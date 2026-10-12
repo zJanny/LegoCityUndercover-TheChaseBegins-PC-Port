@@ -1,6 +1,7 @@
 *.cci
 *.3ds
 /build*/
+/artifacts
 /artifacts/
 __pycache__/
 *.pyc
@@ -11,3 +12,7 @@ __pycache__/
 
 # Local graphify knowledge graph
 /graphify-out/
+
+# Local Claude Code settings and agent worktrees
+/.claude/settings.local.json
+/.claude/worktrees/
