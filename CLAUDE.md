@@ -9,7 +9,7 @@ Early-stage Linux x86_64 reconstruction of *LEGO City Undercover: The Chase Begi
 1. **Extraction pipeline** (`tools/extract_game.py`, Python 3.11+ stdlib only). It reads the NCSD/CCI image, then the NCCH partition 0, the exheader and the ExeFS, and checks every SHA256. It decompresses `.code` (backwards LZ) and wraps it in a synthetic ELF32 ARM file (`game.arm.elf`) for disassembly in REA.
 2. **Native input laboratory** (`src/`, C++17 + SDL2). It tests configurable keyboard/mouse input that maps onto 3DS buttons and the 320x240 lower touch screen. It is **not** the game runtime. Gameplay, rendering, audio, assets and saves have not been recovered yet.
 
-The plan and its progress log live in `docs/plans/linux-port.md` and `docs/plans/linux-port.progress.md`, with steps S1–S4. Read both before you resume port work. Update the progress file with the commands, results and timestamps from each session.
+The plan and its progress log live in `docs/plans/linux-port.md` and `docs/plans/linux-port.progress.md`, with steps S1–S4. Read both before you resume port work. Update the progress file with the commands, results and timestamps from each session. Reverse-engineering findings do not go there: see "Reverse-engineering findings" below.
 
 ## Commands
 
@@ -85,9 +85,9 @@ cd build && ./chase-input-lab [--config PATH] [--smoke-test]
   - Never overwrite an existing output directory.
 
   `manifest.json` records offsets, hashes and ARM segment addresses as evidence. The ELF is a derived analysis wrapper: its entry point is inferred from the text base, and it is not an original binary.
-- REA cannot open the `.cci` directly. Analyse `artifacts/<dir>/game.arm.elf` instead, and record REA evidence IDs in the progress file.
+- REA cannot open the `.cci` directly. Analyse `artifacts/<dir>/game.arm.elf` instead, and record REA evidence IDs in the matching `docs/re/` file.
 
-- **REA reverse engineering:** When investigating the ARM executable, use the installed REA skill or integration if one is available and relevant. Follow its documented workflow rather than inventing commands. If unavailable, use the available disassembly and analysis tools directly, and record reproducible findings and evidence IDs in `docs/plans/linux-port.progress.md`. Do not claim REA analysis was performed unless it actually was.
+- **REA reverse engineering:** When investigating the ARM executable, use the installed REA skill or integration if one is available and relevant. Follow its documented workflow rather than inventing commands. If unavailable, use the available disassembly and analysis tools directly, and record reproducible findings and evidence IDs in the matching `docs/re/` file. Do not claim REA analysis was performed unless it actually was.
 
 - **Future platform compatibility:** Linux x86_64 is the only current development target. A Windows port may be considered at a later stage, but this must not slow down or complicate current Linux development. Do not implement Windows builds, add Windows-specific infrastructure, or introduce abstractions solely for hypothetical Windows support. When making architectural decisions, prefer portable C++17 and standard-library facilities where practical, and be mindful of OS-specific APIs, filesystem assumptions, path handling, process behavior, and build configuration. Keep SDL2 and other existing cross-platform dependencies in mind, but prioritize a simple, maintainable Linux implementation over speculative portability work.
 
@@ -99,6 +99,17 @@ cd build && ./chase-input-lab [--config PATH] [--smoke-test]
 4. **Existing Python decoders are frozen legacy.** The decoders that already exist in `tools/` (`convert_*.py`, `extract_*.py`, `tt_resource.py`, `preview_model.py`) may stay while they work. When one needs a behaviour change that C++ also implements, do not edit the Python decoder: replace it with a call into the C++ code through the binding, and delete the Python decoding logic in the same commit. Never fix both.
 5. **Tests pin frozen reference values instead of a live second implementation.** Real-data tests (`assets-real-test`) compare against recorded checksums and totals. Next to each value, record how it was obtained: a Python command, a game-code evidence ID, or a manual inspection. Synthetic tests (`assets-test`) cover the edge cases.
 6. **Fix violations when you find them.** If you come across anything that breaks rules 1–5, fix it in a focused commit of its own and note the fix in the progress file. Examples: logic that exists only in Python although the runtime needs it, a new format implemented twice, Python and C++ giving different results, a test that depends on running a Python decoder, or a reference value without its provenance. If the fix is too large for the current task, record it as an open item in `docs/plans/linux-port.progress.md`.
+
+## Reverse-engineering findings (docs/re/)
+
+Keep findings out of the progress file so agents load only what they need.
+
+1. **Findings live in `docs/re/<topic>.md`**, one file per topic, indexed in `docs/re/README.md`. Findings are addresses, struct and record layouts, format specs, codec rules, evidence IDs, hypotheses and unknowns.
+2. **The progress file holds only work state**: status, steps, decisions, blockers, next actions, and a short session log (date, what was done, commands, test results, commits). A log entry that produced findings gets one line that links to the `docs/re/` file. Never paste findings into the progress file.
+3. **Read narrowly.** Open `docs/re/README.md`, then only the file for the topic you work on. Do not read all of `docs/re/`.
+4. **Append to the matching file** under a dated `##` heading. Mark corrections of earlier entries explicitly in the new entry. Create a new topic file and an index line when no file fits.
+5. **Record unknowns** at the end of the entry, next to the finding they belong to.
+6. `docs/re/` is written for developers, so the plain-language rule for user docs does not apply. It contains no game assets, only findings.
 
 ## Constraints
 

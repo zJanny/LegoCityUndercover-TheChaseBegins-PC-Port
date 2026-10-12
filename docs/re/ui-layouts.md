@@ -1,0 +1,27 @@
+# UI layouts (.bxaml)
+
+Reverse-engineering findings, moved verbatim from the progress log. Entries are chronological; later entries may correct earlier ones. Evidence IDs are shortened with an ellipsis.
+
+## 2026-10-13T11:00+02:00 — .bxaml UI layouts decoded (REA, Ghidra 12.1.2)
+
+- Loader 0x217220 (ev_b5b7e922…460e), reached from the ".bxaml" string at 0x2175d4. A second path, 0x2ae5dc, loads `%s.bxaml` and falls back to `%s.xaml` (ev_e349a2af…94b1).
+- Block order, all in pool −14:
+  - A u32 header; non-zero means storyboards follow.
+  - The element tree, depth-first, read by 0x29f7b4 (ev_950e0153…c69f). Each element is a 0x4c record and a name. Types 2 and 3 add a source block. The child count is the s16 at +0x40.
+  - Optional storyboards: an 8-byte list (count at +4); per storyboard a 0x10 record (track count at +0xc) and a name; per track a 0x20 record (keyframe count at +8) and a target name, then 0x20-byte keyframes.
+  - Record words +0, +4, +0xc and +0x10 are pointer slots that the loader overwrites.
+- Node builder 0x1b2ec0 (ev_0069b6e8…4fd2):
+  - Types: 1 container, 2 image (path relative to the layout folder unless rooted; a size ≤ ~1e-7 takes the texture size), 3 reference to another layout.
+  - Fields: flags at +0x42 (bit 0x80 = the child the parent keeps), hook id at +0x44 (always 0). +0x46 is matched against the 3-entry font table at 0x52ebf8; names containing "noexport" are skipped. +0x47 & 3 is alignment; +0x48 is a u32 colour.
+- Storyboard builder 0x1dbb80 (ev_5b4bf86b…a55a5):
+  - Track: repeat at +0xa (0 = once), property byte at +0x14, duration at +0x18.
+  - Keyframe: value at +4, four spline floats at +8..+0x14 (passed to 0x249030), time at +0x18, flag at +0x1c. Targets are resolved by 0x24085c.
+- Data fits only (not traced in code):
+  - The element floats +0x18..+0x3c are opacity, rotation (radians), scale, position, origin (always 0.5) and size.
+  - Track properties: 6 opacity, 3/4 scale x/y, 5 rotation, 1/2 translate x/y.
+  - The keyframe spline defaults to (0,0,1,1) in 6499 of 6740 keyframes (XAML KeySpline).
+- Unknown: element +0x14 (0xff ×1105, 3 ×2), the flag bits other than 0x80 (values 1, 0x11, 0x41), track +0x1c and keyframe +0x1c, and the code that applies property ids. Two references (waiting, UI_StrikeControl) have no sibling .bxaml. Two track targets name no element.
+- Added src/assets/xaml.cpp (parseLayout, UiLayout types) with a synthetic layouts() test.
+- Real data: 55/55 files consume every block (13880). 383 containers, 614 images and 110 references. 161 storyboards, 1888 tracks, 6740 keyframes. Every track's duration equals its last keyframe time. The pinned float sums come from a throwaway Python walk.
+- Merged onto main by hand (the worktree was based on origin/main). ctest PASS 8/8.
+
