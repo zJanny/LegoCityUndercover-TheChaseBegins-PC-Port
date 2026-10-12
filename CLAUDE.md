@@ -50,6 +50,8 @@ build/chase-soundtest music/act_bass_break.bwav   # plays decoded sounds; SDL_AU
 SDL_VIDEODRIVER=offscreen build/chase-viewer --screenshot out.bmp models/lvl_00_policestation/room1.bfnmdl --exclude sky
 # Skinned animation playback (first model is posed; --frame N for a fixed frame)
 SDL_VIDEODRIVER=offscreen build/chase-viewer --screenshot out.bmp models/char_bear/char_bear.bfnmdl --skeleton models/char_bear/char_bear.bfnskl --anim models/char_bear/walk.bfnanm --frame 12
+# In-engine cutscene: cast from csdata/models/<id>/manifest.bstxt, camera from its ExportCam tracks
+SDL_VIDEODRIVER=offscreen build/chase-viewer --screenshot out.bmp --cutscene csdata/models/1_1_a --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --exclude sky --frame 200
 
 # Run the lab (looks for config/controls.cfg relative to cwd; CMake copies it into build/)
 cd build && ./chase-input-lab [--config PATH] [--smoke-test]

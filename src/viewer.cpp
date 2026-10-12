@@ -29,6 +29,14 @@ Mat4 multiply(const Mat4& a, const Mat4& b) {
             for (int k = 0; k < 4; ++k) r[c * 4 + row] += a[k * 4 + row] * b[c * 4 + k];
     return r;
 }
+Mat4 rigidInverse(const Mat4& m) {
+    Mat4 r{};
+    for (int row = 0; row < 3; ++row)
+        for (int col = 0; col < 3; ++col) r[col * 4 + row] = m[row * 4 + col];
+    for (int row = 0; row < 3; ++row) r[12 + row] = -(r[row] * m[12] + r[4 + row] * m[13] + r[8 + row] * m[14]);
+    r[15] = 1;
+    return r;
+}
 Mat4 perspective(float fovY, float aspect, float nearZ, float farZ) {
     float f = 1.0f / std::tan(fovY / 2);
     Mat4 m{};
@@ -241,6 +249,7 @@ public:
             for (const auto& p : instance.model->parts) n += std::size_t(p.count) / 3;
         return n;
     }
+    void setTransform(std::size_t instance, const Mat4& transform) { instances_.at(instance).transform = transform; }
     std::size_t missingTextures() const { return missing_; }
     std::size_t instances() const { return instances_.size(); }
     static Mat4 identity() { return {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1}; }
@@ -406,6 +415,9 @@ struct Options {
     // Posing applies to the first model argument. The game's playback rate is set per
     // animation instance by code not yet recovered, so the rate is an option.
     std::string skeleton, animation;
+    // Cutscene folder (csdata/models/<id>). Actors start together and hold their last frame;
+    // the game's alignment of actor and camera animations of different length is not recovered.
+    std::string cutscene;
     bool nav = false;
     double frame = -1;
     double fps = 30;
@@ -435,6 +447,7 @@ Options parse(int argc, char** argv) {
         else if (arg == "--brightness") o.brightness = std::stof(value());
         else if (arg == "--skeleton") o.skeleton = value();
         else if (arg == "--anim") o.animation = value();
+        else if (arg == "--cutscene") o.cutscene = value();
         else if (arg == "--frame") o.frame = std::stod(value());
         else if (arg == "--fps") o.fps = std::stod(value());
         else if (arg == "--yaw") o.yaw = std::stof(value());
@@ -450,10 +463,10 @@ Options parse(int argc, char** argv) {
         else if (!arg.empty() && arg[0] == '-') throw std::runtime_error("unknown option " + arg);
         else o.models.push_back(arg);
     }
-    if (o.models.empty() && o.levels.empty())
+    if (o.models.empty() && o.levels.empty() && o.cutscene.empty())
         throw std::runtime_error("usage: chase-viewer [--fib F] [--names CSV] [--config CFG] [--exclude WORD]... "
                                  "[--level levels/.../x.blvl]... [--room NAME] [--nav] [--cull none|cw|ccw] [--brightness F] [--screenshot OUT.bmp] [--yaw DEG] [--pitch DEG] [--eye X,Y,Z] "
-                                 "[--skeleton S.bfnskl --anim A.bfnanm [--frame N] [--fps F]] "
+                                 "[--skeleton S.bfnskl --anim A.bfnanm [--frame N] [--fps F]] [--cutscene csdata/models/ID] "
                                  "[models/<dir>/<model>.bfnmdl...]");
     if (o.skeleton.empty() != o.animation.empty()) throw std::runtime_error("--skeleton and --anim go together");
     if (!o.skeleton.empty() && o.models.empty()) throw std::runtime_error("--anim needs a model argument to pose");
@@ -520,6 +533,43 @@ int run(const Options& options) {
                   << skeleton.joints.size() << " joints, " << animation.frames << " frames\n";
     }
     double posedFrame = -1;
+    struct Actor {
+        std::string model;
+        std::size_t instance = 0;
+        Skeleton skeleton;
+        Animation animation;
+    };
+    std::vector<Actor> actors;
+    Animation cameraAnimation;
+    bool cutscene = !options.cutscene.empty();
+    if (cutscene) {
+        auto read = [&](const std::string& path) {
+            const FuseEntry* entry = archive.find(path);
+            if (!entry) throw std::runtime_error("not in archive: " + path);
+            return archive.read(*entry);
+        };
+        std::string folder = lower(options.cutscene);
+        for (const auto& cast : cutsceneActors(parseManifest(read(folder + "/manifest.bstxt")), folder)) {
+            if (cast.animation.empty()) continue;
+            if (cast.model.empty()) {
+                cameraAnimation = parseAnimation(read(cast.animation));
+                continue;
+            }
+            Actor actor;
+            actor.model = cast.model;
+            actor.animation = parseAnimation(read(cast.animation));
+            if (!cast.skeleton.empty() && archive.find(cast.skeleton)) actor.skeleton = parseSkeleton(read(cast.skeleton));
+            if (!scene.addModel(cast.model)) throw std::runtime_error("not in archive: " + cast.model);
+            actor.instance = scene.instances() - 1;
+            actors.push_back(std::move(actor));
+        }
+        if (cameraAnimation.subAnimations.empty()) throw std::runtime_error("cutscene has no camera animation");
+        std::cout << "cutscene: " << actors.size() << " actor(s), " << cameraAnimation.frames << " camera frames\n";
+    }
+    auto normalised = [](const Animation& animation, double frame) {
+        double last = animation.frames > 1 ? animation.frames - 1 : 1;
+        return std::min(frame, last) / last;
+    };
     if (options.nav)
         for (const auto& levelPath : options.levels) {
             Level level = parseLevel(archive.read(*archive.find(levelPath)));
@@ -599,13 +649,32 @@ int run(const Options& options) {
                 posedFrame = frame;
             }
         }
+        Mat4 eyeView = view(eye, yaw, pitch);
+        float fovY = 1.0f, nearZ = radius * 0.002f, farZ = radius * 20;
+        if (cutscene) {
+            double frame = options.frame >= 0 ? options.frame : std::fmod(now * options.fps / 1000.0, cameraAnimation.frames);
+            for (const auto& actor : actors) {
+                double local = std::min(frame, double(actor.animation.frames ? actor.animation.frames - 1 : 0));
+                float t = float(normalised(actor.animation, local));
+                scene.setTransform(actor.instance, actorMatrix(actorPose(actor.animation, t)));
+                if (!actor.skeleton.joints.empty()) scene.pose(actor.model, skinMatrices(actor.skeleton, actor.animation, local));
+            }
+            CutsceneCamera camera = cutsceneCamera(cameraAnimation, float(normalised(cameraAnimation, frame)));
+            // The game camera looks along +row 2 (actors lie there; on-screen text is unmirrored),
+            // so rows 0 and 2 flip for GL's -z view direction. Inferred, not traced past 0x241540.
+            Mat4 world = cameraMatrix(camera);
+            for (int i : {0, 1, 2, 8, 9, 10}) world[i] = -world[i];
+            eyeView = rigidInverse(world);
+            fovY = camera.fieldOfView * float(M_PI) / 180;
+            nearZ = 0.1f;
+            farZ = 4000;
+        }
         SDL_GL_GetDrawableSize(window, &width, &height);
         glViewport(0, 0, width, height);
         glClearColor(0.16f, 0.17f, 0.2f, 1);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glUseProgram(program);
-        Mat4 mvp = multiply(perspective(1.0f, float(width) / float(std::max(height, 1)), radius * 0.002f, radius * 20),
-                            view(eye, yaw, pitch));
+        Mat4 mvp = multiply(perspective(fovY, float(width) / float(std::max(height, 1)), nearZ, farZ), eyeView);
         glUniform1i(glGetUniformLocation(program, "tex"), 0);
         glUniform1i(glGetUniformLocation(program, "lightmap"), 1);
         glUniform1f(glGetUniformLocation(program, "brightness"), options.brightness);

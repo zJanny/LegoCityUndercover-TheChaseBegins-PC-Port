@@ -35,6 +35,20 @@ build/chase-viewer models/char_bear/char_bear.bfnmdl \
 - `--frame N` shows a single frame instead. Values such as `2.5` show an in-between pose.
 - The game's real playback speed is not known yet. The viewer plays 30 frames per second; change it with `--fps`.
 
+## Play a cutscene
+
+```sh
+build/chase-viewer --cutscene csdata/models/1_1_a \
+    --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --exclude sky
+```
+
+- `--cutscene` loads the cast listed in the cutscene folder and follows its camera.
+- Add the level the cutscene takes place in with `--level`. Otherwise the characters stand in empty space.
+- The cutscene loops. `--frame N` shows a single frame, and `--fps` changes the speed as for animations.
+- While a cutscene plays, the camera controls do nothing.
+- Some characters have shorter animations than the camera. The viewer starts them all together and holds their last pose. How the game lines them up is not known yet.
+- There is no sound or subtitles yet.
+
 ## Controls
 
 The viewer uses the same `config/controls.cfg` as the [input laboratory](controls.md):
@@ -51,6 +65,7 @@ The viewer uses the same `config/controls.cfg` as the [input laboratory](control
 |---|---|
 | `--room NAME` | Shows only the level objects in one room. |
 | `--nav` | Draws the navigation grid of the level. |
+| `--cutscene FOLDER` | Plays the cutscene in `csdata/models/<id>`. |
 | `--exclude WORD` | Hides parts whose texture name contains WORD, for example `sky`. |
 | `--brightness F` | Makes everything brighter, to help you see. |
 | `--cull ccw\|cw\|none` | Chooses which faces are hidden. The default, `ccw`, hides ceilings so you can look into rooms. |

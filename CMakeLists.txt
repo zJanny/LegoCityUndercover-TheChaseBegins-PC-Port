@@ -63,6 +63,12 @@ if(BUILD_TESTING)
       csdata/models/1_1_e/trolley/trolley.bfnmdl)
     set_tests_properties(viewer-real-smoke PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen"
       PASS_REGULAR_EXPRESSION "850 triangles, 0 missing textures.*saved viewer-smoke.bmp")
+    add_test(NAME viewer-cutscene-smoke COMMAND chase-viewer
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --screenshot viewer-cutscene.bmp
+      --cutscene csdata/models/1_1_a --frame 200)
+    set_tests_properties(viewer-cutscene-smoke PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen"
+      PASS_REGULAR_EXPRESSION "cutscene: 5 actor\\(s\\), 405 camera frames.*0 missing textures.*saved viewer-cutscene.bmp")
     # Opt-in: decodes and plays one looping music track for 0.3 s on SDL's dummy audio driver.
     add_test(NAME soundtest-real-smoke COMMAND chase-soundtest --seconds 0.3
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
