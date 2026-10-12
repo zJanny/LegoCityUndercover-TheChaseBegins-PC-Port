@@ -33,7 +33,7 @@ target_compile_options(chase-soundtest PRIVATE -Wall -Wextra -Wpedantic)
 pkg_check_modules(EPOXY IMPORTED_TARGET epoxy)
 if(EPOXY_FOUND)
   add_executable(chase-viewer src/viewer.cpp)
-  target_link_libraries(chase-viewer PRIVATE chase_assets chase_input PkgConfig::SDL2 PkgConfig::EPOXY)
+  target_link_libraries(chase-viewer PRIVATE chase_assets chase_audio chase_input PkgConfig::SDL2 PkgConfig::EPOXY)
   target_compile_options(chase-viewer PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 set(CHASE_ROMFS_DIR "${CMAKE_SOURCE_DIR}/artifacts/romfs/romfs" CACHE PATH

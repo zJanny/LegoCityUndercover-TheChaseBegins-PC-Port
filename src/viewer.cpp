@@ -3,6 +3,7 @@
 // their textures. Controls come from config/controls.cfg (3DS button names):
 // D-pad moves, L/R lower/raise, X/Y turn, left-drag looks, Escape quits.
 #include "assets/assets.hpp"
+#include "audio/mixer.hpp"
 #include "input.hpp"
 #include <SDL.h>
 #include <epoxy/gl.h>
@@ -12,6 +13,8 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <memory>
+#include <mutex>
 #include <stdexcept>
 #include <sstream>
 #include <string>
@@ -135,6 +138,35 @@ std::string stem(const std::string& path) {
     auto dot = name.rfind('.');
     return lower(dot == std::string::npos ? name : name.substr(0, dot));
 }
+struct AudioOutput {
+    chase::audio::Mixer mixer{48000};
+    std::mutex lock;
+    SDL_AudioDeviceID device = 0;
+    static void callback(void* user, Uint8* stream, int bytes) {
+        auto* output = static_cast<AudioOutput*>(user);
+        std::lock_guard<std::mutex> guard(output->lock);
+        output->mixer.mix(reinterpret_cast<float*>(stream), std::size_t(bytes) / (2 * sizeof(float)));
+    }
+    bool open() {
+        if (SDL_InitSubSystem(SDL_INIT_AUDIO) != 0) return false;
+        SDL_AudioSpec want{}, have{};
+        want.freq = mixer.outputRate();
+        want.format = AUDIO_F32SYS;
+        want.channels = 2;
+        want.samples = 1024;
+        want.callback = callback;
+        want.userdata = this;
+        device = SDL_OpenAudioDevice(nullptr, 0, &want, &have, 0);
+        if (device) SDL_PauseAudioDevice(device, 0);
+        return device != 0;
+    }
+    void close() {
+        if (device) SDL_CloseAudioDevice(device);
+        device = 0;
+    }
+    ~AudioOutput() { close(); }
+};
+
 std::string directory(const std::string& path) {
     auto slash = path.find_last_of("/\\");
     return slash == std::string::npos ? std::string() : path.substr(0, slash + 1);
@@ -533,6 +565,8 @@ int run(const Options& options) {
                   << skeleton.joints.size() << " joints, " << animation.frames << " frames\n";
     }
     double posedFrame = -1;
+    AudioOutput audio;
+    std::shared_ptr<const Sound> cutsceneSound;
     struct Actor {
         std::string model;
         std::size_t instance = 0;
@@ -565,7 +599,16 @@ int run(const Options& options) {
         }
         if (cameraAnimation.subAnimations.empty()) throw std::runtime_error("cutscene has no camera animation");
         std::cout << "cutscene: " << actors.size() << " actor(s), " << cameraAnimation.frames << " camera frames\n";
+        std::string soundPath = "music/csaudio/" + folder.substr(folder.rfind('/') + 1) + ".bwav";
+        if (const FuseEntry* entry = archive.find(soundPath); entry && options.screenshot.empty() && options.frame < 0) {
+            cutsceneSound = std::make_shared<Sound>(decodeSound(archive.read(*entry)));
+            if (!audio.open()) std::cout << "no audio device: " << SDL_GetError() << '\n';
+        }
     }
+    double cutscenePeriod = cameraAnimation.frames / options.fps;
+    if (cutsceneSound) cutscenePeriod = std::max(cutscenePeriod, double(cutsceneSound->frames) / cutsceneSound->rate);
+    Uint32 cutsceneStart = 0;
+    int cutsceneVoice = 0;
     auto normalised = [](const Animation& animation, double frame) {
         double last = animation.frames > 1 ? animation.frames - 1 : 1;
         return std::min(frame, last) / last;
@@ -652,7 +695,16 @@ int run(const Options& options) {
         Mat4 eyeView = view(eye, yaw, pitch);
         float fovY = 1.0f, nearZ = radius * 0.002f, farZ = radius * 20;
         if (cutscene) {
-            double frame = options.frame >= 0 ? options.frame : std::fmod(now * options.fps / 1000.0, cameraAnimation.frames);
+            if (!cutsceneStart || (now - cutsceneStart) / 1000.0 >= cutscenePeriod) {
+                cutsceneStart = now;
+                if (cutsceneSound && audio.device) {
+                    std::lock_guard<std::mutex> guard(audio.lock);
+                    audio.mixer.stop(cutsceneVoice);
+                    cutsceneVoice = audio.mixer.play(cutsceneSound);
+                }
+            }
+            double elapsed = std::min((now - cutsceneStart) * options.fps / 1000.0, double(cameraAnimation.frames - 1));
+            double frame = options.frame >= 0 ? options.frame : elapsed;
             for (const auto& actor : actors) {
                 double local = std::min(frame, double(actor.animation.frames ? actor.animation.frames - 1 : 0));
                 float t = float(normalised(actor.animation, local));
@@ -687,6 +739,7 @@ int run(const Options& options) {
         }
         SDL_GL_SwapWindow(window);
     }
+    audio.close();
     SDL_GL_DeleteContext(context);
     SDL_DestroyWindow(window);
     SDL_Quit();

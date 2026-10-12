@@ -45,9 +45,10 @@ build/chase-viewer --cutscene csdata/models/1_1_a \
 - `--cutscene` loads the cast listed in the cutscene folder and follows its camera.
 - Add the level the cutscene takes place in with `--level`. Otherwise the characters stand in empty space.
 - The cutscene loops. `--frame N` shows a single frame, and `--fps` changes the speed as for animations.
+- Most cutscenes have a soundtrack, and the viewer plays it in time with the picture. It stays silent with `--frame` or `--screenshot`.
 - While a cutscene plays, the camera controls do nothing.
 - Some characters have shorter animations than the camera. The viewer starts them all together and holds their last pose. How the game lines them up is not known yet.
-- There is no sound or subtitles yet.
+- There are no subtitles yet.
 
 ## Controls
 

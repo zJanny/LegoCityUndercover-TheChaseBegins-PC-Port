@@ -658,3 +658,12 @@ Static analysis used local llvm-objdump (armv6k) over game.arm.elf. This is loca
 - Deleted from tools/convert_anims.py: decode_channels, Bits, euler_to_quaternion, quaternion_matrix, joint_pose, blend_poses, pose_matrix, local_matrix, rigid_inverse, frame_count and skin_matrices. assets-test covers them in C++. preview_model.py now poses through chase_native.skin_matrices, and the minifig balance_walk frame 5 renders the same pose as chase-viewer.
 - tests/test_convert_anims.py: the three Python posing tests are replaced by test_native_skin_matrices. It checks the same synthetic curve as assets-test (1.55 at frame 1) and skips when the library is missing.
 - ctest PASS 8/8; Python PASS 55 (1 skip when the library is absent).
+
+### 2026-10-13T03:20+02:00 — Cutscene playback rate and soundtrack
+
+- music/csaudio/<id>.bwav exists for 57 of the 69 cutscene folders (12 kHz).
+- The audio length is camera frames / 30 + 1.0 s in most cases, for example 1_1_a (405 → 14.5 s), 1_1_b, 1_1_c, 1_1_d and 2_7_a. It is exactly frames / 30 for 1_4_a and 2_6_b.
+- Outliers: 6_4_a (221 frames, 23.0 s), 2_11_a and 1_4_c.
+- Conclusion: cutscenes play at 30 frames per second (data evidence; the game's timer code was not traced). This matches the viewer's default `--fps 30`.
+- The viewer's `--cutscene` plays the soundtrack through chase_audio and an SDL audio device. The picture clock restarts with the sound, holds the last camera frame through the tail, and loops after max(frames / fps, sound length). No sound plays with `--frame` or `--screenshot`.
+- ctest PASS 8/8.
