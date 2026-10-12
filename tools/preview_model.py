@@ -47,14 +47,6 @@ class Texture:
         return self.rows[y][x]
 
 
-def quat_matrix(q, transpose):
-    x, y, z, w = q
-    m = [[1 - 2 * (y * y + z * z), 2 * (x * y + z * w), 2 * (x * z - y * w)],
-         [2 * (x * y - z * w), 1 - 2 * (x * x + z * z), 2 * (y * z + x * w)],
-         [2 * (x * z + y * w), 2 * (y * z - x * w), 1 - 2 * (x * x + y * y)]]
-    return [list(r) for r in zip(*m)] if transpose else m
-
-
 def invert_affine(m):
     """Inverse of a row-vector affine 4x4 (rotation/scale in 3x3, translation in row 3)."""
     a = [row[:3] for row in m[:3]]
@@ -67,11 +59,8 @@ def invert_affine(m):
     return [inv[0] + [0.0], inv[1] + [0.0], inv[2] + [0.0], it + [1.0]]
 
 
-def pose_skin_matrices(skeleton, animation, frame, transpose):
-    """Per-joint skin matrices inverse(bind world) * animated world (row vectors).
-
-    Pose composition (order of scale/rotation/translation and the quaternion
-    convention) is an assumption under test; see the progress log."""
+def pose_skin_matrices(skeleton, animation, frame):
+    """Per-joint skin matrices inverse(bind world) * animated world (row vectors), as 0x252cb0."""
     frames = struct.unpack_from('<H', animation['header'], 4)[0]
     world, skin = [], []
     for index, joint in enumerate(skeleton['joints']):
@@ -79,9 +68,7 @@ def pose_skin_matrices(skeleton, animation, frame, transpose):
         if index < len(animation.get('s8', [])):
             channels, mask = ca.decode_channels(animation['s8'][index], frame % max(frames, 1), frames)
             if mask != -1:
-                r = quat_matrix(ca.euler_to_quaternion(*channels[0:3]), transpose)
-                s = channels[3:6]
-                local = [[r[i][j] * s[i] for j in range(3)] + [0.0] for i in range(3)] + [channels[9:12] + [1.0]]
+                local = ca.local_matrix(channels, mask)
         parent = joint['parent']
         w = local if parent < 0 else ca.matmul(local, world[parent])
         world.append(w)
@@ -191,8 +178,6 @@ def main():
     parser.add_argument('--skeleton', type=Path, help='.bfnskl to pose the model with (needs --anim)')
     parser.add_argument('--anim', type=Path, help='.bfnanm to sample')
     parser.add_argument('--frame', type=int, default=0)
-    parser.add_argument('--transpose-rotation', action='store_true',
-                        help='use the transposed quaternion matrix (convention under test)')
     args = parser.parse_args()
     model = cm.parse_model(args.model.read_bytes())
     index = texture_index(args.assets)
@@ -210,7 +195,7 @@ def main():
     skin = None
     if args.skeleton and args.anim:
         skin = pose_skin_matrices(ca.parse_skeleton(args.skeleton.read_bytes()),
-                                  ca.parse_animation(args.anim.read_bytes()), args.frame, args.transpose_rotation)
+                                  ca.parse_animation(args.anim.read_bytes()), args.frame)
     rows = render(model, textures, args.size, math.radians(args.yaw), math.radians(args.pitch),
                   [w.lower() for w in args.exclude], skin)
     args.output.write_bytes(ct.png(rows))

@@ -1,4 +1,5 @@
 import importlib.util
+import math
 import struct
 import sys
 import unittest
@@ -61,6 +62,17 @@ class AnimTests(unittest.TestCase):
         negative = bitstream([(0x01, 8), (1, 3), ((1 << 12) - 100, 12), (0, 4)])   # rotation x = -100
         self.assertAlmostEqual(ca.decode_channels(negative, 0, 1)[0][0], -2.0)
         self.assertEqual(ca.euler_to_quaternion(0, 0, 0), (0.0, 0.0, -0.0, 1.0))
+
+    def test_local_matrix(self):
+        channels = [0.0, 0.0, math.pi / 2, 2.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 2.0, 3.0]
+        m = ca.local_matrix(channels, 0xe3f)
+        expected = [[0, 2, 0, 0], [-1, 0, 0, 0], [0, 0, 1, 0], [1, 2, 3, 1]]
+        for row, want in zip(m, expected):
+            for value, target in zip(row, want):
+                self.assertAlmostEqual(value, target)
+        sheared = ca.local_matrix([0.0] * 3 + [1.0] * 3 + [0.5, 0.25, 2.0] + [0.0] * 3, 0x1c0)
+        self.assertEqual(sheared[:3], [[1.0, 1.0, 0.5, 0.0], [0.25, 1.0, 0.0, 0.0], [0.0, 2.0, 1.0, 0.0]])
+        self.assertEqual(ca.local_matrix(channels, 0)[3], [0.0, 0.0, 0.0, 1.0])
 
     def test_hierarchy_check(self):
         good = joint(-1, (0, 1, 0), (0, 1, 0)) + joint(0, (0, 1.5, 2), (0, 0.5, 2))

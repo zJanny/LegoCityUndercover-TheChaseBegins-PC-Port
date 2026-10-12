@@ -449,3 +449,29 @@ Static analysis used local llvm-objdump (armv6k) over game.arm.elf. This is loca
   - With `--transpose-rotation`, the result is a natural quadruped walk cycle. Without it the bear rears up unnaturally, so the transposed quaternion matrix is the likely convention. This is a visual inference only, not traced in code.
 - Not recovered: how the pose is composed into joint matrices (order of q/scale/translation and the role of channels 6–8 and joint +0x88), root motion (the extra 24th blob), and the 0xfa raw-matrix decomposition 0x1324f8.
 - Named in REA with a _candidate suffix (ev_d6ee55638e4b4ce712665d235d1d66a9d8c1add97c17e5f210b671225ddb1b28): srvGetServiceHandle_candidate, strlen_candidate, dspInit_candidate, fsUserInit_candidate, ndmInit_candidate. Hopper does not define procedures at 0x109fc0, 0x10f8e4 or 0x11006c.
+
+### 2026-10-12T20:10+02:00 — Graphify set up for the repository
+
+- graphify (uv tool install, `~/.local/bin/graphify`) was installed but not initialised. Added `.graphifyignore` (docs/, artifacts/, build*/, graphify-out/, .claude/, *.cci, *.3ds, caches). Detection confirms 0 files from docs/, artifacts/ or build/.
+- Full build: AST over 38 code files (656 nodes, 1464 edges), plus semantic extraction of CLAUDE.md, CMakeLists.txt and README.md by one Haiku subagent (20 nodes, 18 edges, 2 hyperedges; all node types valid, 0 dangling semantic edges). Graph: 711 nodes, 1449 edges, 38 labelled communities.
+- Health check: 184 AST edges point at external symbols (std headers/types) that are not nodes, and 33 same-endpoint edges collapse in the undirected graph.
+- `graphify query` answers from graphify-out/graph.json. `graphify hook install` added post-commit/post-checkout rebuild hooks. graphify-out/ stays local (gitignored); the hook's .gitattributes merge driver was not kept, because the graph is not a tracked team file.
+
+### 2026-10-12T20:15+02:00 — Pose composition recovered (REA, Ghidra)
+
+- Call chain: 0x10f800 (ev_4dd35b1b…6e5) clears a blend state, then 0x2533e0 (ev_ef46d59d…730) adds weighted pose layers through 0x114b58 (ev_732ce83c…7ff, which calls the pose cache 0x1205f8). 0x2530f0 (ev_83cb1c23…509) then calls 0x252cb0 (ev_31aa99b7…9b9), which builds the joint matrices.
+- Pose entry (0x40 bytes, written by 0x12d4b0): floats 0–3 quaternion, 4–6 channels 3–5, 7–9 channels 6–8, 10–12 channels 9–11, word 13 the channel mask.
+- 0x252cb0, per joint:
+  - With more than one layer, it blends quaternions with a sign flip on a negative dot product (0x24c924), normalizes them (0x24c898), and weight-sums the other groups.
+  - It then calls 0x24c734(out, quat|0, scale|0, shear|0, translation|0). Each pointer is NULL when that mask group (bits 0–2 / 3–5 / 6–8 / 9–11) is empty, as confirmed by the call-site disassembly at 0x252f34–0x252fb4.
+- 0x24c734 (ev_94f85e30…81f):
+  - It starts from the rotation 0x248870 (ev_8c943203…64e), or identity.
+  - If a shear is present: row2 += row1·h2, row1 += row0·h1, row0 += row2·h0.
+  - It scales each row by 0x248850 (row i × s_i).
+  - The translation goes into row 3; when it is absent, a vector from 0x56d400 (BSS, runtime value unknown, assumed zero) is used.
+  - So channels 6–8 are a shear.
+- 0x248870 is the rotation matrix of quaternion (x,y,z,w): rows [1−2(y²+z²), 2(xy−wz), 2(xz+wy)], [2(xy+wz), 1−2(x²+z²), 2(yz−wx)], [2(xz−wy), 2(yz+wx), 1−2(x²+y²)]. This is the transpose of the former preview default, which confirms in code the convention that the 19:15 visual test favoured.
+- Hierarchy: world = local · parent.world (0x258a10 multiplies in place, A = A·B, ev_538f88ae…5f0). The skin matrix is rigid-inverse(bind world at joint+8) · world (0x24c5a0, ev_ba75c37d…587, which uses the transposed 3×3).
+- After posing, 0x2530f0 applies optional per-joint s16/256 scales (skipped when all three are 0x100) through 0x24c2c4. This step is not replicated.
+- tools/convert_anims.py: quaternion_matrix() and local_matrix(); the preview uses them, and `--transpose-rotation` is removed. tests: test_local_matrix. Python PASS 44/44.
+- The char_bear walk frames 0/12 render as a natural walk.

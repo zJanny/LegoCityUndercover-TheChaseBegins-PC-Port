@@ -129,6 +129,33 @@ def euler_to_quaternion(x, y, z):
             -(sy * sx * cz) - cy * cx * sz, cy * cx * cz - sy * sx * sz)
 
 
+def quaternion_matrix(q):
+    """Replica of 0x248870: rotation rows of a row-vector matrix from (x, y, z, w)."""
+    x, y, z, w = q
+    return [[1 - 2 * (y * y + z * z), 2 * (x * y - w * z), 2 * (x * z + w * y)],
+            [2 * (x * y + w * z), 1 - 2 * (x * x + z * z), 2 * (y * z - w * x)],
+            [2 * (x * z - w * y), 2 * (y * z + w * x), 1 - 2 * (x * x + y * y)]]
+
+
+def local_matrix(channels, mask):
+    """Replica of 0x24c734 as called by 0x252cb0 for one pose: rotation (mask bits 0-2),
+    shear rows from channels 6-8 (bits 6-8), row scale from channels 3-5 (bits 3-5),
+    translation from channels 9-11 (bits 9-11; zero when absent, see progress log)."""
+    if mask & 7:
+        rows = quaternion_matrix(euler_to_quaternion(*channels[0:3]))
+    else:
+        rows = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
+    if mask & 0x1c0:
+        shear = channels[6:9]
+        rows[2] = [rows[2][j] + rows[1][j] * shear[2] for j in range(3)]
+        rows[1] = [rows[1][j] + rows[0][j] * shear[1] for j in range(3)]
+        rows[0] = [rows[0][j] + rows[2][j] * shear[0] for j in range(3)]
+    if mask & 0x38:
+        rows = [[value * channels[3 + i] for value in row] for i, row in enumerate(rows)]
+    translation = list(channels[9:12]) if mask & 0xe00 else [0.0, 0.0, 0.0]
+    return [row + [0.0] for row in rows] + [translation + [1.0]]
+
+
 def read_track(pools, record):
     """0x253764: a 0x18 record; first block's u32 is copied to +8, then the pointer
     array at +0xc (its own block) with u16(+6) entry blocks, then +0x10 and +0x14."""
