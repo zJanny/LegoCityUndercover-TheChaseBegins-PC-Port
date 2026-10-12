@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <array>
 #include <cctype>
+#include <cmath>
 #include <cstring>
 #include <stdexcept>
 
@@ -150,6 +151,17 @@ std::vector<Placement> placements(const Level& level) {
         if (!p.mesh.empty()) out.push_back(p);
     }
     return out;
+}
+
+std::array<float, 16> placementMatrix(const Placement& placement) {
+    constexpr float degreesToRadians = 0.0174532942f;
+    float x = placement.orientation[0] * degreesToRadians, y = placement.orientation[1] * degreesToRadians,
+          z = placement.orientation[2] * degreesToRadians;
+    float sx = std::sin(x), cx = std::cos(x), sy = std::sin(y), cy = std::cos(y), sz = std::sin(z), cz = std::cos(z);
+    return {cy * cz,  sx * sy * cz + cx * sz, sx * sz - cx * sy * cz, 0,
+            -cy * sz, cx * cz - sx * sy * sz, sx * cz + cx * sy * sz, 0,
+            sy,       -sx * cy,               cx * cy,                0,
+            placement.position[0], placement.position[1], placement.position[2], 1};
 }
 
 std::string meshModelPath(const std::string& mesh) {

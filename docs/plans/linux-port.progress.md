@@ -541,3 +541,15 @@ Static analysis used local llvm-objdump (armv6k) over game.arm.elf. This is loca
 - Result: char_squirrel renders orange with black eyes. lvl_00_policestation room3 shows the textured floor, emblem, plants and lightmap shading where large areas were black before. The scene is still dim; the combiner/lighting setup is unrecovered.
 - Graphics API, from strings: the game links Nintendo DMPGL (a dmp_* reserved-uniform table at 0x35b288, 0x10-byte entries {name, id, count, GL type}). The dmp_TexEnv names are referenced only from that table, and no static PICA TEV command headers (regs 0xc0–0xf7) exist in code.bin, so the combiner setup must be traced through the game's uniform-location usage. Not done.
 - ctest PASS 7/7.
+
+### 2026-10-12T23:05+02:00 — Placement Euler order recovered (replaces the Ry·Rx·Rz assumption)
+
+- "initialorientation" (string at 0x1a49c4, referenced at 0x1a4860 in object setup 0x1a4130, ev_eb095374…8f7 / ev_8c852395…6e0): the parameter is looked up by hash (0x24da28 + 0x217080). Its three floats are multiplied by 0.0174533 (literal at 0x1a49d8) and passed to 0x237c48.
+- 0x237c48 (disassembly), using sincos 0x249038 (r0 = sin, r1 = cos), writes the rotation rows [cy·cz, sx·sy·cz + cx·sz, sx·sz − cx·sy·cz], [−cy·sz, cx·cz − sx·sy·sz, sx·cz + cx·sy·sz], [sy, −sx·cy, cx·cy]. Rows 3 and column 3 are left untouched.
+  - A numeric search over all 48 axis-order and sign combinations matches only Rz·Ry·Rx for row vectors (x applied first), i.e. Rx·Ry·Rz in column-vector terms.
+  - The viewer's Ry·Rx·Rz assumption mirrored the yaw of objects with ±180 on X and Z: the game gives Ry(180 − y), the assumption gave Ry(180 + y).
+- Only object setup 0x1a4130 was traced. That other classes using "initialorientation" (12 more string copies) share 0x237c48 is assumed, not checked.
+- lvl_00_policestation_main: 120 of 130 placements are yaw-only or zero, so only a few props change in room3.
+- chase_assets placementMatrix (level.cpp) and convert_levels.placement_matrix replicate it, with tests for (90,0,0) mapping +y to +z and (180,30,180) equalling a yaw of 150. chase-viewer uses it directly (same memory layout as GL column-major).
+- Material combiners: the renderer keeps bit-packed GPU state (e.g. 0x126f0c, a 4 KB state packer). Not traced further.
+- ctest PASS 7/7; Python PASS 47/47.

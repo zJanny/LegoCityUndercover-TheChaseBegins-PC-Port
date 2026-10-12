@@ -1,4 +1,5 @@
 import importlib.util
+import math
 import struct
 import sys
 import unittest
@@ -47,6 +48,17 @@ class LevelTests(unittest.TestCase):
         self.assertEqual((place['instance'], place['room'], place['mesh']), ('Bench01', 'room1', 'Prop_Bench'))
         self.assertEqual(place['position'], [1.0, 2.0, 3.0])
         self.assertEqual(place['orientation_deg'], [0.0, 90.0, 0.0])
+
+    def test_placement_matrix(self):
+        tilt = cl.placement_matrix({'orientation_deg': [90.0, 0.0, 0.0], 'position': [1.0, 2.0, 3.0]})
+        for got, want in zip(tilt[1][:3] + tilt[3], [0, 0, 1, 1, 2, 3, 1]):   # +y turns into +z
+            self.assertAlmostEqual(got, want, places=6)
+        flipped = cl.placement_matrix({'orientation_deg': [180.0, 30.0, 180.0], 'position': [0, 0, 0]})
+        yaw = math.radians(150)                                             # Rx180.Ry(30).Rz180 = Ry(150)
+        want = [[math.cos(yaw), 0, -math.sin(yaw)], [0, 1, 0], [math.sin(yaw), 0, math.cos(yaw)]]
+        for row, expect in zip(flipped, want):
+            for got, value in zip(row, expect):
+                self.assertAlmostEqual(got, value, places=5)
 
     def test_unconsumed_and_model_path(self):
         with self.assertRaisesRegex(ValueError, 'unconsumed'):

@@ -171,6 +171,10 @@ struct Placement {
     float orientation[3] = {0, 0, 0};
 };
 std::vector<Placement> placements(const Level& level);
+// Object matrix: rotation of 0x237c48 (Rz * Ry * Rx for row vectors, i.e. x applied
+// first) from "initialorientation" degrees (x 0.0174533, as at 0x1a48b0), with
+// "initialposition" as the translation row.
+std::array<float, 16> placementMatrix(const Placement& placement);
 // "Dir/File" -> models/dir/file.bfnmdl, "Name" -> models/name/name.bfnmdl (lower case).
 std::string meshModelPath(const std::string& mesh);
 

@@ -18,7 +18,8 @@
 
 namespace {
 using namespace chase::assets;
-using Mat4 = std::array<float, 16>;  // column-major
+// Column-major; the same memory layout as the game's row-major row-vector matrices.
+using Mat4 = std::array<float, 16>;
 
 Mat4 multiply(const Mat4& a, const Mat4& b) {
     Mat4 r{};
@@ -319,23 +320,6 @@ private:
     std::vector<Instance> instances_;
     std::size_t missing_ = 0;
 };
-
-// Placement transform: translation * Ry * Rx * Rz, angles in degrees. The Euler
-// order is an assumption (not traced in code); most placements are yaw-only.
-Mat4 placementMatrix(const Placement& p) {
-    auto rad = [](float deg) { return deg * float(M_PI) / 180.0f; };
-    float cx = std::cos(rad(p.orientation[0])), sx = std::sin(rad(p.orientation[0]));
-    float cy = std::cos(rad(p.orientation[1])), sy = std::sin(rad(p.orientation[1]));
-    float cz = std::cos(rad(p.orientation[2])), sz = std::sin(rad(p.orientation[2]));
-    Mat4 ry{cy, 0, -sy, 0, 0, 1, 0, 0, sy, 0, cy, 0, 0, 0, 0, 1};
-    Mat4 rx{1, 0, 0, 0, 0, cx, sx, 0, 0, -sx, cx, 0, 0, 0, 0, 1};
-    Mat4 rz{cz, sz, 0, 0, -sz, cz, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
-    Mat4 m = multiply(ry, multiply(rx, rz));
-    m[12] = p.position[0];
-    m[13] = p.position[1];
-    m[14] = p.position[2];
-    return m;
-}
 
 int resolveKey(const std::string& name) {
     std::string spaced = name;

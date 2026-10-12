@@ -304,6 +304,21 @@ void levels() {
     require(meshModelPath("Prop_Plant_01") == "models/prop_plant_01/prop_plant_01.bfnmdl" &&
             meshModelPath("A/B_atlas") == "models/a/b_atlas.bfnmdl", "mesh model path");
     requireThrows([] { parseLevel(levelFile(true)); }, "unconsumed level block accepted");
+
+    auto close = [](float a, float b) { return std::fabs(a - b) < 1e-5f; };
+    Placement tilt;
+    tilt.orientation[0] = 90;
+    tilt.position[2] = 3;
+    auto m = placementMatrix(tilt);
+    require(close(m[4], 0) && close(m[5], 0) && close(m[6], 1) && m[14] == 3, "x rotation turns +y into +z");
+    Placement flipped;
+    flipped.orientation[0] = 180;
+    flipped.orientation[1] = 30;
+    flipped.orientation[2] = 180;
+    auto f = placementMatrix(flipped);
+    float c = std::cos(float(M_PI) * 150 / 180), sn = std::sin(float(M_PI) * 150 / 180);
+    require(close(f[0], c) && close(f[2], -sn) && close(f[8], sn) && close(f[10], c) && close(f[5], 1),
+            "Rz * Ry * Rx: (180, y, 180) is a yaw of 180 - y (0x237c48)");
 }
 }
 

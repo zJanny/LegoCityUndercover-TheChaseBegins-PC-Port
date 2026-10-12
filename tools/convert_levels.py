@@ -8,6 +8,7 @@ the type (1/2/3/6 one block, 4 one block if +8 is non-zero, 8 two blocks).
 """
 import argparse
 import json
+import math
 import struct
 import sys
 from pathlib import Path
@@ -155,6 +156,17 @@ def placements(level):
                     'position': values.get(INITIAL_POSITION) or [0.0, 0.0, 0.0],
                     'orientation_deg': values.get(INITIAL_ORIENTATION) or [0.0, 0.0, 0.0]})
     return out
+
+
+def placement_matrix(placement):
+    """Row-vector object matrix: rotation of 0x237c48 (Rz * Ry * Rx, x applied first) from
+    the orientation in degrees (x 0.0174533, as at 0x1a48b0), position as translation row."""
+    x, y, z = (a * 0.0174532942 for a in placement['orientation_deg'])
+    sx, cx, sy, cy, sz, cz = math.sin(x), math.cos(x), math.sin(y), math.cos(y), math.sin(z), math.cos(z)
+    return [[cy * cz, sx * sy * cz + cx * sz, sx * sz - cx * sy * cz, 0.0],
+            [-cy * sz, cx * cz - sx * sy * sz, sx * cz + cx * sy * sz, 0.0],
+            [sy, -sx * cy, cx * cy, 0.0],
+            list(placement['position']) + [1.0]]
 
 
 def model_path(mesh):
