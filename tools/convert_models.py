@@ -126,6 +126,10 @@ def decode_vertices(part, offset=None):
     if stride != buffer['stride']:
         raise ValueError("computed stride %d != stored %d" % (stride, buffer['stride']))
     data, out = buffer['vertex_data'], []
+    # UV scales live in the vertex-buffer header at +0x50 (uv0.xy, uv1.xy); the
+    # vertex shaders' "UVScales" uniform multiplies the raw s16 values by them.
+    scales = {'uv0': struct.unpack_from('<2f', buffer['header'], 0x50),
+              'uv1': struct.unpack_from('<2f', buffer['header'], 0x58)}
     for v in range(buffer['vertices']):
         base, vertex = v * stride, {}
         for name, offset in layout:
@@ -135,7 +139,7 @@ def decode_vertices(part, offset=None):
                 if offset:
                     vertex[name] = tuple(a + b for a, b in zip(vertex[name], offset))
             elif name in ('uv0', 'uv1'):
-                vertex[name] = tuple(x / 32767 for x in struct.unpack_from('<2h', data, at))
+                vertex[name] = tuple(x * s for x, s in zip(struct.unpack_from('<2h', data, at), scales[name]))
             elif name == 'normal':
                 vertex[name] = tuple(x / 127 for x in struct.unpack_from('<3b', data, at))
             elif name == 'color':

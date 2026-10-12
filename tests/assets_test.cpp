@@ -1,6 +1,7 @@
 // Synthetic fixtures for the native asset runtime; mirrors tests/test_extract_fib.py,
 // tests/test_tt_resource.py and tests/test_convert_textures.py.
 #include "assets/assets.hpp"
+#include <cmath>
 #include <cstdio>
 #include <cstring>
 #include <fstream>
@@ -169,6 +170,8 @@ Bytes modelFile(bool extraBlock) {
     header[2] = 3;                 // vertices
     header[4] = 3;                 // indices
     header[0x1a] = 20;             // stride
+    const float uvScales[4] = {1 / 32767.0f, 1 / 32767.0f, 1, 1};
+    std::memcpy(&header[0x50], uvScales, sizeof uvScales);
     const float positions[3][2] = {{0, 0}, {1, 0}, {0, 1}};
     const std::int16_t uvs[3][2] = {{0, 0}, {32767, 0}, {0, 32767}};
     for (int v = 0; v < 3; ++v) {
@@ -194,7 +197,7 @@ void models() {
     const ModelPart& part = model.meshes[0].parts[0];
     require(part.textures.size() == 1 && part.textures[0] == "tex.tga", "material texture name");
     require(part.flags == 0x84 && vertexStride(part.flags) == 20, "vertex flags");
-    require(part.vertices[1].position[0] == 1.0f && part.vertices[2].uv0[1] == 1.0f, "vertex decode");
+    require(part.vertices[1].position[0] == 1.0f && std::abs(part.vertices[2].uv0[1] - 1.0f) < 1e-6f, "vertex decode");
     require(part.vertices[0].color[0] == 255 && part.vertices[0].color[1] == 0, "vertex colour");
     require(part.indices == std::vector<std::uint16_t>{0, 1, 2}, "indices");
     requireThrows([] { parseModel(modelFile(true)); }, "unconsumed block accepted");

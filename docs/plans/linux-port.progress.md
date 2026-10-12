@@ -375,4 +375,21 @@ Static analysis used local llvm-objdump (armv6k) over game.arm.elf. This is loca
   - The ceilings are culled with CCW front faces.
 - Observed but unknown: many floor/wall surfaces render black with texture × vertex colour. They are probably multi-texture/lightmap materials (tex=2, m3∈{1,5,7}) whose PICA combiner setup is not recovered.
 - `ctest --test-dir build --output-on-failure` — PASS 5/5; Python PASS 39/39; 0 build warnings.
+
+### 2026-10-12T18:05+02:00 — Vertex shaders, UV scales and lightmaps
+
+- The material post-load calls 0x115ec4 (ev_e7652328…b4c5) and 0x115718 (ev_5cfc022b…7939) are stubs that return 1. 0x115128 (ev_adf59b90…39aa) builds a draw-sort key from m1/m2/m3 and the textures. The material shading selection is not in the loader.
+- Added tools/dump_dvlb.py, which reads the public SHBIN layout. code.bin contains one DVLB at file offset 0x2779a0 (data segment) with 11 vertex programs, 342 code words and 83 operand descriptors.
+  - The symbol tables name the inputs: vPos, vUV0, vUV1, vColour, vNormal, vWeights and vIndex. This confirms the 8-byte vertex attribute (flag 2) is skin weights and indices.
+  - They also name the uniforms: ViewComposite, ModelView, MaterialColour, UVScales, UVOffset, TexTrans, Bones (0x22–0x6f), Skinned, Shadows, Cubemap, SimpleTex, VColourTint, ObjspaceCamPos and OutlineScale.
+  - Program 1 outputs normal_quat and view, i.e. it uses PICA fragment lighting.
+  - The shader names are game-derived output and are not committed beyond this log.
+- UV decoding fix: the vertex-buffer header holds the UV scales as f32 at +0x50 (uv0.x, uv0.y, uv1.x, uv1.y), and the shaders multiply the raw s16 values by them.
+  - room60/room3 values range from 1.42e-5 to 1.94e-4. The earlier fixed 1/32767 matched only untiled parts; tiled walls/floors repeat 2–6×.
+  - The Python and C++ decoders now use the stored scales; fixtures updated.
+- In room3, the parts with uv1 carry a second texture "LIGHTMAP_lvl_00_PoliceStation_Basement000.tga" and black vertex colour (000000ff). Lit props carry "cubemap_abstract_c.tga" as their second texture.
+- The viewer modulates by the lightmap on uv1 instead of vertex colour. This is an approximation, because the TEV combiner configuration is not recovered.
+  - room3 now shows tiled floor and wall textures with lightmap shading.
+  - The overall level stays dark, so a lightmap scale (e.g. ×2) is likely but unverified.
+- `ctest` PASS 5/5 (real-data totals unchanged), Python PASS 39/39.
 - Named in REA with a _candidate suffix (ev_d6ee55638e4b4ce712665d235d1d66a9d8c1add97c17e5f210b671225ddb1b28): srvGetServiceHandle_candidate, strlen_candidate, dspInit_candidate, fsUserInit_candidate, ndmInit_candidate. Hopper does not define procedures at 0x109fc0, 0x10f8e4 or 0x11006c.

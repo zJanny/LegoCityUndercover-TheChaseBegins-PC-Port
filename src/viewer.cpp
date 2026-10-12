@@ -70,16 +70,21 @@ layout(location = 0) in vec3 position;
 layout(location = 1) in vec2 uv;
 layout(location = 2) in vec3 normal;
 layout(location = 3) in vec4 colour;
+layout(location = 4) in vec2 uv1;
 uniform mat4 mvp;
-out vec2 vUv; out vec3 vNormal; out vec4 vColour;
-void main() { vUv = uv; vNormal = normal; vColour = colour; gl_Position = mvp * vec4(position, 1.0); }
+out vec2 vUv; out vec2 vUv1; out vec3 vNormal; out vec4 vColour;
+void main() { vUv = uv; vUv1 = uv1; vNormal = normal; vColour = colour; gl_Position = mvp * vec4(position, 1.0); }
 )";
+// Approximation, not the game's PICA combiner setup (not recovered): texture x
+// vertex colour, or texture x lightmap (second texture on uv1) for lightmapped parts,
+// whose vertex colours are black in the shipped data.
 const char* fragmentSource = R"(#version 330 core
-in vec2 vUv; in vec3 vNormal; in vec4 vColour;
-uniform sampler2D tex; uniform bool hasTexture; uniform bool hasNormal; uniform float brightness;
+in vec2 vUv; in vec2 vUv1; in vec3 vNormal; in vec4 vColour;
+uniform sampler2D tex; uniform sampler2D lightmap;
+uniform bool hasTexture; uniform bool hasLightmap; uniform bool hasNormal; uniform float brightness;
 out vec4 fragColour;
 void main() {
-    vec4 c = vColour;
+    vec4 c = hasLightmap ? vec4(texture(lightmap, vUv1).rgb, 1.0) : vColour;
     if (hasTexture) c *= texture(tex, vec2(vUv.x, vUv.y));
     if (c.a < 0.25) discard;
     float shade = 1.0;
@@ -92,9 +97,10 @@ void main() {
 struct GpuVertex {
     float position[3], uv[2], normal[3];
     std::uint8_t colour[4];
+    float uv1[2];
 };
 struct DrawPart {
-    GLuint vao = 0, vbo = 0, ibo = 0, texture = 0;
+    GLuint vao = 0, vbo = 0, ibo = 0, texture = 0, lightmap = 0;
     GLsizei count = 0;
     bool hasNormal = false;
 };
@@ -137,7 +143,11 @@ public:
                     bool skip = false;
                     for (const auto& word : exclude_) skip |= lower(texName).find(word) != std::string::npos;
                     if (skip || part.indices.empty()) continue;
-                    out.parts.push_back(upload(part, texName.empty() ? 0 : texture(texName, directory(lower(path))), out));
+                    std::string dir = directory(lower(path));
+                    DrawPart d = upload(part, texName.empty() ? 0 : texture(texName, dir), out);
+                    // Second texture sampled with uv1: a LIGHTMAP_* texture in the shipped data.
+                    if ((part.flags & AttrUv1) && part.textures.size() >= 2) d.lightmap = texture(part.textures[1], dir);
+                    out.parts.push_back(d);
                 }
             loaded = models_.emplace(path, std::move(out)).first;
         }
@@ -168,6 +178,7 @@ public:
     void draw(GLuint program, const Mat4& viewProjection) const {
         GLint hasTexture = glGetUniformLocation(program, "hasTexture");
         GLint hasNormal = glGetUniformLocation(program, "hasNormal");
+        GLint hasLightmap = glGetUniformLocation(program, "hasLightmap");
         GLint mvp = glGetUniformLocation(program, "mvp");
         for (const auto& instance : instances_) {
             Mat4 m = multiply(viewProjection, instance.transform);
@@ -175,6 +186,10 @@ public:
             for (const auto& part : instance.model->parts) {
                 glUniform1i(hasTexture, part.texture != 0);
                 glUniform1i(hasNormal, part.hasNormal);
+                glUniform1i(hasLightmap, part.lightmap != 0);
+                glActiveTexture(GL_TEXTURE1);
+                glBindTexture(GL_TEXTURE_2D, part.lightmap);
+                glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_2D, part.texture);
                 glBindVertexArray(part.vao);
                 glDrawElements(GL_TRIANGLES, part.count, GL_UNSIGNED_SHORT, nullptr);
@@ -237,6 +252,7 @@ private:
             GpuVertex g{};
             std::copy_n(v.position, 3, g.position);
             std::copy_n(v.uv0, 2, g.uv);
+            std::copy_n(v.uv1, 2, g.uv1);
             std::copy_n(v.normal, 3, g.normal);
             std::copy_n(v.color, 4, g.colour);
             if (!(part.flags & AttrColor)) std::fill_n(g.colour, 4, std::uint8_t(255));
@@ -266,6 +282,7 @@ private:
         attrib(1, 2, GL_FLOAT, GL_FALSE, offsetof(GpuVertex, uv));
         attrib(2, 3, GL_FLOAT, GL_FALSE, offsetof(GpuVertex, normal));
         attrib(3, 4, GL_UNSIGNED_BYTE, GL_TRUE, offsetof(GpuVertex, colour));
+        attrib(4, 2, GL_FLOAT, GL_FALSE, offsetof(GpuVertex, uv1));
         return d;
     }
     FuseArchive& archive_;
@@ -463,6 +480,7 @@ int run(const Options& options) {
         Mat4 mvp = multiply(perspective(1.0f, float(width) / float(std::max(height, 1)), radius * 0.002f, radius * 20),
                             view(eye, yaw, pitch));
         glUniform1i(glGetUniformLocation(program, "tex"), 0);
+        glUniform1i(glGetUniformLocation(program, "lightmap"), 1);
         glUniform1f(glGetUniformLocation(program, "brightness"), options.brightness);
         scene.draw(program, mvp);
         if (!options.screenshot.empty() && ++frames >= 2) {

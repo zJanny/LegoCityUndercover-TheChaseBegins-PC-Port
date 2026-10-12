@@ -37,6 +37,7 @@ def model_bytes(extra_block=False):
     header = bytearray(0x78)
     struct.pack_into('<HHI', header, 0, 0, 3, 3)
     struct.pack_into('<H', header, 0x1a, 20)
+    struct.pack_into('<4f', header, 0x50, 1 / 32767, 1 / 32767, 1, 1)   # UV scales
     vertices = b''.join(struct.pack('<3f2h4B', x, y, 0.0, u, v, 255, 0, 0, 255)
                         for x, y, u, v in ((0, 0, 0, 0), (1, 0, 32767, 0), (0, 1, 0, 32767)))
     slot = struct.pack('<IHBB', 1, 0, 5, 0)
@@ -57,7 +58,8 @@ class ModelTests(unittest.TestCase):
         self.assertEqual(part['material']['textures'][0]['name'], 'tex.tga')
         verts = cm.decode_vertices(part)
         self.assertEqual(verts[1]['position'], (1.0, 0.0, 0.0))
-        self.assertEqual(verts[2]['uv0'], (0.0, 1.0))
+        self.assertAlmostEqual(verts[2]['uv0'][1], 1.0, places=6)
+        self.assertEqual(verts[2]['uv0'][0], 0.0)
         self.assertEqual(verts[0]['color'], (255, 0, 0, 255))
         self.assertEqual(cm.triangles(part), [(0, 1, 2)])
 

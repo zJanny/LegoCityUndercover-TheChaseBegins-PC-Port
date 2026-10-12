@@ -81,19 +81,21 @@ void readVertexBuffer(Reader& r, const Bytes& material, ModelPart& part) {
         if (index >= vertices) throw std::runtime_error("vertex index out of range");
         part.indices.push_back(index);
     }
+    // UV scales at header +0x50 (uv0.xy, uv1.xy), the "UVScales" shader uniform.
+    const float scales[4] = {readF32(header, 0x50), readF32(header, 0x54), readF32(header, 0x58), readF32(header, 0x5c)};
     part.vertices.resize(vertices);
     for (std::size_t v = 0; v < vertices; ++v) {
         std::size_t at = v * stride;
         Vertex& out = part.vertices[v];
         for (int i = 0; i < 3; ++i) out.position[i] = readF32(vertexData, at + 4 * std::size_t(i));
         at += 12;
-        auto uv = [&](float* dst) {
-            dst[0] = std::int16_t(readU16(vertexData, at)) / 32767.0f;
-            dst[1] = std::int16_t(readU16(vertexData, at + 2)) / 32767.0f;
+        auto uv = [&](float* dst, const float* scale) {
+            dst[0] = std::int16_t(readU16(vertexData, at)) * scale[0];
+            dst[1] = std::int16_t(readU16(vertexData, at + 2)) * scale[1];
             at += 4;
         };
-        if (part.flags & AttrUv0) uv(out.uv0);
-        if (part.flags & AttrUv1) uv(out.uv1);
+        if (part.flags & AttrUv0) uv(out.uv0, scales);
+        if (part.flags & AttrUv1) uv(out.uv1, scales + 2);
         if (part.flags & AttrNormal) {
             for (int i = 0; i < 3; ++i) out.normal[i] = std::int8_t(vertexData[at + std::size_t(i)]) / 127.0f;
             at += 4;
