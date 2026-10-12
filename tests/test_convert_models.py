@@ -58,6 +58,7 @@ class ModelTests(unittest.TestCase):
         self.assertEqual(part['material']['textures'][0]['name'], 'tex.tga')
         verts = cm.decode_vertices(part)
         self.assertEqual(verts[1]['position'], (1.0, 0.0, 0.0))
+        self.assertEqual(cm.decode_vertices(part, (10.0, 0.0, -2.0))[1]['position'], (11.0, 0.0, -2.0))
         self.assertAlmostEqual(verts[2]['uv0'][1], 1.0, places=6)
         self.assertEqual(verts[2]['uv0'][0], 0.0)
         self.assertEqual(verts[0]['color'], (255, 0, 0, 255))

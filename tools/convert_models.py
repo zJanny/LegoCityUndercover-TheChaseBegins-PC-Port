@@ -116,8 +116,8 @@ def vertex_layout(flags):
     return layout, offset
 
 
-def decode_vertices(part, offset=None):
-    """Decode a part's vertices; `offset` (the mesh centre) is added to positions when given.
+def decode_vertices(part, centre=None):
+    """Decode a part's vertices; `centre` (the mesh centre) is added to positions when given.
 
     Mesh byte 0 bit 0 marks vertices stored relative to the mesh centre at mesh+8
     (checked on all 6648 shipped meshes); use mesh_offset() to obtain it."""
@@ -136,8 +136,8 @@ def decode_vertices(part, offset=None):
             at = base + offset
             if name == 'position':
                 vertex[name] = struct.unpack_from('<3f', data, at)
-                if offset:
-                    vertex[name] = tuple(a + b for a, b in zip(vertex[name], offset))
+                if centre:
+                    vertex[name] = tuple(a + b for a, b in zip(vertex[name], centre))
             elif name in ('uv0', 'uv1'):
                 vertex[name] = tuple(x * s for x, s in zip(struct.unpack_from('<2h', data, at), scales[name]))
             elif name == 'normal':
