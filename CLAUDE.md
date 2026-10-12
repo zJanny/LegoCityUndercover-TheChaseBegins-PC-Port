@@ -21,6 +21,8 @@ python3 -m unittest discover -s tests -p 'test_*.py' -k test_hash_corruption
 
 # Extract the real image (output dir must NOT already exist)
 python3 tools/extract_game.py "LEGO City Undercover - The Chase Begins (Europe) (En,Fr,De,Es,It,Nl,Pt,Da,Ru).cci" --output artifacts/game
+# Extract RomFS assets (verifies superblock + IVFC tree; same no-overwrite rule)
+python3 tools/extract_romfs.py "LEGO City Undercover - The Chase Begins (Europe) (En,Fr,De,Es,It,Nl,Pt,Da,Ru).cci" --output artifacts/romfs
 
 # Native build + tests
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug

@@ -27,6 +27,14 @@ The tool fails with an error on encrypted, truncated or hash-mismatched images. 
 | `code.bin` | decompressed ARM code |
 | `game.arm.elf` | a synthetic ELF wrapper for disassemblers; not an original or runnable binary |
 
+## Extract the RomFS (game assets)
+
+```sh
+python3 tools/extract_romfs.py path/to/game.cci --output artifacts/romfs
+```
+
+Before writing anything, the tool verifies the RomFS superblock hash from the NCCH header and the full IVFC hash tree. It then writes `romfs/` and `romfs-manifest.json`, which records each file's image offset, size and SHA256. Like the executable extractor, it refuses an existing output directory and rejects unsafe or duplicate names, cycles and out-of-bounds entries.
+
 ## Build and run the input laboratory
 
 Requires CMake ≥ 3.16, a C++17 compiler and SDL2 (found through pkg-config).
@@ -84,5 +92,5 @@ The plan and the evidence log are in `docs/plans/linux-port.md` and `docs/plans/
 - gameplay logic
 - rendering
 - audio
-- RomFS assets
+- RomFS asset formats (the files are extracted, but `.fib`, its `.csv` index and `.moflex` video are not decoded)
 - the save format

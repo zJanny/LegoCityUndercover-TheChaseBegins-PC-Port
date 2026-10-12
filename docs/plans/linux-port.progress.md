@@ -158,4 +158,12 @@ S3: improve function coverage (Hopper found 963 procedures vs ~6697 ARM `push {.
     - 0x131310 in 0x1312d0
     - 0x25b700 in 0x25b67c
   - Inference: 0x258fa4 is srv:GetServiceHandle.
+
+### 2026-10-12T15:25:37+02:00 — RomFS extraction (S1 extension, prerequisite for S4 assets)
+
+- Added tools/extract_romfs.py and tests/test_extract_romfs.py (6 tests: tree/offsets, level 2/3 hash corruption, unsafe `..`/`a/b` and duplicate names, directory cycle, out-of-bounds data, end-to-end image extract, existing output refused, superblock mismatch, encrypted flag).
+- Layout confirmed on the real image: IVFC v0x10000, master hash 384 B, all three levels with 4 KiB blocks; level 3 at RomFS+0x1000, then level 1, then level 2, each aligned. The RomFS superblock hash is at NCCH+0x1E0 over 1 media unit; NCCH+0x1C0 is the ExeFS one.
+- `python3 tools/extract_romfs.py <CCI> --output artifacts/romfs` — PASS exit 0, 0.93 s; the superblock and full IVFC tree were verified; 51 files, 763156067 B; romfs-manifest.json sha256 d5fd75e6…be90e. CCI size and mtime were unchanged (1073741824, 851484720).
+- Contents: `lego_city3ds.fib` (259357972 B, the main asset archive, format unknown), `lego_city3ds.csv` (1090227 B, probably its index), and 49 `cutscenes/*.moflex` (Mobiclip video; `_de` variants are German), including `splash5` and 18 `superbuildit_*`. Every non-video asset is inside the .fib.
+- `python3 -m unittest discover -s tests -p 'test_*.py' -v` — PASS 15/15.
 - Named in REA with a _candidate suffix (ev_d6ee55638e4b4ce712665d235d1d66a9d8c1add97c17e5f210b671225ddb1b28): srvGetServiceHandle_candidate, strlen_candidate, dspInit_candidate, fsUserInit_candidate, ndmInit_candidate. Hopper does not define procedures at 0x109fc0, 0x10f8e4 or 0x11006c.
