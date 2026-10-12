@@ -25,6 +25,8 @@ python3 tools/extract_game.py "LEGO City Undercover - The Chase Begins (Europe) 
 python3 tools/extract_romfs.py "LEGO City Undercover - The Chase Begins (Europe) (En,Fr,De,Es,It,Nl,Pt,Da,Ru).cci" --output artifacts/romfs
 # Unpack the FUSE asset archive (RefPack-variant codec recovered from 0x12efe0)
 python3 tools/extract_fib.py artifacts/romfs/romfs/lego_city3ds.fib --names artifacts/romfs/romfs/lego_city3ds.csv --output artifacts/fib
+# Textures (.btga/.bpng/.bdds, PICA200 formats) -> PNG; --census validates headers only
+python3 tools/convert_textures.py artifacts/fib/files --output artifacts/textures
 
 # Native build + tests
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug

@@ -46,6 +46,17 @@ python3 tools/extract_fib.py artifacts/romfs/romfs/lego_city3ds.fib \
 
 The tool writes `files/<path>` and `fib-manifest.json`. It cross-checks every CSV entry against the archive directory, and any entry missing from the CSV goes to `files/unnamed/<crc>.bin`. Decoding is bounds-checked, and every entry must decode to exactly its declared size. Codec 3 is reported as unsupported because no shipped entry uses it.
 
+## Convert textures to PNG
+
+`.btga`, `.bpng` and `.bdds` share one 56-byte header followed by PICA200 Morton-tiled pixel data. Supported formats: RGBA8, RGB8, RGBA5551, RGB565, RGBA4, LA8, HILO8, L8, A8, LA4, L4, A4, ETC1 and ETC1A4.
+
+```sh
+python3 tools/convert_textures.py --census artifacts/fib/files        # validate headers only
+python3 tools/convert_textures.py artifacts/fib/files --output artifacts/textures
+```
+
+Only the largest mip level is written. Cubemaps are written as a vertical strip of six faces in stored order; which face is which has not been confirmed yet.
+
 ## Build and run the input laboratory
 
 Requires CMake ≥ 3.16, a C++17 compiler and SDL2 (found through pkg-config).
@@ -103,5 +114,5 @@ The plan and the evidence log are in `docs/plans/linux-port.md` and `docs/plans/
 - gameplay logic
 - rendering
 - audio
-- individual asset formats (the `.fib` archive is unpacked, but `.btga`, `.bfnmdl`, `.bfnanm`, `.bwav`, `.blvl`, `.moflex` and the rest are not decoded)
+- individual asset formats (the `.fib` archive is unpacked and textures convert to PNG, but `.bfnmdl`, `.bfnanm`, `.bwav`, `.blvl`, `.moflex` and the rest are not decoded)
 - the save format

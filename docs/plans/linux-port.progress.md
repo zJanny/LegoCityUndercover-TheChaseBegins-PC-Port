@@ -189,4 +189,23 @@ Static analysis used local llvm-objdump (armv6k) over game.arm.elf. This is loca
 - Asset census by extension: btga 3354, bfnmdl 3113, bfnanm 1954, bwav 1361, blvl 856, bfnnav 700, bpng 602, bfnskl 376, srt 204, bstxt 69, loc 66, bxaml 55, bdds 35, bxls 24, bin 23, txt 15, cam 10, tnf 6, bprt 1. None of these formats is decoded yet.
 - Inference, not confirmed: a btga of 87352 B = a 56-byte header + 128×128 RGBA8 with mips down to 8×8 (0x15500), and 0x15500 appears as a u32 inside the header.
 - `python3 -m unittest discover -s tests -p 'test_*.py' -v` — PASS 20/20.
+
+### 2026-10-12T15:40+02:00 — Texture container decoded (.btga/.bpng/.bdds)
+
+- Header layout, recovered from shipped files (not yet traced in code):
+  - 56 bytes: constants 0x400, 0x10, -14, 0x20, -14
+  - u32 data size; u16 width and u16 height; u32 data size again
+  - u8 PICA200 format; 2 zero bytes; u8 cubemap flag; u32 mip count; 16 zero bytes
+  - Data: the mip chain, largest level first, 8×8 Morton-tiled and stored bottom-up. A cubemap holds six chains.
+- Added tools/convert_textures.py (all 14 PICA formats; ETC1/ETC1A4 decode 4×4 blocks in tile order (0,0),(4,0),(0,4),(4,4); u64 LE words; column-major pixel index) and tests/test_convert_textures.py (6 tests).
+- `python3 tools/convert_textures.py --census artifacts/fib/files` — 3991/3991 headers valid. Each declared size equals the computed mip-chain size × faces. Counts: btga ETC1 1443, ETC1A4 985, L8 452, LA8 267, RGBA8 107, RGB8 68, A8 11, RGBA8 cube 21; bpng RGBA8 497, ETC1A4 70, LA8 10, A8 9, RGB8 9, ETC1 5, L8 2; bdds ETC1A4 22, ETC1 11, LA8 2.
+- `python3 tools/convert_textures.py artifacts/fib/files --output artifacts/textures` — PASS, 3991 PNGs, 0 failures, 80 s.
+- Visual checks (viewed PNGs):
+  - pc01_lombardstreet postcard: ETC1
+  - saveicon "POLICE" sign upright: ETC1, confirms the bottom-up flip
+  - ui_shop_codes icon: RGBA8
+  - atlas_lvl_00_policestation_main "CITY TV" atlas: ETC1A4 with alpha
+  - ui_ls_generic1: RGB8, a 400×240 image in a 512×256 texture (the top-screen size)
+  - cubemap_showroom_c: six plausible faces; face order unconfirmed
+- `python3 -m unittest discover -s tests -p 'test_*.py' -v` — PASS 26/26.
 - Named in REA with a _candidate suffix (ev_d6ee55638e4b4ce712665d235d1d66a9d8c1add97c17e5f210b671225ddb1b28): srvGetServiceHandle_candidate, strlen_candidate, dspInit_candidate, fsUserInit_candidate, ndmInit_candidate. Hopper does not define procedures at 0x109fc0, 0x10f8e4 or 0x11006c.
