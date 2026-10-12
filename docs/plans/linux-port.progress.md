@@ -4,9 +4,9 @@
 
 - Overall: IN_PROGRESS
 - Current Phase: IMPLEMENT
-- Current Step: S4a (S3 continues in parallel)
-- Last Updated: 2026-10-12T16:15+02:00
-- Branch: feature/linux-port
+- Current Step: S4c/S4e/S4f groundwork (S3 continues in parallel)
+- Last Updated: 2026-10-13T10:00+02:00
+- Branch: main
 - Target Branch: Not specified
 - Requested Scope: PLAN, IMPLEMENT, TEST; start reverse engineering and native port
 - Plan: docs/plans/linux-port.md
@@ -15,7 +15,7 @@
 
 ## Summary
 
-The executable and the full RomFS are extracted with hash verification. The FUSE asset archive, textures, sounds and model geometry decode, and each decoder has been checked against every shipped file. The game is not playable on PC yet: gameplay, level composition, animation and rendering states are not recovered.
+The executable and the full RomFS are extracted with hash verification. The FUSE asset archive, textures, sounds and model geometry decode, and each decoder has been checked against every shipped file. Levels, nav grids, skeletons, animation, cutscenes, localisation, fonts and data tables also decode in C++, and the development viewer shows levels and cutscenes. The game is not playable on PC yet: gameplay logic, rendering states, UI, scripts and saves are not recovered.
 
 ## Phase Status
 
@@ -41,7 +41,7 @@ Commits authorized by CLAUDE.md "User specified workflows" (commit at logical st
 | S4b | Level viewer (SDL2 + GL) | COMPLETE | chase-viewer; offscreen smoke test; placement awaits S4c |
 | S4c | Level composition (.blvl) | IN_PROGRESS | loader replicated (Py+C++), placements in viewer; materials/lighting, streaming, other sections open |
 | S4d | Audio playback | IN_PROGRESS | mixer + SDL sound test with loops; event routing not recovered |
-| S4e | Gameplay | NOT_STARTED | needs per-subsystem RE plans |
+| S4e | Gameplay | IN_PROGRESS | skeletons/animation/cutscenes/nav/tables/loc/fonts decoded; logic not recovered |
 | S4f | Saves/settings | NOT_STARTED | |
 
 ## Current Work
@@ -92,7 +92,7 @@ Game runtime unavailable (R4 oracle).
 
 ### Branch
 
-feature/linux-port (unborn)
+main (feature/linux-port is the historical start branch)
 
 ### Commits
 
@@ -100,9 +100,11 @@ feature/linux-port (unborn)
 - `db355f9` — Add SDL2 accessible input laboratory (S2)
 - `a805bf3` — Add port plan, progress log and CLAUDE.md
 
+Later commits: see `git log` (one commit per session-log entry).
+
 ### Uncommitted Changes
 
-Plan/progress and .gitignore newly created; source pending.
+None at 2026-10-13T10:00+02:00.
 
 ## Decisions
 
@@ -122,7 +124,10 @@ Full game logic, hardware APIs and asset formats not recovered yet.
 
 ## Next Action
 
-S4a: port the verified decoders to C++ (src/assets/, no SDL) with CTest fixtures. Start with FUSE+RefPack, then the pooled reader, textures and models. Then S4b viewer. Pending RE: the .blvl loader (S4c), skeleton/animation, and the meaning of the node/mesh float3 fields. Also pending from S3: improve function coverage (Hopper found 963 procedures vs ~6697 ARM `push {...,lr}` prologues). Then trace callers of svcSendSyncRequest (0x25947c) to group IPC wrappers by service (hid/gsp/fs/dsp/cfg/ptm), and identify the per-frame game update called from the dispatcher at 0x100448. Resolve the 8 srvGetServiceHandle_candidate call sites whose names come via rodata pointer tables.
+- S3: recover HID input polling and the per-frame update (dispatcher 0x100448/0x10057c).
+- S4e: UI layouts (.bxaml), level cameras (.cam), particle definitions (.bprt), FMV subtitles (.srt, plain SubRip).
+- S4f: recover the save layout and checksum, then plan a native save library.
+- Open unknowns are listed in the session-log entries below.
 
 ## Session Log
 
