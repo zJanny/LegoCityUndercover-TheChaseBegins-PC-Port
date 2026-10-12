@@ -97,7 +97,11 @@ struct ModelPart {
     std::vector<std::string> textures;  // material texture names, e.g. "Brick.tga"
 };
 struct ModelMesh {
-    float f8[3] = {0, 0, 0};            // raw float3 at mesh+8; meaning not recovered
+    // float3 at mesh+8: the bounding-box centre of the mesh. When mesh byte 0 bit 0
+    // is set, vertices are stored relative to it; parseModel already adds it back,
+    // so ModelPart positions are always in model space (checked on all 6648 meshes).
+    float centre[3] = {0, 0, 0};
+    bool relative = false;
     std::vector<ModelPart> parts;
 };
 struct Model {
@@ -109,6 +113,41 @@ Model parseModel(const Bytes& data);
 unsigned vertexFlags(const std::uint8_t* material);
 // Byte stride implied by a flag mask; throws for the unrecovered flag-1 layout.
 std::size_t vertexStride(unsigned flags);
+
+// Name hash 0x24da28: CRC-32 (reflected 0xEDB88320) of the lower-cased name.
+std::uint32_t nameHash(const std::string& name);
+
+// .blvl levels, parsed in the block order of loader 0x1cfc50. Only the object
+// section (+0x2c) is kept; the other sections are consumed and skipped.
+struct LevelParam {
+    std::uint32_t hash = 0;
+    std::uint16_t type = 0;
+    std::uint32_t value = 0;           // inline value (record +8)
+    std::vector<Bytes> blocks;         // out-of-line data (0x208ae0)
+};
+struct LevelObject {
+    std::string className;             // e.g. "leprops/leprop_wobblydestructible"
+    std::string instance;
+    std::string room;
+    std::vector<LevelParam> params;
+};
+struct Level {
+    std::vector<LevelObject> objects;
+};
+Level parseLevel(const Bytes& data);
+
+// Objects with a "meshname" parameter, with "initialposition" and
+// "initialorientation" (degrees; Euler order not recovered).
+struct Placement {
+    std::string instance;
+    std::string room;
+    std::string mesh;
+    float position[3] = {0, 0, 0};
+    float orientation[3] = {0, 0, 0};
+};
+std::vector<Placement> placements(const Level& level);
+// "Dir/File" -> models/dir/file.bfnmdl, "Name" -> models/name/name.bfnmdl (lower case).
+std::string meshModelPath(const std::string& mesh);
 
 std::uint32_t readU32(const Bytes& data, std::size_t offset);
 std::uint16_t readU16(const Bytes& data, std::size_t offset);

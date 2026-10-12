@@ -39,7 +39,7 @@ Commits authorized by CLAUDE.md "User specified workflows" (commit at logical st
 | S4 | Recover gameplay and replace platform | IN_PROGRESS | R4; split into S4a–S4f (plan rev 3) |
 | S4a | Native asset runtime (C++) | IN_PROGRESS | FUSE, pooled, textures, models done + CTest; CWAV pending |
 | S4b | Level viewer (SDL2 + GL) | COMPLETE | chase-viewer; offscreen smoke test; placement awaits S4c |
-| S4c | Level composition (.blvl) | NOT_STARTED | pooled layout known; loader not traced |
+| S4c | Level composition (.blvl) | IN_PROGRESS | loader replicated (Py+C++), placements in viewer; materials/lighting, streaming, other sections open |
 | S4d | Audio playback | NOT_STARTED | WAV decode done |
 | S4e | Gameplay | NOT_STARTED | needs per-subsystem RE plans |
 | S4f | Saves/settings | NOT_STARTED | |
@@ -357,4 +357,22 @@ Static analysis used local llvm-objdump (armv6k) over game.arm.elf. This is loca
 - Euler order is unknown; the viewer assumes R = Ry·Rx·Rz in degrees. Most orientations are yaw-only, or yaw with ±180 on X and Z.
 - lvl_00_policestation_main has 350 objects and 130 mesh placements.
 - Added tools/convert_levels.py (`--census`, `--placements`, `--param-names`) and tests/test_convert_levels.py (3 tests); Python suite PASS 39/39.
+
+### 2026-10-12T17:45+02:00 — S4c: native level placement and the mesh-centre rule
+
+- Mesh record: byte 0 bit 0 means the vertices are stored relative to the float3 at mesh+8 (the mesh bbox centre). It was found because room3/room5 geometry sat at the origin while their props were at x≈−278/+235. Census over all models:
+  - bit clear: 3620 meshes have bbox centre == +8, and 145 more have both at 0
+  - bit set: 2883 meshes are centred at 0
+  - no exceptions
+- tools/convert_models.py gains mesh_offset() and an offset parameter on decode_vertices; preview_model applies it. The C++ parseModel adds the centre when the bit is set, and ModelMesh.f8 is renamed to centre/relative.
+- Added src/assets/level.cpp: nameHash (CRC-32 of the lower-cased name), parseLevel (a 0x1cfc50 replica that keeps the objects), placements(), meshModelPath().
+- assets-core now includes a synthetic level and hash checks. assets-real-data adds 856 levels / 18469 objects / 6563 placements, equal to the Python reference.
+- Viewer:
+  - New options: `--level`, `--room`, `--cull` (default ccw), `--brightness` (inspection only).
+  - Models are cached and drawn per instance with T·Ry·Rx·Rz (degrees). That Euler order is an assumption.
+  - Police station: 130 placements and 0 unresolved meshnames.
+  - room3 with `--room room3`: 55 props sit inside the room shell (plants along the wall, emblem, furniture), which is visual confirmation of the placements.
+  - The ceilings are culled with CCW front faces.
+- Observed but unknown: many floor/wall surfaces render black with texture × vertex colour. They are probably multi-texture/lightmap materials (tex=2, m3∈{1,5,7}) whose PICA combiner setup is not recovered.
+- `ctest --test-dir build --output-on-failure` — PASS 5/5; Python PASS 39/39; 0 build warnings.
 - Named in REA with a _candidate suffix (ev_d6ee55638e4b4ce712665d235d1d66a9d8c1add97c17e5f210b671225ddb1b28): srvGetServiceHandle_candidate, strlen_candidate, dspInit_candidate, fsUserInit_candidate, ndmInit_candidate. Hopper does not define procedures at 0x109fc0, 0x10f8e4 or 0x11006c.

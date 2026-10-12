@@ -76,7 +76,7 @@ void main() { vUv = uv; vNormal = normal; vColour = colour; gl_Position = mvp * 
 )";
 const char* fragmentSource = R"(#version 330 core
 in vec2 vUv; in vec3 vNormal; in vec4 vColour;
-uniform sampler2D tex; uniform bool hasTexture; uniform bool hasNormal;
+uniform sampler2D tex; uniform bool hasTexture; uniform bool hasNormal; uniform float brightness;
 out vec4 fragColour;
 void main() {
     vec4 c = vColour;
@@ -85,7 +85,7 @@ void main() {
     float shade = 1.0;
     if (hasNormal && dot(vNormal, vNormal) > 0.0)
         shade = 0.45 + 0.55 * max(dot(normalize(vNormal), normalize(vec3(0.4, 0.8, 0.45))), 0.0);
-    fragColour = vec4(c.rgb * shade, 1.0);
+    fragColour = vec4(min(c.rgb * shade * brightness, vec3(1.0)), 1.0);
 }
 )";
 
@@ -123,48 +123,83 @@ public:
             if (ext == ".btga" || ext == ".bpng" || ext == ".bdds") texturePaths_[stem(name)].push_back(name);
         }
     }
-    void addModel(const std::string& path) {
-        const FuseEntry* entry = archive_.find(path);
-        if (!entry) throw std::runtime_error("not in archive: " + path);
-        Model model = parseModel(archive_.read(*entry));
-        for (const auto& mesh : model.meshes)
-            for (const auto& part : mesh.parts) {
-                std::string texName = part.textures.empty() ? "" : part.textures.front();
-                bool skip = false;
-                for (const auto& word : exclude_) skip |= lower(texName).find(word) != std::string::npos;
-                if (skip || part.indices.empty()) continue;
-                upload(part, texName.empty() ? 0 : texture(texName, directory(lower(path))));
-            }
+    // Adds one instance of a model; the model's GPU data is loaded once and shared.
+    bool addModel(const std::string& path, const Mat4& transform = identity()) {
+        auto loaded = models_.find(path);
+        if (loaded == models_.end()) {
+            const FuseEntry* entry = archive_.find(path);
+            if (!entry) return false;
+            Model model = parseModel(archive_.read(*entry));
+            LoadedModel out;
+            for (const auto& mesh : model.meshes)
+                for (const auto& part : mesh.parts) {
+                    std::string texName = part.textures.empty() ? "" : part.textures.front();
+                    bool skip = false;
+                    for (const auto& word : exclude_) skip |= lower(texName).find(word) != std::string::npos;
+                    if (skip || part.indices.empty()) continue;
+                    out.parts.push_back(upload(part, texName.empty() ? 0 : texture(texName, directory(lower(path))), out));
+                }
+            loaded = models_.emplace(path, std::move(out)).first;
+        }
+        instances_.push_back({&loaded->second, transform});
+        return true;
     }
     void bounds(float centre[3], float& radius) const {
         float lo[3] = {1e30f, 1e30f, 1e30f}, hi[3] = {-1e30f, -1e30f, -1e30f};
-        for (const auto& p : points_)
-            for (int i = 0; i < 3; ++i) { lo[i] = std::min(lo[i], p[i]); hi[i] = std::max(hi[i], p[i]); }
+        for (const auto& instance : instances_) {
+            if (instance.model->parts.empty()) continue;
+            for (int corner = 0; corner < 8; ++corner) {
+                float p[3];
+                for (int i = 0; i < 3; ++i) p[i] = (corner >> i & 1) ? instance.model->hi[i] : instance.model->lo[i];
+                for (int i = 0; i < 3; ++i) {
+                    const Mat4& m = instance.transform;
+                    float w = m[i] * p[0] + m[4 + i] * p[1] + m[8 + i] * p[2] + m[12 + i];
+                    lo[i] = std::min(lo[i], w);
+                    hi[i] = std::max(hi[i], w);
+                }
+            }
+        }
         radius = 1;
         for (int i = 0; i < 3; ++i) {
-            centre[i] = points_.empty() ? 0 : (lo[i] + hi[i]) / 2;
+            centre[i] = lo[i] > hi[i] ? 0 : (lo[i] + hi[i]) / 2;
             radius = std::max(radius, (hi[i] - lo[i]) / 2);
         }
     }
-    void draw(GLuint program) const {
+    void draw(GLuint program, const Mat4& viewProjection) const {
         GLint hasTexture = glGetUniformLocation(program, "hasTexture");
         GLint hasNormal = glGetUniformLocation(program, "hasNormal");
-        for (const auto& part : parts_) {
-            glUniform1i(hasTexture, part.texture != 0);
-            glUniform1i(hasNormal, part.hasNormal);
-            glBindTexture(GL_TEXTURE_2D, part.texture);
-            glBindVertexArray(part.vao);
-            glDrawElements(GL_TRIANGLES, part.count, GL_UNSIGNED_SHORT, nullptr);
+        GLint mvp = glGetUniformLocation(program, "mvp");
+        for (const auto& instance : instances_) {
+            Mat4 m = multiply(viewProjection, instance.transform);
+            glUniformMatrix4fv(mvp, 1, GL_FALSE, m.data());
+            for (const auto& part : instance.model->parts) {
+                glUniform1i(hasTexture, part.texture != 0);
+                glUniform1i(hasNormal, part.hasNormal);
+                glBindTexture(GL_TEXTURE_2D, part.texture);
+                glBindVertexArray(part.vao);
+                glDrawElements(GL_TRIANGLES, part.count, GL_UNSIGNED_SHORT, nullptr);
+            }
         }
     }
     std::size_t triangles() const {
         std::size_t n = 0;
-        for (const auto& p : parts_) n += std::size_t(p.count) / 3;
+        for (const auto& instance : instances_)
+            for (const auto& p : instance.model->parts) n += std::size_t(p.count) / 3;
         return n;
     }
     std::size_t missingTextures() const { return missing_; }
+    std::size_t instances() const { return instances_.size(); }
+    static Mat4 identity() { return {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1}; }
 
 private:
+    struct LoadedModel {
+        std::vector<DrawPart> parts;
+        float lo[3] = {1e30f, 1e30f, 1e30f}, hi[3] = {-1e30f, -1e30f, -1e30f};
+    };
+    struct Instance {
+        const LoadedModel* model;
+        Mat4 transform;
+    };
     GLuint texture(const std::string& name, const std::string& modelDir) {
         std::string key = stem(name);
         auto cached = textures_.find(key);
@@ -195,7 +230,7 @@ private:
         textures_[key] = id;
         return id;
     }
-    void upload(const ModelPart& part, GLuint tex) {
+    DrawPart upload(const ModelPart& part, GLuint tex, LoadedModel& model) {
         std::vector<GpuVertex> vertices;
         vertices.reserve(part.vertices.size());
         for (const auto& v : part.vertices) {
@@ -206,7 +241,10 @@ private:
             std::copy_n(v.color, 4, g.colour);
             if (!(part.flags & AttrColor)) std::fill_n(g.colour, 4, std::uint8_t(255));
             vertices.push_back(g);
-            points_.push_back({v.position[0], v.position[1], v.position[2]});
+            for (int i = 0; i < 3; ++i) {
+                model.lo[i] = std::min(model.lo[i], v.position[i]);
+                model.hi[i] = std::max(model.hi[i], v.position[i]);
+            }
         }
         DrawPart d;
         d.texture = tex;
@@ -228,16 +266,33 @@ private:
         attrib(1, 2, GL_FLOAT, GL_FALSE, offsetof(GpuVertex, uv));
         attrib(2, 3, GL_FLOAT, GL_FALSE, offsetof(GpuVertex, normal));
         attrib(3, 4, GL_UNSIGNED_BYTE, GL_TRUE, offsetof(GpuVertex, colour));
-        parts_.push_back(d);
+        return d;
     }
     FuseArchive& archive_;
     std::vector<std::string> exclude_;
     std::map<std::string, std::vector<std::string>> texturePaths_;
     std::map<std::string, GLuint> textures_;
-    std::vector<DrawPart> parts_;
-    std::vector<std::array<float, 3>> points_;
+    std::map<std::string, LoadedModel> models_;
+    std::vector<Instance> instances_;
     std::size_t missing_ = 0;
 };
+
+// Placement transform: translation * Ry * Rx * Rz, angles in degrees. The Euler
+// order is an assumption (not traced in code); most placements are yaw-only.
+Mat4 placementMatrix(const Placement& p) {
+    auto rad = [](float deg) { return deg * float(M_PI) / 180.0f; };
+    float cx = std::cos(rad(p.orientation[0])), sx = std::sin(rad(p.orientation[0]));
+    float cy = std::cos(rad(p.orientation[1])), sy = std::sin(rad(p.orientation[1]));
+    float cz = std::cos(rad(p.orientation[2])), sz = std::sin(rad(p.orientation[2]));
+    Mat4 ry{cy, 0, -sy, 0, 0, 1, 0, 0, sy, 0, cy, 0, 0, 0, 0, 1};
+    Mat4 rx{1, 0, 0, 0, 0, cx, sx, 0, 0, -sx, cx, 0, 0, 0, 0, 1};
+    Mat4 rz{cz, sz, 0, 0, -sz, cz, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
+    Mat4 m = multiply(ry, multiply(rx, rz));
+    m[12] = p.position[0];
+    m[13] = p.position[1];
+    m[14] = p.position[2];
+    return m;
+}
 
 int resolveKey(const std::string& name) {
     std::string spaced = name;
@@ -262,8 +317,11 @@ struct Options {
     std::string fib = "artifacts/romfs/romfs/lego_city3ds.fib";
     std::string names = "artifacts/romfs/romfs/lego_city3ds.csv";
     std::string config = "config/controls.cfg";
-    std::string screenshot;
-    std::vector<std::string> exclude, models;
+    // cull: faces with this winding are front. CCW culls room ceilings seen from above
+    // (observed on lvl_00_policestation room3), so it is the default.
+    std::string screenshot, room, cull = "ccw";
+    float brightness = 1.0f;  // inspection aid only; the game's lighting/combiner setup is not recovered
+    std::vector<std::string> exclude, models, levels;
     float yaw = 35, pitch = -25;
 };
 
@@ -280,14 +338,19 @@ Options parse(int argc, char** argv) {
         else if (arg == "--config") o.config = value();
         else if (arg == "--screenshot") o.screenshot = value();
         else if (arg == "--exclude") o.exclude.push_back(lower(value()));
+        else if (arg == "--level") o.levels.push_back(value());
+        else if (arg == "--room") o.room = lower(value());
+        else if (arg == "--cull") o.cull = value();
+        else if (arg == "--brightness") o.brightness = std::stof(value());
         else if (arg == "--yaw") o.yaw = std::stof(value());
         else if (arg == "--pitch") o.pitch = std::stof(value());
         else if (!arg.empty() && arg[0] == '-') throw std::runtime_error("unknown option " + arg);
         else o.models.push_back(arg);
     }
-    if (o.models.empty())
+    if (o.models.empty() && o.levels.empty())
         throw std::runtime_error("usage: chase-viewer [--fib F] [--names CSV] [--config CFG] [--exclude WORD]... "
-                                 "[--screenshot OUT.bmp] [--yaw DEG] [--pitch DEG] models/<dir>/<model>.bfnmdl...");
+                                 "[--level levels/.../x.blvl]... [--room NAME] [--cull none|cw|ccw] [--brightness F] [--screenshot OUT.bmp] [--yaw DEG] [--pitch DEG] "
+                                 "[models/<dir>/<model>.bfnmdl...]");
     return o;
 }
 
@@ -320,11 +383,23 @@ int run(const Options& options) {
     if (!linked) throw std::runtime_error("shader link failed");
 
     Scene scene(archive, options.exclude);
-    for (const auto& model : options.models) scene.addModel(model);
+    for (const auto& model : options.models)
+        if (!scene.addModel(model)) throw std::runtime_error("not in archive: " + model);
+    std::size_t placed = 0, unresolved = 0;
+    for (const auto& levelPath : options.levels) {
+        const FuseEntry* entry = archive.find(levelPath);
+        if (!entry) throw std::runtime_error("not in archive: " + levelPath);
+        for (const auto& placement : placements(parseLevel(archive.read(*entry)))) {
+            if (!options.room.empty() && lower(placement.room) != options.room) continue;
+            if (scene.addModel(meshModelPath(placement.mesh), placementMatrix(placement))) ++placed;
+            else ++unresolved;
+        }
+    }
     float centre[3], radius;
     scene.bounds(centre, radius);
-    std::cout << "loaded " << options.models.size() << " model(s), " << scene.triangles() << " triangles, "
-              << scene.missingTextures() << " missing textures\n";
+    std::cout << "loaded " << scene.instances() << " instance(s) (" << placed << " placed, " << unresolved
+              << " unresolved meshnames), " << scene.triangles() << " triangles, " << scene.missingTextures()
+              << " missing textures\n";
 
     float yaw = options.yaw * float(M_PI) / 180, pitch = options.pitch * float(M_PI) / 180;
     float eye[3];
@@ -336,6 +411,10 @@ int run(const Options& options) {
     };
     placeCamera();
     glEnable(GL_DEPTH_TEST);
+    if (options.cull != "none") {
+        glEnable(GL_CULL_FACE);
+        glFrontFace(options.cull == "cw" ? GL_CW : GL_CCW);
+    }
     bool running = true, dragging = false;
     Uint32 last = SDL_GetTicks();
     int frames = 0;
@@ -383,9 +462,9 @@ int run(const Options& options) {
         glUseProgram(program);
         Mat4 mvp = multiply(perspective(1.0f, float(width) / float(std::max(height, 1)), radius * 0.002f, radius * 20),
                             view(eye, yaw, pitch));
-        glUniformMatrix4fv(glGetUniformLocation(program, "mvp"), 1, GL_FALSE, mvp.data());
         glUniform1i(glGetUniformLocation(program, "tex"), 0);
-        scene.draw(program);
+        glUniform1f(glGetUniformLocation(program, "brightness"), options.brightness);
+        scene.draw(program, mvp);
         if (!options.screenshot.empty() && ++frames >= 2) {
             glFinish();
             saveScreenshot(options.screenshot, width, height);

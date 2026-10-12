@@ -2,6 +2,7 @@
 // tests/test_tt_resource.py and tests/test_convert_textures.py.
 #include "assets/assets.hpp"
 #include <cstdio>
+#include <cstring>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -209,6 +210,50 @@ void models() {
 }
 }
 
+namespace {
+// Same synthetic level as tests/test_convert_levels.py: one object with three parameters.
+Bytes levelFile(bool extraBlock) {
+    Bytes head(0x38), obj(0x18), params;
+    head[14] = 1;   // one object in section +0x2c
+    obj[0xd] = 3;   // three parameters in the first list
+    auto param = [&](const char* name, std::uint16_t kind) {
+        put32(params, nameHash(name));
+        params.push_back(2); params.push_back(0);
+        params.push_back(std::uint8_t(kind)); params.push_back(0);
+        put32(params, 1);
+    };
+    param("initialposition", 2);
+    param("initialorientation", 2);
+    param("meshname", 1);
+    auto floats = [](float a, float b, float c) {
+        Bytes out(12);
+        float v[3] = {a, b, c};
+        std::memcpy(out.data(), v, 12);
+        return out;
+    };
+    std::vector<std::pair<std::int32_t, Bytes>> blocks{{-15, head}};
+    for (int i = 0; i < 7; ++i) blocks.push_back({-15, {}});  // s10 s14 s18 s1c s20 s24 s28
+    blocks.insert(blocks.end(), {{-15, obj}, {-15, bytes(std::string("Bench01", 8))}, {-15, bytes(std::string("room1", 8))},
+                                 {-15, params}, {-15, floats(1, 2, 3)}, {-15, floats(0, 90, 0)},
+                                 {-15, bytes(std::string("Prop_Bench", 12))}, {-15, {}}, {-15, {}},
+                                 {-16, bytes(std::string("leprops/leprop_test", 20))}});
+    if (extraBlock) blocks.push_back({-14, bytes("xx")});
+    return pooledBlocks(blocks);
+}
+
+void levels() {
+    require(nameHash("meshname") == 0xacd1ebb8 && nameHash("InitialPosition") == 0x86166f20, "name hash");
+    Level level = parseLevel(levelFile(false));
+    require(level.objects.size() == 1 && level.objects[0].className == "leprops/leprop_test", "level object");
+    auto places = placements(level);
+    require(places.size() == 1 && places[0].mesh == "Prop_Bench" && places[0].room == "room1", "placement");
+    require(places[0].position[2] == 3.0f && places[0].orientation[1] == 90.0f, "placement transform");
+    require(meshModelPath("Prop_Plant_01") == "models/prop_plant_01/prop_plant_01.bfnmdl" &&
+            meshModelPath("A/B_atlas") == "models/a/b_atlas.bfnmdl", "mesh model path");
+    requireThrows([] { parseLevel(levelFile(true)); }, "unconsumed level block accepted");
+}
+}
+
 int main() {
     try {
         refpack();
@@ -216,6 +261,7 @@ int main() {
         pooled();
         textures();
         models();
+        levels();
     } catch (const std::exception& error) {
         std::cerr << "assets-test failed: " << error.what() << '\n';
         return 1;

@@ -50,6 +50,7 @@ int main(int argc, char** argv) {
         }
         std::size_t bytes = 0, pooled = 0, textures = 0, checked = 0;
         std::size_t models = 0, parts = 0, vertices = 0, triangles = 0;
+        std::size_t levels = 0, objects = 0, placed = 0;
         for (const auto& entry : archive.entries()) {
             Bytes data = archive.read(entry);
             if (data.size() != entry.size) throw std::runtime_error("entry size mismatch");
@@ -60,6 +61,12 @@ int main(int argc, char** argv) {
             if (ext.size() > 2 && ext[1] == 'b' && ext != ".bin") {
                 parsePooled(data);
                 ++pooled;
+            }
+            if (endsWith(name, ".blvl")) {
+                Level level = parseLevel(data);
+                ++levels;
+                objects += level.objects.size();
+                placed += placements(level).size();
             }
             if (endsWith(name, ".bfnmdl")) {
                 Model model = parseModel(data);
@@ -85,10 +92,14 @@ int main(int argc, char** argv) {
         // Reference totals from: python3 tools/convert_models.py --census artifacts/fib/files
         if (models != 3113 || parts != 16122 || vertices != 7211595 || triangles != 4603391)
             throw std::runtime_error("model totals differ from the Python reference");
+        // Reference totals from tools/convert_levels.py (parse_level / placements over all .blvl)
+        if (levels != 856 || objects != 18469 || placed != 6563)
+            throw std::runtime_error("level totals differ from the Python reference");
         std::cout << archive.entries().size() << " entries, " << bytes << " bytes, " << pooled
                   << " pooled resources, " << textures << " textures, " << checked << " checksums match, "
                   << models << " models / " << parts << " parts / " << vertices << " vertices / "
-                  << triangles << " triangles\n";
+                  << triangles << " triangles, " << levels << " levels / " << objects << " objects / " << placed
+                  << " placements\n";
     } catch (const std::exception& error) {
         std::cerr << "assets-real-test failed: " << error.what() << '\n';
         return 1;

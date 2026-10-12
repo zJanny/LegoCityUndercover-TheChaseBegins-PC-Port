@@ -49,7 +49,7 @@ def render(model, textures, size, yaw, pitch, exclude=()):
     tris = []
     for mesh in model['meshes']:
         for part in mesh['parts']:
-            verts = cm.decode_vertices(part)
+            verts = cm.decode_vertices(part, cm.mesh_offset(mesh))
             names = part['material']['textures']
             if any(word in slot['name'].lower() for slot in names for word in exclude):
                 continue

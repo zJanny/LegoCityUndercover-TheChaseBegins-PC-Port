@@ -188,13 +188,19 @@ Model parseModel(const Bytes& data) {
     r.cursor.push(Pool::M15);
     for (std::size_t m = 0; m < meshes; ++m) {
         ModelMesh mesh;
-        for (int i = 0; i < 3; ++i) mesh.f8[i] = readF32(meshBlock, m * 0x24 + 8 + 4 * std::size_t(i));
+        for (int i = 0; i < 3; ++i) mesh.centre[i] = readF32(meshBlock, m * 0x24 + 8 + 4 * std::size_t(i));
+        mesh.relative = meshBlock[m * 0x24] & 1;
         std::size_t parts = meshBlock[m * 0x24 + 2];
         std::vector<Bytes> materials(parts);
         mesh.parts.resize(parts);
         for (std::size_t p = 0; p < parts; ++p) mesh.parts[p].textures = readMaterial(r, materials[p]);
         r.cursor.push(Pool::M14);
-        for (std::size_t p = 0; p < parts; ++p) readVertexBuffer(r, materials[p], mesh.parts[p]);
+        for (std::size_t p = 0; p < parts; ++p) {
+            readVertexBuffer(r, materials[p], mesh.parts[p]);
+            if (mesh.relative)
+                for (auto& v : mesh.parts[p].vertices)
+                    for (int i = 0; i < 3; ++i) v.position[i] += mesh.centre[i];
+        }
         r.cursor.pop();
         model.meshes.push_back(std::move(mesh));
     }

@@ -89,11 +89,17 @@ If you have extracted the RomFS to `artifacts/romfs`, `assets-real-data` also de
 
 ## Development model viewer
 
-`chase-viewer` loads `.bfnmdl` models straight from the archive and draws them with their textures. It uses OpenGL 3.3 through libepoxy and is only built if libepoxy is found. It is a tool for checking decoded assets. It is **not** the game: there is no gameplay, no level placement (`.blvl` isn't decoded yet) and no animation.
+`chase-viewer` loads `.bfnmdl` models straight from the archive and draws them with their textures. With `--level` it also places every object from a `.blvl` level file that names a mesh. It uses OpenGL 3.3 through libepoxy and is only built if libepoxy is found. It is a tool for checking decoded assets. It is **not** the game: there is no gameplay, no animation, no lighting or material combiners, and no characters.
 
 ```sh
-build/chase-viewer models/lvl_00_policestation/room1.bfnmdl models/lvl_00_policestation/room3.bfnmdl --exclude sky
+build/chase-viewer --level levels/levels/lvl_00_policestation/lvl_00_policestation_main.blvl \
+    --room room3 --brightness 2.5 models/lvl_00_policestation/room3.bfnmdl
 ```
+
+- `--room` limits placements to one room.
+- `--cull ccw|cw|none` sets the face winding. The default is `ccw`, which culls ceilings so you can look into interiors.
+- `--brightness` only helps inspection, because the game's lighting setup is not recovered.
+- `--exclude WORD` skips parts whose texture name contains WORD (e.g. `sky`).
 
 The viewer uses the same `config/controls.cfg` bindings as the lab:
 - **D-pad:** move.
