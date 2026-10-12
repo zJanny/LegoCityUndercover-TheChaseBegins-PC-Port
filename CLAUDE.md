@@ -77,6 +77,8 @@ cd build && ./chase-input-lab [--config PATH] [--smoke-test]
   `manifest.json` records offsets, hashes and ARM segment addresses as evidence. The ELF is a derived analysis wrapper: its entry point is inferred from the text base, and it is not an original binary.
 - REA cannot open the `.cci` directly. Analyse `artifacts/<dir>/game.arm.elf` instead, and record REA evidence IDs in the progress file.
 
+- **REA reverse engineering:** When investigating the ARM executable, use the installed REA skill or integration if one is available and relevant. Follow its documented workflow rather than inventing commands. If unavailable, use the available disassembly and analysis tools directly, and record reproducible findings and evidence IDs in `docs/plans/linux-port.progress.md`. Do not claim REA analysis was performed unless it actually was.
+
 ## Constraints
 
 - Never modify the `.cci` image. Never stage or commit it, or anything game-derived (`*.cci`, `*.3ds`, `artifacts/`, `build/` are gitignored).
@@ -85,11 +87,11 @@ cd build && ./chase-input-lab [--config PATH] [--smoke-test]
 ### Graphify — Codebase Knowledge Graph
 
 **Initialization**
-1. At the start of work, check whether Graphify is installed, integrated with Claude Code, and configured for this repository.
-2. If Graphify is not installed or its Claude Code integration is missing, follow the installed Graphify skill or official documentation to install and configure it. Do not silently skip setup because the current task appears small.
-3. If Graphify is installed but not initialized for this repository, initialize it, build the initial graph, and verify that graph queries work.
-4. If installation or initialization fails, investigate the cause and report the specific blocker. Do not invent commands, assume setup succeeded, or claim Graphify is working when it is not.
-5. Follow the documented Graphify workflow and configure `.graphifyignore` to respect `.gitignore` and exclude irrelevant generated files.
+1. At the start of work, check whether Graphify is installed, integrated with Claude Code, and initialized and usable for this repository. Reuse existing working configuration; do not repeat completed setup unnecessarily.
+2. If Graphify is missing or not configured, follow the installed Graphify skill or official documentation to install and configure it. If it is installed but not initialized for this repository, initialize it, build the initial graph, and verify that graph queries work.
+3. If installation, configuration, or initialization fails, investigate the cause and report the specific blocker. Do not invent commands, assume setup succeeded, or claim Graphify is working when it is not.
+4. Follow the documented Graphify workflow and configure `.graphifyignore` to respect `.gitignore` and exclude irrelevant generated files.
+5. For routine tasks, skip Graphify queries when they offer no meaningful benefit. Maintain or refresh the graph as required by the documented workflow.
 
 **Usage and Maintenance**
 6. For architectural questions, dependency tracing, code-flow analysis, and unfamiliar code paths, query Graphify first, then verify relevant findings against source code.
