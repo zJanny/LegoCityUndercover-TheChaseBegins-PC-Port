@@ -280,6 +280,7 @@ def main():
     for item in args.inputs:
         files += sorted(item.rglob('*.bfnmdl')) if item.is_dir() else [item]
     failures, strides, prims, examples, checks = [], {}, {}, {}, {}
+    totals = {'parts': 0, 'vertices': 0, 'triangles': 0}
     for path in files:
         try:
             model = parse_model(path.read_bytes())
@@ -300,6 +301,9 @@ def main():
                     verdict = 'error %s' % exc
                 checks[verdict] = checks.get(verdict, 0) + 1
                 prims['idx%%3=%d' % (b['indices'] % 3)] = prims.get('idx%%3=%d' % (b['indices'] % 3), 0) + 1
+                totals['parts'] += 1
+                totals['vertices'] += b['vertices']
+                totals['triangles'] += b['indices'] // 3
         if args.vertices:
             for mi, mesh in enumerate(model['meshes']):
                 for pi, part in enumerate(mesh['parts']):
@@ -321,7 +325,7 @@ def main():
                                   for p in m['parts']]} for m in model['meshes']]}, indent=1, default=str))
     if args.census:
         print(json.dumps({'files': len(files), 'failure_count': len(failures), 'failures': failures[:15],
-                          'primitive_hint': prims, 'stride_check': checks,
+                          'primitive_hint': prims, 'stride_check': checks, 'totals': totals,
                           'layouts': {k: [v, examples[k]] for k, v in
                                       sorted(strides.items(), key=lambda kv: -kv[1])[:40]}}, indent=1))
     return 1 if failures else 0

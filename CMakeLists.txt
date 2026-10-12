@@ -14,7 +14,7 @@ target_link_libraries(chase-input-lab PRIVATE chase_input PkgConfig::SDL2)
 target_compile_options(chase-input-lab PRIVATE -Wall -Wextra -Wpedantic)
 configure_file(config/controls.cfg config/controls.cfg COPYONLY)
 # Native asset runtime (plan S4a): no SDL dependency.
-add_library(chase_assets src/assets/fuse.cpp src/assets/pooled.cpp src/assets/texture.cpp)
+add_library(chase_assets src/assets/fuse.cpp src/assets/pooled.cpp src/assets/texture.cpp src/assets/model.cpp)
 target_include_directories(chase_assets PUBLIC src)
 target_compile_options(chase_assets PRIVATE -Wall -Wextra -Wpedantic)
 set(CHASE_ROMFS_DIR "${CMAKE_SOURCE_DIR}/artifacts/romfs/romfs" CACHE PATH

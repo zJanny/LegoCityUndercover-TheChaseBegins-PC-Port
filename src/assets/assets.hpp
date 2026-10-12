@@ -77,6 +77,37 @@ struct Image {
 };
 Image decodeTexture(const Bytes& data);
 
+// .bfnmdl geometry, parsed in the block order of deserializer 0x10ccf4.
+struct Vertex {
+    float position[3] = {0, 0, 0};
+    float uv0[2] = {0, 0};
+    float uv1[2] = {0, 0};
+    float normal[3] = {0, 0, 0};
+    std::uint8_t color[4] = {255, 255, 255, 255};
+};
+enum VertexAttribute : unsigned {
+    AttrUv0 = 4, AttrUv1 = 8, AttrNormal = 0x40, AttrColor = 0x80, AttrSkin = 2
+};
+struct ModelPart {
+    unsigned flags = 0;                 // replica of 0x12095c
+    std::vector<Vertex> vertices;
+    std::vector<std::uint16_t> indices; // triangle list
+    std::vector<std::string> textures;  // material texture names, e.g. "Brick.tga"
+};
+struct ModelMesh {
+    float f8[3] = {0, 0, 0};            // raw float3 at mesh+8; meaning not recovered
+    std::vector<ModelPart> parts;
+};
+struct Model {
+    std::vector<std::string> nodeNames;
+    std::vector<ModelMesh> meshes;
+    std::vector<std::string> textures;  // model-level texture list (-16 pool)
+};
+Model parseModel(const Bytes& data);
+unsigned vertexFlags(const std::uint8_t* material);
+// Byte stride implied by a flag mask; throws for the unrecovered flag-1 layout.
+std::size_t vertexStride(unsigned flags);
+
 std::uint32_t readU32(const Bytes& data, std::size_t offset);
 std::uint16_t readU16(const Bytes& data, std::size_t offset);
 } // namespace chase::assets

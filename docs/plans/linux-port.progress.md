@@ -320,4 +320,12 @@ Static analysis used local llvm-objdump (armv6k) over game.arm.elf. This is loca
   - The skip path (`assets-real-test /nonexistent x`) exits 77.
 - Set CMAKE_EXPORT_COMPILE_COMMANDS so clangd finds the `src` include path. The editor diagnostics about a missing `assets/assets.hpp` came only from the missing compile database.
 - Still to do in S4a: CWAV decode and .bfnmdl geometry in C++.
+
+### 2026-10-12T16:45+02:00 — S4a part 2: model geometry in C++
+
+- Added src/assets/model.cpp. parseModel replays 0x10ccf4/0x114860/0x11528c through PoolCursor. vertexFlags is the 0x12095c replica, built on a byte-exact copy of the rodata tables at 0x3798c4–0x379907. Vertices decode to position/uv0/uv1/normal/colour; skin bytes are skipped. Indices are bounds-checked.
+- tools/convert_models.py --census now reports totals: 16122 parts, 7211595 vertices, 4603391 triangles.
+- assets-core adds a synthetic model (mirroring the Python fixture), an unconsumed-block rejection and the stride table. assets-real-data now parses all models and requires the Python totals.
+- `cmake --build build` — 0 warnings. `ctest --test-dir build --output-on-failure` — PASS 4/4 (assets-real-data 10.2 s): 3113 models / 16122 parts / 7211595 vertices / 4603391 triangles, all equal to the Python reference.
+- Remaining in S4a: CWAV decode in C++ (needed for S4d, not for the S4b viewer).
 - Named in REA with a _candidate suffix (ev_d6ee55638e4b4ce712665d235d1d66a9d8c1add97c17e5f210b671225ddb1b28): srvGetServiceHandle_candidate, strlen_candidate, dspInit_candidate, fsUserInit_candidate, ndmInit_candidate. Hopper does not define procedures at 0x109fc0, 0x10f8e4 or 0x11006c.

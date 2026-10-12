@@ -146,6 +146,67 @@ void textures() {
     for (const auto& bad : {truncated, longer, badFormat, texture(12, 8, 7, 1, Bytes(96)), texture(8, 8, 0, 2, Bytes(512))})
         requireThrows([&] { decodeTexture(bad); }, "bad texture accepted");
 }
+
+// Same synthetic model as tests/test_convert_models.py: one mesh, one textured triangle.
+Bytes pooledBlocks(const std::vector<std::pair<std::int32_t, Bytes>>& blocks) {
+    std::vector<std::int32_t> table;
+    Bytes stat, body;
+    std::int32_t current = 0;
+    for (const auto& [marker, data] : blocks) {
+        if (marker != current) table.push_back(current = marker);
+        table.push_back(std::int32_t(data.size()));
+        (marker == -16 ? stat : body).insert((marker == -16 ? stat : body).end(), data.begin(), data.end());
+    }
+    return pooledFile(table, stat, body);
+}
+
+Bytes modelFile(bool extraBlock) {
+    Bytes model(0x24), mesh(0x24), material(0x60), header(0x78), vertices, slot, indices;
+    model[4] = 1;                  // one mesh
+    mesh[2] = 1;                   // one part
+    material[10] = 0x09;           // one texture, one UV set -> flags 0x84, stride 20
+    header[2] = 3;                 // vertices
+    header[4] = 3;                 // indices
+    header[0x1a] = 20;             // stride
+    const float positions[3][2] = {{0, 0}, {1, 0}, {0, 1}};
+    const std::int16_t uvs[3][2] = {{0, 0}, {32767, 0}, {0, 32767}};
+    for (int v = 0; v < 3; ++v) {
+        float xyz[3] = {positions[v][0], positions[v][1], 0};
+        const auto* p = reinterpret_cast<const std::uint8_t*>(xyz);
+        vertices.insert(vertices.end(), p, p + 12);
+        for (auto value : uvs[v]) { vertices.push_back(std::uint8_t(value)); vertices.push_back(std::uint8_t(value >> 8)); }
+        for (std::uint8_t c : {255, 0, 0, 255}) vertices.push_back(c);
+    }
+    indices = {0, 0, 1, 0, 2, 0, 0, 0};    // three u16 indices, padded to an even count
+    put32(slot, 1); slot.push_back(0); slot.push_back(0); slot.push_back(5); slot.push_back(0);
+    std::vector<std::pair<std::int32_t, Bytes>> blocks{
+        {-15, model}, {-15, {}}, {-15, {}}, {-15, mesh}, {-15, Bytes(0x24)}, {-15, {}},
+        {-15, material}, {-15, {}}, {-16, slot}, {-16, bytes(std::string("tex.tga", 8))},
+        {-14, header}, {-14, indices}, {-14, vertices}, {-16, {}}};
+    if (extraBlock) blocks.push_back({-14, bytes("xx")});
+    return pooledBlocks(blocks);
+}
+
+void models() {
+    Model model = parseModel(modelFile(false));
+    require(model.meshes.size() == 1 && model.meshes[0].parts.size() == 1, "model structure");
+    const ModelPart& part = model.meshes[0].parts[0];
+    require(part.textures.size() == 1 && part.textures[0] == "tex.tga", "material texture name");
+    require(part.flags == 0x84 && vertexStride(part.flags) == 20, "vertex flags");
+    require(part.vertices[1].position[0] == 1.0f && part.vertices[2].uv0[1] == 1.0f, "vertex decode");
+    require(part.vertices[0].color[0] == 255 && part.vertices[0].color[1] == 0, "vertex colour");
+    require(part.indices == std::vector<std::uint16_t>{0, 1, 2}, "indices");
+    requireThrows([] { parseModel(modelFile(true)); }, "unconsumed block accepted");
+    auto mat = [](int m0, int m1, int m2, int m3, int b10) {
+        std::uint8_t m[0x60] = {};
+        m[0] = std::uint8_t(m0); m[1] = std::uint8_t(m1); m[2] = std::uint8_t(m2); m[3] = std::uint8_t(m3);
+        m[10] = std::uint8_t(b10);
+        return vertexStride(vertexFlags(m));
+    };
+    require(mat(0, 0, 0, 0, 0) == 16 && mat(0, 0, 1, 0, 0x09) == 24 && mat(0, 0, 2, 1, 0x11) == 20 &&
+            mat(0, 1, 1, 0, 0x12) == 28 && mat(1, 0, 2, 1, 0x51) == 32 && mat(0, 0, 0, 6, 0x11) == 24,
+            "strides match shipped layouts");
+}
 }
 
 int main() {
@@ -154,6 +215,7 @@ int main() {
         fuse();
         pooled();
         textures();
+        models();
     } catch (const std::exception& error) {
         std::cerr << "assets-test failed: " << error.what() << '\n';
         return 1;
