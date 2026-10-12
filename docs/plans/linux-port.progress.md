@@ -619,3 +619,13 @@ Static analysis used local llvm-objdump (armv6k) over game.arm.elf. This is loca
 - In cutscene animations (csdata, 679 files), header u16 +4 reads 0x4000 + frames, e.g. 2_7_a: 16683 = 0x4000 + 299. The camera's per-frame block in section +0xc is 300 bytes (299 padded to 4), and the same holds for 1_1_a/d/e and 1_2_a.
 - The game masks it: 0x114b58 passes `*(u16*)(anim + 4) & 0x3fff` (ev_732ce83c…7ff). Python frame_count() and C++ Animation::frames now mask it. Gameplay animations (no bit 14) are unchanged, and the bear/squirrel references still pass.
 - Check: with the masked count, 29966 of 30081 joint curves fit their blob exactly. The 115 that overflow are all joint 0 with headers 0x48/0x49/0x4b/0x08, in gameplay animations (use, kick_open, idling). Their root-curve encoding is not understood; unknown.
+
+### 2026-10-13T01:40+02:00 — Project rule: C++ is the source of truth
+
+- At the user's request, CLAUDE.md now has the section "C++ source of truth (no parallel implementations)":
+  - C++ libraries hold all runtime decoders and logic.
+  - Python is for exploration and CLI tools, calling C++ through bindings when it needs a decoder.
+  - New formats get one implementation; existing Python decoders are frozen legacy (retire or fix in the same commit, never let them disagree).
+  - Real-data tests pin frozen reference values with recorded provenance.
+  - Violations found later are to be fixed in focused commits, or recorded here as open items.
+- This replaces the earlier "change both decoders" rule. No Python/C++ binding exists yet.

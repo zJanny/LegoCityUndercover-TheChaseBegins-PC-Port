@@ -66,8 +66,8 @@ cd build && ./chase-input-lab [--config PATH] [--smoke-test]
   - Touch maps only inside the aspect-fitted 320x240 viewport.
   
   When you change behaviour, update both tests.
-- **The native asset runtime is `chase_assets`** (`src/assets/`, namespace `chase::assets`). It has no SDL dependency. It ports the verified Python tools: FUSE archive + RefPack, the pooled reader with `PoolCursor`, and PICA texture decode. The Python tools in `tools/` are the reference. When you change a format decoder, change both, and keep `assets-real-test`'s checksums (from `convert_textures.py --checksum`) in agreement.
-- `chase_assets` also decodes skeletons and animation curves (`anim.cpp`) and resolves skin joints through each part's bone palette. Pose math replicates the game's routines (0x24c734, 0x248870, 0x24c5a0); `tools/convert_anims.py` and `convert_models.py` are the reference.
+- **The native asset runtime is `chase_assets`** (`src/assets/`, namespace `chase::assets`). It has no SDL dependency. It is the source of truth for every format decoder (see "C++ source of truth" below): FUSE archive + RefPack, the pooled reader with `PoolCursor`, PICA texture decode, models, levels, navigation grids, skeletons and animation, sound, localisation and fonts.
+- `chase_assets` decodes skeletons and animation curves (`anim.cpp`) and resolves skin joints through each part's bone palette. Pose math replicates the game's routines (0x24c734, 0x248870, 0x24c5a0, 0x252cb0).
 - **`chase_audio` is the mixer core** (`src/audio/`). It has no SDL dependency: voices with linear resampling, mono→stereo, gain and loop points, pulled as float stereo frames by `mix()`. `chase-soundtest` is a thin SDL front end, and `mixer-test` checks the mixing rules.
 - `config/controls.cfg` format: `Action key|mouse Code hold|toggle`, with `#` comments. Key names are SDL names with `_` in place of spaces. Mouse codes are `Left`, `Middle`, `Right`, `X1` and `X2`. Action names are 3DS buttons, not recovered gameplay meanings.
 - **Extractor safety rules:**
@@ -81,6 +81,15 @@ cd build && ./chase-input-lab [--config PATH] [--smoke-test]
 - REA cannot open the `.cci` directly. Analyse `artifacts/<dir>/game.arm.elf` instead, and record REA evidence IDs in the progress file.
 
 - **REA reverse engineering:** When investigating the ARM executable, use the installed REA skill or integration if one is available and relevant. Follow its documented workflow rather than inventing commands. If unavailable, use the available disassembly and analysis tools directly, and record reproducible findings and evidence IDs in `docs/plans/linux-port.progress.md`. Do not claim REA analysis was performed unless it actually was.
+
+## C++ source of truth (no parallel implementations)
+
+1. **C++ is the source of truth.** Every format decoder and every piece of game logic that the runtime uses lives in C++ (`chase_assets`, `chase_audio`, `chase_input`, or a new library under `src/`). Fix bugs and add features there first.
+2. **Python is for exploration and command-line tools.** Use Python freely for throwaway reverse-engineering work: hash brute force, statistics, data fitting, censuses. Do not write a second full decoder in Python for a format that C++ implements. When a Python tool needs a decoder that C++ has, call the C++ code through a binding instead of re-implementing it.
+3. **New formats get one implementation.** Implement a newly recovered format in C++ only. A Python prototype written while investigating may stay as an exploration aid, but it must not be kept in sync as a reference or be relied on by tests.
+4. **Existing Python decoders are frozen legacy.** The decoders that already exist in `tools/` (`convert_*.py`, `extract_*.py`, `tt_resource.py`, `preview_model.py`) may stay while they work. When one needs a behaviour change that C++ also implements, either retire the Python decoder in favour of a binding to the C++ code, or fix both in the same commit. Never let the two disagree.
+5. **Tests pin frozen reference values instead of a live second implementation.** Real-data tests (`assets-real-test`) compare against recorded checksums and totals. Next to each value, record how it was obtained: a Python command, a game-code evidence ID, or a manual inspection. Synthetic tests (`assets-test`) cover the edge cases.
+6. **Fix violations when you find them.** If you come across anything that breaks rules 1–5, fix it in a focused commit of its own and note the fix in the progress file. Examples: logic that exists only in Python although the runtime needs it, a new format implemented twice, Python and C++ giving different results, a test that depends on running a Python decoder, or a reference value without its provenance. If the fix is too large for the current task, record it as an open item in `docs/plans/linux-port.progress.md`.
 
 ## Constraints
 
