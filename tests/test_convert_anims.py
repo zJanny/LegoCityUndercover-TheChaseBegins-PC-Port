@@ -38,7 +38,30 @@ def joint(parent, world_t, local_t):
     return struct.pack('<Ii', 0, parent) + matrix(world_t) + matrix(local_t) + bytes(0x10)
 
 
+def bitstream(fields):
+    """[(value, bits)] packed LSB-first like 0x247a48 reads them."""
+    value = shift = 0
+    for v, n in fields:
+        value |= (v & ((1 << n) - 1)) << shift
+        shift += n
+    return value.to_bytes((shift + 7) // 8 + 4, 'little')
+
+
 class AnimTests(unittest.TestCase):
+    def test_channel_decode(self):
+        # head 0x08: only group 3 (channels 9-11) has a mask; mask 0b001 -> channel 9.
+        # Channel 9: 16-bit signed base 150, 5-bit delta width 3, deltas [0, 5] for 2 frames.
+        blob = bitstream([(0x08, 8), (1, 3), (150, 16), (3, 5), (0, 3), (5, 3)])
+        frame0, mask = ca.decode_channels(blob, 0, 2)
+        frame1, _ = ca.decode_channels(blob, 1, 2)
+        self.assertEqual(mask, 1 << 9)
+        self.assertAlmostEqual(frame0[9], 1.50)
+        self.assertAlmostEqual(frame1[9], 1.55)
+        self.assertEqual(frame0[3:6], [1.0, 1.0, 1.0])   # absent scale channels default to 1
+        negative = bitstream([(0x01, 8), (1, 3), ((1 << 12) - 100, 12), (0, 4)])   # rotation x = -100
+        self.assertAlmostEqual(ca.decode_channels(negative, 0, 1)[0][0], -2.0)
+        self.assertEqual(ca.euler_to_quaternion(0, 0, 0), (0.0, 0.0, -0.0, 1.0))
+
     def test_hierarchy_check(self):
         good = joint(-1, (0, 1, 0), (0, 1, 0)) + joint(0, (0, 1.5, 2), (0, 0.5, 2))
         blocks = [(-14, bytes([0, 2]) + bytes(14)), (-14, b''), (-14, b''), (-14, good), (-14, b'a\0'), (-14, b'b\0')]

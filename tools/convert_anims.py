@@ -8,6 +8,7 @@ the evaluation code are not recovered; tracks are reported structurally.
 """
 import argparse
 import json
+import math
 import struct
 import sys
 from pathlib import Path
@@ -55,6 +56,77 @@ def check_hierarchy(skel, tolerance=2e-3):
     if worst > tolerance:
         raise ValueError("world != local * parent.world (max relative error %.4g)" % worst)
     return worst
+
+
+# Channel table at 0x376494 (base bits, delta-width bits) with scales written by the
+# static initializer at 0x347c5c: channels 0-2 rotation (0.02), 3-5 scale (0.01,
+# default 1.0), 6-8 unknown (0.01), 9-11 translation (0.01, 16-bit base).
+CHANNELS = [(12, 4, 0.02)] * 3 + [(12, 4, 0.01)] * 6 + [(16, 5, 0.01)] * 3
+
+
+class Bits:
+    """LSB-first bit reader (0x247a48)."""
+
+    def __init__(self, data):
+        self.data, self.pos = data, 0
+
+    def peek(self, at, count):
+        value = int.from_bytes(self.data[at >> 3:(at >> 3) + 5].ljust(5, b'\0'), 'little')
+        return (value >> (at & 7)) & ((1 << count) - 1)
+
+    def read(self, count):
+        value = self.peek(self.pos, count)
+        self.pos += count
+        return value
+
+
+def decode_channels(blob, frame, frames):
+    """Replica of 0x248910: 12 channels of one joint at `frame`, plus the channel mask.
+
+    Returns (channels, mask); mask 0xfff with raw=matrix for the 0xfa raw-matrix form."""
+    bits = Bits(blob)
+    head = bits.read(8)
+    if head == 0xfa:
+        start = 1 + frame * 0x40
+        return list(struct.unpack_from('<16f', blob, start)), -1
+    shift, mask = head >> 4, 0
+    for group in range(4):
+        if head & (1 << group):
+            mask |= bits.read(3) << (3 * group)
+    extra = 0
+    if shift & 8:
+        shift, extra = shift & 7, 2
+    out = []
+    for channel in range(12):
+        if not mask & (1 << channel):
+            out.append(1.0 if 3 <= channel < 6 else 0.0)
+            continue
+        base_bits, width_bits, scale = CHANNELS[channel]
+        if shift:
+            base_bits += shift + (extra if channel >= 9 else 0)
+            width_bits += shift
+            scale /= 1 << shift
+        base = bits.read(base_bits)
+        if base & (1 << (base_bits - 1)):
+            base -= 1 << base_bits
+        width = bits.peek(bits.pos, width_bits) & 0xff
+        if width:
+            base += bits.peek(bits.pos + width_bits + frame * width, width)
+        bits.pos += width_bits + frames * width
+        value = base * scale
+        if 3 <= channel < 6 and value < 0.0001:
+            value = 0.0001
+        out.append(value)
+    return out, mask
+
+
+def euler_to_quaternion(x, y, z):
+    """Replica of 0x248248 (sin/cos order from 0x247ac8 = sin, 0x247c90 = cos); returns (x, y, z, w)."""
+    sx, cx = math.sin(x / 2), math.cos(x / 2)
+    sy, cy = math.sin(y / 2), math.cos(y / 2)
+    sz, cz = math.sin(z / 2), math.cos(z / 2)
+    return (-(cy * sx * cz) - sy * cx * sz, cy * sx * sz - sy * cx * cz,
+            -(sy * sx * cz) - cy * cx * sz, cy * cx * cz - sy * sx * sz)
 
 
 def read_track(pools, record):

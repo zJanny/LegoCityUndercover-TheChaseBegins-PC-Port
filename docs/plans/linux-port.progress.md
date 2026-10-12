@@ -427,4 +427,21 @@ Static analysis used local llvm-objdump (armv6k) over game.arm.elf. This is loca
 - check_hierarchy() verifies, across all 376 skeletons / 5280 joints, that parents precede children and that world == local·parent.world (row vectors). The maximum relative error is 4.65e-5.
 - Skin attribute (vertex flag 2, 8 bytes): shipped data reads as u8 weights then u8 indices (e.g. ff000000 00000000). This matches the shader inputs vWeights/vIndex and the 26-entry "Bones" uniform (regs 0x22–0x6f, 3 regs per bone). The order and the bone-palette mapping are not yet confirmed in code.
 - Python PASS 42/42.
+
+### 2026-10-12T19:05+02:00 — Animation keyframe decoding (REA, Ghidra)
+
+- Found by searching for the `lsl #19; lsr #19` extraction of the per-joint table count (anim+8 word: (w & 0x1fff) + bit 28).
+- Call chain:
+  - 0x1205f8 (ev_34ecb50a…32df) is a pose cache that allocates 0x40 bytes per joint and calls the sampler.
+  - 0x12a2b4 (ev_210a33ed…3420) loops over the joints, calling 0x12d4b0 (ev_c0f59246…1227) per joint. 0x12d4b0 clamps the frame (or wraps to 0) and calls the curve decoder 0x248910 (ev_6bc461f5…852c).
+  - It also uses the joint record's +0x88 float4 as a default, together with optional per-joint s16/256 corrections.
+- Curve format (0x248910), read with the LSB-first bit reader 0x247a48 (ev_29ed4ed7…29b6):
+  - 8-bit header. 0xfa means raw f32 4×4 matrices per frame at blob+1+frame·0x40. Otherwise shift = header>>4 (bit 3 adds 2 more base bits to translation), and header bits 0–3 enable four 3-bit channel-mask groups.
+  - 12 channels. Absent channels default to 1.0 for 3–5 and 0 otherwise.
+  - Each present channel: a signed base (12 bits, 16 for channels 9–11; plus shift), a delta width (4/5 bits; plus shift), then one fixed-width unsigned delta per frame. value = (base + delta[frame]) · scale / 2^shift, and scale channels are clamped to ≥ 0.0001.
+- Channel table: 0x376494 (data) holds the bit widths. Its scales are written by the static initializer at 0x347c5c (decoded with `llvm-objdump --mattr=+vfp2`): 0.02 for channels 0–2 (rotation, radians), 0.01 for 3–5 (scale), 6–8 (unknown) and 9–11 (translation).
+- 0x248248 (ev_676da22a…9b72) converts channels 0–2 into a quaternion from half-angle sin/cos (0x249038 calls 0x247ac8 = sin by its polynomial, ev_4caeb96f…49a, then 0x247c90 = cos). The formula is replicated in euler_to_quaternion().
+- Verification: char_bear idle frame 0 decodes per-joint translations equal to the skeleton's local bind translations (LeftForeArm, Head, Knees, Feet and Hands exact; Pelvis 1.344 vs 1.363, i.e. animated). Rotations are small radian values.
+- Added decode_channels() and euler_to_quaternion() to tools/convert_anims.py, plus a synthetic bit-stream test. Python PASS 43/43.
+- Not recovered: how the pose is composed into joint matrices (order of q/scale/translation and the role of channels 6–8 and joint +0x88), root motion (the extra 24th blob), and the 0xfa raw-matrix decomposition 0x1324f8.
 - Named in REA with a _candidate suffix (ev_d6ee55638e4b4ce712665d235d1d66a9d8c1add97c17e5f210b671225ddb1b28): srvGetServiceHandle_candidate, strlen_candidate, dspInit_candidate, fsUserInit_candidate, ndmInit_candidate. Hopper does not define procedures at 0x109fc0, 0x10f8e4 or 0x11006c.
