@@ -55,6 +55,7 @@ int main(int argc, char** argv) {
         std::size_t models = 0, parts = 0, vertices = 0, triangles = 0;
         std::size_t levels = 0, objects = 0, placed = 0;
         std::size_t sounds = 0, samples = 0, loops = 0;
+        std::size_t locFiles = 0, locEntries = 0;
         std::size_t navFiles = 0, navGrids = 0, navPaths = 0, navFlagged = 0;
         std::map<std::string, std::pair<std::size_t, std::size_t>> navCounts;
         std::vector<std::pair<std::string, NavRoom>> navDescriptors;
@@ -90,6 +91,10 @@ int main(int argc, char** argv) {
             if (endsWith(name, ".bfnanm")) {
                 curves += parseAnimation(data).jointCurves.size();
                 ++animations;
+            }
+            if (endsWith(name, ".loc")) {
+                locEntries += parseLocalisation(data).size();
+                ++locFiles;
             }
             if (endsWith(name, ".bfnnav")) {
                 NavMesh nav = parseNav(data);
@@ -149,6 +154,9 @@ int main(int argc, char** argv) {
         // |entries| of skin_matrices() for char_bear walk over all 48 frames.
         if (skeletons != 376 || joints != 5280 || animations != 1954 || curves != 30081)
             throw std::runtime_error("skeleton/animation totals differ from the Python reference");
+        // Reference: python3 tools/convert_loc.py --census artifacts/fib/files/localisation
+        if (locFiles != 66 || locEntries != 25207)
+            throw std::runtime_error("localisation totals differ from the Python reference");
         // Reference: python3 tools/convert_nav.py --census artifacts/fib/files
         std::size_t navMatched = 0;
         for (const auto& [levelName, room] : navDescriptors) {

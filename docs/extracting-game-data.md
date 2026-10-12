@@ -61,7 +61,15 @@ python3 tools/convert_audio.py artifacts/fib/files --output artifacts/audio
 - Music with several channels becomes one WAV file.
 - `audio-manifest.json` lists each sound's sample rate, length and loop points.
 
-## 6. Look at models
+## 6. Read the game text
+
+```sh
+python3 tools/convert_loc.py artifacts/fib/files/localisation/gametext_uk.loc > gametext_uk.json
+```
+
+The output lists every text of one language. Most entries are named by a number, because the original names are only stored as hashes. Add `--names artifacts/game/code.bin` to recover the names that appear in the program. Cyrillic and Polish letters are not decoded yet; they appear as `\u0001` followed by two characters.
+
+## 7. Look at models
 
 `preview_model.py` draws a model into a PNG image. It is slow but needs no graphics card.
 

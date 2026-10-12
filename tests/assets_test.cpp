@@ -507,6 +507,19 @@ void navigation() {
     requireThrows([] { parseNav(navFile(false, 10)); }, "wrong nav cell count accepted");
 }
 
+void localisation() {
+    require(textKey("No") == 78u * 65599u + 79u && textKey("ok") == 0x4f13bcu, "text key hash (sdbm, upper case)");
+    Bytes loc = bytes("LOCA");
+    for (std::uint32_t v : {2u, 2u, 16u, 12u}) put32(loc, v);
+    put32(loc, textKey("OK")); put32(loc, 0);
+    put32(loc, textKey("ON")); put32(loc, 3);
+    for (char c : std::string("OK\0On\0Fran\xe7\0", 12)) loc.push_back(std::uint8_t(c));
+    auto entries = parseLocalisation(loc);
+    require(entries.size() == 2 && entries[textKey("on")] == "On", "LOCA entries");
+    Bytes cut(loc.begin(), loc.end() - 1);
+    requireThrows([&] { parseLocalisation(cut); }, "truncated LOCA accepted");
+}
+
 void sounds() {
     Sound sound = decodeSound(soundFile());
     require(sound.rate == 12000 && sound.loop && sound.loopStart == 1 && sound.frames == 3, "sound header");
@@ -529,6 +542,7 @@ int main() {
         skinnedModels();
         levels();
         navigation();
+        localisation();
         animations();
     } catch (const std::exception& error) {
         std::cerr << "assets-test failed: " << error.what() << '\n';

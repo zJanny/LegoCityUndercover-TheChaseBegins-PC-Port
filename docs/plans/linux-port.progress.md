@@ -580,3 +580,15 @@ Static analysis used local llvm-objdump (armv6k) over game.arm.elf. This is loca
   - assets-real-data: 700 files / 28646 grids / 4607 paths / 429583 flagged cells; 700 descriptors match.
 - chase-viewer `--nav`: cyan/orange quads, 0.25 above the fitted height. In lvl_00 room3 the grid follows the floor plan with orange cells along walls and props.
 - ctest PASS 7/7; Python PASS 50/50.
+
+### 2026-10-13T00:25+02:00 — Localisation tables (.loc) decoded
+
+- Layout (data): "LOCA", u32 version 2, u32 count, u32 table bytes (= count × 8), u32 string bytes (header + table + strings = file size); then (u32 key, u32 offset) pairs sorted by key; then NUL-terminated strings. All 66 files (25207 entries) parse.
+- Keys are the sdbm hash h = h × 65599 + c of the upper-case identifier.
+  - Found by brute-forcing the multiplier on "OK" → 0x4f13bc (only 65599 fits) and confirmed on "NO" and "ON".
+  - 37 of 351 gametext_uk entries hash from their own upper-cased text, and 212 keys over all files resolve from code.bin strings (e.g. PAUSEMENU, CLASS_MINER).
+  - The hash routine was not found in code (no 0x1003f literal or shift pattern); data-only evidence.
+- Text is Latin-1 (e.g. "Français" 0xe7). 0xac stands where ™ belongs ("Nintendo\xac3DS"); not confirmed.
+- Byte 0x01 + 2 bytes is a glyph escape (Russian, Polish). It is neither an offset into extended_chars_utf8.txt nor a constant code-point offset, and probably indexes the .tnf glyph table (8-byte x, y, w, h records). Not decoded.
+- Added tools/convert_loc.py (dump with `--names`, `--census`), tests/test_convert_loc.py (3), and src/assets/text.cpp (textKey, parseLocalisation) with synthetic and real-data (66/25207) checks.
+- ctest PASS 7/7; Python PASS 53/53.
