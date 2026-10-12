@@ -161,3 +161,16 @@ cd build && ./chase-input-lab [--config PATH] [--smoke-test]
    - Do not use Python merely as a substitute for straightforward file reads, writes, or text edits.
    - Use Python or other scripting tools when they provide a meaningful advantage for structured transformations, bulk operations, data processing, testing, or file formats that native tools cannot handle efficiently.
    - Review the resulting diff after edits and verify that the changes are correct.
+   
+   
+### Subagent Model Selection and Cost Control
+
+1. Use the least expensive available model that can reliably complete each delegated task. Prefer Haiku-class models for bounded, low-risk work such as documentation summarization, non-code semantic extraction, routine repository exploration, and structured reporting.
+2. Reserve the main session's stronger model for complex reasoning, reverse engineering, implementation design, security-sensitive changes, difficult debugging, and final review when deeper reasoning is needed.
+3. Keep subagent tasks narrow and independent. Provide only the relevant files, required output format, and applicable constraints. Avoid repeatedly sending large repository context to multiple agents.
+4. For Graphify semantic extraction, prefer supported Claude subagents using a cost-effective model. Require structured outputs with source references, and validate merged results against Graphify's documented format.
+5. Do not delegate correctness-critical verification entirely to a cheaper model. Use deterministic checks, existing tests, checksums, and direct source inspection wherever possible.
+6. Do not spawn subagents when the overhead, duplicated context, or likely rework outweighs the benefit. Prefer local scripts for deterministic parsing and transformations.
+7. If the preferred model is unavailable, use another model supported by the active Claude Code session. Do not require external provider credentials or transmit repository contents to an external service without authorization.
+8. Follow the installed Claude Code and Graphify documentation for model selection and subagent configuration. Do not assume unsupported model aliases or configuration options.
+
