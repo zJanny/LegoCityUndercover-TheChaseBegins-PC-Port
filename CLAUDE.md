@@ -9,7 +9,7 @@ Early-stage Linux x86_64 reconstruction of *LEGO City Undercover: The Chase Begi
 1. **Extraction pipeline** (`tools/extract_game.py`, Python 3.11+ stdlib only). It reads the NCSD/CCI image, then the NCCH partition 0, the exheader and the ExeFS, and checks every SHA256. It decompresses `.code` (backwards LZ) and wraps it in a synthetic ELF32 ARM file (`game.arm.elf`) for disassembly in REA.
 2. **Native input laboratory** (`src/`, C++17 + SDL2). It tests configurable keyboard/mouse input that maps onto 3DS buttons and the 320x240 lower touch screen. It is **not** the game runtime. Gameplay, rendering, audio, assets and saves have not been recovered yet.
 
-The plan and its progress log live in `docs/plans/linux-port.md` and `docs/plans/linux-port.progress.md`, with steps S1–S4. Read both before you resume port work. Update the progress file with the commands, results and timestamps from each session. The plan does not permit committing, pushing or merging unless the user asks.
+The plan and its progress log live in `docs/plans/linux-port.md` and `docs/plans/linux-port.progress.md`, with steps S1–S4. Read both before you resume port work. Update the progress file with the commands, results and timestamps from each session.
 
 ## Commands
 
@@ -85,34 +85,31 @@ cd build && ./chase-input-lab [--config PATH] [--smoke-test]
 ### Graphify — Codebase Knowledge Graph
 
 **Initialization**
-1. If Graphify is not already configured for this repository, verify that the Graphify CLI and Claude Code integration are installed. Initialize the project, build the initial graph, and verify that it can be queried successfully. Do not silently skip setup if Graphify is unavailable; report the issue.
-2. Follow the installed Graphify skill and its documented commands. Do not invent CLI commands or assume generated files exist.
-3. Configure appropriate exclusions using `.graphifyignore`, respecting the repository's `.gitignore`.
+1. At the start of work, check whether Graphify is installed, integrated with Claude Code, and configured for this repository.
+2. If Graphify is not installed or its Claude Code integration is missing, follow the installed Graphify skill or official documentation to install and configure it. Do not silently skip setup because the current task appears small.
+3. If Graphify is installed but not initialized for this repository, initialize it, build the initial graph, and verify that graph queries work.
+4. If installation or initialization fails, investigate the cause and report the specific blocker. Do not invent commands, assume setup succeeded, or claim Graphify is working when it is not.
+5. Follow the documented Graphify workflow and configure `.graphifyignore` to respect `.gitignore` and exclude irrelevant generated files.
 
-**Codebase Exploration**
-4. For questions about architecture, code flow, dependencies, symbol relationships, or how features work, query Graphify first. Use its graph report and relevant graph queries to identify important nodes and relationships before inspecting source files.
-5. Use targeted source-code searches and read the relevant files to verify details, especially when investigating exact implementations, string occurrences, configuration values, or behavior that the graph cannot establish.
-6. If Graphify is missing, stale, incomplete, or fails to answer a question, attempt to update or rebuild it as appropriate. If that fails, fall back to direct source-code inspection and clearly report any remaining limitations. Never treat inferred graph relationships as confirmed facts without verification.
-
-**Keeping the Graph Current**
-7. After modifying source code, regenerate or incrementally update the graph using the documented Graphify workflow before relying on it for subsequent architectural analysis. Avoid unnecessary full rebuilds when an incremental update is supported.
-8. Ensure the graph is up to date before committing changes. Configure Graphify's documented Git hooks where appropriate so commits and branch switches keep the graph synchronized. Update the graph after pulls and merges when required.
-9. Verify that graph updates succeed. Do not claim the graph is current if an update failed or has not completed.
-10. Follow the repository's existing version-control policy. Commit the shared graph artifacts if the project uses them as team-maintained files; exclude local caches, temporary files, and machine-specific artifacts.
+**Usage and Maintenance**
+6. For architectural questions, dependency tracing, code-flow analysis, and unfamiliar code paths, query Graphify first, then verify relevant findings against source code.
+7. If the graph is stale or incomplete, update or rebuild it using the documented workflow. Use direct source inspection as a fallback when Graphify cannot answer the question.
+8. After meaningful source changes, update the graph as required by the installed workflow. Verify success before claiming it is current.
+9. Configure documented Git hooks when appropriate, and keep shared graph artifacts under version control only if the project maintains them as team files.
+10. Use the active Claude Code session for semantic extraction of supported non-code content when the installed workflow supports it. Do not require external API credentials or transmit repository content to an external provider without authorization.
+11. Follow Graphify's documented semantic-extraction workflow, verify that extracted information was incorporated successfully, and report any files or steps that could not be processed.
+12. Never confuse successful local code parsing with successful semantic extraction when both are required.
 
 **Graph Scope and Exclusions**
-11. Exclude irrelevant directories from the graph, such as `docs/` when documentation is not needed for code exploration, along with dependency directories, build outputs, generated artifacts, and temporary files where appropriate.
-12. Do not exclude source code, tests, configuration, migrations, or other files needed to understand application behavior and dependencies without a specific reason.
-13. Revisit exclusions when the project structure or investigation requirements change.
 
-**Semantic Extraction — Use the Active Claude Session**
-14. Always perform semantic extraction of supported non-code files (documentation, PDFs, images, and other supported content) using the active Claude Code session whenever possible. Use Claude's existing model capabilities and subagents rather than requiring a separate LLM provider API key.
-15. Never request, require, or wait for `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GEMINI_API_KEY`, or another provider API key when the active Claude session can perform the extraction itself.
-16. Follow Graphify's installed extraction workflow. For semantic extraction, inspect the installed Graphify skill and dispatch the required extraction tasks to Claude subagents when instructed by that workflow. Merge the extracted entities and relationships into Graphify's expected output format and complete the graph-building process.
-17. Do not confuse Graphify's deterministic, local code parsing with semantic extraction. Code structure should be extracted locally without an LLM. Use the active Claude session for semantic extraction of non-code content when required.
-18. Do not silently skip semantic extraction or produce an AST-only graph when semantic extraction is required and the active Claude session can perform it.
-19. If the installed Graphify version or execution environment cannot use the active Claude session for semantic extraction, investigate supported alternatives, such as the documented Claude CLI backend or a local model backend. Do not install an alternative, require credentials, or send repository contents to an external provider without authorization.
-20. Verify that semantic extraction completed successfully and that its results were incorporated into the graph. Report any files or extraction steps that could not be processed.
+1. Exclude `docs/` entirely from Graphify indexing and semantic extraction by default. Documentation is not part of the code knowledge graph unless a specific task requires it.
+2. Configure `.graphifyignore` according to the installed Graphify documentation. Verify that the exclusion actually works; do not assume that adding a pattern guarantees every Graphify pipeline respects it.
+3. Exclude build outputs, generated artifacts, extracted game assets, temporary files, dependency directories, and other irrelevant content. Respect existing `.gitignore` rules.
+4. Include source code, tests, build configuration, and relevant project configuration files needed to understand code behavior and dependencies.
+5. Only inspect or semantically extract files under `docs/` when the task explicitly requires their contents or the user asks for documentation work. Read only the relevant files rather than scanning the whole directory.
+6. Do not run semantic extraction over excluded documentation merely to complete graph initialization. If Graphify requires a separate extraction workflow, configure its scope to follow these exclusions.
+7. When a task requires documentation context, inspect the specific relevant files directly without automatically adding the entire directory to the graph.
+8. Report any Graphify limitation that prevents the requested exclusions from being enforced.
 
 ## User-Specified Workflows
 
