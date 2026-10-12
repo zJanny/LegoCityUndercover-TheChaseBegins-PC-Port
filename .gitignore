@@ -4,3 +4,7 @@
 /artifacts/
 __pycache__/
 *.pyc
+# Editor swap/backup files
+*.kate-swp
+*.swp
+*~

@@ -66,3 +66,4 @@ cd build && ./chase-input-lab [--config PATH] [--smoke-test]
 
 1. Please commit at logical steps!
 2. Only push when the user wishes to!
+3. Always keep the .gitignore up to date.
