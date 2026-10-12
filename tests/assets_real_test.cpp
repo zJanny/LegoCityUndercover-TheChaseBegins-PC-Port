@@ -61,6 +61,8 @@ int main(int argc, char** argv) {
         std::vector<std::pair<std::string, NavRoom>> navDescriptors;
         std::size_t skinnedParts = 0, boneBatches = 0, jointSum = 0;
         std::size_t skeletons = 0, joints = 0, animations = 0, curves = 0;
+        std::size_t subAnimations = 0, animTracks = 0, trackKeys = 0, cutsceneActorCount = 0;
+        std::vector<std::string> manifestPaths, missingManifestFiles;
         std::uint32_t soundSum = 0x811c9dc5;  // FNV-1a over act_bass_break's PCM, see below
         for (const auto& entry : archive.entries()) {
             Bytes data = archive.read(entry);
@@ -89,8 +91,22 @@ int main(int argc, char** argv) {
                 ++skeletons;
             }
             if (endsWith(name, ".bfnanm")) {
-                curves += parseAnimation(data).jointCurves.size();
+                Animation animation = parseAnimation(data);
+                curves += animation.jointCurves.size();
                 ++animations;
+                subAnimations += animation.subAnimations.size();
+                for (const auto& tracks : animation.subAnimations) {
+                    animTracks += tracks.size();
+                    for (const auto& track : tracks) trackKeys += track.keys.size();
+                }
+            }
+            if (endsWith(name, "manifest.bstxt")) {
+                manifestPaths.push_back(name.substr(0, name.rfind('/')));
+                for (const auto& actor : cutsceneActors(parseManifest(data), manifestPaths.back())) {
+                    ++cutsceneActorCount;
+                    for (const auto& path : {actor.model, actor.skeleton, actor.animation})
+                        if (!path.empty() && !archive.find(path)) missingManifestFiles.push_back(path);
+                }
             }
             if (endsWith(name, ".tnf")) {
                 glyphs += parseFont(data).glyphs.size();
@@ -158,6 +174,23 @@ int main(int argc, char** argv) {
         // |entries| of skin_matrices() for char_bear walk over all 48 frames.
         if (skeletons != 376 || joints != 5280 || animations != 1954 || curves != 30081)
             throw std::runtime_error("skeleton/animation totals differ from the Python reference");
+        // Reference: recorded from this C++ parser (2026-10-13); every key block matches its u16 count.
+        if (subAnimations != 3804 || animTracks != 14564 || trackKeys != 62293)
+            throw std::runtime_error("animation track totals differ from the recorded reference");
+        // Reference: recorded from this C++ parser (2026-10-13) and checked with ls over
+        // artifacts/fib/files/csdata/models: the only listed file absent from the archive.
+        if (manifestPaths.size() != 69 || cutsceneActorCount != 397 || missingManifestFiles.size() != 1 ||
+            missingManifestFiles[0] != "csdata/models/2_7_c/laundrycart/laundrycart.bfnskl")
+            throw std::runtime_error("cutscene manifest totals differ from the recorded reference");
+        // Reference: recorded from this C++ parser (2026-10-13); camera x is near the actors (x ~ -815 raw).
+        {
+            const FuseEntry* shot = archive.find("csdata/models/1_1_a/cscamera/cscamera_0000.bfnanm");
+            if (!shot) throw std::runtime_error("1_1_a camera not found");
+            CutsceneCamera camera = cutsceneCamera(parseAnimation(archive.read(*shot)), 0.5f);
+            if (std::fabs(camera.position[0] + 880.099f) > 1e-2f || std::fabs(camera.position[2] - 1109.11f) > 1e-2f ||
+                camera.fieldOfView != 43)
+                throw std::runtime_error("1_1_a camera differs from the recorded reference");
+        }
         // Reference: python3 tools/convert_loc.py --census artifacts/fib/files/localisation
         if (fonts != 6 || glyphs != 1521) throw std::runtime_error("font totals differ from the Python reference");
         if (locFiles != 66 || locEntries != 25207)
@@ -234,7 +267,7 @@ int main(int argc, char** argv) {
                   << models << " models / " << parts << " parts / " << vertices << " vertices / "
                   << triangles << " triangles, " << levels << " levels / " << objects << " objects / " << placed
                   << " placements, " << skeletons << " skeletons / " << joints << " joints, " << animations
-                  << " animations / " << curves << " joint curves, " << navFiles << " nav files / " << navGrids << " grids, " << sounds << " sounds / " << samples << " samples / " << loops << " looping\n";
+                  << " animations / " << curves << " joint curves / " << animTracks << " tracks, " << manifestPaths.size() << " cutscenes / " << cutsceneActorCount << " actors, " << navFiles << " nav files / " << navGrids << " grids, " << sounds << " sounds / " << samples << " samples / " << loops << " looping\n";
     } catch (const std::exception& error) {
         std::cerr << "assets-real-test failed: " << error.what() << '\n';
         return 1;

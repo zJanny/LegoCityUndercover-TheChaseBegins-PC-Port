@@ -205,12 +205,26 @@ struct Skeleton {
 };
 Skeleton parseSkeleton(const Bytes& data);
 
-// .bfnanm animation (loader 0x10edec); every block is consumed and checked, but
-// only the per-joint curves (+0x08 section) are kept.
+// Keyframe of a named track: cubic Bezier with handles (time +/- delta, handle value).
+// The deltas are 1/3 of the neighbouring key interval in 76% of shipped intervals.
+struct CurveKey {
+    float time = 0;                        // 0..1 over the animation
+    float inDelta = 0, inValue = 0, value = 0, outDelta = 0, outValue = 0;
+};
+struct AnimTrack {
+    std::uint32_t hash = 0;                // name hash; names unknown (e.g. 0x191a8df3 camera x)
+    std::vector<CurveKey> keys;
+};
+// .bfnanm animation (loader 0x10edec); every block is consumed and checked.
 struct Animation {
     unsigned frames = 0;                   // header u16 +4 & 0x3fff (0x114b58); bit 14 set in cutscenes
     std::vector<Bytes> jointCurves;        // indexed like the skeleton joints
+    std::vector<std::string> objects;      // section +0x0c names, e.g. "ExportCam"
+    std::vector<AnimTrack> tracks;         // section +0x18 (unused in shipped data)
+    std::vector<std::vector<AnimTrack>> subAnimations;
 };
+// Value of a track at normalised time 0..1 (Bezier solved for time by bisection).
+float evaluateTrack(const AnimTrack& track, float time);
 Animation parseAnimation(const Bytes& data);
 
 // Curve decoder 0x248910: 12 channels (rotation radians, scale, shear, translation).
@@ -292,6 +306,39 @@ struct PlacedGlyph {
 // without a glyph are skipped.
 std::vector<PlacedGlyph> layoutText(const Font& font, const std::string& utf8,
                                     const std::vector<std::string>& extended);
+
+// csdata/models/<id>/manifest.bstxt: one pooled text block, one archive path per line
+// relative to the folder (e.g. "player1/player1_minifig.fnmdl").
+std::vector<std::string> parseManifest(const Bytes& data);
+// Manifest lines grouped by their first folder into model/skeleton/animation paths
+// (".fnmdl" -> ".bfnmdl" etc., lower case, prefixed with `folder`).
+struct CutsceneActor {
+    std::string name, model, skeleton, animation;
+};
+std::vector<CutsceneActor> cutsceneActors(const std::vector<std::string>& manifest, const std::string& folder);
+// Camera tracks of a cutscene "ExportCam" animation, as handler 0x1c1fbc stores them.
+// Defaults are the handler's; fields 7-11 are kept but their meaning is unknown.
+struct CutsceneCamera {
+    float position[3] = {0, 0, 0};
+    float rotation[3] = {0, 0, 0};         // radians, see cameraMatrix
+    float fieldOfView = 35.0f;             // default 35; degrees, axis not recovered
+    float field7 = 1.41732f, field8 = 0.945f, field9 = 0, field10 = 8.0f, field11 = 0.035f;
+};
+CutsceneCamera cutsceneCamera(const Animation& animation, float time);
+// Actor transform tracks with the signs of the accumulating branch of event 0xb945fcd8 in
+// 0x287ca4: position (0xdcd633e0..2) with x negated, yaw (0x4f44e168, radians) negated,
+// scale (0x7e190104..6). The game adds weighted values to a base; the base is not recovered.
+struct ActorPose {
+    float position[3] = {0, 0, 0};
+    float yaw = 0;
+    float scale[3] = {1, 1, 1};
+};
+ActorPose actorPose(const Animation& animation, float time);
+// Yaw about +y (same sense as placementMatrix), scale, then translation; the yaw sense is
+// a visual choice, not traced.
+Matrix actorMatrix(const ActorPose& pose);
+// 0x20e850: camera world matrix (row vectors) from rotation and position; x is negated.
+Matrix cameraMatrix(const CutsceneCamera& camera);
 
 std::uint32_t readU32(const Bytes& data, std::size_t offset);
 std::uint16_t readU16(const Bytes& data, std::size_t offset);

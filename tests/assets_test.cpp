@@ -537,6 +537,67 @@ void localisation() {
     requireThrows([&] { parseLocalisation(cut); }, "truncated LOCA accepted");
 }
 
+void putF32(Bytes& b, float v) {
+    std::uint32_t bits;
+    std::memcpy(&bits, &v, 4);
+    put32(b, bits);
+}
+
+void cutscenes() {
+    AnimTrack linear{0, {{0, 0, 0, 0, 1.0f / 3, 1}, {1, 1.0f / 3, 2, 3, 0, 0}}};
+    require(near(evaluateTrack(linear, 0.5f), 1.5f) && near(evaluateTrack(linear, 0.25f), 0.75f),
+            "Bezier with one-third handles is linear");
+    require(evaluateTrack(linear, -1) == 0 && evaluateTrack(linear, 2) == 3, "track clamps outside its keys");
+    AnimTrack eased{0, {{0, 0, 0, 0, 0.5f, 0}, {1, 0.5f, 1, 1, 0, 0}}};
+    require(near(evaluateTrack(eased, 0.5f), 0.5f) && evaluateTrack(eased, 0.1f) < 0.1f, "eased track");
+
+    Bytes head(0x28, 0);
+    head[4] = 3;
+    head[5] = 0x40;   // cutscene bit 14
+    head[0x20] = 1;   // one sub-animation
+    Bytes fixups, count, records(0x18, 0), name, times, values;
+    put32(fixups, 0);
+    put32(count, 1);
+    records[4] = 2;
+    put32(name, 0x191a8df3);
+    putF32(times, 0);
+    putF32(times, 1);
+    for (float v : {0.0f, 0.0f, 10.0f, 1.0f / 3, 20.0f, 1.0f / 3, 30.0f, 40.0f, 0.0f, 0.0f}) putF32(values, v);
+    std::vector<std::pair<std::int32_t, Bytes>> blocks{{-14, head}, {-14, {}}, {-14, fixups}, {-14, count},
+                                                       {-14, records}, {-14, name}, {-14, {}}, {-14, times},
+                                                       {-14, values}, {-14, {}}};
+    Animation camera = parseAnimation(pooledBlocks(blocks));
+    require(camera.frames == 3 && camera.subAnimations.size() == 1 && camera.subAnimations[0].size() == 1 &&
+                camera.subAnimations[0][0].keys.size() == 2 && camera.subAnimations[0][0].keys[1].value == 40,
+            "sub-animation track keys");
+    CutsceneCamera shot = cutsceneCamera(camera, 0.5f);
+    require(near(shot.position[0], 25) && shot.fieldOfView == 35 && near(shot.field11, 0.035f),
+            "camera track and handler defaults (0x1c1fbc)");
+    Matrix view = cameraMatrix(shot);
+    require(view[0] == -1 && view[5] == 1 && view[10] == -1 && near(view[12], -25), "camera matrix (0x20e850)");
+    records[4] = 3;
+    blocks[4].second = records;
+    requireThrows([&] { parseAnimation(pooledBlocks(blocks)); }, "key count larger than the key blocks accepted");
+
+    ActorPose pose;
+    pose.yaw = float(M_PI / 2);
+    pose.position[0] = 5;
+    Matrix actor = actorMatrix(pose);
+    require(near(actor[2], -1) && near(actor[8], 1) && actor[12] == 5, "actor yaw and translation");
+
+    Bytes text = bytes("CSCamera/cscamera_0000.fnanm\nDonutMan/donutman_minifig.fnmdl\r\nDonutMan/donutman_minifig.fnskl\n"
+                       "DonutMan/donutman_0000_minifig.fnanm");
+    text.push_back(0);
+    auto manifest = parseManifest(pooledBlocks({{-14, text}}));
+    require(manifest.size() == 4 && manifest[1] == "DonutMan/donutman_minifig.fnmdl", "manifest lines");
+    auto actors = cutsceneActors(manifest, "csdata/models/1_1_a");
+    require(actors.size() == 2 && actors[0].name == "cscamera" && actors[0].model.empty() &&
+                actors[1].model == "csdata/models/1_1_a/donutman/donutman_minifig.bfnmdl" &&
+                actors[1].skeleton == "csdata/models/1_1_a/donutman/donutman_minifig.bfnskl" &&
+                actors[1].animation == "csdata/models/1_1_a/donutman/donutman_0000_minifig.bfnanm",
+            "cutscene actors");
+}
+
 void sounds() {
     Sound sound = decodeSound(soundFile());
     require(sound.rate == 12000 && sound.loop && sound.loopStart == 1 && sound.frames == 3, "sound header");
@@ -561,6 +622,7 @@ int main() {
         navigation();
         localisation();
         animations();
+        cutscenes();
     } catch (const std::exception& error) {
         std::cerr << "assets-test failed: " << error.what() << '\n';
         return 1;

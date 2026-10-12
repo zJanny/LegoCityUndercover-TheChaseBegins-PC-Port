@@ -21,14 +21,31 @@ Matrix readMatrix(const Bytes& data, std::size_t offset) {
     return m;
 }
 
-// 0x253764: first block (name hash), pointer array, u16(+6) entry blocks, +0x10, +0x14.
-void skipTrack(Reader& r, const Bytes& records, std::size_t index) {
+// 0x253764: first block (name hash), pointer array, u16(+6) entry blocks, then key times
+// (+0x10, f32 each) and key values (+0x14, 5 x f32 each); u16 +4 is the key count.
+AnimTrack readTrack(Reader& r, const Bytes& records, std::size_t index) {
     need(records, (index + 1) * 0x18, "track");
+    std::size_t at = index * 0x18;
+    AnimTrack track;
+    Bytes name = r.next();
+    need(name, 4, "track name");
+    track.hash = readU32(name, 0);
     r.skip();
-    r.skip();
-    for (unsigned k = 0; k < readU16(records, index * 0x18 + 6); ++k) r.skip();
-    r.skip();
-    r.skip();
+    for (unsigned k = 0; k < readU16(records, at + 6); ++k) r.skip();
+    Bytes times = r.next(), values = r.next();
+    std::size_t count = readU16(records, at + 4);
+    if (times.size() != count * 4 || values.size() != count * 20) throw std::runtime_error("track key block size mismatch");
+    for (std::size_t k = 0; k < count; ++k) {
+        CurveKey key;
+        key.time = readF32(times, 4 * k);
+        key.inDelta = readF32(values, 20 * k);
+        key.inValue = readF32(values, 20 * k + 4);
+        key.value = readF32(values, 20 * k + 8);
+        key.outDelta = readF32(values, 20 * k + 12);
+        key.outValue = readF32(values, 20 * k + 16);
+        track.keys.push_back(key);
+    }
+    return track;
 }
 
 // LSB-first bit reader 0x247a48; reads past the end see zero bits.
@@ -132,12 +149,19 @@ Animation parseAnimation(const Bytes& data) {
         for (unsigned g = 0; g < groups; ++g)
             for (int k = 0; k < perGroup; ++k) r.skip();
     };
-    skipGroups(readU32(head, 0xc) != 0, head[1], 3);
+    if (readU32(head, 0xc)) {
+        r.skip();
+        for (unsigned g = 0; g < head[1]; ++g) {
+            anim.objects.push_back(cString(r.next()));
+            r.skip();
+            r.skip();
+        }
+    }
     skipGroups(readU32(head, 0x10) != 0, head[2], 2);
     skipGroups(head[3] != 0, head[3], 3);
     if (unsigned tracks = readU16(head, 6)) {
         Bytes records = r.next();
-        for (unsigned i = 0; i < tracks; ++i) skipTrack(r, records, i);
+        for (unsigned i = 0; i < tracks; ++i) anim.tracks.push_back(readTrack(r, records, i));
     }
     if (std::uint32_t subs = readU32(head, 0x20)) {
         r.skip();
@@ -147,7 +171,9 @@ Animation parseAnimation(const Bytes& data) {
             need(fixups, 4, "fixups");
             need(countBlock, 4, "sub-animation track count");
             Bytes records = r.next();
-            for (std::uint32_t i = 0; i < readU32(countBlock, 0); ++i) skipTrack(r, records, i);
+            std::vector<AnimTrack> tracks;
+            for (std::uint32_t i = 0; i < readU32(countBlock, 0); ++i) tracks.push_back(readTrack(r, records, i));
+            anim.subAnimations.push_back(std::move(tracks));
             r.skip();
             for (std::uint32_t i = 0; i < readU32(fixups, 0); ++i) r.skip();
         }
@@ -285,6 +311,28 @@ Matrix poseMatrix(const JointPose& pose) {
 }
 
 Matrix localMatrix(const JointChannels& channels) { return poseMatrix(jointPose(channels)); }
+
+float evaluateTrack(const AnimTrack& track, float time) {
+    const auto& keys = track.keys;
+    if (keys.empty()) return 0;
+    if (time <= keys.front().time) return keys.front().value;
+    if (time >= keys.back().time) return keys.back().value;
+    std::size_t i = 1;
+    while (keys[i].time < time) ++i;
+    const CurveKey& a = keys[i - 1];
+    const CurveKey& b = keys[i];
+    double x0 = a.time, x1 = a.time + a.outDelta, x2 = b.time - b.inDelta, x3 = b.time;
+    auto bezier = [](double p0, double p1, double p2, double p3, double s) {
+        double u = 1 - s;
+        return u * u * u * p0 + 3 * u * u * s * p1 + 3 * u * s * s * p2 + s * s * s * p3;
+    };
+    double lo = 0, hi = 1, s = 0.5;
+    for (int step = 0; step < 40; ++step) {
+        s = (lo + hi) / 2;
+        if (bezier(x0, x1, x2, x3, s) < time) lo = s; else hi = s;
+    }
+    return float(bezier(a.value, a.outValue, b.inValue, b.value, s));
+}
 
 std::vector<Matrix> skinMatrices(const Skeleton& skeleton, const Animation& animation, double frame) {
     unsigned frames = animation.frames ? animation.frames : 1;
