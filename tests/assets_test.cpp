@@ -516,6 +516,10 @@ void localisation() {
     for (char c : std::string("OK\0On\0Fran\xe7\0", 12)) loc.push_back(std::uint8_t(c));
     auto entries = parseLocalisation(loc);
     require(entries.size() == 2 && entries[textKey("on")] == "On", "LOCA entries");
+    auto extended = extendedCharacters(bytes("\xd0\xa0\xd1\x83x\n"));
+    require(extended == std::vector<std::string>{"\xd0\xa0", "\xd1\x83", "x"}, "extended character list");
+    require(decodeText("\x01" "20\x01" "21 \xe7\x01" "2;", extended) == "\xd0\xa0\xd1\x83 \xc3\xa7\x01" "2;",
+            "text decode: escapes, Latin-1 to UTF-8, unknown escape kept");
     Bytes cut(loc.begin(), loc.end() - 1);
     requireThrows([&] { parseLocalisation(cut); }, "truncated LOCA accepted");
 }

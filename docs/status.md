@@ -18,7 +18,6 @@
 - The game's lighting and materials. The viewer shows an approximation.
 - Blending between different animations, and the real animation speed.
 - Which sound plays for which event.
-- Russian and Polish letters in the game text.
 - Cutscene videos (`.moflex`) and several smaller file types.
 - Save games and settings.
 

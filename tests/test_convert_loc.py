@@ -30,6 +30,9 @@ class LocTests(unittest.TestCase):
         entries = cl.parse_loc(data)
         self.assertEqual(entries[cl.key_hash('FRENCH')], 'Fran\xe7ais')
 
+    def test_decode_text(self):
+        self.assertEqual(cl.decode_text('\x0120\x0123 x\x019Z\x012:', 'abcd'), 'ad x\x019Z\x012:')
+
     def test_rejects_bad_tables(self):
         data = bytearray(loc_file([(1, 'a'), (2, 'b')]))
         with self.assertRaisesRegex(ValueError, 'sizes'):

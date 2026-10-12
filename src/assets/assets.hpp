@@ -262,9 +262,13 @@ struct NavMesh {
 NavMesh parseNav(const Bytes& data);
 
 // .loc tables ("LOCA" v2): key -> Latin-1 text. Keys are the sdbm hash of the upper-case
-// identifier (textKey("PAUSEMENU")). Byte 0x01 starts a 3-byte font glyph escape (not decoded).
+// identifier (textKey("PAUSEMENU")).
 std::uint32_t textKey(const std::string& name);
 std::map<std::uint32_t, std::string> parseLocalisation(const Bytes& data);
+// localisation/extended_chars_utf8.txt split into UTF-8 characters.
+std::vector<std::string> extendedCharacters(const Bytes& utf8);
+// Raw .loc text to UTF-8: Latin-1 bytes, and 0x01 '2' c -> extended[c - 0x30].
+std::string decodeText(const std::string& raw, const std::vector<std::string>& extended);
 
 std::uint32_t readU32(const Bytes& data, std::size_t offset);
 std::uint16_t readU16(const Bytes& data, std::size_t offset);

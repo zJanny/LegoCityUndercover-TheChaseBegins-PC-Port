@@ -4,10 +4,10 @@
 Layout (from shipped data): "LOCA", u32 version (2), u32 entry count, u32 table bytes
 (count x 8), u32 string bytes; then (u32 key hash, u32 string offset) pairs sorted by
 hash; then NUL-terminated strings. Keys are the sdbm hash (h = h * 65599 + c) of the
-upper-case identifier, e.g. "PAUSEMENU" -> "Pause Menu". Text is Latin-1; byte 0x01
-starts a three-byte escape whose two following bytes select a glyph from the game
-font (used for Cyrillic and Polish letters). The glyph mapping is not recovered, so
-escapes are kept as "\\x01" plus the two raw characters.
+upper-case identifier, e.g. "PAUSEMENU" -> "Pause Menu". Text is Latin-1, except the
+escape 0x01 '2' c, which stands for character c - 0x30 of
+localisation/extended_chars_utf8.txt (Cyrillic and Polish letters; found by letter
+frequency and confirmed by readable Russian). Other escapes are left as they are.
 """
 import argparse
 import json
@@ -47,6 +47,20 @@ def parse_loc(data):
     return entries
 
 
+def decode_text(text, extended):
+    """Replace 0x01 '2' c escapes by extended[ord(c) - 0x30]."""
+    out, i = [], 0
+    while i < len(text):
+        if text[i] == '\x01' and i + 2 < len(text) and text[i + 1] == '2' and \
+                0 <= ord(text[i + 2]) - 0x30 < len(extended):
+            out.append(extended[ord(text[i + 2]) - 0x30])
+            i += 3
+        else:
+            out.append(text[i])
+            i += 1
+    return ''.join(out)
+
+
 def candidate_names(paths):
     names = set()
     for path in paths:
@@ -59,6 +73,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('inputs', type=Path, nargs='+', help='.loc files or directories')
     parser.add_argument('--census', action='store_true')
+    parser.add_argument('--extended', type=Path, help='extended_chars_utf8.txt for decoding escapes')
     parser.add_argument('--names', type=Path, action='append', default=[],
                         help='files to take candidate key names from (local use; output is game-derived)')
     args = parser.parse_args()
@@ -66,6 +81,8 @@ def main():
     for item in args.inputs:
         files += sorted(item.rglob('*.loc')) if item.is_dir() else [item]
     names = candidate_names(args.names)
+    extended = args.extended.read_text(encoding='utf-8').strip() if args.extended else ''
+
     failures, totals, tables = [], {'files': 0, 'entries': 0, 'named': 0}, {}
     for path in files:
         try:
@@ -76,7 +93,8 @@ def main():
         totals['files'] += 1
         totals['entries'] += len(entries)
         totals['named'] += sum(1 for key in entries if key in names)
-        tables[path.name] = {names.get(key, '%08x' % key): text for key, text in entries.items()}
+        tables[path.name] = {names.get(key, '%08x' % key): decode_text(text, extended)
+                             for key, text in entries.items()}
     if args.census:
         print(json.dumps({'failure_count': len(failures), 'failures': failures[:10], 'totals': totals}, indent=1))
     else:

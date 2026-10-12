@@ -29,4 +29,37 @@ std::map<std::uint32_t, std::string> parseLocalisation(const Bytes& data) {
     }
     return entries;
 }
+std::vector<std::string> extendedCharacters(const Bytes& utf8) {
+    std::vector<std::string> out;
+    for (std::size_t i = 0; i < utf8.size();) {
+        std::size_t length = utf8[i] < 0x80 ? 1 : utf8[i] < 0xe0 ? 2 : utf8[i] < 0xf0 ? 3 : 4;
+        if (i + length > utf8.size()) throw std::runtime_error("truncated UTF-8 in extended character list");
+        std::string glyph(utf8.begin() + std::ptrdiff_t(i), utf8.begin() + std::ptrdiff_t(i + length));
+        i += length;
+        if (glyph != "\n" && glyph != "\r" && glyph != "\xef\xbb\xbf") out.push_back(glyph);
+    }
+    return out;
+}
+
+std::string decodeText(const std::string& raw, const std::vector<std::string>& extended) {
+    std::string out;
+    for (std::size_t i = 0; i < raw.size(); ++i) {
+        auto c = static_cast<unsigned char>(raw[i]);
+        if (c == 0x01 && i + 2 < raw.size() && raw[i + 1] == '2') {
+            std::size_t index = static_cast<unsigned char>(raw[i + 2]) - 0x30u;
+            if (static_cast<unsigned char>(raw[i + 2]) >= 0x30 && index < extended.size()) {
+                out += extended[index];
+                i += 2;
+                continue;
+            }
+        }
+        if (c < 0x80) {
+            out += char(c);
+        } else {
+            out += char(0xc0 | (c >> 6));
+            out += char(0x80 | (c & 0x3f));
+        }
+    }
+    return out;
+}
 } // namespace chase::assets

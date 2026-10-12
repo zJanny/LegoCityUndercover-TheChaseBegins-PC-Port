@@ -592,3 +592,14 @@ Static analysis used local llvm-objdump (armv6k) over game.arm.elf. This is loca
 - Byte 0x01 + 2 bytes is a glyph escape (Russian, Polish). It is neither an offset into extended_chars_utf8.txt nor a constant code-point offset, and probably indexes the .tnf glyph table (8-byte x, y, w, h records). Not decoded.
 - Added tools/convert_loc.py (dump with `--names`, `--census`), tests/test_convert_loc.py (3), and src/assets/text.cpp (textKey, parseLocalisation) with synthetic and real-data (66/25207) checks.
 - ctest PASS 7/7; Python PASS 53/53.
+
+### 2026-10-13T00:45+02:00 — Text escapes decoded (Cyrillic/Polish)
+
+- Escape 0x01 '2' c → character c − 0x30 of localisation/extended_chars_utf8.txt (84 characters, in file order).
+  - Found by frequency: the most common ru codes ':' 'C' '7' '>' '<' 'A' map to о а и н е т at offset 0x30, matching Russian letter frequency.
+  - Confirmed by readable text ("Начальник тюрьмы Филдинг", "Сохранить и выйти"). After decoding, 0 escapes remain over all 66 files.
+  - The earlier brute force had stopped at offset 0x2b. The meaning of the '2' byte is unknown (5295 of 5306 ru escapes use it; the rest look like data, not escapes).
+- Data oddity: the files with the "_pl" suffix hold Dutch text (e.g. "Opslaan en stoppen").
+- Python decode_text (`--extended`); C++ extendedCharacters/decodeText (UTF-8 output).
+- Tests: synthetic escape/Latin-1/unknown-escape cases. Real data: FNV-1a of decoded gametext_ru = 0xc0c84ff0 in both implementations.
+- ctest PASS 7/7; Python PASS 54/54.

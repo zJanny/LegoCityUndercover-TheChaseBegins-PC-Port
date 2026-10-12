@@ -157,6 +157,18 @@ int main(int argc, char** argv) {
         // Reference: python3 tools/convert_loc.py --census artifacts/fib/files/localisation
         if (locFiles != 66 || locEntries != 25207)
             throw std::runtime_error("localisation totals differ from the Python reference");
+        // Reference: FNV-1a over the UTF-8 of convert_loc.decode_text for every gametext_ru entry
+        // in key order, each followed by a NUL.
+        {
+            auto read = [&](const char* name) { return archive.read(*archive.find(name)); };
+            auto extended = extendedCharacters(read("localisation/extended_chars_utf8.txt"));
+            std::uint32_t textSum = 0x811c9dc5;
+            for (const auto& [key, raw] : parseLocalisation(read("localisation/gametext_ru.loc"))) {
+                std::string text = decodeText(raw, extended);
+                for (char c : text + std::string(1, '\0')) textSum = (textSum ^ std::uint8_t(c)) * 0x01000193;
+            }
+            if (textSum != 0xc0c84ff0) throw std::runtime_error("decoded Russian text differs from the Python reference");
+        }
         // Reference: python3 tools/convert_nav.py --census artifacts/fib/files
         std::size_t navMatched = 0;
         for (const auto& [levelName, room] : navDescriptors) {
