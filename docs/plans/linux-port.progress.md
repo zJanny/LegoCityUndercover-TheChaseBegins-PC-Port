@@ -5,7 +5,7 @@
 - Overall: IN_PROGRESS
 - Current Phase: IMPLEMENT
 - Current Step: S3
-- Last Updated: 2026-10-12T15:10:00+02:00
+- Last Updated: 2026-10-12T15:25:00+02:00
 - Branch: feature/linux-port (unborn)
 - Target Branch: Not specified
 - Requested Scope: PLAN, IMPLEMENT, TEST; start reverse engineering and native port
@@ -35,7 +35,7 @@ Commits authorized by CLAUDE.md "User specified workflows" (commit at logical st
 |---|---|---|---|
 | S1 | Verified executable extraction and analysis ELF | COMPLETE | R1; unit tests + real extraction 2026-10-12T14:51 |
 | S2 | Native accessible input laboratory | COMPLETE | R2/R3; warning-free build, CTest 2/2 |
-| S3 | Focused ARM analysis | IN_PROGRESS | R1; startup, SVC stubs, services, paths recorded; game frame function and DSP path still open |
+| S3 | Focused ARM analysis | IN_PROGRESS | R1; startup, SVC stubs, service-handle helper, services, paths recorded; game frame function still open |
 | S4 | Recover gameplay and replace platform | NOT_STARTED | R4, needs S3 subsystem plan |
 
 ## Current Work
@@ -108,8 +108,6 @@ User approved Git init, no extra guidance, Linux devices emit keyboard/mouse. Us
 
 ## Blockers
 
-- REA `resolve_containing_procedure` on 0x10a080 (dsp::DSP literal user) was denied by the Claude Code auto-mode classifier on 2026-10-12. Not retried. Unblock: user allows the call or performs it.
-
 Full game logic, hardware APIs and asset formats not recovered yet.
 
 ## Deviations From Plan
@@ -118,7 +116,7 @@ Full game logic, hardware APIs and asset formats not recovered yet.
 
 ## Next Action
 
-S3: improve function coverage (Hopper found 963 procedures vs ~6697 ARM `push {...,lr}` prologues). Then trace callers of svcSendSyncRequest (0x25947c) to group IPC wrappers by service (hid/gsp/fs/dsp/cfg/ptm), and identify the per-frame game update called from the dispatcher at 0x100448. The REA lookup for the dsp::DSP literal user (0x10a080) was denied by the permission classifier; the user decides whether to allow it.
+S3: improve function coverage (Hopper found 963 procedures vs ~6697 ARM `push {...,lr}` prologues). Then trace callers of svcSendSyncRequest (0x25947c) to group IPC wrappers by service (hid/gsp/fs/dsp/cfg/ptm), and identify the per-frame game update called from the dispatcher at 0x100448. Resolve the 8 srvGetServiceHandle_candidate call sites whose names come via rodata pointer tables.
 
 ## Session Log
 
@@ -140,3 +138,24 @@ S3: improve function coverage (Hopper found 963 procedures vs ~6697 ARM `push {.
 - Paths: rom:/ (literal users at 0x128608, 0x1287d8, 0x159020, 0x188fa4), data:/savegame.dat (pointer at 0x377964), levels/triggers.txt, levels/letriggers.txt, pregen/*.bin, Pregen/Traffic|Pedestrians/%s_*.bin, TouchGestures/%s.dat, Localisation/extended_chars_utf8.txt, scriptfns.txt. Assets live in the 769 MB RomFS (not yet extracted).
 - Coverage caveat: resolve_containing_procedure returned not_in_procedure for the fs:USER user 0x10f988 (ev_f52ce74dbc497c0f3ce93454138b76efb3281e5ccdc80c18256246e4cac469b2) and the rom:/ literal 0x128718 (ev_d887d2367ebb3881e7d6eef78c3e7ad82dd29c9e652671dfa00ddabd9e3293fe). The local disassembly has ~6697 `push {...,lr}` prologues, so Hopper covers a minority of functions.
 - Engine strings (ATTR_*, StudSpawn*, CUFO*) suggest TT Games' engine. This is an unconfirmed inference.
+
+### 2026-10-12T15:25:00+02:00 — S3 DSP/service-handle follow-up
+
+- The user added a permission rule for mcp__rea__resolve_containing_procedure, and the call was retried. For 0x10a080 it returned not_in_procedure (ev_c0e45080d9f6d52a852b58e0a5d3377f6c66d5d7a7303707d43d9b204b691064), the same Hopper coverage gap. The earlier blocker is resolved.
+- Local disassembly: function 0x109fc0 loads "dsp::DSP" (literal 0x10a080 at 0x109fe4), calls 0x258fd8 (length) then 0x258fa4(out, name, len, 0), initializes state, and calls 0x110948.
+- 0x258fa4 has 11 call sites. Each site with its enclosing function (nearest preceding push…lr) and service name:
+  - Name loaded directly:
+    - 0x10a004 in 0x109fc0: dsp::DSP
+    - 0x10f91c in 0x10f8e4: fs:USER
+    - 0x1100a8 in 0x11006c: ndm:u
+  - Name not resolved by the direct-literal scan (likely loaded through rodata pointer tables such as 0x359c64 → hid:USER):
+    - 0x102f0c in 0x102ec8
+    - 0x110164 in 0x110134
+    - 0x117320 in 0x1172b4
+    - 0x118e70 in 0x118e2c
+    - 0x1220f0 in 0x122090
+    - 0x12af28 in 0x12aea0
+    - 0x131310 in 0x1312d0
+    - 0x25b700 in 0x25b67c
+  - Inference: 0x258fa4 is srv:GetServiceHandle.
+- Named in REA with a _candidate suffix (ev_d6ee55638e4b4ce712665d235d1d66a9d8c1add97c17e5f210b671225ddb1b28): srvGetServiceHandle_candidate, strlen_candidate, dspInit_candidate, fsUserInit_candidate, ndmInit_candidate. Hopper does not define procedures at 0x109fc0, 0x10f8e4 or 0x11006c.
