@@ -48,6 +48,8 @@ build/chase-soundtest music/act_bass_break.bwav   # plays decoded sounds; SDL_AU
 
 # Development model viewer (needs libepoxy; not gameplay). Offscreen screenshot for headless checks:
 SDL_VIDEODRIVER=offscreen build/chase-viewer --screenshot out.bmp models/lvl_00_policestation/room1.bfnmdl --exclude sky
+# Skinned animation playback (first model is posed; --frame N for a fixed frame)
+SDL_VIDEODRIVER=offscreen build/chase-viewer --screenshot out.bmp models/char_bear/char_bear.bfnmdl --skeleton models/char_bear/char_bear.bfnskl --anim models/char_bear/walk.bfnanm --frame 12
 
 # Run the lab (looks for config/controls.cfg relative to cwd; CMake copies it into build/)
 cd build && ./chase-input-lab [--config PATH] [--smoke-test]
@@ -65,6 +67,7 @@ cd build && ./chase-input-lab [--config PATH] [--smoke-test]
   
   When you change behaviour, update both tests.
 - **The native asset runtime is `chase_assets`** (`src/assets/`, namespace `chase::assets`). It has no SDL dependency. It ports the verified Python tools: FUSE archive + RefPack, the pooled reader with `PoolCursor`, and PICA texture decode. The Python tools in `tools/` are the reference. When you change a format decoder, change both, and keep `assets-real-test`'s checksums (from `convert_textures.py --checksum`) in agreement.
+- `chase_assets` also decodes skeletons and animation curves (`anim.cpp`) and resolves skin joints through each part's bone palette. Pose math replicates the game's routines (0x24c734, 0x248870, 0x24c5a0); `tools/convert_anims.py` and `convert_models.py` are the reference.
 - **`chase_audio` is the mixer core** (`src/audio/`). It has no SDL dependency: voices with linear resampling, mono→stereo, gain and loop points, pulled as float stereo frames by `mix()`. `chase-soundtest` is a thin SDL front end, and `mixer-test` checks the mixing rules.
 - `config/controls.cfg` format: `Action key|mouse Code hold|toggle`, with `#` comments. Key names are SDL names with `_` in place of spaces. Mouse codes are `Left`, `Middle`, `Right`, `X1` and `X2`. Action names are 3DS buttons, not recovered gameplay meanings.
 - **Extractor safety rules:**
