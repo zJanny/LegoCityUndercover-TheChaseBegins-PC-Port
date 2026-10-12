@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Decode TT Fusion 3DS textures (.btga/.bpng/.bdds) from an unpacked .fib to PNG.
 
-Container (56-byte header, recovered from shipped files; see progress log):
-  0x00 u32 0x400, 0x04 u32 0x10, 0x08 i32 -14, 0x0c u32 0x20, 0x10 i32 -14
-  0x14 u32 data size, 0x18 u16 width, 0x1a u16 height, 0x1c u32 data size,
+Container: a TT pooled resource (tools/tt_resource.py) with table
+[-14, 0x20, -14, data size], i.e. a fixed 0x18-byte prefix
+  0x00 u32 0x400 (4 table words), 0x04 u32 0x10, 0x08 table ...,
+then the 0x20-byte texture record and the pixel block:
+  0x18 u16 width, 0x1a u16 height, 0x1c u32 data size,
   0x20 u8 PICA200 texture format, 0x21-0x22 zero, 0x23 u8 cubemap flag,
   0x24 u32 mip levels, 0x28..0x37 zero.
 Pixel data follows at 0x38: every mip level, largest first, in PICA200

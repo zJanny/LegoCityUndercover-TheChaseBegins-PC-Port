@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Decode TT Fusion .bwav sounds (wrapped Nintendo CWAV) from an unpacked .fib to WAV.
 
-Wrapper (recovered from shipped files; see progress log): u32 version 0x400
-(one CWAV at 0x44) or 0x600 (CWAVs from 0x4c, one per channel, back to back).
+Wrapper: a TT pooled resource (tools/tt_resource.py) whose first block is a
+0x2c-byte sound record (not interpreted) and whose remaining blocks are CWAVs,
+one per channel. Shipped files have one (sound effects) or two (music) parts.
 Each CWAV is the standard 3DS BCWAV layout (INFO + DATA blocks) with PCM8,
 PCM16, DSP-ADPCM or IMA-ADPCM samples. Loop points are kept in the report.
 """
@@ -13,7 +14,10 @@ import sys
 import wave
 from pathlib import Path
 
-CWAV_START = {0x400: 0x44, 0x600: 0x4c}
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from tt_resource import parse as parse_pools  # noqa: E402
+
+SOUND_RECORD = 0x2c
 ENCODINGS = {0: 'PCM8', 1: 'PCM16', 2: 'DSP-ADPCM', 3: 'IMA-ADPCM'}
 IMA_STEPS = [7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 19, 21, 23, 25, 28, 31, 34, 37, 41, 45, 50, 55, 60,
              66, 73, 80, 88, 97, 107, 118, 130, 143, 157, 173, 190, 209, 230, 253, 279, 307, 337, 371,
@@ -44,19 +48,15 @@ def reference(data, offset, kind):
 
 def split_wrapper(data):
     """Return the CWAV byte strings inside a .bwav wrapper."""
-    if len(data) < 4 or u32(data, 0) not in CWAV_START:
-        raise ValueError("unknown .bwav wrapper version")
-    offset, parts = CWAV_START[u32(data, 0)], []
-    while offset < len(data):
-        if data[offset:offset + 4] != b'CWAV':
-            raise ValueError("expected CWAV at 0x%x" % offset)
-        size = u32(data, offset + 0xc)
-        if size < 0x40 or offset + size > len(data):
-            raise ValueError("CWAV size out of bounds")
-        parts.append(data[offset:offset + size])
-        offset += size
-    if not parts:
-        raise ValueError("wrapper contains no CWAV")
+    blocks = parse_pools(data)['blocks']
+    if len(blocks) < 2 or blocks[0]['size'] != SOUND_RECORD:
+        raise ValueError("unexpected .bwav block layout")
+    parts = []
+    for block in blocks[1:]:
+        part = data[block['offset']:block['offset'] + block['size']]
+        if part[:4] != b'CWAV' or block['size'] < 0x40 or u32(part, 0xc) != block['size']:
+            raise ValueError("expected CWAV block at 0x%x" % block['offset'])
+        parts.append(part)
     return parts
 
 

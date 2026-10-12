@@ -34,8 +34,15 @@ def cwav(encoding, samples, payload, coefs=(0,) * 16, ima=(0, 0)):
 
 
 def wrapper(*parts):
-    version = 0x400 if len(parts) == 1 else 0x600
-    return struct.pack('<I', version) + bytes(a.CWAV_START[version] - 4) + b''.join(parts)
+    """Pooled resource: -14 sound record, then one -14 block per CWAV part."""
+    table = [-14, a.SOUND_RECORD]
+    for part in parts:
+        table += [-14, len(part)]
+    head = struct.pack('<II', len(table) << 8, 4 * len(table)) + struct.pack('<%di' % len(table), *table)
+    return head + bytes(a.SOUND_RECORD) + b''.join(parts)
+
+
+CWAV_AT = 8 + 16 + 0x2c  # single-part wrapper: shipped sound effects have CWAV at 0x44
 
 
 class AudioTests(unittest.TestCase):
@@ -79,7 +86,7 @@ class AudioTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 a.decode(data)
         bad_ref = bytearray(wrapper(good))
-        bad_ref[a.CWAV_START[0x400] + 0x15] = 0  # INFO reference type 0x7000 -> 0x0000
+        bad_ref[CWAV_AT + 0x15] = 0  # INFO reference type 0x7000 -> 0x0000
         with self.assertRaisesRegex(ValueError, 'reference type'):
             a.decode(bytes(bad_ref))
 
