@@ -14,9 +14,16 @@ target_link_libraries(chase-input-lab PRIVATE chase_input PkgConfig::SDL2)
 target_compile_options(chase-input-lab PRIVATE -Wall -Wextra -Wpedantic)
 configure_file(config/controls.cfg config/controls.cfg COPYONLY)
 # Native asset runtime (plan S4a): no SDL dependency.
-add_library(chase_assets src/assets/fuse.cpp src/assets/pooled.cpp src/assets/texture.cpp src/assets/model.cpp src/assets/level.cpp)
+add_library(chase_assets src/assets/fuse.cpp src/assets/pooled.cpp src/assets/texture.cpp src/assets/model.cpp src/assets/level.cpp src/assets/audio.cpp)
 target_include_directories(chase_assets PUBLIC src)
 target_compile_options(chase_assets PRIVATE -Wall -Wextra -Wpedantic)
+# Audio mixer core (plan S4d): no SDL dependency; chase-soundtest is the SDL front end.
+add_library(chase_audio src/audio/mixer.cpp)
+target_link_libraries(chase_audio PUBLIC chase_assets)
+target_compile_options(chase_audio PRIVATE -Wall -Wextra -Wpedantic)
+add_executable(chase-soundtest src/soundtest.cpp)
+target_link_libraries(chase-soundtest PRIVATE chase_audio PkgConfig::SDL2)
+target_compile_options(chase-soundtest PRIVATE -Wall -Wextra -Wpedantic)
 # Development model viewer (plan S4b); built when libepoxy is available.
 pkg_check_modules(EPOXY IMPORTED_TARGET epoxy)
 if(EPOXY_FOUND)
@@ -38,6 +45,10 @@ if(BUILD_TESTING)
   target_link_libraries(assets-test PRIVATE chase_assets)
   target_compile_options(assets-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME assets-core COMMAND assets-test)
+  add_executable(mixer-test tests/mixer_test.cpp)
+  target_link_libraries(mixer-test PRIVATE chase_audio)
+  target_compile_options(mixer-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME audio-mixer COMMAND mixer-test)
   add_executable(assets-real-test tests/assets_real_test.cpp)
   target_link_libraries(assets-real-test PRIVATE chase_assets)
   target_compile_options(assets-real-test PRIVATE -Wall -Wextra -Wpedantic)
@@ -52,5 +63,11 @@ if(BUILD_TESTING)
       csdata/models/1_1_e/trolley/trolley.bfnmdl)
     set_tests_properties(viewer-real-smoke PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen"
       PASS_REGULAR_EXPRESSION "850 triangles, 0 missing textures.*saved viewer-smoke.bmp")
+    # Opt-in: decodes and plays one looping music track for 0.3 s on SDL's dummy audio driver.
+    add_test(NAME soundtest-real-smoke COMMAND chase-soundtest --seconds 0.3
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      music/act_bass_break.bwav)
+    set_tests_properties(soundtest-real-smoke PROPERTIES ENVIRONMENT "SDL_AUDIODRIVER=dummy"
+      PASS_REGULAR_EXPRESSION "12000 Hz, 2 channel")
   endif()
 endif()

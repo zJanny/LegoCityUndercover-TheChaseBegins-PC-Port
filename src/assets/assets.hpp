@@ -114,6 +114,17 @@ unsigned vertexFlags(const std::uint8_t* material);
 // Byte stride implied by a flag mask; throws for the unrecovered flag-1 layout.
 std::size_t vertexStride(unsigned flags);
 
+// .bwav: pooled resource with a 0x2c sound record, then one CWAV per channel part.
+// PCM8/PCM16/DSP-ADPCM/IMA-ADPCM decode to signed 16-bit; parts become channels.
+struct Sound {
+    int rate = 0;
+    bool loop = false;
+    std::uint32_t loopStart = 0;
+    std::uint32_t frames = 0;                     // samples per channel
+    std::vector<std::vector<std::int16_t>> channels;
+};
+Sound decodeSound(const Bytes& data);
+
 // Name hash 0x24da28: CRC-32 (reflected 0xEDB88320) of the lower-cased name.
 std::uint32_t nameHash(const std::string& name);
 

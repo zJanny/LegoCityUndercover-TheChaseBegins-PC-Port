@@ -51,6 +51,8 @@ int main(int argc, char** argv) {
         std::size_t bytes = 0, pooled = 0, textures = 0, checked = 0;
         std::size_t models = 0, parts = 0, vertices = 0, triangles = 0;
         std::size_t levels = 0, objects = 0, placed = 0;
+        std::size_t sounds = 0, samples = 0, loops = 0;
+        std::uint32_t soundSum = 0x811c9dc5;  // FNV-1a over act_bass_break's PCM, see below
         for (const auto& entry : archive.entries()) {
             Bytes data = archive.read(entry);
             if (data.size() != entry.size) throw std::runtime_error("entry size mismatch");
@@ -61,6 +63,17 @@ int main(int argc, char** argv) {
             if (ext.size() > 2 && ext[1] == 'b' && ext != ".bin") {
                 parsePooled(data);
                 ++pooled;
+            }
+            if (endsWith(name, ".bwav")) {
+                Sound sound = decodeSound(data);
+                ++sounds;
+                loops += sound.loop;
+                samples += std::size_t(sound.frames) * sound.channels.size();
+                if (name == "music/act_bass_break.bwav")
+                    for (std::uint32_t f = 0; f < sound.frames; ++f)
+                        for (const auto& channel : sound.channels)
+                            for (int b = 0; b < 2; ++b)
+                                soundSum = (soundSum ^ std::uint8_t(std::uint16_t(channel[f]) >> (8 * b))) * 0x01000193;
             }
             if (endsWith(name, ".blvl")) {
                 Level level = parseLevel(data);
@@ -95,11 +108,15 @@ int main(int argc, char** argv) {
         // Reference totals from tools/convert_levels.py (parse_level / placements over all .blvl)
         if (levels != 856 || objects != 18469 || placed != 6563)
             throw std::runtime_error("level totals differ from the Python reference");
+        // Reference: artifacts/audio/audio-manifest.json from tools/convert_audio.py, and FNV-1a over
+        // the interleaved little-endian PCM of its music/act_bass_break.wav.
+        if (sounds != 1361 || samples != 122501647 || loops != 123 || soundSum != 0xdcbf1f85)
+            throw std::runtime_error("sound totals or checksum differ from the Python reference");
         std::cout << archive.entries().size() << " entries, " << bytes << " bytes, " << pooled
                   << " pooled resources, " << textures << " textures, " << checked << " checksums match, "
                   << models << " models / " << parts << " parts / " << vertices << " vertices / "
                   << triangles << " triangles, " << levels << " levels / " << objects << " objects / " << placed
-                  << " placements\n";
+                  << " placements, " << sounds << " sounds / " << samples << " samples / " << loops << " looping\n";
     } catch (const std::exception& error) {
         std::cerr << "assets-real-test failed: " << error.what() << '\n';
         return 1;

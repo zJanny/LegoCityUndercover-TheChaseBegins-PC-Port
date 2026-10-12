@@ -1,0 +1,34 @@
+#pragma once
+// Software mixer for decoded sounds (plan step S4d). No SDL dependency: the
+// platform layer pulls interleaved stereo frames from mix().
+#include "assets/assets.hpp"
+#include <cstddef>
+#include <memory>
+#include <vector>
+
+namespace chase::audio {
+class Mixer {
+public:
+    explicit Mixer(int outputRate);
+    // Starts a voice; returns its id. The sound must outlive the voice.
+    int play(std::shared_ptr<const assets::Sound> sound, float gain = 1.0f);
+    void stop(int voice);
+    bool playing(int voice) const;
+    std::size_t activeVoices() const;
+    // Mixes `frames` stereo frames into `out` (2 * frames floats, overwritten, range about -1..1).
+    void mix(float* out, std::size_t frames);
+    int outputRate() const { return rate_; }
+
+private:
+    struct Voice {
+        int id;
+        std::shared_ptr<const assets::Sound> sound;
+        double position;   // in source frames
+        double step;       // source frames per output frame
+        float gain;
+    };
+    int rate_;
+    int nextId_ = 1;
+    std::vector<Voice> voices_;
+};
+} // namespace chase::audio

@@ -112,6 +112,16 @@ Other options:
 - **`--screenshot OUT.bmp`:** renders one frame, then exits. With `SDL_VIDEODRIVER=offscreen` this works without a display.
 - **`--fib` / `--names`:** default to `artifacts/romfs/romfs/`.
 
+## Sound test
+
+`chase-soundtest` decodes `.bwav` sounds from the archive and plays them through the native mixer (`chase_audio`, `src/audio/`) and SDL audio. It honours loop points: a looping sound plays for 10 s unless you pass `--seconds`.
+
+```sh
+build/chase-soundtest music/act_bass_break.bwav sounds/lego_heart_collected_01.bwav
+```
+
+How the game routes sounds to events is not recovered yet.
+
 ## Build and run the input laboratory
 
 Requires CMake ≥ 3.16, a C++17 compiler and SDL2 (found through pkg-config).

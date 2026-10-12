@@ -257,8 +257,55 @@ void levels() {
 }
 }
 
+namespace {
+// One-part .bwav with a one-channel DSP-ADPCM CWAV; mirrors tests/test_convert_audio.py.
+Bytes soundFile() {
+    Bytes info = bytes("INFO");
+    put32(info, 0);
+    info.push_back(2); info.push_back(1); info.push_back(0); info.push_back(0);  // DSP-ADPCM, loop
+    put32(info, 12000); put32(info, 1); put32(info, 3); put32(info, 0);         // rate, loop start, samples
+    put32(info, 1);                                                             // channel table: 1 entry
+    for (std::uint32_t v : {0x7100u, 0xcu}) put32(info, v);
+    for (std::uint32_t v : {0x1f00u, 0x18u, 0x0300u, 0x14u, 0u}) put32(info, v); // channel info
+    std::int16_t coefs[16] = {2048};
+    for (auto c : coefs) { info.push_back(std::uint8_t(c)); info.push_back(std::uint8_t(c >> 8)); }
+    info.resize(info.size() + 16, 0);
+    info.resize((info.size() + 31) / 32 * 32, 0);
+    std::uint32_t infoSize = std::uint32_t(info.size());
+    std::memcpy(&info[4], &infoSize, 4);
+    Bytes frame{0x04, 0x78, 0, 0, 0, 0, 0, 0};
+    Bytes data = bytes("DATA");
+    put32(data, 0x20 + std::uint32_t(frame.size()));
+    data.resize(data.size() + 0x18, 0);
+    data.insert(data.end(), frame.begin(), frame.end());
+    std::uint32_t total = 0x40 + infoSize + std::uint32_t(data.size());
+    Bytes cwav = bytes("CWAV");
+    cwav.push_back(0xff); cwav.push_back(0xfe); cwav.push_back(0x40); cwav.push_back(0);
+    put32(cwav, 0x02010000); put32(cwav, total);
+    cwav.push_back(2); cwav.push_back(0); cwav.push_back(0); cwav.push_back(0);
+    for (std::uint32_t v : {0x7000u, 0x40u, infoSize, 0x7001u, 0x40u + infoSize, std::uint32_t(data.size())}) put32(cwav, v);
+    cwav.resize(0x40, 0);
+    cwav.insert(cwav.end(), info.begin(), info.end());
+    cwav.insert(cwav.end(), data.begin(), data.end());
+    Bytes record(0x2c, 0);
+    std::vector<std::pair<std::int32_t, Bytes>> blocks{{-14, record}, {-14, cwav}};
+    return pooledBlocks(blocks);
+}
+
+void sounds() {
+    Sound sound = decodeSound(soundFile());
+    require(sound.rate == 12000 && sound.loop && sound.loopStart == 1 && sound.frames == 3, "sound header");
+    require(sound.channels.size() == 1 && sound.channels[0] == std::vector<std::int16_t>{112, -16, -16},
+            "DSP-ADPCM decode (floor shift)");
+    Bytes bad = soundFile();
+    bad[12] = 0x30;   // sound-record block size 0x2c -> 0x30: blocks no longer close
+    requireThrows([&] { decodeSound(bad); }, "bad .bwav accepted");
+}
+}
+
 int main() {
     try {
+        sounds();
         refpack();
         fuse();
         pooled();

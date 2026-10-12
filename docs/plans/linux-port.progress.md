@@ -37,10 +37,10 @@ Commits authorized by CLAUDE.md "User specified workflows" (commit at logical st
 | S2 | Native accessible input laboratory | COMPLETE | R2/R3; warning-free build, CTest 2/2 |
 | S3 | Focused ARM analysis | IN_PROGRESS | R1; startup, SVC stubs, service-handle helper, services, paths recorded; game frame function still open |
 | S4 | Recover gameplay and replace platform | IN_PROGRESS | R4; split into S4a–S4f (plan rev 3) |
-| S4a | Native asset runtime (C++) | IN_PROGRESS | FUSE, pooled, textures, models done + CTest; CWAV pending |
+| S4a | Native asset runtime (C++) | COMPLETE | FUSE, pooled, textures, models, levels, sounds; real-data totals equal Python |
 | S4b | Level viewer (SDL2 + GL) | COMPLETE | chase-viewer; offscreen smoke test; placement awaits S4c |
 | S4c | Level composition (.blvl) | IN_PROGRESS | loader replicated (Py+C++), placements in viewer; materials/lighting, streaming, other sections open |
-| S4d | Audio playback | NOT_STARTED | WAV decode done |
+| S4d | Audio playback | IN_PROGRESS | mixer + SDL sound test with loops; event routing not recovered |
 | S4e | Gameplay | NOT_STARTED | needs per-subsystem RE plans |
 | S4f | Saves/settings | NOT_STARTED | |
 
@@ -392,4 +392,15 @@ Static analysis used local llvm-objdump (armv6k) over game.arm.elf. This is loca
   - room3 now shows tiled floor and wall textures with lightmap shading.
   - The overall level stays dark, so a lightmap scale (e.g. ×2) is likely but unverified.
 - `ctest` PASS 5/5 (real-data totals unchanged), Python PASS 39/39.
+
+### 2026-10-12T18:25+02:00 — S4a complete (CWAV in C++), S4d mixer and sound test
+
+- Added src/assets/audio.cpp: decodeSound splits the .bwav through parsePooled (0x2c record plus CWAV parts) and decodes PCM8/PCM16/DSP-ADPCM/IMA. The DSP sum is computed in 64-bit and floor-shifted, as in the reference.
+- assets-core gains a synthetic DSP vector ([112, −16, −16], matching the Python test) and a malformed-record rejection.
+- assets-real-data: 1361 sounds / 122501647 samples / 123 looping, equal to audio-manifest.json. The FNV-1a over act_bass_break's interleaved PCM is 0xdcbf1f85, bit-identical to the Python WAV output.
+- Added the chase_audio library (src/audio/mixer.{hpp,cpp}, no SDL): voices with linear resampling, mono→stereo, gain, loop wrap to loopStart, and one-shot expiry.
+- Added CTest `audio-mixer` (tests/mixer_test.cpp).
+- Added chase-soundtest (SDL audio callback at 48 kHz float stereo). It plays archive sounds and keeps loops going for 10 s by default or `--seconds`.
+- Added the opt-in CTest `soundtest-real-smoke` (SDL_AUDIODRIVER=dummy).
+- `ctest --test-dir build --output-on-failure` — PASS 7/7; 0 warnings.
 - Named in REA with a _candidate suffix (ev_d6ee55638e4b4ce712665d235d1d66a9d8c1add97c17e5f210b671225ddb1b28): srvGetServiceHandle_candidate, strlen_candidate, dspInit_candidate, fsUserInit_candidate, ndmInit_candidate. Hopper does not define procedures at 0x109fc0, 0x10f8e4 or 0x11006c.
