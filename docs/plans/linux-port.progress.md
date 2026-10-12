@@ -403,4 +403,20 @@ Static analysis used local llvm-objdump (armv6k) over game.arm.elf. This is loca
 - Added chase-soundtest (SDL audio callback at 48 kHz float stereo). It plays archive sounds and keeps loops going for 10 s by default or `--seconds`.
 - Added the opt-in CTest `soundtest-real-smoke` (SDL_AUDIODRIVER=dummy).
 - `ctest --test-dir build --output-on-failure` — PASS 7/7; 0 warnings.
+
+### 2026-10-12T18:40+02:00 — Skeleton and animation containers (REA, Ghidra)
+
+- Loaders:
+  - 0x108f30 rewrites the path to .bfnanm and calls 0x10edec (ev_1b7f5557…8fc1).
+  - The skeleton loader 0x10f26c (ev_fbc95e75…a557) opens .bfnskl itself.
+  - The track reader is 0x253764 (ev_8cc8ebc4…997f).
+  - Neither pushes a pool, and both formats use only the −14 pool, so blocks are handed out in order.
+- Skeleton: the header's u8 at +1 is the joint count, followed by blocks for +8, +0xc and +4. Joint records are 0x98 bytes, each with a name block.
+- Animation (0x10edec):
+  - Optional sections: +8 (count from bits), +0xc (u8 +1 entries × 3 blocks), +0x10 (u8 +2 × 2), +0x14 (u8 +3 × 3), +0x18 tracks (u16 +6).
+  - +0x1c sub-animations (u32 +0x20), each made of a fixup list, a count, tracks, a data block and fixup targets.
+  - A track (0x18) consists of a first block (u32 name hash), its own pointer-array block, u16(+6) entry blocks, then +0x10 (key times, f32 0..1) and +0x14 (key values).
+- Example (csdata donut1_0000): bone-like entries "Donut" and "carryhandle", each with a 0xdf0 data block and a 0x198 per-frame block. One sub-animation has 8 tracks with incrementing hashes and 10 keys of 20 bytes each.
+- Added tools/convert_anims.py and tests/test_convert_anims.py (2 tests). `--census`: 2330/2330 files consume every block (376 skeletons / 5280 joints; 1954 animations / 3804 sub-animations). Python PASS 41/41.
+- Not recovered: the joint record fields (bind pose and parent), the per-bone keyframe encoding (0xdf0/0x198 blocks), the track value layout, and playback/evaluation code.
 - Named in REA with a _candidate suffix (ev_d6ee55638e4b4ce712665d235d1d66a9d8c1add97c17e5f210b671225ddb1b28): srvGetServiceHandle_candidate, strlen_candidate, dspInit_candidate, fsUserInit_candidate, ndmInit_candidate. Hopper does not define procedures at 0x109fc0, 0x10f8e4 or 0x11006c.
