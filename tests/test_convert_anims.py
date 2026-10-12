@@ -31,7 +31,25 @@ def animation():
     return pooled(blocks)
 
 
+def joint(parent, world_t, local_t):
+    def matrix(t):
+        rows = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [t[0], t[1], t[2], 1]]
+        return b''.join(struct.pack('<4f', *r) for r in rows)
+    return struct.pack('<Ii', 0, parent) + matrix(world_t) + matrix(local_t) + bytes(0x10)
+
+
 class AnimTests(unittest.TestCase):
+    def test_hierarchy_check(self):
+        good = joint(-1, (0, 1, 0), (0, 1, 0)) + joint(0, (0, 1.5, 2), (0, 0.5, 2))
+        blocks = [(-14, bytes([0, 2]) + bytes(14)), (-14, b''), (-14, b''), (-14, good), (-14, b'a\0'), (-14, b'b\0')]
+        skel = ca.parse_skeleton(pooled(blocks))
+        self.assertEqual(skel['joints'][1]['parent'], 0)
+        self.assertLess(ca.check_hierarchy(skel), 1e-6)
+        bad = joint(-1, (0, 1, 0), (0, 1, 0)) + joint(0, (0, 9, 2), (0, 0.5, 2))
+        blocks[3] = (-14, bad)
+        with self.assertRaisesRegex(ValueError, 'parent.world'):
+            ca.check_hierarchy(ca.parse_skeleton(pooled(blocks)))
+
     def test_skeleton(self):
         skel = ca.parse_skeleton(skeleton())
         self.assertEqual([j['name'] for j in skel['joints']], ['root', 'spine'])

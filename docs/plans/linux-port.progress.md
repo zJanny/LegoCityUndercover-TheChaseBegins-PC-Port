@@ -418,5 +418,13 @@ Static analysis used local llvm-objdump (armv6k) over game.arm.elf. This is loca
   - A track (0x18) consists of a first block (u32 name hash), its own pointer-array block, u16(+6) entry blocks, then +0x10 (key times, f32 0..1) and +0x14 (key values).
 - Example (csdata donut1_0000): bone-like entries "Donut" and "carryhandle", each with a 0xdf0 data block and a 0x198 per-frame block. One sub-animation has 8 tracks with incrementing hashes and 10 keys of 20 bytes each.
 - Added tools/convert_anims.py and tests/test_convert_anims.py (2 tests). `--census`: 2330/2330 files consume every block (376 skeletons / 5280 joints; 1954 animations / 3804 sub-animations). Python PASS 41/41.
-- Not recovered: the joint record fields (bind pose and parent), the per-bone keyframe encoding (0xdf0/0x198 blocks), the track value layout, and playback/evaluation code.
+- Not recovered: the per-bone keyframe encoding (0xdf0/0x198 blocks), the track value layout, and playback/evaluation code.
+- Joint record (0x98), recovered from data:
+  - +0 name pointer
+  - +4 s32 parent index (−1 for the root)
+  - +8 world bind matrix and +0x48 parent-relative matrix, both row-major 4×4 with the translation in the last row
+  - +0x88 four floats, unknown (often 0,1,0,0,0,1)
+- check_hierarchy() verifies, across all 376 skeletons / 5280 joints, that parents precede children and that world == local·parent.world (row vectors). The maximum relative error is 4.65e-5.
+- Skin attribute (vertex flag 2, 8 bytes): shipped data reads as u8 weights then u8 indices (e.g. ff000000 00000000). This matches the shader inputs vWeights/vIndex and the 26-entry "Bones" uniform (regs 0x22–0x6f, 3 regs per bone). The order and the bone-palette mapping are not yet confirmed in code.
+- Python PASS 42/42.
 - Named in REA with a _candidate suffix (ev_d6ee55638e4b4ce712665d235d1d66a9d8c1add97c17e5f210b671225ddb1b28): srvGetServiceHandle_candidate, strlen_candidate, dspInit_candidate, fsUserInit_candidate, ndmInit_candidate. Hopper does not define procedures at 0x109fc0, 0x10f8e4 or 0x11006c.

@@ -26,11 +26,35 @@ def parse_skeleton(data):
     joints = []
     for i in range(count):
         record = joints_block[i * 0x98:(i + 1) * 0x98]
-        joints.append({'name': cstring(pools.next()), 'raw': record})
+        # +4 parent index (-1 root); +8 world bind matrix and +0x48 parent-relative
+        # matrix, both row-major 4x4 with the translation in the last row.
+        joints.append({'name': cstring(pools.next()), 'raw': record,
+                       'parent': struct.unpack_from('<i', record, 4)[0],
+                       'world': [list(struct.unpack_from('<4f', record, 8 + 16 * r)) for r in range(4)],
+                       'local': [list(struct.unpack_from('<4f', record, 0x48 + 16 * r)) for r in range(4)]})
     left = pools.leftover()
     if left:
         raise ValueError("unconsumed blocks: %s" % left)
     return {'header': head, 'joints': joints, 'b8': b8, 'bc': bc}
+
+
+def matmul(a, b):
+    return [[sum(a[i][k] * b[k][j] for k in range(4)) for j in range(4)] for i in range(4)]
+
+
+def check_hierarchy(skel, tolerance=2e-3):
+    """Parents precede children and world == local * parent.world (row vectors)."""
+    worst = 0.0
+    for index, joint in enumerate(skel['joints']):
+        parent = joint['parent']
+        if parent >= index or parent < -1:
+            raise ValueError("joint %d has parent %d" % (index, parent))
+        expect = joint['local'] if parent < 0 else matmul(joint['local'], skel['joints'][parent]['world'])
+        scale = max(1.0, max(abs(x) for row in joint['world'] for x in row))
+        worst = max(worst, max(abs(expect[i][j] - joint['world'][i][j]) for i in range(4) for j in range(4)) / scale)
+    if worst > tolerance:
+        raise ValueError("world != local * parent.world (max relative error %.4g)" % worst)
+    return worst
 
 
 def read_track(pools, record):
@@ -94,6 +118,7 @@ def main():
         try:
             if path.suffix == '.bfnskl':
                 skel = parse_skeleton(path.read_bytes())
+                totals['worst_hierarchy_error'] = max(totals.get('worst_hierarchy_error', 0.0), check_hierarchy(skel))
                 totals['skeletons'] += 1
                 totals['joints'] += len(skel['joints'])
                 if not args.census:
