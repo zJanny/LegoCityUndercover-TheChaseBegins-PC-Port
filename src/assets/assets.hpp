@@ -208,7 +208,7 @@ Skeleton parseSkeleton(const Bytes& data);
 // .bfnanm animation (loader 0x10edec); every block is consumed and checked, but
 // only the per-joint curves (+0x08 section) are kept.
 struct Animation {
-    unsigned frames = 0;                   // header u16 +4
+    unsigned frames = 0;                   // header u16 +4 & 0x3fff (0x114b58); bit 14 set in cutscenes
     std::vector<Bytes> jointCurves;        // indexed like the skeleton joints
 };
 Animation parseAnimation(const Bytes& data);

@@ -205,10 +205,15 @@ def rigid_inverse(m):
     return rows + [[-sum(t[k] * m[i][k] for k in range(3)) for i in range(3)] + [1.0]]
 
 
+def frame_count(animation):
+    """Header u16 +4 masked with 0x3fff, as 0x114b58 does; cutscene animations set bit 14."""
+    return u16(animation['header'], 4) & 0x3fff
+
+
 def skin_matrices(skeleton, animation, frame):
     """Per joint rigid_inverse(bind world) * animated world (row vectors), as 0x252cb0.
     A fractional frame blends floor(frame) and the next frame, wrapping (0x24bf80)."""
-    frames = max(u16(animation['header'], 4), 1)
+    frames = max(frame_count(animation), 1)
     wrapped = frame % frames
     first = int(wrapped) % frames
     second, fraction = (first + 1) % frames, wrapped - math.floor(wrapped)
@@ -216,12 +221,12 @@ def skin_matrices(skeleton, animation, frame):
     for index, joint in enumerate(skeleton['joints']):
         local = joint['local']
         if index < len(animation.get('s8', [])):
-            a = decode_channels(animation['s8'][index], first, u16(animation['header'], 4))
+            a = decode_channels(animation['s8'][index], first, frame_count(animation))
             if fraction == 0:
                 if a[1] != -1:
                     local = local_matrix(*a)
             else:
-                b = decode_channels(animation['s8'][index], second, u16(animation['header'], 4))
+                b = decode_channels(animation['s8'][index], second, frame_count(animation))
                 if a[1] != -1 and b[1] != -1:
                     local = pose_matrix(blend_poses([(joint_pose(*a), 1 - fraction), (joint_pose(*b), fraction)]))
         parent = joint['parent']

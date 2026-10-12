@@ -117,7 +117,7 @@ Animation parseAnimation(const Bytes& data) {
     Bytes head = r.next();
     need(head, 0x24, "animation header");
     Animation anim;
-    anim.frames = readU16(head, 4);
+    anim.frames = readU16(head, 4) & 0x3fffu;
     if (readU32(head, 8)) {
         Bytes table = r.next();
         need(table, 4, "joint table");
