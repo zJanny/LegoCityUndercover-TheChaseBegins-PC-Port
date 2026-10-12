@@ -5,7 +5,7 @@
 - Overall: IN_PROGRESS
 - Current Phase: IMPLEMENT
 - Current Step: S4c/S4e/S4f groundwork (S3 continues in parallel)
-- Last Updated: 2026-10-13T12:10+02:00
+- Last Updated: 2026-10-13T12:30+02:00
 - Branch: main
 - Target Branch: Not specified
 - Requested Scope: PLAN, IMPLEMENT, TEST; start reverse engineering and native port
@@ -124,7 +124,7 @@ Full game logic, hardware APIs and asset formats not recovered yet.
 
 ## Next Action
 
-- S4f: decode the options block fields and the defaults routine 0x2081cc; slot contents (story progress, unlocks).
+- S4f: meaning of the options nibbles (+0, +3) and the game language index order; slot contents (story progress, unlocks); how live state is copied into the save buffer.
 - S3: find the GSP vsync call and the scheduler step (30 vs 60 fps); name the binding slots at 0x3769e8.
 - S4e: the code that applies .bxaml track properties; .cam field semantics; particle definitions (.bprt).
 - Open unknowns are listed at the end of the matching docs/re/ files.
@@ -220,3 +220,4 @@ Reverse-engineering findings live in docs/re/ (see docs/re/README.md). Entries m
 - 2026-10-13T11:05+02:00 — FMV player with subtitles: WIP, not merged → [docs/re/fmv.md](../re/fmv.md)
 - 2026-10-13T11:40+02:00 — FMV player finished and merged → [docs/re/fmv.md](../re/fmv.md)
 - 2026-10-13T12:10+02:00 — S4f chase_save library (src/save/) and save-core test; `cmake --build build` warning-free, `ctest --test-dir build` 10/10 pass. Header size field confirmed (REA) → [docs/re/save-format.md](../re/save-format.md)
+- 2026-10-13T12:30+02:00 — Options defaults and system language mapping added to chase_save; save-core passes → [docs/re/save-format.md](../re/save-format.md)

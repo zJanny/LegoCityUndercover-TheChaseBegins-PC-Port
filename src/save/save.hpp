@@ -22,6 +22,9 @@ constexpr char kMagic[] = "LEGO_ENGINE_SAVE";
 // CRC routine 0x248308: reflected 0xedb88320, initial 0xffffffff, no final XOR.
 std::uint32_t checksum(const std::uint8_t* data, std::size_t size);
 
+// 0x21b650: 3DS system language (CFG block 0xA0002) to the game's language index.
+std::uint8_t languageForSystem(std::uint8_t systemLanguage);
+
 // Values match the statuses of the game's load path (0x29ff4c, 0x1d0acc).
 enum class Status {
     Ok = 0,
@@ -37,6 +40,9 @@ public:
     static std::optional<SaveImage> fromBytes(const Bytes& data);
 
     Status validate() const;
+    // Options defaults from 0x2081cc and its callback 0x1a25a0; the rest of the block is zeroed.
+    // `language` is the game's language index (see languageForSystem).
+    void resetOptions(std::uint8_t language);
     // Header writer 0x1fc604: magic, size, version, then the CRC over [0x18, end).
     void seal();
 

@@ -63,6 +63,20 @@ std::uint32_t checksum(const std::uint8_t* data, std::size_t size) {
     return crc;
 }
 
+std::uint8_t languageForSystem(std::uint8_t systemLanguage) {
+    switch (systemLanguage) {
+    case 2: return 2;
+    case 3: return 4;
+    case 4: return 3;
+    case 5: return 5;
+    case 7: return 12;
+    case 8: return 6;
+    case 9: return 8;
+    case 10: return 9;
+    default: return 1;
+    }
+}
+
 SaveImage::SaveImage() : bytes_(kFileSize, 0) { seal(); }
 
 std::optional<SaveImage> SaveImage::fromBytes(const Bytes& data) {
@@ -78,6 +92,17 @@ Status SaveImage::validate() const {
         storedSize() != std::uint16_t(kFileSize) || storedVersion() != kVersion)
         return Status::Corrupt;
     return Status::Ok;
+}
+
+void SaveImage::resetOptions(std::uint8_t language) {
+    std::uint8_t* block = options();
+    std::fill(block, block + kOptionsSize, 0);
+    block[0] = 0x8a;
+    block[1] = language;
+    block[2] = 0xff;
+    block[3] = 0x21;
+    block[4] = block[5] = 10;
+    block[6] = block[7] = 8;
 }
 
 void SaveImage::seal() {

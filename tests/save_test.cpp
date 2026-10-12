@@ -1,5 +1,6 @@
 // Synthetic save images: header, CRC, validation statuses and atomic storage. No real save exists.
 #include "save/save.hpp"
+#include <algorithm>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
@@ -41,6 +42,17 @@ int main() {
         require(image.validate() == Status::Corrupt, "edit without seal breaks CRC");
         image.seal();
         require(image.validate() == Status::Ok && image.slot(1)[0x5190] == 0x42, "seal keeps data");
+
+        // Reference: 0x2081cc + 0x1a25a0 (REA ev_4e9c96fe…), globals 0x379d64..66 = 8, 8, 10.
+        SaveImage defaults;
+        defaults.options()[0x100] = 0x55;
+        defaults.resetOptions(languageForSystem(3));
+        const std::uint8_t expected[] = {0x8a, 4, 0xff, 0x21, 10, 10, 8, 8, 0};
+        require(std::equal(std::begin(expected), std::end(expected), defaults.options()) &&
+                    defaults.options()[0x100] == 0,
+                "option defaults");
+        require(languageForSystem(0) == 1 && languageForSystem(7) == 12 && languageForSystem(11) == 1,
+                "language mapping 0x21b650");
 
         Bytes data = image.bytes();
         data[6] = 29;
