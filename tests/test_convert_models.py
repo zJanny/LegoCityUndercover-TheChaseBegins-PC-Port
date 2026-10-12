@@ -64,6 +64,24 @@ class ModelTests(unittest.TestCase):
         self.assertEqual(verts[0]['color'], (255, 0, 0, 255))
         self.assertEqual(cm.triangles(part), [(0, 1, 2)])
 
+    def test_bone_batches_resolve_skin_joints(self):
+        def part(shared_index=0, last_index=1):
+            header = bytearray(0x78)
+            struct.pack_into('<I', header, 0x20, 2)
+            block = bytearray(2 * 0x110)
+            for b, palette in enumerate(((3, 7), (3, 9))):
+                struct.pack_into('<4I2B', block, b * 0x110, 1, 2, b, 3, *palette)   # vertices 0-2, 1-3
+            return {'buffer': {'header': bytes(header), 'b24': bytes(block), 'indices': 6,
+                               'index_data': struct.pack('<6H', 0, 1, 2, 1, 3, 2)}}, \
+                [{'skin': (255, 0, 0, 0, j, 0, 0, 0)} for j in (1, shared_index, 0, last_index)]
+        good, verts = part()
+        self.assertEqual([b['palette'] for b in cm.bone_batches(good)], [[3, 7], [3, 9]])
+        self.assertEqual([j[1][0] for j in cm.skin_joints(good, verts)], [7, 3, 3, 9])
+        with self.assertRaisesRegex(ValueError, 'different joints'):
+            cm.skin_joints(*part(shared_index=1))
+        with self.assertRaisesRegex(ValueError, 'outside'):
+            cm.skin_joints(*part(last_index=2))
+
     def test_unconsumed_block_rejected(self):
         with self.assertRaisesRegex(ValueError, 'unconsumed'):
             cm.parse_model(model_bytes(extra_block=True))

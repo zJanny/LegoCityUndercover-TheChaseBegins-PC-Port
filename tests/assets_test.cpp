@@ -1,6 +1,7 @@
 // Synthetic fixtures for the native asset runtime; mirrors tests/test_extract_fib.py,
 // tests/test_tt_resource.py and tests/test_convert_textures.py.
 #include "assets/assets.hpp"
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <cstring>
@@ -191,6 +192,55 @@ Bytes modelFile(bool extraBlock) {
     return pooledBlocks(blocks);
 }
 
+enum class SkinVariant { Good, Conflict, OutsidePalette };
+// Two triangles in two bone batches with palettes {3, 7} and {3, 9}; vertices 1 and 2 are shared.
+Bytes skinnedModelFile(SkinVariant variant) {
+    Bytes model(0x24), mesh(0x24), material(0x60), header(0x78), vertices, batches(2 * 0x110);
+    model[4] = 1;
+    mesh[2] = 1;
+    material[0] = 1;               // skin attribute -> flags 0x82, stride 24
+    header[2] = 4;
+    header[4] = 6;
+    header[0x1a] = 24;
+    header[0x20] = 2;              // two bone batches
+    header[0x24] = 1;              // batch block present
+    const std::uint8_t sharedIndex = variant == SkinVariant::Conflict ? 1 : 0;
+    const std::uint8_t lastIndex = variant == SkinVariant::OutsidePalette ? 2 : 1;
+    const std::uint8_t joints[4] = {1, sharedIndex, 0, lastIndex};
+    for (int v = 0; v < 4; ++v) {
+        float xyz[3] = {float(v), 0, 0};
+        const auto* p = reinterpret_cast<const std::uint8_t*>(xyz);
+        vertices.insert(vertices.end(), p, p + 12);
+        for (std::uint8_t c : {255, 255, 255, 255}) vertices.push_back(c);
+        Bytes skin = {255, 0, 0, 0, joints[v], 0, 0, 0};
+        vertices.insert(vertices.end(), skin.begin(), skin.end());
+    }
+    const std::uint8_t palettes[2][2] = {{3, 7}, {3, 9}};
+    for (std::size_t b = 0; b < 2; ++b) {
+        Bytes record;
+        put32(record, 1);                        // triangles
+        put32(record, 2);                        // palette size
+        put32(record, std::uint32_t(b));         // first vertex: batches draw vertices 0-2 and 1-3
+        put32(record, 3);
+        std::copy(record.begin(), record.end(), batches.begin() + std::ptrdiff_t(b * 0x110));
+        std::copy_n(palettes[b], 2, batches.begin() + std::ptrdiff_t(b * 0x110 + 16));
+    }
+    Bytes indices = {0, 0, 1, 0, 2, 0, 1, 0, 3, 0, 2, 0};
+    return pooledBlocks({{-15, model}, {-15, {}}, {-15, {}}, {-15, mesh}, {-15, Bytes(0x24)}, {-15, {}},
+                         {-15, material}, {-15, {}}, {-16, {}},
+                         {-14, header}, {-14, batches}, {-14, indices}, {-14, vertices}, {-16, {}}});
+}
+
+void skinnedModels() {
+    const ModelPart part = parseModel(skinnedModelFile(SkinVariant::Good)).meshes[0].parts[0];
+    require(part.flags == 0x82 && part.boneBatches.size() == 2 && part.boneBatches[1].firstVertex == 1,
+            "bone batches");
+    require(part.vertices[0].joints[0] == 7 && part.vertices[1].joints[0] == 3 && part.vertices[3].joints[0] == 9,
+            "palette indices resolved to skeleton joints");
+    requireThrows([] { parseModel(skinnedModelFile(SkinVariant::Conflict)); }, "conflicting shared vertex accepted");
+    requireThrows([] { parseModel(skinnedModelFile(SkinVariant::OutsidePalette)); }, "index outside palette accepted");
+}
+
 void models() {
     Model model = parseModel(modelFile(false));
     require(model.meshes.size() == 1 && model.meshes[0].parts.size() == 1, "model structure");
@@ -366,6 +416,14 @@ void animations() {
     blocks.push_back({-14, bytes("x")});
     requireThrows([&] { parseSkeleton(pooledBlocks(blocks)); }, "unconsumed skeleton block accepted");
 
+    Matrix turned = {0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1, 0, 2, 3, 4, 1};   // 90 degrees about z, then (2, 3, 4)
+    setJoint(0, -1, turned, turned);
+    Skeleton rotated = parseSkeleton(pooledBlocks({{-14, head}, {-14, {}}, {-14, {}}, {-14, joints},
+                                                   {-14, bytes("root")}, {-14, bytes("spine")}}));
+    Matrix rest = skinMatrices(rotated, Animation{}, 0)[0];
+    for (std::size_t i = 0; i < 16; ++i)
+        require(near(rest[i], i % 5 == 0 ? 1.0f : 0.0f), "unanimated joint with rotated bind skins to identity");
+
     Bytes animHead(0x28, 0);
     animHead[4] = 2;    // frames
     animHead[8] = 1;    // per-joint curve section present
@@ -397,6 +455,7 @@ int main() {
         pooled();
         textures();
         models();
+        skinnedModels();
         levels();
         animations();
     } catch (const std::exception& error) {

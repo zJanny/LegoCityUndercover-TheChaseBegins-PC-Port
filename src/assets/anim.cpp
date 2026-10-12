@@ -1,4 +1,5 @@
 #include "block_reader.hpp"
+#include <algorithm>
 #include <cmath>
 #include <stdexcept>
 
@@ -66,8 +67,8 @@ Matrix rigidInverse(const Matrix& m) {
     Matrix out{};
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) out[std::size_t(i * 4 + j)] = m[std::size_t(j * 4 + i)];
-        out[std::size_t(12 + i)] = -(m[12] * m[std::size_t(i)] + m[13] * m[std::size_t(4 + i)] +
-                                     m[14] * m[std::size_t(8 + i)]);
+        out[std::size_t(12 + i)] = -(m[12] * m[std::size_t(i * 4)] + m[13] * m[std::size_t(i * 4 + 1)] +
+                                     m[14] * m[std::size_t(i * 4 + 2)]);
     }
     out[15] = 1;
     return out;
@@ -244,5 +245,28 @@ std::vector<Matrix> skinMatrices(const Skeleton& skeleton, const Animation& anim
         skin.push_back(multiply(rigidInverse(joint.world), world.back()));
     }
     return skin;
+}
+void skinVertex(const Vertex& vertex, const std::vector<Matrix>& skin, float position[3], float normal[3]) {
+    unsigned total = 0;
+    for (auto weight : vertex.weights) total += weight;
+    if (!total || skin.empty()) {
+        std::copy_n(vertex.position, 3, position);
+        std::copy_n(vertex.normal, 3, normal);
+        return;
+    }
+    std::fill_n(position, 3, 0.0f);
+    std::fill_n(normal, 3, 0.0f);
+    for (int k = 0; k < 4; ++k) {
+        if (!vertex.weights[k]) continue;
+        if (vertex.joints[k] >= skin.size()) continue;
+        const Matrix& m = skin[vertex.joints[k]];
+        float w = float(vertex.weights[k]) / float(total);
+        for (std::size_t j = 0; j < 3; ++j) {
+            const float* p = vertex.position;
+            const float* n = vertex.normal;
+            position[j] += w * (p[0] * m[j] + p[1] * m[4 + j] + p[2] * m[8 + j] + m[12 + j]);
+            normal[j] += w * (n[0] * m[j] + n[1] * m[4 + j] + n[2] * m[8 + j]);
+        }
+    }
 }
 } // namespace chase::assets

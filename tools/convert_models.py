@@ -150,6 +150,50 @@ def decode_vertices(part, centre=None):
     return out
 
 
+def bone_batches(part):
+    """Skin batches from the vertex-buffer block at header +0x24, count at header +0x20.
+
+    Each 0x110 record: u32 triangles, u32 palette size, u32 first vertex, u32 vertex
+    count, then a u8 palette of skeleton joints (at most 26, the "Bones" uniform).
+    Batches cover consecutive runs of triangles in index order."""
+    block, header = part['buffer'].get('b24'), part['buffer']['header']
+    if not block:
+        return []
+    count = u32(header, 0x20)
+    if len(block) != count * 0x110:
+        raise ValueError("bone batch block size %d != %d records" % (len(block), count))
+    batches = []
+    for r in range(count):
+        triangles, size, first, vertices = struct.unpack_from('<4I', block, r * 0x110)
+        batches.append({'triangles': triangles, 'first_vertex': first, 'vertices': vertices,
+                        'palette': list(block[r * 0x110 + 16:r * 0x110 + 16 + size])})
+    return batches
+
+
+def skin_joints(part, vertices):
+    """Per-vertex skeleton joints (weights, joints) resolved through the palette of the
+    batch drawing it; None for vertices no batch references. Checked on all 1457 parts:
+    vertices shared between batches always resolve to the same joints."""
+    resolved = [None] * len(vertices)
+    tris, start = triangles(part), 0
+    for batch in bone_batches(part):
+        run, start = tris[start:start + batch['triangles']], start + batch['triangles']
+        if len(run) != batch['triangles']:
+            raise ValueError("bone batches cover more triangles than the part has")
+        for triangle in run:
+            for index in triangle:
+                if not batch['first_vertex'] <= index < batch['first_vertex'] + batch['vertices']:
+                    raise ValueError("vertex outside its bone batch range")
+                weights, local = vertices[index]['skin'][:4], vertices[index]['skin'][4:]
+                if any(w and j >= len(batch['palette']) for w, j in zip(weights, local)):
+                    raise ValueError("skin index outside its bone palette")
+                joints = tuple(batch['palette'][j] if w else 0 for w, j in zip(weights, local))
+                if resolved[index] not in (None, (tuple(weights), joints)):
+                    raise ValueError("vertex resolves to different joints in two batches")
+                resolved[index] = (tuple(weights), joints)
+    return resolved
+
+
 def mesh_offset(mesh):
     return mesh['f8'] if mesh['raw'][0] & 1 else None
 
@@ -179,8 +223,7 @@ def read_material(pools):
 def read_vertex_buffer(pools):
     """0x11528c: header (0x78), optional block, index group, vertex group, optional group."""
     header = pools.next()
-    if u32(header, 0x24):
-        pools.next()
+    block24 = pools.next() if u32(header, 0x24) else None
     vertices, indices, stride = u16(header, 2), u32(header, 4), u16(header, 0x1a)
     pools.push('m14')
     index_data = pools.next()
@@ -196,7 +239,8 @@ def read_vertex_buffer(pools):
         raise ValueError("index block size mismatch")
     return {'vertices': vertices, 'indices': indices, 'stride': stride, 'header': header,
             'index_data': index_data or b'', 'vertex_data': vertex_data or b'',
-            'morph_frames': u32(header, 0x40) if u32(header, 0x44) else 0, 'extra': extra}
+            'morph_frames': u32(header, 0x40) if u32(header, 0x44) else 0, 'extra': extra,
+            'b24': block24}
 
 
 def read_section_1c(pools, count):

@@ -87,7 +87,8 @@ struct Vertex {
     float uv1[2] = {0, 0};
     float normal[3] = {0, 0, 0};
     std::uint8_t color[4] = {255, 255, 255, 255};
-    // Skin attribute (flag 2): u8 weights summing to 255, then u8 indices.
+    // Skin attribute (flag 2): u8 weights summing to 255, then u8 palette indices, which
+    // parseModel resolves to skeleton joint indices through the part's bone batches.
     std::uint8_t weights[4] = {0, 0, 0, 0};
     std::uint8_t joints[4] = {0, 0, 0, 0};
 };
@@ -99,6 +100,15 @@ struct ModelPart {
     std::vector<Vertex> vertices;
     std::vector<std::uint16_t> indices; // triangle list
     std::vector<std::string> textures;  // material texture names, e.g. "Brick.tga"
+    // Skinned parts: consecutive triangle runs with up to 26 joints each (the "Bones"
+    // uniform), each drawing only vertices firstVertex .. firstVertex + vertices - 1.
+    struct BoneBatch {
+        std::uint32_t triangles = 0;
+        std::uint32_t firstVertex = 0;
+        std::uint32_t vertices = 0;
+        std::vector<std::uint8_t> palette;
+    };
+    std::vector<BoneBatch> boneBatches;
 };
 struct ModelMesh {
     // float3 at mesh+8: the bounding-box centre of the mesh. When mesh byte 0 bit 0
@@ -201,6 +211,8 @@ std::array<float, 4> eulerToQuaternion(float x, float y, float z);
 Matrix localMatrix(const JointChannels& pose);
 // 0x252cb0 for a single layer: rigid-inverse(bind world) * animated world per joint.
 std::vector<Matrix> skinMatrices(const Skeleton& skeleton, const Animation& animation, unsigned frame);
+// Weighted blend of the skin matrices of the vertex's resolved joints.
+void skinVertex(const Vertex& vertex, const std::vector<Matrix>& skin, float position[3], float normal[3]);
 
 std::uint32_t readU32(const Bytes& data, std::size_t offset);
 std::uint16_t readU16(const Bytes& data, std::size_t offset);

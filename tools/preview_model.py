@@ -46,19 +46,18 @@ class Texture:
         return self.rows[y][x]
 
 
-def skin_vertex(v, skin):
-    if 'skin' not in v:
+def skin_vertex(v, joints, skin):
+    if not joints:
         return v['position']
-    weights, indices = v['skin'][:4], v['skin'][4:]
+    weights, indices = joints
     total = sum(weights) or 1
     out = [0.0, 0.0, 0.0]
     p = list(v['position']) + [1.0]
     for wgt, idx in zip(weights, indices):
-        if not wgt:
-            continue
-        m = skin[min(idx + 1, len(skin) - 1)]   # hypothesis: index = joint - 1 (root "Character" skipped)
-        for j in range(3):
-            out[j] += wgt / total * sum(p[k] * m[k][j] for k in range(4))
+        if wgt:
+            m = skin[idx]
+            for j in range(3):
+                out[j] += wgt / total * sum(p[k] * m[k][j] for k in range(4))
     return tuple(out)
 
 
@@ -68,7 +67,8 @@ def render(model, textures, size, yaw, pitch, exclude=(), skin=None):
         for part in mesh['parts']:
             verts = cm.decode_vertices(part, cm.mesh_offset(mesh))
             if skin:
-                verts = [dict(v, position=skin_vertex(v, skin)) for v in verts]
+                joints = cm.skin_joints(part, verts)
+                verts = [dict(v, position=skin_vertex(v, j, skin)) for v, j in zip(verts, joints)]
             names = part['material']['textures']
             if any(word in slot['name'].lower() for slot in names for word in exclude):
                 continue

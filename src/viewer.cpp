@@ -99,6 +99,16 @@ struct GpuVertex {
     std::uint8_t colour[4];
     float uv1[2];
 };
+GpuVertex toGpu(const Vertex& v, unsigned flags) {
+    GpuVertex g{};
+    std::copy_n(v.position, 3, g.position);
+    std::copy_n(v.uv0, 2, g.uv);
+    std::copy_n(v.uv1, 2, g.uv1);
+    std::copy_n(v.normal, 3, g.normal);
+    std::copy_n(v.color, 4, g.colour);
+    if (!(flags & AttrColor)) std::fill_n(g.colour, 4, std::uint8_t(255));
+    return g;
+}
 struct DrawPart {
     GLuint vao = 0, vbo = 0, ibo = 0, texture = 0, lightmap = 0;
     GLsizei count = 0;
@@ -147,12 +157,33 @@ public:
                     DrawPart d = upload(part, texName.empty() ? 0 : texture(texName, dir), out);
                     // Second texture sampled with uv1: a LIGHTMAP_* texture in the shipped data.
                     if ((part.flags & AttrUv1) && part.textures.size() >= 2) d.lightmap = texture(part.textures[1], dir);
+                    if (part.flags & AttrSkin) out.skinned.push_back({out.parts.size(), part.vertices, part.flags});
                     out.parts.push_back(d);
                 }
             loaded = models_.emplace(path, std::move(out)).first;
         }
         instances_.push_back({&loaded->second, transform});
         return true;
+    }
+    // Re-skins every skinned part of an already added model on the CPU.
+    void pose(const std::string& path, const std::vector<Matrix>& skin) {
+        auto loaded = models_.find(path);
+        if (loaded == models_.end()) return;
+        std::vector<GpuVertex> vertices;
+        for (const auto& source : loaded->second.skinned) {
+            vertices.clear();
+            for (const auto& v : source.vertices) {
+                GpuVertex g = toGpu(v, source.flags);
+                skinVertex(v, skin, g.position, g.normal);
+                vertices.push_back(g);
+            }
+            glBindBuffer(GL_ARRAY_BUFFER, loaded->second.parts[source.part].vbo);
+            glBufferSubData(GL_ARRAY_BUFFER, 0, GLsizeiptr(vertices.size() * sizeof(GpuVertex)), vertices.data());
+        }
+    }
+    std::size_t skinnedParts(const std::string& path) const {
+        auto loaded = models_.find(path);
+        return loaded == models_.end() ? 0 : loaded->second.skinned.size();
     }
     void bounds(float centre[3], float& radius) const {
         float lo[3] = {1e30f, 1e30f, 1e30f}, hi[3] = {-1e30f, -1e30f, -1e30f};
@@ -207,8 +238,14 @@ public:
     static Mat4 identity() { return {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1}; }
 
 private:
+    struct SkinnedPart {
+        std::size_t part;
+        std::vector<Vertex> vertices;
+        unsigned flags;
+    };
     struct LoadedModel {
         std::vector<DrawPart> parts;
+        std::vector<SkinnedPart> skinned;
         float lo[3] = {1e30f, 1e30f, 1e30f}, hi[3] = {-1e30f, -1e30f, -1e30f};
     };
     struct Instance {
@@ -249,14 +286,7 @@ private:
         std::vector<GpuVertex> vertices;
         vertices.reserve(part.vertices.size());
         for (const auto& v : part.vertices) {
-            GpuVertex g{};
-            std::copy_n(v.position, 3, g.position);
-            std::copy_n(v.uv0, 2, g.uv);
-            std::copy_n(v.uv1, 2, g.uv1);
-            std::copy_n(v.normal, 3, g.normal);
-            std::copy_n(v.color, 4, g.colour);
-            if (!(part.flags & AttrColor)) std::fill_n(g.colour, 4, std::uint8_t(255));
-            vertices.push_back(g);
+            vertices.push_back(toGpu(v, part.flags));
             for (int i = 0; i < 3; ++i) {
                 model.lo[i] = std::min(model.lo[i], v.position[i]);
                 model.hi[i] = std::max(model.hi[i], v.position[i]);
@@ -270,7 +300,7 @@ private:
         glBindVertexArray(d.vao);
         glGenBuffers(1, &d.vbo);
         glBindBuffer(GL_ARRAY_BUFFER, d.vbo);
-        glBufferData(GL_ARRAY_BUFFER, GLsizeiptr(vertices.size() * sizeof(GpuVertex)), vertices.data(), GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, GLsizeiptr(vertices.size() * sizeof(GpuVertex)), vertices.data(), (part.flags & AttrSkin) ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
         glGenBuffers(1, &d.ibo);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, d.ibo);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, GLsizeiptr(part.indices.size() * 2), part.indices.data(), GL_STATIC_DRAW);
@@ -337,6 +367,9 @@ struct Options {
     // cull: faces with this winding are front. CCW culls room ceilings seen from above
     // (observed on lvl_00_policestation room3), so it is the default.
     std::string screenshot, room, cull = "ccw";
+    // Posing applies to the first model argument. The playback rate is not recovered; 30 fps is assumed.
+    std::string skeleton, animation;
+    int frame = -1;
     float brightness = 1.0f;  // inspection aid only; the game's lighting/combiner setup is not recovered
     std::vector<std::string> exclude, models, levels;
     float yaw = 35, pitch = -25;
@@ -359,6 +392,9 @@ Options parse(int argc, char** argv) {
         else if (arg == "--room") o.room = lower(value());
         else if (arg == "--cull") o.cull = value();
         else if (arg == "--brightness") o.brightness = std::stof(value());
+        else if (arg == "--skeleton") o.skeleton = value();
+        else if (arg == "--anim") o.animation = value();
+        else if (arg == "--frame") o.frame = std::stoi(value());
         else if (arg == "--yaw") o.yaw = std::stof(value());
         else if (arg == "--pitch") o.pitch = std::stof(value());
         else if (!arg.empty() && arg[0] == '-') throw std::runtime_error("unknown option " + arg);
@@ -367,7 +403,10 @@ Options parse(int argc, char** argv) {
     if (o.models.empty() && o.levels.empty())
         throw std::runtime_error("usage: chase-viewer [--fib F] [--names CSV] [--config CFG] [--exclude WORD]... "
                                  "[--level levels/.../x.blvl]... [--room NAME] [--cull none|cw|ccw] [--brightness F] [--screenshot OUT.bmp] [--yaw DEG] [--pitch DEG] "
+                                 "[--skeleton S.bfnskl --anim A.bfnanm [--frame N]] "
                                  "[models/<dir>/<model>.bfnmdl...]");
+    if (o.skeleton.empty() != o.animation.empty()) throw std::runtime_error("--skeleton and --anim go together");
+    if (!o.skeleton.empty() && o.models.empty()) throw std::runtime_error("--anim needs a model argument to pose");
     return o;
 }
 
@@ -412,6 +451,19 @@ int run(const Options& options) {
             else ++unresolved;
         }
     }
+    Skeleton skeleton;
+    Animation animation;
+    bool animated = !options.skeleton.empty();
+    if (animated) {
+        const FuseEntry* skl = archive.find(options.skeleton);
+        const FuseEntry* anm = archive.find(options.animation);
+        if (!skl || !anm) throw std::runtime_error("skeleton or animation not in archive");
+        skeleton = parseSkeleton(archive.read(*skl));
+        animation = parseAnimation(archive.read(*anm));
+        std::cout << "posing " << scene.skinnedParts(options.models.front()) << " skinned part(s) with "
+                  << skeleton.joints.size() << " joints, " << animation.frames << " frames\n";
+    }
+    unsigned posedFrame = ~0u;
     float centre[3], radius;
     scene.bounds(centre, radius);
     std::cout << "loaded " << scene.instances() << " instance(s) (" << placed << " placed, " << unresolved
@@ -472,6 +524,13 @@ int run(const Options& options) {
         eye[1] += speed * (forward * std::sin(pitch) + rise);
         eye[2] += speed * (-forward * std::cos(pitch) * std::cos(yaw) + strafe * std::sin(yaw));
 
+        if (animated) {
+            unsigned frame = options.frame >= 0 ? unsigned(options.frame) : unsigned(now * 30 / 1000);
+            if (frame != posedFrame) {
+                scene.pose(options.models.front(), skinMatrices(skeleton, animation, frame));
+                posedFrame = frame;
+            }
+        }
         SDL_GL_GetDrawableSize(window, &width, &height);
         glViewport(0, 0, width, height);
         glClearColor(0.16f, 0.17f, 0.2f, 1);

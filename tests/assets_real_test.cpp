@@ -7,6 +7,7 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <set>
 #include <stdexcept>
 #include <string>
 using namespace chase::assets;
@@ -53,6 +54,7 @@ int main(int argc, char** argv) {
         std::size_t models = 0, parts = 0, vertices = 0, triangles = 0;
         std::size_t levels = 0, objects = 0, placed = 0;
         std::size_t sounds = 0, samples = 0, loops = 0;
+        std::size_t skinnedParts = 0, boneBatches = 0, jointSum = 0;
         std::size_t skeletons = 0, joints = 0, animations = 0, curves = 0;
         std::uint32_t soundSum = 0x811c9dc5;  // FNV-1a over act_bass_break's PCM, see below
         for (const auto& entry : archive.entries()) {
@@ -96,6 +98,13 @@ int main(int argc, char** argv) {
                 ++models;
                 for (const auto& mesh : model.meshes)
                     for (const auto& part : mesh.parts) {
+                        if (!part.boneBatches.empty()) {
+                            ++skinnedParts;
+                            boneBatches += part.boneBatches.size();
+                            for (auto index : std::set<std::uint16_t>(part.indices.begin(), part.indices.end()))
+                                for (int k = 0; k < 4; ++k)
+                                    if (part.vertices[index].weights[k]) jointSum += part.vertices[index].joints[k];
+                        }
                         ++parts;
                         vertices += part.vertices.size();
                         triangles += part.indices.size() / 3;
@@ -126,6 +135,9 @@ int main(int argc, char** argv) {
         // |entries| of skin_matrices() for char_bear walk over all 48 frames.
         if (skeletons != 376 || joints != 5280 || animations != 1954 || curves != 30081)
             throw std::runtime_error("skeleton/animation totals differ from the Python reference");
+        // Reference: convert_models.bone_batches/skin_joints over every part (drawn vertices only).
+        if (skinnedParts != 1457 || boneBatches != 1465 || jointSum != 3492824)
+            throw std::runtime_error("bone palette totals differ from the Python reference");
         const FuseEntry* bearSkeleton = archive.find("models/char_bear/char_bear.bfnskl");
         const FuseEntry* bearWalk = archive.find("models/char_bear/walk.bfnanm");
         if (!bearSkeleton || !bearWalk) throw std::runtime_error("char_bear reference files not found");
@@ -137,6 +149,31 @@ int main(int argc, char** argv) {
                 for (float v : m) poseSum += std::fabs(v);
         if (walk.frames != 48 || std::fabs(poseSum - 5397.175751993695) > 1e-3)
             throw std::runtime_error("char_bear walk pose differs from the Python reference");
+        // Reference: sum of |skinned position| over every vertex (preview_model.skin_vertex with
+        // convert_anims.skin_matrices). The squirrel has rotated bind matrices and two bone batches.
+        auto posedSum = [&](const std::string& dir, const std::string& anim, unsigned frame) {
+            auto read = [&](const std::string& name) {
+                const FuseEntry* entry = archive.find(name);
+                if (!entry) throw std::runtime_error("reference file not found: " + name);
+                return archive.read(*entry);
+            };
+            std::string base = "models/" + dir + "/" + dir;
+            Model model = parseModel(read(base + ".bfnmdl"));
+            std::vector<Matrix> pose = skinMatrices(parseSkeleton(read(base + ".bfnskl")),
+                                                    parseAnimation(read("models/" + dir + "/" + anim)), frame);
+            double sum = 0;
+            for (const auto& mesh : model.meshes)
+                for (const auto& part : mesh.parts)
+                    for (const auto& vertex : part.vertices) {
+                        float position[3], normal[3];
+                        skinVertex(vertex, pose, position, normal);
+                        sum += std::fabs(position[0]) + std::fabs(position[1]) + std::fabs(position[2]);
+                    }
+            return sum;
+        };
+        if (std::fabs(posedSum("char_bear", "walk.bfnanm", 12) - 1754.6224097940715) > 1e-3 ||
+            std::fabs(posedSum("char_squirrel", "run.bfnanm", 5) - 440.7127510475371) > 1e-3)
+            throw std::runtime_error("skinned vertices differ from the Python reference");
         std::cout << archive.entries().size() << " entries, " << bytes << " bytes, " << pooled
                   << " pooled resources, " << textures << " textures, " << checked << " checksums match, "
                   << models << " models / " << parts << " parts / " << vertices << " vertices / "

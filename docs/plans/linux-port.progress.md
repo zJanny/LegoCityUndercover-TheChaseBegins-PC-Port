@@ -494,3 +494,23 @@ Static analysis used local llvm-objdump (armv6k) over game.arm.elf. This is loca
 - assets-real-data: 376 skeletons / 5280 joints and 1954 animations / 30081 joint curves, equal to the Python reference. The char_bear walk skin-matrix |sum| over 48 frames is 5397.1758, within 1e-3 of Python.
 - `ctest --test-dir build --output-on-failure` — PASS 7/7; 0 warnings. Python PASS 44/44.
 - Still a hypothesis: skin index = joint − 1. Blending of more than one layer, the 0xfa raw-matrix form (the bind local is used instead), and the per-joint s16/256 post-scale are not replicated.
+
+### 2026-10-12T21:30+02:00 — Bone palettes recovered; skinned playback in chase-viewer
+
+- The vertex-buffer block at header +0x24 (previously skipped) is the bone palette table, with its count at header +0x20 (1 or 2).
+  - Each 0x110-byte record is u32 triangles, u32 palette size, u32 first vertex, u32 vertex count, then u8 palette[256] of skeleton joints. At most 26 entries are used, matching the 26-entry "Bones" shader uniform.
+  - Batches cover consecutive triangle runs. A first reading of the third word as "first triangle" was wrong (it failed on 7 parts, e.g. squirrel.bfnmdl 282 triangles vs 284).
+- Checked over all 1457 skinned parts (data, not traced in code):
+  - triangle counts sum to the index count
+  - the block size is count × 0x110
+  - every batch's indices stay inside [first vertex, first vertex + count)
+  - no skin index is outside its palette
+  - no vertex shared between batches resolves to different joints
+  - 514 vertices are referenced by no triangle
+- This replaces the joint − 1 hypothesis, which only matched char_bear because its palette is 1..21. The bear's eye part has palette [5] (Head). char_squirrel's palette contains joint 0.
+- Python: convert_models.bone_batches() and skin_joints() (the +0x24 block is kept as buffer 'b24'); preview_model skins through resolved joints. C++: ModelPart::boneBatches, and parseModel resolves Vertex::joints to skeleton joints, rejecting conflicts and out-of-range indices. skinVertex uses the resolved joints.
+- Bug fixed: the C++ rigidInverse used −t·column instead of −t·row (0x24c5a0 uses rows). Bear binds are translation-only, so the bear reference missed it; it was found through char_squirrel. Added a synthetic rotated-bind identity check, and char_squirrel run frame 5 as a second real-data reference.
+- assets-real-data (Python references): 1457 skinned parts / 1465 batches / resolved-joint sum 3492824 over drawn vertices; |posed position| sums char_bear walk@12 1754.6224 and char_squirrel run@5 440.7128 (within 1e-3).
+- chase-viewer: `--skeleton S.bfnskl --anim A.bfnanm [--frame N]` poses the first model argument. Skinned parts are skinned on the CPU and re-uploaded when the frame changes. The playback rate is not recovered; 30 fps is assumed.
+- Offscreen screenshots: char_bear walk 0/12 and char_squirrel run 0/3 show coherent gait poses. The squirrel renders almost black; the material/combiner setup is not recovered.
+- `ctest --test-dir build --output-on-failure` — PASS 7/7; 0 warnings. Python PASS 45/45.

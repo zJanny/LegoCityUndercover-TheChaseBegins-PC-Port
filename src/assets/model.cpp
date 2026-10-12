@@ -1,5 +1,6 @@
 #include "block_reader.hpp"
 #include <algorithm>
+#include <array>
 #include <cstring>
 #include <stdexcept>
 
@@ -39,11 +40,61 @@ std::vector<std::string> readMaterial(Reader& r, Bytes& material) {
     return names;
 }
 
+// Block at vertex-buffer header +0x24, count at +0x20: 0x110-byte records of u32 triangles,
+// u32 palette size, u32 first vertex, u32 vertex count, u8 palette[256].
+void readBoneBatches(const Bytes& block, std::uint32_t count, ModelPart& part) {
+    if (block.empty()) return;
+    if (block.size() != std::size_t(count) * 0x110) throw std::runtime_error("bone batch block size mismatch");
+    for (std::uint32_t i = 0; i < count; ++i) {
+        std::size_t at = std::size_t(i) * 0x110;
+        ModelPart::BoneBatch batch;
+        batch.triangles = readU32(block, at);
+        std::uint32_t size = readU32(block, at + 4);
+        batch.firstVertex = readU32(block, at + 8);
+        batch.vertices = readU32(block, at + 12);
+        if (size > 0x100) throw std::runtime_error("bone palette too large");
+        batch.palette.assign(block.begin() + std::ptrdiff_t(at + 16), block.begin() + std::ptrdiff_t(at + 16 + size));
+        part.boneBatches.push_back(std::move(batch));
+    }
+}
+
+// Rewrites palette indices to skeleton joints using the batch that draws each vertex.
+// A vertex shared by two batches resolves identically in all shipped parts (checked).
+void resolveSkinJoints(ModelPart& part) {
+    if (part.boneBatches.empty()) return;
+    std::vector<int> resolvedBy(part.vertices.size(), -1);
+    std::vector<std::array<std::uint8_t, 4>> joints(part.vertices.size());
+    std::size_t end = 0;
+    for (const auto& batch : part.boneBatches) {
+        std::size_t begin = end;
+        end += std::size_t(batch.triangles) * 3;
+        if (end > part.indices.size()) throw std::runtime_error("bone batches cover more triangles than the part");
+        for (std::size_t i = begin; i < end; ++i) {
+            std::uint16_t index = part.indices[i];
+            if (index < batch.firstVertex || index - batch.firstVertex >= batch.vertices)
+                throw std::runtime_error("vertex outside its bone batch range");
+            const Vertex& v = part.vertices[index];
+            std::array<std::uint8_t, 4> resolved{};
+            for (int k = 0; k < 4; ++k) {
+                if (!v.weights[k]) continue;
+                if (v.joints[k] >= batch.palette.size()) throw std::runtime_error("skin index outside bone palette");
+                resolved[std::size_t(k)] = batch.palette[v.joints[k]];
+            }
+            if (resolvedBy[index] >= 0 && joints[index] != resolved)
+                throw std::runtime_error("vertex resolves to different joints in two bone batches");
+            joints[index] = resolved;
+            resolvedBy[index] = 0;
+        }
+    }
+    for (std::size_t i = 0; i < part.vertices.size(); ++i)
+        if (resolvedBy[i] >= 0) std::copy(joints[i].begin(), joints[i].end(), part.vertices[i].joints);
+}
+
 // 0x11528c: header, optional block, then index / vertex / optional groups (-14).
 void readVertexBuffer(Reader& r, const Bytes& material, ModelPart& part) {
     Bytes header = r.next();
     requireSize(header, 0x78, "vertex buffer header");
-    if (readU32(header, 0x24)) r.skip();
+    Bytes batches = readU32(header, 0x24) ? r.next() : Bytes{};
     std::size_t vertices = readU16(header, 2), indices = readU32(header, 4), stride = readU16(header, 0x1a);
     r.cursor.push(Pool::M14);
     Bytes indexData = r.next(), vertexData = r.next();
@@ -60,6 +111,7 @@ void readVertexBuffer(Reader& r, const Bytes& material, ModelPart& part) {
         if (index >= vertices) throw std::runtime_error("vertex index out of range");
         part.indices.push_back(index);
     }
+    readBoneBatches(batches, readU32(header, 0x20), part);
     // UV scales at header +0x50 (uv0.xy, uv1.xy), the "UVScales" shader uniform.
     const float scales[4] = {readF32(header, 0x50), readF32(header, 0x54), readF32(header, 0x58), readF32(header, 0x5c)};
     part.vertices.resize(vertices);
@@ -88,6 +140,7 @@ void readVertexBuffer(Reader& r, const Bytes& material, ModelPart& part) {
             std::memcpy(out.joints, &vertexData[at + 4], 4);
         }
     }
+    resolveSkinJoints(part);
 }
 
 // 0x114640 (and 0x11fd20): optional section at model+0x1c, pool -14. Skipped, not interpreted.
