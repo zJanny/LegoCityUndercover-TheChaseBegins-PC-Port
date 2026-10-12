@@ -11,8 +11,10 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import convert_anims as ca  # noqa: E402
 import convert_models as cm  # noqa: E402
 import convert_textures as ct  # noqa: E402
+import struct  # noqa: E402
 
 TEXTURE_SUFFIXES = ('.btga', '.bpng', '.bdds')
 
@@ -45,11 +47,71 @@ class Texture:
         return self.rows[y][x]
 
 
-def render(model, textures, size, yaw, pitch, exclude=()):
+def quat_matrix(q, transpose):
+    x, y, z, w = q
+    m = [[1 - 2 * (y * y + z * z), 2 * (x * y + z * w), 2 * (x * z - y * w)],
+         [2 * (x * y - z * w), 1 - 2 * (x * x + z * z), 2 * (y * z + x * w)],
+         [2 * (x * z + y * w), 2 * (y * z - x * w), 1 - 2 * (x * x + y * y)]]
+    return [list(r) for r in zip(*m)] if transpose else m
+
+
+def invert_affine(m):
+    """Inverse of a row-vector affine 4x4 (rotation/scale in 3x3, translation in row 3)."""
+    a = [row[:3] for row in m[:3]]
+    det = (a[0][0] * (a[1][1] * a[2][2] - a[1][2] * a[2][1]) - a[0][1] * (a[1][0] * a[2][2] - a[1][2] * a[2][0])
+           + a[0][2] * (a[1][0] * a[2][1] - a[1][1] * a[2][0]))
+    inv = [[(a[(j + 1) % 3][(i + 1) % 3] * a[(j + 2) % 3][(i + 2) % 3] -
+             a[(j + 1) % 3][(i + 2) % 3] * a[(j + 2) % 3][(i + 1) % 3]) / det for j in range(3)] for i in range(3)]
+    t = m[3][:3]
+    it = [-sum(t[k] * inv[k][j] for k in range(3)) for j in range(3)]
+    return [inv[0] + [0.0], inv[1] + [0.0], inv[2] + [0.0], it + [1.0]]
+
+
+def pose_skin_matrices(skeleton, animation, frame, transpose):
+    """Per-joint skin matrices inverse(bind world) * animated world (row vectors).
+
+    Pose composition (order of scale/rotation/translation and the quaternion
+    convention) is an assumption under test; see the progress log."""
+    frames = struct.unpack_from('<H', animation['header'], 4)[0]
+    world, skin = [], []
+    for index, joint in enumerate(skeleton['joints']):
+        local = joint['local']
+        if index < len(animation.get('s8', [])):
+            channels, mask = ca.decode_channels(animation['s8'][index], frame % max(frames, 1), frames)
+            if mask != -1:
+                r = quat_matrix(ca.euler_to_quaternion(*channels[0:3]), transpose)
+                s = channels[3:6]
+                local = [[r[i][j] * s[i] for j in range(3)] + [0.0] for i in range(3)] + [channels[9:12] + [1.0]]
+        parent = joint['parent']
+        w = local if parent < 0 else ca.matmul(local, world[parent])
+        world.append(w)
+        skin.append(ca.matmul(invert_affine(joint['world']), w))
+    return skin
+
+
+def skin_vertex(v, skin):
+    if 'skin' not in v:
+        return v['position']
+    weights, indices = v['skin'][:4], v['skin'][4:]
+    total = sum(weights) or 1
+    out = [0.0, 0.0, 0.0]
+    p = list(v['position']) + [1.0]
+    for wgt, idx in zip(weights, indices):
+        if not wgt:
+            continue
+        m = skin[min(idx + 1, len(skin) - 1)]   # hypothesis: index = joint - 1 (root "Character" skipped)
+        for j in range(3):
+            out[j] += wgt / total * sum(p[k] * m[k][j] for k in range(4))
+    return tuple(out)
+
+
+def render(model, textures, size, yaw, pitch, exclude=(), skin=None):
     tris = []
     for mesh in model['meshes']:
         for part in mesh['parts']:
             verts = cm.decode_vertices(part, cm.mesh_offset(mesh))
+            if skin:
+                verts = [dict(v, position=skin_vertex(v, skin)) for v in verts]
             names = part['material']['textures']
             if any(word in slot['name'].lower() for slot in names for word in exclude):
                 continue
@@ -126,6 +188,11 @@ def main():
     parser.add_argument('--pitch', type=float, default=20)
     parser.add_argument('--exclude', action='append', default=[],
                         help='skip parts whose texture name contains this text (repeatable), e.g. sky')
+    parser.add_argument('--skeleton', type=Path, help='.bfnskl to pose the model with (needs --anim)')
+    parser.add_argument('--anim', type=Path, help='.bfnanm to sample')
+    parser.add_argument('--frame', type=int, default=0)
+    parser.add_argument('--transpose-rotation', action='store_true',
+                        help='use the transposed quaternion matrix (convention under test)')
     args = parser.parse_args()
     model = cm.parse_model(args.model.read_bytes())
     index = texture_index(args.assets)
@@ -140,8 +207,12 @@ def main():
                     textures[slot['name']] = Texture(path)
                 else:
                     missing.add(slot['name'])
+    skin = None
+    if args.skeleton and args.anim:
+        skin = pose_skin_matrices(ca.parse_skeleton(args.skeleton.read_bytes()),
+                                  ca.parse_animation(args.anim.read_bytes()), args.frame, args.transpose_rotation)
     rows = render(model, textures, args.size, math.radians(args.yaw), math.radians(args.pitch),
-                  [w.lower() for w in args.exclude])
+                  [w.lower() for w in args.exclude], skin)
     args.output.write_bytes(ct.png(rows))
     print('rendered %s (%d textures, missing: %s)' % (args.output, len(textures), sorted(missing) or 'none'))
     return 0

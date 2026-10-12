@@ -443,5 +443,9 @@ Static analysis used local llvm-objdump (armv6k) over game.arm.elf. This is loca
 - 0x248248 (ev_676da22a…9b72) converts channels 0–2 into a quaternion from half-angle sin/cos (0x249038 calls 0x247ac8 = sin by its polynomial, ev_4caeb96f…49a, then 0x247c90 = cos). The formula is replicated in euler_to_quaternion().
 - Verification: char_bear idle frame 0 decodes per-joint translations equal to the skeleton's local bind translations (LeftForeArm, Head, Knees, Feet and Hands exact; Pelvis 1.344 vs 1.363, i.e. animated). Rotations are small radian values.
 - Added decode_channels() and euler_to_quaternion() to tools/convert_anims.py, plus a synthetic bit-stream test. Python PASS 43/43.
+- 19:15 visual test with tools/preview_model.py (`--skeleton --anim --frame [--transpose-rotation]`) on char_bear walk, frames 0/12/24:
+  - Skin attribute: u8 weights (summing to 255), then u8 indices. An index is joint − 1 (the root "Character" is skipped); this is a hypothesis.
+  - Local pose = S·R·T in row-vector order, with the skin matrix = inverse(bind world)·animated world.
+  - With `--transpose-rotation`, the result is a natural quadruped walk cycle. Without it the bear rears up unnaturally, so the transposed quaternion matrix is the likely convention. This is a visual inference only, not traced in code.
 - Not recovered: how the pose is composed into joint matrices (order of q/scale/translation and the role of channels 6–8 and joint +0x88), root motion (the extra 24th blob), and the 0xfa raw-matrix decomposition 0x1324f8.
 - Named in REA with a _candidate suffix (ev_d6ee55638e4b4ce712665d235d1d66a9d8c1add97c17e5f210b671225ddb1b28): srvGetServiceHandle_candidate, strlen_candidate, dspInit_candidate, fsUserInit_candidate, ndmInit_candidate. Hopper does not define procedures at 0x109fc0, 0x10f8e4 or 0x11006c.
