@@ -57,6 +57,17 @@ python3 tools/convert_textures.py artifacts/fib/files --output artifacts/texture
 
 Only the largest mip level is written. Cubemaps are written as a vertical strip of six faces in stored order; which face is which has not been confirmed yet.
 
+## Convert sounds to WAV
+
+`.bwav` files wrap standard Nintendo CWAV data, and every shipped sound is DSP-ADPCM, mostly at 12 kHz. Music files hold one mono CWAV per channel, and the tool merges them into a single WAV.
+
+```sh
+python3 tools/convert_audio.py --census artifacts/fib/files            # parse headers only
+python3 tools/convert_audio.py artifacts/fib/files --output artifacts/audio
+```
+
+`audio-manifest.json` keeps each sound's sample rate, sample count and loop points.
+
 ## Build and run the input laboratory
 
 Requires CMake ≥ 3.16, a C++17 compiler and SDL2 (found through pkg-config).
@@ -114,5 +125,5 @@ The plan and the evidence log are in `docs/plans/linux-port.md` and `docs/plans/
 - gameplay logic
 - rendering
 - audio
-- individual asset formats (the `.fib` archive is unpacked and textures convert to PNG, but `.bfnmdl`, `.bfnanm`, `.bwav`, `.blvl`, `.moflex` and the rest are not decoded)
+- individual asset formats (the `.fib` archive is unpacked and textures and sounds convert to PNG and WAV, but `.bfnmdl`, `.bfnanm`, `.blvl`, `.moflex` and the rest are not decoded)
 - the save format

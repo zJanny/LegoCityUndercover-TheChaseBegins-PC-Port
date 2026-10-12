@@ -208,4 +208,19 @@ Static analysis used local llvm-objdump (armv6k) over game.arm.elf. This is loca
   - ui_ls_generic1: RGB8, a 400×240 image in a 512×256 texture (the top-screen size)
   - cubemap_showroom_c: six plausible faces; face order unconfirmed
 - `python3 -m unittest discover -s tests -p 'test_*.py' -v` — PASS 26/26.
+
+### 2026-10-12T15:45+02:00 — Sound container decoded (.bwav)
+
+- The .bwav wrapper starts with u32 version 0x400 or 0x600.
+  - v4 (1263 files): one standard CWAV at 0x44.
+  - v6 (98 files, all music): one mono CWAV per channel, back to back from 0x4c, with the second CWAV starting exactly where the first ends.
+- The other wrapper fields (rate copy, sample/loop counts, a 4-byte value before CWAV that may be a hash) are not interpreted. The CWAV structure is the public BCWAV layout.
+- Added tools/convert_audio.py (PCM8/PCM16/DSP-ADPCM/IMA-ADPCM to WAV, v6 parts merged as channels, loop points kept in audio-manifest.json) and tests/test_convert_audio.py (4 tests: DSP frame arithmetic including floor shift, PCM8/16, IMA, two-part merge + WAV output, malformed inputs).
+- `python3 tools/convert_audio.py --census artifacts/fib/files` — 1361/1361 parsed; all DSP-ADPCM: 12000 Hz 1068 (+98 two-part), 11999 69, 12001 75; the rest are between 7025 and 12003 Hz.
+- `python3 tools/convert_audio.py artifacts/fib/files --output artifacts/audio` — PASS, 1361 WAVs, 0 failures, 40.4 s.
+- Checks:
+  - The first DSP frame header equals the context pred/scale byte (0x39 in pickup_positive_1_notloop), which confirms data alignment at DATA+0x20.
+  - ffmpeg astats: voice-over and music peak at about −0.2 to −2.4 dBFS with RMS between −10 and −23 dB, which reads as normalized audio rather than noise. Zero-crossing rate is 0.06 for the music sample.
+  - music/act_01 decodes to silence because its frames are genuinely all zero, so it is a placeholder.
+- `python3 -m unittest discover -s tests -p 'test_*.py' -v` — PASS 30/30.
 - Named in REA with a _candidate suffix (ev_d6ee55638e4b4ce712665d235d1d66a9d8c1add97c17e5f210b671225ddb1b28): srvGetServiceHandle_candidate, strlen_candidate, dspInit_candidate, fsUserInit_candidate, ndmInit_candidate. Hopper does not define procedures at 0x109fc0, 0x10f8e4 or 0x11006c.

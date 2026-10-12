@@ -27,6 +27,8 @@ python3 tools/extract_romfs.py "LEGO City Undercover - The Chase Begins (Europe)
 python3 tools/extract_fib.py artifacts/romfs/romfs/lego_city3ds.fib --names artifacts/romfs/romfs/lego_city3ds.csv --output artifacts/fib
 # Textures (.btga/.bpng/.bdds, PICA200 formats) -> PNG; --census validates headers only
 python3 tools/convert_textures.py artifacts/fib/files --output artifacts/textures
+# Sounds (.bwav = wrapped CWAV, DSP-ADPCM) -> WAV; --census parses headers only
+python3 tools/convert_audio.py artifacts/fib/files --output artifacts/audio
 
 # Native build + tests
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
