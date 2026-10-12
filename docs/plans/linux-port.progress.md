@@ -5,7 +5,7 @@
 - Overall: IN_PROGRESS
 - Current Phase: IMPLEMENT
 - Current Step: S4c/S4e/S4f groundwork (S3 continues in parallel)
-- Last Updated: 2026-10-13T10:00+02:00
+- Last Updated: 2026-10-13T11:10+02:00
 - Branch: main
 - Target Branch: Not specified
 - Requested Scope: PLAN, IMPLEMENT, TEST; start reverse engineering and native port
@@ -124,9 +124,10 @@ Full game logic, hardware APIs and asset formats not recovered yet.
 
 ## Next Action
 
-- S3: recover HID input polling and the per-frame update (dispatcher 0x100448/0x10057c).
-- S4e: UI layouts (.bxaml), level cameras (.cam), particle definitions (.bprt), FMV subtitles (.srt, plain SubRip).
-- S4f: recover the save layout and checksum, then plan a native save library.
+- FMV player: finish branch worktree-agent-a93143c61d56bb50d (rebase onto main, fix end of playback, smoke test, docs). See the 2026-10-13T11:05 entry.
+- S4f: implement chase_save (opaque image, header, CRC, validate, XDG path) from the 2026-10-13T10:30 entry.
+- S3: find the GSP vsync call and the scheduler step (30 vs 60 fps); name the binding slots at 0x3769e8.
+- S4e: the code that applies .bxaml track properties; .cam field semantics; particle definitions (.bprt).
 - Open unknowns are listed in the session-log entries below.
 
 ## Session Log
