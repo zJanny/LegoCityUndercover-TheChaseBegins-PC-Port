@@ -14,7 +14,7 @@ C++17 and SDL2 are reversible platform defaults. Action names initially describe
 
 ## 4. Repository Findings
 
-Revision 2 (2026-10-12: commit authorization via CLAUDE.md; CLAUDE.md is now project guidance). Revision 1. Baseline: no Git, no source, only 1 GiB CCI. Git now initialized on feature/linux-port, unborn HEAD. No applicable AGENTS/README found. User approved Git initialization and confirmed no guidance, Linux keyboard/mouse devices. Installed cmake, c++, python3, SDL2 2.32.74. NCSD at 0x100; executable NCCH at 0x4000. NoCrypto flag and matching exheader/ExeFS SHA256 show decrypted content. REA open_binary rejects CCI format; route extracted mapped ARM ELF instead. Existing patterns/tests/database/deployment: none.
+Revision 3 (2026-10-12: S4 split into S4a–S4f after the asset formats were recovered; RomFS/FUSE/texture/audio/model tools added). Revision 2 (2026-10-12: commit authorization via CLAUDE.md; CLAUDE.md is now project guidance). Revision 1. Baseline: no Git, no source, only 1 GiB CCI. Git now initialized on feature/linux-port, unborn HEAD. No applicable AGENTS/README found. User approved Git initialization and confirmed no guidance, Linux keyboard/mouse devices. Installed cmake, c++, python3, SDL2 2.32.74. NCSD at 0x100; executable NCCH at 0x4000. NoCrypto flag and matching exheader/ExeFS SHA256 show decrypted content. REA open_binary rejects CCI format; route extracted mapped ARM ELF instead. Existing patterns/tests/database/deployment: none.
 
 ## 5. Architecture
 
@@ -27,6 +27,20 @@ Add .gitignore; tools/extract_game.py for bounded extraction, manifests, ELF; te
 ## 7. Step-by-Step Implementation Plan
 
 S1 (R1): implement tools/extract_game.py and tests/test_extract_game.py, preserve source, require decrypted NCCH/hash matches, bound all reads/names, reject existing outputs, decompress with backreference checks, emit program headers for text/rodata/data+BSS and manifest hashes. Verify python unit tests and real-image extraction. S2 (R2/R3), independent of S1: implement listed SDL C++ files/config/CMake, all binding validation, toggle debounce, focus-loss reset, opposing cancellation and lower-screen touch coordinate bounds. Verify build, CTest and SDL dummy smoke. S3 (R1), after S1: open ELF in REA, inspect entry/startup/platform calls and strings; record exact evidence IDs and mapped-artifact caveats here in progress. S4 (R4), after S3: define executable-ready per-subsystem plans once evidence exists, recover input polling and main loop, replace kernel services/render/audio/storage incrementally. Never mark gameplay complete because lab builds.
+
+S4 subsystem plan (revision 3, 2026-10-12, based on the asset evidence in the progress log):
+- S4a — native asset runtime. C++17 code under src/assets/, with no SDL dependency, mirroring the verified Python tools:
+  - FUSE .fib reader and RefPack codec
+  - pooled-resource reader
+  - PICA200 texture decode to RGBA8
+  - CWAV DSP-ADPCM decode
+  - .bfnmdl geometry
+  Verify with CTest on synthetic fixtures, plus an opt-in real-data test (skipped when artifacts/ is absent) that compares results with the Python tools' outputs.
+- S4b — level viewer: SDL2 + OpenGL 3.3 core. It loads one level's models with their textures and uses a free camera driven by the existing input core. This is a development viewer, not gameplay.
+- S4c — level composition: decode .blvl (pooled; −15/−16 only) to place models, plus streaming (Pregen/*.bin). Requires RE of the .blvl loader.
+- S4d — audio playback through SDL audio, including loop points. Mapping sound IDs to events requires RE.
+- S4e — gameplay: the main loop (dispatcher 0x100448/0x10057c), entities and characters (.bfnskl/.bfnanm), scripts (scriptfns.txt, triggers), physics/navigation (.bfnnav), and UI (.bxaml/.bxls/.bstxt/.loc). Each needs its own evidence-backed plan before implementation.
+- S4f — saves (data:/savegame.dat) and settings.
 
 ## 8. Database Changes
 

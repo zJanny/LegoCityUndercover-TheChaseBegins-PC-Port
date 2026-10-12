@@ -4,18 +4,18 @@
 
 - Overall: IN_PROGRESS
 - Current Phase: IMPLEMENT
-- Current Step: S3
-- Last Updated: 2026-10-12T15:32:32+02:00
-- Branch: feature/linux-port (unborn)
+- Current Step: S4a (S3 continues in parallel)
+- Last Updated: 2026-10-12T16:15+02:00
+- Branch: feature/linux-port
 - Target Branch: Not specified
 - Requested Scope: PLAN, IMPLEMENT, TEST; start reverse engineering and native port
 - Plan: docs/plans/linux-port.md
-- Plan Revision: 2
+- Plan Revision: 3
 - Planning Baseline: no Git/source; supplied CCI only
 
 ## Summary
 
-Image identified and its executable ExeFS hashes verified in a read-only probe. Extraction and accessible input foundation underway. Game is not playable on PC yet.
+The executable and the full RomFS are extracted with hash verification. The FUSE asset archive, textures, sounds and model geometry decode, and each decoder has been checked against every shipped file. The game is not playable on PC yet: gameplay, level composition, animation and rendering states are not recovered.
 
 ## Phase Status
 
@@ -36,7 +36,13 @@ Commits authorized by CLAUDE.md "User specified workflows" (commit at logical st
 | S1 | Verified executable extraction and analysis ELF | COMPLETE | R1; unit tests + real extraction 2026-10-12T14:51 |
 | S2 | Native accessible input laboratory | COMPLETE | R2/R3; warning-free build, CTest 2/2 |
 | S3 | Focused ARM analysis | IN_PROGRESS | R1; startup, SVC stubs, service-handle helper, services, paths recorded; game frame function still open |
-| S4 | Recover gameplay and replace platform | NOT_STARTED | R4, needs S3 subsystem plan |
+| S4 | Recover gameplay and replace platform | IN_PROGRESS | R4; split into S4a–S4f (plan rev 3) |
+| S4a | Native asset runtime (C++) | NOT_STARTED | Python reference tools done: RomFS, FUSE, textures, audio, pooled resources, models |
+| S4b | Level viewer (SDL2 + GL) | NOT_STARTED | needs S4a |
+| S4c | Level composition (.blvl) | NOT_STARTED | pooled layout known; loader not traced |
+| S4d | Audio playback | NOT_STARTED | WAV decode done |
+| S4e | Gameplay | NOT_STARTED | needs per-subsystem RE plans |
+| S4f | Saves/settings | NOT_STARTED | |
 
 ## Current Work
 
@@ -116,7 +122,7 @@ Full game logic, hardware APIs and asset formats not recovered yet.
 
 ## Next Action
 
-Assets are now unpacked (artifacts/romfs, artifacts/fib). Next, decode the asset formats starting with btga (textures; its header is likely simple, and the decoder can be found from the string `.btga` in code), then bwav and the bfn* model family. Then S3: improve function coverage (Hopper found 963 procedures vs ~6697 ARM `push {...,lr}` prologues). Then trace callers of svcSendSyncRequest (0x25947c) to group IPC wrappers by service (hid/gsp/fs/dsp/cfg/ptm), and identify the per-frame game update called from the dispatcher at 0x100448. Resolve the 8 srvGetServiceHandle_candidate call sites whose names come via rodata pointer tables.
+S4a: port the verified decoders to C++ (src/assets/, no SDL) with CTest fixtures. Start with FUSE+RefPack, then the pooled reader, textures and models. Then S4b viewer. Pending RE: the .blvl loader (S4c), skeleton/animation, and the meaning of the node/mesh float3 fields. Also pending from S3: improve function coverage (Hopper found 963 procedures vs ~6697 ARM `push {...,lr}` prologues). Then trace callers of svcSendSyncRequest (0x25947c) to group IPC wrappers by service (hid/gsp/fs/dsp/cfg/ptm), and identify the per-frame game update called from the dispatcher at 0x100448. Resolve the 8 srvGetServiceHandle_candidate call sites whose names come via rodata pointer tables.
 
 ## Session Log
 
