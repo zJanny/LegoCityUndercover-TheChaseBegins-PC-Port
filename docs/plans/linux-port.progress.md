@@ -341,4 +341,20 @@ Static analysis used local llvm-objdump (armv6k) over game.arm.elf. This is loca
   - lvl_00_policestation (4 models, `--exclude sky`): 48016 triangles, 0 missing textures. Terrain, plaza and building pieces line up in world space. Placed props and buildings are absent, which is expected until .blvl is decoded (S4c).
 - CTest `viewer-real-smoke` is registered only when the extracted RomFS exists at configure time.
 - `cmake --build build` — 0 warnings. `ctest --test-dir build --output-on-failure` — PASS 5/5.
+
+### 2026-10-12T17:20+02:00 — S4c: .blvl level format decoded (REA, Ghidra)
+
+- The xref to "levels/%s.blvl" (0x1b1f30) comes from 0x1b1e58. The xref to ".blvl" (0x1d0028, ev_09591263…74f2) is in 0x1cfc50 (ev_fec8db4c…f2f1), the generic .blvl deserializer (pseudo-code ev_1eed109a…f773).
+- Helpers:
+  - 0x208ae0 (ev_9429bb98…bdf) deserializes a 12-byte parameter: {u32 name hash, u16, u16 type, u32 value}. Types 1/2/3/6 have one block, type 4 one block if the value is non-zero, type 8 two blocks, and the rest are inline.
+  - 0x208a3c (ev_cd34ae96…a091) maps a script-function name to an index.
+  - 0x24da28 (ev_bcab1d94…d0e) is the name hash: table CRC-32 of the lower-cased name. The table is standard; `zlib.crc32` reproduces it.
+- Header (−15) u16 counts: +2 s10 params, +4 s14 params, +6 s18 (0x1c, script-function name lists in −16), +8 s1c (0x18, an event kind plus two strings in −16, e.g. "BoundEntered"), +0xa s20 (0x28), +0xc s24 (0x28, named entries such as "Lobby2Basement_SceneChange"), +0xe s2c objects (0x18). There is also +0x28, optional +0x34, and u8 +1 for s30 (0x28).
+- Objects (s2c): the class name comes from −16 (e.g. "leprops/leprop_wobblydestructible"), +4 is the instance name, +8 the room ("room3"), and +0x10/+0x14 are parameter lists with counts at +0xd/+0xe.
+- `python3 tools/convert_levels.py --census artifacts/fib/files` — 856/856 .blvl parse with every block consumed. Section totals: s10 20043, s14 7758, s18 2553, s1c 1901, s20 2280, s24 4308, s2c 18469, s30 53.
+- Parameter names: hashing every printable string in code.bin resolves 422 of 556 distinct hashes, including initialposition 0x86166f20 (float3), initialorientation 0xa3b9aa7f (float3, degrees; values −185…359), meshname 0xacd1ebb8 (string), DebrisColour, Respawn, SpawnDir, TriggerObject, HeadModel, Speed and others. The names are computed locally (`--param-names artifacts/game/code.bin`) and never committed.
+- Meshname "Dir/File" maps to models/dir/file.bfnmdl, and "Name" to models/name/name.bfnmdl. 1258 of 1642 distinct meshnames resolve this way. The rest (e.g. char_bits_*, Ability_Detective_Dog) follow other conventions that are not yet known.
+- Euler order is unknown; the viewer assumes R = Ry·Rx·Rz in degrees. Most orientations are yaw-only, or yaw with ±180 on X and Z.
+- lvl_00_policestation_main has 350 objects and 130 mesh placements.
+- Added tools/convert_levels.py (`--census`, `--placements`, `--param-names`) and tests/test_convert_levels.py (3 tests); Python suite PASS 39/39.
 - Named in REA with a _candidate suffix (ev_d6ee55638e4b4ce712665d235d1d66a9d8c1add97c17e5f210b671225ddb1b28): srvGetServiceHandle_candidate, strlen_candidate, dspInit_candidate, fsUserInit_candidate, ndmInit_candidate. Hopper does not define procedures at 0x109fc0, 0x10f8e4 or 0x11006c.
