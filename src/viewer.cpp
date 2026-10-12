@@ -13,6 +13,7 @@
 #include <iostream>
 #include <map>
 #include <stdexcept>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -321,6 +322,27 @@ private:
     std::size_t missing_ = 0;
 };
 
+bool endsWith(const std::string& text, const std::string& suffix) {
+    return text.size() >= suffix.size() && text.compare(text.size() - suffix.size(), suffix.size(), suffix) == 0;
+}
+
+// Viewer convenience following the archive's folder naming, not recovered game logic:
+// levels/levels/<name>/x.blvl draws models/<name>/*.bfnmdl without the _l1/_lod1 detail
+// levels, or only models/<name>/<room>.bfnmdl when a room is chosen.
+std::vector<std::string> levelModels(const FuseArchive& archive, const std::string& levelPath, const std::string& room) {
+    std::string dir = directory(lower(levelPath));
+    dir.pop_back();
+    std::string folder = "models/" + dir.substr(dir.find_last_of('/') + 1) + "/";
+    std::vector<std::string> out;
+    for (const auto& name : archive.names()) {
+        if (name.rfind(folder, 0) != 0 || !endsWith(name, ".bfnmdl")) continue;
+        if (!room.empty() ? name != folder + room + ".bfnmdl" : endsWith(name, "_l1.bfnmdl") || endsWith(name, "_lod1.bfnmdl"))
+            continue;
+        out.push_back(name);
+    }
+    return out;
+}
+
 int resolveKey(const std::string& name) {
     std::string spaced = name;
     std::replace(spaced.begin(), spaced.end(), '_', ' ');
@@ -355,6 +377,7 @@ struct Options {
     float brightness = 1.0f;  // inspection aid only; the game's lighting/combiner setup is not recovered
     std::vector<std::string> exclude, models, levels;
     float yaw = 35, pitch = -25;
+    std::vector<float> eye;
 };
 
 Options parse(int argc, char** argv) {
@@ -380,12 +403,20 @@ Options parse(int argc, char** argv) {
         else if (arg == "--fps") o.fps = std::stod(value());
         else if (arg == "--yaw") o.yaw = std::stof(value());
         else if (arg == "--pitch") o.pitch = std::stof(value());
+        else if (arg == "--eye") {
+            std::string text = value();
+            std::replace(text.begin(), text.end(), ',', ' ');
+            std::istringstream in(text);
+            float v;
+            while (in >> v) o.eye.push_back(v);
+            if (o.eye.size() != 3) throw std::runtime_error("--eye needs X,Y,Z");
+        }
         else if (!arg.empty() && arg[0] == '-') throw std::runtime_error("unknown option " + arg);
         else o.models.push_back(arg);
     }
     if (o.models.empty() && o.levels.empty())
         throw std::runtime_error("usage: chase-viewer [--fib F] [--names CSV] [--config CFG] [--exclude WORD]... "
-                                 "[--level levels/.../x.blvl]... [--room NAME] [--cull none|cw|ccw] [--brightness F] [--screenshot OUT.bmp] [--yaw DEG] [--pitch DEG] "
+                                 "[--level levels/.../x.blvl]... [--room NAME] [--cull none|cw|ccw] [--brightness F] [--screenshot OUT.bmp] [--yaw DEG] [--pitch DEG] [--eye X,Y,Z] "
                                  "[--skeleton S.bfnskl --anim A.bfnanm [--frame N] [--fps F]] "
                                  "[models/<dir>/<model>.bfnmdl...]");
     if (o.skeleton.empty() != o.animation.empty()) throw std::runtime_error("--skeleton and --anim go together");
@@ -422,7 +453,13 @@ int run(const Options& options) {
     if (!linked) throw std::runtime_error("shader link failed");
 
     Scene scene(archive, options.exclude);
-    for (const auto& model : options.models)
+    std::vector<std::string> models = options.models;
+    if (models.empty())
+        for (const auto& levelPath : options.levels) {
+            auto found = levelModels(archive, levelPath, options.room);
+            models.insert(models.end(), found.begin(), found.end());
+        }
+    for (const auto& model : models)
         if (!scene.addModel(model)) throw std::runtime_error("not in archive: " + model);
     std::size_t placed = 0, unresolved = 0;
     for (const auto& levelPath : options.levels) {
@@ -462,6 +499,7 @@ int run(const Options& options) {
         eye[2] = centre[2] + d * std::cos(pitch) * std::cos(yaw);
     };
     placeCamera();
+    if (!options.eye.empty()) std::copy_n(options.eye.begin(), 3, eye);
     glEnable(GL_DEPTH_TEST);
     if (options.cull != "none") {
         glEnable(GL_CULL_FACE);

@@ -15,11 +15,13 @@ You can list several models. They are drawn together.
 ## Show a level
 
 ```sh
-build/chase-viewer --level levels/levels/lvl_00_policestation/lvl_00_policestation_main.blvl \
-    --room room3 --brightness 2.5 models/lvl_00_policestation/room3.bfnmdl
+build/chase-viewer --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --exclude sky
 ```
 
-`--level` places every object from the level file that names a model.
+- `--level` places every object from the level file that names a model.
+- Without model names, the viewer also loads the level's own models from `models/<level name>/`. This follows the archive's folder names; how the game itself streams these pieces is not known yet.
+- `--room room3` shows a single room and only its objects.
+- `--eye X,Y,Z` puts the camera at a position, for example `--eye 800,60,1060 --yaw 180 --pitch -25` for a street view in Cherry Tree Hills.
 
 ## Animate a character
 
@@ -51,6 +53,7 @@ The viewer uses the same `config/controls.cfg` as the [input laboratory](control
 | `--brightness F` | Makes everything brighter, to help you see. |
 | `--cull ccw\|cw\|none` | Chooses which faces are hidden. The default, `ccw`, hides ceilings so you can look into rooms. |
 | `--yaw DEG`, `--pitch DEG` | Sets the starting camera angle. |
+| `--eye X,Y,Z` | Sets the starting camera position. |
 | `--screenshot OUT.bmp` | Draws one frame, saves it and exits. |
 | `--fib`, `--names` | Use a different asset archive. The default is in `artifacts/romfs/romfs/`. |
 

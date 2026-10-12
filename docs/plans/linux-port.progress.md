@@ -553,3 +553,10 @@ Static analysis used local llvm-objdump (armv6k) over game.arm.elf. This is loca
 - chase_assets placementMatrix (level.cpp) and convert_levels.placement_matrix replicate it, with tests for (90,0,0) mapping +y to +z and (180,30,180) equalling a yaw of 150. chase-viewer uses it directly (same memory layout as GL column-major).
 - Material combiners: the renderer keeps bit-packed GPU state (e.g. 0x126f0c, a 4 KB state packer). Not traced further.
 - ctest PASS 7/7; Python PASS 47/47.
+
+### 2026-10-12T23:25+02:00 — Whole levels in the viewer
+
+- Meshname resolution: 6561 of 6563 placements over all 856 levels resolve to archive models; only xx_goldstud and Prop_Hotspot_Mission do not.
+- Level models: models/<level>/ holds lvl_*.bfnmdl (plus _lod1) and room<N>.bfnmdl (403, plus 288 _l1 detail levels). chase-viewer `--level` without model arguments loads that folder minus the _l1/_lod1 models, or just room<N> with `--room`. This is a viewer convention; the game's streaming logic (Pregen/*.bin) is not recovered.
+- `--eye X,Y,Z` sets the camera position.
+- lvl_01_cherrytreehills_main: 1161 instances, 845580 triangles, 0 missing textures, about 1.1 s to load offscreen. A street view at (800,60,1060) shows the plaza, arch, roads, vehicles and water plane, textured and placed.
