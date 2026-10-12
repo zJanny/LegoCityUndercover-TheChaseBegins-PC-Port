@@ -1,0 +1,6 @@
+*.cci
+*.3ds
+/build*/
+/artifacts/
+__pycache__/
+*.pyc
