@@ -260,4 +260,45 @@ Static analysis used local llvm-objdump (armv6k) over game.arm.elf. This is loca
   - The last −14 block (0x3c B) is vertices with a 20-byte stride: float3 position (±35.28, 0), 4 B of s16 values 0/0x7fff (UV-like), and 4 B unknown.
   - Inference only: the block-to-field mapping must come from the deserializer 0x10ccf4.
 - Added tests/test_tt_resource.py (3 tests); suite PASS 33/33. The audio census after the refactor is 1361/1361.
+
+### 2026-10-12T16:10+02:00 — .bfnmdl model format decoded (REA, Ghidra 12.1.2 provider)
+
+- Opened game.arm.elf with provider_id=ghidra. Ghidra defines the procedures Hopper missed, and its pseudo-code evidence IDs are:
+
+  | Function | Evidence ID | Recovered role |
+  |---|---|---|
+  | 0x10ccf4 | ev_4bdf7c11…c1e51c7 | model deserializer |
+  | 0x114860 | ev_a1448f66…3d91e | material |
+  | 0x11528c | ev_0346c245…f0f0d | vertex buffer |
+  | 0x114640 | ev_080a4fc6…28d97 | model+0x1c section |
+  | 0x11fd20 | ev_44944596…b7c3fc3b | sub-section |
+  | 0x12095c | ev_91ccfb89…5c3d363 | vertex flags |
+  | 0x1205bc | ev_259de55d…53f2 | buffer relocation callback |
+  | 0x113600 | ev_3b555d22…adfc | render-state dirty flags (not attribute setup) |
+
+- A size-0 block is a NULL pointer, because 0x253800 returns 0 for it.
+- Model record (−15, 0x24):
+  - u16 flags, u16 nodes, u16 meshes, u8 textures, then pointers at +8, +0xc, +0x10, +0x14, +0x1c and +0x20.
+  - Node (0x18): name pointer, float3, optional pointer at +0x14.
+  - Mesh (0x24): u8 part count at +2, parts pointer at +4, float3 at +8.
+  - Part (0x24): material at +0x18, extra at +0x1c, vertex buffer at +0x20.
+- Material record (−15, 0x60): texture count = (b10&0x3f)>>3 and UV sets = b10&7. The texture slots are −16 data (n×8 records, then a name per slot).
+- Vertex buffer header (−14, 0x78): u16 vertex count at +2, u32 index count at +4, u16 stride at +0x1a. Optional blocks follow when +0x24/+0x48 are set, and morph data when +0x44 is set. The index and vertex data are separate −14 groups, read straight into GPU memory by 0x24d1c4.
+- Vertex mask 0x12095c is replicated using the rodata tables at 0x3798c4/d1/e9/f8. The attribute order was recovered from vertex data:
+  - position f32×3
+  - uv0 s16×2 (bit 4), uv1 (bit 8)
+  - normal s8×3+pad (0x40); decoded vectors have length ≈127
+  - colour RGBA8 (0x80)
+  - 8 bytes (bit 2, set when m0=1), probably skin weights/indices; unconfirmed
+  - Bit 1 (m0=2) does not occur.
+- `python3 tools/convert_models.py --census artifacts/fib/files`:
+  - 3113/3113 models parse with every pool block consumed.
+  - All 16122 parts have an index count divisible by 3 (triangle lists).
+  - All 16122 computed strides equal the stored stride.
+- Visual checks with tools/preview_model.py (software renderer):
+  - csdata trolley: a textured hand truck with wheels and cargo.
+  - char_bear: bind pose, recognisable.
+  - lvl_00_policestation/room1 with the SkyBox texture excluded: cliff, grass and road pieces line up, so level vertices are stored in world space.
+- Not recovered: the meaning of node/mesh float3 fields, the model+0x1c section's contents, skin field semantics, and material render states.
+- Added tools/convert_models.py, tools/preview_model.py and tests/test_convert_models.py (3 tests); suite PASS 36/36.
 - Named in REA with a _candidate suffix (ev_d6ee55638e4b4ce712665d235d1d66a9d8c1add97c17e5f210b671225ddb1b28): srvGetServiceHandle_candidate, strlen_candidate, dspInit_candidate, fsUserInit_candidate, ndmInit_candidate. Hopper does not define procedures at 0x109fc0, 0x10f8e4 or 0x11006c.

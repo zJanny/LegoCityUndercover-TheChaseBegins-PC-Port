@@ -29,6 +29,10 @@ python3 tools/extract_fib.py artifacts/romfs/romfs/lego_city3ds.fib --names arti
 python3 tools/convert_textures.py artifacts/fib/files --output artifacts/textures
 # Sounds (.bwav = wrapped CWAV, DSP-ADPCM) -> WAV; --census parses headers only
 python3 tools/convert_audio.py artifacts/fib/files --output artifacts/audio
+# Pooled b* resource layout check; model parse/stride census; model preview render
+python3 tools/tt_resource.py --census artifacts/fib/files
+python3 tools/convert_models.py --census artifacts/fib/files
+python3 tools/preview_model.py MODEL.bfnmdl --assets artifacts/fib/files --output out.png
 
 # Native build + tests
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug

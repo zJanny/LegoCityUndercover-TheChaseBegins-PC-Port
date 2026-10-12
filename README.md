@@ -68,6 +68,19 @@ python3 tools/convert_audio.py artifacts/fib/files --output artifacts/audio
 
 `audio-manifest.json` keeps each sound's sample rate, sample count and loop points.
 
+## Inspect models
+
+All `b*` resources share one pooled block layout (`tools/tt_resource.py`). `tools/convert_models.py` parses `.bfnmdl` models by replaying the game's deserializer block by block. It checks that every block is consumed and that the vertex stride derived from the material matches the stored one.
+
+```sh
+python3 tools/tt_resource.py --census artifacts/fib/files                 # pool layout check, all b* files
+python3 tools/convert_models.py --census artifacts/fib/files              # all models, stride check
+python3 tools/convert_models.py --vertices 3 path/to/model.bfnmdl         # raw vertex dump
+python3 tools/preview_model.py path/to/model.bfnmdl --assets artifacts/fib/files --output out.png [--exclude sky]
+```
+
+`preview_model.py` is a small software renderer for checking the decoders visually. Node and mesh transforms, skinning and animation are not recovered yet.
+
 ## Build and run the input laboratory
 
 Requires CMake ≥ 3.16, a C++17 compiler and SDL2 (found through pkg-config).
@@ -125,5 +138,5 @@ The plan and the evidence log are in `docs/plans/linux-port.md` and `docs/plans/
 - gameplay logic
 - rendering
 - audio
-- individual asset formats (the `.fib` archive is unpacked and textures and sounds convert to PNG and WAV, but `.bfnmdl`, `.bfnanm`, `.blvl`, `.moflex` and the rest are not decoded)
+- individual asset formats (the `.fib` archive is unpacked and textures and sounds convert to PNG and WAV, and model geometry decodes, but transforms, skeletons (`.bfnskl`), animation (`.bfnanm`), `.blvl`, `.moflex` and the rest are not decoded)
 - the save format
