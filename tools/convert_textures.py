@@ -175,7 +175,17 @@ def main():
     parser.add_argument('inputs', type=Path, nargs='+', help='texture files or directories to scan')
     parser.add_argument('--output', type=Path, help='PNG output directory (must not exist)')
     parser.add_argument('--census', action='store_true', help='only validate headers and print a format summary')
+    parser.add_argument('--checksum', action='store_true',
+                        help='print FNV-1a (32-bit) of each decoded RGBA image, for cross-checking the C++ decoder')
     args = parser.parse_args()
+    if args.checksum:
+        for path in args.inputs:
+            info, rows = decode(path.read_bytes())
+            value = 0x811c9dc5
+            for byte in (c for row in rows for px in row for c in px):
+                value = ((value ^ byte) * 0x01000193) & 0xffffffff
+            print('%08x %dx%d %s' % (value, len(rows[0]), len(rows), path))
+        return 0
     if not args.census and not args.output:
         parser.error('--output is required unless --census is given')
     files = []

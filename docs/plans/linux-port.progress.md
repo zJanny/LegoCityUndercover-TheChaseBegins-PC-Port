@@ -307,4 +307,17 @@ Static analysis used local llvm-objdump (armv6k) over game.arm.elf. This is loca
   - lvl_00_policestation/room1 with the SkyBox texture excluded: cliff, grass and road pieces line up, so level vertices are stored in world space.
 - Not recovered: the meaning of node/mesh float3 fields, the model+0x1c section's contents, skin field semantics, and material render states.
 - Added tools/convert_models.py, tools/preview_model.py and tests/test_convert_models.py (3 tests); suite PASS 36/36.
+
+### 2026-10-12T16:30+02:00 — S4a part 1: native asset runtime (C++)
+
+- Added the `chase_assets` library: src/assets/assets.hpp, fuse.cpp (FUSE archive, RefPack, CSV names, case-insensitive lookup), pooled.cpp (parsePooled, PoolCursor) and texture.cpp (all 14 PICA formats, ETC1/ETC1A4, cubemap strip). It has no SDL dependency.
+- Tests:
+  - tests/assets_test.cpp (CTest `assets-core`) mirrors the Python fixtures.
+  - tests/assets_real_test.cpp (CTest `assets-real-data`, SKIP_RETURN_CODE 77 when the RomFS is absent) reads every archive entry, parses every pooled resource, decodes every texture, and compares 5 texture FNV-1a checksums with `tools/convert_textures.py --checksum`.
+- `cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug && cmake --build build` — PASS, 0 warnings (GCC 16.2.1).
+- `ctest --test-dir build --output-on-failure` — PASS 4/4: input-core, input-sdl-smoke, assets-core and assets-real-data (9.1 s).
+  - Real data: 12836 entries and 478387766 bytes, matching the Python totals; 12500 pooled resources; 3991 textures; 5/5 checksums match.
+  - The skip path (`assets-real-test /nonexistent x`) exits 77.
+- Set CMAKE_EXPORT_COMPILE_COMMANDS so clangd finds the `src` include path. The editor diagnostics about a missing `assets/assets.hpp` came only from the missing compile database.
+- Still to do in S4a: CWAV decode and .bfnmdl geometry in C++.
 - Named in REA with a _candidate suffix (ev_d6ee55638e4b4ce712665d235d1d66a9d8c1add97c17e5f210b671225ddb1b28): srvGetServiceHandle_candidate, strlen_candidate, dspInit_candidate, fsUserInit_candidate, ndmInit_candidate. Hopper does not define procedures at 0x109fc0, 0x10f8e4 or 0x11006c.

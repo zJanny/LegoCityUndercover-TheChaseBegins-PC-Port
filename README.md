@@ -81,6 +81,12 @@ python3 tools/preview_model.py path/to/model.bfnmdl --assets artifacts/fib/files
 
 `preview_model.py` is a small software renderer for checking the decoders visually. Node and mesh transforms, skinning and animation are not recovered yet.
 
+## Native asset runtime
+
+`chase_assets` (`src/assets/`) is the start of the native port's asset layer, written in C++17 with no SDL dependency. It reads the FUSE archive, including its RefPack chunks, parses pooled resources and decodes textures to RGBA. `ctest` runs it against synthetic fixtures (`assets-core`).
+
+If you have extracted the RomFS to `artifacts/romfs`, `assets-real-data` also decodes every archive entry and texture. It cross-checks texture checksums against the Python decoder. Without the extracted data, the test is reported as skipped. Set `-DCHASE_ROMFS_DIR=...` to point it elsewhere.
+
 ## Build and run the input laboratory
 
 Requires CMake ≥ 3.16, a C++17 compiler and SDL2 (found through pkg-config).

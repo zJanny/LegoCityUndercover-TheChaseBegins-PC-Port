@@ -40,6 +40,8 @@ cmake --build build
 ctest --test-dir build --output-on-failure
 ctest --test-dir build -R input-core          # pure input-core unit test
 ctest --test-dir build -R input-sdl-smoke     # SDL integration, runs with SDL_VIDEODRIVER=dummy
+ctest --test-dir build -R assets-core         # native asset runtime, synthetic fixtures
+ctest --test-dir build -R assets-real-data    # opt-in: needs artifacts/romfs (skips with code 77 otherwise)
 
 # Run the lab (looks for config/controls.cfg relative to cwd; CMake copies it into build/)
 cd build && ./chase-input-lab [--config PATH] [--smoke-test]
@@ -56,6 +58,7 @@ cd build && ./chase-input-lab [--config PATH] [--smoke-test]
   - Touch maps only inside the aspect-fitted 320x240 viewport.
   
   When you change behaviour, update both tests.
+- **The native asset runtime is `chase_assets`** (`src/assets/`, namespace `chase::assets`). It has no SDL dependency. It ports the verified Python tools: FUSE archive + RefPack, the pooled reader with `PoolCursor`, and PICA texture decode. The Python tools in `tools/` are the reference. When you change a format decoder, change both, and keep `assets-real-test`'s checksums (from `convert_textures.py --checksum`) in agreement.
 - `config/controls.cfg` format: `Action key|mouse Code hold|toggle`, with `#` comments. Key names are SDL names with `_` in place of spaces. Mouse codes are `Left`, `Middle`, `Right`, `X1` and `X2`. Action names are 3DS buttons, not recovered gameplay meanings.
 - **Extractor safety rules:**
   - Open the image read-only.

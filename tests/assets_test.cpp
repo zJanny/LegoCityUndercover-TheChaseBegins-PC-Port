@@ -1,0 +1,163 @@
+// Synthetic fixtures for the native asset runtime; mirrors tests/test_extract_fib.py,
+// tests/test_tt_resource.py and tests/test_convert_textures.py.
+#include "assets/assets.hpp"
+#include <cstdio>
+#include <fstream>
+#include <iostream>
+#include <stdexcept>
+#include <string>
+using namespace chase::assets;
+
+namespace {
+void require(bool condition, const char* message) {
+    if (!condition) throw std::runtime_error(message);
+}
+template <typename F> void requireThrows(F f, const char* message) {
+    try { f(); } catch (const std::runtime_error&) { return; }
+    throw std::runtime_error(message);
+}
+void put32(Bytes& b, std::uint32_t v) {
+    for (int i = 0; i < 4; ++i) b.push_back(std::uint8_t(v >> (8 * i)));
+}
+Bytes bytes(const std::string& text) { return Bytes(text.begin(), text.end()); }
+
+const Bytes stream = bytes(std::string("\xe0" "abca" "\x20\x02" "\x81\x40\x09" "Y", 11) +
+                           std::string("\xc0\x00\x00\x00", 4) + "\xfdX");
+const std::string decoded = "abcabcabcYabcabbbbbbX";
+
+void refpack() {
+    Bytes out = decompressRefPack(stream.data(), stream.size(), decoded.size());
+    require(std::string(out.begin(), out.end()) == decoded, "RefPack token forms");
+    for (const std::string& bad : {std::string("\x00\x05\xfc", 3), std::string("\xe0" "ab"),
+                                   std::string("\xe0" "abcd")}) {
+        Bytes b = bytes(bad);
+        requireThrows([&] { decompressRefPack(b.data(), b.size(), 100); }, "bad RefPack stream accepted");
+    }
+    requireThrows([&] { decompressRefPack(stream.data(), stream.size(), 3); }, "RefPack limit not enforced");
+}
+
+void fuse() {
+    // Entries: stored "raw", codec-1 chunk, two codec-2 chunks of 0x8000.
+    Bytes big(0x8000 + 5);
+    for (std::size_t i = 0; i < big.size(); ++i) big[i] = std::uint8_t(i * 7);
+    Bytes body, directory;
+    auto add = [&](std::uint32_t crc, std::uint32_t codec, std::uint32_t size, const Bytes& payload) {
+        put32(directory, crc);
+        put32(directory, 20 + std::uint32_t(body.size()));
+        put32(directory, size << 5 | codec);
+        body.insert(body.end(), payload.begin(), payload.end());
+    };
+    Bytes chunk1;
+    put32(chunk1, std::uint32_t(stream.size()));
+    chunk1.insert(chunk1.end(), stream.begin(), stream.end());
+    Bytes chunks2;
+    put32(chunks2, 0x8000);
+    chunks2.insert(chunks2.end(), big.begin(), big.begin() + 0x8000);
+    put32(chunks2, 5);
+    chunks2.insert(chunks2.end(), big.begin() + 0x8000, big.end());
+    add(0x11, 0, 3, bytes("raw"));
+    add(0x22, 1, std::uint32_t(decoded.size()), chunk1);
+    add(0x33, 2, std::uint32_t(big.size()), chunks2);
+    Bytes file = bytes("FUSE1.00");
+    put32(file, 3);
+    put32(file, 0);
+    put32(file, 20 + std::uint32_t(body.size()));
+    file.insert(file.end(), body.begin(), body.end());
+    file.insert(file.end(), directory.begin(), directory.end());
+    const std::string path = "assets_test_archive.fib", csv = "assets_test_archive.csv";
+    std::ofstream(path, std::ios::binary).write(reinterpret_cast<const char*>(file.data()), std::streamsize(file.size()));
+    std::ofstream(csv) << "Filename CRC, Filename, Compressed Size, File Size, Offset\n"
+                       << "0x00000022,Models/Packed.BIN,14,21,0x17\n";
+    FuseArchive archive(path);
+    archive.loadNames(csv);
+    require(archive.entries().size() == 3, "entry count");
+    Bytes raw = archive.read(archive.entries()[0]);
+    require(std::string(raw.begin(), raw.end()) == "raw", "stored entry");
+    const FuseEntry* packed = archive.find("models/packed.bin");
+    require(packed && packed->crc == 0x22, "case-insensitive CSV lookup");
+    Bytes unpacked = archive.read(*packed);
+    require(std::string(unpacked.begin(), unpacked.end()) == decoded, "codec 1 entry");
+    require(archive.read(archive.entries()[2]) == big, "codec 2 chunks");
+    require(archive.find("missing") == nullptr, "unknown name");
+    std::remove(path.c_str());
+    std::remove(csv.c_str());
+}
+
+Bytes pooledFile(const std::vector<std::int32_t>& table, const Bytes& stat, const Bytes& body) {
+    Bytes out;
+    put32(out, std::uint32_t(table.size()) << 8);
+    put32(out, std::uint32_t(4 * table.size() + stat.size()));
+    for (auto word : table) put32(out, std::uint32_t(word));
+    out.insert(out.end(), stat.begin(), stat.end());
+    out.insert(out.end(), body.begin(), body.end());
+    return out;
+}
+
+void pooled() {
+    Bytes data = pooledFile({-16, 0, 4, -15, 2, 0, 3, -14, 1, -14, 2}, bytes("SSSS"), bytes("AABBBCDD"));
+    auto blocks = parsePooled(data);
+    require(blocks.size() == 7, "pooled block count");
+    require(blocks[1].pool == Pool::M16 && blocks[1].size == 4 && data[blocks[1].offset] == 'S', "-16 data in header");
+    require(blocks[4].pool == Pool::M15 && data[blocks[4].offset] == 'B', "-15 data order");
+    require(blocks[6].pool == Pool::M14 && data[blocks[6].offset] == 'D', "-14 data order");
+    PoolCursor cursor(data);
+    cursor.push(Pool::M15);
+    require(cursor.next() && cursor.next() == nullptr && cursor.next(), "-15 cursor with NULL block");
+    require(!cursor.exhausted(), "cursor exhausted too early");
+    for (const auto& bad : {pooledFile({-14, 2}, {}, bytes("xxx")), pooledFile({5, -14}, {}, Bytes(5)),
+                            pooledFile({-16, 4}, bytes("SS"), {})})
+        requireThrows([&] { parsePooled(bad); }, "bad pooled resource accepted");
+}
+
+Bytes texture(int width, int height, int format, int levels, const Bytes& payload, int cube = 0) {
+    Bytes out;
+    for (std::uint32_t v : {0x400u, 0x10u, 0xfffffff2u, 0x20u, 0xfffffff2u, std::uint32_t(payload.size())}) put32(out, v);
+    out.push_back(std::uint8_t(width)); out.push_back(std::uint8_t(width >> 8));
+    out.push_back(std::uint8_t(height)); out.push_back(std::uint8_t(height >> 8));
+    put32(out, std::uint32_t(payload.size()));
+    out.push_back(std::uint8_t(format)); out.push_back(0); out.push_back(0); out.push_back(std::uint8_t(cube));
+    put32(out, std::uint32_t(levels));
+    out.resize(0x38, 0);
+    out.insert(out.end(), payload.begin(), payload.end());
+    return out;
+}
+
+void textures() {
+    Bytes payload;
+    for (int i = 0; i < 64; ++i) { payload.push_back(255); payload.push_back(0); payload.push_back(0); payload.push_back(std::uint8_t(i)); }
+    Image image = decodeTexture(texture(8, 8, 0, 1, payload));
+    auto red = [&](int x, int row) { return image.rgba[(std::size_t(row) * 8 + std::size_t(x)) * 4]; };
+    require(red(1, 7) == 1 && red(0, 6) == 2 && red(2, 7) == 4 && red(7, 0) == 63, "Morton tiling / bottom-up rows");
+    // ETC1 individual mode, colours 0x8 / 0xF, index 3 at pixel x=1,y=2.
+    std::uint64_t high = 8u << 28 | 15u << 24 | 8u << 20 | 15u << 16 | 8u << 12 | 15u << 8;
+    std::uint64_t word = high << 32 | 1u << 6 | 1u << 22;
+    Bytes etc;
+    for (int b = 0; b < 4; ++b)
+        for (int i = 0; i < 8; ++i) etc.push_back(b == 0 ? std::uint8_t(word >> (8 * i)) : 0);
+    Image e = decodeTexture(texture(8, 8, 12, 1, etc));
+    auto px = [&](int x, int y) { return e.rgba[(std::size_t(7 - y) * 8 + std::size_t(x)) * 4]; };
+    require(px(0, 0) == 138 && px(3, 3) == 255 && px(1, 2) == 128, "ETC1 individual mode");
+    Image cube = decodeTexture(texture(8, 8, 7, 1, Bytes(64 * 6, 9), 1));
+    require(cube.faces == 6 && cube.height == 48, "cubemap strip");
+    Bytes good = texture(8, 8, 7, 1, Bytes(64));
+    Bytes truncated(good.begin(), good.begin() + 20), longer = good, badFormat = good;
+    longer.push_back(0);
+    badFormat[0x20] = 14;
+    for (const auto& bad : {truncated, longer, badFormat, texture(12, 8, 7, 1, Bytes(96)), texture(8, 8, 0, 2, Bytes(512))})
+        requireThrows([&] { decodeTexture(bad); }, "bad texture accepted");
+}
+}
+
+int main() {
+    try {
+        refpack();
+        fuse();
+        pooled();
+        textures();
+    } catch (const std::exception& error) {
+        std::cerr << "assets-test failed: " << error.what() << '\n';
+        return 1;
+    }
+    std::cout << "assets-test passed\n";
+    return 0;
+}
