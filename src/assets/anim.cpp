@@ -121,6 +121,7 @@ Skeleton parseSkeleton(const Bytes& data) {
         if (joint.parent < -1 || joint.parent >= int(i)) throw std::runtime_error("joint parent out of order");
         joint.world = readMatrix(records, i * 0x98 + 8);
         joint.local = readMatrix(records, i * 0x98 + 0x48);
+        for (std::size_t k = 0; k < 4; ++k) joint.orientation[k] = readF32(records, i * 0x98 + 0x88 + 4 * k);
         skeleton.joints.push_back(std::move(joint));
     }
     r.cursor.pop();
@@ -334,6 +335,19 @@ float evaluateTrack(const AnimTrack& track, float time) {
     return float(bezier(a.value, a.outValue, b.inValue, b.value, s));
 }
 
+JointPose orientedPose(const JointChannels& channels, const Joint& joint) {
+    JointPose pose = jointPose(channels);
+    const auto& o = joint.orientation;
+    if (!(o[3] < 1 && o[3] > -1)) return pose;
+    const auto p = pose.rotation;
+    pose.rotation = {p[3] * o[0] + p[0] * o[3] + p[1] * o[2] - p[2] * o[1],
+                     p[3] * o[1] + p[1] * o[3] + p[2] * o[0] - p[0] * o[2],
+                     p[3] * o[2] + p[2] * o[3] + p[0] * o[1] - p[1] * o[0],
+                     p[3] * o[3] - p[0] * o[0] - p[1] * o[1] - p[2] * o[2]};
+    pose.mask |= 7;
+    return pose;
+}
+
 std::vector<Matrix> skinMatrices(const Skeleton& skeleton, const Animation& animation, double frame) {
     unsigned frames = animation.frames ? animation.frames : 1;
     double wrapped = std::fmod(frame, double(frames));
@@ -347,11 +361,11 @@ std::vector<Matrix> skinMatrices(const Skeleton& skeleton, const Animation& anim
         if (i < animation.jointCurves.size()) {
             JointChannels a = decodeChannels(animation.jointCurves[i], first, animation.frames);
             if (fraction == 0) {
-                if (!a.rawMatrix) local = localMatrix(a);
+                if (!a.rawMatrix) local = poseMatrix(orientedPose(a, joint));
             } else {
                 JointChannels b = decodeChannels(animation.jointCurves[i], second, animation.frames);
                 if (!a.rawMatrix && !b.rawMatrix)
-                    local = poseMatrix(blendPoses({{jointPose(a), 1 - fraction}, {jointPose(b), fraction}}));
+                    local = poseMatrix(blendPoses({{orientedPose(a, joint), 1 - fraction}, {orientedPose(b, joint), fraction}}));
             }
         }
         world.push_back(joint.parent < 0 ? local : multiply(local, world[std::size_t(joint.parent)]));

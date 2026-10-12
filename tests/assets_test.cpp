@@ -459,6 +459,19 @@ void animations() {
     for (auto& q : flipped.rotation) q = -q;
     JointPose mid = blendPoses({{turnedPose(0, 7), 0.5f}, {flipped, 0.5f}});
     require(near(mid.rotation[2], float(std::sin(-M_PI / 8))), "quaternion sign flip before summing (0x24c924)");
+    Joint oriented;
+    oriented.orientation = {0, 0, float(std::sin(M_PI / 4)), float(std::cos(M_PI / 4))};
+    JointChannels yawed;
+    yawed.values[0] = float(M_PI / 2);
+    JointPose combined = orientedPose(yawed, oriented);
+    auto sampled = jointPose(yawed).rotation;
+    const auto& o = oriented.orientation;
+    require(combined.mask == 7 && near(combined.rotation[3], sampled[3] * o[3]) &&
+                near(combined.rotation[0], sampled[0] * o[3]) && near(combined.rotation[1], -sampled[0] * o[2]) &&
+                near(combined.rotation[2], sampled[3] * o[2]),
+            "sampled rotation times joint orientation (0x247f3c)");
+    require(orientedPose(yawed, Joint{}).rotation == sampled && orientedPose(yawed, Joint{}).mask == 0,
+            "identity orientation leaves the pose unchanged");
     JointPose moved = turnedPose(0, 0xe00);
     moved.translation[0] = 1;
     require(near(blendPoses({{moved, 0.5f}, {turnedPose(0, 7), 0.5f}}).translation[0], 0.5f),

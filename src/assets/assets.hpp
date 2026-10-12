@@ -199,6 +199,7 @@ struct Joint {
     int parent = -1;
     Matrix world{};   // bind pose, record +0x08
     Matrix local{};   // relative to the parent, record +0x48
+    std::array<float, 4> orientation{0, 0, 0, 1};  // record +0x88 quaternion (x, y, z, w)
 };
 struct Skeleton {
     std::vector<Joint> joints;
@@ -245,6 +246,9 @@ struct JointPose {
     unsigned mask = 0;
 };
 JointPose jointPose(const JointChannels& channels);
+// 0x12a2b4 after sampling: rotation = sampled * joint.orientation (0x2485d8 -> 0x247f3c),
+// skipped when |w| >= 1; the rotation mask bits are then set.
+JointPose orientedPose(const JointChannels& channels, const Joint& joint);
 // 0x252cb0 with several layers: quaternions summed with a sign flip against the first
 // (0x24c924) and normalised (0x24c898); scale summed over all layers, shear and
 // translation over the layers that carry them. A single layer is returned unchanged.
