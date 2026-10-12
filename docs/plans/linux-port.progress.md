@@ -5,7 +5,7 @@
 - Overall: IN_PROGRESS
 - Current Phase: IMPLEMENT
 - Current Step: S3
-- Last Updated: 2026-10-12T14:53:00+02:00
+- Last Updated: 2026-10-12T15:10:00+02:00
 - Branch: feature/linux-port (unborn)
 - Target Branch: Not specified
 - Requested Scope: PLAN, IMPLEMENT, TEST; start reverse engineering and native port
@@ -35,7 +35,7 @@ Commits authorized by CLAUDE.md "User specified workflows" (commit at logical st
 |---|---|---|---|
 | S1 | Verified executable extraction and analysis ELF | COMPLETE | R1; unit tests + real extraction 2026-10-12T14:51 |
 | S2 | Native accessible input laboratory | COMPLETE | R2/R3; warning-free build, CTest 2/2 |
-| S3 | Focused ARM analysis | IN_PROGRESS | R1, S1 complete |
+| S3 | Focused ARM analysis | IN_PROGRESS | R1; startup, SVC stubs, services, paths recorded; game frame function and DSP path still open |
 | S4 | Recover gameplay and replace platform | NOT_STARTED | R4, needs S3 subsystem plan |
 
 ## Current Work
@@ -90,7 +90,9 @@ feature/linux-port (unborn)
 
 ### Commits
 
-Logical commits for S1 (extraction), S2 (input lab), docs; hashes recorded in next update.
+- `4642cf5` — Add verified 3DS executable extraction tool (S1)
+- `db355f9` — Add SDL2 accessible input laboratory (S2)
+- `a805bf3` — Add port plan, progress log and CLAUDE.md
 
 ### Uncommitted Changes
 
@@ -106,6 +108,8 @@ User approved Git init, no extra guidance, Linux devices emit keyboard/mouse. Us
 
 ## Blockers
 
+- REA `resolve_containing_procedure` on 0x10a080 (dsp::DSP literal user) was denied by the Claude Code auto-mode classifier on 2026-10-12. Not retried. Unblock: user allows the call or performs it.
+
 Full game logic, hardware APIs and asset formats not recovered yet.
 
 ## Deviations From Plan
@@ -114,7 +118,7 @@ Full game logic, hardware APIs and asset formats not recovered yet.
 
 ## Next Action
 
-Continue S3 analysis in REA on artifacts/game/game.arm.elf; then write README.md (section 20).
+S3: improve function coverage (Hopper found 963 procedures vs ~6697 ARM `push {...,lr}` prologues). Then trace callers of svcSendSyncRequest (0x25947c) to group IPC wrappers by service (hid/gsp/fs/dsp/cfg/ptm), and identify the per-frame game update called from the dispatcher at 0x100448. The REA lookup for the dsp::DSP literal user (0x10a080) was denied by the permission classifier; the user decides whether to allow it.
 
 ## Session Log
 
@@ -124,3 +128,15 @@ Continue S3 analysis in REA on artifacts/game/game.arm.elf; then write README.md
 - Product CTR-P-AA8P; program name LEGOCITY; .code compressed (exheader flag bit 0).
 - .code SHA256 f895faaea826ee470e056d36fed72d66922b27ec9e5923e53f341567431b6923.
 - REA rejected CCI container; ordinary Python probe is local evidence, not REA Evidence.
+
+### 2026-10-12T15:10:00+02:00 — S3 focused analysis (REA, Hopper provider, ELF sha256 5152ed14…0881)
+
+- Opened artifacts/game/game.arm.elf; binary_overview ev_58c1dadc79e269e074c9c5fe98ce23a3b06199eb833f901f82be0d66b789bc54: 3 segments, 963 procedures, 0 strings defined (no sections, so Hopper defines no strings).
+- Entry 0x100000 (ev_e86237bf46c633b755ad47fe4e25bff928d851aafa8760d5bd0e03b49ecbdbd1): `bl` chain sub_100024, sub_10022c, sub_1002c8, sub_1002a0, sub_1336cc, sub_1001f8, sub_100280, sub_100108, then `b` to svc 0x3 (ExitProcess). This matches typical CTR SDK crt0; roles of individual init calls not yet confirmed.
+- sub_100108 (ev_1f33c6d8d139ac39e591c882c9d2c37299641b8d9d97dbd19ad5ff226101a5ea): 0x930-byte frame; loop `while (sub_100448()) sub_10057c();`, then sub_100324 and sub_100954. Inference (not confirmed): a framework/applet dispatcher, not game logic.
+- sub_100448 (ev_cd6d2d3e6cabe488c953db4d96d4c28ea3c6034219fdcef6e4ddd52b8342d324) walks a message list with kinds 1/2/3/7 and calls a virtual method at +0x10. sub_10057c (ev_d3565622686694c11b9731296e21efd0c14fc9f675cc63839da706915d17d043) calls sub_25cb2c(*0x376310, 1).
+- SVC census from local llvm-objdump (armv6k, text only; local evidence, not REA). Each SVC appears exactly once in its own stub: 0x01 0x03 0x08 0x09 0x0A 0x0C 0x14 0x17 0x18 0x19 0x1F 0x20 0x21 0x22 0x23 0x25 0x27 0x28 0x2D 0x32 0x35 0x38 0x3A 0x3C. There are 2 spurious `svc #0xed6b90` hits in data. 24 stubs named in REA using standard 3DS SVC numbering (ev_4f958eba9c138769e7849bda90005ec82a681b6cf30b4e97375b17a151f88f98), e.g. svcSendSyncRequest 0x25947c, svcConnectToPort 0x105b08, svcExitProcess 0x25d4d4.
+- Service names in rodata: cecd:u/s, dsp::DSP, fs:LDR, fs:USER, ndm:u, srv:pm, cfg:u/i/s, hid:USER/SPVR, ptm:sysm/s/gets/u/play, err:f, gsp::Lcd, gsp::Gpu. No "srv:" or "APT:U" string was found by this simple search; not yet explained.
+- Paths: rom:/ (literal users at 0x128608, 0x1287d8, 0x159020, 0x188fa4), data:/savegame.dat (pointer at 0x377964), levels/triggers.txt, levels/letriggers.txt, pregen/*.bin, Pregen/Traffic|Pedestrians/%s_*.bin, TouchGestures/%s.dat, Localisation/extended_chars_utf8.txt, scriptfns.txt. Assets live in the 769 MB RomFS (not yet extracted).
+- Coverage caveat: resolve_containing_procedure returned not_in_procedure for the fs:USER user 0x10f988 (ev_f52ce74dbc497c0f3ce93454138b76efb3281e5ccdc80c18256246e4cac469b2) and the rom:/ literal 0x128718 (ev_d887d2367ebb3881e7d6eef78c3e7ad82dd29c9e652671dfa00ddabd9e3293fe). The local disassembly has ~6697 `push {...,lr}` prologues, so Hopper covers a minority of functions.
+- Engine strings (ATTR_*, StudSpawn*, CUFO*) suggest TT Games' engine. This is an unconfirmed inference.
