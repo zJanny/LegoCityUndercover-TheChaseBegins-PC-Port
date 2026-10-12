@@ -737,3 +737,23 @@ Static analysis used local llvm-objdump (armv6k) over game.arm.elf. This is loca
 - options.txt and options3ds.txt are engine logging configuration, not user settings; their loader is unknown. User settings live only in the options block.
 - Unknown: story progress, unlocks and collectibles inside the slot; how the options block is restored on load; exact FS commands behind 0x120a58 and 0x325a04. The defaults callback 0x1a25cc unlocks character IDs 9..140 (table 0x372e10, stride 0x28); how these IDs relate to the 192 tablescharacters rows is unknown.
 - Proposed next step (not started): chase_save under src/save/ (no SDL). It keeps the image as opaque bytes with header, CRC and validate (statuses 3/4), stores it at $XDG_DATA_HOME/chase/savegame.dat with an atomic write (temp file, fsync, rename), and has synthetic tests only (no real save is available).
+
+### 2026-10-13T10:45+02:00 — S3 HID input and main loop (REA, Ghidra 12.1.2; read-only, partial)
+
+- Tooling: REA binds the Ghidra provider (full coverage). VA = file offset + 0xff000 in all segments. Local llvm-objdump needs --mattr=+vfp2 for the VFP code.
+- 0x1172b4 opens hid:USER and maps 0x2b0 bytes of shared memory into the HID object at 0x5941f8: pad +0, touch +0xa8, accel +0x108, gyro +0x158 (ev_98ab09d2…). Readers: pad (constructor 0x110038) and touch (0x10fca0), built at 0x1075f0 (globals 0x3760c4).
+- Pad read 0x10a4dc (ev_b029ae29…): hold &= ~0x2000; trigger = hold & ~prev; release = prev & ~hold; all zeroed when 0x25b8c4() && !0x259648() (meaning unknown).
+- Stick: circle clamp 0x119724 with min 40 and max 145 (defaults at 0x117a10; ev_bb8429e5…). |v| ≤ 40 → 0; otherwise length becomes min(|v| − 40, 105), then divided by 105 (0x10fcb0). Touch 0x10a44c gives {u16 x, u16 y, u8 down}.
+- Channel layer 0x103dc8 (ev_00990eb9…) writes 20-byte channels {f32 value, u8 type, f32 deadzone, f32 threshold, s16 press, s16 release}.
+  - Pad: Up 0x40→12, Down 0x80→13, Left 0x20→14, Right 0x10→15, Start 0x08→6, A 0x01→16, B 0x02→17, X 0x400→18, Y 0x800→19, L 0x200→8, R 0x100→10, stick → ch0/ch1. Select (0x04) is not mapped.
+  - Accel → ch24–26, gyro → ch30–41.
+  - Touch: ch0 = x, ch1 = y, ch3 = 1 while down, rotated by the global at [0x529e30 + 0x28] (0/90/180/270).
+- Per-frame poll 0x25cb2c (ev_ea8b8dd9…): copies previous channels to 0x52f0d0, applies a radial deadzone to (ch0, ch1) and (ch2, ch3) and an axial deadzone elsewhere ((v − dz) / (1 − dz), clamped), and expires a timed list (0x10497c; possibly rumble, unknown).
+- Edges 0x25b4b4 (ev_1d25fc79…): press = ±1 when the value crosses ±threshold; release the same in reverse. No key-repeat logic was found.
+- 0x168c9c (ev_70129f7a…) creates the pad device (*0x3769e4) and fills the slot table 0x3769e8..0x376a2c with channels 12, 13, 14, 15, 16, 17, 16, 17, 18, 19, 6, 7, 8, 10, then axes 0–3. It also records and plays back input (stream 0x379d7c; 0x25afcc, 0x25b310). Game code reads press edges through these slots (e.g. 0x2005e8 reads ch18). No action names were found; no .bxls table holds control mappings.
+- Main loop: 0x100108 registers "LEGO_City3DS" and runs `while (0x100448()) 0x10057c();`.
+  - 0x10057c polls the pad.
+  - 0x100448 (ev_f5b009a8…) runs one frame: process list kinds 1/3 call Update(dt) (vtable +0x10), kind 2 calls 0x100f44, kind 7 removes.
+  - 0x100f44 (ev_68bf373e…) is a fixed-step scheduler: step from config +0x10, catch-up cap +0x70, idle path 0x25c174(1/30).
+- Unknown: the GSP vsync call and the step value (30 vs 60 fps), slot action names, bit 0x2000, channel 7.
+- Effect on the input lab: the game has no key repeat and Select is unused, which is consistent with the lab's rules. The lab's action names stay 3DS buttons until slot meanings are recovered.
