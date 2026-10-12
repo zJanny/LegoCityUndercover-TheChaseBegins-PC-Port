@@ -520,6 +520,80 @@ void navigation() {
     requireThrows([] { parseNav(navFile(false, 10)); }, "wrong nav cell count accepted");
 }
 
+void putF32(Bytes& b, std::size_t offset, float value) {
+    std::uint32_t bits;
+    std::memcpy(&bits, &value, sizeof bits);
+    for (int i = 0; i < 4; ++i) b[offset + i] = std::uint8_t(bits >> (8 * i));
+}
+
+Bytes layoutElement(std::uint32_t type, std::uint16_t children, float x) {
+    Bytes e(0x4c, 0xcd);
+    for (std::size_t i = 8; i < 0x4c; ++i) e[i] = 0;
+    e[8] = std::uint8_t(type);
+    e[0x14] = 0xff;
+    const float values[10] = {0.5f, 1.5f, -1, 1, x, 7, 0.5f, 0.5f, 64, 32};
+    for (std::size_t i = 0; i < 10; ++i) putF32(e, 0x18 + 4 * i, values[i]);
+    e[0x40] = std::uint8_t(children);
+    e[0x42] = 0x11;
+    e[0x46] = 0x0f;
+    e[0x47] = 0x05;
+    for (std::size_t i = 0; i < 4; ++i) e[0x48 + i] = std::uint8_t(0x10 * (i + 1));
+    return e;
+}
+
+Bytes layoutFile(std::uint32_t childType, bool extraBlock) {
+    Bytes storyboards(8, 0), storyboard(0x10, 0), track(0x20, 0);
+    storyboards[4] = 1;
+    storyboard[0xc] = 1;
+    track[8] = 2;
+    track[0xa] = 3;
+    track[0x14] = 6;
+    putF32(track, 0x18, 0.25f);
+    std::vector<Bytes> keys;
+    for (float time : {0.0f, 0.25f}) {
+        Bytes key(0x20, 0);
+        putF32(key, 4, 1 - 4 * time);
+        putF32(key, 0x10, 1);
+        putF32(key, 0x14, 1);
+        putF32(key, 0x18, time);
+        keys.push_back(key);
+    }
+    keys[1][0x1c] = 1;
+    std::vector<std::pair<std::int32_t, Bytes>> blocks{
+        {-14, Bytes{1, 0, 0, 0}}, {-14, layoutElement(1, 1, 0)}, {-14, bytes(std::string("LayoutRoot\0\xde", 12))},
+        {-14, layoutElement(childType, 0, 20)}, {-14, bytes(std::string("img\0", 4))},
+        {-14, bytes(std::string("images/a.png\0\0\0\0", 16))}, {-14, storyboards}, {-14, storyboard},
+        {-14, bytes(std::string("Show\0\0\0\0", 8))}, {-14, track}, {-14, bytes(std::string("img\0", 4))},
+        {-14, keys[0]}, {-14, keys[1]}};
+    if (extraBlock) blocks.push_back({-14, Bytes(4)});
+    return pooledBlocks(blocks);
+}
+
+void layouts() {
+    UiLayout layout = parseLayout(layoutFile(2, false));
+    const UiElement& root = layout.root;
+    require(root.type == UiElementType::Container && root.name == "LayoutRoot" && root.source.empty() &&
+            root.children.size() == 1, "layout root");
+    const UiElement& image = root.children[0];
+    require(image.type == UiElementType::Image && image.name == "img" && image.source == "images/a.png",
+            "layout image element");
+    require(image.unknown14 == 0xff && image.opacity == 0.5f && image.rotation == 1.5f && image.scale[0] == -1 &&
+            image.position[0] == 20 && image.position[1] == 7 && image.origin[1] == 0.5f && image.size[0] == 64 &&
+            image.size[1] == 32, "layout element floats");
+    require(image.flags == 0x11 && image.callback == 0 && image.fontSize == 0x0f && image.alignment == 1 &&
+            image.colour[0] == 0x10 && image.colour[3] == 0x40, "layout element trailer");
+    require(layout.storyboards.size() == 1 && layout.storyboards[0].name == "Show" &&
+            layout.storyboards[0].tracks.size() == 1, "layout storyboard");
+    const UiTrack& track = layout.storyboards[0].tracks[0];
+    require(track.target == "img" && track.property == 6 && track.repeat == 3 && track.duration == 0.25f &&
+            track.keyframes.size() == 2, "layout track");
+    require(track.keyframes[0].value == 1 && track.keyframes[1].value == 0 && track.keyframes[1].time == 0.25f &&
+            track.keyframes[1].spline[2] == 1 && track.keyframes[1].flag == 1, "layout keyframes in file order");
+    requireThrows([] { parseLayout(layoutFile(2, true)); }, "unconsumed layout block accepted");
+    requireThrows([] { parseLayout(layoutFile(4, false)); }, "unknown layout element type accepted");
+    requireThrows([] { parseLayout(layoutFile(1, false)); }, "container read a source block");
+}
+
 void localisation() {
     require(textKey("No") == 78u * 65599u + 79u && textKey("ok") == 0x4f13bcu, "text key hash (sdbm, upper case)");
     Bytes loc = bytes("LOCA");
@@ -701,6 +775,7 @@ int main() {
         skinnedModels();
         levels();
         navigation();
+        layouts();
         localisation();
         animations();
         cutscenes();

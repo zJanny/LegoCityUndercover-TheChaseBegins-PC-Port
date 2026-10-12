@@ -406,6 +406,50 @@ struct CameraFollow {
     std::vector<CameraSetup> setups;
 };
 CameraFollow parseCameraFollow(const std::string& text);
+// .bxaml UI layouts, parsed in the block order of loader 0x217220 (elements 0x29f7b4).
+// Element record field use follows the node builder 0x1b2ec0; storyboards follow 0x1dbb80.
+enum class UiElementType : std::uint32_t { Container = 1, Image = 2, Reference = 3 };
+struct UiElement {
+    UiElementType type = UiElementType::Container;
+    std::string name;
+    std::string source;          // Image: texture path; Reference: name of another .bxaml layout
+    std::uint8_t unknown14 = 0;  // record +0x14, copied to node +0x147
+    float opacity = 1;           // record +0x18
+    float rotation = 0;          // record +0x1c, radians
+    float scale[2] = {1, 1};     // record +0x20
+    float position[2] = {0, 0};  // record +0x28
+    float origin[2] = {0, 0};    // record +0x30
+    float size[2] = {0, 0};      // record +0x38; 0 on an image means the texture size
+    std::uint16_t flags = 0;     // record +0x42; bit 0x80 marks the child the parent keeps at node +0x90
+    std::int16_t callback = 0;   // record +0x44; non-zero calls the hook at 0x37669c
+    std::uint8_t fontSize = 0;   // record +0x46; picks one of three fonts in table 0x52ebf8
+    std::uint8_t alignment = 0;  // record +0x47 & 3
+    std::uint8_t colour[4] = {255, 255, 255, 255}; // record +0x48, bytes in file order
+    std::vector<UiElement> children;
+};
+struct UiKeyframe {
+    float value = 0;
+    float spline[4] = {0, 0, 1, 1}; // two control points handed to 0x249030
+    float time = 0;
+    std::uint8_t flag = 0;           // keyframe +0x1c
+};
+struct UiTrack {
+    std::string target;              // element name, resolved by 0x24085c
+    std::uint8_t property = 0;       // 1..6; meanings are data fits, see the progress log
+    std::int16_t repeat = 0;         // storyboard length uses duration * repeat (0: duration once)
+    float duration = 0;
+    std::uint32_t unknown1c = 0;
+    std::vector<UiKeyframe> keyframes;
+};
+struct UiStoryboard {
+    std::string name;
+    std::vector<UiTrack> tracks;
+};
+struct UiLayout {
+    UiElement root;
+    std::vector<UiStoryboard> storyboards;
+};
+UiLayout parseLayout(const Bytes& data);
 
 std::uint32_t readU32(const Bytes& data, std::size_t offset);
 std::uint16_t readU16(const Bytes& data, std::size_t offset);

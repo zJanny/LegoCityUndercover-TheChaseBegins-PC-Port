@@ -76,6 +76,9 @@ int main(int argc, char** argv) {
         std::vector<std::string> manifestPaths, missingManifestFiles;
         std::size_t tableFiles = 0, tableSheets = 0, tableCells = 0, studThreshold = 0;
         std::string cutsceneVideo;
+        std::size_t layouts = 0, storyboards = 0, tracks = 0, keyframes = 0, unresolvedTargets = 0;
+        std::map<UiElementType, std::size_t> layoutElements;
+        double layoutGeometry = 0, keyframeSum = 0;
         std::uint32_t soundSum = 0x811c9dc5;  // FNV-1a over act_bass_break's PCM, see below
         for (const auto& entry : archive.entries()) {
             Bytes data = archive.read(entry);
@@ -131,6 +134,35 @@ int main(int argc, char** argv) {
                     ++cutsceneActorCount;
                     for (const auto& path : {actor.model, actor.skeleton, actor.animation})
                         if (!path.empty() && !archive.find(path)) missingManifestFiles.push_back(path);
+                }
+            }
+            if (endsWith(name, ".bxaml")) {
+                UiLayout layout = parseLayout(data);
+                ++layouts;
+                std::set<std::string> elementNames;
+                auto lower = [](std::string text) {
+                    for (auto& c : text) c = char(std::tolower(static_cast<unsigned char>(c)));
+                    return text;
+                };
+                auto visit = [&](const UiElement& e, auto&& self) -> void {
+                    ++layoutElements[e.type];
+                    elementNames.insert(lower(e.name));
+                    float fields[10] = {e.opacity, e.rotation, e.scale[0], e.scale[1], e.position[0],
+                                        e.position[1], e.origin[0], e.origin[1], e.size[0], e.size[1]};
+                    for (float f : fields) layoutGeometry += std::fabs(f);
+                    for (const auto& child : e.children) self(child, self);
+                };
+                visit(layout.root, visit);
+                for (const auto& storyboard : layout.storyboards) {
+                    ++storyboards;
+                    for (const auto& track : storyboard.tracks) {
+                        ++tracks;
+                        unresolvedTargets += !elementNames.count(lower(track.target));
+                        for (const auto& key : track.keyframes) {
+                            ++keyframes;
+                            keyframeSum += std::fabs(key.value) + std::fabs(key.time);
+                        }
+                    }
                 }
             }
             if (endsWith(name, ".tnf")) {
@@ -291,6 +323,15 @@ int main(int argc, char** argv) {
         // Reference: convert_models.bone_batches/skin_joints over every part (drawn vertices only).
         if (skinnedParts != 1457 || boneBatches != 1465 || jointSum != 3492824)
             throw std::runtime_error("bone palette totals differ from the Python reference");
+        // Reference: a throwaway Python walk of the 0x217220/0x29f7b4 block order over all 55 .bxaml files
+        // (session 2026-10-13, not kept): element types, storyboard counts, the sum of |the ten element
+        // floats at +0x18|, the sum of |keyframe value| + |keyframe time|, and track targets that name no
+        // element of their layout (0x24085c returns NULL for them).
+        if (layouts != 55 || layoutElements[UiElementType::Container] != 383 ||
+            layoutElements[UiElementType::Image] != 614 || layoutElements[UiElementType::Reference] != 110 ||
+            storyboards != 161 || tracks != 1888 || keyframes != 6740 || unresolvedTargets != 2 ||
+            std::fabs(layoutGeometry - 366157.4538534144) > 1e-3 || std::fabs(keyframeSum - 69052.03302517906) > 1e-3)
+            throw std::runtime_error("layout totals differ from the reference walk");
         const FuseEntry* bearSkeleton = archive.find("models/char_bear/char_bear.bfnskl");
         const FuseEntry* bearWalk = archive.find("models/char_bear/walk.bfnanm");
         if (!bearSkeleton || !bearWalk) throw std::runtime_error("char_bear reference files not found");
@@ -339,7 +380,8 @@ int main(int argc, char** argv) {
                   << models << " models / " << parts << " parts / " << vertices << " vertices / "
                   << triangles << " triangles, " << levels << " levels / " << objects << " objects / " << placed
                   << " placements, " << skeletons << " skeletons / " << joints << " joints, " << animations
-                  << " animations / " << curves << " joint curves / " << animTracks << " tracks, " << manifestPaths.size() << " cutscenes / " << cutsceneActorCount << " actors, " << navFiles << " nav files / " << navGrids << " grids, " << sounds << " sounds / " << samples << " samples / " << loops << " looping\n";
+                  << " animations / " << curves << " joint curves / " << animTracks << " tracks, " << manifestPaths.size() << " cutscenes / " << cutsceneActorCount << " actors, " << navFiles << " nav files / " << navGrids << " grids, " << sounds << " sounds / " << samples << " samples / " << loops << " looping, "
+                  << layouts << " layouts / " << tracks << " tracks\n";
     } catch (const std::exception& error) {
         std::cerr << "assets-real-test failed: " << error.what() << '\n';
         return 1;
