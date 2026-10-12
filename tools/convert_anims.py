@@ -156,6 +156,29 @@ def local_matrix(channels, mask):
     return [row + [0.0] for row in rows] + [translation + [1.0]]
 
 
+def rigid_inverse(m):
+    """Inverse used by 0x24c5a0: transposed 3x3 and the translation rotated back."""
+    t = m[3][:3]
+    rows = [[m[j][i] for j in range(3)] + [0.0] for i in range(3)]
+    return rows + [[-sum(t[k] * m[i][k] for k in range(3)) for i in range(3)] + [1.0]]
+
+
+def skin_matrices(skeleton, animation, frame):
+    """Single-layer 0x252cb0: per joint rigid_inverse(bind world) * animated world (row vectors)."""
+    frames = u16(animation['header'], 4)
+    world, skin = [], []
+    for index, joint in enumerate(skeleton['joints']):
+        local = joint['local']
+        if index < len(animation.get('s8', [])):
+            channels, mask = decode_channels(animation['s8'][index], frame % max(frames, 1), frames)
+            if mask != -1:
+                local = local_matrix(channels, mask)
+        parent = joint['parent']
+        world.append(local if parent < 0 else matmul(local, world[parent]))
+        skin.append(matmul(rigid_inverse(joint['world']), world[-1]))
+    return skin
+
+
 def read_track(pools, record):
     """0x253764: a 0x18 record; first block's u32 is copied to +8, then the pointer
     array at +0xc (its own block) with u16(+6) entry blocks, then +0x10 and +0x14."""

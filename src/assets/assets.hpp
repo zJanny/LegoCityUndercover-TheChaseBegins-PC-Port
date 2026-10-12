@@ -2,6 +2,7 @@
 // Native asset runtime (plan step S4a). Mirrors the verified Python tools in
 // tools/; see docs/plans/linux-port.progress.md for the recovered formats.
 // No SDL or GPU dependency.
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <fstream>
@@ -86,6 +87,9 @@ struct Vertex {
     float uv1[2] = {0, 0};
     float normal[3] = {0, 0, 0};
     std::uint8_t color[4] = {255, 255, 255, 255};
+    // Skin attribute (flag 2): u8 weights summing to 255, then u8 indices.
+    std::uint8_t weights[4] = {0, 0, 0, 0};
+    std::uint8_t joints[4] = {0, 0, 0, 0};
 };
 enum VertexAttribute : unsigned {
     AttrUv0 = 4, AttrUv1 = 8, AttrNormal = 0x40, AttrColor = 0x80, AttrSkin = 2
@@ -159,6 +163,44 @@ struct Placement {
 std::vector<Placement> placements(const Level& level);
 // "Dir/File" -> models/dir/file.bfnmdl, "Name" -> models/name/name.bfnmdl (lower case).
 std::string meshModelPath(const std::string& mesh);
+
+// Row-major 4x4 for row vectors (translation in the last row), as stored by the game.
+using Matrix = std::array<float, 16>;
+Matrix multiply(const Matrix& a, const Matrix& b);
+
+// .bfnskl skeleton (loader 0x10f26c). Parents precede children.
+struct Joint {
+    std::string name;
+    int parent = -1;
+    Matrix world{};   // bind pose, record +0x08
+    Matrix local{};   // relative to the parent, record +0x48
+};
+struct Skeleton {
+    std::vector<Joint> joints;
+};
+Skeleton parseSkeleton(const Bytes& data);
+
+// .bfnanm animation (loader 0x10edec); every block is consumed and checked, but
+// only the per-joint curves (+0x08 section) are kept.
+struct Animation {
+    unsigned frames = 0;                   // header u16 +4
+    std::vector<Bytes> jointCurves;        // indexed like the skeleton joints
+};
+Animation parseAnimation(const Bytes& data);
+
+// Curve decoder 0x248910: 12 channels (rotation radians, scale, shear, translation).
+struct JointChannels {
+    float values[12] = {0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0};
+    unsigned mask = 0;                     // bit per present channel
+    bool rawMatrix = false;                // header 0xfa: stored 4x4 per frame, not decoded
+};
+JointChannels decodeChannels(const Bytes& curve, unsigned frame, unsigned frames);
+// 0x248248: Euler radians to quaternion (x, y, z, w).
+std::array<float, 4> eulerToQuaternion(float x, float y, float z);
+// 0x24c734 with 0x248870: local matrix from one pose.
+Matrix localMatrix(const JointChannels& pose);
+// 0x252cb0 for a single layer: rigid-inverse(bind world) * animated world per joint.
+std::vector<Matrix> skinMatrices(const Skeleton& skeleton, const Animation& animation, unsigned frame);
 
 std::uint32_t readU32(const Bytes& data, std::size_t offset);
 std::uint16_t readU16(const Bytes& data, std::size_t offset);

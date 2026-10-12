@@ -1,10 +1,13 @@
-#include "assets.hpp"
+#include "block_reader.hpp"
 #include <algorithm>
 #include <cstring>
 #include <stdexcept>
 
 namespace chase::assets {
 namespace {
+using detail::cString;
+using Reader = detail::BlockReader;
+using detail::readF32;
 // Rodata tables read by 0x12095c, as raw bytes from 0x3798c4; the u16 table there
 // overlaps the byte tables at 0x3798d1, 0x3798e9 and 0x3798f8 exactly as in memory.
 constexpr std::uint8_t rodata[0x44] = {
@@ -15,32 +18,8 @@ constexpr std::uint8_t rodata[0x44] = {
     0x00, 0x04, 0x0f, 0x00, 0x04, 0x0f, 0x0f, 0x0f, 0x00, 0x0f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 constexpr std::size_t byM1 = 0x0d, byM2 = 0x25, m2Extra = 0x34;
 
-struct Reader {
-    const Bytes& data;
-    PoolCursor cursor;
-    explicit Reader(const Bytes& bytes) : data(bytes), cursor(bytes) {}
-    // Next block of the current pool as a view; empty for NULL.
-    Bytes next() {
-        const Block* block = cursor.next();
-        if (!block) return {};
-        return Bytes(data.begin() + std::ptrdiff_t(block->offset),
-                     data.begin() + std::ptrdiff_t(block->offset + block->size));
-    }
-    void skip() { cursor.next(); }
-};
-
 void requireSize(const Bytes& block, std::size_t size, const char* what) {
     if (block.size() < size) throw std::runtime_error(std::string("model block too small: ") + what);
-}
-std::string cString(const Bytes& block) {
-    auto end = std::find(block.begin(), block.end(), std::uint8_t(0));
-    return std::string(block.begin(), end);
-}
-float readF32(const Bytes& data, std::size_t offset) {
-    std::uint32_t bits = readU32(data, offset);
-    float value;
-    std::memcpy(&value, &bits, sizeof value);
-    return value;
 }
 
 // 0x114860: material record, extra pointer, texture slots in the -16 pool.
@@ -103,6 +82,10 @@ void readVertexBuffer(Reader& r, const Bytes& material, ModelPart& part) {
         if (part.flags & AttrColor) {
             std::memcpy(out.color, &vertexData[at], 4);
             at += 4;
+        }
+        if (part.flags & AttrSkin) {
+            std::memcpy(out.weights, &vertexData[at], 4);
+            std::memcpy(out.joints, &vertexData[at + 4], 4);
         }
     }
 }

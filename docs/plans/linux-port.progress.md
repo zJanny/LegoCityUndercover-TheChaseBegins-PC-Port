@@ -475,3 +475,22 @@ Static analysis used local llvm-objdump (armv6k) over game.arm.elf. This is loca
 - After posing, 0x2530f0 applies optional per-joint s16/256 scales (skipped when all three are 0x100) through 0x24c2c4. This step is not replicated.
 - tools/convert_anims.py: quaternion_matrix() and local_matrix(); the preview uses them, and `--transpose-rotation` is removed. tests: test_local_matrix. Python PASS 44/44.
 - The char_bear walk frames 0/12 render as a natural walk.
+
+### 2026-10-12T20:45+02:00 — Native skeletons, animation curves and skinning (S4e groundwork)
+
+- Fixed tools/convert_models.py decode_vertices: the layout loop variable shadowed the mesh-centre argument, so Python never added the centre. The C++ parser was correct. A regression assertion was added.
+- Moved posing into tools/convert_anims.py: skin_matrices() and rigid_inverse() (0x24c5a0). preview_model calls it, and char_bear walk frame 12 renders pixel-identically.
+- Added src/assets/anim.cpp (chase_assets):
+  - parseSkeleton
+  - parseAnimation (consumes and checks every block, keeps the +0x08 per-joint curves)
+  - decodeChannels (0x248910)
+  - eulerToQuaternion (0x248248)
+  - localMatrix (0x24c734 with 0x248870)
+  - skinMatrices (single-layer 0x252cb0)
+  - multiply()
+  Vertex gains skin weights and joints (flag 2, after colour).
+- Factored the pooled block reader and cString/readF32 into src/assets/block_reader.hpp, shared by model, level and anim.
+- assets-core: synthetic bit stream, signed base, raw-matrix header, local-matrix rotation/scale/translation and shear, skeleton parse and unconsumed-block rejection, animation parse, and root/child skin matrices.
+- assets-real-data: 376 skeletons / 5280 joints and 1954 animations / 30081 joint curves, equal to the Python reference. The char_bear walk skin-matrix |sum| over 48 frames is 5397.1758, within 1e-3 of Python.
+- `ctest --test-dir build --output-on-failure` — PASS 7/7; 0 warnings. Python PASS 44/44.
+- Still a hypothesis: skin index = joint − 1. Blending of more than one layer, the 0xfa raw-matrix form (the bind local is used instead), and the per-joint s16/256 post-scale are not replicated.

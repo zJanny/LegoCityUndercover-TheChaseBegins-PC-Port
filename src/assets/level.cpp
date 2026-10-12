@@ -1,4 +1,4 @@
-#include "assets.hpp"
+#include "block_reader.hpp"
 #include <algorithm>
 #include <array>
 #include <cctype>
@@ -7,26 +7,12 @@
 
 namespace chase::assets {
 namespace {
+using detail::cString;
+using Reader = detail::BlockReader;
 constexpr std::uint32_t initialPosition = 0x86166f20;     // nameHash("initialposition")
 constexpr std::uint32_t initialOrientation = 0xa3b9aa7f;  // nameHash("initialorientation")
 constexpr std::uint32_t meshName = 0xacd1ebb8;            // nameHash("meshname")
 
-struct Reader {
-    const Bytes& data;
-    PoolCursor cursor;
-    explicit Reader(const Bytes& bytes) : data(bytes), cursor(bytes) {}
-    Bytes next() {
-        const Block* block = cursor.next();
-        if (!block) return {};
-        return Bytes(data.begin() + std::ptrdiff_t(block->offset),
-                     data.begin() + std::ptrdiff_t(block->offset + block->size));
-    }
-    void skip() { cursor.next(); }
-};
-
-std::string cString(const Bytes& block) {
-    return std::string(block.begin(), std::find(block.begin(), block.end(), std::uint8_t(0)));
-}
 void need(const Bytes& block, std::size_t size) {
     if (block.size() < size) throw std::runtime_error("level block too small");
 }

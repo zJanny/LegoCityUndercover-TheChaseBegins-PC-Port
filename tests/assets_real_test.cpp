@@ -3,6 +3,7 @@
 // Decodes every archive entry, parses every pooled resource, decodes every
 // texture, and compares FNV-1a checksums with tools/convert_textures.py --checksum.
 #include "assets/assets.hpp"
+#include <cmath>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -52,6 +53,7 @@ int main(int argc, char** argv) {
         std::size_t models = 0, parts = 0, vertices = 0, triangles = 0;
         std::size_t levels = 0, objects = 0, placed = 0;
         std::size_t sounds = 0, samples = 0, loops = 0;
+        std::size_t skeletons = 0, joints = 0, animations = 0, curves = 0;
         std::uint32_t soundSum = 0x811c9dc5;  // FNV-1a over act_bass_break's PCM, see below
         for (const auto& entry : archive.entries()) {
             Bytes data = archive.read(entry);
@@ -74,6 +76,14 @@ int main(int argc, char** argv) {
                         for (const auto& channel : sound.channels)
                             for (int b = 0; b < 2; ++b)
                                 soundSum = (soundSum ^ std::uint8_t(std::uint16_t(channel[f]) >> (8 * b))) * 0x01000193;
+            }
+            if (endsWith(name, ".bfnskl")) {
+                joints += parseSkeleton(data).joints.size();
+                ++skeletons;
+            }
+            if (endsWith(name, ".bfnanm")) {
+                curves += parseAnimation(data).jointCurves.size();
+                ++animations;
             }
             if (endsWith(name, ".blvl")) {
                 Level level = parseLevel(data);
@@ -112,11 +122,27 @@ int main(int argc, char** argv) {
         // the interleaved little-endian PCM of its music/act_bass_break.wav.
         if (sounds != 1361 || samples != 122501647 || loops != 123 || soundSum != 0xdcbf1f85)
             throw std::runtime_error("sound totals or checksum differ from the Python reference");
+        // Reference: tools/convert_anims.py parse_skeleton/parse_animation over all files, and the sum of
+        // |entries| of skin_matrices() for char_bear walk over all 48 frames.
+        if (skeletons != 376 || joints != 5280 || animations != 1954 || curves != 30081)
+            throw std::runtime_error("skeleton/animation totals differ from the Python reference");
+        const FuseEntry* bearSkeleton = archive.find("models/char_bear/char_bear.bfnskl");
+        const FuseEntry* bearWalk = archive.find("models/char_bear/walk.bfnanm");
+        if (!bearSkeleton || !bearWalk) throw std::runtime_error("char_bear reference files not found");
+        Skeleton bear = parseSkeleton(archive.read(*bearSkeleton));
+        Animation walk = parseAnimation(archive.read(*bearWalk));
+        double poseSum = 0;
+        for (unsigned frame = 0; frame < walk.frames; ++frame)
+            for (const auto& m : skinMatrices(bear, walk, frame))
+                for (float v : m) poseSum += std::fabs(v);
+        if (walk.frames != 48 || std::fabs(poseSum - 5397.175751993695) > 1e-3)
+            throw std::runtime_error("char_bear walk pose differs from the Python reference");
         std::cout << archive.entries().size() << " entries, " << bytes << " bytes, " << pooled
                   << " pooled resources, " << textures << " textures, " << checked << " checksums match, "
                   << models << " models / " << parts << " parts / " << vertices << " vertices / "
                   << triangles << " triangles, " << levels << " levels / " << objects << " objects / " << placed
-                  << " placements, " << sounds << " sounds / " << samples << " samples / " << loops << " looping\n";
+                  << " placements, " << skeletons << " skeletons / " << joints << " joints, " << animations
+                  << " animations / " << curves << " joint curves, " << sounds << " sounds / " << samples << " samples / " << loops << " looping\n";
     } catch (const std::exception& error) {
         std::cerr << "assets-real-test failed: " << error.what() << '\n';
         return 1;

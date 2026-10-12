@@ -14,7 +14,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import convert_anims as ca  # noqa: E402
 import convert_models as cm  # noqa: E402
 import convert_textures as ct  # noqa: E402
-import struct  # noqa: E402
 
 TEXTURE_SUFFIXES = ('.btga', '.bpng', '.bdds')
 
@@ -45,35 +44,6 @@ class Texture:
         x = int((u % 1.0) * self.w) % self.w
         y = int((1.0 - (v % 1.0)) * self.h) % self.h  # rows are top-down, v=0 is the bottom
         return self.rows[y][x]
-
-
-def invert_affine(m):
-    """Inverse of a row-vector affine 4x4 (rotation/scale in 3x3, translation in row 3)."""
-    a = [row[:3] for row in m[:3]]
-    det = (a[0][0] * (a[1][1] * a[2][2] - a[1][2] * a[2][1]) - a[0][1] * (a[1][0] * a[2][2] - a[1][2] * a[2][0])
-           + a[0][2] * (a[1][0] * a[2][1] - a[1][1] * a[2][0]))
-    inv = [[(a[(j + 1) % 3][(i + 1) % 3] * a[(j + 2) % 3][(i + 2) % 3] -
-             a[(j + 1) % 3][(i + 2) % 3] * a[(j + 2) % 3][(i + 1) % 3]) / det for j in range(3)] for i in range(3)]
-    t = m[3][:3]
-    it = [-sum(t[k] * inv[k][j] for k in range(3)) for j in range(3)]
-    return [inv[0] + [0.0], inv[1] + [0.0], inv[2] + [0.0], it + [1.0]]
-
-
-def pose_skin_matrices(skeleton, animation, frame):
-    """Per-joint skin matrices inverse(bind world) * animated world (row vectors), as 0x252cb0."""
-    frames = struct.unpack_from('<H', animation['header'], 4)[0]
-    world, skin = [], []
-    for index, joint in enumerate(skeleton['joints']):
-        local = joint['local']
-        if index < len(animation.get('s8', [])):
-            channels, mask = ca.decode_channels(animation['s8'][index], frame % max(frames, 1), frames)
-            if mask != -1:
-                local = ca.local_matrix(channels, mask)
-        parent = joint['parent']
-        w = local if parent < 0 else ca.matmul(local, world[parent])
-        world.append(w)
-        skin.append(ca.matmul(invert_affine(joint['world']), w))
-    return skin
 
 
 def skin_vertex(v, skin):
@@ -194,7 +164,7 @@ def main():
                     missing.add(slot['name'])
     skin = None
     if args.skeleton and args.anim:
-        skin = pose_skin_matrices(ca.parse_skeleton(args.skeleton.read_bytes()),
+        skin = ca.skin_matrices(ca.parse_skeleton(args.skeleton.read_bytes()),
                                   ca.parse_animation(args.anim.read_bytes()), args.frame)
     rows = render(model, textures, args.size, math.radians(args.yaw), math.radians(args.pitch),
                   [w.lower() for w in args.exclude], skin)

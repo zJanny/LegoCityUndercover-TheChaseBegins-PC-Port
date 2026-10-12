@@ -292,6 +292,92 @@ Bytes soundFile() {
     return pooledBlocks(blocks);
 }
 
+Bytes bitstream(const std::vector<std::pair<std::uint32_t, unsigned>>& fields) {
+    Bytes out;
+    std::uint64_t value = 0;
+    unsigned used = 0;
+    for (const auto& [v, n] : fields) {
+        value |= std::uint64_t(v & ((1u << n) - 1)) << used;
+        used += n;
+        while (used >= 8) {
+            out.push_back(std::uint8_t(value));
+            value >>= 8;
+            used -= 8;
+        }
+    }
+    out.push_back(std::uint8_t(value));
+    return out;
+}
+
+Bytes matrixBytes(const Matrix& m) {
+    Bytes out;
+    for (float f : m) {
+        std::uint32_t bits;
+        std::memcpy(&bits, &f, 4);
+        put32(out, bits);
+    }
+    return out;
+}
+
+bool near(float a, float b) { return std::fabs(a - b) < 1e-5f; }
+
+void animations() {
+    // Translation x channel 9: base 150 (16 bits), delta width 3 (5 bits), deltas [0, 5].
+    Bytes curve = bitstream({{0x08, 8}, {1, 3}, {150, 16}, {3, 5}, {0, 3}, {5, 3}});
+    JointChannels f0 = decodeChannels(curve, 0, 2), f1 = decodeChannels(curve, 1, 2);
+    require(f0.mask == 1u << 9 && near(f0.values[9], 1.50f) && near(f1.values[9], 1.55f), "channel decode");
+    require(f0.values[3] == 1 && f0.values[4] == 1 && f0.values[5] == 1, "absent scale defaults to 1");
+    Bytes negative = bitstream({{0x01, 8}, {1, 3}, {(1u << 12) - 100, 12}, {0, 4}});
+    require(near(decodeChannels(negative, 0, 1).values[0], -2.0f), "signed rotation base");
+    require(decodeChannels(Bytes{0xfa}, 0, 1).rawMatrix, "raw matrix header");
+
+    JointChannels pose;
+    const float values[12] = {0, 0, float(M_PI / 2), 2, 1, 1, 0, 0, 0, 1, 2, 3};
+    std::memcpy(pose.values, values, sizeof values);
+    pose.mask = 0xe3f;
+    Matrix m = localMatrix(pose);
+    const Matrix expected = {0, 2, 0, 0, -1, 0, 0, 0, 0, 0, 1, 0, 1, 2, 3, 1};
+    for (std::size_t i = 0; i < 16; ++i) require(near(m[i], expected[i]), "rotation, scale, translation");
+    JointChannels shear;
+    const float shearValues[12] = {0, 0, 0, 1, 1, 1, 0.5f, 0.25f, 2, 0, 0, 0};
+    std::memcpy(shear.values, shearValues, sizeof shearValues);
+    shear.mask = 0x1c0;
+    Matrix sm = localMatrix(shear);
+    require(sm[0] == 1 && sm[1] == 1 && sm[2] == 0.5f && sm[4] == 0.25f && sm[9] == 2, "shear rows (0x24c734)");
+
+    Matrix bind = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1};
+    Bytes joints(0x98 * 2, 0);
+    auto setJoint = [&](std::size_t i, std::int32_t parent, const Matrix& world, const Matrix& local) {
+        std::uint32_t p = std::uint32_t(parent);
+        for (int k = 0; k < 4; ++k) joints[i * 0x98 + 4 + std::size_t(k)] = std::uint8_t(p >> (8 * k));
+        Bytes w = matrixBytes(world), l = matrixBytes(local);
+        std::copy(w.begin(), w.end(), joints.begin() + std::ptrdiff_t(i * 0x98 + 8));
+        std::copy(l.begin(), l.end(), joints.begin() + std::ptrdiff_t(i * 0x98 + 0x48));
+    };
+    setJoint(0, -1, bind, bind);
+    setJoint(1, 0, bind, {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1});
+    Bytes head(16, 0);
+    head[1] = 2;
+    std::vector<std::pair<std::int32_t, Bytes>> blocks{
+        {-14, head}, {-14, {}}, {-14, {}}, {-14, joints}, {-14, bytes("root")}, {-14, bytes("spine")}};
+    Skeleton skeleton = parseSkeleton(pooledBlocks(blocks));
+    require(skeleton.joints.size() == 2 && skeleton.joints[1].name == "spine" && skeleton.joints[1].parent == 0,
+            "skeleton joints");
+    blocks.push_back({-14, bytes("x")});
+    requireThrows([&] { parseSkeleton(pooledBlocks(blocks)); }, "unconsumed skeleton block accepted");
+
+    Bytes animHead(0x28, 0);
+    animHead[4] = 2;    // frames
+    animHead[8] = 1;    // per-joint curve section present
+    Bytes table;
+    put32(table, 1);
+    Animation anim = parseAnimation(pooledBlocks({{-14, animHead}, {-14, table}, {-14, bytes("p")}, {-14, curve}}));
+    require(anim.frames == 2 && anim.jointCurves.size() == 1, "animation curves");
+    std::vector<Matrix> skin = skinMatrices(skeleton, anim, 1);
+    require(near(skin[0][12], 1.55f) && near(skin[0][13], -1.0f) && near(skin[0][0], 1.0f), "root skin matrix");
+    require(near(skin[1][12], 1.55f) && near(skin[1][13], -1.0f), "child follows root (local * parent.world)");
+}
+
 void sounds() {
     Sound sound = decodeSound(soundFile());
     require(sound.rate == 12000 && sound.loop && sound.loopStart == 1 && sound.frames == 3, "sound header");
@@ -312,6 +398,7 @@ int main() {
         textures();
         models();
         levels();
+        animations();
     } catch (const std::exception& error) {
         std::cerr << "assets-test failed: " << error.what() << '\n';
         return 1;
