@@ -291,6 +291,30 @@ int main(int argc, char** argv) {
             }
             if (textSum != 0xc0c84ff0) throw std::runtime_error("decoded Russian text differs from the Python reference");
         }
+        // Reference: independent strict regex census over artifacts/fib/files/cutscenes/*.srt
+        // (CRLF, "N / HH:MM:SS,mmm --> HH:MM:SS,mmm / text lines"): 204 files, 2921 cues, 3560 text
+        // lines, 6486170 ms total cue duration. The decoded-text FNV-1a (each line followed by a NUL)
+        // was recorded from this parser and spot-checked by reading the 01_gameintro_us cues.
+        {
+            std::size_t srtFiles = 0, srtCues = 0, srtLines = 0;
+            std::uint64_t srtMs = 0;
+            std::uint32_t srtSum = 0x811c9dc5;
+            auto extended = extendedCharacters(archive.read(*archive.find("localisation/extended_chars_utf8.txt")));
+            for (const auto& name : archive.names()) {
+                if (name.rfind("cutscenes/", 0) != 0 || !endsWith(name, ".srt")) continue;
+                ++srtFiles;
+                for (const auto& cue : parseSubtitles(archive.read(*archive.find(name)), extended)) {
+                    ++srtCues;
+                    srtMs += cue.endMs - cue.startMs;
+                    for (const auto& line : cue.lines) {
+                        ++srtLines;
+                        for (char c : line + std::string(1, '\0')) srtSum = (srtSum ^ std::uint8_t(c)) * 0x01000193;
+                    }
+                }
+            }
+            if (srtFiles != 204 || srtCues != 2921 || srtLines != 3560 || srtMs != 6486170 || srtSum != 0xe37a66e1)
+                throw std::runtime_error("subtitle totals differ from the regex census");
+        }
         // Reference: python3 tools/convert_nav.py --census artifacts/fib/files
         std::size_t navMatched = 0;
         for (const auto& [levelName, room] : navDescriptors) {

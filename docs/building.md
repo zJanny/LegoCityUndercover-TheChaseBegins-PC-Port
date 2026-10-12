@@ -7,6 +7,7 @@
 - A C++17 compiler.
 - SDL2, found through pkg-config.
 - libepoxy, which is needed only for the model viewer. Without it, the viewer is skipped.
+- FFmpeg (libavformat, libavcodec, libswscale, libswresample), which is needed only for the [video player](fmv-player.md). Without it, the player is skipped.
 
 ## Build
 
@@ -29,4 +30,4 @@ python3 -m unittest discover -s tests -p 'test_*.py' -v
 Some tests need your extracted game data in `artifacts/romfs` (see [Extracting game data](extracting-game-data.md)). Without it, they are reported as skipped.
 
 - Use `-DCHASE_ROMFS_DIR=...` when you configure, if the data is somewhere else.
-- The viewer test is only added if the data existed when you ran the first `cmake` command. Run that command again after you extract the data.
+- The viewer and video player tests are only added if the data existed when you ran the first `cmake` command. Run that command again after you extract the data.

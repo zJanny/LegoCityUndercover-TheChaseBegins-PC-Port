@@ -386,6 +386,23 @@ Bytes matrixBytes(const Matrix& m) {
 
 bool near(float a, float b) { return std::fabs(a - b) < 1e-5f; }
 
+void subtitles() {
+    auto extended = extendedCharacters(bytes("\xd0\xa0"));
+    auto cues = parseSubtitles(bytes("\xef\xbb\xbf" "1\r\n00:00:01,600 --> 01:02:03,004\r\nFran\xe7" "ais\r\n\x01" "20!\r\n\r\n\r\n"
+                                     "7\r\n00:00:07,500 --> 00:00:12,600\r\nLast"),
+                               extended);
+    require(cues.size() == 2 && cues[0].index == 1 && cues[0].startMs == 1600 && cues[0].endMs == 3723004,
+            "subtitle times");
+    require(cues[0].lines == std::vector<std::string>{"Fran\xc3\xa7" "ais", "\xd0\xa0!"}, "subtitle text decode");
+    require(cues[1].index == 7 && cues[1].lines == std::vector<std::string>{"Last"}, "subtitle without final newline");
+    require(parseSubtitles(bytes("")).empty(), "empty subtitle file");
+    for (const char* bad : {"1\n00:00:01.600 --> 00:00:02,000\nx\n", "1\n00:00:01,600 -> 00:00:02,000\nx\n",
+                            "1\n00:61:01,600 --> 00:62:02,000\nx\n", "1\n00:00:03,000 --> 00:00:02,000\nx\n",
+                            "x\n00:00:01,000 --> 00:00:02,000\nx\n", "1\n00:00:01,000 --> 00:00:02,000\n\n",
+                            "1\n"})
+        requireThrows([&] { parseSubtitles(bytes(bad)); }, "malformed subtitles accepted");
+}
+
 void animations() {
     // Translation x channel 9: base 150 (16 bits), delta width 3 (5 bits), deltas [0, 5].
     Bytes curve = bitstream({{0x08, 8}, {1, 3}, {150, 16}, {3, 5}, {0, 3}, {5, 3}});
@@ -777,6 +794,7 @@ int main() {
         navigation();
         layouts();
         localisation();
+        subtitles();
         animations();
         cutscenes();
         tables();

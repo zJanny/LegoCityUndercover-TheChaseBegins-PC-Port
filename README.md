@@ -20,5 +20,6 @@ build/chase-viewer models/char_bear/char_bear.bfnmdl \
 - [Extracting game data](docs/extracting-game-data.md)
 - [Model viewer](docs/model-viewer.md)
 - [Sound test](docs/sound-test.md)
+- [Video player](docs/fmv-player.md)
 - [Controls and the input laboratory](docs/controls.md)
 - [Project status](docs/status.md)

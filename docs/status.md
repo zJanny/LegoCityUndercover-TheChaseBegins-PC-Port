@@ -10,6 +10,7 @@
 - Reading models, level layouts, navigation grids, skeletons, character animations, cutscene cameras, data tables, menu layouts, level camera settings and the game text.
 - Showing models, levels, animated characters and in-engine cutscenes in the [model viewer](model-viewer.md).
 - Playing sounds in the [sound test](sound-test.md).
+- Playing the cutscene videos with subtitles in the [video player](fmv-player.md).
 - Testing keyboard and mouse controls in the [input laboratory](controls.md).
 
 ## Not recovered yet
@@ -18,7 +19,7 @@
 - The game's lighting and materials. The viewer shows an approximation.
 - Blending between different animations, and the real animation speed.
 - Which sound plays for which event.
-- Cutscene videos (`.moflex`) and several smaller file types.
+- Several smaller file types.
 - Save games and settings. The save file layout is known, but nothing reads or writes saves yet.
 
 ## For developers

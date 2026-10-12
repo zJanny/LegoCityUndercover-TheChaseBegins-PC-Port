@@ -44,8 +44,11 @@ ctest --test-dir build -R assets-core         # native asset runtime, synthetic 
 ctest --test-dir build -R assets-real-data    # opt-in: needs artifacts/romfs (skips with code 77 otherwise)
 ctest --test-dir build -R viewer-real-smoke   # registered only if artifacts/romfs exists at configure time
 ctest --test-dir build -R audio-mixer         # mixer core (no SDL)
+ctest --test-dir build -R fmv-real-smoke      # registered only if FFmpeg and artifacts/romfs exist at configure time
 build/chase-tabledump tables/tableslevels.bxls      # data tables as TSV (columns by index; no names in the file)
 build/chase-soundtest music/act_bass_break.bwav   # plays decoded sounds; SDL_AUDIODRIVER=dummy for headless
+# FMV player (needs FFmpeg libs): Mobiclip .moflex from RomFS, subtitles from the fib in the game font
+SDL_VIDEODRIVER=offscreen build/chase-fmv --lang us --screenshot out.bmp --time 3 artifacts/romfs/romfs/cutscenes/01_gameintro.moflex
 
 # Development model viewer (needs libepoxy; not gameplay). Offscreen screenshot for headless checks:
 SDL_VIDEODRIVER=offscreen build/chase-viewer --screenshot out.bmp models/lvl_00_policestation/room1.bfnmdl --exclude sky

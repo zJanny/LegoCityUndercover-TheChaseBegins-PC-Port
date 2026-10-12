@@ -14,7 +14,7 @@ target_link_libraries(chase-input-lab PRIVATE chase_input PkgConfig::SDL2)
 target_compile_options(chase-input-lab PRIVATE -Wall -Wextra -Wpedantic)
 configure_file(config/controls.cfg config/controls.cfg COPYONLY)
 # Native asset runtime (plan S4a): no SDL dependency.
-add_library(chase_assets src/assets/fuse.cpp src/assets/pooled.cpp src/assets/texture.cpp src/assets/model.cpp src/assets/level.cpp src/assets/audio.cpp src/assets/anim.cpp src/assets/nav.cpp src/assets/text.cpp src/assets/cutscene.cpp src/assets/table.cpp src/assets/config_text.cpp src/assets/xaml.cpp)
+add_library(chase_assets src/assets/fuse.cpp src/assets/pooled.cpp src/assets/texture.cpp src/assets/model.cpp src/assets/level.cpp src/assets/audio.cpp src/assets/anim.cpp src/assets/nav.cpp src/assets/text.cpp src/assets/cutscene.cpp src/assets/table.cpp src/assets/config_text.cpp src/assets/xaml.cpp src/assets/subtitles.cpp)
 target_include_directories(chase_assets PUBLIC src)
 target_compile_options(chase_assets PRIVATE -Wall -Wextra -Wpedantic)
 set_target_properties(chase_assets PROPERTIES POSITION_INDEPENDENT_CODE ON)
@@ -38,6 +38,12 @@ if(EPOXY_FOUND)
   add_executable(chase-viewer src/viewer.cpp)
   target_link_libraries(chase-viewer PRIVATE chase_assets chase_audio chase_input PkgConfig::SDL2 PkgConfig::EPOXY)
   target_compile_options(chase-viewer PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+pkg_check_modules(FFMPEG IMPORTED_TARGET libavformat libavcodec libswscale libswresample libavutil)
+if(FFMPEG_FOUND)
+  add_executable(chase-fmv src/fmv.cpp)
+  target_link_libraries(chase-fmv PRIVATE chase_assets PkgConfig::SDL2 PkgConfig::FFMPEG)
+  target_compile_options(chase-fmv PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 set(CHASE_ROMFS_DIR "${CMAKE_SOURCE_DIR}/artifacts/romfs/romfs" CACHE PATH
     "Extracted RomFS directory for the opt-in real-data asset test")
@@ -83,5 +89,13 @@ if(BUILD_TESTING)
       music/act_bass_break.bwav)
     set_tests_properties(soundtest-real-smoke PROPERTIES ENVIRONMENT "SDL_AUDIODRIVER=dummy"
       PASS_REGULAR_EXPRESSION "12000 Hz, 2 channel")
+  endif()
+  if(TARGET chase-fmv AND EXISTS "${CHASE_ROMFS_DIR}/lego_city3ds.fib" AND EXISTS "${CHASE_ROMFS_DIR}/cutscenes/01_gameintro.moflex")
+    add_test(NAME fmv-real-smoke COMMAND chase-fmv
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      --lang us --screenshot fmv-smoke.bmp --time 3.0
+      "${CHASE_ROMFS_DIR}/cutscenes/01_gameintro.moflex")
+    set_tests_properties(fmv-real-smoke PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
+      PASS_REGULAR_EXPRESSION "subtitle lines: 1, saved fmv-smoke.bmp")
   endif()
 endif()

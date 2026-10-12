@@ -5,7 +5,7 @@
 - Overall: IN_PROGRESS
 - Current Phase: IMPLEMENT
 - Current Step: S4c/S4e/S4f groundwork (S3 continues in parallel)
-- Last Updated: 2026-10-13T11:10+02:00
+- Last Updated: 2026-10-13T11:40+02:00
 - Branch: main
 - Target Branch: Not specified
 - Requested Scope: PLAN, IMPLEMENT, TEST; start reverse engineering and native port
@@ -124,7 +124,6 @@ Full game logic, hardware APIs and asset formats not recovered yet.
 
 ## Next Action
 
-- FMV player: finish branch worktree-agent-a93143c61d56bb50d (rebase onto main, fix end of playback, smoke test, docs). See the 2026-10-13T11:05 entry.
 - S4f: implement chase_save (opaque image, header, CRC, validate, XDG path) from the 2026-10-13T10:30 entry.
 - S3: find the GSP vsync call and the scheduler step (30 vs 60 fps); name the binding slots at 0x3769e8.
 - S4e: the code that applies .bxaml track properties; .cam field semantics; particle definitions (.bprt).
@@ -796,3 +795,14 @@ Static analysis used local llvm-objdump (armv6k) over game.arm.elf. This is loca
   - The fmv-real-smoke ctest was not registered (probably the configure-time EXISTS check through the artifacts symlink).
   - docs/fmv-player.md and the FFmpeg line in docs/building.md are not written.
   - Which font and position the game uses for subtitles is unknown.
+
+### 2026-10-13T11:40+02:00 — FMV player finished and merged
+
+- Rebased the WIP branch onto main. A missing space in `set(CHASE_ROMFS_DIR"...")` had kept fmv-real-smoke from being registered; it is fixed.
+- End-of-playback bug: the clock follows the audio queue, and the audio of splash5 ends at 6.362 s. The old end test still needed now > last frame (6.333 s) + 0.1 s, so it never passed. With audio, playback now ends when decoding is finished, no frames are pending and the audio queue is empty. Without audio, it ends one frame after the last frame. splash5 now exits after 6.4 s with dummy audio and with --no-audio.
+- Measured: splash5 has 191 video and 191 audio packets (6.36 s); 01_gameintro has 4088 video and 2044 audio packets (68.2 s). Packets are interleaved.
+- Checked visually: Russian subtitles render in frontendfont ("Все дороги ведут в него." at 4.5 s). `--lang de` on 01_gameintro_de finds 01_gameintro_de_de.srt.
+- The decoded-subtitle FNV-1a pin 0xe37a66e1 now passes in assets-real-test.
+- Added docs/fmv-player.md, FFmpeg in docs/building.md, and links in README.md and docs/status.md.
+- Not tested: Escape or window close with a real display, and A/V sync on real audio hardware.
+- ctest PASS 9/9.

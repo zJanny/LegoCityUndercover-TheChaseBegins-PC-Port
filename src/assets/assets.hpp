@@ -450,6 +450,14 @@ struct UiLayout {
     std::vector<UiStoryboard> storyboards;
 };
 UiLayout parseLayout(const Bytes& data);
+// SubRip cutscene subtitles (cutscenes/<video>_<lang>.srt). Text is decoded with decodeText.
+struct SubtitleCue {
+    unsigned index = 0;
+    std::uint32_t startMs = 0;
+    std::uint32_t endMs = 0;
+    std::vector<std::string> lines;
+};
+std::vector<SubtitleCue> parseSubtitles(const Bytes& data, const std::vector<std::string>& extended = {});
 
 std::uint32_t readU32(const Bytes& data, std::size_t offset);
 std::uint16_t readU16(const Bytes& data, std::size_t offset);
