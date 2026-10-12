@@ -35,6 +35,17 @@ python3 tools/extract_romfs.py path/to/game.cci --output artifacts/romfs
 
 Before writing anything, the tool verifies the RomFS superblock hash from the NCCH header and the full IVFC hash tree. It then writes `romfs/` and `romfs-manifest.json`, which records each file's image offset, size and SHA256. Like the executable extractor, it refuses an existing output directory and rejects unsafe or duplicate names, cycles and out-of-bounds entries.
 
+## Unpack the asset archive
+
+Almost every asset except the `.moflex` cutscene videos is inside `romfs/lego_city3ds.fib`, a TT Fusion `FUSE1.00` archive. The format and its compression (a RefPack variant) were recovered from the game's ARM code.
+
+```sh
+python3 tools/extract_fib.py artifacts/romfs/romfs/lego_city3ds.fib \
+    --names artifacts/romfs/romfs/lego_city3ds.csv --output artifacts/fib
+```
+
+The tool writes `files/<path>` and `fib-manifest.json`. It cross-checks every CSV entry against the archive directory, and any entry missing from the CSV goes to `files/unnamed/<crc>.bin`. Decoding is bounds-checked, and every entry must decode to exactly its declared size. Codec 3 is reported as unsupported because no shipped entry uses it.
+
 ## Build and run the input laboratory
 
 Requires CMake ≥ 3.16, a C++17 compiler and SDL2 (found through pkg-config).
@@ -92,5 +103,5 @@ The plan and the evidence log are in `docs/plans/linux-port.md` and `docs/plans/
 - gameplay logic
 - rendering
 - audio
-- RomFS asset formats (the files are extracted, but `.fib`, its `.csv` index and `.moflex` video are not decoded)
+- individual asset formats (the `.fib` archive is unpacked, but `.btga`, `.bfnmdl`, `.bfnanm`, `.bwav`, `.blvl`, `.moflex` and the rest are not decoded)
 - the save format
