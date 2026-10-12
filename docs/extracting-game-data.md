@@ -97,6 +97,8 @@ To pose a character, add its skeleton, an animation and a frame number:
     --anim artifacts/fib/files/models/char_bear/walk.bfnanm --frame 12
 ```
 
+Posing uses the project's C++ library. Build the project first (see [Building](building.md)), or set `CHASE_ASSETS_LIB` to the path of `libchase_assets_c.so`.
+
 - `--exclude WORD` hides parts whose texture name contains WORD, for example `sky`.
 - `--yaw` and `--pitch` turn the camera, in degrees.
 

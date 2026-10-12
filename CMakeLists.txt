@@ -17,6 +17,11 @@ configure_file(config/controls.cfg config/controls.cfg COPYONLY)
 add_library(chase_assets src/assets/fuse.cpp src/assets/pooled.cpp src/assets/texture.cpp src/assets/model.cpp src/assets/level.cpp src/assets/audio.cpp src/assets/anim.cpp src/assets/nav.cpp src/assets/text.cpp src/assets/cutscene.cpp)
 target_include_directories(chase_assets PUBLIC src)
 target_compile_options(chase_assets PRIVATE -Wall -Wextra -Wpedantic)
+set_target_properties(chase_assets PROPERTIES POSITION_INDEPENDENT_CODE ON)
+# C ABI over chase_assets for the Python tools (tools/chase_native.py).
+add_library(chase_assets_c SHARED src/assets/c_api.cpp)
+target_link_libraries(chase_assets_c PRIVATE chase_assets)
+target_compile_options(chase_assets_c PRIVATE -Wall -Wextra -Wpedantic)
 # Audio mixer core (plan S4d): no SDL dependency; chase-soundtest is the SDL front end.
 add_library(chase_audio src/audio/mixer.cpp)
 target_link_libraries(chase_audio PUBLIC chase_assets)

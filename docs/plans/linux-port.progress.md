@@ -648,5 +648,13 @@ Static analysis used local llvm-objdump (armv6k) over game.arm.elf. This is loca
   - With rows 0 and 2 flipped for GL, "POLICE" signs read unmirrored, and 1_1_a shows the police station, the player walking up and the donut counter.
   - This is inferred; the matrix's consumer 0x241540 was not traced.
 - Unknown: 113 of 397 actor animations have a different frame count from their camera; the viewer holds their last frame. The meaning of camera fields 7–11 and of fov's axis is unknown, as is the base value the actor scale is added to.
-- **Open item (rule 6):** tools/convert_anims.py skin_matrices and tools/preview_model.py do not apply the joint orientation, so Python posing now differs from C++ for minifigs and the squirrel. Per rule 4, replace them with a C++ binding instead of patching. No binding exists yet.
+- Rule 6 violation found and fixed (next entry): Python posing (convert_anims.skin_matrices) did not apply the joint orientation and so differed from C++.
 - ctest PASS 8/8 (new viewer-cutscene-smoke); Python PASS.
+
+### 2026-10-13T03:00+02:00 — First Python→C++ binding; Python posing removed (rule 6 fix)
+
+- New shared library chase_assets_c (src/assets/c_api.cpp → build/libchase_assets_c.so), a C ABI over chase_assets: chase_skin_matrices(skeleton, animation, frame) and chase_last_error(). chase_assets is now built position-independent.
+- tools/chase_native.py: a stdlib ctypes wrapper. It finds the library in build/ or at CHASE_ASSETS_LIB.
+- Deleted from tools/convert_anims.py: decode_channels, Bits, euler_to_quaternion, quaternion_matrix, joint_pose, blend_poses, pose_matrix, local_matrix, rigid_inverse, frame_count and skin_matrices. assets-test covers them in C++. preview_model.py now poses through chase_native.skin_matrices, and the minifig balance_walk frame 5 renders the same pose as chase-viewer.
+- tests/test_convert_anims.py: the three Python posing tests are replaced by test_native_skin_matrices. It checks the same synthetic curve as assets-test (1.55 at frame 1) and skips when the library is missing.
+- ctest PASS 8/8; Python PASS 55 (1 skip when the library is absent).

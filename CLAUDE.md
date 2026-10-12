@@ -70,6 +70,7 @@ cd build && ./chase-input-lab [--config PATH] [--smoke-test]
   When you change behaviour, update both tests.
 - **The native asset runtime is `chase_assets`** (`src/assets/`, namespace `chase::assets`). It has no SDL dependency. It is the source of truth for every format decoder (see "C++ source of truth" below): FUSE archive + RefPack, the pooled reader with `PoolCursor`, PICA texture decode, models, levels, navigation grids, skeletons and animation, sound, localisation and fonts.
 - `chase_assets` decodes skeletons and animation curves (`anim.cpp`) and resolves skin joints through each part's bone palette. Pose math replicates the game's routines (0x24c734, 0x248870, 0x24c5a0, 0x252cb0).
+- **`chase_assets_c` is the C ABI for Python** (`src/assets/c_api.cpp`, built as `build/libchase_assets_c.so`). `tools/chase_native.py` wraps it with ctypes (`skin_matrices`). Add an entry point there when a Python tool needs a C++ decoder. Tests that use it skip when the library is not built.
 - **`chase_audio` is the mixer core** (`src/audio/`). It has no SDL dependency: voices with linear resampling, mono→stereo, gain and loop points, pulled as float stereo frames by `mix()`. `chase-soundtest` is a thin SDL front end, and `mixer-test` checks the mixing rules.
 - `config/controls.cfg` format: `Action key|mouse Code hold|toggle`, with `#` comments. Key names are SDL names with `_` in place of spaces. Mouse codes are `Left`, `Middle`, `Right`, `X1` and `X2`. Action names are 3DS buttons, not recovered gameplay meanings.
 - **Extractor safety rules:**

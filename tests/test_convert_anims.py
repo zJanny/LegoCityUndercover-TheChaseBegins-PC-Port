@@ -1,5 +1,4 @@
 import importlib.util
-import math
 import struct
 import sys
 import unittest
@@ -11,6 +10,7 @@ spec = importlib.util.spec_from_file_location('convert_anims', TOOLS / 'convert_
 ca = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(ca)
 from test_convert_models import pooled  # noqa: E402
+import chase_native as native  # noqa: E402
 
 
 def skeleton(extra=False):
@@ -49,45 +49,20 @@ def bitstream(fields):
 
 
 class AnimTests(unittest.TestCase):
-    def test_channel_decode(self):
-        # head 0x08: only group 3 (channels 9-11) has a mask; mask 0b001 -> channel 9.
-        # Channel 9: 16-bit signed base 150, 5-bit delta width 3, deltas [0, 5] for 2 frames.
-        blob = bitstream([(0x08, 8), (1, 3), (150, 16), (3, 5), (0, 3), (5, 3)])
-        frame0, mask = ca.decode_channels(blob, 0, 2)
-        frame1, _ = ca.decode_channels(blob, 1, 2)
-        self.assertEqual(mask, 1 << 9)
-        self.assertAlmostEqual(frame0[9], 1.50)
-        self.assertAlmostEqual(frame1[9], 1.55)
-        self.assertEqual(frame0[3:6], [1.0, 1.0, 1.0])   # absent scale channels default to 1
-        negative = bitstream([(0x01, 8), (1, 3), ((1 << 12) - 100, 12), (0, 4)])   # rotation x = -100
-        self.assertAlmostEqual(ca.decode_channels(negative, 0, 1)[0][0], -2.0)
-        self.assertEqual(ca.euler_to_quaternion(0, 0, 0), (0.0, 0.0, -0.0, 1.0))
-
-    def test_local_matrix(self):
-        channels = [0.0, 0.0, math.pi / 2, 2.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 2.0, 3.0]
-        m = ca.local_matrix(channels, 0xe3f)
-        expected = [[0, 2, 0, 0], [-1, 0, 0, 0], [0, 0, 1, 0], [1, 2, 3, 1]]
-        for row, want in zip(m, expected):
-            for value, target in zip(row, want):
-                self.assertAlmostEqual(value, target)
-        sheared = ca.local_matrix([0.0] * 3 + [1.0] * 3 + [0.5, 0.25, 2.0] + [0.0] * 3, 0x1c0)
-        self.assertEqual(sheared[:3], [[1.0, 1.0, 0.5, 0.0], [0.25, 1.0, 0.0, 0.0], [0.0, 2.0, 1.0, 0.0]])
-        self.assertEqual(ca.local_matrix(channels, 0)[3], [0.0, 0.0, 0.0, 1.0])
-
-    def test_blend_poses(self):
-        def pose(angle, mask, t=0.0, scale=1.0):
-            return ca.joint_pose([0.0, 0.0, angle, scale, scale, scale, 0.0, 0.0, 0.0, t, 0.0, 0.0], mask)
-        half = ca.blend_poses([(pose(0.0, 0xe07, t=1.0), 0.5), (pose(math.pi / 2, 0x007), 0.5)])
-        self.assertEqual(half['mask'], 0xe07)
-        self.assertAlmostEqual(half['translation'][0], 0.5)              # only layers carrying translation add
-        z = math.sin(-math.pi / 8)                                       # 45 degrees, same sign as the inputs
-        self.assertAlmostEqual(half['rotation'][2], z)
-        flipped = pose(math.pi / 2, 7)
-        flipped['rotation'] = tuple(-q for q in flipped['rotation'])
-        same = ca.blend_poses([(pose(0.0, 7), 0.5), (flipped, 0.5)])
-        self.assertAlmostEqual(same['rotation'][2], z)                   # q and -q blend alike
-        scaled = ca.blend_poses([(pose(0.0, 0x38, scale=2.0), 0.5), (pose(0.0, 0), 0.5)])
-        self.assertAlmostEqual(scaled['scale'][0], 1.5)                  # scale sums every layer (default 1)
+    @unittest.skipUnless(native.available(), 'C++ asset library not built')
+    def test_native_skin_matrices(self):
+        # Translation x channel 9: base 150, delta width 3, deltas [0, 5] (the C++ assets-test curve).
+        curve = bitstream([(0x08, 8), (1, 3), (150, 16), (3, 5), (0, 3), (5, 3)])
+        skel = pooled([(-14, bytes([0, 1]) + bytes(14)), (-14, b''), (-14, b''),
+                       (-14, joint(-1, (0, 0, 0), (0, 0, 0))), (-14, b'root\0')])
+        head = bytearray(0x28)
+        head[4], head[8] = 2, 1
+        anim = pooled([(-14, bytes(head)), (-14, struct.pack('<I', 1)), (-14, b'p'), (-14, curve)])
+        skin = native.skin_matrices(skel, anim, 1)
+        self.assertEqual(len(skin), 1)
+        self.assertAlmostEqual(skin[0][3][0], 1.55, places=5)
+        with self.assertRaises(ValueError):
+            native.skin_matrices(skel, b'', 0)
 
     def test_hierarchy_check(self):
         good = joint(-1, (0, 1, 0), (0, 1, 0)) + joint(0, (0, 1.5, 2), (0, 0.5, 2))

@@ -11,7 +11,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-import convert_anims as ca  # noqa: E402
+import chase_native as native  # noqa: E402
 import convert_models as cm  # noqa: E402
 import convert_textures as ct  # noqa: E402
 
@@ -164,8 +164,7 @@ def main():
                     missing.add(slot['name'])
     skin = None
     if args.skeleton and args.anim:
-        skin = ca.skin_matrices(ca.parse_skeleton(args.skeleton.read_bytes()),
-                                  ca.parse_animation(args.anim.read_bytes()), args.frame)
+        skin = native.skin_matrices(args.skeleton.read_bytes(), args.anim.read_bytes(), args.frame)
     rows = render(model, textures, args.size, math.radians(args.yaw), math.radians(args.pitch),
                   [w.lower() for w in args.exclude], skin)
     args.output.write_bytes(ct.png(rows))
