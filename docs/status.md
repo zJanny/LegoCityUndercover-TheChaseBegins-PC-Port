@@ -20,7 +20,7 @@
 - Blending between different animations, and the real animation speed.
 - Which sound plays for which event.
 - Several smaller file types.
-- Save games and settings. The save file layout is known, but nothing reads or writes saves yet.
+- What a save game contains. The save file can be checked, read and written safely, but the progress and settings inside it are not understood yet. No program uses saves yet.
 
 ## For developers
 

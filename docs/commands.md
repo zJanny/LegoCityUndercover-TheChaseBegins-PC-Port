@@ -43,6 +43,7 @@ Single C++ tests, with `ctest --test-dir build -R <name>`:
 | `assets-real-data` | Needs `artifacts/romfs`; skips with code 77 otherwise |
 | `viewer-real-smoke` | Registered only if `artifacts/romfs` existed at configure time |
 | `audio-mixer` | Mixer core, no SDL |
+| `save-core` | Save file checks, synthetic data, no SDL |
 | `fmv-real-smoke` | Registered only if FFmpeg and `artifacts/romfs` existed at configure time |
 
 ## Programs

@@ -5,7 +5,7 @@
 - Overall: IN_PROGRESS
 - Current Phase: IMPLEMENT
 - Current Step: S4c/S4e/S4f groundwork (S3 continues in parallel)
-- Last Updated: 2026-10-13T11:40+02:00
+- Last Updated: 2026-10-13T12:10+02:00
 - Branch: main
 - Target Branch: Not specified
 - Requested Scope: PLAN, IMPLEMENT, TEST; start reverse engineering and native port
@@ -42,7 +42,7 @@ Commits authorized by CLAUDE.md "User specified workflows" (commit at logical st
 | S4c | Level composition (.blvl) | IN_PROGRESS | loader replicated (Py+C++), placements in viewer; materials/lighting, streaming, other sections open |
 | S4d | Audio playback | IN_PROGRESS | mixer + SDL sound test with loops; event routing not recovered |
 | S4e | Gameplay | IN_PROGRESS | skeletons/animation/cutscenes/nav/tables/loc/fonts decoded; logic not recovered |
-| S4f | Saves/settings | NOT_STARTED | |
+| S4f | Saves/settings | IN_PROGRESS | chase_save: header, CRC, validate, atomic XDG storage; block contents opaque |
 
 ## Current Work
 
@@ -124,7 +124,7 @@ Full game logic, hardware APIs and asset formats not recovered yet.
 
 ## Next Action
 
-- S4f: implement chase_save (opaque image, header, CRC, validate, XDG path) from the 2026-10-13T10:30 entry.
+- S4f: decode the options block fields and the defaults routine 0x2081cc; slot contents (story progress, unlocks).
 - S3: find the GSP vsync call and the scheduler step (30 vs 60 fps); name the binding slots at 0x3769e8.
 - S4e: the code that applies .bxaml track properties; .cam field semantics; particle definitions (.bprt).
 - Open unknowns are listed at the end of the matching docs/re/ files.
@@ -219,3 +219,4 @@ Reverse-engineering findings live in docs/re/ (see docs/re/README.md). Entries m
 - 2026-10-13T11:00+02:00 — .bxaml UI layouts decoded (REA, Ghidra 12.1.2) → [docs/re/ui-layouts.md](../re/ui-layouts.md)
 - 2026-10-13T11:05+02:00 — FMV player with subtitles: WIP, not merged → [docs/re/fmv.md](../re/fmv.md)
 - 2026-10-13T11:40+02:00 — FMV player finished and merged → [docs/re/fmv.md](../re/fmv.md)
+- 2026-10-13T12:10+02:00 — S4f chase_save library (src/save/) and save-core test; `cmake --build build` warning-free, `ctest --test-dir build` 10/10 pass. Header size field confirmed (REA) → [docs/re/save-format.md](../re/save-format.md)

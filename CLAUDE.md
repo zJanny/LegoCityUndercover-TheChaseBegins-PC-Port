@@ -25,6 +25,7 @@ All other commands (extractors, converters, viewer, FMV, sound test, input lab, 
 ## Architecture rules
 
 - `src/input.{hpp,cpp}` (`chase_input`) and `src/audio/` (`chase_audio`) have no SDL dependency. `readBindings` takes a key-name resolver callback and `main.cpp` passes `SDL_GetKeyFromName`. Keep SDL out of both so their tests link without it.
+- `src/save/` (`chase_save`) has no SDL dependency. It treats the options and slot blocks as opaque bytes.
 - `src/assets/` (`chase_assets`, namespace `chase::assets`) has no SDL dependency and is the source of truth for every format decoder. Pose math replicates game routines 0x24c734, 0x248870, 0x24c5a0, 0x252cb0.
 - `chase_assets_c` (`src/assets/c_api.cpp` → `build/libchase_assets_c.so`) is the C ABI for Python, wrapped by `tools/chase_native.py` (ctypes). Add an entry point there when a Python tool needs a C++ decoder. Tests that use it skip when the library is not built.
 - Input rules, checked by `tests/input_test.cpp` and `--smoke-test` in `main.cpp` (update both when behaviour changes):
