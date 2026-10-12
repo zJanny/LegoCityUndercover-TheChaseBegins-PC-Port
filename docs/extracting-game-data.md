@@ -104,6 +104,18 @@ Posing uses the project's C++ library. Build the project first (see [Building](b
 
 For a faster, interactive view, use the [model viewer](model-viewer.md).
 
+## 8. Look at the data tables
+
+The files in `tables/` hold the game's data tables, for example characters, levels, animations and sound effects. `chase-tabledump` prints them as text, one row per line:
+
+```sh
+build/chase-tabledump tables/tableslevels.bxls
+```
+
+- It reads the asset archive in `artifacts/romfs`, like the model viewer. Build the project first (see [Building](building.md)).
+- The files contain no column names, so the columns are numbered only.
+- `-` marks a column that has no value stored in the file.
+
 ## Checking files in bulk
 
 These commands check every file of a type and print a summary. They write nothing.

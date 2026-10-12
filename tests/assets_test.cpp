@@ -611,6 +611,38 @@ void cutscenes() {
             "cutscene actors");
 }
 
+void tables() {
+    Bytes head(4, 0), records(0x1c, 0), types{0, 6, 3, 8, 2, 1, 9, 0xcd, 0xcd}, rows(24, 0), stored{3},
+        strings = bytes(std::string("\0walk\0", 6));
+    head[0] = 1;
+    records[0] = 7;          // columns
+    records[2] = 2;          // rows
+    records[4] = 12;         // stride: string 0, u8 4, listed u8 5, u16 6, int 8
+    records[0x10] = 1;       // string pool present
+    records[0x14] = 1;       // stored-column list present
+    records[0x18] = 1;
+    rows[12] = 1;
+    rows[16] = 9;
+    rows[17] = 1;
+    rows[18] = 0x34;
+    rows[19] = 0x12;
+    rows[20] = 0x78;
+    std::vector<std::pair<std::int32_t, Bytes>> blocks{{-14, head}, {-14, records}, {-14, types},
+                                                       {-14, rows}, {-14, stored}, {-14, strings}};
+    Table table = parseTable(pooledBlocks(blocks));
+    const TableSheet& sheet = table.sheets.at(0);
+    require(sheet.rows == 2 && sheet.stride == 12 && sheet.columns[4].offset == 6 && !sheet.columns[6].stored,
+            "table layout (0x10e1cc)");
+    require(!tableValue(sheet, 1, 0).present && tableValue(sheet, 0, 1).text.empty() &&
+                tableValue(sheet, 1, 1).text == "walk" && tableValue(sheet, 1, 2).bits == 9 &&
+                tableValue(sheet, 1, 3).bits == 1 && tableValue(sheet, 1, 4).bits == 0x1234 &&
+                tableValue(sheet, 1, 5).bits == 0x78 && !tableValue(sheet, 1, 6).present,
+            "table cells");
+    records[4] = 16;
+    blocks[1].second = records;
+    requireThrows([&] { parseTable(pooledBlocks(blocks)); }, "table stride mismatch accepted");
+}
+
 void sounds() {
     Sound sound = decodeSound(soundFile());
     require(sound.rate == 12000 && sound.loop && sound.loopStart == 1 && sound.frames == 3, "sound header");
@@ -636,6 +668,7 @@ int main() {
         localisation();
         animations();
         cutscenes();
+        tables();
     } catch (const std::exception& error) {
         std::cerr << "assets-test failed: " << error.what() << '\n';
         return 1;

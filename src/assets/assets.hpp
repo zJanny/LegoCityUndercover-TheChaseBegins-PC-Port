@@ -344,6 +344,35 @@ Matrix actorMatrix(const ActorPose& pose);
 // 0x20e850: camera world matrix (row vectors) from rotation and position; x is negated.
 Matrix cameraMatrix(const CutsceneCamera& camera);
 
+// Data tables (tables/*.bxls, loader 0x10e1cc): sheets of fixed-stride rows with typed
+// columns. Column names are not stored; the game addresses columns by index.
+// Types: 0 not stored, 1 int32, 2 16-bit, 3 8-bit, 4 float, 5/6 string-pool offset,
+// 7 32-bit (meaning unknown); 8/9/10 are 8/16/32-bit and stored only when listed. Listed
+// type-8 columns end runs of eight type-8 columns and look like bit masks (unconfirmed).
+struct TableColumn {
+    std::uint8_t type = 0;
+    bool stored = false;
+    std::size_t offset = 0, size = 0;
+};
+struct TableSheet {
+    unsigned rows = 0;
+    std::size_t stride = 0;
+    std::vector<TableColumn> columns;
+    Bytes rowData, strings;
+};
+struct Table {
+    std::vector<TableSheet> sheets;
+};
+struct TableValue {
+    std::uint8_t type = 0;
+    bool present = false;          // false for type 0 and unlisted optional columns
+    std::uint32_t bits = 0;        // raw little-endian field, zero-extended
+    std::string text;              // types 5 and 6
+    float asFloat() const;
+};
+Table parseTable(const Bytes& data);
+TableValue tableValue(const TableSheet& sheet, std::size_t row, std::size_t column);
+
 std::uint32_t readU32(const Bytes& data, std::size_t offset);
 std::uint16_t readU16(const Bytes& data, std::size_t offset);
 } // namespace chase::assets

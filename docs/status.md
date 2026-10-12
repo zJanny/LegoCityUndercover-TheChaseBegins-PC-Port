@@ -7,7 +7,7 @@
 - Extracting the executable and the game files from your own decrypted image.
 - Unpacking the asset archive.
 - Converting textures to PNG and sounds to WAV.
-- Reading models, level layouts, navigation grids, skeletons, character animations, cutscene cameras and the game text.
+- Reading models, level layouts, navigation grids, skeletons, character animations, cutscene cameras, data tables and the game text.
 - Showing models, levels, animated characters and in-engine cutscenes in the [model viewer](model-viewer.md).
 - Playing sounds in the [sound test](sound-test.md).
 - Testing keyboard and mouse controls in the [input laboratory](controls.md).

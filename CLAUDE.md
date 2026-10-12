@@ -44,6 +44,7 @@ ctest --test-dir build -R assets-core         # native asset runtime, synthetic 
 ctest --test-dir build -R assets-real-data    # opt-in: needs artifacts/romfs (skips with code 77 otherwise)
 ctest --test-dir build -R viewer-real-smoke   # registered only if artifacts/romfs exists at configure time
 ctest --test-dir build -R audio-mixer         # mixer core (no SDL)
+build/chase-tabledump tables/tableslevels.bxls      # data tables as TSV (columns by index; no names in the file)
 build/chase-soundtest music/act_bass_break.bwav   # plays decoded sounds; SDL_AUDIODRIVER=dummy for headless
 
 # Development model viewer (needs libepoxy; not gameplay). Offscreen screenshot for headless checks:

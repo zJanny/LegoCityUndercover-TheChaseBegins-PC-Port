@@ -63,6 +63,8 @@ int main(int argc, char** argv) {
         std::size_t skeletons = 0, joints = 0, animations = 0, curves = 0;
         std::size_t subAnimations = 0, animTracks = 0, trackKeys = 0, cutsceneActorCount = 0;
         std::vector<std::string> manifestPaths, missingManifestFiles;
+        std::size_t tableFiles = 0, tableSheets = 0, tableCells = 0, studThreshold = 0;
+        std::string cutsceneVideo;
         std::uint32_t soundSum = 0x811c9dc5;  // FNV-1a over act_bass_break's PCM, see below
         for (const auto& entry : archive.entries()) {
             Bytes data = archive.read(entry);
@@ -99,6 +101,17 @@ int main(int argc, char** argv) {
                     animTracks += tracks.size();
                     for (const auto& track : tracks) trackKeys += track.keys.size();
                 }
+            }
+            if (endsWith(name, ".bxls")) {
+                Table table = parseTable(data);
+                ++tableFiles;
+                tableSheets += table.sheets.size();
+                for (const auto& sheet : table.sheets)
+                    for (unsigned row = 0; row < sheet.rows; ++row)
+                        for (std::size_t column = 0; column < sheet.columns.size(); ++column)
+                            tableCells += tableValue(sheet, row, column).present;
+                if (name == "tables/tablescutscenes.bxls") cutsceneVideo = tableValue(table.sheets.at(0), 2, 1).text;
+                if (name == "tables/tableslevels.bxls") studThreshold = tableValue(table.sheets.at(1), 1, 2).bits;
             }
             if (endsWith(name, "manifest.bstxt")) {
                 manifestPaths.push_back(name.substr(0, name.rfind('/')));
@@ -182,6 +195,13 @@ int main(int argc, char** argv) {
         if (manifestPaths.size() != 69 || cutsceneActorCount != 397 || missingManifestFiles.size() != 1 ||
             missingManifestFiles[0] != "csdata/models/2_7_c/laundrycart/laundrycart.bfnskl")
             throw std::runtime_error("cutscene manifest totals differ from the recorded reference");
+        // Reference: every sheet's computed stride equals its stored stride (checked in parseTable);
+        // totals recorded from this C++ parser (2026-10-13). Cell values checked by hand against the
+        // rows dumped by tools/tt_resource.py: tablescutscenes row 2 offset 1 -> "01_gameintro",
+        // tableslevels sheet 1 row 1 "50c30000" = 50000.
+        if (tableFiles != 24 || tableSheets != 54 || tableCells != 23512 || cutsceneVideo != "01_gameintro" ||
+            studThreshold != 50000)
+            throw std::runtime_error("table totals differ from the recorded reference");
         // Reference: recorded from this C++ parser (2026-10-13); camera x is near the actors (x ~ -815 raw).
         {
             const FuseEntry* shot = archive.find("csdata/models/1_1_a/cscamera/cscamera_0000.bfnanm");
