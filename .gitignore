@@ -8,3 +8,6 @@ __pycache__/
 *.kate-swp
 *.swp
 *~
+
+# Local graphify knowledge graph
+/graphify-out/

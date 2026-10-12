@@ -1,0 +1,10 @@
+docs/
+artifacts/
+build/
+build*/
+graphify-out/
+*.cci
+*.3ds
+__pycache__/
+*.pyc
+.claude/
