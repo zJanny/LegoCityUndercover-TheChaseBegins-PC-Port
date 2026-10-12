@@ -4,7 +4,7 @@
 
 - Overall: IN_PROGRESS
 - Current Phase: IMPLEMENT
-- Current Step: S4c/S4e/S4f groundwork (S3 continues in parallel)
+- Current Step: S4f (paused 2026-10-13T12:35+02:00 at user request)
 - Last Updated: 2026-10-13T12:30+02:00
 - Branch: main
 - Target Branch: Not specified
@@ -48,19 +48,19 @@ Commits authorized by CLAUDE.md "User specified workflows" (commit at logical st
 
 ### Current Step
 
-S3.
+S4f, paused at a clean point.
 
 ### What Is Being Done
 
-Open artifacts/game/game.arm.elf in REA; inspect entry/startup, platform service calls, and strings; record evidence.
+Nothing in progress. chase_save (src/save/) handles the header, CRC, validation, atomic XDG storage, option defaults and the system language mapping.
 
 ### Files Being Modified
 
-docs/plans/linux-port.progress.md (evidence); README.md (planned in section 20, still absent).
+None.
 
 ### Expected Result
 
-Recorded entry/startup chain, SVC usage, subsystem leads, and caveats sufficient to draft S4 subsystem plans.
+Next session picks up from Next Action.
 
 ## Completed Work
 
@@ -104,7 +104,7 @@ Later commits: see `git log` (one commit per session-log entry).
 
 ### Uncommitted Changes
 
-None at 2026-10-13T10:00+02:00.
+None at 2026-10-13T12:35+02:00.
 
 ## Decisions
 
