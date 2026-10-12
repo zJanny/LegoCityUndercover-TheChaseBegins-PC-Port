@@ -31,3 +31,5 @@ Some tests need your extracted game data in `artifacts/romfs` (see [Extracting g
 
 - Use `-DCHASE_ROMFS_DIR=...` when you configure, if the data is somewhere else.
 - The viewer and video player tests are only added if the data existed when you ran the first `cmake` command. Run that command again after you extract the data.
+
+For extraction, converter and program commands, see the [command reference](commands.md).
