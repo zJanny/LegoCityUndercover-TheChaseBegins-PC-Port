@@ -21,6 +21,7 @@ build/chase-viewer --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytre
 - `--level` places every object from the level file that names a model.
 - Without model names, the viewer also loads the level's own models from `models/<level name>/`. This follows the archive's folder names; how the game itself streams these pieces is not known yet.
 - `--room room3` shows a single room and only its objects.
+- `--nav` draws the level's navigation grid on top: cyan cells are open floor, orange cells are edges and obstacles.
 - `--eye X,Y,Z` puts the camera at a position, for example `--eye 800,60,1060 --yaw 180 --pitch -25` for a street view in Cherry Tree Hills.
 
 ## Animate a character
@@ -49,6 +50,7 @@ The viewer uses the same `config/controls.cfg` as the [input laboratory](control
 | Option | What it does |
 |---|---|
 | `--room NAME` | Shows only the level objects in one room. |
+| `--nav` | Draws the navigation grid of the level. |
 | `--exclude WORD` | Hides parts whose texture name contains WORD, for example `sky`. |
 | `--brightness F` | Makes everything brighter, to help you see. |
 | `--cull ccw\|cw\|none` | Chooses which faces are hidden. The default, `ccw`, hides ceilings so you can look into rooms. |

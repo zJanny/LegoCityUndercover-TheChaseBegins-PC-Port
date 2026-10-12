@@ -468,6 +468,45 @@ void animations() {
     require(near(skin[1][12], 1.55f) && near(skin[1][13], -1.0f), "child follows root (local * parent.world)");
 }
 
+// Same synthetic navigation file as tests/test_convert_nav.py.
+Bytes navFile(bool extraBlock, std::size_t cells) {
+    auto grid = [](std::uint16_t x, std::uint16_t height, std::uint16_t z, std::uint16_t w, std::uint16_t d,
+                   int link, std::uint16_t extra) {
+        Bytes raw(0x3c, 0);
+        const std::uint16_t head[6] = {x, height, z, w, 0, d};
+        std::memcpy(raw.data(), head, sizeof head);
+        std::fill(raw.begin() + 0x14, raw.begin() + 0x34, 0xff);
+        if (link >= 0) { raw[0x14] = std::uint8_t(link); raw[0x15] = 0; }
+        raw[0x34] = std::uint8_t(extra);
+        return raw;
+    };
+    Bytes grids = grid(10, 512, 20, 3, 2, 1, 1), second = grid(13, 0, 20, 1, 1, -1, 0);
+    grids.insert(grids.end(), second.begin(), second.end());
+    Bytes cellBytes = {1, 0, 0, 4, 12, 1};
+    cellBytes.resize(cells + 2, 0);
+    Bytes path(0x20, 0);
+    const float position[6] = {1, 2, 3, 0.5f, 0.5f, 0.5f};
+    std::memcpy(path.data(), position, sizeof position);
+    path[0x18] = 3;
+    std::vector<std::pair<std::int32_t, Bytes>> blocks{
+        {-14, grids}, {-14, cellBytes}, {-14, Bytes{1, 2, 3, 4}}, {-14, Bytes{1, 0, 0, 0}},
+        {-14, path}, {-14, Bytes{0, 0, 1, 0, 1, 0, 0, 0}}};
+    if (extraBlock) blocks.push_back({-14, bytes("xx")});
+    return pooledBlocks(blocks);
+}
+
+void navigation() {
+    NavMesh nav = parseNav(navFile(false, 6));
+    require(nav.grids.size() == 2 && nav.grids[0].width == 3 && nav.grids[0].depth == 2 && nav.grids[0].z == 20,
+            "nav grid header");
+    require(nav.grids[0].links == std::vector<std::uint16_t>{1} && nav.grids[1].links.empty(), "nav grid links");
+    require(nav.grids[0].cells == std::vector<std::uint8_t>{1, 0, 0, 4, 12, 1}, "nav cells (padding dropped)");
+    require(nav.paths.size() == 1 && nav.paths[0].position[2] == 3 &&
+            nav.paths[0].indices == std::vector<std::uint16_t>{0, 1, 1}, "nav path");
+    requireThrows([] { parseNav(navFile(true, 6)); }, "unconsumed nav block accepted");
+    requireThrows([] { parseNav(navFile(false, 10)); }, "wrong nav cell count accepted");
+}
+
 void sounds() {
     Sound sound = decodeSound(soundFile());
     require(sound.rate == 12000 && sound.loop && sound.loopStart == 1 && sound.frames == 3, "sound header");
@@ -489,6 +528,7 @@ int main() {
         models();
         skinnedModels();
         levels();
+        navigation();
         animations();
     } catch (const std::exception& error) {
         std::cerr << "assets-test failed: " << error.what() << '\n';

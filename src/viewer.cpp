@@ -142,6 +142,12 @@ public:
         }
     }
     // Adds one instance of a model; the model's GPU data is loaded once and shared.
+    // Untextured geometry drawn as its own model, e.g. the navigation overlay.
+    void addGeometry(const std::string& key, const ModelPart& part) {
+        LoadedModel out;
+        out.parts.push_back(upload(part, 0, out));
+        instances_.push_back({&models_.emplace(key, std::move(out)).first->second, identity()});
+    }
     bool addModel(const std::string& path, const Mat4& transform = identity()) {
         auto loaded = models_.find(path);
         if (loaded == models_.end()) {
@@ -343,6 +349,34 @@ std::vector<std::string> levelModels(const FuseArchive& archive, const std::stri
     return out;
 }
 
+// Navigation cells as flat quads, lifted 0.25 above the fitted height (which sits up to
+// ~0.1 under the floor): flag bit 0 set (edges, obstacles) is orange, clear is cyan. Heights
+// use the data-fitted mapping documented with NavRoom.
+ModelPart navOverlay(const NavRoom& room, const NavMesh& nav) {
+    ModelPart part;
+    part.flags = AttrColor;
+    for (const auto& grid : nav.grids) {
+        float y = room.origin[1] + grid.height * room.heightUnit / 256 + 0.25f;
+        for (std::size_t gz = 0; gz < grid.depth; ++gz)
+            for (std::size_t gx = 0; gx < grid.width; ++gx) {
+                std::uint8_t cell = grid.cells[gz * grid.width + gx];
+                if (part.vertices.size() + 4 > 0xffff) return part;
+                auto base = std::uint16_t(part.vertices.size());
+                for (int corner = 0; corner < 4; ++corner) {
+                    Vertex v;
+                    v.position[0] = room.origin[0] + room.cellSize * float(grid.x + gx + (corner & 1) * 0.9f + 0.05f);
+                    v.position[1] = y;
+                    v.position[2] = room.origin[2] + room.cellSize * float(grid.z + gz + (corner >> 1) * 0.9f + 0.05f);
+                    const std::uint8_t orange[4] = {255, 140, 0, 255}, cyan[4] = {0, 200, 255, 255};
+                    std::copy_n(cell & 1 ? orange : cyan, 4, v.color);
+                    part.vertices.push_back(v);
+                }
+                for (int k : {0, 2, 1, 1, 2, 3}) part.indices.push_back(std::uint16_t(base + k));
+            }
+    }
+    return part;
+}
+
 int resolveKey(const std::string& name) {
     std::string spaced = name;
     std::replace(spaced.begin(), spaced.end(), '_', ' ');
@@ -372,6 +406,7 @@ struct Options {
     // Posing applies to the first model argument. The game's playback rate is set per
     // animation instance by code not yet recovered, so the rate is an option.
     std::string skeleton, animation;
+    bool nav = false;
     double frame = -1;
     double fps = 30;
     float brightness = 1.0f;  // inspection aid only; the game's lighting/combiner setup is not recovered
@@ -395,6 +430,7 @@ Options parse(int argc, char** argv) {
         else if (arg == "--exclude") o.exclude.push_back(lower(value()));
         else if (arg == "--level") o.levels.push_back(value());
         else if (arg == "--room") o.room = lower(value());
+        else if (arg == "--nav") o.nav = true;
         else if (arg == "--cull") o.cull = value();
         else if (arg == "--brightness") o.brightness = std::stof(value());
         else if (arg == "--skeleton") o.skeleton = value();
@@ -416,7 +452,7 @@ Options parse(int argc, char** argv) {
     }
     if (o.models.empty() && o.levels.empty())
         throw std::runtime_error("usage: chase-viewer [--fib F] [--names CSV] [--config CFG] [--exclude WORD]... "
-                                 "[--level levels/.../x.blvl]... [--room NAME] [--cull none|cw|ccw] [--brightness F] [--screenshot OUT.bmp] [--yaw DEG] [--pitch DEG] [--eye X,Y,Z] "
+                                 "[--level levels/.../x.blvl]... [--room NAME] [--nav] [--cull none|cw|ccw] [--brightness F] [--screenshot OUT.bmp] [--yaw DEG] [--pitch DEG] [--eye X,Y,Z] "
                                  "[--skeleton S.bfnskl --anim A.bfnanm [--frame N] [--fps F]] "
                                  "[models/<dir>/<model>.bfnmdl...]");
     if (o.skeleton.empty() != o.animation.empty()) throw std::runtime_error("--skeleton and --anim go together");
@@ -484,6 +520,17 @@ int run(const Options& options) {
                   << skeleton.joints.size() << " joints, " << animation.frames << " frames\n";
     }
     double posedFrame = -1;
+    if (options.nav)
+        for (const auto& levelPath : options.levels) {
+            Level level = parseLevel(archive.read(*archive.find(levelPath)));
+            for (const auto& room : level.navRooms) {
+                if (!options.room.empty() && lower(room.room) != options.room) continue;
+                std::string navPath = levelPath.substr(0, levelPath.size() - 5) + "_" + lower(room.room) + ".bfnnav";
+                const FuseEntry* entry = archive.find(navPath);
+                if (!entry) continue;
+                scene.addGeometry(navPath, navOverlay(room, parseNav(archive.read(*entry))));
+            }
+        }
     float centre[3], radius;
     scene.bounds(centre, radius);
     std::cout << "loaded " << scene.instances() << " instance(s) (" << placed << " placed, " << unresolved

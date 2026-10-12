@@ -156,8 +156,19 @@ struct LevelObject {
     std::string room;
     std::vector<LevelParam> params;
 };
+// Section +0x30: navigation descriptor per room (used by loader 0x1971c4). Cell world
+// position: origin + cellSize * cell; height origin.y + u16 * heightUnit / 256 (data fit).
+struct NavRoom {
+    std::string room;
+    float heightUnit = 0;
+    float cellSize = 0;
+    float origin[3] = {0, 0, 0};
+    std::uint16_t grids = 0;
+    std::uint16_t paths = 0;
+};
 struct Level {
     std::vector<LevelObject> objects;
+    std::vector<NavRoom> navRooms;
 };
 Level parseLevel(const Bytes& data);
 
@@ -232,6 +243,23 @@ Matrix localMatrix(const JointChannels& channels);
 std::vector<Matrix> skinMatrices(const Skeleton& skeleton, const Animation& animation, double frame);
 // Weighted blend of the skin matrices of the vertex's resolved joints.
 void skinVertex(const Vertex& vertex, const std::vector<Matrix>& skin, float position[3], float normal[3]);
+
+// .bfnnav navigation grids in the block order of loader 0x1971c4.
+struct NavGrid {
+    std::uint16_t x = 0, z = 0, height = 0, width = 0, depth = 0;
+    std::vector<std::uint16_t> links;     // neighbouring grid indices
+    std::vector<std::uint8_t> cells;      // width * depth, row-major by z; bit 0 set on edges/obstacles
+};
+struct NavPath {
+    float position[3] = {0, 0, 0};
+    float extent[3] = {0, 0, 0};
+    std::vector<std::uint16_t> indices;
+};
+struct NavMesh {
+    std::vector<NavGrid> grids;
+    std::vector<NavPath> paths;
+};
+NavMesh parseNav(const Bytes& data);
 
 std::uint32_t readU32(const Bytes& data, std::size_t offset);
 std::uint16_t readU16(const Bytes& data, std::size_t offset);

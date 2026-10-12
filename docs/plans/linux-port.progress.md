@@ -560,3 +560,23 @@ Static analysis used local llvm-objdump (armv6k) over game.arm.elf. This is loca
 - Level models: models/<level>/ holds lvl_*.bfnmdl (plus _lod1) and room<N>.bfnmdl (403, plus 288 _l1 detail levels). chase-viewer `--level` without model arguments loads that folder minus the _l1/_lod1 models, or just room<N> with `--room`. This is a viewer convention; the game's streaming logic (Pregen/*.bin) is not recovered.
 - `--eye X,Y,Z` sets the camera position.
 - lvl_01_cherrytreehills_main: 1161 instances, 845580 triangles, 0 missing textures, about 1.1 s to load offscreen. A street view at (800,60,1060) shows the plaza, arch, roads, vehicles and water plane, textured and placed.
+
+### 2026-10-12T23:55+02:00 — Navigation grids (.bfnnav) decoded
+
+- Loader 0x1971c4 (ev_1af6d00b…a39a): the ".bfnnav" string at 0x197660 (ev_16ef5cae…3b5) builds "<level>_<room>.bfnnav". Counts come from the level, not the file. Block order (−14 pool):
+  - grid records (0x3c each)
+  - per grid: width × depth cell bytes (padded to 4), then (u16 +0x34 & 0x3fff) × 4 extra bytes when non-zero
+  - path records (0x20 each)
+  - per path: u16 indices (count u32 +0x18, padded)
+- Grid record (data): u16 +0 x cell, +2 height, +4 z cell, +6 width, +8 unknown (~1400 in lvl_00), +0xa depth; +0xc and +0x38 runtime pointers; 16 u16 links at +0x14 (0xffff = none). Path record: f32 position, f32 ×3, u32 count.
+- The level's section +0x30 (s30, previously only consumed) holds the navigation descriptors:
+  - each 0x28 record has a name list (the rooms) and floats at +0xc..+0x1c: height unit, cell size (0.3 in lvl_00), origin x, y, z
+  - its block holds one 0x18 descriptor per room: u16 grid count, u16 path count
+  - The census checks all 700 nav files against their level descriptor counts: 0 mismatches. convert_levels.nav_rooms() and C++ Level::navRooms expose them.
+- World mapping (data fit, not traced in code): x/z = origin + cell × index (bounds match the room models). y = origin.y + height × unit / 256: per-room least-squares slopes give unit/256 within 1–6%, and the result sits ~0.1 under the floor (room5: −0.10 vs 0.0).
+- Cell flags (from the overlay): bit 0 is set on edges and obstacles (429583 of 3895948 cells); bits 2–4 look like edge directions. The cell semantics are inferred.
+- Added tools/convert_nav.py (`--census`, cell_world) and tests/test_convert_nav.py (3 tests). Added src/assets/nav.cpp parseNav and NavRoom.
+  - assets-core: synthetic nav file and rejections.
+  - assets-real-data: 700 files / 28646 grids / 4607 paths / 429583 flagged cells; 700 descriptors match.
+- chase-viewer `--nav`: cyan/orange quads, 0.25 above the fitted height. In lvl_00 room3 the grid follows the floor plan with orange cells along walls and props.
+- ctest PASS 7/7; Python PASS 50/50.

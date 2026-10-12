@@ -3,6 +3,7 @@
 // Decodes every archive entry, parses every pooled resource, decodes every
 // texture, and compares FNV-1a checksums with tools/convert_textures.py --checksum.
 #include "assets/assets.hpp"
+#include <cctype>
 #include <cmath>
 #include <fstream>
 #include <iostream>
@@ -54,6 +55,9 @@ int main(int argc, char** argv) {
         std::size_t models = 0, parts = 0, vertices = 0, triangles = 0;
         std::size_t levels = 0, objects = 0, placed = 0;
         std::size_t sounds = 0, samples = 0, loops = 0;
+        std::size_t navFiles = 0, navGrids = 0, navPaths = 0, navFlagged = 0;
+        std::map<std::string, std::pair<std::size_t, std::size_t>> navCounts;
+        std::vector<std::pair<std::string, NavRoom>> navDescriptors;
         std::size_t skinnedParts = 0, boneBatches = 0, jointSum = 0;
         std::size_t skeletons = 0, joints = 0, animations = 0, curves = 0;
         std::uint32_t soundSum = 0x811c9dc5;  // FNV-1a over act_bass_break's PCM, see below
@@ -87,8 +91,18 @@ int main(int argc, char** argv) {
                 curves += parseAnimation(data).jointCurves.size();
                 ++animations;
             }
+            if (endsWith(name, ".bfnnav")) {
+                NavMesh nav = parseNav(data);
+                ++navFiles;
+                navGrids += nav.grids.size();
+                navPaths += nav.paths.size();
+                for (const auto& grid : nav.grids)
+                    for (auto cell : grid.cells) navFlagged += cell & 1;
+                navCounts[name] = {nav.grids.size(), nav.paths.size()};
+            }
             if (endsWith(name, ".blvl")) {
                 Level level = parseLevel(data);
+                for (const auto& room : level.navRooms) navDescriptors.push_back({name, room});
                 ++levels;
                 objects += level.objects.size();
                 placed += placements(level).size();
@@ -135,6 +149,19 @@ int main(int argc, char** argv) {
         // |entries| of skin_matrices() for char_bear walk over all 48 frames.
         if (skeletons != 376 || joints != 5280 || animations != 1954 || curves != 30081)
             throw std::runtime_error("skeleton/animation totals differ from the Python reference");
+        // Reference: python3 tools/convert_nav.py --census artifacts/fib/files
+        std::size_t navMatched = 0;
+        for (const auto& [levelName, room] : navDescriptors) {
+            std::string roomName = room.room;
+            for (auto& c : roomName) c = char(std::tolower(static_cast<unsigned char>(c)));
+            auto found = navCounts.find(levelName.substr(0, levelName.size() - 5) + "_" + roomName + ".bfnnav");
+            if (found == navCounts.end()) continue;
+            if (found->second != std::make_pair(std::size_t(room.grids), std::size_t(room.paths)))
+                throw std::runtime_error("nav counts differ from the level descriptor: " + found->first);
+            ++navMatched;
+        }
+        if (navFiles != 700 || navGrids != 28646 || navPaths != 4607 || navFlagged != 429583 || navMatched != 700)
+            throw std::runtime_error("navigation totals differ from the Python reference");
         // Reference: convert_models.bone_batches/skin_joints over every part (drawn vertices only).
         if (skinnedParts != 1457 || boneBatches != 1465 || jointSum != 3492824)
             throw std::runtime_error("bone palette totals differ from the Python reference");
@@ -182,7 +209,7 @@ int main(int argc, char** argv) {
                   << models << " models / " << parts << " parts / " << vertices << " vertices / "
                   << triangles << " triangles, " << levels << " levels / " << objects << " objects / " << placed
                   << " placements, " << skeletons << " skeletons / " << joints << " joints, " << animations
-                  << " animations / " << curves << " joint curves, " << sounds << " sounds / " << samples << " samples / " << loops << " looping\n";
+                  << " animations / " << curves << " joint curves, " << navFiles << " nav files / " << navGrids << " grids, " << sounds << " sounds / " << samples << " samples / " << loops << " looping\n";
     } catch (const std::exception& error) {
         std::cerr << "assets-real-test failed: " << error.what() << '\n';
         return 1;

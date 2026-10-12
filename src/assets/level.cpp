@@ -9,6 +9,7 @@
 namespace chase::assets {
 namespace {
 using detail::cString;
+using detail::readF32;
 using Reader = detail::BlockReader;
 constexpr std::uint32_t initialPosition = 0x86166f20;     // nameHash("initialposition")
 constexpr std::uint32_t initialOrientation = 0xa3b9aa7f;  // nameHash("initialorientation")
@@ -125,8 +126,20 @@ Level parseLevel(const Bytes& data) {
         need(s30, n30 * 0x28);
         for (std::size_t i = 0; i < n30; ++i) {
             r.skip();
-            for (std::uint16_t k = 0; k < readU16(s30, i * 0x28); ++k) r.skip();
-            r.skip();
+            std::vector<std::string> names;
+            for (std::uint16_t k = 0; k < readU16(s30, i * 0x28); ++k) names.push_back(cString(r.next()));
+            Bytes descriptors = r.next();
+            need(descriptors, names.size() * 0x18);
+            for (std::size_t k = 0; k < names.size(); ++k) {
+                NavRoom room;
+                room.room = names[k];
+                room.heightUnit = readF32(s30, i * 0x28 + 0xc);
+                room.cellSize = readF32(s30, i * 0x28 + 0x10);
+                for (int a = 0; a < 3; ++a) room.origin[a] = readF32(s30, i * 0x28 + 0x14 + 4 * std::size_t(a));
+                room.grids = readU16(descriptors, k * 0x18);
+                room.paths = readU16(descriptors, k * 0x18 + 2);
+                level.navRooms.push_back(std::move(room));
+            }
         }
     }
     r.cursor.pop();

@@ -104,10 +104,9 @@ def parse_level(data):
         for i in range(n30):
             entry = block30[i * 0x28:(i + 1) * 0x28]
             pools.next()
-            for _ in range(u16(entry, 0)):
-                pools.next()
-            pools.next()
-            level['s30'].append({'raw': entry})
+            names = [cstring(pools.next()) for _ in range(u16(entry, 0))]
+            nav = pools.next()
+            level['s30'].append({'raw': entry, 'names': names, 'nav': nav})
     left = pools.leftover()
     if left:
         raise ValueError("unconsumed blocks: %s" % left)
@@ -167,6 +166,22 @@ def placement_matrix(placement):
             [-cy * sz, cx * cz - sx * sy * sz, sx * cz + cx * sy * sz, 0.0],
             [sy, -sx * cy, cx * cy, 0.0],
             list(placement['position']) + [1.0]]
+
+
+def nav_rooms(level):
+    """Section +0x30: one navigation descriptor per room group, used by loader 0x1971c4.
+
+    Floats at +0x0c..+0x1c: height range / 256, cell size, origin x, y, z. The block holds
+    one 0x18 descriptor per room name, starting with u16 grid count and u16 path count of
+    <level>_<room>.bfnnav."""
+    out = []
+    for entry in level['s30']:
+        height_unit, cell, ox, oy, oz = struct.unpack_from('<5f', entry['raw'], 0xc)
+        for i, name in enumerate(entry['names']):
+            nav = entry['nav'][i * 0x18:(i + 1) * 0x18] if entry['nav'] else b''
+            out.append({'room': name, 'cell': cell, 'origin': (ox, oy, oz), 'height_unit': height_unit,
+                        'grids': u16(nav, 0) if nav else 0, 'paths': u16(nav, 2) if nav else 0})
+    return out
 
 
 def model_path(mesh):

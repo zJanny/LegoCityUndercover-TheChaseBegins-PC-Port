@@ -91,6 +91,7 @@ python3 tools/tt_resource.py --census artifacts/fib/files       # all b* resourc
 python3 tools/convert_models.py --census artifacts/fib/files    # models
 python3 tools/convert_levels.py --census artifacts/fib/files    # level files
 python3 tools/convert_anims.py --census artifacts/fib/files     # skeletons and animations
+python3 tools/convert_nav.py --census artifacts/fib/files       # navigation grids
 ```
 
 To print the first vertices of one model, use `python3 tools/convert_models.py --vertices 3 path/to/model.bfnmdl`.
