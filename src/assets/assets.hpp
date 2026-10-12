@@ -220,6 +220,9 @@ struct AnimTrack {
 struct Animation {
     unsigned frames = 0;                   // header u16 +4 & 0x3fff (0x114b58); bit 14 set in cutscenes
     std::vector<Bytes> jointCurves;        // indexed like the skeleton joints
+    // Curve stored with frames + 1 samples (0x12a2b4 flag 0x10): table bit 29; the extra curve
+    // (bit 28) if present, else curve 0. Inferred from data: all 30081 curves fit their blobs.
+    int longCurve = -1;
     std::vector<std::string> objects;      // section +0x0c names, e.g. "ExportCam"
     std::vector<AnimTrack> tracks;         // section +0x18 (unused in shipped data)
     std::vector<std::vector<AnimTrack>> subAnimations;

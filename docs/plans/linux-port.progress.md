@@ -687,3 +687,10 @@ Static analysis used local llvm-objdump (armv6k) over game.arm.elf. This is loca
 - Hypothesis: the listed type-8 columns sit at indices 7, 15, 23, … and hold mask-like bytes (128, 206, 192), so a run of 8 bool columns probably shares one byte. The bit order and column meanings are unknown. Column names are not in the files.
 - Added src/assets/table.cpp (parseTable, tableValue), src/tabledump.cpp (chase-tabledump), a synthetic assets-test case and real-data totals.
 - ctest PASS 8/8.
+
+### 2026-10-13T04:10+02:00 — Overflowing joint curves explained: one curve stores frames + 1
+
+- 0x12a2b4 (ev_210a33ed…3420) passes frames + 1 to the sampler 0x12d4b0 for one curve when its flag 0x10 is set: the extra curve when flag 0x20 is set, otherwise curve 0. These flags are a runtime argument (0x114b58 → 0x1205f8, ev_34ecb50a…32df) and were not traced to the file.
+- Data rule: if bit 29 of the joint-table word is set, the long curve is the extra curve (when bit 28 is set) or else curve 0. Across all 1954 animations, every selected curve fits its blob only with frames + 1 (149 need it; 441 fit either way), and every other curve fits with frames. This replaces the earlier "115 overflowing joint-0 curves" unknown.
+- Animation::longCurve: skinMatrices samples that curve with frames + 1. assets-real-test pins 590 animations with a long curve. Bear, squirrel and minifig references are unchanged.
+- Still unknown: what the long or extra curve means (root motion?), and the 0xfa raw-matrix form.

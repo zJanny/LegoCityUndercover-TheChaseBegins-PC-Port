@@ -61,6 +61,7 @@ int main(int argc, char** argv) {
         std::vector<std::pair<std::string, NavRoom>> navDescriptors;
         std::size_t skinnedParts = 0, boneBatches = 0, jointSum = 0;
         std::size_t skeletons = 0, joints = 0, animations = 0, curves = 0;
+        std::size_t longCurves = 0;
         std::size_t subAnimations = 0, animTracks = 0, trackKeys = 0, cutsceneActorCount = 0;
         std::vector<std::string> manifestPaths, missingManifestFiles;
         std::size_t tableFiles = 0, tableSheets = 0, tableCells = 0, studThreshold = 0;
@@ -95,6 +96,7 @@ int main(int argc, char** argv) {
             if (endsWith(name, ".bfnanm")) {
                 Animation animation = parseAnimation(data);
                 curves += animation.jointCurves.size();
+                longCurves += animation.longCurve >= 0;
                 ++animations;
                 subAnimations += animation.subAnimations.size();
                 for (const auto& tracks : animation.subAnimations) {
@@ -188,6 +190,8 @@ int main(int argc, char** argv) {
         if (skeletons != 376 || joints != 5280 || animations != 1954 || curves != 30081)
             throw std::runtime_error("skeleton/animation totals differ from the Python reference");
         // Reference: recorded from this C++ parser (2026-10-13); every key block matches its u16 count.
+        // Reference: count of animations with table bit 29, recorded from this C++ parser (2026-10-13).
+        if (longCurves != 590) throw std::runtime_error("long-curve count differs from the recorded reference");
         if (subAnimations != 3804 || animTracks != 14564 || trackKeys != 62293)
             throw std::runtime_error("animation track totals differ from the recorded reference");
         // Reference: recorded from this C++ parser (2026-10-13) and checked with ls over

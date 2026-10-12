@@ -141,6 +141,7 @@ Animation parseAnimation(const Bytes& data) {
         need(table, 4, "joint table");
         std::uint32_t word = readU32(table, 0);
         std::size_t count = (word & 0x1fff) + ((word & 0x10000000) >> 28);
+        if (word & 0x20000000) anim.longCurve = (word & 0x10000000) ? int(count) - 1 : 0;
         r.skip();
         for (std::size_t i = 0; i < count; ++i) anim.jointCurves.push_back(r.next());
     }
@@ -359,11 +360,12 @@ std::vector<Matrix> skinMatrices(const Skeleton& skeleton, const Animation& anim
         const Joint& joint = skeleton.joints[i];
         Matrix local = joint.local;
         if (i < animation.jointCurves.size()) {
-            JointChannels a = decodeChannels(animation.jointCurves[i], first, animation.frames);
+            unsigned samples = animation.frames + (int(i) == animation.longCurve ? 1 : 0);
+            JointChannels a = decodeChannels(animation.jointCurves[i], first, samples);
             if (fraction == 0) {
                 if (!a.rawMatrix) local = poseMatrix(orientedPose(a, joint));
             } else {
-                JointChannels b = decodeChannels(animation.jointCurves[i], second, animation.frames);
+                JointChannels b = decodeChannels(animation.jointCurves[i], second, samples);
                 if (!a.rawMatrix && !b.rawMatrix)
                     local = poseMatrix(blendPoses({{orientedPose(a, joint), 1 - fraction}, {orientedPose(b, joint), fraction}}));
             }
