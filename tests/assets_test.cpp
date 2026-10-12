@@ -654,8 +654,44 @@ void sounds() {
 }
 }
 
+static void configText() {
+    auto roots = parseConfigText("// header\r\nRoot \r\n{ \r\n\tChild\r\n\t{\r\n\t\tName(a b)\r\n\t\tNote(x, {y (z)} )\r\n\t\tEmpty()\r\n\t}\r\n\tLevel(3)\r\n\tList(1, 2.5,-3)\r\n}\r\nSecond{}");
+    require(roots.size() == 2 && roots[0].name == "Root" && roots[1].name == "Second", "config roots");
+    const ConfigBlock& root = roots[0];
+    require(root.line == 2 && root.entries.size() == 2 && root.blocks.size() == 1, "config structure");
+    require(root.number("Level") == 3 && root.numbers("List") == std::vector<double>({1, 2.5, -3}), "config numbers");
+    const ConfigBlock& child = root.blocks[0];
+    require(child.line == 4 && child.entries.size() == 3 && child.value("Name") == "a b", "config child");
+    require(child.value("Note") == "x, {y (z)}" && child.value("Empty").empty(), "config nested parentheses");
+    require(child.entries[2].key == "Empty" && child.entries[2].line == 8, "config entry order and line");
+    require(!root.find("Name") && roots[1].blocks.empty(), "config lookup");
+    requireThrows([&] { root.value("Missing"); }, "missing config key accepted");
+    requireThrows([&] { child.number("Name"); }, "non-numeric config value accepted");
+    for (const char* bad : {"Root\n{\n", "Root\n{\n A(1\n}\n", "Root\n{\n A(1)\n}\n}", "Root\n", "Root\n{\n A\n}\n",
+                            "{\n}\n", "Root\n{\n A(1\n)\n}\n", "A(1)\n"})
+        requireThrows([&] { parseConfigText(bad); }, bad);
+
+    const std::string setup =
+        "\tBound\r\n\t{\r\n\t\tName(Camera)\r\n\t\tType(2)\r\n\t\tRotationY(10)\r\n\t\tRotationX(15)\r\n\t\tDistance(8.5)\r\n"
+        "\t\tLocation(0.5,5,13)\r\n\t\tLookat(0,2,0)\r\n\t\tOffset(0,2,1)\r\n\t\tFOV(43)\r\n\t\tFilters(32,28)\r\n"
+        "\t\tBlendTime(0.85)\r\n\t\tShakeAmp(1)\r\n\t\tShakeRate(2)\r\n\t\tShakeRoll(3)\r\n\t\t3DOffset(5)\r\n\t}\r\n";
+    CameraFollow camera = parseCameraFollow("CameraFollow\r\n{\r\n" + setup + "}\r\n");
+    require(camera.setups.size() == 1, "camera setup count");
+    const CameraSetup& s = camera.setups[0];
+    require(s.kind == "Bound" && s.name == "Camera" && s.type == 2 && s.distance == 8.5 && s.rotationY == 10 &&
+                s.location[0] == 0.5 && s.location[2] == 13 && s.offset[2] == 1 && s.filters[1] == 28 &&
+                s.fov == 43 && s.blendTime == 0.85 && s.shakeRoll == 3 && s.offset3d == 5,
+            "camera fields");
+    requireThrows([&] { parseCameraFollow("Other\n{\n}\n"); }, "wrong camera root accepted");
+    requireThrows([&] { parseCameraFollow("CameraFollow\n{\nBound\n{\nName(x)\n}\n}\n"); }, "incomplete camera accepted");
+    std::string shortList = setup;
+    shortList.replace(shortList.find("0.5,5,13"), 8, "0.5,5");
+    requireThrows([&] { parseCameraFollow("CameraFollow\n{\n" + shortList + "}\n"); }, "short camera vector accepted");
+}
+
 int main() {
     try {
+        configText();
         sounds();
         refpack();
         fuse();

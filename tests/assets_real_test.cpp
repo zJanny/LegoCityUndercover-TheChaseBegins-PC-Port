@@ -3,6 +3,7 @@
 // Decodes every archive entry, parses every pooled resource, decodes every
 // texture, and compares FNV-1a checksums with tools/convert_textures.py --checksum.
 #include "assets/assets.hpp"
+#include <algorithm>
 #include <cctype>
 #include <cmath>
 #include <fstream>
@@ -57,6 +58,15 @@ int main(int argc, char** argv) {
         std::size_t sounds = 0, samples = 0, loops = 0;
         std::size_t locFiles = 0, locEntries = 0, fonts = 0, glyphs = 0;
         std::size_t navFiles = 0, navGrids = 0, navPaths = 0, navFlagged = 0;
+        std::size_t camFiles = 0, camRoots = 0, camBlocks = 0, camEntries = 0, camSetups = 0;
+        std::size_t configFiles = 0, configBlocks = 0, configEntries = 0;
+        std::vector<std::string> configRejected;
+        auto countBlocks = [](const auto& self, const ConfigBlock& block, std::size_t& blocks,
+                              std::size_t& entries) -> void {
+            ++blocks;
+            entries += block.entries.size();
+            for (const auto& child : block.blocks) self(self, child, blocks, entries);
+        };
         std::map<std::string, std::pair<std::size_t, std::size_t>> navCounts;
         std::vector<std::pair<std::string, NavRoom>> navDescriptors;
         std::size_t skinnedParts = 0, boneBatches = 0, jointSum = 0;
@@ -130,6 +140,24 @@ int main(int argc, char** argv) {
             if (endsWith(name, ".loc")) {
                 locEntries += parseLocalisation(data).size();
                 ++locFiles;
+            }
+            if (endsWith(name, ".cam")) {
+                std::string text(data.begin(), data.end());
+                for (const auto& root : parseConfigText(text)) {
+                    ++camRoots;
+                    countBlocks(countBlocks, root, camBlocks, camEntries);
+                }
+                camSetups += parseCameraFollow(text).setups.size();
+                ++camFiles;
+            }
+            if (endsWith(name, ".txt") && !endsWith(name, "extended_chars_utf8.txt") && name.find("/maps/") == std::string::npos) {
+                try {
+                    for (const auto& root : parseConfigText(std::string(data.begin(), data.end())))
+                        countBlocks(countBlocks, root, configBlocks, configEntries);
+                    ++configFiles;
+                } catch (const std::runtime_error& error) {
+                    configRejected.push_back(name + ": " + error.what());
+                }
             }
             if (endsWith(name, ".bfnnav")) {
                 NavMesh nav = parseNav(data);
@@ -244,6 +272,22 @@ int main(int argc, char** argv) {
         }
         if (navFiles != 700 || navGrids != 28646 || navPaths != 4607 || navFlagged != 429583 || navMatched != 700)
             throw std::runtime_error("navigation totals differ from the Python reference");
+        // Reference: line-based Python census over the 10 .cam files: 10 CameraFollow + 1822 Bound + 253 Room
+        // blocks, 2075 setups x 15 entries (Name Type RotationY RotationX Distance Location Lookat Offset FOV
+        // Filters BlendTime ShakeAmp ShakeRate ShakeRoll 3DOffset) = 31125.
+        if (camFiles != 10 || camRoots != 10 || camBlocks != 2085 || camEntries != 31125 || camSetups != 2075)
+            throw std::runtime_error("camera totals differ from the Python census");
+        // Reference: manual inspection and a line-based Python census of options3ds.txt, triggers.txt and
+        // letriggers.txt (1 + 2 + 34 blocks, 11 + 13 + 33 entries). The other three files fail the strict
+        // grammar: options.txt is only the header "options" without a body; scriptfns.txt line 843 lacks a
+        // closing ')'; gescriptfns.txt line 264 has an extra ')'.
+        if (configFiles != 3 || configBlocks != 37 || configEntries != 57 || configRejected.size() != 3)
+            throw std::runtime_error("config text totals differ from the Python census");
+        std::sort(configRejected.begin(), configRejected.end());
+        if (configRejected[0].rfind("levels/gescriptfns.txt: config text line 264:", 0) ||
+            configRejected[1].rfind("levels/scriptfns.txt: config text line 843:", 0) ||
+            configRejected[2].rfind("options.txt: config text line 2:", 0))
+            throw std::runtime_error("rejected config text files differ from the manual inspection");
         // Reference: convert_models.bone_batches/skin_joints over every part (drawn vertices only).
         if (skinnedParts != 1457 || boneBatches != 1465 || jointSum != 3492824)
             throw std::runtime_error("bone palette totals differ from the Python reference");

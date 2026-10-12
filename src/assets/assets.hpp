@@ -375,6 +375,37 @@ struct TableValue {
 };
 Table parseTable(const Bytes& data);
 TableValue tableValue(const TableSheet& sheet, std::size_t row, std::size_t column);
+struct ConfigEntry {
+    std::string key;
+    std::string value;
+    unsigned line = 0;
+};
+struct ConfigBlock {
+    std::string name;
+    unsigned line = 0;
+    std::vector<ConfigEntry> entries;
+    std::vector<ConfigBlock> blocks;
+    const ConfigEntry* find(const std::string& key) const;
+    const std::string& value(const std::string& key) const;
+    double number(const std::string& key) const;
+    std::vector<double> numbers(const std::string& key) const;
+};
+std::vector<ConfigBlock> parseConfigText(const std::string& text);
+
+struct CameraSetup {
+    std::string kind;
+    std::string name;
+    int type = 0;
+    double rotationY = 0, rotationX = 0, distance = 0;
+    std::array<double, 3> location{}, lookat{}, offset{};
+    double fov = 0;
+    std::array<double, 2> filters{};
+    double blendTime = 0, shakeAmp = 0, shakeRate = 0, shakeRoll = 0, offset3d = 0;
+};
+struct CameraFollow {
+    std::vector<CameraSetup> setups;
+};
+CameraFollow parseCameraFollow(const std::string& text);
 
 std::uint32_t readU32(const Bytes& data, std::size_t offset);
 std::uint16_t readU16(const Bytes& data, std::size_t offset);

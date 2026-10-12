@@ -14,7 +14,7 @@ target_link_libraries(chase-input-lab PRIVATE chase_input PkgConfig::SDL2)
 target_compile_options(chase-input-lab PRIVATE -Wall -Wextra -Wpedantic)
 configure_file(config/controls.cfg config/controls.cfg COPYONLY)
 # Native asset runtime (plan S4a): no SDL dependency.
-add_library(chase_assets src/assets/fuse.cpp src/assets/pooled.cpp src/assets/texture.cpp src/assets/model.cpp src/assets/level.cpp src/assets/audio.cpp src/assets/anim.cpp src/assets/nav.cpp src/assets/text.cpp src/assets/cutscene.cpp src/assets/table.cpp)
+add_library(chase_assets src/assets/fuse.cpp src/assets/pooled.cpp src/assets/texture.cpp src/assets/model.cpp src/assets/level.cpp src/assets/audio.cpp src/assets/anim.cpp src/assets/nav.cpp src/assets/text.cpp src/assets/cutscene.cpp src/assets/table.cpp src/assets/config_text.cpp)
 target_include_directories(chase_assets PUBLIC src)
 target_compile_options(chase_assets PRIVATE -Wall -Wextra -Wpedantic)
 set_target_properties(chase_assets PROPERTIES POSITION_INDEPENDENT_CODE ON)

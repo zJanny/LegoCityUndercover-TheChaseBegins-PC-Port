@@ -699,3 +699,13 @@ Static analysis used local llvm-objdump (armv6k) over game.arm.elf. This is loca
 - Data rule: if bit 29 of the joint-table word is set, the long curve is the extra curve (when bit 28 is set) or else curve 0. Across all 1954 animations, every selected curve fits its blob only with frames + 1 (149 need it; 441 fit either way), and every other curve fits with frames. This replaces the earlier "115 overflowing joint-0 curves" unknown.
 - Animation::longCurve: skinMatrices samples that curve with frames + 1. assets-real-test pins 590 animations with a long curve. Bear, squirrel and minifig references are unchanged.
 - Still unknown: what the long or extra curve means (root motion?), and the 0xfa raw-matrix form.
+
+### 2026-10-13T10:15+02:00 — Brace-block config text parser (.cam, trigger and option lists)
+
+- New parseConfigText / ConfigBlock and a typed parseCameraFollow (src/assets/config_text.cpp, in chase_assets).
+- Grammar: `Name {` blocks with `Key(value)` entries and nested blocks, CRLF and `//` comment lines. A value runs to the matching `)` on its line, with balanced inner parentheses. The parser is strict.
+- Census: the 10 .cam files hold 10 CameraFollow, 1822 Bound and 253 Room blocks: 2075 camera setups, each with the same 15 keys (Name, Type, RotationY, RotationX, Distance, Location, Lookat, Offset, FOV, Filters, BlendTime, ShakeAmp, ShakeRate, ShakeRoll, 3DOffset), 31125 entries.
+- options3ds.txt, triggers.txt and letriggers.txt also parse (37 blocks, 57 entries).
+- The strict grammar rejects options.txt (header only), levels/scriptfns.txt line 843 (missing `)`) and levels/gescriptfns.txt line 264 (extra `)`). Whether the game tolerates these is unknown; the test pins each reason.
+- Unknown: the meaning of Type, Filters and the camera values, and script function and trigger semantics. The game's loader for these files was not traced.
+- Tests: synthetic configText in assets-test; real-data totals in assets-real-test (provenance: line-based Python census, manual inspection). ctest PASS 8/8.
