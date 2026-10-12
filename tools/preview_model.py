@@ -42,7 +42,7 @@ class Texture:
 
     def sample(self, u, v):
         x = int((u % 1.0) * self.w) % self.w
-        y = int((1.0 - (v % 1.0)) * self.h) % self.h  # rows are top-down, v=0 is the bottom
+        y = int((v % 1.0) * self.h) % self.h  # rows are top-down and v=0 is the top row
         return self.rows[y][x]
 
 

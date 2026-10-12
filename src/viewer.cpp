@@ -265,14 +265,10 @@ private:
             Image image = decodeTexture(archive_.read(*archive_.find(chosen)));
             glGenTextures(1, &id);
             glBindTexture(GL_TEXTURE_2D, id);
-            // Rows are top-down; GL's first row is v=0, which the game also treats as the bottom.
-            std::vector<std::uint8_t> flipped(image.rgba.size());
-            std::size_t row = std::size_t(image.width) * 4;
-            for (int y = 0; y < image.height; ++y)
-                std::copy_n(image.rgba.begin() + std::ptrdiff_t(row * std::size_t(image.height - 1 - y)), row,
-                            flipped.begin() + std::ptrdiff_t(row * std::size_t(y)));
+            // Decoded rows are top-down and the game's v=0 is the top row (char_squirrel body
+            // and token faces render correctly only this way), so rows upload unflipped.
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, image.width, image.height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-                         flipped.data());
+                         image.rgba.data());
             glGenerateMipmap(GL_TEXTURE_2D);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);

@@ -530,3 +530,14 @@ Static analysis used local llvm-objdump (armv6k) over game.arm.elf. This is loca
 - Tests: synthetic halfway translation (1.525), last→first wrap, sign flip, translation-only-from-carriers. Real-data |posed| sums at char_bear walk 47.5 (1741.8781) and char_squirrel run 2.25 (372.6377) match Python within 1e-3.
 - chase-viewer: poses every rendered frame at fractional time; `--frame` takes fractions; `--fps` (default 30, an assumption) sets the rate.
 - ctest PASS 7/7; Python PASS 46/46; 0 warnings.
+
+### 2026-10-12T22:40+02:00 — Texture v orientation corrected (most "black material" cases)
+
+- Corrects the S4b/18:05 note "GL's first row is v=0, which the game also treats as the bottom": UV v=0 is the TOP row of the decoded (top-down) image.
+  - The decoder itself is right (the splash1top text reads upright).
+  - char_squirrel: the body UVs (v 0.47–0.99) must hit the orange lower half of SquirrelALPHAT64, and the eye part (v 0.02–0.54) the eye decal in the upper half. With the old convention both were swapped, so the body sampled the black decal area.
+  - pickup_chasetoken_imposter: the minifig face is upside down under the old convention and upright under the new one.
+- chase-viewer uploads decoded rows unflipped. preview_model samples row v·h.
+- Result: char_squirrel renders orange with black eyes. lvl_00_policestation room3 shows the textured floor, emblem, plants and lightmap shading where large areas were black before. The scene is still dim; the combiner/lighting setup is unrecovered.
+- Graphics API, from strings: the game links Nintendo DMPGL (a dmp_* reserved-uniform table at 0x35b288, 0x10-byte entries {name, id, count, GL type}). The dmp_TexEnv names are referenced only from that table, and no static PICA TEV command headers (regs 0xc0–0xf7) exist in code.bin, so the combiner setup must be traced through the game's uniform-location usage. Not done.
+- ctest PASS 7/7.
