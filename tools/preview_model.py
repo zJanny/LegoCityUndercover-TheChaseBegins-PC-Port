@@ -147,7 +147,7 @@ def main():
                         help='skip parts whose texture name contains this text (repeatable), e.g. sky')
     parser.add_argument('--skeleton', type=Path, help='.bfnskl to pose the model with (needs --anim)')
     parser.add_argument('--anim', type=Path, help='.bfnanm to sample')
-    parser.add_argument('--frame', type=int, default=0)
+    parser.add_argument('--frame', type=float, default=0, help='fractional frames blend neighbours')
     args = parser.parse_args()
     model = cm.parse_model(args.model.read_bytes())
     index = texture_index(args.assets)

@@ -514,3 +514,19 @@ Static analysis used local llvm-objdump (armv6k) over game.arm.elf. This is loca
 - chase-viewer: `--skeleton S.bfnskl --anim A.bfnanm [--frame N]` poses the first model argument. Skinned parts are skinned on the CPU and re-uploaded when the frame changes. The playback rate is not recovered; 30 fps is assumed.
 - Offscreen screenshots: char_bear walk 0/12 and char_squirrel run 0/3 show coherent gait poses. The squirrel renders almost black; the material/combiner setup is not recovered.
 - `ctest --test-dir build --output-on-failure` — PASS 7/7; 0 warnings. Python PASS 45/45.
+
+### 2026-10-12T22:10+02:00 — Frame interpolation recovered; playback rate traced to the instance
+
+- 0x2533e0 calls 0x24bf80 (ev_d1801bf3…488) per active animation slot (0x58-byte slots at instance+0x2c). It returns frame A, frame B and their weights. 0x114b58 is then called twice (layer 0 = A with weight 1−frac, layer 1 = B with frac), so the game always interpolates neighbouring frames. Layers of weight 0 are skipped, so whole frames use the single-layer path.
+- 0x24cbd4 (ev_01398…5a6) computes frame = (clock − start) × slot+0x30 / clock+0xc + start offset:
+  - The clock is 0x256af4 (ev_5678829b…3ea6), a generic timer in units of clock+0xc per second, so slot+0x30 is the playback rate in frames per second.
+  - Modes are slot u16 +4 & 7: 0 clamp, 1/6 loop, 2 reverse, 3 ping-pong, 5 reverse loop. Frame B uses time + 1 frame and wraps the same way.
+  - The rate is written by the caller that starts the animation. It is not in the .bfnanm header (all 1954 headers tallied; words +0x14/+0x18/+0x24 are always 0) or in options*.txt. It remains unknown.
+- Multi-layer blend in 0x252cb0, from the existing pseudo-code (ev_31aa99b7…9b9) and disassembly of 0x24c898/0x24c924:
+  - Quaternions are summed with weights, negated when dot(first, q) < 0, then normalized (identity when the length is ≤ 2⁻²³, bits 0x34000000).
+  - Scale is summed over every layer when any layer has scale.
+  - Shear and translation are summed only over the layers whose own mask has them.
+- C++: JointPose, jointPose, blendPoses, poseMatrix; skinMatrices takes a double frame and blends floor/next with wrap-around. Python: joint_pose, blend_poses, pose_matrix, fractional skin_matrices; preview `--frame` accepts fractions.
+- Tests: synthetic halfway translation (1.525), last→first wrap, sign flip, translation-only-from-carriers. Real-data |posed| sums at char_bear walk 47.5 (1741.8781) and char_squirrel run 2.25 (372.6377) match Python within 1e-3.
+- chase-viewer: poses every rendered frame at fractional time; `--frame` takes fractions; `--fps` (default 30, an assumption) sets the rate.
+- ctest PASS 7/7; Python PASS 46/46; 0 warnings.

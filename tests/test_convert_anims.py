@@ -74,6 +74,21 @@ class AnimTests(unittest.TestCase):
         self.assertEqual(sheared[:3], [[1.0, 1.0, 0.5, 0.0], [0.25, 1.0, 0.0, 0.0], [0.0, 2.0, 1.0, 0.0]])
         self.assertEqual(ca.local_matrix(channels, 0)[3], [0.0, 0.0, 0.0, 1.0])
 
+    def test_blend_poses(self):
+        def pose(angle, mask, t=0.0, scale=1.0):
+            return ca.joint_pose([0.0, 0.0, angle, scale, scale, scale, 0.0, 0.0, 0.0, t, 0.0, 0.0], mask)
+        half = ca.blend_poses([(pose(0.0, 0xe07, t=1.0), 0.5), (pose(math.pi / 2, 0x007), 0.5)])
+        self.assertEqual(half['mask'], 0xe07)
+        self.assertAlmostEqual(half['translation'][0], 0.5)              # only layers carrying translation add
+        z = math.sin(-math.pi / 8)                                       # 45 degrees, same sign as the inputs
+        self.assertAlmostEqual(half['rotation'][2], z)
+        flipped = pose(math.pi / 2, 7)
+        flipped['rotation'] = tuple(-q for q in flipped['rotation'])
+        same = ca.blend_poses([(pose(0.0, 7), 0.5), (flipped, 0.5)])
+        self.assertAlmostEqual(same['rotation'][2], z)                   # q and -q blend alike
+        scaled = ca.blend_poses([(pose(0.0, 0x38, scale=2.0), 0.5), (pose(0.0, 0), 0.5)])
+        self.assertAlmostEqual(scaled['scale'][0], 1.5)                  # scale sums every layer (default 1)
+
     def test_hierarchy_check(self):
         good = joint(-1, (0, 1, 0), (0, 1, 0)) + joint(0, (0, 1.5, 2), (0, 0.5, 2))
         blocks = [(-14, bytes([0, 2]) + bytes(14)), (-14, b''), (-14, b''), (-14, good), (-14, b'a\0'), (-14, b'b\0')]

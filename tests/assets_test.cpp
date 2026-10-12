@@ -431,6 +431,23 @@ void animations() {
     put32(table, 1);
     Animation anim = parseAnimation(pooledBlocks({{-14, animHead}, {-14, table}, {-14, bytes("p")}, {-14, curve}}));
     require(anim.frames == 2 && anim.jointCurves.size() == 1, "animation curves");
+    std::vector<Matrix> halfway = skinMatrices(skeleton, anim, 0.5);
+    require(near(halfway[0][12], 1.525f), "fractional frame blends neighbouring frames");
+    require(near(skinMatrices(skeleton, anim, 1.5)[0][12], 1.525f), "last frame blends into the first");
+    auto turnedPose = [](float angle, unsigned mask) {
+        JointChannels c;
+        c.values[2] = angle;
+        c.mask = mask;
+        return jointPose(c);
+    };
+    JointPose flipped = turnedPose(float(M_PI / 2), 7);
+    for (auto& q : flipped.rotation) q = -q;
+    JointPose mid = blendPoses({{turnedPose(0, 7), 0.5f}, {flipped, 0.5f}});
+    require(near(mid.rotation[2], float(std::sin(-M_PI / 8))), "quaternion sign flip before summing (0x24c924)");
+    JointPose moved = turnedPose(0, 0xe00);
+    moved.translation[0] = 1;
+    require(near(blendPoses({{moved, 0.5f}, {turnedPose(0, 7), 0.5f}}).translation[0], 0.5f),
+            "translation only from layers that carry it");
     std::vector<Matrix> skin = skinMatrices(skeleton, anim, 1);
     require(near(skin[0][12], 1.55f) && near(skin[0][13], -1.0f) && near(skin[0][0], 1.0f), "root skin matrix");
     require(near(skin[1][12], 1.55f) && near(skin[1][13], -1.0f), "child follows root (local * parent.world)");

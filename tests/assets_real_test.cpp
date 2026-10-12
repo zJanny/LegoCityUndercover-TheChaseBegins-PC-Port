@@ -150,8 +150,9 @@ int main(int argc, char** argv) {
         if (walk.frames != 48 || std::fabs(poseSum - 5397.175751993695) > 1e-3)
             throw std::runtime_error("char_bear walk pose differs from the Python reference");
         // Reference: sum of |skinned position| over every vertex (preview_model.skin_vertex with
-        // convert_anims.skin_matrices). The squirrel has rotated bind matrices and two bone batches.
-        auto posedSum = [&](const std::string& dir, const std::string& anim, unsigned frame) {
+        // convert_anims.skin_matrices). The squirrel has rotated bind matrices and two bone batches;
+        // the fractional frames blend neighbouring frames (47.5 wraps into frame 0).
+        auto posedSum = [&](const std::string& dir, const std::string& anim, double frame) {
             auto read = [&](const std::string& name) {
                 const FuseEntry* entry = archive.find(name);
                 if (!entry) throw std::runtime_error("reference file not found: " + name);
@@ -172,7 +173,9 @@ int main(int argc, char** argv) {
             return sum;
         };
         if (std::fabs(posedSum("char_bear", "walk.bfnanm", 12) - 1754.6224097940715) > 1e-3 ||
-            std::fabs(posedSum("char_squirrel", "run.bfnanm", 5) - 440.7127510475371) > 1e-3)
+            std::fabs(posedSum("char_squirrel", "run.bfnanm", 5) - 440.7127510475371) > 1e-3 ||
+            std::fabs(posedSum("char_bear", "walk.bfnanm", 47.5) - 1741.8780890502587) > 1e-3 ||
+            std::fabs(posedSum("char_squirrel", "run.bfnanm", 2.25) - 372.6377254145856) > 1e-3)
             throw std::runtime_error("skinned vertices differ from the Python reference");
         std::cout << archive.entries().size() << " entries, " << bytes << " bytes, " << pooled
                   << " pooled resources, " << textures << " textures, " << checked << " checksums match, "

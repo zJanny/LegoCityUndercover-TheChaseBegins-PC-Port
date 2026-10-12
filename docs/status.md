@@ -16,7 +16,7 @@
 
 - Gameplay, menus and scripts.
 - The game's lighting and materials. The viewer shows an approximation.
-- Blending between animations, and the real animation speed.
+- Blending between different animations, and the real animation speed.
 - Which sound plays for which event.
 - Cutscene videos (`.moflex`) and several smaller file types.
 - Save games and settings.

@@ -367,9 +367,11 @@ struct Options {
     // cull: faces with this winding are front. CCW culls room ceilings seen from above
     // (observed on lvl_00_policestation room3), so it is the default.
     std::string screenshot, room, cull = "ccw";
-    // Posing applies to the first model argument. The playback rate is not recovered; 30 fps is assumed.
+    // Posing applies to the first model argument. The game's playback rate is set per
+    // animation instance by code not yet recovered, so the rate is an option.
     std::string skeleton, animation;
-    int frame = -1;
+    double frame = -1;
+    double fps = 30;
     float brightness = 1.0f;  // inspection aid only; the game's lighting/combiner setup is not recovered
     std::vector<std::string> exclude, models, levels;
     float yaw = 35, pitch = -25;
@@ -394,7 +396,8 @@ Options parse(int argc, char** argv) {
         else if (arg == "--brightness") o.brightness = std::stof(value());
         else if (arg == "--skeleton") o.skeleton = value();
         else if (arg == "--anim") o.animation = value();
-        else if (arg == "--frame") o.frame = std::stoi(value());
+        else if (arg == "--frame") o.frame = std::stod(value());
+        else if (arg == "--fps") o.fps = std::stod(value());
         else if (arg == "--yaw") o.yaw = std::stof(value());
         else if (arg == "--pitch") o.pitch = std::stof(value());
         else if (!arg.empty() && arg[0] == '-') throw std::runtime_error("unknown option " + arg);
@@ -403,7 +406,7 @@ Options parse(int argc, char** argv) {
     if (o.models.empty() && o.levels.empty())
         throw std::runtime_error("usage: chase-viewer [--fib F] [--names CSV] [--config CFG] [--exclude WORD]... "
                                  "[--level levels/.../x.blvl]... [--room NAME] [--cull none|cw|ccw] [--brightness F] [--screenshot OUT.bmp] [--yaw DEG] [--pitch DEG] "
-                                 "[--skeleton S.bfnskl --anim A.bfnanm [--frame N]] "
+                                 "[--skeleton S.bfnskl --anim A.bfnanm [--frame N] [--fps F]] "
                                  "[models/<dir>/<model>.bfnmdl...]");
     if (o.skeleton.empty() != o.animation.empty()) throw std::runtime_error("--skeleton and --anim go together");
     if (!o.skeleton.empty() && o.models.empty()) throw std::runtime_error("--anim needs a model argument to pose");
@@ -463,7 +466,7 @@ int run(const Options& options) {
         std::cout << "posing " << scene.skinnedParts(options.models.front()) << " skinned part(s) with "
                   << skeleton.joints.size() << " joints, " << animation.frames << " frames\n";
     }
-    unsigned posedFrame = ~0u;
+    double posedFrame = -1;
     float centre[3], radius;
     scene.bounds(centre, radius);
     std::cout << "loaded " << scene.instances() << " instance(s) (" << placed << " placed, " << unresolved
@@ -525,7 +528,7 @@ int run(const Options& options) {
         eye[2] += speed * (-forward * std::cos(pitch) * std::cos(yaw) + strafe * std::sin(yaw));
 
         if (animated) {
-            unsigned frame = options.frame >= 0 ? unsigned(options.frame) : unsigned(now * 30 / 1000);
+            double frame = options.frame >= 0 ? options.frame : now * options.fps / 1000.0;
             if (frame != posedFrame) {
                 scene.pose(options.models.front(), skinMatrices(skeleton, animation, frame));
                 posedFrame = frame;

@@ -137,23 +137,65 @@ def quaternion_matrix(q):
             [2 * (x * z - w * y), 2 * (y * z + w * x), 1 - 2 * (x * x + y * y)]]
 
 
-def local_matrix(channels, mask):
-    """Replica of 0x24c734 as called by 0x252cb0 for one pose: rotation (mask bits 0-2),
-    shear rows from channels 6-8 (bits 6-8), row scale from channels 3-5 (bits 3-5),
-    translation from channels 9-11 (bits 9-11; zero when absent, see progress log)."""
+def joint_pose(channels, mask):
+    """Pose entry as 0x12d4b0 stores it: quaternion, scale, shear, translation, mask."""
+    return {'rotation': euler_to_quaternion(*channels[0:3]), 'scale': list(channels[3:6]),
+            'shear': list(channels[6:9]), 'translation': list(channels[9:12]), 'mask': mask}
+
+
+def blend_poses(layers):
+    """0x252cb0 with several (pose, weight) layers. Quaternions are summed with a sign flip
+    against the first (0x24c924) and normalised (0x24c898, identity below 2**-23); scale is
+    summed over all layers, shear and translation over the layers that carry them."""
+    if len(layers) == 1:
+        return layers[0][0]
+    mask = 0
+    for pose, _ in layers:
+        mask |= pose['mask']
+    rotation, reference = [0.0] * 4, None
+    scale, shear, translation = [0.0] * 3, [0.0] * 3, [0.0] * 3
+    for pose, weight in layers:
+        if pose['mask'] & 7:
+            signed = weight
+            if reference is None:
+                reference = pose['rotation']
+            elif sum(a * b for a, b in zip(reference, pose['rotation'])) < 0:
+                signed = -weight
+            rotation = [r + q * signed for r, q in zip(rotation, pose['rotation'])]
+        for i in range(3):
+            if mask & 0x38:
+                scale[i] += pose['scale'][i] * weight
+            if pose['mask'] & mask & 0x1c0:
+                shear[i] += pose['shear'][i] * weight
+            if pose['mask'] & mask & 0xe00:
+                translation[i] += pose['translation'][i] * weight
+    length = math.sqrt(sum(r * r for r in rotation))
     if mask & 7:
-        rows = quaternion_matrix(euler_to_quaternion(*channels[0:3]))
+        rotation = [r / length for r in rotation] if length > 2 ** -23 else [0.0, 0.0, 0.0, 1.0]
+    return {'rotation': tuple(rotation), 'scale': scale, 'shear': shear, 'translation': translation, 'mask': mask}
+
+
+def pose_matrix(pose):
+    """Replica of 0x24c734 as called by 0x252cb0: rotation (mask bits 0-2), shear rows
+    (bits 6-8), row scale (bits 3-5), translation (bits 9-11; zero when absent)."""
+    mask = pose['mask']
+    if mask & 7:
+        rows = quaternion_matrix(pose['rotation'])
     else:
         rows = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
     if mask & 0x1c0:
-        shear = channels[6:9]
+        shear = pose['shear']
         rows[2] = [rows[2][j] + rows[1][j] * shear[2] for j in range(3)]
         rows[1] = [rows[1][j] + rows[0][j] * shear[1] for j in range(3)]
         rows[0] = [rows[0][j] + rows[2][j] * shear[0] for j in range(3)]
     if mask & 0x38:
-        rows = [[value * channels[3 + i] for value in row] for i, row in enumerate(rows)]
-    translation = list(channels[9:12]) if mask & 0xe00 else [0.0, 0.0, 0.0]
+        rows = [[value * pose['scale'][i] for value in row] for i, row in enumerate(rows)]
+    translation = list(pose['translation']) if mask & 0xe00 else [0.0, 0.0, 0.0]
     return [row + [0.0] for row in rows] + [translation + [1.0]]
+
+
+def local_matrix(channels, mask):
+    return pose_matrix(joint_pose(channels, mask))
 
 
 def rigid_inverse(m):
@@ -164,15 +206,24 @@ def rigid_inverse(m):
 
 
 def skin_matrices(skeleton, animation, frame):
-    """Single-layer 0x252cb0: per joint rigid_inverse(bind world) * animated world (row vectors)."""
-    frames = u16(animation['header'], 4)
+    """Per joint rigid_inverse(bind world) * animated world (row vectors), as 0x252cb0.
+    A fractional frame blends floor(frame) and the next frame, wrapping (0x24bf80)."""
+    frames = max(u16(animation['header'], 4), 1)
+    wrapped = frame % frames
+    first = int(wrapped) % frames
+    second, fraction = (first + 1) % frames, wrapped - math.floor(wrapped)
     world, skin = [], []
     for index, joint in enumerate(skeleton['joints']):
         local = joint['local']
         if index < len(animation.get('s8', [])):
-            channels, mask = decode_channels(animation['s8'][index], frame % max(frames, 1), frames)
-            if mask != -1:
-                local = local_matrix(channels, mask)
+            a = decode_channels(animation['s8'][index], first, u16(animation['header'], 4))
+            if fraction == 0:
+                if a[1] != -1:
+                    local = local_matrix(*a)
+            else:
+                b = decode_channels(animation['s8'][index], second, u16(animation['header'], 4))
+                if a[1] != -1 and b[1] != -1:
+                    local = pose_matrix(blend_poses([(joint_pose(*a), 1 - fraction), (joint_pose(*b), fraction)]))
         parent = joint['parent']
         world.append(local if parent < 0 else matmul(local, world[parent]))
         skin.append(matmul(rigid_inverse(joint['world']), world[-1]))

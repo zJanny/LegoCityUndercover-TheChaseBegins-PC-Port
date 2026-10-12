@@ -207,10 +207,25 @@ struct JointChannels {
 JointChannels decodeChannels(const Bytes& curve, unsigned frame, unsigned frames);
 // 0x248248: Euler radians to quaternion (x, y, z, w).
 std::array<float, 4> eulerToQuaternion(float x, float y, float z);
+// Pose entry built by 0x12d4b0: quaternion (x, y, z, w), scale, shear, translation, mask.
+struct JointPose {
+    std::array<float, 4> rotation{0, 0, 0, 1};
+    float scale[3] = {1, 1, 1};
+    float shear[3] = {0, 0, 0};
+    float translation[3] = {0, 0, 0};
+    unsigned mask = 0;
+};
+JointPose jointPose(const JointChannels& channels);
+// 0x252cb0 with several layers: quaternions summed with a sign flip against the first
+// (0x24c924) and normalised (0x24c898); scale summed over all layers, shear and
+// translation over the layers that carry them. A single layer is returned unchanged.
+JointPose blendPoses(const std::vector<std::pair<JointPose, float>>& layers);
 // 0x24c734 with 0x248870: local matrix from one pose.
-Matrix localMatrix(const JointChannels& pose);
-// 0x252cb0 for a single layer: rigid-inverse(bind world) * animated world per joint.
-std::vector<Matrix> skinMatrices(const Skeleton& skeleton, const Animation& animation, unsigned frame);
+Matrix poseMatrix(const JointPose& pose);
+Matrix localMatrix(const JointChannels& channels);
+// Rigid-inverse(bind world) * animated world per joint (0x252cb0). A fractional frame
+// blends floor(frame) and the next frame, wrapping, as 0x24bf80 does for looping playback.
+std::vector<Matrix> skinMatrices(const Skeleton& skeleton, const Animation& animation, double frame);
 // Weighted blend of the skin matrices of the vertex's resolved joints.
 void skinVertex(const Vertex& vertex, const std::vector<Matrix>& skin, float position[3], float normal[3]);
 

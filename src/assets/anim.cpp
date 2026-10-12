@@ -200,11 +200,64 @@ std::array<float, 4> eulerToQuaternion(float x, float y, float z) {
             float(-(sy * sx * cz) - cy * cx * sz), float(cy * cx * cz - sy * sx * sz)};
 }
 
-Matrix localMatrix(const JointChannels& pose) {
+JointPose jointPose(const JointChannels& channels) {
+    JointPose pose;
+    const float* c = channels.values;
+    pose.rotation = eulerToQuaternion(c[0], c[1], c[2]);
+    for (int i = 0; i < 3; ++i) {
+        pose.scale[i] = c[3 + i];
+        pose.shear[i] = c[6 + i];
+        pose.translation[i] = c[9 + i];
+    }
+    pose.mask = channels.mask;
+    return pose;
+}
+
+JointPose blendPoses(const std::vector<std::pair<JointPose, float>>& layers) {
+    if (layers.size() == 1) return layers.front().first;
+    JointPose out;
+    for (const auto& layer : layers) out.mask |= layer.first.mask;
+    std::array<float, 4> rotation{}, reference{};
+    float scale[3] = {0, 0, 0}, shear[3] = {0, 0, 0}, translation[3] = {0, 0, 0};
+    bool haveReference = false;
+    for (const auto& [pose, weight] : layers) {
+        if (pose.mask & 0x7) {
+            float signedWeight = weight;
+            if (!haveReference) {
+                reference = pose.rotation;
+                haveReference = true;
+            } else {
+                float dot = 0;
+                for (int k = 0; k < 4; ++k) dot += reference[std::size_t(k)] * pose.rotation[std::size_t(k)];
+                if (dot < 0) signedWeight = -weight;
+            }
+            for (int k = 0; k < 4; ++k) rotation[std::size_t(k)] += pose.rotation[std::size_t(k)] * signedWeight;
+        }
+        for (int i = 0; i < 3; ++i) {
+            if (out.mask & 0x38) scale[i] += pose.scale[i] * weight;
+            if (pose.mask & out.mask & 0x1c0) shear[i] += pose.shear[i] * weight;
+            if (pose.mask & out.mask & 0xe00) translation[i] += pose.translation[i] * weight;
+        }
+    }
+    if (out.mask & 0x7) {
+        float length = std::sqrt(rotation[0] * rotation[0] + rotation[1] * rotation[1] +
+                                 rotation[2] * rotation[2] + rotation[3] * rotation[3]);
+        if (length > 1.1920929e-7f)
+            for (auto& value : rotation) value /= length;
+        else
+            rotation = {0, 0, 0, 1};
+        out.rotation = rotation;
+    }
+    std::copy_n(scale, 3, out.scale);
+    std::copy_n(shear, 3, out.shear);
+    std::copy_n(translation, 3, out.translation);
+    return out;
+}
+
+Matrix poseMatrix(const JointPose& pose) {
     Matrix m = identity;
-    const float* c = pose.values;
     if (pose.mask & 0x7) {
-        auto [x, y, z, w] = eulerToQuaternion(c[0], c[1], c[2]);
+        auto [x, y, z, w] = pose.rotation;
         m[0] = 1 - 2 * (y * y + z * z);
         m[1] = 2 * (x * y - w * z);
         m[2] = 2 * (x * z + w * y);
@@ -219,33 +272,46 @@ Matrix localMatrix(const JointChannels& pose) {
         for (int j = 0; j < 3; ++j) m[std::size_t(to * 4 + j)] += m[std::size_t(from * 4 + j)] * factor;
     };
     if (pose.mask & 0x1c0) {
-        addRow(2, 1, c[8]);
-        addRow(1, 0, c[7]);
-        addRow(0, 2, c[6]);
+        addRow(2, 1, pose.shear[2]);
+        addRow(1, 0, pose.shear[1]);
+        addRow(0, 2, pose.shear[0]);
     }
     if (pose.mask & 0x38)
         for (int i = 0; i < 3; ++i)
-            for (int j = 0; j < 3; ++j) m[std::size_t(i * 4 + j)] *= c[3 + i];
+            for (int j = 0; j < 3; ++j) m[std::size_t(i * 4 + j)] *= pose.scale[i];
     if (pose.mask & 0xe00)
-        for (int j = 0; j < 3; ++j) m[std::size_t(12 + j)] = c[9 + j];
+        for (int j = 0; j < 3; ++j) m[std::size_t(12 + j)] = pose.translation[j];
     return m;
 }
 
-std::vector<Matrix> skinMatrices(const Skeleton& skeleton, const Animation& animation, unsigned frame) {
+Matrix localMatrix(const JointChannels& channels) { return poseMatrix(jointPose(channels)); }
+
+std::vector<Matrix> skinMatrices(const Skeleton& skeleton, const Animation& animation, double frame) {
     unsigned frames = animation.frames ? animation.frames : 1;
+    double wrapped = std::fmod(frame, double(frames));
+    if (wrapped < 0) wrapped += frames;
+    unsigned first = unsigned(wrapped) % frames, second = (first + 1) % frames;
+    float fraction = float(wrapped - std::floor(wrapped));
     std::vector<Matrix> world, skin;
     for (std::size_t i = 0; i < skeleton.joints.size(); ++i) {
         const Joint& joint = skeleton.joints[i];
         Matrix local = joint.local;
         if (i < animation.jointCurves.size()) {
-            JointChannels pose = decodeChannels(animation.jointCurves[i], frame % frames, animation.frames);
-            if (!pose.rawMatrix) local = localMatrix(pose);
+            JointChannels a = decodeChannels(animation.jointCurves[i], first, animation.frames);
+            if (fraction == 0) {
+                if (!a.rawMatrix) local = localMatrix(a);
+            } else {
+                JointChannels b = decodeChannels(animation.jointCurves[i], second, animation.frames);
+                if (!a.rawMatrix && !b.rawMatrix)
+                    local = poseMatrix(blendPoses({{jointPose(a), 1 - fraction}, {jointPose(b), fraction}}));
+            }
         }
         world.push_back(joint.parent < 0 ? local : multiply(local, world[std::size_t(joint.parent)]));
         skin.push_back(multiply(rigidInverse(joint.world), world.back()));
     }
     return skin;
 }
+
 void skinVertex(const Vertex& vertex, const std::vector<Matrix>& skin, float position[3], float normal[3]) {
     unsigned total = 0;
     for (auto weight : vertex.weights) total += weight;
