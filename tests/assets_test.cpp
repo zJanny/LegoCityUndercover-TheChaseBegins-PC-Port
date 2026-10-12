@@ -520,6 +520,19 @@ void localisation() {
     require(extended == std::vector<std::string>{"\xd0\xa0", "\xd1\x83", "x"}, "extended character list");
     require(decodeText("\x01" "20\x01" "21 \xe7\x01" "2;", extended) == "\xd0\xa0\xd1\x83 \xc3\xa7\x01" "2;",
             "text decode: escapes, Latin-1 to UTF-8, unknown escape kept");
+    Bytes tnf = {0x23, 0, 0x20, 2};
+    for (std::uint16_t i = 0; i < 3; ++i)
+        for (std::uint16_t v : {std::uint16_t(1 + i), std::uint16_t(2), std::uint16_t(3 * i), std::uint16_t(0)}) {
+            tnf.push_back(std::uint8_t(v));
+            tnf.push_back(std::uint8_t(v >> 8));
+        }
+    Font font = parseFont(tnf);
+    require(font.find(0x22) && font.find(0x22)->x == 6 && !font.find(0x23), "font glyph table");
+    auto placed = layoutText(font, "!\"\xd1\x83", extended);
+    require(placed.size() == 2 && placed[1].x == 3, "text layout (missing glyphs skipped)");
+    Bytes badFont = tnf;
+    badFont.push_back(0);
+    requireThrows([&] { parseFont(badFont); }, "font with wrong size accepted");
     Bytes cut(loc.begin(), loc.end() - 1);
     requireThrows([&] { parseLocalisation(cut); }, "truncated LOCA accepted");
 }

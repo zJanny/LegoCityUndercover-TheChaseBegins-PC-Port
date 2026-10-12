@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
         std::size_t models = 0, parts = 0, vertices = 0, triangles = 0;
         std::size_t levels = 0, objects = 0, placed = 0;
         std::size_t sounds = 0, samples = 0, loops = 0;
-        std::size_t locFiles = 0, locEntries = 0;
+        std::size_t locFiles = 0, locEntries = 0, fonts = 0, glyphs = 0;
         std::size_t navFiles = 0, navGrids = 0, navPaths = 0, navFlagged = 0;
         std::map<std::string, std::pair<std::size_t, std::size_t>> navCounts;
         std::vector<std::pair<std::string, NavRoom>> navDescriptors;
@@ -91,6 +91,10 @@ int main(int argc, char** argv) {
             if (endsWith(name, ".bfnanm")) {
                 curves += parseAnimation(data).jointCurves.size();
                 ++animations;
+            }
+            if (endsWith(name, ".tnf")) {
+                glyphs += parseFont(data).glyphs.size();
+                ++fonts;
             }
             if (endsWith(name, ".loc")) {
                 locEntries += parseLocalisation(data).size();
@@ -155,6 +159,7 @@ int main(int argc, char** argv) {
         if (skeletons != 376 || joints != 5280 || animations != 1954 || curves != 30081)
             throw std::runtime_error("skeleton/animation totals differ from the Python reference");
         // Reference: python3 tools/convert_loc.py --census artifacts/fib/files/localisation
+        if (fonts != 6 || glyphs != 1521) throw std::runtime_error("font totals differ from the Python reference");
         if (locFiles != 66 || locEntries != 25207)
             throw std::runtime_error("localisation totals differ from the Python reference");
         // Reference: FNV-1a over the UTF-8 of convert_loc.decode_text for every gametext_ru entry

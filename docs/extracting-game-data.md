@@ -72,6 +72,15 @@ python3 tools/convert_loc.py artifacts/fib/files/localisation/gametext_uk.loc \
 - `--extended` is needed for Russian and Polish letters.
 - Most entries are named by a number, because the original names are only stored as hashes. Add `--names artifacts/game/code.bin` to recover the names that appear in the program.
 
+To see how a text looks in one of the game's fonts:
+
+```sh
+python3 tools/convert_font.py artifacts/fib/files/fonts/frontendfont.tnf "Pause Menu" --output text.png \
+    --extended artifacts/fib/files/localisation/extended_chars_utf8.txt
+```
+
+This needs the font image next to the `.tnf` file, which is where `extract_fib.py` puts it.
+
 ## 7. Look at models
 
 `preview_model.py` draws a model into a PNG image. It is slow but needs no graphics card.

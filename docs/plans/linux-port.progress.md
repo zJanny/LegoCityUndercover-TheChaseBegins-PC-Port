@@ -603,3 +603,13 @@ Static analysis used local llvm-objdump (armv6k) over game.arm.elf. This is loca
 - Python decode_text (`--extended`); C++ extendedCharacters/decodeText (UTF-8 output).
 - Tests: synthetic escape/Latin-1/unknown-escape cases. Real data: FNV-1a of decoded gametext_ru = 0xc0c84ff0 in both implementations.
 - ctest PASS 7/7; Python PASS 54/54.
+
+### 2026-10-13T01:05+02:00 — Bitmap fonts (.tnf) decoded
+
+- Layout (data): u16 end code, u8 first code (0x20), u8 line height, then (end − first) records of (u16 width, u16 height, u16 x, u16 y) into <name>.btga.
+  - The file size equals 4 + 8 × count for all 6 fonts: debug 0x20–0x80, editorfont 0x20–0xff, frontendfont(-small, -large) 0x20–0x15f, pixelfont 0x20–0x10f; 1521 glyphs.
+  - The x positions step by width + 1 within an atlas row.
+- Codes ≥ 0x100 are the extended characters in extended_chars_utf8.txt order: "Сохранить и выйти" and Polish/quote/™ glyphs render correctly from frontendfont. So the escape 0x01 '2' c probably denotes code ('2' − 0x31) × 0x100 + (c − 0x30); the general rule for other first bytes is unknown.
+- In a test render, "ź" looked like "ż" (unclear at that size; possibly swapped atlas glyphs); unconfirmed.
+- Added tools/convert_font.py (draw text to PNG) and tests/test_convert_font.py (3); C++ parseFont/layoutText with synthetic and real-data (6 fonts / 1521 glyphs) checks.
+- ctest PASS 7/7; Python PASS 57/57.

@@ -62,4 +62,41 @@ std::string decodeText(const std::string& raw, const std::vector<std::string>& e
     }
     return out;
 }
+Font parseFont(const Bytes& data) {
+    if (data.size() < 4) throw std::runtime_error("truncated font header");
+    Font font;
+    std::uint16_t end = readU16(data, 0);
+    font.first = data[2];
+    font.lineHeight = data[3];
+    if (end <= font.first || data.size() != 4 + std::size_t(end - font.first) * 8)
+        throw std::runtime_error("font size does not match its code range");
+    for (std::size_t i = 0; i < std::size_t(end - font.first); ++i) {
+        std::size_t at = 4 + 8 * i;
+        font.glyphs.push_back({readU16(data, at), readU16(data, at + 2), readU16(data, at + 4), readU16(data, at + 6)});
+    }
+    return font;
+}
+
+std::vector<PlacedGlyph> layoutText(const Font& font, const std::string& utf8,
+                                    const std::vector<std::string>& extended) {
+    constexpr std::uint32_t extendedBase = 0x100;
+    std::vector<PlacedGlyph> out;
+    int x = 0;
+    for (std::size_t i = 0; i < utf8.size();) {
+        auto lead = static_cast<unsigned char>(utf8[i]);
+        std::size_t length = lead < 0x80 ? 1 : lead < 0xe0 ? 2 : lead < 0xf0 ? 3 : 4;
+        std::string character = utf8.substr(i, length);
+        i += length;
+        std::uint32_t code = lead;
+        if (length == 2 && lead < 0xc4)
+            code = ((lead & 0x1fu) << 6) | (static_cast<unsigned char>(character[1]) & 0x3fu);
+        for (std::size_t k = 0; k < extended.size(); ++k)
+            if (extended[k] == character) code = extendedBase + std::uint32_t(k);
+        if (const Glyph* glyph = font.find(code)) {
+            out.push_back({*glyph, x});
+            x += glyph->width + 1;
+        }
+    }
+    return out;
+}
 } // namespace chase::assets

@@ -270,6 +270,29 @@ std::vector<std::string> extendedCharacters(const Bytes& utf8);
 // Raw .loc text to UTF-8: Latin-1 bytes, and 0x01 '2' c -> extended[c - 0x30].
 std::string decodeText(const std::string& raw, const std::vector<std::string>& extended);
 
+// .tnf bitmap font: one (width, height, x, y) atlas rectangle per code first..end-1.
+// Codes 0x100 and up are the extended characters in extended_chars_utf8.txt order.
+struct Glyph {
+    std::uint16_t width = 0, height = 0, x = 0, y = 0;
+};
+struct Font {
+    std::uint16_t first = 0;
+    std::uint8_t lineHeight = 0;
+    std::vector<Glyph> glyphs;
+    const Glyph* find(std::uint32_t code) const {
+        return code >= first && code - first < glyphs.size() ? &glyphs[code - first] : nullptr;
+    }
+};
+Font parseFont(const Bytes& data);
+struct PlacedGlyph {
+    Glyph glyph;
+    int x = 0;
+};
+// Glyphs for UTF-8 text laid out left to right with one pixel between them; characters
+// without a glyph are skipped.
+std::vector<PlacedGlyph> layoutText(const Font& font, const std::string& utf8,
+                                    const std::vector<std::string>& extended);
+
 std::uint32_t readU32(const Bytes& data, std::size_t offset);
 std::uint16_t readU16(const Bytes& data, std::size_t offset);
 } // namespace chase::assets
