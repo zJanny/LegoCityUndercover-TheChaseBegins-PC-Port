@@ -17,6 +17,13 @@ configure_file(config/controls.cfg config/controls.cfg COPYONLY)
 add_library(chase_assets src/assets/fuse.cpp src/assets/pooled.cpp src/assets/texture.cpp src/assets/model.cpp)
 target_include_directories(chase_assets PUBLIC src)
 target_compile_options(chase_assets PRIVATE -Wall -Wextra -Wpedantic)
+# Development model viewer (plan S4b); built when libepoxy is available.
+pkg_check_modules(EPOXY IMPORTED_TARGET epoxy)
+if(EPOXY_FOUND)
+  add_executable(chase-viewer src/viewer.cpp)
+  target_link_libraries(chase-viewer PRIVATE chase_assets chase_input PkgConfig::SDL2 PkgConfig::EPOXY)
+  target_compile_options(chase-viewer PRIVATE -Wall -Wextra -Wpedantic)
+endif()
 set(CHASE_ROMFS_DIR "${CMAKE_SOURCE_DIR}/artifacts/romfs/romfs" CACHE PATH
     "Extracted RomFS directory for the opt-in real-data asset test")
 include(CTest)
@@ -37,4 +44,13 @@ if(BUILD_TESTING)
   add_test(NAME assets-real-data COMMAND assets-real-test
     "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
   set_tests_properties(assets-real-data PROPERTIES SKIP_RETURN_CODE 77)
+  if(TARGET chase-viewer AND EXISTS "${CHASE_ROMFS_DIR}/lego_city3ds.fib")
+    # Opt-in: renders one model offscreen (SDL offscreen driver + EGL) and saves a screenshot.
+    add_test(NAME viewer-real-smoke COMMAND chase-viewer
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --screenshot viewer-smoke.bmp
+      csdata/models/1_1_e/trolley/trolley.bfnmdl)
+    set_tests_properties(viewer-real-smoke PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen"
+      PASS_REGULAR_EXPRESSION "850 triangles, 0 missing textures.*saved viewer-smoke.bmp")
+  endif()
 endif()

@@ -37,8 +37,8 @@ Commits authorized by CLAUDE.md "User specified workflows" (commit at logical st
 | S2 | Native accessible input laboratory | COMPLETE | R2/R3; warning-free build, CTest 2/2 |
 | S3 | Focused ARM analysis | IN_PROGRESS | R1; startup, SVC stubs, service-handle helper, services, paths recorded; game frame function still open |
 | S4 | Recover gameplay and replace platform | IN_PROGRESS | R4; split into S4a–S4f (plan rev 3) |
-| S4a | Native asset runtime (C++) | NOT_STARTED | Python reference tools done: RomFS, FUSE, textures, audio, pooled resources, models |
-| S4b | Level viewer (SDL2 + GL) | NOT_STARTED | needs S4a |
+| S4a | Native asset runtime (C++) | IN_PROGRESS | FUSE, pooled, textures, models done + CTest; CWAV pending |
+| S4b | Level viewer (SDL2 + GL) | COMPLETE | chase-viewer; offscreen smoke test; placement awaits S4c |
 | S4c | Level composition (.blvl) | NOT_STARTED | pooled layout known; loader not traced |
 | S4d | Audio playback | NOT_STARTED | WAV decode done |
 | S4e | Gameplay | NOT_STARTED | needs per-subsystem RE plans |
@@ -328,4 +328,17 @@ Static analysis used local llvm-objdump (armv6k) over game.arm.elf. This is loca
 - assets-core adds a synthetic model (mirroring the Python fixture), an unconsumed-block rejection and the stride table. assets-real-data now parses all models and requires the Python totals.
 - `cmake --build build` — 0 warnings. `ctest --test-dir build --output-on-failure` — PASS 4/4 (assets-real-data 10.2 s): 3113 models / 16122 parts / 7211595 vertices / 4603391 triangles, all equal to the Python reference.
 - Remaining in S4a: CWAV decode in C++ (needed for S4d, not for the S4b viewer).
+
+### 2026-10-12T17:00+02:00 — S4b: development model viewer
+
+- Added src/viewer.cpp (chase-viewer). It uses SDL2 with a GL 3.3 core context through libepoxy 1.x (pkg-config `epoxy`); CMake builds it only when epoxy is found.
+- It loads archive paths given on the command line through chase_assets, uploads textures and draws a textured, vertex-coloured, normal-shaded triangle list with alpha discard below 0.25.
+- Textures are looked up by stem, preferring `<model dir>/textures/`. `--exclude` skips parts by texture name, e.g. the sky box.
+- The camera uses the input core and controls.cfg; focus loss resets input. `--screenshot` saves a BMP after the second frame.
+- Added FuseArchive::names().
+- Headless verification with `SDL_VIDEODRIVER=offscreen` (EGL):
+  - csdata/models/1_1_e/trolley: 850 triangles, 0 missing textures. The image shows the trolley, donut crate and label texture, matching the Python preview.
+  - lvl_00_policestation (4 models, `--exclude sky`): 48016 triangles, 0 missing textures. Terrain, plaza and building pieces line up in world space. Placed props and buildings are absent, which is expected until .blvl is decoded (S4c).
+- CTest `viewer-real-smoke` is registered only when the extracted RomFS exists at configure time.
+- `cmake --build build` — 0 warnings. `ctest --test-dir build --output-on-failure` — PASS 5/5.
 - Named in REA with a _candidate suffix (ev_d6ee55638e4b4ce712665d235d1d66a9d8c1add97c17e5f210b671225ddb1b28): srvGetServiceHandle_candidate, strlen_candidate, dspInit_candidate, fsUserInit_candidate, ndmInit_candidate. Hopper does not define procedures at 0x109fc0, 0x10f8e4 or 0x11006c.

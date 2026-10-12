@@ -42,6 +42,10 @@ ctest --test-dir build -R input-core          # pure input-core unit test
 ctest --test-dir build -R input-sdl-smoke     # SDL integration, runs with SDL_VIDEODRIVER=dummy
 ctest --test-dir build -R assets-core         # native asset runtime, synthetic fixtures
 ctest --test-dir build -R assets-real-data    # opt-in: needs artifacts/romfs (skips with code 77 otherwise)
+ctest --test-dir build -R viewer-real-smoke   # registered only if artifacts/romfs exists at configure time
+
+# Development model viewer (needs libepoxy; not gameplay). Offscreen screenshot for headless checks:
+SDL_VIDEODRIVER=offscreen build/chase-viewer --screenshot out.bmp models/lvl_00_policestation/room1.bfnmdl --exclude sky
 
 # Run the lab (looks for config/controls.cfg relative to cwd; CMake copies it into build/)
 cd build && ./chase-input-lab [--config PATH] [--smoke-test]

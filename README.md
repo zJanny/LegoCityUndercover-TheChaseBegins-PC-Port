@@ -87,6 +87,25 @@ python3 tools/preview_model.py path/to/model.bfnmdl --assets artifacts/fib/files
 
 If you have extracted the RomFS to `artifacts/romfs`, `assets-real-data` also decodes every archive entry and texture. It cross-checks texture checksums against the Python decoder. Without the extracted data, the test is reported as skipped. Set `-DCHASE_ROMFS_DIR=...` to point it elsewhere.
 
+## Development model viewer
+
+`chase-viewer` loads `.bfnmdl` models straight from the archive and draws them with their textures. It uses OpenGL 3.3 through libepoxy and is only built if libepoxy is found. It is a tool for checking decoded assets. It is **not** the game: there is no gameplay, no level placement (`.blvl` isn't decoded yet) and no animation.
+
+```sh
+build/chase-viewer models/lvl_00_policestation/room1.bfnmdl models/lvl_00_policestation/room3.bfnmdl --exclude sky
+```
+
+The viewer uses the same `config/controls.cfg` bindings as the lab:
+- **D-pad:** move.
+- **L / R:** lower / raise.
+- **X / Y:** turn.
+- **Left-drag:** look around.
+- **Escape:** quit.
+
+Other options:
+- **`--screenshot OUT.bmp`:** renders one frame, then exits. With `SDL_VIDEODRIVER=offscreen` this works without a display.
+- **`--fib` / `--names`:** default to `artifacts/romfs/romfs/`.
+
 ## Build and run the input laboratory
 
 Requires CMake ≥ 3.16, a C++17 compiler and SDL2 (found through pkg-config).

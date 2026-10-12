@@ -33,6 +33,8 @@ public:
     void loadNames(const std::string& csvPath);
     // Case-insensitive lookup by archive path; nullptr when unknown.
     const FuseEntry* find(const std::string& name) const;
+    // Lower-case archive paths known from the CSV index.
+    std::vector<std::string> names() const;
 private:
     Bytes readAt(std::uint64_t offset, std::size_t size);
     std::ifstream file_;

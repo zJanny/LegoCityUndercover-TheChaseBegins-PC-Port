@@ -141,6 +141,13 @@ void FuseArchive::loadNames(const std::string& csvPath) {
     }
 }
 
+std::vector<std::string> FuseArchive::names() const {
+    std::vector<std::string> out;
+    out.reserve(names_.size());
+    for (const auto& [name, crc] : names_) out.push_back(name);
+    return out;
+}
+
 const FuseEntry* FuseArchive::find(const std::string& name) const {
     auto named = names_.find(lower(name));
     if (named == names_.end()) return nullptr;
