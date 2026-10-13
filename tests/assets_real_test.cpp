@@ -317,17 +317,19 @@ int main(int argc, char** argv) {
         }
         // Reference: tools/tt_resource.py parse of particles/particledefs.bprt: -15 words 10, 25, 97,
         // 298, 0, 0x401503da; 97 -16 names; one -14 block of 113240 bytes at 0x7fc whose FNV-1a is
-        // 0x57544492. All 298 words at record +0x2c equal the PJW hash of a texture name.
+        // 0x57544492. All 298 words at record +0x2c equal the PJW hash of a texture name. Colour key
+        // counts at +0x172 (Python census): 2 x 140, 3 x 93, 4 x 45, 5 x 15, 6 x 3, 7 x 2 = 846 keys.
         {
             ParticleDefs defs = parseParticleDefs(archive.read(*archive.find("particles/particledefs.bprt")));
             std::uint32_t sum = 0x811c9dc5;
-            std::size_t resolved = 0, inLimits = 0;
+            std::size_t resolved = 0, inLimits = 0, colourKeys = 0;
             for (const auto& def : defs.defs) {
                 resolved += def.texture >= 0;
-                inLimits += def.particles >= 1 && def.particles <= defs.maxParticles && def.spawnMode != 0;
+                inLimits += def.particles >= 1 && def.particles <= defs.maxParticles && def.atlasColumns != 0;
+                colourKeys += def.colourKeys.size();
                 for (std::uint8_t b : def.raw) sum = (sum ^ b) * 0x01000193;
             }
-            if (defs.maxEmitters != 10 || defs.maxParticles != 25 || inLimits != 298 || defs.unknown4 != 0 || defs.textures.size() != 97 ||
+            if (defs.maxEmitters != 10 || defs.maxParticles != 25 || inLimits != 298 || colourKeys != 846 || defs.unknown4 != 0 || defs.textures.size() != 97 ||
                 defs.textures[1] != "cloud" || defs.defs.size() != 298 || resolved != 298 || sum != 0x57544492 ||
                 std::fabs(defs.scale - 2.32836f) > 1e-5f)
                 throw std::runtime_error("particle definitions differ from the pooled-resource reference");

@@ -64,7 +64,20 @@ ParticleDefs parseParticleDefs(const Bytes& data) {
         def.flags = readU32(data, at + 0x168);
         def.seed = readU32(data, at + 0x84);
         def.particles = data[at + 0x175];
-        def.spawnMode = data[at + 0x178];
+        def.startAlpha = data[at + 0x134];
+        def.atlasColumns = data[at + 0x178];
+        def.atlasRows = data[at + 0x179];
+        def.frameMode = data[at + 0x176];
+        def.flipModes = data[at + 0x17a];
+        std::uint8_t keys = data[at + 0x172];
+        if (keys > kMaxColourKeys) throw std::runtime_error("particle defs: too many colour keys");
+        for (std::uint8_t k = 0; k < keys; ++k) {
+            ColourKey key;
+            std::uint32_t timeBits = readU32(data, at + 0xf8 + 8u * k);
+            std::memcpy(&key.time, &timeBits, sizeof key.time);
+            std::memcpy(key.rgba.data(), data.data() + at + 0xfc + 8u * k, key.rgba.size());
+            def.colourKeys.push_back(key);
+        }
         for (std::size_t t = 0; t < defs.textures.size(); ++t)
             if (pjwHash(defs.textures[t]) == def.textureHash) def.texture = int(t);
         defs.defs.push_back(def);

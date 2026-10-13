@@ -464,16 +464,25 @@ std::uint32_t pjwHash(const std::string& text);
 
 // particles/particledefs.bprt, loader 0x27d71c. Textures load as Particles/<name>.tga
 // (0x271e6c). Spawners address definitions by index (e.g. ExplosionParticleDef, 0x163f00).
-// The record size is inferred: the data block is exactly count x 380 bytes.
+// Records are 0x17c bytes (0x23de24). Field use from spawner 0x216244 and particle init 0x222550.
 constexpr std::size_t kParticleDefSize = 380;
-// Field use from spawner 0x216244.
+constexpr std::size_t kMaxColourKeys = 7;
+struct ColourKey {
+    float time = 0;
+    std::array<std::uint8_t, 4> rgba{};  // alpha comes from ParticleDef::startAlpha instead
+};
 struct ParticleDef {
     std::uint32_t textureHash = 0;  // +0x2c, pjwHash of a texture name
     int texture = -1;               // index into ParticleDefs::textures, -1 if no name matches
-    std::uint32_t flags = 0;        // +0x168; bit 3 negates the spawn z
+    std::uint32_t flags = 0;        // +0x168; bit 2 random gradient colour, bit 3 planar (z = 0)
     std::uint32_t seed = 0;         // +0x84; 0 = random
     std::uint8_t particles = 0;     // +0x175, clamped below ParticleDefs::maxParticles
-    std::uint8_t spawnMode = 0;     // +0x178; 0 = never spawns, other values unknown
+    std::uint8_t startAlpha = 0;    // +0x134
+    std::uint8_t atlasColumns = 0;  // +0x178; the spawner refuses 0
+    std::uint8_t atlasRows = 0;     // +0x179
+    std::uint8_t frameMode = 0;     // +0x176: 0 whole texture, 1 random cell, 2 first cell, 3 next cell
+    std::uint8_t flipModes = 0;     // +0x17a: low nibble U, high nibble V; 1 random, 2 alternate, 3 always
+    std::vector<ColourKey> colourKeys;  // +0xf8, 8 bytes each, count at +0x172
     std::array<std::uint8_t, kParticleDefSize> raw{};
 };
 struct ParticleDefs {
