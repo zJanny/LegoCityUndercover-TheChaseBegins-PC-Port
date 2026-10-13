@@ -617,9 +617,24 @@ def stop_session(home):
     print('stopped emulator pid %d port %d' % (session['pid'], session['port']))
 
 
-def free_display():
+def lock_owner_alive(lock):
+    try:
+        os.kill(int(lock.read_text().strip()), 0)
+    except (ValueError, ProcessLookupError):
+        return False
+    except PermissionError:
+        return True
+    return True
+
+
+def free_display(root=Path('/tmp')):
     for number in range(90, 200):
-        if not Path('/tmp/.X%d-lock' % number).exists():
+        lock = root / ('.X%d-lock' % number)
+        if not lock.exists():
+            return ':%d' % number
+        if not lock_owner_alive(lock):
+            lock.unlink(missing_ok=True)
+            (root / '.X11-unix' / ('X%d' % number)).unlink(missing_ok=True)
             return ':%d' % number
     raise SystemExit('no free X display number')
 

@@ -49,6 +49,21 @@ class LaunchedTest(unittest.TestCase):
             oracle.GdbRemote(1, timeout=30, alive=dead)
 
 
+class FreeDisplayTest(unittest.TestCase):
+    def test_lock_of_a_dead_process_is_reused_and_cleaned(self):
+        root = Path(tempfile.mkdtemp())
+        (root / '.X11-unix').mkdir()
+        (root / '.X90-lock').write_text('%10d\n' % os.getpid())
+        dead = subprocess.Popen([sys.executable, '-c', 'pass'])
+        dead.wait(timeout=30)
+        (root / '.X91-lock').write_text('%10d\n' % dead.pid)
+        (root / '.X11-unix' / 'X91').write_text('')
+        self.assertEqual(oracle.free_display(root), ':91')
+        self.assertFalse((root / '.X91-lock').exists())
+        self.assertFalse((root / '.X11-unix' / 'X91').exists())
+        self.assertTrue((root / '.X90-lock').exists())
+
+
 class CrashDescriptionTest(unittest.TestCase):
     def home_with_log(self, text):
         home = Path(tempfile.mkdtemp())
