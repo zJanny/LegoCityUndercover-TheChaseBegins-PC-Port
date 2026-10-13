@@ -42,6 +42,7 @@ Single C++ tests, with `ctest --test-dir build -R <name>`:
 | `assets-core` | Asset runtime, synthetic fixtures |
 | `assets-real-data` | Needs `artifacts/romfs`; skips with code 77 otherwise |
 | `viewer-real-smoke` | Registered only if `artifacts/romfs` existed at configure time |
+| `game-real-smoke` | Registered only if `artifacts/romfs` existed at configure time; needs libepoxy |
 | `audio-mixer` | Mixer core, no SDL |
 | `runtime-core` | Game runtime core (frame scheduler), no SDL |
 | `save-core` | Save file checks, synthetic data, no SDL |
@@ -64,6 +65,22 @@ cd build && ./chase-input-lab [--config PATH] [--smoke-test]
 - `chase-soundtest` plays decoded sounds, by file name or by sound number (`--id`). Use `SDL_AUDIODRIVER=dummy` for headless runs. See [Sound test](sound-test.md).
 - `chase-fmv` needs the FFmpeg libraries. See [Video player](fmv-player.md).
 - `chase-input-lab` looks for `config/controls.cfg` relative to the current folder. CMake copies it into `build/`. See [Controls](controls.md).
+
+## Development runtime
+
+Needs libepoxy. This is **not the playable game**. It shows a level and runs the recovered frame timing and pad input, but it has no gameplay. The camera is a stand-in for testing the input.
+
+```sh
+build/chase-game
+build/chase-game --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl
+SDL_VIDEODRIVER=offscreen build/chase-game --screenshot out.bmp --frames 2
+```
+
+- Options: `--fib`, `--names`, `--config` (as in the viewer), `--level`, `--screenshot`, `--frames`.
+- The default level is the police station. Run it from the repository folder so the default paths work.
+- Move with the D-pad keys (circle pad), `Z`/`C` lower and raise, `E`/`R` turn. `Escape` quits.
+- It prints one line per second: updates per second, the last time step and the circle pad values.
+- `--screenshot` saves the picture after `--frames` updates (default 2) and exits.
 
 ## Model viewer
 

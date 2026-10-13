@@ -11,6 +11,7 @@
 - Showing models, levels, animated characters and in-engine cutscenes in the [model viewer](model-viewer.md).
 - Playing sounds in the [sound test](sound-test.md).
 - Playing the cutscene videos with subtitles in the [video player](fmv-player.md).
+- Running a level in the [development runtime](commands.md#development-runtime). It only shows the level and moves a test camera. It is not gameplay.
 - Testing keyboard and mouse controls in the [input laboratory](controls.md).
 
 ## Not recovered yet
