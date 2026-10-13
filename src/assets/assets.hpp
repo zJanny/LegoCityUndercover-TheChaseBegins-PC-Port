@@ -160,7 +160,9 @@ struct Model {
     std::vector<CollisionBox> collisionBoxes;
     std::vector<std::string> nodeNames;
     std::vector<int> nodeMesh;                   // mesh index of each node (i16 at node record +0x10), -1 for none
+    std::vector<std::array<float, 3>> nodePivot;  // float3 at node record +4: the point a door node turns about (0x20a2f4)
     std::vector<std::uint8_t> nodeExtra;         // block at model+0x14
+    std::vector<std::array<float, 16>> nodeMatrices;  // block at model+0x20: 0x40 bytes per node (row vectors, translation last), empty when the model has none
     std::vector<std::uint8_t> block08;           // block at model+0x08
     std::vector<ModelMesh> meshes;
     std::vector<std::string> textures;  // model-level texture list (-16 pool)
@@ -220,9 +222,23 @@ struct LevelBound {
     float centre[3] = {0, 0, 0};
     float half[3] = {0, 0, 0};
 };
+// Type 4 parameter (object reference): the block holds the name hash of the referenced instance at +4, 0 when unset.
+std::uint32_t objectReferenceHash(const LevelParam& param);
+// Section +0x18 script of a level: a name hash and its calls in order. A call is a native function or one of the
+// script words "?" (if), "!?" (else), "?!" (else if), "??" (end if), "=" (assign), "=+" (arithmetic assign),
+// "CallScript" and "SpawnScript" (executor 0x234204, docs/re/scripts.md). Arguments are the strings of the file.
+struct ScriptCall {
+    std::string function;
+    std::vector<std::string> arguments;
+};
+struct LevelScript {
+    std::uint32_t nameHash = 0;
+    std::vector<ScriptCall> calls;
+};
 struct Level {
     std::vector<LevelParam> defaults;  // section +0x10: class default parameters (char_*.blvl carry the appearance)
     std::vector<LevelParam> classParams;  // section +0x14, searched after +0x10 by lookup 0x217080
+    std::vector<LevelScript> scripts;
     std::vector<LevelObject> objects;
     std::vector<LevelBound> bounds;
     std::vector<NavRoom> navRooms;
@@ -243,6 +259,8 @@ struct Placement {
 std::vector<Placement> placements(const Level& level);
 // Class .blvl of an object (levels/<class name>.blvl), or nullptr when the archive has none.
 using ClassLookup = std::function<const Level*(const std::string&)>;
+// Parses the class files of the archive on demand and keeps them; an unknown class gives an empty Level. The lookup must not outlive `archive`.
+ClassLookup archiveClassLookup(FuseArchive& archive);
 // Objects that have a model, as the game resolves it (lookup 0x217080 in the model loader 0x2442b4):
 // "meshname", "initialposition" and "initialorientation" exist only when the class file lists them (+0x10
 // or +0x14). A listed parameter takes the instance value when the object sets it, else the class value.

@@ -3,6 +3,7 @@
 // Needs the extracted RomFS and the local trace directories; exits with 77 (skipped) when one is missing.
 #include "assets/assets.hpp"
 #include "runtime/collision.hpp"
+#include "runtime/level_start.hpp"
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -191,12 +192,16 @@ int main(int argc, char** argv) {
         const chase::assets::FuseEntry* levelEntry = archive.find(kLevelFile);
         require(levelEntry != nullptr, std::string("not in archive: ") + kLevelFile);
         const CollisionWorld staticWorld = world;
-        const std::vector<chase::assets::ObjectCollision> objects =
-            chase::assets::objectCollisions(archive, chase::assets::parseLevel(archive.read(*levelEntry)));
+        const chase::assets::Level level = chase::assets::parseLevel(archive.read(*levelEntry));
+        const chase::assets::PlacedObjectState startState = chase::runtime::levelStartState(level, chase::assets::archiveClassLookup(archive));
+        const std::vector<chase::assets::ObjectCollision> objects = chase::assets::objectCollisions(archive, level, startState);
         for (const auto& object : objects) world.addObject(object);
         {
             // Totals of the replica's registration for the lvl_01 street objects (manual comparison with the grid read from the original at
             // gameplay-start, docs/re/collision.md): 58 lamp posts register their collision item, 33 construction barriers a box.
+            // 824 entries: the 896 objects that would register, less the 72 disabled by the level start state (docs/re/scripts.md;
+            // the grid read gives 60 of them entity flag bit 0, 4 no grid entry, and 8 are co-located with an enabled twin whose entity
+            // has bit 0 clear while the other has it set).
             std::size_t meshes = 0, lamps = 0, barriers = 0;
             for (const auto& object : objects) {
                 meshes += object.mesh != nullptr;
@@ -210,7 +215,19 @@ int main(int argc, char** argv) {
                             "construction barrier box changed");
                 }
             }
-            require(objects.size() == 834 && meshes == 415 && lamps == 58 && barriers == 33, "placed object totals changed: " + std::to_string(objects.size()) + " " + std::to_string(meshes) + " " + std::to_string(lamps) + " " + std::to_string(barriers));
+            // Police_Door_02: entity +0x60 / +0x6c read at gameplay-start (Azahar, entity 0x08dbcb90). The x centre is the mesh centre -0.0698476 moved
+            // by the node matrix translation 0.0698476 (model block +0x20), which leaves 2^-24.
+            bool doorFound = false;
+            for (const auto& object : objects) {
+                if (object.instance != "Police_Door_02") continue;
+                doorFound = true;
+                require(std::fabs(object.centre[0] - 5.96046e-8f) < 1e-9f && std::fabs(object.centre[1] - 1.811122f) < 1e-6f &&
+                            std::fabs(object.centre[2] - 1.13249e-5f) < 1e-9f && std::fabs(object.half[0] - 0.759853f) < 1e-6f &&
+                            std::fabs(object.half[1] - 1.811122f) < 1e-6f && std::fabs(object.half[2] - 0.05f) < 1e-6f,
+                        "Police_Door_02 box changed");
+            }
+            require(doorFound, "Police_Door_02 not registered");
+            require(objects.size() == 824 && meshes == 414 && lamps == 58 && barriers == 33, "placed object totals changed: " + std::to_string(objects.size()) + " " + std::to_string(meshes) + " " + std::to_string(lamps) + " " + std::to_string(barriers));
         }
 
         GroundTotals ground;

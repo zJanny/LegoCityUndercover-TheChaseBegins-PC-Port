@@ -6,6 +6,7 @@
 // Needs the extracted RomFS and the .mem files; exits with 77 (skipped) when one is missing.
 #include "assets/assets.hpp"
 #include "runtime/camera_sweep.hpp"
+#include "runtime/level_start.hpp"
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -76,7 +77,8 @@ int main(int argc, char** argv) {
         const chase::assets::FuseEntry* levelEntry = archive.find(kLevelFile);
         require(levelEntry != nullptr, std::string("not in archive: ") + kLevelFile);
         const chase::assets::Level level = chase::assets::parseLevel(archive.read(*levelEntry));
-        const std::vector<chase::assets::ObjectCollision> objects = chase::assets::objectCollisions(archive, level);
+        const chase::assets::PlacedObjectState startState = chase::runtime::levelStartState(level, chase::assets::archiveClassLookup(archive));
+        const std::vector<chase::assets::ObjectCollision> objects = chase::assets::objectCollisions(archive, level, startState);
         for (const auto& object : objects) world.addObject(object);
 
         std::size_t frames = 0, equal = 0, withObstacles = 0;

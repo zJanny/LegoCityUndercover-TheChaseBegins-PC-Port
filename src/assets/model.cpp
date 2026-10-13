@@ -249,13 +249,20 @@ Model parseModel(const Bytes& data) {
     for (std::size_t i = 0; i < nodes; ++i) {
         model.nodeNames.push_back(cString(r.next()));
         model.nodeMesh.push_back(std::int16_t(readU16(nodeBlock, i * 0x18 + 0x10)));
+        model.nodePivot.push_back({readF32(nodeBlock, i * 0x18 + 4), readF32(nodeBlock, i * 0x18 + 8), readF32(nodeBlock, i * 0x18 + 12)});
         if (readU32(nodeBlock, i * 0x18 + 0x14)) r.skip();
     }
     Bytes meshBlock = r.next();                          // +0x10
     requireSize(meshBlock, meshes * 0x24, "meshes");
     for (std::size_t i = 0; i < meshes; ++i) r.skip(); // parts arrays
     model.nodeExtra = r.next();                          // +0x14
-    if (readU32(header, 0x20)) r.skip();
+    if (readU32(header, 0x20)) {
+        const Bytes matrices = r.next();
+        requireSize(matrices, nodes * 0x40, "node matrices");
+        model.nodeMatrices.resize(nodes);
+        for (std::size_t i = 0; i < nodes; ++i)
+            for (std::size_t k = 0; k < 16; ++k) model.nodeMatrices[i][k] = readF32(matrices, i * 0x40 + k * 4);
+    }
     r.cursor.pop();
     if (readU32(header, 0x1c)) {
         r.cursor.push(Pool::M15);

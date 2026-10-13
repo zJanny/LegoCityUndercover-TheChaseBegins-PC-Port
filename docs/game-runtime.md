@@ -61,6 +61,7 @@ What is not like the original yet:
 - The level's other people stand where the level puts them, with their own heads and clothes. They do not move, talk or react.
 - The character jumps, falls off ledges and lands as in the original, including the short pause after landing.
 - The character makes the sounds of the original: footsteps while walking, running and sprinting, a sound when jumping, and landing sounds that depend on how far the character fell. Picking up a stud plays its coin sound. Sounds come from the place where they happen and are quieter and panned to the side as in the original. See [Sound](#sound).
+- Doors that open by themselves swing open when the character comes close, wait while he stands there, and close again, with the same timing as the original. This works for the hinged doors and the sliding doors of the police station. Doors that the story opens (for example the front doors in the street) stay shut, because the story is not in the program yet.
 - The coins (studs) of the level spin where the level puts them. Walk close to one and it is picked up. After one second the stud counter goes up (silver 10, gold 100, blue 1000, purple 10000). The program prints the counter at the end of a `--script` run.
 
 ## Sound
@@ -73,8 +74,8 @@ What is not like the original yet:
 
 ## What does not work yet
 
-- Only some kinds of objects block the character and the camera so far. Parked cars, people, animals and some special objects do not. A few objects that the original switches off at the start (for example mission items) are switched off from a fixed list that was read from the original, not from its scripts.
-- Objects stay as they are at the start of the level. Nothing breaks, moves or opens, so blocked doors stay blocked.
+- Only some kinds of objects block the character and the camera so far. Parked cars, people, animals and some special objects do not. Objects that the original switches off at the start (mission items, build-it parts and their results) are switched off by the same rules as in the original, but nothing switches them on later.
+- Objects stay as they are at the start of the level. Nothing breaks or moves, and doors open only when the character comes close. An open door keeps the same blocking box as a closed one here. One measurement in the original differed, and the reason is not known yet.
 - When the camera is stuck behind a wall for a longer time, the original places it again. That is not done here.
 - Other characters and vehicles do not block the character.
 - Animals and the eight line-up characters of the police station are not shown. Their look is not worked out yet.

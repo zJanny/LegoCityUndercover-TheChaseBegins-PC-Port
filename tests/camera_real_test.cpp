@@ -4,6 +4,7 @@
 // (skipped) when it is missing.
 #include "assets/assets.hpp"
 #include "runtime/follow_camera.hpp"
+#include "runtime/level_start.hpp"
 #include "runtime/pad.hpp"
 #include <algorithm>
 #include <cmath>
@@ -158,8 +159,9 @@ int main(int argc, char** argv) {
             for (const auto& item : chase::assets::parseModel(archive.read(*entry)).collision) world.add(item);
             const chase::assets::FuseEntry* levelEntry = archive.find(kLevelFile);
             if (!levelEntry) throw std::runtime_error(std::string("not in archive: ") + kLevelFile);
-            for (const auto& object : chase::assets::objectCollisions(archive, chase::assets::parseLevel(archive.read(*levelEntry))))
-                world.addObject(object);
+            const chase::assets::Level level = chase::assets::parseLevel(archive.read(*levelEntry));
+            const chase::assets::PlacedObjectState startState = chase::runtime::levelStartState(level, chase::assets::archiveClassLookup(archive));
+            for (const auto& object : chase::assets::objectCollisions(archive, level, startState)) world.addObject(object);
             // Wall traces (tools/oracle/camwall-circle.txt, camwall-east.txt; CSV from tools/export_camera_trace.py --extra 0x330).
             // Every row is replayed: level collision and the placed objects (lamp posts, doors, plaques).
             struct WallTrace {

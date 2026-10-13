@@ -32,6 +32,8 @@ A scenario file drives the run, one command per line ('#' starts a comment):
                         at a ledge without walking there; the node's parent has an identity transform at gameplay-start)
   dt MIN MAX            write the scheduler's dt limits (floats at C+0x10 and C+0x14); MIN == MAX fixes the step
   read ADDR LEN         print LEN bytes at ADDR as hex words
+  poke ADDR HEXBYTES    write the bytes (hex digits, e.g. 0200) at ADDR through the stub (a measuring aid, for example to
+                        send an object a request that its script would send; the write clears the instruction cache)
   sample SECONDS INTERVAL NAME
                         free-run for SECONDS (no breakpoints) and sample the game clock, vblank counters and the
                         player position every INTERVAL seconds through RPC into NAME.csv (needs --rpc)
@@ -1170,6 +1172,8 @@ def run_scenario(oracle, lines):
             oracle.teleport(float(args[0]), float(args[1]), float(args[2]))
         elif op == 'report':
             oracle.report()
+        elif op == 'poke':
+            oracle.mem.write(int(args[0], 0), bytes.fromhex(args[1]))
         elif op == 'read':
             data = oracle.mem.read(int(args[0], 0), int(args[1], 0))
             for i in range(0, len(data), 16):

@@ -5,6 +5,7 @@
 #include <cmath>
 #include <cstring>
 #include <map>
+#include <memory>
 #include <stdexcept>
 
 namespace chase::assets {
@@ -63,6 +64,11 @@ std::uint32_t nameHash(const std::string& name) {
     return ~crc;
 }
 
+std::uint32_t objectReferenceHash(const LevelParam& param) {
+    if (param.type != 4 || param.blocks.size() != 1 || param.blocks[0].size() < 8) return 0;
+    return readU32(param.blocks[0], 4);
+}
+
 Level parseLevel(const Bytes& data) {
     Reader r(data);
     r.cursor.push(Pool::M15);
@@ -75,12 +81,27 @@ Level parseLevel(const Bytes& data) {
     level.classParams = readParams(r, r.next(), n14);
     Bytes s18 = r.next();
     need(s18, n18 * 0x1c);
+    level.scripts.resize(n18);
     for (std::size_t i = 0; i < n18; ++i) {
+        LevelScript& script = level.scripts[i];
+        script.nameHash = readU32(s18, i * 0x1c);
+        const Bytes calls = r.next();
         r.skip();
-        r.skip();
-        for (std::uint32_t k = 0; k < readU32(s18, i * 0x1c + 0x14); ++k) r.skip();
+        const std::uint16_t callCount = readU16(s18, i * 0x1c + 6);
+        need(calls, std::size_t(callCount) * 8);
+        std::vector<std::string> arguments;
+        for (std::uint32_t k = 0; k < readU32(s18, i * 0x1c + 0x14); ++k) arguments.push_back(cString(r.next()));
         r.cursor.push(Pool::M16);
-        for (std::uint16_t k = 0; k < readU16(s18, i * 0x1c + 6); ++k) r.skip();
+        std::size_t used = 0;
+        for (std::uint16_t k = 0; k < callCount; ++k) {
+            ScriptCall call;
+            call.function = cString(r.next());
+            const std::size_t count = readU16(calls, std::size_t(k) * 8 + 2);
+            if (used + count > arguments.size()) throw std::runtime_error("script call arguments out of range");
+            call.arguments.assign(arguments.begin() + std::ptrdiff_t(used), arguments.begin() + std::ptrdiff_t(used + count));
+            used += count;
+            script.calls.push_back(std::move(call));
+        }
         r.cursor.pop();
     }
     r.skip();  // s1c
@@ -264,16 +285,20 @@ std::vector<Placement> objectPlacements(const Level& level, const ClassLookup& c
     return out;
 }
 
-DrawableObjects drawableObjects(FuseArchive& archive, const Level& level) {
-    std::map<std::string, Level> classes;
-    const ClassLookup classOf = [&](const std::string& name) -> const Level* {
-        auto found = classes.find(name);
-        if (found == classes.end()) {
+ClassLookup archiveClassLookup(FuseArchive& archive) {
+    auto classes = std::make_shared<std::map<std::string, Level>>();
+    return [&archive, classes](const std::string& name) -> const Level* {
+        auto found = classes->find(name);
+        if (found == classes->end()) {
             const FuseEntry* entry = archive.find("levels/" + name + ".blvl");
-            found = classes.emplace(name, entry ? parseLevel(archive.read(*entry)) : Level{}).first;
+            found = classes->emplace(name, entry ? parseLevel(archive.read(*entry)) : Level{}).first;
         }
         return &found->second;
     };
+}
+
+DrawableObjects drawableObjects(FuseArchive& archive, const Level& level) {
+    const ClassLookup classOf = archiveClassLookup(archive);
     DrawableObjects out;
     for (auto& placement : objectPlacements(level, classOf)) {
         const std::string mesh = lowered(placement.mesh);

@@ -117,3 +117,15 @@ Unknowns:
 ### Corrections of earlier entries
 
 - 2026-10-13T14:45:00 "Provisional" and "Unknowns" (layer rule; collision of dynamic objects): the layer rule is the descriptor above (masks and owner flags). The items of the master model all have mask 1, which the replica already used. Placed objects are in the same grid, see above.
+
+## 2026-10-13T20:43:40+02:00 — Correction: the disabled-object stand-in is replaced by the level start state
+
+- **Correction of the 2026-10-13T17:34:00 entry ("Stand-ins and approximations", "Unknowns"):** `kStateDisabledStandIn` (85 recorded names) is gone. The state is derived from the level data: the `startup` script and the revealer links, [scripts.md](scripts.md). 83 of the 85 names follow from the rule; the other two are detective X-spots without collision.
+- `objectCollisions(archive, level, state)` now takes a `PlacedObjectState`. A `BoundCollision` of 0 clears the whole collision flag 0x200 of the object (mesh and box) unless `EnableCollision` sets it again (1-1_Mail_Box does); before, only the box was switched off.
+- lvl_01 totals: 824 entries (was 834), 414 meshes (was 415); the ten removed are co-located twins (`1-2_Dumpster_Open`, `1-3_Garage_Key_Switch`, `1-5_WireTap_01..04`, `Donut_Box`, `FP_BreakAndEnter_Door_Balcony02_Open`, `FP_Warp_01`) and `FP_SuperBuildit_Statue`, whose entities have flag bit 0 in the grid read (the earlier position-only match had paired them with their enabled twin). `collision-real-data` and the camera replays still pass.
+
+## 2026-10-13T20:53:44+02:00 — Correction: the automatic box uses the node matrices (Police_Door_02 centre, girders, Donut_Box)
+
+- **Correction of the 2026-10-13T17:34:00 entry (stand-in `kDoorCentreXStandIn`, "automatic box uses the mesh bounds without the node pose matrices"):** the bounds routine 0x242eb0 (ev_563de5d0…7189) takes the eight corners of every node's mesh box (centre ± half, mesh record +8 / +0x14) and moves them by the matrix of that node before taking the min and max. The matrix comes from the entity's palette (node +0x110) when set, else from the model block at header +0x20 (0x40 bytes per node, row vectors, translation in row 3; the previously skipped block of parseModel, now `Model::nodeMatrices`), used when its last element (+0x3c) is not 0, else the identity (DAT_0052fce4). A mesh that two nodes use counts once (flag array); nodes named "NoBounds*" are skipped.
+- Police_Door_02 (model prop_door_policestation_english1): mesh centre x −0.0698476, node matrix translation x +0.0698476. The entity box read at gameplay-start (entity 0x08dbcb90) has centre x 5.96046e−8 (2^−24) and the replica now computes the same value bit for bit; that was the 0.0 of the stand-in. `kDoorCentreXStandIn` is gone.
+- Box check against the grid read at gameplay-start (entities matched to objects by position and class type byte): 405 of 406 auto and class boxes agree within 2e-3 (was 412 of 419: the girders, `Donut_Box` and the door are fixed). The remaining one is `FP_Sky_Dive_02` (props/parkour_skydive: centre z 1.8271 against 1.7145, half z 2.3672 against 2.4765); that class has its own constructor, not checked.

@@ -83,3 +83,12 @@ Unknowns:
 Unknowns: what the remaining 423 model-less objects are (hearts, `xx_particleemitter`, hint meshes) and how each is drawn.
 
 Collision of placed objects (which objects register collision, box or mesh, node matrix, query layers): [collision.md](collision.md) 2026-10-13T17:34:00.
+
+## 2026-10-13T21:17:41+02:00 — Start state of placed objects and doors (pointer entry)
+
+- Which placed objects are disabled at level start comes from the level's own `startup` script and from the build-it / reveal links of other objects, not from a per-object flag in the .blvl: [scripts.md](scripts.md). Replaces the earlier "hidden at the start" approximations in this file for collision; the drawing code (`drawableObjects`) still draws every object with a model, including the ones the start state disables.
+- Doors: state machine, timing, motion and sounds in [doors.md](doors.md). Trigger chain recovered: a door opens by itself when `AutoOpen` is set (instance parameter, the lvl_00 lift and double doors) and the player is inside its zone, or when it receives message 0xff (from `TriggerObject` / the platform link). The senders of that message in lvl_01 (mission scripts for the front doors) are not traced; the program does not run them.
+
+Unknowns
+- Which scripts send the open request to `Police_Door_01/02` and the other lvl_01 doors.
+- Whether `drawableObjects` should skip the objects the start state disables (visibility at start; not compared with a screenshot).

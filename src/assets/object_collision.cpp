@@ -9,32 +9,7 @@
 namespace chase::assets {
 namespace {
 constexpr float kMinimumHalf = 0.05f;  // 0x3d4ccccd clamp of the automatic box in 0x23aff8
-constexpr float kDoorCentreXStandIn = 0.0f;  // stand-in: Police_Door_02 registers x 0.0 although its mesh record says -0.0698; the source of the 0 is not found
 constexpr float kDoorMargin = 0x1.eb851ep-3f;  // *0x37713c / *0x377140 taken off the x and z half extents when 0x23aff8 gets param_6
-
-// Stand-in: instances of lvl_01_cherrytreehills that the original did not offer to the player and camera queries at gameplay-start:
-// owners with flag bit 0 set (descriptor word 7 = 3 rejects them) or without any grid entry, read from the grid in the oracle. What
-// sets the bit and decides the registration (level scripts, mission state) is not recovered, so the recorded names stand in for it.
-constexpr const char* kStateDisabledStandIn[] = {
-    "1-1_BI_DonutVanParts", "1-1_BI_DonutVanParts_Prop", "1-1_BrokenVan", "1-1_Broken_Lampost", "1-1_Crate_Trolley",
-    "1-1_Donut_Van_Body", "1-1_Donut_Van_Collision", "1-1_DonutsDEMO", "1-1_DonutsDEMO01", "1-1_Mail_Box_Collision",
-    "1-1_Mail_Box_Collision01", "1-2_Dog", "1-2_Dog_Bone", "1-2_Dog_Cage", "1-2_Dog_House", "1-2_Dtv_DogPath_XSpot",
-    "1-2_Temp_Trampoline", "1-2_TrapDoor_01", "1-3_Camera_chopper", "1-3_Camera_park", "1-3_Cart_crate",
-    "1-3_Chopper", "1-3_CraneHook_Collision", "1-3_CraneHook_Down_Collision", "1-3_Crane_Collision",
-    "1-3_Crane_Girder", "1-3_Crane_bits", "1-3_Crow", "1-3_Dtv_BrickSpot_XSpot_02", "1-3_Garage_Key",
-    "1-3_Gardner_Prop", "1-3_Gardner_Prop_02", "1-3_Generator_Pull_Switch", "1-3_Lawnmower_01", "1-3_Lawnmower_02",
-    "1-3_Lawnmower_03", "1-3_Lawnmower_Final", "1-3_Ledge_Platform_Switch", "1-3_Ledge_Platform_Switch_Bits",
-    "1-3_Ledge_Platform_Switch_Prop", "1-3_Lift_Crate_02", "1-3_Lift_Crate_03", "1-3_Push_Cart_bits",
-    "1-3_Push_Platform", "1-3_Push_cart", "1-3_Roundabout", "1-3_Seesaw", "1-3_Swing", "1-3_TrapDoor_02",
-    "1-3_Wheelbarrow02", "1-3_crane_built", "1-3_grab_bits", "1-4_Roadblock_12", "1-4_Roadblock_13",
-    "1-4_Roadblock_18", "1-4_Roadblock_19", "1-4_Showroom_Ladder", "1-5_Generic_Prop_10", "1-8_BossGate_01",
-    "1-8_BossGate_02", "1-8_Cage_01", "1-8_Goon_Collision_01", "1-8_Goon_Collision_02", "1-9_Ferry",
-    "6-1_PlaceDonutsWaypoint", "9_Generic_Prop_081", "Bouncer_01", "CTG_Tshirt", "Donut_Box_01",
-    "FP_ElectricRepair_PoliceGarageDoor02", "FP_Platform_TrainStation_MineCart", "FP_Sky_Dive_01", "FP_Spang_01",
-    "FP_Task_ASTRONAUT_CTH_01", "FP_Task_ASTRONAUT_CTH_02", "FP_Task_ASTRONAUT_CTH_03", "FP_Task_ASTRONAUT_CTH_04",
-    "Fast_Travel_Ferry", "GrappleGun", "Police_Plaque_Floor", "Race01EndBanner", "Race01StartBanner", "Trampoline_03",
-    "Trampoline_06", "Trampoline_07",
-};
 
 const LevelParam* findParam(const std::vector<LevelParam>& params, std::uint32_t hash) {
     for (const auto& param : params)
@@ -73,7 +48,13 @@ struct ModelData {
     float boundsHalf[3] = {0, 0, 0};
 };
 
-// 0x242eb0: union of the mesh bounding boxes (centre +/- half) of the nodes whose name does not start with "NoBounds".
+void transformPoint(const float matrix[16], const float in[3], float out[3]) {
+    for (int a = 0; a < 3; ++a)
+        out[a] = in[0] * matrix[a] + in[1] * matrix[4 + a] + in[2] * matrix[8 + a] + matrix[12 + a];
+}
+
+// 0x242eb0: union of the eight corners of each mesh bounding box (centre +/- half), moved by the matrix of its node (model+0x20,
+// used when its last element is not 0), over the nodes whose name does not start with "NoBounds"; a mesh counts once.
 ModelData loadModel(FuseArchive& archive, const std::string& path) {
     ModelData data;
     const FuseEntry* entry = archive.find(path);
@@ -84,15 +65,24 @@ ModelData loadModel(FuseArchive& archive, const std::string& path) {
     if (!model.collision.empty()) data.firstItem = std::make_shared<CollisionItem>(model.collision.front());
     float low[3] = {3.4028235e+38f, 3.4028235e+38f, 3.4028235e+38f};
     float high[3] = {-3.4028235e+38f, -3.4028235e+38f, -3.4028235e+38f};
+    std::vector<bool> counted(model.meshes.size(), false);
     for (std::size_t n = 0; n < model.nodeMesh.size(); ++n) {
         const int index = model.nodeMesh[n];
-        if (index < 0 || std::size_t(index) >= model.meshes.size()) continue;
+        if (index < 0 || std::size_t(index) >= model.meshes.size() || counted[std::size_t(index)]) continue;
         if (model.nodeNames[n].compare(0, 8, "NoBounds") == 0) continue;
         const ModelMesh& mesh = model.meshes[std::size_t(index)];
-        for (int a = 0; a < 3; ++a) {
-            low[a] = std::min(low[a], mesh.centre[a] - mesh.half[a]);
-            high[a] = std::max(high[a], mesh.centre[a] + mesh.half[a]);
+        const bool moved = n < model.nodeMatrices.size() && model.nodeMatrices[n][15] != 0.0f;
+        for (int corner = 0; corner < 8; ++corner) {
+            float point[3], world[3];
+            for (int a = 0; a < 3; ++a) point[a] = (corner >> a & 1) ? mesh.centre[a] + mesh.half[a] : mesh.centre[a] - mesh.half[a];
+            if (moved) transformPoint(model.nodeMatrices[n].data(), point, world);
+            else std::copy(point, point + 3, world);
+            for (int a = 0; a < 3; ++a) {
+                low[a] = std::min(low[a], world[a]);
+                high[a] = std::max(high[a], world[a]);
+            }
         }
+        counted[std::size_t(index)] = true;
     }
     if (low[0] <= high[0]) {
         data.hasBounds = true;
@@ -117,22 +107,18 @@ void clampAutomaticBox(float centre[3], float half[3], bool margin) {
     }
 }
 
-void transformPoint(const float matrix[16], const float in[3], float out[3]) {
-    for (int a = 0; a < 3; ++a)
-        out[a] = in[0] * matrix[a] + in[1] * matrix[4 + a] + in[2] * matrix[8 + a] + matrix[12 + a];
-}
 }
 
-std::vector<ObjectCollision> objectCollisions(FuseArchive& archive, const Level& level) {
-    std::map<std::string, Level> classes;
-    const auto classOf = [&](const std::string& name) -> const Level& {
-        auto found = classes.find(name);
-        if (found == classes.end()) {
-            const FuseEntry* entry = archive.find("levels/" + name + ".blvl");
-            found = classes.emplace(name, entry ? parseLevel(archive.read(*entry)) : Level{}).first;
-        }
-        return found->second;
-    };
+bool PlacedObjectState::isDisabled(const std::string& instance) const { return disabled.count(lower(instance)) != 0; }
+
+bool PlacedObjectState::collisionEnabled(const std::string& instance, bool initial) const {
+    const auto found = collisionOverride.find(lower(instance));
+    return found == collisionOverride.end() ? initial : found->second;
+}
+
+std::vector<ObjectCollision> objectCollisions(FuseArchive& archive, const Level& level, const PlacedObjectState& state) {
+    const ClassLookup classLookup = archiveClassLookup(archive);
+    const auto classOf = [&](const std::string& name) -> const Level& { return *classLookup(name); };
     std::map<std::string, ModelData> models;
     const auto modelAt = [&](const std::string& path) -> const ModelData& {
         auto found = models.find(path);
@@ -151,7 +137,7 @@ std::vector<ObjectCollision> objectCollisions(FuseArchive& archive, const Level&
         const bool propFamily = startsWith(className, "leprops/leprop_") || className == "props/prop_respawnabledestructible" || door;
         const bool dummyCollision = className == "dummy/dummycollision";
         if (!prop && !dummyCollision) continue;
-        if (std::find(std::begin(kStateDisabledStandIn), std::end(kStateDisabledStandIn), object.instance) != std::end(kStateDisabledStandIn)) continue;
+        if (state.isDisabled(object.instance)) continue;
         const Level& cls = classOf(object.className);
 
         Placement placement;
@@ -185,7 +171,6 @@ std::vector<ObjectCollision> objectCollisions(FuseArchive& archive, const Level&
                     std::memcpy(centre, model->boundsCentre, sizeof centre);
                     std::memcpy(half, model->boundsHalf, sizeof half);
                     clampAutomaticBox(centre, half, door);
-                    if (className == "props/prop_door") centre[0] = kDoorCentreXStandIn;
                     box = true;
                 }
                 const LevelParam* meshCollision = effectiveParam(object, cls, hashMeshCollision);
@@ -199,8 +184,8 @@ std::vector<ObjectCollision> objectCollisions(FuseArchive& archive, const Level&
                 }
             }
         }
-        if (const LevelParam* boundCollision = effectiveParam(object, cls, hashBoundCollision))
-            if (boundCollision->value == 0) box = false;
+        const LevelParam* boundCollision = effectiveParam(object, cls, hashBoundCollision);
+        if (!state.collisionEnabled(object.instance, !boundCollision || boundCollision->value != 0)) continue;
         if (!box && !mesh) continue;
 
         ObjectCollision entry;

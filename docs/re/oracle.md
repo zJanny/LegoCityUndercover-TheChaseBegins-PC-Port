@@ -158,3 +158,9 @@ Unknowns: the meaning of controller state 255; whether the cutscene timing (free
 - The injected stick and button state of a scenario (`stick`, `hold`) is a variable of the tool and survives `loadstate`: start every scenario with `stick 0 0` and `hold -` after `loadstate`, or a later run starts with the previous scenario's input (this made one of the first recordings a walk instead of a still start).
 - A scenario file may chain many `loadstate ... trace` runs; each costs about 5 s for the load plus about 0.5 s per traced frame with `mem`. `--output DIR` may be an existing directory; trace names are relative to it. Writing scenario files to the main checkout's artifacts/ directory with the Write tool is refused for worktree agents; keep scratch scenarios under /tmp.
 - Findings: [player.md](player.md).
+
+## 2026-10-13T21:18:00+02:00 — `poke` command (door work)
+
+- `poke ADDR HEXBYTES` writes bytes at ADDR through the GDB stub (`M` packet; the stub clears the instruction cache). It is a measuring aid to send an object a request that its script would send, for example the target state of a door (record+4 = 2 opens it; docs/re/doors.md). A poked state is never saved as a reference state: the traces were taken from `gameplay-start` after a `loadstate`, the poke followed it in the same scenario, and every scenario starts with `loadstate`, which discards the poke.
+- Pitfall: a scenario killed during a long `trace` (a `pkill` of the tool) took the emulator with it once; use `--stop` and relaunch with `--state`.
+- A long stepped `trace` with the OpenGL renderer and `stick` input took about 3 s per update in this session (`frames 90` plus a 30-update trace for each of two runs: 394 s).

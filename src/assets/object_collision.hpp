@@ -3,9 +3,22 @@
 // with the world, the shape each one registers and its node matrix. Rules and evidence: docs/re/collision.md.
 // No SDL dependency.
 #include "assets/assets.hpp"
+#include <map>
 #include <memory>
+#include <set>
+#include <string>
 
 namespace chase::assets {
+
+// State of the placed objects at the start of a level, by lower-case instance name: entity flag bit 0 (disabled, set by
+// EnableObject with 0 and not registered with the queries) and flag 0x200 (collision, EnableCollision) overrides.
+struct PlacedObjectState {
+    std::set<std::string> disabled;
+    std::map<std::string, bool> collisionOverride;
+
+    bool isDisabled(const std::string& instance) const;
+    bool collisionEnabled(const std::string& instance, bool initial) const;
+};
 
 // One collision entry the original registers in its world grid for a placed object (0x30e0d8 with 0x23aff8).
 struct ObjectCollision {
@@ -28,7 +41,7 @@ struct ObjectCollision {
 //    MeshCollision is set and the model has no item, else the union of the model's mesh bounds);
 //  - "dummy/dummycollision": a box with the half extents of the instance's "CollisionBound" parameter.
 // Characters, vehicles and classes with other constructors are not included. A "BoundCollision" parameter of 0
-// switches the box off.
-std::vector<ObjectCollision> objectCollisions(FuseArchive& archive, const Level& level);
+// clears the collision flag 0x200 of the object unless `state` sets it again; disabled objects are left out.
+std::vector<ObjectCollision> objectCollisions(FuseArchive& archive, const Level& level, const PlacedObjectState& state);
 
 }

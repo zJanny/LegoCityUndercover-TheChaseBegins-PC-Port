@@ -24,6 +24,8 @@ Read this index, then open only the file you need.
 | [ui-layouts.md](ui-layouts.md) | `.bxaml` UI layouts and storyboards |
 | [fmv.md](fmv.md) | Mobiclip `.moflex` video and subtitles |
 | [particles.md](particles.md) | `particledefs.bprt` particle definitions |
+| [scripts.md](scripts.md) | Level scripts (section +0x18), the script executor 0x234204 and its words, EnableObject / EnableCollision, the `startup` script, the revealer links, the start state of placed objects |
+| [doors.md](doors.md) | Doors (type 42): record, update 0x1d16b8, state change, messages, easing, hinge and slide pose, timings measured in the oracle |
 | [studs.md](studs.md) | Studs (collectible coins): pickup pool records, sprite sheet drawing and spin, pickup radius and skip counter, collect timer, counter values and limits, stand-ins |
 | [oracle.md](oracle.md) | Azahar runtime oracle: setup, fidelity rules, save states, fast workflow, timings |
 | [camera.md](camera.md) | Gameplay camera: yaw word 0x376894 writer, manager and modes, follow camera law (OnFoot preset), projection, obstruction by level geometry (slab sweep, pull-in, side and vertical push), unknowns |

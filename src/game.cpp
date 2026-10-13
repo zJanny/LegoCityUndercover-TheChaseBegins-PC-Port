@@ -12,7 +12,9 @@
 #include "render/scene.hpp"
 #include "render/studs.hpp"
 #include "runtime/collision.hpp"
+#include "runtime/door.hpp"
 #include "runtime/follow_camera.hpp"
+#include "runtime/level_start.hpp"
 #include "runtime/pad.hpp"
 #include "runtime/player_intent.hpp"
 #include "runtime/player_locomotion.hpp"
@@ -314,7 +316,7 @@ std::optional<PlayerRig> placePlayer(FuseArchive& archive, Scene& scene, const L
 }
 
 // The level's collision: the items of the level's master model (models/<level>/<level>.bfnmdl) and the placed objects.
-runtime::CollisionWorld loadCollision(FuseArchive& archive, const std::string& levelPath, const Level& level) {
+runtime::CollisionWorld loadCollision(FuseArchive& archive, const std::string& levelPath, const std::vector<ObjectCollision>& objects) {
     runtime::CollisionWorld world;
     const std::string path = lower(levelPath);
     const std::string folder = path.substr(0, path.find_last_of('/'));
@@ -322,8 +324,54 @@ runtime::CollisionWorld loadCollision(FuseArchive& archive, const std::string& l
     const FuseEntry* entry = archive.find("models/" + name + "/" + name + ".bfnmdl");
     if (!entry) return world;
     for (const CollisionItem& item : parseModel(archive.read(*entry)).collision) world.add(item);
-    for (const ObjectCollision& object : objectCollisions(archive, level)) world.addObject(object);
+    for (const ObjectCollision& object : objects) world.addObject(object);
     return world;
+}
+
+// A door object (classes props/prop_door and leprops/leprop_door): its state machine, the scene instance of its model and the matrices
+// that put its node in place (docs/re/doors.md). The node matrix at model+0x20 is applied before the pose and the placement; that order
+// is not verified against the original's picture.
+struct DoorObject {
+    std::string instance;
+    runtime::DoorParams params;
+    runtime::DoorState state;
+    std::size_t sceneInstance = 0;
+    Mat4 placement{};
+    Mat4 rest = identity();
+    float pivot[2][3] = {};
+    std::array<float, 3> position{};
+};
+
+std::vector<DoorObject> loadDoors(FuseArchive& archive, const Level& level, const ClassLookup& classOf, const std::vector<ObjectCollision>& objects,
+                                  const std::map<std::string, std::pair<std::size_t, Mat4>>& instances) {
+    std::vector<DoorObject> doors;
+    for (const ObjectCollision& object : objects) {
+        const std::string className = lower(object.className);
+        if (className != "props/prop_door" && className != "leprops/leprop_door") continue;
+        const auto instance = instances.find(object.instance);
+        if (instance == instances.end() || object.model.empty()) continue;
+        const LevelObject* source = nullptr;
+        for (const LevelObject& candidate : level.objects)
+            if (candidate.instance == object.instance) source = &candidate;
+        const FuseEntry* modelEntry = archive.find(object.model);
+        if (!source || !modelEntry) continue;
+        const Model model = parseModel(archive.read(*modelEntry));
+        DoorObject door;
+        door.instance = object.instance;
+        door.params = runtime::doorParams(*source, *classOf(source->className), model, object.centre, object.half);
+        door.sceneInstance = instance->second.first;
+        door.placement = instance->second.second;
+        if (!model.nodeMatrices.empty() && model.nodeMatrices[0][15] != 0.0f) door.rest = model.nodeMatrices[0];
+        for (std::size_t n = 0; n < model.nodePivot.size() && n < 2; ++n) std::copy_n(model.nodePivot[n].data(), 3, door.pivot[n]);
+        door.position = {door.placement[12], door.placement[13], door.placement[14]};
+        doors.push_back(std::move(door));
+    }
+    return doors;
+}
+
+void poseDoor(Scene& scene, const DoorObject& door) {
+    const runtime::DoorPose pose = runtime::doorPose(door.state, door.params, door.pivot);
+    scene.setTransform(door.sceneInstance, chase::render::multiply(door.placement, chase::render::multiply(pose.node[0], door.rest)));
 }
 
 std::uint32_t clockTicks(std::uint64_t counter, std::uint64_t frequency) {
@@ -463,9 +511,17 @@ int run(const Options& given) {
     std::size_t placed = 0, unresolved = 0;
     const Level level = parseLevel(archive.read(*entry));
     const DrawableObjects drawable = drawableObjects(archive, level);
-    for (const auto& placement : drawable.objects)
-        if (scene.addModel(meshModelPath(placement.mesh), placementMatrix(placement))) ++placed;
-        else ++unresolved;
+    std::map<std::string, std::pair<std::size_t, Mat4>> placedInstances;
+    for (const auto& placement : drawable.objects) {
+        const std::size_t instanceIndex = scene.instances();
+        const Mat4 matrix = placementMatrix(placement);
+        if (scene.addModel(meshModelPath(placement.mesh), matrix)) {
+            ++placed;
+            placedInstances[placement.instance] = {instanceIndex, matrix};
+        } else {
+            ++unresolved;
+        }
+    }
     const std::size_t characters = addLevelCharacters(scene, archive, drawable.characters);
     std::vector<runtime::StudSpawn> studSpawns;
     for (const StudObject& stud : drawable.studs) {
@@ -486,7 +542,12 @@ int run(const Options& given) {
         player->motion.z = player->startZ = (*options.start)[2];
         player->pose(scene);
     }
-    const runtime::CollisionWorld collision = loadCollision(archive, options.level, level);
+    const ClassLookup classOf = archiveClassLookup(archive);
+    const std::vector<ObjectCollision> placedCollisions = objectCollisions(archive, level, runtime::levelStartState(level, classOf));
+    const runtime::CollisionWorld collision = loadCollision(archive, options.level, placedCollisions);
+    std::vector<DoorObject> doors = loadDoors(archive, level, classOf, placedCollisions, placedInstances);
+    for (const DoorObject& door : doors) poseDoor(scene, door);
+    std::cout << "doors: " << doors.size() << '\n';
     std::cout << "collision: " << collision.triangleCount() << " triangles in " << collision.entries().size() << " entries\n";
 
     float centre[3], radius;
@@ -551,6 +612,17 @@ int run(const Options& given) {
                                                            runtime::headingRadians(player->motion.facing))))
                 player->sounds.push_back(runtime::studCollectCall(collected, studs.studs()[collected.index].centre));
             for (const runtime::SoundCall& call : player->sounds) emit(call);
+        }
+        if (player) {
+            const float playerPosition[3] = {player->motion.x, player->vertical.y, player->motion.z};
+            std::vector<runtime::DoorSoundEvent> doorSounds;
+            for (DoorObject& door : doors) {
+                doorSounds.clear();
+                runtime::doorUpdate(door.state, door.params, runtime::doorZoneContains(door.placement.data(), playerPosition, door.params), doorSounds);
+                poseDoor(scene, door);
+                for (const runtime::DoorSoundEvent& event : doorSounds)
+                    if (event.action == runtime::DoorSoundEvent::Action::Play && event.id != 0) emit({event.id, door.position});
+            }
         }
         provisionalStudClockSeconds += double(dt);
         if (follow) {
@@ -642,6 +714,10 @@ int run(const Options& given) {
                       << " units, facing " << player->motion.facing << ", run timer " << player->motion.runTimer << ", height " << player->vertical.y << '\n';
             std::cout << "studs: counter " << studs.counter() << ", " << studs.count(runtime::StudState::Collecting) << " collecting, "
                       << studs.count(runtime::StudState::Done) << " collected, " << studs.count(runtime::StudState::Idle) << " left\n";
+            std::cout << "doors:";
+            for (const DoorObject& door : doors)
+                if (door.state.state != 1) std::cout << ' ' << door.instance << '=' << door.state.state << '/' << int(door.state.timer);
+            std::cout << '\n';
             std::cout << "sounds:";
             for (const auto& [update, id] : soundLog) std::cout << ' ' << update << ':' << id;
             std::cout << '\n';
