@@ -36,6 +36,7 @@ class LaunchedTest(unittest.TestCase):
 
     def test_check_raises_after_exit(self):
         process = subprocess.Popen([sys.executable, '-c', 'import os, signal; os.kill(os.getpid(), signal.SIGABRT)'])
+        process.wait(timeout=30)
         launched = oracle.Launched(process, None, None, None)
         self.assertTrue(launched.exited())
         with self.assertRaisesRegex(oracle.EmulatorExited, 'SIGABRT'):
