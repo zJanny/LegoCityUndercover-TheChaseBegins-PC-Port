@@ -466,14 +466,19 @@ std::uint32_t pjwHash(const std::string& text);
 // (0x271e6c). Spawners address definitions by index (e.g. ExplosionParticleDef, 0x163f00).
 // The record size is inferred: the data block is exactly count x 380 bytes.
 constexpr std::size_t kParticleDefSize = 380;
+// Field use from spawner 0x216244.
 struct ParticleDef {
     std::uint32_t textureHash = 0;  // +0x2c, pjwHash of a texture name
     int texture = -1;               // index into ParticleDefs::textures, -1 if no name matches
+    std::uint32_t flags = 0;        // +0x168; bit 3 negates the spawn z
+    std::uint32_t seed = 0;         // +0x84; 0 = random
+    std::uint8_t particles = 0;     // +0x175, clamped below ParticleDefs::maxParticles
+    std::uint8_t spawnMode = 0;     // +0x178; 0 = never spawns, other values unknown
     std::array<std::uint8_t, kParticleDefSize> raw{};
 };
 struct ParticleDefs {
-    std::uint32_t unknown0 = 0;  // global 0x376b84
-    std::uint32_t unknown1 = 0;  // global 0x376b88
+    std::uint32_t maxEmitters = 0;   // global 0x376b84, live emitter limit
+    std::uint32_t maxParticles = 0;  // global 0x376b88, particles per emitter limit
     std::uint32_t unknown4 = 0;  // global 0x376bbc
     float scale = 1.0f;          // global 0x376bc0; the loader turns 0 into 1
     std::vector<std::string> textures;

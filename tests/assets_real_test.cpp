@@ -321,12 +321,13 @@ int main(int argc, char** argv) {
         {
             ParticleDefs defs = parseParticleDefs(archive.read(*archive.find("particles/particledefs.bprt")));
             std::uint32_t sum = 0x811c9dc5;
-            std::size_t resolved = 0;
+            std::size_t resolved = 0, inLimits = 0;
             for (const auto& def : defs.defs) {
                 resolved += def.texture >= 0;
+                inLimits += def.particles >= 1 && def.particles <= defs.maxParticles && def.spawnMode != 0;
                 for (std::uint8_t b : def.raw) sum = (sum ^ b) * 0x01000193;
             }
-            if (defs.unknown0 != 10 || defs.unknown1 != 25 || defs.unknown4 != 0 || defs.textures.size() != 97 ||
+            if (defs.maxEmitters != 10 || defs.maxParticles != 25 || inLimits != 298 || defs.unknown4 != 0 || defs.textures.size() != 97 ||
                 defs.textures[1] != "cloud" || defs.defs.size() != 298 || resolved != 298 || sum != 0x57544492 ||
                 std::fabs(defs.scale - 2.32836f) > 1e-5f)
                 throw std::runtime_error("particle definitions differ from the pooled-resource reference");

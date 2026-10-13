@@ -32,8 +32,8 @@ ParticleDefs parseParticleDefs(const Bytes& data) {
     PoolCursor cursor(data);
     ParticleDefs defs;
     cursor.push(Pool::M15);
-    defs.unknown0 = word(data, cursor, "header word 0");
-    defs.unknown1 = word(data, cursor, "header word 1");
+    defs.maxEmitters = word(data, cursor, "emitter limit");
+    defs.maxParticles = word(data, cursor, "particle limit");
     std::uint32_t textureCount = word(data, cursor, "texture count");
     std::uint32_t defCount = word(data, cursor, "definition count");
     defs.unknown4 = word(data, cursor, "header word 4");
@@ -61,6 +61,10 @@ ParticleDefs parseParticleDefs(const Bytes& data) {
         std::size_t at = records.offset + std::size_t(i) * kParticleDefSize;
         std::memcpy(def.raw.data(), data.data() + at, kParticleDefSize);
         def.textureHash = readU32(data, at + 0x2c);
+        def.flags = readU32(data, at + 0x168);
+        def.seed = readU32(data, at + 0x84);
+        def.particles = data[at + 0x175];
+        def.spawnMode = data[at + 0x178];
         for (std::size_t t = 0; t < defs.textures.size(); ++t)
             if (pjwHash(defs.textures[t]) == def.textureHash) def.texture = int(t);
         defs.defs.push_back(def);

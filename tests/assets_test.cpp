@@ -414,6 +414,10 @@ void particles() {
     auto hash = u32Bytes(pjwHash("smoke"));
     std::copy(hash.begin(), hash.end(), first.begin() + 0x2c);
     second[0x2c] = 0x99;
+    second[0x168] = 8;
+    second[0x84] = 7;
+    second[0x175] = 4;
+    second[0x178] = 2;
     Bytes data(first);
     data.insert(data.end(), second.begin(), second.end());
     auto file = [&](std::uint32_t defCount, std::uint32_t scale, const Bytes& records) {
@@ -422,11 +426,12 @@ void particles() {
                              {-16, bytes(std::string("smoke\0", 6))}, {-14, records}});
     };
     ParticleDefs defs = parseParticleDefs(file(2, 0, data));
-    require(defs.unknown0 == 10 && defs.unknown1 == 25 && defs.scale == 1.0f &&
+    require(defs.maxEmitters == 10 && defs.maxParticles == 25 && defs.scale == 1.0f &&
                 defs.textures == std::vector<std::string>{"fire", "smoke"},
             "particle header and texture names");
     require(defs.defs.size() == 2 && defs.defs[0].texture == 1 && defs.defs[1].texture == -1 &&
-                defs.defs[1].raw[0x2c] == 0x99,
+                defs.defs[1].raw[0x2c] == 0x99 && defs.defs[1].flags == 8 && defs.defs[1].seed == 7 &&
+                defs.defs[1].particles == 4 && defs.defs[1].spawnMode == 2,
             "particle records");
     require(parseParticleDefs(file(2, 0x40000000, data)).scale == 2.0f, "particle scale");
     requireThrows([&] { parseParticleDefs(file(3, 0, data)); }, "particle count mismatch accepted");
