@@ -90,3 +90,7 @@ Sources: REA (Ghidra 12.1.2, `procedure_pseudo_code`) on `artifacts/game/game.ar
 - The 3D badge scene of the loading screen (model, lights, camera, spin and star motion) and the hexagon card art of the title card; the in-engine cutscene before the first level; when the card ends (the oracle route pressed A).
 - Whether the title layers of the slot screen move or blend as measured (2.4 mean difference).
 - Which level, position and heading a new game starts with beyond the oracle's player position (886.764, 16.589, 1111.166).
+
+## 2026-10-13T20:58:38+02:00 — Correction: the intro movie is stereoscopic
+
+**Correction** of the 2026-10-13T20:46:07 entry ("59.94 frames per second"): `01_gameintro.moflex` holds left/right eye pictures as alternating frames; the original shows the first of each pair, 29.97 pictures per second. Details and evidence: [fmv.md](fmv.md) 2026-10-13T20:58:38. The movie still runs against a clock (`SteppedPlayer::advance(dt)`); the length in updates is unchanged.

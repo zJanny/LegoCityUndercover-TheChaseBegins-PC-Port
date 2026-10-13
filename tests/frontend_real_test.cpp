@@ -4,12 +4,16 @@
 #include "frontend/layout.hpp"
 #include "frontend/movie_host.hpp"
 #include "frontend/script.hpp"
+#include "movie/movie.hpp"
+#include <cmath>
 #include <cstdint>
 #include <cstdlib>
+#include <deque>
 #include <fstream>
 #include <iostream>
 #include <map>
 #include <string>
+#include <tuple>
 #include <vector>
 
 namespace {
@@ -124,6 +128,22 @@ void movies(const std::string& directory) {
     }
 }
 
+void eyePairs(const std::string& directory) {
+    // docs/re/fmv.md 2026-10-13T20:58:38: layout byte 0 = left/right eye frames alternate, the original shows the first of
+    // each pair (oracle intro captures match even frames); ffprobe: 01_gameintro 4088 frames, splash5 191 (layout 6).
+    const std::tuple<const char*, bool, std::size_t, double> cases[] = {{"splash5", false, 191, 1.0 / 30},
+                                                                        {"01_gameintro", true, 2044, 2002.0 / 60000}};
+    for (const auto& [name, pairs, frames, period] : cases) {
+        movie::Decoder decoder(directory + "/" + name + ".moflex", movie::PixelFormat::Yuv420);
+        require(decoder.eyePairs() == pairs, std::string(name) + " eye-pair layout");
+        std::deque<movie::VideoFrame> video;
+        std::vector<std::uint8_t> audio;
+        while (decoder.readMore(video, audio)) audio.clear();
+        require(video.size() == frames, std::string(name) + " shows " + std::to_string(video.size()) + " pictures");
+        require(std::abs(video[1].time - video[0].time - period) < 1e-6, std::string(name) + " picture period");
+    }
+}
+
 }
 
 int main(int argc, char** argv) {
@@ -141,7 +161,10 @@ int main(int argc, char** argv) {
     texts(resources);
     logoPixels(resources);
     pageRenders(resources);
-    if (std::ifstream(std::string(argv[3]) + "/splash5.moflex").good()) movies(argv[3]);
+    if (std::ifstream(std::string(argv[3]) + "/splash5.moflex").good()) {
+        movies(argv[3]);
+        eyePairs(argv[3]);
+    }
     if (failures) {
         std::cerr << failures << " failure(s)\n";
         return EXIT_FAILURE;

@@ -28,6 +28,7 @@ public:
     int height() const;
     bool hasAudio() const;
     bool finished() const;
+    bool eyePairs() const;
 
     bool readMore(std::deque<VideoFrame>& video, std::vector<std::uint8_t>& audio);
 

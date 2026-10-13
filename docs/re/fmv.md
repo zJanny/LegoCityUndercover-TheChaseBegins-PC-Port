@@ -27,3 +27,17 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - Added docs/fmv-player.md, FFmpeg in docs/building.md, and links in README.md and docs/status.md.
 - Not tested: Escape or window close with a real display, and A/V sync on real audio hardware.
 - ctest PASS 9/9.
+
+## 2026-10-13T20:58:38+02:00 — Stereoscopic movies: left/right eye frames alternate
+
+**Correction** of the first entry ("Mobiclip video 400x240 at 30 fps") and of docs/re/front-end.md 2026-10-13T20:46:07 ("01_gameintro … 59.94 frames per second"): 47 of the 49 movies are stereoscopic. Their video stream holds the two eye pictures as alternating frames, so `01_gameintro` is 2044 picture pairs at 29.97 pairs per second (FFmpeg reports 4088 frames at 59.94 fps). Showing every decoded frame made the picture jump left and right (reported by the user in chase-game's intro).
+
+- Header: the first record after the sync block (0x4c32, 2 skipped bytes, u64 timestamp, u16 size; FFmpeg `libavformat/moflex.c` `moflex_read_sync`) is type 3 (video), size 13: stream index, codec 0, u16 rate denominator… as FFmpeg reads it, then 3 bytes FFmpeg skips. The last of them (file offset 28) is the layout: 0 in 47 files (30 at 60000/1001, 16 superbuildit at 60/1, `superbuildit_shuttleboosters` at 30/1 with 20 identical frames), 6 only in `splash5.moflex` (30 fps, one picture per frame). Census: `xxd -s 14 -l 15 -p` over `artifacts/romfs/romfs/cutscenes/*.moflex`.
+- Pairs: PSNR of neighbouring decoded frames of 01_gameintro (frames 1200..1205) is 17.2..17.7 dB, of frames two apart 29.5..30.3 dB (also 07_intro_farm 18.3 vs 34.4, superbuildit_windmill 20.5 vs 34.6).
+- Eye shown by the original on the (2D) top screen: the first frame of each pair. The oracle intro captures `artifacts/review/front-end/oracle/intro/intro02..09.png` each match an even frame best (3060, 3198, 3338, 3476, 3614, 3750, 3888, 4028; mean abs distance on 100x60 grey 6.6..8.9) with the odd neighbours at 16.6..20.8 (script `artifacts/review/fmv-stereo/match_eye.py`, not committed).
+- Native: `chase::movie::Decoder` reads the layout byte and keeps only the first picture of each pair for layout 0 (`Decoder::eyePairs`). Test `frontend-real-data` (`eyePairs`): splash5 191 pictures at 1/30 s, 01_gameintro 2044 pictures at 2002/60000 s. `chase-fmv --time 51.054` now shows frame 3060 (PSNR 28.8 dB against the oracle capture intro02).
+
+Unknowns:
+- Meaning of layout values other than 0 and 6, and of the two other skipped bytes (01 01 in all files).
+- Where the game's Mobiclip player reads the layout and selects the eye (not traced in the ARM code; the rule above is from the header census and the oracle).
+- Whether the second eye of the pair is the right eye (only matters for a stereoscopic display, which the port does not target).

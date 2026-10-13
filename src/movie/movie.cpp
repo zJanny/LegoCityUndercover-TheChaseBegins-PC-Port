@@ -7,6 +7,7 @@ extern "C" {
 #include <libswresample/swresample.h>
 #include <libswscale/swscale.h>
 }
+#include <fstream>
 #include <stdexcept>
 #include <utility>
 
@@ -43,10 +44,21 @@ CodecContext openDecoder(AVStream* stream) {
     return context;
 }
 
+constexpr std::uint8_t kLayoutEyePairs = 0;
+
+bool hasEyePairs(const std::string& path) {
+    std::ifstream file(path, std::ios::binary);
+    std::uint8_t header[29] = {};
+    if (!file.read(reinterpret_cast<char*>(header), sizeof header)) return false;
+    const bool sync = header[0] == 0x4c && header[1] == 0x32;
+    const bool videoRecord = header[14] == 3 && header[15] == 13;
+    return sync && videoRecord && header[28] == kLayoutEyePairs;
+}
+
 }
 
 struct Decoder::Impl {
-    Impl(const std::string& path, PixelFormat format) : format_(format) {
+    Impl(const std::string& path, PixelFormat format) : format_(format), eyePairs_(hasEyePairs(path)) {
         AVFormatContext* raw = nullptr;
         int result = avformat_open_input(&raw, path.c_str(), nullptr, nullptr);
         if (result < 0) fail("cannot open " + path, result);
@@ -113,6 +125,8 @@ struct Decoder::Impl {
     }
 
     void store(std::deque<VideoFrame>& video) {
+        const bool secondEye = eyePairs_ && decodedPictures_++ % 2 == 1;
+        if (secondEye) return;
         const AVPixelFormat target = format_ == PixelFormat::Rgba ? AV_PIX_FMT_RGBA : AV_PIX_FMT_YUV420P;
         if (!scaler_) {
             scaler_.reset(sws_getContext(width_, height_, AVPixelFormat(frame_->format), width_, height_, target,
@@ -155,6 +169,8 @@ struct Decoder::Impl {
     Scaler scaler_;
     Packet packet_;
     Frame frame_;
+    bool eyePairs_ = false;
+    std::uint64_t decodedPictures_ = 0;
     int videoIndex_ = -1, audioIndex_ = -1, width_ = 0, height_ = 0;
     bool eof_ = false;
 };
@@ -165,6 +181,7 @@ int Decoder::width() const { return impl_->width_; }
 int Decoder::height() const { return impl_->height_; }
 bool Decoder::hasAudio() const { return impl_->audioIndex_ >= 0; }
 bool Decoder::finished() const { return impl_->eof_; }
+bool Decoder::eyePairs() const { return impl_->eyePairs_; }
 bool Decoder::readMore(std::deque<VideoFrame>& video, std::vector<std::uint8_t>& audio) {
     return impl_->readMore(video, audio);
 }
