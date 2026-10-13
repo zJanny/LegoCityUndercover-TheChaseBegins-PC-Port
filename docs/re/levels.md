@@ -50,6 +50,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 
 ## 2026-10-12T23:25+02:00 — Whole levels in the viewer
 
+> Correction: the game does not stream with `Pregen/*.bin`; see [streaming.md §2026-10-13T22:27](streaming.md).
+
 - Meshname resolution: 6561 of 6563 placements over all 856 levels resolve to archive models; only xx_goldstud and Prop_Hotspot_Mission do not.
 - Level models: models/<level>/ holds lvl_*.bfnmdl (plus _lod1) and room<N>.bfnmdl (403, plus 288 _l1 detail levels). chase-viewer `--level` without model arguments loads that folder minus the _l1/_lod1 models, or just room<N> with `--room`. This is a viewer convention; the game's streaming logic (Pregen/*.bin) is not recovered.
 - `--eye X,Y,Z` sets the camera position.

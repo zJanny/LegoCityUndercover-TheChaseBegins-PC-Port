@@ -124,8 +124,10 @@ Read this section, CLAUDE.md (incl. "Goal and faithfulness" and "Feature files")
 
 **Priorities (critical path):**
 1. Script execution: doors and other scripted objects (frozen today), NPC animation, then mission flow: [script-system](features/script-system.md), [doors](features/doors.md), [level-objects](features/level-objects.md), [animation-characters](features/animation-characters.md).
-2. Player completeness: slide exit and the landing after a slide, the other `0x203d18` states (strafing, 73, 75, 128..135): [player-movement](features/player-movement.md).
-3. Front-end remainder (existing slots, Continue, loading screen scene): [front-end](features/front-end.md), [saves-options](features/saves-options.md).
+2. World streaming and level switches: WSTREAM-1 (rule that picks loaded rooms), TRANS-1 (police entry bound, trap 0x303480): [world-streaming](features/world-streaming.md), [level-transitions](features/level-transitions.md).
+3. Rendering part 2: RENDER-1 fragment lights (break at 0x12d884), RENDER-4 indoor oracle state, reflections: [rendering](features/rendering.md).
+4. Player completeness: slide exit and the landing after a slide, the other `0x203d18` states: [player-movement](features/player-movement.md).
+5. Front-end remainder (existing slots, Continue, loading screen scene): [front-end](features/front-end.md), [saves-options](features/saves-options.md).
 
 **Workflow notes:** oracle route and states: `tools/azahar_oracle.py` with `--display xvfb --state gameplay-start --renderer opengl --rpc --rpc-input`, route from boot `tools/oracle/to-gameplay.txt`; only one agent may use `--rpc` at a time. The lead delegates to subagents in worktrees (at most 3 in parallel, user), every brief names the CLAUDE.md rules, reviews each result against CLAUDE.md, rebuilds and tests, squash-merges one commit per branch (`git merge --squash`), removes the worktree and branch (`git worktree remove -f -f`, `git branch -D`), then `graphify update .` and verifies. Resume a branch with `git log main..<branch>`.
 
@@ -251,3 +253,5 @@ One line per session: timestamp, what was worked on, how far it got, link to the
 - 2026-10-13T21:51:17+02:00 — Effect sound stop (0x23ae50, owner key, fade from the table) and the door sound sequence in `chase-game`; AUDIO-4 and DOOR-5 closed; ctest 42/42 → [audio](features/audio.md), [doors](features/doors.md)
 - 2026-10-13T22:17:29+02:00 — Progress report tool (`tools/progress_report.py`, README table, `progress-readme` gate) over C++ tables for script commands, object behaviours and file decoders → [viewer-tools](features/viewer-tools.md), [docs/progress.md](../progress.md)
 - 2026-10-13T22:20:38+02:00 — Lead: progress report merged; README progress section is a workflow rule (CLAUDE.md "Git", gate `progress-readme`) → [viewer-tools](features/viewer-tools.md), [docs/progress.md](../progress.md).
+- 2026-10-13T22:35:00+0200 — Mapped world levels, room links, scene change chain; decoded `.blvl` +0x34 room links and +0x1c event bindings (`streaming-real-data`); oracle teleport into the police entry bound did not fire → [world-streaming](features/world-streaming.md), [level-transitions](features/level-transitions.md).
+- 2026-10-13T22:31:09+02:00 — Lead: paused near the usage limit; lighting part 1 and the streaming map merged, all agents stopped, priorities updated in Next Action.

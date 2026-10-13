@@ -106,11 +106,15 @@ Level parseLevel(const Bytes& data) {
         r.cursor.pop();
     }
     r.skip();  // s1c
+    level.triggers.resize(n1c);
     for (std::size_t i = 0; i < n1c; ++i) {
-        r.skip();
-        r.skip();
+        LevelTrigger& trigger = level.triggers[i];
+        trigger.objectName = cString(r.next());
+        trigger.scriptName = cString(r.next());
         r.cursor.push(Pool::M16);
-        for (int k = 0; k < 3; ++k) r.skip();
+        trigger.event = cString(r.next());
+        trigger.firstArgument = cString(r.next());
+        trigger.secondArgument = cString(r.next());
         r.cursor.pop();
     }
     Bytes s20 = r.next();
@@ -149,8 +153,22 @@ Level parseLevel(const Bytes& data) {
     }
     Bytes s34 = r.next();
     if (!s34.empty()) {
-        r.skip();
-        for (std::uint32_t k = 0; k < readU32(s34, 0); ++k) r.skip();
+        need(s34, 8);
+        const std::uint32_t linkCount = readU32(s34, 0);
+        const Bytes records = r.next();
+        need(records, std::size_t(linkCount) * 0x10);
+        level.roomLinks.resize(linkCount);
+        for (std::uint32_t k = 0; k < linkCount; ++k) {
+            RoomLinks& links = level.roomLinks[k];
+            links.roomHash = readU32(records, std::size_t(k) * 0x10);
+            links.worldLevelHash = readU32(records, std::size_t(k) * 0x10 + 4);
+            const std::uint32_t entries = readU32(records, std::size_t(k) * 0x10 + 8);
+            const Bytes list = r.next();
+            need(list, std::size_t(entries) * 12);
+            for (std::uint32_t e = 0; e < entries; ++e)
+                links.linked.push_back({readU32(list, std::size_t(e) * 12), readU32(list, std::size_t(e) * 12 + 4),
+                                        readU32(list, std::size_t(e) * 12 + 8)});
+        }
     }
     r.cursor.push(Pool::M16);
     for (auto& obj : level.objects) obj.className = cString(r.next());

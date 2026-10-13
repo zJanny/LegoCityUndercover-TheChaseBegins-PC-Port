@@ -11,6 +11,8 @@ Item format: `- [ ] ID — gap. needs: ID. blocks: ID. evidence: link`. `needs:`
 | [collision](collision.md) | IN_PROGRESS | COLL-1 broad phase stand-in; COLL-2 constructors missing (vehicles, characters) |
 | [level-objects](level-objects.md) | IN_PROGRESS | LEVOBJ-3 objects frozen (needs SCRIPT-1); LEVOBJ-2 NPC start animation |
 | [script-system](script-system.md) | IN_PROGRESS | SCRIPT-1 no script runs after start (blocks DOOR-1, AUDIO-2, STUD-4) |
+| [world-streaming](world-streaming.md) | IN_PROGRESS | WSTREAM-1 room load rule (blocks WSTREAM-3); WSTREAM-3 rooms load and unload |
+| [level-transitions](level-transitions.md) | IN_PROGRESS | TRANS-1 reproduce a switch in the oracle; TRANS-3 master level (needs SCRIPT-1) |
 | [doors](doors.md) | IN_PROGRESS | DOOR-1 script-requested doors stay closed (needs SCRIPT-1); DOOR-3 open-door box |
 | [studs](studs.md) | IN_PROGRESS | STUD-1 magnet and multiplier; STUD-4 groups (needs SCRIPT-1) |
 | [front-end](front-end.md) | IN_PROGRESS | FE-1 existing slots and Continue (needs SAVE-2); FE-3 loading screen 3D badge |

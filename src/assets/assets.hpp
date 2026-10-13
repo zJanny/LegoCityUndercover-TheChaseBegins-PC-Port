@@ -265,7 +265,26 @@ struct LevelScript {
     std::uint32_t nameHash = 0;
     std::vector<ScriptCall> calls;
 };
+// Section +0x1c: event bindings (loader 0x1cfc50). A record of 0x18 bytes plus five string blocks: the object name
+// (+8, empty for bound events), the script name (+0xc) and, from pool -16, the event name ("BoundEntered",
+// "ObjectTriggered", ...; names of levels/letriggers.txt) and its two arguments (the bound name for bound events).
+struct LevelTrigger {
+    std::string objectName, scriptName, event, firstArgument, secondArgument;
+};
+// Section +0x34: room links (loader 0x1cfc50, consumer 0x173f94). A 0x10-byte record {room hash, world level hash,
+// entry count, list pointer} plus one list block of 12-byte entries {room hash, world level hash, 1}. Hashes are
+// nameHash of "RoomN" and of the world level instance name ("WorldLevel_01_CherryTreeHills"). Present in
+// lvl_the_city (309 records), lvl_05_bluebellwood (54) and lvl_00_policestation (1).
+struct RoomLinkEntry {
+    std::uint32_t roomHash = 0, worldLevelHash = 0, flag = 0;
+};
+struct RoomLinks {
+    std::uint32_t roomHash = 0, worldLevelHash = 0;
+    std::vector<RoomLinkEntry> linked;
+};
 struct Level {
+    std::vector<LevelTrigger> triggers;
+    std::vector<RoomLinks> roomLinks;
     std::vector<LevelParam> defaults;  // section +0x10: class default parameters (char_*.blvl carry the appearance)
     std::vector<LevelParam> classParams;  // section +0x14, searched after +0x10 by lookup 0x217080
     std::vector<LevelScript> scripts;
