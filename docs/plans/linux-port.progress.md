@@ -139,11 +139,11 @@ Handoff (2026-10-13T17:53:20+02:00). Read this section, CLAUDE.md (incl. "Goal a
 **Milestones reached (all on main, verified by the lead):**
 - M1 runtime loop, M2 locomotion, M3 walkable level (follow camera, level collision): see the session log up to 15:22.
 - M4 (2026-10-13 afternoon): level objects from class files (docs/re/objects.md), level characters standing in place (objects.md), studs drawn/collected/counted (docs/re/studs.md), falling and jumping (docs/re/player.md), camera obstruction (docs/re/camera.md), placed-object collision for player and camera (docs/re/collision.md), walk/run speed, jump height, air speed and animation rate derived from code/data (player.md, skeleton-animation.md). README quick start runs chase-game; docs/game-runtime.md.
-- Tests at 286b81d: build warning-free, ctest 28/28 (trace dirs: CHASE_LOCO/CAMERA/CAMERA_WALL/COLLISION/OBJECT_COLLISION/FALL/JUMP/STUDS_TRACE_DIR, defaults under artifacts/oracle/), python3 -m unittest 63 OK. Graphify updated after each merge.
+- Tests at the sound merge: build warning-free, ctest 30/30 (+ CHASE_AUDIO_TRACE_DIR) (trace dirs: CHASE_LOCO/CAMERA/CAMERA_WALL/COLLISION/OBJECT_COLLISION/FALL/JUMP/STUDS_TRACE_DIR, defaults under artifacts/oracle/), python3 -m unittest 63 OK. Graphify updated after each merge.
 
-**Unfinished agent branches (not merged; worktrees under .claude/worktrees/, review before use):**
-- `worktree-agent-acac0a1c124d6d5f2` — front end (boot to title screen): src/frontend/ (flow, layout, canvas, resources) and docs/re/front-end.md, committed as WIP when stopped; not reviewed, may not build. Next: finish the flow map and the screens up to the title, faithful to the original (oracle states agent-doughnut-title, agent-intro-dialog, agent-slot, fast-lang).
-- `worktree-agent-a1e075329efe44717` — sound (level music, stud/jump/land/footstep sounds; src/audio/soundplayer.*, musicplayer.*, spatial.*, src/runtime/sound_events.*, music.*): asked to wrap up; check its last commit and report in the session log before merging.
+**Agent branches at the pause:**
+- Front end (boot to title screen): WIP branch `worktree-agent-acac0a1c124d6d5f2`, also pushed as `origin/wip/front-end` (commit 8a836cc). It holds docs/re/front-end.md (boot flow map: sequencer 0x51429c/0x302080, row table 0x372eb4, screens to gameplay) and src/frontend/{canvas,resources,layout,flow} sources that are not in CMake, not built and not tested. Missing: movie player refactor out of fmv.cpp, prompt/slot flow, autosave spinner, a chase-game front-end mode, tests, screenshots, progress entry. Next: review, add the CMake target and mode, finish the screens up to gameplay.
+- Sound: merged (squash) with ctest 30/30; open items in docs/re/audio.md (sprint footstep phase, idle/jump track sounds, world sounds, music fades; nothing starts level music yet because no scripts run).
 - Resume: `git log main..<branch>`, review against CLAUDE.md, rebuild/test, squash-merge, `git worktree remove -f -f`, `git branch -D`, `graphify update .`.
 
 **Runtime oracle:** tools/azahar_oracle.py with save states (`--display xvfb --state gameplay-start --renderer opengl --rpc --rpc-input`); route from boot: tools/oracle/to-gameplay.txt; `teleport X Y Z` step; stick/button state survives loadstate. Rules in CLAUDE.md "Runtime oracle" and docs/re/oracle.md.
@@ -151,7 +151,7 @@ Handoff (2026-10-13T17:53:20+02:00). Read this section, CLAUDE.md (incl. "Goal a
 **Lead workflow:** delegate to subagents in worktrees (Sonnet for RE and code, Haiku for simple tasks), at most 3 in parallel (user); every brief names the CLAUDE.md rules (Graphify first, oracle fast path, docs/re dated entries with unknowns last, no explanatory comments, plain-language docs, Goal and faithfulness); review each result against CLAUDE.md, spot-check addresses with llvm-objdump, rebuild and test, look at screenshots, squash-merge (`git merge --squash`, one commit per branch), `graphify update .` and verify, push (authorized by the user this session). Only one agent may use `--rpc` at a time.
 
 **Next critical-path candidates:**
-1. Finish and merge the two branches above (front end, sound).
+1. Finish and merge the front-end branch above.
 2. HUD (hearts, stud counter) with the .bxaml layouts; studs flying to the counter.
 3. Interaction and object behaviour: doors and other scripted objects (frozen today), NPC animation, script objects; then mission flow.
 4. Player completeness: step-off state 8, slope slow-down (0x1abe60), landing-stun rule, other 0x203d18 states.
