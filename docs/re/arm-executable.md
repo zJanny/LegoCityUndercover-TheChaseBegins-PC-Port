@@ -124,3 +124,20 @@ Unknown:
   - Callers that choose slots 4/5 versus 6/7 beyond the reader sets above; FUN_00187f78, FUN_002e6a60, FUN_002d7fd0 and the sites 0x2eebec/0x2ef350 were not decompiled.
   - Who reads slots 16/17 (channels 2/3, right stick / C-stick equivalents) and what produces channels 2/3 on a 3DS without a second stick (Circle Pad Pro is possible but unverified).
   - Callers of FUN_002289b8 (where in the frame it runs) were not traced.
+
+## 2026-10-13T09:36:11+02:00 — GSP interrupt thread and vblank wait (REA Ghidra 12.1.2, llvm-objdump; read-only, partial)
+
+- Svc stubs (objdump): 0x2594b4 = WaitSynchronizationN (svc 0x25; no svc 0x24 stub exists), 0x25947c = SendSyncRequest (svc 0x32), 0x259464 = CreateEvent (svc 0x17), 0x256c18 = ClearEvent (svc 0x19), 0x24e9d0 = GetSystemTick (svc 0x28), 0x105b20 = SleepThread (svc 0xa).
+- GSP RegisterInterruptRelayQueue: header 0x130042 is stored by 0x1302f0 (literal at 0x13033c; only caller 0x12c224, inside GSP init 0x12c15c, which is called by 0x122090; ev_0b551343…). The event handle is created by 0x259464 (type 0) and stored at G+0x2c, where G = *0x386404 = 0x371c40. The same init creates the interrupt thread (CreateThread entry 0x1300c8, literal at 0x12c324).
+- Interrupt thread 0x1300c8 (ev_30066315…): loops WaitSynchronizationN on the event G+0x2c with an infinite timeout, then ClearEvent. It pops the shared-memory interrupt queue (pointer G+0x34; queue byte 0 = read index, byte 1 = count, ids at +0xc, wrap modulo 0x34) and calls the callback in table G+0x10+id*4 (7 entries, zeroed in init, so ids 0..6). After each callback it sets G+0x76 = 2 and signals the object at G+0x64.
+- Vblank wait: 0x12bf44 (reached through the thunk 0x24e06c; ev_8170e6aa…) is a one-interrupt wait. It sets G+0x76 = 1 and waits on the object at G+0x64 (0x251d88); if G+0x76 is already 2 it resets it to 0 and returns.
+  - 0x257a68(mode) (ev_4c407a80…) latches two counters, 0x593d14 and 0x593d18, then repeats the one-interrupt wait until the selected counter changes. Mode 0x400: counter 0x593d14 changes. Mode 0x401: counter 0x593d18 changes. Mode 0x402: both change.
+  - Callers: 0x10f370 (ev_371a0248…, a present/swap-end routine that selects the mode from the byte at 0x52a1f4: 1 gives 0x401, 2 gives 0x402, else 0x400), 0x105d8c and 0x25a6f0 (not examined).
+  - 0x1132ac also calls the one-interrupt wait directly (inside FUN_00112630, not examined).
+- Reading (inference): the game waits for a GSP interrupt counter once per present, which is a vsync wait. Frame pacing then depends on how often the counters at 0x593d14/0x593d18 advance, and that is not established.
+
+Unknowns:
+- Which callbacks fill the table G+0x10..0x28, and which ids increment 0x593d14 and 0x593d18 (PDC0/PDC1 ids 2 and 3 are not confirmed). Writers of 0x593d14/0x593d18 were not searched.
+- Whether a counter advances on every vblank or only every second (a swap-interval multiple). Without this the answer 30 versus 60 fps is unknown.
+- Whether 0x10f370 runs once per scheduler step (0x100f44) or per rendered frame, and the value of 0x52a1f4.
+- The step value in the scheduler (C+0x10) is still unknown. The idle path 0x25c174 is not a sleep: it polls input (0x25cb2c, 0x25b4b4) and ends in 0x25afcc, so the earlier wording "sleeps through 0x25c174(1/30)" is unverified.

@@ -5,7 +5,7 @@
 - Overall: IN_PROGRESS
 - Current Phase: IMPLEMENT
 - Current Step: S4f/S3 RE rounds via subagents (last: level/character tables, input slot readers)
-- Last Updated: 2026-10-13T09:33+02:00
+- Last Updated: 2026-10-13T09:36+02:00
 - Branch: main
 - Target Branch: Not specified
 - Requested Scope: PLAN, IMPLEMENT, TEST; start reverse engineering and native port
@@ -125,7 +125,7 @@ Full game logic, hardware APIs and asset formats not recovered yet.
 ## Next Action
 
 - S4f: all completion inputs found (docs/re/save-format.md 09:25, total 711). chase-savecheck prints slot completion from the real tables (total 711); next: check its output against the percentage the game shows for the same save. Not modelled: cheat flags 0x375961/0x375962. Still open: options +0 nibbles and +3 bits 2..5 (no reader found); per-level block contents beyond the counters; how live state is copied into the save buffer.
-- S3: find the GSP vsync call and the scheduler step (30 vs 60 fps); callers of stick-to-D-pad 0x2289b8; readers of axis slots 16/17; other writers of channel 7.
+- S3: vsync wait found (0x257a68, interrupt thread 0x1300c8); 30 vs 60 still open: writers of counters 0x593d14/0x593d18, present mode byte 0x52a1f4, step C+0x10; callers of stick-to-D-pad 0x2289b8; readers of axis slots 16/17; other writers of channel 7.
 - S4e: the code that applies .bxaml track properties; .cam weight source 0x21c1e4 and blend easing; Type bit 0x100 (no reader found); particle rendering (vertex/quad build) and a native particle simulation.
 - Open unknowns are listed at the end of the matching docs/re/ files.
 
@@ -246,3 +246,5 @@ Reverse-engineering findings live in docs/re/ (see docs/re/README.md). Entries m
 - 2026-10-13T09:30+02:00 — chase_save slot progress accessors + completion (worker, Sonnet); reviewed, offsets re-checked against 0x203464/0x20a630; build warning-free, ctest 10/10.
 - 2026-10-13T09:32+02:00 — Camera selection is spatial (0x20bf6c), weights by XZ distance, bit 0x400 = look offset add (worker, REA; 0x23f50c re-checked) → [docs/re/data-tables-config.md](../re/data-tables-config.md)
 - 2026-10-13T09:33+02:00 — chase_save_tables + chase-savecheck, save-real-data test (total 711) (worker, Sonnet); empty-slot wrap shown as empty; build warning-free, ctest 11/11.
+- 2026-10-13T09:33+02:00 — Sound play path 0x23fa54(id, pos, …), ids = tables/tablessoundfx.bxls (worker, REA; table re-checked) → [docs/re/audio.md](../re/audio.md)
+- 2026-10-13T09:35+02:00 — GSP interrupt thread and vsync wait 0x257a68; 30/60 fps still unknown (worker, REA; 0x130042 literal re-checked) → [docs/re/arm-executable.md](../re/arm-executable.md)
