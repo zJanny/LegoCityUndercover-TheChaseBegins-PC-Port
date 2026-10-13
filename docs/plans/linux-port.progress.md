@@ -4,8 +4,8 @@
 
 - Overall: IN_PROGRESS
 - Current Phase: IMPLEMENT
-- Current Step: S4e (particles); S4f option fields done
-- Last Updated: 2026-10-13T09:13+02:00
+- Current Step: paused 2026-10-13T09:15+02:00 at user request (last work: S4f slot progress, S4e particles)
+- Last Updated: 2026-10-13T09:15+02:00
 - Branch: main
 - Target Branch: Not specified
 - Requested Scope: PLAN, IMPLEMENT, TEST; start reverse engineering and native port
@@ -41,18 +41,18 @@ Commits authorized by CLAUDE.md "User specified workflows" (commit at logical st
 | S4b | Level viewer (SDL2 + GL) | COMPLETE | chase-viewer; offscreen smoke test; placement awaits S4c |
 | S4c | Level composition (.blvl) | IN_PROGRESS | loader replicated (Py+C++), placements in viewer; materials/lighting, streaming, other sections open |
 | S4d | Audio playback | IN_PROGRESS | mixer + SDL sound test with loops; event routing not recovered |
-| S4e | Gameplay | IN_PROGRESS | skeletons/animation/cutscenes/nav/tables/loc/fonts decoded; logic not recovered |
-| S4f | Saves/settings | IN_PROGRESS | chase_save: header, CRC, validate, atomic XDG storage, option fields; slot contents opaque |
+| S4e | Gameplay | IN_PROGRESS | skeletons/animation/cutscenes/nav/tables/loc/fonts/particle defs decoded; .cam record layout known; logic not recovered |
+| S4f | Saves/settings | IN_PROGRESS | chase_save: header, CRC, validate, atomic XDG storage, option fields; slot progress layout documented, not in code |
 
 ## Current Work
 
 ### Current Step
 
-S4f, at a clean point.
+Paused at a clean point (all work committed).
 
 ### What Is Being Done
 
-Nothing in progress. chase_save (src/save/) handles the header, CRC, validation, atomic XDG storage, option defaults, option fields and the language mapping.
+Nothing in progress. The last open thread was checking whether tables/tablessupercounters.bxls matches the 13 × 7 completion totals layout (see docs/re/save-format.md, 09:13 entry addendum).
 
 ### Files Being Modified
 
@@ -124,7 +124,7 @@ Full game logic, hardware APIs and asset formats not recovered yet.
 
 ## Next Action
 
-- S4f: options +0 nibbles and +3 bits 2..5 (no reader found); per-level block contents and the 13 completion categories (0x20a630, 0x20a7fc); how live state is copied into the save buffer.
+- S4f: dump tables/tablessupercounters.bxls (`build/chase-tabledump`) and check it against the 13 × 7 totals layout read by 0x20a7fc; if it matches, add slot progress accessors and a completion function to chase_save. Still open: options +0 nibbles and +3 bits 2..5 (no reader found); per-level block contents beyond the counters; how live state is copied into the save buffer.
 - S3: find the GSP vsync call and the scheduler step (30 vs 60 fps); name the binding slots at 0x3769e8.
 - S4e: the code that applies .bxaml track properties; .cam Type values and the run-time camera (0x1e9290); particle rendering (vertex/quad build) and a native particle simulation.
 - Open unknowns are listed at the end of the matching docs/re/ files.
@@ -235,3 +235,5 @@ Reverse-engineering findings live in docs/re/ (see docs/re/README.md). Entries m
 - 2026-10-13T09:10+02:00 — .cam loader 0x3062e4: key handlers and record layout; RotationY/X, Distance, Lookat are editor-only → [docs/re/data-tables-config.md](../re/data-tables-config.md)
 - 2026-10-13T09:12+02:00 — Storyboard runtime layout (0x1dbb80); property evaluator not found (time-boxed) → [docs/re/ui-layouts.md](../re/ui-layouts.md)
 - 2026-10-13T09:13+02:00 — Slot progress layout: character bits, level blocks, completion formula (0x1cd3dc) → [docs/re/save-format.md](../re/save-format.md)
+- 2026-10-13T09:14+02:00 — Per-level counters (0x20a630, 0x203464) and totals source TablesSuperCounters (0x2f63dc) → [docs/re/save-format.md](../re/save-format.md)
+- 2026-10-13T09:15+02:00 — Paused at user request. Tree clean after this commit; ctest 10/10 at the last code change (`46ba507`).
