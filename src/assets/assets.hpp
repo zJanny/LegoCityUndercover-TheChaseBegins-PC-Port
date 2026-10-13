@@ -1,6 +1,5 @@
 #pragma once
-// Native asset runtime (plan step S4a). Mirrors the verified Python tools in
-// tools/; see docs/plans/linux-port.progress.md for the recovered formats.
+// Native asset runtime (plan step S4a). The recovered formats are described in docs/re/.
 // No SDL or GPU dependency.
 #include <array>
 #include <cstddef>
@@ -30,7 +29,8 @@ class FuseArchive {
 public:
     explicit FuseArchive(const std::string& path);
     const std::vector<FuseEntry>& entries() const { return entries_; }
-    Bytes read(const FuseEntry& entry);
+    // `storedSize`, when given, receives the bytes the entry occupies in the archive.
+    Bytes read(const FuseEntry& entry, std::uint64_t* storedSize = nullptr);
     // Shipped CSV index: "CRC, name, compressed size, size, offset" per line.
     void loadNames(const std::string& csvPath);
     // Case-insensitive lookup by archive path; nullptr when unknown.
@@ -132,10 +132,13 @@ std::size_t vertexStride(unsigned flags);
 // .bwav: pooled resource with a 0x2c sound record, then one CWAV per channel part.
 // PCM8/PCM16/DSP-ADPCM/IMA-ADPCM decode to signed 16-bit; parts become channels.
 struct Sound {
+    enum Encoding : std::uint8_t { Pcm8, Pcm16, DspAdpcm, ImaAdpcm };
     int rate = 0;
     bool loop = false;
     std::uint32_t loopStart = 0;
     std::uint32_t frames = 0;                     // samples per channel
+    std::uint32_t version = 0;                    // CWAV version word of the first part
+    std::vector<std::uint8_t> encodings;          // Encoding of each part
     std::vector<std::vector<std::int16_t>> channels;
 };
 Sound decodeSound(const Bytes& data);

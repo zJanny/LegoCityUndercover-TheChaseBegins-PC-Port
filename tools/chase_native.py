@@ -2,12 +2,20 @@
 
 Set CHASE_ASSETS_LIB to use a library outside the default build directory.
 """
+import array
 import ctypes
 import os
 from pathlib import Path
 
 DEFAULT_LIBRARY = Path(__file__).resolve().parents[1] / 'build' / 'libchase_assets_c.so'
 _library = None
+
+ENCODINGS = ('PCM8', 'PCM16', 'DSP-ADPCM', 'IMA-ADPCM')
+
+_TEXT_ENTRY = ctypes.CFUNCTYPE(None, ctypes.c_uint32, ctypes.c_char_p, ctypes.c_void_p)
+_LEVEL_OBJECT = ctypes.CFUNCTYPE(None, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_void_p)
+_LEVEL_PARAM = ctypes.CFUNCTYPE(None, ctypes.c_uint32, ctypes.c_uint16, ctypes.c_uint32, ctypes.c_size_t,
+                                ctypes.POINTER(ctypes.c_void_p), ctypes.POINTER(ctypes.c_size_t), ctypes.c_void_p)
 
 
 class NativeUnavailable(RuntimeError):
@@ -33,8 +41,47 @@ def library():
         lib.chase_skin_matrices.restype = ctypes.c_int
         lib.chase_skin_matrices.argtypes = [ctypes.c_char_p, ctypes.c_size_t, ctypes.c_char_p, ctypes.c_size_t,
                                             ctypes.c_double, ctypes.POINTER(ctypes.c_float), ctypes.c_size_t]
+        lib.chase_fib_open.restype = ctypes.c_void_p
+        lib.chase_fib_open.argtypes = [ctypes.c_char_p]
+        lib.chase_fib_close.argtypes = [ctypes.c_void_p]
+        lib.chase_fib_count.restype = ctypes.c_size_t
+        lib.chase_fib_count.argtypes = [ctypes.c_void_p]
+        lib.chase_fib_entry.restype = ctypes.c_int
+        lib.chase_fib_entry.argtypes = [ctypes.c_void_p, ctypes.c_size_t, ctypes.POINTER(ctypes.c_uint32)]
+        lib.chase_fib_read.restype = ctypes.c_int
+        lib.chase_fib_read.argtypes = [ctypes.c_void_p, ctypes.c_size_t, ctypes.c_void_p, ctypes.c_size_t,
+                                       ctypes.POINTER(ctypes.c_uint64)]
+        lib.chase_texture_decode.restype = ctypes.c_void_p
+        lib.chase_texture_decode.argtypes = [ctypes.c_char_p, ctypes.c_size_t]
+        lib.chase_texture_info.argtypes = [ctypes.c_void_p, ctypes.POINTER(ctypes.c_int32)]
+        lib.chase_texture_rgba.restype = ctypes.c_void_p
+        lib.chase_texture_rgba.argtypes = [ctypes.c_void_p]
+        lib.chase_texture_free.argtypes = [ctypes.c_void_p]
+        lib.chase_sound_decode.restype = ctypes.c_void_p
+        lib.chase_sound_decode.argtypes = [ctypes.c_char_p, ctypes.c_size_t]
+        lib.chase_sound_info.argtypes = [ctypes.c_void_p, ctypes.POINTER(ctypes.c_uint32)]
+        lib.chase_sound_encoding.restype = ctypes.c_int
+        lib.chase_sound_encoding.argtypes = [ctypes.c_void_p, ctypes.c_size_t]
+        lib.chase_sound_channel.restype = ctypes.c_void_p
+        lib.chase_sound_channel.argtypes = [ctypes.c_void_p, ctypes.c_size_t]
+        lib.chase_sound_free.argtypes = [ctypes.c_void_p]
+        lib.chase_text_key.restype = ctypes.c_uint32
+        lib.chase_text_key.argtypes = [ctypes.c_char_p]
+        lib.chase_loc_decode.restype = ctypes.c_int
+        lib.chase_loc_decode.argtypes = [ctypes.c_char_p, ctypes.c_size_t, ctypes.c_char_p, ctypes.c_size_t,
+                                         _TEXT_ENTRY, ctypes.c_void_p]
+        lib.chase_font_layout.restype = ctypes.c_int
+        lib.chase_font_layout.argtypes = [ctypes.c_char_p, ctypes.c_size_t, ctypes.c_char_p, ctypes.c_char_p,
+                                          ctypes.c_size_t, ctypes.POINTER(ctypes.c_int32), ctypes.c_size_t]
+        lib.chase_level_walk.restype = ctypes.c_int
+        lib.chase_level_walk.argtypes = [ctypes.c_char_p, ctypes.c_size_t, _LEVEL_OBJECT, _LEVEL_PARAM,
+                                         ctypes.c_void_p]
         _library = lib
     return _library
+
+
+def _error(lib):
+    return ValueError(lib.chase_last_error().decode())
 
 
 def skin_matrices(skeleton_data, animation_data, frame, max_joints=1024):
@@ -46,3 +93,132 @@ def skin_matrices(skeleton_data, animation_data, frame, max_joints=1024):
     if count < 0:
         raise ValueError(lib.chase_last_error().decode())
     return [[list(out[16 * j + 4 * r:16 * j + 4 * r + 4]) for r in range(4)] for j in range(count)]
+
+
+class FuseArchive:
+    """A FUSE1.00 .fib archive read by chase::assets::FuseArchive."""
+
+    def __init__(self, path):
+        self._lib = library()
+        self._handle = self._lib.chase_fib_open(str(path).encode())
+        if not self._handle:
+            raise _error(self._lib)
+        count = self._lib.chase_fib_count(self._handle)
+        raw = (ctypes.c_uint32 * 4)()
+        self.entries = []
+        for index in range(count):
+            self._lib.chase_fib_entry(self._handle, index, raw)
+            self.entries.append(tuple(raw))
+
+    def read(self, index):
+        """(data, stored size) of the entry at `index` in directory order."""
+        size = self.entries[index][2]
+        buffer = ctypes.create_string_buffer(size)
+        stored = ctypes.c_uint64()
+        if self._lib.chase_fib_read(self._handle, index, buffer, size, ctypes.byref(stored)) != 0:
+            raise _error(self._lib)
+        return buffer.raw, stored.value
+
+    def close(self):
+        if self._handle:
+            self._lib.chase_fib_close(self._handle)
+            self._handle = None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        self.close()
+
+
+def decode_texture(data):
+    """Decode a .btga/.bpng/.bdds with chase::assets::decodeTexture.
+
+    Returns (info, rgba): info has width, height (all rows, six faces of a cubemap stacked), format, faces and
+    levels; rgba holds width * height * 4 bytes, top row first.
+    """
+    lib = library()
+    handle = lib.chase_texture_decode(data, len(data))
+    if not handle:
+        raise _error(lib)
+    try:
+        raw = (ctypes.c_int32 * 5)()
+        lib.chase_texture_info(handle, raw)
+        info = dict(zip(('width', 'height', 'format', 'faces', 'levels'), raw))
+        rgba = ctypes.string_at(lib.chase_texture_rgba(handle), info['width'] * info['height'] * 4)
+    finally:
+        lib.chase_texture_free(handle)
+    return info, rgba
+
+
+def decode_sound(data):
+    """Decode a .bwav with chase::assets::decodeSound.
+
+    Returns (info, channels): info has rate, loop, loop_start, frames, version and the encoding name of each part;
+    channels is a list of signed 16-bit arrays of equal length.
+    """
+    lib = library()
+    handle = lib.chase_sound_decode(data, len(data))
+    if not handle:
+        raise _error(lib)
+    try:
+        raw = (ctypes.c_uint32 * 7)()
+        lib.chase_sound_info(handle, raw)
+        rate, loop, loop_start, frames, channel_count, parts, version = raw
+        channels = []
+        for index in range(channel_count):
+            samples = array.array('h')
+            samples.frombytes(ctypes.string_at(lib.chase_sound_channel(handle, index), frames * 2))
+            channels.append(samples)
+        encodings = [ENCODINGS[lib.chase_sound_encoding(handle, part)] for part in range(parts)]
+    finally:
+        lib.chase_sound_free(handle)
+    return {'rate': rate, 'loop': bool(loop), 'loop_start': loop_start, 'frames': frames, 'version': version,
+            'encodings': encodings}, channels
+
+
+def text_key(name):
+    """Localisation key of an identifier (chase::assets::textKey)."""
+    return library().chase_text_key(name.encode('latin-1'))
+
+
+def decode_localisation(data, extended=''):
+    """{key: text} of a .loc file, with the escapes for extended characters resolved to UTF-8 text."""
+    lib = library()
+    entries = {}
+
+    def collect(key, text, _user):
+        entries[key] = text.decode('utf-8')
+
+    packed = extended.encode('utf-8')
+    if lib.chase_loc_decode(data, len(data), packed, len(packed), _TEXT_ENTRY(collect), None) != 0:
+        raise _error(lib)
+    return entries
+
+
+def layout_text(font_data, text, extended=''):
+    """(line height, [(x, atlas x, atlas y, width, height)]) of `text` laid out in a .tnf font."""
+    lib = library()
+    capacity = 1 + 5 * max(1, len(text))
+    out = (ctypes.c_int32 * capacity)()
+    packed = extended.encode('utf-8')
+    count = lib.chase_font_layout(font_data, len(font_data), text.encode('utf-8'), packed, len(packed), out, capacity)
+    if count < 0:
+        raise _error(lib)
+    return out[0], [tuple(out[1 + 5 * i:6 + 5 * i]) for i in range(count)]
+
+
+def level_objects(data):
+    """[(class name, instance, room, [(hash, type, value, [block bytes])])] of a .blvl level."""
+    lib = library()
+    objects = []
+
+    def on_object(class_name, instance, room, _user):
+        objects.append((class_name.decode('latin-1'), instance.decode('latin-1'), room.decode('latin-1'), []))
+
+    def on_param(name_hash, kind, value, count, blocks, sizes, _user):
+        objects[-1][3].append((name_hash, kind, value, [ctypes.string_at(blocks[i], sizes[i]) for i in range(count)]))
+
+    if lib.chase_level_walk(data, len(data), _LEVEL_OBJECT(on_object), _LEVEL_PARAM(on_param), None) < 0:
+        raise _error(lib)
+    return objects

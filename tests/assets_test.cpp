@@ -1,5 +1,5 @@
 // Synthetic fixtures for the native asset runtime; mirrors tests/test_extract_fib.py,
-// tests/test_tt_resource.py and tests/test_convert_textures.py.
+// tests/test_tt_resource.py (at 9d04c91) and tests/test_convert_textures.py.
 #include "assets/assets.hpp"
 #include <algorithm>
 #include <cmath>
@@ -74,13 +74,14 @@ void fuse() {
     FuseArchive archive(path);
     archive.loadNames(csv);
     require(archive.entries().size() == 3, "entry count");
-    Bytes raw = archive.read(archive.entries()[0]);
-    require(std::string(raw.begin(), raw.end()) == "raw", "stored entry");
+    std::uint64_t stored = 0;
+    Bytes raw = archive.read(archive.entries()[0], &stored);
+    require(std::string(raw.begin(), raw.end()) == "raw" && stored == 3, "stored entry");
     const FuseEntry* packed = archive.find("models/packed.bin");
     require(packed && packed->crc == 0x22, "case-insensitive CSV lookup");
-    Bytes unpacked = archive.read(*packed);
-    require(std::string(unpacked.begin(), unpacked.end()) == decoded, "codec 1 entry");
-    require(archive.read(archive.entries()[2]) == big, "codec 2 chunks");
+    Bytes unpacked = archive.read(*packed, &stored);
+    require(std::string(unpacked.begin(), unpacked.end()) == decoded && stored == chunk1.size(), "codec 1 entry");
+    require(archive.read(archive.entries()[2], &stored) == big && stored == chunks2.size(), "codec 2 chunks");
     require(archive.find("missing") == nullptr, "unknown name");
     std::remove(path.c_str());
     std::remove(csv.c_str());
@@ -150,7 +151,7 @@ void textures() {
         requireThrows([&] { decodeTexture(bad); }, "bad texture accepted");
 }
 
-// Same synthetic model as tests/test_convert_models.py: one mesh, one textured triangle.
+// Same synthetic model as tests/test_convert_models.py (at 9d04c91): one mesh, one textured triangle.
 Bytes pooledBlocks(const std::vector<std::pair<std::int32_t, Bytes>>& blocks) {
     std::vector<std::int32_t> table;
     Bytes stat, body;
@@ -607,7 +608,7 @@ void animations() {
     require(near(skin[1][12], 1.55f) && near(skin[1][13], -1.0f), "child follows root (local * parent.world)");
 }
 
-// Same synthetic navigation file as tests/test_convert_nav.py.
+// Same synthetic navigation file as tests/test_convert_nav.py (at 9d04c91).
 Bytes navFile(bool extraBlock, std::size_t cells) {
     auto grid = [](std::uint16_t x, std::uint16_t height, std::uint16_t z, std::uint16_t w, std::uint16_t d,
                    int link, std::uint16_t extra) {
@@ -888,6 +889,8 @@ void sounds() {
     require(sound.rate == 12000 && sound.loop && sound.loopStart == 1 && sound.frames == 3, "sound header");
     require(sound.channels.size() == 1 && sound.channels[0] == std::vector<std::int16_t>{112, -16, -16},
             "DSP-ADPCM decode (floor shift)");
+    require(sound.version == 0x02010000 && sound.encodings == std::vector<std::uint8_t>{Sound::DspAdpcm},
+            "sound version and encodings");
     Bytes bad = soundFile();
     bad[12] = 0x30;   // sound-record block size 0x2c -> 0x30: blocks no longer close
     requireThrows([&] { decodeSound(bad); }, "bad .bwav accepted");
