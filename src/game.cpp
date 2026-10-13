@@ -13,6 +13,8 @@
 #include <cstdint>
 #include <fstream>
 #include <iostream>
+#include <map>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -25,6 +27,12 @@ namespace runtime = chase::runtime;
 constexpr int kStickFullDeflection = 145;
 constexpr std::size_t kSlotLeftShoulder = 12, kSlotRightShoulder = 13, kSlotStickX = 14, kSlotStickY = 15;
 constexpr std::size_t kSlotButtonX = 8, kSlotButtonY = 9;
+
+// The class whose CharacterEnum 9 row ("police") is the one character the completion count excludes,
+// taken as the starting character (inference). The idle animation is picked by file name only.
+constexpr const char* kPlayerCharacter = "levels/chars/char_police.blvl";
+constexpr const char* kPlayerBaseCharacter = "levels/chars/char_player.blvl";
+constexpr const char* kPlayerIdleAnimation = "models/char_minifig/class_police/idle_minifig.bfnanm";
 
 int resolveKey(const std::string& name) {
     std::string spaced = name;
@@ -91,6 +99,16 @@ struct PlaceholderCamera {
         speed = radius * 0.5f;
     }
 
+    void frameBehind(const Mat4& player) {
+        constexpr float distance = 5.0f, height = 1.6f, lookHeight = 0.9f;
+        const float forward[2] = {player[8], player[10]};
+        eye[0] = player[12] - distance * forward[0];
+        eye[1] = player[13] + height;
+        eye[2] = player[14] - distance * forward[1];
+        yaw = std::atan2(forward[0], -forward[1]);
+        pitch = std::atan2(lookHeight - height, distance);
+    }
+
     void update(float dt, const runtime::PadDevice& pad) {
         float strafe = pad.slot(kSlotStickX).value, forward = pad.slot(kSlotStickY).value;
         float rise = pad.slot(kSlotRightShoulder).value - pad.slot(kSlotLeftShoulder).value;
@@ -101,6 +119,54 @@ struct PlaceholderCamera {
         eye[2] += step * (-forward * std::cos(pitch) * std::cos(yaw) + strafe * std::sin(yaw));
     }
 };
+
+std::string withExtension(std::string path, const std::string& extension) {
+    return path.substr(0, path.rfind('.')) + extension;
+}
+
+std::string lowerStem(const std::string& file) {
+    std::string name = lower(file);
+    return name.substr(0, name.rfind('.'));
+}
+
+CharacterAppearance readCharacter(FuseArchive& archive, const std::string& path) {
+    const FuseEntry* entry = archive.find(path);
+    if (!entry) throw std::runtime_error("not in archive: " + path);
+    return characterAppearance(parseLevel(archive.read(*entry)));
+}
+
+// Places the character at the level's player start. The head model sits on the animated head joint.
+// Returns the player's world matrix, or nothing when the level has no "Player1Start".
+std::optional<Mat4> placePlayer(FuseArchive& archive, Scene& scene, const Level& level) {
+    auto start = playerStart(level);
+    if (!start) return std::nullopt;
+    const Mat4 player = placementMatrix(*start);
+    const CharacterAppearance base = readCharacter(archive, kPlayerBaseCharacter);
+    const CharacterAppearance character = readCharacter(archive, kPlayerCharacter);
+    const std::string bodyPath = meshModelPath(character.body), headPath = meshModelPath(character.head);
+    const std::map<std::string, std::string> bodyTextures = {
+        {lowerStem(base.lower), character.lower}, {lowerStem(base.upper), character.upper}};
+    const std::map<std::string, std::string> headTextures = {{lowerStem(base.face), character.face}};
+
+    const Skeleton skeleton = parseSkeleton(archive.read(*archive.find(withExtension(bodyPath, ".bfnskl"))));
+    const Animation idle = parseAnimation(archive.read(*archive.find(kPlayerIdleAnimation)));
+    const std::vector<Matrix> skin = skinMatrices(skeleton, idle, 0);
+    const auto head = std::find_if(skeleton.joints.begin(), skeleton.joints.end(),
+                                   [](const Joint& joint) { return lower(joint.name) == "head"; });
+
+    if (!scene.addModel(bodyPath, player, bodyTextures)) throw std::runtime_error("not in archive: " + bodyPath);
+    scene.pose(bodyPath, skin);
+    Mat4 headTransform = player;
+    if (head != skeleton.joints.end()) {
+        const std::size_t joint = std::size_t(head - skeleton.joints.begin());
+        headTransform = chase::assets::multiply(chase::assets::multiply(head->world, skin[joint]), player);
+    }
+    if (!scene.addModel(headPath, headTransform, headTextures)) throw std::runtime_error("not in archive: " + headPath);
+    std::cout << "player at " << start->position[0] << ' ' << start->position[1] << ' ' << start->position[2]
+              << ", yaw " << start->orientation[1] << ", character " << character.characterEnum << " ("
+              << character.head << ")\n";
+    return player;
+}
 
 std::uint32_t clockTicks(std::uint64_t counter, std::uint64_t frequency) {
     std::uint64_t seconds = counter / frequency, rest = counter % frequency;
@@ -134,9 +200,11 @@ int run(const Options& options) {
     const FuseEntry* entry = archive.find(options.level);
     if (!entry) throw std::runtime_error("not in archive: " + options.level);
     std::size_t placed = 0, unresolved = 0;
-    for (const auto& placement : placements(parseLevel(archive.read(*entry))))
+    const Level level = parseLevel(archive.read(*entry));
+    for (const auto& placement : placements(level))
         if (scene.addModel(meshModelPath(placement.mesh), placementMatrix(placement))) ++placed;
         else ++unresolved;
+    const std::optional<Mat4> player = placePlayer(archive, scene, level);
 
     float centre[3], radius;
     scene.bounds(centre, radius);
@@ -146,6 +214,7 @@ int run(const Options& options) {
 
     PlaceholderCamera camera;
     camera.frameScene(centre, radius);
+    if (player) camera.frameBehind(*player);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glFrontFace(GL_CCW);

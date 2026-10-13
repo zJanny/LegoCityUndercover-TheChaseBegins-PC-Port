@@ -241,6 +241,20 @@ int main(int argc, char** argv) {
         // Reference totals from tools/convert_levels.py (parse_level / placements over all .blvl)
         if (levels != 856 || objects != 18469 || placed != 6563)
             throw std::runtime_error("level totals differ from the Python reference");
+        // Reference: python3 tools/convert_levels.py on lvl_00_policestation_main.blvl with parameter names from
+        // code.bin (object Player1Start, class point, room1) and on chars/char_police.blvl (s10 defaults).
+        {
+            auto read = [&](const char* path) { return parseLevel(archive.read(*archive.find(path))); };
+            auto start = playerStart(read("levels/levels/lvl_00_policestation/lvl_00_policestation_main.blvl"));
+            if (!start || start->room != "room1" || start->position[0] != -2.1713f || start->position[1] != 1.4203f ||
+                start->position[2] != 17.2821f || start->orientation[0] != 0 || start->orientation[1] != 180.9585f)
+                throw std::runtime_error("Player1Start differs from the recorded reference");
+            CharacterAppearance chase = characterAppearance(read("levels/chars/char_police.blvl"));
+            if (chase.body != "char_minifig" || chase.head != "Char_Head_Chase" || chase.characterEnum != 9 ||
+                chase.face != "head_ChaseMcCainDIFF64_c4x4.tga" || chase.lower != "lower_ChaseMcCainDIFF64.tga" ||
+                chase.upper != "upper_ChaseMcCainDIFF64_uk.tga")
+                throw std::runtime_error("char_police appearance differs from the recorded reference");
+        }
         // Reference: artifacts/audio/audio-manifest.json from tools/convert_audio.py, and FNV-1a over
         // the interleaved little-endian PCM of its music/act_bass_break.wav.
         if (sounds != 1361 || samples != 122501647 || loops != 123 || soundSum != 0xdcbf1f85)

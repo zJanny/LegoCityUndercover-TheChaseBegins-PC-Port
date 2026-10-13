@@ -64,7 +64,8 @@ Level parseLevel(const Bytes& data) {
     need(head, 0x10);
     std::size_t n30 = head[1], n10 = readU16(head, 2), n14 = readU16(head, 4), n18 = readU16(head, 6),
                 n1c = readU16(head, 8), n20 = readU16(head, 10), n24 = readU16(head, 12), n2c = readU16(head, 14);
-    readParams(r, r.next(), n10);
+    Level level;
+    level.defaults = readParams(r, r.next(), n10);
     readParams(r, r.next(), n14);
     Bytes s18 = r.next();
     need(s18, n18 * 0x1c);
@@ -103,7 +104,6 @@ Level parseLevel(const Bytes& data) {
     r.skip();  // +0x28
     Bytes s2c = r.next();
     need(s2c, n2c * 0x18);
-    Level level;
     level.objects.resize(n2c);
     for (std::size_t i = 0; i < n2c; ++i) {
         LevelObject& obj = level.objects[i];
@@ -147,23 +147,56 @@ Level parseLevel(const Bytes& data) {
     return level;
 }
 
+namespace {
+Placement placementOf(const LevelObject& obj) {
+    Placement p;
+    p.instance = obj.instance;
+    p.room = obj.room;
+    for (const auto& param : obj.params) {
+        if (param.blocks.empty() || param.blocks[0].empty()) continue;
+        const Bytes& b = param.blocks[0];
+        if (param.hash == meshName && param.type == 1) p.mesh = cString(b);
+        float* target = param.hash == initialPosition ? p.position
+                      : param.hash == initialOrientation ? p.orientation : nullptr;
+        if (target && param.type == 2 && b.size() >= 12) std::memcpy(target, b.data(), 12);
+    }
+    return p;
+}
+
+std::string stringParam(const std::vector<LevelParam>& params, const std::string& name) {
+    std::uint32_t hash = nameHash(name);
+    for (const auto& param : params)
+        if (param.hash == hash && param.type == 1 && !param.blocks.empty()) return cString(param.blocks[0]);
+    return "";
+}
+}
+
 std::vector<Placement> placements(const Level& level) {
     std::vector<Placement> out;
     for (const auto& obj : level.objects) {
-        Placement p;
-        p.instance = obj.instance;
-        p.room = obj.room;
-        for (const auto& param : obj.params) {
-            if (param.blocks.empty() || param.blocks[0].empty()) continue;
-            const Bytes& b = param.blocks[0];
-            if (param.hash == meshName && param.type == 1) p.mesh = cString(b);
-            float* target = param.hash == initialPosition ? p.position
-                          : param.hash == initialOrientation ? p.orientation : nullptr;
-            if (target && param.type == 2 && b.size() >= 12) std::memcpy(target, b.data(), 12);
-        }
+        Placement p = placementOf(obj);
         if (!p.mesh.empty()) out.push_back(p);
     }
     return out;
+}
+
+std::optional<Placement> playerStart(const Level& level) {
+    for (const auto& obj : level.objects)
+        if (obj.instance == "Player1Start") return placementOf(obj);
+    return std::nullopt;
+}
+
+CharacterAppearance characterAppearance(const Level& characterClass) {
+    CharacterAppearance a;
+    a.body = stringParam(characterClass.defaults, "meshname");
+    a.head = stringParam(characterClass.defaults, "HeadModel");
+    a.face = stringParam(characterClass.defaults, "FaceTexture");
+    a.lower = stringParam(characterClass.defaults, "LowerTexture");
+    a.upper = stringParam(characterClass.defaults, "UpperTexture");
+    const std::uint32_t hash = nameHash("CharacterEnum");
+    for (const auto& param : characterClass.defaults)
+        if (param.hash == hash && param.type == 7) a.characterEnum = param.value;
+    return a;
 }
 
 std::array<float, 16> placementMatrix(const Placement& placement) {

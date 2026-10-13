@@ -191,7 +191,8 @@ void Scene::addGeometry(const std::string& key, const ModelPart& part) {
     instances_.push_back({&models_.emplace(key, std::move(out)).first->second, identity()});
 }
 
-bool Scene::addModel(const std::string& path, const Mat4& transform) {
+bool Scene::addModel(const std::string& path, const Mat4& transform,
+                     const std::map<std::string, std::string>& textureOverrides) {
     auto loaded = models_.find(path);
     if (loaded == models_.end()) {
         const FuseEntry* entry = archive_.find(path);
@@ -205,6 +206,8 @@ bool Scene::addModel(const std::string& path, const Mat4& transform) {
                 for (const auto& word : exclude_) skip |= lower(texName).find(word) != std::string::npos;
                 if (skip || part.indices.empty()) continue;
                 std::string dir = directory(lower(path));
+                auto replacement = textureOverrides.find(stem(texName));
+                if (replacement != textureOverrides.end()) texName = replacement->second;
                 DrawPart d = upload(part, texName.empty() ? 0 : texture(texName, dir), out);
                 // Second texture sampled with uv1: a LIGHTMAP_* texture in the shipped data.
                 if ((part.flags & AttrUv1) && part.textures.size() >= 2) d.lightmap = texture(part.textures[1], dir);

@@ -40,7 +40,10 @@ public:
     // Untextured geometry drawn as its own model, e.g. a navigation overlay.
     void addGeometry(const std::string& key, const assets::ModelPart& part);
     // Adds one instance of a model; the model's GPU data is loaded once and shared.
-    bool addModel(const std::string& path, const Mat4& transform = identity());
+    // textureOverrides maps a lower-case material texture stem to the texture used instead; it
+    // only applies when the model is loaded for the first time.
+    bool addModel(const std::string& path, const Mat4& transform = identity(),
+                  const std::map<std::string, std::string>& textureOverrides = {});
     // Re-skins every skinned part of an already added model on the CPU.
     void pose(const std::string& path, const std::vector<assets::Matrix>& skin);
     std::size_t skinnedParts(const std::string& path) const;

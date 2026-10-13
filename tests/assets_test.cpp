@@ -294,7 +294,51 @@ Bytes levelFile(bool extraBlock) {
     return pooledBlocks(blocks);
 }
 
+// A character class (two s10 defaults: HeadModel string, CharacterEnum 9) with one "Player1Start" point.
+Bytes characterLevelFile() {
+    Bytes head(0x38), obj(0x18), defaults, params;
+    head[2] = 2;
+    head[14] = 1;
+    obj[0xd] = 2;
+    auto param = [](Bytes& out, const char* name, std::uint16_t kind, std::uint32_t value) {
+        put32(out, nameHash(name));
+        out.push_back(2); out.push_back(0);
+        out.push_back(std::uint8_t(kind)); out.push_back(0);
+        put32(out, value);
+    };
+    param(defaults, "HeadModel", 1, 0);
+    param(defaults, "CharacterEnum", 7, 9);
+    param(params, "initialposition", 2, 1);
+    param(params, "initialorientation", 2, 1);
+    auto floats = [](float a, float b, float c) {
+        Bytes out(12);
+        float v[3] = {a, b, c};
+        std::memcpy(out.data(), v, 12);
+        return out;
+    };
+    std::vector<std::pair<std::int32_t, Bytes>> blocks{{-15, head}, {-15, defaults},
+                                                       {-15, bytes(std::string("Char_Head_Test", 16))}};
+    for (int i = 0; i < 6; ++i) blocks.push_back({-15, {}});  // s14 s18 s1c s20 s24 s28
+    blocks.insert(blocks.end(), {{-15, obj}, {-15, bytes(std::string("Player1Start", 16))},
+                                 {-15, bytes(std::string("room1", 8))}, {-15, params},
+                                 {-15, floats(-2, 1.5f, 17)}, {-15, floats(0, 181, 0)}, {-15, {}}, {-15, {}},
+                                 {-16, bytes(std::string("point", 8))}});
+    return pooledBlocks(blocks);
+}
+
+void playerSpawn() {
+    Level level = parseLevel(characterLevelFile());
+    CharacterAppearance appearance = characterAppearance(level);
+    require(appearance.head == "Char_Head_Test" && appearance.characterEnum == 9 && appearance.body.empty(),
+            "character class defaults");
+    auto start = playerStart(level);
+    require(start && start->room == "room1" && start->position[2] == 17.0f && start->orientation[1] == 181.0f,
+            "Player1Start placement");
+    require(!playerStart(parseLevel(levelFile(false))), "level without Player1Start");
+}
+
 void levels() {
+    playerSpawn();
     require(nameHash("meshname") == 0xacd1ebb8 && nameHash("InitialPosition") == 0x86166f20, "name hash");
     Level level = parseLevel(levelFile(false));
     require(level.objects.size() == 1 && level.objects[0].className == "leprops/leprop_test", "level object");

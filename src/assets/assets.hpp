@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <fstream>
 #include <map>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -167,6 +168,7 @@ struct NavRoom {
     std::uint16_t paths = 0;
 };
 struct Level {
+    std::vector<LevelParam> defaults;  // section +0x10: class default parameters (char_*.blvl carry the appearance)
     std::vector<LevelObject> objects;
     std::vector<NavRoom> navRooms;
 };
@@ -182,6 +184,16 @@ struct Placement {
     float orientation[3] = {0, 0, 0};
 };
 std::vector<Placement> placements(const Level& level);
+// The point object "Player1Start": loader 0x2e6264 finds it by name (0x23b350) and gives the
+// player's scene node its transform (0x213284 builds the matrix, 0x24c118 stores it).
+std::optional<Placement> playerStart(const Level& level);
+// Appearance defaults of a character class (levels/chars/char_<name>.blvl). The textures named
+// "*_TEST.tga" on the shared body/head models are the ones these names replace.
+struct CharacterAppearance {
+    std::string body, head, face, lower, upper;  // meshname, HeadModel, FaceTexture, LowerTexture, UpperTexture
+    std::uint32_t characterEnum = 0;             // CharacterEnum; equals the row in tablescharacters.bxls sheet 0
+};
+CharacterAppearance characterAppearance(const Level& characterClass);
 // Object matrix: rotation of 0x237c48 (Rz * Ry * Rx for row vectors, i.e. x applied
 // first) from "initialorientation" degrees (x 0.0174533, as at 0x1a48b0), with
 // "initialposition" as the translation row.

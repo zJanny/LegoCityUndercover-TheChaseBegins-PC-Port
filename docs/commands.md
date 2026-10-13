@@ -68,7 +68,7 @@ cd build && ./chase-input-lab [--config PATH] [--smoke-test]
 
 ## Development runtime
 
-Needs libepoxy. This is **not the playable game**. It shows a level and runs the recovered frame timing and pad input, but it has no gameplay. The camera is a stand-in for testing the input.
+Needs libepoxy. This is **not the playable game**. It shows a level with the main character standing at the start point from the game data. It runs the recovered frame timing and pad input, but the character does not move and there is no gameplay. The camera is a stand-in for testing the input.
 
 ```sh
 build/chase-game
@@ -77,7 +77,7 @@ SDL_VIDEODRIVER=offscreen build/chase-game --screenshot out.bmp --frames 2
 ```
 
 - Options: `--fib`, `--names`, `--config` (as in the viewer), `--level`, `--screenshot`, `--frames`.
-- The default level is the police station. Run it from the repository folder so the default paths work.
+- The default level is the police station. The character is Chase McCain in his police outfit. That choice is a best guess. The camera starts behind him and then flies freely. Run it from the repository folder so the default paths work.
 - Move with the D-pad keys (circle pad), `Z`/`C` lower and raise, `E`/`R` turn. `Escape` quits.
 - It prints one line per second: updates per second, the last time step and the circle pad values.
 - `--screenshot` saves the picture after `--frames` updates (default 2) and exits.
