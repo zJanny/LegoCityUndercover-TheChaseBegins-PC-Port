@@ -25,3 +25,16 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - Real data: 55/55 files consume every block (13880). 383 containers, 614 images and 110 references. 161 storyboards, 1888 tracks, 6740 keyframes. Every track's duration equals its last keyframe time. The pinned float sums come from a throwaway Python walk.
 - Merged onto main by hand (the worktree was based on origin/main). ctest PASS 8/8.
 
+## 2026-10-13T09:12+02:00 — Storyboard runtime layout (REA Ghidra 12.1.2 ev_5b4bf86b…; read-only, evaluator not found)
+
+- 0x1dbb80 allocates a 0x38-byte animation object from pool *0x376490. It stores the storyboard set at +0x30 and a flat target list at +0x34 (one u32 per track, from the file track record +0x10). Byte +1 = 0x1c when the second argument is the constant 0x5429d0d0, otherwise 0x10 (meaning unknown). Storyboard sets are shared by that argument and reference-counted (set +0x10), in a list at *0x376488.
+- Run-time records:
+  - Storyboard (0x10): +0 tracks, +4 s16 track count, +8 f32 total length, +0xc name copy.
+  - Track (0x10): +0 keyframes, +4 u8 property (file +0x14), +6 s16 keyframe count, +8 s16 repeat (file +0xa), +0xc f32 duration (file +0x18).
+  - Keyframe (0x1c): +0 value, +4..+0x10 spline coefficients from 0x249030, +0x14 time, +0x18 u8 flag.
+- Tracks whose file pointer +0x10 is 0 (no resolved target) are skipped. This explains the two tracks whose targets name no element.
+- Storyboard length = max over its tracks of (repeat == 0 ? duration : duration × repeat).
+- Keyframes are written from the end of the array while walking the loaded list. Whether this reverses the file order depends on how 0x29f7b4 links them (not checked).
+- Searched without finding the property evaluator: byte +4 reads followed by a 6/7-entry jump table (0x2215bc is a collision direction filter), multiply-by-28 indexing (0x1fac18, 0x273e84: unrelated), and users of *0x376488/*0x376490 (0x103538, 0x223b5c: unrelated). The property ids stay data-fit only.
+
+

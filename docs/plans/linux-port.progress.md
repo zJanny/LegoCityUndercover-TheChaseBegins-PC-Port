@@ -5,7 +5,7 @@
 - Overall: IN_PROGRESS
 - Current Phase: IMPLEMENT
 - Current Step: S4e (particles); S4f option fields done
-- Last Updated: 2026-10-13T09:10+02:00
+- Last Updated: 2026-10-13T09:12+02:00
 - Branch: main
 - Target Branch: Not specified
 - Requested Scope: PLAN, IMPLEMENT, TEST; start reverse engineering and native port
@@ -233,3 +233,4 @@ Reverse-engineering findings live in docs/re/ (see docs/re/README.md). Entries m
 - 2026-10-13T09:08+02:00 — Particle texture hash-to-index conversion found (0x1ed440) → [docs/re/particles.md](../re/particles.md)
 - 2026-10-13T09:08+02:00 — Session timestamps corrected to commit times (system clock). The earlier 2026-10-13 entries (02:30–12:35) do not match their commit times (e.g. `ab62d67` at 01:43) and were left unchanged.
 - 2026-10-13T09:10+02:00 — .cam loader 0x3062e4: key handlers and record layout; RotationY/X, Distance, Lookat are editor-only → [docs/re/data-tables-config.md](../re/data-tables-config.md)
+- 2026-10-13T09:12+02:00 — Storyboard runtime layout (0x1dbb80); property evaluator not found (time-boxed) → [docs/re/ui-layouts.md](../re/ui-layouts.md)
