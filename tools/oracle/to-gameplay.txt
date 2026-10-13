@@ -1,0 +1,46 @@
+# Run with: --renderer opengl --display xvfb --keep (the software renderer crashes in the donut shop scene)
+# 1. free-run boot to the language list (no input during wait)
+wait 25
+# 2. language list: English (A, held 5 stepped frames)
+hold A
+frames 5
+hold -
+wait 6
+# 3. StreetPass prompt: No (B)
+hold B
+frames 5
+hold -
+wait 6
+# 4. HOME Button notice: Continue (A)
+hold A
+frames 5
+hold -
+wait 6
+# 5. autosave notice: OK (A)
+hold A
+frames 5
+hold -
+wait 6
+# 6. Select Slot: slot 1 New Game (A); loading tips follow
+hold A
+frames 5
+hold -
+wait 8
+# 7. intro cutscene plays on its own (no input needed)
+wait 60
+wait 20
+wait 20
+wait 20
+wait 20
+# 8. mission card "Doughnut Disaster"; shop scene; press A once to take control
+hold A
+frames 5
+hold -
+wait 10
+player
+# 9. player state checkpoint and control test: push the stick up for 90 frames
+savestate gameplay-start
+stick 0 150
+frames 90
+stick 0 0
+player

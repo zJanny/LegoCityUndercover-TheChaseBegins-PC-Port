@@ -126,3 +126,12 @@ Unknowns:
 - Whether Azahar can crash the same way during a plain boot without any state load (not seen).
 - Whether an unmapped render window changes emulation timing (frame pacing was not compared).
 - The cause of the one launch that ended after 4 loads with the render window unmapped (its log was overwritten); it may be a different race.
+
+## 2026-10-13T12:43:33+02:00 — Route to gameplay and the gameplay-start checkpoint
+
+- `tools/oracle/to-gameplay.txt` (worker, Haiku; run with `--renderer opengl --display xvfb`, about 340 s from boot) reaches player control: language English (A), StreetPass No (B), HOME notice (A), autosave notice (A), slot 1 New Game (A), intro cutscene runs by itself (~140 s free run), "Doughnut Disaster" card (A). It ends with `savestate gameplay-start`.
+- Lead check: `--state gameplay-start --renderer opengl --rpc --rpc-input`: the RPC screenshot shows Chase in the city street with the HUD (portrait, hearts) and the minimap; the player entity starts at world (886.764, 16.589, 1111.166). Stick (0, 150) for 60 stepped frames moved it to (856.937, 16.587, 1098.050), intent heading -18569, held flags 1, controller state byte 255.
+- The software renderer crashes in this area (Azahar SIGSEGV in Pica::Texture::LookupTexture, seen three times), so gameplay work uses OpenGL with RPC screenshots.
+- Checkpoint files live in artifacts/oracle/states/ (local, not committed); recreate them with the scenario.
+
+Unknowns: the meaning of controller state 255; whether the cutscene timing (free-run waits) is long enough on slower hosts.
