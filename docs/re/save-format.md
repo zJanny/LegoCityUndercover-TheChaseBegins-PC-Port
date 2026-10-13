@@ -139,3 +139,8 @@ Command: `build/chase-tabledump tables/tablessupercounters.bxls` (source: `artif
   - Byte +0xc looks like a character class or group (1..9); the meaning is unknown. The u16 at +0x24 is 0 in all 192 rows and is not read by the completion function.
 - Offline total (inference from the loops, llvm-objdump 0x1cd3dc..0x1cd5e8, not run): the total counter r6 = 53 (levels) + 42 (two 21-bit sets) + 2 × 132 (characters 9..140) + 2 × 41 (ids 1..41) + 271 (sum of the 13 × 7 cells of TablesSuperCounters, summed from `chase-tabledump`) − 1 (id 9) = **711**. The result is `min(1000, collected × 1000 / 711)` if the divide is a plain unsigned division by the total (the 0x25c1b8 helper was not read).
 - Unknown: the meaning of the level-row bytes +0x04, +0x38, +0x39, +0x3c and +0x41..+0x50, and of character-row byte +0xc; whether 0x25c1b8 is an unsigned divide; whether runtime code ever writes to either table (the static files are used as-is, no writer was searched for); the cheat-flag bits and the collected side of the 41-id and 21-bit sets are still as in the 09:13 entry.
+
+## 2026-10-13T09:26:07+02:00 — Completion divide (llvm-objdump; read-only)
+
+- 0x1cd5e8..0x1cd604: r0 = 1000 × collected (`mul r0, r5, r0`, 0x1cd5f0), r1 = total (r6), `bl 0x25c1b8`, clamp to 1000 (`movhi`), `uxth`. 0x25c1b8 is the compiler's unsigned shift-and-subtract divide (`rsbs r3, r1, r0, lsr #n` ladder). This settles the 09:25 caveat: completion = min(1000, (collected × 1000) / total) as u16, unsigned, truncating. A 32-bit overflow of collected × 1000 needs collected > 4 294 967, so it cannot happen.
+- Unknown: nothing new.

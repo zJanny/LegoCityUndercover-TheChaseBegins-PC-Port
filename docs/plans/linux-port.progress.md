@@ -5,7 +5,7 @@
 - Overall: IN_PROGRESS
 - Current Phase: IMPLEMENT
 - Current Step: S4f/S3 RE rounds via subagents (last: level/character tables, input slot readers)
-- Last Updated: 2026-10-13T09:28+02:00
+- Last Updated: 2026-10-13T09:30+02:00
 - Branch: main
 - Target Branch: Not specified
 - Requested Scope: PLAN, IMPLEMENT, TEST; start reverse engineering and native port
@@ -42,7 +42,7 @@ Commits authorized by CLAUDE.md "User specified workflows" (commit at logical st
 | S4c | Level composition (.blvl) | IN_PROGRESS | loader replicated (Py+C++), placements in viewer; materials/lighting, streaming, other sections open |
 | S4d | Audio playback | IN_PROGRESS | mixer + SDL sound test with loops; event routing not recovered |
 | S4e | Gameplay | IN_PROGRESS | skeletons/animation/cutscenes/nav/tables/loc/fonts/particle defs decoded; .cam record layout known; logic not recovered |
-| S4f | Saves/settings | IN_PROGRESS | chase_save: header, CRC, validate, atomic XDG storage, option fields; slot progress layout documented, not in code |
+| S4f | Saves/settings | IN_PROGRESS | chase_save: header, CRC, validate, atomic XDG storage, option fields, slot progress accessors, completion (0x1cd3dc, no cheat flags) |
 
 ## Current Work
 
@@ -124,9 +124,9 @@ Full game logic, hardware APIs and asset formats not recovered yet.
 
 ## Next Action
 
-- S4f: all completion inputs found (docs/re/save-format.md 09:25, total 711). Confirm 0x25c1b8 is an unsigned divide, then add slot progress accessors and a completion function (chase_save plus chase_assets tables). Still open: options +0 nibbles and +3 bits 2..5 (no reader found); per-level block contents beyond the counters; how live state is copied into the save buffer.
+- S4f: all completion inputs found (docs/re/save-format.md 09:25, total 711). Slot accessors and completion are in chase_save; next: fill CompletionTotals from the tables (chase_assets) and show completion in a tool. Not modelled: cheat flags 0x375961/0x375962. Still open: options +0 nibbles and +3 bits 2..5 (no reader found); per-level block contents beyond the counters; how live state is copied into the save buffer.
 - S3: find the GSP vsync call and the scheduler step (30 vs 60 fps); callers of stick-to-D-pad 0x2289b8; readers of axis slots 16/17; other writers of channel 7.
-- S4e: the code that applies .bxaml track properties; .cam Type values and the run-time camera (0x1e9290); particle rendering (vertex/quad build) and a native particle simulation.
+- S4e: the code that applies .bxaml track properties; .cam Type bit 0x100 and the 0x400 call 0x23f50c; record selection 0x1d34ac; particle rendering (vertex/quad build) and a native particle simulation.
 - Open unknowns are listed at the end of the matching docs/re/ files.
 
 ## Session Log
@@ -241,3 +241,6 @@ Reverse-engineering findings live in docs/re/ (see docs/re/README.md). Entries m
 - 2026-10-13T09:20+02:00 — Input slot table 0x3769e8: 18 slots → pad channels (worker, REA Ghidra; fill at 0x168c9c re-checked with objdump) → [docs/re/arm-executable.md](../re/arm-executable.md)
 - 2026-10-13T09:22+02:00 — Input slots: 6/7 gameplay vs 4/5 UI readers, channel 7 unfed by pad, stick → D-pad 0x2289b8 (worker, REA; 0.6 literal re-checked) → [docs/re/arm-executable.md](../re/arm-executable.md)
 - 2026-10-13T09:25+02:00 — Level/character tables, exclusion uses char byte +0xc, completion total 711 (worker, REA + objdump; loop re-checked) → [docs/re/save-format.md](../re/save-format.md)
+- 2026-10-13T09:26+02:00 — 0x25c1b8 is an unsigned divide; completion formula settled → [docs/re/save-format.md](../re/save-format.md)
+- 2026-10-13T09:28+02:00 — .cam Type is a bit set read by pose blend 0x298cd8; per-frame camera is 0x1b4a30 (worker, REA; bit tests re-checked) → [docs/re/data-tables-config.md](../re/data-tables-config.md)
+- 2026-10-13T09:30+02:00 — chase_save slot progress accessors + completion (worker, Sonnet); reviewed, offsets re-checked against 0x203464/0x20a630; build warning-free, ctest 10/10.
