@@ -417,7 +417,8 @@ int run(int argc, char** argv) {
                 movie.readMore(pending, audioBuffer);
                 flushAudio();
             }
-            if (device && !audioStarted && (queuedSeconds() >= audioLeadSeconds || movie.finished())) {
+            if (device && !audioStarted &&
+                (queuedSeconds() >= audioLeadSeconds || movie.finished() || pending.size() >= maxPendingFrames)) {
                 SDL_PauseAudioDevice(device, 0);
                 audioStarted = true;
             }
