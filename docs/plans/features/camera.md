@@ -27,7 +27,7 @@ IN_PROGRESS, updated 2026-10-13T21:29:01+0200. The follow camera and its obstruc
 - [ ] CAMERA-3 — Pitch clamp, record pose blend rooms and other presets are unknown. evidence: [camera.md §2026-10-13T14:39](../../re/camera.md).
 - [ ] CAMERA-4 — The camera being placed again when it is stuck (not recovered).
 - [ ] CAMERA-5 — The chase-game level start differs slightly from the oracle spawn in lvl_01, so the camera reference comparison is framing-only. see PLAYER-8.
-- [ ] CAMERA-6 — (User observation on a real 3DS, 2026-10-13) Inside the police station the camera cannot be turned, so the view behind the start position is never visible; `chase-game` lets the player turn it (CAMERA-S3). Recover the indoor camera rules: room/bound camera records and the record pose blend 0x298cd8 (CAMERA-3), the pose flag bit 0x40000000 "no rotation" (C+0x4c+0x10), and which camera mode lvl_00 starts with; check against the original in the police station (RENDER-4 state). needs: RENDER-4. evidence: [camera.md §2026-10-13T14:39](../../re/camera.md).
+- [ ] CAMERA-6 — (User observation on a real 3DS, 2026-10-13) Outside the police station L/R turn the camera (as the replica does); inside, L/R do not turn it, so the view behind the start position is never visible; `chase-game` lets the player turn it (CAMERA-S3). Recover the indoor camera rules: room/bound camera records and the record pose blend 0x298cd8 (CAMERA-3), the pose flag bit 0x40000000 "no rotation" (C+0x4c+0x10), and which camera mode lvl_00 starts with; check against the original in the police station (RENDER-4 state). needs: RENDER-4. evidence: [camera.md §2026-10-13T14:39](../../re/camera.md).
 
 ## 6. Findings summary
 
