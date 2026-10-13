@@ -2,6 +2,7 @@
 // tools/oracle/fall-*.txt; docs/re/player.md falling entry). Needs the extracted RomFS and the local trace
 // directory; exits with 77 (skipped) when either is missing.
 #include "assets/assets.hpp"
+#include "player_trace.hpp"
 #include "runtime/player_vertical.hpp"
 #include <algorithm>
 #include <cmath>
@@ -16,65 +17,14 @@
 #include <vector>
 
 using namespace chase::runtime;
+using player_trace::Row;
+using player_trace::require;
 namespace fs = std::filesystem;
 
 namespace {
 constexpr const char* kLevelModel = "models/lvl_01_cherrytreehills/lvl_01_cherrytreehills.bfnmdl";
-constexpr std::size_t kRecord = 4 + 0x100 + 0x340 + 0xb0;
-
 constexpr std::uint16_t kStateIdle = 1, kStateRun = 2, kStateWalk = 3, kStateFall = 5, kStateSoftLanding = 6, kStateHardLanding = 7,
                         kStateStepOff = 8;
-
-struct Row {
-    float dt = 0, x = 0, y = 0, z = 0, forwardX = 0, forwardZ = 0;
-    std::uint16_t state = 0, held = 0;
-    float fallDistance = 0, fallSpeed = 0;
-};
-
-template <typename T> T read(const std::vector<char>& data, std::size_t offset) {
-    T value;
-    std::memcpy(&value, data.data() + offset, sizeof value);
-    return value;
-}
-
-std::vector<Row> loadTrace(const fs::path& csvFile) {
-    std::ifstream csv(csvFile);
-    if (!csv) throw std::runtime_error("cannot open " + csvFile.string());
-    std::string line;
-    std::getline(csv, line);
-    std::vector<Row> rows;
-    while (std::getline(csv, line)) {
-        std::vector<std::string> fields;
-        std::stringstream stream(line);
-        std::string field;
-        while (std::getline(stream, field, ',')) fields.push_back(field);
-        Row row;
-        row.dt = std::stof(fields[1]);
-        row.x = std::stof(fields[5]);
-        row.y = std::stof(fields[6]);
-        row.z = std::stof(fields[7]);
-        row.forwardX = std::stof(fields[8]);
-        row.forwardZ = std::stof(fields[9]);
-        rows.push_back(row);
-    }
-    fs::path memFile = csvFile;
-    memFile.replace_extension(".mem");
-    std::ifstream file(memFile, std::ios::binary);
-    std::vector<char> data((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-    if (data.size() != rows.size() * kRecord) throw std::runtime_error("unexpected trace record size: " + memFile.string());
-    for (std::size_t i = 0; i < rows.size(); ++i) {
-        const std::size_t controller = i * kRecord + 4 + 0x100;
-        rows[i].state = read<std::uint16_t>(data, controller + 0x6c);
-        rows[i].held = read<std::uint16_t>(data, controller + 0xc);
-        rows[i].fallDistance = read<float>(data, controller + 0x2b4);
-        rows[i].fallSpeed = read<float>(data, controller + 0x2b8);
-    }
-    return rows;
-}
-
-void require(bool condition, const std::string& message) {
-    if (!condition) throw std::runtime_error(message);
-}
 
 struct Totals {
     std::size_t traces = 0, updates = 0, starts = 0, landings = 0, hardLandings = 0, softStuns = 0, stunChecks = 0, stepOffs = 0, wrong = 0;
@@ -180,15 +130,10 @@ int main(int argc, char** argv) {
         CollisionWorld world;
         for (const auto& item : model.collision) world.add(item);
 
-        std::vector<fs::path> files;
-        for (const auto& item : fs::directory_iterator(directory))
-            if (item.path().extension() == ".csv") files.push_back(item.path());
-        std::sort(files.begin(), files.end());
         Totals totals;
-        for (const fs::path& file : files) {
-            const std::vector<Row> rows = loadTrace(file);
-            checkUpdates(world, rows, file.filename().string(), totals);
-            checkStun(rows, file.filename().string(), totals);
+        for (const player_trace::NamedTrace& trace : player_trace::loadDirectory(directory)) {
+            checkUpdates(world, trace.rows, trace.name, totals);
+            checkStun(trace.rows, trace.name, totals);
             ++totals.traces;
         }
         std::cout << "falls: " << totals.traces << " traces, " << totals.updates << " updates, " << totals.starts << " fall starts, "

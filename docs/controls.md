@@ -22,7 +22,8 @@ Action key|mouse Code hold|toggle
 
 For example, `A key Space hold` makes Space press the A button.
 
-- **Actions:** Up, Down, Left, Right, A, B, X, Y, L, R, Start, Select.
+- **Actions:** Up, Down, Left, Right, A, B, X, Y, L, R, Start, Select, Walk.
+- **Walk** is not a 3DS button. The [development runtime](commands.md#development-runtime) uses it to tilt the stick halfway, because a keyboard cannot. The other actions are 3DS buttons.
 - **Key names:** SDL key names, with `_` instead of spaces, for example `Left_Shift`.
 - **Mouse buttons:** `Left`, `Middle`, `Right`, `X1`, `X2`.
 - Lines starting with `#` are comments.
@@ -49,3 +50,4 @@ For example, `A key Space hold` makes Space press the A button.
 | R | C |
 | Start | Return |
 | Select | Tab |
+| Walk (not a 3DS button) | Left Alt |

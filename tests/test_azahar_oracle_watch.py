@@ -90,5 +90,27 @@ class MemtraceTest(unittest.TestCase):
             self.assertEqual(data[12:14], bytes([0x08, 0x09]))
 
 
+class TeleportTest(unittest.TestCase):
+    def make_probe(self, world, local):
+        probe = object.__new__(oracle.Oracle)
+        probe.writes = []
+        probe.player = lambda: {'node': 0x8568bb0, 'world': world, 'local': local}
+        probe.rpc = None
+        probe.remote = type('Memory', (), {'write': lambda self, address, data: probe.writes.append((address, data))})()
+        return probe
+
+    def test_teleport_writes_world_and_local_translation(self):
+        probe = self.make_probe((1.0, 2.0, 3.0), (1.0, 2.0, 3.0))
+        probe.teleport(886.5, 40.0, 1111.25)
+        position = struct.pack('<3f', 886.5, 40.0, 1111.25)
+        self.assertEqual(probe.writes, [(0x8568bb0 + 0x8c, position), (0x8568bb0 + 0x4c, position)])
+
+    def test_teleport_refuses_a_node_with_a_parent_transform(self):
+        probe = self.make_probe((1.0, 2.0, 3.0), (0.0, 2.0, 3.0))
+        with self.assertRaises(RuntimeError):
+            probe.teleport(0, 0, 0)
+        self.assertEqual(probe.writes, [])
+
+
 if __name__ == '__main__':
     unittest.main()

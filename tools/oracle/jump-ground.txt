@@ -1,0 +1,64 @@
+# Jumps from the ground at the gameplay-start spawn (B jumps). Traces of one jump are named STEM-1, STEM-2, ...
+# and continue each other (consecutive frame numbers). 'stick 0 0' and 'hold -' first: input survives loadstate.
+# Fixed dt 0.033 unless noted. Tap = B held for one update.
+loadstate gameplay-start
+frames 3
+stick 0 0
+hold -
+dt 0.033 0.033
+frames 2
+trace 2 jstand-1 mem
+hold B
+trace 1 jstand-2 mem
+hold -
+trace 60 jstand-3 mem
+loadstate gameplay-start
+frames 3
+stick 0 0
+hold -
+dt 0.033 0.033
+frames 2
+trace 2 jholdb-1 mem
+hold B
+trace 70 jholdb-2 mem
+hold -
+trace 20 jholdb-3 mem
+loadstate gameplay-start
+frames 3
+stick 0 0
+hold -
+dt 0.033 0.033
+frames 2
+stick 0 70
+trace 8 jwalk-1 mem
+hold B
+trace 1 jwalk-2 mem
+hold -
+trace 60 jwalk-3 mem
+stick 0 0
+loadstate gameplay-start
+frames 3
+stick 0 0
+hold -
+dt 0.033 0.033
+frames 2
+stick 0 150
+trace 8 jrun-1 mem
+hold B
+trace 1 jrun-2 mem
+hold -
+trace 60 jrun-3 mem
+stick 0 0
+loadstate gameplay-start
+frames 3
+stick 0 0
+hold -
+dt 0.033 0.033
+frames 2
+stick 0 150
+trace 40 jsprint-1 mem
+hold B
+trace 1 jsprint-2 mem
+hold -
+trace 60 jsprint-3 mem
+stick 0 0

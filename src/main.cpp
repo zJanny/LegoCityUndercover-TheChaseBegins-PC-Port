@@ -76,7 +76,9 @@ void smoke(Lab& lab) {
         {chase::Action::Up, chase::Source::Key, SDLK_w, chase::Mode::Hold},
         {chase::Action::A, chase::Source::Key, SDLK_SPACE, chase::Mode::Hold},
         {chase::Action::A, chase::Source::Mouse, SDL_BUTTON_LEFT, chase::Mode::Hold},
-        {chase::Action::B, chase::Source::Key, SDLK_q, chase::Mode::Toggle}
+        {chase::Action::B, chase::Source::Key, SDLK_q, chase::Mode::Toggle},
+        {chase::Action::X, chase::Source::Key, SDLK_e, chase::Mode::Hold},
+        {chase::Action::Walk, chase::Source::Key, SDLK_LALT, chase::Mode::Hold}
     });
     lab.input.reset();
     push(key(SDL_KEYDOWN, SDLK_w));
@@ -90,10 +92,12 @@ void smoke(Lab& lab) {
     push(key(SDL_KEYUP, SDLK_SPACE));
     push(key(SDL_KEYDOWN, SDLK_q));
     push(key(SDL_KEYDOWN, SDLK_q, true));
+    push(key(SDL_KEYDOWN, SDLK_LALT));
     pump(lab);
     require(lab.input.active(chase::Action::Up), "SDL key integration failed");
     require(lab.input.active(chase::Action::A), "SDL multi-binding integration failed");
     require(lab.input.active(chase::Action::B), "SDL toggle repeat integration failed");
+    require(lab.input.active(chase::Action::Walk) && !lab.input.active(chase::Action::X), "SDL Walk integration failed");
     chase::TouchPoint expected{};
     require(chase::mapTouch(lab.viewport, mouse.button.x, mouse.button.y, expected),
         "Smoke test point outside viewport");
@@ -105,7 +109,7 @@ void smoke(Lab& lab) {
     push(focus);
     pump(lab);
     require(!lab.input.active(chase::Action::Up) && !lab.input.active(chase::Action::A) &&
-        !lab.input.active(chase::Action::B) && !lab.touching, "SDL focus reset failed");
+        !lab.input.active(chase::Action::B) && !lab.input.active(chase::Action::Walk) && !lab.touching, "SDL focus reset failed");
     std::cout << "SDL dummy input smoke test passed\n";
 }
 void render(SDL_Window* window, SDL_Renderer* renderer, const Lab& lab, int width) {

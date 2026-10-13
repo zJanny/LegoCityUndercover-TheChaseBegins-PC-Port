@@ -456,6 +456,45 @@ int main() {
             verticalUpdate(state, world, input);
             require(state.posture == Posture::Ground && state.y == 0, "a standing character on the ground is not probed");
         }
+
+        // Jump root motion (docs/re/player.md jump entry): the height track sampled at 15 frames per second over
+        // (frames - 1) intervals, linear between frames, times the animation's scale; B starts it from the ground.
+        {
+            chase::assets::AnimTrack track;
+            chase::assets::CurveKey first, last;
+            first.time = 0;
+            first.outDelta = 1.0f / 3;
+            first.outValue = 11.0f / 3;
+            last.time = 1;
+            last.inDelta = 1.0f / 3;
+            last.inValue = 22.0f / 3;
+            last.value = 11;
+            track.keys = {first, last};
+            const JumpProfile profile = makeJumpProfile(track, 12, 0.5f);
+            require(profile.offsets.size() == 12 && near(profile.offsets[1], 0.5f) && near(profile.offsets[11], 5.5f),
+                    "12 animation frames give 11 intervals and 12 samples scaled by the animation's factor");
+            require(near(profile.duration(), 11.0f / 15.0f) && near(profile.offsetAt(0.1f), 0.75f) && near(profile.offsetAt(5.0f), 5.5f),
+                    "linear between frames at 15 frames per second, held after the last frame");
+
+            CollisionWorld world;
+            world.add(quadItem({{-50, 0, -50, -50, 0, 50, 50, 0, 50, 50, 0, -50}}));
+            VerticalState state;
+            VerticalInput input;
+            input.dt = 0.1f;
+            input.startJump = &profile;
+            VerticalStep step = verticalUpdate(state, world, input);
+            require(step.jumpStarted && state.posture == Posture::Jumping && state.y == 0, "the press update starts the jump without moving");
+            input.startJump = nullptr;
+            verticalUpdate(state, world, input);
+            require(near(state.y, 0.75f) && state.posture == Posture::Jumping, "the next update moves along the profile");
+            for (int i = 0; i < 7; ++i) step = verticalUpdate(state, world, input);
+            require(step.jumpEnded && state.posture == Posture::Falling && near(state.y, 5.5f), "a jump that runs out in the air starts to fall");
+
+            const RootMotionSpeeds jump = jumpSpeeds(kMeasuredRootMotionSpeeds);
+            require(near(jump.walk, 0.8f * kMeasuredRootMotionSpeeds.walk) && near(jump.run, 0.8f * kMeasuredRootMotionSpeeds.run) &&
+                        jump.sprintScale == kMeasuredRootMotionSpeeds.sprintScale,
+                    "horizontal speed after take-off is 0.8 of the ground speed");
+        }
     } catch (const std::exception& e) {
         std::cerr << "FAIL: " << e.what() << '\n';
         return 1;

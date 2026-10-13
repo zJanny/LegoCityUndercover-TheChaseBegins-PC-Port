@@ -74,6 +74,8 @@ set(CHASE_COLLISION_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/coll-out" CA
     "Recorded original-game collision traces for the opt-in differential test")
 set(CHASE_FALL_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/fall-out" CACHE PATH
     "Recorded original-game fall and landing traces for the opt-in differential test")
+set(CHASE_JUMP_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/jump-traces" CACHE PATH
+    "Recorded original-game jump traces for the opt-in differential test")
 set(CHASE_CAMERA_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/cam-out" CACHE PATH
     "Recorded original-game camera traces for the opt-in differential test")
 include(CTest)
@@ -114,6 +116,12 @@ if(BUILD_TESTING)
   add_test(NAME fall-real-data COMMAND fall-real-test
     "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv" "${CHASE_FALL_TRACE_DIR}")
   set_tests_properties(fall-real-data PROPERTIES SKIP_RETURN_CODE 77)
+  add_executable(jump-real-test tests/jump_real_test.cpp)
+  target_link_libraries(jump-real-test PRIVATE chase_runtime chase_assets)
+  target_compile_options(jump-real-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME jump-real-data COMMAND jump-real-test
+    "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv" "${CHASE_JUMP_TRACE_DIR}")
+  set_tests_properties(jump-real-data PROPERTIES SKIP_RETURN_CODE 77)
   add_executable(camera-real-test tests/camera_real_test.cpp)
   target_link_libraries(camera-real-test PRIVATE chase_runtime)
   target_compile_options(camera-real-test PRIVATE -Wall -Wextra -Wpedantic)
@@ -176,6 +184,15 @@ if(BUILD_TESTING)
       --start "899.5 17.6393 1101" --script "0 150 40" --screenshot game-script-ledge.bmp)
     set_tests_properties(game-script-ledge PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen"
       PASS_REGULAR_EXPRESSION "heights: (17\\.6393 )+17\\.5898 17\\.4908 17\\.3423 17\\.1443 16\\.8968 16\\.57.*saved game-script-ledge.bmp")
+    # Standing jump in the Cherry Tree Hills street (B button for one update): the heights are the recorded rise
+    # (tools/oracle/jump-ground.txt, jstand: 16.8593, 17.1297, 17.4068, 17.6840, ... to the apex 18.6815).
+    add_test(NAME game-script-jump COMMAND chase-game
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
+      --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl
+      --start "886.764 16.589 1111.166" --script "0 0 2;0 0 1 B;0 0 12" --screenshot game-script-jump.bmp)
+    set_tests_properties(game-script-jump PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen"
+      PASS_REGULAR_EXPRESSION "heights: 16\\.589 16\\.589 16\\.589 16\\.859[0-9]* 17\\.129[0-9]* 17\\.40[67][0-9]* 17\\.68[34][0-9]* 17\\.92[89][0-9]* 18\\.17[0-9]* 18\\.34[0-9]* 18\\.52[0-9]* 18\\.5[89][0-9]* 18\\.65[0-9]* 18\\.66[0-9]* 18\\.68[0-9]*.*saved game-script-jump.bmp")
     # Opt-in: decodes and plays one looping music track for 0.3 s on SDL's dummy audio driver.
     add_test(NAME soundtest-real-smoke COMMAND chase-soundtest --seconds 0.3
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"

@@ -7,7 +7,7 @@
 namespace chase {
 namespace {
 constexpr std::array<const char*, actionCount> names{
-    "Up", "Down", "Left", "Right", "A", "B", "X", "Y", "L", "R", "Start", "Select"
+    "Up", "Down", "Left", "Right", "A", "B", "X", "Y", "L", "R", "Start", "Select", "Walk"
 };
 }
 const char* actionName(Action action) {
