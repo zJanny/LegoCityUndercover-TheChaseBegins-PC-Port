@@ -44,18 +44,21 @@ Single C++ tests, with `ctest --test-dir build -R <name>`:
 | `viewer-real-smoke` | Registered only if `artifacts/romfs` existed at configure time |
 | `audio-mixer` | Mixer core, no SDL |
 | `save-core` | Save file checks, synthetic data, no SDL |
+| `save-real-data` | Completion totals from the game tables; needs `artifacts/romfs`, skips with code 77 otherwise |
 | `fmv-real-smoke` | Registered only if FFmpeg and `artifacts/romfs` existed at configure time |
 
 ## Programs
 
 ```sh
 build/chase-tabledump tables/tableslevels.bxls
+build/chase-savecheck [--romfs artifacts/romfs/romfs] savegame.dat
 build/chase-soundtest music/act_bass_break.bwav
 SDL_VIDEODRIVER=offscreen build/chase-fmv --lang us --screenshot out.bmp --time 3 artifacts/romfs/romfs/cutscenes/01_gameintro.moflex
 cd build && ./chase-input-lab [--config PATH] [--smoke-test]
 ```
 
 - `chase-tabledump` prints data tables as TSV. Columns have no names in the file.
+- `chase-savecheck` prints how much of each of the two save slots is complete, as items collected, per mille and percent. A slot with no progress shows as empty. It reads the totals from the game tables in the extracted game data (`--romfs`).
 - `chase-soundtest` plays decoded sounds. Use `SDL_AUDIODRIVER=dummy` for headless runs. See [Sound test](sound-test.md).
 - `chase-fmv` needs the FFmpeg libraries. See [Video player](fmv-player.md).
 - `chase-input-lab` looks for `config/controls.cfg` relative to the current folder. CMake copies it into `build/`. See [Controls](controls.md).
