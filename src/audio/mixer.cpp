@@ -34,6 +34,15 @@ void Mixer::stop(int voice) {
                   voices_.end());
 }
 
+void Mixer::fadeOut(int voice, float seconds) {
+    if (seconds <= 0.0f) {
+        stop(voice);
+        return;
+    }
+    for (Voice& v : voices_)
+        if (v.id == voice) v.fadeStep = 1.0 / (double(seconds) * rate_);
+}
+
 bool Mixer::playing(int voice) const {
     return std::any_of(voices_.begin(), voices_.end(), [&](const Voice& v) { return v.id == voice; });
 }
@@ -46,6 +55,7 @@ void Mixer::mix(float* out, std::size_t frames) {
         const auto& sound = *voice.sound;
         double end = sound.frames;
         for (std::size_t f = 0; f < frames; ++f) {
+            if (voice.ended) break;
             if (voice.position >= end) {
                 if (!sound.loop) break;
                 voice.position = sound.loopStart + (voice.position - end);
@@ -57,13 +67,17 @@ void Mixer::mix(float* out, std::size_t frames) {
             for (int side = 0; side < 2; ++side) {
                 const auto& channel = sound.channels[std::min<std::size_t>(std::size_t(side), sound.channels.size() - 1)];
                 double s = channel[at] + (channel[next] - channel[at]) * frac;
-                out[2 * f + std::size_t(side)] += float(s / 32768.0) * (side == 0 ? voice.left : voice.right);
+                out[2 * f + std::size_t(side)] += float(s / 32768.0) * (side == 0 ? voice.left : voice.right) * float(voice.fade);
             }
             voice.position += voice.step;
+            if (voice.fadeStep > 0.0) {
+                voice.fade -= voice.fadeStep;
+                if (voice.fade <= 0.0) voice.ended = true;
+            }
         }
     }
     voices_.erase(std::remove_if(voices_.begin(), voices_.end(),
-                                 [](const Voice& v) { return !v.sound->loop && v.position >= v.sound->frames; }),
+                                 [](const Voice& v) { return v.ended || (!v.sound->loop && v.position >= v.sound->frames); }),
                   voices_.end());
 }
 } // namespace chase::audio

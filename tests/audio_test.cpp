@@ -2,6 +2,7 @@
 // mood rule of the level music (0x206c40), the footstep rise detector (0x19f10c) and the landing sound choice
 // (0x1abc5c). The values are worked out by hand from the disassembly (docs/re/audio.md). Recorded game values are in
 // audio_real_test.cpp.
+#include "audio/effectvoices.hpp"
 #include "audio/mixer.hpp"
 #include "audio/spatial.hpp"
 #include "runtime/music.hpp"
@@ -35,6 +36,50 @@ int main() {
             require(mixer.setGains(second, 0.0f, 0.5f) && !mixer.setGains(voice, 1, 1), "setGains");
             mixer.mix(out, 2);
             require(near(out[0], 0.0f) && near(out[1], 0.25f), "changed gains");
+        }
+        {
+            // Stop of effect voices by (sound id, owner), 0x23ae50 -> 0x23f75c -> 0x23fcac: the table fade 0 ends the voice at once
+            // (door sounds 598..617 all have column 16 = 0), a positive time fades it out linearly (stand-in AUDIO-S7).
+            audio::Mixer mixer(8);
+            audio::EffectVoices voices(mixer);
+            auto sound = std::make_shared<assets::Sound>();
+            sound->rate = 8;
+            sound->frames = 8;
+            sound->loop = true;
+            sound->channels = {{16384, 16384, 16384, 16384, 16384, 16384, 16384, 16384}};
+            const int doorA = mixer.play(sound, 1.0f), doorB = mixer.play(sound, 1.0f), other = mixer.play(sound, 1.0f);
+            voices.add(doorA, 605, 1);
+            voices.add(doorB, 605, 2);
+            voices.add(other, 601, 1);
+            require(!voices.stop(605, 3, 0.0f) && !voices.stop(602, 1, 0.0f) && mixer.activeVoices() == 3, "a stop without a matching voice does nothing");
+            require(voices.stop(605, 1, 0.0f) && !mixer.playing(doorA) && mixer.playing(doorB) && mixer.playing(other), "stop ends only the voice of that sound and owner");
+            require(!voices.stop(605, 1, 0.0f), "the stopped voice is gone");
+            require(voices.stop(601, 1, 1.0f) && mixer.playing(other), "a fade keeps the voice running");
+            float out[16];
+            mixer.mix(out, 4);
+            require(mixer.playing(other), "still audible after half the fade");
+            mixer.mix(out, 8);
+            require(!mixer.playing(other) && mixer.playing(doorB), "the fade ends the voice");
+            const int again = mixer.play(sound, 1.0f);
+            voices.add(again, 605, 1);
+            require(voices.stop(605, 1, 0.0f) && !mixer.playing(again), "a new voice of the same sound and owner can be stopped");
+        }
+        {
+            audio::Mixer mixer(8);
+            auto sound = std::make_shared<assets::Sound>();
+            sound->rate = 8;
+            sound->frames = 8;
+            sound->loop = true;
+            sound->channels = {{16384, 16384, 16384, 16384, 16384, 16384, 16384, 16384}};
+            const int voice = mixer.play(sound, 1.0f);
+            mixer.fadeOut(voice, 1.0f);
+            float out[16];
+            mixer.mix(out, 8);
+            require(near(out[0], 0.5f) && near(out[2], 0.5f * 7.0f / 8.0f) && near(out[14], 0.5f * 1.0f / 8.0f), "linear fade over the time");
+            require(!mixer.playing(voice), "the faded voice ends");
+            const int quick = mixer.play(sound, 1.0f);
+            mixer.fadeOut(quick, 0.0f);
+            require(!mixer.playing(quick), "fade time 0 stops at once");
         }
         {
             require(near(audio::distanceVolume(5, 10, 30), 1.0f) && near(audio::distanceVolume(10, 10, 30), 1.0f), "inside the minimum distance");

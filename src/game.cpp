@@ -352,6 +352,7 @@ struct DoorObject {
     Mat4 rest = identity();
     float pivot[2][3] = {};
     std::array<float, 3> position{};
+    std::uint16_t soundOwner = 0;
 };
 
 std::vector<DoorObject> loadDoors(FuseArchive& archive, const Level& level, const ClassLookup& classOf, const std::vector<ObjectCollision>& objects,
@@ -370,6 +371,7 @@ std::vector<DoorObject> loadDoors(FuseArchive& archive, const Level& level, cons
         const Model model = parseModel(archive.read(*modelEntry));
         DoorObject door;
         door.instance = object.instance;
+        door.soundOwner = std::uint16_t(doors.size() + 1);
         door.params = runtime::doorParams(*source, *classOf(source->className), model, object.centre, object.half);
         door.sceneInstance = instance->second.first;
         door.placement = instance->second.second;
@@ -616,8 +618,11 @@ int run(const Options& given) {
                 doorSounds.clear();
                 runtime::doorUpdate(door.state, door.params, runtime::doorZoneContains(door.placement.data(), playerPosition, door.params), doorSounds);
                 poseDoor(scene, door);
-                for (const runtime::DoorSoundEvent& event : doorSounds)
-                    if (event.action == runtime::DoorSoundEvent::Action::Play && event.id != 0) emit({event.id, door.position});
+                for (const runtime::DoorSoundEvent& event : doorSounds) {
+                    if (event.id == 0) continue;
+                    if (event.action == runtime::DoorSoundEvent::Action::Play) emit({event.id, door.position, door.soundOwner});
+                    else if (audio) audio->stop(event.id, door.soundOwner);
+                }
             }
         }
         provisionalStudClockSeconds += double(dt);

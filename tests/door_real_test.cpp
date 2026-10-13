@@ -9,6 +9,8 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <utility>
+#include <vector>
 
 using namespace chase;
 using namespace chase::runtime;
@@ -62,6 +64,25 @@ int main(int argc, char** argv) {
         require(params.openFrames == 22 && params.autoCloseFrames == 0 && !params.autoOpen && params.doorType == 0 && !params.twoLeaves, "door record changed");
         require(std::fabs(params.restAngle + 1.5707964f) < 1e-6f && params.sounds.opening == 605 && params.sounds.closing == 601, "door angle or sounds changed");
         require(model.nodePivot.size() == 1 && std::fabs(model.nodePivot[0][0] - 0.815166f) < 1e-6f, "pivot changed");
+        // Sound events of the door's open and close cycle with the sound ids of the level file (+0x2c = 605 and +0x2e = 601 as read from the record
+        // at gameplay-start; shut +0x30 and open +0x32 are 0 in the file; the open delay +0x10 is 0). Order: 0x1a6b6c, docs/re/doors.md.
+        {
+            DoorParams cycle = params;
+            require(cycle.sounds.shut == 0 && cycle.sounds.open == 0 && cycle.soundOpenDelay == 0, "door shut and open sounds changed");
+            DoorState door;
+            doorMessage(door, cycle, DoorMessage::Open);
+            std::vector<std::pair<DoorSoundEvent::Action, std::uint16_t>> events;
+            for (int update = 0; update < 60; ++update) {
+                if (update == 30) doorMessage(door, cycle, DoorMessage::Close);
+                std::vector<DoorSoundEvent> sounds;
+                doorUpdate(door, cycle, false, sounds);
+                for (const DoorSoundEvent& sound : sounds) events.emplace_back(sound.action, sound.id);
+            }
+            using Action = DoorSoundEvent::Action;
+            const std::vector<std::pair<Action, std::uint16_t>> expected = {
+                {Action::Play, 605}, {Action::Stop, 605}, {Action::Play, 0}, {Action::Play, 601}, {Action::Stop, 601}, {Action::Play, 0}};
+            require(events == expected && door.state == 1, "door sound events of the cycle changed");
+        }
         const float pivots[2][3] = {{model.nodePivot[0][0], model.nodePivot[0][1], model.nodePivot[0][2]}, {0, 0, 0}};
 
         // 1-8_Building_Door: record read at gameplay-start (record 0x08be5ed0): +0xd = 22, +0xe = 0x2c, +0xf = 1. Its autoclosetime of 10 s is 300 frames,

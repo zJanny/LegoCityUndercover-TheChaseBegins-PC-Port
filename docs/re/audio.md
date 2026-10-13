@@ -107,3 +107,16 @@ Recorded (update, id) lists are replayed exactly by `audio-real-data`: walk 7 20
 
 Stand-ins ([features/audio.md](../plans/features/audio.md)): water/object-11 landing flags fixed to off; sprint phase transfer (floor of the proportional frame, 9 of 10 recorded run footsteps exact, one off by one update); no blend weights (a new animation slot cannot fire in its first update); distance volume is linear only as read from code; stud pickup update differs (skip counter stand-in of studs.md); music fade/ramp not replicated; 24-voice limit not enforced; Doppler (emitter velocity) assumed 1.0.
 Unknowns: idle and jump animation sound tracks; NPC, vehicle and object sounds (ambient emitter 0x2c05dc plays ids like 210/296 from level objects); which condition sets ctrl+0x317 bit 3 and ground type 11; mix matrix channel order (left first assumed); how the original maps the run phase to the sprint animation; options volume source in a loaded save (0x2c19a4 sets defaults 8 and 10); mode 3 id remap of 0x23fa54; ducking (record flag bit 3).
+
+## 2026-10-13T21:51:17+02:00 — Stop of effect sounds 0x23ae50 (llvm-objdump only, no REA; no emulator)
+
+Replica: `chase_audio` `EffectVoices` (`src/audio/effectvoices.*`), `Mixer::fadeOut`, `SoundPlayer::play(id, position, owner)` / `stop(id, owner)`, `GameAudio::stop`. Tests: `audio-core` (stop by sound and owner, linear fade), `door-core`, `door-real-data`. Items and stand-ins: [features/audio.md](../plans/features/audio.md) (AUDIO-4, AUDIO-S7).
+
+- `0x23ae50(r0 = sound id, r1 = object, s0 = fade time)`: `0x23fe30(id)` returns the sound bank that owns the id (list head 0x58974c, bitmap test at bank+0x24, highest id u16 at bank+0x20), then the tail call `0x23f75c(bank, id, owner = u16 at object+0x14, fade)`. The play call `0x23ae84(id, object)` passes the same u16 as the owner of the voice it starts.
+- `0x23f75c` returns when the bank is 0. `0x23fcac(bank, id, owner)` searches the instances of the sound (entries of 0x20 bytes at bank+0xc, number of entries derived from byte +7 of the 0x10-byte sound record; first u32 of an entry = owner) and returns the one whose owner matches, or 0. With no instance nothing happens.
+- Fade time: a negative argument (all door calls pass -1.0, literal 0x1a6d18 = 0xbf800000) is replaced by the float at sound record +0xc = tablessoundfx sheet 0 column 16 (`SoundEffect::column16`; 136 rows are nonzero, for example 264 props/ac_fans 0.4, 321 animals/bats_loop 1.0). A fade time of exactly 0.0 ends the voice at once: `0x25b408(instance handle at +8)` and the instance owner is set to -1 (free). A nonzero time: the handle is moved between two lists (`0x23fc0c`, `0x23fbb0`), instance +0xc = current time (`0x2528b4`), +0x10 = fade seconds, +0x14 bit 0 = fading. The code that ramps the volume down is not read.
+- Every door sound (ids 581 to 617, `doors/...`) has column 16 = 0.0, so door stops are immediate (`chase-tabledump tables/tablessoundfx.bxls`, sheet 0).
+
+Unknowns
+- The ramp of a nonzero fade (shape, whether the unit is seconds, who ends the voice): the replica fades linearly over column 16 seconds (AUDIO-S7).
+- What the u16 at object+0x14 is (an object id or an index); what a second play of the same (id, owner) does while the first still runs; whether a stop of id 0 does anything; the exact use of record byte +7.

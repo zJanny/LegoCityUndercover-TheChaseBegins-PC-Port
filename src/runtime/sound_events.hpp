@@ -15,6 +15,7 @@ namespace chase::runtime {
 struct SoundCall {
     std::uint16_t id = 0;
     std::array<float, 3> position{};
+    std::uint16_t owner = 0;  // the u16 at +0x14 of the playing object (0x23ae84), the key of the stop 0x23ae50
 };
 
 // Slots of a character sound row (u16 at category * 0x44 + slot * 2 of the table loaded to 0x375f7c).

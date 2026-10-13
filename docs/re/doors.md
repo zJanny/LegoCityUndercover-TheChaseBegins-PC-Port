@@ -44,3 +44,17 @@ Unknowns
 - Which scripts send open and close requests to the doors of lvl_01, and whether the player's "use" action does.
 - The meaning of the player flag set by 0x1d16b8 in states 2 and 4 (`player ctrl +0x316 |= 0x10`).
 - The difference between the open-door and closed-door walks.
+
+## 2026-10-13T21:51:17+02:00 — Door sound sequence pinned (llvm-objdump, no REA; no emulator)
+
+Addresses read again: state change 0x1a6b6c, play 0x23ae84, stop 0x23ae50 (stop details in [audio.md §2026-10-13T21:51](audio.md)). Tests: `door-core` (all four sounds and the delay), `door-real-data` (Police_Door_02 ids). Correction of the 2026-10-13T21:17 entry ("Stop events are not played"): they are now stopped immediately. Wiring: `chase-game` plays the events at the door position with a per-door owner and stops them through `GameAudio::stop`.
+
+- Sound call sites of the door code: only 0x1a6b6c. A scan of every `bl 0x23ae50` and `bl 0x23ae84` finds none in the update 0x1d16b8 (to 0x1d1928), the update shell 0x169ba0, the destroy 0x174998 or the message handler 0x1749b8..0x174c50 (the neighbours 0x174ef4, 0x1a6dd4 and 0x1a6e74 work on a different record at +0x48). All door sounds are positional at the door (`0x23ae84`, owner = u16 at entity+0x14):
+  - target 1 (closed): stop SFXClosing (+0x2e, -1.0), then play SFXShut (+0x30); entity flag 0x800 cleared.
+  - target 2 (opening): no call in the state change. Afterwards, state 2 with timer (+0xc) equal to the delay (+0x10) plays SFXOpening (+0x2c). The test runs in every update (0x1a6bfc..0x1a6c28), so delay 0 plays at the start and delay d plays d updates after it.
+  - target 3 (open): link message to the platform (0x23211c), stop SFXOpening (+0x2c, -1.0), then play SFXOpen (+0x32).
+  - target 4 (closing): play SFXClosing (+0x2e); link message when the state before was not 2. A close request while opening does not stop the opening sound.
+- Police_Door_02 (lvl_01): SFXOpening 605 (doors/door_open_01), SFXClosing 601 (doors/door_close_01), SFXShut and SFXOpen 0, delay 0. The stop of 605 follows at the end of the opening and the stop of 601 at the end of the closing; the shut and open sounds are id 0 (empty table row, nothing plays here).
+
+Unknowns
+- Whether the original treats sound id 0 as "none" in the play and the stop (stand-in DOOR-S2).

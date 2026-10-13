@@ -3,6 +3,7 @@
 // table row, positional sounds attenuated by distance and panned by the listener (src/audio/spatial.*). Evidence:
 // docs/re/audio.md. No SDL dependency: the owner pulls samples from the mixer and guards both with one lock.
 #include "assets/assets.hpp"
+#include "audio/effectvoices.hpp"
 #include "audio/mixer.hpp"
 #include "audio/spatial.hpp"
 #include <array>
@@ -29,7 +30,12 @@ public:
 
     // 0x23fa54(id, position, ...): returns the mixer voice, or -1 when the id has no sound (id 0, unnamed or unknown)
     // or the sound is silent at its distance. `position` null plays it flat (0x23f82c).
-    int play(std::uint32_t id, const std::array<float, 3>* position);
+    // `owner` is the u16 at +0x14 of the object that plays the sound (0x23ae84), the key of stop().
+    int play(std::uint32_t id, const std::array<float, 3>* position, std::uint16_t owner = 0);
+
+    // 0x23ae50(id, object, -1.0): the voice that `id` started for `owner` ends, with the fade time of the sound's table row
+    // (column 16; 0 stops it at once). False when none runs.
+    bool stop(std::uint32_t id, std::uint16_t owner);
 
     // Recomputes the gains of the running positional voices from the current listener (0x107fa0 runs every frame).
     void update();
@@ -47,6 +53,7 @@ private:
 
     assets::FuseArchive& archive_;
     Mixer& mixer_;
+    EffectVoices voices_;
     std::vector<assets::SoundEffect> effects_;
     assets::SoundTables tables_;
     std::map<std::uint32_t, std::shared_ptr<const assets::Sound>> decoded_;

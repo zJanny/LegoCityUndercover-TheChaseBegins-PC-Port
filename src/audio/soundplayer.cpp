@@ -9,7 +9,7 @@ EmitterShape shapeOf(const assets::SoundEffect& effect) {
 }
 } // namespace
 
-SoundPlayer::SoundPlayer(assets::FuseArchive& archive, Mixer& mixer) : archive_(archive), mixer_(mixer) {
+SoundPlayer::SoundPlayer(assets::FuseArchive& archive, Mixer& mixer) : archive_(archive), mixer_(mixer), voices_(mixer) {
     const assets::FuseEntry* entry = archive.find("tables/tablessoundfx.bxls");
     if (!entry) throw std::runtime_error("not in archive: tables/tablessoundfx.bxls");
     const assets::Table table = assets::parseTable(archive.read(*entry));
@@ -27,7 +27,7 @@ std::shared_ptr<const assets::Sound> SoundPlayer::sound(const assets::SoundEffec
     return decoded;
 }
 
-int SoundPlayer::play(std::uint32_t id, const std::array<float, 3>* position) {
+int SoundPlayer::play(std::uint32_t id, const std::array<float, 3>* position, std::uint16_t owner) {
     const assets::SoundEffect* effect = assets::findSoundEffect(effects_, id);
     if (!effect || effect->name.empty()) return -1;
     const EmitterShape shape = shapeOf(*effect);
@@ -35,7 +35,14 @@ int SoundPlayer::play(std::uint32_t id, const std::array<float, 3>* position) {
     if (position && !(gains.left > 0 || gains.right > 0)) return -1;
     const int voice = mixer_.play(sound(*effect), gains.left, gains.right);
     if (position) positional_.push_back({voice, shape, *position});
+    voices_.add(voice, id, owner);
     return voice;
+}
+
+bool SoundPlayer::stop(std::uint32_t id, std::uint16_t owner) {
+    const assets::SoundEffect* effect = assets::findSoundEffect(effects_, id);
+    if (!effect || effect->name.empty()) return false;
+    return voices_.stop(id, owner, effect->column16);
 }
 
 void SoundPlayer::update() {

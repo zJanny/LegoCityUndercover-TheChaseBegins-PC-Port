@@ -23,7 +23,7 @@ add_library(chase_assets_c SHARED src/assets/c_api.cpp)
 target_link_libraries(chase_assets_c PRIVATE chase_assets)
 target_compile_options(chase_assets_c PRIVATE -Wall -Wextra -Wpedantic)
 # Audio mixer core (plan S4d): no SDL dependency; chase-soundtest is the SDL front end.
-add_library(chase_audio src/audio/mixer.cpp src/audio/spatial.cpp src/audio/soundplayer.cpp src/audio/musicplayer.cpp)
+add_library(chase_audio src/audio/mixer.cpp src/audio/spatial.cpp src/audio/soundplayer.cpp src/audio/effectvoices.cpp src/audio/musicplayer.cpp)
 target_link_libraries(chase_audio PUBLIC chase_assets)
 target_compile_options(chase_audio PRIVATE -Wall -Wextra -Wpedantic)
 # Save image (plan S4f): no SDL dependency.

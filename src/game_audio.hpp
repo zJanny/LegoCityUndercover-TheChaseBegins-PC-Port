@@ -52,8 +52,13 @@ public:
     void play(const chase::runtime::SoundCall& call) {
         if (!device_) return;
         std::lock_guard<std::mutex> guard(lock_);
-        sounds_->play(call.id, &call.position);
+        sounds_->play(call.id, &call.position, call.owner);
         ++calls_;
+    }
+    void stop(std::uint16_t id, std::uint16_t owner) {
+        if (!device_) return;
+        std::lock_guard<std::mutex> guard(lock_);
+        sounds_->stop(id, owner);
     }
     void playUi(unsigned id) {
         if (!device_) return;
