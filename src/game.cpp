@@ -8,6 +8,7 @@
 #include "input.hpp"
 #include "render/character.hpp"
 #include "render/scene.hpp"
+#include "render/studs.hpp"
 #include "runtime/collision.hpp"
 #include "runtime/follow_camera.hpp"
 #include "runtime/pad.hpp"
@@ -15,6 +16,7 @@
 #include "runtime/player_locomotion.hpp"
 #include "runtime/player_vertical.hpp"
 #include "runtime/scheduler.hpp"
+#include "runtime/studs.hpp"
 #include <SDL.h>
 #include <epoxy/gl.h>
 #include <algorithm>
@@ -377,6 +379,17 @@ int run(const Options& options) {
         if (scene.addModel(meshModelPath(placement.mesh), placementMatrix(placement))) ++placed;
         else ++unresolved;
     const std::size_t characters = addLevelCharacters(scene, archive, drawable.characters);
+    std::vector<runtime::StudSpawn> studSpawns;
+    for (const StudObject& stud : drawable.studs) {
+        runtime::StudSpawn spawn;
+        spawn.kind = runtime::StudKind(stud.kind);
+        std::copy_n(stud.position, 3, spawn.position);
+        spawn.group = stud.group;
+        studSpawns.push_back(spawn);
+    }
+    runtime::StudField studs(studSpawns);
+    std::optional<StudSprites> studSprites(std::in_place, archive);
+    double provisionalStudClockSeconds = 0;
     std::optional<PlayerRig> player = placePlayer(archive, scene, level);
     if (player && options.start) {
         player->motion.x = player->startX = (*options.start)[0];
@@ -391,6 +404,7 @@ int run(const Options& options) {
     scene.bounds(centre, radius);
     std::cout << "loaded " << scene.instances() << " instance(s) (" << placed << " placed, " << unresolved
               << " unresolved meshnames, " << characters << " characters standing in place, "
+              << studs.studs().size() << " studs (" << studs.count(runtime::StudState::Idle) << " visible), "
               << drawable.missingModel << " without model in the archive, " << drawable.skeletal
               << " other skeletal, " << drawable.customCharacters << " custom character and " << drawable.markers
               << " marker objects skipped), " << scene.triangles() << " triangles, " << scene.missingTextures()
@@ -438,7 +452,10 @@ int run(const Options& options) {
             const PlayerAnimation shown = updatePlayer(*player, collision, runtime::stickIntent(stick), pad.slot(kSlotJumpButton).press > 0, dt);
             player->animate(scene, dt, shown.role, shown.scale);
             if (!script.empty()) scriptedHeights.push_back(player->vertical.y);
+            studs.update(dt, runtime::studPickupPoint(player->motion.x, player->vertical.y, player->motion.z,
+                                                      runtime::headingRadians(player->motion.facing)));
         }
+        provisionalStudClockSeconds += double(dt);
         if (follow) {
             runtime::FollowCameraInput input;
             input.dt = dt;
@@ -504,16 +521,24 @@ int run(const Options& options) {
         const float* eye = follow ? follow->eye() : camera.eye;
         const float viewYaw = follow ? follow->yaw() : camera.yaw, viewPitch = follow ? follow->pitch() : camera.pitch;
         const float fieldOfView = follow ? runtime::FollowCamera::verticalFieldOfView() : 1.0f;
+        const Mat4 viewMatrix = chase::render::view(eye, viewYaw, viewPitch);
         Mat4 mvp = chase::render::multiply(
-            perspective(fieldOfView, float(width) / float(std::max(height, 1)), radius * 0.002f, radius * 20),
-            chase::render::view(eye, viewYaw, viewPitch));
+            perspective(fieldOfView, float(width) / float(std::max(height, 1)), radius * 0.002f, radius * 20), viewMatrix);
         scene.draw(program, mvp);
+        std::vector<StudSprite> sprites;
+        for (const runtime::Stud& stud : studs.studs())
+            if (stud.state == runtime::StudState::Idle)
+                sprites.push_back({{stud.centre[0], stud.centre[1], stud.centre[2]}, runtime::kStudTint[std::size_t(stud.kind)]});
+        studSprites->draw(program, viewMatrix, mvp, sprites, runtime::studSpriteFrame(std::uint32_t(provisionalStudClockSeconds * double(runtime::kClockTicksPerSecond))),
+                         runtime::kStudHalfSize);
 
         const bool scriptDone = !script.empty() && updates >= scriptLength;
         if (scriptDone) {
             const float moveX = player->motion.x - player->startX, moveZ = player->motion.z - player->startZ;
             std::cout << "scripted: " << updates << " updates, player moved " << std::hypot(moveX, moveZ)
                       << " units, facing " << player->motion.facing << ", run timer " << player->motion.runTimer << ", height " << player->vertical.y << '\n';
+            std::cout << "studs: counter " << studs.counter() << ", " << studs.count(runtime::StudState::Collecting) << " collecting, "
+                      << studs.count(runtime::StudState::Done) << " collected, " << studs.count(runtime::StudState::Idle) << " left\n";
             std::cout << "heights:";
             for (const float y : scriptedHeights) std::cout << ' ' << y;
             std::cout << '\n';
@@ -535,6 +560,7 @@ int run(const Options& options) {
             secondStart = tick;
         }
     }
+    studSprites.reset();
     SDL_GL_DeleteContext(context);
     SDL_DestroyWindow(window);
     SDL_Quit();

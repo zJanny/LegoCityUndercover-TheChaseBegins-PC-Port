@@ -18,6 +18,7 @@ constexpr std::uint32_t meshName = 0xacd1ebb8;            // nameHash("meshname"
 constexpr const char* minifigMesh = "char_minifig";
 constexpr const char* defaultAnimationClass = "CLASS_Generic";
 constexpr std::uint32_t firstCustomCharacter = 1, lastCustomCharacter = 8;
+constexpr std::uint32_t studObjectType = 0x3d, lastStudKind = 3;
 
 void need(const Bytes& block, std::size_t size) {
     if (block.size() < size) throw std::runtime_error("level block too small");
@@ -207,6 +208,18 @@ std::string lowered(std::string text) {
     return text;
 }
 
+float effectiveFloat(const LevelObject& obj, const Level& cls, const std::string& name) {
+    const LevelParam* param = effectiveParam(obj, cls, nameHash(name));
+    if (!param || param->type != 0) return 0;
+    float value;
+    std::memcpy(&value, &param->value, 4);
+    return value;
+}
+
+bool isStudClass(const LevelObject& obj, const Level& cls) {
+    return effectiveEnum(obj, cls, "ObjectType") == studObjectType && effectiveEnum(obj, cls, "pickuptype") <= lastStudKind;
+}
+
 bool float3Of(const LevelParam* param, float* out) {
     if (!param || param->type != 2 || param->blocks.empty() || param->blocks[0].size() < 12) return false;
     std::memcpy(out, param->blocks[0].data(), 12);
@@ -258,11 +271,20 @@ DrawableObjects drawableObjects(FuseArchive& archive, const Level& level) {
     DrawableObjects out;
     for (auto& placement : objectPlacements(level, classOf)) {
         const std::string mesh = lowered(placement.mesh);
+        const LevelObject* object = &level.objects[placement.objectIndex];
+        const Level& cls = *classOf(placement.className);
         if (placement.className.rfind("props/map_", 0) == 0) {
             ++out.markers;
+        } else if (isStudClass(*object, cls)) {
+            StudObject stud;
+            stud.kind = effectiveEnum(*object, cls, "pickuptype");
+            std::copy_n(placement.position, 3, stud.position);
+            stud.group = std::uint32_t(effectiveFloat(*object, cls, "DisabledOnStartUp")) & 0xff;
+            stud.groupOrder = std::uint32_t(effectiveFloat(*object, cls, "GroupOrder")) & 0xff;
+            stud.instance = placement.instance;
+            stud.room = placement.room;
+            out.studs.push_back(std::move(stud));
         } else if (mesh == minifigMesh) {
-            const LevelObject* object = &level.objects[placement.objectIndex];
-            const Level& cls = *classOf(placement.className);
             const std::uint32_t characterEnum = effectiveEnum(*object, cls, "CharacterEnum");
             if (characterEnum >= firstCustomCharacter && characterEnum <= lastCustomCharacter) {
                 ++out.customCharacters;

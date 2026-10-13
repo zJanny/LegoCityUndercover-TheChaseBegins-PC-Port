@@ -245,12 +245,21 @@ struct CharacterObject {
 // objectPlacements split by kind. Static geometry: models that exist in the archive. Characters: objects
 // with the "char_minifig" body, except the custom characters. Left out and counted: the mission markers of
 // class "props/map_*" (observed hidden at the start, see docs/re/objects.md), other skeletal "char_*"
-// models (animals, they have their own rigs), objects whose model the archive does not hold (studs,
-// emitters), and the custom characters (CharacterEnum 1..8, 0x2372e0 builds their look from the saved
+// models (animals, they have their own rigs), objects whose model the archive does not hold (emitters,
+// hearts), the studs (collectible coins: object type 0x3d with pickuptype 0..3, drawn as sprites, see
+// docs/re/studs.md) and the custom characters (CharacterEnum 1..8, 0x2372e0 builds their look from the saved
 // custom character, not from the object's parameters).
+struct StudObject {
+    std::uint32_t kind = 0;            // pickuptype: 0 silver, 1 gold, 2 blue, 3 purple
+    float position[3] = {0, 0, 0};     // initialposition (the sprite centre is 0.56 above it, constructor 0x17f8e0)
+    std::uint32_t group = 0;           // DisabledOnStartUp as the constructor reads it (low byte); nonzero: hidden until a script enables the group
+    std::uint32_t groupOrder = 0;      // GroupOrder (low byte)
+    std::string instance, room;
+};
 struct DrawableObjects {
     std::vector<Placement> objects;
     std::vector<CharacterObject> characters;
+    std::vector<StudObject> studs;
     std::size_t missingModel = 0;
     std::size_t skeletal = 0;
     std::size_t customCharacters = 0;

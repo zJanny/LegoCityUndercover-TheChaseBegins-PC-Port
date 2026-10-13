@@ -75,3 +75,9 @@ Unknowns:
 - Whether objects are hidden at the start (script-activated actors such as `1-3_*` cutscene actors in room7, `DisabledOnStartUp`); all resolved objects are drawn.
 - The appearance of the custom-character lineup, the rigs of animals (`char_pig`, `char_cat`, `char_dog`, `char_shark`, `char_Crow`), the jetpack `AttachModel` placement (bone parameter name unresolved: its hash is not among the code.bin strings; value `chest`), and `AttachRelative`.
 - Playback of NPC animations (not implemented; the player's playback rate is a stand-in too).
+
+## 2026-10-13T17:09:41+02:00 — Studs split out of the model-less objects (worker)
+
+**Correction of the "Left out and why" entry on studs and of the counts above:** studs are pickup objects (object type 0x3d, pickuptype 0..3) drawn as sprites, not models (details, evidence and stand-ins in [studs.md](studs.md)). `drawableObjects` now returns them in `DrawableObjects::studs` and no longer counts them in `missingModel`: lvl_00 1 without model (the particle emitter), lvl_01 11, all 856 levels 423 (not itemised); studs over all levels 4835.
+
+Unknowns: what the remaining 423 model-less objects are (hearts, `xx_particleemitter`, hint meshes) and how each is drawn.

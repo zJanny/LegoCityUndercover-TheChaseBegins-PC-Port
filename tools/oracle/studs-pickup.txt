@@ -1,0 +1,55 @@
+# Stud pickup radius traces (docs/re/studs.md), state gameplay-start (Cherry Tree Hills). The player is teleported so that its
+# pickup point lies (dx, dy) from the silver stud FP_Studs005 (861.136, 16.792, 1060.531); the memtrace regions are that stud's
+# pool record (0x8df101c), the gold stud FP_Studs106 next to it (0x8df127c), the player node world matrix (node 0x8568bb0 + 0x5c)
+# and the stud counter 0x593418. The addresses belong to this save state (pool base 0x8dec3d0, 0x4c bytes per record).
+# (dx, dy) of t0..t9: (1.40,0) (1.45,0) (1.49,0) (1.505,0) (1.52,0) (0,1.40) (0,1.49) (0,1.52) (1.0,1.0) (1.05,1.05).
+loadstate gameplay-start
+stick 0 0
+hold -
+teleport 862.5931 16.1988 1060.5875
+memtrace 30 rad_t0 0x8df101c:0x4c 0x8df127c:0x4c 0x8568c0c:0x40 0x593418:8
+loadstate gameplay-start
+stick 0 0
+hold -
+teleport 862.6431 16.1988 1060.5875
+memtrace 30 rad_t1 0x8df101c:0x4c 0x8df127c:0x4c 0x8568c0c:0x40 0x593418:8
+loadstate gameplay-start
+stick 0 0
+hold -
+teleport 862.6831 16.1988 1060.5875
+memtrace 30 rad_t2 0x8df101c:0x4c 0x8df127c:0x4c 0x8568c0c:0x40 0x593418:8
+loadstate gameplay-start
+stick 0 0
+hold -
+teleport 862.6981 16.1988 1060.5875
+memtrace 30 rad_t3 0x8df101c:0x4c 0x8df127c:0x4c 0x8568c0c:0x40 0x593418:8
+loadstate gameplay-start
+stick 0 0
+hold -
+teleport 862.7131 16.1988 1060.5875
+memtrace 30 rad_t4 0x8df101c:0x4c 0x8df127c:0x4c 0x8568c0c:0x40 0x593418:8
+loadstate gameplay-start
+stick 0 0
+hold -
+teleport 861.1931 17.5988 1060.5875
+memtrace 30 rad_t5 0x8df101c:0x4c 0x8df127c:0x4c 0x8568c0c:0x40 0x593418:8
+loadstate gameplay-start
+stick 0 0
+hold -
+teleport 861.1931 17.6888 1060.5875
+memtrace 30 rad_t6 0x8df101c:0x4c 0x8df127c:0x4c 0x8568c0c:0x40 0x593418:8
+loadstate gameplay-start
+stick 0 0
+hold -
+teleport 861.1931 17.7188 1060.5875
+memtrace 30 rad_t7 0x8df101c:0x4c 0x8df127c:0x4c 0x8568c0c:0x40 0x593418:8
+loadstate gameplay-start
+stick 0 0
+hold -
+teleport 862.1931 17.1988 1060.5875
+memtrace 30 rad_t8 0x8df101c:0x4c 0x8df127c:0x4c 0x8568c0c:0x40 0x593418:8
+loadstate gameplay-start
+stick 0 0
+hold -
+teleport 862.2431 17.2488 1060.5875
+memtrace 30 rad_t9 0x8df101c:0x4c 0x8df127c:0x4c 0x8568c0c:0x40 0x593418:8

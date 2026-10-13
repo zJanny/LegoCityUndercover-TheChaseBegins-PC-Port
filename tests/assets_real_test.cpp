@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
         }
         std::size_t bytes = 0, pooled = 0, textures = 0, checked = 0;
         std::size_t models = 0, parts = 0, vertices = 0, triangles = 0;
-        std::size_t levels = 0, objects = 0, placed = 0, drawable = 0, drawableMissing = 0, drawableSkeletal = 0, drawableMarkers = 0, drawableCharacters = 0, drawableCustom = 0;
+        std::size_t levels = 0, objects = 0, placed = 0, drawable = 0, drawableMissing = 0, drawableSkeletal = 0, drawableMarkers = 0, drawableCharacters = 0, drawableCustom = 0, drawableStuds = 0;
         std::size_t collisionModels = 0, collisionItems = 0, collisionTriangles = 0, collisionNodes = 0;
         std::size_t sounds = 0, samples = 0, loops = 0;
         std::size_t locFiles = 0, locEntries = 0, fonts = 0, glyphs = 0;
@@ -214,6 +214,7 @@ int main(int argc, char** argv) {
                 drawableCharacters += found.characters.size();
                 drawableCustom += found.customCharacters;
                 drawableMarkers += found.markers;
+                drawableStuds += found.studs.size();
             }
             if (endsWith(name, ".bfnmdl")) {
                 Model model = parseModel(data);
@@ -276,7 +277,7 @@ int main(int argc, char** argv) {
         // meshname (and the transform) where the instance does not set it (lookup 0x217080).
         // The 886 skeletal "char_*" objects of that recording are now split: minifig characters drawn, custom
         // characters (CharacterEnum 1..8, 0x2372e0) and the other rigs.
-        if (drawable != 7657 || drawableMissing != 5258 || drawableMarkers != 405 ||
+        if (drawable != 7657 || drawableMissing != 423 || drawableStuds != 4835 || drawableMarkers != 405 ||
             drawableCharacters + drawableCustom + drawableSkeletal != 886 || drawableCharacters != 708 || drawableCustom != 8 || drawableSkeletal != 170)
             throw std::runtime_error("drawable object totals differ from the recorded values");
         // Reference: python3 tools/convert_levels.py (at 9d04c91) on lvl_00_policestation_main.blvl with parameter names from
@@ -306,7 +307,7 @@ int main(int argc, char** argv) {
                 return nullptr;
             };
             DrawableObjects police = drawableObjects(archive, read("levels/levels/lvl_00_policestation/lvl_00_policestation_main.blvl"));
-            if (police.objects.size() != 131 || police.missingModel != 98 || police.skeletal != 0 || police.markers != 0 ||
+            if (police.objects.size() != 131 || police.missingModel != 1 || police.skeletal != 0 || police.markers != 0 ||
                 police.characters.size() != 32 || police.customCharacters != 8)
                 throw std::runtime_error("lvl_00 drawable objects differ from the recorded values");
             const Placement* crate = find(police, "Portrait_Box01");
@@ -316,9 +317,24 @@ int main(int argc, char** argv) {
                 std::fabs(crate->position[1] - 2.5029f) > 1e-3f || std::fabs(crate->position[2] + 16.2848f) > 1e-3f)
                 throw std::runtime_error("lvl_00 Portrait_Box01 (class default model) differs from the recorded values");
             DrawableObjects city = drawableObjects(archive, read("levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl"));
-            if (city.objects.size() != 1198 || city.missingModel != 1051 || city.skeletal != 16 || city.markers != 44 ||
+            if (city.objects.size() != 1198 || city.missingModel != 11 || city.skeletal != 16 || city.markers != 44 ||
                 city.characters.size() != 99 || city.customCharacters != 0)
                 throw std::runtime_error("lvl_01 drawable objects differ from the recorded values");
+            // Studs (object type 0x3d, pickuptype 0..3 silver, gold, blue, purple). Provenance: the per-class census of
+            // `tools/convert_levels.py --param-names` on both levels (silver, gold, blue, purple instances of the classes
+            // pickups/pickup_stud* and lepickups/lepickup_stud*), and the oracle's pickup pool at the gameplay start
+            // (docs/re/studs.md): 1038 of the 1040 lvl_01 studs matched a pool record by position, and a record is active
+            // (state 1) exactly when DisabledOnStartUp is absent or 0, which is the "enabled" column here.
+            auto studCounts = [](const DrawableObjects& found, bool enabledOnly) {
+                std::array<std::size_t, 4> counts{};
+                for (const auto& stud : found.studs)
+                    if (!enabledOnly || stud.group == 0) ++counts[stud.kind];
+                return counts;
+            };
+            using Counts = std::array<std::size_t, 4>;
+            if (studCounts(police, false) != Counts{48, 46, 3, 0} || studCounts(police, true) != Counts{48, 46, 3, 0} ||
+                studCounts(city, false) != Counts{495, 468, 73, 4} || studCounts(city, true) != Counts{416, 419, 42, 4})
+                throw std::runtime_error("stud counts differ from the recorded values");
             const Placement* atm = find(city, "FP_Task_ROBBER_CTH_06");
             auto near = [](float a, float b) { return std::fabs(a - b) < 1e-2f; };
             if (!atm || atm->mesh != "Ability_Freeplay_Robber_ATM01" || !archive.find(meshModelPath(atm->mesh)) ||

@@ -21,6 +21,7 @@ Read this index, then open only the file you need.
 | [ui-layouts.md](ui-layouts.md) | `.bxaml` UI layouts and storyboards |
 | [fmv.md](fmv.md) | Mobiclip `.moflex` video and subtitles |
 | [particles.md](particles.md) | `particledefs.bprt` particle definitions |
+| [studs.md](studs.md) | Studs (collectible coins): pickup pool records, sprite sheet drawing and spin, pickup radius and skip counter, collect timer, counter values and limits, stand-ins |
 | [oracle.md](oracle.md) | Azahar runtime oracle: setup, fidelity rules, save states, fast workflow, timings |
 | [camera.md](camera.md) | Gameplay camera: yaw word 0x376894 writer, manager and modes, follow camera law (OnFoot preset), projection, obstruction by level geometry (slab sweep, pull-in, side and vertical push), unknowns |
 | [player.md](player.md) | Player entity pointer, scene node, controller fields, stick-to-intent, locomotion rules and root motion |

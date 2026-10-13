@@ -1,0 +1,11 @@
+# Oracle view of the studs next to the door at (861, 17.4, 1060) in Cherry Tree Hills, for comparison with
+#   chase-game --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --start "866 16.589 1066" --frames 60 --screenshot OUT.bmp
+# Needs the OpenGL renderer and RPC for the screenshot (the software renderer aborts on loading the state):
+#   tools/azahar_oracle.py --display xvfb --state gameplay-start --renderer opengl --rpc tools/oracle/studs-shot.txt
+loadstate gameplay-start
+stick 0 0
+hold -
+teleport 866 16.589 1066
+frames 60
+player
+screenshot studs-ref

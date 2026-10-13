@@ -35,6 +35,7 @@ A window opens with the police station. Press Escape to quit.
 - The floor and walls come from the level. The character climbs steps and kerbs, and slides along walls.
 - The level's other people stand where the level puts them, with their own heads and clothes. They do not move, talk or react.
 - The character jumps, falls off ledges and lands as in the original, including the short pause after landing.
+- The coins (studs) of the level spin where the level puts them. Walk close to one and it is picked up. After one second the stud counter goes up (silver 10, gold 100, blue 1000, purple 10000). The program prints the counter at the end of a `--script` run.
 
 ## What does not work yet
 
@@ -45,6 +46,8 @@ A window opens with the police station. Press Escape to quit.
 - Walking slowly off a ledge looks different from the original, which first plays a short step.
 - Jumping onto something higher, or under a ceiling, may not match the original.
 - The animations do not blend. Their speed is an estimate.
+- Studs are stand-ins in some details. A picked-up stud disappears at once instead of flying to the counter. The counter is not shown on the screen, only printed. There is no pickup sound. Studs that a mission or a script switches on stay hidden. The spin starts at its own time and the picture is drawn without the original's blending.
+- The pickup distance (1.5 units) was measured in the original, not taken from the game's code.
 
 ## Other levels
 

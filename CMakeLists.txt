@@ -38,6 +38,7 @@ add_library(chase_runtime src/runtime/scheduler.cpp src/runtime/pad.cpp src/runt
 target_link_libraries(chase_runtime PUBLIC chase_assets)
 target_include_directories(chase_runtime PUBLIC src)
 target_compile_options(chase_runtime PRIVATE -Wall -Wextra -Wpedantic -ffp-contract=off)
+target_sources(chase_runtime PRIVATE src/runtime/studs.cpp)
 add_executable(chase-savecheck src/savecheck.cpp)
 target_link_libraries(chase-savecheck PRIVATE chase_save_tables)
 target_compile_options(chase-savecheck PRIVATE -Wall -Wextra -Wpedantic)
@@ -53,6 +54,7 @@ if(EPOXY_FOUND)
   add_library(chase_render src/render/scene.cpp src/render/character.cpp)
   target_link_libraries(chase_render PUBLIC chase_assets PkgConfig::SDL2 PkgConfig::EPOXY)
   target_compile_options(chase_render PRIVATE -Wall -Wextra -Wpedantic)
+  target_sources(chase_render PRIVATE src/render/studs.cpp)
   add_executable(chase-viewer src/viewer.cpp)
   target_link_libraries(chase-viewer PRIVATE chase_render chase_audio chase_input)
   target_compile_options(chase-viewer PRIVATE -Wall -Wextra -Wpedantic)
@@ -80,6 +82,8 @@ set(CHASE_CAMERA_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/cam-out" CACHE 
     "Recorded original-game camera traces for the opt-in differential test")
 set(CHASE_CAMERA_WALL_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/camwall-out" CACHE PATH
     "Recorded original-game camera traces near walls (.mem memtraces and exported CSV) for the opt-in differential tests")
+set(CHASE_STUDS_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/studs-traces" CACHE PATH
+    "Recorded original-game stud pickup traces for the opt-in differential test")
 include(CTest)
 if(BUILD_TESTING)
   add_executable(input-test tests/input_test.cpp)
@@ -156,6 +160,16 @@ if(BUILD_TESTING)
   add_test(NAME assets-real-data COMMAND assets-real-test
     "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
   set_tests_properties(assets-real-data PROPERTIES SKIP_RETURN_CODE 77)
+  add_executable(studs-test tests/studs_test.cpp)
+  target_link_libraries(studs-test PRIVATE chase_runtime)
+  target_compile_options(studs-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME studs-core COMMAND studs-test)
+  add_executable(studs-real-test tests/studs_real_test.cpp)
+  target_link_libraries(studs-real-test PRIVATE chase_runtime chase_assets)
+  target_compile_options(studs-real-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME studs-real-data COMMAND studs-real-test
+    "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv" "${CHASE_STUDS_TRACE_DIR}")
+  set_tests_properties(studs-real-data PROPERTIES SKIP_RETURN_CODE 77)
   if(TARGET chase-viewer AND EXISTS "${CHASE_ROMFS_DIR}/lego_city3ds.fib")
     # Opt-in: renders one model offscreen (SDL offscreen driver + EGL) and saves a screenshot.
     add_test(NAME viewer-real-smoke COMMAND chase-viewer
