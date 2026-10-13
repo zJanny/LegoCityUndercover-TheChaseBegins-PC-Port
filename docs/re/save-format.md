@@ -108,3 +108,18 @@ Offsets are relative to the slot block (live copy at 0x51b6b0; file slot 0 at 0x
   - 0x20a630(category, level) returns that u16, except for category 7. Category 7 is the sum of four flags 0x1ffa74(4 × (L − 2) + k), k = 0..3. These are bits 0..27 of a set at +0x51fa (0x5208aa); cheat flag 0x375961 bit 6 forces them.
   - 0x20a7fc(category, level) reads the total from the runtime table *0x375fb8 (13 × 8 bytes, byte [category × 8 + L − 2]). So totals are not in the save.
   - 0x2f63dc fills *0x375fb8 from "Tables/TablesSuperCounters.xls" (shipped as tables/tablessupercounters.bxls) through 0x20f844. The same loader fills *0x3745fc from TablesWiretap.xls and *0x3746f8 from TablesPickups.xls. 0x1ffc14 adds to a level counter only while it stays at or below that total. Not checked: whether the table's columns match the 13 × 7 layout. If they do, completion can be computed offline from a save plus the tables (still missing: the level table *0x375914 and character-table byte +0x24).
+
+## 2026-10-13T09:19+02:00 — TablesSuperCounters vs the 13 × 7 totals layout (chase-tabledump; no REA)
+
+Command: `build/chase-tabledump tables/tablessupercounters.bxls` (source: `artifacts/fib/files/tables/tablessupercounters.bxls`, 184 bytes, `xxd` checked).
+
+- Verdict: matches the layout read by 0x20a7fc (13 categories × levels 2..8, one byte per cell, 8-byte row stride).
+- Dump: sheet 0 has 13 rows and 9 columns, types `0 3 3 3 3 3 3 3 3`.
+  - Column 0 (type 0) is empty ("-") in every row.
+  - Columns 1..7 (type 3, u8) are the totals for levels 2..8 in that order.
+  - Column 8 (type 3) is 0 in every row, so it fits the unused 8th byte of each `*0x375fb8` row.
+  - Raw data in the file: 13 × 8 bytes from file offset 0x50 (after the column types and three 0xcd padding bytes), each row = 7 totals + 0x00.
+- Representative rows (levels 2..8): category 0 = 5 1 5 4 4 4 5; category 1 = 8 0 5 1 1 2 7; category 7 = 4 4 4 4 4 4 4; category 9 = 1 1 1 1 1 1 1; category 12 = 2 0 2 2 1 2 2.
+- Cross-check: category 7 totals are 4 at every level, which equals the four flags per level that 0x20a630 sums for category 7. Categories 2, 4, 5, 6 are also all 4. Zero totals (categories 1, 10, 11, 12 at level 3) are consistent with a category absent from that level.
+- The evidence is structural only (shape, stride, category 7). The loader 0x2f63dc / 0x20f844 was not re-read in this entry, so the copy of columns 1..8 into the 8-byte rows is inferred.
+- Unknown: the meaning of the 13 categories; whether column 0 is stored anywhere (it is empty here); the level table *0x375914 and character-table byte +0x24, which are still needed for an offline completion value.

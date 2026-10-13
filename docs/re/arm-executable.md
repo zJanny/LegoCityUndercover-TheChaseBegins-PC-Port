@@ -65,3 +65,38 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - 0x158640 builds a smoothing table with dt = 1/60 (0x1640a8). 0x1ab96c and 0x309514 convert a frame count to seconds with 1/30. Neither proves the scheduler step.
 - Searched without success: the 1/30 and 1/60 literals, the app constructor 0x10087c, stores to +0x10..+0x1c with flag bytes +0x20..+0x22 (the candidates 0x156914 and 0x343e30 are unrelated). The object that sets C+0x10 is still unknown.
 - Correction to the 2026-10-13T08:53 save-format entry: slot-table entries 12 and 13 (*0x376a18, *0x376a1c) hold channels 8 (L) and 10 (R), using the table order from the 10:45 entry. Invert camera therefore flips the direction of L/R camera rotation, not a stick axis. Not verified at runtime.
+
+## 2026-10-13T09:20:40+02:00 — Input slot table 0x3769e8 (REA Ghidra 12.1.2; read-only, partial)
+
+- The table is 18 words (0x3769e8..0x376a2c), each a channel index into the pad device's channel array. 0x168c9c fills it (ev_70129f7a…). Memory is zero until that init runs (ev_5ed4bcca…, static image).
+- Readers index it as `*(s16*)(chanArray + slot*0x14 + 0x10)`, where `chanArray = *(DAT_003769e4 + 0x14)`: field +0x10 is the s16 press edge of the 20-byte channel record. So slots are lookups for press edges, not held state.
+- Slot index → channel → pad meaning (channel meaning from the 10:45 entry):
+
+| Slot | Address | Channel | Pad input | Evidence of use |
+|---|---|---|---|---|
+| 0 | 0x3769e8 | 12 | D-pad Up | menu 0x17d428: Up = cursor −4 (4-wide grid) |
+| 1 | 0x3769ec | 13 | D-pad Down | same: Down = cursor +4 |
+| 2 | 0x3769f0 | 14 | D-pad Left | same: Left = cursor −1 |
+| 3 | 0x3769f4 | 15 | D-pad Right | same: Right = cursor +1 |
+| 4 | 0x3769f8 | 16 | A | any-button check 0x1e7bac (below); 22 xrefs |
+| 5 | 0x3769fc | 17 | B | same; xref'd by many functions |
+| 6 | 0x376a00 | 16 | A (duplicate of slot 4) | 7 xrefs (0x2003e4, 0x200534, 0x29ce14 …); how it differs from slot 4 unknown |
+| 7 | 0x376a04 | 17 | B (duplicate of slot 5) | not examined |
+| 8 | 0x376a08 | 18 | X | any-button check; 0x2005dc, 0x200618 |
+| 9 | 0x376a0c | 19 | Y | any-button check |
+| 10 | 0x376a10 | 6 | Start | any-button check |
+| 11 | 0x376a14 | 7 | channel 7, no pad bit feeds it | any-button check; xrefs 0x168cf0, 0x1e7c8c, 0x1e7cf0 |
+| 12 | 0x376a18 | 8 | L | menu 0x17d428: L = previous page (0x1b283c(0)) |
+| 13 | 0x376a1c | 10 | R | same: R = next page (0x1b283c(1)) |
+| 14–17 | 0x376a20..0x376a2c | 0, 1, 2, 3 | analog axes ch0..ch3 | filled by 0x168c9c; readers not examined |
+
+- 0x376a34 holds a copy of the device pointer (DAT_00376a34 = DAT_003769e4); 0x376a30 is not written by 0x168c9c.
+- 0x1e7bac (xref 0x1e7c14, ev_a3accba0…) is an "any button pressed" test: true when slots 4, 9, 8, 5, 11 or 10 have a press edge (A, Y, X, B, ch7, Start), when the client at DAT_00372e80 is not in state 2 and DAT_00372e6c == 0. It also returns true after a timeout (DAT_00372e80+0xc + +4 against the clock at 0x2355c0). Probably a skip-screen check; the screen is not identified.
+- Menu 0x17ceac (xref 0x17d428, ev_af92b1cd…) navigates a 12-per-page grid with the D-pad (slots 0–3) and pages with L/R (slots 12, 13). It also handles touch via 0x258850.
+- Names: none are stored in the binary. Slot labels above are pad buttons, not recovered gameplay actions.
+
+Unknown:
+- Why A and B appear twice (slots 4/5 and 6/7), and which callers use which pair. Ghidra's body for the function containing 0x2004b8 is non-contiguous and was not analysed.
+- What slot 11 (channel 7) reads, since no pad bit maps to channel 7. It may be Select (0x04) reserved but unmapped, or a non-pad source.
+- Readers of the axis slots 14–17 and the meaning of channels 2 and 3.
+- Only 3 of ~19 xref sites of slot 0 were examined.
