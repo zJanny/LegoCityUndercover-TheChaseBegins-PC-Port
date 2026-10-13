@@ -22,7 +22,8 @@ Item format: `- [ ] ID — gap. needs: ID. blocks: ID. evidence: link`. `needs:`
 | [saves-options](saves-options.md) | IN_PROGRESS | SAVE-1 no save-aware start; SAVE-2 slot display (blocks FE-1) |
 | [input](input.md) | DONE (lab, mapping) | INPUT-2 readers of input slots 16/17 |
 | [executable-platform](executable-platform.md) | IN_PROGRESS | EXEC-3 update rate 30/60 undecided; EXEC-4 game frame function |
-| [assets-formats](assets-formats.md) | IN_PROGRESS | ASSET-1 lighting and materials; ASSET-2 streaming |
+| [assets-formats](assets-formats.md) | IN_PROGRESS | ASSET-2 streaming |
+| [rendering](rendering.md) | IN_PROGRESS | RENDER-1 fragment lighting; RENDER-2 reflections; RENDER-3 fog |
 | [viewer-tools](viewer-tools.md) | IN_PROGRESS | TOOLS-1 oracle controller state 255 |
 | missions (no file yet) | NOT_STARTED | mission flow, needs SCRIPT-1 |
 | enemies (no file yet) | NOT_STARTED | enemies and fighting, not recovered |

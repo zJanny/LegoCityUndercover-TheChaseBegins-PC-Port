@@ -34,24 +34,121 @@ uniform mat4 mvp;
 out vec2 vUv; out vec2 vUv1; out vec3 vNormal; out vec4 vColour;
 void main() { vUv = uv; vUv1 = uv1; vNormal = normal; vColour = colour; gl_Position = mvp * vec4(position, 1.0); }
 )";
-// Approximation, not the game's PICA combiner setup (not recovered): texture x
-// vertex colour, or texture x lightmap (second texture on uv1) for lightmapped parts,
-// whose vertex colours are black in the shipped data.
 const char* fragmentSource = R"(#version 330 core
 in vec2 vUv; in vec2 vUv1; in vec3 vNormal; in vec4 vColour;
-uniform sampler2D tex; uniform sampler2D lightmap;
-uniform bool hasTexture; uniform bool hasLightmap; uniform bool hasNormal; uniform float brightness;
+uniform sampler2D unit0; uniform sampler2D unit1; uniform sampler2D unit2;
+uniform int stageCount; uniform ivec4 stageWords[6]; uniform vec4 stageConstant[6];
+uniform int bufferBits; uniform int unitMode[3]; uniform vec4 unitFlat[3];
+uniform bool hasNormal; uniform bool hasSecondUv; uniform bool dynamicLight; uniform float alphaReference; uniform float brightness;
+uniform vec3 lightingStandIn;
 out vec4 fragColour;
+
+vec4 unitColour(int unit) {
+    if (unitMode[unit] == 2) return unitFlat[unit];
+    if (unitMode[unit] == 0) return vec4(1.0);
+    vec2 uv = (unit == 0 || !hasSecondUv) ? vUv : vUv1;
+    if (unit == 0) return texture(unit0, uv);
+    if (unit == 1) return texture(unit1, uv);
+    return texture(unit2, uv);
+}
+vec3 rgbOperand(vec4 c, int op) {
+    switch (op) {
+    case 0: return c.rgb;
+    case 1: return 1.0 - c.rgb;
+    case 2: return vec3(c.a);
+    case 3: return vec3(1.0 - c.a);
+    case 4: return vec3(c.r);
+    case 5: return vec3(1.0 - c.r);
+    case 8: return vec3(c.g);
+    case 9: return vec3(1.0 - c.g);
+    case 12: return vec3(c.b);
+    default: return vec3(1.0 - c.b);
+    }
+}
+float alphaOperand(vec4 c, int op) {
+    switch (op) {
+    case 0: return c.a;
+    case 1: return 1.0 - c.a;
+    case 2: return c.r;
+    case 3: return 1.0 - c.r;
+    case 4: return c.g;
+    case 5: return 1.0 - c.g;
+    case 6: return c.b;
+    default: return 1.0 - c.b;
+    }
+}
+vec4 source(int s, int stage, vec4 previous, vec4 buffer, vec4 fragPrimary) {
+    if (s == 0) return vColour;
+    if (s == 1) return fragPrimary;
+    if (s == 2) return vec4(0.0);
+    if (s == 3) return unitColour(0);
+    if (s == 4) return unitColour(1);
+    if (s == 5) return unitColour(2);
+    if (s == 0xd) return buffer;
+    if (s == 0xe) return stageConstant[stage];
+    if (s == 0xf) return previous;
+    return vec4(0.0);
+}
+vec3 combine3(int mode, vec3 a0, vec3 a1, vec3 a2) {
+    switch (mode) {
+    case 0: return a0;
+    case 1: return a0 * a1;
+    case 2: return a0 + a1;
+    case 3: return a0 + a1 - 0.5;
+    case 4: return a0 * a2 + a1 * (1.0 - a2);
+    case 5: return a0 - a1;
+    case 6: case 7: return vec3(4.0 * dot(a0 - 0.5, a1 - 0.5));
+    case 8: return a0 * a1 + a2;
+    default: return (a0 + a1) * a2;
+    }
+}
+float combine1(int mode, float a0, float a1, float a2) {
+    switch (mode) {
+    case 0: return a0;
+    case 1: return a0 * a1;
+    case 2: return a0 + a1;
+    case 3: return a0 + a1 - 0.5;
+    case 4: return a0 * a2 + a1 * (1.0 - a2);
+    case 5: return a0 - a1;
+    case 8: return a0 * a1 + a2;
+    default: return (a0 + a1) * a2;
+    }
+}
 void main() {
-    vec4 c = hasLightmap ? vec4(texture(lightmap, vUv1).rgb, 1.0) : vColour;
-    if (hasTexture) c *= texture(tex, vec2(vUv.x, vUv.y));
-    if (c.a < 0.25) discard;
-    float shade = 1.0;
-    if (hasNormal && dot(vNormal, vNormal) > 0.0)
-        shade = 0.45 + 0.55 * max(dot(normalize(vNormal), normalize(vec3(0.4, 0.8, 0.45))), 0.0);
-    fragColour = vec4(min(c.rgb * shade * brightness, vec3(1.0)), 1.0);
+    vec4 c;
+    if (stageCount == 0) {
+        c = vColour;
+        c *= unitColour(0);
+        if (c.a < 0.25) discard;
+        float shade = 1.0;
+        if (hasNormal && dot(vNormal, vNormal) > 0.0)
+            shade = 0.45 + 0.55 * max(dot(normalize(vNormal), normalize(vec3(0.4, 0.8, 0.45))), 0.0);
+        fragColour = vec4(min(c.rgb * shade * brightness, vec3(1.0)), 1.0);
+        return;
+    }
+    vec4 fragPrimary = dynamicLight ? vec4(lightingStandIn, 1.0) : vec4(0.0);
+    vec4 previous = vec4(0.0), buffer = vec4(0.0);
+    for (int i = 0; i < stageCount; ++i) {
+        if (((bufferBits >> i) & 1) != 0) buffer = previous;
+        int src = stageWords[i].x, op = stageWords[i].y, comb = stageWords[i].z, scale = stageWords[i].w;
+        vec4 s0 = source(src & 15, i, previous, buffer, fragPrimary);
+        vec4 s1 = source((src >> 4) & 15, i, previous, buffer, fragPrimary);
+        vec4 s2 = source((src >> 8) & 15, i, previous, buffer, fragPrimary);
+        vec3 rgb = clamp(combine3(comb & 15, rgbOperand(s0, op & 15), rgbOperand(s1, (op >> 4) & 15), rgbOperand(s2, (op >> 8) & 15))
+                         * float(1 << (scale & 3)), 0.0, 1.0);
+        vec4 t0 = source((src >> 16) & 15, i, previous, buffer, fragPrimary);
+        vec4 t1 = source((src >> 20) & 15, i, previous, buffer, fragPrimary);
+        vec4 t2 = source((src >> 24) & 15, i, previous, buffer, fragPrimary);
+        float a = clamp(combine1((comb >> 16) & 15, alphaOperand(t0, (op >> 12) & 7), alphaOperand(t1, (op >> 16) & 7),
+                                 alphaOperand(t2, (op >> 20) & 7)) * float(1 << ((scale >> 16) & 3)), 0.0, 1.0);
+        previous = vec4(rgb, a);
+    }
+    if (alphaReference >= 0.0 && !(previous.a > alphaReference)) discard;
+    fragColour = vec4(min(previous.rgb * brightness, vec3(1.0)), previous.a);
 }
 )";
+
+constexpr float kLightingStandIn[3] = {138.0f / 255.0f, 161.0f / 255.0f, 182.0f / 255.0f};
 
 struct GpuVertex {
     float position[3], uv[2], normal[3];
@@ -151,9 +248,16 @@ GLuint createProgram() {
 
 void beginFrame(GLuint program, float brightness) {
     glUseProgram(program);
-    glUniform1i(glGetUniformLocation(program, "tex"), 0);
-    glUniform1i(glGetUniformLocation(program, "lightmap"), 1);
+    glUniform1i(glGetUniformLocation(program, "unit0"), 0);
+    glUniform1i(glGetUniformLocation(program, "unit1"), 1);
+    glUniform1i(glGetUniformLocation(program, "unit2"), 2);
     glUniform1f(glGetUniformLocation(program, "brightness"), brightness);
+    glUniform3fv(glGetUniformLocation(program, "lightingStandIn"), 1, kLightingStandIn);
+    glUniform1i(glGetUniformLocation(program, "stageCount"), 0);
+    glUniform1f(glGetUniformLocation(program, "alphaReference"), -1.0f);
+    glDisable(GL_BLEND);
+    glDepthMask(GL_TRUE);
+    glDepthFunc(GL_LEQUAL);
 }
 
 std::string lower(std::string s) {
@@ -198,7 +302,7 @@ Scene::Scene(FuseArchive& archive, std::vector<std::string> exclude) : archive_(
 
 void Scene::addGeometry(const std::string& key, const ModelPart& part) {
     LoadedModel out;
-    out.parts.push_back(upload(part, 0, out));
+    out.parts.push_back(upload(part, out));
     instances_.push_back({&models_.emplace(key, std::move(out)).first->second, identity()});
 }
 
@@ -211,18 +315,28 @@ bool Scene::addModel(const std::string& path, const Mat4& transform,
         if (!entry) return false;
         Model model = parseModel(archive_.read(*entry));
         LoadedModel out;
+        const std::string dir = directory(lower(path));
         for (const auto& mesh : model.meshes)
             for (const auto& part : mesh.parts) {
                 std::string texName = part.textures.empty() ? "" : part.textures.front();
                 bool skip = false;
                 for (const auto& word : exclude_) skip |= lower(texName).find(word) != std::string::npos;
                 if (skip || part.indices.empty()) continue;
-                std::string dir = directory(lower(path));
-                auto replacement = textureOverrides.find(stem(texName));
-                if (replacement != textureOverrides.end()) texName = replacement->second;
-                DrawPart d = upload(part, texName.empty() ? 0 : texture(texName, dir), out);
-                // Second texture sampled with uv1: a LIGHTMAP_* texture in the shipped data.
-                if ((part.flags & AttrUv1) && part.textures.size() >= 2) d.lightmap = texture(part.textures[1], dir);
+                DrawPart d = upload(part, out);
+                for (int unit = 0; unit < 3 && d.hasMaterial; ++unit) {
+                    const int slot = d.material.unitSlot[unit];
+                    if (slot < 0 || std::size_t(slot) >= part.textures.size()) continue;
+                    std::string name = part.textures[std::size_t(slot)];
+                    const auto replacement = textureOverrides.find(stem(name));
+                    if (replacement != textureOverrides.end()) name = replacement->second;
+                    const TextureInfo& info = texture(name, dir);
+                    if (info.cube) {
+                        d.unitIsFlat[unit] = true;
+                        std::copy_n(info.average, 4, d.unitFlat[unit]);
+                    } else {
+                        d.unitTexture[unit] = info.id;
+                    }
+                }
                 if (part.flags & AttrSkin) out.skinned.push_back({out.parts.size(), part.vertices, part.flags});
                 out.parts.push_back(d);
             }
@@ -275,25 +389,97 @@ void Scene::bounds(float centre[3], float& radius) const {
     }
 }
 
-void Scene::draw(GLuint program, const Mat4& viewProjection) const {
-    GLint hasTexture = glGetUniformLocation(program, "hasTexture");
-    GLint hasNormal = glGetUniformLocation(program, "hasNormal");
-    GLint hasLightmap = glGetUniformLocation(program, "hasLightmap");
-    GLint mvp = glGetUniformLocation(program, "mvp");
-    for (const auto& instance : instances_) {
-        Mat4 m = multiply(viewProjection, instance.transform);
-        glUniformMatrix4fv(mvp, 1, GL_FALSE, m.data());
-        for (const auto& part : instance.model->parts) {
-            glUniform1i(hasTexture, part.texture != 0);
-            glUniform1i(hasNormal, part.hasNormal);
-            glUniform1i(hasLightmap, part.lightmap != 0);
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, part.lightmap);
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, part.texture);
-            glBindVertexArray(part.vao);
-            glDrawElements(GL_TRIANGLES, part.count, GL_UNSIGNED_SHORT, nullptr);
+void Scene::drawPart(GLuint program, const DrawPart& part, bool culling) const {
+    const MaterialState& m = part.material;
+    glUniform1i(glGetUniformLocation(program, "stageCount"), part.hasMaterial ? GLint(m.stages.size()) : 0);
+    glUniform1i(glGetUniformLocation(program, "hasNormal"), part.hasNormal);
+    glUniform1i(glGetUniformLocation(program, "hasSecondUv"), part.secondUv);
+    glUniform1i(glGetUniformLocation(program, "dynamicLight"), m.lighting && m.lightingKey != 1 && m.lightingKey != 4);
+    glUniform1f(glGetUniformLocation(program, "alphaReference"), m.alphaTest ? float(m.alphaReference) / 255.0f : -1.0f);
+    if (part.hasMaterial) {
+        GLint words[6 * 4] = {};
+        GLfloat constants[6 * 4] = {};
+        for (std::size_t i = 0; i < m.stages.size(); ++i) {
+            const TevStage& t = m.stages[i];
+            words[i * 4 + 0] = GLint(t.source);
+            words[i * 4 + 1] = GLint(t.operand);
+            words[i * 4 + 2] = GLint(t.combiner);
+            words[i * 4 + 3] = GLint(t.scale);
+            for (int c = 0; c < 4; ++c) constants[i * 4 + std::size_t(c)] = float((t.constant >> (8 * c)) & 0xff) / 255.0f;
         }
+        glUniform4iv(glGetUniformLocation(program, "stageWords"), 6, words);
+        glUniform4fv(glGetUniformLocation(program, "stageConstant"), 6, constants);
+        glUniform1i(glGetUniformLocation(program, "bufferBits"), GLint(m.bufferUpdate));
+        GLint modes[3];
+        GLfloat flat[12];
+        for (int unit = 0; unit < 3; ++unit) {
+            modes[unit] = part.unitIsFlat[unit] ? 2 : part.unitTexture[unit] != 0 ? 1 : 0;
+            std::copy_n(part.unitFlat[unit], 4, flat + unit * 4);
+        }
+        glUniform1iv(glGetUniformLocation(program, "unitMode"), 3, modes);
+        glUniform4fv(glGetUniformLocation(program, "unitFlat"), 3, flat);
+        for (int unit = 2; unit >= 0; --unit) {
+            glActiveTexture(GLenum(GL_TEXTURE0 + unit));
+            glBindTexture(GL_TEXTURE_2D, part.unitTexture[unit]);
+        }
+        if (m.depthTest) {
+            static const GLenum functions[8] = {GL_NEVER, GL_ALWAYS, GL_EQUAL, GL_NOTEQUAL, GL_LESS, GL_LEQUAL, GL_GREATER, GL_GEQUAL};
+            glDepthFunc(functions[m.depthFunction & 7]);
+        } else {
+            glDepthFunc(GL_ALWAYS);
+        }
+        glDepthMask(m.depthWrite ? GL_TRUE : GL_FALSE);
+        if (culling) {
+            if (m.cullMode == 0) {
+                glDisable(GL_CULL_FACE);
+            } else {
+                glEnable(GL_CULL_FACE);
+                glCullFace(m.cullMode == 1 ? GL_BACK : GL_FRONT);
+            }
+        }
+    } else {
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, part.unitTexture[0]);
+        GLint modes[3] = {part.unitTexture[0] != 0 ? 1 : 0, 0, 0};
+        glUniform1iv(glGetUniformLocation(program, "unitMode"), 3, modes);
+    }
+    glBindVertexArray(part.vao);
+    glDrawElements(GL_TRIANGLES, part.count, GL_UNSIGNED_SHORT, nullptr);
+}
+
+void Scene::draw(GLuint program, const Mat4& viewProjection) const {
+    static const GLenum factors[10] = {GL_ZERO, GL_ONE, GL_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR, GL_DST_COLOR,
+                                       GL_ONE_MINUS_DST_COLOR, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_DST_ALPHA,
+                                       GL_ONE_MINUS_DST_ALPHA};
+    static const GLenum equations[5] = {GL_FUNC_ADD, GL_FUNC_SUBTRACT, GL_FUNC_REVERSE_SUBTRACT, GL_MIN, GL_MAX};
+    GLint mvp = glGetUniformLocation(program, "mvp");
+    const bool culling = glIsEnabled(GL_CULL_FACE);
+    for (int pass = 0; pass < 2; ++pass) {
+        for (const auto& instance : instances_) {
+            Mat4 m = multiply(viewProjection, instance.transform);
+            glUniformMatrix4fv(mvp, 1, GL_FALSE, m.data());
+            for (const auto& part : instance.model->parts) {
+                const bool blended = part.hasMaterial && (part.material.blendSource != 1 || part.material.blendDestination != 0);
+                if (blended != (pass == 1)) continue;
+                if (blended) {
+                    glEnable(GL_BLEND);
+                    glBlendEquation(equations[std::min(part.material.blendEquation, 4u)]);
+                    glBlendFunc(factors[std::min(part.material.blendSource, 9u)], factors[std::min(part.material.blendDestination, 9u)]);
+                } else {
+                    glDisable(GL_BLEND);
+                }
+                drawPart(program, part, culling);
+            }
+        }
+    }
+    glDisable(GL_BLEND);
+    glDepthMask(GL_TRUE);
+    glDepthFunc(GL_LEQUAL);
+    glUniform1i(glGetUniformLocation(program, "stageCount"), 0);
+    glUniform1f(glGetUniformLocation(program, "alphaReference"), -1.0f);
+    if (culling) {
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_BACK);
     }
 }
 
@@ -304,34 +490,42 @@ std::size_t Scene::triangles() const {
     return n;
 }
 
-GLuint Scene::texture(const std::string& name, const std::string& modelDir) {
+const Scene::TextureInfo& Scene::texture(const std::string& name, const std::string& modelDir) {
     std::string key = stem(name);
     auto cached = textures_.find(key);
     if (cached != textures_.end()) return cached->second;
-    GLuint id = 0;
+    TextureInfo info;
     auto candidates = texturePaths_.find(key);
     if (candidates != texturePaths_.end()) {
         std::string chosen = candidates->second.front();
         for (const auto& c : candidates->second)
             if (c.rfind(modelDir + "textures/", 0) == 0) chosen = c;
         Image image = decodeTexture(archive_.read(*archive_.find(chosen)));
-        glGenTextures(1, &id);
-        glBindTexture(GL_TEXTURE_2D, id);
-        // Decoded rows are top-down and the game's v=0 is the top row (char_squirrel body
-        // and token faces render correctly only this way), so rows upload unflipped.
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, image.width, image.height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-                     image.rgba.data());
-        glGenerateMipmap(GL_TEXTURE_2D);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        if (image.faces == 6) {
+            info.cube = true;
+            double sum[4] = {};
+            for (std::size_t i = 0; i + 3 < image.rgba.size(); i += 4)
+                for (std::size_t c = 0; c < 4; ++c) sum[c] += image.rgba[i + c];
+            const double pixels = double(image.rgba.size() / 4);
+            for (std::size_t c = 0; c < 4; ++c) info.average[c] = pixels > 0 ? float(sum[c] / pixels / 255.0) : 1.0f;
+        } else {
+            glGenTextures(1, &info.id);
+            glBindTexture(GL_TEXTURE_2D, info.id);
+            // Decoded rows are top-down and the game's v=0 is the top row (char_squirrel body
+            // and token faces render correctly only this way), so rows upload unflipped.
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, image.width, image.height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                         image.rgba.data());
+            glGenerateMipmap(GL_TEXTURE_2D);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        }
     } else {
         ++missing_;
     }
-    textures_[key] = id;
-    return id;
+    return textures_.emplace(key, info).first->second;
 }
 
-Scene::DrawPart Scene::upload(const ModelPart& part, GLuint tex, LoadedModel& model) {
+Scene::DrawPart Scene::upload(const ModelPart& part, LoadedModel& model) {
     std::vector<GpuVertex> vertices;
     vertices.reserve(part.vertices.size());
     for (const auto& v : part.vertices) {
@@ -342,9 +536,13 @@ Scene::DrawPart Scene::upload(const ModelPart& part, GLuint tex, LoadedModel& mo
         }
     }
     DrawPart d;
-    d.texture = tex;
     d.count = GLsizei(part.indices.size());
     d.hasNormal = part.flags & AttrNormal;
+    d.secondUv = part.flags & AttrUv1;
+    if (part.material.size() >= 0x60) {
+        d.material = materialState(part);
+        d.hasMaterial = d.material.supported;
+    }
     glGenVertexArrays(1, &d.vao);
     glBindVertexArray(d.vao);
     glGenBuffers(1, &d.vbo);

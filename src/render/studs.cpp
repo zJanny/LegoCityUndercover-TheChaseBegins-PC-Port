@@ -82,9 +82,11 @@ void StudSprites::draw(GLuint program, const Mat4& view, const Mat4& viewProject
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, GLsizeiptr(indices.size() * sizeof(std::uint32_t)), indices.data(), GL_STREAM_DRAW);
     glUniformMatrix4fv(glGetUniformLocation(program, "mvp"), 1, GL_FALSE, viewProjection.data());
-    glUniform1i(glGetUniformLocation(program, "hasTexture"), 1);
+    const GLint unitModes[3] = {1, 0, 0};
+    glUniform1iv(glGetUniformLocation(program, "unitMode"), 3, unitModes);
+    glUniform1i(glGetUniformLocation(program, "stageCount"), 0);
     glUniform1i(glGetUniformLocation(program, "hasNormal"), 0);
-    glUniform1i(glGetUniformLocation(program, "hasLightmap"), 0);
+    glUniform1i(glGetUniformLocation(program, "hasSecondUv"), 0);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture_);
     GLboolean culling = glIsEnabled(GL_CULL_FACE);

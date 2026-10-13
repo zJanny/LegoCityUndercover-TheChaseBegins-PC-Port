@@ -56,6 +56,8 @@ int main(int argc, char** argv) {
         std::size_t models = 0, parts = 0, vertices = 0, triangles = 0;
         std::size_t levels = 0, objects = 0, placed = 0, drawable = 0, drawableMissing = 0, drawableSkeletal = 0, drawableMarkers = 0, drawableCharacters = 0, drawableCustom = 0, drawableStuds = 0;
         std::size_t collisionModels = 0, collisionItems = 0, collisionTriangles = 0, collisionNodes = 0;
+        std::size_t unsupportedMaterials = 0;
+        std::map<std::string, std::size_t> materialCensus;
         std::size_t sounds = 0, samples = 0, loops = 0;
         std::size_t locFiles = 0, locEntries = 0, fonts = 0, glyphs = 0;
         std::size_t navFiles = 0, navGrids = 0, navPaths = 0, navFlagged = 0;
@@ -247,6 +249,12 @@ int main(int argc, char** argv) {
                                 for (int k = 0; k < 4; ++k)
                                     if (part.vertices[index].weights[k]) jointSum += part.vertices[index].joints[k];
                         }
+                        const MaterialState material = materialState(part);
+                        if (!material.supported) ++unsupportedMaterials;
+                        ++materialCensus["mode " + std::to_string(material.mode) + " lighting " + std::to_string(material.lightingKey) +
+                                         " texture " + std::to_string(material.textureKey) + " alpha " + std::to_string(material.alphaKey) +
+                                         " textures " + std::to_string((part.material[10] & 0x3fu) >> 3) + " colour " +
+                                         std::to_string((part.material[10] >> 6) & 1u)];
                         ++parts;
                         vertices += part.vertices.size();
                         triangles += part.indices.size() / 3;
@@ -266,6 +274,71 @@ int main(int argc, char** argv) {
         // Reference totals from: python3 tools/convert_models.py --census artifacts/fib/files (at 9d04c91)
         if (models != 3113 || parts != 16122 || vertices != 7211595 || triangles != 4603391)
             throw std::runtime_error("model totals differ from the Python reference");
+        // Pinned from chase-materials over every .bfnmdl, 2026-10-13: the material types of all parts, keyed by the fields
+        // that select the combiner in 0x12e460 (mode = material byte 1, lighting = byte 2, texture = byte 3, alpha = byte 5,
+        // textures and vertex-colour bit = byte 10). Every shipped material has a recovered combiner setup.
+        {
+            const std::vector<std::pair<std::string, std::size_t>> pinned = {
+                {"mode 0 lighting 2 texture 1 alpha 0 textures 2 colour 1", 5012},
+                {"mode 0 lighting 1 texture 0 alpha 0 textures 1 colour 0", 3186},
+                {"mode 0 lighting 1 texture 0 alpha 1 textures 1 colour 0", 2094},
+                {"mode 0 lighting 2 texture 1 alpha 0 textures 2 colour 0", 1181},
+                {"mode 1 lighting 1 texture 0 alpha 0 textures 2 colour 0", 1164},
+                {"mode 0 lighting 0 texture 0 alpha 0 textures 1 colour 0", 711},
+                {"mode 0 lighting 4 texture 0 alpha 0 textures 2 colour 0", 218},
+                {"mode 0 lighting 2 texture 5 alpha 1 textures 2 colour 1", 242},
+                {"mode 0 lighting 2 texture 7 alpha 0 textures 2 colour 0", 44},
+            };
+            if (unsupportedMaterials != 0 || materialCensus.size() != 38)
+                throw std::runtime_error("material census totals differ from the pinned values");
+            for (const auto& [key, count] : pinned)
+                if (materialCensus[key] != count) throw std::runtime_error("material census differs: " + key);
+        }
+        // Decoded combiner setups of named materials, 2026-10-13. Provenance: the stage generator 0x12e460 (ev_f3f2e9e9...),
+        // its command record 0x24c56c (ev_304505a2...: SOURCE, header, OPERAND, COMBINER, COLOR, SCALE) and the key builder
+        // 0x128dc8 (ev_0ff86efc...), hand-evaluated for each material and compared with chase-materials output.
+        {
+            struct Stage { std::uint32_t source, operand, combiner, constant, scale; };
+            auto findPart = [&](const char* path, const std::string& first, const std::string& second) {
+                const Model model = parseModel(archive.read(*archive.find(path)));
+                for (const auto& mesh : model.meshes)
+                    for (const auto& part : mesh.parts)
+                        if (!part.textures.empty() && part.textures[0] == first && (second.empty() || (part.textures.size() > 1 && part.textures[1] == second)))
+                            return part;
+                throw std::runtime_error(std::string("material reference part not found: ") + first);
+            };
+            auto expectStages = [&](const ModelPart& part, std::uint32_t bufferUpdate, const std::vector<Stage>& want, const char* what) {
+                const MaterialState state = materialState(part);
+                bool same = state.supported && state.stages.size() == want.size() && state.bufferUpdate == bufferUpdate;
+                for (std::size_t i = 0; same && i < want.size(); ++i)
+                    same = state.stages[i].source == want[i].source && state.stages[i].operand == want[i].operand &&
+                           state.stages[i].combiner == want[i].combiner && state.stages[i].constant == want[i].constant &&
+                           state.stages[i].scale == want[i].scale;
+                if (!same) throw std::runtime_error(std::string("combiner setup differs: ") + what);
+            };
+            // Baked-colour level surface: texture, then (vertex colour + lighting) x texture.
+            expectStages(findPart("models/lvl_00_policestation/room3.bfnmdl", "Checker1.tga", ""), 0,
+                         {{0x00e00003, 0, 0x00010000, 0xffffffff, 0}, {0x000f0f10, 0, 9, 0, 0}}, "room3 Checker1");
+            // Lightmapped surface: texture, lightmap + vertex colour, (that + lighting) x the first stage's output, x2.
+            expectStages(findPart("models/lvl_00_policestation/room3.bfnmdl", "MetalPlateBrushed.tga", "LIGHTMAP_lvl_00_PoliceStation_Basement000.tga"), 2,
+                         {{0x00e00003, 0, 0x00010000, 0xffffffff, 0}, {0x000f0f04, 0, 2, 0, 0}, {0x000f0d1f, 0, 9, 0, 1}}, "room3 lightmap");
+            // Lit prop with vertex colours and a specular mask in the alpha of the diffuse texture.
+            expectStages(findPart("csdata/models/1_1_a/donut1/donut1.bfnmdl", "Brick_Top.tga", "FX_Specular.tga"), 0,
+                         {{0x00e00003, 0, 0x00010000, 0xffffffff, 0}, {0x000f00f1, 0, 1, 0, 0}, {0x000f000f, 0, 1, 0, 0}, {0x000f0f32, 0x20, 8, 0, 0}},
+                         "donut1");
+            // Chase's face: diffuse texture only, alpha from vertex colour and material (no alpha test, no blending).
+            {
+                const ModelPart face = findPart("models/char_head_chase/char_head_chase.bfnmdl", "head_TEST.tga", "FX_PSP_Specular.tga");
+                expectStages(face, 0, {{0x00e00003, 0, 0x00010000, 0xffffffff, 0}, {0x000f00f1, 0, 1, 0, 0}, {0x000f0f32, 0x20, 8, 0, 0}}, "head");
+                const MaterialState state = materialState(face);
+                if (state.alphaTest || state.blendSource != 1 || state.blendDestination != 0 || state.alphaKey != 0)
+                    throw std::runtime_error("face material alpha state differs");
+            }
+            // Reflection: texture units are bound in reverse order, so the diffuse texture is Texture1.
+            expectStages(findPart("csdata/models/1_2_a/prop_magnifyingglass/prop_magnifyingglass.bfnmdl", "Brick_Gradient.tga", "cubemap_vehicle_windows_c.tga"), 4,
+                         {{0x00e00004, 0, 0x00010000, 0xffffffff, 0}, {0x000f00f1, 0, 1, 0, 0}, {0x000f0f33, 0, 1, 0, 0},
+                          {0x000f00f4, 2, 1, 0, 1}, {0x000f0d0f, 0, 8, 0, 0}}, "magnifying glass reflection");
+        }
         // Pinned totals recorded from chase_assets, 2026-10-13 (collision section of every .bfnmdl; each triangle
         // is reachable from the tree root exactly once, checked above).
         if (collisionModels != 776 || collisionItems != 1725 || collisionTriangles != 312483 || collisionNodes != 262633)

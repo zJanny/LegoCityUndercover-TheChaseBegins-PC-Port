@@ -16,12 +16,12 @@ IN_PROGRESS, updated 2026-10-13T21:29:01+0200. Decoders exist and are checked ag
 
 ## 4. Stand-ins
 
-- ASSET-S1 The viewer's lighting and materials are an approximation (vertex shaders, UV scales and lightmaps are recovered, material states are not).
+- ASSET-S1 Moved to [rendering.md](rendering.md) (RENDER-S1 to RENDER-S4).
 - ASSET-S2 Levels are composed from the archive's folder names (`models/<level name>/`); how the game streams the pieces is not known.
 
 ## 5. Open items
 
-- [ ] ASSET-1 — The game's lighting and materials; most rendering states. evidence: [models.md §2026-10-12T18:05](../../re/models.md).
+- [ ] ASSET-1 — Moved to [rendering.md](rendering.md) (materials recovered; lighting RENDER-1, reflections RENDER-2, fog RENDER-3).
 - [ ] ASSET-2 — Streaming (`Pregen/*.bin`) and the other `.blvl` sections. evidence: [levels.md §2026-10-12T17:20](../../re/levels.md).
 - [ ] ASSET-3 — Several smaller file types are not decoded.
 - [ ] ASSET-4 — `.cam` record selection details: first-gather values and pose blend rooms are open (see CAMERA-3); the `.cam` fields RotationY/X, Distance and Lookat are editor-only. evidence: [data-tables-config.md §2026-10-13T09:10](../../re/data-tables-config.md).

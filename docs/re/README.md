@@ -14,6 +14,7 @@ Read this index, then open only the file you need.
 | [textures.md](textures.md) | `.btga/.bpng/.bdds`, v orientation, DMPGL notes |
 | [audio.md](audio.md) | `.bwav`/CWAV decode, mixer |
 | [models.md](models.md) | `.bfnmdl`, vertex layout, materials, shaders, UV scales, lightmaps (collision section: see collision.md) |
+| [materials.md](materials.md) | Material record fields, the texture-environment stage generator 0x12e460, blend/alpha test/depth/cull, material census, lighting measurements |
 | [levels.md](levels.md) | `.blvl`, placements, Euler order, nav grids (`.bfnnav`) |
 | [objects.md](objects.md) | Level objects: classes, class files (+0x10/+0x14), parameter slots, how the model is found, drawn classes |
 | [skeleton-animation.md](skeleton-animation.md) | `.bfnskl`, `.bfnanm`, curves, pose composition, skinning, bone palettes |

@@ -18,7 +18,7 @@ IN_PROGRESS, updated 2026-10-13T22:17:29+02:00. All tools run; the oracle suppor
 
 ## 4. Stand-ins
 
-- None. (The viewer's lighting is ASSET-S1.)
+- None. (The viewer's lighting is RENDER-S1.)
 
 ## 5. Open items
 

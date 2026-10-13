@@ -89,6 +89,7 @@ cd build && ./chase-input-lab [--config PATH] [--smoke-test]
 ```
 
 - `chase-tabledump` prints data tables as TSV. Columns have no names in the file.
+- `chase-materials FIB CSV` prints how many parts of all models use each material type. With model paths after the two files it prints the texture-environment stages of each part, for example `build/chase-materials artifacts/romfs/romfs/lego_city3ds.fib artifacts/romfs/romfs/lego_city3ds.csv models/lvl_00_policestation/room3.bfnmdl`.
 - `chase-savecheck` prints how much of each of the two save slots is complete, as items collected, per mille and percent. A slot with no progress shows as empty. It reads the totals from the game tables in the extracted game data (`--romfs`).
 - `chase-soundtest` plays decoded sounds, by file name or by sound number (`--id`). Use `SDL_AUDIODRIVER=dummy` for headless runs. See [Sound test](sound-test.md).
 - `chase-fmv` needs the FFmpeg libraries. See [Video player](fmv-player.md).
@@ -125,7 +126,7 @@ SDL_VIDEODRIVER=offscreen build/chase-game --script "0 150 40" --screenshot out.
 - It prints one line per second: updates per second, the last time step and the circle pad values.
 - `--screenshot` saves the picture after `--frames` updates (default 2) and exits.
 - `--script "X Y COUNT [BUTTONS];X Y COUNT"` ignores the keyboard and holds the stick at X, Y for COUNT updates of 0.033 s each (values like the 3DS circle pad: +X right, +Y up, 145 is full). BUTTONS are optional 3DS button letters (A, B, X, Y, L, R) held during those updates. For example `"0 150 40"` pushes forward for 40 updates, and `"0 0 2;0 0 1 B;0 0 30"` stands, presses jump for one update and waits. The program then prints how far the character moved, the stud counter (`studs: counter N, ...`) and the character's height after every update, then exits, saving the picture if `--screenshot` is given.
-- `--start "X Y Z"` puts the character at that world position instead of the level's start point. Use it to test a ledge, for example `--level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --start "899.5 17.6393 1101" --script "0 150 40"` runs off a 1 m platform.
+- `--start "X Y Z"` puts the character at that world position instead of the level's start point. `--facing DEGREES` sets the direction he faces (the camera follows). Use it to test a ledge, for example `--level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --start "899.5 17.6393 1101" --script "0 150 40"` runs off a 1 m platform.
 
 ## Model viewer
 

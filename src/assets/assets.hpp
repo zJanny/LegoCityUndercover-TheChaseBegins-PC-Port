@@ -102,6 +102,9 @@ struct ModelPart {
     std::vector<Vertex> vertices;
     std::vector<std::uint16_t> indices; // triangle list
     std::vector<std::string> textures;  // material texture names, e.g. "Brick.tga"
+    std::vector<std::uint8_t> material;      // raw 0x60-byte material record (0x114860)
+    std::vector<std::uint8_t> materialExtra; // block after the material record
+    std::vector<std::uint8_t> textureSlots;  // 8-byte slot records, one per texture (byte 7 is the role)
     // Skinned parts: consecutive triangle runs with up to 26 joints each (the "Bones"
     // uniform), each drawing only vertices firstVertex .. firstVertex + vertices - 1.
     struct BoneBatch {
@@ -169,6 +172,33 @@ struct Model {
     std::vector<CollisionItem> collision;
 };
 Model parseModel(const Bytes& data);
+
+// One PICA texture-environment stage as the game writes it (0x12e460, command record from 0x24c56c):
+// the SOURCE, OPERAND, COMBINER, COLOR and SCALE register values of registers 0xc0 + 8 * stage .. + 4
+// (stages 4 and 5 sit at 0xf0 and 0xf8). Sources: 0 vertex colour, 1 fragment lighting primary, 2 fragment
+// lighting secondary, 3..6 texture units, 0xd previous buffer, 0xe constant, 0xf previous stage.
+struct TevStage {
+    std::uint32_t source = 0, operand = 0, combiner = 0, constant = 0, scale = 0;
+};
+// What the game's draw setup derives from a material record (0x128dc8 and 0x12e460 for the combiner,
+// 0x1292fc for blending, alpha test, depth and culling).
+struct MaterialState {
+    bool supported = false;
+    unsigned mode = 0, lightingKey = 0, textureKey = 0, alphaKey = 0;
+    bool lighting = false;
+    std::vector<TevStage> stages;
+    std::uint32_t bufferUpdate = 0;  // bit n: the buffer takes the output of stage n - 1 before stage n
+    bool reflection = false;         // texture units are bound in reverse order and the cube texture is used
+    int unitSlot[3] = {-1, -1, -1};  // material texture slot bound to texture unit k, -1 when unbound
+    bool alphaTest = false;
+    std::uint8_t alphaReference = 0; // the test passes when alpha > reference
+    unsigned blendEquation = 0, blendSource = 1, blendDestination = 0;  // PICA values
+    unsigned depthFunction = 0;      // PICA comparison, 0 never .. 7 greater-equal
+    bool depthTest = true, depthWrite = true;
+    unsigned cullMode = 1;           // PICA: 0 none, 1 culls counter-clockwise, 2 culls clockwise
+};
+MaterialState materialState(const ModelPart& part);
+
 unsigned vertexFlags(const std::uint8_t* material);
 // Byte stride implied by a flag mask; throws for the unrecovered flag-1 layout.
 std::size_t vertexStride(unsigned flags);

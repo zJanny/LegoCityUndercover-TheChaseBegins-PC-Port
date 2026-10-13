@@ -1,6 +1,7 @@
 #pragma once
 // Development renderer shared by chase-viewer and chase-game: SDL2 + OpenGL 3.3 core through libepoxy.
-// An approximation of the game's look; the PICA combiner and lighting setup is not recovered.
+// Materials run the texture-environment stages the game builds (assets::materialState); fragment lighting,
+// reflections and fog are stand-ins (docs/plans/features/rendering.md).
 #include "assets/assets.hpp"
 #include <epoxy/gl.h>
 #include <array>
@@ -65,9 +66,20 @@ public:
 
 private:
     struct DrawPart {
-        GLuint vao = 0, vbo = 0, ibo = 0, texture = 0, lightmap = 0;
+        GLuint vao = 0, vbo = 0, ibo = 0;
         GLsizei count = 0;
         bool hasNormal = false;
+        bool hasMaterial = false;
+        bool secondUv = false;
+        assets::MaterialState material;
+        GLuint unitTexture[3] = {0, 0, 0};
+        float unitFlat[3][4] = {};
+        bool unitIsFlat[3] = {false, false, false};
+    };
+    struct TextureInfo {
+        GLuint id = 0;
+        bool cube = false;
+        float average[4] = {1, 1, 1, 1};
     };
     struct SkinnedPart {
         std::size_t part;
@@ -83,13 +95,14 @@ private:
         const LoadedModel* model;
         Mat4 transform;
     };
-    GLuint texture(const std::string& name, const std::string& modelDir);
-    DrawPart upload(const assets::ModelPart& part, GLuint tex, LoadedModel& model);
+    const TextureInfo& texture(const std::string& name, const std::string& modelDir);
+    DrawPart upload(const assets::ModelPart& part, LoadedModel& model);
+    void drawPart(GLuint program, const DrawPart& part, bool culling) const;
 
     assets::FuseArchive& archive_;
     std::vector<std::string> exclude_;
     std::map<std::string, std::vector<std::string>> texturePaths_;
-    std::map<std::string, GLuint> textures_;
+    std::map<std::string, TextureInfo> textures_;
     std::map<std::string, LoadedModel> models_;
     std::vector<Instance> instances_;
     std::size_t missing_ = 0;

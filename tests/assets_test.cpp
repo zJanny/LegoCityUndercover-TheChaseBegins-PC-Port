@@ -305,6 +305,38 @@ void models() {
     require(mat(0, 0, 0, 0, 0) == 16 && mat(0, 0, 1, 0, 0x09) == 24 && mat(0, 0, 2, 1, 0x11) == 20 &&
             mat(0, 1, 1, 0, 0x12) == 28 && mat(1, 0, 2, 1, 0x51) == 32 && mat(0, 0, 0, 6, 0x11) == 24,
             "strides match shipped layouts");
+
+    // Draw state from material bytes (0x1292fc): byte 6 alpha reference, 7 blend equation, 8 and 9 blend factors,
+    // 0xb bits 0-2 depth function, 3 depth write, 4 alpha test, 5 final-stage x2; 0xc bits 0-1 cull mode.
+    ModelPart blended;
+    blended.material.assign(0x60, 0);
+    blended.material[10] = 0x09;
+    blended.material[6] = 0x7f;
+    blended.material[8] = 4;
+    blended.material[9] = 5;
+    blended.material[0xb] = 0x3b;
+    blended.material[0xc] = 2;
+    blended.material[0x13] = 0xff;
+    blended.textureSlots.assign(8, 0);
+    const MaterialState state = materialState(blended);
+    require(state.supported && state.stages.size() == 2 && state.stages[0].source == 0x00e00003 && state.stages[0].constant == 0xffffffff &&
+                state.stages[0].combiner == 0x00010000 && state.stages[0].scale == 0 && state.stages[1].source == 0x000f000f &&
+                state.stages[1].combiner == 1 && state.stages[1].scale == 1,
+            "mode 0 lighting 0 stage");
+    require(state.alphaTest && state.alphaReference == 0x7f && state.blendSource == 6 && state.blendDestination == 7 &&
+                state.cullMode == 0 && state.depthFunction == 4 && state.depthTest && state.depthWrite,
+            "draw state from material bytes");
+    blended.material[3] = 5;
+    blended.material[10] = 0x11;
+    blended.textureSlots.assign(16, 0);
+    blended.textureSlots[7] = 0;
+    blended.textureSlots[15] = 5;
+    const MaterialState reflecting = materialState(blended);
+    require(reflecting.reflection && reflecting.unitSlot[0] == 1 && reflecting.unitSlot[1] == 0 && reflecting.stages[0].source == 0x00e00004 &&
+                reflecting.stages.back().operand == 0x200 && reflecting.stages.back().source == 0x000f04f3,
+            "reflection binds units in reverse order");
+    blended.material[1] = 4;
+    require(!materialState(blended).supported, "unrecovered mode rejected");
 }
 }
 

@@ -90,6 +90,7 @@ struct Options {
     std::string script;
     bool cameraCollision = true;
     std::optional<std::array<float, 3>> start;
+    std::optional<float> facing;
     // Options volumes 0..10 (the game divides them by 10). Read in the oracle at the gameplay start of a new game:
     // sound effects 1.0 (0x37636c + 4), music 0.8 (0x376b3c); the saved options are not read yet.
     unsigned soundVolume = 10, musicVolume = 8;
@@ -165,6 +166,7 @@ Options parse(int argc, char** argv) {
         else if (arg == "--no-camera-collision") o.cameraCollision = false;
         else if (arg == "--sound-volume") o.soundVolume = std::min(10u, unsigned(std::stoul(value())));
         else if (arg == "--music-volume") o.musicVolume = std::min(10u, unsigned(std::stoul(value())));
+        else if (arg == "--facing") o.facing = std::stof(value());
         else if (arg == "--start") {
             std::stringstream fields(value());
             std::array<float, 3> position;
@@ -174,7 +176,7 @@ Options parse(int argc, char** argv) {
         }
         else throw std::runtime_error("usage: chase-game [--fib F] [--names CSV] [--config CFG] [--gameplay] "
                                       "[--level levels/levels/<name>/<name>_main.blvl] [--screenshot OUT.bmp] [--frames N] "
-                                      "[--script \"X Y COUNT [BUTTONS];...\"] [--start \"X Y Z\"] [--no-camera-collision] [--sound-volume 0-10] [--music-volume 0-10] "
+                                      "[--script \"X Y COUNT [BUTTONS];...\"] [--start \"X Y Z\"] [--facing DEGREES] [--no-camera-collision] [--sound-volume 0-10] [--music-volume 0-10] "
                                       "[--front-script \"run 5; press A; until slot; ...\"] [--language 1-9] [--returning] [--window WIDTHxHEIGHT]");
     }
     return o;
@@ -516,6 +518,11 @@ int run(const Options& given) {
         player->motion.x = player->startX = (*options.start)[0];
         player->vertical.y = (*options.start)[1];
         player->motion.z = player->startZ = (*options.start)[2];
+        player->pose(scene);
+    }
+    if (player && options.facing) {
+        player->motion.facing = headingFromDegrees(*options.facing);
+        player->motion.lastIntent = player->motion.facing;
         player->pose(scene);
     }
     const ClassLookup classOf = archiveClassLookup(archive);

@@ -24,13 +24,13 @@ void requireSize(const Bytes& block, std::size_t size, const char* what) {
 }
 
 // 0x114860: material record, extra pointer, texture slots in the -16 pool.
-std::vector<std::string> readMaterial(Reader& r, Bytes& material) {
+std::vector<std::string> readMaterial(Reader& r, Bytes& material, Bytes& extra, Bytes& slots) {
     material = r.next();
     requireSize(material, 0x60, "material");
-    r.skip();
+    extra = r.next();
     unsigned count = (material[10] & 0x3fu) >> 3;
     r.cursor.push(Pool::M16);
-    r.skip();
+    slots = r.next();
     std::vector<std::string> names;
     for (unsigned i = 0; i < count; ++i) {
         Bytes name = r.next();
@@ -294,7 +294,10 @@ Model parseModel(const Bytes& data) {
         std::size_t parts = meshBlock[m * 0x24 + 2];
         std::vector<Bytes> materials(parts);
         mesh.parts.resize(parts);
-        for (std::size_t p = 0; p < parts; ++p) mesh.parts[p].textures = readMaterial(r, materials[p]);
+        for (std::size_t p = 0; p < parts; ++p) {
+            mesh.parts[p].textures = readMaterial(r, materials[p], mesh.parts[p].materialExtra, mesh.parts[p].textureSlots);
+            mesh.parts[p].material = materials[p];
+        }
         r.cursor.push(Pool::M14);
         for (std::size_t p = 0; p < parts; ++p) {
             readVertexBuffer(r, materials[p], mesh.parts[p]);

@@ -53,6 +53,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 
 ## 2026-10-12T18:05+02:00 — Vertex shaders, UV scales and lightmaps
 
+The combiner setups that this entry lists as unrecovered were recovered later: [materials.md](materials.md).
+
 - The material post-load calls 0x115ec4 (ev_e7652328…b4c5) and 0x115718 (ev_5cfc022b…7939) are stubs that return 1. 0x115128 (ev_adf59b90…39aa) builds a draw-sort key from m1/m2/m3 and the textures. The material shading selection is not in the loader.
 - Added tools/dump_dvlb.py, which reads the public SHBIN layout. code.bin contains one DVLB at file offset 0x2779a0 (data segment) with 11 vertex programs, 342 code words and 83 operand descriptors.
   - The symbol tables name the inputs: vPos, vUV0, vUV1, vColour, vNormal, vWeights and vIndex. This confirms the 8-byte vertex attribute (flag 2) is skin weights and indices.
