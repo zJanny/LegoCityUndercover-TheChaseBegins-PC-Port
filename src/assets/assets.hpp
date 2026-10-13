@@ -392,11 +392,13 @@ struct ConfigBlock {
 };
 std::vector<ConfigBlock> parseConfigText(const std::string& text);
 
+// Loader 0x3062e4 reads Name, Type, Location, Offset, FOV, Filters, BlendTime, Shake*, 3DOffset into a
+// 0x50-byte camera record; RotationY, RotationX, Distance and Lookat have no handler (editor data).
 struct CameraSetup {
     std::string kind;
     std::string name;
     int type = 0;
-    double rotationY = 0, rotationX = 0, distance = 0;
+    double rotationY = 0, rotationX = 0, distance = 0;  // 1/256 turn; Type 0 Location derives from these
     std::array<double, 3> location{}, lookat{}, offset{};
     double fov = 0;
     std::array<double, 2> filters{};

@@ -32,3 +32,23 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - Unknown: the meaning of Type, Filters and the camera values, and script function and trigger semantics. The game's loader for these files was not traced.
 - Tests: synthetic configText in assets-test; real-data totals in assets-real-test (provenance: line-based Python census, manual inspection). ctest PASS 8/8.
 
+## 2026-10-13T09:10+02:00 — .cam loader 0x3062e4 (REA Ghidra 12.1.2 ev_9636e324…, llvm-objdump; read-only)
+
+- Partly answers the 10:15 unknowns. 0x3062e4 builds the camera list for a level: one 0x50-byte record per level object whose name starts with "Camera" and does not contain "LookAt".
+  - Name contains "Focus" → +0x4a = 1. Name contains "Blocker" → +0x4b = 1.
+  - Names starting with "CameraVehicle" are set up with mode 2, the others with mode 1 (0x1e9290).
+  - Rooms get their own records (+0x4e = 1).
+- It then opens "3dsdata/levels/<level>.cam", falling back to "levels/<level>.cam", and registers key handlers for Room and Bound blocks:
+  - Type (0x275584) first resets the defaults: Filters 32/28, FOV 43, BlendTime 0.85, 3DOffset 5.0. It then stores u16 (atoi(Type) | 0x80) at +0x44.
+  - Location: three floats at +0x24..+0x2c.
+  - Offset: atoi of each component into bytes +0x46..+0x48 (integers only).
+  - FOV: byte +0x49.
+  - Filters: two bytes at +0x4c and +0x4d, each clamped to 0..50.
+  - BlendTime: float at +0x30, clamped to [0, 20].
+  - ShakeAmp, ShakeRate, ShakeRoll: floats at +0x34, +0x38, +0x3c. 3DOffset: float at +0x40.
+  - Room Name → 0x2a38b8. Bound Name → 0x2ab0b8, which looks up the level object of that name.
+- RotationY, RotationX, Distance and Lookat have no handler, so the game ignores them (editor data).
+- Data check (Python census over all 10 files, 2075 setups): for Type 0, Location = Distance × (sin ry · cos rx, sin rx, cos ry · cos rx), with RotationX/Y in 1/256 turns, in 1723 of 1724 setups (error < 1e-3). Other types store unrelated (world-like) Locations. So Type 0 Location is an offset baked from the editor angles. No shipped value is changed by the atoi truncation or the clamps.
+- CameraSetup (chase_assets) keeps the raw values; its header comment marks the editor-only fields.
+- Unknown: the meaning of the Type values (0..58, 256, 1024..1027) and Filters; how +0x44 and the records drive the camera at run time (0x1e9290 and the camera update); why "Offset" is an integer byte triple.
+
