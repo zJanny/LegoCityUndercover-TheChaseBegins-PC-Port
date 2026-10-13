@@ -128,7 +128,7 @@ Full game logic, hardware APIs and asset formats not recovered yet.
 
 ## Next Action
 
-- M1 status: chase-game runs the scheduler and pad pipeline replicas over lvl_00_policestation and shows the player character (char_police appearance, guessed) at Player1Start (traced, 0x2e6264). The mirrored-world defect is fixed: the game world is left-handed and chase_render's projection mirrors x ([docs/re/levels.md](../re/levels.md)); the free camera now uses the game's yaw convention (forward = (sin yaw, cos yaw)).
+- M1 status: chase-game runs the scheduler and pad pipeline replicas over lvl_00_policestation and shows the player character (char_police appearance, guessed) at Player1Start (traced, 0x2e6264). The mirrored-world defect is fixed: the game world is left-handed and chase_render's projection mirrors x ([docs/re/levels.md](../re/levels.md)); the free camera now uses the game's yaw convention (forward = (sin yaw, cos yaw)). Open defect: the player's head and hair render turned sideways relative to the body (head placement was a guess in the spawn work).
 - Next: recover locomotion (oracle `trace` of the player under fixed stick input once a gameplay scenario exists, plus a write watchpoint on the player's scene node) so movement is measured, not invented.
 - Oracle fidelity: per-frame breakpoint stops inflate the game clock about 30 % against vblanks (free run 51.3 ticks per vblank, stepped 65.9); measure rates in free-run intervals. Open: a frame counter readable without breakpoints, to measure update rate in free runs.
 
