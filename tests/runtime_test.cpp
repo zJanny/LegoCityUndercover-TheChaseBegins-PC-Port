@@ -2,6 +2,7 @@
 // and read from the running game.
 #include "runtime/pad.hpp"
 #include "runtime/player_intent.hpp"
+#include "runtime/player_locomotion.hpp"
 #include "runtime/scheduler.hpp"
 #include <cmath>
 #include <cstring>
@@ -203,6 +204,77 @@ int main() {
         require(!cleared.active && cleared.heading == 0 && cleared.heldSet == 0 && cleared.heldClear == 3 &&
                     cleared.pressClear == 3,
                 "blocked stick");
+
+        // Locomotion regimes from the raw stick through the pad pipeline (oracle 2026-10-13, loco-threshold*.txt:
+        // raw 59 idle, 60 walk, 117 walk, 118 run; stick (0, M), camera yaw 0).
+        const auto regimeAt = [&](int rawY) {
+            PadDevice device;
+            PadState raw;
+            raw.stickY = std::int16_t(rawY);
+            device.poll(raw);
+            StickIntentInput input = stickAt(device.slot(14).value, device.slot(15).value);
+            LocomotionState state;
+            return locomotionUpdate(state, 0.033f, stickIntent(input)).regime;
+        };
+        require(regimeAt(50) == Regime::Idle && regimeAt(59) == Regime::Idle, "raw 59 is idle");
+        require(regimeAt(60) == Regime::Walk && regimeAt(90) == Regime::Walk && regimeAt(117) == Regime::Walk, "raw 60 and 117 walk");
+        require(regimeAt(118) == Regime::Run && regimeAt(145) == Regime::Run && regimeAt(156) == Regime::Run, "raw 118 runs");
+
+        // Speed, timer and sprint: run 6.9 u/s for 30 updates at dt 0.033, the timer passes 1.0 in the 31st
+        // update (1.023), whose own movement is still run speed; sprint (x1.5) moves from the 32nd.
+        {
+            LocomotionState state;
+            StickIntent forward;
+            forward.active = true;
+            forward.heldSet = kHeldMove;
+            LocomotionStep step;
+            for (int update = 1; update <= 31; ++update) {
+                step = locomotionUpdate(state, 0.033f, forward);
+                require(std::fabs(step.deltaZ - kMeasuredRootMotionSpeeds.run * 0.033f) < 1e-6f && step.deltaX == 0.0f, "run step");
+            }
+            require(near(state.runTimer, 1.023f) && state.sprinting && step.animation == kAnimationSprint && step.animationScale == 1.5f, "timer passes 1.0 in update 31");
+            step = locomotionUpdate(state, 0.033f, forward);
+            require(std::fabs(step.deltaZ - kMeasuredRootMotionSpeeds.run * 1.5f * 0.033f) < 1e-6f, "sprint step is 1.5 x run");
+            // Release: no movement, scale back to 1, timer kept; a new push restarts the timer.
+            StickIntent released;
+            step = locomotionUpdate(state, 0.033f, released);
+            require(step.deltaZ == 0.0f && step.animation == 0 && step.animationScale == 1.0f && near(state.runTimer, 1.056f), "release keeps the timer");
+            step = locomotionUpdate(state, 0.033f, forward);
+            require(near(state.runTimer, 0.033f) && !state.sprinting && std::fabs(step.deltaZ - kMeasuredRootMotionSpeeds.run * 0.033f) < 1e-6f, "run re-entry restarts the timer at full run speed");
+            // Walk freezes the timer and runs at walk speed; run re-entry restarts it.
+            StickIntent walk = forward;
+            walk.heldSet |= kHeldSlow;
+            locomotionUpdate(state, 0.033f, forward);
+            const float held = state.runTimer;
+            step = locomotionUpdate(state, 0.033f, walk);
+            require(state.runTimer == held && step.animation == kAnimationWalk && std::fabs(step.deltaZ - kMeasuredRootMotionSpeeds.walk * 0.033f) < 1e-6f, "walk keeps the timer");
+            locomotionUpdate(state, 0.033f, forward);
+            require(near(state.runTimer, 0.033f), "walk to run restarts the timer");
+        }
+
+        // Movement follows the last intent, forward = (sin h, cos h): heading 16384 moves along +x.
+        {
+            LocomotionState state;
+            StickIntent right;
+            right.active = true;
+            right.heldSet = kHeldMove;
+            right.heading = 16384;
+            LocomotionStep step = locomotionUpdate(state, 0.033f, right);
+            require(step.deltaX > 0.22f && std::fabs(step.deltaZ) < 1e-3f, "heading 16384 is +x");
+            StickIntent released;
+            step = locomotionUpdate(state, 0.033f, released);
+            require(state.lastIntent == 16384 && step.deltaX == 0.0f, "intent kept after release");
+        }
+
+        // Facing rule: sign(d) * min(6400, ceil(f32(0.3) * |d|)), d = wrap(target - facing). Values from
+        // loco-turn.txt (turn_rest_r90: -19596 -> -16076 -> -13519 toward -8128; turn_rest_180 reaches
+        // 8258..8260) and the cap of two consecutive 6400 steps in the 180 degree case.
+        require(turnFacing(-19596, -7863) == -16076 && turnFacing(-16076, -7553) == -13519, "turn right");
+        require(turnFacing(0, 100) == 31 && turnFacing(0, 1) == 1 && turnFacing(5, 5) == 5, "ceil (f32(0.3) * 100 = 30.000002) and rest");
+        require(turnFacing(0, -100) == -31, "turn left");
+        require(turnFacing(0, 20000) == 6000 && turnFacing(0, 5536) == 1661 && turnFacing(0, 30000) == 6400, "cap 6400");
+        require(turnFacing(0, -32768) == -6400 && turnFacing(-32768, 0) == 26368, "exactly 180 degrees is d = -32768, a negative step");
+        require(turnFacing(30000, -30000) == wrapHeading(30000 + 1661), "shortest way across the wrap (d = 5536)");
     } catch (const std::exception& e) {
         std::cerr << "FAIL: " << e.what() << '\n';
         return 1;

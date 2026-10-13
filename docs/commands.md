@@ -43,8 +43,10 @@ Single C++ tests, with `ctest --test-dir build -R <name>`:
 | `assets-real-data` | Needs `artifacts/romfs`; skips with code 77 otherwise |
 | `viewer-real-smoke` | Registered only if `artifacts/romfs` existed at configure time |
 | `game-real-smoke` | Registered only if `artifacts/romfs` existed at configure time; needs libepoxy |
+| `game-script-run`, `game-script-walk` | Same conditions. Feed a fixed stick to the development runtime and check how far the character moved |
+| `locomotion-real-data` | Compares the character's movement with traces recorded from the original game (`artifacts/oracle/loco-out`, folder set with `-DCHASE_LOCO_TRACE_DIR=...`); skips with code 77 if the traces or `artifacts/romfs` are missing |
 | `audio-mixer` | Mixer core, no SDL |
-| `runtime-core` | Game runtime core (frame scheduler), no SDL |
+| `runtime-core` | Game runtime core (frame timing, pad, stick, character movement), no SDL |
 | `save-core` | Save file checks, synthetic data, no SDL |
 | `save-real-data` | Completion totals from the game tables; needs `artifacts/romfs`, skips with code 77 otherwise |
 | `fmv-real-smoke` | Registered only if FFmpeg and `artifacts/romfs` existed at configure time |
@@ -68,19 +70,27 @@ cd build && ./chase-input-lab [--config PATH] [--smoke-test]
 
 ## Development runtime
 
-Needs libepoxy. This is **not the playable game**. It shows a level with the main character standing at the start point from the game data. It runs the recovered frame timing and pad input, but the character does not move and there is no gameplay. The camera is a stand-in for testing the input.
+Needs libepoxy. This is **not the playable game**. It shows a level with the main character standing at the start point from the game data. The character walks, runs and sprints when you press the D-pad keys. Speed, turning and the animation changes follow what was measured in the original game. Everything else about the game is missing.
 
 ```sh
 build/chase-game
 build/chase-game --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl
 SDL_VIDEODRIVER=offscreen build/chase-game --screenshot out.bmp --frames 2
+SDL_VIDEODRIVER=offscreen build/chase-game --script "0 150 40" --screenshot out.bmp
 ```
 
-- Options: `--fib`, `--names`, `--config` (as in the viewer), `--level`, `--screenshot`, `--frames`.
-- The default level is the police station. The character is Chase McCain in his police outfit. That choice is a best guess. The camera starts behind him and then flies freely. Run it from the repository folder so the default paths work.
-- Move with the D-pad keys (circle pad), `Z`/`C` lower and raise, `E`/`R` turn. `Escape` quits.
+- Options: `--fib`, `--names`, `--config` (as in the viewer), `--level`, `--screenshot`, `--frames`, `--script`.
+- The default level is the police station. The character is Chase McCain in his police outfit. That choice is a best guess. Run it from the repository folder so the default paths work.
+- Move with the D-pad keys (WASD or arrows). Hold `Z` to walk slowly. Without it you run, and after about one second of running you sprint. `E`/`R` turn the camera. `Escape` quits.
+- What moves like the original: the speeds, the walk, run and sprint switch, the delay before sprinting, and the way the character turns towards the direction you push.
+- What is still a stand-in:
+  - The camera follows behind the character at a fixed distance. The real camera is not recovered.
+  - The character walks through walls and stays at the height of the start point. There is no collision and no ground.
+  - The animations play at an assumed speed and switch without blending.
+  - A keyboard cannot tilt the stick halfway, so `Z` stands in for a gentle push.
 - It prints one line per second: updates per second, the last time step and the circle pad values.
 - `--screenshot` saves the picture after `--frames` updates (default 2) and exits.
+- `--script "X Y COUNT;X Y COUNT"` ignores the keyboard and holds the stick at X, Y for COUNT updates of 0.033 s each (values like the 3DS circle pad: +X right, +Y up, 145 is full). For example `"0 150 40"` pushes forward for 40 updates. The program then prints how far the character moved and exits, saving the picture if `--screenshot` is given.
 
 ## Model viewer
 

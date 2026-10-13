@@ -131,3 +131,42 @@ Unknowns:
 - Why no update occurred at row 59 in the three rest turn cases (always the same row after the stick start; not seen in straight pushes).
 - Camera yaw law (writer of 0x376894), real slope behaviour of ctrl+0x94, the 1.3 variant, other characters and costume variants, vehicles, collision slides at obstacles, ground following (y).
 - Whether free-run dt (about 0.0333, ticks of 1 ms) changes any of the numbers: all measurements used a fixed dt in stepped mode.
+
+## 2026-10-13T13:58:27+02:00 — Locomotion replica, root motion check, differential test (worker; recorded traces in artifacts/oracle/loco-out, REA Ghidra 12.1.2 for 0x2327b4)
+
+Replica: `locomotionUpdate`, `turnFacing`, `kMeasuredRootMotionSpeeds` in src/runtime/player_locomotion.{hpp,cpp}; used by chase-game (src/game.cpp). Tests: runtime-core (synthetic thresholds, timer, facing rule), `locomotion-real-data` (tests/locomotion_real_test.cpp, differential against 33 recorded traces).
+
+**Update order of one step (fits all traces)**
+1. Stick intent (`stickIntent`) is evaluated with the camera yaw from before the camera moves in the same update: with the yaw of the previous trace row the heading equals ctrl+6 to within 1 unit on 338 active rows; with the yaw of the row itself (the camera turns 0.03..0.045 rad per update in the traces) it is off by up to 1280 units.
+2. If the stick is active: lastIntent (ctrl+0xa) = heading. Facing (ctrl+8) takes one `turnFacing` step toward lastIntent, also while idle.
+3. Regime: idle (stick inactive), walk (flag 8 set), run. Movement = speed(role at the start of the update) * dt * (sin h, cos h), h = lastIntent. Walk 2.3008, run 6.9002, sprint 6.9002 * 1.5 u/s.
+4. Run timer: reset to 0 when the previous update was not a run update, then += dt; above 1.0 the sprint role is active from the next update (scale 1.5). Walk and idle clear the sprint role (scale back to 1.0 at once, also on release from sprint) and leave the timer value untouched.
+- Confirmed by cross-file transitions: idle to run moves at full run speed in the first update (6.9, restartA_2 -> A_3), run to walk at walk speed in the first update (2.301, D_1 -> D_2), walk to run at run speed (C_1 -> C_2), release from sprint: zero movement and scale 1.0 in the first update (mag156_push -> mag156_release).
+
+**Differential test numbers** (`locomotion-real-data`, 1114 updates over 33 traces: pushes at raw 60/70/110/130/156, releases, the four restart scenarios, the turn scenarios at dt 0.033/0.066/0.0165)
+- Per-update movement: max error 7.8e-5 u (tolerance 2e-4: float32 positions at 870..1110 have an ulp of 6e-5..1.2e-4; the measured speeds are known to +-0.0003 u/s, 1e-5 u per update at dt 0.033).
+- Accumulated position over a whole trace (45..75 updates, state not resynchronised): max drift 1.5e-3 u (limit 0.01).
+- Run timer (restart traces, the only ones with ctrl+0x24c): identical float values (error 0).
+- Facing: exact on every compared update; three updates (row 25 of turn_rest_r90, _l90, _180) are resynchronised, see below.
+- Animation scale: 1.0 / 1.5 within 2e-3 (the game shows 0.99999994 and 1.4999 on some rows).
+- Stick to heading with the previous row's yaw: max 1 unit over 338 rows.
+
+**Findings from the traces**
+- Updates with no facing step: in each of the three rest turns (row 25, frame 59) the player moves along the old direction but ctrl+8 does not change; in r90 and l90 the latched ctrl+0xa also still holds the old intent while ctrl+6 already shows the new one. A sampling artefact or a skipped controller step; the same frame number every time suggests a periodic event. The test resynchronises the facing there (at most 3 allowed).
+- Slope: in turn_run_r90 the player climbs a ramp (y 16.58 -> 16.78 at rows 26..30). ctrl+0x94 drops to about 1.33 and the speed to about 9.15 u/s for 5 updates, then returns to 1.5 (confirms the slope term of 0x1abe60 described above). Six rows are skipped by the test; ground height and slope are not modelled in the native runtime. The scale deviates by 1e-4..1.5e-4 on several rows (0.9999999 from row 9 of the rest turns, 1.4999 after the ramp) without a visible speed change.
+
+**Root motion from animation data: does not match, measured speeds are used**
+- 0x2327b4 (decompiled again): per active slot (0x58 bytes at instance+0x2c) it samples a root track block of the animation (`0x253ea0(anim+0xc, 1)`, evaluator 0x270778, channel mask `*(anim+8) & 0xf`), subtracts the part belonging to a wrapped loop and adds the weighted per-frame delta. A second path (slot flag 0x1000, or the 0x376750 branch via 0x1fa1e4) adds `slot bytes +0x28..+0x2b / 63 * dt * weight` as a velocity. Which path the walk/run/sprint animations take was not traced.
+- Data (char_minifig class_police walk 12 frames, run 12 frames, sprint 20 frames; checked in the real-data test): the pelvis joint curve (joint 0, the long curve with frames + 1 samples) has no net x/z travel over the loop (x -0.0206 .. 0.0244, z constant 0.075 for walk; z 0.0381 run; z -0.2 sprint, first = last frame). The two sub-animations hold a footstep pulse track (hash 0x68cc6917, 5..6 keys, value 1 twice per cycle at normalised times 0.329/0.832 walk, 0.458/0.957 run, 0.095/0.596 sprint) and eight constant tracks (dcd633e0..e2 = 0, 4f44e168 = 0, 7e190104..06 = 1, 301764d5 = 1). So no stride length or speed can be derived from these files, and 6.9 u/s, 2.301 u/s (ratio 3.0003) and 1.5 x run cannot be checked against them.
+- Consequence: `kMeasuredRootMotionSpeeds` (walk 2.3008, run 6.9002, sprint scale 1.5) is PROVISIONAL; it is measured at the output only.
+
+**Native runtime**
+- chase-game drives the player with the step inside the scheduler update, plays idle/walk/run/sprint (class_police files) at 30 frames/s times the role scale (rate assumed, phase kept across switches, no blending), keeps the head attachment, and places the world matrix from (x, spawn height, z) and the facing (rows (c, 0, -s), (0, 1, 0), (s, 0, c), translation). The camera is a follow placeholder whose yaw feeds the stick intent. Height stays at the spawn height (the nav-grid height of the 2026-10-12T23:55 entry is data-fitted within 1..6 percent and sits 0.1 under the floor).
+- `--script "X Y COUNT;..."` (raw stick, dt 0.033): `0 150 40` moves the player 10.133 u (31 run updates 0.2277 u each, 9 sprint updates 0.3416 u), `0 90 40` moves him 3.037 u; both are ctest cases.
+
+Unknowns:
+- Source of the speeds in the original (data or script value, root track path versus the byte-velocity path of 0x2327b4, role table scale); stride speed of other characters and costume classes.
+- Whether ctrl+0xa is updated for an active stick with heading 0 or only for a non-zero heading (the implementation uses "active").
+- Initial value of ctrl+0xa/ctrl+8 at spawn (the implementation takes the Player1Start yaw), and behaviour of run timer and sprint role when walking from sprint (the implementation clears the sprint role at once; only release from sprint was measured).
+- The cause of the skipped facing step at frame 59, the slope law (clamp and t terms of 0x1abe60), ground following in y, collision slides.
+- Camera yaw law (writer of 0x376894) and the animation playback rate (frames per second) and blend of the real game.

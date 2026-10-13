@@ -4,8 +4,8 @@
 
 - Overall: IN_PROGRESS
 - Current Phase: IMPLEMENT
-- Current Step: S4e runtime core — milestone M1 (native runtime loop drives a real level with the game's input pipeline)
-- Last Updated: 2026-10-13T10:53:04+02:00
+- Current Step: S4e runtime core — milestone M2 (the player character moves with the measured locomotion rules)
+- Last Updated: 2026-10-13T13:59:00+02:00
 - Branch: main
 - Target Branch: Not specified
 - Requested Scope: PLAN, IMPLEMENT, TEST; start reverse engineering and native port
@@ -129,7 +129,8 @@ Full game logic, hardware APIs and asset formats not recovered yet.
 ## Next Action
 
 - M1 status: chase-game runs the scheduler and pad pipeline replicas over lvl_00_policestation and shows the player character (char_police appearance, guessed) at Player1Start (traced, 0x2e6264). The mirrored-world defect is fixed: the game world is left-handed and chase_render's projection mirrors x ([docs/re/levels.md](../re/levels.md)); the free camera now uses the game's yaw convention (forward = (sin yaw, cos yaw)). The head attachment defect is fixed (2026-10-13T12:56+02:00): the head model is attached at the head joint's bind position with its bind orientation dropped ([docs/re/player.md](../re/player.md)); the draw-time consumer of the attachment was not read.
-- Next: recover locomotion (oracle `trace` of the player under fixed stick input once a gameplay scenario exists, plus a write watchpoint on the player's scene node) so movement is measured, not invented.
+- M2 status (2026-10-13T13:59:00+02:00): chase-game moves the player with `locomotionUpdate` (src/runtime/player_locomotion.*): regime from the pad pipeline, run timer, sprint role, facing step, movement along the last intent. Differential test `locomotion-real-data` against 33 recorded traces: movement within 7.8e-5 u per update, timer exact, facing exact except 3 skipped updates ([docs/re/player.md](../re/player.md)). Provisional: the speeds are measured at the output (the walk/run/sprint animation data has no root travel), follow camera, flat height, no collision, assumed animation rate without blending.
+- Next: ground height and slope (nav grid or collision query 0x21a73c), the camera law (writer of 0x376894), animation blending and playback rate; then jump and other moves.
 - Oracle fidelity: per-frame breakpoint stops inflate the game clock about 30 % against vblanks (free run 51.3 ticks per vblank, stepped 65.9); measure rates in free-run intervals. Open: a frame counter readable without breakpoints, to measure update rate in free runs.
 
 - S4f: all completion inputs found (docs/re/save-format.md 09:25, total 711). chase-savecheck prints slot completion from the real tables (total 711); next: check its output against the percentage the game shows for the same save. Not modelled: cheat flags 0x375961/0x375962. Still open: options +0 nibbles and +3 bits 2..5 (no reader found); per-level block contents beyond the counters; how live state is copied into the save buffer.
@@ -270,3 +271,4 @@ Reverse-engineering findings live in docs/re/ (see docs/re/README.md). Entries m
 - 2026-10-13T12:49+02:00 — World handedness (worker): game world is left-handed; chase_render perspective() mirrors x, view/cameraAxes use the game yaw convention, setFrontFace added; chase-game and chase-viewer (free camera and cutscene) now unmirrored, matching gameplay-start.png → [docs/re/levels.md](../re/levels.md)
 - 2026-10-13T12:56+02:00 — Player head attachment fixed (jointAttachment in chase_assets, test pinned); `cmake --build build` warning-free, `ctest --test-dir build` 14/14 pass; chase-game offscreen screenshot compared with gameplay-start.png → [docs/re/player.md](../re/player.md)
 - 2026-10-13T13:45:00+02:00 — Player locomotion measured in the oracle (worker): walk 2.301 / run 6.900 then 10.349 u/s stepped by stick regime (thresholds raw 60, 117/118), no acceleration, facing step ceil(0.3 d) capped at 6400 per update, movement follows the intent heading; animation root motion via 0x20cd30/0x1abe60. Tool: watch, trap, dt, trace mem, attach loadstate focus fix; python3 -m unittest 19 oracle tests OK → [docs/re/player.md](../re/player.md), [docs/re/oracle.md](../re/oracle.md)
+- 2026-10-13T13:59:00+02:00 — Player locomotion in chase-game (worker): `player_locomotion` in chase_runtime replicates the measured rules; root motion could not be derived from the animation data (measured speeds kept behind `kMeasuredRootMotionSpeeds`); `locomotion-real-data` differential test (1114 updates), runtime-core thresholds/timer/facing checks, `--script` stick option with `game-script-run`/`game-script-walk`; `cmake --build build` warning-free, `ctest --test-dir build` 17/17 pass → [docs/re/player.md](../re/player.md)

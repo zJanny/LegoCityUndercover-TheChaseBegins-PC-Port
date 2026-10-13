@@ -34,7 +34,7 @@ add_library(chase_save_tables src/save/completion_tables.cpp)
 target_link_libraries(chase_save_tables PUBLIC chase_save chase_assets)
 target_compile_options(chase_save_tables PRIVATE -Wall -Wextra -Wpedantic)
 # Game runtime core (plan S4e): recovered frame logic, no SDL dependency.
-add_library(chase_runtime src/runtime/scheduler.cpp src/runtime/pad.cpp src/runtime/player_intent.cpp)
+add_library(chase_runtime src/runtime/scheduler.cpp src/runtime/pad.cpp src/runtime/player_intent.cpp src/runtime/player_locomotion.cpp)
 target_include_directories(chase_runtime PUBLIC src)
 target_compile_options(chase_runtime PRIVATE -Wall -Wextra -Wpedantic -ffp-contract=off)
 add_executable(chase-savecheck src/savecheck.cpp)
@@ -67,6 +67,8 @@ if(FFMPEG_FOUND)
 endif()
 set(CHASE_ROMFS_DIR "${CMAKE_SOURCE_DIR}/artifacts/romfs/romfs" CACHE PATH
     "Extracted RomFS directory for the opt-in real-data asset test")
+set(CHASE_LOCO_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/loco-out" CACHE PATH
+    "Recorded original-game locomotion traces for the opt-in differential test")
 include(CTest)
 if(BUILD_TESTING)
   add_executable(input-test tests/input_test.cpp)
@@ -87,6 +89,12 @@ if(BUILD_TESTING)
   target_link_libraries(runtime-test PRIVATE chase_runtime)
   target_compile_options(runtime-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME runtime-core COMMAND runtime-test)
+  add_executable(locomotion-real-test tests/locomotion_real_test.cpp)
+  target_link_libraries(locomotion-real-test PRIVATE chase_runtime chase_assets)
+  target_compile_options(locomotion-real-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME locomotion-real-data COMMAND locomotion-real-test
+    "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv" "${CHASE_LOCO_TRACE_DIR}")
+  set_tests_properties(locomotion-real-data PROPERTIES SKIP_RETURN_CODE 77)
   add_executable(save-test tests/save_test.cpp)
   target_link_libraries(save-test PRIVATE chase_save)
   target_compile_options(save-test PRIVATE -Wall -Wextra -Wpedantic)
@@ -122,6 +130,18 @@ if(BUILD_TESTING)
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --screenshot game-smoke.bmp --frames 2)
     set_tests_properties(game-real-smoke PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen"
       PASS_REGULAR_EXPRESSION "0 missing textures.*saved game-smoke.bmp after [0-9]+ update")
+    # Scripted stick (raw circle pad "x y updates;..." at dt 0.033): 31 run updates at 6.9 u/s and 9 sprint
+    # updates at 10.35 u/s move the player 10.13 units; 40 walk updates at 2.3 u/s move him 3.04 units.
+    add_test(NAME game-script-run COMMAND chase-game
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --script "0 150 40" --screenshot game-script-run.bmp)
+    set_tests_properties(game-script-run PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen"
+      PASS_REGULAR_EXPRESSION "scripted: 40 updates, player moved 10\\.13[0-9]* units.*saved game-script-run.bmp")
+    add_test(NAME game-script-walk COMMAND chase-game
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --script "0 90 40" --screenshot game-script-walk.bmp)
+    set_tests_properties(game-script-walk PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen"
+      PASS_REGULAR_EXPRESSION "scripted: 40 updates, player moved 3\\.03[0-9]* units.*saved game-script-walk.bmp")
     # Opt-in: decodes and plays one looping music track for 0.3 s on SDL's dummy audio driver.
     add_test(NAME soundtest-real-smoke COMMAND chase-soundtest --seconds 0.3
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
