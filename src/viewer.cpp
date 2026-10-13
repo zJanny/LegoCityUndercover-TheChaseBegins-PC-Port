@@ -191,7 +191,7 @@ int run(const Options& options) {
     for (const auto& levelPath : options.levels) {
         const FuseEntry* entry = archive.find(levelPath);
         if (!entry) throw std::runtime_error("not in archive: " + levelPath);
-        for (const auto& placement : placements(parseLevel(archive.read(*entry)))) {
+        for (const auto& placement : drawableObjects(archive, parseLevel(archive.read(*entry))).objects) {
             if (!options.room.empty() && lower(placement.room) != options.room) continue;
             if (scene.addModel(meshModelPath(placement.mesh), placementMatrix(placement))) ++placed;
             else ++unresolved;

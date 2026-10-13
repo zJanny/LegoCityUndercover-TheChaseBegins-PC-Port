@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <fstream>
+#include <functional>
 #include <map>
 #include <optional>
 #include <string>
@@ -177,6 +178,7 @@ std::uint32_t nameHash(const std::string& name);
 // section (+0x2c) is kept; the other sections are consumed and skipped.
 struct LevelParam {
     std::uint32_t hash = 0;
+    std::uint16_t flags = 0;           // record +4: bit 0 inline class value, bit 1 per-instance slot (lookup 0x217080)
     std::uint16_t type = 0;
     std::uint32_t value = 0;           // inline value (record +8)
     std::vector<Bytes> blocks;         // out-of-line data (0x208ae0)
@@ -199,6 +201,7 @@ struct NavRoom {
 };
 struct Level {
     std::vector<LevelParam> defaults;  // section +0x10: class default parameters (char_*.blvl carry the appearance)
+    std::vector<LevelParam> classParams;  // section +0x14, searched after +0x10 by lookup 0x217080
     std::vector<LevelObject> objects;
     std::vector<NavRoom> navRooms;
 };
@@ -209,11 +212,29 @@ Level parseLevel(const Bytes& data);
 struct Placement {
     std::string instance;
     std::string room;
+    std::string className;             // set by objectPlacements
     std::string mesh;
     float position[3] = {0, 0, 0};
     float orientation[3] = {0, 0, 0};
 };
 std::vector<Placement> placements(const Level& level);
+// Class .blvl of an object (levels/<class name>.blvl), or nullptr when the archive has none.
+using ClassLookup = std::function<const Level*(const std::string&)>;
+// Objects that have a model, as the game resolves it (lookup 0x217080 in the model loader 0x2442b4):
+// "meshname", "initialposition" and "initialorientation" exist only when the class file lists them (+0x10
+// or +0x14). A listed parameter takes the instance value when the object sets it, else the class value.
+// An empty meshname means no model.
+std::vector<Placement> objectPlacements(const Level& level, const ClassLookup& classOf);
+// objectPlacements limited to static geometry: models that exist in the archive, without the skeletal
+// "char_*" models of characters and animals (their rigs and animation are not part of this) and without
+// the mission markers of class "props/map_*" (observed hidden at the start, see docs/re/objects.md).
+struct DrawableObjects {
+    std::vector<Placement> objects;
+    std::size_t missingModel = 0;   // meshname names a model the archive does not hold (studs, emitters)
+    std::size_t skeletal = 0;       // skipped "char_*" models
+    std::size_t markers = 0;        // skipped "props/map_*" objects
+};
+DrawableObjects drawableObjects(FuseArchive& archive, const Level& level);
 // The point object "Player1Start": loader 0x2e6264 finds it by name (0x23b350) and gives the
 // player's scene node its transform (0x213284 builds the matrix, 0x24c118 stores it).
 std::optional<Placement> playerStart(const Level& level);

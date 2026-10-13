@@ -86,6 +86,7 @@ SDL_VIDEODRIVER=offscreen build/chase-game --script "0 150 40" --screenshot out.
 - What is still a stand-in:
   - The camera follows the character like the original in open ground: distance, height, smoothing and turning match what was measured. The original also pushes the camera away from walls and from the character. That part is missing, so the camera can sit inside buildings. Rooms that use several camera zones are not handled.
   - The collision is only the level's fixed geometry. The character stays on the floor, climbs steps and kerbs by the original's rules, and slides along walls. Objects, other characters and vehicles do not block him, and he cannot fall or jump. Where the original lets him fall, he stays at his height.
+  - The level shows its fixed objects, such as props, doors and parked vehicles, standing still. Other characters, coins (studs) and mission markers are not shown, and nothing reacts to you.
   - The animations play at an assumed speed and switch without blending.
   - A keyboard cannot tilt the stick halfway, so `E` stands in for a gentle push.
 - It prints one line per second: updates per second, the last time step and the circle pad values.

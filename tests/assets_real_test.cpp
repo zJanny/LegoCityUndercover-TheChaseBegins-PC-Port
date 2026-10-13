@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
         }
         std::size_t bytes = 0, pooled = 0, textures = 0, checked = 0;
         std::size_t models = 0, parts = 0, vertices = 0, triangles = 0;
-        std::size_t levels = 0, objects = 0, placed = 0;
+        std::size_t levels = 0, objects = 0, placed = 0, drawable = 0, drawableMissing = 0, drawableSkeletal = 0, drawableMarkers = 0;
         std::size_t collisionModels = 0, collisionItems = 0, collisionTriangles = 0, collisionNodes = 0;
         std::size_t sounds = 0, samples = 0, loops = 0;
         std::size_t locFiles = 0, locEntries = 0, fonts = 0, glyphs = 0;
@@ -207,6 +207,11 @@ int main(int argc, char** argv) {
                 ++levels;
                 objects += level.objects.size();
                 placed += placements(level).size();
+                DrawableObjects found = drawableObjects(archive, level);
+                drawable += found.objects.size();
+                drawableMissing += found.missingModel;
+                drawableSkeletal += found.skeletal;
+                drawableMarkers += found.markers;
             }
             if (endsWith(name, ".bfnmdl")) {
                 Model model = parseModel(data);
@@ -265,6 +270,10 @@ int main(int argc, char** argv) {
         // Reference totals from tools/convert_levels.py (parse_level / placements over all .blvl) at 9d04c91
         if (levels != 856 || objects != 18469 || placed != 6563)
             throw std::runtime_error("level totals differ from the Python reference");
+        // Pinned totals recorded from chase_assets drawableObjects over all .blvl, 2026-10-13: class files supply
+        // meshname (and the transform) where the instance does not set it (lookup 0x217080).
+        if (drawable != 7657 || drawableMissing != 5258 || drawableSkeletal != 886 || drawableMarkers != 405)
+            throw std::runtime_error("drawable object totals differ from the recorded values");
         // Reference: python3 tools/convert_levels.py (at 9d04c91) on lvl_00_policestation_main.blvl with parameter names from
         // code.bin (object Player1Start, class point, room1) and on chars/char_police.blvl (s10 defaults).
         {
@@ -278,6 +287,37 @@ int main(int argc, char** argv) {
                 chase.face != "head_ChaseMcCainDIFF64_c4x4.tga" || chase.lower != "lower_ChaseMcCainDIFF64.tga" ||
                 chase.upper != "upper_ChaseMcCainDIFF64_uk.tga")
                 throw std::runtime_error("char_police appearance differs from the recorded reference");
+        }
+        // Recorded from chase_assets drawableObjects, 2026-10-13; the class defaults come from
+        // levels/leprops/leprop_wobblydestructible.blvl (s14 meshname 'Prop_Mech_CrateDefault'), levels/props/
+        // parkour_zipline.blvl and levels/props/ability_freeplay_robber_atm.blvl. Instance names and positions were
+        // listed with the same function and cross-checked against `tools/convert_levels.py --param-names` (the
+        // instances carry no meshname parameter).
+        {
+            auto read = [&](const char* path) { return parseLevel(archive.read(*archive.find(path))); };
+            auto find = [](const DrawableObjects& found, const std::string& instance) -> const Placement* {
+                for (const auto& placement : found.objects)
+                    if (placement.instance == instance) return &placement;
+                return nullptr;
+            };
+            DrawableObjects police = drawableObjects(archive, read("levels/levels/lvl_00_policestation/lvl_00_policestation_main.blvl"));
+            if (police.objects.size() != 131 || police.missingModel != 98 || police.skeletal != 40 || police.markers != 0)
+                throw std::runtime_error("lvl_00 drawable objects differ from the recorded values");
+            const Placement* crate = find(police, "Portrait_Box01");
+            if (!crate || crate->className != "leprops/leprop_wobblydestructible" || crate->mesh != "Prop_Mech_CrateDefault" ||
+                meshModelPath(crate->mesh) != "models/prop_mech_cratedefault/prop_mech_cratedefault.bfnmdl" ||
+                !archive.find(meshModelPath(crate->mesh)) || std::fabs(crate->position[0] - 8.7615f) > 1e-3f ||
+                std::fabs(crate->position[1] - 2.5029f) > 1e-3f || std::fabs(crate->position[2] + 16.2848f) > 1e-3f)
+                throw std::runtime_error("lvl_00 Portrait_Box01 (class default model) differs from the recorded values");
+            DrawableObjects city = drawableObjects(archive, read("levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl"));
+            if (city.objects.size() != 1198 || city.missingModel != 1051 || city.skeletal != 115 || city.markers != 44)
+                throw std::runtime_error("lvl_01 drawable objects differ from the recorded values");
+            const Placement* atm = find(city, "FP_Task_ROBBER_CTH_06");
+            auto near = [](float a, float b) { return std::fabs(a - b) < 1e-2f; };
+            if (!atm || atm->mesh != "Ability_Freeplay_Robber_ATM01" || !archive.find(meshModelPath(atm->mesh)) ||
+                !near(atm->position[0], 801.858f) || !near(atm->position[1], 17.0315f) || !near(atm->position[2], 1053.8f))
+                throw std::runtime_error("lvl_01 FP_Task_ROBBER_CTH_06 differs from the recorded values");
+            if (find(city, "1-1_Waypoint_02")) throw std::runtime_error("map markers must not be drawable");
         }
         // Reference: artifacts/audio/audio-manifest.json from tools/convert_audio.py, and FNV-1a over
         // the interleaved little-endian PCM of its music/act_bass_break.wav.

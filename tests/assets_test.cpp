@@ -382,8 +382,67 @@ void playerSpawn() {
     require(!playerStart(parseLevel(levelFile(false))), "level without Player1Start");
 }
 
+LevelParam stringParam(const std::string& name, std::uint16_t flags, const std::string& value) {
+    LevelParam p;
+    p.hash = nameHash(name);
+    p.flags = flags;
+    p.type = 1;
+    p.blocks.push_back(bytes(value + std::string(1, '\0')));
+    return p;
+}
+
+LevelParam float3Param(const std::string& name, std::uint16_t flags, float x, float y, float z) {
+    LevelParam p;
+    p.hash = nameHash(name);
+    p.flags = flags;
+    p.type = 2;
+    float v[3] = {x, y, z};
+    Bytes block(12);
+    std::memcpy(block.data(), v, 12);
+    p.blocks.push_back(block);
+    return p;
+}
+
+void classDefaultPlacements() {
+    Level crate;
+    crate.classParams = {float3Param("initialposition", 6, 1, 2, 3), stringParam("meshname", 6, "Prop_Default")};
+    Level bare;
+    bare.defaults = {stringParam("meshname", 2, "")};
+    Level level;
+    auto object = [](const std::string& cls, const std::string& name) {
+        LevelObject o;
+        o.className = cls;
+        o.instance = name;
+        return o;
+    };
+    LevelObject inherits = object("crate", "inherits");
+    LevelObject overrides = object("crate", "overrides");
+    overrides.params = {stringParam("meshname", 2, "Prop_Own"), float3Param("initialposition", 2, 4, 5, 6),
+                        float3Param("initialorientation", 2, 0, 90, 0)};
+    LevelObject unlisted = object("bare", "unlisted");
+    unlisted.params = {stringParam("meshname", 2, "Prop_Bare"), float3Param("initialposition", 2, 7, 8, 9)};
+    LevelObject emptyMesh = object("bare", "empty");
+    LevelObject noClass = object("missing", "noclass");
+    noClass.params = {stringParam("meshname", 2, "Prop_Orphan")};
+    level.objects = {inherits, overrides, unlisted, emptyMesh, noClass};
+    ClassLookup lookup = [&](const std::string& name) -> const Level* {
+        return name == "crate" ? &crate : name == "bare" ? &bare : nullptr;
+    };
+    auto found = objectPlacements(level, lookup);
+    require(found.size() == 3, "objects without class or without a model are skipped");
+    require(found[0].instance == "inherits" && found[0].mesh == "Prop_Default" && found[0].className == "crate" &&
+            found[0].position[0] == 1.0f && found[0].position[2] == 3.0f && found[0].orientation[1] == 0.0f,
+            "class default model and position");
+    require(found[1].instance == "overrides" && found[1].mesh == "Prop_Own" && found[1].position[1] == 5.0f &&
+            found[1].orientation[1] == 0.0f,
+            "instance value replaces a slot parameter");
+    require(found[2].instance == "unlisted" && found[2].mesh == "Prop_Bare" && found[2].position[0] == 0.0f,
+            "a parameter the class does not list does not exist");
+}
+
 void levels() {
     playerSpawn();
+    classDefaultPlacements();
     require(nameHash("meshname") == 0xacd1ebb8 && nameHash("InitialPosition") == 0x86166f20, "name hash");
     Level level = parseLevel(levelFile(false));
     require(level.objects.size() == 1 && level.objects[0].className == "leprops/leprop_test", "level object");
