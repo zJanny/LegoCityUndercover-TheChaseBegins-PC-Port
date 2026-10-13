@@ -213,6 +213,7 @@ struct Placement {
     std::string instance;
     std::string room;
     std::string className;             // set by objectPlacements
+    std::size_t objectIndex = 0;       // index in Level::objects, set by objectPlacements
     std::string mesh;
     float position[3] = {0, 0, 0};
     float orientation[3] = {0, 0, 0};
@@ -225,19 +226,6 @@ using ClassLookup = std::function<const Level*(const std::string&)>;
 // or +0x14). A listed parameter takes the instance value when the object sets it, else the class value.
 // An empty meshname means no model.
 std::vector<Placement> objectPlacements(const Level& level, const ClassLookup& classOf);
-// objectPlacements limited to static geometry: models that exist in the archive, without the skeletal
-// "char_*" models of characters and animals (their rigs and animation are not part of this) and without
-// the mission markers of class "props/map_*" (observed hidden at the start, see docs/re/objects.md).
-struct DrawableObjects {
-    std::vector<Placement> objects;
-    std::size_t missingModel = 0;   // meshname names a model the archive does not hold (studs, emitters)
-    std::size_t skeletal = 0;       // skipped "char_*" models
-    std::size_t markers = 0;        // skipped "props/map_*" objects
-};
-DrawableObjects drawableObjects(FuseArchive& archive, const Level& level);
-// The point object "Player1Start": loader 0x2e6264 finds it by name (0x23b350) and gives the
-// player's scene node its transform (0x213284 builds the matrix, 0x24c118 stores it).
-std::optional<Placement> playerStart(const Level& level);
 // Appearance defaults of a character class (levels/chars/char_<name>.blvl). The textures named
 // "*_TEST.tga" on the shared body/head models are the ones these names replace.
 struct CharacterAppearance {
@@ -245,6 +233,33 @@ struct CharacterAppearance {
     std::uint32_t characterEnum = 0;             // CharacterEnum; equals the row in tablescharacters.bxls sheet 0
 };
 CharacterAppearance characterAppearance(const Level& characterClass);
+// A level object whose model is the shared minifig rig ("char_minifig"): the parameters the model loader
+// 0x2442b4 reads (meshname, HeadModel, HatModel) and the texture parameters, each resolved like
+// objectPlacements does (instance value when the class lists the parameter as a slot, else the class value).
+struct CharacterObject {
+    Placement placement;               // className, instance, room, mesh (body), position, orientation
+    CharacterAppearance appearance;
+    std::string hat;                   // HatModel, empty when the class does not list it
+    std::string animationClass;        // lower-case folder under models/char_minifig/ ("class_generic" by default)
+};
+// objectPlacements split by kind. Static geometry: models that exist in the archive. Characters: objects
+// with the "char_minifig" body, except the custom characters. Left out and counted: the mission markers of
+// class "props/map_*" (observed hidden at the start, see docs/re/objects.md), other skeletal "char_*"
+// models (animals, they have their own rigs), objects whose model the archive does not hold (studs,
+// emitters), and the custom characters (CharacterEnum 1..8, 0x2372e0 builds their look from the saved
+// custom character, not from the object's parameters).
+struct DrawableObjects {
+    std::vector<Placement> objects;
+    std::vector<CharacterObject> characters;
+    std::size_t missingModel = 0;
+    std::size_t skeletal = 0;
+    std::size_t customCharacters = 0;
+    std::size_t markers = 0;
+};
+DrawableObjects drawableObjects(FuseArchive& archive, const Level& level);
+// The point object "Player1Start": loader 0x2e6264 finds it by name (0x23b350) and gives the
+// player's scene node its transform (0x213284 builds the matrix, 0x24c118 stores it).
+std::optional<Placement> playerStart(const Level& level);
 // Object matrix: rotation of 0x237c48 (Rz * Ry * Rx for row vectors, i.e. x applied
 // first) from "initialorientation" degrees (x 0.0174533, as at 0x1a48b0), with
 // "initialposition" as the translation row.

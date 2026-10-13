@@ -50,7 +50,7 @@ target_compile_options(chase-soundtest PRIVATE -Wall -Wextra -Wpedantic)
 # Development model viewer (plan S4b); built when libepoxy is available.
 pkg_check_modules(EPOXY IMPORTED_TARGET epoxy)
 if(EPOXY_FOUND)
-  add_library(chase_render src/render/scene.cpp)
+  add_library(chase_render src/render/scene.cpp src/render/character.cpp)
   target_link_libraries(chase_render PUBLIC chase_assets PkgConfig::SDL2 PkgConfig::EPOXY)
   target_compile_options(chase_render PRIVATE -Wall -Wextra -Wpedantic)
   add_executable(chase-viewer src/viewer.cpp)

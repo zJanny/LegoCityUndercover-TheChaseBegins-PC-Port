@@ -229,3 +229,7 @@ Unknowns:
 - The event 6 handler (state 1/2/3 to 4) was not read. The conditions that forbid a jump were not tested (a B press during the landing stun, in interaction states).
 - Why A (event 7) does nothing in the street (probably a contextual action).
 - The step-off state 8 and its animation, see the falling entry.
+
+## 2026-10-13T16:34:30+02:00 — Appearance rule shared with level characters (see objects.md)
+
+The head/face/upper/lower replacement and the head attachment of the player are now one library path (`addCharacter`, `poseBody`, `placeCharacter` in src/render/character.cpp) used by chase-game for the player and for the level's characters. The character-select display 0x27a2bc replaces the `*_TEST.tga` placeholders on body (upper_/lower_) and head (head_) by the character class's names in the same way and attaches the head model on the `head` joint, which confirms the rule; details and the custom-character path (0x2372e0) in [objects.md](objects.md).

@@ -5,6 +5,7 @@
 #include "assets/assets.hpp"
 #include "audio/mixer.hpp"
 #include "input.hpp"
+#include "render/character.hpp"
 #include "render/scene.hpp"
 #include <SDL.h>
 #include <epoxy/gl.h>
@@ -102,6 +103,7 @@ struct Options {
     // the game's alignment of actor and camera animations of different length is not recovered.
     std::string cutscene;
     bool nav = false;
+    bool characters = false;
     double frame = -1;
     double fps = 30;
     float brightness = 1.0f;  // inspection aid only; the game's lighting/combiner setup is not recovered
@@ -126,6 +128,7 @@ Options parse(int argc, char** argv) {
         else if (arg == "--level") o.levels.push_back(value());
         else if (arg == "--room") o.room = lower(value());
         else if (arg == "--nav") o.nav = true;
+        else if (arg == "--characters") o.characters = true;
         else if (arg == "--cull") o.cull = value();
         else if (arg == "--brightness") o.brightness = std::stof(value());
         else if (arg == "--skeleton") o.skeleton = value();
@@ -148,7 +151,7 @@ Options parse(int argc, char** argv) {
     }
     if (o.models.empty() && o.levels.empty() && o.cutscene.empty())
         throw std::runtime_error("usage: chase-viewer [--fib F] [--names CSV] [--config CFG] [--exclude WORD]... "
-                                 "[--level levels/.../x.blvl]... [--room NAME] [--nav] [--cull none|cw|ccw] [--brightness F] [--screenshot OUT.bmp] [--yaw DEG] [--pitch DEG] [--eye X,Y,Z] "
+                                 "[--level levels/.../x.blvl]... [--room NAME] [--nav] [--characters] [--cull none|cw|ccw] [--brightness F] [--screenshot OUT.bmp] [--yaw DEG] [--pitch DEG] [--eye X,Y,Z] "
                                  "[--skeleton S.bfnskl --anim A.bfnanm [--frame N] [--fps F]] [--cutscene csdata/models/ID] "
                                  "[models/<dir>/<model>.bfnmdl...]");
     if (o.skeleton.empty() != o.animation.empty()) throw std::runtime_error("--skeleton and --anim go together");
@@ -191,11 +194,18 @@ int run(const Options& options) {
     for (const auto& levelPath : options.levels) {
         const FuseEntry* entry = archive.find(levelPath);
         if (!entry) throw std::runtime_error("not in archive: " + levelPath);
-        for (const auto& placement : drawableObjects(archive, parseLevel(archive.read(*entry))).objects) {
+        DrawableObjects drawable = drawableObjects(archive, parseLevel(archive.read(*entry)));
+        for (const auto& placement : drawable.objects) {
             if (!options.room.empty() && lower(placement.room) != options.room) continue;
             if (scene.addModel(meshModelPath(placement.mesh), placementMatrix(placement))) ++placed;
             else ++unresolved;
         }
+        drawable.characters.erase(std::remove_if(drawable.characters.begin(), drawable.characters.end(),
+                                                 [&](const CharacterObject& character) {
+                                                     return !options.room.empty() && lower(character.placement.room) != options.room;
+                                                 }),
+                                  drawable.characters.end());
+        if (options.characters) placed += addLevelCharacters(scene, archive, drawable.characters);
     }
     Skeleton skeleton;
     Animation animation;

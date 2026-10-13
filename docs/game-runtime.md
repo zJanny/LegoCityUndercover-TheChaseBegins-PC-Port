@@ -33,6 +33,7 @@ A window opens with the police station. Press Escape to quit.
 - The camera follows behind the character, as in the original.
 - The camera keeps out of the level's walls. Near a wall it moves closer to the character and slides to the side, as measured in the original.
 - The floor and walls come from the level. The character climbs steps and kerbs, and slides along walls.
+- The level's other people stand where the level puts them, with their own heads and clothes. They do not move, talk or react.
 - The character jumps, falls off ledges and lands as in the original, including the short pause after landing.
 
 ## What does not work yet
@@ -40,6 +41,7 @@ A window opens with the police station. Press Escape to quit.
 - The camera only reacts to the level's fixed walls. Lamp posts, cars and other objects do not push it.
 - When the camera is stuck behind a wall for a longer time, the original places it again. That is not done here.
 - Objects, other characters and vehicles do not block the character.
+- Animals and the eight line-up characters of the police station are not shown. Their look is not worked out yet.
 - Walking slowly off a ledge looks different from the original, which first plays a short step.
 - Jumping onto something higher, or under a ceiling, may not match the original.
 - The animations do not blend. Their speed is an estimate.

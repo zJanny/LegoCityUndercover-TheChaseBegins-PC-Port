@@ -70,6 +70,7 @@ The viewer uses the same `config/controls.cfg` as the [input laboratory](control
 | `--fps F` | Sets the animation speed. The default is 30. |
 | `--room NAME` | Shows only the level objects in one room. |
 | `--nav` | Draws the navigation grid of the level. |
+| `--characters` | With `--level`, also shows the level's characters standing in place. |
 | `--cutscene FOLDER` | Plays the cutscene in `csdata/models/<id>`. |
 | `--exclude WORD` | Hides parts whose texture name contains WORD, for example `sky`. |
 | `--brightness F` | Makes everything brighter, to help you see. |

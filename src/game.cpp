@@ -6,6 +6,7 @@
 // collision. There is no gameplay.
 #include "assets/assets.hpp"
 #include "input.hpp"
+#include "render/character.hpp"
 #include "render/scene.hpp"
 #include "runtime/collision.hpp"
 #include "runtime/follow_camera.hpp"
@@ -181,15 +182,6 @@ struct PlaceholderCamera {
     }
 };
 
-std::string withExtension(std::string path, const std::string& extension) {
-    return path.substr(0, path.rfind('.')) + extension;
-}
-
-std::string lowerStem(const std::string& file) {
-    std::string name = lower(file);
-    return name.substr(0, name.rfind('.'));
-}
-
 CharacterAppearance readCharacter(FuseArchive& archive, const std::string& path) {
     const FuseEntry* entry = archive.find(path);
     if (!entry) throw std::runtime_error("not in archive: " + path);
@@ -202,13 +194,11 @@ struct PlayerRig {
     runtime::VerticalState vertical;
     runtime::JumpProfile jumpStanding, jumpMoving;
     bool jumpMovingAnimation = false;
-    Skeleton skeleton;
-    std::optional<std::size_t> headJoint;
+    CharacterRig character;
+    CharacterInstance instance;
     std::map<int, Animation> animations;  // 0 = idle, runtime::kAnimationWalk / Run / Sprint
     int animation = 0;
     double frame = 0;
-    std::string bodyPath;
-    std::size_t bodyInstance = 0, headInstance = 0;
     float startX = 0, startZ = 0;
 
     Mat4 matrix() const {
@@ -232,14 +222,9 @@ struct PlayerRig {
     }
 
     void pose(Scene& scene) const {
-        const std::vector<Matrix> skin = skinMatrices(skeleton, animations.at(animation), frame);
-        scene.pose(bodyPath, skin);
         const Mat4 player = matrix();
-        scene.setTransform(bodyInstance, player);
-        Mat4 headTransform = player;
-        if (headJoint)
-            headTransform = chase::assets::multiply(chase::assets::jointAttachment(skeleton.joints[*headJoint], skin[*headJoint]), player);
-        scene.setTransform(headInstance, headTransform);
+        const std::vector<Matrix> skin = poseBody(scene, character, instance, animations.at(animation), frame);
+        placeCharacter(scene, character, instance, skin, player);
     }
 };
 
@@ -254,23 +239,14 @@ std::optional<PlayerRig> placePlayer(FuseArchive& archive, Scene& scene, const L
     if (!start) return std::nullopt;
     const CharacterAppearance base = readCharacter(archive, kPlayerBaseCharacter);
     const CharacterAppearance character = readCharacter(archive, kPlayerCharacter);
-    const std::string bodyPath = meshModelPath(character.body), headPath = meshModelPath(character.head);
-    const std::map<std::string, std::string> bodyTextures = {
-        {lowerStem(base.lower), character.lower}, {lowerStem(base.upper), character.upper}};
-    const std::map<std::string, std::string> headTextures = {{lowerStem(base.face), character.face}};
-
     PlayerRig rig;
-    rig.skeleton = parseSkeleton(archive.read(*archive.find(withExtension(bodyPath, ".bfnskl"))));
+    rig.character = loadCharacterRig(archive, meshModelPath(character.body));
     const std::pair<int, const char*> roles[] = {
         {0, "idle"}, {runtime::kAnimationWalk, "walk"}, {runtime::kAnimationRun, "run"}, {runtime::kAnimationSprint, "sprint"},
         {runtime::kAnimationFall, "fall"}, {runtime::kAnimationLand, "land"}, {runtime::kAnimationFallLand, "fallland"},
         {runtime::kAnimationJump, "jump"}, {runtime::kAnimationJumpRun, "jump_run"}};
-    for (const auto& [id, name] : roles) {
-        const std::string path = std::string(kPlayerAnimationDirectory) + name + kPlayerAnimationSuffix;
-        const FuseEntry* entry = archive.find(path);
-        if (!entry) throw std::runtime_error("not in archive: " + path);
-        rig.animations[id] = parseAnimation(archive.read(*entry));
-    }
+    for (const auto& [id, name] : roles)
+        rig.animations[id] = loadAnimation(archive, std::string(kPlayerAnimationDirectory) + name + kPlayerAnimationSuffix);
     const auto rootHeight = [&](int id) -> const AnimTrack& {
         const Animation& animation = rig.animations.at(id);
         if (animation.subAnimations.size() < 2) throw std::runtime_error("jump animation without root tracks");
@@ -282,11 +258,7 @@ std::optional<PlayerRig> placePlayer(FuseArchive& archive, Scene& scene, const L
                                                 runtime::kJumpHeightScale);
     rig.jumpMoving = runtime::makeJumpProfile(rootHeight(runtime::kAnimationJumpRun), rig.animations.at(runtime::kAnimationJumpRun).frames,
                                               runtime::kJumpRunHeightScale);
-    const auto head = std::find_if(rig.skeleton.joints.begin(), rig.skeleton.joints.end(),
-                                   [](const Joint& joint) { return lower(joint.name) == "head"; });
-    if (head != rig.skeleton.joints.end()) rig.headJoint = std::size_t(head - rig.skeleton.joints.begin());
 
-    rig.bodyPath = bodyPath;
     rig.vertical.y = start->position[1];
     rig.motion.x = start->position[0];
     rig.motion.z = start->position[2];
@@ -294,10 +266,7 @@ std::optional<PlayerRig> placePlayer(FuseArchive& archive, Scene& scene, const L
     rig.motion.lastIntent = rig.motion.facing;
     rig.startX = rig.motion.x;
     rig.startZ = rig.motion.z;
-    if (!scene.addModel(bodyPath, rig.matrix(), bodyTextures)) throw std::runtime_error("not in archive: " + bodyPath);
-    rig.bodyInstance = scene.instances() - 1;
-    if (!scene.addModel(headPath, rig.matrix(), headTextures)) throw std::runtime_error("not in archive: " + headPath);
-    rig.headInstance = scene.instances() - 1;
+    rig.instance = addCharacter(scene, base, character, "", "player", rig.matrix());
     rig.pose(scene);
     std::cout << "player at " << start->position[0] << ' ' << start->position[1] << ' ' << start->position[2]
               << ", yaw " << start->orientation[1] << ", character " << character.characterEnum << " ("
@@ -420,6 +389,7 @@ int run(const Options& options) {
     for (const auto& placement : drawable.objects)
         if (scene.addModel(meshModelPath(placement.mesh), placementMatrix(placement))) ++placed;
         else ++unresolved;
+    const std::size_t characters = addLevelCharacters(scene, archive, drawable.characters);
     std::optional<PlayerRig> player = placePlayer(archive, scene, level);
     if (player && options.start) {
         player->motion.x = player->startX = (*options.start)[0];
@@ -433,8 +403,10 @@ int run(const Options& options) {
     float centre[3], radius;
     scene.bounds(centre, radius);
     std::cout << "loaded " << scene.instances() << " instance(s) (" << placed << " placed, " << unresolved
-              << " unresolved meshnames, " << drawable.missingModel << " without model in the archive, "
-              << drawable.skeletal << " skeletal and " << drawable.markers << " marker objects skipped), " << scene.triangles() << " triangles, " << scene.missingTextures()
+              << " unresolved meshnames, " << characters << " characters standing in place, "
+              << drawable.missingModel << " without model in the archive, " << drawable.skeletal
+              << " other skeletal, " << drawable.customCharacters << " custom character and " << drawable.markers
+              << " marker objects skipped), " << scene.triangles() << " triangles, " << scene.missingTextures()
               << " missing textures\n";
 
     PlaceholderCamera camera;

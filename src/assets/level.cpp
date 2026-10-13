@@ -15,6 +15,9 @@ using Reader = detail::BlockReader;
 constexpr std::uint32_t initialPosition = 0x86166f20;     // nameHash("initialposition")
 constexpr std::uint32_t initialOrientation = 0xa3b9aa7f;  // nameHash("initialorientation")
 constexpr std::uint32_t meshName = 0xacd1ebb8;            // nameHash("meshname")
+constexpr const char* minifigMesh = "char_minifig";
+constexpr const char* defaultAnimationClass = "CLASS_Generic";
+constexpr std::uint32_t firstCustomCharacter = 1, lastCustomCharacter = 8;
 
 void need(const Bytes& block, std::size_t size) {
     if (block.size() < size) throw std::runtime_error("level block too small");
@@ -189,6 +192,21 @@ const LevelParam* effectiveParam(const LevelObject& obj, const Level& cls, std::
     return classParam;
 }
 
+std::string effectiveString(const LevelObject& obj, const Level& cls, const std::string& name) {
+    const LevelParam* param = effectiveParam(obj, cls, nameHash(name));
+    return param && param->type == 1 && !param->blocks.empty() ? cString(param->blocks[0]) : "";
+}
+
+std::uint32_t effectiveEnum(const LevelObject& obj, const Level& cls, const std::string& name) {
+    const LevelParam* param = effectiveParam(obj, cls, nameHash(name));
+    return param && param->type == 7 ? param->value : 0;
+}
+
+std::string lowered(std::string text) {
+    std::transform(text.begin(), text.end(), text.begin(), [](unsigned char c) { return char(std::tolower(c)); });
+    return text;
+}
+
 bool float3Of(const LevelParam* param, float* out) {
     if (!param || param->type != 2 || param->blocks.empty() || param->blocks[0].size() < 12) return false;
     std::memcpy(out, param->blocks[0].data(), 12);
@@ -207,7 +225,8 @@ std::vector<Placement> placements(const Level& level) {
 
 std::vector<Placement> objectPlacements(const Level& level, const ClassLookup& classOf) {
     std::vector<Placement> out;
-    for (const auto& obj : level.objects) {
+    for (std::size_t index = 0; index < level.objects.size(); ++index) {
+        const LevelObject& obj = level.objects[index];
         const Level* cls = classOf(obj.className);
         if (!cls) continue;
         const LevelParam* meshParam = effectiveParam(obj, *cls, meshName);
@@ -216,6 +235,7 @@ std::vector<Placement> objectPlacements(const Level& level, const ClassLookup& c
         p.instance = obj.instance;
         p.room = obj.room;
         p.className = obj.className;
+        p.objectIndex = index;
         p.mesh = cString(meshParam->blocks[0]);
         if (p.mesh.empty()) continue;
         float3Of(effectiveParam(obj, *cls, initialPosition), p.position);
@@ -237,12 +257,36 @@ DrawableObjects drawableObjects(FuseArchive& archive, const Level& level) {
     };
     DrawableObjects out;
     for (auto& placement : objectPlacements(level, classOf)) {
-        std::string lowered = placement.mesh;
-        std::transform(lowered.begin(), lowered.end(), lowered.begin(), [](unsigned char c) { return char(std::tolower(c)); });
-        if (placement.className.rfind("props/map_", 0) == 0) ++out.markers;
-        else if (lowered.rfind("char_", 0) == 0) ++out.skeletal;
-        else if (!archive.find(meshModelPath(placement.mesh))) ++out.missingModel;
-        else out.objects.push_back(std::move(placement));
+        const std::string mesh = lowered(placement.mesh);
+        if (placement.className.rfind("props/map_", 0) == 0) {
+            ++out.markers;
+        } else if (mesh == minifigMesh) {
+            const LevelObject* object = &level.objects[placement.objectIndex];
+            const Level& cls = *classOf(placement.className);
+            const std::uint32_t characterEnum = effectiveEnum(*object, cls, "CharacterEnum");
+            if (characterEnum >= firstCustomCharacter && characterEnum <= lastCustomCharacter) {
+                ++out.customCharacters;
+                continue;
+            }
+            CharacterObject character;
+            character.appearance.body = placement.mesh;
+            character.appearance.head = effectiveString(*object, cls, "HeadModel");
+            character.appearance.face = effectiveString(*object, cls, "FaceTexture");
+            character.appearance.lower = effectiveString(*object, cls, "LowerTexture");
+            character.appearance.upper = effectiveString(*object, cls, "UpperTexture");
+            character.appearance.characterEnum = characterEnum;
+            character.hat = effectiveString(*object, cls, "HatModel");
+            const std::string animationClass = effectiveString(*object, cls, "AnimationClass");
+            character.animationClass = lowered(animationClass.empty() ? defaultAnimationClass : animationClass);
+            character.placement = std::move(placement);
+            out.characters.push_back(std::move(character));
+        } else if (mesh.rfind("char_", 0) == 0) {
+            ++out.skeletal;
+        } else if (!archive.find(meshModelPath(placement.mesh))) {
+            ++out.missingModel;
+        } else {
+            out.objects.push_back(std::move(placement));
+        }
     }
     return out;
 }

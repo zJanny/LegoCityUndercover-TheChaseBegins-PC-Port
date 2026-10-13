@@ -48,11 +48,13 @@ public:
     void addGeometry(const std::string& key, const assets::ModelPart& part);
     // Adds one instance of a model; the model's GPU data is loaded once and shared.
     // textureOverrides maps a lower-case material texture stem to the texture used instead; it
-    // only applies when the model is loaded for the first time.
+    // only applies when the model is loaded for the first time under `key`. The GPU data is shared by every
+    // instance with the same key (the path when `key` is empty), so models that differ in textures or in pose
+    // need distinct keys.
     bool addModel(const std::string& path, const Mat4& transform = identity(),
-                  const std::map<std::string, std::string>& textureOverrides = {});
-    // Re-skins every skinned part of an already added model on the CPU.
-    void pose(const std::string& path, const std::vector<assets::Matrix>& skin);
+                  const std::map<std::string, std::string>& textureOverrides = {}, const std::string& key = "");
+    // Re-skins every skinned part of the model loaded under `key` on the CPU.
+    void pose(const std::string& key, const std::vector<assets::Matrix>& skin);
     std::size_t skinnedParts(const std::string& path) const;
     void bounds(float centre[3], float& radius) const;
     void draw(GLuint program, const Mat4& viewProjection) const;

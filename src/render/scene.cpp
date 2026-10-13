@@ -203,8 +203,9 @@ void Scene::addGeometry(const std::string& key, const ModelPart& part) {
 }
 
 bool Scene::addModel(const std::string& path, const Mat4& transform,
-                     const std::map<std::string, std::string>& textureOverrides) {
-    auto loaded = models_.find(path);
+                     const std::map<std::string, std::string>& textureOverrides, const std::string& key) {
+    const std::string& cacheKey = key.empty() ? path : key;
+    auto loaded = models_.find(cacheKey);
     if (loaded == models_.end()) {
         const FuseEntry* entry = archive_.find(path);
         if (!entry) return false;
@@ -225,7 +226,7 @@ bool Scene::addModel(const std::string& path, const Mat4& transform,
                 if (part.flags & AttrSkin) out.skinned.push_back({out.parts.size(), part.vertices, part.flags});
                 out.parts.push_back(d);
             }
-        loaded = models_.emplace(path, std::move(out)).first;
+        loaded = models_.emplace(cacheKey, std::move(out)).first;
     }
     instances_.push_back({&loaded->second, transform});
     return true;

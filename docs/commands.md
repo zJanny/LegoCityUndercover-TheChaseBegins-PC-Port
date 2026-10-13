@@ -92,7 +92,7 @@ SDL_VIDEODRIVER=offscreen build/chase-game --script "0 150 40" --screenshot out.
   - The collision is only the level's fixed geometry. The character stays on the floor, climbs steps and kerbs by the original's rules, and slides along walls. Objects, other characters and vehicles do not block him.
   - He falls off ledges with the original's gravity and top speed. He lands hard after a fall of 12 units or more. After a landing he stands still for a short time, as in the original. When he walks off a ledge the original plays a short step-off first. That step is missing here. The stand-still time is measured, not read from the game's data.
   - The jump follows the height curve and the forward speed measured in the original (about 2.1 units high, forward speed 0.8 of the ground speed, no double jump). Jumping onto something higher or under a ceiling is not handled like the original, and the jump heights use measured scale factors.
-  - The level shows its fixed objects, such as props, doors and parked vehicles, standing still. Other characters, coins (studs) and mission markers are not shown, and nothing reacts to you.
+  - The level shows its fixed objects, such as props, doors and parked vehicles, standing still. The level's other people (not animals) stand in place in a neutral pose with their own heads and clothes. Coins (studs) and mission markers are not shown, and nothing reacts to you.
   - The animations play at an assumed speed and switch without blending.
   - A keyboard cannot tilt the stick halfway, so `Left Alt` stands in for a gentle push. It is a separate control from the 3DS buttons, set in `config/controls.cfg`.
 - It prints one line per second: updates per second, the last time step and the circle pad values.

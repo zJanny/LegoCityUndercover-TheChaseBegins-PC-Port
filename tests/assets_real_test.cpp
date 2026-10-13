@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
         }
         std::size_t bytes = 0, pooled = 0, textures = 0, checked = 0;
         std::size_t models = 0, parts = 0, vertices = 0, triangles = 0;
-        std::size_t levels = 0, objects = 0, placed = 0, drawable = 0, drawableMissing = 0, drawableSkeletal = 0, drawableMarkers = 0;
+        std::size_t levels = 0, objects = 0, placed = 0, drawable = 0, drawableMissing = 0, drawableSkeletal = 0, drawableMarkers = 0, drawableCharacters = 0, drawableCustom = 0;
         std::size_t collisionModels = 0, collisionItems = 0, collisionTriangles = 0, collisionNodes = 0;
         std::size_t sounds = 0, samples = 0, loops = 0;
         std::size_t locFiles = 0, locEntries = 0, fonts = 0, glyphs = 0;
@@ -211,6 +211,8 @@ int main(int argc, char** argv) {
                 drawable += found.objects.size();
                 drawableMissing += found.missingModel;
                 drawableSkeletal += found.skeletal;
+                drawableCharacters += found.characters.size();
+                drawableCustom += found.customCharacters;
                 drawableMarkers += found.markers;
             }
             if (endsWith(name, ".bfnmdl")) {
@@ -272,7 +274,10 @@ int main(int argc, char** argv) {
             throw std::runtime_error("level totals differ from the Python reference");
         // Pinned totals recorded from chase_assets drawableObjects over all .blvl, 2026-10-13: class files supply
         // meshname (and the transform) where the instance does not set it (lookup 0x217080).
-        if (drawable != 7657 || drawableMissing != 5258 || drawableSkeletal != 886 || drawableMarkers != 405)
+        // The 886 skeletal "char_*" objects of that recording are now split: minifig characters drawn, custom
+        // characters (CharacterEnum 1..8, 0x2372e0) and the other rigs.
+        if (drawable != 7657 || drawableMissing != 5258 || drawableMarkers != 405 ||
+            drawableCharacters + drawableCustom + drawableSkeletal != 886 || drawableCharacters != 708 || drawableCustom != 8 || drawableSkeletal != 170)
             throw std::runtime_error("drawable object totals differ from the recorded values");
         // Reference: python3 tools/convert_levels.py (at 9d04c91) on lvl_00_policestation_main.blvl with parameter names from
         // code.bin (object Player1Start, class point, room1) and on chars/char_police.blvl (s10 defaults).
@@ -301,7 +306,8 @@ int main(int argc, char** argv) {
                 return nullptr;
             };
             DrawableObjects police = drawableObjects(archive, read("levels/levels/lvl_00_policestation/lvl_00_policestation_main.blvl"));
-            if (police.objects.size() != 131 || police.missingModel != 98 || police.skeletal != 40 || police.markers != 0)
+            if (police.objects.size() != 131 || police.missingModel != 98 || police.skeletal != 0 || police.markers != 0 ||
+                police.characters.size() != 32 || police.customCharacters != 8)
                 throw std::runtime_error("lvl_00 drawable objects differ from the recorded values");
             const Placement* crate = find(police, "Portrait_Box01");
             if (!crate || crate->className != "leprops/leprop_wobblydestructible" || crate->mesh != "Prop_Mech_CrateDefault" ||
@@ -310,7 +316,8 @@ int main(int argc, char** argv) {
                 std::fabs(crate->position[1] - 2.5029f) > 1e-3f || std::fabs(crate->position[2] + 16.2848f) > 1e-3f)
                 throw std::runtime_error("lvl_00 Portrait_Box01 (class default model) differs from the recorded values");
             DrawableObjects city = drawableObjects(archive, read("levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl"));
-            if (city.objects.size() != 1198 || city.missingModel != 1051 || city.skeletal != 115 || city.markers != 44)
+            if (city.objects.size() != 1198 || city.missingModel != 1051 || city.skeletal != 16 || city.markers != 44 ||
+                city.characters.size() != 99 || city.customCharacters != 0)
                 throw std::runtime_error("lvl_01 drawable objects differ from the recorded values");
             const Placement* atm = find(city, "FP_Task_ROBBER_CTH_06");
             auto near = [](float a, float b) { return std::fabs(a - b) < 1e-2f; };
@@ -318,6 +325,37 @@ int main(int argc, char** argv) {
                 !near(atm->position[0], 801.858f) || !near(atm->position[1], 17.0315f) || !near(atm->position[2], 1053.8f))
                 throw std::runtime_error("lvl_01 FP_Task_ROBBER_CTH_06 differs from the recorded values");
             if (find(city, "1-1_Waypoint_02")) throw std::runtime_error("map markers must not be drawable");
+            // Resolved character rigs. Provenance: instance and class parameters listed with parseLevel and the
+            // parameter names from the strings of code.bin (scratch dump, 2026-10-13, manual inspection). Lobby_Cop02:
+            // the instance sets HeadModel and the three textures (class chars/char_ai_actor holds the TEST placeholders).
+            // Dumby: only the transform is set, head and textures are the class values of chars/char_ai_deputydunby.
+            // Pedestrian03: AnimationClass 'CLASS_Generic' exists only in the +0x14 table of chars/pedestrian, which the
+            // game reads at 0x1913f8 ("models/%s/%s/" with char_minifig and AnimationClass).
+            auto findCharacter = [](const DrawableObjects& found, const std::string& instance) -> const CharacterObject* {
+                for (const auto& character : found.characters)
+                    if (character.placement.instance == instance) return &character;
+                return nullptr;
+            };
+            const CharacterObject* cop = findCharacter(police, "Lobby_Cop02");
+            if (!cop || cop->placement.className != "chars/char_ai_actor" || cop->appearance.body != "char_minifig" ||
+                cop->appearance.head != "Char_Head_PoliceHat" || !cop->hat.empty() ||
+                cop->appearance.face != "head_MalePolice01DIFF64_c4x4.tga" || cop->appearance.lower != "lower_Lego_BlackDIFF64.tga" ||
+                cop->appearance.upper != "upper_CopJacketDIFF128.tga" || cop->animationClass != "class_generic" ||
+                !near(cop->placement.position[0], 14.1878f) || !near(cop->placement.position[1], 1.4209f) ||
+                !near(cop->placement.position[2], 3.9843f) || !near(cop->placement.orientation[1], -71.9074f))
+                throw std::runtime_error("lvl_00 Lobby_Cop02 rig differs from the recorded values");
+            if (findCharacter(police, "Lineup_01_Civilian")) throw std::runtime_error("custom characters must not be drawn from their placeholder look");
+            const CharacterObject* dunby = findCharacter(city, "1-3_Dumby");
+            if (!dunby || dunby->appearance.head != "Char_Head_DeputyDunby" ||
+                dunby->appearance.face != "head_DeputyDunbyDIFF64_c4x4.tga" || dunby->appearance.lower != "lower_Lego_BlackDIFF64.tga" ||
+                dunby->appearance.upper != "upper_DeputyDunbyDIFF128.tga" || !near(dunby->placement.position[0], 916.51f))
+                throw std::runtime_error("lvl_01 Dumby rig differs from the recorded values");
+            const CharacterObject* walker = findCharacter(city, "Pedestrian03");
+            if (!walker || walker->placement.className != "chars/pedestrian" || walker->appearance.head != "Char_Head_Cheerleader" ||
+                walker->appearance.upper != "upper_CheerleaderDIFF128.tga" || walker->appearance.lower != "lower_CheerleaderDIFF128.tga" ||
+                walker->appearance.face != "head_CheerleaderDIFF64_c4x4.tga" || walker->animationClass != "class_generic" ||
+                !archive.find(meshModelPath(walker->appearance.head)) || !archive.find(meshModelPath(walker->appearance.body)))
+                throw std::runtime_error("lvl_01 Pedestrian03 rig differs from the recorded values");
         }
         // Reference: artifacts/audio/audio-manifest.json from tools/convert_audio.py, and FNV-1a over
         // the interleaved little-endian PCM of its music/act_bass_break.wav.
