@@ -34,7 +34,7 @@ add_library(chase_save_tables src/save/completion_tables.cpp)
 target_link_libraries(chase_save_tables PUBLIC chase_save chase_assets)
 target_compile_options(chase_save_tables PRIVATE -Wall -Wextra -Wpedantic)
 # Game runtime core (plan S4e): recovered frame logic, no SDL dependency.
-add_library(chase_runtime src/runtime/scheduler.cpp src/runtime/pad.cpp src/runtime/player_intent.cpp src/runtime/player_locomotion.cpp src/runtime/follow_camera.cpp src/runtime/collision.cpp)
+add_library(chase_runtime src/runtime/scheduler.cpp src/runtime/pad.cpp src/runtime/player_intent.cpp src/runtime/player_locomotion.cpp src/runtime/follow_camera.cpp src/runtime/collision.cpp src/runtime/player_vertical.cpp)
 target_link_libraries(chase_runtime PUBLIC chase_assets)
 target_include_directories(chase_runtime PUBLIC src)
 target_compile_options(chase_runtime PRIVATE -Wall -Wextra -Wpedantic -ffp-contract=off)
@@ -72,6 +72,8 @@ set(CHASE_LOCO_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/loco-out" CACHE P
     "Recorded original-game locomotion traces for the opt-in differential test")
 set(CHASE_COLLISION_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/coll-out" CACHE PATH
     "Recorded original-game collision traces for the opt-in differential test")
+set(CHASE_FALL_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/fall-out" CACHE PATH
+    "Recorded original-game fall and landing traces for the opt-in differential test")
 set(CHASE_CAMERA_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/cam-out" CACHE PATH
     "Recorded original-game camera traces for the opt-in differential test")
 include(CTest)
@@ -106,6 +108,12 @@ if(BUILD_TESTING)
   add_test(NAME collision-real-data COMMAND collision-real-test
     "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv" "${CHASE_LOCO_TRACE_DIR}" "${CHASE_COLLISION_TRACE_DIR}")
   set_tests_properties(collision-real-data PROPERTIES SKIP_RETURN_CODE 77)
+  add_executable(fall-real-test tests/fall_real_test.cpp)
+  target_link_libraries(fall-real-test PRIVATE chase_runtime chase_assets)
+  target_compile_options(fall-real-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME fall-real-data COMMAND fall-real-test
+    "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv" "${CHASE_FALL_TRACE_DIR}")
+  set_tests_properties(fall-real-data PROPERTIES SKIP_RETURN_CODE 77)
   add_executable(camera-real-test tests/camera_real_test.cpp)
   target_link_libraries(camera-real-test PRIVATE chase_runtime)
   target_compile_options(camera-real-test PRIVATE -Wall -Wextra -Wpedantic)
@@ -159,6 +167,15 @@ if(BUILD_TESTING)
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --script "0 90 40" --screenshot game-script-walk.bmp)
     set_tests_properties(game-script-walk PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen"
       PASS_REGULAR_EXPRESSION "scripted: 40 updates, player moved 3\\.03[0-9]* units.*height 1\\.4[0-9]*.*saved game-script-walk.bmp")
+    # Run west off the 1.06 m platform at x 897 in the Cherry Tree Hills street: the heights are the recorded
+    # fall (tools/oracle/fall-ledge.txt: 17.5898, 17.4908, 17.3423, 17.1443, 16.8968 after the platform updates).
+    add_test(NAME game-script-ledge COMMAND chase-game
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
+      --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl
+      --start "899.5 17.6393 1101" --script "0 150 40" --screenshot game-script-ledge.bmp)
+    set_tests_properties(game-script-ledge PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen"
+      PASS_REGULAR_EXPRESSION "heights: (17\\.6393 )+17\\.5898 17\\.4908 17\\.3423 17\\.1443 16\\.8968 16\\.57.*saved game-script-ledge.bmp")
     # Opt-in: decodes and plays one looping music track for 0.3 s on SDL's dummy audio driver.
     add_test(NAME soundtest-real-smoke COMMAND chase-soundtest --seconds 0.3
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"

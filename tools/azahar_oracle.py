@@ -28,6 +28,8 @@ A scenario file drives the run, one command per line ('#' starts a comment):
   trap ADDR[,ADDR...] N NAME
                         advance N frames with execution breakpoints at the addresses and write the registers and
                         32 stack words of every stop to NAME.txt
+  teleport X Y Z        write the world and local translation of the player node (a measuring aid: places the player
+                        at a ledge without walking there; the node's parent has an identity transform at gameplay-start)
   dt MIN MAX            write the scheduler's dt limits (floats at C+0x10 and C+0x14); MIN == MAX fixes the step
   read ADDR LEN         print LEN bytes at ADDR as hex words
   sample SECONDS INTERVAL NAME
@@ -906,6 +908,16 @@ class Oracle:
             state['ctrl_state'] = r.read(ctrl + 0x14, 1)[0]
         return state
 
+    def teleport(self, x, y, z):
+        state = self.player()
+        if state is None:
+            raise RuntimeError('no player entity (*0x%x == 0)' % PLAYER)
+        if state['world'] != state['local']:
+            raise RuntimeError('player node world %s differs from local %s: not a pure root node' % (state['world'], state['local']))
+        position = struct.pack('<3f', x, y, z)
+        self.mem.write(state['node'] + 0x8c, position)
+        self.mem.write(state['node'] + 0x4c, position)
+
     def print_player(self):
         state = self.player()
         if state is None:
@@ -1139,6 +1151,8 @@ def run_scenario(oracle, lines):
             oracle.trap([int(a, 0) for a in args[0].split(',')], int(args[1]), args[2])
         elif op == 'dt':
             oracle.set_dt(float(args[0]), float(args[1]))
+        elif op == 'teleport':
+            oracle.teleport(float(args[0]), float(args[1]), float(args[2]))
         elif op == 'report':
             oracle.report()
         elif op == 'read':

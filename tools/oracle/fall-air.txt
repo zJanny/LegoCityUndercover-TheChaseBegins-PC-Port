@@ -1,0 +1,42 @@
+# Falls from 23 m above the street at the gameplay-start spawn (teleport into the air; the ground probe fails and the
+# player falls). Fixed dt 0.033. Run, walk, standing, stick released in the air and stick turned in the air.
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+teleport 886.7 40 1111.2
+frames 2
+stick 0 150
+trace 80 fall_tall_run mem
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+teleport 886.7 40 1111.2
+frames 2
+stick 0 70
+trace 90 fall_tall_walk mem
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+teleport 886.7 40 1111.2
+frames 2
+trace 20 fall_tall_still mem
+stick 0 150
+trace 60 fall_tall_still_push mem
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+teleport 886.7 40 1111.2
+frames 2
+stick 0 150
+trace 12 fall_release_a mem
+stick 0 0
+trace 60 fall_release_b mem
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+teleport 886.7 40 1111.2
+frames 2
+stick 0 150
+trace 10 fall_turn_a mem
+stick 150 0
+trace 70 fall_turn_b mem

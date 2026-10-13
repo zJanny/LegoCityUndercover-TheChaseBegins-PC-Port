@@ -76,6 +76,7 @@ struct GroundProbe {
     float forwardX = 0, forwardZ = 1;  // node forward axis (sin h, cos h)
     float rootDelta = 0;             // length of this update's movement before collision (0x20e968 on the root delta)
     float dt = 0;                    // frame step, 0x23602c
+    std::optional<float> distance;   // distance below the node to probe; the airborne call of 0x20b48c passes max(|fall speed|, 0.05)
 };
 
 // Ground height for the node at (x, y, z): nothing when no floor-like triangle is in reach (the original

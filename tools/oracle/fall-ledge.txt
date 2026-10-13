@@ -1,0 +1,34 @@
+# Walk off the 1.06 m platform edge at x 897 (platform top 17.639, street 16.58) west of the gameplay-start spawn.
+# The player is teleported onto the platform, then runs west (stick 106 106 at camera yaw -2.82). Fixed dt 0.033.
+loadstate gameplay-start
+frames 3
+stick 0 0
+hold -
+dt 0.033 0.033
+teleport 899.5 17.6393 1101.0
+frames 2
+stick 106 106
+trace 60 fall_ledge mem
+stick 0 0
+# Same edge at walk speed (stick length 70).
+loadstate gameplay-start
+frames 3
+stick 0 0
+hold -
+dt 0.033 0.033
+teleport 899.5 17.6393 1101.0
+frames 2
+stick 50 50
+trace 70 fall_ledge_walk mem
+stick 0 0
+# Same edge at dt 0.066.
+loadstate gameplay-start
+frames 3
+stick 0 0
+hold -
+dt 0.066 0.066
+teleport 899.5 17.6393 1101.0
+frames 2
+stick 106 106
+trace 30 fall_ledge_dt066 mem
+stick 0 0

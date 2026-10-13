@@ -5,6 +5,7 @@
 #include "runtime/pad.hpp"
 #include "runtime/player_intent.hpp"
 #include "runtime/player_locomotion.hpp"
+#include "runtime/player_vertical.hpp"
 #include "runtime/scheduler.hpp"
 #include <array>
 #include <cmath>
@@ -400,6 +401,60 @@ int main() {
             const float dx = step.target[0] - camera.eye()[0], dz = step.target[2] - camera.eye()[2];
             require(std::fabs(std::sqrt(dx * dx + dz * dz) - 10.0f) < 1e-3f && std::fabs(camera.eye()[1] - (camera.lookAt()[1] + 1.7f)) < 1e-3f,
                     "settled camera is 10 away horizontally and 1.7 above the look point");
+        }
+
+        // Falling and landing (docs/re/player.md falling entry): gravity 0.05 * 30 * dt per update up to 0.8,
+        // probe distance max(|speed|, 0.05), hard landing from a fall distance of 12, stun by elapsed time.
+        {
+            CollisionWorld world;
+            world.add(quadItem({{-5, 0, -5, -5, 0, 5, 50, 0, 5, 50, 0, -5}}));
+            VerticalState state;
+            state.y = 40;
+            VerticalInput input;
+            input.x = -20;
+            input.rootDelta = 0.2f;
+            input.dt = 0.033f;
+            input.forwardZ = 1;
+            verticalUpdate(state, world, input);
+            require(state.posture == Posture::Falling && near(state.fallSpeed, 0.0495f) && near(state.y, 40 - 0.0495f) && near(state.fallDistance, 0.0495f),
+                    "first airborne update: speed 0.0495, y -= speed");
+            verticalUpdate(state, world, input);
+            require(near(state.fallSpeed, 0.099f) && near(state.fallDistance, 0.1485f), "speed grows by 1.5 * dt per update");
+            for (int i = 0; i < 30; ++i) verticalUpdate(state, world, input);
+            require(state.fallSpeed == kTerminalFallSpeed, "terminal speed 0.8 per update");
+
+            input.x = 0;
+            state.y = 0.3f;
+            state.fallSpeed = 0.2f;
+            state.fallDistance = 5;
+            VerticalStep step = verticalUpdate(state, world, input);
+            require(step.landed && !step.hard && state.posture == Posture::Landing && state.fallSpeed == 0 && std::fabs(state.y) < 0.01f,
+                    "ground within max(|speed|, 0.05) + 0.1 below lands; no stick: soft landing stun");
+            int updates = 1;
+            while (!verticalUpdate(state, world, input).stunEnded) ++updates;
+            require(updates == 27 && state.posture == Posture::Ground, "soft stun ends at 26/30 s: 27 updates at dt 0.033");
+
+            state.posture = Posture::Falling;
+            state.y = 0.3f;
+            state.fallSpeed = 0.2f;
+            state.fallDistance = 5;
+            input.moveRequested = true;
+            step = verticalUpdate(state, world, input);
+            require(step.landed && state.posture == Posture::Ground, "soft landing with the stick held has no stun");
+
+            state.posture = Posture::Falling;
+            state.y = 0.3f;
+            state.fallSpeed = 0.2f;
+            state.fallDistance = 12.0f;
+            step = verticalUpdate(state, world, input);
+            require(step.hard && state.posture == Posture::Landing && state.landingDuration == kHardLandingSeconds, "fall distance 12 lands hard, also with the stick held");
+
+            state = VerticalState();
+            state.y = 0;
+            input.x = 0;
+            input.rootDelta = 0;
+            verticalUpdate(state, world, input);
+            require(state.posture == Posture::Ground && state.y == 0, "a standing character on the ground is not probed");
         }
     } catch (const std::exception& e) {
         std::cerr << "FAIL: " << e.what() << '\n';
