@@ -30,4 +30,4 @@
 
 A developer tool runs your own game copy in the Azahar emulator, so our code can be compared with the original game. See the [command reference](commands.md#original-game-in-the-emulator-oracle).
 
-The plan and a detailed log of every finding are in [`plans/linux-port.md`](plans/linux-port.md) and [`plans/linux-port.progress.md`](plans/linux-port.progress.md).
+The plan, the work log and one page per feature (with its known gaps) are in [`plans/linux-port.md`](plans/linux-port.md), [`plans/linux-port.progress.md`](plans/linux-port.progress.md) and [`plans/features/README.md`](plans/features/README.md).

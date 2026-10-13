@@ -1,0 +1,35 @@
+# Input
+
+## 1. Scope
+
+Mapping the 3DS controls to keyboard and mouse (configurable bindings, hold/toggle, focus reset, touch mapping inside the aspect-fitted 320x240 viewport) and the pad pipeline that feeds the game logic (input slot table, channels, stick to D-pad). Mapping is part of the port, not a QoL feature, and must not change game behaviour. Player rules that consume the stick are in [player-movement.md](player-movement.md).
+
+## 2. Status
+
+DONE for the input laboratory (S2) and the keyboard/mouse mapping used by `chase-game`; the pad pipeline replica works for the recovered slots. Updated 2026-10-13T21:29:01+0200.
+
+## 3. Verified behaviour
+
+- A hold action stays active while any binding is held; a toggle flips only on a fresh press; opposite directions cancel; focus loss resets all held and toggled state; touch maps only inside the viewport (`input-core`, `input-sdl-smoke`, `--smoke-test`).
+- Input slot table 0x3769e8 (18 slots to pad channels), A/B pairs, channel 7 unfed by the pad, stick to D-pad 0x2289b8; pad pipeline replica matches the live stick value (`runtime-core`).
+- Action names are 3DS buttons, not gameplay meanings; `Walk` (Left Alt) and jump on B (Q or the right mouse button) are bound in `config/controls.cfg`.
+
+## 4. Stand-ins
+
+- INPUT-S1 The `Walk` key (Left Alt, own non-3DS action) stands in for a half-tilted circle pad.
+
+## 5. Open items
+
+- [ ] INPUT-1 — Replace the `Walk` stand-in by a proper analog mapping if the user decides one is needed (a mapping question, not game behaviour).
+- [ ] INPUT-2 — Readers of input slots 16/17. evidence: [arm-executable.md §2026-10-13T09:22](../../re/arm-executable.md).
+- [ ] INPUT-3 — Slots 6/7 are read by gameplay and 4/5 by UI; which UI actions use them and the controller state 255 are unknown. evidence: [arm-executable.md §2026-10-13T09:22](../../re/arm-executable.md), [oracle.md §2026-10-13T11:50](../../re/oracle.md).
+
+## 6. Findings summary
+
+- Slot table and channel records: [arm-executable.md §2026-10-13T09:20](../../re/arm-executable.md); readers and stick to D-pad: [arm-executable.md §2026-10-13T09:22](../../re/arm-executable.md); HID and main loop: [arm-executable.md §2026-10-13T10:45](../../re/arm-executable.md).
+- Stick to intent: [player.md §2026-10-13T10:59](../../re/player.md).
+
+## 7. Code and tests
+
+- `src/input.*` (`chase_input`, no SDL), `src/main.cpp` (`chase-input-lab`), `src/runtime/pad.*`, `config/controls.cfg` (format in CLAUDE.md "Architecture rules"); user docs `docs/controls.md`.
+- CTest: `input-core`, `input-sdl-smoke`, `runtime-core`.

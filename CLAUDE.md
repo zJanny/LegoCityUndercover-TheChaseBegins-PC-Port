@@ -9,14 +9,14 @@ PC port of *LEGO City Undercover: The Chase Begins* (Nintendo 3DS), built from t
 1. **Extraction pipeline** (`tools/extract_game.py`, Python 3.11+ stdlib only). Reads the NCSD/CCI image, NCCH partition 0, exheader and ExeFS, checks every SHA256, decompresses `.code` (backwards LZ) and wraps it in a synthetic ELF32 ARM file (`game.arm.elf`) for disassembly in REA.
 2. **Native libraries and tools** (`src/`, C++17 + SDL2): asset decoders, mixer, input laboratory, model/level viewer, FMV player, and `chase-game`, a development runtime that reproduces measured original behaviour (locomotion, collision, camera, falling, jumping, level objects and characters). Missions, enemies, menus, scripts, most rendering states and saves are not recovered yet. `chase-game` is the start of the game runtime, not the finished game.
 
-Plan and progress: `docs/plans/linux-port.md` and `docs/plans/linux-port.progress.md` (steps S1–S4). Before resuming port work, read the plan and the progress file's Status and Next Action sections, not the whole log. Record each session's commands, results and timestamps in the progress file. Findings do not go there (see "Reverse-engineering findings").
+Plan and progress: `docs/plans/linux-port.md` and `docs/plans/linux-port.progress.md` (steps S1–S4). Before resuming port work, read the plan and the progress file's Status and Next Action sections, not the whole log, then the feature index `docs/plans/features/README.md` and the one feature file you work on (see "Feature files"). Record each session as one log line in the progress file. Findings, open items and stand-ins do not go there (see "Feature files" and "Reverse-engineering findings").
 
 ## Goal and faithfulness
 
 - **Goal:** a PC port that works and behaves exactly like the original 3DS game, playable from start to finish. Linux x86_64 comes first.
 - **Order of work:** (1) finish the faithful Linux version; (2) only after that, and only when the user says so, the Windows port; (3) only after the game is finished for PC, quality-of-life features. Until then: no Windows work of any kind and no QoL features or deviations from the original.
 - **Behaviour comes from the original:** code (REA, objdump) and measurements (oracle). Do not "improve" it, round it off or simplify it.
-- **Stand-ins:** anything not yet taken from the original (a guessed asset, a measured constant used instead of its source, an approximation) must be labelled as a stand-in in the code's names or the matching `docs/re/` file and listed as an open item in the progress file. Never present a stand-in as original behaviour.
+- **Stand-ins:** anything not yet taken from the original (a guessed asset, a measured constant used instead of its source, an approximation) must be labelled as a stand-in in the code's names or the matching `docs/re/` file and listed as a stand-in in the feature file (see "Feature files"). Never present a stand-in as original behaviour.
 - **Input mapping:** mapping the 3DS controls to keyboard and mouse (configurable bindings, and stand-ins such as the `Walk` key for a half-tilted circle pad) is part of the port, not a QoL feature. It must not change how the game behaves.
 - Never invent game behaviour. Record unknowns.
 
@@ -57,14 +57,24 @@ All other commands (extractors, converters, viewer, FMV, sound test, input lab, 
 3. New formats get one implementation, in C++. A Python prototype may stay as an exploration aid but is not kept in sync or used by tests.
 4. The Python converters (`tools/convert_*.py`, `extract_fib.py`) are thin command-line tools over the binding and hold no decoding logic. Keep it that way: a format change goes into C++ and, when a tool needs it, a C ABI entry point. `extract_game.py` and `extract_romfs.py` read the NCSD/NCCH image and have no C++ counterpart.
 5. Tests pin recorded reference values, not a live second implementation. Next to each value record its provenance (Python command, game-code evidence ID, or manual inspection). `assets-real-test` uses real data; `assets-test` covers synthetic edge cases.
-6. Fix violations in a focused commit and note it in the progress file. If too large, add it as an open item there.
+6. Fix violations in a focused commit and note it in the progress file. If too large, add it as an open item in the feature file.
 
 ## Reverse-engineering findings (docs/re/)
 
 - Findings (addresses, struct/record layouts, format specs, codec rules, evidence IDs, hypotheses, unknowns) live in `docs/re/<topic>.md`, indexed in `docs/re/README.md`. Read the index, then only the file for your topic.
 - Append under a dated `##` heading. Mark corrections of earlier entries explicitly. Put unknowns at the end of the entry. Create a new topic file and index line when none fits.
-- The progress file holds only work state: status, steps, decisions, blockers, next actions, a short session log. A log entry that produced findings gets one line linking to the `docs/re/` file.
+- The progress file holds only work state: status, steps, decisions, blockers, next actions, a short session log. A log entry that produced findings gets one line linking to the feature file.
 - `docs/re/` is for developers (the plain-language rule does not apply) and contains no game assets.
+
+## Feature files (docs/plans/features/)
+
+- Known gaps live in one place per feature: `docs/plans/features/<feature>.md`, indexed in `docs/plans/features/README.md` (one line per feature: status and top open items). To find or record a gap: CLAUDE.md, then the index, then one feature file, then only the `docs/re/` entry it links. Keep the index under about 40 lines and a feature file under about 150 lines; shorten the findings summary and link to `docs/re/` instead of growing it.
+- Fixed sections per feature: Scope, Status, Verified behaviour, Stand-ins, Open items, Findings summary (links into `docs/re/`), Code and tests. Open items and stand-ins have stable IDs (`DOOR-1`, `DOOR-S1`), never reused. Dependencies between features are written on the item: `needs: <ID>` on the blocked side and `blocks: <ID>` on the blocking side; keep both sides in sync.
+- Open items, stand-ins and the current state of a feature live only there. Evidence (addresses, layouts, evidence IDs, unknowns) lives only in `docs/re/`. The progress file holds only work state. Never copy content between the three; link.
+- End of every session: update the feature file (status, stand-ins and open items added or removed, findings summary with a link to the new `docs/re/` entry), add the dated `docs/re/` entry, then add ONE progress-file log line: timestamp, what was worked on, how far it got, link to the feature file. Findings, stand-in lists and open items in the log or in Next Action are not allowed.
+- The `feature-development` workflow (plan file plus progress file) applies only to the umbrella pair `docs/plans/linux-port.md` and `docs/plans/linux-port.progress.md`. Work on a subsystem updates its `docs/plans/features/<feature>.md` and adds one progress-file log line. Never create a new per-feature `docs/plans/<feature>.md` plus `.progress.md` pair.
+- A new feature gets a new file from the template and an index line. Keep Next Action in the progress file to priorities plus links.
+- `docs/plans/` is for developers (the plain-language rule does not apply).
 
 ## Runtime oracle (Azahar)
 

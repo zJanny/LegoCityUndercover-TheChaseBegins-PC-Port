@@ -14,7 +14,7 @@ C++17 and SDL2 are reversible platform defaults for the Linux version. Action na
 
 ## 4. Repository Findings
 
-Revision 3 (2026-10-12: S4 split into S4a–S4f after the asset formats were recovered; RomFS/FUSE/texture/audio/model tools added). Revision 2 (2026-10-12: commit authorization via CLAUDE.md; CLAUDE.md is now project guidance). Revision 1. Baseline: no Git, no source, only 1 GiB CCI. Git now initialized on feature/linux-port, unborn HEAD. No applicable AGENTS/README found. User approved Git initialization and confirmed no guidance, Linux keyboard/mouse devices. Installed cmake, c++, python3, SDL2 2.32.74. NCSD at 0x100; executable NCCH at 0x4000. NoCrypto flag and matching exheader/ExeFS SHA256 show decrypted content. REA open_binary rejects CCI format; route extracted mapped ARM ELF instead. Existing patterns/tests/database/deployment: none.
+Revision 4 (2026-10-13: S4 subsystem plans, open items and stand-ins live in docs/plans/features/; the progress file keeps work state only). Revision 3 (2026-10-12: S4 split into S4a–S4f after the asset formats were recovered; RomFS/FUSE/texture/audio/model tools added). Revision 2 (2026-10-12: commit authorization via CLAUDE.md; CLAUDE.md is now project guidance). Revision 1. Baseline: no Git, no source, only 1 GiB CCI. Git now initialized on feature/linux-port, unborn HEAD. No applicable AGENTS/README found. User approved Git initialization and confirmed no guidance, Linux keyboard/mouse devices. Installed cmake, c++, python3, SDL2 2.32.74. NCSD at 0x100; executable NCCH at 0x4000. NoCrypto flag and matching exheader/ExeFS SHA256 show decrypted content. REA open_binary rejects CCI format; route extracted mapped ARM ELF instead. Existing patterns/tests/database/deployment: none.
 
 ## 5. Architecture
 
@@ -27,6 +27,8 @@ Add .gitignore; tools/extract_game.py for bounded extraction, manifests, ELF; te
 ## 7. Step-by-Step Implementation Plan
 
 S1 (R1): implement tools/extract_game.py and tests/test_extract_game.py, preserve source, require decrypted NCCH/hash matches, bound all reads/names, reject existing outputs, decompress with backreference checks, emit program headers for text/rodata/data+BSS and manifest hashes. Verify python unit tests and real-image extraction. S2 (R2/R3), independent of S1: implement listed SDL C++ files/config/CMake, all binding validation, toggle debounce, focus-loss reset, opposing cancellation and lower-screen touch coordinate bounds. Verify build, CTest and SDL dummy smoke. S3 (R1), after S1: open ELF in REA, inspect entry/startup/platform calls and strings; record exact evidence IDs and mapped-artifact caveats here in progress. S4 (R4), after S3: define executable-ready per-subsystem plans once evidence exists, recover input polling and main loop, replace kernel services/render/audio/storage incrementally. Never mark gameplay complete because lab builds.
+
+Per-feature plans, status, open items and stand-ins (revision 4): docs/plans/features/README.md, one file per feature, rule in CLAUDE.md "Feature files". This plan and its progress file are the only plan/progress pair of the `feature-development` workflow; subsystem work updates its feature file and adds one progress log line, and no per-feature plan/progress pairs are created; the feature files are the evidence-backed subsystem plans that S4e requires.
 
 S4 subsystem plan (revision 3, 2026-10-12, based on the asset evidence in the progress log):
 - S4a — native asset runtime. C++17 code under src/assets/, with no SDL dependency, mirroring the verified Python tools:
@@ -92,7 +94,7 @@ Manifest records reproducible offsets and hashes; REA evidence IDs recorded in p
 
 ## 20. Documentation
 
-README explains extraction/build/run/config, the goal (faithful port, Linux first) and the distinction between development tools and the not-yet-playable game. Progress retains observed findings, coverage boundaries and remaining work.
+README explains extraction/build/run/config, the goal (faithful port, Linux first) and the distinction between development tools and the not-yet-playable game. The progress file retains work state only (it is the only progress file; subsystems use features/ and no separate per-feature pairs); features/ holds each feature's status, open items and stand-ins; docs/re holds evidence.
 
 ## 21. Final Implementation Checklist
 
@@ -106,4 +108,4 @@ Commits authorized (rev 2); push/merge outside scope.
 
 ## Instructions for the Implementation Agent
 
-Read docs/plans/linux-port.md and docs/plans/linux-port.progress.md completely before resuming. Revision 1; baseline unborn feature/linux-port, no extra project guidance. Discover new applicable guidance and inspect Git status/diffs. Protect unrelated changes and the game image. Execute S1/S2 independently, S3 after S1; S4 requires evidence-derived subsystem plans. Update progress before and after steps, record commands/cwd/toolchain/time/revision/results. Reconcile stale progress against source and test evidence. Commit at logical steps per CLAUDE.md; no permission to push, merge or publish unless asked. Record unknowns rather than inventing game behavior.
+Read docs/plans/linux-port.md and docs/plans/linux-port.progress.md completely before resuming, then docs/plans/features/README.md and the feature file you work on. Revision 1; baseline unborn feature/linux-port, no extra project guidance. Discover new applicable guidance and inspect Git status/diffs. Protect unrelated changes and the game image. Execute S1/S2 independently, S3 after S1; S4 requires evidence-derived subsystem plans. Update progress before and after steps, record commands/cwd/toolchain/time/revision/results. Reconcile stale progress against source and test evidence. Commit at logical steps per CLAUDE.md; no permission to push, merge or publish unless asked. Record unknowns rather than inventing game behavior.

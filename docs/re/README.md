@@ -35,4 +35,4 @@ Read this index, then open only the file you need.
 
 Python tools that were later removed from the repository (convert_models, convert_anims, convert_nav, tt_resource, preview_model, the census modes of convert_levels, and the Python decoders behind convert_textures, convert_audio, convert_loc, convert_font and extract_fib) last existed at commit `9d04c91`. Older entries that name them stay as written.
 
-Rules for editing these files are in CLAUDE.md ("Reverse-engineering findings").
+Rules for editing these files are in CLAUDE.md ("Reverse-engineering findings"). Open items and stand-ins per feature are in [../plans/features/README.md](../plans/features/README.md).
