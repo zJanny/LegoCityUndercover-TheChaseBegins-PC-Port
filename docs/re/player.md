@@ -170,3 +170,8 @@ Unknowns:
 - Initial value of ctrl+0xa/ctrl+8 at spawn (the implementation takes the Player1Start yaw), and behaviour of run timer and sprint role when walking from sprint (the implementation clears the sprint role at once; only release from sprint was measured).
 - The cause of the skipped facing step at frame 59, the slope law (clamp and t terms of 0x1abe60), ground following in y, collision slides.
 - Camera yaw law (writer of 0x376894) and the animation playback rate (frames per second) and blend of the real game.
+
+## 2026-10-13T14:41:13+02:00 — Camera yaw word and player entity type (see camera.md)
+
+- **Correction:** the writer of the f32 at 0x376894 is the camera manager update 0x23f174: it stores atan2(row2.x, row2.z) of the camera scene node's world matrix (the yaw of the view direction). Its camera law is in [camera.md](camera.md); the earlier note that it was not recovered is obsolete.
+- The player's ctrl+0x6c (entity type) is 3 (read from the locomotion traces), so the stick shaping applies and the stick x turns the camera (types 1..5 and 0x11c). chase-game uses 3.

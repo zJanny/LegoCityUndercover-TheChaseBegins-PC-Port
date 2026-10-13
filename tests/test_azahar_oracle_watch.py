@@ -1,4 +1,6 @@
 import importlib.util
+import struct
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -50,6 +52,42 @@ class WatchpointTest(unittest.TestCase):
         remote = RecordingRemote([''])
         with self.assertRaises(IOError):
             remote.add_watchpoint(0x1000, 4)
+
+
+class FakeMemory:
+    def __init__(self):
+        self.words = {0x1000: 0x2000}
+
+    def u32(self, address):
+        return self.words[address]
+
+    def read(self, address, length):
+        return bytes((address + i) & 0xff for i in range(length))
+
+
+class MemtraceTest(unittest.TestCase):
+    def test_memtrace_writes_frame_dt_and_regions_per_frame(self):
+        with tempfile.TemporaryDirectory() as directory:
+            probe = object.__new__(oracle.Oracle)
+            probe.output = Path(directory)
+            probe.frame = 7
+            probe.frame_object = 0x500
+            probe.rpc = FakeMemory()
+            probe.advance = lambda count, on_frame: [on_frame() for _ in range(count)]
+            reads = {0x500 + 0x78: struct.pack('<f', 0.033)}
+            memory = FakeMemory()
+            original = memory.read
+            memory.read = lambda address, length: reads.get(address, original(address, length))
+            probe.rpc = memory
+            probe.memtrace(2, 'demo', ['0x10:4', '*0x1000+8:2'])
+            data = (Path(directory) / 'demo.mem').read_bytes()
+            record = 8 + 4 + 2
+            self.assertEqual(len(data), 2 * record)
+            frame, dt = struct.unpack_from('<If', data, 0)
+            self.assertEqual(frame, 7)
+            self.assertAlmostEqual(dt, 0.033, places=6)
+            self.assertEqual(data[8:12], bytes([0x10, 0x11, 0x12, 0x13]))
+            self.assertEqual(data[12:14], bytes([0x08, 0x09]))
 
 
 if __name__ == '__main__':

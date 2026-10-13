@@ -44,6 +44,7 @@ Single C++ tests, with `ctest --test-dir build -R <name>`:
 | `viewer-real-smoke` | Registered only if `artifacts/romfs` existed at configure time |
 | `game-real-smoke` | Registered only if `artifacts/romfs` existed at configure time; needs libepoxy |
 | `game-script-run`, `game-script-walk` | Same conditions. Feed a fixed stick to the development runtime and check how far the character moved |
+| `camera-real-data` | Compares the follow camera with traces recorded from the original game (`artifacts/oracle/cam-out`, folder set with `-DCHASE_CAMERA_TRACE_DIR=...`); skips with code 77 if the traces are missing |
 | `locomotion-real-data` | Compares the character's movement with traces recorded from the original game (`artifacts/oracle/loco-out`, folder set with `-DCHASE_LOCO_TRACE_DIR=...`); skips with code 77 if the traces or `artifacts/romfs` are missing |
 | `audio-mixer` | Mixer core, no SDL |
 | `runtime-core` | Game runtime core (frame timing, pad, stick, character movement), no SDL |
@@ -81,13 +82,13 @@ SDL_VIDEODRIVER=offscreen build/chase-game --script "0 150 40" --screenshot out.
 
 - Options: `--fib`, `--names`, `--config` (as in the viewer), `--level`, `--screenshot`, `--frames`, `--script`.
 - The default level is the police station. The character is Chase McCain in his police outfit. That choice is a best guess. Run it from the repository folder so the default paths work.
-- Move with the D-pad keys (WASD or arrows). Hold `Z` to walk slowly. Without it you run, and after about one second of running you sprint. `E`/`R` turn the camera. `Escape` quits.
+- Move with the D-pad keys (WASD or arrows). Hold `E` to walk slowly. Without it you run, and after about one second of running you sprint. `Z` and `C` turn the camera (the left and right shoulder buttons). Pushing sideways also turns the camera, as in the original. `Escape` quits.
 - What moves like the original: the speeds, the walk, run and sprint switch, the delay before sprinting, and the way the character turns towards the direction you push.
 - What is still a stand-in:
-  - The camera follows behind the character at a fixed distance. The real camera is not recovered.
+  - The camera follows the character like the original in open ground: distance, height, smoothing and turning match what was measured. The original also pushes the camera away from walls and from the character. That part is missing, so the camera can sit inside buildings. Rooms that use several camera zones are not handled.
   - The character walks through walls and stays at the height of the start point. There is no collision and no ground.
   - The animations play at an assumed speed and switch without blending.
-  - A keyboard cannot tilt the stick halfway, so `Z` stands in for a gentle push.
+  - A keyboard cannot tilt the stick halfway, so `E` stands in for a gentle push.
 - It prints one line per second: updates per second, the last time step and the circle pad values.
 - `--screenshot` saves the picture after `--frames` updates (default 2) and exits.
 - `--script "X Y COUNT;X Y COUNT"` ignores the keyboard and holds the stick at X, Y for COUNT updates of 0.033 s each (values like the 3DS circle pad: +X right, +Y up, 145 is full). For example `"0 150 40"` pushes forward for 40 updates. The program then prints how far the character moved and exits, saving the picture if `--screenshot` is given.
@@ -115,6 +116,7 @@ python3 tools/azahar_oracle.py tools/oracle/boot.txt
 
 - The script file lists steps: advance game frames, hold buttons, take screenshots, print timing values. The list of steps is at the top of `tools/azahar_oracle.py`.
 - Screenshots go to `artifacts/oracle/out/`.
+- `tools/oracle/camera-trace.txt` records the camera (`memtrace` step). Convert each `.mem` file with `tools/export_camera_trace.py` (it takes the pad state of that part as options) to get the `.csv` files the camera test reads.
 - `tools/oracle/loco-*.txt` measure how the player moves. Each one starts with `loadstate gameplay-start` (a saved state that `tools/oracle/to-gameplay.txt` creates). Run them with `--display xvfb --renderer opengl --rpc --rpc-input`.
 - The emulator uses its own settings and save folder in `artifacts/oracle/home/`. Your normal Azahar settings and saves are not used or changed. `--fresh` deletes that folder first.
 - Stepping frames is slow: 600 frames take about 4 minutes. Waiting is faster: `wait 25` reaches the language screen in about 35 seconds.

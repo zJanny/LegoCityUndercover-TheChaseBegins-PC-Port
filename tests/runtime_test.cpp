@@ -1,5 +1,6 @@
 // chase_runtime replicas (scheduler 0x100f44, pad pipeline) against values traced from the disassembly
 // and read from the running game.
+#include "runtime/follow_camera.hpp"
 #include "runtime/pad.hpp"
 #include "runtime/player_intent.hpp"
 #include "runtime/player_locomotion.hpp"
@@ -275,6 +276,55 @@ int main() {
         require(turnFacing(0, 20000) == 6000 && turnFacing(0, 5536) == 1661 && turnFacing(0, 30000) == 6400, "cap 6400");
         require(turnFacing(0, -32768) == -6400 && turnFacing(-32768, 0) == 26368, "exactly 180 degrees is d = -32768, a negative step");
         require(turnFacing(30000, -30000) == wrapHeading(30000 + 1661), "shortest way across the wrap (d = 5536)");
+        // Follow camera (docs/re/camera.md). Spline 0x1e3730 through (0, a), (0.5, b), (1, c); stick and shoulder
+        // turn increments of 0x200ab0..0x200b18; reference pose and rates read from the running game at the
+        // gameplay-start checkpoint (tools/oracle/camera-trace.txt, k_still / k_R, dt 0.033).
+        require(near(quadraticSpline(3.0f, 10.0f, 15.0f, 0.5f), 10.0f) && near(quadraticSpline(3.0f, 10.0f, 15.0f, 0.0f), 3.0f) &&
+                    near(quadraticSpline(3.0f, 10.0f, 15.0f, 1.0f), 15.0f),
+                "camera spline passes through its three values");
+        require(stickTurnsCamera(1) && stickTurnsCamera(5) && stickTurnsCamera(0x11c) && !stickTurnsCamera(0) && !stickTurnsCamera(6) &&
+                    !stickTurnsCamera(0x100),
+                "stick turns the camera for types 1..5 and 0x11c");
+        require(near(stickTurnInput(1.0f, 3), 1.0f) && near(stickTurnInput(-1.0f, 3), -1.0f) && stickTurnInput(0.25f, 3) == 0.0f &&
+                    stickTurnInput(-0.25f, 3) == 0.0f && near(stickTurnInput(0.5f, 3), 0.25f * 1.3333334f) && stickTurnInput(1.0f, 0x100) == 0.0f,
+                "stick turn increment: dead zone 0.25, gain 4/3");
+        require(shoulderTurnInput(0, 1, false) == 2.0f && shoulderTurnInput(1, 0, false) == -2.0f && shoulderTurnInput(1, 1, false) == 0.0f &&
+                    shoulderTurnInput(0, 1, true) == -2.0f,
+                "shoulder turn increment and invert option");
+        {
+            const float target[3] = {886.764f, 16.589f, 1111.166f};
+            const float yaw = -2.3501f;
+            FollowCamera camera;
+            camera.reset(target, yaw, yaw);
+            const float expectedEye[3] = {893.878f, 20.489f, 1118.194f}, expectedLook[3] = {886.764f, 18.789f, 1111.166f};
+            for (int i = 0; i < 3; ++i)
+                require(std::fabs(camera.eye()[i] - expectedEye[i]) < 2e-3f && std::fabs(camera.lookAt()[i] - expectedLook[i]) < 2e-3f,
+                        "reset pose behind the player: 10 away, 1.7 above the look point, look point 2.2 above the feet");
+            require(std::fabs(camera.yaw() - yaw) < 1e-4f, "reset yaw");
+
+            FollowCameraInput still;
+            still.dt = 0.033f;
+            for (int i = 0; i < 3; ++i) still.target[i] = target[i];
+            still.targetFacing = yaw;
+            camera.update(still);
+            for (int i = 0; i < 3; ++i) require(std::fabs(camera.eye()[i] - expectedEye[i]) < 2e-3f, "an idle player leaves the camera at rest");
+
+            FollowCameraInput turn = still;
+            turn.shoulderTurn = shoulderTurnInput(0, 1, false);
+            camera.update(turn);
+            require(std::fabs(camera.yaw() - (yaw + 0.0396f)) < 1e-3f, "R turns the view by 2 * dt * 0.6 per update (k_R: -2.3501 -> -2.3105)");
+
+            camera.reset(target, yaw, yaw);
+            FollowCameraInput step = still;
+            step.target[0] += 1.0f;
+            camera.update(step);
+            require(std::fabs(camera.lookAt()[0] - (expectedLook[0] + (1.0f - std::pow(0.75f, 0.99f)))) < 1e-4f,
+                    "look point follows the player by 1 - 0.75^(30 dt) = 0.2478 per update");
+            for (int i = 0; i < 400; ++i) camera.update(step);
+            const float dx = step.target[0] - camera.eye()[0], dz = step.target[2] - camera.eye()[2];
+            require(std::fabs(std::sqrt(dx * dx + dz * dz) - 10.0f) < 1e-3f && std::fabs(camera.eye()[1] - (camera.lookAt()[1] + 1.7f)) < 1e-3f,
+                    "settled camera is 10 away horizontally and 1.7 above the look point");
+        }
     } catch (const std::exception& e) {
         std::cerr << "FAIL: " << e.what() << '\n';
         return 1;

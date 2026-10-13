@@ -11,7 +11,7 @@
 - Showing models, levels, animated characters and in-engine cutscenes in the [model viewer](model-viewer.md).
 - Playing sounds in the [sound test](sound-test.md).
 - Playing the cutscene videos with subtitles in the [video player](fmv-player.md).
-- Running a level in the [development runtime](commands.md#development-runtime). The main character walks, runs and sprints with the speeds measured in the original game. The camera is a stand-in, and there is no collision, ground height or anything else of the game. It is not gameplay.
+- Running a level in the [development runtime](commands.md#development-runtime). The main character walks, runs and sprints with the speeds measured in the original game. The camera follows the character like the original in open ground. There is no collision (also none for the camera), ground height or anything else of the game. It is not gameplay.
 - Testing keyboard and mouse controls in the [input laboratory](controls.md).
 
 ## Not recovered yet

@@ -1,10 +1,12 @@
 // chase-game: development runtime skeleton. Not the playable game.
 // Joins the recovered frame scheduler, pad pipeline and player locomotion (chase_runtime), the controls
 // (chase_input) and the development renderer (chase_render) into one loop. The player character walks,
-// runs and sprints on the ground plane; there is no collision, ground height, camera law or gameplay.
+// runs and sprints on the ground plane with the recovered follow camera; there is no collision, ground
+// height or gameplay.
 #include "assets/assets.hpp"
 #include "input.hpp"
 #include "render/scene.hpp"
+#include "runtime/follow_camera.hpp"
 #include "runtime/pad.hpp"
 #include "runtime/player_intent.hpp"
 #include "runtime/player_locomotion.hpp"
@@ -29,7 +31,7 @@ using namespace chase::render;
 namespace runtime = chase::runtime;
 
 constexpr int kStickFullDeflection = 145;
-// Development stand-in, not the original: a keyboard has no half deflection, so holding L (key Z) tilts the
+// Development stand-in, not the original: a keyboard has no half deflection, so holding X (key E) tilts the
 // stick to this length (raw 3DS units), which is inside the walk regime (walk below raw length 117).
 constexpr int kStickWalkDeflection = 90;
 constexpr float kScriptDt = 0.033f;
@@ -45,9 +47,8 @@ constexpr const char* kPlayerAnimationSuffix = "_minifig.bfnanm";
 // PROVISIONAL: the playback rate of the original (written by the caller that starts an animation) is not
 // recovered; this is the viewer's assumed 30 frames per second, times the role's speed scale.
 constexpr double kAnimationFramesPerSecond = 30.0;
-// ctrl+0x6c of the player is not known; the traced headings match with the stick shaping on, which every
-// type except 0x14b and 0x189 gets.
-constexpr std::uint16_t kPlayerEntityType = 0x100;
+// ctrl+0x6c of the player (read in the oracle, locomotion traces).
+constexpr std::uint16_t kPlayerEntityType = 3;
 
 int resolveKey(const std::string& name) {
     std::string spaced = name;
@@ -120,21 +121,19 @@ runtime::PadState padState(const chase::InputState& input) {
     const double x = input.horizontal(), y = -input.vertical();
     const double length = std::hypot(x, y);
     if (length > 0) {
-        const double deflection = input.active(Action::L) ? kStickWalkDeflection : kStickFullDeflection;
+        const double deflection = input.active(Action::X) ? kStickWalkDeflection : kStickFullDeflection;
         state.stickX = std::int16_t(std::lround(x / length * deflection));
         state.stickY = std::int16_t(std::lround(y / length * deflection));
     }
     return state;
 }
 
-// Development stand-in, not recovered game logic: the camera law of the original (writer of the yaw word
-// 0x376894) is not recovered. With a player the eye follows behind him and E/R turn the yaw; the yaw is the
-// one the stick intent adds to the stick heading, as in the game. Without a player it is a free camera.
+// Development free camera for levels without a player start (not game logic). With a player the recovered
+// FollowCamera is used.
 struct PlaceholderCamera {
     float eye[3] = {0, 0, 0};
     float yaw = 35.0f * float(M_PI) / 180, pitch = -25.0f * float(M_PI) / 180;
     float speed = 1.0f;
-    bool following = false;
 
     void frameScene(const float centre[3], float radius) {
         float d = radius * 2.2f;
@@ -144,18 +143,8 @@ struct PlaceholderCamera {
         speed = radius * 0.5f;
     }
 
-    void follow(const float target[3]) {
-        constexpr float distance = 5.0f, height = 1.6f, lookHeight = 0.9f;
-        following = true;
-        eye[0] = target[0] - distance * std::sin(yaw);
-        eye[1] = target[1] + height;
-        eye[2] = target[2] - distance * std::cos(yaw);
-        pitch = std::atan2(lookHeight - height, distance);
-    }
-
     void update(float dt, const runtime::PadDevice& pad) {
         yaw += 1.5f * dt * (pad.slot(kSlotButtonY).value - pad.slot(kSlotButtonX).value);
-        if (following) return;
         float strafe = pad.slot(kSlotStickX).value, forward = pad.slot(kSlotStickY).value;
         float rise = pad.slot(kSlotRightShoulder).value - pad.slot(kSlotLeftShoulder).value;
         float step = speed * dt;
@@ -317,10 +306,11 @@ int run(const Options& options) {
 
     PlaceholderCamera camera;
     camera.frameScene(centre, radius);
+    std::optional<runtime::FollowCamera> follow;
     if (player) {
-        camera.yaw = runtime::headingRadians(player->motion.facing);
+        follow.emplace();
         const float target[3] = {player->motion.x, player->height, player->motion.z};
-        camera.follow(target);
+        follow->reset(target, runtime::headingRadians(player->motion.facing), runtime::headingRadians(player->motion.facing));
     }
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
@@ -350,14 +340,22 @@ int run(const Options& options) {
             stick.slot14 = {pad.slot(kSlotStickX).value, pad.slot(kSlotStickX).deadzone};
             stick.slot15 = {pad.slot(kSlotStickY).value, pad.slot(kSlotStickY).deadzone};
             stick.entityType = kPlayerEntityType;
-            stick.cameraYaw = camera.yaw;
+            stick.cameraYaw = follow->yaw();
             const runtime::LocomotionStep step = runtime::locomotionUpdate(player->motion, dt, runtime::stickIntent(stick));
             player->animate(scene, dt, step);
         }
-        camera.update(dt, pad);
-        if (player) {
-            const float target[3] = {player->motion.x, player->height, player->motion.z};
-            camera.follow(target);
+        if (follow) {
+            runtime::FollowCameraInput input;
+            input.dt = dt;
+            input.target[0] = player->motion.x;
+            input.target[1] = player->height;
+            input.target[2] = player->motion.z;
+            input.targetFacing = runtime::headingRadians(player->motion.facing);
+            input.stickTurn = runtime::stickTurnInput(pad.slot(kSlotStickX).value, kPlayerEntityType);
+            input.shoulderTurn = runtime::shoulderTurnInput(pad.slot(kSlotLeftShoulder).value, pad.slot(kSlotRightShoulder).value, false);
+            follow->update(input);
+        } else {
+            camera.update(dt, pad);
         }
         ++updates;
         ++updatesThisSecond;
@@ -407,9 +405,12 @@ int run(const Options& options) {
         glClearColor(0.16f, 0.17f, 0.2f, 1);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         beginFrame(program, 1.0f);
+        const float* eye = follow ? follow->eye() : camera.eye;
+        const float viewYaw = follow ? follow->yaw() : camera.yaw, viewPitch = follow ? follow->pitch() : camera.pitch;
+        const float fieldOfView = follow ? runtime::FollowCamera::verticalFieldOfView() : 1.0f;
         Mat4 mvp = chase::render::multiply(
-            perspective(1.0f, float(width) / float(std::max(height, 1)), radius * 0.002f, radius * 20),
-            chase::render::view(camera.eye, camera.yaw, camera.pitch));
+            perspective(fieldOfView, float(width) / float(std::max(height, 1)), radius * 0.002f, radius * 20),
+            chase::render::view(eye, viewYaw, viewPitch));
         scene.draw(program, mvp);
 
         const bool scriptDone = !script.empty() && updates >= scriptLength;
