@@ -45,7 +45,7 @@ All other commands (extractors, converters, viewer, FMV, sound test, input lab, 
 1. Every format decoder and piece of runtime game logic lives in C++ (`chase_assets`, `chase_audio`, `chase_input`, or a new library under `src/`). Fix bugs and add features there first.
 2. Python is for exploration and CLI tools (hash brute force, statistics, censuses). Never write a second full decoder for a format C++ implements; call C++ through the binding.
 3. New formats get one implementation, in C++. A Python prototype may stay as an exploration aid but is not kept in sync or used by tests.
-4. Existing Python decoders (`tools/convert_*.py`, `extract_*.py`, `tt_resource.py`, `preview_model.py`) are frozen legacy. When one needs a behaviour change that C++ also implements, replace its decoding logic with a binding call in the same commit. Never fix both.
+4. The Python converters (`tools/convert_*.py`, `extract_fib.py`) are thin command-line tools over the binding and hold no decoding logic. Keep it that way: a format change goes into C++ and, when a tool needs it, a C ABI entry point. `extract_game.py` and `extract_romfs.py` read the NCSD/NCCH image and have no C++ counterpart.
 5. Tests pin recorded reference values, not a live second implementation. Next to each value record its provenance (Python command, game-code evidence ID, or manual inspection). `assets-real-test` uses real data; `assets-test` covers synthetic edge cases.
 6. Fix violations in a focused commit and note it in the progress file. If too large, add it as an open item there.
 
