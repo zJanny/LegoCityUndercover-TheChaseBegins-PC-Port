@@ -18,10 +18,7 @@ python3 tools/convert_textures.py artifacts/fib/files --output artifacts/texture
 python3 tools/convert_audio.py artifacts/fib/files --output artifacts/audio
 ```
 
-- `convert_textures.py --census` and `convert_audio.py --census` check headers only.
-- `python3 tools/tt_resource.py --census artifacts/fib/files` checks the pooled resource layout.
-- `python3 tools/convert_models.py --census artifacts/fib/files` checks model parsing and strides.
-- `python3 tools/preview_model.py MODEL.bfnmdl --assets artifacts/fib/files --output out.png` renders a model preview.
+- `convert_textures.py --census` and `convert_audio.py --census` decode every file and write nothing.
 
 See [Extracting game data](extracting-game-data.md) for details.
 

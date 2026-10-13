@@ -94,9 +94,11 @@ void decodeCwav(const Bytes& cwav, Sound& sound, bool first) {
         sound.rate = rate;
         sound.loop = cwav[info + 9] != 0;
         sound.loopStart = readU32(cwav, info + 0x10);
+        sound.version = readU32(cwav, 8);
     } else if (rate != sound.rate) {
         throw std::runtime_error("CWAV parts disagree on sample rate");
     }
+    sound.encodings.push_back(std::uint8_t(encoding));
     std::size_t table = info + 0x1c;
     for (std::uint32_t c = 0, n = readU32(cwav, table); c < n; ++c) {
         std::size_t channel = table + reference(cwav, table + 4 + 8 * std::size_t(c), 0x7100);

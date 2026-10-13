@@ -143,3 +143,6 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - Animation::longCurve: skinMatrices samples that curve with frames + 1. assets-real-test pins 590 animations with a long curve. Bear, squirrel and minifig references are unchanged.
 - Still unknown: what the long or extra curve means (root motion?), and the 0xfa raw-matrix form.
 
+## 2026-10-13T15:08:53+02:00 — tools/convert_anims.py removed
+
+- tools/convert_anims.py (`--census`, `parse_skeleton`, `parse_animation`) and tests/test_convert_anims.py were removed. The binding test for `skin_matrices` moved to tests/test_chase_native.py. The census (376 skeletons, 5280 joints, 1954 animations) and the char_bear walk sums stay valid and are pinned in tests/assets_real_test.cpp. Provenance: `python3 tools/convert_anims.py --census artifacts/fib/files` and the preview_model renders at 9d04c91. To reproduce, check out that commit (for example `git worktree add /tmp/old 9d04c91`) and run the command there.

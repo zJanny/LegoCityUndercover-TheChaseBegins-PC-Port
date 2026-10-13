@@ -1,13 +1,17 @@
-import importlib.util
+import json
 import struct
+import sys
 import tempfile
 import unittest
 import wave
 from pathlib import Path
 
-spec = importlib.util.spec_from_file_location('convert_audio', Path(__file__).parents[1] / 'tools/convert_audio.py')
-a = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(a)
+sys.path.insert(0, str(Path(__file__).parent))
+sys.path.insert(0, str(Path(__file__).parents[1] / 'tools'))
+import chase_native as native  # noqa: E402
+from fixtures import run_json_tool  # noqa: E402
+
+SOUND_RECORD = 0x2c
 
 
 def cwav(encoding, samples, payload, coefs=(0,) * 16, ima=(0, 0)):
@@ -35,60 +39,79 @@ def cwav(encoding, samples, payload, coefs=(0,) * 16, ima=(0, 0)):
 
 def wrapper(*parts):
     """Pooled resource: -14 sound record, then one -14 block per CWAV part."""
-    table = [-14, a.SOUND_RECORD]
+    table = [-14, SOUND_RECORD]
     for part in parts:
         table += [-14, len(part)]
     head = struct.pack('<II', len(table) << 8, 4 * len(table)) + struct.pack('<%di' % len(table), *table)
-    return head + bytes(a.SOUND_RECORD) + b''.join(parts)
+    return head + bytes(SOUND_RECORD) + b''.join(parts)
 
 
-CWAV_AT = 8 + 16 + 0x2c  # single-part wrapper: shipped sound effects have CWAV at 0x44
+def convert(directory, data):
+    source = Path(directory) / 'in'
+    source.mkdir(exist_ok=True)
+    (source / 'x.bwav').write_bytes(data)
+    out = Path(directory) / 'out'
+    result, _ = run_json_tool('convert_audio.py', source, '--output', out)
+    with wave.open(str(out / 'x.wav')) as wav:
+        frames = wav.readframes(wav.getnframes())
+        shape = (wav.getnchannels(), wav.getframerate())
+    samples = struct.unpack('<%dh' % (len(frames) // 2), frames)
+    return result, shape, samples, json.loads((out / 'audio-manifest.json').read_text())['x.bwav']
 
 
-class AudioTests(unittest.TestCase):
+@unittest.skipUnless(native.available(), 'C++ asset library not built')
+class AudioToolTests(unittest.TestCase):
+    # Expected samples are computed by hand from the codec definitions; tests/assets_test.cpp pins the DSP values too.
     def test_dsp_adpcm_frame(self):
         # scale 1<<4, predictor 0 with c1=2048 (0.5 * hist1); nibbles 7, -8, 0
         coefs = (2048, 0) + (0,) * 14
         frame = bytes([0x04, 0x78]) + bytes(6)
-        info, channels = a.decode(wrapper(cwav(2, 3, frame, coefs)))
+        with tempfile.TemporaryDirectory() as d:
+            result, shape, samples, entry = convert(d, wrapper(cwav(2, 3, frame, coefs)))
         # s0 = (112<<11 + 1024) >> 11 = 112; s1 = (-128<<11 + 1024 + 2048*112) >> 11 = -16 (floor);
         # s2 = (1024 + 2048*-16) >> 11 = -16
-        self.assertEqual(channels, [[112, -16, -16]])
-        self.assertEqual((info['encoding'], info['rate'], info['channels']), ('DSP-ADPCM', 12000, 1))
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual((shape, samples), ((1, 12000), (112, -16, -16)))
+        self.assertEqual(entry, {'encoding': 'DSP-ADPCM', 'loop': False, 'rate': 12000, 'loop_start': 0, 'samples': 3,
+                                 'version': '02010000', 'parts': 1, 'channels': 1})
 
     def test_pcm_and_ima(self):
-        _, channels = a.decode(wrapper(cwav(1, 2, struct.pack('<hh', 1000, -1000))))
-        self.assertEqual(channels, [[1000, -1000]])
-        _, channels = a.decode(wrapper(cwav(0, 2, bytes([5, 0xfb]))))
-        self.assertEqual(channels, [[5, -5]])
-        # IMA: step 7, nibble 4 -> +7+0 (diff = 7>>3 + 7) = +7; low nibble first
-        _, channels = a.decode(wrapper(cwav(3, 2, bytes([0x04]), ima=(0, 0))))
-        self.assertEqual(channels[0][0], 7)
-
-    def test_v6_parts_become_channels(self):
-        left, right = cwav(1, 1, struct.pack('<h', 1)), cwav(1, 1, struct.pack('<h', -1))
-        info, channels = a.decode(wrapper(left, right))
-        self.assertEqual((info['parts'], channels), (2, [[1], [-1]]))
         with tempfile.TemporaryDirectory() as d:
-            path = Path(d) / 'x.wav'
-            a.write_wav(path, info['rate'], channels)
-            with wave.open(str(path)) as w:
-                self.assertEqual((w.getnchannels(), w.getframerate(), w.readframes(1)),
-                                 (2, 12000, struct.pack('<hh', 1, -1)))
+            self.assertEqual(convert(d, wrapper(cwav(1, 2, struct.pack('<hh', 1000, -1000))))[2], (1000, -1000))
+        with tempfile.TemporaryDirectory() as d:
+            self.assertEqual(convert(d, wrapper(cwav(0, 2, bytes([5, 0xfb]))))[2], (5, -5))
+        with tempfile.TemporaryDirectory() as d:
+            # IMA: step 7, nibble 4 -> +7 (diff = 7>>3 + 7); low nibble first
+            result, _, samples, entry = convert(d, wrapper(cwav(3, 2, bytes([0x04]), ima=(0, 0))))
+            self.assertEqual(samples[0], 7)
+            self.assertEqual(entry['encoding'], 'IMA-ADPCM')
 
-    def test_rejects_malformed(self):
+    def test_parts_become_interleaved_channels(self):
+        left, right = cwav(1, 1, struct.pack('<h', 1)), cwav(1, 1, struct.pack('<h', -1))
+        with tempfile.TemporaryDirectory() as d:
+            _, shape, samples, entry = convert(d, wrapper(left, right))
+        self.assertEqual((shape, samples, entry['parts'], entry['channels']), ((2, 12000), (1, -1), 2, 2))
+
+    def test_mixed_encodings_are_named(self):
+        parts = (cwav(1, 1, struct.pack('<h', 1)), cwav(0, 1, bytes([2])))
+        with tempfile.TemporaryDirectory() as d:
+            self.assertEqual(convert(d, wrapper(*parts))[3]['encoding'], 'PCM16+PCM8')
+
+    def test_census_and_failures(self):
         good = cwav(1, 2, struct.pack('<hh', 1, 2))
-        cases = (b'\0\5\0\0' + bytes(0x60),                      # unknown wrapper version
-                 wrapper(good)[:-1],                            # truncated CWAV
-                 wrapper(good) + b'junk',                       # trailing data that is not a CWAV
-                 wrapper(cwav(1, 9, struct.pack('<hh', 1, 2)))) # samples beyond data
-        for data in cases:
-            with self.assertRaises(ValueError):
-                a.decode(data)
         bad_ref = bytearray(wrapper(good))
-        bad_ref[CWAV_AT + 0x15] = 0  # INFO reference type 0x7000 -> 0x0000
-        with self.assertRaisesRegex(ValueError, 'reference type'):
-            a.decode(bytes(bad_ref))
+        bad_ref[8 + 16 + SOUND_RECORD + 0x15] = 0   # INFO reference type 0x7000 -> 0x0000
+        cases = {'ok.bwav': wrapper(good), 'wrapper.bwav': b'\0\5\0\0' + bytes(0x60), 'cut.bwav': wrapper(good)[:-1],
+                 'junk.bwav': wrapper(good) + b'junk', 'samples.bwav': wrapper(cwav(1, 9, struct.pack('<hh', 1, 2))),
+                 'reference.bwav': bytes(bad_ref)}
+        with tempfile.TemporaryDirectory() as d:
+            source = Path(d) / 'in'
+            source.mkdir()
+            for name, data in cases.items():
+                (source / name).write_bytes(data)
+            result, summary = run_json_tool('convert_audio.py', '--census', source)
+        self.assertEqual(result.returncode, 1)
+        self.assertEqual((summary['failure_count'], summary['kinds']), (len(cases) - 1, {'PCM16 12000 Hz x1': 1}))
 
 
 if __name__ == '__main__':

@@ -19,7 +19,7 @@ cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
 cmake --build build
 ```
 
-The programs are written to `build/`. The build also makes `libchase_assets_c.so`, which some Python tools use (see [Extracting game data](extracting-game-data.md)).
+The programs are written to `build/`. The build also makes `libchase_assets_c.so`, which the unpacking and conversion tools use (see [Extracting game data](extracting-game-data.md)). Build the project before you run them.
 
 ## Check that everything works
 

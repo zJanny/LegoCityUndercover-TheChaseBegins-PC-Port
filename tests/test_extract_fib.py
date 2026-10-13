@@ -1,11 +1,16 @@
 import importlib.util
 import json
 import struct
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 
-spec = importlib.util.spec_from_file_location('extract_fib', Path(__file__).parents[1] / 'tools/extract_fib.py')
+TOOLS = Path(__file__).parents[1] / 'tools'
+sys.path.insert(0, str(TOOLS))
+import chase_native as native  # noqa: E402
+
+spec = importlib.util.spec_from_file_location('extract_fib', TOOLS / 'extract_fib.py')
 f = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(f)
 
@@ -30,17 +35,8 @@ def chunk(data):
     return struct.pack('<I', len(data)) + data
 
 
+@unittest.skipUnless(native.available(), 'C++ asset library not built')
 class FibTests(unittest.TestCase):
-    def test_refpack_all_token_forms(self):
-        self.assertEqual(f.decompress_refpack(STREAM, len(DECODED)), DECODED)
-
-    def test_refpack_rejects_bad_streams(self):
-        for stream in (b'\x00\x05\xfc', b'\xe0ab', b'\xe0abcd', STREAM + b'!'):
-            with self.assertRaises(ValueError):
-                f.decompress_refpack(stream, 100)
-        with self.assertRaisesRegex(ValueError, 'block size'):
-            f.decompress_refpack(STREAM, 3)
-
     def write(self, d, entries, names=None, extra=0):
         fib = Path(d) / 'a.fib'
         fib.write_bytes(archive(entries, extra))
@@ -68,6 +64,8 @@ class FibTests(unittest.TestCase):
             self.assertEqual((m['extracted'], m['named']), (3, 2))
             saved = json.loads((Path(d) / 'out/fib-manifest.json').read_text())
             self.assertEqual(saved['codec_counts'], {'0': 1, '1': 1, '2': 1})
+            self.assertEqual([r['stored_size'] for r in m['files']], [3, 4 + len(STREAM), 8 + len(big)])
+            self.assertEqual((saved['archive']['version'], saved['archive']['directory_offset']), ('1.00', 20 + 3 + 4 + len(STREAM) + 8 + len(big)))
             with self.assertRaisesRegex(ValueError, 'already exists'):
                 f.extract(fib, Path(d) / 'out', csv)
 
@@ -82,7 +80,7 @@ class FibTests(unittest.TestCase):
         cases = (
             ([(1, 0, 3, b'raw')], [(1, '../escape', 3, 3, 20)], {}, 'unsafe'),
             ([(1, 0, 3, b'raw')], [(1, 'ok.txt', 3, 3, 21)], {}, 'disagrees'),
-            ([(1, 1, 99, chunk(STREAM))], None, {}, 'expected'),
+            ([(1, 1, 99, chunk(STREAM))], None, {}, 'wrong size'),
             ([(1, 0, 3, b'raw'), (1, 0, 3, b'raw')], None, {}, 'duplicate'),
             ([(1, 0, 3, b'raw')], None, {'extra': 1}, 'second'),
         )

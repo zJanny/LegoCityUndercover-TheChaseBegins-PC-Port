@@ -88,3 +88,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
   - Whether the game's own winding convention is CCW in left-handed screen space (the culling default is the observed one, chosen because it hides room ceilings).
   - The game's field of view and whether the 3DS top-screen projection (400x240) matches the viewer's 1 rad vertical FOV; the reference framing was not matched numerically.
   - 0x241540, the consumer of the camera matrix, was not traced; the handedness follows from the matrix determinant and the reference screenshot.
+
+## 2026-10-13T15:08:53+02:00 — Python level and navigation tools reduced or removed
+
+- tools/convert_levels.py now only lists the objects of a level with named parameters (`--param-names CODE_BIN`), through the C++ parser. Its `--census`, `--placements` and default section dump were removed, as were tools/convert_nav.py and tests/test_convert_nav.py.
+- The census totals (856 levels, 18469 objects, 6563 placements, 700 nav files matching their descriptors) stay valid and are pinned in tests/assets_real_test.cpp. Provenance: `tools/convert_levels.py --census`, `--placements` and `tools/convert_nav.py --census artifacts/fib/files` at 9d04c91. To reproduce, check out that commit (for example `git worktree add /tmp/old 9d04c91`) and run the command there.

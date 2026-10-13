@@ -107,11 +107,14 @@ Bytes FuseArchive::readAt(std::uint64_t offset, std::size_t size) {
     return data;
 }
 
-Bytes FuseArchive::read(const FuseEntry& entry) {
+Bytes FuseArchive::read(const FuseEntry& entry, std::uint64_t* storedSize) {
     if (entry.size > maxEntry) throw std::runtime_error("entry exceeds size cap");
     unsigned codec = entry.flags & 3;
     std::size_t block = std::size_t(0x8000) << ((entry.flags >> 2) & 7);
-    if (codec == 0) return readAt(entry.offset, entry.size);
+    if (codec == 0) {
+        if (storedSize) *storedSize = entry.size;
+        return readAt(entry.offset, entry.size);
+    }
     if (codec == 3) throw std::runtime_error("codec 3 (decoder 0x12d50c) not recovered");
     Bytes out;
     out.reserve(entry.size);
@@ -125,6 +128,7 @@ Bytes FuseArchive::read(const FuseEntry& entry) {
         if (data.size() != expected) throw std::runtime_error("chunk decoded to the wrong size");
         out.insert(out.end(), data.begin(), data.end());
     }
+    if (storedSize) *storedSize = cursor - entry.offset;
     return out;
 }
 
