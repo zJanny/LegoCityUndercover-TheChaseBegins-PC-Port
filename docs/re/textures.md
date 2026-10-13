@@ -32,3 +32,7 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - Graphics API, from strings: the game links Nintendo DMPGL (a dmp_* reserved-uniform table at 0x35b288, 0x10-byte entries {name, id, count, GL type}). The dmp_TexEnv names are referenced only from that table, and no static PICA TEV command headers (regs 0xc0–0xf7) exist in code.bin, so the combiner setup must be traced through the game's uniform-location usage. Not done.
 - ctest PASS 7/7.
 
+## 2026-10-13T15:08:53+02:00 — convert_textures.py decodes through C++; --checksum removed
+
+- tools/convert_textures.py now writes the PNGs from `chase::assets::decodeTexture` through tools/chase_native.py. The output of all 3991 textures is byte-identical to the earlier Python decoder. The `--checksum` option was removed because it would compare the C++ decoder with itself.
+- The FNV-1a reference values in tests/assets_real_test.cpp stay valid. Provenance: `python3 tools/convert_textures.py --checksum <file>` (the Python decoder) at 9d04c91. To reproduce, check out that commit (for example `git worktree add /tmp/old 9d04c91`) and run the command there.
