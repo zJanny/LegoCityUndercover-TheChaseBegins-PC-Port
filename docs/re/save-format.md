@@ -57,7 +57,7 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
   - Row 1 does the same with 0x37751e, options +6 + slot and 0x1f36ec (clamps to 0..1 and scales a stream at 0x376b30).
   - Row 2 XORs options +3 with 2.
 - Draw code 0x1e4804 labels the rows with text keys SOUND_VOLUME (0x4a6848ca), MUSIC_VOLUME (0x3e17bd14) and INVERTCAMERA (0x27bcbd1b). The value is YES (0x2c187527) when +3 bit 1 is set and NO (0x4e1381) otherwise. French (language 2) uses a different label/value separator string. Keys were resolved with the sdbm hash from text-localisation-fonts.md.
-- Options +3 bit 1 = invert camera. 0x2009e8 adds two input axes (slot table entries 12 and 13, *0x376a18/*0x376a1c) times ±2.0 to *0x589a70 +0x140; the bit swaps the signs.
+- Options +3 bit 1 = invert camera. 0x2009e8 adds two inputs (slot table entries 12 and 13, *0x376a18/*0x376a1c; channels L and R, see arm-executable.md 14:00) times ±2.0 to *0x589a70 +0x140; the bit swaps the signs.
 - Options +3 bit 0 = subtitles (inferred). The second options screen (handler 0x2fb53c, draw 0x1e9358) toggles bit 0 on menu row 4. Its draw code prints the debug strings "subtitles!!!!" and "inv cam!!!!" for rows 4 and 5. 0x2fb484 snapshots sound volume, language and +3 bits 0/1, and starts a save when any of them changed.
 - Language index order, from two independent tables:
   - The sprite switch at 0x31dc84 maps 1 UK, 2 French, 3 Italian, 4 German, 5 Spanish, 6 Dutch, 7 Danish, 8 Portuguese, 9 Russian (UI_Language_*.png).

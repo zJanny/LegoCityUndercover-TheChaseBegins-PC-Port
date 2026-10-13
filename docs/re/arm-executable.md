@@ -54,3 +54,14 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - Unknown: the GSP vsync call and the step value (30 vs 60 fps), slot action names, bit 0x2000, channel 7.
 - Effect on the input lab: the game has no key repeat and Select is unused, which is consistent with the lab's rules. The lab's action names stay 3DS buttons until slot meanings are recovered.
 
+
+## 2026-10-13T14:00+02:00 — Fixed-step scheduler fields (REA Ghidra 12.1.2 ev_68bf373e…, llvm-objdump; read-only, partial)
+
+- 0x100f44 takes a process object P. P+0xc points to a client object C with vtable +0x1c Update(dt) and +0x24 (called with 1 before and 0 after Update).
+  - C+0x10, +0x14 and +0x18 are floats multiplied by the tick frequency 0x25c1f8: the step, the minimum step and the variable-step length.
+  - C+0x1c is a float scale applied to the tick count. C+0x20 = run every call with dt = C+0x10. C+0x21 = variable step. C+0x22 = call 0x102340 after the step when P+0x10 == 2.
+  - P+0x70 is the catch-up cap, P+0x74 the last tick consumed, P+0x78 the dt passed to Update, and *0x376b0c the current tick.
+  - When no step is due, the scheduler sleeps through 0x25c174(1/30 s).
+- 0x158640 builds a smoothing table with dt = 1/60 (0x1640a8). 0x1ab96c and 0x309514 convert a frame count to seconds with 1/30. Neither proves the scheduler step.
+- Searched without success: the 1/30 and 1/60 literals, the app constructor 0x10087c, stores to +0x10..+0x1c with flag bytes +0x20..+0x22 (the candidates 0x156914 and 0x343e30 are unrelated). The object that sets C+0x10 is still unknown.
+- Correction to the 2026-10-13T13:30 save-format entry: slot-table entries 12 and 13 (*0x376a18, *0x376a1c) hold channels 8 (L) and 10 (R), using the table order from the 10:45 entry. Invert camera therefore flips the direction of L/R camera rotation, not a stick axis. Not verified at runtime.
