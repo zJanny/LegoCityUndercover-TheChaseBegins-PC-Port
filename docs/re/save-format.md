@@ -103,3 +103,7 @@ Offsets are relative to the slot block (live copy at 0x51b6b0; file slot 0 at 0x
   - +0x51e3: 41 ids × 2 bits (ids 1..41). Cheat flag bit 1 forces both bits, and 0x375962 bit 1 the first bit. The meaning is unknown; vehicles would fit (inferred).
   - For 13 categories × levels 2..8: collected 0x20a630(category, level), total 0x20a7fc(category).
 - Unknown: the per-level block contents other than +0x81f; the meaning of the 21-bit sets, the 41-id set and the 13 categories; the cheat flag bit assignment; where indices 9 and 10 go.
+- Addendum (ev_90d48bc5…, ev_9bc72d3a…; llvm-objdump 0x203464, 0x1ffa74):
+  - 0x203464(level) returns the level block above (level 1 → +0x4928, levels 2..8 → +0x8 + (L − 2) × 0x820). The block starts with u16[13] collected counts, one per category.
+  - 0x20a630(category, level) returns that u16, except for category 7. Category 7 is the sum of four flags 0x1ffa74(4 × (L − 2) + k), k = 0..3. These are bits 0..27 of a set at +0x51fa (0x5208aa); cheat flag 0x375961 bit 6 forces them.
+  - 0x20a7fc(category, level) reads the total from the runtime table *0x375fb8 (13 × 8 bytes, byte [category × 8 + L − 2]). So totals are not in the save.
