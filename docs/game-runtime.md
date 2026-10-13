@@ -36,7 +36,16 @@ A window opens with the police station. Press Escape to quit.
 - Many objects of the level block the character and the camera like the original: lamp posts, traffic lights, benches, bins, crates, barriers, doors and signs. The character is stopped by them and slides along them.
 - The level's other people stand where the level puts them, with their own heads and clothes. They do not move, talk or react.
 - The character jumps, falls off ledges and lands as in the original, including the short pause after landing.
+- The character makes the sounds of the original: footsteps while walking, running and sprinting, a sound when jumping, and landing sounds that depend on how far the character fell. Picking up a stud plays its coin sound. Sounds come from the place where they happen and are quieter and panned to the side as in the original. See [Sound](#sound).
 - The coins (studs) of the level spin where the level puts them. Walk close to one and it is picked up. After one second the stud counter goes up (silver 10, gold 100, blue 1000, purple 10000). The program prints the counter at the end of a `--script` run.
+
+## Sound
+
+- The program plays the sounds of the character and the studs through your normal audio output. If no audio device can be opened, it prints a note and runs without sound.
+- A sound is louder when it is close and silent when it is far away. It is panned left or right depending on where it is as seen from the camera.
+- The volume options are `--sound-volume 0-10` (default 10) and `--music-volume 0-10` (default 8). They are the game's option values, which the game divides by 10.
+- There is no music at the start of the police station or the street. The original starts none there either. Music that the original starts later (during missions, fights or in vehicles) is not played, because those parts are not worked out yet.
+- Not played yet: the sounds of other people, animals, vehicles and objects of the level, the idle sounds of the character, and water or sand landing sounds.
 
 ## What does not work yet
 
@@ -48,7 +57,7 @@ A window opens with the police station. Press Escape to quit.
 - Walking slowly off a ledge looks different from the original, which first plays a short step.
 - Jumping onto something higher, or under a ceiling, may not match the original.
 - The animations do not blend. Their speed is an estimate.
-- Studs are stand-ins in some details. A picked-up stud disappears at once instead of flying to the counter. The counter is not shown on the screen, only printed. There is no pickup sound. Studs that a mission or a script switches on stay hidden. The spin starts at its own time and the picture is drawn without the original's blending.
+- Studs are stand-ins in some details. A picked-up stud disappears at once instead of flying to the counter. The counter is not shown on the screen, only printed. Studs that a mission or a script switches on stay hidden. The spin starts at its own time and the picture is drawn without the original's blending.
 - The pickup distance (1.5 units) was measured in the original, not taken from the game's code.
 
 ## Other levels

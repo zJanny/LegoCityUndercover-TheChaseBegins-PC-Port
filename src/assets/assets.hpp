@@ -530,6 +530,30 @@ std::vector<SoundEffect> parseSoundEffects(const Table& table);
 const SoundEffect* findSoundEffect(const std::vector<SoundEffect>& effects, std::uint32_t id);
 // Archive path of the effect's sound ("sounds/<name>.bwav"); empty for an unnamed effect.
 std::string soundEffectPath(const SoundEffect& effect);
+
+// tables/tablessoundfx.bxls sheets 1..3 (loaded by the game into the arrays at 0x376b40, 0x375d24 and 0x375f7c).
+// Sheet 1 column 1: music track names (the row is the track id of OverrideMusic, 0x240ec8). Sheet 2: per music set the
+// ambient and the action track (columns 1 and 2; 0 = use the other mood, 255 = no music, 0x206c40). Sheet 3: per
+// character sound category the 34 sound effect ids of the character sound slots (columns 1..34, read by 0x19efbc,
+// 0x1abc5c and 0x200e70 as u16 at category * 0x44 + slot * 2).
+constexpr std::size_t kCharacterSoundSlots = 34;
+struct MusicSet {
+    std::uint8_t ambient = 0;
+    std::uint8_t action = 0;
+};
+struct SoundTables {
+    std::vector<std::string> musicNames;
+    std::vector<MusicSet> musicSets;
+    std::vector<std::array<std::uint16_t, kCharacterSoundSlots>> characterSounds;
+};
+SoundTables parseSoundTables(const Table& soundfx);
+// tables/tableslevels.bxls sheet 0, column 24: index into the music sets (byte +0x39 of the 84-byte level record that
+// 0x2f6c24 and 0x2e6524 read).
+std::uint8_t levelMusicSet(const Table& levels, std::size_t row);
+// tables/tablescharacters.bxls sheet 0, column 95: the character sound category. The row stride is 40 and the column
+// sits at byte +0x21, the byte that 0x200e70 and 0x1abc5c read from the character table at 0x372e10. Row "police" is
+// category 2 (the oracle landing id 410 is slot 7 of category 2).
+std::uint8_t characterSoundCategory(const Table& characters, std::size_t row);
 struct ConfigEntry {
     std::string key;
     std::string value;

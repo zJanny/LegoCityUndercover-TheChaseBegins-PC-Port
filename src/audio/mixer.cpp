@@ -7,12 +7,24 @@ Mixer::Mixer(int outputRate) : rate_(outputRate) {
     if (outputRate <= 0) throw std::runtime_error("invalid mixer rate");
 }
 
-int Mixer::play(std::shared_ptr<const assets::Sound> sound, float gain) {
+int Mixer::play(std::shared_ptr<const assets::Sound> sound, float gain) { return play(std::move(sound), gain, gain); }
+
+bool Mixer::setGains(int voice, float leftGain, float rightGain) {
+    for (Voice& v : voices_)
+        if (v.id == voice) {
+            v.left = leftGain;
+            v.right = rightGain;
+            return true;
+        }
+    return false;
+}
+
+int Mixer::play(std::shared_ptr<const assets::Sound> sound, float leftGain, float rightGain) {
     if (!sound || sound->channels.empty() || sound->rate <= 0 || !sound->frames)
         throw std::runtime_error("cannot play an empty sound");
     if (sound->loop && sound->loopStart >= sound->frames) throw std::runtime_error("loop start beyond sound end");
     int id = nextId_++;
-    voices_.push_back({id, std::move(sound), 0.0, 0.0, gain});
+    voices_.push_back({id, std::move(sound), 0.0, 0.0, leftGain, rightGain});
     voices_.back().step = double(voices_.back().sound->rate) / rate_;
     return id;
 }
@@ -45,7 +57,7 @@ void Mixer::mix(float* out, std::size_t frames) {
             for (int side = 0; side < 2; ++side) {
                 const auto& channel = sound.channels[std::min<std::size_t>(std::size_t(side), sound.channels.size() - 1)];
                 double s = channel[at] + (channel[next] - channel[at]) * frac;
-                out[2 * f + std::size_t(side)] += float(s / 32768.0) * voice.gain;
+                out[2 * f + std::size_t(side)] += float(s / 32768.0) * (side == 0 ? voice.left : voice.right);
             }
             voice.position += voice.step;
         }

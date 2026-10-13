@@ -12,6 +12,9 @@ public:
     explicit Mixer(int outputRate);
     // Starts a voice; returns its id. The sound must outlive the voice.
     int play(std::shared_ptr<const assets::Sound> sound, float gain = 1.0f);
+    int play(std::shared_ptr<const assets::Sound> sound, float leftGain, float rightGain);
+    // Changes the gains of a running voice; false when the voice has ended.
+    bool setGains(int voice, float leftGain, float rightGain);
     void stop(int voice);
     bool playing(int voice) const;
     std::size_t activeVoices() const;
@@ -25,7 +28,8 @@ private:
         std::shared_ptr<const assets::Sound> sound;
         double position;   // in source frames
         double step;       // source frames per output frame
-        float gain;
+        float left;
+        float right;
     };
     int rate_;
     int nextId_ = 1;

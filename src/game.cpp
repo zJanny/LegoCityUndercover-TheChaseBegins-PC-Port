@@ -5,6 +5,7 @@
 // stops him at walls, and he falls off ledges, jumps and lands. The camera keeps out of the level's static
 // collision. There is no gameplay.
 #include "assets/assets.hpp"
+#include "game_audio.hpp"
 #include "input.hpp"
 #include "render/character.hpp"
 #include "render/scene.hpp"
@@ -15,7 +16,9 @@
 #include "runtime/player_intent.hpp"
 #include "runtime/player_locomotion.hpp"
 #include "runtime/player_vertical.hpp"
+#include "runtime/music.hpp"
 #include "runtime/scheduler.hpp"
+#include "runtime/sound_events.hpp"
 #include "runtime/studs.hpp"
 #include <SDL.h>
 #include <epoxy/gl.h>
@@ -25,6 +28,7 @@
 #include <cstdint>
 #include <fstream>
 #include <iostream>
+#include <mutex>
 #include <map>
 #include <optional>
 #include <sstream>
@@ -44,6 +48,13 @@ constexpr int kStickWalkDeflection = 90;
 constexpr float kScriptDt = 0.033f;
 constexpr std::size_t kSlotLeftShoulder = 12, kSlotRightShoulder = 13, kSlotStickX = 14, kSlotStickY = 15;
 constexpr std::size_t kSlotButtonX = 8, kSlotButtonY = 9, kSlotJumpButton = 7;
+
+// Stand-ins, not the original: the water flag (ctrl+0x317 bit 3) and the ground object of type 11 are not modelled, so
+// the landing always plays the default surface sound (docs/re/audio.md).
+constexpr bool kProvisionalWaterLanding = false, kProvisionalObject11Landing = false;
+// The sprint animation plays at its own 30 frames per second: the recorded footsteps are 10.14 updates apart, which
+// is half a cycle at scale 1.0, not at the movement scale ctrl+0x94 = 1.5 (docs/re/audio.md).
+constexpr float kSprintAnimationScale = 1.0f;
 
 // The class whose CharacterEnum 9 row ("police") is the one character the completion count excludes,
 // taken as the starting character (inference). The idle animation is picked by file name only.
@@ -70,6 +81,9 @@ struct Options {
     std::string script;
     bool cameraCollision = true;
     std::optional<std::array<float, 3>> start;
+    // Options volumes 0..10 (the game divides them by 10). Read in the oracle at the gameplay start of a new game:
+    // sound effects 1.0 (0x37636c + 4), music 0.8 (0x376b3c); the saved options are not read yet.
+    unsigned soundVolume = 10, musicVolume = 8;
 };
 
 struct ScriptStep {
@@ -118,6 +132,8 @@ Options parse(int argc, char** argv) {
         else if (arg == "--frames") o.frames = unsigned(std::stoul(value()));
         else if (arg == "--script") o.script = value();
         else if (arg == "--no-camera-collision") o.cameraCollision = false;
+        else if (arg == "--sound-volume") o.soundVolume = std::min(10u, unsigned(std::stoul(value())));
+        else if (arg == "--music-volume") o.musicVolume = std::min(10u, unsigned(std::stoul(value())));
         else if (arg == "--start") {
             std::stringstream fields(value());
             std::array<float, 3> position;
@@ -126,7 +142,7 @@ Options parse(int argc, char** argv) {
         }
         else throw std::runtime_error("usage: chase-game [--fib F] [--names CSV] [--config CFG] "
                                       "[--level levels/levels/<name>/<name>_main.blvl] [--screenshot OUT.bmp] [--frames N] "
-                                      "[--script \"X Y COUNT [BUTTONS];...\"] [--start \"X Y Z\"] [--no-camera-collision]");
+                                      "[--script \"X Y COUNT [BUTTONS];...\"] [--start \"X Y Z\"] [--no-camera-collision] [--sound-volume 0-10] [--music-volume 0-10]");
     }
     return o;
 }
@@ -197,6 +213,11 @@ struct PlayerRig {
     int animation = 0;
     double frame = 0;
     float startX = 0, startZ = 0;
+    runtime::FootstepDetector footsteps;
+    runtime::CharacterSounds characterSounds;
+    std::vector<runtime::SoundCall> sounds;  // the sound calls of the update, filled by updatePlayer and animate
+
+    std::array<float, 3> position() const { return {motion.x, vertical.y, motion.z}; }
 
     Mat4 matrix() const {
         const float heading = runtime::headingRadians(motion.facing), s = std::sin(heading), c = std::cos(heading);
@@ -204,17 +225,21 @@ struct PlayerRig {
     }
 
     void animate(Scene& scene, float dt, int role, float scale) {
-        if (role != animation) {
-            const auto locomotionRole = [](int id) { return id == 0 || id == runtime::kAnimationWalk || id == runtime::kAnimationRun || id == runtime::kAnimationSprint; };
+        const bool switched = role != animation;
+        if (switched) {
+            const auto locomotionRole = [](int id) { return id == runtime::kAnimationWalk || id == runtime::kAnimationRun || id == runtime::kAnimationSprint; };
             const bool keepPhase = locomotionRole(role) && locomotionRole(animation);
             const double phase = frame / double(animations.at(animation).frames);
             animation = role;
-            frame = keepPhase ? phase * double(animations.at(animation).frames) : 0.0;
+            frame = keepPhase ? std::floor(phase * double(animations.at(animation).frames)) : 0.0;
         }
         const Animation& current = animations.at(animation);
         const double rate = double(animationFramesPerSecond(current));
         frame = std::fmod(frame + double(dt) * rate * double(scale), double(current.frames));
         pose(scene);
+        const float value = runtime::footstepTrackValue(current, float(frame / double(current.frames)));
+        if (switched) footsteps.restart(value);
+        else if (footsteps.update(value)) sounds.push_back(characterSounds.footstep(position()));
     }
 
     void pose(Scene& scene) const {
@@ -247,6 +272,13 @@ std::optional<PlayerRig> placePlayer(FuseArchive& archive, Scene& scene, const L
     rig.jumpMoving = runtime::makeJumpProfile(rig.animations.at(runtime::kAnimationJumpRun));
     rig.vertical.landingDurations =
         runtime::landingDurations(rig.animations.at(runtime::kAnimationLand), rig.animations.at(runtime::kAnimationFallLand));
+    const FuseEntry* soundTable = archive.find("tables/tablessoundfx.bxls");
+    const FuseEntry* characterTable = archive.find("tables/tablescharacters.bxls");
+    if (soundTable && characterTable) {
+        const SoundTables sounds = parseSoundTables(parseTable(archive.read(*soundTable)));
+        const std::uint8_t category = characterSoundCategory(parseTable(archive.read(*characterTable)), character.characterEnum);
+        if (category < sounds.characterSounds.size()) rig.characterSounds = runtime::CharacterSounds(sounds.characterSounds[category]);
+    }
 
     rig.vertical.y = start->position[1];
     rig.motion.x = start->position[0];
@@ -329,7 +361,15 @@ PlayerAnimation updatePlayer(PlayerRig& player, const runtime::CollisionWorld& c
         player.jumpMovingAnimation = intent.active;
         input.startJump = intent.active ? &player.jumpMoving : &player.jumpStanding;
     }
+    const float fallBefore = jumping ? 0.0f : player.vertical.fallDistance;
     const runtime::VerticalStep vertical = runtime::verticalUpdate(player.vertical, collision, input);
+    if (vertical.jumpStarted) player.sounds.push_back(player.characterSounds.jump(player.position()));
+    if (vertical.landed) {
+        const std::vector<runtime::SoundCall> calls =
+            vertical.hard ? player.characterSounds.hardLanding(player.position())
+                          : player.characterSounds.landing(fallBefore, kProvisionalWaterLanding, kProvisionalObject11Landing, player.position());
+        player.sounds.insert(player.sounds.end(), calls.begin(), calls.end());
+    }
     if (vertical.landed && player.vertical.posture == Posture::Ground && intent.active && step.regime == runtime::Regime::Run) {
         player.motion.runTimer = (player.motion.sprinting ? runtime::kSprintTime : 0.0f) + dt;
         player.motion.wasRunning = true;
@@ -344,7 +384,7 @@ PlayerAnimation updatePlayer(PlayerRig& player, const runtime::CollisionWorld& c
     if (player.vertical.posture == Posture::Jumping || vertical.jumpStarted)
         return {player.jumpMovingAnimation ? runtime::kAnimationJumpRun : runtime::kAnimationJump, 1.0f};
     if (player.vertical.posture == Posture::Landing) return landingAnimation();
-    return {step.animation, step.animationScale};
+    return {step.animation, step.animation == runtime::kAnimationSprint ? kSprintAnimationScale : step.animationScale};
 }
 
 int run(const Options& options) {
@@ -389,6 +429,13 @@ int run(const Options& options) {
         studSpawns.push_back(spawn);
     }
     runtime::StudField studs(studSpawns);
+    std::optional<GameAudio> audio;
+    try {
+        audio.emplace(archive, std::uint8_t(options.soundVolume), std::uint8_t(options.musicVolume));
+    } catch (const std::exception& error) {
+        std::cout << "audio: disabled (" << error.what() << ")\n";
+    }
+    std::vector<std::pair<unsigned, std::uint16_t>> soundLog;
     std::optional<StudSprites> studSprites(std::in_place, archive);
     double provisionalStudClockSeconds = 0;
     std::optional<PlayerRig> player = placePlayer(archive, scene, level);
@@ -444,7 +491,12 @@ int run(const Options& options) {
     std::vector<float> scriptedHeights;
     auto simulate = [&](float dt, const runtime::PadState& padInput) {
         pad.poll(padInput);
+        const auto emit = [&](const runtime::SoundCall& call) {
+            soundLog.emplace_back(updates, call.id);
+            if (audio) audio->play(call);
+        };
         if (player) {
+            player->sounds.clear();
             runtime::StickIntentInput stick;
             stick.slot14 = {pad.slot(kSlotStickX).value, pad.slot(kSlotStickX).deadzone};
             stick.slot15 = {pad.slot(kSlotStickY).value, pad.slot(kSlotStickY).deadzone};
@@ -453,8 +505,11 @@ int run(const Options& options) {
             const PlayerAnimation shown = updatePlayer(*player, collision, runtime::stickIntent(stick), pad.slot(kSlotJumpButton).press > 0, dt);
             player->animate(scene, dt, shown.role, shown.scale);
             if (!script.empty()) scriptedHeights.push_back(player->vertical.y);
-            studs.update(dt, runtime::studPickupPoint(player->motion.x, player->vertical.y, player->motion.z,
-                                                      runtime::headingRadians(player->motion.facing)));
+            for (const runtime::StudCollected& collected :
+                 studs.update(dt, runtime::studPickupPoint(player->motion.x, player->vertical.y, player->motion.z,
+                                                           runtime::headingRadians(player->motion.facing))))
+                player->sounds.push_back(runtime::studCollectCall(collected, studs.studs()[collected.index].centre));
+            for (const runtime::SoundCall& call : player->sounds) emit(call);
         }
         provisionalStudClockSeconds += double(dt);
         if (follow) {
@@ -467,6 +522,12 @@ int run(const Options& options) {
             input.stickTurn = runtime::stickTurnInput(pad.slot(kSlotStickX).value, kPlayerEntityType);
             input.shoulderTurn = runtime::shoulderTurnInput(pad.slot(kSlotLeftShoulder).value, pad.slot(kSlotRightShoulder).value, false);
             follow->update(input);
+            if (audio) {
+                const float* eye = follow->eye();
+                const float* look = follow->lookAt();
+                audio->setListener({eye[0], eye[1], eye[2]}, {look[0] - eye[0], look[1] - eye[1], look[2] - eye[2]});
+                audio->update();
+            }
         } else {
             camera.update(dt, pad);
         }
@@ -540,6 +601,9 @@ int run(const Options& options) {
                       << " units, facing " << player->motion.facing << ", run timer " << player->motion.runTimer << ", height " << player->vertical.y << '\n';
             std::cout << "studs: counter " << studs.counter() << ", " << studs.count(runtime::StudState::Collecting) << " collecting, "
                       << studs.count(runtime::StudState::Done) << " collected, " << studs.count(runtime::StudState::Idle) << " left\n";
+            std::cout << "sounds:";
+            for (const auto& [update, id] : soundLog) std::cout << ' ' << update << ':' << id;
+            std::cout << '\n';
             std::cout << "heights:";
             for (const float y : scriptedHeights) std::cout << ' ' << y;
             std::cout << '\n';

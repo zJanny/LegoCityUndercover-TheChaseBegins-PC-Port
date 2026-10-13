@@ -1,0 +1,27 @@
+# Sound calls of the player, part 2 (docs/re/audio.md): a stud pickup, walking, running.
+# Same traps as events1.txt. Fixed dt 0.033. Frame numbers are relative to this attach.
+loadstate gameplay-start
+frames 3
+stick 0 0
+hold -
+dt 0.033 0.033
+teleport 862.5931 16.1988 1060.5875
+frames 1
+trap 0x23ae84,0x23ae50,0x227880,0x163f40,0x180674,0x18c508,0x19ecbc,0x1ac82c,0x1ac85c,0x1b43b8,0x2070c0,0x21c9b4,0x2331f8,0x2332c0,0x23a188,0x2455f4,0x26c750,0x26c75c,0x286db0,0x29277c,0x2952ac,0x2c5ac4,0x2d9378 22 ev_stud
+loadstate gameplay-start
+frames 3
+stick 0 0
+hold -
+dt 0.033 0.033
+frames 2
+stick 0 90
+trap 0x23ae84,0x227880 70 ev_walk
+loadstate gameplay-start
+frames 3
+stick 0 0
+hold -
+dt 0.033 0.033
+frames 2
+stick 0 150
+trap 0x23ae84,0x227880 110 ev_run
+stick 0 0

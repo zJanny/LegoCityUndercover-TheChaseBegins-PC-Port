@@ -1,0 +1,73 @@
+# Sound calls of the player, part 3 (docs/re/audio.md): landings after falls from several heights, jumps while walking and running.
+# One trap on the object wrapper 0x23ae84 (the landing code 0x1abc5c plays through it). Fixed dt 0.033, frame numbers relative to this attach.
+# Falls are started by a one-update walk nudge (a standing teleported player does not fall).
+loadstate gameplay-start
+frames 3
+stick 0 0
+hold -
+dt 0.033 0.033
+teleport 886.7 17.1 1111.2
+frames 2
+stick 0 70
+frames 1
+stick 0 0
+trap 0x23ae84 40 ev_fall_0p5
+loadstate gameplay-start
+frames 3
+stick 0 0
+hold -
+dt 0.033 0.033
+teleport 886.7 18.6 1111.2
+frames 2
+stick 0 70
+frames 1
+stick 0 0
+trap 0x23ae84 45 ev_fall_2
+loadstate gameplay-start
+frames 3
+stick 0 0
+hold -
+dt 0.033 0.033
+teleport 886.7 21.6 1111.2
+frames 2
+stick 0 70
+frames 1
+stick 0 0
+trap 0x23ae84 60 ev_fall_5
+loadstate gameplay-start
+frames 3
+stick 0 0
+hold -
+dt 0.033 0.033
+teleport 886.7 29.1 1111.2
+frames 2
+stick 0 70
+frames 1
+stick 0 0
+trap 0x23ae84 100 ev_fall_12p5
+loadstate gameplay-start
+frames 3
+stick 0 0
+hold -
+dt 0.033 0.033
+frames 2
+stick 0 150
+frames 8
+hold B
+trap 0x23ae84 1 ev_runjump_press
+hold -
+trap 0x23ae84 50 ev_runjump_air
+stick 0 0
+loadstate gameplay-start
+frames 3
+stick 0 0
+hold -
+dt 0.033 0.033
+frames 2
+stick 0 70
+frames 8
+hold B
+trap 0x23ae84 1 ev_walkjump_press
+hold -
+trap 0x23ae84 50 ev_walkjump_air
+stick 0 0

@@ -137,4 +137,34 @@ const SoundEffect* findSoundEffect(const std::vector<SoundEffect>& effects, std:
 std::string soundEffectPath(const SoundEffect& effect) {
     return effect.name.empty() ? std::string() : "sounds/" + effect.name + ".bwav";
 }
+
+SoundTables parseSoundTables(const Table& soundfx) {
+    if (soundfx.sheets.size() < 4) throw std::runtime_error("sound effect table has fewer than four sheets");
+    SoundTables tables;
+    const TableSheet& names = soundfx.sheets[1];
+    if (names.columns.size() < 2) throw std::runtime_error("music name sheet has too few columns");
+    for (std::size_t row = 0; row < names.rows; ++row) tables.musicNames.push_back(tableValue(names, row, 1).text);
+    const TableSheet& sets = soundfx.sheets[2];
+    if (sets.columns.size() < 3) throw std::runtime_error("music set sheet has too few columns");
+    for (std::size_t row = 0; row < sets.rows; ++row)
+        tables.musicSets.push_back({std::uint8_t(tableValue(sets, row, 1).bits), std::uint8_t(tableValue(sets, row, 2).bits)});
+    const TableSheet& sounds = soundfx.sheets[3];
+    if (sounds.columns.size() < kCharacterSoundSlots + 1) throw std::runtime_error("character sound sheet has too few columns");
+    for (std::size_t row = 0; row < sounds.rows; ++row) {
+        std::array<std::uint16_t, kCharacterSoundSlots> slots{};
+        for (std::size_t slot = 0; slot < kCharacterSoundSlots; ++slot) slots[slot] = std::uint16_t(tableValue(sounds, row, slot + 1).bits);
+        tables.characterSounds.push_back(slots);
+    }
+    return tables;
+}
+
+std::uint8_t levelMusicSet(const Table& levels, std::size_t row) {
+    if (levels.sheets.empty()) throw std::runtime_error("level table has no sheets");
+    return std::uint8_t(tableValue(levels.sheets[0], row, 24).bits);
+}
+
+std::uint8_t characterSoundCategory(const Table& characters, std::size_t row) {
+    if (characters.sheets.empty()) throw std::runtime_error("character table has no sheets");
+    return std::uint8_t(tableValue(characters.sheets[0], row, 95).bits);
+}
 } // namespace chase::assets
