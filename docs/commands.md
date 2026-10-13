@@ -106,4 +106,25 @@ python3 tools/azahar_oracle.py tools/oracle/boot.txt
 - The script file lists steps: advance game frames, hold buttons, take screenshots, print timing values. The list of steps is at the top of `tools/azahar_oracle.py`.
 - Screenshots go to `artifacts/oracle/out/`.
 - The emulator uses its own settings and save folder in `artifacts/oracle/home/`. Your normal Azahar settings and saves are not used or changed. `--fresh` deletes that folder first.
-- It runs at the speed of a real 3DS, so a few hundred frames take a few minutes.
+- Stepping frames is slow: 600 frames take about 4 minutes. Waiting is faster: `wait 25` reaches the language screen in about 35 seconds.
+
+### Working faster
+
+Save a state once, then start from it. States need the `--display xvfb` option, which runs the emulator on a private virtual screen.
+
+```sh
+python3 tools/azahar_oracle.py boot.txt --display xvfb        # boot.txt ends with: savestate language
+python3 tools/azahar_oracle.py test.txt --display xvfb --state language
+```
+
+- `savestate NAME` and `loadstate NAME` are steps in the script file. States are stored in `artifacts/oracle/states/` and survive `--fresh`.
+- Loading takes about 15 seconds. Right after a start the emulator may refuse for a few seconds. The tool retries by itself.
+- `--keep` leaves the emulator running after the script. `--attach` connects to it later (no game image needed). `--stop` closes it. Frame numbers start at 0 on every attach.
+
+```sh
+python3 tools/azahar_oracle.py boot.txt --display xvfb --keep --port 24690
+python3 tools/azahar_oracle.py more.txt --attach --port 24690
+python3 tools/azahar_oracle.py --stop
+```
+
+- Do not trust timing values from a run with `--frame-limit 0` or from stepped frames. Details are in `docs/re/oracle.md`.

@@ -20,6 +20,7 @@ Read this index, then open only the file you need.
 | [ui-layouts.md](ui-layouts.md) | `.bxaml` UI layouts and storyboards |
 | [fmv.md](fmv.md) | Mobiclip `.moflex` video and subtitles |
 | [particles.md](particles.md) | `particledefs.bprt` particle definitions |
+| [oracle.md](oracle.md) | Azahar runtime oracle: setup, fidelity rules, save states, fast workflow, timings |
 | [player.md](player.md) | Player entity pointer, scene node, controller fields, stick-to-intent |
 
 Rules for editing these files are in CLAUDE.md ("Reverse-engineering findings").
