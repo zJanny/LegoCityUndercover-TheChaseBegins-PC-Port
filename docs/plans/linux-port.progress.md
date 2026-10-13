@@ -5,7 +5,7 @@
 - Overall: IN_PROGRESS
 - Current Phase: IMPLEMENT
 - Current Step: S4f/S3 RE rounds via subagents (last: level/character tables, input slot readers)
-- Last Updated: 2026-10-13T09:41+02:00
+- Last Updated: 2026-10-13T09:42+02:00
 - Branch: main
 - Target Branch: Not specified
 - Requested Scope: PLAN, IMPLEMENT, TEST; start reverse engineering and native port
@@ -251,3 +251,4 @@ Reverse-engineering findings live in docs/re/ (see docs/re/README.md). Entries m
 - 2026-10-13T09:38+02:00 — Vblank counter callbacks (ids 2/3), wait modes 0x400..0x402, mode byte 0x52a1f4; fps still undecided (worker, REA; callback re-checked) → [docs/re/arm-executable.md](../re/arm-executable.md)
 - 2026-10-13T09:39+02:00 — SoundEffect table decoder + chase-soundtest --id (worker, Sonnet); 757/757 names resolve to sounds/<name>.bwav; build warning-free, ctest 12/12 → [docs/re/audio.md](../re/audio.md)
 - 2026-10-13T09:41+02:00 — Swap 0x25a6f0: min frame interval 0x529de8 (1/2), 0x122908 = APT cmd 0x004F0080 (worker, REA; literals re-checked) → [docs/re/arm-executable.md](../re/arm-executable.md)
+- 2026-10-13T09:42+02:00 — Music: tablessoundfx sheet 1 (39 tracks → music/<name>.bwav), OverrideMusic/StopMusic/PauseMusic handlers (worker, REA; sheet re-checked) → [docs/re/audio.md](../re/audio.md)
