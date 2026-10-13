@@ -68,3 +68,7 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
   - The overall level stays dark, so a lightmap scale (e.g. ×2) is likely but unverified.
 - `ctest` PASS 5/5 (real-data totals unchanged), Python PASS 39/39.
 
+## 2026-10-13T15:08:53+02:00 — Python model tools removed
+
+- tools/convert_models.py (`--census`, `--vertices`, `bone_batches`, `skin_joints`) and tools/preview_model.py were removed. The C++ parser (`parseModel`) and `chase-viewer --screenshot` replace them.
+- Reference values from the earlier entries stay valid and are pinned in tests/assets_real_test.cpp: the model census totals, the bone palette totals and the skinned position sums. Provenance: `python3 tools/convert_models.py --census artifacts/fib/files` and preview_model at 9d04c91. To reproduce, check out that commit (for example `git worktree add /tmp/old 9d04c91`) and run the command there.

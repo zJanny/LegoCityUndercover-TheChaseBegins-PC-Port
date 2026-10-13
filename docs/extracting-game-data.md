@@ -34,6 +34,8 @@ Most other tools, the model viewer and the sound test expect the files in `artif
 
 Almost every asset is inside one archive, `romfs/lego_city3ds.fib`. The cutscene videos (`.moflex`) are the exception.
 
+Steps 3 to 6 use the project's C++ library. Build the project first (see [Building](building.md)), or set `CHASE_ASSETS_LIB` to the path of `libchase_assets_c.so`.
+
 ```sh
 python3 tools/extract_fib.py artifacts/romfs/romfs/lego_city3ds.fib \
     --names artifacts/romfs/romfs/lego_city3ds.csv --output artifacts/fib
@@ -83,26 +85,7 @@ This needs the font image next to the `.tnf` file, which is where `extract_fib.p
 
 ## 7. Look at models
 
-`preview_model.py` draws a model into a PNG image. It is slow but needs no graphics card.
-
-```sh
-python3 tools/preview_model.py artifacts/fib/files/models/char_bear/char_bear.bfnmdl \
-    --assets artifacts/fib/files --output bear.png
-```
-
-To pose a character, add its skeleton, an animation and a frame number:
-
-```sh
-    --skeleton artifacts/fib/files/models/char_bear/char_bear.bfnskl \
-    --anim artifacts/fib/files/models/char_bear/walk.bfnanm --frame 12
-```
-
-Posing uses the project's C++ library. Build the project first (see [Building](building.md)), or set `CHASE_ASSETS_LIB` to the path of `libchase_assets_c.so`.
-
-- `--exclude WORD` hides parts whose texture name contains WORD, for example `sky`.
-- `--yaw` and `--pitch` turn the camera, in degrees.
-
-For a faster, interactive view, use the [model viewer](model-viewer.md).
+Use the [model viewer](model-viewer.md). It can also save a picture without opening a window.
 
 ## 8. Look at the data tables
 
@@ -115,17 +98,3 @@ build/chase-tabledump tables/tableslevels.bxls
 - It reads the asset archive in `artifacts/romfs`, like the model viewer. Build the project first (see [Building](building.md)).
 - The files contain no column names, so the columns are numbered only.
 - `-` marks a column that has no value stored in the file.
-
-## Checking files in bulk
-
-These commands check every file of a type and print a summary. They write nothing.
-
-```sh
-python3 tools/tt_resource.py --census artifacts/fib/files       # all b* resource files
-python3 tools/convert_models.py --census artifacts/fib/files    # models
-python3 tools/convert_levels.py --census artifacts/fib/files    # level files
-python3 tools/convert_anims.py --census artifacts/fib/files     # skeletons and animations
-python3 tools/convert_nav.py --census artifacts/fib/files       # navigation grids
-```
-
-To print the first vertices of one model, use `python3 tools/convert_models.py --vertices 3 path/to/model.bfnmdl`.

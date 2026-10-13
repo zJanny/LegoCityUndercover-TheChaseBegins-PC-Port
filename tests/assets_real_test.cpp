@@ -1,7 +1,7 @@
 // Opt-in check against the locally extracted game data (never committed).
 // Usage: assets-real-test <lego_city3ds.fib> <lego_city3ds.csv>; exits 77 (skip) when absent.
 // Decodes every archive entry, parses every pooled resource, decodes every
-// texture, and compares FNV-1a checksums with tools/convert_textures.py --checksum.
+// texture, and compares FNV-1a checksums with tools/convert_textures.py --checksum (at 9d04c91).
 #include "assets/assets.hpp"
 #include <algorithm>
 #include <cctype>
@@ -30,7 +30,7 @@ int main(int argc, char** argv) {
         std::cout << "game data not extracted; skipping\n";
         return 77;
     }
-    // Reference values from: python3 tools/convert_textures.py --checksum <file>
+    // Reference values from: python3 tools/convert_textures.py --checksum <file> (at 9d04c91)
     const std::map<std::string, std::uint32_t> expected{
         {"sprites/game/saveicon.bpng", 0x7d3a8f9f},
         {"models/textures/atlas_lvl_00_policestation_main.bdds", 0x8267ad3e},
@@ -235,13 +235,13 @@ int main(int argc, char** argv) {
             }
         }
         if (checked != expected.size()) throw std::runtime_error("reference textures not found");
-        // Reference totals from: python3 tools/convert_models.py --census artifacts/fib/files
+        // Reference totals from: python3 tools/convert_models.py --census artifacts/fib/files (at 9d04c91)
         if (models != 3113 || parts != 16122 || vertices != 7211595 || triangles != 4603391)
             throw std::runtime_error("model totals differ from the Python reference");
-        // Reference totals from tools/convert_levels.py (parse_level / placements over all .blvl)
+        // Reference totals from tools/convert_levels.py (parse_level / placements over all .blvl) at 9d04c91
         if (levels != 856 || objects != 18469 || placed != 6563)
             throw std::runtime_error("level totals differ from the Python reference");
-        // Reference: python3 tools/convert_levels.py on lvl_00_policestation_main.blvl with parameter names from
+        // Reference: python3 tools/convert_levels.py (at 9d04c91) on lvl_00_policestation_main.blvl with parameter names from
         // code.bin (object Player1Start, class point, room1) and on chars/char_police.blvl (s10 defaults).
         {
             auto read = [&](const char* path) { return parseLevel(archive.read(*archive.find(path))); };
@@ -259,7 +259,7 @@ int main(int argc, char** argv) {
         // the interleaved little-endian PCM of its music/act_bass_break.wav.
         if (sounds != 1361 || samples != 122501647 || loops != 123 || soundSum != 0xdcbf1f85)
             throw std::runtime_error("sound totals or checksum differ from the Python reference");
-        // Reference: tools/convert_anims.py parse_skeleton/parse_animation over all files, and the sum of
+        // Reference: tools/convert_anims.py (at 9d04c91) parse_skeleton/parse_animation over all files, and the sum of
         // |entries| of skin_matrices() for char_bear walk over all 48 frames.
         if (skeletons != 376 || joints != 5280 || animations != 1954 || curves != 30081)
             throw std::runtime_error("skeleton/animation totals differ from the Python reference");
@@ -275,7 +275,7 @@ int main(int argc, char** argv) {
             throw std::runtime_error("cutscene manifest totals differ from the recorded reference");
         // Reference: every sheet's computed stride equals its stored stride (checked in parseTable);
         // totals recorded from this C++ parser (2026-10-13). Cell values checked by hand against the
-        // rows dumped by tools/tt_resource.py: tablescutscenes row 2 offset 1 -> "01_gameintro",
+        // rows dumped by tools/tt_resource.py (at 9d04c91): tablescutscenes row 2 offset 1 -> "01_gameintro",
         // tableslevels sheet 1 row 1 "50c30000" = 50000.
         if (tableFiles != 24 || tableSheets != 54 || tableCells != 23512 || cutsceneVideo != "01_gameintro" ||
             studThreshold != 50000)
@@ -314,7 +314,7 @@ int main(int argc, char** argv) {
         if (fonts != 6 || glyphs != 1521) throw std::runtime_error("font totals differ from the Python reference");
         if (locFiles != 66 || locEntries != 25207)
             throw std::runtime_error("localisation totals differ from the Python reference");
-        // Reference: FNV-1a over the UTF-8 of convert_loc.decode_text for every gametext_ru entry
+        // Reference: FNV-1a over the UTF-8 of convert_loc.decode_text (at 9d04c91) for every gametext_ru entry
         // in key order, each followed by a NUL.
         {
             auto read = [&](const char* name) { return archive.read(*archive.find(name)); };
@@ -350,7 +350,7 @@ int main(int argc, char** argv) {
             if (srtFiles != 204 || srtCues != 2921 || srtLines != 3560 || srtMs != 6486170 || srtSum != 0xe37a66e1)
                 throw std::runtime_error("subtitle totals differ from the regex census");
         }
-        // Reference: tools/tt_resource.py parse of particles/particledefs.bprt: -15 words 10, 25, 97,
+        // Reference: tools/tt_resource.py (at 9d04c91) parse of particles/particledefs.bprt: -15 words 10, 25, 97,
         // 298, 0, 0x401503da; 97 -16 names; one -14 block of 113240 bytes at 0x7fc whose FNV-1a is
         // 0x57544492. All 298 words at record +0x2c equal the PJW hash of a texture name. Colour key
         // counts at +0x172 (Python census): 2 x 140, 3 x 93, 4 x 45, 5 x 15, 6 x 3, 7 x 2 = 846 keys;
@@ -375,7 +375,7 @@ int main(int argc, char** argv) {
                 std::fabs(defs.scale - 2.32836f) > 1e-5f)
                 throw std::runtime_error("particle definitions differ from the pooled-resource reference");
         }
-        // Reference: python3 tools/convert_nav.py --census artifacts/fib/files
+        // Reference: python3 tools/convert_nav.py --census artifacts/fib/files (at 9d04c91)
         std::size_t navMatched = 0;
         for (const auto& [levelName, room] : navDescriptors) {
             std::string roomName = room.room;
@@ -404,7 +404,7 @@ int main(int argc, char** argv) {
             configRejected[1].rfind("levels/scriptfns.txt: config text line 843:", 0) ||
             configRejected[2].rfind("options.txt: config text line 2:", 0))
             throw std::runtime_error("rejected config text files differ from the manual inspection");
-        // Reference: convert_models.bone_batches/skin_joints over every part (drawn vertices only).
+        // Reference: convert_models.bone_batches/skin_joints (at 9d04c91) over every part (drawn vertices only).
         if (skinnedParts != 1457 || boneBatches != 1465 || jointSum != 3492824)
             throw std::runtime_error("bone palette totals differ from the Python reference");
         // Reference: a throwaway Python walk of the 0x217220/0x29f7b4 block order over all 55 .bxaml files
@@ -428,7 +428,7 @@ int main(int argc, char** argv) {
         if (walk.frames != 48 || std::fabs(poseSum - 5397.175751993695) > 1e-3)
             throw std::runtime_error("char_bear walk pose differs from the Python reference");
         // Reference: sum of |skinned position| over every vertex. Bear: preview_model.skin_vertex with
-        // convert_anims.skin_matrices (its joint orientations are identity). Squirrel and minifig:
+        // convert_anims.skin_matrices (both at 9d04c91; its joint orientations are identity). Squirrel and minifig:
         // recorded from this C++ code (2026-10-13) after applying the joint +0x88 orientation
         // (0x2485d8, ev_6c72e2e4…a73d); manual inspection showed upright squirrel ears and an
         // assembled minifig. The squirrel has rotated bind matrices and two bone batches; the

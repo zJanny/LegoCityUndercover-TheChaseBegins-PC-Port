@@ -24,4 +24,6 @@ Read this index, then open only the file you need.
 | [camera.md](camera.md) | Gameplay camera: yaw word 0x376894 writer, manager and modes, follow camera law (OnFoot preset), projection, unknowns |
 | [player.md](player.md) | Player entity pointer, scene node, controller fields, stick-to-intent, locomotion rules and root motion |
 
+Python tools that were later removed from the repository (convert_models, convert_anims, convert_nav, tt_resource, preview_model, the census modes of convert_levels, and the Python decoders behind convert_textures, convert_audio, convert_loc, convert_font and extract_fib) last existed at commit `9d04c91`. Older entries that name them stay as written.
+
 Rules for editing these files are in CLAUDE.md ("Reverse-engineering findings").

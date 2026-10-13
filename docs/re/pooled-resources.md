@@ -39,3 +39,6 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
   - Inference only: the block-to-field mapping must come from the deserializer 0x10ccf4.
 - Added tests/test_tt_resource.py (3 tests); suite PASS 33/33. The audio census after the refactor is 1361/1361.
 
+## 2026-10-13T15:08:53+02:00 — tools/tt_resource.py removed
+
+- tools/tt_resource.py (`--census`) was removed. `chase::assets::parsePooled` and the pooled checks in tests/assets_real_test.cpp replace it. The census (12500/12500 pooled files close exactly) and the particle and table reference values that name it stay valid. Provenance: `python3 tools/tt_resource.py --census artifacts/fib/files` at 9d04c91. To reproduce, check out that commit (for example `git worktree add /tmp/old 9d04c91`) and run the command there.
