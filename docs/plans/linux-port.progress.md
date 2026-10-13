@@ -4,8 +4,8 @@
 
 - Overall: IN_PROGRESS
 - Current Phase: IMPLEMENT
-- Current Step: S4e runtime core — milestone M2 (the player character moves with the measured locomotion rules)
-- Last Updated: 2026-10-13T13:59:00+02:00
+- Current Step: S4e runtime core — M3 reached (player walks a real level with collision and the game camera); paused for context compaction
+- Last Updated: 2026-10-13T15:22:58+02:00
 - Branch: main
 - Target Branch: Not specified
 - Requested Scope: PLAN, IMPLEMENT, TEST; start reverse engineering and native port
@@ -41,18 +41,18 @@ Commits authorized by CLAUDE.md "User specified workflows" (commit at logical st
 | S4b | Level viewer (SDL2 + GL) | COMPLETE | chase-viewer; offscreen smoke test; placement awaits S4c |
 | S4c | Level composition (.blvl) | IN_PROGRESS | loader replicated (Py+C++), placements in viewer; materials/lighting, streaming, other sections open |
 | S4d | Audio playback | IN_PROGRESS | mixer + SDL sound test with loops; sound ids (tablessoundfx) decoded, play by id; script routing partly known |
-| S4e | Gameplay | IN_PROGRESS | chase_runtime: scheduler 0x100f44 and pad pipeline replicas, checked against the running game (Azahar oracle); player entity located; locomotion not recovered |
+| S4e | Gameplay | IN_PROGRESS | chase_runtime replicas checked against the oracle: scheduler, pad pipeline, stick intent, locomotion, follow camera, player collision; chase-game runs them on lvl_00; scripts/AI/objects/UI not recovered |
 | S4f | Saves/settings | IN_PROGRESS | chase_save: header, CRC, validate, atomic XDG storage, option fields, slot progress accessors, completion (0x1cd3dc, no cheat flags) |
 
 ## Current Work
 
 ### Current Step
 
-M1, the first runtime milestone: a native loop (scheduler replica) that reads input through the game's pad pipeline, updates and renders a real level. Acceptance: chase-game loads lvl_00_policestation, prints updates/s and stick channel values matching the pipeline, offscreen smoke test passes. Not gameplay.
+Paused at a clean point for context compaction (all work merged and committed, no agents running). Resume from Next Action.
 
 ### What Is Being Done
 
-Subagents in worktrees: chase-game front end; player stick-to-intent replica (0x2007a0); oracle scenario to reach gameplay. Results are reviewed and verified before merging.
+Nothing in progress.
 
 ### Files Being Modified
 
@@ -128,18 +128,29 @@ Full game logic, hardware APIs and asset formats not recovered yet.
 
 ## Next Action
 
-- 2026-10-13T14:00:43+02:00 — M2 reached in its measured scope (`ba0490f`): chase-game moves the player with the original's walk/run/sprint speeds, thresholds, run timer and turn rule; locomotion-real-data replays 33 oracle traces (1114 updates, max position error 7.8e-5). Lead check: a scripted 40-update run moves 10.1329 units, then the player runs into the lobby desk platform and the camera ends inside geometry, because height is flat and there is no collision.
-- Next (critical path to a walkable level): (1) collision and ground height: find the level collision data and the game's ground/collision query (RE + oracle traces of y over the ramp seen in the loco traces); (2) the game camera law (camera yaw writer, follow distance/height, .cam records docs/re/data-tables-config.md); (3) where the locomotion speeds come from (0x2327b4 velocity path). Also: the keyboard walk modifier uses the key bound to the 3DS L button, which the game uses for the camera; give it its own binding when the camera is recovered.
+Handoff (2026-10-13T15:22:58+02:00). Read this section, CLAUDE.md and docs/re/oracle.md before resuming.
 
-- M1 status: chase-game runs the scheduler and pad pipeline replicas over lvl_00_policestation and shows the player character (char_police appearance, guessed) at Player1Start (traced, 0x2e6264). The mirrored-world defect is fixed: the game world is left-handed and chase_render's projection mirrors x ([docs/re/levels.md](../re/levels.md)); the free camera now uses the game's yaw convention (forward = (sin yaw, cos yaw)). The head attachment defect is fixed (2026-10-13T12:56+02:00): the head model is attached at the head joint's bind position with its bind orientation dropped ([docs/re/player.md](../re/player.md)); the draw-time consumer of the attachment was not read.
-- M2 status (2026-10-13T13:59:00+02:00): chase-game moves the player with `locomotionUpdate` (src/runtime/player_locomotion.*): regime from the pad pipeline, run timer, sprint role, facing step, movement along the last intent. Differential test `locomotion-real-data` against 33 recorded traces: movement within 7.8e-5 u per update, timer exact, facing exact except 3 skipped updates ([docs/re/player.md](../re/player.md)). Provisional: the speeds are measured at the output (the walk/run/sprint animation data has no root travel), follow camera, flat height, no collision, assumed animation rate without blending.
-- Next (2026-10-13T15:10:11+02:00): collision of objects and vehicles, falling and jumping, the slope slow-down of 0x1abe60 (ground normal ctrl+0x1ec is now recorded); level collision for the player is done (collision.md). Earlier: ground height and slope (nav grid or collision query 0x21a73c), the camera law (writer of 0x376894), animation blending and playback rate; then jump and other moves.
-- Oracle fidelity: per-frame breakpoint stops inflate the game clock about 30 % against vblanks (free run 51.3 ticks per vblank, stepped 65.9); measure rates in free-run intervals. Open: a frame counter readable without breakpoints, to measure update rate in free runs.
+**Milestones reached (all on main, verified by the lead):**
+- M1 runtime loop: chase-game (src/game.cpp) runs the scheduler 0x100f44 and pad pipeline replicas over lvl_00_policestation; the player (char_police, guessed) spawns at Player1Start (0x2e6264); world handedness fixed (left-handed, chase_render mirrors x); head attachment fixed.
+- M2 locomotion: src/runtime/player_locomotion.* reproduces walk/run/sprint speeds, thresholds, run timer and turn rule; locomotion-real-data replays 33 oracle traces (max error 7.8e-5).
+- M3 walkable level: follow camera (src/runtime/follow_camera.*, docs/re/camera.md; camera-real-data 9 traces) and player collision (src/runtime/collision.*, docs/re/collision.md; collision-real-data 104 ground + 24 wall traces, 0 wrong). Lead check: `--script "0 150 40"` climbs the lobby steps (height 1.42 -> 2.51) and stops at the desk, camera behind.
+- Tests at 5906012: build warning-free, ctest 19/19 (configure with -DCHASE_LOCO_TRACE_DIR, -DCHASE_CAMERA_TRACE_DIR, -DCHASE_COLLISION_TRACE_DIR pointing to artifacts/oracle/*-out), Python 60/60. Graphify graph rebuilt and verified (1951 nodes).
 
-- S4f: all completion inputs found (docs/re/save-format.md 09:25, total 711). chase-savecheck prints slot completion from the real tables (total 711); next: check its output against the percentage the game shows for the same save. Not modelled: cheat flags 0x375961/0x375962. Still open: options +0 nibbles and +3 bits 2..5 (no reader found); per-level block contents beyond the counters; how live state is copied into the save buffer.
-- S3: vsync wait found (0x257a68, interrupt thread 0x1300c8); vblank counters are ids 2/3, default present waits one vblank; swap 0x25a6f0 enforces a minimum interval of word 0x529de8 (1 or 2 → 60/30 cap, 11 writers); open: which writer applies when, timer 0x529e30 unit, step C+0x10; callers of stick-to-D-pad 0x2289b8; readers of axis slots 16/17; other writers of channel 7.
-- S4e: the code that applies .bxaml track properties; .cam weight source 0x21c1e4 and blend easing; Type bit 0x100 (no reader found); particle rendering (vertex/quad build) and a native particle simulation.
-- Open unknowns are listed at the end of the matching docs/re/ files.
+**Runtime oracle:** tools/azahar_oracle.py with save states (`--display xvfb --state gameplay-start --renderer opengl --rpc --rpc-input`); route from boot: tools/oracle/to-gameplay.txt. Rules in CLAUDE.md "Runtime oracle" and docs/re/oracle.md.
+
+**Lead workflow:** delegate investigation/implementation to subagents in worktrees (Sonnet for RE and code, Haiku for simple exploration); every brief names the CLAUDE.md rules (Graphify first, oracle fast path, docs/re dated entries with unknowns last, no explanatory comments, plain-language docs); review each result against CLAUDE.md, rebuild and test, look at screenshots, cherry-pick, then `graphify update .` and verify. Only one agent may use `--rpc` at a time.
+
+**Next critical-path candidates (choose after re-checking):**
+1. Game objects in the level: spawn and draw the .blvl objects that are not plain meshes (props, doors, NPCs) with their scripts' first-level behaviour, or at least their static state; needed before any mission logic.
+2. Player completeness: falling (0x203b34), jumping, slope slow-down (0x1abe60, ground normal ctrl+0x1ec), the camera's wall sweeps (0x3313c0, 0x2e10f4, 0x2d4e64).
+3. Speed source: where 2.301 / 6.900 u/s come from (0x2327b4 velocity path) instead of the measured constants.
+
+**Open defects and follow-ups:**
+- The keyboard walk modifier uses the key bound to the 3DS X button (E), which the game uses for its own action; give it a non-3DS binding.
+- `tests/test_azahar_oracle_launch.py::test_check_raises_after_exit` is racy (failed once in 4 runs).
+- The chase-game level start differs slightly from the oracle spawn in lvl_01 (camera reference comparison is framing-only).
+
+**Older open items:** S4f: compare chase-savecheck with the percentage the game shows (now possible with the oracle); options +0 nibbles and +3 bits 2..5. S3: which writer of 0x529de8 applies when; readers of input slots 16/17. S4e: .bxaml track properties; particle rendering. Open unknowns are listed at the end of each docs/re/ file.
 
 ## Session Log
 
@@ -279,3 +290,4 @@ Reverse-engineering findings live in docs/re/ (see docs/re/README.md). Entries m
 - 2026-10-13T14:34:16+02:00 — Graphify compliance check: graph was stale since 13:45 (post-commit hook did not rebuild after the cherry-picked merges); `graphify update .` → 1823 nodes / 3818 edges, new runtime files present, docs/, artifacts/ and .claude/ absent; query verified. From now on: update and verify the graph after each merge batch, query it first for repository architecture questions, and say so in agent briefs.
 - 2026-10-13T14:41:13+02:00 — Gameplay camera recovered (worker): writer of 0x376894 is the camera manager update 0x23f174 (atan2 of the camera node's forward axis); the street camera is the follow controller 0x2e0bf0 with the OnFoot preset (look point and eye smoothing 1 − 0.75^(30 dt), 10 m horizontal rope, vertical spring 0.3, yaw (L/R ±2 + stick term) · dt · 0.6, projection 0x23458c); `FollowCamera` in chase_runtime replaces the chase-game placeholder; `camera-real-data` replays 9 oracle traces (323 updates, eye error <= 6.1e-4); `memtrace` step added to the oracle tool; unknowns: wall and player push-out, pitch clamp, record pose blend rooms, other presets → [docs/re/camera.md](../re/camera.md)
 - 2026-10-13T15:10:43+02:00 — Python tool audit (worker): extract_fib, convert_textures, convert_audio, convert_loc, convert_font and convert_levels (`--param-names` only) now call the C++ runtime through `chase_native` (new C ABI entry points; outputs byte-identical on the real data: 12836 files, 3991 PNGs, 1361 WAVs plus manifest, 66 localisation tables, 856 levels); tt_resource, convert_models, convert_anims, convert_nav and preview_model removed with their tests (last present at `9d04c91`; chase-viewer `--screenshot` replaces the preview); CLAUDE.md rule 4 updated; `cmake --build build` warning-free, ctest 18/18, python3 -m unittest 60 OK
+- 2026-10-13T15:22:58+02:00 — Merged player collision (lead check: lobby steps climbed, stop at the desk), Python tools moved onto the C++ binding (5 tools removed; 25-PNG byte-identity spot check by the lead), docs audit, CLAUDE.md rule 4 updated with user approval; graph rebuilt (1951 nodes). Handoff written in Next Action.
