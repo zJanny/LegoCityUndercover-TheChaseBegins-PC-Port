@@ -128,7 +128,8 @@ Full game logic, hardware APIs and asset formats not recovered yet.
 
 ## Next Action
 
-- M1 (runtime core): review and merge the chase-game front end and the stick-to-intent replica; then recover locomotion (oracle `trace` of the player under fixed stick input once a gameplay scenario exists, plus a write watchpoint on the player's scene node) so movement is measured, not invented.
+- M1 status: chase-game runs the scheduler and pad pipeline replicas over lvl_00_policestation and shows the player character (char_police appearance, guessed) at Player1Start (traced, 0x2e6264). Open defect: with the placeholder camera, text on the level ("POLICE" pillars) renders mirrored, so the world handedness of the free camera is wrong; fix together with the game camera.
+- Next: recover locomotion (oracle `trace` of the player under fixed stick input once a gameplay scenario exists, plus a write watchpoint on the player's scene node) so movement is measured, not invented.
 - Oracle fidelity: per-frame breakpoint stops inflate the game clock about 30 % against vblanks (free run 51.3 ticks per vblank, stepped 65.9); measure rates in free-run intervals. Open: a frame counter readable without breakpoints, to measure update rate in free runs.
 
 - S4f: all completion inputs found (docs/re/save-format.md 09:25, total 711). chase-savecheck prints slot completion from the real tables (total 711); next: check its output against the percentage the game shows for the same save. Not modelled: cheat flags 0x375961/0x375962. Still open: options +0 nibbles and +3 bits 2..5 (no reader found); per-level block contents beyond the counters; how live state is copied into the save buffer.
