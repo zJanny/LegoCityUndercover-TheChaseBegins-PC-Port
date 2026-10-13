@@ -257,3 +257,4 @@ One line per session: timestamp, what was worked on, how far it got, link to the
 - 2026-10-13T22:31:09+02:00 — Lead: paused near the usage limit; lighting part 1 and the streaming map merged, all agents stopped, priorities updated in Next Action.
 - 2026-10-13T22:34:50+02:00 — Lead: two user-reported police-station bugs classified and recorded: lift door half open and blocking (DOOR-7, with DOOR-3), grey wall behind the start (WSTREAM-7); both need an indoor oracle state (RENDER-4) → [doors](features/doors.md), [world-streaming](features/world-streaming.md).
 - 2026-10-13T22:41:25+02:00 — Lead: user-reported subtitle overflow recorded as FE-10 → [front-end](features/front-end.md).
+- 2026-10-13T22:45:08+02:00 — Lead: oracle tool `--display desktop` (visible emulator for the user) → [viewer-tools](features/viewer-tools.md), [docs/re/oracle.md](../re/oracle.md).

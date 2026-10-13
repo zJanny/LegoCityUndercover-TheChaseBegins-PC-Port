@@ -50,6 +50,8 @@ Fast iteration (a cold boot to the language screen takes about 4 minutes):
   --display xvfb        run Azahar on a private Xvfb display; the tool presses the emulator's Quick Save / Quick Load
                         hotkeys (F1 / F12, written to the generated config) with XTEST. Needed for savestate,
                         loadstate and --state.
+  --display desktop     run Azahar visibly on the current X display (DISPLAY) with the same isolated home and hotkeys as
+                        xvfb, for a person to watch and play; the render window is not hidden.
   --state NAME          load the saved state NAME right after boot instead of playing through the menus.
   --keep                leave the emulator running after the scenario (the GDB client detaches); the PID and port
                         are printed and recorded in <home>/session.json.
@@ -534,11 +536,12 @@ def stop_process(process):
 class Launched:
     """The emulator process and the Xvfb the tool started for it; stop() kills and reaps exactly these."""
 
-    def __init__(self, process, xvfb, display, keys):
+    def __init__(self, process, xvfb, display, keys, visible=False):
         self.process = process
         self.xvfb = xvfb
         self.display = display
         self.keys = keys
+        self.visible = visible
 
     def check(self):
         code = self.process.poll()
@@ -560,7 +563,8 @@ class Launched:
             if time.monotonic() > deadline:
                 raise RuntimeError('Azahar did not open its render and main windows')
             time.sleep(0.2)
-        self.keys.unmap(render[0])
+        if not self.visible:
+            self.keys.unmap(render[0])
         self.keys.focus(main[0])
 
     def exited(self):
@@ -1228,6 +1232,12 @@ def launch_emulator(args, home, azahar, image):
             xvfb, display = start_xvfb(log)
             env.update(QT_QPA_PLATFORM='xcb', DISPLAY=display)
             keys = XKeys(display)
+        elif args.display == 'desktop':
+            display = os.environ.get('DISPLAY')
+            if not display:
+                raise SystemExit('--display desktop needs an X display (DISPLAY is not set)')
+            env.update(QT_QPA_PLATFORM='xcb', DISPLAY=display)
+            keys = XKeys(display)
         else:
             env['QT_QPA_PLATFORM'] = 'offscreen'
         process = subprocess.Popen([azahar, '-g', str(args.port), str(image)], env=env,
@@ -1244,7 +1254,7 @@ def launch_emulator(args, home, azahar, image):
     session_file(home).write_text(json.dumps({
         'pid': process.pid, 'port': args.port, 'xvfb_pid': xvfb.pid if xvfb else None,
         'display': display, 'rpc': args.rpc, 'renderer': args.renderer}))
-    return Launched(process, xvfb, display, keys)
+    return Launched(process, xvfb, display, keys, visible=args.display == 'desktop')
 
 
 def start_emulator(args, home, azahar, image, output, emulator_states, saved_states):
@@ -1296,9 +1306,9 @@ def main():
     parser.add_argument('--renderer', choices=('software', 'opengl'), default='software',
                         help='software writes frames to emulated VRAM (screenshots work) but delivers vblanks late; '
                              'opengl keeps timing faithful but screenshots show stale VRAM')
-    parser.add_argument('--display', choices=('offscreen', 'xvfb'), default='offscreen',
-                        help='xvfb runs Azahar on a private X server so that savestate/loadstate/--state can press '
-                             'the emulator hotkeys')
+    parser.add_argument('--display', choices=('offscreen', 'xvfb', 'desktop'), default='offscreen',
+                        help='xvfb runs Azahar on a private X server so that savestate/loadstate/--state can press the emulator '
+                             'hotkeys; desktop does the same on the current X display, visibly')
     parser.add_argument('--frame-limit', type=int, default=100,
                         help='Azahar speed limit in percent; 0 is unthrottled and distorts the game clock')
     parser.add_argument('--state', help='load this saved state right after boot (needs --display xvfb)')
@@ -1363,8 +1373,8 @@ def main():
             config.write_text(CONFIG.replace('{renderer}', '0' if args.renderer == 'software' else '1')
                               .replace('{frame_limit}', str(args.frame_limit))
                               .replace('{rpc}', 'true' if args.rpc else 'false')
-                              .replace('{single_window}', 'false' if args.display == 'xvfb' else 'true')
-                              .replace('{single_default}', 'false' if args.display == 'xvfb' else 'true')
+                              .replace('{single_window}', 'false' if args.display in ('xvfb', 'desktop') else 'true')
+                              .replace('{single_default}', 'false' if args.display in ('xvfb', 'desktop') else 'true')
                               .replace('{shortcuts}', shortcut_lines()))
             if args.state:
                 place_state(saved_states, args.state, emulator_states)

@@ -164,3 +164,12 @@ Unknowns: the meaning of controller state 255; whether the cutscene timing (free
 - `poke ADDR HEXBYTES` writes bytes at ADDR through the GDB stub (`M` packet; the stub clears the instruction cache). It is a measuring aid to send an object a request that its script would send, for example the target state of a door (record+4 = 2 opens it; docs/re/doors.md). A poked state is never saved as a reference state: the traces were taken from `gameplay-start` after a `loadstate`, the poke followed it in the same scenario, and every scenario starts with `loadstate`, which discards the poke.
 - Pitfall: a scenario killed during a long `trace` (a `pkill` of the tool) took the emulator with it once; use `--stop` and relaunch with `--state`.
 - A long stepped `trace` with the OpenGL renderer and `stick` input took about 3 s per update in this session (`frames 90` plus a 30-update trace for each of two runs: 394 s).
+
+## 2026-10-13T22:45:08+02:00 — Visible mode for the user (--display desktop)
+
+- `--display desktop` runs Azahar on the current X display (`DISPLAY`, here XWayland :0) with the same isolated home, generated config and Quick Save/Load hotkeys as `--display xvfb`; the render window is not unmapped. Meant for a person to watch and play (user request); agents keep using `xvfb`. Do not combine it with `--rpc-input` (that patch replaces the pad reader, so the keyboard would stop working).
+- Verified: `--display desktop --renderer opengl --state gameplay-start --keep --port 24690 --home artifacts/oracle/desktop-home` loaded gameplay-start (frame 30) and left the emulator running visibly; `tests/test_azahar_oracle_*.py` 23 OK.
+- Default Azahar keys of the generated config: circle pad = arrow keys, A = A, B = S, X = Z, Y = X, L = Q, R = W, D-pad = T/F/G/H, Start = M, Select = N; F1 quick save, F12 quick load.
+
+Unknowns:
+- Whether the known software-renderer paint crash during state loads also hits a visible OpenGL window (not seen in the one run).
