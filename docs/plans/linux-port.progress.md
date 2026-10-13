@@ -259,3 +259,4 @@ One line per session: timestamp, what was worked on, how far it got, link to the
 - 2026-10-13T22:41:25+02:00 — Lead: user-reported subtitle overflow recorded as FE-10 → [front-end](features/front-end.md).
 - 2026-10-13T22:45:08+02:00 — Lead: oracle tool `--display desktop` (visible emulator for the user) → [viewer-tools](features/viewer-tools.md), [docs/re/oracle.md](../re/oracle.md).
 - 2026-10-13T23:11:46+02:00 — Lead: user checked a real 3DS: no camera turning in the police station; WSTREAM-7 reclassified, CAMERA-6 and stand-in CAMERA-S3 added → [camera](features/camera.md).
+- 2026-10-13T23:13:43+02:00 — Lead: camera lock lead from the user's real-3DS observation (crossed-out camera icon): native CameraRotFixedSet 0x27bb9c, icon UI_CameraLocked 0x193a5c → [camera](features/camera.md).

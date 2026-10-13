@@ -136,3 +136,13 @@ Unknowns:
 - The value K+0x1c8 holds during the very first gather of a camera; whether the far limit K+0x1cc and the other constants are also read stale; the order of the original's segment list (grid cells), which matters only above 13 recorded segments.
 - Mesh objects are gathered through the world box of the transformed tree, boxes through the world box of their corners (stand-ins for 0x2335e4 and the local-space tree query, see collision.md).
 - The mask-4 characters (flag bit 0 rejects them at gameplay-start) and the vehicles are not registered by the replica, so the camera ignores them.
+
+## 2026-10-13T23:13:43+02:00 — Camera lock: script native CameraRotFixedSet and the HUD icon UI_CameraLocked
+
+Lead, prompted by the user's observation on a real 3DS: outside the police station L/R turn the camera; inside they do not, and a crossed-out camera icon appears when L/R are pressed.
+- Script native `CameraRotFixedSet`: registered at 0x16071c through 0x23912c (the native registration routine; name by `add r0, pc, #960` = string 0x160ae4, handler word at literal 0x160ae0 = **0x27bb9c**, r2 = 4, r3 = 8 as for the neighbouring registrations). Found by a scan of pc-relative ADD/SUB immediates whose target is the string; the string has no absolute-address reference.
+- HUD icon `Sprites/UI_HUD/UI_CameraLocked.tga` (string 0x193a80): loaded at 0x193a5c (`add r0, pc, #28`, then `bl 0x250244`) and stored at `*(*0x3758b0) + 0x2c`; the same routine calls 0x23cb90 with r0 = 0x518218 (literal 0x193a7c), r2 = 0x1b1150 (literal 0x193a78), r3 = 6, and a float literal 0x3e99999a (0.3) at 0x193a74.
+- So the lock is most likely set by level scripts through `CameraRotFixedSet`, and the HUD shows the icon when L/R are pressed while it is set. Not traced: the handler 0x27bb9c, which camera field it sets (candidates: pose flag bit 0x40000000 "no rotation" at C+0x4c+0x10, see the 14:39:58 entry, or the shoulder accumulator path 0x200ab0), which lvl_00 scripts call it, and the icon's show/hide timing (0.3 s?).
+
+Unknowns:
+- Arguments and effect of 0x27bb9c; the callers in lvl_00 scripts; the role of 0x23cb90 / 0x1b1150 / 0x518218 in the icon routine.
