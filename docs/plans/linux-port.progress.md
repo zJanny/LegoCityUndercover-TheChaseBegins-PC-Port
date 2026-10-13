@@ -4,8 +4,8 @@
 
 - Overall: IN_PROGRESS
 - Current Phase: IMPLEMENT
-- Current Step: S4e runtime core — M3 reached (player walks a real level with collision and the game camera); paused for context compaction
-- Last Updated: 2026-10-13T15:22:58+02:00
+- Current Step: S4e runtime core — M4 reached (level objects, characters, studs, falling/jumping, object collision); paused near the usage limit
+- Last Updated: 2026-10-13T17:53:20+02:00
 - Branch: main
 - Target Branch: Not specified
 - Requested Scope: PLAN, IMPLEMENT, TEST; start reverse engineering and native port
@@ -132,22 +132,29 @@ Full game logic, hardware APIs and asset formats not recovered yet.
 
 ## Next Action
 
-Handoff (2026-10-13T15:22:58+02:00). Read this section, CLAUDE.md and docs/re/oracle.md before resuming.
+Handoff (2026-10-13T17:53:20+02:00). Read this section, CLAUDE.md (incl. "Goal and faithfulness") and docs/re/oracle.md before resuming. Paused at the user's request near the usage limit.
+
+**Goal (user, 2026-10-13):** faithful PC port, playable start to finish, Linux first; Windows only when the user says so; QoL only after the PC version is finished (Decisions section, CLAUDE.md).
 
 **Milestones reached (all on main, verified by the lead):**
-- M1 runtime loop: chase-game (src/game.cpp) runs the scheduler 0x100f44 and pad pipeline replicas over lvl_00_policestation; the player (char_police, guessed) spawns at Player1Start (0x2e6264); world handedness fixed (left-handed, chase_render mirrors x); head attachment fixed.
-- M2 locomotion: src/runtime/player_locomotion.* reproduces walk/run/sprint speeds, thresholds, run timer and turn rule; locomotion-real-data replays 33 oracle traces (max error 7.8e-5).
-- M3 walkable level: follow camera (src/runtime/follow_camera.*, docs/re/camera.md; camera-real-data 9 traces) and player collision (src/runtime/collision.*, docs/re/collision.md; collision-real-data 104 ground + 24 wall traces, 0 wrong). Lead check: `--script "0 150 40"` climbs the lobby steps (height 1.42 -> 2.51) and stops at the desk, camera behind.
-- Tests at 5906012: build warning-free, ctest 19/19 (configure with -DCHASE_LOCO_TRACE_DIR, -DCHASE_CAMERA_TRACE_DIR, -DCHASE_COLLISION_TRACE_DIR pointing to artifacts/oracle/*-out), Python 60/60. Graphify graph rebuilt and verified (1951 nodes).
+- M1 runtime loop, M2 locomotion, M3 walkable level (follow camera, level collision): see the session log up to 15:22.
+- M4 (2026-10-13 afternoon): level objects from class files (docs/re/objects.md), level characters standing in place (objects.md), studs drawn/collected/counted (docs/re/studs.md), falling and jumping (docs/re/player.md), camera obstruction (docs/re/camera.md), placed-object collision for player and camera (docs/re/collision.md), walk/run speed, jump height, air speed and animation rate derived from code/data (player.md, skeleton-animation.md). README quick start runs chase-game; docs/game-runtime.md.
+- Tests at 286b81d: build warning-free, ctest 28/28 (trace dirs: CHASE_LOCO/CAMERA/CAMERA_WALL/COLLISION/OBJECT_COLLISION/FALL/JUMP/STUDS_TRACE_DIR, defaults under artifacts/oracle/), python3 -m unittest 63 OK. Graphify updated after each merge.
 
-**Runtime oracle:** tools/azahar_oracle.py with save states (`--display xvfb --state gameplay-start --renderer opengl --rpc --rpc-input`); route from boot: tools/oracle/to-gameplay.txt. Rules in CLAUDE.md "Runtime oracle" and docs/re/oracle.md.
+**Unfinished agent branches (not merged; worktrees under .claude/worktrees/, review before use):**
+- `worktree-agent-acac0a1c124d6d5f2` — front end (boot to title screen): src/frontend/ (flow, layout, canvas, resources) and docs/re/front-end.md, committed as WIP when stopped; not reviewed, may not build. Next: finish the flow map and the screens up to the title, faithful to the original (oracle states agent-doughnut-title, agent-intro-dialog, agent-slot, fast-lang).
+- `worktree-agent-a1e075329efe44717` — sound (level music, stud/jump/land/footstep sounds; src/audio/soundplayer.*, musicplayer.*, spatial.*, src/runtime/sound_events.*, music.*): asked to wrap up; check its last commit and report in the session log before merging.
+- Resume: `git log main..<branch>`, review against CLAUDE.md, rebuild/test, squash-merge, `git worktree remove -f -f`, `git branch -D`, `graphify update .`.
 
-**Lead workflow:** delegate investigation/implementation to subagents in worktrees (Sonnet for RE and code, Haiku for simple exploration); every brief names the CLAUDE.md rules (Graphify first, oracle fast path, docs/re dated entries with unknowns last, no explanatory comments, plain-language docs); review each result against CLAUDE.md, rebuild and test, look at screenshots, squash-merge the branch into main (`git merge --squash`, one commit per agent branch; user request 2026-10-13), then `graphify update .` and verify. Only one agent may use `--rpc` at a time.
+**Runtime oracle:** tools/azahar_oracle.py with save states (`--display xvfb --state gameplay-start --renderer opengl --rpc --rpc-input`); route from boot: tools/oracle/to-gameplay.txt; `teleport X Y Z` step; stick/button state survives loadstate. Rules in CLAUDE.md "Runtime oracle" and docs/re/oracle.md.
 
-**Next critical-path candidates (choose after re-checking):**
-1. Game objects in the level: spawn and draw the .blvl objects that are not plain meshes (props, doors, NPCs) with their scripts' first-level behaviour, or at least their static state; needed before any mission logic.
-2. Player completeness: falling and jumping are replicated (2026-10-13 session log, docs/re/player.md); open: the step-off state 8 when walking off a ledge, jumps that end in the air, slope slow-down (0x1abe60, ground normal ctrl+0x1ec). The camera's wall sweeps (0x3313c0, 0x2e10f4, 0x2d4e64) are recovered (2026-10-13T16:19, docs/re/camera.md); open there: placed-object collision, the 2 s re-snap 0x2313c8.
-3. (Done 2026-10-13) Speed source: the walk/run speeds, jump scales, jump 0.8 factor, animation rate and landing stun are derived from code and data (docs/re/player.md 2026-10-13T17:02:03).
+**Lead workflow:** delegate to subagents in worktrees (Sonnet for RE and code, Haiku for simple tasks), at most 3 in parallel (user); every brief names the CLAUDE.md rules (Graphify first, oracle fast path, docs/re dated entries with unknowns last, no explanatory comments, plain-language docs, Goal and faithfulness); review each result against CLAUDE.md, spot-check addresses with llvm-objdump, rebuild and test, look at screenshots, squash-merge (`git merge --squash`, one commit per branch), `graphify update .` and verify, push (authorized by the user this session). Only one agent may use `--rpc` at a time.
+
+**Next critical-path candidates:**
+1. Finish and merge the two branches above (front end, sound).
+2. HUD (hearts, stud counter) with the .bxaml layouts; studs flying to the counter.
+3. Interaction and object behaviour: doors and other scripted objects (frozen today), NPC animation, script objects; then mission flow.
+4. Player completeness: step-off state 8, slope slow-down (0x1abe60), landing-stun rule, other 0x203d18 states.
 
 **Open defects and follow-ups:**
 - Stand-ins of the placed-object collision (docs/re/collision.md 2026-10-13T17:34:00): `kStateDisabledStandIn` (85 lvl_01 instance names read from the original's grid instead of its script state), `kDoorCentreXStandIn` (Police_Door_02), automatic box without node pose matrices (girders, Donut_Box), broad phase by world boxes instead of 0x2335e4 / local tree query, objects frozen at gameplay-start, only the classes with a recovered constructor rule (vehicles, characters, prop_prop and about 50 other constructors missing); camera: first-gather K+0x1c8 and w_L row 2 open. Unexplained: door_back rows 125/128/130 (static contact near (901.8, 1096)), 153 master-model items vs 147 + 7 static entries.
@@ -309,3 +316,4 @@ Reverse-engineering findings live in docs/re/ (see docs/re/README.md). Entries m
 - 2026-10-13T17:02:03+02:00 — Speed and scale derivation (worker; Azahar port 24760, traps and a watch, no RPC; stopped afterwards): walk 2.3 / run 6.9 u/s come from `0x203d18` (ATTR_RunSpeed default 0.23, walk one third, 30 steps per second), jump scales from 2.1 / extent of the extra joint curve (0.8608763 equals the oracle slot value), the 0.8 jump factor is a literal in `0x203d18`, the animation rate comes from the joint table word, landing stun = animation length; `kMeasuredRootMotionSpeeds` and the fitted jump scales removed. ctest 26/26 and Python 62/62 → [docs/re/player.md](../re/player.md)
 - 2026-10-13T17:12:29+02:00 — Studs (worker, REA + oracle port 24770 without RPC): studs are pickup-system sprites (object type 0x3d, pickuptype 0..3), not models; pickup radius 1.5, skip counter, 1.0 s collect timer, values 10/100/1000/10000 added to the u64 counter 0x593418, spin 15 frames per second of the 4x4 sheet pickups_commonstud; `StudField` (chase_runtime), `StudSprites` (chase_render), `DrawableObjects::studs`, counter printed by `--script`; `studs-real-data` replays 10 oracle traces frame by frame; ctest 28/28, python3 -m unittest 62 OK; stand-ins listed under Next Action → [docs/re/studs.md](../re/studs.md)
 - 2026-10-13T17:42:29+02:00 — Oracle tool: free_display() reuses X display locks whose Xvfb died (108 stale /tmp/.X*-lock files from crashed runs had filled :90..:199, so no emulator could start); FreeDisplayTest added; python3 -m unittest 63 OK. Lead studs check: oracle screenshot of tools/oracle/studs-shot.txt (port 24800, home artifacts/oracle/lead-home, `--rpc`) shows silver, gold, silver studs at the same door positions as chase-game `--start "866 16.589 1066"`; the original shows that door open, chase-game closed (objects are frozen at their level state, door logic not recovered).
+- 2026-10-13T17:53:20+02:00 — Paused at the user's request near the usage limit: front-end agent stopped with a WIP commit, sound agent asked to wrap up; handoff rewritten in Next Action (M4, unfinished branches, next candidates).
