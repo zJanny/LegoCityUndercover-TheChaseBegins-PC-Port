@@ -4,6 +4,7 @@
 #include <cctype>
 #include <cmath>
 #include <cstring>
+#include <map>
 #include <stdexcept>
 
 namespace chase::assets {
@@ -26,6 +27,7 @@ std::vector<LevelParam> readParams(Reader& r, const Bytes& block, std::size_t co
     for (std::size_t i = 0; i < count; ++i) {
         LevelParam& p = params[i];
         p.hash = readU32(block, i * 12);
+        p.flags = readU16(block, i * 12 + 4);
         p.type = readU16(block, i * 12 + 6);
         p.value = readU32(block, i * 12 + 8);
         if (p.type == 1 || p.type == 2 || p.type == 3 || p.type == 6 || (p.type == 4 && p.value))
@@ -66,7 +68,7 @@ Level parseLevel(const Bytes& data) {
                 n1c = readU16(head, 8), n20 = readU16(head, 10), n24 = readU16(head, 12), n2c = readU16(head, 14);
     Level level;
     level.defaults = readParams(r, r.next(), n10);
-    readParams(r, r.next(), n14);
+    level.classParams = readParams(r, r.next(), n14);
     Bytes s18 = r.next();
     need(s18, n18 * 0x1c);
     for (std::size_t i = 0; i < n18; ++i) {
@@ -169,6 +171,29 @@ std::string stringParam(const std::vector<LevelParam>& params, const std::string
         if (param.hash == hash && param.type == 1 && !param.blocks.empty()) return cString(param.blocks[0]);
     return "";
 }
+
+const LevelParam* findParam(const std::vector<LevelParam>& params, std::uint32_t hash) {
+    for (const auto& param : params)
+        if (param.hash == hash) return &param;
+    return nullptr;
+}
+
+// Lookup 0x217080: only parameters of the class table (+0x10, then +0x14) exist for an object. A slot
+// parameter (flags bit 1) holds the instance value when the level object sets it, else the class value.
+const LevelParam* effectiveParam(const LevelObject& obj, const Level& cls, std::uint32_t hash) {
+    const LevelParam* classParam = findParam(cls.defaults, hash);
+    if (!classParam) classParam = findParam(cls.classParams, hash);
+    if (!classParam) return nullptr;
+    if (classParam->flags & 2)
+        if (const LevelParam* instance = findParam(obj.params, hash)) return instance;
+    return classParam;
+}
+
+bool float3Of(const LevelParam* param, float* out) {
+    if (!param || param->type != 2 || param->blocks.empty() || param->blocks[0].size() < 12) return false;
+    std::memcpy(out, param->blocks[0].data(), 12);
+    return true;
+}
 }
 
 std::vector<Placement> placements(const Level& level) {
@@ -176,6 +201,48 @@ std::vector<Placement> placements(const Level& level) {
     for (const auto& obj : level.objects) {
         Placement p = placementOf(obj);
         if (!p.mesh.empty()) out.push_back(p);
+    }
+    return out;
+}
+
+std::vector<Placement> objectPlacements(const Level& level, const ClassLookup& classOf) {
+    std::vector<Placement> out;
+    for (const auto& obj : level.objects) {
+        const Level* cls = classOf(obj.className);
+        if (!cls) continue;
+        const LevelParam* meshParam = effectiveParam(obj, *cls, meshName);
+        if (!meshParam || meshParam->type != 1 || meshParam->blocks.empty()) continue;
+        Placement p;
+        p.instance = obj.instance;
+        p.room = obj.room;
+        p.className = obj.className;
+        p.mesh = cString(meshParam->blocks[0]);
+        if (p.mesh.empty()) continue;
+        float3Of(effectiveParam(obj, *cls, initialPosition), p.position);
+        float3Of(effectiveParam(obj, *cls, initialOrientation), p.orientation);
+        out.push_back(std::move(p));
+    }
+    return out;
+}
+
+DrawableObjects drawableObjects(FuseArchive& archive, const Level& level) {
+    std::map<std::string, Level> classes;
+    const ClassLookup classOf = [&](const std::string& name) -> const Level* {
+        auto found = classes.find(name);
+        if (found == classes.end()) {
+            const FuseEntry* entry = archive.find("levels/" + name + ".blvl");
+            found = classes.emplace(name, entry ? parseLevel(archive.read(*entry)) : Level{}).first;
+        }
+        return &found->second;
+    };
+    DrawableObjects out;
+    for (auto& placement : objectPlacements(level, classOf)) {
+        std::string lowered = placement.mesh;
+        std::transform(lowered.begin(), lowered.end(), lowered.begin(), [](unsigned char c) { return char(std::tolower(c)); });
+        if (placement.className.rfind("props/map_", 0) == 0) ++out.markers;
+        else if (lowered.rfind("char_", 0) == 0) ++out.skeletal;
+        else if (!archive.find(meshModelPath(placement.mesh))) ++out.missingModel;
+        else out.objects.push_back(std::move(placement));
     }
     return out;
 }

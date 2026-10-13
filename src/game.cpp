@@ -333,7 +333,8 @@ int run(const Options& options) {
     if (!entry) throw std::runtime_error("not in archive: " + options.level);
     std::size_t placed = 0, unresolved = 0;
     const Level level = parseLevel(archive.read(*entry));
-    for (const auto& placement : placements(level))
+    const DrawableObjects drawable = drawableObjects(archive, level);
+    for (const auto& placement : drawable.objects)
         if (scene.addModel(meshModelPath(placement.mesh), placementMatrix(placement))) ++placed;
         else ++unresolved;
     std::optional<PlayerRig> player = placePlayer(archive, scene, level);
@@ -343,7 +344,8 @@ int run(const Options& options) {
     float centre[3], radius;
     scene.bounds(centre, radius);
     std::cout << "loaded " << scene.instances() << " instance(s) (" << placed << " placed, " << unresolved
-              << " unresolved meshnames), " << scene.triangles() << " triangles, " << scene.missingTextures()
+              << " unresolved meshnames, " << drawable.missingModel << " without model in the archive, "
+              << drawable.skeletal << " skeletal and " << drawable.markers << " marker objects skipped), " << scene.triangles() << " triangles, " << scene.missingTextures()
               << " missing textures\n";
 
     PlaceholderCamera camera;
