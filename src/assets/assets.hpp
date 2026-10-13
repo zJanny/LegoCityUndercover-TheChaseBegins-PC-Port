@@ -467,6 +467,11 @@ std::uint32_t pjwHash(const std::string& text);
 // Records are 0x17c bytes (0x23de24). Field use from spawner 0x216244 and particle init 0x222550.
 constexpr std::size_t kParticleDefSize = 380;
 constexpr std::size_t kMaxColourKeys = 7;
+constexpr std::size_t kMaxFadeKeys = 14;
+struct FadeKey {
+    float time = 0;     // fraction of the emitter duration
+    std::uint8_t alpha = 0;
+};
 struct ColourKey {
     float time = 0;
     std::array<std::uint8_t, 4> rgba{};  // alpha comes from ParticleDef::startAlpha instead
@@ -483,6 +488,11 @@ struct ParticleDef {
     std::uint8_t frameMode = 0;     // +0x176: 0 whole texture, 1 random cell, 2 first cell, 3 next cell
     std::uint8_t flipModes = 0;     // +0x17a: low nibble U, high nibble V; 1 random, 2 alternate, 3 always
     std::vector<ColourKey> colourKeys;  // +0xf8, 8 bytes each, count at +0x172
+    std::vector<FadeKey> fadeKeys;      // +0x88, 8 bytes each, count at +0x170; emitter alpha (0x20db0c)
+    float rate = 0;                     // +0x28, particles per second
+    float duration = 0;                 // +0x38, seconds; above 98 the emitter runs until stopped
+    float lifetimeMin = 0;              // +0x7c, seconds
+    float lifetimeMax = 0;              // +0x80
     std::array<std::uint8_t, kParticleDefSize> raw{};
 };
 struct ParticleDefs {

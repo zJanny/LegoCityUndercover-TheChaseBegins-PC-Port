@@ -13,7 +13,7 @@ Reverse-engineering findings for `particles/particledefs.bprt`. Entries are chro
 - The data block is exactly 298 × 380 bytes, and word 3 is 298. The 380-byte record size is inferred from that. Record +0x2c equals the PJW hash of a texture name in all 298 records.
 - Record fields, observed only:
   - Many float pairs look like min/max ranges (+0x0c/+0x10, +0x14/+0x18, +0x1c/+0x20).
-  - +0x90/+0x94 and +0x138..+0x144 hold (float, u32) pairs that look like timed colour or alpha keys.
+  - +0x90/+0x94 and +0x138..+0x144 hold (float, u32) pairs that look like timed colour or alpha keys (see the 16:30 entry: +0x88.. are emitter fade keys).
   - +0x104 holds colour-like words (0xff666666).
   - +0x168..+0x178 hold small packed values.
 - Spawners address definitions by index. 0x163f00 (ev_f0d2eaec…) reads the float attribute "ExplosionParticleDef" as an index for 0x23de24. It also compares word 0 >> 1 with a count from 0x288744, so word 0 may be a capacity (inferred).
@@ -62,3 +62,13 @@ Reverse-engineering findings for `particles/particledefs.bprt`. Entries are chro
 - Data census: frame modes 0:190, 1:53, 2:38, 3:17. Columns {1,2,3,4,5,8}, rows {1,2,3,4}. Key counts 2..7 (846 keys).
 - Implemented: ParticleDef::startAlpha, atlasColumns, atlasRows, frameMode, flipModes and colourKeys.
 - Unknown: emitter fields E+0x100..0x114 and E+0xd4..0xdc (set by the spawner from +0x0c, +0x10, +0x14, +0x1c, +0x20, +0x24, +0x3c, +0x78); the per-frame update (gravity, drag, size over time); +0x174 values 1 and 4; flags bits not listed; +0x16f's exact formula (it uses a second random source 0x2345dc).
+
+## 2026-10-13T16:30+02:00 — Emitter update 0x20db0c (REA Ghidra 12.1.2 ev_a8436740…; read-only)
+
+- Correction to the 13:00/15:30 entries: +0x88..+0xf7 is a second key list, not colour keys. +0x170 keys at +0x88 + 8k, each (f32 time, u8 alpha, 3 zero bytes). This is the emitter fade over its duration: t = 1 − (duration − age) / duration, lerped between keys, then / 255. Flags bit 1 squares the result. It is stored ×128 in E+0x155. The spawner's +0x8c is the first key's alpha.
+- +0x28 is confirmed as particles per second. The accumulator E+0xe4 += dt × +0x28 × E+0xe8; its floor is the number of new particles this frame. These go into free slots (slot +0x38 == −1.0). Optional sub-stepping splits dt into param_3 parts and interpolates the emitter position (0x221e5c).
+- +0x38 is confirmed as the emitter duration. Age E+0xe0 advances only while +0x38 ≤ 98. Larger values (100 in 197 records) do not age; they count down E+0x120 instead and stop when it reaches 0. The emitter is removed when age ≥ duration.
+- Each particle is advanced by 0x221e9c(dt, fade, emitter, particle, matrix, frames, uv-scale, bounds…), which also grows the emitter bounds (E+0xa0 centre, E+0xac half-size). The bounds are refreshed every 4–7 frames (random, 0x235498) unless +0x74 ≥ 0 keeps the larger extent.
+- When a removed emitter's texture has type 2 and is no longer used, it is released about a second later (list 0x586328, up to 20 entries).
+- Implemented: ParticleDef::rate, duration, lifetimeMin/Max, fadeKeys. Real-data check: 648 fade keys, 197 endless emitters.
+- Unknown: the per-particle step 0x221e9c (velocity integration, gravity/drag fields, size over life), E+0xe8 (rate multiplier source), and the meaning of +0x74's sign.

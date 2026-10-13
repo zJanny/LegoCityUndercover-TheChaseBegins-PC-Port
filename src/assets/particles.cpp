@@ -10,6 +10,13 @@ const Block& required(PoolCursor& cursor, const char* what) {
     return *block;
 }
 
+float readFloat(const Bytes& data, std::size_t offset) {
+    std::uint32_t bits = readU32(data, offset);
+    float value;
+    std::memcpy(&value, &bits, sizeof value);
+    return value;
+}
+
 std::uint32_t word(const Bytes& data, PoolCursor& cursor, const char* what) {
     const Block& block = required(cursor, what);
     if (block.size < 4) throw std::runtime_error(std::string("particle defs: short ") + what);
@@ -69,15 +76,22 @@ ParticleDefs parseParticleDefs(const Bytes& data) {
         def.atlasRows = data[at + 0x179];
         def.frameMode = data[at + 0x176];
         def.flipModes = data[at + 0x17a];
+        def.rate = readFloat(data, at + 0x28);
+        def.duration = readFloat(data, at + 0x38);
+        def.lifetimeMin = readFloat(data, at + 0x7c);
+        def.lifetimeMax = readFloat(data, at + 0x80);
         std::uint8_t keys = data[at + 0x172];
         if (keys > kMaxColourKeys) throw std::runtime_error("particle defs: too many colour keys");
         for (std::uint8_t k = 0; k < keys; ++k) {
             ColourKey key;
-            std::uint32_t timeBits = readU32(data, at + 0xf8 + 8u * k);
-            std::memcpy(&key.time, &timeBits, sizeof key.time);
+            key.time = readFloat(data, at + 0xf8 + 8u * k);
             std::memcpy(key.rgba.data(), data.data() + at + 0xfc + 8u * k, key.rgba.size());
             def.colourKeys.push_back(key);
         }
+        std::uint8_t fades = data[at + 0x170];
+        if (fades > kMaxFadeKeys) throw std::runtime_error("particle defs: too many fade keys");
+        for (std::uint8_t k = 0; k < fades; ++k)
+            def.fadeKeys.push_back({readFloat(data, at + 0x88 + 8u * k), data[at + 0x8c + 8u * k]});
         for (std::size_t t = 0; t < defs.textures.size(); ++t)
             if (pjwHash(defs.textures[t]) == def.textureHash) def.texture = int(t);
         defs.defs.push_back(def);

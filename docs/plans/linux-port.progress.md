@@ -126,7 +126,7 @@ Full game logic, hardware APIs and asset formats not recovered yet.
 
 - S4f: options +0 nibbles and +3 bits 2..5 (no reader found); slot contents (story progress, unlocks); how live state is copied into the save buffer.
 - S3: find the GSP vsync call and the scheduler step (30 vs 60 fps); name the binding slots at 0x3769e8.
-- S4e: the code that applies .bxaml track properties; .cam field semantics; particle emitter per-frame update.
+- S4e: the code that applies .bxaml track properties; .cam field semantics; particle step 0x221e9c (motion, size over life).
 - Open unknowns are listed at the end of the matching docs/re/ files.
 
 ## Session Log
@@ -228,3 +228,4 @@ Reverse-engineering findings live in docs/re/ (see docs/re/README.md). Entries m
 - 2026-10-13T15:00+02:00 — particledefs.bprt container decoded (parseParticleDefs, pjwHash); ctest 10/10 → [docs/re/particles.md](../re/particles.md)
 - 2026-10-13T15:30+02:00 — Particle spawner field use; named fields in ParticleDef; ctest 10/10 → [docs/re/particles.md](../re/particles.md)
 - 2026-10-13T16:00+02:00 — Particle init fields (atlas, frames, flips, colour gradient); ctest 10/10 → [docs/re/particles.md](../re/particles.md)
+- 2026-10-13T16:30+02:00 — Particle emitter update (rate, duration, fade keys); ctest 10/10 → [docs/re/particles.md](../re/particles.md)

@@ -422,6 +422,10 @@ void particles() {
     second[0xfc] = 0x11;
     second[0x100 + 3] = 0x3f;
     second[0x104 + 1] = 0x22;
+    second[0x170] = 1;
+    second[0x8c] = 0x80;
+    second[0x38 + 3] = 0x40;  // duration 2.0
+    second[0x28 + 3] = 0x41;  // rate 8.0
     Bytes data(first);
     data.insert(data.end(), second.begin(), second.end());
     auto file = [&](std::uint32_t defCount, std::uint32_t scale, const Bytes& records) {
@@ -441,10 +445,16 @@ void particles() {
     require(keys.size() == 2 && keys[0].time == 0 && keys[0].rgba[0] == 0x11 && keys[1].time == 0.5f &&
                 keys[1].rgba[1] == 0x22,
             "particle colour keys");
+    require(defs.defs[1].fadeKeys.size() == 1 && defs.defs[1].fadeKeys[0].alpha == 0x80 &&
+                defs.defs[1].duration == 2.0f && defs.defs[1].rate == 8.0f,
+            "particle fade keys and timing");
     require(parseParticleDefs(file(2, 0x40000000, data)).scale == 2.0f, "particle scale");
     requireThrows([&] { parseParticleDefs(file(3, 0, data)); }, "particle count mismatch accepted");
     data[kParticleDefSize + 0x172] = kMaxColourKeys + 1;
     requireThrows([&] { parseParticleDefs(file(2, 0, data)); }, "too many colour keys accepted");
+    data[kParticleDefSize + 0x172] = 0;
+    data[kParticleDefSize + 0x170] = kMaxFadeKeys + 1;
+    requireThrows([&] { parseParticleDefs(file(2, 0, data)); }, "too many fade keys accepted");
 }
 
 void animations() {
