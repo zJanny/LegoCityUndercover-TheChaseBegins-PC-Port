@@ -86,3 +86,20 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
   - 0x1cbf54 and 0x2be874 skip slots whose first byte is 0 and pass the record address to 0x20a8d4 (arguments 48, 64, 3200, 3; purpose unknown). Correction: the 10:30 "slot summary" guess is unconfirmed; the floats suggest a saved position or camera state (inferred).
 - Probable original bug: the slot-delete path 0x31ba64 sets the selected slot (*0x3741dc +0x55) to 0xff and then clears options[0x1ec + (s8)0xff × 0x18] = options +0x1d4 instead of the deleted slot's record (0x31baf4..0x31bb18).
 - Unknown: the meaning of the five floats; the bytes between +0x3c and +0x1d4; how gifts are granted.
+
+## 2026-10-13T09:13+02:00 — Slot progress layout and completion (REA Ghidra 12.1.2 ev_852ce460…, llvm-objdump; read-only)
+
+Offsets are relative to the slot block (live copy at 0x51b6b0; file slot 0 at 0x234, slot 1 at 0x5464).
+
+- Character bits at +0x51bc (0x52086c), 2 bits per character id, ids below 141:
+  - Bit 2·id = unlocked. Reader 0x213444 returns true when cheat flag 0x375961 or 0x375962 bit 0 is set.
+  - Bit 2·id + 1 = second state, meaning unknown ("bought"/"available" fits). Reader 0x21793c: ids 1..8 use the unlocked bit instead; cheat bit 0 forces true.
+  - Setter 0x232028(id, which): the first time a bit is set for any id except 9, it also sets bit id of a "new" set at +0x5211 (0x5208c1).
+  - Unlock 0x231fc0(id) sets which = 0. It sets which = 1 too when character-table field +4 is 0. It then recursively unlocks the ids in table bytes +0x22 and +0x23 (table *0x372e10, stride 0x28).
+- Completion 0x1cd3dc (ev_852ce460…) returns per-mille, capped at 1000, = collected × 1000 / total:
+  - Per-level blocks of 0x820 bytes. Level L in 2..8 is at +0x8 + (L − 2) × 0x820 (up to +0x38e8). Level 1 is at +0x4928 (ends at +0x5148, where the stud count starts). Byte +0x81f of a block is that level's collected count; the total comes from the level table *0x375914 (stride 0x54, byte +0x40). The space at +0x38e8..+0x4928 would hold indices 9 and 10; no reader was seen.
+  - Two 21-bit sets at +0x51b5 and +0x51b8: 42 items.
+  - Characters 9..140: both bits each (264 items). Character-table entries with byte +0x24 == 1 are taken out of both counts (132 entries checked).
+  - +0x51e3: 41 ids × 2 bits (ids 1..41). Cheat flag bit 1 forces both bits, and 0x375962 bit 1 the first bit. The meaning is unknown; vehicles would fit (inferred).
+  - For 13 categories × levels 2..8: collected 0x20a630(category, level), total 0x20a7fc(category).
+- Unknown: the per-level block contents other than +0x81f; the meaning of the 21-bit sets, the 41-id set and the 13 categories; the cheat flag bit assignment; where indices 9 and 10 go.

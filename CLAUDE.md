@@ -98,3 +98,5 @@ All other commands (extractors, converters, viewer, FMV, sound test, input lab, 
 - Use the cheapest model that can do the task (Haiku-class for exploration, summarisation, Graphify extraction). Keep tasks narrow, with only the needed files and constraints.
 - Do not delegate correctness-critical verification; use tests, checksums and source inspection.
 - Do not spawn subagents when a local script or the overhead outweighs the benefit.
+
+Always use current system time when putting a time into a file!

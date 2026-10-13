@@ -5,7 +5,7 @@
 - Overall: IN_PROGRESS
 - Current Phase: IMPLEMENT
 - Current Step: S4e (particles); S4f option fields done
-- Last Updated: 2026-10-13T09:12+02:00
+- Last Updated: 2026-10-13T09:13+02:00
 - Branch: main
 - Target Branch: Not specified
 - Requested Scope: PLAN, IMPLEMENT, TEST; start reverse engineering and native port
@@ -124,7 +124,7 @@ Full game logic, hardware APIs and asset formats not recovered yet.
 
 ## Next Action
 
-- S4f: options +0 nibbles and +3 bits 2..5 (no reader found); slot contents (story progress, unlocks); how live state is copied into the save buffer.
+- S4f: options +0 nibbles and +3 bits 2..5 (no reader found); per-level block contents and the 13 completion categories (0x20a630, 0x20a7fc); how live state is copied into the save buffer.
 - S3: find the GSP vsync call and the scheduler step (30 vs 60 fps); name the binding slots at 0x3769e8.
 - S4e: the code that applies .bxaml track properties; .cam Type values and the run-time camera (0x1e9290); particle rendering (vertex/quad build) and a native particle simulation.
 - Open unknowns are listed at the end of the matching docs/re/ files.
@@ -234,3 +234,4 @@ Reverse-engineering findings live in docs/re/ (see docs/re/README.md). Entries m
 - 2026-10-13T09:08+02:00 — Session timestamps corrected to commit times (system clock). The earlier 2026-10-13 entries (02:30–12:35) do not match their commit times (e.g. `ab62d67` at 01:43) and were left unchanged.
 - 2026-10-13T09:10+02:00 — .cam loader 0x3062e4: key handlers and record layout; RotationY/X, Distance, Lookat are editor-only → [docs/re/data-tables-config.md](../re/data-tables-config.md)
 - 2026-10-13T09:12+02:00 — Storyboard runtime layout (0x1dbb80); property evaluator not found (time-boxed) → [docs/re/ui-layouts.md](../re/ui-layouts.md)
+- 2026-10-13T09:13+02:00 — Slot progress layout: character bits, level blocks, completion formula (0x1cd3dc) → [docs/re/save-format.md](../re/save-format.md)
