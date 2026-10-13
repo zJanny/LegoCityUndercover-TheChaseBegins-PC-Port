@@ -105,6 +105,7 @@ The original game runs in Azahar as a measuring reference. Read `docs/re/oracle.
 **Git**
 - Commit small, focused, verified units. Review the diff first; include no unrelated or unintended files.
 - Never push without explicit user authorization; permission does not carry over between requests.
+- Keep the README progress section current: run `python3 tools/progress_report.py --update-readme README.md` before the final commit of a branch and after every merge to main, and commit the README change with that work. CTest `progress-readme` fails while the section is stale. On a merge conflict in that section, regenerate it instead of editing it by hand. Measures and their meaning: `docs/progress.md`.
 - Keep `.gitignore` current for new generated, local or build files. Never ignore files merely to hide unintended changes.
 
 **Game assets and legal**

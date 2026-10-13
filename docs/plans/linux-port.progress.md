@@ -248,3 +248,5 @@ One line per session: timestamp, what was worked on, how far it got, link to the
 - 2026-10-13T21:46:54+0200 — chase-viewer plays animations at their stored rate (ANIM-S1 removed) → [animation-characters](features/animation-characters.md).
 - 2026-10-13T21:46:58+0200 — STUD-3 checked: still open: blue and purple collect sound (id 63) has no recorded oracle pickup; silver id 64 is pinned by `audio-real-data` → [studs](features/studs.md).
 - 2026-10-13T21:51:17+02:00 — Effect sound stop (0x23ae50, owner key, fade from the table) and the door sound sequence in `chase-game`; AUDIO-4 and DOOR-5 closed; ctest 42/42 → [audio](features/audio.md), [doors](features/doors.md)
+- 2026-10-13T22:17:29+02:00 — Progress report tool (`tools/progress_report.py`, README table, `progress-readme` gate) over C++ tables for script commands, object behaviours and file decoders → [viewer-tools](features/viewer-tools.md), [docs/progress.md](../progress.md)
+- 2026-10-13T22:20:38+02:00 — Lead: progress report merged; README progress section is a workflow rule (CLAUDE.md "Git", gate `progress-readme`) → [viewer-tools](features/viewer-tools.md), [docs/progress.md](../progress.md).

@@ -30,6 +30,17 @@ python3 -m unittest discover -s tests -p 'test_*.py' -k test_hash_corruption
 ctest --test-dir build --output-on-failure
 ```
 
+## Progress report
+
+```sh
+python3 tools/progress_report.py                            # short table
+python3 tools/progress_report.py --json artifacts/progress.json
+python3 tools/progress_report.py --update-readme README.md  # rewrite the progress table in the README
+python3 tools/progress_report.py --check README.md          # fails when the README table is out of date
+```
+
+Needs the built `build/libchase_assets_c.so` and the extracted game data. See [Progress](progress.md).
+
 Single C++ tests, with `ctest --test-dir build -R <name>`:
 
 | Name | Notes |
@@ -49,6 +60,8 @@ Single C++ tests, with `ctest --test-dir build -R <name>`:
 | `fall-real-data` | Compares falling, landing and the stand-still after a landing with traces recorded from the original game (`artifacts/oracle/fall-out`, folder set with `-DCHASE_FALL_TRACE_DIR=...`); skips with code 77 if the traces or `artifacts/romfs` are missing |
 | `collision-real-data` | Compares the character's floor height and wall sliding with traces recorded from the original game and the slides against lamp posts and barriers (`artifacts/oracle/loco-out`, `artifacts/oracle/coll-out` and `artifacts/oracle/objcoll-out`, folders set with `-DCHASE_LOCO_TRACE_DIR=...`, `-DCHASE_COLLISION_TRACE_DIR=...` and `-DCHASE_OBJECT_COLLISION_TRACE_DIR=...`); skips with code 77 if the traces or `artifacts/romfs` are missing |
 | `soundtest-real-smoke`, `soundtest-id-smoke` | Play one sound by file name and one by number on the dummy audio driver. Same conditions |
+| `progress-tables` | The tables behind the progress report: which script commands, object types and file types the port handles. No game data needed |
+| `progress-readme` | Fails when the progress table in `README.md` is out of date (`tools/progress_report.py --check`); skips with code 77 if `artifacts/romfs` or the built library is missing |
 | `studs-core` | Coin pickup rules on made-up coins, no game data needed |
 | `studs-real-data` | Replays coin pickups recorded from the original game (`artifacts/oracle/studs-traces`, folder set with `-DCHASE_STUDS_TRACE_DIR=...`); skips with code 77 if the traces or `artifacts/romfs` are missing |
 | `audio-mixer` | Mixer core, no SDL |

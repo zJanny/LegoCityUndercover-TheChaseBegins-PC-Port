@@ -217,3 +217,9 @@ Unknowns:
 - Whether C+0x10/+0x14 and the cap change in other states (gameplay, cutscenes); only one state was measured.
 - Who writes C+0x10..+0x1c (still not found statically).
 - Which screen produced 3 vblanks per update, and the update rate during gameplay.
+
+## 2026-10-13T22:17:29+02:00 — Function count of the analysis ELF, and a call-target estimate (REA Ghidra 12.1.2 binary_overview ev_ccc9183720356c84c7ff8c519dcd05e0f221f159dfc1b672c39a953d3d535b3f; read-only)
+
+- REA lists 8086 procedures and 4927 strings for `artifacts/game/game.arm.elf` (segments 0x100000..0x357000 code, 0x357000..0x36b000 read-only data, 0x36b000..0x5a4f68 data and bss).
+- Estimate without a disassembler (`function_entries` in tools/progress_report.py): the targets of `bl` and `blx` immediate instructions in the code segment, plus 4-aligned words in the data segments that point into the code segment, give 7575 function starts (94 % of REA's count). Adding every `stmfd sp!, {..., lr}` word gives 10150, which is too many (mid-function pushes). The estimate misses leaf functions that nothing calls directly or through a pointer, and the ELF has no symbols to check it.
+- Unknown: the 511 procedures REA finds that the estimate does not; the estimate was not compared address by address.

@@ -1,3 +1,4 @@
+#include "assets/object_classes.hpp"
 #include "block_reader.hpp"
 #include <algorithm>
 #include <array>
@@ -253,6 +254,8 @@ bool float3Of(const LevelParam* param, float* out) {
     return true;
 }
 }
+
+bool isStudObject(const LevelObject& object, const Level& classFile) { return isStudClass(object, classFile); }
 
 std::vector<Placement> placements(const Level& level) {
     std::vector<Placement> out;

@@ -1,5 +1,12 @@
 #include "assets/assets.hpp"
+#include "assets/file_decoders.hpp"
+#include "assets/object_classes.hpp"
+#include "runtime/level_start.hpp"
+#include <algorithm>
+#include <cctype>
 #include <cstring>
+#include <map>
+#include <set>
 #include <stdexcept>
 #include <string>
 
@@ -179,6 +186,76 @@ int chase_level_walk(const std::uint8_t* data, std::size_t size, chase_level_obj
             }
         }
         return int(level.objects.size());
+    });
+}
+
+typedef void (*chase_name_fn)(const char* name, void* user);
+
+const char* chase_file_decoder(const char* archivePath) {
+    thread_local std::string decoder;
+    decoder = chase::assets::fileDecoder(archivePath);
+    return decoder.c_str();
+}
+
+void chase_script_handlers(chase_name_fn callback, void* user) {
+    for (const std::string& name : chase::runtime::handledScriptFunctions()) callback(name.c_str(), user);
+}
+
+typedef void (*chase_census_class_fn)(const char* className, const char* behaviours, std::uint64_t instances,
+                                      std::uint64_t behaving, std::uint32_t levels, void* user);
+typedef void (*chase_census_function_fn)(const char* function, int support, std::uint64_t calls, std::uint32_t levels,
+                                         void* user);
+
+int chase_level_census(const char* fibPath, const char* namesPath, int mainLevelsOnly, chase_census_class_fn onClass,
+                       chase_census_function_fn onFunction, void* user) {
+    return guarded(-1, [&] {
+        using namespace chase::assets;
+        FuseArchive archive(fibPath);
+        archive.loadNames(namesPath);
+        const ClassLookup classOf = archiveClassLookup(archive);
+        struct ClassTotals {
+            unsigned behaviours = 0;
+            std::uint64_t instances = 0, behaving = 0;
+            std::set<std::string> levels;
+        };
+        struct FunctionTotals {
+            std::uint64_t calls = 0;
+            std::set<std::string> levels;
+        };
+        std::map<std::string, ClassTotals> classes;
+        std::map<std::string, FunctionTotals> functions;
+        int levelFiles = 0;
+        for (const std::string& name : archive.names()) {
+            const std::string suffix = mainLevelsOnly ? "_main.blvl" : ".blvl";
+            if (name.rfind("levels/levels/", 0) != 0 || name.size() < suffix.size() ||
+                name.compare(name.size() - suffix.size(), suffix.size(), suffix) != 0)
+                continue;
+            const Level level = parseLevel(archive.read(*archive.find(name)));
+            ++levelFiles;
+            for (const LevelObject& object : level.objects) {
+                const unsigned behaviours = objectBehaviours(object, *classOf(object.className));
+                ClassTotals& totals = classes[object.className];
+                totals.behaviours |= behaviours;
+                ++totals.instances;
+                if (behaviours) ++totals.behaving;
+                totals.levels.insert(name);
+            }
+            for (const LevelScript& script : level.scripts)
+                for (const ScriptCall& call : script.calls) {
+                    std::string function = call.function;
+                    std::transform(function.begin(), function.end(), function.begin(), [](unsigned char c) { return char(std::tolower(c)); });
+                    FunctionTotals& totals = functions[function];
+                    ++totals.calls;
+                    totals.levels.insert(name);
+                }
+        }
+        for (const auto& [className, totals] : classes)
+            onClass(className.c_str(), behaviourNames(totals.behaviours).c_str(), totals.instances, totals.behaving,
+                    std::uint32_t(totals.levels.size()), user);
+        for (const auto& [function, totals] : functions)
+            onFunction(function.c_str(), int(chase::runtime::scriptFunctionSupport(function)), totals.calls,
+                       std::uint32_t(totals.levels.size()), user);
+        return levelFiles;
     });
 }
 }

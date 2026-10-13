@@ -16,6 +16,12 @@ _TEXT_ENTRY = ctypes.CFUNCTYPE(None, ctypes.c_uint32, ctypes.c_char_p, ctypes.c_
 _LEVEL_OBJECT = ctypes.CFUNCTYPE(None, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_void_p)
 _LEVEL_PARAM = ctypes.CFUNCTYPE(None, ctypes.c_uint32, ctypes.c_uint16, ctypes.c_uint32, ctypes.c_size_t,
                                 ctypes.POINTER(ctypes.c_void_p), ctypes.POINTER(ctypes.c_size_t), ctypes.c_void_p)
+_NAME_ENTRY = ctypes.CFUNCTYPE(None, ctypes.c_char_p, ctypes.c_void_p)
+_CENSUS_CLASS = ctypes.CFUNCTYPE(None, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_uint64, ctypes.c_uint64, ctypes.c_uint32,
+                                 ctypes.c_void_p)
+_CENSUS_FUNCTION = ctypes.CFUNCTYPE(None, ctypes.c_char_p, ctypes.c_int, ctypes.c_uint64, ctypes.c_uint32, ctypes.c_void_p)
+
+SCRIPT_SUPPORT = ('none', 'implemented', 'stand-in')
 
 
 class NativeUnavailable(RuntimeError):
@@ -76,6 +82,11 @@ def library():
         lib.chase_level_walk.restype = ctypes.c_int
         lib.chase_level_walk.argtypes = [ctypes.c_char_p, ctypes.c_size_t, _LEVEL_OBJECT, _LEVEL_PARAM,
                                          ctypes.c_void_p]
+        lib.chase_file_decoder.restype = ctypes.c_char_p
+        lib.chase_file_decoder.argtypes = [ctypes.c_char_p]
+        lib.chase_script_handlers.argtypes = [_NAME_ENTRY, ctypes.c_void_p]
+        lib.chase_level_census.restype = ctypes.c_int
+        lib.chase_level_census.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_int, _CENSUS_CLASS, _CENSUS_FUNCTION, ctypes.c_void_p]
         _library = lib
     return _library
 
@@ -222,3 +233,46 @@ def level_objects(data):
     if lib.chase_level_walk(data, len(data), _LEVEL_OBJECT(on_object), _LEVEL_PARAM(on_param), None) < 0:
         raise _error(lib)
     return objects
+
+
+def file_decoder(archive_path):
+    """Name of the chase_assets function that decodes an archive file, or '' when there is none."""
+    return library().chase_file_decoder(archive_path.encode('latin-1')).decode()
+
+
+def script_handlers():
+    """Lower-case names of the script functions the level-start executor handles."""
+    names = []
+
+    def collect(name, _user):
+        names.append(name.decode('latin-1'))
+
+    library().chase_script_handlers(_NAME_ENTRY(collect), None)
+    return names
+
+
+def level_census(fib_path, names_path, main_levels_only=False):
+    """Census of the level files (levels/levels/*.blvl, or only the *_main.blvl ones), computed by chase_runtime and
+    chase_assets.
+
+    Returns (level files, classes, functions). classes maps a class name to a dict with behaviours (list of names),
+    instances, behaving (instances with a behaviour) and levels; functions maps a lower-case script function name to
+    a dict with support ('none', 'implemented' or 'stand-in'), calls and levels.
+    """
+    lib = library()
+    classes = {}
+    functions = {}
+
+    def on_class(name, behaviours, instances, behaving, levels, _user):
+        text = behaviours.decode()
+        classes[name.decode('latin-1')] = {'behaviours': text.split(',') if text else [], 'instances': instances,
+                                           'behaving': behaving, 'levels': levels}
+
+    def on_function(name, support, calls, levels, _user):
+        functions[name.decode('latin-1')] = {'support': SCRIPT_SUPPORT[support], 'calls': calls, 'levels': levels}
+
+    count = lib.chase_level_census(str(fib_path).encode(), str(names_path).encode(), int(main_levels_only), _CENSUS_CLASS(on_class),
+                                   _CENSUS_FUNCTION(on_function), None)
+    if count < 0:
+        raise _error(lib)
+    return count, classes, functions

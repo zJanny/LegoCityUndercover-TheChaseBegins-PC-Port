@@ -5,6 +5,7 @@
 // stops him at walls, and he falls off ledges, jumps and lands. The camera keeps out of the level's static
 // collision. There is no gameplay.
 #include "assets/assets.hpp"
+#include "assets/object_classes.hpp"
 #include "game_audio.hpp"
 #include "frontend/hud.hpp"
 #include "frontend/minimap.hpp"
@@ -359,8 +360,7 @@ std::vector<DoorObject> loadDoors(FuseArchive& archive, const Level& level, cons
                                   const std::map<std::string, std::pair<std::size_t, Mat4>>& instances) {
     std::vector<DoorObject> doors;
     for (const ObjectCollision& object : objects) {
-        const std::string className = lower(object.className);
-        if (className != "props/prop_door" && className != "leprops/leprop_door") continue;
+        if (!isDoorClass(object.className)) continue;
         const auto instance = instances.find(object.instance);
         if (instance == instances.end() || object.model.empty()) continue;
         const LevelObject* source = nullptr;

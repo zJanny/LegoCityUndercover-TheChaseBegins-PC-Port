@@ -1,4 +1,5 @@
 #include "assets/object_collision.hpp"
+#include "assets/object_classes.hpp"
 #include "block_reader.hpp"
 #include <algorithm>
 #include <cctype>
@@ -36,8 +37,6 @@ std::string lower(std::string text) {
     std::transform(text.begin(), text.end(), text.begin(), [](unsigned char c) { return char(std::tolower(c)); });
     return text;
 }
-
-bool startsWith(const std::string& text, const char* prefix) { return text.rfind(prefix, 0) == 0; }
 
 struct ModelData {
     bool present = false;
@@ -131,11 +130,10 @@ std::vector<ObjectCollision> objectCollisions(FuseArchive& archive, const Level&
 
     std::vector<ObjectCollision> out;
     for (const LevelObject& object : level.objects) {
-        const std::string className = lower(object.className);
-        const bool prop = startsWith(className, "props/") || startsWith(className, "leprops/");
-        const bool door = className == "props/prop_door" || className == "leprops/leprop_door";
-        const bool propFamily = startsWith(className, "leprops/leprop_") || className == "props/prop_respawnabledestructible" || door;
-        const bool dummyCollision = className == "dummy/dummycollision";
+        const bool prop = isPropClass(object.className);
+        const bool door = isDoorClass(object.className);
+        const bool propFamily = isPropFamilyClass(object.className);
+        const bool dummyCollision = isDummyCollisionClass(object.className);
         if (!prop && !dummyCollision) continue;
         if (state.isDisabled(object.instance)) continue;
         const Level& cls = classOf(object.className);

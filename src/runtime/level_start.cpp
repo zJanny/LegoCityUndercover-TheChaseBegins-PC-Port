@@ -19,19 +19,38 @@ std::string lower(std::string text) {
     return text;
 }
 
-enum class Word { Native, If, Else, ElseIf, EndIf, Assign, AssignArithmetic, CallScript, SpawnScript };
+enum class Word {
+    Unhandled, If, Else, ElseIf, EndIf, Assign, AssignArithmetic, CallScript, SpawnScript,
+    EnableObject, EnableCollision, GetGameComplete, IsLevelUnlocked, IsRedBrickExtraActive
+};
+
+struct ScriptFunction {
+    const char* name;
+    Word word;
+    bool standIn;
+};
+
+constexpr ScriptFunction kScriptFunctions[] = {
+    {"?", Word::If, false},
+    {"!?", Word::Else, false},
+    {"?!", Word::ElseIf, false},
+    {"??", Word::EndIf, false},
+    {"=", Word::Assign, false},
+    {"=+", Word::AssignArithmetic, false},
+    {"callscript", Word::CallScript, false},
+    {"spawnscript", Word::SpawnScript, false},
+    {"enableobject", Word::EnableObject, false},
+    {"enablecollision", Word::EnableCollision, false},
+    {"getgamecomplete", Word::GetGameComplete, true},
+    {"islevelunlocked", Word::IsLevelUnlocked, true},
+    {"isredbrickextraactive", Word::IsRedBrickExtraActive, true},
+};
 
 Word wordOf(const std::string& function) {
-    if (function == "?") return Word::If;
-    if (function == "!?") return Word::Else;
-    if (function == "?!") return Word::ElseIf;
-    if (function == "??") return Word::EndIf;
-    if (function == "=") return Word::Assign;
-    if (function == "=+") return Word::AssignArithmetic;
     const std::string name = lower(function);
-    if (name == "callscript") return Word::CallScript;
-    if (name == "spawnscript") return Word::SpawnScript;
-    return Word::Native;
+    for (const ScriptFunction& entry : kScriptFunctions)
+        if (name == entry.name) return entry.word;
+    return Word::Unhandled;
 }
 
 std::string unquoted(const std::string& text) {
@@ -65,7 +84,8 @@ public:
         std::size_t pc = 0;
         while (pc < calls.size()) {
             const ScriptCall& call = calls[pc];
-            switch (wordOf(call.function)) {
+            const Word word = wordOf(call.function);
+            switch (word) {
             case Word::ElseIf:
                 if (!elseIfPending) {
                     pc = skipToEnd(calls, pc);
@@ -94,8 +114,8 @@ public:
             case Word::SpawnScript:
                 runNamed(call, depth);
                 break;
-            case Word::Native:
-                native(call);
+            default:
+                native(word, call);
                 break;
             }
             ++pc;
@@ -183,19 +203,25 @@ private:
             }
     }
 
-    void native(const ScriptCall& call) {
-        const std::string name = lower(call.function);
+    void native(Word word, const ScriptCall& call) {
         const auto& args = call.arguments;
-        if (name == "enableobject" && args.size() >= 2) {
-            const std::string instance = lower(args[0]);
-            if (read(args[1]) == 0.0f) state_.disabled.insert(instance);
-            else state_.disabled.erase(instance);
-        } else if (name == "enablecollision" && args.size() >= 2) {
-            state_.collisionOverride[lower(args[0])] = read(args[1]) != 0.0f;
-        } else if (name == "getgamecomplete" && !args.empty()) {
-            variables_[assets::nameHash(args[0])] = 0.0f;
-        } else if ((name == "islevelunlocked" || name == "isredbrickextraactive") && args.size() >= 2) {
-            variables_[assets::nameHash(args[1])] = 0.0f;
+        switch (word) {
+        case Word::EnableObject:
+            if (args.size() < 2) break;
+            if (read(args[1]) == 0.0f) state_.disabled.insert(lower(args[0]));
+            else state_.disabled.erase(lower(args[0]));
+            break;
+        case Word::EnableCollision:
+            if (args.size() >= 2) state_.collisionOverride[lower(args[0])] = read(args[1]) != 0.0f;
+            break;
+        case Word::GetGameComplete:
+            if (!args.empty()) variables_[assets::nameHash(args[0])] = 0.0f;
+            break;
+        case Word::IsLevelUnlocked:
+        case Word::IsRedBrickExtraActive:
+            if (args.size() >= 2) variables_[assets::nameHash(args[1])] = 0.0f;
+            break;
+        default: break;
         }
     }
 
@@ -234,6 +260,19 @@ void hideRevealedObjects(const Level& level, const assets::ClassLookup& classOf,
         }
     }
 }
+}
+
+ScriptFunctionSupport scriptFunctionSupport(const std::string& name) {
+    const std::string key = lower(name);
+    for (const ScriptFunction& entry : kScriptFunctions)
+        if (key == entry.name) return entry.standIn ? ScriptFunctionSupport::StandIn : ScriptFunctionSupport::Implemented;
+    return ScriptFunctionSupport::None;
+}
+
+std::vector<std::string> handledScriptFunctions() {
+    std::vector<std::string> names;
+    for (const ScriptFunction& entry : kScriptFunctions) names.push_back(entry.name);
+    return names;
 }
 
 assets::PlacedObjectState levelStartState(const Level& level, const assets::ClassLookup& classOf) {

@@ -4,7 +4,18 @@
 // objects that a build-it, super build-it or detective reveal object hides until it is used. No SDL dependency.
 #include "assets/object_collision.hpp"
 
+#include <string>
+#include <vector>
+
 namespace chase::runtime {
+
+// The script functions the executor above handles: the script words and the natives with a handler. A function not
+// listed is skipped when a script calls it. StandIn marks a handler whose result is not taken from the original (the
+// unlock and completion natives write 0).
+enum class ScriptFunctionSupport { None, Implemented, StandIn };
+ScriptFunctionSupport scriptFunctionSupport(const std::string& name);
+// Lower-case names of every function with a handler.
+std::vector<std::string> handledScriptFunctions();
 
 // `classOf` finds the class file of an object class (the reveal links exist only for the parameters the class lists).
 // Stand-ins: waits and yielding natives count as elapsed (the state is read after the intro), the natives that write a
