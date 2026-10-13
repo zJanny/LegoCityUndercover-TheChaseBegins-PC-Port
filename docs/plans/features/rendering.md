@@ -28,7 +28,7 @@ IN_PROGRESS, updated 2026-10-13T22:24:39+02:00. Combiner setups of all 16122 shi
 - [ ] RENDER-1 Fragment lighting: light list per draw (0x12d884, 0x5943b0), light mask, LUTs, specular. Next: break at 0x12d884 in the oracle (`trap`) and read the light objects and material +0x10/+0x14 for a character and a prop; implement in the shader; remove RENDER-S1. evidence: [materials.md](../../re/materials.md)
 - [ ] RENDER-2 Reflections (cube sampling, vertex shader program with `Cubemap`). Removes RENDER-S2.
 - [ ] RENDER-3 Fog (0x1292fc caller, 0x3760fc), shadows (0x37796c), material colour pulse, draw sorting.
-- [ ] RENDER-4 Compare an indoor police-station view with the oracle (no checkpoint exists yet; lighting 4 lightmap surfaces are unverified against the original).
+- [ ] RENDER-4 Compare an indoor police-station view with the oracle (no checkpoint exists yet; lighting 4 lightmap surfaces are unverified against the original). blocks: DOOR-7, WSTREAM-7.
 - [ ] RENDER-5 Characters are lighter and more saturated in the original (directional light missing).
 
 ## 6. Findings summary

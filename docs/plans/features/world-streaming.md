@@ -26,6 +26,7 @@ IN_PROGRESS, updated 2026-10-13T22:30:00+0200. Mapped from code and the oracle: 
 - [ ] WSTREAM-4 — Visibility inside the loaded rooms (hide or draw): objects carry their room (object record +8); find what hides objects of unloaded rooms and what the camera or portals add. needs: WSTREAM-1.
 - [ ] WSTREAM-5 — Section +0x20 (0x28-byte records with room names and float triples, probably paths) and the +0x24 byte tuple at +8; decode in `chase_assets` with a real-data test. One session.
 - [ ] WSTREAM-6 — The `RoomStreamingControl/Destination` classes and `StreamRoomIn` / `RoomStreamingWait` natives as scripted preloads. needs: SCRIPT-1.
+- [ ] WSTREAM-7 — (User report 2026-10-13) In the police station (lvl_00, `chase-game --gameplay`), turning around at the start position shows a plain grey wall. Not classified yet: likely causes are WSTREAM-S1 (all rooms are drawn, so a room shell the original would not show can cover the view) or an unrecovered material/lighting case (rendering.md); the original was never compared indoors. needs: RENDER-4.
 
 ## 6. Findings summary
 
