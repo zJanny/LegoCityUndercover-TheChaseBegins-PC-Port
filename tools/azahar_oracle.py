@@ -53,7 +53,7 @@ invalidate the JIT cache. Details are in docs/re/oracle.md.
   --rpc                 enable the RPC server in the generated config and connect to it (with --attach: connect to
                         the kept emulator's RPC server).
   --rpc-input           breakpoint-free pad input: patch the pad reader once (0x10a578 reads the held mask from the
-                        spare word 0x10acf4) and let 'hold' write that word over RPC. Implies --rpc. Circle-pad
+                        a mailbox word in the code cave 0x356580) and let 'hold' write that word over RPC. Implies --rpc. Circle-pad
                         'stick' values still use the per-frame breakpoint at 0x10a540.
 
 After loadstate the frame counter is set to the value stored with the state. A load is refused while the
@@ -88,8 +88,17 @@ GAME_CLOCK = 0x376b0c
 VBLANKS = 0x593d14
 PAD_LOAD = 0x10a578
 PAD_LOAD_ORIGINAL = 0xe5940000
-PAD_SPARE = 0x10acf4
-PAD_LOAD_PATCHED = 0xe59f0000 | (PAD_SPARE - (PAD_LOAD + 8))
+PAD_RESUME = 0x10a57c
+PAD_CAVE = 0x356580
+PAD_MAILBOX = PAD_CAVE + 8
+
+
+def arm_branch(source, target):
+    return 0xea000000 | (((target - (source + 8)) >> 2) & 0xffffff)
+
+
+PAD_CAVE_CODE = struct.pack('<II', 0xe59f0000, arm_branch(PAD_CAVE + 4, PAD_RESUME))
+PAD_LOAD_PATCHED = arm_branch(PAD_LOAD, PAD_CAVE)
 
 BUTTONS = {'A': 0x1, 'B': 0x2, 'SELECT': 0x4, 'START': 0x8, 'RIGHT': 0x10, 'LEFT': 0x20,
            'UP': 0x40, 'DOWN': 0x80, 'R': 0x100, 'L': 0x200, 'X': 0x400, 'Y': 0x800}
@@ -499,20 +508,24 @@ class Oracle:
         current = self.rpc.u32(PAD_LOAD)
         if current not in (PAD_LOAD_ORIGINAL, PAD_LOAD_PATCHED):
             raise RuntimeError('pad reader at 0x%x holds 0x%08x, expected 0x%08x' % (PAD_LOAD, current, PAD_LOAD_ORIGINAL))
-        self.rpc.write(PAD_SPARE, struct.pack('<I', self.held))
+        cave = self.rpc.read(PAD_CAVE, 12)
+        if cave[:8] != PAD_CAVE_CODE and any(cave):
+            raise RuntimeError('code cave at 0x%x is not empty: %s' % (PAD_CAVE, cave.hex()))
+        self.rpc.write(PAD_CAVE, PAD_CAVE_CODE + struct.pack('<I', self.held))
         self.rpc.write(PAD_LOAD, struct.pack('<I', PAD_LOAD_PATCHED))
         self.pad_patched = True
 
     def unpatch_pad_reader(self):
         if self.pad_patched:
             self.rpc.write(PAD_LOAD, struct.pack('<I', PAD_LOAD_ORIGINAL))
+            self.rpc.write(PAD_CAVE, bytes(12))
             self.pad_patched = False
 
     def inject_input(self):
         if self.rpc_input:
             if not self.pad_patched:
                 self.patch_pad_reader()
-            self.rpc.write(PAD_SPARE, struct.pack('<I', self.held))
+            self.rpc.write(PAD_MAILBOX, struct.pack('<I', self.held))
             if self.stick != (0, 0) and PAD_STICK not in self.remote.breakpoints:
                 self.remote.add_breakpoint(PAD_STICK)
         elif PAD_HELD not in self.remote.breakpoints:
