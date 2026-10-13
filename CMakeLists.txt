@@ -34,7 +34,7 @@ add_library(chase_save_tables src/save/completion_tables.cpp)
 target_link_libraries(chase_save_tables PUBLIC chase_save chase_assets)
 target_compile_options(chase_save_tables PRIVATE -Wall -Wextra -Wpedantic)
 # Game runtime core (plan S4e): recovered frame logic, no SDL dependency.
-add_library(chase_runtime src/runtime/scheduler.cpp)
+add_library(chase_runtime src/runtime/scheduler.cpp src/runtime/pad.cpp)
 target_include_directories(chase_runtime PUBLIC src)
 target_compile_options(chase_runtime PRIVATE -Wall -Wextra -Wpedantic)
 add_executable(chase-savecheck src/savecheck.cpp)

@@ -1,4 +1,6 @@
-// Frame scheduler 0x100f44 replica against values traced from the disassembly and read from the running game.
+// chase_runtime replicas (scheduler 0x100f44, pad pipeline) against values traced from the disassembly
+// and read from the running game.
+#include "runtime/pad.hpp"
 #include "runtime/scheduler.hpp"
 #include <cmath>
 #include <iostream>
@@ -66,6 +68,55 @@ int main() {
         Scheduler half(slow, 0);
         dts.clear();
         require(half.advance(150, record) == 1 && near(dts[0], 75.0f / 3000.0f) && half.last() == 150, "scale");
+
+        // Circle clamp 0x119724 with the default min 40 / max 145 (values worked through the integer code).
+        require(circleClamp(0, 30, 40, 145) == std::make_pair<std::int16_t, std::int16_t>(0, 0), "inside min");
+        require(circleClamp(100, 0, 40, 145) == std::make_pair<std::int16_t, std::int16_t>(60, 0), "length - min");
+        require(circleClamp(200, 0, 40, 145) == std::make_pair<std::int16_t, std::int16_t>(105, 0), "capped at max - min");
+        require(circleClamp(100, 100, 40, 145) == std::make_pair<std::int16_t, std::int16_t>(71, 71), "isqrt 18101");
+        require(circleClamp(-100, 0, 40, 145) == std::make_pair<std::int16_t, std::int16_t>(-60, 0), "negative axis");
+
+        // 0x10fcb0 and 0x1035d0.
+        require(axisValue(0, 105) == 0.0f && axisValue(105, 105) == 1.0f && near(axisValue(60, 105), 60.0f / 105.0f), "axis");
+        require(axisValue(-105, 105) == -1.0f && near(axisValue(-140, 105), -140.0f / 105.0f), "negative side not capped");
+        require(deadzoneAxis(0.2f, 0.25f) == 0.0f && deadzoneAxis(-0.2f, 0.25f) == 0.0f, "inside dead zone");
+        require(near(deadzoneAxis(0.625f, 0.25f), 0.5f) && near(deadzoneAxis(-0.625f, 0.25f), -0.5f), "remap");
+        require(deadzoneAxis(1.5f, 0.25f) == 1.0f && deadzoneAxis(-1.5f, 0.25f) == -1.0f, "clamp");
+
+        // Oracle 2026-10-13 (language screen): raw stick (100, 50) gave ch0 0.5779, ch1 0.2889 with the
+        // game's defaults (dead zone 0.1, threshold 0.75 on every channel).
+        PadDevice live;
+        PadState pushed;
+        pushed.stickX = 100;
+        pushed.stickY = 50;
+        live.poll(pushed);
+        require(std::fabs(live.slot(14).value - 0.5779f) < 5e-5f && std::fabs(live.slot(15).value - 0.2889f) < 5e-5f,
+                "matches the running game");
+        require(live.channel(0).threshold == 0.75f && live.channel(16).deadzone == 0.1f, "defaults");
+
+        // Poll: buttons, stick, radial dead zone and edges 0x25b4b4.
+        PadDevice pad;
+        pad.channel(0).deadzone = 0.25f;
+        for (std::size_t i = 0; i < kChannelCount; ++i) pad.channel(i).threshold = 0.5f;
+        PadState state;
+        state.held = PadA | PadUp | 0x2000;
+        state.stickX = 145;
+        pad.poll(state);
+        require(pad.slot(6).value == 1.0f && pad.slot(6).press == 1 && pad.slot(4).press == 1, "A on slots 4 and 6");
+        require(pad.slot(0).value == 1.0f && pad.channel(12).press == 1, "Up on slot 0");
+        require(pad.slot(14).value == 1.0f && pad.slot(15).value == 0.0f && pad.slot(14).press == 1, "stick x full");
+        pad.poll(state);
+        require(pad.slot(6).press == 0 && pad.slot(6).release == 0, "no repeat while held");
+        state.held = 0;
+        state.stickX = -145;
+        pad.poll(state);
+        require(pad.slot(6).value == 0.0f && pad.slot(6).release == 1, "A release edge");
+        require(pad.slot(14).value == -1.0f && pad.slot(14).release == 1 && pad.slot(14).press == -1, "stick reversal");
+        state.stickX = -100;
+        pad.poll(state);
+        const float expected = (60.0f / 105.0f - 0.25f) / 0.75f;
+        require(near(pad.slot(14).value, -expected) && pad.slot(14).release == -1 && pad.slot(14).press == 0,
+                "back inside the negative threshold");
     } catch (const std::exception& e) {
         std::cerr << "FAIL: " << e.what() << '\n';
         return 1;
