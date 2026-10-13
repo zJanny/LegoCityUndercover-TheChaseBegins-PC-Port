@@ -236,4 +236,4 @@ Reverse-engineering findings live in docs/re/ (see docs/re/README.md). Entries m
 - 2026-10-13T09:12+02:00 — Storyboard runtime layout (0x1dbb80); property evaluator not found (time-boxed) → [docs/re/ui-layouts.md](../re/ui-layouts.md)
 - 2026-10-13T09:13+02:00 — Slot progress layout: character bits, level blocks, completion formula (0x1cd3dc) → [docs/re/save-format.md](../re/save-format.md)
 - 2026-10-13T09:14+02:00 — Per-level counters (0x20a630, 0x203464) and totals source TablesSuperCounters (0x2f63dc) → [docs/re/save-format.md](../re/save-format.md)
-- 2026-10-13T09:15+02:00 — Paused at user request. Tree clean after this commit; ctest 10/10 at the last code change (`46ba507`).
+- 2026-10-13T09:15+02:00 — Paused at user request. Tree clean after this commit; build warning-free and ctest 10/10 at `537a033`.
