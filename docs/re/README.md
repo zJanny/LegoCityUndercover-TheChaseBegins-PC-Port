@@ -3,8 +3,11 @@
 Everything recovered about the game's formats and code lives here, one file per topic.
 Read this index, then open only the file you need.
 
+> **All addresses here are for one exact build of the game (Europe, title ID 00040000000AD600, v1.0, image SHA-256 078faf7e…59ad). With any other image they are probably wrong.** Check the image first: [game-version.md](game-version.md).
+
 | File | Contents |
 |---|---|
+| [game-version.md](game-version.md) | The reference build (hashes, title ID, version), how to check an image, the different-version warning |
 | [container-and-archive.md](container-and-archive.md) | CCI/NCCH identity, RomFS, FUSE `.fib` archive and RefPack codec |
 | [arm-executable.md](arm-executable.md) | Startup chain, SVC stubs, services, paths, HID input, channels, main loop |
 | [pooled-resources.md](pooled-resources.md) | Shared layout of all pooled `b*` formats |

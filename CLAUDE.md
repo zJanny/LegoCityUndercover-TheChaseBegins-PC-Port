@@ -46,6 +46,7 @@ All other commands (extractors, converters, viewer, FMV, sound test, input lab, 
 - `config/controls.cfg` format: `Action key|mouse Code hold|toggle`, `#` comments. Key names are SDL names with `_` for spaces. Mouse codes: `Left`, `Middle`, `Right`, `X1`, `X2`. Action names are 3DS buttons, not recovered gameplay meanings.
 - **Extractor safety:** open the image read-only; bounds-check every offset; fail on encryption or hash mismatch; cap decompressed output at `MAX_CODE`; never overwrite an existing output directory. `manifest.json` records offsets, hashes and ARM segment addresses as evidence. The ELF is a derived analysis wrapper, not an original binary.
 - REA cannot open the `.cci`. Analyse `artifacts/<dir>/game.arm.elf`.
+- **Game version:** all `docs/re/` addresses are for one exact build (Europe, `00040000000AD600`, v1.0). `docs/re/game-version.md` lists its hashes and how to check an image. With a different image, warn the user loudly that the documented offsets are probably wrong, and stop before applying them.
 - **REA:** for the ARM executable, use the installed REA skill/integration and its documented workflow. If unavailable, use other disassembly tools. Record reproducible findings and evidence IDs in the matching `docs/re/` file. Never claim REA analysis that did not happen.
 - **Platform:** Linux x86_64 first. Windows comes after the Linux version is finished. Until the user says so, do no Windows work of any kind: no builds, infrastructure, abstractions or preparation. Prefer portable C++17 and the standard library.
 
