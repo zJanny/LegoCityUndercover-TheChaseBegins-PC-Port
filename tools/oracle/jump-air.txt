@@ -1,0 +1,102 @@
+# Jumps with input changes in the air (B jumps). Traces of one jump are named STEM-1, STEM-2, ... and continue each
+# other. 'stick 0 0' and 'hold -' first: input survives loadstate. Fixed dt 0.033 unless noted.
+# Second tap of B at update 8 (rising) and 16 (falling) of a standing jump.
+loadstate gameplay-start
+frames 3
+stick 0 0
+hold -
+dt 0.033 0.033
+frames 2
+trace 2 jdbl8-1 mem
+hold B
+trace 1 jdbl8-2 mem
+hold -
+trace 8 jdbl8-3 mem
+hold B
+trace 1 jdbl8-4 mem
+hold -
+trace 60 jdbl8-5 mem
+loadstate gameplay-start
+frames 3
+stick 0 0
+hold -
+dt 0.033 0.033
+frames 2
+trace 2 jdbl16-1 mem
+hold B
+trace 1 jdbl16-2 mem
+hold -
+trace 16 jdbl16-3 mem
+hold B
+trace 1 jdbl16-4 mem
+hold -
+trace 60 jdbl16-5 mem
+# Standing jump, stick pushed forward after 6 updates.
+loadstate gameplay-start
+frames 3
+stick 0 0
+hold -
+dt 0.033 0.033
+frames 2
+trace 2 jstick-1 mem
+hold B
+trace 1 jstick-2 mem
+hold -
+trace 6 jstick-3 mem
+stick 0 150
+trace 60 jstick-4 mem
+stick 0 0
+# Running jump, stick released after 6 updates in the air.
+loadstate gameplay-start
+frames 3
+stick 0 0
+hold -
+dt 0.033 0.033
+frames 2
+stick 0 150
+trace 8 jrel-1 mem
+hold B
+trace 1 jrel-2 mem
+hold -
+trace 6 jrel-3 mem
+stick 0 0
+trace 60 jrel-4 mem
+# Running jump, stick turned 90 degrees to the right after 6 updates in the air.
+loadstate gameplay-start
+frames 3
+stick 0 0
+hold -
+dt 0.033 0.033
+frames 2
+stick 0 150
+trace 8 jturn-1 mem
+hold B
+trace 1 jturn-2 mem
+hold -
+trace 6 jturn-3 mem
+stick 150 0
+trace 60 jturn-4 mem
+stick 0 0
+# Standing jumps at other time steps.
+loadstate gameplay-start
+frames 3
+stick 0 0
+hold -
+dt 0.066 0.066
+frames 2
+trace 2 jdt066-1 mem
+hold B
+trace 1 jdt066-2 mem
+hold -
+trace 40 jdt066-3 mem
+loadstate gameplay-start
+frames 3
+stick 0 0
+hold -
+dt 0.0165 0.0165
+frames 2
+trace 2 jdt0165-1 mem
+hold B
+trace 1 jdt0165-2 mem
+hold -
+trace 100 jdt0165-3 mem

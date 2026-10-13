@@ -110,7 +110,7 @@ std::optional<float> groundHeight(const CollisionWorld& world, const GroundProbe
     lift += probe.rootDelta * slopeScale * stretch;
     const float startY = probe.y + lift;
     // 0x20cd30: distance below the node = movement * sin(max slope) - 0.1, at least 0x21df6c (0.05).
-    const float distance = std::max(probe.rootDelta * slopeScale - 0.1f, kGroundMinimumDistance);
+    const float distance = probe.distance ? *probe.distance : std::max(probe.rootDelta * slopeScale - 0.1f, kGroundMinimumDistance);
     const float endY = probe.y - kGroundStepDown - distance;
 
     // 0x1f9884: the footprint shrinks by the margins, becomes the world box of the rotated box, clamped

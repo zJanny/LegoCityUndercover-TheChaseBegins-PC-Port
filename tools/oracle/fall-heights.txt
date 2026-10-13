@@ -1,0 +1,70 @@
+# Falls from several heights above the gameplay-start street (floor 16.589), started by a one-update walk nudge
+# (a standing character on the ground is not probed, so a teleported standing player would float).
+# 'stick 0 0' first: the injected stick survives loadstate. Fixed dt 0.033 unless noted.
+loadstate gameplay-start
+frames 3
+stick 0 0
+dt 0.033 0.033
+teleport 886.7 25 1111.2
+frames 2
+trace 8 float_still mem
+loadstate gameplay-start
+frames 3
+stick 0 0
+dt 0.033 0.033
+teleport 886.7 18.6 1111.2
+frames 2
+stick 0 70
+frames 1
+stick 0 0
+trace 60 fh_2 mem
+loadstate gameplay-start
+frames 3
+stick 0 0
+dt 0.033 0.033
+teleport 886.7 21.6 1111.2
+frames 2
+stick 0 70
+frames 1
+stick 0 0
+trace 60 fh_5 mem
+loadstate gameplay-start
+frames 3
+stick 0 0
+dt 0.033 0.033
+teleport 886.7 28.1 1111.2
+frames 2
+stick 0 70
+frames 1
+stick 0 0
+trace 70 fh_11p5 mem
+loadstate gameplay-start
+frames 3
+stick 0 0
+dt 0.033 0.033
+teleport 886.7 29.1 1111.2
+frames 2
+stick 0 70
+frames 1
+stick 0 0
+trace 70 fh_12p5 mem
+loadstate gameplay-start
+frames 3
+stick 0 0
+dt 0.066 0.066
+teleport 886.7 21.6 1111.2
+frames 2
+stick 0 70
+frames 1
+stick 0 0
+trace 40 fh_5_dt066 mem
+loadstate gameplay-start
+frames 3
+stick 0 0
+dt 0.0165 0.0165
+teleport 886.7 21.6 1111.2
+frames 2
+stick 0 70
+frames 1
+stick 0 0
+trace 120 fh_5_dt0165 mem

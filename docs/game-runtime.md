@@ -19,7 +19,8 @@ A window opens with the police station. Press Escape to quit.
 | Action | Keys |
 |---|---|
 | Walk, run and sprint | Arrow keys, or W, A, S and D |
-| Walk slowly | Hold E |
+| Walk slowly | Hold Left Alt |
+| Jump | Q, or the right mouse button |
 | Turn the camera | Z (left) and C (right). Pushing left or right also turns the camera. |
 | Quit | Escape |
 
@@ -32,13 +33,15 @@ A window opens with the police station. Press Escape to quit.
 - The camera follows behind the character, as in the original.
 - The camera keeps out of the level's walls. Near a wall it moves closer to the character and slides to the side, as measured in the original.
 - The floor and walls come from the level. The character climbs steps and kerbs, and slides along walls.
+- The character jumps, falls off ledges and lands as in the original, including the short pause after landing.
 
 ## What does not work yet
 
 - The camera only reacts to the level's fixed walls. Lamp posts, cars and other objects do not push it.
 - When the camera is stuck behind a wall for a longer time, the original places it again. That is not done here.
 - Objects, other characters and vehicles do not block the character.
-- The character cannot fall or jump.
+- Walking slowly off a ledge looks different from the original, which first plays a short step.
+- Jumping onto something higher, or under a ceiling, may not match the original.
 - The animations do not blend. Their speed is an estimate.
 
 ## Other levels

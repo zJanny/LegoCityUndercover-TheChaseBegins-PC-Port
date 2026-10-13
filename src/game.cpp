@@ -2,7 +2,8 @@
 // Joins the recovered frame scheduler, pad pipeline and player locomotion (chase_runtime), the controls
 // (chase_input) and the development renderer (chase_render) into one loop. The player character walks,
 // runs and sprints with the recovered follow camera; the level's static collision keeps him on the floor and
-// stops him at walls. The camera keeps out of the level's static collision. There is no falling or gameplay.
+// stops him at walls, and he falls off ledges, jumps and lands. The camera keeps out of the level's static
+// collision. There is no gameplay.
 #include "assets/assets.hpp"
 #include "input.hpp"
 #include "render/scene.hpp"
@@ -11,10 +12,12 @@
 #include "runtime/pad.hpp"
 #include "runtime/player_intent.hpp"
 #include "runtime/player_locomotion.hpp"
+#include "runtime/player_vertical.hpp"
 #include "runtime/scheduler.hpp"
 #include <SDL.h>
 #include <epoxy/gl.h>
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdint>
 #include <fstream>
@@ -32,12 +35,12 @@ using namespace chase::render;
 namespace runtime = chase::runtime;
 
 constexpr int kStickFullDeflection = 145;
-// Development stand-in, not the original: a keyboard has no half deflection, so holding X (key E) tilts the
+// Development stand-in, not the original: a keyboard has no half deflection, so holding Walk (Left Alt) tilts the
 // stick to this length (raw 3DS units), which is inside the walk regime (walk below raw length 117).
 constexpr int kStickWalkDeflection = 90;
 constexpr float kScriptDt = 0.033f;
 constexpr std::size_t kSlotLeftShoulder = 12, kSlotRightShoulder = 13, kSlotStickX = 14, kSlotStickY = 15;
-constexpr std::size_t kSlotButtonX = 8, kSlotButtonY = 9;
+constexpr std::size_t kSlotButtonX = 8, kSlotButtonY = 9, kSlotJumpButton = 7;
 
 // The class whose CharacterEnum 9 row ("police") is the one character the completion count excludes,
 // taken as the starting character (inference). The idle animation is picked by file name only.
@@ -50,6 +53,8 @@ constexpr const char* kPlayerAnimationSuffix = "_minifig.bfnanm";
 constexpr double kAnimationFramesPerSecond = 30.0;
 // ctrl+0x6c of the player (read in the oracle, locomotion traces).
 constexpr std::uint16_t kPlayerEntityType = 3;
+// Hash of the vertical root-motion track in the sub-animation 1 of the jump animations (docs/re/player.md).
+constexpr std::uint32_t kRootHeightTrack = 0xdcd633e1;
 
 int resolveKey(const std::string& name) {
     std::string spaced = name;
@@ -66,14 +71,17 @@ struct Options {
     unsigned frames = 2;
     std::string script;
     bool cameraCollision = true;
+    std::optional<std::array<float, 3>> start;
 };
 
 struct ScriptStep {
     int stickX = 0, stickY = 0;
     unsigned updates = 0;
+    std::uint32_t buttons = 0;
 };
 
-// "x y count;x y count": raw circle-pad values (+x right, +y up, 145 = full) held for count updates.
+// "x y count [buttons];...": raw circle-pad values (+x right, +y up, 145 = full) held for count updates, with
+// optional 3DS button letters (A B X Y L R) held as well.
 std::vector<ScriptStep> parseScript(const std::string& text) {
     std::vector<ScriptStep> steps;
     std::stringstream stream(text);
@@ -82,6 +90,15 @@ std::vector<ScriptStep> parseScript(const std::string& text) {
         std::stringstream fields(part);
         ScriptStep step;
         if (!(fields >> step.stickX >> step.stickY >> step.updates)) throw std::runtime_error("bad --script step: " + part);
+        std::string letters;
+        fields >> letters;
+        for (const char letter : letters) {
+            const std::pair<char, runtime::PadButton> buttons[] = {{'A', runtime::PadA}, {'B', runtime::PadB}, {'X', runtime::PadX},
+                                                                  {'Y', runtime::PadY}, {'L', runtime::PadL}, {'R', runtime::PadR}};
+            const auto found = std::find_if(std::begin(buttons), std::end(buttons), [&](const auto& entry) { return entry.first == letter; });
+            if (found == std::end(buttons)) throw std::runtime_error("bad button in --script step: " + part);
+            step.buttons |= found->second;
+        }
         steps.push_back(step);
     }
     return steps;
@@ -103,9 +120,15 @@ Options parse(int argc, char** argv) {
         else if (arg == "--frames") o.frames = unsigned(std::stoul(value()));
         else if (arg == "--script") o.script = value();
         else if (arg == "--no-camera-collision") o.cameraCollision = false;
+        else if (arg == "--start") {
+            std::stringstream fields(value());
+            std::array<float, 3> position;
+            if (!(fields >> position[0] >> position[1] >> position[2])) throw std::runtime_error("bad --start, expected \"X Y Z\"");
+            o.start = position;
+        }
         else throw std::runtime_error("usage: chase-game [--fib F] [--names CSV] [--config CFG] "
                                       "[--level levels/levels/<name>/<name>_main.blvl] [--screenshot OUT.bmp] [--frames N] "
-                                      "[--script \"X Y COUNT;...\"] [--no-camera-collision]");
+                                      "[--script \"X Y COUNT [BUTTONS];...\"] [--start \"X Y Z\"] [--no-camera-collision]");
     }
     return o;
 }
@@ -124,7 +147,7 @@ runtime::PadState padState(const chase::InputState& input) {
     const double x = input.horizontal(), y = -input.vertical();
     const double length = std::hypot(x, y);
     if (length > 0) {
-        const double deflection = input.active(Action::X) ? kStickWalkDeflection : kStickFullDeflection;
+        const double deflection = input.active(Action::Walk) ? kStickWalkDeflection : kStickFullDeflection;
         state.stickX = std::int16_t(std::lround(x / length * deflection));
         state.stickY = std::int16_t(std::lround(y / length * deflection));
     }
@@ -176,7 +199,9 @@ CharacterAppearance readCharacter(FuseArchive& archive, const std::string& path)
 // The player character: locomotion state, skeleton, role animations and the scene instances it moves.
 struct PlayerRig {
     runtime::LocomotionState motion;
-    float height = 0;
+    runtime::VerticalState vertical;
+    runtime::JumpProfile jumpStanding, jumpMoving;
+    bool jumpMovingAnimation = false;
     Skeleton skeleton;
     std::optional<std::size_t> headJoint;
     std::map<int, Animation> animations;  // 0 = idle, runtime::kAnimationWalk / Run / Sprint
@@ -188,17 +213,21 @@ struct PlayerRig {
 
     Mat4 matrix() const {
         const float heading = runtime::headingRadians(motion.facing), s = std::sin(heading), c = std::cos(heading);
-        return {c, 0, -s, 0, 0, 1, 0, 0, s, 0, c, 0, motion.x, height, motion.z, 1};
+        return {c, 0, -s, 0, 0, 1, 0, 0, s, 0, c, 0, motion.x, vertical.y, motion.z, 1};
     }
 
-    void animate(Scene& scene, float dt, const runtime::LocomotionStep& step) {
-        if (step.animation != animation) {
+    void animate(Scene& scene, float dt, int role, float scale) {
+        if (role != animation) {
+            const auto locomotionRole = [](int id) { return id == 0 || id == runtime::kAnimationWalk || id == runtime::kAnimationRun || id == runtime::kAnimationSprint; };
+            const bool keepPhase = locomotionRole(role) && locomotionRole(animation);
             const double phase = frame / double(animations.at(animation).frames);
-            animation = step.animation;
-            frame = phase * double(animations.at(animation).frames);
+            animation = role;
+            frame = keepPhase ? phase * double(animations.at(animation).frames) : 0.0;
         }
         const Animation& current = animations.at(animation);
-        frame = std::fmod(frame + double(dt) * kAnimationFramesPerSecond * double(step.animationScale), double(current.frames));
+        const bool jumpRole = role == runtime::kAnimationJump || role == runtime::kAnimationJumpRun;
+        const double rate = jumpRole ? double(runtime::kJumpFramesPerSecond) : kAnimationFramesPerSecond;
+        frame = std::fmod(frame + double(dt) * rate * double(scale), double(current.frames));
         pose(scene);
     }
 
@@ -233,19 +262,32 @@ std::optional<PlayerRig> placePlayer(FuseArchive& archive, Scene& scene, const L
     PlayerRig rig;
     rig.skeleton = parseSkeleton(archive.read(*archive.find(withExtension(bodyPath, ".bfnskl"))));
     const std::pair<int, const char*> roles[] = {
-        {0, "idle"}, {runtime::kAnimationWalk, "walk"}, {runtime::kAnimationRun, "run"}, {runtime::kAnimationSprint, "sprint"}};
+        {0, "idle"}, {runtime::kAnimationWalk, "walk"}, {runtime::kAnimationRun, "run"}, {runtime::kAnimationSprint, "sprint"},
+        {runtime::kAnimationFall, "fall"}, {runtime::kAnimationLand, "land"}, {runtime::kAnimationFallLand, "fallland"},
+        {runtime::kAnimationJump, "jump"}, {runtime::kAnimationJumpRun, "jump_run"}};
     for (const auto& [id, name] : roles) {
         const std::string path = std::string(kPlayerAnimationDirectory) + name + kPlayerAnimationSuffix;
         const FuseEntry* entry = archive.find(path);
         if (!entry) throw std::runtime_error("not in archive: " + path);
         rig.animations[id] = parseAnimation(archive.read(*entry));
     }
+    const auto rootHeight = [&](int id) -> const AnimTrack& {
+        const Animation& animation = rig.animations.at(id);
+        if (animation.subAnimations.size() < 2) throw std::runtime_error("jump animation without root tracks");
+        for (const AnimTrack& track : animation.subAnimations[1])
+            if (track.hash == kRootHeightTrack) return track;
+        throw std::runtime_error("jump animation without a root height track");
+    };
+    rig.jumpStanding = runtime::makeJumpProfile(rootHeight(runtime::kAnimationJump), rig.animations.at(runtime::kAnimationJump).frames,
+                                                runtime::kJumpHeightScale);
+    rig.jumpMoving = runtime::makeJumpProfile(rootHeight(runtime::kAnimationJumpRun), rig.animations.at(runtime::kAnimationJumpRun).frames,
+                                              runtime::kJumpRunHeightScale);
     const auto head = std::find_if(rig.skeleton.joints.begin(), rig.skeleton.joints.end(),
                                    [](const Joint& joint) { return lower(joint.name) == "head"; });
     if (head != rig.skeleton.joints.end()) rig.headJoint = std::size_t(head - rig.skeleton.joints.begin());
 
     rig.bodyPath = bodyPath;
-    rig.height = start->position[1];
+    rig.vertical.y = start->position[1];
     rig.motion.x = start->position[0];
     rig.motion.z = start->position[2];
     rig.motion.facing = headingFromDegrees(start->orientation[1]);
@@ -280,29 +322,70 @@ std::uint32_t clockTicks(std::uint64_t counter, std::uint64_t frequency) {
     return std::uint32_t(seconds * runtime::kClockFrequency + rest * runtime::kClockFrequency / frequency);
 }
 
-// The movement of locomotionUpdate is applied again here with the level collision: walls slide it
-// (0x21a73c), then the ground probe sets the height (0x20b48c). The original probes the ground only while the
-// character moves. A character with no floor in reach keeps its height (the original lets it fall).
-void movePlayer(PlayerRig& player, const runtime::CollisionWorld& collision, float startX, float startZ,
-                const runtime::LocomotionStep& step, float dt) {
+struct PlayerAnimation {
+    int role = 0;
+    float scale = 1.0f;
+};
+
+// One player update: locomotion, wall slide (0x21a73c), then the vertical step (jump, ground probe, fall, landing).
+// A landing stun suppresses locomotion; in the air the stick keeps its walk or run speed, times 0.8 after a jump.
+PlayerAnimation updatePlayer(PlayerRig& player, const runtime::CollisionWorld& collision, const runtime::StickIntent& intent,
+                             bool jumpPressed, float dt) {
+    using runtime::Posture;
+    runtime::VerticalInput input;
+    input.dt = dt;
+    input.moveRequested = intent.active;
+    const auto landingAnimation = [&]() {
+        return PlayerAnimation{player.vertical.hardLanding ? runtime::kAnimationFallLand : runtime::kAnimationLand, 1.0f};
+    };
+    if (player.vertical.posture == Posture::Landing) {
+        runtime::verticalUpdate(player.vertical, collision, input);
+        return landingAnimation();
+    }
+    const bool jumping = player.vertical.posture == Posture::Jumping;
+    const runtime::RootMotionSpeeds speeds =
+        jumping ? runtime::jumpSpeeds(runtime::kMeasuredRootMotionSpeeds) : runtime::kMeasuredRootMotionSpeeds;
+    const runtime::LocomotionState before = player.motion;
+    const float startX = before.x, startZ = before.z;
+    runtime::LocomotionStep step = runtime::locomotionUpdate(player.motion, dt, intent, speeds);
+    if (jumping) {
+        player.motion.runTimer = before.runTimer;
+        player.motion.wasRunning = before.wasRunning;
+        player.motion.sprinting = before.sprinting;
+        step.animationScale = before.sprinting ? runtime::kMeasuredRootMotionSpeeds.sprintScale : 1.0f;
+    }
     float dx = step.deltaX, dz = step.deltaZ;
     const float rootDelta = std::hypot(dx, dz);
     const float heading = runtime::headingRadians(player.motion.facing);
-    const float forwardX = std::sin(heading), forwardZ = std::cos(heading);
+    input.forwardX = std::sin(heading);
+    input.forwardZ = std::cos(heading);
     if (rootDelta > 0 && !collision.empty())
-        runtime::slideAlongWalls(collision, startX, player.height, startZ, forwardX, forwardZ, dx, dz);
+        runtime::slideAlongWalls(collision, startX, player.vertical.y, startZ, input.forwardX, input.forwardZ, dx, dz);
     player.motion.x = startX + dx;
     player.motion.z = startZ + dz;
-    if (rootDelta <= 0 || collision.empty()) return;
-    runtime::GroundProbe probe;
-    probe.x = player.motion.x;
-    probe.y = player.height;
-    probe.z = player.motion.z;
-    probe.forwardX = forwardX;
-    probe.forwardZ = forwardZ;
-    probe.rootDelta = rootDelta;
-    probe.dt = dt;
-    player.height = runtime::groundHeight(collision, probe).value_or(player.height);
+    input.x = player.motion.x;
+    input.z = player.motion.z;
+    input.rootDelta = rootDelta;
+    if (jumpPressed && player.vertical.posture == Posture::Ground) {
+        player.jumpMovingAnimation = intent.active;
+        input.startJump = intent.active ? &player.jumpMoving : &player.jumpStanding;
+    }
+    const runtime::VerticalStep vertical = runtime::verticalUpdate(player.vertical, collision, input);
+    if (vertical.landed && player.vertical.posture == Posture::Ground && intent.active && step.regime == runtime::Regime::Run) {
+        player.motion.runTimer = (player.motion.sprinting ? runtime::kSprintTime : 0.0f) + dt;
+        player.motion.wasRunning = true;
+        player.motion.sprinting = player.motion.runTimer > runtime::kSprintTime;
+    }
+    if (player.vertical.posture == Posture::Falling) {
+        player.motion.runTimer = 0;
+        player.motion.wasRunning = false;
+        player.motion.sprinting = false;
+        return {runtime::kAnimationFall, 1.0f};
+    }
+    if (player.vertical.posture == Posture::Jumping || vertical.jumpStarted)
+        return {player.jumpMovingAnimation ? runtime::kAnimationJumpRun : runtime::kAnimationJump, 1.0f};
+    if (player.vertical.posture == Posture::Landing) return landingAnimation();
+    return {step.animation, step.animationScale};
 }
 
 int run(const Options& options) {
@@ -338,6 +421,12 @@ int run(const Options& options) {
         if (scene.addModel(meshModelPath(placement.mesh), placementMatrix(placement))) ++placed;
         else ++unresolved;
     std::optional<PlayerRig> player = placePlayer(archive, scene, level);
+    if (player && options.start) {
+        player->motion.x = player->startX = (*options.start)[0];
+        player->vertical.y = (*options.start)[1];
+        player->motion.z = player->startZ = (*options.start)[2];
+        player->pose(scene);
+    }
     const runtime::CollisionWorld collision = loadCollision(archive, options.level);
     std::cout << "collision: " << collision.triangleCount() << " triangles\n";
 
@@ -354,7 +443,7 @@ int run(const Options& options) {
     if (player) {
         follow.emplace();
         if (options.cameraCollision) follow->setCollision(&collision);
-        const float target[3] = {player->motion.x, player->height, player->motion.z};
+        const float target[3] = {player->motion.x, player->vertical.y, player->motion.z};
         follow->reset(target, runtime::headingRadians(player->motion.facing), runtime::headingRadians(player->motion.facing));
     }
     glEnable(GL_DEPTH_TEST);
@@ -378,6 +467,7 @@ int run(const Options& options) {
     // One update of the game: the player reads the pad and the camera yaw first, then the camera moves
     // (the heading of the recorded traces is reproduced with the yaw from before the camera step).
     unsigned updates = 0, updatesThisSecond = 0;
+    std::vector<float> scriptedHeights;
     auto simulate = [&](float dt, const runtime::PadState& padInput) {
         pad.poll(padInput);
         if (player) {
@@ -386,16 +476,15 @@ int run(const Options& options) {
             stick.slot15 = {pad.slot(kSlotStickY).value, pad.slot(kSlotStickY).deadzone};
             stick.entityType = kPlayerEntityType;
             stick.cameraYaw = follow->yaw();
-            const float startX = player->motion.x, startZ = player->motion.z;
-            const runtime::LocomotionStep step = runtime::locomotionUpdate(player->motion, dt, runtime::stickIntent(stick));
-            movePlayer(*player, collision, startX, startZ, step, dt);
-            player->animate(scene, dt, step);
+            const PlayerAnimation shown = updatePlayer(*player, collision, runtime::stickIntent(stick), pad.slot(kSlotJumpButton).press > 0, dt);
+            player->animate(scene, dt, shown.role, shown.scale);
+            if (!script.empty()) scriptedHeights.push_back(player->vertical.y);
         }
         if (follow) {
             runtime::FollowCameraInput input;
             input.dt = dt;
             input.target[0] = player->motion.x;
-            input.target[1] = player->height;
+            input.target[1] = player->vertical.y;
             input.target[2] = player->motion.z;
             input.targetFacing = runtime::headingRadians(player->motion.facing);
             input.stickTurn = runtime::stickTurnInput(pad.slot(kSlotStickX).value, kPlayerEntityType);
@@ -413,6 +502,7 @@ int run(const Options& options) {
             if (index < step.updates) {
                 scripted.stickX = std::int16_t(step.stickX);
                 scripted.stickY = std::int16_t(step.stickY);
+                scripted.held = step.buttons;
                 break;
             }
             index -= step.updates;
@@ -464,7 +554,10 @@ int run(const Options& options) {
         if (scriptDone) {
             const float moveX = player->motion.x - player->startX, moveZ = player->motion.z - player->startZ;
             std::cout << "scripted: " << updates << " updates, player moved " << std::hypot(moveX, moveZ)
-                      << " units, facing " << player->motion.facing << ", run timer " << player->motion.runTimer << ", height " << player->height << '\n';
+                      << " units, facing " << player->motion.facing << ", run timer " << player->motion.runTimer << ", height " << player->vertical.y << '\n';
+            std::cout << "heights:";
+            for (const float y : scriptedHeights) std::cout << ' ' << y;
+            std::cout << '\n';
         }
         if (!options.screenshot.empty() && (script.empty() ? updates >= options.frames : scriptDone)) {
             glFinish();

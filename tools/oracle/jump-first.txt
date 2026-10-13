@@ -1,0 +1,39 @@
+# First jump probes at the gameplay-start spawn with the A button: none of them jumps (A is not the jump button, B is:
+# see jump-ground.txt). A tapped for one update while standing, running, and twice in a row.
+# 'stick 0 0' and 'hold -' first: injected input survives loadstate. Fixed dt 0.033.
+loadstate gameplay-start
+frames 3
+stick 0 0
+hold -
+dt 0.033 0.033
+frames 2
+hold A
+frames 1
+hold -
+trace 60 jump_stand mem
+loadstate gameplay-start
+frames 3
+stick 0 0
+hold -
+dt 0.033 0.033
+frames 2
+stick 0 150
+frames 8
+hold A
+frames 1
+hold -
+trace 60 jump_run mem
+loadstate gameplay-start
+frames 3
+stick 0 0
+hold -
+dt 0.033 0.033
+frames 2
+hold A
+frames 1
+hold -
+trace 14 jump_double_a mem
+hold A
+frames 1
+hold -
+trace 60 jump_double_b mem

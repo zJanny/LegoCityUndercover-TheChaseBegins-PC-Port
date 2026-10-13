@@ -45,6 +45,8 @@ Single C++ tests, with `ctest --test-dir build -R <name>`:
 | `camera-sweep-real-data` | Checks the camera's wall test against the sweeps recorded from the original game (same folders); skips with code 77 if they are missing |
 | `camera-sweep` | Checks the camera wall test on small made-up walls (no game data needed) |
 | `locomotion-real-data` | Compares the character's movement with traces recorded from the original game (`artifacts/oracle/loco-out`, folder set with `-DCHASE_LOCO_TRACE_DIR=...`); skips with code 77 if the traces or `artifacts/romfs` are missing |
+| `jump-real-data` | Compares the jump (height curve, forward speed, landing and the stand-still after it) with traces recorded from the original game (`artifacts/oracle/jump-traces`, folder set with `-DCHASE_JUMP_TRACE_DIR=...`); skips with code 77 if the traces or `artifacts/romfs` are missing |
+| `fall-real-data` | Compares falling, landing and the stand-still after a landing with traces recorded from the original game (`artifacts/oracle/fall-out`, folder set with `-DCHASE_FALL_TRACE_DIR=...`); skips with code 77 if the traces or `artifacts/romfs` are missing |
 | `collision-real-data` | Compares the character's floor height and wall sliding with traces recorded from the original game (`artifacts/oracle/loco-out` and `artifacts/oracle/coll-out`, folders set with `-DCHASE_LOCO_TRACE_DIR=...` and `-DCHASE_COLLISION_TRACE_DIR=...`); skips with code 77 if the traces or `artifacts/romfs` are missing |
 | `soundtest-real-smoke`, `soundtest-id-smoke` | Play one sound by file name and one by number on the dummy audio driver. Same conditions |
 | `audio-mixer` | Mixer core, no SDL |
@@ -81,19 +83,22 @@ SDL_VIDEODRIVER=offscreen build/chase-game --screenshot out.bmp --frames 2
 SDL_VIDEODRIVER=offscreen build/chase-game --script "0 150 40" --screenshot out.bmp
 ```
 
-- Options: `--fib`, `--names`, `--config` (as in the viewer), `--level`, `--screenshot`, `--frames`, `--script`, `--no-camera-collision` (the camera ignores the level's walls, for comparing screenshots).
+- Options: `--fib`, `--names`, `--config` (as in the viewer), `--level`, `--screenshot`, `--frames`, `--script`, `--start`, `--no-camera-collision` (the camera ignores the level's walls, for comparing screenshots).
 - The default level is the police station. The character is Chase McCain in his police outfit. That choice is a best guess. Run it from the repository folder so the default paths work.
-- Move with the D-pad keys (WASD or arrows). Hold `E` to walk slowly. Without it you run, and after about one second of running you sprint. `Z` and `C` turn the camera (the left and right shoulder buttons). Pushing sideways also turns the camera, as in the original. `Escape` quits.
+- Move with the D-pad keys (WASD or arrows). Hold `Left Alt` to walk slowly. Without it you run, and after about one second of running you sprint. Press `Q` (the B button, or the right mouse button) to jump. `E` is the X button, which does nothing yet. `Z` and `C` turn the camera (the left and right shoulder buttons). Pushing sideways also turns the camera, as in the original. `Escape` quits.
 - What moves like the original: the speeds, the walk, run and sprint switch, the delay before sprinting, and the way the character turns towards the direction you push.
 - What is still a stand-in:
   - The camera follows the character like the original: distance, height, smoothing and turning match what was measured. It keeps out of the level's fixed walls the way the original does. Objects such as lamp posts do not push it yet, and the original's re-placing of a camera that stays stuck is missing. Rooms that use several camera zones are not handled.
-  - The collision is only the level's fixed geometry. The character stays on the floor, climbs steps and kerbs by the original's rules, and slides along walls. Objects, other characters and vehicles do not block him, and he cannot fall or jump. Where the original lets him fall, he stays at his height.
+  - The collision is only the level's fixed geometry. The character stays on the floor, climbs steps and kerbs by the original's rules, and slides along walls. Objects, other characters and vehicles do not block him.
+  - He falls off ledges with the original's gravity and top speed. He lands hard after a fall of 12 units or more. After a landing he stands still for a short time, as in the original. When he walks off a ledge the original plays a short step-off first. That step is missing here. The stand-still time is measured, not read from the game's data.
+  - The jump follows the height curve and the forward speed measured in the original (about 2.1 units high, forward speed 0.8 of the ground speed, no double jump). Jumping onto something higher or under a ceiling is not handled like the original, and the jump heights use measured scale factors.
   - The level shows its fixed objects, such as props, doors and parked vehicles, standing still. Other characters, coins (studs) and mission markers are not shown, and nothing reacts to you.
   - The animations play at an assumed speed and switch without blending.
-  - A keyboard cannot tilt the stick halfway, so `E` stands in for a gentle push.
+  - A keyboard cannot tilt the stick halfway, so `Left Alt` stands in for a gentle push. It is a separate control from the 3DS buttons, set in `config/controls.cfg`.
 - It prints one line per second: updates per second, the last time step and the circle pad values.
 - `--screenshot` saves the picture after `--frames` updates (default 2) and exits.
-- `--script "X Y COUNT;X Y COUNT"` ignores the keyboard and holds the stick at X, Y for COUNT updates of 0.033 s each (values like the 3DS circle pad: +X right, +Y up, 145 is full). For example `"0 150 40"` pushes forward for 40 updates. The program then prints how far the character moved and exits, saving the picture if `--screenshot` is given.
+- `--script "X Y COUNT [BUTTONS];X Y COUNT"` ignores the keyboard and holds the stick at X, Y for COUNT updates of 0.033 s each (values like the 3DS circle pad: +X right, +Y up, 145 is full). BUTTONS are optional 3DS button letters (A, B, X, Y, L, R) held during those updates. For example `"0 150 40"` pushes forward for 40 updates, and `"0 0 2;0 0 1 B;0 0 30"` stands, presses jump for one update and waits. The program then prints how far the character moved and the character's height after every update, then exits, saving the picture if `--screenshot` is given.
+- `--start "X Y Z"` puts the character at that world position instead of the level's start point. Use it to test a ledge, for example `--level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --start "899.5 17.6393 1101" --script "0 150 40"` runs off a 1 m platform.
 
 ## Model viewer
 
@@ -120,6 +125,7 @@ python3 tools/azahar_oracle.py tools/oracle/boot.txt
 - Screenshots go to `artifacts/oracle/out/`.
 - `tools/oracle/camera-trace.txt` records the camera (`memtrace` step). Convert each `.mem` file with `tools/export_camera_trace.py` (it takes the pad state of that part as options) to get the `.csv` files the camera test reads.
 - `tools/oracle/camwall-circle.txt` and `tools/oracle/camwall-east.txt` record the camera near walls. They need the extra option `--extra 0x330` when converting.
+- `tools/oracle/jump-*.txt` measure jumps (the B button). `tools/oracle/fall-*.txt` measure falling and landing. They use the `teleport X Y Z` step, which places the player at a position (a measuring aid). Start each step list with `stick 0 0`, because the last stick value stays set after `loadstate`.
 - `tools/oracle/loco-*.txt` measure how the player moves. Each one starts with `loadstate gameplay-start` (a saved state that `tools/oracle/to-gameplay.txt` creates). Run them with `--display xvfb --renderer opengl --rpc --rpc-input`.
 - The emulator uses its own settings and save folder in `artifacts/oracle/home/`. Your normal Azahar settings and saves are not used or changed. `--fresh` deletes that folder first.
 - Stepping frames is slow: 600 frames take about 4 minutes. Waiting is faster: `wait 25` reaches the language screen in about 35 seconds.
