@@ -1,0 +1,37 @@
+# Experiment 2b: does the turn smoothing depend on dt? Same 180 degree and 90 degree turns at dt 0.066 and 0.0165, plus a run speed check.
+loadstate gameplay-start
+frames 3
+dt 0.066 0.066
+stick 0 -150
+trace 10 turndt_180_0p066 mem
+stick 0 0
+loadstate gameplay-start
+frames 3
+dt 0.066 0.066
+stick 150 0
+trace 10 turndt_r90_0p066 mem
+stick 0 0
+loadstate gameplay-start
+frames 3
+dt 0.0165 0.0165
+stick 0 -150
+trace 10 turndt_180_0p0165 mem
+stick 0 0
+loadstate gameplay-start
+frames 3
+dt 0.0165 0.0165
+stick 150 0
+trace 10 turndt_r90_0p0165 mem
+stick 0 0
+loadstate gameplay-start
+frames 3
+dt 0.066 0.066
+stick 0 150
+trace 25 turndt_run_0p066 mem
+stick 0 0
+loadstate gameplay-start
+frames 3
+dt 0.0165 0.0165
+stick 0 150
+trace 25 turndt_run_0p0165 mem
+stick 0 0

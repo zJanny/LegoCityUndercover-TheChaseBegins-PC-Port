@@ -1,0 +1,40 @@
+# Experiment 1d: run-up timer (ctrl+0x24c) behaviour. A: run 40 frames, release 1 frame, push again.
+# B: run 20 frames, release 2 frames, push again. C: walk 15 frames then run. D: run 20 frames then walk 20 frames then run.
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 0 150
+trace 40 restartA_1 mem
+stick 0 0
+trace 1 restartA_2 mem
+stick 0 150
+trace 12 restartA_3 mem
+stick 0 0
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 0 150
+trace 20 restartB_1 mem
+stick 0 0
+trace 2 restartB_2 mem
+stick 0 150
+trace 40 restartB_3 mem
+stick 0 0
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 0 90
+trace 15 restartC_1 mem
+stick 0 150
+trace 40 restartC_2 mem
+stick 0 0
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 0 150
+trace 20 restartD_1 mem
+stick 0 90
+trace 20 restartD_2 mem
+stick 0 150
+trace 40 restartD_3 mem
+stick 0 0

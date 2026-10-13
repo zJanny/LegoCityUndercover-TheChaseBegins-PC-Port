@@ -1,0 +1,9 @@
+# Smoke test of the locomotion measurement setup: push the stick up for 40 frames, then release.
+loadstate gameplay-start
+frames 3
+player
+stick 0 150
+trace 40 probe_push
+stick 0 0
+trace 30 probe_release
+player

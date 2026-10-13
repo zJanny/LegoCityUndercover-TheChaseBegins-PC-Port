@@ -135,3 +135,12 @@ Unknowns:
 - Checkpoint files live in artifacts/oracle/states/ (local, not committed); recreate them with the scenario.
 
 Unknowns: the meaning of controller state 255; whether the cutscene timing (free-run waits) is long enough on slower hosts.
+
+## 2026-10-13T13:45:00+02:00 — Watchpoints, execution traps, fixed dt and memory traces (locomotion work)
+
+- `watch ADDR LEN N NAME [KIND]` sets a GDB watchpoint (Z2 write, Z3 read, Z4 access; the stub supports them, `gdbstub.cpp` `CommitBreakpoint`) and advances N frames. `trap ADDR[,ADDR] N NAME` does the same with execution breakpoints. Both write registers r0-r15, 32 stack words and 64 bytes at each pointer-like r0..r3 of every stop to `NAME.txt`. The stub reports `watch:ADDR;` (or `awatch`) in the stop reply; the Azahar log warns that dynarmic has no accurate watchpoints: the reported pc is at a block boundary, not the accessing instruction. Use a trap on candidate functions to confirm.
+- `dt MIN MAX` writes the scheduler's dt limits (`C+0x10`, `C+0x14`, `C` = `*(P+0xc)`); with MIN == MAX each update gets exactly that step (the step is quantised to the 1 ms game clock: 0.0165 became 0.0163). Stepped runs otherwise get dt = max (0.07) on every update because the stub stops take longer than that; free-running games use about 0.033.
+- `trace N NAME mem` also writes `NAME.mem`: per frame u32 frame, entity (0x100 bytes), controller (0x340) and node (0xb0).
+- Bug fixed: `loadstate` with `--attach` did nothing (the quick-load key reached no window because the main window had no keyboard focus in the new X connection) while printing "loaded". The tool now focuses the main window before every quick save and quick load. Check a load by reading `player` afterwards.
+- Timings (OpenGL, RPC, stepped): `trace` about 0.5 s per frame with memory dumps, `loadstate` plus 3 frames about 5 s with `--attach`.
+- Findings from these tools: [player.md](player.md) (2026-10-13T13:42:20+02:00).

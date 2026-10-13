@@ -1,0 +1,72 @@
+# Experiment 1: speed against stick magnitude. Fixed dt, straight push for 75 frames (> 1 s) then release for 20 frames.
+# Stick (0, M) with raw magnitude M; the pad pipeline clamps to 40..145, divides by 105 and applies a 0.1 dead zone.
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 0 45
+trace 75 mag45_push mem
+stick 0 0
+trace 20 mag45_release mem
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 0 60
+trace 75 mag60_push mem
+stick 0 0
+trace 20 mag60_release mem
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 0 70
+trace 75 mag70_push mem
+stick 0 0
+trace 20 mag70_release mem
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 0 74
+trace 75 mag74_push mem
+stick 0 0
+trace 20 mag74_release mem
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 0 76
+trace 75 mag76_push mem
+stick 0 0
+trace 20 mag76_release mem
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 0 90
+trace 75 mag90_push mem
+stick 0 0
+trace 20 mag90_release mem
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 0 110
+trace 75 mag110_push mem
+stick 0 0
+trace 20 mag110_release mem
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 0 130
+trace 75 mag130_push mem
+stick 0 0
+trace 20 mag130_release mem
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 0 145
+trace 75 mag145_push mem
+stick 0 0
+trace 20 mag145_release mem
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 0 156
+trace 75 mag156_push mem
+stick 0 0
+trace 20 mag156_release mem

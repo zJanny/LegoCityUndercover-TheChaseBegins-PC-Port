@@ -1,0 +1,6 @@
+# Caller and arguments of the character mover 0x20cd30 (entity, controller, flags, delta) during a stick push.
+loadstate gameplay-start
+frames 3
+stick 0 150
+trap 0x20cd30 3 loco_trap_mover
+stick 0 0

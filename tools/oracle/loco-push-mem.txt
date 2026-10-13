@@ -1,0 +1,8 @@
+# One straight push at full stick with fixed dt (1/30 s) and a memory trace of entity, controller and node per frame.
+loadstate gameplay-start
+frames 3
+dt 0.0333333 0.0333333
+stick 0 150
+trace 90 push150_mem mem
+stick 0 0
+trace 60 release150_mem mem

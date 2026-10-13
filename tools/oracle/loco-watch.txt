@@ -1,0 +1,9 @@
+# Find the code that writes the player's local translation (node+0x4c) during a stick push.
+# The node address 0x08568bb0 is the one of the gameplay-start checkpoint (see 'player').
+loadstate gameplay-start
+frames 3
+player
+stick 0 150
+watch 0x08568bfc 12 3 loco_watch_local
+stick 0 0
+player

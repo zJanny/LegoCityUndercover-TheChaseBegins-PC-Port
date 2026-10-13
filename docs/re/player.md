@@ -75,3 +75,59 @@ Unknowns:
 - Whether unskinned meshes of cutscene minifigs (the baked head) follow the head joint in the real game; the viewer does not move them.
 - Orientation of the "hat" joint attach (identity bind world) and the models used with HatModel were not checked.
 
+## 2026-10-13T13:42:20+02:00 — Player locomotion measured in the oracle (worker; Azahar 2126.2 old 3DS, REA Ghidra 12.1.2 for the code)
+
+Method: state `gameplay-start`, `dt 0.033 0.033` (fixes the scheduler step), `stick` injection, `trace ... mem` (entity, controller and node bytes per frame). Scenarios: `tools/oracle/loco-*.txt`. A trace row is the state after the previous update; positions are `node+0x8c` (x, z are the ground plane, y is up). Speeds are world units (u) per second of game dt. CSVs and `.mem` files stay local (`artifacts/oracle/loco-out/`).
+
+**Measured facts**
+
+Speed against stick magnitude (stick (0, M); `loco-magnitude.txt`, `loco-threshold.txt`, `loco-threshold-low.txt`; 75 updates per magnitude):
+
+| raw M | v after the pad pipeline | ctrl+0xc | speed (u/s) | ctrl+0x94 |
+|---|---|---|---|---|
+| 45, 50..59 | below the dead zone | 0 | 0 (intent 0, no movement) | 1.0 |
+| 60 (first active value) | 0.1005 | 9 | 2.301 | 1.0 |
+| 61..117 (measured 60, 61, 70, 74, 76, 90, 110, 112..117) | up to 0.703 | 9 | 2.301, constant | 1.0 |
+| 118..156 (measured 118..123, 130, 145, 156) | 0.714 and up | 1 | 6.900 for 30 updates, then 10.349 | 1.0, then 1.5 |
+
+- Walk/run switch is exactly at raw 117 / 118. This matches `v = ((M-40)/105 - 0.1)/0.9` (circle clamp and radial dead zone of src/runtime/pad.cpp) and the flag rule `v^2 < 0.5` (117: 0.495, 118: 0.510). Raw 59 is idle and 60 moves: activation is `v > 0.1` (59: 0.0899, 60: 0.1005).
+- Within a regime the speed does not depend on M (stepped, not continuous). Values: walk 2.3005..2.3010, run phase 1 6.9000..6.9004, run phase 2 10.3490..10.3504.
+- Acceleration and deceleration: none. The first update with the stick active moves at full regime speed (mag156: first step 0.2275 u at dt 0.033 = 6.9 u/s). The first update after release has zero displacement.
+- Run phase 2: `ctrl+0x24c` (run timer, f32) gains dt per update in the run state (0.033 after the first update, 1.023 after the 31st). In the update where it exceeds 1.0, `ctrl+0x94` (f32 animation speed scale) becomes 1.5; the displacement rises one update later (30 updates at 6.9, then 10.349 = 1.5 x 6.9). Sequences (`loco-restart.txt`): release for 1 update then push again restarts at 6.9 with timer 0.033 (also after 2 updates); during walk the timer keeps its value (0.66 held for 20 updates in case D) and run re-entry restarts it at 0.033; a walk-to-run change starts the 1 s count when run begins.
+- Speed is per second of dt: at dt 0.066 the run speeds are 6.9002 and 10.3503 u/s, at dt 0.0163 (requested 0.0165, quantised) 6.9019 u/s.
+- Heading convention: the node forward vector (node+0x7c, +0x84) is (sin h, cos h) for (x, z) with h = s16 * 2*pi/65536 (32768 = pi), and `atan2(fx, fz)` equals ctrl+8 / 10430.378 on all rows (e.g. -24512 -> -2.3501). The displacement direction `atan2(dx, dz)` equals ctrl+0xa / 10430.378 to 4 decimals on every update of `turn_run_r90`: movement follows the intent heading immediately, not the facing. Stick x > 0 adds +16384 (90 degrees) to the camera yaw heading.
+- Controller fields (s16 unless noted): ctrl+6 = intent heading of this update (0 when the stick is inactive), ctrl+8 = facing (what the node forward vector shows), ctrl+0xa = last non-zero intent (kept after release), ctrl+0xc held flags, ctrl+0x94 f32 animation speed scale, ctrl+0x24c f32 run timer.
+- Facing turn (`loco-turn.txt`, `loco-turn-dt.txt`): per update `facing += sign(d) * min(6400, ceil(f32(0.3) * |d|))` with `d = wrap_s16(ctrl+0xa - facing)` (float32 product, rounded up in magnitude). This is exact on 292 of 295 steps (right/left 90 degrees from rest, 90 degrees while running and walking, 180 degrees from rest and while running, at dt 0.033, 0.066 and 0.0165). The 3 misses are updates in which nothing changed (row 59 of the three rest cases). The cap of 6400 (0.6136 rad, 35.2 degrees) was active in two consecutive updates of the 180 degree case. The turn is per update, not per second: identical step sequences at three dt values. After release the facing keeps converging to the last intent.
+- Intent includes the camera yaw (0x376894), and the camera moves: with the stick held sideways the yaw advanced about 0.025..0.045 rad per update (different at dt 0.066 and 0.0165), which rotates the movement direction. The camera law was not recovered.
+
+**Code (REA Ghidra decompile of artifacts/game/game.arm.elf, objdump, execution traps in the oracle)**
+
+- Locomotion is animation root motion. The character mover `0x20cd30(entity, ctrl, flags, deltaMatrix)` runs once per update for the player (trap `loco-trap-mover.txt`: lr 0x1d5168 in the first update, then 0x1c7474; r2 = r3 = 0). Inside it:
+  - the delta vector starts as zero (`0x25b390`); `0x2c9770(entity, ctrl, flags, &delta)` adds the animation root delta of this update: `0x2327b4` samples the root track of the playing animations (weights from `0x115ecc`), it is rotated by the node matrix (or by the angle ctrl+0xa when ctrl+8 != ctrl+0xa, scale 2*pi/65536 = 9.58738e-5) and added with `0x23d39c`;
+  - after the collision query/slide (`0x21a73c`) the world translation of the node (`0x250810(node) + 0x30`, i.e. node+0x8c) gets x and z added and `0x24c118(node, world)` stores the transform: it derives the local matrix (node+0x1c..0x5c, translation +0x4c) from the world matrix and the parent link and marks the world matrix valid (node word 0 bit 0x1000).
+  - Write watchpoints on node+0x4c (`loco-watch.txt`) stopped at 0x20cf60, 0x21b6d8, 0x20b6e0, 0x24c164. With the dynarmic JIT the stop pc is not the writing instruction (block granularity), so these only located the neighbourhood; the call chain was confirmed with execution traps (`loco-trap-move.txt`: 0x20b48c is called from 0x20d59c inside 0x20cd30).
+- Speed control is the playback speed of the locomotion animation. `0x1abe60(entity, ctrl)`: `role = 0x219614(entity, 2)` when role is 2, 0x83 or 0x6f and byte 0x51640e != 1: `ctrl+0x94 = 1.0`; on ground (ctrl+0x314 bit 6) a slope term can lower it (`1 - 0.55 * clamp(-2*dot, ..2) * (1 - t)`, dot from `0x221920(node+0x20, ctrl+0x1ec)`, t from ctrl+0x1f0 and *0x376910; not exercised on flat ground); if `0x236b6c(entity) == 0` then `ctrl+0x24c += dt` (0x23602c) and above 1.0 it switches to role 12 (`0x219614(entity, 12)`), calls `0x2744d0(2.5)` and multiplies ctrl+0x94 by 1.5 (1.3 when `0x219b80(entity)` and `0x2cd540()` are both non-zero). It starts the animation with `0x21941c(0.1, 1.0, entity, id, 1, 0)` (0.1 = blend time). Only direct caller found: 0x1b81f8.
+- Animation roles: `0x219614` looks the role up in the table at `*0x374294` (heap, 0x08370f80 in the checkpoint): 14-byte records of 7 s16 `[default, v1..v6]`, variant chosen by `0x2106d8(ctrl, 0..2)` and bit 4 of `*(ctrl+0xe0)+0x130`; 0x271 (625) means none. Record 2 = (2, 111, 131, 151, 162, 552, 272), record 12 = (281, 282, 283, 625, ...). Names (`tables/tablesanimations.bxls` sheet 1, row = id): 1 "walk", 2 "run", 111/131/162 "run" (class variants), 151 "itemleft_run", 272 "detect_run", 281/282/283 "sprint", 552 "supercarry_walk". So the regimes are: "walk" (id 1) 2.301 u/s, "run" (id 2) 6.9 u/s, "sprint" (id 281, scale 1.5) 10.349 u/s. That walk is role 1 in this walk branch was not traced (the walk path of 0x1abe60 caller was not read).
+
+**Fitted model (for the native runtime; fit quality in brackets)**
+
+```
+v        = ((|stick| - 40) / 105 - 0.1) / 0.9          pad.cpp pipeline; activation and walk/run thresholds reproduced exactly
+active   = per-axis v > 0.1 (player_intent, unchanged)
+walk     = v^2 < 0.5
+h_target = (s16) intent heading incl. camera yaw        (matched on every row)
+speed    = walk ? 2.301 : (run_timer <= 1.0 ? 6.900 : 10.349)   u/s       (flat within +-0.001 u/s)
+run_timer: += dt each run update (0 at run re-entry), frozen while walking, reset at release
+pos     += speed * dt * (sin h_target, cos h_target) on (x, z)           (direction error < 1e-4 rad)
+facing  += sign(d) * min(6400, ceil(f32(0.3) * |d|)),  d = wrap_s16(h_target - facing), once per update   (292/295 exact)
+```
+Run phase 2 applies from the update after the one in which the timer exceeds 1.0 (timer 1.023 at the 31st update, speed 10.349 from the 32nd). The speeds are measured at the output; the derivation from the animation root tracks is open.
+
+Evidence IDs: 0x20cd30 ev_08be8f79c89f4d1984d08dabdcfbd908726d71b671c760d83b853e5ff2cd099a; 0x2c9770 ev_b79fe7bc332011fda70ecd8cec9943a5a92fe0b02a19f678fc95ec1adfd799e0; 0x2327b4 ev_683e74f616e2832d7722dde5b10a033f9e333c58c401d19dbb67eea5328138de; 0x1abe60 ev_15b67eaf9c47398f51e5dab31750331acf7a38d55d39f60f8763bb7b656a6f7a; 0x219614 ev_0689721821644b94e66cfb4f60ac76ec44997215859c15bff10b270aa3425906; 0x1b81f8 ev_fd8a216034ea7e62e0104115dc94c4f5d943b0e1382a1e80f972d6fa960dccee; 0x2b01e4 ev_221c2f32… (target-following branch, not used by the stick path).
+
+Unknowns:
+- Root speed of the walk, run and sprint animations from the `.bfnanm` data and how it relates to 2.301 / 6.9 / 10.349 (measured at the output, not derived).
+- The code that applies the 0.3 / 6400 facing step and the code that resets the run timer on release (writers of ctrl+8 and ctrl+0x24c were not located; a watch on them was not run).
+- Why no update occurred at row 59 in the three rest turn cases (always the same row after the stick start; not seen in straight pushes).
+- Camera yaw law (writer of 0x376894), real slope behaviour of ctrl+0x94, the 1.3 variant, other characters and costume variants, vehicles, collision slides at obstacles, ground following (y).
+- Whether free-run dt (about 0.0333, ticks of 1 ms) changes any of the numbers: all measurements used a fixed dt in stepped mode.

@@ -1,0 +1,6 @@
+# Which callers reach the entity move routine 0x20b48c while the stick is pushed?
+loadstate gameplay-start
+frames 3
+stick 0 150
+trap 0x20b48c,0x21df6c,0x22f134 3 loco_trap_move
+stick 0 0

@@ -17,7 +17,15 @@ A scenario file drives the run, one command per line ('#' starts a comment):
   report                print scheduler and frame-pacing values
   channels              print the pad device's 20-byte channel records (value, type, deadzone, threshold, edges)
   player                print the player entity (*0x3772b8): world position, facing, intent heading, flags
-  trace N NAME          advance N frames, writing the player state of every frame to NAME.csv
+  trace N NAME [mem]    advance N frames, writing the player state of every frame to NAME.csv; 'mem' also writes
+                        NAME.mem: per frame u32 frame, then entity (0x100 bytes), controller (0x340) and node (0xb0)
+  watch ADDR LEN N NAME [KIND]
+                        advance N frames with a GDB watchpoint (KIND 2 write, 3 read, 4 access; default 2) and write
+                        the registers and 32 stack words of every stop to NAME.txt
+  trap ADDR[,ADDR...] N NAME
+                        advance N frames with execution breakpoints at the addresses and write the registers and
+                        32 stack words of every stop to NAME.txt
+  dt MIN MAX            write the scheduler's dt limits (floats at C+0x10 and C+0x14); MIN == MAX fixes the step
   read ADDR LEN         print LEN bytes at ADDR as hex words
   sample SECONDS INTERVAL NAME
                         free-run for SECONDS (no breakpoints) and sample the game clock, vblank counters and the
@@ -83,6 +91,9 @@ PAD_STICK = 0x10a540
 GSP_SHARED = 0x10000000
 PLAYER = 0x3772b8
 PAD_DEVICE = 0x3769e4
+TRACE_ENTITY_BYTES = 0x100
+TRACE_CTRL_BYTES = 0x340
+TRACE_NODE_BYTES = 0xb0
 CAMERA_YAW = 0x376894
 GAME_CLOCK = 0x376b0c
 VBLANKS = 0x593d14
@@ -145,6 +156,16 @@ class EmulatorExited(RuntimeError):
     pass
 
 
+def parse_stop_reply(reply):
+    """Split a stop reply 'T05watch:08568bb0;...' into its signal and its name:value fields."""
+    fields = {}
+    for item in reply[3:].split(';'):
+        name, separator, value = item.partition(':')
+        if separator:
+            fields[name] = value
+    return int(reply[1:3], 16), fields
+
+
 class GdbRemote:
     def __init__(self, port, timeout=60.0, alive=None):
         self.port = port
@@ -162,6 +183,8 @@ class GdbRemote:
         self.sock.settimeout(None)
         self.buffer = b''
         self.breakpoints = set()
+        self.watchpoints = set()
+        self.last_stop = None
         self.command('?')
 
     def _recv(self):
@@ -229,6 +252,16 @@ class GdbRemote:
             raise IOError('cannot set breakpoint at 0x%x' % address)
         self.breakpoints.add(address)
 
+    def add_watchpoint(self, address, length, kind=2):
+        if self.command('Z%d,%x,%x' % (kind, address, length)) != 'OK':
+            raise IOError('cannot set watchpoint at 0x%x' % address)
+        self.watchpoints.add((address, kind))
+
+    def remove_watchpoints(self):
+        for address, kind in sorted(self.watchpoints):
+            self.command('z%d,%x,1' % (kind, address))
+        self.watchpoints.clear()
+
     def run_to_breakpoint(self):
         pc = self.register(15)
         if pc in self.breakpoints:
@@ -238,6 +271,7 @@ class GdbRemote:
         reply = self.command('c')
         if not reply.startswith(('T', 'S')):
             raise ConnectionError('unexpected stop reply %r' % reply)
+        self.last_stop = parse_stop_reply(reply)
         return self.register(15)
 
 
@@ -431,6 +465,12 @@ class XKeys:
         self.x11.XSetInputFocus(self.display, window, 1, 0)
         self.x11.XSync(self.display, 0)
 
+    def focus_main_window(self):
+        main = next((window for window, name in self.windows()
+                     if name.startswith('Azahar ') and not name.endswith(RENDER_WINDOW_SUFFIX)), None)
+        if main is not None:
+            self.focus(main)
+
     def press(self, key_name):
         keycode = self.x11.XKeysymToKeycode(self.display, self.x11.XStringToKeysym(key_name.encode()))
         if not keycode:
@@ -618,6 +658,7 @@ class Oracle:
         self.stick = (0, 0)
         self.frame = 0
         self.frame_object = None
+        self.watch_hits = None
         remote.add_breakpoint(SCHEDULER)
 
     @property
@@ -666,6 +707,61 @@ class Oracle:
             elif pc == PAD_STICK:
                 base = self.remote.register(4)
                 self.remote.write(base + 12, struct.pack('<hh', *self.stick))
+            elif self.watch_hits is not None:
+                self.record_watch_hit(pc)
+
+    def set_dt(self, low, high):
+        if self.frame_object is None:
+            self.advance(1)
+        controller = self.mem.u32(self.frame_object + 0xc)
+        self.mem.write(controller + 0x10, struct.pack('<ff', low, high))
+        print('  dt limits at 0x%08x set to %.6f %.6f' % (controller + 0x10, low, high))
+
+    def record_watch_hit(self, pc):
+        r = self.remote
+        fields = r.last_stop[1] if r.last_stop else {}
+        registers = [r.register(index) for index in range(16)]
+        stack = r.read(registers[13], 0x80)
+        pointed = {}
+        for index in range(4):
+            value = registers[index]
+            if 0x00100000 <= value < 0x10000000 or 0x14000000 <= value < 0x1c000000:
+                pointed[index] = r.read(value, 0x40)
+        hit = {'frame': self.frame, 'pc': pc, 'registers': registers, 'stack': struct.unpack('<32I', stack),
+               'fields': fields, 'pointed': pointed}
+        self.watch_hits.append(hit)
+        print('  watch hit frame %d pc 0x%08x lr 0x%08x %s' % (self.frame, pc, registers[14], fields))
+
+    def watch(self, address, length, count, name, kind=2):
+        self.record_stops(count, name, watchpoint=(address, length, kind))
+
+    def trap(self, addresses, count, name):
+        self.record_stops(count, name, breakpoints=addresses)
+
+    def record_stops(self, count, name, watchpoint=None, breakpoints=()):
+        path = self.output / ('%s.txt' % name)
+        self.watch_hits = []
+        added = [a for a in breakpoints if a not in self.remote.breakpoints]
+        for address in added:
+            self.remote.add_breakpoint(address)
+        if watchpoint:
+            self.remote.add_watchpoint(*watchpoint)
+        try:
+            self.advance(count)
+        finally:
+            self.remote.remove_watchpoints()
+            for address in added:
+                self.remote.command('z0,%x,4' % address)
+                self.remote.breakpoints.discard(address)
+            hits, self.watch_hits = self.watch_hits, None
+        with open(path, 'w') as out:
+            for hit in hits:
+                out.write('frame %d pc 0x%08x fields %s\n' % (hit['frame'], hit['pc'], hit['fields']))
+                out.write('  r0-r15 %s\n' % ' '.join('%08x' % v for v in hit['registers']))
+                out.write('  stack %s\n' % ' '.join('%08x' % v for v in hit['stack']))
+                for index, data in sorted(hit['pointed'].items()):
+                    out.write('  [r%d] %s\n' % (index, data.hex(' ', 4)))
+        print('  %d watchpoint stops -> %s' % (len(hits), path))
 
     def run_free(self, during, seconds):
         r = self.remote
@@ -717,6 +813,7 @@ class Oracle:
         written = []
 
         def press_and_wait(seconds):
+            self.keys.focus_main_window()
             self.keys.press(QUICK_SAVE_KEY)
             deadline = time.monotonic() + seconds
             size = -1
@@ -746,6 +843,7 @@ class Oracle:
         deadline = time.monotonic() + STATE_LOAD_TIMEOUT
         while True:
             self.alive()
+            self.keys.focus_main_window()
             self.keys.press(QUICK_LOAD_KEY)
             time.sleep(STATE_SETTLE_SECONDS)
             self.alive()
@@ -830,8 +928,9 @@ class Oracle:
             print('  ch%-2d value %8.4f type %3d deadzone %.4f threshold %.4f press %d release %d'
                   % (index, value, kind, deadzone, threshold, press, release))
 
-    def trace(self, count, name):
+    def trace(self, count, name, with_memory=False):
         path = self.output / ('%s.csv' % name)
+        memory = open(self.output / ('%s.mem' % name), 'wb') if with_memory else None
         with open(path, 'w') as out:
             out.write('frame,dt,held,stick_x,stick_y,x,y,z,fx,fz,intent,flags,state,camera_yaw\n')
 
@@ -840,12 +939,19 @@ class Oracle:
                 dt = struct.unpack('<f', self.mem.read(self.frame_object + 0x78, 4))[0]
                 if state is None:
                     return
+                if memory:
+                    memory.write(struct.pack('<I', self.frame))
+                    for base, size in ((state['entity'], TRACE_ENTITY_BYTES), (state['ctrl'], TRACE_CTRL_BYTES),
+                                       (state['node'], TRACE_NODE_BYTES)):
+                        memory.write(self.mem.read(base, size))
                 out.write('%d,%.6f,%d,%d,%d,%.5f,%.5f,%.5f,%.5f,%.5f,%d,%d,%d,%.5f\n' % (
                     self.frame, dt, self.held, self.stick[0], self.stick[1], *state['world'],
                     state['forward'][0], state['forward'][2], state.get('intent', 0),
                     state.get('held_flags', 0), state.get('ctrl_state', 0), state['camera_yaw']))
 
             self.advance(count, sample)
+        if memory:
+            memory.close()
         print('  %s' % path)
 
     def screenshot(self, name, via_gdb=False):
@@ -1002,7 +1108,13 @@ def run_scenario(oracle, lines):
         elif op == 'player':
             oracle.print_player()
         elif op == 'trace':
-            oracle.trace(int(args[0]), args[1])
+            oracle.trace(int(args[0]), args[1], args[2:] == ['mem'])
+        elif op == 'watch':
+            oracle.watch(int(args[0], 0), int(args[1], 0), int(args[2]), args[3], int(args[4]) if args[4:] else 2)
+        elif op == 'trap':
+            oracle.trap([int(a, 0) for a in args[0].split(',')], int(args[1]), args[2])
+        elif op == 'dt':
+            oracle.set_dt(float(args[0]), float(args[1]))
         elif op == 'report':
             oracle.report()
         elif op == 'read':

@@ -1,0 +1,50 @@
+# Experiment 2: turning. Fixed dt 0.033. Camera yaw is recorded in every row (the stick heading is camera relative).
+# Stick x is raw, +x = right; stick y +y = up.
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 150 0
+trace 45 turn_rest_r90 mem
+stick 0 0
+trace 25 turn_rest_r90_rel mem
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick -150 0
+trace 45 turn_rest_l90 mem
+stick 0 0
+trace 25 turn_rest_l90_rel mem
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 0 -150
+trace 45 turn_rest_180 mem
+stick 0 0
+trace 25 turn_rest_180_rel mem
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 0 150
+trace 75 turn_run_r90_pre
+stick 150 0
+trace 45 turn_run_r90 mem
+stick 0 0
+trace 25 turn_run_r90_rel mem
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 0 150
+trace 75 turn_run_180_pre
+stick 0 -150
+trace 45 turn_run_180 mem
+stick 0 0
+trace 25 turn_run_180_rel mem
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 0 60
+trace 20 turn_walk_r90_pre
+stick 60 0
+trace 45 turn_walk_r90 mem
+stick 0 0
+trace 25 turn_walk_r90_rel mem

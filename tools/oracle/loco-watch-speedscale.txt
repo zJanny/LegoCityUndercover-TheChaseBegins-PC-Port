@@ -1,0 +1,8 @@
+# Which code writes the controller field +0x94 (speed scale 1.0 -> 1.5 after about one second of push)?
+# ctrl = 0x08552790 at the gameplay-start checkpoint.
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 0 150
+watch 0x08552824 4 40 loco_watch_scale 2
+stick 0 0

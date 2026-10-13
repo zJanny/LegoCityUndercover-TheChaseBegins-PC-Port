@@ -1,0 +1,110 @@
+# Experiment 1b: thresholds. Short pushes at fixed dt; the lower values test where motion starts, the upper values the walk/run switch.
+# Raw magnitude M gives v = ((M-40)/105 - 0.1)/0.9 after the pad pipeline; the walk flag needs v^2 < 0.5 (M < 117.3).
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 0 50
+trace 7 thr50
+stick 0 0
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 0 51
+trace 7 thr51
+stick 0 0
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 0 52
+trace 7 thr52
+stick 0 0
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 0 53
+trace 7 thr53
+stick 0 0
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 0 54
+trace 7 thr54
+stick 0 0
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 0 56
+trace 7 thr56
+stick 0 0
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 0 112
+trace 7 thr112
+stick 0 0
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 0 113
+trace 7 thr113
+stick 0 0
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 0 114
+trace 7 thr114
+stick 0 0
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 0 115
+trace 7 thr115
+stick 0 0
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 0 116
+trace 7 thr116
+stick 0 0
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 0 117
+trace 7 thr117
+stick 0 0
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 0 118
+trace 7 thr118
+stick 0 0
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 0 119
+trace 7 thr119
+stick 0 0
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 0 120
+trace 7 thr120
+stick 0 0
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 0 121
+trace 7 thr121
+stick 0 0
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 0 122
+trace 7 thr122
+stick 0 0
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 0 123
+trace 7 thr123
+stick 0 0

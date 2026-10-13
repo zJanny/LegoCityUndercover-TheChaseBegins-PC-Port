@@ -1,0 +1,31 @@
+# Experiment 1c: lower activation threshold of the stick (raw magnitude 57..61); 59 is idle, 60 walks.
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 0 57
+trace 5 thr57
+stick 0 0
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 0 58
+trace 5 thr58
+stick 0 0
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 0 59
+trace 5 thr59
+stick 0 0
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 0 60
+trace 5 thr60
+stick 0 0
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 0 61
+trace 5 thr61
+stick 0 0
