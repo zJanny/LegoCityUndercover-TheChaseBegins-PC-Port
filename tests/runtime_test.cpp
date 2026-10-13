@@ -1,8 +1,10 @@
 // chase_runtime replicas (scheduler 0x100f44, pad pipeline) against values traced from the disassembly
 // and read from the running game.
 #include "runtime/pad.hpp"
+#include "runtime/player_intent.hpp"
 #include "runtime/scheduler.hpp"
 #include <cmath>
+#include <cstring>
 #include <iostream>
 #include <stdexcept>
 #include <vector>
@@ -13,6 +15,24 @@ void require(bool condition, const char* message) {
     if (!condition) throw std::runtime_error(message);
 }
 bool near(float a, float b) { return std::fabs(a - b) < 1e-6f; }
+float floatOf(std::uint32_t bits) {
+    float value;
+    std::memcpy(&value, &bits, sizeof value);
+    return value;
+}
+std::uint32_t bitsOf(float value) {
+    std::uint32_t bits;
+    std::memcpy(&bits, &value, sizeof bits);
+    return bits;
+}
+StickIntentInput stickAt(float x, float y, std::uint16_t type = 0x100, float yaw = 0.0f) {
+    StickIntentInput input;
+    input.slot14 = {x, 0.1f};
+    input.slot15 = {y, 0.1f};
+    input.entityType = type;
+    input.cameraYaw = yaw;
+    return input;
+}
 }
 
 int main() {
@@ -117,6 +137,72 @@ int main() {
         const float expected = (60.0f / 105.0f - 0.25f) / 0.75f;
         require(near(pad.slot(14).value, -expected) && pad.slot(14).release == -1 && pad.slot(14).press == 0,
                 "back inside the negative threshold");
+        // Library atan2f behind 0x24765c (code at 0x2473ec..0x247f00 extracted from the image and run
+        // under qemu-arm, 2026-10-13): {first, second, result} bit patterns. Not libm: the 1e30 row is one ulp
+        // below atan2f(1e30, 1e30).
+        const std::uint32_t atanRows[][3] = {
+            {0x00000000, 0x00000000, 0x00000000}, {0x80000000, 0x80000000, 0xc0490fdb},
+            {0x00000000, 0x80000000, 0x40490fdb}, {0x3f800000, 0x00000000, 0x3fc90fdb},
+            {0xbf800000, 0x80000000, 0xbfc90fdb}, {0x7f800000, 0x7f800000, 0x3f490fdb},
+            {0xff800000, 0x7f800000, 0xbf490fdb}, {0x7f800000, 0xff800000, 0x4016cbe4},
+            {0x3f800000, 0x7f800000, 0x00000000}, {0x0da24260, 0x3f800000, 0x0da24260},
+            {0x0da24260, 0xbf800000, 0x40490fdb}, {0x8da24260, 0xbf800000, 0xc0490fdb},
+            {0x40400000, 0x3f800000, 0x3f9fe0bb}, {0x3f800000, 0x40400000, 0x3ea4bc7d},
+            {0xc0400000, 0xbf800000, 0xbff23efa}, {0x3f800000, 0xbfc00000, 0x40236e05},
+            {0x3f19999a, 0x3f000000, 0x3f604557}, {0x3f000000, 0x3f19999a, 0x3f31da5e},
+            {0x7149f2ca, 0x7149f2ca, 0x3f490fda}, {0x0da24260, 0x0da24260, 0x3f490fdb},
+            {0x3e99999a, 0xbf666666, 0x4034784b}, {0x40000000, 0x40400000, 0x3f168757},
+            {0xbe99999a, 0x3f333333, 0xbecf4dfb}, {0x00000001, 0x3f800000, 0x00000001},
+        };
+        for (const auto& row : atanRows)
+            require(bitsOf(gameAtan2(floatOf(row[0]), floatOf(row[1]))) == row[2], "gameAtan2 bit pattern");
+        require(std::isnan(gameAtan2(NAN, 1.0f)) && std::isnan(gameAtan2(1.0f, NAN)), "gameAtan2 NaN");
+
+        // Stick to intent, 0x2007a0..0x200864 (heading = (s16)(atan2(x, y) * 10430.378) + (s16)(yaw * 10430.378),
+        // flag 8 when x^2 + y^2 < 0.5 on the raw values, 0x200820). Expected values worked through the
+        // float arithmetic: sqrt(|v|) * v per axis unless type 0x14b / 0x189 (0x2007b0..0x2007c4).
+        StickIntent up = stickIntent(stickAt(0.0f, 1.0f));
+        require(up.active && up.heading == 0 && up.heldSet == kHeldMove, "stick up");
+        StickIntent right = stickIntent(stickAt(1.0f, 0.0f));
+        require(right.heading == 16384 && right.heldSet == kHeldMove, "stick right is a quarter turn");
+        require(stickIntent(stickAt(-1.0f, 0.0f)).heading == -16384, "stick left");
+        require(stickIntent(stickAt(0.0f, -1.0f)).heading == -32768, "stick down wraps to s16 min");
+        require(stickIntent(stickAt(1.0f, 1.0f)).heading == 8192, "diagonal");
+        require(stickIntent(stickAt(0.4f, 0.8f)).heading == 3544, "square-root shaping");
+        require(stickIntent(stickAt(0.4f, 0.8f, 0x189)).heading == 4836, "type 0x189 skips shaping");
+        require(stickIntent(stickAt(0.4f, 0.8f, 0x14b)).heading == 4836, "type 0x14b skips shaping");
+        require(stickIntent(stickAt(-0.6f, -0.3f)).heading == -19928, "negative quadrant");
+
+        // Held flag 8 compares the bits of x^2 + y^2 with 0x3f000000 (0.5): exactly 0.5 does not set it.
+        require(stickIntent(stickAt(0.5f, 0.5f)).heldSet == kHeldMove, "sum 0.5 is not slow");
+        require(stickIntent(stickAt(0.5f, 0.4999f)).heldSet == (kHeldMove | kHeldSlow), "sum below 0.5 is slow");
+        require(stickIntent(stickAt(0.5f, 0.0f, 0x14b)).heldSet == (kHeldMove | kHeldSlow), "slow uses the raw values");
+        require(stickIntent(stickAt(1.0f, 0.0f)).heldSet == kHeldMove, "sum 1");
+
+        // Camera yaw: (s16)(yaw * 10430.378) is added modulo 2^16 (0x200848..0x200864).
+        require(stickIntent(stickAt(0.0f, 1.0f, 0x100, -1.0f)).heading == -10430, "yaw truncates toward zero");
+        require(stickIntent(stickAt(1.0f, 0.0f, 0x100, 3.14159265f)).heading == -16384, "pi yaw plus quarter turn wraps");
+        require(stickIntent(stickAt(0.5f, 0.5f, 0x100, 3.0f)).heading == -26053, "31291 + 8192 wraps");
+        require(stickIntent(stickAt(1.0f, 0.0f, 0x100, 4.0f)).heading == -7431, "41721 as u16 + 16384");
+
+        // Active test 0x200588..0x2005d0: |x| > dead zone of slot 14, or |y| > dead zone of slot 15 (strict).
+        StickIntent idle = stickIntent(stickAt(0.1f, -0.1f));
+        require(!idle.active && idle.heading == 0 && idle.heldSet == 0, "on the dead zone is idle");
+        require(stickIntent(stickAt(0.0f, 0.11f)).active && stickIntent(stickAt(-0.11f, 0.0f)).active, "either axis activates");
+        StickIntentInput separate = stickAt(0.2f, 0.0f);
+        separate.slot14.deadzone = 0.3f;
+        require(!stickIntent(separate).active, "slot 14 uses its own dead zone");
+        separate.slot15 = {0.2f, 0.1f};
+        require(stickIntent(separate).active, "slot 15 uses its own dead zone");
+        require(!stickIntent(stickAt(NAN, 0.0f)).active, "NaN is not active");
+
+        // 0x1aa8ac (signed byte at 0x372d44) nonzero: bits 0 and 1 of +0xc and +0xe cleared, stick ignored.
+        StickIntentInput blocked = stickAt(1.0f, 0.0f);
+        blocked.byte372d44 = -1;
+        StickIntent cleared = stickIntent(blocked);
+        require(!cleared.active && cleared.heading == 0 && cleared.heldSet == 0 && cleared.heldClear == 3 &&
+                    cleared.pressClear == 3,
+                "blocked stick");
     } catch (const std::exception& e) {
         std::cerr << "FAIL: " << e.what() << '\n';
         return 1;
