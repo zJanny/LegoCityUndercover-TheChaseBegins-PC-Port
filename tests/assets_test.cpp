@@ -403,6 +403,35 @@ void subtitles() {
         requireThrows([&] { parseSubtitles(bytes(bad)); }, "malformed subtitles accepted");
 }
 
+Bytes u32Bytes(std::uint32_t value) {
+    return {std::uint8_t(value), std::uint8_t(value >> 8), std::uint8_t(value >> 16), std::uint8_t(value >> 24)};
+}
+
+void particles() {
+    // Reference: Python port of the 0x1886f0 disassembly (lower-case, h = (h << 4) + c, fold bits 28-31).
+    require(pjwHash("Cloud") == 0x6a36b4 && pjwHash("fx_characterswapalpha") == 0x75649a1, "pjw hash");
+    Bytes first(kParticleDefSize), second(kParticleDefSize);
+    auto hash = u32Bytes(pjwHash("smoke"));
+    std::copy(hash.begin(), hash.end(), first.begin() + 0x2c);
+    second[0x2c] = 0x99;
+    Bytes data(first);
+    data.insert(data.end(), second.begin(), second.end());
+    auto file = [&](std::uint32_t defCount, std::uint32_t scale, const Bytes& records) {
+        return pooledBlocks({{-15, u32Bytes(10)}, {-15, u32Bytes(25)}, {-15, u32Bytes(2)}, {-15, u32Bytes(defCount)},
+                             {-15, u32Bytes(0)}, {-15, u32Bytes(scale)}, {-16, bytes(std::string("fire\0\x12", 6))},
+                             {-16, bytes(std::string("smoke\0", 6))}, {-14, records}});
+    };
+    ParticleDefs defs = parseParticleDefs(file(2, 0, data));
+    require(defs.unknown0 == 10 && defs.unknown1 == 25 && defs.scale == 1.0f &&
+                defs.textures == std::vector<std::string>{"fire", "smoke"},
+            "particle header and texture names");
+    require(defs.defs.size() == 2 && defs.defs[0].texture == 1 && defs.defs[1].texture == -1 &&
+                defs.defs[1].raw[0x2c] == 0x99,
+            "particle records");
+    require(parseParticleDefs(file(2, 0x40000000, data)).scale == 2.0f, "particle scale");
+    requireThrows([&] { parseParticleDefs(file(3, 0, data)); }, "particle count mismatch accepted");
+}
+
 void animations() {
     // Translation x channel 9: base 150 (16 bits), delta width 3 (5 bits), deltas [0, 5].
     Bytes curve = bitstream({{0x08, 8}, {1, 3}, {150, 16}, {3, 5}, {0, 3}, {5, 3}});
@@ -795,6 +824,7 @@ int main() {
         layouts();
         localisation();
         subtitles();
+        particles();
         animations();
         cutscenes();
         tables();

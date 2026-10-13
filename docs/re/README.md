@@ -19,5 +19,6 @@ Read this index, then open only the file you need.
 | [save-format.md](save-format.md) | `savegame.dat` layout, CRC, save thread |
 | [ui-layouts.md](ui-layouts.md) | `.bxaml` UI layouts and storyboards |
 | [fmv.md](fmv.md) | Mobiclip `.moflex` video and subtitles |
+| [particles.md](particles.md) | `particledefs.bprt` particle definitions |
 
 Rules for editing these files are in CLAUDE.md ("Reverse-engineering findings").

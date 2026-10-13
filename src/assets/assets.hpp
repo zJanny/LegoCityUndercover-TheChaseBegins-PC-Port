@@ -459,6 +459,28 @@ struct SubtitleCue {
 };
 std::vector<SubtitleCue> parseSubtitles(const Bytes& data, const std::vector<std::string>& extended = {});
 
+// 0x1886f0: PJW/ELF hash of the ASCII-lower-cased name (bytes are signed).
+std::uint32_t pjwHash(const std::string& text);
+
+// particles/particledefs.bprt, loader 0x27d71c. Textures load as Particles/<name>.tga
+// (0x271e6c). Spawners address definitions by index (e.g. ExplosionParticleDef, 0x163f00).
+// The record size is inferred: the data block is exactly count x 380 bytes.
+constexpr std::size_t kParticleDefSize = 380;
+struct ParticleDef {
+    std::uint32_t textureHash = 0;  // +0x2c, pjwHash of a texture name
+    int texture = -1;               // index into ParticleDefs::textures, -1 if no name matches
+    std::array<std::uint8_t, kParticleDefSize> raw{};
+};
+struct ParticleDefs {
+    std::uint32_t unknown0 = 0;  // global 0x376b84
+    std::uint32_t unknown1 = 0;  // global 0x376b88
+    std::uint32_t unknown4 = 0;  // global 0x376bbc
+    float scale = 1.0f;          // global 0x376bc0; the loader turns 0 into 1
+    std::vector<std::string> textures;
+    std::vector<ParticleDef> defs;
+};
+ParticleDefs parseParticleDefs(const Bytes& data);
+
 std::uint32_t readU32(const Bytes& data, std::size_t offset);
 std::uint16_t readU16(const Bytes& data, std::size_t offset);
 } // namespace chase::assets

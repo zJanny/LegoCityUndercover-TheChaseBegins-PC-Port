@@ -315,6 +315,22 @@ int main(int argc, char** argv) {
             if (srtFiles != 204 || srtCues != 2921 || srtLines != 3560 || srtMs != 6486170 || srtSum != 0xe37a66e1)
                 throw std::runtime_error("subtitle totals differ from the regex census");
         }
+        // Reference: tools/tt_resource.py parse of particles/particledefs.bprt: -15 words 10, 25, 97,
+        // 298, 0, 0x401503da; 97 -16 names; one -14 block of 113240 bytes at 0x7fc whose FNV-1a is
+        // 0x57544492. All 298 words at record +0x2c equal the PJW hash of a texture name.
+        {
+            ParticleDefs defs = parseParticleDefs(archive.read(*archive.find("particles/particledefs.bprt")));
+            std::uint32_t sum = 0x811c9dc5;
+            std::size_t resolved = 0;
+            for (const auto& def : defs.defs) {
+                resolved += def.texture >= 0;
+                for (std::uint8_t b : def.raw) sum = (sum ^ b) * 0x01000193;
+            }
+            if (defs.unknown0 != 10 || defs.unknown1 != 25 || defs.unknown4 != 0 || defs.textures.size() != 97 ||
+                defs.textures[1] != "cloud" || defs.defs.size() != 298 || resolved != 298 || sum != 0x57544492 ||
+                std::fabs(defs.scale - 2.32836f) > 1e-5f)
+                throw std::runtime_error("particle definitions differ from the pooled-resource reference");
+        }
         // Reference: python3 tools/convert_nav.py --census artifacts/fib/files
         std::size_t navMatched = 0;
         for (const auto& [levelName, room] : navDescriptors) {
