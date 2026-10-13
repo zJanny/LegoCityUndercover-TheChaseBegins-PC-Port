@@ -5,7 +5,7 @@
 - Overall: IN_PROGRESS
 - Current Phase: IMPLEMENT
 - Current Step: S4f
-- Last Updated: 2026-10-13T13:30+02:00
+- Last Updated: 2026-10-13T09:10+02:00
 - Branch: main
 - Target Branch: Not specified
 - Requested Scope: PLAN, IMPLEMENT, TEST; start reverse engineering and native port
@@ -221,13 +221,14 @@ Reverse-engineering findings live in docs/re/ (see docs/re/README.md). Entries m
 - 2026-10-13T11:40+02:00 — FMV player finished and merged → [docs/re/fmv.md](../re/fmv.md)
 - 2026-10-13T12:10+02:00 — S4f chase_save library (src/save/) and save-core test; `cmake --build build` warning-free, `ctest --test-dir build` 10/10 pass. Header size field confirmed (REA) → [docs/re/save-format.md](../re/save-format.md)
 - 2026-10-13T12:30+02:00 — Options defaults and system language mapping added to chase_save; save-core passes → [docs/re/save-format.md](../re/save-format.md)
-- 2026-10-13T13:10+02:00 — chase-fmv black screen fixed: audio start deadlocked when the frame queue filled first (`4b3b75f`); ctest 10/10.
-- 2026-10-13T13:30+02:00 — Options fields (sound/music volume, invert camera, subtitles) and language order; chase_save accessors; ctest 10/10 → [docs/re/save-format.md](../re/save-format.md)
-- 2026-10-13T14:00+02:00 — S3 scheduler fields recorded; step value still unknown (time-boxed) → [docs/re/arm-executable.md](../re/arm-executable.md)
-- 2026-10-13T14:20+02:00 — Options gift list and +0x1ec records → [docs/re/save-format.md](../re/save-format.md)
-- 2026-10-13T15:00+02:00 — particledefs.bprt container decoded (parseParticleDefs, pjwHash); ctest 10/10 → [docs/re/particles.md](../re/particles.md)
-- 2026-10-13T15:30+02:00 — Particle spawner field use; named fields in ParticleDef; ctest 10/10 → [docs/re/particles.md](../re/particles.md)
-- 2026-10-13T16:00+02:00 — Particle init fields (atlas, frames, flips, colour gradient); ctest 10/10 → [docs/re/particles.md](../re/particles.md)
-- 2026-10-13T16:30+02:00 — Particle emitter update (rate, duration, fade keys); ctest 10/10 → [docs/re/particles.md](../re/particles.md)
-- 2026-10-13T17:00+02:00 — Particle step: four key lists, gravity, drag, bounce, size growth; ctest 10/10 → [docs/re/particles.md](../re/particles.md)
-- 2026-10-13T17:15+02:00 — Particle texture hash-to-index conversion found (0x1ed440) → [docs/re/particles.md](../re/particles.md)
+- 2026-10-13T08:51+02:00 — chase-fmv black screen fixed: audio start deadlocked when the frame queue filled first (`4b3b75f`); ctest 10/10.
+- 2026-10-13T08:53+02:00 — Options fields (sound/music volume, invert camera, subtitles) and language order; chase_save accessors; ctest 10/10 → [docs/re/save-format.md](../re/save-format.md)
+- 2026-10-13T08:55+02:00 — S3 scheduler fields recorded; step value still unknown (time-boxed) → [docs/re/arm-executable.md](../re/arm-executable.md)
+- 2026-10-13T08:56+02:00 — Options gift list and +0x1ec records → [docs/re/save-format.md](../re/save-format.md)
+- 2026-10-13T09:00+02:00 — particledefs.bprt container decoded (parseParticleDefs, pjwHash); ctest 10/10 → [docs/re/particles.md](../re/particles.md)
+- 2026-10-13T09:01+02:00 — Particle spawner field use; named fields in ParticleDef; ctest 10/10 → [docs/re/particles.md](../re/particles.md)
+- 2026-10-13T09:03+02:00 — Particle init fields (atlas, frames, flips, colour gradient); ctest 10/10 → [docs/re/particles.md](../re/particles.md)
+- 2026-10-13T09:05+02:00 — Particle emitter update (rate, duration, fade keys); ctest 10/10 → [docs/re/particles.md](../re/particles.md)
+- 2026-10-13T09:07+02:00 — Particle step: four key lists, gravity, drag, bounce, size growth; ctest 10/10 → [docs/re/particles.md](../re/particles.md)
+- 2026-10-13T09:08+02:00 — Particle texture hash-to-index conversion found (0x1ed440) → [docs/re/particles.md](../re/particles.md)
+- 2026-10-13T09:10+02:00 — Session timestamps corrected to commit times (system clock). The earlier 2026-10-13 entries (02:30–12:35) do not match their commit times (e.g. `ab62d67` at 01:43) and were left unchanged.
