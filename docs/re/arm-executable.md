@@ -141,3 +141,21 @@ Unknowns:
 - Whether a counter advances on every vblank or only every second (a swap-interval multiple). Without this the answer 30 versus 60 fps is unknown.
 - Whether 0x10f370 runs once per scheduler step (0x100f44) or per rendered frame, and the value of 0x52a1f4.
 - The step value in the scheduler (C+0x10) is still unknown. The idle path 0x25c174 is not a sleep: it polls input (0x25cb2c, 0x25b4b4) and ends in 0x25afcc, so the earlier wording "sleeps through 0x25c174(1/30)" is unverified.
+
+## 2026-10-13T09:38:42+02:00 — Vblank counters, wait modes and mode byte 0x52a1f4 (REA Ghidra 12.1.2, llvm-objdump; read-only, partial)
+
+- Counter writers (ev_2916a84c…, ev_a2aee7af…): 0x11f4c8 increments 0x593d14 and 0x11f50c increments 0x593d18, each by 1 modulo 0x7fffffff. Each first calls an optional user hook (0x593d1c / 0x593d20) with 0x400 / 0x401. The counter block base is 0x593bc0 (counters at +0x154 / +0x158, hooks at +0x15c / +0x160).
+- Registration: FUN_00112630 (GPU init, called from 0x105d8c; ev_868d354a…) calls 0x24e07c(callback, id) for ids 0..6 (0x1128a4 onward). 0x24e07c → 0x1222e8 stores the callback at G+0x10+id*4 (objdump of 0x1222e8..0x122320; id must be below 7). Id 2 gets 0x11f4c8 and id 3 gets 0x11f50c (literals at 0x112ffc / 0x113000). So 0x593d14 is the id 2 interrupt and 0x593d18 the id 3 interrupt. Mapping ids 2/3 to VBlank0 (top) / VBlank1 (bottom) is the usual 3DS GSP numbering (outside knowledge, not shown by this binary).
+- Each GSP interrupt of id 2 or 3 advances exactly one counter by 1, so a counter advance is one vertical blank of one screen. No divider or skip logic appears in the two callbacks.
+- 0x257a68(mode) (objdump 0x257a68..0x257ae8): latches both counters, then loops the one-interrupt wait (0x24e06c) until the condition holds. Mode 0x400: leave when 0x593d14 differs. Mode 0x401: leave when 0x593d18 differs. Mode 0x402: leave only after 0x593d14 has changed and then 0x593d18 has also changed. One call therefore waits for at least one interrupt and at most the next change of each counter. It never waits for two changes of the same counter.
+- Mode byte 0x52a1f4 = 0x529e30+0x3c4 (literal 0x10f52c in 0x10f370). 0x10f370 maps 1 to 0x401, 2 to 0x402, anything else to 0x400. The only byte store found is 0x1030d0 (strb r1,[r2,#0x3c4], in the init path just before the call to 0x105d8c; r1 is set to 0 at 0x1030ac but several instructions between are undecoded by objdump, so the stored value 0 is likely, not proven). Readers: 0x1013fc, 0x101f5c (compare with 2, together with the word at +0x3c8) and 0x108804 (compare with 1). No other writer was found by literal-pool search (the base 0x529e30 has about 200 users, only the +0x3c4 offset was grepped). Value at run time: unknown.
+- 0x10f370 has one caller, 0x109c98, which has one caller, 0x25acc0 (in the 0x25afcc area from the earlier entry). It starts with 0x251e4c(1) checks and skips the swap when its first flag is set, so not every call necessarily reaches the wait.
+- 0x105d8c (init, ev_743b52ce…) ends with FUN_0010fa54(0x1e), which is a tail call 0x1193fc → FUN_00122908(1, 0x1e) between lock/unlock calls 0x25b678 / 0x25b5a0. Its meaning is not examined (0x1e is also 30).
+- Reading (inference, not proven): in the default mode the present routine waits for one vblank of one screen (counter 0x593d14), so the present itself is paced to the vblank rate, not to every second vblank. Whether the game renders and presents every vblank or every second one depends on how often 0x25acc0 reaches 0x10f370 per vblank and on the scheduler step, neither of which was resolved.
+
+Corrections to the earlier entry (09:36:11): the unknown "which ids increment 0x593d14 / 0x593d18" is resolved above (ids 2 and 3). The statement "Mode 0x402: both change" is refined to a sequential wait (0x593d14 first, then 0x593d18).
+
+Unknowns:
+- 30 or 60 fps: not decided. The frame count per present and the scheduler step C+0x10 writer were not examined (budget). Next step: decompile 0x25acc0 and its loop (0x25afcc), find what stores C+0x10, and test whether a frame skip or swap-interval counter gates 0x109c98.
+- Whether FUN_00122908(1, 0x1e) sets a frame rate or swap interval.
+- Value of 0x52a1f4 at run time and any writer other than 0x1030d0.
