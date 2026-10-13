@@ -28,7 +28,7 @@ How the level's stud objects are created, drawn, collected and counted. Replica:
 
 **Implemented.** `StudField::update` (idle: skip counter and distance test; collecting: timer; done: value added), `studSpriteFrame`, `studPickupPoint`, `StudSprites` (quads in the shared shader, alpha test), chase-game keeps the pickup point from the player's position and facing, draws idle studs and prints `studs: counter ...` after a `--script` run. Tests: `studs-core` (synthetic), `studs-real-data` (traces `artifacts/oracle/studs-traces`, scenario tools/oracle/studs-pickup.txt), counts in `assets-real-data`.
 
-**Stand-ins (all listed in the progress file):**
+**Stand-ins (all listed in [features/studs.md](../plans/features/studs.md)):**
 - `kMeasuredStudPickupRadius` (1.5) and `kMeasuredPlayerPickupPoint` are values read in the oracle, not derived from their writers (0x2744d0 with its caller 0x1abe60 sets the radius; the writer of entity +0x60 was not found). They may change with abilities or characters.
 - `kProvisionalStudSkipLimit` 17: the observed largest skip counter; the limit is the result of FUN_0023ca4c (0x23ca4c, reads a thread-local rate with the default 30), not decoded.
 - The clock phase of the sprite animation starts at 0 when chase-game starts (`provisionalStudClockSeconds`); the original's clock object (0x5165c8) has its own origin.

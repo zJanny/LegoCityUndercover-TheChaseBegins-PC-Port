@@ -20,7 +20,7 @@ DONE for the input laboratory (S2) and the keyboard/mouse mapping used by `chase
 
 ## 5. Open items
 
-- [ ] INPUT-1 — Replace the `Walk` stand-in by a proper analog mapping if the user decides one is needed (a mapping question, not game behaviour).
+- [ ] INPUT-1 — Keep open (user decision 2026-10-13T21:38): the `Walk` key stands in for a half-tilted circle pad; revisit with an analog mapping if controller support is added later (a mapping question, not game behaviour).
 - [ ] INPUT-2 — Readers of input slots 16/17. evidence: [arm-executable.md §2026-10-13T09:22](../../re/arm-executable.md).
 - [ ] INPUT-3 — Slots 6/7 are read by gameplay and 4/5 by UI; which UI actions use them and the controller state 255 are unknown. evidence: [arm-executable.md §2026-10-13T09:22](../../re/arm-executable.md), [oracle.md §2026-10-13T11:50](../../re/oracle.md).
 

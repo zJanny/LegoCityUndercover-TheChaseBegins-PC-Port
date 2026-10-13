@@ -99,7 +99,7 @@ Ten words {include mask, exclude mask, kinds include, kinds exclude, owner+0xc i
 - chase-game from `--start "875.53 16.58 1123.55" --script "0 150 70"` in lvl_01 now covers 5.92 units instead of 6.54: the character stands against the lamp post (screenshot checked by eye). `game-script-camera` (lvl_00) moved 8.83 → 8.77 units (replica output) because the level's props now push the character and the camera.
 - A teleport makes the camera turn for about 30 updates before it settles (the first objcoll-walk.txt traces head along the camera of that moment); objcoll-barrier.txt waits 90 updates and saves the state `barrier-settled`.
 
-### Stand-ins and approximations (open items in the progress file)
+### Stand-ins and approximations (stand-ins and open items: [features/collision.md](../plans/features/collision.md))
 
 - `kStateDisabledStandIn` (src/assets/object_collision.cpp): 85 instance names of lvl_01 that the original did not register, or rejected through owner flag bit 0, at gameplay-start (recorded from the grid); the state that sets it is not recovered.
 - `kDoorCentreXStandIn`: Police_Door_02 registers x 0 although its mesh record gives −0.0698; source not found.
