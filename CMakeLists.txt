@@ -109,6 +109,11 @@ if(BUILD_TESTING)
       music/act_bass_break.bwav)
     set_tests_properties(soundtest-real-smoke PROPERTIES ENVIRONMENT "SDL_AUDIODRIVER=dummy"
       PASS_REGULAR_EXPRESSION "12000 Hz, 2 channel")
+    add_test(NAME soundtest-id-smoke COMMAND chase-soundtest --seconds 0.3
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      --id 1)
+    set_tests_properties(soundtest-id-smoke PROPERTIES ENVIRONMENT "SDL_AUDIODRIVER=dummy"
+      PASS_REGULAR_EXPRESSION "id 1 ui/brickcounter1, volume 80%.*sounds/ui/brickcounter1.bwav")
   endif()
   if(TARGET chase-fmv AND EXISTS "${CHASE_ROMFS_DIR}/lego_city3ds.fib" AND EXISTS "${CHASE_ROMFS_DIR}/cutscenes/01_gameintro.moflex")
     add_test(NAME fmv-real-smoke COMMAND chase-fmv

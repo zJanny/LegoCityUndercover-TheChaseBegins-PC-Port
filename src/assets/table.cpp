@@ -108,4 +108,33 @@ float TableValue::asFloat() const {
     std::memcpy(&f, &bits, sizeof f);
     return f;
 }
+
+std::vector<SoundEffect> parseSoundEffects(const Table& table) {
+    if (table.sheets.empty()) throw std::runtime_error("sound effect table has no sheets");
+    const TableSheet& sheet = table.sheets[0];
+    if (sheet.columns.size() < 17) throw std::runtime_error("sound effect sheet has too few columns");
+    std::vector<SoundEffect> effects(sheet.rows);
+    for (std::size_t row = 0; row < sheet.rows; ++row) {
+        SoundEffect& effect = effects[row];
+        effect.id = std::uint32_t(row);
+        effect.name = tableValue(sheet, row, 1).text;
+        effect.column2 = tableValue(sheet, row, 2).bits;
+        effect.column3 = tableValue(sheet, row, 3).bits;
+        effect.column11 = tableValue(sheet, row, 11).bits;
+        effect.column12 = tableValue(sheet, row, 12).bits;
+        effect.volumePercent = tableValue(sheet, row, 13).bits;
+        effect.paramA = tableValue(sheet, row, 14).bits;
+        effect.paramB = tableValue(sheet, row, 15).bits;
+        effect.column16 = tableValue(sheet, row, 16).asFloat();
+    }
+    return effects;
+}
+
+const SoundEffect* findSoundEffect(const std::vector<SoundEffect>& effects, std::uint32_t id) {
+    return id < effects.size() ? &effects[id] : nullptr;
+}
+
+std::string soundEffectPath(const SoundEffect& effect) {
+    return effect.name.empty() ? std::string() : "sounds/" + effect.name + ".bwav";
+}
 } // namespace chase::assets

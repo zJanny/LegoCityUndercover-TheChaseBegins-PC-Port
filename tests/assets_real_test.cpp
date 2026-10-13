@@ -266,6 +266,27 @@ int main(int argc, char** argv) {
         if (tableFiles != 24 || tableSheets != 54 || tableCells != 23512 || cutsceneVideo != "01_gameintro" ||
             studThreshold != 50000)
             throw std::runtime_error("table totals differ from the recorded reference");
+        // Reference: chase-tabledump tables/tablessoundfx.bxls (2026-10-13): sheet 0 has 758 rows; row 1
+        // "ui/brickcounter1" 80/20/30, row 5 "lego_sfx/legosmall1" 100/1/100 (the volume/+10/+11 values match
+        // game record bytes +9/+10/+11, docs/re/audio.md). The path rule "sounds/<name>.bwav" resolves 757
+        // of 757 named rows in the archive (checked with a Python scan of lego_city3ds.csv, 2026-10-13).
+        {
+            const FuseEntry* entry = archive.find("tables/tablessoundfx.bxls");
+            if (!entry) throw std::runtime_error("tablessoundfx not found");
+            std::vector<SoundEffect> effects = parseSoundEffects(parseTable(archive.read(*entry)));
+            std::size_t named = 0, resolved = 0;
+            for (const auto& effect : effects) {
+                if (effect.name.empty()) continue;
+                ++named;
+                resolved += archive.find(soundEffectPath(effect)) != nullptr;
+            }
+            if (effects.size() != 758 || !effects[0].name.empty() || effects[1].name != "ui/brickcounter1" ||
+                effects[1].volumePercent != 80 || effects[1].paramA != 20 || effects[1].paramB != 30 ||
+                effects[5].name != "lego_sfx/legosmall1" || effects[5].column2 != 675 ||
+                effects[5].volumePercent != 100 || effects[5].paramA != 1 || effects[5].paramB != 100 ||
+                named != 757 || resolved != 757)
+                throw std::runtime_error("sound effect table differs from the recorded reference");
+        }
         // Reference: recorded from this C++ parser (2026-10-13); camera x is near the actors (x ~ -815 raw).
         {
             const FuseEntry* shot = archive.find("csdata/models/1_1_a/cscamera/cscamera_0000.bfnanm");

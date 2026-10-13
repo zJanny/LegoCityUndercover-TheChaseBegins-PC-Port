@@ -8,6 +8,7 @@
 #include <mutex>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace {
@@ -28,6 +29,7 @@ int run(int argc, char** argv) {
     std::string fib = "artifacts/romfs/romfs/lego_city3ds.fib", names = "artifacts/romfs/romfs/lego_city3ds.csv";
     double seconds = -1;
     std::vector<std::string> paths;
+    std::vector<std::uint32_t> ids;
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
         auto value = [&]() -> std::string {
@@ -37,12 +39,28 @@ int run(int argc, char** argv) {
         if (arg == "--fib") fib = value();
         else if (arg == "--names") names = value();
         else if (arg == "--seconds") seconds = std::stod(value());
+        else if (arg == "--id") ids.push_back(std::uint32_t(std::stoul(value())));
         else paths.push_back(arg);
     }
-    if (paths.empty())
-        throw std::runtime_error("usage: chase-soundtest [--fib F] [--names CSV] [--seconds S] sounds/<name>.bwav...");
+    if (paths.empty() && ids.empty())
+        throw std::runtime_error(
+            "usage: chase-soundtest [--fib F] [--names CSV] [--seconds S] [--id N]... [sounds/<name>.bwav]...");
     assets::FuseArchive archive(fib);
     archive.loadNames(names);
+    std::vector<std::pair<std::string, float>> requests;
+    if (!ids.empty()) {
+        const assets::FuseEntry* tableEntry = archive.find("tables/tablessoundfx.bxls");
+        if (!tableEntry) throw std::runtime_error("not in archive: tables/tablessoundfx.bxls");
+        auto effects = assets::parseSoundEffects(assets::parseTable(archive.read(*tableEntry)));
+        for (std::uint32_t id : ids) {
+            const assets::SoundEffect* effect = assets::findSoundEffect(effects, id);
+            if (!effect) throw std::runtime_error("no sound effect with id " + std::to_string(id));
+            if (effect->name.empty()) throw std::runtime_error("sound effect " + std::to_string(id) + " has no sound");
+            std::cout << "id " << id << " " << effect->name << ", volume " << effect->volumePercent << "%\n";
+            requests.emplace_back(assets::soundEffectPath(*effect), effect->volumePercent / 100.0f);
+        }
+    }
+    for (const auto& path : paths) requests.emplace_back(path, 1.0f);
     if (SDL_Init(SDL_INIT_AUDIO) != 0) throw std::runtime_error(SDL_GetError());
     SDL_AudioSpec want{}, have{};
     want.freq = 48000;
@@ -58,7 +76,7 @@ int run(int argc, char** argv) {
     double longest = 0;
     {
         std::lock_guard<std::mutex> guard(output.lock);
-        for (const auto& path : paths) {
+        for (const auto& [path, gain] : requests) {
             const assets::FuseEntry* entry = archive.find(path);
             if (!entry) throw std::runtime_error("not in archive: " + path);
             auto sound = std::make_shared<assets::Sound>(assets::decodeSound(archive.read(*entry)));
@@ -67,7 +85,7 @@ int run(int argc, char** argv) {
                       << length << " s" << (sound->loop ? ", loops from frame " + std::to_string(sound->loopStart) : "")
                       << '\n';
             longest = std::max(longest, sound->loop ? 10.0 : length);
-            mixer.play(sound);
+            mixer.play(sound, gain);
         }
     }
     SDL_PauseAudioDevice(device, 0);

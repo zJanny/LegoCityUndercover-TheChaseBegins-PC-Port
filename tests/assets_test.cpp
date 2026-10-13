@@ -793,6 +793,46 @@ void tables() {
     requireThrows([&] { parseTable(pooledBlocks(blocks)); }, "table stride mismatch accepted");
 }
 
+void soundEffects() {
+    const std::uint8_t types[]{0, 6, 2, 8, 8, 8, 8, 8, 8, 8, 8, 3, 3, 3, 3, 3, 4};
+    const std::size_t sizes[]{0, 4, 2, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 4};
+    TableSheet sheet;
+    sheet.rows = 3;
+    std::size_t offset = 0;
+    for (std::size_t i = 0; i < 17; ++i) {
+        TableColumn column;
+        column.type = types[i];
+        column.stored = sizes[i] != 0;
+        column.size = sizes[i];
+        column.offset = offset;
+        offset += sizes[i];
+        sheet.columns.push_back(column);
+    }
+    sheet.stride = offset;
+    sheet.rowData.assign(3 * offset, 0);
+    auto setByte = [&](std::size_t row, std::size_t column, std::uint8_t value) {
+        sheet.rowData[row * sheet.stride + sheet.columns[column].offset] = value;
+    };
+    sheet.strings = bytes(std::string("\0ui/click\0", 10));
+    sheet.rowData[1 * sheet.stride + sheet.columns[1].offset] = 1;
+    setByte(1, 13, 80);
+    setByte(1, 14, 20);
+    setByte(1, 15, 30);
+    sheet.rowData[2 * sheet.stride + sheet.columns[1].offset] = 1;
+    setByte(2, 13, 55);
+    Table table;
+    table.sheets.push_back(sheet);
+    std::vector<SoundEffect> effects = parseSoundEffects(table);
+    require(effects.size() == 3 && effects[0].name.empty() && soundEffectPath(effects[0]).empty() &&
+                effects[1].id == 1 && effects[1].name == "ui/click" && effects[1].volumePercent == 80 &&
+                effects[1].paramA == 20 && effects[1].paramB == 30 && effects[2].volumePercent == 55 &&
+                soundEffectPath(effects[1]) == "sounds/ui/click.bwav",
+            "sound effect rows");
+    require(findSoundEffect(effects, 2) == &effects[2] && !findSoundEffect(effects, 3), "sound effect lookup");
+    table.sheets[0].columns.pop_back();
+    requireThrows([&] { parseSoundEffects(table); }, "narrow sound effect sheet accepted");
+}
+
 void sounds() {
     Sound sound = decodeSound(soundFile());
     require(sound.rate == 12000 && sound.loop && sound.loopStart == 1 && sound.frames == 3, "sound header");
@@ -842,6 +882,7 @@ static void configText() {
 int main() {
     try {
         configText();
+        soundEffects();
         sounds();
         refpack();
         fuse();

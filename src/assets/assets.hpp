@@ -375,6 +375,27 @@ struct TableValue {
 };
 Table parseTable(const Bytes& data);
 TableValue tableValue(const TableSheet& sheet, std::size_t row, std::size_t column);
+
+// tables/tablessoundfx.bxls sheet 0: the row index is the sound id scripts pass to the play
+// routine 0x23fa54. volumePercent is the last-but-two integer, which equals record byte +9
+// of that routine; paramA and paramB equal record bytes +10 and +11 (meaning unconfirmed).
+// The remaining stored columns keep their index in the name; their meaning is unknown.
+struct SoundEffect {
+    std::uint32_t id = 0;
+    std::string name;                // "ui/brickcounter1"; empty for id 0
+    std::uint32_t column2 = 0;       // 16-bit
+    std::uint32_t column3 = 0;       // 8-bit
+    std::uint32_t column11 = 0, column12 = 0;
+    std::uint32_t volumePercent = 0; // column 13
+    std::uint32_t paramA = 0;        // column 14
+    std::uint32_t paramB = 0;        // column 15
+    float column16 = 0;
+};
+std::vector<SoundEffect> parseSoundEffects(const Table& table);
+// nullptr when `id` is outside the table.
+const SoundEffect* findSoundEffect(const std::vector<SoundEffect>& effects, std::uint32_t id);
+// Archive path of the effect's sound ("sounds/<name>.bwav"); empty for an unnamed effect.
+std::string soundEffectPath(const SoundEffect& effect);
 struct ConfigEntry {
     std::string key;
     std::string value;
