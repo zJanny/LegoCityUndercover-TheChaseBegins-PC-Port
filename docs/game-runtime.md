@@ -1,0 +1,52 @@
+# Development runtime
+
+The development runtime (`chase-game`) is an early test program. **It is not the game.** It shows a level and lets you walk the main character around it. There are no missions, enemies, menus or story.
+
+You need the game files first. See [Extracting game data](extracting-game-data.md) and [Building the tools](building.md). The program needs libepoxy.
+
+## Start it
+
+Run this from the project folder, the one that contains `README.md`:
+
+```sh
+build/chase-game
+```
+
+A window opens with the police station. Press Escape to quit.
+
+## Keys
+
+| Action | Keys |
+|---|---|
+| Walk, run and sprint | Arrow keys, or W, A, S and D |
+| Walk slowly | Hold E |
+| Turn the camera | Z (left) and C (right). Pushing left or right also turns the camera. |
+| Quit | Escape |
+
+- The character runs when you push the keys. After about one second of running, he sprints.
+- The keys come from `config/controls.cfg`. See [Controls](controls.md).
+
+## What works
+
+- The speeds, the walk, run and sprint change, and the turning follow the original game.
+- The camera follows the character behind him, as in the original, on open ground.
+- The floor and walls come from the level. The character climbs steps and kerbs, and slides along walls.
+
+## What does not work yet
+
+- The camera does not move away from walls. It can end up inside a building.
+- Objects, other characters and vehicles do not block the character.
+- The character cannot fall or jump.
+- The animations do not blend. Their speed is an estimate.
+
+## Other levels
+
+Choose another level with `--level` and the level's path:
+
+```sh
+build/chase-game --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl
+```
+
+The path is the level's place inside the game archive, as in the example. Each level has a `<name>_main.blvl` file.
+
+For the other options, such as `--screenshot` and `--frames`, see the [command reference](commands.md#development-runtime).

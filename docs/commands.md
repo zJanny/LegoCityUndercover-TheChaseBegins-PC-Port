@@ -70,7 +70,7 @@ cd build && ./chase-input-lab [--config PATH] [--smoke-test]
 
 ## Development runtime
 
-Needs libepoxy. This is **not the playable game**. It shows a level with the main character standing at the start point from the game data. The character walks, runs and sprints when you press the D-pad keys. Speed, turning and the animation changes follow what was measured in the original game. Everything else about the game is missing.
+Needs libepoxy. This is **not the playable game**. It shows a level with the main character standing at the start point from the game data. The character walks, runs and sprints when you press the D-pad keys. Speed, turning and the animation changes follow what was measured in the original game. Everything else about the game is missing. For a plain-language guide, see [Development runtime](game-runtime.md).
 
 ```sh
 build/chase-game
