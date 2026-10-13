@@ -12,12 +12,17 @@ A scenario file drives the run, one command per line ('#' starts a comment):
   wait SECONDS          let the emulator run freely for a wall-clock time (no frame count)
   hold BUTTONS          hold buttons from now on, e.g. 'hold A' or 'hold A+UP'; 'hold -' releases all
   stick X Y             raw circle-pad values (about -156..156); 'stick 0 0' centres it
-  screenshot NAME       write NAME_top.png and NAME_bottom.png to the output directory
+  screenshot NAME [gdb] write NAME_top.png and NAME_bottom.png (software renderer) or NAME.png (OpenGL with --rpc);
+                        'gdb' forces the slow memory-read path
   report                print scheduler and frame-pacing values
   channels              print the pad device's 20-byte channel records (value, type, deadzone, threshold, edges)
   player                print the player entity (*0x3772b8): world position, facing, intent heading, flags
   trace N NAME          advance N frames, writing the player state of every frame to NAME.csv
   read ADDR LEN         print LEN bytes at ADDR as hex words
+  sample SECONDS INTERVAL NAME
+                        free-run for SECONDS (no breakpoints) and sample the game clock, vblank counters and the
+                        player position every INTERVAL seconds through RPC into NAME.csv (needs --rpc)
+  perf                  print the emulator's own speed statistics (needs --rpc)
   savestate NAME        save the emulator state as NAME in --states (needs --display xvfb)
   loadstate NAME        restore the state NAME (needs --display xvfb)
 
@@ -37,11 +42,26 @@ Fast iteration (a cold boot to the language screen takes about 4 minutes):
                         emulator keeps running afterwards. The frame counter of every new attach starts at 0.
   --stop                kill the kept emulator (and its Xvfb) recorded in <home>/session.json.
 
+RPC channel (--rpc): Azahar's RPC server is a second, non-halting channel next to the GDB stub. It listens on the
+fixed UDP port 45987 (not configurable), so only one emulator at a time can have it; the tool refuses to start
+with --rpc while the port is taken. Reads (up to 32 KB per datagram) and writes go straight to guest memory
+while the game runs, so measurements can be taken without stopping it. Memory reads for report, player, channels,
+trace, read and the software-renderer screenshot use RPC when it is connected and fall back to the stub
+otherwise. RPC writes are accepted only inside the process image, heap, linear heap and New 3DS extra RAM and
+invalidate the JIT cache. Details are in docs/re/oracle.md.
+
+  --rpc                 enable the RPC server in the generated config and connect to it (with --attach: connect to
+                        the kept emulator's RPC server).
+  --rpc-input           breakpoint-free pad input: patch the pad reader once (0x10a578 reads the held mask from the
+                        spare word 0x10acf4) and let 'hold' write that word over RPC. Implies --rpc. Circle-pad
+                        'stick' values still use the per-frame breakpoint at 0x10a540.
+
 After loadstate the frame counter is set to the value stored with the state. A load is refused while the
 game is still starting (Azahar shows a 'Savestates' dialog); the tool dismisses it and retries for up to
 two minutes. Reaching the language screen is much faster free-running ('wait 25') than stepping 600 frames.
 """
 import argparse
+import csv
 import ctypes
 import json
 import os
@@ -64,6 +84,12 @@ GSP_SHARED = 0x10000000
 PLAYER = 0x3772b8
 PAD_DEVICE = 0x3769e4
 CAMERA_YAW = 0x376894
+GAME_CLOCK = 0x376b0c
+VBLANKS = 0x593d14
+PAD_LOAD = 0x10a578
+PAD_LOAD_ORIGINAL = 0xe5940000
+PAD_SPARE = 0x10acf4
+PAD_LOAD_PATCHED = 0xe59f0000 | (PAD_SPARE - (PAD_LOAD + 8))
 
 BUTTONS = {'A': 0x1, 'B': 0x2, 'SELECT': 0x4, 'START': 0x8, 'RIGHT': 0x10, 'LEFT': 0x20,
            'UP': 0x40, 'DOWN': 0x80, 'R': 0x100, 'L': 0x200, 'X': 0x400, 'Y': 0x800}
@@ -74,6 +100,8 @@ volume\\default=false
 [Debugging]
 use_gdbstub=true
 use_gdbstub\\default=false
+enable_rpc_server={rpc}
+enable_rpc_server\\default=false
 [Renderer]
 graphics_api={renderer}
 graphics_api\\default=false
@@ -188,6 +216,141 @@ class GdbRemote:
         if not reply.startswith(('T', 'S')):
             raise ConnectionError('unexpected stop reply %r' % reply)
         return self.register(15)
+
+
+RPC_PORT = 45987
+RPC_VERSION = 2
+RPC_READ_MAX = 32 * 1024
+RPC_WRITE_MAX = RPC_READ_MAX - 8
+RPC_READ, RPC_WRITE, RPC_PROCESS_LIST, RPC_PROCESS, RPC_SCREENSHOT, RPC_READ_SCREENSHOT, RPC_PERF = range(1, 8)
+RPC_PERF_FIELDS = ('system_fps', 'game_fps', 'time_vblank_interval', 'time_hle_svc', 'time_hle_ipc', 'time_gpu',
+                   'time_swap', 'time_remaining', 'emulation_speed', 'artic_transmitted')
+RPC_SCREENSHOT_RESULTS = {1: 'is unsupported by the active renderer (the software renderer has none)', 2: 'is busy',
+                          3: 'timed out waiting for a frame', 4: 'PNG encoding failed', 5: 'got an invalid argument'}
+RPC_WRITABLE = ((0x00100000, 0x04000000), (0x08000000, 0x10000000), (0x14000000, 0x1c000000),
+                (0x1e800000, 0x1ec00000))
+APPLICATION_TITLE_TYPE = 0x00040000
+
+
+def rpc_port_free():
+    probe = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        probe.bind(('127.0.0.1', RPC_PORT))
+        return True
+    except OSError:
+        return False
+    finally:
+        probe.close()
+
+
+class RpcError(IOError):
+    pass
+
+
+class RpcRemote:
+    """Client for Azahar's RPC server (src/core/rpc in the Azahar source): UDP datagrams, header of four
+    little-endian u32 (version, id, type, size) followed by size bytes; the reply echoes the header with its own
+    size. A request the server rejects is answered with size 0, which is also the normal reply of a write."""
+
+    def __init__(self, port=RPC_PORT, timeout=2.0, retries=3):
+        self.timeout = timeout
+        self.retries = retries
+        self.next_id = 1
+        self.requests = 0
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock.connect(('127.0.0.1', port))
+
+    def close(self):
+        self.sock.close()
+
+    def request(self, kind, payload, timeout=None):
+        if len(payload) > RPC_READ_MAX:
+            raise RpcError('RPC payload of %d bytes exceeds %d' % (len(payload), RPC_READ_MAX))
+        request_id = self.next_id
+        self.next_id = (self.next_id + 1) & 0xffffffff
+        datagram = struct.pack('<4I', RPC_VERSION, request_id, kind, len(payload)) + payload
+        self.sock.settimeout(timeout or self.timeout)
+        for _ in range(1 if timeout else self.retries):
+            self.sock.send(datagram)
+            self.requests += 1
+            try:
+                while True:
+                    reply = self.sock.recv(RPC_READ_MAX + 16)
+                    if len(reply) >= 16 and struct.unpack_from('<I', reply, 4)[0] == request_id:
+                        break
+            except (socket.timeout, ConnectionRefusedError):
+                continue
+            size = struct.unpack_from('<I', reply, 12)[0]
+            if len(reply) != 16 + size:
+                raise RpcError('malformed RPC reply: %d bytes for size field %d' % (len(reply), size))
+            return reply[16:]
+        raise RpcError('no RPC reply on UDP port %d (is the emulator running with --rpc?)' % self.sock.getpeername()[1])
+
+    def read(self, address, length):
+        out = bytearray()
+        while length:
+            size = min(length, RPC_READ_MAX)
+            data = self.request(RPC_READ, struct.pack('<II', address, size))
+            if len(data) != size:
+                raise RpcError('RPC read of %d bytes at 0x%x returned %d bytes (selected process gone?)'
+                               % (size, address, len(data)))
+            out += data
+            address += size
+            length -= size
+        return bytes(out)
+
+    def write(self, address, data, verify=True):
+        if not any(low <= address < high for low, high in RPC_WRITABLE):
+            raise RpcError('the RPC server ignores writes at 0x%08x (allowed: process image, heap, linear heap, '
+                           'New 3DS extra RAM)' % address)
+        offset = 0
+        while offset < len(data):
+            chunk = data[offset:offset + RPC_WRITE_MAX]
+            self.request(RPC_WRITE, struct.pack('<II', address + offset, len(chunk)) + chunk)
+            offset += len(chunk)
+        if verify and self.read(address, len(data)) != bytes(data):
+            raise RpcError('RPC write at 0x%x did not take effect' % address)
+
+    def u32(self, address):
+        return struct.unpack('<I', self.read(address, 4))[0]
+
+    def processes(self):
+        data = self.request(RPC_PROCESS_LIST, struct.pack('<II', 0, 64))
+        found = []
+        for index in range(struct.unpack_from('<I', data)[0]):
+            pid, title, name = struct.unpack_from('<IQ8s', data, 4 + index * 0x14)
+            found.append((pid, title, name.rstrip(b'\0').decode('latin-1')))
+        return found
+
+    def select_process(self, pid):
+        self.request(RPC_PROCESS, struct.pack('<II', 1, pid))
+
+    def select_application(self):
+        applications = [p for p in self.processes() if p[1] >> 32 == APPLICATION_TITLE_TYPE]
+        if not applications:
+            raise RpcError('no application process in the RPC process list')
+        self.select_process(applications[0][0])
+        return applications[0]
+
+    def perf(self, reset=False):
+        data = self.request(RPC_PERF, struct.pack('<II', 1 if reset else 0, 0))
+        if len(data) != 0x54:
+            raise RpcError('unexpected RPC perf reply of %d bytes' % len(data))
+        return dict(zip(RPC_PERF_FIELDS, struct.unpack_from('<10d', data)))
+
+    def take_screenshot(self, flags=0, scale=1):
+        info = self.request(RPC_SCREENSHOT, struct.pack('<II', scale, flags), timeout=15.0)
+        result, width, height, size = struct.unpack('<4I', info)
+        if result:
+            raise RpcError('RPC screenshot %s' % RPC_SCREENSHOT_RESULTS.get(result, 'failed (%d)' % result))
+        out = bytearray()
+        while len(out) < size:
+            chunk = self.request(RPC_READ_SCREENSHOT,
+                                 struct.pack('<II', len(out), min(size - len(out), RPC_READ_MAX)))
+            if not chunk:
+                raise RpcError('RPC screenshot data ended at %d of %d bytes' % (len(out), size))
+            out += chunk
+        return width, height, bytes(out)
 
 
 class XKeys:
@@ -311,8 +474,13 @@ def shortcut_lines():
 
 
 class Oracle:
-    def __init__(self, remote, output, keys=None, emulator_states=None, saved_states=None):
+    def __init__(self, remote, output, keys=None, emulator_states=None, saved_states=None, rpc=None,
+                 renderer='software', rpc_input=False):
         self.remote = remote
+        self.rpc = rpc
+        self.renderer = renderer
+        self.rpc_input = rpc_input
+        self.pad_patched = False
         self.output = output
         self.keys = keys
         self.emulator_states = emulator_states
@@ -323,8 +491,31 @@ class Oracle:
         self.frame_object = None
         remote.add_breakpoint(SCHEDULER)
 
+    @property
+    def mem(self):
+        return self.rpc or self.remote
+
+    def patch_pad_reader(self):
+        current = self.rpc.u32(PAD_LOAD)
+        if current not in (PAD_LOAD_ORIGINAL, PAD_LOAD_PATCHED):
+            raise RuntimeError('pad reader at 0x%x holds 0x%08x, expected 0x%08x' % (PAD_LOAD, current, PAD_LOAD_ORIGINAL))
+        self.rpc.write(PAD_SPARE, struct.pack('<I', self.held))
+        self.rpc.write(PAD_LOAD, struct.pack('<I', PAD_LOAD_PATCHED))
+        self.pad_patched = True
+
+    def unpatch_pad_reader(self):
+        if self.pad_patched:
+            self.rpc.write(PAD_LOAD, struct.pack('<I', PAD_LOAD_ORIGINAL))
+            self.pad_patched = False
+
     def inject_input(self):
-        if PAD_HELD not in self.remote.breakpoints:
+        if self.rpc_input:
+            if not self.pad_patched:
+                self.patch_pad_reader()
+            self.rpc.write(PAD_SPARE, struct.pack('<I', self.held))
+            if self.stick != (0, 0) and PAD_STICK not in self.remote.breakpoints:
+                self.remote.add_breakpoint(PAD_STICK)
+        elif PAD_HELD not in self.remote.breakpoints:
             self.remote.add_breakpoint(PAD_STICK)
             self.remote.add_breakpoint(PAD_HELD)
 
@@ -430,13 +621,16 @@ class Oracle:
             self.keys.press('Return')
             time.sleep(STATE_RETRY_SECONDS)
         self.reattach(installed)
+        if self.rpc_input:
+            self.pad_patched = False
+            self.inject_input()
         frame = state_frame(self.saved_states, name)
         self.advance(1)
         self.frame = frame
         print('  loaded %s (frame %d)' % (name, frame))
 
     def report(self):
-        r = self.remote
+        r = self.mem
         print('frame %d' % self.frame)
         if self.frame_object is not None:
             p = self.frame_object
@@ -449,14 +643,14 @@ class Oracle:
             print('  dt min %.6f max %.6f fixed %.6f scale %.3f flags %s cap %d dt %.6f'
                   % (dt_min, dt_max, dt_fixed, scale, flags.hex(), cap, dt))
             print('  last=%d' % last)
-        print('  clock 0x376b0c=%d' % r.u32(0x376b0c))
+        print('  clock 0x%x=%d' % (GAME_CLOCK, r.u32(GAME_CLOCK)))
         mode, eye = r.read(0x52a1f4, 1)[0], r.read(0x52a1f8, 1)[0]
         print('  present mode 0x52a1f4=%d 0x52a1f8=%d interval 0x529de8=%d'
               % (mode, eye, r.u32(0x529de8)))
-        print('  vblank 0x593d14=%d 0x593d18=%d' % (r.u32(0x593d14), r.u32(0x593d18)))
+        print('  vblank 0x%x=%d 0x%x=%d' % (VBLANKS, r.u32(VBLANKS), VBLANKS + 4, r.u32(VBLANKS + 4)))
 
     def player(self):
-        r = self.remote
+        r = self.mem
         entity = r.u32(PLAYER)
         if not entity:
             return None
@@ -489,12 +683,12 @@ class Oracle:
                   % (state['intent'], state['held_flags'], state['press_flags'], state['ctrl_state']))
 
     def channels(self, count=42):
-        device = self.remote.u32(PAD_DEVICE)
+        device = self.mem.u32(PAD_DEVICE)
         if not device:
             print('  no pad device (*0x%x == 0)' % PAD_DEVICE)
             return
-        base = self.remote.u32(device + 0x14)
-        data = self.remote.read(base, count * 0x14)
+        base = self.mem.u32(device + 0x14)
+        data = self.mem.read(base, count * 0x14)
         print('  device 0x%08x channels 0x%08x' % (device, base))
         for index in range(count):
             value, kind, deadzone, threshold, press, release = struct.unpack_from('<fB3xffhh', data, index * 0x14)
@@ -508,7 +702,7 @@ class Oracle:
 
             def sample():
                 state = self.player()
-                dt = struct.unpack('<f', self.remote.read(self.frame_object + 0x78, 4))[0]
+                dt = struct.unpack('<f', self.mem.read(self.frame_object + 0x78, 4))[0]
                 if state is None:
                     return
                 out.write('%d,%.6f,%d,%d,%d,%.5f,%.5f,%.5f,%.5f,%.5f,%d,%d,%d,%.5f\n' % (
@@ -519,19 +713,79 @@ class Oracle:
             self.advance(count, sample)
         print('  %s' % path)
 
-    def screenshot(self, name):
-        for screen, base, width in (('top', GSP_SHARED + 0x200, 400), ('bottom', GSP_SHARED + 0x240, 320)):
-            index = self.remote.read(base, 1)[0] & 1
-            info = struct.unpack('<7I', self.remote.read(base + 4 + index * 0x1c, 0x1c))
-            address, stride, fmt = info[1], info[3], info[4] & 7
-            if 0x18000000 <= address < 0x18600000:
-                address += 0x07000000
-            elif address >= 0x20000000:
-                address = address - 0x20000000 + 0x14000000
-            pixels = self.remote.read(address, stride * width)
-            path = self.output / ('%s_%s.png' % (name, screen))
-            write_png(path, decode_framebuffer(pixels, width, stride, fmt))
-            print('  %s: 0x%08x format %d -> %s' % (screen, address, fmt, path))
+    def screenshot(self, name, via_gdb=False):
+        started = time.monotonic()
+        if self.rpc and not via_gdb and self.renderer == 'opengl':
+            captured = []
+            self.run_free(lambda _: captured.append(self.rpc.take_screenshot()), 0)
+            width, height, png = captured[0]
+            path = self.output / ('%s.png' % name)
+            path.write_bytes(png)
+            print('  rendered frame %dx%d -> %s' % (width, height, path))
+            route = 'RPC screenshot request (the game ran while the frame was captured)'
+        else:
+            reader = self.remote if via_gdb or not self.rpc else self.rpc
+            for screen, base, width in (('top', GSP_SHARED + 0x200, 400), ('bottom', GSP_SHARED + 0x240, 320)):
+                index = reader.read(base, 1)[0] & 1
+                info = struct.unpack('<7I', reader.read(base + 4 + index * 0x1c, 0x1c))
+                address, stride, fmt = info[1], info[3], info[4] & 7
+                if 0x18000000 <= address < 0x18600000:
+                    address += 0x07000000
+                elif address >= 0x20000000:
+                    address = address - 0x20000000 + 0x14000000
+                pixels = reader.read(address, stride * width)
+                path = self.output / ('%s_%s.png' % (name, screen))
+                write_png(path, decode_framebuffer(pixels, width, stride, fmt))
+                print('  %s: 0x%08x format %d -> %s' % (screen, address, fmt, path))
+            route = 'RPC memory reads' if reader is self.rpc else 'GDB stub memory reads'
+        print('  screenshot took %.2f s via %s' % (time.monotonic() - started, route))
+
+    def perf(self):
+        for key, value in self.rpc.perf().items():
+            print('  %-22s %.6f' % (key, value))
+
+    def sample(self, seconds, interval, name):
+        if not self.rpc:
+            raise SystemExit('sample needs the RPC channel (--rpc)')
+        path = self.output / ('%s.csv' % name)
+        rows = []
+        reader = self.rpc
+
+        def collect(duration):
+            start = time.monotonic()
+            epoch = time.time()
+            due = start
+            while time.monotonic() - start < duration:
+                before = time.monotonic()
+                clock = reader.u32(GAME_CLOCK)
+                vblank_a, vblank_b = struct.unpack('<II', reader.read(VBLANKS, 8))
+                entity = reader.u32(PLAYER)
+                position = (float('nan'),) * 3
+                if entity:
+                    position = struct.unpack('<3f', reader.read(reader.u32(entity + 0x3c) + 0x8c, 12))
+                after = time.monotonic()
+                rows.append(((before + after) / 2 - start, epoch + (before + after) / 2 - start, after - before,
+                             clock, vblank_a, vblank_b, entity, *position))
+                due += interval
+                time.sleep(max(0.0, due - time.monotonic()))
+
+        self.run_free(collect, seconds)
+        with open(path, 'w', newline='') as out:
+            writer = csv.writer(out)
+            writer.writerow(('t', 'epoch', 'rpc_seconds', 'clock', 'vblank_a', 'vblank_b', 'entity', 'x', 'y', 'z'))
+            for row in rows:
+                writer.writerow(('%.4f' % row[0], '%.4f' % row[1], '%.5f' % row[2]) + row[3:7] + tuple('%.5f' % v for v in row[7:]))
+        print('  %d samples -> %s' % (len(rows), path))
+        if len(rows) > 1:
+            first, last = rows[0], rows[-1]
+            span = last[0] - first[0]
+            for label, column in (('0x593d14', 4), ('0x593d18', 5)):
+                vblanks = (last[column] - first[column]) & 0xffffffff
+                ticks = (last[3] - first[3]) & 0xffffffff
+                if vblanks:
+                    print('  clock ticks per vblank (%s): %.2f over %.2f s (%d vblanks, %.2f vblanks/s, %d ticks)'
+                          % (label, ticks / vblanks, span, vblanks, vblanks / span, ticks))
+            print('  mean RPC time per sample %.2f ms' % (1000 * sum(r[2] for r in rows) / len(rows)))
 
 
 def decode_framebuffer(data, width, stride, fmt):
@@ -597,7 +851,11 @@ def run_scenario(oracle, lines):
             oracle.stick = (int(args[0]), int(args[1]))
             oracle.inject_input()
         elif op == 'screenshot':
-            oracle.screenshot(args[0])
+            oracle.screenshot(args[0], via_gdb=args[1:] == ['gdb'])
+        elif op == 'sample':
+            oracle.sample(float(args[0]), float(args[1]), args[2])
+        elif op == 'perf':
+            oracle.perf()
         elif op == 'savestate':
             oracle.savestate(args[0])
         elif op == 'loadstate':
@@ -613,7 +871,7 @@ def run_scenario(oracle, lines):
         elif op == 'report':
             oracle.report()
         elif op == 'read':
-            data = oracle.remote.read(int(args[0], 0), int(args[1], 0))
+            data = oracle.mem.read(int(args[0], 0), int(args[1], 0))
             for i in range(0, len(data), 16):
                 print('  0x%08x: %s' % (int(args[0], 0) + i, data[i:i + 16].hex(' ', 4)))
         else:
@@ -625,6 +883,20 @@ def find_image():
     if len(images) != 1:
         raise SystemExit('pass --image: found %d .cci files in the repository root' % len(images))
     return images[0]
+
+
+def connect_rpc(timeout=60.0):
+    rpc = RpcRemote()
+    deadline = time.monotonic() + timeout
+    while True:
+        try:
+            pid, title, name = rpc.select_application()
+            print('RPC connected: process %d title %016x %s' % (pid, title, name))
+            return rpc
+        except RpcError:
+            if time.monotonic() > deadline:
+                raise
+            time.sleep(0.5)
 
 
 def main():
@@ -646,6 +918,12 @@ def main():
     parser.add_argument('--frame-limit', type=int, default=100,
                         help='Azahar speed limit in percent; 0 is unthrottled and distorts the game clock')
     parser.add_argument('--state', help='load this saved state right after boot (needs --display xvfb)')
+    parser.add_argument('--rpc', action='store_true',
+                        help="enable Azahar's RPC server (UDP port 45987, one emulator at a time) and use it for memory "
+                             'reads, screenshots and the sample command')
+    parser.add_argument('--rpc-input', action='store_true',
+                        help='inject pad buttons by patching the pad reader once instead of a breakpoint per frame '
+                             '(implies --rpc)')
     parser.add_argument('--keep', action='store_true', help='leave the emulator running after the scenario')
     parser.add_argument('--attach', action='store_true',
                         help='connect to the emulator already running on --port instead of launching one; '
@@ -653,6 +931,7 @@ def main():
     parser.add_argument('--stop', action='store_true', help='kill the kept emulator recorded in --home and exit')
     parser.add_argument('--fresh', action='store_true', help='delete the isolated home first (resets the emulated save)')
     args = parser.parse_args()
+    args.rpc = args.rpc or args.rpc_input
 
     home = args.home.resolve()
     if args.stop:
@@ -665,9 +944,12 @@ def main():
     saved_states = args.states.resolve()
     started = time.monotonic()
 
-    process = xvfb = keys = None
+    process = xvfb = keys = rpc = None
+    renderer = args.renderer
     if args.attach:
         session = load_session(home) or {}
+        renderer = session.get('renderer', renderer)
+        args.rpc = args.rpc or bool(session.get('rpc'))
         remote = GdbRemote(args.port)
         if session.get('display'):
             keys = XKeys(session['display'])
@@ -678,6 +960,9 @@ def main():
             raise SystemExit('azahar not found in PATH')
         if load_session(home):
             raise SystemExit('a kept emulator is already recorded in %s; run --stop first' % home)
+        if args.rpc and not rpc_port_free():
+            raise SystemExit('UDP port %d (the RPC server port, not configurable) is already in use by another '
+                             'emulator' % RPC_PORT)
         if args.fresh and home.exists():
             if not (home / 'config/azahar-emu').is_dir():
                 raise SystemExit('%s does not look like an oracle home; refusing to delete it' % home)
@@ -685,7 +970,8 @@ def main():
         config = home / 'config/azahar-emu/qt-config.ini'
         config.parent.mkdir(parents=True, exist_ok=True)
         config.write_text(CONFIG.replace('{renderer}', '0' if args.renderer == 'software' else '1')
-                          .replace('{frame_limit}', str(args.frame_limit)).replace('{shortcuts}', shortcut_lines()))
+                          .replace('{frame_limit}', str(args.frame_limit))
+                          .replace('{rpc}', 'true' if args.rpc else 'false').replace('{shortcuts}', shortcut_lines()))
         if args.state:
             place_state(saved_states, args.state, emulator_states)
         env = dict(os.environ, XDG_CONFIG_HOME=str(home / 'config'), XDG_DATA_HOME=str(home / 'data'),
@@ -701,19 +987,23 @@ def main():
                                    stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
         session_file(home).write_text(json.dumps({
             'pid': process.pid, 'port': args.port, 'xvfb_pid': xvfb.pid if xvfb else None,
-            'display': display if xvfb else None}))
+            'display': display if xvfb else None, 'rpc': args.rpc, 'renderer': args.renderer}))
     keep = args.keep or args.attach
     oracle = None
     try:
         if not args.attach:
             remote = GdbRemote(args.port)
-        oracle = Oracle(remote, args.output.resolve(), keys, emulator_states, saved_states)
+        if args.rpc:
+            rpc = connect_rpc()
+        oracle = Oracle(remote, args.output.resolve(), keys, emulator_states, saved_states, rpc, renderer,
+                        args.rpc_input)
         if args.state:
             oracle.loadstate(args.state)
         run_scenario(oracle, scenario)
     finally:
         if keep and oracle is not None:
             try:
+                oracle.unpatch_pad_reader()
                 oracle.detach()
             except OSError:
                 pass

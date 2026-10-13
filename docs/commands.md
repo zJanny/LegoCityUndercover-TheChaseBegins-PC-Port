@@ -128,3 +128,17 @@ python3 tools/azahar_oracle.py --stop
 ```
 
 - Do not trust timing values from a run with `--frame-limit 0` or from stepped frames. Details are in `docs/re/oracle.md`.
+
+### Measuring while the game runs normally (`--rpc`)
+
+Add `--rpc` to read the game's memory without stopping it. This is faster, and timing values stay correct.
+
+```sh
+python3 tools/azahar_oracle.py measure.txt --display xvfb --state language --rpc
+```
+
+- Screenshots take well under a second instead of about 11 seconds.
+- `sample SECONDS INTERVAL NAME` lets the game run freely and writes the game clock, the screen counters and the player position to `NAME.csv` at the given interval.
+- `--rpc-input` presses buttons without stopping the game on every frame. It changes one instruction of the game in memory while the tool runs. The tool restores it before it leaves a kept emulator.
+- Only one emulator at a time can use `--rpc`, because it always uses the network port 45987. The tool stops with a message if that port is taken.
+- Without `--rpc` the tool works as before.
