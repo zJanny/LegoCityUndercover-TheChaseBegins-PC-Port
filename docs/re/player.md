@@ -170,3 +170,9 @@ Unknowns:
 - Initial value of ctrl+0xa/ctrl+8 at spawn (the implementation takes the Player1Start yaw), and behaviour of run timer and sprint role when walking from sprint (the implementation clears the sprint role at once; only release from sprint was measured).
 - The cause of the skipped facing step at frame 59, the slope law (clamp and t terms of 0x1abe60), ground following in y, collision slides.
 - Camera yaw law (writer of 0x376894) and the animation playback rate (frames per second) and blend of the real game.
+
+## 2026-10-13T14:46:45+02:00 — Ground following and collision slides recovered (see collision.md)
+
+- The unknowns "ground following in y" and "collision slides at obstacles" of the locomotion entries are answered in [collision.md](collision.md): after the horizontal move (0x21a73c slides it along wall triangles) 0x20b48c bisects the height of the floor under the player's box and keeps the old height within 0.01.
+- Correction to the "slope" finding above: the height steps of the turn_run_r90 ramp (16.577, 16.672, 16.794, 16.783) are this probe at the kerb, not a modelled slope; the speed slow-down on that ramp (ctrl+0x94 1.33) is the separate slope term of 0x1abe60 and is still not modelled.
+- ctrl+0x21c/+0x220 hold the x and z the slide changed, ctrl+0x224 the movement before the slide (type 27 only), ctrl+0x240/+0x244 the last ground height, ctrl+0x1e4/+0x1e8 the ground object and triangle, ctrl+0x1ec the ground normal.

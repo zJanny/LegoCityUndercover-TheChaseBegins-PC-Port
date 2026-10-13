@@ -45,8 +45,9 @@ Single C++ tests, with `ctest --test-dir build -R <name>`:
 | `game-real-smoke` | Registered only if `artifacts/romfs` existed at configure time; needs libepoxy |
 | `game-script-run`, `game-script-walk` | Same conditions. Feed a fixed stick to the development runtime and check how far the character moved |
 | `locomotion-real-data` | Compares the character's movement with traces recorded from the original game (`artifacts/oracle/loco-out`, folder set with `-DCHASE_LOCO_TRACE_DIR=...`); skips with code 77 if the traces or `artifacts/romfs` are missing |
+| `collision-real-data` | Compares the character's floor height and wall sliding with traces recorded from the original game (`artifacts/oracle/loco-out` and `artifacts/oracle/coll-out`, folders set with `-DCHASE_LOCO_TRACE_DIR=...` and `-DCHASE_COLLISION_TRACE_DIR=...`); skips with code 77 if the traces or `artifacts/romfs` are missing |
 | `audio-mixer` | Mixer core, no SDL |
-| `runtime-core` | Game runtime core (frame timing, pad, stick, character movement), no SDL |
+| `runtime-core` | Game runtime core (frame timing, pad, stick, character movement, floor height and wall sliding), no SDL |
 | `save-core` | Save file checks, synthetic data, no SDL |
 | `save-real-data` | Completion totals from the game tables; needs `artifacts/romfs`, skips with code 77 otherwise |
 | `fmv-real-smoke` | Registered only if FFmpeg and `artifacts/romfs` existed at configure time |
@@ -85,7 +86,7 @@ SDL_VIDEODRIVER=offscreen build/chase-game --script "0 150 40" --screenshot out.
 - What moves like the original: the speeds, the walk, run and sprint switch, the delay before sprinting, and the way the character turns towards the direction you push.
 - What is still a stand-in:
   - The camera follows behind the character at a fixed distance. The real camera is not recovered.
-  - The character walks through walls and stays at the height of the start point. There is no collision and no ground.
+  - The collision is only the level's fixed geometry. The character stays on the floor, climbs steps and kerbs by the original's rules, and slides along walls. Objects, other characters and vehicles do not block him, and he cannot fall or jump. Where the original lets him fall, he stays at his height.
   - The animations play at an assumed speed and switch without blending.
   - A keyboard cannot tilt the stick halfway, so `Z` stands in for a gentle push.
 - It prints one line per second: updates per second, the last time step and the circle pad values.

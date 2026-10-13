@@ -55,6 +55,7 @@ int main(int argc, char** argv) {
         std::size_t bytes = 0, pooled = 0, textures = 0, checked = 0;
         std::size_t models = 0, parts = 0, vertices = 0, triangles = 0;
         std::size_t levels = 0, objects = 0, placed = 0;
+        std::size_t collisionModels = 0, collisionItems = 0, collisionTriangles = 0, collisionNodes = 0;
         std::size_t sounds = 0, samples = 0, loops = 0;
         std::size_t locFiles = 0, locEntries = 0, fonts = 0, glyphs = 0;
         std::size_t navFiles = 0, navGrids = 0, navPaths = 0, navFlagged = 0;
@@ -210,6 +211,25 @@ int main(int argc, char** argv) {
             if (endsWith(name, ".bfnmdl")) {
                 Model model = parseModel(data);
                 ++models;
+                if (!model.collision.empty()) ++collisionModels;
+                for (const auto& item : model.collision) {
+                    ++collisionItems;
+                    collisionTriangles += item.triangles.size();
+                    collisionNodes += item.nodes.size();
+                    // Every triangle is reachable from the root exactly once.
+                    std::vector<int> seen(item.triangles.size(), 0);
+                    std::vector<std::uint32_t> pending{0};
+                    while (!pending.empty()) {
+                        const CollisionNode& node = item.nodes.at(pending.back());
+                        pending.pop_back();
+                        for (std::uint32_t i = 0; i < node.count(); ++i) {
+                            if (node.leaf()) ++seen.at(node.first() + i);
+                            else pending.push_back(node.first() + i);
+                        }
+                    }
+                    if (std::count(seen.begin(), seen.end(), 1) != std::ptrdiff_t(seen.size()))
+                        throw std::runtime_error("collision tree does not cover every triangle once: " + name);
+                }
                 for (const auto& mesh : model.meshes)
                     for (const auto& part : mesh.parts) {
                         if (!part.boneBatches.empty()) {
@@ -238,6 +258,10 @@ int main(int argc, char** argv) {
         // Reference totals from: python3 tools/convert_models.py --census artifacts/fib/files
         if (models != 3113 || parts != 16122 || vertices != 7211595 || triangles != 4603391)
             throw std::runtime_error("model totals differ from the Python reference");
+        // Reference totals: manual Python census over every .bfnmdl with tools/convert_models.Pools (collision
+        // section blocks of read_section_1c; item header +0x10 nodes, +0x14 triangles).
+        if (collisionModels != 776 || collisionItems != 1725 || collisionTriangles != 312483 || collisionNodes != 262633)
+            throw std::runtime_error("collision totals differ from the Python reference");
         // Reference totals from tools/convert_levels.py (parse_level / placements over all .blvl)
         if (levels != 856 || objects != 18469 || placed != 6563)
             throw std::runtime_error("level totals differ from the Python reference");
@@ -476,6 +500,16 @@ int main(int argc, char** argv) {
                 std::fabs(head[12] + 0.035988) > 1e-4 || std::fabs(head[13] - 1.309142) > 1e-4 ||
                 std::fabs(head[14] + 0.008350) > 1e-4)
                 throw std::runtime_error("head attachment differs from the recorded reference");
+        }
+        {
+            // Reference: manual Python census (tools/convert_models.Pools, collision section of the master models);
+            // the lobby floor of lvl_00 is item "Collision1" (docs/re/collision.md).
+            const Model police = parseModel(archive.read(*archive.find("models/lvl_00_policestation/lvl_00_policestation.bfnmdl")));
+            const std::pair<const char*, std::size_t> want[] = {{"Collision2", 1616}, {"Collision1", 1201}, {"Collision3", 130}};
+            if (police.collision.size() != 3) throw std::runtime_error("lvl_00 collision items differ from the reference");
+            for (std::size_t i = 0; i < 3; ++i)
+                if (police.collision[i].name != want[i].first || police.collision[i].triangles.size() != want[i].second)
+                    throw std::runtime_error("lvl_00 collision item differs from the reference: " + police.collision[i].name);
         }
         std::cout << archive.entries().size() << " entries, " << bytes << " bytes, " << pooled
                   << " pooled resources, " << textures << " textures, " << checked << " checksums match, "

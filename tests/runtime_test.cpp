@@ -1,9 +1,11 @@
 // chase_runtime replicas (scheduler 0x100f44, pad pipeline) against values traced from the disassembly
 // and read from the running game.
+#include "runtime/collision.hpp"
 #include "runtime/pad.hpp"
 #include "runtime/player_intent.hpp"
 #include "runtime/player_locomotion.hpp"
 #include "runtime/scheduler.hpp"
+#include <array>
 #include <cmath>
 #include <cstring>
 #include <iostream>
@@ -33,6 +35,39 @@ StickIntentInput stickAt(float x, float y, std::uint16_t type = 0x100, float yaw
     input.entityType = type;
     input.cameraYaw = yaw;
     return input;
+}
+// A collision item with a single leaf node: quads are four corners (counter-clockwise seen from the normal).
+chase::assets::CollisionItem quadItem(const std::vector<std::array<float, 12>>& quads) {
+    chase::assets::CollisionItem item;
+    item.name = "Collision_Test";
+    for (const auto& quad : quads) {
+        const std::uint32_t base = std::uint32_t(item.vertices.size() / 3);
+        item.vertices.insert(item.vertices.end(), quad.begin(), quad.end());
+        for (const std::array<std::uint32_t, 3>& corner : {std::array<std::uint32_t, 3>{0, 1, 2}, {0, 2, 3}}) {
+            chase::assets::CollisionTriangle triangle;
+            float edgeA[3], edgeB[3], normal[3];
+            for (int a = 0; a < 3; ++a) {
+                edgeA[a] = quad[corner[1] * 3 + std::size_t(a)] - quad[corner[0] * 3 + std::size_t(a)];
+                edgeB[a] = quad[corner[2] * 3 + std::size_t(a)] - quad[corner[0] * 3 + std::size_t(a)];
+            }
+            normal[0] = edgeA[1] * edgeB[2] - edgeA[2] * edgeB[1];
+            normal[1] = edgeA[2] * edgeB[0] - edgeA[0] * edgeB[2];
+            normal[2] = edgeA[0] * edgeB[1] - edgeA[1] * edgeB[0];
+            const float length = std::sqrt(normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2]);
+            for (int a = 0; a < 3; ++a) {
+                triangle.normal[a] = normal[a] / length;
+                triangle.vertex[a] = base + corner[std::size_t(a)];
+            }
+            triangle.d = triangle.normal[0] * quad[corner[0] * 3] + triangle.normal[1] * quad[corner[0] * 3 + 1] +
+                         triangle.normal[2] * quad[corner[0] * 3 + 2];
+            item.triangles.push_back(triangle);
+        }
+    }
+    chase::assets::CollisionNode node;
+    for (int a = 0; a < 3; ++a) node.half[a] = 100;
+    node.info = 1 | (std::uint32_t(item.triangles.size()) << 1);
+    item.nodes.push_back(node);
+    return item;
 }
 }
 
@@ -275,6 +310,46 @@ int main() {
         require(turnFacing(0, 20000) == 6000 && turnFacing(0, 5536) == 1661 && turnFacing(0, 30000) == 6400, "cap 6400");
         require(turnFacing(0, -32768) == -6400 && turnFacing(-32768, 0) == 26368, "exactly 180 degrees is d = -32768, a negative step");
         require(turnFacing(30000, -30000) == wrapHeading(30000 + 1661), "shortest way across the wrap (d = 5536)");
+
+        // Collision (docs/re/collision.md): ground height by bisection of the swept box, kept within 0.01,
+        // wall sliding with the box at the destination.
+        {
+            // Floor at y = 0 (normal up), a raised step at y = 0.2 for x > 1, a wall at x = 3 (normal -x).
+            CollisionWorld world;
+            world.add(quadItem({{-5, 0, -5, -5, 0, 5, 1, 0, 5, 1, 0, -5}}));
+            world.add(quadItem({{1, 0.2f, -5, 1, 0.2f, 5, 5, 0.2f, 5, 5, 0.2f, -5}}));
+            world.add(quadItem({{3, 0, 5, 3, 4, 5, 3, 4, -5, 3, 0, -5}}));
+            GroundProbe probe;
+            probe.forwardZ = 1;
+            probe.dt = 0.033f;
+            probe.rootDelta = 0.2f;
+            probe.y = 0.003f;
+            require(groundHeight(world, probe) && *groundHeight(world, probe) == 0.003f, "height within 0.01 of the floor is kept");
+            probe.y = 0.1f;
+            const auto lowered = groundHeight(world, probe);
+            require(lowered && std::fabs(*lowered) < 0.01f, "floor in reach pulls the height down to the bisected floor");
+            probe.y = 0.5f;
+            require(!groundHeight(world, probe), "no floor in reach");
+            probe.x = 1.3f;
+            probe.y = 0.0f;
+            const auto raised = groundHeight(world, probe);
+            require(raised && std::fabs(*raised - 0.2f) < 0.01f, "step reached by the footprint raises the height");
+            probe.x = -1;
+            probe.y = 0.0f;
+            probe.dt = 0.0f;
+            probe.rootDelta = 0.0f;
+            require(groundHeight(world, probe) && *groundHeight(world, probe) == 0.0f, "flat floor at rest");
+
+            float dx = 0.5f, dz = 0.2f;
+            require(slideAlongWalls(world, 2.0f, 0.0f, 0.0f, 0.0f, 1.0f, dx, dz) == 2 && std::fabs(dx) < 1e-6f && near(dz, 0.2f),
+                    "a wall at the destination removes the movement into it");
+            dx = 0.5f;
+            dz = 0.2f;
+            require(slideAlongWalls(world, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, dx, dz) == 0 && near(dx, 0.5f), "no wall within reach");
+            dx = -0.5f;
+            dz = 0.0f;
+            require(slideAlongWalls(world, 2.9f, 0.0f, 0.0f, 0.0f, 1.0f, dx, dz) == 0 && near(dx, -0.5f), "movement away from the wall");
+        }
     } catch (const std::exception& e) {
         std::cerr << "FAIL: " << e.what() << '\n';
         return 1;

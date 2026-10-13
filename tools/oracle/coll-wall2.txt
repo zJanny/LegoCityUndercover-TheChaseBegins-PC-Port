@@ -1,0 +1,42 @@
+# Wall experiments, set 2: eight stick directions of full deflection from the gameplay-start spawn, 90 updates each at fixed dt 0.033.
+# The camera yaw (recorded per row) drifts with the stick, so the paths curve; the rows with a slide correction are the ones of interest.
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 50 136
+trace 90 wall2_0 mem
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 131 61
+trace 90 wall2_1 mem
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 136 -50
+trace 90 wall2_2 mem
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 61 -131
+trace 90 wall2_3 mem
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick -50 -136
+trace 90 wall2_4 mem
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick -131 -61
+trace 90 wall2_5 mem
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick -136 50
+trace 90 wall2_6 mem
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick -61 131
+trace 90 wall2_7 mem

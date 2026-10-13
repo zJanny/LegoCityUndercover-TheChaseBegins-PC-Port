@@ -119,10 +119,37 @@ struct ModelMesh {
     bool relative = false;
     std::vector<ModelPart> parts;
 };
+// Collision mesh of a model (section at model+0x1c, loader 0x114640; docs/re/collision.md). Vertices are in
+// the model's coordinates, which are world coordinates for a level's master model. The triangle record is
+// 0x20 bytes: plane normal, plane offset d (normal . p = d), three vertex indices, a surface byte and three
+// bytes that are not understood. Nodes (0x1c bytes: box centre, box half extents, info) form a bounding-box tree: bit 0 of info marks a leaf,
+// (info & 0x1f) >> 1 is the child or triangle count and info >> 5 the index of the first child or triangle.
+struct CollisionTriangle {
+    float normal[3] = {0, 0, 0};
+    float d = 0;
+    std::uint32_t vertex[3] = {0, 0, 0};
+    std::uint8_t surface = 0;       // bit index in the surface exclusion masks of the queries
+    std::uint8_t unknown[3] = {0, 0, 0};
+};
+struct CollisionNode {
+    float centre[3] = {0, 0, 0};
+    float half[3] = {0, 0, 0};   // half extents of the node's bounding box
+    std::uint32_t info = 0;
+    bool leaf() const { return info & 1; }
+    std::uint32_t count() const { return (info & 0x1f) >> 1; }
+    std::uint32_t first() const { return info >> 5; }
+};
+struct CollisionItem {
+    std::string name;                           // e.g. "Collision_Floor", "Collision1"
+    std::vector<float> vertices;                // x, y, z triples
+    std::vector<CollisionTriangle> triangles;
+    std::vector<CollisionNode> nodes;           // nodes[0] is the root
+};
 struct Model {
     std::vector<std::string> nodeNames;
     std::vector<ModelMesh> meshes;
     std::vector<std::string> textures;  // model-level texture list (-16 pool)
+    std::vector<CollisionItem> collision;
 };
 Model parseModel(const Bytes& data);
 unsigned vertexFlags(const std::uint8_t* material);

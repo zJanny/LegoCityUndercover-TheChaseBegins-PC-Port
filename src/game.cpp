@@ -1,10 +1,12 @@
 // chase-game: development runtime skeleton. Not the playable game.
 // Joins the recovered frame scheduler, pad pipeline and player locomotion (chase_runtime), the controls
 // (chase_input) and the development renderer (chase_render) into one loop. The player character walks,
-// runs and sprints on the ground plane; there is no collision, ground height, camera law or gameplay.
+// runs and sprints; the level's static collision keeps him on the floor and stops him at walls. There is no
+// falling, camera law or gameplay.
 #include "assets/assets.hpp"
 #include "input.hpp"
 #include "render/scene.hpp"
+#include "runtime/collision.hpp"
 #include "runtime/pad.hpp"
 #include "runtime/player_intent.hpp"
 #include "runtime/player_locomotion.hpp"
@@ -271,9 +273,46 @@ std::optional<PlayerRig> placePlayer(FuseArchive& archive, Scene& scene, const L
     return rig;
 }
 
+// The level's static collision: the items of the level's master model (models/<level>/<level>.bfnmdl).
+runtime::CollisionWorld loadCollision(FuseArchive& archive, const std::string& levelPath) {
+    runtime::CollisionWorld world;
+    const std::string path = lower(levelPath);
+    const std::string folder = path.substr(0, path.find_last_of('/'));
+    const std::string name = folder.substr(folder.find_last_of('/') + 1);
+    const FuseEntry* entry = archive.find("models/" + name + "/" + name + ".bfnmdl");
+    if (!entry) return world;
+    for (const CollisionItem& item : parseModel(archive.read(*entry)).collision) world.add(item);
+    return world;
+}
+
 std::uint32_t clockTicks(std::uint64_t counter, std::uint64_t frequency) {
     std::uint64_t seconds = counter / frequency, rest = counter % frequency;
     return std::uint32_t(seconds * runtime::kClockFrequency + rest * runtime::kClockFrequency / frequency);
+}
+
+// The movement of locomotionUpdate is applied again here with the level collision: walls slide it
+// (0x21a73c), then the ground probe sets the height (0x20b48c). The original probes the ground only while the
+// character moves. A character with no floor in reach keeps its height (the original lets it fall).
+void movePlayer(PlayerRig& player, const runtime::CollisionWorld& collision, float startX, float startZ,
+                const runtime::LocomotionStep& step, float dt) {
+    float dx = step.deltaX, dz = step.deltaZ;
+    const float rootDelta = std::hypot(dx, dz);
+    const float heading = runtime::headingRadians(player.motion.facing);
+    const float forwardX = std::sin(heading), forwardZ = std::cos(heading);
+    if (rootDelta > 0 && !collision.empty())
+        runtime::slideAlongWalls(collision, startX, player.height, startZ, forwardX, forwardZ, dx, dz);
+    player.motion.x = startX + dx;
+    player.motion.z = startZ + dz;
+    if (rootDelta <= 0 || collision.empty()) return;
+    runtime::GroundProbe probe;
+    probe.x = player.motion.x;
+    probe.y = player.height;
+    probe.z = player.motion.z;
+    probe.forwardX = forwardX;
+    probe.forwardZ = forwardZ;
+    probe.rootDelta = rootDelta;
+    probe.dt = dt;
+    player.height = runtime::groundHeight(collision, probe).value_or(player.height);
 }
 
 int run(const Options& options) {
@@ -308,6 +347,8 @@ int run(const Options& options) {
         if (scene.addModel(meshModelPath(placement.mesh), placementMatrix(placement))) ++placed;
         else ++unresolved;
     std::optional<PlayerRig> player = placePlayer(archive, scene, level);
+    const runtime::CollisionWorld collision = loadCollision(archive, options.level);
+    std::cout << "collision: " << collision.triangleCount() << " triangles\n";
 
     float centre[3], radius;
     scene.bounds(centre, radius);
@@ -351,7 +392,9 @@ int run(const Options& options) {
             stick.slot15 = {pad.slot(kSlotStickY).value, pad.slot(kSlotStickY).deadzone};
             stick.entityType = kPlayerEntityType;
             stick.cameraYaw = camera.yaw;
+            const float startX = player->motion.x, startZ = player->motion.z;
             const runtime::LocomotionStep step = runtime::locomotionUpdate(player->motion, dt, runtime::stickIntent(stick));
+            movePlayer(*player, collision, startX, startZ, step, dt);
             player->animate(scene, dt, step);
         }
         camera.update(dt, pad);
@@ -416,7 +459,7 @@ int run(const Options& options) {
         if (scriptDone) {
             const float moveX = player->motion.x - player->startX, moveZ = player->motion.z - player->startZ;
             std::cout << "scripted: " << updates << " updates, player moved " << std::hypot(moveX, moveZ)
-                      << " units, facing " << player->motion.facing << ", run timer " << player->motion.runTimer << '\n';
+                      << " units, facing " << player->motion.facing << ", run timer " << player->motion.runTimer << ", height " << player->height << '\n';
         }
         if (!options.screenshot.empty() && (script.empty() ? updates >= options.frames : scriptDone)) {
             glFinish();

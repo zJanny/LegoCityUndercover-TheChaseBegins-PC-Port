@@ -11,7 +11,7 @@
 - Showing models, levels, animated characters and in-engine cutscenes in the [model viewer](model-viewer.md).
 - Playing sounds in the [sound test](sound-test.md).
 - Playing the cutscene videos with subtitles in the [video player](fmv-player.md).
-- Running a level in the [development runtime](commands.md#development-runtime). The main character walks, runs and sprints with the speeds measured in the original game. The camera is a stand-in, and there is no collision, ground height or anything else of the game. It is not gameplay.
+- Running a level in the [development runtime](commands.md#development-runtime). The main character walks, runs and sprints with the speeds measured in the original game. The level's fixed collision keeps him on the floor and stops him at walls, as in the original. The camera is a stand-in, and nothing else of the game works. It is not gameplay.
 - Testing keyboard and mouse controls in the [input laboratory](controls.md).
 
 ## Not recovered yet
@@ -19,7 +19,7 @@
 - Gameplay, menus and scripts.
 - The game's lighting and materials. The viewer shows an approximation.
 - Blending between different animations, and the real animation speed.
-- The real camera, collision, ground height and the character's other moves (jumping, fighting, vehicles).
+- The real camera, collision with objects, falling and the character's other moves (jumping, fighting, vehicles).
 - Which sound plays for which event.
 - Several smaller file types.
 - What a save game contains. The save file can be checked, read and written safely, but the progress and settings inside it are not understood yet. No program uses saves yet.

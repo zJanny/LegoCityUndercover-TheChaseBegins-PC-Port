@@ -10,7 +10,7 @@ Read this index, then open only the file you need.
 | [pooled-resources.md](pooled-resources.md) | Shared layout of all pooled `b*` formats |
 | [textures.md](textures.md) | `.btga/.bpng/.bdds`, v orientation, DMPGL notes |
 | [audio.md](audio.md) | `.bwav`/CWAV decode, mixer |
-| [models.md](models.md) | `.bfnmdl`, vertex layout, materials, shaders, UV scales, lightmaps |
+| [models.md](models.md) | `.bfnmdl`, vertex layout, materials, shaders, UV scales, lightmaps (collision section: see collision.md) |
 | [levels.md](levels.md) | `.blvl`, placements, Euler order, nav grids (`.bfnnav`) |
 | [skeleton-animation.md](skeleton-animation.md) | `.bfnskl`, `.bfnanm`, curves, pose composition, skinning, bone palettes |
 | [cutscenes.md](cutscenes.md) | `csdata` cutscenes: tracks, cameras, actors, soundtrack |
@@ -22,5 +22,6 @@ Read this index, then open only the file you need.
 | [particles.md](particles.md) | `particledefs.bprt` particle definitions |
 | [oracle.md](oracle.md) | Azahar runtime oracle: setup, fidelity rules, save states, fast workflow, timings |
 | [player.md](player.md) | Player entity pointer, scene node, controller fields, stick-to-intent, locomotion rules and root motion |
+| [collision.md](collision.md) | Level collision data (model+0x1c section), ground probe by box bisection, wall slide, differential test against traces |
 
 Rules for editing these files are in CLAUDE.md ("Reverse-engineering findings").

@@ -68,3 +68,7 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
   - The overall level stays dark, so a lightmap scale (e.g. ×2) is likely but unverified.
 - `ctest` PASS 5/5 (real-data totals unchanged), Python PASS 39/39.
 
+
+## 2026-10-13T14:46:37+02:00 — Correction: the model+0x1c section is collision geometry
+
+- The "model+0x1c section" that earlier entries (2026-10-12T16:10 and the loader notes of 0x114640/0x11fd20) skipped as unrecovered holds the collision mesh: items with a name, a bounding-box tree, 0x20-byte triangle records and vertices. Format, queries and tests: [collision.md](collision.md). `parseModel` now keeps it in `Model::collision`.

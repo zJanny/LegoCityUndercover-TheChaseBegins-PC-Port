@@ -1,0 +1,42 @@
+# Wall experiments, set 3: stick offsets from the camera direction (degrees, + is right) held for 100 updates at fixed dt 0.033,
+# aimed at the walls 9 units west and south of the gameplay-start spawn (headings about -105..-90 and -180..-165 degrees).
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 50 136
+trace 100 wall3_0 mem
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 61 131
+trace 100 wall3_1 mem
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 72 126
+trace 100 wall3_2 mem
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick 83 119
+trace 100 wall3_3 mem
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick -72 126
+trace 100 wall3_4 mem
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick -83 119
+trace 100 wall3_5 mem
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick -93 111
+trace 100 wall3_6 mem
+loadstate gameplay-start
+frames 3
+dt 0.033 0.033
+stick -103 103
+trace 100 wall3_7 mem

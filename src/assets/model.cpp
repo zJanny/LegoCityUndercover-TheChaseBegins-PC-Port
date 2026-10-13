@@ -143,20 +143,64 @@ void readVertexBuffer(Reader& r, const Bytes& material, ModelPart& part) {
     resolveSkinJoints(part);
 }
 
-// 0x114640 (and 0x11fd20): optional section at model+0x1c, pool -14. Skipped, not interpreted.
-void skipSection1c(Reader& r, std::uint32_t count) {
+// 0x114640 (and 0x11fd20): collision section at model+0x1c, pool -14. Items of 0x2c bytes: +0x10 node
+// count, +0x14 triangle count; the name, node and triangle chunks (1024 records each) and the vertex block
+// follow in the order of the loader. The optional block set of an item with +0x28 set (0x11fd20) is skipped.
+void readCollision(Reader& r, std::uint32_t count, std::vector<CollisionItem>& out) {
     r.cursor.push(Pool::M14);
     Bytes items = r.next();
-    for (std::uint32_t i = 0; i < count; ++i)
-        for (int k = 0; k < 5; ++k) r.skip();
+    requireSize(items, std::size_t(count) * 0x2c, "collision items");
+    std::vector<std::string> names(count);
     for (std::uint32_t i = 0; i < count; ++i) {
-        requireSize(items, (i + 1) * 0x2c, "section item");
-        std::size_t base = i * 0x2c;
-        for (std::uint32_t n = 0; n < readU32(items, base + 0x10); n += 0x400) r.skip();
-        for (std::uint32_t n = 0; n < readU32(items, base + 0x14); n += 0x400) r.skip();
-        r.skip();
+        names[i] = cString(r.next());
+        for (int k = 0; k < 4; ++k) r.skip();
+    }
+    for (std::uint32_t i = 0; i < count; ++i) {
+        const std::size_t base = std::size_t(i) * 0x2c;
+        const std::uint32_t nodeCount = readU32(items, base + 0x10), triangleCount = readU32(items, base + 0x14);
+        CollisionItem item;
+        item.name = names[i];
+        Bytes nodeBytes, triangleBytes;
+        for (std::uint32_t n = 0; n < nodeCount; n += 0x400) {
+            Bytes chunk = r.next();
+            nodeBytes.insert(nodeBytes.end(), chunk.begin(), chunk.end());
+        }
+        for (std::uint32_t n = 0; n < triangleCount; n += 0x400) {
+            Bytes chunk = r.next();
+            triangleBytes.insert(triangleBytes.end(), chunk.begin(), chunk.end());
+        }
+        Bytes vertexBytes = r.next();
+        if (nodeBytes.size() != std::size_t(nodeCount) * 0x1c) throw std::runtime_error("collision node size mismatch");
+        if (triangleBytes.size() != std::size_t(triangleCount) * 0x20) throw std::runtime_error("collision triangle size mismatch");
+        if (vertexBytes.size() % 12) throw std::runtime_error("collision vertex size mismatch");
+        const std::uint32_t vertexCount = std::uint32_t(vertexBytes.size() / 12);
+        item.vertices.resize(std::size_t(vertexCount) * 3);
+        for (std::size_t k = 0; k < item.vertices.size(); ++k) item.vertices[k] = readF32(vertexBytes, k * 4);
+        item.nodes.resize(nodeCount);
+        for (std::uint32_t n = 0; n < nodeCount; ++n) {
+            CollisionNode& node = item.nodes[n];
+            for (int k = 0; k < 3; ++k) {
+                node.centre[k] = readF32(nodeBytes, std::size_t(n) * 0x1c + 4 * std::size_t(k));
+                node.half[k] = readF32(nodeBytes, std::size_t(n) * 0x1c + 12 + 4 * std::size_t(k));
+            }
+            node.info = readU32(nodeBytes, std::size_t(n) * 0x1c + 0x18);
+        }
+        item.triangles.resize(triangleCount);
+        for (std::uint32_t t = 0; t < triangleCount; ++t) {
+            CollisionTriangle& triangle = item.triangles[t];
+            const std::size_t at = std::size_t(t) * 0x20;
+            for (int k = 0; k < 3; ++k) triangle.normal[k] = readF32(triangleBytes, at + 4 * std::size_t(k));
+            triangle.d = readF32(triangleBytes, at + 12);
+            for (int k = 0; k < 3; ++k) {
+                triangle.vertex[k] = readU32(triangleBytes, at + 16 + 4 * std::size_t(k));
+                if (triangle.vertex[k] >= vertexCount) throw std::runtime_error("collision vertex index out of range");
+            }
+            triangle.surface = triangleBytes[at + 0x1c];
+            std::memcpy(triangle.unknown, &triangleBytes[at + 0x1d], 3);
+        }
         if (readU32(items, base + 0x28))
             for (int k = 0; k < 4; ++k) r.skip();
+        out.push_back(std::move(item));
     }
     r.cursor.pop();
 }
@@ -221,7 +265,7 @@ Model parseModel(const Bytes& data) {
             for (std::uint32_t i = 0; i < readU32(section, 0); ++i) r.skip();
         }
         r.cursor.pop();
-        if (readU32(section, 0xc)) skipSection1c(r, readU32(section, 8));
+        if (readU32(section, 0xc)) readCollision(r, readU32(section, 8), model.collision);
     }
     r.cursor.push(Pool::M15);
     for (std::size_t m = 0; m < meshes; ++m) {

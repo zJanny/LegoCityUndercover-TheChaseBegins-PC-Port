@@ -144,3 +144,10 @@ Unknowns: the meaning of controller state 255; whether the cutscene timing (free
 - Bug fixed: `loadstate` with `--attach` did nothing (the quick-load key reached no window because the main window had no keyboard focus in the new X connection) while printing "loaded". The tool now focuses the main window before every quick save and quick load. Check a load by reading `player` afterwards.
 - Timings (OpenGL, RPC, stepped): `trace` about 0.5 s per frame with memory dumps, `loadstate` plus 3 frames about 5 s with `--attach`.
 - Findings from these tools: [player.md](player.md) (2026-10-13T13:42:20+02:00).
+
+## 2026-10-13T14:46:37+02:00 — Trap limits seen while tracing the collision code
+
+- `trap` dumps 64 bytes at every pointer-like register r0..r3 of every stop. A trap list that includes a function called with an unmapped pointer-like value (here 0x24c118, called for every node of the scene) aborts the whole run with `memory read failed at 0x5910100`. Trap single player-specific functions instead (0x20cd30, 0x21a73c, 0x20b48c, 0x1f9884, 0x2023e4 all worked).
+- A trap of a function that other entities also call (0x2023e4: pedestrians, vehicles) stops for them too; the first stop of a frame was the player's in the checkpoint (confirmed by its box centre y and half extents against the player's height and root delta).
+- The frame numbers of a `trap` run and of a `trace` run are not aligned across two runs from the same state (the first trap frame was about 6 updates earlier than the matching trace row in one pair of runs); compare values only inside one run. The mem trace record is 4 + 0x100 + 0x340 + 0xb0 = 1268 bytes per frame; older traces of 692 bytes per frame (loco-out push150_mem, mag*, turn*) have a shorter controller dump and do not hold ctrl+0x224.
+- Findings: [collision.md](collision.md).

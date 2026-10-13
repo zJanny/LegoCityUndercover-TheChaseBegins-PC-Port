@@ -192,6 +192,50 @@ Bytes modelFile(bool extraBlock) {
     return pooledBlocks(blocks);
 }
 
+// A model without meshes and a collision section (loader 0x114640): one item "Collision_Test" with a leaf
+// node over two triangles of a 4 x 4 quad.
+Bytes collisionModelFile(bool badVertexIndex) {
+    Bytes model(0x24), section(0x10), items(0x2c), node(0x1c), triangles(0x40), vertices;
+    model[0x1c] = 1;
+    put32(section, 0);
+    section.assign(0x10, 0);
+    section[8] = 1;
+    section[0xc] = 1;
+    items[0x10] = 1;               // nodes
+    items[0x14] = 2;               // triangles
+    const float quad[4][3] = {{-2, 0, -2}, {2, 0, -2}, {2, 0, 2}, {-2, 0, 2}};
+    for (const auto& corner : quad) {
+        const auto* p = reinterpret_cast<const std::uint8_t*>(corner);
+        vertices.insert(vertices.end(), p, p + 12);
+    }
+    const float half[3] = {2, 0, 2};
+    std::memcpy(&node[12], half, sizeof half);
+    node[0x18] = 1 | 2 << 1;       // leaf, two triangles, first 0
+    const std::uint32_t indices[2][3] = {{0, 1, 2}, {0, 2, badVertexIndex ? 4u : 3u}};
+    for (int t = 0; t < 2; ++t) {
+        const float up[4] = {0, 1, 0, 0};
+        std::memcpy(&triangles[std::size_t(t) * 0x20], up, sizeof up);
+        std::memcpy(&triangles[std::size_t(t) * 0x20 + 16], indices[t], 12);
+        triangles[std::size_t(t) * 0x20 + 0x1c] = std::uint8_t(19 + t);
+    }
+    return pooledBlocks({{-15, model}, {-15, {}}, {-15, {}}, {-15, {}}, {-15, {}}, {-15, section},
+                         {-14, items}, {-14, bytes(std::string("Collision_Test", 15))}, {-14, {}}, {-14, Bytes(4)},
+                         {-14, Bytes(4)}, {-14, Bytes(4)}, {-14, node}, {-14, triangles}, {-14, vertices}, {-16, {}}});
+}
+
+void collisionModels() {
+    const Model model = parseModel(collisionModelFile(false));
+    require(model.meshes.empty() && model.collision.size() == 1, "collision section parsed");
+    const CollisionItem& item = model.collision[0];
+    require(item.name == "Collision_Test" && item.triangles.size() == 2 && item.nodes.size() == 1 && item.vertices.size() == 12,
+            "collision item counts");
+    require(item.nodes[0].leaf() && item.nodes[0].count() == 2 && item.nodes[0].first() == 0 && item.nodes[0].half[0] == 2.0f,
+            "collision node");
+    require(item.triangles[1].vertex[2] == 3 && item.triangles[1].surface == 20 && item.triangles[0].normal[1] == 1.0f,
+            "collision triangle");
+    requireThrows([] { parseModel(collisionModelFile(true)); }, "vertex index outside the item accepted");
+}
+
 enum class SkinVariant { Good, Conflict, OutsidePalette };
 // Two triangles in two bone batches with palettes {3, 7} and {3, 9}; vertices 1 and 2 are shared.
 Bytes skinnedModelFile(SkinVariant variant) {
@@ -940,6 +984,7 @@ int main() {
         textures();
         models();
         skinnedModels();
+        collisionModels();
         levels();
         navigation();
         layouts();
