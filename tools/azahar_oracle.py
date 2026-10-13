@@ -137,7 +137,7 @@ graphics_api\\default=false
 frame_limit={frame_limit}
 frame_limit\\default=false
 [System]
-is_new_3ds=false
+is_new_3ds={new_3ds}
 is_new_3ds\\default=false
 init_clock=1
 init_clock\\default=false
@@ -643,6 +643,14 @@ def free_display(root=Path('/tmp')):
             (root / '.X11-unix' / ('X%d' % number)).unlink(missing_ok=True)
             return ':%d' % number
     raise SystemExit('no free X display number')
+
+
+def state_needs_new_3ds(saved_states, name):
+    """A state saved in New 3DS mode (`"new_3ds": true` in NAME.json) only loads into an emulator in that mode."""
+    if not name:
+        return False
+    info = saved_states / (name + '.json')
+    return info.is_file() and bool(json.loads(info.read_text()).get('new_3ds'))
 
 
 def start_xvfb(log):
@@ -1375,7 +1383,8 @@ def main():
                               .replace('{rpc}', 'true' if args.rpc else 'false')
                               .replace('{single_window}', 'false' if args.display in ('xvfb', 'desktop') else 'true')
                               .replace('{single_default}', 'false' if args.display in ('xvfb', 'desktop') else 'true')
-                              .replace('{shortcuts}', shortcut_lines()))
+                              .replace('{shortcuts}', shortcut_lines())
+                              .replace('{new_3ds}', 'true' if state_needs_new_3ds(saved_states, args.state) else 'false'))
             if args.state:
                 place_state(saved_states, args.state, emulator_states)
             launched, oracle = start_emulator(args, home, azahar, image, output, emulator_states, saved_states)

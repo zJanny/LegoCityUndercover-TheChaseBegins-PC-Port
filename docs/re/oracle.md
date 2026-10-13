@@ -173,3 +173,12 @@ Unknowns: the meaning of controller state 255; whether the cutscene timing (free
 
 Unknowns:
 - Whether the known software-renderer paint crash during state loads also hits a visible OpenGL window (not seen in the one run).
+
+## 2026-10-13T23:20:34+02:00 — police-station checkpoint (from the user's own quick save) and New 3DS states
+
+- The user played into the police station on their own Azahar (2126.2, same build) and quick-saved in slot 1. Copied read-only from `~/.local/share/azahar-emu/states/00040000000AD600.01.cst` to `artifacts/oracle/states/police-station.cst` (24 MB, like gameplay-start).
+- The user's Azahar runs in New 3DS mode (`is_new_3ds=true`); the tool's config had Old 3DS. Loading the state into Old 3DS mode crashed Azahar with SIGILL in 3 of 3 attempts. A state's `NAME.json` may now carry `"new_3ds": true`; the tool then writes `is_new_3ds=true` into the generated config (`state_needs_new_3ds`). With that, `--state police-station --display xvfb --renderer opengl --rpc` loads it: the RPC screenshot shows Chase in the lobby between the entrance pillars, facing the reception desk; the player is held (intent 0, state 0).
+- **Measurement caveat:** New 3DS mode runs the CPU faster than the Old 3DS mode every earlier measurement used. Use this state for pictures, camera, door and layout checks; repeat timing-sensitive measurements in Old 3DS mode (or with a state saved there) before pinning rates.
+
+Unknowns:
+- Whether game logic timing differs between the modes for this game (frame pacing measured only in Old 3DS mode).

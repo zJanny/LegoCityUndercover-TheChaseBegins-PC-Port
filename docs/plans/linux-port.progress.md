@@ -261,3 +261,4 @@ One line per session: timestamp, what was worked on, how far it got, link to the
 - 2026-10-13T23:11:46+02:00 — Lead: user checked a real 3DS: no camera turning in the police station; WSTREAM-7 reclassified, CAMERA-6 and stand-in CAMERA-S3 added → [camera](features/camera.md).
 - 2026-10-13T23:13:43+02:00 — Lead: camera lock lead from the user's real-3DS observation (crossed-out camera icon): native CameraRotFixedSet 0x27bb9c, icon UI_CameraLocked 0x193a5c → [camera](features/camera.md).
 - 2026-10-13T23:14:58+02:00 — Lead: police-station camera issue made definitive (CAMERA-6, CAMERA-S3); WSTREAM-7 closed as superseded; white quad split off as RENDER-6 → [camera](features/camera.md).
+- 2026-10-13T23:20:34+02:00 — Lead: oracle checkpoint police-station from the user's own quick save; tool supports New 3DS states ("new_3ds" in the state json) → [rendering](features/rendering.md), [docs/re/oracle.md](../re/oracle.md).
