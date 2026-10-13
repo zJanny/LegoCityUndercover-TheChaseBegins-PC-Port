@@ -56,6 +56,18 @@ All other commands (extractors, converters, viewer, FMV, sound test, input lab, 
 - The progress file holds only work state: status, steps, decisions, blockers, next actions, a short session log. A log entry that produced findings gets one line linking to the `docs/re/` file.
 - `docs/re/` is for developers (the plain-language rule does not apply) and contains no game assets.
 
+## Runtime oracle (Azahar)
+
+The original game runs in Azahar as a measuring reference. Read `docs/re/oracle.md` before any emulator use. Every agent must use the fast path:
+
+- Run the emulator only through `tools/azahar_oracle.py`. Never start `azahar` directly or point it at your own config or saves.
+- Start experiments from save states (`--state NAME`, e.g. `gameplay-start`; needs `--display xvfb`), never by booting and replaying menus. If a checkpoint is missing, create it once (e.g. `tools/oracle/to-gameplay.txt`, ending with `savestate NAME`) and reuse it.
+- For exploration, keep one session (`--keep`) and probe with `--attach`; save a state at each new screen. Never reboot per probe.
+- Navigate with `wait` (free run), not long `frames` runs. Use `frames`/`trace` only where per-update data is needed.
+- Use `--rpc` for screenshots, memory reads and timing (`sample`). Never measure rates or fps from stepped frames (they inflate the game clock about 30 %). Use `--rpc-input` for buttons.
+- Only one emulator per machine can use `--rpc` (fixed UDP port). Give each agent its own `--port` and `--home` under `artifacts/oracle/`.
+- Stop what you start (`--stop`), check `pgrep -x azahar` and `pgrep -x Xvfb`, and never kill processes you did not start.
+
 ## Constraints
 
 - Never modify the `.cci` image. Never stage or commit it or anything game-derived (`*.cci`, `*.3ds`, `artifacts/`, `build/` are gitignored).
