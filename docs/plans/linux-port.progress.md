@@ -4,8 +4,8 @@
 
 - Overall: IN_PROGRESS
 - Current Phase: IMPLEMENT
-- Current Step: S4f/S3 RE rounds via subagents (last: level/character tables, input slot readers)
-- Last Updated: 2026-10-13T09:42+02:00
+- Current Step: S4e runtime core — milestone M1 (native runtime loop drives a real level with the game's input pipeline)
+- Last Updated: 2026-10-13T10:53:04+02:00
 - Branch: main
 - Target Branch: Not specified
 - Requested Scope: PLAN, IMPLEMENT, TEST; start reverse engineering and native port
@@ -41,18 +41,18 @@ Commits authorized by CLAUDE.md "User specified workflows" (commit at logical st
 | S4b | Level viewer (SDL2 + GL) | COMPLETE | chase-viewer; offscreen smoke test; placement awaits S4c |
 | S4c | Level composition (.blvl) | IN_PROGRESS | loader replicated (Py+C++), placements in viewer; materials/lighting, streaming, other sections open |
 | S4d | Audio playback | IN_PROGRESS | mixer + SDL sound test with loops; sound ids (tablessoundfx) decoded, play by id; script routing partly known |
-| S4e | Gameplay | IN_PROGRESS | skeletons/animation/cutscenes/nav/tables/loc/fonts/particle defs decoded; .cam record layout known; logic not recovered |
+| S4e | Gameplay | IN_PROGRESS | chase_runtime: scheduler 0x100f44 and pad pipeline replicas, checked against the running game (Azahar oracle); player entity located; locomotion not recovered |
 | S4f | Saves/settings | IN_PROGRESS | chase_save: header, CRC, validate, atomic XDG storage, option fields, slot progress accessors, completion (0x1cd3dc, no cheat flags) |
 
 ## Current Work
 
 ### Current Step
 
-Paused at a clean point (all work committed).
+M1, the first runtime milestone: a native loop (scheduler replica) that reads input through the game's pad pipeline, updates and renders a real level. Acceptance: chase-game loads lvl_00_policestation, prints updates/s and stick channel values matching the pipeline, offscreen smoke test passes. Not gameplay.
 
 ### What Is Being Done
 
-Nothing in progress. Offline completion total (711) derived from TablesLevels, TablesCharacters and TablesSuperCounters; input slot readers mapped.
+Subagents in worktrees: chase-game front end; player stick-to-intent replica (0x2007a0); oracle scenario to reach gameplay. Results are reviewed and verified before merging.
 
 ### Files Being Modified
 
@@ -108,6 +108,10 @@ None at 2026-10-13T12:35+02:00.
 
 ## Decisions
 
+### Decision: architecture and runtime oracle (2026-10-13T10:53+02:00)
+
+**Question:** how to reach a playable game: execute the ARM code (emulation/recompilation) or reconstruct natively. **Decision:** native reconstruction in C++ (chase_runtime), with the installed Azahar emulator used only as a local oracle (tools/azahar_oracle.py) to measure the original game. **Reason:** executing the ARM code would rebuild Azahar; the oracle turns "unknown at run time" values into measurements and gives a reference for differential tests. The user's own image is only read; nothing game-derived is committed.
+
 User approved Git init, no extra guidance, Linux devices emit keyboard/mouse. Use C++17/SDL2 and preserve ARM code as analysis artifact. Native lab is a foundation, not game runtime.
 
 ### Decision: commit authorization (2026-10-12T15:02+02:00)
@@ -123,6 +127,9 @@ Full game logic, hardware APIs and asset formats not recovered yet.
 - 2026-10-12: Plan section 16 said no commits. Actual: commits made per user's CLAUDE.md workflow rule. Plan revision 2 records this; no code steps reopened.
 
 ## Next Action
+
+- M1 (runtime core): review and merge the chase-game front end and the stick-to-intent replica; then recover locomotion (oracle `trace` of the player under fixed stick input once a gameplay scenario exists, plus a write watchpoint on the player's scene node) so movement is measured, not invented.
+- Oracle fidelity: rule out that per-frame breakpoint stops distort emulated time (Old 3DS shows 66.5 clock ticks per vblank vs nominal 50).
 
 - S4f: all completion inputs found (docs/re/save-format.md 09:25, total 711). chase-savecheck prints slot completion from the real tables (total 711); next: check its output against the percentage the game shows for the same save. Not modelled: cheat flags 0x375961/0x375962. Still open: options +0 nibbles and +3 bits 2..5 (no reader found); per-level block contents beyond the counters; how live state is copied into the save buffer.
 - S3: vsync wait found (0x257a68, interrupt thread 0x1300c8); vblank counters are ids 2/3, default present waits one vblank; swap 0x25a6f0 enforces a minimum interval of word 0x529de8 (1 or 2 → 60/30 cap, 11 writers); open: which writer applies when, timer 0x529e30 unit, step C+0x10; callers of stick-to-D-pad 0x2289b8; readers of axis slots 16/17; other writers of channel 7.
@@ -252,3 +259,4 @@ Reverse-engineering findings live in docs/re/ (see docs/re/README.md). Entries m
 - 2026-10-13T09:39+02:00 — SoundEffect table decoder + chase-soundtest --id (worker, Sonnet); 757/757 names resolve to sounds/<name>.bwav; build warning-free, ctest 12/12 → [docs/re/audio.md](../re/audio.md)
 - 2026-10-13T09:41+02:00 — Swap 0x25a6f0: min frame interval 0x529de8 (1/2), 0x122908 = APT cmd 0x004F0080 (worker, REA; literals re-checked) → [docs/re/arm-executable.md](../re/arm-executable.md)
 - 2026-10-13T09:42+02:00 — Music: tablessoundfx sheet 1 (39 tracks → music/<name>.bwav), OverrideMusic/StopMusic/PauseMusic handlers (worker, REA; sheet re-checked) → [docs/re/audio.md](../re/audio.md)
+- 2026-10-13T10:53:04+02:00 — Runtime oracle (Azahar 2126.2 + gdb stub, tools/azahar_oracle.py; `f5d43cf`); scheduler is a clamped variable step; pacing globals measured → [docs/re/arm-executable.md](../re/arm-executable.md). chase_runtime: scheduler replica (`69d53b3`) and pad pipeline replica matching the live stick value (`6c8e03d`); renderer moved to chase_render, viewer screenshots byte-identical (`8d0d940`). Player entity pointer 0x3772b8 (worker, re-checked) → [docs/re/player.md](../re/player.md). Build warning-free, ctest 13/13, Python 55/55.
