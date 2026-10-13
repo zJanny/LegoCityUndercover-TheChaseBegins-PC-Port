@@ -459,6 +459,24 @@ int main(int argc, char** argv) {
             std::fabs(posedSum("char_bear", "walk.bfnanm", 47.5) - 1741.8780890502587) > 1e-3 ||
             std::fabs(posedSum("char_squirrel", "run.bfnanm", 2.25) - 350.1472583711) > 1e-3)
             throw std::runtime_error("skinned vertices differ from the Python reference");
+        // Head attachment of the police idle pose (class_police/idle_minifig frame 0) at the "head" joint (index 9).
+        // Recorded from this C++ code (2026-10-13); the oracle screenshot gameplay-start.png shows Chase from
+        // behind with the hair centred on the back of the head, and the render with this matrix matches it.
+        // With the bind world (a 90 degree twist for this joint) instead of its position, the head turned sideways.
+        {
+            auto read = [&](const std::string& name) {
+                const FuseEntry* entry = archive.find(name);
+                if (!entry) throw std::runtime_error("reference file not found: " + name);
+                return archive.read(*entry);
+            };
+            Skeleton minifig = parseSkeleton(read("models/char_minifig/char_minifig.bfnskl"));
+            Animation idle = parseAnimation(read("models/char_minifig/class_police/idle_minifig.bfnanm"));
+            Matrix head = jointAttachment(minifig.joints[9], skinMatrices(minifig, idle, 0)[9]);
+            if (minifig.joints[9].name != "head" || head[0] < 0.999f || head[5] < 0.999f || head[10] < 0.999f ||
+                std::fabs(head[12] + 0.035988) > 1e-4 || std::fabs(head[13] - 1.309142) > 1e-4 ||
+                std::fabs(head[14] + 0.008350) > 1e-4)
+                throw std::runtime_error("head attachment differs from the recorded reference");
+        }
         std::cout << archive.entries().size() << " entries, " << bytes << " bytes, " << pooled
                   << " pooled resources, " << textures << " textures, " << checked << " checksums match, "
                   << models << " models / " << parts << " parts / " << vertices << " vertices / "

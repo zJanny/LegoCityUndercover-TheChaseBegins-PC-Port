@@ -274,6 +274,12 @@ Matrix localMatrix(const JointChannels& channels);
 // Rigid-inverse(bind world) * animated world per joint (0x252cb0). A fractional frame
 // blends floor(frame) and the next frame, wrapping, as 0x24bf80 does for looping playback.
 std::vector<Matrix> skinMatrices(const Skeleton& skeleton, const Animation& animation, double frame);
+// Matrix for a model attached to a joint by name (HeadModel -> "head", HatModel -> "hat",
+// 0x2121e8 called from 0x2442b4): the model's vertices sit at the joint's bind position with the
+// bind orientation dropped, as the baked head of csdata minifigs does, and follow the joint's skin
+// matrix. Using the joint's bind world instead would carry its bind orientation (a 90 degree twist
+// for "head") into the head.
+Matrix jointAttachment(const Joint& joint, const Matrix& skin);
 // Weighted blend of the skin matrices of the vertex's resolved joints.
 void skinVertex(const Vertex& vertex, const std::vector<Matrix>& skin, float position[3], float normal[3]);
 

@@ -376,6 +376,11 @@ std::vector<Matrix> skinMatrices(const Skeleton& skeleton, const Animation& anim
     return skin;
 }
 
+Matrix jointAttachment(const Joint& joint, const Matrix& skin) {
+    Matrix bindPosition = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, joint.world[12], joint.world[13], joint.world[14], 1};
+    return multiply(bindPosition, skin);
+}
+
 void skinVertex(const Vertex& vertex, const std::vector<Matrix>& skin, float position[3], float normal[3]) {
     unsigned total = 0;
     for (auto weight : vertex.weights) total += weight;

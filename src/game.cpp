@@ -160,7 +160,7 @@ std::optional<Mat4> placePlayer(FuseArchive& archive, Scene& scene, const Level&
     Mat4 headTransform = player;
     if (head != skeleton.joints.end()) {
         const std::size_t joint = std::size_t(head - skeleton.joints.begin());
-        headTransform = chase::assets::multiply(chase::assets::multiply(head->world, skin[joint]), player);
+        headTransform = chase::assets::multiply(chase::assets::jointAttachment(*head, skin[joint]), player);
     }
     if (!scene.addModel(headPath, headTransform, headTextures)) throw std::runtime_error("not in archive: " + headPath);
     std::cout << "player at " << start->position[0] << ' ' << start->position[1] << ' ' << start->position[2]

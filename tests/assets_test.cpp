@@ -559,6 +559,12 @@ void animations() {
     for (std::size_t i = 0; i < 16; ++i)
         require(near(rest[i], i % 5 == 0 ? 1.0f : 0.0f), "unanimated joint with rotated bind skins to identity");
 
+    Matrix attached = jointAttachment(rotated.joints[0], rest);
+    for (std::size_t i = 0; i < 16; ++i) {
+        const float expected[16] = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 2, 3, 4, 1};
+        require(near(attached[i], expected[i]), "unposed attachment has the bind position and no bind rotation");
+    }
+
     Bytes animHead(0x28, 0);
     animHead[4] = 2;    // frames
     animHead[8] = 1;    // per-joint curve section present
