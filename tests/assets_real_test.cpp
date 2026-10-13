@@ -258,10 +258,10 @@ int main(int argc, char** argv) {
         // Reference totals from: python3 tools/convert_models.py --census artifacts/fib/files
         if (models != 3113 || parts != 16122 || vertices != 7211595 || triangles != 4603391)
             throw std::runtime_error("model totals differ from the Python reference");
-        // Reference totals: manual Python census over every .bfnmdl with tools/convert_models.Pools (collision
-        // section blocks of read_section_1c; item header +0x10 nodes, +0x14 triangles).
+        // Pinned totals recorded from chase_assets, 2026-10-13 (collision section of every .bfnmdl; each triangle
+        // is reachable from the tree root exactly once, checked above).
         if (collisionModels != 776 || collisionItems != 1725 || collisionTriangles != 312483 || collisionNodes != 262633)
-            throw std::runtime_error("collision totals differ from the Python reference");
+            throw std::runtime_error("collision totals differ from the pinned values");
         // Reference totals from tools/convert_levels.py (parse_level / placements over all .blvl)
         if (levels != 856 || objects != 18469 || placed != 6563)
             throw std::runtime_error("level totals differ from the Python reference");
@@ -502,14 +502,14 @@ int main(int argc, char** argv) {
                 throw std::runtime_error("head attachment differs from the recorded reference");
         }
         {
-            // Reference: manual Python census (tools/convert_models.Pools, collision section of the master models);
-            // the lobby floor of lvl_00 is item "Collision1" (docs/re/collision.md).
+            // Pinned values recorded from chase_assets, 2026-10-13; the lobby floor of lvl_00 is item "Collision1"
+            // (docs/re/collision.md).
             const Model police = parseModel(archive.read(*archive.find("models/lvl_00_policestation/lvl_00_policestation.bfnmdl")));
             const std::pair<const char*, std::size_t> want[] = {{"Collision2", 1616}, {"Collision1", 1201}, {"Collision3", 130}};
-            if (police.collision.size() != 3) throw std::runtime_error("lvl_00 collision items differ from the reference");
+            if (police.collision.size() != 3) throw std::runtime_error("lvl_00 collision items differ from the pinned values");
             for (std::size_t i = 0; i < 3; ++i)
                 if (police.collision[i].name != want[i].first || police.collision[i].triangles.size() != want[i].second)
-                    throw std::runtime_error("lvl_00 collision item differs from the reference: " + police.collision[i].name);
+                    throw std::runtime_error("lvl_00 collision item differs from the pinned values: " + police.collision[i].name);
         }
         std::cout << archive.entries().size() << " entries, " << bytes << " bytes, " << pooled
                   << " pooled resources, " << textures << " textures, " << checked << " checksums match, "
