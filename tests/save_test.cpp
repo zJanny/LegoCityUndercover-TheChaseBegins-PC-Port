@@ -53,6 +53,22 @@ int main() {
                 "option defaults");
         require(languageForSystem(0) == 1 && languageForSystem(7) == 12 && languageForSystem(11) == 1,
                 "language mapping 0x21b650");
+        // Reference: options menu 0x31af98 and draw code 0x1e4804, 0x1e9358 (manual disassembly).
+        require(defaults.language() == std::uint8_t(Language::German) && !defaults.lastSlot() &&
+                    defaults.subtitles() && !defaults.invertCamera() && defaults.soundVolume(1) == 10 &&
+                    defaults.musicVolume(0) == 8,
+                "option fields after reset");
+        defaults.setInvertCamera(true);
+        defaults.setSubtitles(false);
+        defaults.setMusicVolume(1, 200);
+        defaults.setSoundVolume(0, 3);
+        defaults.options()[2] = 1;
+        const std::uint8_t edited[] = {0x8a, 4, 1, 0x22, 3, 10, 8, 10};
+        require(std::equal(std::begin(edited), std::end(edited), defaults.options()) && defaults.lastSlot() == 1u,
+                "option field setters");
+        threw = false;
+        try { defaults.soundVolume(2); } catch (const std::out_of_range&) { threw = true; }
+        require(threw, "volume slot range");
 
         Bytes data = image.bytes();
         data[6] = 29;

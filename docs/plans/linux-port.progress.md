@@ -4,8 +4,8 @@
 
 - Overall: IN_PROGRESS
 - Current Phase: IMPLEMENT
-- Current Step: S4f (paused 2026-10-13T12:35+02:00 at user request)
-- Last Updated: 2026-10-13T12:30+02:00
+- Current Step: S4f
+- Last Updated: 2026-10-13T13:30+02:00
 - Branch: main
 - Target Branch: Not specified
 - Requested Scope: PLAN, IMPLEMENT, TEST; start reverse engineering and native port
@@ -42,17 +42,17 @@ Commits authorized by CLAUDE.md "User specified workflows" (commit at logical st
 | S4c | Level composition (.blvl) | IN_PROGRESS | loader replicated (Py+C++), placements in viewer; materials/lighting, streaming, other sections open |
 | S4d | Audio playback | IN_PROGRESS | mixer + SDL sound test with loops; event routing not recovered |
 | S4e | Gameplay | IN_PROGRESS | skeletons/animation/cutscenes/nav/tables/loc/fonts decoded; logic not recovered |
-| S4f | Saves/settings | IN_PROGRESS | chase_save: header, CRC, validate, atomic XDG storage; block contents opaque |
+| S4f | Saves/settings | IN_PROGRESS | chase_save: header, CRC, validate, atomic XDG storage, option fields; slot contents opaque |
 
 ## Current Work
 
 ### Current Step
 
-S4f, paused at a clean point.
+S4f, at a clean point.
 
 ### What Is Being Done
 
-Nothing in progress. chase_save (src/save/) handles the header, CRC, validation, atomic XDG storage, option defaults and the system language mapping.
+Nothing in progress. chase_save (src/save/) handles the header, CRC, validation, atomic XDG storage, option defaults, option fields and the language mapping.
 
 ### Files Being Modified
 
@@ -124,7 +124,7 @@ Full game logic, hardware APIs and asset formats not recovered yet.
 
 ## Next Action
 
-- S4f: meaning of the options nibbles (+0, +3) and the game language index order; slot contents (story progress, unlocks); how live state is copied into the save buffer.
+- S4f: options +0 nibbles and +3 bits 2..5 (no reader found); slot contents (story progress, unlocks); how live state is copied into the save buffer.
 - S3: find the GSP vsync call and the scheduler step (30 vs 60 fps); name the binding slots at 0x3769e8.
 - S4e: the code that applies .bxaml track properties; .cam field semantics; particle definitions (.bprt).
 - Open unknowns are listed at the end of the matching docs/re/ files.
@@ -221,3 +221,5 @@ Reverse-engineering findings live in docs/re/ (see docs/re/README.md). Entries m
 - 2026-10-13T11:40+02:00 — FMV player finished and merged → [docs/re/fmv.md](../re/fmv.md)
 - 2026-10-13T12:10+02:00 — S4f chase_save library (src/save/) and save-core test; `cmake --build build` warning-free, `ctest --test-dir build` 10/10 pass. Header size field confirmed (REA) → [docs/re/save-format.md](../re/save-format.md)
 - 2026-10-13T12:30+02:00 — Options defaults and system language mapping added to chase_save; save-core passes → [docs/re/save-format.md](../re/save-format.md)
+- 2026-10-13T13:10+02:00 — chase-fmv black screen fixed: audio start deadlocked when the frame queue filled first (`4b3b75f`); ctest 10/10.
+- 2026-10-13T13:30+02:00 — Options fields (sound/music volume, invert camera, subtitles) and language order; chase_save accessors; ctest 10/10 → [docs/re/save-format.md](../re/save-format.md)

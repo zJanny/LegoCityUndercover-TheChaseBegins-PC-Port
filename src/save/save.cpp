@@ -1,4 +1,5 @@
 #include "save/save.hpp"
+#include <algorithm>
 #include <array>
 #include <cerrno>
 #include <cstdlib>
@@ -130,6 +131,34 @@ std::uint8_t* SaveImage::slot(std::size_t index) {
 
 const std::uint8_t* SaveImage::slot(std::size_t index) const {
     return const_cast<SaveImage*>(this)->slot(index);
+}
+
+std::optional<std::size_t> SaveImage::lastSlot() const {
+    std::uint8_t value = options()[2];
+    if (value >= kSlotCount) return std::nullopt;
+    return value;
+}
+
+void SaveImage::setOptionBit(int bit, bool on) {
+    std::uint8_t mask = std::uint8_t(1u << bit);
+    options()[3] = std::uint8_t(on ? options()[3] | mask : options()[3] & ~mask);
+}
+
+std::uint8_t& SaveImage::volume(std::size_t base, std::size_t slot) {
+    if (slot >= kSlotCount) throw std::out_of_range("save slot index");
+    return options()[base + slot];
+}
+
+std::uint8_t SaveImage::soundVolume(std::size_t slot) const { return const_cast<SaveImage*>(this)->volume(4, slot); }
+
+void SaveImage::setSoundVolume(std::size_t slot, std::uint8_t value) {
+    volume(4, slot) = std::min(value, kMaxVolume);
+}
+
+std::uint8_t SaveImage::musicVolume(std::size_t slot) const { return const_cast<SaveImage*>(this)->volume(6, slot); }
+
+void SaveImage::setMusicVolume(std::size_t slot, std::uint8_t value) {
+    volume(6, slot) = std::min(value, kMaxVolume);
 }
 
 std::string defaultSavePath() {

@@ -48,3 +48,25 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
   - Callback 0x1a25a0 (disassembled with llvm-objdump; not a Ghidra function): +4 = +5 = 10, +6 = +7 = 8, +3 bit 0 set, bit 1 cleared. Result: options start 8a LL ff 21 0a 0a 08 08, the rest zero.
 - Then each slot is zeroed (0x2594d8, ev_66267ca4…) and the slot callback 0x1a25cc (ev_bea3ecb3…) runs. In the slot buffer it sets +0x51b3/+0x51b4 from a runtime object (*0x375914 +0x97/+0x98), ORs +0x51e0 with 0x10 and +0x520b with 0x20, and applies cheat stud bonuses (+0x5148 u64, +0x5190 u32; +0x520b bits 0/1 mark the 100000/300000 bonuses as given). It also writes live globals (0x51b6b6, 0x52086b, 0x52089d.., 0x52089e bitset, character unlocks 0x231fc0 for IDs 9..140) and options +4+slot = 10, +6+slot = 8, +0x1ec + slot×0x18 = 0.
 - Implemented: SaveImage::resetOptions and languageForSystem in chase_save. The nibble meanings (likely volume or similar sliders) and the language index order are unknown. Slot defaults are not reproduced: they depend on runtime values and on how live globals reach the buffer.
+
+## 2026-10-13T13:30+02:00 — Option fields and language order (REA Ghidra 12.1.2 + llvm-objdump; read-only)
+
+- Correction to the 10:30 and 12:30 entries: options +4/+5 are the **sound** volume and +6/+7 the **music** volume, one byte per slot.
+- Options menu handler 0x31af98:
+  - Row 0 steps global 0x37751d by 1, stores it at options +4 + last slot (only when options +2 ≤ 1), and calls 0x1f4408 → 0x1dca5c with value / 10.0. 0x1dca5c stores the gain and marks 24 voices dirty.
+  - Row 1 does the same with 0x37751e, options +6 + slot and 0x1f36ec (clamps to 0..1 and scales a stream at 0x376b30).
+  - Row 2 XORs options +3 with 2.
+- Draw code 0x1e4804 labels the rows with text keys SOUND_VOLUME (0x4a6848ca), MUSIC_VOLUME (0x3e17bd14) and INVERTCAMERA (0x27bcbd1b). The value is YES (0x2c187527) when +3 bit 1 is set and NO (0x4e1381) otherwise. French (language 2) uses a different label/value separator string. Keys were resolved with the sdbm hash from text-localisation-fonts.md.
+- Options +3 bit 1 = invert camera. 0x2009e8 adds two input axes (slot table entries 12 and 13, *0x376a18/*0x376a1c) times ±2.0 to *0x589a70 +0x140; the bit swaps the signs.
+- Options +3 bit 0 = subtitles (inferred). The second options screen (handler 0x2fb53c, draw 0x1e9358) toggles bit 0 on menu row 4. Its draw code prints the debug strings "subtitles!!!!" and "inv cam!!!!" for rows 4 and 5. 0x2fb484 snapshots sound volume, language and +3 bits 0/1, and starts a save when any of them changed.
+- Language index order, from two independent tables:
+  - The sprite switch at 0x31dc84 maps 1 UK, 2 French, 3 Italian, 4 German, 5 Spanish, 6 Dutch, 7 Danish, 8 Portuguese, 9 Russian (UI_Language_*.png).
+  - The text-key switch at 0x175d34 maps 1..9 to LANG_ENGLISH, LANG_FRENCH, LANG_ITALIAN, LANG_GERMAN, LANG_SPANISH, LANG_DUTCH, LANG_DANISH, LANG_PORTUGUESE, LANG_RUSSIAN. Other indices use key 0xad698cda (unresolved).
+  - 0x2e7bd4 writes a pending language (0x3741d8) to options +1 and reloads the top-screen logos. Index 4 (German) gets a separate "_ger" logo.
+  - The language picker at 0x3077ac maps menu rows 0..8 to indices 1, 2, 3, 4, 5, 7, 6, 9, 8.
+  - 0x22b650 returns the live language from 0x376adc. The list 0x1ecc40 returns 24-byte entries whose first byte is a language index; the list ends with 0.
+- Implemented in chase_save: the Language enum, language/setLanguage, lastSlot, subtitles, invertCamera, and soundVolume/musicVolume per slot (setters clamp to 10). Test values were taken from manual disassembly.
+- Unknown:
+  - Options +0 (both nibbles) and +3 bits 2..5 have no reader among the 33 direct literal loads of 0x51b490/0x51b494. They are only written from globals 0x379d64..66 by 0x2081cc and 0x1c33c0 (callers 0x156a94, 0x1ddb88).
+  - What language index 12 (from Korean system language) does.
+  - Key 0xad698cda.
