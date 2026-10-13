@@ -97,3 +97,9 @@ Reverse-engineering findings for `particles/particledefs.bprt`. Entries are chro
 - Speed (from 0x222550): it starts from E+0xf8 = +0x14 × s and E+0xfc = +0x78 × s, lerped by the emitter's remaining-time fraction. Which end belongs to which value is not settled; ParticleDef does not expose it.
 - Implemented: ParticleKey and the four lists; sizeX/sizeY, growX/growY, gravity, drag, bounce, animationLoops. The 16:00 fields startAlpha and ColourKey/FadeKey were replaced.
 - Unknown: E+0x11c (ground height source), +0x6c/+0x70, the flags not listed, the spin-damping detail, and +0x14 vs +0x78.
+
+## 2026-10-13T17:15+02:00 — Hash-to-index conversion (llvm-objdump; read-only)
+
+- Particle system init 0x1ed440 calls the loader 0x27d71c. For each record (stride 0x17c), it replaces +0x2c with the index of the first entry in the loaded-texture hash table (*0x376bb4, count *0x376b80) that equals the hash. With no match it stores 0. Because missing textures are dropped from that table (15:00 entry), the index refers to the loaded table, not the file's name list.
+- The same init stores its third argument, when non-zero, into 0x376b84. So the caller can override header word 0 (the emitter limit). It then allocates the emitter list (*0x376b98, limit × 4 bytes) and a second array of limit × 16 bytes (*0x376ba8, unknown).
+- ParticleDef::texture keeps −1 for no match; the game would use 0. All 298 shipped records match.

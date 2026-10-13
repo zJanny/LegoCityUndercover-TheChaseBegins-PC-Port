@@ -474,7 +474,7 @@ struct ParticleKey {
 };
 struct ParticleDef {
     std::uint32_t textureHash = 0;  // +0x2c, pjwHash of a texture name
-    int texture = -1;               // index into ParticleDefs::textures, -1 if no name matches
+    int texture = -1;               // index into ParticleDefs::textures, -1 if no name matches (the game uses 0)
     std::uint32_t flags = 0;        // +0x168; bit 2 random gradient colour, bit 3 planar (z = 0)
     std::uint32_t seed = 0;         // +0x84; 0 = random
     std::uint8_t particles = 0;     // +0x175, clamped below ParticleDefs::maxParticles

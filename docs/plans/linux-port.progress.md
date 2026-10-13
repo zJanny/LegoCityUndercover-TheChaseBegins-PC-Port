@@ -230,3 +230,4 @@ Reverse-engineering findings live in docs/re/ (see docs/re/README.md). Entries m
 - 2026-10-13T16:00+02:00 — Particle init fields (atlas, frames, flips, colour gradient); ctest 10/10 → [docs/re/particles.md](../re/particles.md)
 - 2026-10-13T16:30+02:00 — Particle emitter update (rate, duration, fade keys); ctest 10/10 → [docs/re/particles.md](../re/particles.md)
 - 2026-10-13T17:00+02:00 — Particle step: four key lists, gravity, drag, bounce, size growth; ctest 10/10 → [docs/re/particles.md](../re/particles.md)
+- 2026-10-13T17:15+02:00 — Particle texture hash-to-index conversion found (0x1ed440) → [docs/re/particles.md](../re/particles.md)
