@@ -129,7 +129,7 @@ Full game logic, hardware APIs and asset formats not recovered yet.
 ## Next Action
 
 - M1 (runtime core): review and merge the chase-game front end and the stick-to-intent replica; then recover locomotion (oracle `trace` of the player under fixed stick input once a gameplay scenario exists, plus a write watchpoint on the player's scene node) so movement is measured, not invented.
-- Oracle fidelity: rule out that per-frame breakpoint stops distort emulated time (Old 3DS shows 66.5 clock ticks per vblank vs nominal 50).
+- Oracle fidelity: per-frame breakpoint stops inflate the game clock about 30 % against vblanks (free run 51.3 ticks per vblank, stepped 65.9); measure rates in free-run intervals. Open: a frame counter readable without breakpoints, to measure update rate in free runs.
 
 - S4f: all completion inputs found (docs/re/save-format.md 09:25, total 711). chase-savecheck prints slot completion from the real tables (total 711); next: check its output against the percentage the game shows for the same save. Not modelled: cheat flags 0x375961/0x375962. Still open: options +0 nibbles and +3 bits 2..5 (no reader found); per-level block contents beyond the counters; how live state is copied into the save buffer.
 - S3: vsync wait found (0x257a68, interrupt thread 0x1300c8); vblank counters are ids 2/3, default present waits one vblank; swap 0x25a6f0 enforces a minimum interval of word 0x529de8 (1 or 2 → 60/30 cap, 11 writers); open: which writer applies when, timer 0x529e30 unit, step C+0x10; callers of stick-to-D-pad 0x2289b8; readers of axis slots 16/17; other writers of channel 7.
