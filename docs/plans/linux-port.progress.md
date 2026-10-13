@@ -224,3 +224,4 @@ Reverse-engineering findings live in docs/re/ (see docs/re/README.md). Entries m
 - 2026-10-13T13:10+02:00 — chase-fmv black screen fixed: audio start deadlocked when the frame queue filled first (`4b3b75f`); ctest 10/10.
 - 2026-10-13T13:30+02:00 — Options fields (sound/music volume, invert camera, subtitles) and language order; chase_save accessors; ctest 10/10 → [docs/re/save-format.md](../re/save-format.md)
 - 2026-10-13T14:00+02:00 — S3 scheduler fields recorded; step value still unknown (time-boxed) → [docs/re/arm-executable.md](../re/arm-executable.md)
+- 2026-10-13T14:20+02:00 — Options gift list and +0x1ec records → [docs/re/save-format.md](../re/save-format.md)

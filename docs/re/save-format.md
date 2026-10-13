@@ -70,3 +70,19 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
   - Options +0 (both nibbles) and +3 bits 2..5 have no reader among the 33 direct literal loads of 0x51b490/0x51b494. They are only written from globals 0x379d64..66 by 0x2081cc and 0x1c33c0 (callers 0x156a94, 0x1ddb88).
   - What language index 12 (from Korean system language) does.
   - Key 0xad698cda.
+
+## 2026-10-13T14:20+02:00 — Options per-slot records (REA Ghidra 12.1.2 ev_3b2796d6…, llvm-objdump; read-only)
+
+- Options +0xc + slot × 0x18 is a gift list, read by 0x1b0f5c (ev_3b2796d6…) from 0x322ec4 with index *(*0x374a30):
+  - +0 u8 count (at most 5).
+  - Then `count` pairs of (u8 type, u8 id).
+  - Type 0 = character portrait (Sprites/Portraits/%s.png, table *0x372e10 stride 0x28).
+  - Type 1 = portrait from table *0x372e14 (stride 0x18).
+  - Type 2 = red brick (Sprites/UI_Shop/RedBricks/%s.png, table *0x374728 stride 0xc, name at +8).
+  - Type 3 = postcard. Type 4 = story clip.
+  - Empty entries show text key 0xac54bb90 and UI_Gifts_EmptySlot.png. The tables are runtime pointers (0 in the static image).
+- Options +0x1ec + slot × 0x18 is a 24-byte record: u32 (non-zero = present) followed by 5 floats.
+  - 0x2d86c0 copies the whole record to *0x374a30 +0x114, indexed by the signed byte *0x375df0.
+  - 0x1cbf54 and 0x2be874 skip slots whose first byte is 0 and pass the record address to 0x20a8d4 (arguments 48, 64, 3200, 3; purpose unknown). Correction: the 10:30 "slot summary" guess is unconfirmed; the floats suggest a saved position or camera state (inferred).
+- Probable original bug: the slot-delete path 0x31ba64 sets the selected slot (*0x3741dc +0x55) to 0xff and then clears options[0x1ec + (s8)0xff × 0x18] = options +0x1d4 instead of the deleted slot's record (0x31baf4..0x31bb18).
+- Unknown: the meaning of the five floats; the bytes between +0x3c and +0x1d4; how gifts are granted.
