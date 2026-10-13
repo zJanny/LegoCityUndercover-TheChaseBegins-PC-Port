@@ -43,6 +43,7 @@ Single C++ tests, with `ctest --test-dir build -R <name>`:
 | `assets-real-data` | Needs `artifacts/romfs`; skips with code 77 otherwise |
 | `viewer-real-smoke` | Registered only if `artifacts/romfs` existed at configure time |
 | `audio-mixer` | Mixer core, no SDL |
+| `runtime-core` | Game runtime core (frame scheduler), no SDL |
 | `save-core` | Save file checks, synthetic data, no SDL |
 | `save-real-data` | Completion totals from the game tables; needs `artifacts/romfs`, skips with code 77 otherwise |
 | `fmv-real-smoke` | Registered only if FFmpeg and `artifacts/romfs` existed at configure time |
@@ -76,3 +77,16 @@ build/chase-viewer --screenshot out.bmp --cutscene csdata/models/1_1_a --level l
 
 - The second command poses the first model. `--frame N` fixes the frame.
 - The third command builds the cast from `csdata/models/<id>/manifest.bstxt` and the camera from its ExportCam tracks.
+
+## Original game in the emulator (oracle)
+
+Needs the Azahar 3DS emulator in `PATH`. It runs your own game copy without a window, so developers can compare our code with the original game.
+
+```sh
+python3 tools/azahar_oracle.py tools/oracle/boot.txt
+```
+
+- The script file lists steps: advance game frames, hold buttons, take screenshots, print timing values. The list of steps is at the top of `tools/azahar_oracle.py`.
+- Screenshots go to `artifacts/oracle/out/`.
+- The emulator uses its own settings and save folder in `artifacts/oracle/home/`. Your normal Azahar settings and saves are not used or changed. `--fresh` deletes that folder first.
+- It runs at the speed of a real 3DS, so a few hundred frames take a few minutes.

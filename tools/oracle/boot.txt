@@ -1,0 +1,6 @@
+# Boot to the language selection screen and record the frame timing.
+frames 2
+report
+frames 598
+report
+screenshot boot600

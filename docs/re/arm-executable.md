@@ -178,3 +178,42 @@ Unknowns:
 - Whether 0x52a1f4 is 2 (3D double-call mode) at run time, and the meaning of 0x52a1f8.
 - Writer of the scheduler step C+0x10 and the number of game-update steps per present.
 - Which service handle 0x386578 is.
+
+## 2026-10-13T10:35:31+02:00 — Runtime oracle (Azahar 2126.2 gdb stub) and scheduler 0x100f44 semantics
+
+First runtime evidence. The game runs in Azahar 2126.2 (`azahar -g PORT`, Qt offscreen, isolated XDG home); `tools/azahar_oracle.py` drives it through the GDB remote protocol. The stub halts at entry 0x100000 until a client attaches.
+
+**Scheduler 0x100f44(P) — confirmed** (objdump 0x100f44..0x10125c, live values below). Correction to the 08:55 entry: C+0x10/+0x14 are the minimum and maximum dt, not "step" and "minimum step", and the scheduler is a clamped variable step, not a fixed step.
+
+- G = 0x376af8: G+0x10 = current P during the call, G+0x14 = "now" (the clock read by the scheduler; *0x376b0c in earlier entries).
+- Timer object T = P+0x18 (type at +4, raw ticks +8, frequency +0xc read by 0x25c1f8; 0x25c1e8 adds to +8).
+- minT = C+0x10 × freq, maxT = C+0x14 × freq, fixedT = C+0x18 × freq (float → int).
+- If C+0x20 is set: loop {P+0x78 = C+0x10; Update(C+0x10); T += minT; P+0x74 = now; …} until P+0x12 is set. Flag observed 0.
+- Otherwise, return if P+0x74 (last) ≥ now. n = ceil((now − last) / maxT) (0x25c1b8 unsigned divide).
+  - n > cap (P+0x70): n = cap, per = C+0x21 ? fixedT : maxT.
+  - else per = (now − last) / n, then per = C+0x21 ? fixedT : max(per, minT).
+- ticks = (int)(C+0x1c × per), at least 1; dt = ticks / freq is stored at P+0x78.
+- n == 0 (only possible with cap 0): 0x25c174(1, 1/30) (literal 0x101258 = 0x3d088889).
+- For each of n steps: C.vt+0x24(1); first step only 0x102f34(0x5305c4, 2); C.vt+0x1c Update(dt); first step only 0x102f38(0x5305c4, 2); C.vt+0x24(0); T.raw += ticks; last += per; if P+0x10 == 2 and C+0x22: 0x102340(); stop if P+0x12.
+- After the loop, when the cap was reached: if cap ≥ 5 or last < now, last = now (backlog dropped).
+
+**Live values** (oracle, hardware renderer, frame limit 100, screen not captured; this first run was accidentally in New 3DS mode because Azahar ignores a setting whose `\default` flag is true):
+- P = 0x585f18, C = 0x514378 (vtable 0x363cd0). C+0x10 = 0.03, C+0x14 = 0.07, C+0x18 = 0, C+0x1c = 1.0, flags +0x20..+0x22 = 0, P+0x70 cap = 1, P+0x10 = 2.
+- T frequency 0xbb8 = 3000. Clock G+0x14 advanced 18050 over 360 vblanks (50 per vblank), so the clock unit is 1/3000 s.
+- With cap 1 and backlog drop, every update gets dt = clamp(elapsed, 0.03, 0.07) s and the game never catches up with extra steps.
+- 120 scheduler calls took 360 vblanks of each counter (3 per call, 20 updates/s), dt 0.0503. Which screen this was is unknown (about 110 s after boot, no input).
+- Pacing globals: 0x52a1f4 = 2 (correction to the 09:38 entry: the run-time value is 2, not the "likely 0" from the init store), 0x529de8 = 1, 0x52a200 = 0 at the scheduler breakpoint.
+- Timer 0x529e30 = {0, type 1, raw 0xb70, 60, …}: raw 2928 when the vblank counters were 2930. So timer+8 counts vblanks, and the unit of the minimum frame interval 0x529de8 is one vblank (1/60 s). The writer of timer+8 is still not located statically.
+
+**Oracle mechanics (confirmed by use):**
+- GSP shared memory is at 0x10000000 (G_gsp+0x34). Framebuffer info: top +0x200, bottom +0x240 (byte 0 = active entry, entries of 0x1c bytes from +4: active, left address, right address, stride, format, …). Observed: RGB8, stride 0x2d0, top 0x1f300000/0x1f346500, bottom 0x1f000000/0x1f038400 (VRAM virtual addresses).
+- Input injection: the held mask is in r0 at 0x10a57c (just loaded from the pad state, before `bic #0x2000`), and the raw circle-pad s16 pair at r4+12/+14 is read at 0x10a540.
+- With the hardware renderer, VRAM holds stale data (frames stay on the host GPU); the software renderer writes real frames. At frame 600 after boot the bottom screen shows the language selection list.
+- With `frame_limit=0` (unthrottled), the game clock ran about 2000 per vblank instead of 50, so emulated timing is not faithful; oracle runs use the 100 % limit.
+- Old 3DS mode (the oracle default), language screen, frames 600→720: 16 vblanks per update and 66.5 clock ticks per vblank, the same with the software and the hardware renderer. New 3DS mode gave 3 vblanks per update and 50.1 ticks per vblank (the nominal 3000 / 59.83). Reading (unverified): the vblank counters count serviced GSP interrupts, which fall behind the system-tick clock when the CPU is saturated. Whether the per-frame breakpoint stops distort emulated time is not yet ruled out.
+- Pad channels (oracle `channels`, language screen): 42 records, dead zone 0.1 and threshold 0.75 on every channel; types ch0/ch2 = 1, ch1/ch3 = 2, ch4–23 = 0, ch24–41 = 8..25. With raw stick (100, 50) injected, ch0/ch1 read 0.5779/0.2889, which the C++ replica (src/runtime/pad.cpp: circle clamp 0x119724, axis 0x10fcb0, radial dead zone in 0x25cb2c via 0x1035d0) reproduces.
+
+Unknowns:
+- Whether C+0x10/+0x14 and the cap change in other states (gameplay, cutscenes); only one state was measured.
+- Who writes C+0x10..+0x1c (still not found statically).
+- Which screen produced 3 vblanks per update, and the update rate during gameplay.
