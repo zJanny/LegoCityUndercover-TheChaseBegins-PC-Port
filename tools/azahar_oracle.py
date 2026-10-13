@@ -124,6 +124,8 @@ init_clock\\default=false
 [UI]
 confirmClose=false
 confirmClose\\default=false
+singleWindowMode={single_window}
+singleWindowMode\\default={single_default}
 {shortcuts}"""
 
 QUICK_SAVE_KEY = 'F1'
@@ -133,11 +135,23 @@ STATE_RETRY_SECONDS = 5.0
 STATE_LOAD_TIMEOUT = 120.0
 
 
+LAUNCH_ATTEMPTS = 3
+RENDER_WINDOW_SUFFIX = '| Primary Window'
+RENDER_WINDOW_TIMEOUT = 60.0
+CRASH_SIGNATURE = ('SoftwareRenderWidget::Present', 'ArchiveManager')
+
+
+class EmulatorExited(RuntimeError):
+    pass
+
+
 class GdbRemote:
-    def __init__(self, port, timeout=60.0):
+    def __init__(self, port, timeout=60.0, alive=None):
         self.port = port
         deadline = time.monotonic() + timeout
         while True:
+            if alive:
+                alive()
             try:
                 self.sock = socket.create_connection(('127.0.0.1', port), timeout=5)
                 break
@@ -382,23 +396,40 @@ class XKeys:
                                         ctypes.POINTER(ctypes.c_uint)]
         self.x11.XFetchName.argtypes = [ctypes.c_void_p, ctypes.c_ulong, ctypes.POINTER(ctypes.c_char_p)]
         self.x11.XFree.argtypes = [ctypes.c_void_p]
+        self.x11.XUnmapWindow.argtypes = [ctypes.c_void_p, ctypes.c_ulong]
+        self.x11.XSetInputFocus.argtypes = [ctypes.c_void_p, ctypes.c_ulong, ctypes.c_int, ctypes.c_ulong]
+        self.x11.XSync.argtypes = [ctypes.c_void_p, ctypes.c_int]
         self.display = self.x11.XOpenDisplay(display.encode())
         if not self.display:
             raise OSError('cannot open X display %s' % display)
 
-    def window_names(self):
+    def windows(self):
         root, parent = ctypes.c_ulong(), ctypes.c_ulong()
         children, count = ctypes.POINTER(ctypes.c_ulong)(), ctypes.c_uint()
         self.x11.XQueryTree(self.display, self.x11.XDefaultRootWindow(self.display), ctypes.byref(root),
                             ctypes.byref(parent), ctypes.byref(children), ctypes.byref(count))
-        names = []
+        found = []
         for index in range(count.value):
             name = ctypes.c_char_p()
             if self.x11.XFetchName(self.display, children[index], ctypes.byref(name)) and name.value:
-                names.append(name.value.decode('latin-1'))
+                found.append((children[index], name.value.decode('latin-1')))
         if count.value:
             self.x11.XFree(children)
-        return names
+        return found
+
+    def window_names(self):
+        return [name for _, name in self.windows()]
+
+    def find_window(self, suffix):
+        return next((window for window, name in self.windows() if name.endswith(suffix)), None)
+
+    def unmap(self, window):
+        self.x11.XUnmapWindow(self.display, window)
+        self.x11.XSync(self.display, 0)
+
+    def focus(self, window):
+        self.x11.XSetInputFocus(self.display, window, 1, 0)
+        self.x11.XSync(self.display, 0)
 
     def press(self, key_name):
         keycode = self.x11.XKeysymToKeycode(self.display, self.x11.XStringToKeysym(key_name.encode()))
@@ -443,6 +474,93 @@ def kill_group(pid):
         os.kill(pid, signal.SIGKILL)
 
 
+def stop_process(process):
+    """Kill a process group this tool started (the child is its own session leader) and reap the child."""
+    kill_group(process.pid)
+    try:
+        process.wait(timeout=10)
+    except subprocess.TimeoutExpired:
+        process.kill()
+        process.wait()
+
+
+class Launched:
+    """The emulator process and the Xvfb the tool started for it; stop() kills and reaps exactly these."""
+
+    def __init__(self, process, xvfb, display, keys):
+        self.process = process
+        self.xvfb = xvfb
+        self.display = display
+        self.keys = keys
+
+    def check(self):
+        code = self.process.poll()
+        if code is not None:
+            raise EmulatorExited('Azahar exited with %s' % describe_exit(code))
+
+    def silence_render_window(self):
+        """Unmap Azahar's render window so that Qt stops painting it, and move the keyboard focus to the main
+        window (the hotkeys are application shortcuts). A paint of the software render widget that overlaps
+        a state load dereferences the freed GPU and aborts Azahar."""
+        deadline = time.monotonic() + RENDER_WINDOW_TIMEOUT
+        while True:
+            self.check()
+            windows = self.keys.windows()
+            render = [w for w, name in windows if name.endswith(RENDER_WINDOW_SUFFIX)]
+            main = [w for w, name in windows if name.startswith('Azahar ') and not name.endswith(RENDER_WINDOW_SUFFIX)]
+            if render and main:
+                break
+            if time.monotonic() > deadline:
+                raise RuntimeError('Azahar did not open its render and main windows')
+            time.sleep(0.2)
+        self.keys.unmap(render[0])
+        self.keys.focus(main[0])
+
+    def exited(self):
+        try:
+            self.process.wait(timeout=1.0)
+        except subprocess.TimeoutExpired:
+            return False
+        return True
+
+    def stop(self):
+        if self.keys:
+            self.keys.close()
+            self.keys = None
+        stop_process(self.process)
+        if self.xvfb:
+            stop_process(self.xvfb)
+
+
+def describe_exit(code):
+    if code < 0:
+        try:
+            return 'signal %s' % signal.Signals(-code).name
+        except ValueError:
+            return 'signal %d' % -code
+    return 'status %d' % code
+
+
+def crash_description(home, code):
+    texts = []
+    for path in (home / 'data/azahar-emu/log/azahar_log.txt', home / 'azahar-stdout.log'):
+        try:
+            texts.append(path.read_text(errors='replace'))
+        except OSError:
+            pass
+    text = '\n'.join(texts)
+    if all(frame in text for frame in CRASH_SIGNATURE):
+        return ('Azahar crashed with %s in %s -> %s (null system pointer, paint event before the system '
+                'is initialised)' % ((describe_exit(code),) + CRASH_SIGNATURE))
+    return 'Azahar exited with %s; no %s frames in its logs' % (describe_exit(code), ' / '.join(CRASH_SIGNATURE))
+
+
+def save_crash_logs(home, attempt):
+    for path in (home / 'data/azahar-emu/log/azahar_log.txt', home / 'azahar-stdout.log'):
+        if path.exists():
+            shutil.copyfile(path, path.with_name('crash%d-%s' % (attempt, path.name)))
+
+
 def stop_session(home):
     session = load_session(home)
     if not session:
@@ -468,6 +586,7 @@ def start_xvfb(log):
     deadline = time.monotonic() + 15
     while not Path('/tmp/.X11-unix/X%s' % display[1:]).exists():
         if process.poll() is not None or time.monotonic() > deadline:
+            stop_process(process)
             raise SystemExit('Xvfb did not start on %s' % display)
         time.sleep(0.1)
     return process, display
@@ -484,8 +603,9 @@ def shortcut_lines():
 
 class Oracle:
     def __init__(self, remote, output, keys=None, emulator_states=None, saved_states=None, rpc=None,
-                 renderer='software', rpc_input=False):
+                 renderer='software', rpc_input=False, alive=None):
         self.remote = remote
+        self.alive = alive or (lambda: None)
         self.rpc = rpc
         self.renderer = renderer
         self.rpc_input = rpc_input
@@ -578,7 +698,7 @@ class Oracle:
         return installed
 
     def reattach(self, installed):
-        self.remote = GdbRemote(self.remote.port)
+        self.remote = GdbRemote(self.remote.port, alive=self.alive)
         for address in installed:
             self.remote.add_breakpoint(address)
         self.frame_object = None
@@ -625,8 +745,10 @@ class Oracle:
         installed = self.detach()
         deadline = time.monotonic() + STATE_LOAD_TIMEOUT
         while True:
+            self.alive()
             self.keys.press(QUICK_LOAD_KEY)
             time.sleep(STATE_SETTLE_SECONDS)
+            self.alive()
             if 'Savestates' not in self.keys.window_names():
                 break
             if time.monotonic() > deadline:
@@ -898,10 +1020,12 @@ def find_image():
     return images[0]
 
 
-def connect_rpc(timeout=60.0):
+def connect_rpc(timeout=60.0, alive=None):
     rpc = RpcRemote()
     deadline = time.monotonic() + timeout
     while True:
+        if alive:
+            alive()
         try:
             pid, title, name = rpc.select_application()
             print('RPC connected: process %d title %016x %s' % (pid, title, name))
@@ -910,6 +1034,81 @@ def connect_rpc(timeout=60.0):
             if time.monotonic() > deadline:
                 raise
             time.sleep(0.5)
+
+
+def terminate(signum, frame):
+    raise SystemExit(128 + signum)
+
+
+def install_termination_handlers():
+    for number in (signal.SIGTERM, signal.SIGHUP):
+        signal.signal(number, terminate)
+
+
+def launch_emulator(args, home, azahar, image):
+    env = dict(os.environ, XDG_CONFIG_HOME=str(home / 'config'), XDG_DATA_HOME=str(home / 'data'),
+               XDG_CACHE_HOME=str(home / 'cache'))
+    log = open(home / 'azahar-stdout.log', 'wb')
+    xvfb = keys = process = None
+    display = None
+    try:
+        if args.display == 'xvfb':
+            xvfb, display = start_xvfb(log)
+            env.update(QT_QPA_PLATFORM='xcb', DISPLAY=display)
+            keys = XKeys(display)
+        else:
+            env['QT_QPA_PLATFORM'] = 'offscreen'
+        process = subprocess.Popen([azahar, '-g', str(args.port), str(image)], env=env,
+                                   stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
+    except BaseException:
+        if keys:
+            keys.close()
+        for started in (process, xvfb):
+            if started:
+                stop_process(started)
+        raise
+    finally:
+        log.close()
+    session_file(home).write_text(json.dumps({
+        'pid': process.pid, 'port': args.port, 'xvfb_pid': xvfb.pid if xvfb else None,
+        'display': display, 'rpc': args.rpc, 'renderer': args.renderer}))
+    return Launched(process, xvfb, display, keys)
+
+
+def start_emulator(args, home, azahar, image, output, emulator_states, saved_states):
+    """Launch Azahar and bring it to the point where the scenario can start (gdb stub, RPC and the optional state
+    load). Azahar 2126.2 sometimes crashes in this phase; the attempt is then cleaned up and repeated. Nothing
+    is retried once this function has returned, so a scenario never runs twice."""
+    for attempt in range(1, LAUNCH_ATTEMPTS + 1):
+        launched = launch_emulator(args, home, azahar, image)
+        try:
+            if launched.keys:
+                launched.silence_render_window()
+            remote = GdbRemote(args.port, alive=launched.check)
+            rpc = connect_rpc(alive=launched.check) if args.rpc else None
+            oracle = Oracle(remote, output, launched.keys, emulator_states, saved_states, rpc, args.renderer,
+                            args.rpc_input, alive=launched.check)
+            if args.state:
+                oracle.loadstate(args.state)
+            return launched, oracle
+        except Exception as error:
+            crashed = isinstance(error, EmulatorExited) or launched.exited()
+            code = launched.process.poll()
+            if crashed and code is not None:
+                save_crash_logs(home, attempt)
+            launched.stop()
+            session_file(home).unlink(missing_ok=True)
+            if not crashed:
+                raise
+            print('startup attempt %d/%d failed: %s' % (attempt, LAUNCH_ATTEMPTS, crash_description(home, code)),
+                  flush=True)
+            if attempt == LAUNCH_ATTEMPTS:
+                raise SystemExit('Azahar crashed during startup in all %d attempts (logs: %s/crash*-*)'
+                                 % (LAUNCH_ATTEMPTS, home)) from error
+        except BaseException:
+            launched.stop()
+            session_file(home).unlink(missing_ok=True)
+            raise
 
 
 def main():
@@ -957,61 +1156,48 @@ def main():
     saved_states = args.states.resolve()
     started = time.monotonic()
 
-    process = xvfb = keys = rpc = None
+    launched = keys = rpc = oracle = None
     renderer = args.renderer
-    if args.attach:
-        session = load_session(home) or {}
-        renderer = session.get('renderer', renderer)
-        args.rpc = args.rpc or bool(session.get('rpc'))
-        remote = GdbRemote(args.port)
-        if session.get('display'):
-            keys = XKeys(session['display'])
-    else:
-        image = (args.image or find_image()).resolve()
-        azahar = shutil.which('azahar')
-        if not azahar:
-            raise SystemExit('azahar not found in PATH')
-        if load_session(home):
-            raise SystemExit('a kept emulator is already recorded in %s; run --stop first' % home)
-        if args.rpc and not rpc_port_free():
-            raise SystemExit('UDP port %d (the RPC server port, not configurable) is already in use by another '
-                             'emulator' % RPC_PORT)
-        if args.fresh and home.exists():
-            if not (home / 'config/azahar-emu').is_dir():
-                raise SystemExit('%s does not look like an oracle home; refusing to delete it' % home)
-            shutil.rmtree(home)
-        config = home / 'config/azahar-emu/qt-config.ini'
-        config.parent.mkdir(parents=True, exist_ok=True)
-        config.write_text(CONFIG.replace('{renderer}', '0' if args.renderer == 'software' else '1')
-                          .replace('{frame_limit}', str(args.frame_limit))
-                          .replace('{rpc}', 'true' if args.rpc else 'false').replace('{shortcuts}', shortcut_lines()))
-        if args.state:
-            place_state(saved_states, args.state, emulator_states)
-        env = dict(os.environ, XDG_CONFIG_HOME=str(home / 'config'), XDG_DATA_HOME=str(home / 'data'),
-                   XDG_CACHE_HOME=str(home / 'cache'))
-        log = open(home / 'azahar-stdout.log', 'wb')
-        if args.display == 'xvfb':
-            xvfb, display = start_xvfb(log)
-            env.update(QT_QPA_PLATFORM='xcb', DISPLAY=display)
-            keys = XKeys(display)
-        else:
-            env['QT_QPA_PLATFORM'] = 'offscreen'
-        process = subprocess.Popen([azahar, '-g', str(args.port), str(image)], env=env,
-                                   stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
-        session_file(home).write_text(json.dumps({
-            'pid': process.pid, 'port': args.port, 'xvfb_pid': xvfb.pid if xvfb else None,
-            'display': display if xvfb else None, 'rpc': args.rpc, 'renderer': args.renderer}))
+    output = args.output.resolve()
     keep = args.keep or args.attach
-    oracle = None
+    install_termination_handlers()
     try:
-        if not args.attach:
+        if args.attach:
+            session = load_session(home) or {}
+            renderer = session.get('renderer', renderer)
+            args.rpc = args.rpc or bool(session.get('rpc'))
             remote = GdbRemote(args.port)
-        if args.rpc:
-            rpc = connect_rpc()
-        oracle = Oracle(remote, args.output.resolve(), keys, emulator_states, saved_states, rpc, renderer,
-                        args.rpc_input)
-        if args.state:
-            oracle.loadstate(args.state)
+            if session.get('display'):
+                keys = XKeys(session['display'])
+            if args.rpc:
+                rpc = connect_rpc()
+            oracle = Oracle(remote, output, keys, emulator_states, saved_states, rpc, renderer, args.rpc_input)
+        else:
+            image = (args.image or find_image()).resolve()
+            azahar = shutil.which('azahar')
+            if not azahar:
+                raise SystemExit('azahar not found in PATH')
+            if load_session(home):
+                raise SystemExit('a kept emulator is already recorded in %s; run --stop first' % home)
+            if args.rpc and not rpc_port_free():
+                raise SystemExit('UDP port %d (the RPC server port, not configurable) is already in use by another '
+                                 'emulator' % RPC_PORT)
+            if args.fresh and home.exists():
+                if not (home / 'config/azahar-emu').is_dir():
+                    raise SystemExit('%s does not look like an oracle home; refusing to delete it' % home)
+                shutil.rmtree(home)
+            config = home / 'config/azahar-emu/qt-config.ini'
+            config.parent.mkdir(parents=True, exist_ok=True)
+            config.write_text(CONFIG.replace('{renderer}', '0' if args.renderer == 'software' else '1')
+                              .replace('{frame_limit}', str(args.frame_limit))
+                              .replace('{rpc}', 'true' if args.rpc else 'false')
+                              .replace('{single_window}', 'false' if args.display == 'xvfb' else 'true')
+                              .replace('{single_default}', 'false' if args.display == 'xvfb' else 'true')
+                              .replace('{shortcuts}', shortcut_lines()))
+            if args.state:
+                place_state(saved_states, args.state, emulator_states)
+            launched, oracle = start_emulator(args, home, azahar, image, output, emulator_states, saved_states)
+            rpc = oracle.rpc
         run_scenario(oracle, scenario)
     finally:
         if keep and oracle is not None:
@@ -1020,11 +1206,8 @@ def main():
                 oracle.detach()
             except OSError:
                 pass
-        if process is not None and not keep:
-            kill_group(process.pid)
-            process.wait()
-            if xvfb:
-                kill_group(xvfb.pid)
+        if launched is not None and not keep:
+            launched.stop()
             session_file(home).unlink(missing_ok=True)
     if keep:
         session = load_session(home) or {}
