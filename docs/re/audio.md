@@ -50,3 +50,9 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
   - Real names of 0x227ff4, 0x25c604, 0x227fac, 0x227f78, 0x227f4c, 0x1b4420 and the voice object at voice+8, and the sound thread body 0x108ae0 (the actual mixing/streaming).
   - Callers other than script commands (gameplay C++ code, UI, `ATTR_SFX*` attributes), 3D positioning maths, pitch scaling (`ScaleSoundFrequencyGO`), and how music is started.
 
+
+## 2026-10-13T09:39:36+02:00 — Sound effect name → file (chase_assets parseSoundEffects; real archive)
+
+- tablessoundfx.bxls sheet 0 column 1 holds the effect name; `sounds/<name>.bwav` exists in the FUSE archive for all 757 named rows (row 0 is unnamed). Pinned in assets-real-test. This resolves the 09:33:38 unknown "how .bwav files map to table names".
+- Column 13 equals record byte +9 (volume percent). chase-soundtest applies it as a linear gain (80 → 0.8); the game's volume curve is not recovered, so that gain is an assumption.
+- Unknown: columns 2, 3, 11, 12, 14, 15, 16 (paramA/paramB = record bytes +10/+11).

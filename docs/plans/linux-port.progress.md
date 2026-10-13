@@ -5,7 +5,7 @@
 - Overall: IN_PROGRESS
 - Current Phase: IMPLEMENT
 - Current Step: S4f/S3 RE rounds via subagents (last: level/character tables, input slot readers)
-- Last Updated: 2026-10-13T09:38+02:00
+- Last Updated: 2026-10-13T09:39+02:00
 - Branch: main
 - Target Branch: Not specified
 - Requested Scope: PLAN, IMPLEMENT, TEST; start reverse engineering and native port
@@ -40,7 +40,7 @@ Commits authorized by CLAUDE.md "User specified workflows" (commit at logical st
 | S4a | Native asset runtime (C++) | COMPLETE | FUSE, pooled, textures, models, levels, sounds; real-data totals equal Python |
 | S4b | Level viewer (SDL2 + GL) | COMPLETE | chase-viewer; offscreen smoke test; placement awaits S4c |
 | S4c | Level composition (.blvl) | IN_PROGRESS | loader replicated (Py+C++), placements in viewer; materials/lighting, streaming, other sections open |
-| S4d | Audio playback | IN_PROGRESS | mixer + SDL sound test with loops; event routing not recovered |
+| S4d | Audio playback | IN_PROGRESS | mixer + SDL sound test with loops; sound ids (tablessoundfx) decoded, play by id; script routing partly known |
 | S4e | Gameplay | IN_PROGRESS | skeletons/animation/cutscenes/nav/tables/loc/fonts/particle defs decoded; .cam record layout known; logic not recovered |
 | S4f | Saves/settings | IN_PROGRESS | chase_save: header, CRC, validate, atomic XDG storage, option fields, slot progress accessors, completion (0x1cd3dc, no cheat flags) |
 
@@ -249,3 +249,4 @@ Reverse-engineering findings live in docs/re/ (see docs/re/README.md). Entries m
 - 2026-10-13T09:33+02:00 — Sound play path 0x23fa54(id, pos, …), ids = tables/tablessoundfx.bxls (worker, REA; table re-checked) → [docs/re/audio.md](../re/audio.md)
 - 2026-10-13T09:36+02:00 — GSP interrupt thread and vsync wait 0x257a68; 30/60 fps still unknown (worker, REA; 0x130042 literal re-checked) → [docs/re/arm-executable.md](../re/arm-executable.md)
 - 2026-10-13T09:38+02:00 — Vblank counter callbacks (ids 2/3), wait modes 0x400..0x402, mode byte 0x52a1f4; fps still undecided (worker, REA; callback re-checked) → [docs/re/arm-executable.md](../re/arm-executable.md)
+- 2026-10-13T09:39+02:00 — SoundEffect table decoder + chase-soundtest --id (worker, Sonnet); 757/757 names resolve to sounds/<name>.bwav; build warning-free, ctest 12/12 → [docs/re/audio.md](../re/audio.md)
