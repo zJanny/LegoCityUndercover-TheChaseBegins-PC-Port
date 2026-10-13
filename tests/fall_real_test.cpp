@@ -27,7 +27,7 @@ constexpr std::uint16_t kStateIdle = 1, kStateRun = 2, kStateWalk = 3, kStateFal
                         kStateStepOff = 8;
 
 struct Totals {
-    std::size_t traces = 0, updates = 0, starts = 0, landings = 0, hardLandings = 0, softStuns = 0, stunChecks = 0, stepOffs = 0, wrong = 0;
+    std::size_t traces = 0, updates = 0, starts = 0, landings = 0, hardLandings = 0, softStuns = 0, stunChecks = 0, stepOffs = 0, wrong = 0, normalChecks = 0, wrongNormals = 0, otherTriangle = 0;
     float worstHeight = 0, worstSpeed = 0;
 };
 
@@ -68,6 +68,17 @@ void checkUpdates(const CollisionWorld& world, const std::vector<Row>& rows, con
         const float speedError = expectFall ? std::fabs(state.fallSpeed - after.fallSpeed) : 0;
         totals.worstHeight = std::max(totals.worstHeight, heightError);
         totals.worstSpeed = std::max(totals.worstSpeed, speedError);
+        if (!expectFall && (wasAirborne || input.rootDelta > 0)) {
+            ++totals.normalChecks;
+            float normalError = 0;
+            for (int a = 0; a < 3; ++a) normalError = std::max(normalError, std::fabs(state.groundNormal[a] - after.normal[a]));
+            if (normalError > 1e-5f) ++totals.otherTriangle;
+            if (normalError > 0.15f) {
+                ++totals.wrongNormals;
+                std::cerr << name << " row " << i << ": ground normal " << state.groundNormal[0] << ' ' << state.groundNormal[1] << ' '
+                          << state.groundNormal[2] << ", recorded " << after.normal[0] << ' ' << after.normal[1] << ' ' << after.normal[2] << '\n';
+            }
+        }
         if (!wasAirborne && expectFall) ++totals.starts;
         if (expectLanded) {
             ++totals.landings;
@@ -84,7 +95,7 @@ void checkUpdates(const CollisionWorld& world, const std::vector<Row>& rows, con
     }
 }
 
-void checkStun(const std::vector<Row>& rows, const std::string& name, const LandingDurations& durations, Totals& totals) {
+void checkStun(const std::vector<Row>& rows, const std::string& name, const LandingAnimations& animations, Totals& totals) {
     for (std::size_t i = 1; i < rows.size(); ++i) {
         const bool soft = rows[i].state == kStateSoftLanding, hard = rows[i].state == kStateHardLanding;
         if (!((soft || hard) && airborne(rows[i - 1].state))) continue;
@@ -93,9 +104,10 @@ void checkStun(const std::vector<Row>& rows, const std::string& name, const Land
         if (end >= rows.size() || rows[end].state != kStateIdle) continue;
         VerticalState state;
         state.posture = Posture::Landing;
-        state.landingDuration = hard ? durations.hard : durations.soft;
+        state.landingAnimation = hard ? animations.hard : animations.soft;
         VerticalInput input;
         input.dt = rows[i].dt;
+        input.ticks = chase::runtime::stepTicks(rows[i].dt);
         std::size_t updates = 1;
         while (true) {
             const VerticalStep step = verticalUpdate(state, CollisionWorld(), input);
@@ -135,25 +147,26 @@ int main(int argc, char** argv) {
             require(animationEntry != nullptr, "animation not in archive: " + name);
             return chase::assets::parseAnimation(archive.read(*animationEntry));
         };
-        const LandingDurations durations = landingDurations(loadAnimation("land"), loadAnimation("fallland"));
-        // Landing animation lengths: land 14 frames, fallland 19 frames at 15 frames per second (probe at the derivation entry of
-        // docs/re/player.md); the recorded stuns are 26/30 s and 36/30 s.
-        require(std::fabs(durations.soft - 26.0f / 30.0f) < 1e-5f && std::fabs(durations.hard - 36.0f / 30.0f) < 1e-5f,
-                "landing stun lengths derived from the landing animations");
+        const LandingAnimations animations = landingAnimations(loadAnimation("land"), loadAnimation("fallland"));
+        // land has 14 frames and fallland 19, both at 15 frames per second (chase_assets decode of class_police; the oracle
+        // slot read of the landing entry in docs/re/player.md gives the same last frames and rate).
+        require(animations.soft.lastFrame == 13.0f && animations.hard.lastFrame == 18.0f && animations.soft.framesPerSecond == 15.0f &&
+                    animations.hard.framesPerSecond == 15.0f,
+                "landing animations: last frames 13 and 18 at 15 frames per second");
 
         Totals totals;
         for (const player_trace::NamedTrace& trace : player_trace::loadDirectory(directory)) {
             checkUpdates(world, trace.rows, trace.name, totals);
-            checkStun(trace.rows, trace.name, durations, totals);
+            checkStun(trace.rows, trace.name, animations, totals);
             ++totals.traces;
         }
         std::cout << "falls: " << totals.traces << " traces, " << totals.updates << " updates, " << totals.starts << " fall starts, "
                   << totals.landings << " landings (" << totals.hardLandings << " hard, " << totals.softStuns << " soft with stun), "
                   << totals.stunChecks << " stun lengths, " << totals.stepOffs << " traces cut at the step-off state, " << totals.wrong << " wrong, worst height error " << totals.worstHeight
-                  << ", worst fall speed error " << totals.worstSpeed << '\n';
+                  << ", worst fall speed error " << totals.worstSpeed << ", " << totals.normalChecks << " ground normals (" << totals.otherTriangle << " another near-flat triangle of the overlapped pair, " << totals.wrongNormals << " wrong)\n";
         require(totals.traces >= 12 && totals.landings >= 8 && totals.hardLandings >= 3 && totals.starts >= 1,
                 "too little recorded fall data");
-        require(totals.wrong == 0, "fall or landing differs from the recorded traces");
+        require(totals.wrong == 0 && totals.wrongNormals == 0, "fall or landing differs from the recorded traces");
     } catch (const std::exception& error) {
         std::cerr << "fall-real-test: " << error.what() << '\n';
         return 1;

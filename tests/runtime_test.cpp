@@ -463,12 +463,13 @@ int main() {
             CollisionWorld world;
             world.add(quadItem({{-5, 0, -5, -5, 0, 5, 50, 0, 5, 50, 0, -5}}));
             VerticalState state;
-            state.landingDurations = {13.0f / 15.0f, 18.0f / 15.0f};
+            state.landingAnimations = {{13.0f, 15.0f}, {18.0f, 15.0f}};
             state.y = 40;
             VerticalInput input;
             input.x = -20;
             input.rootDelta = 0.2f;
             input.dt = 0.033f;
+            input.ticks = 99;
             input.forwardZ = 1;
             verticalUpdate(state, world, input);
             require(state.posture == Posture::Falling && near(state.fallSpeed, 0.0495f) && near(state.y, 40 - 0.0495f) && near(state.fallDistance, 0.0495f),
@@ -487,7 +488,9 @@ int main() {
                     "ground within max(|speed|, 0.05) + 0.1 below lands; no stick: soft landing stun");
             int updates = 1;
             while (!verticalUpdate(state, world, input).stunEnded) ++updates;
-            require(updates == 27 && state.posture == Posture::Ground, "soft stun ends at 13/15 s: 27 updates at dt 0.033");
+            require(updates == 27 && state.posture == Posture::Ground,
+                    "soft stun ends when ticks * 15 / 3000 >= 13: 27 updates of 99 ticks (2673 ticks = 13.365 frames, 2574 = 12.87)");
+            require(stunFinished({13.0f, 15.0f}, 2600) && !stunFinished({13.0f, 15.0f}, 2599), "13 frames at 15 per second need 2600 ticks");
 
             state.posture = Posture::Falling;
             state.y = 0.3f;
@@ -502,7 +505,7 @@ int main() {
             state.fallSpeed = 0.2f;
             state.fallDistance = 12.0f;
             step = verticalUpdate(state, world, input);
-            require(step.hard && state.posture == Posture::Landing && state.landingDuration == state.landingDurations.hard, "fall distance 12 lands hard, also with the stick held");
+            require(step.hard && state.posture == Posture::Landing && state.landingAnimation.lastFrame == state.landingAnimations.hard.lastFrame, "fall distance 12 lands hard, also with the stick held");
 
             state = VerticalState();
             state.y = 0;

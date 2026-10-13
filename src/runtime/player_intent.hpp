@@ -9,6 +9,11 @@ namespace chase::runtime {
 // Replica of the library routine, not libm.
 float gameAtan2(float first, float second);
 
+// 0x247ac8 (sinf) and 0x247c90 (cosf) of the game's library, called by the sincos routine 0x249038 (r0 = sin, r1 = cos).
+// Arguments of magnitude 12868 or more take the library's slow path (0x132ec8), which is replaced by libm here.
+float gameSin(float angle);
+float gameCos(float angle);
+
 struct StickChannel {
     float value = 0;
     float deadzone = 0.1f;

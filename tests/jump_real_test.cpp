@@ -37,13 +37,13 @@ struct Totals {
 
 bool grounded(std::uint16_t state) { return state == kStateIdle || state == kStateRun || state == kStateWalk; }
 
-void checkJump(const CollisionWorld& world, const JumpProfile& standing, const JumpProfile& moving, const LandingDurations& durations,
+void checkJump(const CollisionWorld& world, const JumpProfile& standing, const JumpProfile& moving, const LandingAnimations& animations,
                const std::vector<Row>& rows, const std::string& name, Totals& totals) {
     for (std::size_t start = 1; start < rows.size(); ++start) {
         if (!(grounded(rows[start - 1].state) && rows[start].state == kStateJump)) continue;
         ++totals.jumps;
         VerticalState state;
-        state.landingDurations = durations;
+        state.landingAnimations = animations;
         state.y = rows[start - 1].y;
         VerticalInput input;
         input.dt = rows[start].dt;
@@ -127,6 +127,7 @@ void checkJump(const CollisionWorld& world, const JumpProfile& standing, const J
         std::size_t updates = 1;
         input = VerticalInput();
         input.dt = after.dt;
+        input.ticks = chase::runtime::stepTicks(after.dt);
         while (!verticalUpdate(state, world, input).stunEnded) ++updates;
         ++totals.stunChecks;
         if (updates != end - i) {
@@ -157,7 +158,7 @@ int main(int argc, char** argv) {
         for (const auto& item : model.collision) world.add(item);
         const JumpProfile standing = makeJumpProfile(loadAnimation(archive, "jump"));
         const JumpProfile moving = makeJumpProfile(loadAnimation(archive, "jump_run"));
-        const LandingDurations durations = landingDurations(loadAnimation(archive, "land"), loadAnimation(archive, "fallland"));
+        const LandingAnimations animations = landingAnimations(loadAnimation(archive, "land"), loadAnimation(archive, "fallland"));
         // Standing jump: slot+0x1c of the playing jump animation read in the oracle (trap 0x115ecc at the jump update, slot 0x0856a510,
         // word 0x3f5c6263 = 0.8608762622). Jump run: the scale fitted to the traces, 0.828197 (docs/re/player.md jump entry, fit error
         // below 5e-7 over 22 updates). Derivation: kJumpHeight / extent of the root joint curve (derivation entry, probe over the archive).
@@ -167,7 +168,7 @@ int main(int argc, char** argv) {
 
         Totals totals;
         for (const player_trace::NamedTrace& trace : player_trace::loadDirectory(directory)) {
-            checkJump(world, standing, moving, durations, trace.rows, trace.name, totals);
+            checkJump(world, standing, moving, animations, trace.rows, trace.name, totals);
             ++totals.traces;
         }
         std::cout << "jumps: " << totals.traces << " traces, " << totals.jumps << " jumps, " << totals.updates << " airborne updates, "

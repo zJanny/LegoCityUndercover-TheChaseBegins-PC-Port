@@ -1,5 +1,6 @@
 #pragma once
 // Frame scheduler 0x100f44 (docs/re/arm-executable.md, 2026-10-13T10:35:31). No SDL dependency.
+#include <cmath>
 #include <cstdint>
 #include <functional>
 
@@ -18,6 +19,9 @@ struct StepConfig {
 
 // Clock unit of the scheduler timer (frequency word 0xbb8 at P+0x18+0xc).
 constexpr std::uint32_t kClockFrequency = 3000;
+
+// The step the scheduler passes to an update is a whole number of clock ticks divided by the frequency.
+inline std::uint32_t stepTicks(float dt) { return static_cast<std::uint32_t>(std::lround(dt * static_cast<float>(kClockFrequency))); }
 
 class Scheduler {
 public:

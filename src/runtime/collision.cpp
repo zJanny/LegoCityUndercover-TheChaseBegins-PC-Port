@@ -44,29 +44,33 @@ void flattenAndNormalise(float normal[3]) {
     normalise(normal);
 }
 
-bool anyOverlap(const std::vector<Triangle>& triangles, const float centre[3], const float half[3]) {
-    return std::any_of(triangles.begin(), triangles.end(), [&](const Triangle& t) {
-        return boxOverlapsTriangle(centre, half, t.vertex, t.record->normal, t.record->d);
-    });
-}
-
 // 0x2023e4: halve the box height until the half height is below kBisectionStop, moving up when the upper
 // half touches a triangle, else down when the lower half does; nothing in either half returns the box top.
-float bisect(const float centre[3], const float half[3], std::vector<Triangle> triangles) {
+// The out parameter of 0x2023e4 holds the triangle of the last half box that overlapped (`found` receives that set).
+float bisect(const float centre[3], const float half[3], std::vector<Triangle> triangles, std::vector<Triangle>& found) {
     const float quarter = half[1] * 0.5f + 1.1920929e-07f;
     if (quarter < kBisectionStop) return centre[1];
     float nextCentre[3] = {centre[0], centre[1], centre[2]};
     const float nextHalf[3] = {half[0], quarter, half[2]};
     nextCentre[1] = centre[1] + quarter;
-    if (anyOverlap(triangles, nextCentre, nextHalf)) return bisect(nextCentre, nextHalf, std::move(triangles));
+    std::vector<Triangle> upper;
+    for (const Triangle& t : triangles)
+        if (boxOverlapsTriangle(nextCentre, nextHalf, t.vertex, t.record->normal, t.record->d)) upper.push_back(t);
+    if (!upper.empty()) {
+        found = upper;
+        return bisect(nextCentre, nextHalf, std::move(triangles), found);
+    }
     nextCentre[1] = centre[1] - quarter;
     triangles.erase(std::remove_if(triangles.begin(), triangles.end(), [&](const Triangle& t) {
                         return !boxOverlapsTriangle(nextCentre, nextHalf, t.vertex, t.record->normal, t.record->d);
                     }), triangles.end());
     if (triangles.empty()) return centre[1] + half[1];
-    return bisect(nextCentre, nextHalf, std::move(triangles));
+    found = triangles;
+    return bisect(nextCentre, nextHalf, std::move(triangles), found);
 }
 }
+
+void normaliseVector(float v[3]) { normalise(v); }
 
 std::size_t CollisionWorld::triangleCount() const {
     std::size_t count = 0;
@@ -188,7 +192,7 @@ bool boxOverlapsTriangle(const float centre[3], const float half[3], const float
     return true;
 }
 
-std::optional<float> groundHeight(const CollisionWorld& world, const GroundProbe& probe, const PlayerBox& box) {
+std::optional<GroundContact> groundContact(const CollisionWorld& world, const GroundProbe& probe, const PlayerBox& box) {
     const float slopeScale = std::sqrt(1.0f - kFloorNormalMin * kFloorNormalMin);
     // 0x22f134 for a character of type 27: probe start above the node, raised by the previous movement
     // when the step is longer than 1/30 s.
@@ -197,7 +201,8 @@ std::optional<float> groundHeight(const CollisionWorld& world, const GroundProbe
     lift += probe.rootDelta * slopeScale * stretch;
     const float startY = probe.y + lift;
     // 0x20cd30: distance below the node = movement * sin(max slope) - 0.1, at least 0x21df6c (0.05).
-    const float distance = probe.distance ? *probe.distance : std::max(probe.rootDelta * slopeScale - 0.1f, kGroundMinimumDistance);
+    const float requested = probe.distance ? *probe.distance : std::max(probe.rootDelta * slopeScale - 0.1f, kGroundMinimumDistance);
+    const float distance = std::max(requested, probe.minimumDistance);
     const float endY = probe.y - kGroundStepDown - distance;
 
     // 0x1f9884: the footprint shrinks by the margins, becomes the world box of the rotated box, clamped
@@ -229,8 +234,23 @@ std::optional<float> groundHeight(const CollisionWorld& world, const GroundProbe
     std::vector<Triangle> floors = keep(kFloorNormalMin);
     if (floors.empty()) floors = keep(kFloorNormalMinLoose);
     if (floors.empty()) return std::nullopt;
-    const float ground = bisect(centre, half, std::move(floors));
-    return std::fabs(probe.y - ground) < kGroundKeepTolerance ? probe.y : ground;
+    std::vector<Triangle> found;
+    const float ground = bisect(centre, half, std::move(floors), found);
+    GroundContact contact;
+    contact.height = std::fabs(probe.y - ground) < kGroundKeepTolerance ? probe.y : ground;
+    if (!found.empty()) {
+        const Triangle& chosen = found.front();
+        std::copy(chosen.record->normal, chosen.record->normal + 3, contact.normal);
+        contact.surface = chosen.record->surface;
+        contact.triangle = true;
+    }
+    return contact;
+}
+
+std::optional<float> groundHeight(const CollisionWorld& world, const GroundProbe& probe, const PlayerBox& box) {
+    const std::optional<GroundContact> contact = groundContact(world, probe, box);
+    if (!contact) return std::nullopt;
+    return contact->height;
 }
 
 namespace {
@@ -243,7 +263,7 @@ struct WallPass {
 // box at the destination, steeper than a floor and facing the movement; every candidate the oriented box overlaps
 // slides the movement, in order.
 WallPass wallPass(const CollisionWorld& world, const PlayerBox& box, const float node[3], const float right[3],
-                  const float up[3], const float forward[3], float movement[3]) {
+                  const float up[3], const float forward[3], float movement[3], std::uint32_t excluded) {
     const float destination[3] = {node[0] + movement[0], node[1] + movement[1], node[2] + movement[2]};
     float centre[3], reach[3];
     for (int a = 0; a < 3; ++a) {
@@ -257,7 +277,7 @@ WallPass wallPass(const CollisionWorld& world, const PlayerBox& box, const float
     world.query(low, high, kPlayerLayer, [&](const Triangle& t) {
         const float* normal = t.record->normal;
         if (normal[1] > kFloorNormalMin) return;
-        if (t.record->surface < 32 && ((kPlayerExcludedSurfaces >> t.record->surface) & 1)) return;
+        if (t.record->surface < 32 && ((excluded >> t.record->surface) & 1)) return;
         if (dot3(normal, requested) >= 0) return;
         bool touches = true;
         for (int a = 0; a < 3; ++a) {
@@ -293,18 +313,18 @@ WallPass wallPass(const CollisionWorld& world, const PlayerBox& box, const float
 }
 
 int slideAlongWalls(const CollisionWorld& world, float x, float y, float z, float forwardX, float forwardZ,
-                    float& dx, float& dz, const PlayerBox& box) {
+                    float& dx, float& dz, const PlayerBox& box, std::uint32_t excluded, float dy) {
     // Node axes as rows: right (c, 0, -s), up (0, 1, 0), forward (s, 0, c).
     const float sine = forwardX, cosine = forwardZ;
     const float right[3] = {cosine, 0, -sine}, up[3] = {0, 1, 0}, forward[3] = {sine, 0, cosine};
     const float node[3] = {x, y, z};
-    float movement[3] = {dx, 0, dz};
-    const WallPass first = wallPass(world, box, node, right, up, forward, movement);
+    float movement[3] = {dx, dy, dz};
+    const WallPass first = wallPass(world, box, node, right, up, forward, movement, excluded);
     if (first.overlaps > 0) {
         // 0x208d84 with flag 0x10 (the player: 0x245b00 is set): a second pass at the slid destination. If it still
         // touches a wall and one of its walls meets a wall of the first pass at an angle with a negative cosine
         // above -1, the character is in a corner and the movement is removed.
-        const WallPass second = wallPass(world, box, node, right, up, forward, movement);
+        const WallPass second = wallPass(world, box, node, right, up, forward, movement, excluded);
         if (second.overlaps > 0) {
             bool corner = false;
             for (const auto& after : second.normals)

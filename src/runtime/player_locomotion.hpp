@@ -39,6 +39,11 @@ constexpr float kFacingStepFraction = 0.3f;
 
 enum class Regime { Idle, Walk, Run };
 
+// 0x1abe60 at 0x1abec4..0x1abf44: while the run animation plays on the ground, ctrl+0x94 = 1 - 0.55 * min(1, -2 d) *
+// (1 - u) with d = forward . ground normal (only when d < 0, walking uphill) and u = max(0, (n.y - 0.6088) / (1 - 0.6088)).
+constexpr float kSlopeSlowDown = 0.55f;   // literal 0x3f0ccccd at 0x1ac148
+float slopeFactor(std::int16_t facing, const float normal[3]);
+
 struct LocomotionState {
     float x = 0, z = 0;                 // ground-plane position (node+0x8c, +0x94)
     std::int16_t facing = 0;            // ctrl+8, what the node forward vector shows
@@ -46,6 +51,7 @@ struct LocomotionState {
     float runTimer = 0;                 // ctrl+0x24c
     bool wasRunning = false;            // previous update was in the run regime
     bool sprinting = false;             // sprint role active (ctrl+0x94 == sprintScale)
+    float slope = 1.0f;                 // slope factor of ctrl+0x94 computed at the end of the previous run update
 };
 
 struct LocomotionStep {
@@ -60,6 +66,17 @@ float headingRadians(std::int16_t heading);
 std::int16_t wrapHeading(std::int32_t value);
 // One facing update: sign(d) * min(kMaxFacingStep, ceil(f32(0.3) * |d|)) with d = wrap(target - facing).
 std::int16_t turnFacing(std::int16_t facing, std::int16_t target);
+
+// State 8 (docs/re/player.md, slide entry). 0x1f3f1c: the facing target (ctrl+0xa) is the heading of the horizontal part
+// of the slide vector ext+0x5c, normalised, atan2(x, z) * 65536 / 2 pi truncated.
+std::int16_t slideHeading(const float slide[3]);
+// 0x203d18 for state 8: a held stick moves the character at its walk or run step, perpendicular to the target heading, to
+// the side the stick is on, scaled by the angle between stick and target (folded to 0..16384, divided by 16384). The
+// facing takes one turnFacing step toward the target first (0x2c9770 runs 0x1f3f1c before 0x203d18).
+LocomotionStep slideLocomotionUpdate(LocomotionState& state, float dt, const StickIntent& intent, std::int16_t target,
+                                     const RootMotionSpeeds& speeds = kCharacterSpeeds);
+// 0x215804, the state 5 update within 0.5 s of a slide: the stick is cleared and the facing target is the facing.
+void lockedFallLocomotion(LocomotionState& state);
 
 // One player update with the intent of the stick-to-intent step (stickIntent).
 LocomotionStep locomotionUpdate(LocomotionState& state, float dt, const StickIntent& intent,

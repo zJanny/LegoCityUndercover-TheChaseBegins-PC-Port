@@ -97,11 +97,15 @@ constexpr float kGroundKeepTolerance = 0x1.47ae16p-7f;     // 0x3c23d70b in 0x1f
 constexpr float kBisectionStop = 0x1.47ae14p-8f;          // 0x3ba3d70a in 0x2023e4
 constexpr std::uint32_t kPlayerExcludedSurfaces = 0x80000;  // low exclusion mask passed by 0x20cd30 to 0x21a73c
 
+// 0x257ea0: unit vector, (0, 0, 1) when the length is at most 0x34000000 (2^-23).
+void normaliseVector(float v[3]);
+
 struct GroundProbe {
     float x = 0, y = 0, z = 0;       // node position after this update's horizontal move
     float forwardX = 0, forwardZ = 1;  // node forward axis (sin h, cos h)
     float rootDelta = 0;             // length of this update's movement before collision (0x20e968 on the root delta)
     float dt = 0;                    // frame step, 0x23602c
+    float minimumDistance = 0;       // |ctrl+0x2b8|: 0x20b48c probes at least that far (state 8 has 0.3 here)
     std::optional<float> distance;   // distance below the node to probe; the airborne call of 0x20b48c passes max(|fall speed|, 0.05)
 };
 
@@ -110,11 +114,23 @@ struct GroundProbe {
 // changes when the bisected ground differs from y by at least kGroundKeepTolerance.
 std::optional<float> groundHeight(const CollisionWorld& world, const GroundProbe& probe, const PlayerBox& box = {});
 
+// The ground the probe found: the node height, and the triangle the bisection ended on (0x2023e4 out parameter), whose
+// normal 0x1f9884 copies into ctrl+0x1ec and whose surface byte is tri+0x1c.
+struct GroundContact {
+    float height = 0;
+    float normal[3] = {0, 1, 0};
+    std::uint8_t surface = 0;
+    bool triangle = false;
+};
+std::optional<GroundContact> groundContact(const CollisionWorld& world, const GroundProbe& probe, const PlayerBox& box = {});
+
 // Slides the movement (dx, dz) of a node at (x, y, z) heading (forwardX, forwardZ) along wall triangles
 // touched by the box at the destination (two passes, a corner removes the movement). Returns the number of wall
-// triangles the box overlapped in the first pass.
+// triangles the box overlapped in the first pass. dy is the vertical part of the movement (0x20cd30 subtracts ctrl+0x2b8
+// from it while the character falls or slides); it only decides which walls face the movement, the result is horizontal.
 int slideAlongWalls(const CollisionWorld& world, float x, float y, float z, float forwardX, float forwardZ,
-                    float& dx, float& dz, const PlayerBox& box = {});
+                    float& dx, float& dz, const PlayerBox& box = {}, std::uint32_t excludedSurfaces = kPlayerExcludedSurfaces,
+                    float dy = 0);
 
 // Akenine-Moller box/triangle overlap as in 0x20c2b0 (plane, three box axes, nine edge axes).
 bool boxOverlapsTriangle(const float centre[3], const float half[3], const float vertex[3][3], const float normal[3], float d);

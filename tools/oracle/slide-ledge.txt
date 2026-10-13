@@ -1,0 +1,75 @@
+# Step-off state 8 (slide down a steep slope), docs/re/player.md slide entry. The player is teleported onto the 1.06 m platform
+# of Cherry Tree Hills (top 17.639, x 897..900, z 1094..1103) and walks or runs off its edge. memtrace records the entity,
+# controller, controller extension (*(ctrl+0xe0), holds ext+0x5c, the slide vector) and node of every update.
+# Run with --state gameplay-start (or loadstate) and --display xvfb.
+loadstate gameplay-start
+frames 3
+stick 0 0
+hold -
+dt 0.033 0.033
+teleport 899.5 17.6393 1101.0
+frames 2
+stick 50 50
+memtrace 50 st8_walk 0x085526f0:0x100 *0x0855276c+0:0x340 *0x08552870+0:0x140 *0x0855272c+0:0xb0
+stick 0 0
+loadstate gameplay-start
+frames 3
+stick 0 0
+hold -
+dt 0.066 0.066
+teleport 899.5 17.6393 1101.0
+frames 2
+stick 106 106
+memtrace 30 st8_dt066 0x085526f0:0x100 *0x0855276c+0:0x340 *0x08552870+0:0x140 *0x0855272c+0:0xb0
+stick 0 0
+loadstate gameplay-start
+frames 3
+stick 0 0
+hold -
+dt 0.0165 0.0165
+teleport 899.5 17.6393 1101.0
+frames 2
+stick 50 50
+memtrace 90 st8_dt0165 0x085526f0:0x100 *0x0855276c+0:0x340 *0x08552870+0:0x140 *0x0855272c+0:0xb0
+stick 0 0
+# walks from the south-west corner of the platform in the four stick directions
+loadstate gameplay-start
+frames 3
+stick 0 0
+hold -
+dt 0.033 0.033
+teleport 899.2 17.6393 1098.0
+frames 2
+stick 70 0
+memtrace 60 st8_w70_0 0x085526f0:0x100 *0x0855276c+0:0x340 *0x08552870+0:0x140 *0x0855272c+0:0xb0
+stick 0 0
+loadstate gameplay-start
+frames 3
+stick 0 0
+hold -
+dt 0.033 0.033
+teleport 899.2 17.6393 1098.0
+frames 2
+stick 0 70
+memtrace 60 st8_w0_70 0x085526f0:0x100 *0x0855276c+0:0x340 *0x08552870+0:0x140 *0x0855272c+0:0xb0
+stick 0 0
+loadstate gameplay-start
+frames 3
+stick 0 0
+hold -
+dt 0.033 0.033
+teleport 899.2 17.6393 1098.0
+frames 2
+stick -70 0
+memtrace 60 st8_wm70_0 0x085526f0:0x100 *0x0855276c+0:0x340 *0x08552870+0:0x140 *0x0855272c+0:0xb0
+stick 0 0
+loadstate gameplay-start
+frames 3
+stick 0 0
+hold -
+dt 0.033 0.033
+teleport 899.2 17.6393 1098.0
+frames 2
+stick 0 -70
+memtrace 60 st8_w0_m70 0x085526f0:0x100 *0x0855276c+0:0x340 *0x08552870+0:0x140 *0x0855272c+0:0xb0
+stick 0 0

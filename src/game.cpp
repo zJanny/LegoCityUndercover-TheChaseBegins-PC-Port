@@ -20,6 +20,7 @@
 #include "runtime/player_locomotion.hpp"
 #include "runtime/player_vertical.hpp"
 #include "runtime/music.hpp"
+#include "runtime/player_motion.hpp"
 #include "runtime/scheduler.hpp"
 #include "runtime/sound_events.hpp"
 #include "runtime/studs.hpp"
@@ -290,8 +291,8 @@ std::optional<PlayerRig> placePlayer(FuseArchive& archive, Scene& scene, const L
         rig.animations[id] = loadAnimation(archive, std::string(kPlayerAnimationDirectory) + name + kPlayerAnimationSuffix);
     rig.jumpStanding = runtime::makeJumpProfile(rig.animations.at(runtime::kAnimationJump));
     rig.jumpMoving = runtime::makeJumpProfile(rig.animations.at(runtime::kAnimationJumpRun));
-    rig.vertical.landingDurations =
-        runtime::landingDurations(rig.animations.at(runtime::kAnimationLand), rig.animations.at(runtime::kAnimationFallLand));
+    rig.vertical.landingAnimations =
+        runtime::landingAnimations(rig.animations.at(runtime::kAnimationLand), rig.animations.at(runtime::kAnimationFallLand));
     const FuseEntry* soundTable = archive.find("tables/tablessoundfx.bxls");
     const FuseEntry* characterTable = archive.find("tables/tablescharacters.bxls");
     if (soundTable && characterTable) {
@@ -389,67 +390,29 @@ struct PlayerAnimation {
 PlayerAnimation updatePlayer(PlayerRig& player, const runtime::CollisionWorld& collision, const runtime::StickIntent& intent,
                              bool jumpPressed, float dt) {
     using runtime::Posture;
-    runtime::VerticalInput input;
-    input.dt = dt;
-    input.moveRequested = intent.active;
+    const runtime::JumpProfiles jumps{&player.jumpStanding, &player.jumpMoving};
+    const runtime::PlayerMotionStep update =
+        runtime::playerMotionUpdate(player.motion, player.vertical, jumps, collision, intent, jumpPressed, dt);
+    const runtime::VerticalStep& vertical = update.vertical;
     const auto landingAnimation = [&]() {
         return PlayerAnimation{player.vertical.hardLanding ? runtime::kAnimationFallLand : runtime::kAnimationLand, 1.0f};
     };
-    if (player.vertical.posture == Posture::Landing) {
-        runtime::verticalUpdate(player.vertical, collision, input);
-        return landingAnimation();
+    if (update.stunned) return landingAnimation();
+    if (vertical.jumpStarted) {
+        player.jumpMovingAnimation = update.jumpMoving;
+        player.sounds.push_back(player.characterSounds.jump(player.position()));
     }
-    const bool jumping = player.vertical.posture == Posture::Jumping;
-    const runtime::RootMotionSpeeds speeds =
-        jumping ? runtime::jumpSpeeds(runtime::kCharacterSpeeds) : runtime::kCharacterSpeeds;
-    const runtime::LocomotionState before = player.motion;
-    const float startX = before.x, startZ = before.z;
-    runtime::LocomotionStep step = runtime::locomotionUpdate(player.motion, dt, intent, speeds);
-    if (jumping) {
-        player.motion.runTimer = before.runTimer;
-        player.motion.wasRunning = before.wasRunning;
-        player.motion.sprinting = before.sprinting;
-        step.animationScale = before.sprinting ? runtime::kCharacterSpeeds.sprintScale : 1.0f;
-    }
-    float dx = step.deltaX, dz = step.deltaZ;
-    const float rootDelta = std::hypot(dx, dz);
-    const float heading = runtime::headingRadians(player.motion.facing);
-    input.forwardX = std::sin(heading);
-    input.forwardZ = std::cos(heading);
-    if (rootDelta > 0 && !collision.empty())
-        runtime::slideAlongWalls(collision, startX, player.vertical.y, startZ, input.forwardX, input.forwardZ, dx, dz);
-    player.motion.x = startX + dx;
-    player.motion.z = startZ + dz;
-    input.x = player.motion.x;
-    input.z = player.motion.z;
-    input.rootDelta = rootDelta;
-    if (jumpPressed && player.vertical.posture == Posture::Ground) {
-        player.jumpMovingAnimation = intent.active;
-        input.startJump = intent.active ? &player.jumpMoving : &player.jumpStanding;
-    }
-    const float fallBefore = jumping ? 0.0f : player.vertical.fallDistance;
-    const runtime::VerticalStep vertical = runtime::verticalUpdate(player.vertical, collision, input);
-    if (vertical.jumpStarted) player.sounds.push_back(player.characterSounds.jump(player.position()));
     if (vertical.landed) {
         const std::vector<runtime::SoundCall> calls =
             vertical.hard ? player.characterSounds.hardLanding(player.position())
-                          : player.characterSounds.landing(fallBefore, kProvisionalWaterLanding, kProvisionalObject11Landing, player.position());
+                          : player.characterSounds.landing(update.fallBefore, kProvisionalWaterLanding, kProvisionalObject11Landing, player.position());
         player.sounds.insert(player.sounds.end(), calls.begin(), calls.end());
     }
-    if (vertical.landed && player.vertical.posture == Posture::Ground && intent.active && step.regime == runtime::Regime::Run) {
-        player.motion.runTimer = (player.motion.sprinting ? runtime::kSprintTime : 0.0f) + dt;
-        player.motion.wasRunning = true;
-        player.motion.sprinting = player.motion.runTimer > runtime::kSprintTime;
-    }
-    if (player.vertical.posture == Posture::Falling) {
-        player.motion.runTimer = 0;
-        player.motion.wasRunning = false;
-        player.motion.sprinting = false;
-        return {runtime::kAnimationFall, 1.0f};
-    }
+    if (player.vertical.posture == Posture::Falling || player.vertical.posture == Posture::Sliding) return {runtime::kAnimationFall, 1.0f};
     if (player.vertical.posture == Posture::Jumping || vertical.jumpStarted)
         return {player.jumpMovingAnimation ? runtime::kAnimationJumpRun : runtime::kAnimationJump, 1.0f};
     if (player.vertical.posture == Posture::Landing) return landingAnimation();
+    const runtime::LocomotionStep& step = update.locomotion;
     return {step.animation, step.animation == runtime::kAnimationSprint ? kSprintAnimationScale : step.animationScale};
 }
 

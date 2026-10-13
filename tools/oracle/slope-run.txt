@@ -1,0 +1,46 @@
+# Slope term of the run state update 0x1abe60 (docs/re/player.md, slope entry): runs that climb the kerb ramps of Cherry Tree
+# Hills, recorded with the controller, extension and node blocks (memtrace). Fixed dt 0.033. Run with --state gameplay-start.
+# turn_run_r90 of tools/oracle/loco-turn.txt, in the memtrace format (ground normal ctrl+0x1ec and ctrl+0x94 in the dump).
+loadstate gameplay-start
+frames 3
+stick 0 0
+hold -
+dt 0.033 0.033
+stick 0 150
+frames 75
+stick 150 0
+memtrace 45 slope_run_r90 0x085526f0:0x100 *0x0855276c+0:0x340 *0x08552870+0:0x140 *0x0855272c+0:0xb0
+stick 0 0
+# straight runs in four directions from the spawn
+loadstate gameplay-start
+frames 3
+stick 0 0
+hold -
+dt 0.033 0.033
+stick 0 150
+memtrace 90 slope_run_n 0x085526f0:0x100 *0x0855276c+0:0x340 *0x08552870+0:0x140 *0x0855272c+0:0xb0
+stick 0 0
+loadstate gameplay-start
+frames 3
+stick 0 0
+hold -
+dt 0.033 0.033
+stick 150 0
+memtrace 90 slope_run_e 0x085526f0:0x100 *0x0855276c+0:0x340 *0x08552870+0:0x140 *0x0855272c+0:0xb0
+stick 0 0
+loadstate gameplay-start
+frames 3
+stick 0 0
+hold -
+dt 0.033 0.033
+stick -150 0
+memtrace 90 slope_run_w 0x085526f0:0x100 *0x0855276c+0:0x340 *0x08552870+0:0x140 *0x0855272c+0:0xb0
+stick 0 0
+loadstate gameplay-start
+frames 3
+stick 0 0
+hold -
+dt 0.033 0.033
+stick 0 -150
+memtrace 90 slope_run_s 0x085526f0:0x100 *0x0855276c+0:0x340 *0x08552870+0:0x140 *0x0855272c+0:0xb0
+stick 0 0

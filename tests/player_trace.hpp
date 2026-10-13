@@ -21,6 +21,7 @@ struct Row {
     float dt = 0, x = 0, y = 0, z = 0, forwardX = 0, forwardZ = 0;
     std::uint16_t state = 0, held = 0;
     float fallDistance = 0, fallSpeed = 0;
+    float normal[3] = {0, 0, 0};   // ctrl+0x1ec
 };
 
 template <typename T> T read(const std::vector<char>& data, std::size_t offset) {
@@ -60,6 +61,7 @@ inline std::vector<Row> loadTrace(const std::filesystem::path& csvFile) {
         rows[i].held = read<std::uint16_t>(data, controller + 0xc);
         rows[i].fallDistance = read<float>(data, controller + 0x2b4);
         rows[i].fallSpeed = read<float>(data, controller + 0x2b8);
+        for (int a = 0; a < 3; ++a) rows[i].normal[a] = read<float>(data, controller + 0x1ec + std::size_t(a) * 4);
     }
     return rows;
 }

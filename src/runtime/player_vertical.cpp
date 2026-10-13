@@ -21,21 +21,102 @@ GroundProbe probeFor(const VerticalState& state, const VerticalInput& input) {
     probe.forwardZ = input.forwardZ;
     probe.rootDelta = input.rootDelta;
     probe.dt = input.dt;
+    if (state.posture == Posture::Sliding) probe.minimumDistance = std::fabs(state.fallSpeed);
     if (state.posture == Posture::Falling) probe.distance = std::max(std::fabs(state.fallSpeed), kGroundMinimumDistance);
     return probe;
+}
+
+std::optional<GroundContact> probeGround(VerticalState& state, const CollisionWorld& world, const GroundProbe& probe) {
+    const std::optional<GroundContact> contact = groundContact(world, probe);
+    if (!contact) return std::nullopt;
+    std::copy(contact->normal, contact->normal + 3, state.groundNormal);
+    state.groundSurface = contact->surface;
+    return contact;
+}
+
+// 0x2b24bc at 0x2b2d14: 0 < normal.y < *0x376910 is the slope branch. Surface 6 sends flat ground to the slope branch too
+// (a counter in ext+8 delays it); that is not replicated (docs/re/player.md, slide entry).
+bool steepNormal(const float normal[3]) {
+    return normal[1] > 0 && normal[1] < kFloorNormalMin;
+}
+
+// 0x22f928: a vector pointing into the plane loses its component along the normal.
+void projectOntoPlane(const float normal[3], float vector[3]) {
+    const float into = normal[0] * vector[0] + normal[1] * vector[1] + normal[2] * vector[2];
+    if (!(into < 0)) return;
+    for (int a = 0; a < 3; ++a) vector[a] -= normal[a] * into;
+}
+
+// Branch of 0x2b24bc that sets state 8: ctrl+0x2b8 = 0.3 (0.5 on surface 6), ext+0x5c = (0, -2b8, 0) projected onto the
+// slope, the node stays where it is.
+void startSlide(VerticalState& state, VerticalStep& step) {
+    state.fallSpeed = state.groundSurface == kSlipperySurface ? kSlideSpeedSlipperySurface : kSlideSpeed;
+    state.slide[0] = 0;
+    state.slide[1] = -state.fallSpeed;
+    state.slide[2] = 0;
+    projectOntoPlane(state.groundNormal, state.slide);
+    state.posture = Posture::Sliding;
+    state.slideFall = false;
+    step.slideStarted = true;
+}
+
+// Event 0x26 in state 8 (no ground in reach): state 5 and the gravity step on top of the slide speed 0.3.
+void leaveSlideByFalling(VerticalState& state, float dt) {
+    gravityStep(state, dt);
+    state.slideFall = true;
+    state.slideFallTicks = 0;
+}
+
+void land(VerticalState& state, const VerticalInput& input, VerticalStep& step, bool fromJump);
+
+// State 8 update, 0x2b24bc at 0x2b2e50: the node moves along the slope by the slide speed minus what the probe
+// already lowered it by, the horizontal part is slid along walls (no surface exclusions), and a second probe snaps the
+// node to ground below. STAND-IN: that second probe (flags 1, 0x22a7a4) is not replicated; it found nothing in any recording, the
+// replica's box probe would have found the slope itself.
+void slideStep(VerticalState& state, const CollisionWorld& world, const VerticalInput& input, VerticalStep& step) {
+    const GroundProbe probe = probeFor(state, input);
+    const std::optional<GroundContact> contact = world.empty() ? std::nullopt : probeGround(state, world, probe);
+    if (!contact) {
+        leaveSlideByFalling(state, input.dt);
+        return;
+    }
+    const float firstHit = contact->height;
+    if (!(state.fallSpeed > 0)) state.fallSpeed = state.groundSurface == kSlipperySurface ? kSlideSpeedSlipperySurface : kSlideSpeed;
+    const float lowered = (state.y - firstHit) - state.fallSpeed;
+    state.y = firstHit;
+    float vector[3] = {0, lowered, 0};
+    projectOntoPlane(state.groundNormal, vector);
+    normaliseVector(vector);
+    for (float& component : vector) component *= -lowered;
+    const float vertical = vector[1];
+    float dx = vector[0], dz = vector[2];
+    slideAlongWalls(world, input.x, state.y, input.z, input.forwardX, input.forwardZ, dx, dz, PlayerBox(), 0);
+    const float drop = vertical;
+    state.y += drop;
+    state.slide[0] = dx;
+    state.slide[1] = drop;
+    state.slide[2] = dz;
+    step.moveX = dx;
+    step.moveZ = dz;
+    if (steepNormal(state.groundNormal)) return;
+    state.y = firstHit;
+    land(state, input, step, false);
 }
 
 void land(VerticalState& state, const VerticalInput& input, VerticalStep& step, bool fromJump) {
     step.landed = true;
     step.hard = state.fallDistance >= kHardLandingDistance;
     const bool stun = step.hard || (!input.moveRequested && (fromJump || state.fallDistance > kGravity));
+    const bool afterSlide = state.steeringLocked();
     state.fallSpeed = 0;
     state.fallDistance = 0;
+    state.slideFall = false;
     if (stun) {
         state.posture = Posture::Landing;
-        state.landingTime = 0;
+        state.landingTicks = 0;
         state.hardLanding = step.hard;
-        state.landingDuration = step.hard ? state.landingDurations.hard : state.landingDurations.soft;
+        state.landingAnimation = step.hard ? state.landingAnimations.hard : state.landingAnimations.soft;
+        if (afterSlide && !step.hard) state.landingAnimation = kSlideLandingStunStandIn;
     } else {
         state.posture = Posture::Ground;
     }
@@ -72,15 +153,29 @@ JumpProfile makeJumpProfile(const assets::Animation& jump, float height) {
     return profile;
 }
 
-LandingDurations landingDurations(const assets::Animation& land, const assets::Animation& fallLand) {
-    return {assets::animationDuration(land), assets::animationDuration(fallLand)};
+StunAnimation stunAnimation(const assets::Animation& animation) {
+    return {animation.frames > 1 ? float(animation.frames - 1) : 0.0f, assets::animationFramesPerSecond(animation)};
 }
 
-VerticalStep verticalUpdate(VerticalState& state, const CollisionWorld& world, const VerticalInput& input) {
+bool stunFinished(const StunAnimation& animation, std::uint32_t elapsedTicks) {
+    const float position = float(elapsedTicks) * animation.framesPerSecond / float(kClockFrequency);
+    return position >= animation.lastFrame;
+}
+
+LandingAnimations landingAnimations(const assets::Animation& land, const assets::Animation& fallLand) {
+    return {stunAnimation(land), stunAnimation(fallLand)};
+}
+
+namespace {
+VerticalStep verticalUpdateStep(VerticalState& state, const CollisionWorld& world, const VerticalInput& input) {
     VerticalStep step;
+    if (state.posture == Posture::Sliding) {
+        slideStep(state, world, input, step);
+        return step;
+    }
     if (state.posture == Posture::Landing) {
-        state.landingTime += input.dt;
-        if (state.landingTime >= state.landingDuration) {
+        state.landingTicks += input.ticks;
+        if (stunFinished(state.landingAnimation, state.landingTicks)) {
             state.posture = Posture::Ground;
             step.stunEnded = true;
         }
@@ -92,16 +187,19 @@ VerticalStep verticalUpdate(VerticalState& state, const CollisionWorld& world, c
         const float previousY = state.y;
         state.y = state.jumpBase + state.jump->offsetAt(state.jumpElapsed);
         const float climb = state.y - previousY;
-        std::optional<float> ground;
+        std::optional<GroundContact> ground;
         if (climb <= 0 && !world.empty()) {
             VerticalInput probeInput = input;
             probeInput.rootDelta = std::sqrt(input.rootDelta * input.rootDelta + climb * climb);
             GroundProbe probe = probeFor(state, probeInput);
             probe.distance.reset();
-            ground = groundHeight(world, probe);
+            ground = probeGround(state, world, probe);
         }
-        if (ground) {
-            state.y = *ground;
+        if (ground && steepNormal(state.groundNormal)) {
+            state.jump = nullptr;
+            startSlide(state, step);
+        } else if (ground) {
+            state.y = ground->height;
             state.fallDistance = 0;
             land(state, input, step, true);
             state.jump = nullptr;
@@ -123,13 +221,24 @@ VerticalStep verticalUpdate(VerticalState& state, const CollisionWorld& world, c
         return step;
     }
     if (state.posture == Posture::Ground && input.rootDelta <= 0) return step;
-    const std::optional<float> ground = world.empty() ? std::nullopt : groundHeight(world, probeFor(state, input));
+    const std::optional<GroundContact> ground = world.empty() ? std::nullopt : probeGround(state, world, probeFor(state, input));
+    if (ground && steepNormal(state.groundNormal)) {
+        startSlide(state, step);
+        return step;
+    }
     if (ground) {
-        state.y = *ground;
+        state.y = ground->height;
         if (state.posture == Posture::Falling) land(state, input, step, false);
         return step;
     }
     if (!world.empty()) gravityStep(state, input.dt);
+    return step;
+}
+}
+
+VerticalStep verticalUpdate(VerticalState& state, const CollisionWorld& world, const VerticalInput& input) {
+    VerticalStep step = verticalUpdateStep(state, world, input);
+    if (state.posture == Posture::Falling && state.slideFall) state.slideFallTicks += input.ticks;
     return step;
 }
 

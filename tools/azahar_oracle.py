@@ -748,7 +748,10 @@ class Oracle:
         for index in range(4):
             value = registers[index]
             if 0x00100000 <= value < 0x10000000 or 0x14000000 <= value < 0x1c000000:
-                pointed[index] = r.read(value, 0x40)
+                try:
+                    pointed[index] = r.read(value, 0x40)
+                except IOError:
+                    pass
         hit = {'frame': self.frame, 'pc': pc, 'registers': registers, 'stack': struct.unpack('<32I', stack),
                'fields': fields, 'pointed': pointed}
         self.watch_hits.append(hit)

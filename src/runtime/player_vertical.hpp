@@ -4,6 +4,7 @@
 // Evidence and traces: docs/re/player.md, 2026-10-13 falling entry. No SDL dependency.
 #include "runtime/collision.hpp"
 #include "runtime/player_locomotion.hpp"
+#include "runtime/scheduler.hpp"
 #include <vector>
 
 namespace chase::runtime {
@@ -13,13 +14,25 @@ constexpr float kGravityRate = 30.0f;             // literal at 0x18f5a0
 constexpr float kTerminalFallSpeed = 0.8f;        // *0x3771b0 through 0x2b75d0, per update
 constexpr float kHardLandingDistance = 12.0f;     // *0x374360, compared with ctrl+0x2b4
 
-// The landing stun lasts as long as the landing animation: (frames - 1) / rate, 13/15 s for "land" and 18/15 s for
-// "fallland" (docs/re/player.md, derivation entry). Matches the measured 26/30 s and 36/30 s.
-struct LandingDurations {
-    float soft = 0;
-    float hard = 0;
+// States 6 (soft landing) and 7 (hard landing) end when the animation they started has played to its last frame: the
+// update functions 0x1d55cc and 0x2a47b0 ask 0x22f560, which asks 0x24cbd4, which tests
+// elapsed clock ticks * rate / 3000 >= frames - 1 (docs/re/player.md, landing entry).
+struct StunAnimation {
+    float lastFrame = 0;
+    float framesPerSecond = 15.0f;
 };
-LandingDurations landingDurations(const assets::Animation& land, const assets::Animation& fallLand);
+// STAND-IN: the soft landing at the end of the fall that follows a slide (within 0.5 s) lasted one update in all four
+// recordings (dt 0.0163, 0.033, 0.066) whatever the animation length; the rule that ends it early in the original is not
+// recovered, so it is modelled as an animation that is finished at once.
+constexpr StunAnimation kSlideLandingStunStandIn{0.0f, 15.0f};
+StunAnimation stunAnimation(const assets::Animation& animation);
+bool stunFinished(const StunAnimation& animation, std::uint32_t elapsedTicks);
+
+struct LandingAnimations {
+    StunAnimation soft;
+    StunAnimation hard;
+};
+LandingAnimations landingAnimations(const assets::Animation& land, const assets::Animation& fallLand);
 
 constexpr int kAnimationJump = 3;
 constexpr int kAnimationJumpRun = 4;
@@ -47,20 +60,36 @@ struct JumpProfile {
 };
 JumpProfile makeJumpProfile(const assets::Animation& jump, float height = kJumpHeight);
 
-enum class Posture { Ground, Jumping, Falling, Landing };
+// Controller states: Ground = 1/2/3, Jumping = 4, Falling = 5, Landing = 6/7, Sliding = 8 (steep slope).
+enum class Posture { Ground, Jumping, Falling, Landing, Sliding };
+
+// State 8 (docs/re/player.md, slide entry). The branch of the ground-contact handler 0x2b24bc for a floor normal with
+// 0 < y < *0x376910 (kFloorNormalMin) starts it with ctrl+0x2b8 = *0x3e99999a (0.5 on surface 6).
+constexpr float kSlideSpeed = 0.3f;
+constexpr float kSlideSpeedSlipperySurface = 0.5f;
+constexpr std::uint8_t kSlipperySurface = 6;
+// Event 0x26 in state 8 starts state 5; state 5 entered from state 8 sets ext+8 = clock + 0.5 (0x1ab98c, literal 0x1abaa4)
+// and its update (0x1d4ce0) runs 0x215804 (no stick, facing target = facing) until the clock passes that time.
+constexpr std::uint32_t kSlideFallLockTicks = kClockFrequency / 2;
 
 struct VerticalState {
     Posture posture = Posture::Ground;
     float y = 0;
     float fallSpeed = 0;      // ctrl+0x2b8, world units per update, positive downwards
     float fallDistance = 0;   // ctrl+0x2b4, accumulated fall speed
-    float landingTime = 0;
-    float landingDuration = 0;
-    LandingDurations landingDurations;
+    std::uint32_t landingTicks = 0;     // clock ticks since the landing update
+    StunAnimation landingAnimation;     // the animation of the current stun
+    LandingAnimations landingAnimations;
     bool hardLanding = false;
+    float groundNormal[3] = {0, 1, 0};  // ctrl+0x1ec, set by a ground probe that found a floor
+    std::uint8_t groundSurface = 0;     // surface byte of the ground triangle
     const JumpProfile* jump = nullptr;
     float jumpElapsed = 0;
     float jumpBase = 0;
+    float slide[3] = {0, 0, 0};         // ext+0x5c: the slide vector of the last state-8 update
+    bool slideFall = false;             // state 5 entered from state 8
+    std::uint32_t slideFallTicks = 0;   // clock ticks since that state 5 began
+    bool steeringLocked() const { return posture == Posture::Falling && slideFall && slideFallTicks <= kSlideFallLockTicks; }
 };
 
 struct VerticalInput {
@@ -68,6 +97,7 @@ struct VerticalInput {
     float forwardX = 0, forwardZ = 1;
     float rootDelta = 0;                // length of this update's horizontal movement
     float dt = 0;
+    std::uint32_t ticks = 0;            // clock ticks of this update, dt in units of 1/3000 s
     bool moveRequested = false;         // ctrl+0xc bit 0
     const JumpProfile* startJump = nullptr;  // set in the update of a jump button press while grounded
 };
@@ -79,6 +109,8 @@ struct VerticalStep {
     bool stunned = false;               // locomotion is suppressed in this update
     bool jumpStarted = false;
     bool jumpEnded = false;             // the jump animation ran out in the air
+    bool slideStarted = false;
+    float moveX = 0, moveZ = 0;         // horizontal movement the slide adds on top of the update's locomotion
 };
 
 VerticalStep verticalUpdate(VerticalState& state, const CollisionWorld& world, const VerticalInput& input);

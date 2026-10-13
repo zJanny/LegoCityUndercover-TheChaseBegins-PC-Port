@@ -165,4 +165,78 @@ StickIntent stickIntent(const StickIntentInput& input) {
     return intent;
 }
 
+namespace {
+struct Reduced {
+    float value = 0;
+    int quadrant = 0;     // n & 3, or -1 for |x| < 2^-12
+    bool large = false;
+};
+
+Reduced reduceAngle(float x) {
+    Reduced reduced;
+    const std::uint32_t bits = bitsOf(x);
+    if (!(0x7e921fb6u <= (bits << 1))) {
+        reduced.value = x;
+        reduced.quadrant = (bits << 1) < 0x73000000u ? -1 : 0;
+        return reduced;
+    }
+    if (0x46490e49u <= (bits & ~kSign)) {
+        reduced.large = true;
+        return reduced;
+    }
+    const float scaled = x * floatOf(0x3f22f983u);
+    const float magic = floatOf(0x4b000000u);
+    float rounded;
+    if ((bits & kSign) == 0) {
+        rounded = (scaled + magic) - magic;
+    } else {
+        const float shifted = scaled - magic;
+        rounded = shifted + magic;
+    }
+    reduced.quadrant = convertToInt(rounded) & 3;
+    float value = x;
+    value = value - rounded * floatOf(0x3fc90000u);
+    value = value - rounded * floatOf(0x39fda000u);
+    value = value - rounded * floatOf(0x33a22000u);
+    value = value - rounded * floatOf(0x2c34611au);
+    reduced.value = value;
+    return reduced;
+}
+
+float sinPolynomial(float x, float squared) {
+    float s0 = floatOf(0x3c0882dau);
+    s0 = s0 - squared * floatOf(0x394c6d33u);
+    float s2 = floatOf(0xbe2aaaa0u);
+    s2 = s2 + squared * s0;
+    return x + x * (s2 * squared);
+}
+
+float cosPolynomial(float squared) {
+    float s2 = floatOf(0x3d2a9fcau);
+    s2 = s2 + squared * floatOf(0xbab23ab9u);
+    float s3 = floatOf(0xbeffffddu);
+    s3 = s3 + squared * s2;
+    return 1.0f + squared * s3;
+}
+}
+
+float gameSin(float angle) {
+    const Reduced r = reduceAngle(angle);
+    if (r.large) return std::sin(angle);
+    if (r.quadrant < 0) return r.value;
+    const float squared = r.value * r.value;
+    const float result = (r.quadrant & 1) ? cosPolynomial(squared) : sinPolynomial(r.value, squared);
+    return (r.quadrant & 2) ? -result : result;
+}
+
+float gameCos(float angle) {
+    const Reduced r = reduceAngle(angle);
+    if (r.large) return std::cos(angle);
+    if (r.quadrant < 0) return 1.0f;
+    const float squared = r.value * r.value;
+    const float result = (r.quadrant & 1) ? sinPolynomial(r.value, squared) : cosPolynomial(squared);
+    const bool negate = (r.quadrant & 1) ? !(r.quadrant & 2) : (r.quadrant & 2) != 0;
+    return negate ? -result : result;
+}
+
 }
