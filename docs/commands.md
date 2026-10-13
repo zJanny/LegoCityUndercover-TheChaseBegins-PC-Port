@@ -40,8 +40,10 @@ Single C++ tests, with `ctest --test-dir build -R <name>`:
 | `assets-real-data` | Needs `artifacts/romfs`; skips with code 77 otherwise |
 | `viewer-real-smoke`, `viewer-cutscene-smoke` | Render one model and one cutscene frame offscreen. Registered only if `artifacts/romfs` existed at configure time |
 | `game-real-smoke` | Registered only if `artifacts/romfs` existed at configure time; needs libepoxy |
-| `game-script-run`, `game-script-walk` | Same conditions. Feed a fixed stick to the development runtime and check how far the character moved |
-| `camera-real-data` | Compares the follow camera with traces recorded from the original game (`artifacts/oracle/cam-out`, folder set with `-DCHASE_CAMERA_TRACE_DIR=...`); skips with code 77 if the traces are missing |
+| `game-script-run`, `game-script-walk`, `game-script-camera` | Same conditions. Feed a fixed stick to the development runtime and check how far the character moved. The first two switch the camera's wall test off (`--no-camera-collision`), the third leaves it on |
+| `camera-real-data` | Compares the follow camera with traces recorded from the original game: in open ground (`artifacts/oracle/cam-out`, folder set with `-DCHASE_CAMERA_TRACE_DIR=...`) and near walls (`artifacts/oracle/camwall-out`, `-DCHASE_CAMERA_WALL_TRACE_DIR=...`, needs the RomFS); skips with code 77 if the traces are missing |
+| `camera-sweep-real-data` | Checks the camera's wall test against the sweeps recorded from the original game (same folders); skips with code 77 if they are missing |
+| `camera-sweep` | Checks the camera wall test on small made-up walls (no game data needed) |
 | `locomotion-real-data` | Compares the character's movement with traces recorded from the original game (`artifacts/oracle/loco-out`, folder set with `-DCHASE_LOCO_TRACE_DIR=...`); skips with code 77 if the traces or `artifacts/romfs` are missing |
 | `collision-real-data` | Compares the character's floor height and wall sliding with traces recorded from the original game (`artifacts/oracle/loco-out` and `artifacts/oracle/coll-out`, folders set with `-DCHASE_LOCO_TRACE_DIR=...` and `-DCHASE_COLLISION_TRACE_DIR=...`); skips with code 77 if the traces or `artifacts/romfs` are missing |
 | `soundtest-real-smoke`, `soundtest-id-smoke` | Play one sound by file name and one by number on the dummy audio driver. Same conditions |
@@ -79,12 +81,12 @@ SDL_VIDEODRIVER=offscreen build/chase-game --screenshot out.bmp --frames 2
 SDL_VIDEODRIVER=offscreen build/chase-game --script "0 150 40" --screenshot out.bmp
 ```
 
-- Options: `--fib`, `--names`, `--config` (as in the viewer), `--level`, `--screenshot`, `--frames`, `--script`.
+- Options: `--fib`, `--names`, `--config` (as in the viewer), `--level`, `--screenshot`, `--frames`, `--script`, `--no-camera-collision` (the camera ignores the level's walls, for comparing screenshots).
 - The default level is the police station. The character is Chase McCain in his police outfit. That choice is a best guess. Run it from the repository folder so the default paths work.
 - Move with the D-pad keys (WASD or arrows). Hold `E` to walk slowly. Without it you run, and after about one second of running you sprint. `Z` and `C` turn the camera (the left and right shoulder buttons). Pushing sideways also turns the camera, as in the original. `Escape` quits.
 - What moves like the original: the speeds, the walk, run and sprint switch, the delay before sprinting, and the way the character turns towards the direction you push.
 - What is still a stand-in:
-  - The camera follows the character like the original in open ground: distance, height, smoothing and turning match what was measured. The original also pushes the camera away from walls and from the character. That part is missing, so the camera can sit inside buildings. Rooms that use several camera zones are not handled.
+  - The camera follows the character like the original: distance, height, smoothing and turning match what was measured. It keeps out of the level's fixed walls the way the original does. Objects such as lamp posts do not push it yet, and the original's re-placing of a camera that stays stuck is missing. Rooms that use several camera zones are not handled.
   - The collision is only the level's fixed geometry. The character stays on the floor, climbs steps and kerbs by the original's rules, and slides along walls. Objects, other characters and vehicles do not block him, and he cannot fall or jump. Where the original lets him fall, he stays at his height.
   - The animations play at an assumed speed and switch without blending.
   - A keyboard cannot tilt the stick halfway, so `E` stands in for a gentle push.
@@ -116,6 +118,7 @@ python3 tools/azahar_oracle.py tools/oracle/boot.txt
 - The script file lists steps: advance game frames, hold buttons, take screenshots, print timing values. The list of steps is at the top of `tools/azahar_oracle.py`.
 - Screenshots go to `artifacts/oracle/out/`.
 - `tools/oracle/camera-trace.txt` records the camera (`memtrace` step). Convert each `.mem` file with `tools/export_camera_trace.py` (it takes the pad state of that part as options) to get the `.csv` files the camera test reads.
+- `tools/oracle/camwall-circle.txt` and `tools/oracle/camwall-east.txt` record the camera near walls. They need the extra option `--extra 0x330` when converting.
 - `tools/oracle/loco-*.txt` measure how the player moves. Each one starts with `loadstate gameplay-start` (a saved state that `tools/oracle/to-gameplay.txt` creates). Run them with `--display xvfb --renderer opengl --rpc --rpc-input`.
 - The emulator uses its own settings and save folder in `artifacts/oracle/home/`. Your normal Azahar settings and saves are not used or changed. `--fresh` deletes that folder first.
 - Stepping frames is slow: 600 frames take about 4 minutes. Waiting is faster: `wait 25` reaches the language screen in about 35 seconds.

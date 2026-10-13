@@ -16,6 +16,7 @@ class CollisionWorld {
 public:
     void add(const assets::CollisionItem& item) { items_.push_back(item); }
     bool empty() const { return items_.empty(); }
+    const std::vector<assets::CollisionItem>& items() const { return items_; }
     std::size_t triangleCount() const;
 
     struct Triangle {

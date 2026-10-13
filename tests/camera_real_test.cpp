@@ -1,6 +1,8 @@
 // Differential test of the follow camera against traces recorded in the original game (Azahar oracle,
-// tools/oracle/camera-trace.txt, converted by tools/export_camera_trace.py; docs/re/camera.md). Needs the
-// local trace directory; exits with 77 (skipped) when it is missing.
+// tools/oracle/camera-trace.txt and camwall-*.txt, converted by tools/export_camera_trace.py; docs/re/camera.md). The
+// wall traces also need the extracted RomFS (the level collision). Needs the local trace directory; exits with 77
+// (skipped) when it is missing.
+#include "assets/assets.hpp"
 #include "runtime/follow_camera.hpp"
 #include "runtime/pad.hpp"
 #include <algorithm>
@@ -23,6 +25,7 @@ struct Row {
     unsigned held;
     float player[3], facing;
     float look[3], eye[3], wanted[3];
+    float clearance = 1.0f, springHold = 0.0f;
 };
 
 std::vector<Row> loadTrace(const fs::path& path) {
@@ -36,7 +39,7 @@ std::vector<Row> loadTrace(const fs::path& path) {
         std::stringstream stream(line);
         std::string cell;
         while (std::getline(stream, cell, ',')) cells.push_back(cell);
-        if (cells.size() != 19) throw std::runtime_error("bad row in " + path.string());
+        if (cells.size() != 19 && cells.size() != 21) throw std::runtime_error("bad row in " + path.string());
         Row row;
         row.dt = std::stof(cells[1]);
         row.stickX = std::stoi(cells[2]);
@@ -49,23 +52,30 @@ std::vector<Row> loadTrace(const fs::path& path) {
             row.wanted[i] = std::stof(cells[16 + i]);
         }
         row.facing = std::atan2(std::stof(cells[8]), std::stof(cells[9]));
+        if (cells.size() == 21) {
+            row.clearance = std::stof(cells[19]);
+            row.springHold = std::stof(cells[20]);
+        }
         rows.push_back(row);
     }
     return rows;
 }
 
 constexpr std::uint16_t kPlayerType = 3;
+constexpr const char* kLevelModel = "models/lvl_01_cherrytreehills/lvl_01_cherrytreehills.bfnmdl";
 
 struct Result {
-    float worstEye = 0, worstLook = 0, worstYaw = 0;
-    std::size_t compared = 0;
+    float worstEye = 0, worstLook = 0, worstYaw = 0, worstClearance = 0;
+    std::size_t compared = 0, worstRow = 0;
 };
 
 // Restore the recorded state at row `from`, run the camera over rows from+1..to with the recorded player
 // position and the pad state of the trace, and compare every row to the recording.
-Result run(const std::vector<Row>& rows, std::size_t from, std::size_t to) {
+Result run(const std::vector<Row>& rows, std::size_t from, std::size_t to, const CollisionWorld* world = nullptr) {
     FollowCamera camera;
-    camera.restore(rows[from].wanted, rows[from].eye, rows[from].look, rows[from].player, rows[from].facing);
+    camera.setCollision(world);
+    camera.restore(rows[from].wanted, rows[from].eye, rows[from].look, rows[from].player, rows[from].facing, rows[from].clearance,
+                   rows[from].springHold);
     PadDevice pad;
     Result result;
     for (std::size_t i = from + 1; i < std::min(to + 1, rows.size()); ++i) {
@@ -83,9 +93,12 @@ Result run(const std::vector<Row>& rows, std::size_t from, std::size_t to) {
         input.shoulderTurn = shoulderTurnInput(pad.slot(12).value, pad.slot(13).value, false);
         camera.update(input);
         for (int k = 0; k < 3; ++k) {
-            result.worstEye = std::max(result.worstEye, std::fabs(camera.eye()[k] - row.eye[k]));
+            const float eyeError = std::fabs(camera.eye()[k] - row.eye[k]);
+            if (eyeError > result.worstEye) result.worstRow = i;
+            result.worstEye = std::max(result.worstEye, eyeError);
             result.worstLook = std::max(result.worstLook, std::fabs(camera.lookAt()[k] - row.look[k]));
         }
+        result.worstClearance = std::max(result.worstClearance, std::fabs(camera.clearance() - row.clearance));
         const float recordedYaw = std::atan2(row.look[0] - row.eye[0], row.look[2] - row.eye[2]);
         float difference = std::fabs(camera.yaw() - recordedYaw);
         if (difference > 3.14159265f) difference = 6.2831853f - difference;
@@ -97,9 +110,9 @@ Result run(const std::vector<Row>& rows, std::size_t from, std::size_t to) {
 
 int failures = 0;
 void check(const std::string& name, const Result& result, float eyeLimit, float yawLimit) {
-    const bool ok = result.compared > 0 && result.worstEye <= eyeLimit && result.worstLook <= eyeLimit && result.worstYaw <= yawLimit;
+    const bool ok = result.compared > 0 && result.worstEye <= eyeLimit && result.worstLook <= eyeLimit && result.worstYaw <= yawLimit && result.worstClearance <= 1e-3f;
     std::cout << (ok ? "ok   " : "FAIL ") << name << ": " << result.compared << " rows, eye " << result.worstEye << ", look "
-              << result.worstLook << ", yaw " << result.worstYaw << '\n';
+              << result.worstLook << ", yaw " << result.worstYaw << ", clearance " << result.worstClearance << " (worst eye row " << result.worstRow << ")\n";
     if (!ok) ++failures;
 }
 }
@@ -134,6 +147,35 @@ int main(int argc, char** argv) {
         {
             const auto rows = loadTrace(directory / "k_dt16.csv");
             check("k_dt16", run(rows, 0, rows.size()), 2e-3f, 2e-4f);
+        }
+        if (argc >= 5 && fs::exists(argv[2]) && fs::exists(argv[3]) && fs::exists(argv[4])) {
+            chase::assets::FuseArchive archive(argv[2]);
+            archive.loadNames(argv[3]);
+            const chase::assets::FuseEntry* entry = archive.find(kLevelModel);
+            if (!entry) throw std::runtime_error(std::string("not in archive: ") + kLevelModel);
+            CollisionWorld world;
+            for (const auto& item : chase::assets::parseModel(archive.read(*entry)).collision) world.add(item);
+            // Wall traces (tools/oracle/camwall-circle.txt, camwall-east.txt; CSV from tools/export_camera_trace.py --extra 0x330).
+            // The rows are those in which the recorded sweep holds no segment of a placed object (lamp posts), which the replica does not
+            // have: the recorded raw segment count equals the replica's (camera-sweep-real-data counts them); the rows around differ
+            // by up to 0.3 units.
+            struct WallTrace {
+                const char* name;
+                std::size_t from, to;
+            };
+            const WallTrace walls[] = {
+                {"w_walk", 0, 44},      // stick back towards the camera with a wall behind it: vertical push, pull-in, side push
+                {"w_rest", 0, 1000},    // the player stands still, the camera against the wall
+                {"w_L", 52, 158},       // L held, the camera turns round the player: pull-in by the deepest obstacle (turning rule)
+                {"w_R", 0, 1000},       // R held in the open street: no obstruction
+                {"w_east_R", 0, 108},   // R held near the wall line at x 911
+                {"w_east_side", 0, 1000},  // stick pushed sideways: the stick turn path, large vertical pushes (the camera rises to y 29)
+            };
+            for (const WallTrace& wall : walls) {
+                const auto rows = loadTrace(fs::path(argv[4]) / (std::string(wall.name) + ".csv"));
+                check(std::string(wall.name) + " (with level collision)", run(rows, wall.from, std::min(wall.to, rows.size()), &world), 1e-3f,
+                      1e-4f);
+            }
         }
     } catch (const std::exception& error) {
         std::cerr << "camera-real-test: " << error.what() << '\n';

@@ -21,7 +21,7 @@ Read this index, then open only the file you need.
 | [fmv.md](fmv.md) | Mobiclip `.moflex` video and subtitles |
 | [particles.md](particles.md) | `particledefs.bprt` particle definitions |
 | [oracle.md](oracle.md) | Azahar runtime oracle: setup, fidelity rules, save states, fast workflow, timings |
-| [camera.md](camera.md) | Gameplay camera: yaw word 0x376894 writer, manager and modes, follow camera law (OnFoot preset), projection, unknowns |
+| [camera.md](camera.md) | Gameplay camera: yaw word 0x376894 writer, manager and modes, follow camera law (OnFoot preset), projection, obstruction by level geometry (slab sweep, pull-in, side and vertical push), unknowns |
 | [player.md](player.md) | Player entity pointer, scene node, controller fields, stick-to-intent, locomotion rules and root motion |
 | [collision.md](collision.md) | Level collision data (model+0x1c section), ground probe by box bisection, wall slide, differential test against traces |
 

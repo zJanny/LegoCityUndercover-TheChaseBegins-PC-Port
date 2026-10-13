@@ -4,10 +4,12 @@
 // camera manager at 0x376870 (update 0x23f174); docs/re/camera.md. No SDL dependency.
 //
 // Recovered: the three tracked points, the exponential smoothing, the horizontal distance rope, the
-// vertical spring, the L/R and stick yaw input and the yaw word 0x376894. Not recovered (see
-// docs/re/camera.md): wall and player push-out (collision rays), the pitch clamp 0x2e0a50, the zoom
-// input, the periodic re-snap, other presets (vehicle, skydive) and the Room/Bound pose blend that the
-// game uses in indoor rooms. Those parts are absent here, so the camera is only exact in open space.
+// vertical spring, the L/R and stick yaw input, the yaw word 0x376894 and the obstruction handling of
+// 0x3313c0 (CameraSweep: pull-in along the view line, sideways and vertical push). Not recovered (see
+// docs/re/camera.md): collision with placed objects, the pitch clamp 0x2e0a50, the zoom input, the
+// periodic re-snap, other presets (vehicle, skydive) and the Room/Bound pose blend that the game uses in
+// indoor rooms.
+#include "runtime/camera_sweep.hpp"
 #include <cstdint>
 
 namespace chase::runtime {
@@ -25,6 +27,7 @@ struct FollowCameraPreset {
     float turnGain = 0.6f;                         // +0x40 yaw per update = (stick + shoulder) * dt * this
     float positionBase = 0.75f;                    // +0x48 camera position smoothing: 1 - base^(30 dt) per update
     float targetBase = 0.75f;                      // +0x4c look point smoothing
+    CameraSweepSettings sweep;                     // +0x58 / +0x5c / +0x60: apex reach, side push gain, vertical push gain
 };
 
 // Entity +0x64 + +0x70 of the player (1.15 + 0.85, read in the oracle).
@@ -50,12 +53,17 @@ class FollowCamera {
 public:
     explicit FollowCamera(const FollowCameraPreset& preset = {}, float bodyHeight = kPlayerBodyHeight);
 
+    // Level collision the camera keeps out of (0x3313c0); without it the camera only follows.
+    void setCollision(const CollisionWorld* world) { world_ = world; }
+
     // Place the camera behind the target at the given view yaw with all tracked points at rest.
     void reset(const float target[3], float yaw, float facing);
     void update(const FollowCameraInput& input);
     // Continue from a recorded state: wanted and tracked camera position, tracked look point (target + offset).
+    // `clearance` is the pull-in factor S+4 and `springHold` the vertical push timer S+0x24 of the recorded state.
     void restore(const float wantedEye[3], const float trackedEye[3], const float trackedLook[3],
-                 const float target[3], float facing);
+                 const float target[3], float facing, float clearance = 1.0f, float springHold = 0.0f);
+    float clearance() const { return clearance_; }
 
     const float* eye() const { return position_; }
     const float* lookAt() const { return look_; }
@@ -72,13 +80,19 @@ public:
 private:
     struct Layout {
         float distance, height, lookUp, lookAhead, bodyUp;
+        float baseDistance, baseHeight;  // before the clearance factor: in+0x50, in+0x54
     };
     Layout layout() const;
     void refreshPose();
+    void avoidObstacles(const FollowCameraInput& input, const Layout& layout, bool moving, float push[3], const float swing[3]);
 
     FollowCameraPreset preset_;
     float bodyHeight_;
     float zoom_ = 1.0f;
+    const CollisionWorld* world_ = nullptr;
+    float clearance_ = 1.0f;     // S+4: the camera sits at this fraction of its distance after obstructions
+    float springHold_ = 0.0f;    // S+0x24: after a vertical push the height spring is off until it runs out
+    float previousLook_[3] = {}; // K+0x70: the look point of the previous update
     // A: wanted camera position (K+4) and its tracker (K+0x34); B: wanted look point (K+0x64) and tracker
     // (K+0x94); C: look point offset (K+0xc4) and tracker (K+0xf4).
     float a_[3] = {}, aTracked_[3] = {};

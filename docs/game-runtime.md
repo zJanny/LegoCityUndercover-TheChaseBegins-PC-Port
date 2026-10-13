@@ -29,12 +29,14 @@ A window opens with the police station. Press Escape to quit.
 ## What works
 
 - The speeds, the walk, run and sprint change, and the turning follow the original game.
-- The camera follows behind the character, as in the original, on open ground.
+- The camera follows behind the character, as in the original.
+- The camera keeps out of the level's walls. Near a wall it moves closer to the character and slides to the side, as measured in the original.
 - The floor and walls come from the level. The character climbs steps and kerbs, and slides along walls.
 
 ## What does not work yet
 
-- The camera does not move away from walls. It can end up inside a building.
+- The camera only reacts to the level's fixed walls. Lamp posts, cars and other objects do not push it.
+- When the camera is stuck behind a wall for a longer time, the original places it again. That is not done here.
 - Objects, other characters and vehicles do not block the character.
 - The character cannot fall or jump.
 - The animations do not blend. Their speed is an estimate.

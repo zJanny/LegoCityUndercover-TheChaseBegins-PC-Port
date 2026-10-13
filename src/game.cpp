@@ -2,7 +2,7 @@
 // Joins the recovered frame scheduler, pad pipeline and player locomotion (chase_runtime), the controls
 // (chase_input) and the development renderer (chase_render) into one loop. The player character walks,
 // runs and sprints with the recovered follow camera; the level's static collision keeps him on the floor and
-// stops him at walls. There is no falling, camera collision or gameplay.
+// stops him at walls. The camera keeps out of the level's static collision. There is no falling or gameplay.
 #include "assets/assets.hpp"
 #include "input.hpp"
 #include "render/scene.hpp"
@@ -65,6 +65,7 @@ struct Options {
     std::string screenshot;
     unsigned frames = 2;
     std::string script;
+    bool cameraCollision = true;
 };
 
 struct ScriptStep {
@@ -101,9 +102,10 @@ Options parse(int argc, char** argv) {
         else if (arg == "--screenshot") o.screenshot = value();
         else if (arg == "--frames") o.frames = unsigned(std::stoul(value()));
         else if (arg == "--script") o.script = value();
+        else if (arg == "--no-camera-collision") o.cameraCollision = false;
         else throw std::runtime_error("usage: chase-game [--fib F] [--names CSV] [--config CFG] "
                                       "[--level levels/levels/<name>/<name>_main.blvl] [--screenshot OUT.bmp] [--frames N] "
-                                      "[--script \"X Y COUNT;...\"]");
+                                      "[--script \"X Y COUNT;...\"] [--no-camera-collision]");
     }
     return o;
 }
@@ -349,6 +351,7 @@ int run(const Options& options) {
     std::optional<runtime::FollowCamera> follow;
     if (player) {
         follow.emplace();
+        if (options.cameraCollision) follow->setCollision(&collision);
         const float target[3] = {player->motion.x, player->height, player->motion.z};
         follow->reset(target, runtime::headingRadians(player->motion.facing), runtime::headingRadians(player->motion.facing));
     }
