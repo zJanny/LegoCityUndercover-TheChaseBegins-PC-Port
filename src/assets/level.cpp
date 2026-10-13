@@ -104,7 +104,13 @@ Level parseLevel(const Bytes& data) {
     Bytes s24 = r.next();
     need(s24, n24 * 0x28);
     for (std::size_t i = 0; i < n24; ++i) {
-        r.skip();
+        LevelBound bound;
+        bound.name = cString(r.next());
+        for (int a = 0; a < 3; ++a) {
+            bound.centre[a] = readF32(s24, i * 0x28 + 0x10 + 4 * std::size_t(a));
+            bound.half[a] = readF32(s24, i * 0x28 + 0x1c + 4 * std::size_t(a));
+        }
+        level.bounds.push_back(std::move(bound));
         if (readU32(s24, i * 0x28 + 4)) r.skip();
     }
     r.skip();  // +0x28

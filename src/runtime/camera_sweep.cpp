@@ -140,6 +140,66 @@ bool CameraSweep::slice(SliceShape& shape, const float triangle[3][3]) const {
     return true;
 }
 
+float CameraSweep::slabDepth(const float point[3]) const {
+    const float q[3] = {point[0] - origin_[0], point[1] - origin_[1], point[2] - origin_[2]};
+    return dot3(q, depth_);
+}
+
+// 0x2eb5d4: an oriented box is cut by the slab plane into one segment per face the plane crosses (from the lowest to the
+// highest lateral position of the face's crossed edges). An edge counts when its end points lie strictly on both sides.
+void CameraSweep::sliceBox(SliceShape& shape, const float matrix[16], const float centre[3], const float half[3]) const {
+    constexpr int kEdges[12][2] = {{0, 1}, {0, 2}, {0, 4}, {1, 3}, {1, 5}, {2, 3}, {2, 6}, {3, 7}, {4, 5}, {4, 6}, {5, 7}, {6, 7}};
+    constexpr int kFaces[6][4] = {{1, 2, 6, 9}, {3, 4, 7, 10}, {0, 2, 4, 8}, {5, 6, 7, 11}, {0, 1, 3, 5}, {8, 9, 10, 11}};
+    float x[8], d[8], y[8];
+    for (int corner = 0; corner < 8; ++corner) {
+        const float local[3] = {centre[0] + ((corner & 1) ? half[0] : -half[0]), centre[1] + ((corner & 2) ? half[1] : -half[1]),
+                                centre[2] + ((corner & 4) ? half[2] : -half[2])};
+        float world[3];
+        for (int a = 0; a < 3; ++a) world[a] = local[0] * matrix[a] + local[1] * matrix[4 + a] + local[2] * matrix[8 + a] + matrix[12 + a];
+        const float q[3] = {world[0] - origin_[0], world[1] - origin_[1], world[2] - origin_[2]};
+        x[corner] = dot3(q, shape.lateral);
+        d[corner] = dot3(q, shape.plane);
+        y[corner] = dot3(q, depth_);
+    }
+    bool crossed[12];
+    float cutX[12], cutY[12];
+    bool any = false;
+    for (int e = 0; e < 12; ++e) {
+        const int a = kEdges[e][0], b = kEdges[e][1];
+        crossed[e] = (d[a] > 0.0f && d[b] < 0.0f) || (d[a] < 0.0f && d[b] > 0.0f);
+        if (!crossed[e]) continue;
+        any = true;
+        const float t = d[b] / (d[b] - d[a]);
+        cutX[e] = x[a] * t + (1.0f - t) * x[b];
+        cutY[e] = y[a] * t + (1.0f - t) * y[b];
+    }
+    if (!any) return;
+    for (const auto& face : kFaces) {
+        bool found = false;
+        float lowX = 0, highX = 0, lowY = 0, highY = 0;
+        for (const int e : face) {
+            if (!crossed[e]) continue;
+            if (!found) {
+                lowX = highX = cutX[e];
+                lowY = highY = cutY[e];
+            } else {
+                if (cutX[e] < lowX) {
+                    lowX = cutX[e];
+                    lowY = cutY[e];
+                }
+                if (highX < cutX[e]) {
+                    highX = cutX[e];
+                    highY = cutY[e];
+                }
+            }
+            found = true;
+        }
+        if (!found) continue;
+        if (shape.raw.size() >= kMaxRawSegments) break;
+        shape.raw.push_back({lowX, lowY, highX, highY});
+    }
+}
+
 void CameraSweep::prepare(const CollisionWorld& world, const float camera[3], const float look[3], float fullDistance,
                           const CameraSweepSettings& settings) {
     fullDistance_ = fullDistance;
@@ -194,9 +254,27 @@ void CameraSweep::prepare(const CollisionWorld& world, const float camera[3], co
         first = false;
     }
 
-    const float nearDepth = nearLimit_;
-    for (const assets::CollisionItem& item : world.items()) {
-        if (item.nodes.empty()) continue;
+    const float nearDepth = settings.previousNear >= 0.0f ? settings.previousNear : nearLimit_;
+    for (const CollisionWorld::Entry& entry : world.entries()) {
+        const assets::CollisionItem& item = entry.item;
+        if (item.nodes.empty() || !kCameraLayer.accepts(entry.mask)) continue;
+        if (entry.box) {
+            const assets::CollisionNode& root = item.nodes[0];
+            bool overlaps = true;
+            for (int a = 0; a < 3; ++a)
+                overlaps = overlaps && root.centre[a] - root.half[a] <= high[a] && root.centre[a] + root.half[a] >= low[a];
+            if (!overlaps) continue;
+            if (entry.half[0] < kSmallObjectHalfSize && entry.half[2] < kSmallObjectHalfSize) {
+                float centre[3];
+                for (int a = 0; a < 3; ++a)
+                    centre[a] = entry.centre[0] * entry.matrix[std::size_t(a)] + entry.centre[1] * entry.matrix[4 + std::size_t(a)] +
+                                entry.centre[2] * entry.matrix[8 + std::size_t(a)] + entry.matrix[12 + std::size_t(a)];
+                if (nearDepth + kSmallObjectDistance < slabDepth(centre)) continue;
+            }
+            sliceBox(shapes_[Side], entry.matrix.data(), entry.centre, entry.half);
+            sliceBox(shapes_[Up], entry.matrix.data(), entry.centre, entry.half);
+            continue;
+        }
         std::vector<const assets::CollisionTriangle*> hits;
         struct Walker {
             const assets::CollisionItem& item;

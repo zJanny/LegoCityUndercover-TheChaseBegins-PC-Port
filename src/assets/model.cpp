@@ -243,17 +243,18 @@ Model parseModel(const Bytes& data) {
     Bytes header = r.next();
     requireSize(header, 0x24, "model");
     std::size_t nodes = readU16(header, 2), meshes = readU16(header, 4), textures = header[6];
-    r.skip();                                            // +0x08
+    model.block08 = r.next();                            // +0x08
     Bytes nodeBlock = r.next();                          // +0x0c
     requireSize(nodeBlock, nodes * 0x18, "nodes");
     for (std::size_t i = 0; i < nodes; ++i) {
         model.nodeNames.push_back(cString(r.next()));
+        model.nodeMesh.push_back(std::int16_t(readU16(nodeBlock, i * 0x18 + 0x10)));
         if (readU32(nodeBlock, i * 0x18 + 0x14)) r.skip();
     }
     Bytes meshBlock = r.next();                          // +0x10
     requireSize(meshBlock, meshes * 0x24, "meshes");
     for (std::size_t i = 0; i < meshes; ++i) r.skip(); // parts arrays
-    r.skip();                                            // +0x14
+    model.nodeExtra = r.next();                          // +0x14
     if (readU32(header, 0x20)) r.skip();
     r.cursor.pop();
     if (readU32(header, 0x1c)) {
@@ -261,8 +262,18 @@ Model parseModel(const Bytes& data) {
         Bytes section = r.next();
         requireSize(section, 0x10, "section");
         if (readU32(section, 0)) {
-            r.skip();
-            for (std::uint32_t i = 0; i < readU32(section, 0); ++i) r.skip();
+            Bytes boxes = r.next();
+            requireSize(boxes, std::size_t(readU32(section, 0)) * 0x5c, "collision boxes");
+            for (std::uint32_t i = 0; i < readU32(section, 0); ++i) {
+                CollisionBox box;
+                box.name = cString(r.next());
+                for (int a = 0; a < 3; ++a) {
+                    box.position[a] = readF32(boxes, std::size_t(i) * 0x5c + 4 + 4 * std::size_t(a));
+                    box.half[a] = readF32(boxes, std::size_t(i) * 0x5c + 0x10 + 4 * std::size_t(a));
+                }
+                for (int a = 0; a < 16; ++a) box.matrix[a] = readF32(boxes, std::size_t(i) * 0x5c + 0x1c + 4 * std::size_t(a));
+                model.collisionBoxes.push_back(std::move(box));
+            }
         }
         r.cursor.pop();
         if (readU32(section, 0xc)) readCollision(r, readU32(section, 8), model.collision);
@@ -271,6 +282,7 @@ Model parseModel(const Bytes& data) {
     for (std::size_t m = 0; m < meshes; ++m) {
         ModelMesh mesh;
         for (int i = 0; i < 3; ++i) mesh.centre[i] = readF32(meshBlock, m * 0x24 + 8 + 4 * std::size_t(i));
+        for (int i = 0; i < 3; ++i) mesh.half[i] = readF32(meshBlock, m * 0x24 + 0x14 + 4 * std::size_t(i));
         mesh.relative = meshBlock[m * 0x24] & 1;
         std::size_t parts = meshBlock[m * 0x24 + 2];
         std::vector<Bytes> materials(parts);

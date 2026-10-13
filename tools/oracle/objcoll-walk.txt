@@ -1,0 +1,59 @@
+# Placed-object collision experiments (docs/re/collision.md, 2026-10-13 object entry): the player walks into a lamp post
+# (mesh collision, Prop_Lampost_01 at (870.20, 16.58, 1118.99)) and a construction barrier (box collision,
+# Prop_Barrier_Construction at (859.74, 16.60, 1123.67)) of the street west of the gameplay-start spawn.
+# Stick up from gameplay-start heads along (-0.7114, -0.7028); the start points lie 7 units upstream of the object, shifted sideways by
+# 0, +0.5 and -0.5 (perpendicular (0.7028, -0.7114)). teleport places the node, two frames settle it, then the stick runs 70 updates at fixed dt 0.033.
+loadstate gameplay-start
+stick 0 0
+hold -
+teleport 875.18 16.58 1123.91
+frames 2
+dt 0.033 0.033
+stick 0 150
+trace 70 lamp_0 mem
+stick 0 0
+loadstate gameplay-start
+stick 0 0
+hold -
+teleport 875.53 16.58 1123.55
+frames 2
+dt 0.033 0.033
+stick 0 150
+trace 70 lamp_p5 mem
+stick 0 0
+loadstate gameplay-start
+stick 0 0
+hold -
+teleport 874.83 16.58 1124.27
+frames 2
+dt 0.033 0.033
+stick 0 150
+trace 70 lamp_m5 mem
+stick 0 0
+loadstate gameplay-start
+stick 0 0
+hold -
+teleport 864.72 16.60 1128.59
+frames 2
+dt 0.033 0.033
+stick 0 150
+trace 70 barrier_0 mem
+stick 0 0
+loadstate gameplay-start
+stick 0 0
+hold -
+teleport 865.07 16.60 1128.23
+frames 2
+dt 0.033 0.033
+stick 0 150
+trace 70 barrier_p5 mem
+stick 0 0
+loadstate gameplay-start
+stick 0 0
+hold -
+teleport 864.37 16.60 1128.95
+frames 2
+dt 0.033 0.033
+stick 0 150
+trace 70 barrier_m5 mem
+stick 0 0

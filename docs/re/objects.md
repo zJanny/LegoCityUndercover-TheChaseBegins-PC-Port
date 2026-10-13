@@ -81,3 +81,5 @@ Unknowns:
 **Correction of the "Left out and why" entry on studs and of the counts above:** studs are pickup objects (object type 0x3d, pickuptype 0..3) drawn as sprites, not models (details, evidence and stand-ins in [studs.md](studs.md)). `drawableObjects` now returns them in `DrawableObjects::studs` and no longer counts them in `missingModel`: lvl_00 1 without model (the particle emitter), lvl_01 11, all 856 levels 423 (not itemised); studs over all levels 4835.
 
 Unknowns: what the remaining 423 model-less objects are (hearts, `xx_particleemitter`, hint meshes) and how each is drawn.
+
+Collision of placed objects (which objects register collision, box or mesh, node matrix, query layers): [collision.md](collision.md) 2026-10-13T17:34:00.

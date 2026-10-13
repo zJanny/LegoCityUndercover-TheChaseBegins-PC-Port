@@ -4,30 +4,55 @@
 // (oriented box against wall triangles, slide response). Data format and evidence: docs/re/collision.md.
 // No SDL dependency.
 #include "assets/assets.hpp"
+#include "assets/object_collision.hpp"
 #include <cstdint>
 #include <optional>
 #include <vector>
 
 namespace chase::runtime {
 
-// Triangles of a level's collision items (CollisionItem of the master model), queried through the
+// Which grid entries a query accepts (0x237f30): the entry mask word must share a bit with include and none with exclude.
+struct CollisionLayer {
+    std::uint32_t include = 0xffffffffu;
+    std::uint32_t exclude = 0;
+    bool accepts(std::uint32_t mask) const { return (include & mask) != 0 && (mask & exclude) == 0; }
+};
+// The default descriptor of 0x208d84 (words {3, 0x90, ...} at 0x362298 as laid out on its stack): static level entries (mask 1)
+// and placed objects with the dynamic flag (mask 6), not the vehicle boxes (mask 17) or anything with bit 4 or 7.
+constexpr CollisionLayer kPlayerLayer{3, 0x90};
+// The camera's K+0x184 descriptor: every mask except those with bit 4 or 5 (0x30).
+constexpr CollisionLayer kCameraLayer{0xffffffffu, 0x30};
+constexpr std::uint32_t kStaticMask = 1;
+
+// Triangles of a level's collision items and of its placed objects (in world coordinates), queried through the
 // bounding-box trees stored in the data.
 class CollisionWorld {
 public:
-    void add(const assets::CollisionItem& item) { items_.push_back(item); }
-    bool empty() const { return items_.empty(); }
-    const std::vector<assets::CollisionItem>& items() const { return items_; }
+    struct Entry {
+        assets::CollisionItem item;
+        std::uint32_t mask = kStaticMask;
+        bool box = false;               // entry kind 0 of the original: an oriented box (the item holds its 12 triangles)
+        assets::Matrix matrix{};        // node matrix of a box
+        float centre[3] = {0, 0, 0};    // box in node space
+        float half[3] = {0, 0, 0};
+    };
+    void add(const assets::CollisionItem& item, std::uint32_t mask = kStaticMask) { entries_.push_back({item, mask}); }
+    // Registers a placed object: its collision item or its box, moved into world coordinates by the node matrix.
+    void addObject(const assets::ObjectCollision& object);
+    bool empty() const { return entries_.empty(); }
+    const std::vector<Entry>& entries() const { return entries_; }
     std::size_t triangleCount() const;
 
     struct Triangle {
         const assets::CollisionTriangle* record;
         float vertex[3][3];
     };
-    // Calls visit(Triangle) for every triangle whose tree leaf overlaps the box, items in order and
-    // the tree depth first. A superset of the triangles that touch the box.
-    template <class Visit> void query(const float low[3], const float high[3], Visit&& visit) const {
-        for (const assets::CollisionItem& item : items_)
-            if (!item.nodes.empty()) walk(item, 0, low, high, visit);
+    // Calls visit(Triangle) for every triangle of an accepted entry whose tree leaf overlaps the box, entries in order
+    // and the tree depth first. A superset of the triangles that touch the box.
+    template <class Visit>
+    void query(const float low[3], const float high[3], const CollisionLayer& layer, Visit&& visit) const {
+        for (const Entry& entry : entries_)
+            if (!entry.item.nodes.empty() && layer.accepts(entry.mask)) walk(entry.item, 0, low, high, visit);
     }
 
 private:
@@ -50,7 +75,7 @@ private:
         }
     }
 
-    std::vector<assets::CollisionItem> items_;
+    std::vector<Entry> entries_;
 };
 
 // The player's collision box: entity+0x60 (centre, in node space) and entity+0x6c (half extents), read

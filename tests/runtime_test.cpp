@@ -11,6 +11,7 @@
 #include <cmath>
 #include <cstring>
 #include <iostream>
+#include <memory>
 #include <stdexcept>
 #include <vector>
 using namespace chase::runtime;
@@ -355,6 +356,55 @@ int main() {
             dx = -0.5f;
             dz = 0.0f;
             require(slideAlongWalls(world, 2.9f, 0.0f, 0.0f, 0.0f, 1.0f, dx, dz) == 0 && near(dx, -0.5f), "movement away from the wall");
+        }
+
+        // Placed objects (docs/re/collision.md): an oriented box becomes the 12 triangles of 0x21ba50 in world coordinates, a
+        // collision item is moved by the node matrix, and the layers of the queries pick entries by mask (player {3, 0x90}, camera {all, 0x30}).
+        {
+            require(kPlayerLayer.accepts(1) && kPlayerLayer.accepts(6) && kPlayerLayer.accepts(38) && !kPlayerLayer.accepts(4) &&
+                        !kPlayerLayer.accepts(17),
+                    "player layer: bits 0 or 1 without bit 4 or 7");
+            require(kCameraLayer.accepts(1) && kCameraLayer.accepts(4) && kCameraLayer.accepts(6) && !kCameraLayer.accepts(17) &&
+                        !kCameraLayer.accepts(38),
+                    "camera layer: everything without bit 4 or 5");
+            // Box centre (0, 1, 0), half (1, 1, 0.5), yaw 90 degrees (row vectors: x axis -> (0, 0, -1), z axis -> (1, 0, 0)), at x = 10.
+            chase::assets::ObjectCollision box;
+            box.matrix = {0, 0, -1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 10, 0, 0, 1};
+            box.centre[1] = 1.0f;
+            box.half[0] = 1.0f;
+            box.half[1] = 1.0f;
+            box.half[2] = 0.5f;
+            CollisionWorld world;
+            world.addObject(box);
+            require(world.entries().size() == 1 && world.entries()[0].box && world.triangleCount() == 12 && world.entries()[0].mask == 6,
+                    "a box registers 12 triangles with mask 6");
+            const auto& root = world.entries()[0].item.nodes[0];
+            require(near(root.centre[0], 10.0f) && near(root.centre[1], 1.0f) && near(root.centre[2], 0.0f) && near(root.half[0], 0.5f) &&
+                        near(root.half[1], 1.0f) && near(root.half[2], 1.0f),
+                    "the box turned by 90 degrees spans 0.5 in x and 1 in z");
+            const auto& top = world.entries()[0].item.triangles[10];
+            require(near(top.normal[1], 1.0f) && near(top.d, 2.0f), "face 10 of the table is the top, plane y = 2");
+            float dx = -0.5f, dz = 0.0f;
+            require(slideAlongWalls(world, 11.0f, 0.0f, 0.0f, 0.0f, 1.0f, dx, dz) > 0 && near(dx, 0.0f), "the player slides along the box");
+            CollisionWorld vehicleLayer;
+            box.mask = 17;
+            vehicleLayer.addObject(box);
+            dx = -0.5f;
+            dz = 0.0f;
+            require(slideAlongWalls(vehicleLayer, 11.0f, 0.0f, 0.0f, 0.0f, 1.0f, dx, dz) == 0 && near(dx, -0.5f), "mask 17 is not part of the player query");
+
+            // A collision item (a floor quad at y = 0 over x, z in [-1, 1]) turned by 180 degrees and lifted by 3 becomes a ceiling at y = 3.
+            auto item = std::make_shared<chase::assets::CollisionItem>(quadItem({{-1, 0, -1, -1, 0, 1, 1, 0, 1, 1, 0, -1}}));
+            item->nodes[0].half[0] = item->nodes[0].half[1] = item->nodes[0].half[2] = 1.0f;
+            chase::assets::ObjectCollision mesh;
+            mesh.mesh = item;
+            mesh.matrix = {-1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1, 0, 0, 3, 0, 1};
+            CollisionWorld placed;
+            placed.addObject(mesh);
+            const auto& moved = placed.entries()[0].item;
+            require(!placed.entries()[0].box && moved.triangles.size() == 2 && near(moved.triangles[0].normal[1], -1.0f) &&
+                        near(moved.triangles[0].d, -3.0f) && near(moved.vertices[1], 3.0f),
+                    "an item is moved by the node matrix: vertices, normals and plane offsets");
         }
 
         // Follow camera (docs/re/camera.md). Spline 0x1e3730 through (0, a), (0.5, b), (1, c); stick and shoulder

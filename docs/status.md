@@ -11,7 +11,7 @@
 - Showing models, levels, animated characters and in-engine cutscenes in the [model viewer](model-viewer.md).
 - Playing sounds in the [sound test](sound-test.md).
 - Playing the cutscene videos with subtitles in the [video player](fmv-player.md).
-- Running a level in the [development runtime](commands.md#development-runtime). The main character walks, runs and sprints with the speeds measured in the original game. The level's fixed collision keeps him on the floor and stops him at walls, as in the original. He jumps, falls off ledges and lands the way the original does (walking slowly off a ledge differs). The camera follows the character like the original and keeps out of the level's fixed walls (objects do not push it). The level's other people stand in place without moving. The level's coins (studs) spin and can be picked up, and a stud counter goes up (some details are stand-ins, see the [development runtime](game-runtime.md)). Nothing else of the game works. It is not gameplay.
+- Running a level in the [development runtime](commands.md#development-runtime). The main character walks, runs and sprints with the speeds measured in the original game. The level's collision keeps him on the floor and stops him at walls, as in the original. Many objects (lamp posts, crates, barriers, doors) stop him too. He jumps, falls off ledges and lands the way the original does (walking slowly off a ledge differs). The camera follows the character like the original and keeps out of the level's walls and of most of its objects. The level's other people stand in place without moving. The level's coins (studs) spin and can be picked up, and a stud counter goes up (some details are stand-ins, see the [development runtime](game-runtime.md)). Nothing else of the game works. It is not gameplay.
 - Testing keyboard and mouse controls in the [input laboratory](controls.md).
 - Showing how complete a save file is, with `chase-savecheck`. See the [command reference](commands.md#programs).
 
@@ -20,7 +20,7 @@
 - Gameplay, menus and scripts.
 - The game's lighting and materials. The viewer shows an approximation.
 - Blending between different animations, and the real animation speed.
-- Objects pushing the camera, the camera being placed again when it is stuck, objects blocking the character and the character's other moves (fighting, climbing, vehicles).
+- Collision with parked cars and people, objects that break or move, the camera being placed again when it is stuck, and the character's other moves (fighting, climbing, vehicles).
 - Which sound plays for which event.
 - Several smaller file types.
 - Most of what a save game contains. The save file can be checked, read and written safely, but only the completion totals are understood. No game program uses saves.

@@ -154,7 +154,10 @@ void FollowCamera::avoidObstacles(const FollowCameraInput& input, const Layout& 
     for (int i = 0; i < 3; ++i) wanted[i] = (a_[i] + swing[i]) + push[i];
     const float fullDistance = std::sqrt(l.baseDistance * l.baseDistance + l.baseHeight * l.baseHeight);
     CameraSweep sweep;
-    sweep.prepare(*world_, wanted, b_, fullDistance, preset_.sweep);
+    CameraSweepSettings settings = preset_.sweep;
+    settings.previousNear = previousNear_;
+    sweep.prepare(*world_, wanted, b_, fullDistance, settings);
+    previousNear_ = sweep.nearDepth();
     const CameraSweepGap side = sweep.gap(CameraSweep::Side), up = sweep.gap(CameraSweep::Up);
     const bool turning = input.shoulderTurn != 0.0f;
     const bool clear = turning ? side.low == -1.0f && side.high == 1.0f

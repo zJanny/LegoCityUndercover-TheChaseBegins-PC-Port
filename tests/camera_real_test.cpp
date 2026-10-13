@@ -62,6 +62,7 @@ std::vector<Row> loadTrace(const fs::path& path) {
 }
 
 constexpr std::uint16_t kPlayerType = 3;
+constexpr const char* kLevelFile = "levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl";
 constexpr const char* kLevelModel = "models/lvl_01_cherrytreehills/lvl_01_cherrytreehills.bfnmdl";
 
 struct Result {
@@ -155,20 +156,22 @@ int main(int argc, char** argv) {
             if (!entry) throw std::runtime_error(std::string("not in archive: ") + kLevelModel);
             CollisionWorld world;
             for (const auto& item : chase::assets::parseModel(archive.read(*entry)).collision) world.add(item);
+            const chase::assets::FuseEntry* levelEntry = archive.find(kLevelFile);
+            if (!levelEntry) throw std::runtime_error(std::string("not in archive: ") + kLevelFile);
+            for (const auto& object : chase::assets::objectCollisions(archive, chase::assets::parseLevel(archive.read(*levelEntry))))
+                world.addObject(object);
             // Wall traces (tools/oracle/camwall-circle.txt, camwall-east.txt; CSV from tools/export_camera_trace.py --extra 0x330).
-            // The rows are those in which the recorded sweep holds no segment of a placed object (lamp posts), which the replica does not
-            // have: the recorded raw segment count equals the replica's (camera-sweep-real-data counts them); the rows around differ
-            // by up to 0.3 units.
+            // Every row is replayed: level collision and the placed objects (lamp posts, doors, plaques).
             struct WallTrace {
                 const char* name;
                 std::size_t from, to;
             };
             const WallTrace walls[] = {
-                {"w_walk", 0, 44},      // stick back towards the camera with a wall behind it: vertical push, pull-in, side push
+                {"w_walk", 0, 1000},      // stick back towards the camera with a wall behind it: vertical push, pull-in, side push
                 {"w_rest", 0, 1000},    // the player stands still, the camera against the wall
-                {"w_L", 52, 158},       // L held, the camera turns round the player: pull-in by the deepest obstacle (turning rule)
+                {"w_L", 0, 1000},         // L held, the camera turns round the player: pull-in by the deepest obstacle (turning rule)
                 {"w_R", 0, 1000},       // R held in the open street: no obstruction
-                {"w_east_R", 0, 108},   // R held near the wall line at x 911
+                {"w_east_R", 0, 1000},   // R held near the wall line at x 911
                 {"w_east_side", 0, 1000},  // stick pushed sideways: the stick turn path, large vertical pushes (the camera rises to y 29)
             };
             for (const WallTrace& wall : walls) {

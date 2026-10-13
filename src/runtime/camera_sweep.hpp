@@ -19,6 +19,7 @@ struct CameraSweepSettings {
     float reach = 5.0f;           // in+0xcc: the apex of the slab lies this far behind the look point
     float sideHalfWidth = 2.5f;   // in+0xd0: half width of the horizontal slab at the camera end
     float upHalfWidth = 1.25f;    // in+0xd4: half height of the vertical slab at the camera end
+    float previousNear = -1.0f;   // K+0x1c8 as the previous update left it; the small-object rules read it while the gather runs. Negative: this update's
 };
 
 // Surfaces the camera query ignores: low mask word at K+0x170 (copied to K+0x1b0), 1 << surface tested as in 0x1dc528.
@@ -58,6 +59,8 @@ private:
     };
 
     bool slice(SliceShape& shape, const float triangle[3][3]) const;
+    void sliceBox(SliceShape& shape, const float matrix[16], const float centre[3], const float half[3]) const;
+    float slabDepth(const float point[3]) const;
     void process(SliceShape& shape) const;
 
     float origin_[3] = {}, depth_[3] = {};

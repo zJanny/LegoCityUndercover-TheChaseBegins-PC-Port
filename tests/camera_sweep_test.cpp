@@ -85,6 +85,37 @@ int main() {
         require(sweep.rawSegments(CameraSweep::Side).empty(), "surface 24 is ignored");
         sweep.prepare(wall(-20, 20, 5), kCamera, kLook, 10.0f);
         require(sweep.rawSegments(CameraSweep::Side).size() == 2, "surface 5 counts");
+
+        // A box object (0x2eb5d4) is cut into one segment per face the slab plane crosses: the box over x in [-1, 1], y in [-10, 10] and
+        // z in [-5.1, -4.9] is crossed by the plane y = 0 at its four vertical edges, so its four side faces give four segments, and the two
+        // faces facing the camera and away show the width 2 at depth 4.9 and 5.1.
+        {
+            chase::assets::ObjectCollision box;
+            box.matrix = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
+            box.centre[2] = -5.0f;
+            box.half[0] = 1.0f;
+            box.half[1] = 10.0f;
+            box.half[2] = 0.1f;
+            CollisionWorld world;
+            world.addObject(box);
+            sweep.prepare(world, kCamera, kLook, 10.0f);
+            require(sweep.rawSegments(CameraSweep::Side).size() == 4, "a box gives one segment per crossed face");
+            const CameraSweepGap gap = sweep.gap(CameraSweep::Side);
+            require(near(gap.low, -1.0f) && near(gap.high, -(15.0f / (9.9f * 2.5f) + 0.001f)) && near(gap.middle, gap.high - 1.0f),
+                    "box width 2 at depth 4.9..5.1: the far face reaches t = 15 / (9.9 * 2.5), widened by 0.001");
+
+            // A box with both half sizes below 1 whose centre lies more than 5 beyond the near limit (0.1) is not sliced (0x2d4d94).
+            box.half[0] = 0.5f;
+            CollisionWorld small;
+            small.addObject(box);
+            sweep.prepare(small, kCamera, kLook, 10.0f);
+            require(sweep.rawSegments(CameraSweep::Side).size() == 4, "a small box at depth 5 counts");
+            box.centre[2] = -2.0f;
+            CollisionWorld far;
+            far.addObject(box);
+            sweep.prepare(far, kCamera, kLook, 10.0f);
+            require(sweep.rawSegments(CameraSweep::Side).empty(), "a small box at depth 8 is skipped");
+        }
     } catch (const std::exception& error) {
         std::cerr << "camera-sweep-test: " << error.what() << '\n';
         return 1;

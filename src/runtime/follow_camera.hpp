@@ -90,6 +90,7 @@ private:
     float bodyHeight_;
     float zoom_ = 1.0f;
     const CollisionWorld* world_ = nullptr;
+    float previousNear_ = -1.0f;   // K+0x1c8 left by the previous sweep (CameraSweepSettings::previousNear)
     float clearance_ = 1.0f;     // S+4: the camera sits at this fraction of its distance after obstructions
     float springHold_ = 0.0f;    // S+0x24: after a vertical push the height spring is off until it runs out
     float previousLook_[3] = {}; // K+0x70: the look point of the previous update

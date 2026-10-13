@@ -263,8 +263,8 @@ std::optional<PlayerRig> placePlayer(FuseArchive& archive, Scene& scene, const L
     return rig;
 }
 
-// The level's static collision: the items of the level's master model (models/<level>/<level>.bfnmdl).
-runtime::CollisionWorld loadCollision(FuseArchive& archive, const std::string& levelPath) {
+// The level's collision: the items of the level's master model (models/<level>/<level>.bfnmdl) and the placed objects.
+runtime::CollisionWorld loadCollision(FuseArchive& archive, const std::string& levelPath, const Level& level) {
     runtime::CollisionWorld world;
     const std::string path = lower(levelPath);
     const std::string folder = path.substr(0, path.find_last_of('/'));
@@ -272,6 +272,7 @@ runtime::CollisionWorld loadCollision(FuseArchive& archive, const std::string& l
     const FuseEntry* entry = archive.find("models/" + name + "/" + name + ".bfnmdl");
     if (!entry) return world;
     for (const CollisionItem& item : parseModel(archive.read(*entry)).collision) world.add(item);
+    for (const ObjectCollision& object : objectCollisions(archive, level)) world.addObject(object);
     return world;
 }
 
@@ -397,8 +398,8 @@ int run(const Options& options) {
         player->motion.z = player->startZ = (*options.start)[2];
         player->pose(scene);
     }
-    const runtime::CollisionWorld collision = loadCollision(archive, options.level);
-    std::cout << "collision: " << collision.triangleCount() << " triangles\n";
+    const runtime::CollisionWorld collision = loadCollision(archive, options.level, level);
+    std::cout << "collision: " << collision.triangleCount() << " triangles in " << collision.entries().size() << " entries\n";
 
     float centre[3], radius;
     scene.bounds(centre, radius);

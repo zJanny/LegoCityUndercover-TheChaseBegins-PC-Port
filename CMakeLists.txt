@@ -14,7 +14,7 @@ target_link_libraries(chase-input-lab PRIVATE chase_input PkgConfig::SDL2)
 target_compile_options(chase-input-lab PRIVATE -Wall -Wextra -Wpedantic)
 configure_file(config/controls.cfg config/controls.cfg COPYONLY)
 # Native asset runtime (plan S4a): no SDL dependency.
-add_library(chase_assets src/assets/fuse.cpp src/assets/pooled.cpp src/assets/texture.cpp src/assets/model.cpp src/assets/level.cpp src/assets/audio.cpp src/assets/anim.cpp src/assets/nav.cpp src/assets/text.cpp src/assets/cutscene.cpp src/assets/table.cpp src/assets/config_text.cpp src/assets/xaml.cpp src/assets/subtitles.cpp src/assets/particles.cpp)
+add_library(chase_assets src/assets/fuse.cpp src/assets/pooled.cpp src/assets/texture.cpp src/assets/model.cpp src/assets/level.cpp src/assets/object_collision.cpp src/assets/audio.cpp src/assets/anim.cpp src/assets/nav.cpp src/assets/text.cpp src/assets/cutscene.cpp src/assets/table.cpp src/assets/config_text.cpp src/assets/xaml.cpp src/assets/subtitles.cpp src/assets/particles.cpp)
 target_include_directories(chase_assets PUBLIC src)
 target_compile_options(chase_assets PRIVATE -Wall -Wextra -Wpedantic)
 set_target_properties(chase_assets PROPERTIES POSITION_INDEPENDENT_CODE ON)
@@ -74,6 +74,8 @@ set(CHASE_LOCO_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/loco-out" CACHE P
     "Recorded original-game locomotion traces for the opt-in differential test")
 set(CHASE_COLLISION_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/coll-out" CACHE PATH
     "Recorded original-game collision traces for the opt-in differential test")
+set(CHASE_OBJECT_COLLISION_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/objcoll-out" CACHE PATH
+    "Recorded original-game traces of the player against placed objects for the opt-in differential test")
 set(CHASE_FALL_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/fall-out" CACHE PATH
     "Recorded original-game fall and landing traces for the opt-in differential test")
 set(CHASE_JUMP_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/jump-traces" CACHE PATH
@@ -118,7 +120,8 @@ if(BUILD_TESTING)
   target_link_libraries(collision-real-test PRIVATE chase_runtime chase_assets)
   target_compile_options(collision-real-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME collision-real-data COMMAND collision-real-test
-    "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv" "${CHASE_LOCO_TRACE_DIR}" "${CHASE_COLLISION_TRACE_DIR}")
+    "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv" "${CHASE_LOCO_TRACE_DIR}" "${CHASE_COLLISION_TRACE_DIR}"
+    "${CHASE_OBJECT_COLLISION_TRACE_DIR}")
   set_tests_properties(collision-real-data PROPERTIES SKIP_RETURN_CODE 77)
   add_executable(fall-real-test tests/fall_real_test.cpp)
   target_link_libraries(fall-real-test PRIVATE chase_runtime chase_assets)
@@ -204,12 +207,13 @@ if(BUILD_TESTING)
     set_tests_properties(game-script-walk PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen"
       PASS_REGULAR_EXPRESSION "scripted: 40 updates, player moved 3\\.03[0-9]* units.*height 1\\.4[0-9]*.*saved game-script-walk.bmp")
     # With camera collision the start corridor of the police station pushes the camera 6.4 degrees round (side push of
-    # docs/re/camera.md), so the same run no longer reaches the lobby steps (replica output, not measured in the original).
+    # docs/re/camera.md), so the same run no longer reaches the lobby steps; the placed objects of the level (docs/re/collision.md) shorten
+    # the run from 8.83 to 8.77 units (replica output, not measured in the original).
     add_test(NAME game-script-camera COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --script "0 150 40" --screenshot game-script-camera.bmp)
     set_tests_properties(game-script-camera PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen"
-      PASS_REGULAR_EXPRESSION "scripted: 40 updates, player moved 8\\.83[0-9]* units.*height 1\\.43[0-9]*.*saved game-script-camera.bmp")
+      PASS_REGULAR_EXPRESSION "scripted: 40 updates, player moved 8\\.76[0-9]* units.*height 1\\.43[0-9]*.*saved game-script-camera.bmp")
     # Run west off the 1.06 m platform at x 897 in the Cherry Tree Hills street: the heights are the recorded
     # fall (tools/oracle/fall-ledge.txt: 17.5898, 17.4908, 17.3423, 17.1443, 16.8968 after the platform updates).
     add_test(NAME game-script-ledge COMMAND chase-game

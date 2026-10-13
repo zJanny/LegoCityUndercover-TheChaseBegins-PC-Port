@@ -1,8 +1,8 @@
 // Checks CameraSweep against the sweeps recorded in the original game (tools/oracle/camwall-*.txt memtraces, docs/re/camera.md).
 // Per frame the trace holds the slab frame of the update (origin, axes, sizes at K+0x214..K+0x2ac, the camera constants at
 // K+0x1b8..K+0x1cc) and the first 13 raw segments at K+0x324 with their count at K+0x320. The replica gathers the level
-// collision into the same frame; every one of its segments must be one of the recorded ones. Recorded sweeps that
-// contain more segments come from placed objects (lamp posts) that the replica does not have.
+// collision and the placed objects (docs/re/collision.md) into the same frame: every recorded segment must be one of the
+// replica's (the original visits the world grid in its own order, so the order differs) and the counts must be equal.
 // Needs the extracted RomFS and the .mem files; exits with 77 (skipped) when one is missing.
 #include "assets/assets.hpp"
 #include "runtime/camera_sweep.hpp"
@@ -22,6 +22,7 @@ using namespace chase::runtime;
 namespace fs = std::filesystem;
 
 namespace {
+constexpr const char* kLevelFile = "levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl";
 constexpr const char* kLevelModel = "models/lvl_01_cherrytreehills/lvl_01_cherrytreehills.bfnmdl";
 constexpr std::size_t kRegions[] = {0x100, 0x200, 0x40, 0xb0, 0x60, 0x30, 0x200, 0x80, 0x60, 0x20, 0x10, 0x20};
 constexpr std::size_t kRecordedSegments = 13;
@@ -72,6 +73,11 @@ int main(int argc, char** argv) {
         require(entry != nullptr, std::string("not in archive: ") + kLevelModel);
         CollisionWorld world;
         for (const auto& item : chase::assets::parseModel(archive.read(*entry)).collision) world.add(item);
+        const chase::assets::FuseEntry* levelEntry = archive.find(kLevelFile);
+        require(levelEntry != nullptr, std::string("not in archive: ") + kLevelFile);
+        const chase::assets::Level level = chase::assets::parseLevel(archive.read(*levelEntry));
+        const std::vector<chase::assets::ObjectCollision> objects = chase::assets::objectCollisions(archive, level);
+        for (const auto& object : objects) world.addObject(object);
 
         std::size_t frames = 0, equal = 0, withObstacles = 0;
         for (const char* name : {"w_walk", "w_rest", "w_L", "w_R", "w_east_R", "w_east_side"}) {
@@ -92,6 +98,7 @@ int main(int argc, char** argv) {
                     camera[i] = look[i] - depth[i] * distance;
                 }
                 CameraSweepSettings settings;
+                if (f > 0) settings.previousNear = trace.value(f - 1, 1, 0x1c8);
                 settings.reach = reach;
                 settings.sideHalfWidth = side;
                 settings.upHalfWidth = up;
@@ -105,12 +112,12 @@ int main(int argc, char** argv) {
                     segments.push_back({trace.value(f, 6, at), trace.value(f, 6, at + 4), trace.value(f, 6, at + 8), trace.value(f, 6, at + 12)});
                 }
                 const auto& mine = sweep.rawSegments(CameraSweep::Side);
-                for (std::size_t i = 0; i < std::min(mine.size(), kRecordedSegments); ++i) {
-                    const bool found = std::any_of(segments.begin(), segments.end(), [&](const CameraSweep::Segment& s) {
-                        return std::fabs(s.x0 - mine[i].x0) < kTolerance && std::fabs(s.y0 - mine[i].y0) < kTolerance &&
-                               std::fabs(s.x1 - mine[i].x1) < kTolerance && std::fabs(s.y1 - mine[i].y1) < kTolerance;
+                for (std::size_t i = 0; i < segments.size(); ++i) {
+                    const bool found = std::any_of(mine.begin(), mine.end(), [&](const CameraSweep::Segment& m) {
+                        return std::fabs(segments[i].x0 - m.x0) < kTolerance && std::fabs(segments[i].y0 - m.y0) < kTolerance &&
+                               std::fabs(segments[i].x1 - m.x1) < kTolerance && std::fabs(segments[i].y1 - m.y1) < kTolerance;
                     });
-                    require(found, std::string(name) + " frame " + std::to_string(f) + ": replica segment " + std::to_string(i) + " not recorded");
+                    require(found, std::string(name) + " frame " + std::to_string(f) + ": recorded segment " + std::to_string(i) + " not produced");
                 }
                 if (mine.size() == recorded) {
                     ++traceEqual;
@@ -122,9 +129,10 @@ int main(int argc, char** argv) {
             equal += traceEqual;
         }
         std::cout << "total " << frames << " frames, " << equal << " with the recorded count, " << withObstacles << " of them with obstacles\n";
-        // Recorded 2026-10-13 with tools/oracle/camwall-circle.txt and camwall-east.txt; the totals come from the first run of this
-        // test (manual inspection: the unmatched recorded segments are the small lamp-post squares of the street east of the spawn).
-        require(frames == 700 && equal == 510 && withObstacles == 323, "explained frame totals changed");
+        // Recorded 2026-10-13 with tools/oracle/camwall-circle.txt and camwall-east.txt; the totals are the result of this test
+        // (manual inspection: the single frame with a different count is w_L frame 2, where the replica has the four segments
+        // of Police_Door_01 that the original skipped; the stale-near rule of docs/re/camera.md decides that skip).
+        require(frames == 700 && equal == 699 && withObstacles == 512, "explained frame totals changed");
     } catch (const std::exception& error) {
         std::cerr << "camera-sweep-real-test: " << error.what() << '\n';
         return 1;

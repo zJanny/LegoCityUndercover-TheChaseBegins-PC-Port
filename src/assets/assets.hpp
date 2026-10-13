@@ -117,6 +117,7 @@ struct ModelMesh {
     // is set, vertices are stored relative to it; parseModel already adds it back,
     // so ModelPart positions are always in model space (checked on all 6648 meshes).
     float centre[3] = {0, 0, 0};
+    float half[3] = {0, 0, 0};   // float3 at mesh+0x14: half extents of the bounding box (0x242eb0)
     bool relative = false;
     std::vector<ModelPart> parts;
 };
@@ -146,8 +147,21 @@ struct CollisionItem {
     std::vector<CollisionTriangle> triangles;
     std::vector<CollisionNode> nodes;           // nodes[0] is the root
 };
+// Box record of the collision section (0x5c bytes at model+0x1c section +4, count at +0): a name, a float3 at +4,
+// half extents at +0x10 and a 4x4 matrix at +0x1c (loader 0x28b070 reads them for "collision_vehicle" boxes,
+// 0x23aff8 for the box of a prop whose model has no collision items).
+struct CollisionBox {
+    std::string name;
+    float position[3] = {0, 0, 0};
+    float half[3] = {0, 0, 0};
+    float matrix[16] = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
+};
 struct Model {
+    std::vector<CollisionBox> collisionBoxes;
     std::vector<std::string> nodeNames;
+    std::vector<int> nodeMesh;                   // mesh index of each node (i16 at node record +0x10), -1 for none
+    std::vector<std::uint8_t> nodeExtra;         // block at model+0x14
+    std::vector<std::uint8_t> block08;           // block at model+0x08
     std::vector<ModelMesh> meshes;
     std::vector<std::string> textures;  // model-level texture list (-16 pool)
     std::vector<CollisionItem> collision;
@@ -199,10 +213,18 @@ struct NavRoom {
     std::uint16_t grids = 0;
     std::uint16_t paths = 0;
 };
+// Section +0x24 record of a class file (0x28 bytes): a name and, at +0x10 and +0x1c, a centre and half extents.
+// Lookup 0x23e798 finds the one named "CollisionBound" for the collision box of an object.
+struct LevelBound {
+    std::string name;
+    float centre[3] = {0, 0, 0};
+    float half[3] = {0, 0, 0};
+};
 struct Level {
     std::vector<LevelParam> defaults;  // section +0x10: class default parameters (char_*.blvl carry the appearance)
     std::vector<LevelParam> classParams;  // section +0x14, searched after +0x10 by lookup 0x217080
     std::vector<LevelObject> objects;
+    std::vector<LevelBound> bounds;
     std::vector<NavRoom> navRooms;
 };
 Level parseLevel(const Bytes& data);

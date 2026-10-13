@@ -1,0 +1,32 @@
+# Placed-object collision experiments, a box prop (docs/re/collision.md, object collision entry): the player walks into the
+# Prop_Barrier_Construction at (859.74, 16.60, 1123.67), a box registered from the model bounds (centre y 0.77, half 0.80 x 0.25,
+# yaw as placed). objcoll-walk.txt showed that a teleport makes the camera turn for a while, so the player is
+# teleported 6.3 units east of the barrier, waits 90 updates (camera yaw about -1.45) and the state is saved; the stick angles then
+# aim 0, 11 and 22 degrees to the right of the camera direction. Run once with the state commands, then reuse barrier-settled.
+loadstate gameplay-start
+stick 0 0
+hold -
+teleport 865.8 16.6 1121.7
+frames 90
+savestate barrier-settled
+loadstate barrier-settled
+stick 0 0
+hold -
+dt 0.033 0.033
+stick 0 150
+trace 80 bar_0 mem
+stick 0 0
+loadstate barrier-settled
+stick 0 0
+hold -
+dt 0.033 0.033
+stick 29 147
+trace 80 bar_11 mem
+stick 0 0
+loadstate barrier-settled
+stick 0 0
+hold -
+dt 0.033 0.033
+stick 56 139
+trace 80 bar_22 mem
+stick 0 0

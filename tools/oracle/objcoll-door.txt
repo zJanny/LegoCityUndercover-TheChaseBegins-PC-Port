@@ -1,0 +1,27 @@
+# Placed-object collision experiments, the police station doors east of the gameplay-start spawn (docs/re/collision.md, object
+# collision entry). Stick back from the spawn walks east along the street into the door boxes (prop_door, box from the class's
+# CollisionBound record: Police_Door_02 at (906.67, 16.58, 1116.66), Police_Door_01 at (908.02, 16.58, 1115.28)).
+loadstate gameplay-start
+stick 0 0
+hold -
+frames 3
+dt 0.033 0.033
+stick 0 -150
+trace 160 door_back mem
+stick 0 0
+loadstate gameplay-start
+stick 0 0
+hold -
+frames 3
+dt 0.033 0.033
+stick 60 -140
+trace 160 door_back_r mem
+stick 0 0
+loadstate gameplay-start
+stick 0 0
+hold -
+frames 3
+dt 0.033 0.033
+stick -60 -140
+trace 160 door_back_l mem
+stick 0 0
