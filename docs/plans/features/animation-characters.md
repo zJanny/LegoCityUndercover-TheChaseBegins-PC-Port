@@ -6,21 +6,22 @@ Skeletons (`.bfnskl`), animations (`.bfnanm`), curves, pose composition, skinnin
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-13T21:29:01+0200. Player and level characters are posed and skinned natively; animation playback for NPCs is not implemented.
+IN_PROGRESS, updated 2026-10-13T21:46:54+0200. Player and level characters are posed and skinned natively; animation playback for NPCs is not implemented.
 
 ## 3. Verified behaviour
 
 - Pose math replicates game routines 0x24c734, 0x248870, 0x24c5a0, 0x252cb0; bone palettes, frame interpolation and the frame count (u16 +4 & 0x3fff) recovered; one curve stores frames + 1.
 - Playback rate comes from the joint table word and the instance; the player's rate and walk/run speeds are derived from code and data (no fitted constants).
+- `chase-viewer` plays each animation at its stored rate (`animationFramesPerSecond`); `--fps` replaces it.
 - Head attachment through `jointAttachment` (pinned test); joint orientation via the skeleton record's +0x88 quaternion.
 
 ## 4. Stand-ins
 
-- ANIM-S1 `chase-viewer` plays animations at an assumed 30 fps (`--fps`) although each animation stores its rate (docs/model-viewer.md).
+- None.
 
 ## 5. Open items
 
-- [ ] ANIM-1 — The viewer's assumed 30 fps and the real animation speed of other animations. evidence: [skeleton-animation.md §2026-10-12T22:10](../../re/skeleton-animation.md), [skeleton-animation.md §2026-10-13T17:02](../../re/skeleton-animation.md).
+- [ ] ANIM-1 — Cutscene actors play on the camera's clock; whether an actor's own stored rate applies is not recovered. An animation that stores rate 0 holds frame 0 in the viewer; whether any shipped animation stores it is not checked. evidence: [skeleton-animation.md §2026-10-12T22:10](../../re/skeleton-animation.md), [skeleton-animation.md §2026-10-13T17:02](../../re/skeleton-animation.md).
 - [ ] ANIM-2 — Playback of NPC animations is not implemented. blocks: LEVOBJ-2. evidence: [objects.md §2026-10-13T16:34](../../re/objects.md).
 - [ ] ANIM-3 — Blending between different animations is not implemented. evidence: [skeleton-animation.md §2026-10-12T22:10](../../re/skeleton-animation.md).
 - [ ] ANIM-4 — The shared character rig code for animals and custom characters is missing (rigs of `char_pig`, `char_cat`, `char_dog`, `char_shark`, `char_Crow`). see LEVOBJ-4.

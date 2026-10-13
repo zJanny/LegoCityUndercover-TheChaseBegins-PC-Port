@@ -16,7 +16,7 @@ IN_PROGRESS, updated 2026-10-13T21:29:01+0200. All tools run; the oracle support
 
 ## 4. Stand-ins
 
-- None. (The viewer's 30 fps assumption is ANIM-S1; its lighting is ASSET-S1.)
+- None. (The viewer's lighting is ASSET-S1.)
 
 ## 5. Open items
 

@@ -21,7 +21,6 @@ IN_PROGRESS, updated 2026-10-13T21:29:01+0200. Runs in `chase-game` (`--gameplay
 
 - PLAYER-S1 `kSlideLandingStunStandIn` — the soft landing after a slide lasts one update — rule not recovered, see PLAYER-1.
 - PLAYER-S2 `gameSin`/`gameCos` use libm for arguments of 12868 or more — the library slow path 0x132ec8 is not replicated.
-- PLAYER-S3 chase-viewer plays animations at an assumed 30 fps (`--fps`) although each animation stores its rate (docs/model-viewer.md) — see ANIM-1.
 - PLAYER-S4 keyboard `Walk` key (Left Alt, own non-3DS action in `config/controls.cfg`) stands in for a half-tilted circle pad — part of the input mapping, see INPUT-1.
 
 ## 5. Open items

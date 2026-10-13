@@ -33,7 +33,7 @@ build/chase-viewer models/char_bear/char_bear.bfnmdl \
 
 - The animation plays in a loop on the first model you list. Like the game, the viewer blends smoothly between frames.
 - `--frame N` shows a single frame instead. Values such as `2.5` show an in-between pose.
-- Each animation stores its own speed (15, 30 or 60 frames per second). The viewer plays 30 frames per second; change it with `--fps`.
+- Each animation plays at the speed it stores (15, 30 or 60 frames per second). `--fps F` replaces that speed for the whole run.
 
 ## Play a cutscene
 
@@ -44,7 +44,7 @@ build/chase-viewer --cutscene csdata/models/1_1_a \
 
 - `--cutscene` loads the cast listed in the cutscene folder and follows its camera.
 - Add the level the cutscene takes place in with `--level`. Otherwise the characters stand in empty space.
-- The cutscene loops. `--frame N` shows a single frame, and `--fps` changes the speed as for animations.
+- The cutscene loops at the speed its camera animation stores (30 frames per second in the shipped cutscenes). `--frame N` shows a single frame, and `--fps` replaces the speed as for animations.
 - Most cutscenes have a soundtrack, and the viewer plays it in time with the picture. It stays silent with `--frame` or `--screenshot`.
 - While a cutscene plays, the camera controls do nothing.
 - Some characters have shorter animations than the camera. The viewer starts them all together and holds their last pose. How the game lines them up is not known yet.
@@ -67,7 +67,7 @@ The viewer uses the same `config/controls.cfg` as the [input laboratory](control
 | `--level FILE` | Places the objects of a level. You can repeat it. |
 | `--skeleton FILE`, `--anim FILE` | Pose and animate the first model. They go together. |
 | `--frame N` | Shows a single animation or cutscene frame. |
-| `--fps F` | Sets the animation speed. The default is 30. |
+| `--fps F` | Sets the animation speed in frames per second. By default each animation uses its stored speed. |
 | `--room NAME` | Shows only the level objects in one room. |
 | `--nav` | Draws the navigation grid of the level. |
 | `--characters` | With `--level`, also shows the level's characters standing in place. |

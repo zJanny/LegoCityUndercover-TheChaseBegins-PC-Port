@@ -17,6 +17,7 @@
 #include <map>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <stdexcept>
 #include <sstream>
 #include <string>
@@ -96,8 +97,6 @@ struct Options {
     // cull: faces with this winding are front. CCW culls room ceilings seen from above
     // (observed on lvl_00_policestation room3), so it is the default.
     std::string screenshot, room, cull = "ccw";
-    // Posing applies to the first model argument. The game's playback rate is set per
-    // animation instance by code not yet recovered, so the rate is an option.
     std::string skeleton, animation;
     // Cutscene folder (csdata/models/<id>). Actors start together and hold their last frame;
     // the game's alignment of actor and camera animations of different length is not recovered.
@@ -105,7 +104,7 @@ struct Options {
     bool nav = false;
     bool characters = false;
     double frame = -1;
-    double fps = 30;
+    std::optional<double> fps;
     float brightness = 1.0f;  // inspection aid only; the game's lighting/combiner setup is not recovered
     std::vector<std::string> exclude, models, levels;
     float yaw = 35, pitch = -25;
@@ -157,6 +156,10 @@ Options parse(int argc, char** argv) {
     if (o.skeleton.empty() != o.animation.empty()) throw std::runtime_error("--skeleton and --anim go together");
     if (!o.skeleton.empty() && o.models.empty()) throw std::runtime_error("--anim needs a model argument to pose");
     return o;
+}
+
+double playbackRate(const std::optional<double>& override, const Animation& animation) {
+    return override ? *override : double(animationFramesPerSecond(animation));
 }
 
 int run(const Options& options) {
@@ -220,6 +223,7 @@ int run(const Options& options) {
                   << skeleton.joints.size() << " joints, " << animation.frames << " frames\n";
     }
     double posedFrame = -1;
+    const double animationRate = playbackRate(options.fps, animation);
     AudioOutput audio;
     std::shared_ptr<const Sound> cutsceneSound;
     struct Actor {
@@ -260,7 +264,8 @@ int run(const Options& options) {
             if (!audio.open()) std::cout << "no audio device: " << SDL_GetError() << '\n';
         }
     }
-    double cutscenePeriod = cameraAnimation.frames / options.fps;
+    const double cutsceneRate = playbackRate(options.fps, cameraAnimation);
+    double cutscenePeriod = cameraAnimation.frames / cutsceneRate;
     if (cutsceneSound) cutscenePeriod = std::max(cutscenePeriod, double(cutsceneSound->frames) / cutsceneSound->rate);
     Uint32 cutsceneStart = 0;
     int cutsceneVoice = 0;
@@ -342,7 +347,7 @@ int run(const Options& options) {
         eye[1] += speed * rise;
 
         if (animated) {
-            double frame = options.frame >= 0 ? options.frame : now * options.fps / 1000.0;
+            double frame = options.frame >= 0 ? options.frame : now * animationRate / 1000.0;
             if (frame != posedFrame) {
                 scene.pose(options.models.front(), skinMatrices(skeleton, animation, frame));
                 posedFrame = frame;
@@ -359,7 +364,7 @@ int run(const Options& options) {
                     cutsceneVoice = audio.mixer.play(cutsceneSound);
                 }
             }
-            double elapsed = std::min((now - cutsceneStart) * options.fps / 1000.0, double(cameraAnimation.frames - 1));
+            double elapsed = std::min((now - cutsceneStart) * cutsceneRate / 1000.0, double(cameraAnimation.frames - 1));
             double frame = options.frame >= 0 ? options.frame : elapsed;
             for (const auto& actor : actors) {
                 double local = std::min(frame, double(actor.animation.frames ? actor.animation.frames - 1 : 0));
