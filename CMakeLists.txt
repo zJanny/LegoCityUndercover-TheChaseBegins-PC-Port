@@ -39,6 +39,10 @@ target_link_libraries(chase_runtime PUBLIC chase_assets)
 target_include_directories(chase_runtime PUBLIC src)
 target_compile_options(chase_runtime PRIVATE -Wall -Wextra -Wpedantic -ffp-contract=off)
 target_sources(chase_runtime PRIVATE src/runtime/studs.cpp src/runtime/sound_events.cpp src/runtime/music.cpp)
+# Front end (boot to the slot list): CPU-drawn screens, no SDL dependency.
+add_library(chase_frontend src/frontend/script.cpp src/frontend/frontend.cpp src/frontend/pages.cpp src/frontend/canvas.cpp src/frontend/resources.cpp src/frontend/layout.cpp src/frontend/flow.cpp)
+target_link_libraries(chase_frontend PUBLIC chase_assets chase_runtime)
+target_compile_options(chase_frontend PRIVATE -Wall -Wextra -Wpedantic -ffp-contract=off)
 add_executable(chase-savecheck src/savecheck.cpp)
 target_link_libraries(chase-savecheck PRIVATE chase_save_tables)
 target_compile_options(chase-savecheck PRIVATE -Wall -Wextra -Wpedantic)
@@ -48,6 +52,23 @@ target_compile_options(chase-tabledump PRIVATE -Wall -Wextra -Wpedantic)
 add_executable(chase-soundtest src/soundtest.cpp)
 target_link_libraries(chase-soundtest PRIVATE chase_audio PkgConfig::SDL2)
 target_compile_options(chase-soundtest PRIVATE -Wall -Wextra -Wpedantic)
+# Movie decoding (FFmpeg) shared by chase-fmv and the front end: no SDL dependency.
+pkg_check_modules(FFMPEG IMPORTED_TARGET libavformat libavcodec libswscale libswresample libavutil)
+if(FFMPEG_FOUND)
+  add_library(chase_movie src/movie/movie.cpp)
+  target_include_directories(chase_movie PUBLIC src)
+  target_link_libraries(chase_movie PUBLIC PkgConfig::FFMPEG)
+  target_compile_options(chase_movie PRIVATE -Wall -Wextra -Wpedantic)
+  add_library(chase_frontend_movie src/frontend/movie_host.cpp)
+  target_link_libraries(chase_frontend_movie PUBLIC chase_frontend chase_movie)
+  target_compile_options(chase_frontend_movie PRIVATE -Wall -Wextra -Wpedantic)
+  add_executable(chase-frontshot src/frontshot.cpp)
+  target_link_libraries(chase-frontshot PRIVATE chase_frontend_movie)
+  target_compile_options(chase-frontshot PRIVATE -Wall -Wextra -Wpedantic)
+  add_executable(chase-fmv src/fmv.cpp)
+  target_link_libraries(chase-fmv PRIVATE chase_assets chase_movie PkgConfig::SDL2)
+  target_compile_options(chase-fmv PRIVATE -Wall -Wextra -Wpedantic)
+endif()
 # Development model viewer (plan S4b); built when libepoxy is available.
 pkg_check_modules(EPOXY IMPORTED_TARGET epoxy)
 if(EPOXY_FOUND)
@@ -58,15 +79,11 @@ if(EPOXY_FOUND)
   add_executable(chase-viewer src/viewer.cpp)
   target_link_libraries(chase-viewer PRIVATE chase_render chase_audio chase_input)
   target_compile_options(chase-viewer PRIVATE -Wall -Wextra -Wpedantic)
-  add_executable(chase-game src/game.cpp)
-  target_link_libraries(chase-game PRIVATE chase_render chase_runtime chase_input chase_audio)
-  target_compile_options(chase-game PRIVATE -Wall -Wextra -Wpedantic)
-endif()
-pkg_check_modules(FFMPEG IMPORTED_TARGET libavformat libavcodec libswscale libswresample libavutil)
-if(FFMPEG_FOUND)
-  add_executable(chase-fmv src/fmv.cpp)
-  target_link_libraries(chase-fmv PRIVATE chase_assets PkgConfig::SDL2 PkgConfig::FFMPEG)
-  target_compile_options(chase-fmv PRIVATE -Wall -Wextra -Wpedantic)
+  if(FFMPEG_FOUND)
+    add_executable(chase-game src/game.cpp)
+    target_link_libraries(chase-game PRIVATE chase_render chase_runtime chase_input chase_audio chase_frontend_movie)
+    target_compile_options(chase-game PRIVATE -Wall -Wextra -Wpedantic)
+  endif()
 endif()
 set(CHASE_ROMFS_DIR "${CMAKE_SOURCE_DIR}/artifacts/romfs/romfs" CACHE PATH
     "Extracted RomFS directory for the opt-in real-data asset test")
@@ -100,6 +117,18 @@ if(BUILD_TESTING)
   target_link_libraries(assets-test PRIVATE chase_assets)
   target_compile_options(assets-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME assets-core COMMAND assets-test)
+  add_executable(frontend-test tests/frontend_test.cpp)
+  target_link_libraries(frontend-test PRIVATE chase_frontend)
+  target_compile_options(frontend-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME frontend-flow COMMAND frontend-test)
+  if(TARGET chase_frontend_movie)
+    add_executable(frontend-real-test tests/frontend_real_test.cpp)
+    target_link_libraries(frontend-real-test PRIVATE chase_frontend_movie)
+    target_compile_options(frontend-real-test PRIVATE -Wall -Wextra -Wpedantic)
+    add_test(NAME frontend-real-data COMMAND frontend-real-test
+      "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv" "${CHASE_ROMFS_DIR}/cutscenes")
+    set_tests_properties(frontend-real-data PROPERTIES SKIP_RETURN_CODE 77)
+  endif()
   add_executable(mixer-test tests/mixer_test.cpp)
   target_link_libraries(mixer-test PRIVATE chase_audio)
   target_compile_options(mixer-test PRIVATE -Wall -Wextra -Wpedantic)
@@ -204,9 +233,27 @@ if(BUILD_TESTING)
       PASS_REGULAR_EXPRESSION "cutscene: 5 actor\\(s\\), 405 camera frames.*0 missing textures.*saved viewer-cutscene.bmp")
     add_test(NAME game-real-smoke COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
-      --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --screenshot game-smoke.bmp --frames 2)
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --gameplay --screenshot game-smoke.bmp --frames 2)
     set_tests_properties(game-real-smoke PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen"
       PASS_REGULAR_EXPRESSION "0 missing textures.*saved game-smoke.bmp after [0-9]+ update")
+    # Front-end mode: runs the scripted pad to the language screen and saves the window; a second run goes through every
+    # screen to the hand-off and then shows the level of a new game.
+    add_test(NAME front-game-smoke COMMAND chase-game
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --front-script "until language 60; run 1" --screenshot front-smoke.bmp)
+    set_tests_properties(front-game-smoke PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
+      PASS_REGULAR_EXPRESSION "front end: [0-9]+ update\\(s\\), screen language, saved front-smoke.bmp")
+    add_test(NAME front-game-handoff COMMAND chase-game
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
+      --front-script "until language 60; run 0.5; press A; run 0.5; press B; run 0.5; press A; run 0.5; press A; run 0.5; press A; until card 200; press A; until done 30"
+      --screenshot front-handoff.bmp --frames 2)
+    set_tests_properties(front-game-handoff PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
+      PASS_REGULAR_EXPRESSION "player at 891\\.472 16\\.5773 1109\\.06.*0 missing textures.*saved front-handoff.bmp after [0-9]+ update")
+    add_test(NAME frontshot-real-smoke COMMAND chase-frontshot
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv" --movies "${CHASE_ROMFS_DIR}/cutscenes"
+      --script "until logos 20; run 1; shot logos; until language 60; run 1; shot language")
+    set_tests_properties(frontshot-real-smoke PROPERTIES PASS_REGULAR_EXPRESSION "language: screen language.*frontshot: [0-9]+ updates, screen language")
     # Scripted stick (raw circle pad "x y updates;..." at dt 0.033): without collision 31 run updates at 6.9 u/s
     # and 9 sprint updates at 10.35 u/s would move the player 10.13 units; the lobby steps raise him to height
     # 2.51 and the desk stops him after 8.10 units. 40 walk updates at 2.3 u/s move him 3.04 units on the floor.

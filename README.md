@@ -13,7 +13,7 @@ python3 tools/extract_romfs.py path/to/game.cci --output artifacts/romfs
 build/chase-game
 ```
 
-This starts the development runtime. It is not the game: you can only walk the player around the police station. See [the development runtime guide](docs/game-runtime.md).
+This starts the development runtime. It is not the game: it shows the start screens of the original (logos, language, slot list, intro movie), and after them you can only walk the player around one street. See [the development runtime guide](docs/game-runtime.md).
 
 ## Documentation
 

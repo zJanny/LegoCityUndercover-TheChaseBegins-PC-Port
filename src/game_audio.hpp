@@ -55,6 +55,11 @@ public:
         sounds_->play(call.id, &call.position);
         ++calls_;
     }
+    void playUi(unsigned id) {
+        if (!device_) return;
+        std::lock_guard<std::mutex> guard(lock_);
+        sounds_->play(id, nullptr);
+    }
     void update() {
         std::lock_guard<std::mutex> guard(lock_);
         sounds_->update();

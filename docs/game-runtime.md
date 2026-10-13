@@ -1,8 +1,8 @@
 # Development runtime
 
-The development runtime (`chase-game`) is the first part of the future game, and it is an early test program. **It is not the game yet.** It shows a level and lets you walk the main character around it, with behaviour measured in the original. There are no missions, enemies, menus or story yet.
+The development runtime (`chase-game`) is the first part of the future game, and it is an early test program. **It is not the game yet.** It starts with the screens of the original game, from the logos to a new game, and then lets you walk the main character around a level, with behaviour measured in the original. There are no missions, enemies, menus or story yet.
 
-You need the game files first. See [Extracting game data](extracting-game-data.md) and [Building the tools](building.md). The program needs libepoxy.
+You need the game files first. See [Extracting game data](extracting-game-data.md) and [Building the tools](building.md). The program needs libepoxy and FFmpeg.
 
 ## Start it
 
@@ -12,7 +12,31 @@ Run this from the project folder, the one that contains `README.md`:
 build/chase-game
 ```
 
-A window opens with the police station. Press Escape to quit.
+A window opens and shows the start of the game, as it looks on the 3DS: the top screen above the bottom screen. Press Escape to quit.
+
+To skip the screens and go straight to a level, use `--gameplay` (police station) or `--level` and the level's path (see [Other levels](#other-levels)).
+
+## The screens before the level
+
+The program shows these screens in the original order:
+
+1. A short loading page ("Preparing Game Card", "Preparing save data").
+2. The company logos, then the TT Games movie.
+3. The language list. Push up or down, then press A.
+4. The StreetPass question. A is Yes, B is No. Then the HOME Button notice (press A).
+5. The autosave notice (press A).
+6. The slot list. Push up or down, then press A on a slot.
+7. "Saving Game", a loading screen with a tip, and the intro movie with its subtitles.
+8. The "Doughnut Disaster" title card. Press A, or wait. Then the level starts.
+
+The buttons are the keys of [Controls](controls.md): A, B, and the up and down keys. `--language 1-9` starts with another language (the list numbers it in the order of the language screen: 1 English, 2 French, 3 Italian, 4 German, 5 Spanish, 6 Dutch, 7 Danish, 8 Portuguese, 9 Russian). `--returning` starts as a player who has played before: the language screen is skipped and the movies can be skipped.
+
+What is not like the original yet:
+
+- Several parts are stand-ins: how long the loading pages last, the spinning badge on the loading screen (a flat picture here), the picture behind the title card, the tip on the loading screen (always the same one), and the 3D scene that the original plays on the top screen under the title card (here the top screen stays black).
+- Every slot is an empty "New Game" slot. Saved games are not shown or loaded.
+- The StreetPass pages act as if StreetPass were available, as it was in the comparison runs.
+- The level after "New Game" is the street of Cherry Tree Hills, with the character at the position the original starts him. Nothing from the story happens there.
 
 ## Keys
 
@@ -70,4 +94,4 @@ build/chase-game --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreeh
 
 The path is the level's place inside the game archive, as in the example. Each level has a `<name>_main.blvl` file.
 
-For the other options, such as `--screenshot` and `--frames`, see the [command reference](commands.md#development-runtime).
+For the other options, such as `--screenshot` and `--frames`, see the [command reference](commands.md#development-runtime). Giving `--level`, `--script` or `--start` also skips the front-end screens.

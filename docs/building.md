@@ -7,7 +7,7 @@
 - A C++17 compiler.
 - SDL2, found through pkg-config.
 - libepoxy, which is needed only for the [model viewer](model-viewer.md) and the [development runtime](commands.md#development-runtime). Without it, both are skipped.
-- FFmpeg (libavformat, libavcodec, libswscale, libswresample, libavutil), which is needed only for the [video player](fmv-player.md). Without it, the player is skipped.
+- FFmpeg (libavformat, libavcodec, libswscale, libswresample, libavutil), which is needed for the [video player](fmv-player.md) and for the movies of the [development runtime](game-runtime.md). Without it, both are skipped.
 - Optional, only for the [emulator comparison tool](commands.md#original-game-in-the-emulator-oracle): the Azahar 3DS emulator and Xvfb.
 
 ## Build

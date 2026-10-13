@@ -1,0 +1,58 @@
+# Screenshots of the front-end screens from the saved states (docs/re/front-end.md, 2026-10-13T20:46:07).
+# Run with: python3 tools/azahar_oracle.py tools/oracle/front-screens.txt --display xvfb --renderer opengl --rpc --rpc-input \
+#   --port PORT --home artifacts/oracle/HOME --states artifacts/oracle/states --output artifacts/review/front-end/oracle
+loadstate front-lang
+wait 1
+screenshot lang
+loadstate front-streetpass
+wait 1
+screenshot front-streetpass
+# Yes: the oracle shows the "StreetPass communication will continue" page, then the HOME notice
+hold A
+frames 5
+hold -
+wait 3
+screenshot sp-yes1
+hold A
+frames 5
+hold -
+wait 3
+screenshot sp-yes2
+loadstate front-homenotice
+wait 1
+screenshot front-homenotice
+loadstate front-autosave
+wait 1
+screenshot front-autosave
+loadstate front-selectslot
+wait 1
+screenshot front-selectslot
+# Down selects slot 2, B does nothing, A on a slot starts "Saving Game..." and the loading screen with its tip
+hold DOWN
+frames 3
+hold -
+wait 2
+screenshot sl-down1
+hold B
+frames 3
+hold -
+wait 2
+screenshot sl-b
+hold A
+frames 3
+hold -
+wait 0.5
+screenshot sa0
+wait 2
+screenshot sa2
+wait 6
+screenshot sa8
+loadstate agent-intro-dialog
+wait 1
+screenshot intro00
+loadstate agent-doughnut-title
+wait 1
+screenshot agent-doughnut-title
+loadstate gameplay-start
+wait 1
+screenshot gameplay-start

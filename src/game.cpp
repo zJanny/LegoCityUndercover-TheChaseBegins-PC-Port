@@ -6,6 +6,7 @@
 // collision. There is no gameplay.
 #include "assets/assets.hpp"
 #include "game_audio.hpp"
+#include "game_front.hpp"
 #include "input.hpp"
 #include "render/character.hpp"
 #include "render/scene.hpp"
@@ -84,7 +85,18 @@ struct Options {
     // Options volumes 0..10 (the game divides them by 10). Read in the oracle at the gameplay start of a new game:
     // sound effects 1.0 (0x37636c + 4), music 0.8 (0x376b3c); the saved options are not read yet.
     unsigned soundVolume = 10, musicVolume = 8;
+    // Front-end mode is the default: boot, language, prompts, slot, intro movie, then the level. --gameplay, --script,
+    // --level and --start describe a level run and start in the level directly.
+    bool gameplay = false;
+    std::string frontScript;
+    unsigned language = 1;
+    bool returningPlayer = false;
 };
+
+// A new game starts in Cherry Tree Hills at the position of the player entity in the oracle at gameplay-start
+// (docs/re/oracle.md); the missions that place him there are not recovered. STAND-IN.
+constexpr const char* kNewGameLevel = "levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl";
+constexpr std::array<float, 3> kNewGameStart = {886.764f, 16.589f, 1111.166f};
 
 struct ScriptStep {
     int stickX = 0, stickY = 0;
@@ -127,10 +139,14 @@ Options parse(int argc, char** argv) {
         if (arg == "--fib") o.fib = value();
         else if (arg == "--names") o.names = value();
         else if (arg == "--config") o.config = value();
-        else if (arg == "--level") o.level = value();
+        else if (arg == "--level") { o.level = value(); o.gameplay = true; }
+        else if (arg == "--gameplay") o.gameplay = true;
+        else if (arg == "--front-script") o.frontScript = value();
+        else if (arg == "--language") o.language = std::max(1u, std::min(9u, unsigned(std::stoul(value()))));
+        else if (arg == "--returning") o.returningPlayer = true;
         else if (arg == "--screenshot") o.screenshot = value();
         else if (arg == "--frames") o.frames = unsigned(std::stoul(value()));
-        else if (arg == "--script") o.script = value();
+        else if (arg == "--script") { o.script = value(); o.gameplay = true; }
         else if (arg == "--no-camera-collision") o.cameraCollision = false;
         else if (arg == "--sound-volume") o.soundVolume = std::min(10u, unsigned(std::stoul(value())));
         else if (arg == "--music-volume") o.musicVolume = std::min(10u, unsigned(std::stoul(value())));
@@ -139,10 +155,12 @@ Options parse(int argc, char** argv) {
             std::array<float, 3> position;
             if (!(fields >> position[0] >> position[1] >> position[2])) throw std::runtime_error("bad --start, expected \"X Y Z\"");
             o.start = position;
+            o.gameplay = true;
         }
-        else throw std::runtime_error("usage: chase-game [--fib F] [--names CSV] [--config CFG] "
+        else throw std::runtime_error("usage: chase-game [--fib F] [--names CSV] [--config CFG] [--gameplay] "
                                       "[--level levels/levels/<name>/<name>_main.blvl] [--screenshot OUT.bmp] [--frames N] "
-                                      "[--script \"X Y COUNT [BUTTONS];...\"] [--start \"X Y Z\"] [--no-camera-collision] [--sound-volume 0-10] [--music-volume 0-10]");
+                                      "[--script \"X Y COUNT [BUTTONS];...\"] [--start \"X Y Z\"] [--no-camera-collision] [--sound-volume 0-10] [--music-volume 0-10] "
+                                      "[--front-script \"run 5; press A; until slot; ...\"] [--language 1-9] [--returning]");
     }
     return o;
 }
@@ -387,7 +405,8 @@ PlayerAnimation updatePlayer(PlayerRig& player, const runtime::CollisionWorld& c
     return {step.animation, step.animation == runtime::kAnimationSprint ? kSprintAnimationScale : step.animationScale};
 }
 
-int run(const Options& options) {
+int run(const Options& given) {
+    Options options = given;
     std::ifstream config(options.config);
     if (!config) throw std::runtime_error("cannot open controls: " + options.config);
     chase::InputState input(chase::readBindings(config, resolveKey));
@@ -407,6 +426,34 @@ int run(const Options& options) {
     if (!context) throw std::runtime_error(SDL_GetError());
     SDL_GL_SetSwapInterval(1);
 
+    std::optional<GameAudio> audio;
+    try {
+        audio.emplace(archive, std::uint8_t(options.soundVolume), std::uint8_t(options.musicVolume));
+    } catch (const std::exception& error) {
+        std::cout << "audio: disabled (" << error.what() << ")\n";
+    }
+    const std::uint64_t frontFrequency = SDL_GetPerformanceFrequency();
+    const std::uint64_t frontOrigin = SDL_GetPerformanceCounter();
+    if (!options.gameplay) {
+        game_front::Options front;
+        front.cutsceneDirectory = game_front::directoryOf(options.fib) + "/cutscenes";
+        front.language = int(options.language);
+        front.firstRun = !options.returningPlayer;
+        front.script = options.frontScript;
+        front.screenshot = options.screenshot;
+        const game_front::Result result =
+            game_front::run(window, input, archive, audio ? &*audio : nullptr, front,
+                            [&]() { return clockTicks(SDL_GetPerformanceCounter() - frontOrigin, frontFrequency); });
+        if (result.quit || result.scriptOnly) {
+            audio.reset();
+            SDL_GL_DeleteContext(context);
+            SDL_DestroyWindow(window);
+            SDL_Quit();
+            return 0;
+        }
+        options.level = kNewGameLevel;
+        options.start = kNewGameStart;
+    }
     GLuint program = createProgram();
     Scene scene(archive, {"sky"});
     for (const auto& model : levelModels(archive, options.level, ""))
@@ -429,12 +476,6 @@ int run(const Options& options) {
         studSpawns.push_back(spawn);
     }
     runtime::StudField studs(studSpawns);
-    std::optional<GameAudio> audio;
-    try {
-        audio.emplace(archive, std::uint8_t(options.soundVolume), std::uint8_t(options.musicVolume));
-    } catch (const std::exception& error) {
-        std::cout << "audio: disabled (" << error.what() << ")\n";
-    }
     std::vector<std::pair<unsigned, std::uint16_t>> soundLog;
     std::optional<StudSprites> studSprites(std::in_place, archive);
     double provisionalStudClockSeconds = 0;
