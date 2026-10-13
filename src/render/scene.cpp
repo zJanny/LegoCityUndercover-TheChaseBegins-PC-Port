@@ -106,7 +106,7 @@ Mat4 rigidInverse(const Mat4& m) {
 Mat4 perspective(float fovY, float aspect, float nearZ, float farZ) {
     float f = 1.0f / std::tan(fovY / 2);
     Mat4 m{};
-    m[0] = f / aspect;
+    m[0] = -f / aspect;
     m[5] = f;
     m[10] = (farZ + nearZ) / (nearZ - farZ);
     m[11] = -1;
@@ -114,18 +114,29 @@ Mat4 perspective(float fovY, float aspect, float nearZ, float farZ) {
     return m;
 }
 
+void cameraAxes(float yaw, float pitch, float forward[3], float right[3]) {
+    forward[0] = std::cos(pitch) * std::sin(yaw);
+    forward[1] = std::sin(pitch);
+    forward[2] = std::cos(pitch) * std::cos(yaw);
+    right[0] = std::cos(yaw);
+    right[1] = 0;
+    right[2] = -std::sin(yaw);
+}
+
 Mat4 view(const float eye[3], float yaw, float pitch) {
-    float fx = std::cos(pitch) * std::sin(yaw), fy = std::sin(pitch), fz = -std::cos(pitch) * std::cos(yaw);
-    float sx = -fz, sz = fx;  // right = forward x up
-    float sl = std::sqrt(sx * sx + sz * sz);
-    sx /= sl; sz /= sl;
-    float ux = -sz * fy, uy = sz * fx - sx * fz, uz = sx * fy;  // up = right x forward
-    Mat4 m{sx, ux, -fx, 0, 0, uy, -fy, 0, sz, uz, -fz, 0, 0, 0, 0, 1};
-    m[12] = -(sx * eye[0] + sz * eye[2]);
+    float forward[3], right[3];
+    cameraAxes(yaw, pitch, forward, right);
+    const float fx = forward[0], fy = forward[1], fz = forward[2];
+    const float rx = -right[0], rz = -right[2];
+    const float ux = -rz * fy, uy = rz * fx - rx * fz, uz = rx * fy;
+    Mat4 m{rx, ux, -fx, 0, 0, uy, -fy, 0, rz, uz, -fz, 0, 0, 0, 0, 1};
+    m[12] = -(rx * eye[0] + rz * eye[2]);
     m[13] = -(ux * eye[0] + uy * eye[1] + uz * eye[2]);
     m[14] = fx * eye[0] + fy * eye[1] + fz * eye[2];
     return m;
 }
+
+void setFrontFace(bool counterClockwise) { glFrontFace(counterClockwise ? GL_CW : GL_CCW); }
 
 GLuint createProgram() {
     GLuint program = glCreateProgram();

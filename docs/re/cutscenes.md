@@ -17,8 +17,9 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
   - The extra curve (anim+8 bit 28) is sampled after the last joint (flag 0x20 path in 0x12a2b4). Its use (root motion?) is not recovered.
 - Viewer `--cutscene`: plays the cast and camera. The game camera looks along +row 2:
   - In 1_2_a and 2_7_a the actors lie along +row 2 (dot product 0.97).
-  - With rows 0 and 2 flipped for GL, "POLICE" signs read unmirrored, and 1_1_a shows the police station, the player walking up and the donut counter.
+  - With rows 0 and 2 flipped for GL, 1_1_a shows the police station, the player walking up and the donut counter.
   - This is inferred; the matrix's consumer 0x241540 was not traced.
+  - Correction (2026-10-13, see levels.md): the "POLICE" signs read mirrored with this flip alone; the world is left-handed and the renderer's projection now mirrors x. The row flip itself stays.
 - Unknown: 113 of 397 actor animations have a different frame count from their camera; the viewer holds their last frame. The meaning of camera fields 7–11 and of fov's axis is unknown, as is the base value the actor scale is added to.
 - Rule 6 violation found and fixed (next entry): Python posing (convert_anims.skin_matrices) did not apply the joint orientation and so differed from C++.
 - ctest PASS 8/8 (new viewer-cutscene-smoke); Python PASS.

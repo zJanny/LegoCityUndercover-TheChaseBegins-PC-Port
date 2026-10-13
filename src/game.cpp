@@ -93,9 +93,9 @@ struct PlaceholderCamera {
 
     void frameScene(const float centre[3], float radius) {
         float d = radius * 2.2f;
-        eye[0] = centre[0] - d * std::cos(pitch) * std::sin(yaw);
-        eye[1] = centre[1] - d * std::sin(pitch);
-        eye[2] = centre[2] + d * std::cos(pitch) * std::cos(yaw);
+        float axisForward[3], axisRight[3];
+        chase::render::cameraAxes(yaw, pitch, axisForward, axisRight);
+        for (int i = 0; i < 3; ++i) eye[i] = centre[i] - d * axisForward[i];
         speed = radius * 0.5f;
     }
 
@@ -105,7 +105,7 @@ struct PlaceholderCamera {
         eye[0] = player[12] - distance * forward[0];
         eye[1] = player[13] + height;
         eye[2] = player[14] - distance * forward[1];
-        yaw = std::atan2(forward[0], -forward[1]);
+        yaw = std::atan2(forward[0], forward[1]);
         pitch = std::atan2(lookHeight - height, distance);
     }
 
@@ -114,9 +114,10 @@ struct PlaceholderCamera {
         float rise = pad.slot(kSlotRightShoulder).value - pad.slot(kSlotLeftShoulder).value;
         yaw += 1.5f * dt * (pad.slot(kSlotButtonY).value - pad.slot(kSlotButtonX).value);
         float step = speed * dt;
-        eye[0] += step * (forward * std::cos(pitch) * std::sin(yaw) + strafe * std::cos(yaw));
-        eye[1] += step * (forward * std::sin(pitch) + rise);
-        eye[2] += step * (-forward * std::cos(pitch) * std::cos(yaw) + strafe * std::sin(yaw));
+        float axisForward[3], axisRight[3];
+        chase::render::cameraAxes(yaw, pitch, axisForward, axisRight);
+        for (int i = 0; i < 3; ++i) eye[i] += step * (forward * axisForward[i] + strafe * axisRight[i]);
+        eye[1] += step * rise;
     }
 };
 
@@ -217,7 +218,7 @@ int run(const Options& options) {
     if (player) camera.frameBehind(*player);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
-    glFrontFace(GL_CCW);
+    chase::render::setFrontFace(true);
 
     runtime::PadDevice pad;
     const std::uint64_t counterFrequency = SDL_GetPerformanceFrequency();

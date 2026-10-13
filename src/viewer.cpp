@@ -279,16 +279,16 @@ int run(const Options& options) {
     float eye[3];
     auto placeCamera = [&]() {
         float d = radius * 2.2f;
-        eye[0] = centre[0] - d * std::cos(pitch) * std::sin(yaw);
-        eye[1] = centre[1] - d * std::sin(pitch);
-        eye[2] = centre[2] + d * std::cos(pitch) * std::cos(yaw);
+        float forward[3], right[3];
+        chase::render::cameraAxes(yaw, pitch, forward, right);
+        for (int i = 0; i < 3; ++i) eye[i] = centre[i] - d * forward[i];
     };
     placeCamera();
     if (!options.eye.empty()) std::copy_n(options.eye.begin(), 3, eye);
     glEnable(GL_DEPTH_TEST);
     if (options.cull != "none") {
         glEnable(GL_CULL_FACE);
-        glFrontFace(options.cull == "cw" ? GL_CW : GL_CCW);
+        chase::render::setFrontFace(options.cull != "cw");
     }
     bool running = true, dragging = false;
     Uint32 last = SDL_GetTicks();
@@ -326,9 +326,10 @@ int run(const Options& options) {
         yaw += turn * float(input.active(chase::Action::Y) - input.active(chase::Action::X));
         float forward = float(input.vertical()), strafe = float(input.horizontal());
         float rise = float(input.active(chase::Action::R) - input.active(chase::Action::L));
-        eye[0] += speed * (forward * std::cos(pitch) * std::sin(yaw) + strafe * std::cos(yaw));
-        eye[1] += speed * (forward * std::sin(pitch) + rise);
-        eye[2] += speed * (-forward * std::cos(pitch) * std::cos(yaw) + strafe * std::sin(yaw));
+        float axisForward[3], axisRight[3];
+        chase::render::cameraAxes(yaw, pitch, axisForward, axisRight);
+        for (int i = 0; i < 3; ++i) eye[i] += speed * (forward * axisForward[i] + strafe * axisRight[i]);
+        eye[1] += speed * rise;
 
         if (animated) {
             double frame = options.frame >= 0 ? options.frame : now * options.fps / 1000.0;
@@ -357,8 +358,9 @@ int run(const Options& options) {
                 if (!actor.skeleton.joints.empty()) scene.pose(actor.model, skinMatrices(actor.skeleton, actor.animation, local));
             }
             CutsceneCamera camera = cutsceneCamera(cameraAnimation, float(normalised(cameraAnimation, frame)));
-            // The game camera looks along +row 2 (actors lie there; on-screen text is unmirrored),
-            // so rows 0 and 2 flip for GL's -z view direction. Inferred, not traced past 0x241540.
+            // The game camera matrix is left-handed: row 0 is screen right, row 2 the view direction.
+            // Negating rows 0 and 2 gives GL's right-handed camera, and perspective() mirrors x
+            // back to the game's handedness.
             Mat4 world = cameraMatrix(camera);
             for (int i : {0, 1, 2, 8, 9, 10}) world[i] = -world[i];
             eyeView = rigidInverse(world);

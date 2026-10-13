@@ -75,3 +75,16 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - chase-viewer `--nav`: cyan/orange quads, 0.25 above the fitted height. In lvl_00 room3 the grid follows the floor plan with orange cells along walls and props.
 - ctest PASS 7/7; Python PASS 50/50.
 
+## 2026-10-13T12:49+02:00 — World handedness: the game world is left-handed
+
+- Evidence:
+  - Oracle reference gameplay-start.png (Azahar, gameplay-start checkpoint): the player stands at (886.764, 16.589, 1111.166) with model forward (−0.711, 0, −0.703), and the camera yaw f32 at 0x376894 is −2.3501 rad. sin(−2.3501) = −0.711 and cos(−2.3501) = −0.703, so the game's yaw convention is forward = (sin yaw, cos yaw) in (x, z).
+  - In the reference the donut shop sits ahead, a blue bus stop to its left, the stairs behind a "POLICE" pillar at the right edge. The old viewer camera at (889.6, 19, 1114) looking along the same forward vector (pitch −12°) showed the stairs and the bus stop swapped and the pillar text mirrored. After mirroring x the layout and the text match the reference.
+  - The cutscene path (cutscenes.md) was also mirrored: the 1_1_a "POLICE" sign read mirrored at frame 200, and the torso "F" of the placeholder minifig was reversed. The earlier claim that the row-0/2 flip gave unmirrored text was wrong.
+  - The camera matrix from 0x20e850 has determinant +1 with row 0 = screen right, row 1 = up, row 2 = forward (x = y × z), which is a left-handed camera. In a left-handed frame, right = up × forward, so at yaw 0 the camera looks along +z with +x to the right.
+- Convention (chase_render): yaw/pitch give forward = (cos p·sin yaw, sin p, cos p·cos yaw) and screen right = (cos yaw, 0, −sin yaw). `view()` builds a proper (right-handed, det +1) GL view for that camera and `perspective()` negates the x scale, which mirrors the image to the game's handedness. No model, placement or actor data is mirrored. The mirror reverses on-screen triangle winding, so `setFrontFace(true)` (front = counter-clockwise in the game's own view, the old default that hides ceilings) selects GL_CW.
+- The cutscene path keeps its row 0/2 flip: that yields a proper GL camera whose GL right is −row 0, and the projection mirror makes screen right = row 0, as in the game.
+- Unknown:
+  - Whether the game's own winding convention is CCW in left-handed screen space (the culling default is the observed one, chosen because it hides room ceilings).
+  - The game's field of view and whether the 3DS top-screen projection (400x240) matches the viewer's 1 rad vertical FOV; the reference framing was not matched numerically.
+  - 0x241540, the consumer of the camera matrix, was not traced; the handedness follows from the matrix determinant and the reference screenshot.

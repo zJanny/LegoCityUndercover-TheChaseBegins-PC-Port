@@ -128,7 +128,7 @@ Full game logic, hardware APIs and asset formats not recovered yet.
 
 ## Next Action
 
-- M1 status: chase-game runs the scheduler and pad pipeline replicas over lvl_00_policestation and shows the player character (char_police appearance, guessed) at Player1Start (traced, 0x2e6264). Open defect: with the placeholder camera, text on the level ("POLICE" pillars) renders mirrored, so the world handedness of the free camera is wrong; fix together with the game camera.
+- M1 status: chase-game runs the scheduler and pad pipeline replicas over lvl_00_policestation and shows the player character (char_police appearance, guessed) at Player1Start (traced, 0x2e6264). The mirrored-world defect is fixed: the game world is left-handed and chase_render's projection mirrors x ([docs/re/levels.md](../re/levels.md)); the free camera now uses the game's yaw convention (forward = (sin yaw, cos yaw)).
 - Next: recover locomotion (oracle `trace` of the player under fixed stick input once a gameplay scenario exists, plus a write watchpoint on the player's scene node) so movement is measured, not invented.
 - Oracle fidelity: per-frame breakpoint stops inflate the game clock about 30 % against vblanks (free run 51.3 ticks per vblank, stepped 65.9); measure rates in free-run intervals. Open: a frame counter readable without breakpoints, to measure update rate in free runs.
 
@@ -267,3 +267,4 @@ Reverse-engineering findings live in docs/re/ (see docs/re/README.md). Entries m
 - 2026-10-13T11:51:01+02:00 — Oracle fast workflow (worker): --keep/--attach/--stop, Xvfb + XTEST hotkeys, savestate/loadstate/--state; language screen in 37 s free-running, state load 13.5 s, attach+report 0.4 s; python3 -m unittest 55 OK → [docs/re/oracle.md](../re/oracle.md)
 - 2026-10-13T12:02:21+02:00 — Oracle RPC channel (worker): --rpc/--rpc-input, sample command, screenshot 0.05 s instead of 10.7 s, free-run 50.14 clock ticks per vblank (stepped 65.5), breakpoint-free pad input verified (channel 16 = 1.0); python3 -m unittest 63 OK → [docs/re/oracle.md](../re/oracle.md)
 - 2026-10-13T12:45+02:00 — Oracle launch robustness (worker): Xvfb quick-load abort traced to a Qt paint vs state-load race, render window unmapped, launch retry (max 3) and cleanup of own processes; 16/16 verification runs, python3 -m unittest 69 OK → [docs/re/oracle.md](../re/oracle.md)
+- 2026-10-13T12:49+02:00 — World handedness (worker): game world is left-handed; chase_render perspective() mirrors x, view/cameraAxes use the game yaw convention, setFrontFace added; chase-game and chase-viewer (free camera and cutscene) now unmirrored, matching gameplay-start.png → [docs/re/levels.md](../re/levels.md)

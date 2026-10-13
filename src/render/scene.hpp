@@ -16,9 +16,16 @@ using Mat4 = std::array<float, 16>;
 Mat4 identity();
 Mat4 multiply(const Mat4& a, const Mat4& b);
 Mat4 rigidInverse(const Mat4& m);
+// The game world is left-handed (+x right, +y up, +z forward at yaw 0), GL's is right-handed.
+// perspective() mirrors x, so a view matrix built with a proper rotation shows the game world
+// as the game does. The mirror reverses triangle winding; setFrontFace() accounts for it.
 Mat4 perspective(float fovY, float aspect, float nearZ, float farZ);
-// View matrix for a camera at `eye` looking along yaw/pitch (radians), +Y up.
+// Game camera convention: forward = (cos p sin yaw, sin p, cos p cos yaw), screen right = (cos yaw, 0, -sin yaw).
+void cameraAxes(float yaw, float pitch, float forward[3], float right[3]);
+// View matrix for a camera at `eye` looking along yaw/pitch (radians), +Y up; use with perspective().
 Mat4 view(const float eye[3], float yaw, float pitch);
+// Sets which stored winding counts as front: counterClockwise is the winding in the game's own space.
+void setFrontFace(bool counterClockwise);
 
 // Shader program with the uniforms Scene::draw sets.
 GLuint createProgram();
