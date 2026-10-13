@@ -72,3 +72,28 @@ Reverse-engineering findings for `particles/particledefs.bprt`. Entries are chro
 - When a removed emitter's texture has type 2 and is no longer used, it is released about a second later (list 0x586328, up to 20 entries).
 - Implemented: ParticleDef::rate, duration, lifetimeMin/Max, fadeKeys. Real-data check: 648 fade keys, 197 endless emitters.
 - Unknown: the per-particle step 0x221e9c (velocity integration, gravity/drag fields, size over life), E+0xe8 (rate multiplier source), and the meaning of +0x74's sign.
+
+## 2026-10-13T17:00+02:00 — Particle step 0x221e9c and the four key lists (REA Ghidra 12.1.2 ev_8d5bac72…; read-only)
+
+- Correction to the 16:00 and 16:30 entries. The record has four key lists, each of (f32 time, 4 value bytes), 8 bytes per key, at most 7 keys:
+  - +0x88, count +0x170: emitter fade (value[0] = alpha).
+  - +0xc0, count +0x171: size change.
+  - +0xf8, count +0x172: colour (value[0..2]).
+  - +0x130, count +0x173: particle alpha over its life (value[0]).
+  - So "+0x134 start alpha" (16:00) is the first alpha key's value, and the fade list holds at most 7 keys, not 14.
+  - In all 298 records every list starts at time 0 and rises. Totals: fade 648, size 718, colour 846, alpha 1045.
+- Per frame, for a live particle P (P+0x38 = age, P+0x34 = lifetime, f = age / lifetime):
+  - position += velocity × dt (0x2408f8, 0x23d39c).
+  - If +0x74 > 0 and the particle is at or below the emitter ground height E+0x11c: when moving down, vy = −vy × +0x74 and y is clamped to the ground. So +0x74 = bounce restitution.
+  - Drag: when |E+0xf4| > 2^-23, velocity ×= 1 − min(E+0xf4 × dt, 1). E+0xf4 = +0x24. Flags bit 15 also damps the spin.
+  - Spin: when E+0x110 (spin range) ≠ 0, angle += spin and wraps at 8000.
+  - When +0x6c ≠ 0, P+0x3c advances by +0x70 × 6400 and wraps at 0x7d000 (meaning unknown).
+  - Size: from the size keys, g = (lerp(value[0]) − 128) / 128 × dt. size x += E+0xec × g and size y += E+0xf0 × g, where E+0xec = +0x1c × s and E+0xf0 = +0x20 × s. Flags bit 9 clamps the size at 0.
+  - Gravity: vy += E+0x10c × dt, where E+0x10c = +0x3c × s (spawner).
+  - Frame mode 2 animates: cell = frac(+0x17b × f) × (columns × rows). So +0x17b counts atlas loops per life. The 16:00 "2 = first cell" is only the init value.
+  - Age += dt. At the end of its life the particle becomes free (−1.0), or −2.0 with flags bit 8.
+  - Colour: unless flags bit 2, the RGB comes from the colour keys at f.
+  - Alpha = lerp(alpha keys at f) × the emitter fade.
+- Speed (from 0x222550): it starts from E+0xf8 = +0x14 × s and E+0xfc = +0x78 × s, lerped by the emitter's remaining-time fraction. Which end belongs to which value is not settled; ParticleDef does not expose it.
+- Implemented: ParticleKey and the four lists; sizeX/sizeY, growX/growY, gravity, drag, bounce, animationLoops. The 16:00 fields startAlpha and ColourKey/FadeKey were replaced.
+- Unknown: E+0x11c (ground height source), +0x6c/+0x70, the flags not listed, the spin-damping detail, and +0x14 vs +0x78.

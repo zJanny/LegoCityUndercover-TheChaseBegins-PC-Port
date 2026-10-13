@@ -17,6 +17,17 @@ float readFloat(const Bytes& data, std::size_t offset) {
     return value;
 }
 
+std::vector<ParticleKey> keys(const Bytes& data, std::size_t record, std::size_t first, std::size_t countAt) {
+    std::uint8_t count = data[record + countAt];
+    if (count > kMaxParticleKeys) throw std::runtime_error("particle defs: too many keys");
+    std::vector<ParticleKey> list(count);
+    for (std::size_t k = 0; k < count; ++k) {
+        list[k].time = readFloat(data, record + first + 8 * k);
+        std::memcpy(list[k].value.data(), data.data() + record + first + 8 * k + 4, 4);
+    }
+    return list;
+}
+
 std::uint32_t word(const Bytes& data, PoolCursor& cursor, const char* what) {
     const Block& block = required(cursor, what);
     if (block.size < 4) throw std::runtime_error(std::string("particle defs: short ") + what);
@@ -71,27 +82,26 @@ ParticleDefs parseParticleDefs(const Bytes& data) {
         def.flags = readU32(data, at + 0x168);
         def.seed = readU32(data, at + 0x84);
         def.particles = data[at + 0x175];
-        def.startAlpha = data[at + 0x134];
         def.atlasColumns = data[at + 0x178];
         def.atlasRows = data[at + 0x179];
         def.frameMode = data[at + 0x176];
+        def.animationLoops = data[at + 0x17b];
         def.flipModes = data[at + 0x17a];
         def.rate = readFloat(data, at + 0x28);
         def.duration = readFloat(data, at + 0x38);
         def.lifetimeMin = readFloat(data, at + 0x7c);
         def.lifetimeMax = readFloat(data, at + 0x80);
-        std::uint8_t keys = data[at + 0x172];
-        if (keys > kMaxColourKeys) throw std::runtime_error("particle defs: too many colour keys");
-        for (std::uint8_t k = 0; k < keys; ++k) {
-            ColourKey key;
-            key.time = readFloat(data, at + 0xf8 + 8u * k);
-            std::memcpy(key.rgba.data(), data.data() + at + 0xfc + 8u * k, key.rgba.size());
-            def.colourKeys.push_back(key);
-        }
-        std::uint8_t fades = data[at + 0x170];
-        if (fades > kMaxFadeKeys) throw std::runtime_error("particle defs: too many fade keys");
-        for (std::uint8_t k = 0; k < fades; ++k)
-            def.fadeKeys.push_back({readFloat(data, at + 0x88 + 8u * k), data[at + 0x8c + 8u * k]});
+        def.sizeX = readFloat(data, at + 0x0c);
+        def.sizeY = readFloat(data, at + 0x10);
+        def.growX = readFloat(data, at + 0x1c);
+        def.growY = readFloat(data, at + 0x20);
+        def.gravity = readFloat(data, at + 0x3c);
+        def.drag = readFloat(data, at + 0x24);
+        def.bounce = readFloat(data, at + 0x74);
+        def.fadeKeys = keys(data, at, 0x88, 0x170);
+        def.sizeKeys = keys(data, at, 0xc0, 0x171);
+        def.colourKeys = keys(data, at, 0xf8, 0x172);
+        def.alphaKeys = keys(data, at, 0x130, 0x173);
         for (std::size_t t = 0; t < defs.textures.size(); ++t)
             if (pjwHash(defs.textures[t]) == def.textureHash) def.texture = int(t);
         defs.defs.push_back(def);

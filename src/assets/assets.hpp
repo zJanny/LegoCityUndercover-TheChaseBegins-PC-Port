@@ -466,15 +466,11 @@ std::uint32_t pjwHash(const std::string& text);
 // (0x271e6c). Spawners address definitions by index (e.g. ExplosionParticleDef, 0x163f00).
 // Records are 0x17c bytes (0x23de24). Field use from spawner 0x216244 and particle init 0x222550.
 constexpr std::size_t kParticleDefSize = 380;
-constexpr std::size_t kMaxColourKeys = 7;
-constexpr std::size_t kMaxFadeKeys = 14;
-struct FadeKey {
-    float time = 0;     // fraction of the emitter duration
-    std::uint8_t alpha = 0;
-};
-struct ColourKey {
+// Four key lists of (f32 time, 4 value bytes), times in 0..1 of a lifetime, at most 7 keys each.
+constexpr std::size_t kMaxParticleKeys = 7;
+struct ParticleKey {
     float time = 0;
-    std::array<std::uint8_t, 4> rgba{};  // alpha comes from ParticleDef::startAlpha instead
+    std::array<std::uint8_t, 4> value{};
 };
 struct ParticleDef {
     std::uint32_t textureHash = 0;  // +0x2c, pjwHash of a texture name
@@ -482,17 +478,24 @@ struct ParticleDef {
     std::uint32_t flags = 0;        // +0x168; bit 2 random gradient colour, bit 3 planar (z = 0)
     std::uint32_t seed = 0;         // +0x84; 0 = random
     std::uint8_t particles = 0;     // +0x175, clamped below ParticleDefs::maxParticles
-    std::uint8_t startAlpha = 0;    // +0x134
     std::uint8_t atlasColumns = 0;  // +0x178; the spawner refuses 0
     std::uint8_t atlasRows = 0;     // +0x179
-    std::uint8_t frameMode = 0;     // +0x176: 0 whole texture, 1 random cell, 2 first cell, 3 next cell
+    std::uint8_t frameMode = 0;     // +0x176: 0 whole texture, 1 random cell, 2 animated, 3 next cell
+    std::uint8_t animationLoops = 0;  // +0x17b, frame mode 2: atlas cycles per particle lifetime
     std::uint8_t flipModes = 0;     // +0x17a: low nibble U, high nibble V; 1 random, 2 alternate, 3 always
-    std::vector<ColourKey> colourKeys;  // +0xf8, 8 bytes each, count at +0x172
-    std::vector<FadeKey> fadeKeys;      // +0x88, 8 bytes each, count at +0x170; emitter alpha (0x20db0c)
-    float rate = 0;                     // +0x28, particles per second
-    float duration = 0;                 // +0x38, seconds; above 98 the emitter runs until stopped
-    float lifetimeMin = 0;              // +0x7c, seconds
-    float lifetimeMax = 0;              // +0x80
+    float rate = 0;                 // +0x28, particles per second
+    float duration = 0;             // +0x38, seconds; above 98 the emitter runs until stopped
+    float lifetimeMin = 0;          // +0x7c, seconds
+    float lifetimeMax = 0;          // +0x80
+    float sizeX = 0, sizeY = 0;     // +0x0c, +0x10, start size before random growth
+    float growX = 0, growY = 0;     // +0x1c, +0x20, size change per second scaled by sizeKeys
+    float gravity = 0;              // +0x3c, added to velocity y per second
+    float drag = 0;                 // +0x24, velocity *= 1 - drag * dt
+    float bounce = 0;               // +0x74, > 0: ground bounce restitution
+    std::vector<ParticleKey> fadeKeys;    // +0x88, count +0x170: value[0] emitter alpha over its duration
+    std::vector<ParticleKey> sizeKeys;    // +0xc0, count +0x171: (value[0] - 128) / 128 growth factor
+    std::vector<ParticleKey> colourKeys;  // +0xf8, count +0x172: value[0..2] colour over particle life
+    std::vector<ParticleKey> alphaKeys;   // +0x130, count +0x173: value[0] alpha over particle life
     std::array<std::uint8_t, kParticleDefSize> raw{};
 };
 struct ParticleDefs {

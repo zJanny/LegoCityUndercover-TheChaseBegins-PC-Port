@@ -426,6 +426,9 @@ void particles() {
     second[0x8c] = 0x80;
     second[0x38 + 3] = 0x40;  // duration 2.0
     second[0x28 + 3] = 0x41;  // rate 8.0
+    second[0x3c + 3] = 0xc0;  // gravity -2.0
+    second[0x173] = 1;
+    second[0x134] = 0x7f;
     Bytes data(first);
     data.insert(data.end(), second.begin(), second.end());
     auto file = [&](std::uint32_t defCount, std::uint32_t scale, const Bytes& records) {
@@ -442,19 +445,21 @@ void particles() {
                 defs.defs[1].particles == 4 && defs.defs[1].atlasColumns == 2 && defs.defs[0].colourKeys.empty(),
             "particle records");
     const auto& keys = defs.defs[1].colourKeys;
-    require(keys.size() == 2 && keys[0].time == 0 && keys[0].rgba[0] == 0x11 && keys[1].time == 0.5f &&
-                keys[1].rgba[1] == 0x22,
+    require(keys.size() == 2 && keys[0].time == 0 && keys[0].value[0] == 0x11 && keys[1].time == 0.5f &&
+                keys[1].value[1] == 0x22,
             "particle colour keys");
-    require(defs.defs[1].fadeKeys.size() == 1 && defs.defs[1].fadeKeys[0].alpha == 0x80 &&
-                defs.defs[1].duration == 2.0f && defs.defs[1].rate == 8.0f,
+    require(defs.defs[1].fadeKeys.size() == 1 && defs.defs[1].fadeKeys[0].value[0] == 0x80 &&
+                defs.defs[1].duration == 2.0f && defs.defs[1].rate == 8.0f && defs.defs[1].gravity == -2.0f &&
+                defs.defs[1].alphaKeys.size() == 1 && defs.defs[1].alphaKeys[0].value[0] == 0x7f &&
+                defs.defs[1].sizeKeys.empty(),
             "particle fade keys and timing");
     require(parseParticleDefs(file(2, 0x40000000, data)).scale == 2.0f, "particle scale");
     requireThrows([&] { parseParticleDefs(file(3, 0, data)); }, "particle count mismatch accepted");
-    data[kParticleDefSize + 0x172] = kMaxColourKeys + 1;
-    requireThrows([&] { parseParticleDefs(file(2, 0, data)); }, "too many colour keys accepted");
-    data[kParticleDefSize + 0x172] = 0;
-    data[kParticleDefSize + 0x170] = kMaxFadeKeys + 1;
-    requireThrows([&] { parseParticleDefs(file(2, 0, data)); }, "too many fade keys accepted");
+    for (std::size_t countAt : {0x170, 0x171, 0x172, 0x173}) {
+        Bytes bad = data;
+        bad[kParticleDefSize + countAt] = kMaxParticleKeys + 1;
+        requireThrows([&] { parseParticleDefs(file(2, 0, bad)); }, "too many particle keys accepted");
+    }
 }
 
 void animations() {
