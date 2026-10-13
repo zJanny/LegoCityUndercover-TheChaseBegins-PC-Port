@@ -23,13 +23,13 @@ A window opens with the police station. Press Escape to quit.
 | Turn the camera | Z (left) and C (right). Pushing left or right also turns the camera. |
 | Quit | Escape |
 
-- The character runs when you push the keys. After about one second of running, he sprints.
+- The character runs when you push the keys. After about one second of running, the character sprints.
 - The keys come from `config/controls.cfg`. See [Controls](controls.md).
 
 ## What works
 
 - The speeds, the walk, run and sprint change, and the turning follow the original game.
-- The camera follows the character behind him, as in the original, on open ground.
+- The camera follows behind the character, as in the original, on open ground.
 - The floor and walls come from the level. The character climbs steps and kerbs, and slides along walls.
 
 ## What does not work yet

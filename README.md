@@ -1,6 +1,6 @@
 # The Chase Begins — Linux reconstruction (work in progress)
 
-This is the start of a Linux x86_64 reconstruction of *LEGO City Undercover: The Chase Begins* (Nintendo 3DS). **The game is not playable on PC.** Today the project can extract and decode the game's files, and show models, levels and animated characters in development tools.
+This is the start of a Linux x86_64 reconstruction of *LEGO City Undercover: The Chase Begins* (Nintendo 3DS). **The game is not playable on PC.** Today the project can extract and decode the game's files, show models, levels and animated characters in development tools, and let you walk the main character around one level.
 
 Game data is never stored in this repository. You need your own decrypted `.cci` image.
 
