@@ -4,12 +4,21 @@ Guidance for Claude Code (claude.ai/code) in this repository.
 
 ## Project
 
-Early-stage Linux x86_64 reconstruction of *LEGO City Undercover: The Chase Begins* (Nintendo 3DS) from the decrypted `.cci` image in the repo root. Two independent pieces exist:
+PC port of *LEGO City Undercover: The Chase Begins* (Nintendo 3DS), built from the user's decrypted `.cci` image in the repo root. The goal is a faithful, complete port: everything works and behaves exactly like the original 3DS game, playable from start to finish, natively on Linux x86_64 first. The project is in an early stage and is **not playable yet**. Never describe it as a playable game or a finished port. Two independent pieces exist:
 
 1. **Extraction pipeline** (`tools/extract_game.py`, Python 3.11+ stdlib only). Reads the NCSD/CCI image, NCCH partition 0, exheader and ExeFS, checks every SHA256, decompresses `.code` (backwards LZ) and wraps it in a synthetic ELF32 ARM file (`game.arm.elf`) for disassembly in REA.
-2. **Native libraries and tools** (`src/`, C++17 + SDL2): asset decoders, mixer, input laboratory, model/level viewer, FMV player. This is **not** the game runtime. Gameplay, rendering states, scripts and saves are not recovered. Never describe it as a playable port.
+2. **Native libraries and tools** (`src/`, C++17 + SDL2): asset decoders, mixer, input laboratory, model/level viewer, FMV player, and `chase-game`, a development runtime that reproduces measured original behaviour (locomotion, collision, camera, falling, jumping, level objects and characters). Missions, enemies, menus, scripts, most rendering states and saves are not recovered yet. `chase-game` is the start of the game runtime, not the finished game.
 
 Plan and progress: `docs/plans/linux-port.md` and `docs/plans/linux-port.progress.md` (steps S1–S4). Before resuming port work, read the plan and the progress file's Status and Next Action sections, not the whole log. Record each session's commands, results and timestamps in the progress file. Findings do not go there (see "Reverse-engineering findings").
+
+## Goal and faithfulness
+
+- **Goal:** a PC port that works and behaves exactly like the original 3DS game, playable from start to finish. Linux x86_64 comes first.
+- **Order of work:** (1) finish the faithful Linux version; (2) only after that, and only when the user says so, the Windows port; (3) only after the game is finished for PC, quality-of-life features. Until then: no Windows work of any kind and no QoL features or deviations from the original.
+- **Behaviour comes from the original:** code (REA, objdump) and measurements (oracle). Do not "improve" it, round it off or simplify it.
+- **Stand-ins:** anything not yet taken from the original (a guessed asset, a measured constant used instead of its source, an approximation) must be labelled as a stand-in in the code's names or the matching `docs/re/` file and listed as an open item in the progress file. Never present a stand-in as original behaviour.
+- **Input mapping:** mapping the 3DS controls to keyboard and mouse (configurable bindings, and stand-ins such as the `Walk` key for a half-tilted circle pad) is part of the port, not a QoL feature. It must not change how the game behaves.
+- Never invent game behaviour. Record unknowns.
 
 ## Commands
 
@@ -38,7 +47,7 @@ All other commands (extractors, converters, viewer, FMV, sound test, input lab, 
 - **Extractor safety:** open the image read-only; bounds-check every offset; fail on encryption or hash mismatch; cap decompressed output at `MAX_CODE`; never overwrite an existing output directory. `manifest.json` records offsets, hashes and ARM segment addresses as evidence. The ELF is a derived analysis wrapper, not an original binary.
 - REA cannot open the `.cci`. Analyse `artifacts/<dir>/game.arm.elf`.
 - **REA:** for the ARM executable, use the installed REA skill/integration and its documented workflow. If unavailable, use other disassembly tools. Record reproducible findings and evidence IDs in the matching `docs/re/` file. Never claim REA analysis that did not happen.
-- **Platform:** Linux x86_64 only. Prefer portable C++17 and the standard library, but add no Windows builds, infrastructure or abstractions.
+- **Platform:** Linux x86_64 first. Windows comes after the Linux version is finished. Until the user says so, do no Windows work of any kind: no builds, infrastructure, abstractions or preparation. Prefer portable C++17 and the standard library.
 
 ## C++ is the source of truth
 

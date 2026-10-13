@@ -1,6 +1,6 @@
 # Development runtime
 
-The development runtime (`chase-game`) is an early test program. **It is not the game.** It shows a level and lets you walk the main character around it. There are no missions, enemies, menus or story.
+The development runtime (`chase-game`) is the first part of the future game, and it is an early test program. **It is not the game yet.** It shows a level and lets you walk the main character around it, with behaviour measured in the original. There are no missions, enemies, menus or story yet.
 
 You need the game files first. See [Extracting game data](extracting-game-data.md) and [Building the tools](building.md). The program needs libepoxy.
 

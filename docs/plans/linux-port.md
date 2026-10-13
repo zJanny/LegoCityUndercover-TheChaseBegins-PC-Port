@@ -2,15 +2,15 @@
 
 ## 1. Executive Summary
 
-Start a Linux x86_64 reconstruction of The Chase Begins from the supplied decrypted 3DS image. Deliver an auditable extraction pipeline and accessible native input laboratory first; gameplay reconstruction remains required work.
+Build a faithful PC port of The Chase Begins from the supplied decrypted 3DS image: everything works and behaves exactly like the original, playable from start to finish, on Linux x86_64 first. Windows follows only after the Linux version is finished and the user says so; quality-of-life features follow only after the game is finished for PC. Until then no Windows work and no deviations from the original. Delivered so far: an auditable extraction pipeline, an accessible native input laboratory, asset decoders and a development runtime; gameplay reconstruction remains required work.
 
 ## 2. Confirmed Requirements
 
-R1: reverse engineer supplied game; accept verified executable extraction and mapped analysis, S1/S3. R2: build native Linux x86_64 foundation; accept native build and smoke test, S2. R3: keyboard/mouse device support; accept configurable hold/toggle input, focus reset, touch mapping, S2. R4: eventual playable port; accept original gameplay, assets, sound and saves on PC, S4; not yet executable-ready.
+R1: reverse engineer supplied game; accept verified executable extraction and mapped analysis, S1/S3. R2: build native Linux x86_64 foundation; accept native build and smoke test, S2. R3: keyboard/mouse device support; accept configurable hold/toggle input, focus reset, touch mapping, S2. R4: playable port that behaves exactly like the original, start to finish, on Linux x86_64; accept original gameplay, assets, sound and saves on PC, S4; not yet executable-ready. R5 (deferred, only on the user's explicit instruction): Windows port, after R4 is complete. R6 (deferred): quality-of-life features, after the game is finished for PC. No work on R5 or R6 until then.
 
 ## 3. Assumptions
 
-C++17 and SDL2 are reversible platform defaults. Action names initially describe 3DS buttons, not recovered gameplay semantics. Do not infer native pointer sizes from ARM addresses. Original image remains unchanged; generated game-derived files stay local.
+C++17 and SDL2 are reversible platform defaults for the Linux version. Action names initially describe 3DS buttons, not recovered gameplay semantics. Do not infer native pointer sizes from ARM addresses. Original image remains unchanged; generated game-derived files stay local.
 
 ## 4. Repository Findings
 
@@ -80,7 +80,7 @@ Actual feature/linux-port. Revision 2: CLAUDE.md (user-specified workflows) auth
 
 ## 17. Rollout Plan
 
-Local tool only: extract, build, run lab. Playable rollout deferred until R4 verified.
+Local tool only: extract, build, run lab and development runtime. Playable rollout deferred until R4 verified; Windows rollout deferred until the user asks for it after R4.
 
 ## 18. Rollback Plan
 
@@ -92,7 +92,7 @@ Manifest records reproducible offsets and hashes; REA evidence IDs recorded in p
 
 ## 20. Documentation
 
-README explains extraction/build/run/config and distinction between lab and playable port. Progress retains observed findings, coverage boundaries and remaining work.
+README explains extraction/build/run/config, the goal (faithful port, Linux first) and the distinction between development tools and the not-yet-playable game. Progress retains observed findings, coverage boundaries and remaining work.
 
 ## 21. Final Implementation Checklist
 

@@ -1,6 +1,6 @@
 # Project status
 
-**The game is not playable on PC.** This project is at an early stage. It can read the game's files and show many of them, but none of the game itself runs yet.
+**The game is not playable on PC yet.** This project is at an early stage. The goal is a port that plays exactly like the original 3DS game, from start to finish, on Linux first. Windows comes after the Linux version is finished. Extra features come after that. Today the project can read the game's files and show many of them, and one level can be walked through. The rest of the game does not run yet.
 
 ## What works
 
