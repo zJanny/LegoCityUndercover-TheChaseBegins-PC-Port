@@ -6,7 +6,7 @@ Studs as the original handles them: pickup-system sprites (object type 0x3d, pic
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-13T21:39:06+0200. Studs spin, are picked up, fly to the HUD counter and are counted and shown in `chase-game`. Resolved and removed: STUD-S2 (skip limit is the read 30), STUD-S4 (studs fly to the counter), STUD-7 (oracle pictures exist).
+IN_PROGRESS, updated 2026-10-13T21:46:46+0200. Studs spin, are picked up, fly to the HUD counter and are counted and shown in `chase-game`. Resolved and removed: STUD-S2 (skip limit is the read 30), STUD-S4 (studs fly to the counter), STUD-7 (oracle pictures exist).
 
 ## 3. Verified behaviour
 
@@ -25,7 +25,7 @@ IN_PROGRESS, updated 2026-10-13T21:39:06+0200. Studs spin, are picked up, fly to
 
 - [ ] STUD-1 — Missing: multiplier mask, magnet, group enabling, dropped studs. evidence: [studs.md §2026-10-13T17:09](../../re/studs.md).
 - [x] STUD-2 — The on-screen counter and studs flying to it. Done 2026-10-13 (needs HUD-1, done). evidence: [studs.md §2026-10-13T21:35](../../re/studs.md), [hud.md](../../re/hud.md).
-- [ ] STUD-3 — The collect sound was listed as missing in the handoff written before the sound merge; the sounds merge (2026-10-13T17:54) plays the original stud ids, so confirm against the oracle and close. see AUDIO-5. evidence: [audio.md §2026-10-13T17:54](../../re/audio.md).
+- [ ] STUD-3 — Blue and purple collect sound (id 63, coinblue) has no recorded oracle pickup. Silver (id 64) is replayed from a recorded pickup (`audio-real-data`, trace `stud.csv`); gold (id 64) has no recording either. see AUDIO-5. evidence: [audio.md §2026-10-13T17:54](../../re/audio.md).
 - [ ] STUD-4 — How a group is enabled (0x28a2cc sequencer, `EnableStudsByGroup` and `SpawnStuds` script functions, `StudSpawn*` parameters, meaning of `GroupOrder` +0x33). needs: SCRIPT-1. evidence: [studs.md §2026-10-13T17:09](../../re/studs.md).
 - [ ] STUD-5 — Where the per-frame clock origin of 0x5165c8 comes from and whether the game restarts it at level start. evidence: [studs.md §2026-10-13T17:09](../../re/studs.md).
 - [ ] STUD-6 — The per-level stud total; whether the radius 1.5 holds for all characters and abilities (setter 0x2744d0). evidence: [studs.md §2026-10-13T17:09](../../re/studs.md).

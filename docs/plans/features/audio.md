@@ -6,7 +6,7 @@ Sound effects and music: the CWAV decode and mixer, sound ids (`tablessoundfx`),
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-13T21:29:01+0200. `chase_audio` plays the player's and the studs' sounds in `chase-game`; no music starts because no scripts run.
+IN_PROGRESS, updated 2026-10-13T21:46:46+0200. `chase_audio` plays the player's and the studs' sounds in `chase-game`; no music starts because no scripts run.
 
 ## 3. Verified behaviour
 
@@ -29,7 +29,7 @@ IN_PROGRESS, updated 2026-10-13T21:29:01+0200. `chase_audio` plays the player's 
 - [ ] AUDIO-2 — Nothing starts level music because no scripts run (OverrideMusic / StopMusic / PauseMusic handlers recovered); music fades. needs: SCRIPT-1. evidence: [audio.md §2026-10-13T09:42](../../re/audio.md), [audio.md §2026-10-13T17:54](../../re/audio.md).
 - [ ] AUDIO-3 — Idle and jump animation sound tracks; world sounds of NPCs, vehicles and objects (ambient emitter 0x2c05dc plays ids like 210/296 from level objects). evidence: [audio.md §2026-10-13T17:54](../../re/audio.md).
 - [ ] AUDIO-4 — Effect sounds cannot be stopped (the mixer has no stop for effect sounds; stop events 0x23ae50). blocks: DOOR-5. evidence: [doors.md §2026-10-13T21:17](../../re/doors.md).
-- [ ] AUDIO-5 — Verify the stud pickup sound path: the stud pickup update differs by the skip-counter stand-in (STUD-S2). evidence: [audio.md §2026-10-13T17:54](../../re/audio.md).
+- [ ] AUDIO-5 — Stud collect sound: silver (id 64) is replayed from a recorded pickup (`audio-real-data`); blue and purple (id 63) have no recorded pickup, and gold (id 64) none either. see STUD-3. evidence: [audio.md §2026-10-13T17:54](../../re/audio.md).
 - [ ] AUDIO-6 — Which condition sets ctrl+0x317 bit 3 and ground type 11; the options volume source in a loaded save (0x2c19a4 sets defaults 8 and 10); mode 3 id remap of 0x23fa54; ducking (record flag bit 3). evidence: [audio.md §2026-10-13T17:54](../../re/audio.md).
 - [ ] AUDIO-7 — Music, and the sounds of other people, animals, vehicles and objects, are not played (the character and the coins are).
 

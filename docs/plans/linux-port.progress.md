@@ -246,3 +246,4 @@ One line per session: timestamp, what was worked on, how far it got, link to the
 - 2026-10-13T21:38:53+02:00 — Lead: docs/re stand-in references (collision, scripts, audio, studs, player) now point to the feature files instead of the progress file; INPUT-1 kept open for possible controller support (user) → [input](features/input.md).
 - 2026-10-13T21:39:06+02:00 — In-game HUD: portrait, hearts, stud counter, studs flying to it, bottom-screen map (stand-in fit); skip limit corrected to 30; ctest 42/42 → [hud-ui](features/hud-ui.md), [studs](features/studs.md), [docs/re/hud.md](../re/hud.md)
 - 2026-10-13T21:46:54+0200 — chase-viewer plays animations at their stored rate (ANIM-S1 removed) → [animation-characters](features/animation-characters.md).
+- 2026-10-13T21:46:58+0200 — STUD-3 checked: still open: blue and purple collect sound (id 63) has no recorded oracle pickup; silver id 64 is pinned by `audio-real-data` → [studs](features/studs.md).

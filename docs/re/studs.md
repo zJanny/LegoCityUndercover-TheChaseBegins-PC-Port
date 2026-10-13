@@ -53,3 +53,10 @@ Unknowns:
 
 Unknowns
 - Whether other stud types fly to sinks 1 or 2 (the type table +0x5c byte is 0 for silver, gold, blue and purple), the blend state of the flying sprite, dropped and magnet studs.
+
+## 2026-10-13T21:48:38+02:00 — Correction: the collect sound is played
+
+**Correction** of the 17:09:41 entry ("the collect sound … chase-game has no audio"): since the sound merge (docs/re/audio.md 17:54) chase-game plays the stud's own collect id (`kStudCollectSounds` {64, 64, 63, 63} for silver, gold, blue, purple in src/runtime/studs.hpp, emitted by src/runtime/studs.cpp, played through `studCollectCall`). The silver pickup is replayed against a recorded oracle pickup (`audio-real-data`, trace `stud.csv`, trap 0x227880, id 64); the ids 63 and gold's 64 come from the table/code only (STUD-3 in [features/studs.md](../plans/features/studs.md)).
+
+Unknowns:
+- A recorded original pickup of a gold, blue or purple stud.
