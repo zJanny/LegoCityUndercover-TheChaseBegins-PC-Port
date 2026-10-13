@@ -27,6 +27,7 @@ Read this index, then open only the file you need.
 | [scripts.md](scripts.md) | Level scripts (section +0x18), the script executor 0x234204 and its words, EnableObject / EnableCollision, the `startup` script, the revealer links, the start state of placed objects |
 | [doors.md](doors.md) | Doors (type 42): record, update 0x1d16b8, state change, messages, easing, hinge and slide pose, timings measured in the oracle |
 | [studs.md](studs.md) | Studs (collectible coins): pickup pool records, sprite sheet drawing and spin, pickup radius and skip counter, collect timer, counter values and limits, stand-ins |
+| [hud.md](hud.md) | In-game HUD: layouts, portrait, hearts (SetHearts, loop rule, health default), stud bar (state machine, formatting, icon bounce, no roll-up for pickups), flying studs (law, unprojection, sinks), bottom-screen map placement |
 | [oracle.md](oracle.md) | Azahar runtime oracle: setup, fidelity rules, save states, fast workflow, timings |
 | [camera.md](camera.md) | Gameplay camera: yaw word 0x376894 writer, manager and modes, follow camera law (OnFoot preset), projection, obstruction by level geometry (slab sweep, pull-in, side and vertical push), unknowns |
 | [player.md](player.md) | Player entity pointer, scene node, controller fields, stick-to-intent, locomotion rules and root motion |

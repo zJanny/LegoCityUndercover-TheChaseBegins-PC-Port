@@ -123,10 +123,9 @@ Read this section, CLAUDE.md (incl. "Goal and faithfulness" and "Feature files")
 **State:** M1 runtime loop, M2 locomotion, M3 walkable level, M4 level objects, characters, studs, falling, jumping and object collision are on main; the front end (boot to the first level) and the sound hooks are merged. `chase-game` is a development runtime, not the game ([docs/status.md](../status.md)).
 
 **Priorities (critical path):**
-1. HUD (hearts, stud counter) from the `.bxaml` layouts; studs flying to the counter: [hud-ui](features/hud-ui.md), [studs](features/studs.md).
-2. Script execution: doors and other scripted objects (frozen today), NPC animation, then mission flow: [script-system](features/script-system.md), [doors](features/doors.md), [level-objects](features/level-objects.md), [animation-characters](features/animation-characters.md).
-3. Player completeness: slide exit and the landing after a slide, the other `0x203d18` states (strafing, 73, 75, 128..135): [player-movement](features/player-movement.md).
-4. Front-end remainder (existing slots, Continue, loading screen scene): [front-end](features/front-end.md), [saves-options](features/saves-options.md).
+1. Script execution: doors and other scripted objects (frozen today), NPC animation, then mission flow: [script-system](features/script-system.md), [doors](features/doors.md), [level-objects](features/level-objects.md), [animation-characters](features/animation-characters.md).
+2. Player completeness: slide exit and the landing after a slide, the other `0x203d18` states (strafing, 73, 75, 128..135): [player-movement](features/player-movement.md).
+3. Front-end remainder (existing slots, Continue, loading screen scene): [front-end](features/front-end.md), [saves-options](features/saves-options.md).
 
 **Workflow notes:** oracle route and states: `tools/azahar_oracle.py` with `--display xvfb --state gameplay-start --renderer opengl --rpc --rpc-input`, route from boot `tools/oracle/to-gameplay.txt`; only one agent may use `--rpc` at a time. The lead delegates to subagents in worktrees (at most 3 in parallel, user), every brief names the CLAUDE.md rules, reviews each result against CLAUDE.md, rebuilds and tests, squash-merges one commit per branch (`git merge --squash`), removes the worktree and branch (`git worktree remove -f -f`, `git branch -D`), then `graphify update .` and verifies. Resume a branch with `git log main..<branch>`.
 
@@ -245,3 +244,4 @@ One line per session: timestamp, what was worked on, how far it got, link to the
 - 2026-10-13T20:50:00+02:00 — Front end finished from boot to the first level (`chase_frontend`, `chase_movie`, `chase-frontshot`, chase-game front-end mode); ctest 35/35 → [front-end](features/front-end.md), [docs/re/front-end.md](../re/front-end.md)
 - 2026-10-13T20:58:38+02:00 — Lead fix: 47 of 49 movies alternate eye frames; `chase_movie` keeps the first picture of each pair; ctest 35/35 → [movies-cutscenes](features/movies-cutscenes.md), [docs/re/fmv.md](../re/fmv.md)
 - 2026-10-13T21:38:53+02:00 — Lead: docs/re stand-in references (collision, scripts, audio, studs, player) now point to the feature files instead of the progress file; INPUT-1 kept open for possible controller support (user) → [input](features/input.md).
+- 2026-10-13T21:39:06+02:00 — In-game HUD: portrait, hearts, stud counter, studs flying to it, bottom-screen map (stand-in fit); skip limit corrected to 30; ctest 42/42 → [hud-ui](features/hud-ui.md), [studs](features/studs.md), [docs/re/hud.md](../re/hud.md)

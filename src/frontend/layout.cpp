@@ -31,19 +31,18 @@ struct Pose {
     bool hasOpacity = false;
 };
 
-Pose poseOf(const assets::UiLayout* layout, const std::string& storyboard, float time, const std::string& target) {
-    Pose pose;
-    if (!layout || storyboard.empty()) return pose;
-    for (const auto& board : layout->storyboards) {
+void applyStoryboard(Pose& pose, const assets::UiLayout& layout, const std::string& storyboard, float time,
+                     const std::string& target) {
+    for (const auto& board : layout.storyboards) {
         if (board.name != storyboard) continue;
         for (const auto& track : board.tracks) {
             if (track.target != target) continue;
             const float value = evaluateTrack(track, time);
             switch (track.property) {
-            case 1: pose.translateX += value; break;
-            case 2: pose.translateY += value; break;
-            case 3: pose.scaleX *= value; break;
-            case 4: pose.scaleY *= value; break;
+            case 1: pose.translateX = value; break;
+            case 2: pose.translateY = value; break;
+            case 3: pose.scaleX = value; break;
+            case 4: pose.scaleY = value; break;
             case 6:
                 pose.opacity = value;
                 pose.hasOpacity = true;
@@ -52,6 +51,14 @@ Pose poseOf(const assets::UiLayout* layout, const std::string& storyboard, float
             }
         }
     }
+}
+
+Pose poseOf(const assets::UiLayout* layout, const std::string& storyboard, float time, const std::string& target,
+            const std::vector<PlayingStoryboard>& later) {
+    Pose pose;
+    if (!layout) return pose;
+    if (!storyboard.empty()) applyStoryboard(pose, *layout, storyboard, time, target);
+    for (const PlayingStoryboard& playing : later) applyStoryboard(pose, *layout, playing.name, playing.time, target);
     return pose;
 }
 
@@ -64,11 +71,13 @@ public:
     Drawer(Canvas& canvas, Resources& resources, const LayoutScene& scene) : canvas_(canvas), resources_(resources), scene_(scene) {}
 
     void layout(const std::string& path, Frame frame, const std::string& storyboard, const std::string& instance,
-                float time) {
+                float time, const std::vector<PlayingStoryboard>& later = {}) {
         const assets::UiLayout& parsed = resources_.layout(path);
         const assets::UiLayout* previous = current_;
         const std::string previousPath = currentPath_, previousBoard = storyboard_, previousInstance = instance_;
         const float previousTime = time_;
+        const std::vector<PlayingStoryboard>* previousLater = later_;
+        later_ = &later;
         time_ = time;
         current_ = &parsed;
         currentPath_ = path;
@@ -80,6 +89,7 @@ public:
         storyboard_ = previousBoard;
         instance_ = previousInstance;
         time_ = previousTime;
+        later_ = previousLater;
     }
 
 private:
@@ -94,7 +104,7 @@ private:
 
     void element(const assets::UiElement& e, const Frame& parent) {
         if (scene_.hidden.count(e.name) || (!instance_.empty() && scene_.hidden.count(instance_ + "/" + e.name))) return;
-        const Pose pose = poseOf(current_, storyboard_, time_, e.name);
+        const Pose pose = poseOf(current_, storyboard_, time_, e.name, *later_);
         float width = e.size[0], height = e.size[1];
         const assets::Image* image = nullptr;
         if (e.type == assets::UiElementType::Image) {
@@ -117,11 +127,13 @@ private:
             const Colour tint{1, 1, 1, frame.opacity};
             canvas_.drawScaled(*image, {0, 0, image->width, image->height}, frame.x, frame.y, width * frame.scaleX,
                                height * frame.scaleY, tint);
-        } else if (e.type == assets::UiElementType::Reference) {
+        } else if (e.type == assets::UiElementType::Reference || scene_.attachedLayouts.count(e.name)) {
+            const auto attached = scene_.attachedLayouts.find(e.name);
             const auto board = scene_.referenceStoryboards.find(e.name);
             const auto referenceTime = scene_.referenceTimes.find(e.name);
-            layout(layoutFolder(currentPath_) + lowerCase(e.source) + ".bxaml", frame,
-                   board == scene_.referenceStoryboards.end() ? std::string() : board->second, e.name,
+            layout(attached != scene_.attachedLayouts.end() ? attached->second
+                                                            : layoutFolder(currentPath_) + lowerCase(e.source) + ".bxaml",
+                   frame, board == scene_.referenceStoryboards.end() ? std::string() : board->second, e.name,
                    referenceTime == scene_.referenceTimes.end() ? scene_.time : referenceTime->second);
         }
         const TextSlot* slot = nullptr;
@@ -164,6 +176,7 @@ private:
     const assets::UiLayout* current_ = nullptr;
     std::string currentPath_, storyboard_, instance_;
     float time_ = 0;
+    const std::vector<PlayingStoryboard>* later_ = nullptr;
 };
 
 }
@@ -230,7 +243,8 @@ std::vector<std::string> wrapText(const BitmapFont& font, const std::vector<std:
 void drawLayout(Canvas& canvas, Resources& resources, const std::string& layoutPath, const LayoutScene& scene, float x,
                 float y) {
     Drawer drawer(canvas, resources, scene);
-    drawer.layout(layoutPath, {x, y, 1, 1, scene.opacity}, scene.storyboard, std::string(), scene.time);
+    drawer.layout(layoutPath, {x, y, 1, 1, scene.opacity}, scene.storyboard, std::string(), scene.time,
+                  scene.laterStoryboards);
 }
 
 }

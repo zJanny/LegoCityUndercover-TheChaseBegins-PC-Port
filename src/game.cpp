@@ -6,7 +6,10 @@
 // collision. There is no gameplay.
 #include "assets/assets.hpp"
 #include "game_audio.hpp"
+#include "frontend/hud.hpp"
+#include "frontend/minimap.hpp"
 #include "game_front.hpp"
+#include "game_hud.hpp"
 #include "input.hpp"
 #include "render/character.hpp"
 #include "render/scene.hpp"
@@ -44,6 +47,7 @@ namespace {
 using namespace chase::assets;
 using namespace chase::render;
 namespace runtime = chase::runtime;
+namespace fe = chase::frontend;
 
 constexpr int kStickFullDeflection = 145;
 // Development stand-in, not the original: a keyboard has no half deflection, so holding Walk (Left Alt) tilts the
@@ -94,6 +98,7 @@ struct Options {
     std::string frontScript;
     unsigned language = 1;
     bool returningPlayer = false;
+    int windowWidth = 960, windowHeight = 600;
 };
 
 // A new game starts in Cherry Tree Hills at the position of the player entity in the oracle at gameplay-start
@@ -147,6 +152,12 @@ Options parse(int argc, char** argv) {
         else if (arg == "--front-script") o.frontScript = value();
         else if (arg == "--language") o.language = std::max(1u, std::min(9u, unsigned(std::stoul(value()))));
         else if (arg == "--returning") o.returningPlayer = true;
+        else if (arg == "--window") {
+            std::stringstream fields(value());
+            char separator = 0;
+            if (!(fields >> o.windowWidth >> separator >> o.windowHeight) || separator != 'x' || o.windowWidth < 200 || o.windowHeight < 240)
+                throw std::runtime_error("bad --window, expected WIDTHxHEIGHT");
+        }
         else if (arg == "--screenshot") o.screenshot = value();
         else if (arg == "--frames") o.frames = unsigned(std::stoul(value()));
         else if (arg == "--script") { o.script = value(); o.gameplay = true; }
@@ -163,7 +174,7 @@ Options parse(int argc, char** argv) {
         else throw std::runtime_error("usage: chase-game [--fib F] [--names CSV] [--config CFG] [--gameplay] "
                                       "[--level levels/levels/<name>/<name>_main.blvl] [--screenshot OUT.bmp] [--frames N] "
                                       "[--script \"X Y COUNT [BUTTONS];...\"] [--start \"X Y Z\"] [--no-camera-collision] [--sound-volume 0-10] [--music-volume 0-10] "
-                                      "[--front-script \"run 5; press A; until slot; ...\"] [--language 1-9] [--returning]");
+                                      "[--front-script \"run 5; press A; until slot; ...\"] [--language 1-9] [--returning] [--window WIDTHxHEIGHT]");
     }
     return o;
 }
@@ -429,7 +440,7 @@ int run(const Options& given) {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-    int width = 960, height = 600;
+    int width = options.windowWidth, height = options.windowHeight;
     SDL_Window* window = SDL_CreateWindow("The Chase Begins - development runtime (not the playable game)",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
     if (!window) throw std::runtime_error(SDL_GetError());
@@ -536,6 +547,20 @@ int run(const Options& given) {
     glEnable(GL_CULL_FACE);
     chase::render::setFrontFace(true);
 
+    fe::Resources hudResources(archive);
+    std::optional<fe::Hud> hud;
+    if (player) {
+        fe::HudConfig hudConfig;
+        const std::string characterFile = kPlayerCharacter;
+        const std::size_t nameStart = characterFile.find("char_") + 5;
+        hudConfig.portrait = characterFile.substr(nameStart, characterFile.find(".blvl") - nameStart);
+        hud.emplace(hudResources, hudConfig);
+    }
+    fe::Canvas hudCanvas(fe::kTopWidth, fe::kScreenHeight), mapCanvas(fe::kBottomWidth, fe::kScreenHeight);
+    std::optional<game_hud::Overlay> overlay(std::in_place);
+    const std::string levelFolder = lower(options.level).substr(0, lower(options.level).find_last_of('/'));
+    const std::string levelName = levelFolder.substr(levelFolder.find_last_of('/') + 1);
+
     runtime::PadDevice pad;
     const std::uint64_t counterFrequency = SDL_GetPerformanceFrequency();
     const std::uint64_t counterOrigin = SDL_GetPerformanceCounter();
@@ -567,6 +592,12 @@ int run(const Options& given) {
             stick.slot15 = {pad.slot(kSlotStickY).value, pad.slot(kSlotStickY).deadzone};
             stick.entityType = kPlayerEntityType;
             stick.cameraYaw = follow->yaw();
+            if (hud) {
+                hud->update(dt);
+                const fe::StudSink sink = hud->studSink();
+                studs.setFlightTarget(runtime::unprojectTopScreen(sink.x, sink.y, fe::kStudSinkDepth, follow->eye(), follow->yaw(),
+                                                                  follow->pitch(), runtime::FollowCamera::verticalFieldOfView()));
+            }
             const PlayerAnimation shown = updatePlayer(*player, collision, runtime::stickIntent(stick), pad.slot(kSlotJumpButton).press > 0, dt);
             player->animate(scene, dt, shown.role, shown.scale);
             if (!script.empty()) scriptedHeights.push_back(player->vertical.y);
@@ -575,6 +606,8 @@ int run(const Options& given) {
                                                            runtime::headingRadians(player->motion.facing))))
                 player->sounds.push_back(runtime::studCollectCall(collected, studs.studs()[collected.index].centre));
             for (const runtime::SoundCall& call : player->sounds) emit(call);
+            if (hud)
+                for (const runtime::StudBanked& banked : studs.takeBanked()) hud->studsBanked(unsigned(banked.kind), banked.total);
         }
         if (player) {
             const float playerPosition[3] = {player->motion.x, player->vertical.y, player->motion.z};
@@ -652,7 +685,14 @@ int run(const Options& given) {
         }
 
         SDL_GL_GetDrawableSize(window, &width, &height);
+        const game_hud::Screens screens = game_hud::screensFor(width, height);
+        glDisable(GL_SCISSOR_TEST);
         glViewport(0, 0, width, height);
+        glClearColor(0, 0, 0, 1);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_SCISSOR_TEST);
+        glScissor(screens.top.x, screens.top.y, screens.top.width, screens.top.height);
+        glViewport(screens.top.x, screens.top.y, screens.top.width, screens.top.height);
         glClearColor(0.16f, 0.17f, 0.2f, 1);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         beginFrame(program, 1.0f);
@@ -661,14 +701,29 @@ int run(const Options& given) {
         const float fieldOfView = follow ? runtime::FollowCamera::verticalFieldOfView() : 1.0f;
         const Mat4 viewMatrix = chase::render::view(eye, viewYaw, viewPitch);
         Mat4 mvp = chase::render::multiply(
-            perspective(fieldOfView, float(width) / float(std::max(height, 1)), radius * 0.002f, radius * 20), viewMatrix);
+            perspective(fieldOfView, float(fe::kTopWidth) / float(fe::kScreenHeight), radius * 0.002f, radius * 20), viewMatrix);
         scene.draw(program, mvp);
         std::vector<StudSprite> sprites;
         for (const runtime::Stud& stud : studs.studs())
-            if (stud.state == runtime::StudState::Idle)
+            if (stud.state == runtime::StudState::Idle || stud.state == runtime::StudState::Collecting)
                 sprites.push_back({{stud.centre[0], stud.centre[1], stud.centre[2]}, runtime::kStudTint[std::size_t(stud.kind)]});
         studSprites->draw(program, viewMatrix, mvp, sprites, runtime::studSpriteFrame(std::uint32_t(provisionalStudClockSeconds * double(runtime::kClockTicksPerSecond))),
                          runtime::kStudHalfSize);
+        glDisable(GL_SCISSOR_TEST);
+        if (hud) {
+            hudCanvas.clearTransparent();
+            hud->draw(hudCanvas, provisionalStudClockSeconds);
+            fe::MinimapView mapView;
+            mapView.x = player->motion.x;
+            mapView.z = player->motion.z;
+            mapView.cameraYaw = follow->yaw();
+            mapView.playerYaw = runtime::headingRadians(player->motion.facing);
+            fe::drawMinimap(mapCanvas, hudResources, levelName, mapView);
+        } else {
+            hudCanvas.clearTransparent();
+            mapCanvas.clear(0, 0, 0);
+        }
+        overlay->draw(hudCanvas, mapCanvas, screens, width, height);
 
         const bool scriptDone = !script.empty() && updates >= scriptLength;
         if (scriptDone) {
@@ -677,6 +732,8 @@ int run(const Options& given) {
                       << " units, facing " << player->motion.facing << ", run timer " << player->motion.runTimer << ", height " << player->vertical.y << '\n';
             std::cout << "studs: counter " << studs.counter() << ", " << studs.count(runtime::StudState::Collecting) << " collecting, "
                       << studs.count(runtime::StudState::Done) << " collected, " << studs.count(runtime::StudState::Idle) << " left\n";
+            if (hud) std::cout << "hud: " << hud->hearts() << " hearts, stud display " << hud->studDisplay() << ", bar state "
+                               << int(hud->studBarState()) << '\n';
             std::cout << "doors:";
             for (const DoorObject& door : doors)
                 if (door.state.state != 1) std::cout << ' ' << door.instance << '=' << door.state.state << '/' << int(door.state.timer);
@@ -706,6 +763,7 @@ int run(const Options& given) {
         }
     }
     studSprites.reset();
+    overlay.reset();
     SDL_GL_DeleteContext(context);
     SDL_DestroyWindow(window);
     SDL_Quit();

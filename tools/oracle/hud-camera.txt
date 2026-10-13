@@ -1,0 +1,12 @@
+# Camera pose after the stud teleport settled: eye K+0x34, look point K+0x94 and offset K+0xf4 (camera.md), the counter sink
+# table 0x58ef4c and the player's camera yaw. Used to check the unprojection of the flying studs' target (docs/re/hud.md).
+loadstate gameplay-start
+stick 0 0
+hold -
+teleport 862.5931 16.1988 1060.5875
+frames 24
+read 0x589aa4 0xc
+read 0x589b04 0xc
+read 0x589b64 0xc
+read 0x58ef4c 0xc
+player

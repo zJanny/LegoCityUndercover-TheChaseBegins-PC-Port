@@ -1,0 +1,33 @@
+# Screenshots for the HUD comparison (docs/re/hud.md). Needs --renderer opengl --rpc. Names are relative to --output.
+loadstate gameplay-start
+stick 0 0
+hold -
+frames 2
+player
+screenshot oracle_start
+loadstate gameplay-start
+stick 0 0
+hold -
+teleport 862.5931 16.1988 1060.5875
+frames 14
+screenshot oracle_fly_a
+frames 3
+screenshot oracle_fly_b
+frames 13
+screenshot oracle_bar_on
+frames 5
+screenshot oracle_bar_steady
+loadstate gameplay-start
+stick 0 0
+hold -
+teleport 960 16.589 1111.166
+frames 40
+player
+screenshot oracle_map_a
+loadstate gameplay-start
+stick 0 0
+hold -
+teleport 886.764 16.589 1190
+frames 40
+player
+screenshot oracle_map_b

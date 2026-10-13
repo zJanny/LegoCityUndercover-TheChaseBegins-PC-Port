@@ -40,9 +40,12 @@ target_include_directories(chase_runtime PUBLIC src)
 target_compile_options(chase_runtime PRIVATE -Wall -Wextra -Wpedantic -ffp-contract=off)
 target_sources(chase_runtime PRIVATE src/runtime/studs.cpp src/runtime/sound_events.cpp src/runtime/music.cpp src/runtime/level_start.cpp src/runtime/door.cpp)
 # Front end (boot to the slot list): CPU-drawn screens, no SDL dependency.
-add_library(chase_frontend src/frontend/script.cpp src/frontend/frontend.cpp src/frontend/pages.cpp src/frontend/canvas.cpp src/frontend/resources.cpp src/frontend/layout.cpp src/frontend/flow.cpp)
+add_library(chase_frontend src/frontend/script.cpp src/frontend/frontend.cpp src/frontend/pages.cpp src/frontend/canvas.cpp src/frontend/resources.cpp src/frontend/layout.cpp src/frontend/flow.cpp src/frontend/hud.cpp src/frontend/minimap.cpp)
 target_link_libraries(chase_frontend PUBLIC chase_assets chase_runtime)
 target_compile_options(chase_frontend PRIVATE -Wall -Wextra -Wpedantic -ffp-contract=off)
+add_executable(chase-hudshot src/hudshot.cpp)
+target_link_libraries(chase-hudshot PRIVATE chase_frontend)
+target_compile_options(chase-hudshot PRIVATE -Wall -Wextra -Wpedantic)
 add_executable(chase-savecheck src/savecheck.cpp)
 target_link_libraries(chase-savecheck PRIVATE chase_save_tables)
 target_compile_options(chase-savecheck PRIVATE -Wall -Wextra -Wpedantic)
@@ -107,6 +110,8 @@ set(CHASE_CAMERA_WALL_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/camwall-ou
     "Recorded original-game camera traces near walls (.mem memtraces and exported CSV) for the opt-in differential tests")
 set(CHASE_STUDS_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/studs-traces" CACHE PATH
     "Recorded original-game stud pickup traces for the opt-in differential test")
+set(CHASE_HUD_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/hud-traces" CACHE PATH
+    "Recorded original-game HUD stud bar traces for the opt-in HUD test")
 set(CHASE_AUDIO_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/audio-traces" CACHE PATH
     "Recorded original-game sound-call traces (CSV from tools/export_sound_trace.py) for the opt-in differential test")
 include(CTest)
@@ -132,6 +137,12 @@ if(BUILD_TESTING)
     add_test(NAME frontend-real-data COMMAND frontend-real-test
       "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv" "${CHASE_ROMFS_DIR}/cutscenes")
     set_tests_properties(frontend-real-data PROPERTIES SKIP_RETURN_CODE 77)
+    add_executable(hud-real-test tests/hud_real_test.cpp)
+    target_link_libraries(hud-real-test PRIVATE chase_frontend)
+    target_compile_options(hud-real-test PRIVATE -Wall -Wextra -Wpedantic)
+    add_test(NAME hud-real-data COMMAND hud-real-test
+      "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv" "${CHASE_HUD_TRACE_DIR}")
+    set_tests_properties(hud-real-data PROPERTIES SKIP_RETURN_CODE 77)
   endif()
   add_executable(mixer-test tests/mixer_test.cpp)
   target_link_libraries(mixer-test PRIVATE chase_audio)
@@ -323,6 +334,15 @@ if(BUILD_TESTING)
       --start "886.764 16.589 1111.166" --script "0 0 2;0 0 1 B;0 0 12" --screenshot game-script-jump.bmp)
     set_tests_properties(game-script-jump PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen"
       PASS_REGULAR_EXPRESSION "heights: 16\\.589 16\\.589 16\\.589 16\\.859[0-9]* 17\\.129[0-9]* 17\\.40[67][0-9]* 17\\.68[34][0-9]* 17\\.92[89][0-9]* 18\\.17[0-9]* 18\\.34[0-9]* 18\\.52[0-9]* 18\\.5[89][0-9]* 18\\.65[0-9]* 18\\.66[0-9]* 18\\.68[0-9]*.*saved game-script-jump.bmp")
+    # The display during play: the player stands on a silver stud (tools/oracle/hud-bar.txt); after 70 updates the stud has flown to
+    # the counter, the total is 10 and the HUD shows it (four hearts: the class attribute Health defaults to 4).
+    add_test(NAME game-script-hud COMMAND chase-game
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
+      --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl
+      --start "862.5931 16.1988 1060.5875" --window 400x480 --script "0 0 70" --screenshot game-script-hud.bmp)
+    set_tests_properties(game-script-hud PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen"
+      PASS_REGULAR_EXPRESSION "studs: counter 10, 0 collecting, 1 collected.*hud: 4 hearts, stud display 10, bar state 2.*saved game-script-hud.bmp")
     # Opt-in: decodes and plays one looping music track for 0.3 s on SDL's dummy audio driver.
     add_test(NAME soundtest-real-smoke COMMAND chase-soundtest --seconds 0.3
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"

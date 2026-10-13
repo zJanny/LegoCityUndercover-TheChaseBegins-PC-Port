@@ -25,9 +25,21 @@ void Canvas::clear(std::uint8_t r, std::uint8_t g, std::uint8_t b) {
     }
 }
 
+void Canvas::clearTransparent() {
+    std::fill(pixels_.begin(), pixels_.end(), std::uint8_t(0));
+}
+
 void Canvas::blend(int x, int y, float r, float g, float b, float a) {
     if (x < 0 || y < 0 || x >= width_ || y >= height_ || a <= 0) return;
     std::uint8_t* destination = pixel(x, y);
+    if (destination[3] != 255) {
+        const float below = destination[3] / 255.0f * (1 - a), alpha = a + below;
+        destination[0] = toByte((r * a + destination[0] * below) / alpha);
+        destination[1] = toByte((g * a + destination[1] * below) / alpha);
+        destination[2] = toByte((b * a + destination[2] * below) / alpha);
+        destination[3] = toByte(alpha * 255);
+        return;
+    }
     destination[0] = toByte(r * a + destination[0] * (1 - a));
     destination[1] = toByte(g * a + destination[1] * (1 - a));
     destination[2] = toByte(b * a + destination[2] * (1 - a));

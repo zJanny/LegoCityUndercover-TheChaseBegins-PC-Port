@@ -7,6 +7,7 @@
 #include <map>
 #include <set>
 #include <string>
+#include <vector>
 
 namespace chase::frontend {
 
@@ -21,6 +22,11 @@ struct TextSlot {
     static constexpr int kSpacingDefault = 1 << 20;
 };
 
+struct PlayingStoryboard {
+    std::string name;
+    float time = 0;
+};
+
 struct LayoutScene {
     std::map<std::string, TextSlot> text;
     std::set<std::string> hidden;
@@ -29,6 +35,8 @@ struct LayoutScene {
     std::map<std::string, float> referenceTimes;
     std::string storyboard;
     float time = 0;
+    std::vector<PlayingStoryboard> laterStoryboards;
+    std::map<std::string, std::string> attachedLayouts;
     float opacity = 1;
     int textSpacing = -2;
 };

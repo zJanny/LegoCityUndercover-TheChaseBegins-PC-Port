@@ -61,6 +61,8 @@ Single C++ tests, with `ctest --test-dir build -R <name>`:
 | `frontend-flow` | The order and triggers of the start screens and the StreetPass pages, with a made-up movie, no game data needed |
 | `frontend-real-data` | Start-screen texts, line wrapping, exact logo pixels, page pictures and the length of the two movies; skips with code 77 if `artifacts/romfs` is missing |
 | `front-game-smoke`, `front-game-handoff`, `frontshot-real-smoke` | Run the start screens with a scripted pad: to the language list, through every screen into the level, and offscreen with `chase-frontshot`. Registered only if `artifacts/romfs` existed at configure time |
+| `hud-real-data` | The display during play: the stud bar's timing against a recorded pickup (`artifacts/oracle/hud-traces`, folder set with `-DCHASE_HUD_TRACE_DIR=...`), the icon bounce, the hearts, pictures of the display and the map screen; skips with code 77 if `artifacts/romfs` is missing and without the trace compares only the numbers pinned in the test |
+| `game-script-hud` | Runs the level offscreen with the character standing on a coin and checks that the coin was banked and the display shows the new total. Registered only if `artifacts/romfs` existed at configure time |
 
 ## Programs
 
@@ -78,6 +80,7 @@ cd build && ./chase-input-lab [--config PATH] [--smoke-test]
 - `chase-soundtest` plays decoded sounds, by file name or by sound number (`--id`). Use `SDL_AUDIODRIVER=dummy` for headless runs. See [Sound test](sound-test.md).
 - `chase-fmv` needs the FFmpeg libraries. See [Video player](fmv-player.md).
 - `chase-frontshot` runs the start screens offscreen with a scripted pad and saves pictures of both screens (400x480, like the emulator's screenshots). Example: `build/chase-frontshot --output /tmp --script "until language 60; run 5; shot language; press A; run 5; shot streetpass"`. Commands: `run SECONDS`, `press A|B|X|Y|START|UP|DOWN`, `until SCREEN [SECONDS]` and `shot NAME`. Screens: boot, logos, fusion, language, prompt, autosave, slot, saving, loading, intro, card, done. Options: `--output`, `--language 1-9`, `--returning`, `--fib`, `--names`, `--movies`.
+- `chase-hudshot` draws the display of the level (portrait, hearts, stud counter) offscreen and saves it as a BMP (over black) with a mask BMP, or saves the bottom-screen map. Example: `build/chase-hudshot --output /tmp --script "run 90; shot start; studs 0 10; run 40; shot bar; map lvl_01_cherrytreehills 886.764 1111.166 -2.35 -2.35 map"`. Commands: `run N` (updates of 1/30 s), `hearts N`, `studs TYPE TOTAL`, `shot NAME`, `map LEVEL X Z CAMERAYAW PLAYERYAW NAME`. Options: `--output`, `--fib`, `--names`.
 - `chase-input-lab` looks for `config/controls.cfg` relative to the current folder. CMake copies it into `build/`. See [Controls](controls.md).
 
 ## Development runtime
@@ -94,7 +97,7 @@ SDL_VIDEODRIVER=offscreen build/chase-game --script "0 150 40" --screenshot out.
 ```
 
 - Without `--gameplay`, `--level`, `--script` or `--start`, the program starts with the screens of the original game (see [Development runtime](game-runtime.md)). `--front-script "..."` runs those screens with a scripted pad (same commands as `chase-frontshot`) and saves the window with `--screenshot`; if the script reaches `done`, the level follows. `--language 1-9` and `--returning` choose the language and a returning player. Escape quits.
-- Options: `--fib`, `--names`, `--config` (as in the viewer), `--gameplay` (start in the level), `--level`, `--screenshot`, `--frames`, `--script`, `--start`, `--no-camera-collision` (the camera ignores the level's walls, for comparing screenshots), `--sound-volume 0-10` and `--music-volume 0-10`. After a `--script` run the program prints `sounds:` with one `update:sound-number` pair per sound played. Use `SDL_AUDIODRIVER=dummy` for headless runs.
+- Options: `--fib`, `--names`, `--config` (as in the viewer), `--gameplay` (start in the level), `--window WIDTHxHEIGHT` (window size, default 960x600; 400x480 gives the size of the emulator screenshots), `--level`, `--screenshot`, `--frames`, `--script`, `--start`, `--no-camera-collision` (the camera ignores the level's walls, for comparing screenshots), `--sound-volume 0-10` and `--music-volume 0-10`. After a `--script` run the program prints `sounds:` with one `update:sound-number` pair per sound played. Use `SDL_AUDIODRIVER=dummy` for headless runs.
 - The default level of `--gameplay` is the police station. The character is Chase McCain in his police outfit. That choice is a best guess. Run it from the repository folder so the default paths work.
 - Move with the D-pad keys (WASD or arrows). Hold `Left Alt` to walk slowly. Without it you run, and after about one second of running you sprint. Press `Q` (the B button, or the right mouse button) to jump. `E` is the X button, which does nothing yet. `Z` and `C` turn the camera (the left and right shoulder buttons). Pushing sideways also turns the camera, as in the original. `Escape` quits.
 - What moves like the original: the speeds, the walk, run and sprint switch, the delay before sprinting, and the way the character turns towards the direction you push.

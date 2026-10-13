@@ -32,6 +32,7 @@ public:
     const std::vector<std::uint8_t>& rgba() const { return pixels_; }
     std::vector<std::uint8_t>& rgba() { return pixels_; }
     void clear(std::uint8_t r, std::uint8_t g, std::uint8_t b);
+    void clearTransparent();
     void draw(const assets::Image& image, const IntRect& source, int x, int y, const Colour& tint = {});
     void drawScaled(const assets::Image& image, const IntRect& source, float x, float y, float width, float height,
                     const Colour& tint = {});

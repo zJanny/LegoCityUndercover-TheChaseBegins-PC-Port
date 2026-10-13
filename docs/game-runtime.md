@@ -12,7 +12,7 @@ Run this from the project folder, the one that contains `README.md`:
 build/chase-game
 ```
 
-A window opens and shows the start of the game, as it looks on the 3DS: the top screen above the bottom screen. Press Escape to quit.
+A window opens and shows the start of the game, as it looks on the 3DS: the top screen above the bottom screen. Press Escape to quit. With `--window WIDTHxHEIGHT` you choose the window size, for example `--window 800x960`.
 
 To skip the screens and go straight to a level, use `--gameplay` (police station) or `--level` and the level's path (see [Other levels](#other-levels)).
 
@@ -61,8 +61,16 @@ What is not like the original yet:
 - The level's other people stand where the level puts them, with their own heads and clothes. They do not move, talk or react.
 - The character jumps, falls off ledges and lands as in the original, including the short pause after landing. Running uphill slows the character down. At some ledges the character first slides down a steep edge before it falls. Two details of that slide are not exact yet: how it ends and the short pause after landing from it.
 - The character makes the sounds of the original: footsteps while walking, running and sprinting, a sound when jumping, and landing sounds that depend on how far the character fell. Picking up a stud plays its coin sound. Sounds come from the place where they happen and are quieter and panned to the side as in the original. See [Sound](#sound).
+- In the level, the top screen shows the 3D view with the display of the original game on top of it, and the bottom screen shows the map. See [The display during play](#the-display-during-play).
 - Doors that open by themselves swing open when the character comes close, wait while he stands there, and close again, with the same timing as the original. This works for the hinged doors and the sliding doors of the police station. Doors that the story opens (for example the front doors in the street) stay shut, because the story is not in the program yet.
-- The coins (studs) of the level spin where the level puts them. Walk close to one and it is picked up. After one second the stud counter goes up (silver 10, gold 100, blue 1000, purple 10000). The program prints the counter at the end of a `--script` run.
+- The coins (studs) of the level spin where the level puts them. Walk close to one and it is picked up. It flies up to the stud counter. After one second the counter goes up (silver 10, gold 100, blue 1000, purple 10000), shows the new total for a few seconds and slides away again. The program also prints the counter at the end of a `--script` run.
+
+## The display during play
+
+- Top left of the top screen: the picture of the main character in its hexagon, and next to it four hearts. The heart at the end of the row beats slowly.
+- The stud counter slides in below the hearts each time a stud is added. It shows the new total and a spinning coin in the colour of the last stud. The coin jumps for a moment when the total changes. After about two seconds the counter slides out again.
+- The bottom screen shows the map of the level, turned so that the camera looks up. The arrow in the middle is the main character. The button at the top left is the characters button; it does nothing yet.
+- Not like the original yet: the hearts do not change because nothing can hurt the character yet. The map is not placed with the original's own data, but fitted to pictures of the original (it differs by a few pixels), and it shows no mission marks or collectibles. The display slides in a moment after the level starts; when the original does that is not known. Only the first level has a map picture that was checked.
 
 ## Sound
 
@@ -82,7 +90,7 @@ What is not like the original yet:
 - Walking slowly off a ledge looks different from the original, which first plays a short step.
 - Jumping onto something higher, or under a ceiling, may not match the original.
 - The animations do not blend. Their speed is an estimate.
-- Studs are stand-ins in some details. A picked-up stud disappears at once instead of flying to the counter. The counter is not shown on the screen, only printed. Studs that a mission or a script switches on stay hidden. The spin starts at its own time and the picture is drawn without the original's blending.
+- Studs are stand-ins in some details. Studs that a mission or a script switches on stay hidden. The spin starts at its own time and the pictures of the studs, also the flying ones, are drawn without the original's blending. Studs that a script adds to the counter later (the original shows the old total first) are not done.
 - The pickup distance (1.5 units) was measured in the original, not taken from the game's code.
 
 ## Other levels

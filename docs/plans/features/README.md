@@ -12,9 +12,9 @@ Item format: `- [ ] ID — gap. needs: ID. blocks: ID. evidence: link`. `needs:`
 | [level-objects](level-objects.md) | IN_PROGRESS | LEVOBJ-3 objects frozen (needs SCRIPT-1); LEVOBJ-2 NPC start animation |
 | [script-system](script-system.md) | IN_PROGRESS | SCRIPT-1 no script runs after start (blocks DOOR-1, AUDIO-2, STUD-4) |
 | [doors](doors.md) | IN_PROGRESS | DOOR-1 script-requested doors stay closed (needs SCRIPT-1); DOOR-3 open-door box |
-| [studs](studs.md) | IN_PROGRESS | STUD-2 counter and flight to HUD (needs HUD-1); STUD-1 magnet and multiplier |
+| [studs](studs.md) | IN_PROGRESS | STUD-1 magnet and multiplier; STUD-4 groups (needs SCRIPT-1) |
 | [front-end](front-end.md) | IN_PROGRESS | FE-1 existing slots and Continue (needs SAVE-2); FE-3 loading screen 3D badge |
-| [hud-ui](hud-ui.md) | NOT_STARTED | HUD-1 hearts and stud counter (blocks STUD-2) |
+| [hud-ui](hud-ui.md) | IN_PROGRESS | HUD-6 hearts never change; HUD-11 map code and icons; HUD-8 other counters |
 | [audio](audio.md) | IN_PROGRESS | AUDIO-2 level music (needs SCRIPT-1); AUDIO-3 world sounds |
 | [movies-cutscenes](movies-cutscenes.md) | IN_PROGRESS | MOVIE-2 cutscenes not in game flow (blocks FE-4) |
 | [animation-characters](animation-characters.md) | IN_PROGRESS | ANIM-2 NPC animation playback (blocks LEVOBJ-2) |

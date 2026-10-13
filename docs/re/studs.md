@@ -42,3 +42,14 @@ Unknowns:
 - The stud counter's display (HUD, 0x15b2f0 loads the same sheet for the stud bar) and the per-level stud total.
 - Whether the radius 1.5 holds for all characters and abilities (setter 0x2744d0).
 - The oracle screenshot of the same spot was not taken: the software renderer aborts when loading the state (three attempts, SIGABRT/SIGSEGV) and an OpenGL screenshot needs `--rpc`, which another agent used.
+
+## 2026-10-13T21:35:00+02:00 — Flight to the HUD counter, banking hook (REA, oracle port 24690 with RPC; details in [hud.md](hud.md))
+
+**Corrections of the entry above**
+- "prepares the flight to the HUD (screen-space target built from camera data; not decoded further)" is decoded: the flight is the state 4 branch of 0x180168. Every update `timer -= dt`; while the timer is above 0 the record moves `(target - position) / (30 * timer)`, the target being the HUD counter's sink 0 (screen point, depth 5.5) unprojected by 0x24c1d0 with the top-screen camera; the record is drawn at its moving position. Reproduced against `bar1.mem` (tools/oracle/hud-bar.txt): the positions of updates 19..24 agree to 2e-3, the camera read in the oracle unprojects the sink to the converged target (864.6103, 20.8361, 1064.3806). Native: `StudField::setFlightTarget`, `unprojectTopScreen`; chase-game draws the flying studs.
+- "0x28a128 adds the value ... " ends with a hook call `(*0x377298)(type, record)` = 0x29c090 that sets the HUD stud bar to the new total (`SetDisplay` 0x22ddf4) and shows it for 2 s; there is no roll-up for pickups (the number jumps to the new total and the icon bounces for 5 updates). Native: `StudField::takeBanked` hands the new total to `Hud::studsBanked`.
+- The stud counter display listed under Unknowns is the stud bar of hud.md. 0x15b2f0 is the bar's init (it loads `Pickups_commonstud.tga` for the bar's icon).
+- **Correction of the stand-in `kProvisionalStudSkipLimit` 17 (first entry):** the limit of the skip counter is `FUN_0023ca4c()`, which returns 30 (0x376af8 +0x8 and +0x10 are zero in the oracle; `kStudSkipLimit`). Measured: the whole pool over 45 updates from the gameplay start (`skip1.mem`, tools/oracle/hud-skip.txt): counters of idle studs run 11 -> 0 and are set to 30 when tested again (30 seen in update 10, then 29, 28 ...). The earlier "16 or 17" were the values of a few updates after the level's first test. The same 30 is the divisor of the flight step, `kStudFlightRate`.
+
+Unknowns
+- Whether other stud types fly to sinks 1 or 2 (the type table +0x5c byte is 0 for silver, gold, blue and purple), the blend state of the flying sprite, dropped and magnet studs.

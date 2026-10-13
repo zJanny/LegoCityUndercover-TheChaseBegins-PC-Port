@@ -1,0 +1,9 @@
+# Stud bar and flying stud trace (docs/re/hud.md), state gameplay-start (Cherry Tree Hills). The player is teleported onto the
+# silver stud FP_Studs005 (861.136, 16.792, 1060.531), as in studs-pickup.txt, and every update records the stud counter
+# 0x593418 (8 bytes), the stud bar object 0x519760 (0x70), the stud's pool record 0x8df101c (0x4c) and the hearts byte 0x519450.
+# Run: tools/azahar_oracle.py --display xvfb --state gameplay-start --renderer opengl --rpc --output artifacts/oracle/hud-traces tools/oracle/hud-bar.txt
+loadstate gameplay-start
+stick 0 0
+hold -
+teleport 862.5931 16.1988 1060.5875
+memtrace 160 bar1 0x593418:8 0x519760:0x70 0x8df101c:0x4c 0x519450:4
