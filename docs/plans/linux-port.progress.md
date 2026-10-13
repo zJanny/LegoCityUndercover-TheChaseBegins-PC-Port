@@ -4,8 +4,8 @@
 
 - Overall: IN_PROGRESS
 - Current Phase: IMPLEMENT
-- Current Step: paused 2026-10-13T09:21+02:00 (last work: S4f totals table check, S3 input slot table)
-- Last Updated: 2026-10-13T09:21+02:00
+- Current Step: S4f/S3 RE rounds via subagents (last: level/character tables, input slot readers)
+- Last Updated: 2026-10-13T09:28+02:00
 - Branch: main
 - Target Branch: Not specified
 - Requested Scope: PLAN, IMPLEMENT, TEST; start reverse engineering and native port
@@ -52,7 +52,7 @@ Paused at a clean point (all work committed).
 
 ### What Is Being Done
 
-Nothing in progress. TablesSuperCounters matches the 13 × 7 totals layout; the input slot table 0x3769e8 is mapped to pad channels.
+Nothing in progress. Offline completion total (711) derived from TablesLevels, TablesCharacters and TablesSuperCounters; input slot readers mapped.
 
 ### Files Being Modified
 
@@ -124,8 +124,8 @@ Full game logic, hardware APIs and asset formats not recovered yet.
 
 ## Next Action
 
-- S4f: totals table matches (docs/re/save-format.md 09:19). Before adding slot progress accessors and a completion function to chase_save, recover the level table *0x375914 and character-table byte +0x24. Still open: options +0 nibbles and +3 bits 2..5 (no reader found); per-level block contents beyond the counters; how live state is copied into the save buffer.
-- S3: find the GSP vsync call and the scheduler step (30 vs 60 fps); why A/B appear twice in slot table 0x3769e8 (slots 6/7), slot 11 (channel 7), readers of axis slots 14–17.
+- S4f: all completion inputs found (docs/re/save-format.md 09:25, total 711). Confirm 0x25c1b8 is an unsigned divide, then add slot progress accessors and a completion function (chase_save plus chase_assets tables). Still open: options +0 nibbles and +3 bits 2..5 (no reader found); per-level block contents beyond the counters; how live state is copied into the save buffer.
+- S3: find the GSP vsync call and the scheduler step (30 vs 60 fps); callers of stick-to-D-pad 0x2289b8; readers of axis slots 16/17; other writers of channel 7.
 - S4e: the code that applies .bxaml track properties; .cam Type values and the run-time camera (0x1e9290); particle rendering (vertex/quad build) and a native particle simulation.
 - Open unknowns are listed at the end of the matching docs/re/ files.
 
@@ -239,3 +239,5 @@ Reverse-engineering findings live in docs/re/ (see docs/re/README.md). Entries m
 - 2026-10-13T09:15+02:00 — Paused at user request. Tree clean after this commit; build warning-free and ctest 10/10 at `537a033`.
 - 2026-10-13T09:19+02:00 — TablesSuperCounters matches the 13 × 7 totals layout (worker, bytes re-checked with xxd) → [docs/re/save-format.md](../re/save-format.md)
 - 2026-10-13T09:20+02:00 — Input slot table 0x3769e8: 18 slots → pad channels (worker, REA Ghidra; fill at 0x168c9c re-checked with objdump) → [docs/re/arm-executable.md](../re/arm-executable.md)
+- 2026-10-13T09:22+02:00 — Input slots: 6/7 gameplay vs 4/5 UI readers, channel 7 unfed by pad, stick → D-pad 0x2289b8 (worker, REA; 0.6 literal re-checked) → [docs/re/arm-executable.md](../re/arm-executable.md)
+- 2026-10-13T09:25+02:00 — Level/character tables, exclusion uses char byte +0xc, completion total 711 (worker, REA + objdump; loop re-checked) → [docs/re/save-format.md](../re/save-format.md)

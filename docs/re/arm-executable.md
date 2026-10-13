@@ -100,3 +100,27 @@ Unknown:
 - What slot 11 (channel 7) reads, since no pad bit maps to channel 7. It may be Select (0x04) reserved but unmapped, or a non-pad source.
 - Readers of the axis slots 14–17 and the meaning of channels 2 and 3.
 - Only 3 of ~19 xref sites of slot 0 were examined.
+
+
+## 2026-10-13T09:22:53+02:00 — Input slots: A/B pairs, channel 7, axis readers (REA Ghidra 12.1.2; read-only, partial)
+
+- Binary: artifacts/game/game.arm.elf (sha256 5152ed14…0881), REA provider Ghidra 12.1.2.
+- **A/B pairs (slots 4/5 vs 6/7).**
+  - Both pairs are constants: 0x168c9c writes 0x10 to 0x3769f8 and 0x376a00, and 0x11 to 0x3769fc and 0x376a04 (ev_70129f7a…). Xrefs show 0x168d10 as the only writer of 0x376a00/0x376a04 (ev_aa50d128…, ev_7041245a…). So neither pair is rebound at run time; both always point at A and B.
+  - The pairs differ only by reader. Slots 6/7 are read by the player controller and similar gameplay code; slots 4/5 have 22 readers (ev_d67b1398…) including the any-button check 0x1e7bac.
+  - Slot 6/7 readers: 0x2003e4, 0x200534, 0x200418 (all inside the player controller FUN_0026be04, body 0x200354..0x200cbf; ev_c048f16d…), 0x29ce14 and 0x29ce38 (FUN_0029cd9c, ev_8aef62e0…), 0x18802c and 0x18818c (FUN_00187f78, not decompiled), 0x2e6c24 (FUN_002e6a60, not decompiled), 0x2eebec, 0x2ef350 (not examined).
+  - In FUN_0026be04, slot 6 (A) sets move flags 0x84 while held (value > 0), a bit in +0xe on press edge, and calls action 0xc on release (+0x12). Slot 7 (B) sets flag 2 while held, a bit in +0xe on press edge, and calls action 0xd on release. Slot 8 (X) sets 0x100 and calls action 200 on press. Slot 9 (Y) held sets 0x60. L/R (slots 12/13) move camera fields DAT_00589bb0 and both pressed together call 0x2313c8.
+  - FUN_0029cd9c reads slot 6/7 held values into the entity fields +0x28c/+0x290 and slot 9 (Y) press edge for an action. The D-pad slots 2/3 force the +0x288 axis to -1/+1.
+  - Reading: the gameplay pair (slots 6/7) is used for held/press/release actions; the menu/skip pair (slots 4/5) is used by UI code. No code evidence shows the roles are fixed; the evidence is only the reader sets. Confidence: medium. In the lab both pairs correspond to the same 3DS A and B buttons.
+- **Slot 11 (0x376a14, channel 7).** 0x103dc8 (ev_171a2e9621fe…) writes channel records at offset ch*0x14: ch6 (+0x78) from Start, ch8 (+0xa0) L, ch10 (+0xc8) R, ch12..15 (+0xf0,+0x104,+0x118,+0x12c) D-pad, ch16..19 (+0x140,+0x154,+0x168,+0x17c) A,B,X,Y. Offset +0x8c (ch7) and +0xb4 (ch9) are never written there, and Select (0x04) is never tested. So no 3DS pad bit feeds channel 7 in this layer. Other writers (record playback 0x1080b0, other devices) were not checked, so channel 7 is probably always zero on a 3DS but not proven. Only readers: the any-button check 0x1e7bac (0x1e7c8c, 0x1e7cf0). Confidence: medium.
+- **Axis slots 14–17 (0x376a20..0x376a2c).**
+  - Readers (ev_aaa1fd56…): 0x168d18, 0x168d30 (init), 0x1d9168 (FUN_001d9094), 0x200570/0x20077c/0x2007e8/0x200ab4 (player controller), 0x2289cc (FUN_002289b8), 0x2d79cc (FUN_002d7fd0, not decompiled).
+  - They read the **f32 value at +0 (and the deadzone at +8)**, not +0x10. The player controller treats the stick as active when |value| > deadzone for slot 14 or 15, converts (x, y) with atan2 (scale 10430.378 = 32768/π) to a heading, and applies a power curve (0x25b578) except for entity types 0x14b and 0x189. Slot 14 value also drives DAT_00589bac for entity types 1–5 and 0x11c (dead zone ±0.25, gain 1.3333334).
+  - **New:** FUN_002289b8 (ev_18417439…) synthesizes D-pad channels from the left stick: if the larger of |slot14| and |slot15| exceeds 0x3f19999a (about 0.6), it picks Right/Left (slots 3/2) when |x| > |y| and Up/Down (slots 0/1) otherwise (positive y gives slot 0 = Up), sets that channel value to 1.0, press edge +0x10 = 1 when the direction changed, release +0x12 = 0; when the stick returns it sets release +0x12 = 1 for the last direction. State lives in 0x376a30 (sentinel 0x2b = none).
+  - **Correction to the 09:20:40 entry:** 0x376a30 is not unused; it holds the last synthesized stick direction written by FUN_002289b8. Slots 14–17 readers are no longer unexamined (slots 14/15 = left stick x/y; slots 16/17 = channels 2/3 had no reader in this pass).
+  - Effect on the lab: the game's menu navigation sees a stick push past about 0.6 of the stick range as a D-pad press, with edge and release. The lab does not need to model this unless it wants to replicate the menu.
+- Unknown:
+  - Whether channel 7 is written elsewhere (record playback, other devices) and what the any-button check expects from it.
+  - Callers that choose slots 4/5 versus 6/7 beyond the reader sets above; FUN_00187f78, FUN_002e6a60, FUN_002d7fd0 and the sites 0x2eebec/0x2ef350 were not decompiled.
+  - Who reads slots 16/17 (channels 2/3, right stick / C-stick equivalents) and what produces channels 2/3 on a 3DS without a second stick (Circle Pad Pro is possible but unverified).
+  - Callers of FUN_002289b8 (where in the frame it runs) were not traced.
