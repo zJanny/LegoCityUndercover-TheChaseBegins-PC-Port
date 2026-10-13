@@ -84,7 +84,7 @@ void checkUpdates(const CollisionWorld& world, const std::vector<Row>& rows, con
     }
 }
 
-void checkStun(const std::vector<Row>& rows, const std::string& name, Totals& totals) {
+void checkStun(const std::vector<Row>& rows, const std::string& name, const LandingDurations& durations, Totals& totals) {
     for (std::size_t i = 1; i < rows.size(); ++i) {
         const bool soft = rows[i].state == kStateSoftLanding, hard = rows[i].state == kStateHardLanding;
         if (!((soft || hard) && airborne(rows[i - 1].state))) continue;
@@ -93,7 +93,7 @@ void checkStun(const std::vector<Row>& rows, const std::string& name, Totals& to
         if (end >= rows.size() || rows[end].state != kStateIdle) continue;
         VerticalState state;
         state.posture = Posture::Landing;
-        state.landingDuration = hard ? kHardLandingSeconds : kSoftLandingSeconds;
+        state.landingDuration = hard ? durations.hard : durations.soft;
         VerticalInput input;
         input.dt = rows[i].dt;
         std::size_t updates = 1;
@@ -130,10 +130,21 @@ int main(int argc, char** argv) {
         CollisionWorld world;
         for (const auto& item : model.collision) world.add(item);
 
+        const auto loadAnimation = [&](const std::string& name) {
+            const chase::assets::FuseEntry* animationEntry = archive.find("models/char_minifig/class_police/" + name + "_minifig.bfnanm");
+            require(animationEntry != nullptr, "animation not in archive: " + name);
+            return chase::assets::parseAnimation(archive.read(*animationEntry));
+        };
+        const LandingDurations durations = landingDurations(loadAnimation("land"), loadAnimation("fallland"));
+        // Landing animation lengths: land 14 frames, fallland 19 frames at 15 frames per second (probe at the derivation entry of
+        // docs/re/player.md); the recorded stuns are 26/30 s and 36/30 s.
+        require(std::fabs(durations.soft - 26.0f / 30.0f) < 1e-5f && std::fabs(durations.hard - 36.0f / 30.0f) < 1e-5f,
+                "landing stun lengths derived from the landing animations");
+
         Totals totals;
         for (const player_trace::NamedTrace& trace : player_trace::loadDirectory(directory)) {
             checkUpdates(world, trace.rows, trace.name, totals);
-            checkStun(trace.rows, trace.name, totals);
+            checkStun(trace.rows, trace.name, durations, totals);
             ++totals.traces;
         }
         std::cout << "falls: " << totals.traces << " traces, " << totals.updates << " updates, " << totals.starts << " fall starts, "

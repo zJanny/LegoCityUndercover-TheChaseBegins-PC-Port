@@ -35,7 +35,7 @@ void land(VerticalState& state, const VerticalInput& input, VerticalStep& step, 
         state.posture = Posture::Landing;
         state.landingTime = 0;
         state.hardLanding = step.hard;
-        state.landingDuration = step.hard ? kHardLandingSeconds : kSoftLandingSeconds;
+        state.landingDuration = step.hard ? state.landingDurations.hard : state.landingDurations.soft;
     } else {
         state.posture = Posture::Ground;
     }
@@ -47,13 +47,13 @@ RootMotionSpeeds jumpSpeeds(const RootMotionSpeeds& ground) {
 }
 
 float JumpProfile::duration() const {
-    return offsets.size() < 2 ? 0.0f : float(offsets.size() - 1) / kJumpFramesPerSecond;
+    return offsets.size() < 2 ? 0.0f : float(offsets.size() - 1) / framesPerSecond;
 }
 
 float JumpProfile::offsetAt(float elapsed) const {
     if (offsets.empty()) return 0.0f;
     const float last = float(offsets.size() - 1);
-    float position = elapsed * kJumpFramesPerSecond;
+    float position = elapsed * framesPerSecond;
     if (position >= last) return offsets.back();
     if (position < 0) position = 0;
     const std::size_t frame = std::size_t(position);
@@ -61,12 +61,19 @@ float JumpProfile::offsetAt(float elapsed) const {
     return offsets[frame] + (offsets[frame + 1] - offsets[frame]) * fraction;
 }
 
-JumpProfile makeJumpProfile(const assets::AnimTrack& rootHeight, unsigned animationFrames, float heightScale) {
+JumpProfile makeJumpProfile(const assets::Animation& jump, float height) {
     JumpProfile profile;
-    const unsigned intervals = animationFrames > 1 ? animationFrames - 1 : 1;
-    for (unsigned frame = 0; frame <= intervals; ++frame)
-        profile.offsets.push_back(heightScale * assets::evaluateTrack(rootHeight, float(frame) / float(intervals)));
+    profile.framesPerSecond = assets::animationFramesPerSecond(jump);
+    const std::optional<assets::RootMotion> motion = assets::rootMotion(jump);
+    if (!motion) return profile;
+    const float top = motion->maximum[1] == 0 ? 1.0f : motion->maximum[1];
+    profile.heightScale = height / (top - motion->minimum[1]);
+    for (const auto& translation : motion->translation) profile.offsets.push_back(profile.heightScale * translation[1]);
     return profile;
+}
+
+LandingDurations landingDurations(const assets::Animation& land, const assets::Animation& fallLand) {
+    return {assets::animationDuration(land), assets::animationDuration(fallLand)};
 }
 
 VerticalStep verticalUpdate(VerticalState& state, const CollisionWorld& world, const VerticalInput& input) {

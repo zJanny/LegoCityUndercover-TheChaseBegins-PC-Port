@@ -136,10 +136,13 @@ Animation parseAnimation(const Bytes& data) {
     need(head, 0x24, "animation header");
     Animation anim;
     anim.frames = readU16(head, 4) & 0x3fffu;
+    anim.headerRateIndex = readU16(head, 4) >> 14;
     if (readU32(head, 8)) {
         Bytes table = r.next();
         need(table, 4, "joint table");
         std::uint32_t word = readU32(table, 0);
+        anim.hasJointTable = true;
+        anim.jointTableWord = word;
         std::size_t count = (word & 0x1fff) + ((word & 0x10000000) >> 28);
         if (word & 0x20000000) anim.longCurve = (word & 0x10000000) ? int(count) - 1 : 0;
         r.skip();
@@ -183,6 +186,42 @@ Animation parseAnimation(const Bytes& data) {
     r.cursor.pop();
     if (!r.cursor.exhausted()) throw std::runtime_error("unconsumed animation blocks");
     return anim;
+}
+
+float animationFramesPerSecond(const Animation& animation) {
+    constexpr float rates[4] = {15.0f, 30.0f, 60.0f, 0.0f};
+    return rates[animation.hasJointTable ? (animation.jointTableWord >> 13) & 3 : animation.headerRateIndex];
+}
+
+float animationDuration(const Animation& animation) {
+    const float rate = animationFramesPerSecond(animation);
+    return rate > 0 && animation.frames > 1 ? float(animation.frames - 1) / rate : 0.0f;
+}
+
+std::optional<RootMotion> rootMotion(const Animation& animation) {
+    const std::uint32_t word = animation.jointTableWord;
+    if (!animation.hasJointTable || !(word & 0x10000000u)) return std::nullopt;
+    const std::size_t curve = word & 0x1fffu;
+    const unsigned samples = ((word >> 15) & 0x1fffu) + ((word >> 29) & 1u);
+    if (curve >= animation.jointCurves.size() || samples == 0) return std::nullopt;
+    auto position = [&](unsigned frame) {
+        const JointChannels c = decodeChannels(animation.jointCurves[curve], std::min(frame, samples - 1), samples);
+        return std::array<float, 3>{c.values[9], c.values[10], c.values[11]};
+    };
+    const std::array<float, 3> origin = position(0);
+    RootMotion motion;
+    motion.translation.push_back({0, 0, 0});
+    for (unsigned frame = 1; frame <= samples; ++frame) {
+        const std::array<float, 3> p = position(frame);
+        std::array<float, 3> relative{};
+        for (std::size_t k = 0; k < 3; ++k) {
+            relative[k] = p[k] - origin[k];
+            motion.minimum[k] = std::min(motion.minimum[k], relative[k]);
+            motion.maximum[k] = std::max(motion.maximum[k], relative[k]);
+        }
+        if (frame < samples) motion.translation.push_back(relative);
+    }
+    return motion;
 }
 
 JointChannels decodeChannels(const Bytes& curve, unsigned frame, unsigned frames) {

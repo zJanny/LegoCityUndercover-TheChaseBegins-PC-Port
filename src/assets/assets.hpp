@@ -301,6 +301,9 @@ struct Animation {
     // Curve stored with frames + 1 samples (0x12a2b4 flag 0x10): table bit 29; the extra curve
     // (bit 28) if present, else curve 0. Inferred from data: all 30081 curves fit their blobs.
     int longCurve = -1;
+    bool hasJointTable = false;            // header +8 present
+    std::uint32_t jointTableWord = 0;      // first word of the joint table: bits 0..12 curves, 13..14 rate, 15..27 samples, 28 extra curve, 29 long curve
+    unsigned headerRateIndex = 0;          // header u16 +4 >> 14, the rate index when there is no joint table
     std::vector<std::string> objects;      // section +0x0c names, e.g. "ExportCam"
     std::vector<AnimTrack> tracks;         // section +0x18 (unused in shipped data)
     std::vector<std::vector<AnimTrack>> subAnimations;
@@ -308,6 +311,22 @@ struct Animation {
 // Value of a track at normalised time 0..1 (Bezier solved for time by bisection).
 float evaluateTrack(const AnimTrack& track, float time);
 Animation parseAnimation(const Bytes& data);
+
+// Playback rate in frames per second (0x108190): index (jointTableWord >> 13) & 3, or the header index without a
+// joint table, into the table {15, 30, 60, 0} at 0x376764.
+float animationFramesPerSecond(const Animation& animation);
+// Time from the first to the last frame: (frames - 1) / rate.
+float animationDuration(const Animation& animation);
+
+// Translation of the extra joint curve (joint table bit 28, the last curve) relative to frame 0 for every frame,
+// with the componentwise extent that 0x292ef8 accumulates over frames 1..n (minimum and maximum start at 0).
+// The jump code (0x200e70) scales the Y component with height / (max.y - min.y).
+struct RootMotion {
+    std::vector<std::array<float, 3>> translation;
+    std::array<float, 3> minimum{0, 0, 0};
+    std::array<float, 3> maximum{0, 0, 0};
+};
+std::optional<RootMotion> rootMotion(const Animation& animation);
 
 // Curve decoder 0x248910: 12 channels (rotation radians, scale, shear, translation).
 struct JointChannels {

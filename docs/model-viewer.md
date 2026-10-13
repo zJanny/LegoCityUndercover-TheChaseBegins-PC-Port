@@ -33,7 +33,7 @@ build/chase-viewer models/char_bear/char_bear.bfnmdl \
 
 - The animation plays in a loop on the first model you list. Like the game, the viewer blends smoothly between frames.
 - `--frame N` shows a single frame instead. Values such as `2.5` show an in-between pose.
-- The game's real playback speed is not known yet. The viewer plays 30 frames per second; change it with `--fps`.
+- Each animation stores its own speed (15, 30 or 60 frames per second). The viewer plays 30 frames per second; change it with `--fps`.
 
 ## Play a cutscene
 

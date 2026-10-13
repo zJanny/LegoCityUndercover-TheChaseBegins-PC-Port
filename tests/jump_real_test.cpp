@@ -19,20 +19,15 @@ namespace fs = std::filesystem;
 namespace {
 constexpr const char* kLevelModel = "models/lvl_01_cherrytreehills/lvl_01_cherrytreehills.bfnmdl";
 constexpr const char* kAnimationDirectory = "models/char_minifig/class_police/";
-constexpr std::uint32_t kRootHeightTrack = 0xdcd633e1;
 // The landing height is the bisected floor under the box (resolution 0.005, docs/re/collision.md); the box of a jump
 // landing depends on the unsnapped height of that update, which is known to about 2e-4 only.
 constexpr float kLandingHeightTolerance = 1e-2f;
 constexpr std::uint16_t kStateIdle = 1, kStateRun = 2, kStateWalk = 3, kStateJump = 4, kStateSoftLanding = 6;
 
-JumpProfile loadProfile(chase::assets::FuseArchive& archive, const std::string& name, float scale) {
+chase::assets::Animation loadAnimation(chase::assets::FuseArchive& archive, const std::string& name) {
     const chase::assets::FuseEntry* entry = archive.find(kAnimationDirectory + name + "_minifig.bfnanm");
     require(entry != nullptr, "animation not in archive: " + name);
-    const chase::assets::Animation animation = chase::assets::parseAnimation(archive.read(*entry));
-    require(animation.subAnimations.size() >= 2, "jump animation without root tracks: " + name);
-    for (const chase::assets::AnimTrack& track : animation.subAnimations[1])
-        if (track.hash == kRootHeightTrack) return makeJumpProfile(track, animation.frames, scale);
-    throw std::runtime_error("no root height track in " + name);
+    return chase::assets::parseAnimation(archive.read(*entry));
 }
 
 struct Totals {
@@ -42,12 +37,13 @@ struct Totals {
 
 bool grounded(std::uint16_t state) { return state == kStateIdle || state == kStateRun || state == kStateWalk; }
 
-void checkJump(const CollisionWorld& world, const JumpProfile& standing, const JumpProfile& moving, const std::vector<Row>& rows,
-               const std::string& name, Totals& totals) {
+void checkJump(const CollisionWorld& world, const JumpProfile& standing, const JumpProfile& moving, const LandingDurations& durations,
+               const std::vector<Row>& rows, const std::string& name, Totals& totals) {
     for (std::size_t start = 1; start < rows.size(); ++start) {
         if (!(grounded(rows[start - 1].state) && rows[start].state == kStateJump)) continue;
         ++totals.jumps;
         VerticalState state;
+        state.landingDurations = durations;
         state.y = rows[start - 1].y;
         VerticalInput input;
         input.dt = rows[start].dt;
@@ -62,7 +58,7 @@ void checkJump(const CollisionWorld& world, const JumpProfile& standing, const J
         const Row& takeoffBefore = rows[start - 1];
         const Row& takeoffBeforeThat = rows[start >= 2 ? start - 2 : start - 1];
         const float groundSpeed = std::hypot(takeoffBefore.x - takeoffBeforeThat.x, takeoffBefore.z - takeoffBeforeThat.z);
-        const bool sprintBeforeJump = groundSpeed > 1.2f * kMeasuredRootMotionSpeeds.run * rows[start].dt;
+        const bool sprintBeforeJump = groundSpeed > 1.2f * kCharacterSpeeds.run * rows[start].dt;
         std::size_t i = start + 1;
         for (; i < rows.size() && rows[i].state == kStateJump; ++i) {
             const Row& before = rows[i - 1];
@@ -81,7 +77,7 @@ void checkJump(const CollisionWorld& world, const JumpProfile& standing, const J
             totals.worstHeight = std::max(totals.worstHeight, error);
             if (input.moveRequested) {
                 const float walk = (after.held & 8) != 0;
-                const RootMotionSpeeds speeds = jumpSpeeds(kMeasuredRootMotionSpeeds);
+                const RootMotionSpeeds speeds = jumpSpeeds(kCharacterSpeeds);
                 float expected = (walk ? speeds.walk : speeds.run) * after.dt;
                 if (sprintBeforeJump) expected *= speeds.sprintScale;
                 ++totals.speedChecks;
@@ -159,12 +155,19 @@ int main(int argc, char** argv) {
         const chase::assets::Model model = chase::assets::parseModel(archive.read(*entry));
         CollisionWorld world;
         for (const auto& item : model.collision) world.add(item);
-        const JumpProfile standing = loadProfile(archive, "jump", kJumpHeightScale);
-        const JumpProfile moving = loadProfile(archive, "jump_run", kJumpRunHeightScale);
+        const JumpProfile standing = makeJumpProfile(loadAnimation(archive, "jump"));
+        const JumpProfile moving = makeJumpProfile(loadAnimation(archive, "jump_run"));
+        const LandingDurations durations = landingDurations(loadAnimation(archive, "land"), loadAnimation(archive, "fallland"));
+        // Standing jump: slot+0x1c of the playing jump animation read in the oracle (trap 0x115ecc at the jump update, slot 0x0856a510,
+        // word 0x3f5c6263 = 0.8608762622). Jump run: the scale fitted to the traces, 0.828197 (docs/re/player.md jump entry, fit error
+        // below 5e-7 over 22 updates). Derivation: kJumpHeight / extent of the root joint curve (derivation entry, probe over the archive).
+        require(std::fabs(standing.heightScale - 0.8608762622f) < 1e-6f && std::fabs(moving.heightScale - 0.828197f) < 1e-5f &&
+                    standing.framesPerSecond == 15.0f,
+                "jump height scales derived from the animation data match the oracle");
 
         Totals totals;
         for (const player_trace::NamedTrace& trace : player_trace::loadDirectory(directory)) {
-            checkJump(world, standing, moving, trace.rows, trace.name, totals);
+            checkJump(world, standing, moving, durations, trace.rows, trace.name, totals);
             ++totals.traces;
         }
         std::cout << "jumps: " << totals.traces << " traces, " << totals.jumps << " jumps, " << totals.updates << " airborne updates, "

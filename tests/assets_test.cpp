@@ -676,6 +676,24 @@ void animations() {
     put32(table, 1);
     Animation anim = parseAnimation(pooledBlocks({{-14, animHead}, {-14, table}, {-14, bytes("p")}, {-14, curve}}));
     require(anim.frames == 2 && anim.jointCurves.size() == 1, "animation curves");
+    {
+        // Extra curve (table bit 28) with three frames at 30 frames per second: channel 10 (y) base 100, width 4, deltas 5, 10, 0.
+        Bytes rootCurve = bitstream({{0x08, 8}, {2, 3}, {100, 16}, {4, 5}, {5, 4}, {10, 4}, {0, 4}});
+        Bytes rootHead(0x28, 0);
+        rootHead[4] = 3;
+        rootHead[8] = 1;
+        Bytes rootTable;
+        put32(rootTable, 0x10000000u | (3u << 15) | (1u << 13));
+        const Animation moving = parseAnimation(pooledBlocks({{-14, rootHead}, {-14, rootTable}, {-14, bytes("p")}, {-14, rootCurve}}));
+        require(moving.jointCurves.size() == 1 && animationFramesPerSecond(moving) == 30.0f && near(animationDuration(moving), 2.0f / 30.0f),
+                "joint table word: curve count, rate index 1 is 30 frames per second, duration (frames - 1) / rate");
+        const std::optional<RootMotion> motion = rootMotion(moving);
+        require(motion && motion->translation.size() == 3 && near(motion->translation[1][1], 0.05f) && near(motion->translation[2][1], -0.05f) &&
+                    near(motion->maximum[1], 0.05f) && near(motion->minimum[1], -0.05f) && motion->maximum[0] == 0 && motion->minimum[2] == 0,
+                "root motion is relative to frame 0, extent starts at 0");
+        require(!rootMotion(anim), "no extra curve, no root motion");
+        require(animationFramesPerSecond(anim) == 15.0f, "rate index 0 is 15 frames per second");
+    }
     std::vector<Matrix> halfway = skinMatrices(skeleton, anim, 0.5);
     require(near(halfway[0][12], 1.525f), "fractional frame blends neighbouring frames");
     require(near(skinMatrices(skeleton, anim, 1.5)[0][12], 1.525f), "last frame blends into the first");

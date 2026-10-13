@@ -49,13 +49,8 @@ constexpr const char* kPlayerCharacter = "levels/chars/char_police.blvl";
 constexpr const char* kPlayerBaseCharacter = "levels/chars/char_player.blvl";
 constexpr const char* kPlayerAnimationDirectory = "models/char_minifig/class_police/";
 constexpr const char* kPlayerAnimationSuffix = "_minifig.bfnanm";
-// PROVISIONAL: the playback rate of the original (written by the caller that starts an animation) is not
-// recovered; this is the viewer's assumed 30 frames per second, times the role's speed scale.
-constexpr double kAnimationFramesPerSecond = 30.0;
 // ctrl+0x6c of the player (read in the oracle, locomotion traces).
 constexpr std::uint16_t kPlayerEntityType = 3;
-// Hash of the vertical root-motion track in the sub-animation 1 of the jump animations (docs/re/player.md).
-constexpr std::uint32_t kRootHeightTrack = 0xdcd633e1;
 
 int resolveKey(const std::string& name) {
     std::string spaced = name;
@@ -215,8 +210,7 @@ struct PlayerRig {
             frame = keepPhase ? phase * double(animations.at(animation).frames) : 0.0;
         }
         const Animation& current = animations.at(animation);
-        const bool jumpRole = role == runtime::kAnimationJump || role == runtime::kAnimationJumpRun;
-        const double rate = jumpRole ? double(runtime::kJumpFramesPerSecond) : kAnimationFramesPerSecond;
+        const double rate = double(animationFramesPerSecond(current));
         frame = std::fmod(frame + double(dt) * rate * double(scale), double(current.frames));
         pose(scene);
     }
@@ -247,17 +241,10 @@ std::optional<PlayerRig> placePlayer(FuseArchive& archive, Scene& scene, const L
         {runtime::kAnimationJump, "jump"}, {runtime::kAnimationJumpRun, "jump_run"}};
     for (const auto& [id, name] : roles)
         rig.animations[id] = loadAnimation(archive, std::string(kPlayerAnimationDirectory) + name + kPlayerAnimationSuffix);
-    const auto rootHeight = [&](int id) -> const AnimTrack& {
-        const Animation& animation = rig.animations.at(id);
-        if (animation.subAnimations.size() < 2) throw std::runtime_error("jump animation without root tracks");
-        for (const AnimTrack& track : animation.subAnimations[1])
-            if (track.hash == kRootHeightTrack) return track;
-        throw std::runtime_error("jump animation without a root height track");
-    };
-    rig.jumpStanding = runtime::makeJumpProfile(rootHeight(runtime::kAnimationJump), rig.animations.at(runtime::kAnimationJump).frames,
-                                                runtime::kJumpHeightScale);
-    rig.jumpMoving = runtime::makeJumpProfile(rootHeight(runtime::kAnimationJumpRun), rig.animations.at(runtime::kAnimationJumpRun).frames,
-                                              runtime::kJumpRunHeightScale);
+    rig.jumpStanding = runtime::makeJumpProfile(rig.animations.at(runtime::kAnimationJump));
+    rig.jumpMoving = runtime::makeJumpProfile(rig.animations.at(runtime::kAnimationJumpRun));
+    rig.vertical.landingDurations =
+        runtime::landingDurations(rig.animations.at(runtime::kAnimationLand), rig.animations.at(runtime::kAnimationFallLand));
 
     rig.vertical.y = start->position[1];
     rig.motion.x = start->position[0];
@@ -313,7 +300,7 @@ PlayerAnimation updatePlayer(PlayerRig& player, const runtime::CollisionWorld& c
     }
     const bool jumping = player.vertical.posture == Posture::Jumping;
     const runtime::RootMotionSpeeds speeds =
-        jumping ? runtime::jumpSpeeds(runtime::kMeasuredRootMotionSpeeds) : runtime::kMeasuredRootMotionSpeeds;
+        jumping ? runtime::jumpSpeeds(runtime::kCharacterSpeeds) : runtime::kCharacterSpeeds;
     const runtime::LocomotionState before = player.motion;
     const float startX = before.x, startZ = before.z;
     runtime::LocomotionStep step = runtime::locomotionUpdate(player.motion, dt, intent, speeds);
@@ -321,7 +308,7 @@ PlayerAnimation updatePlayer(PlayerRig& player, const runtime::CollisionWorld& c
         player.motion.runTimer = before.runTimer;
         player.motion.wasRunning = before.wasRunning;
         player.motion.sprinting = before.sprinting;
-        step.animationScale = before.sprinting ? runtime::kMeasuredRootMotionSpeeds.sprintScale : 1.0f;
+        step.animationScale = before.sprinting ? runtime::kCharacterSpeeds.sprintScale : 1.0f;
     }
     float dx = step.deltaX, dz = step.deltaZ;
     const float rootDelta = std::hypot(dx, dz);

@@ -259,6 +259,10 @@ int main() {
 
         // Speed, timer and sprint: run 6.9 u/s for 30 updates at dt 0.033, the timer passes 1.0 in the 31st
         // update (1.023), whose own movement is still run speed; sprint (x1.5) moves from the 32nd.
+        // Speeds derived from the code constants (0.23 run step, one third for walk, 30 steps per second); oracle: ctrl+0x8c 0.23,
+        // ctrl+0x90 0.076667 in every locomotion trace, measured 2.3005..2.3010 and 6.9000..6.9004 u/s.
+        require(std::fabs(kCharacterSpeeds.run - 6.9f) < 1e-5f && std::fabs(kCharacterSpeeds.walk - 2.3f) < 1e-5f && kCharacterSpeeds.sprintScale == 1.5f,
+                "walk 2.3 and run 6.9 units per second");
         {
             LocomotionState state;
             StickIntent forward;
@@ -267,24 +271,24 @@ int main() {
             LocomotionStep step;
             for (int update = 1; update <= 31; ++update) {
                 step = locomotionUpdate(state, 0.033f, forward);
-                require(std::fabs(step.deltaZ - kMeasuredRootMotionSpeeds.run * 0.033f) < 1e-6f && step.deltaX == 0.0f, "run step");
+                require(std::fabs(step.deltaZ - kCharacterSpeeds.run * 0.033f) < 1e-6f && step.deltaX == 0.0f, "run step");
             }
             require(near(state.runTimer, 1.023f) && state.sprinting && step.animation == kAnimationSprint && step.animationScale == 1.5f, "timer passes 1.0 in update 31");
             step = locomotionUpdate(state, 0.033f, forward);
-            require(std::fabs(step.deltaZ - kMeasuredRootMotionSpeeds.run * 1.5f * 0.033f) < 1e-6f, "sprint step is 1.5 x run");
+            require(std::fabs(step.deltaZ - kCharacterSpeeds.run * 1.5f * 0.033f) < 1e-6f, "sprint step is 1.5 x run");
             // Release: no movement, scale back to 1, timer kept; a new push restarts the timer.
             StickIntent released;
             step = locomotionUpdate(state, 0.033f, released);
             require(step.deltaZ == 0.0f && step.animation == 0 && step.animationScale == 1.0f && near(state.runTimer, 1.056f), "release keeps the timer");
             step = locomotionUpdate(state, 0.033f, forward);
-            require(near(state.runTimer, 0.033f) && !state.sprinting && std::fabs(step.deltaZ - kMeasuredRootMotionSpeeds.run * 0.033f) < 1e-6f, "run re-entry restarts the timer at full run speed");
+            require(near(state.runTimer, 0.033f) && !state.sprinting && std::fabs(step.deltaZ - kCharacterSpeeds.run * 0.033f) < 1e-6f, "run re-entry restarts the timer at full run speed");
             // Walk freezes the timer and runs at walk speed; run re-entry restarts it.
             StickIntent walk = forward;
             walk.heldSet |= kHeldSlow;
             locomotionUpdate(state, 0.033f, forward);
             const float held = state.runTimer;
             step = locomotionUpdate(state, 0.033f, walk);
-            require(state.runTimer == held && step.animation == kAnimationWalk && std::fabs(step.deltaZ - kMeasuredRootMotionSpeeds.walk * 0.033f) < 1e-6f, "walk keeps the timer");
+            require(state.runTimer == held && step.animation == kAnimationWalk && std::fabs(step.deltaZ - kCharacterSpeeds.walk * 0.033f) < 1e-6f, "walk keeps the timer");
             locomotionUpdate(state, 0.033f, forward);
             require(near(state.runTimer, 0.033f), "walk to run restarts the timer");
         }
@@ -409,6 +413,7 @@ int main() {
             CollisionWorld world;
             world.add(quadItem({{-5, 0, -5, -5, 0, 5, 50, 0, 5, 50, 0, -5}}));
             VerticalState state;
+            state.landingDurations = {13.0f / 15.0f, 18.0f / 15.0f};
             state.y = 40;
             VerticalInput input;
             input.x = -20;
@@ -432,7 +437,7 @@ int main() {
                     "ground within max(|speed|, 0.05) + 0.1 below lands; no stick: soft landing stun");
             int updates = 1;
             while (!verticalUpdate(state, world, input).stunEnded) ++updates;
-            require(updates == 27 && state.posture == Posture::Ground, "soft stun ends at 26/30 s: 27 updates at dt 0.033");
+            require(updates == 27 && state.posture == Posture::Ground, "soft stun ends at 13/15 s: 27 updates at dt 0.033");
 
             state.posture = Posture::Falling;
             state.y = 0.3f;
@@ -447,7 +452,7 @@ int main() {
             state.fallSpeed = 0.2f;
             state.fallDistance = 12.0f;
             step = verticalUpdate(state, world, input);
-            require(step.hard && state.posture == Posture::Landing && state.landingDuration == kHardLandingSeconds, "fall distance 12 lands hard, also with the stick held");
+            require(step.hard && state.posture == Posture::Landing && state.landingDuration == state.landingDurations.hard, "fall distance 12 lands hard, also with the stick held");
 
             state = VerticalState();
             state.y = 0;
@@ -457,22 +462,11 @@ int main() {
             require(state.posture == Posture::Ground && state.y == 0, "a standing character on the ground is not probed");
         }
 
-        // Jump root motion (docs/re/player.md jump entry): the height track sampled at 15 frames per second over
-        // (frames - 1) intervals, linear between frames, times the animation's scale; B starts it from the ground.
+        // Jump root motion (docs/re/player.md): the profile samples the animation at its rate, linear between
+        // frames, held after the last frame; B starts it from the ground.
         {
-            chase::assets::AnimTrack track;
-            chase::assets::CurveKey first, last;
-            first.time = 0;
-            first.outDelta = 1.0f / 3;
-            first.outValue = 11.0f / 3;
-            last.time = 1;
-            last.inDelta = 1.0f / 3;
-            last.inValue = 22.0f / 3;
-            last.value = 11;
-            track.keys = {first, last};
-            const JumpProfile profile = makeJumpProfile(track, 12, 0.5f);
-            require(profile.offsets.size() == 12 && near(profile.offsets[1], 0.5f) && near(profile.offsets[11], 5.5f),
-                    "12 animation frames give 11 intervals and 12 samples scaled by the animation's factor");
+            JumpProfile profile;
+            for (int frame = 0; frame < 12; ++frame) profile.offsets.push_back(0.5f * float(frame));
             require(near(profile.duration(), 11.0f / 15.0f) && near(profile.offsetAt(0.1f), 0.75f) && near(profile.offsetAt(5.0f), 5.5f),
                     "linear between frames at 15 frames per second, held after the last frame");
 
@@ -490,9 +484,9 @@ int main() {
             for (int i = 0; i < 7; ++i) step = verticalUpdate(state, world, input);
             require(step.jumpEnded && state.posture == Posture::Falling && near(state.y, 5.5f), "a jump that runs out in the air starts to fall");
 
-            const RootMotionSpeeds jump = jumpSpeeds(kMeasuredRootMotionSpeeds);
-            require(near(jump.walk, 0.8f * kMeasuredRootMotionSpeeds.walk) && near(jump.run, 0.8f * kMeasuredRootMotionSpeeds.run) &&
-                        jump.sprintScale == kMeasuredRootMotionSpeeds.sprintScale,
+            const RootMotionSpeeds jump = jumpSpeeds(kCharacterSpeeds);
+            require(near(jump.walk, 0.8f * kCharacterSpeeds.walk) && near(jump.run, 0.8f * kCharacterSpeeds.run) &&
+                        jump.sprintScale == kCharacterSpeeds.sprintScale,
                     "horizontal speed after take-off is 0.8 of the ground speed");
         }
     } catch (const std::exception& e) {

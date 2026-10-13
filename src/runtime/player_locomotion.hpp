@@ -13,19 +13,23 @@ constexpr int kAnimationWalk = 1;
 constexpr int kAnimationRun = 2;
 constexpr int kAnimationSprint = 281;
 
-// Speed of the animation root motion in world units per second at playback scale 1.0.
-// The original game moves the player by animation root motion (0x2c9770 / 0x2327b4). The root motion
-// of the shipped walk, run and sprint animations is not recovered (docs/re/player.md), so the
-// speeds are the ones measured at the output.
+// The mover 0x20cd30 gets the stick movement from 0x203d18, not from animation root motion (0x2327b4 yields zero for
+// the walk, run and sprint animations): per update dt * 30 * (ctrl speed * ctrl+0x94) along the intent heading.
+// docs/re/player.md, derivation entry.
+constexpr float kRunSpeedPerStep = 0.23f;          // ATTR_RunSpeed default *0x37450c (stored by 0x343de4), ctrl+0x8c (0x236ec0)
+constexpr float kWalkSpeedFraction = 0.33333334f;  // literal 0x3eaaaaab at 0x2371b0, ctrl+0x90 = ctrl+0x8c * this
+constexpr float kStepsPerSecond = 30.0f;           // literal 0x41f00000 at 0x204014
+constexpr float kSprintSpeedScale = 1.5f;          // literal 0x3fc00000 at 0x1ac154, multiplied into ctrl+0x94 by 0x1abe60 (1.3 variant at 0x1ac150)
+
+// Speed in world units per second at playback scale 1.0.
 struct RootMotionSpeeds {
     float walk;
     float run;
     float sprintScale;  // ctrl+0x94 once the run timer passed kSprintTime; sprint plays at run speed times this
 };
 
-// PROVISIONAL: measured in the oracle, not derived from animation data (walk 2.3005..2.3010,
-// run 6.9000..6.9004, sprint 10.3490..10.3504 u/s; docs/re/player.md 2026-10-13T13:42:20).
-constexpr RootMotionSpeeds kMeasuredRootMotionSpeeds{2.3008f, 6.9002f, 1.5f};
+constexpr RootMotionSpeeds kCharacterSpeeds{kRunSpeedPerStep * kWalkSpeedFraction * kStepsPerSecond, kRunSpeedPerStep * kStepsPerSecond,
+                                            kSprintSpeedScale};
 
 // 0x1abe60: ctrl+0x24c above this value switches to the sprint role.
 constexpr float kSprintTime = 1.0f;
@@ -59,6 +63,6 @@ std::int16_t turnFacing(std::int16_t facing, std::int16_t target);
 
 // One player update with the intent of the stick-to-intent step (stickIntent).
 LocomotionStep locomotionUpdate(LocomotionState& state, float dt, const StickIntent& intent,
-                                const RootMotionSpeeds& speeds = kMeasuredRootMotionSpeeds);
+                                const RootMotionSpeeds& speeds = kCharacterSpeeds);
 
 }
