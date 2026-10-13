@@ -214,4 +214,128 @@ void store(const std::string& path, SaveImage image) {
     }
     syncDirectory(directory);
 }
+
+SlotView SaveImage::slotView(std::size_t index) const { return {slot(index), kSlotSize}; }
+
+namespace {
+constexpr std::size_t kLevelOneOffset = 0x4928;
+constexpr std::size_t kLevelTwoOffset = 0x8;
+constexpr std::size_t kCollectedByteInBlock = 0x81f;
+constexpr std::size_t kExtraSetOffsets[2] = {0x51b5, 0x51b8};
+constexpr std::size_t kCharacterBitsOffset = 0x51bc;
+constexpr std::size_t kIdSetOffset = 0x51e3;
+constexpr std::size_t kFlagSetOffset = 0x51fa;
+constexpr std::uint32_t kExtraSetItems = 2 * kExtraSetBits;
+
+std::optional<bool> bitAt(SlotView slot, std::size_t base, std::size_t bit) {
+    std::size_t byte = base + bit / 8;
+    if (byte >= slot.size) return std::nullopt;
+    return (slot.data[byte] >> (bit % 8) & 1) != 0;
+}
+
+bool validLevel(unsigned level) { return level >= kFirstCounterLevel && level <= kLastCounterLevel; }
+}
+
+std::optional<std::size_t> levelBlockOffset(unsigned level) {
+    if (level == 1) return kLevelOneOffset;
+    if (!validLevel(level)) return std::nullopt;
+    return kLevelTwoOffset + (level - kFirstCounterLevel) * kLevelBlockSize;
+}
+
+std::optional<std::uint8_t> levelCollected(SlotView slot, unsigned level) {
+    std::optional<std::size_t> block = levelBlockOffset(level);
+    if (!block || *block + kCollectedByteInBlock >= slot.size) return std::nullopt;
+    return slot.data[*block + kCollectedByteInBlock];
+}
+
+std::optional<bool> flagBit(SlotView slot, unsigned index) {
+    if (index >= kFlagSetBits) return std::nullopt;
+    return bitAt(slot, kFlagSetOffset, index);
+}
+
+std::optional<std::uint16_t> categoryCounter(SlotView slot, unsigned category, unsigned level) {
+    if (category >= kLevelCategories || !validLevel(level)) return std::nullopt;
+    if (category == 7) {
+        std::uint16_t sum = 0;
+        for (unsigned k = 0; k < 4; ++k) {
+            std::optional<bool> flag = flagBit(slot, 4 * (level - kFirstCounterLevel) + k);
+            if (!flag) return std::nullopt;
+            sum = std::uint16_t(sum + *flag);
+        }
+        return sum;
+    }
+    std::size_t offset = *levelBlockOffset(level) + category * 2;
+    if (offset + 2 > slot.size) return std::nullopt;
+    return std::uint16_t(slot.data[offset] | slot.data[offset + 1] << 8);
+}
+
+std::optional<bool> characterBit(SlotView slot, unsigned id, unsigned which) {
+    if (id >= kCharacterIdLimit || which > 1) return std::nullopt;
+    return bitAt(slot, kCharacterBitsOffset, 2 * id + which);
+}
+
+std::optional<bool> extraSetBit(SlotView slot, unsigned set, unsigned index) {
+    if (set > 1 || index >= kExtraSetBits) return std::nullopt;
+    return bitAt(slot, kExtraSetOffsets[set], index);
+}
+
+std::optional<bool> idSetBit(SlotView slot, unsigned id, unsigned which) {
+    if (id < kIdSetFirst || id > kIdSetLast || which > 1) return std::nullopt;
+    return bitAt(slot, kIdSetOffset, 2 * (id - kIdSetFirst) + which);
+}
+
+std::optional<CompletionCounts> completionCounts(SlotView slot, const CompletionTotals& totals) {
+    std::uint32_t collected = 0;
+    std::uint32_t total = 0;
+    auto count = [&](std::optional<bool> bit) {
+        if (!bit) return false;
+        collected += *bit;
+        return true;
+    };
+    for (unsigned level = kFirstCounterLevel; level <= kLastCounterLevel; ++level) {
+        std::optional<std::uint8_t> levelCount = levelCollected(slot, level);
+        if (!levelCount) return std::nullopt;
+        collected += *levelCount;
+        total += totals.levelTotals[level - kFirstCounterLevel];
+    }
+    for (unsigned set = 0; set < 2; ++set)
+        for (unsigned index = 0; index < kExtraSetBits; ++index)
+            if (!count(extraSetBit(slot, set, index))) return std::nullopt;
+    total += kExtraSetItems;
+    for (unsigned id = kFirstCompletionCharacter; id < kCharacterIdLimit; ++id)
+        for (unsigned which = 0; which < 2; ++which) {
+            if (!count(characterBit(slot, id, which))) return std::nullopt;
+            ++total;
+        }
+    for (unsigned id = kIdSetFirst; id <= kIdSetLast; ++id)
+        for (unsigned which = 0; which < 2; ++which) {
+            if (!count(idSetBit(slot, id, which))) return std::nullopt;
+            ++total;
+        }
+    for (unsigned category = 0; category < kLevelCategories; ++category)
+        for (unsigned level = kFirstCounterLevel; level <= kLastCounterLevel; ++level) {
+            std::optional<std::uint16_t> counter = categoryCounter(slot, category, level);
+            if (!counter) return std::nullopt;
+            collected += *counter;
+            total += totals.categoryTotals[category][level - kFirstCounterLevel];
+        }
+    for (std::uint8_t id : totals.excludedCharacters) {
+        if (id < kFirstCompletionCharacter || id >= kCharacterIdLimit) return std::nullopt;
+        --collected;
+        --total;
+    }
+    return CompletionCounts{collected, total};
+}
+
+std::uint16_t completionPermille(std::uint32_t collected, std::uint32_t total) {
+    if (total == 0) return 0;
+    std::uint32_t permille = collected * 1000u / total;
+    return std::uint16_t(std::min<std::uint32_t>(permille, 1000));
+}
+
+std::optional<std::uint16_t> completionPermille(SlotView slot, const CompletionTotals& totals) {
+    std::optional<CompletionCounts> counts = completionCounts(slot, totals);
+    if (!counts) return std::nullopt;
+    return completionPermille(counts->collected, counts->total);
+}
 }

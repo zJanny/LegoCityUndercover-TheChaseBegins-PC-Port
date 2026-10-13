@@ -1,6 +1,7 @@
 #pragma once
 // Save image "data:/savegame.dat" (plan step S4f); format in docs/re/save-format.md.
 // The options and slot blocks stay opaque bytes. No SDL dependency.
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <optional>
@@ -47,6 +48,12 @@ enum class Status {
     Corrupt = 4,     // CRC, size or version mismatch
 };
 
+// Read-only view of one opaque slot block; every accessor bounds-checks against size.
+struct SlotView {
+    const std::uint8_t* data = nullptr;
+    std::size_t size = 0;
+};
+
 class SaveImage {
 public:
     // Zero-filled blocks with a sealed header. The game's defaults (0x2081cc) are not reproduced.
@@ -84,6 +91,7 @@ public:
     std::uint8_t* slot(std::size_t index);
     const std::uint8_t* slot(std::size_t index) const;
     const Bytes& bytes() const { return bytes_; }
+    SlotView slotView(std::size_t index) const;
 
 private:
     void setOptionBit(int bit, bool on);
@@ -105,4 +113,51 @@ LoadResult load(const std::string& path);
 // Seals a copy and replaces the file atomically (temporary file, fsync, rename, directory fsync).
 // Creates missing parent directories. Throws std::runtime_error on failure.
 void store(const std::string& path, SaveImage image);
+
+// Slot progress layout, docs/re/save-format.md (2026-10-13T09:13 and 09:25).
+constexpr std::size_t kLevelBlockSize = 0x820;
+constexpr std::size_t kLevelCategories = 13;
+constexpr unsigned kFirstCounterLevel = 2;
+constexpr unsigned kLastCounterLevel = 8;
+constexpr unsigned kCounterLevels = kLastCounterLevel - kFirstCounterLevel + 1;
+constexpr unsigned kCharacterIdLimit = 141;
+constexpr unsigned kFirstCompletionCharacter = 9;
+constexpr unsigned kExtraSetBits = 21;
+constexpr unsigned kIdSetFirst = 1;
+constexpr unsigned kIdSetLast = 41;
+constexpr unsigned kFlagSetBits = 28;
+
+// 0x203464: block offset of a level, 1..8; empty otherwise.
+std::optional<std::size_t> levelBlockOffset(unsigned level);
+// Byte +0x81f of the level block (read by the completion function 0x1cd3dc).
+std::optional<std::uint8_t> levelCollected(SlotView slot, unsigned level);
+// 0x20a630 without the cheat flag: category 0..12, level 2..8. Category 7 sums four flagBit values.
+std::optional<std::uint16_t> categoryCounter(SlotView slot, unsigned category, unsigned level);
+// Set at +0x51fa, bit 0..27 (0x1ffa74 without the cheat flag).
+std::optional<bool> flagBit(SlotView slot, unsigned index);
+// Bits at +0x51bc, 2 per character id below 141: which 0 = unlocked, 1 = second state.
+std::optional<bool> characterBit(SlotView slot, unsigned id, unsigned which);
+// Two 21-bit sets at +0x51b5 (set 0) and +0x51b8 (set 1); index 0..20.
+std::optional<bool> extraSetBit(SlotView slot, unsigned set, unsigned index);
+// Bits at +0x51e3, 2 per id 1..41: which 0 or 1, without cheat flags.
+std::optional<bool> idSetBit(SlotView slot, unsigned id, unsigned which);
+
+// Table-derived totals the caller supplies; chase_save loads no tables.
+struct CompletionTotals {
+    std::array<std::uint8_t, kCounterLevels> levelTotals{};  // TablesLevels sheet 0, byte +0x40 of rows 2..8
+    std::array<std::array<std::uint8_t, kCounterLevels>, kLevelCategories> categoryTotals{};  // TablesSuperCounters
+    std::vector<std::uint8_t> excludedCharacters;  // ids 9..140 whose TablesCharacters byte +0xc is 1
+};
+
+struct CompletionCounts {
+    std::uint32_t collected = 0;
+    std::uint32_t total = 0;
+};
+
+// 0x1cd3dc without cheat flags. Empty when the slot is too short or an excluded id is outside 9..140.
+// Arithmetic wraps like the game's 32-bit registers.
+std::optional<CompletionCounts> completionCounts(SlotView slot, const CompletionTotals& totals);
+// 0x1cd5e8: min(1000, collected * 1000 / total) as an unsigned truncating u16; 0 when total is 0.
+std::uint16_t completionPermille(std::uint32_t collected, std::uint32_t total);
+std::optional<std::uint16_t> completionPermille(SlotView slot, const CompletionTotals& totals);
 }
