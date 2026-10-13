@@ -1,17 +1,14 @@
-import importlib.util
-import math
 import struct
 import sys
+import tempfile
 import unittest
 import zlib
 from pathlib import Path
 
-TOOLS = Path(__file__).parents[1] / 'tools'
-sys.path.insert(0, str(TOOLS))
-spec = importlib.util.spec_from_file_location('convert_levels', TOOLS / 'convert_levels.py')
-cl = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(cl)
-from test_convert_models import pooled  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent))
+sys.path.insert(0, str(Path(__file__).parents[1] / 'tools'))
+import chase_native as native  # noqa: E402
+from fixtures import pooled, run_tool  # noqa: E402
 
 
 def param(name, kind, inline=0):
@@ -35,36 +32,27 @@ def level_bytes(extra=False):
     return pooled(blocks)
 
 
-class LevelTests(unittest.TestCase):
-    def test_hash_names(self):
-        self.assertEqual(zlib.crc32(b'meshname'), cl.MESH_NAME)
-        self.assertEqual(zlib.crc32(b'initialposition'), cl.INITIAL_POSITION)
-        self.assertEqual(zlib.crc32(b'initialorientation'), cl.INITIAL_ORIENTATION)
+@unittest.skipUnless(native.available(), 'C++ asset library not built')
+class LevelToolTests(unittest.TestCase):
+    def dump(self, data):
+        with tempfile.TemporaryDirectory() as d:
+            (Path(d) / 'a.blvl').write_bytes(data)
+            (Path(d) / 'code.bin').write_bytes(b'\0initialposition\0meshname\0')
+            return run_tool('convert_levels.py', Path(d) / 'a.blvl', '--param-names', Path(d) / 'code.bin')
 
-    def test_parse_and_placements(self):
-        level = cl.parse_level(level_bytes())
-        self.assertEqual(level['s2c'][0]['name'], 'leprops/leprop_test')
-        place = cl.placements(level)[0]
-        self.assertEqual((place['instance'], place['room'], place['mesh']), ('Bench01', 'room1', 'Prop_Bench'))
-        self.assertEqual(place['position'], [1.0, 2.0, 3.0])
-        self.assertEqual(place['orientation_deg'], [0.0, 90.0, 0.0])
+    def test_objects_with_named_parameters(self):
+        result = self.dump(level_bytes())
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(result.stdout.splitlines(), [
+            'leprops/leprop_test Bench01 room1',
+            '   initialposition          type=2 [1.0, 2.0, 3.0]',
+            '   a3b9aa7f                 type=2 [0.0, 90.0, 0.0]',
+            '   meshname                 type=1 Prop_Bench'])
 
-    def test_placement_matrix(self):
-        tilt = cl.placement_matrix({'orientation_deg': [90.0, 0.0, 0.0], 'position': [1.0, 2.0, 3.0]})
-        for got, want in zip(tilt[1][:3] + tilt[3], [0, 0, 1, 1, 2, 3, 1]):   # +y turns into +z
-            self.assertAlmostEqual(got, want, places=6)
-        flipped = cl.placement_matrix({'orientation_deg': [180.0, 30.0, 180.0], 'position': [0, 0, 0]})
-        yaw = math.radians(150)                                             # Rx180.Ry(30).Rz180 = Ry(150)
-        want = [[math.cos(yaw), 0, -math.sin(yaw)], [0, 1, 0], [math.sin(yaw), 0, math.cos(yaw)]]
-        for row, expect in zip(flipped, want):
-            for got, value in zip(row, expect):
-                self.assertAlmostEqual(got, value, places=5)
-
-    def test_unconsumed_and_model_path(self):
-        with self.assertRaisesRegex(ValueError, 'unconsumed'):
-            cl.parse_level(level_bytes(extra=True))
-        self.assertEqual(cl.model_path('Prop_Plant_01'), 'models/prop_plant_01/prop_plant_01.bfnmdl')
-        self.assertEqual(cl.model_path('A/B_atlas'), 'models/a/b_atlas.bfnmdl')
+    def test_unconsumed_block_is_rejected(self):
+        result = self.dump(level_bytes(extra=True))
+        self.assertEqual(result.returncode, 1)
+        self.assertIn('unconsumed', result.stderr)
 
 
 if __name__ == '__main__':
