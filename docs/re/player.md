@@ -176,3 +176,8 @@ Unknowns:
 - The unknowns "ground following in y" and "collision slides at obstacles" of the locomotion entries are answered in [collision.md](collision.md): after the horizontal move (0x21a73c slides it along wall triangles) 0x20b48c bisects the height of the floor under the player's box and keeps the old height within 0.01.
 - Correction to the "slope" finding above: the height steps of the turn_run_r90 ramp (16.577, 16.672, 16.794, 16.783) are this probe at the kerb, not a modelled slope; the speed slow-down on that ramp (ctrl+0x94 1.33) is the separate slope term of 0x1abe60 and is still not modelled.
 - ctrl+0x21c/+0x220 hold the x and z the slide changed, ctrl+0x224 the movement before the slide (type 27 only), ctrl+0x240/+0x244 the last ground height, ctrl+0x1e4/+0x1e8 the ground object and triangle, ctrl+0x1ec the ground normal.
+
+## 2026-10-13T14:41:13+02:00 — Camera yaw word and player entity type (see camera.md)
+
+- **Correction:** the writer of the f32 at 0x376894 is the camera manager update 0x23f174: it stores atan2(row2.x, row2.z) of the camera scene node's world matrix (the yaw of the view direction). Its camera law is in [camera.md](camera.md); the earlier note that it was not recovered is obsolete.
+- The player's ctrl+0x6c (entity type) is 3 (read from the locomotion traces), so the stick shaping applies and the stick x turns the camera (types 1..5 and 0x11c). chase-game uses 3.

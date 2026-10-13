@@ -8,6 +8,9 @@ cd build && ./chase-input-lab
 
 - Press Escape to quit.
 - `--config PATH` loads a different controls file.
+- Run it from the `build` folder, because it looks for `config/controls.cfg` there.
+
+The [model viewer](model-viewer.md) and the [development runtime](commands.md#development-runtime) read the same controls file.
 
 ## Change the controls
 

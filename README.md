@@ -17,6 +17,7 @@ build/chase-viewer models/char_bear/char_bear.bfnmdl \
 ## Documentation
 
 - [Building the tools](docs/building.md)
+- [Command reference](docs/commands.md)
 - [Extracting game data](docs/extracting-game-data.md)
 - [Model viewer](docs/model-viewer.md)
 - [Sound test](docs/sound-test.md)

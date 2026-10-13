@@ -19,6 +19,9 @@ A scenario file drives the run, one command per line ('#' starts a comment):
   player                print the player entity (*0x3772b8): world position, facing, intent heading, flags
   trace N NAME [mem]    advance N frames, writing the player state of every frame to NAME.csv; 'mem' also writes
                         NAME.mem: per frame u32 frame, then entity (0x100 bytes), controller (0x340) and node (0xb0)
+  memtrace N NAME SPEC...
+                        advance N frames, writing per frame u32 frame, f32 dt and each memory region to NAME.mem.
+                        SPEC is ADDR:LEN, or *PTR+OFF:LEN (read the word at PTR, add OFF)
   watch ADDR LEN N NAME [KIND]
                         advance N frames with a GDB watchpoint (KIND 2 write, 3 read, 4 access; default 2) and write
                         the registers and 32 stack words of every stop to NAME.txt
@@ -954,6 +957,25 @@ class Oracle:
             memory.close()
         print('  %s' % path)
 
+    def memtrace(self, count, name, specs):
+        regions = []
+        for spec in specs:
+            location, length = spec.rsplit(':', 1)
+            pointer = location.startswith('*')
+            base, _, offset = location.lstrip('*').partition('+')
+            regions.append((pointer, int(base, 0), int(offset, 0) if offset else 0, int(length, 0)))
+        with open(self.output / ('%s.mem' % name), 'wb') as memory:
+            def sample():
+                dt = struct.unpack('<f', self.mem.read(self.frame_object + 0x78, 4))[0]
+                memory.write(struct.pack('<If', self.frame, dt))
+                for pointer, base, offset, length in regions:
+                    address = (self.mem.u32(base) if pointer else base) + offset
+                    memory.write(self.mem.read(address, length))
+
+            self.advance(count, sample)
+        print('  %s (per frame: u32 frame, f32 dt, then %s)' % (
+            self.output / ('%s.mem' % name), ', '.join('%d bytes' % region[3] for region in regions)))
+
     def screenshot(self, name, via_gdb=False):
         started = time.monotonic()
         if self.rpc and not via_gdb and self.renderer == 'opengl':
@@ -1109,6 +1131,8 @@ def run_scenario(oracle, lines):
             oracle.print_player()
         elif op == 'trace':
             oracle.trace(int(args[0]), args[1], args[2:] == ['mem'])
+        elif op == 'memtrace':
+            oracle.memtrace(int(args[0]), args[1], args[2:])
         elif op == 'watch':
             oracle.watch(int(args[0], 0), int(args[1], 0), int(args[2]), args[3], int(args[4]) if args[4:] else 2)
         elif op == 'trap':
