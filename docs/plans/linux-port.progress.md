@@ -138,7 +138,7 @@ Handoff (2026-10-13T15:22:58+02:00). Read this section, CLAUDE.md and docs/re/or
 
 **Runtime oracle:** tools/azahar_oracle.py with save states (`--display xvfb --state gameplay-start --renderer opengl --rpc --rpc-input`); route from boot: tools/oracle/to-gameplay.txt. Rules in CLAUDE.md "Runtime oracle" and docs/re/oracle.md.
 
-**Lead workflow:** delegate investigation/implementation to subagents in worktrees (Sonnet for RE and code, Haiku for simple exploration); every brief names the CLAUDE.md rules (Graphify first, oracle fast path, docs/re dated entries with unknowns last, no explanatory comments, plain-language docs); review each result against CLAUDE.md, rebuild and test, look at screenshots, cherry-pick, then `graphify update .` and verify. Only one agent may use `--rpc` at a time.
+**Lead workflow:** delegate investigation/implementation to subagents in worktrees (Sonnet for RE and code, Haiku for simple exploration); every brief names the CLAUDE.md rules (Graphify first, oracle fast path, docs/re dated entries with unknowns last, no explanatory comments, plain-language docs); review each result against CLAUDE.md, rebuild and test, look at screenshots, squash-merge the branch into main (`git merge --squash`, one commit per agent branch; user request 2026-10-13), then `graphify update .` and verify. Only one agent may use `--rpc` at a time.
 
 **Next critical-path candidates (choose after re-checking):**
 1. Game objects in the level: spawn and draw the .blvl objects that are not plain meshes (props, doors, NPCs) with their scripts' first-level behaviour, or at least their static state; needed before any mission logic.
