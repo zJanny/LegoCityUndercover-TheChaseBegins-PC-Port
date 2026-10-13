@@ -14,6 +14,7 @@ build/chase-fmv artifacts/romfs/romfs/cutscenes/01_gameintro.moflex --lang us
 - The videos whose names end in `_de` are the German versions. Use `--lang de` with them.
 - `--no-audio` plays the video without sound.
 - `--subtitles FILE.srt` uses your own subtitle file instead.
+- `--font NAME` draws the subtitles with another game font from the `fonts/` folder, for example `frontendfontlarge`. The default is `frontendfont`.
 
 Subtitles are drawn with the game's own font. Where the game places them on the screen, and in which font, is not known yet.
 

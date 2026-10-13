@@ -41,11 +41,12 @@ Single C++ tests, with `ctest --test-dir build -R <name>`:
 | `input-sdl-smoke` | Runs with `SDL_VIDEODRIVER=dummy` |
 | `assets-core` | Asset runtime, synthetic fixtures |
 | `assets-real-data` | Needs `artifacts/romfs`; skips with code 77 otherwise |
-| `viewer-real-smoke` | Registered only if `artifacts/romfs` existed at configure time |
+| `viewer-real-smoke`, `viewer-cutscene-smoke` | Render one model and one cutscene frame offscreen. Registered only if `artifacts/romfs` existed at configure time |
 | `game-real-smoke` | Registered only if `artifacts/romfs` existed at configure time; needs libepoxy |
 | `game-script-run`, `game-script-walk` | Same conditions. Feed a fixed stick to the development runtime and check how far the character moved |
 | `camera-real-data` | Compares the follow camera with traces recorded from the original game (`artifacts/oracle/cam-out`, folder set with `-DCHASE_CAMERA_TRACE_DIR=...`); skips with code 77 if the traces are missing |
 | `locomotion-real-data` | Compares the character's movement with traces recorded from the original game (`artifacts/oracle/loco-out`, folder set with `-DCHASE_LOCO_TRACE_DIR=...`); skips with code 77 if the traces or `artifacts/romfs` are missing |
+| `soundtest-real-smoke`, `soundtest-id-smoke` | Play one sound by file name and one by number on the dummy audio driver. Same conditions |
 | `audio-mixer` | Mixer core, no SDL |
 | `runtime-core` | Game runtime core (frame timing, pad, stick, character movement), no SDL |
 | `save-core` | Save file checks, synthetic data, no SDL |
@@ -108,7 +109,7 @@ build/chase-viewer --screenshot out.bmp --cutscene csdata/models/1_1_a --level l
 
 ## Original game in the emulator (oracle)
 
-Needs the Azahar 3DS emulator in `PATH`. It runs your own game copy without a window, so developers can compare our code with the original game.
+Needs the Azahar 3DS emulator in `PATH`, and Xvfb for `--display xvfb`. It runs your own game copy without a window, so developers can compare our code with the original game. It uses the only `.cci` file in the repository folder. Pass `--image FILE` if there are several.
 
 ```sh
 python3 tools/azahar_oracle.py tools/oracle/boot.txt
@@ -126,8 +127,9 @@ python3 tools/azahar_oracle.py tools/oracle/boot.txt
 Save a state once, then start from it. States need the `--display xvfb` option, which runs the emulator on a private virtual screen.
 
 ```sh
-python3 tools/azahar_oracle.py boot.txt --display xvfb        # boot.txt ends with: savestate language
-python3 tools/azahar_oracle.py test.txt --display xvfb --state language
+python3 tools/azahar_oracle.py tools/oracle/to-gameplay.txt --display xvfb --renderer opengl --keep   # ends with: savestate gameplay-start
+python3 tools/azahar_oracle.py --stop
+python3 tools/azahar_oracle.py my-test.txt --display xvfb --renderer opengl --state gameplay-start
 ```
 
 - `savestate NAME` and `loadstate NAME` are steps in the script file. States are stored in `artifacts/oracle/states/` and survive `--fresh`.
@@ -135,7 +137,7 @@ python3 tools/azahar_oracle.py test.txt --display xvfb --state language
 - `--keep` leaves the emulator running after the script. `--attach` connects to it later (no game image needed). `--stop` closes it. Frame numbers start at 0 on every attach.
 
 ```sh
-python3 tools/azahar_oracle.py boot.txt --display xvfb --keep --port 24690
+python3 tools/azahar_oracle.py my-test.txt --display xvfb --keep --port 24690
 python3 tools/azahar_oracle.py more.txt --attach --port 24690
 python3 tools/azahar_oracle.py --stop
 ```
@@ -147,7 +149,7 @@ python3 tools/azahar_oracle.py --stop
 Add `--rpc` to read the game's memory without stopping it. This is faster, and timing values stay correct.
 
 ```sh
-python3 tools/azahar_oracle.py measure.txt --display xvfb --state language --rpc
+python3 tools/azahar_oracle.py measure.txt --display xvfb --state gameplay-start --rpc
 ```
 
 - Screenshots take well under a second instead of about 11 seconds.

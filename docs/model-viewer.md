@@ -64,6 +64,10 @@ The viewer uses the same `config/controls.cfg` as the [input laboratory](control
 
 | Option | What it does |
 |---|---|
+| `--level FILE` | Places the objects of a level. You can repeat it. |
+| `--skeleton FILE`, `--anim FILE` | Pose and animate the first model. They go together. |
+| `--frame N` | Shows a single animation or cutscene frame. |
+| `--fps F` | Sets the animation speed. The default is 30. |
 | `--room NAME` | Shows only the level objects in one room. |
 | `--nav` | Draws the navigation grid of the level. |
 | `--cutscene FOLDER` | Plays the cutscene in `csdata/models/<id>`. |
@@ -74,6 +78,7 @@ The viewer uses the same `config/controls.cfg` as the [input laboratory](control
 | `--eye X,Y,Z` | Sets the starting camera position. |
 | `--screenshot OUT.bmp` | Draws one frame, saves it and exits. |
 | `--fib`, `--names` | Use a different asset archive. The default is in `artifacts/romfs/romfs/`. |
+| `--config FILE` | Uses a different controls file. The default is `config/controls.cfg`. |
 
 ## Without a display
 
