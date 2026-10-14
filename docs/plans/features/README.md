@@ -7,7 +7,7 @@ Item format: `- [ ] ID — gap. needs: ID. blocks: ID. evidence: link`. `needs:`
 | Feature | Status | Top open items |
 |---|---|---|
 | [player-movement](player-movement.md) | IN_PROGRESS | PLAYER-1 slide landing stun rule; PLAYER-6 other 0x203d18 states |
-| [camera](camera.md) | IN_PROGRESS | CAMERA-1 stale first-gather limits; record selection, pose and lock done (CAMERA-6 closed); CAMERA-3 multi-record and fade open |
+| [camera](camera.md) | IN_PROGRESS | CAMERA-8 record pose snaps instead of blending (user report; needs CAMERA-3); CAMERA-3 multi-record weights and pose in motion |
 | [collision](collision.md) | IN_PROGRESS | COLL-1 broad phase stand-in; COLL-2 constructors missing (vehicles, characters) |
 | [level-objects](level-objects.md) | IN_PROGRESS | LEVOBJ-3 objects frozen (needs SCRIPT-1); LEVOBJ-2 NPC start animation |
 | [script-system](script-system.md) | IN_PROGRESS | SCRIPT-1 mission flow (needs SCRIPT-6 events and class scripts, SCRIPT-7 natives, SCRIPT-11 trigger types) |
