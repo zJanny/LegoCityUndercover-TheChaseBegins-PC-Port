@@ -245,6 +245,9 @@ struct NavRoom {
     float origin[3] = {0, 0, 0};
     std::uint16_t grids = 0;
     std::uint16_t paths = 0;
+    std::uint16_t base = 0;  // descriptor +4: first global grid number of the room
+    std::uint16_t end = 0;   // descriptor +6: one past the last global grid number
+    std::uint16_t section = 0;  // index of the section record (0x28 bytes) the room belongs to; each has its own cell size and origin
 };
 // Section +0x24 record of a class file (0x28 bytes): a name and, at +0x10 and +0x1c, a centre and half extents.
 // Lookup 0x23e798 finds the one named "CollisionBound" for the collision box of an object. The bytes +8..+0xb are the
@@ -508,7 +511,11 @@ void skinVertex(const Vertex& vertex, const std::vector<Matrix>& skin, float pos
 // .bfnnav navigation grids in the block order of loader 0x1971c4.
 struct NavGrid {
     std::uint16_t x = 0, z = 0, height = 0, width = 0, depth = 0;
+    std::uint16_t heightExtent = 0;       // record +8
+    std::uint16_t flags = 0;              // record +0x34: bits 0..13 count of extras, bit 14 and 15 grid switches
     std::vector<std::uint16_t> links;     // neighbouring grid indices
+    std::array<std::uint16_t, 16> linkSlots{};  // record +0x14, 0xffff = none; the slot number is what extras name
+    std::vector<std::array<std::uint8_t, 4>> extras;  // extra block, 4 bytes per entry
     std::vector<std::uint8_t> cells;      // width * depth, row-major by z; bit 0 set on edges/obstacles
 };
 struct NavPath {

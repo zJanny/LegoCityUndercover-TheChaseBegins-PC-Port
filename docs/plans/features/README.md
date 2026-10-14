@@ -13,6 +13,7 @@ Item format: `- [ ] ID — gap. needs: ID. blocks: ID. evidence: link`. `needs:`
 | [script-system](script-system.md) | IN_PROGRESS | SCRIPT-1 mission flow (needs SCRIPT-7 natives, SCRIPT-75 / 76 trigger events); runner, scene start, class startups |
 | [script-system-triggers](script-system-triggers.md) | IN_PROGRESS | SCRIPT-75 / 76 AI and vehicle trigger events; SCRIPT-77 / 78 object bound checks |
 | [script-system-natives](script-system-natives.md) | IN_PROGRESS | SCRIPT-7 natives in batches SCRIPT-29 to SCRIPT-39, SCRIPT-57 to SCRIPT-65 |
+| [script-system-ai-navigation](script-system-ai-navigation.md) | IN_PROGRESS | SCRIPT-93 AIMove across grids; SCRIPT-94 nav grids into chase-game; SCRIPT-96 AISuperJump state 11 |
 | [script-system-dcam](script-system-dcam.md) | IN_PROGRESS | SCRIPT-46 director camera commands, SCRIPT-47 / 48 / 49 / 50 details |
 | [script-system-hud-natives](script-system-hud-natives.md) | IN_PROGRESS | SCRIPT-66 to SCRIPT-70 text screens; SCRIPT-71 to SCRIPT-74 objective markers, arrows, map |
 | [world-streaming](world-streaming.md) | IN_PROGRESS | `chase-game` streams rooms (street level); WSTREAM-12 room position code; WSTREAM-13 room change trigger and load time; WSTREAM-4 visibility inside rooms |

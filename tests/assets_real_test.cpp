@@ -575,6 +575,8 @@ int main(int argc, char** argv) {
             if (found == navCounts.end()) continue;
             if (found->second != std::make_pair(std::size_t(room.grids), std::size_t(room.paths)))
                 throw std::runtime_error("nav counts differ from the level descriptor: " + found->first);
+            if (room.end - room.base != room.grids)
+                throw std::runtime_error("nav global grid range differs from the grid count: " + found->first);
             ++navMatched;
         }
         if (navFiles != 700 || navGrids != 28646 || navPaths != 4607 || navFlagged != 429583 || navMatched != 700)

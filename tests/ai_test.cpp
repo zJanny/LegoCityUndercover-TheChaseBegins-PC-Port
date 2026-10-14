@@ -3,6 +3,7 @@
 // positions are made up. The walk speed is the one measured in the oracle at the police entry (docs/re/scripts.md, 0.11
 // per update of 1/30 s).
 #include "runtime/ai.hpp"
+#include "runtime/ai_go_to_target.hpp"
 #include "runtime/script_runner.hpp"
 #include <cmath>
 #include <iostream>
@@ -133,6 +134,95 @@ void runIsFaster() {
     require(running.character("npc")->move->noAvoid && !walking.character("npc")->move->noAvoid, "AIMoveNoAvoid records the avoid flag");
 }
 
+NavWorld navCorridor() {
+    chase::assets::NavGrid grid;
+    grid.width = 4;
+    grid.depth = 2;
+    grid.heightExtent = 512;
+    grid.cells.assign(8, 0);
+    grid.linkSlots.fill(0xffff);
+    grid.flags = 1;
+    grid.extras = {{0, 0, 0, 0}};
+    chase::assets::NavPath box;
+    box.position[1] = 1;
+    box.extent[0] = box.extent[1] = box.extent[2] = 100;
+    box.indices = {0};
+    chase::assets::NavMesh mesh;
+    mesh.grids.push_back(grid);
+    mesh.paths.push_back(box);
+    chase::assets::NavRoom descriptor;
+    descriptor.heightUnit = 1;
+    descriptor.cellSize = 1;
+    descriptor.end = 1;
+    return NavWorld::fromRooms({descriptor}, {mesh});
+}
+
+AiCore navCore(float targetX) {
+    AiCore core;
+    core.setPositionLookup([targetX](const std::string& name, float out[3]) {
+        if (name == "npc") { out[0] = 0.5f; out[1] = 1; out[2] = 0.5f; return true; }
+        if (name == "target") { out[0] = targetX; out[1] = 1; out[2] = 0.5f; return true; }
+        return false;
+    });
+    std::vector<NavWorld> worlds;
+    worlds.push_back(navCorridor());
+    core.setNavigation(std::move(worlds));
+    return core;
+}
+
+void aiMoveFollowsTheNavGrid() {
+    AiCore core = navCore(3.5f);
+    core.run(AiNativeKind::AIMove, {"npc", "target"}, {0.0f});
+    require(core.moving("npc") && core.character("npc")->move->nav, "the finder 0x204284 accepts a position in the same grid: a nav order (0x22d85c)");
+    core.update(0.1f);
+    const float step = kAiWalkSpeed * 0.1f;
+    require(near((*core.character("npc")->position)[0], 0.5f + step) && near((*core.character("npc")->position)[2], 0.5f),
+            "the follower returns code 4 toward the centre of the exit cell 3: heading 64 (+x), stand-in speed");
+    int updates = 1;
+    while (core.moving("npc") && updates < 100) { core.update(0.1f); ++updates; }
+    const std::vector<AiMoveEnd> ended = core.takeMovesEnded();
+    require(ended.size() == 1 && ended[0].character == "npc" && ended[0].argument == 0, "arrival raises the AIMove event once (0x2c630c)");
+    // The follower returns 0 as soon as the position is in cell 3 (x >= 3): the character stops there, not on the target.
+    const float x = (*core.character("npc")->position)[0];
+    require(x >= 3.0f && x < 3.0f + step + 1e-3f, "arrival happens on entering the exit cell");
+    require(core.character("npc")->state == AiState::Idle, "idle after the event (0x2246c0)");
+}
+
+void aiMoveToAnUnreachableTargetChangesNothing() {
+    AiCore core = navCore(30.5f);
+    core.run(AiNativeKind::AIMove, {"npc", "target"}, {0.0f});
+    require(!core.moving("npc") && core.character("npc")->state == AiState::Idle, "result 1: the front end returns without a state change");
+    require(core.cannotGetThere().size() == 1 && core.cannotGetThere()[0] == "npc", "\"I can't get there\" is recorded");
+}
+
+void aiMoveInTheSameCellEndsAtOnce() {
+    AiCore core = navCore(0.7f);
+    core.run(AiNativeKind::AIMove, {"npc", "target"}, {0.0f});
+    core.update(1.0f / 30.0f);
+    require(core.takeMovesEnded().size() == 1, "phase 0: the follower returns 0 on the first tick (0x1faf2c)");
+}
+
+void goToTargetState() {
+    GoToTarget order;
+    order.target = {3, 5, 4};
+    std::uint16_t heading = 0;
+    const std::array<float, 3> origin = {0, 0, 0};
+    order.minDistance = 5.5f;
+    require(stepGoToTarget(order, origin, heading) == GoToTargetResult::Arrived, "MinDistance 5.5 > horizontal distance 5 arrives (0x2c3c20 bgt)");
+    order.minDistance = 5.0f;
+    require(stepGoToTarget(order, origin, heading) == GoToTargetResult::Moving, "5.0 is not greater than 5.0");
+    require(heading == 6711, "heading = trunc(atan2(3, 4) * 10430.378) = trunc(6711.96) (0x2c3cc0)");
+    order.minDistance = -1.0f;
+    order.arriveBelowTarget = false;
+    require(stepGoToTarget(order, origin, heading) == GoToTargetResult::Moving, "the default MinDistance -1.0 never arrives by distance, below the target without bit 6 neither");
+    order.arriveBelowTarget = true;
+    require(stepGoToTarget(order, origin, heading) == GoToTargetResult::Arrived, "height 0 below the target height 5 with bit 6 of +0x314: arrived (0x2c3c34)");
+    require(stepGoToTarget(order, {0, 5, 0}, heading) == GoToTargetResult::Moving, "at the target height (bhs) the y test does not arrive");
+    order.target = {-3, 0, -4};
+    stepGoToTarget(order, {0, 0, 0}, heading);
+    require(heading == 39480, "atan2(-3, -4) * 10430.378 = -26056.03 truncates to -26056, stored as u16 39480");
+}
+
 SimplePathFollow route(bool closed) {
     SimplePathFollow follow;
     follow.nodes = {{0, 0, 1}, {0, 0, 2}, {0, 0, 3}};
@@ -256,6 +346,10 @@ int main() {
         followSimplePath();
         unknownTargetIsRecorded();
         aiMoveFiresTheTriggerOfTheCharacter();
+        aiMoveFollowsTheNavGrid();
+        aiMoveToAnUnreachableTargetChangesNothing();
+        aiMoveInTheSameCellEndsAtOnce();
+        goToTargetState();
     } catch (const std::exception& error) {
         std::cerr << "ai-test: " << error.what() << '\n';
         return 1;

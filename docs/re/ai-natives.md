@@ -53,6 +53,8 @@ Unknowns:
 
 ## 2026-10-14T18:42:40+02:00 — AI movement: state table, simple-path state 22, go-to-target state 11, path finder front
 
+Corrected by [ai-navigation.md §2026-10-14T19:47](ai-navigation.md#ts-20261014-194710): the phase table of `+0x7e` (0 arrived, 1 failed, 2 inside a grid, 3 after a transition, 4 start beside a grid), bit 0 of `+0x7c` is set only by AIMoveNoAvoid (the stack argument), and state 11 is the AISuperJump state.
+
 Read with llvm-objdump on `artifacts/game/game.arm.elf` (`--triple=armv6k --mattr=+vfp2`); no REA session, no emulator trace. Adds to [the AI native handlers](#ts-20261014-163311).
 
 **AI state table.** Built at 0x2a3c24 into the global 0x3771f0 as 16-byte records, one per state number; word 0 is the update function, word 3 (where set) a second hook. Update functions seen: states 4 and 5: 0x2c5d3c (path follower), state 11: 0x2c3bd8, state 12: 0x2c3d1c, state 22: 0x2cbe14; 0x21102c requests state 2 (pursuit of `+0xc4`). Requests go through 0x218b38(entity, component, state), which stores the number at `+0x15`.

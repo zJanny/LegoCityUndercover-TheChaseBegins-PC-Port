@@ -27,9 +27,12 @@ NavMesh parseNav(const Bytes& data) {
         grid.height = readU16(grids, at + 2);
         grid.z = readU16(grids, at + 4);
         grid.width = readU16(grids, at + 6);
+        grid.heightExtent = readU16(grids, at + 8);
         grid.depth = readU16(grids, at + 10);
+        grid.flags = readU16(grids, at + 0x34);
         for (std::size_t k = 0; k < 16; ++k) {
             std::uint16_t link = readU16(grids, at + 0x14 + 2 * k);
+            grid.linkSlots[k] = link;
             if (link != 0xffff) grid.links.push_back(link);
         }
         Bytes cells = r.next();
@@ -37,7 +40,10 @@ NavMesh parseNav(const Bytes& data) {
         if (!padded(cells.size(), count)) throw std::runtime_error("nav cell block size mismatch");
         grid.cells.assign(cells.begin(), cells.begin() + std::ptrdiff_t(count));
         if (std::size_t extra = readU16(grids, at + 0x34) & 0x3fffu) {
-            if (r.next().size() != extra * 4) throw std::runtime_error("nav extra block size mismatch");
+            Bytes block = r.next();
+            if (block.size() != extra * 4) throw std::runtime_error("nav extra block size mismatch");
+            for (std::size_t k = 0; k < extra; ++k)
+                grid.extras.push_back({block[4 * k], block[4 * k + 1], block[4 * k + 2], block[4 * k + 3]});
         }
         nav.grids.push_back(std::move(grid));
     }

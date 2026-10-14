@@ -120,6 +120,36 @@ void AiCore::startMove(const std::string& name, std::vector<std::array<float, 3>
     order.path = path;
     target.move = std::move(order);
     target.state = path ? AiState::FollowPath : AiState::MoveTo;
+    if (!path && navigation_ && target.position && target.move->waypoints.size() == 1) {
+        const std::array<float, 3> goal = target.move->waypoints.front();
+        if (!startNavMove(name, target, *target.position, goal, noAvoid)) {
+            target.move.reset();
+            target.state = AiState::Idle;
+        }
+    }
+}
+
+bool AiCore::startNavMove(const std::string& name, AiCharacter& target, const std::array<float, 3>& from, const std::array<float, 3>& to,
+                          bool noAvoid) {
+    for (std::size_t index = 0; index < navigation_->size(); ++index) {
+        auto record = std::make_shared<NavPathRecord>();
+        record->avoidFlags = noAvoid ? 1 : 0;
+        record->avoidMask = record->gateMask = kAiNavGateMask;
+        record->heightTolerance = kAiNavHeightTolerance;
+        const int code = navFindPath((*navigation_)[index], *record, from.data(), to.data());
+        if (record->startGrid == kNavNone && record->goalGrid == kNavNone) continue;
+        if (code == 1) {
+            if (std::find(cannotGetThere_.begin(), cannotGetThere_.end(), name) == cannotGetThere_.end()) cannotGetThere_.push_back(name);
+            return false;
+        }
+        const bool withinOneGrid = code == 0 || (code == 3 && record->phase == 2 && record->startGrid == record->goalGrid);
+        if (withinOneGrid) {
+            target.move->nav = std::move(record);
+            target.move->navWorld = index;
+        }
+        return true;
+    }
+    return true;
 }
 
 void AiCore::startSimplePath(const std::string& name, SimplePathFollow follow, bool run) {
@@ -235,6 +265,30 @@ void AiCore::advanceStraightMove(const std::string& name, AiCharacter& target, f
     }
 }
 
+void AiCore::advanceNavMove(const std::string& name, AiCharacter& target, float dt) {
+    AiMoveOrder& order = *target.move;
+    std::array<float, 3>& position = *target.position;
+    const NavFollowResult result = navFollow((*navigation_)[order.navWorld], *order.nav, position.data());
+    if (result.code == 0) {
+        target.move.reset();
+        target.state = AiState::Idle;
+        ended_.push_back({name, 0});
+        return;
+    }
+    if (result.code == 1 || result.code == 2) {
+        order.nav.reset();
+        return;
+    }
+    if (result.code != 4) return;
+    const float dx = result.target[0] - position[0], dz = result.target[2] - position[2];
+    const float distance = std::sqrt(dx * dx + dz * dz);
+    target.heading = headingToward(position, result.target);
+    if (distance <= 0.0f) return;
+    const float step = std::min(distance, (order.run ? kAiRunSpeed : kAiWalkSpeed) * dt);
+    position[0] += dx / distance * step;
+    position[2] += dz / distance * step;
+}
+
 void AiCore::advanceSimplePath(const std::string& name, AiCharacter& target, float dt) {
     AiMoveOrder& order = *target.move;
     std::array<float, 3>& position = *target.position;
@@ -264,6 +318,7 @@ void AiCore::update(float dt) {
         if (target.state != AiState::MoveTo && target.state != AiState::FollowPath) continue;
         moved_.push_back(name);
         if (target.move->follow) advanceSimplePath(name, target, dt);
+        else if (target.move->nav) advanceNavMove(name, target, dt);
         else advanceStraightMove(name, target, dt);
     }
 }

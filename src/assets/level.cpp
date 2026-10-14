@@ -213,6 +213,9 @@ Level parseLevel(const Bytes& data) {
                 for (int a = 0; a < 3; ++a) room.origin[a] = readF32(s30, i * 0x28 + 0x14 + 4 * std::size_t(a));
                 room.grids = readU16(descriptors, k * 0x18);
                 room.paths = readU16(descriptors, k * 0x18 + 2);
+                room.base = readU16(descriptors, k * 0x18 + 4);
+                room.end = readU16(descriptors, k * 0x18 + 6);
+                room.section = static_cast<std::uint16_t>(i);
                 level.navRooms.push_back(std::move(room));
             }
         }

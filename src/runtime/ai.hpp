@@ -7,11 +7,13 @@
 #include <cstdint>
 #include <functional>
 #include <map>
+#include <memory>
 #include <optional>
 #include <string>
 #include <vector>
 
 #include "runtime/ai_simple_path.hpp"
+#include "runtime/nav_follow.hpp"
 
 namespace chase::runtime {
 
@@ -65,6 +67,10 @@ struct AiMoveOrder {
     bool noAvoid = false;
     bool path = false;
     std::optional<SimplePathFollow> follow;
+    // Nav path of the original finder (nav_path.hpp) when the nav grids are set and the position lies in a single grid;
+    // reset when the follower cannot continue, the order then walks straight (SCRIPT-S31).
+    std::shared_ptr<NavPathRecord> nav;
+    std::size_t navWorld = 0;
 };
 
 // A finished move: the AIMove event is raised for `character` with the start argument of the raise site (0x23cee8's
@@ -116,6 +122,13 @@ struct AiCharacter {
 constexpr float kAiWalkSpeed = 0.11f * 30.0f;
 constexpr float kAiRunSpeed = 0.23f * 30.0f;
 
+// STAND-IN SCRIPT-S94: 0x204284 doubles the entity's float at +0x70 into the height tolerance of its lookups; 0.85 is the
+// player's value (oracle read), other characters' values are not read.
+constexpr float kAiNavHeightTolerance = 0.85f;
+// Path record +0x74 and +0x78 are 0x202054 = 0x2b66d8(entity) | 1; the other bits come from the gate types registered in the
+// table at global 0x376f10 (which entity may use which gate), not recovered: STAND-IN SCRIPT-S94, only bit 0 (always set).
+constexpr std::uint32_t kAiNavGateMask = 1;
+
 class AiCore {
 public:
     using PositionLookup = std::function<bool(const std::string&, float[3])>;
@@ -123,6 +136,10 @@ public:
 
     void setPositionLookup(PositionLookup lookup) { lookup_ = std::move(lookup); }
     void setPathLookup(PathLookup lookup) { pathLookup_ = std::move(lookup); }
+    // The nav grids of the level, one world per section record (nav_grid.hpp). With them an AIMove runs the path finder
+    // 0x204284 first like the front end 0x22d85c: result 1 ("I can't get there") leaves the character unchanged.
+    void setNavigation(std::vector<NavWorld> worlds) { navigation_ = std::make_shared<std::vector<NavWorld>>(std::move(worlds)); }
+    const std::vector<std::string>& cannotGetThere() const { return cannotGetThere_; }
 
     // Handler of `kind` for the characters named by lower-case names and the numbers already read from the script.
     void run(AiNativeKind kind, const std::vector<std::string>& names, const std::vector<float>& numbers);
@@ -146,6 +163,9 @@ private:
     void startSimplePath(const std::string& character, SimplePathFollow follow, bool run);
     void advanceStraightMove(const std::string& name, AiCharacter& target, float dt);
     void advanceSimplePath(const std::string& name, AiCharacter& target, float dt);
+    void advanceNavMove(const std::string& name, AiCharacter& target, float dt);
+    bool startNavMove(const std::string& name, AiCharacter& target, const std::array<float, 3>& from, const std::array<float, 3>& to,
+                      bool noAvoid);
     void requestIdle(AiCharacter& character);
     void requestMillAbout(AiCharacter& character);
 
@@ -153,6 +173,8 @@ private:
     std::vector<AiMoveEnd> ended_;
     std::vector<std::string> moved_;
     std::vector<std::string> unresolved_;
+    std::vector<std::string> cannotGetThere_;
+    std::shared_ptr<std::vector<NavWorld>> navigation_;
     PositionLookup lookup_;
     PathLookup pathLookup_;
 };
