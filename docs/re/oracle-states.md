@@ -112,3 +112,27 @@ Unknowns:
 
 Unknowns:
 - Whether word +8 is the hash of an instance name (traffic vehicles may have none).
+
+<a id="ts-20261014-232710"></a>
+
+## 2026-10-14T23:27:10+02:00 — Mission 1-1 step states m11-1 to m11-9 (user slots 6 to 10 and 1 to 4)
+
+- The user played mission 1-1 in a new playthrough on their own Azahar and quick-saved before each step. Copied read-only (`cp --no-clobber`, identical by `cmp`) from `~/.local/share/azahar-emu/states/00040000000AD600.NN.cst` (saved 23:18 to 23:23) to `artifacts/oracle/states/NAME.cst` with `NAME.json` (New 3DS). The user's saves were not modified. Slots 1 to 4 were overwritten by the user since the earlier copies (`info-barrier` and `mission-1-2-start` keep their own copies).
+- Game progress of all nine: mission 1-1 in progress, not finished (user report). The steps are those of [objective-hud.md §2026-10-14T21:23](objective-hud.md#ts-20261014-212357).
+- Each state was loaded once by the lead (port 24730, home `artifacts/oracle/lead-home`, OpenGL, `frames 2`, `player`); all loaded. Player world position and forward vector:
+
+| State | Slot | Point in mission 1-1 | Player position | Forward |
+|---|---|---|---|---|
+| `m11-1-donut-shop` | 6 | before the donut shop waypoint (`1-1_Waypoint_01` at 817.35, 23.93, 1071.20) | 819.581 23.919 1073.996 | -0.422 0 -0.907 |
+| `m11-2-patrol-car` | 7 | in front of the police car waypoint (`1-1_Waypoint_02`) | 886.681 16.590 1112.930 | 0.284 0 0.959 |
+| `m11-3-repair-van-marker` | 8 | in front of the broken van waypoint (`1-1_Waypoint_03`, room33) | 877.270 52.788 705.022 | -0.045 0 -0.999 |
+| `m11-4-van-parts` | 9 | in front of the build-it parts (`1-1_BI_DonutVanParts`) | 876.914 52.435 700.427 | -0.768 0 -0.640 |
+| `m11-5-in-donut-van` | 10 | inside the repaired donut van | 869.590 52.740 691.972 | 0.825 0.017 0.565 |
+| `m11-6-van-to-shop` | 1 | in the van in front of `1-1_Waypoint_05` (bring the van to the shop) | 813.926 17.534 1046.835 | 0.997 -0.009 -0.075 |
+| `m11-7-collect-donuts` | 2 | in front of `1-1_Waypoint_Donuts` | 819.964 23.920 1071.412 | -0.986 0 0.170 |
+| `m11-8-donuts-in-hand` | 3 | carrying the donut box | 819.582 23.920 1074.939 | 0.773 0 0.635 |
+| `m11-9-delivery-goal` | 4 | in front of the delivery target (`1-1_DonutTarget_DEMO`) | 881.396 16.597 1118.883 | 0.370 0 0.929 |
+
+Unknowns:
+- The level variables (StoryProgress, `1-1_IntroPlayed`) and which waypoints and triggers are enabled in each state; not read yet.
+- The player's controller state in the van states (the `player` command prints the intent state only).
