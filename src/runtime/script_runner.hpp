@@ -117,6 +117,8 @@ public:
     // queued first; they run from the next update on.
     void checkTriggers(const float player[3]);
     const std::vector<ScriptTriggerState>& triggers() const { return triggers_; }
+    void setTriggerEnabled(std::size_t index, bool enabled) { if (index < triggers_.size()) triggers_[index].enabled = enabled; }
+    void setBoundEnabled(std::size_t index, bool enabled) { if (index < boundEnabled_.size()) boundEnabled_[index] = enabled; }
     // Bound byte +0xa (EnableBound 0x1d0ce8), one per Level::bounds entry.
     const std::vector<std::uint8_t>& boundsEnabled() const { return boundEnabled_; }
     // Bound byte +0xb: the room setup 0x173944 clears it for the bounds of a room, so such a bound counts only while

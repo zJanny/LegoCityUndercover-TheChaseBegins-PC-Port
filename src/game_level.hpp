@@ -17,6 +17,7 @@
 #include "runtime/level_start.hpp"
 #include "runtime/pad.hpp"
 #include "runtime/scene_change.hpp"
+#include "runtime/scene_start.hpp"
 #include "runtime/scheduler.hpp"
 #include "runtime/script_runner.hpp"
 #include "runtime/studs.hpp"
@@ -98,6 +99,7 @@ private:
     chase::assets::ClassLookup classOf;
     chase::assets::PlacedObjectState objectState;
     chase::runtime::ScriptRunner levelScripts;
+    chase::runtime::SceneStart sceneStart;
     chase::runtime::WorldLevelEntry currentWorldLevel;
     chase::runtime::SceneChangeFlow sceneChangeFlow;
     unsigned updatesForLog = 0;

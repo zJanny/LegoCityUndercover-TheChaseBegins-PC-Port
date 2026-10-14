@@ -2,6 +2,7 @@
 // gameplay-start (Azahar oracle, docs/re/scripts.md). Needs the extracted RomFS; exits with 77 (skipped) when it is missing.
 #include "assets/assets.hpp"
 #include "runtime/level_start.hpp"
+#include "runtime/scene_start.hpp"
 #include <algorithm>
 #include <filesystem>
 #include <iostream>
@@ -10,6 +11,7 @@
 #include <vector>
 
 namespace {
+constexpr const char* kStationFile = "levels/levels/lvl_00_policestation/lvl_00_policestation_main.blvl";
 constexpr const char* kLevelFile = "levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl";
 
 void require(bool condition, const std::string& message) {
@@ -95,20 +97,25 @@ int main(int argc, char** argv) {
 
         chase::assets::PlacedObjectState runState = chase::runtime::levelInitialState(level, chase::assets::archiveClassLookup(archive));
         chase::runtime::ScriptRunner runner(level, runState);
-        const std::uint32_t updates = chase::runtime::runLevelStartup(runner, chase::runtime::kStartupStepDt, chase::runtime::kStartupMaxUpdates);
+        const chase::assets::ClassLookup classOf = chase::assets::archiveClassLookup(archive);
+        chase::runtime::SceneStart sceneStart(level, classOf, runner);
+        chase::runtime::SceneStartOptions startOptions;
+        startOptions.dt = chase::runtime::kStartupStepDt;
+        startOptions.maxUpdates = chase::runtime::kStartupMaxUpdates;
+        const std::uint32_t updates = sceneStart.run(startOptions);
         std::cout << "level-start: startup threads ended after " << updates << " updates; functions without handler:";
         for (const auto& name : runner.unhandledFunctions()) std::cout << ' ' << name << '(' << runner.unhandledCalls(name) << ')';
         std::cout << '\n';
         // Provenance: oracle read at gameplay-start (docs/re/scripts.md 2026-10-14): the thread lists +0x1310 of both
         // resident scenes are empty and the executor 0x234204 is not entered in 3 updates (trap scripts3).
-        require(runner.threadCount() == 0, "startup threads still running: " + std::to_string(runner.threadCount()));
+        require(runner.threadCount() == 0 && sceneStart.classThreadCount() == 0, "startup threads still running: " + std::to_string(runner.threadCount()));
         require(runState.disabled == state.disabled, "runner state differs from levelStartState");
 
         // Provenance: oracle `read` at gameplay-start (docs/re/scripts.md 2026-10-14): enable byte +0 of the 241 trigger
         // records at owner+0x34 (0x08eb22e0, 0x20 each, same order as the file) and byte +0xa of the 482 bounds
         // (0x08663354, 0x28 each). The port runs only the level's startup script, so a few differ (open item SCRIPT-10).
         const std::vector<int> oracleTriggersOff = {1, 67, 68, 69, 70, 71, 79, 80, 81, 82, 98, 99, 110, 141, 203};
-        const std::vector<int> knownTriggerDifferences = {79, 80, 81, 82, 141};
+        const std::vector<int> knownTriggerDifferences = {};
         for (std::size_t i = 0; i < level.triggers.size(); ++i) {
             const bool off = std::find(oracleTriggersOff.begin(), oracleTriggersOff.end(), int(i)) != oracleTriggersOff.end();
             const bool known = std::find(knownTriggerDifferences.begin(), knownTriggerDifferences.end(), int(i)) != knownTriggerDifferences.end();
@@ -123,7 +130,7 @@ int main(int argc, char** argv) {
             335, 336, 337, 338, 339, 340, 341, 342, 343, 344, 345, 346, 347, 348, 349, 350, 351, 352, 353, 354, 355, 356, 357, 358, 359, 360,
             361, 362, 363, 364, 402, 422, 423, 424, 425, 426, 427, 428, 429, 430, 441, 442, 443, 444, 445, 446, 447, 448, 449, 450, 451, 452,
             453, 454, 455, 456, 457, 458, 459, 460, 461, 462, 463, 464, 465, 466, 467, 468, 469, 471, 472, 473, 474, 480};
-        const std::vector<int> knownBoundDifferences = {266, 271, 272};
+        const std::vector<int> knownBoundDifferences = {};
         require(level.bounds.size() == 482, "bound count changed");
         for (std::size_t i = 0; i < level.bounds.size(); ++i) {
             const bool off = std::find(oracleBoundsOff.begin(), oracleBoundsOff.end(), int(i)) != oracleBoundsOff.end();
@@ -139,6 +146,40 @@ int main(int argc, char** argv) {
         require(active == 482 - 225, "bounds with byte +0xb set: " + std::to_string(active));
         require(runner.boundActive(87), "Police_Station_Transition_Lower active (oracle byte +0xb = 1)");
         require(level.bounds[87].name == "Police_Station_Transition_Lower" && level.bounds[87].shape == 4, "bound 87 changed");
+
+        // Provenance: census with the C++ parser (docs/re/scene-start.md): 24 placed objects of lvl_01 have a class file with a
+        // "startup" script (object indices 1119 ... 2870), started from the last to the first.
+        require(sceneStart.classOwners().size() == 24, "class startup owners: " + std::to_string(sceneStart.classOwners().size()));
+        require(sceneStart.classOwners().front()->instance == "SuperJump_02" && sceneStart.classOwners().front()->objectIndex == 2870, "first owner started");
+        require(sceneStart.classOwners().back()->instance == "CharacterLocker" && sceneStart.classOwners().back()->objectIndex == 1119, "last owner started");
+        // Provenance: scripts.md 2026-10-14 oracle read: the five triggers and three bounds that the level scripts leave on but the
+        // original has off (triggers 79-82 and 141, bounds 266, 271, 272) are exactly the ones these two rules switch.
+        require((chase::runtime::triggersWithoutObject(level) == std::vector<std::size_t>{79, 80, 81, 82, 141}), "triggers without object");
+        require((chase::runtime::cameraBoundsSwitchedOffAtStart(level, classOf) == std::vector<std::size_t>{266, 271, 272}), "camera bounds switched off");
+
+        // Provenance: oracle state police-station (New 3DS), `read` of the runtime trigger records (owner+0x34 = 0x08e65ac0,
+        // 53 x 0x20 bytes) and of the 137 bound records (0x08fa4634, 0x28 each) of the lvl_00 level data 0x08f9cba0: all 53 trigger
+        // enable bytes are 1 and bound byte +0xa is 0 for bounds 6, 13 and 14 only
+        // (artifacts/oracle/agentM-out/lvl00-police-station-read.txt, parsed with a Python script of the session).
+        const chase::assets::FuseEntry* stationEntry = archive.find(kStationFile);
+        require(stationEntry != nullptr, "lvl_00 not in archive");
+        const chase::assets::Level station = chase::assets::parseLevel(archive.read(*stationEntry));
+        require(station.triggers.size() == 53 && station.bounds.size() == 137, "lvl_00 sizes");
+        chase::assets::PlacedObjectState stationState = chase::runtime::levelInitialState(station, classOf);
+        chase::runtime::ScriptRunner stationRunner(station, stationState);
+        chase::runtime::SceneStart stationStart(station, classOf, stationRunner);
+        chase::runtime::SceneStartOptions stationOptions;
+        stationOptions.dt = chase::runtime::kStartupStepDt;
+        stationOptions.maxUpdates = chase::runtime::kStartupMaxUpdates;
+        stationOptions.startRoom = 1;
+        stationStart.run(stationOptions);
+        for (std::size_t i = 0; i < station.triggers.size(); ++i) require(stationRunner.triggers()[i].enabled, "lvl_00 trigger enabled: " + std::to_string(i));
+        const std::vector<std::size_t> stationBoundsOff = {6, 13, 14};
+        for (std::size_t i = 0; i < station.bounds.size(); ++i) {
+            const bool off = std::find(stationBoundsOff.begin(), stationBoundsOff.end(), i) != stationBoundsOff.end();
+            require(bool(stationRunner.boundsEnabled()[i]) == !off, "lvl_00 bound byte +0xa: " + station.bounds[i].name);
+        }
+        require(station.bounds[13].name == "HINT_Basement" && station.bounds[14].name == "HINT_Roof_Lift", "lvl_00 bound names");
     } catch (const std::exception& error) {
         std::cerr << "level-start-real-test: " << error.what() << '\n';
         return 1;

@@ -96,6 +96,7 @@ LevelSession::LevelSession(const Shared& sharedState)
       classOf(archiveClassLookup(shared.archive)),
       objectState(runtime::levelInitialState(level, classOf)),
       levelScripts(level, objectState),
+      sceneStart(level, classOf, levelScripts),
       currentWorldLevel(runtime::worldLevelOfFile(shared.master, shared.options.level)),
       hudResources(shared.archive),
       hudCanvas(fe::kTopWidth, fe::kScreenHeight),
@@ -125,12 +126,13 @@ LevelSession::LevelSession(const Shared& sharedState)
                   << (saved.stateSaved ? "saved state of the level (StoryProgress " + std::to_string(saved.storyProgress) + ", " + std::to_string(saved.variables.size()) + " variables)" : std::string("no saved state of the level"))
                   << ", unlocked levels 0x" << std::hex << saved.levelUnlocked << std::dec << ", game complete " << saved.gameComplete << '\n';
     }
-    std::uint32_t startupUpdates = 0;
-    if (levelScripts.start("startup"))
-        while (levelScripts.running("startup", false) && startupUpdates < runtime::kStartupMaxUpdates) {
-            levelScripts.update(runtime::kStartupStepDt);
-            ++startupUpdates;
-        }
+    runtime::SceneStartOptions startOptions;
+    startOptions.dt = runtime::kStartupStepDt;
+    startOptions.maxUpdates = runtime::kStartupMaxUpdates;
+    startOptions.untilAllEnded = false;
+    if (!options.startRoom.empty()) startOptions.startRoom = runtime::roomNumber(options.startRoom);
+    else if (const std::optional<Placement> start = playerStart(level)) startOptions.startRoom = runtime::roomNumber(start->room);
+    const std::uint32_t startupUpdates = sceneStart.run(startOptions);
     for (const std::string& name : options.callScripts)
         if (!levelScripts.start(name) && !shared.afterSwitch) throw std::runtime_error("no level script " + name);
     for (const runtime::ScriptPlacement& request : levelScripts.takePlacements()) applyPlacement(request);
@@ -298,6 +300,7 @@ void advanceToDestination(FuseArchive& archive, game_options::Options& options, 
     options.level = destination.worldLevel.levelFile;
     options.start = std::array<float, 3>{destinationPoint->position[0], destinationPoint->position[1], destinationPoint->position[2]};
     options.facing = destinationPoint->orientation[1];
+    options.startRoom = destinationPoint->room;
 }
 
 }

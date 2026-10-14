@@ -21,6 +21,7 @@ struct Options {
     bool cameraCollision = true;
     std::optional<std::array<float, 3>> start;
     std::optional<float> facing;
+    std::string startRoom;
     // Options volumes 0..10 (the game divides them by 10). Read in the oracle at the gameplay start of a new game:
     // sound effects 1.0 (0x37636c + 4), music 0.8 (0x376b3c); the saved options are not read yet.
     unsigned soundVolume = 10, musicVolume = 8;

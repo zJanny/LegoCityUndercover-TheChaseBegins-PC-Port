@@ -27,6 +27,7 @@ Read this index, then open only the file you need.
 | [fmv.md](fmv.md) | Mobiclip `.moflex` video and subtitles |
 | [particles.md](particles.md) | `particledefs.bprt` particle definitions |
 | [scripts.md](scripts.md) | Level scripts (section +0x18), the script executor 0x234204 and its words, EnableObject / EnableCollision, the `startup` script, the revealer links, the start state of placed objects |
+| [scene-start.md](scene-start.md) | Scene start: class `startup` scripts of placed objects, camera bound switches (0x2ff35c), the trigger rule, `OnSceneEnter<room>` / `OnSceneExit` events (0x1ecc50), `ScriptCheckExtras` (0x2e5638) |
 | [script-natives.md](script-natives.md) | Census of all script natives: handler addresses, argument counts, call counts per level, classes A-D and the work batches SCRIPT-26 to SCRIPT-39 |
 | [doors.md](doors.md) | Doors (type 42): record, update 0x1d16b8, state change, messages, easing, hinge and slide pose, timings measured in the oracle |
 | [studs.md](studs.md) | Studs (collectible coins): pickup pool records, sprite sheet drawing and spin, pickup radius and skip counter, collect timer, counter values and limits, stand-ins |

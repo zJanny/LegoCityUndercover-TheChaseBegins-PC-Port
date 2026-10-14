@@ -29,6 +29,7 @@ IN_PROGRESS, updated 2026-10-13T21:29:01+0200. Objects are drawn standing at the
 - [ ] LEVOBJ-5 — The code that copies instance parameters into the slot array `obj + 0x2c` was not found (the rule is inferred); how `xx_particleemitter` and other `xx_*` objects are created; model LOD selection (`LOD_NumberofLods`); whether `Animation` start poses change placed props. evidence: [objects.md §2026-10-13T15:39](../../re/objects.md#ts-20261013-153915).
 - [ ] LEVOBJ-6 — The police officer NPC of the oracle reference is not identified.
 - [ ] LEVOBJ-7 — Vehicles, animals and the other classes without a recovered constructor are not created (shared with COLL-2).
+- [ ] LEVOBJ-8 — Objects inside class files (sub-objects such as `SBVehicleDropConsole`, `Barrier01`, `Gem`) are not instantiated, so the class `startup` scripts that enable or disable them have no effect. blocks: SCRIPT-52, SCRIPT-S14. evidence: [scene-start.md §2026-10-14T14:27](../../re/scene-start.md#ts-20261014-142739).
 
 ## 6. Findings summary
 

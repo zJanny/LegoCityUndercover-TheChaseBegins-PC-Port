@@ -135,6 +135,7 @@ Unknowns
 
 ## 2026-10-14T10:06:40+02:00 — Trigger records, bound switches, the bound test and the police entrance explained (REA Ghidra 12.1.2, llvm-objdump, Azahar oracle port 24701 without RPC)
 
+Corrected by [scene-start.md §2026-10-14T14:27](scene-start.md#ts-20261014-142739): triggers 79 to 82 and 141 and the three camera bounds that stayed on are explained by two scene-start rules
 Replica: `ScriptRunner::checkTriggers`, `EnableTrigger`, `EnableBound`, `setRoomLoaded` (src/runtime/script_runner.cpp); `LevelTrigger::nameHash`, `LevelBound` node / shape / enabled / active / room, `Level::boundMatrices` (src/assets/level.cpp). Tests: `script-runner` (synthetic), `level-start-real-data` (oracle values below). REA evidence: ev_45c3f2fb… (0x22f650, 0x26a20c, 0x18a89c), ev_5f5e3c50… (0x2c185c, 0x24255c, 0x257f14), ev_05c9f4b1… (0x1dd380, 0x23e798, 0x21b3fc), ev_3549f20e… (0x250810), ev_ae423cb4… (0x229a40), ev_47524e83… (0x173944), ev_3af9fd1a… (0x211e04). [Corrects scripts.md §2026-10-14T09:52:52](#ts-20261014-095252): the unknowns of the 09:52:52 entry about the trigger enable byte, bound bytes +0xa / +0xb, EnableBound, the box test and the police walk.
 
 ### Records (oracle `read`, gameplay-start)

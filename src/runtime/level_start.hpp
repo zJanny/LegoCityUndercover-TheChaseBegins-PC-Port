@@ -15,12 +15,16 @@ namespace chase::runtime {
 constexpr float kStartupStepDt = 0.034f;
 constexpr std::uint32_t kStartupMaxUpdates = 3000;
 
+// Parameter lookup 0x217080 for a placed object: the class value, or the object's own value when the class marks the
+// parameter per instance (flag 2); null when the class file does not list it.
+const assets::LevelParam* effectiveParam(const assets::LevelObject& object, const assets::Level& cls, std::uint32_t hash);
 // The objects the reveal links hide (`classOf` finds the class file of an object class).
 assets::PlacedObjectState levelInitialState(const assets::Level& level, const assets::ClassLookup& classOf);
 // Starts the level's "startup" script and runs the runner with `dt` until no thread is left or `maxUpdates` passed.
 // Returns the number of updates.
 std::uint32_t runLevelStartup(ScriptRunner& runner, float dt, std::uint32_t maxUpdates);
-// levelInitialState plus runLevelStartup with the stand-in step above. The natives that write a variable
+// levelInitialState plus SceneStart::run (scene_start.hpp) with the stand-in step above and the room of "Player1Start" as
+// the start room. The natives that write a variable
 // (IsLevelUnlocked, GetGameComplete, IsRedBrickExtraActive) return 0 as for a new game without a save.
 assets::PlacedObjectState levelStartState(const assets::Level& level, const assets::ClassLookup& classOf);
 

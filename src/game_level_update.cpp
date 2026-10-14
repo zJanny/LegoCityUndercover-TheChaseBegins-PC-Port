@@ -154,7 +154,9 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         const float playerPosition[3] = {player->motion.x, player->vertical.y, player->motion.z};
         updateDoors(playerPosition, emit);
     }
+    sceneStart.startRequested();
     levelScripts.update(dt);
+    sceneStart.update(dt);
     if (player) {
         const float playerPosition[3] = {player->motion.x, player->vertical.y, player->motion.z};
         levelScripts.checkTriggers(playerPosition);
