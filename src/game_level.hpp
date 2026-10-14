@@ -15,6 +15,7 @@
 #include "render/scene.hpp"
 #include "render/studs.hpp"
 #include "runtime/buildit_set.hpp"
+#include "runtime/carry.hpp"
 #include "runtime/camera_lock_icon.hpp"
 #include "runtime/camera_rig.hpp"
 #include "runtime/collision.hpp"
@@ -93,6 +94,7 @@ private:
     void applyPlacement(const chase::runtime::ScriptPlacement& request);
     void updateDoors(const float playerPosition[3], const std::function<void(const chase::runtime::SoundCall&)>& emit);
     void updateBuildits(const float playerPosition[3]);
+    void updateCarry(const float playerPosition[3]);
     void updateFollowCamera(float dt);
     bool holdForMovie(float dt);
     bool cutscenePlaying() const { return levelScripts.cutscenes().playing() != nullptr; }
@@ -132,6 +134,7 @@ private:
     chase::runtime::CollisionWorld collision;
     std::vector<game_doors::DoorObject> doors;
     chase::runtime::BuilditSet buildits;
+    chase::runtime::CarrySet carry;
     float radius = 0;
     PlaceholderCamera camera;
     std::optional<chase::runtime::CameraRig> follow;

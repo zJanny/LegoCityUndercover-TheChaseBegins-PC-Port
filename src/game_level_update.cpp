@@ -2,6 +2,7 @@
 #include "runtime/follow_camera.hpp"
 #include "runtime/player_intent.hpp"
 #include "runtime/script_placement.hpp"
+#include <cmath>
 #include <iostream>
 
 namespace game_level {
@@ -76,6 +77,24 @@ void LevelSession::updateDoors(const float playerPosition[3], const std::functio
             else if (shared.audio) shared.audio->stop(event.id, door.soundOwner);
         }
     }
+}
+
+void LevelSession::updateCarry(const float playerPosition[3]) {
+    runtime::CarryInput input;
+    std::copy_n(playerPosition, 3, input.player);
+    const float heading = runtime::headingRadians(player->motion.facing);
+    input.facing[0] = std::sin(heading);
+    input.facing[2] = std::cos(heading);
+    input.actionPressed = pad.slot(kSlotConfirmButton).press > 0;
+    input.playerFree = !levelScripts.playerControlTaken() && !cutscenePlaying();
+    runtime::applyCarryActions(carry, carry.update(objectState, input), objectState, levelScripts);
+    for (const runtime::CarryObject& object : carry.objects())
+        for (std::size_t i = 0; i < placedObjects.size(); ++i) {
+            if (game_doors::lowerCase(placedObjects[i].instance) != object.instance) continue;
+            Placement moved = placedObjects[i];
+            std::copy_n(object.position, 3, moved.position);
+            scene.setTransform(placedSceneIndex[i], placementMatrix(moved));
+        }
 }
 
 void LevelSession::updateBuildits(const float playerPosition[3]) {
@@ -159,7 +178,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         runtime::StickIntentInput stick;
         stick.slot14 = {pad.slot(kSlotStickX).value, pad.slot(kSlotStickX).deadzone};
         stick.slot15 = {pad.slot(kSlotStickY).value, pad.slot(kSlotStickY).deadzone};
-        const bool controlTaken = levelScripts.playerControlTaken();
+        const bool controlTaken = levelScripts.playerControlTaken() || carry.busy();
         if (controlTaken) stick.slot14.value = stick.slot15.value = 0.0f;
         stick.entityType = game_player::kPlayerEntityType;
         stick.cameraYaw = follow->yaw();
@@ -189,6 +208,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         const float playerPosition[3] = {player->motion.x, player->vertical.y, player->motion.z};
         updateDoors(playerPosition, emit);
         updateBuildits(playerPosition);
+        updateCarry(playerPosition);
     }
     sceneStart.startRequested();
     if (player && !levelScripts.ai().moving("player1")) levelScripts.ai().setPosition("player1", player->position().data());

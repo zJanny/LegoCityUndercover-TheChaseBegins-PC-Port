@@ -92,6 +92,7 @@ What is not like the original yet:
 
 ## What does not work yet
 
+- Carrying works for the donut box of mission 1-1: stand next to it and press A to pick it up (the story script starts), press A far from the target to put it down (it goes back to its start after 5 seconds), press A inside the delivery area to place it into the target (the story script that ends the mission starts). The box floats in front of the character, the character does not turn or play the lifting animations, there are no sounds, and the walking speed while carrying is not changed yet.
 - Only some kinds of objects block the character and the camera so far. Parked cars, people, animals and some special objects do not. Objects that the original switches off at the start (mission items, build-it parts and their results) are switched off by the same rules as in the original, but nothing switches them on later.
 - Objects stay as they are at the start of the level. Nothing breaks or moves, and doors open only when the character comes close. An open door keeps the same blocking box as a closed one here. One measurement in the original differed, and the reason is not known yet.
 - When the camera is stuck behind a wall for a longer time, the original places it again. That is not done here.

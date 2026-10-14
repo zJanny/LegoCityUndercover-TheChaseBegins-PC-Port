@@ -157,6 +157,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     levelName = levelName.substr(levelName.find_last_of('/') + 1);
     levelScripts.setLevelHeadingKey(fe::levelHeadingKey(hudResources, levelName));
     levelScripts.setObjectPositionSource([this](const std::string& instance, float out[3]) {
+        if (carry.position(instance, out)) return true;
         const std::optional<Placement> placement = objectStart(level, instance);
         if (placement) std::copy(placement->position, placement->position + 3, out);
         return placement.has_value();
@@ -214,6 +215,8 @@ LevelSession::LevelSession(const Shared& sharedState)
     std::cout << "doors: " << doors.size() << '\n';
     buildits.load(archive, level, classOf);
     std::cout << "build-its: " << buildits.objects().size() << '\n';
+    carry.load(archive, level, classOf);
+    std::cout << "carry objects: " << carry.objects().size() << ", carry targets: " << carry.targets().size() << '\n';
     std::cout << "collision: " << collision.triangleCount() << " triangles in " << collision.entries().size() << " entries\n";
 
     float centre[3];
