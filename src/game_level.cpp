@@ -3,6 +3,7 @@
 #include "frontend/minimap.hpp"
 #include "frontend/pages.hpp"
 #include "game_save.hpp"
+#include "runtime/fog.hpp"
 #include "runtime/follow_camera.hpp"
 #include "runtime/object_visibility.hpp"
 #include <SDL.h>
@@ -98,6 +99,7 @@ LevelSession::LevelSession(const Shared& sharedState)
       studs(studSpawns(drawable)),
       classOf(archiveClassLookup(shared.archive)),
       objectState(runtime::levelInitialState(level, classOf)),
+      fogObjects(chase::assets::fogObjects(level, classOf)),
       levelScripts(level, objectState),
       sceneStart(level, classOf, levelScripts),
       currentWorldLevel(runtime::worldLevelOfFile(shared.master, shared.options.level)),
@@ -235,6 +237,7 @@ void LevelSession::draw(int width, int height) {
     setViewport(screens.top);
     clearWindow({0.16f, 0.17f, 0.2f, 1}, true);
     beginFrame(1.0f);
+    applyFog();
     const float* eye = follow ? follow->eye() : camera.eye;
     const float viewYaw = follow ? follow->yaw() : camera.yaw, viewPitch = follow ? follow->pitch() : camera.pitch;
     const float fieldOfView = follow ? follow->verticalFieldOfView() : 1.0f;

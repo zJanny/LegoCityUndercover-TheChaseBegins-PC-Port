@@ -329,6 +329,24 @@ std::vector<Placement> objectPlacements(const Level& level, const ClassLookup& c
     return out;
 }
 
+std::vector<FogObject> fogObjects(const Level& level, const ClassLookup& classOf) {
+    std::vector<FogObject> out;
+    for (const LevelObject& obj : level.objects) {
+        const Level* cls = classOf(obj.className);
+        if (!cls) continue;
+        float colour[3];
+        if (!float3Of(effectiveParam(obj, *cls, nameHash("FogColour")), colour)) continue;
+        FogObject fog;
+        fog.instance = obj.instance;
+        fog.room = obj.room;
+        fog.start = effectiveFloat(obj, *cls, "FogStart");
+        fog.end = effectiveFloat(obj, *cls, "FogEnd");
+        for (int i = 0; i < 3; ++i) fog.colour[std::size_t(i)] = std::uint8_t(int(colour[i]) & 255);
+        out.push_back(std::move(fog));
+    }
+    return out;
+}
+
 ClassLookup archiveClassLookup(FuseArchive& archive) {
     auto classes = std::make_shared<std::map<std::string, Level>>();
     return [&archive, classes](const std::string& name) -> const Level* {

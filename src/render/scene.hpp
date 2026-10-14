@@ -4,6 +4,7 @@
 // lighting, reflections and fog are stand-ins (docs/plans/features/rendering.md).
 #include "assets/assets.hpp"
 #include <array>
+#include <cstdint>
 #include <map>
 #include <memory>
 #include <string>
@@ -29,6 +30,15 @@ Mat4 view(const float eye[3], float yaw, float pitch);
 void setFrontFace(bool counterClockwise);
 // Sets the scene shader program up for a frame: uniforms and fixed-function state of the scene pass.
 void beginFrame(float brightness);
+
+// The original's fog (docs/re/rendering-fog.md): a 128-entry table indexed by the depth the PICA computes from a projection with
+// the given near and far, then colour = f * colour + (1 - f) * fogColour for materials that are fogged. Off after beginFrame().
+struct FogParameters {
+    std::array<std::uint32_t, 128> table;  // value (11 bits) << 13 | signed 13-bit difference, both /2048
+    std::array<std::uint8_t, 3> colour;
+    float projectionNear, projectionFar;
+};
+void setFog(const FogParameters& fog);
 
 std::string lower(std::string s);
 

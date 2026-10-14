@@ -19,25 +19,37 @@ IN_PROGRESS, updated 2026-10-14T15:12:26+02:00. OpenGL moved out of the game and
 
 - RENDER-S1 Fragment lighting primary of lit props and characters is the global ambient read once from the original ((138, 161, 182) / 255); level surfaces with baked colours (lighting 1 and 4) use 0. Secondary (specular) is 0. Source: [materials.md §2026-10-13T22:24](../../re/materials.md#ts-20261013-222439).
 - RENDER-S2 Reflection cube textures are replaced by their average colour.
-- RENDER-S3 Blended parts are drawn after opaque parts in instance order (the game sorts by 0x115128).
+- RENDER-S3 Blended parts are drawn after opaque parts in instance order (the game sorts by 0x115128). needs: RENDER-35.
 - RENDER-S4 A missing vertex colour attribute is white; the texture unit to UV set mapping and wrap modes are assumed.
+- RENDER-S5 Fog depth uses projection near 1 and far 260, read from the oracle's matrix (`src/runtime/fog.hpp`); the original's source is not found. needs: RENDER-32. evidence: [rendering-fog.md §2026-10-14T17:35](../../re/rendering-fog.md#ts-20261014-173500).
+- RENDER-S6 Fog object choice: global object, replaced by a room object of the current room, last valid wins. needs: RENDER-32. evidence: [rendering-fog.md §2026-10-14T17:35](../../re/rendering-fog.md#ts-20261014-173500).
+- RENDER-S7 The fog table interpolation at fragment level follows Citra/Azahar behaviour, not measured on a console. evidence: [rendering-fog.md §2026-10-14T17:35](../../re/rendering-fog.md#ts-20261014-173500).
+- RENDER-S8 The clear colour (sky) is not the original's; distant geometry fades to the fog colour against a dark background. needs: RENDER-36.
 - ASSET-S1 (replaced by the above for materials; the vertex shaders' normal/view outputs stay unused).
 
 ## 5. Open items
 
 - [ ] RENDER-1 Fragment lighting: light list per draw (0x12d884, 0x5943b0), light mask, LUTs, specular. Next: break at 0x12d884 in the oracle (`trap`) and read the light objects and material +0x10/+0x14 for a character and a prop; implement in the shader; remove RENDER-S1. evidence: [materials.md](../../re/materials.md)
 - [ ] RENDER-2 Reflections (cube sampling, vertex shader program with `Cubemap`). Removes RENDER-S2.
-- [ ] RENDER-3 Fog (0x1292fc caller, 0x3760fc), shadows (0x37796c), material colour pulse, draw sorting.
+- [ ] RENDER-30 Compare the port's fog with the oracle on a long street (oracle shots `street2.png`, `street3.png` and one port shot exist locally, not yet matched numerically; the sky is not drawn like the original). needs: RENDER-36. evidence: [rendering-fog.md §2026-10-14T17:35](../../re/rendering-fog.md#ts-20261014-173500).
+- [ ] RENDER-31 Room pop-in: does the fog (full at 260, visible from about 86 in the street) hide room loading? Not analysed; streaming is unchanged. evidence: [rendering-fog.md §2026-10-14T17:35](../../re/rendering-fog.md#ts-20261014-173500).
+- [ ] RENDER-32 Fog selection with several ambient objects (two loops, enable byte, type 8), the other fog callers, the OverrideFog reader, the source of projection near and far. blocks: RENDER-S5, RENDER-S6. evidence: [rendering-fog.md §2026-10-14T17:35](../../re/rendering-fog.md#ts-20261014-173500).
+- [ ] RENDER-33 Shadows (0x37796c). blocks: RENDER-9.
+- [ ] RENDER-34 Material colour pulse over time.
+- [ ] RENDER-35 Draw sorting (0x115128). blocks: RENDER-S3.
+- [ ] RENDER-36 The sky and clear colour of the original are not recovered; the port clears to a dark stand-in colour. blocks: RENDER-S8, RENDER-30. evidence: [rendering-fog.md §2026-10-14T17:35](../../re/rendering-fog.md#ts-20261014-173500).
 - [ ] RENDER-5 Characters are lighter and more saturated in the original (directional light missing).
-- [ ] RENDER-9 — The player's shadow (dark patch beside the feet in the oracle picture of the police entrance) is not drawn; part of RENDER-3 (shadows 0x37796c). The pale disc seen there earlier was an object (LEVOBJ-11, closed). evidence: [objects.md §2026-10-14T15:05](../../re/objects.md#ts-20261014-150541).
+- [ ] RENDER-9 — The player's shadow (dark patch beside the feet in the oracle picture of the police entrance) is not drawn; part of RENDER-33 (shadows 0x37796c). needs: RENDER-33. The pale disc seen there earlier was an object (LEVOBJ-11, closed). evidence: [objects.md §2026-10-14T15:05](../../re/objects.md#ts-20261014-150541).
 - [ ] RENDER-6 — The white quad above the police-station entrance is the `Checker1.tga` part of `room1.bfnmdl` (also room3, room5), seen far away outside; not RENDER-S3. Unknown whether the original draws it. Not fixed (related: WSTREAM-3). evidence: [materials.md §2026-10-14T13:40](../../re/materials.md#ts-20261014-134000).
 
 ## 6. Findings summary
 
+- Fog: [rendering-fog.md §2026-10-14T17:35](../../re/rendering-fog.md#ts-20261014-173500).
 - [materials.md §2026-10-13T22:24](../../re/materials.md#ts-20261013-222439); UV scales and vertex shaders: [models.md §2026-10-12T18:05](../../re/models.md#ts-20261012-1805).
 
 ## 7. Code and tests
 
 - `src/assets/material.cpp`, `src/render/scene.cpp` (`src/render/shaders/scene.frag.glsl` runs the stages; all shaders are `.glsl` files embedded at build time by `tools/embed_shaders.cmake`; OpenGL 4.6 core), CTest `no-inline-shaders`, `src/materials.cpp` (`chase-materials`: census, or stages of the models given).
 - All OpenGL calls are in `src/render/*.cpp`. Callers outside `src/render/` see plain-type headers only: `scene.hpp`, `studs.hpp`, `debug_overlay.hpp`, `window.hpp` (viewports, scissor, clears, depth and culling), `hud_overlay.hpp` (two-screen overlay) and `front_presenter.hpp` (front-end screens). Each keeps its GL objects behind a pointer to an implementation class in its `.cpp`. `program.hpp` (shared scene shader) is internal to `src/render/`. CTest `gl-only-in-render` (guard) and `gl-only-in-render-rejects` (fixture `tests/gl_only_in_render/`).
+- Fog: `src/runtime/fog.cpp` (table, level choice), shader `applyFog` in `scene.frag.glsl`, `setFog` in `scene.hpp`; CTest `fog-core`, `fog-real-data`.
 - CTest `assets-core` (hand-evaluated materials), `assets-real-data` (census and named setups). Scene: `setInstanceMesh` (one mesh per instance, used by two-leaf doors). Game option `--facing DEGREES` places the character for screenshot comparisons.

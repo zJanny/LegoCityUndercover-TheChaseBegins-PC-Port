@@ -196,6 +196,7 @@ struct MaterialState {
     unsigned depthFunction = 0;      // PICA comparison, 0 never .. 7 greater-equal
     bool depthTest = true, depthWrite = true;
     unsigned cullMode = 1;           // PICA: 0 none, 1 culls counter-clockwise, 2 culls clockwise
+    bool fogged = true;              // 0x1292fc: fog applies unless material byte 0xb bit 6 is set or byte 9 (blend destination index) is 1
 };
 MaterialState materialState(const ModelPart& part);
 
@@ -337,6 +338,15 @@ ClassLookup archiveClassLookup(FuseArchive& archive);
 // or +0x14). A listed parameter takes the instance value when the object sets it, else the class value.
 // An empty meshname means no model.
 std::vector<Placement> objectPlacements(const Level& level, const ClassLookup& classOf);
+// Fog parameters of a level object (setup 0x1a293c): FogStart, FogEnd (floats, 0 when the class does not list them) and
+// FogColour (float3 of 0..255, truncated to bytes as the game does). Only objects whose class lists FogColour are returned,
+// in level order. Used by class lighting/lightambient (docs/re/rendering-fog.md).
+struct FogObject {
+    std::string instance, room;
+    float start = 0, end = 0;
+    std::array<std::uint8_t, 3> colour = {0, 0, 0};
+};
+std::vector<FogObject> fogObjects(const Level& level, const ClassLookup& classOf);
 // Appearance defaults of a character class (levels/chars/char_<name>.blvl). The textures named
 // "*_TEST.tga" on the shared body/head models are the ones these names replace.
 struct CharacterAppearance {

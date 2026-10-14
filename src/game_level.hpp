@@ -94,6 +94,7 @@ private:
     void updateRoomStreaming();
     void showLoadedRooms();
     bool roomShown(int room) const;
+    void applyFog() const;
     std::uint32_t now() const { return clockTicks(SDL_GetPerformanceCounter() - counterOrigin, counterFrequency); }
 
     Shared shared;
@@ -108,6 +109,7 @@ private:
     std::optional<game_player::PlayerRig> player;
     chase::assets::ClassLookup classOf;
     chase::assets::PlacedObjectState objectState;
+    std::vector<chase::assets::FogObject> fogObjects;
     std::vector<std::size_t> placedSceneIndex;
     std::vector<chase::assets::Placement> placedObjects;
     std::vector<std::size_t> waypointSceneIndex;

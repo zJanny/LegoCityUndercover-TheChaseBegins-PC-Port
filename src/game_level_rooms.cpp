@@ -1,4 +1,5 @@
 #include "game_level.hpp"
+#include "runtime/fog.hpp"
 #include "runtime/scene_start.hpp"
 #include <cstdlib>
 #include <iostream>
@@ -61,6 +62,12 @@ void LevelSession::showLoadedRooms() {
 
 bool LevelSession::roomShown(int room) const {
     return !roomStreamer || !roomStreamer->rooms().count(room) || roomStreamer->loaded(room);
+}
+
+void LevelSession::applyFog() const {
+    const runtime::FogSetting fog = runtime::levelFog(fogObjects, roomStreamer ? roomStreamer->currentRoom() : 0);
+    if (!fog.enabled) return;
+    chase::render::setFog({runtime::buildFogLut(fog.start, fog.end), fog.colour, runtime::kFogProjectionNear, runtime::kFogProjectionFar});
 }
 
 void LevelSession::updateRoomStreaming() {

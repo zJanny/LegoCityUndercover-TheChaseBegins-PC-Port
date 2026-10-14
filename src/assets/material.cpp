@@ -161,6 +161,7 @@ MaterialState materialState(const ModelPart& part) {
     out.depthFunction = depthFunctions[m[0xb] & 7];
     out.depthTest = (m[0xb] & 7) != 6;
     out.depthWrite = m[0xb] & 8;
+    out.fogged = !(m[0xb] & 0x40) && m[9] != 1;
     const unsigned cull = m[0xc] & 3;
     out.cullMode = cull == 0 ? 1 : cull == 1 ? 2 : 0;
     out.supported = true;

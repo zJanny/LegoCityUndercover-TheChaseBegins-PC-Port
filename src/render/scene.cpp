@@ -13,6 +13,7 @@ using namespace chase::assets;
 
 namespace {
 constexpr float kLightingStandIn[3] = {138.0f / 255.0f, 161.0f / 255.0f, 182.0f / 255.0f};
+bool fogActive = false;
 
 struct GpuVertex {
     float position[3], uv[2], normal[3];
@@ -109,9 +110,21 @@ void beginFrame(float brightness) {
     glUniform3fv(glGetUniformLocation(program, "lightingStandIn"), 1, kLightingStandIn);
     glUniform1i(glGetUniformLocation(program, "stageCount"), 0);
     glUniform1f(glGetUniformLocation(program, "alphaReference"), -1.0f);
+    glUniform1i(glGetUniformLocation(program, "fogOn"), 0);
+    fogActive = false;
     glDisable(GL_BLEND);
     glDepthMask(GL_TRUE);
     glDepthFunc(GL_LEQUAL);
+}
+
+void setFog(const FogParameters& fog) {
+    const GLuint program = sceneProgram();
+    glUseProgram(program);
+    glUniform1uiv(glGetUniformLocation(program, "fogLut"), 128, fog.table.data());
+    glUniform3f(glGetUniformLocation(program, "fogColour"), float(fog.colour[0]) / 255.0f, float(fog.colour[1]) / 255.0f,
+                float(fog.colour[2]) / 255.0f);
+    glUniform2f(glGetUniformLocation(program, "fogProjection"), fog.projectionNear, fog.projectionFar);
+    fogActive = true;
 }
 
 std::string lower(std::string s) {
@@ -322,6 +335,7 @@ void SceneImpl::drawPart(GLuint program, const DrawPart& part, bool culling) con
     glUniform1i(glGetUniformLocation(program, "hasSecondUv"), part.secondUv);
     glUniform1i(glGetUniformLocation(program, "dynamicLight"), m.lighting && m.lightingKey != 1 && m.lightingKey != 4);
     glUniform1f(glGetUniformLocation(program, "alphaReference"), m.alphaTest ? float(m.alphaReference) / 255.0f : -1.0f);
+    glUniform1i(glGetUniformLocation(program, "fogOn"), fogActive && part.hasMaterial && m.fogged);
     if (part.hasMaterial) {
         GLint words[6 * 4] = {};
         GLfloat constants[6 * 4] = {};

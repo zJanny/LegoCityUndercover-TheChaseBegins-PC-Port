@@ -1,11 +1,25 @@
 #version 460 core
-in vec2 vUv; in vec2 vUv1; in vec3 vNormal; in vec4 vColour;
+in vec2 vUv; in vec2 vUv1; in vec3 vNormal; in vec4 vColour; in float vViewDepth;
 uniform sampler2D unit0; uniform sampler2D unit1; uniform sampler2D unit2;
 uniform int stageCount; uniform ivec4 stageWords[6]; uniform vec4 stageConstant[6];
 uniform int bufferBits; uniform int unitMode[3]; uniform vec4 unitFlat[3];
 uniform bool hasNormal; uniform bool hasSecondUv; uniform bool dynamicLight; uniform float alphaReference; uniform float brightness;
 uniform vec3 lightingStandIn;
+uniform bool fogOn; uniform vec3 fogColour; uniform vec2 fogProjection; uniform uint fogLut[128];
 out vec4 fragColour;
+
+vec3 applyFog(vec3 colour) {
+    if (!fogOn) return colour;
+    float depthScale = fogProjection.y / (fogProjection.y - fogProjection.x);
+    float depth = clamp(depthScale * (1.0 - fogProjection.x / vViewDepth), 0.0, 1.0);
+    float position = depth * 128.0;
+    int index = min(int(floor(position)), 127);
+    uint word = fogLut[index];
+    int difference = int(word & 0x1fffu);
+    if (difference >= 4096) difference -= 8192;
+    float factor = clamp((float((word >> 13) & 0x7ffu) + float(difference) * (position - float(index))) / 2048.0, 0.0, 1.0);
+    return mix(fogColour, colour, factor);
+}
 
 vec4 unitColour(int unit) {
     if (unitMode[unit] == 2) return unitFlat[unit];
@@ -87,7 +101,7 @@ void main() {
         float shade = 1.0;
         if (hasNormal && dot(vNormal, vNormal) > 0.0)
             shade = 0.45 + 0.55 * max(dot(normalize(vNormal), normalize(vec3(0.4, 0.8, 0.45))), 0.0);
-        fragColour = vec4(min(c.rgb * shade * brightness, vec3(1.0)), 1.0);
+        fragColour = vec4(applyFog(min(c.rgb * shade * brightness, vec3(1.0))), 1.0);
         return;
     }
     vec4 fragPrimary = dynamicLight ? vec4(lightingStandIn, 1.0) : vec4(0.0);
@@ -108,5 +122,5 @@ void main() {
         previous = vec4(rgb, a);
     }
     if (alphaReference >= 0.0 && !(previous.a > alphaReference)) discard;
-    fragColour = vec4(min(previous.rgb * brightness, vec3(1.0)), previous.a);
+    fragColour = vec4(applyFog(min(previous.rgb * brightness, vec3(1.0))), previous.a);
 }
