@@ -38,7 +38,7 @@ IN_PROGRESS, updated 2026-10-14T10:47:00+0200. `chase-game` shows the original's
 - [ ] HUD-8 — Boss hearts page, struggle bar, combat stud counter (`CombatStuds`, `_Tally`), the second counter 0x593430 and its floating number.
 - [ ] HUD-9 — Script path `AddStuds` (0x1584e0): shows the old total, adds 1.75 s later. needs: SCRIPT-1. blocks: STUD-4.
 - [ ] HUD-10 — Who calls 0x17c0f4 (HUD on), `TransitionOff`, and the generic overlay tick that moves bar states 1..3 (measured only through the stepped oracle clock).
-- [ ] HUD-11 — Bottom screen: real map drawing code, `maps/<level>.txt`, mission and collectible icons (needs SCRIPT-1 for missions), the `_2` map pieces, no map picture for lvl_00 (the original shows the city map around the police station with the player marker inside the station: oracle state `police-station`, 2026-10-14), the characters button's behaviour.
+- [ ] HUD-11 — Bottom screen: real map drawing code, `maps/<level>.txt`, mission and collectible icons (needs SCRIPT-1 for missions), the `_2` map pieces, no map picture for lvl_00 (the original shows the city map around the police station with the player marker inside the station: oracle state `police-station`, 2026-10-14), the characters button's behaviour. blocks: SCRIPT-31.
 - [ ] HUD-12 — chase-game always uses the two-screen layout, also for levels without a player (placeholder camera).
 
 ## 6. Findings summary

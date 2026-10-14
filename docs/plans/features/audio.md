@@ -28,7 +28,7 @@ IN_PROGRESS, updated 2026-10-13T21:51:17+02:00. `chase_audio` plays the player's
 ## 5. Open items
 
 - [ ] AUDIO-1 — Sprint footstep phase: how the original maps the run phase to the sprint animation; run-to-sprint phase transfer. evidence: [audio.md §2026-10-13T17:54](../../re/audio.md#ts-20261013-175424).
-- [ ] AUDIO-2 — Nothing starts level music because no scripts run (OverrideMusic / StopMusic / PauseMusic handlers recovered); music fades. needs: SCRIPT-1. evidence: [audio.md §2026-10-13T09:42](../../re/audio.md#ts-20261013-094203), [audio.md §2026-10-13T17:54](../../re/audio.md#ts-20261013-175424).
+- [ ] AUDIO-2 — Nothing starts level music because no scripts run (OverrideMusic / StopMusic / PauseMusic handlers recovered); music fades. needs: SCRIPT-1. blocks: SCRIPT-33. evidence: [audio.md §2026-10-13T09:42](../../re/audio.md#ts-20261013-094203), [audio.md §2026-10-13T17:54](../../re/audio.md#ts-20261013-175424).
 - [ ] AUDIO-3 — Idle and jump animation sound tracks; world sounds of NPCs, vehicles and objects (ambient emitter 0x2c05dc plays ids like 210/296 from level objects). evidence: [audio.md §2026-10-13T17:54](../../re/audio.md#ts-20261013-175424).
 - [ ] AUDIO-5 — Stud collect sound: silver (id 64) is replayed from a recorded pickup (`audio-real-data`); blue and purple (id 63) have no recorded pickup, and gold (id 64) none either. see STUD-3. evidence: [audio.md §2026-10-13T17:54](../../re/audio.md#ts-20261013-175424).
 - [ ] AUDIO-6 — Which condition sets ctrl+0x317 bit 3 and ground type 11; the options volume source in a loaded save (0x2c19a4 sets defaults 8 and 10); mode 3 id remap of 0x23fa54; ducking (record flag bit 3). evidence: [audio.md §2026-10-13T17:54](../../re/audio.md#ts-20261013-175424).

@@ -6,6 +6,8 @@ How the level's own scripts decide which placed objects are disabled when a leve
 
 ## 2026-10-13T20:42:36+02:00 — Script data, executor, EnableObject, the startup script and the revealer links (REA Ghidra 12.1.2, llvm-objdump, Azahar oracle port 24692 without RPC)
 
+Corrected by [script-natives.md §2026-10-14T13:33](script-natives.md#ts-20261014-133339): `scriptfns.txt` documents only 300 of the 377 natives, and the table entries are bound to handlers by name through 0x23912c.
+
 Replica: `Level::scripts` / `objectReferenceHash` (src/assets/level.cpp), `levelStartState` (src/runtime/level_start.cpp), `PlacedObjectState` and `objectCollisions` (src/assets/object_collision.*). Tests: `level-start-real-data` (tests/level_start_real_test.cpp), `collision-real-data`.
 
 ### Script data (level section +0x18)

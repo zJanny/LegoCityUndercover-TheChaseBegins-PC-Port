@@ -23,7 +23,7 @@ IN_PROGRESS, updated 2026-10-13T21:29:01+0200. Movies play in `chase-fmv` and in
 ## 5. Open items
 
 - [ ] MOVIE-1 — Meaning of `.moflex` layout values other than 0 and 6 and of the two other skipped header bytes (01 01 in all files); where the game's Mobiclip player reads the layout and selects the eye (not traced in the ARM code); whether the second eye of the pair is the right eye (only matters for a stereoscopic display, which the port does not target). evidence: [fmv.md §2026-10-13T20:58](../../re/fmv.md#ts-20261013-205838).
-- [ ] MOVIE-2 — In-engine cutscenes are not played in the game flow (the front end's top screen under the title card is black). blocks: FE-4.
+- [ ] MOVIE-2 — In-engine cutscenes are not played in the game flow (the front end's top screen under the title card is black). blocks: FE-4, SCRIPT-29.
 - [ ] MOVIE-3 — 113 of 397 actor animations have a different frame count from their camera (the viewer holds their last frame); the meaning of camera fields 7-11, the fov axis and the base value of the actor scale are unknown. evidence: [cutscenes.md §2026-10-13T02:30](../../re/cutscenes.md#ts-20261013-0230).
 - [ ] MOVIE-4 — The extra (root motion) curve use in cutscenes; the 12 cutscene folders without soundtrack and the outliers 6_4_a, 2_11_a, 1_4_c. evidence: [cutscenes.md §2026-10-13T03:20](../../re/cutscenes.md#ts-20261013-0320).
 

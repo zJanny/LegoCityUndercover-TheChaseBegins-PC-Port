@@ -26,6 +26,7 @@ Read this index, then open only the file you need.
 | [fmv.md](fmv.md) | Mobiclip `.moflex` video and subtitles |
 | [particles.md](particles.md) | `particledefs.bprt` particle definitions |
 | [scripts.md](scripts.md) | Level scripts (section +0x18), the script executor 0x234204 and its words, EnableObject / EnableCollision, the `startup` script, the revealer links, the start state of placed objects |
+| [script-natives.md](script-natives.md) | Census of all script natives: handler addresses, argument counts, call counts per level, classes A-D and the work batches SCRIPT-26 to SCRIPT-39 |
 | [doors.md](doors.md) | Doors (type 42): record, update 0x1d16b8, state change, messages, easing, hinge and slide pose, timings measured in the oracle |
 | [studs.md](studs.md) | Studs (collectible coins): pickup pool records, sprite sheet drawing and spin, pickup radius and skip counter, collect timer, counter values and limits, stand-ins |
 | [hud.md](hud.md) | In-game HUD: layouts, portrait, hearts (SetHearts, loop rule, health default), stud bar (state machine, formatting, icon bounce, no roll-up for pickups), flying studs (law, unprojection, sinks), bottom-screen map placement |
