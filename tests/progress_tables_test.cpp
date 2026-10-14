@@ -50,7 +50,7 @@ int main() {
         require(runtime::scriptFunctionSupport("TriggerObject") == runtime::ScriptFunctionSupport::Implemented, "TriggerObject handled (0x1cddf8)");
         require(runtime::scriptFunctionSupport("WarningDialogBox") == runtime::ScriptFunctionSupport::Implemented, "WarningDialogBox handled (0x2700d4)");
         require(runtime::scriptFunctionSupport("FadeScreen") == runtime::ScriptFunctionSupport::StandIn, "FadeScreen is a stand-in (0x1a2e8c)");
-        require(runtime::scriptFunctionSupport("PositionPlayer") == runtime::ScriptFunctionSupport::None, "PositionPlayer is not handled");
+        require(runtime::scriptFunctionSupport("PositionPlayer") == runtime::ScriptFunctionSupport::StandIn, "PositionPlayer is a stand-in (0x1da0dc, ground probe and message 8 missing)");
         const std::vector<std::string> handled = runtime::handledScriptFunctions();
         require(std::find(handled.begin(), handled.end(), "enablecollision") != handled.end(), "handler list has EnableCollision");
         for (const std::string& name : handled)

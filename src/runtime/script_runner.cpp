@@ -21,7 +21,7 @@ std::string lower(std::string text) {
 enum class Word {
     Unhandled, If, Else, ElseIf, EndIf, Assign, AssignArithmetic, CallScript, SpawnScript, Wait,
     EnableObject, EnableCollision, TriggerObject, EnableTrigger, EnableBound, GetGameComplete, IsLevelUnlocked, IsRedBrickExtraActive,
-    WarningDialogBox, InformationBox, FadeScreen, PositionObject, SceneChange,
+    WarningDialogBox, InformationBox, FadeScreen, PositionObject, PositionPlayer, SceneChange,
     KillScript, ObjectNative, ProgressNative, TextNative, ObjectiveNative, AiNative,
     StartDCam, StartDCamTrack, DCamActive, WaitForDCam, EndDCam, SnapCamera, ShakeScreen, Set3DFocusObject, SetDCamStartWait, SetDCamEndWait
 };
@@ -54,6 +54,7 @@ constexpr ScriptFunction kScriptFunctions[] = {
     {"informationbox", Word::InformationBox, true},
     {"fadescreen", Word::FadeScreen, true},
     {"positionobject", Word::PositionObject, false},
+    {"positionplayer", Word::PositionPlayer, true},
     {"scenechange", Word::SceneChange, false},
     {"killscript", Word::KillScript, false},
     {"startdcam", Word::StartDCam, false},
@@ -372,6 +373,7 @@ ScriptRunner::Result ScriptRunner::native(ScriptThread& thread, const ScriptCall
         }
         break;
     case Word::PositionObject:
+    case Word::PositionPlayer:
         if (args.size() >= 2) {
             placements_.push_back({lower(args[0]), lower(args[1])});
             float where[3];

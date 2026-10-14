@@ -75,3 +75,28 @@ Unknowns:
 - Kind byte (`entity+0x12`) of the player and the contents of the table at 0x3743ec at run time (decides whether PositionObject/PositionPlayer reset fall distance and speed of the player).
 - The global float3 at 0x56d424, the stack descriptor passed to 0x21ab20 and the gather box of the ground probe.
 - The meaning of `comp[0x315]` masks 0x4 and 0x10, of mask 0x20 in the update loop test, and the callers of the other mask 0x4 tests.
+
+<a id="ts-20261014-191915"></a>
+
+## 2026-10-14T19:19:15+02:00 — PositionObject / PositionPlayer: the player gets the controller reset; ground probe and its inputs (oracle with RPC on dcam-police-dialog and street-after-1-1, llvm-objdump; no REA)
+
+Continues [script-natives-flags.md §2026-10-14T18:39](#ts-20261014-183900), whose unknowns on the player kind, the kind list and the probe direction are answered here. Port: `src/runtime/script_placement.*`, `PositionPlayer` in `ScriptRunner` (stand-in), `LevelSession::applyPlacement`; tests in `script-runner`.
+
+**Oracle reads (street-after-1-1, New 3DS, port 24706, RPC)**
+- Player entity `[0x3772b8]` = `[0x3772c0]` = 0x085526f0; bytes at +0x10: 00 b2 1b 00, so the kind byte `entity+0x12` is **0x1b = 27** and `entity+0xc` = 0x200 (no flag 0x4000). `ctrl` (`entity+0x7c`) = 0x08552790. So `0x21aae0(player)` is true by its first test (kind 27); the kind list is not needed for the player.
+- The kind list of 0x236b6c: byte count at 0x3743ec = 1, kind bytes at 0x515a94 = 0x9f (159). Who fills it is not known.
+- The probe direction at 0x56d424 = (0.0, 1.0, 0.0) (words 00000000 3f800000 00000000); so the segment is the target position plus (0, 5.0, 0): 0x23b92c (out = base + direction * s0) with s0 = 5.0 from the pool 0x1da550. The descriptor table at 0x362298 holds code pointers (0x2e81b0, 0x2e81ac, 0, 0, 0x2e837c, 0, 0x2e82b8, 0x2e8368, 0x33d0cc, ...); not decoded.
+
+**PositionPlayer ground probe (disassembly)**
+- Applies when the first object is not in a vehicle (`0x24255c` returns the vehicle at `[ctrl+0x130]` when the controller state `[ctrl+0x6c]` is 284 or 411, else 0). A gather 0x237f30 on the world grid 0x578dfc around the target position, half extents all `[node+0x9c]`, query {include 4, exclude 0, kinds all, owner flag 0x200 required, owner bits 3 excluded, excluded owner = the object, mode 1}; mask 4 holds the characters. Only when a gathered entry's owner has kind 179, 183 or 243 does the probe segment run: 0x21ab20 (box gather around the segment middle with half extents |a-b|/2, then triangle tests 0x27cab4) with a descriptor {vtable 0x362298, include -1, ..., owner flag 0x200 required, excluded owner = the object}; on a hit 0x2554c0 copies the hit point over the target position before the node copy 0x24c118. Which end of the segment is the ray origin was not read.
+- The port's collision world has no character entries (mask 4), so the gather finds none and the probe is a no-op there; this is a stand-in (SCRIPT-S97 list, SCRIPT-98 for the rest). The vehicle branch (state 5 of a vehicle, 0x22b224, 0x204e98) is not modelled (no vehicles).
+
+**Controller reset, measured (state dcam-police-dialog, A pressed at the dialog, trap on PositionObject)**
+- Traps at 0x1d9f74 (after the 0x21aae0 branch), 0x1d9f80 (after the byte store) and 0x1d9f90 (message 8 call, taken because the object is the global player) hit in the update of the call. Poked before: ctrl+0x2b4 = 1.0, ctrl+0x2b8 = 2.0, ctrl+0x315 = 0xff. At the stop at 0x1d9f80 r1 = 0xeb (= 0xff & ~0x14), r2 = 0x2052 (heading 8274 = 45.5 degrees, the placement), r5 = 0x08552790. After the update ctrl+0x2b4 and +0x2b8 read 0.0.
+- ctrl+0x315 was 0x5c unpoked and 0x5c again after the update (0x24 / 0x34 in the neighbouring bytes), and 0xfe (from 0xff) after the update with the poke: later code in the same update sets bits 0x14 again, so the clear is visible only inside the call. The port does not model the byte (SCRIPT-98).
+- Message 8 for the player: 0x244fc8 goes to the entity event function 0x18e4c8, case 8 at 0x18ed9c: 0x2414b4(entity, ctrl+0x50, 1, 0) (class state function via table 0x377194, then 0x2eafc8 with the stored entry), for a non-global-player entity byte ctrl+0x2ce = 136, 0x23f734(node, 1) (clears mask 0x60 of the node flags word), 0x21e218 for non-player entities and 0x242cf0(entity). Not transcribed (SCRIPT-98).
+
+Unknowns:
+- What fills the kind list at 0x3743ec, and whether it is the same list at other times.
+- Which end of the probe segment is the ray origin, and the effect of the hit (a ceiling above a character?); no scripted PositionPlayer call is reachable from a saved state (the 11 calls in lvl_01 are scene-change arrivals and two 1-8 waypoints).
+- Meaning of ctrl+0x315 masks 0x4 and 0x10 and who sets them again; the effect of message 8 (0x2414b4 / 0x2eafc8) on the player.

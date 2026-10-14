@@ -1,6 +1,7 @@
 #include "game_level.hpp"
 #include "runtime/follow_camera.hpp"
 #include "runtime/player_intent.hpp"
+#include "runtime/script_placement.hpp"
 #include <iostream>
 
 namespace game_level {
@@ -54,6 +55,8 @@ void LevelSession::applyPlacement(const runtime::ScriptPlacement& request) {
         player->motion.z = target->position[2];
         player->motion.facing = game_player::headingFromDegrees(target->orientation[1]);
         player->motion.lastIntent = player->motion.facing;
+        if (runtime::entityHasController(runtime::kPlayerEntityKind, 0, runtime::measuredControllerKindList()))
+            runtime::resetControllerAfterPlacement(player->vertical);
         player->pose(scene);
     } else {
         std::cout << "PositionObject not applied (only the player is moved): " << request.object << " to " << request.target << '\n';

@@ -127,7 +127,7 @@ Sum (at the census): 224 unhandled natives in batches, 20 implemented, 1 stand-i
 | VehicleStop | 0x1b27e8 | 1 | 43 / 6 / 0 / 0 | 6 | C | 36 |  |
 | enableobjectfade | 0x26fac4 | 2 | 42 / 1 / 0 / 0 | 7 | A | 26 | open: message 24 first, then the EnableObject node calls; needs SCRIPT-57 |
 | EnableTrafficAndPedestrians | 0x2c5780 | 1 | 42 / 12 / 0 / 0 | 6 | C | 36 |  |
-| PositionPlayer | 0x1da0dc | 2 | 42 / 11 / 0 / 0 | 7 | A | 26 | open: PositionObject steps plus a ground probe (needs run-time data, SCRIPT-59) |
+| PositionPlayer | 0x1da0dc | 2 | 42 / 11 / 0 / 0 | 7 | stand-in | 26 | handled like PositionObject for the player (fall reset); ground probe, vehicle branch, message 8: [script-natives-flags.md §2026-10-14T19:19](script-natives-flags.md#ts-20261014-191915) |
 | AddToSemiTransNearCameraList | 0x2cb734 | 2 | 41 / 5 / 5 / 0 | 7 | C | 38 |  |
 | enabletrafficpath | 0x27bc30 | 2 | 40 / 0 / 0 / 0 | 2 | C | 36 |  |
 | StreamRoomIn | 0x1bfba4 | 1 | 40 / 9 / 0 / 0 | 6 | C | 38 |  |

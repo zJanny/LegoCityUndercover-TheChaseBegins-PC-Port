@@ -2,6 +2,7 @@
 // executor 0x234204, Wait 0x174604, CallScript / SpawnScript 0x1c3730, thread creation 0x22ce9c (head insertion) and
 // the runner 0x169254 (docs/re/scripts.md, 2026-10-14 entry); the scripts here are made up. waitThreeMatchesTheOracleTrace pins
 // the Wait timer recorded in the oracle from the unmodified state street-at-entrance (docs/re/scripts.md, script thread entry).
+#include "runtime/script_placement.hpp"
 #include "runtime/script_runner.hpp"
 #include <iostream>
 #include <stdexcept>
@@ -322,6 +323,46 @@ void positionObjectIsRecorded() {
     require(runner.variable("After") == 1 && runner.takePlacements().empty(), "PositionObject does not block");
 }
 
+void positionPlayerIsRecordedLikePositionObject() {
+    Level level;
+    add(level, "p", {{"PositionPlayer", {"Player1", "Marker_A"}}, {"=", {"After", "1"}}});
+    PlacedObjectState state;
+    ScriptRunner runner(level, state);
+    runner.start("p");
+    const auto placements = runner.takePlacements();
+    require(placements.size() == 1 && placements[0].object == "player1" && placements[0].target == "marker_a", "request");
+    require(runner.variable("After") == 1, "PositionPlayer does not block");
+    require(chase::runtime::scriptFunctionSupport("PositionPlayer") == chase::runtime::ScriptFunctionSupport::StandIn, "ground probe missing");
+}
+
+void placementControllerCondition() {
+    const std::vector<std::uint8_t>& list = chase::runtime::measuredControllerKindList();
+    // Oracle, state street-after-1-1: player entity 0x085526f0 kind byte (+0x12) 0x1b, flags (+0xc) 0x200; list count byte
+    // at 0x3743ec = 1, kind at 0x515a94 = 0x9f (read 2026-10-14, docs/re/script-natives-flags.md).
+    require(chase::runtime::entityHasController(0x1b, 0x200, list), "the player entity (kind 27) gets the controller reset");
+    require(chase::runtime::entityHasController(149, 0, {}), "kind 149");
+    require(chase::runtime::entityHasController(0x9f, 0, list), "kind in the run-time list");
+    require(!chase::runtime::entityHasController(0x9f, 0, {}), "kind 159 only through the list");
+    require(chase::runtime::entityHasController(3, 0x4000, {}), "flag 0x4000");
+    require(!chase::runtime::entityHasController(3, 0x200, list), "no other kind");
+    chase::runtime::VerticalState vertical;
+    vertical.fallDistance = 1.0f;
+    vertical.fallSpeed = 2.0f;
+    chase::runtime::resetControllerAfterPlacement(vertical);
+    require(vertical.fallDistance == 0.0f && vertical.fallSpeed == 0.0f, "fall distance and speed are cleared");
+}
+
+void placementProbeSegment() {
+    // Oracle: 0x56d424 = (0, 1, 0) (words 00000000 3f800000 00000000), length 5.0 from the literal pool 0x1da550.
+    const float start[3] = {1.0f, 2.0f, 3.0f};
+    float end[3];
+    chase::runtime::placementProbeEnd(start, end);
+    require(end[0] == 1.0f && end[1] == 7.0f && end[2] == 3.0f, "segment end");
+    require(chase::runtime::isProbeCharacterKind(179) && chase::runtime::isProbeCharacterKind(183) && chase::runtime::isProbeCharacterKind(243) &&
+                !chase::runtime::isProbeCharacterKind(27),
+            "character kinds of the gather");
+}
+
 // Oracle trace street-at-entrance (docs/re/streaming.md 2026-10-14T11:13): SceneChange does not block the thread (it ended in the update that ran the call).
 void sceneChangeIsRecorded() {
     Level level;
@@ -382,6 +423,9 @@ int main() {
         warningDialogCancelGivesOne();
         fadeScreenBlocksForHalfASecond();
         positionObjectIsRecorded();
+        positionPlayerIsRecordedLikePositionObject();
+        placementControllerCondition();
+        placementProbeSegment();
         sceneChangeIsRecorded();
     } catch (const std::exception& error) {
         std::cerr << "script-runner: FAIL: " << error.what() << '\n';
