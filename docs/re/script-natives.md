@@ -56,12 +56,12 @@ Sum (at the census): 224 unhandled natives in batches, 20 implemented, 1 stand-i
 | PrintDebugString | 0x26fde8 | 2 | 514 / 125 / 6 / 6 | 24 | D | 26 | handled: 0x26fde8 is `mov r0,#1; bx lr`, no text is drawn or logged (corrects the old note: 0x2665d0 belongs to the next function 0x26fdf0) |
 | PositionObject | 0x1d9e6c | 2 | 498 / 89 / 4 / 0 | 9 | done |  |  |
 | CallScript | 0x1c3730 | 1 | 485 / 67 / 64 / 2 | 9 | done |  |  |
-| ShowDialogBG | 0x1bfb64 | 1 | 443 / 64 / 4 / 0 | 8 | C | 30 |  |
+| ShowDialogBG | 0x1bfb64 | 1 | 443 / 64 / 4 / 0 | 8 | stand-in | 30 | handled as a stand-in, drawn with fitted layout: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
 | WaitForDCam | 0x1883ec | 0 | 429 / 120 / 4 / 0 | 10 | done | 28 | handled, busy test without the cutscene part (SCRIPT-29): [dcam.md §2026-10-14T14:36](dcam.md#ts-20261014-143600) |
 | SpawnScript | 0x1c3730 | 1 | 424 / 43 / 6 / 0 | 9 | done |  |  |
-| ShowDialogueText | 0x26ff84 | 3 | 409 / 25 / 0 / 0 | 6 | C | 30 |  |
+| ShowDialogueText | 0x26ff84 | 3 | 409 / 25 / 0 / 0 | 6 | stand-in | 30 | handled as a stand-in, drawn with fitted layout: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
 | AIEnable | 0x1881d4 | 2 | 404 / 74 / 2 / 0 | 10 | C | 34 |  |
-| ShowDialogueTextTimed | 0x2a6d90 | 4 | 400 / 106 / 8 / 0 | 6 | C | 30 |  |
+| ShowDialogueTextTimed | 0x2a6d90 | 4 | 400 / 106 / 8 / 0 | 6 | stand-in | 30 | handled as a stand-in, drawn with fitted layout: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
 | ToggleUseable | 0x1cdcf8 | 2 | 347 / 26 / 7 / 4 | 8 | A | 26 | handled, flag recorded (stand-in SCRIPT-S17) |
 | PlaySound | 0x1b4394 | 2 | 277 / 25 / 0 / 0 | 8 | C | 33 |  |
 | EffectFadeObject | 0x288a60 | 5 | 273 / 21 / 0 / 10 | 8 | C | 38 |  |
@@ -69,7 +69,7 @@ Sum (at the census): 224 unhandled natives in batches, 20 implemented, 1 stand-i
 | DCamActive | 0x1a2e48 | 2 | 261 / 24 / 0 / 0 | 9 | stand-in | 28 | flag stored, readers unknown |
 | subobjectivegotoenable | 0x2adaac | 3 | 260 / 39 / 6 / 0 | 7 | C | 31 |  |
 | StartDCamTrack | 0x1da810 | 4 | 259 / 31 / 0 / 0 | 10 | stand-in | 28 | handled; look point is the placement of the object, not entity +0x60 with its node matrix |
-| ShowTipTextOnce | 0x263850 | 1 | 251 / 31 / 11 / 0 | 8 | C | 30 |  |
+| ShowTipTextOnce | 0x263850 | 1 | 251 / 31 / 11 / 0 | 8 | stand-in | 30 | handled as a stand-in, drawn with fitted layout: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
 | LoadAnimation | 0x2681a0 | 4 | 244 / 18 / 5 / 19 | 10 | C | 32 |  |
 | EnableCollision | 0x27e9f4 | 2 | 240 / 33 / 2 / 5 | 9 | done |  |  |
 | VehicleSetChaseMaxSpeed | 0x2b4bec | 2 | 208 / 12 / 0 / 0 | 6 | C | 36 |  |
@@ -80,8 +80,8 @@ Sum (at the census): 224 unhandled natives in batches, 20 implemented, 1 stand-i
 | SubObjectiveEnemyEnable | 0x2b4c3c | 3 | 152 / 37 / 0 / 0 | 5 | C | 31 |  |
 | ShakeScreen | 0x1b2690 | 3 | 149 / 4 / 0 / 1 | 10 | stand-in | 28 | arguments stored, no shake drawn |
 | !? | 0x174428 | 0 | 140 / 14 / 5 / 1 | 8 | done |  |  |
-| setmissionsummary | 0x27be98 | 1 | 133 / 20 / 5 / 0 | 8 | C | 30 |  |
-| setmissiontitle | 0x263788 | 1 | 133 / 20 / 5 / 0 | 8 | C | 30 |  |
+| setmissionsummary | 0x27be98 | 1 | 133 / 20 / 5 / 0 | 8 | stand-in | 30 | handled as a stand-in, key stored at 0x375f98 / 0x375f9c, no reader: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
+| setmissiontitle | 0x263788 | 1 | 133 / 20 / 5 / 0 | 8 | stand-in | 30 | handled as a stand-in, key stored at 0x375f98 / 0x375f9c, no reader: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
 | PlaySoundGO | 0x295244 | 3 | 114 / 1 / 0 / 0 | 7 | C | 33 |  |
 | ResetObject | 0x1b25f8 | 1 | 107 / 5 / 0 / 0 | 11 | A | 26 | handled: class message 8 queued |
 | VehicleSetLocked | 0x26fe78 | 2 | 102 / 13 / 3 / 0 | 8 | C | 36 |  |
@@ -90,7 +90,7 @@ Sum (at the census): 224 unhandled natives in batches, 20 implemented, 1 stand-i
 | VehicleSetForcedStop | 0x29ea7c | 2 | 99 / 13 / 1 / 0 | 6 | C | 36 |  |
 | AIMove | 0x171f7c | 3 | 98 / 19 / 0 / 0 | 8 | C | 34 |  |
 | EnableTargetable | 0x26fb2c | 2 | 97 / 6 / 0 / 0 | 7 | A | 26 | handled, flag recorded (SCRIPT-S18) |
-| ShowTipTextTimed | 0x26ffec | 2 | 96 / 45 / 6 / 0 | 8 | C | 30 |  |
+| ShowTipTextTimed | 0x26ffec | 2 | 96 / 45 / 6 / 0 | 8 | stand-in | 30 | handled as a stand-in, drawn with fitted layout: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
 | EnableDistanceFade | 0x2a05bc | 2 | 89 / 13 / 9 / 0 | 7 | A | 26 | open: node kind test and child recursion, needs SCRIPT-57 |
 | SkipToFinalState | 0x270078 | 1 | 88 / 0 / 0 / 0 | 7 | A | 26 | handled: class message 54 queued |
 | revealcollectable | 0x27bdb0 | 1 | 84 / 13 / 13 / 0 | 8 | A | 26 | handled: 0x27bdb0 is `mov r0,#1; bx lr` |
@@ -109,7 +109,7 @@ Sum (at the census): 224 unhandled natives in batches, 20 implemented, 1 stand-i
 | SpawnStuds | 0x1a3130 | 2 | 65 / 0 / 0 / 1 | 7 | C | 38 |  |
 | UnlockAbility | 0x1cde84 | 1 | 63 / 12 / 7 / 0 | 10 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
 | AIIgnorePlayer | 0x1d9c38 | 2 | 62 / 0 / 0 / 0 | 4 | C | 34 |  |
-| ShowIntroText | 0x1cdc2c | 1 | 58 / 6 / 0 / 0 | 8 | C | 30 |  |
+| ShowIntroText | 0x1cdc2c | 1 | 58 / 6 / 0 / 0 | 8 | stand-in | 30 | handled as a stand-in, call recorded only: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
 | DCamCutSceneLoad | 0x2889a4 | 1 | 57 / 13 / 2 / 0 | 7 | C | 29 |  |
 | DCamCutSceneWait | 0x288a40 | 1 | 57 / 13 / 2 / 0 | 7 | B | 29 | returns !0x2297b0(arg 0) |
 | SpawnDebris | 0x1b26f0 | 4 | 57 / 0 / 0 / 1 | 3 | C | 38 |  |
@@ -138,7 +138,7 @@ Sum (at the census): 224 unhandled natives in batches, 20 implemented, 1 stand-i
 | BulletTime | 0x1a2df0 | 3 | 28 / 6 / 0 / 0 | 9 | C | 29 |  |
 | SetPartyCharacter | 0x27beb4 | 3 | 28 / 10 / 3 / 0 | 8 | C | 35 |  |
 | SetRaceInProgress | 0x27bff4 | 1 | 28 / 4 / 0 / 0 | 6 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
-| ShowBossHearts | 0x1da788 | 2 | 27 / 0 / 0 / 0 | 7 | C | 30 |  |
+| ShowBossHearts | 0x1da788 | 2 | 27 / 0 / 0 / 0 | 7 | stand-in | 30 | handled as a stand-in, call recorded only: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
 | SceneChange | 0x1b262c | 1 | 25 / 8 / 0 / 0 | 7 | done |  |  |
 | AIResetState | 0x1bf650 | 1 | 24 / 11 / 0 / 0 | 6 | C | 34 |  |
 | EffectFadeAlpha | 0x27e7d0 | 4 | 24 / 13 / 0 / 5 | 4 | C | 38 |  |
@@ -178,7 +178,7 @@ Sum (at the census): 224 unhandled natives in batches, 20 implemented, 1 stand-i
 | QuickSave | 0x194f64 | 0 | 9 / 3 / 1 / 0 | 4 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
 | RoomStreamingWait | 0x27bde0 | 1 | 9 / 0 / 0 / 0 | 3 | B? | 38 |  |
 | SetMapDummyLocObj | 0x27be84 | 1 | 9 / 0 / 0 / 0 | 4 | C | 31 |  |
-| ShowCharacterIntro | 0x2c2af8 | 1 | 9 / 2 / 0 / 0 | 8 | C | 30 |  |
+| ShowCharacterIntro | 0x2c2af8 | 1 | 9 / 2 / 0 / 0 | 8 | stand-in | 30 | handled as a stand-in, call recorded only: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
 | clearmapdummylocobj | 0x26f9f4 | 0 | 8 / 0 / 0 / 0 | 4 | C | 31 |  |
 | EnableShadow | 0x1bf84c | 2 | 8 / 8 / 0 / 0 | 1 | A | 26 | open: written only when 0x21aae0 (object kind) allows, needs SCRIPT-57 |
 | GetGameComplete | 0x2635d0 | 1 | 8 / 1 / 1 / 0 | 8 | done |  |  |
@@ -186,7 +186,7 @@ Sum (at the census): 224 unhandled natives in batches, 20 implemented, 1 stand-i
 | MovePlatform | 0x1bf958 | 3 | 8 / 0 / 0 / 0 | 2 | C | 37 |  |
 | SetDCamStartWait | 0x26fdf0 | 1 | 8 / 1 / 0 / 0 | 3 | done | 28 | handled |
 | SetIndestructible | 0x27be40 | 2 | 8 / 0 / 0 / 0 | 2 | A | 26 | handled, flag recorded (SCRIPT-S18) |
-| ShowRaceStart | 0x1cdc9c | 0 | 8 / 1 / 0 / 0 | 7 | C | 30 |  |
+| ShowRaceStart | 0x1cdc9c | 0 | 8 / 1 / 0 / 0 | 7 | stand-in | 30 | handled as a stand-in, call recorded only: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
 | AIPursuit | 0x17cbf0 | 3 | 7 / 2 / 0 / 0 | 5 | C | 34 |  |
 | AttachToWorldRoot | 0x2951ec | 1 | 7 / 4 / 0 / 0 | 4 | C | 32 |  |
 | AwardRacingCar | 0x1d9c84 | 0 | 7 / 1 / 0 / 0 | 6 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
@@ -203,11 +203,11 @@ Sum (at the census): 224 unhandled natives in batches, 20 implemented, 1 stand-i
 | UnlockLevel | 0x1b276c | 1 | 6 / 1 / 0 / 0 | 6 | A | 27 | handled, exact (batch 27 entry) |
 | VehicleEnableDrivingMusic | 0x2bf2b4 | 2 | 6 / 0 / 0 / 0 | 3 | C | 33 |  |
 | AttachToBoneRot | 0x1bf718 | 6 | 5 / 4 / 4 / 0 | 2 | C | 32 |  |
-| InformationBox | 0x1d9d4c | 1 | 5 / 4 / 0 / 0 | 2 | C | 30 |  |
+| InformationBox | 0x1d9d4c | 1 | 5 / 4 / 0 / 0 | 2 | stand-in | 30 | handled as a stand-in, call recorded only: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
 | SetBackgroundColour | 0x291624 | 3 | 5 / 0 / 0 / 0 | 1 | C | 29 |  |
 | SetForcedStopOnMyVehicle | 0x2b9df0 | 2 | 5 / 4 / 2 / 0 | 2 | C | 36 |  |
-| ShowLevelText | 0x1cdc54 | 0 | 5 / 1 / 1 / 0 | 5 | C | 30 |  |
-| ShowTally | 0x194f78 | 5 | 5 / 0 / 0 / 0 | 1 | C | 30 |  |
+| ShowLevelText | 0x1cdc54 | 0 | 5 / 1 / 1 / 0 | 5 | stand-in | 30 | handled as a stand-in, call recorded only: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
+| ShowTally | 0x194f78 | 5 | 5 / 0 / 0 / 0 | 1 | stand-in | 30 | handled as a stand-in, call recorded only: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
 | VehicleSetAI | 0x1bfb50 | 1 | 5 / 1 / 0 / 0 | 5 | C | 36 |  |
 | VehicleSetDCamPathFollow | 0x27be1c | 3 | 5 / 0 / 0 / 0 | 3 | C | 28 | not read |
 | activeduringdcam | 0x26f978 | 2 | 4 / 0 / 0 / 0 | 3 | A | 26 | handled, flag recorded (SCRIPT-S18) |
@@ -249,7 +249,7 @@ Sum (at the census): 224 unhandled natives in batches, 20 implemented, 1 stand-i
 | removescannermapmarker | 0x2ad8f0 | 0 | 2 / 1 / 0 / 0 | 2 | C | 31 |  |
 | RideableGetOn | 0x1cdc10 | 2 | 2 / 0 / 0 / 0 | 1 | C | 37 |  |
 | settrafficmaxvehicles | 0x2a6d70 | 1 | 2 / 2 / 0 / 0 | 1 | C | 36 |  |
-| ShowPortraitOverVehicle | 0x2b4c1c | 2 | 2 / 0 / 0 / 0 | 1 | C | 30 |  |
+| ShowPortraitOverVehicle | 0x2b4c1c | 2 | 2 / 0 / 0 / 0 | 1 | stand-in | 30 | handled as a stand-in, call recorded only: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
 | 1-8_runfromarrest | 0x27bb4c | 1 | 1 / 1 / 0 / 0 | 1 | C | 35 |  |
 | AIRunAway | 0x17cc30 | 1 | 1 / 0 / 0 / 0 | 1 | C | 34 |  |
 | AwardViewer | 0x1b23e4 | 0 | 1 / 0 / 0 / 0 | 1 | C | 39 |  |
@@ -274,7 +274,7 @@ Sum (at the census): 224 unhandled natives in batches, 20 implemented, 1 stand-i
 | Rex_AxeSmash_Done | 0x27bdb8 | 1 | 1 / 0 / 0 / 0 | 1 | C | 35 |  |
 | Rex_GrapplePull_Done | 0x29ea28 | 1 | 1 / 0 / 0 / 0 | 1 | C | 35 |  |
 | SetPropRocking | 0x1da6a8 | 2 | 1 / 1 / 0 / 0 | 1 | C | 38 |  |
-| showinfopointer | 0x263848 | 2 | 1 / 0 / 0 / 0 | 1 | C | 30 |  |
+| showinfopointer | 0x263848 | 2 | 1 / 0 / 0 / 0 | 1 | stand-in | 30 | handled as a stand-in, call recorded only: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
 | StudMagnetScene | 0x2638e8 | 1 | 1 / 0 / 0 / 0 | 1 | C | 39 |  |
 | UnlockScanner | 0x1cdeb0 | 0 | 1 / 1 / 1 / 0 | 1 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
 | UsePet | 0x172184 | 2 | 1 / 0 / 0 / 0 | 1 | C | 35 |  |

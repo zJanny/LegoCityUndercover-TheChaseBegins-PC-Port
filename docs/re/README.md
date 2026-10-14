@@ -27,6 +27,7 @@ Read this index, then open only the file you need.
 | [fmv.md](fmv.md) | Mobiclip `.moflex` video and subtitles |
 | [particles.md](particles.md) | `particledefs.bprt` particle definitions |
 | [scripts.md](scripts.md) | Level scripts (section +0x18), the script executor 0x234204 and its words, EnableObject / EnableCollision, the `startup` script, the revealer links, the start state of placed objects |
+| [script-text.md](script-text.md) | Tip text, dialogue lines, dialogue background, mission title: handlers of batch 30, the timed objects 0x517ef8 / 0x5189cc, measured timing and layout |
 | [scene-start.md](scene-start.md) | Scene start: class `startup` scripts of placed objects, camera bound switches (0x2ff35c), the trigger rule, `OnSceneEnter<room>` / `OnSceneExit` events (0x1ecc50), `ScriptCheckExtras` (0x2e5638) |
 | [script-natives.md](script-natives.md) | Census of all script natives: handler addresses, argument counts, call counts per level, classes A-D and the work batches SCRIPT-26 to SCRIPT-39 |
 | [script-natives-progress.md](script-natives-progress.md) | Batch SCRIPT-27: handlers of the progress, save and stud natives, the slot bytes they use |

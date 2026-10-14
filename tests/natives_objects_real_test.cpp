@@ -74,14 +74,14 @@ int main(int argc, char** argv) {
             runtime::ScriptRunner control(level, alone);
             control.start("1-2_Scanner_Enter_Script");
             for (int i = 0; i < 60; ++i) control.update(0.1f);
-            require(control.unhandledCalls("showtiptexttimed") >= 1, "without the kill the scanner script shows its tip");
+            require(control.text().tip().key == 938638044u, "without the kill the scanner script shows its tip");
 
             assets::PlacedObjectState state = runtime::levelInitialState(level, classOf);
             runtime::ScriptRunner runner(level, state);
             runner.start("1-2_Scanner_Enter_Script");
             runner.start("1-2_Scanned_Pringles");
             for (int i = 0; i < 60; ++i) runner.update(0.1f);
-            require(runner.unhandledCalls("showtiptexttimed") == 0, "KillScript ends the scanner script before its first tip");
+            require(runner.text().tip().key == 0, "KillScript ends the scanner script before its first tip");
             require(!runner.running("1-2_Scanner_Enter_Script", false), "the scanner script thread is gone");
             require(runner.running("1-2_Scanned_Pringles", false), "the killer continues");
             const runtime::ObjectNativeFlags* zone = runner.objectNatives().flags("1-2_scannerzoneaudio");

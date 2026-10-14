@@ -6,6 +6,7 @@
 #include "runtime/natives_objects.hpp"
 #include "runtime/dcam.hpp"
 #include "runtime/natives_progress.hpp"
+#include "runtime/script_text.hpp"
 
 #include <cstdint>
 #include <list>
@@ -153,6 +154,8 @@ public:
     // Brightness of the screen set by FadeScreen: 1 normal, 0 black.
     float fadeLevel() const { return fadeLevel_; }
     DirectorCamera& director() { return director_; }
+    // Tip text, dialogue lines, dialogue background, mission title and summary (script_text.hpp).
+    const ScriptTextState& text() const { return text_; }
 
 private:
     enum class Result { Continue, Block };
@@ -166,6 +169,7 @@ private:
     void finish(ScriptThread& thread);
     void killScript(const ScriptThread& caller, const std::string& name);
     void progressNative(const assets::ScriptCall& call);
+    void textNative(const assets::ScriptCall& call);
     float read(const std::string& token) const;
     bool holds(const assets::ScriptCall& call) const;
     void assignArithmetic(const assets::ScriptCall& call);
@@ -198,6 +202,7 @@ private:
     std::vector<std::string> sceneChanges_;
     ObjectNativeState objectNatives_;
     ProgressNativeState progressNatives_;
+    ScriptTextState text_;
     float fadeLevel_ = 1.0f, fadeStart_ = 1.0f, fadeTarget_ = 1.0f, fadeElapsed_ = 0;
     DirectorCamera director_;
 };

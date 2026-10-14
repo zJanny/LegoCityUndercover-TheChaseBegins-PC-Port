@@ -21,7 +21,7 @@ enum class Word {
     Unhandled, If, Else, ElseIf, EndIf, Assign, AssignArithmetic, CallScript, SpawnScript, Wait,
     EnableObject, EnableCollision, TriggerObject, EnableTrigger, EnableBound, GetGameComplete, IsLevelUnlocked, IsRedBrickExtraActive,
     WarningDialogBox, FadeScreen, PositionObject, SceneChange,
-    KillScript, ObjectNative, ProgressNative,
+    KillScript, ObjectNative, ProgressNative, TextNative,
     StartDCam, StartDCamTrack, DCamActive, WaitForDCam, EndDCam, SnapCamera, ShakeScreen, Set3DFocusObject, SetDCamStartWait, SetDCamEndWait
 };
 
@@ -71,7 +71,8 @@ Word wordOf(const std::string& function) {
     for (const ScriptFunction& entry : kScriptFunctions)
         if (name == entry.name) return entry.word;
     if (objectNativeKind(name)) return Word::ObjectNative;
-    return progressNativeKind(name) ? Word::ProgressNative : Word::Unhandled;
+    if (progressNativeKind(name)) return Word::ProgressNative;
+    return textNativeKind(name) ? Word::TextNative : Word::Unhandled;
 }
 
 std::string unquoted(const std::string& text) {
@@ -141,6 +142,7 @@ ScriptFunctionSupport scriptFunctionSupport(const std::string& name) {
         return objectNativeIsStandIn(*kind) ? ScriptFunctionSupport::StandIn : ScriptFunctionSupport::Implemented;
     if (const auto kind = progressNativeKind(key))
         return progressNativeIsStandIn(*kind) ? ScriptFunctionSupport::StandIn : ScriptFunctionSupport::Implemented;
+    if (textNativeKind(key)) return ScriptFunctionSupport::StandIn;
     return ScriptFunctionSupport::None;
 }
 
@@ -149,6 +151,7 @@ std::vector<std::string> handledScriptFunctions() {
     for (const ScriptFunction& entry : kScriptFunctions) names.push_back(entry.name);
     for (const std::string& name : objectNativeNames()) names.push_back(name);
     for (const std::string& name : progressNativeNames()) names.push_back(name);
+    for (const std::string& name : textNativeNames()) names.push_back(name);
     return names;
 }
 
@@ -170,6 +173,7 @@ bool ScriptRunner::start(const std::string& scriptName) {
 
 void ScriptRunner::update(float dt) {
     dt_ = dt;
+    text_.update(dt);
     for (auto it = threads_.begin(); it != threads_.end();) {
         const auto next = std::next(it);
         execute(*it);
@@ -376,6 +380,9 @@ ScriptRunner::Result ScriptRunner::native(ScriptThread& thread, const ScriptCall
     case Word::ProgressNative:
         progressNative(call);
         break;
+    case Word::TextNative:
+        textNative(call);
+        break;
     case Word::WarningDialogBox:
         if (!(thread.flags & kScriptBlocked)) {
             dialogOpen_ = true;
@@ -426,6 +433,33 @@ void ScriptRunner::progressNative(const ScriptCall& call) {
         if (found != variables_.end()) output = float(static_cast<std::int8_t>(static_cast<std::int32_t>(found->second)));
     }
     variables_[assets::nameHash(args[first + shape.values])] = output;
+}
+
+void ScriptRunner::textNative(const ScriptCall& call) {
+    const auto kind = textNativeKind(lower(call.function));
+    if (!kind) return;
+    const auto& args = call.arguments;
+    if (args.size() < textNativeArguments(*kind)) return;
+    const auto key = [&](std::size_t index) {
+        const std::string& token = args[index];
+        if (!token.empty() && std::all_of(token.begin(), token.end(), [](unsigned char c) { return std::isdigit(c); }))
+            return std::uint32_t(std::stoull(token));
+        return std::uint32_t(read(token));
+    };
+    switch (*kind) {
+    case TextNativeKind::ShowTipTextOnce: text_.showTip(key(0), kTipOnceSeconds); break;
+    case TextNativeKind::ShowTipTextTimed: text_.showTip(key(0), read(args[1])); break;
+    case TextNativeKind::ShowDialogueText: text_.showDialogue(key(0), std::uint16_t(read(args[1])), lower(args[2]), kDialogueDefaultSeconds); break;
+    case TextNativeKind::ShowDialogueTextTimed: text_.showDialogue(key(0), std::uint16_t(read(args[1])), lower(args[2]), read(args[3])); break;
+    case TextNativeKind::ShowDialogBG: text_.setDialogueBackground(read(args[0]) != 0.0f); break;
+    case TextNativeKind::SetMissionTitle: text_.setMissionTitle(key(0)); break;
+    case TextNativeKind::SetMissionSummary: text_.setMissionSummary(key(0)); break;
+    default: {
+        std::vector<float> values;
+        for (const std::string& token : args) values.push_back(read(token));
+        text_.record(*kind, values);
+    }
+    }
 }
 
 void ScriptRunner::killScript(const ScriptThread& caller, const std::string& name) {

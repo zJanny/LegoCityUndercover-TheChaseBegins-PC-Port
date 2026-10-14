@@ -43,9 +43,9 @@ target_link_libraries(chase_runtime PUBLIC chase_assets)
 target_include_directories(chase_runtime PUBLIC src)
 target_compile_options(chase_runtime PRIVATE -Wall -Wextra -Wpedantic -ffp-contract=off)
 set_target_properties(chase_runtime PROPERTIES POSITION_INDEPENDENT_CODE ON)
-target_sources(chase_runtime PRIVATE src/runtime/studs.cpp src/runtime/sound_events.cpp src/runtime/music.cpp src/runtime/level_start.cpp src/runtime/script_runner.cpp src/runtime/natives_objects.cpp src/runtime/natives_progress.cpp src/runtime/door.cpp src/runtime/scene_change.cpp src/runtime/room_streaming.cpp src/runtime/room_streamer.cpp src/runtime/scene_start.cpp src/runtime/dcam.cpp src/runtime/debug_metrics.cpp src/runtime/object_visibility.cpp)
+target_sources(chase_runtime PRIVATE src/runtime/studs.cpp src/runtime/sound_events.cpp src/runtime/music.cpp src/runtime/level_start.cpp src/runtime/script_runner.cpp src/runtime/natives_objects.cpp src/runtime/natives_progress.cpp src/runtime/door.cpp src/runtime/scene_change.cpp src/runtime/room_streaming.cpp src/runtime/room_streamer.cpp src/runtime/scene_start.cpp src/runtime/dcam.cpp src/runtime/debug_metrics.cpp src/runtime/object_visibility.cpp src/runtime/script_text.cpp)
 # Front end (boot to the slot list): CPU-drawn screens, no SDL dependency.
-add_library(chase_frontend src/frontend/script.cpp src/frontend/frontend.cpp src/frontend/pages.cpp src/frontend/canvas.cpp src/frontend/resources.cpp src/frontend/layout.cpp src/frontend/flow.cpp src/frontend/hud.cpp src/frontend/minimap.cpp)
+add_library(chase_frontend src/frontend/script.cpp src/frontend/frontend.cpp src/frontend/pages.cpp src/frontend/canvas.cpp src/frontend/resources.cpp src/frontend/layout.cpp src/frontend/flow.cpp src/frontend/hud.cpp src/frontend/script_text_pages.cpp src/frontend/minimap.cpp)
 target_link_libraries(chase_frontend PUBLIC chase_assets chase_runtime)
 target_compile_options(chase_frontend PRIVATE -Wall -Wextra -Wpedantic -ffp-contract=off)
 add_executable(chase-hudshot src/hudshot.cpp)
@@ -198,6 +198,12 @@ if(BUILD_TESTING)
   target_link_libraries(natives-progress-test PRIVATE chase_runtime)
   target_compile_options(natives-progress-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME natives-progress COMMAND natives-progress-test)
+  add_executable(script-text-test tests/script_text_test.cpp)
+  target_link_libraries(script-text-test PRIVATE chase_runtime chase_assets)
+  target_compile_options(script-text-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME script-text COMMAND script-text-test)
+  add_test(NAME script-text-real-data COMMAND script-text-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
+  set_tests_properties(script-text-real-data PROPERTIES SKIP_RETURN_CODE 77)
   add_executable(scene-start-test tests/scene_start_test.cpp)
   target_link_libraries(scene-start-test PRIVATE chase_runtime)
   target_compile_options(scene-start-test PRIVATE -Wall -Wextra -Wpedantic)
@@ -477,6 +483,14 @@ if(BUILD_TESTING)
       PASS_REGULAR_EXPRESSION "saved debug-overlay-on.bmp after [0-9]+ update")
     add_test(NAME debug-overlay-area COMMAND python3 "${CMAKE_SOURCE_DIR}/tools/check_debug_overlay_shots.py" debug-overlay-off.bmp debug-overlay-on.bmp)
     set_tests_properties(debug-overlay-area PROPERTIES FIXTURES_REQUIRED "debug_overlay_off;debug_overlay_on")
+    add_test(NAME tip-text-shot COMMAND chase-game
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl
+      --window 400x480 --call-script 1-1_OnScreenText_Script --screenshot tip-text-shot.bmp --frames 20)
+    set_tests_properties(tip-text-shot PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" FIXTURES_SETUP tip_text_shot
+      PASS_REGULAR_EXPRESSION "saved tip-text-shot.bmp after [0-9]+ update")
+    add_test(NAME tip-text-panel COMMAND python3 "${CMAKE_SOURCE_DIR}/tools/check_tip_shot.py" tip-text-shot.bmp)
+    set_tests_properties(tip-text-panel PROPERTIES FIXTURES_REQUIRED tip_text_shot)
     add_test(NAME police-entrance-shot COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl

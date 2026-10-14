@@ -1,4 +1,5 @@
 #include "game_level.hpp"
+#include "frontend/script_text_pages.hpp"
 #include "frontend/minimap.hpp"
 #include "frontend/pages.hpp"
 #include "game_save.hpp"
@@ -21,6 +22,7 @@ namespace fe = chase::frontend;
 
 namespace {
 constexpr const char* kGameTextFile = "localisation/gametext_uk.loc";
+constexpr const char* kHintTextFile = "localisation/hinttext_uk.loc";
 constexpr const char* kSystemTextFile = "localisation/systemtext_uk.loc";
 constexpr std::uint32_t kContinueTextKey = 0xe3f70996;  // systemtext "Continue": inferred from the loading page text, key not read in the code (TRANS-S3)
 
@@ -249,6 +251,13 @@ void LevelSession::draw(int width, int height) {
         hudCanvas.clearTransparent();
         mapCanvas.clear(0, 0, 0);
     }
+    const runtime::ScriptTextState& scriptText = levelScripts.text();
+    if (scriptText.dialogueBackground()) fe::drawDialogueBackground(mapCanvas, hudResources);
+    if (scriptText.tip().active)
+        fe::drawTipPage(mapCanvas, hudResources, hudResources.textForKey(kHintTextFile, scriptText.tip().key), scriptText.tip().alpha);
+    if (scriptText.dialogue().active)
+        fe::drawDialogueBox(hudCanvas, hudResources, scriptText.dialogue().character,
+                            hudResources.textForKey(kHintTextFile, scriptText.dialogue().key), scriptText.dialogue().alpha);
     if (levelScripts.dialogOpen()) {
         const runtime::ScriptDialog dialog = levelScripts.dialog();
         fe::drawWarningDialog(hudCanvas, hudResources, hudResources.textForKey(kGameTextFile, dialog.bodyKey),
