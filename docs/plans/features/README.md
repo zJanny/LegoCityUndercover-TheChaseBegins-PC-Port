@@ -10,6 +10,7 @@ Item format: `- [ ] ID — gap. needs: ID. blocks: ID. evidence: link`. `needs:`
 | [camera](camera.md) | IN_PROGRESS | CAMERA-9 follow controller seed and jump reaction in a fade; CAMERA-3 multi-record weights, Blocker pose, shake |
 | [collision](collision.md) | IN_PROGRESS | COLL-1 broad phase stand-in; COLL-2 constructors missing (vehicles, characters) |
 | [level-objects](level-objects.md) | IN_PROGRESS | LEVOBJ-3 objects frozen (needs SCRIPT-1); LEVOBJ-2 NPC start animation; LEVOBJ-12/13 hidden characters, per-class visibility |
+| [vehicles](vehicles.md) | NOT_STARTED | VEH-1 create vehicle objects; VEH-3 flag natives; VEH-4 enter and leave; VEH-6 physics body (needs oracle traces) |
 | [script-system](script-system.md) | IN_PROGRESS | SCRIPT-1 mission flow (needs SCRIPT-7 natives, SCRIPT-75 / 76 trigger events); runner, scene start, class startups |
 | [script-system-triggers](script-system-triggers.md) | IN_PROGRESS | SCRIPT-75 / 76 AI and vehicle trigger events; SCRIPT-77 / 78 object bound checks |
 | [script-system-missions](script-system-missions.md) | IN_PROGRESS | SCRIPT-110 waypoint class starts mission scripts; SCRIPT-111 class-fired ObjectTriggered events; SCRIPT-113 unnamed mission scripts |
