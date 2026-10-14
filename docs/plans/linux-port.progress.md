@@ -126,12 +126,15 @@ Read this section, CLAUDE.md (incl. "Goal and faithfulness" and "Feature files")
 
 **State:** M1 runtime loop, M2 locomotion, M3 walkable level, M4 level objects, characters, studs, falling, jumping and object collision are on main; the front end (boot to the first level) and the sound hooks are merged. `chase-game` is a development runtime, not the game ([docs/status.md](../status.md)).
 
-**Priorities (critical path):**
-1. Script execution: doors and other scripted objects (frozen today), NPC animation, then mission flow: [script-system](features/script-system.md), [doors](features/doors.md), [level-objects](features/level-objects.md), [animation-characters](features/animation-characters.md).
-2. World streaming and level switches: WSTREAM-1 (rule that picks loaded rooms), TRANS-7 (who requests the switch): [world-streaming](features/world-streaming.md), [level-transitions](features/level-transitions.md).
-3. Rendering part 2: RENDER-1 fragment lights (break at 0x12d884), RENDER-4 indoor oracle state, reflections: [rendering](features/rendering.md).
-4. Player completeness: slide exit and the landing after a slide, the other `0x203d18` states: [player-movement](features/player-movement.md).
-5. Front-end remainder (existing slots, Continue, loading screen scene): [front-end](features/front-end.md), [saves-options](features/saves-options.md).
+**Priorities (critical path), updated 2026-10-14:**
+1. Leave and enter the police station in `chase-game` (user goal): TRANS-2 destination and TRANS-9 exit path (oracle trace of the lobby exit `SceneChange_LobbyToCherryTree` from the state `police-station`), then TRANS-3 level switch at run time with the loading page and its A prompt (TRANS-8, FE-3) and the `SceneChange` native: [level-transitions](features/level-transitions.md).
+2. CAMERA-8 (user report): the record pose camera snaps; blend and pose in motion (CAMERA-3): [camera](features/camera.md).
+3. Save-aware start (SAVE-1) so `chase-game` starts with game progress instead of `--call-script 1-1_MissionSkip`: [saves-options](features/saves-options.md).
+4. Script natives of the entry script and missions (SCRIPT-7: `StartDCam` / `WaitForDCam`, `AIMove`, `PositionPlayer`), events and class scripts (SCRIPT-6): [script-system](features/script-system.md).
+5. World streaming WSTREAM-1 (writer of the room state byte, ranking 0x279ab0), then WSTREAM-3: [world-streaming](features/world-streaming.md).
+6. Rendering part 2 (RENDER-1 fragment lights, reflections), player completeness (PLAYER-1, PLAYER-6), oracle tool TOOLS-6: [rendering](features/rendering.md), [player-movement](features/player-movement.md), [viewer-tools](features/viewer-tools.md).
+
+Oracle states (artifacts/oracle/states, see docs/re/oracle.md): `gameplay-start` (new game, Old 3DS), `police-station` and `street-after-1-1` (user saves after mission 1-1, New 3DS), `street-at-entrance` (agent, unmodified), `trans-poked-*` (poked, measuring aids only). Hard-to-reach states: ask the user (CLAUDE.md "Runtime oracle").
 
 **Pending (user, 2026-10-14):** rename the project from "Decompiled" to `TheChaseBegins-PC-Port` (folder `~/code/TheChaseBegins-PC-Port`, Forgejo repo `LegoCityUndercover-TheChaseBegins-PC-Port`) after the current agent round, with no agent running; done by a Haiku agent; the Forgejo rename is done by the user in the web UI.
 
@@ -280,3 +283,4 @@ One line per session: timestamp, what was worked on, how far it got, link to the
 - 2026-10-14T11:12:23+02:00 — Lead: user bug report recorded as CAMERA-8 (record pose camera snaps in the police station instead of blending) → [camera](features/camera.md).
 - 2026-10-14T11:15:03+02:00 — Agent G: station entry traced from the unmodified street states (bound fires by itself, SceneChange request order, loading-page A, live Wait thread; TRANS-7 and SCRIPT-8 closed, TRANS-9 opened, WSTREAM-1 partly) → [level-transitions](features/level-transitions.md)
 - 2026-10-14T11:17:43+02:00 — Lead: merge review of agent G: dialog pause wording corrected (chase-game already pauses like the original; SCRIPT-S9, SCRIPT-13), oracle savestate drops the New 3DS flag recorded as TOOLS-6 → [viewer-tools](features/viewer-tools.md).
+- 2026-10-14T11:19:23+02:00 — Lead: agent round E/F/G merged; Next Action priorities updated (police-station exit/entry first, CAMERA-8, save-aware start) → [level-transitions](features/level-transitions.md).
