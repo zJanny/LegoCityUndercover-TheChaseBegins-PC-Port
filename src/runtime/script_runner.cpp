@@ -22,7 +22,7 @@ enum class Word {
     Unhandled, If, Else, ElseIf, EndIf, Assign, AssignArithmetic, CallScript, SpawnScript, Wait,
     EnableObject, EnableCollision, TriggerObject, EnableTrigger, EnableBound, GetGameComplete, IsLevelUnlocked, IsRedBrickExtraActive,
     WarningDialogBox, FadeScreen, PositionObject, SceneChange,
-    KillScript, ObjectNative, ProgressNative, TextNative,
+    KillScript, ObjectNative, ProgressNative, TextNative, ObjectiveNative,
     StartDCam, StartDCamTrack, DCamActive, WaitForDCam, EndDCam, SnapCamera, ShakeScreen, Set3DFocusObject, SetDCamStartWait, SetDCamEndWait
 };
 
@@ -73,7 +73,8 @@ Word wordOf(const std::string& function) {
         if (name == entry.name) return entry.word;
     if (objectNativeKind(name)) return Word::ObjectNative;
     if (progressNativeKind(name)) return Word::ProgressNative;
-    return textNativeKind(name) ? Word::TextNative : Word::Unhandled;
+    if (textNativeKind(name)) return Word::TextNative;
+    return objectiveNativeKind(name) ? Word::ObjectiveNative : Word::Unhandled;
 }
 
 std::string unquoted(const std::string& text) {
@@ -144,6 +145,8 @@ ScriptFunctionSupport scriptFunctionSupport(const std::string& name) {
     if (const auto kind = progressNativeKind(key))
         return progressNativeIsStandIn(*kind) ? ScriptFunctionSupport::StandIn : ScriptFunctionSupport::Implemented;
     if (textNativeKind(key)) return ScriptFunctionSupport::StandIn;
+    if (const auto kind = objectiveNativeKind(key))
+        return objectiveNativeIsStandIn(*kind) ? ScriptFunctionSupport::StandIn : ScriptFunctionSupport::Implemented;
     return ScriptFunctionSupport::None;
 }
 
@@ -153,6 +156,7 @@ std::vector<std::string> handledScriptFunctions() {
     for (const std::string& name : objectNativeNames()) names.push_back(name);
     for (const std::string& name : progressNativeNames()) names.push_back(name);
     for (const std::string& name : textNativeNames()) names.push_back(name);
+    for (const std::string& name : objectiveNativeNames()) names.push_back(name);
     return names;
 }
 
@@ -175,6 +179,7 @@ bool ScriptRunner::start(const std::string& scriptName) {
 void ScriptRunner::update(float dt) {
     dt_ = dt;
     text_.update(dt);
+    objectives_.update(dt);
     for (auto it = threads_.begin(); it != threads_.end();) {
         const auto next = std::next(it);
         execute(*it);
@@ -384,6 +389,9 @@ ScriptRunner::Result ScriptRunner::native(ScriptThread& thread, const ScriptCall
     case Word::TextNative:
         textNative(call);
         break;
+    case Word::ObjectiveNative:
+        objectiveNative(call);
+        break;
     case Word::WarningDialogBox:
         if (!(thread.flags & kScriptBlocked)) {
             dialogOpen_ = true;
@@ -459,6 +467,23 @@ void ScriptRunner::textNative(const ScriptCall& call) {
         std::vector<float> values;
         for (const std::string& token : args) values.push_back(read(token));
         text_.record(*kind, values);
+    }
+    }
+}
+
+void ScriptRunner::objectiveNative(const ScriptCall& call) {
+    const auto kind = objectiveNativeKind(lower(call.function));
+    if (!kind) return;
+    const auto& args = call.arguments;
+    if (args.size() < objectiveNativeArguments(*kind)) return;
+    switch (*kind) {
+    case ObjectiveNativeKind::SetActiveWayPoint: objectives_.setWaypointActive(lower(args[0]), read(args[1]) != 0.0f); break;
+    case ObjectiveNativeKind::SubObjectiveGoToEnable: objectives_.setSubObjective(lower(args[0]), lower(args[1]), 0, read(args[2]) != 0.0f); break;
+    case ObjectiveNativeKind::SubObjectiveEnemyEnable: break;
+    default: {
+        std::vector<float> values;
+        for (const std::string& token : args) values.push_back(read(token));
+        objectives_.record(*kind, values, lower(args[0]));
     }
     }
 }

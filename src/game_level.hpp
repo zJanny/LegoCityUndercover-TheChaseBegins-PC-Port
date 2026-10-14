@@ -109,6 +109,8 @@ private:
     chase::assets::PlacedObjectState objectState;
     std::vector<std::size_t> placedSceneIndex;
     std::vector<chase::assets::Placement> placedObjects;
+    std::vector<std::size_t> waypointSceneIndex;
+    std::vector<chase::assets::Placement> waypointObjects;
     chase::runtime::ScriptRunner levelScripts;
     chase::runtime::SceneStart sceneStart;
     chase::runtime::WorldLevelEntry currentWorldLevel;

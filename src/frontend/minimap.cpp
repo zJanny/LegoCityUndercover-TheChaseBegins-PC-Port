@@ -23,6 +23,29 @@ void sampleBilinear(const assets::Image& image, float u, float v, float out[4]) 
         out[c] = (texel[0][c] * (1 - ax) + texel[1][c] * ax) * (1 - ay) + (texel[2][c] * (1 - ax) + texel[3][c] * ax) * ay;
 }
 
+
+void drawMarkers(Canvas& bottom, Resources& resources, const MinimapView& view) {
+    if (view.markers.empty()) return;
+    const assets::Image& disc = resources.image("sprites/ui_bottomscreen/maps/subobjectivepoint.btga");
+    const assets::Image& badge = resources.image("sprites/ui_bottomscreen/mapiconmission.btga");
+    const assets::Image& ring = resources.image("sprites/ui_bottomscreen/mapiconpulse.btga");
+    const float c = std::cos(view.cameraYaw), s = std::sin(view.cameraYaw);
+    const float phase = std::clamp(view.pulsePhase, 0.0f, 1.0f);
+    const float radius = kPulseStartRadius + (kPulseEndRadius - kPulseStartRadius) * phase * phase;
+    for (const MinimapMarker& marker : view.markers) {
+        const float dx = marker.x - view.x, dz = marker.z - view.z;
+        const float cx = kMapPlayerScreenX + kMarkerScale * (c * dx - s * dz);
+        const float cy = kMapPlayerScreenY + kMarkerScale * (-s * dx - c * dz);
+        const float ringSize = 2.0f * radius * float(ring.width) / 15.0f;
+        bottom.drawScaled(ring, {0, 0, ring.width, ring.height}, cx - ringSize / 2, cy - ringSize / 2, ringSize, ringSize,
+                          {1, 1, 1, 1.0f - phase});
+        bottom.drawScaled(disc, {0, 0, disc.width, disc.height}, cx - kMarkerDiscSize / 2, cy - kMarkerDiscSize / 2, kMarkerDiscSize,
+                          kMarkerDiscSize);
+        bottom.drawScaled(badge, {0, 0, badge.width, badge.height}, cx - kMarkerBadgeSize / 2, cy - kMarkerBadgeSize / 2, kMarkerBadgeSize,
+                          kMarkerBadgeSize);
+    }
+}
+
 }
 
 void drawMinimap(Canvas& bottom, Resources& resources, const std::string& levelName, const MinimapView& view) {
@@ -50,6 +73,7 @@ void drawMinimap(Canvas& bottom, Resources& resources, const std::string& levelN
     const assets::Image& arrow = resources.image("sprites/ui_bottomscreen/maps/playericon.btga");
     bottom.drawRotated(arrow, {0, 0, arrow.width, arrow.height}, kMapPlayerScreenX, kMapPlayerScreenY, float(arrow.width),
                        float(arrow.height), view.playerYaw - view.cameraYaw);
+    drawMarkers(bottom, resources, view);
     LayoutScene scene;
     scene.hidden = {"blackBG", "buttonScan", "buttonExit", "buttonAudio", "buttonRedBricks", "buttonHint", "buttonFreeplay",
                     "portrait_0", "portrait_1", "portrait_2", "portrait_3", "portrait_4", "portrait_5", "portrait_6", "portrait_7",

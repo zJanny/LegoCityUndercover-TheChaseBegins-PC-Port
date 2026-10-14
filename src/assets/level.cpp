@@ -350,6 +350,7 @@ DrawableObjects drawableObjects(FuseArchive& archive, const Level& level) {
         const Level& cls = *classOf(placement.className);
         if (placement.className.rfind("props/map_", 0) == 0) {
             ++out.markers;
+            if (archive.find(meshModelPath(placement.mesh))) out.waypoints.push_back(std::move(placement));
         } else if (isStudClass(*object, cls)) {
             StudObject stud;
             stud.kind = effectiveEnum(*object, cls, "pickuptype");

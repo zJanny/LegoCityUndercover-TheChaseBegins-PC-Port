@@ -121,6 +121,12 @@ LevelSession::LevelSession(const Shared& sharedState)
             ++unresolved;
         }
     }
+    for (const auto& waypoint : drawable.waypoints) {
+        const std::size_t instanceIndex = scene.instances();
+        if (!scene.addModel(meshModelPath(waypoint.mesh), placementMatrix(waypoint))) continue;
+        waypointSceneIndex.push_back(instanceIndex);
+        waypointObjects.push_back(waypoint);
+    }
     const std::size_t characters = addLevelCharacters(scene, archive, drawable.characters);
     studSprites.emplace(archive);
     player = game_player::placePlayer(archive, scene, level);
@@ -235,6 +241,10 @@ void LevelSession::draw(int width, int height) {
     const std::vector<bool> drawn = runtime::drawnPlacements(placedObjects, objectState);
     for (std::size_t i = 0; i < drawn.size(); ++i)
         scene.setInstanceVisible(placedSceneIndex[i], drawn[i] && roomShown(runtime::roomNumber(placedObjects[i].room)));
+    const runtime::ObjectiveState& objectives = levelScripts.objectives();
+    for (std::size_t i = 0; i < waypointObjects.size(); ++i)
+        scene.setInstanceVisible(waypointSceneIndex[i], objectives.waypointActive(game_doors::lowerCase(waypointObjects[i].instance)) &&
+                                                            roomShown(runtime::roomNumber(waypointObjects[i].room)));
     scene.draw(mvp);
     std::vector<StudSprite> sprites;
     for (const runtime::Stud& stud : studs.studs())
@@ -251,6 +261,10 @@ void LevelSession::draw(int width, int height) {
         mapView.z = player->motion.z;
         mapView.cameraYaw = follow->yaw();
         mapView.playerYaw = runtime::headingRadians(player->motion.facing);
+        mapView.pulsePhase = objectives.pulsePhase();
+        for (std::size_t i = 0; i < waypointObjects.size(); ++i)
+            if (objectives.waypointActive(game_doors::lowerCase(waypointObjects[i].instance)))
+                mapView.markers.push_back({waypointObjects[i].position[0], waypointObjects[i].position[2]});
         fe::drawMinimap(mapCanvas, hudResources, levelName, mapView);
     } else {
         hudCanvas.clearTransparent();

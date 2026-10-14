@@ -28,6 +28,7 @@ Read this index, then open only the file you need.
 | [particles.md](particles.md) | `particledefs.bprt` particle definitions |
 | [scripts.md](scripts.md) | Level scripts (section +0x18), the script executor 0x234204 and its words, EnableObject / EnableCollision, the `startup` script, the revealer links, the start state of placed objects |
 | [script-text.md](script-text.md) | Tip text, dialogue lines, dialogue background, mission title: handlers of batch 30, the timed objects 0x517ef8 / 0x5189cc, measured timing and layout |
+| [objective-hud.md](objective-hud.md) | Waypoints, sub-objective registry and the waypoint marker on the map: handlers of batch 31 (SetActiveWayPoint 0x27bde8, SubObjectiveGoToEnable 0x2adaac), registry 0x51a3a8, measured marker |
 | [script-triggers.md](script-triggers.md) | Check functions of every bound trigger type (BoundEntered / Left / Inside / Outside, on-foot and vehicle variants, object bounds), census of lvl_01 and lvl_00, oracle runs of BoundLeft and PlayerOnFootBoundEntered, why a teleport does not fire BoundLeft. |
 | [scene-start.md](scene-start.md) | Scene start: class `startup` scripts of placed objects, camera bound switches (0x2ff35c), the trigger rule, `OnSceneEnter<room>` / `OnSceneExit` events (0x1ecc50), `ScriptCheckExtras` (0x2e5638) |
 | [script-natives.md](script-natives.md) | Census of all script natives: handler addresses, argument counts, call counts per level, classes A-D and the work batches SCRIPT-26 to SCRIPT-39 |

@@ -6,6 +6,7 @@
 #include "runtime/natives_objects.hpp"
 #include "runtime/dcam.hpp"
 #include "runtime/natives_progress.hpp"
+#include "runtime/objectives.hpp"
 #include "runtime/script_text.hpp"
 
 #include <cstdint>
@@ -160,6 +161,8 @@ public:
     DirectorCamera& director() { return director_; }
     // Tip text, dialogue lines, dialogue background, mission title and summary (script_text.hpp).
     const ScriptTextState& text() const { return text_; }
+    // Waypoints and sub-objective groups switched on by the level scripts (objectives.hpp).
+    const ObjectiveState& objectives() const { return objectives_; }
 
 private:
     enum class Result { Continue, Block };
@@ -174,6 +177,7 @@ private:
     void killScript(const ScriptThread& caller, const std::string& name);
     void progressNative(const assets::ScriptCall& call);
     void textNative(const assets::ScriptCall& call);
+    void objectiveNative(const assets::ScriptCall& call);
     float read(const std::string& token) const;
     bool holds(const assets::ScriptCall& call) const;
     void assignArithmetic(const assets::ScriptCall& call);
@@ -209,6 +213,7 @@ private:
     ObjectNativeState objectNatives_;
     ProgressNativeState progressNatives_;
     ScriptTextState text_;
+    ObjectiveState objectives_;
     float fadeLevel_ = 1.0f, fadeStart_ = 1.0f, fadeTarget_ = 1.0f, fadeElapsed_ = 0;
     DirectorCamera director_;
 };

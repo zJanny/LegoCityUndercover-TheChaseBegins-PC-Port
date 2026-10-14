@@ -375,6 +375,7 @@ struct DrawableObjects {
     std::size_t skeletal = 0;
     std::size_t customCharacters = 0;
     std::size_t markers = 0;
+    std::vector<Placement> waypoints;  // props/map_* markers that have a model; drawn only while a script switched them on
 };
 DrawableObjects drawableObjects(FuseArchive& archive, const Level& level);
 // The point object "Player1Start": loader 0x2e6264 finds it by name (0x23b350) and gives the
