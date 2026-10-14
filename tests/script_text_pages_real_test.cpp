@@ -67,6 +67,35 @@ int main(int argc, char** argv) {
     require(tipRow.first == 20 && tipRow.last == 299, "tip box columns 20..299");
     require(tipColumn.first == 72 && tipColumn.last == 167, "tip box rows 72..167");
 
+    int blueText = 0, textLeft2 = 999, textRight2 = -1, textTop2 = 999, textBottom2 = -1, iconWhite = 0, iconLeft = 999, iconRight = -1, iconTop = 999, iconBottom = -1;
+    Canvas tipOnBlack(320, 240);
+    tipOnBlack.clear(0, 0, 0);
+    drawTipPage(tipOnBlack, resources, "Press <L> or <R> to rotate the camera.", 1.0f);
+    for (int y = 100; y < 150; ++y)
+        for (int x = 30; x < 300; ++x) {
+            const auto pixel = tipOnBlack.pixel(x, y);
+            if (pixel[2] > 200 && pixel[1] > 130 && pixel[1] < 200 && pixel[0] > 40 && pixel[0] < 120) {
+                ++blueText;
+                textLeft2 = std::min(textLeft2, x);
+                textRight2 = std::max(textRight2, x);
+                textTop2 = std::min(textTop2, y);
+                textBottom2 = std::max(textBottom2, y);
+            }
+            if (x >= 100 && x < 200 && std::min({pixel[0], pixel[1], pixel[2]}) > 225) {
+                ++iconWhite;
+                iconLeft = std::min(iconLeft, x);
+                iconRight = std::max(iconRight, x);
+                iconTop = std::min(iconTop, y);
+                iconBottom = std::max(iconBottom, y);
+            }
+        }
+    // Oracle screenshot agentHUD2-out/h2.png (bottom screen = image columns 40..359, rows 240..479; second tip of mission 1-1): pixels with
+    // blue > 200, 130 < green < 200, 40 < red < 120 are 521 with bounding box x 31..289, y 117..128; pixels above 225 in all channels for
+    // x 100..199 (the button icons' white borders) are 72 with bounding box x 116..131, y 116..129. Layout code 0x21bc2c (line height 23 - 6),
+    // 0x195408 (line top = centre - lines * pitch / 2), 0x2544e0 (icon at line top + (23 - 16) / 2), icons dsbuttonl / dsbuttonr 16x16.
+    require(blueText == 521 && textLeft2 == 31 && textRight2 == 289 && textTop2 == 117 && textBottom2 == 128, "tip text pixels equal the oracle");
+    require(iconWhite == 72 && iconLeft == 116 && iconRight == 131 && iconTop == 116 && iconBottom == 129, "tip button icon pixels equal the oracle");
+
     Canvas dialogue(400, 240);
     dialogue.clearTransparent();
     drawDialogueBox(dialogue, resources, 0, "This police force doesn't run on hopes and dreams alone!", 1.0f);
@@ -113,7 +142,7 @@ int main(int argc, char** argv) {
             textBottom = std::max(textBottom, y);
         }
     // Oracle (state agent-doughnut-title, first tip of mission 1-1, agentHUD2-out/h2.png bottom screen): text pixels above 200 in all channels span
-    // x 103..216, y 24..36; the box spans y 6..53 and x 92..227 (the port box is one pixel narrower on each side, HUD-23). Box centre (160, 30),
+    // x 103..216, y 24..36; the box spans y 6..53 and x 92..227 (border columns 92 and 93, 226 and 227: the oracle pixel columns 132/133 and 266/267 of h2.png equal the port's, difference to the earlier measure was the alpha). Box centre (160, 30),
     // half height 12 and half width min(text width / 2, 145): draw code 0x193f00.
     require(textLeft == 103 && textRight == 216 && textTop == 24 && textBottom == 36, "heading text pixels x 103..216, y 24..36");
     int borderTop = 999, borderBottom = -1;
@@ -124,6 +153,9 @@ int main(int argc, char** argv) {
         borderBottom = std::max(borderBottom, y);
     }
     require(borderTop == 6 && borderBottom == 53, "heading box border rows 6..53 at column 160");
+    // Oracle h2.png pixel (132, 270) = (141, 202, 233) over the scene background (2, 18, 54): the box alpha is the square of 240 / 255 (0x229128
+    // writes the alpha into the vertex colour and into the material), over black the red channel is 141 on columns 92 and 93.
+    require(heading.pixel(92, 30)[0] == 141 && heading.pixel(93, 30)[0] == 141 && heading.pixel(91, 30)[0] < 20, "heading box border at columns 92, 93 with squared alpha");
     require(levelHeadingKey(resources, "lvl_01_cherrytreehills") == 2004168849u && levelHeadingKey(resources, "lvl_missing") == 0,
             "level heading key: TablesLevels field +8 of the row (oracle memory 0x20a4a8 call, gametext 2004168849 = Cherry Tree Hills)");
     require(characterNameKey(resources, 9) == 0xe1924407u && characterNameKey(resources, 10) == 0x8003758fu && characterNameKey(resources, 9999) == 0,

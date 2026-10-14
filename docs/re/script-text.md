@@ -36,6 +36,8 @@ Unknowns:
 
 ## 2026-10-14T15:54:29+02:00 — Draw code of the tip panel and the dialogue box: layout from code, fade of the dialogue
 
+Corrected by [script-text.md §2026-10-14T19:25](#ts-20261014-192500): the fitted line pitch 17, glyph shifts 3.5 / 2.5 and the 16 px button icons follow from the text layout code (line height 23 - 6, line top = centre - lines * pitch / 2, `_16` icon textures at their own size).
+
 Corrected by [script-text.md §2026-10-14T16:51](#ts-20261014-165143): the portrait formula reproduces the oracle (the measure call uses offset 0, centre 33 not 36) and draws the frame heartsBG_generic first; the tip alpha writer is 0x2de284 (0.2 per update up while the tip state is not 0, down in state 0).
 
 Evidence: llvm-objdump (armv6k, vfp2) on `artifacts/game/game.arm.elf`, the `.btga` textures through the C++ decoder, and the oracle comparison pictures of [§2026-10-14T15:25](#ts-20261014-152500). No REA session, no new emulator run. Neither panel is a `.bxaml` layout: no layout file names a `ui_dialog` texture; the textures come from the preload table at 0x3584e8 (nine names, handles stored from 0x518418: index 6 = `ui_dialog_box` at +0x18, 7 = `ui_dialog_badge` at +0x1c, 8 = `ui_dialog_infoicon` at +0x20).
@@ -63,6 +65,8 @@ Unknowns:
 <a id="ts-20261014-165143"></a>
 
 ## 2026-10-14T16:51:43+02:00 — Dialogue portrait and frame, writer of the tip alpha, level heading box
+
+Corrected by [script-text.md §2026-10-14T19:25](#ts-20261014-192500): the "one pixel per side" of the heading box was the alpha (squared), the parameter 10 / 7 is not read, and the heading text shift 0.5 follows from the line top.
 
 Evidence: llvm-objdump (armv6k, vfp2) on `artifacts/game/game.arm.elf`, Azahar oracle (`--rpc`, GDB watchpoint, memory polls, screenshots; states `agent-intro-dialog` and `agent-doughnut-title`, Old 3DS), the C++ decoder for the textures. No REA session. [Corrects §2026-10-14T15:54](#ts-20261014-155429): the portrait position (oracle centre 33, not 36; the formula holds with the offset 0 of the measure call) and the writer of the tip alpha (found).
 
@@ -102,3 +106,31 @@ Unknowns:
 - Where the dialogue background reads its flag and fades; the callers of 0x2ddd64.
 - ShowTally, ShowBossHearts, ShowRaceStart, ShowPortraitOverVehicle layouts and storyboards; the HUD portrait swap of ShowCharacterIntro.
 - The one pixel per side of the heading box and the draw-state parameter 10 / 7 of 0x229128 (stored through 0x254d90): not looked at.
+
+<a id="ts-20261014-192500"></a>
+
+## 2026-10-14T19:25:00+02:00 — Text layout 0x21bc2c, text origin, inline icons, box alpha, draw-state parameter
+
+Evidence: llvm-objdump (armv6k, vfp2) on `artifacts/game/game.arm.elf`, the C++ decoders for fonts and textures, and the existing oracle pictures `agentHUD2-out/h2.png` (second tip of 1-1 with the heading), `i11.png` / `i12.png` (dialogue); port pictures from `chase-game --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --window 400x480 --frames 140 --screenshot` and a scratch renderer of `drawTipPage` / `drawDialogueBox`. No REA session, no emulator run. [Corrects §2026-10-14T15:54](#ts-20261014-155429) (text origin, pitch, icon width) and [Corrects §2026-10-14T16:51](#ts-20261014-165143) (heading box width, parameter 10 / 7, heading text shift).
+
+**Font object (0x375718 + 0x88, the `frontendfont` element) fields read by the layout.** +0 u16 end code, +2 first code, +3 line height (the .tnf header byte 3; 23 for frontendfont), +0x88 / +0x8c scale x / y, +0x98 line scale, +0xa9 fixed advance, +0xaa / +0xab horizontal / vertical alignment (0 left, 1 centre, 2 right), +0xac spacing, +0xad line gap (both signed bytes, minimum from +0xae / +0xaf = -30), +0xb0 flags, +8 / +0xc the inline icon table (count, 8-byte records: height u16, width u16, texture). The constructor 0x1f3b60..0x1f3c14 sets the scales and the line scale to 1.0, the spacing and the line gap to 0. A .tnf glyph record is (advance, height, u, v) as u16.
+
+**Layout 0x21bc2c (font, text, out record): one line per call, returns the start of the next line (0 at the end).** Out record: +0xc line width, +0x10 maximum width, +0x14 line height, +2 / +8 the glyph array (28-byte records: code, line, type, u, v, w, h, width, height, advance). Line height = (font[3] + line gap) * scale y * line scale; initial width = -spacing * scale x; advance of a glyph = (fixed advance or width) + spacing. Escape codes: 1 + two digits = extended character, 2 + one byte = inline icon number (width and height from the icon record). A line breaks at the last space when the next advance passes the limit `[0x52ecac + 0x10]` (the clip width). Measuring (0x1a3778, 0x235538) calls it for every line: width = widest line, height = sum of the line heights.
+
+**Text setup 0x1a0ff8 (called by 0x23c780, the tip and dialogue path).** Sets the alignment to centre / middle (0x2551f8 with 1, 1, flag 1), spacing 0 (0x235cb0), **line gap -6 (0x1a110c: `mvn r1, #5`, through 0x235c9c)**, the clip rectangle (0x223cf8) at x = screen width / 2 - wrap / 2 + x offset (wrap = 300 bottom, 280 top, or the text width when the wrap flag is set), width = wrap. 0x23c780 then sets the text position (0x254d80) to (clip width / 2, box centre y) and draws with 0x235cc4. So the pitch of the tip and dialogue is 23 - 6 = 17 (the fitted 17). The heading (0x193f00) sets the line gap 0 (0x193f48), spacing 0, alignment 1, 1 (0x2551f8 at 0x194090), clip (50, 0, 220, 240), position (110, 30): pitch 23, one line.
+
+**Text origin 0x195408 (the draw).** Line top of line i = anchor y - 0.5 * line height * lines + line height * i (vertical alignment 1 subtracts half a line height per line before the first line is drawn, 0x195520..0x195554), the line's x = anchor x - trunc(line width * 0.5) (0x1957d8..0x1957f4); the glyph quads are placed at clip origin + cursor, their corners rounded half up (0x2549a0..0x254a04, +0.5 and truncate) because the draw mode byte is at least 7. A glyph's top left is the line top, its height the record height 23, width advance + 1 column (0x254748..0x25477c). Applied: tip one line at centre 120 gives line top 111.5 -> 112, the dialogue with two lines and centre 189 gives 172 and 189, the heading (pitch 23, centre 30) 18.5 -> 19. The old shifts (3.5, 2.5, 0.5) were these half pixels.
+
+**Inline icons.** The token table at 0x100b3a maps `<south>` 1, `<east>` 2, `<west>` 3, `<north>` 4, `<l>` 5, `<r>` 6, `<start>` 7 (and `<select>`, `<dpad>` 8, `<stick>` 9) to the icon numbers. The registration (0x21f22c, texture loads then 0x1685d4 with count 10) loads, in this order, `DSButtonB_16`, `DSButtonA_16`, `DSButtonY_16`, `DSButtonX_16`, `DSButtonL`, `DSButtonR`, `Button_START`, `Dpad`, `Button_ANALOG`, one more; sizes come from the textures (dsbutton*_16, dsbuttonl / r, dpad, analog: 16x16; start / select 32x16), with an explicit 16x16 for entry 8. So the port drew the 32 px `dsbuttona` scaled to 16 instead of the 16 px textures. The icon record gives advance = texture width; the icon quad (0x254b70..0x254c7c) is placed at the line top rounded + (23 - icon height) / 2 (integer, 3 for 16 px), x at the cursor.
+
+**Box alpha (0x229128).** The alpha argument is stored in the vertex colour (`orr r6, r6, r12` with alpha << 24) and in the material byte `[sp + 0xab]`, so a box is drawn with alpha squared. Measured on `h2.png`: heading box border column pixel (132, 270) = (141, 202, 233) against the port's (150, 212, 244) with alpha 240 / 255 and (141, 201, 233) with (240 / 255)^2; mean abs difference of the heading region 0.94 -> 0.12. The text keeps single alpha (min of the colour alpha and the font alpha, 0x254c84..0x254c98). The "one pixel per side" was this: border columns 92, 93 and 226, 227 equal the oracle.
+
+**Draw-state parameter 10 / 7 of 0x229128.** 0x229128 calls 0x254d90 with (12, 7 | parameter << 16); 0x254d90 uses only the low nibble (`and r7, r5, #15`, 0x254e68) for its blend setup, the high half is not read. The parameter has no effect on the picture.
+
+**Port.** `src/frontend/script_text_pages.cpp`: pitch = font line height + gap (-6 tip and dialogue, 0 heading), line tops as above, icons from the `_16` textures at their own size, box alpha squared. Checks: tip "Press <L> or <R> to rotate the camera." on `h2.png` (bottom screen): blue text pixels 521, bounding box x 31..289, y 117..128 and icon border pixels 72, x 116..131, y 116..129 are equal in the port and the oracle; tip region mean abs difference 1.49 -> 0.20 (icons were the only difference); dialogue "Welcome to the force, rookie. ..." on `i11.png`: orange text bounding box x 75..344, y 174..203 equal. Pictures (not committed): `artifacts/oracle/agentLAY-out/` (`cmp_new_tip.png`, `cmp_new_tiptext.png`, `cmp_exp_heading.png`, `new_140.bmp`). Tests: `script-text-pages-real-data` (tip text and icon pixel counts, heading border columns).
+
+Unknowns:
+- A dialogue with one line: the code gives line top 177.5 -> 178 (centre 186), the earlier fit gave 177; no oracle picture of a one-line dialogue exists.
+- Whether boxes are drawn with squared alpha at partial alpha for the tip and the dialogue (the code says so, only alpha 240 / 255 was compared).
+- The font flags byte bit 3 (0x1f39d8, from the loader's argument; shifts text by a quarter of the line height when set) and the byte 0x3766a8 / 0x3766a9 that enables the rounding: taken as clear and enabled because the pictures match.
+- `<start>`, `<select>` icons (32x16) and the 10th icon texture; the port draws no icon for these tokens.
