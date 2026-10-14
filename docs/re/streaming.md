@@ -88,6 +88,8 @@ All addresses are for the reference build. Evidence is from the stub's trap dump
 
 ## 2026-10-14T11:13:12+02:00 — The station entry from an unmodified state: trigger, dialog, SceneChange, switch request order; room states while walking (Azahar oracle New 3DS, GDB pad injection, no RPC, no poke; llvm-objdump)
 
+Corrected by [streaming-rooms.md §2026-10-14T14:00](streaming-rooms.md#ts-20261014-140018): the seven-room reading of `street-at-entrance` was taken before the two preloads finished loading, the ranking key of 0x279834 is the view direction dot product (not a distance), and the per-update requests, the unload rule and the state writer are explained there.
+
 States: `street-after-1-1` (user) and `street-at-entrance` ([oracle.md §2026-10-14T11:13](oracle.md#ts-20261014-111312)). Traps with `trap` (stub breakpoints) from `street-at-entrance`: the player walks forward into the bound with the pad (stick (0,100) after the approach). Three full runs (the first and two repeats in one scenario) and one run up to the dialog gave the same order with the same update numbers (the run is repeatable in this state; the earlier remark about unrepeatable runs came from poked states). Update numbers are the trap's frame counter of one run.
 
 **Enable bytes (state `street-after-1-1`, read through the chain scene 2 (0x085abd20) +0x24 -> owner 0 -> +0x24 level data; bound array = level data +0x24, count u16 at +0xc, 40 bytes each, name pointer at +0)**

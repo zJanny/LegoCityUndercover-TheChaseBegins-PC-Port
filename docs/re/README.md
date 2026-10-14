@@ -32,6 +32,7 @@ Read this index, then open only the file you need.
 | [studs.md](studs.md) | Studs (collectible coins): pickup pool records, sprite sheet drawing and spin, pickup radius and skip counter, collect timer, counter values and limits, stand-ins |
 | [hud.md](hud.md) | In-game HUD: layouts, portrait, hearts (SetHearts, loop rule, health default), stud bar (state machine, formatting, icon bounce, no roll-up for pickups), flying studs (law, unprojection, sinks), bottom-screen map placement |
 | [streaming.md](streaming.md) | World levels and the master level, scene array, room objects and states, room links (`.blvl` +0x34), event bindings (+0x1c), the `SceneChange` chain, `StreamRoomIn`; `pregen/` is not streaming |
+| [streaming-rooms.md](streaming-rooms.md) | The per-update room request rule: current room link list, view-ranked preloads, unload by absent request, room request word layout |
 | [oracle.md](oracle.md) | Azahar runtime oracle: setup, fidelity rules, save states, fast workflow, timings |
 | [camera.md](camera.md) | Gameplay camera: pointers to the three files below |
 | [camera-follow.md](camera-follow.md) | Yaw word 0x376894 writer, manager and modes, follow camera law (OnFoot preset), projection |
