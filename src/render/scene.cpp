@@ -307,7 +307,7 @@ void Scene::addGeometry(const std::string& key, const ModelPart& part) {
 }
 
 bool Scene::addModel(const std::string& path, const Mat4& transform,
-                     const std::map<std::string, std::string>& textureOverrides, const std::string& key) {
+                     const std::map<std::string, std::string>& textureOverrides, const std::string& key, int onlyMesh) {
     const std::string& cacheKey = key.empty() ? path : key;
     auto loaded = models_.find(cacheKey);
     if (loaded == models_.end()) {
@@ -316,8 +316,9 @@ bool Scene::addModel(const std::string& path, const Mat4& transform,
         Model model = parseModel(archive_.read(*entry));
         LoadedModel out;
         const std::string dir = directory(lower(path));
-        for (const auto& mesh : model.meshes)
-            for (const auto& part : mesh.parts) {
+        for (std::size_t meshIndex = 0; meshIndex < model.meshes.size(); ++meshIndex) {
+            if (onlyMesh >= 0 && int(meshIndex) != onlyMesh) continue;
+            for (const auto& part : model.meshes[meshIndex].parts) {
                 std::string texName = part.textures.empty() ? "" : part.textures.front();
                 bool skip = false;
                 for (const auto& word : exclude_) skip |= lower(texName).find(word) != std::string::npos;
@@ -340,9 +341,18 @@ bool Scene::addModel(const std::string& path, const Mat4& transform,
                 if (part.flags & AttrSkin) out.skinned.push_back({out.parts.size(), part.vertices, part.flags});
                 out.parts.push_back(d);
             }
+        }
         loaded = models_.emplace(cacheKey, std::move(out)).first;
     }
     instances_.push_back({&loaded->second, transform});
+    return true;
+}
+
+bool Scene::setInstanceMesh(std::size_t instance, const std::string& path, int mesh) {
+    const Mat4 transform = instances_.at(instance).transform;
+    if (!addModel(path, transform, {}, path + "#" + std::to_string(mesh), mesh)) return false;
+    instances_.at(instance).model = instances_.back().model;
+    instances_.pop_back();
     return true;
 }
 

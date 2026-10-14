@@ -350,15 +350,16 @@ struct DoorObject {
     std::string instance;
     runtime::DoorParams params;
     runtime::DoorState state;
-    std::size_t sceneInstance = 0;
+    std::size_t sceneInstance[2] = {0, 0};
+    bool separateLeaves = false;
     Mat4 placement{};
-    Mat4 rest = identity();
+    Mat4 rest[2] = {identity(), identity()};
     float pivot[2][3] = {};
     std::array<float, 3> position{};
     std::uint16_t soundOwner = 0;
 };
 
-std::vector<DoorObject> loadDoors(FuseArchive& archive, const Level& level, const ClassLookup& classOf, const std::vector<ObjectCollision>& objects,
+std::vector<DoorObject> loadDoors(Scene& scene, FuseArchive& archive, const Level& level, const ClassLookup& classOf, const std::vector<ObjectCollision>& objects,
                                   const std::map<std::string, std::pair<std::size_t, Mat4>>& instances) {
     std::vector<DoorObject> doors;
     for (const ObjectCollision& object : objects) {
@@ -375,9 +376,15 @@ std::vector<DoorObject> loadDoors(FuseArchive& archive, const Level& level, cons
         door.instance = object.instance;
         door.soundOwner = std::uint16_t(doors.size() + 1);
         door.params = runtime::doorParams(*source, *classOf(source->className), model, object.centre, object.half);
-        door.sceneInstance = instance->second.first;
+        door.sceneInstance[0] = instance->second.first;
         door.placement = instance->second.second;
-        if (!model.nodeMatrices.empty() && model.nodeMatrices[0][15] != 0.0f) door.rest = model.nodeMatrices[0];
+        for (std::size_t n = 0; n < model.nodeMatrices.size() && n < 2; ++n)
+            if (model.nodeMatrices[n][15] != 0.0f) door.rest[n] = model.nodeMatrices[n];
+        if (door.params.twoLeaves && model.nodeMesh.size() > 1 && model.nodeMesh[0] >= 0 && model.nodeMesh[1] >= 0 &&
+            scene.setInstanceMesh(door.sceneInstance[0], object.model, model.nodeMesh[0])) {
+            door.sceneInstance[1] = scene.instances();
+            door.separateLeaves = scene.addModel(object.model, door.placement, {}, object.model + "#" + std::to_string(model.nodeMesh[1]), model.nodeMesh[1]);
+        }
         for (std::size_t n = 0; n < model.nodePivot.size() && n < 2; ++n) std::copy_n(model.nodePivot[n].data(), 3, door.pivot[n]);
         door.position = {door.placement[12], door.placement[13], door.placement[14]};
         doors.push_back(std::move(door));
@@ -387,7 +394,8 @@ std::vector<DoorObject> loadDoors(FuseArchive& archive, const Level& level, cons
 
 void poseDoor(Scene& scene, const DoorObject& door) {
     const runtime::DoorPose pose = runtime::doorPose(door.state, door.params, door.pivot);
-    scene.setTransform(door.sceneInstance, chase::render::multiply(door.placement, chase::render::multiply(pose.node[0], door.rest)));
+    for (int leaf = 0; leaf < (door.separateLeaves ? 2 : 1); ++leaf)
+        scene.setTransform(door.sceneInstance[leaf], chase::render::multiply(door.placement, chase::render::multiply(pose.node[leaf], door.rest[leaf])));
 }
 
 std::uint32_t clockTicks(std::uint64_t counter, std::uint64_t frequency) {
@@ -528,7 +536,7 @@ int run(const Options& given) {
     const ClassLookup classOf = archiveClassLookup(archive);
     const std::vector<ObjectCollision> placedCollisions = objectCollisions(archive, level, runtime::levelStartState(level, classOf));
     const runtime::CollisionWorld collision = loadCollision(archive, options.level, placedCollisions);
-    std::vector<DoorObject> doors = loadDoors(archive, level, classOf, placedCollisions, placedInstances);
+    std::vector<DoorObject> doors = loadDoors(scene, archive, level, classOf, placedCollisions, placedInstances);
     for (const DoorObject& door : doors) poseDoor(scene, door);
     std::cout << "doors: " << doors.size() << '\n';
     std::cout << "collision: " << collision.triangleCount() << " triangles in " << collision.entries().size() << " entries\n";

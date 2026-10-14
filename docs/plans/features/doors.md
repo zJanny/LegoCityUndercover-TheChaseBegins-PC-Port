@@ -6,7 +6,7 @@ Doors (object type 42): record, update 0x1d16b8, state change, messages, easing,
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-13T21:51:17+02:00. Doors with `AutoOpen` open and close in `chase-game`; doors that need a script request never open.
+IN_PROGRESS, updated 2026-10-14T09:50:11+02:00. Doors with `AutoOpen` open and close in `chase-game`; doors that need a script request never open.
 
 ## 3. Verified behaviour
 
@@ -30,12 +30,13 @@ IN_PROGRESS, updated 2026-10-13T21:51:17+02:00. Doors with `AutoOpen` open and c
 - [ ] DOOR-3 — An open door keeps the closed box in `chase-game`, although one oracle walk differed (the open door held the character still at (905.755, 1116.386) for 30 updates while the closed door let him slide); why is not explained. needs: COLL-4. evidence: [doors.md §2026-10-13T21:17](../../re/doors.md).
 - [ ] DOOR-4 — The rest-matrix-before-pose draw order (`placement * pose * nodeMatrix`) is unverified against a picture of the original. evidence: [doors.md §2026-10-13T21:17](../../re/doors.md).
 - [ ] DOOR-6 — The meaning of the player flag set by 0x1d16b8 in states 2 and 4 (`player ctrl +0x316 |= 0x10`). evidence: [doors.md §2026-10-13T21:17](../../re/doors.md).
-- [ ] DOOR-7 — (User report 2026-10-13, screenshot) The police-station lift door (`Lobby_Lift_Door01`, lvl_00) is a two-panel sliding door: one panel slides away, the other does not move, and the closed panel (plus DOOR-3 / DOOR-S4, the closed collision box) blocks the player. Likely cause: `doorPose` (src/runtime/door.cpp) moves only nodes 0 and 1 and `twoLeaves` is `nodeNames.size() > 1`, so a model with a frame node first, or more than two nodes, moves one panel only. Next: list the lift model's nodes, door type and slide vector, and read how 0x26905c picks the leaf nodes; compare with the original (RENDER-4 indoor state). needs: RENDER-4.
+- [ ] DOOR-7 — Fixed in code 2026-10-14 (two-node doors are drawn as two instances, each with its own pose; the cause was the renderer, not `doorPose`), but not yet checked against a picture of the original with the lift doors open. Closed collision box of an open door still applies (DOOR-3). evidence: [doors.md §2026-10-14T09:50](../../re/doors.md).
 
 ## 6. Findings summary
 
 - Record, update 0x1d16b8, state change and messages, easing, poses, timings, sounds: [doors.md §2026-10-13T21:17](../../re/doors.md).
 - Sound call sites and order: [doors.md §2026-10-13T21:51](../../re/doors.md).
+- Two-leaf doors: node poses and rendering: [doors.md §2026-10-14T09:50](../../re/doors.md).
 - Trigger chain (`AutoOpen`, message 0xff) and where the start state of doors comes from: [objects.md §2026-10-13T21:17](../../re/objects.md), [scripts.md §2026-10-13T20:42](../../re/scripts.md).
 
 ## 7. Code and tests

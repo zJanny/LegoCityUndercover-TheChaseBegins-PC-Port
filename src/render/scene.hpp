@@ -53,7 +53,8 @@ public:
     // instance with the same key (the path when `key` is empty), so models that differ in textures or in pose
     // need distinct keys.
     bool addModel(const std::string& path, const Mat4& transform = identity(),
-                  const std::map<std::string, std::string>& textureOverrides = {}, const std::string& key = "");
+                  const std::map<std::string, std::string>& textureOverrides = {}, const std::string& key = "", int onlyMesh = -1);
+    bool setInstanceMesh(std::size_t instance, const std::string& path, int mesh);
     // Re-skins every skinned part of the model loaded under `key` on the CPU.
     void pose(const std::string& key, const std::vector<assets::Matrix>& skin);
     std::size_t skinnedParts(const std::string& path) const;

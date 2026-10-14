@@ -37,3 +37,14 @@ Unknowns:
 - How texture units map to texture coordinate sets (unit 0 uv0, others uv1 when present: assumed); texture wrap flags in slot bytes 4-5 other than repeat; cube texture sampling (reflection vector not recovered).
 - Fog (byte 9 equals 1 disables it; 0x3760fc and 0x3760fd conditions), the material colour pulse over time, depth write and colour mask details of register 0x107, draw sort order (0x115128).
 - Writers of 0x37796c (shadow texture) and 0x530834 (override flags); assumed 0 in the main pass.
+
+## 2026-10-14T09:50:11+02:00 — Police station lobby against the oracle (RENDER-4) and the white quad (RENDER-6)
+
+Pictures (local, `artifacts/oracle/agentB-out/`): `ps0.png` (oracle, state police-station, Azahar New 3DS, OpenGL RPC screenshot, player at (-1.970, 1.436, 14.843), camera yaw pi) and `cg1.png` (`chase-game --gameplay --start "-1.970 1.436 14.843" --facing 180 --frames 200 --window 400x480`).
+- Lightmap surfaces (lighting 4, `LIGHTMAP_lvl_00_PoliceStation_Lobby000`): the brown stair wall crop matches (mean RGB oracle 79.6 / 71.0 / 70.5, chase-game 80.6 / 71.5 / 70.8). The lobby floor is about 8 percent lighter in chase-game (oracle 89.5 / 84.1 / 98.9, chase-game 97.9 / 91.3 / 108.8; crop positions differ slightly because the cameras differ).
+- Differences: (1) the camera: the original station uses the record pose camera 0x298cd8, so its view is higher and further back (see camera.md 2026-10-14T09:49); (2) the police pillars and other lit props are darker in chase-game (RENDER-S1, RENDER-1/5); (3) the HUD matches; (4) the original shows a crossed-out camera icon when L or R is pressed.
+- RENDER-6: the white quad is the part with the texture `Checker1.tga` of `room1.bfnmdl` (and one in `room3`, `room5`): 4 vertices, 6 indices, flat at y = 0, 4.2 x 4.2 units (room1 x -2.10..2.10, z 47.26..51.46), material lighting 1, opaque, depth test and write on, no blend, no lightmap. Hiding the model part by texture name removes it from the picture (verified), hiding the other models does not. So it is not a blended part drawn out of order (not RENDER-S3). Whether the original draws it is unknown: teleporting the player to z = 56 or 40 in the oracle left the player in the void (those rooms are not loaded there), so no picture of that spot exists.
+
+Unknowns:
+- Whether the original draws the `Checker1.tga` quads (placeholder markers); chase-game draws every room at once (WSTREAM-3).
+- The lobby light on lit props (RENDER-1).

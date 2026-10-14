@@ -6,7 +6,7 @@ How `chase_render` (`src/render/scene.*`, used by `chase-viewer` and `chase-game
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-13T22:24:39+02:00. Combiner setups of all 16122 shipped parts are recovered and run in the shader; lighting is a stand-in.
+IN_PROGRESS, updated 2026-10-14T09:50:11+02:00. Combiner setups of all 16122 shipped parts are recovered and run in the shader; lighting is a stand-in.
 
 ## 3. Verified behaviour
 
@@ -28,9 +28,9 @@ IN_PROGRESS, updated 2026-10-13T22:24:39+02:00. Combiner setups of all 16122 shi
 - [ ] RENDER-1 Fragment lighting: light list per draw (0x12d884, 0x5943b0), light mask, LUTs, specular. Next: break at 0x12d884 in the oracle (`trap`) and read the light objects and material +0x10/+0x14 for a character and a prop; implement in the shader; remove RENDER-S1. evidence: [materials.md](../../re/materials.md)
 - [ ] RENDER-2 Reflections (cube sampling, vertex shader program with `Cubemap`). Removes RENDER-S2.
 - [ ] RENDER-3 Fog (0x1292fc caller, 0x3760fc), shadows (0x37796c), material colour pulse, draw sorting.
-- [ ] RENDER-4 Compare an indoor police-station view with the oracle (checkpoint `police-station` exists since 2026-10-13, New 3DS mode, see oracle.md; lighting 4 lightmap surfaces are unverified against the original). blocks: DOOR-7, CAMERA-6, RENDER-6.
+- [x] RENDER-4 Closed 2026-10-14: the lobby compared with the oracle (lightmap surfaces match within 1 colour level on the stair wall, floor about 8 percent lighter; props darker = RENDER-1/5; camera differs, see CAMERA-6). evidence: [materials.md §2026-10-14T09:50](../../re/materials.md).
 - [ ] RENDER-5 Characters are lighter and more saturated in the original (directional light missing).
-- [ ] RENDER-6 — (User screenshot 2026-10-13) A white quad floats above the police-station entrance in `chase-game` (lvl_00); not classified, possibly a blended part drawn without the original's ordering (RENDER-S3). needs: RENDER-4.
+- [ ] RENDER-6 — The white quad above the police-station entrance is the `Checker1.tga` part (4 vertices, flat y = 0, 4.2 x 4.2, opaque) of `room1.bfnmdl` (also room3, room5), seen far away outside; not RENDER-S3. Unknown whether the original draws it (rooms outside are not loaded in the oracle). Not fixed (related: WSTREAM-3). evidence: [materials.md §2026-10-14T09:50](../../re/materials.md).
 
 ## 6. Findings summary
 
@@ -39,4 +39,4 @@ IN_PROGRESS, updated 2026-10-13T22:24:39+02:00. Combiner setups of all 16122 shi
 ## 7. Code and tests
 
 - `src/assets/material.cpp`, `src/render/scene.cpp` (fragment shader runs the stages), `src/materials.cpp` (`chase-materials`: census, or stages of the models given).
-- CTest `assets-core` (hand-evaluated materials), `assets-real-data` (census and named setups). Game option `--facing DEGREES` places the character for screenshot comparisons.
+- CTest `assets-core` (hand-evaluated materials), `assets-real-data` (census and named setups). Scene: `setInstanceMesh` (one mesh per instance, used by two-leaf doors). Game option `--facing DEGREES` places the character for screenshot comparisons.

@@ -58,3 +58,12 @@ Addresses read again: state change 0x1a6b6c, play 0x23ae84, stop 0x23ae50 (stop 
 
 Unknowns
 - Whether the original treats sound id 0 as "none" in the play and the stop (stand-in DOOR-S2).
+
+## 2026-10-14T09:50:11+02:00 — Two-leaf doors: the model's two nodes are posed separately (REA Ghidra 12.1.2 ev_f634c12d84d35f04d4136c90381719005c7fb3c7b493113075d6f201c7c92a0c, chase-game)
+
+- `Lobby_Lift_Door01` (lvl_00) uses `models/prop_policestation_doubledoors/prop_policestation_doubledoors_atlas_lvl_00_policestation_main.bfnmdl`: DoorType 0 (hinged), AutoOpen 1, openclosetime 22 frames, two nodes `Door_Right` (mesh 0, pivot -1.27201, 0, 0) and `Door_Left` (mesh 1, pivot 1.27201, 0, 0), both meshes half extents (0.6408, 1.3193, 0.166). The lift doors (`Lobby_Lift_Door`, `DOOR_lift_to_*`) use `prop_lift_doors.bfnmdl`: DoorType 5, nodes `Door_L` (mesh 0) and `Door_R` (mesh 1), slide -1.30351 in x.
+- 0x26905c poses exactly the model's nodes 0 and 1 through 0x22cbbc (case 0/1: node 0 turns by `a`, node 1 by `-a` about its own pivot; cases 5 to 8 and 0x11: node 0 by the slide vector, node 1 by its negation). The replica's `doorPose` already did that; **the cause of DOOR-7 was the renderer**: `chase-game` drew the whole door model as one scene instance with only the pose of node 0, so both panels moved together (hinged) or the second leaf never had its own matrix. Fix: a two-node door gets one scene instance per node, restricted to the node's mesh (`Scene::setInstanceMesh`, `addModel(..., onlyMesh)`), each with `placement * pose[node] * rest[node]` (rest matrix of that node, `model+0x20`).
+- Not verified against a picture of the original (the oracle door was not opened in this session): the lobby doors in `chase-game` were checked only by build, tests and a screenshot of the closed doors.
+
+Unknowns:
+- Whether the rest matrix of node 1 is applied in the same order as for node 0 (DOOR-4).
