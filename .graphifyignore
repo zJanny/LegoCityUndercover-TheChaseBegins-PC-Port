@@ -8,3 +8,6 @@ graphify-out/
 __pycache__/
 *.pyc
 .claude/
+*.kate-swp
+*.swp
+*~
