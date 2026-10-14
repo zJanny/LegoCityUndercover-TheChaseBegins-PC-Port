@@ -1,4 +1,5 @@
 #include "assets/assets.hpp"
+#include "runtime/room_locator.hpp"
 #include "runtime/room_streamer.hpp"
 #include "runtime/room_streaming.hpp"
 #include <cmath>
@@ -163,6 +164,60 @@ int main(int argc, char** argv) {
             if (update == int(kRoomLoadUpdates) + 1) require(streamer.loaded(16), "Room16 loaded at update request + 9 (28 to 37 in the trace)");
         }
         require(streamer.loadedRooms() == kReadings[1].loaded, "wstream-room8-settled set " + show(streamer.loadedRooms()));
+        {
+            // Room change rule (0x2e6ce4 -> 0x237b04 -> 0x22d204), oracle agentRS 2026-10-14: street-at-entrance, 3 updates idle,
+            // stick 20 150, memtrace of the current room 0x376c78 and the player node world position each update. The current
+            // room is Room7 (0x880cf40) up to the record with x 899.7787 and Room8 (0x880d580) from the record with
+            // x 899.3618 (Room7's box starts at x 899.53, its centre 949.76 minus half extent 50.24).
+            RoomStreamer walk = *made;
+            walk.settle(7, kReadings[0].player, kReadings[0].view);
+            const Vec3 lastInRoom7 = {899.7787475585938f, 16.550920486450195f, 1121.957763671875f};
+            const Vec3 firstInRoom8 = {899.3617553710938f, 16.550920486450195f, 1122.3746337890625f};
+            const Vec3 blocked = {888.0829467773438f, 16.601083755493164f, 1134.0035400390625f};
+            walk.update(lastInRoom7, kReadings[0].view);
+            require(walk.currentRoom() == 7, "x 899.7787 is still Room7");
+            walk.update(firstInRoom8, kReadings[0].view);
+            require(walk.currentRoom() == 8, "x 899.3618 leaves Room7 for Room8");
+            walk.update(blocked, kReadings[0].view);
+            require(walk.currentRoom() == 8, "the blocked position stays in Room8");
+            const RoomBox& box7 = walk.boxes().at(7);
+            const RoomBox& box8 = walk.boxes().at(8);
+            require(roomContains(box7, {lastInRoom7[0] + kPlayerBoxCentre[0], lastInRoom7[1] + kPlayerBoxCentre[1] + kRoomTestLift,
+                                        lastInRoom7[2] + kPlayerBoxCentre[2]}) &&
+                        roomContains(box8, {lastInRoom7[0] + kPlayerBoxCentre[0], lastInRoom7[1] + kPlayerBoxCentre[1] + kRoomTestLift,
+                                            lastInRoom7[2] + kPlayerBoxCentre[2]}),
+                    "the last Room7 position is inside both boxes: the room is kept while it still contains the player");
+            require(roomAfterMove(walk.rooms(), walk.boxes(), 8, lastInRoom7) == 8, "Room8 is kept while it contains the player");
+            require(roomAfterMove(walk.rooms(), walk.boxes(), 7, lastInRoom7) == 7, "Room7 is kept while it contains the player");
+            // Same scenario continued (stick -150 0): the player is back at x 899.629 inside both boxes with the current room
+            // Room8 (0x880d580, records 63 and 64 of the walk) and Room7 (0x880cf40) from the record with x 900.273, past
+            // Room8's high x of 900.0. All 160 records of the two traces (walk1: 80, walk2: 35 + 45) agree with the rule.
+            require(roomAfterMove(walk.rooms(), walk.boxes(), 8, {899.6290893554688f, 16.586313247680664f, 1113.384521484375f}) == 8,
+                    "Room8 is kept at x 899.629 although Room7 contains it too");
+            require(roomAfterMove(walk.rooms(), walk.boxes(), 8, {900.2732543945312f, 16.586313247680664f, 1113.7161865234375f}) == 7,
+                    "x 900.273 leaves Room8 for Room7");
+        }
+        {
+            // RENDER-31, oracle agentRS 2026-10-14 (memtrace with the camera object [0x377544]+0x5c: eye at +0x30, look
+            // direction at +0x20): camera position and view at the update a room's state byte becomes 2, with the nearest
+            // box point distance and its depth along the view printed by the analysis (docs/re/rendering-fog.md).
+            struct Loaded {
+                int room;
+                Vec3 eye, view;
+                float distance, depth;
+            };
+            const Loaded loads[] = {
+                {16, {900.60888671875f, 20.445377349853516f, 1116.3876953125f}, {-0.42286717891693115f, -0.16819892823696136f, 0.8904451131820679f}, 120.3f, -16.1f},
+                {4, {901.0902709960938f, 20.464563369750977f, 1119.4110107421875f}, {-0.887476921081543f, -0.16730576753616333f, 0.4294106066226959f}, 203.4f, 191.6f},
+                {10, {900.5964965820312f, 20.50408172607422f, 1120.866943359375f}, {-0.9791252017021179f, -0.16837888956069946f, -0.11385247111320496f}, 200.6f, 196.4f},
+                {6, {893.1802978515625f, 20.473302841186523f, 1117.841064453125f}, {0.9851309657096863f, -0.16984662413597107f, 0.02586953155696392f}, 106.3f, 104.8f},
+            };
+            for (const Loaded& load : loads) {
+                const BoxApproach approach = approachToBox(made->boxes().at(load.room), load.eye, load.view);
+                require(std::fabs(approach.distance - load.distance) < 0.1f && std::fabs(approach.depth - load.depth) < 0.1f,
+                        "Room" + std::to_string(load.room) + " approach " + std::to_string(approach.distance) + " / " + std::to_string(approach.depth));
+            }
+        }
         for (std::size_t index = 2; index < sizeof(kReadings) / sizeof(kReadings[0]); ++index) {
             for (int update = 0; update < 40; ++update) streamer.update(kReadings[index].player, kReadings[index].view);
             require(streamer.currentRoom() == kReadings[index].currentRoom, std::string(kReadings[index].provenance) + ": current room");

@@ -68,3 +68,26 @@ Unknowns:
 - Which rooms loop 2 sees in a level with interiors (0x21b51c, the room load state): needed for lvl_00, lvl_02 and lvl_05.
 - The sky models: placement relative to the camera, draw order and fog handling.
 - The functions around the 0x1ee98c and the extra setFog callers; the OverrideFog reader.
+
+<a id="ts-20261014-204714"></a>
+
+## 2026-10-14T20:47:14+02:00 — RENDER-31: how far from the camera a room is when it becomes loaded (Azahar oracle New 3DS, GDB `memtrace` without RPC, state `street-at-entrance`; port `chase-game` room streamer; no new disassembly, REA was not used)
+
+Question (user hypothesis 2026-10-14): a room is loaded before its nearest geometry is closer than the fog's full distance, so it appears inside full fog. Fog numbers from [§2026-10-14T17:35](#ts-20261014-173500): the street fog is 0 up to a depth of 86 and rises as `fog = 1.494 - 128.494 / depth` to 1 at depth 260 (depth along the view axis).
+
+**Method.** Distances are from the camera position to the nearest point of the room's vertex box (meshes 1 and up of `roomN.bfnmdl`, the box of [streaming-rooms.md](streaming-rooms.md) used for the room node) and the depth of that point along the camera look direction. The box is a lower bound for the geometry; for the four oracle events below the nearest model vertex was computed as well and equals the box distance to 0.1. The camera position and look direction come from the camera object (`[0x377544] + 0x5c`, eye at +0x30, look direction at +0x20 of that matrix), the load completion from the room's state byte (state 1 to 2), both read per update in a stepped `memtrace`.
+
+**Oracle (street-at-entrance, stick 20 150 for 35 updates, then stick -150 0 for 45 updates).** Distance to the nearest box point / depth of that point at the update the room reaches state 2:
+- Room16: 120.3 / -16.1 (behind the camera; no vertex ahead within 35 degrees of the view axis).
+- Room4: 203.4 / 191.6 (nearest vertex ahead at depth 191.9, fog about 0.82).
+- Room10: 200.6 / 196.4 (nearest vertex ahead at depth 193.3, fog about 0.83).
+- Room6: 106.3 / 104.8 (nearest vertex ahead at depth 102.0, fog about 0.23; the camera looked east).
+- Room17 and Room22 were requested but left the wanted set before they finished loading.
+
+**Port (`chase-game`, same start pose, `--script "20 150 250"` and `--script "-150 0 700"`).** The port logs the same two numbers when a room finishes loading (`room N loaded at update U: nearest box point ...`). The first walk gives Room16 120.1 / -25.1, Room4 200.5 / 130.4 and Room10 198.4 / 106.2 (oracle 120.3, 203.4, 200.6: the camera differs by a few units). The second walk, 25 loads in 700 updates: distance minimum 97.7 (Room6), lower quartile 115 to 120, median 192.5, upper quartile about 211, maximum 260.5 (Room23); one value above 260, 24 of 25 between 86 and 260, none below 86. The rooms ahead of the camera in the walking direction (Room4, 10, 17, 22, 23, 20, 21) load at 160 to 260 with depths 145 to 257, which is a fog of 0.6 to 0.98. The adjacent rooms (Room3, 6, 9, 16) load at 98 to 120 and have a depth of 2 to 67, so they are beside or behind the camera (no fog at that depth, and mostly not in view).
+
+**Answer.** The hypothesis is not confirmed as a rule. A room is not loaded while its nearest geometry is still beyond the full-fog distance (260): 24 of 25 port loads and all four oracle loads happen with the nearest box point at 98 to 260. Rooms far ahead of the camera do appear at 60 to 98 % fog (their loading is hidden to a large degree, not completely), but the rooms next to the camera load at 100 to 120 where the fog is 0 to 23 % at their depth, so whether their appearance is visible depends on whether they are in view at that moment, not on the fog. Whether pop-in is visible in the original was not looked at in a screenshot (needs RPC, see below).
+
+Unknowns:
+- What the original draws for a room in state 1 and the first frame of state 2 (a screenshot at the load update; the RPC channel was in use by another agent). Pop-in can also be covered by the draw order or by buildings; only the distance was measured.
+- The fog depth source (projection near 1 and far 260) is still the stand-in of [RENDER-S5](../plans/features/rendering.md).

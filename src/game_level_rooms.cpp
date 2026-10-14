@@ -1,5 +1,6 @@
 #include "game_level.hpp"
 #include "runtime/fog.hpp"
+#include "runtime/room_locator.hpp"
 #include "runtime/scene_start.hpp"
 #include <cstdlib>
 #include <iostream>
@@ -79,6 +80,14 @@ void LevelSession::updateRoomStreaming() {
     if (roomStreamer->loadedRooms() != loadedBefore) {
         showLoadedRooms();
         std::cout << "rooms loaded: " << roomStreamer->loadedRooms().size() << " at update " << updatesForLog << '\n';
+        const runtime::Vec3 view = viewDirection(follow->yaw(), follow->pitch());
+        const runtime::Vec3 eye = {follow->eye()[0], follow->eye()[1], follow->eye()[2]};
+        for (const int room : roomStreamer->loadedRooms()) {
+            if (loadedBefore.count(room) || !roomStreamer->boxes().count(room)) continue;
+            const runtime::BoxApproach approach = runtime::approachToBox(roomStreamer->boxes().at(room), eye, view);
+            std::cout << "room " << room << " loaded at update " << updatesForLog << ": nearest box point " << approach.distance
+                      << " from the camera, depth " << approach.depth << '\n';
+        }
     }
 }
 

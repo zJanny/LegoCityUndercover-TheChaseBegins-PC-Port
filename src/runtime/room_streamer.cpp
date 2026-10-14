@@ -1,5 +1,7 @@
 #include "runtime/room_streamer.hpp"
 
+#include "runtime/room_locator.hpp"
+
 #include <utility>
 #include <vector>
 
@@ -71,7 +73,7 @@ void RoomStreamer::update(const Vec3& player, const Vec3& view) {
             ++it;
         }
     }
-    currentRoom_ = roomAt(player);
+    currentRoom_ = roomAfterMove(rooms_, boxes_, currentRoom_, player);
     RoomStreamInput input;
     input.currentRoom = currentRoom_;
     input.playerPosition = player;

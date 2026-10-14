@@ -10,7 +10,7 @@
 namespace chase::runtime {
 
 // Updates a requested room stays in the loading state (state byte 1) before it counts as loaded: Room16 in the oracle walk
-// (docs/re/streaming-rooms.md). The real duration is asynchronous and host dependent (WSTREAM-S4).
+// (docs/re/streaming-rooms.md). The real duration is asynchronous and host dependent (WSTREAM-S30).
 constexpr unsigned kRoomLoadUpdates = 9;
 
 class RoomStreamer {
@@ -30,8 +30,9 @@ public:
     const std::set<int>& loadedRooms() const { return loaded_; }
     const std::map<int, unsigned>& loading() const { return loading_; }
     const StreamRooms& rooms() const { return rooms_; }
+    const std::map<int, RoomBox>& boxes() const { return boxes_; }
 
-    // WSTREAM-S4: the room whose box (x and z) contains the player, the smallest one when several do, else the room kept.
+    // The level start room when the level gives none: the room whose box (x and z) contains the player, the smallest one when several do.
     int roomAt(const Vec3& player) const;
 
 private:
