@@ -21,7 +21,8 @@ enum class Word {
     Unhandled, If, Else, ElseIf, EndIf, Assign, AssignArithmetic, CallScript, SpawnScript, Wait,
     EnableObject, EnableCollision, TriggerObject, EnableTrigger, EnableBound, GetGameComplete, IsLevelUnlocked, IsRedBrickExtraActive,
     WarningDialogBox, FadeScreen, PositionObject, SceneChange,
-    KillScript, ObjectNative
+    KillScript, ObjectNative,
+    StartDCam, StartDCamTrack, DCamActive, WaitForDCam, EndDCam, SnapCamera, ShakeScreen, Set3DFocusObject, SetDCamStartWait, SetDCamEndWait
 };
 
 struct ScriptFunction {
@@ -53,6 +54,16 @@ constexpr ScriptFunction kScriptFunctions[] = {
     {"positionobject", Word::PositionObject, false},
     {"scenechange", Word::SceneChange, false},
     {"killscript", Word::KillScript, false},
+    {"startdcam", Word::StartDCam, false},
+    {"startdcamtrack", Word::StartDCamTrack, true},
+    {"dcamactive", Word::DCamActive, true},
+    {"waitfordcam", Word::WaitForDCam, false},
+    {"enddcam", Word::EndDCam, false},
+    {"snapcamera", Word::SnapCamera, true},
+    {"shakescreen", Word::ShakeScreen, true},
+    {"set3dfocusobject", Word::Set3DFocusObject, true},
+    {"setdcamstartwait", Word::SetDCamStartWait, false},
+    {"setdcamendwait", Word::SetDCamEndWait, false},
 };
 
 Word wordOf(const std::string& function) {
@@ -343,6 +354,20 @@ ScriptRunner::Result ScriptRunner::native(ScriptThread& thread, const ScriptCall
             const bool needsValue = objectNativeTakesValue(*kind);
             if (!needsValue || args.size() >= 2) objectNatives_.apply(*kind, lower(args[0]), needsValue ? read(args[1]) : 0.0f);
         }
+        break;
+    case Word::StartDCam: startDCamNative(director_, level_, args, [this](const std::string& token) { return read(token); }); break;
+    case Word::StartDCamTrack: startDCamTrackNative(director_, level_, args, [this](const std::string& token) { return read(token); }); break;
+    case Word::DCamActive: dcamActiveNative(director_, args, [this](const std::string& token) { return read(token); }); break;
+    case Word::WaitForDCam: return director_.busy() ? Result::Block : Result::Continue;
+    case Word::EndDCam: director_.requestEnd(); break;
+    case Word::SnapCamera: director_.snapFollowCamera(); break;
+    case Word::ShakeScreen: shakeScreenNative(director_, args, [this](const std::string& token) { return read(token); }); break;
+    case Word::Set3DFocusObject: break;
+    case Word::SetDCamStartWait:
+        if (!args.empty()) director_.setStartWait(read(args[0]));
+        break;
+    case Word::SetDCamEndWait:
+        if (!args.empty()) director_.setEndWait(read(args[0]));
         break;
     case Word::WarningDialogBox:
         if (!(thread.flags & kScriptBlocked)) {

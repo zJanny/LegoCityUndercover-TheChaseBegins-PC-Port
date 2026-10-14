@@ -7,6 +7,7 @@
 // not take the shoulder buttons, so they do not turn the camera (0x217b14 returns 0 and the HUD shows UI_CameraLocked
 // on a press). No SDL dependency.
 #include "runtime/camera_records.hpp"
+#include "runtime/dcam.hpp"
 #include "runtime/follow_camera.hpp"
 #include <string>
 #include <vector>
@@ -26,6 +27,11 @@ public:
     void setCollision(const CollisionWorld* world) { follow_.setCollision(world); }
     void reset(const float target[3], float yaw, float facing);
     void update(const FollowCameraInput& input);
+    // The director camera of the level scripts (dcam.hpp): its pose each update and the stack requests it made since the
+    // last update. A start pushes a director entry (0x21cc80), an end pushes the gameplay command again (0x196784).
+    void setDirector(const RecordPose& pose, std::vector<DirectorRequest> requests);
+    // SnapCamera 0x1a30fc: the follow controller takes its start pose behind the player again.
+    void snapFollow(const float target[3], float facing);
 
     // True while the record pose is the top camera command: 0x217b14 returns 0.
     bool locked() const { return !stack_.empty() && stack_.front().kind == Entry::Kind::Record; }
@@ -41,7 +47,7 @@ public:
 
 private:
     struct Entry {
-        enum class Kind { Record, Follow } kind = Kind::Follow;
+        enum class Kind { Record, Follow, Director } kind = Kind::Follow;
         CameraRecordSet set;
         float progress = 1.0f;
         float progressPerSecond = 0.0f;
@@ -60,6 +66,8 @@ private:
     CameraRecordSelector selector_;
     std::vector<Entry> stack_;  // front = newest command
     RecordPose output_;
+    RecordPose directorPose_;
+    std::vector<DirectorRequest> directorRequests_, delayedDirectorEnds_;
     float eyeFactor_ = 1.0f;
     float lookFactor_ = 1.0f;
 };

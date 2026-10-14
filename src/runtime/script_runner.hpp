@@ -4,6 +4,7 @@
 // script words, Wait 0x174604, CallScript / SpawnScript 0x1c3730 and the natives that have a handler. No SDL dependency.
 #include "assets/object_collision.hpp"
 #include "runtime/natives_objects.hpp"
+#include "runtime/dcam.hpp"
 
 #include <cstdint>
 #include <list>
@@ -146,6 +147,7 @@ public:
     std::vector<ObjectClassMessage> takeObjectClassMessages() { return objectNatives_.takeMessages(); }
     // Brightness of the screen set by FadeScreen: 1 normal, 0 black.
     float fadeLevel() const { return fadeLevel_; }
+    DirectorCamera& director() { return director_; }
 
 private:
     enum class Result { Continue, Block };
@@ -190,6 +192,7 @@ private:
     std::vector<std::string> sceneChanges_;
     ObjectNativeState objectNatives_;
     float fadeLevel_ = 1.0f, fadeStart_ = 1.0f, fadeTarget_ = 1.0f, fadeElapsed_ = 0;
+    DirectorCamera director_;
 };
 
 }

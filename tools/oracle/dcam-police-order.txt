@@ -1,0 +1,12 @@
+# Call order inside the updates around the end of the director camera of Police_ExtToInt (docs/re/dcam.md): the script
+# runner 0x169254, WaitForDCam 0x1883ec and the end test 0x196784. Needs the New 3DS state dcam-police-dialog (see its .json);
+# the update numbers are those of tools/oracle/dcam-police-entry.txt (the camera command is replaced in update 4, the done
+# flag is set in update 125, the end test runs in update 126).
+loadstate dcam-police-dialog
+frames 2
+dt 0.033 0.033
+hold A
+frames 3
+hold -
+frames 120
+trap 0x1883ec,0x1b262c,0x196784 8 dcam-order2

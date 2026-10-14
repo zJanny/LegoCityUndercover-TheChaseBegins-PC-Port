@@ -6,7 +6,7 @@ The gameplay camera: yaw word 0x376894, camera manager, the follow camera on the
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-14T12:10:00+02:00. The follow camera and its obstruction run in `chase-game`; the record selection, the record pose camera, the camera lock, the fade between camera commands and the pose filter run too (lobby walks over one and five records verified against the oracle).
+IN_PROGRESS, updated 2026-10-14T14:37:00+02:00. The follow camera and its obstruction run in `chase-game`; the record selection, the record pose camera, the camera lock, the fade between camera commands and the pose filter run too; the script director camera (StartDCam) is a command on the stack and hands back to the follow or record command (lobby walks over one and five records verified against the oracle).
 
 ## 3. Verified behaviour
 
@@ -21,6 +21,8 @@ IN_PROGRESS, updated 2026-10-14T12:10:00+02:00. The follow camera and its obstru
 - CAMERA-S2 `game-script-camera` pin 8.83 -> 8.77 is the replica's own output, not an oracle value.
 - CAMERA-S4 The records that the spatial structure 0x598300 returns are taken in level order (the original's grid order is unknown); all camera bounds count as enabled, bound matrices as static, the scene node world matrix of a bound as the identity, bytes 0x3770c8 / counter 0x3770e0 as 0, and the conditions 0x21d744 / 0x236008 of the icon as 0.
 - CAMERA-S5 The fixed pose of Blocker records (0x58d42c) and the shake 0x1c607c are not applied; the follow controller is seeded by `FollowCamera::reset` 10 m behind the player when it takes over from a record pose (the original starts about 4.6 m behind, 0x1b4864 / 0x2313c8), and the 0.1 factor ramp of 0x1b4864 is not modelled (factors 1.0 at once).
+- CAMERA-S6 While a director camera is the newest command the record / follow hand-overs of the selector are ignored; the original may push commands over it. needs: CAMERA-11.
+- CAMERA-S7 The hand-back of a director camera seeds the follow controller like CAMERA-S5 (10 m behind the player); the original seeds 0x2313c8. needs: CAMERA-10.
 
 ## 5. Open items
 
@@ -33,6 +35,9 @@ IN_PROGRESS, updated 2026-10-14T12:10:00+02:00. The follow camera and its obstru
 - [ ] CAMERA-7 — The lock scope census treats all camera bounds as enabled; which are switched off by EnableBound and what the moving bound matrices do is not traced (affects CAMERA-S4). `EnableBound` is transcribed in the script runner (`ScriptRunner::boundsEnabled`, 0x1d0ce8); the camera records do not read it yet.
 - [x] CAMERA-8 — closed 2026-10-14: the record pose camera snapped in the police station (user report). Now the command stack fades between poses (smoothstep over the records' BlendTime) and the pose goes through the per-update filter; the lobby replays match to 6e-6. evidence: [camera.md §2026-10-14T12:07](../../re/camera-records-blending.md#ts-20261014-120746).
 - [ ] CAMERA-9 — The follow controller in a fade (seed at take-over, reaction to a large player jump, 0.1 factor ramp) is not reproduced, so street hand-over replays only match late (CAMERA-S5). Needs the follow controller with collision in the test and a walked hand-over. evidence: [camera-records-blending.md §2026-10-14T13:39](../../re/camera-records-blending.md#ts-20261014-133954).
+- [ ] CAMERA-10 — Follow reset 0x2313c8 (SnapCamera, hand-back seed) not transcribed. blocks: CAMERA-S7, SCRIPT-S12. evidence: [dcam.md §2026-10-14T14:36](../../re/dcam.md#ts-20261014-143600)
+- [ ] CAMERA-11 — Whether the camera manager pushes selector commands while a director camera runs (the police entry moves the player into the lobby camera bounds). blocks: CAMERA-S6. evidence: [dcam.md §2026-10-14T14:36](../../re/dcam.md#ts-20261014-143600)
+- [ ] CAMERA-12 — Pose filter factors at a director camera push (1.0 seen after the follow command; the lobby record filter case is untested) and the pose fields +0x34 (0.035). evidence: [dcam.md §2026-10-14T14:36](../../re/dcam.md#ts-20261014-143600)
 
 ## 6. Findings summary
 
@@ -42,9 +47,10 @@ IN_PROGRESS, updated 2026-10-14T12:10:00+02:00. The follow camera and its obstru
 - Camera lock: record pose camera instead of follow controller, `CameraRotFixedSet` is only used in lvl_07: [camera.md §2026-10-14T09:49](../../re/camera-records-blending.md#ts-20261014-094953).
 - Fade between camera commands (0x224080, 0x2ae250, curve 0x2b5950), stack merge 0x2c584c and pose filter 0x2a00dc with its factors: [camera.md §2026-10-14T12:07](../../re/camera-records-blending.md#ts-20261014-120746).
 - `.cam` selection and weights (spatial, XZ distance, bit 0x400): [data-tables-config.md §2026-10-13T09:32](../../re/data-tables-config.md#ts-20261013-0932); camera records are the `Camera*` level bounds, decision state machine, pose formula, icon timing, per-level lock census: [camera.md §2026-10-14T10:44](../../re/camera-records-blending.md#ts-20261014-104400).
+- Director camera command, end test and hand-back through the command stack: [dcam.md §2026-10-14T14:36](../../re/dcam.md#ts-20261014-143600).
 
 ## 7. Code and tests
 
-- `src/runtime/follow_camera.*`, `camera_sweep.*`, `camera_records.*` (selection, pose), `camera_rig.*` (command switch), `camera_lock_icon.*`; `tools/camera_lock_census.cpp`; chase-game `--no-camera-collision`.
+- `src/runtime/follow_camera.*`, `camera_sweep.*`, `camera_records.*` (selection, pose), `camera_rig.*` (command switch), `camera_lock_icon.*`, `dcam.*` (director camera, `CameraRig::setDirector`); `tools/camera_lock_census.cpp`; chase-game `--no-camera-collision`.
 - CTest: `camera-sweep`, `camera-real-data`, `camera-sweep-real-data`, `camera-records`, `camera-records-real-data`, `camera-blend-real-data` (traces `CHASE_CAMERA_BLEND_TRACE_DIR`, scenarios `tools/oracle/camera-lobby-walk.txt`, `camera-street-teleport.txt`, converter `tools/export_camera_blend_trace.py`), `game-script-camera`.
 - Trace dirs: `CHASE_CAMERA_TRACE_DIR`, `CHASE_CAMERA_WALL_TRACE_DIR`. Scenarios: `tools/oracle/camera-trace.txt`, `camwall-circle.txt`, `camwall-east.txt`; trace export `tools/export_camera_trace.py`.

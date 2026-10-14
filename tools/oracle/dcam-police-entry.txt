@@ -1,0 +1,11 @@
+# Director camera in the street-to-lobby entry script Police_ExtToInt (docs/re/dcam.md). Needs the New 3DS state
+# dcam-police-dialog (street-at-entrance, then walking into Police_Station_Transition_Lower until the question box opens; see
+# its .json). Answers the question with A and traces the camera object, the DCam record D (*0x3768c0), the camera pointers
+# 0x376880 and the player entity every update with a fixed dt of 0.033.
+loadstate dcam-police-dialog
+frames 2
+dt 0.033 0.033
+hold A
+memtrace 3 dcam-entry-press *0x376884+0:0x100 *0x376884+0x100:0x300 *0x3768c0+0:0x40 0x376880:0x60 *0x3772b8+0:0x100
+hold -
+memtrace 330 dcam-entry-run *0x376884+0:0x100 *0x376884+0x100:0x300 *0x3768c0+0:0x40 0x376880:0x60 *0x3772b8+0:0x100

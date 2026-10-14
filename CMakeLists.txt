@@ -44,6 +44,7 @@ target_include_directories(chase_runtime PUBLIC src)
 target_compile_options(chase_runtime PRIVATE -Wall -Wextra -Wpedantic -ffp-contract=off)
 set_target_properties(chase_runtime PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_sources(chase_runtime PRIVATE src/runtime/studs.cpp src/runtime/sound_events.cpp src/runtime/music.cpp src/runtime/level_start.cpp src/runtime/script_runner.cpp src/runtime/natives_objects.cpp src/runtime/door.cpp src/runtime/scene_change.cpp src/runtime/room_streaming.cpp src/runtime/scene_start.cpp)
+target_sources(chase_runtime PRIVATE src/runtime/dcam.cpp)
 # Front end (boot to the slot list): CPU-drawn screens, no SDL dependency.
 add_library(chase_frontend src/frontend/script.cpp src/frontend/frontend.cpp src/frontend/pages.cpp src/frontend/canvas.cpp src/frontend/resources.cpp src/frontend/layout.cpp src/frontend/flow.cpp src/frontend/hud.cpp src/frontend/minimap.cpp)
 target_link_libraries(chase_frontend PUBLIC chase_assets chase_runtime)
@@ -197,6 +198,10 @@ if(BUILD_TESTING)
   target_link_libraries(scene-start-test PRIVATE chase_runtime)
   target_compile_options(scene-start-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME scene-start COMMAND scene-start-test)
+  add_executable(dcam-test tests/dcam_test.cpp)
+  target_link_libraries(dcam-test PRIVATE chase_runtime)
+  target_compile_options(dcam-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME dcam COMMAND dcam-test)
   add_executable(progress-tables-test tests/progress_tables_test.cpp)
   target_link_libraries(progress-tables-test PRIVATE chase_runtime)
   target_compile_options(progress-tables-test PRIVATE -Wall -Wextra -Wpedantic)
@@ -251,6 +256,11 @@ if(BUILD_TESTING)
   target_compile_options(level-start-real-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME level-start-real-data COMMAND level-start-real-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
   set_tests_properties(level-start-real-data PROPERTIES SKIP_RETURN_CODE 77)
+  add_executable(dcam-real-test tests/dcam_real_test.cpp)
+  target_link_libraries(dcam-real-test PRIVATE chase_runtime chase_assets)
+  target_compile_options(dcam-real-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME dcam-real-data COMMAND dcam-real-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
+  set_tests_properties(dcam-real-data PROPERTIES SKIP_RETURN_CODE 77)
   add_executable(script-dialog-real-test tests/script_dialog_real_test.cpp)
   target_link_libraries(script-dialog-real-test PRIVATE chase_runtime chase_frontend chase_assets)
   target_compile_options(script-dialog-real-test PRIVATE -Wall -Wextra -Wpedantic)
@@ -498,7 +508,7 @@ if(BUILD_TESTING)
     # Lobby exit and station entry at run time: the walk-in bound fires SceneChange_LobbyToCherryTree (update 23), A on the
     # loading page (update 36) and the switch 4 updates later; the street start is the point LobbyToCherryTree_P1 (yaw
     # 249.25 deg = heading -20161, height 16.5773, oracle traces of agent H, docs/re/streaming.md). The entry runs the script
-    # Police_ExtToInt (request at update 132) and lands at Lobby_Dest_CherryTree_P1 (height 2.0901).
+    # Police_ExtToInt (request at update 164: 123 updates after the director camera starts, as in the oracle trace of docs/re/dcam.md) and lands at Lobby_Dest_CherryTree_P1 (height 2.0901).
     add_test(NAME game-scene-change-exit COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
@@ -514,7 +524,7 @@ if(BUILD_TESTING)
       --call-script 1-1_MissionSkip --start "904.2 16.58 1112.4" --facing 45.45
       --script "0 0 10;0 145 16;0 0 14;0 0 1 A;0 0 150;0 0 1 A;0 0 6" --screenshot game-scene-change-entry.bmp)
     set_tests_properties(game-scene-change-entry PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen"
-      PASS_REGULAR_EXPRESSION "scene change requested by SceneChange_Police_ExtToInt at update 132.*scene change to WorldLevel_00_PoliceStation after 196 updates.*facing 27729, .*height 2\\.0901")
+      PASS_REGULAR_EXPRESSION "scene change requested by SceneChange_Police_ExtToInt at update 164.*scene change to WorldLevel_00_PoliceStation after 196 updates.*facing 27729, .*height 2\\.0901")
     # Standing jump in the Cherry Tree Hills street (B button for one update): the heights are the recorded rise
     # (tools/oracle/jump-ground.txt, jstand: 16.8593, 17.1297, 17.4068, 17.6840, ... to the apex 18.6815).
     add_test(NAME game-script-jump COMMAND chase-game

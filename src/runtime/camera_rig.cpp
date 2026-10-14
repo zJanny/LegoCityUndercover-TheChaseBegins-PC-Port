@@ -24,6 +24,7 @@ CameraRig::CameraRig(const assets::Level& level, const std::string& camText) : r
 
 RecordPose CameraRig::entryPose(const Entry& entry, const float target[3]) const {
     if (entry.kind == Entry::Kind::Record) return evaluateRecordPose(records_, entry.set, target);
+    if (entry.kind == Entry::Kind::Director) return directorPose_;
     RecordPose pose;
     for (int a = 0; a < 3; ++a) {
         pose.look[a] = follow_.lookAt()[a];
@@ -93,9 +94,37 @@ void CameraRig::reset(const float target[3], float yaw, float facing) {
     output_ = entry.pose;
 }
 
+void CameraRig::setDirector(const RecordPose& pose, std::vector<DirectorRequest> requests) {
+    directorPose_ = pose;
+    directorRequests_ = std::move(requests);
+}
+
+void CameraRig::snapFollow(const float target[3], float facing) { follow_.reset(target, poseYaw(output_), facing); }
+
 void CameraRig::update(const FollowCameraInput& input) {
     selector_.update(input.target);
-    if (selector_.handedOver()) {
+    std::vector<DirectorRequest> applied = std::move(delayedDirectorEnds_);
+    delayedDirectorEnds_.clear();
+    for (DirectorRequest& request : directorRequests_)
+        (request.kind == DirectorRequest::Kind::End ? delayedDirectorEnds_ : applied).push_back(std::move(request));
+    for (const DirectorRequest& request : applied) {
+        Entry entry;
+        const float rate = request.instant || request.fadeSeconds <= 0.0f ? 0.0f : 1.0f / request.fadeSeconds;
+        if (request.kind == DirectorRequest::Kind::Start) {
+            entry.kind = Entry::Kind::Director;
+        } else if (selector_.command() == CameraCommand::RecordPose) {
+            entry.kind = Entry::Kind::Record;
+            entry.set = selector_.blend();
+        } else {
+            entry.kind = Entry::Kind::Follow;
+            follow_.reset(input.target, poseYaw(output_), input.targetFacing);
+        }
+        entry.progress = 0.0f;
+        entry.progressPerSecond = rate;
+        push(std::move(entry), request.instant || request.fadeSeconds <= 0.0f);
+    }
+    directorRequests_.clear();
+    if (selector_.handedOver() && !(!stack_.empty() && stack_.front().kind == Entry::Kind::Director)) {
         Entry entry;
         if (selector_.command() == CameraCommand::RecordPose) {
             entry.kind = Entry::Kind::Record;

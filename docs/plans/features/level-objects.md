@@ -31,6 +31,8 @@ IN_PROGRESS, updated 2026-10-13T21:29:01+0200. Objects are drawn standing at the
 - [ ] LEVOBJ-7 — Vehicles, animals and the other classes without a recovered constructor are not created (shared with COLL-2).
 - [ ] LEVOBJ-8 — Objects inside class files (sub-objects such as `SBVehicleDropConsole`, `Barrier01`, `Gem`) are not instantiated, so the class `startup` scripts that enable or disable them have no effect. blocks: SCRIPT-52, SCRIPT-S14. evidence: [scene-start.md §2026-10-14T14:27](../../re/scene-start.md#ts-20261014-142739).
 
+- [ ] LEVOBJ-11 — At the police entrance (`dcam-police-dialog`, port update 60 of `Police_ExtToInt`) the port draws a large pale disc under the player that the oracle does not show; which object it is and why the original hides it is unknown (maybe LEVOBJ-1). evidence: lead review of agent L's comparison picture, 2026-10-14.
+
 ## 6. Findings summary
 
 - Object census, parameter slots, class files (+0x10/+0x14) and the model lookup: [objects.md §2026-10-13T15:39](../../re/objects.md#ts-20261013-153915).

@@ -121,9 +121,20 @@ Level parseLevel(const Bytes& data) {
     }
     Bytes s20 = r.next();
     need(s20, n20 * 0x28);
+    level.paths.resize(n20);
     for (std::size_t i = 0; i < n20; ++i) {
-        if (readU32(s20, i * 0x28 + 4)) r.skip();
-        r.skip();
+        LevelPath& path = level.paths[i];
+        path.nameHash = readU32(s20, i * 0x28);
+        path.type = s20[i * 0x28 + 8];
+        path.closed = s20[i * 0x28 + 9] != 0;
+        const std::size_t count = readU16(s20, i * 0x28 + 0xa);
+        path.unknownFloat = readF32(s20, i * 0x28 + 0x20);
+        if (readU32(s20, i * 0x28 + 4)) path.room = cString(r.next());
+        const Bytes points = r.next();
+        need(points, count * 12);
+        path.points.resize(count);
+        for (std::size_t k = 0; k < count; ++k)
+            for (std::size_t a = 0; a < 3; ++a) path.points[k][a] = readF32(points, k * 12 + a * 4);
         if (readU32(s20, i * 0x28 + 0x10)) {
             r.skip();
             r.skip();

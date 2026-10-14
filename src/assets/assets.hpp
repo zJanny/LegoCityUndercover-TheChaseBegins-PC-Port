@@ -290,7 +290,19 @@ struct RoomLinks {
     std::uint32_t roomHash = 0, worldLevelHash = 0;
     std::vector<RoomLinkEntry> linked;
 };
+// Section +0x20: 0x28-byte records looked up by name hash (0x22a3b0). The path of the script functions starts at +8:
+// +8 type (sampler table 0x358f9c; 0 is the Catmull-Rom spline 0x1c17c0), +9 closed, +0xa point count, then the points
+// (block of 12-byte vectors). `room` is the optional block at +4; `unknownFloat` is the float at +0x20 (-1 in every record).
+struct LevelPath {
+    std::uint32_t nameHash = 0;
+    std::uint8_t type = 0;
+    bool closed = false;
+    float unknownFloat = 0;
+    std::string room;
+    std::vector<std::array<float, 3>> points;
+};
 struct Level {
+    std::vector<LevelPath> paths;
     std::vector<LevelTrigger> triggers;
     std::vector<RoomLinks> roomLinks;
     std::vector<LevelParam> defaults;  // section +0x10: class default parameters (char_*.blvl carry the appearance)

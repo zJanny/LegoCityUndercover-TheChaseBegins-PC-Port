@@ -83,6 +83,21 @@ void LevelSession::updateFollowCamera(float dt) {
     input.targetFacing = runtime::headingRadians(player->motion.facing);
     input.stickTurn = runtime::stickTurnInput(pad.slot(kSlotStickX).value, game_player::kPlayerEntityType);
     input.shoulderTurn = runtime::shoulderTurnInput(pad.slot(kSlotLeftShoulder).value, pad.slot(kSlotRightShoulder).value, false);
+    runtime::DirectorCamera& director = levelScripts.director();
+    director.update(dt, [this](const std::string& object, float out[3]) {
+        if (object == "player1" && player) {
+            out[0] = player->motion.x;
+            out[1] = player->vertical.y;
+            out[2] = player->motion.z;
+            return true;
+        }
+        const std::optional<Placement> placed = objectStart(level, object);
+        if (placed)
+            for (int a = 0; a < 3; ++a) out[a] = placed->position[a];
+        return placed.has_value();
+    });
+    follow->setDirector(director.pose(), director.takeRequests());
+    if (director.takeSnapRequest()) follow->snapFollow(input.target, input.targetFacing);
     follow->update(input);
     if (follow->locked() && (pad.slot(kSlotLeftShoulder).value != 0.0f || pad.slot(kSlotRightShoulder).value != 0.0f))
         cameraLockIcon.trigger();

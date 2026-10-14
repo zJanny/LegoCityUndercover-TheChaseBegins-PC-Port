@@ -47,7 +47,7 @@ Sum: 224 unhandled natives in batches, 20 implemented, 1 stand-in (FadeScreen). 
 | TriggerObject | 0x1cddf8 | 2 | 1057 / 88 / 6 / 8 | 16 | done |  |  |
 | EnableTrigger | 0x268164 | 2 | 1050 / 160 / 18 / 18 | 14 | done |  |  |
 | = | 0x17efc0 | 2 | 856 / 102 / 29 / 4 | 9 | done |  |  |
-| StartDCam | 0x194fd8 | 5 | 665 / 121 / 6 / 0 | 11 | C | 28 |  |
+| StartDCam | 0x194fd8 | 5 | 665 / 121 / 6 / 0 | 11 | done | 28 | handled (path and path command; the other commands are not): [dcam.md §2026-10-14T14:36](dcam.md#ts-20261014-143600) |
 | PlayCharAnim | 0x1bf9cc | 4 | 625 / 96 / 0 / 0 | 10 | B | 32 | first call starts the animation; returns 1 when 0x2369c4 == 3 (shared with PlayCutscene) |
 | ? | 0x16354c | 3 | 554 / 69 / 27 / 4 | 10 | done |  |  |
 | ?? | 0x17efb8 | 0 | 554 / 69 / 27 / 4 | 10 | done |  |  |
@@ -56,7 +56,7 @@ Sum: 224 unhandled natives in batches, 20 implemented, 1 stand-in (FadeScreen). 
 | PositionObject | 0x1d9e6c | 2 | 498 / 89 / 4 / 0 | 9 | done |  |  |
 | CallScript | 0x1c3730 | 1 | 485 / 67 / 64 / 2 | 9 | done |  |  |
 | ShowDialogBG | 0x1bfb64 | 1 | 443 / 64 / 4 / 0 | 8 | C | 30 |  |
-| WaitForDCam | 0x1883ec | 0 | 429 / 120 / 4 / 0 | 10 | B | 28 | returns !0x236104 (a camera / cutscene busy test); disassembly read |
+| WaitForDCam | 0x1883ec | 0 | 429 / 120 / 4 / 0 | 10 | done | 28 | handled, busy test without the cutscene part (SCRIPT-29): [dcam.md §2026-10-14T14:36](dcam.md#ts-20261014-143600) |
 | SpawnScript | 0x1c3730 | 1 | 424 / 43 / 6 / 0 | 9 | done |  |  |
 | ShowDialogueText | 0x26ff84 | 3 | 409 / 25 / 0 / 0 | 6 | C | 30 |  |
 | AIEnable | 0x1881d4 | 2 | 404 / 74 / 2 / 0 | 10 | C | 34 |  |
@@ -65,9 +65,9 @@ Sum: 224 unhandled natives in batches, 20 implemented, 1 stand-in (FadeScreen). 
 | PlaySound | 0x1b4394 | 2 | 277 / 25 / 0 / 0 | 8 | C | 33 |  |
 | EffectFadeObject | 0x288a60 | 5 | 273 / 21 / 0 / 10 | 8 | C | 38 |  |
 | PlayAnimation | 0x268240 | 5 | 273 / 19 / 0 / 14 | 11 | C | 32 |  |
-| DCamActive | 0x1a2e48 | 2 | 261 / 24 / 0 / 0 | 9 | C | 28 |  |
+| DCamActive | 0x1a2e48 | 2 | 261 / 24 / 0 / 0 | 9 | stand-in | 28 | flag stored, readers unknown |
 | subobjectivegotoenable | 0x2adaac | 3 | 260 / 39 / 6 / 0 | 7 | C | 31 |  |
-| StartDCamTrack | 0x1da810 | 4 | 259 / 31 / 0 / 0 | 10 | C | 28 |  |
+| StartDCamTrack | 0x1da810 | 4 | 259 / 31 / 0 / 0 | 10 | stand-in | 28 | handled; look point is the placement of the object, not entity +0x60 with its node matrix |
 | ShowTipTextOnce | 0x263850 | 1 | 251 / 31 / 11 / 0 | 8 | C | 30 |  |
 | LoadAnimation | 0x2681a0 | 4 | 244 / 18 / 5 / 19 | 10 | C | 32 |  |
 | EnableCollision | 0x27e9f4 | 2 | 240 / 33 / 2 / 5 | 9 | done |  |  |
@@ -77,7 +77,7 @@ Sum: 224 unhandled natives in batches, 20 implemented, 1 stand-in (FadeScreen). 
 | registersound | 0x1cdbdc | 2 | 180 / 22 / 0 / 0 | 8 | C | 33 |  |
 | FadeScreen | 0x1a2e8c | 1 | 178 / 39 / 0 / 0 | 8 | stand-in |  |  |
 | SubObjectiveEnemyEnable | 0x2b4c3c | 3 | 152 / 37 / 0 / 0 | 5 | C | 31 |  |
-| ShakeScreen | 0x1b2690 | 3 | 149 / 4 / 0 / 1 | 10 | C | 28 |  |
+| ShakeScreen | 0x1b2690 | 3 | 149 / 4 / 0 / 1 | 10 | stand-in | 28 | arguments stored, no shake drawn |
 | !? | 0x174428 | 0 | 140 / 14 / 5 / 1 | 8 | done |  |  |
 | setmissionsummary | 0x27be98 | 1 | 133 / 20 / 5 / 0 | 8 | C | 30 |  |
 | setmissiontitle | 0x263788 | 1 | 133 / 20 / 5 / 0 | 8 | C | 30 |  |
@@ -129,7 +129,7 @@ Sum: 224 unhandled natives in batches, 20 implemented, 1 stand-in (FadeScreen). 
 | AddToSemiTransNearCameraList | 0x2cb734 | 2 | 41 / 5 / 5 / 0 | 7 | C | 38 |  |
 | enabletrafficpath | 0x27bc30 | 2 | 40 / 0 / 0 / 0 | 2 | C | 36 |  |
 | StreamRoomIn | 0x1bfba4 | 1 | 40 / 9 / 0 / 0 | 6 | C | 38 |  |
-| SnapCamera | 0x1a30fc | 0 | 39 / 15 / 2 / 0 | 7 | C | 28 |  |
+| SnapCamera | 0x1a30fc | 0 | 39 / 15 / 2 / 0 | 7 | stand-in | 28 | follow reset through FollowCamera::reset |
 | SetWeaponEnabled | 0x26fea4 | 2 | 36 / 4 / 0 / 0 | 5 | C | 35 |  |
 | UnlockCharacter | 0x263918 | 1 | 34 / 1 / 0 / 0 | 8 | A | 27 |  |
 | AISuperJump | 0x1b2344 | 3 | 31 / 9 / 0 / 0 | 7 | C | 34 |  |
@@ -160,7 +160,7 @@ Sum: 224 unhandled natives in batches, 20 implemented, 1 stand-in (FadeScreen). 
 | PlayParticlesGO | 0x27e8b4 | 6 | 15 / 2 / 0 / 4 | 2 | C | 38 |  |
 | RideableClearPath | 0x27bdcc | 1 | 14 / 0 / 0 / 0 | 1 | C | 37 |  |
 | VehicleSetTopSpeed | 0x2860d4 | 2 | 14 / 2 / 0 / 0 | 6 | C | 36 |  |
-| SetDCamEndWait | 0x1da690 | 1 | 13 / 0 / 0 / 0 | 3 | C | 28 |  |
+| SetDCamEndWait | 0x1da690 | 1 | 13 / 0 / 0 / 0 | 3 | done | 28 | handled |
 | WaitForPlatform | 0x263b84 | 1 | 13 / 3 / 0 / 0 | 5 | B | 37 | returns 1 when the platform value is 1.0 or its state is 5 |
 | AttachToBone | 0x1ddb90 | 4 | 12 / 1 / 1 / 1 | 6 | C | 32 |  |
 | EnableScanner | 0x1cd9dc | 1 | 12 / 1 / 0 / 0 | 7 | C | 31 |  |
@@ -183,7 +183,7 @@ Sum: 224 unhandled natives in batches, 20 implemented, 1 stand-in (FadeScreen). 
 | GetGameComplete | 0x2635d0 | 1 | 8 / 1 / 1 / 0 | 8 | done |  |  |
 | LockCharacter | 0x1cda60 | 1 | 8 / 0 / 0 / 0 | 6 | C | 34 |  |
 | MovePlatform | 0x1bf958 | 3 | 8 / 0 / 0 / 0 | 2 | C | 37 |  |
-| SetDCamStartWait | 0x26fdf0 | 1 | 8 / 1 / 0 / 0 | 3 | C | 28 |  |
+| SetDCamStartWait | 0x26fdf0 | 1 | 8 / 1 / 0 / 0 | 3 | done | 28 | handled |
 | SetIndestructible | 0x27be40 | 2 | 8 / 0 / 0 / 0 | 2 | A | 26 | handled, flag recorded (SCRIPT-S18) |
 | ShowRaceStart | 0x1cdc9c | 0 | 8 / 1 / 0 / 0 | 7 | C | 30 |  |
 | AIPursuit | 0x17cbf0 | 3 | 7 / 2 / 0 / 0 | 5 | C | 34 |  |
@@ -198,7 +198,7 @@ Sum: 224 unhandled natives in batches, 20 implemented, 1 stand-in (FadeScreen). 
 | VehicleSetRaceTrim | 0x286080 | 2 | 7 / 1 / 0 / 0 | 6 | C | 36 |  |
 | AICantAttack | 0x1bf528 | 2 | 6 / 0 / 0 / 0 | 1 | C | 34 |  |
 | OverrideFog | 0x1b24f8 | 2 | 6 / 0 / 0 / 0 | 2 | C | 29 |  |
-| Set3DFocusObject | 0x288aa8 | 2 | 6 / 0 / 0 / 0 | 1 | C | 28 |  |
+| Set3DFocusObject | 0x288aa8 | 2 | 6 / 0 / 0 / 0 | 1 | stand-in | 28 | stereoscopic focus only, no effect on the mono picture |
 | UnlockLevel | 0x1b276c | 1 | 6 / 1 / 0 / 0 | 6 | A | 27 |  |
 | VehicleEnableDrivingMusic | 0x2bf2b4 | 2 | 6 / 0 / 0 / 0 | 3 | C | 33 |  |
 | AttachToBoneRot | 0x1bf718 | 6 | 5 / 4 / 4 / 0 | 2 | C | 32 |  |
@@ -208,14 +208,14 @@ Sum: 224 unhandled natives in batches, 20 implemented, 1 stand-in (FadeScreen). 
 | ShowLevelText | 0x1cdc54 | 0 | 5 / 1 / 1 / 0 | 5 | C | 30 |  |
 | ShowTally | 0x194f78 | 5 | 5 / 0 / 0 / 0 | 1 | C | 30 |  |
 | VehicleSetAI | 0x1bfb50 | 1 | 5 / 1 / 0 / 0 | 5 | C | 36 |  |
-| VehicleSetDCamPathFollow | 0x27be1c | 3 | 5 / 0 / 0 / 0 | 3 | C | 28 |  |
+| VehicleSetDCamPathFollow | 0x27be1c | 3 | 5 / 0 / 0 / 0 | 3 | C | 28 | not read |
 | activeduringdcam | 0x26f978 | 2 | 4 / 0 / 0 / 0 | 3 | A | 26 | handled, flag recorded (SCRIPT-S18) |
 | AIStalkPlayer | 0x1cd88c | 2 | 4 / 0 / 0 / 0 | 1 | C | 34 |  |
 | CharSetAllowVehicleEntry | 0x29ea3c | 2 | 4 / 4 / 0 / 0 | 1 | C | 35 |  |
 | DCamCutsceneFadeDisable | 0x2c09ec | 0 | 4 / 2 / 0 / 0 | 2 | C | 29 |  |
 | DisableSuperBuiltItSave | 0x2b4b78 | 2 | 4 / 2 / 1 / 0 | 2 | A | 27 |  |
 | enablescannerbutton | 0x2915ac | 1 | 4 / 2 / 0 / 0 | 2 | C | 31 |  |
-| EndDCam | 0x17cbd4 | 0 | 4 / 0 / 0 / 0 | 2 | C | 28 |  |
+| EndDCam | 0x17cbd4 | 0 | 4 / 0 / 0 / 0 | 2 | done | 28 | handled |
 | OverrideZClip | 0x1cdb54 | 2 | 4 / 0 / 0 / 0 | 2 | C | 29 |  |
 | RideableJump | 0x1bfb28 | 1 | 4 / 0 / 0 / 0 | 1 | C | 37 |  |
 | setenergyguncolour | 0x285ffc | 2 | 4 / 0 / 0 / 0 | 1 | C | 38 |  |
@@ -226,7 +226,7 @@ Sum: 224 unhandled natives in batches, 20 implemented, 1 stand-in (FadeScreen). 
 | SuperFreeplaySwap | 0x27c0ac | 2 | 4 / 1 / 0 / 0 | 3 | C | 35 |  |
 | AIMillAbout | 0x1b22e4 | 2 | 3 / 0 / 0 / 0 | 1 | C | 34 |  |
 | AttachToRoom | 0x1ddc88 | 1 | 3 / 1 / 0 / 0 | 2 | C | 32 |  |
-| CameraFollow | 0x1bf7c8 | 0 | 3 / 1 / 0 / 0 | 3 | C | 28 |  |
+| CameraFollow | 0x1bf7c8 | 0 | 3 / 1 / 0 / 0 | 3 | C | 28 | read, not handled: [dcam.md §2026-10-14T14:36](dcam.md#ts-20261014-143600) |
 | DistanceFadeMid | 0x27e798 | 1 | 3 / 0 / 0 / 0 | 1 | A | 26 | open: node kind test, needs SCRIPT-57 |
 | PlatformSwapPath | 0x26fdc4 | 2 | 3 / 0 / 0 / 0 | 1 | C | 37 |  |
 | RelockChasePlainClothes | 0x2b4bac | 0 | 3 / 3 / 1 / 0 | 1 | C | 35 |  |
@@ -252,7 +252,7 @@ Sum: 224 unhandled natives in batches, 20 implemented, 1 stand-in (FadeScreen). 
 | 1-8_runfromarrest | 0x27bb4c | 1 | 1 / 1 / 0 / 0 | 1 | C | 35 |  |
 | AIRunAway | 0x17cc30 | 1 | 1 / 0 / 0 / 0 | 1 | C | 34 |  |
 | AwardViewer | 0x1b23e4 | 0 | 1 / 0 / 0 / 0 | 1 | C | 39 |  |
-| CameraRotFixedSet | 0x27bb9c | 4 | 1 / 0 / 0 / 0 | 1 | B? | 28 |  |
+| CameraRotFixedSet | 0x27bb9c | 4 | 1 / 0 / 0 / 0 | 1 | B? | 28 | read, not handled: [dcam.md §2026-10-14T14:36](dcam.md#ts-20261014-143600) |
 | CharacterShop | 0x1cd8e4 | 1 | 1 / 0 / 0 / 0 | 1 | C | 39 |  |
 | CharSetSkydiveMode | 0x1da6e4 | 2 | 1 / 0 / 0 / 0 | 1 | C | 35 |  |
 | DisableIcon | 0x1b2414 | 2 | 1 / 1 / 0 / 0 | 1 | C | 31 |  |
