@@ -46,6 +46,6 @@ IN_PROGRESS, updated 2026-10-13T21:29:01+0200. Runs in `chase-game` (`--gameplay
 
 ## 7. Code and tests
 
-- `src/runtime/player_intent.*`, `player_locomotion.*`, `player_vertical.*`, `player_motion.*`; `src/game.cpp`.
+- `src/runtime/player_intent.*`, `player_locomotion.*`, `player_vertical.*`, `player_motion.*`; `src/game_player.{hpp,cpp}` (rig, placement, per-update step), `src/game_level_update.cpp` (the update order), `src/game.cpp` (wiring).
 - CTest: `runtime-core`, `locomotion-real-data`, `fall-real-data`, `jump-real-data`, `slide-real-data`, `slope-real-data`, `game-script-run`, `game-script-walk`, `game-script-ledge`, `game-script-jump`.
 - Trace dirs: `CHASE_LOCO_TRACE_DIR`, `CHASE_FALL_TRACE_DIR`, `CHASE_JUMP_TRACE_DIR` (defaults under `artifacts/oracle/`). Scenarios: `tools/oracle/loco-*.txt`, `fall-*.txt`, `jump-*.txt`, `slide-ledge.txt`, `slope-run.txt`.

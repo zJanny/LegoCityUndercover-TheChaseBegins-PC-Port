@@ -34,5 +34,5 @@ S1 DONE, S3 IN_PROGRESS (the game frame function is still open). Updated 2026-10
 
 ## 7. Code and tests
 
-- `tools/extract_game.py`, `tests/test_extract_game.py`, `src/runtime/scheduler.cpp`.
+- `tools/extract_game.py`, `tests/test_extract_game.py`, `src/runtime/scheduler.cpp`. `chase-game` is split into `src/game.cpp` (wiring, at most 400 lines, CTest `game-cpp-wiring`), `src/game_options.*`, `src/game_player.*`, `src/game_doors.*` and `src/game_level.*` (`LevelSession`: level setup and the per-update step in `src/game_level_update.cpp`).
 - `python3 -m unittest discover -s tests -p 'test_*.py'`; CTest `runtime-core`.

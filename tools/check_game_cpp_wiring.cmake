@@ -1,0 +1,5 @@
+file(STRINGS "${GAME_CPP}" game_lines)
+list(LENGTH game_lines line_count)
+if(line_count GREATER 400)
+  message(FATAL_ERROR "src/game.cpp has ${line_count} lines (limit 400). It only wires features together; put new runtime logic in its own file under src/runtime/ (CLAUDE.md, section Architecture rules).")
+endif()

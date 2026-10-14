@@ -1,0 +1,185 @@
+#include "game_level.hpp"
+#include "runtime/follow_camera.hpp"
+#include "runtime/player_intent.hpp"
+#include <iostream>
+
+namespace game_level {
+using namespace chase::assets;
+using game_doors::DoorObject;
+namespace runtime = chase::runtime;
+namespace fe = chase::frontend;
+
+namespace {
+constexpr float kScriptDt = 0.033f;
+}
+
+void LevelSession::advance(const runtime::PadState& liveInput) {
+    if (script.empty()) scheduler->advance(now(), [&](float dt) { simulate(dt, liveInput); });
+    else if (updates + shared.scriptOffset < scriptLength) simulate(kScriptDt, scriptedPad(updates + shared.scriptOffset));
+}
+
+runtime::PadState LevelSession::scriptedPad(unsigned index) const {
+    runtime::PadState scripted;
+    for (const game_options::ScriptStep& step : script) {
+        if (index < step.updates) {
+            scripted.stickX = std::int16_t(step.stickX);
+            scripted.stickY = std::int16_t(step.stickY);
+            scripted.held = step.buttons;
+            break;
+        }
+        index -= step.updates;
+    }
+    return scripted;
+}
+
+void LevelSession::requestSceneChange(const runtime::SceneChangeObject* object) {
+    if (object && object->destination && sceneChangeFlow.request(*object->destination))
+        std::cout << "scene change requested by " << object->instance << " at update " << updatesForLog << '\n';
+}
+
+void LevelSession::reportUnhandled() {
+    const std::vector<std::string>& names = levelScripts.unhandledFunctions();
+    for (; reportedUnhandled < names.size(); ++reportedUnhandled)
+        std::cout << "script function without handler (continues at once): " << names[reportedUnhandled] << '\n';
+    const std::vector<std::string>& events = levelScripts.unhandledTriggerEvents();
+    for (; reportedEvents < events.size(); ++reportedEvents)
+        std::cout << "script trigger event without check (never fires): " << events[reportedEvents] << '\n';
+}
+
+void LevelSession::applyPlacement(const runtime::ScriptPlacement& request) {
+    const std::optional<Placement> target = objectStart(level, request.target);
+    if (request.object == "player1" && player && target) {
+        player->motion.x = target->position[0];
+        player->vertical.y = target->position[1];
+        player->motion.z = target->position[2];
+        player->motion.facing = game_player::headingFromDegrees(target->orientation[1]);
+        player->motion.lastIntent = player->motion.facing;
+        player->pose(scene);
+    } else {
+        std::cout << "PositionObject not applied (only the player is moved): " << request.object << " to " << request.target << '\n';
+    }
+}
+
+void LevelSession::updateDoors(const float playerPosition[3], const std::function<void(const runtime::SoundCall&)>& emit) {
+    std::vector<runtime::DoorSoundEvent> doorSounds;
+    for (DoorObject& door : doors) {
+        doorSounds.clear();
+        runtime::doorUpdate(door.state, door.params, runtime::doorZoneContains(door.placement.data(), playerPosition, door.params), doorSounds);
+        game_doors::poseDoor(scene, door);
+        for (const runtime::DoorSoundEvent& event : doorSounds) {
+            if (event.id == 0) continue;
+            if (event.action == runtime::DoorSoundEvent::Action::Play) emit({event.id, door.position, door.soundOwner});
+            else if (shared.audio) shared.audio->stop(event.id, door.soundOwner);
+        }
+    }
+}
+
+void LevelSession::updateFollowCamera(float dt) {
+    runtime::FollowCameraInput input;
+    input.dt = dt;
+    input.target[0] = player->motion.x;
+    input.target[1] = player->vertical.y;
+    input.target[2] = player->motion.z;
+    input.targetFacing = runtime::headingRadians(player->motion.facing);
+    input.stickTurn = runtime::stickTurnInput(pad.slot(kSlotStickX).value, game_player::kPlayerEntityType);
+    input.shoulderTurn = runtime::shoulderTurnInput(pad.slot(kSlotLeftShoulder).value, pad.slot(kSlotRightShoulder).value, false);
+    follow->update(input);
+    if (follow->locked() && (pad.slot(kSlotLeftShoulder).value != 0.0f || pad.slot(kSlotRightShoulder).value != 0.0f))
+        cameraLockIcon.trigger();
+    cameraLockIcon.update(dt);
+    if (hud) hud->setCameraLockAlpha(cameraLockIcon.alpha());
+    if (shared.audio) {
+        const float* eye = follow->eye();
+        const float* look = follow->lookAt();
+        shared.audio->setListener({eye[0], eye[1], eye[2]}, {look[0] - eye[0], look[1] - eye[1], look[2] - eye[2]});
+        shared.audio->update();
+    }
+}
+
+// One update of the game: the player reads the pad and the camera yaw first, then the camera moves
+// (the heading of the recorded traces is reproduced with the yaw from before the camera step).
+void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
+    pad.poll(padInput);
+    updatesForLog = updates;
+    if (sceneChangeFlow.pending()) {
+        sceneChangeFlow.update(pad.slot(kSlotConfirmButton).press > 0);
+        if (const auto due = sceneChangeFlow.takeSwitch()) switchTo = due;
+        ++updates;
+        ++updatesThisSecond;
+        return;
+    }
+    if (levelScripts.dialogOpen()) {
+        if (!dialogReported) std::cout << "script dialog opened at update " << updates << '\n';
+        dialogReported = true;
+        if (pad.slot(kSlotConfirmButton).press > 0) levelScripts.answerDialog(runtime::kDialogConfirm);
+        else if (pad.slot(kSlotCancelButton).press > 0) levelScripts.answerDialog(runtime::kDialogCancel);
+        if (!levelScripts.dialogOpen()) {
+            std::cout << "script dialog answered at update " << updates << '\n';
+            dialogReported = false;
+        }
+        ++updates;
+        ++updatesThisSecond;
+        return;
+    }
+    const auto emit = [&](const runtime::SoundCall& call) {
+        soundLog.emplace_back(updates, call.id);
+        if (shared.audio) shared.audio->play(call);
+    };
+    if (player) {
+        player->sounds.clear();
+        runtime::StickIntentInput stick;
+        stick.slot14 = {pad.slot(kSlotStickX).value, pad.slot(kSlotStickX).deadzone};
+        stick.slot15 = {pad.slot(kSlotStickY).value, pad.slot(kSlotStickY).deadzone};
+        stick.entityType = game_player::kPlayerEntityType;
+        stick.cameraYaw = follow->yaw();
+        if (hud) {
+            hud->update(dt);
+            const fe::StudSink sink = hud->studSink();
+            studs.setFlightTarget(runtime::unprojectTopScreen(sink.x, sink.y, fe::kStudSinkDepth, follow->eye(), follow->yaw(),
+                                                              follow->pitch(), follow->verticalFieldOfView()));
+        }
+        const game_player::PlayerAnimation shown =
+            game_player::updatePlayer(*player, collision, runtime::stickIntent(stick), pad.slot(kSlotJumpButton).press > 0, dt);
+        player->animate(scene, dt, shown.role, shown.scale);
+        if (!script.empty()) scriptedHeights.push_back(player->vertical.y);
+        for (const runtime::StudCollected& collected :
+             studs.update(dt, runtime::studPickupPoint(player->motion.x, player->vertical.y, player->motion.z,
+                                                       runtime::headingRadians(player->motion.facing))))
+            player->sounds.push_back(runtime::studCollectCall(collected, studs.studs()[collected.index].centre));
+        for (const runtime::SoundCall& call : player->sounds) emit(call);
+        if (hud)
+            for (const runtime::StudBanked& banked : studs.takeBanked()) hud->studsBanked(unsigned(banked.kind), banked.total);
+    }
+    if (player) {
+        const float playerPosition[3] = {player->motion.x, player->vertical.y, player->motion.z};
+        updateDoors(playerPosition, emit);
+    }
+    levelScripts.update(dt);
+    if (player) {
+        const float playerPosition[3] = {player->motion.x, player->vertical.y, player->motion.z};
+        levelScripts.checkTriggers(playerPosition);
+    }
+    reportUnhandled();
+    for (const std::string& bound : levelScripts.takeSceneChanges())
+        requestSceneChange(runtime::findSceneChange(shared.sceneChanges, currentWorldLevel.instance, bound));
+    if (player) {
+        const float playerPosition[3] = {player->motion.x, player->vertical.y, player->motion.z};
+        for (const runtime::SceneChangeObject& object : shared.sceneChanges)
+            if (!object.boundName.empty() && object.boundWorldLevel == currentWorldLevel.instance &&
+                levelScripts.playerInNamedBound(object.boundName, playerPosition))
+                requestSceneChange(&object);
+    }
+    for (const runtime::ScriptPlacement& request : levelScripts.takePlacements()) applyPlacement(request);
+    for (const runtime::ScriptObjectMessage& sent : levelScripts.takeObjectMessages())
+        for (DoorObject& door : doors)
+            if (game_doors::lowerCase(door.instance) == sent.instance)
+                runtime::doorMessage(door.state, door.params,
+                                     sent.message == runtime::kMessageTrigger ? runtime::DoorMessage::Open : runtime::DoorMessage::Close);
+    provisionalStudClockSeconds += double(dt);
+    if (follow) updateFollowCamera(dt);
+    else camera.update(dt, pad);
+    ++updates;
+    ++updatesThisSecond;
+}
+
+}

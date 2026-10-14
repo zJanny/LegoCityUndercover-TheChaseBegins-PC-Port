@@ -81,6 +81,7 @@ Single C++ tests, with `ctest --test-dir build -R <name>`:
 | `soundtest-real-smoke`, `soundtest-id-smoke` | Play one sound by file name and one by number on the dummy audio driver. Same conditions |
 | `progress-tables` | The tables behind the progress report: which script commands, object types and file types the port handles. No game data needed |
 | `progress-readme` | Fails when the progress table in `README.md` is out of date (`tools/progress_report.py --check`); skips with code 77 if `artifacts/romfs` or the built library is missing |
+| `game-cpp-wiring` | Fails when `src/game.cpp` has more than 400 lines. That file only wires features together. New game logic goes into its own file under `src/runtime/` (see `CLAUDE.md`) |
 | `doc-links` | Fails when a link in a Markdown file points to a missing file or anchor, or when a dated entry in `docs/re/` has no anchor (`tools/check_doc_links.py`) |
 | `studs-core` | Coin pickup rules on made-up coins, no game data needed |
 | `studs-real-data` | Replays coin pickups recorded from the original game (`artifacts/oracle/studs-traces`, folder set with `-DCHASE_STUDS_TRACE_DIR=...`); skips with code 77 if the traces or `artifacts/romfs` are missing |

@@ -77,6 +77,6 @@ IN_PROGRESS, updated 2026-10-14T13:36:20+02:00. `ScriptRunner` runs threads ever
 
 ## 7. Code and tests
 
-- `Level::scripts` / `triggers` / `bounds` / `boundMatrices` / `objectReferenceHash` (`src/assets/level.cpp`), `ScriptRunner` (`src/runtime/script_runner.cpp`), `levelInitialState` / `runLevelStartup` / `levelStartState` (`src/runtime/level_start.cpp`), `PlacedObjectState` (`src/assets/object_collision.*`), the runner hook and the door messages in `src/game.cpp`.
-- `ScriptRunner` dialog / placement / fade API, `objectStart` (`src/assets/level.cpp`), `drawWarningDialog` / `drawBlackVeil` (`src/frontend/pages.cpp`), `--call-script` (development option) in `src/game.cpp`.
+- `Level::scripts` / `triggers` / `bounds` / `boundMatrices` / `objectReferenceHash` (`src/assets/level.cpp`), `ScriptRunner` (`src/runtime/script_runner.cpp`), `levelInitialState` / `runLevelStartup` / `levelStartState` (`src/runtime/level_start.cpp`), `PlacedObjectState` (`src/assets/object_collision.*`), the runner hook and the door messages in `src/game_level_update.cpp`, level setup in `src/game_level.cpp`.
+- `ScriptRunner` dialog / placement / fade API, `objectStart` (`src/assets/level.cpp`), `drawWarningDialog` / `drawBlackVeil` (`src/frontend/pages.cpp`), `--call-script` (development option) in `src/game_options.cpp` and `src/game_level.cpp`.
 - CTest: `script-runner`, `script-dialog-real-data`, `game-script-dialog`, `level-start-real-data`, `collision-real-data`, `progress-tables`.

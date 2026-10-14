@@ -48,5 +48,5 @@ IN_PROGRESS, updated 2026-10-14T12:05:00+02:00. `chase-game` switches between th
 
 ## 7. Code and tests
 
-- `Level::triggers`, `LevelTrigger` (`src/assets/level.cpp`); `src/runtime/scene_change.{hpp,cpp}` (master `scenechange` objects, destination points, `SceneChangeFlow`); `ScriptRunner::takeSceneChanges` / `playerInNamedBound`; `drawSceneChangeBottom` (`src/frontend/pages.cpp`); the switch loop in `src/game.cpp`.
+- `Level::triggers`, `LevelTrigger` (`src/assets/level.cpp`); `src/runtime/scene_change.{hpp,cpp}` (master `scenechange` objects, destination points, `SceneChangeFlow`); `ScriptRunner::takeSceneChanges` / `playerInNamedBound`; `drawSceneChangeBottom` (`src/frontend/pages.cpp`); the per-update scene change flow in `src/game_level_update.cpp`, the switch loop in `src/game.cpp`, `advanceToDestination` in `src/game_level.cpp`.
 - CTest `streaming-real-data`, `scene-change-real-data`, `game-scene-change-exit`, `game-scene-change-entry`, `script-runner` (`sceneChangeIsRecorded`).
