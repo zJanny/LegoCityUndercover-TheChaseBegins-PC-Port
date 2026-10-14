@@ -141,5 +141,6 @@ The original game runs in Azahar as a measuring reference. Read `docs/re/oracle.
 - Use the cheapest model that can do the task (Haiku-class for exploration, summarisation, Graphify extraction). Keep tasks narrow, with only the needed files and constraints.
 - Do not delegate correctness-critical verification; use tests, checksums and source inspection.
 - Do not spawn subagents when a local script or the overhead outweighs the benefit.
+- An agent in a git worktree first links the main checkout's data into the worktree root: `ln -s <main checkout>/artifacts artifacts` (`artifacts/` is gitignored, so the link is never committed). Without it, real-data tests skip and `tools/progress_report.py --update-readme` refuses to run. Every agent brief tells the agent to do this.
 
 Always use current system time when putting a time into a file!
