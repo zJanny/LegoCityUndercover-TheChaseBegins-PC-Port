@@ -24,10 +24,10 @@ This starts the development runtime. It is not the game: it shows the start scre
 | Object types | 104 of 506 (20.6%) | Different object types in the levels that the port treats with recovered rules (collision, doors, studs). They cover 52.4% of all placed objects. |
 | Game files read | 99.6% of files, 99.9% of data | Files in the game archive (12836) that the port can decode, by count and by size. |
 | Open work | 126 open items, 71 stand-ins | Known gaps and temporary guesses in 23 feature areas. It has no total to reach; watch the trend. |
-| Checked against the original | 56 tests, 195 recorded traces | Automatic tests, and recordings of the original game that the tests compare with. |
-| Game code documented | 822 of about 7575 (10.8%) | Functions of the game program that the notes or the source point to. The total is an estimate. |
+| Checked against the original | 57 tests, 200 recorded traces | Automatic tests, and recordings of the original game that the tests compare with. |
+| Game code documented | 833 of about 7575 (11.0%) | Functions of the game program that the notes or the source point to. The total is an estimate. |
 
-Updated 2026-10-14, commit e985666. How the numbers are measured: [docs/progress.md](docs/progress.md).
+Updated 2026-10-14, commit a7349ae. How the numbers are measured: [docs/progress.md](docs/progress.md).
 <!-- progress:end -->
 
 ## Documentation

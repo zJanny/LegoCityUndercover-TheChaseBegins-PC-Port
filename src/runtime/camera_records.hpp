@@ -9,7 +9,7 @@
 // record pose 0x298cd8 and the shoulder buttons do not turn it.
 //
 // Not recovered: the order in which the spatial structure at 0x598300 returns the records (level order is used), the
-// fade between two poses (the settled pose is used at once), the fixed pose of a Blocker record (0x58d42c), the shake
+// fixed pose of a Blocker record (0x58d42c), the shake
 // (0x1c607c), the second follow target, the byte 0x3770c8 and the counter 0x3770e0 (both read as 0), movement of the
 // matrices that carry bounds, and which record volumes are switched off by EnableBound.
 #include "assets/assets.hpp"
@@ -79,10 +79,13 @@ public:
     // The record set of the record pose (the blend block 0x58d694: records at +0x10, weights at +0x30).
     const CameraRecordSet& blend() const { return blend_; }
     const CameraRecordSet& previous() const { return previous_; }
+    // True when the last update ran the hand-over 0x19b8c8, which pushes a new camera command.
+    bool handedOver() const { return handedOver_; }
 
 private:
     const CameraRecords* records_;
     CameraCommand command_ = CameraCommand::None;
+    bool handedOver_ = false;
     CameraRecordSet previous_, blend_;
 };
 
@@ -95,6 +98,12 @@ struct RecordPose {
 
 // 0x298cd8 for the blend block `set` and the follow target position `target`.
 RecordPose evaluateRecordPose(const CameraRecords& records, const CameraRecordSet& set, const float target[3]);
+
+// Fade time of a record pose command: the plain mean of the BlendTime of the records (0x19b8c8); 0 clears the command stack.
+float recordFadeSeconds(const CameraRecords& records, const CameraRecordSet& set);
+// Filter bytes (+0x4c eye, +0x4d look) of the first record of the set (0x19b8c8).
+std::uint8_t recordEyeFilter(const CameraRecords& records, const CameraRecordSet& set);
+std::uint8_t recordLookFilter(const CameraRecords& records, const CameraRecordSet& set);
 
 // The look-at camera of a pose: matrix 0x2ca814 builds the view direction look - eye, the word 0x376894 is its yaw.
 float poseYaw(const RecordPose& pose);

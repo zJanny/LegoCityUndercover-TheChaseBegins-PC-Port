@@ -208,7 +208,9 @@ CameraCommand CameraRecordSelector::update(const float point[3]) {
         for (int now : current.records)
             if (old == now) shares = true;
 
+    handedOver_ = false;
     const auto handOver = [&]() {
+        handedOver_ = true;
         if (current.records.size() == 1 && current.records[0] == kRoomRecord) {
             command_ = CameraCommand::Follow;
         } else {
@@ -266,6 +268,20 @@ RecordPose evaluateRecordPose(const CameraRecords& records, const CameraRecordSe
         for (int a = 0; a < 3; ++a) out.eye[a] = out.look[a] + direction[a] * distance;
     }
     return out;
+}
+
+float recordFadeSeconds(const CameraRecords& records, const CameraRecordSet& set) {
+    float sum = 0.0f;
+    for (int id : set.records) sum += records.records()[std::size_t(id)].blendTime;
+    return set.records.empty() ? 0.0f : sum / float(set.records.size());
+}
+
+std::uint8_t recordEyeFilter(const CameraRecords& records, const CameraRecordSet& set) {
+    return records.records()[std::size_t(set.records[0])].filters[0];
+}
+
+std::uint8_t recordLookFilter(const CameraRecords& records, const CameraRecordSet& set) {
+    return records.records()[std::size_t(set.records[0])].filters[1];
 }
 
 float poseYaw(const RecordPose& pose) {

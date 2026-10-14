@@ -1,0 +1,16 @@
+# Camera blend traces in the police station lobby (docs/re/camera.md). Run with --state police-station on a New 3DS emulator.
+# Regions per frame: camera object C (0x100), command stack area behind it (0x300), blend block 0x58d694, previous record set
+# 0x58d880, player node, 0x3770c0. Convert each .mem with tools/export_camera_blend_trace.py.
+loadstate police-station
+savestate camera-lobby-walk
+frames 2
+dt 0.033 0.033
+stick 0 150
+memtrace 150 camera-lobby-north 0x08501ad0:0x100 0x08501bd0:0x300 0x58d694:0x60 0x58d880:0x30 0x08568bb0:0xb0 0x3770c0:0x20
+stick 0 0
+loadstate camera-lobby-walk
+frames 2
+dt 0.033 0.033
+stick 150 0
+memtrace 130 camera-lobby-east 0x08501ad0:0x100 0x08501bd0:0x300 0x58d694:0x60 0x58d880:0x30 0x08568bb0:0xb0 0x3770c0:0x20
+stick 0 0

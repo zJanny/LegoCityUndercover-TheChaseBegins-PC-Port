@@ -1,0 +1,11 @@
+# Camera hand-over traces in the street (docs/re/camera.md): follow camera -> record pose (teleport into CameraBound_PolicePK_03)
+# and back. Run with --state street-after-1-1 on a New 3DS emulator. Convert each .mem with tools/export_camera_blend_trace.py.
+# The teleport is a measuring aid; the three traces are one continuous run.
+loadstate street-after-1-1
+frames 2
+dt 0.033 0.033
+memtrace 20 camera-street-rest *0x376884+0:0x100 *0x376884+0x100:0x300 0x58d694:0x60 0x58d880:0x30 0x08568bb0:0xb0 0x3770c0:0x20
+teleport 933 16.6 1124
+memtrace 80 camera-street-in *0x376884+0:0x100 *0x376884+0x100:0x300 0x58d694:0x60 0x58d880:0x30 0x08568bb0:0xb0 0x3770c0:0x20
+teleport 905 16.6 1110
+memtrace 80 camera-street-out *0x376884+0:0x100 *0x376884+0x100:0x300 0x58d694:0x60 0x58d880:0x30 0x08568bb0:0xb0 0x3770c0:0x20

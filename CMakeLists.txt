@@ -114,6 +114,8 @@ set(CHASE_SLOPE_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/slope-traces" CA
     "Recorded original-game run-on-slope traces for the opt-in differential test")
 set(CHASE_CAMERA_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/cam-out" CACHE PATH
     "Recorded original-game camera traces for the opt-in differential test")
+set(CHASE_CAMERA_BLEND_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/camera-blend-traces" CACHE PATH
+    "Recorded original-game camera traces of walks between camera records (exported CSV) for the opt-in blend test")
 set(CHASE_CAMERA_WALL_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/camwall-out" CACHE PATH
     "Recorded original-game camera traces near walls (.mem memtraces and exported CSV) for the opt-in differential tests")
 set(CHASE_STUDS_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/studs-traces" CACHE PATH
@@ -268,6 +270,12 @@ if(BUILD_TESTING)
   add_test(NAME camera-real-data COMMAND camera-real-test "${CHASE_CAMERA_TRACE_DIR}"
     "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv" "${CHASE_CAMERA_WALL_TRACE_DIR}")
   set_tests_properties(camera-real-data PROPERTIES SKIP_RETURN_CODE 77)
+  add_executable(camera-blend-real-test tests/camera_blend_real_test.cpp)
+  target_link_libraries(camera-blend-real-test PRIVATE chase_runtime chase_assets)
+  target_compile_options(camera-blend-real-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME camera-blend-real-data COMMAND camera-blend-real-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib"
+    "${CHASE_ROMFS_DIR}/lego_city3ds.csv" "${CHASE_CAMERA_BLEND_TRACE_DIR}")
+  set_tests_properties(camera-blend-real-data PROPERTIES SKIP_RETURN_CODE 77)
   add_executable(camera-sweep-real-test tests/camera_sweep_real_test.cpp)
   target_link_libraries(camera-sweep-real-test PRIVATE chase_runtime chase_assets)
   target_compile_options(camera-sweep-real-test PRIVATE -Wall -Wextra -Wpedantic)
