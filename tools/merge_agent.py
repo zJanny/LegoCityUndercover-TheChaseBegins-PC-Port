@@ -5,6 +5,9 @@
   merge_agent.py check                   run the checks on the staged merge (after resolving conflicts or review edits)
   merge_agent.py finish BRANCH -m FILE   run the checks, commit with the message in FILE, remove the worktree and branch
 
+Conflicts in the generated files (README progress section, docs/progress-trend.svg) are regenerated; conflicts in a session
+log archive keep the lines of both sides (check_doc_links.py --fix then drops duplicates). Other conflicts stop the merge.
+
 Checks: no game-derived or binary files staged, doc fixes (check_doc_links.py --fix, restaged), doc links, README progress section regenerated,
 warning-free build, ctest, Python tests. Pushing stays a separate, explicitly authorized step.
 """
@@ -20,10 +23,18 @@ FORBIDDEN = re.compile(
     r"(^|/)(artifacts|build[^/]*|graphify-out)(/|$)|\.(cci|3ds|cst|cia|bin|bmp|png|jpe?g|wav|bcstm|bcwav|fib|blvl|bfnmdl|dat)$",
     re.IGNORECASE,
 )
+GENERATED_FILES = ["README.md", "docs/progress-trend.svg"]
+ARCHIVE_SUFFIX = "-archive.md"
+CONFLICT_MARKER = re.compile(r"^(<<<<<<< |=======$|>>>>>>> )")
 
 
 class MergeError(Exception):
     pass
+
+
+def keep_both_sides(path: Path) -> None:
+    lines = path.read_text(encoding="utf-8").split("\n")
+    path.write_text("\n".join(line for line in lines if not CONFLICT_MARKER.match(line)), encoding="utf-8")
 
 
 def run(cmd: list[str], cwd: Path, check: bool = True, capture: bool = False) -> subprocess.CompletedProcess:
@@ -123,11 +134,16 @@ def prepare(root: Path, branch: str) -> None:
     result = run(["git", "merge", "--squash", branch], root, check=False, capture=True)
     if result.returncode != 0:
         unmerged = git(root, "diff", "--name-only", "--diff-filter=U").split()
-        if "README.md" in unmerged:
-            run(["git", "checkout", "--theirs", "README.md"], root)
+        generated = [path for path in GENERATED_FILES if path in unmerged]
+        if generated:
+            run(["git", "checkout", "--theirs", "--", *generated], root)
             run(["python3", "tools/progress_report.py", "--update-readme", "README.md"], root)
-            run(["git", "add", "README.md", "docs/progress-trend.svg"], root)
-            unmerged.remove("README.md")
+            run(["git", "add", *GENERATED_FILES], root)
+            unmerged = [path for path in unmerged if path not in generated]
+        for path in [path for path in unmerged if path.endswith(ARCHIVE_SUFFIX)]:
+            keep_both_sides(root / path)
+            run(["git", "add", path], root)
+            unmerged.remove(path)
     if result.returncode != 0 and unmerged:
         raise MergeError(
             "conflicts in: " + ", ".join(unmerged) + "\nresolve them (regenerate the README section), stage, then run: "

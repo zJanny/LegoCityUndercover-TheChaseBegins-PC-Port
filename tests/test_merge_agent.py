@@ -84,6 +84,15 @@ class MergeAgentTest(unittest.TestCase):
         self.assertIn("docs/plans/features/f.closed.md", staged)
         self.assertEqual((features / "f.md").read_text(), "- [ ] F-1 open\n")
 
+    def test_archive_conflict_keeps_both_sides(self) -> None:
+        sys.path.insert(0, str(SCRIPT.parent))
+        import merge_agent
+
+        archive = self.repo / "x.progress-archive.md"
+        archive.write_text("# Archive\n\n- old\n<<<<<<< HEAD\n- from main\n=======\n- from branch\n- old\n>>>>>>> agent\n")
+        merge_agent.keep_both_sides(archive)
+        self.assertEqual(archive.read_text(), "# Archive\n\n- old\n- from main\n- from branch\n- old\n")
+
 
 if __name__ == "__main__":
     unittest.main()
