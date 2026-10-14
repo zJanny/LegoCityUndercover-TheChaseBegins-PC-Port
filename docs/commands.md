@@ -82,7 +82,7 @@ Single C++ tests, with `ctest --test-dir build -R <name>`:
 | `progress-tables` | The tables behind the progress report: which script commands, object types and file types the port handles. No game data needed |
 | `progress-readme` | Fails when the progress table in `README.md` is out of date (`tools/progress_report.py --check`); skips with code 77 if `artifacts/romfs` or the built library is missing |
 | `game-cpp-wiring` | Fails when `src/game.cpp` has more than 400 lines. That file only wires features together. New game logic goes into its own file under `src/runtime/` (see `CLAUDE.md`) |
-| `doc-links` | Checks the documentation rules (`tools/check_doc_links.py`). It fails on a broken link or anchor, a dated entry without an anchor, a `docs/re/` file over 40 KB, a feature file over 150 lines, the feature index over 40 lines, an item or stand-in over 400 characters, `CLAUDE.md` over 12.5 KB, or a correction that is not marked at both ends. Add `--fix` to repair anchors and links. |
+| `doc-links` | Checks the documentation rules (`tools/check_doc_links.py`). It fails on a broken link or anchor, a dated entry without an anchor, a `docs/re/` file over 40 KB, a feature file over 150 lines, the feature index over 40 lines, an item or stand-in over 400 characters, `CLAUDE.md` over 20 KiB, or a correction that is not marked at both ends. Add `--fix` to repair anchors and links. |
 | `studs-core` | Coin pickup rules on made-up coins, no game data needed |
 | `studs-real-data` | Replays coin pickups recorded from the original game (`artifacts/oracle/studs-traces`, folder set with `-DCHASE_STUDS_TRACE_DIR=...`); skips with code 77 if the traces or `artifacts/romfs` are missing |
 | `audio-mixer` | Mixer core, no SDL |

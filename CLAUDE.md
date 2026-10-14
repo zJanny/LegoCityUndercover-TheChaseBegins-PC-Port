@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Guidance for Claude Code (claude.ai/code) in this repository. Keep this file to rules every agent needs (under about 12 KB); details of one subsystem go into its feature file or `docs/re/`.
+Guidance for Claude Code (claude.ai/code) in this repository. Keep this file to rules every agent needs (at most 20 KiB, checked by `doc-links`); details of one subsystem go into its feature file or `docs/re/`.
 
 ## Project
 

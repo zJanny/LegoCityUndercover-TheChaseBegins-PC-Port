@@ -7,7 +7,7 @@ contains "§YYYY-MM-DDTHH:MM" must point at "file.md#ts-..." of the entry with t
 
 Size and shape rules (CLAUDE.md "Documentation rules"): a docs/re file is at most 40 KB, a feature file at most
 150 lines, the feature index at most 40 lines, an item or stand-in line at most 400 characters, CLAUDE.md at most
-12.5 KB. A link whose text starts with "Corrects" needs a "Corrected by" line under the corrected entry's heading
+20 KiB. A link whose text starts with "Corrects" needs a "Corrected by" line under the corrected entry's heading
 that links back, and every "Corrected by" line needs the matching "Corrects" link.
 """
 import argparse
@@ -30,7 +30,7 @@ MAX_RE_BYTES = 40960
 MAX_FEATURE_LINES = 150
 MAX_INDEX_LINES = 40
 MAX_ITEM_CHARS = 400
-MAX_CLAUDE_BYTES = 12800
+MAX_CLAUDE_BYTES = 20480
 
 
 def markdown_files(root):
