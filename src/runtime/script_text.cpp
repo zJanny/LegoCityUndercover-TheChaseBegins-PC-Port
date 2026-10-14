@@ -69,10 +69,19 @@ void ScriptTextState::showDialogue(std::uint32_t key, std::uint32_t character, c
     start(dialogue_, key, seconds);
     dialogue_.character = character;
     dialogue_.speaker = speaker;
+    dialogue_.characterIntro = false;
 }
 
-void ScriptTextState::showHeading(std::uint32_t key) {
+void ScriptTextState::showCharacterIntro(std::uint32_t character) {
+    start(dialogue_, 0, kCharacterIntroSeconds);
+    dialogue_.character = character;
+    dialogue_.speaker.clear();
+    dialogue_.characterIntro = true;
+}
+
+void ScriptTextState::showHeading(std::uint32_t key, bool hintText) {
     heading_.active = true;
+    heading_.hintText = hintText;
     heading_.key = key;
     heading_.elapsed = 0;
     heading_.alpha = 0;

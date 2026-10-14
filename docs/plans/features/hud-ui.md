@@ -6,7 +6,7 @@ The in-game HUD (portrait, hearts, stud counter, studs flying to the counter, th
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-14T16:55:00+02:00. Script text: the tip panel and the level heading (bottom screen) and the dialogue box with its portrait and hexagon frame (top screen) are drawn from the script natives. `chase-game` shows the original's top-screen HUD over a 5:3 3D view and the map on the bottom screen. Hearts, counter, bounce, timing and the flight are recovered; damage, other counters and the real map code are not.
+IN_PROGRESS, updated 2026-10-14T19:00:00+02:00. Script text: the tip panel, the level and mission heading (ShowLevelText, ShowIntroText; bottom screen), the dialogue box with its portrait and hexagon frame, the character intro and the information box (top screen) are drawn from the script natives. `chase-game` shows the original's top-screen HUD over a 5:3 3D view and the map on the bottom screen. Hearts, counter, bounce, timing and the flight are recovered; damage, other counters and the real map code are not.
 
 ## 3. Verified behaviour
 
@@ -18,6 +18,7 @@ IN_PROGRESS, updated 2026-10-14T16:55:00+02:00. Script text: the tip panel and t
 - Dialogue portrait and frame: position (200 - half text width - 24 - 7, line box centre - 1) from the draw code, `heartsBG_generic` frame then the portrait, both 64x64; frame extents equal the oracle pixels (CTest `script-text-pages-real-data`): [script-text.md §2026-10-14T16:51](../../re/script-text.md#ts-20261014-165143).
 - Tip alpha: written by the update 0x2de284 (0.2 per update up while the tip state is not 0, down in state 0), so the tip stays at 1.0 through its 0.25 s fade-out state; CTest `script-text`: [script-text.md §2026-10-14T16:51](../../re/script-text.md#ts-20261014-165143).
 - Level heading box (ShowLevelText): key from TablesLevels field +8, box at (160, 30), fade 0.5 s in / 5.0 s hold / 0.5 s out; text pixels and box rows equal the oracle picture: [script-text.md §2026-10-14T16:51](../../re/script-text.md#ts-20261014-165143).
+- Heading start: ShowLevelText is the last statement of the `startup` script, so the heading begins with the first tip of 1-1 without any restart; ShowIntroText uses the same heading object with a hint text key; ShowCharacterIntro shows the character's name (gametext, `tablescharacters` column 3) in the dialogue box for 4.0 s: [script-text.md §2026-10-14T18:57](../../re/script-text.md#ts-20261014-185739).
 - Waypoint marker on the map: position (with the HUD-S10 scale), disc and ring colour measured on `gameplay-start`; CTest `waypoint-marker-position`: [objective-hud.md §2026-10-14T15:59](../../re/objective-hud.md#ts-20261014-155919).
 - `.bxaml` layouts decode; concurrent storyboards and attached layouts are supported by the shared layout code (`LayoutScene::laterStoryboards`, `attachedLayouts`).
 
@@ -33,9 +34,9 @@ IN_PROGRESS, updated 2026-10-14T16:55:00+02:00. Script text: the tip panel and t
 - HUD-S10 The map marker is placed with 0.92 of the map unit, sized 20 px disc and 11 px badge, and the pulse ring (12 to 90 px radius, 1.2 s) is a guess from stepped screenshots; markers outside the screen are not clamped. needs: HUD-16. evidence: [objective-hud.md §2026-10-14T15:59](../../re/objective-hud.md#ts-20261014-155919).
 - HUD-S11 The waypoint model is drawn static: its turning police badge and light-column animation are missing. needs: HUD-17. evidence: [objective-hud.md §2026-10-14T15:59](../../re/objective-hud.md#ts-20261014-155919).
 - HUD-S8 Fitted in the tip panel and dialogue box (`script_text_pages.cpp`): line pitch 17, glyph centre shifts (3.5, 2.5), button icon width 16. needs: HUD-21. evidence: [script-text.md §2026-10-14T15:54](../../re/script-text.md#ts-20261014-155429).
+- HUD-S14 The information box (InformationBox) reuses the warning dialog's box with an empty second button (no B icon, B ignored); size and button row for an empty text are not measured. needs: HUD-26. evidence: [script-text.md §2026-10-14T18:57](../../re/script-text.md#ts-20261014-185739).
 - HUD-S9 The dialogue background is drawn at full opacity as long as ShowDialogBG is on (no fade). needs: HUD-22. evidence: [script-text.md §2026-10-14T15:25](../../re/script-text.md#ts-20261014-152500).
 - HUD-S12 The heading text is placed 0.5 px below its position (160, 30), fitted to the oracle picture (`kHeadingTextShiftFitted`). needs: HUD-21. evidence: [script-text.md §2026-10-14T16:51](../../re/script-text.md#ts-20261014-165143).
-- HUD-S13 The heading is restarted when the scene start ends (the startup scripts call ShowLevelText while the scene starts; the original shows the heading with the first tip). needs: HUD-23. evidence: [script-text.md §2026-10-14T16:51](../../re/script-text.md#ts-20261014-165143).
 
 ## 5. Open items
 
@@ -53,8 +54,10 @@ IN_PROGRESS, updated 2026-10-14T16:55:00+02:00. Script text: the tip panel and t
 - [ ] HUD-12 — chase-game always uses the two-screen layout, also for levels without a player (placeholder camera).
 - [ ] HUD-15 — Several text kinds at once (a tip during a dialogue, a dialogue during a DCam cutscene) and the tip on the map's top-screen position are not compared with the oracle. evidence: [script-text.md §2026-10-14T15:25](../../re/script-text.md#ts-20261014-152500).
 - [ ] HUD-21 — Text origin inside the panels, the font line height and the inline button icon width (layout 0x21bc2c) replace the fitted pitch 17, shifts 3.5 / 2.5 and icon 16. blocks: HUD-S8, HUD-S12. evidence: [script-text.md §2026-10-14T15:54](../../re/script-text.md#ts-20261014-155429).
-- [ ] HUD-22 — Other text screens (ShowCharacterIntro, ShowTally, ShowIntroText, the other nine natives of SCRIPT-66) and the fade of the dialogue background. blocks: SCRIPT-66, HUD-S9. evidence: [script-text.md §2026-10-14T15:25](../../re/script-text.md#ts-20261014-152500).
-- [ ] HUD-23 — Which startup script calls ShowLevelText and what delays the original's heading to the first tip; the heading box's one pixel per side; the draw-state parameter 10 / 7 of 0x229128. blocks: HUD-S13. evidence: [script-text.md §2026-10-14T16:51](../../re/script-text.md#ts-20261014-165143).
+- [ ] HUD-22 — Remaining text screens: ShowTally, ShowBossHearts, ShowRaceStart, ShowPortraitOverVehicle (their layouts and storyboards) and the fade of the dialogue background (the flag byte 0x51a2bd has no reader found). blocks: SCRIPT-66, HUD-S9. evidence: [script-text.md §2026-10-14T18:57](../../re/script-text.md#ts-20261014-185739).
+- [ ] HUD-24 — The heading box's one pixel per side and the draw-state parameter 10 / 7 of 0x229128 (stored through 0x254d90). evidence: [script-text.md §2026-10-14T16:51](../../re/script-text.md#ts-20261014-165143).
+- [ ] HUD-25 — ShowCharacterIntro also sets the HUD's "Portrait" image to the character (0x1cc8a4); the port only shows the dialogue box with the name (HUD-S1 relates). evidence: [script-text.md §2026-10-14T18:57](../../re/script-text.md#ts-20261014-185739).
+- [ ] HUD-26 — Compare InformationBox, ShowIntroText and ShowCharacterIntro with the oracle: a state in front of the Auburn barrier and at the start of missions 1-2 and 1-4 is needed. blocks: HUD-S14. evidence: [script-text.md §2026-10-14T18:57](../../re/script-text.md#ts-20261014-185739).
 
 ## 6. Findings summary
 

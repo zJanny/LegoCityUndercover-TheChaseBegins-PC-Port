@@ -39,6 +39,7 @@ unsigned textNativeArguments(TextNativeKind kind);
 constexpr float kTipOnceSeconds = 5.0f;
 constexpr float kTipZeroDurationSeconds = 4.0f;
 constexpr float kDialogueDefaultSeconds = 4.0f;
+constexpr float kCharacterIntroSeconds = 4.0f;
 constexpr std::uint32_t kTipColour = 0xffffad4a;
 // The tip's draw alpha (float 0x51a2d4) is written by the update at 0x2de284 / 0x2de2a0: 0.2 (literal 0x2de44c) per update up while the tip
 // object's state byte (0x517f08) is not 0, down while it is 0, clamped to 0..1. State 3 lasts the object's fade-out time 0.25 s (+0x18).
@@ -57,6 +58,7 @@ constexpr float kHeadingFadeOutSeconds = 0.5f;
 
 struct HeadingText {
     bool active = false;
+    bool hintText = false;
     std::uint32_t key = 0;
     float elapsed = 0;
     float alpha = 0;
@@ -67,6 +69,7 @@ struct TimedText {
     std::uint32_t key = 0;
     std::uint32_t character = 0;   // dialogue: row of the character table 0x372e10 (portrait and name)
     std::string speaker;           // dialogue: object the line belongs to (lower case), may be empty
+    bool characterIntro = false;   // ShowCharacterIntro 0x2c2af8: the text is the character's name (gametext), not a hint text key
     float duration = 0;
     float elapsed = 0;
     float alpha = 0;
@@ -81,9 +84,9 @@ public:
     // an already visible text keeps its alpha (measured: no cross fade between consecutive tips).
     void showTip(std::uint32_t key, float seconds);
     void showDialogue(std::uint32_t key, std::uint32_t character, const std::string& speaker, float seconds);
-    void showHeading(std::uint32_t key);
-    // STAND-IN (HUD-S13): the startup scripts call ShowLevelText while the scene starts; the original shows the heading with the first tip.
-    void restartHeading() { heading_.elapsed = 0; heading_.alpha = 0; }
+    void showHeading(std::uint32_t key, bool hintText = false);
+    // ShowCharacterIntro 0x2c2af8 -> 0x1be0ac(id, 4.0): the dialogue object with the character's portrait and name; duration literal 0x2c2b50.
+    void showCharacterIntro(std::uint32_t character);
     void setDialogueBackground(bool on) { dialogueBackground_ = on; }
     void setMissionTitle(std::uint32_t key) { missionTitle_ = key; }
     void setMissionSummary(std::uint32_t key) { missionSummary_ = key; }

@@ -24,6 +24,7 @@ constexpr int kIconSizeFitted = 16;
 // STAND-IN (HUD-S12) fitted to the oracle picture: glyph centre against the text position (160, 30) of 0x254d80.
 constexpr float kHeadingTextShiftFitted = 0.5f;
 constexpr float kHeadingCentreY = 30, kHeadingHalfHeight = 12, kHeadingMargin = 15, kHeadingMaxAlpha = 240;
+constexpr unsigned kCharacterNameKeyColumn = 3;
 constexpr unsigned kLevelNameColumn = 21, kLevelHeadingKeyColumn = 11;
 constexpr float kPortraitOffsetX = -7, kPortraitOffsetY = -1;
 constexpr const char* kPortraitFrameTexture = "sprites/ui_hud/blend/images/heartsbg_generic.bpng";
@@ -77,6 +78,14 @@ std::string dialoguePortraitName(Resources& resources, unsigned character) {
     }
     if (table->sheets.empty() || character >= table->sheets[0].rows) return {};
     return assets::tableValue(table->sheets[0], character, 1).text;
+}
+
+std::uint32_t characterNameKey(Resources& resources, unsigned character) {
+    const assets::FuseEntry* entry = resources.archive().find("tables/tablescharacters.bxls");
+    if (!entry) return 0;
+    const assets::Table table = assets::parseTable(resources.archive().read(*entry));
+    if (table.sheets.empty() || character >= table.sheets[0].rows) return 0;
+    return assets::tableValue(table.sheets[0], character, kCharacterNameKeyColumn).bits;
 }
 
 std::uint32_t levelHeadingKey(Resources& resources, const std::string& levelName) {

@@ -11,6 +11,8 @@ namespace chase::frontend {
 
 // Portrait name of a row of tablescharacters.bxls sheet 0 (column 1), "" for rows 0 and 147 (0x1b13d4).
 std::string dialoguePortraitName(Resources& resources, unsigned character);
+// Gametext key of the character's name: tablescharacters.bxls sheet 0 column 3 (struct field +8 of the 40-byte rows at 0x372e10, read by 0x1b1314); 0 when the row does not exist.
+std::uint32_t characterNameKey(Resources& resources, unsigned character);
 // Button icon file for a token of the hint texts ("<east>"), empty when the token is not a button.
 std::string buttonIconFile(const std::string& token);
 

@@ -105,6 +105,41 @@ void synthetic() {
     heading.update(0.25f);
     require(!heading.heading().active, "heading over after 6.0 s");
 
+    // ShowIntroText 0x1cdc2c: the key goes through the hint text table [0x37596c] into the same heading object 0x517ec8 as ShowLevelText (0x20a4a8).
+    assets::Level intro;
+    add(intro, "i", {{"ShowIntroText", {"1122972714"}}});
+    assets::PlacedObjectState introState;
+    ScriptRunner introRunner(intro, introState);
+    introRunner.start("i");
+    require(introRunner.text().heading().active && introRunner.text().heading().hintText && introRunner.text().heading().key == 1122972714u,
+            "ShowIntroText starts the heading with a hint text key");
+
+    // ShowCharacterIntro 0x2c2af8 -> 0x1be0ac(id, 4.0): the dialogue object with the character id, shown for the literal 4.0 (0x2c2b50) with no hint text key.
+    assets::Level characterIntro;
+    add(characterIntro, "c", {{"ShowCharacterIntro", {"21"}}});
+    assets::PlacedObjectState characterState;
+    ScriptRunner characterRunner(characterIntro, characterState);
+    characterRunner.start("c");
+    require(characterRunner.text().dialogue().active && characterRunner.text().dialogue().characterIntro && characterRunner.text().dialogue().character == 21 &&
+                characterRunner.text().dialogue().duration == 4.0f,
+            "ShowCharacterIntro starts the dialogue object with the character");
+
+    // InformationBox 0x1d9d4c: opens the dialog mode with the script's key, "OK" 0xd12f028b and the empty 0xdf3cad3b; same flow as WarningDialogBox (docs/re/scripts-runtime.md
+    // §2026-10-14T10:54), blocks until the answer, writes no variable.
+    assets::Level info;
+    add(info, "b", {{"InformationBox", {"2082939282"}}, {"ShowTipTextTimed", {"5", "1"}}});
+    assets::PlacedObjectState infoState;
+    ScriptRunner infoRunner(info, infoState);
+    infoRunner.start("b");
+    require(infoRunner.dialogOpen() && infoRunner.dialog().bodyKey == 2082939282u && infoRunner.dialog().cancelKey == 0xdf3cad3bu, "InformationBox opens the dialog");
+    infoRunner.update(1.0f / 30);
+    require(infoRunner.dialogOpen() && !infoRunner.text().tip().active, "InformationBox blocks");
+    infoRunner.answerDialog(runtime::kDialogCancel);
+    require(infoRunner.dialogOpen(), "no cancel button on the information box");
+    infoRunner.answerDialog(runtime::kDialogConfirm);
+    infoRunner.update(1.0f / 30);
+    require(!infoRunner.dialogOpen() && infoRunner.text().tip().active, "InformationBox continues after A");
+
     assets::Level zero;
     add(zero, "z", {{"ShowTipTextTimed", {"1", "0"}}});
     assets::PlacedObjectState zeroState;

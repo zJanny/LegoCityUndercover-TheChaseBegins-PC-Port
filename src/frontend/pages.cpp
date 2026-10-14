@@ -296,7 +296,8 @@ void drawWarningDialog(Canvas& top, Resources& resources, const std::string& bod
         drawText(top, font, extended, lines[i], kWarnTextCentreX, kWarnFirstLineY + kWarnPitch * float(i), Align::Centre, kWarnTextColour, 0, true);
     const assets::Image& iconA = resources.image(kButtonA);
     const assets::Image& iconB = resources.image(kButtonB);
-    top.drawScaled(iconB, {0, 0, iconB.width, iconB.height}, kWarnCancelIconX - kWarnIconSize / 2, kWarnButtonY - kWarnIconSize / 2, kWarnIconSize, kWarnIconSize);
+    if (!cancel.empty())
+        top.drawScaled(iconB, {0, 0, iconB.width, iconB.height}, kWarnCancelIconX - kWarnIconSize / 2, kWarnButtonY - kWarnIconSize / 2, kWarnIconSize, kWarnIconSize);
     drawText(top, font, extended, cancel, kWarnCancelTextX, kWarnButtonY, Align::Left, kWarnTextColour, 0, true);
     drawText(top, font, extended, confirm, kWarnConfirmTextRightX, kWarnButtonY, Align::Right, kWarnTextColour, 0, true);
     top.drawScaled(iconA, {0, 0, iconA.width, iconA.height}, kWarnConfirmIconX - kWarnIconSize / 2, kWarnButtonY - kWarnIconSize / 2, kWarnIconSize, kWarnIconSize);

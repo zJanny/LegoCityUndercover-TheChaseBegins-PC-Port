@@ -156,7 +156,6 @@ LevelSession::LevelSession(const Shared& sharedState)
     if (!options.startRoom.empty()) startOptions.startRoom = runtime::roomNumber(options.startRoom);
     else if (const std::optional<Placement> start = playerStart(level)) startOptions.startRoom = runtime::roomNumber(start->room);
     const std::uint32_t startupUpdates = sceneStart.run(startOptions);
-    levelScripts.restartHeading();
     for (const std::string& name : options.callScripts)
         if (!levelScripts.start(name) && !shared.afterSwitch) throw std::runtime_error("no level script " + name);
     for (const runtime::ScriptPlacement& request : levelScripts.takePlacements()) applyPlacement(request);
@@ -279,12 +278,15 @@ void LevelSession::draw(int width, int height) {
     const runtime::ScriptTextState& scriptText = levelScripts.text();
     if (scriptText.dialogueBackground()) fe::drawDialogueBackground(mapCanvas, hudResources);
     if (scriptText.heading().active)
-        fe::drawHeadingBox(mapCanvas, hudResources, hudResources.textForKey(kGameTextFile, scriptText.heading().key), scriptText.heading().alpha);
+        fe::drawHeadingBox(mapCanvas, hudResources, hudResources.textForKey(scriptText.heading().hintText ? kHintTextFile : kGameTextFile, scriptText.heading().key), scriptText.heading().alpha);
     if (scriptText.tip().active)
         fe::drawTipPage(mapCanvas, hudResources, hudResources.textForKey(kHintTextFile, scriptText.tip().key), scriptText.tip().alpha);
     if (scriptText.dialogue().active)
         fe::drawDialogueBox(hudCanvas, hudResources, scriptText.dialogue().character,
-                            hudResources.textForKey(kHintTextFile, scriptText.dialogue().key), scriptText.dialogue().alpha);
+                            scriptText.dialogue().characterIntro
+                                ? hudResources.textForKey(kGameTextFile, fe::characterNameKey(hudResources, scriptText.dialogue().character))
+                                : hudResources.textForKey(kHintTextFile, scriptText.dialogue().key),
+                            scriptText.dialogue().alpha);
     if (levelScripts.dialogOpen()) {
         const runtime::ScriptDialog dialog = levelScripts.dialog();
         fe::drawWarningDialog(hudCanvas, hudResources, hudResources.textForKey(kGameTextFile, dialog.bodyKey),

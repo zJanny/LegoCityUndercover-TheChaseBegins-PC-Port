@@ -6,7 +6,7 @@ The objective natives (SetActiveWayPoint, SubObjectiveGoToEnable, arrows, map an
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-14T16:48:13+02:00. The 14 objective natives of batch 31 run as stand-ins: an active waypoint shows its object and a map marker. The 16 text natives of batch 30 run as stand-ins: tip text and dialogue lines are drawn with the layout of the draw code.
+IN_PROGRESS, updated 2026-10-14T19:00:00+02:00. The 14 objective natives of batch 31 run as stand-ins: an active waypoint shows its object and a map marker. The 16 text natives of batch 30 run as stand-ins: tip text, dialogue lines, headings, the character intro and the information box are drawn with the layout of the draw code.
 
 ## 3. Verified behaviour
 
@@ -16,11 +16,11 @@ IN_PROGRESS, updated 2026-10-14T16:48:13+02:00. The 14 objective natives of batc
 
 - SCRIPT-S26 SetActiveWayPoint shows or hides the waypoint object (disable always applies) and SubObjectiveGoToEnable keeps the registry group without its marker effect. needs: SCRIPT-71, SCRIPT-74. evidence: [objective-hud.md §2026-10-14T15:59](../../re/objective-hud.md#ts-20261014-155919).
 - SCRIPT-S27 Twelve batch 31 natives (arrows, minimap wipe, scanner, pan map, map dummy, blackout, DisableIcon) only record call counts and last values. needs: SCRIPT-72, SCRIPT-73. evidence: [objective-hud.md §2026-10-14T15:59](../../re/objective-hud.md#ts-20261014-155919).
-- SCRIPT-S23 The 16 batch 30 natives are stand-ins: tip text, dialogue line and dialogue background are drawn with the layout of the draw code (fitted rest HUD-S8) and the measured five-update tip fade; mission title and summary only store the key; the other nine only count calls. needs: SCRIPT-66. evidence: [script-text.md §2026-10-14T15:25](../../re/script-text.md#ts-20261014-152500).
+- SCRIPT-S23 The 16 batch 30 natives are stand-ins: tip text, dialogue line and dialogue background are drawn with the layout of the draw code (fitted rest HUD-S8) and the measured five-update tip fade; mission title and summary only store the key; ShowIntroText, ShowCharacterIntro and InformationBox follow the handlers (HUD-S14 for the box); the other five only count calls. needs: SCRIPT-66. evidence: [script-text.md §2026-10-14T15:25](../../re/script-text.md#ts-20261014-152500).
 
 ## 5. Open items
 
-- [ ] SCRIPT-66 — ShowIntroText, ShowCharacterIntro, ShowTally, ShowBossHearts, ShowRaceStart, InformationBox, ShowPortraitOverVehicle, showinfopointer only count their calls; their screens are not drawn (ShowLevelText is drawn since 2026-10-14). needs: HUD-22. evidence: [script-text.md §2026-10-14T15:25](../../re/script-text.md#ts-20261014-152500).
+- [ ] SCRIPT-66 — ShowTally, ShowBossHearts, ShowRaceStart, ShowPortraitOverVehicle and showinfopointer only count their calls; their screens are not drawn (ShowLevelText, ShowIntroText, ShowCharacterIntro and InformationBox are drawn since 2026-10-14). needs: HUD-22. evidence: [script-text.md §2026-10-14T15:25](../../re/script-text.md#ts-20261014-152500).
 - [ ] SCRIPT-67 — SetMissionTitle / SetMissionSummary store the key (0x375f98 / 0x375f9c); no reader found, so the title and summary are not shown (pause screen, map?). needs: HUD-5. evidence: [script-text.md §2026-10-14T15:25](../../re/script-text.md#ts-20261014-152500).
 - [ ] SCRIPT-68 — The skip byte 0x37751c of both tip natives (1 = no tip) is not modelled (treated as 0, the value in the oracle). evidence: [script-text.md §2026-10-14T15:25](../../re/script-text.md#ts-20261014-152500).
 - [ ] SCRIPT-69 — The speaker object of the dialogue natives (0x17cc58) and the follow-up call 0x1ffaac (player row == id) are not modelled; the speaker is only stored. evidence: [script-text.md §2026-10-14T15:25](../../re/script-text.md#ts-20261014-152500).

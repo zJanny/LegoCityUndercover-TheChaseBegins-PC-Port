@@ -69,6 +69,9 @@ struct ScriptDialog {
     std::uint32_t confirmKey = 0xd12f028b;
     std::uint32_t cancelKey = 0x994b0cc9;
 };
+// InformationBox 0x1d9d4c opens the same mode with the script's gametext key, systemtext 0xd12f028b "OK" and systemtext 0xdf3cad3b (empty text);
+// it takes no result variable. STAND-IN HUD-S14: the buttons the mode offers for an empty cancel text are not read.
+constexpr std::uint32_t kInformationBoxCancelKey = 0xdf3cad3b;
 constexpr int kDialogCancel = 1;
 constexpr int kDialogConfirm = 2;
 
@@ -142,7 +145,7 @@ public:
     // WarningDialogBox: true from the first call until the script has taken the answer. The host draws the dialog and
     // answers it with answerDialog (kDialogConfirm or kDialogCancel); the script reads the result at its next update.
     bool dialogOpen() const { return dialogOpen_ && !dialogAnswered_; }
-    ScriptDialog dialog() const { return {}; }
+    ScriptDialog dialog() const { return dialog_; }
     void answerDialog(int result);
     // Positions requested since the last call, in order (the host moves the nodes).
     std::vector<ScriptPlacement> takePlacements();
@@ -163,7 +166,6 @@ public:
     // Tip text, dialogue lines, dialogue background, mission title and summary (script_text.hpp).
     const ScriptTextState& text() const { return text_; }
     // Key of the level name in gametext (TablesLevels field +8 of the level's row); 0 shows no heading for ShowLevelText.
-    void restartHeading() { text_.restartHeading(); }
     void setLevelHeadingKey(std::uint32_t key) { levelHeadingKey_ = key; }
     // Waypoints and sub-objective groups switched on by the level scripts (objectives.hpp).
     const ObjectiveState& objectives() const { return objectives_; }
@@ -183,6 +185,7 @@ private:
     void finish(ScriptThread& thread);
     void killScript(const ScriptThread& caller, const std::string& name);
     void progressNative(const assets::ScriptCall& call);
+    std::uint32_t textKeyOf(const std::string& token);
     void textNative(const assets::ScriptCall& call);
     void objectiveNative(const assets::ScriptCall& call);
     void aiNative(const assets::ScriptCall& call);
@@ -214,6 +217,7 @@ private:
     std::vector<std::string> unhandledEvents_;
     ObjectPositionSource objectPosition_;
     float dt_ = 0;
+    ScriptDialog dialog_;
     bool dialogOpen_ = false;
     bool dialogAnswered_ = false;
     int dialogResult_ = 0;

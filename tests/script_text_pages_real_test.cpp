@@ -126,5 +126,7 @@ int main(int argc, char** argv) {
     require(borderTop == 6 && borderBottom == 53, "heading box border rows 6..53 at column 160");
     require(levelHeadingKey(resources, "lvl_01_cherrytreehills") == 2004168849u && levelHeadingKey(resources, "lvl_missing") == 0,
             "level heading key: TablesLevels field +8 of the row (oracle memory 0x20a4a8 call, gametext 2004168849 = Cherry Tree Hills)");
+    require(characterNameKey(resources, 9) == 0xe1924407u && characterNameKey(resources, 10) == 0x8003758fu && characterNameKey(resources, 9999) == 0,
+            "character name key: tablescharacters column 3 (struct +8 read by 0x1b1314), gametext e1924407 = Chase McCain, 8003758f = Police Chief Gleeson (tools/convert_loc.py on gametext_uk.loc)");
     return failures ? EXIT_FAILURE : EXIT_SUCCESS;
 }

@@ -21,7 +21,7 @@ std::string lower(std::string text) {
 enum class Word {
     Unhandled, If, Else, ElseIf, EndIf, Assign, AssignArithmetic, CallScript, SpawnScript, Wait,
     EnableObject, EnableCollision, TriggerObject, EnableTrigger, EnableBound, GetGameComplete, IsLevelUnlocked, IsRedBrickExtraActive,
-    WarningDialogBox, FadeScreen, PositionObject, SceneChange,
+    WarningDialogBox, InformationBox, FadeScreen, PositionObject, SceneChange,
     KillScript, ObjectNative, ProgressNative, TextNative, ObjectiveNative, AiNative,
     StartDCam, StartDCamTrack, DCamActive, WaitForDCam, EndDCam, SnapCamera, ShakeScreen, Set3DFocusObject, SetDCamStartWait, SetDCamEndWait
 };
@@ -51,6 +51,7 @@ constexpr ScriptFunction kScriptFunctions[] = {
     {"islevelunlocked", Word::IsLevelUnlocked, false},
     {"isredbrickextraactive", Word::IsRedBrickExtraActive, false},
     {"warningdialogbox", Word::WarningDialogBox, false},
+    {"informationbox", Word::InformationBox, true},
     {"fadescreen", Word::FadeScreen, true},
     {"positionobject", Word::PositionObject, false},
     {"scenechange", Word::SceneChange, false},
@@ -415,8 +416,22 @@ ScriptRunner::Result ScriptRunner::native(ScriptThread& thread, const ScriptCall
     case Word::AiNative:
         aiNative(call);
         break;
+    case Word::InformationBox:
+        if (!(thread.flags & kScriptBlocked)) {
+            if (args.empty()) break;
+            dialog_ = ScriptDialog{textKeyOf(args[0]), ScriptDialog{}.confirmKey, kInformationBoxCancelKey};
+            dialogOpen_ = true;
+            dialogAnswered_ = false;
+            dialogResult_ = 0;
+            return Result::Block;
+        }
+        if (!dialogAnswered_) return Result::Block;
+        dialogOpen_ = false;
+        dialogAnswered_ = false;
+        break;
     case Word::WarningDialogBox:
         if (!(thread.flags & kScriptBlocked)) {
+            dialog_ = ScriptDialog{};
             dialogOpen_ = true;
             dialogAnswered_ = false;
             dialogResult_ = 0;
@@ -467,17 +482,18 @@ void ScriptRunner::progressNative(const ScriptCall& call) {
     variables_[assets::nameHash(args[first + shape.values])] = output;
 }
 
+std::uint32_t ScriptRunner::textKeyOf(const std::string& token) {
+    if (!token.empty() && std::all_of(token.begin(), token.end(), [](unsigned char c) { return std::isdigit(c); }))
+        return std::uint32_t(std::stoull(token));
+    return std::uint32_t(read(token));
+}
+
 void ScriptRunner::textNative(const ScriptCall& call) {
     const auto kind = textNativeKind(lower(call.function));
     if (!kind) return;
     const auto& args = call.arguments;
     if (args.size() < textNativeArguments(*kind)) return;
-    const auto key = [&](std::size_t index) {
-        const std::string& token = args[index];
-        if (!token.empty() && std::all_of(token.begin(), token.end(), [](unsigned char c) { return std::isdigit(c); }))
-            return std::uint32_t(std::stoull(token));
-        return std::uint32_t(read(token));
-    };
+    const auto key = [&](std::size_t index) { return textKeyOf(args[index]); };
     switch (*kind) {
     case TextNativeKind::ShowTipTextOnce: text_.showTip(key(0), kTipOnceSeconds); break;
     case TextNativeKind::ShowTipTextTimed: text_.showTip(key(0), read(args[1])); break;
@@ -488,6 +504,8 @@ void ScriptRunner::textNative(const ScriptCall& call) {
         if (levelHeadingKey_) text_.showHeading(levelHeadingKey_);
         else text_.record(*kind, {});
         break;
+    case TextNativeKind::ShowCharacterIntro: text_.showCharacterIntro(std::uint16_t(read(args[0]))); break;
+    case TextNativeKind::ShowIntroText: text_.showHeading(key(0), true); break;
     case TextNativeKind::SetMissionTitle: text_.setMissionTitle(key(0)); break;
     case TextNativeKind::SetMissionSummary: text_.setMissionSummary(key(0)); break;
     default: {
@@ -548,6 +566,7 @@ void ScriptRunner::killScript(const ScriptThread& caller, const std::string& nam
 
 void ScriptRunner::answerDialog(int result) {
     if (!dialogOpen_ || dialogAnswered_) return;
+    if (result == kDialogCancel && dialog_.cancelKey == kInformationBoxCancelKey) return;
     dialogResult_ = result;
     dialogAnswered_ = true;
 }
