@@ -22,7 +22,7 @@ enum class Word {
     Unhandled, If, Else, ElseIf, EndIf, Assign, AssignArithmetic, CallScript, SpawnScript, Wait,
     EnableObject, EnableCollision, TriggerObject, EnableTrigger, EnableBound, GetGameComplete, IsLevelUnlocked, IsRedBrickExtraActive,
     WarningDialogBox, InformationBox, FadeScreen, PositionObject, PositionPlayer, SceneChange,
-    KillScript, ObjectNative, ProgressNative, TextNative, ObjectiveNative, AiNative,
+    KillScript, ObjectNative, ProgressNative, TextNative, ObjectiveNative, AiNative, AnimationNative,
     StartDCam, StartDCamTrack, DCamActive, WaitForDCam, EndDCam, SnapCamera, ShakeScreen, Set3DFocusObject, SetDCamStartWait, SetDCamEndWait
 };
 
@@ -77,7 +77,8 @@ Word wordOf(const std::string& function) {
     if (progressNativeKind(name)) return Word::ProgressNative;
     if (textNativeKind(name)) return Word::TextNative;
     if (objectiveNativeKind(name)) return Word::ObjectiveNative;
-    return aiNativeKind(name) ? Word::AiNative : Word::Unhandled;
+    if (aiNativeKind(name)) return Word::AiNative;
+    return animationNativeKind(name) ? Word::AnimationNative : Word::Unhandled;
 }
 
 std::string unquoted(const std::string& text) {
@@ -151,6 +152,7 @@ ScriptFunctionSupport scriptFunctionSupport(const std::string& name) {
     if (const auto kind = objectiveNativeKind(key))
         return objectiveNativeIsStandIn(*kind) ? ScriptFunctionSupport::StandIn : ScriptFunctionSupport::Implemented;
     if (aiNativeKind(key)) return ScriptFunctionSupport::StandIn;
+    if (animationNativeKind(key)) return ScriptFunctionSupport::StandIn;
     return ScriptFunctionSupport::None;
 }
 
@@ -162,6 +164,7 @@ std::vector<std::string> handledScriptFunctions() {
     for (const std::string& name : textNativeNames()) names.push_back(name);
     for (const std::string& name : objectiveNativeNames()) names.push_back(name);
     for (const std::string& name : aiNativeNames()) names.push_back(name);
+    for (const std::string& name : animationNativeNames()) names.push_back(name);
     return names;
 }
 
@@ -418,6 +421,9 @@ ScriptRunner::Result ScriptRunner::native(ScriptThread& thread, const ScriptCall
     case Word::AiNative:
         aiNative(call);
         break;
+    case Word::AnimationNative:
+        animationNative(call);
+        break;
     case Word::InformationBox:
         if (!(thread.flags & kScriptBlocked)) {
             if (args.empty()) break;
@@ -548,6 +554,18 @@ void ScriptRunner::aiNative(const ScriptCall& call) {
         else numbers.push_back(read(args[i]));
     }
     ai_.run(*kind, names, numbers);
+}
+
+void ScriptRunner::animationNative(const ScriptCall& call) {
+    const auto kind = animationNativeKind(lower(call.function));
+    if (!kind) return;
+    std::vector<std::string> args;
+    std::vector<float> numbers;
+    for (const std::string& token : call.arguments) {
+        args.push_back(unquoted(token));
+        numbers.push_back(read(token));
+    }
+    animation_.apply(*kind, args, numbers);
 }
 
 void ScriptRunner::fireAiMoveEvents() {

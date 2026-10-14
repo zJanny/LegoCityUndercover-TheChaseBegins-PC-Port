@@ -28,6 +28,9 @@ A scenario file drives the run, one command per line ('#' starts a comment):
   trap ADDR[,ADDR...] N NAME
                         advance N frames with execution breakpoints at the addresses and write the registers and
                         32 stack words of every stop to NAME.txt
+  ctrace ADDR[,ADDR...] N NAME
+                        like trap but lean: one 'g' packet per stop, one line 'frame pc r0..r15' per stop in NAME.txt
+                        (no stack and no pointed memory; use it for call-order traces with many stops per update)
   teleport X Y Z        write the world and local translation of the player node (a measuring aid: places the player
                         at a ledge without walking there; the node's parent has an identity transform at gameplay-start)
   dt MIN MAX            write the scheduler's dt limits (floats at C+0x10 and C+0x14); MIN == MAX fixes the step
@@ -756,6 +759,11 @@ class Oracle:
 
     def record_watch_hit(self, pc):
         r = self.remote
+        if getattr(self, 'lean_stops', False):
+            packet = r.command('g')
+            registers = list(struct.unpack('<16I', bytes.fromhex(packet[:128])))
+            self.watch_hits.append({'frame': self.frame, 'pc': pc, 'registers': registers, 'stack': (), 'fields': {}, 'pointed': {}})
+            return
         fields = r.last_stop[1] if r.last_stop else {}
         registers = [r.register(index) for index in range(16)]
         stack = r.read(registers[13], 0x80)
@@ -777,6 +785,13 @@ class Oracle:
 
     def trap(self, addresses, count, name):
         self.record_stops(count, name, breakpoints=addresses)
+
+    def ctrace(self, addresses, count, name):
+        self.lean_stops = True
+        try:
+            self.record_stops(count, name, breakpoints=addresses)
+        finally:
+            self.lean_stops = False
 
     def record_stops(self, count, name, watchpoint=None, breakpoints=()):
         path = self.output / ('%s.txt' % name)
@@ -1189,6 +1204,8 @@ def run_scenario(oracle, lines):
             oracle.watch(int(args[0], 0), int(args[1], 0), int(args[2]), args[3], int(args[4]) if args[4:] else 2)
         elif op == 'trap':
             oracle.trap([int(a, 0) for a in args[0].split(',')], int(args[1]), args[2])
+        elif op == 'ctrace':
+            oracle.ctrace([int(a, 0) for a in args[0].split(',')], int(args[1]), args[2])
         elif op == 'dt':
             oracle.set_dt(float(args[0]), float(args[1]))
         elif op == 'teleport':

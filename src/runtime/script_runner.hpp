@@ -3,6 +3,7 @@
 // 0x169254 that the gameplay update 0x2e5158 calls for every resident scene, and the executor 0x234204 with the
 // script words, Wait 0x174604, CallScript / SpawnScript 0x1c3730 and the natives that have a handler. No SDL dependency.
 #include "assets/object_collision.hpp"
+#include "runtime/natives_animation.hpp"
 #include "runtime/natives_objects.hpp"
 #include "runtime/ai.hpp"
 #include "runtime/dcam.hpp"
@@ -172,6 +173,8 @@ public:
     // AI state the AI natives wrote and the move orders they started (ai.hpp).
     AiCore& ai() { return ai_; }
     const AiCore& ai() const { return ai_; }
+    // Animation and attach requests of the batch SCRIPT-32 natives (natives_animation.hpp).
+    const AnimationNativeState& animation() const { return animation_; }
 
 private:
     enum class Result { Continue, Block };
@@ -189,6 +192,7 @@ private:
     void textNative(const assets::ScriptCall& call);
     void objectiveNative(const assets::ScriptCall& call);
     void aiNative(const assets::ScriptCall& call);
+    void animationNative(const assets::ScriptCall& call);
     void fireAiMoveEvents();
     float read(const std::string& token) const;
     bool holds(const assets::ScriptCall& call) const;
@@ -229,6 +233,7 @@ private:
     std::uint32_t levelHeadingKey_ = 0;
     ObjectiveState objectives_;
     AiCore ai_;
+    AnimationNativeState animation_;
     float fadeLevel_ = 1.0f, fadeStart_ = 1.0f, fadeTarget_ = 1.0f, fadeElapsed_ = 0;
     DirectorCamera director_;
 };

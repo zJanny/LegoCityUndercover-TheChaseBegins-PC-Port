@@ -40,6 +40,8 @@ Read this index, then open only the file you need.
 | [script-natives.md](script-natives.md) | Census of all script natives: handler addresses, argument counts, call counts per level, classes A-D and the work batches SCRIPT-26 to SCRIPT-39 |
 | [script-natives-flags.md](script-natives-flags.md) | Batch 26 handlers (object flags, KillScript, class messages): split from script-natives.md |
 | [script-natives-progress.md](script-natives-progress.md) | Batch SCRIPT-27: handlers of the progress, save and stud natives, the slot bytes they use |
+| [script-natives-animation.md](script-natives-animation.md) | Batch SCRIPT-32: handlers of the 13 animation and attach natives (PlayCharAnim 0x29e5f0, PlayAnimation, LoadAnimation, the WaitForCurrent natives, Attach*), corrects the census row of PlayCharAnim |
+| [scripts-missions.md](scripts-missions.md) | Mission gap analysis: the natives and trigger events a whole mission needs, oracle trace of the start of mission 1-2 (waypoint class starts the script, call order and counts) |
 | [doors.md](doors.md) | Doors (type 42): record, update 0x1d16b8, state change, messages, easing, hinge and slide pose, timings measured in the oracle |
 | [studs.md](studs.md) | Studs (collectible coins): pickup pool records, sprite sheet drawing and spin, pickup radius and skip counter, collect timer, counter values and limits, stand-ins |
 | [hud.md](hud.md) | In-game HUD: layouts, portrait, hearts (SetHearts, loop rule, health default), stud bar (state machine, formatting, icon bounce, no roll-up for pickups), flying studs (law, unprojection, sinks), bottom-screen map placement |

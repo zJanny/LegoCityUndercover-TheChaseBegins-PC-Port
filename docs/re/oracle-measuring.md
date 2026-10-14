@@ -31,3 +31,11 @@ Watchpoints, execution traps, fixed dt, memory traces, poke, and the limits of t
 - `poke ADDR HEXBYTES` writes bytes at ADDR through the GDB stub (`M` packet; the stub clears the instruction cache). It is a measuring aid to send an object a request that its script would send, for example the target state of a door (record+4 = 2 opens it; docs/re/doors.md). A poked state is never saved as a reference state: the traces were taken from `gameplay-start` after a `loadstate`, the poke followed it in the same scenario, and every scenario starts with `loadstate`, which discards the poke.
 - Pitfall: a scenario killed during a long `trace` (a `pkill` of the tool) took the emulator with it once; use `--stop` and relaunch with `--state`.
 - A long stepped `trace` with the OpenGL renderer and `stick` input took about 3 s per update in this session (`frames 90` plus a 30-update trace for each of two runs: 394 s).
+
+<a id="ts-20261014-214025"></a>
+
+## 2026-10-14T21:40:25+02:00 — `ctrace`: lean call-order trace of the script executor
+
+- `ctrace ADDR[,ADDR...] N NAME` is `trap` without the stack dump and the pointed-memory reads: one GDB `g` packet per stop, written as `frame N pc 0x... ` plus the 16 registers to `NAME.txt`. A `trap` stop costs about 30 round trips; `ctrace` about 8, so a trace with many stops per update (the script executor) runs at about 1 s per update.
+- Use: `ctrace 0x2342b4,0x22ce9c,0x23cee8 N NAME` at the state `mission-1-2-start`: 0x2342b4 is the executor's `blx r2` of the native handler (r2 = handler address, r7 = thread record), 0x22ce9c a thread creation (lr tells the caller), 0x23cee8 the trigger event firer. Mapping the handler addresses to names with the census of [script-natives.md](script-natives.md) gives the call order. Findings: [scripts-missions.md §2026-10-14T21:39](scripts-missions.md#ts-20261014-213921).
+- Pitfalls met: a scenario that releases the stick before the trigger is reached traces nothing; a trap list with a stop in every update needs `dt 0.033 0.033` to keep updates comparable with the port; `pkill -f` with a pattern that also matches the calling shell kills the shell.
