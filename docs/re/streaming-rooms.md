@@ -6,6 +6,8 @@ The per-update rule that decides which rooms of a world level are requested, loa
 
 ## 2026-10-14T14:00:18+02:00 — The request rule: neighbour list plus three view-ranked preloads (REA not used for this entry; llvm-objdump `--mcpu=arm1176jzf-s` on `artifacts/game/game.arm.elf`, Azahar oracle New 3DS, GDB reads and `memtrace`, no RPC)
 
+Corrected by [§2026-10-14T15:07:48](#ts-20261014-150748): the room node position is the centre of the vertex box of meshes 1 and up (all 43 rooms), not mesh 0's centre plus an offset.
+
 [Corrects streaming.md §2026-10-14T11:13](streaming.md#ts-20261014-111312) (the "rank" remark and the seven-room reading). All addresses are for the reference build.
 
 **Per-update chain (scene room update 0x197794)**
@@ -42,3 +44,25 @@ Unknowns:
 - Whether the ranking uses a room's loaded state in the same update as its load completion (timing of the load: 9 updates for Room16, 7 to 13 for the preloads, async, depends on the host).
 - The handling of the `lvl_05` records (54 records, world level hash 0, all lists empty) and of the `root` record in 0x173f94: the root of each scene is requested by 0x2af6b0, the effect of the records is not shown.
 - The cases of a room with more than 32 neighbours (the tables hold 32 entries) were not checked.
+
+<a id="ts-20261014-150748"></a>
+
+## 2026-10-14T15:07:48+02:00 — Room node position from the room model, and room streaming in chase-game (llvm-objdump on `artifacts/game/game.arm.elf`, data probes with `chase_assets`; no emulator run)
+
+Position of the room node ([room+0x14]+0xa0), the input of the ranking:
+- Fit, checked for all 43 rooms of WorldLevel_01_CherryTreeHills against the 43 oracle values of the 2026-10-14T14:00 entry: the centre of the vertex bounding box (min and max over the vertex positions in model space) of every mesh of `models/lvl_01_cherrytreehills/roomN.bfnmdl` except mesh 0. All 129 values agree to under 0.01 (float rounding). Mesh 0 is the small marker mesh at the room's origin corner (half extents 1.25, y -48.76, a quad); including it, or using the mesh centres and half extents of the model header, does not fit (e.g. Room2 y 47.83 instead of 69.27). Replica: `roomBoxOf`, `roomBoxesOf` in `src/runtime/room_streaming.cpp`; the test `room-streaming-real-data` derives all 43 positions and compares them to the oracle table.
+- [Corrects §2026-10-14T14:00:18](#ts-20261014-140018) (the room position remark: x/z from mesh 0, y open): the node is the box centre of mesh 1 and up, not mesh 0's centre plus an offset.
+- The code that fills +0xa0 was not found; the fit is a stand-in (WSTREAM-S3).
+
+Current room:
+- Static writers of the current-room global 0x376c78 (literal pool scan of `code.bin` for the value and the stores through the loaded register): only 0x2e6354 (in the player-start loader 0x2e6264: the room of `Player1Start` from 0x213284 is stored) and 0x3035c0 (teardown, stores 0). What changes the room later (update 28 of walk1, Room7 to Room8) was not found; it may be written through a computed address. The port takes the room whose model box (x, z) contains the player (smallest area when several do, e.g. Room13 and Room43 are large); this reproduces the current room of all five oracle readings (WSTREAM-S4).
+
+Port runtime (`src/runtime/room_streamer.{hpp,cpp}`, `src/game_level_rooms.cpp`):
+- The level load settles the wanted set instantly around the start (the load screen; reproduces the 9 rooms of `street-at-entrance` +1 update and, from the default start in Room8, the 12 rooms read at gameplay-start in [streaming.md §2026-10-13T22:27](streaming.md#ts-20261013-222700)). Every update: the load flags finished 9 updates after their request become loaded, the room is chosen, `planRoomStreaming` runs on the loaded set, rooms that left the wanted set unload at once, new requests start loading. Replayed in `room-streaming-real-data`: the walk1 step (Room16 requested at update 1, loaded at update 10, the 28 to 37 of the trace) and the sets of `wstream-walk-b`, `-c`, `-d` reached in order from `wstream-room8-settled`.
+- A not loaded room's model instance and the placed objects of that room are not drawn; the bound rule of the script runner (+0xb) counts only loaded rooms after the settle. Characters (`addLevelCharacters`) and studs of unloaded rooms are still drawn.
+- The load time of 9 updates is the one measured for Room16 (7 to 13 for the preloads); all requested rooms load at the same time. What the original draws for a room in state 1 (nothing, so far as the scene list shows) was not measured.
+
+Unknowns:
+- The code that fills the room node position, and the writer of the current room after the level start.
+- Load time per room and whether loads run in parallel or in priority order (the resource queue 0x52cf1c is sorted by priority).
+- Whether characters and studs of unloaded rooms are hidden in the original.

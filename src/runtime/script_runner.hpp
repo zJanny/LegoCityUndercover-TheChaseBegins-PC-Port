@@ -127,6 +127,7 @@ public:
     // its room is loaded. Room names compare without case. No room is loaded until one is set.
     void setRoomLoaded(const std::string& room, bool loaded);
     void setAllRoomsLoaded();
+    void clearAllRoomsLoaded() { allRoomsLoaded_ = false; }
     bool boundActive(std::size_t bound) const;
     // Trigger events whose check is not transcribed, by name, in the order they were first met.
     const std::vector<std::string>& unhandledTriggerEvents() const { return unhandledEvents_; }

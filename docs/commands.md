@@ -108,6 +108,7 @@ Single C++ tests, with `ctest --test-dir build -R <name>`:
 | `front-game-smoke`, `front-game-handoff`, `frontshot-real-smoke` | Run the start screens with a scripted pad: to the language list, through every screen into the level, and offscreen with `chase-frontshot`. Registered only if `artifacts/romfs` existed at configure time |
 | `hud-real-data` | The display during play: the stud bar's timing against a recorded pickup (`artifacts/oracle/hud-traces`, folder set with `-DCHASE_HUD_TRACE_DIR=...`), the icon bounce, the hearts, pictures of the display and the map screen; skips with code 77 if `artifacts/romfs` is missing and without the trace compares only the numbers pinned in the test |
 | `game-script-hud` | Runs the level offscreen with the character standing on a coin and checks that the coin was banked and the display shows the new total. Registered only if `artifacts/romfs` existed at configure time |
+| `game-room-streaming` | Walks the character from Room7 into Room8 in the street level and checks the room messages: nine rooms at the start, one room unloaded on entering Room8, one more loaded nine updates later. Registered only if `artifacts/romfs` existed at configure time |
 
 ## Programs
 

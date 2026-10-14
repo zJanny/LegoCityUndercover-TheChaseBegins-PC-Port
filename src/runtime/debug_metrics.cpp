@@ -129,6 +129,7 @@ std::vector<std::string> debugOverlayLines(const DebugReadout& readout, const De
         lines.push_back(format("HEADING %.1f DEG", game.headingDegrees));
     } else lines.push_back("NO PLAYER");
     lines.push_back("SCRIPT THREADS " + std::to_string(game.scriptThreads));
+    if (game.loadedRooms) lines.push_back("ROOMS LOADED " + std::to_string(*game.loadedRooms));
     return lines;
 }
 

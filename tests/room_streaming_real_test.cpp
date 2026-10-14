@@ -1,5 +1,7 @@
 #include "assets/assets.hpp"
+#include "runtime/room_streamer.hpp"
 #include "runtime/room_streaming.hpp"
+#include <cmath>
 #include <filesystem>
 #include <iostream>
 #include <stdexcept>
@@ -112,6 +114,14 @@ int main(int argc, char** argv) {
         const assets::Level city = assets::parseLevel(archive.read(*entry));
         const StreamRooms rooms = streamRoomsOf(city, "WorldLevel_01_CherryTreeHills", kRoomPositions);
         require(rooms.size() == 43, "43 rooms of WorldLevel_01_CherryTreeHills");
+        // Room node positions derived from models/lvl_01_cherrytreehills/roomN.bfnmdl against the 43 oracle readings above.
+        const StreamRooms derived = streamRoomsOf(city, "WorldLevel_01_CherryTreeHills", roomBoxesOf(archive, "models/lvl_01_cherrytreehills"));
+        require(derived.size() == 43, "43 derived rooms");
+        for (const auto& [number, position] : kRoomPositions)
+            for (int axis = 0; axis < 3; ++axis)
+                require(std::fabs(derived.at(number).position[axis] - position[axis]) < 0.01f,
+                        "Room" + std::to_string(number) + " node position axis " + std::to_string(axis) + " from the model: " +
+                            std::to_string(derived.at(number).position[axis]) + " vs oracle " + std::to_string(position[axis]));
         for (const Reading& reading : kReadings) {
             RoomStreamInput input;
             input.currentRoom = reading.currentRoom;
@@ -136,6 +146,29 @@ int main(int argc, char** argv) {
         bool requested16 = false;
         for (const RoomRequest& request : entered.loadOrder) requested16 = requested16 || (request.room == 16 && !request.preload);
         require(requested16, "Room16 is requested as a neighbour");
+        const std::optional<RoomStreamer> made =
+            RoomStreamer::forWorldLevel(city, "WorldLevel_01_CherryTreeHills", archive, "models/lvl_01_cherrytreehills");
+        require(made.has_value(), "the street level is streamable");
+        RoomStreamer streamer = *made;
+        streamer.settle(7, kReadings[0].player, kReadings[0].view);
+        require(streamer.loadedRooms() == kReadings[0].loaded, "settled start set " + show(streamer.loadedRooms()));
+        // The oracle walks in order: each reading's set is reached by updates with that reading's player and view
+        // (walk1 enters Room8 at update 28 and loads Room16 in 9 updates, agent O memtrace).
+        for (int update = 1; update <= 40; ++update) {
+            streamer.update(kReadings[1].player, kReadings[1].view);
+            if (update == 1)
+                require(!streamer.loaded(6) && streamer.currentRoom() == 8 && streamer.loading().count(16) && !streamer.loaded(16),
+                        "update 1 in Room8: Room6 unloaded, Room16 loading");
+            if (update == int(kRoomLoadUpdates)) require(!streamer.loaded(16), "Room16 still loading 9 updates after the request");
+            if (update == int(kRoomLoadUpdates) + 1) require(streamer.loaded(16), "Room16 loaded at update request + 9 (28 to 37 in the trace)");
+        }
+        require(streamer.loadedRooms() == kReadings[1].loaded, "wstream-room8-settled set " + show(streamer.loadedRooms()));
+        for (std::size_t index = 2; index < sizeof(kReadings) / sizeof(kReadings[0]); ++index) {
+            for (int update = 0; update < 40; ++update) streamer.update(kReadings[index].player, kReadings[index].view);
+            require(streamer.currentRoom() == kReadings[index].currentRoom, std::string(kReadings[index].provenance) + ": current room");
+            require(streamer.loadedRooms() == kReadings[index].loaded,
+                    std::string(kReadings[index].provenance) + ": streamer set " + show(streamer.loadedRooms()));
+        }
     } catch (const std::exception& error) {
         std::cerr << "room-streaming-real-test: FAIL: " << error.what() << "\n";
         return 1;

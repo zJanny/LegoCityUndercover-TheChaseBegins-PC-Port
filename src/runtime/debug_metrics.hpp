@@ -49,6 +49,7 @@ struct DebugGameValues {
     float position[3] = {0, 0, 0};
     float headingDegrees = 0;
     std::size_t scriptThreads = 0;
+    std::optional<std::size_t> loadedRooms;
 };
 
 struct DebugReadout {

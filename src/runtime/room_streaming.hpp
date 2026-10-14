@@ -3,6 +3,7 @@
 
 #include <array>
 #include <map>
+#include <optional>
 #include <set>
 #include <string>
 #include <vector>
@@ -45,6 +46,18 @@ struct RoomStreamPlan {
 
 StreamRooms streamRoomsOf(const assets::Level& master, const std::string& worldLevelInstance,
                           const std::map<int, Vec3>& positions);
+
+// Vertex bounding box of every mesh of the room model except mesh 0 (WSTREAM-S3, fit to 43 oracle readings); its centre is
+// the room node position the ranking uses.
+struct RoomBox {
+    Vec3 low = {0, 0, 0}, high = {0, 0, 0};
+    Vec3 centre() const { return {(low[0] + high[0]) * 0.5f, (low[1] + high[1]) * 0.5f, (low[2] + high[2]) * 0.5f}; }
+};
+
+std::optional<RoomBox> roomBoxOf(const assets::Model& model);
+std::map<int, RoomBox> roomBoxesOf(assets::FuseArchive& archive, const std::string& levelFolder);
+
+StreamRooms streamRoomsOf(const assets::Level& master, const std::string& worldLevelInstance, const std::map<int, RoomBox>& boxes);
 
 RoomStreamPlan planRoomStreaming(const StreamRooms& rooms, const RoomStreamInput& input);
 

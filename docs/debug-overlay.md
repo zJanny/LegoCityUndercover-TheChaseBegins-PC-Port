@@ -42,12 +42,12 @@ The panel shows one line each:
 | `POS` | Player position | game units, X Y Z | The player's current position. `NO PLAYER` if the level has no player start. |
 | `HEADING` | Player heading | degrees | The player's facing angle, converted from the game's 16-bit heading. |
 | `SCRIPT THREADS` | Running level script threads | count | Number of threads of the level script runner now. |
+| `ROOMS LOADED` | Rooms of the level that are loaded now | count | The rooms the room streaming rule keeps loaded around the player (the current room, its neighbours and up to three preloads). Not shown in levels without room streaming. A room that is requested counts only once its loading has finished. |
 
 ## Limits
 
 - The memory and CPU values come from Linux (`/proc`, `getrusage`). On another system they are not available. The overlay is only supported on Linux, like the rest of the port.
 - The numbers are for the whole process, not for the GPU. No GPU time or draw call count is shown.
-- The number of loaded rooms is not shown, because the runtime does not stream rooms yet.
 - Reading `/proc` and drawing the panel cost a little time, well under a millisecond per frame. The overlay is only read and drawn while it is visible. Frame times are recorded all the time (one clock read per frame).
 - The text uses a small built-in font with capital letters, digits and a few signs.
 

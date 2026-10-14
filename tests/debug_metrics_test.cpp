@@ -58,13 +58,17 @@ int main() {
         game.position[2] = 1111.166f;
         game.headingDegrees = 90.0f;
         game.scriptThreads = 3;
+        game.loadedRooms = 9;
         const std::vector<std::string> expected = {
             "FPS 60", "FRAME MS LAST 16.7 AVG 16.6", "FRAME MS MIN 16.0 MAX 17.5", "MEM MB 100.0 PEAK 200.0", "CPU 12.3 %",
-            "UPDATES/S 60", "LEVEL lvl_01_cherrytreehills", "POS 886.76 16.59 1111.17", "HEADING 90.0 DEG", "SCRIPT THREADS 3"};
+            "UPDATES/S 60", "LEVEL lvl_01_cherrytreehills", "POS 886.76 16.59 1111.17", "HEADING 90.0 DEG", "SCRIPT THREADS 3",
+            "ROOMS LOADED 9"};
         require(debugOverlayLines(readout, game) == expected, "overlay lines");
         readout.memory.reset();
         readout.cpuPercent.reset();
         game.hasPlayer = false;
+        game.loadedRooms.reset();
+        require(debugOverlayLines(readout, game).back() == "SCRIPT THREADS 3", "no room line without room streaming");
         const std::vector<std::string> missing = debugOverlayLines(readout, game);
         require(missing[3] == "MEM MB N/A" && missing[4] == "CPU ..." && missing[7] == "NO PLAYER", "missing values are labelled");
         std::cout << "Debug metrics tests passed\n";

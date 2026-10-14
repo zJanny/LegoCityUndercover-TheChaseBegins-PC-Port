@@ -63,6 +63,37 @@ StreamRooms streamRoomsOf(const assets::Level& master, const std::string& worldL
     return rooms;
 }
 
+std::optional<RoomBox> roomBoxOf(const assets::Model& model) {
+    RoomBox box = {{1e30f, 1e30f, 1e30f}, {-1e30f, -1e30f, -1e30f}};
+    bool any = false;
+    for (std::size_t mesh = 1; mesh < model.meshes.size(); ++mesh)
+        for (const assets::ModelPart& part : model.meshes[mesh].parts)
+            for (const assets::Vertex& vertex : part.vertices)
+                for (int axis = 0; axis < 3; ++axis) {
+                    box.low[axis] = std::min(box.low[axis], vertex.position[axis]);
+                    box.high[axis] = std::max(box.high[axis], vertex.position[axis]);
+                    any = true;
+                }
+    if (!any) return std::nullopt;
+    return box;
+}
+
+std::map<int, RoomBox> roomBoxesOf(assets::FuseArchive& archive, const std::string& levelFolder) {
+    std::map<int, RoomBox> boxes;
+    for (int number = 1; number <= kMaxRoomNumber; ++number) {
+        const assets::FuseEntry* entry = archive.find(levelFolder + "/room" + std::to_string(number) + ".bfnmdl");
+        if (!entry) continue;
+        if (const std::optional<RoomBox> box = roomBoxOf(assets::parseModel(archive.read(*entry)))) boxes[number] = *box;
+    }
+    return boxes;
+}
+
+StreamRooms streamRoomsOf(const assets::Level& master, const std::string& worldLevelInstance, const std::map<int, RoomBox>& boxes) {
+    std::map<int, Vec3> positions;
+    for (const auto& [number, box] : boxes) positions[number] = box.centre();
+    return streamRoomsOf(master, worldLevelInstance, positions);
+}
+
 RoomStreamPlan planRoomStreaming(const StreamRooms& rooms, const RoomStreamInput& input) {
     RoomStreamPlan plan;
     const StreamRoom* current = roomOf(rooms, input.currentRoom);

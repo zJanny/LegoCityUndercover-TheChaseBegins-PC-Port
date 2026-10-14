@@ -43,7 +43,7 @@ target_link_libraries(chase_runtime PUBLIC chase_assets)
 target_include_directories(chase_runtime PUBLIC src)
 target_compile_options(chase_runtime PRIVATE -Wall -Wextra -Wpedantic -ffp-contract=off)
 set_target_properties(chase_runtime PROPERTIES POSITION_INDEPENDENT_CODE ON)
-target_sources(chase_runtime PRIVATE src/runtime/studs.cpp src/runtime/sound_events.cpp src/runtime/music.cpp src/runtime/level_start.cpp src/runtime/script_runner.cpp src/runtime/natives_objects.cpp src/runtime/natives_progress.cpp src/runtime/door.cpp src/runtime/scene_change.cpp src/runtime/room_streaming.cpp src/runtime/scene_start.cpp src/runtime/dcam.cpp src/runtime/debug_metrics.cpp src/runtime/object_visibility.cpp)
+target_sources(chase_runtime PRIVATE src/runtime/studs.cpp src/runtime/sound_events.cpp src/runtime/music.cpp src/runtime/level_start.cpp src/runtime/script_runner.cpp src/runtime/natives_objects.cpp src/runtime/natives_progress.cpp src/runtime/door.cpp src/runtime/scene_change.cpp src/runtime/room_streaming.cpp src/runtime/room_streamer.cpp src/runtime/scene_start.cpp src/runtime/dcam.cpp src/runtime/debug_metrics.cpp src/runtime/object_visibility.cpp)
 # Front end (boot to the slot list): CPU-drawn screens, no SDL dependency.
 add_library(chase_frontend src/frontend/script.cpp src/frontend/frontend.cpp src/frontend/pages.cpp src/frontend/canvas.cpp src/frontend/resources.cpp src/frontend/layout.cpp src/frontend/flow.cpp src/frontend/hud.cpp src/frontend/minimap.cpp)
 target_link_libraries(chase_frontend PUBLIC chase_assets chase_runtime)
@@ -101,7 +101,7 @@ if(EPOXY_FOUND)
   target_link_libraries(chase-viewer PRIVATE chase_render chase_audio chase_input)
   target_compile_options(chase-viewer PRIVATE -Wall -Wextra -Wpedantic)
   if(FFMPEG_FOUND)
-    add_executable(chase-game src/game.cpp src/game_options.cpp src/game_player.cpp src/game_doors.cpp src/game_level.cpp src/game_level_update.cpp src/game_level.cpp src/game_level_update.cpp)
+    add_executable(chase-game src/game.cpp src/game_options.cpp src/game_player.cpp src/game_doors.cpp src/game_level.cpp src/game_level_update.cpp src/game_level_rooms.cpp)
     target_link_libraries(chase-game PRIVATE chase_render chase_runtime chase_input chase_audio chase_frontend_movie chase_save_progress chase_save_tables)
     target_compile_options(chase-game PRIVATE -Wall -Wextra -Wpedantic)
   endif()
@@ -584,6 +584,16 @@ if(BUILD_TESTING)
       --start "862.5931 16.1988 1060.5875" --window 400x480 --script "0 0 70" --screenshot game-script-hud.bmp)
     set_tests_properties(game-script-hud PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen"
       PASS_REGULAR_EXPRESSION "studs: counter 10, 0 collecting, 1 collected.*hud: 4 hearts, stud display 10, bar state 2.*saved game-script-hud.bmp")
+    # Room streaming in the level: starting in Room7 (position and view of the oracle state street-at-entrance +1 update, 9 rooms
+    # loaded), walking east to west enters Room8, Room6 unloads in that update and Room16 finishes loading 9 updates later
+    # (the update numbers are the port's own walk, the rule is pinned by room-streaming-real-data).
+    add_test(NAME game-room-streaming COMMAND chase-game
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
+      --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl
+      --start "903.71875 16.573267 1113.328247" --facing 11.3 --window 400x480 --script "20 150 70")
+    set_tests_properties(game-room-streaming PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
+      PASS_REGULAR_EXPRESSION "room streaming: 43 rooms, start Room7, 9 loaded.*room 7 -> 8 at update 54.*rooms loaded: 8 at update 54.*rooms loaded: 9 at update 63")
     # Opt-in: decodes and plays one looping music track for 0.3 s on SDL's dummy audio driver.
     add_test(NAME soundtest-real-smoke COMMAND chase-soundtest --seconds 0.3
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"

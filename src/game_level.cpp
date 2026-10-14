@@ -114,6 +114,7 @@ LevelSession::LevelSession(const Shared& sharedState)
             placedInstances[placement.instance] = {instanceIndex, matrix};
             placedSceneIndex.push_back(instanceIndex);
             placedObjects.push_back(placement);
+            roomInstances[runtime::roomNumber(placement.room)].push_back(instanceIndex);
         } else {
             ++unresolved;
         }
@@ -195,6 +196,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     overlay.emplace();
     const std::string levelFolder = lower(options.level).substr(0, lower(options.level).find_last_of('/'));
     levelName = levelFolder.substr(levelFolder.find_last_of('/') + 1);
+    startRoomStreaming();
 
     counterFrequency = SDL_GetPerformanceFrequency();
     counterOrigin = SDL_GetPerformanceCounter();
@@ -226,7 +228,8 @@ void LevelSession::draw(GLuint program, int width, int height) {
     Mat4 mvp = chase::render::multiply(
         perspective(fieldOfView, float(fe::kTopWidth) / float(fe::kScreenHeight), radius * 0.002f, radius * 20), viewMatrix);
     const std::vector<bool> drawn = runtime::drawnPlacements(placedObjects, objectState);
-    for (std::size_t i = 0; i < drawn.size(); ++i) scene.setInstanceVisible(placedSceneIndex[i], drawn[i]);
+    for (std::size_t i = 0; i < drawn.size(); ++i)
+        scene.setInstanceVisible(placedSceneIndex[i], drawn[i] && roomShown(runtime::roomNumber(placedObjects[i].room)));
     scene.draw(program, mvp);
     std::vector<StudSprite> sprites;
     for (const runtime::Stud& stud : studs.studs())
@@ -294,6 +297,7 @@ runtime::DebugGameValues LevelSession::debugValues() const {
     values.updatesPerSecond = updatesLastSecond;
     values.level = levelName;
     values.scriptThreads = levelScripts.threadCount();
+    if (roomStreamer) values.loadedRooms = roomStreamer->loadedRooms().size();
     if (player) {
         values.hasPlayer = true;
         const std::array<float, 3> position = player->position();

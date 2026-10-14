@@ -17,12 +17,14 @@
 #include "runtime/debug_metrics.hpp"
 #include "runtime/level_start.hpp"
 #include "runtime/pad.hpp"
+#include "runtime/room_streamer.hpp"
 #include "runtime/scene_change.hpp"
 #include "runtime/scene_start.hpp"
 #include "runtime/scheduler.hpp"
 #include "runtime/script_runner.hpp"
 #include "runtime/studs.hpp"
 #include <epoxy/gl.h>
+#include <map>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -86,6 +88,10 @@ private:
     void applyPlacement(const chase::runtime::ScriptPlacement& request);
     void updateDoors(const float playerPosition[3], const std::function<void(const chase::runtime::SoundCall&)>& emit);
     void updateFollowCamera(float dt);
+    void startRoomStreaming();
+    void updateRoomStreaming();
+    void showLoadedRooms();
+    bool roomShown(int room) const;
     std::uint32_t now() const { return clockTicks(SDL_GetPerformanceCounter() - counterOrigin, counterFrequency); }
 
     Shared shared;
@@ -127,6 +133,8 @@ private:
     unsigned updates = 0, updatesThisSecond = 0, updatesLastSecond = 0;
     bool dialogReported = false;
     std::vector<float> scriptedHeights;
+    std::optional<chase::runtime::RoomStreamer> roomStreamer;
+    std::map<int, std::vector<std::size_t>> roomInstances;
 };
 
 void advanceToDestination(chase::assets::FuseArchive& archive, game_options::Options& options, const chase::runtime::SceneChangeDestination& destination,
