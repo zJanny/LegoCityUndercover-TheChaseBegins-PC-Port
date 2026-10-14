@@ -84,6 +84,16 @@ class MergeAgentTest(unittest.TestCase):
         self.assertIn("docs/plans/features/f.closed.md", staged)
         self.assertEqual((features / "f.md").read_text(), "- [ ] F-1 open\n")
 
+    def test_forbidden_matches_build_directories_only(self) -> None:
+        sys.path.insert(0, str(SCRIPT.parent))
+        import merge_agent
+
+        self.assertTrue(merge_agent.FORBIDDEN.search("build/chase-game"))
+        self.assertTrue(merge_agent.FORBIDDEN.search("build-release/x.o"))
+        self.assertTrue(merge_agent.FORBIDDEN.search("artifacts/game/code.bin"))
+        self.assertFalse(merge_agent.FORBIDDEN.search("src/runtime/buildit.cpp"))
+        self.assertFalse(merge_agent.FORBIDDEN.search("docs/re/buildit.md"))
+
     def test_archive_conflict_keeps_both_sides(self) -> None:
         sys.path.insert(0, str(SCRIPT.parent))
         import merge_agent

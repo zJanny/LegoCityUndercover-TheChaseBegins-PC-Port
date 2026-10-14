@@ -20,7 +20,7 @@ import sys
 from pathlib import Path
 
 FORBIDDEN = re.compile(
-    r"(^|/)(artifacts|build[^/]*|graphify-out)(/|$)|\.(cci|3ds|cst|cia|bin|bmp|png|jpe?g|wav|bcstm|bcwav|fib|blvl|bfnmdl|dat)$",
+    r"(^|/)(artifacts|build(-[^/]*)?|graphify-out)/|\.(cci|3ds|cst|cia|bin|bmp|png|jpe?g|wav|bcstm|bcwav|fib|blvl|bfnmdl|dat)$",
     re.IGNORECASE,
 )
 GENERATED_FILES = ["README.md", "docs/progress-trend.svg"]
