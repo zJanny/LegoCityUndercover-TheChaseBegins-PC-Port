@@ -126,12 +126,12 @@ Read this section, CLAUDE.md (incl. "Goal and faithfulness" and "Feature files")
 
 **State:** M1 runtime loop, M2 locomotion, M3 walkable level, M4 level objects, characters, studs, falling, jumping and object collision are on main; the front end (boot to the first level) and the sound hooks are merged. `chase-game` is a development runtime, not the game ([docs/status.md](../status.md)).
 
-**Priorities (critical path), updated 2026-10-14T15:31:32+02:00:**
-1. Mission flow: the objective HUD (SCRIPT-41: waypoints, arrows), trigger types (SCRIPT-11), the AI system with `AIMove` (SCRIPT-42, batch SCRIPT-34), `PositionPlayer` (SCRIPT-59), and readers for recorded values (SCRIPT-56, SCRIPT-64), towards SCRIPT-1: [script-system](features/script-system.md).
-2. Text and HUD fidelity: read the draw code of the tip panel and dialogue box (HUD-14), level heading and portrait frame (HUD-13): [hud-ui](features/hud-ui.md).
+**Priorities (critical path), updated 2026-10-14T16:06:20+02:00:**
+1. Mission flow: the AI system with `AIMove` (SCRIPT-42, batch SCRIPT-34; unblocks the AI trigger events SCRIPT-75), `PositionPlayer` (SCRIPT-59), arrow and map natives (SCRIPT-72, SCRIPT-73), readers for recorded values (SCRIPT-56, SCRIPT-64), towards SCRIPT-1: [script-system](features/script-system.md).
+2. HUD fidelity: portrait and hexagon frame (HUD-19), tip alpha writer (HUD-20), level heading and other text screens (HUD-13), map marker and waypoint animation (HUD-16, HUD-17): [hud-ui](features/hud-ui.md).
 3. Saves: slot list Continue (FE-11, then FE-1), Continue at later levels (SAVE-13), the save writer (SAVE-10): [saves-options](features/saves-options.md), [front-end](features/front-end.md).
-4. Streaming and transitions: current-room rule and load timing (WSTREAM-13), characters and studs of unloaded rooms (WSTREAM-14), then the master level as scenes (TRANS-3): [world-streaming](features/world-streaming.md), [level-transitions](features/level-transitions.md).
-5. Camera and objects: follow reset 0x2313c8 (CAMERA-10, CAMERA-9), disabled characters and sub-objects (LEVOBJ-12), player shadow (RENDER-9), rendering part 2 (RENDER-1): [camera](features/camera.md), [level-objects](features/level-objects.md), [rendering](features/rendering.md).
+4. Streaming and transitions: current-room rule and load timing (WSTREAM-13), characters and studs of unloaded rooms (WSTREAM-14), the master level as scenes (TRANS-3): [world-streaming](features/world-streaming.md), [level-transitions](features/level-transitions.md).
+5. Camera, objects, rendering: follow reset (CAMERA-10, CAMERA-9), disabled characters and sub-objects (LEVOBJ-12), vehicles (LEVOBJ-7, SCRIPT-43), player shadow (RENDER-9), fragment lights (RENDER-1): [camera](features/camera.md), [level-objects](features/level-objects.md), [rendering](features/rendering.md).
 
 Oracle states (artifacts/oracle/states, see docs/re/oracle.md): `gameplay-start` (new game, Old 3DS), `police-station` and `street-after-1-1` (user saves after mission 1-1, New 3DS), `street-at-entrance`, `station-at-exit`, `station-exit-loadingpage`, `camera-lobby-walk`, `dcam-police-dialog`, `agent-doughnut-title` (agents, unmodified, New 3DS), `savecont-slotlist-user` (slot list with the user's save, Old 3DS), `trans-poked-*` (poked, measuring aids only). The real save of the user (read-only copy): `artifacts/oracle/agentJ-saves/savegame.dat`. Hard-to-reach states: ask the user (CLAUDE.md "Runtime oracle").
 
