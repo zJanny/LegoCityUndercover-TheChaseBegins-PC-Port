@@ -38,8 +38,10 @@ A scenario file drives the run, one command per line ('#' starts a comment):
                         free-run for SECONDS (no breakpoints) and sample the game clock, vblank counters and the
                         player position every INTERVAL seconds through RPC into NAME.csv (needs --rpc)
   perf                  print the emulator's own speed statistics (needs --rpc)
-  savestate NAME        save the emulator state as NAME in --states (needs --display xvfb)
-  loadstate NAME        restore the state NAME (needs --display xvfb)
+  savestate NAME        save the emulator state as NAME in --states (needs --display xvfb); NAME.json records the
+                        console mode ("new_3ds") of the running emulator
+  loadstate NAME        restore the state NAME (needs --display xvfb); refused when it was saved in the other console
+                        mode (New 3DS or Old 3DS) than the running emulator
 
 Input is injected inside the game's pad reader 0x10a4dc: the held mask in r0 at 0x10a57c
 and the raw circle-pad words at r4+12/+14 before 0x10a540. It is therefore exact per game
@@ -677,8 +679,9 @@ def shortcut_lines():
 
 class Oracle:
     def __init__(self, remote, output, keys=None, emulator_states=None, saved_states=None, rpc=None,
-                 renderer='software', rpc_input=False, alive=None):
+                 renderer='software', rpc_input=False, alive=None, new_3ds=False):
         self.remote = remote
+        self.new_3ds = new_3ds
         self.alive = alive or (lambda: None)
         self.rpc = rpc
         self.renderer = renderer
@@ -870,11 +873,16 @@ class Oracle:
                 self.keys.press('Return')
             raise RuntimeError('quick save did not write a state file (the game may still be starting)')
         shutil.copyfile(written[0], self.saved_states / ('%s.cst' % name))
-        (self.saved_states / ('%s.json' % name)).write_text(json.dumps({'file': written[0].name, 'frame': self.frame}))
+        (self.saved_states / ('%s.json' % name)).write_text(json.dumps({
+            'file': written[0].name, 'frame': self.frame, 'new_3ds': self.new_3ds}))
         print('  saved %s (%d bytes, frame %d)' % (name, written[0].stat().st_size, self.frame))
 
     def loadstate(self, name):
         self.require_keys()
+        saved_new_3ds = bool(json.loads((self.saved_states / ('%s.json' % name)).read_text()).get('new_3ds'))
+        if saved_new_3ds != self.new_3ds:
+            raise RuntimeError('state %s was saved in %s mode; start a new emulator with --state %s'
+                               % (name, 'New 3DS' if saved_new_3ds else 'Old 3DS', name))
         place_state(self.saved_states, name, self.emulator_states)
         installed = self.detach()
         deadline = time.monotonic() + STATE_LOAD_TIMEOUT
@@ -1229,7 +1237,7 @@ def install_termination_handlers():
         signal.signal(number, terminate)
 
 
-def launch_emulator(args, home, azahar, image):
+def launch_emulator(args, home, azahar, image, new_3ds):
     env = dict(os.environ, XDG_CONFIG_HOME=str(home / 'config'), XDG_DATA_HOME=str(home / 'data'),
                XDG_CACHE_HOME=str(home / 'cache'))
     log = open(home / 'azahar-stdout.log', 'wb')
@@ -1261,23 +1269,23 @@ def launch_emulator(args, home, azahar, image):
         log.close()
     session_file(home).write_text(json.dumps({
         'pid': process.pid, 'port': args.port, 'xvfb_pid': xvfb.pid if xvfb else None,
-        'display': display, 'rpc': args.rpc, 'renderer': args.renderer}))
+        'display': display, 'rpc': args.rpc, 'renderer': args.renderer, 'new_3ds': new_3ds}))
     return Launched(process, xvfb, display, keys, visible=args.display == 'desktop')
 
 
-def start_emulator(args, home, azahar, image, output, emulator_states, saved_states):
+def start_emulator(args, home, azahar, image, output, emulator_states, saved_states, new_3ds):
     """Launch Azahar and bring it to the point where the scenario can start (gdb stub, RPC and the optional state
     load). Azahar 2126.2 sometimes crashes in this phase; the attempt is then cleaned up and repeated. Nothing
     is retried once this function has returned, so a scenario never runs twice."""
     for attempt in range(1, LAUNCH_ATTEMPTS + 1):
-        launched = launch_emulator(args, home, azahar, image)
+        launched = launch_emulator(args, home, azahar, image, new_3ds)
         try:
             if launched.keys:
                 launched.silence_render_window()
             remote = GdbRemote(args.port, alive=launched.check)
             rpc = connect_rpc(alive=launched.check) if args.rpc else None
             oracle = Oracle(remote, output, launched.keys, emulator_states, saved_states, rpc, args.renderer,
-                            args.rpc_input, alive=launched.check)
+                            args.rpc_input, alive=launched.check, new_3ds=new_3ds)
             if args.state:
                 oracle.loadstate(args.state)
             return launched, oracle
@@ -1361,7 +1369,8 @@ def main():
                 keys = XKeys(session['display'])
             if args.rpc:
                 rpc = connect_rpc()
-            oracle = Oracle(remote, output, keys, emulator_states, saved_states, rpc, renderer, args.rpc_input)
+            oracle = Oracle(remote, output, keys, emulator_states, saved_states, rpc, renderer, args.rpc_input,
+                            new_3ds=bool(session.get('new_3ds')))
         else:
             image = (args.image or find_image()).resolve()
             azahar = shutil.which('azahar')
@@ -1376,6 +1385,7 @@ def main():
                 if not (home / 'config/azahar-emu').is_dir():
                     raise SystemExit('%s does not look like an oracle home; refusing to delete it' % home)
                 shutil.rmtree(home)
+            new_3ds = state_needs_new_3ds(saved_states, args.state)
             config = home / 'config/azahar-emu/qt-config.ini'
             config.parent.mkdir(parents=True, exist_ok=True)
             config.write_text(CONFIG.replace('{renderer}', '0' if args.renderer == 'software' else '1')
@@ -1384,10 +1394,11 @@ def main():
                               .replace('{single_window}', 'false' if args.display in ('xvfb', 'desktop') else 'true')
                               .replace('{single_default}', 'false' if args.display in ('xvfb', 'desktop') else 'true')
                               .replace('{shortcuts}', shortcut_lines())
-                              .replace('{new_3ds}', 'true' if state_needs_new_3ds(saved_states, args.state) else 'false'))
+                              .replace('{new_3ds}', 'true' if new_3ds else 'false'))
             if args.state:
                 place_state(saved_states, args.state, emulator_states)
-            launched, oracle = start_emulator(args, home, azahar, image, output, emulator_states, saved_states)
+            launched, oracle = start_emulator(args, home, azahar, image, output, emulator_states, saved_states,
+                                              new_3ds)
             rpc = oracle.rpc
         run_scenario(oracle, scenario)
     finally:

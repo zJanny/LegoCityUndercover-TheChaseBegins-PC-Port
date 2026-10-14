@@ -181,6 +181,7 @@ python3 tools/azahar_oracle.py my-test.txt --display xvfb --renderer opengl --st
 ```
 
 - `savestate NAME` and `loadstate NAME` are steps in the script file. States are stored in `artifacts/oracle/states/` and survive `--fresh`.
+- Each saved state remembers whether it was made in New 3DS mode. `loadstate` refuses a state from the other mode and asks you to start a new emulator with `--state NAME`.
 - Loading takes about 15 seconds. Right after a start the emulator may refuse for a few seconds. The tool retries by itself.
 - `--keep` leaves the emulator running after the script. `--attach` connects to it later (no game image needed). `--stop` closes it. Frame numbers start at 0 on every attach.
 

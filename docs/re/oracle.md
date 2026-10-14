@@ -235,3 +235,15 @@ Unknowns:
 Unknowns:
 - Whether mission 1-2 is active in the two states.
 - The trigger the user mentioned in front of the player.
+
+<a id="ts-20261014-113036"></a>
+
+## 2026-10-14T11:30:36+02:00 — New 3DS flag in saved states and session (TOOLS-6)
+
+- `tools/azahar_oracle.py` now records the console mode. The launch writes `"new_3ds"` into `session.json`; `--attach` reads it (a missing key means Old 3DS). `savestate` writes `"new_3ds"` of the running emulator into `NAME.json`. `loadstate` in a running session raises `state NAME was saved in <mode> mode; start a new emulator with --state NAME` when the state's mode differs, before it copies anything into the emulator's state folder. This closes the crash of [§2026-10-13T23:20](#ts-20261013-232034) for states made by the tool.
+- Tests: `tests/test_azahar_oracle_launch.py` (`SessionModeTest`, `StateModeTest`), 11 tests pass with `python3 -m unittest tests.test_azahar_oracle_launch`.
+- Real run (agent K, own port 24760, home `artifacts/oracle/agentK-home`, states copied in `agentK-states`, xvfb, opengl, no RPC): `--state police-station --keep` loaded the New 3DS state; `wait 5`, `savestate k-check`, `loadstate k-check`, `wait 3` finished with exit 0 and the emulator stayed alive. `k-check.json` was `{"file": "00040000000AD600.00.cst", "frame": 0, "new_3ds": true}` and `session.json` had `"new_3ds": true`. A second `--attach` run with `loadstate gameplay-start` (Old 3DS, no `new_3ds` key) was refused with `state gameplay-start was saved in Old 3DS mode; start a new emulator with --state gameplay-start`; the emulator was still alive afterwards. `--stop` ended the emulator and Xvfb; no `azahar` or `Xvfb` process was left.
+
+Unknowns:
+- The Old 3DS save path was not run for `savestate` in an Old 3DS session (the unit test covers the JSON only), so the Old 3DS value of the written flag is checked by the test, not by an emulator run.
+- Whether a state saved in New 3DS mode loads into a New 3DS session after a crash-free start is shown for one state (`police-station`) only.
