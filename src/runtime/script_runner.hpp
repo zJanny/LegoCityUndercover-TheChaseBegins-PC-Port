@@ -129,6 +129,8 @@ public:
     // queued first; they run from the next update on.
     void checkTriggers(const float player[3]);
     const std::vector<ScriptTriggerState>& triggers() const { return triggers_; }
+    // The code-side fire of an ObjectTriggered event (0x23cee8): queues the enabled trigger whose owner object is `lowerInstance`.
+    void fireObjectTriggered(const std::string& lowerInstance);
     // World position of a placed object by lower-case instance name (the node of an object bound check); false when unknown.
     using ObjectPositionSource = std::function<bool(const std::string&, float[3])>;
     void setObjectPositionSource(ObjectPositionSource source) { objectPosition_ = std::move(source); }

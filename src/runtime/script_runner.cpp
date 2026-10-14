@@ -722,6 +722,14 @@ void ScriptRunner::checkTriggers(const float player[3]) {
     }
 }
 
+void ScriptRunner::fireObjectTriggered(const std::string& lowerInstance) {
+    for (std::size_t i = 0; i < level_.triggers.size(); ++i)
+        if (triggers_[i].enabled && lower(level_.triggers[i].event) == "objecttriggered" && lower(level_.triggers[i].objectName) == lowerInstance) {
+            queueTrigger(i);
+            break;
+        }
+}
+
 void ScriptRunner::queueTrigger(std::size_t index) {
     const assets::LevelTrigger& trigger = level_.triggers[index];
     if (!triggers_[index].enabled) return;

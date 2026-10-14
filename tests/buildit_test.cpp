@@ -1,0 +1,105 @@
+// Build-it state machine (src/runtime/buildit.cpp). The expected rows are the record fields of the object 1-1_BI_DonutVanParts read in
+// the oracle after every update with the action button held from the state m11-4-van-parts (command and result: docs/re/buildit.md,
+// entry "Build of 1-1_BI_DonutVanParts measured"): row i is the state after i updates, each update being the object update followed
+// by the use message. Six bricks.
+#include "runtime/buildit.hpp"
+#include <cmath>
+#include <cstdlib>
+#include <iostream>
+#include <string>
+
+namespace {
+using namespace chase::runtime;
+
+int failures = 0;
+
+void require(bool condition, const std::string& message) {
+    if (!condition) {
+        std::cerr << "FAIL: " << message << '\n';
+        ++failures;
+    }
+}
+
+struct Row {
+    int update;
+    int state, target, bit;
+    float progressOfBit;
+    float rate;
+    float spin;
+};
+
+const Row kRows[] = {
+    {0, 2, 2, -1, 0.0f, 0.1f, 0.0f},      {1, 2, 8, -1, 0.0f, 0.1f, 0.0f},      {2, 8, 8, 0, 0.0f, 0.1f, 0.0f},
+    {3, 8, 8, 0, 0.1f, 0.106f, 0.0f},     {4, 8, 8, 0, 0.21f, 0.112f, 0.0f},    {10, 8, 8, 0, 0.97f, 0.148f, 0.0f},
+    {11, 8, 8, 0, 1.12f, 0.154f, 0.0f},   {12, 9, 9, 0, 1.0f, 0.154f, 0.0f},    {13, 2, 8, 0, 1.0f, 0.1f, 0.0f},
+    {14, 8, 8, 1, 0.0f, 0.1f, 0.0f},      {25, 2, 8, 1, 1.0f, 0.1f, 0.0f},      {38, 8, 8, 3, 0.0f, 0.1f, 0.0f},
+    {72, 9, 9, 5, 1.0f, 0.154f, 0.0f},    {73, 10, 10, 5, 1.0f, 0.154f, 0.0f},  {74, 10, 10, 5, 1.0f, 0.154f, 12.0f},
+    {81, 10, 10, 5, 1.0f, 0.154f, 96.0f}, {82, 10, 10, 5, 1.0f, 0.154f, 120.0f}, {84, 10, 10, 5, 1.0f, 0.154f, 168.0f},
+    {85, 2, 2, -1, 0.0f, 0.1f, 0.0f},
+};
+
+bool near(float a, float b) { return std::fabs(a - b) < 0.0006f; }
+
+void replay() {
+    BuilditState build(6);
+    std::size_t next = 0;
+    int brickStarts = 0, brickDones = 0, reveals = 0, builts = 0, revealAt = -1, builtAt = -1;
+    for (int update = 0; update <= 90; ++update) {
+        if (update > 0) {
+            for (const BuilditEvent event : builditUpdate(build)) {
+                if (event == BuilditEvent::BrickStarted) ++brickStarts;
+                if (event == BuilditEvent::BrickDone) ++brickDones;
+                if (event == BuilditEvent::FinalPropShown) ++reveals, revealAt = update;
+                if (event == BuilditEvent::Built) ++builts, builtAt = update;
+            }
+            if (!build.built) builditUse(build, true);
+        }
+        if (next < sizeof kRows / sizeof kRows[0] && kRows[next].update == update) {
+            const Row& row = kRows[next++];
+            const std::string where = "update " + std::to_string(update);
+            require(build.state == row.state, where + " state " + std::to_string(build.state));
+            require(build.target == row.target, where + " target " + std::to_string(build.target));
+            require(build.bit == row.bit, where + " bit " + std::to_string(build.bit));
+            const float progress = build.bit >= 0 ? build.progress[std::size_t(build.bit)] : 0.0f;
+            require(std::fabs(progress - row.progressOfBit) < 0.006f, where + " progress " + std::to_string(progress));
+            require(near(build.rate, row.rate), where + " rate " + std::to_string(build.rate));
+            require(near(build.spin, row.spin), where + " spin " + std::to_string(build.spin));
+        }
+        if (update == 85) break;
+    }
+    require(next == sizeof kRows / sizeof kRows[0], "all rows checked");
+    require(brickStarts == 6 && brickDones == 6, "six bricks");
+    require(reveals == 1 && revealAt == 73, "final prop shown at update 73");
+    require(builts == 1 && builtAt == 85, "built at update 85");
+    require(build.built, "built flag");
+}
+
+void releasedButton() {
+    BuilditState build(6);
+    require(builditUse(build, false) == 1 && build.target == 2, "no button, no start");
+    require(builditUse(build, true) == 1 && build.target == 8, "button starts the build");
+    builditUpdate(build);
+    builditUse(build, false);
+    for (int i = 0; i < 12; ++i) builditUpdate(build);
+    require(build.state == 2 && build.bit == 0, "the brick in progress is finished without the button");
+    require(build.target == 2, "the next brick waits for the button");
+    BuilditState done(6);
+    done.state = done.target = 10;
+    require(builditUse(done, true) == 2, "not usable while the final prop rises");
+}
+
+void propRise() {
+    require(near(builditPropRise(0.0f), 0.0f), "rise at 0");
+    require(near(builditPropRise(90.0f), 1.0f), "rise at 90");
+    require(near(builditPropRise(180.0f), 0.0f), "rise at 180");
+}
+}
+
+int main() {
+    replay();
+    releasedButton();
+    propRise();
+    if (failures) return EXIT_FAILURE;
+    std::cout << "buildit-test: ok\n";
+    return EXIT_SUCCESS;
+}

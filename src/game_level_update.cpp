@@ -78,6 +78,11 @@ void LevelSession::updateDoors(const float playerPosition[3], const std::functio
     }
 }
 
+void LevelSession::updateBuildits(const float playerPosition[3]) {
+    const std::vector<runtime::BuilditAction> actions = buildits.update(objectState, playerPosition, pad.slot(kSlotConfirmButton).value > 0.0f);
+    runtime::applyBuilditActions(buildits, actions, objectState, levelScripts);
+}
+
 void LevelSession::updateFollowCamera(float dt) {
     runtime::FollowCameraInput input;
     input.dt = dt;
@@ -183,6 +188,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
     if (player) {
         const float playerPosition[3] = {player->motion.x, player->vertical.y, player->motion.z};
         updateDoors(playerPosition, emit);
+        updateBuildits(playerPosition);
     }
     sceneStart.startRequested();
     if (player && !levelScripts.ai().moving("player1")) levelScripts.ai().setPosition("player1", player->position().data());

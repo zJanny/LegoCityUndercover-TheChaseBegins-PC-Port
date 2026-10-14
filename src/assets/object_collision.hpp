@@ -20,6 +20,9 @@ struct PlacedObjectState {
     bool collisionEnabled(const std::string& instance, bool initial) const;
 };
 
+// The model bounds 0x242eb0 (union of the mesh boxes of the nodes that are not NoBounds); false when the model has none.
+bool modelBounds(FuseArchive& archive, const std::string& modelPath, float centre[3], float half[3]);
+
 // One collision entry the original registers in its world grid for a placed object (0x30e0d8 with 0x23aff8).
 struct ObjectCollision {
     std::string instance;

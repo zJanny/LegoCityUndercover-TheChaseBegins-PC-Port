@@ -195,6 +195,8 @@ LevelSession::LevelSession(const Shared& sharedState)
     doors = game_doors::loadDoors(scene, archive, level, classOf, placedCollisions, placedInstances);
     for (const DoorObject& door : doors) game_doors::poseDoor(scene, door);
     std::cout << "doors: " << doors.size() << '\n';
+    buildits.load(archive, level, classOf);
+    std::cout << "build-its: " << buildits.objects().size() << '\n';
     std::cout << "collision: " << collision.triangleCount() << " triangles in " << collision.entries().size() << " entries\n";
 
     float centre[3];

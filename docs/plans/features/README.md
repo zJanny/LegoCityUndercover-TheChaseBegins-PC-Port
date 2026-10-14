@@ -10,6 +10,7 @@ Item format: `- [ ] ID — gap. needs: ID. blocks: ID. evidence: link`. `needs:`
 | [camera](camera.md) | IN_PROGRESS | CAMERA-9 follow controller seed and jump reaction in a fade; CAMERA-3 multi-record weights, Blocker pose, shake |
 | [collision](collision.md) | IN_PROGRESS | COLL-1 broad phase stand-in; COLL-2 constructors missing (vehicles, characters) |
 | [level-objects](level-objects.md) | IN_PROGRESS | LEVOBJ-3 objects frozen (needs SCRIPT-1); LEVOBJ-2 NPC start animation; LEVOBJ-12/13 hidden characters, per-class visibility |
+| [level-objects-buildit](level-objects-buildit.md) | IN_PROGRESS | LEVOBJ-40 brick animation; LEVOBJ-41 sounds, studs; LEVOBJ-43 built state not saved (needs SAVE-8) |
 | [vehicles](vehicles.md) | NOT_STARTED | VEH-1 create vehicle objects; VEH-3 flag natives; VEH-4 enter and leave; VEH-6 physics body (needs oracle traces) |
 | [script-system](script-system.md) | IN_PROGRESS | SCRIPT-1 mission flow (needs SCRIPT-7 natives, SCRIPT-75 / 76 trigger events); runner, scene start, class startups |
 | [script-system-triggers](script-system-triggers.md) | IN_PROGRESS | SCRIPT-75 / 76 AI and vehicle trigger events; SCRIPT-77 / 78 object bound checks |
@@ -34,7 +35,6 @@ Item format: `- [ ] ID — gap. needs: ID. blocks: ID. evidence: link`. `needs:`
 | [assets-formats](assets-formats.md) | IN_PROGRESS | ASSET-2 streaming |
 | [rendering](rendering.md) | IN_PROGRESS | RENDER-1 fragment lighting; RENDER-2 reflections; RENDER-30 fog oracle comparison; RENDER-33 shadows |
 | [viewer-tools](viewer-tools.md) | IN_PROGRESS | TOOLS-1 oracle controller state 255 |
-| missions (no file yet) | NOT_STARTED | mission flow, needs SCRIPT-1 |
-| enemies (no file yet) | NOT_STARTED | enemies and fighting, not recovered |
+| missions, enemies (no file yet) | NOT_STARTED | mission flow needs SCRIPT-1; enemies and fighting are not recovered |
 
 New feature: copy the section list of any file here, add it to this table. Section list: 1 Scope, 2 Status, 3 Verified behaviour, 4 Stand-ins, 5 Open items, 6 Findings summary, 7 Code and tests.

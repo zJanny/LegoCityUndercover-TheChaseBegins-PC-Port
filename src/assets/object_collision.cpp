@@ -108,6 +108,14 @@ void clampAutomaticBox(float centre[3], float half[3], bool margin) {
 
 }
 
+bool modelBounds(FuseArchive& archive, const std::string& modelPath, float centre[3], float half[3]) {
+    const ModelData data = loadModel(archive, modelPath);
+    if (!data.hasBounds) return false;
+    std::copy(data.boundsCentre, data.boundsCentre + 3, centre);
+    std::copy(data.boundsHalf, data.boundsHalf + 3, half);
+    return true;
+}
+
 bool PlacedObjectState::isDisabled(const std::string& instance) const { return disabled.count(lower(instance)) != 0; }
 
 bool PlacedObjectState::collisionEnabled(const std::string& instance, bool initial) const {
