@@ -7,6 +7,7 @@
 #include "input.hpp"
 #include "render/character.hpp"
 #include "render/scene.hpp"
+#include "strict_parse.hpp"
 #include <SDL.h>
 #include <epoxy/gl.h>
 #include <algorithm>
@@ -111,42 +112,50 @@ struct Options {
     std::vector<float> eye;
 };
 
+double positiveReal(const std::string& text) {
+    const double value = strict::real(text, -strict::kAnyReal, strict::kAnyReal);
+    if (value <= 0) strict::reject("expected above 0", text);
+    return value;
+}
+
 Options parse(int argc, char** argv) {
     Options o;
     for (int i = 1; i < argc; ++i) {
-        std::string arg = argv[i];
-        auto value = [&]() -> std::string {
-            if (i + 1 >= argc) throw std::runtime_error("missing value for " + arg);
-            return argv[++i];
-        };
-        if (arg == "--fib") o.fib = value();
-        else if (arg == "--names") o.names = value();
-        else if (arg == "--config") o.config = value();
-        else if (arg == "--screenshot") o.screenshot = value();
-        else if (arg == "--exclude") o.exclude.push_back(lower(value()));
-        else if (arg == "--level") o.levels.push_back(value());
-        else if (arg == "--room") o.room = lower(value());
-        else if (arg == "--nav") o.nav = true;
-        else if (arg == "--characters") o.characters = true;
-        else if (arg == "--cull") o.cull = value();
-        else if (arg == "--brightness") o.brightness = std::stof(value());
-        else if (arg == "--skeleton") o.skeleton = value();
-        else if (arg == "--anim") o.animation = value();
-        else if (arg == "--cutscene") o.cutscene = value();
-        else if (arg == "--frame") o.frame = std::stod(value());
-        else if (arg == "--fps") o.fps = std::stod(value());
-        else if (arg == "--yaw") o.yaw = std::stof(value());
-        else if (arg == "--pitch") o.pitch = std::stof(value());
-        else if (arg == "--eye") {
-            std::string text = value();
-            std::replace(text.begin(), text.end(), ',', ' ');
-            std::istringstream in(text);
-            float v;
-            while (in >> v) o.eye.push_back(v);
-            if (o.eye.size() != 3) throw std::runtime_error("--eye needs X,Y,Z");
-        }
-        else if (!arg.empty() && arg[0] == '-') throw std::runtime_error("unknown option " + arg);
-        else o.models.push_back(arg);
+        const std::string arg = argv[i];
+        auto value = [&]() { return strict::nextValue(argc, argv, i); };
+        strict::forOption(arg, [&] {
+            if (arg == "--fib") o.fib = value();
+            else if (arg == "--names") o.names = value();
+            else if (arg == "--config") o.config = value();
+            else if (arg == "--screenshot") o.screenshot = value();
+            else if (arg == "--exclude") o.exclude.push_back(lower(value()));
+            else if (arg == "--level") o.levels.push_back(value());
+            else if (arg == "--room") o.room = lower(value());
+            else if (arg == "--nav") o.nav = true;
+            else if (arg == "--characters") o.characters = true;
+            else if (arg == "--cull") {
+                o.cull = value();
+                if (o.cull != "none" && o.cull != "cw" && o.cull != "ccw") strict::reject("expected none, cw or ccw", o.cull);
+            }
+            else if (arg == "--brightness") o.brightness = float(strict::real(value(), -strict::kAnyFloat, strict::kAnyFloat));
+            else if (arg == "--skeleton") o.skeleton = value();
+            else if (arg == "--anim") o.animation = value();
+            else if (arg == "--cutscene") o.cutscene = value();
+            else if (arg == "--frame") o.frame = strict::real(value(), -strict::kAnyReal, strict::kAnyReal);
+            else if (arg == "--fps") o.fps = positiveReal(value());
+            else if (arg == "--yaw") o.yaw = float(strict::real(value(), -strict::kAnyFloat, strict::kAnyFloat));
+            else if (arg == "--pitch") o.pitch = float(strict::real(value(), -strict::kAnyFloat, strict::kAnyFloat));
+            else if (arg == "--eye") {
+                const std::string text = value();
+                std::string spaced = text;
+                std::replace(spaced.begin(), spaced.end(), ',', ' ');
+                const std::vector<std::string> fields = strict::words(spaced);
+                if (fields.size() != 3) strict::reject("expected X,Y,Z", text);
+                for (const std::string& field : fields) o.eye.push_back(float(strict::real(field, -strict::kAnyFloat, strict::kAnyFloat)));
+            }
+            else if (!arg.empty() && arg[0] == '-') strict::reject("unknown option", arg);
+            else o.models.push_back(arg);
+        });
     }
     if (o.models.empty() && o.levels.empty() && o.cutscene.empty())
         throw std::runtime_error("usage: chase-viewer [--fib F] [--names CSV] [--config CFG] [--exclude WORD]... "

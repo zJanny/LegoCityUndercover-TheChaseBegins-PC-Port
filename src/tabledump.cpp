@@ -1,5 +1,6 @@
 // chase-tabledump: prints the sheets of tables/*.bxls as tab-separated text.
 #include "assets/assets.hpp"
+#include "strict_parse.hpp"
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -20,14 +21,13 @@ int run(int argc, char** argv) {
     std::string fib = "artifacts/romfs/romfs/lego_city3ds.fib", names = "artifacts/romfs/romfs/lego_city3ds.csv";
     std::vector<std::string> paths;
     for (int i = 1; i < argc; ++i) {
-        std::string arg = argv[i];
-        auto value = [&]() -> std::string {
-            if (i + 1 >= argc) throw std::runtime_error("missing value for " + arg);
-            return argv[++i];
-        };
-        if (arg == "--fib") fib = value();
-        else if (arg == "--names") names = value();
-        else paths.push_back(arg);
+        const std::string arg = argv[i];
+        strict::forOption(arg, [&] {
+            if (arg == "--fib") fib = strict::nextValue(argc, argv, i);
+            else if (arg == "--names") names = strict::nextValue(argc, argv, i);
+            else if (!arg.empty() && arg[0] == '-') strict::reject("unknown option", arg);
+            else paths.push_back(arg);
+        });
     }
     if (paths.empty()) throw std::runtime_error("usage: chase-tabledump [--fib F] [--names CSV] tables/<name>.bxls...");
     FuseArchive archive(fib);

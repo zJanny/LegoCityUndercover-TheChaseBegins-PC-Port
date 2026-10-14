@@ -104,6 +104,8 @@ Single C++ tests, with `ctest --test-dir build -R <name>`:
 
 ## Programs
 
+Every option of these programs is checked. A bad number, an out-of-range value, a missing value or an unknown option stops with an error like `chase-viewer: --frame: not a number: '1x'` and exit code 1. Nothing is read before the options are checked.
+
 ```sh
 build/chase-tabledump tables/tableslevels.bxls
 build/chase-savecheck [--romfs artifacts/romfs/romfs] savegame.dat

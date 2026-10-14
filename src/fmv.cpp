@@ -1,5 +1,6 @@
 #include "assets/assets.hpp"
 #include "movie/movie.hpp"
+#include "strict_parse.hpp"
 #include <SDL.h>
 #include <algorithm>
 #include <cstdio>
@@ -107,21 +108,20 @@ private:
 Options parseOptions(int argc, char** argv) {
     Options options;
     for (int i = 1; i < argc; ++i) {
-        std::string arg = argv[i];
-        auto value = [&]() -> std::string {
-            if (i + 1 >= argc) throw std::runtime_error("missing value for " + arg);
-            return argv[++i];
-        };
-        if (arg == "--subtitles") options.subtitleFile = value();
-        else if (arg == "--lang") options.language = value();
-        else if (arg == "--screenshot") options.screenshot = value();
-        else if (arg == "--time") options.time = std::stod(value());
-        else if (arg == "--no-audio") options.audio = false;
-        else if (arg == "--fib") options.fib = value();
-        else if (arg == "--names") options.names = value();
-        else if (arg == "--font") options.fontName = value();
-        else if (arg.rfind("--", 0) == 0) throw std::runtime_error("unknown option " + arg);
-        else options.video = arg;
+        const std::string arg = argv[i];
+        auto value = [&]() { return strict::nextValue(argc, argv, i); };
+        strict::forOption(arg, [&] {
+            if (arg == "--subtitles") options.subtitleFile = value();
+            else if (arg == "--lang") options.language = value();
+            else if (arg == "--screenshot") options.screenshot = value();
+            else if (arg == "--time") options.time = strict::real(value(), -strict::kAnyReal, strict::kAnyReal);
+            else if (arg == "--no-audio") options.audio = false;
+            else if (arg == "--fib") options.fib = value();
+            else if (arg == "--names") options.names = value();
+            else if (arg == "--font") options.fontName = value();
+            else if (!arg.empty() && arg[0] == '-') strict::reject("unknown option", arg);
+            else options.video = arg;
+        });
     }
     if (options.video.empty())
         throw std::runtime_error("usage: chase-fmv VIDEO.moflex [--subtitles FILE.srt | --lang us] "

@@ -2,8 +2,10 @@
 // (plan step S4d). Development tool, not gameplay audio routing.
 #include "assets/assets.hpp"
 #include "audio/mixer.hpp"
+#include "strict_parse.hpp"
 #include <SDL.h>
 #include <iostream>
+#include <limits>
 #include <memory>
 #include <mutex>
 #include <stdexcept>
@@ -31,16 +33,16 @@ int run(int argc, char** argv) {
     std::vector<std::string> paths;
     std::vector<std::uint32_t> ids;
     for (int i = 1; i < argc; ++i) {
-        std::string arg = argv[i];
-        auto value = [&]() -> std::string {
-            if (i + 1 >= argc) throw std::runtime_error("missing value for " + arg);
-            return argv[++i];
-        };
-        if (arg == "--fib") fib = value();
-        else if (arg == "--names") names = value();
-        else if (arg == "--seconds") seconds = std::stod(value());
-        else if (arg == "--id") ids.push_back(std::uint32_t(std::stoul(value())));
-        else paths.push_back(arg);
+        const std::string arg = argv[i];
+        auto value = [&]() { return strict::nextValue(argc, argv, i); };
+        strict::forOption(arg, [&] {
+            if (arg == "--fib") fib = value();
+            else if (arg == "--names") names = value();
+            else if (arg == "--seconds") seconds = strict::real(value(), -strict::kAnyReal, strict::kAnyReal);
+            else if (arg == "--id") ids.push_back(std::uint32_t(strict::integer(value(), 0, std::numeric_limits<std::uint32_t>::max())));
+            else if (!arg.empty() && arg[0] == '-') strict::reject("unknown option", arg);
+            else paths.push_back(arg);
+        });
     }
     if (paths.empty() && ids.empty())
         throw std::runtime_error(

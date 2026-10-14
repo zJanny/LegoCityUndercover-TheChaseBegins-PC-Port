@@ -1,5 +1,6 @@
 // chase-savecheck: prints the completion of each slot of a savegame.dat, using the shipped tables.
 #include "save/completion_tables.hpp"
+#include "strict_parse.hpp"
 #include <cstdio>
 #include <iostream>
 #include <stdexcept>
@@ -11,15 +12,13 @@ using namespace chase::save;
 int run(int argc, char** argv) {
     std::string romfs = "artifacts/romfs/romfs", savePath;
     for (int i = 1; i < argc; ++i) {
-        std::string arg = argv[i];
-        if (arg == "--romfs") {
-            if (i + 1 >= argc) throw std::runtime_error("missing value for --romfs");
-            romfs = argv[++i];
-        } else if (savePath.empty()) {
-            savePath = arg;
-        } else {
-            throw std::runtime_error("unexpected argument: " + arg);
-        }
+        const std::string arg = argv[i];
+        strict::forOption(arg, [&] {
+            if (arg == "--romfs") romfs = strict::nextValue(argc, argv, i);
+            else if (!arg.empty() && arg[0] == '-') strict::reject("unknown option", arg);
+            else if (savePath.empty()) savePath = arg;
+            else throw std::runtime_error("unexpected argument: " + arg);
+        });
     }
     if (savePath.empty()) throw std::runtime_error("usage: chase-savecheck [--romfs DIR] savegame.dat");
 

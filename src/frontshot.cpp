@@ -3,6 +3,7 @@
 #include "frontend/frontend.hpp"
 #include "frontend/movie_host.hpp"
 #include "frontend/script.hpp"
+#include "strict_parse.hpp"
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -23,19 +24,20 @@ Options parse(int argc, char** argv) {
     Options options;
     for (int i = 1; i < argc; ++i) {
         const std::string arg = argv[i];
-        auto value = [&]() -> std::string {
-            if (i + 1 >= argc) throw std::runtime_error("missing value for " + arg);
-            return argv[++i];
-        };
-        if (arg == "--fib") options.fib = value();
-        else if (arg == "--names") options.names = value();
-        else if (arg == "--movies") options.movies = value();
-        else if (arg == "--script") options.script = value();
-        else if (arg == "--output") options.output = value();
-        else if (arg == "--language") options.language = std::stoi(value());
-        else if (arg == "--returning") options.firstRun = false;
-        else throw std::runtime_error("usage: chase-frontshot --script \"run 5; press A; shot name; until slot 60\" [--output DIR] "
-                                      "[--language N] [--returning] [--fib F] [--names CSV] [--movies DIR]");
+        auto value = [&]() { return strict::nextValue(argc, argv, i); };
+        strict::forOption(arg, [&] {
+            if (arg == "--fib") options.fib = value();
+            else if (arg == "--names") options.names = value();
+            else if (arg == "--movies") options.movies = value();
+            else if (arg == "--script") {
+                options.script = value();
+                parseFrontScript(options.script);
+            }
+            else if (arg == "--output") options.output = value();
+            else if (arg == "--language") options.language = int(strict::integer(value(), 1, 9));
+            else if (arg == "--returning") options.firstRun = false;
+            else strict::reject("unknown option", arg);
+        });
     }
     if (options.script.empty()) throw std::runtime_error("--script is required");
     return options;

@@ -2,6 +2,7 @@
 #include <charconv>
 #include <cmath>
 #include <cstddef>
+#include <limits>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -9,8 +10,27 @@
 
 namespace strict {
 
+inline constexpr double kAnyReal = std::numeric_limits<double>::max();
+inline constexpr double kAnyFloat = std::numeric_limits<float>::max();
+
 [[noreturn]] inline void reject(const std::string& reason, const std::string& text) {
     throw std::runtime_error(reason + ": '" + text + "'");
+}
+
+inline std::string nextValue(int argc, char** argv, int& index) {
+    if (index + 1 >= argc) reject("missing value", "");
+    const std::string text = argv[++index];
+    if (text.empty()) reject("empty value", text);
+    return text;
+}
+
+template <typename Apply>
+void forOption(const std::string& option, Apply&& apply) {
+    try {
+        apply();
+    } catch (const std::runtime_error& error) {
+        throw std::runtime_error(option + ": " + error.what());
+    }
 }
 
 inline long long integer(const std::string& text, long long low, long long high) {

@@ -1,4 +1,5 @@
 #include "input.hpp"
+#include "strict_parse.hpp"
 #include <SDL.h>
 #include <algorithm>
 #include <fstream>
@@ -145,18 +146,37 @@ void render(SDL_Window* window, SDL_Renderer* renderer, const Lab& lab, int widt
     SDL_RenderPresent(renderer);
 }
 }
-int main(int argc, char** argv) {
+
+namespace {
+struct Arguments {
     bool smokeTest = false;
     std::string configuration = "config/controls.cfg";
+};
+
+Arguments parseArguments(int argc, char** argv) {
+    Arguments arguments;
     for (int i = 1; i < argc; ++i) {
-        std::string argument = argv[i];
-        if (argument == "--smoke-test") smokeTest = true;
-        else if (argument == "--config" && i + 1 < argc) configuration = argv[++i];
-        else {
-            std::cerr << "Usage: chase-input-lab [--config PATH] [--smoke-test]\n";
-            return 2;
-        }
+        const std::string argument = argv[i];
+        strict::forOption(argument, [&] {
+            if (argument == "--smoke-test") arguments.smokeTest = true;
+            else if (argument == "--config") arguments.configuration = strict::nextValue(argc, argv, i);
+            else strict::reject("unknown option", argument);
+        });
     }
+    return arguments;
+}
+}
+
+int main(int argc, char** argv) {
+    Arguments arguments;
+    try {
+        arguments = parseArguments(argc, argv);
+    } catch (const std::exception& error) {
+        std::cerr << "chase-input-lab: " << error.what() << '\n';
+        return 1;
+    }
+    const bool smokeTest = arguments.smokeTest;
+    const std::string configuration = arguments.configuration;
     try {
         if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0)
             throw std::runtime_error(SDL_GetError());

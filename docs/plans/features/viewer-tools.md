@@ -6,7 +6,7 @@ The developer programs and scripts: `chase-viewer` (models, levels, animated cha
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-14T14:13:08+02:00. All tools run; the oracle supports save states, an RPC channel, watch/trap/memtrace/teleport/poke steps.
+IN_PROGRESS, updated 2026-10-14T14:35:07+02:00. All tools run; the oracle supports save states, an RPC channel, watch/trap/memtrace/teleport/poke steps.
 
 ## 3. Verified behaviour
 
@@ -29,7 +29,7 @@ IN_PROGRESS, updated 2026-10-14T14:13:08+02:00. All tools run; the oracle suppor
 - [ ] TOOLS-3 — The function total of the progress report is an estimate (7575 call and pointer targets against 8086 procedures in REA); an exact list needs a stored REA procedure list. evidence: [arm-executable.md §2026-10-13T22:17](../../re/arm-executable.md#ts-20261013-221729).
 - [ ] TOOLS-4 — "Object types with behaviour" is decided per class from the class file (props with a `CollisionBound`, the prop family, doors, studs); it does not check that an instance produced a shape, and characters and vehicles count as none until they get rules (COLL-2).
 - [x] TOOLS-5 — Closed 2026-10-14: Forgejo's web view jumps to the explicit `<a id="ts-...">` entry anchors (checked by the user).
-- [ ] TOOLS-7 — `chase-viewer`, `chase-soundtest`, `chase-fmv` and `chase-frontshot` still read numbers with `std::sto*` (`chase-frontshot --language 3x` is accepted); they need `src/strict_parse.hpp` and one rejection test each, as chase-game has.
+- [x] TOOLS-7 — Closed 2026-10-14: `chase-viewer`, `chase-soundtest`, `chase-fmv`, `chase-frontshot`, `chase-hudshot`, `chase-savecheck`, `chase-tabledump` and `chase-input-lab` check every option with `src/strict_parse.hpp` (bad numbers, unknown options and missing values stop with `<tool>: <option>: <reason>: '<text>'`); one rejection test per tool, with no game data needed.
 - [x] TOOLS-6 — Closed 2026-10-14: the oracle records the console mode in `session.json` and in every saved `NAME.json` (`"new_3ds"`), and `loadstate` refuses a state from the other mode with a clear message; checked by unit tests and a real New 3DS save and reload. [oracle.md §2026-10-14T11:30](../../re/oracle.md#ts-20261014-113036).
 
 ## 6. Findings summary
@@ -42,4 +42,4 @@ IN_PROGRESS, updated 2026-10-14T14:13:08+02:00. All tools run; the oracle suppor
 
 - `src/game_options.cpp`, `src/strict_parse.hpp`, `src/frontend/script.*`, `tests/game_options_test.cpp`, `src/viewer.cpp`, `src/soundtest.cpp`, `src/fmv.cpp`, `src/savecheck.cpp`, `src/tabledump.cpp`, `src/frontshot.cpp`, `tools/*.py`, `tools/azahar_oracle.py`, `tests/test_*.py`; command reference `docs/commands.md`.
 - `tools/progress_report.py`, `tests/test_progress_report.py`, `tools/check_doc_links.py`, `tests/test_check_doc_links.py`, `src/assets/object_classes.*`, `src/assets/file_decoders.*`, `handledScriptFunctions` in `src/runtime/level_start.*`, the census entry points in `src/assets/c_api.cpp`, `tests/progress_tables_test.cpp`.
-- CTest: `game-options-core`, `game-option-slot-range`, `game-option-number-trailing`, `game-option-start-malformed`, `game-option-script-step`, `game-option-front-script-step`, `game-option-unknown`, `progress-tables`, `progress-readme`, `doc-links`, `viewer-real-smoke`, `viewer-cutscene-smoke`, `soundtest-real-smoke`, `soundtest-id-smoke`, `fmv-real-smoke`, `frontshot-real-smoke`; Python: `python3 -m unittest discover -s tests -p 'test_*.py'`.
+- CTest: `game-options-core`, `game-option-slot-range`, `game-option-number-trailing`, `game-option-start-malformed`, `game-option-script-step`, `game-option-front-script-step`, `game-option-unknown`, `viewer-option-number`, `viewer-option-cull`, `viewer-option-fps`, `viewer-option-eye`, `viewer-option-unknown`, `soundtest-option-id-range`, `soundtest-option-seconds`, `soundtest-option-missing`, `fmv-option-time`, `frontshot-option-language`, `frontshot-option-script`, `hudshot-option-script`, `hudshot-option-unknown`, `savecheck-option-unknown`, `tabledump-option-unknown`, `input-lab-option-unknown`, `progress-tables`, `progress-readme`, `doc-links`, `viewer-real-smoke`, `viewer-cutscene-smoke`, `soundtest-real-smoke`, `soundtest-id-smoke`, `fmv-real-smoke`, `frontshot-real-smoke`; Python: `python3 -m unittest discover -s tests -p 'test_*.py'`.
