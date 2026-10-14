@@ -128,12 +128,12 @@ Read this section, CLAUDE.md (incl. "Goal and faithfulness" and "Feature files")
 
 **Goal of the current rounds (user, 2026-10-14):** mission 1-1 playable from the new-game start to `1-1_MissionEnd`; its steps and blockers: [objective-hud.md §2026-10-14T21:23](../re/objective-hud.md#ts-20261014-212357).
 
-**Priorities (critical path), updated 2026-10-14T22:23:50+02:00:**
-1. Mission start and steps: the waypoint class that starts `TriggerScript` scripts (SCRIPT-110), class-fired `ObjectTriggered` events (SCRIPT-111), carrying (LEVOBJ-14), build-its (LEVOBJ-15), `SetPartyCharacter` (SCRIPT-35): [script-system-missions](features/script-system-missions.md), [level-objects](features/level-objects.md).
-2. Cutscenes in the game: DCamCutScene* and PlayCutscene (SCRIPT-29, MOVIE-2): [movies-cutscenes](features/movies-cutscenes.md).
-3. Vehicles: survey first, then enter, drive, vehicle waypoints, jump out (SCRIPT-43, SCRIPT-36, SCRIPT-76, COLL-2, LEVOBJ-7): [script-system-natives](features/script-system-natives.md).
-4. Characters and AI in mission 1-1: NPC animation (ANIM-2), AI update states (SCRIPT-104), music natives (SCRIPT-33): [animation-characters](features/animation-characters.md), [script-system-ai-navigation](features/script-system-ai-navigation.md).
-5. After mission 1-1: HUD fidelity, saves (FE-30, SAVE-14, SAVE-15), streaming and transitions (WSTREAM-30, TRANS-3), camera and rendering (CAMERA-10, RENDER-1, RENDER-9).
+**Priorities (critical path), updated 2026-10-15T00:21:39+02:00:** done for mission 1-1: waypoint class, in-engine cutscenes with the level-start intro and fades, build-it, carrying, vehicles created and solid. Oracle states before every step: `m11-1` to `m11-9` (docs/re/oracle-states.md).
+1. Small fixes on the mission path: objects enabled during play get collision (COLL-20, SCRIPT-160), the player hidden during cutscenes and the cutscene actors' looks (MOVIE-14, MOVIE-11): [collision](features/collision.md), [movies-cutscenes](features/movies-cutscenes.md).
+2. Vehicles: enter and leave (VEH-4), driving with a stand-in body (VEH-5), then the physics body (VEH-6), driving collision (VEH-7), camera (VEH-8), jump out (VEH-9), vehicle waypoints (VEH-11, SCRIPT-141): [vehicles](features/vehicles.md).
+3. Class-fired triggers and their call paths (SCRIPT-111, SCRIPT-170, SCRIPT-180), `SetPartyCharacter` (SCRIPT-35), NPC animation (ANIM-2), music (SCRIPT-33).
+4. Polish of the finished steps: carry and build-it stand-ins (level-objects-carry.md, level-objects-buildit.md), the police car start state (VEH-13).
+5. After mission 1-1: HUD fidelity, saves (FE-30, SAVE-14, SAVE-15), level switch screens (TRANS-13, TRANS-14), streaming (WSTREAM-30, TRANS-3), camera and rendering (CAMERA-10, RENDER-1, RENDER-9).
 
 Oracle states (artifacts/oracle/states, see docs/re/oracle.md): `gameplay-start` (new game, Old 3DS), `police-station` and `street-after-1-1` (user saves after mission 1-1, New 3DS), `street-at-entrance`, `station-at-exit`, `station-exit-loadingpage`, `camera-lobby-walk`, `dcam-police-dialog`, `agent-doughnut-title` (agents, unmodified, New 3DS), `savecont-slotlist-user` (slot list with the user's save, Old 3DS), `trans-poked-*` (poked, measuring aids only). The real save of the user (read-only copy): `artifacts/oracle/agentJ-saves/savegame.dat`. Hard-to-reach states: ask the user (CLAUDE.md "Runtime oracle").
 
