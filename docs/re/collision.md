@@ -6,6 +6,8 @@ Findings about the static collision of a level and how the player uses it. The p
 
 ## 2026-10-13T14:45:00+02:00 — Collision data, ground height and wall slide recovered (REA Ghidra 12.1.2 on artifacts/game/game.arm.elf, objdump, Azahar oracle)
 
+Corrected by [collision.md §2026-10-13T17:34](collision.md#ts-20261013-173400): layer rule is the descriptor with masks and owner flags
+
 Replica: `CollisionItem` and `readCollision` (src/assets/model.cpp), `CollisionWorld`, `groundHeight`, `slideAlongWalls` (src/runtime/collision.*), wired in `movePlayer` (src/game.cpp). Tests: `assets-core` (synthetic section), `assets-real-data` (totals), `runtime-core` (synthetic floor, step, wall), `collision-real-data` (differential, below).
 
 ### Data format (the "unrecovered model+0x1c section" of models.md 2026-10-12T16:10)
@@ -65,6 +67,9 @@ Unknowns:
 
 ## 2026-10-13T17:34:00+02:00 — Placed objects: world grid, registration, shapes, layers (REA Ghidra 12.1.2, llvm-objdump, Azahar oracle)
 
+Corrected by [collision.md §2026-10-13T20:43](collision.md#ts-20261013-204340): the disabled-object stand-in is replaced by the level start state
+Corrected by [collision.md §2026-10-13T20:53](collision.md#ts-20261013-205344): the automatic box uses the node matrices
+
 Replica: `objectCollisions` (src/assets/object_collision.*), `CollisionWorld::addObject`, `CollisionLayer` / `kPlayerLayer` / `kCameraLayer` (src/runtime/collision.*), `CameraSweep::sliceBox` (src/runtime/camera_sweep.*); wired into chase-game (`loadCollision`). The camera part is in [camera.md](camera.md) (2026-10-13T17:35:30). Oracle scenarios: tools/oracle/objcoll-walk.txt, objcoll-door.txt, objcoll-barrier.txt (traces in artifacts/oracle/objcoll-out; port 24750, home artifacts/oracle/objcoll-home).
 
 Evidence IDs (shortened): query driver 0x208d84 ev_9cc7be90…811d (see above); grid gather 0x237f30 ev_7176d1e3…38ce; tree/callback dispatch 0x196990 ev_32fb8a66…1907; 0x20c850 ev_7608f1e7…c007; entry matrix 0x21bb78 ev_61f11061…21a2; box to triangles 0x21ba50 ev_c2676bbf…4195; collision setup of an entity 0x23aff8 ev_32c1264e…8d60; s24 record lookup 0x23e798 ev_a3454a65…d13c; bool/int parameter 0x2451d0 ev_d6f1c870…5f; model bounds 0x242eb0 ev_563de5d0…7189; level collision spawn 0x28b070 ev_f04637f7…3b1f; camera box callback 0x2d4d94 ev_a02231a8…c11e and box slicing 0x2eb5d4 ev_fe5b62c3…9ec02. Read with llvm-objdump only (not REA): grid add 0x1f5cd0, cell update 0x209cb8, entity registration 0x2ba3f4, scene registration 0x30e0d8, prop wrapper 0x1a69c4, the tables DAT_00376930 / DAT_00376954 (read from the running game).
@@ -120,13 +125,13 @@ Unknowns:
 
 ### Corrections of earlier entries
 
-- 2026-10-13T14:45:00 "Provisional" and "Unknowns" (layer rule; collision of dynamic objects): the layer rule is the descriptor above (masks and owner flags). The items of the master model all have mask 1, which the replica already used. Placed objects are in the same grid, see above.
+- [Corrects collision.md §2026-10-13T14:45:00](collision.md#ts-20261013-144500) "Provisional" and "Unknowns" (layer rule; collision of dynamic objects): the layer rule is the descriptor above (masks and owner flags). The items of the master model all have mask 1, which the replica already used. Placed objects are in the same grid, see above.
 
 <a id="ts-20261013-204340"></a>
 
 ## 2026-10-13T20:43:40+02:00 — Correction: the disabled-object stand-in is replaced by the level start state
 
-- **Correction of the 2026-10-13T17:34:00 entry ("Stand-ins and approximations", "Unknowns"):** `kStateDisabledStandIn` (85 recorded names) is gone. The state is derived from the level data: the `startup` script and the revealer links, [scripts.md](scripts.md). 83 of the 85 names follow from the rule; the other two are detective X-spots without collision.
+- **[Corrects collision.md §2026-10-13T17:34:00](collision.md#ts-20261013-173400) ("Stand-ins and approximations", "Unknowns"):** `kStateDisabledStandIn` (85 recorded names) is gone. The state is derived from the level data: the `startup` script and the revealer links, [scripts.md](scripts.md). 83 of the 85 names follow from the rule; the other two are detective X-spots without collision.
 - `objectCollisions(archive, level, state)` now takes a `PlacedObjectState`. A `BoundCollision` of 0 clears the whole collision flag 0x200 of the object (mesh and box) unless `EnableCollision` sets it again (1-1_Mail_Box does); before, only the box was switched off.
 - lvl_01 totals: 824 entries (was 834), 414 meshes (was 415); the ten removed are co-located twins (`1-2_Dumpster_Open`, `1-3_Garage_Key_Switch`, `1-5_WireTap_01..04`, `Donut_Box`, `FP_BreakAndEnter_Door_Balcony02_Open`, `FP_Warp_01`) and `FP_SuperBuildit_Statue`, whose entities have flag bit 0 in the grid read (the earlier position-only match had paired them with their enabled twin). `collision-real-data` and the camera replays still pass.
 
@@ -134,6 +139,6 @@ Unknowns:
 
 ## 2026-10-13T20:53:44+02:00 — Correction: the automatic box uses the node matrices (Police_Door_02 centre, girders, Donut_Box)
 
-- **Correction of the 2026-10-13T17:34:00 entry (stand-in `kDoorCentreXStandIn`, "automatic box uses the mesh bounds without the node pose matrices"):** the bounds routine 0x242eb0 (ev_563de5d0…7189) takes the eight corners of every node's mesh box (centre ± half, mesh record +8 / +0x14) and moves them by the matrix of that node before taking the min and max. The matrix comes from the entity's palette (node +0x110) when set, else from the model block at header +0x20 (0x40 bytes per node, row vectors, translation in row 3; the previously skipped block of parseModel, now `Model::nodeMatrices`), used when its last element (+0x3c) is not 0, else the identity (DAT_0052fce4). A mesh that two nodes use counts once (flag array); nodes named "NoBounds*" are skipped.
+- **[Corrects collision.md §2026-10-13T17:34:00](collision.md#ts-20261013-173400) (stand-in `kDoorCentreXStandIn`, "automatic box uses the mesh bounds without the node pose matrices"):** the bounds routine 0x242eb0 (ev_563de5d0…7189) takes the eight corners of every node's mesh box (centre ± half, mesh record +8 / +0x14) and moves them by the matrix of that node before taking the min and max. The matrix comes from the entity's palette (node +0x110) when set, else from the model block at header +0x20 (0x40 bytes per node, row vectors, translation in row 3; the previously skipped block of parseModel, now `Model::nodeMatrices`), used when its last element (+0x3c) is not 0, else the identity (DAT_0052fce4). A mesh that two nodes use counts once (flag array); nodes named "NoBounds*" are skipped.
 - Police_Door_02 (model prop_door_policestation_english1): mesh centre x −0.0698476, node matrix translation x +0.0698476. The entity box read at gameplay-start (entity 0x08dbcb90) has centre x 5.96046e−8 (2^−24) and the replica now computes the same value bit for bit; that was the 0.0 of the stand-in. `kDoorCentreXStandIn` is gone.
 - Box check against the grid read at gameplay-start (entities matched to objects by position and class type byte): 405 of 406 auto and class boxes agree within 2e-3 (was 412 of 419: the girders, `Donut_Box` and the door are fixed). The remaining one is `FP_Sky_Dive_02` (props/parkour_skydive: centre z 1.8271 against 1.7145, half z 2.3672 against 2.4765); that class has its own constructor, not checked.

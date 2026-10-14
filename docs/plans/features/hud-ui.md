@@ -12,7 +12,7 @@ IN_PROGRESS, updated 2026-10-14T10:47:00+0200. `chase-game` shows the original's
 
 - Portrait (heartsBG_cop plus `sprites/portraits/police`), four hearts (class attribute "Health", default 4), the last heart pulses (`Loop_Heart`), `Gain_Heart` / `Lose_Heart` follow `SetHearts` (0x2316b4): [hud.md](../../re/hud.md). HUD pixels against the oracle: portrait 6.7, hearts 2.5, stud number 5.8 mean abs over the opaque pixels.
 - Stud counter: shows the new total at once (no roll-up for pickups), icon bounce for 5 updates, ON 0.5 s / hold 2.0 s / OFF 0.5 s, state sequence equal to a recorded pickup (`hud-real-data`).
-- Crossed-out camera icon (`UI_CameraLocked`): bottom left of the top screen at (10, 240 - 10 - height), fade 0.3 s, hold 0.5 s after the last L/R press while the record pose camera is active, fade out 0.3 s; timing read from the original's object (`camera-records`): [camera.md §2026-10-14T10:44](../../re/camera.md#ts-20261014-104400). Not replicated: the conditions 0x21d744 / 0x236008 (CAMERA-S4).
+- Crossed-out camera icon (`UI_CameraLocked`): bottom left of the top screen at (10, 240 - 10 - height), fade 0.3 s, hold 0.5 s after the last L/R press while the record pose camera is active, fade out 0.3 s; timing read from the original's object (`camera-records`): [camera.md §2026-10-14T10:44](../../re/camera-records-blending.md#ts-20261014-104400). Not replicated: the conditions 0x21d744 / 0x236008 (CAMERA-S4).
 - Flying studs: flight law and sink unprojection reproduce the recorded positions to 2e-3 (`studs-core`).
 - `.bxaml` layouts decode; concurrent storyboards and attached layouts are supported by the shared layout code (`LayoutScene::laterStoryboards`, `attachedLayouts`).
 
@@ -45,7 +45,7 @@ IN_PROGRESS, updated 2026-10-14T10:47:00+0200. `chase-game` shows the original's
 
 - `.bxaml` layout format and storyboards: [ui-layouts.md §2026-10-13T11:00](../../re/ui-layouts.md#ts-20261013-1100), runtime layout [ui-layouts.md §2026-10-13T09:12](../../re/ui-layouts.md#ts-20261013-0912).
 - HUD page, hearts, stud bar, flight, map screen and the fit: [hud.md](../../re/hud.md).
-- Camera lock icon object, states and drawing 0x1b1150: [camera.md §2026-10-14T10:44](../../re/camera.md#ts-20261014-104400).
+- Camera lock icon object, states and drawing 0x1b1150: [camera.md §2026-10-14T10:44](../../re/camera-records-blending.md#ts-20261014-104400).
 
 ## 7. Code and tests
 

@@ -72,5 +72,99 @@ class CheckDocLinksTest(unittest.TestCase):
         self.assertEqual(links.process(self.root, False)[0], [])
 
 
+class RuleChecksTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        self.re_dir = self.root / 'docs' / 're'
+        self.features = self.root / 'docs' / 'plans' / 'features'
+        self.re_dir.mkdir(parents=True)
+        self.features.mkdir(parents=True)
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def errors(self, rule):
+        return [e for e in links.process(self.root, False)[0] if rule in e]
+
+    def test_re_file_size(self):
+        (self.re_dir / 'big.md').write_text('x' * 40960)
+        (self.re_dir / 'huge.md').write_text('x' * 40961)
+        found = self.errors('re-file-size')
+        self.assertEqual(len(found), 1)
+        self.assertTrue(found[0].startswith('docs/re/huge.md:1: re-file-size'))
+
+    def test_feature_and_index_length(self):
+        (self.features / 'ok.md').write_text('line\n' * 150)
+        (self.features / 'long.md').write_text('line\n' * 151)
+        (self.features / 'README.md').write_text('line\n' * 41)
+        found = self.errors('-length')
+        self.assertEqual(len(found), 2)
+        self.assertTrue(any('long.md:151: feature-file-length' in e for e in found))
+        self.assertTrue(any('README.md:41: index-file-length' in e for e in found))
+
+    def test_item_and_stand_in_length(self):
+        long_text = 'y' * 400
+        (self.features / 'f.md').write_text(
+            f'- [ ] FOO-1 {long_text}\n'
+            f'- [x] FOO-2 short\n'
+            f'- FOO-S1 {long_text}\n'
+            f'- FOO-S2 short\n'
+            f'Prose line {long_text}\n'
+        )
+        found = self.errors('item-length')
+        self.assertEqual(len(found), 2)
+        self.assertTrue(any('f.md:1: item-length' in e for e in found))
+        self.assertTrue(any('f.md:3: item-length' in e for e in found))
+
+    def test_claude_md_size(self):
+        (self.root / 'CLAUDE.md').write_text('x' * 12800)
+        self.assertEqual(self.errors('claude-md-size'), [])
+        (self.root / 'CLAUDE.md').write_text('x' * 12801)
+        self.assertEqual(len(self.errors('claude-md-size')), 1)
+
+    def write_pair(self, corrected_by_line, corrects_text='Corrects a.md §2026-01-01T01:00'):
+        (self.re_dir / 'a.md').write_text(
+            '# A\n\n<a id="ts-20260101-010000"></a>\n\n## 2026-01-01T01:00:00+01:00 — Old\n\n'
+            + corrected_by_line + '\nBody.\n'
+        )
+        (self.re_dir / 'b.md').write_text(
+            '# B\n\n<a id="ts-20260102-020000"></a>\n\n## 2026-01-02T02:00:00+01:00 — New\n\n'
+            f'[{corrects_text}](a.md#ts-20260101-010000)\n'
+        )
+
+    def test_correction_pairing_complete(self):
+        self.write_pair('Corrected by [b.md §2026-01-02T02:00](b.md#ts-20260102-020000): value changed')
+        self.assertEqual(self.errors('correction-pairing'), [])
+
+    def test_corrects_without_corrected_by(self):
+        self.write_pair('Nothing here.')
+        found = self.errors('correction-pairing')
+        self.assertEqual(len(found), 1)
+        self.assertTrue(found[0].startswith('docs/re/b.md:7:'))
+
+    def test_corrected_by_without_corrects(self):
+        self.write_pair(
+            'Corrected by [b.md §2026-01-02T02:00](b.md#ts-20260102-020000): value changed',
+            corrects_text='See a.md §2026-01-01T01:00',
+        )
+        found = self.errors('correction-pairing')
+        self.assertTrue(any(e.startswith('docs/re/a.md:7:') and 'no matching' in e for e in found))
+        self.assertEqual(len(found), 1)
+
+    def test_corrected_by_must_stand_under_heading(self):
+        (self.re_dir / 'a.md').write_text(
+            '<a id="ts-20260101-010000"></a>\n\n## 2026-01-01T01:00:00+01:00 — Old\n\nBody.\n\n'
+            'Corrected by [b.md §2026-01-02T02:00](b.md#ts-20260102-020000): late\n'
+        )
+        (self.re_dir / 'b.md').write_text(
+            '<a id="ts-20260102-020000"></a>\n\n## 2026-01-02T02:00:00+01:00 — New\n\n'
+            '[Corrects a.md §2026-01-01T01:00](a.md#ts-20260101-010000)\n'
+        )
+        found = self.errors('correction-pairing')
+        self.assertEqual(len(found), 1)
+        self.assertIn('directly under the heading', found[0])
+
+
 if __name__ == '__main__':
     unittest.main()

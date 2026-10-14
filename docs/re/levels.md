@@ -6,6 +6,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 
 ## 2026-10-12T17:20+02:00 — S4c: .blvl level format decoded (REA, Ghidra)
 
+Corrected by [levels.md §2026-10-12T23:05](levels.md#ts-20261012-2305): placement Euler order recovered
+
 - The xref to "levels/%s.blvl" (0x1b1f30) comes from 0x1b1e58. The xref to ".blvl" (0x1d0028, ev_09591263…74f2) is in 0x1cfc50 (ev_fec8db4c…f2f1), the generic .blvl deserializer (pseudo-code ev_1eed109a…f773).
 - Helpers:
   - 0x208ae0 (ev_9429bb98…bdf) deserializes a 12-byte parameter: {u32 name hash, u16, u16 type, u32 value}. Types 1/2/3/6 have one block, type 4 one block if the value is non-zero, type 8 two blocks, and the rest are inline.
@@ -23,6 +25,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 <a id="ts-20261012-1745"></a>
 
 ## 2026-10-12T17:45+02:00 — S4c: native level placement and the mesh-centre rule
+
+Corrected by [levels.md §2026-10-12T23:05](levels.md#ts-20261012-2305): placement Euler order recovered
 
 - Mesh record: byte 0 bit 0 means the vertices are stored relative to the float3 at mesh+8 (the mesh bbox centre). It was found because room3/room5 geometry sat at the origin while their props were at x≈−278/+235. Census over all models:
   - bit clear: 3620 meshes have bbox centre == +8, and 145 more have both at 0
@@ -47,7 +51,7 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - "initialorientation" (string at 0x1a49c4, referenced at 0x1a4860 in object setup 0x1a4130, ev_eb095374…8f7 / ev_8c852395…6e0): the parameter is looked up by hash (0x24da28 + 0x217080). Its three floats are multiplied by 0.0174533 (literal at 0x1a49d8) and passed to 0x237c48.
 - 0x237c48 (disassembly), using sincos 0x249038 (r0 = sin, r1 = cos), writes the rotation rows [cy·cz, sx·sy·cz + cx·sz, sx·sz − cx·sy·cz], [−cy·sz, cx·cz − sx·sy·sz, sx·cz + cx·sy·sz], [sy, −sx·cy, cx·cy]. Rows 3 and column 3 are left untouched.
   - A numeric search over all 48 axis-order and sign combinations matches only Rz·Ry·Rx for row vectors (x applied first), i.e. Rx·Ry·Rz in column-vector terms.
-  - The viewer's Ry·Rx·Rz assumption mirrored the yaw of objects with ±180 on X and Z: the game gives Ry(180 − y), the assumption gave Ry(180 + y).
+  - The viewer's Ry·Rx·Rz assumption ([Corrects levels.md §2026-10-12T17:20](levels.md#ts-20261012-1720), [Corrects levels.md §2026-10-12T17:45](levels.md#ts-20261012-1745)) mirrored the yaw of objects with ±180 on X and Z: the game gives Ry(180 − y), the assumption gave Ry(180 + y).
 - Only object setup 0x1a4130 was traced. That other classes using "initialorientation" (12 more string copies) share 0x237c48 is assumed, not checked.
 - lvl_00_policestation_main: 120 of 130 placements are yaw-only or zero, so only a few props change in room3.
 - chase_assets placementMatrix (level.cpp) and convert_levels.placement_matrix replicate it, with tests for (90,0,0) mapping +y to +z and (180,30,180) equalling a yaw of 150. chase-viewer uses it directly (same memory layout as GL column-major).
@@ -57,6 +61,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 <a id="ts-20261012-2325"></a>
 
 ## 2026-10-12T23:25+02:00 — Whole levels in the viewer
+
+Corrected by [streaming.md §2026-10-13T22:27](streaming.md#ts-20261013-222700): the game does not stream with Pregen/*.bin
 
 > Correction: the game does not stream with `Pregen/*.bin`; see [streaming.md §2026-10-13T22:27](streaming.md#ts-20261013-222700).
 
@@ -94,7 +100,7 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - Evidence:
   - Oracle reference gameplay-start.png (Azahar, gameplay-start checkpoint): the player stands at (886.764, 16.589, 1111.166) with model forward (−0.711, 0, −0.703), and the camera yaw f32 at 0x376894 is −2.3501 rad. sin(−2.3501) = −0.711 and cos(−2.3501) = −0.703, so the game's yaw convention is forward = (sin yaw, cos yaw) in (x, z).
   - In the reference the donut shop sits ahead, a blue bus stop to its left, the stairs behind a "POLICE" pillar at the right edge. The old viewer camera at (889.6, 19, 1114) looking along the same forward vector (pitch −12°) showed the stairs and the bus stop swapped and the pillar text mirrored. After mirroring x the layout and the text match the reference.
-  - The cutscene path (cutscenes.md) was also mirrored: the 1_1_a "POLICE" sign read mirrored at frame 200, and the torso "F" of the placeholder minifig was reversed. The earlier claim that the row-0/2 flip gave unmirrored text was wrong.
+  - The cutscene path ([Corrects cutscenes.md §2026-10-13T02:30](cutscenes.md#ts-20261013-0230)) was also mirrored: the 1_1_a "POLICE" sign read mirrored at frame 200, and the torso "F" of the placeholder minifig was reversed. The earlier claim that the row-0/2 flip gave unmirrored text was wrong.
   - The camera matrix from 0x20e850 has determinant +1 with row 0 = screen right, row 1 = up, row 2 = forward (x = y × z), which is a left-handed camera. In a left-handed frame, right = up × forward, so at yaw 0 the camera looks along +z with +x to the right.
 - Convention (chase_render): yaw/pitch give forward = (cos p·sin yaw, sin p, cos p·cos yaw) and screen right = (cos yaw, 0, −sin yaw). `view()` builds a proper (right-handed, det +1) GL view for that camera and `perspective()` negates the x scale, which mirrors the image to the game's handedness. No model, placement or actor data is mirrored. The mirror reverses on-screen triangle winding, so `setFrontFace(true)` (front = counter-clockwise in the game's own view, the old default that hides ceilings) selects GL_CW.
 - The cutscene path keeps its row 0/2 flip: that yields a proper GL camera whose GL right is −row 0, and the projection mirror makes screen right = row 0, as in the game.

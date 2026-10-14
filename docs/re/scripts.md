@@ -6,6 +6,7 @@ How the level's own scripts decide which placed objects are disabled when a leve
 
 ## 2026-10-13T20:42:36+02:00 — Script data, executor, EnableObject, the startup script and the revealer links (REA Ghidra 12.1.2, llvm-objdump, Azahar oracle port 24692 without RPC)
 
+Corrected by [scripts.md §2026-10-14T09:52](scripts.md#ts-20261014-095252): waits take their time and SpawnScript returns when the child yields
 Corrected by [script-natives.md §2026-10-14T13:33](script-natives.md#ts-20261014-133339): `scriptfns.txt` documents only 300 of the 377 natives, and the table entries are bound to handlers by name through 0x23912c.
 
 Replica: `Level::scripts` / `objectReferenceHash` (src/assets/level.cpp), `levelStartState` (src/runtime/level_start.cpp), `PlacedObjectState` and `objectCollisions` (src/assets/object_collision.*). Tests: `level-start-real-data` (tests/level_start_real_test.cpp), `collision-real-data`.
@@ -59,6 +60,8 @@ Unknowns
 <a id="ts-20261014-095252"></a>
 
 ## 2026-10-14T09:52:52+02:00 — Per-update script runner, thread record, Wait, CallScript / SpawnScript, script starters and the trigger path (llvm-objdump, REA Ghidra 12.1.2, Azahar oracle port 24701 without RPC)
+
+Corrected by [scripts.md §2026-10-14T10:06](scripts.md#ts-20261014-100640): trigger enable byte and bound bytes +0xa / +0xb
 
 Replica: `ScriptRunner` (src/runtime/script_runner.cpp), `runLevelStartup` / `levelStartState` (src/runtime/level_start.cpp), hook in `chase-game` (src/game.cpp). Tests: `script-runner` (tests/script_runner_test.cpp, synthetic), `level-start-real-data`. REA evidence: ev_8cc8870b… (0x1746c0, 0x17acbc, 0x1ecc50, 0x2f67fc), ev_9d4fee32… (0x197c3c, 0x245258, 0x2b4a50, 0x1964dc), ev_f23162d2… (0x2388e4, 0x23c188, 0x234124, 0x224eb4), ev_b2f65ae3… (0x1cddf8), ev_27b1b3b4… (0x16babc, 0x15b888), ev_e8434d21… (0x23c41c, 0x23cee8, 0x28aef4), ev_d5b25508… (0x21a560, 0x201a54, 0x23cff4). The executor, Wait, CallScript and EnableTrigger were read with llvm-objdump (`--mattr=+vfp2` for the float code).
 
@@ -114,7 +117,7 @@ Replica: `ScriptRunner` (src/runtime/script_runner.cpp), `runLevelStartup` / `le
 ### Port behaviour (chase-game)
 
 - `levelStartState` runs "startup" through `ScriptRunner` and steps it with dt 0.034 until no thread is left: 326 updates for lvl_01 (Wait 1 in `1-1_MissionStart`, waits of `1-1_OnScreenText_Script`); the disabled set is the same 249 names as before. `chase-game` steps only until "startup" has ended (30 updates), then runs the remaining threads in its own updates, and sends TriggerObject 0xff / 0xfe to the doors of the same name.
-- Correction of the 2026-10-13T20:42 entry: its first stand-in (waits count as elapsed, SpawnScript runs the child to its end, only "startup" runs) no longer describes the port; waits now take their time and SpawnScript returns when the child yields.
+- [Corrects scripts.md §2026-10-13T20:42:36](scripts.md#ts-20261013-204236): its first stand-in (waits count as elapsed, SpawnScript runs the child to its end, only "startup" runs) no longer describes the port; waits now take their time and SpawnScript returns when the child yields.
 
 Stand-ins and approximations (IDs: [features/script-system.md](../plans/features/script-system.md))
 - Start steps use dt 0.034 (the free-running dt read at gameplay-start), not the loading phase's own updates.
@@ -132,7 +135,7 @@ Unknowns
 
 ## 2026-10-14T10:06:40+02:00 — Trigger records, bound switches, the bound test and the police entrance explained (REA Ghidra 12.1.2, llvm-objdump, Azahar oracle port 24701 without RPC)
 
-Replica: `ScriptRunner::checkTriggers`, `EnableTrigger`, `EnableBound`, `setRoomLoaded` (src/runtime/script_runner.cpp); `LevelTrigger::nameHash`, `LevelBound` node / shape / enabled / active / room, `Level::boundMatrices` (src/assets/level.cpp). Tests: `script-runner` (synthetic), `level-start-real-data` (oracle values below). REA evidence: ev_45c3f2fb… (0x22f650, 0x26a20c, 0x18a89c), ev_5f5e3c50… (0x2c185c, 0x24255c, 0x257f14), ev_05c9f4b1… (0x1dd380, 0x23e798, 0x21b3fc), ev_3549f20e… (0x250810), ev_ae423cb4… (0x229a40), ev_47524e83… (0x173944), ev_3af9fd1a… (0x211e04). Corrects the unknowns of the 09:52:52 entry about the trigger enable byte, bound bytes +0xa / +0xb, EnableBound, the box test and the police walk.
+Replica: `ScriptRunner::checkTriggers`, `EnableTrigger`, `EnableBound`, `setRoomLoaded` (src/runtime/script_runner.cpp); `LevelTrigger::nameHash`, `LevelBound` node / shape / enabled / active / room, `Level::boundMatrices` (src/assets/level.cpp). Tests: `script-runner` (synthetic), `level-start-real-data` (oracle values below). REA evidence: ev_45c3f2fb… (0x22f650, 0x26a20c, 0x18a89c), ev_5f5e3c50… (0x2c185c, 0x24255c, 0x257f14), ev_05c9f4b1… (0x1dd380, 0x23e798, 0x21b3fc), ev_3549f20e… (0x250810), ev_ae423cb4… (0x229a40), ev_47524e83… (0x173944), ev_3af9fd1a… (0x211e04). [Corrects scripts.md §2026-10-14T09:52:52](scripts.md#ts-20261014-095252): the unknowns of the 09:52:52 entry about the trigger enable byte, bound bytes +0xa / +0xb, EnableBound, the box test and the police walk.
 
 ### Records (oracle `read`, gameplay-start)
 

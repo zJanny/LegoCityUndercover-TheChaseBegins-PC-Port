@@ -27,7 +27,7 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 
 ## 2026-10-12T22:40+02:00 — Texture v orientation corrected (most "black material" cases)
 
-- Corrects the S4b/18:05 note "GL's first row is v=0, which the game also treats as the bottom": UV v=0 is the TOP row of the decoded (top-down) image.
+- Corrects the S4b viewer code comment (`src/viewer.cpp`, commit 9e143f0) "GL's first row is v=0, which the game also treats as the bottom": UV v=0 is the TOP row of the decoded (top-down) image.
   - The decoder itself is right (the splash1top text reads upright).
   - char_squirrel: the body UVs (v 0.47–0.99) must hit the orange lower half of SquirrelALPHAT64, and the eye part (v 0.02–0.54) the eye decal in the upper half. With the old convention both were swapped, so the body sampled the black decal area.
   - pickup_chasetoken_imposter: the minifig face is upside down under the old convention and upright under the new one.

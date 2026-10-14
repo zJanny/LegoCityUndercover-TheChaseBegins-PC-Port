@@ -16,6 +16,7 @@ Read this index, then open only the file you need.
 | [models.md](models.md) | `.bfnmdl`, vertex layout, materials, shaders, UV scales, lightmaps (collision section: see collision.md) |
 | [materials.md](materials.md) | Material record fields, the texture-environment stage generator 0x12e460, blend/alpha test/depth/cull, material census, lighting measurements |
 | [levels.md](levels.md) | `.blvl`, placements, Euler order, nav grids (`.bfnnav`) |
+| [level-transitions.md](level-transitions.md) | Details moved out of the level-transition feature items (natives without handler, loading page code) |
 | [objects.md](objects.md) | Level objects: classes, class files (+0x10/+0x14), parameter slots, how the model is found, drawn classes |
 | [skeleton-animation.md](skeleton-animation.md) | `.bfnskl`, `.bfnanm`, curves, pose composition, skinning, bone palettes |
 | [cutscenes.md](cutscenes.md) | `csdata` cutscenes: tracks, cameras, actors, soundtrack |
@@ -32,8 +33,14 @@ Read this index, then open only the file you need.
 | [hud.md](hud.md) | In-game HUD: layouts, portrait, hearts (SetHearts, loop rule, health default), stud bar (state machine, formatting, icon bounce, no roll-up for pickups), flying studs (law, unprojection, sinks), bottom-screen map placement |
 | [streaming.md](streaming.md) | World levels and the master level, scene array, room objects and states, room links (`.blvl` +0x34), event bindings (+0x1c), the `SceneChange` chain, `StreamRoomIn`; `pregen/` is not streaming |
 | [oracle.md](oracle.md) | Azahar runtime oracle: setup, fidelity rules, save states, fast workflow, timings |
-| [camera.md](camera.md) | Gameplay camera: yaw word 0x376894 writer, manager and modes, follow camera law (OnFoot preset), projection, obstruction by level geometry (slab sweep, pull-in, side and vertical push), unknowns |
-| [player.md](player.md) | Player entity pointer, scene node, controller fields, stick-to-intent, locomotion rules and root motion |
+| [camera.md](camera.md) | Gameplay camera: pointers to the three files below |
+| [camera-follow.md](camera-follow.md) | Yaw word 0x376894 writer, manager and modes, follow camera law (OnFoot preset), projection |
+| [camera-collision-sweep.md](camera-collision-sweep.md) | Obstruction by level geometry and placed objects (slab sweep, pull-in, side and vertical push, box slicing) |
+| [camera-records-blending.md](camera-records-blending.md) | Camera lock, level-bound records, record pose 0x298cd8, fade between commands, pose filter |
+| [player.md](player.md) | Player entity and controller: pointers to the three files below |
+| [player-entity-input.md](player-entity-input.md) | Player entity pointer, scene node, controller fields, stick-to-intent, position and character source, head attachment |
+| [player-locomotion.md](player-locomotion.md) | Locomotion rules and root motion, replica, ground following, derivation of the speeds |
+| [player-falling-jumping.md](player-falling-jumping.md) | Falling, landing stun, jumping, step-off slide, slope slow-down, state table |
 | [front-end.md](front-end.md) | Boot sequencer 0x302080, screen order and triggers from power-on to the first level, prompt state machine 0x313368, save indicator, language, savegameflow pages, loading screen, intro movie bubble and title card |
 | [collision.md](collision.md) | Level collision data (model+0x1c section), ground probe by box bisection, wall slide, placed objects (world grid, registration, shapes, query layers), differential test against traces |
 

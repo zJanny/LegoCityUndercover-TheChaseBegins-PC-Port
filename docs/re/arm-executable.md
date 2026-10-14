@@ -65,6 +65,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 
 ## 2026-10-13T08:55+02:00 — Fixed-step scheduler fields (REA Ghidra 12.1.2 ev_68bf373e…, llvm-objdump; read-only, partial)
 
+Corrected by [arm-executable.md §2026-10-13T10:35](arm-executable.md#ts-20261013-103531): C+0x10/+0x14 are minimum and maximum dt; the scheduler is a clamped variable step
+
 - 0x100f44 takes a process object P. P+0xc points to a client object C with vtable +0x1c Update(dt) and +0x24 (called with 1 before and 0 after Update).
   - C+0x10, +0x14 and +0x18 are floats multiplied by the tick frequency 0x25c1f8: the step, the minimum step and the variable-step length.
   - C+0x1c is a float scale applied to the tick count. C+0x20 = run every call with dt = C+0x10. C+0x21 = variable step. C+0x22 = call 0x102340 after the step when P+0x10 == 2.
@@ -72,11 +74,13 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
   - When no step is due, the scheduler sleeps through 0x25c174(1/30 s).
 - 0x158640 builds a smoothing table with dt = 1/60 (0x1640a8). 0x1ab96c and 0x309514 convert a frame count to seconds with 1/30. Neither proves the scheduler step.
 - Searched without success: the 1/30 and 1/60 literals, the app constructor 0x10087c, stores to +0x10..+0x1c with flag bytes +0x20..+0x22 (the candidates 0x156914 and 0x343e30 are unrelated). The object that sets C+0x10 is still unknown.
-- Correction to the 2026-10-13T08:53 save-format entry: slot-table entries 12 and 13 (*0x376a18, *0x376a1c) hold channels 8 (L) and 10 (R), using the table order from the 10:45 entry. Invert camera therefore flips the direction of L/R camera rotation, not a stick axis. Not verified at runtime.
+- [Corrects save-format.md §2026-10-13T08:53](save-format.md#ts-20261013-0853): slot-table entries 12 and 13 (*0x376a18, *0x376a1c) hold channels 8 (L) and 10 (R), using the table order from the 10:45 entry. Invert camera therefore flips the direction of L/R camera rotation, not a stick axis. Not verified at runtime.
 
 <a id="ts-20261013-092040"></a>
 
 ## 2026-10-13T09:20:40+02:00 — Input slot table 0x3769e8 (REA Ghidra 12.1.2; read-only, partial)
+
+Corrected by [arm-executable.md §2026-10-13T09:22](arm-executable.md#ts-20261013-092253): 0x376a30 is not unused
 
 - The table is 18 words (0x3769e8..0x376a2c), each a channel index into the pad device's channel array. 0x168c9c fills it (ev_70129f7a…). Memory is zero until that init runs (ev_5ed4bcca…, static image).
 - Readers index it as `*(s16*)(chanArray + slot*0x14 + 0x10)`, where `chanArray = *(DAT_003769e4 + 0x14)`: field +0x10 is the s16 press edge of the 20-byte channel record. So slots are lookups for press edges, not held state.
@@ -129,7 +133,7 @@ Unknown:
   - Readers (ev_aaa1fd56…): 0x168d18, 0x168d30 (init), 0x1d9168 (FUN_001d9094), 0x200570/0x20077c/0x2007e8/0x200ab4 (player controller), 0x2289cc (FUN_002289b8), 0x2d79cc (FUN_002d7fd0, not decompiled).
   - They read the **f32 value at +0 (and the deadzone at +8)**, not +0x10. The player controller treats the stick as active when |value| > deadzone for slot 14 or 15, converts (x, y) with atan2 (scale 10430.378 = 32768/π) to a heading, and applies a power curve (0x25b578) except for entity types 0x14b and 0x189. Slot 14 value also drives DAT_00589bac for entity types 1–5 and 0x11c (dead zone ±0.25, gain 1.3333334).
   - **New:** FUN_002289b8 (ev_18417439…) synthesizes D-pad channels from the left stick: if the larger of |slot14| and |slot15| exceeds 0x3f19999a (about 0.6), it picks Right/Left (slots 3/2) when |x| > |y| and Up/Down (slots 0/1) otherwise (positive y gives slot 0 = Up), sets that channel value to 1.0, press edge +0x10 = 1 when the direction changed, release +0x12 = 0; when the stick returns it sets release +0x12 = 1 for the last direction. State lives in 0x376a30 (sentinel 0x2b = none).
-  - **Correction to the 09:20:40 entry:** 0x376a30 is not unused; it holds the last synthesized stick direction written by FUN_002289b8. Slots 14–17 readers are no longer unexamined (slots 14/15 = left stick x/y; slots 16/17 = channels 2/3 had no reader in this pass).
+  - **[Corrects arm-executable.md §2026-10-13T09:20:40](arm-executable.md#ts-20261013-092040):** 0x376a30 is not unused; it holds the last synthesized stick direction written by FUN_002289b8. Slots 14–17 readers are no longer unexamined (slots 14/15 = left stick x/y; slots 16/17 = channels 2/3 had no reader in this pass).
   - Effect on the lab: the game's menu navigation sees a stick push past about 0.6 of the stick range as a D-pad press, with edge and release. The lab does not need to model this unless it wants to replicate the menu.
 - Unknown:
   - Whether channel 7 is written elsewhere (record playback, other devices) and what the any-button check expects from it.
@@ -140,6 +144,9 @@ Unknown:
 <a id="ts-20261013-093611"></a>
 
 ## 2026-10-13T09:36:11+02:00 — GSP interrupt thread and vblank wait (REA Ghidra 12.1.2, llvm-objdump; read-only, partial)
+
+Corrected by [arm-executable.md §2026-10-13T09:38](arm-executable.md#ts-20261013-093842): ids 2 and 3 increment 0x593d14 / 0x593d18; mode 0x402 waits sequentially
+Corrected by [arm-executable.md §2026-10-13T09:41](arm-executable.md#ts-20261013-094132): 0x25a6f0 is the same routine as the vblank-wait caller
 
 - Svc stubs (objdump): 0x2594b4 = WaitSynchronizationN (svc 0x25; no svc 0x24 stub exists), 0x25947c = SendSyncRequest (svc 0x32), 0x259464 = CreateEvent (svc 0x17), 0x256c18 = ClearEvent (svc 0x19), 0x24e9d0 = GetSystemTick (svc 0x28), 0x105b20 = SleepThread (svc 0xa).
 - GSP RegisterInterruptRelayQueue: header 0x130042 is stored by 0x1302f0 (literal at 0x13033c; only caller 0x12c224, inside GSP init 0x12c15c, which is called by 0x122090; ev_0b551343…). The event handle is created by 0x259464 (type 0) and stored at G+0x2c, where G = *0x386404 = 0x371c40. The same init creates the interrupt thread (CreateThread entry 0x1300c8, literal at 0x12c324).
@@ -160,6 +167,8 @@ Unknowns:
 
 ## 2026-10-13T09:38:42+02:00 — Vblank counters, wait modes and mode byte 0x52a1f4 (REA Ghidra 12.1.2, llvm-objdump; read-only, partial)
 
+Corrected by [arm-executable.md §2026-10-13T10:35](arm-executable.md#ts-20261013-103531): 0x52a1f4 is 2 at run time
+
 - Counter writers (ev_2916a84c…, ev_a2aee7af…): 0x11f4c8 increments 0x593d14 and 0x11f50c increments 0x593d18, each by 1 modulo 0x7fffffff. Each first calls an optional user hook (0x593d1c / 0x593d20) with 0x400 / 0x401. The counter block base is 0x593bc0 (counters at +0x154 / +0x158, hooks at +0x15c / +0x160).
 - Registration: FUN_00112630 (GPU init, called from 0x105d8c; ev_868d354a…) calls 0x24e07c(callback, id) for ids 0..6 (0x1128a4 onward). 0x24e07c → 0x1222e8 stores the callback at G+0x10+id*4 (objdump of 0x1222e8..0x122320; id must be below 7). Id 2 gets 0x11f4c8 and id 3 gets 0x11f50c (literals at 0x112ffc / 0x113000). So 0x593d14 is the id 2 interrupt and 0x593d18 the id 3 interrupt. Mapping ids 2/3 to VBlank0 (top) / VBlank1 (bottom) is the usual 3DS GSP numbering (outside knowledge, not shown by this binary).
 - Each GSP interrupt of id 2 or 3 advances exactly one counter by 1, so a counter advance is one vertical blank of one screen. No divider or skip logic appears in the two callbacks.
@@ -169,7 +178,7 @@ Unknowns:
 - 0x105d8c (init, ev_743b52ce…) ends with FUN_0010fa54(0x1e), which is a tail call 0x1193fc → FUN_00122908(1, 0x1e) between lock/unlock calls 0x25b678 / 0x25b5a0. Its meaning is not examined (0x1e is also 30).
 - Reading (inference, not proven): in the default mode the present routine waits for one vblank of one screen (counter 0x593d14), so the present itself is paced to the vblank rate, not to every second vblank. Whether the game renders and presents every vblank or every second one depends on how often 0x25acc0 reaches 0x10f370 per vblank and on the scheduler step, neither of which was resolved.
 
-Corrections to the earlier entry (09:36:11): the unknown "which ids increment 0x593d14 / 0x593d18" is resolved above (ids 2 and 3). The statement "Mode 0x402: both change" is refined to a sequential wait (0x593d14 first, then 0x593d18).
+[Corrects arm-executable.md §2026-10-13T09:36:11](arm-executable.md#ts-20261013-093611): the unknown "which ids increment 0x593d14 / 0x593d18" is resolved above (ids 2 and 3). The statement "Mode 0x402: both change" is refined to a sequential wait (0x593d14 first, then 0x593d18).
 
 Unknowns:
 - 30 or 60 fps: not decided. The frame count per present and the scheduler step C+0x10 writer were not examined (budget). Next step: decompile 0x25acc0 and its loop (0x25afcc), find what stores C+0x10, and test whether a frame skip or swap-interval counter gates 0x109c98.
@@ -180,7 +189,7 @@ Unknowns:
 
 ## 2026-10-13T09:41:32+02:00 — Present function 0x25a6f0, minimum frame interval 0x529de8, command 0x4f (REA Ghidra 12.1.2, llvm-objdump; read-only, partial)
 
-- 0x25acc0 is not a function entry. It lies inside FUN_0025a6f0 (REA name; decompile ev_9f455fe2…), the display-list flush and buffer-swap routine. The call to 0x109c98 (which reaches 0x10f370) is its tail, after the swap, and runs only when byte 0x3760f0 is 0 and not (0x52a1f8 == 1 and 0x52a1f4 == 2). Correction: the earlier entry listed 0x25a6f0 as a separate caller of the vblank wait (not examined); it is the same routine.
+- 0x25acc0 is not a function entry. It lies inside FUN_0025a6f0 (REA name; decompile ev_9f455fe2…), the display-list flush and buffer-swap routine. The call to 0x109c98 (which reaches 0x10f370) is its tail, after the swap, and runs only when byte 0x3760f0 is 0 and not (0x52a1f8 == 1 and 0x52a1f4 == 2). [Corrects arm-executable.md §2026-10-13T09:36:11](arm-executable.md#ts-20261013-093611): the earlier entry listed 0x25a6f0 as a separate caller of the vblank wait (not examined); it is the same routine.
 - Waits per call (ev_9f455fe2…, objdump 0x25ab60..0x25abc8): the routine returns at once when byte 0x52a200 is 0. Otherwise it submits the frame and, if `0x52a1f8 == 1 || 0x52a1f4 != 2`, calls the mode wait 0x257a68(mode) once (mode from 0x52a1f4 as before) and then repeats it in a loop: `while (timer(0x529e30) < word(0x529de8) + last) wait(mode)`, where last = word 0x376120, refreshed after the loop. So one call waits for at least one counter change and then until the timer has advanced by word(0x529de8) since the previous present. This is a minimum frame interval, not an accumulator; no code path skips or repeats a game-update step here.
 - 3D-style double call: when 0x52a1f4 == 2 the wait block runs only when 0x52a1f8 == 1, and 0x52a1f8 is toggled (xor 1) at the end of the call. So in that mode two calls of this routine make one swap and one wait (0x52a1f8 selects the eye/half). In mode 0 or 1 every call waits. Meaning of 0x52a1f8 is inferred from this use only.
 - Interval word 0x529de8 = 0x529dc8 + 0x20. The 0x529dc8 block is zeroed at init (0x103034, size 0x6a8), so the value is 0 until set. Eleven stores of the constants 1 or 2 exist: value 2 at 0x2d5364, 0x2d84e0, 0x2d8978, 0x2f2170, 0x30003c and value 1 at 0x2d5a04, 0x2d874c, 0x2d8c2c, 0x2f2764, 0x300774, 0x313080 (objdump, each `str r0,[r1,#0x20]` with r1 from a literal pool word 0x529dc8 or 0x37472c / 0x375f90; the last two bases were not checked, so they may be a different structure). The function that holds each store was not decompiled, so what selects 1 versus 2 (a game state, 60 versus 30 fps cap) is unknown.
@@ -203,7 +212,7 @@ Unknowns:
 
 First runtime evidence. The game runs in Azahar 2126.2 (`azahar -g PORT`, Qt offscreen, isolated XDG home); `tools/azahar_oracle.py` drives it through the GDB remote protocol. The stub halts at entry 0x100000 until a client attaches.
 
-**Scheduler 0x100f44(P) — confirmed** (objdump 0x100f44..0x10125c, live values below). Correction to the 08:55 entry: C+0x10/+0x14 are the minimum and maximum dt, not "step" and "minimum step", and the scheduler is a clamped variable step, not a fixed step.
+**Scheduler 0x100f44(P) — confirmed** (objdump 0x100f44..0x10125c, live values below). [Corrects arm-executable.md §2026-10-13T08:55](arm-executable.md#ts-20261013-0855): C+0x10/+0x14 are the minimum and maximum dt, not "step" and "minimum step", and the scheduler is a clamped variable step, not a fixed step.
 
 - G = 0x376af8: G+0x10 = current P during the call, G+0x14 = "now" (the clock read by the scheduler; *0x376b0c in earlier entries).
 - Timer object T = P+0x18 (type at +4, raw ticks +8, frequency +0xc read by 0x25c1f8; 0x25c1e8 adds to +8).
@@ -222,7 +231,7 @@ First runtime evidence. The game runs in Azahar 2126.2 (`azahar -g PORT`, Qt off
 - T frequency 0xbb8 = 3000. Clock G+0x14 advanced 18050 over 360 vblanks (50 per vblank), so the clock unit is 1/3000 s.
 - With cap 1 and backlog drop, every update gets dt = clamp(elapsed, 0.03, 0.07) s and the game never catches up with extra steps.
 - 120 scheduler calls took 360 vblanks of each counter (3 per call, 20 updates/s), dt 0.0503. Which screen this was is unknown (about 110 s after boot, no input).
-- Pacing globals: 0x52a1f4 = 2 (correction to the 09:38 entry: the run-time value is 2, not the "likely 0" from the init store), 0x529de8 = 1, 0x52a200 = 0 at the scheduler breakpoint.
+- Pacing globals: 0x52a1f4 = 2 ([Corrects arm-executable.md §2026-10-13T09:38:42](arm-executable.md#ts-20261013-093842): the run-time value is 2, not the "likely 0" from the init store), 0x529de8 = 1, 0x52a200 = 0 at the scheduler breakpoint.
 - Timer 0x529e30 = {0, type 1, raw 0xb70, 60, …}: raw 2928 when the vblank counters were 2930. So timer+8 counts vblanks, and the unit of the minimum frame interval 0x529de8 is one vblank (1/60 s). The writer of timer+8 is still not located statically.
 
 **Oracle mechanics (confirmed by use):**

@@ -52,3 +52,11 @@ Pictures (local, `artifacts/oracle/agentB-out/`): `ps0.png` (oracle, state polic
 Unknowns:
 - Whether the original draws the `Checker1.tga` quads (placeholder markers); chase-game draws every room at once (WSTREAM-3).
 - The lobby light on lit props (RENDER-1).
+
+<a id="ts-20261014-134000"></a>
+
+## 2026-10-14T13:40:00+02:00 — Details moved from feature items RENDER-6
+
+Moved from the feature files so that the items stay short (CLAUDE.md, "Documentation rules"). The text below is the former wording of each item.
+
+- **RENDER-6** (rendering.md): The white quad above the police-station entrance is the `Checker1.tga` part (4 vertices, flat y = 0, 4.2 x 4.2, opaque) of `room1.bfnmdl` (also room3, room5), seen far away outside; not RENDER-S3. Unknown whether the original draws it (rooms outside are not loaded in the oracle). Not fixed (related: WSTREAM-3). evidence: [materials.md §2026-10-14T09:50](materials.md#ts-20261014-095011).

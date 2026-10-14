@@ -6,6 +6,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 
 ## 2026-10-12T15:45+02:00 — Sound container decoded (.bwav)
 
+Corrected by [pooled-resources.md §2026-10-12T15:55](pooled-resources.md#ts-20261012-1555): the .bwav 'version' word is the word count
+
 - The .bwav wrapper starts with u32 version 0x400 or 0x600.
   - v4 (1263 files): one standard CWAV at 0x44.
   - v6 (98 files, all music): one mono CWAV per channel, back to back from 0x4c, with the second CWAV starting exactly where the first ends.

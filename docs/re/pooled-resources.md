@@ -14,7 +14,7 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
   - Table: table_words × u32, each a pool marker (−14/−15/−16) followed by that pool's block sizes.
   - −16 block data follows the table and is included in header_bytes.
   - −15 and −14 block data follow in table order and end exactly at the end of the file.
-- Correction: the "version 0x400/0x600" noted earlier for .btga/.bwav is this word count (4 and 6). The texture "constants" are the table [−14, 0x20, −14, size]. The .bwav wrapper is a 0x2c record plus one CWAV block per part. convert_audio.py now splits it through this parser.
+- [Corrects audio.md §2026-10-12T15:45](audio.md#ts-20261012-1545): the "version 0x400/0x600" noted earlier for .btga/.bwav is this word count (4 and 6). The texture "constants" are the table [−14, 0x20, −14, size]. The .bwav wrapper is a 0x2c record plus one CWAV block per part. convert_audio.py now splits it through this parser.
 - `python3 tools/tt_resource.py --census artifacts/fib/files` — 12500/12500 pooled files close exactly:
 
   | Format | Files | Blocks | Pools |

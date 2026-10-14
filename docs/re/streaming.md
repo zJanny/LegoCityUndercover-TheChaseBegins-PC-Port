@@ -6,10 +6,12 @@ How the original organises levels, loads and unloads rooms and switches between 
 
 ## 2026-10-13T22:27:00+0200 — World levels, room links, scene change chain (REA Ghidra 12.1.2, llvm-objdump `--mcpu=arm1176jzf-s`, Azahar oracle port 24691 without RPC)
 
+Corrected by [streaming.md §2026-10-14T10:07](streaming.md#ts-20261014-100715): the bound was disabled, not out of position
+
 All addresses are for the reference build. Evidence IDs are shortened. Replica: `Level::roomLinks`, `Level::triggers` (src/assets/level.cpp); test `streaming-real-data` (tests/streaming_real_test.cpp).
 
 **Corrections of earlier entries**
-- [levels.md 2026-10-12T23:25](levels.md) says the game's streaming is `Pregen/*.bin`. Wrong: `pregen/` holds `collectables_level1..7.bin` (71 bytes each), `customchar.bin`, `levelobjectscount.bin`, `traffic/lvl_*_traffic.bin` and `pedestrians/lvl_*_pedestrians.bin` (AI route data for vehicles and pedestrians; code strings `Pregen/Traffic|Pedestrians/%s_*.bin` 0x2... in [arm-executable.md](arm-executable.md), `pregen/Collectables_Level%u.bin` at 0x23b598, `pregen/CustomChar.bin` at 0x1b7730). They are not read by anything that loads rooms. Not decoded here; the streaming data is the level file section +0x34 (below).
+- [Corrects levels.md §2026-10-12T23:25](levels.md#ts-20261012-2325) says the game's streaming is `Pregen/*.bin`. Wrong: `pregen/` holds `collectables_level1..7.bin` (71 bytes each), `customchar.bin`, `levelobjectscount.bin`, `traffic/lvl_*_traffic.bin` and `pedestrians/lvl_*_pedestrians.bin` (AI route data for vehicles and pedestrians; code strings `Pregen/Traffic|Pedestrians/%s_*.bin` 0x2... in [arm-executable.md](arm-executable.md), `pregen/Collectables_Level%u.bin` at 0x23b598, `pregen/CustomChar.bin` at 0x1b7730). They are not read by anything that loads rooms. Not decoded here; the streaming data is the level file section +0x34 (below).
 - The game does not load "one whole level" as the port does. The city is a master level plus world levels (below); the port's ASSET-S2 composition by archive folder is a stand-in.
 
 **World levels (observed, oracle state gameplay-start, GDB memory reads)**
@@ -60,7 +62,7 @@ All addresses are for the reference build. Evidence IDs are shortened. Replica: 
 
 All addresses are for the reference build. Evidence is from the stub's trap dumps (`artifacts/oracle/agentC-out/t*.txt`, not committed) and the REA-free `llvm-objdump --mcpu=arm1176jzf-s` listing of `game.arm.elf`; no REA session was used for this entry.
 
-**Correction of [the entry of 2026-10-13T22:27](#ts-20261013-222700) ("Oracle attempts without result")**
+**[Corrects streaming.md §2026-10-13T22:27](#ts-20261013-222700)** ("Oracle attempts without result")
 - The bound did not fire because it is disabled, not because of the position. Section +0x24 records are kept in memory as loaded (0x28 bytes): `+0 name pointer, +4 pointer, +8 byte tuple, +0xc float, +0x10 centre, +0x1c half extents`. The byte at **+0xa is the enabled flag**. The script native `EnableBound <bound> <value>` (table entry 0x136, handler 0x1d0ce8) stores `value > 0` there. At gameplay-start (lvl_01, StoryProgress 1) it is 0 for `Police_Station_Transition_Lower` (record 0x086640ec), `Police_ExtToInt` (0x086633f4) and `Police_Station_Transition_Upper` (0x08664114). Found by scanning the heap for the centre floats.
 - Scripts (decoded with `Level::scripts`): `1-1_MissionHide` (hash 0x550174ce) sets all three to 0 and is called by `startup` for every chapter; `1-1_MissionEnd` (0x4ca19460) and `1-1_MissionSkip` (0x9eeea98; `Police_Station_Transition_Upper` only when `Entered_Police_Station >= 1`) set them to 1; `1-2_MissionSkip` (0xb4248656) sets `Police_ExtToInt` to 1. `startup` calls `1-1_MissionStart` at StoryProgress 1 and `1-1_MissionSkip` from StoryProgress 2 on. So the entry to the station is first possible after mission 1-1.
 - Poking the byte to 1 (`poke 0x086640f6 01`) and placing the player inside the bound (x 905.2..909.3, y 16.2..20.2, z 1113.8..1117.8; world and local translation poked) made the trigger fire: the first call of `WarningDialogBox` (handler 0x2700d4, table entry 0x10a) came 34 updates later, from the script executor (lr 0x2342c0). That is script `Police_ExtToInt` (hash 0x2a5fbbbf). Evidence: traps t1, t9.
