@@ -81,6 +81,7 @@ Single C++ tests, with `ctest --test-dir build -R <name>`:
 | `soundtest-real-smoke`, `soundtest-id-smoke` | Play one sound by file name and one by number on the dummy audio driver. Same conditions |
 | `progress-tables` | The tables behind the progress report: which script commands, object types and file types the port handles. No game data needed |
 | `progress-readme` | Fails when the progress table in `README.md` is out of date (`tools/progress_report.py --check`); skips with code 77 if `artifacts/romfs` or the built library is missing |
+| `no-inline-shaders` | Fails when a `.cpp`, `.hpp` or `.h` file under `src/` contains shader code. Shaders live only in `.glsl` files under `src/render/shaders/` (see `CLAUDE.md`) |
 | `game-cpp-wiring` | Fails when `src/game.cpp` has more than 400 lines. That file only wires features together. New game logic goes into its own file under `src/runtime/` (see `CLAUDE.md`) |
 | `doc-links` | Checks the documentation rules (`tools/check_doc_links.py`). It fails on a broken link or anchor, a dated entry without an anchor, a `docs/re/` file over 40 KB, a feature file over 150 lines, the feature index over 40 lines, an item or stand-in over 400 characters, `CLAUDE.md` over 20 KiB, or a correction that is not marked at both ends. Add `--fix` to repair anchors and links. |
 | `studs-core` | Coin pickup rules on made-up coins, no game data needed |

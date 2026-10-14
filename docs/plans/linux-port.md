@@ -38,7 +38,7 @@ S4 subsystem plan (revision 3, 2026-10-12, based on the asset evidence in the pr
   - CWAV DSP-ADPCM decode
   - .bfnmdl geometry
   Verify with CTest on synthetic fixtures, plus an opt-in real-data test (skipped when artifacts/ is absent) that compares results with the Python tools' outputs.
-- S4b — level viewer: SDL2 + OpenGL 3.3 core. It loads one level's models with their textures and uses a free camera driven by the existing input core. This is a development viewer, not gameplay.
+- S4b — level viewer: SDL2 + OpenGL 4.6 core. It loads one level's models with their textures and uses a free camera driven by the existing input core. This is a development viewer, not gameplay.
 - S4c — level composition: decode .blvl (pooled; −15/−16 only) to place models, plus streaming (Pregen/*.bin). Requires RE of the .blvl loader.
 - S4d — audio playback through SDL audio, including loop points. Mapping sound IDs to events requires RE.
 - S4e — gameplay: the main loop (dispatcher 0x100448/0x10057c), entities and characters (.bfnskl/.bfnanm), scripts (scriptfns.txt, triggers), physics/navigation (.bfnnav), and UI (.bxaml/.bxls/.bstxt/.loc). Each needs its own evidence-backed plan before implementation.

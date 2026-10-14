@@ -38,5 +38,5 @@ IN_PROGRESS, updated 2026-10-14T09:50:11+02:00. Combiner setups of all 16122 shi
 
 ## 7. Code and tests
 
-- `src/assets/material.cpp`, `src/render/scene.cpp` (fragment shader runs the stages), `src/materials.cpp` (`chase-materials`: census, or stages of the models given).
+- `src/assets/material.cpp`, `src/render/scene.cpp` (`src/render/shaders/scene.frag.glsl` runs the stages; all shaders are `.glsl` files embedded at build time by `tools/embed_shaders.cmake`; OpenGL 4.6 core), CTest `no-inline-shaders`, `src/materials.cpp` (`chase-materials`: census, or stages of the models given).
 - CTest `assets-core` (hand-evaluated materials), `assets-real-data` (census and named setups). Scene: `setInstanceMesh` (one mesh per instance, used by two-leaf doors). Game option `--facing DEGREES` places the character for screenshot comparisons.

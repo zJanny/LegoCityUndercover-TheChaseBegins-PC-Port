@@ -1,5 +1,6 @@
 #pragma once
 #include "frontend/canvas.hpp"
+#include "render/shaders.hpp"
 #include <SDL.h>
 #include <epoxy/gl.h>
 #include <algorithm>
@@ -36,18 +37,8 @@ inline Screens screensFor(int width, int height) {
 class Overlay {
 public:
     Overlay() {
-        const char* vertexSource = "#version 330 core\n"
-                                   "layout(location = 0) in vec2 position;\n"
-                                   "layout(location = 1) in vec2 uv;\n"
-                                   "out vec2 texel;\n"
-                                   "void main() { texel = uv; gl_Position = vec4(position, 0.0, 1.0); }\n";
-        const char* fragmentSource = "#version 330 core\n"
-                                     "in vec2 texel;\n"
-                                     "uniform sampler2D image;\n"
-                                     "out vec4 colour;\n"
-                                     "void main() { colour = texture(image, texel); }\n";
         program_ = glCreateProgram();
-        const GLuint vertex = compile(GL_VERTEX_SHADER, vertexSource), fragment = compile(GL_FRAGMENT_SHADER, fragmentSource);
+        const GLuint vertex = compile(GL_VERTEX_SHADER, chase::render::shaders::hudVertex), fragment = compile(GL_FRAGMENT_SHADER, chase::render::shaders::hudFragment);
         glAttachShader(program_, vertex);
         glAttachShader(program_, fragment);
         glLinkProgram(program_);

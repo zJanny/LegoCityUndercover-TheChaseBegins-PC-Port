@@ -83,7 +83,17 @@ endif()
 # Development model viewer (plan S4b); built when libepoxy is available.
 pkg_check_modules(EPOXY IMPORTED_TARGET epoxy)
 if(EPOXY_FOUND)
-  add_library(chase_render src/render/scene.cpp src/render/character.cpp)
+  set(CHASE_SHADER_DIR ${CMAKE_SOURCE_DIR}/src/render/shaders)
+  set(CHASE_SHADER_SOURCES sceneVertex:scene.vert.glsl sceneFragment:scene.frag.glsl hudVertex:hud.vert.glsl hudFragment:hud.frag.glsl)
+  set(CHASE_SHADERS_CPP ${CMAKE_BINARY_DIR}/generated/shaders.cpp)
+  add_custom_command(OUTPUT ${CHASE_SHADERS_CPP}
+    COMMAND ${CMAKE_COMMAND} "-DSHADERS=${CHASE_SHADER_SOURCES}" -DSHADER_DIR=${CHASE_SHADER_DIR} -DOUTPUT=${CHASE_SHADERS_CPP}
+      -P ${CMAKE_SOURCE_DIR}/tools/embed_shaders.cmake
+    DEPENDS ${CHASE_SHADER_DIR}/scene.vert.glsl ${CHASE_SHADER_DIR}/scene.frag.glsl ${CHASE_SHADER_DIR}/hud.vert.glsl ${CHASE_SHADER_DIR}/hud.frag.glsl
+      ${CMAKE_SOURCE_DIR}/tools/embed_shaders.cmake
+    VERBATIM)
+  add_library(chase_render src/render/scene.cpp src/render/character.cpp ${CHASE_SHADERS_CPP})
+  target_include_directories(chase_render PUBLIC ${CMAKE_SOURCE_DIR}/src)
   target_link_libraries(chase_render PUBLIC chase_assets PkgConfig::SDL2 PkgConfig::EPOXY)
   target_compile_options(chase_render PRIVATE -Wall -Wextra -Wpedantic)
   target_sources(chase_render PRIVATE src/render/studs.cpp)
@@ -189,6 +199,7 @@ if(BUILD_TESTING)
   add_test(NAME progress-tables COMMAND progress-tables-test)
   add_test(NAME progress-readme COMMAND python3 "${CMAKE_SOURCE_DIR}/tools/progress_report.py" --check "${CMAKE_SOURCE_DIR}/README.md")
   set_tests_properties(progress-readme PROPERTIES SKIP_RETURN_CODE 77 ENVIRONMENT "CHASE_ASSETS_LIB=$<TARGET_FILE:chase_assets_c>")
+  add_test(NAME no-inline-shaders COMMAND ${CMAKE_COMMAND} -DSRC_DIR=${CMAKE_SOURCE_DIR}/src -P ${CMAKE_SOURCE_DIR}/tools/check_no_inline_shaders.cmake)
   add_test(NAME game-cpp-wiring COMMAND ${CMAKE_COMMAND} -DGAME_CPP=${CMAKE_SOURCE_DIR}/src/game.cpp -P ${CMAKE_SOURCE_DIR}/tools/check_game_cpp_wiring.cmake)
   add_test(NAME doc-links COMMAND python3 "${CMAKE_SOURCE_DIR}/tools/check_doc_links.py" --root "${CMAKE_SOURCE_DIR}")
   add_executable(door-test tests/door_test.cpp)
