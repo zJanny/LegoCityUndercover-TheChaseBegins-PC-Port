@@ -103,7 +103,12 @@ Unknowns:
 
 - The user quick-saved in their own Azahar with the player sitting in a vehicle in lvl_01, slot 5. Copied read-only from `~/.local/share/azahar-emu/states/00040000000AD600.05.cst` (2026-10-14 23:10, 25614134 bytes, identical by `cmp`) to `artifacts/oracle/states/in-vehicle.cst` with `in-vehicle.json` (New 3DS). The user's saves were not modified.
 - Purpose: leave and jump-out traces of the vehicle states 0x11b / 0x11c and the driving update (VEH-4, VEH-5, VEH-9 in [vehicles.md](../plans/features/vehicles.md)).
-- Game progress: presumably the same playthrough as `info-barrier` and `mission-1-2-start` (mission 1-1 finished, mission 1-2 not started); not yet confirmed by the user.
+- Game progress: mission 1-1 finished, mission 1-2 not started (the user confirmed it on 2026-10-14).
+- Read from memory (2026-10-14T23:13:01+02:00, GDB, `--renderer opengl`, lead's own port 24730 and home `artifacts/oracle/lead-home`, after `frames 2`):
+  - Player entity 0x085526f0, ctrl 0x08552790. Locomotion state ctrl+0x6c = 0x11c (driving), ctrl+0x130 = vehicle entity 0x08b7d640. Player at (613.370, 17.072, 1062.515), forward (-0.199, -0.002, 0.980).
+  - Vehicle entity: type byte +0x12 = 0xb7 (183), owner flags +0x10 = 0x1300 (the traffic value of [vehicles.md](vehicles.md#ts-20261014-224438)), word +8 = 0x2b69676d, record +0x7c = 0x08b7d6e0 with state +2 = 5 (driven by the player).
+  - `VehicleType` record+0x2ec = 37: row 37 of `tablescharacters` sheet 4 is `van_dulmen` (a van; the donut van is 36). The user took it from the traffic in the street, not a parked vehicle.
+  - Vehicle node 0x08b7da40, world translation node+0x8c = (613.37, 17.97, 1062.50).
 
 Unknowns:
-- Which vehicle, where, and the player position and heading; not read from memory yet.
+- Whether word +8 is the hash of an instance name (traffic vehicles may have none).
