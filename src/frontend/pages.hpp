@@ -47,6 +47,11 @@ void drawDialogBackground(Canvas& bottom, Resources& resources);
 void drawSubtitleBubble(Canvas& bottom, Resources& resources, const std::vector<std::string>& lines);
 void drawLoadingTop(Canvas& top, Resources& resources);
 void drawLoadingBottom(Canvas& bottom, Resources& resources, const std::string& tip);
+// WarningDialogBox (script native 0x2700d4): a box on the top screen over the level with the body text and the two
+// buttons (B cancel left, A confirm right). Drawn by game code that the port has not read: positions are STAND-INS.
+void drawWarningDialog(Canvas& top, Resources& resources, const std::string& body, const std::string& confirm, const std::string& cancel);
+// Black over the whole screen with the given opacity (FadeScreen: opacity = 1 - brightness).
+void drawBlackVeil(Canvas& screen, float opacity);
 void drawMissionCard(Canvas& bottom, Resources& resources, const std::string& title);
 
 }

@@ -239,6 +239,65 @@ void scriptSwitchesTriggersAndBounds() {
     runner.update(0.034f);
     require(runner.variable("Switched") == 1, "a disabled owner object does not start its trigger");
 }
+
+void warningDialogBlocksUntilAnswered() {
+    Level level;
+    add(level, "d", {{"WarningDialogBox", {"DIALOG_RETURNCODE"}},
+                     {"?", {"DIALOG_RETURNCODE", "\"==\"", "2"}}, {"=", {"Entered", "1"}}, {"!?", {}}, {"=", {"Cancelled", "1"}}, {"??", {}}});
+    PlacedObjectState state;
+    ScriptRunner runner(level, state);
+    runner.start("d");
+    require(runner.dialogOpen() && runner.threadCount() == 1, "the first call opens the dialog and blocks");
+    require(runner.dialog().bodyKey == 0xfd849176 && runner.dialog().confirmKey == 0xd12f028b && runner.dialog().cancelKey == 0x994b0cc9,
+            "text keys of 0x20ffe8");
+    for (int i = 0; i < 5; ++i) runner.update(0.034f);
+    require(runner.threadCount() == 1 && runner.variable("Entered") == 0, "blocked while no button was pressed");
+    runner.answerDialog(chase::runtime::kDialogConfirm);
+    require(!runner.dialogOpen(), "answered");
+    require(runner.variable("DIALOG_RETURNCODE") == 0, "the result is stored by the script's next call");
+    runner.update(0.034f);
+    require(runner.variable("DIALOG_RETURNCODE") == 2 && runner.variable("Entered") == 1 && runner.variable("Cancelled") == 0 &&
+                runner.threadCount() == 0,
+            "confirm gives 2 as a float variable and the script continues");
+}
+
+void warningDialogCancelGivesOne() {
+    Level level;
+    add(level, "d", {{"WarningDialogBox", {"R"}}});
+    PlacedObjectState state;
+    ScriptRunner runner(level, state);
+    runner.start("d");
+    runner.answerDialog(chase::runtime::kDialogCancel);
+    runner.answerDialog(chase::runtime::kDialogConfirm);
+    runner.update(0.034f);
+    require(runner.variable("R") == 1, "the first answer counts");
+}
+
+void fadeScreenBlocksForHalfASecond() {
+    Level level;
+    add(level, "f", {{"FadeScreen", {"0"}}, {"=", {"Faded", "1"}}, {"FadeScreen", {"1"}}, {"=", {"Back", "1"}}});
+    PlacedObjectState state;
+    ScriptRunner runner(level, state);
+    runner.start("f");
+    require(runner.fadeLevel() == 1.0f && runner.variable("Faded") == 0, "the first call starts the fade and blocks");
+    for (int i = 0; i < 7; ++i) runner.update(0.07f);
+    require(runner.variable("Faded") == 0 && runner.fadeLevel() < 1.0f && runner.fadeLevel() > 0.0f, "still fading after 0.49 s");
+    runner.update(0.07f);
+    require(runner.variable("Faded") == 1 && runner.fadeLevel() == 0.0f, "black after 0.5 s");
+    for (int i = 0; i < 9; ++i) runner.update(0.07f);
+    require(runner.variable("Back") == 1 && runner.fadeLevel() == 1.0f, "FadeScreen 1 brings the screen back");
+}
+
+void positionObjectIsRecorded() {
+    Level level;
+    add(level, "p", {{"PositionObject", {"Player1", "Marker_A"}}, {"=", {"After", "1"}}});
+    PlacedObjectState state;
+    ScriptRunner runner(level, state);
+    runner.start("p");
+    const auto placements = runner.takePlacements();
+    require(placements.size() == 1 && placements[0].object == "player1" && placements[0].target == "marker_a", "request");
+    require(runner.variable("After") == 1 && runner.takePlacements().empty(), "PositionObject does not block");
+}
 }
 
 int main() {
@@ -255,6 +314,10 @@ int main() {
         boundTriggersFireOnTheEdge();
         roomBoundsCountOnlyWhileTheRoomIsLoaded();
         scriptSwitchesTriggersAndBounds();
+        warningDialogBlocksUntilAnswered();
+        warningDialogCancelGivesOne();
+        fadeScreenBlocksForHalfASecond();
+        positionObjectIsRecorded();
     } catch (const std::exception& error) {
         std::cerr << "script-runner: FAIL: " << error.what() << '\n';
         return 1;

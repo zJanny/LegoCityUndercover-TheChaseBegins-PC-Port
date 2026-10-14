@@ -31,6 +31,12 @@ constexpr int kTipIconSize = 16;
 constexpr int kCardPadding = 12, kCardHeight = 40;
 constexpr float kCardY = 4;
 constexpr const char* kEastToken = "<EAST>";
+// STAND-INS fitted to the oracle screenshot of the WarningDialogBox (street-after-1-1, docs/re/scripts.md): box 296x92
+// at (52, 126) on the top screen, orange text (255, 169, 22), button row at y 203.
+constexpr int kWarnX = 52, kWarnY = 126, kWarnWidth = 296, kWarnHeight = 92, kWarnWrapWidth = 280;
+constexpr float kWarnTextCentreX = 200, kWarnFirstLineY = 141, kWarnPitch = 17.5f, kWarnButtonY = 203;
+constexpr float kWarnCancelIconX = 63, kWarnCancelTextX = 86, kWarnConfirmTextRightX = 316, kWarnConfirmIconX = 333, kWarnIconSize = 28;
+constexpr Colour kWarnTextColour{1.0f, 169.0f / 255.0f, 22.0f / 255.0f, 1.0f};
 constexpr float kSlotConfirmedSeconds = 0.3f;
 constexpr const char* kSlotLayout = "sprites/blend/savegameflow/page_selectslot.bxaml";
 constexpr const char* kButtonA = "sprites/buttons/dsbuttona.btga";
@@ -254,6 +260,30 @@ void drawMissionCard(Canvas& bottom, Resources& resources, const std::string& ti
     const int width = textWidth(font, extended, title, 0) + 2 * kCardPadding;
     bottom.drawNineSlice(resources.image(kDialogBoxTexture), kBoxEdge, (kBottomWidth - width) / 2, kCardY, width, kCardHeight);
     drawText(bottom, font, extended, title, kBottomWidth / 2.0f, kCardY + kCardHeight / 2.0f, Align::Centre, {1, 1, 1, 1}, 0, true);
+}
+
+void drawWarningDialog(Canvas& top, Resources& resources, const std::string& body, const std::string& confirm, const std::string& cancel) {
+    top.drawNineSlice(resources.image(kDialogBoxTexture), kBoxEdge, kWarnX - kBoxMarginX, kWarnY - kBoxMarginY, kWarnWidth + 2 * kBoxMarginX, kWarnHeight + 2 * kBoxMarginY);
+    const BitmapFont& font = resources.font("frontendfont");
+    const auto& extended = resources.extendedCharacters();
+    const std::vector<std::string> lines = wrapText(font, extended, body, kWarnWrapWidth, 0);
+    for (std::size_t i = 0; i < lines.size(); ++i)
+        drawText(top, font, extended, lines[i], kWarnTextCentreX, kWarnFirstLineY + kWarnPitch * float(i), Align::Centre, kWarnTextColour, 0, true);
+    const assets::Image& iconA = resources.image(kButtonA);
+    const assets::Image& iconB = resources.image(kButtonB);
+    top.drawScaled(iconB, {0, 0, iconB.width, iconB.height}, kWarnCancelIconX - kWarnIconSize / 2, kWarnButtonY - kWarnIconSize / 2, kWarnIconSize, kWarnIconSize);
+    drawText(top, font, extended, cancel, kWarnCancelTextX, kWarnButtonY, Align::Left, kWarnTextColour, 0, true);
+    drawText(top, font, extended, confirm, kWarnConfirmTextRightX, kWarnButtonY, Align::Right, kWarnTextColour, 0, true);
+    top.drawScaled(iconA, {0, 0, iconA.width, iconA.height}, kWarnConfirmIconX - kWarnIconSize / 2, kWarnButtonY - kWarnIconSize / 2, kWarnIconSize, kWarnIconSize);
+}
+
+void drawBlackVeil(Canvas& screen, float opacity) {
+    if (opacity <= 0.0f) return;
+    assets::Image black;
+    black.width = 1;
+    black.height = 1;
+    black.rgba = {0, 0, 0, 255};
+    screen.drawScaled(black, {0, 0, 1, 1}, 0, 0, float(screen.width()), float(screen.height()), {1, 1, 1, std::min(opacity, 1.0f)});
 }
 
 }

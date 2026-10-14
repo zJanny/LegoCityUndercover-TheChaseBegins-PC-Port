@@ -368,6 +368,9 @@ DrawableObjects drawableObjects(FuseArchive& archive, const Level& level);
 // The point object "Player1Start": loader 0x2e6264 finds it by name (0x23b350) and gives the
 // player's scene node its transform (0x213284 builds the matrix, 0x24c118 stores it).
 std::optional<Placement> playerStart(const Level& level);
+// The placement (position and orientation parameters) of the level object with that instance name; names compare
+// without case (the script natives resolve object arguments by name, 0x22dacc).
+std::optional<Placement> objectStart(const Level& level, const std::string& instance);
 // Object matrix: rotation of 0x237c48 (Rz * Ry * Rx for row vectors, i.e. x applied
 // first) from "initialorientation" degrees (x 0.0174533, as at 0x1a48b0), with
 // "initialposition" as the translation row.

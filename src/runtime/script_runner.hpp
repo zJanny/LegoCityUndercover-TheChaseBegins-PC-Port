@@ -54,6 +54,27 @@ struct ScriptTriggerState {
     bool inside = false;
 };
 
+// WarningDialogBox 0x2700d4: text keys it hands to the dialog mode (0x20ffe8 stores them at +0x2c of the mode's data):
+// gametext body, systemtext confirm button, systemtext cancel button. The result the mode stores at +0x28 is 2 for the
+// confirm button (A) and 1 for the cancel button (B); 0 while no button was pressed.
+struct ScriptDialog {
+    std::uint32_t bodyKey = 0xfd849176;
+    std::uint32_t confirmKey = 0xd12f028b;
+    std::uint32_t cancelKey = 0x994b0cc9;
+};
+constexpr int kDialogCancel = 1;
+constexpr int kDialogConfirm = 2;
+
+// PositionObject 0x1d9e6c: the node of `object` takes the transform of the node of `target` (names in lower case).
+struct ScriptPlacement {
+    std::string object;
+    std::string target;
+};
+
+// FadeScreen 0x1a2e8c starts a fade of 0.5 s (immediate of its two start functions 0x252068 / 0x2520e8) and blocks
+// until it is done (0x25207c). STAND-IN: the curve is linear and the end is the elapsed time (SCRIPT-S6).
+constexpr float kFadeSeconds = 0.5f;
+
 // The scripts of one level (owner): the threads of its scene list +0x1310, its variables (the level's default
 // parameter table) and the placed-object state the natives change.
 class ScriptRunner {
@@ -94,6 +115,16 @@ public:
     // Trigger events whose check is not transcribed, by name, in the order they were first met.
     const std::vector<std::string>& unhandledTriggerEvents() const { return unhandledEvents_; }
 
+    // WarningDialogBox: true from the first call until the script has taken the answer. The host draws the dialog and
+    // answers it with answerDialog (kDialogConfirm or kDialogCancel); the script reads the result at its next update.
+    bool dialogOpen() const { return dialogOpen_ && !dialogAnswered_; }
+    ScriptDialog dialog() const { return {}; }
+    void answerDialog(int result);
+    // Positions requested since the last call, in order (the host moves the nodes).
+    std::vector<ScriptPlacement> takePlacements();
+    // Brightness of the screen set by FadeScreen: 1 normal, 0 black.
+    float fadeLevel() const { return fadeLevel_; }
+
 private:
     enum class Result { Continue, Block };
 
@@ -102,7 +133,7 @@ private:
     Result call(ScriptThread& thread, const assets::ScriptCall& call);
     Result callScript(ScriptThread& thread, const assets::ScriptCall& call, bool suspendParent);
     Result wait(ScriptThread& thread, const assets::ScriptCall& call);
-    void native(const assets::ScriptCall& call, int word);
+    Result native(ScriptThread& thread, const assets::ScriptCall& call, int word);
     void finish(ScriptThread& thread);
     float read(const std::string& token) const;
     bool holds(const assets::ScriptCall& call) const;
@@ -128,6 +159,11 @@ private:
     bool allRoomsLoaded_ = false;
     std::vector<std::string> unhandledEvents_;
     float dt_ = 0;
+    bool dialogOpen_ = false;
+    bool dialogAnswered_ = false;
+    int dialogResult_ = 0;
+    std::vector<ScriptPlacement> placements_;
+    float fadeLevel_ = 1.0f, fadeStart_ = 1.0f, fadeTarget_ = 1.0f, fadeElapsed_ = 0;
 };
 
 }

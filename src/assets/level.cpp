@@ -383,6 +383,17 @@ std::optional<Placement> playerStart(const Level& level) {
     return std::nullopt;
 }
 
+std::optional<Placement> objectStart(const Level& level, const std::string& instance) {
+    const auto fold = [](std::string text) {
+        std::transform(text.begin(), text.end(), text.begin(), [](unsigned char c) { return char(std::tolower(c)); });
+        return text;
+    };
+    const std::string wanted = fold(instance);
+    for (const auto& obj : level.objects)
+        if (fold(obj.instance) == wanted) return placementOf(obj);
+    return std::nullopt;
+}
+
 CharacterAppearance characterAppearance(const Level& characterClass) {
     CharacterAppearance a;
     a.body = stringParam(characterClass.defaults, "meshname");

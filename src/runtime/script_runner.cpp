@@ -19,7 +19,8 @@ std::string lower(std::string text) {
 
 enum class Word {
     Unhandled, If, Else, ElseIf, EndIf, Assign, AssignArithmetic, CallScript, SpawnScript, Wait,
-    EnableObject, EnableCollision, TriggerObject, EnableTrigger, EnableBound, GetGameComplete, IsLevelUnlocked, IsRedBrickExtraActive
+    EnableObject, EnableCollision, TriggerObject, EnableTrigger, EnableBound, GetGameComplete, IsLevelUnlocked, IsRedBrickExtraActive,
+    WarningDialogBox, FadeScreen, PositionObject
 };
 
 struct ScriptFunction {
@@ -46,6 +47,9 @@ constexpr ScriptFunction kScriptFunctions[] = {
     {"getgamecomplete", Word::GetGameComplete, true},
     {"islevelunlocked", Word::IsLevelUnlocked, true},
     {"isredbrickextraactive", Word::IsRedBrickExtraActive, true},
+    {"warningdialogbox", Word::WarningDialogBox, false},
+    {"fadescreen", Word::FadeScreen, true},
+    {"positionobject", Word::PositionObject, false},
 };
 
 Word wordOf(const std::string& function) {
@@ -244,8 +248,7 @@ ScriptRunner::Result ScriptRunner::call(ScriptThread& thread, const ScriptCall& 
         return Result::Continue;
     }
     default:
-        native(call, int(word));
-        return Result::Continue;
+        return native(thread, call, int(word));
     }
 }
 
@@ -274,7 +277,7 @@ ScriptRunner::Result ScriptRunner::wait(ScriptThread& thread, const ScriptCall& 
     return thread.waitTimer <= 0.0f ? Result::Continue : Result::Block;
 }
 
-void ScriptRunner::native(const ScriptCall& call, int word) {
+ScriptRunner::Result ScriptRunner::native(ScriptThread& thread, const ScriptCall& call, int word) {
     const auto& args = call.arguments;
     switch (Word(word)) {
     case Word::EnableObject:
@@ -312,8 +315,51 @@ void ScriptRunner::native(const ScriptCall& call, int word) {
     case Word::IsRedBrickExtraActive:
         if (args.size() >= 2) variables_[assets::nameHash(args[1])] = 0.0f;
         break;
+    case Word::PositionObject:
+        if (args.size() >= 2) placements_.push_back({lower(args[0]), lower(args[1])});
+        break;
+    case Word::WarningDialogBox:
+        if (!(thread.flags & kScriptBlocked)) {
+            dialogOpen_ = true;
+            dialogAnswered_ = false;
+            dialogResult_ = 0;
+            return Result::Block;
+        }
+        if (!dialogAnswered_) return Result::Block;
+        dialogOpen_ = false;
+        dialogAnswered_ = false;
+        if (!args.empty()) variables_[assets::nameHash(args[0])] = float(dialogResult_);
+        break;
+    case Word::FadeScreen:
+        if (!(thread.flags & kScriptBlocked)) {
+            if (args.empty()) break;
+            fadeTarget_ = read(args[0]) == 0.0f ? 0.0f : 1.0f;
+            fadeStart_ = fadeLevel_;
+            fadeElapsed_ = 0;
+            return Result::Block;
+        }
+        fadeElapsed_ += dt_;
+        if (fadeElapsed_ < kFadeSeconds) {
+            fadeLevel_ = fadeStart_ + (fadeTarget_ - fadeStart_) * (fadeElapsed_ / kFadeSeconds);
+            return Result::Block;
+        }
+        fadeLevel_ = fadeTarget_;
+        break;
     default: break;
     }
+    return Result::Continue;
+}
+
+void ScriptRunner::answerDialog(int result) {
+    if (!dialogOpen_ || dialogAnswered_) return;
+    dialogResult_ = result;
+    dialogAnswered_ = true;
+}
+
+std::vector<ScriptPlacement> ScriptRunner::takePlacements() {
+    std::vector<ScriptPlacement> taken;
+    taken.swap(placements_);
+    return taken;
 }
 
 float ScriptRunner::read(const std::string& token) const {

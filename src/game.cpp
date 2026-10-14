@@ -9,6 +9,7 @@
 #include "game_audio.hpp"
 #include "frontend/hud.hpp"
 #include "frontend/minimap.hpp"
+#include "frontend/pages.hpp"
 #include "game_front.hpp"
 #include "game_hud.hpp"
 #include "input.hpp"
@@ -59,6 +60,9 @@ constexpr int kStickFullDeflection = 145;
 constexpr int kStickWalkDeflection = 90;
 constexpr float kScriptDt = 0.033f;
 constexpr std::size_t kSlotLeftShoulder = 12, kSlotRightShoulder = 13, kSlotStickX = 14, kSlotStickY = 15;
+constexpr std::size_t kSlotConfirmButton = 4, kSlotCancelButton = 5;
+constexpr const char* kGameTextFile = "localisation/gametext_uk.loc";
+constexpr const char* kSystemTextFile = "localisation/systemtext_uk.loc";
 constexpr std::size_t kSlotButtonX = 8, kSlotButtonY = 9, kSlotJumpButton = 7;
 
 // Stand-ins, not the original: the water flag (ctrl+0x317 bit 3) and the ground object of type 11 are not modelled, so
@@ -91,6 +95,7 @@ struct Options {
     std::string screenshot;
     unsigned frames = 2;
     std::string script;
+    std::vector<std::string> callScripts;
     bool cameraCollision = true;
     std::optional<std::array<float, 3>> start;
     std::optional<float> facing;
@@ -166,6 +171,7 @@ Options parse(int argc, char** argv) {
         else if (arg == "--screenshot") o.screenshot = value();
         else if (arg == "--frames") o.frames = unsigned(std::stoul(value()));
         else if (arg == "--script") { o.script = value(); o.gameplay = true; }
+        else if (arg == "--call-script") o.callScripts.push_back(value());
         else if (arg == "--no-camera-collision") o.cameraCollision = false;
         else if (arg == "--sound-volume") o.soundVolume = std::min(10u, unsigned(std::stoul(value())));
         else if (arg == "--music-volume") o.musicVolume = std::min(10u, unsigned(std::stoul(value())));
@@ -530,17 +536,6 @@ int run(const Options& given) {
     std::optional<StudSprites> studSprites(std::in_place, archive);
     double provisionalStudClockSeconds = 0;
     std::optional<PlayerRig> player = placePlayer(archive, scene, level);
-    if (player && options.start) {
-        player->motion.x = player->startX = (*options.start)[0];
-        player->vertical.y = (*options.start)[1];
-        player->motion.z = player->startZ = (*options.start)[2];
-        player->pose(scene);
-    }
-    if (player && options.facing) {
-        player->motion.facing = headingFromDegrees(*options.facing);
-        player->motion.lastIntent = player->motion.facing;
-        player->pose(scene);
-    }
     const ClassLookup classOf = archiveClassLookup(archive);
     PlacedObjectState objectState = runtime::levelInitialState(level, classOf);
     runtime::ScriptRunner levelScripts(level, objectState);
@@ -554,12 +549,39 @@ int run(const Options& given) {
         for (; reportedEvents < events.size(); ++reportedEvents)
             std::cout << "script trigger event without check (never fires): " << events[reportedEvents] << '\n';
     };
+    const auto applyPlacement = [&](const runtime::ScriptPlacement& request) {
+        const std::optional<Placement> target = objectStart(level, request.target);
+        if (request.object == "player1" && player && target) {
+            player->motion.x = target->position[0];
+            player->vertical.y = target->position[1];
+            player->motion.z = target->position[2];
+            player->motion.facing = headingFromDegrees(target->orientation[1]);
+            player->motion.lastIntent = player->motion.facing;
+            player->pose(scene);
+        } else {
+            std::cout << "PositionObject not applied (only the player is moved): " << request.object << " to " << request.target << '\n';
+        }
+    };
     std::uint32_t startupUpdates = 0;
     if (levelScripts.start("startup"))
         while (levelScripts.running("startup", false) && startupUpdates < runtime::kStartupMaxUpdates) {
             levelScripts.update(runtime::kStartupStepDt);
             ++startupUpdates;
         }
+    for (const std::string& name : options.callScripts)
+        if (!levelScripts.start(name)) throw std::runtime_error("no level script " + name);
+    for (const runtime::ScriptPlacement& request : levelScripts.takePlacements()) applyPlacement(request);
+    if (player && options.start) {
+        player->motion.x = player->startX = (*options.start)[0];
+        player->vertical.y = (*options.start)[1];
+        player->motion.z = player->startZ = (*options.start)[2];
+        player->pose(scene);
+    }
+    if (player && options.facing) {
+        player->motion.facing = headingFromDegrees(*options.facing);
+        player->motion.lastIntent = player->motion.facing;
+        player->pose(scene);
+    }
     reportUnhandled();
     std::cout << "scripts: startup ended after " << startupUpdates << " updates, " << levelScripts.threadCount() << " threads running\n";
     const std::vector<ObjectCollision> placedCollisions = objectCollisions(archive, level, objectState);
@@ -629,9 +651,23 @@ int run(const Options& given) {
     // One update of the game: the player reads the pad and the camera yaw first, then the camera moves
     // (the heading of the recorded traces is reproduced with the yaw from before the camera step).
     unsigned updates = 0, updatesThisSecond = 0;
+    bool dialogReported = false;
     std::vector<float> scriptedHeights;
     auto simulate = [&](float dt, const runtime::PadState& padInput) {
         pad.poll(padInput);
+        if (levelScripts.dialogOpen()) {
+            if (!dialogReported) std::cout << "script dialog opened at update " << updates << '\n';
+            dialogReported = true;
+            if (pad.slot(kSlotConfirmButton).press > 0) levelScripts.answerDialog(runtime::kDialogConfirm);
+            else if (pad.slot(kSlotCancelButton).press > 0) levelScripts.answerDialog(runtime::kDialogCancel);
+            if (!levelScripts.dialogOpen()) {
+                std::cout << "script dialog answered at update " << updates << '\n';
+                dialogReported = false;
+            }
+            ++updates;
+            ++updatesThisSecond;
+            return;
+        }
         const auto emit = [&](const runtime::SoundCall& call) {
             soundLog.emplace_back(updates, call.id);
             if (audio) audio->play(call);
@@ -680,6 +716,7 @@ int run(const Options& given) {
             levelScripts.checkTriggers(playerPosition);
         }
         reportUnhandled();
+        for (const runtime::ScriptPlacement& request : levelScripts.takePlacements()) applyPlacement(request);
         for (const runtime::ScriptObjectMessage& sent : levelScripts.takeObjectMessages())
             for (DoorObject& door : doors)
                 if (lowerCase(door.instance) == sent.instance)
@@ -792,6 +829,13 @@ int run(const Options& given) {
             hudCanvas.clearTransparent();
             mapCanvas.clear(0, 0, 0);
         }
+        if (levelScripts.dialogOpen()) {
+            const runtime::ScriptDialog dialog = levelScripts.dialog();
+            fe::drawWarningDialog(hudCanvas, hudResources, hudResources.textForKey(kGameTextFile, dialog.bodyKey),
+                                  hudResources.textForKey(kSystemTextFile, dialog.confirmKey), hudResources.textForKey(kSystemTextFile, dialog.cancelKey));
+        }
+        fe::drawBlackVeil(hudCanvas, 1.0f - levelScripts.fadeLevel());
+        fe::drawBlackVeil(mapCanvas, 1.0f - levelScripts.fadeLevel());
         overlay->draw(hudCanvas, mapCanvas, screens, width, height);
 
         const bool scriptDone = !script.empty() && updates >= scriptLength;

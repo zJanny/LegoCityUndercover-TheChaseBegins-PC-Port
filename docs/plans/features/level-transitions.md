@@ -6,7 +6,7 @@ Leaving a street for a building and travelling between world levels: `SceneChang
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-14T10:07:15+0200. The chain from the script native to the scene change execution is mapped; event bindings (`Level::triggers`) are decoded; one switch (street to lvl_00) was reproduced in the oracle with a poked enable byte. Nothing runs in `chase-game`.
+IN_PROGRESS, updated 2026-10-14T10:56:00+0200. The chain from the script native to the scene change execution is mapped; event bindings (`Level::triggers`) are decoded; one switch (street to lvl_00) was reproduced in the oracle with a poked enable byte. Nothing runs in `chase-game`.
 
 ## 3. Verified behaviour
 
@@ -27,12 +27,14 @@ IN_PROGRESS, updated 2026-10-14T10:07:15+0200. The chain from the script native 
 - [ ] TRANS-2 — Destination semantics: the scenechange object's `initialposition`, `SceneChangeTo`, hash 0xccaaccdd and the scene index byte (+0xd of the destination entity); how the bound argument is qualified with the world level name; whether world level offsets of the master are applied. needs: TRANS-7.
 - [ ] TRANS-3 — Master level in `chase-game`: load `lvl_the_city`, world levels as scenes, switch with fade and the generic loading screen. needs: SCRIPT-1, WSTREAM-3, FE-3.
 - [x] TRANS-4 — Closed 2026-10-14: trigger dispatch runs in `chase-game` (`ScriptRunner::checkTriggers`, 0x1746c0): BoundEntered, Player1BoundEntered, PlayerOnFootBoundEntered and BoundLeft with the bounds of section +0x24, ObjectTriggered / ObjectUntriggered from `TriggerObject`; the other trigger types are SCRIPT-11 ([script-system.md](script-system.md)). evidence: [scripts.md §2026-10-14T10:06](../../re/scripts.md#ts-20261014-100640).
-- [ ] TRANS-5 — Natives needed by the transition scripts (`WarningDialogBox` behaviour: [streaming.md §2026-10-14T10:07](../../re/streaming.md#ts-20261014-100715)): `WarningDialogBox`, `PositionPlayer`, `PositionObject`, `SnapCamera`, `FadeScreen`, `AIMove`, `StartDCam`. needs: SCRIPT-1.
+- [ ] TRANS-5 — Natives needed by the transition scripts: `WarningDialogBox`, `PositionObject` (player) and `FadeScreen` (stand-in) run in `chase-game` (SCRIPT-7); still without handler: `PositionPlayer`, `SnapCamera`, `AIMove`, `StartDCam`, `WaitForDCam`, `AIEnable`, `DCamActive`, `CharSetAllowVehicleEntry`, `RelockChasePlainClothes`, `SceneChange`. evidence: [scripts.md §2026-10-14T10:54](../../re/scripts.md#ts-20261014-105432). needs: SCRIPT-1.
+- [ ] TRANS-8 — The level switch waits for a second A on the loading screen (a blank screen with a "press A" prompt bottom right; leaving the station shows only that prompt). User observation in the real game, not traced; its code was not found. needs: FE-3, TRANS-3. evidence: [scripts.md §2026-10-14T10:54](../../re/scripts.md#ts-20261014-105432).
 - [ ] TRANS-6 — Building entries inside a level (lift in lvl_00 between room1/3/5, `Lobby2Basement_SceneChange` objects enabled by `EnableBound`). needs: TRANS-7.
 
 ## 6. Findings summary
 
 - [streaming.md §2026-10-13T22:27](../../re/streaming.md#ts-20261013-222700) (level switch chain, event bindings, unknowns).
+- [scripts.md §2026-10-14T10:54](../../re/scripts.md#ts-20261014-105432) (WarningDialogBox results and look, the poke region belongs to `Police_Station_Transition_Lower`, the user's loading-screen observation).
 - [streaming.md §2026-10-14T10:07](../../re/streaming.md#ts-20261014-100715) (bound enable byte, WarningDialogBox, observed switch chain, order unknown).
 
 ## 7. Code and tests
