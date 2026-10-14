@@ -6,7 +6,7 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 
 ## 2026-10-12T18:40+02:00 — Skeleton and animation containers (REA, Ghidra)
 
-Corrected by [skeleton-animation.md §2026-10-12T21:30](skeleton-animation.md#ts-20261012-2130): skin index is the bone palette, not joint - 1
+Corrected by [skeleton-animation.md §2026-10-12T21:30](#ts-20261012-2130): skin index is the bone palette, not joint - 1
 
 - Loaders:
   - 0x108f30 rewrites the path to .bfnanm and calls 0x10edec (ev_1b7f5557…8fc1).
@@ -79,7 +79,7 @@ Corrected by [skeleton-animation.md §2026-10-12T21:30](skeleton-animation.md#ts
 
 ## 2026-10-12T20:45+02:00 — Native skeletons, animation curves and skinning (S4e groundwork)
 
-Corrected by [skeleton-animation.md §2026-10-12T21:30](skeleton-animation.md#ts-20261012-2130): skin index is the bone palette, not joint - 1
+Corrected by [skeleton-animation.md §2026-10-12T21:30](#ts-20261012-2130): skin index is the bone palette, not joint - 1
 
 - Fixed tools/convert_models.py decode_vertices: the layout loop variable shadowed the mesh-centre argument, so Python never added the centre. The C++ parser was correct. A regression assertion was added.
 - Moved posing into tools/convert_anims.py: skin_matrices() and rigid_inverse() (0x24c5a0). preview_model calls it, and char_bear walk frame 12 renders pixel-identically.
@@ -112,7 +112,7 @@ Corrected by [skeleton-animation.md §2026-10-12T21:30](skeleton-animation.md#ts
   - no skin index is outside its palette
   - no vertex shared between batches resolves to different joints
   - 514 vertices are referenced by no triangle
-- This replaces the joint − 1 hypothesis ([Corrects skeleton-animation.md §2026-10-12T18:40](skeleton-animation.md#ts-20261012-1840), [Corrects skeleton-animation.md §2026-10-12T20:45](skeleton-animation.md#ts-20261012-2045)), which only matched char_bear because its palette is 1..21. The bear's eye part has palette [5] (Head). char_squirrel's palette contains joint 0.
+- This replaces the joint − 1 hypothesis ([Corrects skeleton-animation.md §2026-10-12T18:40](#ts-20261012-1840), [Corrects skeleton-animation.md §2026-10-12T20:45](#ts-20261012-2045)), which only matched char_bear because its palette is 1..21. The bear's eye part has palette [5] (Head). char_squirrel's palette contains joint 0.
 - Python: convert_models.bone_batches() and skin_joints() (the +0x24 block is kept as buffer 'b24'); preview_model skins through resolved joints. C++: ModelPart::boneBatches, and parseModel resolves Vertex::joints to skeleton joints, rejecting conflicts and out-of-range indices. skinVertex uses the resolved joints.
 - Bug fixed: the C++ rigidInverse used −t·column instead of −t·row (0x24c5a0 uses rows). Bear binds are translation-only, so the bear reference missed it; it was found through char_squirrel. Added a synthetic rotated-bind identity check, and char_squirrel run frame 5 as a second real-data reference.
 - assets-real-data (Python references): 1457 skinned parts / 1465 batches / resolved-joint sum 3492824 over drawn vertices; |posed position| sums char_bear walk@12 1754.6224 and char_squirrel run@5 440.7128 (within 1e-3).
@@ -125,7 +125,7 @@ Corrected by [skeleton-animation.md §2026-10-12T21:30](skeleton-animation.md#ts
 ## 2026-10-12T22:10+02:00 — Frame interpolation recovered; playback rate traced to the instance
 
 Corrected by [player-locomotion.md §2026-10-13T17:02](player-locomotion.md#ts-20261013-170203): playback rate found: 15, 30 or 60 frames per second
-Corrected by [skeleton-animation.md §2026-10-13T17:02](skeleton-animation.md#ts-20261013-170203): playback rate found: 15, 30 or 60 frames per second
+Corrected by [skeleton-animation.md §2026-10-13T17:02](#ts-20261013-170203): playback rate found: 15, 30 or 60 frames per second
 
 - 0x2533e0 calls 0x24bf80 (ev_d1801bf3…488) per active animation slot (0x58-byte slots at instance+0x2c). It returns frame A, frame B and their weights. 0x114b58 is then called twice (layer 0 = A with weight 1−frac, layer 1 = B with frac), so the game always interpolates neighbouring frames. Layers of weight 0 are skipped, so whole frames use the single-layer path.
 - 0x24cbd4 (ev_01398…5a6) computes frame = (clock − start) × slot+0x30 / clock+0xc + start offset:
@@ -145,7 +145,7 @@ Corrected by [skeleton-animation.md §2026-10-13T17:02](skeleton-animation.md#ts
 
 ## 2026-10-13T01:30+02:00 — Animation frame count is u16 +4 & 0x3fff
 
-Corrected by [skeleton-animation.md §2026-10-13T04:10](skeleton-animation.md#ts-20261013-0410): one curve stores frames + 1
+Corrected by [skeleton-animation.md §2026-10-13T04:10](#ts-20261013-0410): one curve stores frames + 1
 
 - In cutscene animations (csdata, 679 files), header u16 +4 reads 0x4000 + frames, e.g. 2_7_a: 16683 = 0x4000 + 299. The camera's per-frame block in section +0xc is 300 bytes (299 padded to 4), and the same holds for 1_1_a/d/e and 1_2_a.
 - The game masks it: 0x114b58 passes `*(u16*)(anim + 4) & 0x3fff` (ev_732ce83c…7ff). Python frame_count() and C++ Animation::frames now mask it. Gameplay animations (no bit 14) are unchanged, and the bear/squirrel references still pass.
@@ -166,7 +166,7 @@ Corrected by [skeleton-animation.md §2026-10-13T04:10](skeleton-animation.md#ts
 ## 2026-10-13T04:10+02:00 — Overflowing joint curves explained: one curve stores frames + 1
 
 - 0x12a2b4 (ev_210a33ed…3420) passes frames + 1 to the sampler 0x12d4b0 for one curve when its flag 0x10 is set: the extra curve when flag 0x20 is set, otherwise curve 0. These flags are a runtime argument (0x114b58 → 0x1205f8, ev_34ecb50a…32df) and were not traced to the file.
-- Data rule: if bit 29 of the joint-table word is set, the long curve is the extra curve (when bit 28 is set) or else curve 0. Across all 1954 animations, every selected curve fits its blob only with frames + 1 (149 need it; 441 fit either way), and every other curve fits with frames. This ([Corrects skeleton-animation.md §2026-10-13T01:30](skeleton-animation.md#ts-20261013-0130)) replaces the earlier "115 overflowing joint-0 curves" unknown.
+- Data rule: if bit 29 of the joint-table word is set, the long curve is the extra curve (when bit 28 is set) or else curve 0. Across all 1954 animations, every selected curve fits its blob only with frames + 1 (149 need it; 441 fit either way), and every other curve fits with frames. This ([Corrects skeleton-animation.md §2026-10-13T01:30](#ts-20261013-0130)) replaces the earlier "115 overflowing joint-0 curves" unknown.
 - Animation::longCurve: skinMatrices samples that curve with frames + 1. assets-real-test pins 590 animations with a long curve. Bear, squirrel and minifig references are unchanged.
 - Still unknown: what the long or extra curve means (root motion?), and the 0xfa raw-matrix form.
 
@@ -181,7 +181,7 @@ Corrected by [skeleton-animation.md §2026-10-13T04:10](skeleton-animation.md#ts
 ## 2026-10-13T17:02:03+02:00 — Joint table word, playback rate and the extra (root motion) curve (see player.md derivation entry)
 
 - The first word of the joint table block (`Animation::jointTableWord`): bits 0..12 curve count (without the extra curve), bits 13..14 rate index, bits 15..27 sample count, bit 28 extra curve present (it is the last curve, index = bits 0..12), bit 29 long curve (+1 sample). Checked on police land (0x10070015: 21 curves + extra, 14 samples), fall (0x30050015: 10 samples + long), sprint (0x200a2015: rate index 1).
-- **Playback rate** (`0x108190`): `{15, 30, 60, 0}[bits 13..14]` frames per second, or header u16 +4 >> 14 when there is no joint table (cutscene animations carry bit 14, 30 fps). **[Corrects skeleton-animation.md §2026-10-12T22:10](skeleton-animation.md#ts-20261012-2210):** the earlier "rate unknown, 30 assumed" entries; police walk/run/jump/land/idle are 15 fps, sprint 30 fps. `animationFramesPerSecond`, `animationDuration` ((frames - 1) / rate).
+- **Playback rate** (`0x108190`): `{15, 30, 60, 0}[bits 13..14]` frames per second, or header u16 +4 >> 14 when there is no joint table (cutscene animations carry bit 14, 30 fps). **[Corrects skeleton-animation.md §2026-10-12T22:10](#ts-20261012-2210):** the earlier "rate unknown, 30 assumed" entries; police walk/run/jump/land/idle are 15 fps, sprint 30 fps. `animationFramesPerSecond`, `animationDuration` ((frames - 1) / rate).
 - **Extra curve = root motion joint.** `0x292ef8` samples it for every frame, relative to frame 0, and `0x200e70` scales it to a target height (player.md). `rootMotion` returns the relative translation per frame and the extent with minimum and maximum starting at 0. For animations without bit 28 the game reads the root joint index from the skeleton (`0x24b8bc`); not replicated.
 
 <a id="ts-20261014-133953"></a>
@@ -190,4 +190,4 @@ Corrected by [skeleton-animation.md §2026-10-13T04:10](skeleton-animation.md#ts
 
 Moved from the feature files so that the items stay short (CLAUDE.md, "Documentation rules"). The text below is the former wording of each item.
 
-- **ANIM-1** (animation-characters.md): Cutscene actors play on the camera's clock; whether an actor's own stored rate applies is not recovered. An animation that stores rate 0 holds frame 0 in the viewer; whether any shipped animation stores it is not checked. evidence: [skeleton-animation.md §2026-10-12T22:10](skeleton-animation.md#ts-20261012-2210), [skeleton-animation.md §2026-10-13T17:02](skeleton-animation.md#ts-20261013-170203).
+- **ANIM-1** (animation-characters.md): Cutscene actors play on the camera's clock; whether an actor's own stored rate applies is not recovered. An animation that stores rate 0 holds frame 0 in the viewer; whether any shipped animation stores it is not checked. evidence: [skeleton-animation.md §2026-10-12T22:10](#ts-20261012-2210), [skeleton-animation.md §2026-10-13T17:02](#ts-20261013-170203).

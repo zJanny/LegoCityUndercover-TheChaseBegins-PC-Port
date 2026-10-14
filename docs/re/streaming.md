@@ -6,7 +6,7 @@ How the original organises levels, loads and unloads rooms and switches between 
 
 ## 2026-10-13T22:27:00+0200 — World levels, room links, scene change chain (REA Ghidra 12.1.2, llvm-objdump `--mcpu=arm1176jzf-s`, Azahar oracle port 24691 without RPC)
 
-Corrected by [streaming.md §2026-10-14T10:07](streaming.md#ts-20261014-100715): the bound was disabled, not out of position
+Corrected by [streaming.md §2026-10-14T10:07](#ts-20261014-100715): the bound was disabled, not out of position
 
 All addresses are for the reference build. Evidence IDs are shortened. Replica: `Level::roomLinks`, `Level::triggers` (src/assets/level.cpp); test `streaming-real-data` (tests/streaming_real_test.cpp).
 
@@ -123,7 +123,7 @@ States: `street-after-1-1` (user) and `street-at-entrance` ([oracle.md §2026-10
 States: `police-station` (user), new `station-at-exit` (player 0.9 m before the exit bound, stick released) and `station-exit-loadingpage` (loading page open, waiting for A), both unmodified (their JSON has a `source` key). Replica: `src/runtime/scene_change.{hpp,cpp}`, `ScriptRunner::takeSceneChanges` / `playerInNamedBound`, the run-time switch in `chase-game`. Tests: `scene-change-real-data`, `game-scene-change-exit`, `game-scene-change-entry`, `script-runner`.
 
 **Corrections of earlier entries**
-- [streaming.md §2026-10-13T22:27](streaming.md#ts-20261013-222700) says the scene index is byte +0xd of the destination entity, and [§2026-10-14T11:13](streaming.md#ts-20261014-111312) says the scenechange update 0x1c47e8 is not involved. Byte +0xd belongs to the 20-byte reference record `[[entity+0x7c]+0x14]` (manager +0x28), not to the entity. The update 0x1c47e8 is the path of the lobby exit (below); it was only absent from the script path of the entry.
+- [streaming.md §2026-10-13T22:27](#ts-20261013-222700) says the scene index is byte +0xd of the destination entity, and [§2026-10-14T11:13](#ts-20261014-111312) says the scenechange update 0x1c47e8 is not involved. Byte +0xd belongs to the 20-byte reference record `[[entity+0x7c]+0x14]` (manager +0x28), not to the entity. The update 0x1c47e8 is the path of the lobby exit (below); it was only absent from the script path of the entry.
 
 **The exit is not script-driven (walk-in)**
 - lvl_00 has no trigger and no script for it (`Level::triggers` of lvl_00: 53 records, none names `Lobby_to_CherryTree`; only `HINT_Exit_to_Cherry_Tree` on the bound `hint_lobbyexit`). The master level has the object `SceneChange_LobbyToCherryTree` (class `scenechange`, SceneChangeBound `WorldLevel_00_PoliceStation.Lobby_to_CherryTree`). The bound `Lobby_to_CherryTree` of lvl_00: room1, centre (-2.1827, 1.8918, 21.7526), half (2, 1.9639, 1.6412), shape 3 (box), node 255, enabled.

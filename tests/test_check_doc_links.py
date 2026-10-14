@@ -66,6 +66,17 @@ class CheckDocLinksTest(unittest.TestCase):
         self.assertTrue(any('missing anchor #nothing' in e for e in errors))
         self.assertTrue(any('no entry §2030-01-01T00:00' in e for e in errors))
 
+    def test_same_file_links_are_plain_fragments(self):
+        links.process(self.root, True)
+        topic = self.root / 'docs' / 're' / 'topic.md'
+        topic.write_text(topic.read_text() + '\n[topic.md §2026-01-02T03:04](topic.md#ts-20260102-030405) [x](topic.md#ts-20260102-030900)\n')
+        errors = links.process(self.root, False)[0]
+        self.assertTrue(any('link topic.md#ts-20260102-030405 must be #ts-20260102-030405' in e for e in errors))
+        self.assertTrue(any('same-file link topic.md#ts-20260102-030900 must be #ts-20260102-030900' in e for e in errors))
+        links.process(self.root, True)
+        self.assertEqual(links.process(self.root, False)[0], [])
+        self.assertIn('(#ts-20260102-030405) [x](#ts-20260102-030900)', topic.read_text())
+
     def test_heading_anchor_and_external_links(self):
         links.process(self.root, True)
         self.feature.write_text('# My Title: (x)\n[a](#my-title-x) [b](https://example.org/x.md#y)\n')

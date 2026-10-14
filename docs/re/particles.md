@@ -6,7 +6,7 @@ Reverse-engineering findings for `particles/particledefs.bprt`. Entries are chro
 
 ## 2026-10-13T09:00+02:00 — particledefs.bprt container (REA Ghidra 12.1.2; read-only)
 
-Corrected by [particles.md §2026-10-13T09:05](particles.md#ts-20261013-0905): +0x88..+0xf7 is a fade key list, not colour keys
+Corrected by [particles.md §2026-10-13T09:05](#ts-20261013-0905): +0x88..+0xf7 is a fade key list, not colour keys
 
 - Loader 0x27d71c (ev_ed8196cc…) opens "Particles/ParticleDefs.bprt" (pooled resource, see pooled-resources.md) and reads, in this order:
   - Pool −15: six u32 blocks. Word 0 → 0x376b84 (10; the block pointer is also kept at 0x376bc4). Word 1 → 0x376b88 (25). Word 2 = texture count N (97). Word 3 → 0x376b90 (298). Word 4 → 0x376bbc (0). Word 5 is a float → 0x376bc0 (2.328); 0 becomes 1.0.
@@ -28,8 +28,8 @@ Corrected by [particles.md §2026-10-13T09:05](particles.md#ts-20261013-0905): +
 
 ## 2026-10-13T09:01+02:00 — Spawner field use (REA Ghidra 12.1.2 ev_a61454c9…, ev_5f3e0e6f…; read-only)
 
-Corrected by [particles.md §2026-10-13T09:03](particles.md#ts-20261013-0903): +0x178 is the atlas column count, not a spawn mode
-Corrected by [particles.md §2026-10-13T09:05](particles.md#ts-20261013-0905): +0x88..+0xf7 is a fade key list, not colour keys
+Corrected by [particles.md §2026-10-13T09:03](#ts-20261013-0903): +0x178 is the atlas column count, not a spawn mode
+Corrected by [particles.md §2026-10-13T09:05](#ts-20261013-0905): +0x88..+0xf7 is a fade key list, not colour keys
 
 - 0x23de24 (ev_a61454c9…) indexes the data block with stride 0x17c (380) and rejects indices ≥ word 3. This confirms the record size and the count.
 - Spawner 0x216244 (ev_5f3e0e6f…; Ghidra shifts the parameters by one, so the definition is its param_2):
@@ -51,9 +51,9 @@ Corrected by [particles.md §2026-10-13T09:05](particles.md#ts-20261013-0905): +
 
 ## 2026-10-13T09:03+02:00 — Per-particle init 0x222550 (REA Ghidra 12.1.2 ev_57c912e6…; read-only)
 
-Corrected by [particles.md §2026-10-13T09:07](particles.md#ts-20261013-0907): the record has four key lists
+Corrected by [particles.md §2026-10-13T09:07](#ts-20261013-0907): the record has four key lists
 
-- [Corrects particles.md §2026-10-13T09:01](particles.md#ts-20261013-0901): +0x178 is not a spawn mode. 0x222550 reads +0x178 and +0x179 as 1/x divisors: atlas columns and rows. The spawner's "+0x178 == 0 → no spawn" check guards that division. The 09:01 field `spawnMode` was renamed to `atlasColumns`.
+- [Corrects particles.md §2026-10-13T09:01](#ts-20261013-0901): +0x178 is not a spawn mode. 0x222550 reads +0x178 and +0x179 as 1/x divisors: atlas columns and rows. The spawner's "+0x178 == 0 → no spawn" check guards that division. The 09:01 field `spawnMode` was renamed to `atlasColumns`.
 - Random numbers come from the emitter's LCG at emitter +0x134: x = x × 0x343fd + 0x269ec3; value = ((x & 0x7fffffff) >> 15) / 65536. It is seeded from record +0x84 (spawner).
 - Fields (E = emitter; s = the scale from 09:01):
   - +0x54/+0x58/+0x5c: half-extents of a box offset, ±value × (2r − 1) per axis. Used when E+0x150 bit 2 is clear; otherwise E+0xd4..0xdc.
@@ -80,9 +80,9 @@ Corrected by [particles.md §2026-10-13T09:07](particles.md#ts-20261013-0907): t
 
 ## 2026-10-13T09:05+02:00 — Emitter update 0x20db0c (REA Ghidra 12.1.2 ev_a8436740…; read-only)
 
-Corrected by [particles.md §2026-10-13T09:07](particles.md#ts-20261013-0907): the record has four key lists
+Corrected by [particles.md §2026-10-13T09:07](#ts-20261013-0907): the record has four key lists
 
-- [Corrects particles.md §2026-10-13T09:00](particles.md#ts-20261013-0900) and [Corrects particles.md §2026-10-13T09:01](particles.md#ts-20261013-0901): +0x88..+0xf7 is a second key list, not colour keys. +0x170 keys at +0x88 + 8k, each (f32 time, u8 alpha, 3 zero bytes). This is the emitter fade over its duration: t = 1 − (duration − age) / duration, lerped between keys, then / 255. Flags bit 1 squares the result. It is stored ×128 in E+0x155. The spawner's +0x8c is the first key's alpha.
+- [Corrects particles.md §2026-10-13T09:00](#ts-20261013-0900) and [Corrects particles.md §2026-10-13T09:01](#ts-20261013-0901): +0x88..+0xf7 is a second key list, not colour keys. +0x170 keys at +0x88 + 8k, each (f32 time, u8 alpha, 3 zero bytes). This is the emitter fade over its duration: t = 1 − (duration − age) / duration, lerped between keys, then / 255. Flags bit 1 squares the result. It is stored ×128 in E+0x155. The spawner's +0x8c is the first key's alpha.
 - +0x28 is confirmed as particles per second. The accumulator E+0xe4 += dt × +0x28 × E+0xe8; its floor is the number of new particles this frame. These go into free slots (slot +0x38 == −1.0). Optional sub-stepping splits dt into param_3 parts and interpolates the emitter position (0x221e5c).
 - +0x38 is confirmed as the emitter duration. Age E+0xe0 advances only while +0x38 ≤ 98. Larger values (100 in 197 records) do not age; they count down E+0x120 instead and stop when it reaches 0. The emitter is removed when age ≥ duration.
 - Each particle is advanced by 0x221e9c(dt, fade, emitter, particle, matrix, frames, uv-scale, bounds…), which also grows the emitter bounds (E+0xa0 centre, E+0xac half-size). The bounds are refreshed every 4–7 frames (random, 0x235498) unless +0x74 ≥ 0 keeps the larger extent.
@@ -94,7 +94,7 @@ Corrected by [particles.md §2026-10-13T09:07](particles.md#ts-20261013-0907): t
 
 ## 2026-10-13T09:07+02:00 — Particle step 0x221e9c and the four key lists (REA Ghidra 12.1.2 ev_8d5bac72…; read-only)
 
-- [Corrects particles.md §2026-10-13T09:03](particles.md#ts-20261013-0903) and [Corrects particles.md §2026-10-13T09:05](particles.md#ts-20261013-0905). The record has four key lists, each of (f32 time, 4 value bytes), 8 bytes per key, at most 7 keys:
+- [Corrects particles.md §2026-10-13T09:03](#ts-20261013-0903) and [Corrects particles.md §2026-10-13T09:05](#ts-20261013-0905). The record has four key lists, each of (f32 time, 4 value bytes), 8 bytes per key, at most 7 keys:
   - +0x88, count +0x170: emitter fade (value[0] = alpha).
   - +0xc0, count +0x171: size change.
   - +0xf8, count +0x172: colour (value[0..2]).

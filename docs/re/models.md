@@ -6,7 +6,7 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 
 ## 2026-10-12T16:10+02:00 — .bfnmdl model format decoded (REA, Ghidra 12.1.2 provider)
 
-Corrected by [models.md §2026-10-13T14:46](models.md#ts-20261013-144637): the model+0x1c section is collision geometry
+Corrected by [models.md §2026-10-13T14:46](#ts-20261013-144637): the model+0x1c section is collision geometry
 
 - Opened game.arm.elf with provider_id=ghidra. Ghidra defines the procedures Hopper missed, and its pseudo-code evidence IDs are:
 
@@ -89,4 +89,4 @@ The combiner setups that this entry lists as unrecovered were recovered later: [
 
 ## 2026-10-13T14:46:37+02:00 — Correction: the model+0x1c section is collision geometry
 
-- The "model+0x1c section" that earlier entries ([Corrects models.md §2026-10-12T16:10](models.md#ts-20261012-1610) and the loader notes of 0x114640/0x11fd20) skipped as unrecovered holds the collision mesh: items with a name, a bounding-box tree, 0x20-byte triangle records and vertices. Format, queries and tests: [collision.md](collision.md). `parseModel` now keeps it in `Model::collision`.
+- The "model+0x1c section" that earlier entries ([Corrects models.md §2026-10-12T16:10](#ts-20261012-1610) and the loader notes of 0x114640/0x11fd20) skipped as unrecovered holds the collision mesh: items with a name, a bounding-box tree, 0x20-byte triangle records and vertices. Format, queries and tests: [collision.md](collision.md). `parseModel` now keeps it in `Model::collision`.

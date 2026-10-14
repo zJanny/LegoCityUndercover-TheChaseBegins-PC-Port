@@ -6,7 +6,7 @@ Camera records, the record pose blend, the camera lock and the command stack wit
 
 ## 2026-10-13T23:13:43+02:00 — Camera lock: script native CameraRotFixedSet and the HUD icon UI_CameraLocked
 
-Corrected by [camera-records-blending.md §2026-10-14T09:49](camera-records-blending.md#ts-20261014-094953): the police-station lock is the record-pose camera 0x298cd8
+Corrected by [camera-records-blending.md §2026-10-14T09:49](#ts-20261014-094953): the police-station lock is the record-pose camera 0x298cd8
 
 Lead, prompted by the user's observation on a real 3DS: outside the police station L/R turn the camera; inside they do not, and a crossed-out camera icon appears when L/R are pressed.
 - Script native `CameraRotFixedSet`: registered at 0x16071c through 0x23912c (the native registration routine; name by `add r0, pc, #960` = string 0x160ae4, handler word at literal 0x160ae0 = **0x27bb9c**, r2 = 4, r3 = 8 as for the neighbouring registrations). Found by a scan of pc-relative ADD/SUB immediates whose target is the string; the string has no absolute-address reference.
@@ -20,7 +20,7 @@ Unknowns:
 
 ## 2026-10-14T09:49:53+02:00 — Correction: the police-station lock is not CameraRotFixedSet; it is the record-pose camera 0x298cd8 (REA Ghidra 12.1.2, llvm-objdump, Azahar oracle New 3DS state police-station)
 
-**[Corrects camera-records-blending.md §2026-10-13T23:13:43](camera-records-blending.md#ts-20261013-231343)** (which guessed that level scripts set the lock through `CameraRotFixedSet`).
+**[Corrects camera-records-blending.md §2026-10-13T23:13:43](#ts-20261013-231343)** (which guessed that level scripts set the lock through `CameraRotFixedSet`).
 - `CameraRotFixedSet` (handler 0x27bb9c) takes (focus object, target height, target distance, height offset) (script function list, `levels/scriptfns.txt` entry id 10025). It stores the object's node (+0x3c) and three floats plus 43.0 into the preset block at 0x372d74 through 0x182060 and selects the preset object 0x372d54 through 0x226a30 (manager 0x376870 +0x28). The census `level_census` over all 30 level files finds **one** call in total, in `lvl_07_downtown_main.blvl` (script function list near `CameraFollow` / `EnableTrigger`). lvl_00 never calls it. So it is not the police-station lock, and not a generic indoor mechanism.
 - What the oracle shows (state police-station, Azahar New 3DS, OpenGL, `--rpc-input`): with L held for 2 s the camera yaw (0x376894) stays -3.1416 and the HUD shows the crossed-out camera icon in the top-left (screenshot `artifacts/oracle/agentB-out/psL.png`). The preset in the manager is the default preset 0x377110 in the station and in the street (manager+0x28 = +0x2c = 0x377110, both states).
 - The difference is the camera command object: `*(*(manager+0x14))+0x78` holds a function pointer. Street (gameplay-start): **0x2a8bfc** (follow controller 0x2e0bf0). Police station: **0x298cd8** (record pose blend). Read at 0x08501c38 (street) and 0x08501ce4 (station).
@@ -122,5 +122,5 @@ Unknowns:
 
 Moved from the feature files so that the items stay short (CLAUDE.md, "Documentation rules"). The text below is the former wording of each item.
 
-- **CAMERA-3** (camera.md): Record selection, record pose, fade and pose filter are in; open: the multi-record weights and pose against the oracle (the lobby has no overlapping records; needs a place with two overlapping records and a free player), Blocker pose, shake, query order, pitch clamp and other presets. evidence: [camera.md §2026-10-14T10:44](camera-records-blending.md#ts-20261014-104400), [camera.md §2026-10-13T14:39](camera-follow.md#ts-20261013-143958).
-- **CAMERA-9** (camera.md): The follow controller in a fade: its seed when it takes over from a record pose (original about 4.6 m behind the player, y player + 2.0), its reaction to a large jump of the player and the factor ramp 0.1 of 0x1b4864 are not reproduced, so the poses of the street hand-over replay only match late (CAMERA-S5). Needs the follow controller with collision in the test and a walked (not teleported) hand-over. evidence: [camera.md §2026-10-14T12:07](camera-records-blending.md#ts-20261014-120746).
+- **CAMERA-3** (camera.md): Record selection, record pose, fade and pose filter are in; open: the multi-record weights and pose against the oracle (the lobby has no overlapping records; needs a place with two overlapping records and a free player), Blocker pose, shake, query order, pitch clamp and other presets. evidence: [camera.md §2026-10-14T10:44](#ts-20261014-104400), [camera.md §2026-10-13T14:39](camera-follow.md#ts-20261013-143958).
+- **CAMERA-9** (camera.md): The follow controller in a fade: its seed when it takes over from a record pose (original about 4.6 m behind the player, y player + 2.0), its reaction to a large jump of the player and the factor ramp 0.1 of 0x1b4864 are not reproduced, so the poses of the street hand-over replay only match late (CAMERA-S5). Needs the follow controller with collision in the test and a walked (not teleported) hand-over. evidence: [camera.md §2026-10-14T12:07](#ts-20261014-120746).

@@ -6,7 +6,7 @@ Object type 42: classes `props/prop_door` and `leprops/leprop_door`. Collision o
 
 ## 2026-10-13T21:17:00+02:00 — State machine, timing, motion and sounds (REA Ghidra 12.1.2, llvm-objdump, Azahar oracle port 24692 without RPC)
 
-Corrected by [doors.md §2026-10-13T21:51](doors.md#ts-20261013-215117): stop events are played
+Corrected by [doors.md §2026-10-13T21:51](#ts-20261013-215117): stop events are played
 
 Replica: `src/runtime/door.{hpp,cpp}` (`doorUpdate`, `doorMessage`, `doorPose`, `doorParams`), `Model::nodePivot`, wiring in `chase-game` (`DoorObject`). Tests: `door-core` (tests/door_test.cpp), `door-real-data` (tests/door_real_test.cpp, replays the two oracle traces below).
 
@@ -53,7 +53,7 @@ Unknowns
 
 ## 2026-10-13T21:51:17+02:00 — Door sound sequence pinned (llvm-objdump, no REA; no emulator)
 
-Addresses read again: state change 0x1a6b6c, play 0x23ae84, stop 0x23ae50 (stop details in [audio.md §2026-10-13T21:51](audio.md#ts-20261013-215117)). Tests: `door-core` (all four sounds and the delay), `door-real-data` (Police_Door_02 ids). [Corrects doors.md §2026-10-13T21:17](doors.md#ts-20261013-211700) entry ("Stop events are not played"): they are now stopped immediately. Wiring: `chase-game` plays the events at the door position with a per-door owner and stops them through `GameAudio::stop`.
+Addresses read again: state change 0x1a6b6c, play 0x23ae84, stop 0x23ae50 (stop details in [audio.md §2026-10-13T21:51](audio.md#ts-20261013-215117)). Tests: `door-core` (all four sounds and the delay), `door-real-data` (Police_Door_02 ids). [Corrects doors.md §2026-10-13T21:17](#ts-20261013-211700) entry ("Stop events are not played"): they are now stopped immediately. Wiring: `chase-game` plays the events at the door position with a per-door owner and stops them through `GameAudio::stop`.
 
 - Sound call sites of the door code: only 0x1a6b6c. A scan of every `bl 0x23ae50` and `bl 0x23ae84` finds none in the update 0x1d16b8 (to 0x1d1928), the update shell 0x169ba0, the destroy 0x174998 or the message handler 0x1749b8..0x174c50 (the neighbours 0x174ef4, 0x1a6dd4 and 0x1a6e74 work on a different record at +0x48). All door sounds are positional at the door (`0x23ae84`, owner = u16 at entity+0x14):
   - target 1 (closed): stop SFXClosing (+0x2e, -1.0), then play SFXShut (+0x30); entity flag 0x800 cleared.
@@ -82,4 +82,4 @@ Unknowns:
 
 Moved from the feature files so that the items stay short (CLAUDE.md, "Documentation rules"). The text below is the former wording of each item.
 
-- **DOOR-1** (doors.md): Some doors in lvl_01 (Cherry Tree Hills, for example `Police_Door_01/02`) open only when a game script asks. `TriggerObject` requests reach the doors (0xff opens, 0xfe closes) and bound triggers start scripts, but the police front-door script `Police_ExtToInt` stops at `WarningDialogBox`, which has no handler, and its bound `Police_Station_Transition_Lower` is switched off at the start of the story (a mission script switches it on later). Whether the player's "use" action also opens doors is unknown. needs: SCRIPT-7 ([script-system.md](../plans/features/script-system.md)). evidence: [doors.md §2026-10-13T21:17](doors.md#ts-20261013-211700), [objects.md §2026-10-13T21:17](objects.md#ts-20261013-211741), [scripts.md §2026-10-14T10:06](scripts.md#ts-20261014-100640).
+- **DOOR-1** (doors.md): Some doors in lvl_01 (Cherry Tree Hills, for example `Police_Door_01/02`) open only when a game script asks. `TriggerObject` requests reach the doors (0xff opens, 0xfe closes) and bound triggers start scripts, but the police front-door script `Police_ExtToInt` stops at `WarningDialogBox`, which has no handler, and its bound `Police_Station_Transition_Lower` is switched off at the start of the story (a mission script switches it on later). Whether the player's "use" action also opens doors is unknown. needs: SCRIPT-7 ([script-system.md](../plans/features/script-system.md)). evidence: [doors.md §2026-10-13T21:17](#ts-20261013-211700), [objects.md §2026-10-13T21:17](objects.md#ts-20261013-211741), [scripts.md §2026-10-14T10:06](scripts.md#ts-20261014-100640).

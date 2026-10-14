@@ -6,9 +6,9 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 
 ## 2026-10-13T10:30+02:00 — S4f save format recovered (REA, Ghidra 12.1.2; read-only)
 
-Corrected by [save-format.md §2026-10-13T12:30](save-format.md#ts-20261013-1230): +4..+7 are two per-slot pairs
-Corrected by [save-format.md §2026-10-13T08:53](save-format.md#ts-20261013-0853): options +4/+5 are sound volume, +6/+7 music volume
-Corrected by [save-format.md §2026-10-13T08:56](save-format.md#ts-20261013-0856): the slot summary guess is unconfirmed
+Corrected by [save-format.md §2026-10-13T12:30](#ts-20261013-1230): +4..+7 are two per-slot pairs
+Corrected by [save-format.md §2026-10-13T08:53](#ts-20261013-0853): options +4/+5 are sound volume, +6/+7 music volume
+Corrected by [save-format.md §2026-10-13T08:56](#ts-20261013-0856): the slot summary guess is unconfirmed
 
 - Path "data:/savegame.dat" (0x36741c). 0x24bc0c mounts "data:" and opens the file with mode 7, read/write/create (ev_7bc912c1…, ev_7004d64d…). 0x24baa0 maps FS results to statuses 1/4/5; 4 = corrupted and 5 = not formatted are inferred.
 - I/O runs on "saveiothread" 0x1688cc (ev_b8f03e66…, ev_56a85bfb…), by mode:
@@ -50,9 +50,9 @@ Corrected by [save-format.md §2026-10-13T08:56](save-format.md#ts-20261013-0856
 
 ## 2026-10-13T12:30+02:00 — Reset defaults 0x2081cc (REA, Ghidra 12.1.2; read-only)
 
-Corrected by [save-format.md §2026-10-13T08:53](save-format.md#ts-20261013-0853): options +4/+5 are sound volume, +6/+7 music volume
+Corrected by [save-format.md §2026-10-13T08:53](#ts-20261013-0853): options +4/+5 are sound volume, +6/+7 music volume
 
-- [Corrects save-format.md §2026-10-13T10:30](save-format.md#ts-20261013-1030): +4..+7 are two per-slot pairs, not one music/SFX pair. The descriptor from 0x1a1fb8 (ev_c8c0b40e…) holds sizes, slot count 2, version 0x1e, the slot callback 0x1a25cc and the options callback 0x1a25a0.
+- [Corrects save-format.md §2026-10-13T10:30](#ts-20261013-1030): +4..+7 are two per-slot pairs, not one music/SFX pair. The descriptor from 0x1a1fb8 (ev_c8c0b40e…) holds sizes, slot count 2, version 0x1e, the slot callback 0x1a25cc and the options callback 0x1a25a0.
 - 0x2081cc (ev_4e9c96fe…) zeroes the whole buffer (0x24d234), then sets the options block:
   - +0 = 0x8a: high nibble = global 0x379d64 (8), low nibble = 0x379d66 (10). Initial globals 08 08 0a (ev_a37531a1…). 0x1c33c0 applies the same nibbles from these globals, apparently a second reset path.
   - +1 = language: 0x21b650 (ev_b616888e…) maps the 3DS CFG system language (0x3292fc reads block 0xA0002, ev_57575aae…) as 2→2, 3→4, 4→3, 5→5, 7→12, 8→6, 9→8, 10→9, otherwise 1. 0x2babe0 (ev_4d5865e7…) falls back to 1 when the index is not in a runtime list at *0x376ae8 (stride 0x18; the pointer is 0 in the static image).
@@ -67,7 +67,7 @@ Corrected by [save-format.md §2026-10-13T08:53](save-format.md#ts-20261013-0853
 
 Corrected by [arm-executable.md §2026-10-13T08:55](arm-executable.md#ts-20261013-0855): slot-table entries 12 and 13 hold channels 8 (L) and 10 (R)
 
-- [Corrects save-format.md §2026-10-13T10:30](save-format.md#ts-20261013-1030) and [Corrects save-format.md §2026-10-13T12:30](save-format.md#ts-20261013-1230): options +4/+5 are the **sound** volume and +6/+7 the **music** volume, one byte per slot.
+- [Corrects save-format.md §2026-10-13T10:30](#ts-20261013-1030) and [Corrects save-format.md §2026-10-13T12:30](#ts-20261013-1230): options +4/+5 are the **sound** volume and +6/+7 the **music** volume, one byte per slot.
 - Options menu handler 0x31af98:
   - Row 0 steps global 0x37751d by 1, stores it at options +4 + last slot (only when options +2 ≤ 1), and calls 0x1f4408 → 0x1dca5c with value / 10.0. 0x1dca5c stores the gain and marks 24 voices dirty.
   - Row 1 does the same with 0x37751e, options +6 + slot and 0x1f36ec (clamps to 0..1 and scales a stream at 0x376b30).
@@ -101,7 +101,7 @@ Corrected by [arm-executable.md §2026-10-13T08:55](arm-executable.md#ts-2026101
   - Empty entries show text key 0xac54bb90 and UI_Gifts_EmptySlot.png. The tables are runtime pointers (0 in the static image).
 - Options +0x1ec + slot × 0x18 is a 24-byte record: u32 (non-zero = present) followed by 5 floats.
   - 0x2d86c0 copies the whole record to *0x374a30 +0x114, indexed by the signed byte *0x375df0.
-  - 0x1cbf54 and 0x2be874 skip slots whose first byte is 0 and pass the record address to 0x20a8d4 (arguments 48, 64, 3200, 3; purpose unknown). [Corrects save-format.md §2026-10-13T10:30](save-format.md#ts-20261013-1030): the "slot summary" guess is unconfirmed; the floats suggest a saved position or camera state (inferred).
+  - 0x1cbf54 and 0x2be874 skip slots whose first byte is 0 and pass the record address to 0x20a8d4 (arguments 48, 64, 3200, 3; purpose unknown). [Corrects save-format.md §2026-10-13T10:30](#ts-20261013-1030): the "slot summary" guess is unconfirmed; the floats suggest a saved position or camera state (inferred).
 - Probable original bug: the slot-delete path 0x31ba64 sets the selected slot (*0x3741dc +0x55) to 0xff and then clears options[0x1ec + (s8)0xff × 0x18] = options +0x1d4 instead of the deleted slot's record (0x31baf4..0x31bb18).
 - Unknown: the meaning of the five floats; the bytes between +0x3c and +0x1d4; how gifts are granted.
 
@@ -109,7 +109,7 @@ Corrected by [arm-executable.md §2026-10-13T08:55](arm-executable.md#ts-2026101
 
 ## 2026-10-13T09:13+02:00 — Slot progress layout and completion (REA Ghidra 12.1.2 ev_852ce460…, llvm-objdump; read-only)
 
-Corrected by [save-format.md §2026-10-13T09:25](save-format.md#ts-20261013-0925): the exclusion loop reads byte +0xc, not +0x24
+Corrected by [save-format.md §2026-10-13T09:25](#ts-20261013-0925): the exclusion loop reads byte +0xc, not +0x24
 
 Offsets are relative to the slot block (live copy at 0x51b6b0; file slot 0 at 0x234, slot 1 at 0x5464).
 
@@ -160,7 +160,7 @@ Command: `build/chase-tabledump tables/tablessupercounters.bxls` (source: `artif
   - Confirmed from code (ev_9962dde4…): 0x2f67fc compares the string at +0x30 (and at +0x84, the next row's +0x30) with the current level name over 28 rows to set the level id (0x51640e), and compares the collected count with byte +0x41 for ids 8 down to 2.
   - The completion formula 0x1cd3dc (llvm-objdump 0x1cd3f4..0x1cd450) adds byte +0x40 of rows 2..8 to the total. Values: row 2 = 7, 3 = 8, 4 = 5, 5 = 8, 6 = 9, 7 = 8, 8 = 8 (sum 53). Rows 2..8 are lvl_01_cherrytreehills, 02_albatrossisland, 03_auburn, 04_fortmeadows, 06_apolloisland, 05_bluebellwood, 07_downtown (id order differs from the number in the name for rows 6 and 7). Byte +0x41 for rows 2..8 is 10, 10, 8, 10, 11, 10, 10 (use unconfirmed; the check in 0x2f67fc compares a count against it).
 - Character table (`tablescharacters.bxls` sheet 0: 192 rows, stride 0x28 = stride used by 0x231fc0, computed layout agrees). Layout: +0 string name, +4 int (cost: 0, 200000, …), +8 int (hash), +0xc u8, +0xd u8, +0xe u8, then bool bytes and u8 fields up to +0x22 / +0x23 (the two unlock-chain ids) and a u16 at +0x24.
-- [Corrects save-format.md §2026-10-13T09:13](save-format.md#ts-20261013-0913) ("character-table byte +0x24 == 1"): the exclusion loop at 0x1cd5bc..0x1cd5e4 starts at `*0x372e10 + 372` and steps 0x28 for 132 entries. 372 = 9 × 0x28 + 0xc, so it reads byte **+0xc** of ids 9..140, not +0x24.
+- [Corrects save-format.md §2026-10-13T09:13](#ts-20261013-0913) ("character-table byte +0x24 == 1"): the exclusion loop at 0x1cd5bc..0x1cd5e4 starts at `*0x372e10 + 372` and steps 0x28 for 132 entries. 372 = 9 × 0x28 + 0xc, so it reads byte **+0xc** of ids 9..140, not +0x24.
   - Data: byte +0xc over ids 9..140 holds 1 only for id 9 ("police"); the other 131 values are 2..9 (value 9 occurs 19 times, each other value 16 times). So exactly one entry is excluded; each match subtracts 1 from both the collected and the total counter.
   - Byte +0xc looks like a character class or group (1..9); the meaning is unknown. The u16 at +0x24 is 0 in all 192 rows and is not read by the completion function.
 - Offline total (inference from the loops, llvm-objdump 0x1cd3dc..0x1cd5e8, not run): the total counter r6 = 53 (levels) + 42 (two 21-bit sets) + 2 × 132 (characters 9..140) + 2 × 41 (ids 1..41) + 271 (sum of the 13 × 7 cells of TablesSuperCounters, summed from `chase-tabledump`) − 1 (id 9) = **711**. The result is `min(1000, collected × 1000 / 711)` if the divide is a plain unsigned division by the total (the 0x25c1b8 helper was not read).

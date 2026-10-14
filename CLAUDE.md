@@ -55,7 +55,7 @@ Three places, never copied between them, only linked: **findings** in `docs/re/`
 
 **Findings (`docs/re/<topic>.md`, index `docs/re/README.md`)**
 - Read the index, then only the entry a feature file links, not whole files.
-- Append dated entries at the end: anchor line `<a id="ts-YYYYMMDD-HHMMSS"></a>` directly above `## <date -Iseconds> — title`. Links to entries are `file.md#ts-...` with `§<timestamp>` in the link text. Never rewrite a heading timestamp. Unknowns go last in the entry.
+- Append dated entries at the end: anchor line `<a id="ts-YYYYMMDD-HHMMSS"></a>` directly above `## <date -Iseconds> — title`. Links to entries are `file.md#ts-...` with `§<timestamp>` in the link text; inside the same file only `#ts-...` (Forgejo ignores same-page links that repeat the file name). Never rewrite a heading timestamp. Unknowns go last in the entry.
 - **Corrections are marked at both ends:** the new entry links the old one with link text starting `Corrects`, and the old entry gets a line `Corrected by [file.md §<ts>](file.md#ts-...): <what changed>` directly under its heading. Otherwise old entries stay unchanged.
 - **Split a file by subtopic when it passes 40 KB:** move whole entries with their anchors into `docs/re/<topic>-<subtopic>.md`, leave a short pointer list in the old file, update the index and all links.
 - For developers; no game assets.

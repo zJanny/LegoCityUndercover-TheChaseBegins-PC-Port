@@ -6,8 +6,8 @@ How the level's stud objects are created, drawn, collected and counted. Replica:
 
 ## 2026-10-13T17:09:41+02:00 — Pickup pool, sprite drawing, pickup rule and counter (REA Ghidra 12.1.2 pseudo-code, llvm-objdump, oracle port 24770 without RPC)
 
-Corrected by [studs.md §2026-10-13T21:35](studs.md#ts-20261013-213500): the skip limit is 30
-Corrected by [studs.md §2026-10-13T21:48](studs.md#ts-20261013-214838): the collect sound is played
+Corrected by [studs.md §2026-10-13T21:35](#ts-20261013-213500): the skip limit is 30
+Corrected by [studs.md §2026-10-13T21:48](#ts-20261013-214838): the collect sound is played
 
 **[Corrects objects.md §2026-10-13T15:39:15](objects.md#ts-20261013-153915)** ("Left out and why", "How studs ... are created"): the stud classes have a `meshname` (`xx_goldstud` ...) but the game never loads it as a model. The names are not used by any code (no `xx_` string in the executable). The stud class is a pickup object (object type 0x3d) that the pickup system draws as a camera-facing sprite.
 
@@ -56,7 +56,7 @@ Unknowns:
 - "prepares the flight to the HUD (screen-space target built from camera data; not decoded further)" is decoded: the flight is the state 4 branch of 0x180168. Every update `timer -= dt`; while the timer is above 0 the record moves `(target - position) / (30 * timer)`, the target being the HUD counter's sink 0 (screen point, depth 5.5) unprojected by 0x24c1d0 with the top-screen camera; the record is drawn at its moving position. Reproduced against `bar1.mem` (tools/oracle/hud-bar.txt): the positions of updates 19..24 agree to 2e-3, the camera read in the oracle unprojects the sink to the converged target (864.6103, 20.8361, 1064.3806). Native: `StudField::setFlightTarget`, `unprojectTopScreen`; chase-game draws the flying studs.
 - "0x28a128 adds the value ... " ends with a hook call `(*0x377298)(type, record)` = 0x29c090 that sets the HUD stud bar to the new total (`SetDisplay` 0x22ddf4) and shows it for 2 s; there is no roll-up for pickups (the number jumps to the new total and the icon bounces for 5 updates). Native: `StudField::takeBanked` hands the new total to `Hud::studsBanked`.
 - The stud counter display listed under Unknowns is the stud bar of hud.md. 0x15b2f0 is the bar's init (it loads `Pickups_commonstud.tga` for the bar's icon).
-- **[Corrects studs.md §2026-10-13T17:09:41](studs.md#ts-20261013-170941)** (stand-in `kProvisionalStudSkipLimit` 17, first entry): the limit of the skip counter is `FUN_0023ca4c()`, which returns 30 (0x376af8 +0x8 and +0x10 are zero in the oracle; `kStudSkipLimit`). Measured: the whole pool over 45 updates from the gameplay start (`skip1.mem`, tools/oracle/hud-skip.txt): counters of idle studs run 11 -> 0 and are set to 30 when tested again (30 seen in update 10, then 29, 28 ...). The earlier "16 or 17" were the values of a few updates after the level's first test. The same 30 is the divisor of the flight step, `kStudFlightRate`.
+- **[Corrects studs.md §2026-10-13T17:09:41](#ts-20261013-170941)** (stand-in `kProvisionalStudSkipLimit` 17, first entry): the limit of the skip counter is `FUN_0023ca4c()`, which returns 30 (0x376af8 +0x8 and +0x10 are zero in the oracle; `kStudSkipLimit`). Measured: the whole pool over 45 updates from the gameplay start (`skip1.mem`, tools/oracle/hud-skip.txt): counters of idle studs run 11 -> 0 and are set to 30 when tested again (30 seen in update 10, then 29, 28 ...). The earlier "16 or 17" were the values of a few updates after the level's first test. The same 30 is the divisor of the flight step, `kStudFlightRate`.
 
 Unknowns
 - Whether other stud types fly to sinks 1 or 2 (the type table +0x5c byte is 0 for silver, gold, blue and purple), the blend state of the flying sprite, dropped and magnet studs.
@@ -65,7 +65,7 @@ Unknowns
 
 ## 2026-10-13T21:48:38+02:00 — Correction: the collect sound is played
 
-**[Corrects studs.md §2026-10-13T17:09:41](studs.md#ts-20261013-170941)** ("the collect sound … chase-game has no audio"): since the sound merge (docs/re/audio.md 17:54) chase-game plays the stud's own collect id (`kStudCollectSounds` {64, 64, 63, 63} for silver, gold, blue, purple in src/runtime/studs.hpp, emitted by src/runtime/studs.cpp, played through `studCollectCall`). The silver pickup is replayed against a recorded oracle pickup (`audio-real-data`, trace `stud.csv`, trap 0x227880, id 64); the ids 63 and gold's 64 come from the table/code only (STUD-3 in [features/studs.md](../plans/features/studs.md)).
+**[Corrects studs.md §2026-10-13T17:09:41](#ts-20261013-170941)** ("the collect sound … chase-game has no audio"): since the sound merge (docs/re/audio.md 17:54) chase-game plays the stud's own collect id (`kStudCollectSounds` {64, 64, 63, 63} for silver, gold, blue, purple in src/runtime/studs.hpp, emitted by src/runtime/studs.cpp, played through `studCollectCall`). The silver pickup is replayed against a recorded oracle pickup (`audio-real-data`, trace `stud.csv`, trap 0x227880, id 64); the ids 63 and gold's 64 come from the table/code only (STUD-3 in [features/studs.md](../plans/features/studs.md)).
 
 Unknowns:
 - A recorded original pickup of a gold, blue or purple stud.

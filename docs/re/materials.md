@@ -59,4 +59,4 @@ Unknowns:
 
 Moved from the feature files so that the items stay short (CLAUDE.md, "Documentation rules"). The text below is the former wording of each item.
 
-- **RENDER-6** (rendering.md): The white quad above the police-station entrance is the `Checker1.tga` part (4 vertices, flat y = 0, 4.2 x 4.2, opaque) of `room1.bfnmdl` (also room3, room5), seen far away outside; not RENDER-S3. Unknown whether the original draws it (rooms outside are not loaded in the oracle). Not fixed (related: WSTREAM-3). evidence: [materials.md §2026-10-14T09:50](materials.md#ts-20261014-095011).
+- **RENDER-6** (rendering.md): The white quad above the police-station entrance is the `Checker1.tga` part (4 vertices, flat y = 0, 4.2 x 4.2, opaque) of `room1.bfnmdl` (also room3, room5), seen far away outside; not RENDER-S3. Unknown whether the original draws it (rooms outside are not loaded in the oracle). Not fixed (related: WSTREAM-3). evidence: [materials.md §2026-10-14T09:50](#ts-20261014-095011).

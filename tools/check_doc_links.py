@@ -299,10 +299,11 @@ def process(root, fix):
                         errors.append(f"{where}: missing file {target}")
                     elif dest.suffix == ".md" and dest.is_file():
                         target_doc = load(dest)
+                        link_file = "" if dest == path.resolve() else file_part
                         if stamp:
                             hits = resolve_stamp(target_doc, stamp)
                             if len(hits) == 1:
-                                new_target = f"{file_part}#{hits[0]}"
+                                new_target = f"{link_file}#{hits[0]}"
                                 if new_target != target:
                                     if fix:
                                         links_rewritten += 1
@@ -314,6 +315,12 @@ def process(root, fix):
                                 errors.append(f"{where}: {stamp.group(0)} is ambiguous in {file_part}: {', '.join(hits)}")
                         elif fragment and fragment not in target_doc.anchors():
                             errors.append(f"{where}: missing anchor #{fragment} in {file_part or rel.name}")
+                        elif fragment and link_file != file_part:
+                            new_target = f"#{fragment}"
+                            if fix:
+                                links_rewritten += 1
+                            else:
+                                errors.append(f"{where}: same-file link {target} must be {new_target}")
                 pieces.append(line[last:match.start(2)])
                 pieces.append(new_target)
                 last = match.end(2)

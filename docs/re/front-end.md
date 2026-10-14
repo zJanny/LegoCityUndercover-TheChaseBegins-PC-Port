@@ -50,7 +50,7 @@ Rows 1..5 have fade in 0.5, fade out 0.5, hold 4.0 (row 1) or 1.0. Row 3 is skip
 ## 2026-10-13T20:46:07+02:00 — Prompt state machine, save indicator, boot pages, intro screens; native front end (chase_frontend)
 
 Corrected by [fmv.md §2026-10-13T20:58](fmv.md#ts-20261013-205838): the intro movie holds two eye pictures per frame pair
-Corrected by [front-end.md §2026-10-13T20:58](front-end.md#ts-20261013-205838): the intro movie is stereoscopic, 29.97 pictures per second
+Corrected by [front-end.md §2026-10-13T20:58](#ts-20261013-205838): the intro movie is stereoscopic, 29.97 pictures per second
 
 Sources: REA (Ghidra 12.1.2, `procedure_pseudo_code`) on `artifacts/game/game.arm.elf`; Azahar oracle (OpenGL + RPC screenshots, port 24690, home `artifacts/oracle/fe-home`, states front-lang / front-streetpass / front-selectslot, cold boot capture); native renders compared with the oracle screenshots (mean abs difference over a 400x480 composite).
 
@@ -102,7 +102,7 @@ Sources: REA (Ghidra 12.1.2, `procedure_pseudo_code`) on `artifacts/game/game.ar
 
 ## 2026-10-13T20:58:38+02:00 — Correction: the intro movie is stereoscopic
 
-**[Corrects front-end.md §2026-10-13T20:46:07](front-end.md#ts-20261013-204607)** ("59.94 frames per second"): `01_gameintro.moflex` holds left/right eye pictures as alternating frames; the original shows the first of each pair, 29.97 pictures per second. Details and evidence: [fmv.md](fmv.md) 2026-10-13T20:58:38. The movie still runs against a clock (`SteppedPlayer::advance(dt)`); the length in updates is unchanged.
+**[Corrects front-end.md §2026-10-13T20:46:07](#ts-20261013-204607)** ("59.94 frames per second"): `01_gameintro.moflex` holds left/right eye pictures as alternating frames; the original shows the first of each pair, 29.97 pictures per second. Details and evidence: [fmv.md](fmv.md) 2026-10-13T20:58:38. The movie still runs against a clock (`SteppedPlayer::advance(dt)`); the length in updates is unchanged.
 
 <a id="ts-20261014-133956"></a>
 
@@ -110,4 +110,4 @@ Sources: REA (Ghidra 12.1.2, `procedure_pseudo_code`) on `artifacts/game/game.ar
 
 Moved from the feature files so that the items stay short (CLAUDE.md, "Documentation rules"). The text below is the former wording of each item.
 
-- **FE-10** (front-end.md): (User report 2026-10-13) Intro movie subtitles run out of the bottom screen instead of wrapping. `drawSubtitleBubble` (src/frontend/pages.cpp) draws each cue line of the `.srt` as it is, centred in the 308 px bubble, with no wrap; long lines overflow. A wrap function exists (`wrapText`, used by the alert pages with their recovered 296 px width), but the subtitle wrap width, line limit and what the original does with a cue longer than the box (wrap, shrink or split) are not recovered; take them from the subtitle code of the original and an oracle capture of a long cue, never fit by eye. Check `chase-fmv`'s subtitle renderer for the same problem. evidence: [front-end.md §2026-10-13T20:46](front-end.md#ts-20261013-204607).
+- **FE-10** (front-end.md): (User report 2026-10-13) Intro movie subtitles run out of the bottom screen instead of wrapping. `drawSubtitleBubble` (src/frontend/pages.cpp) draws each cue line of the `.srt` as it is, centred in the 308 px bubble, with no wrap; long lines overflow. A wrap function exists (`wrapText`, used by the alert pages with their recovered 296 px width), but the subtitle wrap width, line limit and what the original does with a cue longer than the box (wrap, shrink or split) are not recovered; take them from the subtitle code of the original and an oracle capture of a long cue, never fit by eye. Check `chase-fmv`'s subtitle renderer for the same problem. evidence: [front-end.md §2026-10-13T20:46](#ts-20261013-204607).

@@ -6,8 +6,8 @@ How the .blvl objects (section +0x2c) find their model and transform. Format of 
 
 ## 2026-10-13T15:39:15+02:00 — Object census, parameter slots and the model lookup
 
-Corrected by [objects.md §2026-10-13T16:34](objects.md#ts-20261013-163430): minifig characters are drawn
-Corrected by [objects.md §2026-10-13T17:09](objects.md#ts-20261013-170941): studs are pickup sprites, not models
+Corrected by [objects.md §2026-10-13T16:34](#ts-20261013-163430): minifig characters are drawn
+Corrected by [objects.md §2026-10-13T17:09](#ts-20261013-170941): studs are pickup sprites, not models
 Corrected by [studs.md §2026-10-13T17:09](studs.md#ts-20261013-170941): the stud classes are pickup objects, never loaded as models
 
 **Census (C++ parser, parameter names from code.bin strings, local only).** Classes with counts, `levels/levels/lvl_00_policestation/lvl_00_policestation_main.blvl` (350 objects) and `levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl` (2967 objects; the gameplay-start state of the oracle stands in this level, player at (886.8, 16.6, 1111.2)).
@@ -62,11 +62,11 @@ Per-class parameter lists come from a scratch tool over the C++ parser (not comm
 
 ## 2026-10-13T16:34:30+02:00 — Characters in the level: body, head, textures and starting pose (worker; REA Ghidra 12.1.2 pseudo-code, objdump, class and instance dumps through parseLevel)
 
-Corrected by [objects.md §2026-10-13T21:17](objects.md#ts-20261013-211741): the start state comes from the startup script and reveal links
+Corrected by [objects.md §2026-10-13T21:17](#ts-20261013-211741): the start state comes from the startup script and reveal links
 
 Replica: `drawableObjects` / `CharacterObject` in src/assets/level.cpp, `addLevelCharacters` in src/render/character.cpp (shared with the player through `addCharacter` / `poseBody` / `placeCharacter`; chase-game and `chase-viewer --characters`). Tests: `assets-real-data` (counts and three resolved rigs).
 
-**[Corrects objects.md §2026-10-13T15:39:15](objects.md#ts-20261013-153915):** the "Left out and why" entry on `char_*` meshes of the earlier section no longer holds for minifig characters (drawn now, see below); animals and the custom characters stay out.
+**[Corrects objects.md §2026-10-13T15:39:15](#ts-20261013-153915):** the "Left out and why" entry on `char_*` meshes of the earlier section no longer holds for minifig characters (drawn now, see below); animals and the custom characters stay out.
 
 **Census (all objects whose resolved meshname is a `char_*` model).** lvl_00: 40 `chars/char_ai_actor`, all `char_minifig`. lvl_01: 115 = 99 `char_minifig` (char_ai_actor 25, char_ai_cherrytreehillsgang1..4 46, char_ai_goon_fists 3, char_ai_tonyknucklesmcgee 2, char_boosterstrange 2, deputydunby 1, journalist 1, racecardriver 1, `chars/pedestrian` 14, `props/ability_freeplay_astronaut_alien01` 4) + 16 other rigs (`char_pig` 5 for `chars/ride_pig`, `char_Crow`, `char_cat` 4, `char_dog` 2, `char_shark` 4). All 856 levels: 886 = 708 minifig characters drawn + 8 custom + 170 other rigs.
 
@@ -90,7 +90,7 @@ Unknowns:
 
 ## 2026-10-13T17:09:41+02:00 — Studs split out of the model-less objects (worker)
 
-**[Corrects objects.md §2026-10-13T15:39:15](objects.md#ts-20261013-153915)** ("Left out and why" entry on studs and the counts above): studs are pickup objects (object type 0x3d, pickuptype 0..3) drawn as sprites, not models (details, evidence and stand-ins in [studs.md](studs.md)). `drawableObjects` now returns them in `DrawableObjects::studs` and no longer counts them in `missingModel`: lvl_00 1 without model (the particle emitter), lvl_01 11, all 856 levels 423 (not itemised); studs over all levels 4835.
+**[Corrects objects.md §2026-10-13T15:39:15](#ts-20261013-153915)** ("Left out and why" entry on studs and the counts above): studs are pickup objects (object type 0x3d, pickuptype 0..3) drawn as sprites, not models (details, evidence and stand-ins in [studs.md](studs.md)). `drawableObjects` now returns them in `DrawableObjects::studs` and no longer counts them in `missingModel`: lvl_00 1 without model (the particle emitter), lvl_01 11, all 856 levels 423 (not itemised); studs over all levels 4835.
 
 Unknowns: what the remaining 423 model-less objects are (hearts, `xx_particleemitter`, hint meshes) and how each is drawn.
 
@@ -100,7 +100,7 @@ Collision of placed objects (which objects register collision, box or mesh, node
 
 ## 2026-10-13T21:17:41+02:00 — Start state of placed objects and doors (pointer entry)
 
-- Which placed objects are disabled at level start comes from the level's own `startup` script and from the build-it / reveal links of other objects, not from a per-object flag in the .blvl: [scripts.md](scripts.md). [Corrects objects.md §2026-10-13T16:34:30](objects.md#ts-20261013-163430), replacing the earlier "hidden at the start" approximations in this file for collision; the drawing code (`drawableObjects`) still draws every object with a model, including the ones the start state disables.
+- Which placed objects are disabled at level start comes from the level's own `startup` script and from the build-it / reveal links of other objects, not from a per-object flag in the .blvl: [scripts.md](scripts.md). [Corrects objects.md §2026-10-13T16:34:30](#ts-20261013-163430), replacing the earlier "hidden at the start" approximations in this file for collision; the drawing code (`drawableObjects`) still draws every object with a model, including the ones the start state disables.
 - Doors: state machine, timing, motion and sounds in [doors.md](doors.md). Trigger chain recovered: a door opens by itself when `AutoOpen` is set (instance parameter, the lvl_00 lift and double doors) and the player is inside its zone, or when it receives message 0xff (from `TriggerObject` / the platform link). The senders of that message in lvl_01 (mission scripts for the front doors) are not traced; the program does not run them.
 
 Unknowns
@@ -113,4 +113,4 @@ Unknowns
 
 Moved from the feature files so that the items stay short (CLAUDE.md, "Documentation rules"). The text below is the former wording of each item.
 
-- **LEVOBJ-1** (level-objects.md): Whether `drawableObjects` should skip the objects the start state disables (visibility at start; not compared with a screenshot); per-class visibility at start (`DisabledOnStartUp`, `ShowOnObjectScan`, `ShowOnMap`) and the effect of flags bit 2 (value 6 in the +0x14 table). evidence: [objects.md §2026-10-13T21:17](objects.md#ts-20261013-211741), [objects.md §2026-10-13T15:39](objects.md#ts-20261013-153915).
+- **LEVOBJ-1** (level-objects.md): Whether `drawableObjects` should skip the objects the start state disables (visibility at start; not compared with a screenshot); per-class visibility at start (`DisabledOnStartUp`, `ShowOnObjectScan`, `ShowOnMap`) and the effect of flags bit 2 (value 6 in the +0x14 table). evidence: [objects.md §2026-10-13T21:17](#ts-20261013-211741), [objects.md §2026-10-13T15:39](#ts-20261013-153915).

@@ -7,8 +7,8 @@ Where the player entity lives, how the stick becomes intent, where it gets its p
 ## 2026-10-13T10:42:27+02:00 — Player entity pointer, scene node, stick-to-intent (worker, REA Ghidra 12.1.2; key claims re-checked with objdump)
 
 Corrected by [camera-follow.md §2026-10-13T14:39](camera-follow.md#ts-20261013-143958): the yaw writer is the camera manager update 0x23f174
-Corrected by [player-entity-input.md §2026-10-13T10:59](player-entity-input.md#ts-20261013-105911): active test of the stick and the dead D-pad path
-Corrected by [player-entity-input.md §2026-10-13T14:41](player-entity-input.md#ts-20261013-144113): the yaw writer is the camera manager update 0x23f174
+Corrected by [player-entity-input.md §2026-10-13T10:59](#ts-20261013-105911): active test of the stick and the dead D-pad path
+Corrected by [player-entity-input.md §2026-10-13T14:41](#ts-20261013-144113): the yaw writer is the camera manager update 0x23f174
 
 Binary: artifacts/game/game.arm.elf (sha256 5152ed14…0881).
 
@@ -36,7 +36,7 @@ Replica: src/runtime/player_intent.{hpp,cpp} (`stickIntent`, `gameAtan2`), check
 
 - **Frame order in 0x200354 (confirmed).** The prologue zeroes ctrl+6 (heading), ctrl+0xc (held) and ctrl+0xe (press) at 0x2003b0..0x2003b8. So the heading is 0 on every frame in which the stick is not active; nothing writes it in that case. The whole body is skipped when the entity is not *0x3772b8 (0x2003c8) or 0x235f08() (byte at 0x377508) == 3 (0x2003d8).
 - **Slots (confirmed).** Literal pool 0x200744 = 0x376a20 (slot 14), 0x200748 = 0x376a24 (slot 15). Entry i of 0x3769e8 is a channel index; channel record = 20 bytes at *(*0x3769e4 + 0x14): +0 f32 value, +8 f32 dead zone, +0xc threshold, +0x10 s16 press, +0x12 s16 release (matches src/runtime/pad.hpp). The first axis passed to atan2 is slot 14 (s16 at 0x2007a0), the second is slot 15 (s17 at 0x2007a4).
-- **Active test (0x200588..0x2005d0, [Corrects player-entity-input.md §2026-10-13T10:42:27](player-entity-input.md#ts-20261013-104227): "active when |v| > dead zone" only in detail).** Active iff |slot14| > dz(slot14) (vcmpe + bgt, strict, false for NaN) or dz(slot15) < |slot15| (vcmpe s1,s0 + bhs skips on <= and on unordered). Each axis uses its own channel dead zone (+8). On active r7 = 1 and r5 = 0xffffff81 (mvn r5,#126).
+- **Active test (0x200588..0x2005d0, [Corrects player-entity-input.md §2026-10-13T10:42:27](#ts-20261013-104227): "active when |v| > dead zone" only in detail).** Active iff |slot14| > dz(slot14) (vcmpe + bgt, strict, false for NaN) or dz(slot15) < |slot15| (vcmpe s1,s0 + bhs skips on <= and on unordered). Each axis uses its own channel dead zone (+8). On active r7 = 1 and r5 = 0xffffff81 (mvn r5,#126).
 - **Gate 0x200654.** 0x1aa8ac returns the signed byte at 0x372d44. If nonzero: bits 0 and 1 of ctrl+0xc and ctrl+0xe are cleared and r5 = 0, which ends the stick path at 0x200698 (this happens even when the stick is inactive, as long as the earlier button code reached it). 0x339d30 is `mov r0,#0; bx lr` (0x339d30), so its "clear everything" branch (0x200688..0x200694) never runs.
 - **Axis shaping (confirmed).** 0x25b578 is `vsqrt.f32 s1,s0`. Unless ctrl+0x6c (u16) is 0x14b or 0x189 (0x200778..0x2007a0: type - 256 - 75 == 0, else type - 331 == 62), each axis becomes `sqrt(|v|) * v`, slot 14 first (0x2007b0..0x2007c4).
 - **Heading (confirmed).** 0x24765c is a branch to 0x2473ec, the library atan2f(s0, s1) with s0 = shaped slot 14 and s1 = shaped slot 15 (standard atan2(y, x) argument order, so 0 = slot 15 positive, i.e. stick up; slot 14 positive gives +16384). Result * 10430.378 (0x4622f983, float multiply at 0x2007d4) -> vcvt.s32.f32 (round toward zero, saturating, NaN -> 0) -> strh to ctrl+6 (low 16 bits). Then 0x200848: `ldrh` ctrl+6 (zero-extended), add (int)(f32 at *0x200bf8 * 10430.378) (the literal 0x200bf8 points at 0x376894; an earlier entry in this file named it the camera yaw), strh low 16 bits. So the final heading is `(u16)((int32)(yaw*k) + (u16)(int32)(atan2*k))` as an s16, wrapping modulo 2^16. Held flags: ctrl+0xc |= 1 at 0x200758, |= 8 at 0x20082c.
@@ -54,7 +54,7 @@ Unknowns:
 
 ## 2026-10-13T11:08:12+02:00 — Where the player entity gets its position and character (worker; objdump of artifacts/game/game.arm.elf, .blvl dumps with parameter names from code.bin)
 
-Corrected by [player-entity-input.md §2026-10-13T12:56](player-entity-input.md#ts-20261013-125622): the head attachment rule
+Corrected by [player-entity-input.md §2026-10-13T12:56](#ts-20261013-125622): the head attachment rule
 
 Replica: `playerStart` and `characterAppearance` in src/assets/level.cpp, used by `placePlayer` in src/game.cpp; checks in tests/assets_test.cpp (synthetic) and tests/assets_real_test.cpp (pinned real values).
 
@@ -76,7 +76,7 @@ Unknowns:
 
 Replica: `jointAttachment` in src/assets/anim.cpp, used by `placePlayer` in src/game.cpp; pinned in tests/assets_test.cpp (synthetic) and tests/assets_real_test.cpp (police idle frame 0).
 
-- **[Corrects player-entity-input.md §2026-10-13T11:08:12](player-entity-input.md#ts-20261013-110812).** The earlier entry's rule "bind(head) · skin(head) · player" was wrong. bind · skin = bind · bind⁻¹ · animated = the animated head world, which still carries the head joint's bind orientation. In char_minifig.bfnskl joint 9 "head" has world rows (0,0,-1), (1,0,0), (0,-1,0) (a 90 degree twist; joint 10 "hat", its child, has an identity world rotation), so the upright head model (vertices y 0..0.57, x/z ±0.26) was turned sideways.
+- **[Corrects player-entity-input.md §2026-10-13T11:08:12](#ts-20261013-110812).** The earlier entry's rule "bind(head) · skin(head) · player" was wrong. bind · skin = bind · bind⁻¹ · animated = the animated head world, which still carries the head joint's bind orientation. In char_minifig.bfnskl joint 9 "head" has world rows (0,0,-1), (1,0,0), (0,-1,0) (a 90 degree twist; joint 10 "hat", its child, has an identity world rotation), so the upright head model (vertices y 0..0.57, x/z ±0.26) was turned sideways.
 - **Who attaches the head (confirmed in code).** The character builder at 0x2442b4 (read from 0x2442b4 to 0x244880) reads the object parameters "meshname", "AttachModel%02d"/"AttachBone%02d"/"AttachRelative%02d" (4 slots), then "HeadModel" (string 0x24489c) and "HatModel" (0x2448a8). Each model name is passed to 0x2121e8(entity, modelName, boneName, 0, 0) with boneName = "head" (string 0x2448b4) for HeadModel and "hat" (0x2448bc) for HatModel. 0x2121e8 builds "models/<name>/<name>.fnmdl" (0x2123cc loads it), adds it as a child node of the entity's node (0x22690c on entity+0x3c), and binds it to the skeleton joint named by the string: 0x24f444(entity+0x44, name) -> 0x2023bc stores {skeleton, joint} in a 0x38-byte record (+0x30/+0x34), and 0x242814 stores that record at node+0x10. The code that consumes node+0x10 when drawing was not found.
 - **Where the head model's origin sits (data).** The cutscene minifig models (csdata/models/<id>/<actor>/<actor>_minifig.bfnmdl) carry the head as a separate unskinned mesh whose node is named "head" with node offset (0, 1.3640, 0.0381) (node record +4). Its vertices equal the standalone Char_Head_Test vertices plus that offset (bbox y 0..0.568 -> 1.364..1.932, z -0.26..0.26 -> -0.222..0.298; mesh centre 0.2839 -> 1.6478). So a standalone head model's vertices are relative to a pure translation, with no rotation, from the head joint's bind position. The skeleton's head joint is at (0, 1.348, 0.0381).
 - **Rule implemented.** head matrix = translate(head joint bind position) · skin(head) · player, i.e. the bind orientation is dropped and the joint's skin matrix (inverse bind · animated world, 0x252cb0) moves the head. For the police idle frame 0 the result is an upright head (rotation diagonal 0.9999, 0.9992, 0.9992) at (-0.036, 1.309, -0.008) in model space. chase-game now shows the hair centred on the back of the head, as in the oracle references gameplay-start.png and gameplay-stick-up-60.png (compared by eye; no pixel comparison).
@@ -93,7 +93,7 @@ Unknowns:
 
 ## 2026-10-13T14:41:13+02:00 — Camera yaw word and player entity type (see camera.md)
 
-- **[Corrects player-entity-input.md §2026-10-13T10:42:27](player-entity-input.md#ts-20261013-104227):** the writer of the f32 at 0x376894 is the camera manager update 0x23f174: it stores atan2(row2.x, row2.z) of the camera scene node's world matrix (the yaw of the view direction). Its camera law is in [camera.md](camera.md); the earlier note that it was not recovered is obsolete.
+- **[Corrects player-entity-input.md §2026-10-13T10:42:27](#ts-20261013-104227):** the writer of the f32 at 0x376894 is the camera manager update 0x23f174: it stores atan2(row2.x, row2.z) of the camera scene node's world matrix (the yaw of the view direction). Its camera law is in [camera.md](camera.md); the earlier note that it was not recovered is obsolete.
 - The player's ctrl+0x6c (entity type) is 3 (read from the locomotion traces), so the stick shaping applies and the stick x turns the camera (types 1..5 and 0x11c). chase-game uses 3.
 
 <a id="ts-20261013-163430"></a>

@@ -6,7 +6,7 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 
 ## 2026-10-13T11:05+02:00 — FMV player with subtitles: WIP, not merged
 
-Corrected by [fmv.md §2026-10-13T20:58](fmv.md#ts-20261013-205838): 47 of the 49 movies are stereoscopic
+Corrected by [fmv.md §2026-10-13T20:58](#ts-20261013-205838): 47 of the 49 movies are stereoscopic
 
 - Branch worktree-agent-a93143c61d56bb50d, commit 2be2b23 (WIP). Based on origin/main 6c26639, not rebased; CMakeLists.txt and assets.hpp will conflict (keep both sides).
 - The FMVs are romfs/cutscenes/*.moflex (49 files): Mobiclip video 400x240 at 30 fps and IMA-ADPCM audio at 22050 Hz stereo. System FFmpeg 8 decodes them. Subtitles are fib cutscenes/<video>_<lang>.srt (17 videos × 12 languages, SubRip with the .loc escape bytes). The German videos only have <stem>_de_de.srt.
@@ -38,7 +38,7 @@ Corrected by [fmv.md §2026-10-13T20:58](fmv.md#ts-20261013-205838): 47 of the 4
 
 ## 2026-10-13T20:58:38+02:00 — Stereoscopic movies: left/right eye frames alternate
 
-**[Corrects fmv.md §2026-10-13T11:05](fmv.md#ts-20261013-1105)** ("Mobiclip video 400x240 at 30 fps") and **[Corrects front-end.md §2026-10-13T20:46:07](front-end.md#ts-20261013-204607)** ("01_gameintro … 59.94 frames per second"): 47 of the 49 movies are stereoscopic. Their video stream holds the two eye pictures as alternating frames, so `01_gameintro` is 2044 picture pairs at 29.97 pairs per second (FFmpeg reports 4088 frames at 59.94 fps). Showing every decoded frame made the picture jump left and right (reported by the user in chase-game's intro).
+**[Corrects fmv.md §2026-10-13T11:05](#ts-20261013-1105)** ("Mobiclip video 400x240 at 30 fps") and **[Corrects front-end.md §2026-10-13T20:46:07](front-end.md#ts-20261013-204607)** ("01_gameintro … 59.94 frames per second"): 47 of the 49 movies are stereoscopic. Their video stream holds the two eye pictures as alternating frames, so `01_gameintro` is 2044 picture pairs at 29.97 pairs per second (FFmpeg reports 4088 frames at 59.94 fps). Showing every decoded frame made the picture jump left and right (reported by the user in chase-game's intro).
 
 - Header: the first record after the sync block (0x4c32, 2 skipped bytes, u64 timestamp, u16 size; FFmpeg `libavformat/moflex.c` `moflex_read_sync`) is type 3 (video), size 13: stream index, codec 0, u16 rate denominator… as FFmpeg reads it, then 3 bytes FFmpeg skips. The last of them (file offset 28) is the layout: 0 in 47 files (30 at 60000/1001, 16 superbuildit at 60/1, `superbuildit_shuttleboosters` at 30/1 with 20 identical frames), 6 only in `splash5.moflex` (30 fps, one picture per frame). Census: `xxd -s 14 -l 15 -p` over `artifacts/romfs/romfs/cutscenes/*.moflex`.
 - Pairs: PSNR of neighbouring decoded frames of 01_gameintro (frames 1200..1205) is 17.2..17.7 dB, of frames two apart 29.5..30.3 dB (also 07_intro_farm 18.3 vs 34.4, superbuildit_windmill 20.5 vs 34.6).
@@ -56,4 +56,4 @@ Unknowns:
 
 Moved from the feature files so that the items stay short (CLAUDE.md, "Documentation rules"). The text below is the former wording of each item.
 
-- **MOVIE-1** (movies-cutscenes.md): Meaning of `.moflex` layout values other than 0 and 6 and of the two other skipped header bytes (01 01 in all files); where the game's Mobiclip player reads the layout and selects the eye (not traced in the ARM code); whether the second eye of the pair is the right eye (only matters for a stereoscopic display, which the port does not target). evidence: [fmv.md §2026-10-13T20:58](fmv.md#ts-20261013-205838).
+- **MOVIE-1** (movies-cutscenes.md): Meaning of `.moflex` layout values other than 0 and 6 and of the two other skipped header bytes (01 01 in all files); where the game's Mobiclip player reads the layout and selects the eye (not traced in the ARM code); whether the second eye of the pair is the right eye (only matters for a stereoscopic display, which the port does not target). evidence: [fmv.md §2026-10-13T20:58](#ts-20261013-205838).

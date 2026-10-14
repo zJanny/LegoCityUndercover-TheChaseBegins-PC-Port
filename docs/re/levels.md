@@ -6,7 +6,7 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 
 ## 2026-10-12T17:20+02:00 — S4c: .blvl level format decoded (REA, Ghidra)
 
-Corrected by [levels.md §2026-10-12T23:05](levels.md#ts-20261012-2305): placement Euler order recovered
+Corrected by [levels.md §2026-10-12T23:05](#ts-20261012-2305): placement Euler order recovered
 
 - The xref to "levels/%s.blvl" (0x1b1f30) comes from 0x1b1e58. The xref to ".blvl" (0x1d0028, ev_09591263…74f2) is in 0x1cfc50 (ev_fec8db4c…f2f1), the generic .blvl deserializer (pseudo-code ev_1eed109a…f773).
 - Helpers:
@@ -26,7 +26,7 @@ Corrected by [levels.md §2026-10-12T23:05](levels.md#ts-20261012-2305): placeme
 
 ## 2026-10-12T17:45+02:00 — S4c: native level placement and the mesh-centre rule
 
-Corrected by [levels.md §2026-10-12T23:05](levels.md#ts-20261012-2305): placement Euler order recovered
+Corrected by [levels.md §2026-10-12T23:05](#ts-20261012-2305): placement Euler order recovered
 
 - Mesh record: byte 0 bit 0 means the vertices are stored relative to the float3 at mesh+8 (the mesh bbox centre). It was found because room3/room5 geometry sat at the origin while their props were at x≈−278/+235. Census over all models:
   - bit clear: 3620 meshes have bbox centre == +8, and 145 more have both at 0
@@ -51,7 +51,7 @@ Corrected by [levels.md §2026-10-12T23:05](levels.md#ts-20261012-2305): placeme
 - "initialorientation" (string at 0x1a49c4, referenced at 0x1a4860 in object setup 0x1a4130, ev_eb095374…8f7 / ev_8c852395…6e0): the parameter is looked up by hash (0x24da28 + 0x217080). Its three floats are multiplied by 0.0174533 (literal at 0x1a49d8) and passed to 0x237c48.
 - 0x237c48 (disassembly), using sincos 0x249038 (r0 = sin, r1 = cos), writes the rotation rows [cy·cz, sx·sy·cz + cx·sz, sx·sz − cx·sy·cz], [−cy·sz, cx·cz − sx·sy·sz, sx·cz + cx·sy·sz], [sy, −sx·cy, cx·cy]. Rows 3 and column 3 are left untouched.
   - A numeric search over all 48 axis-order and sign combinations matches only Rz·Ry·Rx for row vectors (x applied first), i.e. Rx·Ry·Rz in column-vector terms.
-  - The viewer's Ry·Rx·Rz assumption ([Corrects levels.md §2026-10-12T17:20](levels.md#ts-20261012-1720), [Corrects levels.md §2026-10-12T17:45](levels.md#ts-20261012-1745)) mirrored the yaw of objects with ±180 on X and Z: the game gives Ry(180 − y), the assumption gave Ry(180 + y).
+  - The viewer's Ry·Rx·Rz assumption ([Corrects levels.md §2026-10-12T17:20](#ts-20261012-1720), [Corrects levels.md §2026-10-12T17:45](#ts-20261012-1745)) mirrored the yaw of objects with ±180 on X and Z: the game gives Ry(180 − y), the assumption gave Ry(180 + y).
 - Only object setup 0x1a4130 was traced. That other classes using "initialorientation" (12 more string copies) share 0x237c48 is assumed, not checked.
 - lvl_00_policestation_main: 120 of 130 placements are yaw-only or zero, so only a few props change in room3.
 - chase_assets placementMatrix (level.cpp) and convert_levels.placement_matrix replicate it, with tests for (90,0,0) mapping +y to +z and (180,30,180) equalling a yaw of 150. chase-viewer uses it directly (same memory layout as GL column-major).
