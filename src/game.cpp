@@ -9,6 +9,7 @@
 #include "game_front.hpp"
 #include "game_level.hpp"
 #include "game_options.hpp"
+#include "game_save.hpp"
 #include "input.hpp"
 #include "render/debug_overlay.hpp"
 #include "render/scene.hpp"
@@ -139,6 +140,7 @@ int run(const Options& given) {
         options.level = game_options::kNewGameLevel;
         options.start = game_options::kNewGameStart;
     }
+    if (!options.saveFile.empty() && !options.levelGiven) game_save::chooseContinueLevel(archive, options);
     const FuseEntry* masterEntry = archive.find(runtime::kMasterLevelFile);
     if (!masterEntry) throw std::runtime_error(std::string("not in archive: ") + runtime::kMasterLevelFile);
     const Level master = parseLevel(archive.read(*masterEntry));

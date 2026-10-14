@@ -12,6 +12,7 @@ struct Options {
     std::string names = "artifacts/romfs/romfs/lego_city3ds.csv";
     std::string config = "config/controls.cfg";
     std::string level = "levels/levels/lvl_00_policestation/lvl_00_policestation_main.blvl";
+    bool levelGiven = false;
     std::string screenshot;
     unsigned frames = 2;
     std::string script;

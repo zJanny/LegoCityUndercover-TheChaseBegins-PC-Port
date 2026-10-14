@@ -254,3 +254,11 @@ Unknowns:
 
 - `station-at-exit` (New 3DS, from `police-station` with the pad: 2 idle updates, stick (0,-150) for 7 updates, 6 idle; the player stands at (-1.970, 1.424, 18.224) in the lobby, 1.9 m in front of the exit bound `Lobby_to_CherryTree`, facing +z) and `station-exit-loadingpage` (same route with the stick held about 40 updates: the loading page waits for A). Both unmodified, with a `source` key; game progress as `police-station` (after mission 1-1). Findings: [streaming.md §2026-10-14T12:02](streaming.md#ts-20261014-120258).
 - With `--rpc` and OpenGL, `screenshot` works in stepped runs and returns the page that the game shows at that moment (400x480). `trap` still reports the unrequested UI stops on the A press of the loading page (0x2c34b4, 0x2a85a0, ...): they are the page's own widget code (see the streaming entry), not a tool artefact.
+
+<a id="ts-20261014-152224"></a>
+
+## 2026-10-14T15:22:24+02:00 — State `savecont-slotlist-user` (user save, slot list)
+
+- `savecont-slotlist-user` (agent C, `new_3ds: false`): cold boot with a read-only copy of the user's `savegame.dat` (`artifacts/oracle/agentJ-saves/`) in the emulator's own sdmc (`artifacts/oracle/agentC-home`), A on the HOME notice and the autosave notice, stopped at the slot list before a slot is chosen. Game progress: slot 0 used, after mission 1-1 (slot byte +6 = 1, police station), slot 1 empty. Continue on slot 0 starts lvl_00_policestation at `Player1Start` ([save-format.md §2026-10-14T15:19](save-format.md#ts-20261014-151903)). The user's own Azahar saves were not touched.
+
+Unknowns: a save with byte +6 above 1 for Continue at later levels (SAVE-13).

@@ -63,7 +63,7 @@ bool applyOption(Options& o, const std::string& arg, const std::function<std::st
     if (arg == "--fib") o.fib = value();
     else if (arg == "--names") o.names = value();
     else if (arg == "--config") o.config = value();
-    else if (arg == "--level") { o.level = value(); o.gameplay = true; }
+    else if (arg == "--level") { o.level = value(); o.levelGiven = true; o.gameplay = true; }
     else if (arg == "--gameplay") o.gameplay = true;
     else if (arg == "--front-script") {
         const std::string script = value();

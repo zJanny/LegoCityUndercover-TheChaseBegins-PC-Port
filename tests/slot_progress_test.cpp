@@ -1,4 +1,5 @@
 // Synthetic slots: level state block, saved variables, unlock bits and the game-complete test (docs/re/save-format.md).
+#include "save/continue_start.hpp"
 #include "save/slot_progress.hpp"
 #include <cstring>
 #include <iostream>
@@ -121,6 +122,18 @@ int main() {
         bool threw = false;
         try { slotStart(image.slotView(0), level, 2, 8); } catch (const std::runtime_error&) { threw = true; }
         require(threw, "a state without a level-data record is rejected");
+
+        require(!slotInUse(empty.slotView(1)) && !slotInUse(SlotView{}), "an untouched slot is not in use");
+        image.slot(0)[kSlotFlagsOffset] = kSlotInUseBit;
+        require(slotInUse(image.slotView(0)), "slot byte +7 bit 2 marks a slot in use");
+        const chase::assets::Table noTable;
+        bool emptyRejected = false;
+        try { continueStart(empty.slotView(1), noTable); } catch (const std::runtime_error&) { emptyRejected = true; }
+        require(emptyRejected, "Continue on an empty slot is rejected");
+        bool noSceneRejected = false;
+        try { continueStart(image.slotView(0), noTable); } catch (const std::runtime_error&) { noSceneRejected = true; }
+        require(noSceneRejected, "Continue without a scene for the level is rejected");
+        require(levelPathOfScene("lvl_00_PoliceStation") == "levels/levels/lvl_00_policestation/lvl_00_policestation_main.blvl", "level file of a scene");
     } catch (const std::exception& error) {
         std::cerr << "slot-progress: FAIL: " << error.what() << '\n';
         return 1;

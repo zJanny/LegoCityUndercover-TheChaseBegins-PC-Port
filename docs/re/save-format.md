@@ -233,3 +233,21 @@ Unknowns:
 - Behaviour of type 0x15 and 0x43 records with bit 0 set (never seen set: their objects had flag +0x82 bit 0 clear in all 3333 headers read).
 - Whether the front end starts the level in slot +6 on Continue and at which position (the copy at 0x2b1100 and 0x2e7d50 was read, its consumer not followed).
 - What `scene+0x12f4` counts (0 at `street-after-1-1`, 265..272 when the user's save was written).
+
+<a id="ts-20261014-151903"></a>
+
+## 2026-10-14T15:19:03+02:00 — Where Continue starts: level of slot byte +6, entered at Player1Start (REA/Ghidra on artifacts/game/game.arm.elf; oracle with the user's save copy, Old 3DS, OpenGL, no RPC)
+
+Resolves the last unknown of [save-format.md §2026-10-14T13:41](#ts-20261014-134146). Code: `src/save/continue_start.*` (`continueStart`), glue `game_save::chooseContinueLevel`; tests `slot-progress`, `slot-progress-real-data`, `game-save-continue`, `game-save-continue-empty-slot`, `game-options-core`.
+
+- **Chain (REA pseudo code and assembly).** The slot-list handler 0x2e7ce8 (the reader at 0x2e7d50 is inside it; 0x2b1100 is the same code in a second handler) reads row byte +0x2d of the list. Value 0 (an existing slot): copies the 8 bytes at 0x5207f8 to 0x593418, stores slot byte +6 (0x51b6b6) at 0x3741d5 (front-end structure 0x3741d4, +1), calls 0x217f88(0), sets byte +0x2f of the structure at 0x3741dc + 8 and calls 0x20eec4(1, 0). Value 1 (New Game) calls 0x217f88(0x514fc0) instead. The frame update 0x2d5874 sees byte +0x2f, clears it and calls 0x20a4d4(slot 0x5163e8, level 0x3741d5). 0x20a4d4: level 0 becomes 2; byte 0x51640e = level (0x51640d = level when it is above 8, else 0); copies the unlock words 0x5207f8 and 0x520840 to 0x593418 and 0x593430; calls 0x1947a0 (unlock bit which 0) and 0x1b1c90 (character group from slot +0x51e1.. or TablesLevels row +0x43..0x4a); starts the level load 0x25d26c(0.5, 0.5, slot, 2).
+- **No position is saved or read.** The level start function 0x2e6264 puts the player at the level's own object "Player1Start" ([player-entity-input.md §2026-10-13](player-entity-input.md)); Continue only chooses the level.
+- **Oracle.** The user's savegame.dat (slot 0 used, byte +6 = 1, per mille 2, after mission 1-1) was copied into the sdmc of the agent's own Azahar home (`artifacts/oracle/agentC-home`; the user's Azahar was not touched). Booted, A on the HOME notice and the autosave notice, state `savecont-slotlist-user` at the slot list (mode row pointer 0x372f2c, slot bytes at 0x51b6b0 read +4 = 2, +6 = 1, +7 = 4). A on the slot: 0x51640e = 1 (level 1), after 40 s free run the player entity is at world (-2.171, 1.432, 17.282), forward (-0.017, 0, -1), camera yaw 3.1416 = Player1Start of lvl_00_policestation (-2.1713, 1.4203, 17.2821, yaw 180.9585) with the ground snap (+0.012 in y); run twice, same values. chase-game `--save` without `--level` prints the same position (`player at -2.1713 1.4203 17.2821, yaw 180.958`).
+- **Poke attempt.** Writing byte 02 into 0x51b6b6 at the slot list changed nothing: the live slot is overwritten from the loaded save when the slot is chosen (read back 1 after A, level 1 again). A level-2 Continue was therefore not measured.
+- Boot with this save: after 20 s with no input the boot sequencer was on row 4 (row pointer 0x372f04), A moved to row 5 (0x372f18), A to the slot list (0x372f2c, row 6); the first-run byte [0x372e6c] read 1.
+
+Unknowns:
+- The start of a Continue at level 2 or later (heading and position, whether level scripts move the player by StoryProgress): only level 1 was measured, the pinned save has no other level in byte +6. Needs a save or state of the user with byte +6 above 1.
+- What the slot list shows for a used slot (time, percent, location rows, delete) and how the cursor moves; no screenshot was taken (the RPC belongs to another agent).
+- What 0x217f88 does with its argument (stores it at [0x5163e8-like object]+4 and calls a virtual); 0x514fc0 as the New Game argument.
+- Why the first-run byte read 1 with a save whose options last-slot byte is 0.

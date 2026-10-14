@@ -15,13 +15,13 @@ Item format: `- [ ] ID — gap. needs: ID. blocks: ID. evidence: link`. `needs:`
 | [level-transitions](level-transitions.md) | IN_PROGRESS | station exit and entry switch at run time; TRANS-3 master level (needs SCRIPT-1), TRANS-8 loading page code and look, TRANS-6 lifts |
 | [doors](doors.md) | IN_PROGRESS | DOOR-1 script-requested doors stay closed (needs SCRIPT-7); DOOR-3 open-door box |
 | [studs](studs.md) | IN_PROGRESS | STUD-1 magnet and multiplier; STUD-4 groups (needs SCRIPT-1) |
-| [front-end](front-end.md) | IN_PROGRESS | FE-1 existing slots and Continue (needs SAVE-2); FE-3 loading screen 3D badge |
+| [front-end](front-end.md) | IN_PROGRESS | FE-1 existing slots and Continue (needs SAVE-2, FE-11); FE-3 loading screen 3D badge |
 | [hud-ui](hud-ui.md) | IN_PROGRESS | HUD-6 hearts never change; HUD-11 map code and icons; HUD-8 other counters |
 | [audio](audio.md) | IN_PROGRESS | AUDIO-2 level music (needs SCRIPT-1); AUDIO-3 world sounds |
 | [movies-cutscenes](movies-cutscenes.md) | IN_PROGRESS | MOVIE-2 cutscenes not in game flow (blocks FE-4) |
 | [animation-characters](animation-characters.md) | IN_PROGRESS | ANIM-2 NPC animation playback (blocks LEVOBJ-2) |
 | [particles](particles.md) | IN_PROGRESS | PART-1 no particle rendering |
-| [saves-options](saves-options.md) | IN_PROGRESS | SAVE-9 Continue level and position, SAVE-8 object record meaning (needs a richer save), SAVE-2 slot display (blocks FE-1) |
+| [saves-options](saves-options.md) | IN_PROGRESS | SAVE-13 Continue at level 2 and later, SAVE-8 object record meaning (needs a richer save), SAVE-2 slot display (blocks FE-1) |
 | [input](input.md) | DONE (lab, mapping) | INPUT-2 readers of input slots 16/17 |
 | [executable-platform](executable-platform.md) | IN_PROGRESS | EXEC-3 update rate 30/60 undecided; EXEC-4 game frame function |
 | [assets-formats](assets-formats.md) | IN_PROGRESS | ASSET-2 streaming |

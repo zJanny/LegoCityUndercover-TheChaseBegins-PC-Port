@@ -34,7 +34,7 @@ target_compile_options(chase_save PRIVATE -Wall -Wextra -Wpedantic)
 add_library(chase_save_tables src/save/completion_tables.cpp)
 target_link_libraries(chase_save_tables PUBLIC chase_save chase_assets)
 target_compile_options(chase_save_tables PRIVATE -Wall -Wextra -Wpedantic)
-add_library(chase_save_progress src/save/slot_progress.cpp)
+add_library(chase_save_progress src/save/slot_progress.cpp src/save/continue_start.cpp)
 target_link_libraries(chase_save_progress PUBLIC chase_save chase_assets)
 target_compile_options(chase_save_progress PRIVATE -Wall -Wextra -Wpedantic)
 # Game runtime core (plan S4e): recovered frame logic, no SDL dependency.
@@ -491,6 +491,18 @@ if(BUILD_TESTING)
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --gameplay --screenshot game-smoke.bmp --frames 2)
     set_tests_properties(game-real-smoke PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen"
       PASS_REGULAR_EXPRESSION "0 missing textures.*saved game-smoke.bmp after [0-9]+ update")
+    if(EXISTS "${CHASE_REAL_SAVE}")
+      add_test(NAME game-save-continue COMMAND chase-game
+        --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+        --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --save "${CHASE_REAL_SAVE}" --slot 0 --frames 1 --screenshot game-continue.bmp)
+      set_tests_properties(game-save-continue PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
+        PASS_REGULAR_EXPRESSION "continue: slot 0 starts level 1 \\(lvl_00_policestation\\).*player at -2\\.1713 1\\.4203 17\\.2821")
+      add_test(NAME game-save-continue-empty-slot COMMAND chase-game
+        --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+        --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --save "${CHASE_REAL_SAVE}" --slot 1 --frames 1)
+      set_tests_properties(game-save-continue-empty-slot PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
+        PASS_REGULAR_EXPRESSION "the save slot is empty")
+    endif()
     # Front-end mode: runs the scripted pad to the language screen and saves the window; a second run goes through every
     # screen to the hand-off and then shows the level of a new game.
     add_test(NAME front-game-smoke COMMAND chase-game

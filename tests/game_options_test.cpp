@@ -57,6 +57,12 @@ void testDefaults() {
     if (options.gameplay || options.start || options.facing) fail("defaults start a level");
 }
 
+void testLevelGiven() {
+    if (parseArgs({"--save", "savegame.dat"}).levelGiven) fail("--save alone must not count as a given level");
+    const game_options::Options given = parseArgs({"--save", "savegame.dat", "--level", "levels/x.blvl"});
+    if (!given.levelGiven || given.level != "levels/x.blvl") fail("--level must override the level of the save");
+}
+
 void testValidValues() {
     const game_options::Options slot = parseArgs({"--slot", "1", "--language", "9", "--sound-volume", "0", "--music-volume", "10"});
     if (slot.saveSlot != 1 || slot.language != 9 || slot.soundVolume != 0 || slot.musicVolume != 10) fail("valid numbers changed");
@@ -122,6 +128,7 @@ void testRejections() {
 int main() {
     testDefaults();
     testValidValues();
+    testLevelGiven();
     testRejections();
     if (failures != 0) {
         std::cerr << failures << " failure(s)\n";

@@ -24,7 +24,8 @@ IN_PROGRESS, updated 2026-10-13T21:29:01+0200. Squash-merged to main; `chase-gam
 
 ## 5. Open items
 
-- [ ] FE-1 — Existing slots with time, percent and location, Continue, delete: `chase_save` integration is open; the returning-player flow (flag 0: whether rows 4 and 5 still show, which slot rows show) is unknown. needs: SAVE-2, SAVE-9 (saves-options.md). evidence: [front-end.md §2026-10-13T20:46](../../re/front-end.md#ts-20261013-204607).
+- [ ] FE-1 — Existing slots with time, percent and location, Continue, delete: `chase_save` integration is open; the returning-player flow (flag 0: whether rows 4 and 5 still show, which slot rows show) is unknown. needs: SAVE-2, FE-11 (SAVE-9 is closed: Continue = level of slot byte +6 at Player1Start). evidence: [front-end.md §2026-10-13T20:46](../../re/front-end.md#ts-20261013-204607).
+- [ ] FE-11 — The slot list page for a used slot (time, percent, location rows, cursor, delete) and Continue from it in the front end: only the start rule is known; needs oracle screenshots of the page (state savecont-slotlist-user). blocks: FE-1. evidence: [save-format.md §2026-10-14T15:19](../../re/save-format.md#ts-20261014-151903).
 - [ ] FE-2 — Logo bottom variants and table suffixes for non-English languages. evidence: [front-end.md §2026-10-13T20:46](../../re/front-end.md#ts-20261013-204607).
 - [ ] FE-3 — The loading screen's 3D badge scene (`prop_special_loadingring`, model, lights, camera, spin and star motion) and its tip choice; the async load that row 0 waits for. The loading screen also waits for A in the real game (user observation). blocks: TRANS-3, TRANS-8. evidence: [front-end.md §2026-10-13T20:46](../../re/front-end.md#ts-20261013-204607).
 - [ ] FE-4 — The title card's hexagon art and the in-engine cutscene on the top screen; when the card ends (the oracle route pressed A). needs: MOVIE-2. evidence: [front-end.md §2026-10-13T20:46](../../re/front-end.md#ts-20261013-204607).

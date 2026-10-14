@@ -3,6 +3,7 @@
 // when a file is missing or the save is not the one whose values are pinned below.
 #include "runtime/level_start.hpp"
 #include "save/completion_tables.hpp"
+#include "save/continue_start.hpp"
 #include "save/slot_progress.hpp"
 #include <algorithm>
 #include <fstream>
@@ -14,6 +15,7 @@
 using namespace chase;
 
 namespace {
+constexpr const char* kContinueLevelFile = "levels/levels/lvl_00_policestation/lvl_00_policestation_main.blvl";
 constexpr const char* kLevelFile = "levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl";
 // Stored CRC (file +0) of the copy of the user's save that the values below were read from.
 constexpr std::uint32_t kPinnedCrc = 0x937dacf8;
@@ -53,6 +55,26 @@ int main(int argc, char** argv) {
         require(save::levelIdForScene(levels, "lvl_00_policestation") == 1u, "police station level id");
         require(save::levelIdForScene(levels, "LVL_01_CherryTreeHills") == 2u, "lvl_01 level id");
         require(!save::levelIdForScene(levels, "lvl_the_city") && !save::levelIdForScene(levels, "lvl_customisation"), "rows outside 1..8");
+
+        // Provenance: oracle state savecont-slotlist-user (docs/re/save-format.md, Continue entry): Continue on this save's
+        // slot 0 loaded level 1 and put the player at Player1Start of lvl_00_policestation (-2.171, 1.432, 17.282).
+        const save::ContinueStart continueSlot = save::continueStart(image->slotView(0), levels);
+        require(continueSlot.level == 1u && continueSlot.scene == "lvl_00_policestation", "Continue level of the pinned save");
+        require(continueSlot.levelPath == kContinueLevelFile && archive.find(continueSlot.levelPath), "Continue level file");
+        require(!save::slotInUse(image->slotView(1)), "slot 1 of the pinned save is empty");
+        bool emptySlotRejected = false;
+        try { save::continueStart(image->slotView(1), levels); } catch (const std::runtime_error&) { emptySlotRejected = true; }
+        require(emptySlotRejected, "Continue on the empty slot 1 is rejected");
+        save::SaveImage changed = *image;
+        std::uint8_t* changedSlot = changed.slot(0);
+        changedSlot[save::kSlotCurrentLevelOffset] = 0;
+        require(save::continueStart(changed.slotView(0), levels).level == 2u, "level 0 continues in level 2 (0x20a4d4)");
+        changedSlot[save::kSlotCurrentLevelOffset] = 2;
+        require(save::continueStart(changed.slotView(0), levels).levelPath == "levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl", "level 2 file");
+        changedSlot[save::kSlotCurrentLevelOffset] = 9;
+        bool level9Rejected = false;
+        try { save::continueStart(changed.slotView(0), levels); } catch (const std::runtime_error&) { level9Rejected = true; }
+        require(level9Rejected, "level 9 has no scene");
 
         // Provenance (all values below): the pinned save, slot 0, read with the offsets of docs/re/save-format.md
         // (2026-10-14, level state block); StoryProgress, 1-1_IntroPlayed, Entered_Police_Station and Enter_Police_Car
