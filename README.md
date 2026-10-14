@@ -27,7 +27,7 @@ This starts the development runtime. It is not the game: it shows the start scre
 | Checked against the original | 118 tests, 200 recorded traces | Automatic tests, and recordings of the original game that the tests compare with. |
 | Game code documented | 1047 of about 7575 (13.8%) | Functions of the game program that the notes or the source point to. The total is an estimate. |
 
-Updated 2026-10-14, commit 3a393e3. How the numbers are measured: [docs/progress.md](docs/progress.md).
+Updated 2026-10-14, commit bffa544. How the numbers are measured: [docs/progress.md](docs/progress.md).
 <!-- progress:end -->
 
 ## Documentation

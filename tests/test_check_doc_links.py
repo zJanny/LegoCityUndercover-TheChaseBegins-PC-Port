@@ -196,6 +196,19 @@ class RuleChecksTest(unittest.TestCase):
         (self.features / 'g.md').write_text('- [ ] F-1 other feature, allowed\n')
         self.assertEqual(len(self.errors('duplicate-id')), 2)
 
+    def test_every_feature_file_has_an_index_row(self):
+        (self.features / 'f.md').write_text('# F\n')
+        (self.features / 'f-sub.md').write_text('# F sub\n')
+        (self.features / 'f.closed.md').write_text('- [x] F-1 done\n')
+        index = self.features / 'README.md'
+        index.write_text('# Index\n\nSee [f](f.md) in prose.\n\n| Feature | Status |\n|---|---|\n| [f](f.md) | IN_PROGRESS |\n')
+        found = self.errors('index-')
+        self.assertEqual(found, ["docs/plans/features/f-sub.md:1: index-missing-row: f-sub.md has no row in docs/plans/features/README.md; add one"])
+        index.write_text(index.read_text() + '| [f-sub](f-sub.md) | IN_PROGRESS |\n| [f closed](f.closed.md) | DONE |\n')
+        self.assertEqual(self.errors('index-'), ["docs/plans/features/README.md:9: index-closed-file: f.closed.md is a closed-items file and has no index row"])
+        index.write_text(index.read_text().replace('| [f closed](f.closed.md) | DONE |\n', ''))
+        self.assertEqual(self.errors('index-'), [])
+
     def test_claude_md_size(self):
         (self.root / 'CLAUDE.md').write_text('x' * 20480)
         self.assertEqual(self.errors('claude-md-size'), [])

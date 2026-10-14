@@ -9,7 +9,7 @@ Size and shape rules (CLAUDE.md "Documentation rules"): a docs/re file is at mos
 16 KB, the feature index at most 40 lines, CLAUDE.md at most 20 KiB, the session log of a progress file at most
 20 entry lines. With --fix, older log lines move to the progress archive and closed items ("- [x] ID") of a feature
 file move to <feature>.closed.md. An item or stand-in ID defined twice in a feature and its closed file is an
-error. A link whose text starts with "Corrects" needs a "Corrected by" line under the corrected entry's heading
+error. Every feature file has a row in the feature index; closed-items files have none. A link whose text starts with "Corrects" needs a "Corrected by" line under the corrected entry's heading
 that links back, and every "Corrected by" line needs the matching "Corrects" link.
 """
 import argparse
@@ -29,6 +29,7 @@ EXPLICIT_ID = re.compile(r'<a\s+[^>]*?\b(?:id|name)="([^"]+)"')
 FENCE = re.compile(r"^\s*(```|~~~)")
 ITEM_ID = re.compile(r"^- (?:\[[ x]\] )?([A-Z][A-Z0-9]*-S?\d+)\b")
 CLOSED_ITEM_LINE = re.compile(r"^- \[x\] [A-Z][A-Z0-9]*-\d+\b")
+INDEX_ROW = re.compile(r"^\|\s*\[[^\]]*\]\(([^)#\s]+\.md)\)")
 LOG_HEADING = "## Session Log"
 CLOSED_SUFFIX = ".closed.md"
 ARCHIVE_SUFFIX = "-archive.md"
@@ -274,6 +275,26 @@ def duplicate_id_errors(root):
     return errors
 
 
+def index_errors(root):
+    index = feature_dir(root) / "README.md"
+    if not index.is_file():
+        return []
+    errors = []
+    rows = {}
+    for number, line in enumerate(index.read_text(encoding="utf-8").split("\n")):
+        match = INDEX_ROW.match(line)
+        if match:
+            rows[match.group(1)] = number + 1
+    rel = index.relative_to(root)
+    for name, number in rows.items():
+        if name.endswith(CLOSED_SUFFIX):
+            errors.append(f"{rel}:{number}: index-closed-file: {name} is a closed-items file and has no index row")
+    for path in feature_files(root):
+        if path.name not in rows:
+            errors.append(f"{path.relative_to(root)}:1: index-missing-row: {path.name} has no row in {rel}; add one")
+    return errors
+
+
 def progress_files(root):
     plans = root / "docs" / "plans"
     if not plans.is_dir():
@@ -363,6 +384,7 @@ def size_errors(root):
             if size > MAX_FEATURE_BYTES:
                 errors.append(f"{path.relative_to(root)}:1: feature-file-size: {size} bytes, limit {MAX_FEATURE_BYTES}; split it by subtopic as <feature>-<subtopic>.md")
     errors.extend(duplicate_id_errors(root))
+    errors.extend(index_errors(root))
     errors.extend(session_log_errors(root))
     claude = root / "CLAUDE.md"
     if claude.is_file() and claude.stat().st_size > MAX_CLAUDE_BYTES:
