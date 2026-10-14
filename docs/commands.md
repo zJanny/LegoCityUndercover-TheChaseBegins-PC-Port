@@ -102,9 +102,9 @@ Single C++ tests, with `ctest --test-dir build -R <name>`:
 | `scene-change-real-data`, `game-scene-change-exit`, `game-scene-change-entry` | Walking out of the police station and back in: where each door leads, the landing points from the original, the order loading page, A, switch. Registered only if `artifacts/romfs` existed at configure time |
 | `ai-core` | The AI natives (flags, requested states, moves, AIMove event) with made-up characters and scripts, no game data needed |
 | `ai-real-data` | Runs the real police station entry script: the player walks to the door at 0.11 per update, then the scene change follows; skips with code 77 without `artifacts/romfs` |
-| `nav-grid` | Nav grid lookups (position to room, grid and cell) on a made-up grid, hand-evaluated values |
-| `nav-path` | The AIMove path finder and the in-grid follower on small made-up grids: same cell, straight line, search around a wall, two linked grids |
-| `nav-path-real-data` | The finder and follower on the real grids of lvl_01_cherrytreehills: the police entry case and invariants over 3000 pairs of positions; skips with code 77 without `artifacts/romfs` |
+| `nav-grid` | Nav grid lookups (position to room, grid and cell) on a made-up grid, the nav file name and the loader fix-up, hand-evaluated values |
+| `nav-path` | The AIMove path finder and the follower on small made-up grids: same cell, straight line, search around a wall, two linked grids, the walk across the link, a refused gate, a start beside a grid |
+| `nav-path-real-data` | The finder and follower on the real grids of lvl_01_cherrytreehills: the police entry case, and 3000 pairs of positions followed inside and across grids; skips with code 77 without `artifacts/romfs` |
 | `script-runner` | How level scripts run each update (waits, a script calling or starting another one, conditions, door requests, scripts started by walking into marked places), with made-up scripts, no game data needed |
 | `dcam` | The script camera: its path curves, start and end waits, the end after the set time and the blocking of `WaitForDCam`, with made-up paths, no game data needed |
 | `dcam-real-data` | The camera paths of the first level against what the original showed in the police station entry (positions of the camera, the update on which the camera ends); skips with code 77 if `artifacts/romfs` is missing |

@@ -685,6 +685,12 @@ void searchGrids(NavWorld& world, NavPathRecord& record) {
 
 }
 
+void navResetGrids(NavWorld& world) { resetGrids(world); }
+
+void navSearchGrids(NavWorld& world, NavPathRecord& record) { searchGrids(world, record); }
+
+void navBuildLegs(NavWorld& world, NavPathRecord& record) { buildLegs(world, record); }
+
 // 0x204284
 int navFindPath(NavWorld& world, NavPathRecord& record, const float start[3], const float goal[3]) {
     record.startGrid = kNavNone;

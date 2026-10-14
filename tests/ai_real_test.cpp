@@ -1,10 +1,11 @@
 // AIMove on real data: the police station entry script Police_ExtToInt of lvl_01_cherrytreehills walks Player1 to
 // Enter_Police_Station_Position_End with AIMove, waits and changes the scene. Provenance: oracle state street-after-1-1
 // (docs/re/scripts.md): after A the player node stands at (904.652, 16.577, 1113.197) and then moves 0.11 per update
-// towards Enter_Police_Station_Position_End. The AI path finder is not ported (STAND-IN SCRIPT-S31); the straight walk
-// reproduces that speed. Needs the extracted RomFS; exits with 77 (skipped) when it is missing.
+// towards Enter_Police_Station_Position_End. The nav grids of the level are given to the AI (path finder and in-grid follower); the walk speed is the
+// stand-in SCRIPT-S31. Needs the extracted RomFS; exits with 77 (skipped) when it is missing.
 #include "assets/assets.hpp"
 #include "runtime/level_start.hpp"
+#include "runtime/nav_load.hpp"
 #include "runtime/script_runner.hpp"
 #include <cmath>
 #include <filesystem>
@@ -37,6 +38,7 @@ int main(int argc, char** argv) {
         const assets::ClassLookup classOf = assets::archiveClassLookup(archive);
         assets::PlacedObjectState state = runtime::levelInitialState(level, classOf);
         runtime::ScriptRunner runner(level, state);
+        runner.ai().setNavigation(runtime::loadNavWorlds(archive, kLevelFile, level));
         runner.setObjectPositionSource([&](const std::string& instance, float out[3]) {
             const auto placement = assets::objectStart(level, instance);
             if (placement) std::copy(placement->position, placement->position + 3, out);
@@ -61,14 +63,22 @@ int main(int argc, char** argv) {
         const float total = std::hypot(end->position[0] - lower->position[0], end->position[2] - lower->position[2]);
         const int expectedUpdates = int(std::ceil(total / 0.11f));
         int updates = 1;
-        while (runner.ai().moving("player1") && updates < 1000) {
+        std::array<float, 3> last = after;
+        int standing = 0;
+        while (standing < 3 && updates < 1000) {
             runner.update(1.0f / 30.0f);
             ++updates;
+            const auto now = *runner.ai().character("player1")->position;
+            standing = now == last ? standing + 1 : 0;
+            last = now;
         }
-        require(std::abs(updates - expectedUpdates) <= 2, "the walk takes distance / 0.11 updates");
+        require(updates - 3 < expectedUpdates && updates - 3 >= expectedUpdates - 6,
+                "the walk ends a few updates before distance / 0.11: the follower returns 3 and stops on entering the exit cell (grid 26 cell 143, 0.37 before its centre)");
         const auto position = *runner.ai().character("player1")->position;
-        require(std::fabs(position[0] - end->position[0]) < 1e-3f && std::fabs(position[2] - end->position[2]) < 1e-3f,
-                "the player ends on Enter_Police_Station_Position_End");
+        require(std::hypot(position[0] - end->position[0], position[2] - end->position[2]) < 0.8f,
+                "the player stops inside the goal cell (cell size 0.74; centre 910.81, 1119.46 is oracle +0x58 of the path record)");
+        require(runner.ai().moving("player1"),
+                "grid 26 has no extras, the follower keeps returning code 3 on the exit cell and the move never ends (docs/re/ai-navigation.md)");
         for (int i = 0; i < 600 && runner.threadCount() > 0; ++i) {
             runner.director().update(1.0f / 30.0f, [&](const std::string& name, float out[3]) {
                 const auto placed = assets::objectStart(level, name);

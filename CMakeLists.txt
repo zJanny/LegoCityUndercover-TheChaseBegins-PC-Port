@@ -43,7 +43,7 @@ target_link_libraries(chase_runtime PUBLIC chase_assets)
 target_include_directories(chase_runtime PUBLIC src)
 target_compile_options(chase_runtime PRIVATE -Wall -Wextra -Wpedantic -ffp-contract=off)
 set_target_properties(chase_runtime PROPERTIES POSITION_INDEPENDENT_CODE ON)
-target_sources(chase_runtime PRIVATE src/runtime/studs.cpp src/runtime/sound_events.cpp src/runtime/music.cpp src/runtime/level_start.cpp src/runtime/script_runner.cpp src/runtime/natives_objects.cpp src/runtime/natives_progress.cpp src/runtime/door.cpp src/runtime/scene_change.cpp src/runtime/room_streaming.cpp src/runtime/room_streamer.cpp src/runtime/scene_start.cpp src/runtime/dcam.cpp src/runtime/debug_metrics.cpp src/runtime/object_visibility.cpp src/runtime/script_text.cpp src/runtime/script_triggers.cpp src/runtime/objectives.cpp src/runtime/ai.cpp src/runtime/ai_simple_path.cpp src/runtime/fog.cpp src/runtime/script_placement.cpp src/runtime/ai_go_to_target.cpp src/runtime/nav_grid.cpp src/runtime/nav_path.cpp src/runtime/nav_follow.cpp)
+target_sources(chase_runtime PRIVATE src/runtime/studs.cpp src/runtime/sound_events.cpp src/runtime/music.cpp src/runtime/level_start.cpp src/runtime/script_runner.cpp src/runtime/natives_objects.cpp src/runtime/natives_progress.cpp src/runtime/door.cpp src/runtime/scene_change.cpp src/runtime/room_streaming.cpp src/runtime/room_streamer.cpp src/runtime/scene_start.cpp src/runtime/dcam.cpp src/runtime/debug_metrics.cpp src/runtime/object_visibility.cpp src/runtime/script_text.cpp src/runtime/script_triggers.cpp src/runtime/objectives.cpp src/runtime/ai.cpp src/runtime/ai_simple_path.cpp src/runtime/fog.cpp src/runtime/script_placement.cpp src/runtime/ai_go_to_target.cpp src/runtime/nav_grid.cpp src/runtime/nav_path.cpp src/runtime/nav_follow.cpp src/runtime/nav_load.cpp)
 # Front end (boot to the slot list): CPU-drawn screens, no SDL dependency.
 add_library(chase_frontend src/frontend/script.cpp src/frontend/frontend.cpp src/frontend/pages.cpp src/frontend/canvas.cpp src/frontend/resources.cpp src/frontend/layout.cpp src/frontend/flow.cpp src/frontend/hud.cpp src/frontend/script_text_pages.cpp src/frontend/minimap.cpp)
 target_link_libraries(chase_frontend PUBLIC chase_assets chase_runtime)
@@ -635,7 +635,7 @@ if(BUILD_TESTING)
     # Walk into Police_Station_Transition_Lower after 1-1_MissionSkip enabled it (the dev option --call-script): the script
     # Police_ExtToInt opens WarningDialogBox, A answers it and PositionObject puts the player on
     # Enter_Police_Station_Position_Lower (yaw 45.4542 deg = heading 8275, height 16.5773 as in the oracle); the AIMove that follows
-    # turns the player straight to Enter_Police_Station_Position_End (heading 8053, stand-in SCRIPT-S31) and walks it 1.44948 units in 6 updates.
+    # turns the player along the nav path to the goal cell centre (910.81, 1119.46; oracle +0x58 of the path record, docs/re/ai-navigation.md; heading 8103) and walks it 1.44903 units in 6 updates (speed: stand-in SCRIPT-S31).
     add_test(NAME game-script-dialog COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
@@ -643,7 +643,7 @@ if(BUILD_TESTING)
       --call-script 1-1_MissionSkip --start "904.2 16.58 1112.4" --facing 45.45
       --script "0 0 10;0 145 16;0 0 14;0 0 1 A;0 0 6" --screenshot game-script-dialog.bmp)
     set_tests_properties(game-script-dialog PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen"
-      PASS_REGULAR_EXPRESSION "script dialog opened at update 23.*script dialog answered at update 40.*player moved 1\\.44948 units, facing 8053, .*height 16\\.5773")
+      PASS_REGULAR_EXPRESSION "script dialog opened at update 23.*script dialog answered at update 40.*player moved 1\\.44903 units, facing 8103, .*height 16\\.5773")
     # Lobby exit and station entry at run time: the walk-in bound fires SceneChange_LobbyToCherryTree (update 23), A on the
     # loading page (update 36) and the switch 4 updates later; the street start is the point LobbyToCherryTree_P1 (yaw
     # 249.25 deg = heading -20161, height 16.5773, oracle traces of agent H, docs/re/streaming.md). The entry runs the script

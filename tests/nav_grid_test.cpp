@@ -2,6 +2,7 @@
 // hand from the code of 0x1c2ccc (position -> room, grid, cell), 0x20d8a8 (cell of a grid), 0x221de4 (grid by number)
 // on a made-up grid; the addresses stand next to each check. No original data is used.
 #include "runtime/nav_grid.hpp"
+#include "runtime/nav_load.hpp"
 
 #include <iostream>
 #include <stdexcept>
@@ -111,10 +112,25 @@ void blockedCellFallsBackToTheVerticalSearch() {
     require(!found.found, "the cell lookup fails again for the best grid (0x1c3028 blt 0x1c3078)");
 }
 
+void loaderFixUp() {
+    require(navFilePath("levels/levels/lvl_01/lvl_01_main.blvl", "Room12") == "levels/levels/lvl_01/lvl_01_main_room12.bfnnav",
+            "<level>_<room>.bfnnav, room name in lower case (string at 0x197660 and the name built by 0x1971c4)");
+    NavMesh mesh;
+    NavGrid grid;
+    grid.flags = 0xc005;
+    grid.cells = {0, 1, 2, 3, 7, 0xfb};
+    mesh.grids.push_back(grid);
+    navNormalizeLoaded(mesh);
+    const std::vector<std::uint8_t> expected = {0, 1, 2, 0, 4, 0xf8};
+    require(mesh.grids[0].cells == expected, "cells with both kind bits set lose them (0x1975f0 .. 0x197688: bics r2=3, biceq #3)");
+    require(mesh.grids[0].flags == 0x8005, "bit 14 of every grid is cleared (0x197694: bic r0, r0, #16384)");
+}
+
 }
 
 int main() {
     try {
+        loaderFixUp();
         gridNumbers();
         cellOfAGrid();
         locatePositions();

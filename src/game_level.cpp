@@ -5,6 +5,7 @@
 #include "game_save.hpp"
 #include "runtime/fog.hpp"
 #include "runtime/follow_camera.hpp"
+#include "runtime/nav_load.hpp"
 #include "runtime/object_visibility.hpp"
 #include <SDL.h>
 #include <algorithm>
@@ -142,6 +143,8 @@ LevelSession::LevelSession(const Shared& sharedState)
         if (placement) std::copy(placement->position, placement->position + 3, out);
         return placement.has_value();
     });
+    std::vector<runtime::NavWorld> navWorlds = runtime::loadNavWorlds(archive, options.level, level);
+    if (!navWorlds.empty()) levelScripts.ai().setNavigation(std::move(navWorlds));
     if (!options.saveFile.empty()) {
         const chase::save::SlotStart saved = game_save::load(options.saveFile, options.saveSlot, archive, level, options.level);
         game_save::apply(saved, levelScripts);

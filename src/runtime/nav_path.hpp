@@ -67,6 +67,11 @@ int navFindPath(NavWorld& world, NavPathRecord& record, const float start[3], co
 // Cell the path leads to next from `cell` of the start grid: the parent link of the cell node.
 inline std::uint8_t navNextCell(const NavPathRecord& record, std::uint8_t cell) { return record.cellNodes[cell].parent; }
 
+// 0x1d05d0, 0x1d0700 (the grid search with the cell legs) and 0x208338 (the cell legs of the start grid), run again by the follower.
+void navResetGrids(NavWorld& world);
+void navSearchGrids(NavWorld& world, NavPathRecord& record);
+void navBuildLegs(NavWorld& world, NavPathRecord& record);
+
 // Helpers of the search, exposed for the tests.
 int navEdgeCost(NavWorld& world, const NavPathRecord& record, std::uint16_t from, std::uint16_t to);
 bool navEntryCell(NavWorld& world, NavPathRecord& record, std::uint16_t grid);

@@ -188,6 +188,65 @@ void aiMoveFollowsTheNavGrid() {
     require(core.character("npc")->state == AiState::Idle, "idle after the event (0x2246c0)");
 }
 
+NavWorld navTwoGrids() {
+    chase::assets::NavGrid left, right;
+    for (chase::assets::NavGrid* grid : {&left, &right}) {
+        grid->width = 4;
+        grid->depth = 2;
+        grid->heightExtent = 512;
+        grid->cells.assign(8, 0);
+        grid->linkSlots.fill(0xffff);
+        grid->flags = 2;
+    }
+    right.x = 4;
+    left.linkSlots[0] = 101;
+    right.linkSlots[0] = 100;
+    left.extras = {{0, 0, 1, 0}, {0, 0, 1, 0}};
+    right.extras = {{0, 0, 0xff, 0}, {0, 0, 0xff, 0}};
+    left.cells[3] = 4;
+    left.cells[7] = 12;
+    right.cells[0] = 4;
+    right.cells[4] = 12;
+    chase::assets::NavPath box;
+    box.position[0] = box.position[2] = 50;
+    box.position[1] = 1;
+    box.extent[0] = box.extent[1] = box.extent[2] = 100;
+    box.indices = {0, 1};
+    chase::assets::NavMesh mesh;
+    mesh.grids = {left, right};
+    mesh.paths.push_back(box);
+    chase::assets::NavRoom descriptor;
+    descriptor.heightUnit = 1;
+    descriptor.cellSize = 1;
+    descriptor.base = 100;
+    descriptor.end = 102;
+    return NavWorld::fromRooms({descriptor}, {mesh});
+}
+
+void aiMoveCrossesToTheNextGrid() {
+    AiCore core;
+    core.setPositionLookup([](const std::string& name, float out[3]) {
+        if (name == "npc") { out[0] = 0.5f; out[1] = 1; out[2] = 0.5f; return true; }
+        if (name == "target") { out[0] = 7.5f; out[1] = 1; out[2] = 1.5f; return true; }
+        return false;
+    });
+    std::vector<NavWorld> worlds;
+    worlds.push_back(navTwoGrids());
+    core.setNavigation(std::move(worlds));
+    core.run(AiNativeKind::AIMove, {"npc", "target"}, {1.0f});
+    require(core.moving("npc") && core.character("npc")->move->nav, "a path across two grids is a nav order (finder result 3, phase 2)");
+    float highest = 0;
+    int updates = 0;
+    while (core.moving("npc") && updates < 400) {
+        core.update(1.0f / 30.0f);
+        highest = std::max(highest, (*core.character("npc")->position)[0]);
+        ++updates;
+    }
+    const std::vector<AiMoveEnd> ended = core.takeMovesEnded();
+    require(ended.size() == 1 && ended[0].character == "npc", "arrival in the goal grid raises the AIMove event once");
+    require(core.character("npc")->move == std::nullopt && (*core.character("npc")->position)[0] >= 7.0f, "the character crossed from grid 100 into grid 101 and ended in cell 7");
+}
+
 void aiMoveToAnUnreachableTargetChangesNothing() {
     AiCore core = navCore(30.5f);
     core.run(AiNativeKind::AIMove, {"npc", "target"}, {0.0f});
@@ -347,6 +406,7 @@ int main() {
         unknownTargetIsRecorded();
         aiMoveFiresTheTriggerOfTheCharacter();
         aiMoveFollowsTheNavGrid();
+        aiMoveCrossesToTheNextGrid();
         aiMoveToAnUnreachableTargetChangesNothing();
         aiMoveInTheSameCellEndsAtOnce();
         goToTargetState();

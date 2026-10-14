@@ -7,6 +7,7 @@
 #include "runtime/ai.hpp"
 #include "runtime/nav_follow.hpp"
 #include "runtime/nav_grid.hpp"
+#include "runtime/nav_load.hpp"
 #include "runtime/nav_path.hpp"
 
 #include <cctype>
@@ -24,11 +25,6 @@ constexpr const char* kLevelFile = "levels/levels/lvl_01_cherrytreehills/lvl_01_
 
 void require(bool condition, const std::string& message) {
     if (!condition) throw std::runtime_error(message);
-}
-
-std::string lower(std::string text) {
-    for (char& c : text) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-    return text;
 }
 
 NavPathRecord plainAiMove() {
@@ -53,12 +49,8 @@ int main(int argc, char** argv) {
         archive.loadNames(argv[2]);
         const std::string levelPath = kLevelFile;
         const assets::Level level = assets::parseLevel(archive.read(*archive.find(levelPath)));
-        std::vector<assets::NavMesh> meshes;
-        for (const auto& room : level.navRooms) {
-            const std::string navPath = levelPath.substr(0, levelPath.size() - 5) + "_" + lower(room.room) + ".bfnnav";
-            meshes.push_back(assets::parseNav(archive.read(*archive.find(navPath))));
-        }
-        std::vector<NavWorld> worlds = navWorldsFromLevel(level.navRooms, meshes);
+        std::vector<NavWorld> worlds = loadNavWorlds(archive, levelPath, level);
+        for (NavWorld& world : worlds) world.now = kAiNavClockStart;
         require(worlds.size() == 1 && worlds[0].rooms.size() == 43 && navTotalGrids(worlds[0]) == 1588, "one section of 43 rooms and 1588 grids");
 
         // Police station entry. Grid 26: x 2527, z 1522, width 12, depth 13, flags 0x4000 (a restricted grid, open because
@@ -96,12 +88,15 @@ int main(int argc, char** argv) {
             if (const auto placement = assets::objectStart(level, object.instance))
                 points.push_back({placement->position[0], placement->position[1], placement->position[2]});
         require(points.size() > 1000, "object positions");
-        std::size_t paths = 0, followed = 0, arrived = 0;
+        std::size_t paths = 0, followed = 0, arrived = 0, crossFollowed = 0, crossArrived = 0;
+        // Standing height above the grid base: the player at 16.577 over the first waypoint 16.48 (oracle read, police entry).
+        constexpr float kStandingHeight = 0.097f;
         for (int n = 0; n < 3000; ++n) {
             const auto& a = points[next() % points.size()];
             std::array<float, 3> b = a;
             b[0] += static_cast<float>(static_cast<int>(next() % 4001) - 2000) / 100.0f;
             b[2] += static_cast<float>(static_cast<int>(next() % 4001) - 2000) / 100.0f;
+            worlds[0].now += 5.0f;
             NavPathRecord pair = plainAiMove();
             const int code = navFindPath(worlds[0], pair, a.data(), b.data());
             require(code >= 0 && code <= 3, "result code");
@@ -113,18 +108,21 @@ int main(int argc, char** argv) {
             int steps = 0;
             while (cell != pair.exitCell && steps++ < 300) cell = pair.cellNodes[std::size_t(cell)].parent;
             require(cell == pair.exitCell, "the parent chain of the start cell reaches the exit cell");
-            if (pair.startGrid != pair.goalGrid) continue;
-            ++followed;
+            const bool across = pair.startGrid != pair.goalGrid;
+            ++(across ? crossFollowed : followed);
             float position[3] = {a[0], a[1], a[2]};
             bool done = false;
-            for (int step = 0; step < 4000 && !done; ++step) {
+            int holdSteps = 0;
+            for (int step = 0; step < 6000 && !done; ++step) {
                 const NavFollowResult result = navFollow(worlds[0], pair, position);
                 if (result.code == 0) {
-                    ++arrived;
+                    ++(across ? crossArrived : arrived);
                     done = true;
-                } else if (result.code != 4) {
-                    done = true;
+                } else if (result.code != 4 && result.code != 5) {
+                    if (result.code != 3 || ++holdSteps > 60) done = true;
                 } else {
+                    holdSteps = 0;
+                    position[1] = result.target[1] + kStandingHeight;
                     const float dx = result.target[0] - position[0], dz = result.target[2] - position[2];
                     const float distance = std::sqrt(dx * dx + dz * dz);
                     const float stepLength = std::min(distance, 0.11f);
@@ -134,10 +132,14 @@ int main(int argc, char** argv) {
                     }
                 }
             }
-            require(done, "the follower ends within 4000 steps");
+            require(done, "the follower ends within 6000 steps");
         }
-        require(paths > 100 && followed > 10, "enough paths were found");
+        // Port run with seed 12345 (no comparison with the original): 26 same-grid paths and 228 paths across grids, 201 of
+        // them end on the goal cell. The others end blocked: a grid whose cells in the middle are walled off from the exit cells
+        // (grid 660 of lvl_01: the follower marks one exit cell after the other, 0x27e12c, and then turns back) or a refused gate.
+        require(paths > 100 && followed > 10 && crossFollowed > 100, "enough paths were found");
         require(arrived == followed, "every same-grid path is followed to its end");
+        require(crossArrived * 10 >= crossFollowed * 8, "at least 8 of 10 paths across grids reach the goal cell");
     } catch (const std::exception& error) {
         std::cerr << "nav-path-real-test: " << error.what() << '\n';
         return 1;

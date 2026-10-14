@@ -219,6 +219,80 @@ void positionOutsideEveryGrid() {
     require(record.goalGrid == kNavNone && record.goalCell == kNavNone, "the outputs stay 0xffff");
 }
 
+// The path of acrossTwoGrids followed by the follower: transition 0x272598, phase 3 branch 0x1fb104. Cell size 1, height unit 1,
+// origin 0, so the values are exact.
+void followsAcrossTwoGrids() {
+    NavWorld world = twoGrids(true);
+    NavPathRecord record;
+    record.avoidMask = record.gateMask = 1;
+    float start[3], goal[3], position[3];
+    at(start, 0.5f, 0.5f);
+    at(goal, 7.5f, 1.5f);
+    navFindPath(world, record, start, goal);
+    NavFollowResult step = navFollow(world, record, start);
+    require(step.code == 4 && step.target[0] == 3.5f && step.target[2] == 0.5f && step.target[1] == 0.0f,
+            "the mark of the start cell is the exit cell 3, centre 3 + 0.5 (0x27e2a0)");
+    at(position, 3.5f, 0.5f);
+    step = navFollow(world, record, position);
+    require(record.phase == 3 && step.code == 5 && step.heading == 64, "the exit cell with a free link: transition, code 5 + gate 0 (0x272908 .. 0x272920), heading pi / 2 * 128 / pi = 64");
+    require(record.target[0] == 4.5f && record.target[2] == 0.5f && record.target[1] == 0.0f,
+            "the cell across: int((3.5 - 0) / 1) + offset 1 = 4, centre 4 * 1 + 0.5; same row; both grids at height 0 (0x2726c4 .. 0x2726fc)");
+    at(position, 3.9f, 0.5f);
+    step = navFollow(world, record, position);
+    require(step.code == 5 && record.phase == 3 && record.startGrid == 100, "0.6 from the waypoint, more than half a cell: still walking (0x1fb178 vcmpe, ble)");
+    at(position, 4.2f, 0.5f);
+    step = navFollow(world, record, position);
+    require(record.startGrid == 101 && record.phase == 2 && record.startCell == 0,
+            "within 0.5 of the waypoint: grid 101 (the parent) becomes the start grid, the position is in its cell 0 (0x1fb344 .. 0x1fb3c8)");
+    require(step.code == 4 && step.target[0] == 7.5f && step.target[2] == 1.5f && record.exitCell == 7,
+            "gate 0: the same call continues with 0x27ddb4 toward the goal cell 7, centre (7.5, 1.5)");
+    require(record.cellNodes[0].cost == 7 && record.cellNodes[0].mark == 7, "cell line 7 -> 6 -> 1 -> 0 costs 2 + 3 + 2 (0x2087e4)");
+    at(position, 7.5f, 1.5f);
+    require(navFollow(world, record, position).code == 0 && record.phase == 0, "standing on the goal cell of the goal grid: arrived (0x27df54)");
+}
+
+void transitionRefusesAClosedGate() {
+    NavWorld world = twoGrids(true);
+    world.rooms[0].state[0].extras[0][1] = 3;
+    NavPathRecord record;
+    record.avoidMask = record.gateMask = 1;
+    float start[3], goal[3], position[3];
+    at(start, 0.5f, 0.5f);
+    at(goal, 7.5f, 1.5f);
+    navFindPath(world, record, start, goal);
+    record.phase = 2;
+    record.exitCell = 3;
+    at(position, 3.5f, 0.5f);
+    const NavFollowResult step = navFollow(world, record, position);
+    require(step.code == 2 && step.heading == 3 && record.diagnostic == 1, "gate 3 is not in the mask: code 2 with the gate in the heading byte (0x272778)");
+}
+
+void walkingToTheGridBesideTheStart() {
+    NavWorld world = twoGrids(true);
+    NavPathRecord record;
+    record.avoidMask = record.gateMask = 1;
+    record.heightTolerance = 0.5f;
+    float start[3], goal[3], position[3];
+    at(start, -0.3f, 0.5f);
+    at(goal, 7.5f, 1.5f);
+    require(navFindPath(world, record, start, goal) == 3 && record.phase == 4 && record.startGrid == 100,
+            "start 0.3 left of grid 100: inside the 1.25 scaled box, phase 4 (0x2044ac)");
+    NavFollowResult step = navFollow(world, record, start);
+    require(step.code == 4 && step.target[0] == 2.0f && step.target[1] == 1.0f && step.target[2] == 1.0f,
+            "not in the box: walk to the box centre (2, 1, 1) (0x1fb4a8 .. 0x1fb4f0)");
+    at(position, 0.5f, 0.5f);
+    step = navFollow(world, record, position);
+    require(record.phase == 2 && record.startCell == 0 && step.code == 4 && step.target[0] == 3.5f,
+            "inside the box and cell 0: the search runs (0x1d0700), phase 2 and 0x27ddb4 walks to the exit cell 3");
+    NavPathRecord near = record;
+    near.phase = 4;
+    near.startCell = kNavNone;
+    near.startGrid = 100;
+    const float outside[3] = {2.1f, 5.0f, 1.2f};
+    step = navFollow(world, near, outside);
+    require(step.code == 1 && near.phase == 1 && near.diagnostic == 4,
+            "outside the box but within sqrt(0.1) of its centre: diagnostic 4, phase 1 (0x1fb4f4)");
+}
 }
 
 int main() {
@@ -232,6 +306,9 @@ int main() {
         followsAlongTheCorridorAndArrives();
         followerReportsLeavingTheGrid();
         temporaryMarkOnTheExitExtra();
+        followsAcrossTwoGrids();
+        transitionRefusesAClosedGate();
+        walkingToTheGridBesideTheStart();
     } catch (const std::exception& error) {
         std::cerr << "nav-path-test: " << error.what() << '\n';
         return 1;

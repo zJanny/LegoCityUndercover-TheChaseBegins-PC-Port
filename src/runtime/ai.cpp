@@ -142,8 +142,7 @@ bool AiCore::startNavMove(const std::string& name, AiCharacter& target, const st
             if (std::find(cannotGetThere_.begin(), cannotGetThere_.end(), name) == cannotGetThere_.end()) cannotGetThere_.push_back(name);
             return false;
         }
-        const bool withinOneGrid = code == 0 || (code == 3 && record->phase == 2 && record->startGrid == record->goalGrid);
-        if (withinOneGrid) {
+        if (code == 0 || code == 3) {
             target.move->nav = std::move(record);
             target.move->navWorld = index;
         }
@@ -279,10 +278,16 @@ void AiCore::advanceNavMove(const std::string& name, AiCharacter& target, float 
         order.nav.reset();
         return;
     }
-    if (result.code != 4) return;
+    if (result.code > 5) {
+        order.nav.reset();
+        return;
+    }
+    if (result.code != 4 && result.code != 5) return;
     const float dx = result.target[0] - position[0], dz = result.target[2] - position[2];
     const float distance = std::sqrt(dx * dx + dz * dz);
     target.heading = headingToward(position, result.target);
+    if (!order.navHeightOffset) order.navHeightOffset = position[1] - result.target[1];
+    position[1] = result.target[1] + *order.navHeightOffset;
     if (distance <= 0.0f) return;
     const float step = std::min(distance, (order.run ? kAiRunSpeed : kAiWalkSpeed) * dt);
     position[0] += dx / distance * step;
@@ -313,6 +318,9 @@ void AiCore::advanceSimplePath(const std::string& name, AiCharacter& target, flo
 
 void AiCore::update(float dt) {
     moved_.clear();
+    navClock_ += dt;
+    if (navigation_)
+        for (NavWorld& world : *navigation_) world.now = navClock_;
     for (auto& [name, target] : characters_) {
         if (!target.move || !target.position) continue;
         if (target.state != AiState::MoveTo && target.state != AiState::FollowPath) continue;

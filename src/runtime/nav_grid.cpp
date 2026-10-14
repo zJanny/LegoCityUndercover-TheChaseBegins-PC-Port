@@ -12,10 +12,7 @@ constexpr float kOver256 = 1.0f / 256.0f;
 constexpr float kOver512 = 1.0f / 512.0f;
 constexpr float kNearScale = 1.25f;
 
-struct Box {
-    float centre[3];
-    float half[3];
-};
+using Box = NavBox;
 
 Box gridBox(const NavWorld& world, const NavGrid& grid) {
     Box box;
@@ -54,6 +51,10 @@ bool insideFlat(const float position[3], const float centre[3], const float half
 }
 
 }
+
+NavBox navGridBox(const NavWorld& world, const NavGrid& grid) { return gridBox(world, grid); }
+
+bool navInsideBox(const float position[3], const NavBox& box) { return insideBox(position, box); }
 
 NavWorld NavWorld::fromRooms(const std::vector<assets::NavRoom>& descriptors, const std::vector<assets::NavMesh>& meshes) {
     NavWorld world;

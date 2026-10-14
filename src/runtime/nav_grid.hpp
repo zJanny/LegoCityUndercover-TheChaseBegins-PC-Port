@@ -58,6 +58,15 @@ NavGridState* navGridStateById(NavWorld& world, std::uint16_t id);
 // the quotient truncated toward zero, so a position up to one cell before the grid origin still maps to cell 0.
 int navCellAt(const NavWorld& world, const assets::NavGrid& grid, const float position[3]);
 
+struct NavBox {
+    float centre[3];
+    float half[3];
+};
+
+// The box of a grid as the lookup 0x1c2ccc and the follower (0x1faf70, 0x1fb1dc) build it, and the test 0x2397a0.
+NavBox navGridBox(const NavWorld& world, const assets::NavGrid& grid);
+bool navInsideBox(const float position[3], const NavBox& box);
+
 struct NavLocation {
     std::uint16_t room = kNavNone;
     std::uint16_t grid = kNavNone;

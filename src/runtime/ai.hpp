@@ -71,6 +71,8 @@ struct AiMoveOrder {
     // reset when the follower cannot continue, the order then walks straight (SCRIPT-S31).
     std::shared_ptr<NavPathRecord> nav;
     std::size_t navWorld = 0;
+    // Stand-in SCRIPT-S100: height of the character above the base of the grid it walks in, taken at the first step.
+    std::optional<float> navHeightOffset;
 };
 
 // A finished move: the AIMove event is raised for `character` with the start argument of the raise site (0x23cee8's
@@ -128,6 +130,9 @@ constexpr float kAiNavHeightTolerance = 0.85f;
 // Path record +0x74 and +0x78 are 0x202054 = 0x2b66d8(entity) | 1; the other bits come from the gate types registered in the
 // table at global 0x376f10 (which entity may use which gate), not recovered: STAND-IN SCRIPT-S94, only bit 0 (always set).
 constexpr std::uint32_t kAiNavGateMask = 1;
+// STAND-IN SCRIPT-S101: the clock of 0x2355c0 that dates the temporary marks of the grids (older than 1 s or 2 s counts as
+// old) is the game time in seconds, which is far above 2 at any level start; the nav clock here starts at 10 and runs with update().
+constexpr float kAiNavClockStart = 10.0f;
 
 class AiCore {
 public:
@@ -138,7 +143,10 @@ public:
     void setPathLookup(PathLookup lookup) { pathLookup_ = std::move(lookup); }
     // The nav grids of the level, one world per section record (nav_grid.hpp). With them an AIMove runs the path finder
     // 0x204284 first like the front end 0x22d85c: result 1 ("I can't get there") leaves the character unchanged.
-    void setNavigation(std::vector<NavWorld> worlds) { navigation_ = std::make_shared<std::vector<NavWorld>>(std::move(worlds)); }
+    void setNavigation(std::vector<NavWorld> worlds) {
+        navigation_ = std::make_shared<std::vector<NavWorld>>(std::move(worlds));
+        for (NavWorld& world : *navigation_) world.now = navClock_;
+    }
     const std::vector<std::string>& cannotGetThere() const { return cannotGetThere_; }
 
     // Handler of `kind` for the characters named by lower-case names and the numbers already read from the script.
@@ -175,6 +183,7 @@ private:
     std::vector<std::string> unresolved_;
     std::vector<std::string> cannotGetThere_;
     std::shared_ptr<std::vector<NavWorld>> navigation_;
+    float navClock_ = kAiNavClockStart;
     PositionLookup lookup_;
     PathLookup pathLookup_;
 };
