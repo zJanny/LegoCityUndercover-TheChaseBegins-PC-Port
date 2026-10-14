@@ -96,3 +96,14 @@ Unknowns:
 - Both were taken in the agent's own home `artifacts/oracle/agentOC-home`; the user's saves were not touched.
 
 - 2026-10-14T22:49:29+02:00 — Agent Q (cutscenes-in-game): state `cutscene-1-1-b` (Old 3DS, from `gameplay-start`): the player was teleported onto the donut shop waypoint (817.3, 24.0, 1071.4) and `1-1_VanBreakdown` started `1_1_b`; saved with the cutscene near its end (the fade to black and the return to the game follow within seconds). Game progress: new game, mission 1-1 started (cutscene `1_1_a` played), nothing else done. Own home `artifacts/oracle/agentQ-home`; the user saves were not touched. Findings: [cutscenes.md §2026-10-14T22:49](cutscenes.md#ts-20261014-224929).
+
+<a id="ts-20261014-231052"></a>
+
+## 2026-10-14T23:10:52+02:00 — State in-vehicle (user slot 5)
+
+- The user quick-saved in their own Azahar with the player sitting in a vehicle in lvl_01, slot 5. Copied read-only from `~/.local/share/azahar-emu/states/00040000000AD600.05.cst` (2026-10-14 23:10, 25614134 bytes, identical by `cmp`) to `artifacts/oracle/states/in-vehicle.cst` with `in-vehicle.json` (New 3DS). The user's saves were not modified.
+- Purpose: leave and jump-out traces of the vehicle states 0x11b / 0x11c and the driving update (VEH-4, VEH-5, VEH-9 in [vehicles.md](../plans/features/vehicles.md)).
+- Game progress: presumably the same playthrough as `info-barrier` and `mission-1-2-start` (mission 1-1 finished, mission 1-2 not started); not yet confirmed by the user.
+
+Unknowns:
+- Which vehicle, where, and the player position and heading; not read from memory yet.
