@@ -7,7 +7,8 @@ contains "§YYYY-MM-DDTHH:MM" must point at "file.md#ts-..." of the entry with t
 
 Size and shape rules (CLAUDE.md "Documentation rules"): a docs/re file is at most 40 KB, a feature file at most
 16 KB, the feature index at most 40 lines, CLAUDE.md at most 20 KiB, the session log of a progress file at most
-20 entry lines. With --fix, older log lines move to the progress archive and closed items ("- [x] ID") of a feature
+20 entry lines. With --fix, older log lines move to the progress archive (a line the archive already holds, as
+after a merge of two branches that both archived it, is dropped instead of copied again) and closed items ("- [x] ID") of a feature
 file move to <feature>.closed.md. An item or stand-in ID defined twice in a feature and its closed file is an
 error. Every feature file has a row in the feature index; closed-items files have none. A link whose text starts with "Corrects" needs a "Corrected by" line under the corrected entry's heading
 that links back, and every "Corrected by" line needs the matching "Corrects" link.
@@ -332,21 +333,52 @@ def appended(path, header, new_lines):
     path.write_text(text + "\n".join(new_lines) + "\n", encoding="utf-8")
 
 
+def archived_log_lines(path):
+    if not path.is_file():
+        return set()
+    return {line for line in path.read_text(encoding="utf-8").split("\n") if line.startswith("- ")}
+
+
 def rotate_session_logs(root):
     moved = 0
     for path in progress_files(root):
         lines = path.read_text(encoding="utf-8").split("\n")
         span = log_span(lines)
-        if not span or len(span[1]) <= MAX_LOG_LINES:
+        if not span:
             continue
-        old = span[1][: len(span[1]) - MAX_LOG_LINES]
-        header = (f"# Session log archive\n\nSession log lines that left [{path.name}]({path.name}), oldest first, unchanged. "
-                  "tools/check_doc_links.py --fix appends new lines at the end.\n\n")
-        appended(archive_path(path), header, [lines[i] for i in old])
-        drop = set(old)
-        path.write_text("\n".join(line for i, line in enumerate(lines) if i not in drop), encoding="utf-8")
+        archived = archived_log_lines(archive_path(path))
+        drop = {i for i in span[1] if lines[i] in archived}
+        live = [i for i in span[1] if i not in drop]
+        old = live[: max(0, len(live) - MAX_LOG_LINES)]
+        if old:
+            header = (f"# Session log archive\n\nSession log lines that left [{path.name}]({path.name}), oldest first, unchanged. "
+                      "tools/check_doc_links.py --fix appends new lines at the end.\n\n")
+            appended(archive_path(path), header, [lines[i] for i in old])
+        drop |= set(old)
+        if drop:
+            path.write_text("\n".join(line for i, line in enumerate(lines) if i not in drop), encoding="utf-8")
         moved += len(old)
     return moved
+
+
+def remove_duplicate_archive_lines(root):
+    removed = 0
+    for path in progress_files(root):
+        archive = archive_path(path)
+        if not archive.is_file():
+            continue
+        seen = set()
+        kept = []
+        lines = archive.read_text(encoding="utf-8").split("\n")
+        for line in lines:
+            if line.startswith("- ") and line in seen:
+                continue
+            seen.add(line)
+            kept.append(line)
+        if len(kept) < len(lines):
+            archive.write_text("\n".join(kept), encoding="utf-8")
+            removed += len(lines) - len(kept)
+    return removed
 
 
 def move_closed_items(root):
@@ -395,7 +427,8 @@ def size_errors(root):
 def process(root, fix, messages=None):
     docs = {}
     if fix:
-        for what, count in (("log lines archived", rotate_session_logs(root)), ("closed items moved", move_closed_items(root))):
+        for what, count in (("duplicate archive log lines removed", remove_duplicate_archive_lines(root)),
+                            ("log lines archived", rotate_session_logs(root)), ("closed items moved", move_closed_items(root))):
             if count and messages is not None:
                 messages.append(f"{count} {what}")
 

@@ -519,12 +519,12 @@ if(BUILD_TESTING)
       PASS_REGULAR_EXPRESSION "cutscene: 5 actor\\(s\\), 405 camera frames.*0 missing textures.*saved viewer-cutscene.bmp")
     add_test(NAME debug-overlay-off COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
-      --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --gameplay --screenshot debug-overlay-off.bmp --frames 2)
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --gameplay --script "0 0 2" --screenshot debug-overlay-off.bmp)
     set_tests_properties(debug-overlay-off PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" FIXTURES_SETUP debug_overlay_off
       PASS_REGULAR_EXPRESSION "saved debug-overlay-off.bmp after [0-9]+ update")
     add_test(NAME debug-overlay-on COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
-      --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --gameplay --debug-overlay --screenshot debug-overlay-on.bmp --frames 2)
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --gameplay --debug-overlay --script "0 0 2" --screenshot debug-overlay-on.bmp)
     set_tests_properties(debug-overlay-on PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" FIXTURES_SETUP debug_overlay_on
       PASS_REGULAR_EXPRESSION "saved debug-overlay-on.bmp after [0-9]+ update")
     add_test(NAME debug-overlay-area COMMAND python3 "${CMAKE_SOURCE_DIR}/tools/check_debug_overlay_shots.py" debug-overlay-off.bmp debug-overlay-on.bmp)

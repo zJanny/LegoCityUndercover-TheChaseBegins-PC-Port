@@ -164,6 +164,19 @@ class RuleChecksTest(unittest.TestCase):
         kept = [l for l in log.read_text().split('\n') if l.startswith('- 2026')]
         self.assertEqual(kept, lines[3:] + extra + ['- 2026-02-03T00:00:00+01:00 — new 3'])
 
+    def test_session_log_rotation_after_merge_keeps_one_copy(self):
+        lines = self.write_log(23)
+        plans = self.root / 'docs' / 'plans'
+        archive = plans / 'x.progress-archive.md'
+        archive.write_text('# Session log archive\n\n' + '\n'.join([lines[0], lines[1], lines[0]]) + '\n')
+        messages = []
+        links.process(self.root, True, messages)
+        self.assertEqual(messages, ['1 duplicate archive log lines removed', '1 log lines archived'])
+        entries = [l for l in archive.read_text().split('\n') if l.startswith('- 2026')]
+        self.assertEqual(entries, lines[:3])
+        kept = [l for l in (plans / 'x.progress.md').read_text().split('\n') if l.startswith('- 2026')]
+        self.assertEqual(kept, lines[3:])
+
     def test_fix_moves_closed_items_in_order(self):
         feature = self.features / 'f.md'
         feature.write_text('# F\n\n- [ ] F-1 open\n- [x] F-2 done\n- F-S1 stand-in\n- [x] F-3 also done\nProse.\n')
