@@ -203,7 +203,10 @@ void AiCore::run(AiNativeKind kind, const std::vector<std::string>& names, const
         if (target.enabled.value_or(false) || name != kPlayerAlias) {
             target.state = AiState::FaceTarget;
             target.faceTarget = names[1];
-            if (locate(name, self)) target.homePosition = self;
+            if (locate(name, self)) {
+                target.homePosition = self;
+                if (!target.position) target.position = self;
+            }
         } else if (locate(name, self)) {
             target.heading = headingToward(self, where);
         }
@@ -214,7 +217,22 @@ void AiCore::run(AiNativeKind kind, const std::vector<std::string>& names, const
         ++target.stateResets;
         break;
     case AiNativeKind::AISuperJump:
-        if (names.size() >= 2 && locate(names[1], where)) target.superJump = AiSuperJump{where, number};
+        if (names.size() >= 2 && locate(names[1], where)) {
+            std::array<float, 3> self{};
+            if (target.position) self = *target.position;
+            else if (!locate(name, self)) break;
+            target.position = self;
+            AiSuperJump jump;
+            jump.target = where;
+            jump.height = number;
+            jump.plan = planSuperJump(self, where, kSuperJumpNativeFrames, number);
+            jump.start = self;
+            jump.horizontalDistance = std::sqrt((where[0] - self[0]) * (where[0] - self[0]) + (where[2] - self[2]) * (where[2] - self[2]));
+            target.heading = jump.plan.heading;
+            target.move.reset();
+            target.superJump = jump;
+            target.state = AiState::GoToTarget;
+        }
         break;
     case AiNativeKind::AIPursuit:
         if (names.size() >= 2) {
@@ -222,8 +240,16 @@ void AiCore::run(AiNativeKind kind, const std::vector<std::string>& names, const
             target.state = number != 0.0f ? AiState::Takedown : AiState::Pursuit;
         }
         break;
-    case AiNativeKind::AIStalkPlayer: target.stalkDistance = number; break;
-    case AiNativeKind::AIRunAway: target.runningAway = true; break;
+    case AiNativeKind::AIStalkPlayer:
+        target.stalkDistance = number;
+        target.state = AiState::Stalk;
+        target.move.reset();
+        break;
+    case AiNativeKind::AIRunAway:
+        target.runningAway = true;
+        target.state = AiState::RunAway;
+        target.move.reset();
+        break;
     case AiNativeKind::AIFollowSimplePath: {
         SimplePathFollow follow;
         if (names.size() < 2 || !pathLookup_ || !pathLookup_(names[1], follow) || follow.nodes.empty()) break;
@@ -294,6 +320,50 @@ void AiCore::advanceNavMove(const std::string& name, AiCharacter& target, float 
     position[2] += dz / distance * step;
 }
 
+void AiCore::advanceSuperJump(const std::string& name, AiCharacter& target, float dt) {
+    AiSuperJump& jump = *target.superJump;
+    std::array<float, 3>& position = *target.position;
+    GoToTarget order;
+    order.target = jump.target;
+    order.minDistance = kAiGoToMinDistance;
+    std::uint16_t heading = 0;
+    if (stepGoToTarget(order, position, heading) == GoToTargetResult::Arrived) {
+        target.state = AiState::Idle;
+        target.superJump.reset();
+        ended_.push_back({name, 0});
+        return;
+    }
+    target.heading = heading;
+    const float dx = jump.target[0] - position[0], dz = jump.target[2] - position[2];
+    const float distance = std::sqrt(dx * dx + dz * dz);
+    const float step = std::min(distance, jump.plan.horizontalPerFrame * kAiUpdatesPerSecond * dt);
+    if (distance > 0.0f) {
+        position[0] += dx / distance * step;
+        position[2] += dz / distance * step;
+    }
+    jump.traveled += step;
+    const float progress = jump.horizontalDistance > 0.0f ? std::min(1.0f, jump.traveled / jump.horizontalDistance) : 1.0f;
+    const float rise = jump.target[1] - jump.start[1];
+    const float climb = jump.plan.climb;
+    if (climb > 0.0f && climb >= rise) {
+        const float apexToLanding = std::sqrt((climb - rise) / climb);
+        const float apex = 1.0f / (1.0f + apexToLanding);
+        const float k = climb / (apex * apex);
+        position[1] = jump.start[1] + climb - k * (progress - apex) * (progress - apex);
+    } else {
+        position[1] = jump.start[1] + rise * progress;
+    }
+}
+
+void AiCore::advanceFaceTarget(const std::string&, AiCharacter& target) {
+    std::array<float, 3> where{};
+    const bool located = !target.faceTarget.empty() && locate(target.faceTarget, where);
+    const FaceTargetResult result = stepFaceTarget(*target.position, target.homePosition.value_or(*target.position), located ? &where : nullptr,
+                                                   target.heading.value_or(0));
+    *target.position = result.position;
+    if (result.facing) target.heading = result.heading;
+}
+
 void AiCore::advanceSimplePath(const std::string& name, AiCharacter& target, float dt) {
     AiMoveOrder& order = *target.move;
     std::array<float, 3>& position = *target.position;
@@ -322,7 +392,17 @@ void AiCore::update(float dt) {
     if (navigation_)
         for (NavWorld& world : *navigation_) world.now = navClock_;
     for (auto& [name, target] : characters_) {
-        if (!target.move || !target.position) continue;
+        if (!target.position) continue;
+        if (target.state == AiState::GoToTarget && target.superJump) {
+            moved_.push_back(name);
+            advanceSuperJump(name, target, dt);
+            continue;
+        }
+        if (target.state == AiState::FaceTarget) {
+            advanceFaceTarget(name, target);
+            continue;
+        }
+        if (!target.move) continue;
         if (target.state != AiState::MoveTo && target.state != AiState::FollowPath) continue;
         moved_.push_back(name);
         if (target.move->follow) advanceSimplePath(name, target, dt);

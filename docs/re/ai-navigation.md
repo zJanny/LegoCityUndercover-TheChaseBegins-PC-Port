@@ -6,6 +6,8 @@ How an AIMove finds and follows a path over the nav grids (`.bfnnav`, format in 
 
 ## 2026-10-14T19:47:10+02:00 — Nav path finder 0x204284, follower 0x27ddb4 and state 11 (0x2c3bd8)
 
+Corrected by [ai-states.md §2026-10-14T21:21](ai-states.md#ts-20261014-212158): ctrl+`0x8c` ("MinDistance", default -1.0) is `ATTR_RunSpeed` (0.23) once the character set-up 0x236d74 has run.
+
 Corrected by [ai-navigation.md §2026-10-14T20:39](#ts-20261014-203953): runtime cells and grids never keep kind 3 / bit 14 (loader fix-up); 0x27e12c is the recovery for an unclosed start cell node.
 
 [Corrects ai-natives.md §2026-10-14T18:42](ai-natives.md#ts-20261014-184240): the phase table of `+0x7e` and the avoid bit (see "Front end and flags").

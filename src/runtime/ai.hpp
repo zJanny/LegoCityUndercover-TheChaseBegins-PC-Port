@@ -12,7 +12,10 @@
 #include <string>
 #include <vector>
 
+#include "runtime/ai_face_target.hpp"
+#include "runtime/ai_go_to_target.hpp"
 #include "runtime/ai_simple_path.hpp"
+#include "runtime/ai_super_jump.hpp"
 #include "runtime/nav_follow.hpp"
 
 namespace chase::runtime {
@@ -48,7 +51,7 @@ bool aiNativeIsStandIn(AiNativeKind kind);
 
 // Requested state byte of the AI component (+0x15). Idle: 0x2246c0 stores 0. NoState: 0x241304 (AIEnable, AINoState)
 // stores 1. FollowPath: the path state writes 5. MillAbout: 0x22471c stores 9. FaceTarget: 0x211110 stores 10.
-// Takedown / Pursuit: AIPursuit passes 35 (takedown argument set) or 36 to 0x218b38. MoveTo: the state AIMove requests
+// RunAway: 0x228c70 requests 25. Stalk: 0x282b88 requests 27. Takedown / Pursuit: AIPursuit passes 35 (takedown argument set) or 36 to 0x218b38. MoveTo: the state AIMove requests
 // through 0x2414b4 (its number is not read; the value is a placeholder).
 enum class AiState : std::uint8_t {
     Idle = 0,
@@ -56,6 +59,9 @@ enum class AiState : std::uint8_t {
     FollowPath = 5,
     MillAbout = 9,
     FaceTarget = 10,
+    GoToTarget = 11,
+    RunAway = 25,
+    Stalk = 27,
     Takedown = 35,
     Pursuit = 36,
     MoveTo = 0xfe,
@@ -87,9 +93,16 @@ struct AiPursuit {
     bool takedown = false;
 };
 
+// AISuperJump: the setup of 0x213300 (plan) and the flight. STAND-IN SCRIPT-S103: the flight itself is locomotion state 72
+// (not recovered); the character covers `plan.horizontalPerFrame` per 1/30 s toward the target and its height follows a
+// parabola from the start through the apex `plan.climb` above the start to the target height.
 struct AiSuperJump {
     std::array<float, 3> target{};
     float height = 0;
+    SuperJumpPlan plan;
+    std::array<float, 3> start{};
+    float traveled = 0;
+    float horizontalDistance = 0;
 };
 
 // Values the natives wrote, unset until a script wrote them. Meaning of the original bits (component bytes):
@@ -123,6 +136,10 @@ struct AiCharacter {
 // from the character's locomotion parameters.
 constexpr float kAiWalkSpeed = 0.11f * 30.0f;
 constexpr float kAiRunSpeed = 0.23f * 30.0f;
+constexpr float kAiUpdatesPerSecond = 30.0f;
+// State 11 compares the horizontal distance with ctrl+0x8c, ATTR_RunSpeed (0x236ed4; default 0.23, the class value of other
+// characters is not read, SCRIPT-S104). Bit 6 of +0x314 (a character below the target has arrived) is stood in by false.
+constexpr float kAiGoToMinDistance = 0.23f;
 
 // STAND-IN SCRIPT-S94: 0x204284 doubles the entity's float at +0x70 into the height tolerance of its lookups; 0.85 is the
 // player's value (oracle read), other characters' values are not read.
@@ -171,6 +188,8 @@ private:
     void startSimplePath(const std::string& character, SimplePathFollow follow, bool run);
     void advanceStraightMove(const std::string& name, AiCharacter& target, float dt);
     void advanceSimplePath(const std::string& name, AiCharacter& target, float dt);
+    void advanceSuperJump(const std::string& name, AiCharacter& target, float dt);
+    void advanceFaceTarget(const std::string& name, AiCharacter& target);
     void advanceNavMove(const std::string& name, AiCharacter& target, float dt);
     bool startNavMove(const std::string& name, AiCharacter& target, const std::array<float, 3>& from, const std::array<float, 3>& to,
                       bool noAvoid);

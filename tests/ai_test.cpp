@@ -96,6 +96,9 @@ void states() {
     core.run(AiNativeKind::AIStalkPlayer, {"npc"}, {4.0f});
     core.run(AiNativeKind::AIRunAway, {"npc"}, {});
     require(core.character("npc")->stalkDistance == 4.0f && core.character("npc")->runningAway, "AIStalkPlayer and AIRunAway record their request");
+    require(core.character("npc")->state == AiState::RunAway, "AIRunAway 0x228c70 requests state 25 (0x228c78), AIStalkPlayer 0x282b88 state 27 (0x282b94)");
+    core.run(AiNativeKind::AIStalkPlayer, {"npc"}, {4.0f});
+    require(core.character("npc")->state == AiState::Stalk, "AIStalkPlayer requests state 27");
     core.run(AiNativeKind::AISuperJump, {"npc", "target"}, {2.0f});
     require(core.character("npc")->superJump && core.character("npc")->superJump->height == 2.0f && core.character("npc")->superJump->target[2] == 4.0f, "AISuperJump 0x1b2344 hands the target position and the height to 0x213300");
 }
@@ -261,6 +264,45 @@ void aiMoveInTheSameCellEndsAtOnce() {
     require(core.takeMovesEnded().size() == 1, "phase 0: the follower returns 0 on the first tick (0x1faf2c)");
 }
 
+void superJumpPlanAndFlight() {
+    const SuperJumpPlan level = planSuperJump({0, 0, 0}, {3, 0, 4}, kSuperJumpNativeFrames, 2.0f);
+    require(level.heading == 6711 && level.frames == 28 && near(level.horizontalPerFrame, 5.0f / 28.0f, 1e-6f) && level.climb == 2.0f,
+            "0x213300 with a target at the same height keeps the 28 frames: speed 5 / 28, climb = height (hand evaluation of 0x213300..0x2133f0)");
+    const SuperJumpPlan up = planSuperJump({0, 0, 0}, {0, 3, 4}, kSuperJumpNativeFrames, 2.0f);
+    require(up.heading == 0 && up.frames == 22 && near(up.horizontalPerFrame, 4.0f / 22.0f, 1e-6f) && up.climb == 5.0f,
+            "a target 3 above: frames = int((pi - asin(3 / 5)) * 8.912677) = 22 (hand evaluation, python), climb = 3 + 2");
+
+    AiCore core = withPositions();
+    core.run(AiNativeKind::AISuperJump, {"npc", "target"}, {2.0f});
+    const AiCharacter* npc = core.character("npc");
+    require(npc->state == AiState::GoToTarget && npc->heading && *npc->heading == 6711, "AISuperJump requests state 11 (0x2133f8) and sets the heading");
+    int ticks = 0;
+    while (core.character("npc")->state == AiState::GoToTarget && ticks < 100) {
+        core.update(1.0f / 30.0f);
+        ++ticks;
+        require(core.movedLastUpdate("npc"), "the flight moves the character");
+    }
+    const AiCharacter* landed = core.character("npc");
+    const float rest = std::sqrt((3 - (*landed->position)[0]) * (3 - (*landed->position)[0]) + (4 - (*landed->position)[2]) * (4 - (*landed->position)[2]));
+    require(landed->state == AiState::Idle && ticks >= 25 && ticks <= 28 && rest < kAiGoToMinDistance, "state 11 ends when ATTR_RunSpeed (0.23) exceeds the horizontal distance (0x2c3c20)");
+    const std::vector<AiMoveEnd> ended = core.takeMovesEnded();
+    require(ended.size() == 1 && ended[0].character == "npc" && ended[0].argument == 0, "arrival raises the AIMove event (0x2c3c68)");
+}
+
+void faceTargetState() {
+    AiCore core = withPositions();
+    core.run(AiNativeKind::AIFaceTarget, {"npc", "target"}, {});
+    core.update(1.0f / 30.0f);
+    require(core.character("npc")->heading && *core.character("npc")->heading == 6711, "state 10 (0x2c5bc4) sets the heading toward the target every tick: atan2(3, 4) * 10430.378");
+    const float moved[3] = {9.0f, 0.0f, 9.0f};
+    core.setPosition("target", moved);
+    core.update(1.0f / 30.0f);
+    require(*core.character("npc")->heading == 8192, "the heading follows the target (atan2(9, 9) = pi / 4 = 8192 units)");
+    const FaceTargetResult pinned = stepFaceTarget({1, 7, 2}, {0, 0, 0}, nullptr, 77);
+    require(pinned.position[0] == 0 && pinned.position[1] == 7 && pinned.position[2] == 0 && pinned.heading == 77 && !pinned.facing,
+            "x and z return to the home position (0x2c5bd8..0x2c5be8), y stays; without a target the heading stays");
+}
+
 void goToTargetState() {
     GoToTarget order;
     order.target = {3, 5, 4};
@@ -410,6 +452,8 @@ int main() {
         aiMoveToAnUnreachableTargetChangesNothing();
         aiMoveInTheSameCellEndsAtOnce();
         goToTargetState();
+        superJumpPlanAndFlight();
+        faceTargetState();
     } catch (const std::exception& error) {
         std::cerr << "ai-test: " << error.what() << '\n';
         return 1;
