@@ -101,3 +101,15 @@ Unknowns:
 - Whether the page accepts A before the load finishes; what the badge and line do while loading (the progress setter 0x1f23f0 gets floats 0..100); the drift of the player after landing in the lobby (x -1.1152 to -1.1395, z 15.7023 to 15.7487 in 12 updates after the fall, player state 4).
 - How 0x26344c qualifies the script argument; the use of the second destination (hash 0xccaaccdd); what slot +0x28 (0x3038a0) does after storing the request and who executes 0x303480 for it (the lifts of lvl_00 are the candidates).
 - The camera pose after the switch (the port resets the follow camera behind the heading).
+
+<a id="ts-20261014-234123"></a>
+
+## 2026-10-14T23:41:23+02:00 — User report: leaving the police station in the original shows more than the port
+
+Source: the user played the original on their own Azahar and compared with `chase-game` (2026-10-14). Not measured in the oracle yet.
+
+- **Original, walking out of the lobby to the street:** a "checking save data" popup, a loading screen with the spinning 3D badge on the top screen, and an additional confirmation with A.
+- **Port:** a single 2D loading page (key art stand-in on top, badge without ring, `Continue (A)`), one A press, then the switch ([TRANS-S3](../plans/features/level-transitions.md)).
+
+Unknowns:
+- The order of the popup, the badge screen and the A confirmations; whether the save check is the autosave of the level switch (the save indicator 0x1a3d0c / 0x24004c of the front end) and whether it also happens on the entry; the code that shows each. States for a measurement: `station-at-exit` (1.9 m in front of the exit bound) and `station-exit-loadingpage`.

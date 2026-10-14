@@ -21,7 +21,7 @@ IN_PROGRESS, updated 2026-10-14T12:05:00+02:00. `chase-game` switches between th
 
 - TRANS-S1 The port runs one level file at a time and rebuilds the level at each switch (`chase-game`), not the master level `lvl_the_city` with resident world levels; the state of the left level is lost, and `--call-script` runs again in the new level when it has the script (stands in for the saved game, SAVE-1). needs: TRANS-3.
 - TRANS-S2 `SceneChange <bound>` is qualified with the calling level's world level instance name (data fit, every shipped call matches; 0x26344c not read). needs: TRANS-10.
-- TRANS-S3 The loading page is drawn from one oracle screenshot (`drawSceneChangeBottom`); the top screen shows the generic1 background instead of the key art, the badge has no ring, the text key `Continue` (systemtext 0xe3f70996) is inferred from the text. needs: TRANS-8.
+- TRANS-S3 The loading page is drawn from one oracle screenshot (`drawSceneChangeBottom`); the top screen shows the generic1 background instead of the key art, the badge has no ring (the original shows the spinning 3D badge, user report 2026-10-14: FE-3), the text key `Continue` (systemtext 0xe3f70996) is inferred from the text. needs: TRANS-8, TRANS-14.
 - TRANS-S4 The page accepts A from its first update, and nothing runs between the A press and the switch, which comes 4 updates after the press (trap measurement of the execution 0x303480). needs: TRANS-8.
 - TRANS-S5 The follow camera is reset behind the landing heading after a switch; the original's pose was not compared. needs: TRANS-12.
 
@@ -34,6 +34,8 @@ IN_PROGRESS, updated 2026-10-14T12:05:00+02:00. `chase-game` switches between th
 - [ ] TRANS-10 — How 0x26344c qualifies the script argument with the world level name, and what the second destination parameter (hash 0xccaaccdd) is for. blocks: TRANS-S2.
 - [ ] TRANS-11 — What manager slot +0x28 (0x3038a0, taken when the destination is already loaded) does after storing the request and who runs 0x303480 for it. blocks: TRANS-6.
 - [ ] TRANS-12 — The drift of the player after landing in the lobby (x -1.1152 to -1.1395 and z 15.7023 to 15.7487 within 12 updates after the fall, player state 4) and the camera pose after a switch. blocks: TRANS-S5.
+- [ ] TRANS-13 — (User report 2026-10-14) Leaving the police station, the original shows a "checking save data" popup that the port does not show; whether it is the autosave of the level switch, when it appears and what is written is not recovered. blocks: TRANS-S3. evidence: [streaming-transitions.md §2026-10-14T23:41](../../re/streaming-transitions.md#ts-20261014-234123).
+- [ ] TRANS-14 — (User report 2026-10-14) The original's police station exit has a spinning 3D badge loading screen (FE-3) and an additional A confirmation that the port's single loading page lacks; the screen order and the A waits are not recovered (oracle states `station-at-exit`, `station-exit-loadingpage`). needs: FE-3, TRANS-13. blocks: TRANS-S3. evidence: [streaming-transitions.md §2026-10-14T23:41](../../re/streaming-transitions.md#ts-20261014-234123).
 
 ## 6. Findings summary
 
