@@ -36,7 +36,12 @@ Read this index, then open only the file you need.
 | [hud.md](hud.md) | In-game HUD: layouts, portrait, hearts (SetHearts, loop rule, health default), stud bar (state machine, formatting, icon bounce, no roll-up for pickups), flying studs (law, unprojection, sinks), bottom-screen map placement |
 | [streaming.md](streaming.md) | World levels and the master level, scene array, room objects and states, room links (`.blvl` +0x34), event bindings (+0x1c), the `SceneChange` chain, `StreamRoomIn`; `pregen/` is not streaming |
 | [streaming-rooms.md](streaming-rooms.md) | The per-update room request rule: current room link list, view-ranked preloads, unload by absent request, room request word layout |
-| [oracle.md](oracle.md) | Azahar runtime oracle: setup, fidelity rules, save states, fast workflow, timings |
+| [oracle.md](oracle.md) | Azahar runtime oracle: entry point, setup, fidelity rules, fast workflow, pointers to the subtopic files |
+| [oracle-setup.md](oracle-setup.md) | Oracle launch: Xvfb, render-window crash and launch retry, visible desktop mode |
+| [oracle-rpc.md](oracle-rpc.md) | Oracle RPC channel: UDP memory access, screenshots, pad input without breakpoints, timings |
+| [oracle-states.md](oracle-states.md) | Oracle save states and checkpoints: game progress of each, how each was made, New 3DS flag, poked states |
+| [oracle-routes.md](oracle-routes.md) | Oracle route scripts to gameplay and scenario pitfalls (`teleport`, input that survives a load) |
+| [oracle-measuring.md](oracle-measuring.md) | Oracle measuring methods: watchpoints, execution traps, fixed dt, memory traces, `poke` |
 | [camera.md](camera.md) | Gameplay camera: pointers to the three files below |
 | [camera-follow.md](camera-follow.md) | Yaw word 0x376894 writer, manager and modes, follow camera law (OnFoot preset), projection |
 | [camera-collision-sweep.md](camera-collision-sweep.md) | Obstruction by level geometry and placed objects (slab sweep, pull-in, side and vertical push, box slicing) |
