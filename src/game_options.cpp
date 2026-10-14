@@ -3,6 +3,7 @@
 #include "runtime/pad.hpp"
 #include "strict_parse.hpp"
 #include <algorithm>
+#include <filesystem>
 #include <functional>
 #include <limits>
 #include <stdexcept>
@@ -20,7 +21,7 @@ constexpr double kAnyRealLow = std::numeric_limits<double>::lowest(), kAnyRealHi
 
 const char* const kUsage = "usage: chase-game [--fib F] [--names CSV] [--config CFG] [--gameplay] "
                            "[--level levels/levels/<name>/<name>_main.blvl] [--screenshot OUT.bmp] [--frames N] "
-                           "[--script \"X Y COUNT [BUTTONS];...\"] [--save savegame.dat] [--slot 0|1] [--start \"X Y Z\"] [--facing DEGREES] [--no-camera-collision] [--debug-overlay] [--sound-volume 0-10] [--music-volume 0-10] "
+                           "[--script \"X Y COUNT [BUTTONS];...\"] [--save savegame.dat] [--save-out FILE] [--slot 0|1] [--start \"X Y Z\"] [--facing DEGREES] [--no-camera-collision] [--debug-overlay] [--sound-volume 0-10] [--music-volume 0-10] "
                            "[--front-script \"run 5; press A; until slot; ...\"] [--language 1-9] [--returning] [--window WIDTHxHEIGHT]";
 
 std::uint32_t buttonOf(char letter) {
@@ -83,6 +84,7 @@ bool applyOption(Options& o, const std::string& arg, const std::function<std::st
     }
     else if (arg == "--call-script") o.callScripts.push_back(value());
     else if (arg == "--save") { o.saveFile = value(); o.gameplay = true; }
+    else if (arg == "--save-out") o.saveOut = value();
     else if (arg == "--slot") o.saveSlot = unsigned(strict::integer(value(), 0, 1));
     else if (arg == "--no-camera-collision") o.cameraCollision = false;
     else if (arg == "--debug-overlay") o.debugOverlay = true;
@@ -104,6 +106,17 @@ std::vector<ScriptStep> parseScript(const std::string& text) {
     return steps;
 }
 
+void checkSaveOut(const Options& o) {
+    if (o.saveOut.empty()) return;
+    if (o.saveFile.empty()) throw std::runtime_error("--save-out: needs --save, the slot it writes comes from that file");
+    namespace fs = std::filesystem;
+    std::error_code ignored;
+    const bool same = fs::absolute(o.saveOut).lexically_normal() == fs::absolute(o.saveFile).lexically_normal() ||
+                      fs::equivalent(o.saveOut, o.saveFile, ignored);
+    if (same)
+        throw std::runtime_error("--save-out: must not be the file given with --save: '" + o.saveOut + "'");
+}
+
 Options parse(int argc, char** argv) {
     Options o;
     for (int i = 1; i < argc; ++i) {
@@ -122,6 +135,7 @@ Options parse(int argc, char** argv) {
         }
         if (!recognised) throw std::runtime_error(arg + ": unknown option: '" + arg + "'\n" + kUsage);
     }
+    checkSaveOut(o);
     return o;
 }
 

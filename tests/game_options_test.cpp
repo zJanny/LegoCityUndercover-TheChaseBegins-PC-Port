@@ -86,6 +86,10 @@ void testValidValues() {
 
 void testRejections() {
     expectRejected({"--slot", "1x"}, "--slot: not a whole number: '1x'");
+    expectRejected({"--save-out", "out.dat"}, "--save-out: needs --save, the slot it writes comes from that file");
+    expectRejected({"--save", "a.dat", "--save-out", "./a.dat"}, "--save-out: must not be the file given with --save: './a.dat'");
+    expectRejected({"--save-out"}, "--save-out: missing value: ''");
+    if (parseArgs({"--save", "a.dat", "--save-out", "b.dat"}).saveOut != "b.dat") fail("--save-out value lost");
     expectRejected({"--slot", "2"}, "--slot: out of range, allowed 0 to 1: '2'");
     expectRejected({"--slot", " 1"}, "--slot: not a whole number: ' 1'");
     expectRejected({"--language", "0"}, "--language: out of range, allowed 1 to 9: '0'");

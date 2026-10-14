@@ -139,6 +139,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     if (!options.saveFile.empty()) {
         const chase::save::SlotStart saved = game_save::load(options.saveFile, options.saveSlot, archive, level, options.level);
         game_save::apply(saved, levelScripts);
+        saveWriter = game_save::requestWriter(options, archive);
         std::cout << "save: slot " << options.saveSlot << ", level " << saved.level << ", "
                   << (saved.stateSaved ? "saved state of the level (StoryProgress " + std::to_string(saved.storyProgress) + ", " + std::to_string(saved.variables.size()) + " variables)" : std::string("no saved state of the level"))
                   << ", unlocked levels 0x" << std::hex << saved.levelUnlocked << std::dec << ", game complete " << saved.gameComplete << '\n';

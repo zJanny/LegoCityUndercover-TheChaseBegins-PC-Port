@@ -18,6 +18,7 @@
 #include "runtime/debug_metrics.hpp"
 #include "runtime/level_start.hpp"
 #include "runtime/pad.hpp"
+#include "save/save_writer.hpp"
 #include "runtime/room_streamer.hpp"
 #include "runtime/scene_change.hpp"
 #include "runtime/scene_start.hpp"
@@ -112,6 +113,7 @@ private:
     std::vector<std::size_t> waypointSceneIndex;
     std::vector<chase::assets::Placement> waypointObjects;
     chase::runtime::ScriptRunner levelScripts;
+    chase::save::SaveRequestWriter saveWriter;
     chase::runtime::SceneStart sceneStart;
     chase::runtime::WorldLevelEntry currentWorldLevel;
     chase::runtime::SceneChangeFlow sceneChangeFlow;

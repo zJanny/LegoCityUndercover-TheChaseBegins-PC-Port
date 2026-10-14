@@ -5,6 +5,7 @@
 #include "game_options.hpp"
 #include "save/completion_tables.hpp"
 #include "save/continue_start.hpp"
+#include "save/save_writer.hpp"
 #include "save/slot_progress.hpp"
 
 #include <algorithm>
@@ -48,6 +49,15 @@ inline void chooseContinueLevel(chase::assets::FuseArchive& archive, game_option
     const ContinueStart start = continueStart(loaded.image->slotView(options.saveSlot), chase::assets::parseTable(archive.read(*levelTable)));
     options.level = levelPathOfScene(start.scene);
     std::cout << "continue: slot " << options.saveSlot << " starts level " << start.level << " (" << start.scene << ")\n";
+}
+
+inline chase::save::SaveRequestWriter requestWriter(const game_options::Options& options, chase::assets::FuseArchive& archive) {
+    using namespace chase::save;
+    if (options.saveOut.empty()) return {};
+    LoadResult base = chase::save::load(options.saveOut);
+    if (!base.found || base.status != Status::Ok) base = chase::save::load(options.saveFile);
+    if (!base.image) throw std::runtime_error("not a valid save file: " + options.saveFile);
+    return SaveRequestWriter(options.saveOut, *base.image, options.saveSlot, completionTotals(archive));
 }
 
 inline void apply(const chase::save::SlotStart& start, chase::runtime::ScriptRunner& runner) {

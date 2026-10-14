@@ -251,3 +251,22 @@ Unknowns:
 - What the slot list shows for a used slot (time, percent, location rows, delete) and how the cursor moves; no screenshot was taken (the RPC belongs to another agent).
 - What 0x217f88 does with its argument (stores it at [0x5163e8-like object]+4 and calls a virtual); 0x514fc0 as the New Game argument.
 - Why the first-run byte read 1 with a save whose options last-slot byte is 0.
+
+<a id="ts-20261014-163403"></a>
+
+## 2026-10-14T16:34:03+02:00 — Save request chain, slot commit and the slot row fields (llvm-objdump on artifacts/game/game.arm.elf; no emulator)
+
+Resolves the writer part of [script-natives-progress.md §2026-10-14T14:41](script-natives-progress.md#ts-20261014-144155) (SAVE-10) and the data side of SAVE-2. Code: `src/save/save_writer.*`, tests `save-writer`, `save-writer-real-data`, `game-options-core`.
+
+- **0x21cf38(0)** (QuickSave, SetRaceWon, AwardRacingCar, GiveReward): sets byte 0x5163e8+0x34 = arg, calls 0x17caf8 (summary), for a level id (signed byte 0x5163e8+0x26) of at most 8 (unsigned compare) calls 0x229740 (formats "levels/%s/main.lvl.world" from the level row +0x30 and hands it to 0x2baddc; purpose unknown) and 0x192f60 (level state, below), then queues 0x2400a0(0x1a5248, 0x261a1c, 0). 0x261a1c starts a level transition only when byte +0x34 is set, so the request with 0 starts none.
+- **0x17caf8 (summary).** Copies the 8 bytes at 0x593418 to slot +0x5148, bits 2..4 of slot +0x520b from (byte 0x519760+0x40) << 2, the u32 at 0x593418+0x18 to slot +0x5190, and stores the completion per mille (0x1cd3dc) at slot +4. 0x23cbdc does only the last step.
+- **0x192f60 (level state).** Finds the level block (0x21d4b8), serialises the live objects with 0x1c26dc into block +0x1f (2048 bytes max), stores the length at +0x1a, sets +0x1e = 1 and StoryProgress at +0x1c (0x2451d0). It needs the live object system and is not ported.
+- **Request handler 0x1a5248, case 0.** Checks 0x2a0568: the signed byte at +0x3c of the object at 0x376844 (active slot) is >= 0 and below the u16 slot count; if not it does nothing. Otherwise it allocates a task (0x2ccf4c, template 0x2c8e2c) with options flag 1 and the slot index. Task state 0 (0x2c8e5c): copy the live slot (0x228008) into the buffer at the slot's file offset (0x1d0ba0), store the slot index at live options +2 (0x22801c), copy the live options over the buffer's options (0x1d0b80, when the flag is set), write the header and CRC (0x1fc604), turn the save indicator on (0x24004c) and start the I/O (0x2281c8(3), mode 3 of the save thread). State 1 polls 0x228058 and reads the result 0x228044; state 2 turns the indicator off. The front-end save page runs the same sequence at 0x2b63a0.
+- **Slot row builder 0x2cc298** (per slot, label "Slot N"): row fields are u32 [slot+0], u16 [slot+4], byte [slot+6]; +7 bit 2 set = used. Text_Percent from the per mille p (p = 1 shows as 0; 1000 gives "100%" by format 0x358a58, else "%u%s%u%%" with p/10, the separator "." for language 1 else "," (0x358a50, 0x358a54), p%10). Text_Time from [slot+0] as 1/30 s ticks: hours = (t+1)*0x136b06e7 >> 45, minutes by 0x91a2b3c5, seconds by 0x88888889, format "%u:%02u:%02u" from one hour, "%02u:%02u" below, "999:59:59" from 1000 hours. Text_Location is the loc text of the hash at TablesLevels row [level] column 11 (runtime row stride 84, +8), level = byte [slot+6], 0 shows row 1. The ticks counter is incremented by one per update by the loops at 0x2d8a30, 0x2e5338, 0x2f26e8 and 0x300444.
+- **Verified on the user's save copy** (`save-writer-real-data`): slot 0 row = 10462 ticks (05:48), per mille 2 (0.2%), level byte 1 (location hash 0x99a49618 = row 1 column 11); recomputing the per mille from the slot gives 2; committing slot 0's own bytes through `commitSlot` reproduces the file byte for byte (header, CRC, options +2). No screenshot of the original's row was taken, so the texts are the code's, not compared with a picture.
+
+Unknowns:
+- What 0x2baddc does with the world path, and whether the queue 0x2400a0 coalesces several pending requests (the port writes once per update after any new request).
+- The values at 0x593418 (+0, +0x18) and 0x519760+0x40 in the running game (studs, stud total, a display setting?).
+- The level state serialiser 0x1c26dc and the StoryProgress source 0x2451d0 (SAVE-14).
+- Whether the row builder reads other TablesLevels columns than 11 (location) for the row; none seen in 0x2cc298.
