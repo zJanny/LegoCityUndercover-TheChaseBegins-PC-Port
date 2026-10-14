@@ -106,6 +106,8 @@ Unknowns:
 
 ## 2026-10-14T23:41:23+02:00 — User report: leaving the police station in the original shows more than the port
 
+Corrected by [streaming-transitions.md §2026-10-14T23:41:49](#ts-20261014-234149): the port does have the confirmation with A; no second A confirmation is missing.
+
 Source: the user played the original on their own Azahar and compared with `chase-game` (2026-10-14). Not measured in the oracle yet.
 
 - **Original, walking out of the lobby to the street:** a "checking save data" popup, a loading screen with the spinning 3D badge on the top screen, and an additional confirmation with A.
@@ -113,3 +115,9 @@ Source: the user played the original on their own Azahar and compared with `chas
 
 Unknowns:
 - The order of the popup, the badge screen and the A confirmations; whether the save check is the autosave of the level switch (the save indicator 0x1a3d0c / 0x24004c of the front end) and whether it also happens on the entry; the code that shows each. States for a measurement: `station-at-exit` (1.9 m in front of the exit bound) and `station-exit-loadingpage`.
+
+<a id="ts-20261014-234149"></a>
+
+## 2026-10-14T23:41:49+02:00 — Correction: the A confirmation of the police station exit is not missing
+
+[Corrects streaming-transitions.md §2026-10-14T23:41:23](#ts-20261014-234123): the user re-checked; the port's loading page with `Continue (A)` matches the original's one confirmation. What the original shows and the port does not: the "checking save data" popup and the spinning 3D badge on the loading screen.
