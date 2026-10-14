@@ -21,7 +21,7 @@ Item format: `- [ ] ID — gap. needs: ID. blocks: ID. evidence: link`. `needs:`
 | [movies-cutscenes](movies-cutscenes.md) | IN_PROGRESS | MOVIE-2 cutscenes not in game flow (blocks FE-4) |
 | [animation-characters](animation-characters.md) | IN_PROGRESS | ANIM-2 NPC animation playback (blocks LEVOBJ-2) |
 | [particles](particles.md) | IN_PROGRESS | PART-1 no particle rendering |
-| [saves-options](saves-options.md) | IN_PROGRESS | SAVE-6 object records of the saved state, SAVE-7 Continue level and position, SAVE-2 slot display (blocks FE-1) |
+| [saves-options](saves-options.md) | IN_PROGRESS | SAVE-9 Continue level and position, SAVE-8 object record meaning (needs a richer save), SAVE-2 slot display (blocks FE-1) |
 | [input](input.md) | DONE (lab, mapping) | INPUT-2 readers of input slots 16/17 |
 | [executable-platform](executable-platform.md) | IN_PROGRESS | EXEC-3 update rate 30/60 undecided; EXEC-4 game frame function |
 | [assets-formats](assets-formats.md) | IN_PROGRESS | ASSET-2 streaming |

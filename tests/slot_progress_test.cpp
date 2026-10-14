@@ -59,9 +59,15 @@ int main() {
         Bytes data;
         putRecord(data, 0x1234abcd, {7});
         putRecord(data, 0, payload);
+        Bytes tasks;
+        putFloat(tasks, 5.0f);
+        putRecord(data, 0x5555aaaa, tasks);
+        data.insert(data.end(), 4, 0xff);
+        data.insert(data.end(), 3, 0);
 
         SaveImage image;
         writeLevelState(image, 2, 3, data);
+        image.slot(0)[kSlotCurrentLevelOffset] = 2;
         image.slot(0)[kLevelUnlockBitsOffset] = 0x10 | 0x20;
         image.slot(0)[kLevelUnlockBitsOffset + 1] = 0x01;
 
@@ -77,6 +83,17 @@ int main() {
         require((*variables)[1].hash == chase::assets::nameHash("Flag") && (*variables)[1].value == 1.0f, "type 5 value");
         require((*variables)[2].hash == chase::assets::nameHash("Counter") && (*variables)[2].value == 4.0f, "type 7 value");
 
+        const std::optional<ObjectRecords> objects = objectRecords(*state);
+        require(objects && objects->records.size() == 2, "object records without the level-data record");
+        require(objects->records[0].hash == 0x1234abcd && objects->records[0].payload == Bytes{7}, "one-byte record");
+        require(objects->endBitSetBytes == 3 && objects->endBitSetZero, "end bit set padding");
+        const std::vector<SavedVariable> tasks5 = tasksCompleteVariables(*objects);
+        require(tasks5.size() == 1 && tasks5[0].hash == chase::assets::nameHash("TASKS_COMPLETE") && tasks5[0].value == 5.0f, "TASKS_COMPLETE record");
+        const LevelStateView noMarker{state->data, 8, 0};
+        require(!objectRecords(noMarker), "a state without end marker is rejected");
+        const LevelStateView overrun{state->data, 10, 0};
+        require(!objectRecords(overrun), "a record that overruns the data is rejected");
+
         Level shorter = level;
         shorter.defaults.pop_back();
         require(!levelVariables(shorter, *state), "record size must match the parameter table");
@@ -87,8 +104,9 @@ int main() {
         require(!levelUnlockBit(slot, 9, 0) && !levelUnlockBit(slot, 2, 2), "unlock bit range");
 
         const SlotStart start = slotStart(slot, level, 2, 8);
-        require(start.stateSaved && start.storyProgress == 3 && start.variables.size() == 3, "slot start state");
+        require(start.stateSaved && start.storyProgress == 3 && start.variables.size() == 4 && start.objectRecords.size() == 2, "slot start state");
         require(start.levelUnlocked == (1u << 2 | 1u << 4) && !start.gameComplete, "slot start unlocks");
+        require(start.currentLevel == 2u, "slot current level");
 
         image.slot(0)[*levelBlockOffset(8) + 0x81f] = 7;
         require(gameComplete(image.slotView(0), 8) == std::optional<bool>(false), "7 of 8 is not complete");

@@ -198,3 +198,28 @@ Unknowns:
 - Whether the override of StoryProgress by byte +0x41 (0x192e14) matters for the main scene (it is skipped for it) and what the second unlock bit (which = 1) is set by.
 - The mode word 0x376aac: its value is inferred from the saved data (parameter bit only), not read.
 - `Language_Spanish` is a saved parameter (type 5) of unknown meaning.
+
+<a id="ts-20261014-134146"></a>
+<a id="ts-20261014-134146"></a>
+
+## 2026-10-14T13:41:46+02:00 — Object records, end bit set, current level and the second unlock bit (llvm-objdump on artifacts/game/game.arm.elf; oracle `read` on `street-after-1-1`, OpenGL, no RPC; real save copy)
+
+Code: `objectRecords`, `slotCurrentLevel`, `tasksCompleteVariables` in `src/save/slot_progress.*`; tests `slot-progress`, `slot-progress-real-data`.
+
+- Class table 0x583124 (stride 0x28, index = object type byte +0x12, save callback +0x20, restore callback +0x24) is filled at run time; read at `street-after-1-1`: exactly four classes have callbacks. Callback is called only when the object's halfword +0x82 has bit 0.
+  - Type 0x15 (21, `props/prop_buildit`, string "BUILD IT "): save 0x15d380, restore 0x15d348. 1 byte: bit 0 = bit 4 of byte +0x37 of the object's data (+0x7c), bit 1 = inverted bit 0 of the halfword +0x10 of the node at data +0x1c. Restore: bit 0 calls 0x2428c0 (enable), bit 1 with a node calls 0x242cf0 (disable).
+  - Type 0x43 (67, `props/prop_prop`): save 0x156550 stores `*(u16*)(obj+0x10) & 1`; restore 0x15654c: bit 0 calls 0x2428c0 (enable). Never disables.
+  - Type 0x62 (98, `props/prop_superbuildit`): save 0x192608 stores `!(data+0x92 & 8) & (data+0x92 >> 1)`; restore 0x192548: only when bit 0 is set it sets bit 1 of data+0x92 and runs the enable and disable calls (0x2428c0, 0x242cf0, 0x244f40) and, by data+0x8c, 0x2258bc with 6 or 8.
+  - Type 0xfc (252): 4 bytes. Save 0x192804 stores the scene variable "TASKS_COMPLETE" (lookup 0x241624); restore 0x1927a8 sets it back (0x236968) and, if 0x239678(obj) is true, calls 0x244fc8(obj, 0x58, 0). The 4-byte records of a state are all this class.
+- Hash of a record = object field +8. For instances placed in a level file it is `nameHash(instance)` (checked: `FP_SuperBuildit_Statue_BP` = 0x91737ed7, type 98). The other records (47 of 48 in level 2, 1 in level 1) belong to objects that no .blvl of the archive lists; at `street-after-1-1` 66 live objects of the level scene (0x085abd20, +0x1c = 3338 objects, array at +0x24; object headers read with `read` for 3333 pointers) carry these hashes: all type 0xfc for the 4-byte records and type 0x62 for the 1-byte ones. Their names and creator are unknown.
+- Records are written in the order of the scene object array (+0x24). The first object (index 0) is the level object: its class callback result is the offset before the level-data record, the bounds bit set (mode bit 1) and the parameters (mode bit 2) follow.
+- **Mode word 0x376aac is always 2** (read 2 at `street-after-1-1`; its only writer is the setter 0x29444c, called once at 0x2f5d1c with 2). So the bounds bit set (bit 1) and the end bit set (bit 4) are never filled. The serializer still adds `(scene+0x12f4 + 7) >> 3` bytes after the end marker (0x1c2984 is reached by both paths), so the 34 bytes (level 2) and 7 bytes (level 1) are zero padding (the buffer is cleared by 0x24d234 first); the restore skips them with the same count only when mode bit 4 is set and does not read them. Nothing to apply.
+- User's save, slot 0: level 2 holds 48 object records (6 of 1 byte, 42 of 4 bytes), level 1 holds 1 (1 byte); every payload is 0. Applying them changes nothing: a 4-byte record sets TASKS_COMPLETE to 0.0, a 1-byte record with bit 0 clear is a no-op for types 0x43 and 0x62 and for type 0x15 sets nothing visible.
+- **Slot byte +6 = current level id** (signed byte 0x5163e8+0x26, the level of the running game). Writers: 0x1947e0 (called at 0x20a520 when a level is entered, together with `bit 2·level` of the unlock set for levels 2..8), 0x2f68ec, 0x2e14c0, default 0x1a2608. Readers 0x2b1100 and 0x2e7d50 copy it into a front-end structure, then call 0x217f88(0). The user's save holds 1 (police station), matching its level-1 block with saved state. Slot +4 (u16) is the completion per-mille written by 0x17cb3c / 0x23cbe8 (0x1cd3dc); +7 bit 2 = in use. No position or vehicle field exists in the slot.
+- **Second unlock bit (`which` 1)**: the only code that sets a bit of the set at 0x520890 is the setter 0x1b2098(level, which) (bit `2·level + which`) and 0x1947a0 (`which` 0). Both callers of 0x1b2098 (0x1b2780, a script native taking one level argument, and 0x2f68e0) pass which = 0. No other literal reference to 0x520890 exists (0x1947f0, 0x1b20b8, 0x21d4b0 only), so no code writes `which` 1 and the 0x192e14 override of StoryProgress by level-row byte +0x41 never fires in a game played from a new save. (Slot data copied from a file could in theory carry the bit: not seen in the real save.)
+
+Unknowns:
+- Names, creator and meaning of the type 0xfc and 0x62 objects behind the unmatched hashes (`TASKS_COMPLETE` with 42 objects in level 2).
+- Behaviour of type 0x15 and 0x43 records with bit 0 set (never seen set: their objects had flag +0x82 bit 0 clear in all 3333 headers read).
+- Whether the front end starts the level in slot +6 on Continue and at which position (the copy at 0x2b1100 and 0x2e7d50 was read, its consumer not followed).
+- What `scene+0x12f4` counts (0 at `street-after-1-1`, 265..272 when the user's save was written).

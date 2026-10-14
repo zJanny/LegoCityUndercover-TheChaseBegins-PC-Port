@@ -98,6 +98,43 @@ std::optional<std::vector<SavedVariable>> levelVariables(const assets::Level& le
     return std::nullopt;
 }
 
+std::optional<ObjectRecords> objectRecords(const LevelStateView& state) {
+    ObjectRecords out;
+    std::size_t at = 0;
+    while (true) {
+        if (at + 4 > state.size) return std::nullopt;
+        const std::uint32_t hash = readU32(state.data + at);
+        if (hash == kEndMarker) {
+            at += 4;
+            break;
+        }
+        if (at + kObjectRecordHeader > state.size) return std::nullopt;
+        const std::size_t size = state.data[at + 4];
+        if (at + kObjectRecordHeader + size > state.size) return std::nullopt;
+        if (hash != 0) {
+            const std::uint8_t* payload = state.data + at + kObjectRecordHeader;
+            out.records.push_back({hash, std::vector<std::uint8_t>(payload, payload + size)});
+        }
+        at += kObjectRecordHeader + size;
+    }
+    out.endBitSetBytes = state.size - at;
+    out.endBitSetZero = std::all_of(state.data + at, state.data + state.size, [](std::uint8_t b) { return b == 0; });
+    return out;
+}
+
+std::optional<unsigned> slotCurrentLevel(SlotView slot) {
+    if (!slot.data || slot.size <= kSlotCurrentLevelOffset) return std::nullopt;
+    return slot.data[kSlotCurrentLevelOffset];
+}
+
+std::vector<SavedVariable> tasksCompleteVariables(const ObjectRecords& records) {
+    std::vector<SavedVariable> variables;
+    const std::uint32_t hash = assets::nameHash("TASKS_COMPLETE");
+    for (const ObjectRecord& record : records.records)
+        if (record.payload.size() == kTasksCompleteRecordSize) variables.push_back({hash, floatOf(readU32(record.payload.data()))});
+    return variables;
+}
+
 SlotStart slotStart(SlotView slot, const assets::Level& level, unsigned levelId, std::uint8_t finalLevelTotal) {
     SlotStart start;
     start.level = levelId;
@@ -115,7 +152,13 @@ SlotStart slotStart(SlotView slot, const assets::Level& level, unsigned levelId,
         start.stateSaved = true;
         start.storyProgress = state->storyProgress;
         start.variables = *variables;
+        const std::optional<ObjectRecords> objects = objectRecords(*state);
+        if (!objects) throw std::runtime_error("the object records of the saved state are malformed");
+        const std::vector<SavedVariable> tasks = tasksCompleteVariables(*objects);
+        start.variables.insert(start.variables.end(), tasks.begin(), tasks.end());
+        start.objectRecords = objects->records;
     }
+    start.currentLevel = slotCurrentLevel(slot);
     return start;
 }
 }

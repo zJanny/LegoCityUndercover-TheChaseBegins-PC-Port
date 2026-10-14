@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
         const save::SlotStart start = save::slotStart(slot, level, 2, totals.levelTotals[save::kGameCompleteLevel - save::kFirstCounterLevel]);
         require(start.stateSaved && start.storyProgress == 2, "saved StoryProgress");
         require(start.levelUnlocked == 1u << 2 && !start.gameComplete, "unlock bits");
-        require(start.variables.size() == 43, "saved variable count (46 saved parameters minus a string and two vectors)");
+        require(start.variables.size() == 43 + 42, "saved variable count (43 level-data values plus 42 TASKS_COMPLETE records)");
         const auto saved = [&](const char* name) {
             for (const save::SavedVariable& variable : start.variables)
                 if (variable.hash == assets::nameHash(name)) return variable.value;
@@ -70,6 +70,27 @@ int main(int argc, char** argv) {
         require(saved("StoryProgress") == 2.0f && saved("1-1_IntroPlayed") == 1.0f, "mission 1-1 variables");
         require(saved("Entered_Police_Station") == 1.0f && saved("Enter_Police_Car") == 1.0f, "police variables");
         require(saved("DIALOG_RETURNCODE") == 2.0f && saved("Music_NumberGen") == 1.0f, "dialog and music variables");
+
+        // Provenance: the records of the level 2 state data were listed with a scratch parser of the layout in
+        // docs/re/save-format.md; 6 one-byte and 42 four-byte records, all payloads zero. Their hashes were matched to the
+        // live scene objects at street-after-1-1 (oracle `read` of the 3333 object headers of the scene at 0x085abd20):
+        // the four-byte ones are object type 0xfc, the one-byte ones type 0x62. The padding after the end marker is
+        // 34 zero bytes (272 scene entries; mode word 0x376aac is 2, so the bit set is never filled).
+        const std::optional<save::LevelStateView> state2 = save::levelState(slot, 2);
+        require(state2.has_value(), "level 2 state");
+        const std::optional<save::ObjectRecords> objects = save::objectRecords(*state2);
+        require(objects && objects->records.size() == 48, "object record count");
+        std::size_t oneByte = 0, fourByte = 0, nonZero = 0;
+        for (const save::ObjectRecord& record : objects->records) {
+            oneByte += record.payload.size() == 1;
+            fourByte += record.payload.size() == 4;
+            for (const std::uint8_t b : record.payload) nonZero += b != 0;
+        }
+        require(oneByte == 6 && fourByte == 42 && nonZero == 0, "object record sizes and payloads");
+        require(objects->endBitSetBytes == 34 && objects->endBitSetZero, "end bit set padding");
+        // Provenance: slot byte +6 of the pinned save (hexdump of file offset 0x234 + 6): 1, the police station.
+        require(start.currentLevel == 1u, "slot current level");
+        require(saved("TASKS_COMPLETE") == 0.0f, "TASKS_COMPLETE");
 
         const assets::ClassLookup classOf = assets::archiveClassLookup(archive);
         assets::PlacedObjectState newGameState = runtime::levelInitialState(level, classOf);

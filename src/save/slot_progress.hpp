@@ -14,7 +14,9 @@ constexpr std::size_t kLevelStoryProgressOffset = 0x1c;
 constexpr std::size_t kLevelStateSavedOffset = 0x1e;
 constexpr std::size_t kLevelStateDataOffset = 0x1f;
 constexpr std::size_t kLevelStateCapacity = 0x800;
+constexpr std::size_t kSlotCurrentLevelOffset = 6;
 constexpr std::size_t kLevelUnlockBitsOffset = 0x51e0;
+constexpr std::size_t kObjectRecordHeader = 8;
 constexpr unsigned kUnlockLevels = 9;
 constexpr unsigned kGameCompleteLevel = 8;
 constexpr std::size_t kLevelNameColumn = 21;  // TablesLevels sheet 0, the string at row +0x30
@@ -44,6 +46,25 @@ struct SavedVariable {
 // state holds no such record or its size does not match the parameter table.
 std::optional<std::vector<SavedVariable>> levelVariables(const assets::Level& level, const LevelStateView& state);
 
+struct ObjectRecord {
+    std::uint32_t hash = 0;
+    std::vector<std::uint8_t> payload;
+};
+struct ObjectRecords {
+    std::vector<ObjectRecord> records;
+    std::size_t endBitSetBytes = 0;
+    bool endBitSetZero = true;
+};
+// The object records of the saved state (restore 0x1c2400): every record but the level-data record (hash 0) up to the
+// end marker, then the zero padding of the end bit set. Empty when the data has no end marker or a record overruns it.
+std::optional<ObjectRecords> objectRecords(const LevelStateView& state);
+// Slot byte +6: the current level id written when a level is entered (0x1947e0, 0x2f68ec) and read by the front end (0x2b1100).
+std::optional<unsigned> slotCurrentLevel(SlotView slot);
+// Restore callback of the class with a 4-byte record (object type 0xfc, 0x192804 save, 0x1927a8 restore): the value of
+// the scene variable "TASKS_COMPLETE". The classes with 1-byte records (types 0x15, 0x43, 0x62) are not applied.
+constexpr std::size_t kTasksCompleteRecordSize = 4;
+std::vector<SavedVariable> tasksCompleteVariables(const ObjectRecords& records);
+
 struct SlotStart {
     unsigned level = 0;
     bool stateSaved = false;
@@ -51,6 +72,8 @@ struct SlotStart {
     std::uint32_t levelUnlocked = 0;  // bit n: level n unlocked
     bool gameComplete = false;
     std::vector<SavedVariable> variables;
+    std::vector<ObjectRecord> objectRecords;
+    std::optional<unsigned> currentLevel;
 };
 // Throws std::runtime_error when the slot is too short or a saved state does not match `level`.
 SlotStart slotStart(SlotView slot, const assets::Level& level, unsigned levelId, std::uint8_t finalLevelTotal);
