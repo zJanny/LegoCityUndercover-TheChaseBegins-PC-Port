@@ -20,7 +20,7 @@ std::string lower(std::string text) {
 enum class Word {
     Unhandled, If, Else, ElseIf, EndIf, Assign, AssignArithmetic, CallScript, SpawnScript, Wait,
     EnableObject, EnableCollision, TriggerObject, EnableTrigger, EnableBound, GetGameComplete, IsLevelUnlocked, IsRedBrickExtraActive,
-    WarningDialogBox, FadeScreen, PositionObject
+    WarningDialogBox, FadeScreen, PositionObject, SceneChange
 };
 
 struct ScriptFunction {
@@ -50,6 +50,7 @@ constexpr ScriptFunction kScriptFunctions[] = {
     {"warningdialogbox", Word::WarningDialogBox, false},
     {"fadescreen", Word::FadeScreen, true},
     {"positionobject", Word::PositionObject, false},
+    {"scenechange", Word::SceneChange, false},
 };
 
 Word wordOf(const std::string& function) {
@@ -326,6 +327,9 @@ ScriptRunner::Result ScriptRunner::native(ScriptThread& thread, const ScriptCall
     case Word::PositionObject:
         if (args.size() >= 2) placements_.push_back({lower(args[0]), lower(args[1])});
         break;
+    case Word::SceneChange:
+        if (!args.empty()) sceneChanges_.push_back(args[0]);
+        break;
     case Word::WarningDialogBox:
         if (!(thread.flags & kScriptBlocked)) {
             dialogOpen_ = true;
@@ -362,6 +366,17 @@ void ScriptRunner::answerDialog(int result) {
     if (!dialogOpen_ || dialogAnswered_) return;
     dialogResult_ = result;
     dialogAnswered_ = true;
+}
+
+std::vector<std::string> ScriptRunner::takeSceneChanges() {
+    std::vector<std::string> taken;
+    taken.swap(sceneChanges_);
+    return taken;
+}
+
+bool ScriptRunner::playerInNamedBound(const std::string& name, const float player[3]) const {
+    const int index = boundIndex(name);
+    return index >= 0 && playerInBound(std::size_t(index), player);
 }
 
 std::vector<ScriptPlacement> ScriptRunner::takePlacements() {

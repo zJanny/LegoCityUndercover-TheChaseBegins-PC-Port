@@ -247,3 +247,10 @@ Unknowns:
 Unknowns:
 - The Old 3DS save path was not run for `savestate` in an Old 3DS session (the unit test covers the JSON only), so the Old 3DS value of the written flag is checked by the test, not by an emulator run.
 - Whether a state saved in New 3DS mode loads into a New 3DS session after a crash-free start is shown for one state (`police-station`) only.
+
+<a id="ts-20261014-120404"></a>
+
+## 2026-10-14T12:04:04+02:00 — Agent states for the police station exit
+
+- `station-at-exit` (New 3DS, from `police-station` with the pad: 2 idle updates, stick (0,-150) for 7 updates, 6 idle; the player stands at (-1.970, 1.424, 18.224) in the lobby, 1.9 m in front of the exit bound `Lobby_to_CherryTree`, facing +z) and `station-exit-loadingpage` (same route with the stick held about 40 updates: the loading page waits for A). Both unmodified, with a `source` key; game progress as `police-station` (after mission 1-1). Findings: [streaming.md §2026-10-14T12:02](streaming.md#ts-20261014-120258).
+- With `--rpc` and OpenGL, `screenshot` works in stepped runs and returns the page that the game shows at that moment (400x480). `trap` still reports the unrequested UI stops on the A press of the loading page (0x2c34b4, 0x2a85a0, ...): they are the page's own widget code (see the streaming entry), not a tool artefact.

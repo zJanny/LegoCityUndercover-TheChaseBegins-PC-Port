@@ -251,6 +251,31 @@ void drawLoadingBottom(Canvas& bottom, Resources& resources, const std::string& 
     }
 }
 
+void drawSceneChangeBottom(Canvas& bottom, Resources& resources, const std::string& continueText) {
+    constexpr int kLineY = 33;
+    constexpr std::uint8_t kLine[5][3] = {{1, 85, 162}, {104, 191, 255}, {207, 235, 255}, {57, 170, 255}, {0, 57, 115}};
+    constexpr std::uint8_t kPanel[3] = {0, 3, 7};
+    constexpr float kBadgeCentreX = 40, kBadgeCentreY = 35, kBadgeSize = 64;
+    constexpr float kContinueRightX = 290, kContinueY = 223, kContinueIconX = 293, kContinueIconSize = 22;
+    bottom.clear(0, 0, 0);
+    for (int y = kLineY; y < kScreenHeight - 5; ++y)
+        for (int x = 0; x < kBottomWidth; ++x) {
+            const std::uint8_t* colour = y < kLineY + 5 ? kLine[y - kLineY] : kPanel;
+            std::uint8_t* pixel = bottom.pixel(x, y);
+            pixel[0] = colour[0];
+            pixel[1] = colour[1];
+            pixel[2] = colour[2];
+            pixel[3] = 255;
+        }
+    const assets::Image& badge = resources.image("sprites/ui_dialog/ui_dialog_badge.btga");
+    bottom.drawScaled(badge, {0, 0, badge.width, badge.height}, kBadgeCentreX - kBadgeSize / 2, kBadgeCentreY - kBadgeSize / 2, kBadgeSize, kBadgeSize);
+    const BitmapFont& font = resources.font("frontendfont");
+    const auto& extended = resources.extendedCharacters();
+    drawText(bottom, font, extended, continueText, kContinueRightX, kContinueY, Align::Right, {1, 1, 1, 1}, 0, true);
+    const assets::Image& icon = resources.image(kButtonA);
+    bottom.drawScaled(icon, {0, 0, icon.width, icon.height}, kContinueIconX, kContinueY - kContinueIconSize / 2, kContinueIconSize, kContinueIconSize);
+}
+
 void drawMissionCard(Canvas& bottom, Resources& resources, const std::string& title) {
     drawDialogBackground(bottom, resources);
     const assets::Image& hex = resources.image("sprites/blend/awardviewertop/images/bighexbg.bpng");

@@ -12,7 +12,7 @@ Item format: `- [ ] ID — gap. needs: ID. blocks: ID. evidence: link`. `needs:`
 | [level-objects](level-objects.md) | IN_PROGRESS | LEVOBJ-3 objects frozen (needs SCRIPT-1); LEVOBJ-2 NPC start animation |
 | [script-system](script-system.md) | IN_PROGRESS | SCRIPT-1 mission flow (needs SCRIPT-6 events and class scripts, SCRIPT-7 natives, SCRIPT-11 trigger types) |
 | [world-streaming](world-streaming.md) | IN_PROGRESS | WSTREAM-1 room load rule (blocks WSTREAM-3); WSTREAM-3 rooms load and unload |
-| [level-transitions](level-transitions.md) | IN_PROGRESS | TRANS-7 who requests the mode switch (reproduced with a poked bound); TRANS-3 master level (needs SCRIPT-1) |
+| [level-transitions](level-transitions.md) | IN_PROGRESS | station exit and entry switch at run time; TRANS-3 master level (needs SCRIPT-1), TRANS-8 loading page code and look, TRANS-6 lifts |
 | [doors](doors.md) | IN_PROGRESS | DOOR-1 script-requested doors stay closed (needs SCRIPT-7); DOOR-3 open-door box |
 | [studs](studs.md) | IN_PROGRESS | STUD-1 magnet and multiplier; STUD-4 groups (needs SCRIPT-1) |
 | [front-end](front-end.md) | IN_PROGRESS | FE-1 existing slots and Continue (needs SAVE-2); FE-3 loading screen 3D badge |

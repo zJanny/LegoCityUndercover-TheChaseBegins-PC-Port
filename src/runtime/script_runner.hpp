@@ -133,6 +133,11 @@ public:
     void answerDialog(int result);
     // Positions requested since the last call, in order (the host moves the nodes).
     std::vector<ScriptPlacement> takePlacements();
+    // SceneChange 0x1b262c: the bound arguments of the calls since the last call, in order (the host resolves them
+    // against the master level, see scene_change.hpp).
+    std::vector<std::string> takeSceneChanges();
+    // The scenechange update 0x1c47e8 tests the player against the enabled bound of the object (0x22f650).
+    bool playerInNamedBound(const std::string& name, const float player[3]) const;
     // Brightness of the screen set by FadeScreen: 1 normal, 0 black.
     float fadeLevel() const { return fadeLevel_; }
 
@@ -175,6 +180,7 @@ private:
     bool dialogAnswered_ = false;
     int dialogResult_ = 0;
     std::vector<ScriptPlacement> placements_;
+    std::vector<std::string> sceneChanges_;
     float fadeLevel_ = 1.0f, fadeStart_ = 1.0f, fadeTarget_ = 1.0f, fadeElapsed_ = 0;
 };
 

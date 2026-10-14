@@ -29,6 +29,7 @@
 #include "runtime/player_vertical.hpp"
 #include "runtime/music.hpp"
 #include "runtime/player_motion.hpp"
+#include "runtime/scene_change.hpp"
 #include "runtime/scheduler.hpp"
 #include "runtime/sound_events.hpp"
 #include "runtime/studs.hpp"
@@ -64,6 +65,7 @@ constexpr std::size_t kSlotLeftShoulder = 12, kSlotRightShoulder = 13, kSlotStic
 constexpr std::size_t kSlotConfirmButton = 4, kSlotCancelButton = 5;
 constexpr const char* kGameTextFile = "localisation/gametext_uk.loc";
 constexpr const char* kSystemTextFile = "localisation/systemtext_uk.loc";
+constexpr std::uint32_t kContinueTextKey = 0xe3f70996;  // systemtext "Continue": inferred from the loading page text, key not read in the code (TRANS-S3)
 constexpr std::size_t kSlotButtonX = 8, kSlotButtonY = 9, kSlotJumpButton = 7;
 
 // Stand-ins, not the original: the water flag (ctrl+0x317 bit 3) and the ground object of type 11 are not modelled, so
@@ -508,6 +510,13 @@ int run(const Options& given) {
         options.start = kNewGameStart;
     }
     GLuint program = createProgram();
+    const FuseEntry* masterEntry = archive.find(runtime::kMasterLevelFile);
+    if (!masterEntry) throw std::runtime_error(std::string("not in archive: ") + runtime::kMasterLevelFile);
+    const Level master = parseLevel(archive.read(*masterEntry));
+    const std::vector<runtime::SceneChangeObject> sceneChanges = runtime::sceneChangeObjects(master);
+    unsigned scriptOffset = 0;
+    bool afterSwitch = false;
+    for (;;) {
     Scene scene(archive, {"sky"});
     for (const auto& model : levelModels(archive, options.level, ""))
         if (!scene.addModel(model)) throw std::runtime_error("not in archive: " + model);
@@ -552,6 +561,14 @@ int run(const Options& given) {
                   << (saved.stateSaved ? "saved state of the level (StoryProgress " + std::to_string(saved.storyProgress) + ", " + std::to_string(saved.variables.size()) + " variables)" : std::string("no saved state of the level"))
                   << ", unlocked levels 0x" << std::hex << saved.levelUnlocked << std::dec << ", game complete " << saved.gameComplete << '\n';
     }
+    const runtime::WorldLevelEntry currentWorldLevel = runtime::worldLevelOfFile(master, options.level);
+    runtime::SceneChangeFlow sceneChangeFlow;
+    unsigned updatesForLog = 0;
+    std::optional<runtime::SceneChangeDestination> switchTo;
+    const auto requestSceneChange = [&](const runtime::SceneChangeObject* object) {
+        if (object && object->destination && sceneChangeFlow.request(*object->destination))
+            std::cout << "scene change requested by " << object->instance << " at update " << updatesForLog << '\n';
+    };
     std::size_t reportedUnhandled = 0, reportedEvents = 0;
     const auto reportUnhandled = [&] {
         const std::vector<std::string>& names = levelScripts.unhandledFunctions();
@@ -581,7 +598,7 @@ int run(const Options& given) {
             ++startupUpdates;
         }
     for (const std::string& name : options.callScripts)
-        if (!levelScripts.start(name)) throw std::runtime_error("no level script " + name);
+        if (!levelScripts.start(name) && !afterSwitch) throw std::runtime_error("no level script " + name);
     for (const runtime::ScriptPlacement& request : levelScripts.takePlacements()) applyPlacement(request);
     if (player && options.start) {
         player->motion.x = player->startX = (*options.start)[0];
@@ -667,6 +684,14 @@ int run(const Options& given) {
     std::vector<float> scriptedHeights;
     auto simulate = [&](float dt, const runtime::PadState& padInput) {
         pad.poll(padInput);
+        updatesForLog = updates;
+        if (sceneChangeFlow.pending()) {
+            sceneChangeFlow.update(pad.slot(kSlotConfirmButton).press > 0);
+            if (const auto due = sceneChangeFlow.takeSwitch()) switchTo = due;
+            ++updates;
+            ++updatesThisSecond;
+            return;
+        }
         if (levelScripts.dialogOpen()) {
             if (!dialogReported) std::cout << "script dialog opened at update " << updates << '\n';
             dialogReported = true;
@@ -728,6 +753,15 @@ int run(const Options& given) {
             levelScripts.checkTriggers(playerPosition);
         }
         reportUnhandled();
+        for (const std::string& bound : levelScripts.takeSceneChanges())
+            requestSceneChange(runtime::findSceneChange(sceneChanges, currentWorldLevel.instance, bound));
+        if (player) {
+            const float playerPosition[3] = {player->motion.x, player->vertical.y, player->motion.z};
+            for (const runtime::SceneChangeObject& object : sceneChanges)
+                if (!object.boundName.empty() && object.boundWorldLevel == currentWorldLevel.instance &&
+                    levelScripts.playerInNamedBound(object.boundName, playerPosition))
+                    requestSceneChange(&object);
+        }
         for (const runtime::ScriptPlacement& request : levelScripts.takePlacements()) applyPlacement(request);
         for (const runtime::ScriptObjectMessage& sent : levelScripts.takeObjectMessages())
             for (DoorObject& door : doors)
@@ -798,8 +832,8 @@ int run(const Options& given) {
         if (script.empty()) {
             const runtime::PadState state = padState(input);
             scheduler.advance(now(), [&](float dt) { simulate(dt, state); });
-        } else if (updates < scriptLength) {
-            simulate(kScriptDt, scriptedPad(updates));
+        } else if (updates + scriptOffset < scriptLength) {
+            simulate(kScriptDt, scriptedPad(updates + scriptOffset));
         }
 
         SDL_GL_GetDrawableSize(window, &width, &height);
@@ -846,11 +880,15 @@ int run(const Options& given) {
             fe::drawWarningDialog(hudCanvas, hudResources, hudResources.textForKey(kGameTextFile, dialog.bodyKey),
                                   hudResources.textForKey(kSystemTextFile, dialog.confirmKey), hudResources.textForKey(kSystemTextFile, dialog.cancelKey));
         }
+        if (sceneChangeFlow.pageOpen()) {
+            fe::drawLoadingTop(hudCanvas, hudResources);
+            fe::drawSceneChangeBottom(mapCanvas, hudResources, hudResources.textForKey(kSystemTextFile, kContinueTextKey));
+        }
         fe::drawBlackVeil(hudCanvas, 1.0f - levelScripts.fadeLevel());
         fe::drawBlackVeil(mapCanvas, 1.0f - levelScripts.fadeLevel());
         overlay->draw(hudCanvas, mapCanvas, screens, width, height);
 
-        const bool scriptDone = !script.empty() && updates >= scriptLength;
+        const bool scriptDone = !script.empty() && updates + scriptOffset >= scriptLength;
         if (scriptDone) {
             const float moveX = player->motion.x - player->startX, moveZ = player->motion.z - player->startZ;
             std::cout << "scripted: " << updates << " updates, player moved " << std::hypot(moveX, moveZ)
@@ -876,7 +914,7 @@ int run(const Options& given) {
             std::cout << "saved " << options.screenshot << " after " << updates << " update(s)\n";
             running = false;
         }
-        if (scriptDone) running = false;
+        if (scriptDone || switchTo) running = false;
         SDL_GL_SwapWindow(window);
 
         Uint32 tick = SDL_GetTicks();
@@ -889,6 +927,18 @@ int run(const Options& given) {
     }
     studSprites.reset();
     overlay.reset();
+    if (!switchTo) break;
+    const FuseEntry* destinationEntry = archive.find(switchTo->worldLevel.levelFile);
+    if (!destinationEntry) throw std::runtime_error("not in archive: " + switchTo->worldLevel.levelFile);
+    const std::optional<Placement> destinationPoint = runtime::destinationPoint(parseLevel(archive.read(*destinationEntry)), *switchTo);
+    if (!destinationPoint) throw std::runtime_error("scene change destination point missing in " + switchTo->worldLevel.instance);
+    std::cout << "scene change to " << switchTo->worldLevel.instance << " after " << updates << " updates\n";
+    scriptOffset += updates;
+    afterSwitch = true;
+    options.level = switchTo->worldLevel.levelFile;
+    options.start = std::array<float, 3>{destinationPoint->position[0], destinationPoint->position[1], destinationPoint->position[2]};
+    options.facing = destinationPoint->orientation[1];
+    }
     SDL_GL_DeleteContext(context);
     SDL_DestroyWindow(window);
     SDL_Quit();

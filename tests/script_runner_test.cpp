@@ -321,6 +321,18 @@ void positionObjectIsRecorded() {
     require(placements.size() == 1 && placements[0].object == "player1" && placements[0].target == "marker_a", "request");
     require(runner.variable("After") == 1 && runner.takePlacements().empty(), "PositionObject does not block");
 }
+
+// Oracle trace street-at-entrance (docs/re/streaming.md 2026-10-14T11:13): SceneChange does not block the thread (it ended in the update that ran the call).
+void sceneChangeIsRecorded() {
+    Level level;
+    add(level, "p", {{"SceneChange", {"Police_ExtToInt"}}, {"=", {"After", "1"}}});
+    PlacedObjectState state;
+    ScriptRunner runner(level, state);
+    runner.start("p");
+    const auto requests = runner.takeSceneChanges();
+    require(requests.size() == 1 && requests[0] == "Police_ExtToInt", "request");
+    require(runner.variable("After") == 1 && runner.takeSceneChanges().empty(), "SceneChange does not block");
+}
 }
 
 int main() {
@@ -342,6 +354,7 @@ int main() {
         warningDialogCancelGivesOne();
         fadeScreenBlocksForHalfASecond();
         positionObjectIsRecorded();
+        sceneChangeIsRecorded();
     } catch (const std::exception& error) {
         std::cerr << "script-runner: FAIL: " << error.what() << '\n';
         return 1;
