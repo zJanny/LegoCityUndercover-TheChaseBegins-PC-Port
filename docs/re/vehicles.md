@@ -119,3 +119,16 @@ Unknowns:
 - The meaning of owner flag 0x40 (parked) and which code sets the vehicle's collision item; whether the traffic vehicles' flags 0x1301 (disabled) mean they are skipped by the player query (they are registered with mask 6 in the pool, owner bit 0 excludes them).
 - The wheel pose rule while driving (suspension) and the wheel orientation of the left and right side (the class files list no orientation: the port draws them unrotated).
 - Whether the oracle player is stopped by a parked vehicle (not measured, see above); the entity box +0x60 against the mesh item when both exist.
+
+<a id="ts-20261015-000907"></a>
+
+## 2026-10-15T00:09:07+02:00 — The police car enabled during play has no collision in the port
+
+Lead check after the VEH-2 merge (72d0f6b), port only, no oracle. Start at the `m11-2-patrol-car` player position, facing the car (`1-1_Police_Car` at 887.38, 17.80, 1117.32, 4.4 units ahead): `chase-game --level lvl_01 --no-start-cutscenes [--call-script 1-1_VanBreakdown] --start "886.681 16.590 1112.930" --facing 16 --script "0 0 700;0 150 45"`.
+
+- Without `--call-script` (car disabled): the player moves 11.8408 units.
+- With `--call-script 1-1_VanBreakdown` (the script enables the car about 5 s in, the walk starts at update 700): the player moves the same 11.8408 units, straight through the car.
+- So the collision of `chase-game` (built once after the startup run) does not follow an `EnableObject` during play; VEH-2 only covers vehicles enabled at the level start. In the original the car stands in the way at this point of mission 1-1 (user state `m11-2-patrol-car`, car enabled, state 4).
+
+Unknowns:
+- Whether objects disabled during play keep their collision in the port (not tested).

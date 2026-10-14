@@ -31,6 +31,7 @@ IN_PROGRESS, updated 2026-10-13T21:29:01+0200. Level collision and placed object
 - [ ] COLL-5 — Whether the ground probe stands on box tops as the replica does (no trace of a character on a crate). evidence: [collision.md §2026-10-13T17:34](../../re/collision.md#ts-20261013-173400).
 - [ ] COLL-6 — Unexplained: `door_back` rows 125/128/130 (static contact near (901.8, 1096)), 153 master-model items vs 147 + 7 static entries.
 - [ ] COLL-7 — Collision with parked cars and people, and objects that break or move, is not replicated (cars and people fall under COLL-2).
+- [ ] COLL-20 — Collision is built once after the startup run, so objects enabled during play get none: the police car that `1-1_VanBreakdown` enables in mission 1-1 can be walked through. `EnableObject` / `EnableCollision` during play must add and remove the object's entries as the original does (code not read; related: SCRIPT-160 for the startup part). blocks: VEH-S2. evidence: [vehicles.md §2026-10-15T00:09](../../re/vehicles.md#ts-20261015-000907).
 
 ## 6. Findings summary
 

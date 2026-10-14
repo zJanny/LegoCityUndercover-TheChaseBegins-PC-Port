@@ -17,7 +17,7 @@ IN_PROGRESS, updated 2026-10-14T23:59:31+02:00. Vehicles of a level are created 
 
 - VEH-S1 The player is never in a vehicle: `0x24255c` is taken as 0 ([script-system-triggers.md](script-system-triggers.md) SCRIPT-S29). needs: VEH-4. evidence: [vehicles.md](../../re/vehicles.md#ts-20261014-224438).
 
-- VEH-S2 Owner flags (0x1340 parked, 0x1300 traffic, bit 0 disabled) are not modelled: a vehicle collides while it is enabled (EnableObject); the meaning of 0x40 is unknown. needs: VEH-16. evidence: [vehicles.md §2026-10-14T23:59:31](../../re/vehicles.md#ts-20261014-235931).
+- VEH-S2 Owner flags (0x1340 parked, 0x1300 traffic, bit 0 disabled) are not modelled: a vehicle collides while it is enabled at the level start (one enabled later has none: COLL-20); the meaning of 0x40 is unknown. needs: VEH-16, COLL-20. evidence: [vehicles.md §2026-10-14T23:59:31](../../re/vehicles.md#ts-20261014-235931).
 - VEH-S3 (to introduce with VEH-5) The physics body is replaced by a simple kinematic stand-in (no suspension, tyres or gears). needs: VEH-6. evidence: [vehicles.md](../../re/vehicles.md#ts-20261014-224438).
 - VEH-S4 Health byte +0x30e omits the +1 of global bit 16 (`0x2369a8(0x10)`, word 0x374724, clear in the oracle states). evidence: [vehicles.md §2026-10-14T23:59:31](../../re/vehicles.md#ts-20261014-235931).
 - VEH-S5 The first update copies the requested state +4 to +2; the original transition (and the 10 to 4 change seen in the oracle) is not found. needs: VEH-13. evidence: [vehicles.md §2026-10-14T23:59:31](../../re/vehicles.md#ts-20261014-235931).
