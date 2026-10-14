@@ -44,9 +44,9 @@ constexpr ScriptFunction kScriptFunctions[] = {
     {"triggerobject", Word::TriggerObject, false},
     {"enabletrigger", Word::EnableTrigger, false},
     {"enablebound", Word::EnableBound, false},
-    {"getgamecomplete", Word::GetGameComplete, true},
-    {"islevelunlocked", Word::IsLevelUnlocked, true},
-    {"isredbrickextraactive", Word::IsRedBrickExtraActive, true},
+    {"getgamecomplete", Word::GetGameComplete, false},
+    {"islevelunlocked", Word::IsLevelUnlocked, false},
+    {"isredbrickextraactive", Word::IsRedBrickExtraActive, false},
     {"warningdialogbox", Word::WarningDialogBox, false},
     {"fadescreen", Word::FadeScreen, true},
     {"positionobject", Word::PositionObject, false},
@@ -309,11 +309,19 @@ ScriptRunner::Result ScriptRunner::native(ScriptThread& thread, const ScriptCall
             if (const int index = boundIndex(args[0]); index >= 0) boundEnabled_[std::size_t(index)] = read(args[1]) > 0.0f ? 1 : 0;
         break;
     case Word::GetGameComplete:
-        if (!args.empty()) variables_[assets::nameHash(args[0])] = 0.0f;
+        if (!args.empty()) variables_[assets::nameHash(args[0])] = progress_.gameComplete ? 1.0f : 0.0f;
         break;
     case Word::IsLevelUnlocked:
+        if (args.size() >= 2) {
+            const int level = int(read(args[0]));
+            variables_[assets::nameHash(args[1])] = level >= 0 && level < 9 && (progress_.levelUnlocked >> level & 1) ? 1.0f : 0.0f;
+        }
+        break;
     case Word::IsRedBrickExtraActive:
-        if (args.size() >= 2) variables_[assets::nameHash(args[1])] = 0.0f;
+        if (args.size() >= 2) {
+            const int index = int(read(args[0]));
+            variables_[assets::nameHash(args[1])] = index >= 0 && index < 32 && (progress_.redBrickExtrasActive >> index & 1) ? 1.0f : 0.0f;
+        }
         break;
     case Word::PositionObject:
         if (args.size() >= 2) placements_.push_back({lower(args[0]), lower(args[1])});

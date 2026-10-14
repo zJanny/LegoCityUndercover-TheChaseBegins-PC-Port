@@ -12,6 +12,7 @@
 #include "frontend/pages.hpp"
 #include "game_front.hpp"
 #include "game_hud.hpp"
+#include "game_save.hpp"
 #include "input.hpp"
 #include "render/character.hpp"
 #include "render/scene.hpp"
@@ -96,6 +97,8 @@ struct Options {
     unsigned frames = 2;
     std::string script;
     std::vector<std::string> callScripts;
+    std::string saveFile;
+    unsigned saveSlot = 0;
     bool cameraCollision = true;
     std::optional<std::array<float, 3>> start;
     std::optional<float> facing;
@@ -172,6 +175,8 @@ Options parse(int argc, char** argv) {
         else if (arg == "--frames") o.frames = unsigned(std::stoul(value()));
         else if (arg == "--script") { o.script = value(); o.gameplay = true; }
         else if (arg == "--call-script") o.callScripts.push_back(value());
+        else if (arg == "--save") { o.saveFile = value(); o.gameplay = true; }
+        else if (arg == "--slot") o.saveSlot = unsigned(std::stoul(value()));
         else if (arg == "--no-camera-collision") o.cameraCollision = false;
         else if (arg == "--sound-volume") o.soundVolume = std::min(10u, unsigned(std::stoul(value())));
         else if (arg == "--music-volume") o.musicVolume = std::min(10u, unsigned(std::stoul(value())));
@@ -185,7 +190,7 @@ Options parse(int argc, char** argv) {
         }
         else throw std::runtime_error("usage: chase-game [--fib F] [--names CSV] [--config CFG] [--gameplay] "
                                       "[--level levels/levels/<name>/<name>_main.blvl] [--screenshot OUT.bmp] [--frames N] "
-                                      "[--script \"X Y COUNT [BUTTONS];...\"] [--start \"X Y Z\"] [--facing DEGREES] [--no-camera-collision] [--sound-volume 0-10] [--music-volume 0-10] "
+                                      "[--script \"X Y COUNT [BUTTONS];...\"] [--save savegame.dat] [--slot 0|1] [--start \"X Y Z\"] [--facing DEGREES] [--no-camera-collision] [--sound-volume 0-10] [--music-volume 0-10] "
                                       "[--front-script \"run 5; press A; until slot; ...\"] [--language 1-9] [--returning] [--window WIDTHxHEIGHT]");
     }
     return o;
@@ -540,6 +545,13 @@ int run(const Options& given) {
     PlacedObjectState objectState = runtime::levelInitialState(level, classOf);
     runtime::ScriptRunner levelScripts(level, objectState);
     levelScripts.setAllRoomsLoaded();
+    if (!options.saveFile.empty()) {
+        const chase::save::SlotStart saved = game_save::load(options.saveFile, options.saveSlot, archive, level, options.level);
+        game_save::apply(saved, levelScripts);
+        std::cout << "save: slot " << options.saveSlot << ", level " << saved.level << ", "
+                  << (saved.stateSaved ? "saved state of the level (StoryProgress " + std::to_string(saved.storyProgress) + ", " + std::to_string(saved.variables.size()) + " variables)" : std::string("no saved state of the level"))
+                  << ", unlocked levels 0x" << std::hex << saved.levelUnlocked << std::dec << ", game complete " << saved.gameComplete << '\n';
+    }
     std::size_t reportedUnhandled = 0, reportedEvents = 0;
     const auto reportUnhandled = [&] {
         const std::vector<std::string>& names = levelScripts.unhandledFunctions();

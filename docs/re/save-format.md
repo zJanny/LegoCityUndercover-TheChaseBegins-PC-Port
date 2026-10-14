@@ -162,3 +162,39 @@ Command: `build/chase-tabledump tables/tablessupercounters.bxls` (source: `artif
 
 - 0x1cd5e8..0x1cd604: r0 = 1000 × collected (`mul r0, r5, r0`, 0x1cd5f0), r1 = total (r6), `bl 0x25c1b8`, clamp to 1000 (`movhi`), `uxth`. 0x25c1b8 is the compiler's unsigned shift-and-subtract divide (`rsbs r3, r1, r0, lsr #n` ladder). This settles the 09:25 caveat: completion = min(1000, (collected × 1000) / total) as u16, unsigned, truncating. A 32-bit overflow of collected × 1000 needs collected > 4 294 967, so it cannot happen.
 - Unknown: nothing new.
+
+<a id="ts-20261014-115300"></a>
+
+## 2026-10-14T11:53:00+02:00 — Level state blocks, unlock bits and the progress natives (llvm-objdump, REA-free static reading of artifacts/game/game.arm.elf; real save copy; oracle `read` on `street-after-1-1`, OpenGL renderer, no RPC)
+
+Replica: `src/save/slot_progress.{hpp,cpp}` (`chase_save_progress`), `ScriptProgress` in `ScriptRunner`, `chase-game --save FILE --slot N` (`src/game_save.hpp`). Tests: `slot-progress` (synthetic), `slot-progress-real-data` (copy of the user's save, skips without it).
+
+### Level block (0x820 bytes, 0x203464; completes the 09:13 entry)
+
+- +0x00 u16[13] category counters, **+0x1a u16 length of the state data, +0x1c u16 StoryProgress at save time, +0x1e u8 "state saved", +0x1f.. 2048 bytes of state data**, +0x81f collected (read by 0x1cd3dc and GetGameComplete). The block of the current scene is found by 0x21d4b8(scene), which matches the scene file name against the TablesLevels scene-name column (+0x30 of rows 1..8; row 1 = lvl_00_policestation, row 2 = lvl_01_cherrytreehills).
+- Writer: 0x2e80fc (scene unload) calls the serializer 0x1c26dc(scene, block+0x1f, 0x800), stores the length at +0x1a, sets +0x1e = 1 and stores the scene variable "StoryProgress" (string 0x358354, lookup 0x241624 / 0x2451d0) at +0x1c. The same pair is at 0x192f60 (called from 0x21cf58).
+- Reader: 0x2e8054 (scene start) calls 0x192e14(scene) after the scene setup (0x1d9594, 0x1bcf94, 0x197948, 0x29d6e8) and before it starts the scene's threads. 0x192e14: when +0x1e is set it calls the restore 0x1c2400(scene, block+0x1f, length). Then, only for a scene that is not the main scene (compare with *(0x589a18+4)) and whose level has the second unlock bit (below) set, it overwrites StoryProgress with byte +0x41 of the level row (level table `*0x375914`, stride 0x54).
+- State data (restore 0x1c2400, save 0x1c26dc): records {u32 name hash of an object, u8 size, 3 bytes, `size` bytes of payload}; the record of hash 0 is the level data; the object records (hash found by binary search in the scene's object array, `scene+0x28`) go to the class's restore callback (class table 0x583124 stride 0x28, callback at +0x24); a final marker 0xffffffff is followed by the bit set of `scene+0x12f4` entries (flag 4 of the mode word 0x376aac).
+- Level-data record (hash 0): the default parameters of the level file (section +0x10) with record flag bit 1 (`LevelParam::flags & 2`), in file order, written by value: types 0, 5, 7 four bytes (type 0 float, 5 and 7 integers, the port converts them to float as for the defaults), type 1 a NUL-terminated string, type 2 twelve bytes, types 3, 4, 6 nothing. The mode word has the parameter bit (2) only; the bit sets of bounds (bit 1) are not in the saved data. Checked on the real save: for lvl_01 the record is 219 bytes = 43 floats and integers (172) + the string "lvl_01_CherryTreeHills" (23) + two vectors (24), consumed exactly.
+
+### Unlock bits and the natives (all read the live slot, base 0x51b6b0)
+
+- 0x21d450(level, which): level >= 9 gives 0; otherwise bit `2*level + which` of the bytes at 0x520890 = slot +0x51e0 (byte `(2*level+which)>>3`). which 0 = unlocked, 1 = second state ("completed / visited"). With the cheat flag 0x375961 bit 2 it returns true. The slot defaults 0x1a25cc OR byte +0x51e0 with 0x10, so a new game has level 2 unlocked. `IsLevelUnlocked` (handler 0x2636e4, native table entry name at 0x162338) calls 0x21d450(level, 0) and writes 1.0 / 0.0 to its second argument.
+- `GetGameComplete` (0x2635d0): the collected byte +0x81f of level block 8 (0x203464(8)) >= byte +0x40 of TablesLevels row 8 (`*0x375914 + 0x2e0`, value 8): 1.0 else 0.0.
+- `IsRedBrickExtraActive` (handler 0x2a6d34, table entry at 0x162304) calls 0x2369a8(index) = bit `index` of the word `*0x374724`. That word is a runtime mask: its only writers are the setter 0x1e8cb4(bit, on) (callers 0x2fe2d4, 0x316ddc, 0x316e24: the menu toggles) and the reset 0x19c4c0 (called at 0x2d544c). No loader copies the slot into it (literal search of 0x374724: 0x19c4d8, 0x1e8cd8, 0x2369c0, 0x2f67b8 only), so after a load it is 0.
+
+### The user's save (copy at artifacts/oracle/agentJ-saves/savegame.dat; the originals under ~/.local/share/azahar-emu/sdmc/Nintendo 3DS/<id0>/<id1>/title/00040000/000ad600/data/00000001/savegame.dat were only read)
+
+- File 42644 bytes, valid (`chase-savecheck`: slot 0 2/711, slot 1 empty), stored CRC 0x937dacf8, options +2 = 0 (last slot 0), slot 0 byte +7 = 4 (in use), slot 1 all zero. The Azahar file layout is `data/00000001/savegame.dat` (plus a 16-byte `00000001.metadata`); the file is the same format as the game's.
+- Slot 0: unlock byte +0x51e0 = 0x10 (level 2 unlocked only, no second-state bits); level 1 (police station) block has state data 201 bytes, StoryProgress 0; level 2 block has state data 823 bytes, StoryProgress 2, collected 1. Decoded level-data record of lvl_01: StoryProgress 2, 1-1_IntroPlayed 1, Entered_Police_Station 1, Enter_Police_Car 1, DIALOG_RETURNCODE 2, Music_NumberGen 1, Language_Spanish 2 (type 5; meaning unknown), other saved values 260, 1, 160, 10 and two type-5 values of 1. This is the progress "after mission 1-1".
+
+### Oracle comparison (state `street-after-1-1`, `read 0x08e02284 19280` = the 482 bound records of the level data, GDB, `--renderer opengl`; the software renderer crashed three times at the state load in `LookupTexture`)
+
+- The `chase-game` start with this slot (saved variables + `startup`) gives the same bound enable bytes (+0xa) as the oracle for 479 of 482 bounds; the three that differ (`CameraBound_Police_Helipad`, `CameraBound_VehicleDrop_01/02`) are the known SCRIPT-10 differences. The earlier route (`--call-script 1-1_MissionSkip` after a new-game startup) differs in 5 bounds (1-1_Get_Back_To_Donuts is enabled, `Police_Station_Transition_Upper` is off). Files: artifacts/oracle/agentJ-out/compare/bounds-street-after-1-1-vs-save-route.txt and ...-oracle-read.txt. Object enable flags (entities) were not compared.
+
+Unknowns:
+- The object records of the state data (class restore callbacks: doors, pickups, build-its, ...), the end-marker bit set (`scene+0x12f4`, 34 bytes in lvl_01) and what the hub block (level 1) holds besides its level-data record.
+- Which level (and position) a Continue starts: the slot's own fields for it were not found (options +0x1ec records are floats; see 08:56). `chase-game` needs `--level`.
+- Whether the override of StoryProgress by byte +0x41 (0x192e14) matters for the main scene (it is skipped for it) and what the second unlock bit (which = 1) is set by.
+- The mode word 0x376aac: its value is inferred from the saved data (parameter bit only), not read.
+- `Language_Spanish` is a saved parameter (type 5) of unknown meaning.

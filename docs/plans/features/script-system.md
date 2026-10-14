@@ -19,7 +19,7 @@ IN_PROGRESS, updated 2026-10-14T10:56:00+02:00. `ScriptRunner` keeps script thre
 ## 4. Stand-ins
 
 - SCRIPT-S1 The startup threads are stepped before the first frame with dt 0.034 (the free-running dt read at gameplay-start; the loading phase's own updates are not recovered): `chase-game` until `startup` ends, `levelStartState` until no thread is left.
-- SCRIPT-S2 `IsLevelUnlocked`, `GetGameComplete` and `IsRedBrickExtraActive` return 0 (new game, no save). A loaded save would change the state; the port has no save-aware start yet. needs: SAVE-1.
+- SCRIPT-S2 Closed 2026-10-14: `IsLevelUnlocked`, `GetGameComplete` and `IsRedBrickExtraActive` read the loaded slot ([save-format.md §2026-10-14T11:53](../../re/save-format.md#ts-20261014-115300)); without `--save` they return the new-game values (level 2 unlocked, rest 0). The mask of `IsRedBrickExtraActive` is a runtime value that is 0 after a load.
 - SCRIPT-S3 The revealer rule is a data fit, not traced to its code; verified only in lvl_01.
 - SCRIPT-S4 A function without a handler does nothing and continues at once; `chase-game` prints its name the first time (`script function without handler`). The original may block in it (WaitForDCam, DCamCutSceneWait, AIMove, ...). See SCRIPT-7.
 - SCRIPT-S5 A CallScript / SpawnScript of a script the level does not have continues (the original's result with a null script is unknown).

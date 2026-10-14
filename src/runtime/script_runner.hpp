@@ -75,6 +75,15 @@ struct ScriptPlacement {
 // until it is done (0x25207c). STAND-IN: the curve is linear and the end is the elapsed time (SCRIPT-S6).
 constexpr float kFadeSeconds = 0.5f;
 
+// What the natives IsLevelUnlocked 0x2636e4, GetGameComplete 0x2635d0 and IsRedBrickExtraActive 0x2a6d34 read from the
+// loaded slot (docs/re/save-format.md). The defaults are those of a new game: only level 2 is unlocked (the slot
+// defaults 0x1a25cc set bit 4 of slot +0x51e0).
+struct ScriptProgress {
+    std::uint32_t levelUnlocked = 1u << 2;
+    bool gameComplete = false;
+    std::uint32_t redBrickExtrasActive = 0;
+};
+
 // The scripts of one level (owner): the threads of its scene list +0x1310, its variables (the level's default
 // parameter table) and the placed-object state the natives change.
 class ScriptRunner {
@@ -94,6 +103,8 @@ public:
     std::size_t threadCount() const { return threads_.size(); }
     const std::list<ScriptThread>& threads() const { return threads_; }
     float variable(const std::string& name) const;
+    void setProgress(const ScriptProgress& progress) { progress_ = progress; }
+    void setVariable(std::uint32_t nameHash, float value) { variables_[nameHash] = value; }
     // Calls of functions without a handler, by lower-case name, in the order they were first called.
     const std::vector<std::string>& unhandledFunctions() const { return unhandledOrder_; }
     std::uint32_t unhandledCalls(const std::string& lowerCaseName) const;
@@ -149,6 +160,7 @@ private:
     assets::PlacedObjectState& state_;
     std::list<ScriptThread> threads_;
     std::map<std::uint32_t, float> variables_;
+    ScriptProgress progress_;
     std::map<std::string, std::uint32_t> unhandled_;
     std::vector<std::string> unhandledOrder_;
     std::vector<ScriptObjectMessage> messages_;

@@ -45,7 +45,7 @@ int main() {
         require(assets::behaviourNames(assets::BehaviourCollision | assets::BehaviourStud) == "collision,stud", "behaviour names");
 
         require(runtime::scriptFunctionSupport("EnableObject") == runtime::ScriptFunctionSupport::Implemented, "EnableObject handled");
-        require(runtime::scriptFunctionSupport("IsLevelUnlocked") == runtime::ScriptFunctionSupport::StandIn, "IsLevelUnlocked is a stand-in");
+        require(runtime::scriptFunctionSupport("IsLevelUnlocked") == runtime::ScriptFunctionSupport::Implemented, "IsLevelUnlocked handled (0x2636e4)");
         require(runtime::scriptFunctionSupport("Wait") == runtime::ScriptFunctionSupport::Implemented, "Wait handled (0x174604)");
         require(runtime::scriptFunctionSupport("TriggerObject") == runtime::ScriptFunctionSupport::Implemented, "TriggerObject handled (0x1cddf8)");
         require(runtime::scriptFunctionSupport("WarningDialogBox") == runtime::ScriptFunctionSupport::Implemented, "WarningDialogBox handled (0x2700d4)");
