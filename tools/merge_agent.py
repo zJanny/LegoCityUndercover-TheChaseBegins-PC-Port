@@ -105,7 +105,7 @@ def run_checks(root: Path) -> None:
     build_warning_free(root)
     print("== README progress section")
     run(["python3", "tools/progress_report.py", "--update-readme", "README.md"], root)
-    run(["git", "add", "README.md"], root)
+    run(["git", "add", "README.md", "docs/progress-trend.svg"], root)
     print("== ctest")
     run(["ctest", "--test-dir", "build", "--output-on-failure", "-j", "4"], root)
     print("== python tests")
@@ -126,7 +126,7 @@ def prepare(root: Path, branch: str) -> None:
         if "README.md" in unmerged:
             run(["git", "checkout", "--theirs", "README.md"], root)
             run(["python3", "tools/progress_report.py", "--update-readme", "README.md"], root)
-            run(["git", "add", "README.md"], root)
+            run(["git", "add", "README.md", "docs/progress-trend.svg"], root)
             unmerged.remove("README.md")
     if result.returncode != 0 and unmerged:
         raise MergeError(

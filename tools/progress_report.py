@@ -22,8 +22,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-START_MARKER = '<!-- progress:start -->'
-END_MARKER = '<!-- progress:end -->'
+from progress_trend import END_MARKER, START_MARKER, TREND_IMAGE, trend_is_current, write_trend  # noqa: E402
+
 SKIP_EXIT = 77
 CODE_ADDRESS = re.compile(r'(?<![0-9A-Za-z_])0x([0-9a-fA-F]{6})(?![0-9A-Za-z_])')
 FEATURE_STATUS_WORDS = ('NOT_STARTED', 'IN_PROGRESS', 'DONE', 'BLOCKED')
@@ -372,7 +372,7 @@ def render_section(report):
         lines.append('| %s | %s | %s |' % (measure, value if value is not None else 'not measured', meaning))
     git = report['git']
     date = report['timestamp'][:10]
-    lines += ['', 'Updated %s, commit %s. How the numbers are measured: [docs/progress.md](docs/progress.md).' % (date, git['short'] or 'unknown')]
+    lines += ['', TREND_IMAGE, '', 'Updated %s, commit %s. How the numbers are measured: [docs/progress.md](docs/progress.md).' % (date, git['short'] or 'unknown')]
     return '\n'.join(lines)
 
 
@@ -447,10 +447,15 @@ def main(argv=None):
             print(error)
             return 1
         fresh = render_section(report)
-        if comparable(current) != comparable(fresh):
+        stale = comparable(current) != comparable(fresh)
+        if stale:
             print('README progress section is stale. Run: python3 tools/progress_report.py --update-readme %s\n\nfresh:\n%s' % (args.check, fresh))
+        if not trend_is_current(root, fresh):
+            print('docs/progress-trend.svg is stale. Run: python3 tools/progress_report.py --update-readme %s' % args.check)
+            stale = True
+        if stale:
             return 1
-        print('README progress section is current')
+        print('README progress section and trend graphic are current')
         return 0
     if args.json:
         args.json.write_text(json.dumps(report, indent=1) + '\n', encoding='utf-8')
@@ -460,8 +465,10 @@ def main(argv=None):
             print('not updating the README, missing data: %s' % '; '.join(dict.fromkeys(report[key]['skipped'] for key in gaps)))
             return 2
         readme = args.update_readme.read_text(encoding='utf-8')
-        args.update_readme.write_text(replace_section(readme, render_section(report)), encoding='utf-8')
-        print('updated %s' % args.update_readme)
+        section = render_section(report)
+        args.update_readme.write_text(replace_section(readme, section), encoding='utf-8')
+        write_trend(root, section)
+        print('updated %s and docs/progress-trend.svg' % args.update_readme)
     if not (args.json or args.update_readme):
         print(render_text(report))
     return 0

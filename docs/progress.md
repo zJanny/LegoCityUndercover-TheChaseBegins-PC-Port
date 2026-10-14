@@ -19,6 +19,10 @@ Some script commands run with a stand-in result (for example "is this level unlo
 
 The 30 level files include the 8 main levels and test levels that the game ships. `--json` and the text output also show the numbers for the 8 main levels only.
 
+## Trend graphic
+
+The picture under the README table shows four of the measures over time: script commands, object types, open work and game code documented. Each point is one earlier version of the README, read from the git history of `README.md`. Its date and commit come from the "Updated" line of that version. Versions without a readable table are left out. The graphic is `docs/progress-trend.svg`, and `--update-readme` writes it.
+
 ## Run it
 
 ```sh
