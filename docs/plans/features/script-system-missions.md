@@ -14,11 +14,13 @@ IN_PROGRESS, updated 2026-10-14T21:41:00+02:00. Mission 1-2 was compared with th
 
 ## 4. Stand-ins
 
-- SCRIPT-S111 Missions are started by `--call-script NAME` or by a script's own `CallScript` / `SpawnScript`; no waypoint reached by the player starts one. needs: SCRIPT-110. evidence: [scripts-missions.md §2026-10-14T21:39](../../re/scripts-missions.md#ts-20261014-213921).
+- SCRIPT-S141 Waypoint bound is turned by the yaw of `initialorientation` only (Euler order unknown, lvl_01 waypoints have no pitch or roll); while TakePlayerControl holds, the port zeroes stick and jump, the original keeps the player almost still (drift up to 0.03 in 13 updates, cause of the +0xd8 bit 4 effect not read). evidence: [scripts-missions.md §2026-10-14T22:48](../../re/scripts-missions.md#ts-20261014-224825).
+- [x] SCRIPT-S111 Missions were started only by `--call-script NAME` or a script's own `CallScript` / `SpawnScript`; waypoints now start them (waypoints.cpp). needs: SCRIPT-110. evidence: [scripts-missions.md §2026-10-14T21:39](../../re/scripts-missions.md#ts-20261014-213921).
 
 ## 5. Open items
 
-- [ ] SCRIPT-110 — The waypoint class `props/map_waypoint` (update 0x17acbc: states 0 to 3 at component +0x78, messages 52 / 53, the fade states, the thread start 0x17b03c with the script id at component +0x64) is not ported: reaching the active waypoint starts no script (its `TriggerScript` parameter), so no mission starts by play; this is also why the donut shop of mission 1-1 does nothing (user report 2026-10-14, former SCRIPT-140). blocks: SCRIPT-1, SCRIPT-S111. evidence: [scripts-missions.md §2026-10-14T21:39](../../re/scripts-missions.md#ts-20261014-213921).
+- [ ] SCRIPT-141 — Waypoint variants the port cannot exercise: the vehicle second test (0x17b21c), VehicleString / VehicleType matching, the hint shown to a foot waypoint hit from a vehicle (0x17b31c), UseMarker waypoints (kind 2, `map_useobjectwaypoint`), `NextWayPoint`, the badge child and the receivers of messages 52 / 53 / 0x2e5. needs: SCRIPT-S29. evidence: [scripts-missions.md §2026-10-14T22:48](../../re/scripts-missions.md#ts-20261014-224825).
+- [ ] SCRIPT-142 — Order of the waypoint update against the trigger pass and the runner inside one update is not measured (the port updates waypoints after `checkTriggers`; thread creation to first executor pass matches one update). evidence: [scripts-missions.md §2026-10-14T22:48](../../re/scripts-missions.md#ts-20261014-224825).
 - [ ] SCRIPT-111 — Class-fired `ObjectTriggered` events: of the 22 triggers of mission 1-2, 12 belong to `scriptobject` objects and no script calls `TriggerObject` on them; scanner (`Scanned_Pringles`, `Scanner_Enter_Script`, `Scanner_Zoomed_Script`, `Scanner_Locked_Script`), detective spots (`Dtv_DogSpot_01_Script`, `Reveal_Bone_Script`, `SO_Dspot_02_X`), the cage use spot (`Cage_Key_Target_Script`) and the camera off script are fired by classes (`prop_scannerzoneaudio`, `ability_detective*`, `prop_simpleuse`, not traced). needs: SCRIPT-75. blocks: SCRIPT-1. evidence: [scripts-missions.md §2026-10-14T21:39](../../re/scripts-missions.md#ts-20261014-213921).
 - [ ] SCRIPT-113 — Two mission 1-2 scripts have no known starter (`2451216995`, `2494968948`); the other two are named by waypoint `TriggerScript` parameters (`1-2_HouseArrival`, `1-2_Spawn_Doorlock`) and start with SCRIPT-110. blocks: SCRIPT-1. evidence: [scripts-missions.md §2026-10-14T21:44](../../re/scripts-missions.md#ts-20261014-214429).
 - [ ] SCRIPT-114 — The port runs `1-2_MissionStart` one update later than the original at the end of the title camera (DestroyProp in update 154 after the first call, original 153; PlayCharAnim 306 against 305, 0.033 s updates, harness with the director updated after the runner); the game loop order was not checked. needs: SCRIPT-50. evidence: [scripts-missions.md §2026-10-14T21:39](../../re/scripts-missions.md#ts-20261014-213921).
@@ -26,9 +28,11 @@ IN_PROGRESS, updated 2026-10-14T21:41:00+02:00. Mission 1-2 was compared with th
 
 ## 6. Findings summary
 
+- Waypoint class: states, reach test, timings and oracle numbers: [scripts-missions.md §2026-10-14T22:48](../../re/scripts-missions.md#ts-20261014-224825).
 - Mission 1-2 gap analysis: natives without a handler and their items, stand-ins, trigger events, the oracle trace of the start: [scripts-missions.md §2026-10-14T21:39](../../re/scripts-missions.md#ts-20261014-213921).
 - Natives that block mission 1-2 and have items: DestroyProp SCRIPT-58, EffectFadeObject / StreamRoomIn SCRIPT-38, SetPartyCharacter SCRIPT-35, DCamCutScene* SCRIPT-29, EnableDistanceFade SCRIPT-57, music natives SCRIPT-33, SetForcedStopOnMyVehicle SCRIPT-36; AI natives and events SCRIPT-42 and SCRIPT-75; the moving dog truck SCRIPT-77.
 
 ## 7. Code and tests
 
-- No code of its own yet. `1-2_MissionStart`, `1-2_Cage_Key_Target_Script` and the level startup run in CTest `natives-animation-real-data`.
+- `src/runtime/waypoints.{hpp,cpp}` (waypoint class), glue `ScriptRunner::loadWaypoints` / `updateWaypoints` and two lines in `game_level_update.cpp`; CTest `waypoints`, `waypoints-real-data`.
+- `1-2_MissionStart`, `1-2_MissionStart`, `1-2_Cage_Key_Target_Script` and the level startup run in CTest `natives-animation-real-data`.

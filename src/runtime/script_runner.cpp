@@ -208,6 +208,16 @@ void ScriptRunner::update(float dt) {
     }
 }
 
+std::vector<std::string> ScriptRunner::updateWaypoints(float dt, const float player[3], bool playerInVehicle) {
+    const WaypointUpdate update = waypoints_.update(dt, player, playerInVehicle, [this](const std::string& room) {
+        return allRoomsLoaded_ || loadedRooms_.count(lower(room)) > 0;
+    });
+    for (const std::string& name : update.deactivated) objectives_.setWaypointActive(name, false);
+    for (const std::string& name : update.startScripts)
+        if (const LevelScript* script = find(name)) create(*script);
+    return update.startScripts;
+}
+
 bool ScriptRunner::running(const std::string& scriptName, bool requireActive) const {
     const std::uint32_t hash = assets::nameHash(scriptName);
     for (const ScriptThread& thread : threads_)
@@ -530,7 +540,12 @@ void ScriptRunner::objectiveNative(const ScriptCall& call) {
     const auto& args = call.arguments;
     if (args.size() < objectiveNativeArguments(*kind)) return;
     switch (*kind) {
-    case ObjectiveNativeKind::SetActiveWayPoint: objectives_.setWaypointActive(lower(args[0]), read(args[1]) != 0.0f); break;
+    case ObjectiveNativeKind::SetActiveWayPoint: {
+        const std::string waypoint = lower(args[0]);
+        const bool enable = read(args[1]) != 0.0f;
+        objectives_.setWaypointActive(waypoint, waypoints_.known(waypoint) ? waypoints_.setActive(waypoint, enable) : enable);
+        break;
+    }
     case ObjectiveNativeKind::SubObjectiveGoToEnable: objectives_.setSubObjective(lower(args[0]), lower(args[1]), 0, read(args[2]) != 0.0f); break;
     case ObjectiveNativeKind::SubObjectiveEnemyEnable: break;
     default: {

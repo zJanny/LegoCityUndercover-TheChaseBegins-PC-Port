@@ -149,6 +149,8 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         runtime::StickIntentInput stick;
         stick.slot14 = {pad.slot(kSlotStickX).value, pad.slot(kSlotStickX).deadzone};
         stick.slot15 = {pad.slot(kSlotStickY).value, pad.slot(kSlotStickY).deadzone};
+        const bool controlTaken = levelScripts.playerControlTaken();
+        if (controlTaken) stick.slot14.value = stick.slot15.value = 0.0f;
         stick.entityType = game_player::kPlayerEntityType;
         stick.cameraYaw = follow->yaw();
         if (hud) {
@@ -158,7 +160,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
                                                               follow->pitch(), follow->verticalFieldOfView()));
         }
         game_player::PlayerAnimation shown =
-            game_player::updatePlayer(*player, collision, runtime::stickIntent(stick), pad.slot(kSlotJumpButton).press > 0, dt);
+            game_player::updatePlayer(*player, collision, runtime::stickIntent(stick), !controlTaken && pad.slot(kSlotJumpButton).press > 0, dt);
         if (const runtime::AiCharacter* driven = levelScripts.ai().moving("player1") ? levelScripts.ai().character("player1") : nullptr) {
             game_player::applyAiPosition(*player, *driven);
             shown = game_player::aiMoveAnimation(*driven);
@@ -187,6 +189,8 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
     if (player) {
         const float playerPosition[3] = {player->motion.x, player->vertical.y, player->motion.z};
         levelScripts.checkTriggers(playerPosition);
+        for (const std::string& started : levelScripts.updateWaypoints(dt, playerPosition, false))
+            std::cout << "waypoint started script " << started << " at update " << updates << '\n';
     }
     reportUnhandled();
     for (const std::string& bound : levelScripts.takeSceneChanges())

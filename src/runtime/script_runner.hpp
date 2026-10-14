@@ -9,6 +9,7 @@
 #include "runtime/dcam.hpp"
 #include "runtime/natives_progress.hpp"
 #include "runtime/objectives.hpp"
+#include "runtime/waypoints.hpp"
 #include "runtime/script_text.hpp"
 
 #include <cstdint>
@@ -170,6 +171,11 @@ public:
     void setLevelHeadingKey(std::uint32_t key) { levelHeadingKey_ = key; }
     // Waypoints and sub-objective groups switched on by the level scripts (objectives.hpp).
     const ObjectiveState& objectives() const { return objectives_; }
+    // Waypoint class (waypoints.hpp): reaching an active waypoint starts the level script named by its TriggerScript.
+    void loadWaypoints(const assets::ClassLookup& classOf) { waypoints_.load(level_, classOf); }
+    std::vector<std::string> updateWaypoints(float dt, const float player[3], bool playerInVehicle);
+    bool playerControlTaken() const { return waypoints_.playerControlTaken(); }
+    const WaypointSet& waypoints() const { return waypoints_; }
     // AI state the AI natives wrote and the move orders they started (ai.hpp).
     AiCore& ai() { return ai_; }
     const AiCore& ai() const { return ai_; }
@@ -232,6 +238,7 @@ private:
     ScriptTextState text_;
     std::uint32_t levelHeadingKey_ = 0;
     ObjectiveState objectives_;
+    WaypointSet waypoints_;
     AiCore ai_;
     AnimationNativeState animation_;
     float fadeLevel_ = 1.0f, fadeStart_ = 1.0f, fadeTarget_ = 1.0f, fadeElapsed_ = 0;

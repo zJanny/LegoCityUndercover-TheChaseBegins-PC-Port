@@ -135,6 +135,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     studSprites.emplace(archive);
     player = game_player::placePlayer(archive, scene, level);
     levelScripts.setAllRoomsLoaded();
+    levelScripts.loadWaypoints(classOf);
     levelName = lower(options.level).substr(0, lower(options.level).find_last_of('/'));
     levelName = levelName.substr(levelName.find_last_of('/') + 1);
     levelScripts.setLevelHeadingKey(fe::levelHeadingKey(hudResources, levelName));
