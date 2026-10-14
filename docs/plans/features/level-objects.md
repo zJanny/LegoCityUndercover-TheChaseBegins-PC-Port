@@ -32,6 +32,8 @@ IN_PROGRESS, updated 2026-10-14T15:05:41+02:00. Objects are drawn standing at th
 
 - [ ] LEVOBJ-12 — Disabled characters and the sub-objects of disabled objects are still drawn (only placed props follow the disabled state). evidence: [objects.md §2026-10-14T15:05](../../re/objects.md#ts-20261014-150541).
 - [ ] LEVOBJ-13 — Per-class start visibility (`DisabledOnStartUp` of non-stud classes, `ShowOnObjectScan`, `ShowOnMap`) and the effect of flags bit 2 (value 6 in the +0x14 table) are not applied. evidence: [objects.md §2026-10-14T13:39](../../re/objects.md#ts-20261014-133957).
+- [ ] LEVOBJ-14 — Carrying is not implemented: picking up a `props/prop_carry` object, carrying it and putting it into a `props/prop_carrytargetnomesh` target, and the script objects these fire (mission 1-1 donut box). blocks: SCRIPT-1. evidence: [objective-hud.md §2026-10-14T21:23](../../re/objective-hud.md#ts-20261014-212357).
+- [ ] LEVOBJ-15 — Build-its (`props/prop_buildit`) cannot be built: the build action, the final prop and the script object fired when done (mission 1-1 donut van). blocks: SCRIPT-1. evidence: [objective-hud.md §2026-10-14T21:23](../../re/objective-hud.md#ts-20261014-212357).
 
 ## 6. Findings summary
 

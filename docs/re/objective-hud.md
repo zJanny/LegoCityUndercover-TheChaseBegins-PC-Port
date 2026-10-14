@@ -38,3 +38,38 @@ Unknowns:
 - Which code draws the map markers and which parameter selects the icon (the class values at hashes 0x6fef256, 0x51a935e, 0x59521dda, 0xc93e4625 of the waypoint classes are untested); markers outside the map screen (clamp or not) and the other icons (`subobjectiveenemy.btga`, `pointofinterest.btga`, mission icons).
 - Handlers 0x2c289c, 0x230dbc, 0x187f28, 0x246128, 0x241624, 0x236968, 0x19465c and the update 0x2be934 in detail; the effect ids 0x0d, 0x0e, 0x0f and what a go-to group looks like in the world; the arrow of SubObjectiveArrow* (not used by mission 1-1).
 - The pulse clock, the badge colours (the sprite drawn by the port looks darker than the oracle's badge, so the original probably uses another blend), the badge's turning in the world.
+
+<a id="ts-20261014-212357"></a>
+
+## 2026-10-14T21:23:57+02:00 — Mission 1-1 flow in the level data and what stops it in the port (donut shop waypoint)
+
+Source: `Level::scripts`, `Level::triggers` and the object parameters of `lvl_01_cherrytreehills_main.blvl` (`tools/convert_levels.py --param-names` and a scratch dump through `chase_assets` / `scriptFunctionSupport`, not kept). No oracle run.
+
+**User report 2026-10-14.** Walking into the donut shop marker at the start of mission 1-1 does nothing in `chase-game`.
+
+**Why.** The marker is `1-1_Waypoint_01` (class `props/map_waypoint`, 817.35, 23.93, 1071.20, room8). It has no trigger record: its instance parameter `TriggerScript` = `1-1_VanBreakdown` names the level script that the original starts when the player reaches the waypoint. The port shows the waypoint (SetActiveWayPoint) but has no reach test and never reads `TriggerScript`. All 23 waypoint objects of lvl_01 (`props/map_waypoint`, `props/map_vehiclewaypoint`, `props/map_getintovehiclewaypoint`) work this way.
+
+**Mission 1-1 order (scripts and what starts them).**
+
+| Step | Started by | Script | Needs in the port |
+|---|---|---|---|
+| 1 | `startup` (`1-<StoryProgress>_MissionStart`) | `1-1_MissionStart`: intro movie `01_GameIntro` once, in-engine cutscene `1_1_a`, waypoint 01 on | PlayCutscene, DCamCutScene* (SCRIPT-29, MOVIE-2), SetPartyCharacter, VehicleSetLocked / ForcedStop (vehicles) |
+| 2 | waypoint 01 reached | `1-1_VanBreakdown`: cutscene `1_1_b`, dialogue, police car and waypoint 02 on, broken van scene in room33 | waypoint reach and `TriggerScript`; PlayCharAnim; CameraFollow |
+| 3 | waypoint 02 reached (police car) | `1-1_Get_Car`: unlocks `1-1_Police_Car` | vehicles: enter and drive |
+| 4 | `PlayerVehicleEntered` of `1-1_Police_Car` (trigger 2) | `1-1_Release_Car_Script`: director cameras, waypoint 03 on | vehicle trigger events (SCRIPT-76) |
+| 5 | waypoint 03 reached (room33) | `1-1_Found_Van`: dialogue with `1-1_AI_DonutLady`, build-it `1-1_BI_DonutVanParts` on | AIFaceTarget, EnableTrafficAndPedestrians, PlayCharAnim |
+| 6 | build-it finished (inferred from the names; `ObjectTriggered` of the script object `1-1_SO_VanFixed`, trigger 7) | `1-1_SO_VanFixed`: driveable donut van, `1-1_Van_Waypoint_Enter` on | build-its (`props/prop_buildit`, parameters `BuilditFinalProp`, `TriggerObject`) |
+| 7 | `1-1_Van_Waypoint_Enter` reached (`props/map_getintovehiclewaypoint`, `TriggerScript`) | `1-1_Van_Waypoint_Enter_Script`: waypoint 05 on | vehicles; VehicleAllowJumpOut |
+| 8 | waypoint 05 reached in the van (`props/map_vehiclewaypoint`) | `1-1_VanEscorted`: cutscene `1_1_d`, player out of the van, donut box waypoint on | VehicleJumpOut, VehicleSetForcedStop |
+| 9 | `1-1_Waypoint_Donuts` reached | `1-1_Carry_Object_Tutorial`: carry box `1-1_DonutsDEMO` on, `1-1_Deliver_Donuts` trigger on | carrying (`props/prop_carry`, parameter `TriggerPickup`) |
+| 10 | box carried into its target (inferred from the names; `ObjectBoundEntered` of `1-1_DonutsDEMO`, trigger 1; target `1-1_DonutTarget_DEMO`, class `props/prop_carrytargetnomesh`, parameter `TriggerObject`) | `1-1_Deliver_Donuts`, then `1-1_SO_MissionEnd` (`ObjectTriggered`, trigger 6): cutscene `1_1_e` | carry target; moving object bounds (SCRIPT-77) |
+| 11 | `SpawnScript` | `1-1_MissionEnd`: StoryProgress 2, reward, director cameras, police station doors on, mission 1-2 waypoint | GiveReward, SnapCamera (stand-ins) |
+
+Side scripts: `1-1_Get_Back_To_Donuts` (BoundLeft, warns when the player walks away), `1-1_SO_Donuts_PickedUp` (`ObjectTriggered`, tip texts), `1-1_Buildit_Tutorial` (empty).
+
+**Script functions of mission 1-1 without any handler:** DCamCutSceneLoad / Play / Wait / Free, PlayCutscene, SetPartyCharacter, VehicleSetLocked, VehicleSetForcedStop, SetForcedStopOnMyVehicle, VehicleSetUnshovable, VehicleAllowJumpOut, VehicleJumpOut, EnableTrafficAndPedestrians, PlayCharAnim, CameraFollow, OverrideMusic, AutomaticMusic. The other calls run, many of them as stand-ins (tip texts, dialogue, waypoints, AIEnable, AIFaceTarget, GiveReward, SnapCamera, QuickSave).
+
+Unknowns:
+- The waypoint reach test: code (class behaviour of `props/map_waypoint` and the two vehicle classes), radius or bound, on foot or in a vehicle, and when the script starts relative to the trigger pass.
+- How a script object (class `scriptobject`) is fired by a build-it, a carry pickup or a carry target: the object reference parameters (`TriggerObject`, `TriggerPickup`, `BuilditFinalProp`, unnamed hash 0xc23d689b) print as unset (`None`) in the converter, so the link may be made elsewhere.
+- What the original shows at step 1 on a new game in the port's order (intro movie, then `1_1_a`).

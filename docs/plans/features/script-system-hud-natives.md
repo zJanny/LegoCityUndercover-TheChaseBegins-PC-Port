@@ -29,6 +29,7 @@ IN_PROGRESS, updated 2026-10-14T19:00:00+02:00. The 14 objective natives of batc
 - [ ] SCRIPT-72 — The arrow natives (SubObjectiveArrowGoToEnable 0x2c57b0 -> 0x2c289c, SubObjectiveArrowEnemyEnable 0x2c87f0 -> 0x230dbc) only record; their arrows (textures SubObjectiveArrow*) are not drawn; mission 1-2 and later use them. blocks: SCRIPT-S27. evidence: [objective-hud.md §2026-10-14T15:59](../../re/objective-hud.md#ts-20261014-155919).
 - [ ] SCRIPT-73 — Map and scanner natives (EnableMinimapWipe 0x187f28, EnableScanner, OverrideScannable, PanMapToObject, map dummy location, BlackoutMap, DisableIcon, scanner marker) only record their arguments. needs: HUD-11. blocks: SCRIPT-S27. evidence: [objective-hud.md §2026-10-14T15:59](../../re/objective-hud.md#ts-20261014-155919).
 - [ ] SCRIPT-74 — SetActiveWayPoint 0x26e168 skips a disable when bit 4 of component +0x8e is clear (meaning unknown), and its show / hide chain 0x229c98 / 0x242cf0 is not transcribed. blocks: SCRIPT-S26. evidence: [objective-hud.md §2026-10-14T15:59](../../re/objective-hud.md#ts-20261014-155919).
+- [ ] SCRIPT-140 — (User report 2026-10-14: the donut shop marker of mission 1-1 does nothing.) Reaching a waypoint (`props/map_waypoint`, `map_vehiclewaypoint`, `map_getintovehiclewaypoint`) does not start the level script in its `TriggerScript` parameter; the reach test is not recovered. Mission 1-1 needs it at five steps. blocks: SCRIPT-1. evidence: [objective-hud.md §2026-10-14T21:23](../../re/objective-hud.md#ts-20261014-212357).
 
 ## 6. Findings summary
 
