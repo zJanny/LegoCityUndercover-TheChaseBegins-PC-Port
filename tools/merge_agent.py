@@ -120,6 +120,12 @@ def prepare(root: Path, branch: str) -> None:
     result = run(["git", "merge", "--squash", branch], root, check=False, capture=True)
     if result.returncode != 0:
         unmerged = git(root, "diff", "--name-only", "--diff-filter=U").split()
+        if "README.md" in unmerged:
+            run(["git", "checkout", "--theirs", "README.md"], root)
+            run(["python3", "tools/progress_report.py", "--update-readme", "README.md"], root)
+            run(["git", "add", "README.md"], root)
+            unmerged.remove("README.md")
+    if result.returncode != 0 and unmerged:
         raise MergeError(
             "conflicts in: " + ", ".join(unmerged) + "\nresolve them (regenerate the README section), stage, then run: "
             "merge_agent.py check"
@@ -167,6 +173,7 @@ def main(argv: list[str] | None = None) -> int:
     finish_parser.add_argument("branch")
     finish_parser.add_argument("-m", "--message", required=True, type=Path)
     args = parser.parse_args(argv)
+    sys.stdout.reconfigure(line_buffering=True)
     try:
         root = repo_root()
         if args.command == "prepare":
