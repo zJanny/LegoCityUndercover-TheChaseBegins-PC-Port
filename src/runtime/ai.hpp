@@ -1,8 +1,8 @@
 #pragma once
 // AI core and the AI natives of batch SCRIPT-34 (docs/re/ai-natives.md): the per-character AI state the natives write
 // (component at entity+0x7c), the move orders of AIMove / AIMoveNoAvoid / AIFollowSimplePath and the AIMove trigger
-// event raised when a move ends. The nav-mesh path finder and the locomotion states are not ported: a move is a
-// straight walk (STAND-IN SCRIPT-S31). No SDL dependency.
+// event raised when a move ends. AIFollowSimplePath follows state 22 (ai_simple_path.hpp); the nav-mesh path finder
+// behind AIMove and the locomotion are not ported: an AIMove is a straight walk (STAND-IN SCRIPT-S31). No SDL dependency.
 #include <array>
 #include <cstdint>
 #include <functional>
@@ -10,6 +10,8 @@
 #include <optional>
 #include <string>
 #include <vector>
+
+#include "runtime/ai_simple_path.hpp"
 
 namespace chase::runtime {
 
@@ -62,6 +64,14 @@ struct AiMoveOrder {
     bool run = false;
     bool noAvoid = false;
     bool path = false;
+    std::optional<SimplePathFollow> follow;
+};
+
+// A finished move: the AIMove event is raised for `character` with the start argument of the raise site (0x23cee8's
+// fourth argument: 255 at 0x2cbf10; component byte 0 at the other sites, whose value is not recovered and stays 0).
+struct AiMoveEnd {
+    std::string character;
+    std::uint16_t argument = 0;
 };
 
 struct AiPursuit {
@@ -109,7 +119,7 @@ constexpr float kAiRunSpeed = 0.23f * 30.0f;
 class AiCore {
 public:
     using PositionLookup = std::function<bool(const std::string&, float[3])>;
-    using PathLookup = std::function<const std::vector<std::array<float, 3>>*(const std::string&)>;
+    using PathLookup = std::function<bool(const std::string&, SimplePathFollow&)>;
 
     void setPositionLookup(PositionLookup lookup) { lookup_ = std::move(lookup); }
     void setPathLookup(PathLookup lookup) { pathLookup_ = std::move(lookup); }
@@ -124,7 +134,7 @@ public:
     bool movedLastUpdate(const std::string& lowerCaseName) const;
     // Advances every move order; characters whose order ended in this call are returned once (the AIMove event).
     void update(float dt);
-    std::vector<std::string> takeMovesEnded();
+    std::vector<AiMoveEnd> takeMovesEnded();
 
     const AiCharacter* character(const std::string& lowerCaseName) const;
     const std::vector<std::string>& unresolvedTargets() const { return unresolved_; }
@@ -133,11 +143,14 @@ private:
     AiCharacter& at(const std::string& lowerCaseName);
     bool locate(const std::string& lowerCaseName, std::array<float, 3>& out);
     void startMove(const std::string& character, std::vector<std::array<float, 3>> waypoints, bool run, bool noAvoid, bool path);
+    void startSimplePath(const std::string& character, SimplePathFollow follow, bool run);
+    void advanceStraightMove(const std::string& name, AiCharacter& target, float dt);
+    void advanceSimplePath(const std::string& name, AiCharacter& target, float dt);
     void requestIdle(AiCharacter& character);
     void requestMillAbout(AiCharacter& character);
 
     std::map<std::string, AiCharacter> characters_;
-    std::vector<std::string> ended_;
+    std::vector<AiMoveEnd> ended_;
     std::vector<std::string> moved_;
     std::vector<std::string> unresolved_;
     PositionLookup lookup_;

@@ -122,6 +122,18 @@ void AiCore::startMove(const std::string& name, std::vector<std::array<float, 3>
     target.state = path ? AiState::FollowPath : AiState::MoveTo;
 }
 
+void AiCore::startSimplePath(const std::string& name, SimplePathFollow follow, bool run) {
+    AiCharacter& target = at(name);
+    std::array<float, 3> where{};
+    if (!target.position && locate(name, where)) target.position = where;
+    AiMoveOrder order;
+    order.run = run;
+    order.path = true;
+    order.follow = std::move(follow);
+    target.move = std::move(order);
+    target.state = AiState::FollowPath;
+}
+
 void AiCore::run(AiNativeKind kind, const std::vector<std::string>& names, const std::vector<float>& numbers) {
     if (names.empty()) return;
     const std::string& name = names[0];
@@ -184,20 +196,65 @@ void AiCore::run(AiNativeKind kind, const std::vector<std::string>& names, const
     case AiNativeKind::AIStalkPlayer: target.stalkDistance = number; break;
     case AiNativeKind::AIRunAway: target.runningAway = true; break;
     case AiNativeKind::AIFollowSimplePath: {
-        const std::vector<std::array<float, 3>>* points = names.size() >= 2 && pathLookup_ ? pathLookup_(names[1]) : nullptr;
-        if (!points || points->empty()) break;
-        const std::int32_t count = static_cast<std::int32_t>(points->size());
+        SimplePathFollow follow;
+        if (names.size() < 2 || !pathLookup_ || !pathLookup_(names[1], follow) || follow.nodes.empty()) break;
+        const std::int32_t count = static_cast<std::int32_t>(follow.nodes.size());
         std::int32_t first = numbers.size() > 0 ? static_cast<std::int32_t>(numbers[0]) : 0;
         if (numbers.size() > 0 && numbers[0] < 0.0f) first += count - 1;
-        first = std::clamp<std::int32_t>(first, 0, count - 1);
-        const bool reverse = numbers.size() > 1 && numbers[1] != 0.0f;
-        const bool running = numbers.size() > 2 && numbers[2] != 0.0f;
-        std::vector<std::array<float, 3>> waypoints;
-        for (std::int32_t i = first; reverse ? i >= 0 : i < count; i += reverse ? -1 : 1) waypoints.push_back((*points)[std::size_t(i)]);
-        startMove(name, std::move(waypoints), running, false, true);
+        follow.index = static_cast<std::uint16_t>(std::clamp<std::int32_t>(first, 0, count - 1));
+        follow.reverse = numbers.size() > 1 && numbers[1] != 0.0f;
+        startSimplePath(name, std::move(follow), numbers.size() > 2 && numbers[2] != 0.0f);
         break;
     }
     }
+}
+
+void AiCore::advanceStraightMove(const std::string& name, AiCharacter& target, float dt) {
+    AiMoveOrder& order = *target.move;
+    float budget = (order.run ? kAiRunSpeed : kAiWalkSpeed) * dt;
+    std::array<float, 3>& position = *target.position;
+    while (budget > 0.0f && !order.waypoints.empty()) {
+        const std::array<float, 3>& goal = order.waypoints.front();
+        const float dx = goal[0] - position[0], dz = goal[2] - position[2];
+        const float distance = std::sqrt(dx * dx + dz * dz);
+        target.heading = headingToward(position, goal);
+        if (distance <= budget) {
+            position = goal;
+            budget -= distance;
+            order.waypoints.erase(order.waypoints.begin());
+        } else {
+            position[0] += dx / distance * budget;
+            position[2] += dz / distance * budget;
+            budget = 0.0f;
+        }
+    }
+    if (order.waypoints.empty()) {
+        target.move.reset();
+        target.state = AiState::Idle;
+        ended_.push_back({name, 0});
+    }
+}
+
+void AiCore::advanceSimplePath(const std::string& name, AiCharacter& target, float dt) {
+    AiMoveOrder& order = *target.move;
+    std::array<float, 3>& position = *target.position;
+    std::uint16_t heading = 0;
+    const bool nodeInRange = order.follow->index < order.follow->nodes.size();
+    const SimplePathResult result = stepSimplePath(*order.follow, position, heading);
+    if (nodeInRange) target.heading = heading;
+    if (result == SimplePathResult::Ended) {
+        target.move.reset();
+        target.state = AiState::Idle;
+        ended_.push_back({name, kSimplePathEndEventArgument});
+        return;
+    }
+    if (result == SimplePathResult::Advanced) return;
+    const std::array<float, 3>& node = order.follow->nodes[order.follow->index];
+    const float dx = node[0] - position[0], dz = node[2] - position[2];
+    const float distance = std::sqrt(dx * dx + dz * dz);
+    const float step = std::min(distance, (order.run ? kAiRunSpeed : kAiWalkSpeed) * dt);
+    position[0] += dx / distance * step;
+    position[2] += dz / distance * step;
 }
 
 void AiCore::update(float dt) {
@@ -205,35 +262,14 @@ void AiCore::update(float dt) {
     for (auto& [name, target] : characters_) {
         if (!target.move || !target.position) continue;
         if (target.state != AiState::MoveTo && target.state != AiState::FollowPath) continue;
-        AiMoveOrder& order = *target.move;
         moved_.push_back(name);
-        float budget = (order.run ? kAiRunSpeed : kAiWalkSpeed) * dt;
-        std::array<float, 3>& position = *target.position;
-        while (budget > 0.0f && !order.waypoints.empty()) {
-            const std::array<float, 3>& goal = order.waypoints.front();
-            const float dx = goal[0] - position[0], dz = goal[2] - position[2];
-            const float distance = std::sqrt(dx * dx + dz * dz);
-            target.heading = headingToward(position, goal);
-            if (distance <= budget) {
-                position = goal;
-                budget -= distance;
-                order.waypoints.erase(order.waypoints.begin());
-            } else {
-                position[0] += dx / distance * budget;
-                position[2] += dz / distance * budget;
-                budget = 0.0f;
-            }
-        }
-        if (order.waypoints.empty()) {
-            target.move.reset();
-            target.state = AiState::Idle;
-            ended_.push_back(name);
-        }
+        if (target.move->follow) advanceSimplePath(name, target, dt);
+        else advanceStraightMove(name, target, dt);
     }
 }
 
-std::vector<std::string> AiCore::takeMovesEnded() {
-    std::vector<std::string> taken;
+std::vector<AiMoveEnd> AiCore::takeMovesEnded() {
+    std::vector<AiMoveEnd> taken;
     taken.swap(ended_);
     return taken;
 }

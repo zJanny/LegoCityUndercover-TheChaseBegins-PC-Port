@@ -48,3 +48,30 @@ Unknowns:
 - Meaning of entity flag bit 0x10 at entity+0xc (AIMove, AIEnable skip such objects).
 - What 0x241304 / 0x2414b4 do after the request byte (state change in the AI update), the follow-up lookup 0x1f8d5c, and the third raise site 0x2cbf10.
 - AISuperJump 0x213300, AIPursuit 0x1d4688 / 0x2c2604 / 0x218b38, AIStalkPlayer 0x282b88, AIRunAway 0x228c70 and the face-target state are only read as far as their arguments; their effects are not ported.
+
+<a id="ts-20261014-184240"></a>
+
+## 2026-10-14T18:42:40+02:00 — AI movement: state table, simple-path state 22, go-to-target state 11, path finder front
+
+Read with llvm-objdump on `artifacts/game/game.arm.elf` (`--triple=armv6k --mattr=+vfp2`); no REA session, no emulator trace. Adds to [the AI native handlers](#ts-20261014-163311).
+
+**AI state table.** Built at 0x2a3c24 into the global 0x3771f0 as 16-byte records, one per state number; word 0 is the update function, word 3 (where set) a second hook. Update functions seen: states 4 and 5: 0x2c5d3c (path follower), state 11: 0x2c3bd8, state 12: 0x2c3d1c, state 22: 0x2cbe14; 0x21102c requests state 2 (pursuit of `+0xc4`). Requests go through 0x218b38(entity, component, state), which stores the number at `+0x15`.
+
+**AIFollowSimplePath is state 22, not the path finder.** The helper 0x1fbde4 stores path `+0xa8`, start node `+0xa6`, reverse bit 7 of `+0xda`, walk bit 5 of `+0xd9` (argument `run == 0`) and bit 3 of `+0xd9`, then requests state 22. The update 0x2cbe14, each tick:
+- node = path positions (`path+0xc`, 12 bytes each)[`+0xa6`]; `+0xe` bit 0 set (move wanted), bit 3 set when the walk bit is set; heading u16 `+6` = int(angle(position, node) * 10430.378) (0x23df44: atan2(dx, dz) of node - position through 0x24765c).
+- Distance 0x22b62c: sqrt(dx^2 + dz^2), y ignored. The raw float bits are compared with 0x3f000000 (0.5): below 0.5 the node counts as reached, otherwise the tick ends. The character is not snapped to the node.
+- Next index: reverse: index - 1; below 0 a closed path (byte `path+9`) continues with count - 2 (sub 1, sub 1, add count at 0x2cbea4..0x2cbec4), an open path ends. Forward: index + 1; when count is not greater, a closed path wraps to index + 1 - count, an open path ends. Count is u16 `path+10`.
+- End of an open path: 0x218b38(..., 0) (idle), then the AIMove event 0x23cee8(*0x3775e8, entity, entity, **255**, 0) at **0x2cbf10**. A closed path never ends.
+- The fourth argument of 0x23cee8 reaches 0x21a560 as the start argument (uxth) of the trigger found; the other two sites pass the component byte 0.
+
+**State 11, go to target (0x2c3bd8).** Vector to `+0xb8` / `+0xc0` (x and z); distance via 0x229708. Arrived when MinDistance (`+0x8c`) is greater than the distance, or the node's y (transform `+0x34`) is below `+0xbc` while bit 6 of `+0x314` is set. Arrival raises the AIMove event with component byte 0 (second site), then asks 0x1f8d5c for a follow-up (a target to attack: non-zero -> 0x21102c, state 2; zero -> idle). Otherwise heading `+6` as above, `+0xc` bit 0 set, and for `+0x6c` == 1 the locomotion state 72 through 0x2414b4(entity, `+0x50`, 72, 0). MinDistance defaults to -1.0, so without a class value only the y test can end it. Who requests state 11 is not read.
+
+**AIMove front end (0x22d85c).** It makes sure the path record (`+0xc8`, created by 0x206d18) exists, sets bit 0 of the record's u16 `+0x7c` (avoid) and runs the path finder; on result 1 it logs "I can't get there" and returns 0 (nothing changes). Otherwise the target is copied to `+0xb8`, the requested state is **4**, bit 5 of `+0xd9` = walk argument, bit 3 = avoid argument, `+0x84` = 5. The finder entry 0x1f9834 is a gate (budget byte at 0x3771d8 or the argument) that clears the low nibble of `+0xd8` and calls 0x204284.
+
+**Path finder (0x204284, not ported).** It works on the loaded nav grids (global 0x376bec: 0x3c-byte grid records per room and 0x18 per room descriptor, the file records of [levels.md](levels.md#ts-20261012-2355) plus runtime fields). 0x1c2ccc maps a world position to (grid, cell, room) with cell size and origin from the level; both endpoints are looked up, equal cells give a direct leg, otherwise an incremental search (0x1d0700 resets node flags, 0x294768 steps the search until a node of type 3, 0x208338 builds the leg list). The record byte `+0x7e` holds the follow phase: 0 none, 1 failed, 2 direct, 3 within a grid, 4 across grids. The follower 0x1faf04 / 0x1fae48 returns a code per tick; the state 4/5 update 0x2c5d3c ends a plain move when it returns 0 and `+0xa8` is 0: AIMove event with component byte 0 at **0x2c630c**, follow-up 0x1f8d5c, idle. With `+0xa8` set that function advances the node itself (same index rules, then 0x22d85c to the next node, requested state 5) and raises the event only when no node is left.
+
+Unknowns:
+- The path finder and follower in full (0x204284, 0x1d0700, 0x208338, 0x294768, 0x1faf04, 0x1fae48, 0x20d8a8, 0x2397a0): the arrival test of a plain AIMove (the follower's last-leg tolerance) and the waypoint list.
+- Actual movement: these states only set heading and the `+0xe` bits and play locomotion state 72 (0x2414b4 -> animation 0x2eafc8); speeds of non-player characters come from their locomotion and animation, not from this code.
+- Value of component byte 0 (start argument of the event at the 0x2c3bd8 and 0x2c630c sites).
+- The follow-up lookup 0x1f8d5c in full; who requests state 11; what the original does with an index outside the path (it reads past the node array).

@@ -118,8 +118,8 @@ void moveWalksAtTheMeasuredSpeedAndEnds() {
     require(near((*npc->position)[0], 0.11f * 0.6f) && near((*npc->position)[2], 0.11f * 0.8f), "0.11 per update towards the target (oracle)");
     require(core.takeMovesEnded().empty(), "not at the target yet");
     for (int i = 0; i < 60; ++i) core.update(1.0f / 30.0f);
-    const std::vector<std::string> ended = core.takeMovesEnded();
-    require(ended.size() == 1 && ended[0] == "npc" && !core.moving("npc"), "the move ends once at the target");
+    const std::vector<AiMoveEnd> ended = core.takeMovesEnded();
+    require(ended.size() == 1 && ended[0].character == "npc" && ended[0].argument == 0 && !core.moving("npc"), "the move ends once at the target");
     require(core.character("npc")->state == AiState::Idle && near((*core.character("npc")->position)[2], 4.0f), "idle again, standing on the target");
 }
 
@@ -133,16 +133,60 @@ void runIsFaster() {
     require(running.character("npc")->move->noAvoid && !walking.character("npc")->move->noAvoid, "AIMoveNoAvoid records the avoid flag");
 }
 
+SimplePathFollow route(bool closed) {
+    SimplePathFollow follow;
+    follow.nodes = {{0, 0, 1}, {0, 0, 2}, {0, 0, 3}};
+    follow.closed = closed;
+    return follow;
+}
+
+void simplePathIndexRules() {
+    std::uint16_t next = 99;
+    require(nextSimplePathIndex(0, 3, false, false, next) && next == 1, "forward: index + 1 (0x2cbecc)");
+    require(!nextSimplePathIndex(2, 3, false, false, next), "an open path ends after its last node (0x2cbee0 branches to 0x2cbef8)");
+    require(nextSimplePathIndex(2, 3, false, true, next) && next == 0, "a closed path wraps forward to index + 1 - count");
+    require(nextSimplePathIndex(2, 3, true, false, next) && next == 1, "reverse: index - 1 (0x2cbea4)");
+    require(!nextSimplePathIndex(0, 3, true, false, next), "an open path ends before node 0 in reverse");
+    require(nextSimplePathIndex(0, 3, true, true, next) && next == 1, "a closed path wraps in reverse to count - 2 (sub 1, sub 1, add count)");
+}
+
+void simplePathStepRules() {
+    SimplePathFollow follow = route(false);
+    std::uint16_t heading = 0;
+    require(stepSimplePath(follow, {0, 0, 0}, heading) == SimplePathResult::Moving && heading == 0 && follow.index == 0, "node 0 is 1 away: moving, heading atan2(0, 1) = 0");
+    require(stepSimplePath(follow, {1, 0, 0}, heading) == SimplePathResult::Moving && heading == static_cast<std::uint16_t>(static_cast<std::int32_t>(std::atan2(-1.0f, 1.0f) * 10430.378f)), "heading toward the node, u16 of the truncated angle (+6)");
+    require(stepSimplePath(follow, {0, 5, 0.5f}, heading) == SimplePathResult::Moving, "exactly 0.5 away is not arrival (cmp r0, #0x3f000000; bge keeps moving)");
+}
+
+void simplePathAdvancesAndEnds() {
+    SimplePathFollow follow = route(false);
+    std::uint16_t heading = 0;
+    require(stepSimplePath(follow, {0, 0, 0.6f}, heading) == SimplePathResult::Advanced && follow.index == 1, "0.4 from node 0: advance to node 1");
+    require(stepSimplePath(follow, {0, 0, 1.51f}, heading) == SimplePathResult::Advanced && follow.index == 2, "0.49 from node 1: advance to node 2");
+    require(stepSimplePath(follow, {0, 0, 2.6f}, heading) == SimplePathResult::Ended, "0.4 from the last node of an open path: ended");
+}
+
 void followSimplePath() {
     AiCore core = withPositions();
-    const std::vector<std::array<float, 3>> points = {{0, 0, 1}, {0, 0, 2}, {0, 0, 3}};
-    core.setPathLookup([&](const std::string& name) { return name == "route" ? &points : nullptr; });
+    core.setPathLookup([&](const std::string& name, SimplePathFollow& out) {
+        if (name == "route") { out = route(false); return true; }
+        if (name == "loop") { out = route(true); return true; }
+        return false;
+    });
     core.run(AiNativeKind::AIFollowSimplePath, {"npc", "route"}, {-1.0f, 0.0f, 1.0f});
-    require(core.character("npc")->state == AiState::FollowPath && core.character("npc")->move->waypoints.size() == 2 && core.character("npc")->move->waypoints[0][2] == 2.0f, "AIFollowSimplePath 0x285d18: start node -1 of 3 points is node 1 (count - 1 + node)");
-    core.run(AiNativeKind::AIFollowSimplePath, {"npc", "route"}, {0.0f, 1.0f, 0.0f});
-    require(core.character("npc")->move->waypoints.size() == 1 && !core.character("npc")->move->run, "reverse from node 0 visits one point, walk");
-    core.run(AiNativeKind::AIFollowSimplePath, {"npc", "route"}, {0.0f, 0.0f, 1.0f});
-    require(core.character("npc")->move->waypoints.size() == 3 && core.character("npc")->move->run, "forward from node 0 visits all points");
+    require(core.character("npc")->state == AiState::FollowPath && core.character("npc")->move->follow->index == 1 && core.character("npc")->move->run, "AIFollowSimplePath 0x285d18: start node -1 of 3 points is node 1 (count - 1 + node); run 1");
+    core.run(AiNativeKind::AIFollowSimplePath, {"npc", "route"}, {1.0f, 1.0f, 0.0f});
+    require(core.character("npc")->move->follow->index == 1 && core.character("npc")->move->follow->reverse && !core.character("npc")->move->run, "reverse flag, walk");
+    core.run(AiNativeKind::AIFollowSimplePath, {"npc", "route"}, {0.0f, 0.0f, 0.0f});
+    for (int i = 0; i < 300 && core.moving("npc"); ++i) core.update(1.0f / 30.0f);
+    const std::vector<AiMoveEnd> ended = core.takeMovesEnded();
+    require(ended.size() == 1 && ended[0].character == "npc" && ended[0].argument == 255, "the end of an open path raises the AIMove event with argument 255 (0x2cbf10)");
+    require(core.character("npc")->state == AiState::Idle, "and requests idle (0x218b38 with state 0)");
+    const float z = (*core.character("npc")->position)[2];
+    require(z >= 2.5f - 0.001f && z < 3.0f, "the character stops within 0.5 of the last node, not on it (walk step 0.11: first position below 0.5)");
+    core.run(AiNativeKind::AIFollowSimplePath, {"npc", "loop"}, {0.0f, 0.0f, 1.0f});
+    for (int i = 0; i < 600; ++i) core.update(1.0f / 30.0f);
+    require(core.moving("npc") && core.takeMovesEnded().empty(), "a closed path never ends");
 }
 
 void unknownTargetIsRecorded() {
@@ -206,6 +250,9 @@ int main() {
         faceTarget();
         moveWalksAtTheMeasuredSpeedAndEnds();
         runIsFaster();
+        simplePathIndexRules();
+        simplePathStepRules();
+        simplePathAdvancesAndEnds();
         followSimplePath();
         unknownTargetIsRecorded();
         aiMoveFiresTheTriggerOfTheCharacter();

@@ -167,11 +167,15 @@ ScriptRunner::ScriptRunner(const Level& level, assets::PlacedObjectState& state)
     : level_(level), state_(state), triggers_(level.triggers.size()) {
     for (const assets::LevelBound& bound : level.bounds) boundEnabled_.push_back(bound.enabled);
     ai_.setPositionLookup([this](const std::string& name, float out[3]) { return objectPosition_ && objectPosition_(name, out); });
-    ai_.setPathLookup([this](const std::string& name) -> const std::vector<std::array<float, 3>>* {
+    ai_.setPathLookup([this](const std::string& name, SimplePathFollow& out) {
         const std::uint32_t hash = assets::nameHash(name);
         for (const assets::LevelPath& path : level_.paths)
-            if (path.nameHash == hash) return &path.points;
-        return nullptr;
+            if (path.nameHash == hash) {
+                out.nodes = path.points;
+                out.closed = path.closed;
+                return true;
+            }
+        return false;
     });
     for (const LevelParam& param : level.defaults) {
         if (param.type == 0) variables_[param.hash] = floatOf(param.value);
@@ -527,9 +531,9 @@ void ScriptRunner::aiNative(const ScriptCall& call) {
 }
 
 void ScriptRunner::fireAiMoveEvents() {
-    for (const std::string& character : ai_.takeMovesEnded())
+    for (const AiMoveEnd& end : ai_.takeMovesEnded())
         for (std::size_t i = 0; i < level_.triggers.size(); ++i)
-            if (triggers_[i].enabled && lower(level_.triggers[i].event) == "aimove" && lower(level_.triggers[i].objectName) == character) {
+            if (triggers_[i].enabled && lower(level_.triggers[i].event) == "aimove" && lower(level_.triggers[i].objectName) == end.character) {
                 queueTrigger(i);
                 break;
             }
