@@ -14,6 +14,7 @@ enum class ProgressNativeKind {
     GiveReward,
     UnlockAbility,
     UnlockCharacter,
+    LockCharacter,
     SetRaceInProgress,
     AddStuds,
     QuickSave,
@@ -96,6 +97,8 @@ public:
     unsigned saveRequests() const { return saveRequests_; }
     const std::vector<std::uint32_t>& rewards() const { return rewards_; }
     const std::vector<std::uint32_t>& charactersUnlocked() const { return charactersUnlocked_; }
+    // LockCharacter requests; the removal from the party (0x23b388) is not modelled (SCRIPT-S31).
+    const std::vector<std::uint32_t>& charactersLocked() const { return charactersLocked_; }
     std::optional<bool> raceInProgress() const { return raceInProgress_; }
     std::optional<bool> superBricksEnabled() const { return superBricks_; }
     std::optional<float> parachuteDeployHeight() const { return parachuteHeight_; }
@@ -116,6 +119,7 @@ private:
     std::vector<StudGroupRequest> studGroupRequests_;
     std::vector<std::uint32_t> rewards_;
     std::vector<std::uint32_t> charactersUnlocked_;
+    std::vector<std::uint32_t> charactersLocked_;
     std::optional<bool> raceInProgress_;
     std::optional<bool> superBricks_;
     std::optional<float> parachuteHeight_;

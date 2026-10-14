@@ -29,9 +29,11 @@ Read this index, then open only the file you need.
 | [scripts.md](scripts.md) | Level scripts (section +0x18), the script executor 0x234204 and its words, EnableObject / EnableCollision, the `startup` script, the revealer links, the start state of placed objects |
 | [script-text.md](script-text.md) | Tip text, dialogue lines, dialogue background, mission title: handlers of batch 30, the timed objects 0x517ef8 / 0x5189cc, measured timing and layout |
 | [objective-hud.md](objective-hud.md) | Waypoints, sub-objective registry and the waypoint marker on the map: handlers of batch 31 (SetActiveWayPoint 0x27bde8, SubObjectiveGoToEnable 0x2adaac), registry 0x51a3a8, measured marker |
+| [ai-natives.md](ai-natives.md) | The 17 AI natives of batch 34 (AIMove 0x171f7c, AIEnable 0x1881d4, ...): AI component fields, requested state numbers, the AIMove trigger event |
 | [script-triggers.md](script-triggers.md) | Check functions of every bound trigger type (BoundEntered / Left / Inside / Outside, on-foot and vehicle variants, object bounds), census of lvl_01 and lvl_00, oracle runs of BoundLeft and PlayerOnFootBoundEntered, why a teleport does not fire BoundLeft. |
 | [scene-start.md](scene-start.md) | Scene start: class `startup` scripts of placed objects, camera bound switches (0x2ff35c), the trigger rule, `OnSceneEnter<room>` / `OnSceneExit` events (0x1ecc50), `ScriptCheckExtras` (0x2e5638) |
 | [script-natives.md](script-natives.md) | Census of all script natives: handler addresses, argument counts, call counts per level, classes A-D and the work batches SCRIPT-26 to SCRIPT-39 |
+| [script-natives-flags.md](script-natives-flags.md) | Batch 26 handlers (object flags, KillScript, class messages): split from script-natives.md |
 | [script-natives-progress.md](script-natives-progress.md) | Batch SCRIPT-27: handlers of the progress, save and stud natives, the slot bytes they use |
 | [doors.md](doors.md) | Doors (type 42): record, update 0x1d16b8, state change, messages, easing, hinge and slide pose, timings measured in the oracle |
 | [studs.md](studs.md) | Studs (collectible coins): pickup pool records, sprite sheet drawing and spin, pickup radius and skip counter, collect timer, counter values and limits, stand-ins |

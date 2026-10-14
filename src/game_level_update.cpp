@@ -153,8 +153,12 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
             studs.setFlightTarget(runtime::unprojectTopScreen(sink.x, sink.y, fe::kStudSinkDepth, follow->eye(), follow->yaw(),
                                                               follow->pitch(), follow->verticalFieldOfView()));
         }
-        const game_player::PlayerAnimation shown =
+        game_player::PlayerAnimation shown =
             game_player::updatePlayer(*player, collision, runtime::stickIntent(stick), pad.slot(kSlotJumpButton).press > 0, dt);
+        if (const runtime::AiCharacter* driven = levelScripts.ai().moving("player1") ? levelScripts.ai().character("player1") : nullptr) {
+            game_player::applyAiPosition(*player, *driven);
+            shown = game_player::aiMoveAnimation(*driven);
+        }
         player->animate(scene, dt, shown.role, shown.scale);
         if (!script.empty()) scriptedHeights.push_back(player->vertical.y);
         for (const runtime::StudCollected& collected :
@@ -170,7 +174,9 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         updateDoors(playerPosition, emit);
     }
     sceneStart.startRequested();
+    if (player && !levelScripts.ai().moving("player1")) levelScripts.ai().setPosition("player1", player->position().data());
     levelScripts.update(dt);
+    if (player && levelScripts.ai().movedLastUpdate("player1")) game_player::applyAiPosition(*player, *levelScripts.ai().character("player1"));
     studs.addToCounter(levelScripts.progressNatives().takeStudsAdded());
     saveWriter.update(levelScripts.progressNatives().saveRequests(), levelScripts.progressNatives().slotImage());
     sceneStart.update(dt);

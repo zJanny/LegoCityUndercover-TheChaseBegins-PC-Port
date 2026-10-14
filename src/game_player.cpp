@@ -30,6 +30,20 @@ Mat4 PlayerRig::matrix() const {
     return {c, 0, -s, 0, 0, 1, 0, 0, s, 0, c, 0, motion.x, vertical.y, motion.z, 1};
 }
 
+void applyAiPosition(PlayerRig& player, const runtime::AiCharacter& ai) {
+    if (!ai.position) return;
+    player.motion.x = (*ai.position)[0];
+    player.motion.z = (*ai.position)[2];
+    if (ai.heading) {
+        player.motion.facing = static_cast<std::int16_t>(*ai.heading);
+        player.motion.lastIntent = player.motion.facing;
+    }
+}
+
+PlayerAnimation aiMoveAnimation(const runtime::AiCharacter& ai) {
+    return {ai.move && ai.move->run ? runtime::kAnimationRun : runtime::kAnimationWalk, 1.0f};
+}
+
 void PlayerRig::animate(Scene& scene, float dt, int role, float scale) {
     const bool switched = role != animation;
     if (switched) {

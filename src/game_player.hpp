@@ -2,6 +2,7 @@
 #include "assets/assets.hpp"
 #include "render/character.hpp"
 #include "render/scene.hpp"
+#include "runtime/ai.hpp"
 #include "runtime/collision.hpp"
 #include "runtime/player_intent.hpp"
 #include "runtime/player_locomotion.hpp"
@@ -54,6 +55,10 @@ struct PlayerAnimation {
 std::int16_t headingFromDegrees(float degrees);
 
 std::optional<PlayerRig> placePlayer(chase::assets::FuseArchive& archive, chase::render::Scene& scene, const chase::assets::Level& level);
+
+// A scripted move (AIMove on the player, STAND-IN SCRIPT-S31): the AI position and heading replace the locomotion result.
+void applyAiPosition(PlayerRig& player, const chase::runtime::AiCharacter& ai);
+PlayerAnimation aiMoveAnimation(const chase::runtime::AiCharacter& ai);
 
 PlayerAnimation updatePlayer(PlayerRig& player, const chase::runtime::CollisionWorld& collision, const chase::runtime::StickIntent& intent,
                              bool jumpPressed, float dt);

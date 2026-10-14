@@ -6,7 +6,8 @@ Every native (script function) of the level scripts: handler address, argument c
 
 ## 2026-10-14T13:33:39+02:00 — Census of the 245 natives used by level and class scripts, handler addresses, classes A-D and batches (llvm-objdump on game.arm.elf, C++ level loader; no emulator, no REA session)
 Corrected by [script-natives-progress.md §2026-10-14T14:41](script-natives-progress.md#ts-20261014-144155): CountRacesWon is class A (not blocking) and the second argument of EnableStudsByGroup is not an enable flag.
-Corrected by [script-natives.md §2026-10-14T14:16](#ts-20261014-141621): the note of PrintDebugString (0x26fde8 is a no-op, not the draw call 0x2665d0) and the classes of the batch 26 rows (what each handler does).
+Corrected by [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311): none of the 17 batch 34 natives blocks (all return 1; class C with B? was wrong).
+Corrected by [script-natives-flags.md §2026-10-14T14:16](script-natives-flags.md#ts-20261014-141621): the note of PrintDebugString (0x26fde8 is a no-op, not the draw call 0x2665d0) and the classes of the batch 26 rows (what each handler does).
 
 ### Method
 
@@ -60,7 +61,7 @@ Sum (at the census): 224 unhandled natives in batches, 20 implemented, 1 stand-i
 | WaitForDCam | 0x1883ec | 0 | 429 / 120 / 4 / 0 | 10 | done | 28 | handled, busy test without the cutscene part (SCRIPT-29): [dcam.md §2026-10-14T14:36](dcam.md#ts-20261014-143600) |
 | SpawnScript | 0x1c3730 | 1 | 424 / 43 / 6 / 0 | 9 | done |  |  |
 | ShowDialogueText | 0x26ff84 | 3 | 409 / 25 / 0 / 0 | 6 | stand-in | 30 | handled as a stand-in, drawn with fitted layout: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
-| AIEnable | 0x1881d4 | 2 | 404 / 74 / 2 / 0 | 10 | C | 34 |  |
+| AIEnable | 0x1881d4 | 2 | 404 / 74 / 2 / 0 | 10 | stand-in | 34 | handled: flag or requested state recorded; returns 1: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
 | ShowDialogueTextTimed | 0x2a6d90 | 4 | 400 / 106 / 8 / 0 | 6 | stand-in | 30 | handled as a stand-in, drawn with fitted layout: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
 | ToggleUseable | 0x1cdcf8 | 2 | 347 / 26 / 7 / 4 | 8 | A | 26 | handled, flag recorded (stand-in SCRIPT-S17) |
 | PlaySound | 0x1b4394 | 2 | 277 / 25 / 0 / 0 | 8 | C | 33 |  |
@@ -74,7 +75,7 @@ Sum (at the census): 224 unhandled natives in batches, 20 implemented, 1 stand-i
 | EnableCollision | 0x27e9f4 | 2 | 240 / 33 / 2 / 5 | 9 | done |  |  |
 | VehicleSetChaseMaxSpeed | 0x2b4bec | 2 | 208 / 12 / 0 / 0 | 6 | C | 36 |  |
 | StopCharAnim | 0x1bfb84 | 1 | 193 / 30 / 0 / 0 | 8 | C | 32 |  |
-| AIFaceTarget | 0x1bf570 | 2 | 182 / 18 / 0 / 0 | 8 | C | 34 |  |
+| AIFaceTarget | 0x1bf570 | 2 | 182 / 18 / 0 / 0 | 8 | stand-in | 34 | handled: flag or requested state recorded; returns 1: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
 | registersound | 0x1cdbdc | 2 | 180 / 22 / 0 / 0 | 8 | C | 33 |  |
 | FadeScreen | 0x1a2e8c | 1 | 178 / 39 / 0 / 0 | 8 | stand-in |  |  |
 | SubObjectiveEnemyEnable | 0x2b4c3c | 3 | 152 / 37 / 0 / 0 | 5 | done | 31 | exact: handler is `mov r0, #1; bx lr`: [objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919) |
@@ -85,10 +86,10 @@ Sum (at the census): 224 unhandled natives in batches, 20 implemented, 1 stand-i
 | PlaySoundGO | 0x295244 | 3 | 114 / 1 / 0 / 0 | 7 | C | 33 |  |
 | ResetObject | 0x1b25f8 | 1 | 107 / 5 / 0 / 0 | 11 | A | 26 | handled: class message 8 queued |
 | VehicleSetLocked | 0x26fe78 | 2 | 102 / 13 / 3 / 0 | 8 | C | 36 |  |
-| AIActive | 0x1881a4 | 1 | 101 / 16 / 0 / 0 | 6 | C | 34 |  |
+| AIActive | 0x1881a4 | 1 | 101 / 16 / 0 / 0 | 6 | stand-in | 34 | handled: flag or requested state recorded; returns 1: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
 | AttachObject | 0x1bf68c | 2 | 100 / 15 / 13 / 0 | 8 | C | 32 |  |
 | VehicleSetForcedStop | 0x29ea7c | 2 | 99 / 13 / 1 / 0 | 6 | C | 36 |  |
-| AIMove | 0x171f7c | 3 | 98 / 19 / 0 / 0 | 8 | C | 34 |  |
+| AIMove | 0x171f7c | 3 | 98 / 19 / 0 / 0 | 8 | stand-in | 34 | handled: starts a straight walk to the target object (path finder not ported) and ends with the AIMove trigger event; returns 1: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
 | EnableTargetable | 0x26fb2c | 2 | 97 / 6 / 0 / 0 | 7 | A | 26 | handled, flag recorded (SCRIPT-S18) |
 | ShowTipTextTimed | 0x26ffec | 2 | 96 / 45 / 6 / 0 | 8 | stand-in | 30 | handled as a stand-in, drawn with fitted layout: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
 | EnableDistanceFade | 0x2a05bc | 2 | 89 / 13 / 9 / 0 | 7 | A | 26 | open: node kind test and child recursion, needs SCRIPT-57 |
@@ -108,7 +109,7 @@ Sum (at the census): 224 unhandled natives in batches, 20 implemented, 1 stand-i
 | PanMapToObject | 0x1d9e04 | 4 | 65 / 2 / 0 / 0 | 6 | stand-in | 31 | handled as a stand-in that records its call (SCRIPT-S26): [objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919) |
 | SpawnStuds | 0x1a3130 | 2 | 65 / 0 / 0 / 1 | 7 | C | 38 |  |
 | UnlockAbility | 0x1cde84 | 1 | 63 / 12 / 7 / 0 | 10 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
-| AIIgnorePlayer | 0x1d9c38 | 2 | 62 / 0 / 0 / 0 | 4 | C | 34 |  |
+| AIIgnorePlayer | 0x1d9c38 | 2 | 62 / 0 / 0 / 0 | 4 | stand-in | 34 | handled: flag or requested state recorded; returns 1: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
 | ShowIntroText | 0x1cdc2c | 1 | 58 / 6 / 0 / 0 | 8 | stand-in | 30 | handled as a stand-in, call recorded only: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
 | DCamCutSceneLoad | 0x2889a4 | 1 | 57 / 13 / 2 / 0 | 7 | C | 29 |  |
 | DCamCutSceneWait | 0x288a40 | 1 | 57 / 13 / 2 / 0 | 7 | B | 29 | returns !0x2297b0(arg 0) |
@@ -116,12 +117,12 @@ Sum (at the census): 224 unhandled natives in batches, 20 implemented, 1 stand-i
 | DCamCutSceneFree | 0x28898c | 1 | 56 / 13 / 2 / 0 | 7 | C | 29 |  |
 | DCamCutScenePlay | 0x2889e4 | 5 | 56 / 13 / 2 / 0 | 7 | C | 29 |  |
 | WaitForCurrentAnim | 0x2a06a8 | 1 | 53 / 8 / 0 / 1 | 7 | B | 32 | returns 0 until the playing animation frame is within 1 frame of its length |
-| ainostate | 0x194e0c | 1 | 50 / 6 / 0 / 0 | 6 | C | 34 |  |
+| ainostate | 0x194e0c | 1 | 50 / 6 / 0 / 0 | 6 | stand-in | 34 | handled: flag or requested state recorded; returns 1: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
 | StopAnim | 0x1883d0 | 1 | 49 / 10 / 0 / 0 | 5 | C | 32 |  |
 | StopSound | 0x1b43ec | 3 | 48 / 5 / 0 / 0 | 7 | C | 33 |  |
 | vehiclestopsounds | 0x27c148 | 1 | 47 / 6 / 0 / 0 | 7 | C | 33 |  |
 | WaitForCurrentCharAnim | 0x263ae4 | 1 | 46 / 3 / 0 / 0 | 8 | B | 32 | same shape as WaitForCurrentAnim |
-| CharacterInvulnerable | 0x2a6cfc | 2 | 45 / 6 / 0 / 0 | 7 | C | 34 |  |
+| CharacterInvulnerable | 0x2a6cfc | 2 | 45 / 6 / 0 / 0 | 7 | stand-in | 34 | handled: flag or requested state recorded; returns 1: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
 | IsRedBrickExtraActive | 0x2a6d34 | 2 | 44 / 12 / 4 / 0 | 6 | done |  |  |
 | VehicleStop | 0x1b27e8 | 1 | 43 / 6 / 0 / 0 | 6 | C | 36 |  |
 | enableobjectfade | 0x26fac4 | 2 | 42 / 1 / 0 / 0 | 7 | A | 26 | open: message 24 first, then the EnableObject node calls; needs SCRIPT-57 |
@@ -133,16 +134,16 @@ Sum (at the census): 224 unhandled natives in batches, 20 implemented, 1 stand-i
 | SnapCamera | 0x1a30fc | 0 | 39 / 15 / 2 / 0 | 7 | stand-in | 28 | follow reset through FollowCamera::reset |
 | SetWeaponEnabled | 0x26fea4 | 2 | 36 / 4 / 0 / 0 | 5 | C | 35 |  |
 | UnlockCharacter | 0x263918 | 1 | 34 / 1 / 0 / 0 | 8 | A | 27 | handled as stand-in, partial (SCRIPT-S21, SCRIPT-61) |
-| AISuperJump | 0x1b2344 | 3 | 31 / 9 / 0 / 0 | 7 | C | 34 |  |
+| AISuperJump | 0x1b2344 | 3 | 31 / 9 / 0 / 0 | 7 | stand-in | 34 | handled: flag or requested state recorded; returns 1: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
 | KillScript | 0x1c3834 | 1 | 30 / 5 / 1 / 0 | 7 | A | 26 | handled: threads of the script except the caller end |
 | BulletTime | 0x1a2df0 | 3 | 28 / 6 / 0 / 0 | 9 | C | 29 |  |
 | SetPartyCharacter | 0x27beb4 | 3 | 28 / 10 / 3 / 0 | 8 | C | 35 |  |
 | SetRaceInProgress | 0x27bff4 | 1 | 28 / 4 / 0 / 0 | 6 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
 | ShowBossHearts | 0x1da788 | 2 | 27 / 0 / 0 / 0 | 7 | stand-in | 30 | handled as a stand-in, call recorded only: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
 | SceneChange | 0x1b262c | 1 | 25 / 8 / 0 / 0 | 7 | done |  |  |
-| AIResetState | 0x1bf650 | 1 | 24 / 11 / 0 / 0 | 6 | C | 34 |  |
+| AIResetState | 0x1bf650 | 1 | 24 / 11 / 0 / 0 | 6 | stand-in | 34 | handled: flag or requested state recorded; returns 1: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
 | EffectFadeAlpha | 0x27e7d0 | 4 | 24 / 13 / 0 / 5 | 4 | C | 38 |  |
-| AIFollowSimplePath | 0x285d18 | 5 | 23 / 2 / 0 / 0 | 4 | C | 34 |  |
+| AIFollowSimplePath | 0x285d18 | 5 | 23 / 2 / 0 / 0 | 4 | stand-in | 34 | handled: walks the path points from the start node, forward or reverse: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
 | ScaleSoundFrequency | 0x2a8afc | 3 | 23 / 0 / 0 / 0 | 6 | C | 33 |  |
 | AddStuds | 0x18838c | 1 | 22 / 3 / 0 / 0 | 7 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
 | SubObjectiveArrowEnemyEnable | 0x2c87f0 | 2 | 22 / 8 / 0 / 0 | 6 | stand-in | 31 | handled as a stand-in that records its call (SCRIPT-S26): [objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919) |
@@ -182,12 +183,12 @@ Sum (at the census): 224 unhandled natives in batches, 20 implemented, 1 stand-i
 | clearmapdummylocobj | 0x26f9f4 | 0 | 8 / 0 / 0 / 0 | 4 | stand-in | 31 | handled as a stand-in that records its call (SCRIPT-S26): [objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919) |
 | EnableShadow | 0x1bf84c | 2 | 8 / 8 / 0 / 0 | 1 | A | 26 | open: written only when 0x21aae0 (object kind) allows, needs SCRIPT-57 |
 | GetGameComplete | 0x2635d0 | 1 | 8 / 1 / 1 / 0 | 8 | done |  |  |
-| LockCharacter | 0x1cda60 | 1 | 8 / 0 / 0 / 0 | 6 | C | 34 |  |
+| LockCharacter | 0x1cda60 | 1 | 8 / 0 / 0 / 0 | 6 | stand-in | 34 | handled: clears the group bit like UnlockCharacter sets it (party removal not modelled): [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
 | MovePlatform | 0x1bf958 | 3 | 8 / 0 / 0 / 0 | 2 | C | 37 |  |
 | SetDCamStartWait | 0x26fdf0 | 1 | 8 / 1 / 0 / 0 | 3 | done | 28 | handled |
 | SetIndestructible | 0x27be40 | 2 | 8 / 0 / 0 / 0 | 2 | A | 26 | handled, flag recorded (SCRIPT-S18) |
 | ShowRaceStart | 0x1cdc9c | 0 | 8 / 1 / 0 / 0 | 7 | stand-in | 30 | handled as a stand-in, call recorded only: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
-| AIPursuit | 0x17cbf0 | 3 | 7 / 2 / 0 / 0 | 5 | C | 34 |  |
+| AIPursuit | 0x17cbf0 | 3 | 7 / 2 / 0 / 0 | 5 | stand-in | 34 | handled: flag or requested state recorded; returns 1: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
 | AttachToWorldRoot | 0x2951ec | 1 | 7 / 4 / 0 / 0 | 4 | C | 32 |  |
 | AwardRacingCar | 0x1d9c84 | 0 | 7 / 1 / 0 / 0 | 6 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
 | ConversationPlayAndWait | 0x2ab364 | 5 | 7 / 2 / 0 / 0 | 2 | B | 29 | first call 0x25d974, repeat calls return 1 when the byte at thread+0x48 pointer is 0 |
@@ -197,7 +198,7 @@ Sum (at the census): 224 unhandled natives in batches, 20 implemented, 1 stand-i
 | SetRaceWon | 0x1a30a8 | 1 | 7 / 1 / 0 / 0 | 6 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
 | SpawnDebris2Colour | 0x2860f0 | 7 | 7 / 4 / 0 / 0 | 3 | C | 38 |  |
 | VehicleSetRaceTrim | 0x286080 | 2 | 7 / 1 / 0 / 0 | 6 | C | 36 |  |
-| AICantAttack | 0x1bf528 | 2 | 6 / 0 / 0 / 0 | 1 | C | 34 |  |
+| AICantAttack | 0x1bf528 | 2 | 6 / 0 / 0 / 0 | 1 | stand-in | 34 | handled: flag or requested state recorded; returns 1: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
 | OverrideFog | 0x1b24f8 | 2 | 6 / 0 / 0 / 0 | 2 | C | 29 |  |
 | Set3DFocusObject | 0x288aa8 | 2 | 6 / 0 / 0 / 0 | 1 | stand-in | 28 | stereoscopic focus only, no effect on the mono picture |
 | UnlockLevel | 0x1b276c | 1 | 6 / 1 / 0 / 0 | 6 | A | 27 | handled, exact (batch 27 entry) |
@@ -211,7 +212,7 @@ Sum (at the census): 224 unhandled natives in batches, 20 implemented, 1 stand-i
 | VehicleSetAI | 0x1bfb50 | 1 | 5 / 1 / 0 / 0 | 5 | C | 36 |  |
 | VehicleSetDCamPathFollow | 0x27be1c | 3 | 5 / 0 / 0 / 0 | 3 | C | 28 | not read |
 | activeduringdcam | 0x26f978 | 2 | 4 / 0 / 0 / 0 | 3 | A | 26 | handled, flag recorded (SCRIPT-S18) |
-| AIStalkPlayer | 0x1cd88c | 2 | 4 / 0 / 0 / 0 | 1 | C | 34 |  |
+| AIStalkPlayer | 0x1cd88c | 2 | 4 / 0 / 0 / 0 | 1 | stand-in | 34 | handled: flag or requested state recorded; returns 1: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
 | CharSetAllowVehicleEntry | 0x29ea3c | 2 | 4 / 4 / 0 / 0 | 1 | C | 35 |  |
 | DCamCutsceneFadeDisable | 0x2c09ec | 0 | 4 / 2 / 0 / 0 | 2 | C | 29 |  |
 | DisableSuperBuiltItSave | 0x2b4b78 | 2 | 4 / 2 / 1 / 0 | 2 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
@@ -225,7 +226,7 @@ Sum (at the census): 224 unhandled natives in batches, 20 implemented, 1 stand-i
 | SmokeyElectrifyTile | 0x2916b8 | 2 | 4 / 0 / 0 / 0 | 1 | C | 38 |  |
 | StartMiniGame | 0x1cdcac | 1 | 4 / 0 / 0 / 0 | 2 | C | 39 |  |
 | SuperFreeplaySwap | 0x27c0ac | 2 | 4 / 1 / 0 / 0 | 3 | C | 35 |  |
-| AIMillAbout | 0x1b22e4 | 2 | 3 / 0 / 0 / 0 | 1 | C | 34 |  |
+| AIMillAbout | 0x1b22e4 | 2 | 3 / 0 / 0 / 0 | 1 | stand-in | 34 | handled: flag or requested state recorded; returns 1: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
 | AttachToRoom | 0x1ddc88 | 1 | 3 / 1 / 0 / 0 | 2 | C | 32 |  |
 | CameraFollow | 0x1bf7c8 | 0 | 3 / 1 / 0 / 0 | 3 | C | 28 | read, not handled: [dcam.md §2026-10-14T14:36](dcam.md#ts-20261014-143600) |
 | DistanceFadeMid | 0x27e798 | 1 | 3 / 0 / 0 / 0 | 1 | A | 26 | open: node kind test, needs SCRIPT-57 |
@@ -238,7 +239,7 @@ Sum (at the census): 224 unhandled natives in batches, 20 implemented, 1 stand-i
 | Walnuts_Hit | 0x1b2828 | 1 | 3 / 0 / 0 / 0 | 1 | C | 35 |  |
 | 1-8_RejoinFight | 0x26353c | 1 | 2 / 2 / 0 / 0 | 1 | C | 35 |  |
 | AddToSemiTransList | 0x2a059c | 2 | 2 / 0 / 0 / 0 | 1 | C | 38 |  |
-| AIMoveNoAvoid | 0x1cd798 | 3 | 2 / 2 / 0 / 0 | 1 | C | 34 |  |
+| AIMoveNoAvoid | 0x1cd798 | 3 | 2 / 2 / 0 / 0 | 1 | stand-in | 34 | handled: as AIMove, records the no-avoid flag: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
 | BlackoutMap | 0x1b23f4 | 1 | 2 / 0 / 0 / 0 | 1 | stand-in | 31 | handled as a stand-in that records its call (SCRIPT-S26): [objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919) |
 | EnableMinimapWipe | 0x27bbe8 | 1 | 2 / 2 / 2 / 0 | 1 | stand-in | 31 | handled as a stand-in that records its call (SCRIPT-S26): [objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919) |
 | getinmech | 0x194e7c | 2 | 2 / 0 / 0 / 0 | 1 | C | 35 |  |
@@ -251,7 +252,7 @@ Sum (at the census): 224 unhandled natives in batches, 20 implemented, 1 stand-i
 | settrafficmaxvehicles | 0x2a6d70 | 1 | 2 / 2 / 0 / 0 | 1 | C | 36 |  |
 | ShowPortraitOverVehicle | 0x2b4c1c | 2 | 2 / 0 / 0 / 0 | 1 | stand-in | 30 | handled as a stand-in, call recorded only: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
 | 1-8_runfromarrest | 0x27bb4c | 1 | 1 / 1 / 0 / 0 | 1 | C | 35 |  |
-| AIRunAway | 0x17cc30 | 1 | 1 / 0 / 0 / 0 | 1 | C | 34 |  |
+| AIRunAway | 0x17cc30 | 1 | 1 / 0 / 0 / 0 | 1 | stand-in | 34 | handled: flag or requested state recorded; returns 1: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
 | AwardViewer | 0x1b23e4 | 0 | 1 / 0 / 0 / 0 | 1 | C | 39 |  |
 | CameraRotFixedSet | 0x27bb9c | 4 | 1 / 0 / 0 / 0 | 1 | B? | 28 | read, not handled: [dcam.md §2026-10-14T14:36](dcam.md#ts-20261014-143600) |
 | CharacterShop | 0x1cd8e4 | 1 | 1 / 0 / 0 / 0 | 1 | C | 39 |  |
@@ -302,52 +303,6 @@ AIRemoveRangeBound, ActivateObject, Active, AddCharacterToParty, AddCharacterToP
 - Whether natives are also called by game code outside the script executor (messages to the mission logic); the call-site census only sees scripts.
 - The 1-1 closure is static: scripts reachable by trigger events other than the name prefix `1-1` and by class startup scripts (SCRIPT-6) are not in it.
 
-<a id="ts-20261014-141621"></a>
+Moved entries:
 
-## 2026-10-14T14:16:21+02:00 — Batch 26 (SCRIPT-26): the 22 handlers read, 11 transcribed (llvm-objdump on game.arm.elf, C++ runner tests; no emulator, no REA session)
-
-[Corrects script-natives.md §2026-10-14T13:33](#ts-20261014-133339) where noted. Every handler address was checked against its registration (the handler word sits directly before the name string at 0x15fd1c, 0x161408, 0x15fdec, 0x1620a0, 0x160b44, 0x1604a8, 0x160cf8, 0x161a68, 0x1603d4, 0x160b30, 0x15fef4, 0x15ff5c, 0x160b08, 0x160b1c; KillScript is in the static table at 0x359154; `DestroyProp` and `KillObject` share 0x1a2fe4).
-
-### Argument array
-
-An object argument is followed by a gap: in the two-argument natives whose first argument is an object the second value is at `[r1 + 0xc]` (ToggleUseable, EnableTargetable, EnableDistanceFade, SetIndestructible, ObjectUnshovable, ToggleUpdateFlag, EnableShadow, EnableSwitch, ResetCarriedThing); in ActiveDuringDCam and PrintDebugString it is at `[r1 + 4]`; PositionBound reads its two arguments at `[r1 + 4]` and `[r1 + 8]`. The call text always has the arguments in order, so the port reads them by index.
-
-### Transcribed (handler, effect, return)
-
-All return 1 (never block). The float argument tests compare with the literal 0.0 (pool words checked); the stores are to the object entity (`obj`) or its component `obj + 0x7c` (`comp`).
-
-| Native | Handler | Effect |
-|---|---|---|
-| PrintDebugString | 0x26fde8 | `mov r0,#1; bx lr`. Corrects the census note (0x2665d0 is called by the next function 0x26fdf0). |
-| revealcollectable | 0x27bdb0 | `mov r0,#1; bx lr`. |
-| KillScript | 0x1c3834 | Calls 0x223a14(thread, script owner, script record). It walks the thread list at scene +0x1310 and, for every thread other than the caller with that owner and script record, stores the script's call count (record +6) into the thread's pc (+0x16). The thread ends at its next runner pass. A script the level does not have matches nothing. |
-| ResetObject | 0x1b25f8 | Resolves the object with 0x22dacc, then 0x244fc8(obj, 8, 0): the class message handler of the object's kind (table 0x245004 + kind * 40, +0x14). |
-| SkipToFinalState | 0x270078 | Same with message 54. |
-| ToggleUseable | 0x1cdcf8 | v = argument > 0. For an object of kind 0x47 the children of kinds 0x48 in its child range get 0x236624(child, v) (bit 4 of the byte at +4 of the child's record in the scene's usable registry, when it is registered) and 0x2219bc(child, v) (byte +0xa of its 12-byte record in the second registry); then the same two calls for the object itself. |
-| EnableTargetable | 0x26fb2c | Null object: nothing. Else the argument is converted to an integer (truncation); `comp[0xda]` bits 0 and 3 become 1 when its low byte is 0, else 0 (bits 6 and 7 unchanged). |
-| SetIndestructible | 0x27be40 | `comp[0xde]` bit 0 = argument != 0. |
-| ActiveDuringDCam | 0x26f978 | `comp[0x312]` bit 1 = argument != 0. |
-| ObjectUnshovable | 0x26fd68 | Argument != 0: `obj+0x10` (halfword) |= 0x100 and `obj+0xc` |= 0x20000; 0 clears both. The object is used as is (no 0x22dacc). |
-| ToggleUpdateFlag | 0x270094 | `obj+0x10` (halfword) bit 4: set when the argument is 0, cleared otherwise (cleared for NaN). |
-
-### Read and not transcribed
-
-- **EnableDistanceFade 0x2a05bc, DistanceFadeMid 0x27e798.** On the object's node (`obj+0x3c`), only when `node[0] & 31` equals a global node kind: EnableDistanceFade sets or clears bit 4 of `node[0xde]` (clearing also stores 16 / 255 in `node[0xdc]` / `node[0xdd]`) and repeats the same through all child nodes (0x2b65dc, links at +8 and +0xc); DistanceFadeMid sets bit 5 of `node[0xde]`. The node kinds and the fade consumer are not recovered.
-- **enableobjectfade 0x26fac4.** 0x244fc8(obj, 24, argument); when the class handler returns 0 it calls 0x2428c0 (argument 0) or 0x242cf0 (else), the node calls EnableObject 0x1ddd00 also uses. Which kinds handle message 24 is not known.
-- **EnableShadow 0x1bf84c.** Only when 0x21aae0(obj) is true (kind 27 or 149, or 0x236b6c(obj) non-zero, or flag bit 14 of `obj+0xc`): `comp[0x316]` bit 2 = argument > 0.
-- **EnableSwitch 0x1bf8a4.** Argument > 0: message 8, then 0x236624(obj, 1). Else: for kinds 94, 139, 100 and 58 `comp[4]` (halfword) = 3; then 0x236624(obj, 0). Needs the kind of the object.
-- **DestroyProp / KillObject 0x1a2fe4.** 0x23cd80(0x22dacc(obj), 0): returns when `obj+0x10` bit 0 or `obj+0xc` bit 4 is set; otherwise unlinks the entity from the scene lists (0x23211c, 0x23cee8 several times), sends message 1 and, if it is not handled, sets `obj+0xc` bit 4 and calls 0x2320f8. This is the entity destruction.
-- **VehicleSetUnshovable 0x29eaa8.** Returns 0 (blocks, runs again every update) while `comp[2]` is 6 or 7; otherwise `comp[4]` = 10 and returns 1. The meaning of the states is part of the vehicle system.
-- **ResetCarriedThing 0x27bd64.** Takes the global player entity (pool word 0x27bdac), and calls 0x2253b8(player..., argument > 0, ...) on the thing carried at `player.comp[0x13c]` (kind 122); needs the carry system.
-- **PositionBound 0x268390.** Bound record centre (+0x10..+0x18) = world position of the object's node (matrix 0x250810, translation +48), and the byte +0xb of the bound = low byte of the halfword +0x2c of the room record found by 0x2234a8 for the node. Only call: `PositionBound(CameraBound_Test, Player1)` in lvl_test_playground_mike, not a game level.
-- **PositionPlayer 0x1da0dc.** Same steps as PositionObject 0x1d9e6c (node copy 0x24c118, room link 0x245008, heading from the target matrix times 0x10000 / 360 into `comp[8]` and `comp[10]`, controller fields cleared: `comp[0x315]` bits 2 and 4, floats at `comp[692]` and `comp[696]`, message 8 for the player) and, for the character kinds 179, 183 and 243, a ground probe: a grid gather 0x237f30 around the target, a sweep 0x21ab20 downward through the hit entities, and the position replaced by the hit point (0x2554c0). When the target is a vehicle (kind 11 branch) 0x213284 gives the transform. Vehicles (0x29f014) are repositioned too (state 5, 0x22b224, 0x204e98).
-
-### Port
-
-`src/runtime/natives_objects.{hpp,cpp}` stores the ten transcribed values by instance name (lower case) and queues the class messages 8 and 54; `ScriptRunner::killScript` ends the threads. Tests: `natives-objects` (synthetic scripts, values from the disassembly above) and `natives-objects-real-data` (scripts of lvl_01: `1-3_parkour_working` four usable flags, `1-3_Platform_Down`, the three ResetObject messages of `1-3_Ledge_Platform_Switch_Bottom_Script`, and `1-2_Scanned_Pringles` ending `1-2_Scanner_Enter_Script` before its first tip; call texts dumped with the C++ level loader).
-
-Unknowns:
-- Who reads each flag in the original (targeting, interaction prompt, shove, destruction, door and object update) and the meaning of the class messages 8 and 54 per kind.
-- The kind byte (`entity+0x12`) of each placed class; it gates EnableShadow, EnableSwitch, the group case of ToggleUseable, the fade natives and message 24.
-- Whether the registries of 0x236624 and 0x2219bc hold every object; an unregistered object ignores ToggleUseable.
-- The runner's treatment of a thread whose pc was set past the end while it waits for a child (the port ends it when the child returns).
+- [script-natives-flags.md §2026-10-14T14:16](script-natives-flags.md#ts-20261014-141621): batch 26 (SCRIPT-26), the 22 handlers read.

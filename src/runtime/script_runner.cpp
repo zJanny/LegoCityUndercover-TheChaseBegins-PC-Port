@@ -22,7 +22,7 @@ enum class Word {
     Unhandled, If, Else, ElseIf, EndIf, Assign, AssignArithmetic, CallScript, SpawnScript, Wait,
     EnableObject, EnableCollision, TriggerObject, EnableTrigger, EnableBound, GetGameComplete, IsLevelUnlocked, IsRedBrickExtraActive,
     WarningDialogBox, FadeScreen, PositionObject, SceneChange,
-    KillScript, ObjectNative, ProgressNative, TextNative, ObjectiveNative,
+    KillScript, ObjectNative, ProgressNative, TextNative, ObjectiveNative, AiNative,
     StartDCam, StartDCamTrack, DCamActive, WaitForDCam, EndDCam, SnapCamera, ShakeScreen, Set3DFocusObject, SetDCamStartWait, SetDCamEndWait
 };
 
@@ -74,7 +74,8 @@ Word wordOf(const std::string& function) {
     if (objectNativeKind(name)) return Word::ObjectNative;
     if (progressNativeKind(name)) return Word::ProgressNative;
     if (textNativeKind(name)) return Word::TextNative;
-    return objectiveNativeKind(name) ? Word::ObjectiveNative : Word::Unhandled;
+    if (objectiveNativeKind(name)) return Word::ObjectiveNative;
+    return aiNativeKind(name) ? Word::AiNative : Word::Unhandled;
 }
 
 std::string unquoted(const std::string& text) {
@@ -147,6 +148,7 @@ ScriptFunctionSupport scriptFunctionSupport(const std::string& name) {
     if (textNativeKind(key)) return ScriptFunctionSupport::StandIn;
     if (const auto kind = objectiveNativeKind(key))
         return objectiveNativeIsStandIn(*kind) ? ScriptFunctionSupport::StandIn : ScriptFunctionSupport::Implemented;
+    if (aiNativeKind(key)) return ScriptFunctionSupport::StandIn;
     return ScriptFunctionSupport::None;
 }
 
@@ -157,12 +159,20 @@ std::vector<std::string> handledScriptFunctions() {
     for (const std::string& name : progressNativeNames()) names.push_back(name);
     for (const std::string& name : textNativeNames()) names.push_back(name);
     for (const std::string& name : objectiveNativeNames()) names.push_back(name);
+    for (const std::string& name : aiNativeNames()) names.push_back(name);
     return names;
 }
 
 ScriptRunner::ScriptRunner(const Level& level, assets::PlacedObjectState& state)
     : level_(level), state_(state), triggers_(level.triggers.size()) {
     for (const assets::LevelBound& bound : level.bounds) boundEnabled_.push_back(bound.enabled);
+    ai_.setPositionLookup([this](const std::string& name, float out[3]) { return objectPosition_ && objectPosition_(name, out); });
+    ai_.setPathLookup([this](const std::string& name) -> const std::vector<std::array<float, 3>>* {
+        const std::uint32_t hash = assets::nameHash(name);
+        for (const assets::LevelPath& path : level_.paths)
+            if (path.nameHash == hash) return &path.points;
+        return nullptr;
+    });
     for (const LevelParam& param : level.defaults) {
         if (param.type == 0) variables_[param.hash] = floatOf(param.value);
         else if (param.type == 5 || param.type == 7) variables_[param.hash] = float(param.value);
@@ -180,6 +190,8 @@ void ScriptRunner::update(float dt) {
     dt_ = dt;
     text_.update(dt);
     objectives_.update(dt);
+    ai_.update(dt);
+    fireAiMoveEvents();
     for (auto it = threads_.begin(); it != threads_.end();) {
         const auto next = std::next(it);
         execute(*it);
@@ -355,7 +367,11 @@ ScriptRunner::Result ScriptRunner::native(ScriptThread& thread, const ScriptCall
         }
         break;
     case Word::PositionObject:
-        if (args.size() >= 2) placements_.push_back({lower(args[0]), lower(args[1])});
+        if (args.size() >= 2) {
+            placements_.push_back({lower(args[0]), lower(args[1])});
+            float where[3];
+            if (objectPosition_ && objectPosition_(lower(args[1]), where)) ai_.setPosition(lower(args[0]), where);
+        }
         break;
     case Word::SceneChange:
         if (!args.empty()) sceneChanges_.push_back(args[0]);
@@ -391,6 +407,9 @@ ScriptRunner::Result ScriptRunner::native(ScriptThread& thread, const ScriptCall
         break;
     case Word::ObjectiveNative:
         objectiveNative(call);
+        break;
+    case Word::AiNative:
+        aiNative(call);
         break;
     case Word::WarningDialogBox:
         if (!(thread.flags & kScriptBlocked)) {
@@ -486,6 +505,30 @@ void ScriptRunner::objectiveNative(const ScriptCall& call) {
         objectives_.record(*kind, values, lower(args[0]));
     }
     }
+}
+
+void ScriptRunner::aiNative(const ScriptCall& call) {
+    const auto kind = aiNativeKind(lower(call.function));
+    if (!kind) return;
+    const auto& args = call.arguments;
+    if (args.size() < aiNativeArguments(*kind)) return;
+    const std::size_t objects = aiNativeObjects(*kind);
+    std::vector<std::string> names;
+    std::vector<float> numbers;
+    for (std::size_t i = 0; i < aiNativeArguments(*kind); ++i) {
+        if (i < objects) names.push_back(lower(args[i]));
+        else numbers.push_back(read(args[i]));
+    }
+    ai_.run(*kind, names, numbers);
+}
+
+void ScriptRunner::fireAiMoveEvents() {
+    for (const std::string& character : ai_.takeMovesEnded())
+        for (std::size_t i = 0; i < level_.triggers.size(); ++i)
+            if (triggers_[i].enabled && lower(level_.triggers[i].event) == "aimove" && lower(level_.triggers[i].objectName) == character) {
+                queueTrigger(i);
+                break;
+            }
 }
 
 void ScriptRunner::killScript(const ScriptThread& caller, const std::string& name) {

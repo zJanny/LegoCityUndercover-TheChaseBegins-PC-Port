@@ -4,6 +4,7 @@
 // script words, Wait 0x174604, CallScript / SpawnScript 0x1c3730 and the natives that have a handler. No SDL dependency.
 #include "assets/object_collision.hpp"
 #include "runtime/natives_objects.hpp"
+#include "runtime/ai.hpp"
 #include "runtime/dcam.hpp"
 #include "runtime/natives_progress.hpp"
 #include "runtime/objectives.hpp"
@@ -163,6 +164,9 @@ public:
     const ScriptTextState& text() const { return text_; }
     // Waypoints and sub-objective groups switched on by the level scripts (objectives.hpp).
     const ObjectiveState& objectives() const { return objectives_; }
+    // AI state the AI natives wrote and the move orders they started (ai.hpp).
+    AiCore& ai() { return ai_; }
+    const AiCore& ai() const { return ai_; }
 
 private:
     enum class Result { Continue, Block };
@@ -178,6 +182,8 @@ private:
     void progressNative(const assets::ScriptCall& call);
     void textNative(const assets::ScriptCall& call);
     void objectiveNative(const assets::ScriptCall& call);
+    void aiNative(const assets::ScriptCall& call);
+    void fireAiMoveEvents();
     float read(const std::string& token) const;
     bool holds(const assets::ScriptCall& call) const;
     void assignArithmetic(const assets::ScriptCall& call);
@@ -214,6 +220,7 @@ private:
     ProgressNativeState progressNatives_;
     ScriptTextState text_;
     ObjectiveState objectives_;
+    AiCore ai_;
     float fadeLevel_ = 1.0f, fadeStart_ = 1.0f, fadeTarget_ = 1.0f, fadeElapsed_ = 0;
     DirectorCamera director_;
 };

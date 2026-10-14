@@ -100,6 +100,8 @@ Single C++ tests, with `ctest --test-dir build -R <name>`:
 | `runtime-core` | Game runtime core (frame timing, pad, stick, character movement, floor height and wall sliding), no SDL |
 | `script-dialog-real-data`, `game-script-dialog` | The police station entry script: the question box opens, A and B give their answers, the character is moved to the door. Registered only if `artifacts/romfs` existed at configure time |
 | `scene-change-real-data`, `game-scene-change-exit`, `game-scene-change-entry` | Walking out of the police station and back in: where each door leads, the landing points from the original, the order loading page, A, switch. Registered only if `artifacts/romfs` existed at configure time |
+| `ai-core` | The AI natives (flags, requested states, moves, AIMove event) with made-up characters and scripts, no game data needed |
+| `ai-real-data` | Runs the real police station entry script: the player walks to the door at 0.11 per update, then the scene change follows; skips with code 77 without `artifacts/romfs` |
 | `script-runner` | How level scripts run each update (waits, a script calling or starting another one, conditions, door requests, scripts started by walking into marked places), with made-up scripts, no game data needed |
 | `dcam` | The script camera: its path curves, start and end waits, the end after the set time and the blocking of `WaitForDCam`, with made-up paths, no game data needed |
 | `dcam-real-data` | The camera paths of the first level against what the original showed in the police station entry (positions of the camera, the update on which the camera ends); skips with code 77 if `artifacts/romfs` is missing |

@@ -173,11 +173,11 @@ void switchesAndLanguage() {
 void supportClasses() {
     for (const char* name : {"CountRacesWon", "IsRacingCarAwarded", "UnlockLevel", "GetCharacterUnlocked", "IsRedbrickBought"})
         require(chase::runtime::scriptFunctionSupport(name) == ScriptFunctionSupport::Implemented, name);
-    for (const char* name : {"AddStuds", "UnlockAbility", "LockAbility", "UnlockCharacter", "GiveReward", "QuickSave", "SetRaceWon", "AwardRacingCar",
+    for (const char* name : {"AddStuds", "UnlockAbility", "LockAbility", "UnlockCharacter", "LockCharacter", "GiveReward", "QuickSave", "SetRaceWon", "AwardRacingCar",
                              "EnableStudsByGroup", "GetLanguage", "GetPlayerNumber", "UnlockScanner", "SetRaceInProgress", "EnableSuperBricks",
                              "SetParachuteDeployHeight", "DisableSuperBuiltItSave"})
         require(chase::runtime::scriptFunctionSupport(name) == ScriptFunctionSupport::StandIn, name);
-    require(chase::runtime::progressNativeNames().size() == 21, "21 natives in the batch");
+    require(chase::runtime::progressNativeNames().size() == 22, "22 natives in the batch");
 }
 }
 

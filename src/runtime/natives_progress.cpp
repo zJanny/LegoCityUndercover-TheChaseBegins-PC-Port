@@ -18,6 +18,7 @@ constexpr Entry kEntries[] = {
     {"givereward", ProgressNativeKind::GiveReward, {1, false, false}, true},
     {"unlockability", ProgressNativeKind::UnlockAbility, {1, false, false}, true},
     {"unlockcharacter", ProgressNativeKind::UnlockCharacter, {1, false, false}, true},
+    {"lockcharacter", ProgressNativeKind::LockCharacter, {1, false, false}, true},
     {"setraceinprogress", ProgressNativeKind::SetRaceInProgress, {1, false, false}, true},
     {"addstuds", ProgressNativeKind::AddStuds, {1, false, false}, true},
     {"quicksave", ProgressNativeKind::QuickSave, {0, false, false}, true},
@@ -163,6 +164,13 @@ ProgressNativeResult ProgressNativeState::run(ProgressNativeKind kind, const std
         const int group = groupBit(number);
         if (group >= 0) slot_[kCharacterGroupOffset] = std::uint8_t(slot_[kCharacterGroupOffset] | 1u << group);
         if ((group >= 0 || number == 16) && !characterUnlocked(number)) unlockCharacter(index & 0xff);
+        break;
+    }
+    case ProgressNativeKind::LockCharacter: {
+        const int group = groupBit(number);
+        if (group < 0) break;
+        charactersLocked_.push_back(index);
+        slot_[kCharacterGroupOffset] = std::uint8_t(slot_[kCharacterGroupOffset] & ~(1u << group));
         break;
     }
     case ProgressNativeKind::SetRaceInProgress: raceInProgress_ = number != 0; break;
