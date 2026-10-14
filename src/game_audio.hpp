@@ -74,6 +74,16 @@ public:
         std::lock_guard<std::mutex> guard(lock_);
         return music_->start(track);
     }
+    int playBuffer(std::shared_ptr<const chase::assets::Sound> sound) {
+        if (!device_) return 0;
+        std::lock_guard<std::mutex> guard(lock_);
+        return mixer_.play(std::move(sound));
+    }
+    void stopBuffer(int voice) {
+        if (!device_ || voice == 0) return;
+        std::lock_guard<std::mutex> guard(lock_);
+        mixer_.stop(voice);
+    }
     std::size_t calls() const { return calls_; }
 
 private:

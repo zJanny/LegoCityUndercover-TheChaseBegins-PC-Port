@@ -112,11 +112,11 @@ Sum (at the census): 224 unhandled natives in batches, 20 implemented, 1 stand-i
 | UnlockAbility | 0x1cde84 | 1 | 63 / 12 / 7 / 0 | 10 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
 | AIIgnorePlayer | 0x1d9c38 | 2 | 62 / 0 / 0 / 0 | 4 | stand-in | 34 | handled: flag or requested state recorded; returns 1: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
 | ShowIntroText | 0x1cdc2c | 1 | 58 / 6 / 0 / 0 | 8 | stand-in | 30 | heading object with a hint text key: [script-text.md §2026-10-14T18:57](script-text.md#ts-20261014-185739) |
-| DCamCutSceneLoad | 0x2889a4 | 1 | 57 / 13 / 2 / 0 | 7 | C | 29 |  |
-| DCamCutSceneWait | 0x288a40 | 1 | 57 / 13 / 2 / 0 | 7 | B | 29 | returns !0x2297b0(arg 0) |
+| DCamCutSceneLoad | 0x2889a4 | 1 | 57 / 13 / 2 / 0 | 7 | stand-in | 29 | slot table, loader 0x196390; the retry condition of the native is open: [cutscenes.md §2026-10-14T22:49](cutscenes.md#ts-20261014-224929) |
+| DCamCutSceneWait | 0x288a40 | 1 | 57 / 13 / 2 / 0 | 7 | stand-in | 29 | returns !0x2297b0(name): [cutscenes.md §2026-10-14T22:49](cutscenes.md#ts-20261014-224929) |
 | SpawnDebris | 0x1b26f0 | 4 | 57 / 0 / 0 / 1 | 3 | C | 38 |  |
-| DCamCutSceneFree | 0x28898c | 1 | 56 / 13 / 2 / 0 | 7 | C | 29 |  |
-| DCamCutScenePlay | 0x2889e4 | 5 | 56 / 13 / 2 / 0 | 7 | C | 29 |  |
+| DCamCutSceneFree | 0x28898c | 1 | 56 / 13 / 2 / 0 | 7 | stand-in | 29 | 0x196144: [cutscenes.md §2026-10-14T22:49](cutscenes.md#ts-20261014-224929) |
+| DCamCutScenePlay | 0x2889e4 | 5 | 56 / 13 / 2 / 0 | 7 | stand-in | 29 | 0x1964dc, flags a b c d: [cutscenes.md §2026-10-14T22:49](cutscenes.md#ts-20261014-224929) |
 | WaitForCurrentAnim | 0x2a06a8 | 1 | 53 / 8 / 0 / 1 | 7 | stand-in | 32 | stand-in: completes at once (the original blocks until the frame is within 1 of the length): [script-natives-animation.md §2026-10-14T21:36](script-natives-animation.md#ts-20261014-213649) |
 | ainostate | 0x194e0c | 1 | 50 / 6 / 0 / 0 | 6 | stand-in | 34 | handled: flag or requested state recorded; returns 1: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
 | StopAnim | 0x1883d0 | 1 | 49 / 10 / 0 / 0 | 5 | stand-in | 32 | stand-in: current request cleared: [script-natives-animation.md §2026-10-14T21:36](script-natives-animation.md#ts-20261014-213649) |
@@ -175,8 +175,8 @@ Sum (at the census): 224 unhandled natives in batches, 20 implemented, 1 stand-i
 | VehicleSetUnshovable | 0x29eaa8 | 1 | 10 / 1 / 1 / 0 | 4 | A | 26 | open: blocks while the vehicle state is 6 or 7, SCRIPT-60 |
 | EnableSwitch | 0x1bf8a4 | 2 | 9 / 0 / 0 / 0 | 2 | A | 26 | open: kind-dependent state write, needs SCRIPT-57 |
 | IsLevelUnlocked | 0x2636e4 | 2 | 9 / 5 / 5 / 0 | 4 | done |  |  |
-| PlayCutscene | 0x1bf9d4 | 1 | 9 / 3 / 2 / 0 | 6 | B | 29 | own body 0x1bf9dc (the census wrongly said it shares the body of PlayCharAnim): returns 1 when 0x2369c4 == 3 |
-| PlayCutsceneNoFadeBackIn | 0x2b9dac | 1 | 9 / 0 / 0 / 0 | 6 | C | 29 |  |
+| PlayCutscene | 0x1bf9d4 | 1 | 9 / 3 / 2 / 0 | 6 | stand-in | 29 | own body 0x1bf9dc, blocks until the movie ends: [cutscenes.md §2026-10-14T22:49](cutscenes.md#ts-20261014-224929) |
+| PlayCutsceneNoFadeBackIn | 0x2b9dac | 1 | 9 / 0 / 0 / 0 | 6 | stand-in | 29 | sets byte 0x5163e8+0x184, then PlayCutscene with fade-back-in 0: [cutscenes.md §2026-10-14T22:49](cutscenes.md#ts-20261014-224929) |
 | QuickSave | 0x194f64 | 0 | 9 / 3 / 1 / 0 | 4 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
 | RoomStreamingWait | 0x27bde0 | 1 | 9 / 0 / 0 / 0 | 3 | B? | 38 |  |
 | SetMapDummyLocObj | 0x27be84 | 1 | 9 / 0 / 0 / 0 | 4 | stand-in | 31 | handled as a stand-in that records its call (SCRIPT-S26): [objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919) |
@@ -215,7 +215,7 @@ Sum (at the census): 224 unhandled natives in batches, 20 implemented, 1 stand-i
 | activeduringdcam | 0x26f978 | 2 | 4 / 0 / 0 / 0 | 3 | A | 26 | handled, flag recorded (SCRIPT-S18) |
 | AIStalkPlayer | 0x1cd88c | 2 | 4 / 0 / 0 / 0 | 1 | stand-in | 34 | state 27 recorded; update 0x2c1c90 not ported (SCRIPT-104); returns 1 ([ai-states.md §2026-10-14T21:21](ai-states.md#ts-20261014-212158)): [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
 | CharSetAllowVehicleEntry | 0x29ea3c | 2 | 4 / 4 / 0 / 0 | 1 | C | 35 |  |
-| DCamCutsceneFadeDisable | 0x2c09ec | 0 | 4 / 2 / 0 / 0 | 2 | C | 29 |  |
+| DCamCutsceneFadeDisable | 0x2c09ec | 0 | 4 / 2 / 0 / 0 | 2 | stand-in | 29 | sets byte 0x529e30+0x39d, nothing reads it yet: [cutscenes.md §2026-10-14T22:49](cutscenes.md#ts-20261014-224929) |
 | DisableSuperBuiltItSave | 0x2b4b78 | 2 | 4 / 2 / 1 / 0 | 2 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
 | enablescannerbutton | 0x2915ac | 1 | 4 / 2 / 0 / 0 | 2 | stand-in | 31 | handled as a stand-in that records its call (SCRIPT-S26): [objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919) |
 | EndDCam | 0x17cbd4 | 0 | 4 / 0 / 0 / 0 | 2 | done | 28 | handled |

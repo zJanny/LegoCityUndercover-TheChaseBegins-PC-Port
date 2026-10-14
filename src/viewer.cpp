@@ -243,31 +243,20 @@ int run(const Options& options) {
     Animation cameraAnimation;
     bool cutscene = !options.cutscene.empty();
     if (cutscene) {
-        auto read = [&](const std::string& path) {
-            const FuseEntry* entry = archive.find(path);
-            if (!entry) throw std::runtime_error("not in archive: " + path);
-            return archive.read(*entry);
-        };
-        std::string folder = lower(options.cutscene);
-        for (const auto& cast : cutsceneActors(parseManifest(read(folder + "/manifest.bstxt")), folder)) {
-            if (cast.animation.empty()) continue;
-            if (cast.model.empty()) {
-                cameraAnimation = parseAnimation(read(cast.animation));
-                continue;
-            }
+        CutsceneContent content = loadCutscene(archive, options.cutscene.substr(options.cutscene.rfind('/') + 1));
+        for (auto& cast : content.actors) {
             Actor actor;
             actor.model = cast.model;
-            actor.animation = parseAnimation(read(cast.animation));
-            if (!cast.skeleton.empty() && archive.find(cast.skeleton)) actor.skeleton = parseSkeleton(read(cast.skeleton));
+            actor.animation = std::move(cast.animation);
+            actor.skeleton = std::move(cast.skeleton);
             if (!scene.addModel(cast.model)) throw std::runtime_error("not in archive: " + cast.model);
             actor.instance = scene.instances() - 1;
             actors.push_back(std::move(actor));
         }
-        if (cameraAnimation.subAnimations.empty()) throw std::runtime_error("cutscene has no camera animation");
+        cameraAnimation = std::move(content.camera);
         std::cout << "cutscene: " << actors.size() << " actor(s), " << cameraAnimation.frames << " camera frames\n";
-        std::string soundPath = "music/csaudio/" + folder.substr(folder.rfind('/') + 1) + ".bwav";
-        if (const FuseEntry* entry = archive.find(soundPath); entry && options.screenshot.empty() && options.frame < 0) {
-            cutsceneSound = std::make_shared<Sound>(decodeSound(archive.read(*entry)));
+        if (!content.soundPath.empty() && options.screenshot.empty() && options.frame < 0) {
+            cutsceneSound = std::make_shared<Sound>(decodeSound(archive.read(*archive.find(content.soundPath))));
             if (!audio.open()) std::cout << "no audio device: " << SDL_GetError() << '\n';
         }
     }
@@ -276,10 +265,7 @@ int run(const Options& options) {
     if (cutsceneSound) cutscenePeriod = std::max(cutscenePeriod, double(cutsceneSound->frames) / cutsceneSound->rate);
     Uint32 cutsceneStart = 0;
     int cutsceneVoice = 0;
-    auto normalised = [](const Animation& animation, double frame) {
-        double last = animation.frames > 1 ? animation.frames - 1 : 1;
-        return std::min(frame, last) / last;
-    };
+    auto normalised = [](const Animation& animation, double frame) { return cutsceneNormalised(animation, frame); };
     if (options.nav)
         for (const auto& levelPath : options.levels) {
             Level level = parseLevel(archive.read(*archive.find(levelPath)));
@@ -380,12 +366,7 @@ int run(const Options& options) {
                 if (!actor.skeleton.joints.empty()) scene.pose(actor.model, skinMatrices(actor.skeleton, actor.animation, local));
             }
             CutsceneCamera camera = cutsceneCamera(cameraAnimation, float(normalised(cameraAnimation, frame)));
-            // The game camera matrix is left-handed: row 0 is screen right, row 2 the view direction.
-            // Negating rows 0 and 2 gives GL's right-handed camera, and perspective() mirrors x
-            // back to the game's handedness.
-            Mat4 world = cameraMatrix(camera);
-            for (int i : {0, 1, 2, 8, 9, 10}) world[i] = -world[i];
-            eyeView = rigidInverse(world);
+            eyeView = chase::render::cutsceneView(camera);
             fovY = camera.fieldOfView * float(M_PI) / 180;
             nearZ = 0.1f;
             farZ = 4000;

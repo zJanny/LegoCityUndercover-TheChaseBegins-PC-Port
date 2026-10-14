@@ -140,6 +140,7 @@ int run(const Options& given) {
             return 0;
         }
         if (result.handoff.newGame) {
+            options.introMovieShown = true;
             options.level = game_options::kNewGameLevel;
             options.start = game_options::kNewGameStart;
         } else {

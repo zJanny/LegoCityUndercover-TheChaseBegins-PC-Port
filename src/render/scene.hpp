@@ -26,6 +26,9 @@ Mat4 perspective(float fovY, float aspect, float nearZ, float farZ);
 void cameraAxes(float yaw, float pitch, float forward[3], float right[3]);
 // View matrix for a camera at `eye` looking along yaw/pitch (radians), +Y up; use with perspective().
 Mat4 view(const float eye[3], float yaw, float pitch);
+// View matrix of a cutscene camera: the game camera matrix is left-handed (row 0 screen right, row 2 the view
+// direction); negating rows 0 and 2 gives GL's camera and perspective() mirrors x back.
+Mat4 cutsceneView(const assets::CutsceneCamera& camera);
 // Sets which stored winding counts as front: counterClockwise is the winding in the game's own space.
 void setFrontFace(bool counterClockwise);
 // Sets the scene shader program up for a frame: uniforms and fixed-function state of the scene pass.

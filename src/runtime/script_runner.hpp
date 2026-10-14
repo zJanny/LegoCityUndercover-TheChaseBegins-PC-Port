@@ -4,6 +4,7 @@
 // script words, Wait 0x174604, CallScript / SpawnScript 0x1c3730 and the natives that have a handler. No SDL dependency.
 #include "assets/object_collision.hpp"
 #include "runtime/natives_animation.hpp"
+#include "runtime/natives_cutscene.hpp"
 #include "runtime/natives_objects.hpp"
 #include "runtime/ai.hpp"
 #include "runtime/dcam.hpp"
@@ -181,6 +182,9 @@ public:
     const AiCore& ai() const { return ai_; }
     // Animation and attach requests of the batch SCRIPT-32 natives (natives_animation.hpp).
     const AnimationNativeState& animation() const { return animation_; }
+    // In-engine cutscene slots and the movie request of the batch SCRIPT-29 natives (natives_cutscene.hpp).
+    CutsceneNativeState& cutscenes() { return cutscenes_; }
+    const CutsceneNativeState& cutscenes() const { return cutscenes_; }
 
 private:
     enum class Result { Continue, Block };
@@ -199,6 +203,7 @@ private:
     void objectiveNative(const assets::ScriptCall& call);
     void aiNative(const assets::ScriptCall& call);
     void animationNative(const assets::ScriptCall& call);
+    Result cutsceneNative(ScriptThread& thread, const assets::ScriptCall& call);
     void fireAiMoveEvents();
     float read(const std::string& token) const;
     bool holds(const assets::ScriptCall& call) const;
@@ -241,6 +246,7 @@ private:
     WaypointSet waypoints_;
     AiCore ai_;
     AnimationNativeState animation_;
+    CutsceneNativeState cutscenes_;
     float fadeLevel_ = 1.0f, fadeStart_ = 1.0f, fadeTarget_ = 1.0f, fadeElapsed_ = 0;
     DirectorCamera director_;
 };

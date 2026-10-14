@@ -66,6 +66,12 @@ Mat4 rigidInverse(const Mat4& m) {
     return r;
 }
 
+Mat4 cutsceneView(const assets::CutsceneCamera& camera) {
+    Mat4 world = assets::cameraMatrix(camera);
+    for (int i : {0, 1, 2, 8, 9, 10}) world[i] = -world[i];
+    return rigidInverse(world);
+}
+
 Mat4 perspective(float fovY, float aspect, float nearZ, float farZ) {
     float f = 1.0f / std::tan(fovY / 2);
     Mat4 m{};

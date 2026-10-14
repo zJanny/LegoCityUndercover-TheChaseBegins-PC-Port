@@ -6,6 +6,7 @@
 #include "frontend/slot_summaries.hpp"
 #include "game_audio.hpp"
 #include "game_hud.hpp"
+#include "game_movie_sound.hpp"
 #include "input.hpp"
 #include "render/debug_overlay.hpp"
 #include "render/front_presenter.hpp"
@@ -24,31 +25,7 @@
 namespace game_front {
 
 namespace fe = chase::frontend;
-
-class MovieSound {
-public:
-    MovieSound() {
-        if (SDL_InitSubSystem(SDL_INIT_AUDIO) != 0) return;
-        SDL_AudioSpec want{}, have{};
-        want.freq = chase::movie::kAudioRate;
-        want.format = AUDIO_S16SYS;
-        want.channels = 2;
-        want.samples = 1024;
-        device_ = SDL_OpenAudioDevice(nullptr, 0, &want, &have, 0);
-        if (device_) SDL_PauseAudioDevice(device_, 0);
-    }
-    ~MovieSound() {
-        if (device_) SDL_CloseAudioDevice(device_);
-    }
-    MovieSound(const MovieSound&) = delete;
-    MovieSound& operator=(const MovieSound&) = delete;
-    void queue(const std::vector<std::uint8_t>& pcm) {
-        if (device_ && !pcm.empty()) SDL_QueueAudio(device_, pcm.data(), Uint32(pcm.size()));
-    }
-
-private:
-    SDL_AudioDeviceID device_ = 0;
-};
+using ::MovieSound;
 
 struct Options {
     std::string cutsceneDirectory;

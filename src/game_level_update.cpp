@@ -140,11 +140,16 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         ++updatesThisSecond;
         return;
     }
+    if (holdForMovie(dt)) {
+        ++updates;
+        ++updatesThisSecond;
+        return;
+    }
     const auto emit = [&](const runtime::SoundCall& call) {
         soundLog.emplace_back(updates, call.id);
         if (shared.audio) shared.audio->play(call);
     };
-    if (player) {
+    if (player && !cutscenePlaying()) {
         player->sounds.clear();
         runtime::StickIntentInput stick;
         stick.slot14 = {pad.slot(kSlotStickX).value, pad.slot(kSlotStickX).deadzone};
@@ -182,6 +187,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
     sceneStart.startRequested();
     if (player && !levelScripts.ai().moving("player1")) levelScripts.ai().setPosition("player1", player->position().data());
     levelScripts.update(dt);
+    cutsceneHost->update(levelScripts.cutscenes());
     if (player && levelScripts.ai().movedLastUpdate("player1")) game_player::applyAiPosition(*player, *levelScripts.ai().character("player1"));
     studs.addToCounter(levelScripts.progressNatives().takeStudsAdded());
     saveWriter.update(levelScripts.progressNatives().saveRequests(), levelScripts.progressNatives().slotImage());

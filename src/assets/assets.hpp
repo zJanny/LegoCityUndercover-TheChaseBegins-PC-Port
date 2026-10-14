@@ -594,6 +594,23 @@ Matrix actorMatrix(const ActorPose& pose);
 // 0x20e850: camera world matrix (row vectors) from rotation and position; x is negated.
 Matrix cameraMatrix(const CutsceneCamera& camera);
 
+// Everything one cutscene folder (csdata/models/<id>) holds: the cast with model, skeleton and animation, the camera
+// animation and the soundtrack path (music/csaudio/<id>.bwav, empty when the archive has none).
+struct CutsceneCast {
+    std::string model;
+    Skeleton skeleton;
+    Animation animation;
+};
+struct CutsceneContent {
+    std::vector<CutsceneCast> actors;
+    Animation camera;
+    std::string soundPath;
+};
+// Throws when the folder, a listed file or the camera animation is missing. Actors without animation are skipped.
+CutsceneContent loadCutscene(FuseArchive& archive, const std::string& id);
+// Frame position in 0..1 of an animation whose playback is held at `frame` (the last frame holds).
+double cutsceneNormalised(const Animation& animation, double frame);
+
 // Data tables (tables/*.bxls, loader 0x10e1cc): sheets of fixed-stride rows with typed
 // columns. Column names are not stored; the game addresses columns by index.
 // Types: 0 not stored, 1 int32, 2 16-bit, 3 8-bit, 4 float, 5/6 string-pool offset,

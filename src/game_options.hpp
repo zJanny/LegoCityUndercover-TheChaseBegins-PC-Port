@@ -36,6 +36,7 @@ struct Options {
     std::string frontScript;
     unsigned language = 1;
     bool returningPlayer = false;
+    bool introMovieShown = false;
     int windowWidth = 960, windowHeight = 600;
 };
 

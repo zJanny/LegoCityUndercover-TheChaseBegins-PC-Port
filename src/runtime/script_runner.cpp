@@ -22,7 +22,7 @@ enum class Word {
     Unhandled, If, Else, ElseIf, EndIf, Assign, AssignArithmetic, CallScript, SpawnScript, Wait,
     EnableObject, EnableCollision, TriggerObject, EnableTrigger, EnableBound, GetGameComplete, IsLevelUnlocked, IsRedBrickExtraActive,
     WarningDialogBox, InformationBox, FadeScreen, PositionObject, PositionPlayer, SceneChange,
-    KillScript, ObjectNative, ProgressNative, TextNative, ObjectiveNative, AiNative, AnimationNative,
+    KillScript, ObjectNative, ProgressNative, TextNative, ObjectiveNative, AiNative, AnimationNative, CutsceneNative,
     StartDCam, StartDCamTrack, DCamActive, WaitForDCam, EndDCam, SnapCamera, ShakeScreen, Set3DFocusObject, SetDCamStartWait, SetDCamEndWait
 };
 
@@ -78,7 +78,8 @@ Word wordOf(const std::string& function) {
     if (textNativeKind(name)) return Word::TextNative;
     if (objectiveNativeKind(name)) return Word::ObjectiveNative;
     if (aiNativeKind(name)) return Word::AiNative;
-    return animationNativeKind(name) ? Word::AnimationNative : Word::Unhandled;
+    if (animationNativeKind(name)) return Word::AnimationNative;
+    return cutsceneNativeKind(name) ? Word::CutsceneNative : Word::Unhandled;
 }
 
 std::string unquoted(const std::string& text) {
@@ -153,6 +154,7 @@ ScriptFunctionSupport scriptFunctionSupport(const std::string& name) {
         return objectiveNativeIsStandIn(*kind) ? ScriptFunctionSupport::StandIn : ScriptFunctionSupport::Implemented;
     if (aiNativeKind(key)) return ScriptFunctionSupport::StandIn;
     if (animationNativeKind(key)) return ScriptFunctionSupport::StandIn;
+    if (cutsceneNativeKind(key)) return ScriptFunctionSupport::StandIn;
     return ScriptFunctionSupport::None;
 }
 
@@ -165,6 +167,7 @@ std::vector<std::string> handledScriptFunctions() {
     for (const std::string& name : objectiveNativeNames()) names.push_back(name);
     for (const std::string& name : aiNativeNames()) names.push_back(name);
     for (const std::string& name : animationNativeNames()) names.push_back(name);
+    for (const std::string& name : cutsceneNativeNames()) names.push_back(name);
     return names;
 }
 
@@ -200,6 +203,7 @@ void ScriptRunner::update(float dt) {
     text_.update(dt);
     objectives_.update(dt);
     ai_.update(dt);
+    cutscenes_.update(dt);
     fireAiMoveEvents();
     for (auto it = threads_.begin(); it != threads_.end();) {
         const auto next = std::next(it);
@@ -408,7 +412,7 @@ ScriptRunner::Result ScriptRunner::native(ScriptThread& thread, const ScriptCall
     case Word::StartDCam: startDCamNative(director_, level_, args, [this](const std::string& token) { return read(token); }); break;
     case Word::StartDCamTrack: startDCamTrackNative(director_, level_, args, [this](const std::string& token) { return read(token); }); break;
     case Word::DCamActive: dcamActiveNative(director_, args, [this](const std::string& token) { return read(token); }); break;
-    case Word::WaitForDCam: return director_.busy() ? Result::Block : Result::Continue;
+    case Word::WaitForDCam: return director_.busy() || cutscenes_.busy("") ? Result::Block : Result::Continue;
     case Word::EndDCam: director_.requestEnd(); break;
     case Word::SnapCamera: director_.snapFollowCamera(); break;
     case Word::ShakeScreen: shakeScreenNative(director_, args, [this](const std::string& token) { return read(token); }); break;
@@ -434,6 +438,8 @@ ScriptRunner::Result ScriptRunner::native(ScriptThread& thread, const ScriptCall
     case Word::AnimationNative:
         animationNative(call);
         break;
+    case Word::CutsceneNative:
+        return cutsceneNative(thread, call);
     case Word::InformationBox:
         if (!(thread.flags & kScriptBlocked)) {
             if (args.empty()) break;
@@ -581,6 +587,31 @@ void ScriptRunner::animationNative(const ScriptCall& call) {
         numbers.push_back(read(token));
     }
     animation_.apply(*kind, args, numbers);
+}
+
+ScriptRunner::Result ScriptRunner::cutsceneNative(ScriptThread& thread, const ScriptCall& call) {
+    const auto kind = cutsceneNativeKind(lower(call.function));
+    const auto& args = call.arguments;
+    if (!kind || args.size() < cutsceneNativeArguments(*kind)) return Result::Continue;
+    const std::string name = args.empty() ? std::string() : lower(unquoted(args[0]));
+    switch (*kind) {
+    case CutsceneNativeKind::Load: cutscenes_.load(name); break;
+    case CutsceneNativeKind::Play:
+        cutscenes_.play(name, {read(args[1]) != 0.0f, read(args[2]) != 0.0f, read(args[3]) != 0.0f, read(args[4]) != 0.0f});
+        break;
+    case CutsceneNativeKind::Wait: return cutscenes_.busy(name) ? Result::Block : Result::Continue;
+    case CutsceneNativeKind::Free: cutscenes_.free(name); break;
+    case CutsceneNativeKind::FadeDisable: break;
+    case CutsceneNativeKind::Movie:
+    case CutsceneNativeKind::MovieNoFadeBackIn:
+        if (!(thread.flags & kScriptBlocked)) {
+            cutscenes_.startMovie(unquoted(args[0]), *kind == CutsceneNativeKind::Movie);
+            return cutscenes_.movieOpen() ? Result::Block : Result::Continue;
+        }
+        if (cutscenes_.movieOpen()) return Result::Block;
+        break;
+    }
+    return Result::Continue;
 }
 
 void ScriptRunner::fireAiMoveEvents() {

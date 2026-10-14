@@ -1,4 +1,5 @@
 #include "block_reader.hpp"
+#include <algorithm>
 #include <cctype>
 #include <cmath>
 #include <stdexcept>
@@ -108,5 +109,37 @@ Matrix cameraMatrix(const CutsceneCamera& camera) {
             cx * sz - cz * sx * sy,    cx * cz + sx * sy * sz,   cy * sx,  0,
             sx * sz + cx * cz * sy,    cz * sx - cx * sy * sz,   -cx * cy, 0,
             -camera.position[0],       camera.position[1],       camera.position[2], 1};
+}
+
+CutsceneContent loadCutscene(FuseArchive& archive, const std::string& id) {
+    const auto read = [&](const std::string& path) {
+        const FuseEntry* entry = archive.find(path);
+        if (!entry) throw std::runtime_error("not in archive: " + path);
+        return archive.read(*entry);
+    };
+    std::string folder = "csdata/models/" + id;
+    std::transform(folder.begin(), folder.end(), folder.begin(), [](unsigned char c) { return char(std::tolower(c)); });
+    CutsceneContent content;
+    for (const CutsceneActor& cast : cutsceneActors(parseManifest(read(folder + "/manifest.bstxt")), folder)) {
+        if (cast.animation.empty()) continue;
+        if (cast.model.empty()) {
+            content.camera = parseAnimation(read(cast.animation));
+            continue;
+        }
+        CutsceneCast actor;
+        actor.model = cast.model;
+        actor.animation = parseAnimation(read(cast.animation));
+        if (!cast.skeleton.empty() && archive.find(cast.skeleton)) actor.skeleton = parseSkeleton(read(cast.skeleton));
+        content.actors.push_back(std::move(actor));
+    }
+    if (content.camera.subAnimations.empty()) throw std::runtime_error("cutscene has no camera animation: " + id);
+    const std::string soundPath = "music/csaudio/" + folder.substr(folder.rfind('/') + 1) + ".bwav";
+    if (archive.find(soundPath)) content.soundPath = soundPath;
+    return content;
+}
+
+double cutsceneNormalised(const Animation& animation, double frame) {
+    const double last = animation.frames > 1 ? animation.frames - 1 : 1;
+    return std::min(frame, last) / last;
 }
 } // namespace chase::assets

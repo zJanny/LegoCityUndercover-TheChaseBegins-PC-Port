@@ -6,6 +6,7 @@
 #include "frontend/hud.hpp"
 #include "frontend/resources.hpp"
 #include "game_audio.hpp"
+#include "game_cutscene.hpp"
 #include "game_doors.hpp"
 #include "game_hud.hpp"
 #include "game_options.hpp"
@@ -91,6 +92,8 @@ private:
     void applyPlacement(const chase::runtime::ScriptPlacement& request);
     void updateDoors(const float playerPosition[3], const std::function<void(const chase::runtime::SoundCall&)>& emit);
     void updateFollowCamera(float dt);
+    bool holdForMovie(float dt);
+    bool cutscenePlaying() const { return levelScripts.cutscenes().playing() != nullptr; }
     void startRoomStreaming();
     void updateRoomStreaming();
     void showLoadedRooms();
@@ -144,6 +147,9 @@ private:
     std::vector<float> scriptedHeights;
     std::optional<chase::runtime::RoomStreamer> roomStreamer;
     std::map<int, std::vector<std::size_t>> roomInstances;
+    std::optional<game_cutscene::InEngine> cutsceneHost;
+    std::optional<game_cutscene::Movies> movies;
+    bool movieStarted = false, introMovieSkip = false;
 };
 
 void advanceToDestination(chase::assets::FuseArchive& archive, game_options::Options& options, const chase::runtime::SceneChangeDestination& destination,

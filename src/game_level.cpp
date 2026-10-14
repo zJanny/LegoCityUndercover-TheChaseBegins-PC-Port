@@ -10,6 +10,7 @@
 #include <SDL.h>
 #include <algorithm>
 #include <cmath>
+#include <filesystem>
 #include <iostream>
 #include <map>
 #include <stdexcept>
@@ -161,6 +162,11 @@ LevelSession::LevelSession(const Shared& sharedState)
     if (!options.startRoom.empty()) startOptions.startRoom = runtime::roomNumber(options.startRoom);
     else if (const std::optional<Placement> start = playerStart(level)) startOptions.startRoom = runtime::roomNumber(start->room);
     const std::uint32_t startupUpdates = sceneStart.run(startOptions);
+    cutsceneHost.emplace(archive, scene, shared.audio);
+    movies.emplace(archive, hudResources, (std::filesystem::path(options.fib).parent_path() / "cutscenes").string(), int(options.language));
+    introMovieSkip = options.introMovieShown;
+    levelScripts.cutscenes().setLengthSource([this](const std::string& name) { return cutsceneHost->load(name); });
+    levelScripts.cutscenes().setHostPlaysMovies(true);
     for (const std::string& name : options.callScripts)
         if (!levelScripts.start(name) && !shared.afterSwitch) throw std::runtime_error("no level script " + name);
     for (const runtime::ScriptPlacement& request : levelScripts.takePlacements()) applyPlacement(request);
@@ -245,9 +251,16 @@ void LevelSession::draw(int width, int height) {
     const float* eye = follow ? follow->eye() : camera.eye;
     const float viewYaw = follow ? follow->yaw() : camera.yaw, viewPitch = follow ? follow->pitch() : camera.pitch;
     const float fieldOfView = follow ? follow->verticalFieldOfView() : 1.0f;
-    const Mat4 viewMatrix = chase::render::view(eye, viewYaw, viewPitch);
+    Mat4 viewMatrix = chase::render::view(eye, viewYaw, viewPitch);
+    float shownFieldOfView = fieldOfView, nearPlane = radius * 0.002f, farPlane = radius * 20;
+    if (const auto cutsceneCamera = cutsceneHost->camera(levelScripts.cutscenes())) {
+        viewMatrix = cutsceneCamera->view;
+        shownFieldOfView = cutsceneCamera->fieldOfView;
+        nearPlane = game_cutscene::kNearPlane;
+        farPlane = game_cutscene::kFarPlane;
+    }
     Mat4 mvp = chase::render::multiply(
-        perspective(fieldOfView, float(fe::kTopWidth) / float(fe::kScreenHeight), radius * 0.002f, radius * 20), viewMatrix);
+        perspective(shownFieldOfView, float(fe::kTopWidth) / float(fe::kScreenHeight), nearPlane, farPlane), viewMatrix);
     const std::vector<bool> drawn = runtime::drawnPlacements(placedObjects, objectState);
     for (std::size_t i = 0; i < drawn.size(); ++i)
         scene.setInstanceVisible(placedSceneIndex[i], drawn[i] && roomShown(runtime::roomNumber(placedObjects[i].room)));
@@ -263,7 +276,7 @@ void LevelSession::draw(int width, int height) {
     studSprites->draw(viewMatrix, mvp, sprites, runtime::studSpriteFrame(std::uint32_t(provisionalStudClockSeconds * double(runtime::kClockTicksPerSecond))),
                      runtime::kStudHalfSize);
     setScissorTest(false);
-    if (hud) {
+    if (hud && !cutscenePlaying()) {
         hudCanvas.clearTransparent();
         hud->draw(hudCanvas, provisionalStudClockSeconds);
         fe::MinimapView mapView;
@@ -307,6 +320,7 @@ void LevelSession::draw(int width, int height) {
     }
     fe::drawBlackVeil(hudCanvas, 1.0f - levelScripts.fadeLevel());
     fe::drawBlackVeil(mapCanvas, 1.0f - levelScripts.fadeLevel());
+    if (movies->playing()) movies->draw(hudCanvas, mapCanvas);
     overlay->draw(game_hud::pixelsOf(hudCanvas), game_hud::pixelsOf(mapCanvas), screens.top, screens.bottom, width, height);
 }
 
