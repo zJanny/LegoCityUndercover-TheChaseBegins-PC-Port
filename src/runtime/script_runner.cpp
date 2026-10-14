@@ -1,4 +1,5 @@
 #include "runtime/script_runner.hpp"
+#include "runtime/script_triggers.hpp"
 #include <algorithm>
 #include <cctype>
 #include <cmath>
@@ -529,19 +530,29 @@ void ScriptRunner::checkTriggers(const float player[3]) {
         ScriptTriggerState& state = triggers_[i];
         if (!state.enabled || (!trigger.objectName.empty() && state_.isDisabled(lower(trigger.objectName)))) continue;
         const std::string event = lower(trigger.event);
-        const bool entered = event == "boundentered" || event == "player1boundentered" || event == "playeronfootboundentered";
-        const bool left = event == "boundleft";
-        if (!entered && !left) {
+        const TriggerEvent kind = classifyTriggerEvent(event);
+        if (kind == TriggerEvent::Unmodelled) {
             if (event != "objecttriggered" && event != "objectuntriggered" &&
                 std::find(unhandledEvents_.begin(), unhandledEvents_.end(), event) == unhandledEvents_.end())
                 unhandledEvents_.push_back(event);
             continue;
         }
         const int bound = boundIndex(trigger.firstArgument);
-        const bool inside = bound >= 0 && playerInBound(std::size_t(bound), player);
-        if (!state.skip && inside != state.inside && inside == entered) queueTrigger(i);
-        state.inside = inside;
-        state.skip = false;
+        TriggerSample sample;
+        sample.playerInside = bound >= 0 && playerInBound(std::size_t(bound), player);
+        float position[3] = {0, 0, 0};
+        const bool objectBound = kind == TriggerEvent::ObjectBoundEntered || kind == TriggerEvent::ObjectBoundLeft ||
+                                 kind == TriggerEvent::ObjectBoundInside;
+        if (objectBound) {
+            sample.objectUsable = bound >= 0 && boundEnabled_[std::size_t(bound)] && objectPosition_ &&
+                                  objectPosition_(lower(trigger.objectName), position);
+            sample.objectInside = sample.objectUsable && pointInBound(std::size_t(bound), position, false);
+        }
+        TriggerRecord record{state.skip, state.inside};
+        const bool fire = applyTriggerCheck(kind, record, sample);
+        state.skip = record.skip;
+        state.inside = record.inside;
+        if (fire) queueTrigger(i);
     }
     while (!queued_.empty()) {
         const std::size_t index = queued_.back();
@@ -565,9 +576,9 @@ bool ScriptRunner::scriptActive(const LevelScript& script) const {
     return false;
 }
 
-bool ScriptRunner::playerInBound(std::size_t index, const float player[3]) const {
+bool ScriptRunner::pointInBound(std::size_t index, const float player[3], bool requireRoom) const {
     const assets::LevelBound& bound = level_.bounds[index];
-    if (!boundEnabled_[index] || !boundActive(index)) return false;
+    if (!boundEnabled_[index] || (requireRoom && !boundActive(index))) return false;
     float x = player[0] - bound.centre[0], y = player[1] - bound.centre[1], z = player[2] - bound.centre[2];
     if (bound.node != 0xff) {
         if (bound.node >= level_.boundMatrices.size()) return false;

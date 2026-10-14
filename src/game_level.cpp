@@ -125,6 +125,11 @@ LevelSession::LevelSession(const Shared& sharedState)
     studSprites.emplace(archive);
     player = game_player::placePlayer(archive, scene, level);
     levelScripts.setAllRoomsLoaded();
+    levelScripts.setObjectPositionSource([this](const std::string& instance, float out[3]) {
+        const std::optional<Placement> placement = objectStart(level, instance);
+        if (placement) std::copy(placement->position, placement->position + 3, out);
+        return placement.has_value();
+    });
     if (!options.saveFile.empty()) {
         const chase::save::SlotStart saved = game_save::load(options.saveFile, options.saveSlot, archive, level, options.level);
         game_save::apply(saved, levelScripts);

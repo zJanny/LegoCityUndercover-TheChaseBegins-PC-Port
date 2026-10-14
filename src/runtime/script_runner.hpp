@@ -9,6 +9,7 @@
 #include "runtime/script_text.hpp"
 
 #include <cstdint>
+#include <functional>
 #include <list>
 #include <map>
 #include <set>
@@ -120,6 +121,9 @@ public:
     // queued first; they run from the next update on.
     void checkTriggers(const float player[3]);
     const std::vector<ScriptTriggerState>& triggers() const { return triggers_; }
+    // World position of a placed object by lower-case instance name (the node of an object bound check); false when unknown.
+    using ObjectPositionSource = std::function<bool(const std::string&, float[3])>;
+    void setObjectPositionSource(ObjectPositionSource source) { objectPosition_ = std::move(source); }
     void setTriggerEnabled(std::size_t index, bool enabled) { if (index < triggers_.size()) triggers_[index].enabled = enabled; }
     void setBoundEnabled(std::size_t index, bool enabled) { if (index < boundEnabled_.size()) boundEnabled_[index] = enabled; }
     // Bound byte +0xa (EnableBound 0x1d0ce8), one per Level::bounds entry.
@@ -176,7 +180,8 @@ private:
     const assets::LevelScript* find(const std::string& name) const;
     bool scriptActive(const assets::LevelScript& script) const;
     void queueTrigger(std::size_t index);
-    bool playerInBound(std::size_t bound, const float player[3]) const;
+    bool pointInBound(std::size_t bound, const float point[3], bool requireRoom) const;
+    bool playerInBound(std::size_t bound, const float player[3]) const { return pointInBound(bound, player, true); }
     int triggerIndex(const std::string& name) const;
     int boundIndex(const std::string& name) const;
 
@@ -194,6 +199,7 @@ private:
     std::set<std::string> loadedRooms_;
     bool allRoomsLoaded_ = false;
     std::vector<std::string> unhandledEvents_;
+    ObjectPositionSource objectPosition_;
     float dt_ = 0;
     bool dialogOpen_ = false;
     bool dialogAnswered_ = false;

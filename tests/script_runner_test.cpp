@@ -335,6 +335,33 @@ void sceneChangeIsRecorded() {
 }
 }
 
+void objectBoundTriggersUseTheObjectPosition() {
+    Level level = boundLevel();
+    level.triggers.push_back(trigger("ObjEnter", "ObjectBoundEntered", "Lever", "objentered", "Door_Bound"));
+    add(level, "objentered", {{"=+", {"ObjEntered", "ObjEntered", "\"+\"", "1"}}});
+    PlacedObjectState state;
+    ScriptRunner runner(level, state);
+    float lever[3] = {0, 0, 0};
+    runner.setObjectPositionSource([&lever](const std::string& name, float out[3]) {
+        if (name != "lever") return false;
+        std::copy(lever, lever + 3, out);
+        return true;
+    });
+    const float far[3] = {0, 0, 100};
+    runner.checkTriggers(far);
+    lever[0] = 10.5f;
+    runner.checkTriggers(far);
+    runner.update(0.034f);
+    require(runner.variable("ObjEntered") == 1, "the object entering the bound starts the script (player elsewhere)");
+    runner.setBoundEnabled(0, false);
+    lever[0] = 0;
+    runner.checkTriggers(far);
+    lever[0] = 10.5f;
+    runner.checkTriggers(far);
+    runner.update(0.034f);
+    require(runner.variable("ObjEntered") == 1, "a switched-off bound counts for no object");
+}
+
 int main() {
     try {
         waitCountsFromTheSecondCall();
@@ -350,6 +377,7 @@ int main() {
         boundTriggersFireOnTheEdge();
         roomBoundsCountOnlyWhileTheRoomIsLoaded();
         scriptSwitchesTriggersAndBounds();
+        objectBoundTriggersUseTheObjectPosition();
         warningDialogBlocksUntilAnswered();
         warningDialogCancelGivesOne();
         fadeScreenBlocksForHalfASecond();
