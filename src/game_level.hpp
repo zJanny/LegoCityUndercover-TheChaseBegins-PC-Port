@@ -9,6 +9,7 @@
 #include "game_hud.hpp"
 #include "game_options.hpp"
 #include "game_player.hpp"
+#include "render/hud_overlay.hpp"
 #include "render/scene.hpp"
 #include "render/studs.hpp"
 #include "runtime/camera_lock_icon.hpp"
@@ -23,7 +24,7 @@
 #include "runtime/scheduler.hpp"
 #include "runtime/script_runner.hpp"
 #include "runtime/studs.hpp"
-#include <epoxy/gl.h>
+#include <SDL.h>
 #include <map>
 #include <cstddef>
 #include <cstdint>
@@ -70,7 +71,7 @@ public:
     LevelSession& operator=(const LevelSession&) = delete;
 
     void advance(const chase::runtime::PadState& liveInput);
-    void draw(GLuint program, int width, int height);
+    void draw(int width, int height);
     bool scriptDone() const { return !script.empty() && updates + shared.scriptOffset >= scriptLength; }
     bool scripted() const { return !script.empty(); }
     void reportScripted() const;
@@ -123,7 +124,7 @@ private:
     chase::frontend::Resources hudResources;
     std::optional<chase::frontend::Hud> hud;
     chase::frontend::Canvas hudCanvas, mapCanvas;
-    std::optional<game_hud::Overlay> overlay;
+    std::optional<chase::render::HudOverlay> overlay;
     std::string levelName;
     chase::runtime::PadDevice pad;
     std::uint64_t counterFrequency = 0, counterOrigin = 0;

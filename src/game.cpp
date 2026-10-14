@@ -12,12 +12,12 @@
 #include "input.hpp"
 #include "render/debug_overlay.hpp"
 #include "render/scene.hpp"
+#include "render/window.hpp"
 #include "runtime/debug_metrics.hpp"
 #include "runtime/level_start.hpp"
 #include "runtime/pad.hpp"
 #include "runtime/scene_change.hpp"
 #include <SDL.h>
-#include <epoxy/gl.h>
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -139,7 +139,6 @@ int run(const Options& given) {
         options.level = game_options::kNewGameLevel;
         options.start = game_options::kNewGameStart;
     }
-    GLuint program = createProgram();
     const FuseEntry* masterEntry = archive.find(runtime::kMasterLevelFile);
     if (!masterEntry) throw std::runtime_error(std::string("not in archive: ") + runtime::kMasterLevelFile);
     const Level master = parseLevel(archive.read(*masterEntry));
@@ -158,7 +157,7 @@ int run(const Options& given) {
             session.advance(padState(input));
 
             SDL_GL_GetDrawableSize(window, &width, &height);
-            session.draw(program, width, height);
+            session.draw(width, height);
             const bool debugVisible = options.debugOverlay != input.active(chase::Action::DebugOverlay);
             debugMetrics.setVisible(debugVisible);
             if (debugVisible) {
@@ -169,7 +168,7 @@ int run(const Options& given) {
             const bool scriptDone = session.scriptDone();
             if (scriptDone) session.reportScripted();
             if (!options.screenshot.empty() && (session.scripted() ? scriptDone : session.updateCount() >= options.frames)) {
-                glFinish();
+                waitForGpu();
                 saveScreenshot(options.screenshot, width, height);
                 std::cout << "saved " << options.screenshot << " after " << session.updateCount() << " update(s)\n";
                 running = false;

@@ -6,7 +6,7 @@ How `chase_render` (`src/render/scene.*`, used by `chase-viewer` and `chase-game
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-14T09:50:11+02:00. Combiner setups of all 16122 shipped parts are recovered and run in the shader; lighting is a stand-in.
+IN_PROGRESS, updated 2026-10-14T15:12:26+02:00. OpenGL moved out of the game and viewer code into `src/render/` (no behaviour change). Combiner setups of all 16122 shipped parts are recovered and run in the shader; lighting is a stand-in.
 
 ## 3. Verified behaviour
 
@@ -40,4 +40,5 @@ IN_PROGRESS, updated 2026-10-14T09:50:11+02:00. Combiner setups of all 16122 shi
 ## 7. Code and tests
 
 - `src/assets/material.cpp`, `src/render/scene.cpp` (`src/render/shaders/scene.frag.glsl` runs the stages; all shaders are `.glsl` files embedded at build time by `tools/embed_shaders.cmake`; OpenGL 4.6 core), CTest `no-inline-shaders`, `src/materials.cpp` (`chase-materials`: census, or stages of the models given).
+- All OpenGL calls are in `src/render/*.cpp`. Callers outside `src/render/` see plain-type headers only: `scene.hpp`, `studs.hpp`, `debug_overlay.hpp`, `window.hpp` (viewports, scissor, clears, depth and culling), `hud_overlay.hpp` (two-screen overlay) and `front_presenter.hpp` (front-end screens). Each keeps its GL objects behind a pointer to an implementation class in its `.cpp`. `program.hpp` (shared scene shader) is internal to `src/render/`. CTest `gl-only-in-render` (guard) and `gl-only-in-render-rejects` (fixture `tests/gl_only_in_render/`).
 - CTest `assets-core` (hand-evaluated materials), `assets-real-data` (census and named setups). Scene: `setInstanceMesh` (one mesh per instance, used by two-leaf doors). Game option `--facing DEGREES` places the character for screenshot comparisons.

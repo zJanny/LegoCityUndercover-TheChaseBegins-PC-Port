@@ -1,5 +1,7 @@
 #include "render/studs.hpp"
+#include "render/program.hpp"
 #include <cstddef>
+#include <epoxy/gl.h>
 #include <stdexcept>
 
 namespace chase::render {
@@ -16,7 +18,17 @@ struct SpriteVertex {
 };
 }
 
-StudSprites::StudSprites(FuseArchive& archive) {
+class StudSpritesImpl {
+public:
+    explicit StudSpritesImpl(FuseArchive& archive);
+    ~StudSpritesImpl();
+    void draw(const Mat4& view, const Mat4& viewProjection, const std::vector<StudSprite>& sprites, unsigned frame, float halfSize) const;
+
+private:
+    GLuint texture_ = 0, vao_ = 0, vbo_ = 0, ibo_ = 0;
+};
+
+StudSpritesImpl::StudSpritesImpl(FuseArchive& archive) {
     const FuseEntry* entry = archive.find(kSheetPath);
     if (!entry) throw std::runtime_error(std::string("not in archive: ") + kSheetPath);
     const Image image = decodeTexture(archive.read(*entry));
@@ -44,15 +56,16 @@ StudSprites::StudSprites(FuseArchive& archive) {
     attribute(4, 2, GL_FLOAT, GL_FALSE, offsetof(SpriteVertex, uv1));
 }
 
-StudSprites::~StudSprites() {
+StudSpritesImpl::~StudSpritesImpl() {
     glDeleteTextures(1, &texture_);
     glDeleteBuffers(1, &vbo_);
     glDeleteBuffers(1, &ibo_);
     glDeleteVertexArrays(1, &vao_);
 }
 
-void StudSprites::draw(GLuint program, const Mat4& view, const Mat4& viewProjection, const std::vector<StudSprite>& sprites,
-                       unsigned frame, float halfSize) const {
+void StudSpritesImpl::draw(const Mat4& view, const Mat4& viewProjection, const std::vector<StudSprite>& sprites, unsigned frame,
+                           float halfSize) const {
+    const GLuint program = sceneProgram();
     if (sprites.empty()) return;
     const float right[3] = {-view[0] * halfSize, -view[4] * halfSize, -view[8] * halfSize};
     const float up[3] = {view[1] * halfSize, view[5] * halfSize, view[9] * halfSize};
@@ -93,6 +106,15 @@ void StudSprites::draw(GLuint program, const Mat4& view, const Mat4& viewProject
     glDisable(GL_CULL_FACE);
     glDrawElements(GL_TRIANGLES, GLsizei(indices.size()), GL_UNSIGNED_INT, nullptr);
     if (culling) glEnable(GL_CULL_FACE);
+}
+
+StudSprites::StudSprites(FuseArchive& archive) : impl_(std::make_unique<StudSpritesImpl>(archive)) {}
+
+StudSprites::~StudSprites() = default;
+
+void StudSprites::draw(const Mat4& view, const Mat4& viewProjection, const std::vector<StudSprite>& sprites, unsigned frame,
+                       float halfSize) const {
+    impl_->draw(view, viewProjection, sprites, frame, halfSize);
 }
 
 }

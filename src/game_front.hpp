@@ -4,11 +4,13 @@
 #include "frontend/movie_host.hpp"
 #include "frontend/script.hpp"
 #include "game_audio.hpp"
+#include "game_hud.hpp"
 #include "input.hpp"
+#include "render/front_presenter.hpp"
 #include "render/scene.hpp"
+#include "render/window.hpp"
 #include "runtime/scheduler.hpp"
 #include <SDL.h>
-#include <epoxy/gl.h>
 #include <algorithm>
 #include <cstdint>
 #include <functional>
@@ -18,61 +20,6 @@
 namespace game_front {
 
 namespace fe = chase::frontend;
-
-class Presenter {
-public:
-    Presenter() {
-        glGenTextures(2, textures_);
-        glGenFramebuffers(2, framebuffers_);
-        const int widths[2] = {fe::kTopWidth, fe::kBottomWidth};
-        for (int i = 0; i < 2; ++i) {
-            glBindTexture(GL_TEXTURE_2D, textures_[i]);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, widths[i], fe::kScreenHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffers_[i]);
-            glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textures_[i], 0);
-        }
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-    }
-    ~Presenter() {
-        glDeleteFramebuffers(2, framebuffers_);
-        glDeleteTextures(2, textures_);
-    }
-    Presenter(const Presenter&) = delete;
-    Presenter& operator=(const Presenter&) = delete;
-
-    void present(const fe::Canvas& top, const fe::Canvas& bottom, int width, int height) {
-        upload(0, top);
-        upload(1, bottom);
-        glDisable(GL_DEPTH_TEST);
-        glDisable(GL_CULL_FACE);
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-        glViewport(0, 0, width, height);
-        glClearColor(0, 0, 0, 1);
-        glClear(GL_COLOR_BUFFER_BIT);
-        const float scale = std::min(float(width) / fe::kTopWidth, float(height) / (2 * fe::kScreenHeight));
-        const float originX = (float(width) - scale * fe::kTopWidth) / 2, originY = (float(height) - scale * 2 * fe::kScreenHeight) / 2;
-        blit(0, originX, originY, scale * fe::kTopWidth, scale * fe::kScreenHeight, fe::kTopWidth, height);
-        blit(1, originX + scale * (fe::kTopWidth - fe::kBottomWidth) / 2, originY + scale * fe::kScreenHeight, scale * fe::kBottomWidth,
-             scale * fe::kScreenHeight, fe::kBottomWidth, height);
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-    }
-
-private:
-    void upload(int index, const fe::Canvas& canvas) {
-        glBindTexture(GL_TEXTURE_2D, textures_[index]);
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, canvas.width(), canvas.height(), GL_RGBA, GL_UNSIGNED_BYTE, canvas.rgba().data());
-    }
-    void blit(int index, float x, float yFromTop, float width, float height, int sourceWidth, int windowHeight) {
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffers_[index]);
-        const int left = int(std::lround(x)), right = int(std::lround(x + width));
-        const int bottom = windowHeight - int(std::lround(yFromTop + height)), top = windowHeight - int(std::lround(yFromTop));
-        glBlitFramebuffer(0, fe::kScreenHeight, sourceWidth, 0, left, bottom, right, top, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-    }
-    GLuint textures_[2] = {0, 0}, framebuffers_[2] = {0, 0};
-};
 
 class MovieSound {
 public:
@@ -127,7 +74,7 @@ inline Result run(SDL_Window* window, chase::InputState& input, chase::assets::F
     config.firstRun = options.firstRun;
     fe::FrontEnd front(resources, &movies, config);
     fe::Canvas top(fe::kTopWidth, fe::kScreenHeight), bottom(fe::kBottomWidth, fe::kScreenHeight);
-    Presenter presenter;
+    chase::render::FrontPresenter presenter(fe::kTopWidth, fe::kBottomWidth, fe::kScreenHeight);
     MovieSound movieSound;
     int width = 0, height = 0;
 
@@ -139,8 +86,8 @@ inline Result run(SDL_Window* window, chase::InputState& input, chase::assets::F
         if (front.flow().done()) return result;
         front.draw(top, bottom);
         SDL_GL_GetDrawableSize(window, &width, &height);
-        presenter.present(top, bottom, width, height);
-        glFinish();
+        presenter.present(game_hud::pixelsOf(top), game_hud::pixelsOf(bottom), width, height);
+        chase::render::waitForGpu();
         if (!options.screenshot.empty()) chase::render::saveScreenshot(options.screenshot, width, height);
         std::cout << "front end: " << updates << " update(s), screen " << fe::screenName(front.flow().screen()) << ", "
                   << (options.screenshot.empty() ? "" : "saved " + options.screenshot) << '\n';
@@ -192,7 +139,7 @@ inline Result run(SDL_Window* window, chase::InputState& input, chase::assets::F
         if (audio) audio->update();
         front.draw(top, bottom);
         SDL_GL_GetDrawableSize(window, &width, &height);
-        presenter.present(top, bottom, width, height);
+        presenter.present(game_hud::pixelsOf(top), game_hud::pixelsOf(bottom), width, height);
         SDL_GL_SwapWindow(window);
     }
     Result result;

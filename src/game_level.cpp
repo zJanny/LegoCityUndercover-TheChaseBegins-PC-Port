@@ -182,8 +182,8 @@ LevelSession::LevelSession(const Shared& sharedState)
         const float target[3] = {player->motion.x, player->vertical.y, player->motion.z};
         follow->reset(target, runtime::headingRadians(player->motion.facing), runtime::headingRadians(player->motion.facing));
     }
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
+    chase::render::setDepthTest(true);
+    chase::render::setCullFace(true);
     chase::render::setFrontFace(true);
 
     if (player) {
@@ -193,7 +193,7 @@ LevelSession::LevelSession(const Shared& sharedState)
         hudConfig.portrait = characterFile.substr(nameStart, characterFile.find(".blvl") - nameStart);
         hud.emplace(hudResources, hudConfig);
     }
-    overlay.emplace();
+    overlay.emplace(fe::kTopWidth, fe::kBottomWidth, fe::kScreenHeight);
     const std::string levelFolder = lower(options.level).substr(0, lower(options.level).find_last_of('/'));
     levelName = levelFolder.substr(levelFolder.find_last_of('/') + 1);
     startRoomStreaming();
@@ -209,18 +209,16 @@ LevelSession::LevelSession(const Shared& sharedState)
     for (const game_options::ScriptStep& step : script) scriptLength += step.updates;
 }
 
-void LevelSession::draw(GLuint program, int width, int height) {
+void LevelSession::draw(int width, int height) {
     const game_hud::Screens screens = game_hud::screensFor(width, height);
-    glDisable(GL_SCISSOR_TEST);
-    glViewport(0, 0, width, height);
-    glClearColor(0, 0, 0, 1);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glEnable(GL_SCISSOR_TEST);
-    glScissor(screens.top.x, screens.top.y, screens.top.width, screens.top.height);
-    glViewport(screens.top.x, screens.top.y, screens.top.width, screens.top.height);
-    glClearColor(0.16f, 0.17f, 0.2f, 1);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    beginFrame(program, 1.0f);
+    setScissorTest(false);
+    setViewport({0, 0, width, height});
+    clearWindow({0, 0, 0, 1}, true);
+    setScissorTest(true);
+    setScissorBox(screens.top);
+    setViewport(screens.top);
+    clearWindow({0.16f, 0.17f, 0.2f, 1}, true);
+    beginFrame(1.0f);
     const float* eye = follow ? follow->eye() : camera.eye;
     const float viewYaw = follow ? follow->yaw() : camera.yaw, viewPitch = follow ? follow->pitch() : camera.pitch;
     const float fieldOfView = follow ? follow->verticalFieldOfView() : 1.0f;
@@ -230,14 +228,14 @@ void LevelSession::draw(GLuint program, int width, int height) {
     const std::vector<bool> drawn = runtime::drawnPlacements(placedObjects, objectState);
     for (std::size_t i = 0; i < drawn.size(); ++i)
         scene.setInstanceVisible(placedSceneIndex[i], drawn[i] && roomShown(runtime::roomNumber(placedObjects[i].room)));
-    scene.draw(program, mvp);
+    scene.draw(mvp);
     std::vector<StudSprite> sprites;
     for (const runtime::Stud& stud : studs.studs())
         if (stud.state == runtime::StudState::Idle || stud.state == runtime::StudState::Collecting)
             sprites.push_back({{stud.centre[0], stud.centre[1], stud.centre[2]}, runtime::kStudTint[std::size_t(stud.kind)]});
-    studSprites->draw(program, viewMatrix, mvp, sprites, runtime::studSpriteFrame(std::uint32_t(provisionalStudClockSeconds * double(runtime::kClockTicksPerSecond))),
+    studSprites->draw(viewMatrix, mvp, sprites, runtime::studSpriteFrame(std::uint32_t(provisionalStudClockSeconds * double(runtime::kClockTicksPerSecond))),
                      runtime::kStudHalfSize);
-    glDisable(GL_SCISSOR_TEST);
+    setScissorTest(false);
     if (hud) {
         hudCanvas.clearTransparent();
         hud->draw(hudCanvas, provisionalStudClockSeconds);
@@ -262,7 +260,7 @@ void LevelSession::draw(GLuint program, int width, int height) {
     }
     fe::drawBlackVeil(hudCanvas, 1.0f - levelScripts.fadeLevel());
     fe::drawBlackVeil(mapCanvas, 1.0f - levelScripts.fadeLevel());
-    overlay->draw(hudCanvas, mapCanvas, screens, width, height);
+    overlay->draw(game_hud::pixelsOf(hudCanvas), game_hud::pixelsOf(mapCanvas), screens.top, screens.bottom, width, height);
 }
 
 void LevelSession::reportScripted() const {

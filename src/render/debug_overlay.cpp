@@ -1,6 +1,7 @@
 #include "render/debug_overlay.hpp"
 #include "render/debug_text.hpp"
 #include "render/shaders.hpp"
+#include <epoxy/gl.h>
 #include <stdexcept>
 
 namespace chase::render {
@@ -18,7 +19,18 @@ GLuint compile(GLenum type, const char* source) {
 
 }
 
-DebugOverlay::DebugOverlay() {
+class DebugOverlayImpl {
+public:
+    DebugOverlayImpl();
+    ~DebugOverlayImpl();
+    void draw(const std::vector<std::string>& lines, int windowWidth, int windowHeight);
+
+private:
+    GLuint program_ = 0, array_ = 0, buffer_ = 0, texture_ = 0;
+};
+
+
+DebugOverlayImpl::DebugOverlayImpl() {
     program_ = glCreateProgram();
     const GLuint vertex = compile(GL_VERTEX_SHADER, shaders::hudVertex), fragment = compile(GL_FRAGMENT_SHADER, shaders::hudFragment);
     glAttachShader(program_, vertex);
@@ -46,14 +58,14 @@ DebugOverlay::DebugOverlay() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 }
 
-DebugOverlay::~DebugOverlay() {
+DebugOverlayImpl::~DebugOverlayImpl() {
     glDeleteTextures(1, &texture_);
     glDeleteBuffers(1, &buffer_);
     glDeleteVertexArrays(1, &array_);
     glDeleteProgram(program_);
 }
 
-void DebugOverlay::draw(const std::vector<std::string>& lines, int windowWidth, int windowHeight) {
+void DebugOverlayImpl::draw(const std::vector<std::string>& lines, int windowWidth, int windowHeight) {
     const int scale = windowHeight >= 600 ? 2 : 1;
     const DebugTextImage image = rasteriseDebugText(lines, scale);
     glDisable(GL_DEPTH_TEST);
@@ -77,6 +89,14 @@ void DebugOverlay::draw(const std::vector<std::string>& lines, int windowWidth, 
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
+}
+
+DebugOverlay::DebugOverlay() : impl_(std::make_unique<DebugOverlayImpl>()) {}
+
+DebugOverlay::~DebugOverlay() = default;
+
+void DebugOverlay::draw(const std::vector<std::string>& lines, int windowWidth, int windowHeight) {
+    impl_->draw(lines, windowWidth, windowHeight);
 }
 
 }

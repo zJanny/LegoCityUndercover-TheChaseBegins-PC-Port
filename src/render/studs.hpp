@@ -5,6 +5,7 @@
 #include "assets/assets.hpp"
 #include "render/scene.hpp"
 #include <cstdint>
+#include <memory>
 #include <vector>
 
 namespace chase::render {
@@ -14,6 +15,8 @@ struct StudSprite {
     std::uint32_t tint;   // 0xAABBGGRR
 };
 
+class StudSpritesImpl;
+
 class StudSprites {
 public:
     explicit StudSprites(assets::FuseArchive& archive);
@@ -22,11 +25,10 @@ public:
     StudSprites& operator=(const StudSprites&) = delete;
 
     // `frame` 0..15 selects the cell of the sheet (row-major, row 0 on top); `halfSize` is the quad's half width.
-    void draw(GLuint program, const Mat4& view, const Mat4& viewProjection, const std::vector<StudSprite>& sprites,
-              unsigned frame, float halfSize) const;
+    void draw(const Mat4& view, const Mat4& viewProjection, const std::vector<StudSprite>& sprites, unsigned frame, float halfSize) const;
 
 private:
-    GLuint texture_ = 0, vao_ = 0, vbo_ = 0, ibo_ = 0;
+    std::unique_ptr<StudSpritesImpl> impl_;
 };
 
 }

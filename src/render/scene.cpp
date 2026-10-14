@@ -1,6 +1,7 @@
 #include "render/scene.hpp"
-#include "render/shaders.hpp"
+#include "render/program.hpp"
 #include <SDL.h>
+#include <epoxy/gl.h>
 #include <algorithm>
 #include <cctype>
 #include <cmath>
@@ -11,20 +12,6 @@ namespace chase::render {
 using namespace chase::assets;
 
 namespace {
-GLuint compile(GLenum type, const char* source) {
-    GLuint shader = glCreateShader(type);
-    glShaderSource(shader, 1, &source, nullptr);
-    glCompileShader(shader);
-    GLint ok = 0;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &ok);
-    if (!ok) {
-        char log[1024];
-        glGetShaderInfoLog(shader, sizeof log, nullptr, log);
-        throw std::runtime_error(std::string("shader: ") + log);
-    }
-    return shader;
-}
-
 constexpr float kLightingStandIn[3] = {138.0f / 255.0f, 161.0f / 255.0f, 182.0f / 255.0f};
 
 struct GpuVertex {
@@ -112,18 +99,8 @@ Mat4 view(const float eye[3], float yaw, float pitch) {
 
 void setFrontFace(bool counterClockwise) { glFrontFace(counterClockwise ? GL_CW : GL_CCW); }
 
-GLuint createProgram() {
-    GLuint program = glCreateProgram();
-    glAttachShader(program, compile(GL_VERTEX_SHADER, shaders::sceneVertex));
-    glAttachShader(program, compile(GL_FRAGMENT_SHADER, shaders::sceneFragment));
-    glLinkProgram(program);
-    GLint linked = 0;
-    glGetProgramiv(program, GL_LINK_STATUS, &linked);
-    if (!linked) throw std::runtime_error("shader link failed");
-    return program;
-}
-
-void beginFrame(GLuint program, float brightness) {
+void beginFrame(float brightness) {
+    const GLuint program = sceneProgram();
     glUseProgram(program);
     glUniform1i(glGetUniformLocation(program, "unit0"), 0);
     glUniform1i(glGetUniformLocation(program, "unit1"), 1);
@@ -169,7 +146,69 @@ void saveScreenshot(const std::string& path, int width, int height) {
     SDL_FreeSurface(surface);
 }
 
-Scene::Scene(FuseArchive& archive, std::vector<std::string> exclude) : archive_(archive), exclude_(std::move(exclude)) {
+class SceneImpl {
+public:
+    SceneImpl(FuseArchive& archive, std::vector<std::string> exclude);
+    void addGeometry(const std::string& key, const ModelPart& part);
+    bool addModel(const std::string& path, const Mat4& transform = identity(),
+                  const std::map<std::string, std::string>& textureOverrides = {}, const std::string& key = "", int onlyMesh = -1);
+    bool setInstanceMesh(std::size_t instance, const std::string& path, int mesh);
+    void pose(const std::string& key, const std::vector<Matrix>& skin);
+    std::size_t skinnedParts(const std::string& path) const;
+    void bounds(float centre[3], float& radius) const;
+    void draw(const Mat4& viewProjection) const;
+    std::size_t triangles() const;
+    void setTransform(std::size_t instance, const Mat4& transform) { instances_.at(instance).transform = transform; }
+    void setInstanceVisible(std::size_t instance, bool visible) { instances_.at(instance).visible = visible; }
+    std::size_t missingTextures() const { return missing_; }
+    std::size_t instances() const { return instances_.size(); }
+
+private:
+    struct DrawPart {
+        GLuint vao = 0, vbo = 0, ibo = 0;
+        GLsizei count = 0;
+        bool hasNormal = false;
+        bool hasMaterial = false;
+        bool secondUv = false;
+        assets::MaterialState material;
+        GLuint unitTexture[3] = {0, 0, 0};
+        float unitFlat[3][4] = {};
+        bool unitIsFlat[3] = {false, false, false};
+    };
+    struct TextureInfo {
+        GLuint id = 0;
+        bool cube = false;
+        float average[4] = {1, 1, 1, 1};
+    };
+    struct SkinnedPart {
+        std::size_t part;
+        std::vector<assets::Vertex> vertices;
+        unsigned flags;
+    };
+    struct LoadedModel {
+        std::vector<DrawPart> parts;
+        std::vector<SkinnedPart> skinned;
+        float lo[3] = {1e30f, 1e30f, 1e30f}, hi[3] = {-1e30f, -1e30f, -1e30f};
+    };
+    struct Instance {
+        const LoadedModel* model;
+        Mat4 transform;
+        bool visible = true;
+    };
+    const TextureInfo& texture(const std::string& name, const std::string& modelDir);
+    DrawPart upload(const ModelPart& part, LoadedModel& model);
+    void drawPart(GLuint program, const DrawPart& part, bool culling) const;
+
+    FuseArchive& archive_;
+    std::vector<std::string> exclude_;
+    std::map<std::string, std::vector<std::string>> texturePaths_;
+    std::map<std::string, TextureInfo> textures_;
+    std::map<std::string, LoadedModel> models_;
+    std::vector<Instance> instances_;
+    std::size_t missing_ = 0;
+};
+
+SceneImpl::SceneImpl(FuseArchive& archive, std::vector<std::string> exclude) : archive_(archive), exclude_(std::move(exclude)) {
     for (const auto& name : archive_.names()) {
         auto dot = name.rfind('.');
         std::string ext = dot == std::string::npos ? "" : name.substr(dot);
@@ -177,13 +216,13 @@ Scene::Scene(FuseArchive& archive, std::vector<std::string> exclude) : archive_(
     }
 }
 
-void Scene::addGeometry(const std::string& key, const ModelPart& part) {
+void SceneImpl::addGeometry(const std::string& key, const ModelPart& part) {
     LoadedModel out;
     out.parts.push_back(upload(part, out));
     instances_.push_back({&models_.emplace(key, std::move(out)).first->second, identity(), true});
 }
 
-bool Scene::addModel(const std::string& path, const Mat4& transform,
+bool SceneImpl::addModel(const std::string& path, const Mat4& transform,
                      const std::map<std::string, std::string>& textureOverrides, const std::string& key, int onlyMesh) {
     const std::string& cacheKey = key.empty() ? path : key;
     auto loaded = models_.find(cacheKey);
@@ -225,7 +264,7 @@ bool Scene::addModel(const std::string& path, const Mat4& transform,
     return true;
 }
 
-bool Scene::setInstanceMesh(std::size_t instance, const std::string& path, int mesh) {
+bool SceneImpl::setInstanceMesh(std::size_t instance, const std::string& path, int mesh) {
     const Mat4 transform = instances_.at(instance).transform;
     if (!addModel(path, transform, {}, path + "#" + std::to_string(mesh), mesh)) return false;
     instances_.at(instance).model = instances_.back().model;
@@ -233,7 +272,7 @@ bool Scene::setInstanceMesh(std::size_t instance, const std::string& path, int m
     return true;
 }
 
-void Scene::pose(const std::string& path, const std::vector<Matrix>& skin) {
+void SceneImpl::pose(const std::string& path, const std::vector<Matrix>& skin) {
     auto loaded = models_.find(path);
     if (loaded == models_.end()) return;
     std::vector<GpuVertex> vertices;
@@ -249,12 +288,12 @@ void Scene::pose(const std::string& path, const std::vector<Matrix>& skin) {
     }
 }
 
-std::size_t Scene::skinnedParts(const std::string& path) const {
+std::size_t SceneImpl::skinnedParts(const std::string& path) const {
     auto loaded = models_.find(path);
     return loaded == models_.end() ? 0 : loaded->second.skinned.size();
 }
 
-void Scene::bounds(float centre[3], float& radius) const {
+void SceneImpl::bounds(float centre[3], float& radius) const {
     float lo[3] = {1e30f, 1e30f, 1e30f}, hi[3] = {-1e30f, -1e30f, -1e30f};
     for (const auto& instance : instances_) {
         if (instance.model->parts.empty()) continue;
@@ -276,7 +315,7 @@ void Scene::bounds(float centre[3], float& radius) const {
     }
 }
 
-void Scene::drawPart(GLuint program, const DrawPart& part, bool culling) const {
+void SceneImpl::drawPart(GLuint program, const DrawPart& part, bool culling) const {
     const MaterialState& m = part.material;
     glUniform1i(glGetUniformLocation(program, "stageCount"), part.hasMaterial ? GLint(m.stages.size()) : 0);
     glUniform1i(glGetUniformLocation(program, "hasNormal"), part.hasNormal);
@@ -334,7 +373,8 @@ void Scene::drawPart(GLuint program, const DrawPart& part, bool culling) const {
     glDrawElements(GL_TRIANGLES, part.count, GL_UNSIGNED_SHORT, nullptr);
 }
 
-void Scene::draw(GLuint program, const Mat4& viewProjection) const {
+void SceneImpl::draw(const Mat4& viewProjection) const {
+    const GLuint program = sceneProgram();
     static const GLenum factors[10] = {GL_ZERO, GL_ONE, GL_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR, GL_DST_COLOR,
                                        GL_ONE_MINUS_DST_COLOR, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_DST_ALPHA,
                                        GL_ONE_MINUS_DST_ALPHA};
@@ -371,14 +411,14 @@ void Scene::draw(GLuint program, const Mat4& viewProjection) const {
     }
 }
 
-std::size_t Scene::triangles() const {
+std::size_t SceneImpl::triangles() const {
     std::size_t n = 0;
     for (const auto& instance : instances_)
         for (const auto& p : instance.model->parts) n += std::size_t(p.count) / 3;
     return n;
 }
 
-const Scene::TextureInfo& Scene::texture(const std::string& name, const std::string& modelDir) {
+const SceneImpl::TextureInfo& SceneImpl::texture(const std::string& name, const std::string& modelDir) {
     std::string key = stem(name);
     auto cached = textures_.find(key);
     if (cached != textures_.end()) return cached->second;
@@ -413,7 +453,7 @@ const Scene::TextureInfo& Scene::texture(const std::string& name, const std::str
     return textures_.emplace(key, info).first->second;
 }
 
-Scene::DrawPart Scene::upload(const ModelPart& part, LoadedModel& model) {
+SceneImpl::DrawPart SceneImpl::upload(const ModelPart& part, LoadedModel& model) {
     std::vector<GpuVertex> vertices;
     vertices.reserve(part.vertices.size());
     for (const auto& v : part.vertices) {
@@ -450,5 +490,39 @@ Scene::DrawPart Scene::upload(const ModelPart& part, LoadedModel& model) {
     attrib(4, 2, GL_FLOAT, GL_FALSE, offsetof(GpuVertex, uv1));
     return d;
 }
+
+Scene::Scene(FuseArchive& archive, std::vector<std::string> exclude)
+    : impl_(std::make_unique<SceneImpl>(archive, std::move(exclude))) {}
+
+Scene::~Scene() = default;
+
+void Scene::addGeometry(const std::string& key, const ModelPart& part) { impl_->addGeometry(key, part); }
+
+bool Scene::addModel(const std::string& path, const Mat4& transform, const std::map<std::string, std::string>& textureOverrides,
+                     const std::string& key, int onlyMesh) {
+    return impl_->addModel(path, transform, textureOverrides, key, onlyMesh);
+}
+
+bool Scene::setInstanceMesh(std::size_t instance, const std::string& path, int mesh) {
+    return impl_->setInstanceMesh(instance, path, mesh);
+}
+
+void Scene::pose(const std::string& key, const std::vector<Matrix>& skin) { impl_->pose(key, skin); }
+
+std::size_t Scene::skinnedParts(const std::string& path) const { return impl_->skinnedParts(path); }
+
+void Scene::bounds(float centre[3], float& radius) const { impl_->bounds(centre, radius); }
+
+void Scene::draw(const Mat4& viewProjection) const { impl_->draw(viewProjection); }
+
+std::size_t Scene::triangles() const { return impl_->triangles(); }
+
+void Scene::setTransform(std::size_t instance, const Mat4& transform) { impl_->setTransform(instance, transform); }
+
+void Scene::setInstanceVisible(std::size_t instance, bool visible) { impl_->setInstanceVisible(instance, visible); }
+
+std::size_t Scene::missingTextures() const { return impl_->missingTextures(); }
+
+std::size_t Scene::instances() const { return impl_->instances(); }
 
 }

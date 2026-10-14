@@ -7,9 +7,9 @@
 #include "input.hpp"
 #include "render/character.hpp"
 #include "render/scene.hpp"
+#include "render/window.hpp"
 #include "strict_parse.hpp"
 #include <SDL.h>
-#include <epoxy/gl.h>
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -191,8 +191,6 @@ int run(const Options& options) {
     if (!context) throw std::runtime_error(SDL_GetError());
     SDL_GL_SetSwapInterval(1);
 
-    GLuint program = createProgram();
-
     Scene scene(archive, options.exclude);
     std::vector<std::string> models = options.models;
     if (models.empty())
@@ -309,9 +307,9 @@ int run(const Options& options) {
     };
     placeCamera();
     if (!options.eye.empty()) std::copy_n(options.eye.begin(), 3, eye);
-    glEnable(GL_DEPTH_TEST);
+    chase::render::setDepthTest(true);
     if (options.cull != "none") {
-        glEnable(GL_CULL_FACE);
+        chase::render::setCullFace(true);
         chase::render::setFrontFace(options.cull != "cw");
     }
     bool running = true, dragging = false;
@@ -393,14 +391,13 @@ int run(const Options& options) {
             farZ = 4000;
         }
         SDL_GL_GetDrawableSize(window, &width, &height);
-        glViewport(0, 0, width, height);
-        glClearColor(0.16f, 0.17f, 0.2f, 1);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        beginFrame(program, options.brightness);
+        chase::render::setViewport({0, 0, width, height});
+        chase::render::clearWindow({0.16f, 0.17f, 0.2f, 1}, true);
+        beginFrame(options.brightness);
         Mat4 mvp = chase::render::multiply(perspective(fovY, float(width) / float(std::max(height, 1)), nearZ, farZ), eyeView);
-        scene.draw(program, mvp);
+        scene.draw(mvp);
         if (!options.screenshot.empty() && ++frames >= 2) {
-            glFinish();
+            chase::render::waitForGpu();
             saveScreenshot(options.screenshot, width, height);
             std::cout << "saved " << options.screenshot << '\n';
             running = false;

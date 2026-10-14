@@ -1,11 +1,11 @@
 #pragma once
-// Development renderer shared by chase-viewer and chase-game: SDL2 + OpenGL 3.3 core through libepoxy.
-// Materials run the texture-environment stages the game builds (assets::materialState); fragment lighting,
-// reflections and fog are stand-ins (docs/plans/features/rendering.md).
+// Development renderer shared by chase-viewer and chase-game: SDL2 + OpenGL 3.3 core through libepoxy, all GL calls
+// in src/render. Materials run the texture-environment stages the game builds (assets::materialState); fragment
+// lighting, reflections and fog are stand-ins (docs/plans/features/rendering.md).
 #include "assets/assets.hpp"
-#include <epoxy/gl.h>
 #include <array>
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -27,10 +27,8 @@ void cameraAxes(float yaw, float pitch, float forward[3], float right[3]);
 Mat4 view(const float eye[3], float yaw, float pitch);
 // Sets which stored winding counts as front: counterClockwise is the winding in the game's own space.
 void setFrontFace(bool counterClockwise);
-
-// Shader program with the uniforms Scene::draw sets.
-GLuint createProgram();
-void beginFrame(GLuint program, float brightness);
+// Sets the scene shader program up for a frame: uniforms and fixed-function state of the scene pass.
+void beginFrame(float brightness);
 
 std::string lower(std::string s);
 
@@ -42,9 +40,15 @@ std::vector<std::string> levelModels(const assets::FuseArchive& archive, const s
 // Saves the current GL framebuffer as a BMP.
 void saveScreenshot(const std::string& path, int width, int height);
 
+class SceneImpl;
+
 class Scene {
 public:
     Scene(assets::FuseArchive& archive, std::vector<std::string> exclude);
+    ~Scene();
+    Scene(const Scene&) = delete;
+    Scene& operator=(const Scene&) = delete;
+
     // Untextured geometry drawn as its own model, e.g. a navigation overlay.
     void addGeometry(const std::string& key, const assets::ModelPart& part);
     // Adds one instance of a model; the model's GPU data is loaded once and shared.
@@ -59,56 +63,15 @@ public:
     void pose(const std::string& key, const std::vector<assets::Matrix>& skin);
     std::size_t skinnedParts(const std::string& path) const;
     void bounds(float centre[3], float& radius) const;
-    void draw(GLuint program, const Mat4& viewProjection) const;
+    void draw(const Mat4& viewProjection) const;
     std::size_t triangles() const;
-    void setTransform(std::size_t instance, const Mat4& transform) { instances_.at(instance).transform = transform; }
-    void setInstanceVisible(std::size_t instance, bool visible) { instances_.at(instance).visible = visible; }
-    std::size_t missingTextures() const { return missing_; }
-    std::size_t instances() const { return instances_.size(); }
+    void setTransform(std::size_t instance, const Mat4& transform);
+    void setInstanceVisible(std::size_t instance, bool visible);
+    std::size_t missingTextures() const;
+    std::size_t instances() const;
 
 private:
-    struct DrawPart {
-        GLuint vao = 0, vbo = 0, ibo = 0;
-        GLsizei count = 0;
-        bool hasNormal = false;
-        bool hasMaterial = false;
-        bool secondUv = false;
-        assets::MaterialState material;
-        GLuint unitTexture[3] = {0, 0, 0};
-        float unitFlat[3][4] = {};
-        bool unitIsFlat[3] = {false, false, false};
-    };
-    struct TextureInfo {
-        GLuint id = 0;
-        bool cube = false;
-        float average[4] = {1, 1, 1, 1};
-    };
-    struct SkinnedPart {
-        std::size_t part;
-        std::vector<assets::Vertex> vertices;
-        unsigned flags;
-    };
-    struct LoadedModel {
-        std::vector<DrawPart> parts;
-        std::vector<SkinnedPart> skinned;
-        float lo[3] = {1e30f, 1e30f, 1e30f}, hi[3] = {-1e30f, -1e30f, -1e30f};
-    };
-    struct Instance {
-        const LoadedModel* model;
-        Mat4 transform;
-        bool visible = true;
-    };
-    const TextureInfo& texture(const std::string& name, const std::string& modelDir);
-    DrawPart upload(const assets::ModelPart& part, LoadedModel& model);
-    void drawPart(GLuint program, const DrawPart& part, bool culling) const;
-
-    assets::FuseArchive& archive_;
-    std::vector<std::string> exclude_;
-    std::map<std::string, std::vector<std::string>> texturePaths_;
-    std::map<std::string, TextureInfo> textures_;
-    std::map<std::string, LoadedModel> models_;
-    std::vector<Instance> instances_;
-    std::size_t missing_ = 0;
+    std::unique_ptr<SceneImpl> impl_;
 };
 
 }
