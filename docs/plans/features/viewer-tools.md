@@ -28,6 +28,7 @@ IN_PROGRESS, updated 2026-10-13T22:17:29+02:00. All tools run; the oracle suppor
 - [ ] TOOLS-3 — The function total of the progress report is an estimate (7575 call and pointer targets against 8086 procedures in REA); an exact list needs a stored REA procedure list. evidence: [arm-executable.md §2026-10-13T22:17](../../re/arm-executable.md#ts-20261013-221729).
 - [ ] TOOLS-4 — "Object types with behaviour" is decided per class from the class file (props with a `CollisionBound`, the prop family, doors, studs); it does not check that an instance produced a shape, and characters and vehicles count as none until they get rules (COLL-2).
 - [x] TOOLS-5 — Closed 2026-10-14: Forgejo's web view jumps to the explicit `<a id="ts-...">` entry anchors (checked by the user).
+- [ ] TOOLS-6 — `savestate` in `tools/azahar_oracle.py` writes `NAME.json` without `"new_3ds"`, so a state saved in an emulator started in New 3DS mode loads into Old 3DS mode and crashes Azahar (SIGILL, oracle.md §2026-10-13T23:20); agent G set the flag by hand for `street-at-entrance`. Fix: record the mode in `session.json` at launch (also for `--attach`) and copy it into every saved state's JSON; add a test. evidence: [oracle.md §2026-10-14T11:13](../../re/oracle.md#ts-20261014-111312).
 
 ## 6. Findings summary
 

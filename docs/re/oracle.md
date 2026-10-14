@@ -221,3 +221,17 @@ Addition to [the entry of 2026-10-13T23:20](#ts-20261013-232034) (user statement
 
 Unknowns:
 - Whether mission 1-2 had already started when the user saved (the chapter / mission variables were not read).
+
+<a id="ts-20261014-111312"></a>
+
+## 2026-10-14T11:13:12+02:00 — Street states after mission 1-1: `street-after-1-1` (user) and `street-at-entrance`
+
+- `street-after-1-1`: the user's own quick save (slot 2, 10:25), `new_3ds: true`. The player stands just outside the police-station entrance at world (900.55, 16.57, 1110.28), facing -x, camera yaw -1.57. Game progress: after mission 1-1 (donut delivery), the same as `police-station`. Evidence from memory (no poke): the enable bytes of `Police_Station_Transition_Lower`, `_Upper` and `Police_ExtToInt` are 1 ([streaming.md §2026-10-14T11:13](streaming.md#ts-20261014-111312)); the mission variables were not read, so whether 1-2 is active is open. User note: a mission trigger lies a few metres in front of the player; it was not found among the bounds (the bounds near the start are disabled except `Police_Station_Transition_Lower`), and it was not triggered.
+- `street-at-entrance`: made from `street-after-1-1` with GDB pad injection only (no pokes, no RPC): stick (-90, -120) for 30 updates, (40, 150) for 25, idle 8. Player at (903.72, 16.57, 1113.33), 0.5 m south of Lower (z 1113.83..1117.83), `new_3ds: true` (the `savestate` command does not copy that flag: the JSON was edited by hand). Reference state for the station entry: it is unmodified past mission 1-1 and the bound fires from it by itself.
+- Walking: the stick is camera relative and the camera swings while it moves (yaw 0.2 to 0.8 within 15 updates), so the player cannot be steered exactly; a short walk into the bound from `street-at-entrance` is `stick 60 100` 6 updates, `stick 140 20` 4 updates, `stick 0 100` (enters at update 14 of the scenario).
+- Costs (New 3DS, OpenGL, port 24706): a `trap` update with three stops takes about 4.7 s, one without stops about 0.5 s; `loadstate` plus 3 updates about 7 s. Trap runs from this state were repeatable update for update (three full runs, same update numbers).
+- A `trap` run showed stops at the UI addresses 0x2c34b4 / 0x2a85a0 / 0x2a8658 on the update of the loading-page A press although they were not in the trap list; the same values appear in an earlier agent's trace. Origin not found (see the streaming entry).
+
+Unknowns:
+- Whether mission 1-2 is active in the two states.
+- The trigger the user mentioned in front of the player.

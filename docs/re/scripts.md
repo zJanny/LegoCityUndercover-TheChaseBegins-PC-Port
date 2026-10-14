@@ -192,3 +192,25 @@ Evidence source: the clean oracle state `street-after-1-1` (user's save after mi
 - PositionPlayer 0x1da0dc (not read beyond its entry), PositionObject for non-player objects, the player messages 8 and the cleared fields.
 - The tween 0x256a14 curve and the end test 0x25207c of FadeScreen; the byte at 0x51a224+0x99.
 - Whether the original's first player position at a new game is `Player1Start` or the placement by `1-1_MissionStart` (the port now follows the script).
+
+<a id="ts-20261014-111312"></a>
+
+## 2026-10-14T11:13:12+02:00 — A live script thread of the original: `Police_ExtToInt` (Azahar oracle New 3DS, GDB `memtrace` and `trap`, no RPC, no poke, unmodified state `street-at-entrance`)
+
+Sequence of events, trigger and switch request: [streaming.md §2026-10-14T11:13](streaming.md#ts-20261014-111312). Tests: `script-runner` (`waitThreeMatchesTheOracleTrace`). The runs are stepped, so dt is 0.07 (the clamp) in every update; the first sample has 0.0337.
+
+**Thread record read each update** (`memtrace` of the word at scene 2 +0x1310 = 0x085ad030 and of the 0x50 bytes it points to; samples are taken after the update with that number)
+- The trigger thread is at 0x0835997c: +0xc owner 0x08eae520, +0x10 script 0x08db975c (hash 0x2a5fbbbf), +0x4c parent 0. While the dialog is open: flags 0x4, pc 0 (it blocks in `WarningDialogBox` at word 0), timer 0, for as many updates as the dialog is open.
+- The answering update (A) creates the BoundLeft thread (script 0x08db9778) at the head of the list (0x083598dc, next = 0x0835997c, flags 0, pc 0); it is gone from the list at the next sample (it ran one pass and ended). The trigger thread moves on to pc 15 and calls Wait in that update.
+- Wait 3: the first call stores 3.0; the samples then read 2.93, 2.86, ... decreasing by dt = 0.07 per update, 0.06 after 42 repeat calls, -0.01 after the 43rd, when the thread advances to pc 18 (flags 0x4, blocked, 16 samples) and later to SceneChange. This is the rule of `ScriptRunner` (first call stores the argument, repeat calls subtract dt, the call returns 1 when the timer is <= 0). Pinned by `script-runner`: timer after 1, 20 and 42 repeat calls (2.93, 1.60, 0.06) and the end at the 43rd.
+- The head of the list read as 0 after the thread ended (the memtrace aborted there with a read at address 0): the thread ended in the update that ran SceneChange and its record went back to the free list.
+- Parent pointers were 0 for both threads (no CallScript in this path).
+
+**Executor and trap order (run 1, update numbers of the trap)**: 0x22ce9c (update 16) -> executor 0x234204 and `WarningDialogBox` (17) -> answer: Wait first call at 32, one executor + Wait stop per update to 75 -> executor only 76..92 -> SceneChange at 93. A new thread created by the trigger pass runs in the next update's runner pass, as recorded on 2026-10-14T09:52.
+
+**Modal dialog:** in the dialog state no scene thread ran in 70 updates (no stop of 0x234204, 0x174604 or 0x2700d4), so the original does not call the blocked `WarningDialogBox` every update while the dialog is open; the repeat call comes in the update where the answer is taken. The same holds on the loading page (46 updates, no executor stop).
+
+**Unknowns**
+- Which words the script has at pc 15 to 19 beyond Wait (the executor was not read per word); the blocked word at pc 18 (probably `WaitForDCam`) and how long the camera path takes in the original.
+- The record of the second thread in the list (only the head was read), so the chain via +0 was seen only for the BoundLeft thread.
+- Free-run dt (about 0.033) was not used: all runs are stepped with the 0.07 clamp.

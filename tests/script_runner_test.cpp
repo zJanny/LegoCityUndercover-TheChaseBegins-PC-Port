@@ -1,6 +1,7 @@
 // Synthetic edge cases of the script runner (src/runtime/script_runner.cpp). The rules come from the disassembly of the
 // executor 0x234204, Wait 0x174604, CallScript / SpawnScript 0x1c3730, thread creation 0x22ce9c (head insertion) and
-// the runner 0x169254 (docs/re/scripts.md, 2026-10-14 entry); the scripts here are made up.
+// the runner 0x169254 (docs/re/scripts.md, 2026-10-14 entry); the scripts here are made up. waitThreeMatchesTheOracleTrace pins
+// the Wait timer recorded in the oracle from the unmodified state street-at-entrance (docs/re/scripts.md, script thread entry).
 #include "runtime/script_runner.hpp"
 #include <iostream>
 #include <stdexcept>
@@ -36,6 +37,28 @@ void waitCountsFromTheSecondCall() {
     require(runner.variable("Done") == 0, "0.1 - 2 * 0.034 > 0");
     runner.update(0.034f);
     require(runner.variable("Done") == 1 && runner.threadCount() == 0, "Wait ends when the timer reaches 0 or below");
+}
+
+void waitThreeMatchesTheOracleTrace() {
+    Level level;
+    add(level, "police", {{"Wait", {"3"}}, {"=", {"Done", "1"}}});
+    PlacedObjectState state;
+    ScriptRunner runner(level, state);
+    runner.start("police");
+    require(runner.threads().front().waitTimer == 3.0f, "the first call stores the argument");
+    const struct {
+        int updates;
+        float timer;
+    } recorded[] = {{1, 2.93f}, {20, 1.60f}, {42, 0.06f}};
+    int done = 0;
+    for (const auto& sample : recorded) {
+        for (; done < sample.updates; ++done) runner.update(0.07f);
+        const float timer = runner.threads().front().waitTimer;
+        require(timer > sample.timer - 0.0005f && timer < sample.timer + 0.0005f, "Wait timer after " + std::to_string(sample.updates) + " updates");
+    }
+    require(runner.variable("Done") == 0, "the Wait is still pending after 42 repeat calls");
+    runner.update(0.07f);
+    require(runner.variable("Done") == 1 && runner.threadCount() == 0, "the 43rd repeat call ends Wait 3 at dt 0.07");
 }
 
 void waitZeroYieldsOnce() {
@@ -303,6 +326,7 @@ void positionObjectIsRecorded() {
 int main() {
     try {
         waitCountsFromTheSecondCall();
+        waitThreeMatchesTheOracleTrace();
         waitZeroYieldsOnce();
         callScriptSuspendsTheParent();
         callScriptOfAnEndingChildContinuesAtOnce();
