@@ -50,6 +50,7 @@ What is not like the original yet:
 
 - The character runs when you push the keys. After about one second of running, the character sprints.
 - The keys come from `config/controls.cfg`. See [Controls](controls.md).
+- F3 shows or hides the [debug overlay](debug-overlay.md) (frame rate, memory, CPU and a few level values). It is off by default.
 
 ## What works
 

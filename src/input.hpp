@@ -7,7 +7,7 @@
 #include <vector>
 
 namespace chase {
-enum class Action { Up, Down, Left, Right, A, B, X, Y, L, R, Start, Select, Walk, Count };
+enum class Action { Up, Down, Left, Right, A, B, X, Y, L, R, Start, Select, Walk, DebugOverlay, Count };
 constexpr std::size_t actionCount = static_cast<std::size_t>(Action::Count);
 const char* actionName(Action action);
 enum class Source { Key, Mouse };

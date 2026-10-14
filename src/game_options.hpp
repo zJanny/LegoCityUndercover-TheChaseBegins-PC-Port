@@ -19,6 +19,7 @@ struct Options {
     std::string saveFile;
     unsigned saveSlot = 0;
     bool cameraCollision = true;
+    bool debugOverlay = false;
     std::optional<std::array<float, 3>> start;
     std::optional<float> facing;
     std::string startRoom;

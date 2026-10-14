@@ -10,7 +10,9 @@
 #include "game_level.hpp"
 #include "game_options.hpp"
 #include "input.hpp"
+#include "render/debug_overlay.hpp"
 #include "render/scene.hpp"
+#include "runtime/debug_metrics.hpp"
 #include "runtime/level_start.hpp"
 #include "runtime/pad.hpp"
 #include "runtime/scene_change.hpp"
@@ -142,6 +144,8 @@ int run(const Options& given) {
     if (!masterEntry) throw std::runtime_error(std::string("not in archive: ") + runtime::kMasterLevelFile);
     const Level master = parseLevel(archive.read(*masterEntry));
     const std::vector<runtime::SceneChangeObject> sceneChanges = runtime::sceneChangeObjects(master);
+    runtime::DebugMetrics debugMetrics;
+    std::optional<chase::render::DebugOverlay> debugOverlay;
     unsigned scriptOffset = 0;
     bool afterSwitch = false;
     for (;;) {
@@ -149,11 +153,18 @@ int run(const Options& given) {
         bool running = true;
         Uint32 secondStart = SDL_GetTicks();
         while (running) {
+            debugMetrics.frame();
             pollEvents(input, running);
             session.advance(padState(input));
 
             SDL_GL_GetDrawableSize(window, &width, &height);
             session.draw(program, width, height);
+            const bool debugVisible = options.debugOverlay != input.active(chase::Action::DebugOverlay);
+            debugMetrics.setVisible(debugVisible);
+            if (debugVisible) {
+                if (!debugOverlay) debugOverlay.emplace();
+                debugOverlay->draw(runtime::debugOverlayLines(debugMetrics.readout(), session.debugValues()), width, height);
+            }
 
             const bool scriptDone = session.scriptDone();
             if (scriptDone) session.reportScripted();
@@ -172,6 +183,7 @@ int run(const Options& given) {
                 secondStart = tick;
             }
         }
+        debugOverlay.reset();
         session.releaseOverlays();
         if (!session.switchTo) break;
         game_level::advanceToDestination(archive, options, *session.switchTo, session.updateCount(), scriptOffset, afterSwitch);

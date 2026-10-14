@@ -280,7 +280,22 @@ void LevelSession::reportScripted() const {
 void LevelSession::reportRate() {
     std::cout << "updates/s " << updatesThisSecond << ", dt " << scheduler->lastDt() << " s, stick "
               << pad.slot(kSlotStickX).value << ' ' << pad.slot(kSlotStickY).value << '\n';
+    updatesLastSecond = updatesThisSecond;
     updatesThisSecond = 0;
+}
+
+runtime::DebugGameValues LevelSession::debugValues() const {
+    runtime::DebugGameValues values;
+    values.updatesPerSecond = updatesLastSecond;
+    values.level = levelName;
+    values.scriptThreads = levelScripts.threadCount();
+    if (player) {
+        values.hasPlayer = true;
+        const std::array<float, 3> position = player->position();
+        std::copy(position.begin(), position.end(), values.position);
+        values.headingDegrees = runtime::headingRadians(player->motion.facing) * 180.0f / float(M_PI);
+    }
+    return values;
 }
 
 void LevelSession::releaseOverlays() {

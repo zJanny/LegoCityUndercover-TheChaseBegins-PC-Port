@@ -6,12 +6,13 @@ Mapping the 3DS controls to keyboard and mouse (configurable bindings, hold/togg
 
 ## 2. Status
 
-DONE for the input laboratory (S2) and the keyboard/mouse mapping used by `chase-game`; the pad pipeline replica works for the recovered slots. Updated 2026-10-13T21:29:01+0200.
+DONE for the input laboratory (S2) and the keyboard/mouse mapping used by `chase-game`; the pad pipeline replica works for the recovered slots. Updated 2026-10-14T14:37:06+02:00.
 
 ## 3. Verified behaviour
 
 - A hold action stays active while any binding is held; a toggle flips only on a fresh press; opposite directions cancel; focus loss resets all held and toggled state; touch maps only inside the viewport (`input-core`, `input-sdl-smoke`, `--smoke-test`).
 - Input slot table 0x3769e8 (18 slots to pad channels), A/B pairs, channel 7 unfed by the pad, stick to D-pad 0x2289b8; pad pipeline replica matches the live stick value (`runtime-core`).
+- `DebugOverlay` (default F3, toggle; developer tool, no game behaviour) is parsed like every action; a malformed line is still rejected (`input-core`); see [TOOLS-10 in viewer-tools](viewer-tools.md).
 - Action names are 3DS buttons, not gameplay meanings; `Walk` (Left Alt) and jump on B (Q or the right mouse button) are bound in `config/controls.cfg`.
 
 ## 4. Stand-ins
@@ -32,4 +33,4 @@ DONE for the input laboratory (S2) and the keyboard/mouse mapping used by `chase
 ## 7. Code and tests
 
 - `src/input.*` (`chase_input`, no SDL), `src/main.cpp` (`chase-input-lab`), `src/runtime/pad.*`, `config/controls.cfg` (format in CLAUDE.md "Architecture rules"); user docs `docs/controls.md`.
-- CTest: `input-core`, `input-sdl-smoke`, `runtime-core`.
+- CTest: `input-core` (includes the `DebugOverlay` line), `input-sdl-smoke`, `runtime-core`.

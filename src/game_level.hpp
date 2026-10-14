@@ -14,6 +14,7 @@
 #include "runtime/camera_lock_icon.hpp"
 #include "runtime/camera_rig.hpp"
 #include "runtime/collision.hpp"
+#include "runtime/debug_metrics.hpp"
 #include "runtime/level_start.hpp"
 #include "runtime/pad.hpp"
 #include "runtime/scene_change.hpp"
@@ -72,6 +73,7 @@ public:
     bool scripted() const { return !script.empty(); }
     void reportScripted() const;
     void reportRate();
+    chase::runtime::DebugGameValues debugValues() const;
     void releaseOverlays();
     unsigned updateCount() const { return updates; }
     std::optional<chase::runtime::SceneChangeDestination> switchTo;
@@ -120,7 +122,7 @@ private:
     std::optional<chase::runtime::Scheduler> scheduler;
     std::vector<game_options::ScriptStep> script;
     unsigned scriptLength = 0;
-    unsigned updates = 0, updatesThisSecond = 0;
+    unsigned updates = 0, updatesThisSecond = 0, updatesLastSecond = 0;
     bool dialogReported = false;
     std::vector<float> scriptedHeights;
 };
