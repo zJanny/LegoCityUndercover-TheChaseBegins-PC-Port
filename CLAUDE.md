@@ -83,6 +83,15 @@ The original game runs in Azahar as a measuring reference. Read `docs/re/oracle.
 
 - Run the emulator only through `tools/azahar_oracle.py`. Never start `azahar` directly or point it at your own config or saves.
 - Start experiments from save states (`--state NAME`, e.g. `gameplay-start`; needs `--display xvfb`), never by booting and replaying menus. If a checkpoint is missing, create it once (e.g. `tools/oracle/to-gameplay.txt`, ending with `savestate NAME`) and reuse it.
+- **Ask the user for hard-to-reach states.** When reaching a game point needs playing (missions, fights, driving, long routes), or an agent's scripted attempts fail (about 3 tries or 15 minutes), the agent stops trying and asks the user through the lead. Agents send the request to the lead (`SendMessage` to `main`); the lead passes it to the user. The request states:
+  - the state name;
+  - why it is needed;
+  - the game progress it needs (which missions are done, which must not be started);
+  - where to go and how to get there;
+  - where to stand and which way to face;
+  - what must not happen first (triggers, cutscenes);
+  - the save slot.
+  Meanwhile the agent continues with work that does not need the state. The user saves in their own Azahar. The lead copies the slot read-only to `artifacts/oracle/states/NAME.cst` and writes `NAME.json` (`file`, `new_3ds`, `source` with slot, time, position and game progress). The user's saves are unmodified reference states; record their game progress in `docs/re/oracle.md`.
 - For exploration, keep one session (`--keep`) and probe with `--attach`; save a state at each new screen. Never reboot per probe.
 - Navigate with `wait` (free run), not long `frames` runs. Use `frames`/`trace` only where per-update data is needed.
 - Use `--rpc` for screenshots, memory reads and timing (`sample`). Never measure rates or fps from stepped frames (they inflate the game clock about 30 %). Use `--rpc-input` for buttons.

@@ -106,6 +106,10 @@ User approved Git init, no extra guidance, Linux devices emit keyboard/mouse. Us
 
 **Question:** where do known gaps live so that an agent finds them without reading many files. **Decision (user):** one combined file per feature in `docs/plans/features/` (index `features/README.md`, about 18 fine-grained files, stable item IDs, `needs:`/`blocks:` between features); this file keeps work state only with one log line per session; docs/re stays the evidence layer; long old log entries shortened to one line. Plan revision 4. **Reason:** the Next Action section had grown into a mix of status, open items, stand-ins and findings. Rule in CLAUDE.md "Feature files".
 
+### Decision: the user makes hard-to-reach oracle states (2026-10-14T10:33:57+02:00)
+
+**Question:** how agents get to game points that need playing (missions, routes) in the oracle. **Decision (user):** an agent that would have to play there, or whose scripted attempts fail, asks the user through the lead with everything needed to play to that point; the user saves the state in their own Azahar and the lead copies it into `artifacts/oracle/states/`. **Reason:** an agent brute-forcing a route with scripted input costs hours and tokens; the user plays it in minutes (example: `street-after-1-1`). Rule in CLAUDE.md "Runtime oracle".
+
 ## Blockers
 
 Full game logic, hardware APIs and asset formats not recovered yet.
@@ -268,3 +272,4 @@ One line per session: timestamp, what was worked on, how far it got, link to the
 - 2026-10-14T10:07:15+02:00 — Agent C: TRANS-1 closed (Lower bound disabled by mission state; switch chain trapped in the oracle with a poked bound), TRANS-7 opened → [level-transitions](features/level-transitions.md)
 - 2026-10-14T10:09:18+02:00 — Agent A: SCRIPT-1 phase 1: script threads run every update (ScriptRunner), TriggerObject reaches doors, trigger dispatch for player bound events and ObjectTriggered (TRANS-4 closed); SCRIPT-1 stays open for natives, events and other trigger types → [script-system](features/script-system.md).
 - 2026-10-14T10:20:23+02:00 — Lead: recorded (user) that the police-station checkpoint is after mission 1-1; TRANS-7 now starts from it instead of replaying the mission → [level-transitions](features/level-transitions.md).
+- 2026-10-14T10:33:57+02:00 — Lead: user rule: agents ask the user (through the lead) for hard-to-reach oracle states instead of brute-forcing routes; added to CLAUDE.md "Runtime oracle" and Decisions; user state street-after-1-1 registered (slot 2) → [viewer-tools](features/viewer-tools.md).
