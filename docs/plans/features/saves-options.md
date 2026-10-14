@@ -32,6 +32,9 @@ IN_PROGRESS, updated 2026-10-14T13:41:46+0200. `chase_save` reads, validates and
 - [x] SAVE-7 — closed 2026-10-14: Continue level = slot byte +6; no position field; `which` 1 is never written, so the StoryProgress override 0x192e14 never fires. evidence: [save-format.md §2026-10-14T13:41](../../re/save-format.md#ts-20261014-134146)
 - [ ] SAVE-8 — Names and creator of the type 0xfc and 0x62 objects behind the record hashes, and the effect of type 0x15 / 0x43 / 0x62 records with bit 0 set (needs a save with built build-its). blocks: SAVE-S3. evidence: [save-format.md §2026-10-14T13:41](../../re/save-format.md#ts-20261014-134146)
 - [ ] SAVE-9 — Follow the consumer of slot byte +6 on Continue (0x2b1100, 0x2e7d50) and make `chase-game --save` start that level; the start position is unknown. blocks: SAVE-S2, FE-1 (front-end.md). evidence: [save-format.md §2026-10-14T13:41](../../re/save-format.md#ts-20261014-134146)
+- [ ] SAVE-10 — No save writer: the save request 0x21cf38(0) (QuickSave, SetRaceWon, AwardRacingCar, GiveReward) and the slot copy to the file are not done; the progress natives change an in-memory slot image only. blocks: SCRIPT-63. evidence: [script-natives-progress.md §2026-10-14T14:41](../../re/script-natives-progress.md#ts-20261014-144155).
+- [ ] SAVE-11 — New-game slot defaults (0x1a25cc: level 2 unlocked, characters 9..140, sets) are not reproduced; without `--save` the progress natives start from a zero image. evidence: [save-format.md §2026-10-13T09:13](../../re/save-format.md#ts-20261013-0913).
+- [ ] SAVE-12 — Where the language byte 0x376adc comes from (options field) and its wiring into GetLanguage. blocks: SCRIPT-65. evidence: [script-natives-progress.md §2026-10-14T14:41](../../re/script-natives-progress.md#ts-20261014-144155).
 - [ ] SAVE-5 — Most of what a save game contains: only the completion totals are understood.
 
 ## 6. Findings summary
@@ -40,10 +43,11 @@ IN_PROGRESS, updated 2026-10-14T13:41:46+0200. `chase_save` reads, validates and
 - Options and defaults: [save-format.md §2026-10-13T12:30](../../re/save-format.md#ts-20261013-1230), [save-format.md §2026-10-13T08:53](../../re/save-format.md#ts-20261013-0853), [save-format.md §2026-10-13T08:56](../../re/save-format.md#ts-20261013-0856).
 - Level state blocks, unlock bits, the progress natives and the user's save: [save-format.md §2026-10-14T11:53](../../re/save-format.md#ts-20261014-115300).
 - Object records, end bit set, current level, second unlock bit: [save-format.md §2026-10-14T13:41](../../re/save-format.md#ts-20261014-134146).
+- Slot bytes the progress natives write (abilities +0x51ee, races +0x5200, racing car +0x520c, red bricks +0x51b8, character group +0x51bb): [script-natives-progress.md §2026-10-14T14:41](../../re/script-natives-progress.md#ts-20261014-144155).
 - Slot progress, totals and completion: [save-format.md §2026-10-13T09:13](../../re/save-format.md#ts-20261013-0913), [save-format.md §2026-10-13T09:25](../../re/save-format.md#ts-20261013-0925), [save-format.md §2026-10-13T09:26](../../re/save-format.md#ts-20261013-092607).
 
 ## 7. Code and tests
 
 - `src/save/` (`chase_save`, `chase_save_tables`), `chase-savecheck`, `chase-tabledump`.
-- `src/save/slot_progress.*` (`chase_save_progress`), `src/game_save.hpp`, `ScriptRunner::setProgress` / `setVariable`.
+- `src/save/slot_progress.*` (`chase_save_progress`), `src/game_save.hpp`, `ScriptRunner::setProgress` / `setVariable`, `SlotStart::slotBytes` to `ProgressNativeState::setSlotImage`.
 - CTest: `save-core`, `save-real-data`, `slot-progress`, `slot-progress-real-data` (needs a copy of a real save, `-DCHASE_REAL_SAVE`).

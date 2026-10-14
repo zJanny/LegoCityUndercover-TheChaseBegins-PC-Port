@@ -5,6 +5,7 @@
 #include "assets/object_collision.hpp"
 #include "runtime/natives_objects.hpp"
 #include "runtime/dcam.hpp"
+#include "runtime/natives_progress.hpp"
 
 #include <cstdint>
 #include <list>
@@ -145,6 +146,9 @@ public:
     // Flags and class messages written by the object natives (natives_objects.hpp).
     const ObjectNativeState& objectNatives() const { return objectNatives_; }
     std::vector<ObjectClassMessage> takeObjectClassMessages() { return objectNatives_.takeMessages(); }
+    // Progress, stud and switch natives (natives_progress.hpp); the slot image is the one of a loaded save.
+    ProgressNativeState& progressNatives() { return progressNatives_; }
+    const ProgressNativeState& progressNatives() const { return progressNatives_; }
     // Brightness of the screen set by FadeScreen: 1 normal, 0 black.
     float fadeLevel() const { return fadeLevel_; }
     DirectorCamera& director() { return director_; }
@@ -160,6 +164,7 @@ private:
     Result native(ScriptThread& thread, const assets::ScriptCall& call, int word);
     void finish(ScriptThread& thread);
     void killScript(const ScriptThread& caller, const std::string& name);
+    void progressNative(const assets::ScriptCall& call);
     float read(const std::string& token) const;
     bool holds(const assets::ScriptCall& call) const;
     void assignArithmetic(const assets::ScriptCall& call);
@@ -191,6 +196,7 @@ private:
     std::vector<ScriptPlacement> placements_;
     std::vector<std::string> sceneChanges_;
     ObjectNativeState objectNatives_;
+    ProgressNativeState progressNatives_;
     float fadeLevel_ = 1.0f, fadeStart_ = 1.0f, fadeTarget_ = 1.0f, fadeElapsed_ = 0;
     DirectorCamera director_;
 };

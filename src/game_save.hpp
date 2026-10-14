@@ -43,6 +43,7 @@ inline void apply(const chase::save::SlotStart& start, chase::runtime::ScriptRun
     progress.levelUnlocked = start.levelUnlocked;
     progress.gameComplete = start.gameComplete;
     runner.setProgress(progress);
+    runner.progressNatives().setSlotImage(start.slotBytes);
     for (const chase::save::SavedVariable& variable : start.variables) runner.setVariable(variable.hash, variable.value);
 }
 

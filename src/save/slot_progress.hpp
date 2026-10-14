@@ -74,6 +74,7 @@ struct SlotStart {
     std::vector<SavedVariable> variables;
     std::vector<ObjectRecord> objectRecords;
     std::optional<unsigned> currentLevel;
+    std::vector<std::uint8_t> slotBytes;  // the whole slot block, for the progress natives (natives_progress.hpp)
 };
 // Throws std::runtime_error when the slot is too short or a saved state does not match `level`.
 SlotStart slotStart(SlotView slot, const assets::Level& level, unsigned levelId, std::uint8_t finalLevelTotal);

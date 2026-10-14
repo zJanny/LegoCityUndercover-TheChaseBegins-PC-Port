@@ -88,6 +88,8 @@ public:
     std::vector<StudBanked> takeBanked();
 
     std::uint64_t counter() const { return counter_; }
+    // AddStuds 0x18838c adds through 0x1584e0 to the counter object without the clamp of 0x28a128.
+    void addToCounter(std::uint64_t amount) { counter_ += amount; }
     const std::vector<Stud>& studs() const { return studs_; }
     std::vector<Stud>& studs() { return studs_; }
     std::size_t count(StudState state) const;

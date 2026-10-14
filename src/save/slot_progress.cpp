@@ -159,6 +159,7 @@ SlotStart slotStart(SlotView slot, const assets::Level& level, unsigned levelId,
         start.objectRecords = objects->records;
     }
     start.currentLevel = slotCurrentLevel(slot);
+    start.slotBytes.assign(slot.data, slot.data + slot.size);
     return start;
 }
 }

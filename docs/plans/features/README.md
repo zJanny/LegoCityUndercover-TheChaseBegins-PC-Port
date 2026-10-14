@@ -10,7 +10,7 @@ Item format: `- [ ] ID — gap. needs: ID. blocks: ID. evidence: link`. `needs:`
 | [camera](camera.md) | IN_PROGRESS | CAMERA-9 follow controller seed and jump reaction in a fade; CAMERA-3 multi-record weights, Blocker pose, shake |
 | [collision](collision.md) | IN_PROGRESS | COLL-1 broad phase stand-in; COLL-2 constructors missing (vehicles, characters) |
 | [level-objects](level-objects.md) | IN_PROGRESS | LEVOBJ-3 objects frozen (needs SCRIPT-1); LEVOBJ-2 NPC start animation |
-| [script-system](script-system.md) | IN_PROGRESS | SCRIPT-1 mission flow (needs SCRIPT-7 natives in batches SCRIPT-27 to SCRIPT-39 and SCRIPT-57 to SCRIPT-60, SCRIPT-11 trigger types) |
+| [script-system](script-system.md) | IN_PROGRESS | SCRIPT-1 mission flow (needs SCRIPT-7 natives in batches SCRIPT-29 to SCRIPT-39, SCRIPT-46 and SCRIPT-57 to SCRIPT-65, SCRIPT-11 trigger types) |
 | [world-streaming](world-streaming.md) | IN_PROGRESS | Room load rule recovered (`planRoomStreaming`); WSTREAM-3 rooms load and unload in `chase-game` (needs WSTREAM-8 room position) |
 | [level-transitions](level-transitions.md) | IN_PROGRESS | station exit and entry switch at run time; TRANS-3 master level (needs SCRIPT-1), TRANS-8 loading page code and look, TRANS-6 lifts |
 | [doors](doors.md) | IN_PROGRESS | DOOR-1 script-requested doors stay closed (needs SCRIPT-7); DOOR-3 open-door box |

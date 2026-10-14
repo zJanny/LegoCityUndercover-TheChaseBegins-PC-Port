@@ -21,7 +21,7 @@ enum class Word {
     Unhandled, If, Else, ElseIf, EndIf, Assign, AssignArithmetic, CallScript, SpawnScript, Wait,
     EnableObject, EnableCollision, TriggerObject, EnableTrigger, EnableBound, GetGameComplete, IsLevelUnlocked, IsRedBrickExtraActive,
     WarningDialogBox, FadeScreen, PositionObject, SceneChange,
-    KillScript, ObjectNative,
+    KillScript, ObjectNative, ProgressNative,
     StartDCam, StartDCamTrack, DCamActive, WaitForDCam, EndDCam, SnapCamera, ShakeScreen, Set3DFocusObject, SetDCamStartWait, SetDCamEndWait
 };
 
@@ -70,7 +70,8 @@ Word wordOf(const std::string& function) {
     const std::string name = lower(function);
     for (const ScriptFunction& entry : kScriptFunctions)
         if (name == entry.name) return entry.word;
-    return objectNativeKind(name) ? Word::ObjectNative : Word::Unhandled;
+    if (objectNativeKind(name)) return Word::ObjectNative;
+    return progressNativeKind(name) ? Word::ProgressNative : Word::Unhandled;
 }
 
 std::string unquoted(const std::string& text) {
@@ -138,6 +139,8 @@ ScriptFunctionSupport scriptFunctionSupport(const std::string& name) {
         if (key == entry.name) return entry.standIn ? ScriptFunctionSupport::StandIn : ScriptFunctionSupport::Implemented;
     if (const auto kind = objectNativeKind(key))
         return objectNativeIsStandIn(*kind) ? ScriptFunctionSupport::StandIn : ScriptFunctionSupport::Implemented;
+    if (const auto kind = progressNativeKind(key))
+        return progressNativeIsStandIn(*kind) ? ScriptFunctionSupport::StandIn : ScriptFunctionSupport::Implemented;
     return ScriptFunctionSupport::None;
 }
 
@@ -145,6 +148,7 @@ std::vector<std::string> handledScriptFunctions() {
     std::vector<std::string> names;
     for (const ScriptFunction& entry : kScriptFunctions) names.push_back(entry.name);
     for (const std::string& name : objectNativeNames()) names.push_back(name);
+    for (const std::string& name : progressNativeNames()) names.push_back(name);
     return names;
 }
 
@@ -369,6 +373,9 @@ ScriptRunner::Result ScriptRunner::native(ScriptThread& thread, const ScriptCall
     case Word::SetDCamEndWait:
         if (!args.empty()) director_.setEndWait(read(args[0]));
         break;
+    case Word::ProgressNative:
+        progressNative(call);
+        break;
     case Word::WarningDialogBox:
         if (!(thread.flags & kScriptBlocked)) {
             dialogOpen_ = true;
@@ -399,6 +406,26 @@ ScriptRunner::Result ScriptRunner::native(ScriptThread& thread, const ScriptCall
     default: break;
     }
     return Result::Continue;
+}
+
+void ScriptRunner::progressNative(const ScriptCall& call) {
+    const auto kind = progressNativeKind(lower(call.function));
+    if (!kind) return;
+    const ProgressNativeShape shape = progressNativeShape(*kind);
+    const std::size_t first = shape.object ? 1 : 0;
+    const auto& args = call.arguments;
+    if (args.size() < first + shape.values + (shape.output ? 1 : 0)) return;
+    std::vector<float> values;
+    for (unsigned i = 0; i < shape.values; ++i) values.push_back(read(args[first + i]));
+    const ProgressNativeResult result = progressNatives_.run(*kind, values, shape.object ? lower(args[0]) : std::string());
+    if (result.unlockedLevel) progress_.levelUnlocked |= 1u << *result.unlockedLevel;
+    if (!shape.output) return;
+    float output = result.output.value_or(-1.0f);
+    if (result.languageParameter) {
+        const auto found = variables_.find(assets::nameHash(*result.languageParameter));
+        if (found != variables_.end()) output = float(static_cast<std::int8_t>(static_cast<std::int32_t>(found->second)));
+    }
+    variables_[assets::nameHash(args[first + shape.values])] = output;
 }
 
 void ScriptRunner::killScript(const ScriptThread& caller, const std::string& name) {

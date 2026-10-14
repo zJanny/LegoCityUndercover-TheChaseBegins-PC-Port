@@ -171,6 +171,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
     }
     sceneStart.startRequested();
     levelScripts.update(dt);
+    studs.addToCounter(levelScripts.progressNatives().takeStudsAdded());
     sceneStart.update(dt);
     if (player) {
         const float playerPosition[3] = {player->motion.x, player->vertical.y, player->motion.z};

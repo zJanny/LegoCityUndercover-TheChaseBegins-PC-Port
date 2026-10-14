@@ -1,10 +1,11 @@
 # Script natives: census, handlers and work batches
 
-Every native (script function) of the level scripts: handler address, argument count, use in the levels, class and work batch. Script engine itself: [scripts.md](scripts.md). Items: [script-system.md](../plans/features/script-system.md) (SCRIPT-26 to SCRIPT-45).
+Every native (script function) of the level scripts: handler address, argument count, use in the levels, class and work batch. Script engine itself: [scripts.md](scripts.md). Items: [script-system.md](../plans/features/script-system.md) (SCRIPT-26 to SCRIPT-45). Batch 27 (progress, saves, studs): [script-natives-progress.md](script-natives-progress.md).
 
 <a id="ts-20261014-133339"></a>
 
 ## 2026-10-14T13:33:39+02:00 — Census of the 245 natives used by level and class scripts, handler addresses, classes A-D and batches (llvm-objdump on game.arm.elf, C++ level loader; no emulator, no REA session)
+Corrected by [script-natives-progress.md §2026-10-14T14:41](script-natives-progress.md#ts-20261014-144155): CountRacesWon is class A (not blocking) and the second argument of EnableStudsByGroup is not an enable flag.
 Corrected by [script-natives.md §2026-10-14T14:16](#ts-20261014-141621): the note of PrintDebugString (0x26fde8 is a no-op, not the draw call 0x2665d0) and the classes of the batch 26 rows (what each handler does).
 
 ### Method
@@ -35,7 +36,7 @@ Corrected by [script-natives.md §2026-10-14T14:16](#ts-20261014-141621): the no
 | 38 | SCRIPT-38 | effects, particles, streaming, semi-transparent lists (20) | C | 553 / 55 / 5 | PART-1 |
 | 39 | SCRIPT-39 | hub, shops, minigames (10) | C | 14 / 0 / 0 | SCRIPT-45 |
 
-Sum: 224 unhandled natives in batches, 20 implemented, 1 stand-in (FadeScreen). The "needs" column names the system whose absence stops the native from doing anything visible; a batch agent can still transcribe the handler's argument handling and state writes, and mark the effect as a stand-in.
+Sum (at the census): 224 unhandled natives in batches, 20 implemented, 1 stand-in (FadeScreen); batch 26 and 27 changed this, see their entries. The "needs" column names the system whose absence stops the native from doing anything visible; a batch agent can still transcribe the handler's argument handling and state writes, and mark the effect as a stand-in.
 
 ### Table (sorted by calls over all levels)
 
@@ -96,8 +97,8 @@ Sum: 224 unhandled natives in batches, 20 implemented, 1 stand-in (FadeScreen). 
 | =+ | 0x17ef30 | 4 | 77 / 7 / 1 / 0 | 9 | done |  |  |
 | SubObjectiveArrowGoToEnable | 0x2c57b0 | 2 | 77 / 15 / 4 / 0 | 5 | C | 31 |  |
 | OverrideScannable | 0x27bce4 | 2 | 76 / 17 / 11 / 0 | 6 | C | 31 |  |
-| enablestudsbygroup | 0x285ed4 | 2 | 74 / 13 / 0 / 0 | 8 | A | 27 |  |
-| GiveReward | 0x1a2f18 | 1 | 74 / 9 / 1 / 4 | 14 | A | 27 |  |
+| enablestudsbygroup | 0x285ed4 | 2 | 74 / 13 / 0 / 0 | 8 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
+| GiveReward | 0x1a2f18 | 1 | 74 / 9 / 1 / 4 | 14 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
 | VehicleJumpOut | 0x1da8d8 | 1 | 70 / 5 / 0 / 0 | 8 | C | 36 |  |
 | StopMusic | 0x195054 | 1 | 68 / 15 / 0 / 0 | 7 | C | 33 |  |
 | AutomaticMusic | 0x1d9c70 | 0 | 67 / 15 / 1 / 0 | 7 | C | 33 |  |
@@ -106,7 +107,7 @@ Sum: 224 unhandled natives in batches, 20 implemented, 1 stand-in (FadeScreen). 
 | OverrideMusic | 0x1cdb28 | 1 | 65 / 19 / 0 / 0 | 7 | C | 33 |  |
 | PanMapToObject | 0x1d9e04 | 4 | 65 / 2 / 0 / 0 | 6 | C | 31 |  |
 | SpawnStuds | 0x1a3130 | 2 | 65 / 0 / 0 / 1 | 7 | C | 38 |  |
-| UnlockAbility | 0x1cde84 | 1 | 63 / 12 / 7 / 0 | 10 | A | 27 |  |
+| UnlockAbility | 0x1cde84 | 1 | 63 / 12 / 7 / 0 | 10 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
 | AIIgnorePlayer | 0x1d9c38 | 2 | 62 / 0 / 0 / 0 | 4 | C | 34 |  |
 | ShowIntroText | 0x1cdc2c | 1 | 58 / 6 / 0 / 0 | 8 | C | 30 |  |
 | DCamCutSceneLoad | 0x2889a4 | 1 | 57 / 13 / 2 / 0 | 7 | C | 29 |  |
@@ -131,19 +132,19 @@ Sum: 224 unhandled natives in batches, 20 implemented, 1 stand-in (FadeScreen). 
 | StreamRoomIn | 0x1bfba4 | 1 | 40 / 9 / 0 / 0 | 6 | C | 38 |  |
 | SnapCamera | 0x1a30fc | 0 | 39 / 15 / 2 / 0 | 7 | stand-in | 28 | follow reset through FollowCamera::reset |
 | SetWeaponEnabled | 0x26fea4 | 2 | 36 / 4 / 0 / 0 | 5 | C | 35 |  |
-| UnlockCharacter | 0x263918 | 1 | 34 / 1 / 0 / 0 | 8 | A | 27 |  |
+| UnlockCharacter | 0x263918 | 1 | 34 / 1 / 0 / 0 | 8 | A | 27 | handled as stand-in, partial (SCRIPT-S21, SCRIPT-61) |
 | AISuperJump | 0x1b2344 | 3 | 31 / 9 / 0 / 0 | 7 | C | 34 |  |
 | KillScript | 0x1c3834 | 1 | 30 / 5 / 1 / 0 | 7 | A | 26 | handled: threads of the script except the caller end |
 | BulletTime | 0x1a2df0 | 3 | 28 / 6 / 0 / 0 | 9 | C | 29 |  |
 | SetPartyCharacter | 0x27beb4 | 3 | 28 / 10 / 3 / 0 | 8 | C | 35 |  |
-| SetRaceInProgress | 0x27bff4 | 1 | 28 / 4 / 0 / 0 | 6 | A | 27 |  |
+| SetRaceInProgress | 0x27bff4 | 1 | 28 / 4 / 0 / 0 | 6 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
 | ShowBossHearts | 0x1da788 | 2 | 27 / 0 / 0 / 0 | 7 | C | 30 |  |
 | SceneChange | 0x1b262c | 1 | 25 / 8 / 0 / 0 | 7 | done |  |  |
 | AIResetState | 0x1bf650 | 1 | 24 / 11 / 0 / 0 | 6 | C | 34 |  |
 | EffectFadeAlpha | 0x27e7d0 | 4 | 24 / 13 / 0 / 5 | 4 | C | 38 |  |
 | AIFollowSimplePath | 0x285d18 | 5 | 23 / 2 / 0 / 0 | 4 | C | 34 |  |
 | ScaleSoundFrequency | 0x2a8afc | 3 | 23 / 0 / 0 / 0 | 6 | C | 33 |  |
-| AddStuds | 0x18838c | 1 | 22 / 3 / 0 / 0 | 7 | A | 27 |  |
+| AddStuds | 0x18838c | 1 | 22 / 3 / 0 / 0 | 7 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
 | SubObjectiveArrowEnemyEnable | 0x2c87f0 | 2 | 22 / 8 / 0 / 0 | 6 | C | 31 |  |
 | VehicleJumpIn | 0x1cdec0 | 2 | 22 / 4 / 0 / 0 | 6 | C | 36 |  |
 | RideableIdle | 0x1bfb14 | 1 | 21 / 0 / 0 / 0 | 1 | C | 37 |  |
@@ -174,7 +175,7 @@ Sum: 224 unhandled natives in batches, 20 implemented, 1 stand-in (FadeScreen). 
 | IsLevelUnlocked | 0x2636e4 | 2 | 9 / 5 / 5 / 0 | 4 | done |  |  |
 | PlayCutscene | 0x1bf9d4 | 1 | 9 / 3 / 2 / 0 | 6 | B | 29 | shares the body of PlayCharAnim (r2 = 1) |
 | PlayCutsceneNoFadeBackIn | 0x2b9dac | 1 | 9 / 0 / 0 / 0 | 6 | C | 29 |  |
-| QuickSave | 0x194f64 | 0 | 9 / 3 / 1 / 0 | 4 | A | 27 |  |
+| QuickSave | 0x194f64 | 0 | 9 / 3 / 1 / 0 | 4 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
 | RoomStreamingWait | 0x27bde0 | 1 | 9 / 0 / 0 / 0 | 3 | B? | 38 |  |
 | SetMapDummyLocObj | 0x27be84 | 1 | 9 / 0 / 0 / 0 | 4 | C | 31 |  |
 | ShowCharacterIntro | 0x2c2af8 | 1 | 9 / 2 / 0 / 0 | 8 | C | 30 |  |
@@ -188,18 +189,18 @@ Sum: 224 unhandled natives in batches, 20 implemented, 1 stand-in (FadeScreen). 
 | ShowRaceStart | 0x1cdc9c | 0 | 8 / 1 / 0 / 0 | 7 | C | 30 |  |
 | AIPursuit | 0x17cbf0 | 3 | 7 / 2 / 0 / 0 | 5 | C | 34 |  |
 | AttachToWorldRoot | 0x2951ec | 1 | 7 / 4 / 0 / 0 | 4 | C | 32 |  |
-| AwardRacingCar | 0x1d9c84 | 0 | 7 / 1 / 0 / 0 | 6 | A | 27 |  |
+| AwardRacingCar | 0x1d9c84 | 0 | 7 / 1 / 0 / 0 | 6 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
 | ConversationPlayAndWait | 0x2ab364 | 5 | 7 / 2 / 0 / 0 | 2 | B | 29 | first call 0x25d974, repeat calls return 1 when the byte at thread+0x48 pointer is 0 |
-| CountRacesWon | 0x1cd910 | 1 | 7 / 1 / 0 / 0 | 6 | B? | 27 |  |
-| IsRacingCarAwarded | 0x285f64 | 1 | 7 / 1 / 0 / 0 | 6 | A | 27 |  |
+| CountRacesWon | 0x1cd910 | 1 | 7 / 1 / 0 / 0 | 6 | A | 27 | handled, exact; not blocking (corrects the B? class) |
+| IsRacingCarAwarded | 0x285f64 | 1 | 7 / 1 / 0 / 0 | 6 | A | 27 | handled, exact (batch 27 entry) |
 | SetPlatformTime | 0x2637a4 | 2 | 7 / 0 / 0 / 0 | 1 | C | 37 |  |
-| SetRaceWon | 0x1a30a8 | 1 | 7 / 1 / 0 / 0 | 6 | A | 27 |  |
+| SetRaceWon | 0x1a30a8 | 1 | 7 / 1 / 0 / 0 | 6 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
 | SpawnDebris2Colour | 0x2860f0 | 7 | 7 / 4 / 0 / 0 | 3 | C | 38 |  |
 | VehicleSetRaceTrim | 0x286080 | 2 | 7 / 1 / 0 / 0 | 6 | C | 36 |  |
 | AICantAttack | 0x1bf528 | 2 | 6 / 0 / 0 / 0 | 1 | C | 34 |  |
 | OverrideFog | 0x1b24f8 | 2 | 6 / 0 / 0 / 0 | 2 | C | 29 |  |
 | Set3DFocusObject | 0x288aa8 | 2 | 6 / 0 / 0 / 0 | 1 | stand-in | 28 | stereoscopic focus only, no effect on the mono picture |
-| UnlockLevel | 0x1b276c | 1 | 6 / 1 / 0 / 0 | 6 | A | 27 |  |
+| UnlockLevel | 0x1b276c | 1 | 6 / 1 / 0 / 0 | 6 | A | 27 | handled, exact (batch 27 entry) |
 | VehicleEnableDrivingMusic | 0x2bf2b4 | 2 | 6 / 0 / 0 / 0 | 3 | C | 33 |  |
 | AttachToBoneRot | 0x1bf718 | 6 | 5 / 4 / 4 / 0 | 2 | C | 32 |  |
 | InformationBox | 0x1d9d4c | 1 | 5 / 4 / 0 / 0 | 2 | C | 30 |  |
@@ -213,13 +214,13 @@ Sum: 224 unhandled natives in batches, 20 implemented, 1 stand-in (FadeScreen). 
 | AIStalkPlayer | 0x1cd88c | 2 | 4 / 0 / 0 / 0 | 1 | C | 34 |  |
 | CharSetAllowVehicleEntry | 0x29ea3c | 2 | 4 / 4 / 0 / 0 | 1 | C | 35 |  |
 | DCamCutsceneFadeDisable | 0x2c09ec | 0 | 4 / 2 / 0 / 0 | 2 | C | 29 |  |
-| DisableSuperBuiltItSave | 0x2b4b78 | 2 | 4 / 2 / 1 / 0 | 2 | A | 27 |  |
+| DisableSuperBuiltItSave | 0x2b4b78 | 2 | 4 / 2 / 1 / 0 | 2 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
 | enablescannerbutton | 0x2915ac | 1 | 4 / 2 / 0 / 0 | 2 | C | 31 |  |
 | EndDCam | 0x17cbd4 | 0 | 4 / 0 / 0 / 0 | 2 | done | 28 | handled |
 | OverrideZClip | 0x1cdb54 | 2 | 4 / 0 / 0 / 0 | 2 | C | 29 |  |
 | RideableJump | 0x1bfb28 | 1 | 4 / 0 / 0 / 0 | 1 | C | 37 |  |
 | setenergyguncolour | 0x285ffc | 2 | 4 / 0 / 0 / 0 | 1 | C | 38 |  |
-| SetParachuteDeployHeight | 0x286040 | 1 | 4 / 1 / 1 / 0 | 4 | A | 27 |  |
+| SetParachuteDeployHeight | 0x286040 | 1 | 4 / 1 / 1 / 0 | 4 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
 | SetPlatformSpeed | 0x26fe08 | 2 | 4 / 1 / 0 / 0 | 3 | C | 37 |  |
 | SmokeyElectrifyTile | 0x2916b8 | 2 | 4 / 0 / 0 / 0 | 1 | C | 38 |  |
 | StartMiniGame | 0x1cdcac | 1 | 4 / 0 / 0 / 0 | 2 | C | 39 |  |
@@ -242,7 +243,7 @@ Sum: 224 unhandled natives in batches, 20 implemented, 1 stand-in (FadeScreen). 
 | EnableMinimapWipe | 0x27bbe8 | 1 | 2 / 2 / 2 / 0 | 1 | C | 31 |  |
 | getinmech | 0x194e7c | 2 | 2 / 0 / 0 / 0 | 1 | C | 35 |  |
 | ifplayercharacter | 0x27bc58 | 2 | 2 / 0 / 0 / 0 | 1 | C | 39 |  |
-| LockAbility | 0x1b24ac | 1 | 2 / 0 / 0 / 0 | 2 | A | 27 |  |
+| LockAbility | 0x1b24ac | 1 | 2 / 0 / 0 / 0 | 2 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
 | PlayCredits | 0x1b25c0 | 0 | 2 / 0 / 0 / 0 | 2 | B | 29 | first call starts 0x213184; returns 1 when byte +0x25 of a global is 3 |
 | PositionLastPlayerVehicleIfNearby | 0x2cd564 | 1 | 2 / 0 / 0 / 0 | 1 | C | 36 |  |
 | removescannermapmarker | 0x2ad8f0 | 0 | 2 / 1 / 0 / 0 | 2 | C | 31 |  |
@@ -256,16 +257,16 @@ Sum: 224 unhandled natives in batches, 20 implemented, 1 stand-in (FadeScreen). 
 | CharacterShop | 0x1cd8e4 | 1 | 1 / 0 / 0 / 0 | 1 | C | 39 |  |
 | CharSetSkydiveMode | 0x1da6e4 | 2 | 1 / 0 / 0 / 0 | 1 | C | 35 |  |
 | DisableIcon | 0x1b2414 | 2 | 1 / 1 / 0 / 0 | 1 | C | 31 |  |
-| EnableSuperBricks | 0x27bc08 | 1 | 1 / 1 / 0 / 0 | 1 | A | 27 |  |
+| EnableSuperBricks | 0x27bc08 | 1 | 1 / 1 / 0 / 0 | 1 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
 | FireBeamWeapon | 0x1d9cb4 | 4 | 1 / 0 / 0 / 0 | 1 | C | 35 |  |
-| GetCharacterUnlocked | 0x29e2c0 | 2 | 1 / 1 / 0 / 0 | 1 | A | 27 |  |
-| getlanguage | 0x1b241c | 1 | 1 / 1 / 0 / 0 | 1 | A | 27 |  |
+| GetCharacterUnlocked | 0x29e2c0 | 2 | 1 / 1 / 0 / 0 | 1 | A | 27 | handled, exact (batch 27 entry) |
+| getlanguage | 0x1b241c | 1 | 1 / 1 / 0 / 0 | 1 | A | 27 | handled as stand-in (SCRIPT-S22) |
 | GetOutMech | 0x1a2f04 | 1 | 1 / 0 / 0 / 0 | 1 | C | 35 |  |
-| GetPlayerNumber | 0x263618 | 1 | 1 / 1 / 0 / 0 | 1 | A | 27 |  |
+| GetPlayerNumber | 0x263618 | 1 | 1 / 1 / 0 / 0 | 1 | A | 27 | handled as stand-in (SCRIPT-S22) |
 | HACK_PlayDowntownIntro | 0x2ad87c | 1 | 1 / 1 / 1 / 0 | 1 | C | 35 |  |
 | HubCustomisation | 0x26fc88 | 0 | 1 / 0 / 0 / 0 | 1 | C | 39 |  |
 | HubShop | 0x1b2450 | 1 | 1 / 0 / 0 / 0 | 1 | C | 39 |  |
-| IsRedbrickBought | 0x26fd30 | 2 | 1 / 0 / 0 / 0 | 1 | A | 27 |  |
+| IsRedbrickBought | 0x26fd30 | 2 | 1 / 0 / 0 / 0 | 1 | A | 27 | handled, exact (batch 27 entry) |
 | PlayScriptOnStartup | 0x2915d4 | 1 | 1 / 0 / 0 / 0 | 1 | C | 39 |  |
 | PlaySoundAtObject | 0x27bd48 | 2 | 1 / 0 / 0 / 0 | 1 | C | 33 |  |
 | PositionBound | 0x268390 | 2 | 1 / 0 / 0 / 0 | 1 | A | 26 | open: needs the object world position, only in lvl_test_playground_mike, SCRIPT-59 |
@@ -275,7 +276,7 @@ Sum: 224 unhandled natives in batches, 20 implemented, 1 stand-in (FadeScreen). 
 | SetPropRocking | 0x1da6a8 | 2 | 1 / 1 / 0 / 0 | 1 | C | 38 |  |
 | showinfopointer | 0x263848 | 2 | 1 / 0 / 0 / 0 | 1 | C | 30 |  |
 | StudMagnetScene | 0x2638e8 | 1 | 1 / 0 / 0 / 0 | 1 | C | 39 |  |
-| UnlockScanner | 0x1cdeb0 | 0 | 1 / 1 / 1 / 0 | 1 | A | 27 |  |
+| UnlockScanner | 0x1cdeb0 | 0 | 1 / 1 / 1 / 0 | 1 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
 | UsePet | 0x172184 | 2 | 1 / 0 / 0 / 0 | 1 | C | 35 |  |
 | VehicleSetThrowObjects | 0x2ad940 | 2 | 1 / 0 / 0 / 0 | 1 | C | 36 |  |
 | VehicleShop | 0x1b278c | 1 | 1 / 0 / 0 / 0 | 1 | C | 39 |  |
