@@ -6,6 +6,8 @@ Handlers of batch 26 (SCRIPT-26). Census and the other batches: [script-natives.
 
 ## 2026-10-14T14:16:21+02:00 — Batch 26 (SCRIPT-26): the 22 handlers read, 11 transcribed (llvm-objdump on game.arm.elf, C++ runner tests; no emulator, no REA session)
 
+Corrected by [script-natives-flags.md §2026-10-14T18:39](#ts-20261014-183900): ToggleUpdateFlag changes mask 0x4 (not 0x10) of the halfword at +0x10; it is read by the entity update loop 0x1a4094.
+
 [Corrects script-natives.md §2026-10-14T13:33](script-natives.md#ts-20261014-133339) where noted. Every handler address was checked against its registration (the handler word sits directly before the name string at 0x15fd1c, 0x161408, 0x15fdec, 0x1620a0, 0x160b44, 0x1604a8, 0x160cf8, 0x161a68, 0x1603d4, 0x160b30, 0x15fef4, 0x15ff5c, 0x160b08, 0x160b1c; KillScript is in the static table at 0x359154; `DestroyProp` and `KillObject` share 0x1a2fe4).
 
 ### Argument array
@@ -51,3 +53,25 @@ Unknowns:
 - The kind byte (`entity+0x12`) of each placed class; it gates EnableShadow, EnableSwitch, the group case of ToggleUseable, the fade natives and message 24.
 - Whether the registries of 0x236624 and 0x2219bc hold every object; an unregistered object ignores ToggleUseable.
 - The runner's treatment of a thread whose pc was set past the end while it waits for a child (the port ends it when the child returns).
+
+<a id="ts-20261014-183900"></a>
+
+## 2026-10-14T18:39:00+02:00 — ToggleUpdateFlag has a reader: the entity update loop 0x1a4094; PositionPlayer read again (llvm-objdump on game.arm.elf, `--mattr=+vfp2`; no REA, no emulator)
+
+[Corrects script-natives-flags.md §2026-10-14T14:16](#ts-20261014-141621) ("`obj+0x10` (halfword) bit 4"): ToggleUpdateFlag 0x270094 sets or clears the **mask 0x4** (bit 2) of the halfword at `obj+0x10` (`orr r1, r1, #4` / `bic r1, r1, #4`), not mask 0x10. An argument of 0 sets it.
+
+### The reader
+
+- The scene's entity update loop (function around 0x1a3ffc..0x1a4118) takes each entity of its list, reads the halfword `[entity + 0x10]` and skips the entity when `halfword & 0x24` is non-zero (`tst r0, #36` at 0x1a4098), then applies an optional filter callback (`[r9 + 8]`), then calls the class update `table[kind * 40 + 0xc]` with `kind = entity+0x12` (table at 0x583124, loaded at 0x1a40cc..0x1a40e0). For a door that update is the shell 0x169ba0 (update 0x1d16b8 and state change 0x1a6b6c). So an entity with the ToggleUpdateFlag mask set gets no class update at all: a door neither opens, closes nor plays sounds, a request still changes its target through the message handler 0x1749b8 but is not carried out. Mask 0x20 is set by code not read here.
+- The same mask 0x4 is tested at gather and target-search sites that skip the entity: 0x15712c, 0x1580a8, 0x17683c, 0x18c210, 0x1fefac, 0x269e94, 0x2a59bc, 0x2a5b1c, 0x2a5c98, 0x2e6ec8, 0x2e6f9c (all `ldrh r, [entity, #16]; tst r, #4`). The semantics of each caller (target selection, camera, collision gathers) are not read.
+
+### PositionPlayer 0x1da0dc and PositionObject 0x1d9e6c (read in more detail)
+
+- Pool of PositionPlayer: 0x1da550 = 5.0f, 0x1da554 -> a global float3 at 0x56d424 (zero in the file, filled at run time), 0x1da558 = 0x362298 (a table of function pointers in the file, used as the query descriptor of 0x21ab20 as in the camera note), 0x1da560 = 0.0f. The probe for kinds 179, 183 and 243 gathers entities around the target with 0x237f30 (box half extents from the float at node+0x9c), builds a segment of length 5.0 along the global direction with 0x23b92c and casts it with 0x21ab20; a hit replaces the position by the hit point (0x2554c0). Without the run-time value of the direction, the descriptor words on the stack and the semantics of 0x21ab20 this cannot be transcribed.
+- The controller reset (both functions): inside the branch taken when `0x21aae0(entity)` is true (kind 27 or 149, or kind in the run-time table filled at 0x3743ec, or entity flag 0x4000 at `+0xc`) the controller component (`entity+0x7c`) gets: heading `strh [comp+8]` and `[comp+10]` from atan2 (0x24765c) of the target matrix, `comp[0x315] &= ~0x14`, floats at `comp+692` (0x2b4, fall distance) and `comp+696` (0x2b8, fall speed) = 0.0, and when `comp+0xc8` is set 0x215988(comp). Then message 8 for the player (0x244fc8(player, 8, 0)) when the global player entity (0x3772c0) is the object. The port's `VerticalState` has `fallDistance` and `fallSpeed` for those two floats.
+- Whether `0x21aae0(player)` is true is not decidable statically: the kind table at 0x3743ec has count 0 in the file and the kind byte of the player entity is set at run time.
+
+Unknowns:
+- Kind byte (`entity+0x12`) of the player and the contents of the table at 0x3743ec at run time (decides whether PositionObject/PositionPlayer reset fall distance and speed of the player).
+- The global float3 at 0x56d424, the stack descriptor passed to 0x21ab20 and the gather box of the ground probe.
+- The meaning of `comp[0x315]` masks 0x4 and 0x10, of mask 0x20 in the update loop test, and the callers of the other mask 0x4 tests.

@@ -71,6 +71,11 @@ const ObjectNativeFlags* ObjectNativeState::flags(const std::string& instance) c
     return found == flags_.end() ? nullptr : &found->second;
 }
 
+bool ObjectNativeState::entityUpdateSkipped(const std::string& instance) const {
+    const ObjectNativeFlags* found = flags(instance);
+    return found && found->updateFlagBit.value_or(false);
+}
+
 std::vector<ObjectClassMessage> ObjectNativeState::takeMessages() {
     std::vector<ObjectClassMessage> taken;
     taken.swap(messages_);

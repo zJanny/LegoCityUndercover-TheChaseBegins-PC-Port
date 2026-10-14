@@ -42,7 +42,8 @@ struct ObjectClassMessage {
 //  indestructible: SetIndestructible, bit 0 of +0xde of the component;
 //  activeDuringDcam: ActiveDuringDCam, bit 1 of +0x312 of the component;
 //  unshovable: ObjectUnshovable, bit 0x100 of the flag word at +0x10 and bit 0x20000 of the one at +0xc;
-//  updateFlagBit: ToggleUpdateFlag, bit 4 of the flag word at +0x10, set for an argument of 0.
+//  updateFlagBit: ToggleUpdateFlag, mask 0x4 of the halfword at +0x10, set for an argument of 0; the entity update loop 0x1a4094 skips an
+//  entity whose halfword has mask 0x24 set (docs/re/script-natives-flags.md).
 struct ObjectNativeFlags {
     std::optional<bool> usable;
     std::optional<bool> targetable;
@@ -56,6 +57,7 @@ class ObjectNativeState {
 public:
     void apply(ObjectNativeKind kind, const std::string& lowerCaseInstance, float value);
     const ObjectNativeFlags* flags(const std::string& lowerCaseInstance) const;
+    bool entityUpdateSkipped(const std::string& lowerCaseInstance) const;
     std::vector<ObjectClassMessage> takeMessages();
 
 private:

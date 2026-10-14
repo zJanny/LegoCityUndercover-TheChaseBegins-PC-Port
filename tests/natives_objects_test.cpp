@@ -53,6 +53,8 @@ void valueNativesStoreTheirFlag() {
     require(natives.flags("pig_tractor")->activeDuringDcam == true, "ActiveDuringDCam");
     require(natives.flags("monk")->unshovable == true && natives.flags("douser")->unshovable == false, "ObjectUnshovable");
     require(natives.flags("fan")->updateFlagBit == true && natives.flags("door")->updateFlagBit == false, "ToggleUpdateFlag sets its bit for 0");
+    // 0x1a4094 skips the class update of an entity with mask 0x4 set; ToggleUpdateFlag(fan, 0) sets it, (door, 1) clears it (0x270094).
+    require(natives.entityUpdateSkipped("fan") && !natives.entityUpdateSkipped("door") && !natives.entityUpdateSkipped("nobody"), "update skip");
     require(natives.flags("crate")->targetable == std::nullopt && natives.flags("nobody") == nullptr, "untouched flags stay unset");
     require(runner.unhandledFunctions().empty(), "no native of the batch is reported as unhandled");
 }
