@@ -10,6 +10,7 @@
 #include "runtime/dcam.hpp"
 #include "runtime/natives_progress.hpp"
 #include "runtime/objectives.hpp"
+#include "runtime/vehicle.hpp"
 #include "runtime/waypoints.hpp"
 #include "runtime/script_text.hpp"
 
@@ -179,6 +180,10 @@ public:
     std::vector<std::string> updateWaypoints(float dt, const float player[3], bool playerInVehicle);
     bool playerControlTaken() const { return waypoints_.playerControlTaken(); }
     const WaypointSet& waypoints() const { return waypoints_; }
+    // Vehicle records and the flag natives (vehicle.hpp); load before the startup script runs.
+    void loadVehicles(const assets::ClassLookup& classOf, const std::vector<VehicleTableRow>& table) { vehicles_.load(level_, classOf, table); }
+    VehicleSet& vehicles() { return vehicles_; }
+    const VehicleSet& vehicles() const { return vehicles_; }
     // AI state the AI natives wrote and the move orders they started (ai.hpp).
     AiCore& ai() { return ai_; }
     const AiCore& ai() const { return ai_; }
@@ -246,6 +251,7 @@ private:
     std::uint32_t levelHeadingKey_ = 0;
     ObjectiveState objectives_;
     WaypointSet waypoints_;
+    VehicleSet vehicles_;
     AiCore ai_;
     AnimationNativeState animation_;
     CutsceneNativeState cutscenes_;

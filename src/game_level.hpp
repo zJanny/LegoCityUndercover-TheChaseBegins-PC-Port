@@ -118,6 +118,7 @@ private:
     std::vector<chase::assets::FogObject> fogObjects;
     std::array<std::uint8_t, 3> backgroundColour;
     std::vector<std::size_t> placedSceneIndex;
+    std::vector<std::pair<std::size_t, std::size_t>> wheelSceneIndex;
     std::vector<chase::assets::Placement> placedObjects;
     std::vector<std::size_t> waypointSceneIndex;
     std::vector<chase::assets::Placement> waypointObjects;

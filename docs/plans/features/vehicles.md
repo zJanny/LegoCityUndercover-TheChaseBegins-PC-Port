@@ -6,27 +6,28 @@ Vehicle objects (class type 183, `levels/vehicles/vehicle_*`): creation and park
 
 ## 2. Status
 
-NOT_STARTED in code; surveyed 2026-10-14T22:44:38+02:00 ([vehicles.md](../../re/vehicles.md#ts-20261014-224438)). Vehicles are not created in `chase-game`; the player is always on foot. Size of the original: vehicle class functions about 2,500 instructions, driving states of the character about 2,000, physics body about 1,700 reachable instructions (lower bounds).
+IN_PROGRESS, updated 2026-10-14T23:59:31+02:00. Vehicles of a level are created as records, drawn with their wheels, collide with the player and take the five mission 1-1 flag natives; nobody drives yet (VEH-4 and later). [vehicles.md §2026-10-14T23:59:31](../../re/vehicles.md#ts-20261014-235931).
 
 ## 3. Verified behaviour
 
-- Nothing is replicated. Read from the code and the class files: the class descriptor and its functions, the parameter reader (`SpawnParked` sets state 4, `SpawnUnshovable` state 10, `VehicleType` indexes `tablescharacters` sheet 4), the six SCRIPT-36 natives of mission 1-1 (flag writes on the vehicle record), `0x24255c`, the vehicle search `0x225d94` and the enter / leave event `0x322aa4`; see [vehicles.md](../../re/vehicles.md#ts-20261014-224438).
+- Replicated (`src/runtime/vehicle.*`, test `vehicle-core`, `vehicle-real-data`): the parameter reader 0x23ed0c (start state, flags, health, camera values) against the oracle records of the three parked vehicles of lvl_01, the wheel children, the collision item of the model with mask 6 (oracle: 7 of 7 vehicle entities have such a grid entry) and the natives VehicleSetLocked, VehicleSetForcedStop, SetForcedStopOnMyVehicle, VehicleAllowJumpOut, VehicleSetUnshovable. Read from the code and the class files: the class descriptor and its functions, the parameter reader (`SpawnParked` sets state 4, `SpawnUnshovable` state 10, `VehicleType` indexes `tablescharacters` sheet 4), the six SCRIPT-36 natives of mission 1-1 (flag writes on the vehicle record), `0x24255c`, the vehicle search `0x225d94` and the enter / leave event `0x322aa4`; see [vehicles.md](../../re/vehicles.md#ts-20261014-224438).
 - Oracle (GDB, no pokes): all 10 loaded vehicles run 0x1571dc / 0x16ce9c every update; parked vehicles are state 4 with owner flags 0x1340, traffic is state 1 with flags 0x1300 / 0x1301; X next to a parked vehicle raises event 200 → 0x322a04 → state 0x11a, about 11 updates later state 0x11c (ctrl+0x6c = 0x011c); with A held the vehicle goes to state 5, 0x29cd9c runs for it and it moved 5.7 m in 15 updates.
 
 ## 4. Stand-ins
 
 - VEH-S1 The player is never in a vehicle: `0x24255c` is taken as 0 ([script-system-triggers.md](script-system-triggers.md) SCRIPT-S29). needs: VEH-4. evidence: [vehicles.md](../../re/vehicles.md#ts-20261014-224438).
 
-- VEH-S2 (to introduce with VEH-1) Owner flags and collision of vehicles without the recovered rule: parked vehicles stay out of the player's queries until VEH-2. needs: VEH-2. evidence: [vehicles.md](../../re/vehicles.md#ts-20261014-224438).
+- VEH-S2 Owner flags (0x1340 parked, 0x1300 traffic, bit 0 disabled) are not modelled: a vehicle collides while it is enabled (EnableObject); the meaning of 0x40 is unknown. needs: VEH-16. evidence: [vehicles.md §2026-10-14T23:59:31](../../re/vehicles.md#ts-20261014-235931).
 - VEH-S3 (to introduce with VEH-5) The physics body is replaced by a simple kinematic stand-in (no suspension, tyres or gears). needs: VEH-6. evidence: [vehicles.md](../../re/vehicles.md#ts-20261014-224438).
+- VEH-S4 Health byte +0x30e omits the +1 of global bit 16 (`0x2369a8(0x10)`, word 0x374724, clear in the oracle states). evidence: [vehicles.md §2026-10-14T23:59:31](../../re/vehicles.md#ts-20261014-235931).
+- VEH-S5 The first update copies the requested state +4 to +2; the original transition (and the 10 to 4 change seen in the oracle) is not found. needs: VEH-13. evidence: [vehicles.md §2026-10-14T23:59:31](../../re/vehicles.md#ts-20261014-235931).
+- VEH-S6 Vehicles stand at their placement height; the original body rests 0.04 to 0.11 away (physics). needs: VEH-6. evidence: [vehicles.md §2026-10-14T23:59:31](../../re/vehicles.md#ts-20261014-235931).
+- VEH-S7 Wheels are drawn unrotated at their class-file pose, always attached (no LOD detach, no suspension). needs: VEH-6. evidence: [vehicles.md §2026-10-14T23:59:31](../../re/vehicles.md#ts-20261014-235931).
 
 ## 5. Open items
 
 Ordered for mission 1-1; sizes are agent sessions (S below one, M one, L two or more). Each item needs the oracle for its numbers (fixed dt, traps) unless stated.
 
-- [ ] VEH-1 — Create the vehicle objects of a level from the class files (type 183, `Wheel01..04` children attached, mesh, parked placement, `SpawnParked` state 4 / `SpawnUnshovable` state 10 and the parameter reader 0x23ed0c fields) and draw them; stand-in for the owner flags and collision until VEH-2. Size M. blocks: VEH-2, VEH-3, VEH-4, LEVOBJ-20. evidence: [vehicles.md](../../re/vehicles.md#ts-20261014-224438).
-- [ ] VEH-2 — Vehicles of a level as collision objects (mask 6, owner flags 0x1341 / 0x1340: find the code that sets them and what bit 0 means), so the player stands against parked cars; boxes from `CollSpheres` or the model (find which). Size S to M. needs: VEH-1. blocks: COLL-10. evidence: [vehicles.md](../../re/vehicles.md#ts-20261014-224438).
-- [ ] VEH-3 — Vehicle record state and the flag natives VehicleSetLocked, VehicleSetForcedStop, SetForcedStopOnMyVehicle, VehicleSetUnshovable, VehicleAllowJumpOut (handlers 0x26fe78, 0x29ea7c, 0x2b9df0, 0x29eaa8, 0x27c014; each a one-line flag write) as C++ with tests; the mission 1-1 start script already calls two of them. Size S. needs: VEH-1. blocks: SCRIPT-36. evidence: [vehicles.md](../../re/vehicles.md#ts-20261014-224438).
 - [ ] VEH-4 — Enter and leave from the player side: prompt rule 0x1835d0 / 0x225d94, the button event 0x322aa4, driving states 0x11a / 0x11b / 0x11c, animation and node hand-over, `0x24255c` real, PlayerVehicleEntered and PlayerVehicleBoundEntered firing. Enter is traced (X, event 200, 0x322a04, states 0x11a then 0x11c); the leave path, the animation and the node hand-over still need traces (a state with the player seated: not saved yet). Size L. needs: VEH-1, VEH-3. blocks: SCRIPT-76, SCRIPT-77, VEH-5, VEH-8. evidence: [vehicles.md](../../re/vehicles.md#ts-20261014-224438).
 - [ ] VEH-5 — Driving without physics detail: player input 0x29cd9c, input copy 0x23019c, vehicle state machine and transition (+2 / +4), forced stop braking, stuck rule 0x16ce9c, with the physics body as a stand-in (VEH-S3). Size M. needs: VEH-4. blocks: VEH-6, VEH-9. evidence: [vehicles.md](../../re/vehicles.md#ts-20261014-224438).
 - [ ] VEH-6 — Physics body (0x33ce74 constructor, update 0x33aea8, integration 0x33b084, wheel ray casts and suspension, engine and gear model, tyre friction, gravity -13, damping) with the per-gear and per-wheel parameters whose hashes are unresolved; replace VEH-S3. Size L (two to three sessions: body and gravity; wheels and suspension; engine and tyres), measured with fixed-dt traces of a drive. needs: VEH-5. blocks: VEH-7. evidence: [vehicles.md](../../re/vehicles.md#ts-20261014-224438).
@@ -36,6 +37,10 @@ Ordered for mission 1-1; sizes are agent sessions (S below one, M one, L two or 
 - [ ] VEH-10 — Sounds and music: engine start / rev loop / stop, horn (table row +0x12), skid, impact, siren, `MusicTrack` and VehicleEnableDrivingMusic. Size M. needs: VEH-5, AUDIO-3. evidence: [vehicles.md](../../re/vehicles.md#ts-20261014-224438).
 - [ ] VEH-11 — Vehicle waypoints in a vehicle (`map_getintovehiclewaypoint`, `map_vehiclewaypoint`: reach test while `0x24255c` is set) and the donut van scene of room33 (build-it parts, driveable van); linked to the waypoint work. Size M. needs: VEH-4, SCRIPT-76. evidence: [objective-hud.md](../../re/objective-hud.md#ts-20261014-212357).
 - [ ] VEH-12 — Traffic and AI drivers (input provider 0x1d8df0, `settrafficmaxvehicles`, pursuit); not needed for mission 1-1. Size L. needs: VEH-6. evidence: [vehicles.md](../../re/vehicles.md#ts-20261014-224438).
+- [ ] VEH-13 — Find what changes the state 10 of a `SpawnUnshovable` vehicle to 4 (user state `m11-2-patrol-car`: +2 = +4 = 4) and the meaning of the record states; candidates are the parked input provider 0x1d8df0 and the state functions. blocks: VEH-S5. evidence: [vehicles.md §2026-10-14T23:59:31](../../re/vehicles.md#ts-20261014-235931).
+- [ ] VEH-14 — Vehicle class 243 (0xf3, `vehicle_aircraft_ufo`, accepted by the vehicle search) and type 0xb3 have no record or collision. evidence: [vehicles.md §2026-10-14T23:59:31](../../re/vehicles.md#ts-20261014-235931).
+- [ ] VEH-15 — Wheel orientation of the left and right side, wheel node LOD attach (record +0x318 by camera distance) and the vehicle light children. needs: VEH-6. evidence: [vehicles.md §2026-10-14T23:59:31](../../re/vehicles.md#ts-20261014-235931).
+- [ ] VEH-16 — Measure a player walking into a parked vehicle in the oracle (needs a settled camera) and find the meaning of owner flag 0x40. blocks: VEH-S2. evidence: [vehicles.md §2026-10-14T23:59:31](../../re/vehicles.md#ts-20261014-235931).
 
 ## 6. Findings summary
 
@@ -43,4 +48,4 @@ Ordered for mission 1-1; sizes are agent sessions (S below one, M one, L two or 
 
 ## 7. Code and tests
 
-None yet. Planned: `src/runtime/vehicle.{hpp,cpp}` (record, flags, natives), `src/runtime/vehicle_physics.*`, tests `vehicle-core` and an oracle-trace replay.
+`src/runtime/vehicle.{hpp,cpp}` (records, parameter reader, wheels, flag natives; glue in `ScriptRunner` and `game_level.cpp`), vehicle collision in `src/assets/object_collision.cpp`; CTest `vehicle-core`, `vehicle-real-data`. Planned: `src/runtime/vehicle_physics.*`, tests `vehicle-core` and an oracle-trace replay.

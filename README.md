@@ -20,16 +20,16 @@ This starts the development runtime. It is not the game: it shows the start scre
 <!-- progress:start -->
 | Measure | Now | What it means |
 |---|---|---|
-| Script commands | 34 of 239 (14.2%) | Different commands the level scripts call that the port runs. They cover 65.3% of all calls. 98 more run with a stand-in result. |
-| Object types | 104 of 506 (20.6%) | Different object types in the levels that the port treats with recovered rules (collision, doors, studs). They cover 52.4% of all placed objects. |
+| Script commands | 39 of 239 (16.3%) | Different commands the level scripts call that the port runs. They cover 66.1% of all calls. 98 more run with a stand-in result. |
+| Object types | 152 of 506 (30.0%) | Different object types in the levels that the port treats with recovered rules (collision, doors, studs). They cover 54.0% of all placed objects. |
 | Game files read | 99.6% of files, 99.9% of data | Files in the game archive (12836) that the port can decode, by count and by size. |
-| Open work | 245 open items, 133 stand-ins | Known gaps and temporary guesses in 23 feature areas. It has no total to reach; watch the trend. |
-| Checked against the original | 135 tests, 200 recorded traces | Automatic tests, and recordings of the original game that the tests compare with. |
+| Open work | 244 open items, 137 stand-ins | Known gaps and temporary guesses in 23 feature areas. It has no total to reach; watch the trend. |
+| Checked against the original | 137 tests, 200 recorded traces | Automatic tests, and recordings of the original game that the tests compare with. |
 | Game code documented | 1265 of about 7575 (16.7%) | Functions of the game program that the notes or the source point to. The total is an estimate. |
 
 ![Progress trend](docs/progress-trend.svg)
 
-Updated 2026-10-15, commit 987f1ba. How the numbers are measured: [docs/progress.md](docs/progress.md).
+Updated 2026-10-15, commit 9de97eb. How the numbers are measured: [docs/progress.md](docs/progress.md).
 <!-- progress:end -->
 
 ## Documentation

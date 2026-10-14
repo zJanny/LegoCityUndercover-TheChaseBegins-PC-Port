@@ -42,6 +42,11 @@ Level readLevel(FuseArchive& archive, const std::string& levelPath) {
     return parseLevel(archive.read(*entry));
 }
 
+std::vector<runtime::VehicleTableRow> vehicleTable(FuseArchive& archive) {
+    const FuseEntry* entry = archive.find("tables/tablescharacters.bxls");
+    return entry ? runtime::parseVehicleTable(parseTable(archive.read(*entry))) : std::vector<runtime::VehicleTableRow>();
+}
+
 std::vector<runtime::StudSpawn> studSpawns(const DrawableObjects& drawable) {
     std::vector<runtime::StudSpawn> spawns;
     for (const StudObject& stud : drawable.studs) {
@@ -137,6 +142,17 @@ LevelSession::LevelSession(const Shared& sharedState)
     player = game_player::placePlayer(archive, scene, level);
     levelScripts.setAllRoomsLoaded();
     levelScripts.loadWaypoints(classOf);
+    levelScripts.loadVehicles(classOf, vehicleTable(archive));
+    for (const runtime::VehicleRecord& vehicle : levelScripts.vehicles().records()) {
+        const auto owner = placedInstances.find(vehicle.instance);
+        if (owner == placedInstances.end()) continue;
+        const std::size_t placedIndex = std::size_t(std::find(placedSceneIndex.begin(), placedSceneIndex.end(), owner->second.first) - placedSceneIndex.begin());
+        for (const runtime::VehicleWheel& wheel : vehicle.wheels) {
+            const std::size_t wheelIndex = scene.instances();
+            if (scene.addModel(meshModelPath(wheel.local.mesh), chase::assets::multiply(placementMatrix(wheel.local), owner->second.second)))
+                wheelSceneIndex.push_back({placedIndex, wheelIndex});
+        }
+    }
     levelName = lower(options.level).substr(0, lower(options.level).find_last_of('/'));
     levelName = levelName.substr(levelName.find_last_of('/') + 1);
     levelScripts.setLevelHeadingKey(fe::levelHeadingKey(hudResources, levelName));
@@ -173,6 +189,7 @@ LevelSession::LevelSession(const Shared& sharedState)
         startOptions.yieldWhen = [this]() { return levelScripts.cutscenes().playing() != nullptr || levelScripts.cutscenes().movieOpen(); };
     }
     const std::uint32_t startupUpdates = sceneStart.run(startOptions);
+    levelScripts.vehicles().settle();
     if (!options.startCutscenes) hostCutscenes();
     for (const std::string& name : options.callScripts)
         if (!levelScripts.start(name) && !shared.afterSwitch) throw std::runtime_error("no level script " + name);
@@ -273,6 +290,8 @@ void LevelSession::draw(int width, int height) {
     const std::vector<bool> drawn = runtime::drawnPlacements(placedObjects, objectState);
     for (std::size_t i = 0; i < drawn.size(); ++i)
         scene.setInstanceVisible(placedSceneIndex[i], drawn[i] && roomShown(runtime::roomNumber(placedObjects[i].room)));
+    for (const auto& [placedIndex, wheelIndex] : wheelSceneIndex)
+        scene.setInstanceVisible(wheelIndex, drawn[placedIndex] && roomShown(runtime::roomNumber(placedObjects[placedIndex].room)));
     const runtime::ObjectiveState& objectives = levelScripts.objectives();
     for (std::size_t i = 0; i < waypointObjects.size(); ++i)
         scene.setInstanceVisible(waypointSceneIndex[i], objectives.waypointActive(game_doors::lowerCase(waypointObjects[i].instance)) &&

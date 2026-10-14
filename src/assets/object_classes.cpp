@@ -33,11 +33,21 @@ bool isPropFamilyClass(const std::string& className) {
 
 bool isDummyCollisionClass(const std::string& className) { return lower(className) == "dummy/dummycollision"; }
 
+bool isVehicleClassFile(const Level& classFile) {
+    const std::uint32_t hash = nameHash("ObjectType");
+    for (const auto* params : {&classFile.defaults, &classFile.classParams})
+        for (const LevelParam& param : *params)
+            if (param.hash == hash && param.type == 7) return param.value == kVehicleObjectType;
+    return false;
+}
+
 unsigned objectBehaviours(const LevelObject& object, const Level& classFile) {
     unsigned behaviours = 0;
-    const bool collision = isDummyCollisionClass(object.className) ||
+    const bool vehicle = isVehicleClassFile(classFile);
+    const bool collision = isDummyCollisionClass(object.className) || vehicle ||
                            (isPropClass(object.className) && (isPropFamilyClass(object.className) || hasCollisionBound(classFile)));
     if (collision) behaviours |= BehaviourCollision;
+    if (vehicle) behaviours |= BehaviourVehicle;
     if (isDoorClass(object.className)) behaviours |= BehaviourDoor;
     if (isStudObject(object, classFile)) behaviours |= BehaviourStud;
     return behaviours;
@@ -53,6 +63,7 @@ std::string behaviourNames(unsigned behaviours) {
     add(BehaviourCollision, "collision");
     add(BehaviourDoor, "door");
     add(BehaviourStud, "stud");
+    add(BehaviourVehicle, "vehicle");
     return names;
 }
 

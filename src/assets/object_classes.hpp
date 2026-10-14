@@ -3,6 +3,7 @@
 // (tools/progress_report.py). A class has behaviour when the runtime acts on its instances beyond drawing them.
 // No SDL dependency.
 #include "assets/assets.hpp"
+#include <cstdint>
 #include <string>
 
 namespace chase::assets {
@@ -12,6 +13,10 @@ bool isDoorClass(const std::string& className);
 bool isPropFamilyClass(const std::string& className);
 bool isDummyCollisionClass(const std::string& className);
 
+// Class files of the vehicle object type (ObjectType 183, class descriptor 0x155b5c; section +0x14 of levels/vehicles/vehicle_*).
+constexpr std::uint32_t kVehicleObjectType = 183;
+bool isVehicleClassFile(const Level& classFile);
+
 // Instance with the stud object type (0x3d) and a pickup type of 0..3: collected by the stud system.
 bool isStudObject(const LevelObject& object, const Level& classFile);
 
@@ -19,6 +24,7 @@ enum ObjectBehaviour : unsigned {
     BehaviourCollision = 1,  // objectCollisions registers a shape for it
     BehaviourDoor = 2,       // the door state machine drives it
     BehaviourStud = 4,       // the stud system collects it
+    BehaviourVehicle = 8,    // the vehicle records and flag natives act on it (runtime/vehicle.hpp)
 };
 
 // Bit set of ObjectBehaviour for one placed object; 0 when the runtime only draws it or ignores it.

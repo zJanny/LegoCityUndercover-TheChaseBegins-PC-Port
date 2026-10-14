@@ -140,11 +140,12 @@ std::vector<ObjectCollision> objectCollisions(FuseArchive& archive, const Level&
     for (const LevelObject& object : level.objects) {
         const bool prop = isPropClass(object.className);
         const bool door = isDoorClass(object.className);
-        const bool propFamily = isPropFamilyClass(object.className);
         const bool dummyCollision = isDummyCollisionClass(object.className);
-        if (!prop && !dummyCollision) continue;
-        if (state.isDisabled(object.instance)) continue;
         const Level& cls = classOf(object.className);
+        const bool vehicle = isVehicleClassFile(cls);
+        const bool propFamily = isPropFamilyClass(object.className) || vehicle;
+        if (!prop && !dummyCollision && !vehicle) continue;
+        if (state.isDisabled(object.instance)) continue;
 
         Placement placement;
         if (!float3Of(effectiveParam(object, cls, hashPosition), placement.position)) continue;

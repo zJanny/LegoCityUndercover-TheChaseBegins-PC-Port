@@ -22,7 +22,7 @@ enum class Word {
     Unhandled, If, Else, ElseIf, EndIf, Assign, AssignArithmetic, CallScript, SpawnScript, Wait,
     EnableObject, EnableCollision, TriggerObject, EnableTrigger, EnableBound, GetGameComplete, IsLevelUnlocked, IsRedBrickExtraActive,
     WarningDialogBox, InformationBox, FadeScreen, PositionObject, PositionPlayer, SceneChange,
-    KillScript, ObjectNative, ProgressNative, TextNative, ObjectiveNative, AiNative, AnimationNative, CutsceneNative,
+    KillScript, ObjectNative, VehicleNative, ProgressNative, TextNative, ObjectiveNative, AiNative, AnimationNative, CutsceneNative,
     StartDCam, StartDCamTrack, DCamActive, WaitForDCam, EndDCam, SnapCamera, ShakeScreen, Set3DFocusObject, SetDCamStartWait, SetDCamEndWait
 };
 
@@ -74,6 +74,7 @@ Word wordOf(const std::string& function) {
     for (const ScriptFunction& entry : kScriptFunctions)
         if (name == entry.name) return entry.word;
     if (objectNativeKind(name)) return Word::ObjectNative;
+    if (vehicleNativeKind(name)) return Word::VehicleNative;
     if (progressNativeKind(name)) return Word::ProgressNative;
     if (textNativeKind(name)) return Word::TextNative;
     if (objectiveNativeKind(name)) return Word::ObjectiveNative;
@@ -147,6 +148,7 @@ ScriptFunctionSupport scriptFunctionSupport(const std::string& name) {
         if (key == entry.name) return entry.standIn ? ScriptFunctionSupport::StandIn : ScriptFunctionSupport::Implemented;
     if (const auto kind = objectNativeKind(key))
         return objectNativeIsStandIn(*kind) ? ScriptFunctionSupport::StandIn : ScriptFunctionSupport::Implemented;
+    if (vehicleNativeKind(key)) return ScriptFunctionSupport::Implemented;
     if (const auto kind = progressNativeKind(key))
         return progressNativeIsStandIn(*kind) ? ScriptFunctionSupport::StandIn : ScriptFunctionSupport::Implemented;
     if (textNativeKind(key)) return ScriptFunctionSupport::StandIn;
@@ -162,6 +164,7 @@ std::vector<std::string> handledScriptFunctions() {
     std::vector<std::string> names;
     for (const ScriptFunction& entry : kScriptFunctions) names.push_back(entry.name);
     for (const std::string& name : objectNativeNames()) names.push_back(name);
+    for (const std::string& name : vehicleNativeNames()) names.push_back(name);
     for (const std::string& name : progressNativeNames()) names.push_back(name);
     for (const std::string& name : textNativeNames()) names.push_back(name);
     for (const std::string& name : objectiveNativeNames()) names.push_back(name);
@@ -407,6 +410,12 @@ ScriptRunner::Result ScriptRunner::native(ScriptThread& thread, const ScriptCall
         if (const auto kind = objectNativeKind(lower(call.function)); kind && !args.empty()) {
             const bool needsValue = objectNativeTakesValue(*kind);
             if (!needsValue || args.size() >= 2) objectNatives_.apply(*kind, lower(args[0]), needsValue ? read(args[1]) : 0.0f);
+        }
+        break;
+    case Word::VehicleNative:
+        if (const auto kind = vehicleNativeKind(lower(call.function)); kind && !args.empty()) {
+            const bool needsValue = vehicleNativeTakesValue(*kind);
+            if ((!needsValue || args.size() >= 2) && !vehicles_.apply(*kind, lower(args[0]), needsValue ? read(args[1]) : 0.0f)) return Result::Block;
         }
         break;
     case Word::StartDCam: startDCamNative(director_, level_, args, [this](const std::string& token) { return read(token); }); break;
