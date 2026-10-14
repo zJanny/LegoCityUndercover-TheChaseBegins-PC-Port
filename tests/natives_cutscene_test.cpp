@@ -3,6 +3,7 @@
 // negated busy test 0x2297b0), DCamCutSceneFree 0x28898c / 0x196144, PlayCutscene 0x1bf9dc (docs/re/cutscenes.md,
 // entry on the cutscene natives). The scripts and lengths here are made up.
 #include "runtime/script_runner.hpp"
+#include <cmath>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -50,6 +51,30 @@ void slotsAndBusyTest() {
     require(state.busy("short"), "busy before the length");
     state.update(0.5f);
     require(!state.busy("short") && state.playing() == nullptr, "the cutscene ends at its length");
+}
+
+void fadesAroundTheCutscene() {
+    CutsceneNativeState state;
+    state.setLengthSource(lengths());
+    require(state.veil() == 0.0f, "no veil before any cutscene");
+    state.play("long", {true, true, true, true});
+    require(state.playing() != nullptr && !state.shown() && state.veil() == 0.0f, "flag a: the game picture stays during the fade, veil starts clear");
+    state.update(chase::runtime::kCutsceneFadeSeconds / 2);
+    require(std::fabs(state.veil() - 0.5f) < 1e-4f, "the veil is half black in the middle of the fade before the start");
+    state.update(chase::runtime::kCutsceneFadeSeconds / 2 + 0.001f);
+    require(state.shown() && state.playing()->elapsed == 0.0f, "the cutscene starts after the fade and its time starts at 0");
+    state.update(4.0f);
+    require(state.veil() == 0.0f, "clear until the last 0.5 s");
+    state.update(0.75f);
+    require(std::fabs(state.veil() - 0.5f) < 0.01f, "half black 0.25 s before the end");
+    state.update(0.3f);
+    require(state.playing() == nullptr && state.veil() == 1.0f, "black when the cutscene ends");
+    state.update(chase::runtime::kCutsceneBlackSeconds + chase::runtime::kCutsceneFadeInSeconds / 2);
+    require(std::fabs(state.veil() - 0.5f) < 0.01f, "the game picture fades in");
+    state.update(1.0f);
+    require(state.veil() == 0.0f, "clear again");
+    state.play("short", {false, true, true, true});
+    require(state.shown(), "without flag a the cutscene starts at once");
 }
 
 void freeEndsThePlayingCutscene() {
@@ -133,6 +158,7 @@ int main() {
     try {
         slotsAndBusyTest();
         freeEndsThePlayingCutscene();
+        fadesAroundTheCutscene();
         waitBlocksForTheLength();
         waitForDCamCountsTheCutscene();
         movieBlocksUntilFinished();

@@ -116,6 +116,7 @@ std::uint32_t SceneStart::run(const SceneStartOptions& options) {
         levelRunner_.update(options.dt);
         update(options.dt);
         ++updates;
+        if (options.yieldWhen && options.yieldWhen()) break;
     }
     return updates;
 }

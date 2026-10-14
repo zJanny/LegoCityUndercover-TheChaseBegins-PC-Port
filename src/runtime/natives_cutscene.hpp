@@ -29,9 +29,17 @@ struct CutsceneRequest {
 // What DCamCutScenePlay 0x1964dc stored: the object of the slot becomes the active one. The four flags are the
 // script's a b c d; the original turns each into 0.5 (set) or 0 (clear), a and b going to the mode start 0x25d26c and
 // c, d to the block at 0x58988c + 0x2c / 0x30. Their meaning is not recovered (SCRIPT-150).
+// STAND-IN MOVIE-S20: the fade times are measured in the oracle (docs/re/cutscenes.md), not read from the code. A linear fade
+// to black of 0.5 s (30 vblanks) before the start when flag a is set, the same fade over the last 0.5 s of the cutscene, then
+// black for 4 vblanks and a fade in of the game picture over 43 vblanks. The fades cover the top screen only.
+constexpr float kCutsceneFadeSeconds = 0.5f;
+constexpr float kCutsceneBlackSeconds = 4.0f / 60.0f;
+constexpr float kCutsceneFadeInSeconds = 43.0f / 60.0f;
+
 struct CutscenePlaying {
     std::string name;
     float elapsed = 0;
+    float startFadeLeft = 0;
     float length = 0;
     std::array<bool, 4> flags{};
 };
@@ -56,6 +64,10 @@ public:
     void update(float dt);
 
     const CutscenePlaying* playing() const { return playing_ ? &*playing_ : nullptr; }
+    // The picture is the cutscene: it is playing and the fade before its start has ended.
+    bool shown() const { return playing_ && playing_->startFadeLeft <= 0; }
+    // Opacity of the black veil on the top screen, 0 clear to 1 black.
+    float veil() const;
     bool loaded(const std::string& name) const;
     bool fadeDisabled() const { return fadeDisabled_; }
     std::vector<CutsceneRequest> takeRequests();
@@ -84,6 +96,7 @@ private:
     std::vector<CutsceneRequest> requests_;
     std::optional<MovieRequest> movie_;
     bool movieFinished_ = false;
+    float afterEnd_ = -1;
     bool fadeDisabled_ = false;
     bool hostPlaysMovies_ = false;
 };

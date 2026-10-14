@@ -161,12 +161,19 @@ LevelSession::LevelSession(const Shared& sharedState)
     startOptions.untilAllEnded = false;
     if (!options.startRoom.empty()) startOptions.startRoom = runtime::roomNumber(options.startRoom);
     else if (const std::optional<Placement> start = playerStart(level)) startOptions.startRoom = runtime::roomNumber(start->room);
-    const std::uint32_t startupUpdates = sceneStart.run(startOptions);
     cutsceneHost.emplace(archive, scene, shared.audio);
     movies.emplace(archive, hudResources, (std::filesystem::path(options.fib).parent_path() / "cutscenes").string(), int(options.language));
     introMovieSkip = options.introMovieShown;
-    levelScripts.cutscenes().setLengthSource([this](const std::string& name) { return cutsceneHost->load(name); });
-    levelScripts.cutscenes().setHostPlaysMovies(true);
+    const auto hostCutscenes = [this]() {
+        levelScripts.cutscenes().setLengthSource([this](const std::string& name) { return cutsceneHost->load(name); });
+        levelScripts.cutscenes().setHostPlaysMovies(true);
+    };
+    if (options.startCutscenes) {
+        hostCutscenes();
+        startOptions.yieldWhen = [this]() { return levelScripts.cutscenes().playing() != nullptr || levelScripts.cutscenes().movieOpen(); };
+    }
+    const std::uint32_t startupUpdates = sceneStart.run(startOptions);
+    if (!options.startCutscenes) hostCutscenes();
     for (const std::string& name : options.callScripts)
         if (!levelScripts.start(name) && !shared.afterSwitch) throw std::runtime_error("no level script " + name);
     for (const runtime::ScriptPlacement& request : levelScripts.takePlacements()) applyPlacement(request);
@@ -319,6 +326,7 @@ void LevelSession::draw(int width, int height) {
         fe::drawSceneChangeBottom(mapCanvas, hudResources, hudResources.textForKey(kSystemTextFile, kContinueTextKey));
     }
     fe::drawBlackVeil(hudCanvas, 1.0f - levelScripts.fadeLevel());
+    fe::drawBlackVeil(hudCanvas, levelScripts.cutscenes().veil());
     fe::drawBlackVeil(mapCanvas, 1.0f - levelScripts.fadeLevel());
     if (movies->playing()) movies->draw(hudCanvas, mapCanvas);
     overlay->draw(game_hud::pixelsOf(hudCanvas), game_hud::pixelsOf(mapCanvas), screens.top, screens.bottom, width, height);

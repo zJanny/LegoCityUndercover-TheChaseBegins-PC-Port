@@ -3,3 +3,5 @@
 Done items of [movies-cutscenes.md](movies-cutscenes.md), moved here by tools/check_doc_links.py --fix in the order they were closed. IDs are never reused.
 
 - [x] MOVIE-2 — In-engine cutscenes play in the game flow (natives, cast, camera, soundtrack, hand-back). evidence: [cutscenes.md §2026-10-14T22:49](../../re/cutscenes.md#ts-20261014-224929).
+- [x] MOVIE-10 — Cutscene fades are drawn on the top screen: 0.5 s to black before the start (flag a), 0.5 s to black over the end, 4 vblanks black, 43 vblanks fade in; times measured in the oracle, not read from the code (MOVIE-S20, MOVIE-20). evidence: [cutscenes.md §2026-10-14T23:52](../../re/cutscenes.md#ts-20261014-235214).
+- [x] MOVIE-13 — The level start plays `01_GameIntro` (once, `1-1_IntroPlayed`) and `1_1_a` as the script orders: the startup run yields at the first movie or cutscene and the game loop continues it; `--no-start-cutscenes` keeps the old preroll for development. evidence: [cutscenes.md §2026-10-14T23:52](../../re/cutscenes.md#ts-20261014-235214).

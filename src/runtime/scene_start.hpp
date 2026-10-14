@@ -7,6 +7,7 @@
 #include "runtime/script_runner.hpp"
 
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
@@ -46,6 +47,7 @@ struct SceneStartOptions {
     float dt = 0.034f;
     std::uint32_t maxUpdates = 3000;
     bool untilAllEnded = true;
+    std::function<bool()> yieldWhen;
 };
 
 class SceneStart {

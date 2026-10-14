@@ -19,7 +19,7 @@ IN_PROGRESS, updated 2026-10-14T16:48:13+02:00. `ScriptRunner` runs threads ever
 
 ## 4. Stand-ins
 
-- SCRIPT-S1 The startup threads are stepped before the first frame with dt 0.034 (the free-running dt read at gameplay-start; the loading phase's own updates are not recovered): `chase-game` until `startup` ends, `levelStartState` until no thread is left.
+- SCRIPT-S1 The startup threads are stepped before the first frame with dt 0.034 (the free-running dt read at gameplay-start; the loading phase's own updates are not recovered): `chase-game` until `startup` ends or starts a movie or an in-engine cutscene (the game loop then continues it, as the original runs the thread during the load), `levelStartState` until no thread is left.
 - SCRIPT-S2 Closed 2026-10-14: `IsLevelUnlocked`, `GetGameComplete` and `IsRedBrickExtraActive` read the loaded slot ([save-format-state.md §2026-10-14T11:53](../../re/save-format-state.md#ts-20261014-115300)); without `--save` they return the new-game values (level 2 unlocked, rest 0). The mask of `IsRedBrickExtraActive` is a runtime value that is 0 after a load.
 - SCRIPT-S3 The revealer rule is a data fit, not traced to its code; verified only in lvl_01.
 - SCRIPT-S4 A function without a handler does nothing and continues at once; `chase-game` prints its name the first time (`script function without handler`). The original may block in it (WaitForDCam, DCamCutSceneWait, AIMove, ...). See SCRIPT-7.
@@ -31,7 +31,7 @@ IN_PROGRESS, updated 2026-10-14T16:48:13+02:00. `ScriptRunner` runs threads ever
 
 ## 5. Open items
 
-- [ ] SCRIPT-1 — Scripts run during play and player bound triggers start them, but most natives have no handler and most trigger types start nothing: no mission flow. needs: SCRIPT-7, SCRIPT-75, SCRIPT-76, SCRIPT-110, SCRIPT-111, SCRIPT-113, SCRIPT-143, LEVOBJ-14, LEVOBJ-15. blocks: AUDIO-2, LEVOBJ-3, STUD-4, HUD-9, TRANS-3, TRANS-5, WSTREAM-6. evidence: [scripts.md §2026-10-14T09:52](../../re/scripts.md#ts-20261014-095252).
+- [ ] SCRIPT-1 — Scripts run during play and player bound triggers start them, but most natives have no handler and most trigger types start nothing: no mission flow. needs: SCRIPT-7, SCRIPT-75, SCRIPT-76, SCRIPT-110, SCRIPT-111, SCRIPT-113, LEVOBJ-14, LEVOBJ-15. blocks: AUDIO-2, LEVOBJ-3, STUD-4, HUD-9, TRANS-3, TRANS-5, WSTREAM-6. evidence: [scripts.md §2026-10-14T09:52](../../re/scripts.md#ts-20261014-095252).
 - [ ] SCRIPT-2 — `levelStartState` disables some objects the original has enabled (hydrant sprays, tokens, task and archway pads, build-it bits). Class startups do not explain it (their classes have no scripts); cause not found. evidence: [scene-start.md §2026-10-14T14:27](../../re/scene-start.md#ts-20261014-142739), [scripts.md §2026-10-13T20:42](../../re/scripts.md#ts-20261013-204236).
 - [ ] SCRIPT-3 — The two detective X-spots (`1-2_Dtv_DogPath_XSpot`, `1-3_Dtv_BrickSpot_XSpot_02`) are not explained (no grid entry). evidence: [collision.md §2026-10-13T20:43](../../re/collision.md#ts-20261013-204340).
 - [ ] SCRIPT-4 — The code that hides the revealer targets; the role of the other type-4 parameters (Destination, ObjectTo, TriggerObject, ...); the revealer rule is a data fit and only lvl_01 was compared with the oracle (lvl_00 not). evidence: [scripts.md §2026-10-13T20:42](../../re/scripts.md#ts-20261013-204236).

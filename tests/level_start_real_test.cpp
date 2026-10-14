@@ -134,6 +134,21 @@ int main(int argc, char** argv) {
         require(runner.threadCount() == 0 && sceneStart.classThreadCount() == 0, "startup threads still running: " + std::to_string(runner.threadCount()));
         require(runState.disabled == state.disabled, "runner state differs from levelStartState");
 
+        // Provenance: startup script of lvl_01 (decoded with the C++ parser, docs/re/scripts-missions.md): StoryProgress 1 calls
+        // 1-1_MissionStart (SetActiveWayPoint 1-1_Waypoint_01 1), StoryProgress 2 calls 1-1_MissionSkip and 1-2_MissionAvailable
+        // (SetActiveWayPoint 1-2_Waypoint_01 1).
+        require(runner.objectives().waypointActive("1-1_waypoint_01") && !runner.objectives().waypointActive("1-2_waypoint_01"),
+                "a new game start switches 1-1_Waypoint_01 on");
+        {
+            chase::assets::PlacedObjectState afterOne = chase::runtime::levelInitialState(level, classOf);
+            chase::runtime::ScriptRunner afterOneRunner(level, afterOne);
+            afterOneRunner.setVariable(chase::assets::nameHash("StoryProgress"), 2.0f);
+            chase::runtime::SceneStart afterOneStart(level, classOf, afterOneRunner);
+            afterOneStart.run(startOptions);
+            require(!afterOneRunner.objectives().waypointActive("1-1_waypoint_01") && afterOneRunner.objectives().waypointActive("1-2_waypoint_01"),
+                    "StoryProgress 2 starts the 1-2 waypoint, not 1-1");
+        }
+
         // Provenance: oracle `read` at gameplay-start (docs/re/scripts.md 2026-10-14): enable byte +0 of the 241 trigger
         // records at owner+0x34 (0x08eb22e0, 0x20 each, same order as the file) and byte +0xa of the 482 bounds
         // (0x08663354, 0x28 each). The port runs only the level's startup script, so a few differ (open item SCRIPT-10).

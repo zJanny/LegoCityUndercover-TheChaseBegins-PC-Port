@@ -22,6 +22,7 @@ struct Options {
     std::string frontSave;
     unsigned saveSlot = 0;
     bool cameraCollision = true;
+    bool startCutscenes = true;
     bool debugOverlay = false;
     std::optional<std::array<float, 3>> start;
     std::optional<float> facing;

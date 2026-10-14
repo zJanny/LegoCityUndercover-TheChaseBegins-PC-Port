@@ -112,6 +112,12 @@ build/chase-game --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreeh
 
 The path is the level's place inside the game archive, as in the example. Each level has a `<name>_main.blvl` file.
 
+A new game in Cherry Tree Hills starts as in the original:
+
+- The intro movie plays (once), then the first cutscene of mission 1-1 with the donut shop, then the first tip.
+- Cutscenes fade the top screen to black before they start (when the script asks for it) and at their end, then fade the game picture back in. The fade times were measured in the original, not read from its code.
+- The player is held during the cutscene. Add `--no-start-cutscenes` to skip the movie and the first cutscene while testing.
+
 For the other options, such as `--screenshot` and `--frames`, see the [command reference](commands.md#development-runtime). Giving `--level`, `--script` or `--start` also skips the front-end screens.
 
 In-engine cutscenes that the level scripts start (for example the donut shop scene of mission 1-1) play in the level: the picture is the cutscene camera, the HUD is hidden and the player waits until it ends. Movies that a script starts play on the top screen. Fades, the faces of the actors and skipping are not done yet.

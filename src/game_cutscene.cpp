@@ -59,7 +59,7 @@ void InEngine::pose(const Loaded& cutscene, double seconds) {
 
 void InEngine::update(runtime::CutsceneNativeState& state) {
     state.takeRequests();
-    const runtime::CutscenePlaying* playing = state.playing();
+    const runtime::CutscenePlaying* playing = state.shown() ? state.playing() : nullptr;
     const std::string name = playing ? playing->name : std::string();
     if (name != shown_) {
         show(shown_, false);
@@ -75,7 +75,7 @@ void InEngine::update(runtime::CutsceneNativeState& state) {
 }
 
 std::optional<CameraView> InEngine::camera(const runtime::CutsceneNativeState& state) const {
-    const runtime::CutscenePlaying* playing = state.playing();
+    const runtime::CutscenePlaying* playing = state.shown() ? state.playing() : nullptr;
     if (!playing) return std::nullopt;
     const auto found = loaded_.find(playing->name);
     if (found == loaded_.end()) return std::nullopt;

@@ -22,7 +22,7 @@ constexpr double kAnyRealLow = std::numeric_limits<double>::lowest(), kAnyRealHi
 
 const char* const kUsage = "usage: chase-game [--fib F] [--names CSV] [--config CFG] [--gameplay] "
                            "[--level levels/levels/<name>/<name>_main.blvl] [--screenshot OUT.bmp] [--frames N] "
-                           "[--script \"X Y COUNT [BUTTONS];...\"] [--save savegame.dat] [--save-out FILE] [--front-save savegame.dat] [--slot 0|1] [--start \"X Y Z\"] [--facing DEGREES] [--hide-room N] [--no-camera-collision] [--debug-overlay] [--sound-volume 0-10] [--music-volume 0-10] "
+                           "[--script \"X Y COUNT [BUTTONS];...\"] [--save savegame.dat] [--save-out FILE] [--front-save savegame.dat] [--slot 0|1] [--start \"X Y Z\"] [--facing DEGREES] [--hide-room N] [--no-camera-collision] [--no-start-cutscenes] [--debug-overlay] [--sound-volume 0-10] [--music-volume 0-10] "
                            "[--front-script \"run 5; press A; until slot; ...\"] [--language 1-9] [--returning] [--window WIDTHxHEIGHT]";
 
 std::uint32_t buttonOf(char letter) {
@@ -89,6 +89,7 @@ bool applyOption(Options& o, const std::string& arg, const std::function<std::st
     else if (arg == "--front-save") o.frontSave = value();
     else if (arg == "--slot") o.saveSlot = unsigned(strict::integer(value(), 0, 1));
     else if (arg == "--no-camera-collision") o.cameraCollision = false;
+    else if (arg == "--no-start-cutscenes") o.startCutscenes = false;
     else if (arg == "--debug-overlay") o.debugOverlay = true;
     else if (arg == "--sound-volume") o.soundVolume = unsigned(strict::integer(value(), 0, 10));
     else if (arg == "--music-volume") o.musicVolume = unsigned(strict::integer(value(), 0, 10));
