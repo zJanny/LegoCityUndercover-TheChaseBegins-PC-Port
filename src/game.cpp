@@ -130,6 +130,7 @@ int run(const Options& given) {
         front.script = options.frontScript;
         front.screenshot = options.screenshot;
         front.saveFile = options.frontSave;
+        front.debugOverlay = options.debugOverlay;
         const game_front::Result result =
             game_front::run(window, input, archive, audio ? &*audio : nullptr, front,
                             [&]() { return game_level::clockTicks(SDL_GetPerformanceCounter() - frontOrigin, frontFrequency); });
@@ -165,12 +166,17 @@ int run(const Options& given) {
             session.advance(padState(input));
 
             SDL_GL_GetDrawableSize(window, &width, &height);
-            session.draw(width, height);
             const bool debugVisible = options.debugOverlay != input.active(chase::Action::DebugOverlay);
             debugMetrics.setVisible(debugVisible);
+            if (debugVisible && !debugOverlay) debugOverlay.emplace();
+            if (debugVisible) debugOverlay->beginFrame();
+            session.draw(width, height);
             if (debugVisible) {
-                if (!debugOverlay) debugOverlay.emplace();
-                debugOverlay->draw(runtime::debugOverlayLines(debugMetrics.readout(), session.debugValues()), width, height);
+                const chase::render::FrameStats renderStats = debugOverlay->endFrame();
+                chase::runtime::DebugReadout readout = debugMetrics.readout();
+                if (renderStats.gpuValid) readout.gpuMilliseconds = renderStats.gpuMilliseconds;
+                readout.drawCalls = renderStats.drawCalls;
+                debugOverlay->draw(runtime::debugOverlayLines(readout, session.debugValues()), width, height);
             }
 
             const bool scriptDone = session.scriptDone();

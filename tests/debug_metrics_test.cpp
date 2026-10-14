@@ -49,6 +49,8 @@ int main() {
         readout.frame = {60, 16.7, 16.6, 16.0, 17.5};
         readout.memory = ProcessMemory{102400, 204800};
         readout.cpuPercent = 12.34;
+        readout.gpuMilliseconds = 3.456;
+        readout.drawCalls = 321;
         DebugGameValues game;
         game.updatesPerSecond = 60;
         game.level = "lvl_01_cherrytreehills";
@@ -61,16 +63,23 @@ int main() {
         game.loadedRooms = 9;
         const std::vector<std::string> expected = {
             "FPS 60", "FRAME MS LAST 16.7 AVG 16.6", "FRAME MS MIN 16.0 MAX 17.5", "MEM MB 100.0 PEAK 200.0", "CPU 12.3 %",
-            "UPDATES/S 60", "LEVEL lvl_01_cherrytreehills", "POS 886.76 16.59 1111.17", "HEADING 90.0 DEG", "SCRIPT THREADS 3",
+            "GPU MS 3.46", "DRAWS 321", "UPDATES/S 60", "LEVEL lvl_01_cherrytreehills", "POS 886.76 16.59 1111.17", "HEADING 90.0 DEG", "SCRIPT THREADS 3",
             "ROOMS LOADED 9"};
         require(debugOverlayLines(readout, game) == expected, "overlay lines");
         readout.memory.reset();
         readout.cpuPercent.reset();
+        readout.gpuMilliseconds.reset();
+        readout.drawCalls.reset();
         game.hasPlayer = false;
         game.loadedRooms.reset();
         require(debugOverlayLines(readout, game).back() == "SCRIPT THREADS 3", "no room line without room streaming");
         const std::vector<std::string> missing = debugOverlayLines(readout, game);
-        require(missing[3] == "MEM MB N/A" && missing[4] == "CPU ..." && missing[7] == "NO PLAYER", "missing values are labelled");
+        require(missing[3] == "MEM MB N/A" && missing[4] == "CPU ..." && missing[5] == "GPU MS N/A" && missing[6] == "DRAWS N/A" && missing[9] == "NO PLAYER",
+                "missing values are labelled");
+        require(debugFrontEndLines(readout, "language") ==
+                    std::vector<std::string>{"FPS 60", "FRAME MS LAST 16.7 AVG 16.6", "FRAME MS MIN 16.0 MAX 17.5", "MEM MB N/A", "CPU ...",
+                                             "FRONT END LANGUAGE"},
+                "front-end overlay lines");
         std::cout << "Debug metrics tests passed\n";
         return 0;
     } catch (const std::exception& error) {

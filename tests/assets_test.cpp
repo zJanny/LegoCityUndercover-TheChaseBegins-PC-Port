@@ -566,7 +566,23 @@ Bytes matrixBytes(const Matrix& m) {
 
 bool near(float a, float b) { return std::fabs(a - b) < 1e-5f; }
 
+void subtitleWrapping() {
+    const auto measure = [](const std::string& text) { return int(text.size()); };
+    require(subtitleWrapWidthStandIn(320) == 280 && subtitleWrapWidthStandIn(400) == 350, "stand-in wrap width is 7/8 of the screen");
+    require(wrapSubtitleLines({"aaa bbb ccc"}, 7, measure) == std::vector<std::string>{"aaa bbb", "ccc"}, "wrap at the last space");
+    require(wrapSubtitleLines({"aaa bbb"}, 7, measure) == std::vector<std::string>{"aaa bbb"}, "line of exactly the width stays");
+    require(wrapSubtitleLines({"abcdefghij"}, 4, measure) == std::vector<std::string>{"abcd", "efgh", "ij"}, "word wider than the box breaks inside");
+    require(wrapSubtitleLines({"aa bb", "", "cc dd ee"}, 5, measure) == std::vector<std::string>{"aa bb", "", "cc dd", "ee"}, "explicit breaks stay");
+    const auto glyphs = [](const std::string& text) {
+        int count = 0;
+        for (char c : text) count += (static_cast<unsigned char>(c) & 0xc0) != 0x80;
+        return count;
+    };
+    require(wrapSubtitleLines({"ab \xc3\xa9\xc3\xa9"}, 4, glyphs) == std::vector<std::string>{"ab", "\xc3\xa9\xc3\xa9"}, "wrap counts characters, not bytes");
+}
+
 void subtitles() {
+    subtitleWrapping();
     auto extended = extendedCharacters(bytes("\xd0\xa0"));
     auto cues = parseSubtitles(bytes("\xef\xbb\xbf" "1\r\n00:00:01,600 --> 01:02:03,004\r\nFran\xe7" "ais\r\n\x01" "20!\r\n\r\n\r\n"
                                      "7\r\n00:00:07,500 --> 00:00:12,600\r\nLast"),

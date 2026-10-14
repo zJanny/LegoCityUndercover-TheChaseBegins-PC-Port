@@ -66,6 +66,27 @@ void texts(Resources& resources) {
     }
 }
 
+// Provenance: line breaks of the intro cues in oracle pictures artifacts/review/front-end/oracle/intro/intro00.png (Excellent...),
+// intro03/04 (I'm sure...), intro06 (We're out of doughnuts...) and intro09 (Part two...); box heights 48 (one line) and 72 (two lines).
+void subtitleBreaks(Resources& resources) {
+    const BitmapFont& font = resources.font("frontendfont");
+    const auto& extended = resources.extendedCharacters();
+    const auto cues = assets::parseSubtitles(resources.bytes("cutscenes/01_gameintro_us.srt"), extended);
+    const auto wrapped = [&](const std::string& begin) {
+        for (const auto& cue : cues)
+            if (!cue.lines.empty() && cue.lines[0].rfind(begin, 0) == 0)
+                return assets::wrapSubtitleLines(cue.lines, assets::subtitleWrapWidthStandIn(kBottomWidth),
+                                                 [&](const std::string& text) { return textWidth(font, extended, text, 0); });
+        return std::vector<std::string>{};
+    };
+    using Lines = std::vector<std::string>;
+    require(wrapped("Excellent, we're") == Lines{"Excellent, we're all very happy to have", "you here."}, "subtitle break: Excellent");
+    require(wrapped("I'm sure he has") == Lines{"I'm sure he has some important work", "for you."}, "subtitle break: I'm sure");
+    require(wrapped("We're out of") == Lines{"We're out of doughnuts. Get me some", "more."}, "subtitle break: doughnuts");
+    require(wrapped("Part two.") == Lines{"Part two. I think I've made a bad", "career choice."}, "subtitle break: Part two");
+    require(wrapped("Thrilled.") == Lines{"Thrilled."}, "subtitle one line");
+}
+
 void logoPixels(Resources& resources) {
     FrontEnd front(resources, nullptr, {});
     Canvas top(kTopWidth, kScreenHeight), bottom(kBottomWidth, kScreenHeight);
@@ -159,6 +180,7 @@ int main(int argc, char** argv) {
     archive.loadNames(argv[2]);
     Resources resources(archive);
     texts(resources);
+    subtitleBreaks(resources);
     logoPixels(resources);
     pageRenders(resources);
     if (std::ifstream(std::string(argv[3]) + "/splash5.moflex").good()) {

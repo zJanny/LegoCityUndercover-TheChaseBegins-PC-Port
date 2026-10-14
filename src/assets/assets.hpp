@@ -752,6 +752,14 @@ struct SubtitleCue {
     std::vector<std::string> lines;
 };
 std::vector<SubtitleCue> parseSubtitles(const Bytes& data, const std::vector<std::string>& extended = {});
+// STAND-IN (FE-S41): the wrap width of a subtitle is 7/8 of the screen width, 280 on the 320 px bottom screen. The oracle
+// breaks four intro cues at port widths 272 (fits) and 284 (breaks), so the limit lies in 272..283; the movie player's
+// clip (0x2e1760, 0.05..0.95 of the width, 288) does not explain it.
+constexpr int subtitleWrapWidthStandIn(int screenWidth) { return screenWidth * 7 / 8; }
+// The line breaker 0x21bc2c breaks at the last space, or before the character that crosses the width when the line has
+// no space; explicit line breaks stay.
+std::vector<std::string> wrapSubtitleLines(const std::vector<std::string>& lines, int width,
+                                           const std::function<int(const std::string&)>& measure);
 
 // 0x1886f0: PJW/ELF hash of the ASCII-lower-cased name (bytes are signed).
 std::uint32_t pjwHash(const std::string& text);

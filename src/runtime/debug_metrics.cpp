@@ -108,10 +108,15 @@ DebugReadout DebugMetrics::readout() {
         memory_ = parseProcessStatus(text.str());
         cpu_.sample(now, processCpuSeconds());
     }
-    return {window_.stats(), memory_, cpu_.percent()};
+    DebugReadout readout;
+    readout.frame = window_.stats();
+    readout.memory = memory_;
+    readout.cpuPercent = cpu_.percent();
+    return readout;
 }
 
-std::vector<std::string> debugOverlayLines(const DebugReadout& readout, const DebugGameValues& game) {
+namespace {
+std::vector<std::string> readoutLines(const DebugReadout& readout) {
     std::vector<std::string> lines;
     const FrameTimeStats& frame = readout.frame;
     lines.push_back(format("FPS %.0f", double(frame.frames)));
@@ -122,6 +127,14 @@ std::vector<std::string> debugOverlayLines(const DebugReadout& readout, const De
                                double(readout.memory->peakKilobytes) / 1024.0));
     else lines.push_back("MEM MB N/A");
     lines.push_back(readout.cpuPercent ? format("CPU %.1f %%", *readout.cpuPercent) : "CPU ...");
+    return lines;
+}
+}
+
+std::vector<std::string> debugOverlayLines(const DebugReadout& readout, const DebugGameValues& game) {
+    std::vector<std::string> lines = readoutLines(readout);
+    lines.push_back(readout.gpuMilliseconds ? format("GPU MS %.2f", *readout.gpuMilliseconds) : "GPU MS N/A");
+    lines.push_back(readout.drawCalls ? "DRAWS " + std::to_string(*readout.drawCalls) : "DRAWS N/A");
     lines.push_back(format("UPDATES/S %.0f", double(game.updatesPerSecond)));
     lines.push_back("LEVEL " + game.level);
     if (game.hasPlayer) {
@@ -130,6 +143,15 @@ std::vector<std::string> debugOverlayLines(const DebugReadout& readout, const De
     } else lines.push_back("NO PLAYER");
     lines.push_back("SCRIPT THREADS " + std::to_string(game.scriptThreads));
     if (game.loadedRooms) lines.push_back("ROOMS LOADED " + std::to_string(*game.loadedRooms));
+    return lines;
+}
+
+std::vector<std::string> debugFrontEndLines(const DebugReadout& readout, const std::string& screen) {
+    std::vector<std::string> lines = readoutLines(readout);
+    std::string upper = screen;
+    for (char& c : upper)
+        if (c >= 'a' && c <= 'z') c = char(c - 'a' + 'A');
+    lines.push_back("FRONT END " + upper);
     return lines;
 }
 

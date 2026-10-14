@@ -97,7 +97,7 @@ if(EPOXY_FOUND)
   target_link_libraries(chase_render PUBLIC chase_assets PkgConfig::SDL2 PkgConfig::EPOXY)
   target_compile_options(chase_render PRIVATE -Wall -Wextra -Wpedantic)
   target_sources(chase_render PRIVATE src/render/studs.cpp src/render/debug_text.cpp src/render/debug_overlay.cpp
-    src/render/program.cpp src/render/window.cpp src/render/hud_overlay.cpp src/render/front_presenter.cpp)
+    src/render/program.cpp src/render/window.cpp src/render/hud_overlay.cpp src/render/front_presenter.cpp src/render/frame_stats.cpp)
   add_executable(chase-viewer src/viewer.cpp)
   target_link_libraries(chase-viewer PRIVATE chase_render chase_audio chase_input)
   target_compile_options(chase-viewer PRIVATE -Wall -Wextra -Wpedantic)
@@ -591,6 +591,18 @@ if(BUILD_TESTING)
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --front-script "until language 60; run 1" --screenshot front-smoke.bmp)
     set_tests_properties(front-game-smoke PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
       PASS_REGULAR_EXPRESSION "front end: [0-9]+ update\\(s\\), screen language, saved front-smoke.bmp")
+    add_test(NAME front-overlay-off COMMAND chase-game
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --front-script "until language 60; run 1" --screenshot front-overlay-off.bmp)
+    set_tests_properties(front-overlay-off PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" FIXTURES_SETUP front_overlay_off
+      PASS_REGULAR_EXPRESSION "saved front-overlay-off.bmp")
+    add_test(NAME front-overlay-on COMMAND chase-game
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --debug-overlay --front-script "until language 60; run 1" --screenshot front-overlay-on.bmp)
+    set_tests_properties(front-overlay-on PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" FIXTURES_SETUP front_overlay_on
+      PASS_REGULAR_EXPRESSION "saved front-overlay-on.bmp")
+    add_test(NAME front-overlay-area COMMAND python3 "${CMAKE_SOURCE_DIR}/tools/check_debug_overlay_shots.py" front-overlay-off.bmp front-overlay-on.bmp)
+    set_tests_properties(front-overlay-area PROPERTIES FIXTURES_REQUIRED "front_overlay_off;front_overlay_on")
     add_test(NAME front-game-handoff COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg"

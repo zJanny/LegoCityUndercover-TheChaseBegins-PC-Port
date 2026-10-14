@@ -56,6 +56,8 @@ struct DebugReadout {
     FrameTimeStats frame;
     std::optional<ProcessMemory> memory;
     std::optional<double> cpuPercent;
+    std::optional<double> gpuMilliseconds;
+    std::optional<unsigned> drawCalls;
 };
 
 // Frame timing is recorded on every frame (one clock read); /proc and getrusage are read only while visible.
@@ -74,5 +76,7 @@ private:
 };
 
 std::vector<std::string> debugOverlayLines(const DebugReadout& readout, const DebugGameValues& game);
+// The timing and process lines plus the current front-end screen (docs/debug-overlay.md).
+std::vector<std::string> debugFrontEndLines(const DebugReadout& readout, const std::string& screen);
 
 }

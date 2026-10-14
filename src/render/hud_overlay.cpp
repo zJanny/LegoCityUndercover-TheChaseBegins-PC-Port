@@ -1,4 +1,5 @@
 #include "render/hud_overlay.hpp"
+#include "render/frame_stats.hpp"
 #include "render/shaders.hpp"
 #include <epoxy/gl.h>
 #include <stdexcept>
@@ -98,6 +99,7 @@ void HudOverlayImpl::quad(int index, const Pixels& image, const PixelRect& rect,
     const float vertices[16] = {left, top, 0, 0, right, top, 1, 0, left, bottom, 0, 1, right, bottom, 1, 1};
     glBindBuffer(GL_ARRAY_BUFFER, buffer_);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+    countDrawCall();
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
 

@@ -16,7 +16,7 @@ build/chase-fmv artifacts/romfs/romfs/cutscenes/01_gameintro.moflex --lang us
 - `--subtitles FILE.srt` uses your own subtitle file instead.
 - `--font NAME` draws the subtitles with another game font from the `fonts/` folder, for example `frontendfontlarge`. The default is `frontendfont`.
 
-Subtitles are drawn with the game's own font. Where the game places them on the screen, and in which font, is not known yet.
+Subtitles are drawn with the game's own font. Long lines wrap at seven eighths of the video width (the original's exact width is not known yet). Where the game places them on the screen, and in which font, is not known yet.
 
 ## Save a single picture
 

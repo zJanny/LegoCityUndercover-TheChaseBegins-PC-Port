@@ -75,9 +75,14 @@ public:
 
     void draw(SDL_Renderer* renderer, const assets::SubtitleCue& cue, int width, int height) {
         int lineHeight = std::max<int>(font_.lineHeight, 1);
-        int top = height - 8 - lineHeight * int(cue.lines.size());
-        for (std::size_t row = 0; row < cue.lines.size(); ++row) {
-            auto placed = assets::layoutText(font_, cue.lines[row], extended_);
+        const std::vector<std::string> lines = assets::wrapSubtitleLines(
+            cue.lines, assets::subtitleWrapWidthStandIn(width), [&](const std::string& text) {
+                auto laidOut = assets::layoutText(font_, text, extended_);
+                return laidOut.empty() ? 0 : laidOut.back().x + laidOut.back().glyph.width;
+            });
+        int top = height - 8 - lineHeight * int(lines.size());
+        for (std::size_t row = 0; row < lines.size(); ++row) {
+            auto placed = assets::layoutText(font_, lines[row], extended_);
             if (placed.empty()) continue;
             int lineWidth = placed.back().x + placed.back().glyph.width;
             int left = (width - lineWidth) / 2, y = top + lineHeight * int(row);

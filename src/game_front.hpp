@@ -7,15 +7,18 @@
 #include "game_audio.hpp"
 #include "game_hud.hpp"
 #include "input.hpp"
+#include "render/debug_overlay.hpp"
 #include "render/front_presenter.hpp"
 #include "render/scene.hpp"
 #include "render/window.hpp"
+#include "runtime/debug_metrics.hpp"
 #include "runtime/scheduler.hpp"
 #include <SDL.h>
 #include <algorithm>
 #include <cstdint>
 #include <functional>
 #include <iostream>
+#include <optional>
 #include <string>
 
 namespace game_front {
@@ -54,6 +57,7 @@ struct Options {
     std::string script;
     std::string screenshot;
     std::string saveFile;
+    bool debugOverlay = false;
 };
 
 inline std::string directoryOf(const std::string& path) {
@@ -65,6 +69,24 @@ struct Result {
     bool quit = false;
     bool scriptOnly = false;
     fe::Handoff handoff;
+};
+
+class FrontDebugOverlay {
+public:
+    explicit FrontDebugOverlay(bool startVisible) : startVisible_(startVisible) {}
+    void frame() { metrics_.frame(); }
+    void draw(const chase::InputState& input, const fe::FrontEnd& front, int width, int height) {
+        const bool visible = startVisible_ != input.active(chase::Action::DebugOverlay);
+        metrics_.setVisible(visible);
+        if (!visible) return;
+        if (!overlay_) overlay_.emplace();
+        overlay_->draw(chase::runtime::debugFrontEndLines(metrics_.readout(), fe::screenName(front.flow().screen())), width, height);
+    }
+
+private:
+    bool startVisible_;
+    chase::runtime::DebugMetrics metrics_;
+    std::optional<chase::render::DebugOverlay> overlay_;
 };
 
 inline Result run(SDL_Window* window, chase::InputState& input, chase::assets::FuseArchive& archive, GameAudio* audio,
@@ -80,6 +102,7 @@ inline Result run(SDL_Window* window, chase::InputState& input, chase::assets::F
     chase::render::FrontPresenter presenter(fe::kTopWidth, fe::kBottomWidth, fe::kScreenHeight);
     MovieSound movieSound;
     int width = 0, height = 0;
+    FrontDebugOverlay debugOverlay(options.debugOverlay);
 
     if (!options.script.empty()) {
         fe::ScriptHooks hooks;
@@ -90,6 +113,7 @@ inline Result run(SDL_Window* window, chase::InputState& input, chase::assets::F
         front.draw(top, bottom);
         SDL_GL_GetDrawableSize(window, &width, &height);
         presenter.present(game_hud::pixelsOf(top), game_hud::pixelsOf(bottom), width, height);
+        debugOverlay.draw(input, front, width, height);
         chase::render::waitForGpu();
         if (!options.screenshot.empty()) chase::render::saveScreenshot(options.screenshot, width, height);
         std::cout << "front end: " << updates << " update(s), screen " << fe::screenName(front.flow().screen()) << ", "
@@ -103,6 +127,7 @@ inline Result run(SDL_Window* window, chase::InputState& input, chase::assets::F
     bool wasUp = false, wasDown = false, wasA = false, wasB = false, wasX = false, wasY = false, wasStart = false;
     bool running = true;
     while (running && !front.flow().done()) {
+        debugOverlay.frame();
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
             switch (event.type) {
@@ -143,6 +168,7 @@ inline Result run(SDL_Window* window, chase::InputState& input, chase::assets::F
         front.draw(top, bottom);
         SDL_GL_GetDrawableSize(window, &width, &height);
         presenter.present(game_hud::pixelsOf(top), game_hud::pixelsOf(bottom), width, height);
+        debugOverlay.draw(input, front, width, height);
         SDL_GL_SwapWindow(window);
     }
     Result result;

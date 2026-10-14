@@ -24,6 +24,8 @@ IN_PROGRESS, updated 2026-10-13T21:29:01+0200. Squash-merged to main; `chase-gam
 - FE-S4 The new game starts in Cherry Tree Hills at the oracle's player position (886.764, 16.589, 1111.166).
 - FE-S5 The loading screen shows a flat badge instead of the 3D scene and a fixed tip.
 - FE-S6 The title card's hexagon art is a stand-in (not found in one texture); the in-engine cutscene on the top screen under the title card is black.
+- FE-S40 The bubble box height follows the line count by the 0x229128 rule and its centre (26.5 + 11.5 per line) is fitted to the one- and two-line boxes; three or more lines are extrapolated. evidence: [front-end.md §2026-10-14T21:36](../../re/front-end.md#ts-20261014-213617).
+- FE-S41 The subtitle wrap width is 7/8 of the screen width (280 on the bottom screen; `chase-fmv` uses it on the movie width) instead of the unexplained original value in 272..283. needs: FE-40. evidence: [front-end.md §2026-10-14T21:36](../../re/front-end.md#ts-20261014-213617).
 
 ## 5. Open items
 
@@ -37,7 +39,7 @@ IN_PROGRESS, updated 2026-10-13T21:29:01+0200. Squash-merged to main; `chase-gam
 - [ ] FE-7 — Which level, position and heading a new game starts with beyond the oracle's player position; the level and heading a new game starts with (Cherry Tree Hills at the oracle's player position). evidence: [front-end.md §2026-10-13T20:46](../../re/front-end.md#ts-20261013-204607).
 - [ ] FE-8 — The activation call 0x1e59f8 and the system reads behind 0x329338 / 0x3293b8 / 0x20aa64. evidence: [front-end.md §2026-10-13T20:46](../../re/front-end.md#ts-20261013-204607).
 - [ ] FE-9 — The intro movie is stereoscopic: the port shows the first picture of each pair; which eye the second picture is only matters for a stereoscopic display. see MOVIE-1.
-- [ ] FE-10 — (User report 2026-10-13) Intro movie subtitles run out of the bottom screen instead of wrapping; the wrap width, line limit and the original's handling of a too-long cue are not recovered (take them from the original's code and an oracle capture, never by eye). evidence: [front-end.md §2026-10-14T13:39](../../re/front-end.md#ts-20261014-133956).
+- [ ] FE-40 — The effective subtitle wrap width: the clip code gives 288 on the bottom screen but the oracle breaks at 272..283 (port glyph widths); trap 0x23c4a4 during the intro movie, then replace FE-S41. blocks: FE-S41. evidence: [front-end.md §2026-10-14T21:36](../../re/front-end.md#ts-20261014-213617).
 
 ## 6. Findings summary
 

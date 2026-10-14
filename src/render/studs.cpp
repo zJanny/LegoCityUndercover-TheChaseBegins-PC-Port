@@ -1,4 +1,5 @@
 #include "render/studs.hpp"
+#include "render/frame_stats.hpp"
 #include "render/program.hpp"
 #include <cstddef>
 #include <epoxy/gl.h>
@@ -105,6 +106,7 @@ void StudSpritesImpl::draw(const Mat4& view, const Mat4& viewProjection, const s
     glBindTexture(GL_TEXTURE_2D, texture_);
     GLboolean culling = glIsEnabled(GL_CULL_FACE);
     glDisable(GL_CULL_FACE);
+    countDrawCall();
     glDrawElements(GL_TRIANGLES, GLsizei(indices.size()), GL_UNSIGNED_INT, nullptr);
     if (culling) glEnable(GL_CULL_FACE);
 }

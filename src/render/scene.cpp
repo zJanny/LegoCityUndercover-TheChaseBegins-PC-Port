@@ -1,4 +1,5 @@
 #include "render/scene.hpp"
+#include "render/frame_stats.hpp"
 #include "render/program.hpp"
 #include <SDL.h>
 #include <epoxy/gl.h>
@@ -384,6 +385,7 @@ void SceneImpl::drawPart(GLuint program, const DrawPart& part, bool culling) con
         glUniform1iv(glGetUniformLocation(program, "unitMode"), 3, modes);
     }
     glBindVertexArray(part.vao);
+    countDrawCall();
     glDrawElements(GL_TRIANGLES, part.count, GL_UNSIGNED_SHORT, nullptr);
 }
 

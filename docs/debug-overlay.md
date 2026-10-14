@@ -8,7 +8,7 @@ The debug overlay is a developer tool of the [development runtime](game-runtime.
 - Press **F3** in the game window to show it. Press F3 again to hide it.
 - Start with it shown: `build/chase-game --debug-overlay`. Then F3 hides it, and F3 again shows it.
 - It appears as a text panel in the top-left corner of the window. In a screenshot (`--screenshot`) it is part of the picture.
-- It works only in a level, not on the front-end screens (logos, language, save slots, movie).
+- It works in a level and on the front-end screens (logos, language, save slots, movie). On a front-end screen it shows the timing and process lines and a `FRONT END` line with the screen name; the level lines are not shown there.
 - When the window loses focus, the key state is reset, as for every binding. A key that switched the overlay on is then released, so the overlay goes off.
 
 ## Change the key
@@ -37,20 +37,23 @@ The panel shows one line each:
 | `MEM MB` | Resident memory of the process now | mebibytes (1024 x 1024 bytes) | `VmRSS` in `/proc/self/status`, read once per second. |
 | `PEAK` | Highest resident memory since the process started | mebibytes | `VmHWM` in `/proc/self/status`, read once per second. |
 | `CPU` | CPU use of the process | percent | CPU time (user plus system, from `getrusage`) divided by wall time, over about one second. **100 % is one full core.** All threads of the process count, so the value can exceed 100 %, for example with audio or driver threads or a software renderer. Shows `...` for the first second after the overlay appears. |
+| `GPU MS` | GPU time of the level draw | milliseconds | An OpenGL timer query (`GL_TIME_ELAPSED`) around drawing the level (scene, studs, HUD). The driver finishes it a frame or two later, so the value is for an earlier frame. `N/A` until the first result, and when the driver gives none. The overlay's own drawing is not included. |
+| `DRAWS` | Draw calls of the level draw | count | Every draw call of the level scene, the studs and the HUD in one frame (the overlay's own is not counted). Only in levels. |
 | `UPDATES/S` | Game updates in the last full second | updates per second | The count of game logic updates (the fixed update rate of the recovered scheduler), the same number the program prints once a second. `0` for the first second. |
 | `LEVEL` | Level folder name | text | The loaded level, for example `lvl_01_cherrytreehills`. |
 | `POS` | Player position | game units, X Y Z | The player's current position. `NO PLAYER` if the level has no player start. |
 | `HEADING` | Player heading | degrees | The player's facing angle, converted from the game's 16-bit heading. |
 | `SCRIPT THREADS` | Running level script threads | count | Number of threads of the level script runner now. |
+| `FRONT END` | Current front-end screen | text | The name of the screen, for example `LANGUAGE`. Only on the front-end screens, in place of the level lines. |
 | `ROOMS LOADED` | Rooms of the level that are loaded now | count | The rooms the room streaming rule keeps loaded around the player (the current room, its neighbours and up to three preloads). Not shown in levels without room streaming. A room that is requested counts only once its loading has finished. |
 
 ## Limits
 
 - The memory and CPU values come from Linux (`/proc`, `getrusage`). On another system they are not available. The overlay is only supported on Linux, like the rest of the port.
-- The numbers are for the whole process, not for the GPU. No GPU time or draw call count is shown.
+- Memory, CPU and frame times are for the whole process. `GPU MS` and `DRAWS` cover only the drawing of the level, not the front-end screens.
 - Reading `/proc` and drawing the panel cost a little time, well under a millisecond per frame. The overlay is only read and drawn while it is visible. Frame times are recorded all the time (one clock read per frame).
 - The text uses a small built-in font with capital letters, digits and a few signs.
 
 ## Tests
 
-See [Commands](commands.md): `debug-metrics-core`, `debug-text-core`, `debug-overlay-off`, `debug-overlay-on`, `debug-overlay-area`, `game-option-debug-overlay-value`, and the binding checks in `input-core`.
+See [Commands](commands.md): `debug-metrics-core`, `debug-text-core`, `debug-overlay-off`, `debug-overlay-on`, `debug-overlay-area`, `front-overlay-off`, `front-overlay-on`, `front-overlay-area`, `game-option-debug-overlay-value`, and the binding checks in `input-core`.

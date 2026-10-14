@@ -24,8 +24,12 @@ constexpr float kShortcutsX = -80, kShortcutsY = -16;
 constexpr const char* kDialogBoxTexture = "sprites/ui_dialog/ui_dialog_box.btga";
 // STAND-INS fitted to oracle screenshots of the movie bubble, loading tip and mission card.
 constexpr int kBoxEdge = 16;
-constexpr int kBubbleX = 6, kBubbleY = 14, kBubbleWidth = 308, kBubbleHeight = 72;
+constexpr int kBubbleX = 6, kBubbleWidth = 308;
 constexpr float kBubblePitch = 23, kBubbleTextY = 33.5f;
+// STAND-IN (FE-S40): the bubble box height follows the line count like the generic text box 0x229128 (half height =
+// lines * pitch / 2, rounded to an even number); matches the oracle for one and two lines, extrapolated for more.
+// The centre 26.5 + 11.5 * lines is fitted to those two boxes (the code that places the box is not recovered).
+constexpr float kBubbleCentreBase = 26.5f, kBubbleCentreStep = 11.5f;
 constexpr int kBoxMarginX = 8, kBoxMarginY = 4;
 constexpr int kTipX = 8, kTipY = 78, kTipWidth = 304, kTipHeight = 152, kTipWrapWidth = 270;
 constexpr int kTipHexX = 32, kTipHexY = -10;
@@ -201,13 +205,22 @@ void drawDialogBackground(Canvas& bottom, Resources& resources) {
     bottom.draw(right, {0, 0, kBottomWidth - left.width, kScreenHeight}, left.width, 0);
 }
 
-void drawSubtitleBubble(Canvas& bottom, Resources& resources, const std::vector<std::string>& lines) {
+void drawSubtitleBubble(Canvas& bottom, Resources& resources, const std::vector<std::string>& cueLines) {
     drawDialogBackground(bottom, resources);
-    if (lines.empty()) return;
-    bottom.drawNineSlice(resources.image(kDialogBoxTexture), kBoxEdge, kBubbleX - kBoxMarginX, kBubbleY - kBoxMarginY,
-                         kBubbleWidth + 2 * kBoxMarginX, kBubbleHeight + 2 * kBoxMarginY);
+    if (cueLines.empty()) return;
     const BitmapFont& font = resources.font("frontendfont");
     const auto& extended = resources.extendedCharacters();
+    const std::vector<std::string> lines = assets::wrapSubtitleLines(
+        cueLines, assets::subtitleWrapWidthStandIn(kBottomWidth), [&](const std::string& text) { return textWidth(font, extended, text, 0); });
+    const auto evenRounded = [](float value) {
+        const int rounded = int(std::floor(value + 0.5f));
+        return rounded + (rounded & 1);
+    };
+    const float count = float(lines.size());
+    const int half = evenRounded(count * kBubblePitch / 2);
+    const int top = evenRounded(kBubbleCentreBase + kBubbleCentreStep * count) - half - kBoxEdge;
+    bottom.drawNineSlice(resources.image(kDialogBoxTexture), kBoxEdge, kBubbleX - kBoxMarginX, top,
+                         kBubbleWidth + 2 * kBoxMarginX, 2 * (half + kBoxEdge));
     for (std::size_t i = 0; i < lines.size(); ++i)
         drawText(bottom, font, extended, lines[i], kBubbleX + kBubbleWidth / 2.0f, kBubbleTextY + kBubblePitch * float(i),
                  Align::Centre, {1, 1, 1, 1}, 0, true);

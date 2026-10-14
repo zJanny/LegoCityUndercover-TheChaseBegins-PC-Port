@@ -5,7 +5,7 @@ import struct
 import sys
 
 PANEL_WIDTH = 480
-PANEL_HEIGHT = 240
+PANEL_HEIGHT = 280
 
 
 def read_bmp(path):

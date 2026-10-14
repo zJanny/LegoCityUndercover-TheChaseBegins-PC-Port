@@ -128,3 +128,25 @@ Unknowns:
 - The delete confirmation's layout (element names, positions, storyboard) and its result; the Y icon and label sit 6 px right of the oracle's (the layout offset of the extra button is not explained); the black interval between the slot list and the loading screen on Continue.
 - Which tip the loading screen picks.
 - Whether the percent's shift comes from the page's code (right edge of a resized element) or from the layout.
+
+<a id="ts-20261014-213617"></a>
+<a id="ts-20261014-213617"></a>
+
+## 2026-10-14T21:36:17+02:00 — Movie subtitles: wrap, box height, the original's text code
+
+Evidence: llvm-objdump (armv6k, vfp2) on `artifacts/game/game.arm.elf`, oracle pictures `artifacts/review/front-end/oracle/intro/intro00..49.png` (local), one GDB-only Azahar run (state `agent-slot`, port 24714, memory read at 0x529f28). No REA session; no RPC (agent M held it). The attempt to trap the clip call during the intro movie did not reach the movie (the scripted A press from `front-selectslot` did not start New Game); not repeated.
+
+**Original code (addresses).**
+- Loader 0x223dbc builds `cutscenes/` + movie name + `_xx.srt` (literals 0x223f5c, 0x223f68; the `.moflex` literal 0x223f48) and calls the SubRip reader 0x2e20a0 when the file exists.
+- Reader 0x2e20a0: splits the file at line feeds, looks for the `-->` line (literal 0x2e2540), converts hours, minutes, seconds, milliseconds to a float with 3600.0 / 60.0 / 0.001 (literals 0x2e2530..0x2e2538) and stores 12-byte cues (start, end, text pointer) at `[state + 0x44]`, count at `[+0x4c]`. It creates the subtitle font (0x1f394c, 0x1f3744), colour white (0x2551c4), `0x2551f8(font, 1, 0, flag 1, 0, 0)` (centre, top, **wrap flag on**) and `0x2551cc(font, 4, 5)`. No line limit is stored.
+- Draw 0x2e1760 (called from 0x2e1b18): fade alpha from the cue time (10 per second at both ends), then the clip rectangle through 0x23c490 with x = 0.05 * W .. 0.95 * W (literals 0.05 at 0x2e19ac, 0.95 at 0x2e19b0, 0.9 at 0x2e19b4), y = 0 .. H, W and H the render target size at 0x529e30 + 268 / + 272, then the position (0x254d80) x = clip width / 2 and y = the font's line height byte `[font + 3]` (bottom-screen case, `[state + 0x54]` = 1) or `0.93 * H - text height` (other case), and `0x235cc4("%s", text)`. Bottom-screen values read in the oracle: 0x529f34 = 320.0, 0x529f38 = 240.0, 0x529f3c = 320.0, 0x529f40 = 240.0, so the clip is x 16..304, width 288.
+- Line breaker 0x21bc2c (shared by all text): with the wrap flag set it adds the glyph advance to the line position and when `position + glyph width > [0x52ecac + 16]` (the clip width stored by 0x23c490) it breaks at the last space seen in the line, or before the glyph when the line has no space; characters 10 and 13 end a line (explicit breaks stay). There is no line limit and no shrinking: a long cue just gets more lines. The measure 0x20f9e4 sums the line heights.
+
+**Oracle.** One-line cues have a bubble of 48 rows (rows 14..61 of the bottom screen), two-line cues 72 rows (14..85): the box follows the line count like the generic text box 0x229128 (half height = lines * 23 / 2, centre and half size rounded to even, nine-slice edges 16). The top stays at row 10 of the nine-slice. Four two-line cues break as "Excellent, we're all very happy to have / you here.", "I'm sure he has some important work / for you.", "We're out of doughnuts. Get me some / more.", "Part two. I think I've made a bad / career choice." With the port's glyph widths these lines are 272, 264, 260 and 231 wide, and "Part two. I think I've made a bad career" would be 284: the effective limit is 272..283, not the 288 of the clip code. The port wraps at 280 (stand-in FE-S41), which reproduces all four breaks; the port's boxes are 48 and 72 rows high like the oracle's.
+
+**Port.** `assets::wrapSubtitleLines` (src/assets/subtitles.cpp, shared by the front end and `chase-fmv`), `assets::subtitleWrapWidthStandIn`, `drawSubtitleBubble` (box height by line count, FE-S40). `chase-fmv` wraps at 7/8 of the movie width (no measurement for the top screen). Tests: `assets-core` (wrapping rules), `frontend-real-data` (the four breaks, pinned with the oracle picture names above). Pictures of a two-line and a one-line cue are in the scratch directory of agent O (not committed).
+
+Unknowns:
+- Why the effective wrap width is 272..283 and not 288 (font scale, advance rounding, or a different clip at the time of the draw); a trap on 0x23c4a4 during the movie would show the clip (0x2e188c) and the first wrap compare.
+- The box for three or more lines (extrapolated by the 0x229128 rule), and the box centre rule (26.5 + 11.5 * lines fits one and two lines).
+- Cues of 3 lines (61 of 2921) and 4 lines (5) exist at the stand-in width; no oracle picture.

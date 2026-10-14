@@ -71,3 +71,39 @@ std::vector<SubtitleCue> parseSubtitles(const Bytes& data, const std::vector<std
     return cues;
 }
 }
+
+namespace chase::assets {
+
+std::vector<std::string> wrapSubtitleLines(const std::vector<std::string>& lines, int width,
+                                           const std::function<int(const std::string&)>& measure) {
+    std::vector<std::string> wrapped;
+    for (const std::string& paragraph : lines) {
+        std::string line;
+        std::size_t lastSpace = std::string::npos;
+        for (std::size_t i = 0; i < paragraph.size();) {
+            std::size_t next = i + 1;
+            while (next < paragraph.size() && (static_cast<unsigned char>(paragraph[next]) & 0xc0) == 0x80) ++next;
+            const std::string glyph = paragraph.substr(i, next - i);
+            const bool space = glyph == " ";
+            if (!space && measure(line + glyph) > width && !line.empty()) {
+                if (lastSpace != std::string::npos) {
+                    wrapped.push_back(line.substr(0, lastSpace));
+                    line = line.substr(lastSpace + 1);
+                } else {
+                    wrapped.push_back(line);
+                    line.clear();
+                }
+                lastSpace = std::string::npos;
+                for (std::size_t j = 0; j < line.size(); ++j)
+                    if (line[j] == ' ') lastSpace = j;
+            }
+            if (space) lastSpace = line.size();
+            line += glyph;
+            i = next;
+        }
+        wrapped.push_back(line);
+    }
+    return wrapped;
+}
+
+}
