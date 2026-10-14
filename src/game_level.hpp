@@ -1,4 +1,5 @@
 #pragma once
+#include <array>
 #include "assets/assets.hpp"
 #include "assets/object_collision.hpp"
 #include "frontend/canvas.hpp"
@@ -110,6 +111,7 @@ private:
     chase::assets::ClassLookup classOf;
     chase::assets::PlacedObjectState objectState;
     std::vector<chase::assets::FogObject> fogObjects;
+    std::array<std::uint8_t, 3> backgroundColour;
     std::vector<std::size_t> placedSceneIndex;
     std::vector<chase::assets::Placement> placedObjects;
     std::vector<std::size_t> waypointSceneIndex;

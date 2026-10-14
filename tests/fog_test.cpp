@@ -3,6 +3,7 @@
 // exits with 77 (skipped) when the data is missing.
 #include "assets/assets.hpp"
 #include "runtime/fog.hpp"
+#include <array>
 #include <filesystem>
 #include <iostream>
 #include <stdexcept>
@@ -104,6 +105,16 @@ void levelChecks(const char* fib, const char* names) {
     require(street.size() == 1, "lvl_01 has one fog object");
     require(street[0].start == 220.0f && street[0].end == 260.0f, "lvl_01 range 220 260 (oracle 0x376160 / 0x376164)");
     require(street[0].colour[0] == 183 && street[0].colour[1] == 199 && street[0].colour[2] == 221, "lvl_01 colour (oracle 0x376168)");
+    const auto backgroundOf = [&](const char* path) {
+        const chase::assets::FuseEntry* entry = archive.find(path);
+        require(entry != nullptr, std::string("missing ") + path);
+        return chase::assets::levelBackgroundColour(chase::assets::parseLevel(archive.read(*entry)));
+    };
+    const auto backgroundOfLevel = [&](const std::string& name) { return backgroundOf(("levels/levels/" + name + "/" + name + "_main.blvl").c_str()); };
+    const std::array<std::uint8_t, 3> fogColour = {183, 199, 221};
+    for (const char* name : {"lvl_01_cherrytreehills", "lvl_02_albatrossisland", "lvl_03_auburn", "lvl_04_fortmeadows", "lvl_05_bluebellwood", "lvl_06_apolloisland", "lvl_07_downtown"})
+        require(backgroundOfLevel(name) == fogColour, std::string(name) + " BackgroundColour (183, 199, 221); lvl_01 = bytes b7 c7 dd at 0x589890 and fill value 0xb7c7dd00 in the GX memory fill at 0x100009a0 (oracle, street-after-1-1); the others from level data only");
+    require(backgroundOfLevel("lvl_00_policestation") == std::array<std::uint8_t, 3>{0, 0, 0}, "lvl_00 BackgroundColour black (level data only, not measured in the oracle)");
     const FogSetting setting = levelFog(street, 7);
     require(setting.enabled && setting.start == 220.0f, "street fog applies in Room7");
 

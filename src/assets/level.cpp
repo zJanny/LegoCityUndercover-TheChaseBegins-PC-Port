@@ -347,6 +347,17 @@ std::vector<FogObject> fogObjects(const Level& level, const ClassLookup& classOf
     return out;
 }
 
+std::array<std::uint8_t, 3> levelBackgroundColour(const Level& level) {
+    std::array<std::uint8_t, 3> colour = {0, 0, 0};
+    const std::uint32_t hash = nameHash("BackgroundColour");
+    const LevelParam* param = findParam(level.defaults, hash);
+    if (!param) param = findParam(level.classParams, hash);
+    float values[3];
+    if (!float3Of(param, values)) return colour;
+    for (int i = 0; i < 3; ++i) colour[std::size_t(i)] = std::uint8_t(int(values[i]) & 255);
+    return colour;
+}
+
 ClassLookup archiveClassLookup(FuseArchive& archive) {
     auto classes = std::make_shared<std::map<std::string, Level>>();
     return [&archive, classes](const std::string& name) -> const Level* {

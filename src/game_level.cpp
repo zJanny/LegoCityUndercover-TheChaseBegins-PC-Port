@@ -100,6 +100,7 @@ LevelSession::LevelSession(const Shared& sharedState)
       classOf(archiveClassLookup(shared.archive)),
       objectState(runtime::levelInitialState(level, classOf)),
       fogObjects(chase::assets::fogObjects(level, classOf)),
+      backgroundColour(chase::assets::levelBackgroundColour(level)),
       levelScripts(level, objectState),
       sceneStart(level, classOf, levelScripts),
       currentWorldLevel(runtime::worldLevelOfFile(shared.master, shared.options.level)),
@@ -234,7 +235,7 @@ void LevelSession::draw(int width, int height) {
     setScissorTest(true);
     setScissorBox(screens.top);
     setViewport(screens.top);
-    clearWindow({0.16f, 0.17f, 0.2f, 1}, true);
+    clearWindow({backgroundColour[0] / 255.0f, backgroundColour[1] / 255.0f, backgroundColour[2] / 255.0f, 1}, true);
     beginFrame(1.0f);
     applyFog();
     const float* eye = follow ? follow->eye() : camera.eye;
