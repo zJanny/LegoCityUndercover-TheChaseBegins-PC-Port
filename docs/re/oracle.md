@@ -202,3 +202,13 @@ Unknowns:
 
 Unknowns:
 - Whether game logic timing differs between the modes for this game (frame pacing measured only in Old 3DS mode).
+
+<a id="ts-20261014-100715"></a>
+
+## 2026-10-14T10:07:15+02:00 — Poked transition states (no RPC)
+
+- Two measuring-aid states, both made from `gameplay-start` with GDB `poke` and therefore **not reference states** (no test may pin original behaviour from them): `trans-poked-bound-enabled` (after `frames 3`: `poke 0x086640f6 01` enables the bound `Police_Station_Transition_Lower` of lvl_01; player node world and local x, z set to 909.0 and 1115.83 with pokes at 0x08568c3c, 0x08568c44, 0x08568bfc, 0x08568c04; y unchanged) and `trans-poked-dialog-answered` (the former plus 34 updates, `WarningDialogBox` answered with A). The heap addresses are valid only for `gameplay-start` loaded under Old 3DS mode. The way to the enabled bound without a poke is mission 1-1 (`1-1_MissionEnd`); no state after it exists yet.
+- Without RPC the player is placed by poking the node translations (world `node+0x8c`, local `node+0x4c`), which is what `teleport` does over RPC. The node of `gameplay-start` is 0x08568bb0.
+- A heap scan without RPC: `memtrace 1 NAME ADDR:LEN ...` with 1 MB regions (0x08500000..0x08d00000) took 170 s and found the bound records by their float centres.
+- Runs from the same loaded state were not repeatable update for update (the dialog opened after 34 updates in one run and after 125 in another). Compare values only inside one run.
+- Findings: [streaming.md](streaming.md#ts-20261014-100715).

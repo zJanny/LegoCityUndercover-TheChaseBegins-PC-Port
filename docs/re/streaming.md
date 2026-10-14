@@ -52,3 +52,32 @@ All addresses are for the reference build. Evidence IDs are shortened. Replica: 
 - Section +0x20 (0x28-byte records with a room name and float triples, probably paths) and the +0x24 byte tuples.
 - Whether the three `lvl_05` and one `lvl_00` links are used, and the `root` record.
 - `Pregen/traffic` and `pedestrians` formats (not needed for streaming).
+
+
+<a id="ts-20261014-100715"></a>
+
+## 2026-10-14T10:07:15+02:00 — Why the Lower bound did not fire; the transition chain observed (Azahar oracle, no RPC, GDB `poke` and traps)
+
+All addresses are for the reference build. Evidence is from the stub's trap dumps (`artifacts/oracle/agentC-out/t*.txt`, not committed) and the REA-free `llvm-objdump --mcpu=arm1176jzf-s` listing of `game.arm.elf`; no REA session was used for this entry.
+
+**Correction of [the entry of 2026-10-13T22:27](#ts-20261013-222700) ("Oracle attempts without result")**
+- The bound did not fire because it is disabled, not because of the position. Section +0x24 records are kept in memory as loaded (0x28 bytes): `+0 name pointer, +4 pointer, +8 byte tuple, +0xc float, +0x10 centre, +0x1c half extents`. The byte at **+0xa is the enabled flag**. The script native `EnableBound <bound> <value>` (table entry 0x136, handler 0x1d0ce8) stores `value > 0` there. At gameplay-start (lvl_01, StoryProgress 1) it is 0 for `Police_Station_Transition_Lower` (record 0x086640ec), `Police_ExtToInt` (0x086633f4) and `Police_Station_Transition_Upper` (0x08664114). Found by scanning the heap for the centre floats.
+- Scripts (decoded with `Level::scripts`): `1-1_MissionHide` (hash 0x550174ce) sets all three to 0 and is called by `startup` for every chapter; `1-1_MissionEnd` (0x4ca19460) and `1-1_MissionSkip` (0x9eeea98; `Police_Station_Transition_Upper` only when `Entered_Police_Station >= 1`) set them to 1; `1-2_MissionSkip` (0xb4248656) sets `Police_ExtToInt` to 1. `startup` calls `1-1_MissionStart` at StoryProgress 1 and `1-1_MissionSkip` from StoryProgress 2 on. So the entry to the station is first possible after mission 1-1.
+- Poking the byte to 1 (`poke 0x086640f6 01`) and placing the player inside the bound (x 905.2..909.3, y 16.2..20.2, z 1113.8..1117.8; world and local translation poked) made the trigger fire: the first call of `WarningDialogBox` (handler 0x2700d4, table entry 0x10a) came 34 updates later, from the script executor (lr 0x2342c0). That is script `Police_ExtToInt` (hash 0x2a5fbbbf). Evidence: traps t1, t9.
+
+**WarningDialogBox (handler 0x2700d4)**
+- First call: opens the dialog (0x20ffe8, 0x25d26c), sets the byte at 0x5163e8+0x38 and blocks (returns 0). Later call: when the byte is set it clears it and stores the integer at `[[0x375f00]+0x28]` as float into the script variable (`DIALOG_RETURNCODE`) and continues. With button A held, the value read at 0x527254+0x28 was 2 (script branch `?! DIALOG_RETURNCODE == 2` = enter the station). The button for 1 was not probed.
+
+**Transition execution observed (run from the poked state, A pressed once)**
+- Stops in order: `0x303480` (lr 0x1098c0), `0x2e3cc4` (lr 0x3035d4), `0x2e3a9c` (lr 0x3035e0), `0x223878` (lr 0x3035ec), `0x21ac70` (lr 0x3035f8), all inside one game update; a second and a third call of 0x223878 came from 0x1c3aec and 0x189d34 during the loading. 8 updates after the dialog was answered. Afterwards the player node was at (-1.14, 1.43, 15.75) in lvl_00 (first run: (-2.011, 1.431, 14.801)).
+- 0x303480 is slot +8 of the global object 0x5937e4 (vtable 0x3639a0; slots +0 0x30398c, +8 0x303480, +0x28 0x3038a0, +0x2c 0x3037e8). The main loop (0x1098bc) calls `[[[r4]+0xc]+8]` slot +8 of the current mode, so 0x303480 is that object's enter/run, not a function called by the script. `[0x37758c]` points to the same object; its +0x28 held the destination entity (0x0851f43c) in the runs; `0x1c47e8` ends in slot +0x28 or +0x2c of that object with r1 = the scenechange entity.
+- The scene array (0x085a9310) elements did not change in the 8 updates read before and after (same nine pointers).
+
+**Scenechange entity handler 0x1c47e8 (disassembly, per update, three entities)**
+- It resolves a bound record by hash (`0x20c1a8` of the data at entity+0x7c, the `SceneChangeBound`), copies the record centre (+0x10) into a matrix, writes it to the node `[entity+0x3c]` (0x24c118), and later requires the record's enabled byte (+0xa) and a containment test (0x22f650) before calling the manager slot. So the bound's enable byte gates the scenechange too, and the bound centre is used as a position.
+
+**Unknowns**
+- Order: in the run that ended in lvl_00 the `SceneChange` native (0x1b262c, then 0x26344c) was NOT hit before 0x303480. In another run from the same poked state (dialog answered, player walked by `AIMove`) the native was hit 141 updates later and 0x303480 did not follow within 30 more updates. What requests the mode switch in the first case (the scenechange update 0x1c47e8 seeing the player in the enabled bound, or the dialog answer) is not found. Runs were not repeatable update for update: the same command sequence gave the dialog first call at 34 updates in one run and at 125 in another.
+- Whether the dialog return value 1 re-arms as the script says.
+- The meaning of the bound tuple bytes at +8, +9, +0xb.
+- How the destination scene index (entity+0xd) and `initialposition` are used: not traced (TRANS-2).

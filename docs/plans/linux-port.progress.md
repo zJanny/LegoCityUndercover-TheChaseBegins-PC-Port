@@ -124,7 +124,7 @@ Read this section, CLAUDE.md (incl. "Goal and faithfulness" and "Feature files")
 
 **Priorities (critical path):**
 1. Script execution: doors and other scripted objects (frozen today), NPC animation, then mission flow: [script-system](features/script-system.md), [doors](features/doors.md), [level-objects](features/level-objects.md), [animation-characters](features/animation-characters.md).
-2. World streaming and level switches: WSTREAM-1 (rule that picks loaded rooms), TRANS-1 (police entry bound, trap 0x303480): [world-streaming](features/world-streaming.md), [level-transitions](features/level-transitions.md).
+2. World streaming and level switches: WSTREAM-1 (rule that picks loaded rooms), TRANS-7 (who requests the switch): [world-streaming](features/world-streaming.md), [level-transitions](features/level-transitions.md).
 3. Rendering part 2: RENDER-1 fragment lights (break at 0x12d884), RENDER-4 indoor oracle state, reflections: [rendering](features/rendering.md).
 4. Player completeness: slide exit and the landing after a slide, the other `0x203d18` states: [player-movement](features/player-movement.md).
 5. Front-end remainder (existing slots, Continue, loading screen scene): [front-end](features/front-end.md), [saves-options](features/saves-options.md).
@@ -265,3 +265,4 @@ One line per session: timestamp, what was worked on, how far it got, link to the
 - 2026-10-14T09:50:11+02:00 — Agent B: RENDER-4 closed (lobby compared), CAMERA-6 cause found (record pose camera 0x298cd8, not CameraRotFixedSet; not implemented, needs CAMERA-3), DOOR-7 fixed in code (per-leaf instances, not oracle-verified), RENDER-6 classified (Checker1 quad) → [camera](features/camera.md), [doors](features/doors.md), [rendering](features/rendering.md).
 - 2026-10-14T10:00:14+02:00 — Agent D: links from features to docs/re now carry #ts- anchors (130 entry anchors, 193 links); tools/check_doc_links.py and CTest doc-links added → [viewer-tools](features/viewer-tools.md)
 - 2026-10-14T10:03:32+02:00 — Lead: TOOLS-5 closed, the user confirmed that the #ts- entry anchors work in the Forgejo web view → [viewer-tools](features/viewer-tools.md).
+- 2026-10-14T10:07:15+02:00 — Agent C: TRANS-1 closed (Lower bound disabled by mission state; switch chain trapped in the oracle with a poked bound), TRANS-7 opened → [level-transitions](features/level-transitions.md)
