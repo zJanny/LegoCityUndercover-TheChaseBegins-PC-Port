@@ -57,7 +57,7 @@ IN_PROGRESS, updated 2026-10-14T19:00:00+02:00. Script text: the tip panel, the 
 - [ ] HUD-22 — Remaining text screens: ShowTally, ShowBossHearts, ShowRaceStart, ShowPortraitOverVehicle (their layouts and storyboards) and the fade of the dialogue background (the flag byte 0x51a2bd has no reader found). blocks: SCRIPT-66, HUD-S9. evidence: [script-text.md §2026-10-14T18:57](../../re/script-text.md#ts-20261014-185739).
 - [ ] HUD-24 — The heading box's one pixel per side and the draw-state parameter 10 / 7 of 0x229128 (stored through 0x254d90). evidence: [script-text.md §2026-10-14T16:51](../../re/script-text.md#ts-20261014-165143).
 - [ ] HUD-25 — ShowCharacterIntro also sets the HUD's "Portrait" image to the character (0x1cc8a4); the port only shows the dialogue box with the name (HUD-S1 relates). evidence: [script-text.md §2026-10-14T18:57](../../re/script-text.md#ts-20261014-185739).
-- [ ] HUD-26 — Compare InformationBox, ShowIntroText and ShowCharacterIntro with the oracle: a state in front of the Auburn barrier and at the start of missions 1-2 and 1-4 is needed. blocks: HUD-S14. evidence: [script-text.md §2026-10-14T18:57](../../re/script-text.md#ts-20261014-185739).
+- [ ] HUD-26 — Compare InformationBox, ShowIntroText and ShowCharacterIntro with the oracle: states `info-barrier` and `mission-1-2-start` exist ([oracle-states.md §2026-10-14T19:17](../../re/oracle-states.md#ts-20261014-191730)); a state at the start of mission 1-4 (ShowCharacterIntro) is still missing. blocks: HUD-S14. evidence: [script-text.md §2026-10-14T18:57](../../re/script-text.md#ts-20261014-185739).
 
 ## 6. Findings summary
 
