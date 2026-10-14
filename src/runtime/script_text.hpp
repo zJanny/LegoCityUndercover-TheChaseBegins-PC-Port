@@ -42,6 +42,10 @@ constexpr float kDialogueDefaultSeconds = 4.0f;
 constexpr std::uint32_t kTipColour = 0xffffad4a;
 // Fade measured on the oracle: the draw alpha (float at 0x51a224 + 0xb0) steps by 0.2 per game update in and out.
 constexpr float kFadeStep = 0.2f;
+// Dialogue draw code 0x1cc550: alpha rises by dt * 5.0 (literal 0x1cc878) per update up to 1.0; in state 3 the alpha is the
+// remaining fraction of the fade-out time +0x18 = 0.25 s (0x235e2c). The writer of the tip's alpha is not found (SCRIPT-70).
+constexpr float kDialogueFadeInRate = 5.0f;
+constexpr float kDialogueFadeOutSeconds = 0.25f;
 
 struct TimedText {
     bool active = false;
@@ -52,6 +56,7 @@ struct TimedText {
     float elapsed = 0;
     float alpha = 0;
     bool fadingOut = false;
+    float fadeOutElapsed = 0;
 };
 
 class ScriptTextState {
@@ -78,6 +83,7 @@ public:
 private:
     static void start(TimedText& text, std::uint32_t key, float seconds);
     static void step(TimedText& text, float dt);
+    static void stepDialogue(TimedText& text, float dt);
 
     TimedText tip_, dialogue_;
     bool dialogueBackground_ = false;

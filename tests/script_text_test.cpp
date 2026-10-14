@@ -8,6 +8,7 @@
 #include "assets/assets.hpp"
 #include "runtime/level_start.hpp"
 #include "runtime/script_runner.hpp"
+#include <cmath>
 #include <filesystem>
 #include <iostream>
 #include <stdexcept>
@@ -59,6 +60,15 @@ void synthetic() {
     require(!text.tip().active, "tip over after 1.5 s plus five fade updates");
     for (int i = 0; i < 200 && text.dialogue().active; ++i) runner.update(1.0f / 30);
     require(!text.dialogue().active, "dialogue over");
+
+    runtime::ScriptTextState fade;
+    fade.showDialogue(1, 0, "", 1.0f);
+    fade.update(0.04f);
+    require(std::fabs(fade.dialogue().alpha - 0.2f) < 1e-5f, "dialogue alpha rises by dt * 5.0 (0x1cc878, code of 0x1cc550)");
+    for (int i = 0; i < 40 && !fade.dialogue().fadingOut; ++i) fade.update(0.04f);
+    require(fade.dialogue().fadingOut && fade.dialogue().alpha == 1.0f, "dialogue reaches 1.0 and holds");
+    fade.update(0.125f);
+    require(std::fabs(fade.dialogue().alpha - 0.5f) < 1e-5f, "dialogue fade-out is linear over 0.25 s (+0x18, 0x235e2c)");
 
     assets::Level zero;
     add(zero, "z", {{"ShowTipTextTimed", {"1", "0"}}});

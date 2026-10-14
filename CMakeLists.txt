@@ -158,6 +158,12 @@ if(BUILD_TESTING)
     add_test(NAME frontend-real-data COMMAND frontend-real-test
       "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv" "${CHASE_ROMFS_DIR}/cutscenes")
     set_tests_properties(frontend-real-data PROPERTIES SKIP_RETURN_CODE 77)
+    add_executable(script-text-pages-real-test tests/script_text_pages_real_test.cpp)
+    target_link_libraries(script-text-pages-real-test PRIVATE chase_frontend)
+    target_compile_options(script-text-pages-real-test PRIVATE -Wall -Wextra -Wpedantic)
+    add_test(NAME script-text-pages-real-data COMMAND script-text-pages-real-test
+      "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
+    set_tests_properties(script-text-pages-real-data PROPERTIES SKIP_RETURN_CODE 77)
     add_executable(hud-real-test tests/hud_real_test.cpp)
     target_link_libraries(hud-real-test PRIVATE chase_frontend)
     target_compile_options(hud-real-test PRIVATE -Wall -Wextra -Wpedantic)

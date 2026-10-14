@@ -57,6 +57,7 @@ void ScriptTextState::start(TimedText& text, std::uint32_t key, float seconds) {
     text.duration = seconds == 0.0f ? kTipZeroDurationSeconds : seconds;
     text.elapsed = 0;
     text.fadingOut = false;
+    text.fadeOutElapsed = 0;
 }
 
 void ScriptTextState::showTip(std::uint32_t key, float seconds) {
@@ -89,9 +90,22 @@ void ScriptTextState::step(TimedText& text, float dt) {
     if (text.elapsed >= text.duration) text.fadingOut = true;
 }
 
+void ScriptTextState::stepDialogue(TimedText& text, float dt) {
+    if (!text.active) return;
+    text.elapsed += dt;
+    if (text.fadingOut) {
+        text.fadeOutElapsed += dt;
+        text.alpha = std::max(0.0f, 1.0f - text.fadeOutElapsed / kDialogueFadeOutSeconds);
+        if (text.alpha <= 0) text.active = false;
+        return;
+    }
+    text.alpha = std::min(1.0f, text.alpha + dt * kDialogueFadeInRate);
+    if (text.elapsed >= text.duration) text.fadingOut = true;
+}
+
 void ScriptTextState::update(float dt) {
     step(tip_, dt);
-    step(dialogue_, dt);
+    stepDialogue(dialogue_, dt);
 }
 
 }

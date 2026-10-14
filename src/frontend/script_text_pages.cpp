@@ -12,20 +12,30 @@ namespace chase::frontend {
 namespace {
 
 constexpr const char* kBoxTexture = "sprites/ui_dialog/ui_dialog_box.btga";
-constexpr int kBoxEdge = 16, kBoxMarginX = 8, kBoxMarginY = 4;
-// STAND-INS fitted to the oracle screenshots of the tips of mission 1-1 (bottom screen, 320x240).
-constexpr int kPanelX = 21, kPanelY = 72, kPanelWidth = 280, kPanelHeight = 96;
-constexpr float kInfoIconCentreX = 271, kInfoIconCentreY = 73, kInfoIconSize = 28;
-constexpr float kBadgeCentreX = 271, kBadgeCentreY = 168, kBadgeWidth = 62;
-constexpr float kTextCentreX = 160, kTextCentreY = 123.5f, kTextPitch = 17.0f;
-constexpr int kTextWrapWidth = 266, kIconSize = 16;
-constexpr Colour kTipTextColour{74.0f / 255.0f, 173.0f / 255.0f, 1.0f, 1.0f};
-// STAND-INS fitted to the dialogue box of the oracle screenshot (top screen, 400x240).
-constexpr int kDialogueX = 44, kDialogueY = 155, kDialogueWidth = 332, kDialogueHeight = 62;
+constexpr int kBoxEdge = 16;
+constexpr float kScreenCentreBottomX = 160, kScreenCentreTopX = 200;
+constexpr float kBoxMinHalfWidth = 120, kBoxMinHalfHeight = 20;
+constexpr float kTipCentreY = 120, kTipPadHeight = 16, kTipWrapWidth = 300;
+constexpr float kBadgeOffsetX = -52, kInfoIconOffsetX = -36, kInfoIconOffsetY = -43;
+constexpr float kDialogueCentreXOffset = 10, kDialogueBottomLine = 206, kDialoguePadWidth = 24, kDialogueWrapWidth = 280;
+// STAND-INS (HUD-S8) fitted to the oracle screenshots: glyph centre against the line box centre, line pitch, icon width.
+constexpr float kTipTextShiftFitted = 3.5f, kDialogueTextShiftFitted = 2.5f, kTextPitchFitted = 17.0f;
+constexpr int kIconSizeFitted = 16;
+// STAND-INS (HUD-S9) fitted: the portrait position follows from the same layout code but did not reproduce.
 constexpr float kPortraitCentreX = 36, kPortraitCentreY = 186, kPortraitSize = 56;
-constexpr float kDialogueTextCentreX = 210, kDialogueFirstLineY = 180, kDialoguePitch = 17.0f;
-constexpr int kDialogueWrapWidth = 290;
+constexpr Colour kTipTextColour{74.0f / 255.0f, 173.0f / 255.0f, 1.0f, 1.0f};
 constexpr Colour kDialogueTextColour{1.0f, 169.0f / 255.0f, 22.0f / 255.0f, 1.0f};
+
+int evenRounded(float value) {
+    int rounded = int(std::floor(value + 0.5f));
+    return rounded + (rounded & 1);
+}
+
+void drawFramedBox(Canvas& canvas, Resources& resources, float centreX, float centreY, float halfWidth, float halfHeight, Colour fade) {
+    const int innerHalfWidth = evenRounded(halfWidth), innerHalfHeight = evenRounded(halfHeight);
+    const int left = evenRounded(centreX) - innerHalfWidth - kBoxEdge, top = evenRounded(centreY) - innerHalfHeight - kBoxEdge;
+    canvas.drawNineSlice(resources.image(kBoxTexture), kBoxEdge, left, top, 2 * (innerHalfWidth + kBoxEdge), 2 * (innerHalfHeight + kBoxEdge), fade);
+}
 
 struct Word {
     std::string text;
@@ -71,15 +81,6 @@ void drawDialogueBackground(Canvas& bottom, Resources& resources) {
 
 void drawTipPage(Canvas& bottom, Resources& resources, const std::string& text, float alpha) {
     const Colour fade{1, 1, 1, alpha};
-    bottom.drawNineSlice(resources.image(kBoxTexture), kBoxEdge, kPanelX - kBoxMarginX, kPanelY - kBoxMarginY, kPanelWidth + 2 * kBoxMarginX, kPanelHeight + 2 * kBoxMarginY, fade);
-    const assets::Image& info = resources.image("sprites/ui_dialog/ui_dialog_infoicon.btga");
-    bottom.drawScaled(info, {0, 0, info.width, info.height}, kInfoIconCentreX - kInfoIconSize / 2, kInfoIconCentreY - kInfoIconSize / 2,
-                      kInfoIconSize, kInfoIconSize, fade);
-    const assets::Image& badge = resources.image("sprites/ui_dialog/ui_dialog_badge.btga");
-    const float badgeHeight = kBadgeWidth * float(badge.height) / float(badge.width);
-    bottom.drawScaled(badge, {0, 0, badge.width, badge.height}, kBadgeCentreX - kBadgeWidth / 2, kBadgeCentreY - badgeHeight / 2, kBadgeWidth,
-                      badgeHeight, fade);
-
     const BitmapFont& font = resources.font("frontendfont");
     const auto& extended = resources.extendedCharacters();
     const int space = textWidth(font, extended, "a a", 0) - textWidth(font, extended, "aa", 0);
@@ -91,33 +92,44 @@ void drawTipPage(Canvas& bottom, Resources& resources, const std::string& text, 
         Word word;
         word.text = text.substr(start, end - start);
         word.icon = buttonIconFile(word.text);
-        word.width = word.icon.empty() ? textWidth(font, extended, word.text, 0) : kIconSize;
+        word.width = word.icon.empty() ? textWidth(font, extended, word.text, 0) : kIconSizeFitted;
         words.push_back(word);
         start = end + 1;
     }
     std::vector<std::vector<Word>> lines(1);
-    int lineWidth = 0;
+    std::vector<int> lineWidths(1, 0);
     for (const Word& word : words) {
         const int added = lines.back().empty() ? word.width : space + word.width;
-        if (!lines.back().empty() && lineWidth + added > kTextWrapWidth) {
+        if (!lines.back().empty() && float(lineWidths.back() + added) > kTipWrapWidth) {
             lines.emplace_back();
-            lineWidth = 0;
+            lineWidths.push_back(0);
         }
-        lineWidth += lines.back().empty() ? word.width : space + word.width;
+        lineWidths.back() += lines.back().empty() ? word.width : space + word.width;
         lines.back().push_back(word);
     }
-    const float first = kTextCentreY - kTextPitch * float(lines.size() - 1) / 2;
+    const float widest = float(*std::max_element(lineWidths.begin(), lineWidths.end()));
+    const float halfWidth = std::max(kBoxMinHalfWidth, widest / 2);
+    const float halfHeight = std::max(kBoxMinHalfHeight, kTextPitchFitted * float(lines.size()) / 2);
+
+    drawFramedBox(bottom, resources, kScreenCentreBottomX, kTipCentreY, halfWidth, halfHeight + kTipPadHeight, fade);
+    const assets::Image& info = resources.image("sprites/ui_dialog/ui_dialog_infoicon.btga");
+    bottom.drawScaled(info, {0, 0, info.width, info.height}, kScreenCentreBottomX + halfWidth + kInfoIconOffsetX,
+                      kTipCentreY - halfHeight + kInfoIconOffsetY, float(info.width), float(info.height), fade);
+    const assets::Image& badge = resources.image("sprites/ui_dialog/ui_dialog_badge.btga");
+    bottom.drawScaled(badge, {0, 0, badge.width, badge.height}, kScreenCentreBottomX + halfWidth + kBadgeOffsetX, kTipCentreY + halfHeight,
+                      float(badge.width), float(badge.height), fade);
+
+    const float first = kTipCentreY + kTipTextShiftFitted - kTextPitchFitted * float(lines.size() - 1) / 2;
     for (std::size_t row = 0; row < lines.size(); ++row) {
-        int total = 0;
-        for (std::size_t i = 0; i < lines[row].size(); ++i) total += lines[row][i].width + (i ? space : 0);
-        int x = int(std::floor(kTextCentreX - total / 2.0f + 0.5f));
-        const float y = first + kTextPitch * float(row);
+        int x = int(std::floor(kScreenCentreBottomX - float(lineWidths[row]) / 2.0f + 0.5f));
+        const float y = first + kTextPitchFitted * float(row);
         for (std::size_t i = 0; i < lines[row].size(); ++i) {
             if (i) x += space;
             const Word& word = lines[row][i];
             if (!word.icon.empty()) {
                 const assets::Image& icon = resources.image(word.icon);
-                bottom.drawScaled(icon, {0, 0, icon.width, icon.height}, float(x), y - kIconSize / 2.0f, float(kIconSize), float(kIconSize), fade);
+                bottom.drawScaled(icon, {0, 0, icon.width, icon.height}, float(x), y - kIconSizeFitted / 2.0f, float(kIconSizeFitted),
+                                  float(kIconSizeFitted), fade);
             } else {
                 drawText(bottom, font, extended, word.text, float(x), y, Align::Left, withAlpha(kTipTextColour, alpha), 0, true);
             }
@@ -128,13 +140,19 @@ void drawTipPage(Canvas& bottom, Resources& resources, const std::string& text, 
 
 void drawDialogueBox(Canvas& top, Resources& resources, unsigned character, const std::string& text, float alpha) {
     const Colour fade{1, 1, 1, alpha};
-    top.drawNineSlice(resources.image(kBoxTexture), kBoxEdge, kDialogueX - kBoxMarginX, kDialogueY - kBoxMarginY, kDialogueWidth + 2 * kBoxMarginX, kDialogueHeight + 2 * kBoxMarginY, fade);
     const BitmapFont& font = resources.font("frontendfont");
     const auto& extended = resources.extendedCharacters();
-    const std::vector<std::string> lines = wrapText(font, extended, text, kDialogueWrapWidth, 0);
-    const float first = kDialogueFirstLineY + kDialoguePitch * (2 - float(std::min<std::size_t>(lines.size(), 2))) / 2;
+    const std::vector<std::string> lines = wrapText(font, extended, text, int(kDialogueWrapWidth), 0);
+    int widest = 0;
+    for (const std::string& line : lines) widest = std::max(widest, textWidth(font, extended, line, 0));
+    const float halfWidth = std::max(kBoxMinHalfWidth, float(widest) / 2);
+    const float halfHeight = std::max(kBoxMinHalfHeight, kTextPitchFitted * float(lines.size()) / 2);
+    const float centreX = kScreenCentreTopX + kDialogueCentreXOffset, centreY = kDialogueBottomLine - halfHeight;
+
+    drawFramedBox(top, resources, centreX, centreY, halfWidth + kDialoguePadWidth, halfHeight, fade);
+    const float first = centreY + kDialogueTextShiftFitted - kTextPitchFitted * float(lines.size() - 1) / 2;
     for (std::size_t i = 0; i < lines.size(); ++i)
-        drawText(top, font, extended, lines[i], kDialogueTextCentreX, first + kDialoguePitch * float(i), Align::Centre,
+        drawText(top, font, extended, lines[i], centreX, first + kTextPitchFitted * float(i), Align::Centre,
                  withAlpha(kDialogueTextColour, alpha), 0, true);
     const std::string portrait = dialoguePortraitName(resources, character);
     const std::string path = "sprites/portraits/" + portrait + ".bpng";

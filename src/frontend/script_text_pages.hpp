@@ -1,7 +1,7 @@
 #pragma once
 // Script text on screen (docs/re/script-text.md): the tip text panel of the bottom screen and the dialogue box of the
-// top screen. Every position and size is a STAND-IN (HUD-S8) fitted to oracle screenshots of mission 1-1; the drawing
-// code 0x15b518 / 0x1cc550 of the original is only read for its alpha and timing. No SDL dependency.
+// top screen. Box, icon and wrap geometry come from the original (0x15b518, 0x1cc550, 0x23c680, 0x23c780, 0x229128); the
+// line pitch, glyph centre shift and portrait position are fitted STAND-INS (HUD-S8). No SDL dependency.
 #include "frontend/canvas.hpp"
 #include "frontend/resources.hpp"
 #include <string>
