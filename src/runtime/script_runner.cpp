@@ -20,7 +20,8 @@ std::string lower(std::string text) {
 enum class Word {
     Unhandled, If, Else, ElseIf, EndIf, Assign, AssignArithmetic, CallScript, SpawnScript, Wait,
     EnableObject, EnableCollision, TriggerObject, EnableTrigger, EnableBound, GetGameComplete, IsLevelUnlocked, IsRedBrickExtraActive,
-    WarningDialogBox, FadeScreen, PositionObject, SceneChange
+    WarningDialogBox, FadeScreen, PositionObject, SceneChange,
+    KillScript, ObjectNative
 };
 
 struct ScriptFunction {
@@ -51,13 +52,14 @@ constexpr ScriptFunction kScriptFunctions[] = {
     {"fadescreen", Word::FadeScreen, true},
     {"positionobject", Word::PositionObject, false},
     {"scenechange", Word::SceneChange, false},
+    {"killscript", Word::KillScript, false},
 };
 
 Word wordOf(const std::string& function) {
     const std::string name = lower(function);
     for (const ScriptFunction& entry : kScriptFunctions)
         if (name == entry.name) return entry.word;
-    return Word::Unhandled;
+    return objectNativeKind(name) ? Word::ObjectNative : Word::Unhandled;
 }
 
 std::string unquoted(const std::string& text) {
@@ -123,12 +125,15 @@ ScriptFunctionSupport scriptFunctionSupport(const std::string& name) {
     const std::string key = lower(name);
     for (const ScriptFunction& entry : kScriptFunctions)
         if (key == entry.name) return entry.standIn ? ScriptFunctionSupport::StandIn : ScriptFunctionSupport::Implemented;
+    if (const auto kind = objectNativeKind(key))
+        return objectNativeIsStandIn(*kind) ? ScriptFunctionSupport::StandIn : ScriptFunctionSupport::Implemented;
     return ScriptFunctionSupport::None;
 }
 
 std::vector<std::string> handledScriptFunctions() {
     std::vector<std::string> names;
     for (const ScriptFunction& entry : kScriptFunctions) names.push_back(entry.name);
+    for (const std::string& name : objectNativeNames()) names.push_back(name);
     return names;
 }
 
@@ -330,6 +335,15 @@ ScriptRunner::Result ScriptRunner::native(ScriptThread& thread, const ScriptCall
     case Word::SceneChange:
         if (!args.empty()) sceneChanges_.push_back(args[0]);
         break;
+    case Word::KillScript:
+        if (!args.empty()) killScript(thread, args[0]);
+        break;
+    case Word::ObjectNative:
+        if (const auto kind = objectNativeKind(lower(call.function)); kind && !args.empty()) {
+            const bool needsValue = objectNativeTakesValue(*kind);
+            if (!needsValue || args.size() >= 2) objectNatives_.apply(*kind, lower(args[0]), needsValue ? read(args[1]) : 0.0f);
+        }
+        break;
     case Word::WarningDialogBox:
         if (!(thread.flags & kScriptBlocked)) {
             dialogOpen_ = true;
@@ -360,6 +374,13 @@ ScriptRunner::Result ScriptRunner::native(ScriptThread& thread, const ScriptCall
     default: break;
     }
     return Result::Continue;
+}
+
+void ScriptRunner::killScript(const ScriptThread& caller, const std::string& name) {
+    const LevelScript* script = find(name);
+    if (!script) return;
+    for (ScriptThread& thread : threads_)
+        if (&thread != &caller && thread.script == script) thread.pc = static_cast<std::uint16_t>(script->calls.size());
 }
 
 void ScriptRunner::answerDialog(int result) {

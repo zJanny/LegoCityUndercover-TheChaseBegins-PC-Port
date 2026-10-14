@@ -3,6 +3,7 @@
 // 0x169254 that the gameplay update 0x2e5158 calls for every resident scene, and the executor 0x234204 with the
 // script words, Wait 0x174604, CallScript / SpawnScript 0x1c3730 and the natives that have a handler. No SDL dependency.
 #include "assets/object_collision.hpp"
+#include "runtime/natives_objects.hpp"
 
 #include <cstdint>
 #include <list>
@@ -138,6 +139,9 @@ public:
     std::vector<std::string> takeSceneChanges();
     // The scenechange update 0x1c47e8 tests the player against the enabled bound of the object (0x22f650).
     bool playerInNamedBound(const std::string& name, const float player[3]) const;
+    // Flags and class messages written by the object natives (natives_objects.hpp).
+    const ObjectNativeState& objectNatives() const { return objectNatives_; }
+    std::vector<ObjectClassMessage> takeObjectClassMessages() { return objectNatives_.takeMessages(); }
     // Brightness of the screen set by FadeScreen: 1 normal, 0 black.
     float fadeLevel() const { return fadeLevel_; }
 
@@ -151,6 +155,7 @@ private:
     Result wait(ScriptThread& thread, const assets::ScriptCall& call);
     Result native(ScriptThread& thread, const assets::ScriptCall& call, int word);
     void finish(ScriptThread& thread);
+    void killScript(const ScriptThread& caller, const std::string& name);
     float read(const std::string& token) const;
     bool holds(const assets::ScriptCall& call) const;
     void assignArithmetic(const assets::ScriptCall& call);
@@ -181,6 +186,7 @@ private:
     int dialogResult_ = 0;
     std::vector<ScriptPlacement> placements_;
     std::vector<std::string> sceneChanges_;
+    ObjectNativeState objectNatives_;
     float fadeLevel_ = 1.0f, fadeStart_ = 1.0f, fadeTarget_ = 1.0f, fadeElapsed_ = 0;
 };
 
