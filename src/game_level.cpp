@@ -3,6 +3,7 @@
 #include "frontend/pages.hpp"
 #include "game_save.hpp"
 #include "runtime/follow_camera.hpp"
+#include "runtime/object_visibility.hpp"
 #include <SDL.h>
 #include <algorithm>
 #include <cmath>
@@ -111,6 +112,8 @@ LevelSession::LevelSession(const Shared& sharedState)
         if (scene.addModel(meshModelPath(placement.mesh), matrix)) {
             ++placed;
             placedInstances[placement.instance] = {instanceIndex, matrix};
+            placedSceneIndex.push_back(instanceIndex);
+            placedObjects.push_back(placement);
         } else {
             ++unresolved;
         }
@@ -222,6 +225,8 @@ void LevelSession::draw(GLuint program, int width, int height) {
     const Mat4 viewMatrix = chase::render::view(eye, viewYaw, viewPitch);
     Mat4 mvp = chase::render::multiply(
         perspective(fieldOfView, float(fe::kTopWidth) / float(fe::kScreenHeight), radius * 0.002f, radius * 20), viewMatrix);
+    const std::vector<bool> drawn = runtime::drawnPlacements(placedObjects, objectState);
+    for (std::size_t i = 0; i < drawn.size(); ++i) scene.setInstanceVisible(placedSceneIndex[i], drawn[i]);
     scene.draw(program, mvp);
     std::vector<StudSprite> sprites;
     for (const runtime::Stud& stud : studs.studs())

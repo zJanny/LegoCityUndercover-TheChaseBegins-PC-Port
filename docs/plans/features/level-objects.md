@@ -6,7 +6,7 @@ The objects a level places: how the class file supplies model and parameters, wh
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-13T21:29:01+0200. Objects are drawn standing at their level state; characters stand in place; nothing moves or reacts.
+IN_PROGRESS, updated 2026-10-14T15:05:41+02:00. Objects are drawn standing at their level state; characters stand in place; nothing moves or reacts.
 
 ## 3. Verified behaviour
 
@@ -17,12 +17,12 @@ IN_PROGRESS, updated 2026-10-13T21:29:01+0200. Objects are drawn standing at the
 ## 4. Stand-ins
 
 - LEVOBJ-S1 Characters show frame 0 of `class_generic/idle_minifig`, taken from the pedestrian and character-display code, not the animation the AI state would start.
-- LEVOBJ-S2 Everything else with a model is drawn standing still at its placement, including objects that may be hidden or inactive in the original (freeplay `FP_*`, ability props such as ziplines).
+- LEVOBJ-S2 Everything else with a model is drawn standing still at its placement; props are hidden while the start state disables them (EnableObject, build-it targets), but characters, sub-objects and per-class start visibility (`ShowOnObjectScan`, `ShowOnMap`) are not applied (LEVOBJ-12, LEVOBJ-13).
 - LEVOBJ-S3 `props/map_*` markers (mission waypoints, `Prop_Waypoint_*`) are filtered out by an observation-based class-name rule (five lie within 12 units of the player at the gameplay start and none appears in the oracle reference).
 
 ## 5. Open items
 
-- [ ] LEVOBJ-1 — Whether `drawableObjects` should skip objects the start state disables, per-class start visibility (`DisabledOnStartUp`, `ShowOnObjectScan`, `ShowOnMap`) and the effect of flags bit 2 (value 6 in the +0x14 table). evidence: [objects.md §2026-10-14T13:39](../../re/objects.md#ts-20261014-133957).
+- [x] LEVOBJ-1 — closed 2026-10-14: props the start state disables are not drawn (127 of 1198 in lvl_01), live with EnableObject; the rest is LEVOBJ-12 and LEVOBJ-13. evidence: [objects.md §2026-10-14T15:05](../../re/objects.md#ts-20261014-150541).
 - [ ] LEVOBJ-2 — Which animation an AI character plays at level start (the AI classes read many parameters and start animations through the role table `tablesanimations`); which `class_*` folder (police, robber, construction, farmer, fire, space, miner, female) a class selects was not traced. needs: ANIM-2. evidence: [objects.md §2026-10-13T16:34](../../re/objects.md#ts-20261013-163430).
 - [ ] LEVOBJ-3 — Objects that move, break or react (platforms, scripted objects, NPC walking, mission flow) are frozen at their level state. needs: SCRIPT-1. evidence: [scripts.md §2026-10-13T20:42](../../re/scripts.md#ts-20261013-204236).
 - [ ] LEVOBJ-4 — The 8 custom lineup characters (`CharacterEnum` 1..8 through 0x2372e0) and the 16 animals (`char_pig`, `char_cat`, `char_dog`, `char_shark`, `char_Crow`, `ride_pig`) are not drawn; the jetpack `AttachModel` placement (bone name hash unresolved, value `chest`) and `AttachRelative`. evidence: [objects.md §2026-10-13T16:34](../../re/objects.md#ts-20261013-163430).
@@ -31,10 +31,13 @@ IN_PROGRESS, updated 2026-10-13T21:29:01+0200. Objects are drawn standing at the
 - [ ] LEVOBJ-7 — Vehicles, animals and the other classes without a recovered constructor are not created (shared with COLL-2).
 - [ ] LEVOBJ-8 — Objects inside class files (sub-objects such as `SBVehicleDropConsole`, `Barrier01`, `Gem`) are not instantiated, so the class `startup` scripts that enable or disable them have no effect. blocks: SCRIPT-52, SCRIPT-S14. evidence: [scene-start.md §2026-10-14T14:27](../../re/scene-start.md#ts-20261014-142739).
 
-- [ ] LEVOBJ-11 — At the police entrance (`dcam-police-dialog`, port update 60 of `Police_ExtToInt`) the port draws a large pale disc under the player that the oracle does not show; which object it is and why the original hides it is unknown (maybe LEVOBJ-1). evidence: lead review of agent L's comparison picture, 2026-10-14.
+- [x] LEVOBJ-11 — closed 2026-10-14: the disc was `Police_Plaque_Floor`, disabled at the start in the original (flag bit 0, node hidden by EnableObject 0x2428c0); the port now hides disabled props. Test `police-entrance-no-disc`. evidence: [objects.md §2026-10-14T15:05](../../re/objects.md#ts-20261014-150541).
+- [ ] LEVOBJ-12 — Disabled characters and the sub-objects of disabled objects are still drawn (only placed props follow the disabled state). evidence: [objects.md §2026-10-14T15:05](../../re/objects.md#ts-20261014-150541).
+- [ ] LEVOBJ-13 — Per-class start visibility (`DisabledOnStartUp` of non-stud classes, `ShowOnObjectScan`, `ShowOnMap`) and the effect of flags bit 2 (value 6 in the +0x14 table) are not applied. evidence: [objects.md §2026-10-14T13:39](../../re/objects.md#ts-20261014-133957).
 
 ## 6. Findings summary
 
+- Hidden props (EnableObject, flag bit 0, node hidden) and the police entrance disc: [objects.md §2026-10-14T15:05](../../re/objects.md#ts-20261014-150541).
 - Object census, parameter slots, class files (+0x10/+0x14) and the model lookup: [objects.md §2026-10-13T15:39](../../re/objects.md#ts-20261013-153915).
 - Characters: body, head, textures, starting pose, custom characters, animation class: [objects.md §2026-10-13T16:34](../../re/objects.md#ts-20261013-163430).
 - Studs are pickup sprites, not models: [objects.md §2026-10-13T17:09](../../re/objects.md#ts-20261013-170941).
@@ -43,4 +46,5 @@ IN_PROGRESS, updated 2026-10-13T21:29:01+0200. Objects are drawn standing at the
 ## 7. Code and tests
 
 - `objectPlacements`, `drawableObjects` (`DrawableObjects::characters`), `LevelParam::flags`, `Level::classParams` in `src/assets/level.cpp`; rig code `src/render/character.*`; `chase-game`, `chase-viewer`.
-- CTest: `assets-core`, `assets-real-data`, `game-real-smoke`, `viewer-real-smoke`.
+- `drawnPlacements` in `src/runtime/object_visibility.*`, `Scene::setInstanceVisible`.
+- CTest: `assets-core`, `assets-real-data`, `game-real-smoke`, `viewer-real-smoke`, `runtime-core`, `level-start-real-data`, `police-entrance-shot` + `police-entrance-no-disc`.

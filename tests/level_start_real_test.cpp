@@ -2,6 +2,7 @@
 // gameplay-start (Azahar oracle, docs/re/scripts.md). Needs the extracted RomFS; exits with 77 (skipped) when it is missing.
 #include "assets/assets.hpp"
 #include "runtime/level_start.hpp"
+#include "runtime/object_visibility.hpp"
 #include "runtime/scene_start.hpp"
 #include <algorithm>
 #include <filesystem>
@@ -94,6 +95,28 @@ int main(int argc, char** argv) {
         // Provenance: an exploration script (Python, same control words) disabled 226 names through the startup script alone;
         // the total of the script and the revealer links is the value this test recorded from the C++ implementation.
         require(state.disabled.size() == 249, "disabled instance count: " + std::to_string(state.disabled.size()));
+
+        // Provenance: LEVOBJ-11. The pale disc at the police entrance was the placement Police_Plaque_Floor
+        // (props/prop_respawnabledestructible, the Prop_PolicePlaque model lying on the ground); the original hides it at
+        // the start (entity flag bit 0 in the oracle grid read, EnableObject 0x2428c0 hides the scene node; the oracle picture
+        // dcam-oracle-2500ms shows no disc). GrappleGun is hidden the same way; the wall plaque Police_Plaque is drawn.
+        {
+            const chase::assets::DrawableObjects drawable = chase::assets::drawableObjects(archive, level);
+            const std::vector<bool> drawn = chase::runtime::drawnPlacements(drawable.objects, state);
+            std::size_t hidden = 0;
+            bool floorFound = false, wallDrawn = false, grappleFound = false;
+            for (std::size_t i = 0; i < drawn.size(); ++i) {
+                hidden += drawn[i] ? 0 : 1;
+                const std::string& name = drawable.objects[i].instance;
+                if (name == "Police_Plaque_Floor") floorFound = true, require(!drawn[i], "Police_Plaque_Floor is drawn");
+                if (name == "GrappleGun") grappleFound = true, require(!drawn[i], "GrappleGun is drawn");
+                if (name == "Police_Plaque") wallDrawn = drawn[i];
+            }
+            require(floorFound && grappleFound && wallDrawn, "Police plaque placements changed");
+            std::cout << "level-start: " << hidden << " of " << drawn.size() << " drawable objects hidden at the start\n";
+            // The count is the value recorded from the C++ implementation (the disabled set is pinned against the oracle above).
+            require(hidden == 127, "hidden drawable object count: " + std::to_string(hidden));
+        }
 
         chase::assets::PlacedObjectState runState = chase::runtime::levelInitialState(level, chase::assets::archiveClassLookup(archive));
         chase::runtime::ScriptRunner runner(level, runState);

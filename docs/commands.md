@@ -68,6 +68,7 @@ Single C++ tests, with `ctest --test-dir build -R <name>`:
 | `debug-metrics-core` | [Debug overlay](debug-overlay.md) values on synthetic input: frame-time window, `/proc/self/status` fixture, CPU percent, overlay lines |
 | `debug-text-core` | Debug overlay font and panel raster |
 | `debug-overlay-off`, `debug-overlay-on`, `debug-overlay-area` | Two offscreen screenshots without and with `--debug-overlay`; the third checks that they differ only in the top-left panel area. Registered only if `artifacts/romfs` existed at configure time |
+| `police-entrance-shot`, `police-entrance-no-disc` | An offscreen screenshot at the police entrance (script `Police_ExtToInt`) and a check that no pale blue-grey disc lies under the player. Registered only if `artifacts/romfs` existed at configure time |
 | `game-option-debug-overlay-value` | `--debug-overlay` takes no value |
 | `input-sdl-smoke` | Runs with `SDL_VIDEODRIVER=dummy` |
 | `assets-core` | Asset runtime, synthetic fixtures |

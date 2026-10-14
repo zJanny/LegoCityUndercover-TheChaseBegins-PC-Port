@@ -180,7 +180,7 @@ Scene::Scene(FuseArchive& archive, std::vector<std::string> exclude) : archive_(
 void Scene::addGeometry(const std::string& key, const ModelPart& part) {
     LoadedModel out;
     out.parts.push_back(upload(part, out));
-    instances_.push_back({&models_.emplace(key, std::move(out)).first->second, identity()});
+    instances_.push_back({&models_.emplace(key, std::move(out)).first->second, identity(), true});
 }
 
 bool Scene::addModel(const std::string& path, const Mat4& transform,
@@ -221,7 +221,7 @@ bool Scene::addModel(const std::string& path, const Mat4& transform,
         }
         loaded = models_.emplace(cacheKey, std::move(out)).first;
     }
-    instances_.push_back({&loaded->second, transform});
+    instances_.push_back({&loaded->second, transform, true});
     return true;
 }
 
@@ -343,6 +343,7 @@ void Scene::draw(GLuint program, const Mat4& viewProjection) const {
     const bool culling = glIsEnabled(GL_CULL_FACE);
     for (int pass = 0; pass < 2; ++pass) {
         for (const auto& instance : instances_) {
+            if (!instance.visible) continue;
             Mat4 m = multiply(viewProjection, instance.transform);
             glUniformMatrix4fv(mvp, 1, GL_FALSE, m.data());
             for (const auto& part : instance.model->parts) {

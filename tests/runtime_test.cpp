@@ -2,6 +2,7 @@
 // and read from the running game.
 #include "runtime/collision.hpp"
 #include "runtime/follow_camera.hpp"
+#include "runtime/object_visibility.hpp"
 #include "runtime/pad.hpp"
 #include "runtime/player_intent.hpp"
 #include "runtime/player_locomotion.hpp"
@@ -541,6 +542,17 @@ int main() {
             require(near(jump.walk, 0.8f * kCharacterSpeeds.walk) && near(jump.run, 0.8f * kCharacterSpeeds.run) &&
                         jump.sprintScale == kCharacterSpeeds.sprintScale,
                     "horizontal speed after take-off is 0.8 of the ground speed");
+        }
+        {
+            chase::assets::Placement shown, hidden;
+            shown.instance = "Police_Plaque";
+            hidden.instance = "Police_Plaque_Floor";
+            chase::assets::PlacedObjectState state;
+            state.disabled.insert("police_plaque_floor");
+            const std::vector<bool> drawn = drawnPlacements({shown, hidden}, state);
+            require(drawn.size() == 2 && drawn[0] && !drawn[1], "a disabled object is not drawn, an enabled one is");
+            state.disabled.erase("police_plaque_floor");
+            require(drawnPlacements({hidden}, state)[0], "EnableObject 1 draws the object again");
         }
     } catch (const std::exception& e) {
         std::cerr << "FAIL: " << e.what() << '\n';

@@ -30,6 +30,7 @@ IN_PROGRESS, updated 2026-10-14T09:50:11+02:00. Combiner setups of all 16122 shi
 - [ ] RENDER-3 Fog (0x1292fc caller, 0x3760fc), shadows (0x37796c), material colour pulse, draw sorting.
 - [x] RENDER-4 Closed 2026-10-14: the lobby compared with the oracle (lightmap surfaces match within 1 colour level on the stair wall, floor about 8 percent lighter; props darker = RENDER-1/5; camera differs, see CAMERA-6). evidence: [materials.md §2026-10-14T09:50](../../re/materials.md#ts-20261014-095011).
 - [ ] RENDER-5 Characters are lighter and more saturated in the original (directional light missing).
+- [ ] RENDER-9 — The player's shadow (dark patch beside the feet in the oracle picture of the police entrance) is not drawn; part of RENDER-3 (shadows 0x37796c). The pale disc seen there earlier was an object (LEVOBJ-11, closed). evidence: [objects.md §2026-10-14T15:05](../../re/objects.md#ts-20261014-150541).
 - [ ] RENDER-6 — The white quad above the police-station entrance is the `Checker1.tga` part of `room1.bfnmdl` (also room3, room5), seen far away outside; not RENDER-S3. Unknown whether the original draws it. Not fixed (related: WSTREAM-3). evidence: [materials.md §2026-10-14T13:40](../../re/materials.md#ts-20261014-134000).
 
 ## 6. Findings summary

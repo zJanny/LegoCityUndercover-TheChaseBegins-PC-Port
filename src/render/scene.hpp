@@ -62,6 +62,7 @@ public:
     void draw(GLuint program, const Mat4& viewProjection) const;
     std::size_t triangles() const;
     void setTransform(std::size_t instance, const Mat4& transform) { instances_.at(instance).transform = transform; }
+    void setInstanceVisible(std::size_t instance, bool visible) { instances_.at(instance).visible = visible; }
     std::size_t missingTextures() const { return missing_; }
     std::size_t instances() const { return instances_.size(); }
 
@@ -95,6 +96,7 @@ private:
     struct Instance {
         const LoadedModel* model;
         Mat4 transform;
+        bool visible = true;
     };
     const TextureInfo& texture(const std::string& name, const std::string& modelDir);
     DrawPart upload(const assets::ModelPart& part, LoadedModel& model);

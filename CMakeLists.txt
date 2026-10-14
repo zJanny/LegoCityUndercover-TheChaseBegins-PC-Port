@@ -43,7 +43,7 @@ target_link_libraries(chase_runtime PUBLIC chase_assets)
 target_include_directories(chase_runtime PUBLIC src)
 target_compile_options(chase_runtime PRIVATE -Wall -Wextra -Wpedantic -ffp-contract=off)
 set_target_properties(chase_runtime PROPERTIES POSITION_INDEPENDENT_CODE ON)
-target_sources(chase_runtime PRIVATE src/runtime/studs.cpp src/runtime/sound_events.cpp src/runtime/music.cpp src/runtime/level_start.cpp src/runtime/script_runner.cpp src/runtime/natives_objects.cpp src/runtime/natives_progress.cpp src/runtime/door.cpp src/runtime/scene_change.cpp src/runtime/room_streaming.cpp src/runtime/scene_start.cpp src/runtime/dcam.cpp src/runtime/debug_metrics.cpp)
+target_sources(chase_runtime PRIVATE src/runtime/studs.cpp src/runtime/sound_events.cpp src/runtime/music.cpp src/runtime/level_start.cpp src/runtime/script_runner.cpp src/runtime/natives_objects.cpp src/runtime/natives_progress.cpp src/runtime/door.cpp src/runtime/scene_change.cpp src/runtime/room_streaming.cpp src/runtime/scene_start.cpp src/runtime/dcam.cpp src/runtime/debug_metrics.cpp src/runtime/object_visibility.cpp)
 # Front end (boot to the slot list): CPU-drawn screens, no SDL dependency.
 add_library(chase_frontend src/frontend/script.cpp src/frontend/frontend.cpp src/frontend/pages.cpp src/frontend/canvas.cpp src/frontend/resources.cpp src/frontend/layout.cpp src/frontend/flow.cpp src/frontend/hud.cpp src/frontend/minimap.cpp)
 target_link_libraries(chase_frontend PUBLIC chase_assets chase_runtime)
@@ -473,6 +473,15 @@ if(BUILD_TESTING)
       PASS_REGULAR_EXPRESSION "saved debug-overlay-on.bmp after [0-9]+ update")
     add_test(NAME debug-overlay-area COMMAND python3 "${CMAKE_SOURCE_DIR}/tools/check_debug_overlay_shots.py" debug-overlay-off.bmp debug-overlay-on.bmp)
     set_tests_properties(debug-overlay-area PROPERTIES FIXTURES_REQUIRED "debug_overlay_off;debug_overlay_on")
+    add_test(NAME police-entrance-shot COMMAND chase-game
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl
+      --call-script 1-1_MissionSkip --call-script Police_ExtToInt --start "904.2 16.58 1112.4" --facing 45.45
+      --script "0 0 5;0 0 1 A;0 0 60" --screenshot police-entrance.bmp)
+    set_tests_properties(police-entrance-shot PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" FIXTURES_SETUP police_entrance
+      PASS_REGULAR_EXPRESSION "saved police-entrance.bmp after [0-9]+ update")
+    add_test(NAME police-entrance-no-disc COMMAND python3 "${CMAKE_SOURCE_DIR}/tools/check_police_entrance_shot.py" police-entrance.bmp)
+    set_tests_properties(police-entrance-no-disc PROPERTIES FIXTURES_REQUIRED police_entrance)
     add_test(NAME game-real-smoke COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --gameplay --screenshot game-smoke.bmp --frames 2)

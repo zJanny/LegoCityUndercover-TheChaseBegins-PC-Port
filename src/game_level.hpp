@@ -100,6 +100,8 @@ private:
     std::optional<game_player::PlayerRig> player;
     chase::assets::ClassLookup classOf;
     chase::assets::PlacedObjectState objectState;
+    std::vector<std::size_t> placedSceneIndex;
+    std::vector<chase::assets::Placement> placedObjects;
     chase::runtime::ScriptRunner levelScripts;
     chase::runtime::SceneStart sceneStart;
     chase::runtime::WorldLevelEntry currentWorldLevel;
