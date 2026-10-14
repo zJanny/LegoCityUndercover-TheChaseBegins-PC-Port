@@ -4,8 +4,8 @@
 
 - Overall: IN_PROGRESS
 - Current Phase: IMPLEMENT
-- Current Step: S4e runtime core — M4 reached (level objects, characters, studs, falling/jumping, object collision); front end and sound merged; open items moved to docs/plans/features/
-- Last Updated: 2026-10-13T21:51:17+02:00
+- Current Step: S4e runtime core — M4 reached; police-station exit and entry at run time, save-aware start and camera blend merged (round H/I/J/K)
+- Last Updated: 2026-10-14T12:16:46+02:00
 - Branch: main
 - Target Branch: Not specified
 - Requested Scope: PLAN, IMPLEMENT, TEST; start reverse engineering and native port
@@ -126,19 +126,16 @@ Read this section, CLAUDE.md (incl. "Goal and faithfulness" and "Feature files")
 
 **State:** M1 runtime loop, M2 locomotion, M3 walkable level, M4 level objects, characters, studs, falling, jumping and object collision are on main; the front end (boot to the first level) and the sound hooks are merged. `chase-game` is a development runtime, not the game ([docs/status.md](../status.md)).
 
-**Priorities (critical path), updated 2026-10-14:**
-1. Leave and enter the police station in `chase-game` (user goal): TRANS-2 destination and TRANS-9 exit path (oracle trace of the lobby exit `SceneChange_LobbyToCherryTree` from the state `police-station`), then TRANS-3 level switch at run time with the loading page and its A prompt (TRANS-8, FE-3) and the `SceneChange` native: [level-transitions](features/level-transitions.md).
-2. CAMERA-8 (user report): the record pose camera snaps; blend and pose in motion (CAMERA-3): [camera](features/camera.md).
-3. Save-aware start (SAVE-1) so `chase-game` starts with game progress instead of `--call-script 1-1_MissionSkip`: [saves-options](features/saves-options.md).
-4. Script natives of the entry script and missions (SCRIPT-7: `StartDCam` / `WaitForDCam`, `AIMove`, `PositionPlayer`), events and class scripts (SCRIPT-6): [script-system](features/script-system.md).
-5. World streaming WSTREAM-1 (writer of the room state byte, ranking 0x279ab0), then WSTREAM-3: [world-streaming](features/world-streaming.md).
-6. Rendering part 2 (RENDER-1 fragment lights, reflections), player completeness (PLAYER-1, PLAYER-6), oracle tool TOOLS-6: [rendering](features/rendering.md), [player-movement](features/player-movement.md), [viewer-tools](features/viewer-tools.md).
+**Priorities (critical path), updated 2026-10-14T12:16:46+02:00:**
+1. Script natives of the entry script and the missions (SCRIPT-7: `StartDCam` / `WaitForDCam`, `AIMove`, `PositionPlayer`, `SnapCamera`; TRANS-5), events and class scripts (SCRIPT-6), towards the mission flow SCRIPT-1: [script-system](features/script-system.md).
+2. Save fidelity: saved object states (SAVE-6) and where Continue starts (SAVE-7): [saves-options](features/saves-options.md).
+3. World streaming WSTREAM-1 (writer of the room state byte, ranking 0x279ab0), then WSTREAM-3, then the master level as scenes (TRANS-3): [world-streaming](features/world-streaming.md), [level-transitions](features/level-transitions.md).
+4. Station polish: loading page A edge and key art (TRANS-8, TRANS-S3), camera after a switch and the follow seed (TRANS-12, CAMERA-9), lobby map (HUD-11): [level-transitions](features/level-transitions.md), [camera](features/camera.md), [hud-ui](features/hud-ui.md).
+5. Rendering part 2 (RENDER-1 fragment lights, reflections), player completeness (PLAYER-1, PLAYER-6): [rendering](features/rendering.md), [player-movement](features/player-movement.md).
 
-Oracle states (artifacts/oracle/states, see docs/re/oracle.md): `gameplay-start` (new game, Old 3DS), `police-station` and `street-after-1-1` (user saves after mission 1-1, New 3DS), `street-at-entrance` (agent, unmodified), `trans-poked-*` (poked, measuring aids only). Hard-to-reach states: ask the user (CLAUDE.md "Runtime oracle").
+Oracle states (artifacts/oracle/states, see docs/re/oracle.md): `gameplay-start` (new game, Old 3DS), `police-station` and `street-after-1-1` (user saves after mission 1-1, New 3DS), `street-at-entrance`, `station-at-exit`, `station-exit-loadingpage`, `camera-lobby-walk` (agents, unmodified, New 3DS), `trans-poked-*` (poked, measuring aids only). The real save of the user (read-only copy): `artifacts/oracle/agentJ-saves/savegame.dat`. Hard-to-reach states: ask the user (CLAUDE.md "Runtime oracle").
 
-**Order of this round (user, 2026-10-14):** TOOLS-6 (oracle `savestate` keeps the New 3DS flag) first, by agent K; then agents H (station exit and entry, holds `--rpc`), I (CAMERA-8 blend) and J (SAVE-1 save-aware start).
-
-**Workflow notes:** oracle route and states: `tools/azahar_oracle.py` with `--display xvfb --state gameplay-start --renderer opengl --rpc --rpc-input`, route from boot `tools/oracle/to-gameplay.txt`; only one agent may use `--rpc` at a time. The lead delegates to subagents in worktrees (at most 3 in parallel, user), every brief names the CLAUDE.md rules, reviews each result against CLAUDE.md, rebuilds and tests, squash-merges one commit per branch (`git merge --squash`), removes the worktree and branch (`git worktree remove -f -f`, `git branch -D`), then `graphify update .` and verifies. Resume a branch with `git log main..<branch>`.
+**Workflow notes:** oracle route and states: `tools/azahar_oracle.py` with `--display xvfb --state gameplay-start --renderer opengl --rpc --rpc-input`, route from boot `tools/oracle/to-gameplay.txt`; only one agent may use `--rpc` at a time. The lead delegates to subagents in worktrees (at most 3 in parallel, user), every brief names the CLAUDE.md rules, reviews each result against CLAUDE.md, rebuilds and tests, squash-merges one commit per branch (`git merge --squash`), removes the worktree and branch (`git worktree remove -f -f`, `git branch -D`), then `graphify update .` and verifies. Worktree agents link `artifacts/` into their worktree (CLAUDE.md "Subagents"). Resume a branch with `git log main..<branch>`.
 
 ## Session Log
 
@@ -288,3 +285,4 @@ One line per session: timestamp, what was worked on, how far it got, link to the
 - 2026-10-14T11:53:13+02:00 — Agent J: SAVE-1 save-aware start (chase-game --save/--slot, level state blocks, unlock bits, oracle bound compare on street-after-1-1) → [saves-options](features/saves-options.md)
 - 2026-10-14T12:04:04+02:00 — Agent H: lobby exit traced from the unmodified station state (walk-in bound, destination points, loading page), `chase-game` switches between the police station and the street at run time → [level-transitions](features/level-transitions.md)
 - 2026-10-14T12:09:00+02:00 — Agent I: CAMERA-8 closed; record pose camera fades between commands and filters the pose per update, lobby walks replay to 6e-6, street hand-over traced → [camera](features/camera.md)
+- 2026-10-14T12:16:46+02:00 — Lead: round K/J/H/I merged (TOOLS-6, SAVE-1, station exit and entry at run time, CAMERA-8); merge reviews fixed one-sided dependencies (SAVE-S2, TRANS-S5) and corrected a wrong lobby-walk note in docs/re/camera.md; game.cpp level loop reindented; Next Action priorities updated → [level-transitions](features/level-transitions.md).
