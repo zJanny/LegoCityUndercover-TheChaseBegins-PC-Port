@@ -95,7 +95,7 @@ The original runs in Azahar as a measuring reference. Read `docs/re/oracle.md` b
 ## Workflows
 
 **Git**
-- Commit small, focused, verified units; review the diff first.
+- Commit small, focused, verified units; review the diff first. Each agent ends its own commit messages with its own `Co-Authored-By:` line; no session links.
 - Merge agent branches into main only with `tools/merge_agent.py` (`prepare`, `check`, `finish`): it squashes, refuses game-derived and binary files, regenerates the README section, builds warning-free and runs all tests. The lead reviews the diff and findings in between; the script never pushes.
 - Never push without explicit user authorization; permission does not carry over between requests.
 - Run `python3 tools/progress_report.py --update-readme README.md` before the final commit of a branch and after every merge (CTest `progress-readme`); on a conflict in that section regenerate it. Measures: `docs/progress.md`.

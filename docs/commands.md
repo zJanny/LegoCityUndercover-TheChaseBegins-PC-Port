@@ -58,7 +58,7 @@ python3 tools/merge_agent.py check                   # run the checks again afte
 python3 tools/merge_agent.py finish BRANCH -m FILE   # checks, commit with the message in FILE, remove worktree and branch
 ```
 
-The checks stop on game files, screenshots or other binary files, broken doc links, build warnings and failing tests. They also refresh the README progress table. The script never pushes.
+The checks stop on game files, screenshots or other binary files, broken doc links, build warnings and failing tests. They also refresh the README progress table. The message file must end with the merging agent's own `Co-Authored-By:` line. The script never pushes.
 
 Single C++ tests, with `ctest --test-dir build -R <name>`:
 

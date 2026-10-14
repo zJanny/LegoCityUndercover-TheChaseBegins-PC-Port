@@ -50,6 +50,14 @@ class MergeAgentTest(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("must be on main, not 'other'", result.stderr)
 
+    def test_message_without_co_author_is_refused(self) -> None:
+        git(self.repo, "branch", "agent")
+        message = self.repo / "message.txt"
+        message.write_text("Subject\n\nBody\n")
+        result = run_script(self.repo, "finish", "agent", "-m", str(message))
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("has no Co-Authored-By line", result.stderr)
+
     def test_game_derived_files_are_refused(self) -> None:
         git(self.repo, "checkout", "-q", "-b", "agent")
         (self.repo / "shot.bmp").write_bytes(b"BM\x00\x01")

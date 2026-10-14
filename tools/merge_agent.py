@@ -16,10 +16,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-TRAILER = (
-    "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n"
-    "Claude-Session: https://claude.ai/code/session_01NCqAGJNfJ4YNtAckpDHk7s"
-)
 FORBIDDEN = re.compile(
     r"(^|/)(artifacts|build[^/]*|graphify-out)(/|$)|\.(cci|3ds|cst|cia|bin|bmp|png|jpe?g|wav|bcstm|bcwav|fib|blvl|bfnmdl|dat)$",
     re.IGNORECASE,
@@ -149,8 +145,8 @@ def finish(root: Path, branch: str, message_file: Path) -> None:
     message = message_file.read_text().rstrip()
     if not message:
         raise MergeError(f"message file '{message_file}' is empty")
-    if "Claude-Session:" not in message:
-        message += "\n\n" + TRAILER
+    if not re.search(r"^Co-Authored-By: .+ <.+>$", message, re.MULTILINE):
+        raise MergeError(f"message file '{message_file}' has no Co-Authored-By line; the merging agent adds its own")
     run_checks(root)
     subprocess.run(["git", "commit", "-q", "-F", "-"], cwd=root, input=message + "\n", text=True, check=True)
     worktree = worktree_of(root, branch)
