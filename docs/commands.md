@@ -50,6 +50,16 @@ python3 tools/progress_report.py --check README.md          # fails when the REA
 
 Needs the built `build/libchase_assets_c.so` and the extracted game data. See [Progress](progress.md).
 
+## Merging an agent branch
+
+```sh
+python3 tools/merge_agent.py prepare BRANCH          # squash the branch into main's staging area, then run the checks
+python3 tools/merge_agent.py check                   # run the checks again after fixing conflicts or review edits
+python3 tools/merge_agent.py finish BRANCH -m FILE   # checks, commit with the message in FILE, remove worktree and branch
+```
+
+The checks stop on game files, screenshots or other binary files, broken doc links, build warnings and failing tests. They also refresh the README progress table. The script never pushes.
+
 Single C++ tests, with `ctest --test-dir build -R <name>`:
 
 | Name | Notes |
