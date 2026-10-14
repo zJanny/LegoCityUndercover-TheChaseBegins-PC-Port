@@ -126,12 +126,14 @@ Read this section, CLAUDE.md (incl. "Goal and faithfulness" and "Feature files")
 
 **State:** M1 runtime loop, M2 locomotion, M3 walkable level, M4 level objects, characters, studs, falling, jumping and object collision are on main; the front end (boot to the first level) and the sound hooks are merged. `chase-game` is a development runtime, not the game ([docs/status.md](../status.md)).
 
-**Priorities (critical path), updated 2026-10-14T16:54:21+02:00:**
-1. Mission flow: AI movement and path finding (SCRIPT-79) and the rest of the AI (SCRIPT-42), the other AI trigger events (SCRIPT-75), `PositionPlayer` (SCRIPT-59), readers for recorded values (SCRIPT-56, SCRIPT-64), towards SCRIPT-1: [script-system](features/script-system.md), [script-system-natives](features/script-system-natives.md), [script-system-triggers](features/script-system-triggers.md); arrow and map natives (SCRIPT-72, SCRIPT-73): [script-system-hud-natives](features/script-system-hud-natives.md).
-2. HUD fidelity: the other text screens and the dialogue background fade (HUD-22), heading start and box width (HUD-23), text layout inside the panels (HUD-21), map marker and waypoint animation (HUD-16, HUD-17): [hud-ui](features/hud-ui.md).
-3. Saves: slot list Continue (FE-11, then FE-1), Continue at later levels (SAVE-13), level state refresh and live inputs of a save (SAVE-14, SAVE-15): [saves-options](features/saves-options.md), [front-end](features/front-end.md).
-4. Streaming and transitions: loader cost (WSTREAM-30), characters and studs of unloaded rooms (WSTREAM-14), the master level as scenes (TRANS-3): [world-streaming](features/world-streaming.md), [level-transitions](features/level-transitions.md).
-5. Camera, objects, rendering: follow reset (CAMERA-10, CAMERA-9), disabled characters and sub-objects (LEVOBJ-12), vehicles (LEVOBJ-7, SCRIPT-43), player shadow (RENDER-9), fragment lights (RENDER-1), fog oracle comparison and sky (RENDER-30, RENDER-36): [camera](features/camera.md), [level-objects](features/level-objects.md), [rendering](features/rendering.md).
+**Goal of the current rounds (user, 2026-10-14):** mission 1-1 playable from the new-game start to `1-1_MissionEnd`; its steps and blockers: [objective-hud.md §2026-10-14T21:23](../re/objective-hud.md#ts-20261014-212357).
+
+**Priorities (critical path), updated 2026-10-14T22:23:50+02:00:**
+1. Mission start and steps: the waypoint class that starts `TriggerScript` scripts (SCRIPT-110), class-fired `ObjectTriggered` events (SCRIPT-111), carrying (LEVOBJ-14), build-its (LEVOBJ-15), `SetPartyCharacter` (SCRIPT-35): [script-system-missions](features/script-system-missions.md), [level-objects](features/level-objects.md).
+2. Cutscenes in the game: DCamCutScene* and PlayCutscene (SCRIPT-29, MOVIE-2): [movies-cutscenes](features/movies-cutscenes.md).
+3. Vehicles: survey first, then enter, drive, vehicle waypoints, jump out (SCRIPT-43, SCRIPT-36, SCRIPT-76, COLL-2, LEVOBJ-7): [script-system-natives](features/script-system-natives.md).
+4. Characters and AI in mission 1-1: NPC animation (ANIM-2), AI update states (SCRIPT-104), music natives (SCRIPT-33): [animation-characters](features/animation-characters.md), [script-system-ai-navigation](features/script-system-ai-navigation.md).
+5. After mission 1-1: HUD fidelity, saves (FE-30, SAVE-14, SAVE-15), streaming and transitions (WSTREAM-30, TRANS-3), camera and rendering (CAMERA-10, RENDER-1, RENDER-9).
 
 Oracle states (artifacts/oracle/states, see docs/re/oracle.md): `gameplay-start` (new game, Old 3DS), `police-station` and `street-after-1-1` (user saves after mission 1-1, New 3DS), `street-at-entrance`, `station-at-exit`, `station-exit-loadingpage`, `camera-lobby-walk`, `dcam-police-dialog`, `agent-doughnut-title` (agents, unmodified, New 3DS), `savecont-slotlist-user` (slot list with the user's save, Old 3DS), `trans-poked-*` (poked, measuring aids only). The real save of the user (read-only copy): `artifacts/oracle/agentJ-saves/savegame.dat`. Hard-to-reach states: ask the user (CLAUDE.md "Runtime oracle").
 
