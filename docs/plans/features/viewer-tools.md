@@ -29,12 +29,9 @@ IN_PROGRESS, updated 2026-10-14T14:37:06+02:00. All tools run; the oracle suppor
 
 - [ ] TOOLS-3 — The function total of the progress report is an estimate (7575 call and pointer targets against 8086 procedures in REA); an exact list needs a stored REA procedure list. evidence: [arm-executable.md §2026-10-13T22:17](../../re/arm-executable.md#ts-20261013-221729).
 - [ ] TOOLS-4 — "Object types with behaviour" is decided per class from the class file (props with a `CollisionBound`, the prop family, doors, studs); it does not check that an instance produced a shape, and characters and vehicles count as none until they get rules (COLL-2).
-- [x] TOOLS-5 — Closed 2026-10-14: Forgejo's web view jumps to the explicit `<a id="ts-...">` entry anchors (checked by the user).
-- [x] TOOLS-7 — Closed 2026-10-14: `chase-viewer`, `chase-soundtest`, `chase-fmv`, `chase-frontshot`, `chase-hudshot`, `chase-savecheck`, `chase-tabledump` and `chase-input-lab` check every option with `src/strict_parse.hpp` (bad numbers, unknown options and missing values stop with `<tool>: <option>: <reason>: '<text>'`); one rejection test per tool, with no game data needed.
 - [ ] TOOLS-10 — The debug overlay shows no GPU time and no draw calls (the loaded-room count `ROOMS LOADED` was added 2026-10-14). evidence: [debug-overlay.md](../../debug-overlay.md).
 - [ ] TOOLS-11 — The debug overlay is drawn only in levels, not on the front-end screens (`src/game_front.hpp` loop). evidence: [debug-overlay.md](../../debug-overlay.md).
 - [ ] TOOLS-13 — CTest `debug-overlay-area` failed once in a full parallel `ctest` run (agent HD, 2026-10-14) and passed alone; the cause (test order, timing of the panel width, shared screenshot files) is not found.
-- [x] TOOLS-6 — Closed 2026-10-14: the oracle records the console mode in `session.json` and in every saved `NAME.json` (`"new_3ds"`), and `loadstate` refuses a state from the other mode with a clear message; checked by unit tests and a real New 3DS save and reload. [oracle-states.md §2026-10-14T11:30](../../re/oracle-states.md#ts-20261014-113036).
 
 ## 6. Findings summary
 

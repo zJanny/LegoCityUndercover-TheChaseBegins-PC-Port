@@ -24,7 +24,6 @@ IN_PROGRESS, updated 2026-10-13T21:46:46+0200. Studs spin, are picked up, fly to
 ## 5. Open items
 
 - [ ] STUD-1 — Missing: multiplier mask, magnet, group enabling, dropped studs. evidence: [studs.md §2026-10-13T17:09](../../re/studs.md#ts-20261013-170941).
-- [x] STUD-2 — The on-screen counter and studs flying to it. Done 2026-10-13 (needs HUD-1, done). evidence: [studs.md §2026-10-13T21:35](../../re/studs.md#ts-20261013-213500), [hud.md](../../re/hud.md).
 - [ ] STUD-3 — Blue and purple collect sound (id 63, coinblue) has no recorded oracle pickup. Silver (id 64) is replayed from a recorded pickup (`audio-real-data`, trace `stud.csv`); gold (id 64) has no recording either. see AUDIO-5. evidence: [audio.md §2026-10-13T17:54](../../re/audio.md#ts-20261013-175424).
 - [ ] STUD-4 — How a group is enabled (0x28a2cc sequencer, `EnableStudsByGroup` and `SpawnStuds` script functions, `StudSpawn*` parameters, meaning of `GroupOrder` +0x33). needs: SCRIPT-1. evidence: [studs.md §2026-10-13T17:09](../../re/studs.md#ts-20261013-170941).
 - [ ] STUD-9 — `EnableStudsByGroup(group, value)` only records the request (the sequencer entry 0x58f710 and its per-frame update 0x28a2cc are not ported; `value` is 6 or 8 in lvl_01); hidden studs stay hidden. blocks: SCRIPT-64. evidence: [script-natives-progress.md §2026-10-14T14:41](../../re/script-natives-progress.md#ts-20261014-144155).

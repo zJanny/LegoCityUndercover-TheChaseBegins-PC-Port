@@ -1,0 +1,9 @@
+# Closed items of saves-options
+
+Done items of [saves-options.md](saves-options.md), moved here by tools/check_doc_links.py --fix in the order they were closed. IDs are never reused.
+
+- [x] SAVE-1 — closed 2026-10-14: `chase-game --save FILE --slot N` loads a slot through `chase_save_progress` and gives the script runner the saved variables of the level (StoryProgress, ...) and the unlock / complete state; replaces `--call-script 1-1_MissionSkip` for progress. evidence: [save-format-state.md §2026-10-14T11:53](../../re/save-format-state.md#ts-20261014-115300).
+- [x] SAVE-6 — closed 2026-10-14: object records decoded (`objectRecords`), classes with callbacks identified, end bit set shown to be never used (mode word always 2), 4-byte records applied as TASKS_COMPLETE. evidence: [save-format-state.md §2026-10-14T13:41](../../re/save-format-state.md#ts-20261014-134146)
+- [x] SAVE-7 — closed 2026-10-14: Continue level = slot byte +6; no position field; `which` 1 is never written, so the StoryProgress override 0x192e14 never fires. evidence: [save-format-state.md §2026-10-14T13:41](../../re/save-format-state.md#ts-20261014-134146)
+- [x] SAVE-9 — closed 2026-10-14: Continue loads the level of slot byte +6 (0 becomes 2) through 0x2e7ce8, 0x2d5874 and 0x20a4d4 and spawns at Player1Start; `chase-game --save` does the same; oracle level 1 matches. evidence: [save-format-state.md §2026-10-14T15:19](../../re/save-format-state.md#ts-20261014-151903).
+- [x] SAVE-10 — closed 2026-10-14: the save request chain and the slot commit are transcribed (`commitSlot`, `writeSlotSummary`) and wired as `SaveRequestWriter` with `--save-out`. Remaining parts: SAVE-14, SAVE-15. evidence: [save-format-state.md §2026-10-14T16:34](../../re/save-format-state.md#ts-20261014-163403).

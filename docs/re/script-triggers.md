@@ -1,6 +1,6 @@
 # Script triggers: check functions per type
 
-What each trigger type checks in the trigger pass 0x1746c0, and which types the mission 1 levels use. The record layout, the queue 0x21a560 and the first transcription are in [scripts.md](scripts.md); the start rule of the records is in [scene-start.md](scene-start.md). Items: [script-system.md](../plans/features/script-system.md).
+What each trigger type checks in the trigger pass 0x1746c0, and which types the mission 1 levels use. The record layout, the queue 0x21a560 and the first transcription are in [scripts.md](scripts.md); the start rule of the records is in [scene-start.md](scene-start.md). Items: [script-system-triggers.md](../plans/features/script-system-triggers.md).
 
 <a id="ts-20261014-155345"></a>
 

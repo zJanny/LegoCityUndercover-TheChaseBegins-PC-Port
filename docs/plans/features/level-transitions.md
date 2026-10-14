@@ -10,9 +10,9 @@ IN_PROGRESS, updated 2026-10-14T12:05:00+02:00. `chase-game` switches between th
 
 ## 3. Verified behaviour
 
-- `SceneChange <bound>` (handler 0x1b262c) finds a `scenechange` object (type 78) by bound hash and sends it message 0xff; manager slot +0x2c (0x3037e8) stores the request (`[[entity+0x7c]+0x14]` at +0x28) and pushes the loading page (mode 6); after the A press the execution 0x303480 unloads and reloads the world when the destination world level is not loaded and only moves the player when it is. evidence: [streaming.md §2026-10-13T22:27](../../re/streaming.md#ts-20261013-222700), [§2026-10-14T11:13](../../re/streaming.md#ts-20261014-111312).
+- `SceneChange <bound>` (handler 0x1b262c) finds a `scenechange` object (type 78) by bound hash and sends it message 0xff; manager slot +0x2c (0x3037e8) stores the request (`[[entity+0x7c]+0x14]` at +0x28) and pushes the loading page (mode 6); after the A press the execution 0x303480 unloads and reloads the world when the destination world level is not loaded and only moves the player when it is. evidence: [streaming.md §2026-10-13T22:27](../../re/streaming.md#ts-20261013-222700), [§2026-10-14T11:13](../../re/streaming-transitions.md#ts-20261014-111312).
 - Entry order in the original (unmodified state): trigger `PlayerOnFootBoundEntered` on `Police_Station_Transition_Lower`, `WarningDialogBox`, 3 s wait, `SceneChange`, loading page, second A, switch 4 updates later; the dialog answer does not request the switch. The master level lists 35 `scenechange` objects with qualified bounds (`WorldLevel_01_CherryTreeHills.Police_ExtToInt`).
-- Exit in the original: no script. The master object `SceneChange_LobbyToCherryTree` fires from its own update 0x1c47e8 when the player is inside its enabled bound `Lobby_to_CherryTree` of lvl_00 (update 13 of the traced walk, z 20.156 inside, 19.673 outside), through manager slot +0x2c when the destination world level is not loaded (slot +0x28, 0x3038a0, without loading page, when it is). evidence: [streaming.md §2026-10-14T12:02](../../re/streaming.md#ts-20261014-120258).
+- Exit in the original: no script. The master object `SceneChange_LobbyToCherryTree` fires from its own update 0x1c47e8 when the player is inside its enabled bound `Lobby_to_CherryTree` of lvl_00 (update 13 of the traced walk, z 20.156 inside, 19.673 outside), through manager slot +0x2c when the destination world level is not loaded (slot +0x28, 0x3038a0, without loading page, when it is). evidence: [streaming-transitions.md §2026-10-14T12:02](../../re/streaming-transitions.md#ts-20261014-120258).
 - Destination: the `SceneChangeTo` parameter (hash d2fb9421) is a 20-byte reference {world level hash, point hash, pointer, flags, scene index byte +0xd}; the player lands exactly on the `point` object, heading = its yaw, no world level offset: lobby to street (902.00848, 16.57730, 1111.12634) yaw 249.25; street to lobby (-1.11520, 2.09010, 15.70230) yaw 152.32, then it falls to y 1.43053. The second destination parameter (hash 0xccaaccdd) is not read. `scene-change-real-data`, `game-scene-change-exit`, `game-scene-change-entry`.
 - Loading page (oracle screenshot): key art on the top screen, black bottom screen with a blue line, badge and `Continue (A)` bottom right; the same in both directions. The A wait is in the generic menu widget (addresses in the streaming entry).
 - Event bindings (bound entered and others to scripts) are decoded and pinned (`streaming-real-data`).
@@ -27,11 +27,6 @@ IN_PROGRESS, updated 2026-10-14T12:05:00+02:00. `chase-game` switches between th
 
 ## 5. Open items
 
-- [x] TRANS-1 — closed 2026-10-14: cause of the silent bound and the trap chain recorded. Remaining question moved to TRANS-7.
-- [x] TRANS-7 — closed 2026-10-14: the `SceneChange` native requests the switch through the scenechange entity (slot +0x2c); `0x303480` runs after the loading-page A press. evidence: [streaming.md §2026-10-14T11:13](../../re/streaming.md#ts-20261014-111312).
-- [x] TRANS-4 — closed 2026-10-14: trigger dispatch runs in `chase-game` (`ScriptRunner::checkTriggers`, 0x1746c0). evidence: [scripts.md §2026-10-14T10:06](../../re/scripts.md#ts-20261014-100640).
-- [x] TRANS-2 — closed 2026-10-14: destination semantics and both landing positions pinned (see Verified behaviour). evidence: [streaming.md §2026-10-14T12:02](../../re/streaming.md#ts-20261014-120258). The qualification rule moved to TRANS-10.
-- [x] TRANS-9 — closed 2026-10-14: the scenechange update 0x1c47e8 is the walk-in path (enabled bound plus player inside, then slot +0x28 or +0x2c); the lobby exit uses it. evidence: [streaming.md §2026-10-14T12:02](../../re/streaming.md#ts-20261014-120258).
 - [ ] TRANS-3 — Master level in `chase-game`: load `lvl_the_city`, world levels as scenes (resident set, unload and reload as 0x303480), switch with fade and the generic loading screen. needs: SCRIPT-1, FE-3. blocks: SCRIPT-78.
 - [ ] TRANS-5 — Natives for the transition scripts still without handler: `PositionPlayer`, `SnapCamera`, `AIMove`, `StartDCam`, `WaitForDCam`, `AIEnable`, `DCamActive`, `CharSetAllowVehicleEntry`, `RelockChasePlainClothes`. needs: SCRIPT-1. evidence: [level-transitions.md §2026-10-14T13:39](../../re/level-transitions.md#ts-20261014-133958).
 - [ ] TRANS-8 — Loading page code: which input read gives the A edge, whether A counts before the load finishes, what the badge and line do while loading, the text key and the source of the top key art. blocks: TRANS-S3, TRANS-S4. needs: FE-3. evidence: [level-transitions.md §2026-10-14T13:39](../../re/level-transitions.md#ts-20261014-133958).
@@ -42,9 +37,9 @@ IN_PROGRESS, updated 2026-10-14T12:05:00+02:00. `chase-game` switches between th
 
 ## 6. Findings summary
 
-- [streaming.md §2026-10-14T12:02](../../re/streaming.md#ts-20261014-120258): lobby exit as walk-in, scenechange update 0x1c47e8, destination reference record, landing positions, loading page (enter, widget, screenshot measurements).
-- [streaming.md §2026-10-13T22:27](../../re/streaming.md#ts-20261013-222700) (level switch chain, event bindings), [§2026-10-14T11:13](../../re/streaming.md#ts-20261014-111312) (entry order, loading page, room states), [§2026-10-14T10:07](../../re/streaming.md#ts-20261014-100715) (bound enable byte, poked switch).
-- [scripts.md §2026-10-14T10:54](../../re/scripts.md#ts-20261014-105432) (WarningDialogBox results and look, user observation of the loading screen).
+- [streaming-transitions.md §2026-10-14T12:02](../../re/streaming-transitions.md#ts-20261014-120258): lobby exit as walk-in, scenechange update 0x1c47e8, destination reference record, landing positions, loading page (enter, widget, screenshot measurements).
+- [streaming.md §2026-10-13T22:27](../../re/streaming.md#ts-20261013-222700) (level switch chain, event bindings), [§2026-10-14T11:13](../../re/streaming-transitions.md#ts-20261014-111312) (entry order, loading page, room states), [§2026-10-14T10:07](../../re/streaming-transitions.md#ts-20261014-100715) (bound enable byte, poked switch).
+- [scripts-runtime.md §2026-10-14T10:54](../../re/scripts-runtime.md#ts-20261014-105432) (WarningDialogBox results and look, user observation of the loading screen).
 
 ## 7. Code and tests
 

@@ -2,6 +2,8 @@
 
 How the level's own scripts decide which placed objects are disabled when a level starts. Format of the level file: [levels.md](levels.md). Collision consumer: [collision.md](collision.md).
 
+Moved to [scripts-runtime.md](scripts-runtime.md): trigger records and bound switches, WarningDialogBox / PositionObject / FadeScreen, a live script thread.
+
 <a id="ts-20261013-204236"></a>
 
 ## 2026-10-13T20:42:36+02:00 — Script data, executor, EnableObject, the startup script and the revealer links (REA Ghidra 12.1.2, llvm-objdump, Azahar oracle port 24692 without RPC)
@@ -61,7 +63,7 @@ Unknowns
 
 ## 2026-10-14T09:52:52+02:00 — Per-update script runner, thread record, Wait, CallScript / SpawnScript, script starters and the trigger path (llvm-objdump, REA Ghidra 12.1.2, Azahar oracle port 24701 without RPC)
 
-Corrected by [scripts.md §2026-10-14T10:06](#ts-20261014-100640): trigger enable byte and bound bytes +0xa / +0xb
+Corrected by [scripts-runtime.md §2026-10-14T10:06](scripts-runtime.md#ts-20261014-100640): trigger enable byte and bound bytes +0xa / +0xb
 
 Replica: `ScriptRunner` (src/runtime/script_runner.cpp), `runLevelStartup` / `levelStartState` (src/runtime/level_start.cpp), hook in `chase-game` (src/game.cpp). Tests: `script-runner` (tests/script_runner_test.cpp, synthetic), `level-start-real-data`. REA evidence: ev_8cc8870b… (0x1746c0, 0x17acbc, 0x1ecc50, 0x2f67fc), ev_9d4fee32… (0x197c3c, 0x245258, 0x2b4a50, 0x1964dc), ev_f23162d2… (0x2388e4, 0x23c188, 0x234124, 0x224eb4), ev_b2f65ae3… (0x1cddf8), ev_27b1b3b4… (0x16babc, 0x15b888), ev_e8434d21… (0x23c41c, 0x23cee8, 0x28aef4), ev_d5b25508… (0x21a560, 0x201a54, 0x23cff4). The executor, Wait, CallScript and EnableTrigger were read with llvm-objdump (`--mattr=+vfp2` for the float code).
 
@@ -130,93 +132,3 @@ Unknowns
 - The runtime trigger record builder (where the enable byte +0 comes from), bound bytes +0xa / +0xb and EnableBound 0x1d0ce8, the box test 0x22f650, and why the PlayerOnFootBoundEntered walk above did not start `Police_ExtToInt`.
 - Order of the scene owners (+0x24) against `Level::objects`; thread pool size; the second runner caller 0x2d1d6c; the script argument slots (+0x18..) and how a script reads them.
 - Where in 0x2e5158 the runner sits relative to the player and camera updates (`chase-game` runs scripts after the doors).
-
-<a id="ts-20261014-100640"></a>
-
-## 2026-10-14T10:06:40+02:00 — Trigger records, bound switches, the bound test and the police entrance explained (REA Ghidra 12.1.2, llvm-objdump, Azahar oracle port 24701 without RPC)
-
-Corrected by [scene-start.md §2026-10-14T14:27](scene-start.md#ts-20261014-142739): triggers 79 to 82 and 141 and the three camera bounds that stayed on are explained by two scene-start rules
-Replica: `ScriptRunner::checkTriggers`, `EnableTrigger`, `EnableBound`, `setRoomLoaded` (src/runtime/script_runner.cpp); `LevelTrigger::nameHash`, `LevelBound` node / shape / enabled / active / room, `Level::boundMatrices` (src/assets/level.cpp). Tests: `script-runner` (synthetic), `level-start-real-data` (oracle values below). REA evidence: ev_45c3f2fb… (0x22f650, 0x26a20c, 0x18a89c), ev_5f5e3c50… (0x2c185c, 0x24255c, 0x257f14), ev_05c9f4b1… (0x1dd380, 0x23e798, 0x21b3fc), ev_3549f20e… (0x250810), ev_ae423cb4… (0x229a40), ev_47524e83… (0x173944), ev_3af9fd1a… (0x211e04). [Corrects scripts.md §2026-10-14T09:52:52](#ts-20261014-095252): the unknowns of the 09:52:52 entry about the trigger enable byte, bound bytes +0xa / +0xb, EnableBound, the box test and the police walk.
-
-### Records (oracle `read`, gameplay-start)
-
-- Level root owner 0x0870f6f0: +0x20 scene, +0x24 level data 0x08618720, +0x34 runtime trigger records 0x08eb22e0, +0x3c node 0x0870f790 with an identity world matrix (translation 0, 0, 0). Level data header: n18 314 scripts, n1c 241 triggers, n24 482 bounds; +0x18 scripts 0x08618a18, +0x24 bounds 0x08663354.
-- Runtime trigger record (0x20 bytes, one per file trigger, same order; 241 of 241 matched the file's script by table index): +0 enabled, +1 skip, +2 u16 index, +4 type, +8 owner object, +0xc owner (level root), +0x10 script, +0x14 setting (the bound for bound events), +0x1c inside at the last check. ObjectTriggered records keep skip 1 (never checked); bound records have skip 0 after their first check.
-- File trigger record +0 is the trigger's name hash (`Police_ExtToInt` = 0x2a5fbbbf); EnableTrigger's argument resolves through 0x1dd380: the first file trigger with that hash, then the runtime record at owner+0x34 + 0x20 * index. Not every trigger name equals its script name (`PlayerOnFootBoundEntered` → `Police_ExtToInt` has hash 0x713159aa).
-- File bound record (0x28): +0 name, +4 room name (optional block), +8 node index (0xff none), +9 shape, +0xa enabled, +0xb active, +0x10 centre, +0x1c half extents (radius for shapes 2, 4, 6). In lvl_01 every file record has +0xa = +0xb = 1. EnableBound 0x1d0ce8 writes +0xa = (value > 0); the bound argument resolves through 0x23e798 (case-insensitive name compare 0x25ad90, first match). Section +0x28 holds 0x40-byte matrices (98 in lvl_01, highest bound node 97).
-- Bound byte +0xb: the room setup 0x173944 sets it to 1 for every bound, then to 0 for each bound whose room name (+4) equals a room of the scene (room bound list +0x4c). Oracle: the 225 bounds with +0xb = 0 are exactly the bounds of rooms not loaded; the 257 with 1 are the bounds without a room plus those of Room 1, 2, 3, 7, 8, 9, 14, 15, 16, 17, 22, 23 (the loaded set of [streaming.md](streaming.md)).
-
-### Checks
-
-- 0x22f650(point, bound, level data): only when +0xa is set; p = point − centre; with a node index p is turned by the rows of the matrix at level data +0x28 + 0x40 * node (0x229a40, no translation); shape 2: |p| < r; shape 3: |x|, |y|, |z| below the half extents; shapes 4 and 6: sqrt(x² + z²) < r and |y| < half y.
-- Player1BoundEntered 0x2c185c and BoundEntered 0x28aef4 (through 0x201a54): point = player node translation (node+0x8c) minus the owner's translation, bound +0xa and +0xb both required; fire 0x21a560 on outside → inside when skip is 0; store inside, clear skip. BoundLeft 0x26a20c fires on inside → outside. PlayerOnFootBoundEntered 0x2ca6b8 is Player1BoundEntered while 0x24255c(player) is 0 (not in a vehicle: controller +0x6c is neither 0x11c nor 0x19b).
-- 0x21a560 also skips a trigger whose script already runs actively (0x18a89c: the first thread of that script with pc < count and flag bit 0 clear).
-
-### Oracle comparison
-
-- After the port's startup run with EnableTrigger and EnableBound (triggers start enabled), 236 of 241 trigger enable bytes and 479 of 482 bound +0xa bytes equal the oracle. Different: triggers 79 to 82 (`1-4_Run_Point_02..05`, AIMove / ObjectBoundEntered) and 141 (`DEBUG_Head_Robber_Chase_End`) are off in the original; bounds 266 (`CameraBound_Police_Helipad`), 271 and 272 (`CameraBound_VehicleDrop_01/02`) are off in the original. The port does not switch them off.
-- The police entrance: bound 87 `Police_Station_Transition_Lower` has +0xa = 0 at gameplay-start (bytes ff 04 00 01; the startup path disables it, the port gets the same 0). This is why the walk in the 09:52:52 entry did not start `Police_ExtToInt`; the PlayerOnFootBoundEntered trigger 204 itself is enabled (skip 0, inside 0).
-
-### Port behaviour
-
-- `checkTriggers` runs after every runner pass in `chase-game`: BoundEntered, Player1BoundEntered, PlayerOnFootBoundEntered and BoundLeft with the player position; ObjectTriggered / ObjectUntriggered are queued by TriggerObject. Queued triggers become threads after the checks (last queued first) and run from the next update. Every room counts as loaded in `chase-game` (it shows all rooms). Other events are listed once on the console and never fire.
-
-Unknowns
-- Where the trigger enable byte starts (the builder of the runtime records was not read; "enabled" fits 236 of 241) and what switches off the five triggers and three camera bounds above.
-- The object flag 0x100000 that forces an ObjectTriggered start (0x23cee8); the checks of ObjectBoundEntered, BoundInside / BoundOutside, AIMove, Character*, PlayerVehicle* and the other events.
-- Whether the trigger pass runs for the master scene's triggers too (0x23cff4 searches it; the port has no master level).
-
-<a id="ts-20261014-105432"></a>
-
-## 2026-10-14T10:54:32+02:00 — WarningDialogBox, PositionObject and FadeScreen (llvm-objdump, Azahar oracle port 24704 without RPC, user observation)
-
-Replica: `ScriptRunner` (WarningDialogBox, FadeScreen, PositionObject), `objectStart` (src/assets/level.cpp), `drawWarningDialog` / `drawBlackVeil` (src/frontend/pages.cpp), the hooks in `chase-game` (src/game.cpp). Tests: `script-runner` (synthetic), `script-dialog-real-data`, `game-script-dialog`. No REA session was used for this entry (llvm-objdump listing of `game.arm.elf`). Handler addresses come from the literal pools of the registration code (the name string follows the handler address, for example 0x1623c4: 0x2700d4 then "WarningDialogBox"): PositionObject 0x1d9e6c, PositionPlayer 0x1da0dc, FadeScreen 0x1a2e8c, WarningDialogBox 0x2700d4, SnapCamera 0x1a30fc, AIMove 0x171f7c, StartDCam 0x194fd8, WaitForDCam 0x1883ec, AIEnable 0x1881d4, DCamActive 0x1a2e48, CharSetAllowVehicleEntry 0x29ea3c, SceneChange 0x1b262c, RelockChasePlainClothes 0x2b4bac.
-
-Evidence source: the clean oracle state `street-after-1-1` (user's save after mission 1-1, New 3DS, nothing poked; walking into `Police_Station_Transition_Lower` opens the dialog) unless a line says otherwise. The earlier entry [streaming.md §2026-10-14T10:07](streaming.md#ts-20261014-100715) used a poked state; its "bound `Police_ExtToInt`" poke region (x 905.2..909.3, y 16.2..20.2, z 1113.8..1117.8) is the bound `Police_Station_Transition_Lower` (file record: centre 907.242 18.2292 1115.83, half 2.0466 2 2, node 255, shape 4), not the bound `Police_ExtToInt` (centre 920.92 12.2418 1116.23, half 3.3978 2 2, node 1, shape 4). The trigger `PlayerOnFootBoundEntered` on `Police_Station_Transition_Lower` starts the script `Police_ExtToInt`.
-
-**WarningDialogBox 0x2700d4 (disassembly, oracle)**
-- Arguments: one, the script variable that receives the result (`WarningDialogBox DIALOG_RETURNCODE`). It takes no text argument: the three text keys are immediates of the handler (0x27018c..0x270194): gametext 0xfd849176 "If you are on a mission, any progress will be lost.\nThe mission will reset when you return.", systemtext 0xd12f028b "OK", systemtext 0x994b0cc9 "Cancel" (lookup with `frontend::Resources`, English table).
-- Flow: early return 0 when the u16 at `[[[0x3772b8]+0x7c]+0x6c]` is 0x11a or 0x11b (state of the player entity data; the value was 2 while the dialog was open). Byte B = `0x5163e8+0x38`. B clear: when `0x1a142c` (byte `0x518c84+0x10`) is set return 0; else `0x20ffe8(M, keys)` (stores the three keys at M+0x2c..0x34, M = `[0x375f00]`, address 0x527254 in the oracle), `0x25d26c(M, 4, 0, 0)` (pushes mode 4, the dialog), B = 1, return 0. B set: B = 0, variable = float(int at M+0x28), return 1.
-- Oracle (street-after-1-1): while the dialog is open B (0x516420) is 1 and M+0x28 (0x52727c) is 0; the keys at 0x527280.. read fd849176, d12f028b, 994b0cc9. **A gives 2, B gives 1** (read at M+0x28 after the press; B is cleared 24 updates later by the script's next call). The script maps 2 to entering the station and 1 to `EnableTrigger Police_ExtToInt_SwitchOn 1` / `EnableTrigger Police_ExtToInt 0`. After the dialog is cancelled and the player leaves and re-enters the bound, the dialog opens again (re-arm confirmed).
-- The player reaches the final position one update after A: oracle reads at the update after the press: world (904.652, 16.577, 1113.197), then 0.11 per update towards `Enter_Police_Station_Position_End` (AIMove).
-- Look (oracle, X screenshot of the emulator window, `artifacts/oracle/agentE-out/dialog_oracle_top.png`, not committed): top screen over the level with the HUD; box x 52..347, y 126..217 (texture `sprites/ui_dialog/ui_dialog_box`, as the movie bubble, rounded border), body text orange (255, 169, 22), three centred lines at y 141, 158, 176 (line 2 and 3 follow the newline in the text key), button row at y 203: B icon at x 63 and "Cancel" from x 86, "OK" ending at x 316 and the A icon at x 333. `chase-game` draws it with these measurements (STAND-IN SCRIPT-S9); comparison picture `artifacts/oracle/agentE-out/dialog_compare_oracle_over_game.png` (oracle on top). The drawing code (mode 4) was not read.
-- Why the script waits although the handler returns 0 only once: mode 4 is pushed on top of the gameplay mode; the gameplay update 0x2e5158 (which runs the script runner) is not entered while it is on top, and the repeat call after the pop finds B set. This is an inference from the code (B set means the dialog was shown and the next call completes); the oracle trap that would show 0x169254 not being entered during the dialog was not obtained (emulator connection lost). `chase-game` therefore pauses the whole update while the dialog is open (STAND-IN SCRIPT-S9).
-
-**PositionObject 0x1d9e6c (disassembly, oracle)**
-- Resolves both arguments to entities (0x22dacc) and copies the transform of the target's node (0x250810 gives its matrix) to the object's node (0x24c118), then updates the entity (0x245048, 0x242b08). For the player (the entity at `[0x3772c0]`) it also stores the heading `atan2(m[+0x20], m[+0x28]) * 10430.378` as u16 at controller data +8 and +10, clears bits 0x14 of the byte at +0x315 and two floats at +0x2b4 / +0x2b8, and sends the player message 8 (0x244fc8). Characters of types 179, 183 and 243 take extra steps (0x22a1f4, 0x2429d0). A target of type 11 uses a stored matrix (0x213284). Not read: the other steps.
-- Oracle: after A the player node is at the placement of `Enter_Police_Station_Position_Lower` (904.652, 16.5773, 1113.2) and its forward vector is (0.713, 0, 0.701), yaw 45.5 deg = the placement's 45.4542. `chase-game` applies it to the player only (position, height, heading = `headingFromDegrees(orientation[1])`); other objects are reported as not applied.
-- The same call in `1-1_MissionStart` / `1-1_MissionEnd` (for example `PositionObject Player1 1-1_Chase_DD_MoveTo`) now moves the player in `chase-game` after the startup script, as in the original.
-
-**FadeScreen 0x1a2e8c (disassembly only)**
-- First call (flag bit 2 clear): r4 = (signed byte at `0x51a224+0x99`) != 0; argument 0 == 0 calls 0x2520e8 (tween from 1.0 by -1.0), else 0x252068 (from 0.0 by +1.0), both tail-calling 0x256a14 with duration 0.5 (immediate 0x3f000000) on the object 0x1166bc. Every call returns `!0x25207c()`, so it blocks until 0x25207c reports the fade done (it compares the tween value at 0x529e30+0x128 with its target). The script word argument is "0 - fade out, 1 - fade in" (scriptfns.txt). `chase-game`: a linear fade over 0.5 s with a black veil over both screens (STAND-IN SCRIPT-S10).
-
-**User observation, real game (2026-10-14, relayed by the lead)**: walking into the police-station door shows the WarningDialogBox prompt and A answers it. Then a loading screen appears, a blank screen with a "press A" prompt in the bottom-right corner, and it needs a second A before the station loads. Leaving the station shows only the loading-screen prompt. The loading-screen prompt is not part of WarningDialogBox; it belongs to the level switch (TRANS-8). Its code was not found.
-
-**Unknowns**
-- Mode 4 (dialog) drawing and input code, why `0x1a142c` can refuse the dialog, the rest of the state values 0x11a / 0x11b.
-- Whether the gameplay update really does not run during the dialog (SCRIPT-S9); the dialog's open and close animation.
-- PositionPlayer 0x1da0dc (not read beyond its entry), PositionObject for non-player objects, the player messages 8 and the cleared fields.
-- The tween 0x256a14 curve and the end test 0x25207c of FadeScreen; the byte at 0x51a224+0x99.
-- Whether the original's first player position at a new game is `Player1Start` or the placement by `1-1_MissionStart` (the port now follows the script).
-
-<a id="ts-20261014-111312"></a>
-
-## 2026-10-14T11:13:12+02:00 — A live script thread of the original: `Police_ExtToInt` (Azahar oracle New 3DS, GDB `memtrace` and `trap`, no RPC, no poke, unmodified state `street-at-entrance`)
-
-Sequence of events, trigger and switch request: [streaming.md §2026-10-14T11:13](streaming.md#ts-20261014-111312). Tests: `script-runner` (`waitThreeMatchesTheOracleTrace`). The runs are stepped, so dt is 0.07 (the clamp) in every update; the first sample has 0.0337.
-
-**Thread record read each update** (`memtrace` of the word at scene 2 +0x1310 = 0x085ad030 and of the 0x50 bytes it points to; samples are taken after the update with that number)
-- The trigger thread is at 0x0835997c: +0xc owner 0x08eae520, +0x10 script 0x08db975c (hash 0x2a5fbbbf), +0x4c parent 0. While the dialog is open: flags 0x4, pc 0 (it blocks in `WarningDialogBox` at word 0), timer 0, for as many updates as the dialog is open.
-- The answering update (A) creates the BoundLeft thread (script 0x08db9778) at the head of the list (0x083598dc, next = 0x0835997c, flags 0, pc 0); it is gone from the list at the next sample (it ran one pass and ended). The trigger thread moves on to pc 15 and calls Wait in that update.
-- Wait 3: the first call stores 3.0; the samples then read 2.93, 2.86, ... decreasing by dt = 0.07 per update, 0.06 after 42 repeat calls, -0.01 after the 43rd, when the thread advances to pc 18 (flags 0x4, blocked, 16 samples) and later to SceneChange. This is the rule of `ScriptRunner` (first call stores the argument, repeat calls subtract dt, the call returns 1 when the timer is <= 0). Pinned by `script-runner`: timer after 1, 20 and 42 repeat calls (2.93, 1.60, 0.06) and the end at the 43rd.
-- The head of the list read as 0 after the thread ended (the memtrace aborted there with a read at address 0): the thread ended in the update that ran SceneChange and its record went back to the free list.
-- Parent pointers were 0 for both threads (no CallScript in this path).
-
-**Executor and trap order (run 1, update numbers of the trap)**: 0x22ce9c (update 16) -> executor 0x234204 and `WarningDialogBox` (17) -> answer: Wait first call at 32, one executor + Wait stop per update to 75 -> executor only 76..92 -> SceneChange at 93. A new thread created by the trigger pass runs in the next update's runner pass, as recorded on 2026-10-14T09:52.
-
-**Modal dialog:** in the dialog state no scene thread ran in 70 updates (no stop of 0x234204, 0x174604 or 0x2700d4), so the original does not call the blocked `WarningDialogBox` every update while the dialog is open; the repeat call comes in the update where the answer is taken. The same holds on the loading page (46 updates, no executor stop).
-
-**Unknowns**
-- Which words the script has at pc 15 to 19 beyond Wait (the executor was not read per word); the blocked word at pc 18 (probably `WaitForDCam`) and how long the camera path takes in the original.
-- The record of the second thread in the list (only the head was read), so the chain via +0 was seen only for the BoundLeft thread.
-- Free-run dt (about 0.033) was not used: all runs are stepped with the 0.07 clamp.

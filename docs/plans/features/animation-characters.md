@@ -30,7 +30,7 @@ IN_PROGRESS, updated 2026-10-13T21:46:54+0200. Player and level characters are p
 
 - Containers, keyframes, pose composition, interpolation, bone palettes: [skeleton-animation.md §2026-10-12T18:40](../../re/skeleton-animation.md#ts-20261012-1840), [skeleton-animation.md §2026-10-12T20:15](../../re/skeleton-animation.md#ts-20261012-2015), [skeleton-animation.md §2026-10-12T21:30](../../re/skeleton-animation.md#ts-20261012-2130).
 - Playback rate and the extra (root motion) curve: [skeleton-animation.md §2026-10-13T17:02](../../re/skeleton-animation.md#ts-20261013-170203).
-- Head attachment: [player.md §2026-10-13T12:56](../../re/player-entity-input.md#ts-20261013-125622).
+- Head attachment: [player-entity-input.md §2026-10-13T12:56](../../re/player-entity-input.md#ts-20261013-125622).
 
 ## 7. Code and tests
 

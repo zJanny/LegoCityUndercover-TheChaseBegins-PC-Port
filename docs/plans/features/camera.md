@@ -26,14 +26,12 @@ IN_PROGRESS, updated 2026-10-14T14:37:00+02:00. The follow camera and its obstru
 
 ## 5. Open items
 
-- [ ] CAMERA-1 — The value K+0x1c8 holds during the very first gather of a camera; whether the far limit K+0x1cc and other constants are also read stale; the original's segment list order (grid cells), which matters only above 13 recorded segments (`w_L` row 2 of the first gather is the known case). evidence: [camera.md §2026-10-13T17:35](../../re/camera-collision-sweep.md#ts-20261013-173530).
-- [ ] CAMERA-2 — Mask-4 characters (flag bit 0 rejects them at gameplay-start) and vehicles are not registered, so the camera ignores them. needs: COLL-2. evidence: [camera.md §2026-10-13T17:35](../../re/camera-collision-sweep.md#ts-20261013-173530).
+- [ ] CAMERA-1 — The value K+0x1c8 holds during the very first gather of a camera; whether the far limit K+0x1cc and other constants are also read stale; the original's segment list order (grid cells), which matters only above 13 recorded segments (`w_L` row 2 of the first gather is the known case). evidence: [camera-collision-sweep.md §2026-10-13T17:35](../../re/camera-collision-sweep.md#ts-20261013-173530).
+- [ ] CAMERA-2 — Mask-4 characters (flag bit 0 rejects them at gameplay-start) and vehicles are not registered, so the camera ignores them. needs: COLL-2. evidence: [camera-collision-sweep.md §2026-10-13T17:35](../../re/camera-collision-sweep.md#ts-20261013-173530).
 - [ ] CAMERA-3 — Record selection, record pose, fade and pose filter are in; open: the multi-record weights and pose against the oracle, Blocker pose, shake, query order, pitch clamp and other presets. evidence: [camera-records-blending.md §2026-10-14T13:39](../../re/camera-records-blending.md#ts-20261014-133954).
 - [ ] CAMERA-4 — The camera being placed again when it is stuck (not recovered).
 - [ ] CAMERA-5 — The chase-game level start differs slightly from the oracle spawn in lvl_01, so the camera reference comparison is framing-only. see PLAYER-8.
-- [x] CAMERA-6 — Camera lock and UI_CameraLocked icon in the police station. Done 2026-10-14: the record pose is active wherever a `Camera*` bound contains the player (not all indoor rooms); L/R do not turn it and the icon shows (CAMERA-S3 removed). List: [camera-records-blending.md §2026-10-14T10:44](../../re/camera-records-blending.md#ts-20261014-104400).
 - [ ] CAMERA-7 — The lock scope census treats all camera bounds as enabled; which are switched off by EnableBound and what the moving bound matrices do is not traced (affects CAMERA-S4). `EnableBound` is transcribed in the script runner (`ScriptRunner::boundsEnabled`, 0x1d0ce8); the camera records do not read it yet.
-- [x] CAMERA-8 — closed 2026-10-14: the record pose camera snapped in the police station (user report). Now the command stack fades between poses (smoothstep over the records' BlendTime) and the pose goes through the per-update filter; the lobby replays match to 6e-6. evidence: [camera.md §2026-10-14T12:07](../../re/camera-records-blending.md#ts-20261014-120746).
 - [ ] CAMERA-9 — The follow controller in a fade (seed at take-over, reaction to a large player jump, 0.1 factor ramp) is not reproduced, so street hand-over replays only match late (CAMERA-S5). Needs the follow controller with collision in the test and a walked hand-over. evidence: [camera-records-blending.md §2026-10-14T13:39](../../re/camera-records-blending.md#ts-20261014-133954).
 - [ ] CAMERA-10 — Follow reset 0x2313c8 (SnapCamera, hand-back seed) not transcribed. blocks: CAMERA-S7, SCRIPT-S12. evidence: [dcam.md §2026-10-14T14:36](../../re/dcam.md#ts-20261014-143600)
 - [ ] CAMERA-11 — Whether the camera manager pushes selector commands while a director camera runs (the police entry moves the player into the lobby camera bounds). blocks: CAMERA-S6. evidence: [dcam.md §2026-10-14T14:36](../../re/dcam.md#ts-20261014-143600)
@@ -41,12 +39,12 @@ IN_PROGRESS, updated 2026-10-14T14:37:00+02:00. The follow camera and its obstru
 
 ## 6. Findings summary
 
-- Writer of 0x376894 is the camera manager update 0x23f174 (atan2 of the camera node's forward axis); the street camera is follow controller 0x2e0bf0: [camera.md §2026-10-13T14:39](../../re/camera-follow.md#ts-20261013-143958).
-- 0x3313c0 is a two-slab sweep, not a sphere sweep: [camera.md §2026-10-13T16:19](../../re/camera-collision-sweep.md#ts-20261013-161935).
-- Placed objects: layer, box slicing, stale near limit: [camera.md §2026-10-13T17:35](../../re/camera-collision-sweep.md#ts-20261013-173530).
-- Camera lock: record pose camera instead of follow controller, `CameraRotFixedSet` is only used in lvl_07: [camera.md §2026-10-14T09:49](../../re/camera-records-blending.md#ts-20261014-094953).
-- Fade between camera commands (0x224080, 0x2ae250, curve 0x2b5950), stack merge 0x2c584c and pose filter 0x2a00dc with its factors: [camera.md §2026-10-14T12:07](../../re/camera-records-blending.md#ts-20261014-120746).
-- `.cam` selection and weights (spatial, XZ distance, bit 0x400): [data-tables-config.md §2026-10-13T09:32](../../re/data-tables-config.md#ts-20261013-0932); camera records are the `Camera*` level bounds, decision state machine, pose formula, icon timing, per-level lock census: [camera.md §2026-10-14T10:44](../../re/camera-records-blending.md#ts-20261014-104400).
+- Writer of 0x376894 is the camera manager update 0x23f174 (atan2 of the camera node's forward axis); the street camera is follow controller 0x2e0bf0: [camera-follow.md §2026-10-13T14:39](../../re/camera-follow.md#ts-20261013-143958).
+- 0x3313c0 is a two-slab sweep, not a sphere sweep: [camera-collision-sweep.md §2026-10-13T16:19](../../re/camera-collision-sweep.md#ts-20261013-161935).
+- Placed objects: layer, box slicing, stale near limit: [camera-collision-sweep.md §2026-10-13T17:35](../../re/camera-collision-sweep.md#ts-20261013-173530).
+- Camera lock: record pose camera instead of follow controller, `CameraRotFixedSet` is only used in lvl_07: [camera-records-blending.md §2026-10-14T09:49](../../re/camera-records-blending.md#ts-20261014-094953).
+- Fade between camera commands (0x224080, 0x2ae250, curve 0x2b5950), stack merge 0x2c584c and pose filter 0x2a00dc with its factors: [camera-records-blending.md §2026-10-14T12:07](../../re/camera-records-blending.md#ts-20261014-120746).
+- `.cam` selection and weights (spatial, XZ distance, bit 0x400): [data-tables-config.md §2026-10-13T09:32](../../re/data-tables-config.md#ts-20261013-0932); camera records are the `Camera*` level bounds, decision state machine, pose formula, icon timing, per-level lock census: [camera-records-blending.md §2026-10-14T10:44](../../re/camera-records-blending.md#ts-20261014-104400).
 - Director camera command, end test and hand-back through the command stack: [dcam.md §2026-10-14T14:36](../../re/dcam.md#ts-20261014-143600).
 
 ## 7. Code and tests

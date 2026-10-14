@@ -22,36 +22,31 @@ IN_PROGRESS, updated 2026-10-14T16:35:00+0200. `chase_save` reads, validates and
 - SAVE-S1 An empty slot wrap is shown as empty by `chase-savecheck`.
 - SAVE-S2 (closed 2026-10-14: `--save` starts the level of the slot, see SAVE-9.)
 - SAVE-S4 Continue enters every level at its Player1Start (code shows no saved position; measured for level 1 only). needs: SAVE-13.
-- SAVE-S5 A save request writes only to the file given with `--save-out`; the summary of 0x17caf8 takes studs, stud total and the display byte from the slot itself, not from live state; the level state block is not refreshed; the play-time counter at slot +0 is not incremented. needs: SAVE-14, SAVE-15. evidence: [save-format.md §2026-10-14T16:34](../../re/save-format.md#ts-20261014-163403).
+- SAVE-S5 A save request writes only to the file given with `--save-out`; the summary of 0x17caf8 takes studs, stud total and the display byte from the slot itself, not from live state; the level state block is not refreshed; the play-time counter at slot +0 is not incremented. needs: SAVE-14, SAVE-15. evidence: [save-format-state.md §2026-10-14T16:34](../../re/save-format-state.md#ts-20261014-163403).
 - SAVE-S3 The 1-byte object records (types 0x15, 0x43, 0x62) are decoded but not applied; the 4-byte ones set TASKS_COMPLETE. All payloads of the only real save are 0, so nothing differs. needs: SAVE-8.
 
 ## 5. Open items
 
-- [x] SAVE-1 — closed 2026-10-14: `chase-game --save FILE --slot N` loads a slot through `chase_save_progress` and gives the script runner the saved variables of the level (StoryProgress, ...) and the unlock / complete state; replaces `--call-script 1-1_MissionSkip` for progress. evidence: [save-format.md §2026-10-14T11:53](../../re/save-format.md#ts-20261014-115300).
-- [ ] SAVE-2 — Data side done (`slotRow`, `formatPlayTime`, `formatPercent`, `locationTextHash`); the slot list page with the rows, Continue and delete is FE-11. blocks: FE-1. evidence: [save-format.md §2026-10-14T16:34](../../re/save-format.md#ts-20261014-163403).
+- [ ] SAVE-2 — Data side done (`slotRow`, `formatPlayTime`, `formatPercent`, `locationTextHash`); the slot list page with the rows, Continue and delete is FE-11. blocks: FE-1. evidence: [save-format-state.md §2026-10-14T16:34](../../re/save-format-state.md#ts-20261014-163403).
 - [ ] SAVE-3 — Compare `chase-savecheck` with the percentage the game shows (possible now with the oracle).
 - [ ] SAVE-4 — Options +0 nibbles and +3 bits 2..5 are not understood; the options volume source in a loaded save. evidence: [save-format.md §2026-10-13T08:53](../../re/save-format.md#ts-20261013-0853).
-- [x] SAVE-6 — closed 2026-10-14: object records decoded (`objectRecords`), classes with callbacks identified, end bit set shown to be never used (mode word always 2), 4-byte records applied as TASKS_COMPLETE. evidence: [save-format.md §2026-10-14T13:41](../../re/save-format.md#ts-20261014-134146)
-- [x] SAVE-7 — closed 2026-10-14: Continue level = slot byte +6; no position field; `which` 1 is never written, so the StoryProgress override 0x192e14 never fires. evidence: [save-format.md §2026-10-14T13:41](../../re/save-format.md#ts-20261014-134146)
-- [ ] SAVE-8 — Names and creator of the type 0xfc and 0x62 objects behind the record hashes, and the effect of type 0x15 / 0x43 / 0x62 records with bit 0 set (needs a save with built build-its). blocks: SAVE-S3. evidence: [save-format.md §2026-10-14T13:41](../../re/save-format.md#ts-20261014-134146)
-- [x] SAVE-9 — closed 2026-10-14: Continue loads the level of slot byte +6 (0 becomes 2) through 0x2e7ce8, 0x2d5874 and 0x20a4d4 and spawns at Player1Start; `chase-game --save` does the same; oracle level 1 matches. evidence: [save-format.md §2026-10-14T15:19](../../re/save-format.md#ts-20261014-151903).
-- [x] SAVE-10 — closed 2026-10-14: the save request chain and the slot commit are transcribed (`commitSlot`, `writeSlotSummary`) and wired as `SaveRequestWriter` with `--save-out`. Remaining parts: SAVE-14, SAVE-15. evidence: [save-format.md §2026-10-14T16:34](../../re/save-format.md#ts-20261014-163403).
+- [ ] SAVE-8 — Names and creator of the type 0xfc and 0x62 objects behind the record hashes, and the effect of type 0x15 / 0x43 / 0x62 records with bit 0 set (needs a save with built build-its). blocks: SAVE-S3. evidence: [save-format-state.md §2026-10-14T13:41](../../re/save-format-state.md#ts-20261014-134146)
 - [ ] SAVE-11 — New-game slot defaults (0x1a25cc: level 2 unlocked, characters 9..140, sets) are not reproduced; without `--save` the progress natives start from a zero image. evidence: [save-format.md §2026-10-13T09:13](../../re/save-format.md#ts-20261013-0913).
 - [ ] SAVE-12 — Where the language byte 0x376adc comes from (options field) and its wiring into GetLanguage. blocks: SCRIPT-65. evidence: [script-natives-progress.md §2026-10-14T14:41](../../re/script-natives-progress.md#ts-20261014-144155).
-- [ ] SAVE-13 — Continue at level 2 or later is not measured (heading, position, level scripts moving the player); needs a user save or state with slot byte +6 above 1. blocks: SAVE-S4. evidence: [save-format.md §2026-10-14T15:19](../../re/save-format.md#ts-20261014-151903).
-- [ ] SAVE-14 — The level state refresh 0x192f60 (object serialiser 0x1c26dc into block +0x1f, length +0x1a, saved flag, StoryProgress 0x2451d0) and 0x229740 / 0x2baddc are not ported, so a save keeps the old level block. blocks: SAVE-S5. evidence: [save-format.md §2026-10-14T16:34](../../re/save-format.md#ts-20261014-163403).
-- [ ] SAVE-15 — Live inputs of the summary (0x593418 +0 / +0x18, byte 0x519760+0x40), the per-update play-time tick (`addPlayTick`, four update loops), the write to the default XDG path instead of `--save-out`, and the request queue behaviour 0x2400a0 are not wired. blocks: SAVE-S5. evidence: [save-format.md §2026-10-14T16:34](../../re/save-format.md#ts-20261014-163403).
+- [ ] SAVE-13 — Continue at level 2 or later is not measured (heading, position, level scripts moving the player); needs a user save or state with slot byte +6 above 1. blocks: SAVE-S4. evidence: [save-format-state.md §2026-10-14T15:19](../../re/save-format-state.md#ts-20261014-151903).
+- [ ] SAVE-14 — The level state refresh 0x192f60 (object serialiser 0x1c26dc into block +0x1f, length +0x1a, saved flag, StoryProgress 0x2451d0) and 0x229740 / 0x2baddc are not ported, so a save keeps the old level block. blocks: SAVE-S5. evidence: [save-format-state.md §2026-10-14T16:34](../../re/save-format-state.md#ts-20261014-163403).
+- [ ] SAVE-15 — Live inputs of the summary (0x593418 +0 / +0x18, byte 0x519760+0x40), the per-update play-time tick (`addPlayTick`, four update loops), the write to the default XDG path instead of `--save-out`, and the request queue behaviour 0x2400a0 are not wired. blocks: SAVE-S5. evidence: [save-format-state.md §2026-10-14T16:34](../../re/save-format-state.md#ts-20261014-163403).
 - [ ] SAVE-5 — Most of what a save game contains: only the completion totals are understood.
 
 ## 6. Findings summary
 
 - Layout, CRC, save thread: [save-format.md §2026-10-13T10:30](../../re/save-format.md#ts-20261013-1030).
 - Options and defaults: [save-format.md §2026-10-13T12:30](../../re/save-format.md#ts-20261013-1230), [save-format.md §2026-10-13T08:53](../../re/save-format.md#ts-20261013-0853), [save-format.md §2026-10-13T08:56](../../re/save-format.md#ts-20261013-0856).
-- Level state blocks, unlock bits, the progress natives and the user's save: [save-format.md §2026-10-14T11:53](../../re/save-format.md#ts-20261014-115300).
-- Object records, end bit set, current level, second unlock bit: [save-format.md §2026-10-14T13:41](../../re/save-format.md#ts-20261014-134146).
+- Level state blocks, unlock bits, the progress natives and the user's save: [save-format-state.md §2026-10-14T11:53](../../re/save-format-state.md#ts-20261014-115300).
+- Object records, end bit set, current level, second unlock bit: [save-format-state.md §2026-10-14T13:41](../../re/save-format-state.md#ts-20261014-134146).
 - Slot bytes the progress natives write (abilities +0x51ee, races +0x5200, racing car +0x520c, red bricks +0x51b8, character group +0x51bb): [script-natives-progress.md §2026-10-14T14:41](../../re/script-natives-progress.md#ts-20261014-144155).
-- Save request chain, slot commit, slot row fields: [save-format.md §2026-10-14T16:34](../../re/save-format.md#ts-20261014-163403).
-- Where Continue starts (level of byte +6, Player1Start): [save-format.md §2026-10-14T15:19](../../re/save-format.md#ts-20261014-151903).
+- Save request chain, slot commit, slot row fields: [save-format-state.md §2026-10-14T16:34](../../re/save-format-state.md#ts-20261014-163403).
+- Where Continue starts (level of byte +6, Player1Start): [save-format-state.md §2026-10-14T15:19](../../re/save-format-state.md#ts-20261014-151903).
 - Slot progress, totals and completion: [save-format.md §2026-10-13T09:13](../../re/save-format.md#ts-20261013-0913), [save-format.md §2026-10-13T09:25](../../re/save-format.md#ts-20261013-0925), [save-format.md §2026-10-13T09:26](../../re/save-format.md#ts-20261013-092607).
 
 ## 7. Code and tests

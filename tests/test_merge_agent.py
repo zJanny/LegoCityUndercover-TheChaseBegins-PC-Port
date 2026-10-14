@@ -68,6 +68,22 @@ class MergeAgentTest(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("game-derived, build or binary files are staged: shot.bmp", result.stderr)
 
+    def test_fix_docs_runs_the_doc_fixer_and_restages(self) -> None:
+        tools = self.repo / "tools"
+        tools.mkdir()
+        (tools / "check_doc_links.py").write_text(SCRIPT.with_name("check_doc_links.py").read_text())
+        features = self.repo / "docs" / "plans" / "features"
+        features.mkdir(parents=True)
+        (features / "f.md").write_text("- [ ] F-1 open\n- [x] F-2 done\n")
+        git(self.repo, "add", "-A")
+        sys.path.insert(0, str(SCRIPT.parent))
+        import merge_agent
+
+        merge_agent.fix_docs(self.repo)
+        staged = subprocess.run(["git", "diff", "--cached", "--name-only"], cwd=self.repo, text=True, capture_output=True).stdout.split()
+        self.assertIn("docs/plans/features/f.closed.md", staged)
+        self.assertEqual((features / "f.md").read_text(), "- [ ] F-1 open\n")
+
 
 if __name__ == "__main__":
     unittest.main()

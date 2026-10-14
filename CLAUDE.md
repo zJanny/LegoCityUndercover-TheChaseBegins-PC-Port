@@ -36,7 +36,7 @@ All other commands and test names: `docs/commands.md`.
 - **`src/game.cpp` only wires features together** (options, the order of the update, calls). New runtime logic goes into its own file under `src/runtime/` (or the matching library) with its own test; a feature adds at most a few lines of glue to `game.cpp`. CTest `game-cpp-wiring` guards its size.
 - **OpenGL and shaders:** OpenGL 4.6 core. Every OpenGL call, GL type and `<epoxy/gl.h>` include lives in `src/render/` (`chase_render`); other code uses its plain-type interfaces (CTest `gl-only-in-render`). Shader code lives only in `.glsl` files under `src/render/shaders/`, embedded at build time; never in a `.cpp` or `.hpp` file (CTest `no-inline-shaders`).
 - **Strict input:** every command-line option and development script (`--script`, `--front-script`, `--start`, oracle scripts) is parsed strictly. Malformed, unknown or out-of-range input stops with an error naming the option and the bad text; never fall back to a default or skip silently. Each new option gets a test for its rejection.
-- **Script natives in batches:** natives are implemented one batch item at a time (SCRIPT-26..39 in `docs/plans/features/script-system.md`, census in `docs/re/script-natives.md`), never one by one; read each handler before transcribing it and update the census row.
+- **Script natives in batches:** natives are implemented one batch item at a time (SCRIPT-26..39 in `docs/plans/features/script-system-natives.md`, census in `docs/re/script-natives.md`), never one by one; read each handler before transcribing it and update the census row.
 - **Extractor safety:** open the image read-only, bounds-check every offset, fail on encryption or hash mismatch, cap decompressed output at `MAX_CODE`, never overwrite an output directory. The ELF is a derived analysis wrapper, not an original binary.
 - **Game version:** all `docs/re/` addresses are for one build (Europe, `00040000000AD600`, v1.0; hashes in `docs/re/game-version.md`). With a different image, warn the user loudly and stop before applying offsets.
 - **REA:** analyse `artifacts/<dir>/game.arm.elf` (REA cannot open the `.cci`) with the installed REA skill; otherwise other disassembly tools. Never claim REA analysis that did not happen. Don't size native pointers from ARM addresses.
@@ -62,10 +62,10 @@ Three places, never copied between them, only linked: **findings** in `docs/re/`
 - For developers; no game assets.
 
 **Feature files (`docs/plans/features/<feature>.md`, index `README.md` there)**
-- Sections: Scope, Status, Verified behaviour, Stand-ins, Open items, Findings summary, Code and tests. Index at most about 40 lines, a feature file at most 150 lines.
+- Sections: Scope, Status, Verified behaviour, Stand-ins, Open items, Findings summary, Code and tests. Index at most about 40 lines.
 - Items have stable IDs (`DOOR-1`, stand-ins `DOOR-S1`), never reused. Dependencies on both sides: `needs: <ID>` on the blocked item, `blocks: <ID>` on the blocking one.
-- **An item or stand-in is at most 400 characters:** the gap, needs/blocks, one evidence link. Addresses, lists and details go into the linked `docs/re/` entry.
-- End of every session: update the feature file (status, items, findings summary link), add the dated `docs/re/` entry, then ONE progress-log line (timestamp, what, how far, link to the feature file). No findings, stand-ins or items in the log or in Next Action.
+- **A feature file is at most 16 KB (16384 bytes).** An item or stand-in states the gap, needs/blocks and one evidence link; addresses, lists and details go into the linked `docs/re/` entry. A larger feature is split by subtopic as `<feature>-<subtopic>.md` (standard sections in each, one index row each). `--fix` moves closed items (`- [x] ID`) to `<feature>.closed.md` (exempt from the limit, not in the index); an ID defined twice in a feature and its closed file is an error.
+- End of every session: update the feature file (status, items, findings summary link), add the dated `docs/re/` entry, then ONE progress-log line (timestamp, what, how far, link to the feature file); `--fix` keeps the newest 20 log lines and moves older ones unchanged to `docs/plans/linux-port.progress-archive.md`. No findings, stand-ins or items in the log or in Next Action.
 - Never create per-feature plan/progress pairs; the `feature-development` workflow applies only to `linux-port.md` / `.progress.md`. A new feature gets a file from the template and an index line.
 
 **User docs (`docs/` except `re/` and `plans/`)**

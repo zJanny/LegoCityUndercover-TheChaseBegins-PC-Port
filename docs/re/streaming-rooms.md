@@ -8,7 +8,7 @@ The per-update rule that decides which rooms of a world level are requested, loa
 
 Corrected by [§2026-10-14T15:07:48](#ts-20261014-150748): the room node position is the centre of the vertex box of meshes 1 and up (all 43 rooms), not mesh 0's centre plus an offset.
 
-[Corrects streaming.md §2026-10-14T11:13](streaming.md#ts-20261014-111312) (the "rank" remark and the seven-room reading). All addresses are for the reference build.
+[Corrects streaming-transitions.md §2026-10-14T11:13](streaming-transitions.md#ts-20261014-111312) (the "rank" remark and the seven-room reading). All addresses are for the reference build.
 
 **Per-update chain (scene room update 0x197794)**
 - 0x197794 runs per update over the scenes of the list at 0x589a18 (count `[0x589a18+8]`, pointers `+0xc`). Each scene has a dirty-room list at scene+0x132c (count) / scene+0x1330 (array); 0x205b5c(room, request) appends a room there when its new request word differs from its applied word.

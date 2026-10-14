@@ -5,7 +5,7 @@
   merge_agent.py check                   run the checks on the staged merge (after resolving conflicts or review edits)
   merge_agent.py finish BRANCH -m FILE   run the checks, commit with the message in FILE, remove the worktree and branch
 
-Checks: no game-derived or binary files staged, doc links, README progress section regenerated,
+Checks: no game-derived or binary files staged, doc fixes (check_doc_links.py --fix, restaged), doc links, README progress section regenerated,
 warning-free build, ctest, Python tests. Pushing stays a separate, explicitly authorized step.
 """
 from __future__ import annotations
@@ -90,8 +90,15 @@ def build_warning_free(root: Path) -> None:
         raise MergeError("build has warnings:\n" + "\n".join(warnings[:40]))
 
 
+def fix_docs(root: Path) -> None:
+    run(["python3", "tools/check_doc_links.py", "--root", ".", "--fix"], root)
+    run(["git", "add", "-A", "--", "docs"], root)
+
+
 def run_checks(root: Path) -> None:
     check_staged_content(root)
+    print("== doc fixes (session log rotation, closed items, anchors)")
+    fix_docs(root)
     print("== doc links")
     run(["python3", "tools/check_doc_links.py", "--root", "."], root)
     print("== build")

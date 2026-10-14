@@ -22,7 +22,6 @@ IN_PROGRESS, updated 2026-10-14T15:05:41+02:00. Objects are drawn standing at th
 
 ## 5. Open items
 
-- [x] LEVOBJ-1 — closed 2026-10-14: props the start state disables are not drawn (127 of 1198 in lvl_01), live with EnableObject; the rest is LEVOBJ-12 and LEVOBJ-13. evidence: [objects.md §2026-10-14T15:05](../../re/objects.md#ts-20261014-150541).
 - [ ] LEVOBJ-2 — Which animation an AI character plays at level start (the AI classes read many parameters and start animations through the role table `tablesanimations`); which `class_*` folder (police, robber, construction, farmer, fire, space, miner, female) a class selects was not traced. needs: ANIM-2. evidence: [objects.md §2026-10-13T16:34](../../re/objects.md#ts-20261013-163430).
 - [ ] LEVOBJ-3 — Objects that move, break or react (platforms, scripted objects, NPC walking, mission flow) are frozen at their level state. needs: SCRIPT-1. evidence: [scripts.md §2026-10-13T20:42](../../re/scripts.md#ts-20261013-204236).
 - [ ] LEVOBJ-4 — The 8 custom lineup characters (`CharacterEnum` 1..8 through 0x2372e0) and the 16 animals (`char_pig`, `char_cat`, `char_dog`, `char_shark`, `char_Crow`, `ride_pig`) are not drawn; the jetpack `AttachModel` placement (bone name hash unresolved, value `chest`) and `AttachRelative`. evidence: [objects.md §2026-10-13T16:34](../../re/objects.md#ts-20261013-163430).
@@ -31,7 +30,6 @@ IN_PROGRESS, updated 2026-10-14T15:05:41+02:00. Objects are drawn standing at th
 - [ ] LEVOBJ-7 — Vehicles, animals and the other classes without a recovered constructor are not created (shared with COLL-2).
 - [ ] LEVOBJ-8 — Objects inside class files (sub-objects such as `SBVehicleDropConsole`, `Barrier01`, `Gem`) are not instantiated, so the class `startup` scripts that enable or disable them have no effect. blocks: SCRIPT-52, SCRIPT-S14. evidence: [scene-start.md §2026-10-14T14:27](../../re/scene-start.md#ts-20261014-142739).
 
-- [x] LEVOBJ-11 — closed 2026-10-14: the disc was `Police_Plaque_Floor`, disabled at the start in the original (flag bit 0, node hidden by EnableObject 0x2428c0); the port now hides disabled props. Test `police-entrance-no-disc`. evidence: [objects.md §2026-10-14T15:05](../../re/objects.md#ts-20261014-150541).
 - [ ] LEVOBJ-12 — Disabled characters and the sub-objects of disabled objects are still drawn (only placed props follow the disabled state). evidence: [objects.md §2026-10-14T15:05](../../re/objects.md#ts-20261014-150541).
 - [ ] LEVOBJ-13 — Per-class start visibility (`DisabledOnStartUp` of non-stud classes, `ShowOnObjectScan`, `ShowOnMap`) and the effect of flags bit 2 (value 6 in the +0x14 table) are not applied. evidence: [objects.md §2026-10-14T13:39](../../re/objects.md#ts-20261014-133957).
 

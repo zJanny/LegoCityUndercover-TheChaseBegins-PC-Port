@@ -6,8 +6,10 @@ stable anchor line "<a id="ts-YYYYMMDD-HHMMSS"></a>" in front of it. Every link 
 contains "§YYYY-MM-DDTHH:MM" must point at "file.md#ts-..." of the entry with that timestamp.
 
 Size and shape rules (CLAUDE.md "Documentation rules"): a docs/re file is at most 40 KB, a feature file at most
-150 lines, the feature index at most 40 lines, an item or stand-in line at most 400 characters, CLAUDE.md at most
-20 KiB. A link whose text starts with "Corrects" needs a "Corrected by" line under the corrected entry's heading
+16 KB, the feature index at most 40 lines, CLAUDE.md at most 20 KiB, the session log of a progress file at most
+20 entry lines. With --fix, older log lines move to the progress archive and closed items ("- [x] ID") of a feature
+file move to <feature>.closed.md. An item or stand-in ID defined twice in a feature and its closed file is an
+error. A link whose text starts with "Corrects" needs a "Corrected by" line under the corrected entry's heading
 that links back, and every "Corrected by" line needs the matching "Corrects" link.
 """
 import argparse
@@ -25,20 +27,24 @@ SECTION_STAMP = re.compile(r"§\s*(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d)(?::(\d\d))
 INLINE_CODE = re.compile(r"`[^`\n]*`")
 EXPLICIT_ID = re.compile(r'<a\s+[^>]*?\b(?:id|name)="([^"]+)"')
 FENCE = re.compile(r"^\s*(```|~~~)")
-ITEM_LINE = re.compile(r"^- (?:\[[ x]\] [A-Z][A-Z0-9]*-\d+|[A-Z][A-Z0-9]*-S\d+)\b")
+ITEM_ID = re.compile(r"^- (?:\[[ x]\] )?([A-Z][A-Z0-9]*-S?\d+)\b")
+CLOSED_ITEM_LINE = re.compile(r"^- \[x\] [A-Z][A-Z0-9]*-\d+\b")
+LOG_HEADING = "## Session Log"
+CLOSED_SUFFIX = ".closed.md"
+ARCHIVE_SUFFIX = "-archive.md"
 MAX_RE_BYTES = 40960
-MAX_FEATURE_LINES = 150
+MAX_FEATURE_BYTES = 16384
 MAX_INDEX_LINES = 40
-MAX_ITEM_CHARS = 400
+MAX_LOG_LINES = 20
 MAX_CLAUDE_BYTES = 20480
 
 
 def markdown_files(root):
     if (root / ".git").exists():
         out = subprocess.run(
-            ["git", "-C", str(root), "ls-files", "*.md"], capture_output=True, text=True, check=True
+            ["git", "-C", str(root), "ls-files", "--cached", "--others", "--exclude-standard", "*.md"], capture_output=True, text=True, check=True
         ).stdout.splitlines()
-        return sorted(root / p for p in out if not set(Path(p).parts) & EXCLUDED_DIRS and (root / p).is_file())
+        return sorted(root / p for p in set(out) if not set(Path(p).parts) & EXCLUDED_DIRS and (root / p).is_file())
     return sorted(
         p for p in root.rglob("*.md") if not set(p.relative_to(root).parts) & EXCLUDED_DIRS and p.is_file()
     )
@@ -222,6 +228,121 @@ def correction_errors(root, files, load):
     return errors
 
 
+def feature_dir(root):
+    return root / "docs" / "plans" / "features"
+
+
+def feature_files(root):
+    directory = feature_dir(root)
+    if not directory.is_dir():
+        return []
+    return [p for p in sorted(directory.glob("*.md")) if p.name != "README.md" and not p.name.endswith(CLOSED_SUFFIX)]
+
+
+def closed_file_of(path):
+    return path.with_name(path.name[: -len(".md")] + CLOSED_SUFFIX)
+
+
+def feature_base(stem, stems):
+    best = stem
+    for other in stems:
+        if stem.startswith(other + "-") and (best == stem or len(other) < len(best)):
+            best = other
+    return best
+
+
+def duplicate_id_errors(root):
+    errors = []
+    paths = feature_files(root)
+    stems = [p.stem for p in paths]
+    seen = {}
+    for path in paths:
+        base = feature_base(path.stem, stems)
+        for member in (path, closed_file_of(path)):
+            if not member.is_file():
+                continue
+            for number, line in enumerate(member.read_text(encoding="utf-8").split("\n")):
+                match = ITEM_ID.match(line)
+                if not match:
+                    continue
+                key = (base, match.group(1))
+                where = f"{member.relative_to(root)}:{number + 1}"
+                if key in seen:
+                    errors.append(f"{where}: duplicate-id: {match.group(1)} is already defined at {seen[key]}; IDs are never reused")
+                else:
+                    seen[key] = where
+    return errors
+
+
+def progress_files(root):
+    plans = root / "docs" / "plans"
+    if not plans.is_dir():
+        return []
+    return sorted(plans.glob("*.progress.md"))
+
+
+def log_span(lines):
+    heading = next((i for i, line in enumerate(lines) if line.strip() == LOG_HEADING), None)
+    if heading is None:
+        return None
+    entries = [i for i in range(heading + 1, len(lines)) if lines[i].startswith("- ")]
+    return heading, entries
+
+
+def session_log_errors(root):
+    errors = []
+    for path in progress_files(root):
+        span = log_span(path.read_text(encoding="utf-8").split("\n"))
+        if span and len(span[1]) > MAX_LOG_LINES:
+            errors.append(f"{path.relative_to(root)}:{span[1][0] + 1}: session-log-length: {len(span[1])} entry lines, limit {MAX_LOG_LINES}; run tools/check_doc_links.py --fix to archive the older ones")
+    return errors
+
+
+def archive_path(path):
+    return path.with_name(path.name[: -len(".md")] + ARCHIVE_SUFFIX)
+
+
+def appended(path, header, new_lines):
+    if path.is_file():
+        text = path.read_text(encoding="utf-8")
+        text = text if text.endswith("\n") else text + "\n"
+    else:
+        text = header
+    path.write_text(text + "\n".join(new_lines) + "\n", encoding="utf-8")
+
+
+def rotate_session_logs(root):
+    moved = 0
+    for path in progress_files(root):
+        lines = path.read_text(encoding="utf-8").split("\n")
+        span = log_span(lines)
+        if not span or len(span[1]) <= MAX_LOG_LINES:
+            continue
+        old = span[1][: len(span[1]) - MAX_LOG_LINES]
+        header = (f"# Session log archive\n\nSession log lines that left [{path.name}]({path.name}), oldest first, unchanged. "
+                  "tools/check_doc_links.py --fix appends new lines at the end.\n\n")
+        appended(archive_path(path), header, [lines[i] for i in old])
+        drop = set(old)
+        path.write_text("\n".join(line for i, line in enumerate(lines) if i not in drop), encoding="utf-8")
+        moved += len(old)
+    return moved
+
+
+def move_closed_items(root):
+    moved = 0
+    for path in feature_files(root):
+        lines = path.read_text(encoding="utf-8").split("\n")
+        closed = [line for line in lines if CLOSED_ITEM_LINE.match(line)]
+        if not closed:
+            continue
+        header = (f"# Closed items of {path.stem}\n\nDone items of [{path.name}]({path.name}), moved here by "
+                  "tools/check_doc_links.py --fix in the order they were closed. IDs are never reused.\n\n")
+        appended(closed_file_of(path), header, closed)
+        path.write_text("\n".join(line for line in lines if not CLOSED_ITEM_LINE.match(line)), encoding="utf-8")
+        moved += len(closed)
+    return moved
+
+
 def size_errors(root):
     errors = []
     re_dir = root / "docs" / "re"
@@ -230,28 +351,31 @@ def size_errors(root):
             size = path.stat().st_size
             if size > MAX_RE_BYTES:
                 errors.append(f"{path.relative_to(root)}:1: re-file-size: {size} bytes, limit {MAX_RE_BYTES}; split it by subtopic")
-    features = root / "docs" / "plans" / "features"
+    features = feature_dir(root)
     if features.is_dir():
-        for path in sorted(features.glob("*.md")):
-            lines = path.read_text(encoding="utf-8").split("\n")
-            if lines and lines[-1] == "":
-                lines.pop()
-            index = path.name == "README.md"
-            limit = MAX_INDEX_LINES if index else MAX_FEATURE_LINES
-            if len(lines) > limit:
-                errors.append(f"{path.relative_to(root)}:{limit + 1}: {'index' if index else 'feature'}-file-length: {len(lines)} lines, limit {limit}")
-            if not index:
-                for number, line in enumerate(lines):
-                    if ITEM_LINE.match(line) and len(line) > MAX_ITEM_CHARS:
-                        errors.append(f"{path.relative_to(root)}:{number + 1}: item-length: {len(line)} characters, limit {MAX_ITEM_CHARS}")
+        index = features / "README.md"
+        if index.is_file():
+            count = len(index.read_text(encoding="utf-8").rstrip("\n").split("\n"))
+            if count > MAX_INDEX_LINES:
+                errors.append(f"{index.relative_to(root)}:{MAX_INDEX_LINES + 1}: index-file-length: {count} lines, limit {MAX_INDEX_LINES}")
+        for path in feature_files(root):
+            size = path.stat().st_size
+            if size > MAX_FEATURE_BYTES:
+                errors.append(f"{path.relative_to(root)}:1: feature-file-size: {size} bytes, limit {MAX_FEATURE_BYTES}; split it by subtopic as <feature>-<subtopic>.md")
+    errors.extend(duplicate_id_errors(root))
+    errors.extend(session_log_errors(root))
     claude = root / "CLAUDE.md"
     if claude.is_file() and claude.stat().st_size > MAX_CLAUDE_BYTES:
         errors.append(f"CLAUDE.md:1: claude-md-size: {claude.stat().st_size} bytes, limit {MAX_CLAUDE_BYTES}")
     return errors
 
 
-def process(root, fix):
+def process(root, fix, messages=None):
     docs = {}
+    if fix:
+        for what, count in (("log lines archived", rotate_session_logs(root)), ("closed items moved", move_closed_items(root))):
+            if count and messages is not None:
+                messages.append(f"{count} {what}")
 
     def load(path):
         key = path.resolve()
@@ -343,7 +467,10 @@ def main(argv=None):
     parser.add_argument("--fix", action="store_true", help="add missing entry anchors and rewrite section links")
     args = parser.parse_args(argv)
     root = Path(args.root).resolve()
-    errors, added, rewritten, count = process(root, args.fix)
+    messages = []
+    errors, added, rewritten, count = process(root, args.fix, messages)
+    for message in messages:
+        print(message)
     for error in errors:
         print(error)
     if args.fix:

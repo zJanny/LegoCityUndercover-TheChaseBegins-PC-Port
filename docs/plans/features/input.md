@@ -28,7 +28,7 @@ DONE for the input laboratory (S2) and the keyboard/mouse mapping used by `chase
 ## 6. Findings summary
 
 - Slot table and channel records: [arm-executable.md §2026-10-13T09:20](../../re/arm-executable.md#ts-20261013-092040); readers and stick to D-pad: [arm-executable.md §2026-10-13T09:22](../../re/arm-executable.md#ts-20261013-092253); HID and main loop: [arm-executable.md §2026-10-13T10:45](../../re/arm-executable.md#ts-20261013-1045).
-- Stick to intent: [player.md §2026-10-13T10:59](../../re/player-entity-input.md#ts-20261013-105911).
+- Stick to intent: [player-entity-input.md §2026-10-13T10:59](../../re/player-entity-input.md#ts-20261013-105911).
 
 ## 7. Code and tests
 

@@ -1,6 +1,6 @@
 # AI natives and the AI component (batch 34)
 
-The 17 AI natives of the level scripts, the AI component fields they write, the requested-state numbers and the AIMove trigger event. Evidence: llvm-objdump (`--triple=armv6k --mattr=+vfp2`) of `artifacts/game/game.arm.elf`, level data (`parseLevel`); no emulator run, no REA session. Census of all natives: [script-natives.md](script-natives.md). Items: [script-system.md](../plans/features/script-system.md) (SCRIPT-34, SCRIPT-42, SCRIPT-75, SCRIPT-79 to SCRIPT-84).
+The 17 AI natives of the level scripts, the AI component fields they write, the requested-state numbers and the AIMove trigger event. Evidence: llvm-objdump (`--triple=armv6k --mattr=+vfp2`) of `artifacts/game/game.arm.elf`, level data (`parseLevel`); no emulator run, no REA session. Census of all natives: [script-natives.md](script-natives.md). Items: [script-system-natives.md](../plans/features/script-system-natives.md) (SCRIPT-34, SCRIPT-42, SCRIPT-75, SCRIPT-79 to SCRIPT-84).
 
 <a id="ts-20261014-163311"></a>
 
@@ -41,7 +41,7 @@ The 17 AI natives of the level scripts, the AI component fields they write, the 
 - lvl_01 triggers of the type: `1-4_Booster_Strange` (script 1-4_Run_Point_01), `1-4_AI_HeadRobber` (1-4_Run_Point_02, 03, 04); several triggers of one owner fire one after another because the scripts switch the next one on.
 - `chase-game` ends a move when the character stands on the target (after a straight walk) and starts the first enabled AIMove trigger of the character ([ai.hpp](../../src/runtime/ai.hpp), SCRIPT-S31).
 
-**Measurement used for the walk stand-in.** Police entry, oracle: the player moves 0.11 per update of 1/30 s towards `Enter_Police_Station_Position_End` ([scripts.md §2026-10-14T10:54](scripts.md#ts-20261014-105432), WarningDialogBox section). `AiCore` uses 0.11 * 30 for walk and the player's run speed (0.23 per step) for run; `ai_real_test` pins the step to 0.11 +- 0.002 on the real script `Police_ExtToInt`.
+**Measurement used for the walk stand-in.** Police entry, oracle: the player moves 0.11 per update of 1/30 s towards `Enter_Police_Station_Position_End` ([scripts-runtime.md §2026-10-14T10:54](scripts-runtime.md#ts-20261014-105432), WarningDialogBox section). `AiCore` uses 0.11 * 30 for walk and the player's run speed (0.23 per step) for run; `ai_real_test` pins the step to 0.11 +- 0.002 on the real script `Police_ExtToInt`.
 
 Unknowns:
 - Number of the state AIMove installs through 0x2414b4 (table at 0x3742c8, entry stride 24), the path finder 0x1f9834 and the state update that moves along its path; the real walk speed of non-player characters (class parameters) and the walk / run decision.

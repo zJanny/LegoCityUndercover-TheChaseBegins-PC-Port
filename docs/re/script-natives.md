@@ -1,6 +1,6 @@
 # Script natives: census, handlers and work batches
 
-Every native (script function) of the level scripts: handler address, argument count, use in the levels, class and work batch. Script engine itself: [scripts.md](scripts.md). Items: [script-system.md](../plans/features/script-system.md) (SCRIPT-26 to SCRIPT-45). Batch 27 (progress, saves, studs): [script-natives-progress.md](script-natives-progress.md).
+Every native (script function) of the level scripts: handler address, argument count, use in the levels, class and work batch. Script engine itself: [scripts.md](scripts.md). Items: [script-system-natives.md](../plans/features/script-system-natives.md) (SCRIPT-26 to SCRIPT-45). Batch 27 (progress, saves, studs): [script-natives-progress.md](script-natives-progress.md).
 
 <a id="ts-20261014-133339"></a>
 

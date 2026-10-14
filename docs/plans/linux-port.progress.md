@@ -126,10 +126,10 @@ Read this section, CLAUDE.md (incl. "Goal and faithfulness" and "Feature files")
 
 **State:** M1 runtime loop, M2 locomotion, M3 walkable level, M4 level objects, characters, studs, falling, jumping and object collision are on main; the front end (boot to the first level) and the sound hooks are merged. `chase-game` is a development runtime, not the game ([docs/status.md](../status.md)).
 
-**Priorities (critical path), updated 2026-10-14T16:06:20+02:00:**
-1. Mission flow: the AI system with `AIMove` (SCRIPT-42, batch SCRIPT-34; unblocks the AI trigger events SCRIPT-75), `PositionPlayer` (SCRIPT-59), arrow and map natives (SCRIPT-72, SCRIPT-73), readers for recorded values (SCRIPT-56, SCRIPT-64), towards SCRIPT-1: [script-system](features/script-system.md).
+**Priorities (critical path), updated 2026-10-14T16:54:21+02:00:**
+1. Mission flow: AI movement and path finding (SCRIPT-79) and the rest of the AI (SCRIPT-42), the other AI trigger events (SCRIPT-75), `PositionPlayer` (SCRIPT-59), readers for recorded values (SCRIPT-56, SCRIPT-64), towards SCRIPT-1: [script-system](features/script-system.md), [script-system-natives](features/script-system-natives.md), [script-system-triggers](features/script-system-triggers.md); arrow and map natives (SCRIPT-72, SCRIPT-73): [script-system-hud-natives](features/script-system-hud-natives.md).
 2. HUD fidelity: portrait and hexagon frame (HUD-19), tip alpha writer (HUD-20), level heading and other text screens (HUD-13), map marker and waypoint animation (HUD-16, HUD-17): [hud-ui](features/hud-ui.md).
-3. Saves: slot list Continue (FE-11, then FE-1), Continue at later levels (SAVE-13), the save writer (SAVE-10): [saves-options](features/saves-options.md), [front-end](features/front-end.md).
+3. Saves: slot list Continue (FE-11, then FE-1), Continue at later levels (SAVE-13), level state refresh and live inputs of a save (SAVE-14, SAVE-15): [saves-options](features/saves-options.md), [front-end](features/front-end.md).
 4. Streaming and transitions: current-room rule and load timing (WSTREAM-13), characters and studs of unloaded rooms (WSTREAM-14), the master level as scenes (TRANS-3): [world-streaming](features/world-streaming.md), [level-transitions](features/level-transitions.md).
 5. Camera, objects, rendering: follow reset (CAMERA-10, CAMERA-9), disabled characters and sub-objects (LEVOBJ-12), vehicles (LEVOBJ-7, SCRIPT-43), player shadow (RENDER-9), fragment lights (RENDER-1): [camera](features/camera.md), [level-objects](features/level-objects.md), [rendering](features/rendering.md).
 
@@ -139,158 +139,8 @@ Oracle states (artifacts/oracle/states, see docs/re/oracle.md): `gameplay-start`
 
 ## Session Log
 
-One line per session: timestamp, what was worked on, how far it got, link to the feature file. Findings, open items and stand-ins do not belong here (CLAUDE.md "Feature files"). Reverse-engineering details are in docs/re/ (see docs/re/README.md).
+The newest 20 lines only; `python3 tools/check_doc_links.py --fix` moves older lines unchanged to [linux-port.progress-archive.md](linux-port.progress-archive.md). One line per session: timestamp, what was worked on, how far it got, link to the feature file. Findings, open items and stand-ins do not belong here (CLAUDE.md "Feature files"). Reverse-engineering details are in docs/re/ (see docs/re/README.md).
 
-- 2026-10-12T14:43:19.863039+02:00 → [docs/re/container-and-archive.md](../re/container-and-archive.md)
-- 2026-10-12T15:10:00+02:00 — S3 focused analysis (REA, Hopper provider, ELF sha256 5152ed14…0881) → [docs/re/arm-executable.md](../re/arm-executable.md)
-- 2026-10-12T15:25:00+02:00 — S3 DSP/service-handle follow-up → [docs/re/arm-executable.md](../re/arm-executable.md)
-- 2026-10-12T15:25:37+02:00 — RomFS extraction (S1 extension, prerequisite for S4 assets) → [docs/re/container-and-archive.md](../re/container-and-archive.md)
-- 2026-10-12T15:32:32+02:00 — FUSE (.fib) archive format and codec recovered → [docs/re/container-and-archive.md](../re/container-and-archive.md)
-- 2026-10-12T15:40+02:00 — Texture container decoded (.btga/.bpng/.bdds) → [docs/re/textures.md](../re/textures.md)
-- 2026-10-12T15:45+02:00 — Sound container decoded (.bwav) → [docs/re/audio.md](../re/audio.md)
-- 2026-10-12T15:55+02:00 — Shared TT pooled-resource layout (all b* formats) → [docs/re/pooled-resources.md](../re/pooled-resources.md)
-- 2026-10-12T16:10+02:00 — .bfnmdl model format decoded (REA, Ghidra 12.1.2 provider) → [docs/re/models.md](../re/models.md)
-- 2026-10-12T16:30+02:00 — S4a part 1: `chase_assets` (FUSE, pooled, textures) with `assets-core` and `assets-real-data`; ctest 4/4, 0 warnings → [assets-formats](features/assets-formats.md)
-- 2026-10-12T16:45+02:00 — S4a part 2: model geometry in C++ → [docs/re/models.md](../re/models.md)
-- 2026-10-12T17:00+02:00 — S4b: development model viewer `chase-viewer` (SDL2, GL 3.3 core, libepoxy) with `viewer-real-smoke`; ctest 5/5 → [viewer-tools](features/viewer-tools.md)
-- 2026-10-12T17:20+02:00 — S4c: .blvl level format decoded (REA, Ghidra) → [docs/re/levels.md](../re/levels.md)
-- 2026-10-12T17:45+02:00 — S4c: native level placement and the mesh-centre rule → [docs/re/levels.md](../re/levels.md)
-- 2026-10-12T18:05+02:00 — Vertex shaders, UV scales and lightmaps → [docs/re/models.md](../re/models.md)
-- 2026-10-12T18:25+02:00 — S4a complete (CWAV in C++), S4d mixer and sound test → [docs/re/audio.md](../re/audio.md)
-- 2026-10-12T18:40+02:00 — Skeleton and animation containers (REA, Ghidra) → [docs/re/skeleton-animation.md](../re/skeleton-animation.md)
-- 2026-10-12T19:05+02:00 — Animation keyframe decoding (REA, Ghidra) → [docs/re/skeleton-animation.md](../re/skeleton-animation.md)
-- 2026-10-12T20:10+02:00 — Graphify set up (`.graphifyignore`, AST graph, rebuild hooks; graphify-out/ stays local) → CLAUDE.md Graphify
-- 2026-10-12T20:15+02:00 — Pose composition recovered (REA, Ghidra) → [docs/re/skeleton-animation.md](../re/skeleton-animation.md)
-- 2026-10-12T20:45+02:00 — Native skeletons, animation curves and skinning (S4e groundwork) → [docs/re/skeleton-animation.md](../re/skeleton-animation.md)
-- 2026-10-12T21:30+02:00 — Bone palettes recovered; skinned playback in chase-viewer → [docs/re/skeleton-animation.md](../re/skeleton-animation.md)
-- 2026-10-12T22:10+02:00 — Frame interpolation recovered; playback rate traced to the instance → [docs/re/skeleton-animation.md](../re/skeleton-animation.md)
-- 2026-10-12T22:40+02:00 — Texture v orientation corrected (most "black material" cases) → [docs/re/textures.md](../re/textures.md)
-- 2026-10-12T23:05+02:00 — Placement Euler order recovered (replaces the Ry·Rx·Rz assumption) → [docs/re/levels.md](../re/levels.md)
-- 2026-10-12T23:25+02:00 — Whole levels in the viewer → [docs/re/levels.md](../re/levels.md)
-- 2026-10-12T23:55+02:00 — Navigation grids (.bfnnav) decoded → [docs/re/levels.md](../re/levels.md)
-- 2026-10-13T00:25+02:00 — Localisation tables (.loc) decoded → [docs/re/text-localisation-fonts.md](../re/text-localisation-fonts.md)
-- 2026-10-13T00:45+02:00 — Text escapes decoded (Cyrillic/Polish) → [docs/re/text-localisation-fonts.md](../re/text-localisation-fonts.md)
-- 2026-10-13T01:05+02:00 — Bitmap fonts (.tnf) decoded → [docs/re/text-localisation-fonts.md](../re/text-localisation-fonts.md)
-- 2026-10-13T01:30+02:00 — Animation frame count is u16 +4 & 0x3fff → [docs/re/skeleton-animation.md](../re/skeleton-animation.md)
-- 2026-10-13T01:40+02:00 — Project rule "C++ is the source of truth" added to CLAUDE.md at the user's request → CLAUDE.md
-- 2026-10-13T02:30+02:00 — Cutscene tracks, cameras and joint orientations (REA, Ghidra 12.1.2) → [docs/re/cutscenes.md](../re/cutscenes.md)
-- 2026-10-13T03:00+02:00 — First Python→C++ binding; Python posing removed (rule 6 fix) → [docs/re/skeleton-animation.md](../re/skeleton-animation.md)
-- 2026-10-13T03:20+02:00 — Cutscene playback rate and soundtrack → [docs/re/cutscenes.md](../re/cutscenes.md)
-- 2026-10-13T03:50+02:00 — Data tables (.bxls) decoded (REA, Ghidra 12.1.2) → [docs/re/data-tables-config.md](../re/data-tables-config.md)
-- 2026-10-13T04:10+02:00 — Overflowing joint curves explained: one curve stores frames + 1 → [docs/re/skeleton-animation.md](../re/skeleton-animation.md)
-- 2026-10-13T08:51+02:00 — chase-fmv black screen fixed: audio start deadlocked when the frame queue filled first (`4b3b75f`); ctest 10/10.
-- 2026-10-13T08:53+02:00 — Options fields (sound/music volume, invert camera, subtitles) and language order; chase_save accessors; ctest 10/10 → [docs/re/save-format.md](../re/save-format.md)
-- 2026-10-13T08:55+02:00 — S3 scheduler fields recorded; step value still unknown (time-boxed) → [docs/re/arm-executable.md](../re/arm-executable.md)
-- 2026-10-13T08:56+02:00 — Options gift list and +0x1ec records → [docs/re/save-format.md](../re/save-format.md)
-- 2026-10-13T09:00+02:00 — particledefs.bprt container decoded (parseParticleDefs, pjwHash); ctest 10/10 → [docs/re/particles.md](../re/particles.md)
-- 2026-10-13T09:01+02:00 — Particle spawner field use; named fields in ParticleDef; ctest 10/10 → [docs/re/particles.md](../re/particles.md)
-- 2026-10-13T09:03+02:00 — Particle init fields (atlas, frames, flips, colour gradient); ctest 10/10 → [docs/re/particles.md](../re/particles.md)
-- 2026-10-13T09:05+02:00 — Particle emitter update (rate, duration, fade keys); ctest 10/10 → [docs/re/particles.md](../re/particles.md)
-- 2026-10-13T09:07+02:00 — Particle step: four key lists, gravity, drag, bounce, size growth; ctest 10/10 → [docs/re/particles.md](../re/particles.md)
-- 2026-10-13T09:08+02:00 — Particle texture hash-to-index conversion found (0x1ed440) → [docs/re/particles.md](../re/particles.md)
-- 2026-10-13T09:08+02:00 — Session timestamps corrected to commit times (system clock). The earlier 2026-10-13 entries (02:30–12:35) do not match their commit times (e.g. `ab62d67` at 01:43) and were left unchanged.
-- 2026-10-13T09:10+02:00 — .cam loader 0x3062e4: key handlers and record layout; RotationY/X, Distance, Lookat are editor-only → [docs/re/data-tables-config.md](../re/data-tables-config.md)
-- 2026-10-13T09:12+02:00 — Storyboard runtime layout (0x1dbb80); property evaluator not found (time-boxed) → [docs/re/ui-layouts.md](../re/ui-layouts.md)
-- 2026-10-13T09:13+02:00 — Slot progress layout: character bits, level blocks, completion formula (0x1cd3dc) → [docs/re/save-format.md](../re/save-format.md)
-- 2026-10-13T09:14+02:00 — Per-level counters (0x20a630, 0x203464) and totals source TablesSuperCounters (0x2f63dc) → [docs/re/save-format.md](../re/save-format.md)
-- 2026-10-13T09:15+02:00 — Paused at user request. Tree clean after this commit; build warning-free and ctest 10/10 at `537a033`.
-- 2026-10-13T09:19+02:00 — TablesSuperCounters matches the 13 × 7 totals layout (worker, bytes re-checked with xxd) → [docs/re/save-format.md](../re/save-format.md)
-- 2026-10-13T09:20+02:00 — Input slot table 0x3769e8: 18 slots → pad channels (worker, REA Ghidra; fill at 0x168c9c re-checked with objdump) → [docs/re/arm-executable.md](../re/arm-executable.md)
-- 2026-10-13T09:22+02:00 — Input slots: 6/7 gameplay vs 4/5 UI readers, channel 7 unfed by pad, stick → D-pad 0x2289b8 (worker, REA; 0.6 literal re-checked) → [docs/re/arm-executable.md](../re/arm-executable.md)
-- 2026-10-13T09:25+02:00 — Level/character tables, exclusion uses char byte +0xc, completion total 711 (worker, REA + objdump; loop re-checked) → [docs/re/save-format.md](../re/save-format.md)
-- 2026-10-13T09:26+02:00 — 0x25c1b8 is an unsigned divide; completion formula settled → [docs/re/save-format.md](../re/save-format.md)
-- 2026-10-13T09:28+02:00 — .cam Type is a bit set read by pose blend 0x298cd8; per-frame camera is 0x1b4a30 (worker, REA; bit tests re-checked) → [docs/re/data-tables-config.md](../re/data-tables-config.md)
-- 2026-10-13T09:30+02:00 — chase_save slot progress accessors + completion (worker, Sonnet); reviewed, offsets re-checked against 0x203464/0x20a630; build warning-free, ctest 10/10.
-- 2026-10-13T09:32+02:00 — Camera selection is spatial (0x20bf6c), weights by XZ distance, bit 0x400 = look offset add (worker, REA; 0x23f50c re-checked) → [docs/re/data-tables-config.md](../re/data-tables-config.md)
-- 2026-10-13T09:33+02:00 — Sound play path 0x23fa54(id, pos, …), ids = tables/tablessoundfx.bxls (worker, REA; table re-checked) → [docs/re/audio.md](../re/audio.md)
-- 2026-10-13T09:33+02:00 — chase_save_tables + chase-savecheck, save-real-data test (total 711) (worker, Sonnet); empty-slot wrap shown as empty; build warning-free, ctest 11/11.
-- 2026-10-13T09:36+02:00 — GSP interrupt thread and vsync wait 0x257a68; 30/60 fps still unknown (worker, REA; 0x130042 literal re-checked) → [docs/re/arm-executable.md](../re/arm-executable.md)
-- 2026-10-13T09:38+02:00 — Vblank counter callbacks (ids 2/3), wait modes 0x400..0x402, mode byte 0x52a1f4; fps still undecided (worker, REA; callback re-checked) → [docs/re/arm-executable.md](../re/arm-executable.md)
-- 2026-10-13T09:39+02:00 — SoundEffect table decoder + chase-soundtest --id (worker, Sonnet); 757/757 names resolve to sounds/<name>.bwav; build warning-free, ctest 12/12 → [docs/re/audio.md](../re/audio.md)
-- 2026-10-13T09:41+02:00 — Swap 0x25a6f0: min frame interval 0x529de8 (1/2), 0x122908 = APT cmd 0x004F0080 (worker, REA; literals re-checked) → [docs/re/arm-executable.md](../re/arm-executable.md)
-- 2026-10-13T09:42+02:00 — Music: tablessoundfx sheet 1 (39 tracks → music/<name>.bwav), OverrideMusic/StopMusic/PauseMusic handlers (worker, REA; sheet re-checked) → [docs/re/audio.md](../re/audio.md)
-- 2026-10-13T10:15+02:00 — Brace-block config text parser (.cam, trigger and option lists) → [docs/re/data-tables-config.md](../re/data-tables-config.md)
-- 2026-10-13T10:30+02:00 — S4f save format recovered (REA, Ghidra 12.1.2; read-only) → [docs/re/save-format.md](../re/save-format.md)
-- 2026-10-13T10:45+02:00 — S3 HID input and main loop (REA, Ghidra 12.1.2; read-only, partial) → [docs/re/arm-executable.md](../re/arm-executable.md)
-- 2026-10-13T10:53:04+02:00 — Runtime oracle (`f5d43cf`), scheduler and pad pipeline replicas (`69d53b3`, `6c8e03d`), renderer moved to chase_render (`8d0d940`); ctest 13/13, Python 55/55 → [executable-platform](features/executable-platform.md), [viewer-tools](features/viewer-tools.md), [docs/re/arm-executable.md](../re/arm-executable.md)
-- 2026-10-13T10:55+02:00 — chase-game development runtime skeleton (S4e): input, scheduler, level via chase_render; ctest 14/14 → [player-movement](features/player-movement.md)
-- 2026-10-13T10:59:11+02:00 — Stick-to-intent replica (`player_intent`, library atan2f ported bit-exact) → [player-movement](features/player-movement.md), [docs/re/player.md](../re/player.md)
-- 2026-10-13T11:00+02:00 — .bxaml UI layouts decoded (REA, Ghidra 12.1.2) → [docs/re/ui-layouts.md](../re/ui-layouts.md)
-- 2026-10-13T11:05+02:00 — FMV player with subtitles: WIP, not merged → [docs/re/fmv.md](../re/fmv.md)
-- 2026-10-13T11:08:12+02:00 — chase-game shows the player at Player1Start (idle_minifig frame 0, stand-in camera); ctest 14/14 → [player-movement](features/player-movement.md), [docs/re/player.md](../re/player.md)
-- 2026-10-13T11:40+02:00 — FMV player finished and merged → [docs/re/fmv.md](../re/fmv.md)
-- 2026-10-13T11:51:01+02:00 — Oracle fast workflow (`--keep`/`--attach`/`--stop`, save states); Python 55 OK → [viewer-tools](features/viewer-tools.md), [docs/re/oracle.md](../re/oracle.md)
-- 2026-10-13T12:02:21+02:00 — Oracle RPC channel (`--rpc`, `--rpc-input`, screenshot 0.05 s); Python 63 OK → [viewer-tools](features/viewer-tools.md), [docs/re/oracle.md](../re/oracle.md)
-- 2026-10-13T12:10+02:00 — S4f chase_save library (src/save/) and save-core test; `cmake --build build` warning-free, `ctest --test-dir build` 10/10 pass. Header size field confirmed (REA) → [docs/re/save-format.md](../re/save-format.md)
-- 2026-10-13T12:30+02:00 — Options defaults and system language mapping added to chase_save; save-core passes → [docs/re/save-format.md](../re/save-format.md)
-- 2026-10-13T12:45+02:00 — Oracle launch robustness (Xvfb quick-load abort mitigated, launch retry); 16/16 runs, Python 69 OK → [viewer-tools](features/viewer-tools.md), [docs/re/oracle.md](../re/oracle.md)
-- 2026-10-13T12:49+02:00 — World handedness: the game world is left-handed, renderer mirrors x → [assets-formats](features/assets-formats.md), [docs/re/levels.md](../re/levels.md)
-- 2026-10-13T12:56+02:00 — Player head attachment fixed (`jointAttachment`); ctest 14/14 → [animation-characters](features/animation-characters.md), [docs/re/player.md](../re/player.md)
-- 2026-10-13T13:45:00+02:00 — Player locomotion measured in the oracle: speeds by stick regime, facing step → [player-movement](features/player-movement.md), [docs/re/player.md](../re/player.md)
-- 2026-10-13T13:59:00+02:00 — Player locomotion in chase-game (`player_locomotion`, `locomotion-real-data` 1114 updates); ctest 17/17 → [player-movement](features/player-movement.md), [docs/re/player.md](../re/player.md)
-- 2026-10-13T14:34:16+02:00 — Graphify compliance check: stale graph rebuilt with `graphify update .`; rule: update and verify the graph after each merge batch and query it first → CLAUDE.md Graphify
-- 2026-10-13T14:41:13+02:00 — Gameplay camera recovered and replicated (`FollowCamera`, `camera-real-data` 9 traces) → [camera](features/camera.md), [docs/re/camera.md](../re/camera.md)
-- 2026-10-13T15:10:11+02:00 — Level collision: ground height and wall sliding replicated (`collision-real-data`: 104 traces, 24 wall traces); ctest 18/18 → [collision](features/collision.md), [docs/re/collision.md](../re/collision.md)
-- 2026-10-13T15:10:43+02:00 — Python tool audit: five converters moved onto the C++ binding (byte-identical output), five Python tools removed (last present at `9d04c91`) → [viewer-tools](features/viewer-tools.md)
-- 2026-10-13T15:22:58+02:00 — Merged player collision, Python tools moved onto the C++ binding, docs audit, CLAUDE.md rule 4 updated; graph rebuilt → [collision](features/collision.md), [viewer-tools](features/viewer-tools.md)
-- 2026-10-13T15:34:18+02:00 — Racy oracle launch test fixed; README quick start starts chase-game; new guide docs/game-runtime.md; Python 60 OK → [viewer-tools](features/viewer-tools.md)
-- 2026-10-13T15:39:33+02:00 — Level objects in chase-game and chase-viewer (class files supply meshname and transform); ctest 19/19 → [level-objects](features/level-objects.md), [docs/re/objects.md](../re/objects.md)
-- 2026-10-13T16:06:01+02:00 — Falling and landing recovered and replicated (`fall-real-data` 18 traces); oracle tool got `teleport` → [player-movement](features/player-movement.md), [docs/re/player.md](../re/player.md)
-- 2026-10-13T16:19:35+02:00 — Camera obstruction recovered (two slabs, pull-in, side and vertical push) and replicated (`CameraSweep`); ctest 22/22 → [camera](features/camera.md), [docs/re/camera.md](../re/camera.md)
-- 2026-10-13T16:31:00+02:00 — Jumping recovered and replicated (`jump-real-data` 12 jumps); jump on B, own `Walk` action → [player-movement](features/player-movement.md), [input](features/input.md)
-- 2026-10-13T16:33:40+02:00 — Lead merge of falling/jumping into main (conflicts in src/game.cpp, CMakeLists.txt and docs resolved); ctest 26/26, Python 62 OK → [player-movement](features/player-movement.md)
-- 2026-10-13T16:35:00+02:00 — Level characters drawn standing in place (lvl_00 32, lvl_01 99); ctest 22/22 → [level-objects](features/level-objects.md), [docs/re/objects.md](../re/objects.md)
-- 2026-10-13T17:02:03+02:00 — Speed and scale derivation: walk/run speeds, jump scales and landing stun derived from code and data, fitted constants removed; ctest 26/26 → [player-movement](features/player-movement.md), [docs/re/player.md](../re/player.md)
-- 2026-10-13T17:12:29+02:00 — Studs recovered (pickup sprites, radius, counter) and replicated (`StudField`, `studs-real-data` 10 traces); ctest 28/28 → [studs](features/studs.md), [docs/re/studs.md](../re/studs.md)
-- 2026-10-13T17:36:00+02:00 — Placed objects block the player and the camera (world grid, registration, query layers, camera box slice); ctest 26/26 → [collision](features/collision.md), [camera](features/camera.md), [docs/re/collision.md](../re/collision.md)
-- 2026-10-13T17:42:29+02:00 — Oracle tool: `free_display()` reuses stale X display locks; lead studs check against an oracle screenshot (the original shows that door open, chase-game closed) → [viewer-tools](features/viewer-tools.md), [doors](features/doors.md)
-- 2026-10-13T17:53:20+02:00 — Paused at the user's request near the usage limit: front-end agent stopped with a WIP commit, sound agent asked to wrap up; handoff rewritten in Next Action (M4, unfinished branches, next candidates).
-- 2026-10-13T17:54:24+02:00 — Sounds in chase-game (jump, footsteps, landings, studs; level music rule); `audio-core`, `audio-real-data` added → [audio](features/audio.md), [docs/re/audio.md](../re/audio.md)
-- 2026-10-13T20:50:00+02:00 — Front end finished from boot to the first level (`chase_frontend`, `chase_movie`, `chase-frontshot`, chase-game front-end mode); ctest 35/35 → [front-end](features/front-end.md), [docs/re/front-end.md](../re/front-end.md)
-- 2026-10-13T20:58:38+02:00 — Lead fix: 47 of 49 movies alternate eye frames; `chase_movie` keeps the first picture of each pair; ctest 35/35 → [movies-cutscenes](features/movies-cutscenes.md), [docs/re/fmv.md](../re/fmv.md)
-- 2026-10-13T21:17:22+02:00 — Player runtime: landing stun by the animation-finished test, slide (state 8), slope slow-down, exact library sin/cos; ctest 32/32 → [player-movement](features/player-movement.md), [docs/re/player.md](../re/player.md)
-- 2026-10-13T21:17:53+02:00 — Start state of placed objects and doors: level scripts decoded, `startup` script and reveal links give the disabled objects, doors wired into chase-game; ctest 38/38 → [script-system](features/script-system.md), [doors](features/doors.md), [docs/re/scripts.md](../re/scripts.md)
-- 2026-10-13T21:34:59+02:00 — Feature layer introduced: open items, stand-ins and findings moved from this file into docs/plans/features/ (one file per feature, index features/README.md); long log entries shortened to one line (git history keeps the originals) → [features/README.md](features/README.md)
-- 2026-10-13T21:38:53+02:00 — Lead: docs/re stand-in references (collision, scripts, audio, studs, player) now point to the feature files instead of the progress file; INPUT-1 kept open for possible controller support (user) → [input](features/input.md).
-- 2026-10-13T21:39:06+02:00 — In-game HUD: portrait, hearts, stud counter, studs flying to it, bottom-screen map (stand-in fit); skip limit corrected to 30; ctest 42/42 → [hud-ui](features/hud-ui.md), [studs](features/studs.md), [docs/re/hud.md](../re/hud.md)
-- 2026-10-13T21:46:54+0200 — chase-viewer plays animations at their stored rate (ANIM-S1 removed) → [animation-characters](features/animation-characters.md).
-- 2026-10-13T21:46:58+0200 — STUD-3 checked: still open: blue and purple collect sound (id 63) has no recorded oracle pickup; silver id 64 is pinned by `audio-real-data` → [studs](features/studs.md).
-- 2026-10-13T21:51:17+02:00 — Effect sound stop (0x23ae50, owner key, fade from the table) and the door sound sequence in `chase-game`; AUDIO-4 and DOOR-5 closed; ctest 42/42 → [audio](features/audio.md), [doors](features/doors.md)
-- 2026-10-13T22:17:29+02:00 — Progress report tool (`tools/progress_report.py`, README table, `progress-readme` gate) over C++ tables for script commands, object behaviours and file decoders → [viewer-tools](features/viewer-tools.md), [docs/progress.md](../progress.md)
-- 2026-10-13T22:20:38+02:00 — Lead: progress report merged; README progress section is a workflow rule (CLAUDE.md "Git", gate `progress-readme`) → [viewer-tools](features/viewer-tools.md), [docs/progress.md](../progress.md).
-- 2026-10-13T22:24:39+02:00 — Material texture-environment stages, blend, alpha test and cull recovered and run in the renderer (levels no longer dark, Chase's eyes no longer holes); lighting still a stand-in; ctest 42/42 → [rendering](features/rendering.md), [docs/re/materials.md](../re/materials.md)
-- 2026-10-13T22:31:09+02:00 — Lead: paused near the usage limit; lighting part 1 and the streaming map merged, all agents stopped, priorities updated in Next Action.
-- 2026-10-13T22:34:50+02:00 — Lead: two user-reported police-station bugs classified and recorded: lift door half open and blocking (DOOR-7, with DOOR-3), grey wall behind the start (WSTREAM-7); both need an indoor oracle state (RENDER-4) → [doors](features/doors.md), [world-streaming](features/world-streaming.md).
-- 2026-10-13T22:35:00+0200 — Mapped world levels, room links, scene change chain; decoded `.blvl` +0x34 room links and +0x1c event bindings (`streaming-real-data`); oracle teleport into the police entry bound did not fire → [world-streaming](features/world-streaming.md), [level-transitions](features/level-transitions.md).
-- 2026-10-13T22:41:25+02:00 — Lead: user-reported subtitle overflow recorded as FE-10 → [front-end](features/front-end.md).
-- 2026-10-13T22:45:08+02:00 — Lead: oracle tool `--display desktop` (visible emulator for the user) → [viewer-tools](features/viewer-tools.md), [docs/re/oracle.md](../re/oracle.md).
-- 2026-10-13T23:11:46+02:00 — Lead: user checked a real 3DS: no camera turning in the police station; WSTREAM-7 reclassified, CAMERA-6 and stand-in CAMERA-S3 added → [camera](features/camera.md).
-- 2026-10-13T23:13:43+02:00 — Lead: camera lock lead from the user's real-3DS observation (crossed-out camera icon): native CameraRotFixedSet 0x27bb9c, icon UI_CameraLocked 0x193a5c → [camera](features/camera.md).
-- 2026-10-13T23:14:58+02:00 — Lead: police-station camera issue made definitive (CAMERA-6, CAMERA-S3); WSTREAM-7 closed as superseded; white quad split off as RENDER-6 → [camera](features/camera.md).
-- 2026-10-13T23:20:34+02:00 — Lead: oracle checkpoint police-station from the user's own quick save; tool supports New 3DS states ("new_3ds" in the state json) → [rendering](features/rendering.md), [docs/re/oracle.md](../re/oracle.md).
-- 2026-10-14T09:50:11+02:00 — Agent B: RENDER-4 closed (lobby compared), CAMERA-6 cause found (record pose camera 0x298cd8, not CameraRotFixedSet; not implemented, needs CAMERA-3), DOOR-7 fixed in code (per-leaf instances, not oracle-verified), RENDER-6 classified (Checker1 quad) → [camera](features/camera.md), [doors](features/doors.md), [rendering](features/rendering.md).
-- 2026-10-14T10:00:14+02:00 — Agent D: links from features to docs/re now carry #ts- anchors (130 entry anchors, 193 links); tools/check_doc_links.py and CTest doc-links added → [viewer-tools](features/viewer-tools.md)
-- 2026-10-14T10:03:32+02:00 — Lead: TOOLS-5 closed, the user confirmed that the #ts- entry anchors work in the Forgejo web view → [viewer-tools](features/viewer-tools.md).
-- 2026-10-14T10:07:15+02:00 — Agent C: TRANS-1 closed (Lower bound disabled by mission state; switch chain trapped in the oracle with a poked bound), TRANS-7 opened → [level-transitions](features/level-transitions.md)
-- 2026-10-14T10:09:18+02:00 — Agent A: SCRIPT-1 phase 1: script threads run every update (ScriptRunner), TriggerObject reaches doors, trigger dispatch for player bound events and ObjectTriggered (TRANS-4 closed); SCRIPT-1 stays open for natives, events and other trigger types → [script-system](features/script-system.md).
-- 2026-10-14T10:20:23+02:00 — Lead: recorded (user) that the police-station checkpoint is after mission 1-1; TRANS-7 now starts from it instead of replaying the mission → [level-transitions](features/level-transitions.md).
-- 2026-10-14T10:33:57+02:00 — Lead: user rule: agents ask the user (through the lead) for hard-to-reach oracle states instead of brute-forcing routes; added to CLAUDE.md "Runtime oracle" and Decisions; user state street-after-1-1 registered (slot 2) → [viewer-tools](features/viewer-tools.md).
-- 2026-10-14T10:45:00+02:00 — Agent F: camera records: selection 0x1d34ac/0x1b4a30, record pose 0x298cd8, camera lock and UI_CameraLocked icon in chase-game; CAMERA-6 closed, CAMERA-3 partly (single record verified), lock scope list recorded → [camera](features/camera.md)
-- 2026-10-14T10:56:00+02:00 — Agent E: WarningDialogBox (blocking, A 2 / B 1, drawn in chase-game), PositionObject (player) and FadeScreen (stand-in) run; Police_ExtToInt reaches its Wait 3; SCRIPT-12/13 and TRANS-8 opened → [script-system](features/script-system.md).
-- 2026-10-14T11:12:23+02:00 — Lead: user bug report recorded as CAMERA-8 (record pose camera snaps in the police station instead of blending) → [camera](features/camera.md).
-- 2026-10-14T11:15:03+02:00 — Agent G: station entry traced from the unmodified street states (bound fires by itself, SceneChange request order, loading-page A, live Wait thread; TRANS-7 and SCRIPT-8 closed, TRANS-9 opened, WSTREAM-1 partly) → [level-transitions](features/level-transitions.md)
-- 2026-10-14T11:17:43+02:00 — Lead: merge review of agent G: dialog pause wording corrected (chase-game already pauses like the original; SCRIPT-S9, SCRIPT-13), oracle savestate drops the New 3DS flag recorded as TOOLS-6 → [viewer-tools](features/viewer-tools.md).
-- 2026-10-14T11:19:23+02:00 — Lead: agent round E/F/G merged; Next Action priorities updated (police-station exit/entry first, CAMERA-8, save-aware start) → [level-transitions](features/level-transitions.md).
-- 2026-10-14T11:30:56+02:00 — Agent K: TOOLS-6 closed; oracle saves and checks the New 3DS mode in session.json and state JSON, refuses a mismatched loadstate; unit tests and a real New 3DS save and reload pass → [viewer-tools](features/viewer-tools.md)
-- 2026-10-14T11:53:13+02:00 — Agent J: SAVE-1 save-aware start (chase-game --save/--slot, level state blocks, unlock bits, oracle bound compare on street-after-1-1) → [saves-options](features/saves-options.md)
-- 2026-10-14T12:04:04+02:00 — Agent H: lobby exit traced from the unmodified station state (walk-in bound, destination points, loading page), `chase-game` switches between the police station and the street at run time → [level-transitions](features/level-transitions.md)
-- 2026-10-14T12:09:00+02:00 — Agent I: CAMERA-8 closed; record pose camera fades between commands and filters the pose per update, lobby walks replay to 6e-6, street hand-over traced → [camera](features/camera.md)
-- 2026-10-14T12:16:46+02:00 — Lead: round K/J/H/I merged (TOOLS-6, SAVE-1, station exit and entry at run time, CAMERA-8); merge reviews fixed one-sided dependencies (SAVE-S2, TRANS-S5) and corrected a wrong lobby-walk note in docs/re/camera.md; game.cpp level loop reindented; Next Action priorities updated → [level-transitions](features/level-transitions.md).
-- 2026-10-14T13:36:20+02:00 — Agent Q: census of all 245 script natives (handlers, call counts, classes A-D) and 14 work batches; script-system items reshaped → [script-system](features/script-system.md)
-- 2026-10-14T13:37:00+02:00 — Agent R: game.cpp split into game_options, game_player, game_doors and game_level (LevelSession), 956 to 191 lines, CTest game-cpp-wiring added → [executable-platform](features/executable-platform.md)
-- 2026-10-14T13:42:31+02:00 — Agent N: SAVE-6 and SAVE-7 closed (object records decoded, TASKS_COMPLETE applied, current level byte, unlock bit 1 never written); SAVE-8, SAVE-9 opened → [saves-options](features/saves-options.md)
-- 2026-10-14T13:41:56+02:00 — Agent D: docs rules made checkable (size limits, item length, correction pairing in doc-links), 57 corrections marked at both ends, player.md and camera.md split, 10 long feature items shortened → [executable-platform](features/executable-platform.md)
-- 2026-10-14T14:01:39+02:00 — Agent O: room streaming rule recovered (request chain 0x197794/0x2af6b0/0x279834, neighbour list plus view-ranked preloads, unload by absent request) and pinned by five oracle readings; WSTREAM-1/2 closed → [world-streaming](features/world-streaming.md)
 - 2026-10-14T14:13:25+02:00 — Agent P: strict option parsing in chase-game (numbers whole and in range, --start, --script and --front-script steps checked before data is read, unknown options rejected; errors name the option and text, exit 1) → [viewer-tools](features/viewer-tools.md)
 - 2026-10-14T14:17:34+02:00 — Agent B1: natives batch SCRIPT-26 read (22 handlers), 11 run (KillScript, flag setters, ResetObject, SkipToFinalState, two no-ops); rest recorded → [script-system](features/script-system.md)
 - 2026-10-14T14:17:00+02:00 — Agent G: OpenGL 4.6 core and shaders in .glsl files embedded at build time, guard test no-inline-shaders; screenshots and test output unchanged → [rendering](features/rendering.md)
@@ -310,3 +160,4 @@ One line per session: timestamp, what was worked on, how far it got, link to the
 - 2026-10-14T16:01:35+02:00 — Agent OH: objective natives of batch 31 (SetActiveWayPoint, SubObjectiveGoToEnable registry), waypoint object and map marker in chase-game, measured on the oracle; group effect and arrows open → [script-system](features/script-system.md)
 - 2026-10-14T16:34:42+02:00 — Agent SV: save request chain 0x21cf38 and slot commit transcribed (SaveRequestWriter, --save-out, round trip byte-exact on the user's save copy), slot row fields (play time, percent, location) decoded; level state refresh and live summary inputs open (SAVE-14, SAVE-15); SAVE-10 and SCRIPT-63 closed → [saves-options](features/saves-options.md)
 - 2026-10-14T16:37:00+02:00 — Agent AI: AI core and batch SCRIPT-34 (17 AI natives as stand-ins, AIMove walks the player and fires the AIMove trigger, Police_ExtToInt runs to its SceneChange); movement, pursuit and the other AI events open → [script-system](features/script-system.md)
+- 2026-10-14T16:52:00+02:00 — Agent DOCS: docs workflow rules enforced by check_doc_links --fix (log newest 20 + archive, feature files 16 KB, closed items to .closed.md, duplicate IDs), script-system and three docs/re files split by subtopic, merge_agent runs --fix → [script-system](features/script-system.md)

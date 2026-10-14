@@ -22,11 +22,13 @@ Read this index, then open only the file you need.
 | [cutscenes.md](cutscenes.md) | `csdata` cutscenes: tracks, cameras, actors, soundtrack |
 | [text-localisation-fonts.md](text-localisation-fonts.md) | `.loc`, text escapes, `.tnf` fonts |
 | [data-tables-config.md](data-tables-config.md) | `.bxls` tables, brace-block config text |
-| [save-format.md](save-format.md) | `savegame.dat` layout, CRC, save thread |
+| [save-format.md](save-format.md) | `savegame.dat` layout, CRC, save thread, options, slot progress, level table; later entries: [save-format-state.md](save-format-state.md) |
+| [save-format-state.md](save-format-state.md) | Level state blocks, unlock bits, object records, where Continue starts, the save request chain and slot row fields |
 | [ui-layouts.md](ui-layouts.md) | `.bxaml` UI layouts and storyboards |
 | [fmv.md](fmv.md) | Mobiclip `.moflex` video and subtitles |
 | [particles.md](particles.md) | `particledefs.bprt` particle definitions |
-| [scripts.md](scripts.md) | Level scripts (section +0x18), the script executor 0x234204 and its words, EnableObject / EnableCollision, the `startup` script, the revealer links, the start state of placed objects |
+| [scripts.md](scripts.md) | Level scripts (section +0x18), the script executor 0x234204 and its words, the per-update runner, EnableObject / EnableCollision, the `startup` script, the revealer links, the start state of placed objects; runtime entries: [scripts-runtime.md](scripts-runtime.md) |
+| [scripts-runtime.md](scripts-runtime.md) | Trigger records and bound switches, the police entrance, WarningDialogBox / PositionObject / FadeScreen, a live script thread of the original |
 | [script-text.md](script-text.md) | Tip text, dialogue lines, dialogue background, mission title: handlers of batch 30, the timed objects 0x517ef8 / 0x5189cc, measured timing and layout |
 | [objective-hud.md](objective-hud.md) | Waypoints, sub-objective registry and the waypoint marker on the map: handlers of batch 31 (SetActiveWayPoint 0x27bde8, SubObjectiveGoToEnable 0x2adaac), registry 0x51a3a8, measured marker |
 | [ai-natives.md](ai-natives.md) | The 17 AI natives of batch 34 (AIMove 0x171f7c, AIEnable 0x1881d4, ...): AI component fields, requested state numbers, the AIMove trigger event |
@@ -38,7 +40,8 @@ Read this index, then open only the file you need.
 | [doors.md](doors.md) | Doors (type 42): record, update 0x1d16b8, state change, messages, easing, hinge and slide pose, timings measured in the oracle |
 | [studs.md](studs.md) | Studs (collectible coins): pickup pool records, sprite sheet drawing and spin, pickup radius and skip counter, collect timer, counter values and limits, stand-ins |
 | [hud.md](hud.md) | In-game HUD: layouts, portrait, hearts (SetHearts, loop rule, health default), stud bar (state machine, formatting, icon bounce, no roll-up for pickups), flying studs (law, unprojection, sinks), bottom-screen map placement |
-| [streaming.md](streaming.md) | World levels and the master level, scene array, room objects and states, room links (`.blvl` +0x34), event bindings (+0x1c), the `SceneChange` chain, `StreamRoomIn`; `pregen/` is not streaming |
+| [streaming.md](streaming.md) | World levels and the master level, scene array, room objects and states, room links (`.blvl` +0x34), event bindings (+0x1c), the `SceneChange` chain, `StreamRoomIn`; `pregen/` is not streaming; the observed chain: [streaming-transitions.md](streaming-transitions.md) |
+| [streaming-transitions.md](streaming-transitions.md) | The observed transition chain: why the Lower bound did not fire, station entry, lobby exit and the scene change update |
 | [streaming-rooms.md](streaming-rooms.md) | The per-update room request rule: current room link list, view-ranked preloads, unload by absent request, room request word layout |
 | [oracle.md](oracle.md) | Azahar runtime oracle: entry point, setup, fidelity rules, fast workflow, pointers to the subtopic files |
 | [oracle-setup.md](oracle-setup.md) | Oracle launch: Xvfb, render-window crash and launch retry, visible desktop mode |

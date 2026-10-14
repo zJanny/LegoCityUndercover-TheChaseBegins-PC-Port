@@ -34,10 +34,7 @@ IN_PROGRESS, updated 2026-10-14T15:55:00+02:00. Script text: the tip panel (bott
 
 ## 5. Open items
 
-- [x] HUD-1 — Draw the HUD (hearts, stud counter) from the `.bxaml` layouts. Done 2026-10-13. blocks: STUD-2 (done).
-- [x] HUD-2 — Studs flying to the counter. Done 2026-10-13 (STUD-S4 removed).
 - [ ] HUD-3 — The `.bxaml` track properties and the storyboard property evaluator (not found, time-boxed). evidence: [ui-layouts.md §2026-10-13T09:12](../../re/ui-layouts.md#ts-20261013-0912).
-- [x] HUD-4 — The stud counter's display and per-level stud total: display recovered ([hud.md](../../re/hud.md)); the per-level total (0x593420..) is STUD-6.
 - [ ] HUD-5 — In-game menus and the main menu are not recovered.
 - [ ] HUD-6 — Hearts never change: no damage or healing exists yet. needs: enemies (no feature file yet). evidence: [hud.md](../../re/hud.md).
 - [ ] HUD-7 — Vehicle heart image (entity type 0x11a / 0x11c), the +1 heart of unlock 17 (0x236e6c).
@@ -50,7 +47,6 @@ IN_PROGRESS, updated 2026-10-14T15:55:00+02:00. Script text: the tip panel (bott
 - [ ] HUD-18 — The top-screen waypoint arrow or indicator (none was seen at the mission start); compare when the player is far from the waypoint. evidence: [objective-hud.md §2026-10-14T15:59](../../re/objective-hud.md#ts-20261014-155919).
 - [ ] HUD-12 — chase-game always uses the two-screen layout, also for levels without a player (placeholder camera).
 - [ ] HUD-13 — Level heading box ("Cherry Tree Hills" above the tip panel, ShowLevelText), hexagon frame of the dialogue portrait, fade of the dialogue background, the other text screens (ShowCharacterIntro, ShowTally, ShowIntroText). blocks: SCRIPT-66. evidence: [script-text.md §2026-10-14T15:25](../../re/script-text.md#ts-20261014-152500).
-- [x] HUD-14 — Closed 2026-10-14: tip and dialogue layout from the draw code, badge at natural size, dialogue fade by the code; fitted rest is HUD-S8. evidence: [script-text.md §2026-10-14T15:54](../../re/script-text.md#ts-20261014-155429).
 - [ ] HUD-15 — Several text kinds at once (a tip during a dialogue, a dialogue during a DCam cutscene) and the tip on the map's top-screen position are not compared with the oracle. evidence: [script-text.md §2026-10-14T15:25](../../re/script-text.md#ts-20261014-152500).
 - [ ] HUD-19 — Dialogue portrait and hexagon frame: the formula (centre x - half width - 31, centre y - 1, sprites `[0x5189cc+0xac]`, `[0x51920c+0x264]`) gives x about 50 against the measured 36. needs: HUD-13. blocks: HUD-S8, HUD-S9. evidence: [script-text.md §2026-10-14T15:54](../../re/script-text.md#ts-20261014-155429).
 - [ ] HUD-20 — Writer of the tip's draw alpha (float 0x51a2d4, read by 0x1b1fe0); the tip keeps the measured 0.2 per update. blocks: SCRIPT-70. evidence: [script-text.md §2026-10-14T15:54](../../re/script-text.md#ts-20261014-155429).

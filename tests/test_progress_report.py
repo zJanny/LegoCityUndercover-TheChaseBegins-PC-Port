@@ -50,6 +50,24 @@ class FeatureParserTests(unittest.TestCase):
     def test_index_rows_without_file(self):
         self.assertEqual(report.parse_feature_index(INDEX), [('missions (no file yet)', 'NOT_STARTED')])
 
+    def test_closed_and_split_files_count_for_their_feature(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            features = root / 'docs' / 'plans' / 'features'
+            features.mkdir(parents=True)
+            (features / 'sample.md').write_text(FEATURE)
+            (features / 'sample.closed.md').write_text('# Closed\n\n- [x] SAMP-9 done\n')
+            (features / 'sample-extra.md').write_text('## 5. Open items\n\n- [ ] SAMP-10 gap\n- SAMP-S3 guess\n')
+            (features / 'sample-extra.closed.md').write_text('- [x] SAMP-11 done\n')
+            (features / 'README.md').write_text(INDEX)
+            measured = report.measure_features(root)
+            self.assertEqual(list(measured['per_feature']), ['sample'])
+            self.assertEqual(measured['features'], 2)
+            self.assertEqual(measured['open'], 3)
+            self.assertEqual(measured['done'], 3)
+            self.assertEqual(measured['stand_ins'], 3)
+            self.assertEqual(measured['per_feature']['sample']['status'], 'IN_PROGRESS')
+
     def test_feature_directory(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

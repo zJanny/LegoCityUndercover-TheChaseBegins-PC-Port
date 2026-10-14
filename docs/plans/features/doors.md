@@ -25,7 +25,7 @@ IN_PROGRESS, updated 2026-10-14T09:54:47+02:00. Doors with `AutoOpen` open and c
 
 ## 5. Open items
 
-- [ ] DOOR-1 — Some doors in lvl_01 open only when a game script asks; `Police_ExtToInt` stops at `WarningDialogBox`, which has no handler, and its bound is off at the story start. Whether the player's "use" action also opens doors is unknown. needs: SCRIPT-7 ([script-system.md](script-system.md)). evidence: [doors.md §2026-10-14T13:39](../../re/doors.md#ts-20261014-133955).
+- [ ] DOOR-1 — Some doors in lvl_01 open only when a game script asks; `Police_ExtToInt` stops at `WarningDialogBox`, which has no handler, and its bound is off at the story start. Whether the player's "use" action also opens doors is unknown. needs: SCRIPT-7 ([script-system-natives.md](script-system-natives.md)). evidence: [doors.md §2026-10-14T13:39](../../re/doors.md#ts-20261014-133955).
 - [ ] DOOR-2 — Easing 4 and the custom curves, door types 2, 3, 4, 9 to 0x13 (motion), the DoorAnim path, partial opening and the bounce are transcribed or missing without oracle measurements. evidence: [doors.md §2026-10-13T21:17](../../re/doors.md#ts-20261013-211700).
 - [ ] DOOR-3 — An open door keeps the closed box in `chase-game`, although one oracle walk differed (the open door held the character still at (905.755, 1116.386) for 30 updates while the closed door let him slide); why is not explained. needs: COLL-4. evidence: [doors.md §2026-10-13T21:17](../../re/doors.md#ts-20261013-211700).
 - [ ] DOOR-4 — The rest-matrix-before-pose draw order (`placement * pose * nodeMatrix`) is unverified against a picture of the original. evidence: [doors.md §2026-10-13T21:17](../../re/doors.md#ts-20261013-211700).

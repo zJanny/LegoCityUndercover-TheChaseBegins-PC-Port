@@ -161,12 +161,28 @@ def parse_feature_index(text):
     return rows
 
 
+def feature_base_name(stem, stems):
+    candidates = [other for other in stems if stem.startswith(other + '-')]
+    return min(candidates, key=len) if candidates else stem
+
+
 def measure_features(root):
     directory = root / 'docs' / 'plans' / 'features'
+    paths = [p for p in sorted(directory.glob('*.md')) if p.name != 'README.md']
+    closed_suffix = '.closed'
+    stems = [p.stem for p in paths if not p.stem.endswith(closed_suffix)]
     features = {}
-    for path in sorted(directory.glob('*.md')):
-        if path.name != 'README.md':
-            features[path.stem] = parse_feature_file(path.read_text(encoding='utf-8'))
+    for path in paths:
+        closed = path.stem.endswith(closed_suffix)
+        owner = feature_base_name(path.stem[:-len(closed_suffix)] if closed else path.stem, stems)
+        parsed = parse_feature_file(path.read_text(encoding='utf-8'))
+        if owner not in features:
+            features[owner] = {'status': 'UNKNOWN', 'open': [], 'done': [], 'stand_ins': []}
+        merged = features[owner]
+        if path.stem == owner:
+            merged['status'] = parsed['status']
+        for key in ('open', 'done', 'stand_ins'):
+            merged[key] = sorted(set(merged[key]) | set(parsed[key]))
     index = directory / 'README.md'
     without_file = parse_feature_index(index.read_text(encoding='utf-8')) if index.exists() else []
     return {

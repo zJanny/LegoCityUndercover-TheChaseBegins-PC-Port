@@ -1,6 +1,6 @@
 # Script natives: progress, saves and studs (batch SCRIPT-27)
 
-Handlers of the 21 natives of batch SCRIPT-27 and what they touch. Census and batches: [script-natives.md](script-natives.md). Items: [script-system.md](../plans/features/script-system.md) (SCRIPT-27, SCRIPT-61 to SCRIPT-65).
+Handlers of the 21 natives of batch SCRIPT-27 and what they touch. Census and batches: [script-natives.md](script-natives.md). Items: [script-system-natives.md](../plans/features/script-system-natives.md) (SCRIPT-27, SCRIPT-61 to SCRIPT-65).
 
 <a id="ts-20261014-144155"></a>
 

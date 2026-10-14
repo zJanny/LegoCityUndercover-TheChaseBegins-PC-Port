@@ -105,28 +105,96 @@ class RuleChecksTest(unittest.TestCase):
         self.assertEqual(len(found), 1)
         self.assertTrue(found[0].startswith('docs/re/huge.md:1: re-file-size'))
 
-    def test_feature_and_index_length(self):
-        (self.features / 'ok.md').write_text('line\n' * 150)
-        (self.features / 'long.md').write_text('line\n' * 151)
+    def test_feature_byte_limit_and_index_line_limit(self):
+        (self.features / 'ok.md').write_text('x' * 16384)
+        (self.features / 'big.md').write_text('x' * 16385)
+        (self.features / 'big.closed.md').write_text('x' * 20000)
         (self.features / 'README.md').write_text('line\n' * 41)
-        found = self.errors('-length')
-        self.assertEqual(len(found), 2)
-        self.assertTrue(any('long.md:151: feature-file-length' in e for e in found))
-        self.assertTrue(any('README.md:41: index-file-length' in e for e in found))
+        self.assertEqual(len(self.errors('feature-file-size')), 1)
+        self.assertTrue(self.errors('feature-file-size')[0].startswith('docs/plans/features/big.md:1: feature-file-size: 16385 bytes, limit 16384'))
+        self.assertEqual(len(self.errors('index-file-length')), 1)
+        self.assertTrue(self.errors('index-file-length')[0].startswith('docs/plans/features/README.md:41: index-file-length'))
+        (self.features / 'README.md').write_text('line\n' * 40)
+        self.assertEqual(self.errors('index-file-length'), [])
 
-    def test_item_and_stand_in_length(self):
-        long_text = 'y' * 400
-        (self.features / 'f.md').write_text(
-            f'- [ ] FOO-1 {long_text}\n'
-            f'- [x] FOO-2 short\n'
-            f'- FOO-S1 {long_text}\n'
-            f'- FOO-S2 short\n'
-            f'Prose line {long_text}\n'
-        )
-        found = self.errors('item-length')
+    def test_long_item_lines_are_not_limited(self):
+        (self.features / 'f.md').write_text('- [ ] FOO-1 ' + 'y' * 900 + '\n')
+        self.assertEqual(links.process(self.root, False)[0], [])
+
+    def write_log(self, count):
+        plans = self.root / 'docs' / 'plans'
+        lines = [f'- 2026-01-{n:02d}T00:00:00+01:00 — line {n}' for n in range(1, count + 1)]
+        (plans / 'x.progress.md').write_text('# P\n\n## Status\n\n- not a log line\n\n## Session Log\n\nIntro.\n\n' + '\n'.join(lines) + '\n')
+        return lines
+
+    def test_session_log_length_fails_and_fix_rotates(self):
+        lines = self.write_log(23)
+        found = self.errors('session-log-length')
+        self.assertEqual(len(found), 1)
+        self.assertIn('23 entry lines, limit 20', found[0])
+        messages = []
+        links.process(self.root, True, messages)
+        self.assertEqual(messages, ['3 log lines archived'])
+        plans = self.root / 'docs' / 'plans'
+        log = (plans / 'x.progress.md').read_text()
+        self.assertIn('- not a log line', log)
+        self.assertEqual([l for l in log.split('\n') if l.startswith('- 2026')], lines[3:])
+        archive = (plans / 'x.progress-archive.md').read_text()
+        self.assertEqual([l for l in archive.split('\n') if l.startswith('- 2026')], lines[:3])
+        self.assertEqual(self.errors('session-log-length'), [])
+
+    def test_session_log_rotation_appends_and_is_idempotent(self):
+        lines = self.write_log(20)
+        plans = self.root / 'docs' / 'plans'
+        links.process(self.root, True)
+        self.assertFalse((plans / 'x.progress-archive.md').exists())
+        extra = ['- 2026-02-01T00:00:00+01:00 — new 1', '- 2026-02-02T00:00:00+01:00 — new 2']
+        log = plans / 'x.progress.md'
+        log.write_text(log.read_text() + '\n'.join(extra) + '\n')
+        links.process(self.root, True)
+        snapshot = {p: p.read_text() for p in plans.glob('*.md')}
+        links.process(self.root, True)
+        self.assertEqual(snapshot, {p: p.read_text() for p in plans.glob('*.md')})
+        archive = [l for l in (plans / 'x.progress-archive.md').read_text().split('\n') if l.startswith('- 2026')]
+        self.assertEqual(archive, lines[:2])
+        log.write_text(log.read_text() + '- 2026-02-03T00:00:00+01:00 — new 3\n')
+        links.process(self.root, True)
+        archive = [l for l in (plans / 'x.progress-archive.md').read_text().split('\n') if l.startswith('- 2026')]
+        self.assertEqual(archive, lines[:3])
+        kept = [l for l in log.read_text().split('\n') if l.startswith('- 2026')]
+        self.assertEqual(kept, lines[3:] + extra + ['- 2026-02-03T00:00:00+01:00 — new 3'])
+
+    def test_fix_moves_closed_items_in_order(self):
+        feature = self.features / 'f.md'
+        feature.write_text('# F\n\n- [ ] F-1 open\n- [x] F-2 done\n- F-S1 stand-in\n- [x] F-3 also done\nProse.\n')
+        messages = []
+        links.process(self.root, True, messages)
+        self.assertEqual(messages, ['2 closed items moved'])
+        self.assertEqual(feature.read_text(), '# F\n\n- [ ] F-1 open\n- F-S1 stand-in\nProse.\n')
+        closed = (self.features / 'f.closed.md').read_text()
+        self.assertTrue(closed.startswith('# Closed items of f\n'))
+        self.assertTrue(closed.endswith('- [x] F-2 done\n- [x] F-3 also done\n'))
+        feature.write_text(feature.read_text() + '- [x] F-4 later\n')
+        links.process(self.root, True)
+        self.assertTrue((self.features / 'f.closed.md').read_text().endswith('- [x] F-3 also done\n- [x] F-4 later\n'))
+        snapshot = {p: p.read_text() for p in self.features.glob('*.md')}
+        links.process(self.root, True)
+        self.assertEqual(snapshot, {p: p.read_text() for p in self.features.glob('*.md')})
+        self.assertEqual(links.process(self.root, False)[0], [])
+
+    def test_duplicate_ids_across_feature_and_closed_file(self):
+        (self.features / 'f.md').write_text('- [ ] F-1 open\n- F-S1 guess\n')
+        (self.features / 'f.closed.md').write_text('- [x] F-1 done\n- F-S1 again\n- [x] F-2 fine\n')
+        found = self.errors('duplicate-id')
         self.assertEqual(len(found), 2)
-        self.assertTrue(any('f.md:1: item-length' in e for e in found))
-        self.assertTrue(any('f.md:3: item-length' in e for e in found))
+        self.assertTrue(any('f.closed.md:1: duplicate-id: F-1 is already defined at docs/plans/features/f.md:1' in e for e in found))
+        self.assertTrue(any('f.closed.md:2: duplicate-id: F-S1' in e for e in found))
+
+    def test_duplicate_ids_inside_one_file_and_split_siblings(self):
+        (self.features / 'f.md').write_text('- [ ] F-1 a\n- [ ] F-1 b\n')
+        (self.features / 'f-sub.md').write_text('- [ ] F-1 c\n')
+        (self.features / 'g.md').write_text('- [ ] F-1 other feature, allowed\n')
+        self.assertEqual(len(self.errors('duplicate-id')), 2)
 
     def test_claude_md_size(self):
         (self.root / 'CLAUDE.md').write_text('x' * 20480)
