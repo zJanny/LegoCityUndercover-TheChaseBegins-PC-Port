@@ -49,6 +49,8 @@ All other commands (extractors, converters, viewer, FMV, sound test, input lab, 
 - **Game version:** all `docs/re/` addresses are for one exact build (Europe, `00040000000AD600`, v1.0). `docs/re/game-version.md` lists its hashes and how to check an image. With a different image, warn the user loudly that the documented offsets are probably wrong, and stop before applying them.
 - **REA:** for the ARM executable, use the installed REA skill/integration and its documented workflow. If unavailable, use other disassembly tools. Record reproducible findings and evidence IDs in the matching `docs/re/` file. Never claim REA analysis that did not happen.
 - **Platform:** Linux x86_64 first. Windows comes after the Linux version is finished. Until the user says so, do no Windows work of any kind: no builds, infrastructure, abstractions or preparation. Prefer portable C++17 and the standard library.
+- **`src/game.cpp` only wires features together** (options, the order of the update, calls). New runtime logic goes into its own file under `src/runtime/` (or the matching library) with its own test; a feature adds at most a few lines of glue to `game.cpp`.
+- **Strict input:** every command-line option and every development script (`--script`, `--front-script`, `--start`, oracle scripts) is parsed strictly. Malformed, unknown or out-of-range input stops the program with an error that names the option and the bad text; never fall back to a default or skip it silently. Each new option gets a test for its rejection.
 
 ## C++ is the source of truth
 
