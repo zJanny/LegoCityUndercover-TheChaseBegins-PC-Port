@@ -14,6 +14,7 @@ namespace chase::frontend {
 constexpr const char* kHudLayout = "sprites/ui_hud/blend/main.bxaml";
 constexpr const char* kHeartControlLayout = "sprites/ui_hud/blend/images/ui_hearts_control.bxaml";
 constexpr const char* kStudSheet = "sprites/commonlego/pickups_commonstud.btga";
+constexpr const char* kCameraLockedSprite = "sprites/ui_hud/ui_cameralocked.btga";
 constexpr int kHudHeartSlots = 6;
 constexpr float kStudBarHoldSeconds = 2.0f;   // argument of 0x240fc0 in 0x22ddf4
 constexpr unsigned kStudBounceUpdates = 5;    // 0x166e08 tests `update count - 5 < change`
@@ -53,6 +54,8 @@ public:
     StudSink studSink() const { return sink_; }
     StudBarState studBarState() const { return barState_; }
     unsigned hearts() const { return hearts_; }
+    // 0x1b1150: the crossed-out camera icon, alpha 0 hides it.
+    void setCameraLockAlpha(float alpha) { cameraLockAlpha_ = alpha; }
     std::uint64_t studDisplay() const { return studValue_; }
     float studIconSize() const { return barLayout().iconSize; }
 
@@ -77,6 +80,7 @@ private:
     Resources& resources_;
     HudConfig config_;
     float seconds_ = 0;
+    float cameraLockAlpha_ = 0;
     unsigned updates_ = 0;
     unsigned hearts_ = kHudHeartSlots;
     std::array<Heart, kHudHeartSlots> heart_{};

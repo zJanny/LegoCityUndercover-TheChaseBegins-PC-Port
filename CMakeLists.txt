@@ -35,7 +35,7 @@ add_library(chase_save_tables src/save/completion_tables.cpp)
 target_link_libraries(chase_save_tables PUBLIC chase_save chase_assets)
 target_compile_options(chase_save_tables PRIVATE -Wall -Wextra -Wpedantic)
 # Game runtime core (plan S4e): recovered frame logic, no SDL dependency.
-add_library(chase_runtime src/runtime/scheduler.cpp src/runtime/pad.cpp src/runtime/player_intent.cpp src/runtime/player_locomotion.cpp src/runtime/follow_camera.cpp src/runtime/collision.cpp src/runtime/camera_sweep.cpp src/runtime/player_vertical.cpp src/runtime/player_motion.cpp)
+add_library(chase_runtime src/runtime/scheduler.cpp src/runtime/pad.cpp src/runtime/player_intent.cpp src/runtime/player_locomotion.cpp src/runtime/follow_camera.cpp src/runtime/collision.cpp src/runtime/camera_sweep.cpp src/runtime/player_vertical.cpp src/runtime/player_motion.cpp src/runtime/camera_records.cpp src/runtime/camera_rig.cpp src/runtime/camera_lock_icon.cpp)
 target_link_libraries(chase_runtime PUBLIC chase_assets)
 target_include_directories(chase_runtime PUBLIC src)
 target_compile_options(chase_runtime PRIVATE -Wall -Wextra -Wpedantic -ffp-contract=off)
@@ -189,6 +189,15 @@ if(BUILD_TESTING)
   target_link_libraries(camera-sweep-test PRIVATE chase_runtime)
   target_compile_options(camera-sweep-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME camera-sweep COMMAND camera-sweep-test)
+  add_executable(camera-records-test tests/camera_records_test.cpp)
+  target_link_libraries(camera-records-test PRIVATE chase_runtime chase_assets)
+  target_compile_options(camera-records-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME camera-records COMMAND camera-records-test)
+  add_executable(camera-records-real-test tests/camera_records_real_test.cpp)
+  target_link_libraries(camera-records-real-test PRIVATE chase_runtime chase_assets)
+  target_compile_options(camera-records-real-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME camera-records-real-data COMMAND camera-records-real-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
+  set_tests_properties(camera-records-real-data PROPERTIES SKIP_RETURN_CODE 77)
   add_executable(locomotion-real-test tests/locomotion_real_test.cpp)
   target_link_libraries(locomotion-real-test PRIVATE chase_runtime chase_assets)
   target_compile_options(locomotion-real-test PRIVATE -Wall -Wextra -Wpedantic)
@@ -317,26 +326,25 @@ if(BUILD_TESTING)
     set_tests_properties(frontshot-real-smoke PROPERTIES PASS_REGULAR_EXPRESSION "language: screen language.*frontshot: [0-9]+ updates, screen language")
     # Scripted stick (raw circle pad "x y updates;..." at dt 0.033): without collision 31 run updates at 6.9 u/s
     # and 9 sprint updates at 10.35 u/s would move the player 10.13 units; the lobby steps raise him to height
-    # 2.51 and the desk stops him after 8.10 units. 40 walk updates at 2.3 u/s move him 3.04 units on the floor.
+    # 2.51 and the desk stops him after 8.05 units (the lobby has the record pose camera). 40 walk updates at 2.3 u/s move him 3.04 units on the floor.
     # These two run without camera collision (the camera yaw sets the walking direction).
     add_test(NAME game-script-run COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --script "0 150 40" --no-camera-collision --screenshot game-script-run.bmp)
     set_tests_properties(game-script-run PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen"
-      PASS_REGULAR_EXPRESSION "scripted: 40 updates, player moved 8\\.10[0-9]* units.*height 2\\.50[0-9]*.*saved game-script-run.bmp")
+      PASS_REGULAR_EXPRESSION "scripted: 40 updates, player moved 8\\.05[0-9]* units.*height 2\\.50[0-9]*.*saved game-script-run.bmp")
     add_test(NAME game-script-walk COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --script "0 90 40" --no-camera-collision --screenshot game-script-walk.bmp)
     set_tests_properties(game-script-walk PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen"
       PASS_REGULAR_EXPRESSION "scripted: 40 updates, player moved 3\\.03[0-9]* units.*height 1\\.4[0-9]*.*saved game-script-walk.bmp")
-    # With camera collision the start corridor of the police station pushes the camera 6.4 degrees round (side push of
-    # docs/re/camera.md), so the same run no longer reaches the lobby steps; the placed objects of the level (docs/re/collision.md) shorten
-    # the run from 8.83 to 8.77 units (replica output, not measured in the original).
+    # In the police station lobby the record pose camera (docs/re/camera.md) is active, so the camera does not turn and
+    # the run goes straight up the lobby steps: 8.05 units (replica output, not measured in the original).
     add_test(NAME game-script-camera COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --script "0 150 40" --screenshot game-script-camera.bmp)
     set_tests_properties(game-script-camera PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen"
-      PASS_REGULAR_EXPRESSION "scripted: 40 updates, player moved 8\\.76[0-9]* units.*height 1\\.43[0-9]*.*saved game-script-camera.bmp")
+      PASS_REGULAR_EXPRESSION "scripted: 40 updates, player moved 8\\.05[0-9]* units.*height 2\\.50[0-9]*.*saved game-script-camera.bmp")
     # Run west off the 1.06 m platform at x 897 in the Cherry Tree Hills street: the heights are the recorded
     # fall (tools/oracle/fall-ledge.txt: 17.5898, 17.4908, 17.3423, 17.1443, 16.8968 after the platform updates).
     add_test(NAME game-script-ledge COMMAND chase-game
@@ -385,3 +393,7 @@ if(BUILD_TESTING)
       PASS_REGULAR_EXPRESSION "subtitle lines: 1, saved fmv-smoke.bmp")
   endif()
 endif()
+
+add_executable(camera-lock-census tools/camera_lock_census.cpp)
+target_link_libraries(camera-lock-census PRIVATE chase_runtime chase_assets)
+target_compile_options(camera-lock-census PRIVATE -Wall -Wextra -Wpedantic)

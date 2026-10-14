@@ -219,6 +219,11 @@ void Hud::draw(Canvas& top, double spinSeconds) {
                                                                           : seconds_ - barStart_});
     drawLayout(top, resources_, kHudLayout, scene, 0, 0);
     drawStudBar(top, spinSeconds);
+    if (cameraLockAlpha_ > 0.0f) {
+        const assets::Image& icon = resources_.image(kCameraLockedSprite);
+        top.drawScaled(icon, {0, 0, icon.width, icon.height}, 10.0f, float(kScreenHeight) - 10.0f - float(icon.height), float(icon.width),
+                       float(icon.height), {1, 1, 1, float(int(cameraLockAlpha_ * 255.0f) & 0xff) / 255.0f});
+    }
 }
 
 }

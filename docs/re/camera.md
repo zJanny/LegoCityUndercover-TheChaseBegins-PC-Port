@@ -172,3 +172,56 @@ Unknowns:
 - The exact record set (names, Room / Bound, Focus / Blocker) at the player start in lvl_00; the full pose of 0x298cd8 (CAMERA-3).
 - Which other levels or rooms select 0x298cd8; the show / hide timing of the icon (0x23cc00 argument 0.5).
 - Where the byte 0x3770c8 is written (it was 0 in both states).
+
+<a id="ts-20261014-104400"></a>
+
+## 2026-10-14T10:44:00+02:00 — Record selection, record pose 0x298cd8, camera lock icon and lock scope (REA Ghidra 12.1.2, llvm-objdump, Azahar oracle New 3DS states police-station and street-after-1-1)
+
+Evidence IDs: loader 0x3062e4 ev_9636e324…, query 0x1d34ac ev_a69314f3…, volume filter 0x20bf6c ev_4b20c0b7…, search 0x237f30 ev_7176d1e3…, dedupe 0x1aa734 ev_8bf13740…, binder 0x1e9290 ev_161c6427…, update 0x1b4a30 ev_20eb339d…, hand-over 0x19b8c8 ev_578623fa…, follow hand-over 0x1b4864 ev_8f15a259…, pose 0x298cd8 ev_02030dc2…, segment test 0x21c1e4 ev_ec9ce96a…, 0x23b92c ev_48c77a25…, 0x2397a0 ev_3240d814…, 0x204528 ev_16144aeb…, 0x2536c0 ev_ab3f0c52…, 0x21bb78 ev_61f11061…, icon 0x193aa4 ev_7c195249…, 0x23cc00 ev_8d8eaf0a…, 0x1b1150 ev_85050241…. Code: `src/runtime/camera_records.*`, `camera_rig.*`, `camera_lock_icon.*`; tests `camera-records`, `camera-records-real-data`.
+
+**Records (loader 0x3062e4, binder 0x1e9290).** Correction of the 2026-10-13T09:10 wording "level object": the camera records are the **level bounds** (level file section +0x24, `LevelBound`). One 0x50-byte record is made for each bound whose name starts with `Camera` and does not contain `LookAt`, in section order (lvl_00: 94, lvl_01: 332). The `.cam` `Bound` blocks fill them by name; a `Room` block fills the record of a room. Bound field +0x0c is the bounding radius (sqrt of the sum of the squared half extents, checked on lvl_00). 0x1e9290 with a node index (not 255) adds the centre to the translation of the node matrix (`level.boundMatrices`) and zeroes the centre; without a node, shapes 2 and 4 copy the radius +0x1c into +0x20 and +0x24.
+
+**Query 0x1d34ac in detail.**
+- 0x20bf6c keeps a record only when its bound is enabled (+0x0a) and the point is inside. The point is moved into the bound's space with 0x2536c0 (p minus translation, then the columns of the matrix; 0x21bb78 multiplies the bound matrix with the world matrix of the owning scene node, taken as the identity here). Shape 2: distance <= +0x1c. Shapes 4 and 6 (0x204528): 3D length of the difference < radius and |dy| < +0x20 (the length helper 0x20e968 is a plain vector length). Others: inclusive box test 0x2397a0.
+- 0x1aa734 drops the later record of every pair whose smallest axis overlap (sum of half extents minus the distance of the centres plus node translations) is <= 0.5. After a removal it advances to the next index without testing the element that moved up (decompiler output).
+- The first record with Focus or Blocker wins alone. For 2 or more records the weight is the XZ distance between the query point and the point where the segment from the bound centre, along (point - centre) with y = 0, length 2 x radius, leaves the box (0x21c1e4 then 0x22b62c). The slab loop of 0x21c1e4 compares t = half / delta without a sign test, so for a negative delta component it reports the face of the opposite side. The weights are divided by their sum.
+- With no record inside, the set is the level's Room record (count 1, +0x4e set).
+
+**Decision (0x1b4a30 and 0x19b8c8).** The set of the last frame (0x58d880, count 0x3770cb) is compared with the new one. If they share no record, 0x19b8c8 runs: one Room record and byte 0x3770c8 == 0 gives the follow controller (0x1b4864 registers 0x2a8bfc unless it is already active), anything else gives the record pose 0x298cd8 with the new set as its blend block (0x58d694: records +0x10, weights +0x30). If they share a record and the sets are equal, only the weights are refreshed (when more than one record). If they share a record but differ and a new record is in the blend block, the block is updated in place; otherwise 0x19b8c8 runs.
+
+**Record pose 0x298cd8.** T is the player node position (0x58d8a0 transformed by the node; second target absent). For each record: P.x = Location.x (Type bit 0x01) or T.x + Location.x; P.y = Location.y (bit 0x02) or T.y + Location.y; P.z likewise (bit 0x04); the second-target factor 1.1 applies to x and z only. Look point: bit 0x08 / 0x10 / 0x20 clear gives T + Offset, set with the position bit clear gives T, set with the position bit set gives P + Offset; bit 0x400 overrides all three with P + Offset. FOV = byte +0x49, 3DOffset = +0x40. The pose is the weighted sum of look point, eye, FOV and 3DOffset; with more than one record the eye is rebuilt as look + normalize(eye - look) x the weighted sum of |look - eye| (0x23b92c(f, out, base, dir) = base + dir x f).
+
+**Oracle check.**
+- police-station (player node (-1.97040856, 1.43587279, 14.84306526)): command tag 0x298cd8; one record at 0x08e78640 = `Camerabound_01` (Type 0|0x80, Location (0, 5.5557, 8.3147), Offset (0, 2, 0), FOV 43, blend block count 1, weight 1); camera C+0x4c: eye (-1.9704089, 6.9915738, 23.1577549), look (-1.9704088, 3.4358723, 14.8430634), FOV 43, yaw pi. The replica gives eye (-1.9704, 6.991602, 23.15779), look (-1.9704, 3.4359, 14.8431), yaw pi (the replica input has 4 decimals). The block C+0xbc.. reads 0.1936 / 0.1296 there (its use in motion was not traced); the pose at rest equals the sum of the records.
+- street-after-1-1 (player (900.549, 16.567, 1110.280)): tag 0x2a8bfc, one record = the Room record (+0x4e = 1, no bound), blend list head 0. gameplay-start was read earlier (0x2a8bfc). The replica selects the follow controller at that point.
+- Pictures (local): `artifacts/oracle/agentF-out/ps_oracle.png` (oracle), `ps_cg.png` (chase-game `--gameplay --start "-1.9704 1.4359 14.8431" --facing 180`), side by side `ps_side.png`: the framing matches (eye height, distance, FOV 43); the character faces another way because the oracle player faces (-0.67, -0.74). `ps_cgL.png`: chase-game with L held for 30 updates, the camera stays and the icon shows.
+- Walking in the oracle state was not possible (the player is held there, intent 0 state 0), so the pose in motion and a two-record pose were not measured. No point of lvl_00 has two records after the dedupe (scan of the lobby, y 0.5 to 6, grid 1.5).
+
+**Lock icon (0x193a1c create, 0x193aa4 show).**
+- 0x193a1c builds the object at *0x3758b0: sprite `Sprites/UI_HUD/UI_CameraLocked.tga` (archive `sprites/ui_hud/ui_cameralocked.btga`) in +0x2c, fade times +0x14 = +0x18 = 0.3 s (literal 0x3e99999a at 0x193a74), draw callback 0x1b1150. 0x193aa4 calls 0x23cc00(0.5, object, 0) when 0x21d744() and 0x236008() are both 0 (0x21d744 returns the u16 at *0x51998c + 0xf4, 0x236008 the byte at *0x51b430 + 0x4c9; meaning not traced); 0x23cc00 stores the hold time 0.5 in +0x1c.
+- Read in the oracle while L was held and released (object fields polled at about 50 Hz over RPC, state byte +0x10): 0 hidden, press gives 1 fading in for 0.3 s, then 2 shown while triggers keep arriving (+0x28 holds the time of the last trigger), 0.5 s after the last trigger 3 fading out for 0.3 s, then 0 (observed 0.59 s from the release to the fade out and 0.31 s for the fade). A trigger in state 3 returns to state 1 with the start moved so that the alpha continues (0x23cc00 case 3: start = now - (1 - progress) x fade in). 0x1b1150 draws the sprite at (10, 240 - 10 - height) of the top screen with alpha = fade x 255 (confirmed by `agentB-out/psL.png`, bottom left).
+- 0x217b14 returns 1 only for the follow controller, so the icon shows (and the yaw does not move) whenever the command is the record pose.
+
+**Lock scope (replica, `tools/camera_lock_census.cpp`, target `camera-lock-census`).** The census takes every walkable cell (nav grid cell with flag bit 0 clear, at the fitted floor + 0.1) of the level's rooms and counts the cells for which the query returns something other than the Room record. All level bounds are treated as enabled, the node matrices as static, and the query order as the level order.
+
+| Level | camera records | walkable cells | locked cells |
+|---|---|---|---|
+| lvl_00 police station | 94 | 41922 | 41540 (Room1 20551 of 20560, Room3 all, Room5 2205 of 2578) |
+| lvl_01 Cherry Tree Hills | 332 | 125943 | 24902 |
+| lvl_02 Albatross Island | 259 | 176915 | 115381 |
+| lvl_03 Auburn | 200 | 514767 | 17322 |
+| lvl_04 Fort Meadows | 193 | 12110 | 987 |
+| lvl_05 Bluebell Wood | 202 | 156445 | 84896 |
+| lvl_06 Apollo Island | 245 | 103588 | 77095 |
+| lvl_07 Downtown | 297 | 85326 | 42191 |
+
+Rooms in which every walkable cell is locked: lvl_00 Room3; lvl_01 Room34, Room35; lvl_02 Room9, Room15; lvl_04 Room41; lvl_05 Room45, 46, 48, 49, 52, 53, 56, 57; lvl_06 Room20, 27, 36; lvl_07 Room36, 40, 41, 62. In the street rooms of lvl_01 the lock covers parts only (Room15 3274 of 6667, Room18 5678 of 18057, Room10 493 of 6122), and many rooms have no camera bound at all and are never locked (lvl_01 Room3, 9, 11).
+
+**Verdict on "all indoor rooms are locked":** not as stated. The lock is tied to the `Camera*` bounds, not to rooms or indoors: where one or more of their volumes contain the player the camera is the record pose and locked; elsewhere the Room record applies and the follow camera runs. The police station is locked almost everywhere (99 percent of its cells) and several interiors in other levels are completely locked, but outdoor areas are locked wherever a volume covers them, and rooms without such volumes stay unlocked. Which rooms are indoors was not classified, so an "indoor but unlocked" example was not searched for.
+
+Unknowns:
+- The order in which the spatial structure at 0x598300 returns the records (level order is used; it matters for the dedupe of shallow overlaps and for the first Focus / Blocker record).
+- Multi-record weights and poses were not compared with the oracle (no two-record point found in lvl_00); the slab loop of 0x21c1e4 was read from decompiler output only.
+- The fade between two poses (0x224094 / 0x224080, easing and the filter block), the fixed pose of a Blocker record (0x58d42c..0x58d464), the shake 0x1c607c, the second follow target, the writer of byte 0x3770c8 and of counter 0x3770e0.
+- Which camera bounds are switched off at the level start (EnableBound), whether moving bound matrices (lifts, vehicles) change the selection, and what 0x21d744 / 0x236008 test.
+- How 0x1b4864 seeds the follow camera when it takes over from the record pose.

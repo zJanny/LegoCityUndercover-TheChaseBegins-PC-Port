@@ -17,6 +17,8 @@
 #include "render/studs.hpp"
 #include "runtime/collision.hpp"
 #include "runtime/door.hpp"
+#include "runtime/camera_lock_icon.hpp"
+#include "runtime/camera_rig.hpp"
 #include "runtime/follow_camera.hpp"
 #include "runtime/level_start.hpp"
 #include "runtime/pad.hpp"
@@ -579,9 +581,15 @@ int run(const Options& given) {
 
     PlaceholderCamera camera;
     camera.frameScene(centre, radius);
-    std::optional<runtime::FollowCamera> follow;
+    std::optional<runtime::CameraRig> follow;
+    runtime::CameraLockIcon cameraLockIcon;
     if (player) {
-        follow.emplace();
+        std::string camText;
+        if (const FuseEntry* camEntry = archive.find(options.level.substr(0, options.level.size() - 5) + ".cam")) {
+            const Bytes camBytes = archive.read(*camEntry);
+            camText.assign(camBytes.begin(), camBytes.end());
+        }
+        follow.emplace(level, camText);
         if (options.cameraCollision) follow->setCollision(&collision);
         const float target[3] = {player->motion.x, player->vertical.y, player->motion.z};
         follow->reset(target, runtime::headingRadians(player->motion.facing), runtime::headingRadians(player->motion.facing));
@@ -639,7 +647,7 @@ int run(const Options& given) {
                 hud->update(dt);
                 const fe::StudSink sink = hud->studSink();
                 studs.setFlightTarget(runtime::unprojectTopScreen(sink.x, sink.y, fe::kStudSinkDepth, follow->eye(), follow->yaw(),
-                                                                  follow->pitch(), runtime::FollowCamera::verticalFieldOfView()));
+                                                                  follow->pitch(), follow->verticalFieldOfView()));
             }
             const PlayerAnimation shown = updatePlayer(*player, collision, runtime::stickIntent(stick), pad.slot(kSlotJumpButton).press > 0, dt);
             player->animate(scene, dt, shown.role, shown.scale);
@@ -688,6 +696,10 @@ int run(const Options& given) {
             input.stickTurn = runtime::stickTurnInput(pad.slot(kSlotStickX).value, kPlayerEntityType);
             input.shoulderTurn = runtime::shoulderTurnInput(pad.slot(kSlotLeftShoulder).value, pad.slot(kSlotRightShoulder).value, false);
             follow->update(input);
+            if (follow->locked() && (pad.slot(kSlotLeftShoulder).value != 0.0f || pad.slot(kSlotRightShoulder).value != 0.0f))
+                cameraLockIcon.trigger();
+            cameraLockIcon.update(dt);
+            if (hud) hud->setCameraLockAlpha(cameraLockIcon.alpha());
             if (audio) {
                 const float* eye = follow->eye();
                 const float* look = follow->lookAt();
@@ -755,7 +767,7 @@ int run(const Options& given) {
         beginFrame(program, 1.0f);
         const float* eye = follow ? follow->eye() : camera.eye;
         const float viewYaw = follow ? follow->yaw() : camera.yaw, viewPitch = follow ? follow->pitch() : camera.pitch;
-        const float fieldOfView = follow ? runtime::FollowCamera::verticalFieldOfView() : 1.0f;
+        const float fieldOfView = follow ? follow->verticalFieldOfView() : 1.0f;
         const Mat4 viewMatrix = chase::render::view(eye, viewYaw, viewPitch);
         Mat4 mvp = chase::render::multiply(
             perspective(fieldOfView, float(fe::kTopWidth) / float(fe::kScreenHeight), radius * 0.002f, radius * 20), viewMatrix);

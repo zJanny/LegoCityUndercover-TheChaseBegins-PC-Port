@@ -254,6 +254,7 @@ struct LevelBound {
     float centre[3] = {0, 0, 0};
     float half[3] = {0, 0, 0};
     std::uint8_t node = 0xff, shape = 0, enabled = 0, active = 0;
+    float extent = 0;  // +0xc: read by the camera record weights 0x1d34ac as twice the length of the probe segment
     // Block at +4: the room the bound belongs to. The room setup 0x173944 sets +0xb to 1 for every bound and back to 0
     // for the bounds of a room (the room's bound list); empty for a bound outside the rooms.
     std::string room;

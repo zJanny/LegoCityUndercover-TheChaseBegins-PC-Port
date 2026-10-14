@@ -142,6 +142,7 @@ Level parseLevel(const Bytes& data) {
         bound.shape = s24[i * 0x28 + 9];
         bound.enabled = s24[i * 0x28 + 0xa];
         bound.active = s24[i * 0x28 + 0xb];
+        bound.extent = readF32(s24, i * 0x28 + 0xc);
         if (readU32(s24, i * 0x28 + 4)) bound.room = cString(r.next());
         level.bounds.push_back(std::move(bound));
     }
