@@ -78,6 +78,7 @@ Single C++ tests, with `ctest --test-dir build -R <name>`:
 | `audio-core` | Sound rules on made-up values (distance volume, panning, level music choice, footstep detection, landing sounds), no game data needed |
 | `audio-real-data` | Checks the sound tables and replays sound calls recorded from the original game (`artifacts/oracle/audio-traces`, folder set with `-DCHASE_AUDIO_TRACE_DIR=...`, made with `tools/export_sound_trace.py`) by running `chase-game --script`; skips with code 77 if the traces or `artifacts/romfs` are missing |
 | `runtime-core` | Game runtime core (frame timing, pad, stick, character movement, floor height and wall sliding), no SDL |
+| `script-runner` | How level scripts run each update (waits, a script calling or starting another one, conditions, door requests, scripts started by walking into marked places), with made-up scripts, no game data needed |
 | `save-core` | Save file checks, synthetic data, no SDL |
 | `save-real-data` | Completion totals from the game tables; needs `artifacts/romfs`, skips with code 77 otherwise |
 | `fmv-real-smoke` | Registered only if FFmpeg and `artifacts/romfs` existed at configure time |

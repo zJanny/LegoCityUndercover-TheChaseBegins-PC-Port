@@ -2,6 +2,7 @@
 // gameplay-start (Azahar oracle, docs/re/scripts.md). Needs the extracted RomFS; exits with 77 (skipped) when it is missing.
 #include "assets/assets.hpp"
 #include "runtime/level_start.hpp"
+#include <algorithm>
 #include <filesystem>
 #include <iostream>
 #include <stdexcept>
@@ -91,6 +92,53 @@ int main(int argc, char** argv) {
         // Provenance: an exploration script (Python, same control words) disabled 226 names through the startup script alone;
         // the total of the script and the revealer links is the value this test recorded from the C++ implementation.
         require(state.disabled.size() == 249, "disabled instance count: " + std::to_string(state.disabled.size()));
+
+        chase::assets::PlacedObjectState runState = chase::runtime::levelInitialState(level, chase::assets::archiveClassLookup(archive));
+        chase::runtime::ScriptRunner runner(level, runState);
+        const std::uint32_t updates = chase::runtime::runLevelStartup(runner, chase::runtime::kStartupStepDt, chase::runtime::kStartupMaxUpdates);
+        std::cout << "level-start: startup threads ended after " << updates << " updates; functions without handler:";
+        for (const auto& name : runner.unhandledFunctions()) std::cout << ' ' << name << '(' << runner.unhandledCalls(name) << ')';
+        std::cout << '\n';
+        // Provenance: oracle read at gameplay-start (docs/re/scripts.md 2026-10-14): the thread lists +0x1310 of both
+        // resident scenes are empty and the executor 0x234204 is not entered in 3 updates (trap scripts3).
+        require(runner.threadCount() == 0, "startup threads still running: " + std::to_string(runner.threadCount()));
+        require(runState.disabled == state.disabled, "runner state differs from levelStartState");
+
+        // Provenance: oracle `read` at gameplay-start (docs/re/scripts.md 2026-10-14): enable byte +0 of the 241 trigger
+        // records at owner+0x34 (0x08eb22e0, 0x20 each, same order as the file) and byte +0xa of the 482 bounds
+        // (0x08663354, 0x28 each). The port runs only the level's startup script, so a few differ (open item SCRIPT-10).
+        const std::vector<int> oracleTriggersOff = {1, 67, 68, 69, 70, 71, 79, 80, 81, 82, 98, 99, 110, 141, 203};
+        const std::vector<int> knownTriggerDifferences = {79, 80, 81, 82, 141};
+        for (std::size_t i = 0; i < level.triggers.size(); ++i) {
+            const bool off = std::find(oracleTriggersOff.begin(), oracleTriggersOff.end(), int(i)) != oracleTriggersOff.end();
+            const bool known = std::find(knownTriggerDifferences.begin(), knownTriggerDifferences.end(), int(i)) != knownTriggerDifferences.end();
+            require((runner.triggers()[i].enabled == !off) != known, "trigger enable byte differs from the oracle: " + std::to_string(i));
+        }
+        const std::vector<int> oracleBoundsOff = {
+            2, 3, 4, 5, 6, 7, 8, 9, 10, 17, 18, 19, 20, 21, 22, 23, 24, 25, 29, 30, 38, 42, 44, 45, 46, 47, 48, 51, 52, 53, 54, 55, 67, 68, 70,
+            79, 80, 81, 82, 87, 88, 91, 92, 94, 95, 96, 99, 100, 101, 111, 118, 119, 120, 121, 122, 123, 126, 127, 129, 138, 139, 140, 141,
+            142, 143, 150, 151, 152, 153, 154, 161, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 202, 203, 204, 223, 224,
+            251, 252, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263, 266, 271, 272, 290, 291, 292, 293, 294, 295, 296, 297, 298, 299, 300,
+            301, 302, 303, 304, 305, 306, 307, 308, 309, 310, 311, 312, 313, 314, 315, 316, 317, 318, 319, 320, 321, 322, 323, 332, 333, 334,
+            335, 336, 337, 338, 339, 340, 341, 342, 343, 344, 345, 346, 347, 348, 349, 350, 351, 352, 353, 354, 355, 356, 357, 358, 359, 360,
+            361, 362, 363, 364, 402, 422, 423, 424, 425, 426, 427, 428, 429, 430, 441, 442, 443, 444, 445, 446, 447, 448, 449, 450, 451, 452,
+            453, 454, 455, 456, 457, 458, 459, 460, 461, 462, 463, 464, 465, 466, 467, 468, 469, 471, 472, 473, 474, 480};
+        const std::vector<int> knownBoundDifferences = {266, 271, 272};
+        require(level.bounds.size() == 482, "bound count changed");
+        for (std::size_t i = 0; i < level.bounds.size(); ++i) {
+            const bool off = std::find(oracleBoundsOff.begin(), oracleBoundsOff.end(), int(i)) != oracleBoundsOff.end();
+            const bool known = std::find(knownBoundDifferences.begin(), knownBoundDifferences.end(), int(i)) != knownBoundDifferences.end();
+            require((bool(runner.boundsEnabled()[i]) == !off) != known, "bound enable byte differs from the oracle: " + level.bounds[i].name);
+        }
+        // Provenance: the same read, byte +0xb: 1 exactly for the bounds without a room and the bounds of the 12 rooms
+        // loaded at gameplay-start (docs/re/streaming.md 2026-10-13T22:27 lists the same rooms).
+        for (const char* room : {"Room1", "Room2", "Room3", "Room7", "Room8", "Room9", "Room14", "Room15", "Room16", "Room17", "Room22", "Room23"})
+            runner.setRoomLoaded(room, true);
+        std::size_t active = 0;
+        for (std::size_t i = 0; i < level.bounds.size(); ++i) active += runner.boundActive(i) ? 1 : 0;
+        require(active == 482 - 225, "bounds with byte +0xb set: " + std::to_string(active));
+        require(runner.boundActive(87), "Police_Station_Transition_Lower active (oracle byte +0xb = 1)");
+        require(level.bounds[87].name == "Police_Station_Transition_Lower" && level.bounds[87].shape == 4, "bound 87 changed");
     } catch (const std::exception& error) {
         std::cerr << "level-start-real-test: " << error.what() << '\n';
         return 1;

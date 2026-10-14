@@ -36,14 +36,19 @@ int main() {
                 "door behaviours");
         require(assets::objectBehaviours(objectOfClass("props/prop_crate"), emptyClassFile) == 0, "prop without bound has no behaviour");
         assets::Level bounded;
-        bounded.bounds.push_back({"CollisionBound", {0, 0, 0}, {1, 1, 1}});
+        assets::LevelBound collisionBound;
+        collisionBound.name = "CollisionBound";
+        collisionBound.half[0] = collisionBound.half[1] = collisionBound.half[2] = 1;
+        bounded.bounds.push_back(collisionBound);
         require(assets::objectBehaviours(objectOfClass("props/prop_crate"), bounded) == assets::BehaviourCollision, "prop with bound collides");
         require(assets::objectBehaviours(objectOfClass("characters/char_minifig"), bounded) == 0, "characters have no behaviour");
         require(assets::behaviourNames(assets::BehaviourCollision | assets::BehaviourStud) == "collision,stud", "behaviour names");
 
         require(runtime::scriptFunctionSupport("EnableObject") == runtime::ScriptFunctionSupport::Implemented, "EnableObject handled");
         require(runtime::scriptFunctionSupport("IsLevelUnlocked") == runtime::ScriptFunctionSupport::StandIn, "IsLevelUnlocked is a stand-in");
-        require(runtime::scriptFunctionSupport("Wait") == runtime::ScriptFunctionSupport::None, "Wait is not handled");
+        require(runtime::scriptFunctionSupport("Wait") == runtime::ScriptFunctionSupport::Implemented, "Wait handled (0x174604)");
+        require(runtime::scriptFunctionSupport("TriggerObject") == runtime::ScriptFunctionSupport::Implemented, "TriggerObject handled (0x1cddf8)");
+        require(runtime::scriptFunctionSupport("WarningDialogBox") == runtime::ScriptFunctionSupport::None, "WarningDialogBox is not handled");
         const std::vector<std::string> handled = runtime::handledScriptFunctions();
         require(std::find(handled.begin(), handled.end(), "enablecollision") != handled.end(), "handler list has EnableCollision");
         for (const std::string& name : handled)

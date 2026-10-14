@@ -32,6 +32,7 @@
 #include <epoxy/gl.h>
 #include <algorithm>
 #include <array>
+#include <cctype>
 #include <cmath>
 #include <cstdint>
 #include <fstream>
@@ -343,6 +344,11 @@ runtime::CollisionWorld loadCollision(FuseArchive& archive, const std::string& l
     return world;
 }
 
+std::string lowerCase(std::string text) {
+    std::transform(text.begin(), text.end(), text.begin(), [](unsigned char c) { return char(std::tolower(c)); });
+    return text;
+}
+
 // A door object (classes props/prop_door and leprops/leprop_door): its state machine, the scene instance of its model and the matrices
 // that put its node in place (docs/re/doors.md). The node matrix at model+0x20 is applied before the pose and the placement; that order
 // is not verified against the original's picture.
@@ -534,7 +540,27 @@ int run(const Options& given) {
         player->pose(scene);
     }
     const ClassLookup classOf = archiveClassLookup(archive);
-    const std::vector<ObjectCollision> placedCollisions = objectCollisions(archive, level, runtime::levelStartState(level, classOf));
+    PlacedObjectState objectState = runtime::levelInitialState(level, classOf);
+    runtime::ScriptRunner levelScripts(level, objectState);
+    levelScripts.setAllRoomsLoaded();
+    std::size_t reportedUnhandled = 0, reportedEvents = 0;
+    const auto reportUnhandled = [&] {
+        const std::vector<std::string>& names = levelScripts.unhandledFunctions();
+        for (; reportedUnhandled < names.size(); ++reportedUnhandled)
+            std::cout << "script function without handler (continues at once): " << names[reportedUnhandled] << '\n';
+        const std::vector<std::string>& events = levelScripts.unhandledTriggerEvents();
+        for (; reportedEvents < events.size(); ++reportedEvents)
+            std::cout << "script trigger event without check (never fires): " << events[reportedEvents] << '\n';
+    };
+    std::uint32_t startupUpdates = 0;
+    if (levelScripts.start("startup"))
+        while (levelScripts.running("startup", false) && startupUpdates < runtime::kStartupMaxUpdates) {
+            levelScripts.update(runtime::kStartupStepDt);
+            ++startupUpdates;
+        }
+    reportUnhandled();
+    std::cout << "scripts: startup ended after " << startupUpdates << " updates, " << levelScripts.threadCount() << " threads running\n";
+    const std::vector<ObjectCollision> placedCollisions = objectCollisions(archive, level, objectState);
     const runtime::CollisionWorld collision = loadCollision(archive, options.level, placedCollisions);
     std::vector<DoorObject> doors = loadDoors(scene, archive, level, classOf, placedCollisions, placedInstances);
     for (const DoorObject& door : doors) poseDoor(scene, door);
@@ -640,6 +666,17 @@ int run(const Options& given) {
                 }
             }
         }
+        levelScripts.update(dt);
+        if (player) {
+            const float playerPosition[3] = {player->motion.x, player->vertical.y, player->motion.z};
+            levelScripts.checkTriggers(playerPosition);
+        }
+        reportUnhandled();
+        for (const runtime::ScriptObjectMessage& sent : levelScripts.takeObjectMessages())
+            for (DoorObject& door : doors)
+                if (lowerCase(door.instance) == sent.instance)
+                    runtime::doorMessage(door.state, door.params,
+                                         sent.message == runtime::kMessageTrigger ? runtime::DoorMessage::Open : runtime::DoorMessage::Close);
         provisionalStudClockSeconds += double(dt);
         if (follow) {
             runtime::FollowCameraInput input;

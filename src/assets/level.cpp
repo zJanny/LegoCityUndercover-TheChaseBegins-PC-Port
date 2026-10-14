@@ -105,10 +105,12 @@ Level parseLevel(const Bytes& data) {
         }
         r.cursor.pop();
     }
-    r.skip();  // s1c
+    const Bytes s1c = r.next();
+    need(s1c, n1c * 0x18);
     level.triggers.resize(n1c);
     for (std::size_t i = 0; i < n1c; ++i) {
         LevelTrigger& trigger = level.triggers[i];
+        trigger.nameHash = readU32(s1c, i * 0x18);
         trigger.objectName = cString(r.next());
         trigger.scriptName = cString(r.next());
         r.cursor.push(Pool::M16);
@@ -136,10 +138,19 @@ Level parseLevel(const Bytes& data) {
             bound.centre[a] = readF32(s24, i * 0x28 + 0x10 + 4 * std::size_t(a));
             bound.half[a] = readF32(s24, i * 0x28 + 0x1c + 4 * std::size_t(a));
         }
+        bound.node = s24[i * 0x28 + 8];
+        bound.shape = s24[i * 0x28 + 9];
+        bound.enabled = s24[i * 0x28 + 0xa];
+        bound.active = s24[i * 0x28 + 0xb];
+        if (readU32(s24, i * 0x28 + 4)) bound.room = cString(r.next());
         level.bounds.push_back(std::move(bound));
-        if (readU32(s24, i * 0x28 + 4)) r.skip();
     }
-    r.skip();  // +0x28
+    const Bytes s28 = r.next();
+    for (std::size_t offset = 0; offset + 0x40 <= s28.size(); offset += 0x40) {
+        std::array<float, 16> matrix{};
+        for (std::size_t k = 0; k < 16; ++k) matrix[k] = readF32(s28, offset + 4 * k);
+        level.boundMatrices.push_back(matrix);
+    }
     Bytes s2c = r.next();
     need(s2c, n2c * 0x18);
     level.objects.resize(n2c);

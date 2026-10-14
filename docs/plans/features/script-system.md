@@ -2,38 +2,54 @@
 
 ## 1. Scope
 
-The level scripts (level section +0x18), the script executor 0x234204 and its words, EnableObject / EnableCollision, the `startup` script, the revealer links and the start state of placed objects. At run time the original executes scripts for missions, triggers, door requests and music; the port does not run any script after the level start. Mission flow and enemies are not covered ([README.md](README.md) lists them as not started).
+The level scripts (level section +0x18), the per-update runner 0x169254, the executor 0x234204 and its words, Wait, CallScript / SpawnScript, the natives with a handler (EnableObject, EnableCollision, TriggerObject, EnableTrigger, EnableBound), the trigger pass 0x1746c0 with the bound checks, the `startup` script, the revealer links and the start state of placed objects. At run time the original also starts scripts from events and class scripts; the port does not start those yet. Mission flow and enemies are not covered ([README.md](README.md) lists them as not started).
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-13T21:29:01+0200. Scripts are decoded and the `startup` script runs once to compute the start state (`levelStartState`). No script runs during play.
+IN_PROGRESS, updated 2026-10-14T10:06:40+02:00. `ScriptRunner` keeps script threads and runs them every update like the original (waits take their time, CallScript suspends the caller, SpawnScript returns when the child yields). The `startup` script, the player bound triggers and `TriggerObject` start scripts; events, class scripts and the other trigger types do not, and most natives have no handler.
 
 ## 3. Verified behaviour
 
 - Script data layout and loader 0x1cfc50; function names re-derived by hash (0x208a3c). lvl_01 has 314 scripts.
 - Over the 896 lvl_01 objects that would register collision, the state rule gives 819 enabled in both, 48 flag-0 in both, 4 without entity and disabled by the script, 12 flag-0 only through the revealer links, 8 co-located twins; no object that the rule disables while its entity is enabled. `level-start-real-data` pins this against the oracle grid read.
+- The runner is entered once per update per resident scene from the gameplay update (oracle trap, lr 0x2e54b8), and no thread is alive at gameplay-start or police-station; `level-start-real-data` checks that the lvl_01 startup threads all end.
+- Executor, Wait, CallScript / SpawnScript and thread creation rules were transcribed from the disassembly; `script-runner` covers them with synthetic scripts.
+- After the startup run, 236 of 241 trigger enable bytes and 479 of 482 bound enable bytes equal the oracle read at gameplay-start, and the bound room rule gives exactly the oracle's 257 active bounds for its 12 loaded rooms; `level-start-real-data` pins all three.
 
 ## 4. Stand-ins
 
-- SCRIPT-S1 Waits and every blocking native count as elapsed; SpawnScript runs the child to its end before the parent continues (the original runs it until it yields). Only the `startup` script is run.
+- SCRIPT-S1 The startup threads are stepped before the first frame with dt 0.034 (the free-running dt read at gameplay-start; the loading phase's own updates are not recovered): `chase-game` until `startup` ends, `levelStartState` until no thread is left.
 - SCRIPT-S2 `IsLevelUnlocked`, `GetGameComplete` and `IsRedBrickExtraActive` return 0 (new game, no save). A loaded save would change the state; the port has no save-aware start yet. needs: SAVE-1.
 - SCRIPT-S3 The revealer rule is a data fit, not traced to its code; verified only in lvl_01.
+- SCRIPT-S4 A function without a handler does nothing and continues at once; `chase-game` prints its name the first time (`script function without handler`). The original may block in it (WaitForDCam, DCamCutSceneWait, WarningDialogBox, AIMove, ...). See SCRIPT-7.
+- SCRIPT-S5 A CallScript / SpawnScript of a script the level does not have continues (the original's result with a null script is unknown).
+- SCRIPT-S6 `chase-game` runs the scripts and the trigger pass after the door update; where 0x2e5158 runs them relative to the player and camera was not compared.
+- SCRIPT-S7 `chase-game` counts every room as loaded for the bound switch +0xb, because it shows all rooms (WSTREAM-S1, see WSTREAM-3 in [world-streaming.md](world-streaming.md)); the original only counts the loaded rooms.
+- SCRIPT-S8 Triggers start enabled (fits 236 of 241 records; the record builder was not read), and the object flag 0x100000 that forces an ObjectTriggered start is taken as clear. The trigger pass does not run while the startup is stepped before the first frame.
 
 ## 5. Open items
 
-- [ ] SCRIPT-1 — No script runs after the level start: no mission events, triggers or bounds, no door requests, no level music start. blocks: DOOR-1 (script-requested doors in lvl_01 stay closed), AUDIO-2 (level music), LEVOBJ-3 (scripted object behaviour), STUD-4 (stud groups), TRANS-3, TRANS-4, TRANS-5 ([level-transitions.md](level-transitions.md)), WSTREAM-6 ([world-streaming.md](world-streaming.md)). evidence: [scripts.md §2026-10-13T20:42](../../re/scripts.md#ts-20261013-204236).
-- [ ] SCRIPT-2 — `levelStartState` lists some objects as disabled although the original has them enabled: the hydrant sprays (`Hydrant_Spray_01` appears twice in the startup script), `Pickup_CharacterToken06/07/10`, `FP_Task_COP_CTH_02..05`, `FP_Archway_GrapplePad01`, `1-3_BI_Seesaw`, `1-3_BI_Roundabout` (build-it bits; `MissionHide` disables them). Another script or class handler may re-enable them, or the class ignores message 0xfb; not investigated. None of them collides. evidence: [scripts.md §2026-10-13T20:42](../../re/scripts.md#ts-20261013-204236).
+- [ ] SCRIPT-1 — Scripts run during play and player bound triggers start them, but the mission natives have no handler and events, class scripts and most trigger types start nothing: no mission flow, level music or scripted objects. needs: SCRIPT-6, SCRIPT-7, SCRIPT-11. blocks: AUDIO-2, LEVOBJ-3, STUD-4, HUD-9, TRANS-3, TRANS-5 ([level-transitions.md](level-transitions.md)), WSTREAM-6 ([world-streaming.md](world-streaming.md)). evidence: [scripts.md §2026-10-14T09:52](../../re/scripts.md#ts-20261014-095252).
+- [ ] SCRIPT-2 — `levelStartState` lists some objects as disabled although the original has them enabled: the hydrant sprays (`Hydrant_Spray_01` appears twice in the startup script), `Pickup_CharacterToken06/07/10`, `FP_Task_COP_CTH_02..05`, `FP_Archway_GrapplePad01`, `1-3_BI_Seesaw`, `1-3_BI_Roundabout` (build-it bits; `MissionHide` disables them). Class startup scripts (SCRIPT-6) may re-enable them; not investigated. None of them collides. evidence: [scripts.md §2026-10-13T20:42](../../re/scripts.md#ts-20261013-204236).
 - [ ] SCRIPT-3 — The two detective X-spots (`1-2_Dtv_DogPath_XSpot`, `1-3_Dtv_BrickSpot_XSpot_02`) are not explained (no grid entry). evidence: [collision.md §2026-10-13T20:43](../../re/collision.md#ts-20261013-204340).
 - [ ] SCRIPT-4 — The code that hides the revealer targets; the role of the other type-4 parameters (Destination, ObjectTo, TriggerObject, ...); the revealer rule is a data fit and only lvl_01 was compared with the oracle (lvl_00 not). evidence: [scripts.md §2026-10-13T20:42](../../re/scripts.md#ts-20261013-204236).
 - [ ] SCRIPT-5 — Variables of type 5 and 7 in conditions are converted to floats; the executor compares floats. evidence: [scripts.md §2026-10-13T20:42](../../re/scripts.md#ts-20261013-204236).
+- [ ] SCRIPT-6 — Other thread starters: the `startup` scripts of placed objects whose class file has scripts (64 class files; owners of scene+0x24 from last to first, order against `Level::objects` unknown), the events `OnSceneEnter%d` / `OnSceneExit` (0x1ecc50) and `ScriptCheckExtras` (0x2e5638). blocks: SCRIPT-1. evidence: [scripts.md §2026-10-14T09:52](../../re/scripts.md#ts-20261014-095252).
+- [ ] SCRIPT-7 — Natives: which ones block (return 0) and what they do. Only Wait, EnableObject, EnableCollision and TriggerObject are transcribed (SCRIPT-S4). Most used in lvl_01: EnableBound (625 calls), EnableTrigger (160), StartDCam / WaitForDCam (121 / 120), ShowDialogueTextTimed (106), PlayCharAnim (96), PositionObject (89); the police entrance needs WarningDialogBox (0x2700d4). Handler addresses come from the native table read. blocks: SCRIPT-1, DOOR-1 ([doors.md](doors.md)). evidence: [scripts.md §2026-10-14T09:52](../../re/scripts.md#ts-20261014-095252).
+- [ ] SCRIPT-8 — No live script thread was traced in the oracle (none alive at gameplay-start or police-station; `Police_Station_Transition_Lower` is switched off at gameplay-start, so walking in starts nothing). Pin the Wait timing and the CallScript order against a trace of an enabled bound trigger. evidence: [scripts.md §2026-10-14T09:52](../../re/scripts.md#ts-20261014-095252).
+- [ ] SCRIPT-9 — Script argument slots (thread +0x18..) and how a called script reads them; the thread pool size and the reuse of a running thread when the pool is empty (same script or `EffectScript`). evidence: [scripts.md §2026-10-14T09:52](../../re/scripts.md#ts-20261014-095252).
+- [ ] SCRIPT-10 — After the startup run the original has triggers 79 to 82 (`1-4_Run_Point_02..05`) and 141 (`DEBUG_Head_Robber_Chase_End`) and the bounds `CameraBound_Police_Helipad`, `CameraBound_VehicleDrop_01/02` switched off; the port leaves them on (class scripts, SCRIPT-6, or the record builder). evidence: [scripts.md §2026-10-14T10:06](../../re/scripts.md#ts-20261014-100640).
+- [ ] SCRIPT-11 — Trigger types without a check: ObjectBoundEntered / Left / Inside, BoundInside / BoundOutside, BoundBothEntered, AIMove, AISpawned, Character*, PlayerVehicle*, Reset and the rest of 0x16babc / 0x15b888; `chase-game` lists the ones a level uses and they never fire. Triggers of other owners (class files) and of the master scene are not modelled. blocks: SCRIPT-1. evidence: [scripts.md §2026-10-14T10:06](../../re/scripts.md#ts-20261014-100640).
 
 ## 6. Findings summary
 
 - Script record layout, argument strings, function-name hash lookup: [scripts.md §2026-10-13T20:42](../../re/scripts.md#ts-20261013-204236).
 - The `startup` script plus build-it / reveal links give the disabled objects (replaces the 85-name list): [scripts.md §2026-10-13T20:42](../../re/scripts.md#ts-20261013-204236), [collision.md §2026-10-13T20:43](../../re/collision.md#ts-20261013-204340).
-- Door open requests arrive as message 0xff from `TriggerObject` / the platform link; the senders in lvl_01 are mission scripts that are not traced: [objects.md §2026-10-13T21:17](../../re/objects.md#ts-20261013-211741).
+- Runner 0x169254, thread record, executor, Wait, CallScript / SpawnScript, thread starters, trigger queue and check functions, TriggerObject, native table, the police door script: [scripts.md §2026-10-14T09:52](../../re/scripts.md#ts-20261014-095252).
+- Trigger and bound records, EnableTrigger / EnableBound lookups, the bound test 0x22f650, the room switch +0xb, oracle comparison, why the police entrance did not fire: [scripts.md §2026-10-14T10:06](../../re/scripts.md#ts-20261014-100640).
+- Door open requests arrive as message 0xff from `TriggerObject` / the platform link: [objects.md §2026-10-13T21:17](../../re/objects.md#ts-20261013-211741).
 
 ## 7. Code and tests
 
-- `Level::scripts` / `objectReferenceHash` (`src/assets/level.cpp`), `levelStartState` (`src/runtime/level_start.cpp`), `PlacedObjectState` (`src/assets/object_collision.*`).
-- CTest: `level-start-real-data`, `collision-real-data`.
+- `Level::scripts` / `triggers` / `bounds` / `boundMatrices` / `objectReferenceHash` (`src/assets/level.cpp`), `ScriptRunner` (`src/runtime/script_runner.cpp`), `levelInitialState` / `runLevelStartup` / `levelStartState` (`src/runtime/level_start.cpp`), `PlacedObjectState` (`src/assets/object_collision.*`), the runner hook and the door messages in `src/game.cpp`.
+- CTest: `script-runner`, `level-start-real-data`, `collision-real-data`, `progress-tables`.

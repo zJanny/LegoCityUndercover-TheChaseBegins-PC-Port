@@ -246,11 +246,17 @@ struct NavRoom {
     std::uint16_t paths = 0;
 };
 // Section +0x24 record of a class file (0x28 bytes): a name and, at +0x10 and +0x1c, a centre and half extents.
-// Lookup 0x23e798 finds the one named "CollisionBound" for the collision box of an object.
+// Lookup 0x23e798 finds the one named "CollisionBound" for the collision box of an object. The bytes +8..+0xb are the
+// node index (0xff none), the shape (2 sphere, 3 box, 4 and 6 cylinder; test 0x22f650) and two switches that the
+// player bound tests 0x2c185c / 0x28aef4 both require (+0xa is the one EnableBound 0x1d0ce8 writes).
 struct LevelBound {
     std::string name;
     float centre[3] = {0, 0, 0};
     float half[3] = {0, 0, 0};
+    std::uint8_t node = 0xff, shape = 0, enabled = 0, active = 0;
+    // Block at +4: the room the bound belongs to. The room setup 0x173944 sets +0xb to 1 for every bound and back to 0
+    // for the bounds of a room (the room's bound list); empty for a bound outside the rooms.
+    std::string room;
 };
 // Type 4 parameter (object reference): the block holds the name hash of the referenced instance at +4, 0 when unset.
 std::uint32_t objectReferenceHash(const LevelParam& param);
@@ -270,6 +276,7 @@ struct LevelScript {
 // "ObjectTriggered", ...; names of levels/letriggers.txt) and its two arguments (the bound name for bound events).
 struct LevelTrigger {
     std::string objectName, scriptName, event, firstArgument, secondArgument;
+    std::uint32_t nameHash = 0;  // record +0: nameHash of the trigger's name, looked up by EnableTrigger (0x1dd380)
 };
 // Section +0x34: room links (loader 0x1cfc50, consumer 0x173f94). A 0x10-byte record {room hash, world level hash,
 // entry count, list pointer} plus one list block of 12-byte entries {room hash, world level hash, 1}. Hashes are
@@ -290,6 +297,8 @@ struct Level {
     std::vector<LevelScript> scripts;
     std::vector<LevelObject> objects;
     std::vector<LevelBound> bounds;
+    // Section +0x28: 0x40-byte matrices; a bound with a node index is turned by the rows of its matrix (0x22f650, 0x229a40).
+    std::vector<std::array<float, 16>> boundMatrices;
     std::vector<NavRoom> navRooms;
 };
 Level parseLevel(const Bytes& data);

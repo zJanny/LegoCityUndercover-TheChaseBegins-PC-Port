@@ -18,7 +18,7 @@
 
 ## Not recovered yet
 
-- Gameplay, menus and scripts.
+- Gameplay and menus. The level scripts run and some of them start when the character walks into marked places, but most script commands and many ways to start a script are not worked out yet.
 - The game's lighting and materials. The viewer shows an approximation.
 - Blending between different animations, and the real animation speed.
 - Collision with parked cars and people, objects that break or move, the camera being placed again when it is stuck, and the character's other moves (fighting, climbing, vehicles).
