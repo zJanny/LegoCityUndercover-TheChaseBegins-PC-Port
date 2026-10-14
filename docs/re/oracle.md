@@ -212,3 +212,12 @@ Unknowns:
 - A heap scan without RPC: `memtrace 1 NAME ADDR:LEN ...` with 1 MB regions (0x08500000..0x08d00000) took 170 s and found the bound records by their float centres.
 - Runs from the same loaded state were not repeatable update for update (the dialog opened after 34 updates in one run and after 125 in another). Compare values only inside one run.
 - Findings: [streaming.md](streaming.md#ts-20261014-100715).
+
+<a id="ts-20261014-102023"></a>
+
+## 2026-10-14T10:20:23+02:00 — Addition to the police-station checkpoint: game progress
+
+Addition to [the entry of 2026-10-13T23:20](#ts-20261013-232034) (user statement, 2026-10-14): the user's quick save `police-station` was made **after the first mission (1-1, bringing the donuts to the police station)**. It is an unmodified state of the original past `1-1_MissionEnd`, so it is the reference state for everything that the mission end enables (for example the `Police_Station_Transition_*` bounds, see [streaming.md §2026-10-14T10:07](streaming.md#ts-20261014-100715)). No state that played mission 1-1 is needed; walking out of the station from this state reaches the street with the post-mission flags.
+
+Unknowns:
+- Whether mission 1-2 had already started when the user saved (the chapter / mission variables were not read).
