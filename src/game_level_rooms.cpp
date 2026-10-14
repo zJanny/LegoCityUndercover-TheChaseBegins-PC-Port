@@ -55,14 +55,14 @@ void LevelSession::startRoomStreaming() {
 void LevelSession::showLoadedRooms() {
     for (const auto& [room, instances] : roomInstances) {
         if (!roomStreamer->rooms().count(room)) continue;
-        const bool loaded = roomStreamer->loaded(room);
+        const bool loaded = roomStreamer->loaded(room) && room != shared.options.hideRoom;
         for (const std::size_t instance : instances) scene.setInstanceVisible(instance, loaded);
         levelScripts.setRoomLoaded("Room" + std::to_string(room), loaded);
     }
 }
 
 bool LevelSession::roomShown(int room) const {
-    return !roomStreamer || !roomStreamer->rooms().count(room) || roomStreamer->loaded(room);
+    return !roomStreamer || !roomStreamer->rooms().count(room) || (roomStreamer->loaded(room) && room != shared.options.hideRoom);
 }
 
 void LevelSession::applyFog() const {

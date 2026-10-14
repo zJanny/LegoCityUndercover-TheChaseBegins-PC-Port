@@ -73,6 +73,7 @@ void testValidValues() {
     const game_options::Options start = parseArgs({"--start", "886.764 16.589 1111.166", "--facing", "-90.5"});
     if (!start.start || std::fabs((*start.start)[0] - 886.764f) > 1e-3f || std::fabs((*start.start)[2] - 1111.166f) > 1e-3f || !start.gameplay) fail("valid --start changed");
     if (!start.facing || *start.facing != -90.5f) fail("valid --facing changed");
+    if (parseArgs({"--hide-room", "4"}).hideRoom != 4 || parseArgs({}).hideRoom) fail("valid --hide-room changed");
 
     const game_options::Options script = parseArgs({"--script", "0 150 40;0 0 1 AB;-156 0 0"});
     requireEqual(script.script, "0 150 40;0 0 1 AB;-156 0 0", "valid --script text");
@@ -101,6 +102,8 @@ void testRejections() {
     expectRejected({"--music-volume", "-1"}, "--music-volume: out of range, allowed 0 to 10: '-1'");
     expectRejected({"--frames", "-1"}, "--frames: out of range, allowed 0 to 1000000: '-1'");
     expectRejected({"--facing", "nan"}, "--facing: not a number: 'nan'");
+    expectRejected({"--hide-room", "0"}, "--hide-room: out of range, allowed 1 to 99: '0'");
+    expectRejected({"--hide-room", "Room4"}, "--hide-room: not a whole number: 'Room4'");
     expectRejected({"--facing", "90deg"}, "--facing: not a number: '90deg'");
 
     expectRejected({"--window", "400"}, "--window: expected WIDTHxHEIGHT: '400'");

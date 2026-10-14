@@ -22,7 +22,7 @@ IN_PROGRESS, updated 2026-10-14T20:55:00+0200. The load rule is recovered (`plan
 
 - WSTREAM-S1 `chase-game` loads the whole level folder into memory (no master level, ASSET-S2) and only hides rooms that are not loaded; levels without room models for every room show all rooms. Characters and studs of unloaded rooms stay visible (WSTREAM-14).
 - WSTREAM-S3 The room node position is the centre of the vertex box of meshes 1 and up of `roomN.bfnmdl`: a fit that matches all 43 oracle values, the code that fills +0xa0 is not read (WSTREAM-12). evidence: [streaming-rooms.md §2026-10-14T15:07:48](../../re/streaming-rooms.md#ts-20261014-150748).
-- WSTREAM-S30 A requested room loads in a fixed 9 updates, all in parallel; the original loads one room at a time in priority order, 6 to 12 updates per room in the stepped oracle, on a separate thread. needs: WSTREAM-30. evidence: [streaming-rooms.md §2026-10-14T20:51:26](../../re/streaming-rooms.md#ts-20261014-205126).
+- WSTREAM-S30 A requested room loads in a fixed 9 updates, all in parallel; the original loads one room at a time in priority order, 6 to 12 updates per room in the stepped oracle and 6 to 15 in a free run ([rendering-fog.md §2026-10-14T21:42](../../re/rendering-fog.md#ts-20261014-214220)), on a separate thread. needs: WSTREAM-30. evidence: [streaming-rooms.md §2026-10-14T20:51:26](../../re/streaming-rooms.md#ts-20261014-205126).
 - WSTREAM-S31 The player's box centre (0, 0.6875, 0.1399) that is added to its position for the room test is one reading of the node's +0xa0, not derived from the model. The level start still picks the room by box area when the level gives none (`RoomStreamer::roomAt`). evidence: same entry.
 
 ## 5. Open items

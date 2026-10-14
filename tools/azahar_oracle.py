@@ -12,6 +12,15 @@ A scenario file drives the run, one command per line ('#' starts a comment):
   wait SECONDS          let the emulator run freely for a wall-clock time (no frame count)
   hold BUTTONS          hold buttons from now on, e.g. 'hold A' or 'hold A+UP'; 'hold -' releases all
   stick X Y             raw circle-pad values (about -156..156); 'stick 0 0' centres it
+  freestick X Y         the same through a code cave without per-frame breakpoints (needs --rpc-input); the game
+                        keeps running freely, so a walk takes the guest time of a real run
+  shotloop NAME SECONDS ADDR[,ADDR...] [VBLANKS:X:Y ...]
+                        free-run and take RPC screenshots back to back (OpenGL), writing NAME_NNN.png and NAME_log.csv
+                        with the vblank counter and the bytes at the addresses before and after each shot; a
+                        VBLANKS:X:Y item sets the stick (as freestick) once that many vblanks have passed, a
+                        VBLANKS:X:Y:Z item teleports the player (as teleport)
+  waitbyte ADDR VALUE SECONDS
+                        free-run until the byte at ADDR (RPC read) equals VALUE or SECONDS pass, then halt
   screenshot NAME [gdb] write NAME_top.png and NAME_bottom.png (software renderer) or NAME.png (OpenGL with --rpc);
                         'gdb' forces the slow memory-read path
   report                print scheduler and frame-pacing values
@@ -110,6 +119,7 @@ TRACE_CTRL_BYTES = 0x340
 TRACE_NODE_BYTES = 0xb0
 CAMERA_YAW = 0x376894
 GAME_CLOCK = 0x376b0c
+CAMERA_OBJECT = 0x377544
 VBLANKS = 0x593d14
 PAD_LOAD = 0x10a578
 PAD_LOAD_ORIGINAL = 0xe5940000
@@ -124,6 +134,17 @@ def arm_branch(source, target):
 
 PAD_CAVE_CODE = struct.pack('<II', 0xe59f0000, arm_branch(PAD_CAVE + 4, PAD_RESUME))
 PAD_LOAD_PATCHED = arm_branch(PAD_LOAD, PAD_CAVE)
+
+STICK_LOAD_ORIGINAL = 0xe1d400fe
+STICK_RESUME = PAD_STICK + 4
+STICK_CAVE = 0x3565a0
+STICK_MAILBOX_Y = STICK_CAVE + 0x30
+STICK_MAILBOX_X = STICK_CAVE + 0x34
+STICK_CAVE_CODE = struct.pack(
+    '<6I', 0xe59f0000 | (STICK_MAILBOX_Y - (STICK_CAVE + 8)), 0xe1c400be,
+    0xe59f0000 | (STICK_MAILBOX_X - (STICK_CAVE + 8 + 8)), 0xe1c400bc, STICK_LOAD_ORIGINAL,
+    arm_branch(STICK_CAVE + 20, STICK_RESUME))
+STICK_LOAD_PATCHED = arm_branch(PAD_STICK, STICK_CAVE)
 
 BUTTONS = {'A': 0x1, 'B': 0x2, 'SELECT': 0x4, 'START': 0x8, 'RIGHT': 0x10, 'LEFT': 0x20,
            'UP': 0x40, 'DOWN': 0x80, 'R': 0x100, 'L': 0x200, 'X': 0x400, 'Y': 0x800}
@@ -690,6 +711,7 @@ class Oracle:
         self.renderer = renderer
         self.rpc_input = rpc_input
         self.pad_patched = False
+        self.stick_patched = False
         self.output = output
         self.keys = keys
         self.emulator_states = emulator_states
@@ -721,6 +743,84 @@ class Oracle:
             self.rpc.write(PAD_LOAD, struct.pack('<I', PAD_LOAD_ORIGINAL))
             self.rpc.write(PAD_CAVE, bytes(12))
             self.pad_patched = False
+
+    def free_stick(self, x, y):
+        if not self.rpc_input:
+            raise SystemExit('freestick needs --rpc-input')
+        current = self.rpc.u32(PAD_STICK)
+        if current not in (STICK_LOAD_ORIGINAL, STICK_LOAD_PATCHED):
+            raise RuntimeError('stick reader at 0x%x holds 0x%08x, expected 0x%08x' % (PAD_STICK, current, STICK_LOAD_ORIGINAL))
+        if not self.stick_patched:
+            cave = self.rpc.read(STICK_CAVE, 0x38)
+            if cave[:len(STICK_CAVE_CODE)] != STICK_CAVE_CODE and any(cave):
+                raise RuntimeError('code cave at 0x%x is not empty: %s' % (STICK_CAVE, cave.hex()))
+            self.rpc.write(STICK_CAVE, STICK_CAVE_CODE)
+        self.rpc.write(STICK_MAILBOX_Y, struct.pack('<ii', y, x))
+        if not self.stick_patched:
+            self.rpc.write(PAD_STICK, struct.pack('<I', STICK_LOAD_PATCHED))
+            self.stick_patched = True
+
+    def unpatch_stick(self):
+        if self.stick_patched:
+            self.rpc.write(PAD_STICK, struct.pack('<I', STICK_LOAD_ORIGINAL))
+            self.rpc.write(STICK_CAVE, bytes(0x38))
+            self.stick_patched = False
+
+    def wait_for_byte(self, address, value, seconds):
+        deadline = time.monotonic() + seconds
+        result = []
+
+        def poll(_):
+            while time.monotonic() < deadline:
+                if self.rpc.read(address, 1)[0] == value:
+                    result.append(struct.unpack('<II', self.rpc.read(VBLANKS, 8)))
+                    return
+        self.run_free(poll, seconds)
+        if result:
+            print('  byte 0x%x became %d, vblanks %d %d' % (address, value, *result[0]))
+        else:
+            print('  byte 0x%x did not become %d within %.1f s' % (address, value, seconds))
+
+    def shot_loop(self, name, seconds, addresses, plan):
+        if self.renderer != 'opengl':
+            raise SystemExit('shotloop needs --renderer opengl')
+        rows = []
+
+        def loop(_):
+            start_vblank = self.rpc.u32(VBLANKS)
+            pending = sorted(plan, key=lambda item: item[0])
+            deadline = time.monotonic() + seconds
+            index = 0
+            while time.monotonic() < deadline:
+                elapsed = (self.rpc.u32(VBLANKS) - start_vblank) & 0xffffffff
+                while pending and pending[0][0] <= elapsed:
+                    item = pending.pop(0)
+                    if len(item) == 4:
+                        self.teleport(item[1], item[2], item[3])
+                    else:
+                        self.free_stick(int(item[1]), int(item[2]))
+                before = (elapsed, tuple(self.rpc.read(a, 1)[0] for a in addresses), time.monotonic())
+                width, height, png = self.rpc.take_screenshot()
+                after = ((self.rpc.u32(VBLANKS) - start_vblank) & 0xffffffff, tuple(self.rpc.read(a, 1)[0] for a in addresses),
+                         time.monotonic())
+                (self.output / ('%s_%03d.png' % (name, index))).write_bytes(png)
+                matrix = self.rpc.read(self.rpc.u32(CAMERA_OBJECT) + 0x5c, 0x40)
+                pose = struct.unpack('<3f', matrix[0x30:0x3c]) + struct.unpack('<3f', matrix[0x20:0x2c])
+                entity = self.rpc.u32(PLAYER)
+                if entity:
+                    pose += struct.unpack('<3f', self.rpc.read(self.rpc.u32(entity + 0x3c) + 0x8c, 12))
+                rows.append((index, before, after, pose))
+                index += 1
+
+        self.run_free(loop, seconds + 30)
+        with open(self.output / ('%s_log.csv' % name), 'w', newline='') as out:
+            writer = csv.writer(out)
+            writer.writerow(('shot', 'vblank_before', 'vblank_after', 'states_before', 'states_after', 'seconds',
+                             'eye_x', 'eye_y', 'eye_z', 'look_x', 'look_y', 'look_z', 'player_x', 'player_y', 'player_z'))
+            for index, before, after, pose in rows:
+                writer.writerow((index, before[0], after[0], ' '.join(map(str, before[1])), ' '.join(map(str, after[1])),
+                                 '%.3f' % (after[2] - before[2])) + tuple('%.4f' % v for v in pose))
+        print('  %d shots -> %s_NNN.png, log %s_log.csv' % (len(rows), self.output / name, name))
 
     def inject_input(self):
         if self.rpc_input:
@@ -916,6 +1016,7 @@ class Oracle:
         self.reattach(installed)
         if self.rpc_input:
             self.pad_patched = False
+            self.stick_patched = False
             self.inject_input()
         frame = state_frame(self.saved_states, name)
         self.advance(1)
@@ -1180,6 +1281,13 @@ def run_scenario(oracle, lines):
         elif op == 'stick':
             oracle.stick = (int(args[0]), int(args[1]))
             oracle.inject_input()
+        elif op == 'freestick':
+            oracle.free_stick(int(args[0]), int(args[1]))
+        elif op == 'waitbyte':
+            oracle.wait_for_byte(int(args[0], 0), int(args[1], 0), float(args[2]))
+        elif op == 'shotloop':
+            oracle.shot_loop(args[0], float(args[1]), [int(a, 0) for a in args[2].split(',')],
+                             [tuple(float(v) for v in item.split(':')) for item in args[3:]])
         elif op == 'screenshot':
             oracle.screenshot(args[0], via_gdb=args[1:] == ['gdb'])
         elif op == 'sample':
@@ -1422,6 +1530,7 @@ def main():
         if keep and oracle is not None:
             try:
                 oracle.unpatch_pad_reader()
+                oracle.unpatch_stick()
                 oracle.detach()
             except OSError:
                 pass

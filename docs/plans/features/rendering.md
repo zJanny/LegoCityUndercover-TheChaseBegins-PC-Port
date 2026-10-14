@@ -29,10 +29,10 @@ IN_PROGRESS, updated 2026-10-14T19:00:00+02:00. OpenGL moved out of the game and
 
 ## 5. Open items
 
-- [ ] RENDER-1 Fragment lighting: light list per draw (0x12d884, 0x5943b0), light mask, LUTs, specular. Next: break at 0x12d884 in the oracle (`trap`) and read the light objects and material +0x10/+0x14 for a character and a prop; implement in the shader; remove RENDER-S1. evidence: [materials.md](../../re/materials.md)
+- [ ] RENDER-1 Fragment lighting: light list per draw (0x12d884, 0x5943b0), light mask, LUTs, specular. Next: break at 0x12d884 in the oracle (`trap`) and read the light objects and material +0x10/+0x14 for a character and a prop; implement in the shader; remove RENDER-S1. blocks: RENDER-42. evidence: [materials.md](../../re/materials.md)
 - [ ] RENDER-2 Reflections (cube sampling, vertex shader program with `Cubemap`). Removes RENDER-S2.
-- [ ] RENDER-30 Fog against the oracle at a long street: numbers recorded for a different camera (3 to 13 per channel, sky model missing); needs an oracle shot with RPC at a known pose (state `street-after-1-1`, player and camera pose written down) and the port at the same pose to compare pixel by pixel. needs: RENDER-37. evidence: [rendering-fog.md §2026-10-14T18:59](../../re/rendering-fog.md#ts-20261014-185910).
-- [ ] RENDER-41 Look at pop-in in a screenshot: what the original draws for a room at the update it reaches state 2 and whether the adjacent rooms (loaded at 100 to 120, beside the camera) are visible then. Needs the oracle RPC screenshot (one emulator per machine). evidence: [rendering-fog.md §2026-10-14T20:47:14](../../re/rendering-fog.md#ts-20261014-204714).
+- [ ] RENDER-30 Fog fade at pixel level: the oracle and the port at the same pose (`street-after-1-1`) agree within about 12 per channel at depth 197 to 360, but windows of identical content were rare; needs one material seen over depth 86 to 260 in both pictures. needs: RENDER-37. evidence: [rendering-fog.md §2026-10-14T21:42](../../re/rendering-fog.md#ts-20261014-214220).
+- [ ] RENDER-42 The port's near ground (fog 0, depth 17 to 33) is lighter than the oracle by about (+11, +10, +13) at the `street-after-1-1` pose; lighting or texture filtering of level surfaces. needs: RENDER-1. evidence: [rendering-fog.md §2026-10-14T21:42](../../re/rendering-fog.md#ts-20261014-214220).
 - [ ] RENDER-33 Shadows (0x37796c). blocks: RENDER-9.
 - [ ] RENDER-34 Material colour pulse over time.
 - [ ] RENDER-35 Draw sorting (0x115128). blocks: RENDER-S3.

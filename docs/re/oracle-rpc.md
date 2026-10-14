@@ -61,3 +61,16 @@ Unknowns:
 - Why the RPC round trip is 50 times slower in the dialog state than at the language screen (likely the emulation loop services pending work less often under load); not investigated.
 - Behaviour of RPC writes into a JIT block that is executing at that moment on the second core (old 3DS has only core 0, so none seen).
 - Circle-pad injection without a breakpoint (needs a patch of 0x10a540 and 0x10a550 to load full words from spare RAM, or a stub in the code cave).
+
+<a id="ts-20261014-214240"></a>
+<a id="ts-20261014-214240"></a>
+
+## 2026-10-14T21:42:40+02:00 — Breakpoint-free circle pad, wait for a byte, screenshot loop (`tools/azahar_oracle.py`; llvm-objdump on `artifacts/game/game.arm.elf`, oracle run on `street-at-entrance`; REA was not used)
+
+Resolves the last unknown of [§2026-10-13T12:02:21](#ts-20261013-120221) (circle pad without a breakpoint). The raw words are read at 0x10a540 (`ldrsh r0, [r4, #14]`, y) and 0x10a550 (`ldrsh r3, [r4, #12]`, x). `freestick X Y` (needs `--rpc-input`) replaces 0x10a540 by a branch to a cave at 0x3565a0 (zero padding after the button cave) that stores the two mailbox words 0x3565d0 (y) and 0x3565d4 (x) into `r4+14` and `r4+12`, executes the replaced `ldrsh` and branches back to 0x10a544. The words were checked with `llvm-mc -triple=armv6k` (pinned in `tests/test_azahar_oracle_stick.py`). The game keeps running freely, so a walk takes real guest time; the stepped `stick` (breakpoint per frame) inflates the clock about 30 times per update. The patch is removed when a kept emulator is left and after `loadstate`.
+
+New scenario commands: `waitbyte ADDR VALUE SECONDS` (free-run, poll by RPC, halt when the byte matches) and `shotloop NAME SECONDS ADDR[,ADDR...] [VBLANKS:X:Y | VBLANKS:X:Y:Z ...]` (OpenGL only: RPC screenshots back to back, about 14 per second, with the vblank counter, the bytes at the addresses and the camera eye and look and player position per shot in `NAME_log.csv`; items set the stick or teleport after that many vblanks). A teleport of the player node across the Room7/Room8 box did not change the current room in 6 s (cause not found).
+
+Unknowns:
+- Why the teleport does not trigger the room change that a walk does.
+- The software renderer crashes in `Pica::Texture::LookupTexture` on the street scene (three launches), so `shotloop` is OpenGL only.
