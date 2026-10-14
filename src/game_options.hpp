@@ -19,6 +19,7 @@ struct Options {
     std::vector<std::string> callScripts;
     std::string saveFile;
     std::string saveOut;
+    std::string frontSave;
     unsigned saveSlot = 0;
     bool cameraCollision = true;
     bool debugOverlay = false;

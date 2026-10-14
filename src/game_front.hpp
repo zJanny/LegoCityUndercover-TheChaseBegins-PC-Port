@@ -3,6 +3,7 @@
 #include "frontend/frontend.hpp"
 #include "frontend/movie_host.hpp"
 #include "frontend/script.hpp"
+#include "frontend/slot_summaries.hpp"
 #include "game_audio.hpp"
 #include "game_hud.hpp"
 #include "input.hpp"
@@ -52,6 +53,7 @@ struct Options {
     bool firstRun = true;
     std::string script;
     std::string screenshot;
+    std::string saveFile;
 };
 
 inline std::string directoryOf(const std::string& path) {
@@ -72,6 +74,7 @@ inline Result run(SDL_Window* window, chase::InputState& input, chase::assets::F
     fe::FlowConfig config;
     config.language = options.language;
     config.firstRun = options.firstRun;
+    if (!options.saveFile.empty()) config.slots = fe::slotSummariesFromSave(options.saveFile, archive, options.language);
     fe::FrontEnd front(resources, &movies, config);
     fe::Canvas top(fe::kTopWidth, fe::kScreenHeight), bottom(fe::kBottomWidth, fe::kScreenHeight);
     chase::render::FrontPresenter presenter(fe::kTopWidth, fe::kBottomWidth, fe::kScreenHeight);

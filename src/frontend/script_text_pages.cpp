@@ -27,6 +27,9 @@ constexpr float kPortraitOffsetX = -7, kPortraitOffsetY = -1;
 constexpr const char* kPortraitFrameTexture = "sprites/ui_hud/blend/images/heartsbg_generic.bpng";
 constexpr Colour kTipTextColour{74.0f / 255.0f, 173.0f / 255.0f, 1.0f, 1.0f};
 constexpr Colour kDialogueTextColour{1.0f, 169.0f / 255.0f, 22.0f / 255.0f, 1.0f};
+constexpr float kInfoBoxWrapWidth = 280, kInfoBoxBottomLine = 206, kInfoBoxButtonInsetX = 24, kInfoBoxIconInsetX = 6, kInfoBoxIconInsetY = 2;
+constexpr float kInfoBoxFirstLineInset = 3;
+constexpr const char* kConfirmIcon = "sprites/blend/ui_frontend/images/screen_selectbutton.bpng";
 
 int evenRounded(float value) {
     int rounded = int(std::floor(value + 0.5f));
@@ -205,6 +208,29 @@ void drawDialogueBox(Canvas& top, Resources& resources, unsigned character, cons
                            float(image.width), float(image.height), fade);
         }
     }
+}
+
+void drawInformationBox(Canvas& top, Resources& resources, const std::string& body, const std::string& confirm) {
+    const Colour fade{1, 1, 1, 1};
+    const BitmapFont& font = resources.font("frontendfont");
+    const auto& extended = resources.extendedCharacters();
+    const std::vector<std::string> lines = wrapText(font, extended, body, int(kInfoBoxWrapWidth), 0);
+    int widest = 0;
+    for (const std::string& line : lines) widest = std::max(widest, textWidth(font, extended, line, 0));
+    const float pitch = float(font.font.lineHeight + kTipDialogueLineGap);
+    const float halfWidth = std::max(kBoxMinHalfWidth, float(widest) / 2);
+    const float halfHeight = std::max(kBoxMinHalfHeight, pitch * float(lines.size() + 1) / 2);
+    const float centreY = kInfoBoxBottomLine - halfHeight;
+    drawFramedBox(top, resources, kScreenCentreTopX, centreY, halfWidth, halfHeight, fade);
+    for (std::size_t i = 0; i < lines.size(); ++i)
+        drawText(top, font, extended, lines[i], kScreenCentreTopX, centreY - halfHeight + kInfoBoxFirstLineInset + pitch * float(i), Align::Centre,
+                 kDialogueTextColour, 0, true);
+    const float rowY = centreY + halfHeight - kInfoBoxIconInsetY;
+    drawText(top, font, extended, confirm, std::floor(kScreenCentreTopX + halfWidth - kInfoBoxButtonInsetX + 0.5f), rowY, Align::Right,
+             kDialogueTextColour, 0, true);
+    const assets::Image& icon = resources.image(kConfirmIcon);
+    top.drawScaled(icon, {0, 0, icon.width, icon.height}, std::floor(kScreenCentreTopX + halfWidth - kInfoBoxIconInsetX + 0.5f) - float(icon.width / 2),
+                   std::floor(rowY + 0.5f) - float(icon.height / 2), float(icon.width), float(icon.height), fade);
 }
 
 }

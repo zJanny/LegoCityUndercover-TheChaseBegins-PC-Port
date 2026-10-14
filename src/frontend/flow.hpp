@@ -76,13 +76,20 @@ public:
     virtual double frameSeconds() const = 0;
 };
 
+struct SlotSummary {
+    bool used = false;
+    std::string time, percent;
+    std::uint32_t locationKey = 0;
+};
+
 struct FlowConfig {
     // 0x313018 sets the flag 0x372e6c from the sign of the options' last-slot byte: true while no slot was ever used.
     bool firstRun = true;
     int language = 1;
     StreetPassEnvironment streetPass;
-    // Saves are not read yet (docs/re/save-format.md): every slot is an empty "New Game" slot. STAND-IN.
+    // Without a save file every slot is an empty "New Game" slot (STAND-IN FE-S3); `slots` holds the rows of a used save.
     unsigned slotCount = 2;
+    std::vector<SlotSummary> slots;
 };
 
 struct Handoff {
@@ -114,6 +121,7 @@ public:
     const FlowConfig& config() const { return config_; }
     bool blackout() const { return blackUpdates_ > 0; }
     bool done() const { return screen_ == Screen::Done; }
+    bool slotUsed(unsigned slot) const { return slot < config_.slots.size() && config_.slots[slot].used; }
     const Handoff& handoff() const { return handoff_; }
     double movieSeconds() const { return movieSeconds_; }
     bool movieShowing() const { return movieOpen_ && !blackout(); }

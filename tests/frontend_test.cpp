@@ -237,6 +237,38 @@ void slotsAndHandoff() {
     requireEqual(flow.done() ? 1 : 0, 1, "A on the mission card hands over to the level");
 }
 
+void continueUsedSlot() {
+    FakeMovies movies(0.2);
+    FlowConfig config;
+    config.slots = {{true, "05:48", "0.2%", 1}, {false, "", "", 0}};
+    Flow flow(&movies, config);
+    toPrompt(flow);
+    step(flow, kButtonB);
+    step(flow, kButtonA);
+    step(flow, kButtonA);
+    stepsUntilScreen(flow, Screen::SlotSelect, 100);
+    step(flow, kButtonA);
+    stepsUntilScreen(flow, Screen::Loading, 100);
+    requireEqual(flow.handoff().slot, 0u, "chosen used slot");
+    requireEqual(flow.handoff().newGame ? 1 : 0, 0, "a used slot continues (oracle state savecont-slotlist-user: no saving page, loading screen at once)");
+    stepsUntilScreen(flow, Screen::Done, 1000);
+    bool introOpened = false;
+    for (const std::string& name : movies.opened) introOpened = introOpened || name == "01_gameintro:uk";
+    requireEqual(introOpened ? 1 : 0, 0, "Continue plays no intro movie");
+
+    FakeMovies movies2(0.2);
+    Flow second(&movies2, config);
+    toPrompt(second);
+    step(second, kButtonB);
+    step(second, kButtonA);
+    step(second, kButtonA);
+    stepsUntilScreen(second, Screen::SlotSelect, 100);
+    step(second, kButtonDown);
+    step(second, kButtonA);
+    stepsUntilScreen(second, Screen::SavingGame, 100);
+    requireEqual(second.handoff().newGame ? 1 : 0, 1, "an empty slot next to a used one starts a new game");
+}
+
 }
 
 int main() {
@@ -245,6 +277,7 @@ int main() {
     language();
     promptStateMachine();
     slotsAndHandoff();
+    continueUsedSlot();
     if (failures) {
         std::cerr << failures << " failure(s)\n";
         return EXIT_FAILURE;

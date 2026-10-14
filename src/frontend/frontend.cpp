@@ -9,7 +9,7 @@ namespace {
 
 // Keys from the page builders of the original (docs/re/front-end.md).
 constexpr std::uint32_t kKeyStreetPass = 0x4617a2ca, kKeyYes = 0x2c187527, kKeyNo = 0x4e1381, kKeyOk = 0x4f13bc,
-                        kKeySelect = 0x715c59fc, kKeyAutosave = 0xa5e2f63f, kKeyHome = 0x65213108,
+                        kKeySelect = 0x715c59fc, kKeyDelete = 0x24d3ab6b, kKeyAutosave = 0xa5e2f63f, kKeyHome = 0x65213108,
                         kKeyAgreement = 0x62ab3f48, kKeyAgreementHelp = 0x62ab3f49, kKeyParental = 0x64301deb,
                         kKeyTooMany = 0x71ba2807, kKeyStreetPassOn = 0xe10321ee, kKeyTip = 0x9e318a31;
 constexpr std::uint32_t kSystemContinue = 0xe3f70996, kSystemBack = 0x8be4916, kSystemSelectSlot = 0xe2117397,
@@ -152,10 +152,18 @@ void FrontEnd::drawSlots(Canvas& top, Canvas& bottom) {
     drawTitleTop(top, resources_, "uk", 1.0f);
     std::vector<SlotRow> rows;
     const std::string system = textFile("systemtext");
-    for (unsigned i = 0; i < flow_.config().slotCount; ++i)
-        rows.push_back({int(i) + 1, resources_.textForKey(system, kSystemNewGame)});
+    for (unsigned i = 0; i < flow_.config().slotCount; ++i) {
+        SlotRow row{int(i) + 1, resources_.textForKey(system, kSystemNewGame), flow_.slotUsed(i), {}, {}, {}};
+        if (row.used) {
+            const SlotSummary& summary = flow_.config().slots[i];
+            row.time = summary.time;
+            row.percent = summary.percent;
+            row.location = resources_.textForKey(textFile("gametext"), summary.locationKey);
+        }
+        rows.push_back(row);
+    }
     drawSlotPage(bottom, resources_, resources_.textForKey(system, kSystemSelectSlot),
-                 resources_.textForKey(textFile("gametext"), kKeySelect), rows, flow_.selectedSlot(), flow_.screenSeconds(),
+                 resources_.textForKey(textFile("gametext"), kKeySelect), resources_.textForKey(textFile("gametext"), kKeyDelete), rows, flow_.selectedSlot(), flow_.screenSeconds(),
                  std::min(flow_.selectionSeconds(), 0.267f), flow_.confirming() ? flow_.confirmSeconds() : -1.0f);
 }
 

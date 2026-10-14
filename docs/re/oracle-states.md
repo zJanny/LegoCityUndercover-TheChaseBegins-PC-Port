@@ -86,3 +86,11 @@ Both are the user's own Azahar quick saves (2026-10-14 19:16), copied read-only 
 
 Unknowns:
 - Position, heading and the save slot's story bytes were not read from memory yet; the progress above is the user's report.
+
+<a id="ts-20261014-204610"></a>
+
+## 2026-10-14T20:46:10+02:00 — States info-box-open and slotlist-delete-confirm
+
+- `info-box-open` (New 3DS, from `info-barrier` with the stick up for 30 updates): the InformationBox of `No_Entry_Auburn_OnFoot` is open at the player position (755.09, 25.58, 588.84). Game progress as `info-barrier`: mission 1-1 finished, mission 1-2 not started, Auburn locked. Findings: [script-text.md §2026-10-14T20:46](script-text.md#ts-20261014-204600).
+- `slotlist-delete-confirm` (Old 3DS, from `savecont-slotlist-user` with Y pressed on slot 1): the delete confirmation of the used slot 1 ("Are you sure you want to delete this save file?", B Cancel, Confirm A). Game progress as `savecont-slotlist-user` (the user's slot 0: after mission 1-1, per mille 2, level 1). Findings: [front-end.md §2026-10-14T20:46](front-end.md#ts-20261014-204620).
+- Both were taken in the agent's own home `artifacts/oracle/agentOC-home`; the user's saves were not touched.

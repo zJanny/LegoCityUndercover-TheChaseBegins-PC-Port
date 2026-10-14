@@ -25,5 +25,8 @@ void drawDialogueBackground(Canvas& bottom, Resources& resources);
 // Level heading box above the tip panel of the bottom screen (0x193f00, ShowLevelText).
 void drawHeadingBox(Canvas& bottom, Resources& resources, const std::string& text, float alpha);
 void drawDialogueBox(Canvas& top, Resources& resources, unsigned character, const std::string& text, float alpha);
+// InformationBox, the dialog mode with an empty cancel text: box from the draw call 0x193c4c (0x23c680 sizes, 0x229128 box) with
+// the body plus an empty line, the confirm text right aligned and the A icon (screen_selectbutton) at the bottom right; B is not offered.
+void drawInformationBox(Canvas& top, Resources& resources, const std::string& body, const std::string& confirm);
 
 }

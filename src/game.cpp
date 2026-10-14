@@ -129,6 +129,7 @@ int run(const Options& given) {
         front.firstRun = !options.returningPlayer;
         front.script = options.frontScript;
         front.screenshot = options.screenshot;
+        front.saveFile = options.frontSave;
         const game_front::Result result =
             game_front::run(window, input, archive, audio ? &*audio : nullptr, front,
                             [&]() { return game_level::clockTicks(SDL_GetPerformanceCounter() - frontOrigin, frontFrequency); });
@@ -137,8 +138,13 @@ int run(const Options& given) {
             shutDown(context, window);
             return 0;
         }
-        options.level = game_options::kNewGameLevel;
-        options.start = game_options::kNewGameStart;
+        if (result.handoff.newGame) {
+            options.level = game_options::kNewGameLevel;
+            options.start = game_options::kNewGameStart;
+        } else {
+            options.saveFile = options.frontSave;
+            options.saveSlot = result.handoff.slot;
+        }
     }
     if (!options.saveFile.empty() && !options.levelGiven) game_save::chooseContinueLevel(archive, options);
     const FuseEntry* masterEntry = archive.find(runtime::kMasterLevelFile);

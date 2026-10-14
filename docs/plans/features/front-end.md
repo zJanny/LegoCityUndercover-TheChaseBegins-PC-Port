@@ -15,17 +15,20 @@ IN_PROGRESS, updated 2026-10-13T21:29:01+0200. Squash-merged to main; `chase-gam
 
 ## 4. Stand-ins (all labelled in the code)
 
+- FE-S31 The percent of a used slot sits 37 px left of its layout element (`kSlotPercentShiftX`). evidence: [front-end.md §2026-10-14T20:46](../../re/front-end.md#ts-20261014-204620).
+- FE-S32 The Delete label is tinted (255, 200, 100) by hand and the extra button sits 6 px right of the oracle's. evidence: [front-end.md §2026-10-14T20:46](../../re/front-end.md#ts-20261014-204620).
+- FE-S33 Continue goes through the loading screen with the stand-in duration and no black interval. needs: FE-3. evidence: [front-end.md §2026-10-14T20:46](../../re/front-end.md#ts-20261014-204620).
 - FE-S1 Durations: boot pages 3 s, saving page 2 s, loading screen 4 s, title card 6 s or A; emptied slot page interval 0.5 s; save indicator off time 0.3 s; language fade-in 0.25 s.
 - FE-S2 `StreetPassEnvironment` takes the oracle's values.
-- FE-S3 Every slot is an empty New Game slot.
+- FE-S3 Without `--front-save` every slot is an empty New Game slot; Continue starts the level of slot byte +6 (SAVE-S4).
 - FE-S4 The new game starts in Cherry Tree Hills at the oracle's player position (886.764, 16.589, 1111.166).
 - FE-S5 The loading screen shows a flat badge instead of the 3D scene and a fixed tip.
 - FE-S6 The title card's hexagon art is a stand-in (not found in one texture); the in-engine cutscene on the top screen under the title card is black.
 
 ## 5. Open items
 
-- [ ] FE-1 — Existing slots with time, percent and location, Continue, delete: `chase_save` integration is open; the returning-player flow (flag 0: whether rows 4 and 5 still show, which slot rows show) is unknown. needs: SAVE-2, FE-11 (SAVE-9 is closed: Continue = level of slot byte +6 at Player1Start). evidence: [front-end.md §2026-10-13T20:46](../../re/front-end.md#ts-20261013-204607).
-- [ ] FE-11 — The slot list page for a used slot (time, percent, location rows, cursor, delete) and Continue from it in the front end: only the start rule is known; needs oracle screenshots of the page (state savecont-slotlist-user). blocks: FE-1. evidence: [save-format-state.md §2026-10-14T15:19](../../re/save-format-state.md#ts-20261014-151903).
+- [ ] FE-1 — Existing slots with time, percent and location, Continue, delete: `chase_save` integration is open; the returning-player flow (flag 0: whether rows 4 and 5 still show, which slot rows show) is unknown. needs: SAVE-2, FE-30 (FE-11 and SAVE-9 are closed: Continue = level of slot byte +6 at Player1Start). evidence: [front-end.md §2026-10-13T20:46](../../re/front-end.md#ts-20261013-204607).
+- [ ] FE-30 — The delete confirmation page (Y on a used slot: text, B Cancel / Confirm A, result, save write) and a test pinning the used-row texts with the real save; state `slotlist-delete-confirm`. blocks: FE-1. evidence: [front-end.md §2026-10-14T20:46](../../re/front-end.md#ts-20261014-204620).
 - [ ] FE-2 — Logo bottom variants and table suffixes for non-English languages. evidence: [front-end.md §2026-10-13T20:46](../../re/front-end.md#ts-20261013-204607).
 - [ ] FE-3 — The loading screen's 3D badge scene (`prop_special_loadingring`, model, lights, camera, spin and star motion) and its tip choice; the async load that row 0 waits for. The loading screen also waits for A in the real game (user observation). blocks: TRANS-3, TRANS-8. evidence: [front-end.md §2026-10-13T20:46](../../re/front-end.md#ts-20261013-204607).
 - [ ] FE-4 — The title card's hexagon art and the in-engine cutscene on the top screen; when the card ends (the oracle route pressed A). needs: MOVIE-2. evidence: [front-end.md §2026-10-13T20:46](../../re/front-end.md#ts-20261013-204607).

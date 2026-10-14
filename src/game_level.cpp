@@ -293,8 +293,12 @@ void LevelSession::draw(int width, int height) {
                             scriptText.dialogue().alpha);
     if (levelScripts.dialogOpen()) {
         const runtime::ScriptDialog dialog = levelScripts.dialog();
-        fe::drawWarningDialog(hudCanvas, hudResources, hudResources.textForKey(kGameTextFile, dialog.bodyKey),
-                              hudResources.textForKey(kSystemTextFile, dialog.confirmKey), hudResources.textForKey(kSystemTextFile, dialog.cancelKey));
+        if (dialog.cancelKey == runtime::kInformationBoxCancelKey)
+            fe::drawInformationBox(hudCanvas, hudResources, hudResources.textForKey(kGameTextFile, dialog.bodyKey),
+                                   hudResources.textForKey(kSystemTextFile, dialog.confirmKey));
+        else
+            fe::drawWarningDialog(hudCanvas, hudResources, hudResources.textForKey(kGameTextFile, dialog.bodyKey),
+                                  hudResources.textForKey(kSystemTextFile, dialog.confirmKey), hudResources.textForKey(kSystemTextFile, dialog.cancelKey));
     }
     if (sceneChangeFlow.pageOpen()) {
         fe::drawLoadingTop(hudCanvas, hudResources);

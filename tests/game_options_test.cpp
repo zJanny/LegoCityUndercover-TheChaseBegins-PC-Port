@@ -90,6 +90,10 @@ void testRejections() {
     expectRejected({"--save", "a.dat", "--save-out", "./a.dat"}, "--save-out: must not be the file given with --save: './a.dat'");
     expectRejected({"--save-out"}, "--save-out: missing value: ''");
     if (parseArgs({"--save", "a.dat", "--save-out", "b.dat"}).saveOut != "b.dat") fail("--save-out value lost");
+    expectRejected({"--front-save"}, "--front-save: missing value: ''");
+    expectRejected({"--front-save", "a.dat", "--gameplay"}, "--front-save: only the front end reads it, not a level run (--gameplay, --script, --level, --start, --save): 'a.dat'");
+    expectRejected({"--front-save", "a.dat", "--save", "b.dat"}, "--front-save: only the front end reads it, not a level run (--gameplay, --script, --level, --start, --save): 'a.dat'");
+    if (parseArgs({"--front-save", "a.dat"}).frontSave != "a.dat") fail("--front-save value lost");
     expectRejected({"--slot", "2"}, "--slot: out of range, allowed 0 to 1: '2'");
     expectRejected({"--slot", " 1"}, "--slot: not a whole number: ' 1'");
     expectRejected({"--language", "0"}, "--language: out of range, allowed 1 to 9: '0'");

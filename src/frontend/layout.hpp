@@ -19,6 +19,10 @@ struct TextSlot {
     int spacing = kSpacingDefault;
     // Vertical shift in pixels. STAND-IN: measured per element; the rule behind it (font size field) is not recovered.
     int offsetY = 0;
+    // Horizontal shift in pixels. STAND-IN (FE-S31): measured for the slot list percent, the rule behind it is not recovered.
+    int offsetX = 0;
+    bool tinted = false;
+    float tint[3] = {1, 1, 1};
     static constexpr int kSpacingDefault = 1 << 20;
 };
 

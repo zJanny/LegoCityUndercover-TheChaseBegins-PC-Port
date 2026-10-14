@@ -160,5 +160,31 @@ int main(int argc, char** argv) {
             "level heading key: TablesLevels field +8 of the row (oracle memory 0x20a4a8 call, gametext 2004168849 = Cherry Tree Hills)");
     require(characterNameKey(resources, 9) == 0xe1924407u && characterNameKey(resources, 10) == 0x8003758fu && characterNameKey(resources, 9999) == 0,
             "character name key: tablescharacters column 3 (struct +8 read by 0x1b1314), gametext e1924407 = Chase McCain, 8003758f = Police Chief Gleeson (tools/convert_loc.py on gametext_uk.loc)");
+    Canvas information(400, 240);
+    information.clearTransparent();
+    drawInformationBox(information, resources, "You need to complete more missions before you can enter this area of LEGO City.", "OK");
+    const Extent informationRow = rowExtent(information, 170, 200);
+    const Extent informationColumn = columnExtent(information, 200, 200);
+    // Oracle (state info-barrier, walked into No_Entry_Auburn_OnFoot, agentOC-out/ib3.png top screen): border light blue (159, 224, 255) at columns
+    // 56..57 and 342..343 of row 170, rows 126..127 and 216..217 of column 200 (box x 56..343, y 126..217); the draw call 0x193c4c gives centre
+    // (200, 172) and half size (135.5, 34) (three lines plus the empty line of the two newlines appended before the buttons).
+    require(informationRow.first == 56 && informationRow.last == 343, "information box columns 56..343");
+    require(informationColumn.first == 126 && informationColumn.last == 217, "information box rows 126..217");
+    int okLeft = 999, okRight = -1, okTop = 999, okBottom = -1;
+    Canvas informationOnBlack(400, 240);
+    informationOnBlack.clear(0, 0, 0);
+    drawInformationBox(informationOnBlack, resources, "You need to complete more missions before you can enter this area of LEGO City.", "OK");
+    for (int y = 190; y < 216; ++y)
+        for (int x = 280; x < 318; ++x) {
+            const auto pixel = informationOnBlack.pixel(x, y);
+            if (pixel[0] <= 200 || pixel[1] <= 120 || pixel[1] >= 210 || pixel[2] >= 90) continue;
+            okLeft = std::min(okLeft, x);
+            okRight = std::max(okRight, x);
+            okTop = std::min(okTop, y);
+            okBottom = std::max(okBottom, y);
+        }
+    // Oracle ib3.png: orange pixels (red > 200, 120 < green < 210, blue < 90) of the "OK" row span x 298..310, y 198..208 at rows 190..215; the
+    // oracle's glyph rows sit about 0.2 pixel lower, so the port's last row 209 carries two pixels the oracle does not.
+    require(okLeft == 298 && okRight == 310 && okTop == 198 && okBottom <= 209 && okBottom >= 208, "information box OK text pixels x 298..310, y 198..208");
     return failures ? EXIT_FAILURE : EXIT_SUCCESS;
 }

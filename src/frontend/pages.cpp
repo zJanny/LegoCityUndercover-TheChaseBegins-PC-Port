@@ -16,6 +16,9 @@ constexpr float kSpinnerX = 128, kSpinnerY = 180, kSpinnerSize = 64;
 constexpr int kBodyWrapWidth = 296, kPitchShort = 27, kPitchLong = 23;
 // STAND-IN: top-left of the title layers on the 400x240 screen, fitted to the oracle (mean abs diff 0.26).
 constexpr int kTitleX = -56, kTitleY = -8;
+// STAND-IN FE-S32: the Delete label is orange in the oracle (sl0.png brightest texel 255, 200, 100); the code that tints it is not read.
+constexpr float kDeleteTintGreen = 200.0f / 255.0f, kDeleteTintBlue = 100.0f / 255.0f;
+constexpr const char* kExtraButtonImage = "sprites/blend/ui_frontend/images/screen_extrabutton.bpng";
 constexpr const char* kShortcutsLayout = "sprites/blend/ui_frontend/shortcuts.bxaml";
 constexpr float kShortcutsX = -80, kShortcutsY = -16;
 constexpr const char* kDialogBoxTexture = "sprites/ui_dialog/ui_dialog_box.btga";
@@ -38,6 +41,8 @@ constexpr float kWarnTextCentreX = 200, kWarnFirstLineY = 141, kWarnPitch = 17.5
 constexpr float kWarnCancelIconX = 63, kWarnCancelTextX = 86, kWarnConfirmTextRightX = 316, kWarnConfirmIconX = 333, kWarnIconSize = 28;
 constexpr Colour kWarnTextColour{1.0f, 169.0f / 255.0f, 22.0f / 255.0f, 1.0f};
 constexpr float kSlotConfirmedSeconds = 0.3f;
+// STAND-IN FE-S31: the percent's right edge is 37 px left of its layout element's (oracle sl0.png: glyphs end at x 276).
+constexpr int kSlotPercentShiftX = -37;
 constexpr const char* kSlotLayout = "sprites/blend/savegameflow/page_selectslot.bxaml";
 constexpr const char* kButtonA = "sprites/buttons/dsbuttona.btga";
 constexpr const char* kButtonB = "sprites/buttons/dsbuttonb.btga";
@@ -100,9 +105,21 @@ void drawSaveSpinner(Canvas& bottom, Resources& resources, float phase, float op
                        rotation, {1, 1, 1, opacity * alpha});
 }
 
-void drawSelectShortcut(Canvas& bottom, Resources& resources, const std::string& selectLabel) {
+void drawSelectShortcut(Canvas& bottom, Resources& resources, const std::string& selectLabel, const std::string& extraLabel) {
     LayoutScene shortcuts;
-    shortcuts.hidden = {"BackButton_DS", "SelectButton_DS", "ExtraButton_DS", "BackButton_3DS", "ExtraButton_3DS"};
+    shortcuts.hidden = {"BackButton_DS", "SelectButton_DS", "ExtraButton_DS", "BackButton_3DS"};
+    if (extraLabel.empty()) shortcuts.hidden.insert("ExtraButton_3DS");
+    else {
+        TextSlot extra;
+        extra.text = extraLabel;
+        extra.align = Align::Left;
+        extra.spacing = 0;
+        extra.tinted = true;
+        extra.tint[1] = kDeleteTintGreen;
+        extra.tint[2] = kDeleteTintBlue;
+        shortcuts.text["ExtraButton_3DS/Text_Title"] = extra;
+        shortcuts.images["ExtraButton_3DS/Button_Image"] = kExtraButtonImage;
+    }
     shortcuts.textSpacing = 1;
     TextSlot select;
     select.text = selectLabel;
@@ -112,8 +129,8 @@ void drawSelectShortcut(Canvas& bottom, Resources& resources, const std::string&
 }
 
 void drawSlotPage(Canvas& bottom, Resources& resources, const std::string& header, const std::string& selectLabel,
-                  const std::vector<SlotRow>& rows, unsigned selected, float seconds, float selectedSeconds,
-                  float confirmSeconds) {
+                  const std::string& deleteLabel, const std::vector<SlotRow>& rows, unsigned selected, float seconds,
+                  float selectedSeconds, float confirmSeconds) {
     const assets::Image& background = resources.image("sprites/blend/savegameflow/images/ui_lcu_bg.bpng");
     bottom.draw(background, {0, 0, kBottomWidth, kScreenHeight}, 0, 0);
     LayoutScene scene;
@@ -135,22 +152,37 @@ void drawSlotPage(Canvas& bottom, Resources& resources, const std::string& heade
     }
     for (std::size_t i = 0; i < rows.size() && i < 2; ++i) {
         const std::string name = "ListItem" + std::to_string(i + 1);
-        scene.hidden.insert(name + "/Text_Time");
-        scene.hidden.insert(name + "/Text_Percent");
-        scene.hidden.insert(name + "/Text_Location");
         TextSlot number;
         number.text = std::to_string(rows[i].number);
         number.align = Align::Left;
         scene.text[name + "/Text_SlotNum"] = number;
-        TextSlot label;
-        label.text = rows[i].text;
-        label.align = Align::Left;
-        scene.text[name + "/Text_NoData"] = label;
+        if (rows[i].used) {
+            scene.hidden.insert(name + "/Text_NoData");
+            TextSlot time, percent, location;
+            time.text = rows[i].time;
+            time.align = Align::Left;
+            percent.text = rows[i].percent;
+            percent.align = Align::Right;
+            percent.offsetX = kSlotPercentShiftX;
+            location.text = rows[i].location;
+            location.align = Align::Left;
+            scene.text[name + "/Text_Time"] = time;
+            scene.text[name + "/Text_Percent"] = percent;
+            scene.text[name + "/Text_Location"] = location;
+        } else {
+            scene.hidden.insert(name + "/Text_Time");
+            scene.hidden.insert(name + "/Text_Percent");
+            scene.hidden.insert(name + "/Text_Location");
+            TextSlot label;
+            label.text = rows[i].text;
+            label.align = Align::Left;
+            scene.text[name + "/Text_NoData"] = label;
+        }
         scene.referenceStoryboards[name] = "ButtonHighlight";
         scene.referenceTimes[name] = i == selected ? selectedSeconds : 0.0f;
     }
     drawLayout(bottom, resources, kSlotLayout, scene, 0, 0);
-    if (!cleared) drawSelectShortcut(bottom, resources, selectLabel);
+    if (!cleared) drawSelectShortcut(bottom, resources, selectLabel, selected < rows.size() && rows[selected].used ? deleteLabel : std::string());
 }
 
 void drawTitleTop(Canvas& top, Resources& resources, const std::string& suffix, float level) {

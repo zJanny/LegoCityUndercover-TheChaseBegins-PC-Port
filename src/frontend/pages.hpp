@@ -28,15 +28,17 @@ void drawAlertPage(Canvas& bottom, Resources& resources, const AlertPage& page);
 
 void drawSaveSpinner(Canvas& bottom, Resources& resources, float phase, float opacity);
 
-void drawSelectShortcut(Canvas& bottom, Resources& resources, const std::string& selectLabel);
+void drawSelectShortcut(Canvas& bottom, Resources& resources, const std::string& selectLabel, const std::string& extraLabel = {});
 
 struct SlotRow {
     int number = 1;
     std::string text;
+    bool used = false;
+    std::string time, percent, location;
 };
 
 void drawSlotPage(Canvas& bottom, Resources& resources, const std::string& header, const std::string& selectLabel,
-                  const std::vector<SlotRow>& rows, unsigned selected, float seconds, float selectedSeconds,
+                  const std::string& deleteLabel, const std::vector<SlotRow>& rows, unsigned selected, float seconds, float selectedSeconds,
                   float confirmSeconds = -1);
 
 void drawTitleTop(Canvas& top, Resources& resources, const std::string& suffix, float level);

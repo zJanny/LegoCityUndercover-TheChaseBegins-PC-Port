@@ -157,12 +157,13 @@ private:
                                                          : wrapText(font, extended, slot.text, 1 << 20, spacing);
         const int pitch = slot.pitch > 0 ? slot.pitch : int(font.font.lineHeight);
         const float boxWidth = width * frame.scaleX, boxHeight = height * frame.scaleY;
-        float anchor = frame.x + boxWidth / 2;
-        if (slot.align == Align::Left) anchor = frame.x;
-        else if (slot.align == Align::Right) anchor = frame.x + boxWidth;
+        float anchor = frame.x + boxWidth / 2 + float(slot.offsetX);
+        if (slot.align == Align::Left) anchor = frame.x + float(slot.offsetX);
+        else if (slot.align == Align::Right) anchor = frame.x + boxWidth + float(slot.offsetX);
         const float blockHeight = float(pitch) * float(lines.size());
         float top = frame.y + (boxHeight - blockHeight) / 2 + float(slot.offsetY);
         Colour colour{e.colour[0] / 255.0f, e.colour[1] / 255.0f, e.colour[2] / 255.0f, e.colour[3] / 255.0f * frame.opacity};
+        if (slot.tinted) colour = Colour{slot.tint[0], slot.tint[1], slot.tint[2], colour.a};
         for (const auto& line : lines) {
             drawText(canvas_, font, extended, line, anchor, top + float(pitch - int(font.font.lineHeight)), slot.align, colour,
                      spacing, false);

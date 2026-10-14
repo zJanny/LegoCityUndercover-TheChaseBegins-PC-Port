@@ -1,5 +1,6 @@
 // chase-frontshot: runs the front end offscreen with a scripted pad and saves screenshots (400x480, the two screens
 // stacked as the emulator's screenshots). No window, no sound. Script grammar: frontend/script.hpp.
+#include "frontend/slot_summaries.hpp"
 #include "frontend/frontend.hpp"
 #include "frontend/movie_host.hpp"
 #include "frontend/script.hpp"
@@ -18,6 +19,7 @@ struct Options {
     std::string script, output = ".";
     int language = 1;
     bool firstRun = true;
+    std::string save;
 };
 
 Options parse(int argc, char** argv) {
@@ -36,6 +38,7 @@ Options parse(int argc, char** argv) {
             else if (arg == "--output") options.output = value();
             else if (arg == "--language") options.language = int(strict::integer(value(), 1, 9));
             else if (arg == "--returning") options.firstRun = false;
+            else if (arg == "--save") options.save = value();
             else strict::reject("unknown option", arg);
         });
     }
@@ -51,6 +54,7 @@ int run(const Options& options) {
     FlowConfig config;
     config.language = options.language;
     config.firstRun = options.firstRun;
+    if (!options.save.empty()) config.slots = slotSummariesFromSave(options.save, archive, options.language);
     FrontEnd front(resources, &movies, config);
     Canvas top(kTopWidth, kScreenHeight), bottom(kBottomWidth, kScreenHeight);
     ScriptHooks hooks;

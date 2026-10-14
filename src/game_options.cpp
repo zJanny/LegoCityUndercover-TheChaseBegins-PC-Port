@@ -21,7 +21,7 @@ constexpr double kAnyRealLow = std::numeric_limits<double>::lowest(), kAnyRealHi
 
 const char* const kUsage = "usage: chase-game [--fib F] [--names CSV] [--config CFG] [--gameplay] "
                            "[--level levels/levels/<name>/<name>_main.blvl] [--screenshot OUT.bmp] [--frames N] "
-                           "[--script \"X Y COUNT [BUTTONS];...\"] [--save savegame.dat] [--save-out FILE] [--slot 0|1] [--start \"X Y Z\"] [--facing DEGREES] [--no-camera-collision] [--debug-overlay] [--sound-volume 0-10] [--music-volume 0-10] "
+                           "[--script \"X Y COUNT [BUTTONS];...\"] [--save savegame.dat] [--save-out FILE] [--front-save savegame.dat] [--slot 0|1] [--start \"X Y Z\"] [--facing DEGREES] [--no-camera-collision] [--debug-overlay] [--sound-volume 0-10] [--music-volume 0-10] "
                            "[--front-script \"run 5; press A; until slot; ...\"] [--language 1-9] [--returning] [--window WIDTHxHEIGHT]";
 
 std::uint32_t buttonOf(char letter) {
@@ -85,6 +85,7 @@ bool applyOption(Options& o, const std::string& arg, const std::function<std::st
     else if (arg == "--call-script") o.callScripts.push_back(value());
     else if (arg == "--save") { o.saveFile = value(); o.gameplay = true; }
     else if (arg == "--save-out") o.saveOut = value();
+    else if (arg == "--front-save") o.frontSave = value();
     else if (arg == "--slot") o.saveSlot = unsigned(strict::integer(value(), 0, 1));
     else if (arg == "--no-camera-collision") o.cameraCollision = false;
     else if (arg == "--debug-overlay") o.debugOverlay = true;
@@ -117,6 +118,11 @@ void checkSaveOut(const Options& o) {
         throw std::runtime_error("--save-out: must not be the file given with --save: '" + o.saveOut + "'");
 }
 
+void checkFrontSave(const Options& o) {
+    if (o.frontSave.empty()) return;
+    if (o.gameplay) throw std::runtime_error("--front-save: only the front end reads it, not a level run (--gameplay, --script, --level, --start, --save): '" + o.frontSave + "'");
+}
+
 Options parse(int argc, char** argv) {
     Options o;
     for (int i = 1; i < argc; ++i) {
@@ -136,6 +142,7 @@ Options parse(int argc, char** argv) {
         if (!recognised) throw std::runtime_error(arg + ": unknown option: '" + arg + "'\n" + kUsage);
     }
     checkSaveOut(o);
+    checkFrontSave(o);
     return o;
 }
 

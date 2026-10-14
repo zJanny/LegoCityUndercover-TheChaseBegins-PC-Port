@@ -190,8 +190,8 @@ void Flow::update(float dt, const FrontInput& input) {
             confirmSeconds_ += dt;
             if (confirmSeconds_ >= kSlotConfirmSeconds + kSlotClearedSeconds) {
                 handoff_.slot = selectedSlot_;
-                handoff_.newGame = true;
-                next(Screen::SavingGame, false);
+                handoff_.newGame = !slotUsed(selectedSlot_);
+                next(handoff_.newGame ? Screen::SavingGame : Screen::Loading, false);
             }
             break;
         }
@@ -209,7 +209,7 @@ void Flow::update(float dt, const FrontInput& input) {
         if (elapsed >= kSavingSeconds) next(Screen::Loading, true);
         break;
     case Screen::Loading:
-        if (elapsed >= kLoadingSeconds) next(Screen::IntroMovie, true);
+        if (elapsed >= kLoadingSeconds) next(handoff_.newGame ? Screen::IntroMovie : Screen::Done, handoff_.newGame);
         break;
     case Screen::IntroMovie:
         if (!movieEnded_) {

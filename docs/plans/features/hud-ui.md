@@ -6,7 +6,7 @@ The in-game HUD (portrait, hearts, stud counter, studs flying to the counter, th
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-14T19:00:00+02:00. Script text: the tip panel, the level and mission heading (ShowLevelText, ShowIntroText; bottom screen), the dialogue box with its portrait and hexagon frame, the character intro and the information box (top screen) are drawn from the script natives. `chase-game` shows the original's top-screen HUD over a 5:3 3D view and the map on the bottom screen. Hearts, counter, bounce, timing and the flight are recovered; damage, other counters and the real map code are not.
+IN_PROGRESS, updated 2026-10-14T19:00:00+02:00. Script text: the tip panel, the level and mission heading (ShowLevelText, ShowIntroText; bottom screen), the dialogue box with its portrait and hexagon frame, the character intro and the information box (top screen, box and A icon as the oracle's) are drawn from the script natives. `chase-game` shows the original's top-screen HUD over a 5:3 3D view and the map on the bottom screen. Hearts, counter, bounce, timing and the flight are recovered; damage, other counters and the real map code are not.
 
 ## 3. Verified behaviour
 
@@ -34,7 +34,7 @@ IN_PROGRESS, updated 2026-10-14T19:00:00+02:00. Script text: the tip panel, the 
 - HUD-S7 The stud icon (HUD and flying) is drawn alpha-tested/blended normally, not with the original's blend state (see STUD-S5).
 - HUD-S10 The map marker is placed with 0.92 of the map unit, sized 20 px disc and 11 px badge, and the pulse ring (12 to 90 px radius, 1.2 s) is a guess from stepped screenshots; markers outside the screen are not clamped. needs: HUD-16. evidence: [objective-hud.md §2026-10-14T15:59](../../re/objective-hud.md#ts-20261014-155919).
 - HUD-S11 The waypoint model is drawn static: its turning police badge and light-column animation are missing. needs: HUD-17. evidence: [objective-hud.md §2026-10-14T15:59](../../re/objective-hud.md#ts-20261014-155919).
-- HUD-S14 The information box (InformationBox) reuses the warning dialog's box with an empty second button (no B icon, B ignored); size and button row for an empty text are not measured. needs: HUD-26. evidence: [script-text.md §2026-10-14T18:57](../../re/script-text.md#ts-20261014-185739).
+- HUD-S15 The information box places its first text line at the box top + 3 (measured for three lines only); the warning dialog keeps its earlier fitted button positions. needs: HUD-30. evidence: [script-text.md §2026-10-14T20:46](../../re/script-text.md#ts-20261014-204600).
 - HUD-S9 The dialogue background is drawn at full opacity as long as ShowDialogBG is on (no fade). needs: HUD-22. evidence: [script-text.md §2026-10-14T15:25](../../re/script-text.md#ts-20261014-152500).
 
 ## 5. Open items
@@ -57,7 +57,8 @@ IN_PROGRESS, updated 2026-10-14T19:00:00+02:00. Script text: the tip panel, the 
 - [ ] HUD-27 — Oracle pictures of a one-line dialogue (code says line top 178, the old fit 177) and of a tip or dialogue box at partial alpha (the port squares the box alpha as 0x229128 does, only compared at 240 / 255). evidence: [script-text.md §2026-10-14T19:25](../../re/script-text.md#ts-20261014-192500).
 - [ ] HUD-28 — Inline icons for `<start>`, `<select>` (32x16 textures), the 10th icon texture, and the font flag byte bit 3 / rounding byte 0x3766a9 taken as clear / enabled (pictures match). evidence: [script-text.md §2026-10-14T19:25](../../re/script-text.md#ts-20261014-192500).
 - [ ] HUD-29 — The round camera-rotate icon drawn below the tip box while the camera tip shows (oracle picture `agentHUD2-out/h2.png`, bottom centre of the top screen) is not drawn; its texture, code and timing are not found. evidence: [script-text.md §2026-10-14T19:25](../../re/script-text.md#ts-20261014-192500).
-- [ ] HUD-26 — Compare InformationBox, ShowIntroText and ShowCharacterIntro with the oracle: states `info-barrier` and `mission-1-2-start` exist ([oracle-states.md §2026-10-14T19:17](../../re/oracle-states.md#ts-20261014-191730)); a state at the start of mission 1-4 (ShowCharacterIntro) is still missing. blocks: HUD-S14. evidence: [script-text.md §2026-10-14T18:57](../../re/script-text.md#ts-20261014-185739).
+- [ ] HUD-30 — ShowCharacterIntro against the oracle (no state at mission 1-4 yet), an information or warning box with other line counts than three, and the warning dialog's width rule. blocks: HUD-S15. evidence: [script-text.md §2026-10-14T20:46](../../re/script-text.md#ts-20261014-204600).
+- [ ] HUD-31 — While the InformationBox at the Auburn barrier is open, the original keeps the top-screen HUD (portrait, hearts) and the bottom-screen map (oracle `agentOC-out/ib3.png`); the port's picture of the same box (`--call-script No_Entry_Auburn_On_Foot`) shows neither and a dialogue background on the bottom screen. Cause not analysed (what the barrier script switches, the ShowDialogBG reader of HUD-S9, the HUD draw condition). evidence: [script-text.md §2026-10-14T20:46](../../re/script-text.md#ts-20261014-204600).
 
 ## 6. Findings summary
 
