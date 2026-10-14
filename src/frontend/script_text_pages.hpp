@@ -4,6 +4,7 @@
 // line pitch, glyph centre shift and portrait position are fitted STAND-INS (HUD-S8). No SDL dependency.
 #include "frontend/canvas.hpp"
 #include "frontend/resources.hpp"
+#include <cstdint>
 #include <string>
 
 namespace chase::frontend {
@@ -13,8 +14,14 @@ std::string dialoguePortraitName(Resources& resources, unsigned character);
 // Button icon file for a token of the hint texts ("<east>"), empty when the token is not a button.
 std::string buttonIconFile(const std::string& token);
 
+// TablesLevels sheet 0 field +8 (column 11, the key of the level name in gametext_<lang>.loc) of the row whose scene name (column 21)
+// equals `levelName` ("lvl_01_cherrytreehills"); 0 when the level has no row.
+std::uint32_t levelHeadingKey(Resources& resources, const std::string& levelName);
+
 void drawTipPage(Canvas& bottom, Resources& resources, const std::string& text, float alpha);
 void drawDialogueBackground(Canvas& bottom, Resources& resources);
+// Level heading box above the tip panel of the bottom screen (0x193f00, ShowLevelText).
+void drawHeadingBox(Canvas& bottom, Resources& resources, const std::string& text, float alpha);
 void drawDialogueBox(Canvas& top, Resources& resources, unsigned character, const std::string& text, float alpha);
 
 }

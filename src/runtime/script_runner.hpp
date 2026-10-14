@@ -162,6 +162,9 @@ public:
     DirectorCamera& director() { return director_; }
     // Tip text, dialogue lines, dialogue background, mission title and summary (script_text.hpp).
     const ScriptTextState& text() const { return text_; }
+    // Key of the level name in gametext (TablesLevels field +8 of the level's row); 0 shows no heading for ShowLevelText.
+    void restartHeading() { text_.restartHeading(); }
+    void setLevelHeadingKey(std::uint32_t key) { levelHeadingKey_ = key; }
     // Waypoints and sub-objective groups switched on by the level scripts (objectives.hpp).
     const ObjectiveState& objectives() const { return objectives_; }
     // AI state the AI natives wrote and the move orders they started (ai.hpp).
@@ -219,6 +222,7 @@ private:
     ObjectNativeState objectNatives_;
     ProgressNativeState progressNatives_;
     ScriptTextState text_;
+    std::uint32_t levelHeadingKey_ = 0;
     ObjectiveState objectives_;
     AiCore ai_;
     float fadeLevel_ = 1.0f, fadeStart_ = 1.0f, fadeTarget_ = 1.0f, fadeElapsed_ = 0;

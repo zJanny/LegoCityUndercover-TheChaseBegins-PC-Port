@@ -70,6 +70,41 @@ void synthetic() {
     fade.update(0.125f);
     require(std::fabs(fade.dialogue().alpha - 0.5f) < 1e-5f, "dialogue fade-out is linear over 0.25 s (+0x18, 0x235e2c)");
 
+    // Oracle poll of the tip object state (0x517f08) and the alpha (0x51a2d4), state 3 -> 0 at 27.460 s -> 27.726 s wall: alpha stays 1.0 through
+    // state 3 (0.25 s) and then falls 0.8 .. 0.0 by 0.2 per update (writer 0x2de284, evidence docs/re/script-text.md).
+    runtime::ScriptTextState tipOut;
+    tipOut.showTip(1, 1.0f);
+    for (int i = 0; i < 5; ++i) tipOut.update(1.0f / 30);
+    require(tipOut.tip().alpha == 1.0f && !tipOut.tip().fadingOut, "tip holds");
+    for (int i = 0; i < 40 && !tipOut.tip().fadingOut; ++i) tipOut.update(1.0f / 30);
+    require(tipOut.tip().fadingOut && tipOut.tip().alpha == 1.0f, "state 3 starts at full alpha");
+    for (int i = 0; i < 40 && !tipOut.tip().released; ++i) {
+        require(tipOut.tip().alpha == 1.0f, "alpha stays 1.0 in state 3");
+        tipOut.update(1.0f / 30);
+    }
+    require(tipOut.tip().released && tipOut.tip().active, "state 0 after 0.25 s");
+    tipOut.update(1.0f / 30);
+    require(std::fabs(tipOut.tip().alpha - 0.8f) < 1e-5f && tipOut.tip().active, "falls by 0.2 per update");
+    for (int i = 0; i < 4; ++i) tipOut.update(1.0f / 30);
+    require(int(tipOut.tip().alpha * 255.0f) == 0, "alpha * 255 is 0 after five updates (0x15b564, float residue 2.4e-8)");
+    tipOut.update(1.0f / 30);
+    require(tipOut.tip().alpha == 0.0f && !tipOut.tip().active, "clamped to 0 by the sixth update");
+
+    // Heading object 0x517ec8 on the oracle: +0x14 = +0x18 = 0.5, +0x1c = 5.0 (read over RPC, state 1 -> 2 -> 3 -> 0, state 2 lasts 5.0 s of game clock).
+    runtime::ScriptTextState heading;
+    heading.showHeading(7);
+    require(heading.heading().active && heading.heading().key == 7 && heading.heading().alpha == 0.0f, "heading starts invisible");
+    heading.update(0.25f);
+    require(std::fabs(heading.heading().alpha - 0.5f) < 1e-5f, "heading fades in linearly over 0.5 s");
+    heading.update(0.25f);
+    heading.update(2.0f);
+    require(heading.heading().alpha == 1.0f, "heading holds");
+    heading.update(3.0f);
+    heading.update(0.25f);
+    require(std::fabs(heading.heading().alpha - 0.5f) < 1e-5f && heading.heading().active, "heading fades out linearly over 0.5 s");
+    heading.update(0.25f);
+    require(!heading.heading().active, "heading over after 6.0 s");
+
     assets::Level zero;
     add(zero, "z", {{"ShowTipTextTimed", {"1", "0"}}});
     assets::PlacedObjectState zeroState;

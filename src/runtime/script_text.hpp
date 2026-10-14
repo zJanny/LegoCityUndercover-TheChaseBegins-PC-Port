@@ -40,12 +40,27 @@ constexpr float kTipOnceSeconds = 5.0f;
 constexpr float kTipZeroDurationSeconds = 4.0f;
 constexpr float kDialogueDefaultSeconds = 4.0f;
 constexpr std::uint32_t kTipColour = 0xffffad4a;
-// Fade measured on the oracle: the draw alpha (float at 0x51a224 + 0xb0) steps by 0.2 per game update in and out.
+// The tip's draw alpha (float 0x51a2d4) is written by the update at 0x2de284 / 0x2de2a0: 0.2 (literal 0x2de44c) per update up while the tip
+// object's state byte (0x517f08) is not 0, down while it is 0, clamped to 0..1. State 3 lasts the object's fade-out time 0.25 s (+0x18).
 constexpr float kFadeStep = 0.2f;
+constexpr float kTipFadeOutSeconds = 0.25f;
 // Dialogue draw code 0x1cc550: alpha rises by dt * 5.0 (literal 0x1cc878) per update up to 1.0; in state 3 the alpha is the
-// remaining fraction of the fade-out time +0x18 = 0.25 s (0x235e2c). The writer of the tip's alpha is not found (SCRIPT-70).
+// remaining fraction of the fade-out time +0x18 = 0.25 s (0x235e2c).
 constexpr float kDialogueFadeInRate = 5.0f;
 constexpr float kDialogueFadeOutSeconds = 0.25f;
+
+// Level heading object 0x517ec8 (ShowLevelText, 0x1cdc54 -> 0x20a4a8 -> 0x23cc00): fade in +0x14 = 0.5 s, fade out +0x18 = 0.5 s, duration
+// +0x1c = 5.0 s (literal 0x20a4cc), measured on the oracle: state 1 for 0.5 s, state 2 for 5.0 s of game clock, state 3, then 0.
+constexpr float kHeadingFadeInSeconds = 0.5f;
+constexpr float kHeadingHoldSeconds = 5.0f;
+constexpr float kHeadingFadeOutSeconds = 0.5f;
+
+struct HeadingText {
+    bool active = false;
+    std::uint32_t key = 0;
+    float elapsed = 0;
+    float alpha = 0;
+};
 
 struct TimedText {
     bool active = false;
@@ -56,6 +71,7 @@ struct TimedText {
     float elapsed = 0;
     float alpha = 0;
     bool fadingOut = false;
+    bool released = false;
     float fadeOutElapsed = 0;
 };
 
@@ -65,6 +81,9 @@ public:
     // an already visible text keeps its alpha (measured: no cross fade between consecutive tips).
     void showTip(std::uint32_t key, float seconds);
     void showDialogue(std::uint32_t key, std::uint32_t character, const std::string& speaker, float seconds);
+    void showHeading(std::uint32_t key);
+    // STAND-IN (HUD-S13): the startup scripts call ShowLevelText while the scene starts; the original shows the heading with the first tip.
+    void restartHeading() { heading_.elapsed = 0; heading_.alpha = 0; }
     void setDialogueBackground(bool on) { dialogueBackground_ = on; }
     void setMissionTitle(std::uint32_t key) { missionTitle_ = key; }
     void setMissionSummary(std::uint32_t key) { missionSummary_ = key; }
@@ -75,6 +94,7 @@ public:
 
     const TimedText& tip() const { return tip_; }
     const TimedText& dialogue() const { return dialogue_; }
+    const HeadingText& heading() const { return heading_; }
     bool dialogueBackground() const { return dialogueBackground_; }
     std::uint32_t missionTitle() const { return missionTitle_; }
     std::uint32_t missionSummary() const { return missionSummary_; }
@@ -86,6 +106,7 @@ private:
     static void stepDialogue(TimedText& text, float dt);
 
     TimedText tip_, dialogue_;
+    HeadingText heading_;
     bool dialogueBackground_ = false;
     std::uint32_t missionTitle_ = 0, missionSummary_ = 0;
     unsigned recorded_[16] = {};

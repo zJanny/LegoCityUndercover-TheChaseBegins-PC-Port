@@ -480,6 +480,10 @@ void ScriptRunner::textNative(const ScriptCall& call) {
     case TextNativeKind::ShowDialogueText: text_.showDialogue(key(0), std::uint16_t(read(args[1])), lower(args[2]), kDialogueDefaultSeconds); break;
     case TextNativeKind::ShowDialogueTextTimed: text_.showDialogue(key(0), std::uint16_t(read(args[1])), lower(args[2]), read(args[3])); break;
     case TextNativeKind::ShowDialogBG: text_.setDialogueBackground(read(args[0]) != 0.0f); break;
+    case TextNativeKind::ShowLevelText:
+        if (levelHeadingKey_) text_.showHeading(levelHeadingKey_);
+        else text_.record(*kind, {});
+        break;
     case TextNativeKind::SetMissionTitle: text_.setMissionTitle(key(0)); break;
     case TextNativeKind::SetMissionSummary: text_.setMissionSummary(key(0)); break;
     default: {

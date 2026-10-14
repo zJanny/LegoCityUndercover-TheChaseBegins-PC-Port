@@ -131,6 +131,9 @@ LevelSession::LevelSession(const Shared& sharedState)
     studSprites.emplace(archive);
     player = game_player::placePlayer(archive, scene, level);
     levelScripts.setAllRoomsLoaded();
+    levelName = lower(options.level).substr(0, lower(options.level).find_last_of('/'));
+    levelName = levelName.substr(levelName.find_last_of('/') + 1);
+    levelScripts.setLevelHeadingKey(fe::levelHeadingKey(hudResources, levelName));
     levelScripts.setObjectPositionSource([this](const std::string& instance, float out[3]) {
         const std::optional<Placement> placement = objectStart(level, instance);
         if (placement) std::copy(placement->position, placement->position + 3, out);
@@ -151,6 +154,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     if (!options.startRoom.empty()) startOptions.startRoom = runtime::roomNumber(options.startRoom);
     else if (const std::optional<Placement> start = playerStart(level)) startOptions.startRoom = runtime::roomNumber(start->room);
     const std::uint32_t startupUpdates = sceneStart.run(startOptions);
+    levelScripts.restartHeading();
     for (const std::string& name : options.callScripts)
         if (!levelScripts.start(name) && !shared.afterSwitch) throw std::runtime_error("no level script " + name);
     for (const runtime::ScriptPlacement& request : levelScripts.takePlacements()) applyPlacement(request);
@@ -208,8 +212,6 @@ LevelSession::LevelSession(const Shared& sharedState)
         hud.emplace(hudResources, hudConfig);
     }
     overlay.emplace(fe::kTopWidth, fe::kBottomWidth, fe::kScreenHeight);
-    const std::string levelFolder = lower(options.level).substr(0, lower(options.level).find_last_of('/'));
-    levelName = levelFolder.substr(levelFolder.find_last_of('/') + 1);
     startRoomStreaming();
 
     counterFrequency = SDL_GetPerformanceFrequency();
@@ -273,6 +275,8 @@ void LevelSession::draw(int width, int height) {
     }
     const runtime::ScriptTextState& scriptText = levelScripts.text();
     if (scriptText.dialogueBackground()) fe::drawDialogueBackground(mapCanvas, hudResources);
+    if (scriptText.heading().active)
+        fe::drawHeadingBox(mapCanvas, hudResources, hudResources.textForKey(kGameTextFile, scriptText.heading().key), scriptText.heading().alpha);
     if (scriptText.tip().active)
         fe::drawTipPage(mapCanvas, hudResources, hudResources.textForKey(kHintTextFile, scriptText.tip().key), scriptText.tip().alpha);
     if (scriptText.dialogue().active)

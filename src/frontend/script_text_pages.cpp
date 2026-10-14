@@ -21,8 +21,12 @@ constexpr float kDialogueCentreXOffset = 10, kDialogueBottomLine = 206, kDialogu
 // STAND-INS (HUD-S8) fitted to the oracle screenshots: glyph centre against the line box centre, line pitch, icon width.
 constexpr float kTipTextShiftFitted = 3.5f, kDialogueTextShiftFitted = 2.5f, kTextPitchFitted = 17.0f;
 constexpr int kIconSizeFitted = 16;
-// STAND-INS (HUD-S9) fitted: the portrait position follows from the same layout code but did not reproduce.
-constexpr float kPortraitCentreX = 36, kPortraitCentreY = 186, kPortraitSize = 56;
+// STAND-IN (HUD-S12) fitted to the oracle picture: glyph centre against the text position (160, 30) of 0x254d80.
+constexpr float kHeadingTextShiftFitted = 0.5f;
+constexpr float kHeadingCentreY = 30, kHeadingHalfHeight = 12, kHeadingMargin = 15, kHeadingMaxAlpha = 240;
+constexpr unsigned kLevelNameColumn = 21, kLevelHeadingKeyColumn = 11;
+constexpr float kPortraitOffsetX = -7, kPortraitOffsetY = -1;
+constexpr const char* kPortraitFrameTexture = "sprites/ui_hud/blend/images/heartsbg_generic.bpng";
 constexpr Colour kTipTextColour{74.0f / 255.0f, 173.0f / 255.0f, 1.0f, 1.0f};
 constexpr Colour kDialogueTextColour{1.0f, 169.0f / 255.0f, 22.0f / 255.0f, 1.0f};
 
@@ -73,6 +77,29 @@ std::string dialoguePortraitName(Resources& resources, unsigned character) {
     }
     if (table->sheets.empty() || character >= table->sheets[0].rows) return {};
     return assets::tableValue(table->sheets[0], character, 1).text;
+}
+
+std::uint32_t levelHeadingKey(Resources& resources, const std::string& levelName) {
+    const assets::FuseEntry* entry = resources.archive().find("tables/tableslevels.bxls");
+    if (!entry) return 0;
+    const assets::Table table = assets::parseTable(resources.archive().read(*entry));
+    if (table.sheets.empty() || table.sheets[0].columns.size() <= kLevelNameColumn) return 0;
+    const assets::TableSheet& sheet = table.sheets[0];
+    for (unsigned row = 0; row < sheet.rows; ++row)
+        if (lowered(assets::tableValue(sheet, row, kLevelNameColumn).text) == levelName) return assets::tableValue(sheet, row, kLevelHeadingKeyColumn).bits;
+    return 0;
+}
+
+void drawHeadingBox(Canvas& bottom, Resources& resources, const std::string& text, float alpha) {
+    const int byteAlpha = int(alpha * 255.0f);
+    if (byteAlpha == 0) return;
+    const BitmapFont& font = resources.font("frontendfont");
+    const auto& extended = resources.extendedCharacters();
+    const float halfWidth = std::min(float(textWidth(font, extended, text, 0)) * 0.5f, kScreenCentreBottomX - kHeadingMargin);
+    const float boxAlpha = std::min(float(byteAlpha), kHeadingMaxAlpha) / 255.0f;
+    drawFramedBox(bottom, resources, kScreenCentreBottomX, kHeadingCentreY, halfWidth, kHeadingHalfHeight, Colour{1, 1, 1, boxAlpha});
+    drawText(bottom, font, extended, text, kScreenCentreBottomX, kHeadingCentreY + kHeadingTextShiftFitted, Align::Centre,
+             Colour{1, 1, 1, float(byteAlpha) / 255.0f}, 0, true);
 }
 
 void drawDialogueBackground(Canvas& bottom, Resources& resources) {
@@ -157,9 +184,13 @@ void drawDialogueBox(Canvas& top, Resources& resources, unsigned character, cons
     const std::string portrait = dialoguePortraitName(resources, character);
     const std::string path = "sprites/portraits/" + portrait + ".bpng";
     if (!portrait.empty() && resources.has(path)) {
-        const assets::Image& image = resources.image(path);
-        top.drawScaled(image, {0, 0, image.width, image.height}, kPortraitCentreX - kPortraitSize / 2, kPortraitCentreY - kPortraitSize / 2,
-                       kPortraitSize, kPortraitSize, fade);
+        const float portraitCentreX = kScreenCentreTopX - halfWidth - kDialoguePadWidth + kPortraitOffsetX;
+        const float portraitCentreY = centreY + kPortraitOffsetY;
+        for (const char* file : {kPortraitFrameTexture, path.c_str()}) {
+            const assets::Image& image = resources.image(file);
+            top.drawScaled(image, {0, 0, image.width, image.height}, portraitCentreX - float(image.width / 2), portraitCentreY - float(image.height / 2),
+                           float(image.width), float(image.height), fade);
+        }
     }
 }
 

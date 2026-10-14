@@ -57,6 +57,7 @@ void ScriptTextState::start(TimedText& text, std::uint32_t key, float seconds) {
     text.duration = seconds == 0.0f ? kTipZeroDurationSeconds : seconds;
     text.elapsed = 0;
     text.fadingOut = false;
+    text.released = false;
     text.fadeOutElapsed = 0;
 }
 
@@ -70,6 +71,13 @@ void ScriptTextState::showDialogue(std::uint32_t key, std::uint32_t character, c
     dialogue_.speaker = speaker;
 }
 
+void ScriptTextState::showHeading(std::uint32_t key) {
+    heading_.active = true;
+    heading_.key = key;
+    heading_.elapsed = 0;
+    heading_.alpha = 0;
+}
+
 void ScriptTextState::record(TextNativeKind kind, const std::vector<float>&) {
     ++recorded_[std::size_t(kind)];
 }
@@ -81,12 +89,17 @@ unsigned ScriptTextState::recordedCalls(TextNativeKind kind) const {
 void ScriptTextState::step(TimedText& text, float dt) {
     if (!text.active) return;
     text.elapsed += dt;
-    if (text.fadingOut) {
+    if (text.released) {
         text.alpha = std::max(0.0f, text.alpha - kFadeStep);
         if (text.alpha <= 0) text.active = false;
         return;
     }
     text.alpha = std::min(1.0f, text.alpha + kFadeStep);
+    if (text.fadingOut) {
+        text.fadeOutElapsed += dt;
+        if (text.fadeOutElapsed >= kTipFadeOutSeconds) text.released = true;
+        return;
+    }
     if (text.elapsed >= text.duration) text.fadingOut = true;
 }
 
@@ -106,6 +119,13 @@ void ScriptTextState::stepDialogue(TimedText& text, float dt) {
 void ScriptTextState::update(float dt) {
     step(tip_, dt);
     stepDialogue(dialogue_, dt);
+    if (!heading_.active) return;
+    heading_.elapsed += dt;
+    const float fadeOutStart = kHeadingFadeInSeconds + kHeadingHoldSeconds;
+    if (heading_.elapsed < kHeadingFadeInSeconds) heading_.alpha = heading_.elapsed / kHeadingFadeInSeconds;
+    else if (heading_.elapsed < fadeOutStart) heading_.alpha = 1.0f;
+    else heading_.alpha = std::max(0.0f, 1.0f - (heading_.elapsed - fadeOutStart) / kHeadingFadeOutSeconds);
+    if (heading_.elapsed >= fadeOutStart + kHeadingFadeOutSeconds) heading_.active = false;
 }
 
 }
