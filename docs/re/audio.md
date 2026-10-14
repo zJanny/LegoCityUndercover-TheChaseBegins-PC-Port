@@ -2,6 +2,8 @@
 
 Reverse-engineering findings, moved verbatim from the progress log. Entries are chronological; later entries may correct earlier ones. Evidence IDs are shortened with an ellipsis.
 
+<a id="ts-20261012-1545"></a>
+
 ## 2026-10-12T15:45+02:00 — Sound container decoded (.bwav)
 
 - The .bwav wrapper starts with u32 version 0x400 or 0x600.
@@ -17,6 +19,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
   - music/act_01 decodes to silence because its frames are genuinely all zero, so it is a placeholder.
 - `python3 -m unittest discover -s tests -p 'test_*.py' -v` — PASS 30/30.
 
+<a id="ts-20261012-1825"></a>
+
 ## 2026-10-12T18:25+02:00 — S4a complete (CWAV in C++), S4d mixer and sound test
 
 - Added src/assets/audio.cpp: decodeSound splits the .bwav through parsePooled (0x2c record plus CWAV parts) and decodes PCM8/PCM16/DSP-ADPCM/IMA. The DSP sum is computed in 64-bit and floor-shifted, as in the reference.
@@ -27,6 +31,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - Added chase-soundtest (SDL audio callback at 48 kHz float stereo). It plays archive sounds and keeps loops going for 10 s by default or `--seconds`.
 - Added the opt-in CTest `soundtest-real-smoke` (SDL_AUDIODRIVER=dummy).
 - `ctest --test-dir build --output-on-failure` — PASS 7/7; 0 warnings.
+
+<a id="ts-20261013-093338"></a>
 
 ## 2026-10-13T09:33:38+02:00 — S4d play-sound entry point (REA Ghidra 12.1.2; llvm-objdump; read-only, partial)
 
@@ -51,11 +57,15 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
   - Callers other than script commands (gameplay C++ code, UI, `ATTR_SFX*` attributes), 3D positioning maths, pitch scaling (`ScaleSoundFrequencyGO`), and how music is started.
 
 
+<a id="ts-20261013-093936"></a>
+
 ## 2026-10-13T09:39:36+02:00 — Sound effect name → file (chase_assets parseSoundEffects; real archive)
 
 - tablessoundfx.bxls sheet 0 column 1 holds the effect name; `sounds/<name>.bwav` exists in the FUSE archive for all 757 named rows (row 0 is unnamed). Pinned in assets-real-test. This resolves the 09:33:38 unknown "how .bwav files map to table names".
 - Column 13 equals record byte +9 (volume percent). chase-soundtest applies it as a linear gain (80 → 0.8); the game's volume curve is not recovered, so that gain is an assumption.
 - Unknown: columns 2, 3, 11, 12, 14, 15, 16 (paramA/paramB = record bytes +10/+11).
+
+<a id="ts-20261013-094203"></a>
 
 ## 2026-10-13T09:42:03+02:00 — S4d music routing (REA Ghidra 12.1.2 pseudo-code; llvm-objdump; script docs; partial)
 
@@ -83,6 +93,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
   - Which file-internal loop info the stream uses for looping tracks such as `tension_short_loop` versus `tension_not_looped`.
   - Whether `AIActionMusicExclude` (string 0x1a4adc) and `levels/aiactionmusicexclusion.blvl` relate to action mood switching.
 
+<a id="ts-20261013-175424"></a>
+
 ## 2026-10-13T17:54:24+02:00 — Sounds of the player and studs, positional rules, level music (REA-free: llvm-objdump + Azahar traps without RPC, port 24790)
 
 Replica: `chase_audio` (`spatial.*`, `soundplayer.*`, `musicplayer.*`), `chase_runtime` (`sound_events.*`, `music.*`), `parseSoundTables` / `levelMusicSet` / `characterSoundCategory` in `chase_assets`, wiring in `src/game.cpp` + `src/game_audio.hpp`. Scenarios: `tools/oracle/audio-events{1,2,3}.txt` (execution traps on the call sites of 0x23fa54, on 0x23ae84, 0x23ae50 and 0x227880; fixed dt 0.033; `tools/export_sound_trace.py` writes the CSVs of `CHASE_AUDIO_TRACE_DIR`). Test: `audio-core`, `audio-real-data`.
@@ -107,6 +119,8 @@ Recorded (update, id) lists are replayed exactly by `audio-real-data`: walk 7 20
 
 Stand-ins ([features/audio.md](../plans/features/audio.md)): water/object-11 landing flags fixed to off; sprint phase transfer (floor of the proportional frame, 9 of 10 recorded run footsteps exact, one off by one update); no blend weights (a new animation slot cannot fire in its first update); distance volume is linear only as read from code; stud pickup update differs (skip counter stand-in of studs.md); music fade/ramp not replicated; 24-voice limit not enforced; Doppler (emitter velocity) assumed 1.0.
 Unknowns: idle and jump animation sound tracks; NPC, vehicle and object sounds (ambient emitter 0x2c05dc plays ids like 210/296 from level objects); which condition sets ctrl+0x317 bit 3 and ground type 11; mix matrix channel order (left first assumed); how the original maps the run phase to the sprint animation; options volume source in a loaded save (0x2c19a4 sets defaults 8 and 10); mode 3 id remap of 0x23fa54; ducking (record flag bit 3).
+
+<a id="ts-20261013-215117"></a>
 
 ## 2026-10-13T21:51:17+02:00 — Stop of effect sounds 0x23ae50 (llvm-objdump only, no REA; no emulator)
 

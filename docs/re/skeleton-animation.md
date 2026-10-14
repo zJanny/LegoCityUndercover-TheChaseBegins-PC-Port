@@ -2,6 +2,8 @@
 
 Reverse-engineering findings, moved verbatim from the progress log. Entries are chronological; later entries may correct earlier ones. Evidence IDs are shortened with an ellipsis.
 
+<a id="ts-20261012-1840"></a>
+
 ## 2026-10-12T18:40+02:00 — Skeleton and animation containers (REA, Ghidra)
 
 - Loaders:
@@ -26,6 +28,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - Skin attribute (vertex flag 2, 8 bytes): shipped data reads as u8 weights then u8 indices (e.g. ff000000 00000000). This matches the shader inputs vWeights/vIndex and the 26-entry "Bones" uniform (regs 0x22–0x6f, 3 regs per bone). The order and the bone-palette mapping are not yet confirmed in code.
 - Python PASS 42/42.
 
+<a id="ts-20261012-1905"></a>
+
 ## 2026-10-12T19:05+02:00 — Animation keyframe decoding (REA, Ghidra)
 
 - Found by searching for the `lsl #19; lsr #19` extraction of the per-joint table count (anim+8 word: (w & 0x1fff) + bit 28).
@@ -48,6 +52,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - Not recovered: how the pose is composed into joint matrices (order of q/scale/translation and the role of channels 6–8 and joint +0x88), root motion (the extra 24th blob), and the 0xfa raw-matrix decomposition 0x1324f8.
 - Named in REA with a _candidate suffix (ev_d6ee55638e4b4ce712665d235d1d66a9d8c1add97c17e5f210b671225ddb1b28): srvGetServiceHandle_candidate, strlen_candidate, dspInit_candidate, fsUserInit_candidate, ndmInit_candidate. Hopper does not define procedures at 0x109fc0, 0x10f8e4 or 0x11006c.
 
+<a id="ts-20261012-2015"></a>
+
 ## 2026-10-12T20:15+02:00 — Pose composition recovered (REA, Ghidra)
 
 - Call chain: 0x10f800 (ev_4dd35b1b…6e5) clears a blend state, then 0x2533e0 (ev_ef46d59d…730) adds weighted pose layers through 0x114b58 (ev_732ce83c…7ff, which calls the pose cache 0x1205f8). 0x2530f0 (ev_83cb1c23…509) then calls 0x252cb0 (ev_31aa99b7…9b9), which builds the joint matrices.
@@ -67,6 +73,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - tools/convert_anims.py: quaternion_matrix() and local_matrix(); the preview uses them, and `--transpose-rotation` is removed. tests: test_local_matrix. Python PASS 44/44.
 - The char_bear walk frames 0/12 render as a natural walk.
 
+<a id="ts-20261012-2045"></a>
+
 ## 2026-10-12T20:45+02:00 — Native skeletons, animation curves and skinning (S4e groundwork)
 
 - Fixed tools/convert_models.py decode_vertices: the layout loop variable shadowed the mesh-centre argument, so Python never added the centre. The C++ parser was correct. A regression assertion was added.
@@ -85,6 +93,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - assets-real-data: 376 skeletons / 5280 joints and 1954 animations / 30081 joint curves, equal to the Python reference. The char_bear walk skin-matrix |sum| over 48 frames is 5397.1758, within 1e-3 of Python.
 - `ctest --test-dir build --output-on-failure` — PASS 7/7; 0 warnings. Python PASS 44/44.
 - Still a hypothesis: skin index = joint − 1. Blending of more than one layer, the 0xfa raw-matrix form (the bind local is used instead), and the per-joint s16/256 post-scale are not replicated.
+
+<a id="ts-20261012-2130"></a>
 
 ## 2026-10-12T21:30+02:00 — Bone palettes recovered; skinned playback in chase-viewer
 
@@ -106,6 +116,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - Offscreen screenshots: char_bear walk 0/12 and char_squirrel run 0/3 show coherent gait poses. The squirrel renders almost black; the material/combiner setup is not recovered.
 - `ctest --test-dir build --output-on-failure` — PASS 7/7; 0 warnings. Python PASS 45/45.
 
+<a id="ts-20261012-2210"></a>
+
 ## 2026-10-12T22:10+02:00 — Frame interpolation recovered; playback rate traced to the instance
 
 - 0x2533e0 calls 0x24bf80 (ev_d1801bf3…488) per active animation slot (0x58-byte slots at instance+0x2c). It returns frame A, frame B and their weights. 0x114b58 is then called twice (layer 0 = A with weight 1−frac, layer 1 = B with frac), so the game always interpolates neighbouring frames. Layers of weight 0 are skipped, so whole frames use the single-layer path.
@@ -122,11 +134,15 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - chase-viewer: poses every rendered frame at fractional time; `--frame` takes fractions; `--fps` (default 30, an assumption) sets the rate.
 - ctest PASS 7/7; Python PASS 46/46; 0 warnings.
 
+<a id="ts-20261013-0130"></a>
+
 ## 2026-10-13T01:30+02:00 — Animation frame count is u16 +4 & 0x3fff
 
 - In cutscene animations (csdata, 679 files), header u16 +4 reads 0x4000 + frames, e.g. 2_7_a: 16683 = 0x4000 + 299. The camera's per-frame block in section +0xc is 300 bytes (299 padded to 4), and the same holds for 1_1_a/d/e and 1_2_a.
 - The game masks it: 0x114b58 passes `*(u16*)(anim + 4) & 0x3fff` (ev_732ce83c…7ff). Python frame_count() and C++ Animation::frames now mask it. Gameplay animations (no bit 14) are unchanged, and the bear/squirrel references still pass.
 - Check: with the masked count, 29966 of 30081 joint curves fit their blob exactly. The 115 that overflow are all joint 0 with headers 0x48/0x49/0x4b/0x08, in gameplay animations (use, kick_open, idling). Their root-curve encoding is not understood; unknown.
+
+<a id="ts-20261013-0300"></a>
 
 ## 2026-10-13T03:00+02:00 — First Python→C++ binding; Python posing removed (rule 6 fix)
 
@@ -136,6 +152,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - tests/test_convert_anims.py: the three Python posing tests are replaced by test_native_skin_matrices. It checks the same synthetic curve as assets-test (1.55 at frame 1) and skips when the library is missing.
 - ctest PASS 8/8; Python PASS 55 (1 skip when the library is absent).
 
+<a id="ts-20261013-0410"></a>
+
 ## 2026-10-13T04:10+02:00 — Overflowing joint curves explained: one curve stores frames + 1
 
 - 0x12a2b4 (ev_210a33ed…3420) passes frames + 1 to the sampler 0x12d4b0 for one curve when its flag 0x10 is set: the extra curve when flag 0x20 is set, otherwise curve 0. These flags are a runtime argument (0x114b58 → 0x1205f8, ev_34ecb50a…32df) and were not traced to the file.
@@ -143,9 +161,13 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - Animation::longCurve: skinMatrices samples that curve with frames + 1. assets-real-test pins 590 animations with a long curve. Bear, squirrel and minifig references are unchanged.
 - Still unknown: what the long or extra curve means (root motion?), and the 0xfa raw-matrix form.
 
+<a id="ts-20261013-150853"></a>
+
 ## 2026-10-13T15:08:53+02:00 — tools/convert_anims.py removed
 
 - tools/convert_anims.py (`--census`, `parse_skeleton`, `parse_animation`) and tests/test_convert_anims.py were removed. The binding test for `skin_matrices` moved to tests/test_chase_native.py. The census (376 skeletons, 5280 joints, 1954 animations) and the char_bear walk sums stay valid and are pinned in tests/assets_real_test.cpp. Provenance: `python3 tools/convert_anims.py --census artifacts/fib/files` and the preview_model renders at 9d04c91. To reproduce, check out that commit (for example `git worktree add /tmp/old 9d04c91`) and run the command there.
+
+<a id="ts-20261013-170203"></a>
 
 ## 2026-10-13T17:02:03+02:00 — Joint table word, playback rate and the extra (root motion) curve (see player.md derivation entry)
 

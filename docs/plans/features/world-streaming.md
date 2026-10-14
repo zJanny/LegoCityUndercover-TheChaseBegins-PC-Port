@@ -10,7 +10,7 @@ IN_PROGRESS, updated 2026-10-13T22:30:00+0200. Mapped from code and the oracle: 
 
 ## 3. Verified behaviour
 
-- The city is `lvl_the_city.blvl` (master) plus eight world levels; at gameplay-start only the master and `lvl_01` are loaded (state 2), 12 of the 43 rooms of `lvl_01` are loaded (Room 1, 2, 3, 7, 8, 9, 14, 15, 16, 17, 22, 23), the player is in Room8. evidence: [streaming.md §2026-10-13T22:27](../../re/streaming.md).
+- The city is `lvl_the_city.blvl` (master) plus eight world levels; at gameplay-start only the master and `lvl_01` are loaded (state 2), 12 of the 43 rooms of `lvl_01` are loaded (Room 1, 2, 3, 7, 8, 9, 14, 15, 16, 17, 22, 23), the player is in Room8. evidence: [streaming.md §2026-10-13T22:27](../../re/streaming.md#ts-20261013-222700).
 - Section +0x34 of the master level holds room links (309 records); the links of Room8 in `WorldLevel_01_CherryTreeHills` equal nine of the twelve loaded rooms. Pinned by `streaming-real-data`.
 - `pregen/*.bin` is traffic, pedestrian and collectable data, not room streaming.
 
@@ -30,7 +30,7 @@ IN_PROGRESS, updated 2026-10-13T22:30:00+0200. Mapped from code and the oracle: 
 
 ## 6. Findings summary
 
-- Everything is in [streaming.md §2026-10-13T22:27](../../re/streaming.md): world levels, scene array, room objects and states, room links, request list, natives.
+- Everything is in [streaming.md §2026-10-13T22:27](../../re/streaming.md#ts-20261013-222700): world levels, scene array, room objects and states, room links, request list, natives.
 
 ## 7. Code and tests
 

@@ -22,14 +22,14 @@ IN_PROGRESS, updated 2026-10-13T21:29:01+0200. `chase_save` reads, validates and
 - [ ] SAVE-1 — No program uses saves: a save-aware level start and new-game values replaced by loaded ones. blocks: SCRIPT-S2.
 - [ ] SAVE-2 — Existing slots with time, percent and location, Continue and delete in the front end. blocks: FE-1.
 - [ ] SAVE-3 — Compare `chase-savecheck` with the percentage the game shows (possible now with the oracle).
-- [ ] SAVE-4 — Options +0 nibbles and +3 bits 2..5 are not understood; the options volume source in a loaded save. evidence: [save-format.md §2026-10-13T08:53](../../re/save-format.md).
+- [ ] SAVE-4 — Options +0 nibbles and +3 bits 2..5 are not understood; the options volume source in a loaded save. evidence: [save-format.md §2026-10-13T08:53](../../re/save-format.md#ts-20261013-0853).
 - [ ] SAVE-5 — Most of what a save game contains: only the completion totals are understood.
 
 ## 6. Findings summary
 
-- Layout, CRC, save thread: [save-format.md §2026-10-13T10:30](../../re/save-format.md).
-- Options and defaults: [save-format.md §2026-10-13T12:30](../../re/save-format.md), [save-format.md §2026-10-13T08:53](../../re/save-format.md), [save-format.md §2026-10-13T08:56](../../re/save-format.md).
-- Slot progress, totals and completion: [save-format.md §2026-10-13T09:13](../../re/save-format.md), [save-format.md §2026-10-13T09:25](../../re/save-format.md), [save-format.md §2026-10-13T09:26](../../re/save-format.md).
+- Layout, CRC, save thread: [save-format.md §2026-10-13T10:30](../../re/save-format.md#ts-20261013-1030).
+- Options and defaults: [save-format.md §2026-10-13T12:30](../../re/save-format.md#ts-20261013-1230), [save-format.md §2026-10-13T08:53](../../re/save-format.md#ts-20261013-0853), [save-format.md §2026-10-13T08:56](../../re/save-format.md#ts-20261013-0856).
+- Slot progress, totals and completion: [save-format.md §2026-10-13T09:13](../../re/save-format.md#ts-20261013-0913), [save-format.md §2026-10-13T09:25](../../re/save-format.md#ts-20261013-0925), [save-format.md §2026-10-13T09:26](../../re/save-format.md#ts-20261013-092607).
 
 ## 7. Code and tests
 

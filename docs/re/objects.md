@@ -2,6 +2,8 @@
 
 How the .blvl objects (section +0x2c) find their model and transform. Format of the level file: [levels.md](levels.md).
 
+<a id="ts-20261013-153915"></a>
+
 ## 2026-10-13T15:39:15+02:00 — Object census, parameter slots and the model lookup
 
 **Census (C++ parser, parameter names from code.bin strings, local only).** Classes with counts, `levels/levels/lvl_00_policestation/lvl_00_policestation_main.blvl` (350 objects) and `levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl` (2967 objects; the gameplay-start state of the oracle stands in this level, player at (886.8, 16.6, 1111.2)).
@@ -52,6 +54,8 @@ Per-class parameter lists come from a scratch tool over the C++ parser (not comm
 - How studs, particle emitters and other `xx_*` objects are created; model LOD selection (`LOD_NumberofLods`); whether `Animation` start poses change placed props.
 - Orientation parameters of other classes were assumed to use 0x237c48 as well (see levels.md).
 
+<a id="ts-20261013-163430"></a>
+
 ## 2026-10-13T16:34:30+02:00 — Characters in the level: body, head, textures and starting pose (worker; REA Ghidra 12.1.2 pseudo-code, objdump, class and instance dumps through parseLevel)
 
 Replica: `drawableObjects` / `CharacterObject` in src/assets/level.cpp, `addLevelCharacters` in src/render/character.cpp (shared with the player through `addCharacter` / `poseBody` / `placeCharacter`; chase-game and `chase-viewer --characters`). Tests: `assets-real-data` (counts and three resolved rigs).
@@ -76,6 +80,8 @@ Unknowns:
 - The appearance of the custom-character lineup, the rigs of animals (`char_pig`, `char_cat`, `char_dog`, `char_shark`, `char_Crow`), the jetpack `AttachModel` placement (bone parameter name unresolved: its hash is not among the code.bin strings; value `chest`), and `AttachRelative`.
 - Playback of NPC animations (not implemented; the player's playback rate is a stand-in too).
 
+<a id="ts-20261013-170941"></a>
+
 ## 2026-10-13T17:09:41+02:00 — Studs split out of the model-less objects (worker)
 
 **Correction of the "Left out and why" entry on studs and of the counts above:** studs are pickup objects (object type 0x3d, pickuptype 0..3) drawn as sprites, not models (details, evidence and stand-ins in [studs.md](studs.md)). `drawableObjects` now returns them in `DrawableObjects::studs` and no longer counts them in `missingModel`: lvl_00 1 without model (the particle emitter), lvl_01 11, all 856 levels 423 (not itemised); studs over all levels 4835.
@@ -83,6 +89,8 @@ Unknowns:
 Unknowns: what the remaining 423 model-less objects are (hearts, `xx_particleemitter`, hint meshes) and how each is drawn.
 
 Collision of placed objects (which objects register collision, box or mesh, node matrix, query layers): [collision.md](collision.md) 2026-10-13T17:34:00.
+
+<a id="ts-20261013-211741"></a>
 
 ## 2026-10-13T21:17:41+02:00 — Start state of placed objects and doors (pointer entry)
 

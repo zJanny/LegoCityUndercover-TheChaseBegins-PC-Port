@@ -12,7 +12,7 @@ IN_PROGRESS, updated 2026-10-13T21:51:17+02:00. `chase_audio` plays the player's
 
 - CWAV DSP-ADPCM decode, mixer with loops (`chase-soundtest`); 757/757 sound effect names resolve to `sounds/<name>.bwav`; music sheet 1 (39 tracks).
 - Jump, footsteps, landings and studs play the original ids with the original's distance and pan rules: `audio-real-data` (8 recorded scenarios). Footstep trigger: track hash 0x68cc6917 sampled as a step function, event 50, slot 5.
-- Effect sounds can be stopped by (sound id, owner): the voice that id started for that owner ends at once when the table row's fade (column 16) is 0, as for every door sound; `audio-core`. Details: [audio.md §2026-10-13T21:51](../../re/audio.md).
+- Effect sounds can be stopped by (sound id, owner): the voice that id started for that owner ends at once when the table row's fade (column 16) is 0, as for every door sound; `audio-core`. Details: [audio.md §2026-10-13T21:51](../../re/audio.md#ts-20261013-215117).
 - Level music rule: lvl_00 starts none; lvl_01 (set 2 = (255, 5)) has ambient none and action `act_fight_music_1`.
 
 ## 4. Stand-ins
@@ -27,20 +27,20 @@ IN_PROGRESS, updated 2026-10-13T21:51:17+02:00. `chase_audio` plays the player's
 
 ## 5. Open items
 
-- [ ] AUDIO-1 — Sprint footstep phase: how the original maps the run phase to the sprint animation; run-to-sprint phase transfer. evidence: [audio.md §2026-10-13T17:54](../../re/audio.md).
-- [ ] AUDIO-2 — Nothing starts level music because no scripts run (OverrideMusic / StopMusic / PauseMusic handlers recovered); music fades. needs: SCRIPT-1. evidence: [audio.md §2026-10-13T09:42](../../re/audio.md), [audio.md §2026-10-13T17:54](../../re/audio.md).
-- [ ] AUDIO-3 — Idle and jump animation sound tracks; world sounds of NPCs, vehicles and objects (ambient emitter 0x2c05dc plays ids like 210/296 from level objects). evidence: [audio.md §2026-10-13T17:54](../../re/audio.md).
-- [ ] AUDIO-5 — Stud collect sound: silver (id 64) is replayed from a recorded pickup (`audio-real-data`); blue and purple (id 63) have no recorded pickup, and gold (id 64) none either. see STUD-3. evidence: [audio.md §2026-10-13T17:54](../../re/audio.md).
-- [ ] AUDIO-6 — Which condition sets ctrl+0x317 bit 3 and ground type 11; the options volume source in a loaded save (0x2c19a4 sets defaults 8 and 10); mode 3 id remap of 0x23fa54; ducking (record flag bit 3). evidence: [audio.md §2026-10-13T17:54](../../re/audio.md).
+- [ ] AUDIO-1 — Sprint footstep phase: how the original maps the run phase to the sprint animation; run-to-sprint phase transfer. evidence: [audio.md §2026-10-13T17:54](../../re/audio.md#ts-20261013-175424).
+- [ ] AUDIO-2 — Nothing starts level music because no scripts run (OverrideMusic / StopMusic / PauseMusic handlers recovered); music fades. needs: SCRIPT-1. evidence: [audio.md §2026-10-13T09:42](../../re/audio.md#ts-20261013-094203), [audio.md §2026-10-13T17:54](../../re/audio.md#ts-20261013-175424).
+- [ ] AUDIO-3 — Idle and jump animation sound tracks; world sounds of NPCs, vehicles and objects (ambient emitter 0x2c05dc plays ids like 210/296 from level objects). evidence: [audio.md §2026-10-13T17:54](../../re/audio.md#ts-20261013-175424).
+- [ ] AUDIO-5 — Stud collect sound: silver (id 64) is replayed from a recorded pickup (`audio-real-data`); blue and purple (id 63) have no recorded pickup, and gold (id 64) none either. see STUD-3. evidence: [audio.md §2026-10-13T17:54](../../re/audio.md#ts-20261013-175424).
+- [ ] AUDIO-6 — Which condition sets ctrl+0x317 bit 3 and ground type 11; the options volume source in a loaded save (0x2c19a4 sets defaults 8 and 10); mode 3 id remap of 0x23fa54; ducking (record flag bit 3). evidence: [audio.md §2026-10-13T17:54](../../re/audio.md#ts-20261013-175424).
 - [ ] AUDIO-7 — Music, and the sounds of other people, animals, vehicles and objects, are not played (the character and the coins are).
 
 ## 6. Findings summary
 
-- Sound container and mixer: [audio.md §2026-10-12T15:45](../../re/audio.md), [audio.md §2026-10-12T18:25](../../re/audio.md).
-- Play entry 0x23fa54(id, pos, ...), ids from `tables/tablessoundfx.bxls`: [audio.md §2026-10-13T09:33](../../re/audio.md), [audio.md §2026-10-13T09:39](../../re/audio.md).
-- Music routing and level music rule: [audio.md §2026-10-13T09:42](../../re/audio.md), [audio.md §2026-10-13T17:54](../../re/audio.md).
-- Positional gains (0x107fa0, 0x25c388) and footsteps: [audio.md §2026-10-13T17:54](../../re/audio.md).
-- Stop of effect sounds 0x23ae50 (owner key, fade from the table): [audio.md §2026-10-13T21:51](../../re/audio.md).
+- Sound container and mixer: [audio.md §2026-10-12T15:45](../../re/audio.md#ts-20261012-1545), [audio.md §2026-10-12T18:25](../../re/audio.md#ts-20261012-1825).
+- Play entry 0x23fa54(id, pos, ...), ids from `tables/tablessoundfx.bxls`: [audio.md §2026-10-13T09:33](../../re/audio.md#ts-20261013-093338), [audio.md §2026-10-13T09:39](../../re/audio.md#ts-20261013-093936).
+- Music routing and level music rule: [audio.md §2026-10-13T09:42](../../re/audio.md#ts-20261013-094203), [audio.md §2026-10-13T17:54](../../re/audio.md#ts-20261013-175424).
+- Positional gains (0x107fa0, 0x25c388) and footsteps: [audio.md §2026-10-13T17:54](../../re/audio.md#ts-20261013-175424).
+- Stop of effect sounds 0x23ae50 (owner key, fade from the table): [audio.md §2026-10-13T21:51](../../re/audio.md#ts-20261013-215117).
 
 ## 7. Code and tests
 

@@ -2,6 +2,8 @@
 
 How the level's own scripts decide which placed objects are disabled when a level starts. Format of the level file: [levels.md](levels.md). Collision consumer: [collision.md](collision.md).
 
+<a id="ts-20261013-204236"></a>
+
 ## 2026-10-13T20:42:36+02:00 — Script data, executor, EnableObject, the startup script and the revealer links (REA Ghidra 12.1.2, llvm-objdump, Azahar oracle port 24692 without RPC)
 
 Replica: `Level::scripts` / `objectReferenceHash` (src/assets/level.cpp), `levelStartState` (src/runtime/level_start.cpp), `PlacedObjectState` and `objectCollisions` (src/assets/object_collision.*). Tests: `level-start-real-data` (tests/level_start_real_test.cpp), `collision-real-data`.

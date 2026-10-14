@@ -2,6 +2,8 @@
 
 `tools/azahar_oracle.py` runs the user's own game copy in the Azahar 3DS emulator (2126.2) and observes it through the emulator's GDB stub. It measures the original game; it is not part of the port. Scenario commands are listed in the tool's docstring.
 
+<a id="ts-20261013-115030"></a>
+
 ## 2026-10-13T11:50:30+02:00 — Setup, fidelity rules and the fast workflow
 
 **Setup**
@@ -49,6 +51,8 @@ Unknowns:
 - Whether a state saved while the game is in a loading phase (async file reads) is accepted; the dialog text was not captured.
 - Which exact boot time the "pending operations" refusal ends at (observed: refused at about 10 s, accepted at about 15 s after launch).
 - Whether the quick-save slot file name differs for other titles; only title 00040000000AD600 was tried.
+
+<a id="ts-20261013-120221"></a>
 
 ## 2026-10-13T12:02:21+02:00 — RPC channel (non-halting memory access, breakpoint-free pad input)
 
@@ -106,6 +110,8 @@ Unknowns:
 - Behaviour of RPC writes into a JIT block that is executing at that moment on the second core (old 3DS has only core 0, so none seen).
 - Circle-pad injection without a breakpoint (needs a patch of 0x10a540 and 0x10a550 to load full words from spare RAM, or a stub in the code cave).
 
+<a id="ts-20261013-124127"></a>
+
 ## 2026-10-13T12:41:27+02:00 — Azahar abort on quick load under Xvfb, launch retry and cleanup
 
 **Symptom:** about 1 in 4 launches with `--display xvfb` and the software renderer died with SIGABRT a few seconds after the quick load, which looked like a startup crash (`ConnectionRefusedError`/`ConnectionResetError`, defunct azahar, running Xvfb).
@@ -127,6 +133,8 @@ Unknowns:
 - Whether an unmapped render window changes emulation timing (frame pacing was not compared).
 - The cause of the one launch that ended after 4 loads with the render window unmapped (its log was overwritten); it may be a different race.
 
+<a id="ts-20261013-124333"></a>
+
 ## 2026-10-13T12:43:33+02:00 — Route to gameplay and the gameplay-start checkpoint
 
 - `tools/oracle/to-gameplay.txt` (worker, Haiku; run with `--renderer opengl --display xvfb`, about 340 s from boot) reaches player control: language English (A), StreetPass No (B), HOME notice (A), autosave notice (A), slot 1 New Game (A), intro cutscene runs by itself (~140 s free run), "Doughnut Disaster" card (A). It ends with `savestate gameplay-start`.
@@ -135,6 +143,8 @@ Unknowns:
 - Checkpoint files live in artifacts/oracle/states/ (local, not committed); recreate them with the scenario.
 
 Unknowns: the meaning of controller state 255; whether the cutscene timing (free-run waits) is long enough on slower hosts.
+
+<a id="ts-20261013-134500"></a>
 
 ## 2026-10-13T13:45:00+02:00 — Watchpoints, execution traps, fixed dt and memory traces (locomotion work)
 
@@ -145,12 +155,16 @@ Unknowns: the meaning of controller state 255; whether the cutscene timing (free
 - Timings (OpenGL, RPC, stepped): `trace` about 0.5 s per frame with memory dumps, `loadstate` plus 3 frames about 5 s with `--attach`.
 - Findings from these tools: [player.md](player.md) (2026-10-13T13:42:20+02:00).
 
+<a id="ts-20261013-144637"></a>
+
 ## 2026-10-13T14:46:37+02:00 — Trap limits seen while tracing the collision code
 
 - `trap` dumps 64 bytes at every pointer-like register r0..r3 of every stop. A trap list that includes a function called with an unmapped pointer-like value (here 0x24c118, called for every node of the scene) aborts the whole run with `memory read failed at 0x5910100`. Trap single player-specific functions instead (0x20cd30, 0x21a73c, 0x20b48c, 0x1f9884, 0x2023e4 all worked).
 - A trap of a function that other entities also call (0x2023e4: pedestrians, vehicles) stops for them too; the first stop of a frame was the player's in the checkpoint (confirmed by its box centre y and half extents against the player's height and root delta).
 - The frame numbers of a `trap` run and of a `trace` run are not aligned across two runs from the same state (the first trap frame was about 6 updates earlier than the matching trace row in one pair of runs); compare values only inside one run. The mem trace record is 4 + 0x100 + 0x340 + 0xb0 = 1268 bytes per frame; older traces of 692 bytes per frame (loco-out push150_mem, mag*, turn*) have a shorter controller dump and do not hold ctrl+0x224.
 - Findings: [collision.md](collision.md).
+
+<a id="ts-20261013-160530"></a>
 
 ## 2026-10-13T16:05:30+02:00 — `teleport` command and scenario pitfalls (falling and jump work)
 
@@ -159,11 +173,15 @@ Unknowns: the meaning of controller state 255; whether the cutscene timing (free
 - A scenario file may chain many `loadstate ... trace` runs; each costs about 5 s for the load plus about 0.5 s per traced frame with `mem`. `--output DIR` may be an existing directory; trace names are relative to it. Writing scenario files to the main checkout's artifacts/ directory with the Write tool is refused for worktree agents; keep scratch scenarios under /tmp.
 - Findings: [player.md](player.md).
 
+<a id="ts-20261013-211800"></a>
+
 ## 2026-10-13T21:18:00+02:00 — `poke` command (door work)
 
 - `poke ADDR HEXBYTES` writes bytes at ADDR through the GDB stub (`M` packet; the stub clears the instruction cache). It is a measuring aid to send an object a request that its script would send, for example the target state of a door (record+4 = 2 opens it; docs/re/doors.md). A poked state is never saved as a reference state: the traces were taken from `gameplay-start` after a `loadstate`, the poke followed it in the same scenario, and every scenario starts with `loadstate`, which discards the poke.
 - Pitfall: a scenario killed during a long `trace` (a `pkill` of the tool) took the emulator with it once; use `--stop` and relaunch with `--state`.
 - A long stepped `trace` with the OpenGL renderer and `stick` input took about 3 s per update in this session (`frames 90` plus a 30-update trace for each of two runs: 394 s).
+
+<a id="ts-20261013-224508"></a>
 
 ## 2026-10-13T22:45:08+02:00 — Visible mode for the user (--display desktop)
 
@@ -173,6 +191,8 @@ Unknowns: the meaning of controller state 255; whether the cutscene timing (free
 
 Unknowns:
 - Whether the known software-renderer paint crash during state loads also hits a visible OpenGL window (not seen in the one run).
+
+<a id="ts-20261013-232034"></a>
 
 ## 2026-10-13T23:20:34+02:00 — police-station checkpoint (from the user's own quick save) and New 3DS states
 

@@ -10,7 +10,7 @@ IN_PROGRESS, updated 2026-10-13T22:30:00+0200. The chain from the script native 
 
 ## 3. Verified behaviour
 
-- `SceneChange <bound>` (handler 0x1b262c) finds a `scenechange` object (type 78) by bound hash and sends it message 0xff; execution 0x303480 unloads and reloads the world when the destination world level is not loaded (progress 25/50/100) and only moves the player when it is. evidence: [streaming.md §2026-10-13T22:27](../../re/streaming.md).
+- `SceneChange <bound>` (handler 0x1b262c) finds a `scenechange` object (type 78) by bound hash and sends it message 0xff; execution 0x303480 unloads and reloads the world when the destination world level is not loaded (progress 25/50/100) and only moves the player when it is. evidence: [streaming.md §2026-10-13T22:27](../../re/streaming.md#ts-20261013-222700).
 - 24 `SceneChange` calls exist in shipped level scripts (city to Auburn, Downtown, Albatross, police entry and helipad entry, bluebell and fort meadows exits). Entering the police station from the street runs script `Police_ExtToInt` (dialog, camera, doors, `SceneChange`).
 - The master level lists 35 `scenechange` objects with qualified bounds (`WorldLevel_01_CherryTreeHills.Police_ExtToInt`).
 - Event bindings (bound entered and others to scripts) are decoded and pinned (`streaming-real-data`).
@@ -30,7 +30,7 @@ IN_PROGRESS, updated 2026-10-13T22:30:00+0200. The chain from the script native 
 
 ## 6. Findings summary
 
-- [streaming.md §2026-10-13T22:27](../../re/streaming.md) (level switch chain, event bindings, unknowns).
+- [streaming.md §2026-10-13T22:27](../../re/streaming.md#ts-20261013-222700) (level switch chain, event bindings, unknowns).
 
 ## 7. Code and tests
 

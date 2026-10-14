@@ -2,6 +2,8 @@
 
 How the original organises levels, loads and unloads rooms and switches between levels and buildings. Level file format: [levels.md](levels.md). Scripts: [scripts.md](scripts.md). Boot hand-off: [front-end.md](front-end.md). Feature files: [world-streaming](../plans/features/world-streaming.md), [level-transitions](../plans/features/level-transitions.md).
 
+<a id="ts-20261013-222700"></a>
+
 ## 2026-10-13T22:27:00+0200 — World levels, room links, scene change chain (REA Ghidra 12.1.2, llvm-objdump `--mcpu=arm1176jzf-s`, Azahar oracle port 24691 without RPC)
 
 All addresses are for the reference build. Evidence IDs are shortened. Replica: `Level::roomLinks`, `Level::triggers` (src/assets/level.cpp); test `streaming-real-data` (tests/streaming_real_test.cpp).

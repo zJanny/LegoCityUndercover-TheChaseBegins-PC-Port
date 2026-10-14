@@ -2,6 +2,8 @@
 
 Reverse-engineering findings for `particles/particledefs.bprt`. Entries are chronological; later entries may correct earlier ones. Evidence IDs are shortened with an ellipsis.
 
+<a id="ts-20261013-0900"></a>
+
 ## 2026-10-13T09:00+02:00 — particledefs.bprt container (REA Ghidra 12.1.2; read-only)
 
 - Loader 0x27d71c (ev_ed8196cc…) opens "Particles/ParticleDefs.bprt" (pooled resource, see pooled-resources.md) and reads, in this order:
@@ -20,6 +22,8 @@ Reverse-engineering findings for `particles/particledefs.bprt`. Entries are chro
 - Implemented: chase::assets::parseParticleDefs and pjwHash (src/assets/particles.cpp). Synthetic tests cover the format. Real-data totals (97 textures, 298 records, all hashes resolved, FNV-1a of the records) come from the tools/tt_resource.py parse.
 - Unknown: the meaning of every record field except +0x2c; header words 0, 1 and 4; the float in word 5. Next step: field use inside the spawner 0x23de24 and the emitter update.
 
+<a id="ts-20261013-0901"></a>
+
 ## 2026-10-13T09:01+02:00 — Spawner field use (REA Ghidra 12.1.2 ev_a61454c9…, ev_5f3e0e6f…; read-only)
 
 - 0x23de24 (ev_a61454c9…) indexes the data block with stride 0x17c (380) and rejects indices ≥ word 3. This confirms the record size and the count.
@@ -37,6 +41,8 @@ Reverse-engineering findings for `particles/particledefs.bprt`. Entries are chro
 - Data census (298 records): +0x178 ∈ {1..5, 8}, never 0. +0x175 ∈ 1..25. 285 records have seed 0.
 - Implemented: ParticleDefs::maxEmitters/maxParticles, ParticleDef::flags/seed/particles/spawnMode.
 - Unknown: per-particle init 0x222550 and the emitter update (velocity, colour keys at +0x90/+0x138, size curves), the values of +0x178, the hash-to-index conversion, word 4 and the word-5 float.
+
+<a id="ts-20261013-0903"></a>
 
 ## 2026-10-13T09:03+02:00 — Per-particle init 0x222550 (REA Ghidra 12.1.2 ev_57c912e6…; read-only)
 
@@ -63,6 +69,8 @@ Reverse-engineering findings for `particles/particledefs.bprt`. Entries are chro
 - Implemented: ParticleDef::startAlpha, atlasColumns, atlasRows, frameMode, flipModes and colourKeys.
 - Unknown: emitter fields E+0x100..0x114 and E+0xd4..0xdc (set by the spawner from +0x0c, +0x10, +0x14, +0x1c, +0x20, +0x24, +0x3c, +0x78); the per-frame update (gravity, drag, size over time); +0x174 values 1 and 4; flags bits not listed; +0x16f's exact formula (it uses a second random source 0x2345dc).
 
+<a id="ts-20261013-0905"></a>
+
 ## 2026-10-13T09:05+02:00 — Emitter update 0x20db0c (REA Ghidra 12.1.2 ev_a8436740…; read-only)
 
 - Correction to the 09:00/09:01 entries: +0x88..+0xf7 is a second key list, not colour keys. +0x170 keys at +0x88 + 8k, each (f32 time, u8 alpha, 3 zero bytes). This is the emitter fade over its duration: t = 1 − (duration − age) / duration, lerped between keys, then / 255. Flags bit 1 squares the result. It is stored ×128 in E+0x155. The spawner's +0x8c is the first key's alpha.
@@ -72,6 +80,8 @@ Reverse-engineering findings for `particles/particledefs.bprt`. Entries are chro
 - When a removed emitter's texture has type 2 and is no longer used, it is released about a second later (list 0x586328, up to 20 entries).
 - Implemented: ParticleDef::rate, duration, lifetimeMin/Max, fadeKeys. Real-data check: 648 fade keys, 197 endless emitters.
 - Unknown: the per-particle step 0x221e9c (velocity integration, gravity/drag fields, size over life), E+0xe8 (rate multiplier source), and the meaning of +0x74's sign.
+
+<a id="ts-20261013-0907"></a>
 
 ## 2026-10-13T09:07+02:00 — Particle step 0x221e9c and the four key lists (REA Ghidra 12.1.2 ev_8d5bac72…; read-only)
 
@@ -97,6 +107,8 @@ Reverse-engineering findings for `particles/particledefs.bprt`. Entries are chro
 - Speed (from 0x222550): it starts from E+0xf8 = +0x14 × s and E+0xfc = +0x78 × s, lerped by the emitter's remaining-time fraction. Which end belongs to which value is not settled; ParticleDef does not expose it.
 - Implemented: ParticleKey and the four lists; sizeX/sizeY, growX/growY, gravity, drag, bounce, animationLoops. The 09:03 fields startAlpha and ColourKey/FadeKey were replaced.
 - Unknown: E+0x11c (ground height source), +0x6c/+0x70, the flags not listed, the spin-damping detail, and +0x14 vs +0x78.
+
+<a id="ts-20261013-0908"></a>
 
 ## 2026-10-13T09:08+02:00 — Hash-to-index conversion (llvm-objdump; read-only)
 

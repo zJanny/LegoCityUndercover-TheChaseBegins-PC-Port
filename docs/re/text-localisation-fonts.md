@@ -2,6 +2,8 @@
 
 Reverse-engineering findings, moved verbatim from the progress log. Entries are chronological; later entries may correct earlier ones. Evidence IDs are shortened with an ellipsis.
 
+<a id="ts-20261013-0025"></a>
+
 ## 2026-10-13T00:25+02:00 — Localisation tables (.loc) decoded
 
 - Layout (data): "LOCA", u32 version 2, u32 count, u32 table bytes (= count × 8), u32 string bytes (header + table + strings = file size); then (u32 key, u32 offset) pairs sorted by key; then NUL-terminated strings. All 66 files (25207 entries) parse.
@@ -14,6 +16,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - Added tools/convert_loc.py (dump with `--names`, `--census`), tests/test_convert_loc.py (3), and src/assets/text.cpp (textKey, parseLocalisation) with synthetic and real-data (66/25207) checks.
 - ctest PASS 7/7; Python PASS 53/53.
 
+<a id="ts-20261013-0045"></a>
+
 ## 2026-10-13T00:45+02:00 — Text escapes decoded (Cyrillic/Polish)
 
 - Escape 0x01 '2' c → character c − 0x30 of localisation/extended_chars_utf8.txt (84 characters, in file order).
@@ -24,6 +28,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - Python decode_text (`--extended`); C++ extendedCharacters/decodeText (UTF-8 output).
 - Tests: synthetic escape/Latin-1/unknown-escape cases. Real data: FNV-1a of decoded gametext_ru = 0xc0c84ff0 in both implementations.
 - ctest PASS 7/7; Python PASS 54/54.
+
+<a id="ts-20261013-0105"></a>
 
 ## 2026-10-13T01:05+02:00 — Bitmap fonts (.tnf) decoded
 

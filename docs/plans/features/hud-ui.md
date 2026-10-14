@@ -29,7 +29,7 @@ IN_PROGRESS, updated 2026-10-13T21:39:06+0200. `chase-game` shows the original's
 
 - [x] HUD-1 — Draw the HUD (hearts, stud counter) from the `.bxaml` layouts. Done 2026-10-13. blocks: STUD-2 (done).
 - [x] HUD-2 — Studs flying to the counter. Done 2026-10-13 (STUD-S4 removed).
-- [ ] HUD-3 — The `.bxaml` track properties and the storyboard property evaluator (not found, time-boxed). evidence: [ui-layouts.md §2026-10-13T09:12](../../re/ui-layouts.md).
+- [ ] HUD-3 — The `.bxaml` track properties and the storyboard property evaluator (not found, time-boxed). evidence: [ui-layouts.md §2026-10-13T09:12](../../re/ui-layouts.md#ts-20261013-0912).
 - [x] HUD-4 — The stud counter's display and per-level stud total: display recovered ([hud.md](../../re/hud.md)); the per-level total (0x593420..) is STUD-6.
 - [ ] HUD-5 — In-game menus and the main menu are not recovered.
 - [ ] HUD-6 — Hearts never change: no damage or healing exists yet. needs: enemies (no feature file yet). evidence: [hud.md](../../re/hud.md).
@@ -42,7 +42,7 @@ IN_PROGRESS, updated 2026-10-13T21:39:06+0200. `chase-game` shows the original's
 
 ## 6. Findings summary
 
-- `.bxaml` layout format and storyboards: [ui-layouts.md §2026-10-13T11:00](../../re/ui-layouts.md), runtime layout [ui-layouts.md §2026-10-13T09:12](../../re/ui-layouts.md).
+- `.bxaml` layout format and storyboards: [ui-layouts.md §2026-10-13T11:00](../../re/ui-layouts.md#ts-20261013-1100), runtime layout [ui-layouts.md §2026-10-13T09:12](../../re/ui-layouts.md#ts-20261013-0912).
 - HUD page, hearts, stud bar, flight, map screen and the fit: [hud.md](../../re/hud.md).
 
 ## 7. Code and tests

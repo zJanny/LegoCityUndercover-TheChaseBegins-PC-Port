@@ -2,6 +2,8 @@
 
 Findings from the oracle (Azahar, fresh save, Old 3DS, software renderer, GDB stub screenshots) and objdump/REA reading of `game.arm.elf`. Related: [ui-layouts.md](ui-layouts.md), [fmv.md](fmv.md), [text-localisation-fonts.md](text-localisation-fonts.md), [save-format.md](save-format.md), [arm-executable.md](arm-executable.md) (0x1e7bac "any button" test).
 
+<a id="ts-20261013-175408"></a>
+
 ## 2026-10-13T17:54:08+02:00 — Screen flow and the boot sequencer (partial)
 
 **Mechanism.** Mode object 0x51429c (vtable 0x363738, update 0x302080) is the boot sequencer. Its table at 0x372eb4 has 20-byte rows `{mode object, fade in, fade out, hold, int}` (floats set by the initialiser 0x348cd0). `[0x372e6c+0x14]` = current row, `+0x18` = next index. Each step calls the transition 0x25d26c(mode, 6, ...). Mode objects and their vtables are built by 0x348cd0. Vtable slots: +8 enter, +0x1c update, +0x20 leave.
@@ -42,6 +44,8 @@ Rows 1..5 have fade in 0.5, fade out 0.5, hold 4.0 (row 1) or 1.0. Row 3 is skip
 - Whether Up/Down on the circle pad also move the language row; slot list behaviour (move, cancel, existing saves, delete).
 - Pulse counter of the selected language row; spacing/offset rule per element (font size field 12/14/10 vs 0).
 - The loading screen, intro movie subtitles layout and mission card, and the code that drives them.
+
+<a id="ts-20261013-204607"></a>
 
 ## 2026-10-13T20:46:07+02:00 — Prompt state machine, save indicator, boot pages, intro screens; native front end (chase_frontend)
 
@@ -90,6 +94,8 @@ Sources: REA (Ghidra 12.1.2, `procedure_pseudo_code`) on `artifacts/game/game.ar
 - The 3D badge scene of the loading screen (model, lights, camera, spin and star motion) and the hexagon card art of the title card; the in-engine cutscene before the first level; when the card ends (the oracle route pressed A).
 - Whether the title layers of the slot screen move or blend as measured (2.4 mean difference).
 - Which level, position and heading a new game starts with beyond the oracle's player position (886.764, 16.589, 1111.166).
+
+<a id="ts-20261013-205838"></a>
 
 ## 2026-10-13T20:58:38+02:00 — Correction: the intro movie is stereoscopic
 

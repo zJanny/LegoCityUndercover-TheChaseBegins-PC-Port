@@ -21,17 +21,17 @@ IN_PROGRESS, updated 2026-10-13T21:29:01+0200. Scripts are decoded and the `star
 
 ## 5. Open items
 
-- [ ] SCRIPT-1 — No script runs after the level start: no mission events, triggers or bounds, no door requests, no level music start. blocks: DOOR-1 (script-requested doors in lvl_01 stay closed), AUDIO-2 (level music), LEVOBJ-3 (scripted object behaviour), STUD-4 (stud groups), TRANS-3, TRANS-4, TRANS-5 ([level-transitions.md](level-transitions.md)), WSTREAM-6 ([world-streaming.md](world-streaming.md)). evidence: [scripts.md §2026-10-13T20:42](../../re/scripts.md).
-- [ ] SCRIPT-2 — `levelStartState` lists some objects as disabled although the original has them enabled: the hydrant sprays (`Hydrant_Spray_01` appears twice in the startup script), `Pickup_CharacterToken06/07/10`, `FP_Task_COP_CTH_02..05`, `FP_Archway_GrapplePad01`, `1-3_BI_Seesaw`, `1-3_BI_Roundabout` (build-it bits; `MissionHide` disables them). Another script or class handler may re-enable them, or the class ignores message 0xfb; not investigated. None of them collides. evidence: [scripts.md §2026-10-13T20:42](../../re/scripts.md).
-- [ ] SCRIPT-3 — The two detective X-spots (`1-2_Dtv_DogPath_XSpot`, `1-3_Dtv_BrickSpot_XSpot_02`) are not explained (no grid entry). evidence: [collision.md §2026-10-13T20:43](../../re/collision.md).
-- [ ] SCRIPT-4 — The code that hides the revealer targets; the role of the other type-4 parameters (Destination, ObjectTo, TriggerObject, ...); the revealer rule is a data fit and only lvl_01 was compared with the oracle (lvl_00 not). evidence: [scripts.md §2026-10-13T20:42](../../re/scripts.md).
-- [ ] SCRIPT-5 — Variables of type 5 and 7 in conditions are converted to floats; the executor compares floats. evidence: [scripts.md §2026-10-13T20:42](../../re/scripts.md).
+- [ ] SCRIPT-1 — No script runs after the level start: no mission events, triggers or bounds, no door requests, no level music start. blocks: DOOR-1 (script-requested doors in lvl_01 stay closed), AUDIO-2 (level music), LEVOBJ-3 (scripted object behaviour), STUD-4 (stud groups), TRANS-3, TRANS-4, TRANS-5 ([level-transitions.md](level-transitions.md)), WSTREAM-6 ([world-streaming.md](world-streaming.md)). evidence: [scripts.md §2026-10-13T20:42](../../re/scripts.md#ts-20261013-204236).
+- [ ] SCRIPT-2 — `levelStartState` lists some objects as disabled although the original has them enabled: the hydrant sprays (`Hydrant_Spray_01` appears twice in the startup script), `Pickup_CharacterToken06/07/10`, `FP_Task_COP_CTH_02..05`, `FP_Archway_GrapplePad01`, `1-3_BI_Seesaw`, `1-3_BI_Roundabout` (build-it bits; `MissionHide` disables them). Another script or class handler may re-enable them, or the class ignores message 0xfb; not investigated. None of them collides. evidence: [scripts.md §2026-10-13T20:42](../../re/scripts.md#ts-20261013-204236).
+- [ ] SCRIPT-3 — The two detective X-spots (`1-2_Dtv_DogPath_XSpot`, `1-3_Dtv_BrickSpot_XSpot_02`) are not explained (no grid entry). evidence: [collision.md §2026-10-13T20:43](../../re/collision.md#ts-20261013-204340).
+- [ ] SCRIPT-4 — The code that hides the revealer targets; the role of the other type-4 parameters (Destination, ObjectTo, TriggerObject, ...); the revealer rule is a data fit and only lvl_01 was compared with the oracle (lvl_00 not). evidence: [scripts.md §2026-10-13T20:42](../../re/scripts.md#ts-20261013-204236).
+- [ ] SCRIPT-5 — Variables of type 5 and 7 in conditions are converted to floats; the executor compares floats. evidence: [scripts.md §2026-10-13T20:42](../../re/scripts.md#ts-20261013-204236).
 
 ## 6. Findings summary
 
-- Script record layout, argument strings, function-name hash lookup: [scripts.md §2026-10-13T20:42](../../re/scripts.md).
-- The `startup` script plus build-it / reveal links give the disabled objects (replaces the 85-name list): [scripts.md §2026-10-13T20:42](../../re/scripts.md), [collision.md §2026-10-13T20:43](../../re/collision.md).
-- Door open requests arrive as message 0xff from `TriggerObject` / the platform link; the senders in lvl_01 are mission scripts that are not traced: [objects.md §2026-10-13T21:17](../../re/objects.md).
+- Script record layout, argument strings, function-name hash lookup: [scripts.md §2026-10-13T20:42](../../re/scripts.md#ts-20261013-204236).
+- The `startup` script plus build-it / reveal links give the disabled objects (replaces the 85-name list): [scripts.md §2026-10-13T20:42](../../re/scripts.md#ts-20261013-204236), [collision.md §2026-10-13T20:43](../../re/collision.md#ts-20261013-204340).
+- Door open requests arrive as message 0xff from `TriggerObject` / the platform link; the senders in lvl_01 are mission scripts that are not traced: [objects.md §2026-10-13T21:17](../../re/objects.md#ts-20261013-211741).
 
 ## 7. Code and tests
 

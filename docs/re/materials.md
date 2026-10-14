@@ -2,6 +2,8 @@
 
 Reverse-engineering findings. Entries are chronological; later entries may correct earlier ones. Evidence IDs are shortened with an ellipsis. Addresses are for the Europe v1.0 build.
 
+<a id="ts-20261013-222439"></a>
+
 ## 2026-10-13T22:24:39+02:00 — Material record to PICA texture-environment stages (REA Ghidra 12.1.2, llvm-objdump, oracle reads)
 
 **Where the setup is** (all in `.code`, written straight into the GPU command list at `*0x37614c`)
@@ -37,6 +39,8 @@ Unknowns:
 - How texture units map to texture coordinate sets (unit 0 uv0, others uv1 when present: assumed); texture wrap flags in slot bytes 4-5 other than repeat; cube texture sampling (reflection vector not recovered).
 - Fog (byte 9 equals 1 disables it; 0x3760fc and 0x3760fd conditions), the material colour pulse over time, depth write and colour mask details of register 0x107, draw sort order (0x115128).
 - Writers of 0x37796c (shadow texture) and 0x530834 (override flags); assumed 0 in the main pass.
+
+<a id="ts-20261014-095011"></a>
 
 ## 2026-10-14T09:50:11+02:00 — Police station lobby against the oracle (RENDER-4) and the white quad (RENDER-6)
 

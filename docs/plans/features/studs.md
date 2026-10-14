@@ -23,19 +23,19 @@ IN_PROGRESS, updated 2026-10-13T21:46:46+0200. Studs spin, are picked up, fly to
 
 ## 5. Open items
 
-- [ ] STUD-1 — Missing: multiplier mask, magnet, group enabling, dropped studs. evidence: [studs.md §2026-10-13T17:09](../../re/studs.md).
-- [x] STUD-2 — The on-screen counter and studs flying to it. Done 2026-10-13 (needs HUD-1, done). evidence: [studs.md §2026-10-13T21:35](../../re/studs.md), [hud.md](../../re/hud.md).
-- [ ] STUD-3 — Blue and purple collect sound (id 63, coinblue) has no recorded oracle pickup. Silver (id 64) is replayed from a recorded pickup (`audio-real-data`, trace `stud.csv`); gold (id 64) has no recording either. see AUDIO-5. evidence: [audio.md §2026-10-13T17:54](../../re/audio.md).
-- [ ] STUD-4 — How a group is enabled (0x28a2cc sequencer, `EnableStudsByGroup` and `SpawnStuds` script functions, `StudSpawn*` parameters, meaning of `GroupOrder` +0x33). needs: SCRIPT-1. evidence: [studs.md §2026-10-13T17:09](../../re/studs.md).
-- [ ] STUD-5 — Where the per-frame clock origin of 0x5165c8 comes from and whether the game restarts it at level start. evidence: [studs.md §2026-10-13T17:09](../../re/studs.md).
-- [ ] STUD-6 — The per-level stud total; whether the radius 1.5 holds for all characters and abilities (setter 0x2744d0). evidence: [studs.md §2026-10-13T17:09](../../re/studs.md).
+- [ ] STUD-1 — Missing: multiplier mask, magnet, group enabling, dropped studs. evidence: [studs.md §2026-10-13T17:09](../../re/studs.md#ts-20261013-170941).
+- [x] STUD-2 — The on-screen counter and studs flying to it. Done 2026-10-13 (needs HUD-1, done). evidence: [studs.md §2026-10-13T21:35](../../re/studs.md#ts-20261013-213500), [hud.md](../../re/hud.md).
+- [ ] STUD-3 — Blue and purple collect sound (id 63, coinblue) has no recorded oracle pickup. Silver (id 64) is replayed from a recorded pickup (`audio-real-data`, trace `stud.csv`); gold (id 64) has no recording either. see AUDIO-5. evidence: [audio.md §2026-10-13T17:54](../../re/audio.md#ts-20261013-175424).
+- [ ] STUD-4 — How a group is enabled (0x28a2cc sequencer, `EnableStudsByGroup` and `SpawnStuds` script functions, `StudSpawn*` parameters, meaning of `GroupOrder` +0x33). needs: SCRIPT-1. evidence: [studs.md §2026-10-13T17:09](../../re/studs.md#ts-20261013-170941).
+- [ ] STUD-5 — Where the per-frame clock origin of 0x5165c8 comes from and whether the game restarts it at level start. evidence: [studs.md §2026-10-13T17:09](../../re/studs.md#ts-20261013-170941).
+- [ ] STUD-6 — The per-level stud total; whether the radius 1.5 holds for all characters and abilities (setter 0x2744d0). evidence: [studs.md §2026-10-13T17:09](../../re/studs.md#ts-20261013-170941).
 - [ ] STUD-8 — Whether other stud types use other HUD sinks (the type table +0x5c byte is 0 for all four), the flying sprite's blend state, dropped and magnet studs. needs: STUD-1. evidence: [hud.md](../../re/hud.md).
 
 ## 6. Findings summary
 
-- Studs are pickup-system sprites, not models; the `meshname` of the stud classes is never loaded: [studs.md §2026-10-13T17:09](../../re/studs.md), [objects.md §2026-10-13T17:09](../../re/objects.md).
-- Flight, banking hook and the skip limit: [studs.md §2026-10-13T21:35](../../re/studs.md); the stud bar: [hud.md](../../re/hud.md).
-- Pickup pool, drawing, pickup rule and counter (object type 0x3d registered at 0x2ed0b4, constructor 0x17f8e0): [studs.md §2026-10-13T17:09](../../re/studs.md).
+- Studs are pickup-system sprites, not models; the `meshname` of the stud classes is never loaded: [studs.md §2026-10-13T17:09](../../re/studs.md#ts-20261013-170941), [objects.md §2026-10-13T17:09](../../re/objects.md#ts-20261013-170941).
+- Flight, banking hook and the skip limit: [studs.md §2026-10-13T21:35](../../re/studs.md#ts-20261013-213500); the stud bar: [hud.md](../../re/hud.md).
+- Pickup pool, drawing, pickup rule and counter (object type 0x3d registered at 0x2ed0b4, constructor 0x17f8e0): [studs.md §2026-10-13T17:09](../../re/studs.md#ts-20261013-170941).
 
 ## 7. Code and tests
 

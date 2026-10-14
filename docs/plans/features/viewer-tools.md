@@ -22,20 +22,21 @@ IN_PROGRESS, updated 2026-10-13T22:17:29+02:00. All tools run; the oracle suppor
 
 ## 5. Open items
 
-- [ ] TOOLS-1 — The meaning of oracle controller state 255; whether the cutscene timing (free-run waits) is long enough on slower hosts. evidence: [oracle.md §2026-10-13T11:50](../../re/oracle.md).
-- [ ] TOOLS-2 — Whether Azahar can crash during a plain boot without a state load, whether the unmapped render window changes emulation timing, and the cause of one launch that ended after 4 loads (the software-renderer abort under Xvfb is mitigated, not removed). Only one emulator per machine can use `--rpc`. evidence: [oracle.md §2026-10-13T12:41](../../re/oracle.md).
+- [ ] TOOLS-1 — The meaning of oracle controller state 255; whether the cutscene timing (free-run waits) is long enough on slower hosts. evidence: [oracle.md §2026-10-13T11:50](../../re/oracle.md#ts-20261013-115030).
+- [ ] TOOLS-2 — Whether Azahar can crash during a plain boot without a state load, whether the unmapped render window changes emulation timing, and the cause of one launch that ended after 4 loads (the software-renderer abort under Xvfb is mitigated, not removed). Only one emulator per machine can use `--rpc`. evidence: [oracle.md §2026-10-13T12:41](../../re/oracle.md#ts-20261013-124127).
 
-- [ ] TOOLS-3 — The function total of the progress report is an estimate (7575 call and pointer targets against 8086 procedures in REA); an exact list needs a stored REA procedure list. evidence: [arm-executable.md §2026-10-13T22:17](../../re/arm-executable.md).
+- [ ] TOOLS-3 — The function total of the progress report is an estimate (7575 call and pointer targets against 8086 procedures in REA); an exact list needs a stored REA procedure list. evidence: [arm-executable.md §2026-10-13T22:17](../../re/arm-executable.md#ts-20261013-221729).
 - [ ] TOOLS-4 — "Object types with behaviour" is decided per class from the class file (props with a `CollisionBound`, the prop family, doors, studs); it does not check that an instance produced a shape, and characters and vehicles count as none until they get rules (COLL-2).
+- [ ] TOOLS-5 — Whether Forgejo's web view jumps to the explicit `<a id="ts-...">` entry anchors (the instance was not reachable for a check; Gitea-family renderers prefix ids with `user-content-` and resolve `#fragment` links by script). If it does not, switch the anchors in `tools/check_doc_links.py`.
 
 ## 6. Findings summary
 
-- Setup, fidelity rules, fast workflow: [oracle.md §2026-10-13T11:50](../../re/oracle.md); RPC channel: [oracle.md §2026-10-13T12:02](../../re/oracle.md); route to gameplay: [oracle.md §2026-10-13T12:43](../../re/oracle.md).
-- Function count estimate of the game program: [arm-executable.md §2026-10-13T22:17](../../re/arm-executable.md).
-- Watchpoints, traps, memory traces, teleport, poke: [oracle.md §2026-10-13T13:45](../../re/oracle.md), [oracle.md §2026-10-13T16:05](../../re/oracle.md), [oracle.md §2026-10-13T21:18](../../re/oracle.md).
+- Setup, fidelity rules, fast workflow: [oracle.md §2026-10-13T11:50](../../re/oracle.md#ts-20261013-115030); RPC channel: [oracle.md §2026-10-13T12:02](../../re/oracle.md#ts-20261013-120221); route to gameplay: [oracle.md §2026-10-13T12:43](../../re/oracle.md#ts-20261013-124333).
+- Function count estimate of the game program: [arm-executable.md §2026-10-13T22:17](../../re/arm-executable.md#ts-20261013-221729).
+- Watchpoints, traps, memory traces, teleport, poke: [oracle.md §2026-10-13T13:45](../../re/oracle.md#ts-20261013-134500), [oracle.md §2026-10-13T16:05](../../re/oracle.md#ts-20261013-160530), [oracle.md §2026-10-13T21:18](../../re/oracle.md#ts-20261013-211800).
 
 ## 7. Code and tests
 
 - `src/viewer.cpp`, `src/soundtest.cpp`, `src/fmv.cpp`, `src/savecheck.cpp`, `src/tabledump.cpp`, `src/frontshot.cpp`, `tools/*.py`, `tools/azahar_oracle.py`, `tests/test_*.py`; command reference `docs/commands.md`.
-- `tools/progress_report.py`, `tests/test_progress_report.py`, `src/assets/object_classes.*`, `src/assets/file_decoders.*`, `handledScriptFunctions` in `src/runtime/level_start.*`, the census entry points in `src/assets/c_api.cpp`, `tests/progress_tables_test.cpp`.
-- CTest: `progress-tables`, `progress-readme`, `viewer-real-smoke`, `viewer-cutscene-smoke`, `soundtest-real-smoke`, `soundtest-id-smoke`, `fmv-real-smoke`, `frontshot-real-smoke`; Python: `python3 -m unittest discover -s tests -p 'test_*.py'`.
+- `tools/progress_report.py`, `tests/test_progress_report.py`, `tools/check_doc_links.py`, `tests/test_check_doc_links.py`, `src/assets/object_classes.*`, `src/assets/file_decoders.*`, `handledScriptFunctions` in `src/runtime/level_start.*`, the census entry points in `src/assets/c_api.cpp`, `tests/progress_tables_test.cpp`.
+- CTest: `progress-tables`, `progress-readme`, `doc-links`, `viewer-real-smoke`, `viewer-cutscene-smoke`, `soundtest-real-smoke`, `soundtest-id-smoke`, `fmv-real-smoke`, `frontshot-real-smoke`; Python: `python3 -m unittest discover -s tests -p 'test_*.py'`.

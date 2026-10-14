@@ -2,12 +2,16 @@
 
 Reverse-engineering findings, moved verbatim from the progress log. Entries are chronological; later entries may correct earlier ones. Evidence IDs are shortened with an ellipsis.
 
+<a id="ts-20261012-144319"></a>
+
 ## 2026-10-12T14:43:19.863039+02:00
 
 - Original CCI untouched; NCCH NoCrypto flag 0x04, exheader hash valid.
 - Product CTR-P-AA8P; program name LEGOCITY; .code compressed (exheader flag bit 0).
 - .code SHA256 f895faaea826ee470e056d36fed72d66922b27ec9e5923e53f341567431b6923.
 - REA rejected CCI container; ordinary Python probe is local evidence, not REA Evidence.
+
+<a id="ts-20261012-152537"></a>
 
 ## 2026-10-12T15:25:37+02:00 — RomFS extraction (S1 extension, prerequisite for S4 assets)
 
@@ -16,6 +20,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - `python3 tools/extract_romfs.py <CCI> --output artifacts/romfs` — PASS exit 0, 0.93 s; the superblock and full IVFC tree were verified; 51 files, 763156067 B; romfs-manifest.json sha256 d5fd75e6…be90e. CCI size and mtime were unchanged (1073741824, 851484720).
 - Contents: `lego_city3ds.fib` (259357972 B, the main asset archive, format unknown), `lego_city3ds.csv` (1090227 B, probably its index), and 49 `cutscenes/*.moflex` (Mobiclip video; `_de` variants are German), including `splash5` and 18 `superbuildit_*`. Every non-video asset is inside the .fib.
 - `python3 -m unittest discover -s tests -p 'test_*.py' -v` — PASS 15/15.
+
+<a id="ts-20261012-153232"></a>
 
 ## 2026-10-12T15:32:32+02:00 — FUSE (.fib) archive format and codec recovered
 

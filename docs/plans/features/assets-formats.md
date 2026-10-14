@@ -22,16 +22,16 @@ IN_PROGRESS, updated 2026-10-13T21:29:01+0200. Decoders exist and are checked ag
 ## 5. Open items
 
 - [ ] ASSET-1 — Moved to [rendering.md](rendering.md) (materials recovered; lighting RENDER-1, reflections RENDER-2, fog RENDER-3).
-- [ ] ASSET-2 — The other `.blvl` sections: +0x1c event bindings and +0x34 room links are decoded; +0x20 and the +0x24 byte tuples remain (WSTREAM-5). `pregen/*.bin` is not streaming (traffic, pedestrians, collectables); its formats are undecoded. Streaming itself: [world-streaming.md](world-streaming.md). evidence: [streaming.md §2026-10-13T22:27](../../re/streaming.md).
+- [ ] ASSET-2 — The other `.blvl` sections: +0x1c event bindings and +0x34 room links are decoded; +0x20 and the +0x24 byte tuples remain (WSTREAM-5). `pregen/*.bin` is not streaming (traffic, pedestrians, collectables); its formats are undecoded. Streaming itself: [world-streaming.md](world-streaming.md). evidence: [streaming.md §2026-10-13T22:27](../../re/streaming.md#ts-20261013-222700).
 - [ ] ASSET-3 — Several smaller file types are not decoded.
-- [ ] ASSET-4 — `.cam` record selection details: first-gather values and pose blend rooms are open (see CAMERA-3); the `.cam` fields RotationY/X, Distance and Lookat are editor-only. evidence: [data-tables-config.md §2026-10-13T09:10](../../re/data-tables-config.md).
+- [ ] ASSET-4 — `.cam` record selection details: first-gather values and pose blend rooms are open (see CAMERA-3); the `.cam` fields RotationY/X, Distance and Lookat are editor-only. evidence: [data-tables-config.md §2026-10-13T09:10](../../re/data-tables-config.md#ts-20261013-0910).
 
 ## 6. Findings summary
 
-- Container, RomFS, FUSE: [container-and-archive.md §2026-10-12T15:32](../../re/container-and-archive.md); pooled layout: [pooled-resources.md §2026-10-12T15:55](../../re/pooled-resources.md).
-- Textures: [textures.md §2026-10-12T15:40](../../re/textures.md), [textures.md §2026-10-12T22:40](../../re/textures.md); models: [models.md §2026-10-12T16:10](../../re/models.md).
-- Levels, placement, nav grids, handedness: [levels.md §2026-10-12T17:20](../../re/levels.md), [levels.md §2026-10-12T23:05](../../re/levels.md), [levels.md §2026-10-12T23:55](../../re/levels.md), [levels.md §2026-10-13T12:49](../../re/levels.md).
-- Text and fonts: [text-localisation-fonts.md §2026-10-13T00:25](../../re/text-localisation-fonts.md); tables and config text: [data-tables-config.md §2026-10-13T03:50](../../re/data-tables-config.md), [data-tables-config.md §2026-10-13T10:15](../../re/data-tables-config.md).
+- Container, RomFS, FUSE: [container-and-archive.md §2026-10-12T15:32](../../re/container-and-archive.md#ts-20261012-153232); pooled layout: [pooled-resources.md §2026-10-12T15:55](../../re/pooled-resources.md#ts-20261012-1555).
+- Textures: [textures.md §2026-10-12T15:40](../../re/textures.md#ts-20261012-1540), [textures.md §2026-10-12T22:40](../../re/textures.md#ts-20261012-2240); models: [models.md §2026-10-12T16:10](../../re/models.md#ts-20261012-1610).
+- Levels, placement, nav grids, handedness: [levels.md §2026-10-12T17:20](../../re/levels.md#ts-20261012-1720), [levels.md §2026-10-12T23:05](../../re/levels.md#ts-20261012-2305), [levels.md §2026-10-12T23:55](../../re/levels.md#ts-20261012-2355), [levels.md §2026-10-13T12:49](../../re/levels.md#ts-20261013-1249).
+- Text and fonts: [text-localisation-fonts.md §2026-10-13T00:25](../../re/text-localisation-fonts.md#ts-20261013-0025); tables and config text: [data-tables-config.md §2026-10-13T03:50](../../re/data-tables-config.md#ts-20261013-0350), [data-tables-config.md §2026-10-13T10:15](../../re/data-tables-config.md#ts-20261013-1015).
 
 ## 7. Code and tests
 

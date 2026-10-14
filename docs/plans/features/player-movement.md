@@ -25,24 +25,24 @@ IN_PROGRESS, updated 2026-10-13T21:29:01+0200. Runs in `chase-game` (`--gameplay
 
 ## 5. Open items
 
-- [ ] PLAYER-1 — Why the soft landing after a slide lasts one update (`kSlideLandingStunStandIn`). evidence: [player.md §2026-10-13T21:15](../../re/player.md).
-- [ ] PLAYER-2 — Wall response while the box penetrates the slope: the 4 slide exits in the recordings are not reproduced, `slide-real-data` skips them. evidence: [player.md §2026-10-13T21:15](../../re/player.md).
-- [ ] PLAYER-3 — Second ground probe of the slide branch (0x22a7a4 path), the 5 s timeout of state 8, surface byte 6 (slippery ground counter, constant 0x23ca4c), moving ground (0x23d3d0), the flag 255 passed to 0x21a73c for surface 20, the sprint scale in state 8. evidence: [player.md §2026-10-13T21:15](../../re/player.md).
-- [ ] PLAYER-4 — Choice among overlapping near-flat triangles for the ground normal (14 of 133 rows pick the other one). evidence: [player.md §2026-10-13T21:15](../../re/player.md).
-- [ ] PLAYER-5 — The landing animation's root motion drag; `rootMotion` handles only animations with the extra curve. evidence: [player.md §2026-10-13T21:15](../../re/player.md).
-- [ ] PLAYER-6 — The other `0x203d18` states (strafing 16/17, 73, 75, 128..135) and `ATTR_RunSpeed` of other character classes are not replicated. evidence: [player.md §2026-10-13T21:15](../../re/player.md).
+- [ ] PLAYER-1 — Why the soft landing after a slide lasts one update (`kSlideLandingStunStandIn`). evidence: [player.md §2026-10-13T21:15](../../re/player.md#ts-20261013-211552).
+- [ ] PLAYER-2 — Wall response while the box penetrates the slope: the 4 slide exits in the recordings are not reproduced, `slide-real-data` skips them. evidence: [player.md §2026-10-13T21:15](../../re/player.md#ts-20261013-211552).
+- [ ] PLAYER-3 — Second ground probe of the slide branch (0x22a7a4 path), the 5 s timeout of state 8, surface byte 6 (slippery ground counter, constant 0x23ca4c), moving ground (0x23d3d0), the flag 255 passed to 0x21a73c for surface 20, the sprint scale in state 8. evidence: [player.md §2026-10-13T21:15](../../re/player.md#ts-20261013-211552).
+- [ ] PLAYER-4 — Choice among overlapping near-flat triangles for the ground normal (14 of 133 rows pick the other one). evidence: [player.md §2026-10-13T21:15](../../re/player.md#ts-20261013-211552).
+- [ ] PLAYER-5 — The landing animation's root motion drag; `rootMotion` handles only animations with the extra curve. evidence: [player.md §2026-10-13T21:15](../../re/player.md#ts-20261013-211552).
+- [ ] PLAYER-6 — The other `0x203d18` states (strafing 16/17, 73, 75, 128..135) and `ATTR_RunSpeed` of other character classes are not replicated. evidence: [player.md §2026-10-13T21:15](../../re/player.md#ts-20261013-211552).
 - [ ] PLAYER-7 — Player completeness beyond walking: fighting, climbing, vehicles, abilities. Not started.
 - [ ] PLAYER-8 — The chase-game level start differs slightly from the oracle spawn in lvl_01 (camera reference comparison is framing-only).
 - [x] PLAYER-9 — The keyboard walk modifier has its own non-3DS action `Walk` (Left Alt) in `config/controls.cfg` (done 2026-10-13).
 
 ## 6. Findings summary
 
-- Heading comes from the two stick slots (14/15) through `stickIntent`; the heading is 0 on every frame without active stick: [player.md §2026-10-13T10:59](../../re/player.md).
-- Speed regimes step by stick magnitude (thresholds raw 60, 117/118); movement follows the intent heading; animation root motion goes through 0x20cd30 / 0x1abe60: [player.md §2026-10-13T13:42](../../re/player.md), [player.md §2026-10-13T13:58](../../re/player.md).
-- Speeds and jump scales derive from code and data, no fitted constants: [player.md §2026-10-13T17:02](../../re/player.md).
-- Fall and jump rules: [player.md §2026-10-13T16:05](../../re/player.md), [player.md §2026-10-13T16:29](../../re/player.md).
-- Landing stun, slide, slope slow-down: [player.md §2026-10-13T21:15](../../re/player.md).
-- Player entity pointer 0x3772b8, outfit and appearance rule: [player.md §2026-10-13T10:42](../../re/player.md), [player.md §2026-10-13T16:34](../../re/player.md).
+- Heading comes from the two stick slots (14/15) through `stickIntent`; the heading is 0 on every frame without active stick: [player.md §2026-10-13T10:59](../../re/player.md#ts-20261013-105911).
+- Speed regimes step by stick magnitude (thresholds raw 60, 117/118); movement follows the intent heading; animation root motion goes through 0x20cd30 / 0x1abe60: [player.md §2026-10-13T13:42](../../re/player.md#ts-20261013-134220), [player.md §2026-10-13T13:58](../../re/player.md#ts-20261013-135827).
+- Speeds and jump scales derive from code and data, no fitted constants: [player.md §2026-10-13T17:02](../../re/player.md#ts-20261013-170203).
+- Fall and jump rules: [player.md §2026-10-13T16:05](../../re/player.md#ts-20261013-160500), [player.md §2026-10-13T16:29](../../re/player.md#ts-20261013-162920).
+- Landing stun, slide, slope slow-down: [player.md §2026-10-13T21:15](../../re/player.md#ts-20261013-211552).
+- Player entity pointer 0x3772b8, outfit and appearance rule: [player.md §2026-10-13T10:42](../../re/player.md#ts-20261013-104227), [player.md §2026-10-13T16:34](../../re/player.md#ts-20261013-163430).
 
 ## 7. Code and tests
 

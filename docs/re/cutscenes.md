@@ -2,6 +2,8 @@
 
 Reverse-engineering findings, moved verbatim from the progress log. Entries are chronological; later entries may correct earlier ones. Evidence IDs are shortened with an ellipsis.
 
+<a id="ts-20261013-0230"></a>
+
 ## 2026-10-13T02:30+02:00 — Cutscene tracks, cameras and joint orientations (REA, Ghidra 12.1.2)
 
 - Track records (0x18, loader 0x253764, ev_8cc8ebc4…997f): u16 +4 key count, u16 +6 extra entry blocks. Blocks: name hash, pointer array, entry blocks, key times (f32), key values (5 × f32: in-delta, in-value, value, out-delta, out-value). The earlier draft read +4 as u32, which overlaps +6; fixed.
@@ -23,6 +25,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - Unknown: 113 of 397 actor animations have a different frame count from their camera; the viewer holds their last frame. The meaning of camera fields 7–11 and of fov's axis is unknown, as is the base value the actor scale is added to.
 - Rule 6 violation found and fixed (next entry): Python posing (convert_anims.skin_matrices) did not apply the joint orientation and so differed from C++.
 - ctest PASS 8/8 (new viewer-cutscene-smoke); Python PASS.
+
+<a id="ts-20261013-0320"></a>
 
 ## 2026-10-13T03:20+02:00 — Cutscene playback rate and soundtrack
 

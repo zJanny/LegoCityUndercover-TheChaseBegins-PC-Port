@@ -2,6 +2,8 @@
 
 Reverse-engineering findings, moved verbatim from the progress log. Entries are chronological; later entries may correct earlier ones. Evidence IDs are shortened with an ellipsis.
 
+<a id="ts-20261013-1030"></a>
+
 ## 2026-10-13T10:30+02:00 — S4f save format recovered (REA, Ghidra 12.1.2; read-only)
 
 - Path "data:/savegame.dat" (0x36741c). 0x24bc0c mounts "data:" and opens the file with mode 7, read/write/create (ev_7bc912c1…, ev_7004d64d…). 0x24baa0 maps FS results to statuses 1/4/5; 4 = corrupted and 5 = not formatted are inferred.
@@ -31,12 +33,16 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - Proposed next step (not started): chase_save under src/save/ (no SDL). It keeps the image as opaque bytes with header, CRC and validate (statuses 3/4), stores it at $XDG_DATA_HOME/chase/savegame.dat with an atomic write (temp file, fsync, rename), and has synthetic tests only (no real save is available).
 
 
+<a id="ts-20261013-1210"></a>
+
 ## 2026-10-13T12:10+02:00 — Header size and version sources (REA, Ghidra 12.1.2; read-only)
 
 - Confirms the 10:30 entry. Descriptor builder 0x272948 (ev_ff261669…) stores the running total 0x18 + options + slots × slot size at descriptor+0x1c. The header writer 0x1fc604 (ev_60bfa19c…) writes that total, truncated to u16, at file +4, and descriptor+10 (version) at +6. So the size field holds 0xa694, the whole file size.
 - Load check 0x1d0acc (ev_53486e92…) compares the u16 at +4 with descriptor+0x1c and the u16 at +6 with descriptor+10. The magic check counts matching bytes over all 16, so a partial match still fails.
 - 0x272948 also formats "Profile data [slot %u]" per slot; the label's use is unknown.
 - Implemented as chase_save (src/save/), opaque blocks only. Unknowns: the defaults written by 0x2081cc, so a reset image is zero-filled rather than the game's defaults.
+
+<a id="ts-20261013-1230"></a>
 
 ## 2026-10-13T12:30+02:00 — Reset defaults 0x2081cc (REA, Ghidra 12.1.2; read-only)
 
@@ -48,6 +54,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
   - Callback 0x1a25a0 (disassembled with llvm-objdump; not a Ghidra function): +4 = +5 = 10, +6 = +7 = 8, +3 bit 0 set, bit 1 cleared. Result: options start 8a LL ff 21 0a 0a 08 08, the rest zero.
 - Then each slot is zeroed (0x2594d8, ev_66267ca4…) and the slot callback 0x1a25cc (ev_bea3ecb3…) runs. In the slot buffer it sets +0x51b3/+0x51b4 from a runtime object (*0x375914 +0x97/+0x98), ORs +0x51e0 with 0x10 and +0x520b with 0x20, and applies cheat stud bonuses (+0x5148 u64, +0x5190 u32; +0x520b bits 0/1 mark the 100000/300000 bonuses as given). It also writes live globals (0x51b6b6, 0x52086b, 0x52089d.., 0x52089e bitset, character unlocks 0x231fc0 for IDs 9..140) and options +4+slot = 10, +6+slot = 8, +0x1ec + slot×0x18 = 0.
 - Implemented: SaveImage::resetOptions and languageForSystem in chase_save. The nibble meanings (likely volume or similar sliders) and the language index order are unknown. Slot defaults are not reproduced: they depend on runtime values and on how live globals reach the buffer.
+
+<a id="ts-20261013-0853"></a>
 
 ## 2026-10-13T08:53+02:00 — Option fields and language order (REA Ghidra 12.1.2 + llvm-objdump; read-only)
 
@@ -71,6 +79,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
   - What language index 12 (from Korean system language) does.
   - Key 0xad698cda.
 
+<a id="ts-20261013-0856"></a>
+
 ## 2026-10-13T08:56+02:00 — Options per-slot records (REA Ghidra 12.1.2 ev_3b2796d6…, llvm-objdump; read-only)
 
 - Options +0xc + slot × 0x18 is a gift list, read by 0x1b0f5c (ev_3b2796d6…) from 0x322ec4 with index *(*0x374a30):
@@ -86,6 +96,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
   - 0x1cbf54 and 0x2be874 skip slots whose first byte is 0 and pass the record address to 0x20a8d4 (arguments 48, 64, 3200, 3; purpose unknown). Correction: the 10:30 "slot summary" guess is unconfirmed; the floats suggest a saved position or camera state (inferred).
 - Probable original bug: the slot-delete path 0x31ba64 sets the selected slot (*0x3741dc +0x55) to 0xff and then clears options[0x1ec + (s8)0xff × 0x18] = options +0x1d4 instead of the deleted slot's record (0x31baf4..0x31bb18).
 - Unknown: the meaning of the five floats; the bytes between +0x3c and +0x1d4; how gifts are granted.
+
+<a id="ts-20261013-0913"></a>
 
 ## 2026-10-13T09:13+02:00 — Slot progress layout and completion (REA Ghidra 12.1.2 ev_852ce460…, llvm-objdump; read-only)
 
@@ -109,6 +121,8 @@ Offsets are relative to the slot block (live copy at 0x51b6b0; file slot 0 at 0x
   - 0x20a7fc(category, level) reads the total from the runtime table *0x375fb8 (13 × 8 bytes, byte [category × 8 + L − 2]). So totals are not in the save.
   - 0x2f63dc fills *0x375fb8 from "Tables/TablesSuperCounters.xls" (shipped as tables/tablessupercounters.bxls) through 0x20f844. The same loader fills *0x3745fc from TablesWiretap.xls and *0x3746f8 from TablesPickups.xls. 0x1ffc14 adds to a level counter only while it stays at or below that total. Not checked: whether the table's columns match the 13 × 7 layout. If they do, completion can be computed offline from a save plus the tables (still missing: the level table *0x375914 and character-table byte +0x24).
 
+<a id="ts-20261013-0919"></a>
+
 ## 2026-10-13T09:19+02:00 — TablesSuperCounters vs the 13 × 7 totals layout (chase-tabledump; no REA)
 
 Command: `build/chase-tabledump tables/tablessupercounters.bxls` (source: `artifacts/fib/files/tables/tablessupercounters.bxls`, 184 bytes, `xxd` checked).
@@ -123,6 +137,8 @@ Command: `build/chase-tabledump tables/tablessupercounters.bxls` (source: `artif
 - Cross-check: category 7 totals are 4 at every level, which equals the four flags per level that 0x20a630 sums for category 7. Categories 2, 4, 5, 6 are also all 4. Zero totals (categories 1, 10, 11, 12 at level 3) are consistent with a category absent from that level.
 - The evidence is structural only (shape, stride, category 7). The loader 0x2f63dc / 0x20f844 was not re-read in this entry, so the copy of columns 1..8 into the 8-byte rows is inferred.
 - Unknown: the meaning of the 13 categories; whether column 0 is stored anywhere (it is empty here); the level table *0x375914 and character-table byte +0x24, which are still needed for an offline completion value.
+
+<a id="ts-20261013-0925"></a>
 
 ## 2026-10-13T09:25+02:00 — Level table, character table and the offline completion total (REA Ghidra 12.1.2 ev_6865bb9a…, ev_424ca108…, ev_9962dde4…, ev_f0bc83a6…; llvm-objdump; read-only)
 
@@ -139,6 +155,8 @@ Command: `build/chase-tabledump tables/tablessupercounters.bxls` (source: `artif
   - Byte +0xc looks like a character class or group (1..9); the meaning is unknown. The u16 at +0x24 is 0 in all 192 rows and is not read by the completion function.
 - Offline total (inference from the loops, llvm-objdump 0x1cd3dc..0x1cd5e8, not run): the total counter r6 = 53 (levels) + 42 (two 21-bit sets) + 2 × 132 (characters 9..140) + 2 × 41 (ids 1..41) + 271 (sum of the 13 × 7 cells of TablesSuperCounters, summed from `chase-tabledump`) − 1 (id 9) = **711**. The result is `min(1000, collected × 1000 / 711)` if the divide is a plain unsigned division by the total (the 0x25c1b8 helper was not read).
 - Unknown: the meaning of the level-row bytes +0x04, +0x38, +0x39, +0x3c and +0x41..+0x50, and of character-row byte +0xc; whether 0x25c1b8 is an unsigned divide; whether runtime code ever writes to either table (the static files are used as-is, no writer was searched for); the cheat-flag bits and the collected side of the 41-id and 21-bit sets are still as in the 09:13 entry.
+
+<a id="ts-20261013-092607"></a>
 
 ## 2026-10-13T09:26:07+02:00 — Completion divide (llvm-objdump; read-only)
 

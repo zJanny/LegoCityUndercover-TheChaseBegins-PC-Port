@@ -24,20 +24,20 @@ IN_PROGRESS, updated 2026-10-13T21:29:01+0200. Level collision and placed object
 
 ## 5. Open items
 
-- [ ] COLL-1 — Broad phase by world boxes instead of 0x2335e4 / local tree query. evidence: [collision.md §2026-10-13T17:34](../../re/collision.md).
-- [ ] COLL-2 — Only the classes with a recovered constructor rule register: vehicles (mask 6, flags 0x1341 / 0x1340), characters (mask 4), prop_prop and about 50 other constructors are missing; `FP_Sky_Dive_02` of props/parkour_skydive has another box (centre z 1.8271 against 1.7145). blocks: CAMERA-2. evidence: [collision.md §2026-10-13T20:53](../../re/collision.md).
-- [ ] COLL-3 — The 100 grid entries without a level object (for example 24 boxes 0.21 x 1.0 x 0.18 with mask 6) and the boxes with mask 38. evidence: [collision.md §2026-10-13T17:34](../../re/collision.md).
-- [ ] COLL-4 — What sets owner flag bit 0 and whether it changes while playing; why the master model has 153 items but 147 + 7 static entries; the box of Police_Door_02 and of the girders; the real surface byte of the box triangles (0 assumed). blocks: DOOR-3. evidence: [collision.md §2026-10-13T17:34](../../re/collision.md).
-- [ ] COLL-5 — Whether the ground probe stands on box tops as the replica does (no trace of a character on a crate). evidence: [collision.md §2026-10-13T17:34](../../re/collision.md).
+- [ ] COLL-1 — Broad phase by world boxes instead of 0x2335e4 / local tree query. evidence: [collision.md §2026-10-13T17:34](../../re/collision.md#ts-20261013-173400).
+- [ ] COLL-2 — Only the classes with a recovered constructor rule register: vehicles (mask 6, flags 0x1341 / 0x1340), characters (mask 4), prop_prop and about 50 other constructors are missing; `FP_Sky_Dive_02` of props/parkour_skydive has another box (centre z 1.8271 against 1.7145). blocks: CAMERA-2. evidence: [collision.md §2026-10-13T20:53](../../re/collision.md#ts-20261013-205344).
+- [ ] COLL-3 — The 100 grid entries without a level object (for example 24 boxes 0.21 x 1.0 x 0.18 with mask 6) and the boxes with mask 38. evidence: [collision.md §2026-10-13T17:34](../../re/collision.md#ts-20261013-173400).
+- [ ] COLL-4 — What sets owner flag bit 0 and whether it changes while playing; why the master model has 153 items but 147 + 7 static entries; the box of Police_Door_02 and of the girders; the real surface byte of the box triangles (0 assumed). blocks: DOOR-3. evidence: [collision.md §2026-10-13T17:34](../../re/collision.md#ts-20261013-173400).
+- [ ] COLL-5 — Whether the ground probe stands on box tops as the replica does (no trace of a character on a crate). evidence: [collision.md §2026-10-13T17:34](../../re/collision.md#ts-20261013-173400).
 - [ ] COLL-6 — Unexplained: `door_back` rows 125/128/130 (static contact near (901.8, 1096)), 153 master-model items vs 147 + 7 static entries.
 - [ ] COLL-7 — Collision with parked cars and people, and objects that break or move, is not replicated (cars and people fall under COLL-2).
 
 ## 6. Findings summary
 
-- Collision data layout, ground probe (0x20b48c / 0x1f9884 / 0x2023e4) and wall slide (0x21a73c / 0x208d84 / 0x2092d8): [collision.md §2026-10-13T14:45](../../re/collision.md).
-- Placed-object grid, shapes and layers: [collision.md §2026-10-13T17:34](../../re/collision.md).
-- Corrections that replaced the stand-ins: [collision.md §2026-10-13T20:43](../../re/collision.md), [collision.md §2026-10-13T20:53](../../re/collision.md).
-- The model +0x1c section is collision geometry: [models.md §2026-10-13T14:46](../../re/models.md).
+- Collision data layout, ground probe (0x20b48c / 0x1f9884 / 0x2023e4) and wall slide (0x21a73c / 0x208d84 / 0x2092d8): [collision.md §2026-10-13T14:45](../../re/collision.md#ts-20261013-144500).
+- Placed-object grid, shapes and layers: [collision.md §2026-10-13T17:34](../../re/collision.md#ts-20261013-173400).
+- Corrections that replaced the stand-ins: [collision.md §2026-10-13T20:43](../../re/collision.md#ts-20261013-204340), [collision.md §2026-10-13T20:53](../../re/collision.md#ts-20261013-205344).
+- The model +0x1c section is collision geometry: [models.md §2026-10-13T14:46](../../re/models.md#ts-20261013-144637).
 
 ## 7. Code and tests
 

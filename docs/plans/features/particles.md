@@ -18,11 +18,11 @@ IN_PROGRESS, updated 2026-10-13T21:29:01+0200. Definitions decode in C++ (`parse
 
 ## 5. Open items
 
-- [ ] PART-1 — Particle rendering (emitters, step, drawing) is not implemented; no level object creates emitters (`xx_particleemitter` creation is untraced, see LEVOBJ-5). evidence: [particles.md §2026-10-13T09:05](../../re/particles.md), [particles.md §2026-10-13T09:07](../../re/particles.md).
+- [ ] PART-1 — Particle rendering (emitters, step, drawing) is not implemented; no level object creates emitters (`xx_particleemitter` creation is untraced, see LEVOBJ-5). evidence: [particles.md §2026-10-13T09:05](../../re/particles.md#ts-20261013-0905), [particles.md §2026-10-13T09:07](../../re/particles.md#ts-20261013-0907).
 
 ## 6. Findings summary
 
-- Container: [particles.md §2026-10-13T09:00](../../re/particles.md); spawner, init, emitter update, step, texture index: [particles.md §2026-10-13T09:01](../../re/particles.md), [particles.md §2026-10-13T09:03](../../re/particles.md), [particles.md §2026-10-13T09:08](../../re/particles.md).
+- Container: [particles.md §2026-10-13T09:00](../../re/particles.md#ts-20261013-0900); spawner, init, emitter update, step, texture index: [particles.md §2026-10-13T09:01](../../re/particles.md#ts-20261013-0901), [particles.md §2026-10-13T09:03](../../re/particles.md#ts-20261013-0903), [particles.md §2026-10-13T09:08](../../re/particles.md#ts-20261013-0908).
 
 ## 7. Code and tests
 

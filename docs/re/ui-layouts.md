@@ -2,6 +2,8 @@
 
 Reverse-engineering findings, moved verbatim from the progress log. Entries are chronological; later entries may correct earlier ones. Evidence IDs are shortened with an ellipsis.
 
+<a id="ts-20261013-1100"></a>
+
 ## 2026-10-13T11:00+02:00 — .bxaml UI layouts decoded (REA, Ghidra 12.1.2)
 
 - Loader 0x217220 (ev_b5b7e922…460e), reached from the ".bxaml" string at 0x2175d4. A second path, 0x2ae5dc, loads `%s.bxaml` and falls back to `%s.xaml` (ev_e349a2af…94b1).
@@ -24,6 +26,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - Added src/assets/xaml.cpp (parseLayout, UiLayout types) with a synthetic layouts() test.
 - Real data: 55/55 files consume every block (13880). 383 containers, 614 images and 110 references. 161 storyboards, 1888 tracks, 6740 keyframes. Every track's duration equals its last keyframe time. The pinned float sums come from a throwaway Python walk.
 - Merged onto main by hand (the worktree was based on origin/main). ctest PASS 8/8.
+
+<a id="ts-20261013-0912"></a>
 
 ## 2026-10-13T09:12+02:00 — Storyboard runtime layout (REA Ghidra 12.1.2 ev_5b4bf86b…; read-only, evaluator not found)
 

@@ -24,22 +24,22 @@ IN_PROGRESS, updated 2026-10-13T21:29:01+0200. Squash-merged to main; `chase-gam
 
 ## 5. Open items
 
-- [ ] FE-1 — Existing slots with time, percent and location, Continue, delete: `chase_save` integration is open; the returning-player flow (flag 0: whether rows 4 and 5 still show, which slot rows show) is unknown. needs: SAVE-2. evidence: [front-end.md §2026-10-13T20:46](../../re/front-end.md).
-- [ ] FE-2 — Logo bottom variants and table suffixes for non-English languages. evidence: [front-end.md §2026-10-13T20:46](../../re/front-end.md).
-- [ ] FE-3 — The loading screen's 3D badge scene (`prop_special_loadingring`, model, lights, camera, spin and star motion) and its tip choice; the async load that row 0 waits for. blocks: TRANS-3. evidence: [front-end.md §2026-10-13T20:46](../../re/front-end.md).
-- [ ] FE-4 — The title card's hexagon art and the in-engine cutscene on the top screen; when the card ends (the oracle route pressed A). needs: MOVIE-2. evidence: [front-end.md §2026-10-13T20:46](../../re/front-end.md).
-- [ ] FE-5 — Page-to-page transitions (the StreetPass pages build a new page after 0x240030 reports the old one done; timing unknown). evidence: [front-end.md §2026-10-13T20:46](../../re/front-end.md).
-- [ ] FE-6 — The title layers of the slot screen differ from the oracle by 2.4 mean; whether they move or blend as measured. evidence: [front-end.md §2026-10-13T20:46](../../re/front-end.md).
-- [ ] FE-7 — Which level, position and heading a new game starts with beyond the oracle's player position; the level and heading a new game starts with (Cherry Tree Hills at the oracle's player position). evidence: [front-end.md §2026-10-13T20:46](../../re/front-end.md).
-- [ ] FE-8 — The activation call 0x1e59f8 and the system reads behind 0x329338 / 0x3293b8 / 0x20aa64. evidence: [front-end.md §2026-10-13T20:46](../../re/front-end.md).
+- [ ] FE-1 — Existing slots with time, percent and location, Continue, delete: `chase_save` integration is open; the returning-player flow (flag 0: whether rows 4 and 5 still show, which slot rows show) is unknown. needs: SAVE-2. evidence: [front-end.md §2026-10-13T20:46](../../re/front-end.md#ts-20261013-204607).
+- [ ] FE-2 — Logo bottom variants and table suffixes for non-English languages. evidence: [front-end.md §2026-10-13T20:46](../../re/front-end.md#ts-20261013-204607).
+- [ ] FE-3 — The loading screen's 3D badge scene (`prop_special_loadingring`, model, lights, camera, spin and star motion) and its tip choice; the async load that row 0 waits for. blocks: TRANS-3. evidence: [front-end.md §2026-10-13T20:46](../../re/front-end.md#ts-20261013-204607).
+- [ ] FE-4 — The title card's hexagon art and the in-engine cutscene on the top screen; when the card ends (the oracle route pressed A). needs: MOVIE-2. evidence: [front-end.md §2026-10-13T20:46](../../re/front-end.md#ts-20261013-204607).
+- [ ] FE-5 — Page-to-page transitions (the StreetPass pages build a new page after 0x240030 reports the old one done; timing unknown). evidence: [front-end.md §2026-10-13T20:46](../../re/front-end.md#ts-20261013-204607).
+- [ ] FE-6 — The title layers of the slot screen differ from the oracle by 2.4 mean; whether they move or blend as measured. evidence: [front-end.md §2026-10-13T20:46](../../re/front-end.md#ts-20261013-204607).
+- [ ] FE-7 — Which level, position and heading a new game starts with beyond the oracle's player position; the level and heading a new game starts with (Cherry Tree Hills at the oracle's player position). evidence: [front-end.md §2026-10-13T20:46](../../re/front-end.md#ts-20261013-204607).
+- [ ] FE-8 — The activation call 0x1e59f8 and the system reads behind 0x329338 / 0x3293b8 / 0x20aa64. evidence: [front-end.md §2026-10-13T20:46](../../re/front-end.md#ts-20261013-204607).
 - [ ] FE-9 — The intro movie is stereoscopic: the port shows the first picture of each pair; which eye the second picture is only matters for a stereoscopic display. see MOVIE-1.
-- [ ] FE-10 — (User report 2026-10-13) Intro movie subtitles run out of the bottom screen instead of wrapping. `drawSubtitleBubble` (src/frontend/pages.cpp) draws each cue line of the `.srt` as it is, centred in the 308 px bubble, with no wrap; long lines overflow. A wrap function exists (`wrapText`, used by the alert pages with their recovered 296 px width), but the subtitle wrap width, line limit and what the original does with a cue longer than the box (wrap, shrink or split) are not recovered; take them from the subtitle code of the original and an oracle capture of a long cue, never fit by eye. Check `chase-fmv`'s subtitle renderer for the same problem. evidence: [front-end.md §2026-10-13T20:46](../../re/front-end.md).
+- [ ] FE-10 — (User report 2026-10-13) Intro movie subtitles run out of the bottom screen instead of wrapping. `drawSubtitleBubble` (src/frontend/pages.cpp) draws each cue line of the `.srt` as it is, centred in the 308 px bubble, with no wrap; long lines overflow. A wrap function exists (`wrapText`, used by the alert pages with their recovered 296 px width), but the subtitle wrap width, line limit and what the original does with a cue longer than the box (wrap, shrink or split) are not recovered; take them from the subtitle code of the original and an oracle capture of a long cue, never fit by eye. Check `chase-fmv`'s subtitle renderer for the same problem. evidence: [front-end.md §2026-10-13T20:46](../../re/front-end.md#ts-20261013-204607).
 
 ## 6. Findings summary
 
-- Screen flow and the boot sequencer: [front-end.md §2026-10-13T17:54](../../re/front-end.md).
-- Prompt state machine, save indicator, boot pages, intro screens: [front-end.md §2026-10-13T20:46](../../re/front-end.md).
-- Intro movie is stereoscopic, 47 of 49 moflex movies alternate eye frames: [front-end.md §2026-10-13T20:58](../../re/front-end.md), [fmv.md §2026-10-13T20:58](../../re/fmv.md).
+- Screen flow and the boot sequencer: [front-end.md §2026-10-13T17:54](../../re/front-end.md#ts-20261013-175408).
+- Prompt state machine, save indicator, boot pages, intro screens: [front-end.md §2026-10-13T20:46](../../re/front-end.md#ts-20261013-204607).
+- Intro movie is stereoscopic, 47 of 49 moflex movies alternate eye frames: [front-end.md §2026-10-13T20:58](../../re/front-end.md#ts-20261013-205838), [fmv.md §2026-10-13T20:58](../../re/fmv.md#ts-20261013-205838).
 
 ## 7. Code and tests
 

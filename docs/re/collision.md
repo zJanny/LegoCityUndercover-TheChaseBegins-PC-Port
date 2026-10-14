@@ -2,6 +2,8 @@
 
 Findings about the static collision of a level and how the player uses it. The player's other relations (objects, vehicles, falling) are listed as unknowns at the end.
 
+<a id="ts-20261013-144500"></a>
+
 ## 2026-10-13T14:45:00+02:00 — Collision data, ground height and wall slide recovered (REA Ghidra 12.1.2 on artifacts/game/game.arm.elf, objdump, Azahar oracle)
 
 Replica: `CollisionItem` and `readCollision` (src/assets/model.cpp), `CollisionWorld`, `groundHeight`, `slideAlongWalls` (src/runtime/collision.*), wired in `movePlayer` (src/game.cpp). Tests: `assets-core` (synthetic section), `assets-real-data` (totals), `runtime-core` (synthetic floor, step, wall), `collision-real-data` (differential, below).
@@ -58,6 +60,8 @@ Unknowns:
 - Collision of dynamic objects (entity+0x78 meshes and boxes with 0x2c8f80 / 0x204764 / 0x22a7a4), slopes steeper than 0.6088 (wall rule) and the looser floor rule 0.087.
 - The falling path, the event 0x24 handler that accepts the ground contact (0x244fc8), the 0x2b01e4 branch executed before the slide for the player, and the optional per-item block set 0x11fd20.
 - Whether 0x23602c is the scheduler's dt for every update (the probe lift depends on it above 1/30 s).
+
+<a id="ts-20261013-173400"></a>
 
 ## 2026-10-13T17:34:00+02:00 — Placed objects: world grid, registration, shapes, layers (REA Ghidra 12.1.2, llvm-objdump, Azahar oracle)
 
@@ -118,11 +122,15 @@ Unknowns:
 
 - 2026-10-13T14:45:00 "Provisional" and "Unknowns" (layer rule; collision of dynamic objects): the layer rule is the descriptor above (masks and owner flags). The items of the master model all have mask 1, which the replica already used. Placed objects are in the same grid, see above.
 
+<a id="ts-20261013-204340"></a>
+
 ## 2026-10-13T20:43:40+02:00 — Correction: the disabled-object stand-in is replaced by the level start state
 
 - **Correction of the 2026-10-13T17:34:00 entry ("Stand-ins and approximations", "Unknowns"):** `kStateDisabledStandIn` (85 recorded names) is gone. The state is derived from the level data: the `startup` script and the revealer links, [scripts.md](scripts.md). 83 of the 85 names follow from the rule; the other two are detective X-spots without collision.
 - `objectCollisions(archive, level, state)` now takes a `PlacedObjectState`. A `BoundCollision` of 0 clears the whole collision flag 0x200 of the object (mesh and box) unless `EnableCollision` sets it again (1-1_Mail_Box does); before, only the box was switched off.
 - lvl_01 totals: 824 entries (was 834), 414 meshes (was 415); the ten removed are co-located twins (`1-2_Dumpster_Open`, `1-3_Garage_Key_Switch`, `1-5_WireTap_01..04`, `Donut_Box`, `FP_BreakAndEnter_Door_Balcony02_Open`, `FP_Warp_01`) and `FP_SuperBuildit_Statue`, whose entities have flag bit 0 in the grid read (the earlier position-only match had paired them with their enabled twin). `collision-real-data` and the camera replays still pass.
+
+<a id="ts-20261013-205344"></a>
 
 ## 2026-10-13T20:53:44+02:00 — Correction: the automatic box uses the node matrices (Police_Door_02 centre, girders, Donut_Box)
 

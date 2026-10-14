@@ -22,20 +22,20 @@ IN_PROGRESS, updated 2026-10-13T21:29:01+0200. Objects are drawn standing at the
 
 ## 5. Open items
 
-- [ ] LEVOBJ-1 — Whether `drawableObjects` should skip the objects the start state disables (visibility at start; not compared with a screenshot); per-class visibility at start (`DisabledOnStartUp`, `ShowOnObjectScan`, `ShowOnMap`) and the effect of flags bit 2 (value 6 in the +0x14 table). evidence: [objects.md §2026-10-13T21:17](../../re/objects.md), [objects.md §2026-10-13T15:39](../../re/objects.md).
-- [ ] LEVOBJ-2 — Which animation an AI character plays at level start (the AI classes read many parameters and start animations through the role table `tablesanimations`); which `class_*` folder (police, robber, construction, farmer, fire, space, miner, female) a class selects was not traced. needs: ANIM-2. evidence: [objects.md §2026-10-13T16:34](../../re/objects.md).
-- [ ] LEVOBJ-3 — Objects that move, break or react (platforms, scripted objects, NPC walking, mission flow) are frozen at their level state. needs: SCRIPT-1. evidence: [scripts.md §2026-10-13T20:42](../../re/scripts.md).
-- [ ] LEVOBJ-4 — The 8 custom lineup characters (`CharacterEnum` 1..8 through 0x2372e0) and the 16 animals (`char_pig`, `char_cat`, `char_dog`, `char_shark`, `char_Crow`, `ride_pig`) are not drawn; the jetpack `AttachModel` placement (bone name hash unresolved, value `chest`) and `AttachRelative`. evidence: [objects.md §2026-10-13T16:34](../../re/objects.md).
-- [ ] LEVOBJ-5 — The code that copies instance parameters into the slot array `obj + 0x2c` was not found (the rule is inferred); how `xx_particleemitter` and other `xx_*` objects are created; model LOD selection (`LOD_NumberofLods`); whether `Animation` start poses change placed props. evidence: [objects.md §2026-10-13T15:39](../../re/objects.md).
+- [ ] LEVOBJ-1 — Whether `drawableObjects` should skip the objects the start state disables (visibility at start; not compared with a screenshot); per-class visibility at start (`DisabledOnStartUp`, `ShowOnObjectScan`, `ShowOnMap`) and the effect of flags bit 2 (value 6 in the +0x14 table). evidence: [objects.md §2026-10-13T21:17](../../re/objects.md#ts-20261013-211741), [objects.md §2026-10-13T15:39](../../re/objects.md#ts-20261013-153915).
+- [ ] LEVOBJ-2 — Which animation an AI character plays at level start (the AI classes read many parameters and start animations through the role table `tablesanimations`); which `class_*` folder (police, robber, construction, farmer, fire, space, miner, female) a class selects was not traced. needs: ANIM-2. evidence: [objects.md §2026-10-13T16:34](../../re/objects.md#ts-20261013-163430).
+- [ ] LEVOBJ-3 — Objects that move, break or react (platforms, scripted objects, NPC walking, mission flow) are frozen at their level state. needs: SCRIPT-1. evidence: [scripts.md §2026-10-13T20:42](../../re/scripts.md#ts-20261013-204236).
+- [ ] LEVOBJ-4 — The 8 custom lineup characters (`CharacterEnum` 1..8 through 0x2372e0) and the 16 animals (`char_pig`, `char_cat`, `char_dog`, `char_shark`, `char_Crow`, `ride_pig`) are not drawn; the jetpack `AttachModel` placement (bone name hash unresolved, value `chest`) and `AttachRelative`. evidence: [objects.md §2026-10-13T16:34](../../re/objects.md#ts-20261013-163430).
+- [ ] LEVOBJ-5 — The code that copies instance parameters into the slot array `obj + 0x2c` was not found (the rule is inferred); how `xx_particleemitter` and other `xx_*` objects are created; model LOD selection (`LOD_NumberofLods`); whether `Animation` start poses change placed props. evidence: [objects.md §2026-10-13T15:39](../../re/objects.md#ts-20261013-153915).
 - [ ] LEVOBJ-6 — The police officer NPC of the oracle reference is not identified.
 - [ ] LEVOBJ-7 — Vehicles, animals and the other classes without a recovered constructor are not created (shared with COLL-2).
 
 ## 6. Findings summary
 
-- Object census, parameter slots, class files (+0x10/+0x14) and the model lookup: [objects.md §2026-10-13T15:39](../../re/objects.md).
-- Characters: body, head, textures, starting pose, custom characters, animation class: [objects.md §2026-10-13T16:34](../../re/objects.md).
-- Studs are pickup sprites, not models: [objects.md §2026-10-13T17:09](../../re/objects.md).
-- Level format, placement Euler order and handedness: [levels.md §2026-10-12T23:05](../../re/levels.md), [levels.md §2026-10-13T12:49](../../re/levels.md).
+- Object census, parameter slots, class files (+0x10/+0x14) and the model lookup: [objects.md §2026-10-13T15:39](../../re/objects.md#ts-20261013-153915).
+- Characters: body, head, textures, starting pose, custom characters, animation class: [objects.md §2026-10-13T16:34](../../re/objects.md#ts-20261013-163430).
+- Studs are pickup sprites, not models: [objects.md §2026-10-13T17:09](../../re/objects.md#ts-20261013-170941).
+- Level format, placement Euler order and handedness: [levels.md §2026-10-12T23:05](../../re/levels.md#ts-20261012-2305), [levels.md §2026-10-13T12:49](../../re/levels.md#ts-20261013-1249).
 
 ## 7. Code and tests
 

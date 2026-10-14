@@ -2,6 +2,8 @@
 
 Reverse-engineering findings, moved verbatim from the progress log. Entries are chronological; later entries may correct earlier ones. Evidence IDs are shortened with an ellipsis.
 
+<a id="ts-20261012-1540"></a>
+
 ## 2026-10-12T15:40+02:00 — Texture container decoded (.btga/.bpng/.bdds)
 
 - Header layout, recovered from shipped files (not yet traced in code):
@@ -21,6 +23,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
   - cubemap_showroom_c: six plausible faces; face order unconfirmed
 - `python3 -m unittest discover -s tests -p 'test_*.py' -v` — PASS 26/26.
 
+<a id="ts-20261012-2240"></a>
+
 ## 2026-10-12T22:40+02:00 — Texture v orientation corrected (most "black material" cases)
 
 - Corrects the S4b/18:05 note "GL's first row is v=0, which the game also treats as the bottom": UV v=0 is the TOP row of the decoded (top-down) image.
@@ -31,6 +35,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - Result: char_squirrel renders orange with black eyes. lvl_00_policestation room3 shows the textured floor, emblem, plants and lightmap shading where large areas were black before. The scene is still dim; the combiner/lighting setup is unrecovered.
 - Graphics API, from strings: the game links Nintendo DMPGL (a dmp_* reserved-uniform table at 0x35b288, 0x10-byte entries {name, id, count, GL type}). The dmp_TexEnv names are referenced only from that table, and no static PICA TEV command headers (regs 0xc0–0xf7) exist in code.bin, so the combiner setup must be traced through the game's uniform-location usage. Not done.
 - ctest PASS 7/7.
+
+<a id="ts-20261013-150853"></a>
 
 ## 2026-10-13T15:08:53+02:00 — convert_textures.py decodes through C++; --checksum removed
 

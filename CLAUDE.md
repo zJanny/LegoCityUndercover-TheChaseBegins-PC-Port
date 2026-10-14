@@ -63,6 +63,7 @@ All other commands (extractors, converters, viewer, FMV, sound test, input lab, 
 
 - Findings (addresses, struct/record layouts, format specs, codec rules, evidence IDs, hypotheses, unknowns) live in `docs/re/<topic>.md`, indexed in `docs/re/README.md`. Read the index, then only the file for your topic.
 - Append under a dated `##` heading. Mark corrections of earlier entries explicitly. Put unknowns at the end of the entry. Create a new topic file and index line when none fits.
+- Every dated entry has an anchor line `<a id="ts-YYYYMMDD-HHMMSS"></a>` (the heading's time digits; `HHMM` when it has no seconds) directly above its `##` heading. Every link to a dated entry is `file.md#ts-...` with `§<timestamp>` in the link text. Never rewrite a heading timestamp. After any docs edit run `python3 tools/check_doc_links.py --fix`; CTest `doc-links` fails on a broken link or missing anchor.
 - The progress file holds only work state: status, steps, decisions, blockers, next actions, a short session log. A log entry that produced findings gets one line linking to the feature file.
 - `docs/re/` is for developers (the plain-language rule does not apply) and contains no game assets.
 

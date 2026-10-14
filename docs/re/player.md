@@ -2,6 +2,8 @@
 
 Findings about the player character at run time: where it lives, how input becomes intent, and (later) how it moves.
 
+<a id="ts-20261013-104227"></a>
+
 ## 2026-10-13T10:42:27+02:00 — Player entity pointer, scene node, stick-to-intent (worker, REA Ghidra 12.1.2; key claims re-checked with objdump)
 
 Binary: artifacts/game/game.arm.elf (sha256 5152ed14…0881).
@@ -21,6 +23,8 @@ Binary: artifacts/game/game.arm.elf (sha256 5152ed14…0881).
 Unknowns:
 - The locomotion code (event 9 handlers, per-state table *0x3771f0 built at 0x2a3c18) was not found; walk/run speed, acceleration and turn rate are probably data-driven (reaction objects built from scripts or character data). Attribute tables 0x16ff98 (maxSpeed 0.5, maxAccel 0.05, Drag 0.9) and 0x16e224 (TurnSpeed 0.1) belong to other object classes as far as checked.
 - Who writes the node position each frame. Next step: oracle traces of the world position under fixed stick input, and a write watchpoint on node+0x4c.
+
+<a id="ts-20261013-105911"></a>
 
 ## 2026-10-13T10:59:11+02:00 — Stick-to-intent replica, library atan2f, dead D-pad path (worker; objdump of artifacts/game/game.arm.elf, qemu-arm for atan2)
 
@@ -42,6 +46,8 @@ Unknowns:
 - Whether the real VFP11 on the 3DS flushes denormals (the replica assumes IEEE with denormals; irrelevant for stick values above 1e-38).
 - The meaning of the heading beyond its scale (32768 = pi) and the reaction to flag 8 are still not recovered (no locomotion code found).
 
+<a id="ts-20261013-110812"></a>
+
 ## 2026-10-13T11:08:12+02:00 — Where the player entity gets its position and character (worker; objdump of artifacts/game/game.arm.elf, .blvl dumps with parameter names from code.bin)
 
 Replica: `playerStart` and `characterAppearance` in src/assets/level.cpp, used by `placePlayer` in src/game.cpp; checks in tests/assets_test.cpp (synthetic) and tests/assets_real_test.cpp (pinned real values).
@@ -57,6 +63,8 @@ Unknowns:
 - Which code builds "Player1.Player01" (registry key composition) and how the `Player1` object's position (y 2.0901, yaw -90) relates to the Player1Start placement; whether the level start of a saved game uses Player1Start too (the function at 0x2e6264 was not read beyond 0x2e6460).
 - The starting character, the hat/hair assembly (the `hat` joint, char_head_policehat) and the face texture binding.
 - Which of Player01..Player16 is active for one player (the code at 0x19f41c uses Player01).
+
+<a id="ts-20261013-125622"></a>
 
 ## 2026-10-13T12:56:22+02:00 — Head attachment: correction of the "Assembly (guess)" entry (worker; objdump of artifacts/game/game.arm.elf, model/skeleton dumps through chase_assets)
 
@@ -74,6 +82,8 @@ Unknowns:
 - The baked head node offset y 1.3640 differs by 0.016 from the head joint's bind y 1.348; the runtime path may add an offset (AttachRelative%02d parameters were not traced). The implementation uses the joint position.
 - Whether unskinned meshes of cutscene minifigs (the baked head) follow the head joint in the real game; the viewer does not move them.
 - Orientation of the "hat" joint attach (identity bind world) and the models used with HatModel were not checked.
+
+<a id="ts-20261013-134220"></a>
 
 ## 2026-10-13T13:42:20+02:00 — Player locomotion measured in the oracle (worker; Azahar 2126.2 old 3DS, REA Ghidra 12.1.2 for the code)
 
@@ -132,6 +142,8 @@ Unknowns:
 - Camera yaw law (writer of 0x376894), real slope behaviour of ctrl+0x94, the 1.3 variant, other characters and costume variants, vehicles, collision slides at obstacles, ground following (y).
 - Whether free-run dt (about 0.0333, ticks of 1 ms) changes any of the numbers: all measurements used a fixed dt in stepped mode.
 
+<a id="ts-20261013-135827"></a>
+
 ## 2026-10-13T13:58:27+02:00 — Locomotion replica, root motion check, differential test (worker; recorded traces in artifacts/oracle/loco-out, REA Ghidra 12.1.2 for 0x2327b4)
 
 Replica: `locomotionUpdate`, `turnFacing`, `kMeasuredRootMotionSpeeds` in src/runtime/player_locomotion.{hpp,cpp}; used by chase-game (src/game.cpp). Tests: runtime-core (synthetic thresholds, timer, facing rule), `locomotion-real-data` (tests/locomotion_real_test.cpp, differential against 33 recorded traces).
@@ -171,16 +183,22 @@ Unknowns:
 - The cause of the skipped facing step at frame 59, the slope law (clamp and t terms of 0x1abe60), ground following in y, collision slides.
 - Camera yaw law (writer of 0x376894) and the animation playback rate (frames per second) and blend of the real game.
 
+<a id="ts-20261013-144645"></a>
+
 ## 2026-10-13T14:46:45+02:00 — Ground following and collision slides recovered (see collision.md)
 
 - The unknowns "ground following in y" and "collision slides at obstacles" of the locomotion entries are answered in [collision.md](collision.md): after the horizontal move (0x21a73c slides it along wall triangles) 0x20b48c bisects the height of the floor under the player's box and keeps the old height within 0.01.
 - Correction to the "slope" finding above: the height steps of the turn_run_r90 ramp (16.577, 16.672, 16.794, 16.783) are this probe at the kerb, not a modelled slope; the speed slow-down on that ramp (ctrl+0x94 1.33) is the separate slope term of 0x1abe60 and is still not modelled.
 - ctrl+0x21c/+0x220 hold the x and z the slide changed, ctrl+0x224 the movement before the slide (type 27 only), ctrl+0x240/+0x244 the last ground height, ctrl+0x1e4/+0x1e8 the ground object and triangle, ctrl+0x1ec the ground normal.
 
+<a id="ts-20261013-144113"></a>
+
 ## 2026-10-13T14:41:13+02:00 — Camera yaw word and player entity type (see camera.md)
 
 - **Correction:** the writer of the f32 at 0x376894 is the camera manager update 0x23f174: it stores atan2(row2.x, row2.z) of the camera scene node's world matrix (the yaw of the view direction). Its camera law is in [camera.md](camera.md); the earlier note that it was not recovered is obsolete.
 - The player's ctrl+0x6c (entity type) is 3 (read from the locomotion traces), so the stick shaping applies and the stick x turns the camera (types 1..5 and 0x11c). chase-game uses 3.
+
+<a id="ts-20261013-160500"></a>
 
 ## 2026-10-13T16:05:00+02:00 — Falling, landing and the landing stun (worker; REA Ghidra 12.1.2, objdump of artifacts/game/game.arm.elf, Azahar oracle)
 
@@ -206,6 +224,8 @@ Replica: src/runtime/player_vertical.{hpp,cpp} (`verticalUpdate`), `GroundProbe:
 - Slope and moving ground (ctrl+0x1e4 object), water, ledge grabbing, the soft landing animation root motion, and falls onto objects.
 - The 0x203b34 long-reach query (DAT_003771b8) was read but its distance and the event 0x25 handler (state 5 selection) were not traced.
 
+<a id="ts-20261013-162920"></a>
+
 ## 2026-10-13T16:29:20+02:00 — Jumping: B button, root-motion height curve, forward speed, landing (worker; Azahar oracle, chase_assets animation decode, objdump)
 
 Replica: `JumpProfile`, `makeJumpProfile`, `jumpSpeeds`, `Posture::Jumping` in src/runtime/player_vertical.*, `updatePlayer` in src/game.cpp. Tests: `runtime-core` (synthetic profile), `jump-real-data` (tests/jump_real_test.cpp, shared reader tests/player_trace.hpp, CMake cache path `CHASE_JUMP_TRACE_DIR`, default artifacts/oracle/jump-traces), `game-script-jump`. Scenarios: tools/oracle/jump-ground.txt, jump-air.txt (jump-first.txt is the first probe, which used the wrong button A). Traces: 12 jumps, 86 files in artifacts/oracle/jump-traces (local).
@@ -230,9 +250,13 @@ Unknowns:
 - Why A (event 7) does nothing in the street (probably a contextual action).
 - The step-off state 8 and its animation, see the falling entry.
 
+<a id="ts-20261013-163430"></a>
+
 ## 2026-10-13T16:34:30+02:00 — Appearance rule shared with level characters (see objects.md)
 
 The head/face/upper/lower replacement and the head attachment of the player are now one library path (`addCharacter`, `poseBody`, `placeCharacter` in src/render/character.cpp) used by chase-game for the player and for the level's characters. The character-select display 0x27a2bc replaces the `*_TEST.tga` placeholders on body (upper_/lower_) and head (head_) by the character class's names in the same way and attaches the head model on the `head` joint, which confirms the rule; details and the custom-character path (0x2372e0) in [objects.md](objects.md).
+
+<a id="ts-20261013-170203"></a>
 
 ## 2026-10-13T17:02:03+02:00 — Derivation of the walk/run speeds, jump scales, 0.8 factor and landing stun (worker; REA Ghidra 12.1.2 xrefs, objdump of artifacts/game/game.arm.elf, Azahar oracle traps without RPC)
 
@@ -263,6 +287,8 @@ Unknowns:
 - The root joint of an animation without the extra curve (the byte read through `0x24b8bc(skeleton, 0)` in `0x292ef8`); `rootMotion` returns nothing for those, which the jump animations do not need.
 - Which writes of slot+0x1c other than 0x200e70 exist (other characters, jump_double 215, costume classes); ctrl+0xe0+0x130 bit 3, ctrl+0x308 and the states 8, 16, 17, 73, 75 of `0x203d18`.
 - Whether `ATTR_RunSpeed` is listed in other character classes (the 192 characters of tablescharacters; only char_player was probed) and what `0x225754` mode 2 (carrying) does to the speed.
+
+<a id="ts-20261013-211552"></a>
 
 ## 2026-10-13T21:15:52+0200 — Landing stun rule, step-off state 8 (slide), slope slow-down, state table (worker; REA Ghidra 12.1.2, objdump of artifacts/game/game.arm.elf, Azahar oracle without RPC)
 

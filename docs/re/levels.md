@@ -2,6 +2,8 @@
 
 Reverse-engineering findings, moved verbatim from the progress log. Entries are chronological; later entries may correct earlier ones. Evidence IDs are shortened with an ellipsis.
 
+<a id="ts-20261012-1720"></a>
+
 ## 2026-10-12T17:20+02:00 — S4c: .blvl level format decoded (REA, Ghidra)
 
 - The xref to "levels/%s.blvl" (0x1b1f30) comes from 0x1b1e58. The xref to ".blvl" (0x1d0028, ev_09591263…74f2) is in 0x1cfc50 (ev_fec8db4c…f2f1), the generic .blvl deserializer (pseudo-code ev_1eed109a…f773).
@@ -17,6 +19,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - Euler order is unknown; the viewer assumes R = Ry·Rx·Rz in degrees. Most orientations are yaw-only, or yaw with ±180 on X and Z.
 - lvl_00_policestation_main has 350 objects and 130 mesh placements.
 - Added tools/convert_levels.py (`--census`, `--placements`, `--param-names`) and tests/test_convert_levels.py (3 tests); Python suite PASS 39/39.
+
+<a id="ts-20261012-1745"></a>
 
 ## 2026-10-12T17:45+02:00 — S4c: native level placement and the mesh-centre rule
 
@@ -36,6 +40,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - Observed but unknown: many floor/wall surfaces render black with texture × vertex colour. They are probably multi-texture/lightmap materials (tex=2, m3∈{1,5,7}) whose PICA combiner setup is not recovered.
 - `ctest --test-dir build --output-on-failure` — PASS 5/5; Python PASS 39/39; 0 build warnings.
 
+<a id="ts-20261012-2305"></a>
+
 ## 2026-10-12T23:05+02:00 — Placement Euler order recovered (replaces the Ry·Rx·Rz assumption)
 
 - "initialorientation" (string at 0x1a49c4, referenced at 0x1a4860 in object setup 0x1a4130, ev_eb095374…8f7 / ev_8c852395…6e0): the parameter is looked up by hash (0x24da28 + 0x217080). Its three floats are multiplied by 0.0174533 (literal at 0x1a49d8) and passed to 0x237c48.
@@ -48,14 +54,18 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - Material combiners: the renderer keeps bit-packed GPU state (e.g. 0x126f0c, a 4 KB state packer). Not traced further.
 - ctest PASS 7/7; Python PASS 47/47.
 
+<a id="ts-20261012-2325"></a>
+
 ## 2026-10-12T23:25+02:00 — Whole levels in the viewer
 
-> Correction: the game does not stream with `Pregen/*.bin`; see [streaming.md §2026-10-13T22:27](streaming.md).
+> Correction: the game does not stream with `Pregen/*.bin`; see [streaming.md §2026-10-13T22:27](streaming.md#ts-20261013-222700).
 
 - Meshname resolution: 6561 of 6563 placements over all 856 levels resolve to archive models; only xx_goldstud and Prop_Hotspot_Mission do not.
 - Level models: models/<level>/ holds lvl_*.bfnmdl (plus _lod1) and room<N>.bfnmdl (403, plus 288 _l1 detail levels). chase-viewer `--level` without model arguments loads that folder minus the _l1/_lod1 models, or just room<N> with `--room`. This is a viewer convention; the game's streaming logic (Pregen/*.bin) is not recovered.
 - `--eye X,Y,Z` sets the camera position.
 - lvl_01_cherrytreehills_main: 1161 instances, 845580 triangles, 0 missing textures, about 1.1 s to load offscreen. A street view at (800,60,1060) shows the plaza, arch, roads, vehicles and water plane, textured and placed.
+
+<a id="ts-20261012-2355"></a>
 
 ## 2026-10-12T23:55+02:00 — Navigation grids (.bfnnav) decoded
 
@@ -77,6 +87,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - chase-viewer `--nav`: cyan/orange quads, 0.25 above the fitted height. In lvl_00 room3 the grid follows the floor plan with orange cells along walls and props.
 - ctest PASS 7/7; Python PASS 50/50.
 
+<a id="ts-20261013-1249"></a>
+
 ## 2026-10-13T12:49+02:00 — World handedness: the game world is left-handed
 
 - Evidence:
@@ -90,6 +102,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
   - Whether the game's own winding convention is CCW in left-handed screen space (the culling default is the observed one, chosen because it hides room ceilings).
   - The game's field of view and whether the 3DS top-screen projection (400x240) matches the viewer's 1 rad vertical FOV; the reference framing was not matched numerically.
   - 0x241540, the consumer of the camera matrix, was not traced; the handedness follows from the matrix determinant and the reference screenshot.
+
+<a id="ts-20261013-150853"></a>
 
 ## 2026-10-13T15:08:53+02:00 — Python level and navigation tools reduced or removed
 

@@ -2,6 +2,8 @@
 
 Findings from REA (Ghidra 12.1.2 pseudo-code of `artifacts/game/game.arm.elf`, evidence IDs shortened), `llvm-objdump` and the Azahar oracle (OpenGL with RPC screenshots, port 24690, home `artifacts/oracle/hud-home`, state `gameplay-start`). Related: [ui-layouts.md](ui-layouts.md), [studs.md](studs.md), [camera.md](camera.md), [front-end.md](front-end.md). Replica: `chase::frontend::Hud` (src/frontend/hud.*), `drawMinimap` (src/frontend/minimap.*), `StudField` flight (src/runtime/studs.*), presentation in src/game_hud.hpp and src/game.cpp.
 
+<a id="ts-20261013-213101"></a>
+
 ## 2026-10-13T21:31:01+02:00 — Layouts, hearts, stud bar, flying studs, map screen
 
 ### Layouts and page creation

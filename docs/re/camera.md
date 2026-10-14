@@ -2,6 +2,8 @@
 
 How the original game places the gameplay camera and where the yaw word 0x376894 comes from. Findings from REA (Ghidra 12.1.2, `artifacts/game/game.arm.elf`) and the Azahar oracle (`gameplay-start` checkpoint, Chase in the street of lvl_01).
 
+<a id="ts-20261013-143958"></a>
+
 ## 2026-10-13T14:39:58+02:00 — Camera chain, follow camera law, yaw word 0x376894, projection
 
 Evidence IDs (shortened): manager update 0x23f174 ev_4ee0aeb7…; follow camera update 0x2e0bf0 ev_30040f4a…; strategy 0x330e4c / 0x3310d0 / 0x330f8c / 0x3313c0 ev_41be0eba…, ev_819eeed6…; tracker 0x1ed9ac, 0x2e0800, 0x2e06f4 ev_49381ce6…; single-room path 0x1b4864 ev_8f15a259…; controller 0x2a8bfc and reset 0x2313c8 ev_dc307321…; matrix 0x2ca814 ev_30885dc9…, 0x22859c ev_8a74ba9a…, 0x24c118 ev_108e70de…; mode pose step 0x181fe0 ev_ccf4afe3…, 0x2821f8 ev_21175f0e…; projection 0x23458c ev_3b3195159a…; pad side 0x26be04 ev_c048f16d….
@@ -69,6 +71,8 @@ Reference values: gameplay-start player (886.764, 16.589, 1111.166): eye (893.87
 - data-tables-config.md 2026-10-13T09:28 (record path "is the per-frame camera"): in the street the record path is replaced by the follow controller above; the record path serves rooms with several records.
 - player.md ("camera yaw writer not found", "entity type unknown"): see above; the player type is 3.
 
+<a id="ts-20261013-161935"></a>
+
 ## 2026-10-13T16:19:35+02:00 — Camera obstruction: slab sweep, pull-in, side and vertical push (0x3313c0 recovered)
 
 Evidence IDs (shortened): post step 0x3313c0 ev_e003811b…; sweep input 0x2e10f4 ev_f8e1224b…; setup 0x2d5208 ev_c64ec493…, 0x2d4ea8 ev_36ec2da6…, 0x2eb288 ev_da6cfa10…; triangle callback 0x2d4fd8 ev_22e1b809…; slice 0x2eb9a0 ev_b7044517…; segment pass 0x2eafdc ev_e51a6421…; re-evaluation 0x2d4e64 ev_7f171ec4…; funnel depth 0x2ebe10 ev_5ac729e9…; clip 0x1eb780 ev_a2065188…; interval merge 0x1eb66c ev_922945aa…; leaf filter 0x1dc528 ev_8f4fde36…; grid gather 0x237f30 ev_7176d1e3…; spring, rope and yaw 0x3310d0 ev_7c08f084…; timers 0x330f8c ev_44b1fde3…; pre-step 0x330e4c ev_1a5ff56d…; input block 0x2e0800 ev_00697d81…, 0x2e06f4 ev_8a061ecc…; pitch clamp 0x2e0a50 ev_ff0bd884…; reset 0x2313c8 ev_a5c17128…. Small helpers read with `llvm-objdump` (not REA): 0x23d39c a += b, 0x227790 a -= b, 0x23f50c d = a + b, 0x257f14 d = a - b, 0x2408c4 d += s * v, 0x23b960 cross(a, b), 0x257ea0 unit vector ((0, 0, 1) when the length is at most 1.2e-7), 0x23ba14 2D unit vector ((0, 1) likewise), 0x23f14c 2D dot, 0x24ef70 squared distance, 0x22b62c distance of x and z only (y skipped), 0x2507dc 3D distance.
@@ -122,6 +126,8 @@ The nine older traces (323 updates, no obstruction in range) still agree within 
 - 2026-10-13T14:39:58 ("0x3313c0 and 0x2e10f4 fill collision sweeps ... and push the wanted position by in+0xd0 / in+0xd4 times the penetration"): the factor is the middle of the widest free gap (a number in about -2 to 2, 0 when clear), not a penetration depth. 0x2d4e64 is not a candidate-sweep setup but the re-evaluation of stored pieces (step 6).
 - Same entry, "timers S+0x18 / 0x1c (0.5 s) are set then" and "S+0x20 / 0x24 set when the player walks through the camera": S+0x18 / 0x1c belong to the side push and S+0x20 / 0x24 to the vertical push (step 8); "the model's rope flips direction there" is explained by the S+4 pull-in and the vertical push, both now replicated.
 
+<a id="ts-20261013-173530"></a>
+
 ## 2026-10-13T17:35:30+02:00 — Camera sweep and placed objects: box slicing, layer, stale near limit (REA, objdump, Azahar oracle)
 
 Registration, entries and layers of the world grid: [collision.md](collision.md) (2026-10-13T17:34:00). Replica: `CameraSweep::sliceBox`, `CameraSweepSettings::previousNear`, `FollowCamera` keeps `previousNear_`; tests `camera-sweep-real-data`, `camera-real-data`, `camera-sweep` (synthetic box).
@@ -137,6 +143,8 @@ Unknowns:
 - Mesh objects are gathered through the world box of the transformed tree, boxes through the world box of their corners (stand-ins for 0x2335e4 and the local-space tree query, see collision.md).
 - The mask-4 characters (flag bit 0 rejects them at gameplay-start) and the vehicles are not registered by the replica, so the camera ignores them.
 
+<a id="ts-20261013-231343"></a>
+
 ## 2026-10-13T23:13:43+02:00 — Camera lock: script native CameraRotFixedSet and the HUD icon UI_CameraLocked
 
 Lead, prompted by the user's observation on a real 3DS: outside the police station L/R turn the camera; inside they do not, and a crossed-out camera icon appears when L/R are pressed.
@@ -146,6 +154,8 @@ Lead, prompted by the user's observation on a real 3DS: outside the police stati
 
 Unknowns:
 - Arguments and effect of 0x27bb9c; the callers in lvl_00 scripts; the role of 0x23cb90 / 0x1b1150 / 0x518218 in the icon routine.
+
+<a id="ts-20261014-094953"></a>
 
 ## 2026-10-14T09:49:53+02:00 — Correction: the police-station lock is not CameraRotFixedSet; it is the record-pose camera 0x298cd8 (REA Ghidra 12.1.2, llvm-objdump, Azahar oracle New 3DS state police-station)
 

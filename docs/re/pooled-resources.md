@@ -2,6 +2,8 @@
 
 Reverse-engineering findings, moved verbatim from the progress log. Entries are chronological; later entries may correct earlier ones. Evidence IDs are shortened with an ellipsis.
 
+<a id="ts-20261012-1555"></a>
+
 ## 2026-10-12T15:55+02:00 — Shared TT pooled-resource layout (all b* formats)
 
 - 0x107288 rewrites a `.fnmdl` request to `.bfnmdl`, opens it and calls deserializer 0x10ccf4.
@@ -38,6 +40,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
   - The last −14 block (0x3c B) is vertices with a 20-byte stride: float3 position (±35.28, 0), 4 B of s16 values 0/0x7fff (UV-like), and 4 B unknown.
   - Inference only: the block-to-field mapping must come from the deserializer 0x10ccf4.
 - Added tests/test_tt_resource.py (3 tests); suite PASS 33/33. The audio census after the refactor is 1361/1361.
+
+<a id="ts-20261013-150853"></a>
 
 ## 2026-10-13T15:08:53+02:00 — tools/tt_resource.py removed
 

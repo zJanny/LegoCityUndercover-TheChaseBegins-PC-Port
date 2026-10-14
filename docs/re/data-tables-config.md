@@ -2,6 +2,8 @@
 
 Reverse-engineering findings, moved verbatim from the progress log. Entries are chronological; later entries may correct earlier ones. Evidence IDs are shortened with an ellipsis.
 
+<a id="ts-20261013-0350"></a>
+
 ## 2026-10-13T03:50+02:00 — Data tables (.bxls) decoded (REA, Ghidra 12.1.2)
 
 - Code names: "Tables/" + "TablesCutscenes.xls" etc. (0x1eecb4; loader 0x1eec18, ev_c15cf16e…4192). The "xls" extension handler is registered at 0x103da8 (ev_db44b1bb…232c) with the callback 0x107f08 (ev_b86a6c1d…2641), which swaps in ".bxls" and calls the parser 0x10e1cc (ev_5e7ab97d…a567). Cell row access is 0x20f844 (ev_f0bc83a6…437a).
@@ -22,6 +24,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - Added src/assets/table.cpp (parseTable, tableValue), src/tabledump.cpp (chase-tabledump), a synthetic assets-test case and real-data totals.
 - ctest PASS 8/8.
 
+<a id="ts-20261013-1015"></a>
+
 ## 2026-10-13T10:15+02:00 — Brace-block config text parser (.cam, trigger and option lists)
 
 - New parseConfigText / ConfigBlock and a typed parseCameraFollow (src/assets/config_text.cpp, in chase_assets).
@@ -31,6 +35,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - The strict grammar rejects options.txt (header only), levels/scriptfns.txt line 843 (missing `)`) and levels/gescriptfns.txt line 264 (extra `)`). Whether the game tolerates these is unknown; the test pins each reason.
 - Unknown: the meaning of Type, Filters and the camera values, and script function and trigger semantics. The game's loader for these files was not traced.
 - Tests: synthetic configText in assets-test; real-data totals in assets-real-test (provenance: line-based Python census, manual inspection). ctest PASS 8/8.
+
+<a id="ts-20261013-0910"></a>
 
 ## 2026-10-13T09:10+02:00 — .cam loader 0x3062e4 (REA Ghidra 12.1.2 ev_9636e324…, llvm-objdump; read-only)
 
@@ -53,6 +59,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - Unknown: the meaning of the Type values (0..58, 256, 1024..1027) and Filters; how +0x44 and the records drive the camera at run time (0x1e9290 and the camera update); why "Offset" is an integer byte triple.
 
 
+<a id="ts-20261013-0928"></a>
+
 ## 2026-10-13T09:28+02:00 — .cam Type is a flag word, and the per-frame camera blend (REA Ghidra 12.1.2; llvm-objdump)
 
 - Evidence IDs: Type handler 0x275584 ev_aea05ee8…; per-frame camera update 0x1b4a30 ev_6375ca51…; record picker 0x1d34ac ev_0eff67cc…; blend set-up 0x19b8c8 ev_578623fa…; pose blend 0x298cd8 ev_02030dc2…; record lookup 0x268678 ev_5057c3df…; shake 0x1c607c ev_14d33f71…; record binder 0x1e9290 ev_161c6427…, 0x1fc5b8 ev_6c8215c4…; FOV getter 0x2ab2e4 ev_470bbc59….
@@ -72,6 +80,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
   - ShakeAmp, ShakeRate and ShakeRoll (+0x34, +0x38, +0x3c) are used by 0x1c607c, which adds a position offset (+0x34 x +0x38 per axis from helper calls 0x241098/0x217b70) and a roll (+0x3c) to the view matrix. The exact waveform is not decoded.
 - Unknown: bit 0x100 (Type 256) was not read by 0x298cd8, 0x19b8c8, 0x1b4a30 or 0x1d34ac, so its meaning is open; what 0x23f50c does for 0x400; the exact easing inside the blend controller (0x224094, 0x298cd8's caller); the single-room path 0x1b4864; whether 0x1d34ac's weights are distance or volume based (only the call chain was read); the other ~60 sites that read a u16 at +0x44 of unrelated structures were not checked.
 
+<a id="ts-20261013-0932"></a>
+
 ## 2026-10-13T09:32+02:00 — .cam record selection, blend weights, Type bit 0x400 and 0x100 (REA Ghidra 12.1.2; llvm-objdump)
 
 - Evidence IDs: record picker 0x1d34ac ev_a69314f3…; volume filter 0x20bf6c ev_4b20c0b7…; overlap dedupe 0x1aa734 ev_8bf13740…; 0x23f50c ev_a62a1112…; pose blend 0x298cd8 ev_02030dc2…; blend set-up 0x19b8c8 ev_578623fa…; XZ distance 0x22b62c ev_2829763a….
@@ -86,6 +96,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - **Type bit 0x400**: 0x23f50c(out, a, b) is a plain vec3 add (out = a + b). In 0x298cd8 the call is 0x23f50c(L, P, (float)(+0x46,+0x47,+0x48 as signed bytes)) at 0x299008, guarded by `tst r1, #1024` at 0x298fbc on the u16 at +0x44. So with 0x400 the look point is overwritten as **L = P + Offset**: Offset becomes a direction/vector from the camera and the 0x08/0x10/0x20 look rules for that record are ignored. Offset is the unscaled signed bytes.
 - **Type bit 0x100**: no reader found. A scan of the whole disassembly (0x100000..0x560000) found 64 `ldrh ..., [rX, #68]` sites; within 8 instructions of each, the only mask test for 0x100/0x400 is the single `tst #1024` at 0x298fbc. The other tests are #1, #2, #4, #8, #16, #32, #128, #512 and compares with 0 (for unrelated structures or the 0x80 loaded flag). Bit 0x100 is stored (Type 256 appears 3 times, 1280 never) but never tested by an +0x44 u16 read. Limit: a read through a different base/offset form, a word load, or a computed pointer would not match the pattern.
 - Unknown: what 0x21c1e4 and its helpers compute (so the real behaviour of the distance weight); the default-room globals DAT_003770d0/DAT_00376c78; easing in 0x224094/0x224080; path 0x1b4864; whether anything rewrites the weights after set-up; meaning of Type 256; the 0x1aa734 overlap rule's purpose.
+
+<a id="ts-20261013-144113"></a>
 
 ## 2026-10-13T14:41:13+02:00 — Corrections from the camera work (see camera.md)
 

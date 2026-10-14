@@ -2,6 +2,8 @@
 
 How the level's stud objects are created, drawn, collected and counted. Replica: `StudObject` / `drawableObjects` (src/assets/level.cpp), `StudField` (src/runtime/studs.*), `StudSprites` (src/render/studs.*), wiring in src/game.cpp. Level objects in general: [objects.md](objects.md).
 
+<a id="ts-20261013-170941"></a>
+
 ## 2026-10-13T17:09:41+02:00 — Pickup pool, sprite drawing, pickup rule and counter (REA Ghidra 12.1.2 pseudo-code, llvm-objdump, oracle port 24770 without RPC)
 
 **Correction of objects.md ("Left out and why", "How studs ... are created"):** the stud classes have a `meshname` (`xx_goldstud` ...) but the game never loads it as a model. The names are not used by any code (no `xx_` string in the executable). The stud class is a pickup object (object type 0x3d) that the pickup system draws as a camera-facing sprite.
@@ -43,6 +45,8 @@ Unknowns:
 - Whether the radius 1.5 holds for all characters and abilities (setter 0x2744d0).
 - The oracle screenshot of the same spot was not taken: the software renderer aborts when loading the state (three attempts, SIGABRT/SIGSEGV) and an OpenGL screenshot needs `--rpc`, which another agent used.
 
+<a id="ts-20261013-213500"></a>
+
 ## 2026-10-13T21:35:00+02:00 — Flight to the HUD counter, banking hook (REA, oracle port 24690 with RPC; details in [hud.md](hud.md))
 
 **Corrections of the entry above**
@@ -53,6 +57,8 @@ Unknowns:
 
 Unknowns
 - Whether other stud types fly to sinks 1 or 2 (the type table +0x5c byte is 0 for silver, gold, blue and purple), the blend state of the flying sprite, dropped and magnet studs.
+
+<a id="ts-20261013-214838"></a>
 
 ## 2026-10-13T21:48:38+02:00 — Correction: the collect sound is played
 

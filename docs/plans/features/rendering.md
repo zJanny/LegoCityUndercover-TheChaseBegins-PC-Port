@@ -17,7 +17,7 @@ IN_PROGRESS, updated 2026-10-14T09:50:11+02:00. Combiner setups of all 16122 shi
 
 ## 4. Stand-ins
 
-- RENDER-S1 Fragment lighting primary of lit props and characters is the global ambient read once from the original ((138, 161, 182) / 255); level surfaces with baked colours (lighting 1 and 4) use 0. Secondary (specular) is 0. Source: [materials.md §2026-10-13T22:24](../../re/materials.md).
+- RENDER-S1 Fragment lighting primary of lit props and characters is the global ambient read once from the original ((138, 161, 182) / 255); level surfaces with baked colours (lighting 1 and 4) use 0. Secondary (specular) is 0. Source: [materials.md §2026-10-13T22:24](../../re/materials.md#ts-20261013-222439).
 - RENDER-S2 Reflection cube textures are replaced by their average colour.
 - RENDER-S3 Blended parts are drawn after opaque parts in instance order (the game sorts by 0x115128).
 - RENDER-S4 A missing vertex colour attribute is white; the texture unit to UV set mapping and wrap modes are assumed.
@@ -28,13 +28,13 @@ IN_PROGRESS, updated 2026-10-14T09:50:11+02:00. Combiner setups of all 16122 shi
 - [ ] RENDER-1 Fragment lighting: light list per draw (0x12d884, 0x5943b0), light mask, LUTs, specular. Next: break at 0x12d884 in the oracle (`trap`) and read the light objects and material +0x10/+0x14 for a character and a prop; implement in the shader; remove RENDER-S1. evidence: [materials.md](../../re/materials.md)
 - [ ] RENDER-2 Reflections (cube sampling, vertex shader program with `Cubemap`). Removes RENDER-S2.
 - [ ] RENDER-3 Fog (0x1292fc caller, 0x3760fc), shadows (0x37796c), material colour pulse, draw sorting.
-- [x] RENDER-4 Closed 2026-10-14: the lobby compared with the oracle (lightmap surfaces match within 1 colour level on the stair wall, floor about 8 percent lighter; props darker = RENDER-1/5; camera differs, see CAMERA-6). evidence: [materials.md §2026-10-14T09:50](../../re/materials.md).
+- [x] RENDER-4 Closed 2026-10-14: the lobby compared with the oracle (lightmap surfaces match within 1 colour level on the stair wall, floor about 8 percent lighter; props darker = RENDER-1/5; camera differs, see CAMERA-6). evidence: [materials.md §2026-10-14T09:50](../../re/materials.md#ts-20261014-095011).
 - [ ] RENDER-5 Characters are lighter and more saturated in the original (directional light missing).
-- [ ] RENDER-6 — The white quad above the police-station entrance is the `Checker1.tga` part (4 vertices, flat y = 0, 4.2 x 4.2, opaque) of `room1.bfnmdl` (also room3, room5), seen far away outside; not RENDER-S3. Unknown whether the original draws it (rooms outside are not loaded in the oracle). Not fixed (related: WSTREAM-3). evidence: [materials.md §2026-10-14T09:50](../../re/materials.md).
+- [ ] RENDER-6 — The white quad above the police-station entrance is the `Checker1.tga` part (4 vertices, flat y = 0, 4.2 x 4.2, opaque) of `room1.bfnmdl` (also room3, room5), seen far away outside; not RENDER-S3. Unknown whether the original draws it (rooms outside are not loaded in the oracle). Not fixed (related: WSTREAM-3). evidence: [materials.md §2026-10-14T09:50](../../re/materials.md#ts-20261014-095011).
 
 ## 6. Findings summary
 
-- [materials.md §2026-10-13T22:24](../../re/materials.md); UV scales and vertex shaders: [models.md §2026-10-12T18:05](../../re/models.md).
+- [materials.md §2026-10-13T22:24](../../re/materials.md#ts-20261013-222439); UV scales and vertex shaders: [models.md §2026-10-12T18:05](../../re/models.md#ts-20261012-1805).
 
 ## 7. Code and tests
 

@@ -2,6 +2,8 @@
 
 Reverse-engineering findings, moved verbatim from the progress log. Entries are chronological; later entries may correct earlier ones. Evidence IDs are shortened with an ellipsis.
 
+<a id="ts-20261012-1610"></a>
+
 ## 2026-10-12T16:10+02:00 — .bfnmdl model format decoded (REA, Ghidra 12.1.2 provider)
 
 - Opened game.arm.elf with provider_id=ghidra. Ghidra defines the procedures Hopper missed, and its pseudo-code evidence IDs are:
@@ -43,6 +45,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - Not recovered: the meaning of node/mesh float3 fields, the model+0x1c section's contents, skin field semantics, and material render states.
 - Added tools/convert_models.py, tools/preview_model.py and tests/test_convert_models.py (3 tests); suite PASS 36/36.
 
+<a id="ts-20261012-1645"></a>
+
 ## 2026-10-12T16:45+02:00 — S4a part 2: model geometry in C++
 
 - Added src/assets/model.cpp. parseModel replays 0x10ccf4/0x114860/0x11528c through PoolCursor. vertexFlags is the 0x12095c replica, built on a byte-exact copy of the rodata tables at 0x3798c4–0x379907. Vertices decode to position/uv0/uv1/normal/colour; skin bytes are skipped. Indices are bounds-checked.
@@ -50,6 +54,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - assets-core adds a synthetic model (mirroring the Python fixture), an unconsumed-block rejection and the stride table. assets-real-data now parses all models and requires the Python totals.
 - `cmake --build build` — 0 warnings. `ctest --test-dir build --output-on-failure` — PASS 4/4 (assets-real-data 10.2 s): 3113 models / 16122 parts / 7211595 vertices / 4603391 triangles, all equal to the Python reference.
 - Remaining in S4a: CWAV decode in C++ (needed for S4d, not for the S4b viewer).
+
+<a id="ts-20261012-1805"></a>
 
 ## 2026-10-12T18:05+02:00 — Vertex shaders, UV scales and lightmaps
 
@@ -70,10 +76,14 @@ The combiner setups that this entry lists as unrecovered were recovered later: [
   - The overall level stays dark, so a lightmap scale (e.g. ×2) is likely but unverified.
 - `ctest` PASS 5/5 (real-data totals unchanged), Python PASS 39/39.
 
+<a id="ts-20261013-150853"></a>
+
 ## 2026-10-13T15:08:53+02:00 — Python model tools removed
 
 - tools/convert_models.py (`--census`, `--vertices`, `bone_batches`, `skin_joints`) and tools/preview_model.py were removed. The C++ parser (`parseModel`) and `chase-viewer --screenshot` replace them.
 - Reference values from the earlier entries stay valid and are pinned in tests/assets_real_test.cpp: the model census totals, the bone palette totals and the skinned position sums. Provenance: `python3 tools/convert_models.py --census artifacts/fib/files` and preview_model at 9d04c91. To reproduce, check out that commit (for example `git worktree add /tmp/old 9d04c91`) and run the command there.
+
+<a id="ts-20261013-144637"></a>
 
 ## 2026-10-13T14:46:37+02:00 — Correction: the model+0x1c section is collision geometry
 

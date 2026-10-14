@@ -2,6 +2,8 @@
 
 Reverse-engineering findings, moved verbatim from the progress log. Entries are chronological; later entries may correct earlier ones. Evidence IDs are shortened with an ellipsis.
 
+<a id="ts-20261012-151000"></a>
+
 ## 2026-10-12T15:10:00+02:00 — S3 focused analysis (REA, Hopper provider, ELF sha256 5152ed14…0881)
 
 - Opened artifacts/game/game.arm.elf; binary_overview ev_58c1dadc79e269e074c9c5fe98ce23a3b06199eb833f901f82be0d66b789bc54: 3 segments, 963 procedures, 0 strings defined (no sections, so Hopper defines no strings).
@@ -13,6 +15,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - Paths: rom:/ (literal users at 0x128608, 0x1287d8, 0x159020, 0x188fa4), data:/savegame.dat (pointer at 0x377964), levels/triggers.txt, levels/letriggers.txt, pregen/*.bin, Pregen/Traffic|Pedestrians/%s_*.bin, TouchGestures/%s.dat, Localisation/extended_chars_utf8.txt, scriptfns.txt. Assets live in the 769 MB RomFS (not yet extracted).
 - Coverage caveat: resolve_containing_procedure returned not_in_procedure for the fs:USER user 0x10f988 (ev_f52ce74dbc497c0f3ce93454138b76efb3281e5ccdc80c18256246e4cac469b2) and the rom:/ literal 0x128718 (ev_d887d2367ebb3881e7d6eef78c3e7ad82dd29c9e652671dfa00ddabd9e3293fe). The local disassembly has ~6697 `push {...,lr}` prologues, so Hopper covers a minority of functions.
 - Engine strings (ATTR_*, StudSpawn*, CUFO*) suggest TT Games' engine. This is an unconfirmed inference.
+
+<a id="ts-20261012-152500"></a>
 
 ## 2026-10-12T15:25:00+02:00 — S3 DSP/service-handle follow-up
 
@@ -33,6 +37,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
     - 0x131310 in 0x1312d0
     - 0x25b700 in 0x25b67c
   - Inference: 0x258fa4 is srv:GetServiceHandle.
+
+<a id="ts-20261013-1045"></a>
 
 ## 2026-10-13T10:45+02:00 — S3 HID input and main loop (REA, Ghidra 12.1.2; read-only, partial)
 
@@ -55,6 +61,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - Effect on the input lab: the game has no key repeat and Select is unused, which is consistent with the lab's rules. The lab's action names stay 3DS buttons until slot meanings are recovered.
 
 
+<a id="ts-20261013-0855"></a>
+
 ## 2026-10-13T08:55+02:00 — Fixed-step scheduler fields (REA Ghidra 12.1.2 ev_68bf373e…, llvm-objdump; read-only, partial)
 
 - 0x100f44 takes a process object P. P+0xc points to a client object C with vtable +0x1c Update(dt) and +0x24 (called with 1 before and 0 after Update).
@@ -65,6 +73,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - 0x158640 builds a smoothing table with dt = 1/60 (0x1640a8). 0x1ab96c and 0x309514 convert a frame count to seconds with 1/30. Neither proves the scheduler step.
 - Searched without success: the 1/30 and 1/60 literals, the app constructor 0x10087c, stores to +0x10..+0x1c with flag bytes +0x20..+0x22 (the candidates 0x156914 and 0x343e30 are unrelated). The object that sets C+0x10 is still unknown.
 - Correction to the 2026-10-13T08:53 save-format entry: slot-table entries 12 and 13 (*0x376a18, *0x376a1c) hold channels 8 (L) and 10 (R), using the table order from the 10:45 entry. Invert camera therefore flips the direction of L/R camera rotation, not a stick axis. Not verified at runtime.
+
+<a id="ts-20261013-092040"></a>
 
 ## 2026-10-13T09:20:40+02:00 — Input slot table 0x3769e8 (REA Ghidra 12.1.2; read-only, partial)
 
@@ -102,6 +112,8 @@ Unknown:
 - Only 3 of ~19 xref sites of slot 0 were examined.
 
 
+<a id="ts-20261013-092253"></a>
+
 ## 2026-10-13T09:22:53+02:00 — Input slots: A/B pairs, channel 7, axis readers (REA Ghidra 12.1.2; read-only, partial)
 
 - Binary: artifacts/game/game.arm.elf (sha256 5152ed14…0881), REA provider Ghidra 12.1.2.
@@ -125,6 +137,8 @@ Unknown:
   - Who reads slots 16/17 (channels 2/3, right stick / C-stick equivalents) and what produces channels 2/3 on a 3DS without a second stick (Circle Pad Pro is possible but unverified).
   - Callers of FUN_002289b8 (where in the frame it runs) were not traced.
 
+<a id="ts-20261013-093611"></a>
+
 ## 2026-10-13T09:36:11+02:00 — GSP interrupt thread and vblank wait (REA Ghidra 12.1.2, llvm-objdump; read-only, partial)
 
 - Svc stubs (objdump): 0x2594b4 = WaitSynchronizationN (svc 0x25; no svc 0x24 stub exists), 0x25947c = SendSyncRequest (svc 0x32), 0x259464 = CreateEvent (svc 0x17), 0x256c18 = ClearEvent (svc 0x19), 0x24e9d0 = GetSystemTick (svc 0x28), 0x105b20 = SleepThread (svc 0xa).
@@ -141,6 +155,8 @@ Unknowns:
 - Whether a counter advances on every vblank or only every second (a swap-interval multiple). Without this the answer 30 versus 60 fps is unknown.
 - Whether 0x10f370 runs once per scheduler step (0x100f44) or per rendered frame, and the value of 0x52a1f4.
 - The step value in the scheduler (C+0x10) is still unknown. The idle path 0x25c174 is not a sleep: it polls input (0x25cb2c, 0x25b4b4) and ends in 0x25afcc, so the earlier wording "sleeps through 0x25c174(1/30)" is unverified.
+
+<a id="ts-20261013-093842"></a>
 
 ## 2026-10-13T09:38:42+02:00 — Vblank counters, wait modes and mode byte 0x52a1f4 (REA Ghidra 12.1.2, llvm-objdump; read-only, partial)
 
@@ -160,6 +176,8 @@ Unknowns:
 - Whether FUN_00122908(1, 0x1e) sets a frame rate or swap interval.
 - Value of 0x52a1f4 at run time and any writer other than 0x1030d0.
 
+<a id="ts-20261013-094132"></a>
+
 ## 2026-10-13T09:41:32+02:00 — Present function 0x25a6f0, minimum frame interval 0x529de8, command 0x4f (REA Ghidra 12.1.2, llvm-objdump; read-only, partial)
 
 - 0x25acc0 is not a function entry. It lies inside FUN_0025a6f0 (REA name; decompile ev_9f455fe2…), the display-list flush and buffer-swap routine. The call to 0x109c98 (which reaches 0x10f370) is its tail, after the swap, and runs only when byte 0x3760f0 is 0 and not (0x52a1f8 == 1 and 0x52a1f4 == 2). Correction: the earlier entry listed 0x25a6f0 as a separate caller of the vblank wait (not examined); it is the same routine.
@@ -178,6 +196,8 @@ Unknowns:
 - Whether 0x52a1f4 is 2 (3D double-call mode) at run time, and the meaning of 0x52a1f8.
 - Writer of the scheduler step C+0x10 and the number of game-update steps per present.
 - Which service handle 0x386578 is.
+
+<a id="ts-20261013-103531"></a>
 
 ## 2026-10-13T10:35:31+02:00 — Runtime oracle (Azahar 2126.2 gdb stub) and scheduler 0x100f44 semantics
 
@@ -217,6 +237,8 @@ Unknowns:
 - Whether C+0x10/+0x14 and the cap change in other states (gameplay, cutscenes); only one state was measured.
 - Who writes C+0x10..+0x1c (still not found statically).
 - Which screen produced 3 vblanks per update, and the update rate during gameplay.
+
+<a id="ts-20261013-221729"></a>
 
 ## 2026-10-13T22:17:29+02:00 — Function count of the analysis ELF, and a call-target estimate (REA Ghidra 12.1.2 binary_overview ev_ccc9183720356c84c7ff8c519dcd05e0f221f159dfc1b672c39a953d3d535b3f; read-only)
 

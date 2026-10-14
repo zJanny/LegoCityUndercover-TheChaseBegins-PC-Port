@@ -2,6 +2,8 @@
 
 Reverse-engineering findings, moved verbatim from the progress log. Entries are chronological; later entries may correct earlier ones. Evidence IDs are shortened with an ellipsis.
 
+<a id="ts-20261013-1105"></a>
+
 ## 2026-10-13T11:05+02:00 — FMV player with subtitles: WIP, not merged
 
 - Branch worktree-agent-a93143c61d56bb50d, commit 2be2b23 (WIP). Based on origin/main 6c26639, not rebased; CMakeLists.txt and assets.hpp will conflict (keep both sides).
@@ -17,6 +19,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
   - docs/fmv-player.md and the FFmpeg line in docs/building.md are not written.
   - Which font and position the game uses for subtitles is unknown.
 
+<a id="ts-20261013-1140"></a>
+
 ## 2026-10-13T11:40+02:00 — FMV player finished and merged
 
 - Rebased the WIP branch onto main. A missing space in `set(CHASE_ROMFS_DIR"...")` had kept fmv-real-smoke from being registered; it is fixed.
@@ -27,6 +31,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - Added docs/fmv-player.md, FFmpeg in docs/building.md, and links in README.md and docs/status.md.
 - Not tested: Escape or window close with a real display, and A/V sync on real audio hardware.
 - ctest PASS 9/9.
+
+<a id="ts-20261013-205838"></a>
 
 ## 2026-10-13T20:58:38+02:00 — Stereoscopic movies: left/right eye frames alternate
 
