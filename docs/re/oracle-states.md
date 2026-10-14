@@ -74,3 +74,15 @@ Unknowns:
 - `savecont-slotlist-user` (agent C, `new_3ds: false`): cold boot with a read-only copy of the user's `savegame.dat` (`artifacts/oracle/agentJ-saves/`) in the emulator's own sdmc (`artifacts/oracle/agentC-home`), A on the HOME notice and the autosave notice, stopped at the slot list before a slot is chosen. Game progress: slot 0 used, after mission 1-1 (slot byte +6 = 1, police station), slot 1 empty. Continue on slot 0 starts lvl_00_policestation at `Player1Start` ([save-format-state.md §2026-10-14T15:19](save-format-state.md#ts-20261014-151903)). The user's own Azahar saves were not touched.
 
 Unknowns: a save with byte +6 above 1 for Continue at later levels (SAVE-13).
+
+<a id="ts-20261014-191730"></a>
+
+## 2026-10-14T19:17:30+02:00 — User states `info-barrier` and `mission-1-2-start`
+
+Both are the user's own Azahar quick saves (2026-10-14 19:16), copied read-only and byte-identical to `artifacts/oracle/states/`, `new_3ds: true`, level `lvl_01_cherrytreehills`.
+- `info-barrier` (user slot 3): the player stands just before the bound `No_Entry_Auburn_OnFoot` (centre 763.682 36.0 577.971) on the street from Cherry Tree Hills to Auburn, near the mission 1-2 dog house; walking forward a few steps opens the InformationBox "You need to complete more missions before you can enter this area of LEGO City." Use: HUD-26 (InformationBox look, buttons).
+- `mission-1-2-start` (user slot 4): the player stands close in front of the mission 1-2 start trigger. Use: ShowIntroText heading and the mission 1-2 opening (HUD-26), mission flow (SCRIPT-1).
+- Game progress (user report): mission 1-1 finished, mission 1-2 not started, Auburn locked.
+
+Unknowns:
+- Position, heading and the save slot's story bytes were not read from memory yet; the progress above is the user's report.
