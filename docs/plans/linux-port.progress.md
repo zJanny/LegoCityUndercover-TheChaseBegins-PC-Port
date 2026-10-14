@@ -136,7 +136,7 @@ Read this section, CLAUDE.md (incl. "Goal and faithfulness" and "Feature files")
 
 Oracle states (artifacts/oracle/states, see docs/re/oracle.md): `gameplay-start` (new game, Old 3DS), `police-station` and `street-after-1-1` (user saves after mission 1-1, New 3DS), `street-at-entrance` (agent, unmodified), `trans-poked-*` (poked, measuring aids only). Hard-to-reach states: ask the user (CLAUDE.md "Runtime oracle").
 
-**Pending (user, 2026-10-14):** rename the project from "Decompiled" to `TheChaseBegins-PC-Port` (folder `~/code/TheChaseBegins-PC-Port`, Forgejo repo `LegoCityUndercover-TheChaseBegins-PC-Port`) after the current agent round, with no agent running; done by a Haiku agent; the Forgejo rename is done by the user in the web UI.
+**Order of this round (user, 2026-10-14):** TOOLS-6 (oracle `savestate` keeps the New 3DS flag) first, by agent K; then agents H (station exit and entry, holds `--rpc`), I (CAMERA-8 blend) and J (SAVE-1 save-aware start).
 
 **Workflow notes:** oracle route and states: `tools/azahar_oracle.py` with `--display xvfb --state gameplay-start --renderer opengl --rpc --rpc-input`, route from boot `tools/oracle/to-gameplay.txt`; only one agent may use `--rpc` at a time. The lead delegates to subagents in worktrees (at most 3 in parallel, user), every brief names the CLAUDE.md rules, reviews each result against CLAUDE.md, rebuilds and tests, squash-merges one commit per branch (`git merge --squash`), removes the worktree and branch (`git worktree remove -f -f`, `git branch -D`), then `graphify update .` and verifies. Resume a branch with `git log main..<branch>`.
 
