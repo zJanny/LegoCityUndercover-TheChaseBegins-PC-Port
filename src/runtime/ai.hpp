@@ -158,6 +158,10 @@ public:
 
     void setPositionLookup(PositionLookup lookup) { lookup_ = std::move(lookup); }
     void setPathLookup(PathLookup lookup) { pathLookup_ = std::move(lookup); }
+    // Asked for every character before update() advances it; false leaves it untouched (the control routine 0x29bf30 of an
+    // active director camera, director_hold.hpp).
+    using UpdateGate = std::function<bool(const std::string&)>;
+    void setUpdateGate(UpdateGate gate) { updateGate_ = std::move(gate); }
     // The nav grids of the level, one world per section record (nav_grid.hpp). With them an AIMove runs the path finder
     // 0x204284 first like the front end 0x22d85c: result 1 ("I can't get there") leaves the character unchanged.
     void setNavigation(std::vector<NavWorld> worlds) {
@@ -205,6 +209,7 @@ private:
     float navClock_ = kAiNavClockStart;
     PositionLookup lookup_;
     PathLookup pathLookup_;
+    UpdateGate updateGate_;
 };
 
 }

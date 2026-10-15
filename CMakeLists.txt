@@ -43,7 +43,7 @@ target_link_libraries(chase_runtime PUBLIC chase_assets)
 target_include_directories(chase_runtime PUBLIC src)
 target_compile_options(chase_runtime PRIVATE -Wall -Wextra -Wpedantic -ffp-contract=off)
 set_target_properties(chase_runtime PROPERTIES POSITION_INDEPENDENT_CODE ON)
-target_sources(chase_runtime PRIVATE src/runtime/studs.cpp src/runtime/sound_events.cpp src/runtime/music.cpp src/runtime/level_start.cpp src/runtime/script_runner.cpp src/runtime/natives_objects.cpp src/runtime/natives_animation.cpp src/runtime/natives_cutscene.cpp src/runtime/natives_progress.cpp src/runtime/door.cpp src/runtime/scene_change.cpp src/runtime/room_streaming.cpp src/runtime/room_streamer.cpp src/runtime/scene_start.cpp src/runtime/dcam.cpp src/runtime/debug_metrics.cpp src/runtime/object_visibility.cpp src/runtime/script_text.cpp src/runtime/script_triggers.cpp src/runtime/objectives.cpp src/runtime/ai.cpp src/runtime/ai_simple_path.cpp src/runtime/fog.cpp src/runtime/script_placement.cpp src/runtime/ai_go_to_target.cpp src/runtime/nav_grid.cpp src/runtime/nav_path.cpp src/runtime/nav_follow.cpp src/runtime/nav_load.cpp src/runtime/room_locator.cpp src/runtime/ai_super_jump.cpp src/runtime/ai_face_target.cpp src/runtime/waypoints.cpp src/runtime/buildit.cpp src/runtime/buildit_set.cpp src/runtime/vehicle.cpp src/runtime/vehicle_boarding.cpp src/runtime/vehicle_drive.cpp src/runtime/carry.cpp src/runtime/cutscene_cast.cpp src/runtime/collision_enable.cpp src/runtime/game_random.cpp src/runtime/npc_idle.cpp)
+target_sources(chase_runtime PRIVATE src/runtime/studs.cpp src/runtime/sound_events.cpp src/runtime/music.cpp src/runtime/level_start.cpp src/runtime/script_runner.cpp src/runtime/natives_objects.cpp src/runtime/natives_animation.cpp src/runtime/natives_cutscene.cpp src/runtime/natives_progress.cpp src/runtime/door.cpp src/runtime/scene_change.cpp src/runtime/room_streaming.cpp src/runtime/room_streamer.cpp src/runtime/scene_start.cpp src/runtime/dcam.cpp src/runtime/debug_metrics.cpp src/runtime/object_visibility.cpp src/runtime/script_text.cpp src/runtime/script_triggers.cpp src/runtime/objectives.cpp src/runtime/ai.cpp src/runtime/ai_simple_path.cpp src/runtime/fog.cpp src/runtime/script_placement.cpp src/runtime/ai_go_to_target.cpp src/runtime/nav_grid.cpp src/runtime/nav_path.cpp src/runtime/nav_follow.cpp src/runtime/nav_load.cpp src/runtime/room_locator.cpp src/runtime/ai_super_jump.cpp src/runtime/ai_face_target.cpp src/runtime/waypoints.cpp src/runtime/buildit.cpp src/runtime/buildit_set.cpp src/runtime/vehicle.cpp src/runtime/vehicle_boarding.cpp src/runtime/vehicle_drive.cpp src/runtime/carry.cpp src/runtime/cutscene_cast.cpp src/runtime/collision_enable.cpp src/runtime/game_random.cpp src/runtime/npc_idle.cpp src/runtime/director_hold.cpp)
 # Front end (boot to the slot list): CPU-drawn screens, no SDL dependency.
 add_library(chase_frontend src/frontend/script.cpp src/frontend/frontend.cpp src/frontend/pages.cpp src/frontend/canvas.cpp src/frontend/resources.cpp src/frontend/layout.cpp src/frontend/flow.cpp src/frontend/hud.cpp src/frontend/script_text_pages.cpp src/frontend/minimap.cpp src/frontend/slot_summaries.cpp)
 target_link_libraries(chase_frontend PUBLIC chase_assets chase_runtime chase_save_progress)
@@ -300,6 +300,10 @@ if(BUILD_TESTING)
   target_link_libraries(dcam-test PRIVATE chase_runtime)
   target_compile_options(dcam-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME dcam COMMAND dcam-test)
+  add_executable(director-hold-test tests/director_hold_test.cpp)
+  target_link_libraries(director-hold-test PRIVATE chase_runtime)
+  target_compile_options(director-hold-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME director-hold COMMAND director-hold-test)
   add_executable(progress-tables-test tests/progress_tables_test.cpp)
   target_link_libraries(progress-tables-test PRIVATE chase_runtime)
   target_compile_options(progress-tables-test PRIVATE -Wall -Wextra -Wpedantic)
@@ -691,25 +695,26 @@ if(BUILD_TESTING)
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv" --movies "${CHASE_ROMFS_DIR}/cutscenes"
       --script "until logos 20; run 1; shot logos; until language 60; run 1; shot language")
     set_tests_properties(frontshot-real-smoke PROPERTIES PASS_REGULAR_EXPRESSION "language: screen language.*frontshot: [0-9]+ updates, screen language")
+    # The lobby's first-visit camera tour (Lobby_Dcam_Intro 0) holds the player (docs/re/dcam.md); these runs start after it.
     # Scripted stick (raw circle pad "x y updates;..." at dt 0.033): without collision 31 run updates at 6.9 u/s
     # and 9 sprint updates at 10.35 u/s would move the player 10.13 units; the lobby steps raise him to height
     # 2.51 and the desk stops him after 8.05 units (the lobby has the record pose camera). 40 walk updates at 2.3 u/s move him 3.04 units on the floor.
     # These two run without camera collision (the camera yaw sets the walking direction).
     add_test(NAME game-script-run COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
-      --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --script "0 150 40" --no-camera-collision --screenshot game-script-run.bmp)
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --set-variable Lobby_Dcam_Intro=1 --script "0 150 40" --no-camera-collision --screenshot game-script-run.bmp)
     set_tests_properties(game-script-run PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen"
       PASS_REGULAR_EXPRESSION "scripted: 40 updates, player moved 8\\.05[0-9]* units.*height 2\\.50[0-9]*.*saved game-script-run.bmp")
     add_test(NAME game-script-walk COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
-      --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --script "0 90 40" --no-camera-collision --screenshot game-script-walk.bmp)
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --set-variable Lobby_Dcam_Intro=1 --script "0 90 40" --no-camera-collision --screenshot game-script-walk.bmp)
     set_tests_properties(game-script-walk PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen"
       PASS_REGULAR_EXPRESSION "scripted: 40 updates, player moved 3\\.03[0-9]* units.*height 1\\.4[0-9]*.*saved game-script-walk.bmp")
     # In the police station lobby the record pose camera (docs/re/camera.md) is active, so the camera does not turn and
     # the run goes straight up the lobby steps: 8.05 units (replica output, not measured in the original).
     add_test(NAME game-script-camera COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
-      --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --script "0 150 40" --screenshot game-script-camera.bmp)
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --set-variable Lobby_Dcam_Intro=1 --script "0 150 40" --screenshot game-script-camera.bmp)
     set_tests_properties(game-script-camera PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen"
       PASS_REGULAR_EXPRESSION "scripted: 40 updates, player moved 8\\.05[0-9]* units.*height 2\\.50[0-9]*.*saved game-script-camera.bmp")
     # Run west off the 1.06 m platform at x 897 in the Cherry Tree Hills street: the heights are the recorded
@@ -750,7 +755,7 @@ if(BUILD_TESTING)
     # Police_ExtToInt (request at update 164: 123 updates after the director camera starts, as in the oracle trace of docs/re/dcam.md) and lands at Lobby_Dest_CherryTree_P1 (height 2.0901).
     add_test(NAME game-scene-change-exit COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
-      --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --set-variable Lobby_Dcam_Intro=1
       --level levels/levels/lvl_00_policestation/lvl_00_policestation_main.blvl
       --start "-1.97 1.436 14.843" --facing 0
       --script "0 -145 30;0 0 6;0 0 1 A;0 0 10" --screenshot game-scene-change-exit.bmp)
@@ -764,6 +769,24 @@ if(BUILD_TESTING)
       --script "0 0 10;0 145 16;0 0 14;0 0 1 A;0 0 150;0 0 1 A;0 0 6" --screenshot game-scene-change-entry.bmp)
     set_tests_properties(game-scene-change-entry PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen"
       PASS_REGULAR_EXPRESSION "scene change requested by SceneChange_Police_ExtToInt at update 164.*scene change to WorldLevel_00_PoliceStation after 196 updates.*facing 27729, .*height 2\\.0901")
+    # Getting into the police car of mission 1-1 starts 1-1_Release_Car_Script, whose director cameras hold the player's controls
+    # (docs/re/dcam.md, tools/oracle/dcam-hold-car.txt): in the oracle the hold lasts from the update after StartDCam to the update
+    # after the end test, 278 updates after Drive began. X at update 763 and 1022 does nothing, X at 1023 (278 updates after Drive
+    # began at 745) lets the player out.
+    set(DIRECTOR_HOLD_ARGS --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
+      --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes
+      --call-script 1-1_VanBreakdown --call-script 1-1_Get_Car --start "886.681 16.590 1112.930" --facing 16)
+    add_test(NAME game-director-hold COMMAND chase-game ${DIRECTOR_HOLD_ARGS}
+      --script "0 0 700;0 0 5;0 150 12;0 0 5;0 0 1 X;0 0 40;0 0 1 X;0 0 258;0 0 1 X;0 0 40")
+    set_tests_properties(game-director-hold PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
+      PASS_REGULAR_EXPRESSION "entered at update 745.*scripted: 1063 updates"
+      FAIL_REGULAR_EXPRESSION "exiting at update")
+    add_test(NAME game-director-release COMMAND chase-game ${DIRECTOR_HOLD_ARGS}
+      --script "0 0 700;0 0 5;0 150 12;0 0 5;0 0 1 X;0 0 40;0 0 1 X;0 0 259;0 0 1 X;0 0 30")
+    set_tests_properties(game-director-release PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
+      PASS_REGULAR_EXPRESSION "entered at update 745.*exiting at update 1023.*left at update 1046"
+      FAIL_REGULAR_EXPRESSION "exiting at update [0-9]{1,3}[^0-9]|exiting at update 10[01][0-9][^0-9]|exiting at update 102[0-2][^0-9]")
     # Standing jump in the Cherry Tree Hills street (B button for one update): the heights are the recorded rise
     # (tools/oracle/jump-ground.txt, jstand: 16.8593, 17.1297, 17.4068, 17.6840, ... to the apex 18.6815).
     add_test(NAME game-script-jump COMMAND chase-game

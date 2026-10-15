@@ -1,4 +1,5 @@
 #include "runtime/script_runner.hpp"
+#include "runtime/director_hold.hpp"
 #include "runtime/script_triggers.hpp"
 #include <algorithm>
 #include <cctype>
@@ -187,6 +188,9 @@ ScriptRunner::ScriptRunner(const Level& level, assets::PlacedObjectState& state)
                 return true;
             }
         return false;
+    });
+    ai_.setUpdateGate([this](const std::string& name) {
+        return characterControl(director_.holdsControl(), name == "player1", true, director_.objectActiveDuringDirector(name)) == CharacterControl::Ai;
     });
     for (const LevelParam& param : level.defaults) {
         if (param.type == 0) variables_[param.hash] = floatOf(param.value);

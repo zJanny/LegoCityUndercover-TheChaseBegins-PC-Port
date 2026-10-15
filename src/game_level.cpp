@@ -178,6 +178,13 @@ LevelSession::LevelSession(const Shared& sharedState)
                   << (saved.stateSaved ? "saved state of the level (StoryProgress " + std::to_string(saved.storyProgress) + ", " + std::to_string(saved.variables.size()) + " variables)" : std::string("no saved state of the level"))
                   << ", unlocked levels 0x" << std::hex << saved.levelUnlocked << std::dec << ", game complete " << saved.gameComplete << '\n';
     }
+    if (!shared.afterSwitch)
+        for (const auto& [name, value] : options.variables) {
+            const std::uint32_t hash = chase::assets::nameHash(name);
+            const bool known = std::any_of(level.defaults.begin(), level.defaults.end(), [&](const chase::assets::LevelParam& param) { return param.hash == hash; });
+            if (!known) throw std::runtime_error("--set-variable: no level variable named '" + name + "'");
+            levelScripts.setVariable(hash, value);
+        }
     runtime::SceneStartOptions startOptions;
     startOptions.dt = runtime::kStartupStepDt;
     startOptions.maxUpdates = runtime::kStartupMaxUpdates;

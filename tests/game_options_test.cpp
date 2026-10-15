@@ -81,6 +81,10 @@ void testValidValues() {
     if (steps.size() != 3 || steps[0].stickY != 150 || steps[0].updates != 40 || steps[1].buttons == 0 || steps[2].stickX != -156)
         fail("parseScript steps changed");
 
+    const game_options::Options variables = parseArgs({"--set-variable", "Lobby_Dcam_Intro=1", "--set-variable", "Other=-2.5"});
+    if (variables.variables.size() != 2 || variables.variables[0].first != "Lobby_Dcam_Intro" || variables.variables[0].second != 1.0f || variables.variables[1].second != -2.5f)
+        fail("valid --set-variable changed");
+
     const game_options::Options front = parseArgs({"--front-script", "until language 60; run 0.5; press A; shot x"});
     requireEqual(front.frontScript, "until language 60; run 0.5; press A; shot x", "valid --front-script text");
 }
@@ -105,6 +109,12 @@ void testRejections() {
     expectRejected({"--hide-room", "0"}, "--hide-room: out of range, allowed 1 to 99: '0'");
     expectRejected({"--hide-room", "Room4"}, "--hide-room: not a whole number: 'Room4'");
     expectRejected({"--facing", "90deg"}, "--facing: not a number: '90deg'");
+    expectRejected({"--set-variable", "Lobby_Dcam_Intro"}, "--set-variable: expected NAME=VALUE: 'Lobby_Dcam_Intro'");
+    expectRejected({"--set-variable", "=1"}, "--set-variable: expected a variable name before '=': '=1'");
+    expectRejected({"--set-variable", "a b=1"}, "--set-variable: expected a variable name before '=': 'a b=1'");
+    expectRejected({"--set-variable", "Lobby_Dcam_Intro=on"}, "--set-variable: not a number: 'on'");
+    expectRejected({"--set-variable", "Lobby_Dcam_Intro="}, "--set-variable: not a number: ''");
+    expectRejected({"--set-variable"}, "--set-variable: missing value: ''");
 
     expectRejected({"--window", "400"}, "--window: expected WIDTHxHEIGHT: '400'");
     expectRejected({"--window", "400x480 "}, "--window: not a whole number: '480 '");

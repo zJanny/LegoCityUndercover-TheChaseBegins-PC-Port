@@ -47,6 +47,10 @@ public:
     void setEndWait(float seconds) { endWait_ = seconds; }
     // 0x236104 without its cutscene part (0x2297b0, SCRIPT-29): a director camera has started and has not ended.
     bool busy() const { return active_; }
+    // The camera slot 0x37689c is the director camera: the character routine 0x1835d0 then runs 0x29bf30 (director_hold.hpp).
+    // The slot copies 0x376898 (written by the start and by the end test) once per update after the scripts and before the end
+    // test: the characters are held from the update after StartDCam to the update after the end test (oracle, docs/re/dcam.md).
+    bool holdsControl() const { return holding_; }
     // DCamActive 0x1a2e48: flag bit 1 of the object's component (what reads it is not recovered).
     void setObjectActiveDuringDirector(const std::string& object, bool active);
     bool objectActiveDuringDirector(const std::string& object) const;
@@ -80,6 +84,7 @@ private:
     void evaluate(const ObjectPoint& objectPoint, float eased);
 
     bool active_ = false;
+    bool holding_ = false;
     bool endRequested_ = false;
     bool doneFlag_ = false;
     Phase phase_ = Phase::Done;

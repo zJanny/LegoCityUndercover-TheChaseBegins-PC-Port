@@ -393,6 +393,7 @@ void AiCore::update(float dt) {
         for (NavWorld& world : *navigation_) world.now = navClock_;
     for (auto& [name, target] : characters_) {
         if (!target.position) continue;
+        if (updateGate_ && !updateGate_(name)) continue;
         if (target.state == AiState::GoToTarget && target.superJump) {
             moved_.push_back(name);
             advanceSuperJump(name, target, dt);

@@ -22,7 +22,7 @@ constexpr double kAnyRealLow = std::numeric_limits<double>::lowest(), kAnyRealHi
 
 const char* const kUsage = "usage: chase-game [--fib F] [--names CSV] [--config CFG] [--gameplay] "
                            "[--level levels/levels/<name>/<name>_main.blvl] [--screenshot OUT.bmp] [--frames N] "
-                           "[--script \"X Y COUNT [BUTTONS];...\"] [--save savegame.dat] [--save-out FILE] [--front-save savegame.dat] [--slot 0|1] [--start \"X Y Z\"] [--facing DEGREES] [--hide-room N] [--no-camera-collision] [--no-start-cutscenes] [--debug-overlay] [--sound-volume 0-10] [--music-volume 0-10] "
+                           "[--script \"X Y COUNT [BUTTONS];...\"] [--save savegame.dat] [--save-out FILE] [--front-save savegame.dat] [--slot 0|1] [--start \"X Y Z\"] [--facing DEGREES] [--hide-room N] [--no-camera-collision] [--no-start-cutscenes] [--set-variable NAME=VALUE] [--debug-overlay] [--sound-volume 0-10] [--music-volume 0-10] "
                            "[--front-script \"run 5; press A; until slot; ...\"] [--language 1-9] [--returning] [--window WIDTHxHEIGHT]";
 
 std::uint32_t buttonOf(char letter) {
@@ -61,6 +61,14 @@ void parseStart(Options& o, const std::string& text) {
     o.gameplay = true;
 }
 
+void parseVariable(Options& o, const std::string& text) {
+    const std::size_t separator = text.find('=');
+    if (separator == std::string::npos) strict::reject("expected NAME=VALUE", text);
+    const std::string name = text.substr(0, separator);
+    if (name.empty() || name.find_first_of(" \t") != std::string::npos) strict::reject("expected a variable name before '='", text);
+    o.variables.emplace_back(name, float(strict::real(text.substr(separator + 1), kAnyRealLow, kAnyRealHigh)));
+}
+
 bool applyOption(Options& o, const std::string& arg, const std::function<std::string()>& value) {
     if (arg == "--fib") o.fib = value();
     else if (arg == "--names") o.names = value();
@@ -84,6 +92,7 @@ bool applyOption(Options& o, const std::string& arg, const std::function<std::st
         o.gameplay = true;
     }
     else if (arg == "--call-script") o.callScripts.push_back(value());
+    else if (arg == "--set-variable") parseVariable(o, value());
     else if (arg == "--save") { o.saveFile = value(); o.gameplay = true; }
     else if (arg == "--save-out") o.saveOut = value();
     else if (arg == "--front-save") o.frontSave = value();

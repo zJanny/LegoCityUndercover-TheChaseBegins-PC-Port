@@ -193,6 +193,7 @@ bool DirectorCamera::routine(const ObjectPoint& objectPoint) {
 }
 
 void DirectorCamera::update(float dt, const ObjectPoint& objectPoint) {
+    holding_ = active_;
     clockMs_ += std::llround(double(dt) * 1000.0);
     if (active_ && (endRequested_ || doneFlag_)) {
         DirectorRequest request;

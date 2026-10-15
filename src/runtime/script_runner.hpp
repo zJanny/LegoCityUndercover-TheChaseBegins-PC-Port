@@ -181,7 +181,8 @@ public:
     // Waypoint class (waypoints.hpp): reaching an active waypoint starts the level script named by its TriggerScript.
     void loadWaypoints(const assets::ClassLookup& classOf) { waypoints_.load(level_, classOf); }
     std::vector<std::string> updateWaypoints(float dt, const float player[3], bool playerInVehicle);
-    bool playerControlTaken() const { return waypoints_.playerControlTaken(); }
+    // A waypoint script that took the controls, or the player held by an active director camera (director_hold.hpp).
+    bool playerControlTaken() const { return waypoints_.playerControlTaken() || director_.holdsControl(); }
     const WaypointSet& waypoints() const { return waypoints_; }
     // Vehicle records and the flag natives (vehicle.hpp); load before the startup script runs.
     void loadVehicles(const assets::ClassLookup& classOf, const std::vector<VehicleTableRow>& table) { vehicles_.load(level_, classOf, table); }

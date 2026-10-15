@@ -57,6 +57,7 @@ What is not like the original yet:
 - The speeds, the walk, run and sprint change, and the turning follow the original game.
 - The camera follows behind the character, as in the original.
 - In some places the camera is fixed, as in the original: the police station and every area the level marks with a fixed camera. There it does not turn when you press the camera buttons, and a crossed-out camera picture shows at the bottom left of the top screen. Details such as the smooth change between fixed cameras are not done yet.
+- While a script runs a camera sequence (a camera that flies along a path), the character cannot be controlled: the stick and the buttons do nothing, and other characters stop too unless the script keeps them running. When the sequence ends you can move again at once. In mission 1-1 this is why X does not let you out of the police car for the first 9 seconds. Other effects of the sequence (hidden display, stopped clocks) are not done yet.
 - The camera keeps out of the level's walls. Near a wall it moves closer to the character and slides to the side, as measured in the original.
 - The floor and walls come from the level. The character climbs steps and kerbs, and slides along walls.
 - Many objects of the level block the character and the camera like the original: lamp posts, traffic lights, benches, bins, crates, barriers, doors and signs. The character is stopped by them and slides along them.

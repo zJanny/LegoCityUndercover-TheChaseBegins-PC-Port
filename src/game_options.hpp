@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace game_options {
@@ -17,6 +18,7 @@ struct Options {
     unsigned frames = 2;
     std::string script;
     std::vector<std::string> callScripts;
+    std::vector<std::pair<std::string, float>> variables;
     std::string saveFile;
     std::string saveOut;
     std::string frontSave;
