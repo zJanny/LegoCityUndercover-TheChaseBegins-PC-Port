@@ -88,6 +88,12 @@ public:
     // `clearance` is the pull-in factor S+4 and `springHold` the vertical push timer S+0x24 of the recorded state.
     void restore(const float wantedEye[3], const float trackedEye[3], const float trackedLook[3],
                  const float target[3], float facing, float clearance = 1.0f, float springHold = 0.0f);
+    // SnapCamera 0x1a30fc: the reset 0x2313c8 with argument 0, which tests each candidate with the ray test 0x21ab20 and pulls the
+    // camera in with 0x23b92c. Seeds the camera behind the player's facing like `takeOver`, without the near rule.
+    void snap(const float target[3], float facing);
+    // K+0x178 reads 360 after any reset and 0 from the start of the release director camera on (oracle memtrace, writer not found,
+    // STAND-IN CAMERA-S30: the port clears it when a director camera starts). With 0, argument 360 takes the ray test branch.
+    void clearStoredHeading();
     float clearance() const { return clearance_; }
 
     const float* eye() const { return position_; }
@@ -109,6 +115,9 @@ private:
     };
     Layout layout() const;
     void refreshPose();
+    // The candidate loop of 0x2313c8 for the look point `b_` (A := B + candidate offset, then the line test 0x22b108 or the ray test
+    // 0x21ab20 with the pull-in 0x23b92c); `lineTest` is the branch of argument 360 with the stored heading K+0x178 = 360.
+    void placeCandidates(const Layout& layout, float facing, bool lineTest);
     float automaticTurn(const FollowCameraInput& input) const;
     void clampPitch(const FollowCameraInput& input, float poseScale);
     void avoidObstacles(const FollowCameraInput& input, const Layout& layout, bool moving, float push[3], const float swing[3]);
@@ -123,6 +132,7 @@ private:
     float springHold_ = 0.0f;    // S+0x24: after a vertical push the height spring is off until it runs out
     float sideHold_ = 0.0f;      // S+0x1c: after a side push the automatic turn is off (factor 0.4 - this) until it runs out
     float modelHalfHeight_ = 0.0f;
+    unsigned storedHeading_ = 0;  // K+0x178: 360 after any reset
     float previousLook_[3] = {}; // K+0x70: the look point of the previous update
     // A: wanted camera position (K+4) and its tracker (K+0x34); B: wanted look point (K+0x64) and tracker
     // (K+0x94); C: look point offset (K+0xc4) and tracker (K+0xf4).

@@ -123,7 +123,7 @@ void CameraRig::setDirector(const RecordPose& pose, std::vector<DirectorRequest>
     directorRequests_ = std::move(requests);
 }
 
-void CameraRig::snapFollow(const float target[3], float facing) { follow_.reset(target, poseYaw(output_), facing); }
+void CameraRig::snapFollow(const float target[3], float facing) { follow_.snap(target, facing); }
 
 void CameraRig::update(const FollowCameraInput& input) {
     selector_.update(input.target);
@@ -137,6 +137,7 @@ void CameraRig::update(const FollowCameraInput& input) {
         const float rate = request.instant || request.fadeSeconds <= 0.0f ? 0.0f : 1.0f / request.fadeSeconds;
         if (request.kind == DirectorRequest::Kind::Start) {
             entry.kind = Entry::Kind::Director;
+            follow_.clearStoredHeading();
         } else if (selector_.command() == CameraCommand::RecordPose) {
             entry.kind = Entry::Kind::Record;
             entry.set = selector_.blend();

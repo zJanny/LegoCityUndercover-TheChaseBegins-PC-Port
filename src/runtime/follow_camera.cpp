@@ -1,6 +1,9 @@
 #include "runtime/follow_camera.hpp"
+#include "runtime/camera_reset_probe.hpp"
 #include <algorithm>
 #include <cmath>
+#include <array>
+#include <optional>
 
 namespace chase::runtime {
 
@@ -9,6 +12,10 @@ constexpr float kVehicleExtraDistance = 10.0f;  // in+0xfc written by 0x32f334
 constexpr float kVehicleExtraHeight = 2.5f;     // in+0x100
 constexpr float kSideHoldSeconds = 0.5f;
 constexpr std::uint8_t kVehicleObjectType = 183;
+constexpr unsigned kResetHeading = 360;
+constexpr unsigned kCandidateDegrees[8] = {180, 0, 90, 270, 45, 135, 225, 315};  // table at 0x359780
+constexpr float kPullInMargin = 0.25f;     // in+0x8c, the ground offset of the preset block (+0x18)
+constexpr float kNearestHitMinimum = 0.1f;  // literal 0x3dcccccd in 0x2313c8
 // 0x257ea0: unit vector, (0, 0, 1) for a vector of length 1.2e-7 or less.
 void unitVector(const float v[3], float out[3]) {
     const float length = std::sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
@@ -97,6 +104,7 @@ FollowCamera::Layout FollowCamera::layout() const {
 }
 
 void FollowCamera::reset(const float target[3], float yaw, float facing) {
+    storedHeading_ = kResetHeading;
     clearance_ = 1.0f;
     springHold_ = 0.0f;
     sideHold_ = 0.0f;
@@ -117,6 +125,33 @@ void FollowCamera::reset(const float target[3], float yaw, float facing) {
     refreshPose();
 }
 
+void FollowCamera::placeCandidates(const Layout& l, float facing, bool lineTest) {
+    const unsigned heading = lineTest ? kResetHeading : 0;
+    std::optional<CameraResetProbe> probe;
+    if (world_ && !world_->empty()) probe.emplace(*world_, excludedOwner_);
+    const float sine = std::sin(facing), cosine = std::cos(facing);
+    for (int index = 0; index < 8; ++index) {
+        const float angle = (float(kCandidateDegrees[index]) + float(heading)) * 3.1415927f * 0.0055555557f;
+        const float x = std::sin(angle) * l.distance, z = std::cos(angle) * l.distance;
+        a_[0] = b_[0] + (x * cosine + z * sine);
+        a_[1] = b_[1] + l.height;
+        a_[2] = b_[2] + (-x * sine + z * cosine);
+        if (!probe) return;
+        if (lineTest) {
+            if (!probe->segmentBlocked(b_, a_)) return;
+            continue;
+        }
+        const std::optional<std::array<float, 3>> hit = probe->nearestHit(b_, a_);
+        if (!hit) return;
+        const float toHit[3] = {(*hit)[0] - b_[0], (*hit)[1] - b_[1], (*hit)[2] - b_[2]};
+        const float length = std::sqrt(toHit[0] * toHit[0] + toHit[1] * toHit[1] + toHit[2] * toHit[2]);
+        if (kNearestHitMinimum > length) continue;
+        const float ratio = (length - kPullInMargin) / length;
+        for (int i = 0; i < 3; ++i) a_[i] = b_[i] + toHit[i] * ratio;
+        return;
+    }
+}
+
 bool FollowCamera::takeOver(const float target[3], float facing, const float currentEye[3], bool previousIsRecordPose) {
     const Layout l = layout();
     clearance_ = 1.0f;
@@ -125,9 +160,8 @@ bool FollowCamera::takeOver(const float target[3], float facing, const float cur
     c_[0] = std::sin(facing) * l.lookAhead;
     c_[1] = l.lookUp;
     c_[2] = std::cos(facing) * l.lookAhead;
-    a_[0] = b_[0] - std::sin(facing) * l.distance;
-    a_[1] = b_[1] + l.height;
-    a_[2] = b_[2] - std::cos(facing) * l.distance;
+    placeCandidates(l, facing, storedHeading_ == kResetHeading);
+    storedHeading_ = kResetHeading;
     const float dx = b_[0] - currentEye[0], dy = b_[1] - currentEye[1], dz = b_[2] - currentEye[2];
     const bool nearCamera = previousIsRecordPose && std::sqrt(dx * dx + dy * dy + dz * dz) < 2.0f * preset_.distance[1];
     if (nearCamera)
@@ -139,6 +173,26 @@ bool FollowCamera::takeOver(const float target[3], float facing, const float cur
     }
     refreshPose();
     return nearCamera;
+}
+
+void FollowCamera::clearStoredHeading() { storedHeading_ = 0; }
+
+void FollowCamera::snap(const float target[3], float facing) {
+    const Layout l = layout();
+    clearance_ = 1.0f;
+    for (int i = 0; i < 3; ++i) b_[i] = target[i];
+    b_[1] += l.bodyUp;
+    c_[0] = std::sin(facing) * l.lookAhead;
+    c_[1] = l.lookUp;
+    c_[2] = std::cos(facing) * l.lookAhead;
+    placeCandidates(l, facing, false);
+    storedHeading_ = kResetHeading;
+    for (int i = 0; i < 3; ++i) {
+        aTracked_[i] = a_[i];
+        bTracked_[i] = b_[i];
+        cTracked_[i] = c_[i];
+    }
+    refreshPose();
 }
 
 void FollowCamera::restore(const float wantedEye[3], const float trackedEye[3], const float trackedLook[3],
