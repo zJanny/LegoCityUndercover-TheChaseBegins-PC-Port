@@ -103,6 +103,23 @@ class MergeAgentTest(unittest.TestCase):
         merge_agent.keep_both_sides(archive)
         self.assertEqual(archive.read_text(), "# Archive\n\n- old\n- from main\n- from branch\n- old\n")
 
+    def test_readme_conflict_inside_progress_section_keeps_main(self) -> None:
+        sys.path.insert(0, str(SCRIPT.parent))
+        import merge_agent
+
+        text = ("# T\n\ncmake RelWithDebInfo\n<!-- progress:start -->\n<<<<<<< HEAD\n| 5 tests |\n=======\n| 4 tests |\n"
+                ">>>>>>> agent\n<!-- progress:end -->\n")
+        self.assertEqual(merge_agent.resolve_progress_conflicts(text),
+                         "# T\n\ncmake RelWithDebInfo\n<!-- progress:start -->\n| 5 tests |\n<!-- progress:end -->\n")
+
+    def test_readme_conflict_outside_progress_section_is_not_resolved(self) -> None:
+        sys.path.insert(0, str(SCRIPT.parent))
+        import merge_agent
+
+        text = ("# T\n\n<<<<<<< HEAD\ncmake RelWithDebInfo\n=======\ncmake Debug\n>>>>>>> agent\n<!-- progress:start -->\n"
+                "| 5 tests |\n<!-- progress:end -->\n")
+        self.assertIsNone(merge_agent.resolve_progress_conflicts(text))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -5,8 +5,9 @@
   merge_agent.py check                   run the checks on the staged merge (after resolving conflicts or review edits)
   merge_agent.py finish BRANCH -m FILE   run the checks, commit with the message in FILE, remove the worktree and branch
 
-Conflicts in the generated files (README progress section, docs/progress-trend.svg) are regenerated; conflicts in a session
-log archive keep the lines of both sides (check_doc_links.py --fix then drops duplicates). Other conflicts stop the merge.
+Conflicts inside the README progress section and in docs/progress-trend.svg are regenerated; a README conflict outside that
+section stops the merge like any other. Conflicts in a session log archive keep the lines of both sides (check_doc_links.py
+--fix then drops duplicates). Other conflicts stop the merge.
 
 Checks: no game-derived or binary files staged, doc fixes (check_doc_links.py --fix, restaged), doc links, README progress section regenerated,
 warning-free build, ctest, Python tests. Pushing stays a separate, explicitly authorized step.
@@ -24,6 +25,8 @@ FORBIDDEN = re.compile(
     re.IGNORECASE,
 )
 GENERATED_FILES = ["README.md", "docs/progress-trend.svg"]
+PROGRESS_START = "<!-- progress:start -->"
+PROGRESS_END = "<!-- progress:end -->"
 ARCHIVE_SUFFIX = "-archive.md"
 CONFLICT_MARKER = re.compile(r"^(<<<<<<< |=======$|>>>>>>> )")
 
@@ -35,6 +38,47 @@ class MergeError(Exception):
 def keep_both_sides(path: Path) -> None:
     lines = path.read_text(encoding="utf-8").split("\n")
     path.write_text("\n".join(line for line in lines if not CONFLICT_MARKER.match(line)), encoding="utf-8")
+
+
+def resolve_progress_conflicts(text: str) -> str | None:
+    lines = text.split("\n")
+    out: list[str] = []
+    inside = False
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        if line.startswith("<<<<<<< "):
+            middle = next(n for n in range(i + 1, len(lines)) if lines[n] == "=======")
+            end = next(n for n in range(middle + 1, len(lines)) if lines[n].startswith(">>>>>>> "))
+            hunk = lines[i + 1:end]
+            if not inside or any(PROGRESS_START in l or PROGRESS_END in l for l in hunk):
+                return None
+            out.extend(lines[i + 1:middle])
+            i = end + 1
+            continue
+        if PROGRESS_START in line:
+            inside = True
+        elif PROGRESS_END in line:
+            inside = False
+        out.append(line)
+        i += 1
+    return "\n".join(out)
+
+
+def resolve_generated(root: Path, unmerged: list[str]) -> list[str]:
+    remaining = list(unmerged)
+    if "README.md" in remaining:
+        resolved = resolve_progress_conflicts((root / "README.md").read_text(encoding="utf-8"))
+        if resolved is None:
+            return remaining
+        (root / "README.md").write_text(resolved, encoding="utf-8")
+        remaining.remove("README.md")
+    if "docs/progress-trend.svg" in remaining:
+        run(["git", "checkout", "--ours", "--", "docs/progress-trend.svg"], root)
+        remaining.remove("docs/progress-trend.svg")
+    run(["python3", "tools/progress_report.py", "--update-readme", "README.md"], root)
+    run(["git", "add", *GENERATED_FILES], root)
+    return remaining
 
 
 def run(cmd: list[str], cwd: Path, check: bool = True, capture: bool = False) -> subprocess.CompletedProcess:
@@ -134,12 +178,8 @@ def prepare(root: Path, branch: str) -> None:
     result = run(["git", "merge", "--squash", branch], root, check=False, capture=True)
     if result.returncode != 0:
         unmerged = git(root, "diff", "--name-only", "--diff-filter=U").split()
-        generated = [path for path in GENERATED_FILES if path in unmerged]
-        if generated:
-            run(["git", "checkout", "--theirs", "--", *generated], root)
-            run(["python3", "tools/progress_report.py", "--update-readme", "README.md"], root)
-            run(["git", "add", *GENERATED_FILES], root)
-            unmerged = [path for path in unmerged if path not in generated]
+        if any(path in unmerged for path in GENERATED_FILES):
+            unmerged = resolve_generated(root, unmerged)
         for path in [path for path in unmerged if path.endswith(ARCHIVE_SUFFIX)]:
             keep_both_sides(root / path)
             run(["git", "add", path], root)
