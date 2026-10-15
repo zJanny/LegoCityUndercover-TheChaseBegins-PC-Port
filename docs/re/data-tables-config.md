@@ -113,3 +113,18 @@ Corrected by [data-tables-config.md §2026-10-13T14:41](#ts-20261013-144113): ty
 
 - **[Corrects data-tables-config.md §2026-10-13T09:32](#ts-20261013-0932):** Type bit 0x100 does have a reader: 0x2821f8, called from the pose step 0x181fe0, tests `[record+0x44] & 0x100` and `& 0x200` (the record pointer is passed as an argument, which the earlier `ldrh` scan could not match). Without these bits its shift decays to zero.
 - **[Corrects data-tables-config.md §2026-10-13T09:28](#ts-20261013-0928):** the record pose blend 0x298cd8 is not the only per-frame camera. With exactly one active Room record and DAT_003770c8 == 0 (0x19b8c8), the follow controller 0x2a8bfc is used instead; that is the street at gameplay-start. Details and unknowns in [camera.md](camera.md).
+
+<a id="ts-20261015-120948"></a>
+
+## 2026-10-15T12:09:48+02:00 — Pregen, script-list and options files: where the code uses their paths
+
+Tools: Python scans of `artifacts/game/game.arm.elf` (VA = file offset + 0xFF000 in both loaded segments) for ARM `add`/`sub rd, pc, #imm` and `ldr rd, [pc, #imm]` that produce a string address; `llvm-objdump --triple=armv6k-none-eabi --mattr=+vfp2`. No REA session.
+
+- Strings (VA): `ScriptFns` 0x15c0d8, `scriptfns.txt` 0x15c118, `gescriptfns.txt` 0x15c128, `pregen/Collectables_Level%u.bin` 0x23b598, `pregen/levelobjectscount.bin` 0x2e6208, `pregen/CustomChar.bin` 0x1b7737, `Pregen/Traffic/%s_Traffic.bin` 0x2e0567, `Pregen/Pedestrians/%s_Pedestrians.bin` 0x2eeaa7, `TouchGestures/%s.dat` 0x316d2c.
+- No 32-bit literal word holds any of these addresses; the code builds them with `add rd, pc, #imm`: `ScriptFns` at 0x15bf88, `scriptfns.txt` at 0x15bfe8 and 0x15c004, `gescriptfns.txt` at 0x15c028 and 0x15c044, the collectables path at 0x23b4f0, the levelobjectscount path at 0x2e6164. The functions around these sites were not read.
+- `options.txt` and `options3ds.txt`: no such string in the executable (case-insensitive search).
+
+Unknowns:
+- What the code at the sites above does with each file: the field layout of `collectables_level*.bin` and `levelobjectscount.bin`, and whether the script-list reader tolerates scriptfns line 843 (missing `)`) and gescriptfns line 264 (extra `)`); the strict parser is unchanged.
+- The users of the CustomChar, Traffic, Pedestrians and TouchGestures paths (no `add`-from-pc hit; other forms not scanned).
+- Whether the game reads `options.txt` / `options3ds.txt` under another name.
