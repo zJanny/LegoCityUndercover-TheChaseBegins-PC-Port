@@ -28,6 +28,7 @@
 #include "runtime/room_streamer.hpp"
 #include "runtime/scene_change.hpp"
 #include "runtime/scene_start.hpp"
+#include "runtime/frame_pacer.hpp"
 #include "runtime/scheduler.hpp"
 #include "runtime/vehicle_camera.hpp"
 #include "runtime/script_runner.hpp"
@@ -91,6 +92,7 @@ public:
     chase::runtime::DebugGameValues debugValues() const;
     void releaseOverlays();
     unsigned updateCount() const { return updates; }
+    bool frameDue() const { return !script.empty() || pacer.due(now()); }
     std::optional<chase::runtime::SceneChangeDestination> switchTo;
 
 private:
@@ -191,6 +193,7 @@ private:
     chase::runtime::PadDevice pad;
     std::uint64_t counterFrequency = 0, counterOrigin = 0;
     std::optional<chase::runtime::Scheduler> scheduler;
+    chase::runtime::FramePacer pacer;
     std::vector<game_options::ScriptStep> script;
     unsigned scriptLength = 0;
     unsigned updates = 0, updatesThisSecond = 0, updatesLastSecond = 0;

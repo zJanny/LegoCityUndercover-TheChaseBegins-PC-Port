@@ -267,3 +267,14 @@ Unknowns:
 
 Unknowns:
 - How the original paces gameplay to 1/30 s (the minimum frame interval 0x529de8 of the present function and its writers, EXEC-1, EXEC-3).
+
+<a id="ts-20261015-174400"></a>
+
+## 2026-10-15T17:44:00+02:00 — Gameplay pacing: 30 updates per second, why the port skipped vehicle steps (EXEC-5)
+
+- Confirmed in a model (`tests/frame_pacer_test.cpp`, CTest `frame-pacer`): the scheduler replica called once per 60 Hz frame (50 ticks) gives 34 updates of 334 without a vehicle world step (`vehicleWorldSteps` with dt 0.03). This is the cause of [§2026-10-15T17:36](#ts-20261015-173641); not seen on screen while driving.
+- Original (read from [§2026-10-13T09:41](#ts-20261013-094132), [§2026-10-13T10:35](#ts-20261013-103531)): the present waits until the timer 0x529e30 (60 units/s, 50 clock ticks per unit) advanced by word 0x529de8 since the last present; the scheduler 0x100f44 then sees the exact elapsed ticks. With interval 2 each update gets 100 ticks and dt 100/3000 s, matching the driven police car ([oracle-rpc.md §2026-10-15T16:17](oracle-rpc.md#ts-20261015-161706)).
+- Port: `FramePacer` (`src/runtime/frame_pacer.hpp`) presents on a fixed schedule of 2 units, feeds the scheduler a virtual clock that advances 100 ticks per present, and skips loop iterations until due (25-tick slack so a vsync swap lands on the right vblank). Scripted runs bypass it. In Xvfb (software render) a gameplay run showed dt 0.0333333 and 27 to 32 updates/s (render bound); not measured on a real display.
+
+Unknowns:
+- Which states of the original use interval 1 or 2 (EXEC-1, EXEC-10); real-display vsync behaviour of the schedule.

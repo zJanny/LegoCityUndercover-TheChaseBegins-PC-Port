@@ -51,6 +51,7 @@ What is not like the original yet:
 - The character runs when you push the keys. After about one second of running, the character sprints.
 - The keys come from `config/controls.cfg`. See [Controls](controls.md).
 - F3 shows or hides the [debug overlay](debug-overlay.md) (frame rate, memory, CPU and a few level values). It is off by default.
+- In a level the game updates 30 times per second, every 1/30 s, like the original in the driven police car. Other screens still follow the display rate.
 
 ## What works
 

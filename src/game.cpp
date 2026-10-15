@@ -162,8 +162,12 @@ int run(const Options& given) {
         bool running = true;
         Uint32 secondStart = SDL_GetTicks();
         while (running) {
-            debugMetrics.frame();
             pollEvents(input, running);
+            if (!session.frameDue()) {
+                SDL_Delay(1);
+                continue;
+            }
+            debugMetrics.frame();
             session.advance(padState(input));
 
             SDL_GL_GetDrawableSize(window, &width, &height);

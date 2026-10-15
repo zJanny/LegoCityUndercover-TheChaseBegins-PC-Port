@@ -16,15 +16,16 @@ S1 DONE, S3 IN_PROGRESS (the game frame function is still open). Updated 2026-10
 
 ## 4. Stand-ins
 
-- EXEC-S1 `chase-game` runs the scheduler replica on SDL timing; the original's frame rate in gameplay (30 or 60) is not decided.
+- EXEC-S1 `chase-game` runs the scheduler replica on SDL timing outside level sessions; level sessions use the pacer of EXEC-S10.
+- EXEC-S10 Level sessions present every second 60 Hz unit (30 updates/s, clock +100 ticks per update) for all gameplay; the original's measured case is the driven police car only. The virtual clock stands in for the vblank counters and SDL timing with a 25-tick slack stands in for the vblank wait (`src/runtime/frame_pacer.hpp`). needs: EXEC-10. evidence: [arm-executable.md §2026-10-15T17:44](../../re/arm-executable.md#ts-20261015-174400)
 
 ## 5. Open items
 
-- [ ] EXEC-1 — Which writer of 0x529de8 applies when. evidence: [arm-executable.md §2026-10-13T09:41](../../re/arm-executable.md#ts-20261013-094132).
+- [ ] EXEC-1 — Which writer of 0x529de8 applies when. blocks: EXEC-10. evidence: [arm-executable.md §2026-10-13T09:41](../../re/arm-executable.md#ts-20261013-094132).
 - [ ] EXEC-2 — Whether C+0x10/+0x14 and the cap change in other states (gameplay, cutscenes); only one state was measured; who writes C+0x10..+0x1c (not found statically). evidence: [arm-executable.md §2026-10-13T10:35](../../re/arm-executable.md#ts-20261013-103531).
-- [ ] EXEC-3 — Which screen produced 3 vblanks per update and the update rate during gameplay (30/60 fps undecided). blocks: EXEC-5. evidence: [arm-executable.md §2026-10-13T09:38](../../re/arm-executable.md#ts-20261013-093842).
+- [ ] EXEC-3 — Which screen produced 3 vblanks per update and the update rate during gameplay (30/60 fps undecided). evidence: [arm-executable.md §2026-10-13T09:38](../../re/arm-executable.md#ts-20261013-093842). Narrowed: the driven police car runs 30 updates/s, 100 ticks each.
 - [ ] EXEC-4 — The game frame function and the rest of the main loop (S3 remains IN_PROGRESS). evidence: [arm-executable.md §2026-10-13T10:45](../../re/arm-executable.md#ts-20261013-1045).
-- [ ] EXEC-5 — (User report 2026-10-15) While driving, the camera skips back and forth: chase-game runs updates of dt 0.03 on an irregular frame pattern, so the vehicle's 1/30 s world step skips about one update in ten; the original updates every 1/30 s in gameplay. Pace gameplay updates like the original. needs: EXEC-3. evidence: [arm-executable.md §2026-10-15T17:36](../../re/arm-executable.md#ts-20261015-173641)
+- [ ] EXEC-10 — Which states of the original use present interval 2 (30 updates/s) and which 1; the port assumes 2 in every level session. blocks: EXEC-S10. needs: EXEC-1. evidence: [arm-executable.md §2026-10-15T17:44](../../re/arm-executable.md#ts-20261015-174400)
 
 ## 6. Findings summary
 

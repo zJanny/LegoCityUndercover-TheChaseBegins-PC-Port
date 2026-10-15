@@ -17,7 +17,7 @@ constexpr float kScriptDt = 0.033f;
 }
 
 void LevelSession::advance(const runtime::PadState& liveInput) {
-    if (script.empty()) scheduler->advance(now(), [&](float dt) { simulate(dt, liveInput); });
+    if (script.empty()) scheduler->advance(pacer.present(now()), [&](float dt) { simulate(dt, liveInput); });
     else if (updates + shared.scriptOffset < scriptLength) {
         applyScriptTeleports(updates + shared.scriptOffset);
         simulate(kScriptDt, scriptedPad(updates + shared.scriptOffset));

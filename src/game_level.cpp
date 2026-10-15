@@ -286,7 +286,7 @@ LevelSession::LevelSession(const Shared& sharedState)
 
     counterFrequency = SDL_GetPerformanceFrequency();
     counterOrigin = SDL_GetPerformanceCounter();
-    scheduler.emplace(runtime::StepConfig{}, now());
+    scheduler.emplace(runtime::StepConfig{}, pacer.clock());
 
     if (!options.script.empty()) {
         if (!player) throw std::runtime_error("--script needs a level with a player start");
