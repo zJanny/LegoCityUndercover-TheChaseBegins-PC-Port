@@ -16,6 +16,7 @@ Read this index, then open only the file you need.
 | [models.md](models.md) | `.bfnmdl`, vertex layout, materials, shaders, UV scales, lightmaps (collision section: see collision.md) |
 | [materials.md](materials.md) | Material record fields, the texture-environment stage generator 0x12e460, blend/alpha test/depth/cull, material census, lighting measurements |
 | [rendering-fog.md](rendering-fog.md) | Fog: level parameters (`FogStart`, `FogEnd`, `FogColour`), the per-draw rule, the 128-entry PICA fog table and how it is built, room pop-in |
+| [rendering-sky.md](rendering-sky.md) | Sky models: the sky pass 0x180fac (camera orientation, eye at (0, lift, 0)), draw order, depth, the Sea lift |
 | [levels.md](levels.md) | `.blvl`, placements, Euler order, nav grids (`.bfnnav`) |
 | [level-transitions.md](level-transitions.md) | Details moved out of the level-transition feature items (natives without handler, loading page code) |
 | [objects.md](objects.md) | Level objects: classes, class files (+0x10/+0x14), parameter slots, how the model is found, drawn classes |

@@ -8,6 +8,7 @@
 #include "runtime/follow_camera.hpp"
 #include "runtime/nav_load.hpp"
 #include "runtime/object_visibility.hpp"
+#include "runtime/sky.hpp"
 #include <SDL.h>
 #include <algorithm>
 #include <cmath>
@@ -31,7 +32,7 @@ constexpr const char* kSystemTextFile = "localisation/systemtext_uk.loc";
 constexpr std::uint32_t kContinueTextKey = 0xe3f70996;  // systemtext "Continue": inferred from the loading page text, key not read in the code (TRANS-S3)
 
 std::unique_ptr<Scene> makeScene(FuseArchive& archive, const std::string& levelPath) {
-    auto scene = std::make_unique<Scene>(archive, std::vector<std::string>{"sky"});
+    auto scene = std::make_unique<Scene>(archive, std::vector<std::string>{});
     for (const auto& model : levelModels(archive, levelPath, ""))
         if (!scene->addModel(model)) throw std::runtime_error("not in archive: " + model);
     return scene;
@@ -119,9 +120,18 @@ LevelSession::LevelSession(const Shared& sharedState)
     FuseArchive& archive = shared.archive;
     std::size_t placed = 0, unresolved = 0;
     std::map<std::string, std::pair<std::size_t, Mat4>> placedInstances;
+    if (const auto sea = chase::assets::objectStart(level, "Sea")) seaHeight = sea->position[1];
     for (const auto& placement : drawable.objects) {
         const std::size_t instanceIndex = scene.instances();
         const Mat4 matrix = placementMatrix(placement);
+        if (placement.className == runtime::kSkyClass) {
+            // STAND-IN RENDER-S51: the original's choice among several sky objects (lvl_06 places two) is not read; the first is used.
+            if (!skyInstance && scene.addModel(meshModelPath(placement.mesh), identity())) {
+                skyInstance = instanceIndex;
+                scene.setInstanceSky(instanceIndex);
+            }
+            continue;
+        }
         if (scene.addModel(meshModelPath(placement.mesh), matrix)) {
             ++placed;
             placedInstances[placement.instance] = {instanceIndex, matrix};
@@ -317,6 +327,16 @@ void LevelSession::draw(int width, int height) {
     for (std::size_t i = 0; i < waypointObjects.size(); ++i)
         scene.setInstanceVisible(waypointSceneIndex[i], objectives.waypointActive(game_doors::lowerCase(waypointObjects[i].instance)) &&
                                                             roomShown(runtime::roomNumber(waypointObjects[i].room)));
+    if (skyInstance) {
+        const float lift = player && seaHeight ? runtime::skyLift(player->vertical.y, *seaHeight) : 0.0f;
+        const Mat4 cameraToWorld = chase::render::rigidInverse(viewMatrix);
+        const float skyEye[3] = {cameraToWorld[12], cameraToWorld[13], cameraToWorld[14]};
+        const auto offset = runtime::skyTranslation(skyEye, lift);
+        Mat4 skyModel = identity();
+        std::copy(offset.begin(), offset.end(), skyModel.begin() + 12);
+        scene.setTransform(*skyInstance, skyModel);
+        scene.drawSky(mvp);
+    }
     scene.draw(mvp);
     std::vector<StudSprite> sprites;
     for (const runtime::Stud& stud : studs.studs())

@@ -177,6 +177,8 @@ public:
     std::size_t skinnedParts(const std::string& path) const;
     void bounds(float centre[3], float& radius) const;
     void draw(const Mat4& viewProjection) const;
+    void drawSky(const Mat4& viewProjection) const;
+    void setInstanceSky(std::size_t instance) { instances_.at(instance).sky = true; }
     std::size_t triangles() const;
     void setTransform(std::size_t instance, const Mat4& transform) { instances_.at(instance).transform = transform; }
     void setInstanceVisible(std::size_t instance, bool visible) { instances_.at(instance).visible = visible; }
@@ -214,10 +216,12 @@ private:
         const LoadedModel* model;
         Mat4 transform;
         bool visible = true;
+        bool sky = false;
     };
+    void drawInstances(const Mat4& viewProjection, bool skyPass) const;
     const TextureInfo& texture(const std::string& name, const std::string& modelDir);
     DrawPart upload(const ModelPart& part, LoadedModel& model);
-    void drawPart(GLuint program, const DrawPart& part, bool culling) const;
+    void drawPart(GLuint program, const DrawPart& part, bool culling, bool skyPass) const;
 
     FuseArchive& archive_;
     std::vector<std::string> exclude_;
@@ -316,7 +320,7 @@ std::size_t SceneImpl::skinnedParts(const std::string& path) const {
 void SceneImpl::bounds(float centre[3], float& radius) const {
     float lo[3] = {1e30f, 1e30f, 1e30f}, hi[3] = {-1e30f, -1e30f, -1e30f};
     for (const auto& instance : instances_) {
-        if (instance.model->parts.empty()) continue;
+        if (instance.model->parts.empty() || instance.sky) continue;
         for (int corner = 0; corner < 8; ++corner) {
             float p[3];
             for (int i = 0; i < 3; ++i) p[i] = (corner >> i & 1) ? instance.model->hi[i] : instance.model->lo[i];
@@ -335,7 +339,7 @@ void SceneImpl::bounds(float centre[3], float& radius) const {
     }
 }
 
-void SceneImpl::drawPart(GLuint program, const DrawPart& part, bool culling) const {
+void SceneImpl::drawPart(GLuint program, const DrawPart& part, bool culling, bool skyPass) const {
     const MaterialState& m = part.material;
     glUniform1i(glGetUniformLocation(program, "stageCount"), part.hasMaterial ? GLint(m.stages.size()) : 0);
     glUniform1i(glGetUniformLocation(program, "hasNormal"), part.hasNormal);
@@ -375,7 +379,8 @@ void SceneImpl::drawPart(GLuint program, const DrawPart& part, bool culling) con
         } else {
             glDepthFunc(GL_ALWAYS);
         }
-        glDepthMask(m.depthWrite ? GL_TRUE : GL_FALSE);
+        if (skyPass) glDepthFunc(GL_ALWAYS);
+        glDepthMask(m.depthWrite && !skyPass ? GL_TRUE : GL_FALSE);
         if (culling) {
             if (m.cullMode == 0) {
                 glDisable(GL_CULL_FACE);
@@ -395,7 +400,11 @@ void SceneImpl::drawPart(GLuint program, const DrawPart& part, bool culling) con
     glDrawElements(GL_TRIANGLES, part.count, GL_UNSIGNED_SHORT, nullptr);
 }
 
-void SceneImpl::draw(const Mat4& viewProjection) const {
+void SceneImpl::draw(const Mat4& viewProjection) const { drawInstances(viewProjection, false); }
+
+void SceneImpl::drawSky(const Mat4& viewProjection) const { drawInstances(viewProjection, true); }
+
+void SceneImpl::drawInstances(const Mat4& viewProjection, bool skyPass) const {
     const GLuint program = sceneProgram();
     static const GLenum factors[10] = {GL_ZERO, GL_ONE, GL_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR, GL_DST_COLOR,
                                        GL_ONE_MINUS_DST_COLOR, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_DST_ALPHA,
@@ -405,7 +414,7 @@ void SceneImpl::draw(const Mat4& viewProjection) const {
     const bool culling = glIsEnabled(GL_CULL_FACE);
     for (int pass = 0; pass < 2; ++pass) {
         for (const auto& instance : instances_) {
-            if (!instance.visible) continue;
+            if (!instance.visible || instance.sky != skyPass) continue;
             Mat4 m = multiply(viewProjection, instance.transform);
             glUniformMatrix4fv(mvp, 1, GL_FALSE, m.data());
             for (const auto& part : instance.model->parts) {
@@ -418,7 +427,7 @@ void SceneImpl::draw(const Mat4& viewProjection) const {
                 } else {
                     glDisable(GL_BLEND);
                 }
-                drawPart(program, part, culling);
+                drawPart(program, part, culling, skyPass);
             }
         }
     }
@@ -536,6 +545,10 @@ std::size_t Scene::skinnedParts(const std::string& path) const { return impl_->s
 void Scene::bounds(float centre[3], float& radius) const { impl_->bounds(centre, radius); }
 
 void Scene::draw(const Mat4& viewProjection) const { impl_->draw(viewProjection); }
+
+void Scene::drawSky(const Mat4& viewProjection) const { impl_->drawSky(viewProjection); }
+
+void Scene::setInstanceSky(std::size_t instance) { impl_->setInstanceSky(instance); }
 
 std::size_t Scene::triangles() const { return impl_->triangles(); }
 

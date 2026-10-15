@@ -77,6 +77,9 @@ public:
     std::size_t skinnedParts(const std::string& path) const;
     void bounds(float centre[3], float& radius) const;
     void draw(const Mat4& viewProjection) const;
+    // STAND-IN RENDER-S50: sky instances are drawn by drawSky() only, without depth test or depth write (docs/re/rendering-sky.md).
+    void drawSky(const Mat4& viewProjection) const;
+    void setInstanceSky(std::size_t instance);
     std::size_t triangles() const;
     void setTransform(std::size_t instance, const Mat4& transform);
     void setInstanceVisible(std::size_t instance, bool visible);

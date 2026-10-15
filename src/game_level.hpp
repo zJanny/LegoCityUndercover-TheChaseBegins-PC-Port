@@ -1,5 +1,6 @@
 #pragma once
 #include <array>
+#include <optional>
 #include "assets/assets.hpp"
 #include "assets/object_collision.hpp"
 #include "frontend/canvas.hpp"
@@ -143,6 +144,8 @@ private:
     std::vector<chase::assets::FogObject> fogObjects;
     std::array<std::uint8_t, 3> backgroundColour;
     std::vector<std::size_t> placedSceneIndex;
+    std::optional<std::size_t> skyInstance;
+    std::optional<float> seaHeight;
     std::vector<std::pair<std::size_t, std::size_t>> wheelSceneIndex;
     std::vector<chase::assets::Placement> placedObjects;
     std::vector<std::size_t> waypointSceneIndex;
