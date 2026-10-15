@@ -67,6 +67,9 @@ void readParameters(const ParamReader& reader, const std::vector<VehicleTableRow
     setBit(record.flags311, kVehicleCameraOverride, reader.flag("ATTR_CameraOverride"));
     record.topSpeed = floatOf(reader.get("TopSpeed"), 0.0f);
     record.dampingLinear = floatOf(reader.get("DampingLinear"), 0.0f);
+    record.dampingAngular = floatOf(reader.get("DampingAngular"), 0.0f);
+    record.suspensionScale = floatOf(reader.get("WheelSuspensionScale"), 0.0f);
+    record.mass = floatOf(reader.get("Mass"), 1400.0f);
     record.cameraPosY = floatOf(reader.get("ATTR_CameraPosY"), 0.0f);
     record.cameraPosZ = floatOf(reader.get("ATTR_CameraPosZ"), 0.0f);
     record.cameraLookY = floatOf(reader.get("ATTR_CameraLookY"), 0.0f);
@@ -87,9 +90,34 @@ void findWheels(const assets::Level& cls, const assets::ClassLookup& classOf, Ve
         std::snprintf(name, sizeof name, "Wheel%02u", number);
         for (const assets::Placement& child : children)
             if (lower(child.instance) == lower(name)) {
-                record.wheels.push_back({child.instance, child});
+                record.wheels.push_back({child.instance, child, {}});
                 break;
             }
+    }
+}
+
+void readSuspension(const ParamReader& reader, VehicleRecord& record) {
+    const auto value = [&](const char* side, const char* name, float fallback) {
+        char key[64];
+        std::snprintf(key, sizeof key, "%s%s", side, name);
+        return floatOf(reader.get(key), fallback);
+    };
+    const float suspensionRatio = floatOf(reader.get("WheelSuspensionRatio"), 0.0f);
+    for (std::size_t index = 0; index < record.wheels.size(); ++index) {
+        const bool rear = (index & 2) != 0;
+        const char* side = rear ? "Rear" : "Front";
+        const float ratio = rear ? 2.0f - suspensionRatio * 2.0f : suspensionRatio * 2.0f;
+        WheelSuspension& suspension = record.wheels[index].suspension;
+        const assets::Placement& local = record.wheels[index].local;
+        suspension.mount = {local.position[0] - record.centreOfMass[0], value(side, "ShockYoffset", 0.0f) - record.centreOfMass[1],
+                            local.position[2] - record.centreOfMass[2]};
+        const float width = value(side, "WheelWidth", 0.0f) * 0.25f;
+        suspension.sideOffset = local.position[0] < 0.0f ? -width : width;
+        suspension.radius = value(side, "WheelRadius", 0.0f);
+        suspension.travel = value(side, "ShockTravelMax", 0.0f);
+        suspension.stiffness = value(side, "ShockStiffness", 0.0f) * ratio * kVehicleBodyMassFactor;
+        suspension.dampingExtend = value(side, "ShockDampingPos", 0.0f) * ratio * kVehicleBodyMassFactor;
+        suspension.dampingCompress = value(side, "ShockDampingNeg", 0.0f) * ratio * kVehicleBodyMassFactor;
     }
 }
 
@@ -161,6 +189,7 @@ void VehicleSet::load(const assets::Level& level, const assets::ClassLookup& cla
         record.room = object.room;
         readParameters({object, *cls}, table, record);
         findWheels(*cls, classOf, record);
+        readSuspension({object, *cls}, record);
         records_.push_back(std::move(record));
     }
 }

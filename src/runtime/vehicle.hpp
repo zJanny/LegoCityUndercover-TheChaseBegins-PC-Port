@@ -37,11 +37,28 @@ struct VehicleTableRow {
 };
 std::vector<VehicleTableRow> parseVehicleTable(const assets::Table& characters);
 
+// The suspension part of a wheel record (body+0x2b8 + n * 0x154) as the per-wheel loader 0x243628 fills it; wheels 0 and 1 read the
+// "Front..." values, the others "Rear...". Distances are in body space relative to the centre of mass.
+struct WheelSuspension {
+    std::array<float, 3> mount = {0, 0, 0};  // w+0x50: (wheel x, %sShockYoffset, wheel z) - CentreOfMass
+    float sideOffset = 0;                    // w+0x44: %sWheelWidth * 0.25, negative when the mount x is negative
+    float radius = 0;                        // w+0x40: %sWheelRadius
+    float travel = 0;                        // w+0xe4: %sShockTravelMax
+    float stiffness = 0;                     // w+0xe8: %sShockStiffness * ratio * body+0x84
+    float dampingExtend = 0;                 // w+0xec: %sShockDampingPos * ratio * body+0x84
+    float dampingCompress = 0;               // w+0xf0: %sShockDampingNeg * ratio * body+0x84
+};
+
 // A wheel child of the vehicle class file ("Wheel%02u", class vehicles/wheel): model and pose relative to the vehicle node.
 struct VehicleWheel {
     std::string instance;
     assets::Placement local;
+    WheelSuspension suspension;
 };
+
+// body+0x84, the factor 0x243628 applies to the shock values; 2.0 in the trooper and the donut van (oracle). Where it is set is not read (VEH-33),
+// the same factor doubles the rigid body mass (STAND-IN VEH-S21).
+constexpr float kVehicleBodyMassFactor = 2.0f;
 
 struct VehicleRecord {
     std::string instance;        // as written in the level, compared without case by the natives
@@ -64,6 +81,9 @@ struct VehicleRecord {
     float cameraPosY = 0, cameraPosZ = 0, cameraLookY = 0, cameraLookZ = 0, cameraPanScale = 1.0f;  // +0x2f0..+0x300
     float topSpeed = 0;                // class value TopSpeed, the limit of the stand-in body
     float dampingLinear = 0;           // class value DampingLinear (body+0xd58)
+    float dampingAngular = 0;          // class value DampingAngular (body+0xd5c)
+    float suspensionScale = 0;         // class value WheelSuspensionScale (body+0xd9c)
+    float mass = 1400.0f;              // class value Mass (0x243f90, default 1400)
     std::optional<float> pendingSpeedLimit;  // a waypoint hit clamps the body's speed (0x17b3d4..0x17b454) once the drive code runs
     std::uint8_t wheelCount = 0;       // +0x314 (class value numWheels)
     std::vector<VehicleWheel> wheels;  // +0x318: one per found "Wheel%02u" up to wheelCount

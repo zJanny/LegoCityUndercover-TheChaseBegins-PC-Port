@@ -1,7 +1,6 @@
 # Feature index
 
-One file per feature: scope, status, verified behaviour, stand-ins, open items (stable IDs), a findings summary that links into [docs/re/](../../re/README.md), and code and tests. Read this index, then only the file for your feature, then only the docs/re entry it links. Rules: CLAUDE.md "Feature files". Work state (status, steps, log) is in [linux-port.progress.md](../linux-port.progress.md). Limits: this index at most about 40 lines, a feature file at most 16 KB (split a larger one as `<feature>-<subtopic>.md`, one row each). `python3 tools/check_doc_links.py --fix` moves closed items (`- [x]`) to `<feature>.closed.md`; closed files are not listed here.
-Item format: `- [ ] ID — gap. needs: ID. blocks: ID. evidence: link`. `needs:` and `blocks:` are written on both sides. Stand-ins use `PREFIX-S<n>`.
+One file per feature: scope, status, verified behaviour, stand-ins, open items (stable IDs), a findings summary that links into [docs/re/](../../re/README.md), and code and tests. Read this index, then only the file for your feature, then only the docs/re entry it links. Rules: CLAUDE.md "Feature files". Work state (status, steps, log) is in [linux-port.progress.md](../linux-port.progress.md). Limits: this index at most about 40 lines, a feature file at most 16 KB (split a larger one as `<feature>-<subtopic>.md`, one row each). `python3 tools/check_doc_links.py --fix` moves closed items (`- [x]`) to `<feature>.closed.md`; closed files are not listed here. Item format: `- [ ] ID — gap. needs: ID. blocks: ID. evidence: link`. `needs:` and `blocks:` are written on both sides. Stand-ins use `PREFIX-S<n>`.
 | Feature | Status | Top open items |
 |---|---|---|
 | [player-movement](player-movement.md) | IN_PROGRESS | PLAYER-1 slide landing stun rule; PLAYER-6 other 0x203d18 states |
@@ -10,7 +9,8 @@ Item format: `- [ ] ID — gap. needs: ID. blocks: ID. evidence: link`. `needs:`
 | [level-objects](level-objects.md) | IN_PROGRESS | LEVOBJ-3 objects frozen (needs SCRIPT-1); LEVOBJ-2 NPC start animation; LEVOBJ-12/13 hidden characters, per-class visibility |
 | [level-objects-buildit](level-objects-buildit.md) | IN_PROGRESS | LEVOBJ-40 brick animation; LEVOBJ-41 sounds, studs; LEVOBJ-43 built state not saved (needs SAVE-8) |
 | [level-objects-carry](level-objects-carry.md) | IN_PROGRESS | LEVOBJ-30 pickup timing; LEVOBJ-31 locomotion while carrying; LEVOBJ-32 sounds and effects |
-| [vehicles](vehicles.md) | IN_PROGRESS | VEH-5 driving without physics detail; VEH-6 physics body (needs oracle traces) |
+| [vehicles](vehicles.md) | IN_PROGRESS | VEH-7 driving collision; VEH-21 driving details; VEH-10 sounds |
+| [vehicles-physics](vehicles-physics.md) | IN_PROGRESS | VEH-32 engine, gears, tyres; VEH-40 body collision and solver; VEH-33 mass, gravity, mode switch |
 | [vehicles-boarding](vehicles-boarding.md) | IN_PROGRESS | VEH-17 enter prompt; VEH-19 boarding gates and exit probes |
 | [script-system](script-system.md) | IN_PROGRESS | SCRIPT-1 mission flow (needs SCRIPT-7 natives, SCRIPT-75 / 76 trigger events); runner, scene start, class startups |
 | [script-system-triggers](script-system-triggers.md) | IN_PROGRESS | SCRIPT-75 / 76 AI and vehicle trigger events; SCRIPT-77 / 78 object bound checks |

@@ -275,6 +275,42 @@ void real(const char* fib, const char* names) {
     requireNear(police->wheels[0].local.position[2], 1.52f, "Wheel01 z");
     require(police->wheels[0].local.mesh == "Veh_Wheel_20x12", "wheel model");
     require(!police->locked(), "locked comes from the scripts, not from the class");
+    // Oracle (drv-police-car-seated, GDB read of the wheel records body+0x2b8 + n * 0x154 of 1-1_Police_Car, 2026-10-15, agentVPHYS body0.mem):
+    // w+0x50 mount, w+0x44 side offset, w+0x40 radius, w+0xe4 travel, w+0xe8 stiffness, w+0xec / w+0xf0 damping; wheel 0 front left, wheel 2 rear.
+    struct WheelExpect { std::size_t index; float mount[3], side, radius, travel, stiffness, extend, compress; };
+    const WheelExpect wheelExpect[] = {{0, {-0.85f, 0.0685f, 1.52f}, -0.07825f, 0.48f, 1.0f, 18.2f, 5.2f, 3.9f},
+                                       {2, {0.85f, 0.067f, -1.52f}, 0.1055f, 0.48f, 1.0f, 18.2f, 2.8f, 2.1f}};
+    for (const WheelExpect& expected : wheelExpect) {
+        const runtime::WheelSuspension& suspension = police->wheels[expected.index].suspension;
+        const std::string what = "trooper wheel " + std::to_string(expected.index);
+        for (int a = 0; a < 3; ++a) requireNear(suspension.mount[std::size_t(a)], expected.mount[a], what + " mount");
+        requireNear(suspension.sideOffset, expected.side, what + " side offset");
+        requireNear(suspension.radius, expected.radius, what + " radius");
+        requireNear(suspension.travel, expected.travel, what + " travel");
+        requireNear(suspension.stiffness, expected.stiffness, what + " stiffness");
+        requireNear(suspension.dampingExtend, expected.extend, what + " extend damping");
+        requireNear(suspension.dampingCompress, expected.compress, what + " compress damping");
+    }
+    // Oracle (m11-5-in-donut-van, the same read of the van the player sits in, agentVPHYS vbody0.mem): CentreOfMass (0, -0.9, 0.2) moves the mounts.
+    const runtime::VehicleRecord* van = set.find("1-1_donutvan");
+    require(van != nullptr && van->wheels.size() == 4, "1-1_DonutVan has four wheels");
+    const WheelExpect vanExpect[] = {{0, {-1.1f, -0.3564f, 1.32f}, -0.1f, 0.45f, 0.9f, 41.6f, 15.6f, 7.8f},
+                                     {2, {1.1f, -0.3831f, -1.72f}, 0.1055f, 0.45f, 0.9f, 28.0f, 8.4f, 4.2f}};
+    for (const WheelExpect& expected : vanExpect) {
+        const runtime::WheelSuspension& suspension = van->wheels[expected.index].suspension;
+        const std::string what = "van wheel " + std::to_string(expected.index);
+        for (int a = 0; a < 3; ++a) requireNear(suspension.mount[std::size_t(a)], expected.mount[a], what + " mount");
+        requireNear(suspension.sideOffset, expected.side, what + " side offset");
+        requireNear(suspension.radius, expected.radius, what + " radius");
+        requireNear(suspension.travel, expected.travel, what + " travel");
+        requireNear(suspension.stiffness, expected.stiffness, what + " stiffness");
+        requireNear(suspension.dampingExtend, expected.extend, what + " extend damping");
+        requireNear(suspension.dampingCompress, expected.compress, what + " compress damping");
+    }
+    requireNear(van->suspensionScale, 0.75f, "van WheelSuspensionScale (body+0xd9c in the oracle)");
+    requireNear(police->suspensionScale, 1.0f, "trooper WheelSuspensionScale (body+0xd9c in the oracle)");
+    requireNear(police->dampingAngular, 0.1f, "trooper DampingAngular (body+0xd5c, rigid +0x1c4 in the oracle)");
+    requireNear(police->mass, 1300.0f, "trooper Mass (rigid inverse mass 1/2600 in the oracle)");
 
     struct Parked { const char* instance; std::uint16_t type; std::uint8_t wheels, health; float camera[4]; };
     // Oracle (street-after-1-1, GDB reads of the records of the three parked vehicles): +2 = +4 = 4, +0x311 = 1, +0x312 = 4, health bytes 100/4/4,

@@ -1,5 +1,4 @@
 #include "game_level.hpp"
-#include <algorithm>
 
 namespace game_level {
 namespace runtime = chase::runtime;
@@ -12,7 +11,7 @@ bool LevelSession::placeVehicle(const std::string& instance, const chase::assets
         vehicle.matrix = placementMatrix(target);
         drive.body.position = {vehicle.matrix[12], vehicle.matrix[13], vehicle.matrix[14]};
         drive.body.heading = runtime::vehicleHeading(vehicle);
-        drive.fall.height = vehicle.matrix[13];
+        drive.rigid = runtime::vehicleRigidBody(levelScripts.vehicles().records()[boardingRecords[i]], drive.body.position, drive.body.heading);
         scene.setTransform(placedSceneIndex[drive.placedIndex], vehicle.matrix);
         for (std::size_t w = 0; w < wheelSceneIndex.size(); ++w)
             if (wheelSceneIndex[w].first == drive.placedIndex)
