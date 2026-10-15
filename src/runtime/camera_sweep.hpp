@@ -47,6 +47,10 @@ public:
 
     const float* sideAxis() const { return shapes_[Side].lateral; }
     const float* upAxis() const { return shapes_[Up].lateral; }
+    const float* lateralAxis(Shape shape) const { return shapes_[shape].lateral; }
+    // Slab frame: a raw segment point (x, y) lies at origin + x * lateral + y * depth axis.
+    const float* origin() const { return origin_; }
+    const float* depthAxis() const { return depth_; }
     float farDepth() const { return farLimit_; }
     float nearDepth() const { return nearLimit_; }
 

@@ -126,6 +126,11 @@ void CameraRig::setDirector(const RecordPose& pose, std::vector<DirectorRequest>
 void CameraRig::snapFollow(const float target[3], float facing) { follow_.snap(target, facing); }
 
 void CameraRig::update(const FollowCameraInput& input) {
+    if (output_.fovDegrees > 0.0f) {
+        float xScale, yScale;
+        FollowCamera::projectionScales(output_.fovDegrees, xScale, yScale);
+        follow_.setProjectionScales(xScale, yScale);
+    }
     selector_.update(input.target);
     std::vector<DirectorRequest> applied = std::move(delayedDirectorEnds_);
     delayedDirectorEnds_.clear();

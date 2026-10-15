@@ -1,4 +1,5 @@
 #include "runtime/follow_camera.hpp"
+#include "runtime/camera_near_plane.hpp"
 #include "runtime/camera_reset_probe.hpp"
 #include <algorithm>
 #include <cmath>
@@ -11,6 +12,7 @@ namespace {
 constexpr float kVehicleExtraDistance = 10.0f;  // in+0xfc written by 0x32f334
 constexpr float kVehicleExtraHeight = 2.5f;     // in+0x100
 constexpr float kSideHoldSeconds = 0.5f;
+constexpr float kTopScreenAspect = 400.0f / 240.0f;
 constexpr std::uint8_t kVehicleObjectType = 183;
 constexpr unsigned kResetHeading = 360;
 constexpr unsigned kCandidateDegrees[8] = {180, 0, 90, 270, 45, 135, 225, 315};  // table at 0x359780
@@ -82,7 +84,15 @@ void FollowCamera::setSubject(const FollowCameraPreset& preset, float bodyHeight
     modelHalfHeight_ = modelHalfHeight;
 }
 
-FollowCamera::FollowCamera(const FollowCameraPreset& preset, float bodyHeight) : preset_(preset), bodyHeight_(bodyHeight) {}
+FollowCamera::FollowCamera(const FollowCameraPreset& preset, float bodyHeight) : preset_(preset), bodyHeight_(bodyHeight) {
+    projectionScales(kFieldOfViewDegrees, xScale_, yScale_);
+}
+
+void FollowCamera::projectionScales(float poseDegrees, float& xScale, float& yScale) {
+    const float half = poseDegrees * 3.1415927f * 0.0055555557f * 0.5f;
+    yScale = 1.0f / std::tan(half) * 1.3333334f;
+    xScale = yScale / kTopScreenAspect;
+}
 
 FollowCamera::Layout FollowCamera::layout() const {
     const float t = zoom_ * 0.5f;
@@ -268,7 +278,21 @@ void FollowCamera::update(const FollowCameraInput& input) {
     track(bTracked_, b_, targetFactors);
     track(cTracked_, c_, targetFactors);
     clampPitch(input, poseScale);
+    snapToClearView();
     refreshPose();
+}
+
+// Tail of 0x2e0bf0: when the wanted position sees further than the tracked one before the first obstruction (0x2e0e28, both looking at the
+// tracked look point), the tracker jumps to the wanted position (0x211d98); the larger depth becomes the near plane (0x23f168).
+void FollowCamera::snapToClearView() {
+    if (!swept_) return;
+    const float look[3] = {bTracked_[0] + cTracked_[0], bTracked_[1] + cTracked_[1], bTracked_[2] + cTracked_[2]};
+    nearPlane_ = cameraNearDepth(sweep_, aTracked_, look, xScale_, yScale_);
+    const float wantedNear = cameraNearDepth(sweep_, a_, look, xScale_, yScale_);
+    if (wantedNear > nearPlane_) {
+        for (int i = 0; i < 3; ++i) aTracked_[i] = a_[i];
+        nearPlane_ = wantedNear;
+    }
 }
 
 // 0x2e0a50: keeps the look point's height between the target's head and feet, widened by the view depth (at least 10).
@@ -313,11 +337,12 @@ void FollowCamera::avoidObstacles(const FollowCameraInput& input, const Layout& 
     float wanted[3];
     for (int i = 0; i < 3; ++i) wanted[i] = (a_[i] + swing[i]) + push[i];
     const float fullDistance = std::sqrt(l.baseDistance * l.baseDistance + l.baseHeight * l.baseHeight);
-    CameraSweep sweep;
+    CameraSweep& sweep = sweep_;
     CameraSweepSettings settings = preset_.sweep;
     settings.previousNear = previousNear_;
     settings.excludedOwner = excludedOwner_;
     sweep.prepare(*world_, wanted, b_, fullDistance, settings);
+    swept_ = true;
     previousNear_ = sweep.nearDepth();
     const CameraSweepGap side = sweep.gap(CameraSweep::Side), up = sweep.gap(CameraSweep::Up);
     const bool turning = input.shoulderTurn != 0.0f;

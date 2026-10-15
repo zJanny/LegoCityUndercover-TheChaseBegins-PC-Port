@@ -91,10 +91,14 @@ public:
     // SnapCamera 0x1a30fc: the reset 0x2313c8 with argument 0, which tests each candidate with the ray test 0x21ab20 and pulls the
     // camera in with 0x23b92c. Seeds the camera behind the player's facing like `takeOver`, without the near rule.
     void snap(const float target[3], float facing);
-    // K+0x178 reads 360 after any reset and 0 from the start of the release director camera on (oracle memtrace, writer not found,
-    // STAND-IN CAMERA-S30: the port clears it when a director camera starts). With 0, argument 360 takes the ray test branch.
+    // K+0x178 is 360 after any reset; StartDCam 0x194fd8, StartDCamTrack 0x1da810, StartDCamTrackAuto 0x2861ac and StartNodelessDCamTrack
+    // 0x2ad9f4 store 0 after pushing their director command. With 0, argument 360 takes the ray test branch.
     void clearStoredHeading();
     float clearance() const { return clearance_; }
+    // Projection scales of the render camera the near plane test reads (camera +0xbc / +0xc0, written by 0x23458c from the previous pose).
+    void setProjectionScales(float xScale, float yScale) { xScale_ = xScale, yScale_ = yScale; }
+    // Camera +0xc4 written by 0x23f168 at the end of every update: the near plane distance (0x2e0e28).
+    float nearPlane() const { return nearPlane_; }
 
     const float* eye() const { return position_; }
     const float* lookAt() const { return look_; }
@@ -107,6 +111,8 @@ public:
     // Projection 0x23458c: y scale = cot(fov / 2) * 4/3, x scale = y scale / aspect. Returns the vertical field of
     // view in radians that this y scale corresponds to (30.5 degrees for a pose FOV of 40).
     static float verticalFieldOfView(float poseDegrees = kFieldOfViewDegrees);
+    // The two scales of 0x23458c for the top screen (aspect 400 / 240).
+    static void projectionScales(float poseDegrees, float& xScale, float& yScale);
 
 private:
     struct Layout {
@@ -120,6 +126,7 @@ private:
     void placeCandidates(const Layout& layout, float facing, bool lineTest);
     float automaticTurn(const FollowCameraInput& input) const;
     void clampPitch(const FollowCameraInput& input, float poseScale);
+    void snapToClearView();
     void avoidObstacles(const FollowCameraInput& input, const Layout& layout, bool moving, float push[3], const float swing[3]);
 
     FollowCameraPreset preset_;
@@ -132,6 +139,10 @@ private:
     float springHold_ = 0.0f;    // S+0x24: after a vertical push the height spring is off until it runs out
     float sideHold_ = 0.0f;      // S+0x1c: after a side push the automatic turn is off (factor 0.4 - this) until it runs out
     float modelHalfHeight_ = 0.0f;
+    CameraSweep sweep_;
+    bool swept_ = false;
+    float xScale_, yScale_;
+    float nearPlane_ = 1.0f;
     unsigned storedHeading_ = 0;  // K+0x178: 360 after any reset
     float previousLook_[3] = {}; // K+0x70: the look point of the previous update
     // A: wanted camera position (K+4) and its tracker (K+0x34); B: wanted look point (K+0x64) and tracker

@@ -15,6 +15,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -31,18 +32,23 @@ constexpr std::size_t kSettlingRows = 12;
 constexpr float kLeaveSpringHold = 0.467f;
 // After the release director camera of mission 1-1 (CAMERA-15): seed rows 297 to 304, the whole track from row 297 and the settled camera from row 340.
 constexpr std::size_t kHandBackSeedFirstRow = 297, kHandBackSeedRows = 8, kHandBackSettledRow = 340;
-// Limits pinned at the measured errors of the replica (CAMERA-15 is open: the seed row is 0.64 off, the rest of the track within 0.45 falling to 1e-3):
-// the reset takes the ray test branch because the stored heading K+0x178 reads 0 after the director camera (oracle memtrace), the wall of
-// Collision_Player__35 13.24 m behind the car pulls the camera in. Measured 0.640 seed and track eye, look 1.1e-4, settled horizontal 1.2e-4, height 1.6e-3.
+// Limits pinned at the measured errors of the replica (CAMERA-15): the reset takes the ray test branch because StartDCam (0x194fd8) stores 0 in
+// K+0x178, the wall of Collision_Player__35 13.24 m behind the car pulls the seed in, and in the first update the tracker jumps to the wanted
+// position because that sees further before the first obstruction (near plane test 0x2e0e28). Measured: seed rows 2.4e-4, whole track eye 2.9e-3
+// (the swing round the car from row 307), look 1.1e-4, settled horizontal 1.2e-4, height 1.6e-3.
 // Provenance: this test, handback.csv from tools/oracle/camera-vehicle-handback.txt.
-constexpr float kHandBackSeedLimit = 0.7f, kHandBackTrackEyeLimit = 0.7f, kHandBackTrackLookLimit = 3e-4f, kHandBackSettledHeightLimit = 3e-3f;
+constexpr float kHandBackSeedLimit = 5e-4f, kHandBackTrackEyeLimit = 5e-3f, kHandBackTrackLookLimit = 3e-4f, kHandBackSettledHeightLimit = 3e-3f;
 constexpr float kHandBackSettledHorizontalLimit = 2e-3f;
+// Near plane of the render camera (*0x377544 + 0xc4, written by 0x23f168) after the hand-over, rows 297 to 309. Provenance: Azahar memtrace
+// camq-near of tools/oracle/camera-vehicle-handback-near.txt (frames 503 to 515); the replica's error is 2.4e-4.
+constexpr float kHandBackNearPlanes[] = {0.722414f, 0.563713f, 0.419943f, 0.303219f, 0.213484f, 0.2f, 0.2f, 0.2f, 0.2f, 0.2f, 1.0f, 1.0f, 1.0f};
+constexpr float kHandBackNearLimit = 1e-3f;
 constexpr const char* kPoliceCar = "1-1_police_car";
 constexpr std::uint16_t kDrivingState = 0x11c;
 constexpr std::uint8_t kVehicleObjectType = 183;
 
 struct Row {
-    float dt, vehicle[3], heading, wanted[3], eye[3], look[3];
+    float dt, vehicle[3], heading, wanted[3], eye[3], look[3], fov = 0;
     float player[3] = {0, 0, 0};
     unsigned state = 0;
     bool followOnTop = true;
@@ -69,6 +75,7 @@ std::vector<Row> loadTrace(const fs::path& path) {
             row.look[a] = std::stof(cells[std::size_t(12 + a)]);
         }
         row.heading = std::stof(cells[5]);
+        row.fov = std::stof(cells[21]);
         row.followOnTop = cells[22] == "002a8bfc";
         if (cells.size() >= 29) {
             for (int a = 0; a < 3; ++a) row.player[a] = std::stof(cells[std::size_t(25 + a)]);
@@ -236,9 +243,9 @@ int main(int argc, char** argv) {
             returning.setCollision(&world);
             returning.setSubject(onFoot.preset, onFoot.bodyHeight, onFoot.modelHalfHeight);
             returning.restore(rows[0].wanted, rows[0].eye, rows[0].look, rows[0].player, 0.0f);
-            returning.clearStoredHeading();  // K+0x178 is 0 from frame 229 to the hand-over (camera-veh-handback memtrace)
+            returning.clearStoredHeading();  // StartDCam of the release script at frame 228 (oracle watchpoint and trap at 0x195038)
             bool vehicleSubject = false, wasOnTop = true;
-            float seedError = 0, settledError = 0, trackEye = 0, trackLook = 0, settledHeight = 0;
+            float seedError = 0, settledError = 0, trackEye = 0, trackLook = 0, settledHeight = 0, nearError = 0;
             std::size_t compared = 0;
             for (std::size_t i = 1; i < rows.size(); ++i) {
                 const Row& row = rows[i];
@@ -253,6 +260,10 @@ int main(int argc, char** argv) {
                 input.dt = row.dt;
                 for (int a = 0; a < 3; ++a) input.target[a] = driving ? row.vehicle[a] : row.player[a];
                 input.targetFacing = driving ? row.heading : 0.0f;
+                // The near plane test reads the projection the previous update left (camera +0xbc / +0xc0 from the blended FOV).
+                float xScale, yScale;
+                FollowCamera::projectionScales(rows[i - 1].fov, xScale, yScale);
+                returning.setProjectionScales(xScale, yScale);
                 if (!row.followOnTop) {
                     wasOnTop = false;
                     continue;
@@ -268,6 +279,9 @@ int main(int argc, char** argv) {
                     trackEye = std::max(trackEye, distance(returning.eye(), row.eye));
                     trackLook = std::max(trackLook, distance(returning.lookAt(), row.look));
                 }
+                const std::size_t nearRow = i - kHandBackSeedFirstRow;
+                if (i >= kHandBackSeedFirstRow && nearRow < std::size(kHandBackNearPlanes))
+                    nearError = std::max(nearError, std::fabs(returning.nearPlane() - kHandBackNearPlanes[nearRow]));
                 if (i < kHandBackSeedFirstRow + kHandBackSeedRows) {
                     seedError = std::max(seedError, distance(returning.eye(), row.eye));
                 } else if (i >= kHandBackSettledRow) {
@@ -278,9 +292,9 @@ int main(int argc, char** argv) {
                 }
             }
             std::cout << "after the release director camera: seed " << seedError << ", whole track eye " << trackEye << " look " << trackLook
-                      << ", horizontal error when settled " << settledError << ", height " << settledHeight << '\n';
+                      << ", horizontal error when settled " << settledError << ", height " << settledHeight << ", near plane " << nearError << '\n';
             if (compared < 30 || seedError > kHandBackSeedLimit || trackEye > kHandBackTrackEyeLimit || trackLook > kHandBackTrackLookLimit ||
-                settledError > kHandBackSettledHorizontalLimit || settledHeight > kHandBackSettledHeightLimit)
+                settledError > kHandBackSettledHorizontalLimit || settledHeight > kHandBackSettledHeightLimit || nearError > kHandBackNearLimit)
                 throw std::runtime_error("hand-back differs from the recorded camera");
         }
         std::cout << "vehicle camera: worst eye error " << worstEye << " (" << worstFile << " row " << worstRow << "), look " << worstLook << '\n';
