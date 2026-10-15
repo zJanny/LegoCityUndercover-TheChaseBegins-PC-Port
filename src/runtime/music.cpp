@@ -16,6 +16,11 @@ MoodChoice chooseMoodTrack(const assets::MusicSet& set, unsigned mood, unsigned 
     return choice;
 }
 
+std::optional<assets::MusicSet> musicSetOfLevel(const assets::SoundTables& sounds, std::uint8_t set) {
+    if (set >= sounds.musicSets.size()) return std::nullopt;
+    return sounds.musicSets[set];
+}
+
 LevelMusic levelStartMusic(const assets::SoundTables& sounds, std::uint8_t set, unsigned currentTrack) {
     LevelMusic music;
     music.set = set;

@@ -174,6 +174,7 @@ void LevelSession::updateFollowCamera(float dt) {
         const float* look = follow->lookAt();
         shared.audio->setListener({eye[0], eye[1], eye[2]}, {look[0] - eye[0], look[1] - eye[1], look[2] - eye[2]});
         shared.audio->update();
+        shared.audio->updateMusic(dt);
     }
 }
 

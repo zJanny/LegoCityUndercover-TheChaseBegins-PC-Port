@@ -33,9 +33,9 @@ void overrideAndAutomatic() {
     ScriptRunner runner(level, state);
     runner.start("s");
     const std::vector<MusicRequest> requests = runner.musicNatives().takeRequests();
-    require(requests.size() == 2, "two OverrideMusic starts");
-    for (const MusicRequest& request : requests)
-        require(request.kind == MusicRequest::Kind::Start && request.track == 4 && request.loop && request.crossfade && request.fade == 0.5f,
+    require(requests.size() == 3 && requests[2].kind == MusicRequest::Kind::ClearOverride, "two OverrideMusic starts and the override clear of AutomaticMusic");
+    for (std::size_t index = 0; index < 2; ++index)
+        require(requests[index].kind == MusicRequest::Kind::Start && requests[index].track == 4 && requests[index].loop && requests[index].crossfade && requests[index].fade == 0.5f,
                 "OverrideMusic starts the row looping with crossfade and fade 0.5 (u16 id)");
     require(!runner.musicNatives().overrideActive(), "AutomaticMusic clears the override byte");
 

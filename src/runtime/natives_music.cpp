@@ -65,6 +65,7 @@ void MusicNativeState::run(MusicNativeKind kind, const std::vector<float>& value
     }
     case MusicNativeKind::AutomaticMusic:
         overrideActive_ = false;
+        requests_.push_back(MusicRequest{MusicRequest::Kind::ClearOverride});
         break;
     case MusicNativeKind::StopMusic: {
         MusicRequest request;

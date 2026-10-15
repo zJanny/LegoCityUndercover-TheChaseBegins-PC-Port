@@ -25,6 +25,7 @@ struct MusicRequest {
         Start,    // 0x24039c(name of the row, row, loop, crossfade, fade)
         StopNow,  // 0x21cc04(1)
         FadeOut,  // 0x240f6c(step) then 0x22b660(0.0): the volume ramps to 0 by `step` per update
+        ClearOverride,  // 0x1c29ac: byte 0x376b31 cleared by AutomaticMusic
     };
     Kind kind = Kind::Start;
     unsigned track = 0;

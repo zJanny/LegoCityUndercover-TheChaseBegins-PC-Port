@@ -5,7 +5,10 @@
 #include "audio/mixer.hpp"
 #include "audio/musicplayer.hpp"
 #include "audio/soundplayer.hpp"
+#include "runtime/music.hpp"
+#include "runtime/music_block.hpp"
 #include "runtime/natives_music.hpp"
+#include "save/slot_progress.hpp"
 #include "runtime/sound_events.hpp"
 #include <SDL.h>
 #include <iostream>
@@ -13,11 +16,25 @@
 #include <mutex>
 #include <optional>
 
+class MusicStreamDevice : public chase::runtime::MusicStreams {
+public:
+    explicit MusicStreamDevice(chase::audio::MusicPlayer& player) : player_(player) {}
+    bool open(unsigned track, bool) override { return player_.start(track, 0.0f); }
+    void close() override { player_.stop(); }
+    void setVolume(float volume) override { player_.setVolume(volume); }
+    bool finished() override { return player_.finished(); }
+
+private:
+    chase::audio::MusicPlayer& player_;
+};
+
 class GameAudio {
 public:
     GameAudio(chase::assets::FuseArchive& archive, std::uint8_t soundOption, std::uint8_t musicOption) : mixer_(kRate) {
         sounds_.emplace(archive, mixer_);
         music_.emplace(archive, mixer_, sounds_->tables().musicNames);
+        musicStreams_.emplace(*music_);
+        musicBlock_.emplace(*musicStreams_);
         sounds_->setMasterVolume(chase::audio::volumeFromOption(soundOption));
         music_->setMasterVolume(chase::audio::volumeFromOption(musicOption));
         if (SDL_InitSubSystem(SDL_INIT_AUDIO) != 0) {
@@ -79,9 +96,26 @@ public:
         if (!device_) return;
         std::lock_guard<std::mutex> guard(lock_);
         using Kind = chase::runtime::MusicRequest::Kind;
-        if (request.kind == Kind::Start) music_->start(request.track);
-        else if (request.kind == Kind::StopNow) music_->stop();
-        else music_->fadeOut(1.0f / (request.step * chase::runtime::kStopMusicFramesPerSecond));
+        if (request.kind == Kind::Start) musicBlock_->startTrack(request.track, request.loop, request.crossfade, request.fade);
+        else if (request.kind == Kind::StopNow) musicBlock_->stopNow();
+        else if (request.kind == Kind::FadeOut) musicBlock_->fadeOut(request.step);
+        else musicBlock_->clearOverride();
+    }
+    void updateMusic(float dt) {
+        if (!device_) return;
+        std::lock_guard<std::mutex> guard(lock_);
+        musicBlock_->update(dt);
+    }
+    void startLevelMusic(chase::assets::FuseArchive& archive, const std::string& sceneName) {
+        if (!device_) return;
+        const chase::assets::FuseEntry* entry = archive.find("tables/tableslevels.bxls");
+        if (!entry) return;
+        const chase::assets::Table levels = chase::assets::parseTable(archive.read(*entry));
+        const std::optional<unsigned> row = chase::save::levelIdForScene(levels, sceneName);
+        if (!row) return;
+        std::lock_guard<std::mutex> guard(lock_);
+        musicBlock_->setMusicSet(chase::runtime::musicSetOfLevel(sounds_->tables(), chase::assets::levelMusicSet(levels, *row)));
+        musicBlock_->moodRoute(chase::runtime::kLevelStartMood, true, true, chase::runtime::kLevelStartMusicFade);
     }
     int playBuffer(std::shared_ptr<const chase::assets::Sound> sound) {
         if (!device_) return 0;
@@ -107,6 +141,8 @@ private:
     std::mutex lock_;
     std::optional<chase::audio::SoundPlayer> sounds_;
     std::optional<chase::audio::MusicPlayer> music_;
+    std::optional<MusicStreamDevice> musicStreams_;
+    std::optional<chase::runtime::MusicBlock> musicBlock_;
     SDL_AudioDeviceID device_ = 0;
     std::size_t calls_ = 0;
 };

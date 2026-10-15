@@ -66,11 +66,11 @@ This file has no dated entries: the table is edited in place. When a native is r
 | enablestudsbygroup | 0x285ed4 | 2 | 74 / 13 / 0 / 0 | 8 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
 | GiveReward | 0x1a2f18 | 1 | 74 / 9 / 1 / 4 | 14 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
 | VehicleJumpOut | 0x1da8d8 | 1 | 70 / 5 / 0 / 0 | 8 | done | 36 | player: [vehicles-waypoints.md §2026-10-15T11:35](vehicles-waypoints.md#ts-20261015-113500) |
-| StopMusic | 0x195054 | 1 | 68 / 15 / 0 / 0 | 7 | stand-in | 33 | linear fade stand-in [§2026-10-15T15:10](script-natives-audio.md#ts-20261015-151038) |
+| StopMusic | 0x195054 | 1 | 68 / 15 / 0 / 0 | 7 | stand-in | 33 | block ramp (AUDIO-S20) [§2026-10-15T15:10](script-natives-audio.md#ts-20261015-151038) |
 | AutomaticMusic | 0x1d9c70 | 0 | 67 / 15 / 1 / 0 | 7 | stand-in | 33 | clears 0x376b31; mood step needs combat [§2026-10-15T15:10](script-natives-audio.md#ts-20261015-151038) |
 | DestroyProp | 0x1a2fe4 | 1 | 66 / 7 / 0 / 0 | 8 | A | 26 | open: entity destruction 0x23cd80, needs SCRIPT-58 |
 | SwapAllegiance | 0x1da88c | 1 | 66 / 2 / 0 / 0 | 8 | C | 35 |  |
-| OverrideMusic | 0x1cdb28 | 1 | 65 / 19 / 0 / 0 | 7 | stand-in | 33 | stream start without ramp/queue [§2026-10-15T15:10](script-natives-audio.md#ts-20261015-151038) |
+| OverrideMusic | 0x1cdb28 | 1 | 65 / 19 / 0 / 0 | 7 | stand-in | 33 | through the block queue and ramp (AUDIO-S20) [§2026-10-15T15:10](script-natives-audio.md#ts-20261015-151038) |
 | PanMapToObject | 0x1d9e04 | 4 | 65 / 2 / 0 / 0 | 6 | stand-in | 31 | records its call (SCRIPT-S26): [objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919) |
 | SpawnStuds | 0x1a3130 | 2 | 65 / 0 / 0 / 1 | 7 | C | 38 |  |
 | UnlockAbility | 0x1cde84 | 1 | 63 / 12 / 7 / 0 | 10 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |

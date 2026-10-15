@@ -25,7 +25,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | [studs](studs.md) | IN_PROGRESS | STUD-1 magnet and multiplier; STUD-4 groups (needs SCRIPT-1) |
 | [front-end](front-end.md) | IN_PROGRESS | FE-1 existing slots and Continue (needs SAVE-2, FE-11); FE-3 loading screen 3D badge |
 | [hud-ui](hud-ui.md) | IN_PROGRESS | HUD-6 hearts never change; HUD-11 map code and icons, HUD-16 waypoint marker details; HUD-8 other counters; HUD-13 text screens |
-| [audio](audio.md) | IN_PROGRESS | AUDIO-2 level music (needs SCRIPT-1); AUDIO-3 world sounds |
+| [audio](audio.md) | IN_PROGRESS | AUDIO-20 duck record; AUDIO-21 sound natives; AUDIO-3 world sounds |
 | [movies-cutscenes](movies-cutscenes.md) | IN_PROGRESS | MOVIE-2 cutscenes not in game flow (blocks FE-4) |
 | [animation-characters](animation-characters.md) | IN_PROGRESS | ANIM-5 general animation slot player, ANIM-3 blending |
 | [particles](particles.md) | IN_PROGRESS | PART-1 no particle rendering |

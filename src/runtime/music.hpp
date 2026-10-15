@@ -10,6 +10,10 @@ namespace chase::runtime {
 constexpr unsigned kMoodAmbient = 0, kMoodAction = 1;
 constexpr std::uint8_t kNoMusic = 255;   // set entry: stop the music for this mood
 constexpr unsigned kLevelStartMood = kMoodAmbient;   // 0x2f71b0 calls 0x206c40 with mood 0
+constexpr float kLevelStartMusicFade = 1.0f;         // s0 of that call: literal 0x3f800000 at 0x2f705c, loop 1, crossfade 1
+
+// The set record the level start hands to the block (+0x24 of 0x376b30); none when the set index is 14 or more (0x2f7160).
+std::optional<assets::MusicSet> musicSetOfLevel(const assets::SoundTables& sounds, std::uint8_t set);
 
 struct MoodChoice {
     bool stop = false;                   // entry 255: the current stream is stopped

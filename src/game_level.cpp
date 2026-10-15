@@ -213,6 +213,7 @@ LevelSession::LevelSession(const Shared& sharedState)
         hostCutscenes();
         startOptions.yieldWhen = [this]() { return levelScripts.cutscenes().playing() != nullptr || levelScripts.cutscenes().movieOpen(); };
     }
+    if (shared.audio) shared.audio->startLevelMusic(archive, levelName);
     const std::uint32_t startupUpdates = sceneStart.run(startOptions);
     levelScripts.vehicles().settle();
     if (!options.startCutscenes) hostCutscenes();

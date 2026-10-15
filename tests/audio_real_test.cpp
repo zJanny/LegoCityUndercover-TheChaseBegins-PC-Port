@@ -148,6 +148,8 @@ int main(int argc, char** argv) {
             require(!lobby.choice.stop && !lobby.choice.track && lobby.trackName.empty(), "lvl_00 starts no music");
             const runtime::LevelMusic street = runtime::levelStartMusic(tables, assets::levelMusicSet(levels, 2), 0);
             require(street.choice.stop && !street.choice.track, "lvl_01 starts no music (ambient entry 255)");
+            const std::optional<assets::MusicSet> streetSet = runtime::musicSetOfLevel(tables, assets::levelMusicSet(levels, 2));
+            require(streetSet && streetSet->ambient == 255 && streetSet->action == 5 && !runtime::musicSetOfLevel(tables, 14), "level start hands set 2 to the block; set 14 is none (0x2f7160)");
             const runtime::LevelMusic actionStreet = runtime::levelStartMusic(tables, 2, 0);
             const runtime::MoodChoice fight = runtime::chooseMoodTrack(tables.musicSets[2], runtime::kMoodAction, 0);
             require(fight.track && tables.musicNames.at(*fight.track) == "act_fight_music_1" && actionStreet.choice.stop, "action mood of set 2");
