@@ -6,6 +6,8 @@ Reverse-engineering findings. Entries are chronological; later entries may corre
 
 ## 2026-10-13T22:24:39+02:00 — Material record to PICA texture-environment stages (REA Ghidra 12.1.2, llvm-objdump, oracle reads)
 
+Corrected by [rendering-lighting.md §2026-10-15T17:47](rendering-lighting.md#ts-20261015-174725): the global ambient is the per-frame sum of the type 0 lights (lvl_01 (136, 159, 179) / 255, register 0x1c0 = 0x08827cb3), and the fragment lighting is recovered.
+
 **Where the setup is** (all in `.code`, written straight into the GPU command list at `*0x37614c`)
 - 0x128dc8 (ev_0ff86efc…): per-draw setup. Builds a 32-bit key from the material, skips regeneration when it equals the last key (`0x377974`), and calls the stage generator for modes below 9. Key fields: byte 1 (bits 0-4, "mode"), byte 2 & 0xf (bits 5-8, "lighting"), byte 3 & 0xf (bits 9-12, "texture"), byte 5 & 7 (bits 13-15, "alpha"), byte 10 bit 6 (vertex colour), byte 0xc bit 6 (material colour), byte 0xd bit 1 (bump). Modes 12 and 13 use a precomputed table at 0x5957f8 (0x94 bytes each; not used by any shipped model).
 - 0x12e460 (ev_f3f2e9e9…): the stage generator. Each stage is a 6-word record from 0x24c56c (ev_304505a2…): SOURCE, header (register | 0x804f0000, five consecutive registers), OPERAND, COMBINER, COLOR, SCALE. Stage registers come from the table at 0x379940 (0xc0, 0xc8, 0xd0, 0xd8, 0xf0, 0xf8). Stages after the first get the alpha source "previous" (|0xf0000).

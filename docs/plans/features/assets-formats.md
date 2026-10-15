@@ -16,7 +16,7 @@ IN_PROGRESS, updated 2026-10-15T12:09:48+02:00. Decoders exist and are checked a
 
 ## 4. Stand-ins
 
-- ASSET-S1 Moved to [rendering.md](rendering.md) (RENDER-S1 to RENDER-S4).
+- ASSET-S1 Moved to [rendering.md](rendering.md) (RENDER-S2 to RENDER-S4; RENDER-S1 was removed with RENDER-1).
 - ASSET-S2 Levels are composed from the archive's folder names (`models/<level name>/`). The original streams rooms of a world level inside a master level: see WSTREAM-S1 in [world-streaming.md](world-streaming.md).
 
 ## 5. Open items

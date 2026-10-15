@@ -201,10 +201,15 @@ int run(const Options& options) {
     for (const auto& model : models)
         if (!scene.addModel(model)) throw std::runtime_error("not in archive: " + model);
     std::size_t placed = 0, unresolved = 0;
+    std::vector<LightObject> lights;
+    const ClassLookup lightClasses = archiveClassLookup(archive);
     for (const auto& levelPath : options.levels) {
         const FuseEntry* entry = archive.find(levelPath);
         if (!entry) throw std::runtime_error("not in archive: " + levelPath);
-        DrawableObjects drawable = drawableObjects(archive, parseLevel(archive.read(*entry)));
+        const Level parsedLevel = parseLevel(archive.read(*entry));
+        const std::vector<LightObject> levelLights = lightObjects(parsedLevel, lightClasses);
+        lights.insert(lights.end(), levelLights.begin(), levelLights.end());
+        DrawableObjects drawable = drawableObjects(archive, parsedLevel);
         for (const auto& placement : drawable.objects) {
             if (!options.room.empty() && lower(placement.room) != options.room) continue;
             if (scene.addModel(meshModelPath(placement.mesh), placementMatrix(placement))) ++placed;
@@ -376,6 +381,8 @@ int run(const Options& options) {
         chase::render::clearWindow({0.16f, 0.17f, 0.2f, 1}, true);
         beginFrame(options.brightness);
         Mat4 mvp = chase::render::multiply(perspective(fovY, float(width) / float(std::max(height, 1)), nearZ, farZ), eyeView);
+        const Mat4 viewToWorld = chase::render::rigidInverse(eyeView);
+        scene.setLighting(chase::runtime::levelLights(lights, 0), &viewToWorld[12]);
         scene.draw(mvp);
         if (!options.screenshot.empty() && ++frames >= 2) {
             chase::render::waitForGpu();

@@ -20,7 +20,7 @@ IN_PROGRESS, updated 2026-10-14T14:37:06+02:00. All tools run; the oracle suppor
 
 ## 4. Stand-ins
 
-- None. (The viewer's lighting is RENDER-S1.)
+- None. (The viewer uses the level lights of RENDER-1 with the room stand-in RENDER-S60.)
 
 ## 5. Open items
 

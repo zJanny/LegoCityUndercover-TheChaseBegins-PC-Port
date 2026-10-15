@@ -1,19 +1,19 @@
 # The Chase Begins — PC port (work in progress)
 
-This project is building a PC port of *LEGO City Undercover: The Chase Begins* (Nintendo 3DS). The goal is a port that plays exactly like the original, from start to finish. It runs on Linux first. A Windows version is planned for after the Linux version is finished. **The game is not playable on PC yet.** Today the project can extract and decode the game's files, show models, levels and animated characters in development tools, and let you walk the main character around a level and try parts of the first mission.
+This project is building a PC port of *LEGO City Undercover: The Chase Begins* (Nintendo 3DS). The goal is a port that plays exactly like the original, from start to finish. It runs on Linux first. A Windows version is planned for after the Linux version is finished. **The game is not playable on PC yet.** Today the project can extract and decode the game's files, show models, levels and animated characters in development tools, and let you walk the main character around one level.
 
 Game data is never stored in this repository. You need your own decrypted `.cci` image.
 
 ## Quick start
 
 ```sh
-cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
 cmake --build build
 python3 tools/extract_romfs.py path/to/game.cci --output artifacts/romfs
 build/chase-game
 ```
 
-This starts the development runtime. It is not the game: it shows the start screens of the original (logos, language, slot list, intro movie), and after them you can walk the player around a street, with parts of mission 1-1 and a car you can get into. See [the development runtime guide](docs/game-runtime.md).
+This starts the development runtime. It is not the game: it shows the start screens of the original (logos, language, slot list, intro movie), and after them you can only walk the player around one street. See [the development runtime guide](docs/game-runtime.md).
 
 ## Progress
 
@@ -23,13 +23,13 @@ This starts the development runtime. It is not the game: it shows the start scre
 | Script commands | 43 of 239 (18.0%) | Different commands the level scripts call that the port runs. They cover 66.5% of all calls. 113 more run with a stand-in result. |
 | Object types | 152 of 506 (30.0%) | Different object types in the levels that the port treats with recovered rules (collision, doors, studs). They cover 54.0% of all placed objects. |
 | Game files read | 99.6% of files, 99.9% of data | Files in the game archive (12836) that the port can decode, by count and by size. |
-| Open work | 278 open items, 171 stand-ins | Known gaps and temporary guesses in 23 feature areas. It has no total to reach; watch the trend. |
-| Checked against the original | 167 tests, 210 recorded traces | Automatic tests, and recordings of the original game that the tests compare with. |
-| Game code documented | 1490 of about 7575 (19.7%) | Functions of the game program that the notes or the source point to. The total is an estimate. |
+| Open work | 281 open items, 173 stand-ins | Known gaps and temporary guesses in 23 feature areas. It has no total to reach; watch the trend. |
+| Checked against the original | 169 tests, 210 recorded traces | Automatic tests, and recordings of the original game that the tests compare with. |
+| Game code documented | 1503 of about 7575 (19.8%) | Functions of the game program that the notes or the source point to. The total is an estimate. |
 
 ![Progress trend](docs/progress-trend.svg)
 
-Updated 2026-10-15, commit c7da4f3. How the numbers are measured: [docs/progress.md](docs/progress.md).
+Updated 2026-10-15, commit e70a8d5. How the numbers are measured: [docs/progress.md](docs/progress.md).
 <!-- progress:end -->
 
 ## Documentation

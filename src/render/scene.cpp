@@ -13,8 +13,11 @@ namespace chase::render {
 using namespace chase::assets;
 
 namespace {
-constexpr float kLightingStandIn[3] = {138.0f / 255.0f, 161.0f / 255.0f, 182.0f / 255.0f};
 bool fogActive = false;
+
+void uploadLut(GLuint program, const char* name, const runtime::LightLut& lut) {
+    glUniform4uiv(glGetUniformLocation(program, name), GLsizei(lut.size() / 4), lut.data());
+}
 
 struct GpuVertex {
     float position[3], uv[2], normal[3];
@@ -114,7 +117,12 @@ void beginFrame(float brightness) {
     glUniform1i(glGetUniformLocation(program, "unit1"), 1);
     glUniform1i(glGetUniformLocation(program, "unit2"), 2);
     glUniform1f(glGetUniformLocation(program, "brightness"), brightness);
-    glUniform3fv(glGetUniformLocation(program, "lightingStandIn"), 1, kLightingStandIn);
+    static const runtime::LightLut distribution = runtime::distributionLut(), spot = runtime::spotLut(), distance = runtime::distanceLut();
+    uploadLut(program, "lutDistribution", distribution);
+    uploadLut(program, "lutSpot", spot);
+    uploadLut(program, "lutDistance", distance);
+    glUniform1i(glGetUniformLocation(program, "clampHighlights"), (runtime::kLightingConfig0 >> 27) & 1);
+    glUniform1i(glGetUniformLocation(program, "lightingOn"), 0);
     glUniform1i(glGetUniformLocation(program, "stageCount"), 0);
     glUniform1f(glGetUniformLocation(program, "alphaReference"), -1.0f);
     glUniform1i(glGetUniformLocation(program, "fogOn"), 0);
@@ -178,6 +186,10 @@ public:
     void bounds(float centre[3], float& radius) const;
     void draw(const Mat4& viewProjection) const;
     void drawSky(const Mat4& viewProjection) const;
+    void setLighting(const runtime::LightSet& lights, const float eye[3]) {
+        lights_ = lights;
+        std::copy_n(eye, 3, eye_);
+    }
     void setInstanceSky(std::size_t instance) { instances_.at(instance).sky = true; }
     std::size_t triangles() const;
     void setTransform(std::size_t instance, const Mat4& transform) { instances_.at(instance).transform = transform; }
@@ -196,6 +208,8 @@ private:
         GLuint unitTexture[3] = {0, 0, 0};
         float unitFlat[3][4] = {};
         bool unitIsFlat[3] = {false, false, false};
+        std::uint8_t colour[4] = {255, 255, 255, 255}, specular[4] = {255, 255, 255, 255};
+        bool doubled = false;
     };
     struct TextureInfo {
         GLuint id = 0;
@@ -222,6 +236,7 @@ private:
     const TextureInfo& texture(const std::string& name, const std::string& modelDir);
     DrawPart upload(const ModelPart& part, LoadedModel& model);
     void drawPart(GLuint program, const DrawPart& part, bool culling, bool skyPass) const;
+    void setPartLighting(GLuint program, const DrawPart& part) const;
 
     FuseArchive& archive_;
     std::vector<std::string> exclude_;
@@ -230,6 +245,8 @@ private:
     std::map<std::string, LoadedModel> models_;
     std::vector<Instance> instances_;
     std::size_t missing_ = 0;
+    runtime::LightSet lights_;
+    float eye_[3] = {0, 0, 0};
 };
 
 SceneImpl::SceneImpl(FuseArchive& archive, std::vector<std::string> exclude) : archive_(archive), exclude_(std::move(exclude)) {
@@ -344,7 +361,7 @@ void SceneImpl::drawPart(GLuint program, const DrawPart& part, bool culling, boo
     glUniform1i(glGetUniformLocation(program, "stageCount"), part.hasMaterial ? GLint(m.stages.size()) : 0);
     glUniform1i(glGetUniformLocation(program, "hasNormal"), part.hasNormal);
     glUniform1i(glGetUniformLocation(program, "hasSecondUv"), part.secondUv);
-    glUniform1i(glGetUniformLocation(program, "dynamicLight"), m.lighting && m.lightingKey != 1 && m.lightingKey != 4);
+    setPartLighting(program, part);
     glUniform1f(glGetUniformLocation(program, "alphaReference"), m.alphaTest ? float(m.alphaReference) / 255.0f : -1.0f);
     glUniform1i(glGetUniformLocation(program, "fogOn"), fogActive && part.hasMaterial && m.fogged);
     if (part.hasMaterial) {
@@ -400,6 +417,39 @@ void SceneImpl::drawPart(GLuint program, const DrawPart& part, bool culling, boo
     glDrawElements(GL_TRIANGLES, part.count, GL_UNSIGNED_SHORT, nullptr);
 }
 
+void SceneImpl::setPartLighting(GLuint program, const DrawPart& part) const {
+    const runtime::FragmentLighting lighting =
+        part.hasMaterial ? runtime::fragmentLighting(lights_, part.material.lightingKey, part.colour, part.specular, part.doubled)
+                         : runtime::FragmentLighting{};
+    glUniform1i(glGetUniformLocation(program, "lightingOn"), lighting.enabled);
+    if (!lighting.enabled) return;
+    const auto unit = [](const std::array<std::uint8_t, 3>& c, GLfloat* out) {
+        for (std::size_t i = 0; i < 3; ++i) out[i] = float(c[i]) / 255.0f;
+    };
+    GLfloat ambient[3], diffuse[8 * 3] = {}, lit[8 * 3] = {}, shine[8 * 3] = {}, vectors[8 * 3] = {}, scales[8] = {};
+    GLint flags[8] = {};
+    unit(lighting.globalAmbient, ambient);
+    const std::size_t count = std::min(lighting.slots.size(), runtime::kMaxLights);
+    for (std::size_t i = 0; i < count; ++i) {
+        const runtime::LightSlot& slot = lighting.slots[i];
+        unit(slot.diffuse, diffuse + i * 3);
+        unit(slot.ambient, lit + i * 3);
+        unit(slot.specular, shine + i * 3);
+        std::copy(slot.vector.begin(), slot.vector.end(), vectors + i * 3);
+        flags[i] = (slot.directional ? 1 : 0) | (slot.twoSided ? 2 : 0) | (slot.spotAttenuation ? 4 : 0) | (slot.distanceAttenuation ? 8 : 0);
+        scales[i] = slot.distanceScale;
+    }
+    glUniform3fv(glGetUniformLocation(program, "globalAmbient"), 1, ambient);
+    glUniform1i(glGetUniformLocation(program, "lightCount"), GLint(count));
+    glUniform3fv(glGetUniformLocation(program, "lightDiffuse"), 8, diffuse);
+    glUniform3fv(glGetUniformLocation(program, "lightAmbient"), 8, lit);
+    glUniform3fv(glGetUniformLocation(program, "lightSpecular"), 8, shine);
+    glUniform3fv(glGetUniformLocation(program, "lightVector"), 8, vectors);
+    glUniform1iv(glGetUniformLocation(program, "lightFlags"), 8, flags);
+    glUniform1fv(glGetUniformLocation(program, "lightDistanceScale"), 8, scales);
+    glUniform3fv(glGetUniformLocation(program, "eyePosition"), 1, eye_);
+}
+
 void SceneImpl::draw(const Mat4& viewProjection) const { drawInstances(viewProjection, false); }
 
 void SceneImpl::drawSky(const Mat4& viewProjection) const { drawInstances(viewProjection, true); }
@@ -411,12 +461,14 @@ void SceneImpl::drawInstances(const Mat4& viewProjection, bool skyPass) const {
                                        GL_ONE_MINUS_DST_ALPHA};
     static const GLenum equations[5] = {GL_FUNC_ADD, GL_FUNC_SUBTRACT, GL_FUNC_REVERSE_SUBTRACT, GL_MIN, GL_MAX};
     GLint mvp = glGetUniformLocation(program, "mvp");
+    GLint model = glGetUniformLocation(program, "model");
     const bool culling = glIsEnabled(GL_CULL_FACE);
     for (int pass = 0; pass < 2; ++pass) {
         for (const auto& instance : instances_) {
             if (!instance.visible || instance.sky != skyPass) continue;
             Mat4 m = multiply(viewProjection, instance.transform);
             glUniformMatrix4fv(mvp, 1, GL_FALSE, m.data());
+            glUniformMatrix4fv(model, 1, GL_FALSE, instance.transform.data());
             for (const auto& part : instance.model->parts) {
                 const bool blended = part.hasMaterial && (part.material.blendSource != 1 || part.material.blendDestination != 0);
                 if (blended != (pass == 1)) continue;
@@ -436,6 +488,7 @@ void SceneImpl::drawInstances(const Mat4& viewProjection, bool skyPass) const {
     glDepthFunc(GL_LEQUAL);
     glUniform1i(glGetUniformLocation(program, "stageCount"), 0);
     glUniform1f(glGetUniformLocation(program, "alphaReference"), -1.0f);
+    glUniform1i(glGetUniformLocation(program, "lightingOn"), 0);
     if (culling) {
         glEnable(GL_CULL_FACE);
         glCullFace(GL_BACK);
@@ -501,6 +554,9 @@ SceneImpl::DrawPart SceneImpl::upload(const ModelPart& part, LoadedModel& model)
     if (part.material.size() >= 0x60) {
         d.material = materialState(part);
         d.hasMaterial = d.material.supported;
+        std::copy_n(part.material.begin() + 0x10, 4, d.colour);
+        std::copy_n(part.material.begin() + 0x14, 4, d.specular);
+        d.doubled = (part.material[0xb] >> 5) & 1;
     }
     glGenVertexArrays(1, &d.vao);
     glBindVertexArray(d.vao);
@@ -547,6 +603,8 @@ void Scene::bounds(float centre[3], float& radius) const { impl_->bounds(centre,
 void Scene::draw(const Mat4& viewProjection) const { impl_->draw(viewProjection); }
 
 void Scene::drawSky(const Mat4& viewProjection) const { impl_->drawSky(viewProjection); }
+
+void Scene::setLighting(const runtime::LightSet& lights, const float eye[3]) { impl_->setLighting(lights, eye); }
 
 void Scene::setInstanceSky(std::size_t instance) { impl_->setInstanceSky(instance); }
 

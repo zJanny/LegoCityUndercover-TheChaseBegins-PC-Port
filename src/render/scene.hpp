@@ -1,8 +1,9 @@
 #pragma once
 // Development renderer shared by chase-viewer and chase-game: SDL2 + OpenGL 3.3 core through libepoxy, all GL calls
-// in src/render. Materials run the texture-environment stages the game builds (assets::materialState); fragment
-// lighting, reflections and fog are stand-ins (docs/plans/features/rendering.md).
+// in src/render. Materials run the texture-environment stages the game builds (assets::materialState) with the original's
+// fragment lighting (runtime/lighting.hpp); reflections are stand-ins (docs/plans/features/rendering.md).
 #include "assets/assets.hpp"
+#include "runtime/lighting.hpp"
 #include <array>
 #include <cstdint>
 #include <map>
@@ -77,6 +78,8 @@ public:
     std::size_t skinnedParts(const std::string& path) const;
     void bounds(float centre[3], float& radius) const;
     void draw(const Mat4& viewProjection) const;
+    // Lights of the following draws and the camera position the view vector of the specular term uses (world space).
+    void setLighting(const runtime::LightSet& lights, const float eye[3]);
     // STAND-IN RENDER-S50: sky instances are drawn by drawSky() only, without depth test or depth write (docs/re/rendering-sky.md).
     void drawSky(const Mat4& viewProjection) const;
     void setInstanceSky(std::size_t instance);

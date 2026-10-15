@@ -109,6 +109,7 @@ LevelSession::LevelSession(const Shared& sharedState)
       classOf(archiveClassLookup(shared.archive)),
       objectState(runtime::levelInitialState(level, classOf)),
       fogObjects(chase::assets::fogObjects(level, classOf)),
+      lightObjects(chase::assets::lightObjects(level, classOf)),
       backgroundColour(chase::assets::levelBackgroundColour(level)),
       levelScripts(level, objectState),
       sceneStart(level, classOf, levelScripts),
@@ -319,6 +320,8 @@ void LevelSession::draw(int width, int height) {
     }
     Mat4 mvp = chase::render::multiply(
         perspective(shownFieldOfView, float(fe::kTopWidth) / float(fe::kScreenHeight), nearPlane, farPlane), viewMatrix);
+    const Mat4 viewToWorld = chase::render::rigidInverse(viewMatrix);
+    scene.setLighting(runtime::levelLights(lightObjects, roomStreamer ? roomStreamer->currentRoom() : 0), &viewToWorld[12]);
     const std::vector<bool> drawn = runtime::drawnPlacements(placedObjects, objectState);
     for (std::size_t i = 0; i < drawn.size(); ++i)
         scene.setInstanceVisible(placedSceneIndex[i], drawn[i] && roomShown(runtime::roomNumber(placedObjects[i].room)));

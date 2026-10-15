@@ -350,6 +350,34 @@ std::vector<FogObject> fogObjects(const Level& level, const ClassLookup& classOf
     return out;
 }
 
+std::vector<LightObject> lightObjects(const Level& level, const ClassLookup& classOf) {
+    std::vector<LightObject> out;
+    const std::uint32_t typeHash = nameHash("LightType");
+    for (const LevelObject& obj : level.objects) {
+        const Level* cls = classOf(obj.className);
+        if (!cls) continue;
+        const LevelParam* typeParam = effectiveParam(obj, *cls, typeHash);
+        if (!typeParam || typeParam->type != 0) continue;
+        LightObject light;
+        light.instance = obj.instance;
+        light.room = obj.room;
+        float type;
+        std::memcpy(&type, &typeParam->value, 4);
+        light.type = int(type);
+        if (effectiveParam(obj, *cls, nameHash("Intensity"))) light.intensity = effectiveFloat(obj, *cls, "Intensity");
+        if (effectiveParam(obj, *cls, nameHash("MaxRange"))) light.maxRange = effectiveFloat(obj, *cls, "MaxRange");
+        float3Of(effectiveParam(obj, *cls, nameHash("Colour")), light.colour.data());
+        if (!float3Of(effectiveParam(obj, *cls, nameHash("SpecularColour")), light.specular.data())) light.specular = light.colour;
+        light.placement.instance = obj.instance;
+        light.placement.room = obj.room;
+        light.placement.className = obj.className;
+        float3Of(effectiveParam(obj, *cls, initialPosition), light.placement.position);
+        float3Of(effectiveParam(obj, *cls, initialOrientation), light.placement.orientation);
+        out.push_back(std::move(light));
+    }
+    return out;
+}
+
 std::array<std::uint8_t, 3> levelBackgroundColour(const Level& level) {
     std::array<std::uint8_t, 3> colour = {0, 0, 0};
     const std::uint32_t hash = nameHash("BackgroundColour");

@@ -350,6 +350,18 @@ struct FogObject {
     std::array<std::uint8_t, 3> colour = {0, 0, 0};
 };
 std::vector<FogObject> fogObjects(const Level& level, const ClassLookup& classOf);
+// Light objects (class setup 0x15dd50, docs/re/rendering-lighting.md): every object whose class lists LightType (a float the
+// game converts to an integer: 0 ambient, 1 directional, 2 point, 4 specular). Colours stay 0..255 as stored; the defaults when a
+// class lacks a parameter are those of 0x15dd50 (Intensity 1, MaxRange 10, SpecularColour = Colour).
+struct LightObject {
+    std::string instance, room;
+    int type = 0;
+    std::array<float, 3> colour = {0, 0, 0};
+    std::array<float, 3> specular = {0, 0, 0};
+    float intensity = 1, maxRange = 10;
+    Placement placement;
+};
+std::vector<LightObject> lightObjects(const Level& level, const ClassLookup& classOf);
 // BackgroundColour of the level's own parameter tables (read by 0x1bcf94 from the first scene's table, +0x10 then +0x14; bytes by
 // float to int as the game does). Without the parameter the game uses black (0x1bd0a0).
 std::array<std::uint8_t, 3> levelBackgroundColour(const Level& level);

@@ -19,7 +19,7 @@
 ## Not recovered yet
 
 - Gameplay and menus. The level scripts run and some of them start when the character walks into marked places, but most script commands and many ways to start a script are not worked out yet.
-- The game's lighting and materials. The viewer shows an approximation.
+- Reflections, shadows and draw sorting. Lighting and materials follow the game; which lights apply in each room is approximated.
 - Blending between different animations, and the real animation speed.
 - Collision with people, objects that break or move, the camera being placed again when it is stuck, and the character's other moves (fighting, climbing). Vehicles are only partly done.
 - Most music, and the sounds of other people, animals, vehicles and objects. For the character and the coins the sound for each event is known.
