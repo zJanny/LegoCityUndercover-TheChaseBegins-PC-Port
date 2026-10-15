@@ -1,4 +1,5 @@
 #include "game_level.hpp"
+#include "runtime/collision_enable.hpp"
 #include "frontend/script_text_pages.hpp"
 #include "frontend/minimap.hpp"
 #include "frontend/pages.hpp"
@@ -210,8 +211,9 @@ LevelSession::LevelSession(const Shared& sharedState)
     }
     reportUnhandled();
     std::cout << "scripts: startup ended after " << startupUpdates << " updates, " << levelScripts.threadCount() << " threads running\n";
-    const std::vector<ObjectCollision> placedCollisions = objectCollisions(archive, level, objectState);
+    const std::vector<ObjectCollision> placedCollisions = objectCollisionCandidates(archive, level);
     collision = loadCollision(archive, options.level, placedCollisions);
+    runtime::applyObjectCollisionState(collision, objectState);
     doors = game_doors::loadDoors(scene, archive, level, classOf, placedCollisions, placedInstances);
     for (const DoorObject& door : doors) game_doors::poseDoor(scene, door);
     std::cout << "doors: " << doors.size() << '\n';

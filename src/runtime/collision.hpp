@@ -7,6 +7,7 @@
 #include "assets/object_collision.hpp"
 #include <cstdint>
 #include <optional>
+#include <string>
 #include <vector>
 
 namespace chase::runtime {
@@ -35,12 +36,21 @@ public:
         assets::Matrix matrix{};        // node matrix of a box
         float centre[3] = {0, 0, 0};    // box in node space
         float half[3] = {0, 0, 0};
+        std::string owner;              // lower-case instance name of a placed object, empty for level items
+        bool collisionDefault = true;   // owner flag 0x200 before any EnableCollision
+        bool active = true;             // owner flags allow the query layers to accept the entry (bit 0 clear, 0x200 set)
     };
-    void add(const assets::CollisionItem& item, std::uint32_t mask = kStaticMask) { entries_.push_back({item, mask}); }
+    void add(const assets::CollisionItem& item, std::uint32_t mask = kStaticMask) {
+        Entry entry;
+        entry.item = item;
+        entry.mask = mask;
+        entries_.push_back(std::move(entry));
+    }
     // Registers a placed object: its collision item or its box, moved into world coordinates by the node matrix.
     void addObject(const assets::ObjectCollision& object);
     bool empty() const { return entries_.empty(); }
     const std::vector<Entry>& entries() const { return entries_; }
+    std::vector<Entry>& mutableEntries() { return entries_; }
     std::size_t triangleCount() const;
 
     struct Triangle {
@@ -52,7 +62,7 @@ public:
     template <class Visit>
     void query(const float low[3], const float high[3], const CollisionLayer& layer, Visit&& visit) const {
         for (const Entry& entry : entries_)
-            if (!entry.item.nodes.empty() && layer.accepts(entry.mask)) walk(entry.item, 0, low, high, visit);
+            if (entry.active && !entry.item.nodes.empty() && layer.accepts(entry.mask)) walk(entry.item, 0, low, high, visit);
     }
 
 private:

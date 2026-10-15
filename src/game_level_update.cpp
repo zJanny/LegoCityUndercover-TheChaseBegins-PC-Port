@@ -1,3 +1,4 @@
+#include "runtime/collision_enable.hpp"
 #include "game_level.hpp"
 #include "runtime/follow_camera.hpp"
 #include "runtime/player_intent.hpp"
@@ -68,7 +69,7 @@ void LevelSession::updateDoors(const float playerPosition[3], const std::functio
     std::vector<runtime::DoorSoundEvent> doorSounds;
     for (DoorObject& door : doors) {
         doorSounds.clear();
-        if (levelScripts.objectNatives().entityUpdateSkipped(game_doors::lowerCase(door.instance))) continue;
+        if (objectState.isDisabled(door.instance) || levelScripts.objectNatives().entityUpdateSkipped(game_doors::lowerCase(door.instance))) continue;
         runtime::doorUpdate(door.state, door.params, runtime::doorZoneContains(door.placement.data(), playerPosition, door.params), doorSounds);
         game_doors::poseDoor(scene, door);
         for (const runtime::DoorSoundEvent& event : doorSounds) {
@@ -173,6 +174,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         soundLog.emplace_back(updates, call.id);
         if (shared.audio) shared.audio->play(call);
     };
+    runtime::applyObjectCollisionState(collision, objectState);
     if (player && !cutscenePlaying()) {
         player->sounds.clear();
         runtime::StickIntentInput stick;

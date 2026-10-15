@@ -27,6 +27,7 @@ bool modelBounds(FuseArchive& archive, const std::string& modelPath, float centr
 struct ObjectCollision {
     std::string instance;
     std::string className;
+    bool collisionDefault = true;                 // the object's BoundCollision parameter: entity flag 0x200 before any EnableCollision
     std::string model;                            // meshModelPath of the object's model, empty without one
     std::uint32_t mask = 6;                       // entry mask word: 6 for objects with the dynamic flag 0x100, which every prop has
     Matrix matrix{};                              // node world matrix of the object (row vectors, translation last)
@@ -46,5 +47,10 @@ struct ObjectCollision {
 // Characters, vehicles and classes with other constructors are not included. A "BoundCollision" parameter of 0
 // clears the collision flag 0x200 of the object unless `state` sets it again; disabled objects are left out.
 std::vector<ObjectCollision> objectCollisions(FuseArchive& archive, const Level& level, const PlacedObjectState& state);
+
+// Every object the rules above cover, whatever its enable state. The original lists an entity in its world grid once (0x2ba3f4
+// returns when it is already listed) and the query layers test the owner's flags (bit 0 disabled, 0x200 collision) when they
+// run, so EnableObject and EnableCollision during play only change those flags (docs/re/collision.md).
+std::vector<ObjectCollision> objectCollisionCandidates(FuseArchive& archive, const Level& level);
 
 }

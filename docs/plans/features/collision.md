@@ -20,6 +20,7 @@ IN_PROGRESS, updated 2026-10-13T21:29:01+0200. Level collision and placed object
 - COLL-S1 Broad phase by world boxes instead of 0x2335e4 / the local tree query (shared with CAMERA-S1).
 - COLL-S2 The start state takes new-game values and treats waits as elapsed — owned by [script-system.md](script-system.md) (SCRIPT-S1, SCRIPT-S2).
 - COLL-S3 An open door keeps the closed box (see DOOR-3).
+- COLL-S4 Doors of disabled objects are not updated; whether the original updates a disabled entity is not read. needs: COLL-21. evidence: [collision.md §2026-10-15T07:58](../../re/collision.md#ts-20261015-075843).
 - The former stand-ins `kStateDisabledStandIn` and `kDoorCentreXStandIn` are gone (start state from the level scripts and revealer links; box corners by the node matrices).
 
 ## 5. Open items
@@ -31,10 +32,11 @@ IN_PROGRESS, updated 2026-10-13T21:29:01+0200. Level collision and placed object
 - [ ] COLL-5 — Whether the ground probe stands on box tops as the replica does (no trace of a character on a crate). evidence: [collision.md §2026-10-13T17:34](../../re/collision.md#ts-20261013-173400).
 - [ ] COLL-6 — Unexplained: `door_back` rows 125/128/130 (static contact near (901.8, 1096)), 153 master-model items vs 147 + 7 static entries.
 - [ ] COLL-7 — Collision with parked cars and people, and objects that break or move, is not replicated (cars and people fall under COLL-2).
-- [ ] COLL-20 — Collision is built once after the startup run, so objects enabled during play get none: the police car that `1-1_VanBreakdown` enables in mission 1-1 can be walked through. `EnableObject` / `EnableCollision` during play must add and remove the object's entries as the original does (code not read; related: SCRIPT-160 for the startup part). blocks: VEH-S2. evidence: [vehicles.md §2026-10-15T00:09](../../re/vehicles.md#ts-20261015-000907).
+- [ ] COLL-21 — Pin the player-into-police-car stop as an oracle trace with the port camera at the same yaw (the 3.06 / 3.22 unit stop agrees only roughly), take comparison screenshots (needs an RPC slot), and read 0x242b08 to settle COLL-S4. blocks: COLL-S4. evidence: [collision.md §2026-10-15T07:58](../../re/collision.md#ts-20261015-075843).
 
 ## 6. Findings summary
 
+- EnableObject / EnableCollision during play only change owner flags, the grid is filled once: [collision.md §2026-10-15T07:58](../../re/collision.md#ts-20261015-075843).
 - Collision data layout, ground probe (0x20b48c / 0x1f9884 / 0x2023e4) and wall slide (0x21a73c / 0x208d84 / 0x2092d8): [collision.md §2026-10-13T14:45](../../re/collision.md#ts-20261013-144500).
 - Placed-object grid, shapes and layers: [collision.md §2026-10-13T17:34](../../re/collision.md#ts-20261013-173400).
 - Corrections that replaced the stand-ins: [collision.md §2026-10-13T20:43](../../re/collision.md#ts-20261013-204340), [collision.md §2026-10-13T20:53](../../re/collision.md#ts-20261013-205344).
@@ -43,5 +45,6 @@ IN_PROGRESS, updated 2026-10-13T21:29:01+0200. Level collision and placed object
 ## 7. Code and tests
 
 - `src/runtime/collision.*`, `src/assets/object_collision.*`, `CollisionWorld::addObject`, `objectCollisions` (chase_assets).
-- CTest: `collision-real-data`, `level-start-real-data`.
+- `src/runtime/collision_enable.*` (owner flags per update), `objectCollisionCandidates`.
+- CTest: `collision-enable`, `collision-real-data`, `level-start-real-data`.
 - Trace dirs: `CHASE_COLLISION_TRACE_DIR`, `CHASE_OBJECT_COLLISION_TRACE_DIR`. Scenarios: `tools/oracle/coll-wall*.txt`, `objcoll-walk.txt`, `objcoll-door.txt`, `objcoll-barrier.txt`.

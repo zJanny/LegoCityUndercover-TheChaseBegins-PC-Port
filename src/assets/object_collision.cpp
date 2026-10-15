@@ -123,7 +123,8 @@ bool PlacedObjectState::collisionEnabled(const std::string& instance, bool initi
     return found == collisionOverride.end() ? initial : found->second;
 }
 
-std::vector<ObjectCollision> objectCollisions(FuseArchive& archive, const Level& level, const PlacedObjectState& state) {
+namespace {
+std::vector<ObjectCollision> collectObjectCollisions(FuseArchive& archive, const Level& level, const PlacedObjectState& state, bool keepInactive) {
     const ClassLookup classLookup = archiveClassLookup(archive);
     const auto classOf = [&](const std::string& name) -> const Level& { return *classLookup(name); };
     std::map<std::string, ModelData> models;
@@ -145,7 +146,7 @@ std::vector<ObjectCollision> objectCollisions(FuseArchive& archive, const Level&
         const bool vehicle = isVehicleClassFile(cls);
         const bool propFamily = isPropFamilyClass(object.className) || vehicle;
         if (!prop && !dummyCollision && !vehicle) continue;
-        if (state.isDisabled(object.instance)) continue;
+        if (!keepInactive && state.isDisabled(object.instance)) continue;
 
         Placement placement;
         if (!float3Of(effectiveParam(object, cls, hashPosition), placement.position)) continue;
@@ -192,12 +193,14 @@ std::vector<ObjectCollision> objectCollisions(FuseArchive& archive, const Level&
             }
         }
         const LevelParam* boundCollision = effectiveParam(object, cls, hashBoundCollision);
-        if (!state.collisionEnabled(object.instance, !boundCollision || boundCollision->value != 0)) continue;
+        const bool collisionDefault = !boundCollision || boundCollision->value != 0;
+        if (!keepInactive && !state.collisionEnabled(object.instance, collisionDefault)) continue;
         if (!box && !mesh) continue;
 
         ObjectCollision entry;
         entry.instance = object.instance;
         entry.className = object.className;
+        entry.collisionDefault = collisionDefault;
         entry.model = modelPath;
         entry.matrix = placementMatrix(placement);
         entry.mesh = mesh;
@@ -206,6 +209,15 @@ std::vector<ObjectCollision> objectCollisions(FuseArchive& archive, const Level&
         out.push_back(std::move(entry));
     }
     return out;
+}
+}
+
+std::vector<ObjectCollision> objectCollisions(FuseArchive& archive, const Level& level, const PlacedObjectState& state) {
+    return collectObjectCollisions(archive, level, state, false);
+}
+
+std::vector<ObjectCollision> objectCollisionCandidates(FuseArchive& archive, const Level& level) {
+    return collectObjectCollisions(archive, level, PlacedObjectState{}, true);
 }
 
 }

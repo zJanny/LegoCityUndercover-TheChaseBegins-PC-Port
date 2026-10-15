@@ -257,7 +257,7 @@ void CameraSweep::prepare(const CollisionWorld& world, const float camera[3], co
     const float nearDepth = settings.previousNear >= 0.0f ? settings.previousNear : nearLimit_;
     for (const CollisionWorld::Entry& entry : world.entries()) {
         const assets::CollisionItem& item = entry.item;
-        if (item.nodes.empty() || !kCameraLayer.accepts(entry.mask)) continue;
+        if (!entry.active || item.nodes.empty() || !kCameraLayer.accepts(entry.mask)) continue;
         if (entry.box) {
             const assets::CollisionNode& root = item.nodes[0];
             bool overlaps = true;

@@ -1,6 +1,7 @@
 #include "runtime/collision.hpp"
 #include <algorithm>
 #include <array>
+#include <cctype>
 #include <cmath>
 #include <cstring>
 
@@ -153,6 +154,9 @@ assets::CollisionItem movedItem(const assets::CollisionItem& local, const assets
 void CollisionWorld::addObject(const assets::ObjectCollision& object) {
     Entry entry;
     entry.mask = object.mask;
+    entry.owner.resize(object.instance.size());
+    std::transform(object.instance.begin(), object.instance.end(), entry.owner.begin(), [](unsigned char c) { return char(std::tolower(c)); });
+    entry.collisionDefault = object.collisionDefault;
     if (object.mesh) {
         entry.item = movedItem(*object.mesh, object.matrix);
     } else {
