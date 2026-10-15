@@ -10,7 +10,7 @@ IN_PROGRESS, updated 2026-10-14T21:41:00+02:00. The 13 animation and attach nati
 
 ## 3. Verified behaviour
 
-- The 34 natives that run and the 90 stand-ins are counted in the census. Census and handlers: [script-natives.md §2026-10-14T13:33](../../re/script-natives.md#ts-20261014-133339).
+- The 34 natives that run and the 90 stand-ins are counted in the census. Census table: [script-natives-census.md](../../re/script-natives-census.md).
 
 ## 4. Stand-ins
 

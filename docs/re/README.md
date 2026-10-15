@@ -40,7 +40,8 @@ Read this index, then open only the file you need.
 | [ai-states.md](ai-states.md) | AISuperJump set-up 0x213300 (frames, +0x308, +0x30c), state 10 face target 0x2c5bc4, state 11 arrival value (ATTR_RunSpeed), state numbers 25 / 27 / 35 / 36 |
 | [script-triggers.md](script-triggers.md) | Check functions of every bound trigger type (BoundEntered / Left / Inside / Outside, on-foot and vehicle variants, object bounds), census of lvl_01 and lvl_00, oracle runs of BoundLeft and PlayerOnFootBoundEntered, why a teleport does not fire BoundLeft. |
 | [scene-start.md](scene-start.md) | Scene start: class `startup` scripts of placed objects, camera bound switches (0x2ff35c), the trigger rule, `OnSceneEnter<room>` / `OnSceneExit` events (0x1ecc50), `ScriptCheckExtras` (0x2e5638) |
-| [script-natives.md](script-natives.md) | Census of all script natives: handler addresses, argument counts, call counts per level, classes A-D and the work batches SCRIPT-26 to SCRIPT-39 |
+| [script-natives.md](script-natives.md) | Script natives: how the census was made, handler ABI, classes A-D and the work batches SCRIPT-26 to SCRIPT-39 |
+| [script-natives-census.md](script-natives-census.md) | Census table of all script natives, kept up to date: handler addresses, argument counts, call counts per level, class, batch and state |
 | [script-natives-flags.md](script-natives-flags.md) | Batch 26 handlers (object flags, KillScript, class messages): split from script-natives.md |
 | [script-natives-progress.md](script-natives-progress.md) | Batch SCRIPT-27: handlers of the progress, save and stud natives, the slot bytes they use |
 | [script-natives-audio.md](script-natives-audio.md) | Music natives OverrideMusic, AutomaticMusic, StopMusic, the music block 0x376b30, EnableTrafficAndPedestrians and the camera manager request (+0x28) |
