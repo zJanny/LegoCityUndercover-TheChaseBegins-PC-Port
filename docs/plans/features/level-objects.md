@@ -16,13 +16,14 @@ IN_PROGRESS, updated 2026-10-14T15:05:41+02:00. Objects are drawn standing at th
 
 ## 4. Stand-ins
 
-- LEVOBJ-S1 Characters show frame 0 of `class_generic/idle_minifig`, taken from the pedestrian and character-display code, not the animation the AI state would start.
+- LEVOBJ-S1 Characters other than pedestrians run the idle state of `char_ai_actor` (verified for `char_ai_actor`; assumed for the other classes, which were not measured); pedestrians stand in frame 0 of `idle_minifig`.
+- LEVOBJ-S4 The random generator of the idle choice uses a fixed seed; the original seeds from the clock (0x105d8c). evidence: [npc-animation.md §2026-10-15T09:29](../../re/npc-animation.md#ts-20261015-092900).
 - LEVOBJ-S2 Everything else with a model is drawn standing still at its placement; props are hidden while the start state disables them (EnableObject, build-it targets), but characters, sub-objects and per-class start visibility (`ShowOnObjectScan`, `ShowOnMap`) are not applied (LEVOBJ-12, LEVOBJ-13).
 - LEVOBJ-S3 `props/map_*` markers (mission waypoints, `Prop_Waypoint_*`) are filtered out by an observation-based class-name rule (five lie within 12 units of the player at the gameplay start and none appears in the oracle reference).
 
 ## 5. Open items
 
-- [ ] LEVOBJ-2 — Which animation an AI character plays at level start (the AI classes read many parameters and start animations through the role table `tablesanimations`); which `class_*` folder (police, robber, construction, farmer, fire, space, miner, female) a class selects was not traced. needs: ANIM-2. evidence: [objects.md §2026-10-13T16:34](../../re/objects.md#ts-20261013-163430).
+- [ ] LEVOBJ-16 — Other NPC states (pedestrian walk, AIMillAbout stop, patrol, gang classes) and the animation of classes not measured. needs: ANIM-5. evidence: [npc-animation.md §2026-10-15T09:29](../../re/npc-animation.md#ts-20261015-092900).
 - [ ] LEVOBJ-3 — Objects that move, break or react (platforms, scripted objects, NPC walking, mission flow) are frozen at their level state. needs: SCRIPT-1. evidence: [scripts.md §2026-10-13T20:42](../../re/scripts.md#ts-20261013-204236).
 - [ ] LEVOBJ-4 — The 8 custom lineup characters (`CharacterEnum` 1..8 through 0x2372e0) and the 16 animals (`char_pig`, `char_cat`, `char_dog`, `char_shark`, `char_Crow`, `ride_pig`) are not drawn; the jetpack `AttachModel` placement (bone name hash unresolved, value `chest`) and `AttachRelative`. evidence: [objects.md §2026-10-13T16:34](../../re/objects.md#ts-20261013-163430).
 - [ ] LEVOBJ-5 — The code that copies instance parameters into the slot array `obj + 0x2c` was not found (the rule is inferred); how `xx_particleemitter` and other `xx_*` objects are created; model LOD selection (`LOD_NumberofLods`); whether `Animation` start poses change placed props. evidence: [objects.md §2026-10-13T15:39](../../re/objects.md#ts-20261013-153915).

@@ -27,8 +27,8 @@ const FuseEntry& require(FuseArchive& archive, const std::string& path) {
 
 constexpr const char* defaultAnimationClass = "class_generic";
 
-std::string idleAnimationPath(const std::string& animationClass) {
-    return "models/char_minifig/" + animationClass + "/idle_minifig.bfnanm";
+std::string idleAnimationPath(const std::string& animationClass, const char* name) {
+    return "models/char_minifig/" + animationClass + "/" + name + "_minifig.bfnanm";
 }
 
 Mat4 onJoint(const CharacterRig& rig, std::size_t joint, const std::vector<Matrix>& skin, const Mat4& world) {
@@ -74,29 +74,29 @@ CharacterAppearance readBaseAppearance(FuseArchive& archive) {
     return characterAppearance(parseLevel(archive.read(require(archive, "levels/chars/char_player.blvl"))));
 }
 
+std::string levelCharacterAnimationPath(FuseArchive& archive, const std::string& animationClass, const char* name) {
+    const std::string path = idleAnimationPath(animationClass, name);
+    return archive.find(path) ? path : idleAnimationPath(defaultAnimationClass, name);
+}
+
 std::vector<std::optional<CharacterInstance>> placeLevelCharacters(Scene& scene, FuseArchive& archive, const std::vector<CharacterObject>& characters) {
     std::vector<std::optional<CharacterInstance>> placed(characters.size());
     if (characters.empty()) return placed;
     const CharacterAppearance base = readBaseAppearance(archive);
     std::map<std::string, CharacterRig> rigs;
     std::map<std::string, Animation> animations;
-    std::map<std::string, std::vector<Matrix>> skins;
     for (std::size_t index = 0; index < characters.size(); ++index) {
         const CharacterObject& character = characters[index];
         const std::string bodyPath = meshModelPath(character.appearance.body);
         if (!archive.find(bodyPath)) continue;
-        std::string animationPath = idleAnimationPath(character.animationClass);
-        if (!archive.find(animationPath)) animationPath = idleAnimationPath(defaultAnimationClass);
+        const std::string animationPath = levelCharacterAnimationPath(archive, character.animationClass, "idle");
         auto rig = rigs.find(bodyPath);
         if (rig == rigs.end()) rig = rigs.emplace(bodyPath, loadCharacterRig(archive, bodyPath)).first;
         auto animation = animations.find(animationPath);
         if (animation == animations.end()) animation = animations.emplace(animationPath, loadAnimation(archive, animationPath)).first;
         const Mat4 world = placementMatrix(character.placement);
-        const CharacterInstance instance = addCharacter(scene, base, character.appearance, character.hat, animationPath, world);
-        auto skin = skins.find(instance.bodyKey);
-        if (skin == skins.end())
-            skin = skins.emplace(instance.bodyKey, poseBody(scene, rig->second, instance, animation->second, 0)).first;
-        placeCharacter(scene, rig->second, instance, skin->second, world);
+        const CharacterInstance instance = addCharacter(scene, base, character.appearance, character.hat, character.placement.instance, world);
+        placeCharacter(scene, rig->second, instance, poseBody(scene, rig->second, instance, animation->second, 0), world);
         placed[index] = instance;
     }
     return placed;

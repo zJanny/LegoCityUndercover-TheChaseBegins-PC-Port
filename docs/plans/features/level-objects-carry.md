@@ -17,9 +17,9 @@ IN_PROGRESS, updated 2026-10-15T00:20:00+02:00. `chase-game` picks up `1-1_Donut
 
 ## 4. Stand-ins
 
-- LEVOBJ-S30 The durations of the pickup (attach at update 8, end at 17) are copies of the measured place timing; the drop end (17) is a copy as well. The original ends them on animation events. needs: ANIM-2, LEVOBJ-30.
+- LEVOBJ-S30 The durations of the pickup (attach at update 8, end at 17) are copies of the measured place timing; the drop end (17) is a copy as well. The original ends them on animation events. needs: ANIM-5, LEVOBJ-30.
 - LEVOBJ-S31 The player does not turn towards the object or the target (the original sets the heading in the message 3 handlers) and stands still while a carry state runs (`CarrySet::busy` suppresses the stick).
-- LEVOBJ-S32 A carried object floats 0.5 m in front of the player, 0.9 m up; the original hangs its `carryhandle` node on the player's hand node. A released box is put at the target position (place) or at the player (drop); the original lets it fall to the ground from the hand. needs: ANIM-2.
+- LEVOBJ-S32 A carried object floats 0.5 m in front of the player, 0.9 m up; the original hangs its `carryhandle` node on the player's hand node. A released box is put at the target position (place) or at the player (drop); the original lets it fall to the ground from the hand. needs: ANIM-5.
 - LEVOBJ-S33 Character ability 6 (can lift) is taken as present, ability 7 (strength) as missing, so `ATTR_StrengthOnly` objects cannot be picked up.
 - LEVOBJ-S34 The ray test of the pickup message (0x22f134, 3 m) and the interaction-flag gates of the action (ctrl+0x314 bit 6, ctrl+0x316) are not applied; the first matching zone in file order wins.
 

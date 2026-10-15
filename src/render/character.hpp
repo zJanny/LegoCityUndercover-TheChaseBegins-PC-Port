@@ -30,8 +30,11 @@ CharacterInstance addCharacter(Scene& scene, const assets::CharacterAppearance& 
 // The base look for CharacterAppearance (the placeholder textures of the shared models): class char_player.
 assets::CharacterAppearance readBaseAppearance(assets::FuseArchive& archive);
 
+// The animation file `name` ("idle", "idle2") of an animation class folder; the generic class when the folder has none.
+std::string levelCharacterAnimationPath(assets::FuseArchive& archive, const std::string& animationClass, const char* name);
+
 // Draws the characters of a level standing in place: each at its placement, in frame 0 of the idle
-// animation of its animation class. placeLevelCharacters returns the scene instances per character (empty for the ones left out), addLevelCharacters how many were added.
+// animation of its animation class, each with its own skinned body so that it can be posed on its own. placeLevelCharacters returns the scene instances per character (empty for the ones left out), addLevelCharacters how many were added.
 std::vector<std::optional<CharacterInstance>> placeLevelCharacters(Scene& scene, assets::FuseArchive& archive,
                                                                    const std::vector<assets::CharacterObject>& characters);
 std::size_t addLevelCharacters(Scene& scene, assets::FuseArchive& archive, const std::vector<assets::CharacterObject>& characters);

@@ -6,6 +6,7 @@
 #include "frontend/hud.hpp"
 #include "frontend/resources.hpp"
 #include "game_audio.hpp"
+#include "game_characters.hpp"
 #include "game_cutscene.hpp"
 #include "game_doors.hpp"
 #include "game_hud.hpp"
@@ -96,6 +97,7 @@ private:
     void updateDoors(const float playerPosition[3], const std::function<void(const chase::runtime::SoundCall&)>& emit);
     void updateBuildits(const float playerPosition[3]);
     void updateCarry(const float playerPosition[3]);
+    void updateLevelCharacters(float dt);
     void updateFollowCamera(float dt);
     void loadBoardingVehicles(const std::map<std::string, std::pair<std::size_t, chase::render::Mat4>>& placedInstances);
     chase::runtime::BoardingStep stepBoarding(float dt);
@@ -161,6 +163,7 @@ private:
     std::vector<float> scriptedHeights;
     std::optional<chase::runtime::RoomStreamer> roomStreamer;
     std::map<int, std::vector<std::size_t>> roomInstances;
+    std::optional<game_characters::LevelCharacters> levelCharacters;
     std::optional<game_cutscene::InEngine> cutsceneHost;
     std::optional<game_cutscene::Movies> movies;
     bool movieStarted = false, introMovieSkip = false;

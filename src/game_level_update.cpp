@@ -98,6 +98,12 @@ void LevelSession::updateCarry(const float playerPosition[3]) {
         }
 }
 
+void LevelSession::updateLevelCharacters(float dt) {
+    levelCharacters->update(scene, dt, [this](const chase::assets::CharacterObject& character) {
+        return !objectState.isDisabled(character.placement.instance) && roomShown(runtime::roomNumber(character.placement.room));
+    });
+}
+
 void LevelSession::updateBuildits(const float playerPosition[3]) {
     const std::vector<runtime::BuilditAction> actions = buildits.update(objectState, playerPosition, pad.slot(kSlotConfirmButton).value > 0.0f);
     runtime::applyBuilditActions(buildits, actions, objectState, levelScripts);
@@ -246,6 +252,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
                 runtime::doorMessage(door.state, door.params,
                                      sent.message == runtime::kMessageTrigger ? runtime::DoorMessage::Open : runtime::DoorMessage::Close);
     provisionalStudClockSeconds += double(dt);
+    updateLevelCharacters(dt);
     if (follow) updateFollowCamera(dt);
     else camera.update(dt, pad);
     updateRoomStreaming();

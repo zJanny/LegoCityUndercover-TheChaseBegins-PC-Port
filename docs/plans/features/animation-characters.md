@@ -6,7 +6,7 @@ Skeletons (`.bfnskl`), animations (`.bfnanm`), curves, pose composition, skinnin
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-13T21:46:54+0200. Player and level characters are posed and skinned natively; animation playback for NPCs is not implemented.
+IN_PROGRESS, updated 2026-10-15T09:35:00+0200. Player and level characters are posed and skinned natively; level characters play the idle state's animations (idle / idle2, once each at the stored rate); other NPC states and blending are open.
 
 ## 3. Verified behaviour
 
@@ -17,12 +17,13 @@ IN_PROGRESS, updated 2026-10-13T21:46:54+0200. Player and level characters are p
 
 ## 4. Stand-ins
 
-- None.
+- ANIM-S2 The pose of a finished clip is clamped to `frames - 1` (the original's out-of-range sample rule was not read). evidence: [npc-animation.md §2026-10-15T09:29](../../re/npc-animation.md#ts-20261015-092900).
 
 ## 5. Open items
 
 - [ ] ANIM-1 — Cutscene actors play on the camera's clock; whether an actor's own stored rate applies is not recovered, and whether any shipped animation stores rate 0 is not checked. evidence: [skeleton-animation.md §2026-10-14T13:39](../../re/skeleton-animation.md#ts-20261014-133953).
-- [ ] ANIM-2 — Playback of NPC animations is not implemented. blocks: LEVOBJ-2, SCRIPT-32. evidence: [objects.md §2026-10-13T16:34](../../re/objects.md#ts-20261013-163430).
+- [ ] ANIM-5 — The general animation slot player (4 slots, modes 1 / 6 loop, 2, 3, 5, start offsets, finished flag, `WaitForCurrent` lengths, `PlayAnimation` offsets) is only implemented for the idle state. blocks: SCRIPT-112, SCRIPT-32. evidence: [npc-animation.md §2026-10-15T09:29](../../re/npc-animation.md#ts-20261015-092900).
+- [ ] ANIM-6 — Original-vs-port comparison picture of an idle NPC (state `m11-1-donut-shop`, `1-1_AI_DonutShopMan` at 813.3 23.92 1070.1, player at 819.58 23.92 1074.0 facing -0.422 0 -0.907) needs RPC screenshots; the check so far is memory reads only. evidence: [npc-animation.md §2026-10-15T09:29](../../re/npc-animation.md#ts-20261015-092900).
 - [ ] ANIM-3 — Blending between different animations is not implemented. evidence: [skeleton-animation.md §2026-10-12T22:10](../../re/skeleton-animation.md#ts-20261012-2210).
 - [ ] ANIM-4 — The shared character rig code for animals and custom characters is missing (rigs of `char_pig`, `char_cat`, `char_dog`, `char_shark`, `char_Crow`). see LEVOBJ-4.
 
@@ -30,9 +31,10 @@ IN_PROGRESS, updated 2026-10-13T21:46:54+0200. Player and level characters are p
 
 - Containers, keyframes, pose composition, interpolation, bone palettes: [skeleton-animation.md §2026-10-12T18:40](../../re/skeleton-animation.md#ts-20261012-1840), [skeleton-animation.md §2026-10-12T20:15](../../re/skeleton-animation.md#ts-20261012-2015), [skeleton-animation.md §2026-10-12T21:30](../../re/skeleton-animation.md#ts-20261012-2130).
 - Playback rate and the extra (root motion) curve: [skeleton-animation.md §2026-10-13T17:02](../../re/skeleton-animation.md#ts-20261013-170203).
+- NPC idle state, slots, RNG: [npc-animation.md §2026-10-15T09:29](../../re/npc-animation.md#ts-20261015-092900).
 - Head attachment: [player-entity-input.md §2026-10-13T12:56](../../re/player-entity-input.md#ts-20261013-125622).
 
 ## 7. Code and tests
 
-- `src/assets/anim.cpp`, `src/render/character.*`, C ABI `chase_assets_c` (`tools/chase_native.py`).
-- CTest: `assets-core`, `assets-real-data`, `viewer-real-smoke`.
+- `src/assets/anim.cpp`, `src/render/character.*`, `src/runtime/npc_idle.*`, `src/runtime/game_random.*`, `src/game_characters.*`, C ABI `chase_assets_c` (`tools/chase_native.py`).
+- CTest: `npc-idle`, `npc-idle-real-data`, `assets-core`, `assets-real-data`, `viewer-real-smoke`.
