@@ -22,8 +22,9 @@ Plan and progress: `docs/plans/linux-port.md` and `docs/plans/linux-port.progres
 
 ```sh
 python3 -m unittest discover -s tests -p 'test_*.py' -v
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug && cmake --build build
-ctest --test-dir build --output-on-failure                # -R <name> for one test
+cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo && cmake --build build -j
+ctest --test-dir build -j8 -LE slow --output-on-failure   # while developing; -R <name> for one test
+ctest --test-dir build -j8 --output-on-failure            # all tests, once before the final commit
 python3 tools/extract_game.py "<image>.cci" --output artifacts/game   # output dir must NOT exist
 ```
 
@@ -106,6 +107,7 @@ The original runs in Azahar as a measuring reference. Read `docs/re/oracle.md` b
 **Code and files**
 - No explanatory comments; clear names and simple control flow. Keep license notices, tool directives and comments on non-obvious correctness or unavoidable constraints.
 - Prefer the native Read/Edit/Write tools; scripts only for bulk or structured edits. Review the diff afterwards.
+- **Short tests:** no test or development script walks or drives long distances or runs for minutes, and nobody tunes routes. Start close to the point under test (`at X Y Z`, a level data position, a replay of recorded data). A test above about 5 seconds gets the label `slow` (list at the end of `CMakeLists.txt`).
 
 **Subagents**
 - Cheapest model that can do the task; narrow tasks with only the needed files and rules. Do not delegate correctness-critical verification.

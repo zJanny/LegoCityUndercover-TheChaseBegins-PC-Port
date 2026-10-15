@@ -7,7 +7,7 @@ Game data is never stored in this repository. You need your own decrypted `.cci`
 ## Quick start
 
 ```sh
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo
 cmake --build build
 python3 tools/extract_romfs.py path/to/game.cci --output artifacts/romfs
 build/chase-game
@@ -29,7 +29,7 @@ This starts the development runtime. It is not the game: it shows the start scre
 
 ![Progress trend](docs/progress-trend.svg)
 
-Updated 2026-10-15, commit 6e03b95. How the numbers are measured: [docs/progress.md](docs/progress.md).
+Updated 2026-10-15, commit c04eb99. How the numbers are measured: [docs/progress.md](docs/progress.md).
 <!-- progress:end -->
 
 ## Documentation

@@ -27,8 +27,12 @@ See [Extracting game data](extracting-game-data.md) for details.
 ```sh
 python3 -m unittest discover -s tests -p 'test_*.py' -v
 python3 -m unittest discover -s tests -p 'test_*.py' -k test_hash_corruption
-ctest --test-dir build --output-on-failure
+ctest --test-dir build -j8 --output-on-failure            # all tests, about one minute
+ctest --test-dir build -j8 -LE slow --output-on-failure   # without the slow tests, a few seconds
 ```
+
+- Tests with the label `slow` run for more than about 5 seconds each. They are listed at the end of `CMakeLists.txt`. Run them before every commit that ends a piece of work.
+- Build with `-DCMAKE_BUILD_TYPE=RelWithDebInfo` (the default). A `Debug` build runs the game tests about 5 times slower.
 
 ## Documentation links
 

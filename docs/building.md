@@ -15,7 +15,7 @@
 Run these commands from the repository folder:
 
 ```sh
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo
 cmake --build build
 ```
 
@@ -24,7 +24,7 @@ The programs are written to `build/`. The build also makes `libchase_assets_c.so
 ## Check that everything works
 
 ```sh
-ctest --test-dir build --output-on-failure
+ctest --test-dir build -j8 --output-on-failure
 python3 -m unittest discover -s tests -p 'test_*.py' -v
 ```
 

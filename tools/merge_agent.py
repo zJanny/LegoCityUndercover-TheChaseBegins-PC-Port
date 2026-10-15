@@ -91,7 +91,7 @@ def check_staged_content(root: Path) -> None:
 
 
 def build_warning_free(root: Path) -> None:
-    run(["cmake", "-S", ".", "-B", "build", "-DCMAKE_BUILD_TYPE=Debug"], root, capture=True)
+    run(["cmake", "-S", ".", "-B", "build", "-DCMAKE_BUILD_TYPE=RelWithDebInfo"], root, capture=True)
     result = run(["cmake", "--build", "build", "-j"], root, check=False, capture=True)
     output = result.stdout + result.stderr
     if result.returncode != 0:
@@ -118,7 +118,7 @@ def run_checks(root: Path) -> None:
     run(["python3", "tools/progress_report.py", "--update-readme", "README.md"], root)
     run(["git", "add", "README.md", "docs/progress-trend.svg"], root)
     print("== ctest")
-    run(["ctest", "--test-dir", "build", "--output-on-failure", "-j", "4"], root)
+    run(["ctest", "--test-dir", "build", "--output-on-failure", "-j", "8"], root)
     print("== python tests")
     run(["python3", "-m", "unittest", "discover", "-s", "tests", "-p", "test_*.py"], root)
     print("== staged")

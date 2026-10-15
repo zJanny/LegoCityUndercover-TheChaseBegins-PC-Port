@@ -23,6 +23,11 @@ void put32(Bytes& b, std::uint32_t v) {
     for (int i = 0; i < 4; ++i) b.push_back(std::uint8_t(v >> (8 * i)));
 }
 Bytes bytes(const std::string& text) { return Bytes(text.begin(), text.end()); }
+Bytes padded(const char* text, std::size_t size) {
+    std::string field(text);
+    field.resize(size, '\0');
+    return bytes(field);
+}
 
 const Bytes stream = bytes(std::string("\xe0" "abca" "\x20\x02" "\x81\x40\x09" "Y", 11) +
                            std::string("\xc0\x00\x00\x00", 4) + "\xfdX");
@@ -363,9 +368,9 @@ Bytes levelFile(bool extraBlock) {
     };
     std::vector<std::pair<std::int32_t, Bytes>> blocks{{-15, head}};
     for (int i = 0; i < 7; ++i) blocks.push_back({-15, {}});  // s10 s14 s18 s1c s20 s24 s28
-    blocks.insert(blocks.end(), {{-15, obj}, {-15, bytes(std::string("Bench01", 8))}, {-15, bytes(std::string("room1", 8))},
+    blocks.insert(blocks.end(), {{-15, obj}, {-15, bytes(std::string("Bench01", 8))}, {-15, padded("room1", 8)},
                                  {-15, params}, {-15, floats(1, 2, 3)}, {-15, floats(0, 90, 0)},
-                                 {-15, bytes(std::string("Prop_Bench", 12))}, {-15, {}}, {-15, {}},
+                                 {-15, padded("Prop_Bench", 12)}, {-15, {}}, {-15, {}},
                                  {-16, bytes(std::string("leprops/leprop_test", 20))}});
     if (extraBlock) blocks.push_back({-14, bytes("xx")});
     return pooledBlocks(blocks);
@@ -394,12 +399,12 @@ Bytes characterLevelFile() {
         return out;
     };
     std::vector<std::pair<std::int32_t, Bytes>> blocks{{-15, head}, {-15, defaults},
-                                                       {-15, bytes(std::string("Char_Head_Test", 16))}};
+                                                       {-15, padded("Char_Head_Test", 16)}};
     for (int i = 0; i < 6; ++i) blocks.push_back({-15, {}});  // s14 s18 s1c s20 s24 s28
-    blocks.insert(blocks.end(), {{-15, obj}, {-15, bytes(std::string("Player1Start", 16))},
-                                 {-15, bytes(std::string("room1", 8))}, {-15, params},
+    blocks.insert(blocks.end(), {{-15, obj}, {-15, padded("Player1Start", 16)},
+                                 {-15, padded("room1", 8)}, {-15, params},
                                  {-15, floats(-2, 1.5f, 17)}, {-15, floats(0, 181, 0)}, {-15, {}}, {-15, {}},
-                                 {-16, bytes(std::string("point", 8))}});
+                                 {-16, padded("point", 8)}});
     return pooledBlocks(blocks);
 }
 
