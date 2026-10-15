@@ -13,6 +13,14 @@ constexpr float kVehicleBodyGravity = -39.0f;
 // 0x33b0d4..0x33b120: linear damping = DampingLinear * (0.04 * min(|velocity|, 25))^2, clamped to 0..1 (0x1e124c).
 constexpr float kVehicleDampingSpeedScale = 0.04f;
 constexpr float kVehicleDampingSpeedCap = 25.0f;
+// 0x33b44c..0x33b474: above the speed limit body+0xdbc the linear damping is 0.2.
+constexpr float kVehicleSpeedLimitDamping = 0.2f;
+// The physics world 0x30c768 steps in fixed steps and keeps the leftover time (world +0xf0); the vehicle update 0x33aea8 runs once per step.
+// STAND-IN VEH-S42: the step 1/30 s is measured (oracle: 2 steps at dt 0.066, 1 or 0 at dt 0.02, one skipped step per about 100 updates at
+// dt 0.033, and the traced updates replay exactly with 1/30); where the step value comes from is not read.
+constexpr float kVehicleWorldStep = 1.0f / 30.0f;
+// Adds dt to the leftover time and returns the number of whole world steps it holds, keeping the rest.
+int vehicleWorldSteps(float& leftover, float dt);
 // 0x1f2eb4: the angular velocity is limited to a quarter turn (constant 0x3fc90fdb) per step.
 constexpr float kVehicleAngularStepLimit = 1.57079637f;
 
@@ -41,6 +49,10 @@ std::array<float, 4> headingOrientation(float heading);
 void addForceAtPoint(VehicleRigidBody& body, const Vector3& force, const Vector3& point);
 // 0x1e131c / 0x341694: velocity + angular velocity x (point - position).
 Vector3 pointVelocity(const VehicleRigidBody& body, const Vector3& point);
+// 0x229948: the velocity along the body's forward axis (body+0xc0 holds it from the start of the update).
+float forwardSpeed(const VehicleRigidBody& body);
+// 0x17b3d4..0x17b454: the velocity scaled so that the forward speed is at most `limit` in size.
+void limitForwardSpeed(VehicleRigidBody& body, float limit);
 
 // One step of 0x30c768 for one dynamic body: gravity force (0x30c630), 0x1f2eb4 (velocity += force * inverse mass * dt, angular velocity +=
 // inverse world inertia * torque * dt, limited to kVehicleAngularStepLimit per step), 0x1f2c20 (both velocities times (1 - damping)^dt),

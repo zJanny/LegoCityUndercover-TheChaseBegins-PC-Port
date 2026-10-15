@@ -1,7 +1,7 @@
 #pragma once
 // Wheels and suspension of the vehicle physics body (docs/re/vehicles-physics.md): the wheel position 0x3396cc, the ground ray of 0x33c718 and
-// the spring and damper force of 0x339030, applied to the rigid body at the wheel. Tyre forces (0x339374) and wheel spin (0x339a30) are VEH-32.
-// No SDL dependency.
+// the spring and damper force of 0x339030, applied to the rigid body at the wheel, and the vehicle step of 0x33aea8 that adds the engine and
+// the tyres of vehicle_drivetrain.hpp. No SDL dependency.
 #include "runtime/collision.hpp"
 #include "runtime/vehicle.hpp"
 #include "runtime/vehicle_body.hpp"
@@ -52,6 +52,8 @@ std::optional<WheelHit> castWheelRay(const CollisionWorld& world, const Vector3&
 
 struct WheelState {
     Vector3 centre = {0, 0, 0};  // w+0x100: the wheel centre in the world
+    Vector3 point = {0, 0, 0};   // w+0xbc: the ground hit, or travel below the centre along the body's down axis without contact
+    Vector3 normal = {0, 1, 0};  // w+0xc8: the hit record normal, the body's up axis without contact
     float distance = 0;          // w+0xe0: centre to the ground hit, the ray length without contact
     float force = 0;             // w+0xb4
     bool contact = false;        // w+0x13c
@@ -73,10 +75,6 @@ VehicleRigidBody vehicleRigidBody(const VehicleRecord& record, const Vector3& no
 // The node matrix (rows right, up, forward, translation) of a rigid body.
 std::array<float, 16> vehicleNodeMatrix(const VehicleRigidBody& body, const std::array<float, 3>& centreOfMass);
 
-// One update of a dynamic vehicle body: wheel forces, then the world step with the damping of 0x33aea8 (DampingLinear by the speed of the
-// update before, DampingAngular). STAND-IN VEH-S33: the engine, tyres and steering are still the kinematic body (VEH-S3), so before the step
-// the horizontal velocity is set to `speed` along `heading`, and after it the body is turned about the vertical to `heading`; height, pitch
-// and roll come from the springs and gravity. Ends with keepWheelsAboveGround.
 // STAND-IN VEH-S34 for the collision pass and constraint solver 0x30cdf8 (the body's CollSpheres against the level): after the step no wheel
 // centre may lie below the ground that a ray from kBodyGroundLookUp above it finds; the body is lifted by the largest shortfall and loses its
 // downward velocity. Without it a body that falls faster than the wheel rays reach drops through the street.
@@ -84,7 +82,20 @@ constexpr float kBodyGroundLookUp = 2.0f;
 constexpr float kBodyGroundLookDown = 8.0f;
 void keepWheelsAboveGround(VehicleRigidBody& body, const std::vector<VehicleWheel>& wheels, const WheelRay& ray);
 
-std::vector<WheelState> stepVehiclePhysics(VehicleRigidBody& body, const VehicleRecord& record, float heading, float speed, const WheelRay& ray,
-                                           float dt);
+// The drivetrain state of a new vehicle body: the engine at IdleSpeed (0x243e9c), gear 2 (0x33ce74), one spin state per wheel.
+DrivetrainState vehicleDrivetrain(const VehicleRecord& record);
+
+// One update of 0x33aea8 for a dynamic body, then the world step: the speed of the update before sets the linear damping (0.2 above the
+// speed limit), the steering 0x33cb1c, the brake and gear rules, and unless the body was asleep at the start of the update (0x33b518 skips
+// the wheels in the update it wakes) per wheel the setup 0x3396cc, the ray and suspension, the tyre force and the spin; then the drivetrain
+// and the rigid body step. Ends with keepWheelsAboveGround.
+std::vector<WheelState> stepVehiclePhysics(VehicleRigidBody& body, DrivetrainState& drive, const VehicleRecord& record, const BodyInputs& controls,
+                                           bool wokeThisUpdate, const WheelRay& ray, float dt);
+
+// The world steps of one update (vehicleWorldSteps) for one vehicle: per step the wake test of 0x33b4a0, then stepVehiclePhysics with
+// kVehicleWorldStep. An asleep body without a reason to wake stays asleep (mode 2); STAND-IN VEH-S35: an awake body without a reason to wake
+// goes to sleep at once (the world's sleep rule is not read). Returns whether the body is awake afterwards.
+bool stepVehicleWorld(VehicleRigidBody& body, DrivetrainState& drive, bool awake, const VehicleRecord& record, const BodyInputs& controls,
+                      const WheelRay& ray, int steps);
 
 }

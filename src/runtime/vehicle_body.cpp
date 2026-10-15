@@ -85,4 +85,26 @@ void stepRigidBody(VehicleRigidBody& body, float linearDamping, float angularDam
     body.torque = {0, 0, 0};
 }
 
+int vehicleWorldSteps(float& leftover, float dt) {
+    leftover += dt;
+    int steps = 0;
+    while (leftover >= kVehicleWorldStep) {
+        leftover -= kVehicleWorldStep;
+        ++steps;
+    }
+    return steps;
+}
+
+float forwardSpeed(const VehicleRigidBody& body) {
+    const Vector3 forward = bodyAxes(body)[2];
+    return body.velocity[0] * forward[0] + body.velocity[1] * forward[1] + body.velocity[2] * forward[2];
+}
+
+void limitForwardSpeed(VehicleRigidBody& body, float limit) {
+    const float speed = forwardSpeed(body);
+    if (speed == 0.0f) return;
+    const float scale = std::min(std::fabs(speed), limit) / std::fabs(speed);
+    for (float& value : body.velocity) value *= scale;
+}
+
 }

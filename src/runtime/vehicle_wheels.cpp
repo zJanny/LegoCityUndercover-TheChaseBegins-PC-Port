@@ -89,12 +89,16 @@ std::vector<WheelState> applyWheelForces(VehicleRigidBody& body, const std::vect
         state.centre = bodyToWorld(body, {wheel.mount[0] + wheel.sideOffset, wheel.mount[1], wheel.mount[2]});
         const float reach = wheelRayLength(wheel);
         state.distance = reach;
+        state.point = along(state.centre, down, wheel.travel);
+        state.normal = up;
         const std::optional<WheelHit> hit = ray(along(state.centre, up, kWheelRayLift), along(state.centre, down, reach));
         if (hit) {
             state.contact = true;
             const Vector3 point = dot(subtract(hit->point, state.centre), down) < 0.0f ? state.centre : hit->point;
             const Vector3 gap = subtract(state.centre, point);
             state.distance = std::sqrt(dot(gap, gap));
+            state.point = point;
+            state.normal = hit->normal;
             const float normalSpeed = dot(pointVelocity(body, state.centre), hit->normal);
             state.force = suspensionForce(wheel, state.distance, normalSpeed, suspensionScale);
             if (index < 4) addForceAtPoint(body, along({0, 0, 0}, hit->normal, state.force), state.centre);
@@ -146,21 +150,61 @@ void keepWheelsAboveGround(VehicleRigidBody& body, const std::vector<VehicleWhee
     body.velocity[1] = std::max(body.velocity[1], 0.0f);
 }
 
-std::vector<WheelState> stepVehiclePhysics(VehicleRigidBody& body, const VehicleRecord& record, float heading, float speed, const WheelRay& ray,
-                                           float dt) {
-    const float previousSpeed = std::sqrt(dot(body.velocity, body.velocity));
-    body.velocity[0] = speed * std::sin(heading);
-    body.velocity[2] = speed * std::cos(heading);
-    std::vector<WheelState> states = applyWheelForces(body, record.wheels, record.suspensionScale, ray);
-    stepRigidBody(body, vehicleLinearDamping(record.dampingLinear, previousSpeed), record.dampingAngular, dt);
-    const Vector3 forward = bodyAxes(body)[2];
-    const float turn = std::remainder(heading - std::atan2(forward[0], forward[2]), 6.28318531f) * 0.5f;
-    const std::array<float, 4> q = body.orientation;
-    const float s = std::sin(turn), c = std::cos(turn);
-    body.orientation = {c * q[0] + s * q[2], c * q[1] + s * q[3], c * q[2] - s * q[0], c * q[3] - s * q[1]};
+DrivetrainState vehicleDrivetrain(const VehicleRecord& record) {
+    DrivetrainState drive;
+    drive.rpm = record.engine.idleRpm;
+    drive.wheels.resize(record.wheels.size());
+    return drive;
+}
+
+std::vector<WheelState> stepVehiclePhysics(VehicleRigidBody& body, DrivetrainState& drive, const VehicleRecord& record, const BodyInputs& controls,
+                                           bool wokeThisUpdate, const WheelRay& ray, float dt) {
+    const std::array<Vector3, 3> axes = bodyAxes(body);
+    const float forwardSpeed = dot(body.velocity, axes[2]);
+    const float speedSquared = dot(body.velocity, body.velocity);
+    float linearDamping = vehicleLinearDamping(record.dampingLinear, std::sqrt(speedSquared));
+    steerVehicle(drive, record.engine.steering, controls.steer, axes[2], body.velocity);
+    if (!controlDrivetrain(drive, record.engine, controls, forwardSpeed, speedSquared)) linearDamping = kVehicleSpeedLimitDamping;
+    drive.previousSteer = controls.steer;
+    std::vector<WheelState> states;
+    std::vector<WheelGripSpec> grips;
+    for (const VehicleWheel& wheel : record.wheels) grips.push_back(wheel.grip);
+    drive.wheels.resize(record.wheels.size());
+    if (!wokeThisUpdate) {
+        for (std::size_t i = 0; i < record.wheels.size(); ++i) setupWheel(drive.wheels[i], grips[i], i, drive, axes);
+        states = applyWheelForces(body, record.wheels, record.suspensionScale, ray);
+        for (std::size_t i = 0; i < record.wheels.size(); ++i) {
+            WheelSpinState& wheel = drive.wheels[i];
+            if (i < 4) {
+                applyTyreForce(body, wheel, grips[i], record.wheels[i].suspension.radius, {states[i].point, states[i].normal, states[i].force},
+                               record.engine.mass);
+            } else {
+                wheel.rate = drive.wheels[i - 2].rate;
+                wheel.skid = drive.wheels[i - 2].skid;
+            }
+            spinWheel(wheel, drive, dt);
+        }
+    }
+    stepDrivetrain(drive, record.engine, grips, forwardSpeed);
+    stepRigidBody(body, linearDamping, record.dampingAngular, dt);
     keepWheelsAboveGround(body, record.wheels, ray);
     return states;
 }
 
+
+bool stepVehicleWorld(VehicleRigidBody& body, DrivetrainState& drive, bool awake, const VehicleRecord& record, const BodyInputs& controls,
+                      const WheelRay& ray, int steps) {
+    for (int step = 0; step < steps; ++step) {
+        if (!vehicleWakes(controls, forwardSpeed(body), dot(body.velocity, body.velocity), drive.previousSteer)) {
+            sleepVehicle(drive, controls);
+            awake = false;
+            continue;
+        }
+        const bool woke = !awake;
+        awake = true;
+        stepVehiclePhysics(body, drive, record, controls, woke, ray, kVehicleWorldStep);
+    }
+    return awake;
 }
 
+}

@@ -23,3 +23,10 @@ Unknowns: the meaning of controller state 255; whether the cutscene timing (free
 - The injected stick and button state of a scenario (`stick`, `hold`) is a variable of the tool and survives `loadstate`: start every scenario with `stick 0 0` and `hold -` after `loadstate`, or a later run starts with the previous scenario's input (this made one of the first recordings a walk instead of a still start).
 - A scenario file may chain many `loadstate ... trace` runs; each costs about 5 s for the load plus about 0.5 s per traced frame with `mem`. `--output DIR` may be an existing directory; trace names are relative to it. Writing scenario files to the main checkout's artifacts/ directory with the Write tool is refused for worktree agents; keep scratch scenarios under /tmp.
 - Findings: [player.md](player.md).
+
+<a id="ts-20261015-160734"></a>
+
+## 2026-10-15T16:07:34+02:00 — Steering a vehicle in a stepped scenario (VEH-32 traces)
+
+- In the state `drv-police-car-seated`, `stick 156 0` with `hold A` and `memtrace` did not reach the vehicle: the body's steer input (body+0x1bc) stayed 0 for 30 updates. `hold A+RIGHT` and `hold A+LEFT` (the D-pad channels 15 and 14 of 0x29cd9c) steered as expected (steer ±1). Use the D-pad for vehicle steering in stepped scenarios; why the raw circle-pad words written at 0x10a540 do not reach channel 0 of the vehicle input was not looked into.
+- Findings: [vehicles-physics.md §2026-10-15T15:58:54](vehicles-physics.md#ts-20261015-155854).

@@ -64,30 +64,32 @@ void LevelSession::driveVehicles(float dt) {
     runtime::DriveInput playerInput;
     if (!levelScripts.playerControlTaken() && !carry.busy() && !cutscenePlaying())
         playerInput = runtime::readDriveInput({pad.slot(kSlotStickX).value, pad.channel(14).value, pad.channel(15).value, pad.channel(16).value, pad.channel(17).value});
+    const int steps = runtime::vehicleWorldSteps(vehicleWorldTime, dt);
     for (std::size_t i = 0; i < boardingVehicles.size(); ++i) {
         runtime::VehicleRecord& record = *levelScripts.vehicles().mutableRecord(boardingRecords[i]);
         VehicleDrive& drive = vehicleDrives[i];
         runtime::BoardingVehicle& vehicle = boardingVehicles[i];
         const bool driven = seated && *seated == i && record.state == runtime::kVehicleStateDriven;
-        if (!driven && drive.body.speed == 0.0f) continue;
+        if (!driven && !drive.awake) continue;
         if (!drive.started) {
             drive.started = true;
             suppressDrivenVehicleCollision();
-            drive.body.position = {vehicle.matrix[12], vehicle.matrix[13], vehicle.matrix[14]};
-            drive.body.heading = runtime::vehicleHeading(vehicle);
-            drive.rigid = runtime::vehicleRigidBody(record, drive.body.position, drive.body.heading);
+            drive.rigid = runtime::vehicleRigidBody(record, {vehicle.matrix[12], vehicle.matrix[13], vehicle.matrix[14]}, runtime::vehicleHeading(vehicle));
+            drive.drivetrain = runtime::vehicleDrivetrain(record);
         }
         if (record.pendingSpeedLimit) {
-            drive.body.speed = std::clamp(drive.body.speed, -*record.pendingSpeedLimit, *record.pendingSpeedLimit);
+            runtime::limitForwardSpeed(drive.rigid, *record.pendingSpeedLimit);
             record.pendingSpeedLimit.reset();
         }
-        const runtime::DriveCommand command = runtime::commandForState(record.state, driven ? playerInput : runtime::DriveInput{}, record.forcedStop != 0, drive.body.speed);
-        runtime::stepDriveBody(drive.body, command, record.topSpeed, dt);
-        if (runtime::updateStuckTimer(record.stuckTimer, 1.0f, false, std::fabs(drive.body.speed), dt)) levelScripts.vehicles().requestState(boardingRecords[i], runtime::kVehicleStateStuck);
-        runtime::stepVehiclePhysics(drive.rigid, record, drive.body.heading, drive.body.speed,
-                                    [this](const runtime::Vector3& from, const runtime::Vector3& to) { return runtime::castWheelRay(collision, from, to); }, dt);
+        const float forwardSpeed = runtime::forwardSpeed(drive.rigid);
+        const runtime::DriveCommand command = runtime::commandForState(record.state, driven ? playerInput : runtime::DriveInput{}, record.forcedStop != 0, forwardSpeed);
+        runtime::BodyInputs controls = runtime::bodyInputs(command);
+        controls.driver = driven;
+        drive.awake = runtime::stepVehicleWorld(drive.rigid, drive.drivetrain, drive.awake, record, controls,
+                                                [this](const runtime::Vector3& from, const runtime::Vector3& to) { return runtime::castWheelRay(collision, from, to); }, steps);
+        if (runtime::updateStuckTimer(record.stuckTimer, 1.0f, false, std::fabs(runtime::forwardSpeed(drive.rigid)), dt))
+            levelScripts.vehicles().requestState(boardingRecords[i], runtime::kVehicleStateStuck);
         vehicle.matrix = runtime::vehicleNodeMatrix(drive.rigid, record.centreOfMass);
-        drive.body.position = {vehicle.matrix[12], vehicle.matrix[13], vehicle.matrix[14]};
         scene.setTransform(placedSceneIndex[drive.placedIndex], vehicle.matrix);
         for (std::size_t w = 0; w < wheelSceneIndex.size(); ++w)
             if (wheelSceneIndex[w].first == drive.placedIndex) scene.setTransform(wheelSceneIndex[w].second, chase::assets::multiply(placementMatrix(wheelLocalPlacements[w]), vehicle.matrix));

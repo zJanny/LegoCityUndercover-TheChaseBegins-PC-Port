@@ -1,8 +1,7 @@
 #pragma once
 // Driving a vehicle (docs/re/vehicles-driving.md): the player input 0x29cd9c, the state rules of the input copy 0x23019c, the writers of the
-// record states in the vehicle message handler (messages 84 and 85) and a kinematic body that stands in for the physics body (STAND-IN
-// VEH-S3: no suspension, tyres, gears, tilt or collision; its speed and turn tables are oracle measurements). No SDL dependency.
-#include <array>
+// record states in the vehicle message handler (messages 84 and 85) and the stuck rule. The body that the inputs drive is in
+// vehicle_wheels.hpp and vehicle_drivetrain.hpp. No SDL dependency.
 #include <cstdint>
 #include <optional>
 
@@ -57,26 +56,5 @@ constexpr float kStuckSeconds = 2.0f;
 // and the body speed is below 2.0 the timer record +0x31c adds dt; above 2.0 seconds the requested state becomes 8. A body that is not tipped over
 // resets the timer. Returns true when state 8 is requested.
 bool updateStuckTimer(float& timer, float upright, bool frozen, float speed, float dt);
-
-struct DriveBody {
-    std::array<float, 3> position = {0, 0, 0};
-    float heading = 0.0f;  // atan2(forward x, forward z); a positive steer turns it up
-    float speed = 0.0f;    // along the heading, negative in reverse
-    int stoppingUpdates = 0;  // consecutive updates with brake or hand brake
-};
-
-// STAND-IN VEH-S3. The tables hold the measurements of the police trooper (docs/re/vehicles-driving.md); the top speed is the class value TopSpeed.
-void stepDriveBody(DriveBody& body, const DriveCommand& command, float topSpeed, float dt);
-
-float driveAcceleration(float speed);
-float driveBrakeDeceleration(int stoppingUpdates);
-float driveHandBrakeDeceleration(int stoppingUpdates);
-float driveReverseAcceleration();
-float driveCoastDeceleration(float speed);
-float driveReverseCoastDeceleration(float speed);
-float driveCurvature(float steerMagnitude);
-float driveCurvatureSpeedScale(float speed);
-
-constexpr float kDriveReverseSpeedLimit = 10.0f;
 
 }

@@ -110,6 +110,7 @@ private:
     void loadBoardingVehicles(const std::map<std::string, std::pair<std::size_t, chase::render::Mat4>>& placedInstances);
     void driveVehicles(float dt);
     bool placeVehicle(const std::string& instance, const chase::assets::Placement& target);
+    bool placeSeatedVehicle(const float position[3]);
     std::optional<chase::runtime::WaypointVehicle> waypointVehicle() const;
     void suppressDrivenVehicleCollision();
     chase::runtime::BoardingInput boardingInput(float dt);
@@ -167,12 +168,14 @@ private:
     std::vector<std::size_t> boardingRecords;
     std::optional<chase::runtime::WaypointVehicle> previousWaypointVehicle;
     struct VehicleDrive {
-        chase::runtime::DriveBody body;
         chase::runtime::VehicleRigidBody rigid;
+        chase::runtime::DrivetrainState drivetrain;
         bool started = false;
+        bool awake = false;
         std::size_t placedIndex = 0;
     };
     std::vector<VehicleDrive> vehicleDrives;
+    float vehicleWorldTime = 0;
     std::vector<chase::runtime::VehicleCameraSubject> vehicleCameras;
     std::optional<std::size_t> cameraVehicle;
     std::vector<chase::assets::Placement> wheelLocalPlacements;

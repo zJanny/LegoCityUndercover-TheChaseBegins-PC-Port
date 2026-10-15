@@ -3,6 +3,7 @@
 // parameter reader 0x23ed0c writes, the wheel children the post-link 0x15624c finds by name, and the five flag natives of mission 1-1.
 // Driving is in vehicle_drive.hpp, entering and leaving in vehicle_boarding.hpp. No SDL dependency.
 #include "assets/assets.hpp"
+#include "runtime/vehicle_drivetrain.hpp"
 
 #include <array>
 #include <cstdint>
@@ -54,6 +55,7 @@ struct VehicleWheel {
     std::string instance;
     assets::Placement local;
     WheelSuspension suspension;
+    WheelGripSpec grip;
 };
 
 // body+0x84, the factor 0x243628 applies to the shock values; 2.0 in the trooper and the donut van (oracle). Where it is set is not read (VEH-33),
@@ -84,6 +86,7 @@ struct VehicleRecord {
     float dampingAngular = 0;          // class value DampingAngular (body+0xd5c)
     float suspensionScale = 0;         // class value WheelSuspensionScale (body+0xd9c)
     float mass = 1400.0f;              // class value Mass (0x243f90, default 1400)
+    EngineSpec engine;                 // 0x243e9c, 0x243c50, Slowdown of 0x243f90, the final drive of 0x2435d0
     std::optional<float> pendingSpeedLimit;  // a waypoint hit clamps the body's speed (0x17b3d4..0x17b454) once the drive code runs
     std::uint8_t wheelCount = 0;       // +0x314 (class value numWheels)
     std::vector<VehicleWheel> wheels;  // +0x318: one per found "Wheel%02u" up to wheelCount

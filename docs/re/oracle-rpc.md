@@ -74,3 +74,11 @@ New scenario commands: `waitbyte ADDR VALUE SECONDS` (free-run, poll by RPC, hal
 Unknowns:
 - Why the teleport does not trigger the room change that a walk does.
 - The software renderer crashes in `Pica::Texture::LookupTexture` on the street scene (three launches), so `shotloop` is OpenGL only.
+
+<a id="ts-20261015-161706"></a>
+
+## 2026-10-15T16:17:06+02:00 — RPC polling misses game steps; check row continuity (VEH-32)
+
+- A Python loop that polls guest memory over RPC while the game runs freely does not see every update: in a run that read the clock, 12 bytes of the rigid body and two small body fields per poll, about one row in ten spanned two vehicle world steps (the clock difference was 170 to 200 ticks instead of 100, and once 0). Counting rows as updates overstates every rate per update; the brake samples of [vehicles-driving.md §2026-10-15T09:30:35](vehicles-driving.md#ts-20261015-093035) showed about 1.6 times too strong braking this way.
+- Check continuity instead of counting rows: keep a value that the next step starts from (for a vehicle the forward speed body+0xc0 that 0x33aea8 writes at the start of a step from the velocity the step before ended with) and accept a row as the next step only when it equals the end value of the row before. Read as little as possible per poll, and record the clock to see gaps (one game step is 100 ticks of 0x376b0c in the trooper's free run).
+- Findings: [vehicles-physics.md §2026-10-15T15:58:54](vehicles-physics.md#ts-20261015-155854).

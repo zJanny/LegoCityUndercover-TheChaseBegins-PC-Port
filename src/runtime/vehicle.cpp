@@ -90,7 +90,7 @@ void findWheels(const assets::Level& cls, const assets::ClassLookup& classOf, Ve
         std::snprintf(name, sizeof name, "Wheel%02u", number);
         for (const assets::Placement& child : children)
             if (lower(child.instance) == lower(name)) {
-                record.wheels.push_back({child.instance, child, {}});
+                record.wheels.push_back({child.instance, child, {}, {}});
                 break;
             }
     }
@@ -103,6 +103,7 @@ void readSuspension(const ParamReader& reader, VehicleRecord& record) {
         return floatOf(reader.get(key), fallback);
     };
     const float suspensionRatio = floatOf(reader.get("WheelSuspensionRatio"), 0.0f);
+    const float driveRatio = floatOf(reader.get("WheelDriveRatio"), 0.0f);
     for (std::size_t index = 0; index < record.wheels.size(); ++index) {
         const bool rear = (index & 2) != 0;
         const char* side = rear ? "Rear" : "Front";
@@ -118,7 +119,32 @@ void readSuspension(const ParamReader& reader, VehicleRecord& record) {
         suspension.stiffness = value(side, "ShockStiffness", 0.0f) * ratio * kVehicleBodyMassFactor;
         suspension.dampingExtend = value(side, "ShockDampingPos", 0.0f) * ratio * kVehicleBodyMassFactor;
         suspension.dampingCompress = value(side, "ShockDampingNeg", 0.0f) * ratio * kVehicleBodyMassFactor;
+        WheelGripSpec& grip = record.wheels[index].grip;
+        grip.driveRatio = rear ? 2.0f - driveRatio * 2.0f : driveRatio * 2.0f;
+        grip.steered = !rear;
+        grip.frictionStatic = value(side, "WheelFrictionStatic", 0.0f) * 2.0f;
+        grip.frictionDynamic = value(side, "WheelFrictionDynamic", 0.0f) * 2.0f;
+        grip.inertia = value(side, "WheelInertia", 0.0f);
+        grip.driftScale = value(side, "DriftScale", 1.0f);
+        grip.handbrakeScale = value(side, "HandbrakeScale", 0.0f);
+        grip.brakeForce = value(side, "BrakeForce", 0.0f);
+        grip.brakeFriction = value(side, "BrakeFriction", 0.0f);
     }
+}
+
+void readEngine(const ParamReader& reader, VehicleRecord& record) {
+    const auto value = [&](const char* name, float fallback) { return floatOf(reader.get(name), fallback); };
+    SteeringSpec steering;
+    steering.speed = value("SteeringSpeed", 2.0f);
+    steering.speedNeg = value("SteeringSpeedNeg", 0.4f);
+    steering.speedCentre = value("SteeringSpeedCentre", 0.5f);
+    steering.lockMax = value("SteeringLockMax", 0.9f);
+    steering.lockMin = value("SteeringLockMin", 0.4f);
+    steering.lockPower = value("SteeringLockPower", 3.0f);
+    const float wheelRadius = record.wheels.empty() ? 0.0f : record.wheels[0].suspension.radius;
+    record.engine = makeEngineSpec(value("Friction", 0.0f), value("IdleSpeed", 0.0f), value("Inertia", 0.0f), value("MaxRPM", 0.0f),
+                                   value("Redline", 0.0f), value("dtPower", 0.0f), record.topSpeed, wheelRadius,
+                                   kVehicleBodyMassFactor * record.mass, value("Slowdown", 0.2f), steering);
 }
 
 struct NativeEntry {
@@ -190,6 +216,7 @@ void VehicleSet::load(const assets::Level& level, const assets::ClassLookup& cla
         readParameters({object, *cls}, table, record);
         findWheels(*cls, classOf, record);
         readSuspension({object, *cls}, record);
+        readEngine({object, *cls}, record);
         records_.push_back(std::move(record));
     }
 }

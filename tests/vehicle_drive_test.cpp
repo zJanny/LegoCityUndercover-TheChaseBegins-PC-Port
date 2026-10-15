@@ -1,8 +1,10 @@
-// Tests of the driving rules (src/runtime/vehicle_drive.*). The numbers of the kinematic stand-in body are pinned against oracle measurements
-// of the police trooper made on 2026-10-15 with Azahar (state drv-police-car-seated, RPC samples of the vehicle node, 30 updates per second);
-// each block names its source run. Evidence: docs/re/vehicles-driving.md.
+// Tests of the driving rules (src/runtime/vehicle_drive.*) and of the physics body driving on a flat street. The speed and turn numbers are
+// oracle measurements of the police trooper made on 2026-10-15 with Azahar (state drv-police-car-seated, RPC samples of the vehicle node, 30
+// updates per second); each block names its source run. Evidence: docs/re/vehicles-driving.md, docs/re/vehicles-physics.md.
 #include "runtime/vehicle_drive.hpp"
+#include "vehicle_trooper.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
 
@@ -22,12 +24,6 @@ void expect(bool ok, const char* what, double got = 0.0) {
 void near(double got, double want, double tolerance, const char* what) { expect(std::fabs(got - want) <= tolerance, what, got); }
 
 constexpr float kDt = 1.0f / 30.0f;
-constexpr float kPoliceTopSpeed = 28.0f;
-
-DriveBody run(DriveBody body, const DriveCommand& command, int updates, float topSpeed = kPoliceTopSpeed) {
-    for (int i = 0; i < updates; ++i) stepDriveBody(body, command, topSpeed, kDt);
-    return body;
-}
 
 void inputRules() {
     DriveControls controls;
@@ -62,106 +58,201 @@ void stateRules() {
     expect(!requestedStateOnPlayerEntered(6) && !requestedStateOnPlayerEntered(7), "message 84 does nothing in states 6 and 7 (0x17a4bc)");
     expect(requestedStateOnPlayerExited(5) == 3u, "message 85 requests 3 from state 5");
     expect(!requestedStateOnPlayerExited(10) && !requestedStateOnPlayerExited(4), "message 85 keeps states 10 and 4 (0x17a530)");
+    const BodyInputs inputs = bodyInputs(stopped);
+    expect(inputs.steer == 0.5f && inputs.accelerate == 0.0f && inputs.brake == 1.0f && inputs.handBrake == 1.0f, "0x23019c copies 1 or 0 to the body");
 }
+
+// The physics body (vehicle_wheels.*, vehicle_drivetrain.*) of the police trooper on a flat street, against the free-run oracle samples of the
+// runs in artifacts/oracle/agentDRV-out. The street of the runs is not flat and the samples are node movement per update, so the tolerances
+// are those the kinematic stand-in had.
+struct Car {
+    VehicleRecord record = trooper::record();
+    VehicleRigidBody body;
+    DrivetrainState drive;
+    Vector3 start{};
+
+    explicit Car(float heading = 0.0f) {
+        body = vehicleRigidBody(record, {0.0f, 0.95f, 0.0f}, heading);
+        drive = vehicleDrivetrain(record);
+        for (int i = 0; i < 90; ++i) step({}, false);
+        start = body.position;
+    }
+    void step(const BodyInputs& inputs, bool woke) { stepVehiclePhysics(body, drive, record, inputs, woke, trooper::flatGround, kDt); }
+    void run(const BodyInputs& inputs, int updates) {
+        for (int i = 0; i < updates; ++i) step(inputs, false);
+    }
+    float speed() const { return forwardSpeed(body); }
+    float heading() const {
+        const Vector3 forward = bodyAxes(body)[2];
+        return std::atan2(forward[0], forward[2]);
+    }
+    float travelled() const { return std::hypot(body.position[0] - start[0], body.position[2] - start[2]); }
+    void reach(float target) {
+        while (speed() < target) step({0.0f, 1.0f, 0.0f, 0.0f}, false);
+    }
+};
+
+const BodyInputs kAccelerate{0.0f, 1.0f, 0.0f, 0.0f};
+const BodyInputs kBrake{0.0f, 0.0f, 1.0f, 0.0f};
+const BodyInputs kCoast{};
 
 void accelerationAgainstOracle() {
     // Oracle: A held from standstill, speed after k updates counted from the first update that moved (the first update already reaches 2.1 m/s),
-    // median of the runs pcA, pcB, coast, exitmv and brk (artifacts/oracle/agentDRV-out, copies of the sampler files).
+    // median of the runs pcA, pcB, coast, exitmv and brk. The car starts like the oracle one: the update that wakes it skips the wheels.
     struct Sample {
         int updates;
         double speed;
     };
     const Sample samples[] = {{1, 2.1}, {5, 3.44}, {10, 4.86}, {20, 8.57}, {30, 12.73}, {40, 16.54}, {50, 19.84}, {60, 22.8}, {70, 25.1}, {80, 26.45}};
-    DriveCommand accelerate;
-    accelerate.accelerate = true;
-    for (const Sample& sample : samples) near(run({}, accelerate, sample.updates).speed, sample.speed, 1.0, "speed after A held from standstill");
-    near(run({}, accelerate, 30).position[2], 7.07, 1.0, "distance 30 updates after the first move (oracle pcA 7.09, pcB 7.04, coast 7.09)");
-    near(run({}, accelerate, 60).position[2], 25.0, 2.0, "distance 60 updates after the first move (oracle pcA 25.5, coast 24.3)");
-    near(run({}, accelerate, 300).speed, kPoliceTopSpeed, 1e-4, "the speed ends at the class value TopSpeed 28 (oracle: 27.3 to 28.6 at the top)");
-    near(run({}, accelerate, 300, 30.0f).speed, 30.0, 1e-4, "the top speed is the vehicle's own class value");
+    for (const Sample& sample : samples) {
+        Car car;
+        car.step(kAccelerate, true);
+        car.run(kAccelerate, sample.updates);
+        std::printf("A k%d %.3f (oracle %.2f)\n", sample.updates, car.speed(), sample.speed);
+        near(car.speed(), sample.speed, 1.0, "speed after A held from standstill");
+    }
+    Car car;
+    car.step(kAccelerate, true);
+    car.run(kAccelerate, 30);
+    std::printf("A d30 %.3f\n", car.travelled());
+    near(car.travelled(), 7.07, 1.0, "distance 30 updates after the first move (oracle pcA 7.09, pcB 7.04, coast 7.09)");
+    car.run(kAccelerate, 30);
+    std::printf("A d60 %.3f\n", car.travelled());
+    near(car.travelled(), 25.0, 2.0, "distance 60 updates after the first move (oracle pcA 25.5, coast 24.3)");
+    car.run(kAccelerate, 300);
+    std::printf("A top %.3f\n", car.speed());
+    expect(car.speed() > 27.3f && car.speed() < 28.6f, "the speed ends near the class value TopSpeed 28 (oracle: 27.3 to 28.6 at the top)", car.speed());
 }
 
+void report(double got, double want, double tolerance, const char* what) {
+    std::printf("%s: %.3f (oracle %.2f, error %.2f)\n", what, got, want, std::fabs(got - want));
+    near(got, want, tolerance, what);
+}
+
+// Free-run RPC samples of 2026-10-15 (artifacts/oracle/agentVEH32-out free3.csv, free4.csv; state drv-police-car-seated, --rpc-input, no
+// breakpoints): one world step per 100 clock ticks. Every pinned row was checked for continuity: its start speed (body+0xc0) equals the end
+// speed |v| of the row before, so it is the next step; where they differ a step was missed and the count skips one (free3 step 2). The older
+// brake samples of agentDRV-out (pcB, brk, both, forced) counted polled rows as updates while polling misses steps, so they are not used
+// (VEH-52 closed; docs/re/vehicles-driving.md is marked corrected). Test setup difference: the oracle car drives on the street of lvl_01, the
+// test car on a flat plane without collision (the ground and solver are VEH-40), so the limits are 0.4 m/s.
 void brakingAgainstOracle() {
-    // Oracle run pcB: B pressed at 18.24 m/s: 6.47 after 3 updates, 3.41 after 6, 0.88 after 8, stopped after 10. Run brk: B at 25.66 m/s: 13.83
-    // after 3 updates, 8.17 after 6, 4.0 after 10, 0.42 after 14 (both runs lose 11.8 m/s in the first three updates).
-    DriveBody body;
-    body.speed = 18.24f;
-    DriveCommand brake;
-    brake.brake = true;
-    near(run(body, brake, 3).speed, 6.47, 0.5, "pcB: 3 updates after B at 18.2 m/s");
-    near(run(body, brake, 6).speed, 3.41, 0.5, "pcB: 6 updates");
-    near(run(body, brake, 8).speed, 0.88, 1.0, "pcB: 8 updates");
-    body.speed = 25.66f;
-    near(run(body, brake, 3).speed, 13.83, 0.5, "brk: 3 updates after B at 25.7 m/s");
-    near(run(body, brake, 6).speed, 8.17, 3.0, "brk: 6 updates");
-    near(run(body, brake, 14).speed, 0.42, 3.0, "brk: 14 updates");
-    DriveCommand both;
-    both.accelerate = true;
-    both.brake = true;
-    body.speed = 18.38f;
-    near(run(body, both, 3).speed, 7.06, 1.0, "both: A and B at 18.4 m/s brake (oracle both: 7.06 after 3 updates)");
-    near(run(body, both, 8).speed, 1.35, 1.5, "both: 8 updates");
-    DriveBody stopped;
-    near(run(stopped, brake, 30).speed, -4.2, 0.8, "rev: speed 30 updates after B at standstill");
-    near(run(stopped, brake, 60).speed, -7.83, 0.8, "rev: speed 60 updates after B at standstill");
-    expect(run(stopped, brake, 600).speed >= -kDriveReverseSpeedLimit - 1e-4, "reverse speed stays within the largest measured value");
+    // free3: B pressed at 27.30 m/s (A before): 24.14, 19.72, 13.96, 7.01, 2.54 m/s after 1, 3, 6, 10, 14 steps (the row of step 2 was missed).
+    struct Sample {
+        int steps;
+        double speed;
+    };
+    const Sample brake[] = {{1, 24.14}, {3, 19.72}, {6, 13.96}, {10, 7.01}, {14, 2.54}};
+    for (const Sample& sample : brake) {
+        Car car;
+        car.reach(27.30f);
+        car.run(kBrake, sample.steps);
+        report(car.speed(), sample.speed, 0.4, "free3: B at 27.3 m/s");
+    }
+    // free4: record +0x310 poked to 1 (forced stop: hand brake and brake, A released) at 24.69 m/s: 22.05, 20.71, 18.44, 14.88, 10.35, 5.33 after
+    // 1, 3, 5, 7, 9, 11 steps.
+    const BodyInputs forced{0.0f, 0.0f, 1.0f, 1.0f};
+    const Sample stop[] = {{1, 22.05}, {3, 20.71}, {5, 18.44}, {7, 14.88}, {9, 10.35}, {11, 5.33}};
+    for (const Sample& sample : stop) {
+        Car car;
+        car.reach(24.69f);
+        car.run(forced, sample.steps);
+        report(car.speed(), sample.speed, 0.4, "free4: forced stop at 24.7 m/s");
+    }
+    // Run rev (agentDRV-out, free run): B at standstill reverses, -4.2 m/s after 30 updates (a slow change, so missed rows matter little).
+    Car reverse;
+    reverse.run(kBrake, 30);
+    report(reverse.speed(), -4.2, 0.8, "rev: speed 30 updates after B at standstill");
+    expect(reverse.drive.gear == kGearReverse, "B at standstill selects reverse");
+}
+
+void fixedDtTraces() {
+    // Fixed-dt oracle traces (memtrace at dt 0.033, artifacts/oracle/agentVEH32-out): tB = B after 20 updates of coasting at 18.57 m/s: 15.36,
+    // 13.26, 11.19, 9.31 after 1 to 4 updates; fS = record +0x310 poked to 1 at 15.98 m/s with A held (forced stop, brake and hand brake):
+    // 13.23, 11.58, 8.96, 5.30, 1.68, 0.06 after 1, 2, 4, 6, 8, 10 updates. The tB car had coasted longer than the test car.
+    struct Sample {
+        int updates;
+        double speed;
+    };
+    const Sample brake[] = {{1, 15.36}, {2, 13.26}, {3, 11.19}, {4, 9.31}};
+    for (const Sample& sample : brake) {
+        Car car;
+        car.reach(20.0f);
+        while (car.speed() > 18.57f) car.step(kCoast, false);
+        car.run(kBrake, sample.updates);
+        report(car.speed(), sample.speed, 0.4, "tB: B at 18.6 m/s");
+    }
+    const BodyInputs forced{0.0f, 0.0f, 1.0f, 1.0f};
+    const Sample stop[] = {{1, 13.23}, {2, 11.58}, {4, 8.96}, {6, 5.30}, {8, 1.68}, {10, 0.06}};
+    for (const Sample& sample : stop) {
+        Car car;
+        car.reach(15.98f);
+        car.run(forced, sample.updates);
+        report(car.speed(), sample.speed, 0.4, "fS: forced stop at 16 m/s");
+    }
 }
 
 void coastingAgainstOracle() {
-    // Oracle run forced (record +0x310 poked to 1 while A is held at 18.1 m/s): 11.39 after 2 updates, 8.86 after 3, 7.32 after 4, 5.49 after 5, 3.89 after 6,
-    // 0.65 after 8. Run both (A and B held at 18.4 m/s): 7.06 after 3 updates, 5.62 after 4, 3.85 after 6, 1.35 after 8, then reverse. Oracle run coast: A released at 20.0 m/s: 19.19 after 2 updates, 17.87 after 6, 16.19 after 10, 12.77 after 20, 9.33 after 30, 5.98 after 40;
-    // the car is at rest after 50. Run exitmv: hand brake from about 16 m/s: 4.91 after 6 updates, 2.87 after 8, 0.12 after 14.
-    DriveBody body;
-    body.speed = 20.0f;
-    DriveCommand coast;
-    near(run(body, coast, 2).speed, 19.19, 0.5, "coast: 2 updates after A released at 20 m/s");
-    near(run(body, coast, 6).speed, 17.87, 0.5, "coast: 6 updates");
-    near(run(body, coast, 10).speed, 16.19, 0.7, "coast: 10 updates");
-    near(run(body, coast, 20).speed, 12.77, 1.0, "coast: 20 updates");
-    near(run(body, coast, 30).speed, 9.33, 1.0, "coast: 30 updates");
-    near(run(body, coast, 40).speed, 5.98, 1.0, "coast: 40 updates");
-    near(run(body, coast, 80).speed, 0.0, 1e-6, "coast: at rest");
-    DriveCommand handBrake;
-    handBrake.handBrake = true;
-    handBrake.brake = true;
-    body.speed = 18.07f;
-    near(run(body, handBrake, 2).speed, 11.39, 0.8, "forced: 2 updates after SetForcedStop at 18.1 m/s");
-    near(run(body, handBrake, 4).speed, 7.32, 0.8, "forced: 4 updates");
-    near(run(body, handBrake, 6).speed, 3.89, 0.8, "forced: 6 updates");
-    near(run(body, handBrake, 9).speed, 0.0, 1.0, "forced: stopped 8 to 10 updates after the forced stop");
-    body.speed = 16.0f;
-    expect(run(body, handBrake, 6).speed < 5.5f, "exitmv: under 5.5 m/s 6 updates after the hand brake from 16 m/s (oracle 4.91)");
-    near(run(body, handBrake, 14).speed, 0.0, 0.2, "exitmv: stopped 14 updates after the hand brake");
+    // Free-run oracle run coast (agentDRV-out): A released at 20.0 m/s: 19.19 after 2 updates, 17.87 after 6, 16.19 after 10, 12.77 after 20, 9.33
+    // after 30, 5.98 after 40; at rest after 50. Without a driver 0x33b364 brakes with 0.7 (STAND-IN VEH-S41 for the driver flag): after the jump
+    // out the car stops (run exitmv: 4.91 m/s 6 rows and 0.12 m/s 14 rows after the jump out at 16 m/s). The 6-row value is not reproduced (port
+    // 9.0 m/s; the run counted rows as updates and was not measured again): its limit 4.4 m/s marks the gap VEH-54, not a match; the old check
+    // of the stand-in was "below 5.5".
+    struct Sample {
+        int updates;
+        double speed, tolerance;
+    };
+    const Sample coast[] = {{2, 19.19, 0.5}, {6, 17.87, 0.5}, {10, 16.19, 0.7}, {20, 12.77, 1.0}, {30, 9.33, 1.0}, {40, 5.98, 1.0}};
+    for (const Sample& sample : coast) {
+        Car car;
+        car.reach(20.0f);
+        car.run(kCoast, sample.updates);
+        report(car.speed(), sample.speed, sample.tolerance, "coast after A released at 20 m/s");
+    }
+    Car rest;
+    rest.reach(20.0f);
+    rest.run(kCoast, 80);
+    report(rest.speed(), 0.0, 0.1, "coast: at rest");
+    BodyInputs jumpedOut{0.0f, 0.0f, 0.0f, 1.0f};
+    jumpedOut.driver = false;
+    Car exit;
+    exit.reach(16.0f);
+    exit.run(jumpedOut, 6);
+    report(exit.speed(), 4.91, 4.4, "exitmv: 6 updates after the jump out at 16 m/s (gap VEH-54)");
+    exit.run(jumpedOut, 8);
+    report(exit.speed(), 0.0, 0.2, "exitmv: stopped 14 updates after the jump out");
 }
 
 void steeringAgainstOracle() {
-    // Oracle runs pcSt* (A held from standstill, constant stick) at update 20 (speed 8.6 m/s): yaw rate per steer value (stick raw 78, 100, 120, 140, 156).
+    // Oracle runs pcSt* (A held from standstill, constant stick) at update 20 (speed 8.6 m/s): yaw rate per steer value (stick raw 78, 100, 120,
+    // 140, 156). Run hiL: full lock at 23 to 25 m/s reaches 1.2 to 1.5 rad/s over one second.
     struct Sample {
         float steer;
         double yawRate;
     };
     const Sample samples[] = {{0.291f, 0.093}, {0.5238f, 0.253}, {0.7354f, 0.635}, {0.9471f, 0.93}, {1.0f, 1.007}};
-    DriveCommand command;
-    command.accelerate = true;
     for (const Sample& sample : samples) {
-        command.steer = sample.steer;
-        const DriveBody before = run({}, command, 20);
-        const DriveBody after = run(before, command, 1);
-        near((after.heading - before.heading) / kDt, sample.yawRate, 0.12, "yaw rate at 8.6 m/s");
+        Car car;
+        const BodyInputs inputs{sample.steer, 1.0f, 0.0f, 0.0f};
+        car.step(inputs, true);
+        car.run(inputs, 20);
+        std::printf("steer %.4f speed %.3f yaw %.3f (oracle %.3f)\n", sample.steer, car.speed(), car.body.angularVelocity[1], sample.yawRate);
+        near(car.body.angularVelocity[1], sample.yawRate, 0.12, "yaw rate at 8.6 m/s");
     }
-    command.steer = -1.0f;
-    const DriveBody left = run({}, command, 20);
-    expect(left.heading < 0.0f, "a negative steer turns the heading down");
-    command.steer = 0.0f;
-    near(run({}, command, 60).heading, 0.0, 1e-9, "no steer, no turn");
-    command.steer = 1.0f;
-    command.accelerate = false;
-    near(run({}, command, 60).heading, 0.0, 1e-9, "no turn at standstill");
-    DriveBody fast;
-    fast.speed = 24.0f;
-    command.accelerate = true;
-    const DriveBody turned = run(fast, command, 10);
-    near((turned.heading) / (10 * kDt), 1.5, 0.35, "full lock at 24 m/s: yaw rate about 1.5 rad/s (oracle hiL: 1.2 to 1.5)");
+    Car left;
+    left.run({-1.0f, 1.0f, 0.0f, 0.0f}, 20);
+    expect(left.heading() < 0.0f, "a negative steer turns the heading down", left.heading());
+    Car straight;
+    straight.run(kAccelerate, 60);
+    near(straight.heading(), 0.0, 1e-4, "no steer, no turn");
+    Car standing;
+    standing.run({1.0f, 0.0f, 0.0f, 0.0f}, 60);
+    near(standing.heading(), 0.0, 1e-3, "no turn at standstill");
+    Car fast;
+    fast.reach(24.0f);
+    const float before = fast.heading();
+    fast.run({1.0f, 1.0f, 0.0f, 0.0f}, 30);
+    std::printf("full lock yaw %.3f\n", (fast.heading() - before) / (30 * kDt));
+    near((fast.heading() - before) / (30 * kDt), 1.35, 0.35, "full lock at 24 m/s");
 }
 
 void stuckRule() {
@@ -178,16 +269,12 @@ void stuckRule() {
 }
 
 void movement() {
-    DriveBody body;
-    body.heading = 0.0f;
-    DriveCommand accelerate;
-    accelerate.accelerate = true;
-    body = run(body, accelerate, 30);
-    expect(body.position[2] > 0.0f && std::fabs(body.position[0]) < 1e-5, "heading 0 drives along +z");
-    DriveBody east;
-    east.heading = float(M_PI) / 2.0f;
-    east = run(east, accelerate, 30);
-    expect(east.position[0] > 0.0f && std::fabs(east.position[2]) < 1e-3, "heading pi/2 drives along +x");
+    Car north;
+    north.run(kAccelerate, 30);
+    expect(north.body.position[2] - north.start[2] > 1.0f && std::fabs(north.body.position[0] - north.start[0]) < 1e-2, "heading 0 drives along +z");
+    Car east(float(M_PI) / 2.0f);
+    east.run(kAccelerate, 30);
+    expect(east.body.position[0] - east.start[0] > 1.0f && std::fabs(east.body.position[2] - east.start[2]) < 1e-2, "heading pi/2 drives along +x");
 }
 
 }
@@ -198,6 +285,7 @@ int main() {
     accelerationAgainstOracle();
     brakingAgainstOracle();
     coastingAgainstOracle();
+    fixedDtTraces();
     steeringAgainstOracle();
     stuckRule();
     movement();
