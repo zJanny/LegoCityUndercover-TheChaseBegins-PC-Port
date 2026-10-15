@@ -6,7 +6,7 @@ Build-its (`props/prop_buildit`, object type 0x15): the use zone, the build with
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-15T18:35:00+02:00. `chase-game` builds `1-1_BI_DonutVanParts` when the player stands in its zone and holds A: the state machine, the per-brick timing and the completion run as in the original (85 updates for six bricks, oracle state `m11-4-van-parts`), and the finished build starts `1-1_SO_VanFixed`. The parts model is drawn node by node: the six bricks lie scattered at the first frame of `prop_donut_truck_cabin_bi_buildit.bfnanm`, each flies to its place while it builds (0x19c9e0) and the final prop rises by sin of the spin (state 10). The picture is not yet the original's: unbuilt bricks do not wobble, the player does not play the building animation.
+IN_PROGRESS, updated 2026-10-15T18:35:00+02:00. `chase-game` builds `1-1_BI_DonutVanParts` when the player stands in its zone and holds A: the state machine, the per-brick timing and the completion run as in the original (85 updates for six bricks, oracle state `m11-4-van-parts`), and the finished build starts `1-1_SO_VanFixed`. The parts model is drawn node by node: the six bricks lie scattered at the first frame of `prop_donut_truck_cabin_bi_buildit.bfnanm`, each flies to its place while it builds (0x19c9e0) and the final prop rises by sin of the spin (state 10). Unbuilt bricks hop while the player stands in the zone (formula, phase and random draws as measured; no sound yet). The picture is not yet the original's: the player does not play the building animation.
 
 ## 3. Verified behaviour
 
@@ -17,13 +17,15 @@ IN_PROGRESS, updated 2026-10-15T18:35:00+02:00. `chase-game` builds `1-1_BI_Donu
 
 ## 4. Stand-ins
 
-- LEVOBJ-S60 Unbuilt bricks lie still where the animation's first frame puts them; the original hops them when a condition (0x210f30, 0x1a0f6c, counter +0x39) holds. needs: LEVOBJ-60.
+- LEVOBJ-S70 The start phase, amplitude and speed of each brick's hop come from a stand-in random source (fixed seed `kBuilditWobbleStandInSeed`); the original draws them from its global generator at link time. evidence: [buildit.md §2026-10-15T19:52](../../re/buildit.md#ts-20261015-195230).
+- LEVOBJ-S71 The hop runs while the player stands in the use zone; the original also asks the class (0x244fc8) and a list at `*0x519114` (0x1a0f6c), and has flag bits 2 and 3 in the state-2 check. needs: LEVOBJ-71. evidence: [buildit.md §2026-10-15T19:52](../../re/buildit.md#ts-20261015-195230).
 - LEVOBJ-S61 Brick k is node k with the animation's first frame as start and last frame as end, and the animation path uses the mesh's folder name; both are inferences from the shipped files, no brick matrix was traced in the oracle. needs: LEVOBJ-62.
 - LEVOBJ-S41 The action button is read as A (confirm slot); the original's reader of the action flag in the use query was not located.
 
 ## 5. Open items
 
-- [ ] LEVOBJ-60 — Wobble of the unbuilt bricks (0x206ea0): the condition that triggers it, the counter +0x39, the random amplitude and speed (0x2345dc) and the effect call. blocks: LEVOBJ-S60. evidence: [buildit.md §2026-10-15T18:31](../../re/buildit.md#ts-20261015-183145).
+- [ ] LEVOBJ-70 — The sound of a hop (sound 5 at the brick, pitch 1.1 - 0.2 r, first three crossings of an update): which sound it is and its volume; `WobbleSound` already carries the pitch. evidence: [buildit.md §2026-10-15T19:52](../../re/buildit.md#ts-20261015-195230).
+- [ ] LEVOBJ-71 — The full condition of the hop: what fills the list tested by 0x1a0f6c, the class answer of 0x244fc8, flag bits 2 and 3 of +0x36 in the state-2 check. blocks: LEVOBJ-S71. evidence: [buildit.md §2026-10-15T19:52](../../re/buildit.md#ts-20261015-195230).
 - [ ] LEVOBJ-61 — Brick paths of other build-its: `MoveViaPoint` (quadratic curve), `Reverse` (flag bit 4) and animations with more than two frames. evidence: [buildit.md §2026-10-15T18:31](../../re/buildit.md#ts-20261015-183145).
 - [ ] LEVOBJ-62 — Trace the node matrices of a build in the oracle (`ctrace` 0x22b5a0) to check the brick order, the start and end frames and the hop. blocks: LEVOBJ-S61. evidence: [buildit.md §2026-10-15T18:31](../../re/buildit.md#ts-20261015-183145).
 - [ ] LEVOBJ-41 — Effects of the build that are not played: sounds `ATTR_SFXBitDone` and `ATTR_SFXBuilt`, the `StudValue` studs spawned at the end (0x2149ac), the player's building animation (animation 9 asked in the use query) and the camera (`NoCameraFollow`). evidence: [buildit.md §2026-10-14T23:55](../../re/buildit.md#ts-20261014-235539).
@@ -33,10 +35,11 @@ IN_PROGRESS, updated 2026-10-15T18:35:00+02:00. `chase-game` builds `1-1_BI_Donu
 ## 6. Findings summary
 
 - Class record, messages, use zone and state machine from the code: [buildit.md §2026-10-14T23:55](../../re/buildit.md#ts-20261014-235539).
-- Brick data, flight, rise and the wobble from the code: [buildit.md §2026-10-15T18:31](../../re/buildit.md#ts-20261015-183145).
+- Brick data, flight and rise from the code: [buildit.md §2026-10-15T18:31](../../re/buildit.md#ts-20261015-183145).
+- Hop of the unbuilt bricks (start values, condition, oracle rows): [buildit.md §2026-10-15T19:52](../../re/buildit.md#ts-20261015-195230).
 
 ## 7. Code and tests
 
-- `src/runtime/buildit.*` (state machine), `src/runtime/buildit_set.*` (level objects, zone, actions), `src/runtime/reference_trigger.*` (step 0x23211c), `ScriptRunner::triggerObjectEnabling`, `assets::modelBounds`; glue `updateBuildits` in `src/game_level_update.cpp`.
+- `src/runtime/buildit.*` (state machine), `src/runtime/buildit_wobble.*` (hop of the unbuilt bricks), `src/runtime/buildit_set.*` (level objects, zone, actions), `src/runtime/reference_trigger.*` (step 0x23211c), `ScriptRunner::triggerObjectEnabling`, `assets::modelBounds`; glue `updateBuildits` in `src/game_level_update.cpp`.
 - Per-node transforms of placed props (the API other features use, e.g. `Attach*`): `Scene::addModelNodes(path, placement)` in `src/render/scene.hpp` returns one scene instance per node with a mesh (-1 for none; GPU data shared by key `path#mesh`) and `Scene::setTransform(instance, matrix)` moves it, each update, to `local * placement` (row-vector `Mat4`, the game's layout). Logic without GL: `src/runtime/prop_nodes.*` (`PropNodes::of(model)` node matrices and `world()`, `nodePoseOf`/`nodeMatrixOf` quaternion conversion, `nodeSlerp`, `nodeFlight`), `src/runtime/buildit_bricks.*` (bricks of a parts model from its `_buildit` animation, `assets::objectAnimationMatrix`), `src/runtime/mesh_bouncer.*` (class `dummymeshbouncer`, `propChildren` for objects embedded in class files); glue `src/game_prop_parts.*` (`PropParts`: build-it bricks, final prop rise, waypoint Badge children), `BuilditState::flight` and `propRise`.
-- CTest: `buildit`, `buildit-real-data`, `reference-trigger`, `prop-parts`, `prop-parts-real-data`.
+- CTest: `buildit`, `buildit-wobble`, `buildit-real-data`, `reference-trigger`, `prop-parts`, `prop-parts-real-data`.

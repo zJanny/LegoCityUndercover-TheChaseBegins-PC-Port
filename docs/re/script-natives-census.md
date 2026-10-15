@@ -31,7 +31,7 @@ This file has no dated entries: the table is edited in place. When a native is r
 | ToggleUseable | 0x1cdcf8 | 2 | 347 / 26 / 7 / 4 | 8 | A | 26 | handled, flag recorded (stand-in SCRIPT-S17) |
 | PlaySound | 0x1b4394 | 2 | 277 / 25 / 0 / 0 | 8 | stand-in | 33 | stand-in (AUDIO-S30) [§2026-10-15T17:27](script-natives-audio.md#ts-20261015-172705) |
 | EffectFadeObject | 0x288a60 | 5 | 273 / 21 / 0 / 10 | 8 | C | 38 |  |
-| PlayAnimation | 0x268240 | 5 | 273 / 19 / 0 / 14 | 11 | stand-in | 32 | stand-in: plays a loaded animation on level characters with AnimationOffset, records the rest (SCRIPT-S110, SCRIPT-271, SCRIPT-273): [script-natives-animation.md §2026-10-15T18:33](script-natives-animation.md#ts-20261015-183336) |
+| PlayAnimation | 0x268240 | 5 | 273 / 19 / 0 / 14 | 11 | stand-in | 32 | stand-in: plays a loaded animation on level characters and on skinned placed props with AnimationOffset, records the rest (SCRIPT-S110, SCRIPT-273): [script-natives-animation.md §2026-10-15T20:04](script-natives-animation.md#ts-20261015-200440) |
 | DCamActive | 0x1a2e48 | 2 | 261 / 24 / 0 / 0 | 9 | stand-in | 28 | flag stored, readers unknown |
 | subobjectivegotoenable | 0x2adaac | 3 | 260 / 39 / 6 / 0 | 7 | stand-in | 31 | handled: registry transcribed (0x2a62b8), the group effect is not drawn (SCRIPT-71): [objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919) |
 | StartDCamTrack | 0x1da810 | 4 | 259 / 31 / 0 / 0 | 10 | stand-in | 28 | handled; look point is the placement of the object, not entity +0x60 with its node matrix |
@@ -81,9 +81,9 @@ This file has no dated entries: the table is edited in place. When a native is r
 | SpawnDebris | 0x1b26f0 | 4 | 57 / 0 / 0 / 1 | 3 | C | 38 |  |
 | DCamCutSceneFree | 0x28898c | 1 | 56 / 13 / 2 / 0 | 7 | stand-in | 29 | 0x196144: [cutscenes.md §2026-10-14T22:49](cutscenes.md#ts-20261014-224929) |
 | DCamCutScenePlay | 0x2889e4 | 5 | 56 / 13 / 2 / 0 | 7 | stand-in | 29 | 0x1964dc, flags a b c d: [cutscenes.md §2026-10-14T22:49](cutscenes.md#ts-20261014-224929) |
-| WaitForCurrentAnim | 0x2a06a8 | 1 | 53 / 8 / 0 / 1 | 7 | stand-in | 32 | stand-in: blocks on level characters as the original, completes at once otherwise (SCRIPT-S110, SCRIPT-271): [script-natives-animation.md §2026-10-15T18:33](script-natives-animation.md#ts-20261015-183336) |
+| WaitForCurrentAnim | 0x2a06a8 | 1 | 53 / 8 / 0 / 1 | 7 | stand-in | 32 | stand-in: blocks on level characters and skinned placed props as the original, completes at once otherwise (SCRIPT-S110): [script-natives-animation.md §2026-10-15T20:04](script-natives-animation.md#ts-20261015-200440) |
 | ainostate | 0x194e0c | 1 | 50 / 6 / 0 / 0 | 6 | stand-in | 34 | flag or requested state recorded; returns 1: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
-| StopAnim | 0x1883d0 | 1 | 49 / 10 / 0 / 0 | 5 | stand-in | 32 | stand-in: stops level characters, records the rest (SCRIPT-S110, SCRIPT-271): [script-natives-animation.md §2026-10-15T18:33](script-natives-animation.md#ts-20261015-183336) |
+| StopAnim | 0x1883d0 | 1 | 49 / 10 / 0 / 0 | 5 | stand-in | 32 | stand-in: stops level characters and skinned placed props, records the rest (SCRIPT-S110): [script-natives-animation.md §2026-10-15T20:04](script-natives-animation.md#ts-20261015-200440) |
 | StopSound | 0x1b43ec | 3 | 48 / 5 / 0 / 0 | 7 | done | 33 | handled [§2026-10-15T17:27](script-natives-audio.md#ts-20261015-172705) |
 | vehiclestopsounds | 0x27c148 | 1 | 47 / 6 / 0 / 0 | 7 | stand-in | 33 | stand-in, records only (AUDIO-S32) [§2026-10-15T17:27](script-natives-audio.md#ts-20261015-172705) |
 | WaitForCurrentCharAnim | 0x263ae4 | 1 | 46 / 3 / 0 / 0 | 8 | stand-in | 32 | stand-in: blocks on level characters as the original, completes at once otherwise (SCRIPT-S110, SCRIPT-270): [script-natives-animation.md §2026-10-15T18:33](script-natives-animation.md#ts-20261015-183336) |

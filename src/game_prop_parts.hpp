@@ -20,9 +20,10 @@ public:
     void loadBuildits(chase::render::Scene& scene, chase::assets::FuseArchive& archive, const chase::runtime::BuilditSet& buildits,
                       const std::vector<chase::assets::Placement>& placed, const std::vector<std::size_t>& placedScene);
     void step(float dt);
-    // `shown[i]` tells whether placed object i is drawn (enabled and in a shown room), `waypointShown[w]` the same for waypoint w.
+    // `shown[i]` tells whether placed object i is drawn (enabled and in a shown room), `waypointShown[w]` the same for waypoint w, `badgeFade[w]` the alpha tween of its Badge child.
     void apply(chase::render::Scene& scene, const chase::runtime::BuilditSet& buildits, const std::vector<chase::assets::Placement>& placed,
-               const std::vector<std::size_t>& placedScene, const std::vector<bool>& shown, const std::vector<bool>& waypointShown) const;
+               const std::vector<std::size_t>& placedScene, const std::vector<bool>& shown, const std::vector<bool>& waypointShown,
+               const std::vector<float>& badgeFade) const;
 
 private:
     struct Child {

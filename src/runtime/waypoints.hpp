@@ -5,6 +5,7 @@
 // when the fade-out timer ends, a thread of the level script named by the instance parameter TriggerScript (0x22ce9c at
 // 0x17b03c). The waypoint then switches itself off. No SDL dependency.
 #include "assets/assets.hpp"
+#include "runtime/node_tween.hpp"
 #include <cstdint>
 #include <functional>
 #include <string>
@@ -40,6 +41,12 @@ struct Waypoint {
     bool fired = false;
     std::uint8_t state = 0;
     float timer = 0;
+
+    float badgeFadeIn = 0;  // BadgeFadeInTime (+0x68)
+    NodeTween columnTween = NodeTween::start(0.0f, 0.0f, 0.0f);  // alpha of the column node: 0 to 1 in state 0, 1 to 0 in state 2
+    NodeTween badgeTween = NodeTween::start(0.0f, 0.0f, 0.0f);   // alpha of the Badge child: 0 until state 1 ends, then 0 to 1
+    float columnFade() const { return columnTween.value(); }
+    float badgeFade() const { return badgeTween.value(); }
 };
 
 constexpr float kWaypointVehicleSpeedLimit = 12.0f;

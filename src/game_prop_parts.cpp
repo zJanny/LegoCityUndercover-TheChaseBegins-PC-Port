@@ -43,9 +43,11 @@ void PropParts::step(float dt) {
 }
 
 void PropParts::apply(render::Scene& scene, const runtime::BuilditSet& buildits, const std::vector<assets::Placement>& placed,
-                      const std::vector<std::size_t>& placedScene, const std::vector<bool>& shown, const std::vector<bool>& waypointShown) const {
+                      const std::vector<std::size_t>& placedScene, const std::vector<bool>& shown, const std::vector<bool>& waypointShown,
+                      const std::vector<float>& badgeFade) const {
     for (const Child& child : children_) {
         scene.setInstanceVisible(child.instance, child.waypoint < waypointShown.size() && waypointShown[child.waypoint]);
+        scene.setInstanceFade(child.instance, child.waypoint < badgeFade.size() ? badgeFade[child.waypoint] : 1.0f);
         scene.setTransform(child.instance, assets::multiply(child.bouncer ? child.motion.matrix() : child.local, child.parent));
     }
     for (const Parts& entry : parts_) {
@@ -58,7 +60,9 @@ void PropParts::apply(render::Scene& scene, const runtime::BuilditSet& buildits,
             const std::ptrdiff_t instance = entry.nodeInstance.at(entry.bricks.bricks()[brick].node);
             if (instance < 0) continue;
             scene.setInstanceVisible(std::size_t(instance), visible);
-            scene.setTransform(std::size_t(instance), assets::multiply(entry.bricks.matrix(brick, build.flight[brick]), placement));
+            runtime::NodeMatrix node = entry.bricks.matrix(brick, build.flight[brick]);
+            node[13] += buildits.objects()[entry.buildit].wobble.offset(brick);
+            scene.setTransform(std::size_t(instance), assets::multiply(node, placement));
         }
         if (entry.finalIndex >= 0) {
             assets::Placement risen = placed[std::size_t(entry.finalIndex)];

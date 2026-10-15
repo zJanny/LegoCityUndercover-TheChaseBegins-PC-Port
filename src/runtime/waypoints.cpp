@@ -71,6 +71,7 @@ void WaypointSet::load(const assets::Level& level, const assets::ClassLookup& cl
         waypoint.triggerScript = stringOf(effectiveParam(object, *cls, kHashTriggerScript));
         waypoint.fadeScaleIn = floatOf(effectiveParam(object, *cls, kHashFadeScaleIn), 0.0f);
         waypoint.fadeScaleOut = floatOf(effectiveParam(object, *cls, kHashFadeScaleOut), 0.0f);
+        waypoint.badgeFadeIn = floatOf(effectiveParam(object, *cls, assets::nameHash("BadgeFadeInTime")), 0.0f);
         waypoint.takePlayerControl = intOf(effectiveParam(object, *cls, kHashTakePlayerControl), 0) != 0;
         waypoint.autoTrigger = intOf(effectiveParam(object, *cls, kHashAutoTrigger), 0) != 0;
         waypoint.getIntoVehicle = intOf(effectiveParam(object, *cls, kHashGetIntoVehicle), 0) != 0;
@@ -126,6 +127,8 @@ bool WaypointSet::setActive(const std::string& lowerName, bool enable) {
             waypoint.fired = false;
             waypoint.state = 0;
             waypoint.timer = kWaypointEnableTimer;
+            waypoint.columnTween = NodeTween::start(0.0f, 0.0f, 0.0f);
+            waypoint.badgeTween = NodeTween::start(0.0f, 0.0f, 0.0f);
         }
         return waypoint.active;
     }
@@ -224,6 +227,8 @@ WaypointUpdate WaypointSet::update(float dt, const float player[3], const Waypoi
     for (Waypoint& waypoint : waypoints_) {
         if (!waypoint.active) continue;
         if (roomLoaded && !waypoint.room.empty() && !roomLoaded(waypoint.room)) continue;
+        waypoint.columnTween.step(dt);
+        waypoint.badgeTween.step(dt);
         if (waypoint.timer > 0.0f) {
             waypoint.timer -= dt;
             if (waypoint.timer <= 0.0f) waypoint.timer = 0.0f;
@@ -232,9 +237,15 @@ WaypointUpdate WaypointSet::update(float dt, const float player[3], const Waypoi
                 case 0:
                     waypoint.state = 1;
                     waypoint.timer = waypoint.fadeScaleIn;
+                    waypoint.columnTween = NodeTween::start(0.0f, 1.0f, waypoint.fadeScaleIn);
+                    waypoint.badgeTween = NodeTween::start(0.0f, 0.0f, 0.0f);
+                    break;
+                case 1:
+                    waypoint.badgeTween = NodeTween::start(0.0f, 1.0f, waypoint.badgeFadeIn);
                     break;
                 case 2:
                     waypoint.state = 3;
+                    waypoint.columnTween = NodeTween::start(1.0f, 0.0f, waypoint.fadeScaleOut);
                     waypoint.timer = waypoint.fadeScaleOut;
                     if (waypoint.takePlayerControl) controlTaken_ = true;
                     break;

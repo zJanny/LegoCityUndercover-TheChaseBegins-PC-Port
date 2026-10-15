@@ -125,6 +125,8 @@ LevelSession::LevelSession(const Shared& sharedState)
     FuseArchive& archive = shared.archive;
     std::size_t placed = 0, unresolved = 0;
     std::map<std::string, std::pair<std::size_t, Mat4>> placedInstances;
+    const std::set<std::string> animationTargets = runtime::animationTargets(level);
+    std::vector<runtime::AnimatedProp> animatedProps;
     if (const auto sea = chase::assets::objectStart(level, "Sea")) seaHeight = sea->position[1];
     for (const auto& placement : drawable.objects) {
         const std::size_t instanceIndex = scene.instances();
@@ -137,7 +139,11 @@ LevelSession::LevelSession(const Shared& sharedState)
             }
             continue;
         }
-        if (scene.addModel(meshModelPath(placement.mesh), matrix)) {
+        const std::string lowerInstance = game_doors::lowerCase(placement.instance);
+        const bool animated = animationTargets.count(lowerInstance) != 0;
+        const std::string modelPath = meshModelPath(placement.mesh);
+        if (scene.addModel(modelPath, matrix, {}, animated ? runtime::propSceneKey(modelPath, lowerInstance) : std::string())) {
+            if (animated) animatedProps.push_back({lowerInstance, modelPath, placement.mesh});
             ++placed;
             placedInstances[placement.instance] = {instanceIndex, matrix};
             placedSceneIndex.push_back(instanceIndex);
@@ -157,7 +163,10 @@ LevelSession::LevelSession(const Shared& sharedState)
     const auto placedCharacters = placeLevelCharacters(scene, archive, drawable.characters);
     const std::size_t characters = std::size_t(std::count_if(placedCharacters.begin(), placedCharacters.end(), [](const auto& placed) { return placed.has_value(); }));
     levelCharacters.emplace(archive, drawable.characters, placedCharacters);
-    levelScripts.setAnimationDriver(&*levelCharacters);
+    propAnimations = runtime::PropAnimations(archive, animatedProps);
+    animationDrivers.add(&*levelCharacters);
+    animationDrivers.add(&propAnimations);
+    levelScripts.setAnimationDriver(&animationDrivers);
     levelScripts.loadAnimationOffsets(classOf);
     studSprites.emplace(archive);
     player = game_player::placePlayer(archive, scene, level);
@@ -347,14 +356,19 @@ void LevelSession::draw(int width, int height) {
     for (const auto& [placedIndex, wheelIndex] : wheelSceneIndex)
         scene.setInstanceVisible(wheelIndex, drawn[placedIndex] && roomShown(runtime::roomNumber(placedObjects[placedIndex].room)));
     const runtime::ObjectiveState& objectives = levelScripts.objectives();
-    for (std::size_t i = 0; i < waypointObjects.size(); ++i)
+    std::vector<float> badgeFades(waypointObjects.size(), 1.0f);
+    for (std::size_t i = 0; i < waypointObjects.size(); ++i) {
+        const runtime::Waypoint* waypoint = levelScripts.waypoints().find(game_doors::lowerCase(waypointObjects[i].instance));
+        scene.setInstanceFade(waypointSceneIndex[i], waypoint ? waypoint->columnFade() : 1.0f);
+        if (waypoint) badgeFades[i] = waypoint->badgeFade();
         scene.setInstanceVisible(waypointSceneIndex[i], objectives.waypointActive(game_doors::lowerCase(waypointObjects[i].instance)) &&
                                                             roomShown(runtime::roomNumber(waypointObjects[i].room)));
+    }
     std::vector<bool> shownPlaced(drawn.size()), shownWaypoints(waypointObjects.size());
     for (std::size_t i = 0; i < drawn.size(); ++i) shownPlaced[i] = drawn[i] && roomShown(runtime::roomNumber(placedObjects[i].room));
     for (std::size_t i = 0; i < waypointObjects.size(); ++i)
         shownWaypoints[i] = objectives.waypointActive(game_doors::lowerCase(waypointObjects[i].instance)) && roomShown(runtime::roomNumber(waypointObjects[i].room));
-    propParts.apply(scene, buildits, placedObjects, placedSceneIndex, shownPlaced, shownWaypoints);
+    propParts.apply(scene, buildits, placedObjects, placedSceneIndex, shownPlaced, shownWaypoints, badgeFades);
     if (skyInstance) {
         const float lift = player && seaHeight ? runtime::skyLift(player->vertical.y, *seaHeight) : 0.0f;
         const Mat4 cameraToWorld = chase::render::rigidInverse(viewMatrix);

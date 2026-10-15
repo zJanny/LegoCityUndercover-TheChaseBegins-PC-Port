@@ -117,6 +117,7 @@ void beginFrame(float brightness) {
     glUniform1i(glGetUniformLocation(program, "unit1"), 1);
     glUniform1i(glGetUniformLocation(program, "unit2"), 2);
     glUniform1f(glGetUniformLocation(program, "brightness"), brightness);
+    glUniform1f(glGetUniformLocation(program, "instanceFade"), 1.0f);
     static const runtime::LightLut distribution = runtime::distributionLut(), spot = runtime::spotLut(), distance = runtime::distanceLut();
     uploadLut(program, "lutDistribution", distribution);
     uploadLut(program, "lutSpot", spot);
@@ -195,6 +196,7 @@ public:
     std::size_t triangles() const;
     void setTransform(std::size_t instance, const Mat4& transform) { instances_.at(instance).transform = transform; }
     void setInstanceVisible(std::size_t instance, bool visible) { instances_.at(instance).visible = visible; }
+    void setInstanceFade(std::size_t instance, float fade) { instances_.at(instance).fade = fade; }
     std::size_t missingTextures() const { return missing_; }
     std::size_t instances() const { return instances_.size(); }
 
@@ -232,6 +234,7 @@ private:
         Mat4 transform;
         bool visible = true;
         bool sky = false;
+        float fade = 1.0f;
     };
     void drawInstances(const Mat4& viewProjection, bool skyPass) const;
     const TextureInfo& texture(const std::string& name, const std::string& modelDir);
@@ -482,6 +485,7 @@ void SceneImpl::drawInstances(const Mat4& viewProjection, bool skyPass) const {
     static const GLenum equations[5] = {GL_FUNC_ADD, GL_FUNC_SUBTRACT, GL_FUNC_REVERSE_SUBTRACT, GL_MIN, GL_MAX};
     GLint mvp = glGetUniformLocation(program, "mvp");
     GLint model = glGetUniformLocation(program, "model");
+    const GLint fadeLocation = glGetUniformLocation(program, "instanceFade");
     const bool culling = glIsEnabled(GL_CULL_FACE);
     for (int pass = 0; pass < 2; ++pass) {
         for (const auto& instance : instances_) {
@@ -489,6 +493,7 @@ void SceneImpl::drawInstances(const Mat4& viewProjection, bool skyPass) const {
             Mat4 m = multiply(viewProjection, instance.transform);
             glUniformMatrix4fv(mvp, 1, GL_FALSE, m.data());
             glUniformMatrix4fv(model, 1, GL_FALSE, instance.transform.data());
+            glUniform1f(fadeLocation, instance.fade);
             for (const auto& part : instance.model->parts) {
                 const bool blended = part.hasMaterial && (part.material.blendSource != 1 || part.material.blendDestination != 0);
                 if (blended != (pass == 1)) continue;
@@ -504,6 +509,7 @@ void SceneImpl::drawInstances(const Mat4& viewProjection, bool skyPass) const {
         }
     }
     glDisable(GL_BLEND);
+    glUniform1f(fadeLocation, 1.0f);
     glDepthMask(GL_TRUE);
     glDepthFunc(GL_LEQUAL);
     glUniform1i(glGetUniformLocation(program, "stageCount"), 0);
@@ -636,6 +642,8 @@ std::size_t Scene::triangles() const { return impl_->triangles(); }
 void Scene::setTransform(std::size_t instance, const Mat4& transform) { impl_->setTransform(instance, transform); }
 
 void Scene::setInstanceVisible(std::size_t instance, bool visible) { impl_->setInstanceVisible(instance, visible); }
+
+void Scene::setInstanceFade(std::size_t instance, float fade) { impl_->setInstanceFade(instance, fade); }
 
 std::size_t Scene::missingTextures() const { return impl_->missingTextures(); }
 

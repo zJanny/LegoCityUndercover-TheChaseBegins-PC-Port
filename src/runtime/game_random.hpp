@@ -27,4 +27,7 @@ private:
     unsigned second_ = kGameRandomSecondCursorStart;
 };
 
+// 0x2345dc: the low 16 bits of the next word times 2^-16, in [0, 1).
+inline float gameRandomUnit(GameRandom& random) { return static_cast<float>(static_cast<std::uint16_t>(random.next())) * (1.0f / 65536.0f); }
+
 }

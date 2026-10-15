@@ -18,6 +18,7 @@
 #include "render/hud_overlay.hpp"
 #include "render/scene.hpp"
 #include "render/studs.hpp"
+#include "runtime/animation_driver_chain.hpp"
 #include "runtime/buildit_set.hpp"
 #include "runtime/carry.hpp"
 #include "runtime/camera_lock_icon.hpp"
@@ -26,6 +27,7 @@
 #include "runtime/debug_metrics.hpp"
 #include "runtime/level_start.hpp"
 #include "runtime/pad.hpp"
+#include "runtime/prop_animation.hpp"
 #include "save/save_writer.hpp"
 #include "runtime/room_streamer.hpp"
 #include "runtime/head_icon.hpp"
@@ -225,6 +227,8 @@ private:
     std::optional<chase::runtime::RoomStreamer> roomStreamer;
     std::map<int, std::vector<std::size_t>> roomInstances;
     std::optional<game_characters::LevelCharacters> levelCharacters;
+    chase::runtime::PropAnimations propAnimations;
+    chase::runtime::AnimationDriverChain animationDrivers;
     std::optional<game_cutscene::InEngine> cutsceneHost;
     std::optional<game_cutscene::Movies> movies;
     bool movieStarted = false, introMovieSkip = false;

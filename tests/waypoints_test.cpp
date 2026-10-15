@@ -84,7 +84,7 @@ assets::LevelParam objectReference(std::uint32_t hash, const std::string& instan
 assets::Level syntheticClass(bool vehicleClass = false, bool getIntoVehicle = false, float radius = 1.0f) {
     assets::Level cls;
     cls.classParams = {floatParam(0xd7954f4e, 0.8f), floatParam(0x190be976, 0.4f), intParam(0x59521dda, 1), intParam(0xc93e4625, 1),
-                       stringParam(0xd3575d66, "")};
+                       stringParam(0xd3575d66, ""), floatParam(assets::nameHash("BadgeFadeInTime"), 0.8f)};
     assets::LevelBound bound;
     bound.name = "TriggerBound";
     bound.half[0] = radius;
@@ -128,6 +128,34 @@ assets::Level syntheticLevel(const std::string& className, const std::string& na
     script.calls = {{"Wait", {"100"}}};
     level.scripts.push_back(script);
     return level;
+}
+
+void fades() {
+    const assets::Level cls = syntheticClass();
+    const assets::ClassLookup classOf = [&](const std::string&) { return &cls; };
+    const assets::Level level = syntheticLevel("props/map_waypoint");
+    const float dt = 0.4f, inside[3] = {10.5f, 5.5f, 20.0f}, outside[3] = {12.0f, 5.5f, 20.0f};
+    WaypointSet set;
+    set.load(level, classOf);
+    set.setActive("wp_a", true);
+    const auto near = [](float a, float b) { return std::fabs(a - b) < 1e-5f; };
+    const runtime::Waypoint* wp = set.find("wp_a");
+    require(wp->columnFade() == 0.0f && wp->badgeFade() == 0.0f, "enabled: column and badge are transparent until the state 0 handler runs");
+    set.update(dt, outside, nullptr, nullptr);
+    require(wp->columnFade() == 0.0f && wp->badgeFade() == 0.0f, "state 0 starts the column tween at 0 and sets the badge to 0 (0x17ae0c, 0x17ae28)");
+    set.update(dt, outside, nullptr, nullptr);
+    require(near(wp->columnFade(), 0.5f) && wp->badgeFade() == 0.0f, "FadeScaleInTime 0.8: half after 0.4 s (linear, 0x159420)");
+    set.update(dt, outside, nullptr, nullptr);
+    require(near(wp->columnFade(), 1.0f) && wp->badgeFade() == 0.0f, "the column is opaque after FadeScaleInTime; the badge tween starts when state 1 ends (0x17ae64)");
+    set.update(dt, outside, nullptr, nullptr);
+    require(near(wp->badgeFade(), 0.5f), "BadgeFadeInTime 0.8: half after 0.4 s");
+    set.update(dt, outside, nullptr, nullptr);
+    require(near(wp->badgeFade(), 1.0f) && near(wp->columnFade(), 1.0f), "both opaque");
+    set.update(dt, inside, nullptr, nullptr);
+    set.update(dt, inside, nullptr, nullptr);
+    require(wp->state == 3 && near(wp->columnFade(), 1.0f) && near(wp->badgeFade(), 1.0f), "state 3: the column tween 1 to 0 starts at 1; the badge is not faded (0x17aebc)");
+    set.update(dt, inside, nullptr, nullptr);
+    require(!wp->active && wp->columnFade() == 0.0f, "FadeScaleOutTime 0.4: transparent when the waypoint switches off");
 }
 
 void synthetic() {
@@ -337,6 +365,7 @@ void real(const std::string& fib, const std::string& names) {
 int main(int argc, char** argv) {
     try {
         synthetic();
+        fades();
         if (argc == 1) {
             std::cout << "waypoints-test: synthetic part passed\n";
             return 0;

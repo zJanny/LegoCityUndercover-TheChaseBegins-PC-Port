@@ -65,6 +65,7 @@ void BuilditSet::load(assets::FuseArchive& archive, const assets::Level& level, 
             bricks = brickCount(archive, path);
         }
         build.build = BuilditState(bricks);
+        build.wobble = BuilditWobble(static_cast<std::size_t>(bricks), [this] { return gameRandomUnit(random_); });
         references_.add(build.instance, build.triggerObject);
         objects_.push_back(std::move(build));
     }
@@ -83,12 +84,25 @@ bool BuilditSet::inZone(const BuilditObject& object, const float player[3]) {
     return true;
 }
 
+void BuilditSet::updateWobble(BuilditObject& object, const float player[3]) {
+    const BuilditState& build = object.build;
+    const bool checkRuns = build.state == build.target;
+    if (!checkRuns || (build.state != static_cast<std::uint16_t>(BuilditPhase::Ready) && build.state != static_cast<std::uint16_t>(BuilditPhase::Building))) return;
+    std::vector<bool> mayHop(build.progress.size());
+    for (std::size_t i = 0; i < mayHop.size(); ++i) {
+        const bool active = build.state == static_cast<std::uint16_t>(BuilditPhase::Building) && build.bit == static_cast<int>(i);
+        mayHop[i] = !active && build.progress[i] != 1.0f;
+    }
+    object.wobble.update(inZone(object, player), mayHop, [this] { return gameRandomUnit(random_); });
+}
+
 std::vector<BuilditAction> BuilditSet::update(const assets::PlacedObjectState& state, const float player[3], bool actionHeld) {
     std::vector<BuilditAction> actions;
     for (std::size_t i = 0; i < objects_.size(); ++i) {
         BuilditObject& object = objects_[i];
         if (state.isDisabled(object.instance) && object.build.state == static_cast<std::uint16_t>(BuilditPhase::Ready)) continue;
         bool built = false;
+        updateWobble(object, player);
         for (const BuilditEvent event : builditUpdate(object.build)) {
             built = built || event == BuilditEvent::Built;
             BuilditAction action;

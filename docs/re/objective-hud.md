@@ -127,3 +127,20 @@ Unknowns:
 - The colour of the ring lines (0x204b68 not read) and whether the line width 2 is the GPU line width.
 - What sets the zoom level index (struct + 0x368) and the zoom buttons; the port keeps 1.55.
 - Arrow and icon positions of types other than 0 were not compared with the oracle.
+
+<a id="ts-20261015-195841"></a>
+
+## 2026-10-15T19:58:41+02:00 — Fade of the waypoint column and badge: the node tween (llvm-objdump)
+
+Source: llvm-objdump of `artifacts/game/game.arm.elf`; no oracle run. Completes the fade unknown of [§2026-10-15T18:31](#ts-20261015-183130).
+
+**Waypoint update 0x17acbc, timer +0x74 and state +0x78.** The timer is reduced by dt and clamped to 0; only the update in which it reaches 0 runs the state. State 0: the waypoint node gets a tween from 0 to 1 over `FadeScaleInTime` (+0x6c) through 0x229e54 (flags 3), the Badge child (+0x5c) a tween from 0 to 0, timer = +0x6c, state 1, sound 0x35. State 1 (only when the badge exists and bit 1 of +0x8f is set): the Badge gets a tween from 0 to 1 over `BadgeFadeInTime` (+0x68); the state stays 1. State 2: the waypoint node gets a tween from 1 to 0 over `FadeScaleOutTime` (+0x70), timer = +0x70, state 3 (the Badge is not touched). So the column is transparent at the start of its fade-in, the badge starts fading in when the column is opaque, and the column fades out while the badge keeps full opacity until the waypoint switches off.
+
+**Tween registry 0x21b7cc(manager, node, flags, from, to, duration, linked object).** A table of up to 20 entries of 28 bytes at manager +0x338 (count +0x334; an entry for the same node is reused, a full table drops the oldest): node, start time (0x23f74c), duration, from, to, linked object, flag byte. On registration the `from` value is applied at once. Evaluation 0x1593c8 (entry index, dt; dt of -1.0 means the time since the start): value = from + (to - from) elapsed / duration, 1.0 from 1.0 up, 0 at or below 0; a duration of 0 is skipped. Applying a value: flag bit 0 sets the node alpha to int(value x 255) (0x23f708), bit 1 sets the node colour to value x the float3 at 0x56d40c = (1, 1, 1) (0x2408f8, 0x23f6d0), bit 2 a third node property (0x23f540); at value 0 the node is hidden (0x23f734) and the linked object disabled with message 251 (0), shown again with message 251 (1) otherwise. The flags used by the waypoint are 3: alpha and colour.
+
+**Port.** `src/runtime/node_tween.hpp` (the evaluator), `Waypoint::columnTween` / `badgeTween` in `src/runtime/waypoints.*` (start points as above, `BadgeFadeInTime` read from the class), `Scene::setInstanceFade` (uniform `instanceFade` multiplies the colour and alpha of the whole instance in `scene.frag.glsl`), glue in `src/game_level.cpp` and `PropParts::apply`. Test `waypoints` (`fades`).
+
+Unknowns:
+- How the node alpha and colour enter the material of the draw (0x23f708, 0x23f6d0 store them in the node; the draw path that reads them was not read): the port multiplies colour and alpha of the finished fragment by the value (HUD-S70).
+- Bit 1 of +0x8f (condition for the badge fade-in; a distance test of 0x17ad20) is assumed set; the tween clock (time since registration) is advanced by dt per update from the next update on.
+- The tweens of the other `props/map_*` classes (`UseMarker`) and the sound 0x35 at the start of state 0.

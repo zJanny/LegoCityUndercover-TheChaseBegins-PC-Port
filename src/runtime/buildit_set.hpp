@@ -4,6 +4,8 @@
 #include "assets/assets.hpp"
 #include "assets/object_collision.hpp"
 #include "runtime/buildit.hpp"
+#include "runtime/buildit_wobble.hpp"
+#include "runtime/game_random.hpp"
 #include "runtime/reference_trigger.hpp"
 #include "runtime/script_runner.hpp"
 #include <string>
@@ -26,7 +28,10 @@ struct BuilditObject {
     float zoneHalf[3] = {0, 0, 0};
     bool hasZone = false;
     BuilditState build;
+    BuilditWobble wobble;  // LEVOBJ-S70: the start values come from the stand-in random source
 };
+
+constexpr std::uint32_t kBuilditWobbleStandInSeed = 0x5d2e91c7u;
 
 enum class BuilditActionKind {
     BrickStarted,
@@ -53,8 +58,10 @@ public:
     static bool inZone(const BuilditObject& object, const float player[3]);
 
 private:
+    void updateWobble(BuilditObject& object, const float player[3]);
     std::vector<BuilditObject> objects_;
     ReferenceTriggers references_;  // one per object, same index (TriggerObject)
+    GameRandom random_{kBuilditWobbleStandInSeed};
 };
 
 // What the actions change: Reveal shows the final prop and disables the parts, Built runs the reference-trigger step 0x23211c on TriggerObject (reference_trigger.hpp).

@@ -92,6 +92,8 @@ Unknowns:
 
 ## 2026-10-15T18:31:45+02:00 — Brick animation of the build-it: scatter, flight and rise of the final prop (llvm-objdump, archive data)
 
+Corrected by [buildit.md §2026-10-15T19:52](#ts-20261015-195230): the wobble sound is made for the first three crossings (not four); start values and condition of the wobble are recovered.
+
 Source: llvm-objdump of `artifacts/game/game.arm.elf`, the extracted RomFS; no oracle run. Completes the unknowns of [§2026-10-14T23:55](#ts-20261014-235539).
 
 **Data.** `models/prop_donut_truck_cabin_bi/prop_donut_truck_cabin_bi_buildit.bfnanm` (2 frames, 30 fps, six object tracks `Bit1`..`Bit6`) next to the parts model with six nodes `Bit1`..`Bit6`, one mesh each (the mesh vertices sit at their built positions). The path is built by 0x18ddc0 from the strings "models/%s/", "_buildit" and ".fnanm" and the object's mesh name; the instance's mesh is `Prop_Donut_Truck_Cabin_BI/..._atlas_lvl_01_cherrytreehills_main`, so the `%s` must be its folder (inferred from the shipped file name). Each object track holds two blocks; the first decodes with the curve decoder 0x248910 (`decodeChannels`, `localMatrix`) to a matrix per frame: frame 1 is the identity for all six (built), frame 0 is the scattered pose, for example Bit1 a quarter turn about z at (-0.5106, 1.045, -1.54) and Bit6 a turn about x at (-1.3425, 3.169, -5.134). The model's own node matrices (block +0x20) equal frame 0 within the animation's quantisation of 0.0025.
@@ -110,3 +112,29 @@ Unknowns:
 - The condition r5 of the wobble (what 0x210f30 on 0x3772b8 and 0x1a0f6c test) and what sets the counter +0x39; the port does not wobble the bricks (LEVOBJ-60).
 - The brick order against the node order for other build-its (`Reverse`, flag bit 4) and the `MoveViaPoint` curve; the end key of an animation with more than two frames (the port takes the last frame).
 - Whether the node matrix per update equals the port's: a `ctrace` of 0x22b5a0 over a build in the oracle was not run.
+
+<a id="ts-20261015-195230"></a>
+
+## 2026-10-15T19:52:30+02:00 — Hop of the unbuilt bricks: start values, condition and measured rows (llvm-objdump, oracle)
+
+[Corrects §2026-10-15T18:31](#ts-20261015-183145) on the wobble: the sound is made for the first three crossings of an update, not four, and the start values and the condition are now known.
+
+Source: llvm-objdump of `artifacts/game/game.arm.elf`; Azahar oracle, GDB only (no RPC), state `m11-4-van-parts` (player in the use zone, brick array 0x08e114e0 of that state): `memtrace 40 brick 0x08e114e0:0x558 0x08a75580:0xa0` idle; the same with `poke` of 12 zero bytes into each brick (+0..+0xb) and with `teleport 900 52.4 650` away from the zone and back. The user state was not modified.
+
+**Brick record.** +0 amplitude, +4 speed (degrees per update), +8 phase (degrees), +0xc offset (the last sin(phase) x amplitude), +0x24 progress, +0x28 start position, +0xe2 active byte; 228 bytes per brick, zero-filled at allocation (0x25c030 with the clear flag, 0x24d234).
+
+**Start values, 0x18275c(entity, brick)**, called for the bricks in order 0..n-1 from 0x18ddc0 (link of the build-it): r = 0x2345dc (low 16 bits of 0x25b2b8 times 2^-16, one draw each): phase = 180 r, then amplitude = 0.2 + 0.3 r, then speed = 15 + 10 r. It also zeroes progress, active byte and offset and puts the identity into +0x60 and +0xa0. Poking zeros into the three fields in the oracle leaves them zero for 40 updates: the update alone never starts a hop, only these start values do.
+
+**Condition (r5 of 0x206ea0).** `0x210f30(*0x3772b8, entity)` is true when the player can use the build-it: it walks the entity's use-zone list (entity +0x20), tests the player against the zone shape of the entry (0x221570: shape in the low 3 bits of entry+4, 3 is the box) and then asks the class (0x244fc8, message 3 or 4 by whether the asker is the player) whether the use is possible. `0x1a0f6c(entity)` is true when the entity is in the list at `*0x519114 + 0xa8` (8-byte entries, count in the flag bits 3..6 of +0xc0); what fills that list was not read. The counter +0x39 is never written by the build-it code (stores to +0x38/+0x39 exist only for other classes) and reads 0 in the oracle (`06 ff 01 00 00 00 00 01` at +0x34..+0x3b).
+
+**Measured (oracle).** In the zone every update: offset = sin(phase) x amplitude with the phase before the step, then phase += speed; for example brick 0 at the first row amplitude 0.361096203, speed 20.749054, phase 67.8738403 gives phases 88.6228943, 109.371948, 130.121002, 150.870056 and offsets 0.334503919, 0.360991895, 0.340652794, 0.276124865 at the next four rows. Brick 3 crosses 180 from phase 162.102509 (offset 0.291660875 with the old amplitude 0.43334505, speed 24.4050598) to phase 6.50756836, amplitude 0.482522607 (r = 61718 / 65536 gives exactly this float) and speed 15.171814 (r = 1126 / 65536). Away from the zone (teleport 40 m): all fields stay frozen, the offset reads 0.0; back in the zone the hop continues from the same phase.
+
+**Sound of a crossing.** The crossing counter is incremented before the test `< 4`, so the first three crossings of an update call 0x23fa54 (sound 5, position = the brick's node translation, brick index) and 0x22f770 (sound 5, entity halfword +0x14, value 1.1 - 0.2 r with a draw before the amplitude and speed draws). Which sound id 5 is (a global sound table, not an `ATTR_` parameter) and its volume were not read.
+
+**Port.** `src/runtime/buildit_wobble.*` (`BuilditWobble`), `BuilditSet::updateWobble` (runs in the update when state equals target and is 2 or 8; condition = the player in the use zone), `PropParts::apply` adds the offset to the brick's node y. Test `buildit-wobble` pins the rows above.
+
+Unknowns:
+- The seed of the original random source at link time: the start values of a real run differ from the port's (stand-in source with a fixed seed).
+- What fills the list of 0x1a0f6c and whether the class answer of 0x244fc8 adds conditions beyond the zone (the port tests the zone only).
+- The flag bit 2 of +0x36 (set by message 0x14) and bit 3 (sets target 7) in the state-2 check are not modelled.
+- The sound 5 and its volume.
