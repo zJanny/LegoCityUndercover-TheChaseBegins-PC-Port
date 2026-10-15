@@ -87,3 +87,26 @@ Unknowns:
 - Message 10 (to the target) and message 0xff to the owners are not modelled; their handlers were not read.
 - Which other classes register references in the list at 0x591d88; the port registers build-it references only, so a join with a reference of another class would be missed.
 - Deactivate mode (a rebuild) is not ported.
+
+<a id="ts-20261015-183145"></a>
+
+## 2026-10-15T18:31:45+02:00 — Brick animation of the build-it: scatter, flight and rise of the final prop (llvm-objdump, archive data)
+
+Source: llvm-objdump of `artifacts/game/game.arm.elf`, the extracted RomFS; no oracle run. Completes the unknowns of [§2026-10-14T23:55](#ts-20261014-235539).
+
+**Data.** `models/prop_donut_truck_cabin_bi/prop_donut_truck_cabin_bi_buildit.bfnanm` (2 frames, 30 fps, six object tracks `Bit1`..`Bit6`) next to the parts model with six nodes `Bit1`..`Bit6`, one mesh each (the mesh vertices sit at their built positions). The path is built by 0x18ddc0 from the strings "models/%s/", "_buildit" and ".fnanm" and the object's mesh name; the instance's mesh is `Prop_Donut_Truck_Cabin_BI/..._atlas_lvl_01_cherrytreehills_main`, so the `%s` must be its folder (inferred from the shipped file name). Each object track holds two blocks; the first decodes with the curve decoder 0x248910 (`decodeChannels`, `localMatrix`) to a matrix per frame: frame 1 is the identity for all six (built), frame 0 is the scattered pose, for example Bit1 a quarter turn about z at (-0.5106, 1.045, -1.54) and Bit6 a turn about x at (-1.3425, 3.169, -5.134). The model's own node matrices (block +0x20) equal frame 0 within the animation's quantisation of 0.0025.
+
+**Brick setup (0x18ddc0 -> 0x21e96c, then 0x2318c8).** The brick array has 228 bytes per brick. 0x21e96c copies the node's current matrix into record +0xa0 (end) and +0x60 (start), then, for a node whose name an animation object carries (0x25ad90), samples the track (0x24a0c8) into +0x60 (key 0) and +0xa0 (key 1). 0x2318c8 turns both matrices into a quaternion (0x248618, Shepperd's method with the table {1, 2, 0} at 0x358f04) and a position: start at +0x40 and +0x28, end at +0x50 and +0x34, and sets the rate +0x40 of the record to 0.1. Bricks and nodes pair by index (node k is brick k, or the reverse for flag bit 4).
+
+**Flight, 0x19c9e0(entity, brick).** Called by the check 0x1d428c in state 8 while the current brick's progress t (+0x24) is below 1.0, before the progress grows by the rate: rotation = slerp(start, end, t) (0x21a600: shortest arc, linear above a dot product of 0.99999), position = start + (end - start) t (0x221e5c), then y += 0.2 x 4t(1 - t) x (|dx| + |dz|) of start and end (a hop); with a `MoveViaPoint` object (flag bit 5) the position is a quadratic curve through the point instead (not transcribed). The result goes to the node through 0x22b5a0 (matrix of the node with that index). The change to state 9 (0x1aae6c) sets the node to the end pose (key 1, here the identity) and the progress to 1.0. The change to state 11 puts all nodes back to the start pose and the progress to 0.
+
+**Rise of the final prop.** State 10 check 0x1d4320: y of the final prop's node = base y (record +0x4c, stored by the change to state 10) + sin(spin degrees), with the spin before it grows by 12 (24 from 90 degrees); the change to state 11 writes the base y back.
+
+**Wobble of the unbuilt bricks, 0x206ea0(entity, 0).** Called every update in state 2 (flag bits 2 and 3 clear) and in state 8. When a condition holds (r5: 0x210f30 on the global at 0x3772b8, or 0x1a0f6c(entity)) or the byte +0x39 is non-zero (it counts down by 1 per update), every brick that is not active (+0xe2 = 0) and not at progress 1.0 hops: y offset = sin(phase degrees) x amplitude on the node (matrix y = base y +0x2c + offset), phase (+8) += speed (+4) per update; when the phase passes 180 it falls by 180, amplitude (+0) becomes 0.2 + 0.3 r and speed 15 + 10 r (r random in [0, 1) from 0x2345dc), and for the first four bricks a sound-like effect call (0x23fa54, 0x22f770 with 1.1 - 0.2 r) is made. Otherwise (condition false, counter 0) a brick that wobbled (+0x36 bit 0) is put back to its base matrix. The constants 0.2, 0.3, 10, 15, 180 and 1.1 are the literals at 0x207270..0x207284.
+
+**Port.** `src/runtime/prop_nodes.*` (quaternion, slerp, flight), `src/runtime/buildit_bricks.*` (bricks of a parts model and its animation), `BuilditState::flight` and `propRise`, `src/game_prop_parts.*` (node instances of the parts model, the final prop's rise), `Scene::addModelNodes`. Tests `prop-parts`, `prop-parts-real-data`, `buildit`. Picture check only by eye against the code (no oracle picture of the scattered bricks exists): the six bricks lie scattered around the build-it, the first flies in over about 12 updates, the van rises at the end.
+
+Unknowns:
+- The condition r5 of the wobble (what 0x210f30 on 0x3772b8 and 0x1a0f6c test) and what sets the counter +0x39; the port does not wobble the bricks (LEVOBJ-60).
+- The brick order against the node order for other build-its (`Reverse`, flag bit 4) and the `MoveViaPoint` curve; the end key of an animation with more than two frames (the port takes the last frame).
+- Whether the node matrix per update equals the port's: a `ctrace` of 0x22b5a0 over a build in the oracle was not run.

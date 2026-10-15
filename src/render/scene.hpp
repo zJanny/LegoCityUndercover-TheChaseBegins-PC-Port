@@ -5,6 +5,7 @@
 #include "assets/assets.hpp"
 #include "runtime/lighting.hpp"
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <map>
 #include <memory>
@@ -73,6 +74,9 @@ public:
     bool addModel(const std::string& path, const Mat4& transform = identity(),
                   const std::map<std::string, std::string>& textureOverrides = {}, const std::string& key = "", int onlyMesh = -1);
     bool setInstanceMesh(std::size_t instance, const std::string& path, int mesh);
+    // One instance per node of the model that has a mesh (the mesh's GPU data is shared by key "path#mesh"); the result holds the
+    // instance index of every node, -1 for a node without a mesh, and is empty when the model is missing. Move a node with setTransform().
+    std::vector<std::ptrdiff_t> addModelNodes(const std::string& path, const Mat4& placement);
     // Re-skins every skinned part of the model loaded under `key` on the CPU.
     void pose(const std::string& key, const std::vector<assets::Matrix>& skin);
     std::size_t skinnedParts(const std::string& path) const;

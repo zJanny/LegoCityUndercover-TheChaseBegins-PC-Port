@@ -93,9 +93,41 @@ void propRise() {
     require(near(builditPropRise(90.0f), 1.0f), "rise at 90");
     require(near(builditPropRise(180.0f), 0.0f), "rise at 180");
 }
+
+void flightAndRise() {
+    BuilditState build(6);
+    builditUse(build, true);
+    const float expectedFlight[] = {0.0f, 0.1f, 0.206f, 0.318f, 0.436f, 0.56f, 0.69f, 0.826f, 0.968f};
+    builditUpdate(build);
+    require(build.state == 8 && build.bit == 0, "the first update starts the brick");
+    int step = 0;
+    for (const float expected : expectedFlight) {
+        builditUpdate(build);
+        require(std::fabs(build.flight[0] - expected) < 0.0006f, "flight at step " + std::to_string(++step) + " " + std::to_string(build.flight[0]));
+    }
+    require(std::fabs(build.progress[0] - 1.116f) < 0.0006f, "the ninth step ends with progress 1.116 (oracle row of update 11)");
+    builditUpdate(build);
+    require(build.state == 9 && build.flight[0] == 1.0f, "the change to state 9 places the brick at its end");
+    require(build.flight[1] == 0.0f, "the next brick still lies scattered");
+    BuilditState rising(1);
+    rising.state = rising.target = 10;
+    float seen[3];
+    for (int i = 0; i < 3; ++i) {
+        builditUpdate(rising);
+        seen[i] = rising.propRise;
+    }
+    require(seen[0] == 0.0f && near(seen[1], builditPropRise(12.0f)) && near(seen[2], builditPropRise(24.0f)), "the rise uses the spin before its step");
+    rising.state = rising.target = 10;
+    rising.spin = 168.0f;
+    builditUpdate(rising);
+    builditUpdate(rising);
+    require(rising.state == 11 || rising.built, "rise ends");
+    require(rising.propRise == 0.0f && rising.flight[0] == 0.0f, "the change to state 11 resets the bricks and the rise");
+}
 }
 
 int main() {
+    flightAndRise();
     replay();
     releasedButton();
     propRise();

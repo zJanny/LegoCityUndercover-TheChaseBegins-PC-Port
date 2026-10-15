@@ -10,6 +10,7 @@
 #include "game_characters.hpp"
 #include "game_cutscene.hpp"
 #include "game_doors.hpp"
+#include "game_prop_parts.hpp"
 #include "game_hud.hpp"
 #include "game_options.hpp"
 #include "game_player.hpp"
@@ -175,6 +176,7 @@ private:
     chase::runtime::CollisionWorld collision;
     std::vector<game_doors::DoorObject> doors;
     chase::runtime::BuilditSet buildits;
+    game_prop_parts::PropParts propParts;
     chase::runtime::CarrySet carry;
     std::optional<chase::runtime::VehicleBoarding> boarding;
     std::vector<chase::runtime::BoardingVehicle> boardingVehicles;

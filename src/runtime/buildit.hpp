@@ -27,7 +27,9 @@ struct BuilditState {
     float spin = 0;                                                          // record +0x48, degrees of the final prop's rise
     std::vector<float> progress;                                             // per brick +0x24
     bool built = false;                                                      // record +0x37 bit 4
-    explicit BuilditState(int bitCount = 0) : progress(static_cast<std::size_t>(bitCount), 0.0f) {}
+    std::vector<float> flight;  // per brick: the progress the brick's node was last placed at (0x19c9e0 with the progress before its step; 1 after the change to 9; 0 after the change to 11)
+    float propRise = 0;         // height of the final prop above its base: sin of the spin before its step, set by the check of state 10 (0x1d4320), 0 after the change to 11
+    explicit BuilditState(int bitCount = 0) : progress(static_cast<std::size_t>(bitCount), 0.0f), flight(static_cast<std::size_t>(bitCount), 0.0f) {}
 };
 
 enum class BuilditEvent {

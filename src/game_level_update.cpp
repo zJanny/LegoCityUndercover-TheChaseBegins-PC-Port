@@ -256,6 +256,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         updateBuildits(playerPosition);
         updateCarry(playerPosition);
     }
+    propParts.step(dt);
     sceneStart.startRequested();
     if (player && !levelScripts.ai().moving("player1")) levelScripts.ai().setPosition("player1", player->position().data());
     levelScripts.update(dt);

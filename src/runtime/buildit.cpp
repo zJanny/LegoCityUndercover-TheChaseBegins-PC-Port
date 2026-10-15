@@ -19,7 +19,10 @@ void check(BuilditState& build) {
             build.target = phase(BuilditPhase::BitDone);
             return;
         }
-        if (build.bit >= 0 && index < build.progress.size()) build.progress[index] += build.rate;
+        if (build.bit >= 0 && index < build.progress.size()) {
+            build.flight[index] = build.progress[index];
+            build.progress[index] += build.rate;
+        }
         build.rate += kBuilditRateStep;
         if (build.rate > kBuilditRateMax) build.rate = kBuilditRateMax;
         return;
@@ -28,6 +31,7 @@ void check(BuilditState& build) {
         build.target = build.bit == static_cast<int>(build.progress.size()) - 1 ? phase(BuilditPhase::Finishing) : phase(BuilditPhase::Ready);
         return;
     case 10:
+        build.propRise = builditPropRise(build.spin);
         build.spin += build.spin >= kBuilditSpinLateFrom ? kBuilditSpinStepLate : kBuilditSpinStep;
         if (build.spin >= kBuilditSpinEnd) build.target = phase(BuilditPhase::Finished);
         return;
@@ -48,7 +52,10 @@ void change(BuilditState& build, std::vector<BuilditEvent>& events) {
         events.push_back(BuilditEvent::BrickStarted);
         break;
     case 9:
-        if (build.bit >= 0 && static_cast<std::size_t>(build.bit) < build.progress.size()) build.progress[static_cast<std::size_t>(build.bit)] = 1.0f;
+        if (build.bit >= 0 && static_cast<std::size_t>(build.bit) < build.progress.size()) {
+            build.progress[static_cast<std::size_t>(build.bit)] = 1.0f;
+            build.flight[static_cast<std::size_t>(build.bit)] = 1.0f;
+        }
         events.push_back(BuilditEvent::BrickDone);
         break;
     case 10:
@@ -56,6 +63,8 @@ void change(BuilditState& build, std::vector<BuilditEvent>& events) {
         break;
     case 11:
         for (float& value : build.progress) value = 0.0f;
+        for (float& value : build.flight) value = 0.0f;
+        build.propRise = 0.0f;
         build.bit = -1;
         build.rate = kBuilditStartRate;
         build.spin = 0.0f;

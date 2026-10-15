@@ -148,6 +148,7 @@ LevelSession::LevelSession(const Shared& sharedState)
         if (!scene.addModel(meshModelPath(waypoint.mesh), placementMatrix(waypoint))) continue;
         waypointSceneIndex.push_back(instanceIndex);
         waypointObjects.push_back(waypoint);
+        propParts.addWaypointChildren(scene, classOf, waypointObjects.size() - 1, waypoint);
     }
     const auto placedCharacters = placeLevelCharacters(scene, archive, drawable.characters);
     const std::size_t characters = std::size_t(std::count_if(placedCharacters.begin(), placedCharacters.end(), [](const auto& placed) { return placed.has_value(); }));
@@ -250,6 +251,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     std::cout << "doors: " << doors.size() << '\n';
     buildits.load(archive, level, classOf);
     std::cout << "build-its: " << buildits.objects().size() << '\n';
+    propParts.loadBuildits(scene, archive, buildits, placedObjects, placedSceneIndex);
     carry.load(archive, level, classOf);
     std::cout << "carry objects: " << carry.objects().size() << ", carry targets: " << carry.targets().size() << '\n';
     std::cout << "collision: " << collision.triangleCount() << " triangles in " << collision.entries().size() << " entries\n";
@@ -336,6 +338,11 @@ void LevelSession::draw(int width, int height) {
     for (std::size_t i = 0; i < waypointObjects.size(); ++i)
         scene.setInstanceVisible(waypointSceneIndex[i], objectives.waypointActive(game_doors::lowerCase(waypointObjects[i].instance)) &&
                                                             roomShown(runtime::roomNumber(waypointObjects[i].room)));
+    std::vector<bool> shownPlaced(drawn.size()), shownWaypoints(waypointObjects.size());
+    for (std::size_t i = 0; i < drawn.size(); ++i) shownPlaced[i] = drawn[i] && roomShown(runtime::roomNumber(placedObjects[i].room));
+    for (std::size_t i = 0; i < waypointObjects.size(); ++i)
+        shownWaypoints[i] = objectives.waypointActive(game_doors::lowerCase(waypointObjects[i].instance)) && roomShown(runtime::roomNumber(waypointObjects[i].room));
+    propParts.apply(scene, buildits, placedObjects, placedSceneIndex, shownPlaced, shownWaypoints);
     if (skyInstance) {
         const float lift = player && seaHeight ? runtime::skyLift(player->vertical.y, *seaHeight) : 0.0f;
         const Mat4 cameraToWorld = chase::render::rigidInverse(viewMatrix);

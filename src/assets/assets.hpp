@@ -478,6 +478,7 @@ struct Animation {
     std::uint32_t jointTableWord = 0;      // first word of the joint table: bits 0..12 curves, 13..14 rate, 15..27 samples, 28 extra curve, 29 long curve
     unsigned headerRateIndex = 0;          // header u16 +4 >> 14, the rate index when there is no joint table
     std::vector<std::string> objects;      // section +0x0c names, e.g. "ExportCam"
+    std::vector<std::array<Bytes, 2>> objectBlocks;  // the two data blocks that follow each name of section +0x0c
     std::vector<AnimTrack> tracks;         // section +0x18 (unused in shipped data)
     std::vector<std::vector<AnimTrack>> subAnimations;
 };
@@ -533,6 +534,9 @@ JointPose blendPoses(const std::vector<std::pair<JointPose, float>>& layers);
 // 0x24c734 with 0x248870: local matrix from one pose.
 Matrix poseMatrix(const JointPose& pose);
 Matrix localMatrix(const JointChannels& channels);
+// Matrix of a named object track (section +0x0c, e.g. "Bit1" of a build-it's _buildit animation) at a frame: the first block of the
+// object decoded with the curve decoder 0x248910. Frame 0 is the pose the original reads as the start (0x21e96c), the last frame the end.
+Matrix objectAnimationMatrix(const Animation& animation, std::size_t object, unsigned frame);
 // Rigid-inverse(bind world) * animated world per joint (0x252cb0). A fractional frame
 // blends floor(frame) and the next frame, wrapping, as 0x24bf80 does for looping playback.
 std::vector<Matrix> skinMatrices(const Skeleton& skeleton, const Animation& animation, double frame);

@@ -181,6 +181,7 @@ public:
     bool addModel(const std::string& path, const Mat4& transform = identity(),
                   const std::map<std::string, std::string>& textureOverrides = {}, const std::string& key = "", int onlyMesh = -1);
     bool setInstanceMesh(std::size_t instance, const std::string& path, int mesh);
+    std::vector<std::ptrdiff_t> addModelNodes(const std::string& path, const Mat4& placement);
     void pose(const std::string& key, const std::vector<Matrix>& skin);
     std::size_t skinnedParts(const std::string& path) const;
     void bounds(float centre[3], float& radius) const;
@@ -243,6 +244,7 @@ private:
     std::map<std::string, std::vector<std::string>> texturePaths_;
     std::map<std::string, TextureInfo> textures_;
     std::map<std::string, LoadedModel> models_;
+    std::map<std::string, std::vector<int>> nodeMeshes_;
     std::vector<Instance> instances_;
     std::size_t missing_ = 0;
     runtime::LightSet lights_;
@@ -311,6 +313,24 @@ bool SceneImpl::setInstanceMesh(std::size_t instance, const std::string& path, i
     instances_.at(instance).model = instances_.back().model;
     instances_.pop_back();
     return true;
+}
+
+std::vector<std::ptrdiff_t> SceneImpl::addModelNodes(const std::string& path, const Mat4& placement) {
+    auto known = nodeMeshes_.find(path);
+    if (known == nodeMeshes_.end()) {
+        const FuseEntry* entry = archive_.find(path);
+        if (!entry) return {};
+        known = nodeMeshes_.emplace(path, parseModel(archive_.read(*entry)).nodeMesh).first;
+    }
+    std::vector<std::ptrdiff_t> out;
+    for (const int mesh : known->second) {
+        if (mesh < 0 || !addModel(path, placement, {}, path + "#" + std::to_string(mesh), mesh)) {
+            out.push_back(-1);
+            continue;
+        }
+        out.push_back(std::ptrdiff_t(instances_.size()) - 1);
+    }
+    return out;
 }
 
 void SceneImpl::pose(const std::string& path, const std::vector<Matrix>& skin) {
@@ -592,6 +612,9 @@ bool Scene::addModel(const std::string& path, const Mat4& transform, const std::
 
 bool Scene::setInstanceMesh(std::size_t instance, const std::string& path, int mesh) {
     return impl_->setInstanceMesh(instance, path, mesh);
+}
+std::vector<std::ptrdiff_t> Scene::addModelNodes(const std::string& path, const Mat4& placement) {
+    return impl_->addModelNodes(path, placement);
 }
 
 void Scene::pose(const std::string& key, const std::vector<Matrix>& skin) { impl_->pose(key, skin); }

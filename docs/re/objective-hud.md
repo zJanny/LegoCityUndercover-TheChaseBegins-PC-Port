@@ -6,6 +6,8 @@ Handlers of batch SCRIPT-31 as far as mission 1-1 uses them, and what the origin
 
 ## 2026-10-14T15:59:19+02:00 — SetActiveWayPoint, SubObjectiveGoToEnable, the sub-objective registry and the waypoint marker on the map
 
+Corrected by [objective-hud.md §2026-10-15T18:31](#ts-20261015-183130): the badge is not part of the waypoint model; it is a child object of the class file (`dummymeshbouncer`) that the port did not instantiate, so the model was drawn without it rather than "drawn static".
+
 **What mission 1-1 calls.** In lvl_01 (`1-1_*` scripts): `SetActiveWayPoint(object, 0|1)` and `SubObjectiveGoToEnable(waypoint, target, 0|1)`; `EnableMinimapWipe` appears in the `1-2` scripts. `1-1_MissionStart` (hash 1340660679) switches `1-1_Waypoint_01` on (the donut shop, world 817.35, 23.93, 1071.20); `1-1_SO_Donuts_PickedUp`-type scripts move the waypoint to `1-1_Waypoint_02` (police car), `_03` (donut van), `1-1_Van_Waypoint_Enter`, `_05`, `_Donuts`. The waypoint objects are placed objects of the classes `props/map_waypoint` (mesh `Prop_Waypoint_Small`), `props/map_getintovehiclewaypoint` and `props/map_vehiclewaypoint` (mesh `Prop_Waypoint_Large`); the classes have no script.
 
 **Handlers (REA and objdump).**
@@ -73,3 +75,22 @@ Unknowns:
 - The waypoint reach test: code (class behaviour of `props/map_waypoint` and the two vehicle classes), radius or bound, on foot or in a vehicle, and when the script starts relative to the trigger pass.
 - How a script object (class `scriptobject`) is fired by a build-it, a carry pickup or a carry target: the object reference parameters (`TriggerObject`, `TriggerPickup`, `BuilditFinalProp`, unnamed hash 0xc23d689b) print as unset (`None`) in the converter, so the link may be made elsewhere.
 - What the original shows at step 1 on a new game in the port's order (intro movie, then `1_1_a`).
+
+<a id="ts-20261015-183130"></a>
+
+## 2026-10-15T18:31:30+02:00 — The waypoint badge is a child object `Badge` of class `dummymeshbouncer`; it turns and hops (llvm-objdump, class files)
+
+[Corrects §2026-10-14T15:59](#ts-20261014-155919): the model `Prop_Waypoint_Small` (`models/prop_waypoint_small/`, one node `Waypoint_Small`, one mesh with the `marker_rings.tga` part, 128 vertices) holds only the light column. The police badge is a second model, `Prop_Waypoint_LCPDBadge` (`models/prop_waypoint_lcpdbadge/`, one node, one part `Prop_Waypoint_LCPDBadge_128.tga`, 107 vertices).
+
+**Why the port drew no badge.** The class files `levels/props/map_waypoint.blvl`, `map_vehiclewaypoint.blvl` and `map_getintovehiclewaypoint.blvl` carry one embedded object (section +0x2c, the same layout as a level's objects): instance `Badge`, class `dummymeshbouncer`, parameters `meshname` = `Prop_Waypoint_LCPDBadge`, `initialposition` (0, 0.3965, 0) in the small class and (0, 2.6375, 0) in the two large ones, and the bouncer parameters below. The port read only the objects of the level file, never the objects of a class file. The setup 0x170fd8 of the waypoint class looks the child up by name (0x2450f0 "Badge", stored at component +0x5c) and hides it with the waypoint (0x2428c0 at its end).
+
+**Class `dummymeshbouncer`** (type 228, `levels/dummymeshbouncer.blvl`; descriptor built at 0x1c8008: create 0x260528, destroy 0x26c858, update 0x260728, handler 0x26c87c = `return 0`). Create reads `RevsPerMin` (hash 7581f2b0) x 0.10471976 into +0x48, `BouncePerMin` (ba47dfdf) x 0.016666668 into +0x40 and `BounceAmount` (40d85717) into +0x44, all defaulting to 0, and keeps the child's placement matrix (0x2364cc from `initialposition` / `initialorientation`) as the record's first 0x40 bytes. Update 0x260728 (dt in s0): clock +0x4c += dt, wraps at 60 s (`if 60 <= clock then clock -= 60`); the matrix is the placement matrix with rows 0 and 2 turned about y by `RevsPerMin * 0.10471976 * clock` radians (0x237bc4: row0' = row0 c - row2 s, row2' = row2 c + row0 s) and the translation raised by `sin(BouncePerMin * 0.016666668 * clock * 2 pi) * BounceAmount` along (0, 1, 0) (the float3 at 0x56d424, measured (0, 1, 0) in [script-natives-flags.md §2026-10-14T19:19](script-natives-flags.md#ts-20261014-191915)); then set on the node (0x24c118). Values: small waypoint `RevsPerMin` 15, `BouncePerMin` 50, `BounceAmount` 0.08; both large classes 15, 20, 0.25. So the badge turns a quarter in 1 s and hops with a period of 1.2 s (small) or 3 s (large).
+
+**The column has no animation data.** The model has one node and the archive holds no `.bfnanm` for it (`models/prop_waypoint_*` has only the models and the chequered flag's `ufo_beam.bfnanm`). The waypoint update 0x17acbc animates it with a node tween (0x229e54 -> 0x21b7cc with flag byte 3: alpha and colour of the node, from the first to the second float over a time): state 0 starts a 0 to 1 fade of the waypoint node over `FadeScaleInTime` (+0x6c: 0.8 s small, 1.0 s large; the parameter name says "scale" but the tween flags are alpha and colour), state 1 fades the Badge 0 to 1 over `BadgeFadeInTime` (+0x68, 0.8 s small), state 2 fades the waypoint 1 to 0 over `FadeScaleOutTime` (+0x70, 0.4 s small). The tween evaluator and the effect of the flag bits on the draw (0x23f708, 0x2408f8, 0x23f540) were not read.
+
+**Port.** `src/runtime/mesh_bouncer.*` (class replica and `propChildren` for the class files), `src/game_prop_parts.*` (scene instances of the children, shown with their waypoint). Tests `prop-parts` (closed form) and `prop-parts-real-data` (class parameters). Picture check against the oracle picture `agentOH-out/tp3a.png`: the same cyan column with the bronze badge inside, and in the port the badge goes from edge-on to three-quarter view over 16 updates; no oracle number of the badge's angle or height exists.
+
+Unknowns:
+- The fade tweens of the column and the badge (alpha and colour over 0.8 s, 0.4 s out) are not drawn; the port shows both at full opacity as soon as the waypoint is switched on.
+- Where the child's clock starts (record +0x4c is zero from the allocation; the first update adds dt) and whether the bouncer runs while its parent is disabled (the flag byte +0x50 that stops the update has no writer found); the port runs it every update.
+- The effect of `UseMarker` waypoints (kind 2, other `props/map_*` classes) on the children.

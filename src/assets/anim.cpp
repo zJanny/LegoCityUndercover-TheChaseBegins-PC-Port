@@ -158,8 +158,7 @@ Animation parseAnimation(const Bytes& data) {
         r.skip();
         for (unsigned g = 0; g < head[1]; ++g) {
             anim.objects.push_back(cString(r.next()));
-            r.skip();
-            r.skip();
+            anim.objectBlocks.push_back({r.next(), r.next()});
         }
     }
     skipGroups(readU32(head, 0x10) != 0, head[2], 2);
@@ -361,6 +360,10 @@ Matrix poseMatrix(const JointPose& pose) {
 }
 
 Matrix localMatrix(const JointChannels& channels) { return poseMatrix(jointPose(channels)); }
+
+Matrix objectAnimationMatrix(const Animation& animation, std::size_t object, unsigned frame) {
+    return localMatrix(decodeChannels(animation.objectBlocks.at(object)[0], frame, animation.frames));
+}
 
 float evaluateTrack(const AnimTrack& track, float time) {
     const auto& keys = track.keys;
