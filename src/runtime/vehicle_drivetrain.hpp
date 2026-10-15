@@ -135,8 +135,7 @@ bool controlDrivetrain(DrivetrainState& state, const EngineSpec& engine, const B
 // or brake input and the steer input did not change.
 bool vehicleWakes(const BodyInputs& controls, float forwardSpeed, float speedSquared, float previousSteer);
 
-// A body asleep (mode 2) keeps the steer input as the previous one and its wheels stop spinning (0x33b564). STAND-IN VEH-S35: the world's rule
-// that puts a body to sleep is not read; here a body sleeps in the first update in which vehicleWakes is false.
+// A body asleep (mode 2) keeps the steer input as the previous one and its wheels stop spinning (0x33b564).
 void sleepVehicle(DrivetrainState& state, const BodyInputs& controls);
 
 // 0x3396cc without the matrix: brake and hand brake on the wheel's spin, the steer angle and the rolling direction.

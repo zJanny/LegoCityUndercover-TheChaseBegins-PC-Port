@@ -56,6 +56,28 @@ Vector3 pointVelocity(const VehicleRigidBody& body, const Vector3& point) {
 }
 
 void stepRigidBody(VehicleRigidBody& body, float linearDamping, float angularDamping, float dt) {
+    applyRigidBodyForces(body, dt);
+    integrateRigidBody(body, linearDamping, angularDamping, dt);
+}
+
+Vector3 worldInverseInertia(const VehicleRigidBody& body, const Vector3& value) {
+    const std::array<Vector3, 3> axes = bodyAxes(body);
+    Vector3 out{};
+    for (std::size_t a = 0; a < 3; ++a) {
+        const float local = dot(axes[a], value) * body.inverseInertia[a];
+        for (std::size_t k = 0; k < 3; ++k) out[k] += axes[a][k] * local;
+    }
+    return out;
+}
+
+void applyImpulse(VehicleRigidBody& body, const Vector3& impulse, const Vector3& arm) {
+    if (body.inverseMass == 0.0f) return;
+    for (std::size_t a = 0; a < 3; ++a) body.velocity[a] += impulse[a] * body.inverseMass;
+    const Vector3 turn = worldInverseInertia(body, cross(arm, impulse));
+    for (std::size_t a = 0; a < 3; ++a) body.angularVelocity[a] += turn[a];
+}
+
+void applyRigidBodyForces(VehicleRigidBody& body, float dt) {
     body.force[1] += kVehicleBodyGravity / body.inverseMass;
     const float push = body.inverseMass * dt;
     for (std::size_t a = 0; a < 3; ++a) body.velocity[a] += body.force[a] * push;
@@ -69,6 +91,11 @@ void stepRigidBody(VehicleRigidBody& body, float linearDamping, float angularDam
         const float scale = kVehicleAngularStepLimit / dt / spin;
         for (float& value : body.angularVelocity) value *= scale;
     }
+    body.force = {0, 0, 0};
+    body.torque = {0, 0, 0};
+}
+
+void integrateRigidBody(VehicleRigidBody& body, float linearDamping, float angularDamping, float dt) {
     const float keepLinear = std::pow(1.0f - linearDamping, dt), keepAngular = std::pow(1.0f - angularDamping, dt);
     for (std::size_t a = 0; a < 3; ++a) {
         body.velocity[a] *= keepLinear;
@@ -87,12 +114,22 @@ void stepRigidBody(VehicleRigidBody& body, float linearDamping, float angularDam
 
 int vehicleWorldSteps(float& leftover, float dt) {
     leftover += dt;
-    int steps = 0;
-    while (leftover >= kVehicleWorldStep) {
-        leftover -= kVehicleWorldStep;
-        ++steps;
-    }
-    return steps;
+    if (kVehicleWorldStep > leftover) return 0;
+    const int steps = int(leftover / kVehicleWorldStep);
+    leftover -= float(steps) * kVehicleWorldStep;
+    return std::min(steps, kVehicleMaxWorldSteps);
+}
+
+bool updateVehicleActivation(VehicleRigidBody& body, float dt) {
+    if (dot(body.velocity, body.velocity) < kVehicleSleepSpeed * kVehicleSleepSpeed &&
+        dot(body.angularVelocity, body.angularVelocity) < kVehicleSleepTurn * kVehicleSleepTurn)
+        body.deactivationTime += dt;
+    else
+        body.deactivationTime = 0.0f;
+    if (!(body.deactivationTime > kVehicleSleepTime)) return true;
+    body.velocity = {0.0f, 0.0f, 0.0f};
+    body.angularVelocity = {0.0f, 0.0f, 0.0f};
+    return false;
 }
 
 float forwardSpeed(const VehicleRigidBody& body) {

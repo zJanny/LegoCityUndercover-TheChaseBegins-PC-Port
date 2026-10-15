@@ -5,6 +5,7 @@
 #include "runtime/collision.hpp"
 #include "runtime/vehicle.hpp"
 #include "runtime/vehicle_body.hpp"
+#include "runtime/vehicle_collision.hpp"
 
 #include <functional>
 #include <optional>
@@ -75,12 +76,13 @@ VehicleRigidBody vehicleRigidBody(const VehicleRecord& record, const Vector3& no
 // The node matrix (rows right, up, forward, translation) of a rigid body.
 std::array<float, 16> vehicleNodeMatrix(const VehicleRigidBody& body, const std::array<float, 3>& centreOfMass);
 
-// STAND-IN VEH-S34 for the collision pass and constraint solver 0x30cdf8 (the body's CollSpheres against the level): after the step no wheel
-// centre may lie below the ground that a ray from kBodyGroundLookUp above it finds; the body is lifted by the largest shortfall and loses its
-// downward velocity. Without it a body that falls faster than the wheel rays reach drops through the street.
-constexpr float kBodyGroundLookUp = 2.0f;
-constexpr float kBodyGroundLookDown = 8.0f;
-void keepWheelsAboveGround(VehicleRigidBody& body, const std::vector<VehicleWheel>& wheels, const WheelRay& ray);
+// The level floor of a vehicle body: the floor graph, the tracked cell and the body's collision points.
+struct VehicleFloor {
+    FloorMesh mesh;
+    FloorTracker tracker;
+    VehicleCollisionBody shape;
+};
+VehicleCollisionBody vehicleCollisionBody(const VehicleRecord& record);
 
 // The drivetrain state of a new vehicle body: the engine at IdleSpeed (0x243e9c), gear 2 (0x33ce74), one spin state per wheel.
 DrivetrainState vehicleDrivetrain(const VehicleRecord& record);
@@ -88,14 +90,15 @@ DrivetrainState vehicleDrivetrain(const VehicleRecord& record);
 // One update of 0x33aea8 for a dynamic body, then the world step: the speed of the update before sets the linear damping (0.2 above the
 // speed limit), the steering 0x33cb1c, the brake and gear rules, and unless the body was asleep at the start of the update (0x33b518 skips
 // the wheels in the update it wakes) per wheel the setup 0x3396cc, the ray and suspension, the tyre force and the spin; then the drivetrain
-// and the rigid body step. Ends with keepWheelsAboveGround.
+// and the forces of the rigid body step; then the body moves through the floor collision pass 0x1c54f8, or freely without a floor (`floor`
+// null, a test setup; in the game a body without a floor cell does not move).
 std::vector<WheelState> stepVehiclePhysics(VehicleRigidBody& body, DrivetrainState& drive, const VehicleRecord& record, const BodyInputs& controls,
-                                           bool wokeThisUpdate, const WheelRay& ray, float dt);
+                                           bool wokeThisUpdate, const WheelRay& ray, float dt, VehicleFloor* floor = nullptr);
 
-// The world steps of one update (vehicleWorldSteps) for one vehicle: per step the wake test of 0x33b4a0, then stepVehiclePhysics with
-// kVehicleWorldStep. An asleep body without a reason to wake stays asleep (mode 2); STAND-IN VEH-S35: an awake body without a reason to wake
-// goes to sleep at once (the world's sleep rule is not read). Returns whether the body is awake afterwards.
+// The world steps of one update (vehicleWorldSteps) for one vehicle: per step the cell tracker 0x20c0e4, the wake test of 0x33b4a0 (0x2308e4
+// resets the sleep time), then for an awake body stepVehiclePhysics with kVehicleWorldStep and the sleep rule updateVehicleActivation. An
+// asleep body without a reason to wake stays asleep (mode 2). Returns whether the body is awake afterwards.
 bool stepVehicleWorld(VehicleRigidBody& body, DrivetrainState& drive, bool awake, const VehicleRecord& record, const BodyInputs& controls,
-                      const WheelRay& ray, int steps);
+                      const WheelRay& ray, int steps, VehicleFloor* floor = nullptr);
 
 }

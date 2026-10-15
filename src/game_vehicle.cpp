@@ -85,8 +85,13 @@ void LevelSession::driveVehicles(float dt) {
         const runtime::DriveCommand command = runtime::commandForState(record.state, driven ? playerInput : runtime::DriveInput{}, record.forcedStop != 0, forwardSpeed);
         runtime::BodyInputs controls = runtime::bodyInputs(command);
         controls.driver = driven;
+        const CollisionItem* floorMesh = floorItem();
+        std::optional<runtime::VehicleFloor> floor;
+        if (floorMesh) floor = runtime::VehicleFloor{runtime::FloorMesh(*floorMesh), drive.floorTracker, runtime::vehicleCollisionBody(record)};
         drive.awake = runtime::stepVehicleWorld(drive.rigid, drive.drivetrain, drive.awake, record, controls,
-                                                [this](const runtime::Vector3& from, const runtime::Vector3& to) { return runtime::castWheelRay(collision, from, to); }, steps);
+                                                [this](const runtime::Vector3& from, const runtime::Vector3& to) { return runtime::castWheelRay(collision, from, to); }, steps,
+                                                floor ? &*floor : nullptr);
+        if (floor) drive.floorTracker = floor->tracker;
         if (runtime::updateStuckTimer(record.stuckTimer, 1.0f, false, std::fabs(runtime::forwardSpeed(drive.rigid)), dt))
             levelScripts.vehicles().requestState(boardingRecords[i], runtime::kVehicleStateStuck);
         vehicle.matrix = runtime::vehicleNodeMatrix(drive.rigid, record.centreOfMass);
@@ -94,6 +99,12 @@ void LevelSession::driveVehicles(float dt) {
         for (std::size_t w = 0; w < wheelSceneIndex.size(); ++w)
             if (wheelSceneIndex[w].first == drive.placedIndex) scene.setTransform(wheelSceneIndex[w].second, chase::assets::multiply(placementMatrix(wheelLocalPlacements[w]), vehicle.matrix));
     }
+}
+
+const CollisionItem* LevelSession::floorItem() const {
+    for (const runtime::CollisionWorld::Entry& entry : collision.entries())
+        if (entry.item.floor) return &entry.item;
+    return nullptr;
 }
 
 void LevelSession::suppressDrivenVehicleCollision() {

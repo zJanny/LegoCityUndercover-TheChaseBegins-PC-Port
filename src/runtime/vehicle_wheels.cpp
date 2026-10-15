@@ -138,16 +138,13 @@ std::array<float, 16> vehicleNodeMatrix(const VehicleRigidBody& body, const std:
     return matrix;
 }
 
-void keepWheelsAboveGround(VehicleRigidBody& body, const std::vector<VehicleWheel>& wheels, const WheelRay& ray) {
-    float lift = 0.0f;
-    for (const VehicleWheel& wheel : wheels) {
-        const Vector3 centre = bodyToWorld(body, {wheel.suspension.mount[0] + wheel.suspension.sideOffset, wheel.suspension.mount[1], wheel.suspension.mount[2]});
-        const std::optional<WheelHit> hit = ray({centre[0], centre[1] + kBodyGroundLookUp, centre[2]}, {centre[0], centre[1] - kBodyGroundLookDown, centre[2]});
-        if (hit) lift = std::max(lift, hit->point[1] - centre[1]);
-    }
-    if (lift <= 0.0f) return;
-    body.position[1] += lift;
-    body.velocity[1] = std::max(body.velocity[1], 0.0f);
+VehicleCollisionBody vehicleCollisionBody(const VehicleRecord& record) {
+    Vector3 low, high;
+    vehicleCollisionBoxStandIn(record.className, low, high);
+    VehicleCollisionBody shape;
+    shape.points = vehicleProbePoints(low, high, record.wheels);
+    shape.massTimesTwo = kVehicleBodyMassFactor * record.mass;
+    return shape;
 }
 
 DrivetrainState vehicleDrivetrain(const VehicleRecord& record) {
@@ -158,7 +155,7 @@ DrivetrainState vehicleDrivetrain(const VehicleRecord& record) {
 }
 
 std::vector<WheelState> stepVehiclePhysics(VehicleRigidBody& body, DrivetrainState& drive, const VehicleRecord& record, const BodyInputs& controls,
-                                           bool wokeThisUpdate, const WheelRay& ray, float dt) {
+                                           bool wokeThisUpdate, const WheelRay& ray, float dt, VehicleFloor* floor) {
     const std::array<Vector3, 3> axes = bodyAxes(body);
     const float forwardSpeed = dot(body.velocity, axes[2]);
     const float speedSquared = dot(body.velocity, body.velocity);
@@ -186,23 +183,29 @@ std::vector<WheelState> stepVehiclePhysics(VehicleRigidBody& body, DrivetrainSta
         }
     }
     stepDrivetrain(drive, record.engine, grips, forwardSpeed);
-    stepRigidBody(body, linearDamping, record.dampingAngular, dt);
-    keepWheelsAboveGround(body, record.wheels, ray);
+    applyRigidBodyForces(body, dt);
+    if (floor) collideVehicleWithFloor(body, floor->mesh, floor->shape, floor->tracker, kTyreSurfaceFriction, linearDamping, record.dampingAngular, dt);
+    else integrateRigidBody(body, linearDamping, record.dampingAngular, dt);
     return states;
 }
 
 
 bool stepVehicleWorld(VehicleRigidBody& body, DrivetrainState& drive, bool awake, const VehicleRecord& record, const BodyInputs& controls,
-                      const WheelRay& ray, int steps) {
+                      const WheelRay& ray, int steps, VehicleFloor* floor) {
     for (int step = 0; step < steps; ++step) {
-        if (!vehicleWakes(controls, forwardSpeed(body), dot(body.velocity, body.velocity), drive.previousSteer)) {
+        if (floor) trackFloorCell(floor->mesh, floor->tracker, body.position);
+        bool woke = false;
+        if (vehicleWakes(controls, forwardSpeed(body), dot(body.velocity, body.velocity), drive.previousSteer)) {
+            woke = !awake;
+            awake = true;
+            body.deactivationTime = 0.0f;
+        }
+        if (!awake) {
             sleepVehicle(drive, controls);
-            awake = false;
             continue;
         }
-        const bool woke = !awake;
-        awake = true;
-        stepVehiclePhysics(body, drive, record, controls, woke, ray, kVehicleWorldStep);
+        stepVehiclePhysics(body, drive, record, controls, woke, ray, kVehicleWorldStep, floor);
+        awake = updateVehicleActivation(body, kVehicleWorldStep);
     }
     return awake;
 }

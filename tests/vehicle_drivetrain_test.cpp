@@ -108,6 +108,10 @@ void worldSteps() {
     expect(vehicleWorldSteps(leftover, 0.066f) == 1 && vehicleWorldSteps(leftover, 0.066f) == 2, "dt 0.066: 1, then 2 steps");
     leftover = 0.0f;
     expect(vehicleWorldSteps(leftover, 0.02f) == 0 && vehicleWorldSteps(leftover, 0.02f) == 1, "dt 0.02: 0, then 1 step");
+    // 0x30c768: at most scheduler +0xc0 = 2 steps (oracle read at 0x5164a8); the steps beyond are dropped, not kept for later.
+    leftover = 0.0f;
+    expect(vehicleWorldSteps(leftover, 0.2f) == 2, "dt 0.2: 6 whole steps, 2 run");
+    expect(leftover < kVehicleWorldStep && vehicleWorldSteps(leftover, 0.0f) == 0, "dt 0.2: the dropped steps are not carried over");
 }
 
 void engineSpec() {
@@ -189,7 +193,7 @@ void replays() {
             {7.96509504f, 7.96407223f, 12.4793873f, 12.4805517f}, {24076.3203f, 23874.0234f, 25759.9082f, 25692.5547f}},
            0.0005, 0.0005, 0.001, "tA frame 25 -> 26 (A held, 3.0 m/s)");
     // In the turn the roll and pitch rates differ by up to 0.05 rad/s, the velocity by 0.03 and the spring forces by up to 7 % (the inertia is a
-    // stand-in, VEH-S32, and the solver is missing, VEH-S34); the yaw rate stays within 0.002.
+    // stand-in, VEH-S32, and the replay has no floor collision); the yaw rate stays within 0.002.
     const Vector3 flat = {0.00240988517f, 0.999997139f, 3.39709841e-05f};
     replay({{-0.684325933f, 0.0273690913f, 0.728662312f}, {0.0294426773f, 0.9995175f, -0.00989140756f}, {-0.728581488f, 0.0146848224f, -0.684801579f},
             {881.581909f, 17.0517101f, 1111.67639f}, {-10.8159151f, 0.00922959205f, -8.35695648f}, {-0.169964358f, 0.465350419f, -0.1492185f},

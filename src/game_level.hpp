@@ -115,6 +115,7 @@ private:
     bool placeSeatedVehicle(const float position[3]);
     std::optional<chase::runtime::WaypointVehicle> waypointVehicle() const;
     void suppressDrivenVehicleCollision();
+    const chase::assets::CollisionItem* floorItem() const;
     chase::runtime::BoardingInput boardingInput(float dt);
     void handleBoardingEvents(const std::vector<chase::runtime::BoardingEvent>& events);
     void loadVehicleCameras();
@@ -173,6 +174,7 @@ private:
     struct VehicleDrive {
         chase::runtime::VehicleRigidBody rigid;
         chase::runtime::DrivetrainState drivetrain;
+        chase::runtime::FloorTracker floorTracker;
         bool started = false;
         bool awake = false;
         std::size_t placedIndex = 0;

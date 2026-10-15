@@ -143,9 +143,55 @@ void readVertexBuffer(Reader& r, const Bytes& material, ModelPart& part) {
     resolveSkinJoints(part);
 }
 
+CollisionTriangle readTriangle(const Bytes& block, std::size_t at, std::uint32_t vertexCount) {
+    CollisionTriangle triangle;
+    for (int k = 0; k < 3; ++k) triangle.normal[k] = readF32(block, at + 4 * std::size_t(k));
+    triangle.d = readF32(block, at + 12);
+    for (int k = 0; k < 3; ++k) {
+        triangle.vertex[k] = readU32(block, at + 16 + 4 * std::size_t(k));
+        if (triangle.vertex[k] >= vertexCount) throw std::runtime_error("collision vertex index out of range");
+    }
+    triangle.surface = block[at + 0x1c];
+    std::memcpy(triangle.unknown, &block[at + 0x1d], 3);
+    return triangle;
+}
+
+// 0x11fd20: header block (word 0 the cell count), the 0x10-byte cells, the extra 0x20-byte triangles and their 12-byte vertices.
+FloorGraph readFloorGraph(Reader& r, const CollisionItem& item) {
+    FloorGraph graph;
+    Bytes header = r.next();
+    Bytes cells = r.next();
+    Bytes triangles = r.next();
+    Bytes vertices = r.next();
+    requireSize(header, 0x18, "floor graph header");
+    for (std::size_t k = 0; k < 6; ++k) graph.header[k] = readU32(header, 4 * k);
+    const std::uint32_t count = graph.header[0];
+    if (cells.size() != std::size_t(count) * 0x10) throw std::runtime_error("floor graph cell size mismatch");
+    if (triangles.size() % 0x20) throw std::runtime_error("floor graph triangle size mismatch");
+    if (vertices.size() % 12) throw std::runtime_error("floor graph vertex size mismatch");
+    const std::uint32_t vertexCount = std::uint32_t(vertices.size() / 12);
+    graph.extraVertices.resize(std::size_t(vertexCount) * 3);
+    for (std::size_t k = 0; k < graph.extraVertices.size(); ++k) graph.extraVertices[k] = readF32(vertices, k * 4);
+    for (std::size_t at = 0; at < triangles.size(); at += 0x20) graph.extraTriangles.push_back(readTriangle(triangles, at, vertexCount));
+    graph.cells.resize(count);
+    for (std::uint32_t i = 0; i < count; ++i) {
+        const std::size_t at = std::size_t(i) * 0x10;
+        FloorCell& cell = graph.cells[i];
+        const std::uint32_t word = readU32(cells, at);
+        cell.itemTriangle = word & 1;
+        cell.triangle = cell.itemTriangle ? (word >> 11) * 0x400 + ((word >> 1) & 0x3ff) : word >> 1;
+        const std::size_t limit = cell.itemTriangle ? item.triangles.size() : graph.extraTriangles.size();
+        if (cell.triangle >= limit) throw std::runtime_error("floor graph triangle index out of range");
+        cell.flags = readU16(cells, at + 6);
+        cell.index = readU16(cells, at + 8);
+        for (std::size_t k = 0; k < 3; ++k) cell.neighbour[k] = readU16(cells, at + 10 + 2 * k);
+    }
+    return graph;
+}
+
 // 0x114640 (and 0x11fd20): collision section at model+0x1c, pool -14. Items of 0x2c bytes: +0x10 node
 // count, +0x14 triangle count; the name, node and triangle chunks (1024 records each) and the vertex block
-// follow in the order of the loader. The optional block set of an item with +0x28 set (0x11fd20) is skipped.
+// follow in the order of the loader, then the floor graph of an item with +0x28 set.
 void readCollision(Reader& r, std::uint32_t count, std::vector<CollisionItem>& out) {
     r.cursor.push(Pool::M14);
     Bytes items = r.next();
@@ -185,21 +231,9 @@ void readCollision(Reader& r, std::uint32_t count, std::vector<CollisionItem>& o
             }
             node.info = readU32(nodeBytes, std::size_t(n) * 0x1c + 0x18);
         }
-        item.triangles.resize(triangleCount);
-        for (std::uint32_t t = 0; t < triangleCount; ++t) {
-            CollisionTriangle& triangle = item.triangles[t];
-            const std::size_t at = std::size_t(t) * 0x20;
-            for (int k = 0; k < 3; ++k) triangle.normal[k] = readF32(triangleBytes, at + 4 * std::size_t(k));
-            triangle.d = readF32(triangleBytes, at + 12);
-            for (int k = 0; k < 3; ++k) {
-                triangle.vertex[k] = readU32(triangleBytes, at + 16 + 4 * std::size_t(k));
-                if (triangle.vertex[k] >= vertexCount) throw std::runtime_error("collision vertex index out of range");
-            }
-            triangle.surface = triangleBytes[at + 0x1c];
-            std::memcpy(triangle.unknown, &triangleBytes[at + 0x1d], 3);
-        }
-        if (readU32(items, base + 0x28))
-            for (int k = 0; k < 4; ++k) r.skip();
+        item.triangles.reserve(triangleCount);
+        for (std::uint32_t t = 0; t < triangleCount; ++t) item.triangles.push_back(readTriangle(triangleBytes, std::size_t(t) * 0x20, vertexCount));
+        if (readU32(items, base + 0x28)) item.floor = readFloorGraph(r, item);
         out.push_back(std::move(item));
     }
     r.cursor.pop();

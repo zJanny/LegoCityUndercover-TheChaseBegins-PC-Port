@@ -1,12 +1,15 @@
 // Tests of the driving rules (src/runtime/vehicle_drive.*) and of the physics body driving on a flat street. The speed and turn numbers are
 // oracle measurements of the police trooper made on 2026-10-15 with Azahar (state drv-police-car-seated, RPC samples of the vehicle node, 30
 // updates per second); each block names its source run. Evidence: docs/re/vehicles-driving.md, docs/re/vehicles-physics.md.
+#include "assets/assets.hpp"
 #include "runtime/vehicle_drive.hpp"
 #include "vehicle_trooper.hpp"
 
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <filesystem>
+#include <memory>
 
 namespace {
 
@@ -62,29 +65,59 @@ void stateRules() {
     expect(inputs.steer == 0.5f && inputs.accelerate == 0.0f && inputs.brake == 1.0f && inputs.handBrake == 1.0f, "0x23019c copies 1 or 0 to the body");
 }
 
-// The physics body (vehicle_wheels.*, vehicle_drivetrain.*) of the police trooper on a flat street, against the free-run oracle samples of the
-// runs in artifacts/oracle/agentDRV-out. The street of the runs is not flat and the samples are node movement per update, so the tolerances
-// are those the kinematic stand-in had.
+// With FIB NAMES the cars drive on the street of lvl_01 where the oracle trooper of drv-police-car-seated stands (rigid body at (887.378,
+// 17.07, 1117.319), forward (-0.7046, -0.0010, -0.7096); the runs below started there), with the level's wheel rays and the floor collision
+// pass; without data on a flat plane without collision.
+struct Street {
+    chase::assets::Model model;
+    CollisionWorld world;
+    const chase::assets::CollisionItem* floor = nullptr;
+};
+std::unique_ptr<Street> street;
+const Vector3 kStreetStart = {887.377625f, 17.3f, 1117.31873f};
+const float kStreetHeading = std::atan2(-0.704645872f, -0.709558249f);
+
+// The physics body (vehicle_wheels.*, vehicle_drivetrain.*) of the police trooper against the free-run oracle samples of the runs in
+// artifacts/oracle/agentDRV-out. The samples are node movement per update, so the tolerances are those the kinematic stand-in had.
 struct Car {
     VehicleRecord record = trooper::record();
     VehicleRigidBody body;
     DrivetrainState drive;
+    std::optional<VehicleFloor> floor;
     Vector3 start{};
+    float startHeading = 0.0f;
 
     explicit Car(float heading = 0.0f) {
-        body = vehicleRigidBody(record, {0.0f, 0.95f, 0.0f}, heading);
+        if (street) {
+            startHeading = kStreetHeading + heading;
+            body = vehicleRigidBody(record, {0.0f, 0.0f, 0.0f}, startHeading);
+            body.position = kStreetStart;
+            floor = VehicleFloor{FloorMesh(*street->floor), FloorTracker{}, vehicleCollisionBody(record)};
+        } else {
+            body = vehicleRigidBody(record, {0.0f, 0.95f, 0.0f}, heading);
+            startHeading = heading;
+        }
         drive = vehicleDrivetrain(record);
         for (int i = 0; i < 90; ++i) step({}, false);
         start = body.position;
     }
-    void step(const BodyInputs& inputs, bool woke) { stepVehiclePhysics(body, drive, record, inputs, woke, trooper::flatGround, kDt); }
+    void step(const BodyInputs& inputs, bool woke) {
+        if (!street) {
+            stepVehiclePhysics(body, drive, record, inputs, woke, trooper::flatGround, kDt);
+            return;
+        }
+        trackFloorCell(floor->mesh, floor->tracker, body.position);
+        const CollisionWorld& world = street->world;
+        stepVehiclePhysics(body, drive, record, inputs, woke, [&world](const Vector3& from, const Vector3& to) { return castWheelRay(world, from, to); },
+                           kDt, &*floor);
+    }
     void run(const BodyInputs& inputs, int updates) {
         for (int i = 0; i < updates; ++i) step(inputs, false);
     }
     float speed() const { return forwardSpeed(body); }
     float heading() const {
         const Vector3 forward = bodyAxes(body)[2];
-        return std::atan2(forward[0], forward[2]);
+        return std::remainder(std::atan2(forward[0], forward[2]) - startHeading, 2.0f * float(M_PI));
     }
     float travelled() const { return std::hypot(body.position[0] - start[0], body.position[2] - start[2]); }
     void reach(float target) {
@@ -119,6 +152,8 @@ void accelerationAgainstOracle() {
     car.run(kAccelerate, 30);
     std::printf("A d60 %.3f\n", car.travelled());
     near(car.travelled(), 25.0, 2.0, "distance 60 updates after the first move (oracle pcA 25.5, coast 24.3)");
+    // The top speed needs 300 more updates (about 250 m); on the street that is a long drive that ends at a wall, so only the flat plane runs it.
+    if (street) return;
     car.run(kAccelerate, 300);
     std::printf("A top %.3f\n", car.speed());
     expect(car.speed() > 27.3f && car.speed() < 28.6f, "the speed ends near the class value TopSpeed 28 (oracle: 27.3 to 28.6 at the top)", car.speed());
@@ -133,8 +168,7 @@ void report(double got, double want, double tolerance, const char* what) {
 // breakpoints): one world step per 100 clock ticks. Every pinned row was checked for continuity: its start speed (body+0xc0) equals the end
 // speed |v| of the row before, so it is the next step; where they differ a step was missed and the count skips one (free3 step 2). The older
 // brake samples of agentDRV-out (pcB, brk, both, forced) counted polled rows as updates while polling misses steps, so they are not used
-// (VEH-52 closed; docs/re/vehicles-driving.md is marked corrected). Test setup difference: the oracle car drives on the street of lvl_01, the
-// test car on a flat plane without collision (the ground and solver are VEH-40), so the limits are 0.4 m/s.
+// (VEH-52 closed; docs/re/vehicles-driving.md is marked corrected). The limits are 0.4 m/s on the plane and on the street of lvl_01.
 void brakingAgainstOracle() {
     // free3: B pressed at 27.30 m/s (A before): 24.14, 19.72, 13.96, 7.01, 2.54 m/s after 1, 3, 6, 10, 14 steps (the row of step 2 was missed).
     struct Sample {
@@ -241,12 +275,14 @@ void steeringAgainstOracle() {
     Car left;
     left.run({-1.0f, 1.0f, 0.0f, 0.0f}, 20);
     expect(left.heading() < 0.0f, "a negative steer turns the heading down", left.heading());
+    // On the plane these are exact symmetries; the street of lvl_01 slopes and tilts (port: 0.0019 rad after 60 updates straight, 0.0017
+    // standing with full lock), so there the limit is 0.005 rad.
     Car straight;
     straight.run(kAccelerate, 60);
-    near(straight.heading(), 0.0, 1e-4, "no steer, no turn");
+    near(straight.heading(), 0.0, street ? 5e-3 : 1e-4, "no steer, no turn");
     Car standing;
     standing.run({1.0f, 0.0f, 0.0f, 0.0f}, 60);
-    near(standing.heading(), 0.0, 1e-3, "no turn at standstill");
+    near(standing.heading(), 0.0, street ? 5e-3 : 1e-3, "no turn at standstill");
     Car fast;
     fast.reach(24.0f);
     const float before = fast.heading();
@@ -269,6 +305,7 @@ void stuckRule() {
 }
 
 void movement() {
+    if (street) return;
     Car north;
     north.run(kAccelerate, 30);
     expect(north.body.position[2] - north.start[2] > 1.0f && std::fabs(north.body.position[0] - north.start[0]) < 1e-2, "heading 0 drives along +z");
@@ -279,7 +316,29 @@ void movement() {
 
 }
 
-int main() {
+int main(int argc, char** argv) {
+    if (argc == 3) {
+        if (!std::filesystem::exists(argv[1]) || !std::filesystem::exists(argv[2])) {
+            std::printf("vehicle-drive-test: data not available, skipped\n");
+            return 77;
+        }
+        chase::assets::FuseArchive archive(argv[1]);
+        archive.loadNames(argv[2]);
+        const chase::assets::FuseEntry* entry = archive.find("models/lvl_01_cherrytreehills/lvl_01_cherrytreehills.bfnmdl");
+        if (!entry) {
+            std::printf("FAIL: level model not in archive\n");
+            return 1;
+        }
+        street = std::make_unique<Street>();
+        street->model = chase::assets::parseModel(archive.read(*entry));
+        for (const auto& item : street->model.collision) street->world.add(item);
+        for (const auto& entry : street->world.entries())
+            if (entry.item.floor) street->floor = &entry.item;
+        if (!street->floor) {
+            std::printf("FAIL: no floor graph\n");
+            return 1;
+        }
+    }
     inputRules();
     stateRules();
     accelerationAgainstOracle();

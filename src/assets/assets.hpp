@@ -144,11 +144,31 @@ struct CollisionNode {
     std::uint32_t count() const { return (info & 0x1f) >> 1; }
     std::uint32_t first() const { return info >> 5; }
 };
+// One 0x10-byte cell of the floor graph (optional block set of an item with +0x28 set, loader 0x11fd20; the game keeps the
+// "collision_floor" graph in 0x376c60 count, 0x376c68 cells, 0x376c64 extra triangles, 0x376c6c extra vertices; 0x28b070).
+// Word 0 bit 0 set: a triangle of the item's own chunks (chunk word >> 11, index (word >> 1) & 0x3ff), the loader sets
+// flag 0x2000; clear: extra triangle word >> 1, whose vertex indices count in the extra vertex block. +4 is cleared at load,
+// +6 flags, +8 the cell's own index, +0xa / +0xc / +0xe the neighbour across each edge as read by 0x1c54f8 and 0x15c4a4
+// (signed values -1..-3 are markers, every other value an unsigned cell index).
+struct FloorCell {
+    bool itemTriangle = false;
+    std::uint32_t triangle = 0;   // index into CollisionItem::triangles or FloorGraph::extraTriangles
+    std::uint16_t flags = 0;      // as in the file, without the loader's 0x2000
+    std::uint16_t index = 0;
+    std::uint16_t neighbour[3] = {0, 0, 0};
+};
+struct FloorGraph {
+    std::uint32_t header[6] = {0, 0, 0, 0, 0, 0};  // words of the header block; 0x11fd20 replaces words 1, 3 and 5 by the block pointers
+    std::vector<FloorCell> cells;
+    std::vector<CollisionTriangle> extraTriangles;
+    std::vector<float> extraVertices;              // x, y, z triples
+};
 struct CollisionItem {
     std::string name;                           // e.g. "Collision_Floor", "Collision1"
     std::vector<float> vertices;                // x, y, z triples
     std::vector<CollisionTriangle> triangles;
     std::vector<CollisionNode> nodes;           // nodes[0] is the root
+    std::optional<FloorGraph> floor;
 };
 // Box record of the collision section (0x5c bytes at model+0x1c section +4, count at +0): a name, a float3 at +4,
 // half extents at +0x10 and a 4x4 matrix at +0x1c (loader 0x28b070 reads them for "collision_vehicle" boxes,
