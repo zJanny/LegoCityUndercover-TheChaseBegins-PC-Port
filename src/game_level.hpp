@@ -30,6 +30,7 @@
 #include "runtime/scheduler.hpp"
 #include "runtime/vehicle_camera.hpp"
 #include "runtime/script_runner.hpp"
+#include "runtime/script_thread_log.hpp"
 #include "runtime/studs.hpp"
 #include "runtime/vehicle_boarding.hpp"
 #include "runtime/vehicle_body.hpp"
@@ -94,6 +95,9 @@ public:
 private:
     void simulate(float dt, const chase::runtime::PadState& padInput);
     chase::runtime::PadState scriptedPad(unsigned index) const;
+    void applyScriptTeleports(unsigned index);
+    void logCutsceneChange();
+    void placePlayer(const float position[3], std::optional<float> facingDegrees);
     void reportUnhandled();
     void requestSceneChange(const chase::runtime::SceneChangeObject* object);
     void applyPlacement(const chase::runtime::ScriptPlacement& request);
@@ -143,6 +147,7 @@ private:
     std::vector<std::size_t> waypointSceneIndex;
     std::vector<chase::assets::Placement> waypointObjects;
     chase::runtime::ScriptRunner levelScripts;
+    std::optional<chase::runtime::ScriptThreadLog> threadLog;
     chase::save::SaveRequestWriter saveWriter;
     chase::runtime::SceneStart sceneStart;
     chase::runtime::WorldLevelEntry currentWorldLevel;
@@ -191,6 +196,7 @@ private:
     std::optional<game_cutscene::InEngine> cutsceneHost;
     std::optional<game_cutscene::Movies> movies;
     bool movieStarted = false, introMovieSkip = false;
+    std::string loggedCutscene;
 };
 
 void advanceToDestination(chase::assets::FuseArchive& archive, game_options::Options& options, const chase::runtime::SceneChangeDestination& destination,

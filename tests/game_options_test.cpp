@@ -80,6 +80,11 @@ void testValidValues() {
     const std::vector<game_options::ScriptStep> steps = game_options::parseScript("0 150 40;0 0 1 AB;-156 0 0");
     if (steps.size() != 3 || steps[0].stickY != 150 || steps[0].updates != 40 || steps[1].buttons == 0 || steps[2].stickX != -156)
         fail("parseScript steps changed");
+    const std::vector<game_options::ScriptStep> teleports = game_options::parseScript("0 0 3;at 817.5 24 1071.25 -30;at 1 2 3");
+    if (teleports.size() != 3 || !teleports[1].teleport || teleports[1].updates != 0 || teleports[1].position[0] != 817.5f ||
+        teleports[1].position[2] != 1071.25f || !teleports[1].facingDegrees || *teleports[1].facingDegrees != -30.0f ||
+        teleports[2].facingDegrees || teleports[0].teleport)
+        fail("parseScript teleport steps changed");
 
     const game_options::Options variables = parseArgs({"--set-variable", "Lobby_Dcam_Intro=1", "--set-variable", "Other=-2.5"});
     if (variables.variables.size() != 2 || variables.variables[0].first != "Lobby_Dcam_Intro" || variables.variables[0].second != 1.0f || variables.variables[1].second != -2.5f)
@@ -129,6 +134,9 @@ void testRejections() {
     expectRejected({"--script", "0 150 40 AQ"}, "--script: unknown button: 'Q'");
     expectRejected({"--script", "0 200 40"}, "--script: out of range, allowed -156 to 156: '200'");
     expectRejected({"--script", "0 150 4.5"}, "--script: not a whole number: '4.5'");
+    expectRejected({"--script", "at 1 2"}, "--script: expected at X Y Z [FACING]: 'at 1 2'");
+    expectRejected({"--script", "at 1 2 3 4 5"}, "--script: expected at X Y Z [FACING]: 'at 1 2 3 4 5'");
+    expectRejected({"--script", "at 1 two 3"}, "--script: not a number: 'two'");
     expectRejected({"--script", "0 150 40 AB C"}, "--script: expected X Y COUNT [BUTTONS]: '0 150 40 AB C'");
 
     expectRejected({"--front-script", "run 1;;press A"}, "--front-script: empty command: ''");

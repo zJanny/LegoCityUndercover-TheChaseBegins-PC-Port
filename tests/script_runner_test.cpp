@@ -4,6 +4,7 @@
 // the Wait timer recorded in the oracle from the unmodified state street-at-entrance (docs/re/scripts.md, script thread entry).
 #include "runtime/script_placement.hpp"
 #include "runtime/script_runner.hpp"
+#include "runtime/script_thread_log.hpp"
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -420,8 +421,27 @@ void objectBoundTriggersUseTheObjectPosition() {
     require(runner.variable("ObjEntered") == 1, "a switched-off bound counts for no object");
 }
 
+void threadEventsAreLoggedWithNames() {
+    Level level;
+    add(level, "parent", {{"CallScript", {"child"}}, {"=", {"Done", "1"}}});
+    add(level, "child", {{"Wait", {"0.1"}}});
+    PlacedObjectState state;
+    ScriptRunner runner(level, state);
+    chase::runtime::ScriptThreadLog log(level);
+    log.learn("parent");
+    require(runner.start("parent"), "start");
+    for (int i = 0; i < 6; ++i) runner.update(0.034f);
+    const std::vector<std::string> lines = log.lines(runner.takeThreadEvents(), 7);
+    require(lines.size() == 4 && lines[0] == "script parent started at update 7" && lines[1] == "script child started at update 7" &&
+                lines[2] == "script child ended at update 7" && lines[3] == "script parent ended at update 7",
+            "thread start and end lines");
+    require(runner.takeThreadEvents().empty(), "events are taken once");
+    require(log.lines({{12345u, true}}, 1)[0] == "script #12345 started at update 1", "unknown names print their hash");
+}
+
 int main() {
     try {
+        threadEventsAreLoggedWithNames();
         waitCountsFromTheSecondCall();
         waitThreeMatchesTheOracleTrace();
         waitZeroYieldsOnce();

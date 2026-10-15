@@ -18,7 +18,35 @@ constexpr float kScriptDt = 0.033f;
 
 void LevelSession::advance(const runtime::PadState& liveInput) {
     if (script.empty()) scheduler->advance(now(), [&](float dt) { simulate(dt, liveInput); });
-    else if (updates + shared.scriptOffset < scriptLength) simulate(kScriptDt, scriptedPad(updates + shared.scriptOffset));
+    else if (updates + shared.scriptOffset < scriptLength) {
+        applyScriptTeleports(updates + shared.scriptOffset);
+        simulate(kScriptDt, scriptedPad(updates + shared.scriptOffset));
+    }
+}
+
+void LevelSession::applyScriptTeleports(unsigned index) {
+    unsigned start = 0;
+    for (const game_options::ScriptStep& step : script) {
+        if (step.teleport && start == index && player) {
+            placePlayer(step.position.data(), step.facingDegrees);
+            std::cout << "script teleport to " << step.position[0] << ' ' << step.position[1] << ' ' << step.position[2] << " at update " << updates << '\n';
+        }
+        start += step.updates;
+        if (start > index) break;
+    }
+}
+
+void LevelSession::placePlayer(const float position[3], std::optional<float> facingDegrees) {
+    player->motion.x = position[0];
+    player->vertical.y = position[1];
+    player->motion.z = position[2];
+    if (facingDegrees) {
+        player->motion.facing = game_player::headingFromDegrees(*facingDegrees);
+        player->motion.lastIntent = player->motion.facing;
+    }
+    runtime::resetControllerAfterPlacement(player->vertical);
+    cancelBoardingByPlacement();
+    player->pose(scene);
 }
 
 runtime::PadState LevelSession::scriptedPad(unsigned index) const {
@@ -173,6 +201,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         ++updatesThisSecond;
         return;
     }
+    logCutsceneChange();
     if (holdForMovie(dt)) {
         ++updates;
         ++updatesThisSecond;
@@ -235,8 +264,10 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         const float playerPosition[3] = {player->motion.x, player->vertical.y, player->motion.z};
         const bool inVehicle = boarding && boarding->seatedVehicle();
         levelScripts.checkTriggers(playerPosition, inVehicle);
-        for (const std::string& started : levelScripts.updateWaypoints(dt, playerPosition, previousWaypointVehicle ? &*previousWaypointVehicle : nullptr))
+        for (const std::string& started : levelScripts.updateWaypoints(dt, playerPosition, previousWaypointVehicle ? &*previousWaypointVehicle : nullptr)) {
+            threadLog->learn(started);
             std::cout << "waypoint started script " << started << " at update " << updates << '\n';
+        }
         previousWaypointVehicle = waypointVehicle();
     }
     reportUnhandled();
@@ -260,6 +291,8 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
     if (follow) updateFollowCamera(dt);
     else camera.update(dt, pad);
     updateRoomStreaming();
+    logCutsceneChange();
+    for (const std::string& line : threadLog->lines(levelScripts.takeThreadEvents(), updates)) std::cout << line << '\n';
     ++updates;
     ++updatesThisSecond;
 }

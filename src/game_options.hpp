@@ -52,6 +52,9 @@ struct ScriptStep {
     int stickX = 0, stickY = 0;
     unsigned updates = 0;
     std::uint32_t buttons = 0;
+    bool teleport = false;
+    std::array<float, 3> position{};
+    std::optional<float> facingDegrees;
 };
 
 std::vector<ScriptStep> parseScript(const std::string& text);

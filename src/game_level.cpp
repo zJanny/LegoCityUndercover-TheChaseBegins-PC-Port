@@ -221,6 +221,9 @@ LevelSession::LevelSession(const Shared& sharedState)
         player->pose(scene);
     }
     reportUnhandled();
+    threadLog.emplace(level);
+    for (const std::string& name : options.callScripts) threadLog->learn(name);
+    levelScripts.takeThreadEvents();
     std::cout << "scripts: startup ended after " << startupUpdates << " updates, " << levelScripts.threadCount() << " threads running\n";
     const std::vector<ObjectCollision> placedCollisions = objectCollisionCandidates(archive, level);
     collision = loadCollision(archive, options.level, placedCollisions);
@@ -375,6 +378,8 @@ void LevelSession::reportScripted() const {
     const float moveX = player->motion.x - player->startX, moveZ = player->motion.z - player->startZ;
     std::cout << "scripted: " << updates << " updates, player moved " << std::hypot(moveX, moveZ)
               << " units, facing " << player->motion.facing << ", run timer " << player->motion.runTimer << ", height " << player->vertical.y << '\n';
+    std::cout << "StoryProgress " << levelScripts.variable("StoryProgress") << '\n';
+    std::cout << "player ended at " << player->motion.x << ' ' << player->vertical.y << ' ' << player->motion.z << '\n';
     std::cout << "studs: counter " << studs.counter() << ", " << studs.count(runtime::StudState::Collecting) << " collecting, "
               << studs.count(runtime::StudState::Done) << " collected, " << studs.count(runtime::StudState::Idle) << " left\n";
     if (hud) std::cout << "hud: " << hud->hearts() << " hearts, stud display " << hud->studDisplay() << ", bar state "

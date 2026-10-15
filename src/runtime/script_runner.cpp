@@ -260,7 +260,14 @@ std::vector<ScriptObjectMessage> ScriptRunner::takeObjectMessages() {
     return taken;
 }
 
+std::vector<ScriptThreadEvent> ScriptRunner::takeThreadEvents() {
+    std::vector<ScriptThreadEvent> taken;
+    taken.swap(threadEvents_);
+    return taken;
+}
+
 ScriptThread* ScriptRunner::create(const LevelScript& script) {
+    threadEvents_.push_back({script.nameHash, true});
     threads_.emplace_front();
     ScriptThread& thread = threads_.front();
     thread.script = &script;
@@ -281,6 +288,7 @@ void ScriptRunner::execute(ScriptThread& thread) {
 }
 
 void ScriptRunner::finish(ScriptThread& thread) {
+    threadEvents_.push_back({thread.script->nameHash, false});
     if (thread.parent) thread.parent->flags ^= kScriptSuspended;
     threads_.remove_if([&](const ScriptThread& candidate) { return &candidate == &thread; });
 }

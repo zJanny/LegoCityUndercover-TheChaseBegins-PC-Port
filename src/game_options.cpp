@@ -22,7 +22,7 @@ constexpr double kAnyRealLow = std::numeric_limits<double>::lowest(), kAnyRealHi
 
 const char* const kUsage = "usage: chase-game [--fib F] [--names CSV] [--config CFG] [--gameplay] "
                            "[--level levels/levels/<name>/<name>_main.blvl] [--screenshot OUT.bmp] [--frames N] "
-                           "[--script \"X Y COUNT [BUTTONS];...\"] [--save savegame.dat] [--save-out FILE] [--front-save savegame.dat] [--slot 0|1] [--start \"X Y Z\"] [--facing DEGREES] [--hide-room N] [--no-camera-collision] [--no-start-cutscenes] [--set-variable NAME=VALUE] [--debug-overlay] [--sound-volume 0-10] [--music-volume 0-10] "
+                           "[--script \"X Y COUNT [BUTTONS];at X Y Z [FACING];...\"] [--save savegame.dat] [--save-out FILE] [--front-save savegame.dat] [--slot 0|1] [--start \"X Y Z\"] [--facing DEGREES] [--hide-room N] [--no-camera-collision] [--no-start-cutscenes] [--set-variable NAME=VALUE] [--debug-overlay] [--sound-volume 0-10] [--music-volume 0-10] "
                            "[--front-script \"run 5; press A; until slot; ...\"] [--language 1-9] [--returning] [--window WIDTHxHEIGHT]";
 
 std::uint32_t buttonOf(char letter) {
@@ -33,8 +33,18 @@ std::uint32_t buttonOf(char letter) {
     return found->second;
 }
 
+ScriptStep parseTeleport(const std::vector<std::string>& fields, const std::string& text) {
+    if (fields.size() != 4 && fields.size() != 5) strict::reject("expected at X Y Z [FACING]", text);
+    ScriptStep step;
+    step.teleport = true;
+    for (std::size_t i = 0; i < 3; ++i) step.position[i] = float(strict::real(fields[i + 1], kAnyRealLow, kAnyRealHigh));
+    if (fields.size() == 5) step.facingDegrees = float(strict::real(fields[4], kAnyRealLow, kAnyRealHigh));
+    return step;
+}
+
 ScriptStep parseStep(const std::string& text) {
     const std::vector<std::string> fields = strict::words(text);
+    if (!fields.empty() && fields[0] == "at") return parseTeleport(fields, text);
     if (fields.size() < 3 || fields.size() > 4) strict::reject("expected X Y COUNT [BUTTONS]", text);
     ScriptStep step;
     step.stickX = int(strict::integer(fields[0], -kCirclePadLimit, kCirclePadLimit));
@@ -111,7 +121,7 @@ bool applyOption(Options& o, const std::string& arg, const std::function<std::st
 
 }
 
-// "x y count [buttons];...": raw circle-pad values (+x right, +y up, 145 = full) held for count updates, with
+// "x y count [buttons];..." or "at x y z [facing degrees]" (development teleport of the player before the next update): raw circle-pad values (+x right, +y up, 145 = full) held for count updates, with
 // optional 3DS button letters (A B X Y L R) held as well.
 std::vector<ScriptStep> parseScript(const std::string& text) {
     std::vector<ScriptStep> steps;

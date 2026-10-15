@@ -30,16 +30,21 @@ IN_PROGRESS, updated 2026-10-15T11:12:11+02:00. Mission 1-2 was compared with th
 - [ ] SCRIPT-114 — The port runs `1-2_MissionStart` one update later than the original at the end of the title camera (DestroyProp in update 154 after the first call, original 153; PlayCharAnim 306 against 305, 0.033 s updates, harness with the director updated after the runner); the game loop order was not checked. needs: SCRIPT-50. evidence: [scripts-missions.md §2026-10-14T21:39](../../re/scripts-missions.md#ts-20261014-213921).
 - [ ] SCRIPT-115 — Only the scripted start of mission 1-2 (330 updates) was traced; the free-play parts (bounds `ShowTheDog`, `Prop_Smash_Hint`, the detective spots, `Waypoint_02_Script`, `MissionEnd` with the dog truck) were not walked in the oracle and need states made by the user (position, mission progress after each part). evidence: [scripts-missions.md §2026-10-14T21:39](../../re/scripts-missions.md#ts-20261014-213921).
 
+- [ ] SCRIPT-200 — The mission 1-1 run (`game-mission-1-1`) replaces walks and the drive to room 33 by dev teleports (`at X Y Z`); real walking along the original's paths, the police car drive and the timing between the stops are not compared with the original. needs: VEH-6. evidence: [scripts-missions.md §2026-10-15T12:41](../../re/scripts-missions.md#ts-20261015-124140).
+- [ ] SCRIPT-201 — Mission 1-1 calls natives with no handler (CameraFollow, EnableTrafficAndPedestrians, OverrideMusic, AutomaticMusic) and a PositionObject of a non-player object (`1-1_Police_Car` to `1-1_Dcam_Exclusion_Police_Car_Resnap` at the end of `1-1_Release_Car_Script`) that the port ignores. evidence: [scripts-missions.md §2026-10-15T12:41](../../re/scripts-missions.md#ts-20261015-124140).
+
 ## 6. Findings summary
 
 - Waypoint class: states, reach test, timings and oracle numbers: [scripts-missions.md §2026-10-14T22:48](../../re/scripts-missions.md#ts-20261014-224825).
 - Mission 1-2 gap analysis: natives without a handler and their items, stand-ins, trigger events, the oracle trace of the start: [scripts-missions.md §2026-10-14T21:39](../../re/scripts-missions.md#ts-20261014-213921).
 - Natives that block mission 1-2 and have items: DestroyProp SCRIPT-58, EffectFadeObject / StreamRoomIn SCRIPT-38, SetPartyCharacter SCRIPT-35, DCamCutScene* SCRIPT-29, EnableDistanceFade SCRIPT-57, music natives SCRIPT-33, SetForcedStopOnMyVehicle SCRIPT-36; AI natives and events SCRIPT-42 and SCRIPT-75; the moving dog truck SCRIPT-77.
 
+- First end-to-end run of mission 1-1, teleports, update numbers: [scripts-missions.md §2026-10-15T12:41](../../re/scripts-missions.md#ts-20261015-124140).
 - Code-side ObjectTriggered call 0x244f40 (enable, message 0xff, event), its carry callers and the missing build-it caller: [carrying.md §2026-10-15T11:11](../../re/carrying.md#ts-20261015-111115).
 
 ## 7. Code and tests
 
 - `src/runtime/waypoints.{hpp,cpp}` (waypoint class), glue `ScriptRunner::loadWaypoints` / `updateWaypoints` and two lines in `game_level_update.cpp`; CTest `waypoints`, `waypoints-real-data`.
 - `1-2_MissionStart`, `1-2_MissionStart`, `1-2_Cage_Key_Target_Script` and the level startup run in CTest `natives-animation-real-data`.
+- CTests `game-mission-1-1`, `game-mission-1-1-start`; `src/runtime/script_thread_log.*` (log lines), script step `at X Y Z` in `game_options.cpp`.
 - `ScriptRunner::triggerObjectEnabling` (0x244f40) and `applyCarryActions`; tests `script-runner` (objectTriggerFromCodeEnablesTheObject) and `carry` (TriggerOnRespawn).

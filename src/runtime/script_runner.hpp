@@ -40,6 +40,11 @@ enum ScriptThreadFlag : std::uint16_t {
 
 // Thread record (0x50 bytes in the original): +0x10 script, +0x14 flags, +0x16 program counter, +0x48 Wait timer,
 // +0x4c parent (the thread a CallScript suspended).
+struct ScriptThreadEvent {
+    std::uint32_t nameHash = 0;
+    bool started = false;
+};
+
 struct ScriptThread {
     const assets::LevelScript* script = nullptr;
     std::uint16_t flags = 0;
@@ -124,6 +129,7 @@ public:
     std::uint32_t unhandledCalls(const std::string& lowerCaseName) const;
     // Messages sent since the last call, in order; the instance name is lower case.
     std::vector<ScriptObjectMessage> takeObjectMessages();
+    std::vector<ScriptThreadEvent> takeThreadEvents();
 
     // 0x1746c0, after the runner pass: the check of every enabled trigger whose owner object is enabled (bound events
     // of the player at `player`), then the queued triggers (0x21a560) become threads at the head of the list, the last
@@ -238,6 +244,7 @@ private:
     std::map<std::string, std::uint32_t> unhandled_;
     std::vector<std::string> unhandledOrder_;
     std::vector<ScriptObjectMessage> messages_;
+    std::vector<ScriptThreadEvent> threadEvents_;
     std::vector<ScriptTriggerState> triggers_;
     std::vector<std::uint8_t> boundEnabled_;
     std::vector<std::size_t> queued_;
