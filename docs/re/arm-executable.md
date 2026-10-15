@@ -254,3 +254,16 @@ Unknowns:
 - REA lists 8086 procedures and 4927 strings for `artifacts/game/game.arm.elf` (segments 0x100000..0x357000 code, 0x357000..0x36b000 read-only data, 0x36b000..0x5a4f68 data and bss).
 - Estimate without a disassembler (`function_entries` in tools/progress_report.py): the targets of `bl` and `blx` immediate instructions in the code segment, plus 4-aligned words in the data segments that point into the code segment, give 7575 function starts (94 % of REA's count). Adding every `stmfd sp!, {..., lr}` word gives 10150, which is too many (mid-function pushes). The estimate misses leaf functions that nothing calls directly or through a pointer, and the ELF has no symbols to check it.
 - Unknown: the 511 procedures REA finds that the estimate does not; the estimate was not compared address by address.
+
+<a id="ts-20261015-173641"></a>
+
+## 2026-10-15T17:36:41+02:00 — Update timing of chase-game while driving (user report: camera skips back and forth)
+
+- User report: while driving in `chase-game` the camera skips back and forth.
+- Port code (read, not measured): the main loop calls the scheduler replica (`src/runtime/scheduler.cpp`, 0x100f44) once per presented frame. With a 60 Hz display a frame is about 50 clock ticks (frequency 3000). The replica raises a period below `minDt` 0.03 to 90 ticks and advances its last time by that period, so updates run with dt 0.03 on an irregular frame pattern (mostly every second frame, sometimes two frames in a row).
+- The vehicle body steps in fixed world steps of 1/30 s (`vehicleWorldSteps`, [vehicles-physics.md §2026-10-15T15:58:54](vehicles-physics.md#ts-20261015-155854)). With dt 0.03 the step accumulator gives 0 steps in about one update of ten, so the vehicle stands still for that update while the follow camera keeps moving; the camera then falls back and catches up.
+- Original: in the free run of the driven police car one vehicle world step happens per update and the clock advances 100 ticks per step ([oracle-rpc.md §2026-10-15T16:17](oracle-rpc.md#ts-20261015-161706)), so gameplay updates there come every 1/30 s with dt 1/30.
+- This makes the irregular dt the likely cause; it was not confirmed by tracing the port while driving.
+
+Unknowns:
+- How the original paces gameplay to 1/30 s (the minimum frame interval 0x529de8 of the present function and its writers, EXEC-1, EXEC-3).

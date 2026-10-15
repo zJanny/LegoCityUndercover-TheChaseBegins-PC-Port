@@ -38,3 +38,13 @@ Unknowns:
 - The maximum reverse speed (the runs ended against an obstacle at about -10), A pressed while moving backward, steering at standstill, steering ramp time and the speed dependence of the curvature above 17 m/s with partial steer (two runs), the first-update jump of the speed (2.1 to 2.7: launch or an effect of the input edge).
 - The traffic input provider 0x1d8df0 and the tow provider 0x26d934; the speeds of vehicles other than the police trooper (their class files give other TopSpeed, Mass and DriveRatio; the stand-in only takes TopSpeed from the class).
 - Which mission script clears the forced stop of the police car and when (see above).
+
+<a id="ts-20261015-173642"></a>
+
+## 2026-10-15T17:36:42+02:00 — User report: the driven car becomes invisible after hitting something
+
+- User report: while driving in `chase-game`, when the car hits something it becomes invisible.
+- Not investigated. The port has no vehicle collision yet (VEH-40): the car drives into walls and objects, while the camera keeps its own collision. Possible causes are the car inside a building or object with the camera outside, the body falling through the level (VEH-53), or the body state breaking (for example a non-finite value).
+
+Unknowns:
+- Which of these happens; a short reproduction near a wall is needed.
