@@ -119,6 +119,7 @@ void LevelSession::updateFollowCamera(float dt) {
     input.targetFacing = runtime::headingRadians(player->motion.facing);
     input.stickTurn = runtime::stickTurnInput(pad.slot(kSlotStickX).value, game_player::kPlayerEntityType);
     input.shoulderTurn = runtime::shoulderTurnInput(pad.slot(kSlotLeftShoulder).value, pad.slot(kSlotRightShoulder).value, false);
+    selectCameraSubject(input);
     runtime::DirectorCamera& director = levelScripts.director();
     director.update(dt, [this](const std::string& object, float out[3]) {
         if (object == "player1" && player) {

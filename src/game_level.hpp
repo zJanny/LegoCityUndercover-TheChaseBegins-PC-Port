@@ -28,6 +28,7 @@
 #include "runtime/scene_change.hpp"
 #include "runtime/scene_start.hpp"
 #include "runtime/scheduler.hpp"
+#include "runtime/vehicle_camera.hpp"
 #include "runtime/script_runner.hpp"
 #include "runtime/studs.hpp"
 #include "runtime/vehicle_boarding.hpp"
@@ -107,6 +108,8 @@ private:
     void suppressDrivenVehicleCollision();
     chase::runtime::BoardingInput boardingInput(float dt);
     void handleBoardingEvents(const std::vector<chase::runtime::BoardingEvent>& events);
+    void loadVehicleCameras();
+    void selectCameraSubject(chase::runtime::FollowCameraInput& input);
     chase::runtime::BoardingStep stepBoarding(float dt);
     void scriptBoardingRequest(chase::runtime::BoardingRequestKind kind, const std::string& vehicle);
     void cancelBoardingByPlacement();
@@ -162,6 +165,8 @@ private:
         std::size_t placedIndex = 0;
     };
     std::vector<VehicleDrive> vehicleDrives;
+    std::vector<chase::runtime::VehicleCameraSubject> vehicleCameras;
+    std::optional<std::size_t> cameraVehicle;
     std::vector<chase::assets::Placement> wheelLocalPlacements;
     float radius = 0;
     PlaceholderCamera camera;

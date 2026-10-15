@@ -60,6 +60,8 @@ Read this index, then open only the file you need.
 | [oracle-measuring.md](oracle-measuring.md) | Oracle measuring methods: watchpoints, execution traps, fixed dt, memory traces, `poke` |
 | [camera.md](camera.md) | Gameplay camera: pointers to the three files below |
 | [camera-follow.md](camera-follow.md) | Yaw word 0x376894 writer, manager and modes, follow camera law (OnFoot preset), projection |
+| [camera-follow-handover.md](camera-follow-handover.md) | Follow controller take-over: reset 0x2313c8 seed, near rule and filter ramp of 0x1b4864 |
+| [camera-vehicle.md](camera-vehicle.md) | Vehicle camera: chooser 0x1597c8, InVehicle block and record floats, 15 m behind, automatic turn, pitch clamp 0x2e0a50, enter and leave |
 | [camera-collision-sweep.md](camera-collision-sweep.md) | Obstruction by level geometry and placed objects (slab sweep, pull-in, side and vertical push, box slicing) |
 | [camera-records-blending.md](camera-records-blending.md) | Camera lock, level-bound records, record pose 0x298cd8, fade between commands, pose filter |
 | [player.md](player.md) | Player entity and controller: pointers to the three files below |

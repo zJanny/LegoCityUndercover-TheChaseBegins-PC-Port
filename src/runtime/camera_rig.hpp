@@ -20,11 +20,24 @@ float poseFilterFactor(std::uint8_t filterByte);
 // Curve 5 of the fade between commands (0x2b5950): x * x * (3 - 2x).
 float fadeCurve(float progress);
 
+// A pose filter factor (C+0xbc / C+0xcc): 0x21a538 stores target and rate, and sets the factor at once for rate 1.0; otherwise
+// 0x1cf0b8 moves it by (target - factor) * rate each update until it is within 1e-4 of the target.
+struct FilterRamp {
+    float current = 1.0f;
+    float target = 1.0f;
+    float rate = 1.0f;
+    bool active = false;
+    void set(float newTarget, float newRate);
+    void step();
+};
+
 class CameraRig {
 public:
     CameraRig(const assets::Level& level, const std::string& camText);
 
     void setCollision(const CollisionWorld* world) { follow_.setCollision(world); }
+    void setExcludedOwner(const std::string& owner) { follow_.setExcludedOwner(owner); }
+    void setSubject(const FollowCameraPreset& preset, float bodyHeight, float modelHalfHeight) { follow_.setSubject(preset, bodyHeight, modelHalfHeight); }
     void reset(const float target[3], float yaw, float facing);
     void update(const FollowCameraInput& input);
     // The director camera of the level scripts (dcam.hpp): its pose each update and the stack requests it made since the
@@ -42,6 +55,9 @@ public:
     // Vertical field of view in radians for the pose FOV (40 for the follow controller, the record FOV otherwise).
     float verticalFieldOfView() const;
     float fieldOfViewDegrees() const { return output_.fovDegrees; }
+    float eyeFilterFactor() const { return eyeFilter_.current; }
+    float lookFilterFactor() const { return lookFilter_.current; }
+    const FollowCamera& follow() const { return follow_; }
     std::size_t commandCount() const { return stack_.size(); }
     float weightOfTop() const { return stack_.empty() ? 0.0f : stack_.front().weight; }
 
@@ -68,8 +84,8 @@ private:
     RecordPose output_;
     RecordPose directorPose_;
     std::vector<DirectorRequest> directorRequests_, delayedDirectorEnds_;
-    float eyeFactor_ = 1.0f;
-    float lookFactor_ = 1.0f;
+    FilterRamp eyeFilter_;
+    FilterRamp lookFilter_;
 };
 
 }

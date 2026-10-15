@@ -258,6 +258,7 @@ void CameraSweep::prepare(const CollisionWorld& world, const float camera[3], co
     for (const CollisionWorld::Entry& entry : world.entries()) {
         const assets::CollisionItem& item = entry.item;
         if (!entry.active || item.nodes.empty() || !kCameraLayer.accepts(entry.mask)) continue;
+        if (!settings.excludedOwner.empty() && entry.owner == settings.excludedOwner) continue;
         if (entry.box) {
             const assets::CollisionNode& root = item.nodes[0];
             bool overlaps = true;

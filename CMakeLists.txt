@@ -44,6 +44,7 @@ target_include_directories(chase_runtime PUBLIC src)
 target_compile_options(chase_runtime PRIVATE -Wall -Wextra -Wpedantic -ffp-contract=off)
 set_target_properties(chase_runtime PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_sources(chase_runtime PRIVATE src/runtime/studs.cpp src/runtime/sound_events.cpp src/runtime/music.cpp src/runtime/level_start.cpp src/runtime/script_runner.cpp src/runtime/natives_objects.cpp src/runtime/natives_animation.cpp src/runtime/natives_cutscene.cpp src/runtime/natives_progress.cpp src/runtime/door.cpp src/runtime/scene_change.cpp src/runtime/room_streaming.cpp src/runtime/room_streamer.cpp src/runtime/scene_start.cpp src/runtime/dcam.cpp src/runtime/debug_metrics.cpp src/runtime/object_visibility.cpp src/runtime/script_text.cpp src/runtime/script_triggers.cpp src/runtime/objectives.cpp src/runtime/ai.cpp src/runtime/ai_simple_path.cpp src/runtime/fog.cpp src/runtime/script_placement.cpp src/runtime/ai_go_to_target.cpp src/runtime/nav_grid.cpp src/runtime/nav_path.cpp src/runtime/nav_follow.cpp src/runtime/nav_load.cpp src/runtime/room_locator.cpp src/runtime/ai_super_jump.cpp src/runtime/ai_face_target.cpp src/runtime/waypoints.cpp src/runtime/buildit.cpp src/runtime/buildit_set.cpp src/runtime/vehicle.cpp src/runtime/vehicle_boarding.cpp src/runtime/vehicle_drive.cpp src/runtime/vehicle_body.cpp src/runtime/carry.cpp src/runtime/cutscene_cast.cpp src/runtime/collision_enable.cpp src/runtime/game_random.cpp src/runtime/npc_idle.cpp src/runtime/director_hold.cpp)
+target_sources(chase_runtime PRIVATE src/runtime/vehicle_camera.cpp)
 # Front end (boot to the slot list): CPU-drawn screens, no SDL dependency.
 add_library(chase_frontend src/frontend/script.cpp src/frontend/frontend.cpp src/frontend/pages.cpp src/frontend/canvas.cpp src/frontend/resources.cpp src/frontend/layout.cpp src/frontend/flow.cpp src/frontend/hud.cpp src/frontend/script_text_pages.cpp src/frontend/minimap.cpp src/frontend/slot_summaries.cpp)
 target_link_libraries(chase_frontend PUBLIC chase_assets chase_runtime chase_save_progress)
@@ -102,7 +103,7 @@ if(EPOXY_FOUND)
   target_link_libraries(chase-viewer PRIVATE chase_render chase_audio chase_input)
   target_compile_options(chase-viewer PRIVATE -Wall -Wextra -Wpedantic)
   if(FFMPEG_FOUND)
-    add_executable(chase-game src/game.cpp src/game_options.cpp src/game_player.cpp src/game_doors.cpp src/game_level.cpp src/game_level_update.cpp src/game_vehicle.cpp src/game_level_rooms.cpp src/game_cutscene.cpp src/game_level_cutscene.cpp src/game_characters.cpp)
+    add_executable(chase-game src/game.cpp src/game_options.cpp src/game_player.cpp src/game_doors.cpp src/game_level.cpp src/game_level_update.cpp src/game_vehicle.cpp src/game_vehicle_camera.cpp src/game_level_rooms.cpp src/game_cutscene.cpp src/game_level_cutscene.cpp src/game_characters.cpp)
     target_link_libraries(chase-game PRIVATE chase_render chase_runtime chase_input chase_audio chase_frontend_movie chase_save_progress chase_save_tables)
     target_compile_options(chase-game PRIVATE -Wall -Wextra -Wpedantic)
   endif()
@@ -127,6 +128,8 @@ set(CHASE_CAMERA_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/cam-out" CACHE 
     "Recorded original-game camera traces for the opt-in differential test")
 set(CHASE_CAMERA_BLEND_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/camera-blend-traces" CACHE PATH
     "Recorded original-game camera traces of walks between camera records (exported CSV) for the opt-in blend test")
+set(CHASE_CAMERA_VEHICLE_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/camera-vehicle-traces" CACHE PATH
+    "Recorded original-game camera traces while driving the police car (exported CSV) for the vehicle camera test")
 set(CHASE_CAMERA_WALL_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/camwall-out" CACHE PATH
     "Recorded original-game camera traces near walls (.mem memtraces and exported CSV) for the opt-in differential tests")
 set(CHASE_STUDS_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/studs-traces" CACHE PATH
@@ -466,6 +469,12 @@ if(BUILD_TESTING)
   add_test(NAME camera-blend-real-data COMMAND camera-blend-real-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib"
     "${CHASE_ROMFS_DIR}/lego_city3ds.csv" "${CHASE_CAMERA_BLEND_TRACE_DIR}")
   set_tests_properties(camera-blend-real-data PROPERTIES SKIP_RETURN_CODE 77)
+  add_executable(camera-vehicle-real-test tests/camera_vehicle_real_test.cpp)
+  target_link_libraries(camera-vehicle-real-test PRIVATE chase_runtime chase_assets)
+  target_compile_options(camera-vehicle-real-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME camera-vehicle-real-data COMMAND camera-vehicle-real-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib"
+    "${CHASE_ROMFS_DIR}/lego_city3ds.csv" "${CHASE_CAMERA_VEHICLE_TRACE_DIR}")
+  set_tests_properties(camera-vehicle-real-data PROPERTIES SKIP_RETURN_CODE 77)
   add_executable(camera-sweep-real-test tests/camera_sweep_real_test.cpp)
   target_link_libraries(camera-sweep-real-test PRIVATE chase_runtime chase_assets)
   target_compile_options(camera-sweep-real-test PRIVATE -Wall -Wextra -Wpedantic)

@@ -11,6 +11,7 @@
 // indoor rooms.
 #include "runtime/camera_sweep.hpp"
 #include <cstdint>
+#include <string>
 
 namespace chase::runtime {
 
@@ -28,6 +29,17 @@ struct FollowCameraPreset {
     float positionBase = 0.75f;                    // +0x48 camera position smoothing: 1 - base^(30 dt) per update
     float targetBase = 0.75f;                      // +0x4c look point smoothing
     CameraSweepSettings sweep;                     // +0x58 / +0x5c / +0x60: apex reach, side push gain, vertical push gain
+    float pitchLow = 0.25f;                        // +0x64 (in+0xd8): pitch clamp, look point at most this times the view depth below the head
+    float pitchHigh = 0.25f;                       // +0x68 (in+0xdc): and above the feet
+    float autoTurnGain = 0.0f;                     // +0x38: yaw per second towards the back of the target (1.0 for InVehicle)
+    bool vehicleLayout = false;                    // byte +0x6e: the input provider 0x32f334 adds 10 to the distance and 2.5 to the height
+                                                   // and 0x330e4c takes the look lift from the target model's half height
+    static FollowCameraPreset onFoot() { return {}; }
+    // InVehicle block at 0x376fdc; the overrides are the vehicle record's ATTR_Camera* floats (+0x2f0 PosY, +0x2f4 PosZ, +0x2f8
+    // LookY, +0x2fc LookZ) that 0x1597c8 writes into the middle value of the distance, height, look lift and look depth triples when
+    // record byte +0x311 bit 0 is set. PanScale (+0x300) is not read by that function.
+    static FollowCameraPreset inVehicle();
+    FollowCameraPreset& withVehicleOverrides(float posY, float posZ, float lookY, float lookZ);
 };
 
 // Entity +0x64 + +0x70 of the player (1.15 + 0.85, read in the oracle).
@@ -36,7 +48,8 @@ constexpr float kPlayerBodyHeight = 2.0f;
 // Entity types whose stick x turns the camera (0x200ae0): 1..5 and 0x11c.
 bool stickTurnsCamera(std::uint16_t entityType);
 // DAT_00589bac increment per update (0x200af0): dead zone 0.25 outside the channel dead zone, gain 4/3.
-float stickTurnInput(float stickX, std::uint16_t entityType);
+// `seatedVehicleType` is the type byte (+0x12) of the vehicle the player drives (0 on foot): 0x200b0c clears the term for type 183.
+float stickTurnInput(float stickX, std::uint16_t entityType, std::uint8_t seatedVehicleType = 0);
 // DAT_00589bb0 increment per update (0x200ab0): R turns the camera towards +yaw, L towards -yaw, 2 each.
 // The "invert camera" option (byte 0x51b493 bit 1) flips the sign.
 float shoulderTurnInput(float left, float right, bool invert);
@@ -53,12 +66,24 @@ class FollowCamera {
 public:
     explicit FollowCamera(const FollowCameraPreset& preset = {}, float bodyHeight = kPlayerBodyHeight);
 
+    // The subject the next updates follow: the preset block (0x23f488 stores K+0x160), the top of the target's collision box (entity
+    // +0x64 + +0x70) and the half height of its model bounds (node +0xb0, read by vehicle presets).
+    void setSubject(const FollowCameraPreset& preset, float bodyHeight, float modelHalfHeight);
+
     // Level collision the camera keeps out of (0x3313c0); without it the camera only follows.
     void setCollision(const CollisionWorld* world) { world_ = world; }
+    // The placed object the camera follows (a vehicle) does not obstruct it: lower-case instance name, empty for none.
+    void setExcludedOwner(const std::string& owner) { excludedOwner_ = owner; }
 
     // Place the camera behind the target at the given view yaw with all tracked points at rest.
     void reset(const float target[3], float yaw, float facing);
     void update(const FollowCameraInput& input);
+    // The follow command taking over from another camera command (0x1b4864): the reset 0x2313c8 places the camera behind the
+    // player's facing at the strategy distance, scaled by the clearance factor left by the last sweep (the strategy reset 0x3310b0 then sets it to 1), and
+    // the camera starts at `currentEye` instead when the look point is closer to it than twice the preset distance. That near rule
+    // only applies while the top command is a record pose (0x2a8c4c tests the routine 0x298cd8): `previousIsRecordPose`. Returns the
+    // near case (the filter factors then ramp at 0.1 per update).
+    bool takeOver(const float target[3], float facing, const float currentEye[3], bool previousIsRecordPose);
     // Continue from a recorded state: wanted and tracked camera position, tracked look point (target + offset).
     // `clearance` is the pull-in factor S+4 and `springHold` the vertical push timer S+0x24 of the recorded state.
     void restore(const float wantedEye[3], const float trackedEye[3], const float trackedLook[3],
@@ -84,15 +109,20 @@ private:
     };
     Layout layout() const;
     void refreshPose();
+    float automaticTurn(const FollowCameraInput& input) const;
+    void clampPitch(const FollowCameraInput& input, float poseScale);
     void avoidObstacles(const FollowCameraInput& input, const Layout& layout, bool moving, float push[3], const float swing[3]);
 
     FollowCameraPreset preset_;
     float bodyHeight_;
     float zoom_ = 1.0f;
     const CollisionWorld* world_ = nullptr;
+    std::string excludedOwner_;
     float previousNear_ = -1.0f;   // K+0x1c8 left by the previous sweep (CameraSweepSettings::previousNear)
     float clearance_ = 1.0f;     // S+4: the camera sits at this fraction of its distance after obstructions
     float springHold_ = 0.0f;    // S+0x24: after a vertical push the height spring is off until it runs out
+    float sideHold_ = 0.0f;      // S+0x1c: after a side push the automatic turn is off (factor 0.4 - this) until it runs out
+    float modelHalfHeight_ = 0.0f;
     float previousLook_[3] = {}; // K+0x70: the look point of the previous update
     // A: wanted camera position (K+4) and its tracker (K+0x34); B: wanted look point (K+0x64) and tracker
     // (K+0x94); C: look point offset (K+0xc4) and tracker (K+0xf4).

@@ -5,6 +5,10 @@
 namespace chase::runtime {
 
 namespace {
+constexpr float kVehicleExtraDistance = 10.0f;  // in+0xfc written by 0x32f334
+constexpr float kVehicleExtraHeight = 2.5f;     // in+0x100
+constexpr float kSideHoldSeconds = 0.5f;
+constexpr std::uint8_t kVehicleObjectType = 183;
 // 0x257ea0: unit vector, (0, 0, 1) for a vector of length 1.2e-7 or less.
 void unitVector(const float v[3], float out[3]) {
     const float length = std::sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
@@ -32,8 +36,8 @@ bool stickTurnsCamera(std::uint16_t entityType) {
     return (entityType >= 1 && entityType <= 5) || entityType == 0x11c;
 }
 
-float stickTurnInput(float stickX, std::uint16_t entityType) {
-    if (!stickTurnsCamera(entityType)) return 0.0f;
+float stickTurnInput(float stickX, std::uint16_t entityType, std::uint8_t seatedVehicleType) {
+    if (!stickTurnsCamera(entityType) || seatedVehicleType == kVehicleObjectType) return 0.0f;
     if (stickX > 0.25f) return (stickX - 0.25f) * 1.3333334f;
     if (stickX < -0.25f) return (stickX + 0.25f) * 1.3333334f;
     return 0.0f;
@@ -43,6 +47,34 @@ float shoulderTurnInput(float left, float right, bool invert) {
     return invert ? left * 2.0f + right * -2.0f : left * -2.0f + right * 2.0f;
 }
 
+FollowCameraPreset FollowCameraPreset::inVehicle() {
+    FollowCameraPreset preset;
+    preset.distance[0] = 4.5f, preset.distance[1] = 5.5f, preset.distance[2] = 6.5f;
+    preset.height[0] = 0.2f, preset.height[1] = 0.35f, preset.height[2] = 0.5f;
+    preset.lookHeight[0] = preset.lookHeight[1] = preset.lookHeight[2] = -0.5f;
+    preset.lookDepth[0] = preset.lookDepth[1] = preset.lookDepth[2] = 1.5f;
+    preset.pitchHigh = 0.2f;
+    preset.autoTurnGain = 1.0f;
+    preset.positionBase = 0.7f;
+    preset.targetBase = 0.0f;
+    preset.vehicleLayout = true;
+    return preset;
+}
+
+FollowCameraPreset& FollowCameraPreset::withVehicleOverrides(float posY, float posZ, float lookY, float lookZ) {
+    height[1] = posY;
+    distance[1] = posZ;
+    lookHeight[1] = lookY;
+    lookDepth[1] = lookZ;
+    return *this;
+}
+
+void FollowCamera::setSubject(const FollowCameraPreset& preset, float bodyHeight, float modelHalfHeight) {
+    preset_ = preset;
+    bodyHeight_ = bodyHeight;
+    modelHalfHeight_ = modelHalfHeight;
+}
+
 FollowCamera::FollowCamera(const FollowCameraPreset& preset, float bodyHeight) : preset_(preset), bodyHeight_(bodyHeight) {}
 
 FollowCamera::Layout FollowCamera::layout() const {
@@ -50,10 +82,15 @@ FollowCamera::Layout FollowCamera::layout() const {
     Layout result;
     result.baseDistance = quadraticSpline(preset_.distance[0], preset_.distance[1], preset_.distance[2], t);
     result.baseHeight = quadraticSpline(preset_.height[0], preset_.height[1], preset_.height[2], t);
+    if (preset_.vehicleLayout) {
+        result.baseDistance += kVehicleExtraDistance;
+        result.baseHeight += kVehicleExtraHeight;
+    }
     result.distance = result.baseDistance * clearance_;
     result.height = result.baseHeight * clearance_;
     result.bodyUp = bodyHeight_ - preset_.groundOffset;
-    const float lookUp = quadraticSpline(preset_.lookHeight[0], preset_.lookHeight[1], preset_.lookHeight[2], t) + bodyHeight_;
+    const float lookHeight = quadraticSpline(preset_.lookHeight[0], preset_.lookHeight[1], preset_.lookHeight[2], t);
+    const float lookUp = preset_.vehicleLayout ? lookHeight + modelHalfHeight_ * 2.0f : lookHeight + bodyHeight_;
     result.lookUp = (lookUp - result.bodyUp) * clearance_;
     result.lookAhead = quadraticSpline(preset_.lookDepth[0], preset_.lookDepth[1], preset_.lookDepth[2], t) * clearance_;
     return result;
@@ -62,6 +99,7 @@ FollowCamera::Layout FollowCamera::layout() const {
 void FollowCamera::reset(const float target[3], float yaw, float facing) {
     clearance_ = 1.0f;
     springHold_ = 0.0f;
+    sideHold_ = 0.0f;
     const Layout l = layout();
     for (int i = 0; i < 3; ++i) b_[i] = target[i];
     b_[1] += l.bodyUp;
@@ -77,6 +115,30 @@ void FollowCamera::reset(const float target[3], float yaw, float facing) {
         cTracked_[i] = c_[i];
     }
     refreshPose();
+}
+
+bool FollowCamera::takeOver(const float target[3], float facing, const float currentEye[3], bool previousIsRecordPose) {
+    const Layout l = layout();
+    clearance_ = 1.0f;
+    for (int i = 0; i < 3; ++i) b_[i] = target[i];
+    b_[1] += l.bodyUp;
+    c_[0] = std::sin(facing) * l.lookAhead;
+    c_[1] = l.lookUp;
+    c_[2] = std::cos(facing) * l.lookAhead;
+    a_[0] = b_[0] - std::sin(facing) * l.distance;
+    a_[1] = b_[1] + l.height;
+    a_[2] = b_[2] - std::cos(facing) * l.distance;
+    const float dx = b_[0] - currentEye[0], dy = b_[1] - currentEye[1], dz = b_[2] - currentEye[2];
+    const bool nearCamera = previousIsRecordPose && std::sqrt(dx * dx + dy * dy + dz * dz) < 2.0f * preset_.distance[1];
+    if (nearCamera)
+        for (int i = 0; i < 3; ++i) a_[i] = currentEye[i];
+    for (int i = 0; i < 3; ++i) {
+        aTracked_[i] = a_[i];
+        bTracked_[i] = b_[i];
+        cTracked_[i] = c_[i];
+    }
+    refreshPose();
+    return nearCamera;
 }
 
 void FollowCamera::restore(const float wantedEye[3], const float trackedEye[3], const float trackedLook[3],
@@ -110,7 +172,12 @@ void FollowCamera::update(const FollowCameraInput& input) {
 
     const float movedX = b_[0] - previousLook_[0], movedY = b_[1] - previousLook_[1], movedZ = b_[2] - previousLook_[2];
     const bool moving = movedX * movedX + movedY * movedY + movedZ * movedZ > 1.0e-4f;
-    if (moving) springHold_ = std::max(springHold_ - input.dt, 0.0f);
+    const float poseScale = clearance_ * zoom_;
+    const float autoTurn = automaticTurn(input);
+    if (moving) {
+        springHold_ = std::max(springHold_ - input.dt, 0.0f);
+        sideHold_ = std::max(sideHold_ - input.dt, 0.0f);
+    }
 
     float push[3] = {0, 0, 0}, swing[3] = {0, 0, 0};
     push[1] = std::max(0.5f - springHold_, 0.0f) * 0.3f * 2.0f * ((b_[1] + c_[1] + l.height) - a_[1]);
@@ -127,7 +194,7 @@ void FollowCamera::update(const FollowCameraInput& input) {
     push[0] = toTargetX * (away - l.distance);
     push[2] = toTargetZ * (away - l.distance);
 
-    const float turn = (input.shoulderTurn + input.stickTurn) * input.dt * preset_.turnGain;
+    const float turn = autoTurn + (input.shoulderTurn + input.stickTurn) * input.dt * preset_.turnGain;
     if (turn != 0.0f) {
         const float x = a_[0] - b_[0], z = a_[2] - b_[2];
         swing[0] = x * std::cos(turn) + z * std::sin(turn) - x;
@@ -146,7 +213,46 @@ void FollowCamera::update(const FollowCameraInput& input) {
     track(aTracked_, a_, positionFactors);
     track(bTracked_, b_, targetFactors);
     track(cTracked_, c_, targetFactors);
+    clampPitch(input, poseScale);
     refreshPose();
+}
+
+// 0x2e0a50: keeps the look point's height between the target's head and feet, widened by the view depth (at least 10).
+void FollowCamera::clampPitch(const FollowCameraInput& input, float poseScale) {
+    if (preset_.vehicleLayout || !(poseScale > 0.99f)) return;
+    const float lookHeight = bTracked_[1] + cTracked_[1];
+    const float toLook[3] = {bTracked_[0] - aTracked_[0], lookHeight - aTracked_[1], bTracked_[2] - aTracked_[2]};
+    float forward[3];
+    unitVector(toLook, forward);
+    const float toHead[3] = {input.target[0] - aTracked_[0], input.target[1] + bodyHeight_ - aTracked_[1], input.target[2] - aTracked_[2]};
+    float depth = toHead[0] * forward[0] + toHead[1] * forward[1] + toHead[2] * forward[2];
+    if (!(depth > 10.0f)) depth = 10.0f;
+    const float upper = input.target[1] + preset_.pitchHigh * depth;
+    float lower = input.target[1] + bodyHeight_ - preset_.pitchLow * depth;
+    float clamped;
+    if (lookHeight > upper) {
+        clamped = upper;
+    } else {
+        if (lookHeight > lower) lower = lookHeight;
+        clamped = lower;
+    }
+    bTracked_[1] = clamped - cTracked_[1];
+}
+
+float FollowCamera::automaticTurn(const FollowCameraInput& input) const {
+    if (preset_.autoTurnGain == 0.0f || input.shoulderTurn != 0.0f) return 0.0f;
+    const float x = a_[0] - input.target[0], z = a_[2] - input.target[2];
+    const float sine = std::sin(input.targetFacing), cosine = std::cos(input.targetFacing);
+    const float localRight = x * cosine - z * sine, localForward = x * sine + z * cosine;
+    const float angle = std::atan2(localRight, -localForward);
+    const float wanted = std::fabs(angle * 0.5f) * angle * 0.5f;
+    const float limit = input.dt * preset_.autoTurnGain;
+    float clamped = limit;
+    if (wanted < limit) {
+        clamped = wanted;
+        if (wanted <= -limit) clamped = -limit;
+    }
+    return clamped * std::max(0.4f - sideHold_, 0.0f) * 2.0f;
 }
 
 void FollowCamera::avoidObstacles(const FollowCameraInput& input, const Layout& l, bool moving, float push[3], const float swing[3]) {
@@ -156,6 +262,7 @@ void FollowCamera::avoidObstacles(const FollowCameraInput& input, const Layout& 
     CameraSweep sweep;
     CameraSweepSettings settings = preset_.sweep;
     settings.previousNear = previousNear_;
+    settings.excludedOwner = excludedOwner_;
     sweep.prepare(*world_, wanted, b_, fullDistance, settings);
     previousNear_ = sweep.nearDepth();
     const CameraSweepGap side = sweep.gap(CameraSweep::Side), up = sweep.gap(CameraSweep::Up);
@@ -215,6 +322,7 @@ void FollowCamera::avoidObstacles(const FollowCameraInput& input, const Layout& 
     if (pushed(side.middle, side)) {
         const float amount = preset_.sweep.sideHalfWidth * side.middle;
         for (int i = 0; i < 3; ++i) push[i] += sideAxis[i] * amount;
+        sideHold_ = kSideHoldSeconds;
     }
     if (pushed(up.middle, up)) {
         if (side.low == 0.0f && side.high == 0.0f && moving) {

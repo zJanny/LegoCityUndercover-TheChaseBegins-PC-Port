@@ -1,5 +1,6 @@
 #include "runtime/camera_rig.hpp"
 #include <algorithm>
+#include <cmath>
 
 namespace chase::runtime {
 
@@ -7,9 +8,31 @@ namespace {
 constexpr std::size_t kStackCapacity = 4;
 constexpr float kFollowFadeSeconds = 0.5f;
 constexpr float kUnfilteredFactor = 1.0f;
+constexpr float kNearTakeOverRate = 0.1f;
+constexpr float kRampSettled = 1.0e-4f;
 constexpr float kDefaultFilterFactor = 0.3f;
 
 float lerp(float from, float to, float t) { return from + (to - from) * t; }
+}
+
+void FilterRamp::set(float newTarget, float newRate) {
+    target = newTarget;
+    rate = newRate;
+    if (newRate == 1.0f)
+        current = newTarget;
+    else
+        active = true;
+}
+
+void FilterRamp::step() {
+    if (!active) return;
+    const float delta = target - current;
+    if (std::fabs(delta) <= kRampSettled) {
+        current = target;
+        active = false;
+    } else {
+        current += delta * rate;
+    }
 }
 
 float poseFilterFactor(std::uint8_t filterByte) {
@@ -84,10 +107,11 @@ void CameraRig::reset(const float target[3], float yaw, float facing) {
     if (selector_.command() == CameraCommand::RecordPose) {
         entry.kind = Entry::Kind::Record;
         entry.set = selector_.blend();
-        eyeFactor_ = poseFilterFactor(recordEyeFilter(records_, entry.set));
-        lookFactor_ = poseFilterFactor(recordLookFilter(records_, entry.set));
+        eyeFilter_.set(poseFilterFactor(recordEyeFilter(records_, entry.set)), 1.0f);
+        lookFilter_.set(poseFilterFactor(recordLookFilter(records_, entry.set)), 1.0f);
     } else {
-        eyeFactor_ = lookFactor_ = kUnfilteredFactor;
+        eyeFilter_.set(kUnfilteredFactor, 1.0f);
+        lookFilter_.set(kUnfilteredFactor, 1.0f);
     }
     entry.pose = entryPose(entry, target);
     stack_.push_back(entry);
@@ -109,6 +133,7 @@ void CameraRig::update(const FollowCameraInput& input) {
         (request.kind == DirectorRequest::Kind::End ? delayedDirectorEnds_ : applied).push_back(std::move(request));
     for (const DirectorRequest& request : applied) {
         Entry entry;
+        bool followStarts = false;
         const float rate = request.instant || request.fadeSeconds <= 0.0f ? 0.0f : 1.0f / request.fadeSeconds;
         if (request.kind == DirectorRequest::Kind::Start) {
             entry.kind = Entry::Kind::Director;
@@ -117,11 +142,15 @@ void CameraRig::update(const FollowCameraInput& input) {
             entry.set = selector_.blend();
         } else {
             entry.kind = Entry::Kind::Follow;
-            follow_.reset(input.target, poseYaw(output_), input.targetFacing);
+            followStarts = true;
+            const bool nearCamera = follow_.takeOver(input.target, input.targetFacing, output_.eye, !stack_.empty() && stack_.front().kind == Entry::Kind::Record);
+            eyeFilter_.set(kUnfilteredFactor, nearCamera ? kNearTakeOverRate : 1.0f);
+            lookFilter_.set(kUnfilteredFactor, nearCamera ? kNearTakeOverRate : 1.0f);
         }
         entry.progress = 0.0f;
         entry.progressPerSecond = rate;
         push(std::move(entry), request.instant || request.fadeSeconds <= 0.0f);
+        if (followStarts) follow_.update(input);
     }
     directorRequests_.clear();
     if (selector_.handedOver() && !(!stack_.empty() && stack_.front().kind == Entry::Kind::Director)) {
@@ -132,16 +161,19 @@ void CameraRig::update(const FollowCameraInput& input) {
             const float fade = recordFadeSeconds(records_, entry.set);
             entry.progress = 0.0f;
             entry.progressPerSecond = fade > 0.0f ? 1.0f / fade : 0.0f;
-            eyeFactor_ = poseFilterFactor(recordEyeFilter(records_, entry.set));
-            lookFactor_ = poseFilterFactor(recordLookFilter(records_, entry.set));
+            eyeFilter_.set(poseFilterFactor(recordEyeFilter(records_, entry.set)), 1.0f);
+            lookFilter_.set(poseFilterFactor(recordLookFilter(records_, entry.set)), 1.0f);
             push(std::move(entry), fade <= 0.0f);
         } else if (!stack_.empty() && stack_.front().kind != Entry::Kind::Follow) {
             entry.kind = Entry::Kind::Follow;
             entry.progress = 0.0f;
             entry.progressPerSecond = 1.0f / kFollowFadeSeconds;
-            eyeFactor_ = lookFactor_ = kUnfilteredFactor;
-            follow_.reset(input.target, poseYaw(output_), input.targetFacing);
+            const bool nearCamera = follow_.takeOver(input.target, input.targetFacing, output_.eye, stack_.front().kind == Entry::Kind::Record);
+            const float rate = nearCamera ? kNearTakeOverRate : 1.0f;
+            eyeFilter_.set(kUnfilteredFactor, rate);
+            lookFilter_.set(kUnfilteredFactor, rate);
             push(std::move(entry), false);
+            follow_.update(input);
         }
     } else if (selector_.command() == CameraCommand::RecordPose && locked()) {
         stack_.front().set = selector_.blend();
@@ -152,6 +184,8 @@ void CameraRig::update(const FollowCameraInput& input) {
     const bool followRuns = std::any_of(stack_.begin(), stack_.end(), [](const Entry& e) { return e.kind == Entry::Kind::Follow; });
     if (followRuns) follow_.update(followInput);
 
+    eyeFilter_.step();
+    lookFilter_.step();
     float remaining = 1.0f;
     for (std::size_t i = 0; i < stack_.size(); ++i) {
         Entry& entry = stack_[i];
@@ -170,11 +204,11 @@ void CameraRig::update(const FollowCameraInput& input) {
     const RecordPose combined = weightedPose(stack_);
 
     for (int a = 0; a < 3; ++a) {
-        output_.eye[a] = lerp(output_.eye[a], combined.eye[a], eyeFactor_);
-        output_.look[a] = lerp(output_.look[a], combined.look[a], lookFactor_);
+        output_.eye[a] = lerp(output_.eye[a], combined.eye[a], eyeFilter_.current);
+        output_.look[a] = lerp(output_.look[a], combined.look[a], lookFilter_.current);
     }
     output_.fovDegrees = combined.fovDegrees;
-    output_.offset3d = lerp(output_.offset3d, combined.offset3d, eyeFactor_);
+    output_.offset3d = lerp(output_.offset3d, combined.offset3d, eyeFilter_.current);
 }
 
 float CameraRig::verticalFieldOfView() const { return FollowCamera::verticalFieldOfView(output_.fovDegrees); }

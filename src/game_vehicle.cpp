@@ -37,6 +37,7 @@ void LevelSession::loadBoardingVehicles(const std::map<std::string, std::pair<st
         drive.placedIndex = std::size_t(std::find_if(placedObjects.begin(), placedObjects.end(), [&](const Placement& p) { return p.instance == record.instance; }) - placedObjects.begin());
         vehicleDrives.push_back(drive);
     }
+    loadVehicleCameras();
     std::cout << "boardable vehicles: " << boardingVehicles.size() << '\n';
     levelScripts.vehicles().setBoardingHandler([this](runtime::BoardingRequestKind kind, const std::string& vehicle) { scriptBoardingRequest(kind, vehicle); });
     levelScripts.vehicles().setOccupantLookup([this](const std::string& character) -> std::string {

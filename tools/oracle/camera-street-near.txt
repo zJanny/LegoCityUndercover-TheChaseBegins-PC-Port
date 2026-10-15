@@ -1,0 +1,18 @@
+# Hand-over from the record pose camera to the follow controller with the player landing less than 20 m from the camera
+# (the near rule of 0x1b4864, docs/re/camera-follow-handover.md): landing points outside CameraBound_PolicePK_03, each after
+# 100 updates inside it. Run with --state street-after-1-1 on a New 3DS emulator. The teleports are measuring aids.
+loadstate street-after-1-1
+frames 2
+dt 0.033 0.033
+teleport 933 16.6 1124
+frames 100
+teleport 933 16.6 1131
+memtrace 40 camera-near-a 0x589a70:0x200 *0x376884+0:0x100 *0x376884+0x100:0x300 0x08568bb0:0xb0
+teleport 933 16.6 1124
+frames 100
+teleport 941 16.6 1124
+memtrace 40 camera-near-b 0x589a70:0x200 *0x376884+0:0x100 *0x376884+0x100:0x300 0x08568bb0:0xb0
+teleport 933 16.6 1124
+frames 100
+teleport 941 16.6 1131
+memtrace 40 camera-near-c 0x589a70:0x200 *0x376884+0:0x100 *0x376884+0x100:0x300 0x08568bb0:0xb0

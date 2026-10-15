@@ -7,6 +7,7 @@
 // Evidence and recovered constants: docs/re/camera.md. No SDL dependency.
 #include "runtime/collision.hpp"
 #include <cstdint>
+#include <string>
 #include <vector>
 
 namespace chase::runtime {
@@ -19,6 +20,7 @@ struct CameraSweepSettings {
     float reach = 5.0f;           // in+0xcc: the apex of the slab lies this far behind the look point
     float sideHalfWidth = 2.5f;   // in+0xd0: half width of the horizontal slab at the camera end
     float upHalfWidth = 1.25f;    // in+0xd4: half height of the vertical slab at the camera end
+    std::string excludedOwner;    // the entity the camera follows is not an obstacle (descriptor word K+0x18c, 0x196990): lower-case instance name
     float previousNear = -1.0f;   // K+0x1c8 as the previous update left it; the small-object rules read it while the gather runs. Negative: this update's
 };
 
