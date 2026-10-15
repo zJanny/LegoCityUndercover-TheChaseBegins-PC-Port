@@ -6,6 +6,8 @@ Handlers of the 13 natives of batch 32 and what the port does with them. Census 
 
 ## 2026-10-14T21:36:49+02:00 — Batch 32 (SCRIPT-32): the 13 handlers read, all run as stand-ins (llvm-objdump on game.arm.elf, C++ runner tests; no REA session, no emulator for these handlers)
 
+Corrected by [script-natives-animation.md §2026-10-15T18:33](#ts-20261015-183336): 0x1b71e8 plays the cape animation, not the looked-up animation; the Attach natives attach the second object to the first.
+
 [Corrects script-natives.md §2026-10-14T13:33](script-natives.md#ts-20261014-133339): PlayCharAnim is not blocking and does not share the body of PlayCutscene. The census row said "first call starts the animation; returns 1 when 0x2369c4 == 3 (shared with PlayCutscene)".
 
 ### Handlers
@@ -46,3 +48,27 @@ Unknowns:
 
 Unknowns:
 - The object, animation name and any position change of these PlayCharAnim calls.
+
+<a id="ts-20261015-183336"></a>
+
+## 2026-10-15T18:33:36+02:00 — Batch 32 played through the slot player: PlayCharAnim 0x295a8c, PlayAnimation, the waits, the attach direction, the van driver in the mailbox (REA/Ghidra pseudo-code and llvm-objdump of `game.arm.elf`; oracle `m11-3-repair-van-marker` memory reads; `chase-game` offscreen run)
+
+[Corrects §2026-10-14T21:36](#ts-20261014-213649): 0x1b71e8 does not return the played animation, it plays the cape animation; AttachObject, AttachToBone and AttachToBoneRot attach the second object to the first, not the first to the second.
+
+**PlayCharAnim 0x29e5f0.** The object resolves through 0x22dacc (an entity of kind 159 with a vehicle record is destroyed first and the player used). The folder is `"%s/%s"` of 0x2270f8(character byte ctrl+0x2cc) and the class argument when 0x22716c(entity) is true, else the entity's +0x40 text; 0x2270f8 returns `char_minifig`, `char_minifig_small` (table byte +0x1f bit 2) or `char_minifig_tall` (bit 0x40) from the character table 0x372e10 (stride 0x28). **0x295a8c(entity, name, folder, loop, ...)** is the play: 0x21e8b4(entity + 0x40, name) finds a loaded animation, else 0x23e6e4 loads it (none: nothing happens). When the found animation is the current one (0x23ad24) and ctrl+0x317 bit 0x40 is set, only the mode bits of the current slot change and 0x22c2fc(0) starts it again at frame 0. Otherwise a previous script animation is released (callback `*0x3771c8`, bit 0x40 cleared), 0x23afc0(entity, animation, mode = loop, first 0, end 0xffff, speed 1.0, blend 0.1) starts it, ctrl+700 = 0xffff, ctrl+0x310 = 1.0, and bit 0x40 is set when this call loaded it. Then state request 80 (81 when the caller passes r2 = 1) through 0x2414b4. The name copy with its text after the first `_` upper-cased and `_MINIFIG` cut is for **0x1b71e8**: for characters whose table byte +0x1f has bit 8 it looks for `models/<folder>/<class>/<name>_cape.bfnanm` and plays it on the cape entity (ctrl+0xe0 +0x28) with the same 0x23afc0 call.
+
+**PlayAnimation 0x268240** (asm read): mode = the low byte of the raw argument word 3 (no float conversion; the port reads the argument as a number as for the other raw-word natives, [script-natives-progress.md](script-natives-progress.md)), speed argument 2, blend argument 4, then `AnimationOffset` through 0x2451d0 (the int/bool parameter lookup) applied by 0x22c2fc when not 0. Class message 253 with {u16 0, animation, 0.0} goes to the object first.
+
+**Waits 0x2a06a8 / 0x263ae4**: slot 0x233900(entity + 0x40); none or no animation -> done; kind (0x245f84 = 0x22f560 of the animation's slot) 6 -> done; kind 1 or 5 -> done when `|length (0x23caa4) - position (0x213140)| <= 1.0` (float bits compared with 0x3f800001); every other kind (0 still playing, 2, 3) blocks. So a play-once animation blocks until it finishes, a looping one until its position is within one frame of the length.
+
+**Attach.** 0x245008(parent, child) links the child under the parent (child +4 = parent, parent +8 = child, child +0xc = the old first child) and makes the child's local matrix from both world matrices (+0x5c), so the child keeps its world pose; 0x245048(parent, child) unlinks. AttachObject(A, B): B's node leaves its parent and goes under A's, B's halfword +0x10 loses 0x400, A gets class message 43 with B, B's bit 0x40 says whether its new parent is the scene's root node. AttachToBone(A, B, bone of A, bone of B or "relative"): 0x20f33c(A, B, bone, matrix) unlinks B, finds A's bone through A's animation player (0x24f444, 0x227788), attaches B's node to it (0x22690c) with the inverse of B's own named bone as offset when B is skinned (type `*0x37674c`), else 0x241590 for "relative" or 0x22acdc. AttachToBoneRot(A, B, bone of A, x, y, z degrees) uses the rotation matrix instead. In lvl_01: `AttachObject(1-3_Lawnmower_01, 1-3_Gardner_Prop)` (the gardener rides the mower), `AttachToBone(1-7_AI_GrappleGiver, GrappleGun, "weaponRight", "handle")`.
+
+**The van driver (ANIM-7).** `1-1_VanBreakdown` ends with `EnableCollision(1-1_Mail_Box, 0)`, `EnableCollision(1-1_AI_DonutLady, 0)`, `EnableObject(1-1_AI_DonutLady, 1)`, `Wait(0.1)`, `PlayCharAnim(1-1_AI_DonutLady, "postboxstuck_idle_minifig", "Class_generic", 1)`; `1-1_Found_Van` only plays `idle_minifig` (loop 0) on Player1. In the original the driver's slot plays that clip in mode 1 with end 42 at her placement ([npc-animation.md §2026-10-15T18:33](npc-animation.md#ts-20261015-183306)). No offset and no position change: the stuck pose is the animation (42 frames, 15 fps, loop bit). `chase-game --level ...lvl_01... --no-start-cutscenes --call-script 1-1_VanBreakdown --start "875.2 52.79 704.6" --facing 240 --frames 760` now shows her legs out of the mailbox; the build before showed her standing in front of it (pictures not kept). An original picture was not taken (no RPC this round).
+
+**Port.** `runtime::playCharacterAnimation` (0x295a8c rules), `runtime::playObjectAnimation` (0x268240 after its loaded check), `AnimationDriver` (play, stop, the wait test), `ScriptRunner::setAnimationDriver`, `loadAnimationOffsets`; `game_characters::LevelCharacters` drives the level characters. Tests `animation-slots`, `natives-animation` and `natives-animation-real-data` (the VanBreakdown play, the clip's length and loop bit, the attach direction of the mower startup).
+
+Unknowns:
+- State requests 80 / 81 and what that state does after a play-once animation; class message 253; 0x1fb894 and 0x2b9e2c after the start.
+- The loaded set of an entity (0x21e8b4): which animations a class loads by itself. The port knows only LoadAnimation and the idle clips, so `PlayAnimation(1-4_Booster_Strange, "cower_minifig", ...)` (no LoadAnimation) does nothing in the port.
+- What 0x22716c decides for level characters and the folder from entity +0x40; 0x23e6e4's path rules.
+- Player1 (the player entity) and props have animation players the port does not drive.

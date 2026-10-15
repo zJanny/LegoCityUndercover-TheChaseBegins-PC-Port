@@ -1,5 +1,6 @@
 #include "runtime/script_runner.hpp"
 #include "runtime/director_hold.hpp"
+#include "runtime/level_start.hpp"
 #include "runtime/script_triggers.hpp"
 #include <algorithm>
 #include <cctype>
@@ -482,7 +483,7 @@ ScriptRunner::Result ScriptRunner::native(ScriptThread& thread, const ScriptCall
         aiNative(call);
         break;
     case Word::AnimationNative:
-        animationNative(call);
+        if (!animationNative(call)) return Result::Block;
         break;
     case Word::CutsceneNative:
         return cutsceneNative(thread, call);
@@ -645,16 +646,27 @@ void ScriptRunner::aiNative(const ScriptCall& call) {
     ai_.run(*kind, names, numbers);
 }
 
-void ScriptRunner::animationNative(const ScriptCall& call) {
+void ScriptRunner::loadAnimationOffsets(const assets::ClassLookup& classOf) {
+    const std::uint32_t hash = assets::nameHash("AnimationOffset");
+    std::map<std::string, std::uint32_t> offsets;
+    for (const assets::LevelObject& object : level_.objects) {
+        const assets::Level* cls = classOf(object.className);
+        if (!cls) continue;
+        if (const assets::LevelParam* param = effectiveParam(object, *cls, hash)) offsets[lower(object.instance)] = param->value;
+    }
+    animation_.setAnimationOffsets(std::move(offsets));
+}
+
+bool ScriptRunner::animationNative(const ScriptCall& call) {
     const auto kind = animationNativeKind(lower(call.function));
-    if (!kind) return;
+    if (!kind) return true;
     std::vector<std::string> args;
     std::vector<float> numbers;
     for (const std::string& token : call.arguments) {
         args.push_back(unquoted(token));
         numbers.push_back(read(token));
     }
-    animation_.apply(*kind, args, numbers);
+    return animation_.apply(*kind, args, numbers, animationDriver_);
 }
 
 ScriptRunner::Result ScriptRunner::cutsceneNative(ScriptThread& thread, const ScriptCall& call) {

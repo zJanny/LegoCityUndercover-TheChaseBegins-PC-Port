@@ -1,6 +1,6 @@
 # Feature index
 
-One file per feature: scope, status, verified behaviour, stand-ins, open items (stable IDs), a findings summary that links into [docs/re/](../../re/README.md), and code and tests. Read this index, then only the file for your feature, then only the docs/re entry it links. Rules: CLAUDE.md "Feature files". Work state (status, steps, log) is in [linux-port.progress.md](../linux-port.progress.md). Limits: this index at most about 40 lines, a feature file at most 16 KB (split a larger one as `<feature>-<subtopic>.md`, one row each). `python3 tools/check_doc_links.py --fix` moves closed items (`- [x]`) to `<feature>.closed.md`; closed files are not listed here. Item format: `- [ ] ID — gap. needs: ID. blocks: ID. evidence: link`. `needs:` and `blocks:` are written on both sides. Stand-ins use `PREFIX-S<n>`.
+One file per feature: scope, status, verified behaviour, stand-ins, open items (stable IDs), a findings summary that links into [docs/re/](../../re/README.md), and code and tests. Read this index, then only the file for your feature, then only the docs/re entry it links. Rules: CLAUDE.md "Feature files". Work state (status, steps, log) is in [linux-port.progress.md](../linux-port.progress.md). Limits: this index at most about 40 lines, a feature file at most 16 KB (split a larger one as `<feature>-<subtopic>.md`, one row each). `python3 tools/check_doc_links.py --fix` moves closed items (`- [x]`) to `<feature>.closed.md`; closed files are not listed here. Item format: `- [ ] ID — gap. needs: ID. blocks: ID. evidence: link`. `needs:` and `blocks:` are written on both sides. Stand-ins use `PREFIX-S<n>`. New feature: copy the section list of any file here, add it to this table. Section list: 1 Scope, 2 Status, 3 Verified behaviour, 4 Stand-ins, 5 Open items, 6 Findings summary, 7 Code and tests.
 | Feature | Status | Top open items |
 |---|---|---|
 | [player-movement](player-movement.md) | IN_PROGRESS | PLAYER-1 slide landing stun rule; PLAYER-6 other 0x203d18 states |
@@ -16,6 +16,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | [script-system-triggers](script-system-triggers.md) | IN_PROGRESS | SCRIPT-75 / 76 AI and vehicle trigger events; SCRIPT-77 / 78 object bound checks |
 | [script-system-missions](script-system-missions.md) | IN_PROGRESS | SCRIPT-110 waypoint class starts mission scripts; SCRIPT-111 class-fired ObjectTriggered events; SCRIPT-113 unnamed mission scripts |
 | [script-system-natives](script-system-natives.md) | IN_PROGRESS | SCRIPT-7 natives in batches SCRIPT-29 to SCRIPT-39, SCRIPT-57 to SCRIPT-65 |
+| [script-system-natives-animation](script-system-natives-animation.md) | IN_PROGRESS | SCRIPT-270 player animations; SCRIPT-271 / 272 props and attach (need agent X's node transforms); SCRIPT-273 / 274 states, loaded set |
 | [script-system-ai-navigation](script-system-ai-navigation.md) | IN_PROGRESS | SCRIPT-93 AIMove across grids; SCRIPT-94 nav grids into chase-game; SCRIPT-103 AISuperJump flight, SCRIPT-104 pursuit / stalk / run-away states |
 | [script-system-dcam](script-system-dcam.md) | IN_PROGRESS | SCRIPT-46 director camera commands, SCRIPT-48 / 49 / 50 / 181 / 182 details |
 | [script-system-hud-natives](script-system-hud-natives.md) | IN_PROGRESS | SCRIPT-66 to SCRIPT-70 text screens; SCRIPT-71 to SCRIPT-74 objective markers, arrows, map |
@@ -27,7 +28,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | [hud-ui](hud-ui.md) | IN_PROGRESS | HUD-6 hearts never change; HUD-11 map code and icons, HUD-16 waypoint marker details; HUD-8 other counters; HUD-13 text screens |
 | [audio](audio.md) | IN_PROGRESS | AUDIO-20 duck record; AUDIO-21 sound natives; AUDIO-3 world sounds |
 | [movies-cutscenes](movies-cutscenes.md) | IN_PROGRESS | MOVIE-2 cutscenes not in game flow (blocks FE-4) |
-| [animation-characters](animation-characters.md) | IN_PROGRESS | ANIM-5 general animation slot player, ANIM-3 blending |
+| [animation-characters](animation-characters.md) | IN_PROGRESS | ANIM-3 blending; ANIM-10 slot bookkeeping; ANIM-11 model folders |
 | [particles](particles.md) | IN_PROGRESS | PART-1 no particle rendering |
 | [saves-options](saves-options.md) | IN_PROGRESS | SAVE-13 Continue at level 2 and later, SAVE-8 object record meaning (needs a richer save), SAVE-2 slot display (blocks FE-1) |
 | [input](input.md) | DONE (lab, mapping) | INPUT-2 readers of input slots 16/17 |
@@ -36,5 +37,3 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | [rendering](rendering.md) | IN_PROGRESS | RENDER-1 fragment lighting; RENDER-2 reflections; RENDER-30 fog oracle comparison; RENDER-33 shadows |
 | [viewer-tools](viewer-tools.md) | IN_PROGRESS | TOOLS-1 oracle controller state 255 |
 | missions, enemies (no file yet) | NOT_STARTED | mission flow needs SCRIPT-1; enemies and fighting are not recovered |
-
-New feature: copy the section list of any file here, add it to this table. Section list: 1 Scope, 2 Status, 3 Verified behaviour, 4 Stand-ins, 5 Open items, 6 Findings summary, 7 Code and tests.

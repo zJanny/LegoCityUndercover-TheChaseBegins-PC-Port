@@ -1,72 +1,125 @@
 #include "game_characters.hpp"
 
 #include <algorithm>
+#include <cctype>
+#include <cmath>
 
 namespace game_characters {
 using namespace chase::assets;
 
 namespace {
 constexpr const char* kPedestrianClass = "chars/pedestrian";
+constexpr const char* kCharacterModelFolder = "models/char_minifig/";
 
-runtime::NpcIdleClip clipOf(const Animation& animation) {
-    return {double(animation.frames), double(animationFramesPerSecond(animation))};
+std::string lower(std::string text) {
+    std::transform(text.begin(), text.end(), text.begin(), [](unsigned char c) { return char(std::tolower(c)); });
+    return text;
 }
 
 double lastSampleFrame(const Animation& animation, double position) {
-    return std::min(position, double(animation.frames > 0 ? animation.frames - 1 : 0));
+    return std::clamp(position, 0.0, double(animation.frames > 0 ? animation.frames - 1 : 0));
+}
+
+std::string characterAnimationPath(const std::string& classFolder, const std::string& name) {
+    return lower(kCharacterModelFolder + (classFolder.empty() ? std::string() : classFolder + "/") + name + ".bfnanm");
 }
 }
 
 LevelCharacters::LevelCharacters(FuseArchive& archive, const std::vector<CharacterObject>& characters,
                                  const std::vector<std::optional<render::CharacterInstance>>& placed)
-    : characters_(characters) {
+    : archive_(archive), characters_(characters) {
     for (std::size_t index = 0; index < characters.size(); ++index) {
         const CharacterObject& character = characters[index];
         if (!placed[index] || character.placement.className == kPedestrianClass) continue;
         const std::string bodyPath = meshModelPath(character.appearance.body);
         auto rig = rigs_.find(bodyPath);
         if (rig == rigs_.end()) rig = rigs_.emplace(bodyPath, render::loadCharacterRig(archive, bodyPath)).first;
-        auto clips = clips_.find(character.animationClass);
-        if (clips == clips_.end()) {
-            Clips loaded;
-            loaded.idle = render::loadAnimation(archive, render::levelCharacterAnimationPath(archive, character.animationClass, "idle"));
-            loaded.idle2 = render::loadAnimation(archive, render::levelCharacterAnimationPath(archive, character.animationClass, "idle2"));
-            loaded.idleClip = clipOf(loaded.idle);
-            loaded.idle2Clip = clipOf(loaded.idle2);
-            clips = clips_.emplace(character.animationClass, std::move(loaded)).first;
-        }
         Entry entry;
         entry.character = index;
         entry.instance = *placed[index];
         entry.rig = &rig->second;
-        entry.clips = &clips->second;
+        entry.idle = *clipOf(render::levelCharacterAnimationPath(archive, character.animationClass, "idle"));
+        entry.idle2 = *clipOf(render::levelCharacterAnimationPath(archive, character.animationClass, "idle2"));
         entry.world = placementMatrix(character.placement);
+        byInstance_[lower(character.placement.instance)] = entries_.size();
         entries_.push_back(std::move(entry));
     }
 }
 
+std::optional<std::uint32_t> LevelCharacters::clipOf(const std::string& path) {
+    const auto found = clipIndex_.find(path);
+    if (found != clipIndex_.end()) return found->second;
+    if (!archive_.find(path)) return std::nullopt;
+    Clip clip;
+    clip.path = path;
+    clip.animation = render::loadAnimation(archive_, path);
+    clip.info.clip = std::uint32_t(clips_.size());
+    clip.info.length = animationLength(clip.animation);
+    clip.info.rate = std::uint16_t(animationFramesPerSecond(clip.animation));
+    clip.info.loops = animationLoops(clip.animation);
+    clips_.push_back(std::move(clip));
+    clipIndex_[path] = clips_.back().info.clip;
+    return clips_.back().info.clip;
+}
+
+LevelCharacters::Entry* LevelCharacters::find(const std::string& instance) {
+    const auto found = byInstance_.find(instance);
+    return found == byInstance_.end() ? nullptr : &entries_[found->second];
+}
+
+const LevelCharacters::Entry* LevelCharacters::find(const std::string& instance) const {
+    const auto found = byInstance_.find(instance);
+    return found == byInstance_.end() ? nullptr : &entries_[found->second];
+}
+
+void LevelCharacters::play(const runtime::AnimationPlay& play) {
+    Entry* entry = find(play.instance);
+    if (!entry) return;
+    const auto clip = clipOf(characterAnimationPath(play.request.classFolder, play.request.name));
+    if (!clip) return;
+    const runtime::AnimationClipInfo& info = clips_[*clip].info;
+    if (play.request.character) {
+        const runtime::AnimationSlot* current = entry->slots.current();
+        const bool loaded = *clip == entry->idle || *clip == entry->idle2 || (entry->scriptLoaded && current && current->clip == *clip);
+        runtime::playCharacterAnimation(entry->slots, entry->scriptLoaded, info, loaded, play.request.loop, clock_);
+    } else {
+        runtime::playObjectAnimation(entry->slots, info, play.request, clock_);
+    }
+}
+
+void LevelCharacters::stop(const std::string& instance) {
+    if (Entry* entry = find(instance)) entry->slots.stop(clock_);
+}
+
+std::optional<bool> LevelCharacters::currentNearEnd(const std::string& instance) const {
+    const Entry* entry = find(instance);
+    if (!entry) return std::nullopt;
+    return entry->slots.currentNearEnd(clock_);
+}
+
 void LevelCharacters::update(render::Scene& scene, float dt, const std::function<bool(const CharacterObject&)>& active) {
+    clock_ += std::llround(double(dt) * double(runtime::kAnimationClockTicksPerSecond));
     for (Entry& entry : entries_) {
         if (!active(characters_[entry.character])) continue;
-        const Clips& clips = *entry.clips;
-        entry.idle.update(double(dt), random_, clips.idleClip, clips.idle2Clip);
-        const runtime::NpcIdlePose pose = entry.idle.pose(clips.idleClip, clips.idle2Clip);
-        const bool second = pose.variant == runtime::NpcIdleVariant::Idle2;
-        const Animation& animation = second ? clips.idle2 : clips.idle;
-        const std::vector<Matrix> skin = render::poseBody(scene, *entry.rig, entry.instance, animation, lastSampleFrame(animation, pose.position));
+        entry.idleState.update(entry.slots, clock_, random_, clips_[entry.idle].info, clips_[entry.idle2].info);
+        const runtime::AnimationSlot* slot = entry.slots.current();
+        if (!slot) continue;
+        const Animation& animation = clips_[slot->clip].animation;
+        const float frame = runtime::AnimationSlots::position(*slot, clock_).frame;
+        const std::vector<Matrix> skin = render::poseBody(scene, *entry.rig, entry.instance, animation, lastSampleFrame(animation, frame));
         render::placeCharacter(scene, *entry.rig, entry.instance, skin, entry.world);
     }
 }
 
 std::size_t LevelCharacters::started() const {
-    return std::size_t(std::count_if(entries_.begin(), entries_.end(), [](const Entry& entry) { return entry.idle.started(); }));
+    return std::size_t(std::count_if(entries_.begin(), entries_.end(), [](const Entry& entry) { return entry.slots.current() != nullptr; }));
 }
 
-std::optional<runtime::NpcIdlePose> LevelCharacters::pose(const std::string& instance) const {
-    for (const Entry& entry : entries_)
-        if (characters_[entry.character].placement.instance == instance && entry.idle.started())
-            return entry.idle.pose(entry.clips->idleClip, entry.clips->idle2Clip);
-    return std::nullopt;
+std::optional<CharacterPose> LevelCharacters::pose(const std::string& instance) const {
+    const Entry* entry = find(lower(instance));
+    if (!entry || !entry->slots.current()) return std::nullopt;
+    const runtime::AnimationSlot& slot = *entry->slots.current();
+    return CharacterPose{clips_[slot.clip].path, runtime::AnimationSlots::position(slot, clock_).frame};
 }
 
 }

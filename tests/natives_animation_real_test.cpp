@@ -7,7 +7,9 @@
 #include <filesystem>
 #include <iostream>
 #include <stdexcept>
+#include <optional>
 #include <string>
+#include <vector>
 
 namespace {
 constexpr const char* kLevelFile = "levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl";
@@ -69,13 +71,47 @@ int main(int argc, char** argv) {
                     "MissionStart plays the crying animation of the dog man");
         }
         {
-            // The level startup calls AttachObject(1-3_Lawnmower_01, 1-3_lawn_mower_particles_01 / _02, ..., 1-3_Gardner_Prop) in this
-            // order; the node has one parent, so the last call stays.
+            // The level startup calls AttachObject(1-3_Lawnmower_01, 1-3_lawn_mower_particles_01 / _02, SFX_Lawnmower_Guy,
+            // 1-3_Gardner_Prop): each second object goes under the mower (0x1bf68c, docs/re/script-natives-animation.md).
             assets::PlacedObjectState state = runtime::levelInitialState(level, classOf);
             runtime::ScriptRunner runner(level, state);
             runtime::runLevelStartup(runner, 0.034f, 600);
-            const auto* mower = runner.animation().attachment("1-3_lawnmower_01");
-            require(mower && mower->kind == runtime::AttachKind::Object && mower->parent == "1-3_gardner_prop", "1-3_Lawnmower_01 attachment");
+            const auto* gardener = runner.animation().attachment("1-3_gardner_prop");
+            const auto* particles = runner.animation().attachment("1-3_lawn_mower_particles_01");
+            require(gardener && gardener->kind == runtime::AttachKind::Object && gardener->parent == "1-3_lawnmower_01" && particles &&
+                        particles->parent == "1-3_lawnmower_01",
+                    "the gardener and the particles ride on 1-3_Lawnmower_01");
+        }
+        {
+            // 1-1_VanBreakdown ends with PlayCharAnim(1-1_AI_DonutLady, "postboxstuck_idle_minifig", "Class_generic", 1): the driver gets
+            // a looping play; the clip has 42 frames and joint table bit 29, the length and end frame of the original's slot
+            // (oracle m11-3-repair-van-marker, slot 0x08a6f460: end 42, mode 1 with bit 13; docs/re/script-natives-animation.md).
+            struct Recorder : runtime::AnimationDriver {
+                std::vector<runtime::AnimationPlay> plays;
+                void play(const runtime::AnimationPlay& play) override { plays.push_back(play); }
+                void stop(const std::string&) override {}
+                std::optional<bool> currentNearEnd(const std::string&) const override { return std::nullopt; }
+            } recorder;
+            assets::PlacedObjectState state = runtime::levelInitialState(level, classOf);
+            runtime::ScriptRunner runner(level, state);
+            runner.setAnimationDriver(&recorder);
+            require(runner.start("1-1_VanBreakdown"), "1-1_VanBreakdown");
+            const auto noObject = [](const std::string&, float*) { return false; };
+            for (int i = 0; i < 2400 && runner.threadCount(); ++i) {
+                runner.update(1.0f / 30.0f);
+                runner.director().update(1.0f / 30.0f, noObject);
+                runner.cutscenes().update(1.0f / 30.0f);
+            }
+            require(recorder.plays.size() == 1 && recorder.plays[0].instance == "1-1_ai_donutlady", "one play for the van driver");
+            const runtime::AnimationRequest& request = recorder.plays[0].request;
+            require(request.character && request.name == "postboxstuck_idle_minifig" && request.classFolder == "class_generic" &&
+                        request.loop && request.mode == runtime::kAnimationLoop && request.speed == 1.0f,
+                    "PlayCharAnim of the stuck pose");
+            const auto* entry = archive.find("models/char_minifig/class_generic/postboxstuck_idle_minifig.bfnanm");
+            require(entry != nullptr, "postboxstuck_idle_minifig.bfnanm");
+            const assets::Animation stuck = assets::parseAnimation(archive.read(*entry));
+            require(assets::animationLength(stuck) == 42 && assets::animationLoops(stuck) && assets::animationFramesPerSecond(stuck) == 15.0f,
+                    "length 42, loop bit, rate 15");
         }
     } catch (const std::exception& error) {
         std::cerr << "natives-animation-real-test: FAIL: " << error.what() << '\n';

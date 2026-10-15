@@ -195,6 +195,10 @@ public:
     const ObjectiveState& objectives() const { return objectives_; }
     // Waypoint class (waypoints.hpp): reaching an active waypoint starts the level script named by its TriggerScript.
     void loadWaypoints(const assets::ClassLookup& classOf) { waypoints_.load(level_, classOf); }
+    // The AnimationOffset parameter of every placed object whose class lists it (PlayAnimation 0x268240).
+    void loadAnimationOffsets(const assets::ClassLookup& classOf);
+    // Who plays the animation natives' requests; null records them only.
+    void setAnimationDriver(AnimationDriver* driver) { animationDriver_ = driver; }
     std::vector<std::string> updateWaypoints(float dt, const float player[3], const WaypointVehicle* vehicle);
     // A waypoint script that took the controls, or the player held by an active director camera (director_hold.hpp).
     bool playerControlTaken() const { return waypoints_.playerControlTaken() || director_.holdsControl(); }
@@ -230,7 +234,7 @@ private:
     void textNative(const assets::ScriptCall& call);
     void objectiveNative(const assets::ScriptCall& call);
     void aiNative(const assets::ScriptCall& call);
-    void animationNative(const assets::ScriptCall& call);
+    bool animationNative(const assets::ScriptCall& call);
     Result cutsceneNative(ScriptThread& thread, const assets::ScriptCall& call);
     void fireAiMoveEvents();
     float read(const std::string& token) const;
@@ -278,6 +282,7 @@ private:
     VehicleSet vehicles_;
     AiCore ai_;
     AnimationNativeState animation_;
+    AnimationDriver* animationDriver_ = nullptr;
     CutsceneNativeState cutscenes_;
     float fadeLevel_ = 1.0f, fadeStart_ = 1.0f, fadeTarget_ = 1.0f, fadeElapsed_ = 0;
     DirectorCamera director_;

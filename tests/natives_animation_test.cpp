@@ -79,12 +79,16 @@ void attachNatives() {
     PlacedObjectState state;
     ScriptRunner runner(level, state);
     runner.start("s");
-    const auto* mower = runner.animation().attachment("mower");
-    require(mower && mower->kind == AttachKind::Object && mower->parent == "sfx", "AttachObject");
-    const auto* giver = runner.animation().attachment("giver");
-    require(giver && giver->kind == AttachKind::Bone && giver->parent == "gun" && giver->childBone == "weaponright" && giver->parentBone == "handle", "AttachToBone");
-    const auto* man = runner.animation().attachment("man");
-    require(man && man->kind == AttachKind::BoneRotated && man->rotationDegrees[0] == 60.0f && man->rotationDegrees[2] == -5.0f, "AttachToBoneRot");
+    const auto* sfx = runner.animation().attachment("sfx");
+    require(sfx && sfx->kind == AttachKind::Object && sfx->parent == "mower" && !runner.animation().attachment("mower"),
+            "AttachObject moves the second object under the first (0x245008(parent, child))");
+    const auto* gun = runner.animation().attachment("gun");
+    require(gun && gun->kind == AttachKind::Bone && gun->parent == "giver" && gun->parentBone == "weaponright" && gun->childBone == "handle",
+            "AttachToBone: the second object on a bone of the first (0x20f33c)");
+    const auto* boom = runner.animation().attachment("boom");
+    require(boom && boom->kind == AttachKind::BoneRotated && boom->parent == "man" && boom->parentBone == "weaponright" &&
+                boom->rotationDegrees[0] == 60.0f && boom->rotationDegrees[2] == -5.0f,
+            "AttachToBoneRot");
     const auto* crane = runner.animation().attachment("crane");
     require(crane && crane->kind == AttachKind::WorldRoot, "AttachToWorldRoot");
     const auto* crow = runner.animation().attachment("crow");
@@ -97,7 +101,7 @@ void shortCallsAreIgnored() {
     PlacedObjectState state;
     ScriptRunner runner(level, state);
     runner.start("s");
-    require(runner.animation().current("a") == nullptr && runner.animation().attachment("a") == nullptr, "calls with missing arguments do nothing");
+    require(runner.animation().current("a") == nullptr && runner.animation().attachment("b") == nullptr, "calls with missing arguments do nothing");
 }
 }
 

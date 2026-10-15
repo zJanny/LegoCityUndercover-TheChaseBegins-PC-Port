@@ -488,6 +488,10 @@ Animation parseAnimation(const Bytes& data);
 // Playback rate in frames per second (0x108190): index (jointTableWord >> 13) & 3, or the header index without a
 // joint table, into the table {15, 30, 60, 0} at 0x376764.
 float animationFramesPerSecond(const Animation& animation);
+// Loop bit of the animation player (0x107990): joint table bit 29 (the curve stored with frames + 1 samples).
+bool animationLoops(const Animation& animation);
+// Length in frames the animation player uses (0x1081ec): frames, minus 1 unless animationLoops; 16 bits.
+std::uint16_t animationLength(const Animation& animation);
 // Time from the first to the last frame: (frames - 1) / rate.
 float animationDuration(const Animation& animation);
 

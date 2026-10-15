@@ -1,31 +1,13 @@
 #include "runtime/npc_idle.hpp"
 
-#include <algorithm>
-
 namespace chase::runtime {
 
-namespace {
-double positionOf(double elapsedSeconds, const NpcIdleClip& clip) {
-    return std::min(elapsedSeconds * clip.framesPerSecond, clip.frames);
-}
-
-bool finished(double elapsedSeconds, const NpcIdleClip& clip) {
-    return clip.frames <= 0 || elapsedSeconds * clip.framesPerSecond >= clip.frames;
-}
-}
-
-void NpcIdle::update(double dt, GameRandom& random, const NpcIdleClip& idle, const NpcIdleClip& idle2) {
-    if (started_) {
-        elapsed_ += dt;
-        if (!finished(elapsed_, clipOf(variant_, idle, idle2))) return;
-    }
+bool NpcIdle::update(AnimationSlots& slots, std::int64_t now, GameRandom& random, const AnimationClipInfo& idle, const AnimationClipInfo& idle2) {
+    if (slots.kind(now) != kAnimationStopped) return false;
     started_ = true;
     variant_ = (random.next() & kIdleRandomBit) != 0 ? NpcIdleVariant::Idle2 : NpcIdleVariant::Idle;
-    elapsed_ = 0;
-}
-
-NpcIdlePose NpcIdle::pose(const NpcIdleClip& idle, const NpcIdleClip& idle2) const {
-    return {variant_, positionOf(elapsed_, clipOf(variant_, idle, idle2))};
+    slots.start(variant_ == NpcIdleVariant::Idle ? idle : idle2, kAnimationOnce, 0, kAnimationFrameDefault, kIdleSpeed, kIdleBlend, now);
+    return true;
 }
 
 }

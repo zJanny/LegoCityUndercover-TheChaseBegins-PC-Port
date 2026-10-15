@@ -193,6 +193,15 @@ float animationFramesPerSecond(const Animation& animation) {
     return rates[animation.hasJointTable ? (animation.jointTableWord >> 13) & 3 : animation.headerRateIndex];
 }
 
+bool animationLoops(const Animation& animation) {
+    return animation.hasJointTable && (animation.jointTableWord & 0x20000000u) != 0;
+}
+
+std::uint16_t animationLength(const Animation& animation) {
+    const std::uint16_t frames = std::uint16_t(animation.frames & 0x3fffu);
+    return animationLoops(animation) ? frames : std::uint16_t(frames - 1u);
+}
+
 float animationDuration(const Animation& animation) {
     const float rate = animationFramesPerSecond(animation);
     return rate > 0 && animation.frames > 1 ? float(animation.frames - 1) / rate : 0.0f;

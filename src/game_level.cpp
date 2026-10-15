@@ -152,6 +152,8 @@ LevelSession::LevelSession(const Shared& sharedState)
     const auto placedCharacters = placeLevelCharacters(scene, archive, drawable.characters);
     const std::size_t characters = std::size_t(std::count_if(placedCharacters.begin(), placedCharacters.end(), [](const auto& placed) { return placed.has_value(); }));
     levelCharacters.emplace(archive, drawable.characters, placedCharacters);
+    levelScripts.setAnimationDriver(&*levelCharacters);
+    levelScripts.loadAnimationOffsets(classOf);
     studSprites.emplace(archive);
     player = game_player::placePlayer(archive, scene, level);
     levelScripts.setAllRoomsLoaded();
