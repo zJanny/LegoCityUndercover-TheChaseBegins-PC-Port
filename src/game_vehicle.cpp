@@ -86,6 +86,7 @@ void LevelSession::driveVehicles(float dt) {
             drive.body.position = {vehicle.matrix[12], vehicle.matrix[13], vehicle.matrix[14]};
             drive.body.heading = runtime::vehicleHeading(vehicle);
             if (const std::optional<float> ground = groundAt(drive.body.position)) drive.groundOffset = drive.body.position[1] - *ground;
+            drive.fall = {drive.body.position[1], 0.0f};
         }
         if (record.pendingSpeedLimit) {
             drive.body.speed = std::clamp(drive.body.speed, -*record.pendingSpeedLimit, *record.pendingSpeedLimit);
@@ -94,7 +95,10 @@ void LevelSession::driveVehicles(float dt) {
         const runtime::DriveCommand command = runtime::commandForState(record.state, driven ? playerInput : runtime::DriveInput{}, record.forcedStop != 0, drive.body.speed);
         runtime::stepDriveBody(drive.body, command, record.topSpeed, dt);
         if (runtime::updateStuckTimer(record.stuckTimer, 1.0f, false, std::fabs(drive.body.speed), dt)) levelScripts.vehicles().requestState(boardingRecords[i], runtime::kVehicleStateStuck);
-        if (const std::optional<float> ground = groundAt(drive.body.position)) drive.body.position[1] = *ground + drive.groundOffset;
+        runtime::stepVehicleFall(drive.fall, record.dampingLinear, std::hypot(drive.body.speed, drive.fall.velocity), dt);
+        drive.body.position[1] = drive.fall.height;
+        if (const std::optional<float> ground = groundAt(drive.body.position)) runtime::settleOnGround(drive.fall, *ground + drive.groundOffset);
+        drive.body.position[1] = drive.fall.height;
         const float sine = std::sin(drive.body.heading), cosine = std::cos(drive.body.heading);
         vehicle.matrix = {cosine, 0, -sine, 0, 0, 1, 0, 0, sine, 0, cosine, 0, drive.body.position[0], drive.body.position[1], drive.body.position[2], 1};
         scene.setTransform(placedSceneIndex[drive.placedIndex], vehicle.matrix);

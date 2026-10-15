@@ -66,6 +66,7 @@ void readParameters(const ParamReader& reader, const std::vector<VehicleTableRow
     setBit(record.flags311, kVehicleInvulnerable, reader.flag("Invulnerable"));
     setBit(record.flags311, kVehicleCameraOverride, reader.flag("ATTR_CameraOverride"));
     record.topSpeed = floatOf(reader.get("TopSpeed"), 0.0f);
+    record.dampingLinear = floatOf(reader.get("DampingLinear"), 0.0f);
     record.cameraPosY = floatOf(reader.get("ATTR_CameraPosY"), 0.0f);
     record.cameraPosZ = floatOf(reader.get("ATTR_CameraPosZ"), 0.0f);
     record.cameraLookY = floatOf(reader.get("ATTR_CameraLookY"), 0.0f);

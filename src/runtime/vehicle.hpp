@@ -63,6 +63,7 @@ struct VehicleRecord {
     std::array<float, 3> centreOfMass = {0, 0, 0};  // class value CentreOfMass: the origin of the physics body relative to the node
     float cameraPosY = 0, cameraPosZ = 0, cameraLookY = 0, cameraLookZ = 0, cameraPanScale = 1.0f;  // +0x2f0..+0x300
     float topSpeed = 0;                // class value TopSpeed, the limit of the stand-in body
+    float dampingLinear = 0;           // class value DampingLinear (body+0xd58)
     std::optional<float> pendingSpeedLimit;  // a waypoint hit clamps the body's speed (0x17b3d4..0x17b454) once the drive code runs
     std::uint8_t wheelCount = 0;       // +0x314 (class value numWheels)
     std::vector<VehicleWheel> wheels;  // +0x318: one per found "Wheel%02u" up to wheelCount

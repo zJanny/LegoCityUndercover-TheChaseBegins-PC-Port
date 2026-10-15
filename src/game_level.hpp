@@ -31,6 +31,7 @@
 #include "runtime/script_runner.hpp"
 #include "runtime/studs.hpp"
 #include "runtime/vehicle_boarding.hpp"
+#include "runtime/vehicle_body.hpp"
 #include "runtime/vehicle_drive.hpp"
 #include <SDL.h>
 #include <map>
@@ -155,6 +156,7 @@ private:
     std::optional<chase::runtime::WaypointVehicle> previousWaypointVehicle;
     struct VehicleDrive {
         chase::runtime::DriveBody body;
+        chase::runtime::VehicleFall fall;
         float groundOffset = 0;
         bool started = false;
         std::size_t placedIndex = 0;
