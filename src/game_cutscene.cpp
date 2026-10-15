@@ -1,6 +1,7 @@
 #include "game_cutscene.hpp"
 #include "frontend/flow.hpp"
 #include "frontend/pages.hpp"
+#include "runtime/cutscene_cast.hpp"
 #include <algorithm>
 #include <iostream>
 
@@ -17,6 +18,36 @@ InEngine::~InEngine() {
     if (audio_) audio_->stopBuffer(voice_);
 }
 
+namespace {
+void setVisible(render::Scene& scene, const render::CharacterInstance& instance, bool visible) {
+    scene.setInstanceVisible(instance.bodyInstance, visible);
+    scene.setInstanceVisible(instance.headInstance, visible);
+    if (instance.hatInstance) scene.setInstanceVisible(*instance.hatInstance, visible);
+}
+
+const StandIn* standInFor(const Roster& roster, const CutsceneCast& cast) {
+    const std::size_t fileStart = cast.model.rfind('/'), folderStart = cast.model.rfind('/', fileStart - 1) + 1;
+    const std::string file = cast.model.substr(fileStart + 1), folder = cast.model.substr(folderStart, fileStart - folderStart);
+    std::vector<std::string> names;
+    for (const StandIn& character : roster.characters) names.push_back(character.cutsceneName);
+    const runtime::CastTarget target = runtime::resolveCastTarget(folder, file, roster.player.has_value(), names);
+    if (target.kind == runtime::CastTargetKind::Player) return &*roster.player;
+    if (target.kind == runtime::CastTargetKind::LevelCharacter) return &roster.characters[target.characterIndex];
+    return nullptr;
+}
+}
+
+Roster makeRoster(FuseArchive& archive, const std::vector<CharacterObject>& characters,
+                  const std::vector<std::optional<render::CharacterInstance>>& placed, const CharacterAppearance& playerLook,
+                  const render::CharacterInstance& playerInstance) {
+    Roster roster;
+    roster.base = render::readBaseAppearance(archive);
+    for (std::size_t i = 0; i < characters.size(); ++i)
+        if (placed[i]) roster.characters.push_back({characters[i].cutsceneName, characters[i].appearance, characters[i].hat, *placed[i]});
+    roster.player = StandIn{"player1", playerLook, "", playerInstance};
+    return roster;
+}
+
 std::optional<float> InEngine::load(const std::string& name) {
     if (const auto found = loaded_.find(name); found != loaded_.end()) {
         const Loaded& cutscene = found->second;
@@ -26,9 +57,21 @@ std::optional<float> InEngine::load(const std::string& name) {
     try {
         cutscene.content = loadCutscene(archive_, name);
         for (const CutsceneCast& cast : cutscene.content.actors) {
-            if (!scene_.addModel(cast.model)) throw std::runtime_error("not in archive: " + cast.model);
-            cutscene.instances.push_back(scene_.instances() - 1);
-            scene_.setInstanceVisible(cutscene.instances.back(), false);
+            Actor actor;
+            if (const StandIn* standIn = standInFor(roster_, cast)) {
+                Driven driven;
+                driven.rig = render::loadCharacterRig(archive_, meshModelPath(standIn->look.body));
+                driven.copy = render::addCharacter(scene_, roster_.base, standIn->look, standIn->hat, "cutscene|" + name + "|" + cast.model,
+                                                   render::identity());
+                driven.original = standIn->original;
+                setVisible(scene_, driven.copy, false);
+                actor.driven = std::move(driven);
+            } else {
+                if (!scene_.addModel(cast.model)) throw std::runtime_error("not in archive: " + cast.model);
+                actor.standalone = scene_.instances() - 1;
+                scene_.setInstanceVisible(*actor.standalone, false);
+            }
+            cutscene.actors.push_back(std::move(actor));
         }
         if (!cutscene.content.soundPath.empty())
             cutscene.sound = std::make_shared<Sound>(decodeSound(archive_.read(*archive_.find(cutscene.content.soundPath))));
@@ -44,7 +87,12 @@ std::optional<float> InEngine::load(const std::string& name) {
 void InEngine::show(const std::string& name, bool visible) {
     const auto found = loaded_.find(name);
     if (found == loaded_.end()) return;
-    for (const std::size_t instance : found->second.instances) scene_.setInstanceVisible(instance, visible);
+    for (const Actor& actor : found->second.actors) {
+        if (actor.standalone) scene_.setInstanceVisible(*actor.standalone, visible);
+        if (!actor.driven) continue;
+        setVisible(scene_, actor.driven->copy, visible);
+        setVisible(scene_, actor.driven->original, !visible);
+    }
 }
 
 void InEngine::pose(const Loaded& cutscene, double seconds) {
@@ -52,7 +100,13 @@ void InEngine::pose(const Loaded& cutscene, double seconds) {
     for (std::size_t i = 0; i < cutscene.content.actors.size(); ++i) {
         const CutsceneCast& actor = cutscene.content.actors[i];
         const double local = std::min(frame, double(actor.animation.frames ? actor.animation.frames - 1 : 0));
-        scene_.setTransform(cutscene.instances[i], actorMatrix(actorPose(actor.animation, float(cutsceneNormalised(actor.animation, local)))));
+        const render::Mat4 world = actorMatrix(actorPose(actor.animation, float(cutsceneNormalised(actor.animation, local))));
+        if (const auto& driven = cutscene.actors[i].driven) {
+            const std::vector<Matrix> skin = render::poseBody(scene_, driven->rig, driven->copy, actor.animation, local);
+            render::placeCharacter(scene_, driven->rig, driven->copy, skin, world);
+            continue;
+        }
+        scene_.setTransform(*cutscene.actors[i].standalone, world);
         if (!actor.skeleton.joints.empty()) scene_.pose(actor.model, skinMatrices(actor.skeleton, actor.animation, local));
     }
 }

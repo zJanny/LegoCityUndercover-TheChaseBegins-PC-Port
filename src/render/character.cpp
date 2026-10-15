@@ -74,14 +74,15 @@ CharacterAppearance readBaseAppearance(FuseArchive& archive) {
     return characterAppearance(parseLevel(archive.read(require(archive, "levels/chars/char_player.blvl"))));
 }
 
-std::size_t addLevelCharacters(Scene& scene, FuseArchive& archive, const std::vector<CharacterObject>& characters) {
-    if (characters.empty()) return 0;
+std::vector<std::optional<CharacterInstance>> placeLevelCharacters(Scene& scene, FuseArchive& archive, const std::vector<CharacterObject>& characters) {
+    std::vector<std::optional<CharacterInstance>> placed(characters.size());
+    if (characters.empty()) return placed;
     const CharacterAppearance base = readBaseAppearance(archive);
     std::map<std::string, CharacterRig> rigs;
     std::map<std::string, Animation> animations;
     std::map<std::string, std::vector<Matrix>> skins;
-    std::size_t added = 0;
-    for (const CharacterObject& character : characters) {
+    for (std::size_t index = 0; index < characters.size(); ++index) {
+        const CharacterObject& character = characters[index];
         const std::string bodyPath = meshModelPath(character.appearance.body);
         if (!archive.find(bodyPath)) continue;
         std::string animationPath = idleAnimationPath(character.animationClass);
@@ -96,9 +97,14 @@ std::size_t addLevelCharacters(Scene& scene, FuseArchive& archive, const std::ve
         if (skin == skins.end())
             skin = skins.emplace(instance.bodyKey, poseBody(scene, rig->second, instance, animation->second, 0)).first;
         placeCharacter(scene, rig->second, instance, skin->second, world);
-        ++added;
+        placed[index] = instance;
     }
-    return added;
+    return placed;
+}
+
+std::size_t addLevelCharacters(Scene& scene, FuseArchive& archive, const std::vector<CharacterObject>& characters) {
+    const auto placed = placeLevelCharacters(scene, archive, characters);
+    return std::size_t(std::count_if(placed.begin(), placed.end(), [](const auto& instance) { return instance.has_value(); }));
 }
 
 std::vector<Matrix> poseBody(Scene& scene, const CharacterRig& rig, const CharacterInstance& instance,

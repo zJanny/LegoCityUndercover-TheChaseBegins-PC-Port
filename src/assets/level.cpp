@@ -406,6 +406,7 @@ DrawableObjects drawableObjects(FuseArchive& archive, const Level& level) {
             character.appearance.upper = effectiveString(*object, cls, "UpperTexture");
             character.appearance.characterEnum = characterEnum;
             character.hat = effectiveString(*object, cls, "HatModel");
+            character.cutsceneName = effectiveString(*object, cls, "CSCharacter");
             const std::string animationClass = effectiveString(*object, cls, "AnimationClass");
             character.animationClass = lowered(animationClass.empty() ? defaultAnimationClass : animationClass);
             character.placement = std::move(placement);

@@ -6,7 +6,7 @@ Mobiclip `.moflex` movies with subtitles (FMV player and the shared `chase_movie
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-14T23:52:14+02:00. Movies play in `chase-fmv` and in the front end; in-engine cutscenes play in `chase-viewer --cutscene` and in `chase-game` (DCamCutScene natives, `1_1_b` compared with the oracle); `PlayCutscene` movies play in the game, the level start plays the intro movie and `1_1_a`, and cutscenes fade to and from black.
+IN_PROGRESS, updated 2026-10-15T07:56:00+02:00. Movies play in `chase-fmv` and in the front end; in-engine cutscenes play in `chase-viewer --cutscene` and in `chase-game` (DCamCutScene natives, `1_1_b` compared with the oracle); `PlayCutscene` movies play in the game, the level start plays the intro movie and `1_1_a`, and cutscenes fade to and from black.
 
 ## 3. Verified behaviour
 
@@ -23,6 +23,7 @@ IN_PROGRESS, updated 2026-10-14T23:52:14+02:00. Movies play in `chase-fmv` and i
 - MOVIE-S10 The length of a cutscene is max(camera frames / 30, soundtrack length), as in the viewer; the original's end is not recovered. evidence: [cutscenes.md §2026-10-14T22:49](../../re/cutscenes.md#ts-20261014-224929).
 - MOVIE-S11 During a cutscene the HUD is hidden and the player and doors are held (oracle: HUD hidden on the top screen); what else stops is not known.
 - MOVIE-S12 A new game from the front end shows `01_GameIntro` in the front end and skips the script's `PlayCutscene` in the level (a plain `--level` start plays it in the level); the original shows it during the load.
+- MOVIE-S30 An actor that is a level character (or the player) is drawn as a copy of that character and the level's own figure is hidden while the cutscene shows; the original drives the figure itself. The copy ends at the same place the figure stood. needs: MOVIE-22. evidence: [cutscene-actors.md §2026-10-15T07:54](../../re/cutscene-actors.md#ts-20261015-075438).
 - MOVIE-S20 The cutscene fade times (0.5 s before the start with flag a, 0.5 s at the end for every cutscene, 4 vblanks black, 43 vblanks fade in) are measured with `1_1_b`, not read from the code. evidence: [cutscenes.md §2026-10-14T23:52](../../re/cutscenes.md#ts-20261014-235214).
 - MOVIE-S21 With the front end new game `kNewGameStart` (the oracle player position at gameplay-start) is applied before the intro cutscene; the script then moves the player to `1-1_Chase_Intro_Shot_Dummy` (891.47, 1109.06), 4.7 m from it, as in the original order; where the original player stands after the intro was not compared.
 
@@ -32,18 +33,19 @@ IN_PROGRESS, updated 2026-10-14T23:52:14+02:00. Movies play in `chase-fmv` and i
 - [ ] MOVIE-3 — 113 of 397 actor animations have a different frame count from their camera (the viewer holds their last frame); the meaning of camera fields 7-11, the fov axis and the base value of the actor scale are unknown. evidence: [cutscenes.md §2026-10-13T02:30](../../re/cutscenes.md#ts-20261013-0230).
 - [ ] MOVIE-4 — The extra (root motion) curve use in cutscenes; the 12 cutscene folders without soundtrack and the outliers 6_4_a, 2_11_a, 1_4_c. evidence: [cutscenes.md §2026-10-13T03:20](../../re/cutscenes.md#ts-20261013-0320).
 
-- [ ] MOVIE-11 — Cutscene actors in `chase-game` have no faces and wrong clothes (texture overrides of the characters are missing). evidence: [cutscenes.md §2026-10-14T22:49](../../re/cutscenes.md#ts-20261014-224929).
-- [ ] MOVIE-12 — Unknown: what ends a cutscene object, skipping with a button, letterboxing, soundtrack volume and sound sync, actor visibility rules, what the level objects do. needs: SCRIPT-47. evidence: [cutscenes.md §2026-10-14T22:49](../../re/cutscenes.md#ts-20261014-224929).
-- [ ] MOVIE-14 — (User report 2026-10-14, confirmed by the user in `chase-game` with `--call-script 1-1_MissionStart`: the gameplay Chase with his correct textures stays in view) During an in-engine cutscene the port keeps drawing the playable character (and the level characters the cast stands in for), so Chase is seen next to his cutscene actor; the original hides them. Which code hides the player and the level characters, and when they reappear, is not recovered (related: MOVIE-12 actor visibility, MOVIE-S11). evidence: [cutscenes.md §2026-10-14T22:49](../../re/cutscenes.md#ts-20261014-224929).
+- [ ] MOVIE-12 — Unknown: what ends a cutscene object, skipping with a button, letterboxing, soundtrack volume and sound sync, what the level objects do. Actor visibility is resolved (the actors are the level's figures, see MOVIE-S30). needs: SCRIPT-47. evidence: [cutscenes.md §2026-10-14T22:49](../../re/cutscenes.md#ts-20261014-224929).
+- [ ] MOVIE-21 — Compare `chase-game --call-script 1-1_VanBreakdown` pictures with the original (software renderer crashes on street states; needs an RPC slot or an indoor state), and read the slot array of the cutscene object (flag, entity pointer, entity byte +0x18 = 5) once the heap read works. evidence: [cutscene-actors.md §2026-10-15T07:54](../../re/cutscene-actors.md#ts-20261015-075438).
+- [ ] MOVIE-22 — What entity byte +0x18 = 5 means for a driven figure and where the player and the level characters stand after the cutscene (the port restores their old place). blocks: MOVIE-S30. evidence: [cutscene-actors.md §2026-10-15T07:54](../../re/cutscene-actors.md#ts-20261015-075438).
 - [ ] MOVIE-20 — Fades from the code: the cutscene mode that 0x25d26c starts (record table 0x58613c) and its end fade, what flags b, c, d control, whether `1_1_a` fades at its end, whether the fade in includes the camera blend; the end function 0x2fac7c only fades for `7_9_A`. needs: SCRIPT-150. evidence: [cutscenes.md §2026-10-14T23:52](../../re/cutscenes.md#ts-20261014-235214).
 
 ## 6. Findings summary
 
+- Cutscene actors are the level's own characters (`CSCharacter`, `Player1.Player01`): [cutscene-actors.md §2026-10-15T07:54](../../re/cutscene-actors.md#ts-20261015-075438).
 - FMV container, audio, subtitles: [fmv.md §2026-10-13T11:40](../../re/fmv.md#ts-20261013-1140); stereoscopic pairs: [fmv.md §2026-10-13T20:58](../../re/fmv.md#ts-20261013-205838).
 - Cutscene natives, slot table, oracle run of `1_1_b`: [cutscenes.md §2026-10-14T22:49](../../re/cutscenes.md#ts-20261014-224929); fades and level start: [cutscenes.md §2026-10-14T23:52](../../re/cutscenes.md#ts-20261014-235214).
 - Cutscene tracks, cameras, actors, joint orientations: [cutscenes.md §2026-10-13T02:30](../../re/cutscenes.md#ts-20261013-0230); playback rate and soundtrack: [cutscenes.md §2026-10-13T03:20](../../re/cutscenes.md#ts-20261013-0320).
 
 ## 7. Code and tests
 
-- `src/movie/` (`chase_movie`), `src/fmv.cpp` (`chase-fmv`), `src/assets/subtitles.cpp`, `src/assets/cutscene.cpp`; `chase-viewer --cutscene`; `src/runtime/natives_cutscene.*`, `src/game_cutscene.*`, `src/game_level_cutscene.cpp` (game side), `loadCutscene` in `chase_assets`.
-- CTest: `fmv-real-smoke`, `viewer-cutscene-smoke`, `frontend-real-data`, `natives-cutscene`, `natives-cutscene-real-data`.
+- `src/movie/` (`chase_movie`), `src/fmv.cpp` (`chase-fmv`), `src/assets/subtitles.cpp`, `src/assets/cutscene.cpp`; `chase-viewer --cutscene`; `src/runtime/natives_cutscene.*`, `src/runtime/cutscene_cast.*`, `src/game_cutscene.*`, `src/game_level_cutscene.cpp` (game side), `loadCutscene` in `chase_assets`.
+- CTest: `fmv-real-smoke`, `viewer-cutscene-smoke`, `frontend-real-data`, `natives-cutscene`, `natives-cutscene-real-data`, `cutscene-cast`.

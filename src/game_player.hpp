@@ -54,6 +54,8 @@ struct PlayerAnimation {
 
 std::int16_t headingFromDegrees(float degrees);
 
+chase::assets::CharacterAppearance playerAppearance(chase::assets::FuseArchive& archive);
+
 std::optional<PlayerRig> placePlayer(chase::assets::FuseArchive& archive, chase::render::Scene& scene, const chase::assets::Level& level);
 
 // A scripted move (AIMove on the player, STAND-IN SCRIPT-S31): the AI position and heading replace the locomotion result.

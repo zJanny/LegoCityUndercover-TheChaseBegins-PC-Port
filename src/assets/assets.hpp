@@ -368,6 +368,7 @@ struct CharacterObject {
     CharacterAppearance appearance;
     std::string hat;                   // HatModel, empty when the class does not list it
     std::string animationClass;        // lower-case folder under models/char_minifig/ ("class_generic" by default)
+    std::string cutsceneName;          // CSCharacter: the cutscene cast folder this character plays (docs/re/cutscene-actors.md), empty when unset
 };
 // objectPlacements split by kind. Static geometry: models that exist in the archive. Characters: objects
 // with the "char_minifig" body, except the custom characters. Left out and counted: the mission markers of

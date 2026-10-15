@@ -137,7 +137,8 @@ LevelSession::LevelSession(const Shared& sharedState)
         waypointSceneIndex.push_back(instanceIndex);
         waypointObjects.push_back(waypoint);
     }
-    const std::size_t characters = addLevelCharacters(scene, archive, drawable.characters);
+    const auto placedCharacters = placeLevelCharacters(scene, archive, drawable.characters);
+    const std::size_t characters = std::size_t(std::count_if(placedCharacters.begin(), placedCharacters.end(), [](const auto& placed) { return placed.has_value(); }));
     studSprites.emplace(archive);
     player = game_player::placePlayer(archive, scene, level);
     levelScripts.setAllRoomsLoaded();
@@ -179,6 +180,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     if (!options.startRoom.empty()) startOptions.startRoom = runtime::roomNumber(options.startRoom);
     else if (const std::optional<Placement> start = playerStart(level)) startOptions.startRoom = runtime::roomNumber(start->room);
     cutsceneHost.emplace(archive, scene, shared.audio);
+    if (player) cutsceneHost->setRoster(game_cutscene::makeRoster(archive, drawable.characters, placedCharacters, game_player::playerAppearance(archive), player->instance));
     movies.emplace(archive, hudResources, (std::filesystem::path(options.fib).parent_path() / "cutscenes").string(), int(options.language));
     introMovieSkip = options.introMovieShown;
     const auto hostCutscenes = [this]() {

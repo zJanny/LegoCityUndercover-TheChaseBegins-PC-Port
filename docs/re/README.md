@@ -23,6 +23,7 @@ Read this index, then open only the file you need.
 | [carrying.md](carrying.md) | Carry objects and targets (`props/prop_carry*`): class records, use zones, pickup, drop, placing, fired events |
 | [skeleton-animation.md](skeleton-animation.md) | `.bfnskl`, `.bfnanm`, curves, pose composition, skinning, bone palettes |
 | [cutscenes.md](cutscenes.md) | `csdata` cutscenes: tracks, cameras, actors, soundtrack |
+| [cutscene-actors.md](cutscene-actors.md) | Which entities the cutscene cast are (`CSCharacter`, `Player1.Player01`), faces and clothes |
 | [text-localisation-fonts.md](text-localisation-fonts.md) | `.loc`, text escapes, `.tnf` fonts |
 | [data-tables-config.md](data-tables-config.md) | `.bxls` tables, brace-block config text |
 | [save-format.md](save-format.md) | `savegame.dat` layout, CRC, save thread, options, slot progress, level table; later entries: [save-format-state.md](save-format-state.md) |

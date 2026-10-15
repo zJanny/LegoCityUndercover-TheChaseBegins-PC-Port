@@ -7,6 +7,7 @@
 #include "frontend/resources.hpp"
 #include "game_audio.hpp"
 #include "game_movie_sound.hpp"
+#include "render/character.hpp"
 #include "render/scene.hpp"
 #include "runtime/natives_cutscene.hpp"
 #include <map>
@@ -25,10 +26,29 @@ struct CameraView {
     float fieldOfView = 0;
 };
 
+// A character of the level that a cutscene actor stands in for: its look, to build the cutscene's copy, and the instances of
+// the level's own figure, hidden while the cutscene shows (the original drives the level's figure itself, docs/re/cutscene-actors.md).
+struct StandIn {
+    std::string cutsceneName;
+    chase::assets::CharacterAppearance look;
+    std::string hat;
+    chase::render::CharacterInstance original;
+};
+struct Roster {
+    chase::assets::CharacterAppearance base;
+    std::vector<StandIn> characters;
+    std::optional<StandIn> player;
+};
+
+Roster makeRoster(chase::assets::FuseArchive& archive, const std::vector<chase::assets::CharacterObject>& characters,
+                  const std::vector<std::optional<chase::render::CharacterInstance>>& placed,
+                  const chase::assets::CharacterAppearance& playerLook, const chase::render::CharacterInstance& playerInstance);
+
 class InEngine {
 public:
     InEngine(chase::assets::FuseArchive& archive, chase::render::Scene& scene, std::optional<GameAudio>& audio);
     ~InEngine();
+    void setRoster(Roster roster) { roster_ = std::move(roster); }
     InEngine(const InEngine&) = delete;
     InEngine& operator=(const InEngine&) = delete;
 
@@ -39,9 +59,17 @@ public:
     std::optional<CameraView> camera(const chase::runtime::CutsceneNativeState& state) const;
 
 private:
+    struct Driven {
+        chase::render::CharacterRig rig;
+        chase::render::CharacterInstance copy, original;
+    };
+    struct Actor {
+        std::optional<std::size_t> standalone;
+        std::optional<Driven> driven;
+    };
     struct Loaded {
         chase::assets::CutsceneContent content;
-        std::vector<std::size_t> instances;
+        std::vector<Actor> actors;
         std::shared_ptr<const chase::assets::Sound> sound;
         double rate = 30;
     };
@@ -51,6 +79,7 @@ private:
     chase::assets::FuseArchive& archive_;
     chase::render::Scene& scene_;
     std::optional<GameAudio>& audio_;
+    Roster roster_;
     std::map<std::string, Loaded> loaded_;
     std::string shown_;
     int voice_ = 0;

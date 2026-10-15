@@ -25,6 +25,10 @@ CharacterAppearance readCharacter(FuseArchive& archive, const std::string& path)
 }
 }
 
+CharacterAppearance playerAppearance(FuseArchive& archive) {
+    return readCharacter(archive, kPlayerCharacter);
+}
+
 Mat4 PlayerRig::matrix() const {
     const float heading = runtime::headingRadians(motion.facing), s = std::sin(heading), c = std::cos(heading);
     return {c, 0, -s, 0, 0, 1, 0, 0, s, 0, c, 0, motion.x, vertical.y, motion.z, 1};
