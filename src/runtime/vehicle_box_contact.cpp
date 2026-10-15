@@ -19,6 +19,8 @@ constexpr float kPi = 3.14159265358979323846f;
 constexpr float kUpperLimit = 1e10f;
 constexpr int kManifoldPoints = 4;
 constexpr int kBoxBoxMaxContacts = 4;
+// The float 0x376c5c (0x3dcccccd in the ELF data): 0x332368 scales a contact row's angular component of body A (flag word bit 0) or B (bit 1).
+constexpr float kContactAngularScale = 0x1.99999ap-4f;
 
 Vector3 add(const Vector3& a, const Vector3& b) { return {a[0] + b[0], a[1] + b[1], a[2] + b[2]}; }
 Vector3 sub(const Vector3& a, const Vector3& b) { return {a[0] - b[0], a[1] - b[1], a[2] - b[2]}; }
@@ -519,11 +521,13 @@ void resolveRow(std::vector<SolverBody>& bodies, SolverConstraint& c, bool upper
     applySolverImpulse(b, scale(neg(c.contactNormal), b.inverseMass()), c.angularComponentB, deltaImpulse, c.flag);
 }
 
-SolverConstraint frictionConstraint(const std::vector<SolverBody>& bodies, const Vector3& normal, ManifoldPoint& point, const Vector3& relPos1,
-                                    const Vector3& relPos2) {
-    const SolverBody& a = bodies[0];
-    const SolverBody& b = bodies[1];
+SolverConstraint frictionConstraint(const std::vector<SolverBody>& bodies, int bodyA, int bodyB, const Vector3& normal, ManifoldPoint& point,
+                                    const Vector3& relPos1, const Vector3& relPos2) {
+    const SolverBody& a = bodies[std::size_t(bodyA)];
+    const SolverBody& b = bodies[std::size_t(bodyB)];
     SolverConstraint c;
+    c.bodyA = bodyA;
+    c.bodyB = bodyB;
     c.flag = (point.flags & 4) != 0;
     c.contactNormal = normal;
     c.friction = point.friction;
@@ -700,26 +704,38 @@ void addManifoldContact(ContactManifold& manifold, const BulletTransform& a, con
     manifold.points.push_back(point);
 }
 
-void solveVehicleContacts(VehicleRigidBody& body, std::vector<ContactManifold>& manifolds, const BulletSolverInfo& info) {
-    std::vector<SolverBody> bodies(2);
-    bodies[0].body = &body;
-    if (body.inverseMass == 0.0f) return;
+std::vector<bool> solveContactGroup(const std::vector<VehicleRigidBody*>& bodyList, const std::vector<SolverManifold>& manifolds,
+                                    const BulletSolverInfo& info) {
+    std::vector<SolverBody> bodies(bodyList.size() + 1);
+    for (std::size_t i = 0; i < bodyList.size(); ++i) bodies[i + 1].body = bodyList[i];
+    std::vector<bool> activated(bodyList.size(), false);
+    const auto dynamic = [&](int index) { return index >= 0 && bodyList[std::size_t(index)]->inverseMass != 0.0f; };
     std::vector<SolverConstraint> contacts, frictions;
-    for (ContactManifold& manifold : manifolds) {
+    for (const SolverManifold& entry : manifolds) {
+        if (!dynamic(entry.bodyA) && !dynamic(entry.bodyB)) continue;
+        ContactManifold& manifold = *entry.manifold;
+        const int indexA = entry.bodyA + 1;
+        const int indexB = entry.bodyB + 1;
         for (ManifoldPoint& point : manifold.points) {
             if (!(point.distance <= manifold.processingThreshold)) continue;
-            const SolverBody& a = bodies[0];
-            const SolverBody& b = bodies[1];
+            if (entry.bodyA >= 0) activated[std::size_t(entry.bodyA)] = true;
+            if (entry.bodyB >= 0) activated[std::size_t(entry.bodyB)] = true;
+            const SolverBody& a = bodies[std::size_t(indexA)];
+            const SolverBody& b = bodies[std::size_t(indexB)];
             SolverConstraint c;
+            c.bodyA = indexA;
+            c.bodyB = indexB;
             c.point = &point;
             c.flag = (point.flags & 4) != 0;
             const Vector3 relPos1 = sub(point.worldA, a.centre(point.worldA));
-            const Vector3 relPos2 = sub(point.worldB, point.worldB);
+            const Vector3 relPos2 = sub(point.worldB, b.centre(point.worldB));
             const Vector3 normal = point.normalOnB;
             c.angularComponentA = a.inverseInertia(cross(relPos1, normal));
+            if (point.flags & 1) c.angularComponentA = scale(c.angularComponentA, kContactAngularScale);
             c.angularComponentB = b.inverseInertia(neg(cross(relPos2, normal)));
-            const float denom0 = dot(normal, cross(c.angularComponentA, relPos1)) + a.inverseMass();
-            const float denom1 = 0.0f;
+            if (point.flags & 2) c.angularComponentB = scale(c.angularComponentB, kContactAngularScale);
+            const float denom0 = a.body ? dot(normal, cross(c.angularComponentA, relPos1)) + a.inverseMass() : 0.0f;
+            const float denom1 = b.body ? dot(normal, cross(neg(c.angularComponentB), relPos2)) + b.inverseMass() : 0.0f;
             c.jacDiagABInv = 1.0f / (denom0 + denom1);
             c.contactNormal = normal;
             c.relpos1CrossNormal = cross(relPos1, normal);
@@ -737,7 +753,8 @@ void solveVehicleContacts(VehicleRigidBody& body, std::vector<ContactManifold>& 
             }
             if (info.mode & 4) {
                 c.appliedImpulse = point.appliedImpulse * info.warmStarting;
-                applySolverImpulse(bodies[0], scale(normal, a.inverseMass()), c.angularComponentA, c.appliedImpulse, c.flag);
+                applySolverImpulse(bodies[std::size_t(indexA)], scale(normal, a.inverseMass()), c.angularComponentA, c.appliedImpulse, c.flag);
+                applySolverImpulse(bodies[std::size_t(indexB)], scale(normal, b.inverseMass()), neg(c.angularComponentB), -c.appliedImpulse, c.flag);
             } else {
                 c.appliedImpulse = 0.0f;
             }
@@ -756,20 +773,20 @@ void solveVehicleContacts(VehicleRigidBody& body, std::vector<ContactManifold>& 
                 const float lateral = length2(point.lateralDir1);
                 if (!(info.mode & 0x40) && aboveEpsilon(lateral)) {
                     point.lateralDir1 = scale(point.lateralDir1, 1.0f / std::sqrt(lateral));
-                    frictions.push_back(frictionConstraint(bodies, point.lateralDir1, point, relPos1, relPos2));
+                    frictions.push_back(frictionConstraint(bodies, indexA, indexB, point.lateralDir1, point, relPos1, relPos2));
                 } else {
                     planeSpace(normal, point.lateralDir1, point.lateralDir2);
-                    frictions.push_back(frictionConstraint(bodies, point.lateralDir1, point, relPos1, relPos2));
+                    frictions.push_back(frictionConstraint(bodies, indexA, indexB, point.lateralDir1, point, relPos1, relPos2));
                 }
                 point.lateralInitialized = true;
             } else {
-                frictions.push_back(frictionConstraint(bodies, point.lateralDir1, point, relPos1, relPos2));
+                frictions.push_back(frictionConstraint(bodies, indexA, indexB, point.lateralDir1, point, relPos1, relPos2));
             }
             frictions.back().appliedImpulse = 0.0f;
             contacts.push_back(c);
         }
     }
-    if (contacts.empty()) return;
+    if (contacts.empty()) return activated;
     for (int iteration = 0; iteration < info.iterations; ++iteration) {
         for (SolverConstraint& c : contacts) resolveRow(bodies, c, false);
         for (SolverConstraint& f : frictions) {
@@ -782,15 +799,29 @@ void solveVehicleContacts(VehicleRigidBody& body, std::vector<ContactManifold>& 
         }
     }
     for (SolverConstraint& c : contacts) c.point->appliedImpulse = c.appliedImpulse;
-    for (std::size_t a = 0; a < 3; ++a) {
-        body.velocity[a] += bodies[0].deltaLinear[a];
-        body.angularVelocity[a] += bodies[0].deltaAngular[a];
+    for (std::size_t i = 0; i < bodyList.size(); ++i) {
+        if (bodyList[i]->inverseMass == 0.0f) continue;
+        for (std::size_t a = 0; a < 3; ++a) {
+            bodyList[i]->velocity[a] += bodies[i + 1].deltaLinear[a];
+            bodyList[i]->angularVelocity[a] += bodies[i + 1].deltaAngular[a];
+        }
     }
+    return activated;
+}
+
+void solveVehicleContacts(VehicleRigidBody& body, std::vector<ContactManifold>& manifolds, const BulletSolverInfo& info) {
+    std::vector<SolverManifold> entries;
+    for (ContactManifold& manifold : manifolds) entries.push_back({&manifold, 0, -1});
+    solveContactGroup({&body}, entries, info);
 }
 
 VehicleBoxContacts vehicleBoxContacts(const std::string& className, const std::vector<BulletBox>* boxes) {
     Vector3 low, high;
     vehicleCollisionBoxStandIn(className, low, high);
+    return vehicleBoxContacts(low, high, boxes);
+}
+
+VehicleBoxContacts vehicleBoxContacts(const Vector3& low, const Vector3& high, const std::vector<BulletBox>* boxes) {
     VehicleBoxContacts contacts;
     contacts.boxes = boxes;
     contacts.childOffset = scale(add(low, high), 0.5f);
@@ -837,6 +868,49 @@ void collideVehicleWithBoxes(const VehicleRigidBody& body, VehicleBoxContacts& c
             addManifoldContact(*found, root, box.transform, contact, friction, 0.0f);
         if (!found->points.empty()) refreshManifold(*found, root, box.transform);
     }
+}
+
+namespace {
+
+BulletTransform childTransform(const VehicleRigidBody& body, const VehicleBoxContacts& shape) {
+    const BulletTransform root = bulletBodyTransform(body);
+    BulletTransform child = root;
+    child.origin = bulletApply(root, shape.childOffset);
+    return child;
+}
+
+bool aabbOverlap(const Vector3& lowA, const Vector3& highA, const Vector3& lowB, const Vector3& highB) {
+    return !(lowA[0] > highB[0] || highA[0] < lowB[0]) && !(lowA[2] > highB[2] || highA[2] < lowB[2]) && !(lowA[1] > highB[1] || highA[1] < lowB[1]);
+}
+
+}
+
+void collideVehiclePair(const VehicleRigidBody& first, const VehicleBoxContacts& firstShape, const VehicleRigidBody& second,
+                        const VehicleBoxContacts& secondShape, std::optional<ContactManifold>& manifold) {
+    const BulletTransform rootFirst = bulletBodyTransform(first);
+    const BulletTransform rootSecond = bulletBodyTransform(second);
+    const BulletTransform childFirst = childTransform(first, firstShape);
+    const BulletTransform childSecond = childTransform(second, secondShape);
+    Vector3 lowFirst, highFirst, lowSecond, highSecond;
+    bulletBoxAabb(firstShape.child, childFirst, lowFirst, highFirst);
+    bulletBoxAabb(secondShape.child, childSecond, lowSecond, highSecond);
+    const bool overlap = aabbOverlap(lowFirst, highFirst, lowSecond, highSecond);
+    if (manifold && !manifold->points.empty()) refreshManifold(*manifold, rootSecond, rootFirst);
+    if (!overlap) {
+        manifold.reset();
+        return;
+    }
+    if (manifold && !manifold->points.empty()) refreshManifold(*manifold, rootSecond, rootFirst);
+    if (!manifold) {
+        manifold = ContactManifold{};
+        manifold->breakingThreshold = std::min(bulletBoxBreakingThreshold(secondShape.child), bulletBoxBreakingThreshold(firstShape.child));
+    }
+    const float friction = kBulletVehicleFriction * kBulletVehicleFriction;
+    for (const BoxBoxContact& contact :
+         boxBoxContacts(childSecond, bulletBoxHalfExtents(secondShape.child), childFirst, bulletBoxHalfExtents(firstShape.child)))
+        addManifoldContact(*manifold, rootSecond, rootFirst, contact, friction, 0.0f);
+    if (!manifold->points.empty()) refreshManifold(*manifold, rootSecond, rootFirst);
+    for (ManifoldPoint& point : manifold->points) point.flags = kVehiclePairContactFlagsStandIn;
 }
 
 void stepVehicleBoxContacts(VehicleRigidBody& body, VehicleBoxContacts& contacts, float dt) {

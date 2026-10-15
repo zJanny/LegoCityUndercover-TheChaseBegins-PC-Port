@@ -8,6 +8,7 @@
 
 #include <array>
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -108,6 +109,17 @@ struct BulletSolverInfo {
     std::uint32_t mode = 0x104;  // SOLVER_SIMD | SOLVER_USE_WARMSTARTING
     int restingRestitutionThreshold = 2;
 };
+// One manifold of the solve: its two bodies as indices into the solver's body list, -1 for the fixed body of 0x1e3674 (a static box).
+struct SolverManifold {
+    ContactManifold* manifold = nullptr;
+    int bodyA = -1;
+    int bodyB = -1;
+};
+// The solve of 0x331814 (setup 0x332fcc, contacts 0x3318a0 / 0x332368, friction 0x3329e0, iterations 0x333c38, finish 0x333a0c) for all manifolds
+// at once, in the given order, as 0x30c768 hands over every manifold of the dispatcher. A manifold whose bodies both have no inverse mass is
+// skipped. Every point within the processing threshold sets both bodies' activation state to 1 (0x3318a0 calls 0x241194(body, 1)); the result
+// tells per body whether that happened.
+std::vector<bool> solveContactGroup(const std::vector<VehicleRigidBody*>& bodies, const std::vector<SolverManifold>& manifolds, const BulletSolverInfo& info);
 // The solve of 0x331814 for one dynamic vehicle body and the static boxes of its manifolds (body 0 of every manifold is the vehicle). The
 // impulses of each contact are kept in the manifold points as 0x333a0c does.
 void solveVehicleContacts(VehicleRigidBody& body, std::vector<ContactManifold>& manifolds, const BulletSolverInfo& info);
@@ -121,9 +133,21 @@ struct VehicleBoxContacts {
     std::vector<ContactManifold> manifolds;
 };
 VehicleBoxContacts vehicleBoxContacts(const std::string& className, const std::vector<BulletBox>* boxes);
+// The same shape from the box `low`..`high` of vehicleCollisionBox.
+VehicleBoxContacts vehicleBoxContacts(const Vector3& low, const Vector3& high, const std::vector<BulletBox>* boxes);
 // The collision detection of 0x30c768 for the vehicle against the static boxes (0x32367c): manifolds of boxes whose AABB the child box no longer
 // overlaps are released; the others are refreshed, take the box-box contacts and are refreshed again.
 void collideVehicleWithBoxes(const VehicleRigidBody& body, VehicleBoxContacts& contacts);
+// The Bullet contacts of two vehicle bodies (compound against compound, 0x32367c). The pair cache keeps the body with the lower broadphase
+// proxy id first; the compound algorithm of the first body runs the compound algorithm of the second swapped, so the box-box manifold's body 0
+// is the second vehicle (box 1 of dBoxBox2 is the second's child box). Per step: the outer and the inner compound algorithm each refresh the
+// manifold, then the box-box contacts and a third refresh; when the child AABBs no longer overlap the manifold is released.
+// STAND-IN VEH-S80: every point of a vehicle pair manifold carries the flag word 2 when the solver runs (traced in the hit of the trooper on the
+// parked worker; the static box contacts carry 0), so the angular part of the manifold's body 1 (the pair's first body) is scaled by 0.1. The
+// code that writes the flag word is not found, nor whether it depends on the pair order, the player's vehicle or the body flag +0xc4 bit 3.
+constexpr std::uint16_t kVehiclePairContactFlagsStandIn = 2;
+void collideVehiclePair(const VehicleRigidBody& first, const VehicleBoxContacts& firstShape, const VehicleRigidBody& second,
+                        const VehicleBoxContacts& secondShape, std::optional<ContactManifold>& manifold);
 // One world step after the vehicle's floor pass: the collision detection and the solver with the step `dt`.
 void stepVehicleBoxContacts(VehicleRigidBody& body, VehicleBoxContacts& contacts, float dt);
 

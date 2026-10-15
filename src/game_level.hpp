@@ -42,6 +42,7 @@
 #include "runtime/studs.hpp"
 #include "runtime/vehicle_boarding.hpp"
 #include "runtime/vehicle_wheels.hpp"
+#include "runtime/vehicle_world.hpp"
 #include "runtime/vehicle_drive.hpp"
 #include <SDL.h>
 #include <map>
@@ -125,7 +126,7 @@ private:
     void enterVehicleHud(const chase::runtime::VehicleRecord& record);
     void leaveVehicleHud();
     bool placeVehicle(const std::string& instance, const chase::assets::Placement& target);
-    bool placeSeatedVehicle(const float position[3]);
+    bool placeSeatedVehicle(const float position[3], std::optional<float> facingDegrees);
     std::optional<chase::runtime::WaypointVehicle> waypointVehicle() const;
     void suppressDrivenVehicleCollision();
     const chase::assets::CollisionItem* floorItem() const;
@@ -193,11 +194,15 @@ private:
         std::vector<chase::runtime::WheelState> wheels;
         chase::runtime::FloorTracker floorTracker;
         chase::runtime::VehicleBoxContacts boxContacts;
+        chase::runtime::VehicleShapeBoxes shape;
+        float massScale = 1.0f;
         bool started = false;
         bool awake = false;
+        bool moved = false;
         std::size_t placedIndex = 0;
     };
     std::vector<VehicleDrive> vehicleDrives;
+    chase::runtime::VehiclePairManifolds vehiclePairs;
     std::vector<std::string> vehicleTableNames;
     chase::runtime::VehicleHud vehicleHud;
     chase::runtime::HeadIcon headIcon;

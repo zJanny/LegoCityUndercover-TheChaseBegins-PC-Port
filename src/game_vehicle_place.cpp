@@ -11,8 +11,10 @@ bool LevelSession::placeVehicle(const std::string& instance, const chase::assets
         if (vehicle.instance != instance) continue;
         VehicleDrive& drive = vehicleDrives[i];
         vehicle.matrix = placementMatrix(target);
-        drive.rigid = runtime::vehicleRigidBody(levelScripts.vehicles().records()[boardingRecords[i]], {vehicle.matrix[12], vehicle.matrix[13], vehicle.matrix[14]},
-                                                runtime::vehicleHeading(vehicle));
+        const runtime::VehicleRecord& record = levelScripts.vehicles().records()[boardingRecords[i]];
+        if (!drive.started) drive.shape = runtime::vehicleShapeBoxes(record, vehicle.boxCentre, vehicle.boxHalf);
+        drive.rigid = runtime::vehicleRigidBody(record, {vehicle.matrix[12], vehicle.matrix[13], vehicle.matrix[14]}, runtime::vehicleHeading(vehicle),
+                                                drive.shape.shapeLow, drive.shape.shapeHigh, drive.massScale);
         scene.setTransform(placedSceneIndex[drive.placedIndex], vehicle.matrix);
         drive.wheels.clear();
         poseVehicleWheels(i);
@@ -21,7 +23,7 @@ bool LevelSession::placeVehicle(const std::string& instance, const chase::assets
     return false;
 }
 
-bool LevelSession::placeSeatedVehicle(const float position[3]) {
+bool LevelSession::placeSeatedVehicle(const float position[3], std::optional<float> facingDegrees) {
     const std::optional<std::size_t> seated = boarding ? boarding->seatedVehicle() : std::nullopt;
     if (!seated) return false;
     const std::string& instance = levelScripts.vehicles().records()[boardingRecords[*seated]].instance;
@@ -29,6 +31,8 @@ bool LevelSession::placeSeatedVehicle(const float position[3]) {
     if (placed == drawable.objects.end()) return false;
     chase::assets::Placement target = *placed;
     std::copy(position, position + 3, target.position);
+    if (facingDegrees) target.orientation[1] = *facingDegrees;
+    vehicleDrives[*seated].floorTracker = {};
     return placeVehicle(boardingVehicles[*seated].instance, target);
 }
 

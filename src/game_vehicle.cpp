@@ -67,18 +67,32 @@ void LevelSession::driveVehicles(float dt) {
     if (!levelScripts.playerControlTaken() && !carry.busy() && !cutscenePlaying())
         playerInput = runtime::readDriveInput({pad.slot(kSlotStickX).value, pad.channel(14).value, pad.channel(15).value, pad.channel(16).value, pad.channel(17).value});
     const int steps = runtime::vehicleWorldSteps(vehicleWorldTime, dt);
+    const CollisionItem* floorMesh = floorItem();
+    std::vector<runtime::VehicleWorldBody> bodies;
+    std::vector<runtime::VehicleRecord> scaled;
+    std::vector<std::optional<runtime::VehicleFloor>> floors;
+    std::vector<std::size_t> members;
+    scaled.reserve(boardingVehicles.size());
+    floors.reserve(boardingVehicles.size());
     for (std::size_t i = 0; i < boardingVehicles.size(); ++i) {
         runtime::VehicleRecord& record = *levelScripts.vehicles().mutableRecord(boardingRecords[i]);
         VehicleDrive& drive = vehicleDrives[i];
         runtime::BoardingVehicle& vehicle = boardingVehicles[i];
         const bool driven = seated && *seated == i && record.state == runtime::kVehicleStateDriven;
-        if (!driven && !drive.awake) continue;
+        if (!runtime::vehicleHasDynamicBody(record, driven || drive.started, objectState.isDisabled(vehicle.instance))) continue;
+        const float massScale = runtime::vehicleMassScale(seated && *seated == i);
         if (!drive.started) {
             drive.started = true;
-            suppressDrivenVehicleCollision();
-            drive.rigid = runtime::vehicleRigidBody(record, {vehicle.matrix[12], vehicle.matrix[13], vehicle.matrix[14]}, runtime::vehicleHeading(vehicle));
+            drive.shape = runtime::vehicleShapeBoxes(record, vehicle.boxCentre, vehicle.boxHalf);
+            drive.massScale = massScale;
+            drive.rigid = runtime::vehicleRigidBody(record, {vehicle.matrix[12], vehicle.matrix[13], vehicle.matrix[14]}, runtime::vehicleHeading(vehicle),
+                                                    drive.shape.shapeLow, drive.shape.shapeHigh, massScale);
             drive.drivetrain = runtime::vehicleDrivetrain(record);
-            drive.boxContacts = runtime::vehicleBoxContacts(record.className, &vehicleBoxes);
+            drive.boxContacts = runtime::vehicleBoxContacts(drive.shape.collisionLow, drive.shape.collisionHigh, &vehicleBoxes);
+            std::cout << "vehicle " << vehicle.instance << ": Bullet body, mass scale " << massScale << " at update " << updatesForLog << '\n';
+        } else if (drive.massScale != massScale) {
+            drive.massScale = massScale;
+            runtime::setVehicleMassScale(drive.rigid, record, drive.shape.shapeLow, drive.shape.shapeHigh, massScale);
         }
         if (record.pendingSpeedLimit) {
             runtime::limitForwardSpeed(drive.rigid, *record.pendingSpeedLimit);
@@ -86,21 +100,34 @@ void LevelSession::driveVehicles(float dt) {
         }
         const float forwardSpeed = runtime::forwardSpeed(drive.rigid);
         const runtime::DriveCommand command = runtime::commandForState(record.state, driven ? playerInput : runtime::DriveInput{}, record.forcedStop != 0, forwardSpeed);
-        runtime::BodyInputs controls = runtime::bodyInputs(command);
-        controls.driver = driven;
-        const CollisionItem* floorMesh = floorItem();
-        std::optional<runtime::VehicleFloor> floor;
-        if (floorMesh) floor = runtime::VehicleFloor{runtime::FloorMesh(*floorMesh), drive.floorTracker, runtime::vehicleCollisionBody(record), &drive.boxContacts};
-        drive.awake = runtime::stepVehicleWorld(drive.rigid, drive.drivetrain, drive.awake, record, controls,
-                                                [this](const runtime::Vector3& from, const runtime::Vector3& to) { return runtime::castWheelRay(collision, from, to); }, steps,
-                                                floor ? &*floor : nullptr, &drive.wheels);
-        if (floor) drive.floorTracker = floor->tracker;
+        scaled.push_back(runtime::vehicleRecordAtMassScale(record, massScale));
+        floors.emplace_back();
+        if (floorMesh)
+            floors.back() = runtime::VehicleFloor{runtime::FloorMesh(*floorMesh), drive.floorTracker,
+                                                  runtime::vehicleCollisionBody(scaled.back(), drive.shape.collisionLow, drive.shape.collisionHigh, massScale), &drive.boxContacts};
+        runtime::VehicleWorldBody body{i, &drive.rigid, &drive.drivetrain, &drive.awake, &scaled.back(), runtime::bodyInputs(command), floors.back() ? &*floors.back() : nullptr, &drive.wheels};
+        body.controls.driver = driven;
+        bodies.push_back(body);
+        members.push_back(i);
+    }
+    runtime::stepVehicleBodies(bodies, vehiclePairs,
+                               [this](const runtime::Vector3& from, const runtime::Vector3& to) { return runtime::castWheelRay(collision, from, to); }, steps);
+    for (std::size_t n = 0; n < members.size(); ++n) {
+        const std::size_t i = members[n];
+        VehicleDrive& drive = vehicleDrives[i];
+        if (floors[n]) drive.floorTracker = floors[n]->tracker;
+        const bool driven = seated && *seated == i && levelScripts.vehicles().records()[boardingRecords[i]].state == runtime::kVehicleStateDriven;
+        if (!driven && !drive.awake) continue;
+        if (!drive.moved && !driven) std::cout << "vehicle " << boardingVehicles[i].instance << ": moved by a contact at update " << updatesForLog << '\n';
+        drive.moved = true;
+        runtime::VehicleRecord& record = *levelScripts.vehicles().mutableRecord(boardingRecords[i]);
         if (runtime::updateStuckTimer(record.stuckTimer, 1.0f, false, std::fabs(runtime::forwardSpeed(drive.rigid)), dt))
             levelScripts.vehicles().requestState(boardingRecords[i], runtime::kVehicleStateStuck);
-        vehicle.matrix = runtime::vehicleNodeMatrix(drive.rigid, record.centreOfMass);
-        scene.setTransform(placedSceneIndex[drive.placedIndex], vehicle.matrix);
+        boardingVehicles[i].matrix = runtime::vehicleNodeMatrix(drive.rigid, record.centreOfMass);
+        scene.setTransform(placedSceneIndex[drive.placedIndex], boardingVehicles[i].matrix);
         poseVehicleWheels(i);
     }
+    suppressDrivenVehicleCollision();
 }
 
 void LevelSession::poseVehicleWheels(std::size_t vehicleIndex) {
@@ -125,7 +152,7 @@ const CollisionItem* LevelSession::floorItem() const {
 
 void LevelSession::suppressDrivenVehicleCollision() {
     for (std::size_t i = 0; i < boardingVehicles.size(); ++i)
-        if (vehicleDrives[i].started)
+        if (vehicleDrives[i].moved)
             for (runtime::CollisionWorld::Entry& entry : collision.mutableEntries())
                 if (entry.owner == boardingVehicles[i].instance) entry.active = false;
 }

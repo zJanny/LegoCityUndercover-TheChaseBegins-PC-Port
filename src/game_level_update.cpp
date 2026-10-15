@@ -28,7 +28,7 @@ void LevelSession::applyScriptTeleports(unsigned index) {
     unsigned start = 0;
     for (const game_options::ScriptStep& step : script) {
         if (step.teleport && start == index && player) {
-            if (placeSeatedVehicle(step.position.data())) std::cout << "script teleport of the seated vehicle: ";
+            if (placeSeatedVehicle(step.position.data(), step.facingDegrees)) std::cout << "script teleport of the seated vehicle: ";
             else placePlayer(step.position.data(), step.facingDegrees);
             std::cout << "script teleport to " << step.position[0] << ' ' << step.position[1] << ' ' << step.position[2] << " at update " << updates << '\n';
         }

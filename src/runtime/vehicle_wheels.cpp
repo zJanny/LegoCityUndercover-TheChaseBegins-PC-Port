@@ -1,4 +1,5 @@
 #include "runtime/vehicle_wheels.hpp"
+#include "runtime/vehicle_world.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -128,6 +129,54 @@ VehicleRigidBody vehicleRigidBody(const VehicleRecord& record, const Vector3& no
     return body;
 }
 
+Vector3 vehicleLocalInertia(float mass, const Vector3& low, const Vector3& high, const std::optional<std::array<float, 3>>& inertiaScale) {
+    Vector3 l{};
+    for (std::size_t a = 0; a < 3; ++a) {
+        const float half = (high[a] - low[a]) * 0.5f;
+        const float offset = (high[a] + low[a]) * 0.5f;
+        const float boxHalf = (half - kBulletBoxMargin) + kBulletBoxMargin;
+        const float localLow = offset - boxHalf, localHigh = offset + boxHalf;
+        const float compoundHalf = (localHigh - localLow) * 0.5f;
+        const float compoundCentre = (localHigh + localLow) * 0.5f;
+        l[a] = ((compoundCentre + compoundHalf) - (compoundCentre - compoundHalf)) * 0.5f * 2.0f;
+    }
+    const float k = mass * 0x1.555556p-4f;
+    float x = l[1] * l[1];
+    x += l[2] * l[2];
+    float y = l[0] * l[0];
+    y += l[2] * l[2];
+    float z = l[0] * l[0];
+    z += l[1] * l[1];
+    Vector3 inertia = {x * k, y * k, z * k};
+    if (inertiaScale)
+        for (std::size_t a = 0; a < 3; ++a) inertia[a] *= (*inertiaScale)[a];
+    return inertia;
+}
+
+void setVehicleMassScale(VehicleRigidBody& body, const VehicleRecord& record, const Vector3& shapeLow, const Vector3& shapeHigh, float massScale) {
+    const Vector3 inertia = vehicleLocalInertia(record.mass, shapeLow, shapeHigh, record.inertiaScale);
+    const float mass = record.mass * massScale;
+    body.inverseMass = mass != 0.0f ? 1.0f / mass : 0.0f;
+    for (std::size_t a = 0; a < 3; ++a) {
+        const float scaled = inertia[a] * massScale;
+        body.inverseInertia[a] = scaled != 0.0f ? 1.0f / scaled : 0.0f;
+    }
+}
+
+VehicleRigidBody vehicleRigidBody(const VehicleRecord& record, const Vector3& node, float heading, const Vector3& shapeLow, const Vector3& shapeHigh,
+                                  float massScale) {
+    VehicleRigidBody body = vehicleRigidBody(record, node, heading);
+    setVehicleMassScale(body, record, shapeLow, shapeHigh, massScale);
+    return body;
+}
+
+VehicleCollisionBody vehicleCollisionBody(const VehicleRecord& record, const Vector3& low, const Vector3& high, float massScale) {
+    VehicleCollisionBody shape;
+    shape.points = vehicleProbePoints(low, high, record.wheels);
+    shape.massTimesTwo = record.mass * massScale;
+    return shape;
+}
+
 std::array<float, 16> vehicleNodeMatrix(const VehicleRigidBody& body, const std::array<float, 3>& centreOfMass) {
     const std::array<Vector3, 3> axes = bodyAxes(body);
     std::array<float, 16> matrix{};
@@ -193,23 +242,16 @@ std::vector<WheelState> stepVehiclePhysics(VehicleRigidBody& body, DrivetrainSta
 
 bool stepVehicleWorld(VehicleRigidBody& body, DrivetrainState& drive, bool awake, const VehicleRecord& record, const BodyInputs& controls,
                       const WheelRay& ray, int steps, VehicleFloor* floor, std::vector<WheelState>* lastWheels) {
-    for (int step = 0; step < steps; ++step) {
-        if (floor) trackFloorCell(floor->mesh, floor->tracker, body.position);
-        bool woke = false;
-        if (vehicleWakes(controls, forwardSpeed(body), dot(body.velocity, body.velocity), drive.previousSteer)) {
-            woke = !awake;
-            awake = true;
-            body.deactivationTime = 0.0f;
-        }
-        if (!awake) {
-            sleepVehicle(drive, controls);
-            continue;
-        }
-        std::vector<WheelState> wheels = stepVehiclePhysics(body, drive, record, controls, woke, ray, kVehicleWorldStep, floor);
-        if (lastWheels) *lastWheels = std::move(wheels);
-        if (floor && floor->boxes) stepVehicleBoxContacts(body, *floor->boxes, kVehicleWorldStep);
-        awake = updateVehicleActivation(body, kVehicleWorldStep);
-    }
+    std::vector<VehicleWorldBody> bodies(1);
+    bodies[0].body = &body;
+    bodies[0].drive = &drive;
+    bodies[0].awake = &awake;
+    bodies[0].record = &record;
+    bodies[0].controls = controls;
+    bodies[0].floor = floor;
+    bodies[0].lastWheels = lastWheels;
+    VehiclePairManifolds pairs;
+    stepVehicleBodies(bodies, pairs, ray, steps);
     return awake;
 }
 

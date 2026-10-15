@@ -74,6 +74,18 @@ Vector3 vehicleInverseInertiaStandIn(const std::string& className);
 // The rigid body of a vehicle record whose node stands at `node` with `heading`: the centre of mass is the node plus CentreOfMass in body axes
 // (0x243f90 keeps -CentreOfMass at body+0x44 as the node offset), the mass kVehicleBodyMassFactor * Mass.
 VehicleRigidBody vehicleRigidBody(const VehicleRecord& record, const Vector3& node, float heading);
+// btCompoundShape::calculateLocalInertia 0x33ee44 of the compound with one box child `low`..`high` (its AABB with margin, l = 2 half extents,
+// mass * 0x3daaaaab * (ly^2 + lz^2, lx^2 + lz^2, lx^2 + ly^2)) for the class Mass, times InertiaScale when the class has it (0x243f90). Oracle
+// (rigid +0x190 and body+0xb0): the trooper, the worker and the donut van, whose inertia follows its entity box (vehicleShapeBox).
+Vector3 vehicleLocalInertia(float mass, const Vector3& low, const Vector3& high, const std::optional<std::array<float, 3>>& inertiaScale);
+// The rigid body at mass scale body+0x84 (command 6 of 0x2e3390: mass = Mass * scale, inertia = vehicleLocalInertia * scale, setMassProps
+// 0x1f3124 keeps the inverses); `shapeLow`..`shapeHigh` is vehicleShapeBox. Oracle: scale 1 for the parked worker, 2 for the vehicle the player sits
+// in (the enter path 0x31fffc passes the float 0x3745b4, 2.0 in the oracle; the leave path 0x3222f4 passes the literal 1.0).
+VehicleRigidBody vehicleRigidBody(const VehicleRecord& record, const Vector3& node, float heading, const Vector3& shapeLow, const Vector3& shapeHigh,
+                                  float massScale);
+void setVehicleMassScale(VehicleRigidBody& body, const VehicleRecord& record, const Vector3& shapeLow, const Vector3& shapeHigh, float massScale);
+// The collision points of the box `low`..`high` (vehicleCollisionBox) and body+0xc8 = Mass * scale.
+VehicleCollisionBody vehicleCollisionBody(const VehicleRecord& record, const Vector3& low, const Vector3& high, float massScale);
 // The node matrix (rows right, up, forward, translation) of a rigid body.
 std::array<float, 16> vehicleNodeMatrix(const VehicleRigidBody& body, const std::array<float, 3>& centreOfMass);
 

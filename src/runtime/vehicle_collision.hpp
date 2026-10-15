@@ -42,6 +42,14 @@ std::array<Vector3, 8> vehicleProbePoints(const Vector3& low, const Vector3& hig
 // STAND-IN VEH-S50: the box comes from the Bullet collision shape (a compound with one box child, rigid +0xc0, getAabb), which is built by code
 // that is not read; these are the local AABBs read in the oracle for the trooper and the donut van (the trooper's for every other class).
 void vehicleCollisionBoxStandIn(const std::string& className, Vector3& low, Vector3& high);
+// The shape builder 0x2184a4 without a CollisionBound record: the compound's child box is the entity box (0x242df4, entity +0x60 / +0x6c) at its
+// centre minus CentreOfMass. Oracle (compound child offset and half extents of the shapes in the world, drv-police-car-seated): equal for the
+// trooper, the worker, the minibrawn, the foundation, the gotland van and the tigerella.
+void vehicleShapeBox(const Vector3& entityCentre, const Vector3& entityHalf, const std::array<float, 3>& centreOfMass, Vector3& low, Vector3& high);
+// The box of the Bullet shape and of the collision points: vehicleShapeBox, except STAND-IN VEH-S50: the donut van's box is the one read in the
+// oracle (vehicleCollisionBoxStandIn), which reaches 0.139 lower than its entity box (VEH-62).
+void vehicleCollisionBox(const std::string& className, const Vector3& entityCentre, const Vector3& entityHalf, const std::array<float, 3>& centreOfMass,
+                         Vector3& low, Vector3& high);
 
 struct FloorContact {
     float time = 0;               // fraction of the remaining step

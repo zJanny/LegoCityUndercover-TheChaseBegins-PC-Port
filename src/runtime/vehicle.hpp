@@ -86,6 +86,7 @@ struct VehicleRecord {
     float dampingAngular = 0;          // class value DampingAngular (body+0xd5c)
     float suspensionScale = 0;         // class value WheelSuspensionScale (body+0xd9c)
     float mass = 1400.0f;              // class value Mass (0x243f90, default 1400)
+    std::optional<std::array<float, 3>> inertiaScale;  // class value InertiaScale (0x243f90 scales the shape's inertia by it when present)
     EngineSpec engine;                 // 0x243e9c, 0x243c50, Slowdown of 0x243f90, the final drive of 0x2435d0
     std::optional<float> pendingSpeedLimit;  // a waypoint hit clamps the body's speed (0x17b3d4..0x17b454) once the drive code runs
     std::uint8_t wheelCount = 0;       // +0x314 (class value numWheels)
@@ -96,6 +97,11 @@ struct VehicleRecord {
     bool musicEnabled() const { return (flags312 & kVehicleMusicEnabled) != 0; }
     bool invulnerable() const { return (flags311 & kVehicleInvulnerable) != 0; }
 };
+
+// The record of a body whose mass scale body+0x84 is `massScale`: command 6 of the body queue (0x2e3390, queued by 0x213dc8) sets the wheels'
+// shock stiffness and damping (w+0xe8, +0xec, +0xf0) to their base values times the scale, and the rigid mass to the class Mass times the
+// scale. The record holds them at kVehicleBodyMassFactor.
+VehicleRecord vehicleRecordAtMassScale(const VehicleRecord& record, float massScale);
 
 enum class VehicleNativeKind {
     SetLocked,               // VehicleSetLocked 0x26fe78

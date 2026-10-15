@@ -70,6 +70,12 @@ void readParameters(const ParamReader& reader, const std::vector<VehicleTableRow
     record.dampingAngular = floatOf(reader.get("DampingAngular"), 0.0f);
     record.suspensionScale = floatOf(reader.get("WheelSuspensionScale"), 0.0f);
     record.mass = floatOf(reader.get("Mass"), 1400.0f);
+    if (const assets::LevelParam* scale = reader.get("InertiaScale"))
+        if (scale->type == 2 && !scale->blocks.empty() && scale->blocks[0].size() >= 12) {
+            std::array<float, 3> value{};
+            std::memcpy(value.data(), scale->blocks[0].data(), 12);
+            record.inertiaScale = value;
+        }
     record.cameraPosY = floatOf(reader.get("ATTR_CameraPosY"), 0.0f);
     record.cameraPosZ = floatOf(reader.get("ATTR_CameraPosZ"), 0.0f);
     record.cameraLookY = floatOf(reader.get("ATTR_CameraLookY"), 0.0f);
@@ -303,6 +309,17 @@ bool VehicleSet::apply(VehicleNativeKind kind, const std::string& lowerCaseInsta
     case VehicleNativeKind::StopPlayerVehicle: break;
     }
     return true;
+}
+
+VehicleRecord vehicleRecordAtMassScale(const VehicleRecord& record, float massScale) {
+    VehicleRecord scaled = record;
+    for (VehicleWheel& wheel : scaled.wheels) {
+        wheel.suspension.stiffness = wheel.suspension.stiffness / kVehicleBodyMassFactor * massScale;
+        wheel.suspension.dampingExtend = wheel.suspension.dampingExtend / kVehicleBodyMassFactor * massScale;
+        wheel.suspension.dampingCompress = wheel.suspension.dampingCompress / kVehicleBodyMassFactor * massScale;
+    }
+    scaled.engine.mass = record.engine.mass / kVehicleBodyMassFactor * massScale;
+    return scaled;
 }
 
 }
