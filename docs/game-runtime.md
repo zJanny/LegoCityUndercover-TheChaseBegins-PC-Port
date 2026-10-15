@@ -36,7 +36,7 @@ What is not like the original yet:
 - Several parts are stand-ins: how long the loading pages last, the spinning badge on the loading screen (a flat picture here), the picture behind the title card, the tip on the loading screen (always the same one), and the 3D scene that the original plays on the top screen under the title card (here the top screen stays black).
 - Every slot is an empty "New Game" slot. Saved games are not shown in the slot list yet. To start from your own save, run `chase-game --save savegame.dat --slot 0` (see [commands](commands.md)): it starts the level of that slot like Continue in the original.
 - The StreetPass pages act as if StreetPass were available, as it was in the comparison runs.
-- The level after "New Game" is the street of Cherry Tree Hills, with the character at the position the original starts him. Nothing from the story happens there.
+- The level after "New Game" is the street of Cherry Tree Hills, with the character at the position the original starts him. Mission 1-1 starts there: the cutscene plays, then the first light column (at the donut shop) is switched on.
 
 ## Keys
 
