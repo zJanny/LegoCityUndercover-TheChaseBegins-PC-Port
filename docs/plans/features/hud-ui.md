@@ -59,6 +59,7 @@ IN_PROGRESS, updated 2026-10-14T19:00:00+02:00. Script text: the tip panel, the 
 - [ ] HUD-29 — The round camera-rotate icon drawn below the tip box while the camera tip shows (oracle picture `agentHUD2-out/h2.png`, bottom centre of the top screen) is not drawn; its texture, code and timing are not found. evidence: [script-text.md §2026-10-14T19:25](../../re/script-text.md#ts-20261014-192500).
 - [ ] HUD-30 — ShowCharacterIntro against the oracle (no state at mission 1-4 yet), an information or warning box with other line counts than three, and the warning dialog's width rule. blocks: HUD-S15. evidence: [script-text.md §2026-10-14T20:46](../../re/script-text.md#ts-20261014-204600).
 - [ ] HUD-32 — Does the original's HUD clock (TransitionOn, heart and stud bar animations) keep running while a dialog box is open? The port freezes `hud->update` during a dialog. evidence: [script-text.md §2026-10-14T21:41](../../re/script-text.md#ts-20261014-214151).
+- [ ] HUD-33 — After the release director camera of mission 1-1 the port shows the driving tip ("Press and hold A…") on the bottom screen, while the original shows the hexagon panel and then the map with no tip at +3, +10 and +30 updates; when the original shows this tip is not measured. needs: MOVIE-24. evidence: [script-text.md §2026-10-15T17:19](../../re/script-text.md#ts-20261015-171916)
 
 ## 6. Findings summary
 

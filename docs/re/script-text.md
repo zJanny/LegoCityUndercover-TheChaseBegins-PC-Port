@@ -173,3 +173,16 @@ Evidence: `chase-game ... --window 400x480` runs, the oracle picture `artifacts/
 Unknowns:
 - Whether the original's HUD clock (`TransitionOn`, heart and stud bar animations) keeps running while a dialog box is open; the port freezes `hud->update` during a dialog (HUD-32).
 - The reader of the `ShowDialogBG` byte (HUD-S9) is still not found.
+
+<a id="ts-20261015-171916"></a>
+
+## 2026-10-15T17:19:16+02:00 — Bottom screen after the release director camera of mission 1-1 (observation)
+
+- Source: the oracle RPC screenshots that agent Q took 3, 10 and 30 updates after the hand-back of the release director camera ([camera-vehicle.md §2026-10-15T16:58](camera-vehicle.md#ts-20261015-165809)), next to `chase-game` pictures of the same moments.
+- Original: at +3 the bottom screen shows the hexagon panel with the police badge (the panel of MOVIE-24), at +10 the panel is in a closing animation, at +30 it shows the map. No tip box is visible in the three pictures.
+- Port: from the hand-back on, the bottom screen shows the tip "Press and hold A to accelerate and B to brake and reverse." over the map.
+- Only three moments were looked at; whether the original shows this tip earlier, later or not at all is not measured. The top screen also differs in the vehicle portrait and blue hearts, which is VEH-18.
+
+Unknowns:
+- Which script line or code shows the driving tip in the original, and when.
+- The code and textures of the hexagon panel (MOVIE-24) and its closing animation.
