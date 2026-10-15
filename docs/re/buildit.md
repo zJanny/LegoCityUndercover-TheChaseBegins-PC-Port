@@ -54,3 +54,12 @@ Unknowns:
 - Who fires the event and with which owner: the build-it class has no `TriggerObject` read in its post-link or link; the change to state 11 (0x1ab00c) does not call 0x23cee8 itself in the part read.
 - Whether the action flag of the use query comes from the A channel only (B, X and Y do nothing, other buttons and the touch screen were not tried).
 - The player's reaction (animation 9, position) during the build was not recorded.
+
+<a id="ts-20261015-111211"></a>
+
+## 2026-10-15T11:12:11+02:00 — Who fires the TriggerObject of a type 21 build-it: not the class code (llvm-objdump)
+
+Result of the static search in [carrying.md §2026-10-15T11:11](carrying.md#ts-20261015-111115): none of the type 21 class functions (create, link, update, destroy, handler, state table, state change) calls the code-side ObjectTriggered path 0x244f40 / 0x23cee8; the state change to 11 only sends message 8 to nearby carry objects. The path that fires `1-1_SO_VanFixed` is still unknown; the port keeps its queue at the end of the build as a stand-in (SCRIPT-S190 in [script-system-missions.md](../plans/features/script-system-missions.md)). A state change with the same layout (0x26d550) fires its `TriggerObject` through 0x244f40 on completion.
+
+Unknowns:
+- The origin of the event for type 21 (a generic step, the final prop, or another class); a `ctrace` of 0x244f40 over a build would settle it (earlier traces of 0x21a560 and 0x23cee8 did not finish, see the entry above).

@@ -264,6 +264,23 @@ void scriptSwitchesTriggersAndBounds() {
     require(runner.variable("Switched") == 1, "a disabled owner object does not start its trigger");
 }
 
+// Provenance: 0x244f40 (llvm-objdump): 0x242cf0 (clears the disabled bit), 0x244fc8 message 0xff, 0x23cee8 with the ObjectTriggered type; the script
+// native TriggerObject 0x1cddf8 does not enable (docs/re/carrying.md, entry of the trigger paths).
+void objectTriggerFromCodeEnablesTheObject() {
+    const Level level = boundLevel();
+    PlacedObjectState state;
+    ScriptRunner runner(level, state);
+    state.disabled.insert("lever");
+    runner.triggerObjectEnabling("lever");
+    require(!state.isDisabled("lever"), "0x244f40 enables the object first");
+    const std::vector<chase::runtime::ScriptObjectMessage> sent = runner.takeObjectMessages();
+    require(sent.size() == 1 && sent[0].instance == "lever" && sent[0].message == chase::runtime::kMessageTrigger, "message 0xff to the object");
+    const float outside[3] = {0, 0, 0};
+    runner.checkTriggers(outside);
+    runner.update(0.034f);
+    require(runner.variable("Switched") == 1, "the ObjectTriggered script of the enabled object starts");
+}
+
 void warningDialogBlocksUntilAnswered() {
     Level level;
     add(level, "d", {{"WarningDialogBox", {"DIALOG_RETURNCODE"}},
@@ -418,6 +435,7 @@ int main() {
         boundTriggersFireOnTheEdge();
         roomBoundsCountOnlyWhileTheRoomIsLoaded();
         scriptSwitchesTriggersAndBounds();
+        objectTriggerFromCodeEnablesTheObject();
         objectBoundTriggersUseTheObjectPosition();
         warningDialogBlocksUntilAnswered();
         warningDialogCancelGivesOne();

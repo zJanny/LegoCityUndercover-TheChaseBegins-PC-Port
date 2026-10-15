@@ -738,6 +738,12 @@ void ScriptRunner::checkTriggers(const float player[3], bool playerInVehicle) {
 
 void ScriptRunner::fireObjectTriggered(const std::string& lowerInstance) { fireObjectEvent("objecttriggered", lowerInstance); }
 
+void ScriptRunner::triggerObjectEnabling(const std::string& lowerInstance) {
+    state_.disabled.erase(lowerInstance);
+    messages_.push_back({lowerInstance, kMessageTrigger});
+    fireObjectTriggered(lowerInstance);
+}
+
 void ScriptRunner::fireObjectEvent(const std::string& lowerEvent, const std::string& lowerInstance) {
     for (std::size_t i = 0; i < level_.triggers.size(); ++i)
         if (triggers_[i].enabled && lower(level_.triggers[i].event) == lowerEvent && lower(level_.triggers[i].objectName) == lowerInstance) {

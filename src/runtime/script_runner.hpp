@@ -132,6 +132,9 @@ public:
     const std::vector<ScriptTriggerState>& triggers() const { return triggers_; }
     // The code-side fire of an ObjectTriggered event (0x23cee8): queues the enabled trigger whose owner object is `lowerInstance`.
     void fireObjectTriggered(const std::string& lowerInstance);
+    // 0x244f40(object, instigator), called by class code such as the carry object and the carry target (not by the script native TriggerObject, 0x1cddf8): enables
+    // the object (0x242cf0, clears the disabled bit), sends it message 0xff and fires its ObjectTriggered event.
+    void triggerObjectEnabling(const std::string& lowerInstance);
     // The same for the other events the vehicle and character code raises by name (PlayerVehicleEntered, PlayerVehicleExiting): the first enabled
     // trigger of that event whose owner object is `lowerInstance`.
     void fireObjectEvent(const std::string& lowerEvent, const std::string& lowerInstance);

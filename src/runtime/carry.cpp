@@ -53,6 +53,7 @@ void CarrySet::load(assets::FuseArchive& archive, const assets::Level& level, co
             CarryObject carry;
             carry.instance = lower(object.instance);
             carry.triggerPickup = referenceName(object, *cls, "TriggerPickup", names);
+            carry.triggerOnRespawn = referenceName(object, *cls, "TriggerOnRespawn", names);
             std::copy_n(placed->position, 3, carry.home);
             std::copy_n(placed->position, 3, carry.position);
             carry.small = boolParam(object, *cls, "ATTR_SmallObject", true);
@@ -207,11 +208,14 @@ void applyCarryActions(const CarrySet& set, const std::vector<CarryAction>& acti
     for (const CarryAction& action : actions) {
         if (action.kind == CarryActionKind::PickedUp) {
             const CarryObject& object = set.objects()[action.object];
-            if (!object.triggerPickup.empty()) scripts.fireObjectTriggered(object.triggerPickup);
+            if (!object.triggerPickup.empty()) scripts.triggerObjectEnabling(object.triggerPickup);
+        } else if (action.kind == CarryActionKind::Respawned) {
+            const CarryObject& object = set.objects()[action.object];
+            if (!object.triggerOnRespawn.empty()) scripts.triggerObjectEnabling(object.triggerOnRespawn);
         } else if (action.kind == CarryActionKind::Used) {
             const CarryTarget& target = set.targets()[action.target];
             if (!target.useObject.empty()) state.disabled.insert(target.useObject);
-            if (!target.triggerObject.empty()) scripts.fireObjectTriggered(target.triggerObject);
+            if (!target.triggerObject.empty()) scripts.triggerObjectEnabling(target.triggerObject);
         }
     }
 }

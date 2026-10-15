@@ -38,3 +38,27 @@ Unknowns:
 - Walking speed while carrying and what else the player cannot do (the readers of 0x225754 in the locomotion code were not read).
 - Where the dropped box lands (ray in message 0x12), the turn of the player towards the object or the target, the sounds `carryit_pickup_big_01` and `carryit_putdown_big_01` and which event plays them.
 - Use of `TriggerOnRespawn`, `TargetObject01..04`, `TargetBound01..04` of the carry class and of the unnamed parameter 0xc23d689b (value: the target instance).
+
+<a id="ts-20261015-111115"></a>
+
+## 2026-10-15T11:11:15+02:00 — The code-side ObjectTriggered call 0x244f40: what it does, who calls it for carry objects and build-its (llvm-objdump)
+
+Source: `llvm-objdump -d --triple=armv6k --mattr=+vfp2` of `artifacts/game/game.arm.elf` (no REA session, no emulator run). Extends [the carry entry](#ts-20261015-001729).
+
+**0x244f40(object, instigator).** Three steps: (1) 0x242cf0(object): when the entity flag bit 0 (+0x10) is set it clears it and runs the enable work (the same helper the build-it uses on its final prop); (2) 0x244fc8(object, 0xff, instigator), the generic object message send (dispatch through the class table entry +0x14 of the class byte at entity+0x12); (3) 0x23cee8(`*0x3775d0` = ObjectTriggered, object, instigator, 0xff, 0). 0x244f88 is the untrigger twin without the enable (message 0xfe, `*0x3775d4`). 0x23cee8 finds the trigger record with 0x23cff4(type, owner entity) (scene list +0x2f4/+0x2f8, entries with enable byte set, +8 = owner, +4 = type) and calls 0x21a560(trigger, instigator, 0xffff, ...); a name loop for the `Player1`/`Player%d` variants runs first. The owner is therefore the entity named by the reference parameter itself, the instigator is the second argument (the carrier, the target, ...). The port keys triggers by the owner's instance name, which is the same lookup; it has no instigator.
+
+**The script native TriggerObject (0x1cddf8) is not 0x244f40.** It sends 0xff / 0xfe with 0x244fc8 and calls 0x23cee8 with the object as its own instigator; it does not enable the object. The code-side callers (about 100 call sites of 0x244f40) enable first.
+
+**Carry object (type 122).** Message 0x11 (attach, handler 0x1767c8, call at 0x176a48): 0x244f40(+0x10 `TriggerPickup`, carrier = the message argument). The respawn function 0x22fc84 (called from the update at 0x16d520 and 0x16d5f8, and from the message handler at 0x1769e4 and 0x176d40) starts with 0x244f40(+0x14 `TriggerOnRespawn`, the carry object) when the reference is set, then places the object at its start. The countdown the port models (reset after `ResetTime`) is one of these callers; the other callers were not matched to messages.
+
+**Carry target (type 123).** State change 0x25e354 to requested state 1: 0x2428c0(`UseObject` +0x18), 0x242cf0(`PlaceObject` +0x1c), 0x244f40(`TriggerObject` +0x20, the target) at 0x25e3a4, then the drop sound and 0x236624. Confirms the order in [the carry entry](#ts-20261015-001729).
+
+**Build-it, type 21 (`props/prop_buildit`).** No function of the class calls 0x244f40, 0x244f88, 0x244fc8, 0x23cee8 or 0x21a560 for the build-it's own `TriggerObject`: create 0x16c4ec, link 0x16c808, update 0x16cc78, destroy 0x176130, handler 0x176160, the state-check table function 0x1d428c and the state change 0x1aad90 were searched for those calls. The only object message the state change sends is message 8 (reset) at 0x1ab360 to each carry object (class byte 122, not disabled) found by the sphere query 0x237f30 around the final prop when the build ends (flag +0x3b `SpawnCheck`). So the build of 1-1_BI_DonutVanParts reaches `1-1_SO_VanFixed` by a path not found in the class code ([buildit.md](buildit.md#ts-20261014-235539) measured the effect: script calls visible one update after the build ends). A different function does fire `TriggerObject` on completion: 0x26d550 (a state change with the same state/requested-state layout at record +2/+4; its registration was not found, likely the super build-it, type 98 of [save-format-state.md](save-format-state.md)): at its state-3 branch it runs 0x2428c0 on +0x24 and on itself, 0x242cf0 on the final prop (+0x1c), 0x244f40(+0x28, self) when set, 0x242cf0 on +0x2c, and a second 0x244f40(`TriggerObject` read by name with 0x24242c, self).
+
+**Other callers of 0x244f40.** A message handler at 0x1bc4d4 forwards message 0xff to every child entity (entity +0x14 first child index, +0x16 count, scene list +0x24) with 0x244f40(child, self) and 0xfe with 0x244f88; the class was not identified (candidate: `scriptobject`, which would make a triggered script object trigger its child script objects). Class-code callers are spread over the executable; 0x25de86 and about 50 other code strings hold `TriggerObject`.
+
+Unknowns:
+- Which class code (or which generic step) fires `TriggerObject` for a type 21 build-it; the registration of 0x26d550.
+- Whether the class at 0x1bc4d4 is `scriptobject` and whether lvl_01 script objects have children.
+- The other callers of 0x22fc84 (0x1769e4, 0x176d40) and what raises them; `TargetObject01..04`, `TargetBound01..04` and the other carry classes of lvl_01 were not read.
+- The instigator is not used by the port; what 0x21a560 stores of it was not read here.

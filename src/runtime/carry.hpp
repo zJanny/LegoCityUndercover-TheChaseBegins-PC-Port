@@ -41,6 +41,7 @@ constexpr float kCarryHeldHeight = 0.9f;
 struct CarryObject {
     std::string instance;       // lower case
     std::string triggerPickup;  // TriggerPickup, lower case, empty when unset
+    std::string triggerOnRespawn;  // TriggerOnRespawn (record +0x14), lower case, empty when unset
     float home[3] = {0, 0, 0};  // initialposition
     float position[3] = {0, 0, 0};
     float zoneCentre[3] = {0, 0, 0};  // relative to the position
@@ -121,8 +122,8 @@ private:
     float facing_[3] = {0, 0, 1};
 };
 
-// What the actions change: Used disables the carry object (0x2428c0) and fires ObjectTriggered of the target's TriggerObject; PickedUp fires
-// the one of the object's TriggerPickup.
+// What the actions change: Used disables the carry object (0x2428c0) and triggers the target's TriggerObject; PickedUp triggers the object's
+// TriggerPickup and Respawned its TriggerOnRespawn, all three through 0x244f40 (ScriptRunner::triggerObjectEnabling).
 void applyCarryActions(const CarrySet& set, const std::vector<CarryAction>& actions, assets::PlacedObjectState& state, ScriptRunner& scripts);
 
 }

@@ -111,6 +111,34 @@ int main() {
             require(position[0] == 10 && position[2] == 10, "back at the start position");
         }
         {
+            // Provenance: the respawn function 0x22fc84 calls 0x244f40(record +0x14 = TriggerOnRespawn, object) first (llvm-objdump, docs/re/carrying.md).
+            chase::assets::Level level;
+            chase::assets::LevelScript script;
+            script.nameHash = chase::assets::nameHash("on_respawn");
+            script.calls.push_back({});
+            level.scripts.push_back(script);
+            chase::assets::LevelTrigger trigger;
+            trigger.event = "ObjectTriggered";
+            trigger.objectName = "Reset_Hook";
+            trigger.scriptName = "on_respawn";
+            level.triggers.push_back(trigger);
+            chase::assets::PlacedObjectState hookState;
+            hookState.disabled.insert("reset_hook");
+            ScriptRunner runner(level, hookState);
+            CarrySet set = makeSet();
+            CarryObject hooked = set.objects()[0];
+            hooked.instance = "hooked";
+            hooked.triggerOnRespawn = "reset_hook";
+            hooked.triggerPickup.clear();
+            CarrySet hookedSet;
+            hookedSet.add(hooked);
+            applyCarryActions(hookedSet, {{CarryActionKind::Respawned, 0, 0}}, hookState, runner);
+            require(!hookState.isDisabled("reset_hook"), "the respawn trigger enables its object");
+            const float away[3] = {0, 0, 0};
+            runner.checkTriggers(away);
+            require(runner.threadCount() == 1, "the respawn fires TriggerOnRespawn");
+        }
+        {
             CarrySet set = makeSet();
             set.update(state, at(11, 10, true));
             while (set.busy()) set.update(state, at(11, 10, false));
