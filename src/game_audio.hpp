@@ -8,6 +8,7 @@
 #include "runtime/music.hpp"
 #include "runtime/music_block.hpp"
 #include "runtime/natives_music.hpp"
+#include "runtime/natives_sound.hpp"
 #include "save/slot_progress.hpp"
 #include "runtime/sound_events.hpp"
 #include <SDL.h>
@@ -77,6 +78,19 @@ public:
         if (!device_) return;
         std::lock_guard<std::mutex> guard(lock_);
         sounds_->stop(id, owner);
+    }
+    void applySound(const chase::runtime::SoundRequest& request) {
+        if (!device_) return;
+        std::lock_guard<std::mutex> guard(lock_);
+        using Kind = chase::runtime::SoundRequest::Kind;
+        const bool ownerFits = request.owner >= 0 && request.owner <= 0xffff;
+        const std::uint16_t owner = std::uint16_t(request.owner);
+        if (request.kind == Kind::Play) {
+            sounds_->play(request.id, request.positional ? &request.position : nullptr, owner);
+            ++calls_;
+        } else if (ownerFits && request.kind == Kind::Stop) sounds_->stop(request.id, owner, request.value);
+        else if (ownerFits && request.kind == Kind::SetVolume) sounds_->setVolume(request.id, owner, request.value);
+        else if (ownerFits && request.kind == Kind::SetFrequency) sounds_->scaleFrequency(request.id, owner, request.value);
     }
     void playUi(unsigned id) {
         if (!device_) return;

@@ -262,6 +262,8 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
     studs.addToCounter(levelScripts.progressNatives().takeStudsAdded());
     for (const runtime::MusicRequest& request : levelScripts.musicNatives().takeRequests())
         if (shared.audio) shared.audio->applyMusic(request);
+    for (const runtime::SoundRequest& request : levelScripts.soundNatives().takeRequests())
+        if (shared.audio) shared.audio->applySound(request);
     saveWriter.update(levelScripts.progressNatives().saveRequests(), levelScripts.progressNatives().slotImage());
     sceneStart.update(dt);
     if (player) {

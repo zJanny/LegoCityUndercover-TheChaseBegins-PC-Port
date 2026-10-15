@@ -18,6 +18,9 @@ public:
     // record, tablessoundfx column 16) and fades out over that time otherwise. False when no such voice runs.
     bool stop(std::uint32_t id, std::uint16_t owner, float fadeSeconds);
 
+    // The oldest running voice of (id, owner), the instance search 0x23fcac; -1 when none.
+    int find(std::uint32_t id, std::uint16_t owner);
+
 private:
     struct Entry {
         int voice;

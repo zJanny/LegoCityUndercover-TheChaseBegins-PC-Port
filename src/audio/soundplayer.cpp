@@ -39,10 +39,23 @@ int SoundPlayer::play(std::uint32_t id, const std::array<float, 3>* position, st
     return voice;
 }
 
-bool SoundPlayer::stop(std::uint32_t id, std::uint16_t owner) {
+bool SoundPlayer::stop(std::uint32_t id, std::uint16_t owner, float fadeSeconds) {
     const assets::SoundEffect* effect = assets::findSoundEffect(effects_, id);
     if (!effect || effect->name.empty()) return false;
-    return voices_.stop(id, owner, effect->column16);
+    return voices_.stop(id, owner, fadeSeconds < 0.0f ? effect->column16 : fadeSeconds);
+}
+
+bool SoundPlayer::setVolume(std::uint32_t id, std::uint16_t owner, float volume) {
+    const int voice = voices_.find(id, owner);
+    return voice >= 0 && mixer_.setVolume(voice, volume);
+}
+
+bool SoundPlayer::scaleFrequency(std::uint32_t id, std::uint16_t owner, float scale) {
+    const int voice = voices_.find(id, owner);
+    const assets::SoundEffect* effect = assets::findSoundEffect(effects_, id);
+    if (voice < 0 || !effect) return false;
+    const double rate = double(scale) * double(sound(*effect)->rate);
+    return mixer_.setRate(voice, rate >= 2147483647.0 ? 2147483647 : rate <= 0.0 ? 0 : int(rate));
 }
 
 void SoundPlayer::update() {

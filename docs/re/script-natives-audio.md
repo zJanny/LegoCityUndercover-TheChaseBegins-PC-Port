@@ -49,3 +49,34 @@ Unknowns:
 - The duck record and its writer 0x1a4d38 (DuckMusicFor), 0x23ca4c's rate object, the byte +0x185 gate, the unread 0x168a28 and 0x1631c0, the initial value of block +0 at a new game.
 - What 0x25bc34 and the copy at 0x586280 are used for; the reopen branch (1) with a looping track.
 - Handlers of the ten remaining sound natives (PlaySound, registersound, PlaySoundGO, StopSound, vehiclestopsounds, ScaleSoundFrequency, VehicleEnableDrivingMusic, SetSoundVolume, StopSoundGO, PlaySoundAtObject) are unread.
+
+<a id="ts-20261015-172705"></a>
+
+## 2026-10-15T17:27:05+02:00 — The ten sound natives of batch 8 (llvm-objdump only, no REA session, no emulator)
+
+Method: `llvm-objdump -d --triple=armv6k-none-eabi --mattr=+vfp2` on `artifacts/game/game.arm.elf`; names and argument lists from `levels/scriptfns.txt` and `levels/gescriptfns.txt`. Extends [the music entry](#ts-20261015-151038). Replica: `src/runtime/natives_sound.*` (`SoundNativeState`), `Mixer::setRate` / `setVolume`, `EffectVoices::find`, `SoundPlayer::stop(id, owner, fade)` / `setVolume` / `scaleFrequency`, `GameAudio::applySound`; tests `natives-sound`, `audio-core`.
+
+**Argument layout.** The array of a handler has 8 bytes per argument: +8i the entity pointer of an object argument, +8i+4 the pointer to the value. So PlaySound reads its first value at +4 and its second at +0xc, an object argument sits at +0 / +8 (EnableObject, StopSoundGO). Sound enums (SFX name, `tablessoundfx` sheet 0) are read as the raw word, numbers as floats converted with vcvt to int.
+
+**Play family.** PlaySound 0x1b4394 (SFX name, unique identifier): `0x23fa54(word, position null, (int)uid, 0)`, a flat sound whose owner is the uid. PlaySoundGO 0x295244 (SFX, object, uid): a uid below 0.0 calls `0x23ae84(sfx, object)` (position of the object node, owner = u16 at object+0x14); otherwise `0x23fb78(object, buffer)` fills the position (node position of a type-11 object via 0x22faf8, else matrix +0x30 of the object's node) and `0x23fa54(sfx, buffer, (int)uid, 0)` plays with the uid as owner. PlaySoundAtObject 0x27bd48 (object, SFX): `0x23ae84(*value[1], object)`.
+
+**Stop family.** StopSound 0x1b43ec (SFX, uid, fade): `0x235028(sfx, (int)uid, fade)` = `0x23fe30(sfx)` (bank) then `0x23f75c(bank, sfx, uid, fade)`, the same tail as the stop `0x23ae50` of [audio.md §2026-10-13T21:51](audio.md#ts-20261013-215117) but with the uid as owner and the script's fade (negative = column 16 of the row, as there). StopSoundGO 0x1d0d28 (SFX, object, fade): when the object's type byte (+0x12) is not 10 it calls `0x235028(sfx, hword object+0x14, fade)`; for type 10 it calls `0x22c58c(object, 0, 0)` instead, which (when the audio enable word at 0x376ce4+0xc is nonzero) sets bit 1 of component byte +0xd (r2 = 0 gives 1) and, if bit 0 of that byte is set, stops the sound hword component+0xe with owner object+0x14 and clears bit 0 (an ambient emitter object; the port has none).
+
+**registersound 0x1cdbdc** (SFX, scene): `0x281fc4(u16 sfx, scene & 255)` appends the pair to the array at 0x593a60 (4 bytes: hword id, byte scene; count word at 0x377594+4) unless an equal pair exists; the capacity check is not there. It only registers the pair (a per-scene preload list); no reader was read.
+
+**ScaleSoundFrequency 0x2a8afc** (SFX, uid, scale): `0x22f770(sfx, uid, scale)` finds the instance by (sfx, uid) (0x23fcac). With no instance it ends. Rate = sample rate of the instance's source (`0x23fc98(handle, 1)` = [[handle+4]+0x10]); when bit 3 of byte +6 of the sound record and the byte 0x376ce6 are both set the rate is increased by half; new rate = (int)(scale * rate), stored by `0x227f4c` at voice +0x58 with bit 2 of hword +0x42 (dirty). The voice synchroniser around 0x25c540 divides the rate by the source rate times a pitch factor and passes it to 0x25b3b4.
+
+**SetSoundVolume 0x272dcc** (SFX, uid, volume): `0x219178` finds the instance the same way and `0x227ff4` stores the float at voice +0x50 and sets bit 0 of hword +0x42.
+
+**vehiclestopsounds 0x27c148** (vehicle): `0x1fcc20(entity)` = `0x22e620(entity, 0)`. With the component at entity+0x7c and r4 = component+0xc it stops, for each of the three hwords at r4+0x10, +0x12, +0x14 that is nonzero and whose flag in byte r4+0x29 (bits 0, 1, 2) is set, the sound with owner = the vehicle entity's u16 +0x14 and fade 0.0 (the third uses 1.0 when the second argument is nonzero, here 0), clearing the flag; then it tail-calls `0x2b429c(entity)` (unread).
+
+**VehicleEnableDrivingMusic 0x2bf2b4** (vehicle, flag): sets (word != 0) or clears bit 2 of byte component+0x312 of the vehicle at entity+0x7c. The reader of that bit (the vehicle music) is not read.
+
+**Mission 1-1.** The static census counts no call of any of the ten in the 43 scripts of the 1-1 closure (census table, column 1-1); lvl_01 has 25 PlaySound, 22 registersound, 6 vehiclestopsounds, 5 StopSound, 1 PlaySoundGO, 1 SetSoundVolume, 1 StopSoundGO.
+
+**Port.** Play and stop run through the existing play and stop paths. The owner of an object's sounds is a consecutive id from 0x4000 per object name (AUDIO-S30; the original's u16 at +0x14 is not identified). SetSoundVolume is a volume factor on the voice's gains and ScaleSoundFrequency sets the voice's source rate to (int)(scale * rate) (AUDIO-S31). registersound, VehicleEnableDrivingMusic and vehiclestopsounds are recorded only (AUDIO-S32). A sound at an object the position source does not know is dropped and counted.
+
+Unknowns:
+- Source of the u16 at entity+0x14 (AUDIO-30); the readers of voice fields +0x50 / +0x58 and the byte 0x376ce6 (AUDIO-31).
+- Readers of the registered sound pairs, of component bit 2 at +0x312 and the callee 0x2b429c; the vehicle sound ids at component +0x1c..+0x20 (AUDIO-32, AUDIO-11).
+- What an object of type 10 is and the beginning of 0x22c58c (AUDIO-33).

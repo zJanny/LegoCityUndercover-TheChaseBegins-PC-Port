@@ -141,20 +141,20 @@ void conditions() {
 
 void cameraFollowNeedsNoHandler() {
     Level level;
-    add(level, "f", {{"CameraFollow", {}}, {"PlaySound", {"1"}}});
+    add(level, "f", {{"CameraFollow", {}}, {"DuckMusicFor", {"1"}}});
     PlacedObjectState state;
     ScriptRunner runner(level, state);
     runner.start("f");
-    require(runner.unhandledCalls("camerafollow") == 0 && runner.unhandledCalls("playsound") == 1 && runner.threadCount() == 0, "CameraFollow handled");
+    require(runner.unhandledCalls("camerafollow") == 0 && runner.unhandledCalls("duckmusicfor") == 1 && runner.threadCount() == 0, "CameraFollow handled");
 }
 
 void unhandledFunctionsAreRecorded() {
     Level level;
-    add(level, "u", {{"PlaySound", {"1"}}, {"PlaySound", {"2"}}, {"EnableObject", {"Crate", "0"}}});
+    add(level, "u", {{"DuckMusicFor", {"1"}}, {"DuckMusicFor", {"2"}}, {"EnableObject", {"Crate", "0"}}});
     PlacedObjectState state;
     ScriptRunner runner(level, state);
     runner.start("u");
-    require(runner.unhandledFunctions().size() == 1 && runner.unhandledCalls("playsound") == 2, "PlaySound recorded");
+    require(runner.unhandledFunctions().size() == 1 && runner.unhandledCalls("duckmusicfor") == 2, "DuckMusicFor recorded");
     require(state.isDisabled("Crate") && runner.threadCount() == 0, "continues after the unhandled call");
 }
 

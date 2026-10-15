@@ -12,6 +12,12 @@ void EffectVoices::add(int voice, std::uint32_t id, std::uint16_t owner) {
     entries_.push_back({voice, id, owner});
 }
 
+int EffectVoices::find(std::uint32_t id, std::uint16_t owner) {
+    prune();
+    const auto found = std::find_if(entries_.begin(), entries_.end(), [&](const Entry& e) { return e.id == id && e.owner == owner; });
+    return found == entries_.end() ? -1 : found->voice;
+}
+
 bool EffectVoices::stop(std::uint32_t id, std::uint16_t owner, float fadeSeconds) {
     prune();
     const auto found = std::find_if(entries_.begin(), entries_.end(), [&](const Entry& e) { return e.id == id && e.owner == owner; });

@@ -15,6 +15,9 @@ public:
     int play(std::shared_ptr<const assets::Sound> sound, float leftGain, float rightGain);
     // Changes the gains of a running voice; false when the voice has ended.
     bool setGains(int voice, float leftGain, float rightGain);
+    // Script voice controls: the source frames per second of the voice and a volume factor on its gains; false when the voice has ended.
+    bool setRate(int voice, int sourceRate);
+    bool setVolume(int voice, float volume);
     void stop(int voice);
     // Ramps the voice to silence over `seconds` of output and then ends it; a non-positive time stops it at once.
     void fadeOut(int voice, float seconds);
@@ -33,6 +36,7 @@ private:
         float left;
         float right;
         double fade = 1.0;
+        float volume = 1.0f;
         double fadeStep = 0.0;
         bool ended = false;
     };

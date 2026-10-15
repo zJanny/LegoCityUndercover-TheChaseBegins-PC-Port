@@ -38,6 +38,23 @@ int main() {
             require(near(out[0], 0.0f) && near(out[1], 0.25f), "changed gains");
         }
         {
+            audio::Mixer mixer(8);
+            auto sound = std::make_shared<assets::Sound>();
+            sound->rate = 8;
+            sound->frames = 8;
+            sound->channels = {{0, 8192, 16384, 24576, 16384, 8192, 0, 0}};
+            audio::EffectVoices voices(mixer);
+            const int voice = mixer.play(sound, 1.0f);
+            voices.add(voice, 12, 7);
+            require(voices.find(12, 7) == voice && voices.find(12, 8) == -1 && voices.find(13, 7) == -1, "find by sound and owner (0x23fcac)");
+            float out[4];
+            require(mixer.setVolume(voice, 0.5f) && mixer.setRate(voice, 16), "volume factor and rate of a running voice");
+            mixer.mix(out, 2);
+            require(near(out[0], 0.0f) && near(out[2], 0.5f * 16384.0f / 32768.0f) && near(out[3], out[2]), "half volume, double rate skips every other frame");
+            mixer.stop(voice);
+            require(!mixer.setVolume(voice, 1.0f) && !mixer.setRate(voice, 8) && voices.find(12, 7) == -1, "an ended voice takes no change");
+        }
+        {
             // Stop of effect voices by (sound id, owner), 0x23ae50 -> 0x23f75c -> 0x23fcac: the table fade 0 ends the voice at once
             // (door sounds 598..617 all have column 16 = 0), a positive time fades it out linearly (stand-in AUDIO-S7).
             audio::Mixer mixer(8);

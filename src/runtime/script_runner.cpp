@@ -23,7 +23,7 @@ enum class Word {
     Unhandled, If, Else, ElseIf, EndIf, Assign, AssignArithmetic, CallScript, SpawnScript, Wait,
     EnableObject, EnableCollision, TriggerObject, EnableTrigger, EnableBound, GetGameComplete, IsLevelUnlocked, IsRedBrickExtraActive,
     WarningDialogBox, InformationBox, FadeScreen, PositionObject, PositionPlayer, SceneChange,
-    KillScript, ObjectNative, VehicleNative, ProgressNative, MusicNative, TextNative, ObjectiveNative, AiNative, AnimationNative, CutsceneNative,
+    KillScript, ObjectNative, VehicleNative, ProgressNative, MusicNative, SoundNative, TextNative, ObjectiveNative, AiNative, AnimationNative, CutsceneNative,
     StartDCam, StartDCamTrack, DCamActive, WaitForDCam, EndDCam, SnapCamera, ShakeScreen, Set3DFocusObject, SetDCamStartWait, SetDCamEndWait, CameraFollow
 };
 
@@ -79,6 +79,7 @@ Word wordOf(const std::string& function) {
     if (vehicleNativeKind(name)) return Word::VehicleNative;
     if (progressNativeKind(name)) return Word::ProgressNative;
     if (musicNativeKind(name)) return Word::MusicNative;
+    if (soundNativeKind(name)) return Word::SoundNative;
     if (textNativeKind(name)) return Word::TextNative;
     if (objectiveNativeKind(name)) return Word::ObjectiveNative;
     if (aiNativeKind(name)) return Word::AiNative;
@@ -155,6 +156,7 @@ ScriptFunctionSupport scriptFunctionSupport(const std::string& name) {
     if (const auto kind = progressNativeKind(key))
         return progressNativeIsStandIn(*kind) ? ScriptFunctionSupport::StandIn : ScriptFunctionSupport::Implemented;
     if (musicNativeKind(key)) return ScriptFunctionSupport::StandIn;
+    if (soundNativeKind(key)) return ScriptFunctionSupport::StandIn;
     if (textNativeKind(key)) return ScriptFunctionSupport::StandIn;
     if (const auto kind = objectiveNativeKind(key))
         return objectiveNativeIsStandIn(*kind) ? ScriptFunctionSupport::StandIn : ScriptFunctionSupport::Implemented;
@@ -171,6 +173,7 @@ std::vector<std::string> handledScriptFunctions() {
     for (const std::string& name : vehicleNativeNames()) names.push_back(name);
     for (const std::string& name : progressNativeNames()) names.push_back(name);
     for (const std::string& name : musicNativeNames()) names.push_back(name);
+    for (const std::string& name : soundNativeNames()) names.push_back(name);
     for (const std::string& name : textNativeNames()) names.push_back(name);
     for (const std::string& name : objectiveNativeNames()) names.push_back(name);
     for (const std::string& name : aiNativeNames()) names.push_back(name);
@@ -466,6 +469,9 @@ ScriptRunner::Result ScriptRunner::native(ScriptThread& thread, const ScriptCall
     case Word::MusicNative:
         musicNative(call);
         break;
+    case Word::SoundNative:
+        soundNative(call);
+        break;
     case Word::TextNative:
         textNative(call);
         break;
@@ -552,6 +558,20 @@ void ScriptRunner::musicNative(const ScriptCall& call) {
     std::vector<float> values;
     for (unsigned i = 0; i < musicNativeArguments(*kind); ++i) values.push_back(read(call.arguments[i]));
     musicNatives_.run(*kind, values);
+}
+
+void ScriptRunner::soundNative(const ScriptCall& call) {
+    const auto kind = soundNativeKind(lower(call.function));
+    const unsigned count = kind ? soundNativeArguments(*kind) : 0;
+    if (!kind || call.arguments.size() < count) return;
+    const int objectArgument = soundNativeObjectArgument(*kind);
+    std::vector<float> values(count, 0.0f);
+    std::vector<std::string> objects(count);
+    for (unsigned i = 0; i < count; ++i) {
+        if (int(i) == objectArgument) objects[i] = lower(call.arguments[i]);
+        else values[i] = read(call.arguments[i]);
+    }
+    soundNatives_.run(*kind, values, objects, [this](const std::string& name, float out[3]) { return objectPosition_ && objectPosition_(name, out); });
 }
 
 std::uint32_t ScriptRunner::textKeyOf(const std::string& token) {

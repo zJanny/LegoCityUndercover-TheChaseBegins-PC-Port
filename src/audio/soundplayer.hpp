@@ -35,7 +35,14 @@ public:
 
     // 0x23ae50(id, object, -1.0): the voice that `id` started for `owner` ends, with the fade time of the sound's table row
     // (column 16; 0 stops it at once). False when none runs.
-    bool stop(std::uint32_t id, std::uint16_t owner);
+    // A fade time of 0 or more replaces the column 16 time (0x23f75c: only a negative argument takes the table's).
+    bool stop(std::uint32_t id, std::uint16_t owner, float fadeSeconds = -1.0f);
+
+    // SetSoundVolume 0x219178 and ScaleSoundFrequency 0x22f770 on the voice that `id` started for `owner`.
+    // AUDIO-S31: the volume is a factor on the gains and the rate is (int)(scale * source rate); the original's
+    // consumers of the voice fields +0x50 and +0x58 are only partly read.
+    bool setVolume(std::uint32_t id, std::uint16_t owner, float volume);
+    bool scaleFrequency(std::uint32_t id, std::uint16_t owner, float scale);
 
     // Recomputes the gains of the running positional voices from the current listener (0x107fa0 runs every frame).
     void update();
