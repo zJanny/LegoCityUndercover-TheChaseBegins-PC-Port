@@ -88,7 +88,7 @@ What is not like the original yet:
 - The program plays the sounds of the character and the studs through your normal audio output. If no audio device can be opened, it prints a note and runs without sound.
 - A sound is louder when it is close and silent when it is far away. It is panned left or right depending on where it is as seen from the camera.
 - The volume options are `--sound-volume 0-10` (default 10) and `--music-volume 0-10` (default 8). They are the game's option values, which the game divides by 10.
-- There is no music at the start of the police station or the street. The original starts none there either. Music that the original starts later (during missions, fights or in vehicles) is not played, because those parts are not worked out yet.
+- There is no music at the start of the police station or the street. The original starts none there either. Music that mission scripts start (the story script commands that choose a music track, or stop it) is played, but it switches at once without the original's fade between tracks and does not loop. Music that the original starts in fights or in vehicles is not played, because those parts are not worked out yet.
 - Not played yet: the sounds of other people, animals, vehicles and objects of the level, the idle sounds of the character, and water or sand landing sounds.
 
 ## What does not work yet

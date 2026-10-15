@@ -23,12 +23,16 @@ IN_PROGRESS, updated 2026-10-13T21:51:17+02:00. `chase_audio` plays the player's
 - AUDIO-S4 Distance volume is linear only as read from code (not measured end to end); Doppler assumed 1.0.
 - AUDIO-S5 Music fade/ramp is not replicated; the 24-voice limit is not enforced.
 - AUDIO-S6 Mix matrix channel order: left first assumed.
+- AUDIO-S10 The music natives (`natives_music`) start the track at once at the fade target: the crossfade queue and volume ramp of 0x24039c (per-frame updater unread) are not replicated, StopMusic fades linearly over its argument in seconds (original: step 1 / (30 * seconds) per update), the mixer does not loop the track (loop flag ignored), and the lock hword 0x376b36 is assumed 0. needs: AUDIO-10. blocks: SCRIPT-33.
+- AUDIO-S11 AutomaticMusic clears the override byte 0x376b31 and runs the evaluation 0x204fe0 only as far as the mood-0 exit (the port has no combat, so the mood never changes). needs: AUDIO-11.
 - AUDIO-S7 A stop of a sound with a fade time (column 16 above 0, 136 rows, none of them a door sound) fades the voice out linearly over that many seconds; the original's ramp is not read.
 
 ## 5. Open items
 
 - [ ] AUDIO-1 — Sprint footstep phase: how the original maps the run phase to the sprint animation; run-to-sprint phase transfer. evidence: [audio.md §2026-10-13T17:54](../../re/audio.md#ts-20261013-175424).
-- [ ] AUDIO-2 — Nothing starts level music because no scripts run (OverrideMusic / StopMusic / PauseMusic handlers recovered); music fades. needs: SCRIPT-1. blocks: SCRIPT-33. evidence: [audio.md §2026-10-13T09:42](../../re/audio.md#ts-20261013-094203), [audio.md §2026-10-13T17:54](../../re/audio.md#ts-20261013-175424).
+- [ ] AUDIO-10 — The per-frame ramp and queue updater of the music block 0x376b30, the writers of its lock hword +6 and the music loop are not read. blocks: AUDIO-S10. evidence: [script-natives-audio.md §2026-10-15T15:10](../../re/script-natives-audio.md#ts-20261015-151038)
+- [ ] AUDIO-11 — Action music: the combat scan of 0x204fe0 (table 0x58deb0), OverrideMusicMood, PauseMusic, DuckMusicFor, VehicleEnableDrivingMusic and the level-start mood route are not wired. needs: SCRIPT-42. blocks: AUDIO-S11. evidence: [script-natives-audio.md §2026-10-15T15:10](../../re/script-natives-audio.md#ts-20261015-151038)
+- [ ] AUDIO-2 — Level music at level start is not wired (the mood route 0x206c40 exists as `chooseMoodTrack`); OverrideMusic / AutomaticMusic / StopMusic run from scripts (stand-ins AUDIO-S10, AUDIO-S11). needs: SCRIPT-1. blocks: SCRIPT-33. evidence: [audio.md §2026-10-13T09:42](../../re/audio.md#ts-20261013-094203), [audio.md §2026-10-13T17:54](../../re/audio.md#ts-20261013-175424).
 - [ ] AUDIO-3 — Idle and jump animation sound tracks; world sounds of NPCs, vehicles and objects (ambient emitter 0x2c05dc plays ids like 210/296 from level objects). evidence: [audio.md §2026-10-13T17:54](../../re/audio.md#ts-20261013-175424).
 - [ ] AUDIO-5 — Stud collect sound: silver (id 64) is replayed from a recorded pickup (`audio-real-data`); blue and purple (id 63) have no recorded pickup, and gold (id 64) none either. see STUD-3. evidence: [audio.md §2026-10-13T17:54](../../re/audio.md#ts-20261013-175424).
 - [ ] AUDIO-6 — Which condition sets ctrl+0x317 bit 3 and ground type 11; the options volume source in a loaded save (0x2c19a4 sets defaults 8 and 10); mode 3 id remap of 0x23fa54; ducking (record flag bit 3). evidence: [audio.md §2026-10-13T17:54](../../re/audio.md#ts-20261013-175424).

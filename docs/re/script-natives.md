@@ -62,7 +62,7 @@ Sum (at the census): 224 unhandled natives in batches, 20 implemented, 1 stand-i
 | WaitForDCam | 0x1883ec | 0 | 429 / 120 / 4 / 0 | 10 | done | 28 | handled, busy test without the cutscene part (SCRIPT-29): [dcam.md §2026-10-14T14:36](dcam.md#ts-20261014-143600) |
 | SpawnScript | 0x1c3730 | 1 | 424 / 43 / 6 / 0 | 9 | done |  |  |
 | ShowDialogueText | 0x26ff84 | 3 | 409 / 25 / 0 / 0 | 6 | stand-in | 30 | handled as a stand-in, drawn with fitted layout: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
-| AIEnable | 0x1881d4 | 2 | 404 / 74 / 2 / 0 | 10 | stand-in | 34 | handled: flag or requested state recorded; returns 1: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
+| AIEnable | 0x1881d4 | 2 | 404 / 74 / 2 / 0 | 10 | stand-in | 34 | flag or requested state recorded; returns 1: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
 | ShowDialogueTextTimed | 0x2a6d90 | 4 | 400 / 106 / 8 / 0 | 6 | stand-in | 30 | handled as a stand-in, drawn with fitted layout: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
 | ToggleUseable | 0x1cdcf8 | 2 | 347 / 26 / 7 / 4 | 8 | A | 26 | handled, flag recorded (stand-in SCRIPT-S17) |
 | PlaySound | 0x1b4394 | 2 | 277 / 25 / 0 / 0 | 8 | C | 33 |  |
@@ -87,7 +87,7 @@ Sum (at the census): 224 unhandled natives in batches, 20 implemented, 1 stand-i
 | PlaySoundGO | 0x295244 | 3 | 114 / 1 / 0 / 0 | 7 | C | 33 |  |
 | ResetObject | 0x1b25f8 | 1 | 107 / 5 / 0 / 0 | 11 | A | 26 | handled: class message 8 queued |
 | VehicleSetLocked | 0x26fe78 | 2 | 102 / 13 / 3 / 0 | 8 | done | 36 | record +0x311 bit 1; src/runtime/vehicle.cpp: [vehicles-system.md §2026-10-14T23:59:31](vehicles-system.md#ts-20261014-235931) |
-| AIActive | 0x1881a4 | 1 | 101 / 16 / 0 / 0 | 6 | stand-in | 34 | handled: flag or requested state recorded; returns 1: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
+| AIActive | 0x1881a4 | 1 | 101 / 16 / 0 / 0 | 6 | stand-in | 34 | flag or requested state recorded; returns 1: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
 | AttachObject | 0x1bf68c | 2 | 100 / 15 / 13 / 0 | 8 | stand-in | 32 | stand-in: parent recorded (0x245008, message 43, flag 0x40): [script-natives-animation.md §2026-10-14T21:36](script-natives-animation.md#ts-20261014-213649) |
 | VehicleSetForcedStop | 0x29ea7c | 2 | 99 / 13 / 1 / 0 | 6 | done | 36 | record +0x310: [vehicles-system.md §2026-10-14T23:59:31](vehicles-system.md#ts-20261014-235931) |
 | AIMove | 0x171f7c | 3 | 98 / 19 / 0 / 0 | 8 | stand-in | 34 | handled: starts a straight walk to the target object (path finder not ported) and ends with the AIMove trigger event; returns 1: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
@@ -97,20 +97,20 @@ Sum (at the census): 224 unhandled natives in batches, 20 implemented, 1 stand-i
 | SkipToFinalState | 0x270078 | 1 | 88 / 0 / 0 / 0 | 7 | A | 26 | handled: class message 54 queued |
 | revealcollectable | 0x27bdb0 | 1 | 84 / 13 / 13 / 0 | 8 | A | 26 | handled: 0x27bdb0 is `mov r0,#1; bx lr` |
 | =+ | 0x17ef30 | 4 | 77 / 7 / 1 / 0 | 9 | done |  |  |
-| SubObjectiveArrowGoToEnable | 0x2c57b0 | 2 | 77 / 15 / 4 / 0 | 5 | stand-in | 31 | handled as a stand-in that records its call (SCRIPT-S26): [objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919) |
-| OverrideScannable | 0x27bce4 | 2 | 76 / 17 / 11 / 0 | 6 | stand-in | 31 | handled as a stand-in that records its call (SCRIPT-S26): [objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919) |
+| SubObjectiveArrowGoToEnable | 0x2c57b0 | 2 | 77 / 15 / 4 / 0 | 5 | stand-in | 31 | records its call (SCRIPT-S26): [objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919) |
+| OverrideScannable | 0x27bce4 | 2 | 76 / 17 / 11 / 0 | 6 | stand-in | 31 | records its call (SCRIPT-S26): [objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919) |
 | enablestudsbygroup | 0x285ed4 | 2 | 74 / 13 / 0 / 0 | 8 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
 | GiveReward | 0x1a2f18 | 1 | 74 / 9 / 1 / 4 | 14 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
 | VehicleJumpOut | 0x1da8d8 | 1 | 70 / 5 / 0 / 0 | 8 | done | 36 | player: [vehicles-waypoints.md §2026-10-15T11:35](vehicles-waypoints.md#ts-20261015-113500) |
-| StopMusic | 0x195054 | 1 | 68 / 15 / 0 / 0 | 7 | C | 33 |  |
-| AutomaticMusic | 0x1d9c70 | 0 | 67 / 15 / 1 / 0 | 7 | C | 33 |  |
+| StopMusic | 0x195054 | 1 | 68 / 15 / 0 / 0 | 7 | stand-in | 33 | linear fade stand-in [§2026-10-15T15:10](script-natives-audio.md#ts-20261015-151038) |
+| AutomaticMusic | 0x1d9c70 | 0 | 67 / 15 / 1 / 0 | 7 | stand-in | 33 | clears 0x376b31; mood step needs combat [§2026-10-15T15:10](script-natives-audio.md#ts-20261015-151038) |
 | DestroyProp | 0x1a2fe4 | 1 | 66 / 7 / 0 / 0 | 8 | A | 26 | open: entity destruction 0x23cd80, needs SCRIPT-58 |
 | SwapAllegiance | 0x1da88c | 1 | 66 / 2 / 0 / 0 | 8 | C | 35 |  |
-| OverrideMusic | 0x1cdb28 | 1 | 65 / 19 / 0 / 0 | 7 | C | 33 |  |
-| PanMapToObject | 0x1d9e04 | 4 | 65 / 2 / 0 / 0 | 6 | stand-in | 31 | handled as a stand-in that records its call (SCRIPT-S26): [objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919) |
+| OverrideMusic | 0x1cdb28 | 1 | 65 / 19 / 0 / 0 | 7 | stand-in | 33 | stream start without ramp/queue [§2026-10-15T15:10](script-natives-audio.md#ts-20261015-151038) |
+| PanMapToObject | 0x1d9e04 | 4 | 65 / 2 / 0 / 0 | 6 | stand-in | 31 | records its call (SCRIPT-S26): [objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919) |
 | SpawnStuds | 0x1a3130 | 2 | 65 / 0 / 0 / 1 | 7 | C | 38 |  |
 | UnlockAbility | 0x1cde84 | 1 | 63 / 12 / 7 / 0 | 10 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
-| AIIgnorePlayer | 0x1d9c38 | 2 | 62 / 0 / 0 / 0 | 4 | stand-in | 34 | handled: flag or requested state recorded; returns 1: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
+| AIIgnorePlayer | 0x1d9c38 | 2 | 62 / 0 / 0 / 0 | 4 | stand-in | 34 | flag or requested state recorded; returns 1: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
 | ShowIntroText | 0x1cdc2c | 1 | 58 / 6 / 0 / 0 | 8 | stand-in | 30 | heading object with a hint text key: [script-text.md §2026-10-14T18:57](script-text.md#ts-20261014-185739) |
 | DCamCutSceneLoad | 0x2889a4 | 1 | 57 / 13 / 2 / 0 | 7 | stand-in | 29 | slot table, loader 0x196390; the retry condition of the native is open: [cutscenes.md §2026-10-14T22:49](cutscenes.md#ts-20261014-224929) |
 | DCamCutSceneWait | 0x288a40 | 1 | 57 / 13 / 2 / 0 | 7 | stand-in | 29 | returns !0x2297b0(name): [cutscenes.md §2026-10-14T22:49](cutscenes.md#ts-20261014-224929) |
@@ -118,16 +118,16 @@ Sum (at the census): 224 unhandled natives in batches, 20 implemented, 1 stand-i
 | DCamCutSceneFree | 0x28898c | 1 | 56 / 13 / 2 / 0 | 7 | stand-in | 29 | 0x196144: [cutscenes.md §2026-10-14T22:49](cutscenes.md#ts-20261014-224929) |
 | DCamCutScenePlay | 0x2889e4 | 5 | 56 / 13 / 2 / 0 | 7 | stand-in | 29 | 0x1964dc, flags a b c d: [cutscenes.md §2026-10-14T22:49](cutscenes.md#ts-20261014-224929) |
 | WaitForCurrentAnim | 0x2a06a8 | 1 | 53 / 8 / 0 / 1 | 7 | stand-in | 32 | stand-in: completes at once (the original blocks until the frame is within 1 of the length): [script-natives-animation.md §2026-10-14T21:36](script-natives-animation.md#ts-20261014-213649) |
-| ainostate | 0x194e0c | 1 | 50 / 6 / 0 / 0 | 6 | stand-in | 34 | handled: flag or requested state recorded; returns 1: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
+| ainostate | 0x194e0c | 1 | 50 / 6 / 0 / 0 | 6 | stand-in | 34 | flag or requested state recorded; returns 1: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
 | StopAnim | 0x1883d0 | 1 | 49 / 10 / 0 / 0 | 5 | stand-in | 32 | stand-in: current request cleared: [script-natives-animation.md §2026-10-14T21:36](script-natives-animation.md#ts-20261014-213649) |
 | StopSound | 0x1b43ec | 3 | 48 / 5 / 0 / 0 | 7 | C | 33 |  |
 | vehiclestopsounds | 0x27c148 | 1 | 47 / 6 / 0 / 0 | 7 | C | 33 |  |
 | WaitForCurrentCharAnim | 0x263ae4 | 1 | 46 / 3 / 0 / 0 | 8 | stand-in | 32 | stand-in: completes at once (same shape as WaitForCurrentAnim): [script-natives-animation.md §2026-10-14T21:36](script-natives-animation.md#ts-20261014-213649) |
-| CharacterInvulnerable | 0x2a6cfc | 2 | 45 / 6 / 0 / 0 | 7 | stand-in | 34 | handled: flag or requested state recorded; returns 1: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
+| CharacterInvulnerable | 0x2a6cfc | 2 | 45 / 6 / 0 / 0 | 7 | stand-in | 34 | flag or requested state recorded; returns 1: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
 | IsRedBrickExtraActive | 0x2a6d34 | 2 | 44 / 12 / 4 / 0 | 6 | done |  |  |
 | VehicleStop | 0x1b27e8 | 1 | 43 / 6 / 0 / 0 | 6 | C | 36 |  |
 | enableobjectfade | 0x26fac4 | 2 | 42 / 1 / 0 / 0 | 7 | A | 26 | open: message 24 first, then the EnableObject node calls; needs SCRIPT-57 |
-| EnableTrafficAndPedestrians | 0x2c5780 | 1 | 42 / 12 / 0 / 0 | 6 | C | 36 |  |
+| EnableTrafficAndPedestrians | 0x2c5780 | 1 | 42 / 12 / 0 / 0 | 6 | stand-in | 36 | flag only, no traffic [§2026-10-15T15:10](script-natives-audio.md#ts-20261015-151038) |
 | PositionPlayer | 0x1da0dc | 2 | 42 / 11 / 0 / 0 | 7 | stand-in | 26 | handled like PositionObject for the player (fall reset); ground probe, vehicle branch, message 8: [script-natives-flags.md §2026-10-14T19:19](script-natives-flags.md#ts-20261014-191915) |
 | AddToSemiTransNearCameraList | 0x2cb734 | 2 | 41 / 5 / 5 / 0 | 7 | C | 38 |  |
 | enabletrafficpath | 0x27bc30 | 2 | 40 / 0 / 0 / 0 | 2 | C | 36 |  |
@@ -140,14 +140,14 @@ Sum (at the census): 224 unhandled natives in batches, 20 implemented, 1 stand-i
 | BulletTime | 0x1a2df0 | 3 | 28 / 6 / 0 / 0 | 9 | C | 29 |  |
 | SetPartyCharacter | 0x27beb4 | 3 | 28 / 10 / 3 / 0 | 8 | C | 35 |  |
 | SetRaceInProgress | 0x27bff4 | 1 | 28 / 4 / 0 / 0 | 6 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
-| ShowBossHearts | 0x1da788 | 2 | 27 / 0 / 0 / 0 | 7 | stand-in | 30 | handled as a stand-in, call recorded only: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
+| ShowBossHearts | 0x1da788 | 2 | 27 / 0 / 0 / 0 | 7 | stand-in | 30 | call recorded only: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
 | SceneChange | 0x1b262c | 1 | 25 / 8 / 0 / 0 | 7 | done |  |  |
-| AIResetState | 0x1bf650 | 1 | 24 / 11 / 0 / 0 | 6 | stand-in | 34 | handled: flag or requested state recorded; returns 1: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
+| AIResetState | 0x1bf650 | 1 | 24 / 11 / 0 / 0 | 6 | stand-in | 34 | flag or requested state recorded; returns 1: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
 | EffectFadeAlpha | 0x27e7d0 | 4 | 24 / 13 / 0 / 5 | 4 | C | 38 |  |
 | AIFollowSimplePath | 0x285d18 | 5 | 23 / 2 / 0 / 0 | 4 | stand-in | 34 | handled: walks the path points from the start node, forward or reverse: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
 | ScaleSoundFrequency | 0x2a8afc | 3 | 23 / 0 / 0 / 0 | 6 | C | 33 |  |
 | AddStuds | 0x18838c | 1 | 22 / 3 / 0 / 0 | 7 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
-| SubObjectiveArrowEnemyEnable | 0x2c87f0 | 2 | 22 / 8 / 0 / 0 | 6 | stand-in | 31 | handled as a stand-in that records its call (SCRIPT-S26): [objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919) |
+| SubObjectiveArrowEnemyEnable | 0x2c87f0 | 2 | 22 / 8 / 0 / 0 | 6 | stand-in | 31 | records its call (SCRIPT-S26): [objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919) |
 | VehicleJumpIn | 0x1cdec0 | 2 | 22 / 4 / 0 / 0 | 6 | done | 36 | player: [vehicles-waypoints.md §2026-10-15T11:35](vehicles-waypoints.md#ts-20261015-113500) |
 | RideableIdle | 0x1bfb14 | 1 | 21 / 0 / 0 / 0 | 1 | C | 37 |  |
 | StopRiding | 0x1a3180 | 2 | 21 / 0 / 0 / 0 | 1 | C | 37 |  |
@@ -166,7 +166,7 @@ Sum (at the census): 224 unhandled natives in batches, 20 implemented, 1 stand-i
 | SetDCamEndWait | 0x1da690 | 1 | 13 / 0 / 0 / 0 | 3 | done | 28 | handled |
 | WaitForPlatform | 0x263b84 | 1 | 13 / 3 / 0 / 0 | 5 | B | 37 | returns 1 when the platform value is 1.0 or its state is 5 |
 | AttachToBone | 0x1ddb90 | 4 | 12 / 1 / 1 / 1 | 6 | stand-in | 32 | stand-in: parent and both bone names recorded: [script-natives-animation.md §2026-10-14T21:36](script-natives-animation.md#ts-20261014-213649) |
-| EnableScanner | 0x1cd9dc | 1 | 12 / 1 / 0 / 0 | 7 | stand-in | 31 | handled as a stand-in that records its call (SCRIPT-S26): [objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919) |
+| EnableScanner | 0x1cd9dc | 1 | 12 / 1 / 0 / 0 | 7 | stand-in | 31 | records its call (SCRIPT-S26): [objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919) |
 | setplatformorigin | 0x27bfbc | 2 | 12 / 2 / 0 / 0 | 3 | C | 37 |  |
 | SetPlatformTarget | 0x27bfd8 | 2 | 12 / 2 / 0 / 0 | 3 | C | 37 |  |
 | AddToSemiTransListBound | 0x2c08e8 | 3 | 11 / 0 / 0 / 0 | 2 | C | 38 |  |
@@ -179,16 +179,16 @@ Sum (at the census): 224 unhandled natives in batches, 20 implemented, 1 stand-i
 | PlayCutsceneNoFadeBackIn | 0x2b9dac | 1 | 9 / 0 / 0 / 0 | 6 | stand-in | 29 | sets byte 0x5163e8+0x184, then PlayCutscene with fade-back-in 0: [cutscenes.md §2026-10-14T22:49](cutscenes.md#ts-20261014-224929) |
 | QuickSave | 0x194f64 | 0 | 9 / 3 / 1 / 0 | 4 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
 | RoomStreamingWait | 0x27bde0 | 1 | 9 / 0 / 0 / 0 | 3 | B? | 38 |  |
-| SetMapDummyLocObj | 0x27be84 | 1 | 9 / 0 / 0 / 0 | 4 | stand-in | 31 | handled as a stand-in that records its call (SCRIPT-S26): [objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919) |
+| SetMapDummyLocObj | 0x27be84 | 1 | 9 / 0 / 0 / 0 | 4 | stand-in | 31 | records its call (SCRIPT-S26): [objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919) |
 | ShowCharacterIntro | 0x2c2af8 | 1 | 9 / 2 / 0 / 0 | 8 | stand-in | 30 | dialogue box with the character name; HUD portrait swap missing (HUD-25): [script-text.md §2026-10-14T18:57](script-text.md#ts-20261014-185739) |
-| clearmapdummylocobj | 0x26f9f4 | 0 | 8 / 0 / 0 / 0 | 4 | stand-in | 31 | handled as a stand-in that records its call (SCRIPT-S26): [objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919) |
+| clearmapdummylocobj | 0x26f9f4 | 0 | 8 / 0 / 0 / 0 | 4 | stand-in | 31 | records its call (SCRIPT-S26): [objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919) |
 | EnableShadow | 0x1bf84c | 2 | 8 / 8 / 0 / 0 | 1 | A | 26 | open: written only when 0x21aae0 (object kind) allows, needs SCRIPT-57 |
 | GetGameComplete | 0x2635d0 | 1 | 8 / 1 / 1 / 0 | 8 | done |  |  |
 | LockCharacter | 0x1cda60 | 1 | 8 / 0 / 0 / 0 | 6 | stand-in | 34 | handled: clears the group bit like UnlockCharacter sets it (party removal not modelled): [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
 | MovePlatform | 0x1bf958 | 3 | 8 / 0 / 0 / 0 | 2 | C | 37 |  |
 | SetDCamStartWait | 0x26fdf0 | 1 | 8 / 1 / 0 / 0 | 3 | done | 28 | handled |
 | SetIndestructible | 0x27be40 | 2 | 8 / 0 / 0 / 0 | 2 | A | 26 | handled, flag recorded (SCRIPT-S18) |
-| ShowRaceStart | 0x1cdc9c | 0 | 8 / 1 / 0 / 0 | 7 | stand-in | 30 | handled as a stand-in, call recorded only: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
+| ShowRaceStart | 0x1cdc9c | 0 | 8 / 1 / 0 / 0 | 7 | stand-in | 30 | call recorded only: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
 | AIPursuit | 0x17cbf0 | 3 | 7 / 2 / 0 / 0 | 5 | stand-in | 34 | state numbers 35/36 recorded; update 0x2ab6cc not ported (SCRIPT-104); returns 1 ([ai-states.md §2026-10-14T21:21](ai-states.md#ts-20261014-212158)): [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
 | AttachToWorldRoot | 0x2951ec | 1 | 7 / 4 / 0 / 0 | 4 | stand-in | 32 | stand-in: recorded: [script-natives-animation.md §2026-10-14T21:36](script-natives-animation.md#ts-20261014-213649) |
 | AwardRacingCar | 0x1d9c84 | 0 | 7 / 1 / 0 / 0 | 6 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
@@ -199,7 +199,7 @@ Sum (at the census): 224 unhandled natives in batches, 20 implemented, 1 stand-i
 | SetRaceWon | 0x1a30a8 | 1 | 7 / 1 / 0 / 0 | 6 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
 | SpawnDebris2Colour | 0x2860f0 | 7 | 7 / 4 / 0 / 0 | 3 | C | 38 |  |
 | VehicleSetRaceTrim | 0x286080 | 2 | 7 / 1 / 0 / 0 | 6 | C | 36 |  |
-| AICantAttack | 0x1bf528 | 2 | 6 / 0 / 0 / 0 | 1 | stand-in | 34 | handled: flag or requested state recorded; returns 1: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
+| AICantAttack | 0x1bf528 | 2 | 6 / 0 / 0 / 0 | 1 | stand-in | 34 | flag or requested state recorded; returns 1: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
 | OverrideFog | 0x1b24f8 | 2 | 6 / 0 / 0 / 0 | 2 | C | 29 |  |
 | Set3DFocusObject | 0x288aa8 | 2 | 6 / 0 / 0 / 0 | 1 | stand-in | 28 | stereoscopic focus only, no effect on the mono picture |
 | UnlockLevel | 0x1b276c | 1 | 6 / 1 / 0 / 0 | 6 | A | 27 | handled, exact (batch 27 entry) |
@@ -209,7 +209,7 @@ Sum (at the census): 224 unhandled natives in batches, 20 implemented, 1 stand-i
 | SetBackgroundColour | 0x291624 | 3 | 5 / 0 / 0 / 0 | 1 | C | 29 |  |
 | SetForcedStopOnMyVehicle | 0x2b9df0 | 2 | 5 / 4 / 2 / 0 | 2 | done | 36 | first argument is a character; no effect while it is on foot (always, until VEH-4): [vehicles-system.md §2026-10-14T23:59:31](vehicles-system.md#ts-20261014-235931) |
 | ShowLevelText | 0x1cdc54 | 0 | 5 / 1 / 1 / 0 | 5 | stand-in | 30 | heading box drawn, start time a stand-in: [script-text.md §2026-10-14T16:51](script-text.md#ts-20261014-165143) |
-| ShowTally | 0x194f78 | 5 | 5 / 0 / 0 / 0 | 1 | stand-in | 30 | handled as a stand-in, call recorded only: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
+| ShowTally | 0x194f78 | 5 | 5 / 0 / 0 / 0 | 1 | stand-in | 30 | call recorded only: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
 | VehicleSetAI | 0x1bfb50 | 1 | 5 / 1 / 0 / 0 | 5 | C | 36 |  |
 | VehicleSetDCamPathFollow | 0x27be1c | 3 | 5 / 0 / 0 / 0 | 3 | C | 28 | not read |
 | activeduringdcam | 0x26f978 | 2 | 4 / 0 / 0 / 0 | 3 | A | 26 | handled, flag recorded (SCRIPT-S18) |
@@ -217,7 +217,7 @@ Sum (at the census): 224 unhandled natives in batches, 20 implemented, 1 stand-i
 | CharSetAllowVehicleEntry | 0x29ea3c | 2 | 4 / 4 / 0 / 0 | 1 | C | 35 |  |
 | DCamCutsceneFadeDisable | 0x2c09ec | 0 | 4 / 2 / 0 / 0 | 2 | stand-in | 29 | sets byte 0x529e30+0x39d, nothing reads it yet: [cutscenes.md §2026-10-14T22:49](cutscenes.md#ts-20261014-224929) |
 | DisableSuperBuiltItSave | 0x2b4b78 | 2 | 4 / 2 / 1 / 0 | 2 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
-| enablescannerbutton | 0x2915ac | 1 | 4 / 2 / 0 / 0 | 2 | stand-in | 31 | handled as a stand-in that records its call (SCRIPT-S26): [objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919) |
+| enablescannerbutton | 0x2915ac | 1 | 4 / 2 / 0 / 0 | 2 | stand-in | 31 | records its call (SCRIPT-S26): [objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919) |
 | EndDCam | 0x17cbd4 | 0 | 4 / 0 / 0 / 0 | 2 | done | 28 | handled |
 | OverrideZClip | 0x1cdb54 | 2 | 4 / 0 / 0 / 0 | 2 | C | 29 |  |
 | RideableJump | 0x1bfb28 | 1 | 4 / 0 / 0 / 0 | 1 | C | 37 |  |
@@ -227,9 +227,9 @@ Sum (at the census): 224 unhandled natives in batches, 20 implemented, 1 stand-i
 | SmokeyElectrifyTile | 0x2916b8 | 2 | 4 / 0 / 0 / 0 | 1 | C | 38 |  |
 | StartMiniGame | 0x1cdcac | 1 | 4 / 0 / 0 / 0 | 2 | C | 39 |  |
 | SuperFreeplaySwap | 0x27c0ac | 2 | 4 / 1 / 0 / 0 | 3 | C | 35 |  |
-| AIMillAbout | 0x1b22e4 | 2 | 3 / 0 / 0 / 0 | 1 | stand-in | 34 | handled: flag or requested state recorded; returns 1: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
+| AIMillAbout | 0x1b22e4 | 2 | 3 / 0 / 0 / 0 | 1 | stand-in | 34 | flag or requested state recorded; returns 1: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
 | AttachToRoom | 0x1ddc88 | 1 | 3 / 1 / 0 / 0 | 2 | stand-in | 32 | stand-in: recorded: [script-natives-animation.md §2026-10-14T21:36](script-natives-animation.md#ts-20261014-213649) |
-| CameraFollow | 0x1bf7c8 | 0 | 3 / 1 / 0 / 0 | 3 | stand-in | 28 | stores `*0x3770d8` into camera manager +0x28; port has no state for it, no-op: [script-natives-flags.md §2026-10-15T13:42](script-natives-flags.md#ts-20261015-134200) |
+| CameraFollow | 0x1bf7c8 | 0 | 3 / 1 / 0 / 0 | 3 | stand-in | 28 | camera switch request (manager +0x28), no-op stand-in: [script-natives-audio.md §2026-10-15T15:10](script-natives-audio.md#ts-20261015-151038) |
 | DistanceFadeMid | 0x27e798 | 1 | 3 / 0 / 0 / 0 | 1 | A | 26 | open: node kind test, needs SCRIPT-57 |
 | PlatformSwapPath | 0x26fdc4 | 2 | 3 / 0 / 0 / 0 | 1 | C | 37 |  |
 | RelockChasePlainClothes | 0x2b4bac | 0 | 3 / 3 / 1 / 0 | 1 | C | 35 |  |
@@ -241,24 +241,24 @@ Sum (at the census): 224 unhandled natives in batches, 20 implemented, 1 stand-i
 | 1-8_RejoinFight | 0x26353c | 1 | 2 / 2 / 0 / 0 | 1 | C | 35 |  |
 | AddToSemiTransList | 0x2a059c | 2 | 2 / 0 / 0 / 0 | 1 | C | 38 |  |
 | AIMoveNoAvoid | 0x1cd798 | 3 | 2 / 2 / 0 / 0 | 1 | stand-in | 34 | handled: as AIMove, records the no-avoid flag: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
-| BlackoutMap | 0x1b23f4 | 1 | 2 / 0 / 0 / 0 | 1 | stand-in | 31 | handled as a stand-in that records its call (SCRIPT-S26): [objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919) |
-| EnableMinimapWipe | 0x27bbe8 | 1 | 2 / 2 / 2 / 0 | 1 | stand-in | 31 | handled as a stand-in that records its call (SCRIPT-S26): [objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919) |
+| BlackoutMap | 0x1b23f4 | 1 | 2 / 0 / 0 / 0 | 1 | stand-in | 31 | records its call (SCRIPT-S26): [objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919) |
+| EnableMinimapWipe | 0x27bbe8 | 1 | 2 / 2 / 2 / 0 | 1 | stand-in | 31 | records its call (SCRIPT-S26): [objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919) |
 | getinmech | 0x194e7c | 2 | 2 / 0 / 0 / 0 | 1 | C | 35 |  |
 | ifplayercharacter | 0x27bc58 | 2 | 2 / 0 / 0 / 0 | 1 | C | 39 |  |
 | LockAbility | 0x1b24ac | 1 | 2 / 0 / 0 / 0 | 2 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
 | PlayCredits | 0x1b25c0 | 0 | 2 / 0 / 0 / 0 | 2 | B | 29 | first call starts 0x213184; returns 1 when byte +0x25 of a global is 3 |
 | PositionLastPlayerVehicleIfNearby | 0x2cd564 | 1 | 2 / 0 / 0 / 0 | 1 | C | 36 |  |
-| removescannermapmarker | 0x2ad8f0 | 0 | 2 / 1 / 0 / 0 | 2 | stand-in | 31 | handled as a stand-in that records its call (SCRIPT-S26): [objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919) |
+| removescannermapmarker | 0x2ad8f0 | 0 | 2 / 1 / 0 / 0 | 2 | stand-in | 31 | records its call (SCRIPT-S26): [objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919) |
 | RideableGetOn | 0x1cdc10 | 2 | 2 / 0 / 0 / 0 | 1 | C | 37 |  |
 | settrafficmaxvehicles | 0x2a6d70 | 1 | 2 / 2 / 0 / 0 | 1 | C | 36 |  |
-| ShowPortraitOverVehicle | 0x2b4c1c | 2 | 2 / 0 / 0 / 0 | 1 | stand-in | 30 | handled as a stand-in, call recorded only: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
+| ShowPortraitOverVehicle | 0x2b4c1c | 2 | 2 / 0 / 0 / 0 | 1 | stand-in | 30 | call recorded only: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
 | 1-8_runfromarrest | 0x27bb4c | 1 | 1 / 1 / 0 / 0 | 1 | C | 35 |  |
 | AIRunAway | 0x17cc30 | 1 | 1 / 0 / 0 / 0 | 1 | stand-in | 34 | state 25 recorded; update 0x28b7a0 not ported (SCRIPT-104); returns 1 ([ai-states.md §2026-10-14T21:21](ai-states.md#ts-20261014-212158)): [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
 | AwardViewer | 0x1b23e4 | 0 | 1 / 0 / 0 / 0 | 1 | C | 39 |  |
 | CameraRotFixedSet | 0x27bb9c | 4 | 1 / 0 / 0 / 0 | 1 | B? | 28 | read, not handled: [dcam.md §2026-10-14T14:36](dcam.md#ts-20261014-143600) |
 | CharacterShop | 0x1cd8e4 | 1 | 1 / 0 / 0 / 0 | 1 | C | 39 |  |
 | CharSetSkydiveMode | 0x1da6e4 | 2 | 1 / 0 / 0 / 0 | 1 | C | 35 |  |
-| DisableIcon | 0x1b2414 | 2 | 1 / 1 / 0 / 0 | 1 | stand-in | 31 | handled as a stand-in that records its call (SCRIPT-S26): [objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919) |
+| DisableIcon | 0x1b2414 | 2 | 1 / 1 / 0 / 0 | 1 | stand-in | 31 | records its call (SCRIPT-S26): [objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919) |
 | EnableSuperBricks | 0x27bc08 | 1 | 1 / 1 / 0 / 0 | 1 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
 | FireBeamWeapon | 0x1d9cb4 | 4 | 1 / 0 / 0 / 0 | 1 | C | 35 |  |
 | GetCharacterUnlocked | 0x29e2c0 | 2 | 1 / 1 / 0 / 0 | 1 | A | 27 | handled, exact (batch 27 entry) |
@@ -276,7 +276,7 @@ Sum (at the census): 224 unhandled natives in batches, 20 implemented, 1 stand-i
 | Rex_AxeSmash_Done | 0x27bdb8 | 1 | 1 / 0 / 0 / 0 | 1 | C | 35 |  |
 | Rex_GrapplePull_Done | 0x29ea28 | 1 | 1 / 0 / 0 / 0 | 1 | C | 35 |  |
 | SetPropRocking | 0x1da6a8 | 2 | 1 / 1 / 0 / 0 | 1 | C | 38 |  |
-| showinfopointer | 0x263848 | 2 | 1 / 0 / 0 / 0 | 1 | stand-in | 30 | handled as a stand-in, call recorded only: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
+| showinfopointer | 0x263848 | 2 | 1 / 0 / 0 / 0 | 1 | stand-in | 30 | call recorded only: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
 | StudMagnetScene | 0x2638e8 | 1 | 1 / 0 / 0 / 0 | 1 | C | 39 |  |
 | UnlockScanner | 0x1cdeb0 | 0 | 1 / 1 / 1 / 0 | 1 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
 | UsePet | 0x172184 | 2 | 1 / 0 / 0 / 0 | 1 | C | 35 |  |

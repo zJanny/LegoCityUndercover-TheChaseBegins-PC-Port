@@ -21,6 +21,8 @@ public:
     // "Music/.wav" and plays nothing). `volume` is the fade target `s0` of 0x24039c.
     bool start(unsigned track, float volume = 1.0f);
     void stop();
+    // Ramps the playing stream to silence over `seconds` and ends it (the ramp of 0x22b660 is not read, AUDIO-S10).
+    void fadeOut(float seconds);
     // The track id of the playing stream, 0 when none (0x586220).
     unsigned currentTrack() const { return current_; }
     bool playing() const { return voice_ >= 0 && mixer_.playing(voice_); }

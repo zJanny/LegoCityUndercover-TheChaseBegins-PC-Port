@@ -5,6 +5,7 @@
 #include "audio/mixer.hpp"
 #include "audio/musicplayer.hpp"
 #include "audio/soundplayer.hpp"
+#include "runtime/natives_music.hpp"
 #include "runtime/sound_events.hpp"
 #include <SDL.h>
 #include <iostream>
@@ -73,6 +74,14 @@ public:
         if (!device_) return false;
         std::lock_guard<std::mutex> guard(lock_);
         return music_->start(track);
+    }
+    void applyMusic(const chase::runtime::MusicRequest& request) {
+        if (!device_) return;
+        std::lock_guard<std::mutex> guard(lock_);
+        using Kind = chase::runtime::MusicRequest::Kind;
+        if (request.kind == Kind::Start) music_->start(request.track);
+        else if (request.kind == Kind::StopNow) music_->stop();
+        else music_->fadeOut(1.0f / (request.step * chase::runtime::kStopMusicFramesPerSecond));
     }
     int playBuffer(std::shared_ptr<const chase::assets::Sound> sound) {
         if (!device_) return 0;

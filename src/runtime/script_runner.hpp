@@ -8,6 +8,7 @@
 #include "runtime/natives_objects.hpp"
 #include "runtime/ai.hpp"
 #include "runtime/dcam.hpp"
+#include "runtime/natives_music.hpp"
 #include "runtime/natives_progress.hpp"
 #include "runtime/objectives.hpp"
 #include "runtime/vehicle.hpp"
@@ -178,6 +179,8 @@ public:
     // Progress, stud and switch natives (natives_progress.hpp); the slot image is the one of a loaded save.
     ProgressNativeState& progressNatives() { return progressNatives_; }
     const ProgressNativeState& progressNatives() const { return progressNatives_; }
+    MusicNativeState& musicNatives() { return musicNatives_; }
+    const MusicNativeState& musicNatives() const { return musicNatives_; }
     // Brightness of the screen set by FadeScreen: 1 normal, 0 black.
     float fadeLevel() const { return fadeLevel_; }
     DirectorCamera& director() { return director_; }
@@ -218,6 +221,7 @@ private:
     void finish(ScriptThread& thread);
     void killScript(const ScriptThread& caller, const std::string& name);
     void progressNative(const assets::ScriptCall& call);
+    void musicNative(const assets::ScriptCall& call);
     std::uint32_t textKeyOf(const std::string& token);
     void textNative(const assets::ScriptCall& call);
     void objectiveNative(const assets::ScriptCall& call);
@@ -261,6 +265,7 @@ private:
     std::vector<std::string> sceneChanges_;
     ObjectNativeState objectNatives_;
     ProgressNativeState progressNatives_;
+    MusicNativeState musicNatives_;
     ScriptTextState text_;
     std::uint32_t levelHeadingKey_ = 0;
     ObjectiveState objectives_;

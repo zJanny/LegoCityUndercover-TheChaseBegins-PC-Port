@@ -43,6 +43,7 @@ Read this index, then open only the file you need.
 | [script-natives.md](script-natives.md) | Census of all script natives: handler addresses, argument counts, call counts per level, classes A-D and the work batches SCRIPT-26 to SCRIPT-39 |
 | [script-natives-flags.md](script-natives-flags.md) | Batch 26 handlers (object flags, KillScript, class messages): split from script-natives.md |
 | [script-natives-progress.md](script-natives-progress.md) | Batch SCRIPT-27: handlers of the progress, save and stud natives, the slot bytes they use |
+| [script-natives-audio.md](script-natives-audio.md) | Music natives OverrideMusic, AutomaticMusic, StopMusic, the music block 0x376b30, EnableTrafficAndPedestrians and the camera manager request (+0x28) |
 | [npc-animation.md](npc-animation.md) | Idle state 0x1d5070 of level characters: animation slots and position rule (0x24cbd4), blend weights, the random idle / idle2 choice (0x219614), RNG 0x25b2b8, oracle timeline |
 | [script-natives-animation.md](script-natives-animation.md) | Batch SCRIPT-32: handlers of the 13 animation and attach natives (PlayCharAnim 0x29e5f0, PlayAnimation, LoadAnimation, the WaitForCurrent natives, Attach*), corrects the census row of PlayCharAnim |
 | [scripts-missions.md](scripts-missions.md) | Mission gap analysis: the natives and trigger events a whole mission needs, oracle trace of the start of mission 1-2 (waypoint class starts the script, call order and counts) |

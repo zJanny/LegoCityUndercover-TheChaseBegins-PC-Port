@@ -136,6 +136,7 @@ void switchesAndLanguage() {
                      {"GetLanguage", {"English"}},
                      {"SetRaceInProgress", {"1"}},
                      {"EnableSuperBricks", {"2"}},
+                     {"EnableTrafficAndPedestrians", {"0"}},
                      {"SetParachuteDeployHeight", {"12.5"}},
                      {"UnlockScanner", {}},
                      {"DisableSuperBuiltItSave", {"Helipad.SBPlate", "1"}},
@@ -151,6 +152,7 @@ void switchesAndLanguage() {
     require(natives.raceInProgress() == true && natives.superBricksEnabled() == true && natives.parachuteDeployHeight() == 12.5f &&
                 natives.scannerUnlocked(),
             "global switches");
+    require(natives.trafficAndPedestriansEnabled() == false, "EnableTrafficAndPedestrians(0) clears the flag (disassembly of 0x2c5780: cmp word, 0)");
     require(natives.superBuiltItSaves().size() == 2 && natives.superBuiltItSaves()[0].instance == "helipad.sbplate" &&
                 natives.superBuiltItSaves()[0].disabled && !natives.superBuiltItSaves()[1].disabled,
             "DisableSuperBuiltItSave stores bit 0 of the argument");
@@ -174,10 +176,10 @@ void supportClasses() {
     for (const char* name : {"CountRacesWon", "IsRacingCarAwarded", "UnlockLevel", "GetCharacterUnlocked", "IsRedbrickBought"})
         require(chase::runtime::scriptFunctionSupport(name) == ScriptFunctionSupport::Implemented, name);
     for (const char* name : {"AddStuds", "UnlockAbility", "LockAbility", "UnlockCharacter", "LockCharacter", "GiveReward", "QuickSave", "SetRaceWon", "AwardRacingCar",
-                             "EnableStudsByGroup", "GetLanguage", "GetPlayerNumber", "UnlockScanner", "SetRaceInProgress", "EnableSuperBricks",
+                             "EnableStudsByGroup", "GetLanguage", "GetPlayerNumber", "UnlockScanner", "SetRaceInProgress", "EnableSuperBricks", "EnableTrafficAndPedestrians",
                              "SetParachuteDeployHeight", "DisableSuperBuiltItSave"})
         require(chase::runtime::scriptFunctionSupport(name) == ScriptFunctionSupport::StandIn, name);
-    require(chase::runtime::progressNativeNames().size() == 22, "22 natives in the batch");
+    require(chase::runtime::progressNativeNames().size() == 23, "23 natives in the batch");
 }
 }
 

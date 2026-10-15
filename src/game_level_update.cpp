@@ -258,6 +258,8 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
     cutsceneHost->update(levelScripts.cutscenes());
     if (player && levelScripts.ai().movedLastUpdate("player1")) game_player::applyAiPosition(*player, *levelScripts.ai().character("player1"));
     studs.addToCounter(levelScripts.progressNatives().takeStudsAdded());
+    for (const runtime::MusicRequest& request : levelScripts.musicNatives().takeRequests())
+        if (shared.audio) shared.audio->applyMusic(request);
     saveWriter.update(levelScripts.progressNatives().saveRequests(), levelScripts.progressNatives().slotImage());
     sceneStart.update(dt);
     if (player) {

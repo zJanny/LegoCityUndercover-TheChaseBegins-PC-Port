@@ -24,7 +24,7 @@ IN_PROGRESS, updated 2026-10-15T12:08:12+02:00. The follow camera and its obstru
 - CAMERA-S6 While a director camera is the newest command the record / follow hand-overs of the selector are ignored; the original may push commands over it. needs: CAMERA-11.
 - CAMERA-S7 SnapCamera (0x1a30fc) seeds the follow controller with `FollowCamera::reset`; the original runs the reset 0x2313c8 with argument 0 (ray test and pull-in branch). The hand-back of a director camera uses `FollowCamera::takeOver` (the 360 branch, verified for the seed in the vehicle case). needs: CAMERA-10.
 
-- CAMERA-S20 `CameraFollow` (0x1bf7c8, manager +0x28 := `*0x3770d8`) is a no-op in the script runner (stand-in): the port has one gameplay camera object. needs: CAMERA-22.
+- CAMERA-S20 `CameraFollow` (0x1bf7c8, a request to switch to camera `*0x3770d8`) is a no-op in the script runner (stand-in): the port has one gameplay camera object. needs: CAMERA-40.
 
 ## 5. Open items
 
@@ -39,7 +39,7 @@ IN_PROGRESS, updated 2026-10-15T12:08:12+02:00. The follow camera and its obstru
 - [ ] CAMERA-15 — After the release director camera of mission 1-1 the port's eye is 0.45 off at the seed, 2.30 at most along the track and 0.245 m low when settled (`camera-vehicle-real-data` pins these). The stale clearance is refuted. needs: CAMERA-20. blocks: CAMERA-21. evidence: [camera-vehicle.md §2026-10-15T13:41](../../re/camera-vehicle.md#ts-20261015-134100)
 - [ ] CAMERA-20 — The reset 0x2313c8 (argument 360) shortens the seed to about 0.946 x the strategy distance (line test 0x22b108, ray test 0x21ab20, pull-in 0x23b92c, not transcribed); the sweep state and the push history after it decide the swing start (row 307 against 306) and the settled height. needs: CAMERA-10. blocks: CAMERA-15. evidence: [camera-vehicle.md §2026-10-15T13:41](../../re/camera-vehicle.md#ts-20261015-134100)
 - [ ] CAMERA-21 — Screenshot pair (original vs port) of the police car after the release director camera was not taken. needs: CAMERA-15.
-- [ ] CAMERA-22 — Readers of camera manager +0x28 (written by CameraFollow 0x1bf7c8 and eight other sites) are not read. blocks: CAMERA-S20. evidence: [script-natives-flags.md §2026-10-15T13:42](../../re/script-natives-flags.md#ts-20261015-134200)
+- [ ] CAMERA-40 — Which camera is current when CameraFollow runs (1-1_VanBreakdown after cutscene `1_1_b`), the enter / leave / update virtuals of the camera classes, and whether the port's cutscene hand-back equals the switch. blocks: CAMERA-S20. evidence: [script-natives-audio.md §2026-10-15T15:10](../../re/script-natives-audio.md#ts-20261015-151038)
 - [ ] CAMERA-11 — Whether the camera manager pushes selector commands while a director camera runs (the police entry moves the player into the lobby camera bounds). blocks: CAMERA-S6. evidence: [dcam.md §2026-10-14T14:36](../../re/dcam.md#ts-20261014-143600)
 - [ ] CAMERA-12 — Pose filter factors at a director camera push (1.0 seen after the follow command; the lobby record filter case is untested) and the pose fields +0x34 (0.035). evidence: [dcam.md §2026-10-14T14:36](../../re/dcam.md#ts-20261014-143600)
 

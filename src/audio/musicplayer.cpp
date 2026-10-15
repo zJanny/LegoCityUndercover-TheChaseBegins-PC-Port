@@ -32,4 +32,11 @@ void MusicPlayer::stop() {
     current_ = 0;
 }
 
+void MusicPlayer::fadeOut(float seconds) {
+    if (voice_ < 0) return;
+    mixer_.fadeOut(voice_, seconds);
+    voice_ = -1;
+    current_ = 0;
+}
+
 } // namespace chase::audio
