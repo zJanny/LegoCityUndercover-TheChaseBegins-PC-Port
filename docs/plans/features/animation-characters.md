@@ -25,6 +25,7 @@ IN_PROGRESS, updated 2026-10-15T09:35:00+0200. Player and level characters are p
 - [ ] ANIM-5 — The general animation slot player (4 slots, modes 1 / 6 loop, 2, 3, 5, start offsets, finished flag, `WaitForCurrent` lengths, `PlayAnimation` offsets) is only implemented for the idle state. blocks: SCRIPT-112, SCRIPT-32. evidence: [npc-animation.md §2026-10-15T09:29](../../re/npc-animation.md#ts-20261015-092900).
 - [ ] ANIM-3 — Blending between different animations is not implemented. evidence: [skeleton-animation.md §2026-10-12T22:10](../../re/skeleton-animation.md#ts-20261012-2210).
 - [ ] ANIM-4 — The shared character rig code for animals and custom characters is missing (rigs of `char_pig`, `char_cat`, `char_dog`, `char_shark`, `char_Crow`). see LEVOBJ-4.
+- [ ] ANIM-7 — (User report 2026-10-15) At the broken-down donut van the original shows the van driver (`1-1_AI_DonutLady`) stuck inside a mailbox; the port shows the driver standing in front of it. Likely the PlayCharAnim of `1-1_VanBreakdown` / `1-1_Found_Van`, which the port does not play. needs: SCRIPT-112. evidence: [script-natives-animation.md §2026-10-15T17:50](../../re/script-natives-animation.md#ts-20261015-175022)
 
 ## 6. Findings summary
 

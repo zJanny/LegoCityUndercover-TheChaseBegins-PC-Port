@@ -35,3 +35,14 @@ Unknowns:
 - The class of `0x22716c` and what the entity `+0x40` word is in the second path format.
 - Whether animations are loaded by the object class itself before a script calls PlayAnimation (the original skips PlayAnimation for an animation that is not loaded; the port records the request anyway).
 - The lengths for the WaitForCurrent natives need the animation player (ANIM-2).
+
+<a id="ts-20261015-175022"></a>
+
+## 2026-10-15T17:50:22+02:00 — User report: the van driver is not stuck in the mailbox (mission 1-1)
+
+- User report: at the broken-down donut van (where the cutscene of mission 1-1 starts), the original shows the van driver stuck inside a mailbox; in `chase-game` the driver stands in front of it.
+- The driver is `1-1_AI_DonutLady` (`CSCharacter` `donut_driver`, [cutscene-actors.md](cutscene-actors.md)). The scripts that set up the broken van scene, `1-1_VanBreakdown` and `1-1_Found_Van`, call PlayCharAnim ([objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919)); in the port PlayCharAnim only records the request (SCRIPT-112), so no special animation plays.
+- Likely cause: the stuck pose is an animation (and maybe an offset) started by PlayCharAnim. Not checked against the script arguments or the oracle.
+
+Unknowns:
+- The object, animation name and any position change of these PlayCharAnim calls.
