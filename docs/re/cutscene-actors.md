@@ -25,3 +25,19 @@ Unknowns:
 - Where the player stands after a cutscene (the original keeps the figure's own position or the script moves it; MOVIE-S21).
 - Whether `Player%s` entities other than player 1 exist in the story mode, and the actors `Donut1` and `Donutbox` (non-minifig props: the level has `Donut_Box` with an empty `CSCharacter`).
 - Port-vs-original comparison pictures: not taken (software renderer crashes on street states, RPC not granted).
+
+<a id="ts-20261015-105031"></a>
+
+## 2026-10-15T10:50:31+02:00 — MOVIE-21 comparison screenshots: cutscene `1_1_b` in the original and the port's `1-1_VanBreakdown` run (oracle `cutscene-1-1-b` with OpenGL and RPC screenshots; port `chase-game`; no code change; REA was not used)
+
+- **Original.** `tools/azahar_oracle.py` with a scenario of `screenshot shot-movie21-orig-0`, `wait 2`, `screenshot shot-movie21-orig-2s`, and the options of the COLL-21 entry, with `--state cutscene-1-1-b`. Frames: `artifacts/oracle/agentSHOT-out/shot-movie21-orig-0.png` and `shot-movie21-orig-2s.png` (400x480).
+- **Port.** `build/chase-game --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes --call-script 1-1_VanBreakdown --frames N --window 400x480 --screenshot <scratch>/port-movie21-N.bmp` with N = 45, 100, 200. Copies: `artifacts/oracle/agentSHOT-out/port-movie21-45.png`, `port-movie21-100.png`, `port-movie21-200.png`.
+- **Side by side:** `artifacts/oracle/agentSHOT-out/sbs-movie21.png` (original 0 s, original +2 s, port 45, 100, 200 updates).
+- **Matches.** The same subtitle box and dialogue style; the 400x480 layout; the donut shop and the police garage appear as the level's own rooms.
+- **Differs.** The original state shows the police garage with the car and the line "Go to your patrol car. I'll send you the delivery van's location." The port run from the donut-shop start shows the donut-man lines ("I'm sorry. We're out of doughnuts...", then "Not good. Where's the van?..."). At +2 s the original has no subtitle and the camera is still on the garage, with no actor in close view. The original frames therefore show a different moment of the sequence than the port frames, and no actor can be compared in them. The port run starts at the level's start point, not at the state's position (see MOVIE-23). The original's bottom screen during the cutscene shows a hexagon panel with a police badge in the centre; the port's bottom screen shows the tip panel (45, 100 updates) or the empty dialogue background (200 updates).
+
+Unknowns:
+- Which part of the original sequence the state is in at 0 s (the state was saved before the cutscene's dialogue) and how long the cutscene lasts from it; not measured.
+- Whether the port's 1-1 sequence (from the donut shop) matches the original's order of cutscenes 1_1_a and 1_1_b; not read.
+- The actors in the original frames are too far to compare; a close-up state is needed for the actor check.
+- Which code draws the original's bottom-screen hexagon panel during a cutscene, and its textures; not searched.

@@ -32,7 +32,8 @@ IN_PROGRESS, updated 2026-10-13T21:29:01+0200. Level collision and placed object
 - [ ] COLL-5 — Whether the ground probe stands on box tops as the replica does (no trace of a character on a crate). evidence: [collision.md §2026-10-13T17:34](../../re/collision.md#ts-20261013-173400).
 - [ ] COLL-6 — Unexplained: `door_back` rows 125/128/130 (static contact near (901.8, 1096)), 153 master-model items vs 147 + 7 static entries.
 - [ ] COLL-7 — Collision with parked cars and people, and objects that break or move, is not replicated (cars and people fall under COLL-2).
-- [ ] COLL-21 — Pin the player-into-police-car stop as an oracle trace with the port camera at the same yaw (the 3.06 / 3.22 unit stop agrees only roughly), take comparison screenshots (needs an RPC slot), and read 0x242b08 to settle COLL-S4. blocks: COLL-S4. evidence: [collision.md §2026-10-15T07:58](../../re/collision.md#ts-20261015-075843).
+- [ ] COLL-21 — Pin the player-into-police-car stop as an oracle trace with the port camera at the same yaw (the 3.06 / 3.22 unit stop agrees only roughly), and read 0x242b08 to settle COLL-S4. blocks: COLL-S4. evidence: [collision.md §2026-10-15T07:58](../../re/collision.md#ts-20261015-075843); screenshots: [collision.md §2026-10-15T10:50](../../re/collision.md#ts-20261015-105024).
+- [ ] COLL-22 — The port run from the same start (`--call-script 1-1_VanBreakdown`, 25 updates) shows a harbour view without the car or HUD, the original shows the garage with the car; the port camera or view state at that update is not explained. evidence: [collision.md §2026-10-15T10:50](../../re/collision.md#ts-20261015-105024).
 
 ## 6. Findings summary
 

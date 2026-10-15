@@ -158,3 +158,17 @@ Unknowns:
 Unknowns:
 - What 0x242b08 removes the disabled object from, and whether a disabled entity keeps being updated (doors, vehicles).
 - A pinned oracle trace with the port camera at yaw 1.014, and comparison screenshots (the software renderer crashes on the street scene; no RPC slot).
+
+<a id="ts-20261015-105024"></a>
+
+## 2026-10-15T10:50:24+02:00 — COLL-21 comparison screenshots: the original car view and the port run from the same start do not show the same picture (oracle `m11-2-patrol-car` with OpenGL and RPC screenshots; port `chase-game`; no code change; REA was not used)
+
+- **Original.** `tools/azahar_oracle.py` with a scenario of `wait 3` and `screenshot shot-coll21-orig-car`, plus `--image` (the `.cci` of the main checkout), `--display xvfb --renderer opengl --rpc --rpc-input --state m11-2-patrol-car --port 24733 --home artifacts/oracle/agentSHOT-home --output artifacts/oracle/agentSHOT-out`. Frame: `artifacts/oracle/agentSHOT-out/shot-coll21-orig-car.png` (400x480, RPC `TakeScreenshot`, the game was running).
+- **Port.** `build/chase-game --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --start "886.681 16.590 1112.930" --facing 16 --call-script 1-1_VanBreakdown --frames 25 --window 400x480 --screenshot <scratch>/port-coll21-25.bmp`. Copy: `artifacts/oracle/agentSHOT-out/port-coll21-25.png`.
+- **Side by side:** `artifacts/oracle/agentSHOT-out/sbs-coll21.png` (left original, right port).
+- **Matches.** Both pictures are 400x480 with the same top and bottom layout.
+- **Differs.** The original shows the police garage with `1-1_Police_Car` in front of Chase, the HUD (portrait, hearts, minimap). The port frame at update 25 shows a far view of the harbour with a statue, no car, no HUD and an empty bottom screen. So the two frames are not the same situation: the port camera or view at that update is not the original's. The frame cannot be used as the COLL-21 comparison until that is explained ([COLL-22](../plans/features/collision.md)).
+
+Unknowns:
+- Why the port frame at update 25 shows the harbour view and no HUD (camera at the start, the `--call-script` start, or the port's view state); not read.
+- The original's camera yaw at the frame (about 1.01 rad in the trace above) and the port's yaw at update 25 were not matched, so the frames are not expected to agree in any case.
