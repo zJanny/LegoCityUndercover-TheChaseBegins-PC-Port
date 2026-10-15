@@ -6,6 +6,8 @@ Findings from REA (Ghidra 12.1.2 pseudo-code of `artifacts/game/game.arm.elf`, e
 
 ## 2026-10-13T21:31:01+02:00 — Layouts, hearts, stud bar, flying studs, map screen
 
+Corrected by [objective-hud.md §2026-10-15T19:56](objective-hud.md#ts-20261015-195600): the waypoint marker is `WayPoint.tga` with line circles (not `mapiconmission`), and the map matrix and the drawing code of the icons are read.
+
 Corrected by [vehicles-boarding.md §2026-10-15T18:35:55](vehicles-boarding.md#ts-20261015-183555): the portrait background of class 0x1f is builder and the fallback is generic (the Portrait paragraph has them the other way round).
 
 ### Layouts and page creation

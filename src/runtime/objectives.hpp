@@ -63,12 +63,6 @@ public:
     const std::vector<SubObjectiveGroup>& groups() const { return groups_; }
     const SubObjectiveGroup* group(const std::string& waypoint, std::uint8_t type) const;
 
-    // STAND-IN (HUD-S10): the pulse ring of a map marker repeats every kPulseSeconds; the original's clock and curve are
-    // not recovered (stepped oracle screenshots show a ring that grows from radius 12 to about 90 pixels and fades).
-    static constexpr float kPulseSeconds = 1.2f;
-    void update(float dt);
-    float pulsePhase() const;
-
     // STAND-IN: natives without a drawn effect only store their call count and last values.
     void record(ObjectiveNativeKind kind, const std::vector<float>& values, const std::string& firstObject);
     unsigned recordedCalls(ObjectiveNativeKind kind) const { return recorded_[static_cast<std::size_t>(kind)]; }
@@ -83,7 +77,6 @@ private:
     unsigned recorded_[kObjectiveNativeCount] = {};
     bool minimapWipe_ = false;
     bool scannerFlag_ = false;
-    float clock_ = 0;
     std::string panMapObject_, mapDummyObject_;
 };
 

@@ -1,5 +1,5 @@
 // chase-hudshot: draws the in-game HUD offscreen for a scripted sequence and saves the transparent top-screen canvas as a
-// BMP over black plus an alpha mask BMP. Script: "run N; hearts N; studs TYPE TOTAL; shot NAME; map LEVEL X Z CAMERAYAW PLAYERYAW NAME" (updates are 1/30 s).
+// BMP over black plus an alpha mask BMP. Script: "run N; hearts N; studs TYPE TOTAL; shot NAME; marker X Z; ring SECONDS; map LEVEL X Z CAMERAYAW PLAYERYAW NAME" (updates are 1/30 s).
 #include "frontend/hud.hpp"
 #include "frontend/minimap.hpp"
 #include "strict_parse.hpp"
@@ -20,13 +20,15 @@ struct Options {
 };
 
 constexpr long long kMaxRunUpdates = 1000000;
+constexpr int kMapSettleUpdates = 45;
 
 struct Command {
-    enum class Kind { Run, Hearts, Studs, Map, Shot };
+    enum class Kind { Run, Hearts, Studs, Map, Shot, Marker, Ring };
     Kind kind = Kind::Run;
     unsigned count = 0;
     unsigned type = 0;
     std::uint64_t total = 0;
+    float x = 0, z = 0, seconds = 0;
     std::string level, name;
     MinimapView view;
 };
@@ -62,6 +64,15 @@ Command parseCommand(const std::string& text) {
         command.view.cameraYaw = float(strict::real(fields[4], -strict::kAnyFloat, strict::kAnyFloat));
         command.view.playerYaw = float(strict::real(fields[5], -strict::kAnyFloat, strict::kAnyFloat));
         command.name = fields[6];
+    } else if (verb == "marker") {
+        requireFields(fields, 3, "marker X Z", text);
+        command.kind = Command::Kind::Marker;
+        command.x = float(strict::real(fields[1], -strict::kAnyFloat, strict::kAnyFloat));
+        command.z = float(strict::real(fields[2], -strict::kAnyFloat, strict::kAnyFloat));
+    } else if (verb == "ring") {
+        requireFields(fields, 2, "ring SECONDS", text);
+        command.kind = Command::Kind::Ring;
+        command.seconds = float(strict::real(fields[1], 0.0, kRingCycleSeconds));
     } else if (verb == "shot") {
         requireFields(fields, 2, "shot NAME", text);
         command.kind = Command::Kind::Shot;
@@ -116,19 +127,31 @@ int run(const Options& options) {
     Hud hud(resources, {});
     Canvas top(kTopWidth, kScreenHeight);
     double spin = 0;
+    MapMarkerField markerField;
+    std::vector<MinimapMarker> pendingMarkers;
+    float ringSeconds = 0;
     for (const Command& command : parseScript(options.script)) {
         if (command.kind == Command::Kind::Run) {
             for (unsigned i = 0; i < command.count; ++i) {
                 hud.update(1.0f / 30);
                 spin += options.spinPerUpdate;
             }
+        } else if (command.kind == Command::Kind::Marker) {
+            pendingMarkers.push_back({int(pendingMarkers.size()), command.x, command.z});
+        } else if (command.kind == Command::Kind::Ring) {
+            ringSeconds = command.seconds;
         } else if (command.kind == Command::Kind::Hearts) {
             hud.setHearts(command.count);
         } else if (command.kind == Command::Kind::Studs) {
             hud.studsBanked(command.type, command.total);
         } else if (command.kind == Command::Kind::Map) {
             Canvas bottom(kBottomWidth, kScreenHeight);
-            drawMinimap(bottom, resources, command.level, command.view);
+            MinimapView view = command.view;
+            view.markers = pendingMarkers;
+            for (int update = 0; update < kMapSettleUpdates; ++update) markerField.advance(1.0f / 30, view.x, view.z, view.cameraYaw, view.markers);
+            markerField.setRingClock(ringSeconds);
+            view.markerField = &markerField;
+            drawMinimap(bottom, resources, command.level, view);
             bottom.writeBmp(options.output + "/" + command.name + ".bmp");
         } else {
             top.clearTransparent();

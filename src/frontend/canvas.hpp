@@ -39,6 +39,7 @@ public:
     void drawNineSlice(const assets::Image& image, int edge, int x, int y, int width, int height, const Colour& tint = {});
     void drawRotated(const assets::Image& image, const IntRect& source, float cx, float cy, float width, float height,
                      float radians, const Colour& tint = {});
+    void drawLine(float x0, float y0, float x1, float y1, float width, const Colour& tint = {});
     void dim(float factor);
     void blit(const Canvas& other, int x, int y);
     void writeBmp(const std::string& path) const;

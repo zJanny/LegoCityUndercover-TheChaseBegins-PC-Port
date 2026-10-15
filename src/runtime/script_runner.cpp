@@ -216,7 +216,6 @@ bool ScriptRunner::start(const std::string& scriptName) {
 void ScriptRunner::update(float dt) {
     dt_ = dt;
     text_.update(dt);
-    objectives_.update(dt);
     ai_.update(dt);
     cutscenes_.update(dt);
     fireAiMoveEvents();

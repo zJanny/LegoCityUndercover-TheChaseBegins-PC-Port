@@ -131,8 +131,37 @@ void minimap(Resources& resources) {
     drawMinimap(bottom, resources, "lvl_01_cherrytreehills", view);
     const std::uint8_t* corner = bottom.pixel(10, 200);
     require(corner[0] + corner[1] + corner[2] > 100, "the map covers the screen");
-    const std::uint8_t* arrow = bottom.pixel(160, 118);
+    const std::uint8_t* arrow = bottom.pixel(160, 120);
     require(arrow[2] > arrow[0] + 30, "the player's arrow is blue in the middle of the screen");
+
+    // Provenance: oracle state gameplay-start, player teleported to (700, 16.6, 900), shotloop picture arrowA_201 (OpenGL, RPC):
+    // camera look (-0.6548, -0.7370); the blue pixels (74, 174, 255) below row 180 of the bottom screen number 88 with centroid
+    // (172.74, 222.08).
+    MinimapView edge;
+    edge.x = 700.0f;
+    edge.z = 900.0f;
+    edge.cameraYaw = -2.4152f;
+    edge.playerYaw = -2.4152f;
+    edge.markers = {{0, 817.35f, 1071.20f}};
+    MapMarkerField field;
+    for (int update = 0; update < 45; ++update) field.advance(1.0f / 30, edge.x, edge.z, edge.cameraYaw, edge.markers);
+    field.setRingClock(2.5f);
+    edge.markerField = &field;
+    drawMinimap(bottom, resources, "lvl_01_cherrytreehills", edge);
+    int blue = 0;
+    double sumX = 0, sumY = 0;
+    for (int y = 181; y < 240; ++y)
+        for (int x = 0; x < 320; ++x) {
+            const std::uint8_t* p = bottom.pixel(x, y);
+            if (std::abs(p[0] - 74) < 8 && std::abs(p[1] - 174) < 8 && std::abs(p[2] - 255) < 8) {
+                ++blue;
+                sumX += x;
+                sumY += y;
+            }
+        }
+    require(blue == 88, "pixels of the marker blue at the screen edge (oracle 88)");
+    require(blue > 0 && std::fabs(sumX / blue - 172.74) < 0.05 && std::fabs(sumY / blue - 222.08) < 0.05,
+            "the edge marker and its arrow sit where the oracle shows them (centroid 172.74, 222.08)");
     drawMinimap(bottom, resources, "lvl_missing", view);
     require(bottom.pixel(10, 200)[0] == 0 && bottom.pixel(10, 200)[1] == 0, "a level without a map shows no map");
 }

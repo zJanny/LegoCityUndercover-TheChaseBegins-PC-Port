@@ -155,6 +155,21 @@ void Canvas::drawRotated(const assets::Image& image, const IntRect& source, floa
     }
 }
 
+void Canvas::drawLine(float x0, float y0, float x1, float y1, float width, const Colour& tint) {
+    const float half = width * 0.5f;
+    const float lengthSquared = (x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0);
+    const int left = std::max(0, int(std::floor(std::min(x0, x1) - half)) - 1), right = std::min(width_ - 1, int(std::ceil(std::max(x0, x1) + half)) + 1);
+    const int top = std::max(0, int(std::floor(std::min(y0, y1) - half)) - 1), bottom = std::min(height_ - 1, int(std::ceil(std::max(y0, y1) + half)) + 1);
+    for (int y = top; y <= bottom; ++y)
+        for (int x = left; x <= right; ++x) {
+            const float px = float(x) + 0.5f - x0, py = float(y) + 0.5f - y0;
+            const float along = lengthSquared > 0 ? std::clamp((px * (x1 - x0) + py * (y1 - y0)) / lengthSquared, 0.0f, 1.0f) : 0.0f;
+            const float distance = std::hypot(px - along * (x1 - x0), py - along * (y1 - y0));
+            const float coverage = std::clamp(half + 0.5f - distance, 0.0f, 1.0f);
+            if (coverage > 0) blend(x, y, 255.0f * tint.r, 255.0f * tint.g, 255.0f * tint.b, coverage * tint.a);
+        }
+}
+
 void Canvas::dim(float factor) {
     for (std::size_t i = 0; i < pixels_.size(); i += 4)
         for (int c = 0; c < 3; ++c) pixels_[i + c] = toByte(pixels_[i + c] * factor);

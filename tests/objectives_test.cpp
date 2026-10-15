@@ -65,13 +65,6 @@ void synthetic() {
                              "RemoveScannerMapMarker", "DisableIcon"})
         require(runtime::scriptFunctionSupport(name) == runtime::ScriptFunctionSupport::StandIn, std::string("stand-in ") + name);
 
-    runtime::ObjectiveState pulse;
-    require(pulse.pulsePhase() == 0.0f, "pulse starts at 0");
-    pulse.update(0.6f);
-    require(pulse.pulsePhase() > 0.49f && pulse.pulsePhase() < 0.51f, "half period");
-    pulse.update(0.7f);
-    require(pulse.pulsePhase() > 0.07f && pulse.pulsePhase() < 0.09f, "wraps");
-
     assets::Level full;
     std::vector<assets::ScriptCall> many;
     for (int i = 0; i < 40; ++i) many.push_back({"SubObjectiveGoToEnable", {"w", "t" + std::to_string(i), "1"}});

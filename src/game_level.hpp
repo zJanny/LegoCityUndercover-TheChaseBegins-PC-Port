@@ -5,6 +5,7 @@
 #include "assets/object_collision.hpp"
 #include "frontend/canvas.hpp"
 #include "frontend/hud.hpp"
+#include "frontend/minimap.hpp"
 #include "frontend/resources.hpp"
 #include "game_audio.hpp"
 #include "game_characters.hpp"
@@ -109,6 +110,7 @@ private:
     void applyPlacement(const chase::runtime::ScriptPlacement& request);
     void updateDoors(const float playerPosition[3], const std::function<void(const chase::runtime::SoundCall&)>& emit);
     void updateBuildits(const float playerPosition[3]);
+    std::vector<chase::frontend::MinimapMarker> activeMapMarkers() const;
     void updateCarry(const float playerPosition[3]);
     void updateLevelCharacters(float dt);
     void updateFollowCamera(float dt);
@@ -206,6 +208,7 @@ private:
     std::optional<chase::runtime::CameraRig> follow;
     chase::runtime::CameraLockIcon cameraLockIcon;
     chase::frontend::Resources hudResources;
+    chase::frontend::MapMarkerField mapMarkerField;
     std::optional<chase::frontend::Hud> hud;
     chase::frontend::Canvas hudCanvas, mapCanvas;
     std::optional<chase::render::HudOverlay> overlay;

@@ -307,6 +307,14 @@ LevelSession::LevelSession(const Shared& sharedState)
     for (const game_options::ScriptStep& step : script) scriptLength += step.updates;
 }
 
+std::vector<fe::MinimapMarker> LevelSession::activeMapMarkers() const {
+    std::vector<fe::MinimapMarker> markers;
+    for (std::size_t i = 0; i < waypointObjects.size(); ++i)
+        if (levelScripts.objectives().waypointActive(game_doors::lowerCase(waypointObjects[i].instance)))
+            markers.push_back({int(i), waypointObjects[i].position[0], waypointObjects[i].position[2]});
+    return markers;
+}
+
 void LevelSession::draw(int width, int height) {
     const game_hud::Screens screens = game_hud::screensFor(width, height);
     setScissorTest(false);
@@ -374,10 +382,8 @@ void LevelSession::draw(int width, int height) {
         mapView.z = player->motion.z;
         mapView.cameraYaw = follow->yaw();
         mapView.playerYaw = runtime::headingRadians(player->motion.facing);
-        mapView.pulsePhase = objectives.pulsePhase();
-        for (std::size_t i = 0; i < waypointObjects.size(); ++i)
-            if (objectives.waypointActive(game_doors::lowerCase(waypointObjects[i].instance)))
-                mapView.markers.push_back({waypointObjects[i].position[0], waypointObjects[i].position[2]});
+        mapView.markers = activeMapMarkers();
+        mapView.markerField = &mapMarkerField;
         fe::drawMinimap(mapCanvas, hudResources, levelName, mapView);
     } else {
         hudCanvas.clearTransparent();

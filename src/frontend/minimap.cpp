@@ -24,25 +24,44 @@ void sampleBilinear(const assets::Image& image, float u, float v, float out[4]) 
 }
 
 
+void drawRing(Canvas& bottom, float centreX, float centreY, const MapRing& ring) {
+    constexpr float kTwoPi = 6.2831855f;
+    auto edge = [](float distance) { return std::clamp(distance * 0.05f, 0.0f, 1.0f); };
+    for (int i = 0; i < kRingSegments; ++i) {
+        const float a0 = float(i) * kTwoPi * 0.015625f, a1 = float(i + 1) * kTwoPi * 0.015625f;
+        const float x0 = centreX + std::cos(a0) * ring.radius, y0 = centreY + std::sin(a0) * ring.radius;
+        const float x1 = centreX + std::cos(a1) * ring.radius, y1 = centreY + std::sin(a1) * ring.radius;
+        const float visible = edge(x1) * edge(kMapScreenWidth - x0) * edge(y1) * edge(kMapScreenHeight - y0);
+        bottom.drawLine(x0, y0, x1, y1, kRingLineWidth, {1, 1, 1, ring.alpha * visible});
+    }
+}
+
 void drawMarkers(Canvas& bottom, Resources& resources, const MinimapView& view) {
-    if (view.markers.empty()) return;
-    const assets::Image& disc = resources.image("sprites/ui_bottomscreen/maps/subobjectivepoint.btga");
-    const assets::Image& badge = resources.image("sprites/ui_bottomscreen/mapiconmission.btga");
-    const assets::Image& ring = resources.image("sprites/ui_bottomscreen/mapiconpulse.btga");
-    const float c = std::cos(view.cameraYaw), s = std::sin(view.cameraYaw);
-    const float phase = std::clamp(view.pulsePhase, 0.0f, 1.0f);
-    const float radius = kPulseStartRadius + (kPulseEndRadius - kPulseStartRadius) * phase * phase;
+    if (view.markers.empty() || !view.markerField) return;
+    const assets::Image& icon = resources.image("sprites/ui_bottomscreen/maps/waypoint.btga");
+    const assets::Image& arrow = resources.image("sprites/ui_bottomscreen/maps/waypointoffscreen.btga");
+    const MapMarkerField& field = *view.markerField;
+    const float half = float(icon.width) * 0.5f;
     for (const MinimapMarker& marker : view.markers) {
-        const float dx = marker.x - view.x, dz = marker.z - view.z;
-        const float cx = kMapPlayerScreenX + kMarkerScale * (c * dx - s * dz);
-        const float cy = kMapPlayerScreenY + kMarkerScale * (-s * dx - c * dz);
-        const float ringSize = 2.0f * radius * float(ring.width) / 15.0f;
-        bottom.drawScaled(ring, {0, 0, ring.width, ring.height}, cx - ringSize / 2, cy - ringSize / 2, ringSize, ringSize,
-                          {1, 1, 1, 1.0f - phase});
-        bottom.drawScaled(disc, {0, 0, disc.width, disc.height}, cx - kMarkerDiscSize / 2, cy - kMarkerDiscSize / 2, kMarkerDiscSize,
-                          kMarkerDiscSize);
-        bottom.drawScaled(badge, {0, 0, badge.width, badge.height}, cx - kMarkerBadgeSize / 2, cy - kMarkerBadgeSize / 2, kMarkerBadgeSize,
-                          kMarkerBadgeSize);
+        const MapMarkerPlacement placement = placeMapMarker(view.x, view.z, view.cameraYaw, marker.x, marker.z);
+        const MapMarkerAnimation& animation = field.animation(marker.id);
+        float shownX = float(roundedCoordinate(placement.x)), shownY = float(roundedCoordinate(placement.y));
+        const float haloHalf = half * (1.0f - (animation.scale - 0.5f));
+        bottom.drawScaled(icon, {0, 0, icon.width, icon.height}, shownX - haloHalf, shownY - haloHalf, haloHalf * 2, haloHalf * 2);
+        if (field.ringsActive()) {
+            drawRing(bottom, placement.x, placement.y, field.largeRing());
+            drawRing(bottom, placement.x, placement.y, field.smallRing());
+        }
+        if (placement.outsideEllipse) {
+            const float arrowX = placement.edgeX + placement.directionX * kArrowOffset, arrowY = placement.edgeY + placement.directionY * kArrowOffset;
+            bottom.drawRotated(arrow, {0, 0, arrow.width, arrow.height}, arrowX, arrowY, float(arrow.width), float(arrow.height),
+                               arrowRotation(placement), {1, 1, 1, animation.grow});
+            shownX = float(roundedCoordinate(placement.edgeX));
+            shownY = float(roundedCoordinate(placement.edgeY));
+        }
+        const float shownHalf = half * animation.scale;
+        bottom.drawScaled(icon, {0, 0, icon.width, icon.height}, shownX - shownHalf, shownY - shownHalf, shownHalf * 2, shownHalf * 2,
+                          {1, 1, 1, animation.grow});
     }
 }
 
@@ -59,7 +78,7 @@ void drawMinimap(Canvas& bottom, Resources& resources, const std::string& levelN
             for (int x = 0; x < bottom.width(); ++x) {
                 const float sx = float(x) + 0.5f - kMapPlayerScreenX, sy = float(y) + 0.5f - kMapPlayerScreenY;
                 const float dx = c * sx - s * sy, dz = -s * sx - c * sy;
-                const float u = playerU + kMapTexelsPerUnit * dx, v = playerV - kMapTexelsPerUnit * dz;
+                const float u = playerU + kMapTexelsPerUnit * dx / kMapPixelsPerUnit, v = playerV - kMapTexelsPerUnit * dz / kMapPixelsPerUnit;
                 if (u < 0 || v < 0 || u >= float(map.width) || v >= float(map.height)) continue;
                 float texel[4];
                 sampleBilinear(map, u * float(map.width) / 1024.0f, v * float(map.height) / 1024.0f, texel);

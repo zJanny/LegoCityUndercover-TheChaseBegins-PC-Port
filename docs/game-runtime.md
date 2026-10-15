@@ -83,7 +83,7 @@ What is not like the original yet:
 - Top left of the top screen: the picture of the main character in its hexagon, and next to it four hearts. The heart at the end of the row beats slowly.
 - The stud counter slides in below the hearts each time a stud is added. It shows the new total and a spinning coin in the colour of the last stud. The coin jumps for a moment when the total changes. After about two seconds the counter slides out again.
 - The bottom screen shows the map of the level, turned so that the camera looks up. The arrow in the middle is the main character. The button at the top left is the characters button; it does nothing yet.
-- Not like the original yet: the hearts do not change because nothing can hurt the character yet. The map is not placed with the original's own data, but fitted to pictures of the original (it differs by a few pixels), and it shows the marker of the active waypoint, but no other mission marks or collectibles. The display slides in a moment after the level starts; when the original does that is not known. Only the first level has a map picture that was checked.
+- Not like the original yet: the hearts do not change because nothing can hurt the character yet. The map is placed with the original's numbers for the first level (the picture equals the original's), and it shows the marker of the active waypoint. When the waypoint is far away, the marker stays at the edge of the map and an arrow points to it. Other mission marks and collectibles are not shown, and the map does not zoom yet. The display slides in a moment after the level starts; when the original does that is not known. Only the first level has a map picture that was checked.
 
 ## Sound
 

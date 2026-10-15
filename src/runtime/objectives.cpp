@@ -98,10 +98,6 @@ const SubObjectiveGroup* ObjectiveState::group(const std::string& waypoint, std:
     return nullptr;
 }
 
-void ObjectiveState::update(float dt) { clock_ = std::fmod(clock_ + dt, kPulseSeconds); }
-
-float ObjectiveState::pulsePhase() const { return clock_ / kPulseSeconds; }
-
 void ObjectiveState::record(ObjectiveNativeKind kind, const std::vector<float>& values, const std::string& firstObject) {
     ++recorded_[static_cast<std::size_t>(kind)];
     switch (kind) {
