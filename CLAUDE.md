@@ -91,6 +91,7 @@ The original runs in Azahar as a measuring reference. Read `docs/re/oracle.md` b
 
 - At the start of work check that Graphify is installed and the graph exists; if broken, follow the installed skill and report the exact blocker.
 - For architecture, dependency and code-flow questions query the graph first, then verify against source. Rebuild after meaningful source changes.
+- The graph lives only in the main checkout (`graphify-out/` is gitignored and not in worktrees). An agent in a worktree queries it there: `graphify query "<question>" --graph <main checkout>/graphify-out/graph.json`. A missing `graphify-out/` in the worktree is no reason to skip the graph; every agent brief names this path.
 - `.graphifyignore` excludes `docs/`, everything in `.gitignore`, build outputs, `artifacts/` and temp files. Send no repository content to an external provider without authorization.
 
 ## Workflows
