@@ -66,7 +66,8 @@ float Hud::boardLength(const std::string& layoutPath, const std::string& storybo
     return storyboardLength(resources_.layout(layoutPath), storyboard);
 }
 
-void Hud::setHearts(unsigned hearts) {
+void Hud::setHearts(unsigned hearts, bool vehicleImage) {
+    vehicleHearts_ = vehicleImage;
     const unsigned previous = hearts_;
     for (unsigned i = 0; i < unsigned(kHudHeartSlots); ++i) {
         if (i < hearts && i >= previous) heart_[i] = {HeartBoard::Gain, 0};
@@ -191,8 +192,10 @@ void Hud::draw(Canvas& top, double spinSeconds) {
     scene.storyboard = "TransitionOn";
     scene.hidden = {"userControl", "UI_Strike", "Struggle_Button"};
     scene.time = seconds_;
-    scene.images["UI_HUD_Image_3DS"] = "sprites/ui_hud/blend/images/heartsbg_" + config_.heartsBackground + ".bpng";
-    scene.images["UI_portrait"] = "sprites/portraits/" + config_.portrait + ".bpng";
+    const bool inVehicle = !vehiclePortrait_.empty();
+    scene.images["UI_HUD_Image_3DS"] = "sprites/ui_hud/blend/images/heartsbg_" + (inVehicle ? std::string("generic") : config_.heartsBackground) + ".bpng";
+    scene.images["UI_portrait"] = inVehicle ? vehiclePortrait_ : "sprites/portraits/" + config_.portrait + ".bpng";
+    if (vehicleHearts_) scene.images["UI_Heart_Image_3DS"] = "sprites/ui_hud/blend/images/ui_heartvehicle_3ds.bpng";
     for (int i = 0; i < kHudHeartSlots; ++i) {
         const std::string name = heartContainer(i);
         scene.attachedLayouts[name] = kHeartControlLayout;

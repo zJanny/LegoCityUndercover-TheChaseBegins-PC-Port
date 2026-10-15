@@ -1,5 +1,7 @@
 #include "game_level.hpp"
 #include "runtime/scheduler.hpp"
+#include "runtime/head_icon.hpp"
+#include "runtime/vehicle_wheel_pose.hpp"
 #include <algorithm>
 #include <cmath>
 #include <iostream>
@@ -90,14 +92,27 @@ void LevelSession::driveVehicles(float dt) {
         if (floorMesh) floor = runtime::VehicleFloor{runtime::FloorMesh(*floorMesh), drive.floorTracker, runtime::vehicleCollisionBody(record)};
         drive.awake = runtime::stepVehicleWorld(drive.rigid, drive.drivetrain, drive.awake, record, controls,
                                                 [this](const runtime::Vector3& from, const runtime::Vector3& to) { return runtime::castWheelRay(collision, from, to); }, steps,
-                                                floor ? &*floor : nullptr);
+                                                floor ? &*floor : nullptr, &drive.wheels);
         if (floor) drive.floorTracker = floor->tracker;
         if (runtime::updateStuckTimer(record.stuckTimer, 1.0f, false, std::fabs(runtime::forwardSpeed(drive.rigid)), dt))
             levelScripts.vehicles().requestState(boardingRecords[i], runtime::kVehicleStateStuck);
         vehicle.matrix = runtime::vehicleNodeMatrix(drive.rigid, record.centreOfMass);
         scene.setTransform(placedSceneIndex[drive.placedIndex], vehicle.matrix);
-        for (std::size_t w = 0; w < wheelSceneIndex.size(); ++w)
-            if (wheelSceneIndex[w].first == drive.placedIndex) scene.setTransform(wheelSceneIndex[w].second, chase::assets::multiply(placementMatrix(wheelLocalPlacements[w]), vehicle.matrix));
+        poseVehicleWheels(i);
+    }
+}
+
+void LevelSession::poseVehicleWheels(std::size_t vehicleIndex) {
+    const VehicleDrive& drive = vehicleDrives[vehicleIndex];
+    const runtime::VehicleRecord& record = levelScripts.vehicles().records()[boardingRecords[vehicleIndex]];
+    const chase::assets::Matrix origin = runtime::bodyOriginMatrix(drive.rigid);
+    for (std::size_t w = 0; w < wheelSceneIndex.size(); ++w) {
+        if (wheelSceneIndex[w].first != drive.placedIndex) continue;
+        const std::size_t number = wheelNumbers[w];
+        const bool simulated = number < drive.wheels.size() && number < drive.drivetrain.wheels.size();
+        scene.setTransform(wheelSceneIndex[w].second,
+                           simulated ? runtime::wheelPoseMatrix(record.wheels[number].suspension, drive.drivetrain.wheels[number], number, drive.wheels[number].distance, origin)
+                                     : chase::assets::multiply(placementMatrix(wheelLocalPlacements[w]), boardingVehicles[vehicleIndex].matrix));
     }
 }
 
@@ -153,13 +168,54 @@ void LevelSession::handleBoardingEvents(const std::vector<runtime::BoardingEvent
         static const char* const names[] = {"jump in started", "entered", "exiting", "left"};
         std::cout << "vehicle " << instance << ": " << names[int(event.kind)] << " at update " << updatesForLog << '\n';
         if (event.kind == runtime::BoardingEventKind::Entered) {
+            enterVehicleHud(levelScripts.vehicles().records()[record]);
             levelScripts.vehicles().playerEntered(record);
             levelScripts.fireObjectEvent("playervehicleentered", instance);
         } else if (event.kind == runtime::BoardingEventKind::Exiting) {
             levelScripts.vehicles().playerExited(record);
             levelScripts.fireObjectEvent("playervehicleexiting", instance);
         }
+        if (event.kind == runtime::BoardingEventKind::Exiting || event.kind == runtime::BoardingEventKind::Left) leaveVehicleHud();
     }
+}
+
+void LevelSession::enterVehicleHud(const runtime::VehicleRecord& record) {
+    if (!hud) return;
+    const std::string name = record.vehicleType < vehicleTableNames.size() ? vehicleTableNames[record.vehicleType] : std::string();
+    const runtime::VehicleHud::Change change =
+        vehicleHud.begin(record.healthStart, name, hud->hearts(), [this](const std::string& path) { return shared.archive.find(path) != nullptr; });
+    hud->setHearts(change.hearts, change.vehicleImage);
+}
+
+void LevelSession::leaveVehicleHud() {
+    if (!hud) return;
+    if (const std::optional<runtime::VehicleHud::Change> change = vehicleHud.end()) hud->setHearts(change->hearts, change->vehicleImage);
+}
+
+void LevelSession::syncVehicleHud() {
+    if (!hud || !boarding) return;
+    hud->setVehiclePortrait(vehicleHud.portrait(boarding->phase()).value_or(std::string()));
+}
+
+void LevelSession::updateHeadIcon(float dt) {
+    headIcon.update(dt);
+    if (!boarding || !player || boarding->phase() != runtime::BoardingPhase::OnFoot) return;
+    if (runtime::findVehicleToEnter(boardingVehicles, boardingInput(0.0f).player)) headIcon.request();
+}
+
+void LevelSession::drawHeadIcon(chase::frontend::Canvas& top) {
+    if (!player || !follow) return;
+    const float node[3] = {player->motion.x, player->vertical.y, player->motion.z};
+    const std::array<float, 3> position = runtime::headIconPosition(node, runtime::kPlayerEntityScaleMeasured);
+    const float* eye = follow->eye();
+    const float dx = position[0] - eye[0], dy = position[1] - eye[1], dz = position[2] - eye[2];
+    const int alpha = runtime::headIconAlphaByte(headIcon.fade(), std::sqrt(dx * dx + dy * dy + dz * dz));
+    if (alpha <= 0) return;
+    const runtime::HeadIconScreen screen = runtime::projectHeadIcon(position, eye, follow->yaw(), follow->pitch(), follow->verticalFieldOfView());
+    if (!screen.visible) return;
+    const Image& icon = hudResources.image(runtime::kHeadIconButtonX);
+    top.drawScaled(icon, {0, 0, icon.width, icon.height}, screen.centreX - screen.width * 0.5f, screen.centreY - screen.height * 0.5f, screen.width, screen.height,
+                   {1, 1, 1, float(alpha) / 255.0f});
 }
 
 runtime::BoardingStep LevelSession::stepBoarding(float dt) {

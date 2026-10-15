@@ -131,3 +131,13 @@ Unknowns:
 - The sphere sweep 0x1b6ef8 / 0x16788c, the sphere set-up 0x33a4fc, the second cell search 0x164328 (0x1aa478, 0x2384dc), the message handler of 0x181e68 and its other effects (body+0x90 bits, body+0xdc8 +0x41 for surface 6).
 - Where the compound shape and its box come from (CollSpheres, CollRadius, DCollSpheres, ExtraColSpheres1 at the class loader), and the writers of 0x376820 (0.75), of the step record and of byte 0x376c35.
 - Whether the original also throws the trooper at (822, 18.7, 1052); the oracle run stopped before it.
+
+<a id="ts-20261015-183542"></a>
+
+## 2026-10-15T18:35:42+02:00 — Wheel node pose 0x33929c (llvm-objdump)
+
+Evidence: objdump of 0x33929c (per-wheel pose, called by the body pose method 0x33c3e8 with the body-origin matrix), 0x237bc4 (rotation about Y), 0x2354b4 (about X), 0x258a10 (row-vector matrix product), 0x24d434 (identity), the constructor 0x33ce74 (body+0xdb0 = 1.0, literal 0x33d030). Wheel node matrix = M x body-origin matrix (rows right, up, forward, translation = the centre of mass, not the node), with M = identity, rotated about Y by (pi for a negative mount x) + (w+0x84 x body+0xdb0, wheels 0 and 1 only), then about X by w+0x80 (negated for a negative mount x), translation (mount x, mount y - (w+0xe0 - radius), mount z); a wheel with no node pointer (w+0x7c = 0) is skipped. w+0xe0 is the ray hit distance of the last wheel step. Port: `src/runtime/vehicle_wheel_pose.*`, glue `LevelSession::poseVehicleWheels`; test `vehicle-wheel-pose` (the expected matrices follow from the code, no wheel node was traced in the oracle).
+
+Unknowns:
+- The value of w+0xe0 before the first wheel step (wheel constructor 0x339bec); the port keeps the class-file pose until then.
+- The detach of wheel nodes by distance (0x1571dc) and what the pose does for them.

@@ -26,6 +26,8 @@
 #include "runtime/pad.hpp"
 #include "save/save_writer.hpp"
 #include "runtime/room_streamer.hpp"
+#include "runtime/head_icon.hpp"
+#include "runtime/vehicle_hud.hpp"
 #include "runtime/scene_change.hpp"
 #include "runtime/scene_start.hpp"
 #include "runtime/frame_pacer.hpp"
@@ -111,6 +113,12 @@ private:
     void updateFollowCamera(float dt);
     void loadBoardingVehicles(const std::map<std::string, std::pair<std::size_t, chase::render::Mat4>>& placedInstances);
     void driveVehicles(float dt);
+    void poseVehicleWheels(std::size_t vehicle);
+    void syncVehicleHud();
+    void updateHeadIcon(float dt);
+    void drawHeadIcon(chase::frontend::Canvas& top);
+    void enterVehicleHud(const chase::runtime::VehicleRecord& record);
+    void leaveVehicleHud();
     bool placeVehicle(const std::string& instance, const chase::assets::Placement& target);
     bool placeSeatedVehicle(const float position[3]);
     std::optional<chase::runtime::WaypointVehicle> waypointVehicle() const;
@@ -152,6 +160,7 @@ private:
     std::optional<std::size_t> skyInstance;
     std::optional<float> seaHeight;
     std::vector<std::pair<std::size_t, std::size_t>> wheelSceneIndex;
+    std::vector<std::size_t> wheelNumbers;
     std::vector<chase::assets::Placement> placedObjects;
     std::vector<std::size_t> waypointSceneIndex;
     std::vector<chase::assets::Placement> waypointObjects;
@@ -174,12 +183,16 @@ private:
     struct VehicleDrive {
         chase::runtime::VehicleRigidBody rigid;
         chase::runtime::DrivetrainState drivetrain;
+        std::vector<chase::runtime::WheelState> wheels;
         chase::runtime::FloorTracker floorTracker;
         bool started = false;
         bool awake = false;
         std::size_t placedIndex = 0;
     };
     std::vector<VehicleDrive> vehicleDrives;
+    std::vector<std::string> vehicleTableNames;
+    chase::runtime::VehicleHud vehicleHud;
+    chase::runtime::HeadIcon headIcon;
     float vehicleWorldTime = 0;
     std::vector<chase::runtime::VehicleCameraSubject> vehicleCameras;
     std::optional<std::size_t> cameraVehicle;

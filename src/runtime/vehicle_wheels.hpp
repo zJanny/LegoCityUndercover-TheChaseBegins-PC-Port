@@ -99,6 +99,6 @@ std::vector<WheelState> stepVehiclePhysics(VehicleRigidBody& body, DrivetrainSta
 // resets the sleep time), then for an awake body stepVehiclePhysics with kVehicleWorldStep and the sleep rule updateVehicleActivation. An
 // asleep body without a reason to wake stays asleep (mode 2). Returns whether the body is awake afterwards.
 bool stepVehicleWorld(VehicleRigidBody& body, DrivetrainState& drive, bool awake, const VehicleRecord& record, const BodyInputs& controls,
-                      const WheelRay& ray, int steps, VehicleFloor* floor = nullptr);
+                      const WheelRay& ray, int steps, VehicleFloor* floor = nullptr, std::vector<WheelState>* lastWheels = nullptr);
 
 }

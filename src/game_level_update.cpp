@@ -226,6 +226,8 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         stick.cameraYaw = follow->yaw();
         if (hud) {
             hud->update(dt);
+            syncVehicleHud();
+            updateHeadIcon(dt);
             const fe::StudSink sink = hud->studSink();
             studs.setFlightTarget(runtime::unprojectTopScreen(sink.x, sink.y, fe::kStudSinkDepth, follow->eye(), follow->yaw(),
                                                               follow->pitch(), follow->verticalFieldOfView()));

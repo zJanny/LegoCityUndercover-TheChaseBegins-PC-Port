@@ -14,6 +14,10 @@ public:
 
     enum class State { Hidden, FadingIn, Shown, FadingOut };
 
+    CameraLockIcon() = default;
+    // The same state machine with other durations (the head icon of 0x22d7c0 uses 0.15 and 0.1).
+    CameraLockIcon(float fadeSeconds, float holdSeconds) : fade_(fadeSeconds), hold_(holdSeconds) {}
+
     // 0x23cc00: called by 0x193aa4 while L or R is pressed and the camera command is not the follow controller.
     void trigger();
     void update(float dt);
@@ -21,6 +25,7 @@ public:
     State state() const { return state_; }
 
 private:
+    float fade_ = kFadeSeconds, hold_ = kHoldSeconds;
     State state_ = State::Hidden;
     float now_ = 0, start_ = 0;
 };

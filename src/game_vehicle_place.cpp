@@ -14,9 +14,8 @@ bool LevelSession::placeVehicle(const std::string& instance, const chase::assets
         drive.rigid = runtime::vehicleRigidBody(levelScripts.vehicles().records()[boardingRecords[i]], {vehicle.matrix[12], vehicle.matrix[13], vehicle.matrix[14]},
                                                 runtime::vehicleHeading(vehicle));
         scene.setTransform(placedSceneIndex[drive.placedIndex], vehicle.matrix);
-        for (std::size_t w = 0; w < wheelSceneIndex.size(); ++w)
-            if (wheelSceneIndex[w].first == drive.placedIndex)
-                scene.setTransform(wheelSceneIndex[w].second, chase::assets::multiply(placementMatrix(wheelLocalPlacements[w]), vehicle.matrix));
+        drive.wheels.clear();
+        poseVehicleWheels(i);
         return true;
     }
     return false;

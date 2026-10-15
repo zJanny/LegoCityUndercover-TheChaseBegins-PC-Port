@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <utility>
 
 namespace chase::runtime {
 namespace {
@@ -191,7 +192,7 @@ std::vector<WheelState> stepVehiclePhysics(VehicleRigidBody& body, DrivetrainSta
 
 
 bool stepVehicleWorld(VehicleRigidBody& body, DrivetrainState& drive, bool awake, const VehicleRecord& record, const BodyInputs& controls,
-                      const WheelRay& ray, int steps, VehicleFloor* floor) {
+                      const WheelRay& ray, int steps, VehicleFloor* floor, std::vector<WheelState>* lastWheels) {
     for (int step = 0; step < steps; ++step) {
         if (floor) trackFloorCell(floor->mesh, floor->tracker, body.position);
         bool woke = false;
@@ -204,7 +205,8 @@ bool stepVehicleWorld(VehicleRigidBody& body, DrivetrainState& drive, bool awake
             sleepVehicle(drive, controls);
             continue;
         }
-        stepVehiclePhysics(body, drive, record, controls, woke, ray, kVehicleWorldStep, floor);
+        std::vector<WheelState> wheels = stepVehiclePhysics(body, drive, record, controls, woke, ray, kVehicleWorldStep, floor);
+        if (lastWheels) *lastWheels = std::move(wheels);
         awake = updateVehicleActivation(body, kVehicleWorldStep);
     }
     return awake;

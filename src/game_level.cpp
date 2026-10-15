@@ -158,7 +158,9 @@ LevelSession::LevelSession(const Shared& sharedState)
     player = game_player::placePlayer(archive, scene, level);
     levelScripts.setAllRoomsLoaded();
     levelScripts.loadWaypoints(classOf);
-    levelScripts.loadVehicles(classOf, vehicleTable(archive));
+    const std::vector<runtime::VehicleTableRow> vehicleRows = vehicleTable(archive);
+    for (const runtime::VehicleTableRow& row : vehicleRows) vehicleTableNames.push_back(row.name);
+    levelScripts.loadVehicles(classOf, vehicleRows);
     for (const runtime::VehicleRecord& vehicle : levelScripts.vehicles().records()) {
         const auto owner = placedInstances.find(vehicle.instance);
         if (owner == placedInstances.end()) continue;
@@ -168,6 +170,7 @@ LevelSession::LevelSession(const Shared& sharedState)
             if (scene.addModel(meshModelPath(wheel.local.mesh), chase::assets::multiply(placementMatrix(wheel.local), owner->second.second))) {
                 wheelSceneIndex.push_back({placedIndex, wheelIndex});
                 wheelLocalPlacements.push_back(wheel.local);
+                wheelNumbers.push_back(std::size_t(&wheel - vehicle.wheels.data()));
             }
         }
     }
@@ -354,6 +357,7 @@ void LevelSession::draw(int width, int height) {
     if (hud && !cutscenePlaying()) {
         hudCanvas.clearTransparent();
         hud->draw(hudCanvas, provisionalStudClockSeconds);
+        drawHeadIcon(hudCanvas);
         fe::MinimapView mapView;
         mapView.x = player->motion.x;
         mapView.z = player->motion.z;

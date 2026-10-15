@@ -41,7 +41,11 @@ public:
     Hud(Resources& resources, const HudConfig& config);
 
     void update(float dt);
-    void setHearts(unsigned hearts);
+    // 0x2316b4: `vehicleImage` picks UI_HeartVehicle_3DS (the player's state is 0x11a or 0x11c) for all six hearts.
+    void setHearts(unsigned hearts, bool vehicleImage = false);
+    // 0x193604 while the player is in a vehicle: the portrait is the vehicle's (loaded by 0x262188) on heartsBG_generic. An empty path
+    // returns to the character's portrait and background.
+    void setVehiclePortrait(const std::string& path) { vehiclePortrait_ = path; }
     // 0x22ddf4 via the pickup hook 0x29c090: the counter now shows `total` with the icon of stud type 0..3.
     void studsBanked(unsigned type, std::uint64_t total);
     // STAND-IN: `spinSeconds`, the clock of the icon animation (15 frames per second), has the same unrecovered origin as
@@ -83,6 +87,8 @@ private:
     float cameraLockAlpha_ = 0;
     unsigned updates_ = 0;
     unsigned hearts_ = kHudHeartSlots;
+    bool vehicleHearts_ = false;
+    std::string vehiclePortrait_;
     std::array<Heart, kHudHeartSlots> heart_{};
     StudBarState barState_ = StudBarState::Hidden;
     float barStart_ = 0, barHold_ = kStudBarHoldSeconds;

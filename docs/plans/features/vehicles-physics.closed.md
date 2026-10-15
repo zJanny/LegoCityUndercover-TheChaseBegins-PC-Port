@@ -13,3 +13,4 @@ Done items of [vehicles-physics.md](vehicles-physics.md), moved here by tools/ch
 - [x] VEH-S34 — removed 2026-10-15: the ground limit is replaced by the floor pass 0x1c54f8 (VEH-40). evidence: [vehicles-physics.md §2026-10-15T18:07:23](../../re/vehicles-physics.md#ts-20261015-180723)
 - [x] VEH-S35 — removed 2026-10-15: the body sleeps by the original's rule 0x30cdf8 (VEH-40). evidence: [vehicles-physics.md §2026-10-15T18:07:23](../../re/vehicles-physics.md#ts-20261015-180723)
 - [x] VEH-S42 — removed 2026-10-15: the world step 1/30 s and the limit of 2 steps are read from the scheduler record (VEH-S53 for its writer). evidence: [vehicles-physics.md §2026-10-15T18:07:23](../../re/vehicles-physics.md#ts-20261015-180723)
+- [x] VEH-43 — Wheel node pose 0x33929c: suspension travel, steer angle and spin on the wheel nodes, in `vehicle_wheel_pose.*`; evidence: [vehicles-physics.md §2026-10-15T18:35:42](../../re/vehicles-physics.md#ts-20261015-183542).
