@@ -5,6 +5,7 @@
 #include "runtime/collision.hpp"
 #include "runtime/vehicle.hpp"
 #include "runtime/vehicle_body.hpp"
+#include "runtime/vehicle_box_contact.hpp"
 #include "runtime/vehicle_collision.hpp"
 
 #include <functional>
@@ -76,11 +77,13 @@ VehicleRigidBody vehicleRigidBody(const VehicleRecord& record, const Vector3& no
 // The node matrix (rows right, up, forward, translation) of a rigid body.
 std::array<float, 16> vehicleNodeMatrix(const VehicleRigidBody& body, const std::array<float, 3>& centreOfMass);
 
-// The level floor of a vehicle body: the floor graph, the tracked cell and the body's collision points.
+// The level floor of a vehicle body: the floor graph, the tracked cell and the body's collision points; optionally the body's Bullet contacts
+// with the level's static boxes.
 struct VehicleFloor {
     FloorMesh mesh;
     FloorTracker tracker;
     VehicleCollisionBody shape;
+    VehicleBoxContacts* boxes = nullptr;
 };
 VehicleCollisionBody vehicleCollisionBody(const VehicleRecord& record);
 
@@ -96,7 +99,8 @@ std::vector<WheelState> stepVehiclePhysics(VehicleRigidBody& body, DrivetrainSta
                                            bool wokeThisUpdate, const WheelRay& ray, float dt, VehicleFloor* floor = nullptr);
 
 // The world steps of one update (vehicleWorldSteps) for one vehicle: per step the cell tracker 0x20c0e4, the wake test of 0x33b4a0 (0x2308e4
-// resets the sleep time), then for an awake body stepVehiclePhysics with kVehicleWorldStep and the sleep rule updateVehicleActivation. An
+// resets the sleep time), then for an awake body stepVehiclePhysics with kVehicleWorldStep, the Bullet contacts with the static boxes
+// (collision detection and solver of 0x30c768, after the floor pass) and the sleep rule updateVehicleActivation. An
 // asleep body without a reason to wake stays asleep (mode 2). Returns whether the body is awake afterwards.
 bool stepVehicleWorld(VehicleRigidBody& body, DrivetrainState& drive, bool awake, const VehicleRecord& record, const BodyInputs& controls,
                       const WheelRay& ray, int steps, VehicleFloor* floor = nullptr, std::vector<WheelState>* lastWheels = nullptr);

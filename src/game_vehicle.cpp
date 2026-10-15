@@ -78,6 +78,7 @@ void LevelSession::driveVehicles(float dt) {
             suppressDrivenVehicleCollision();
             drive.rigid = runtime::vehicleRigidBody(record, {vehicle.matrix[12], vehicle.matrix[13], vehicle.matrix[14]}, runtime::vehicleHeading(vehicle));
             drive.drivetrain = runtime::vehicleDrivetrain(record);
+            drive.boxContacts = runtime::vehicleBoxContacts(record.className, &vehicleBoxes);
         }
         if (record.pendingSpeedLimit) {
             runtime::limitForwardSpeed(drive.rigid, *record.pendingSpeedLimit);
@@ -89,7 +90,7 @@ void LevelSession::driveVehicles(float dt) {
         controls.driver = driven;
         const CollisionItem* floorMesh = floorItem();
         std::optional<runtime::VehicleFloor> floor;
-        if (floorMesh) floor = runtime::VehicleFloor{runtime::FloorMesh(*floorMesh), drive.floorTracker, runtime::vehicleCollisionBody(record)};
+        if (floorMesh) floor = runtime::VehicleFloor{runtime::FloorMesh(*floorMesh), drive.floorTracker, runtime::vehicleCollisionBody(record), &drive.boxContacts};
         drive.awake = runtime::stepVehicleWorld(drive.rigid, drive.drivetrain, drive.awake, record, controls,
                                                 [this](const runtime::Vector3& from, const runtime::Vector3& to) { return runtime::castWheelRay(collision, from, to); }, steps,
                                                 floor ? &*floor : nullptr, &drive.wheels);

@@ -174,6 +174,7 @@ private:
     unsigned updatesForLog = 0;
     std::size_t reportedUnhandled = 0, reportedEvents = 0;
     chase::runtime::CollisionWorld collision;
+    std::vector<chase::runtime::BulletBox> vehicleBoxes;
     std::vector<game_doors::DoorObject> doors;
     chase::runtime::BuilditSet buildits;
     game_prop_parts::PropParts propParts;
@@ -187,6 +188,7 @@ private:
         chase::runtime::DrivetrainState drivetrain;
         std::vector<chase::runtime::WheelState> wheels;
         chase::runtime::FloorTracker floorTracker;
+        chase::runtime::VehicleBoxContacts boxContacts;
         bool started = false;
         bool awake = false;
         std::size_t placedIndex = 0;

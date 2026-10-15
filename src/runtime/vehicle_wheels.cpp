@@ -207,6 +207,7 @@ bool stepVehicleWorld(VehicleRigidBody& body, DrivetrainState& drive, bool awake
         }
         std::vector<WheelState> wheels = stepVehiclePhysics(body, drive, record, controls, woke, ray, kVehicleWorldStep, floor);
         if (lastWheels) *lastWheels = std::move(wheels);
+        if (floor && floor->boxes) stepVehicleBoxContacts(body, *floor->boxes, kVehicleWorldStep);
         awake = updateVehicleActivation(body, kVehicleWorldStep);
     }
     return awake;

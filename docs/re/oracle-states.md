@@ -144,3 +144,13 @@ Unknowns:
 - Made by the vehicle-drive agent from the user's `m11-2-patrol-car` (game progress: mission 1-1 step 2, the police car waits behind `1-1_Waypoint_02`; nothing of the user's save was changed): with `--rpc` writes as measuring aids the locked bit (+0x311 bit 1) of the record of `1-1_Police_Car` (entity 0x08a88440, record 0x08a884e0) was cleared and the player was teleported 1.9 m beside the car (car position plus its right axis); X was pressed, then `savestate drv-police-car-seated` (New 3DS, OpenGL renderer).
 - Contents: the player sits in the police car (ctrl+0x6c = 0x11c, vehicle state (5, 5)), the forced stop byte +0x310 is still 1 (set by VanBreakdown, cleared by a script call of SetForcedStopOnMyVehicle in the first update after A is pressed), the car stands at (887.377, 17.809, 1117.318). Use: speed, brake, steering and hand brake measurements in [vehicles-driving.md §2026-10-15T09:30:35](vehicles-driving.md#ts-20261015-093035).
 
+
+<a id="ts-20261015-190736"></a>
+
+## 2026-10-15T19:07:36+02:00 — State bullet-trooper-at-obstacle (made for the vehicle box contacts, VEH-60)
+
+- Made by agent Y (vehicle box collisions) from `drv-police-car-seated` (mission 1-1 step 2, see above): fixed dt 0.033, A held for 106 stepped updates, then `savestate`. The save ran only after the tool detached, while the game ran freely with A still held, so the state is later than the stepped frame: the trooper rests against the static Bullet box at (839.22, 22.16, 1071.55), rigid body 0x08e16f40 at (847.79, 17.25, 1077.14), awake, its manifold 0x08472cb0 has 4 points. The NAME.json frame (106) is the stepped frame, not the saved one.
+- Needs the OpenGL renderer (`--renderer opengl`): with the software renderer, launches with `--state drv-police-car-seated` crashed 6 of 6 times during the state load (SIGSEGV, not the known paint race signature).
+
+Unknowns:
+- Why the save waited for the detach (the save key press is queued until the emulation thread runs).

@@ -61,15 +61,19 @@ std::vector<runtime::StudSpawn> studSpawns(const DrawableObjects& drawable) {
     return spawns;
 }
 
-// The level's collision: the items of the level's master model (models/<level>/<level>.bfnmdl) and the placed objects.
-runtime::CollisionWorld loadCollision(FuseArchive& archive, const std::string& levelPath, const std::vector<ObjectCollision>& objects) {
+// The level's collision: the items of the level's master model (models/<level>/<level>.bfnmdl) and the placed objects; the master model's
+// static Bullet boxes for the vehicles.
+runtime::CollisionWorld loadCollision(FuseArchive& archive, const std::string& levelPath, const std::vector<ObjectCollision>& objects,
+                                      std::vector<runtime::BulletBox>& vehicleBoxes) {
     runtime::CollisionWorld world;
     const std::string path = lower(levelPath);
     const std::string folder = path.substr(0, path.find_last_of('/'));
     const std::string name = folder.substr(folder.find_last_of('/') + 1);
     const FuseEntry* entry = archive.find("models/" + name + "/" + name + ".bfnmdl");
     if (!entry) return world;
-    for (const CollisionItem& item : parseModel(archive.read(*entry)).collision) world.add(item);
+    const Model model = parseModel(archive.read(*entry));
+    for (const CollisionItem& item : model.collision) world.add(item);
+    vehicleBoxes = runtime::levelVehicleBoxes(model);
     for (const ObjectCollision& object : objects) world.addObject(object);
     return world;
 }
@@ -244,7 +248,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     levelScripts.takeThreadEvents();
     std::cout << "scripts: startup ended after " << startupUpdates << " updates, " << levelScripts.threadCount() << " threads running\n";
     const std::vector<ObjectCollision> placedCollisions = objectCollisionCandidates(archive, level);
-    collision = loadCollision(archive, options.level, placedCollisions);
+    collision = loadCollision(archive, options.level, placedCollisions, vehicleBoxes);
     runtime::applyObjectCollisionState(collision, objectState);
     doors = game_doors::loadDoors(scene, archive, level, classOf, placedCollisions, placedInstances);
     for (const DoorObject& door : doors) game_doors::poseDoor(scene, door);
