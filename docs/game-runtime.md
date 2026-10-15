@@ -99,7 +99,7 @@ What is not like the original yet:
 - Only some kinds of objects block the character and the camera so far. Parked cars, people, animals and some special objects do not. Objects that the original switches off at the start (mission items, build-it parts and their results) are switched off by the same rules as in the original, but nothing switches them on later.
 - Objects stay as they are at the start of the level. Nothing breaks or moves, and doors open only when the character comes close. An open door keeps the same blocking box as a closed one here. One measurement in the original differed, and the reason is not known yet.
 - When the camera is stuck behind a wall for a longer time, the original places it again. That is not done here.
-- Other characters do not block the character. Parked vehicles do: the character stops at them. Vehicles stand still with their wheels; nobody can get in or drive yet.
+- Other characters do not block the character. Parked vehicles do: the character stops at them.
 - Animals and the eight line-up characters of the police station are not shown. Their look is not worked out yet.
 - Walking slowly off a ledge looks different from the original, which first plays a short step.
 - Jumping onto something higher, or under a ceiling, may not match the original.
