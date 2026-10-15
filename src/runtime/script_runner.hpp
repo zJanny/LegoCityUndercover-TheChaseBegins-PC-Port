@@ -128,10 +128,13 @@ public:
     // 0x1746c0, after the runner pass: the check of every enabled trigger whose owner object is enabled (bound events
     // of the player at `player`), then the queued triggers (0x21a560) become threads at the head of the list, the last
     // queued first; they run from the next update on.
-    void checkTriggers(const float player[3]);
+    void checkTriggers(const float player[3], bool playerInVehicle = false);
     const std::vector<ScriptTriggerState>& triggers() const { return triggers_; }
     // The code-side fire of an ObjectTriggered event (0x23cee8): queues the enabled trigger whose owner object is `lowerInstance`.
     void fireObjectTriggered(const std::string& lowerInstance);
+    // The same for the other events the vehicle and character code raises by name (PlayerVehicleEntered, PlayerVehicleExiting): the first enabled
+    // trigger of that event whose owner object is `lowerInstance`.
+    void fireObjectEvent(const std::string& lowerEvent, const std::string& lowerInstance);
     // World position of a placed object by lower-case instance name (the node of an object bound check); false when unknown.
     using ObjectPositionSource = std::function<bool(const std::string&, float[3])>;
     void setObjectPositionSource(ObjectPositionSource source) { objectPosition_ = std::move(source); }

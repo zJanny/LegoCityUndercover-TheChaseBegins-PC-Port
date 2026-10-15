@@ -116,6 +116,15 @@ bool modelBounds(FuseArchive& archive, const std::string& modelPath, float centr
     return true;
 }
 
+bool modelCollisionBox(FuseArchive& archive, const std::string& modelPath, float centre[3], float half[3]) {
+    const ModelData data = loadModel(archive, modelPath);
+    if (!data.firstItem || data.firstItem->nodes.empty()) return false;
+    const CollisionNode& root = data.firstItem->nodes.front();
+    std::copy(root.centre, root.centre + 3, centre);
+    std::copy(root.half, root.half + 3, half);
+    return true;
+}
+
 bool PlacedObjectState::isDisabled(const std::string& instance) const { return disabled.count(lower(instance)) != 0; }
 
 bool PlacedObjectState::collisionEnabled(const std::string& instance, bool initial) const {

@@ -72,6 +72,12 @@ void PlayerRig::pose(Scene& scene) const {
     placeCharacter(scene, character, instance, skin, player);
 }
 
+void PlayerRig::setVisible(Scene& scene, bool visible) const {
+    scene.setInstanceVisible(instance.bodyInstance, visible);
+    scene.setInstanceVisible(instance.headInstance, visible);
+    if (instance.hatInstance) scene.setInstanceVisible(*instance.hatInstance, visible);
+}
+
 std::int16_t headingFromDegrees(float degrees) {
     return runtime::wrapHeading(std::int32_t(std::lround(degrees / 360.0f * 65536.0f)));
 }

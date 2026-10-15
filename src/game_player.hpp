@@ -45,6 +45,7 @@ struct PlayerRig {
     chase::render::Mat4 matrix() const;
     void animate(chase::render::Scene& scene, float dt, int role, float scale);
     void pose(chase::render::Scene& scene) const;
+    void setVisible(chase::render::Scene& scene, bool visible) const;
 };
 
 struct PlayerAnimation {

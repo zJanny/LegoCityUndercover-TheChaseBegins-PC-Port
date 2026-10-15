@@ -694,7 +694,7 @@ void ScriptRunner::assignArithmetic(const ScriptCall& call) {
     variables_[assets::nameHash(call.arguments[0])] = result;
 }
 
-void ScriptRunner::checkTriggers(const float player[3]) {
+void ScriptRunner::checkTriggers(const float player[3], bool playerInVehicle) {
     for (std::size_t i = 0; i < level_.triggers.size(); ++i) {
         const assets::LevelTrigger& trigger = level_.triggers[i];
         ScriptTriggerState& state = triggers_[i];
@@ -702,7 +702,7 @@ void ScriptRunner::checkTriggers(const float player[3]) {
         const std::string event = lower(trigger.event);
         const TriggerEvent kind = classifyTriggerEvent(event);
         if (kind == TriggerEvent::Unmodelled) {
-            if (event != "objecttriggered" && event != "objectuntriggered" &&
+            if (event != "objecttriggered" && event != "objectuntriggered" && event != "playervehicleentered" && event != "playervehicleexiting" &&
                 std::find(unhandledEvents_.begin(), unhandledEvents_.end(), event) == unhandledEvents_.end())
                 unhandledEvents_.push_back(event);
             continue;
@@ -710,6 +710,7 @@ void ScriptRunner::checkTriggers(const float player[3]) {
         const int bound = boundIndex(trigger.firstArgument);
         TriggerSample sample;
         sample.playerInside = bound >= 0 && playerInBound(std::size_t(bound), player);
+        sample.playerInVehicle = playerInVehicle;
         float position[3] = {0, 0, 0};
         const bool objectBound = kind == TriggerEvent::ObjectBoundEntered || kind == TriggerEvent::ObjectBoundLeft ||
                                  kind == TriggerEvent::ObjectBoundInside;
@@ -731,9 +732,11 @@ void ScriptRunner::checkTriggers(const float player[3]) {
     }
 }
 
-void ScriptRunner::fireObjectTriggered(const std::string& lowerInstance) {
+void ScriptRunner::fireObjectTriggered(const std::string& lowerInstance) { fireObjectEvent("objecttriggered", lowerInstance); }
+
+void ScriptRunner::fireObjectEvent(const std::string& lowerEvent, const std::string& lowerInstance) {
     for (std::size_t i = 0; i < level_.triggers.size(); ++i)
-        if (triggers_[i].enabled && lower(level_.triggers[i].event) == "objecttriggered" && lower(level_.triggers[i].objectName) == lowerInstance) {
+        if (triggers_[i].enabled && lower(level_.triggers[i].event) == lowerEvent && lower(level_.triggers[i].objectName) == lowerInstance) {
             queueTrigger(i);
             break;
         }

@@ -29,6 +29,7 @@
 #include "runtime/scheduler.hpp"
 #include "runtime/script_runner.hpp"
 #include "runtime/studs.hpp"
+#include "runtime/vehicle_boarding.hpp"
 #include <SDL.h>
 #include <map>
 #include <cstddef>
@@ -96,6 +97,9 @@ private:
     void updateBuildits(const float playerPosition[3]);
     void updateCarry(const float playerPosition[3]);
     void updateFollowCamera(float dt);
+    void loadBoardingVehicles(const std::map<std::string, std::pair<std::size_t, chase::render::Mat4>>& placedInstances);
+    chase::runtime::BoardingStep stepBoarding(float dt);
+    game_player::PlayerAnimation applyBoarding(const chase::runtime::BoardingStep& step);
     bool holdForMovie(float dt);
     bool cutscenePlaying() const { return levelScripts.cutscenes().playing() != nullptr; }
     void startRoomStreaming();
@@ -135,6 +139,9 @@ private:
     std::vector<game_doors::DoorObject> doors;
     chase::runtime::BuilditSet buildits;
     chase::runtime::CarrySet carry;
+    std::optional<chase::runtime::VehicleBoarding> boarding;
+    std::vector<chase::runtime::BoardingVehicle> boardingVehicles;
+    std::vector<std::size_t> boardingRecords;
     float radius = 0;
     PlaceholderCamera camera;
     std::optional<chase::runtime::CameraRig> follow;

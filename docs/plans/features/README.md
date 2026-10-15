@@ -11,7 +11,7 @@ Item format: `- [ ] ID — gap. needs: ID. blocks: ID. evidence: link`. `needs:`
 | [level-objects](level-objects.md) | IN_PROGRESS | LEVOBJ-3 objects frozen (needs SCRIPT-1); LEVOBJ-2 NPC start animation; LEVOBJ-12/13 hidden characters, per-class visibility |
 | [level-objects-buildit](level-objects-buildit.md) | IN_PROGRESS | LEVOBJ-40 brick animation; LEVOBJ-41 sounds, studs; LEVOBJ-43 built state not saved (needs SAVE-8) |
 | [level-objects-carry](level-objects-carry.md) | IN_PROGRESS | LEVOBJ-30 pickup timing; LEVOBJ-31 locomotion while carrying; LEVOBJ-32 sounds and effects |
-| [vehicles](vehicles.md) | NOT_STARTED | VEH-1 create vehicle objects; VEH-3 flag natives; VEH-4 enter and leave; VEH-6 physics body (needs oracle traces) |
+| [vehicles](vehicles.md) | IN_PROGRESS | VEH-5 driving without physics detail; VEH-6 physics body (needs oracle traces); VEH-17 enter prompt; VEH-19 boarding gates and exit probes |
 | [script-system](script-system.md) | IN_PROGRESS | SCRIPT-1 mission flow (needs SCRIPT-7 natives, SCRIPT-75 / 76 trigger events); runner, scene start, class startups |
 | [script-system-triggers](script-system-triggers.md) | IN_PROGRESS | SCRIPT-75 / 76 AI and vehicle trigger events; SCRIPT-77 / 78 object bound checks |
 | [script-system-missions](script-system-missions.md) | IN_PROGRESS | SCRIPT-110 waypoint class starts mission scripts; SCRIPT-111 class-fired ObjectTriggered events; SCRIPT-113 unnamed mission scripts |

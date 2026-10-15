@@ -190,8 +190,10 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
             studs.setFlightTarget(runtime::unprojectTopScreen(sink.x, sink.y, fe::kStudSinkDepth, follow->eye(), follow->yaw(),
                                                               follow->pitch(), follow->verticalFieldOfView()));
         }
+        const runtime::BoardingStep boardingStep = stepBoarding(dt);
         game_player::PlayerAnimation shown =
-            game_player::updatePlayer(*player, collision, runtime::stickIntent(stick), !controlTaken && pad.slot(kSlotJumpButton).press > 0, dt);
+            boardingStep.takesControl ? applyBoarding(boardingStep)
+                                      : game_player::updatePlayer(*player, collision, runtime::stickIntent(stick), !controlTaken && pad.slot(kSlotJumpButton).press > 0, dt);
         if (const runtime::AiCharacter* driven = levelScripts.ai().moving("player1") ? levelScripts.ai().character("player1") : nullptr) {
             game_player::applyAiPosition(*player, *driven);
             shown = game_player::aiMoveAnimation(*driven);
@@ -222,8 +224,9 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
     sceneStart.update(dt);
     if (player) {
         const float playerPosition[3] = {player->motion.x, player->vertical.y, player->motion.z};
-        levelScripts.checkTriggers(playerPosition);
-        for (const std::string& started : levelScripts.updateWaypoints(dt, playerPosition, false))
+        const bool inVehicle = boarding && boarding->seatedVehicle();
+        levelScripts.checkTriggers(playerPosition, inVehicle);
+        for (const std::string& started : levelScripts.updateWaypoints(dt, playerPosition, inVehicle))
             std::cout << "waypoint started script " << started << " at update " << updates << '\n';
     }
     reportUnhandled();

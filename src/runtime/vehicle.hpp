@@ -1,7 +1,7 @@
 #pragma once
 // Vehicle objects (class descriptor of type 183 at 0x155b5c): the vehicle record the class creates at entity+0x7c, the start state its
 // parameter reader 0x23ed0c writes, the wheel children the post-link 0x15624c finds by name, and the five flag natives of mission 1-1.
-// No driving: the physics body, the input providers and entering are not ported (docs/plans/features/vehicles.md). No SDL dependency.
+// No driving: the physics body and the input providers are not ported; entering and leaving are in vehicle_boarding.hpp. No SDL dependency.
 #include "assets/assets.hpp"
 
 #include <array>
@@ -49,6 +49,7 @@ struct VehicleRecord {
     std::string room;
     std::uint16_t state = 0;           // +2
     std::uint16_t requestedState = 0;  // +4
+    bool statePending = false;         // +4 was written by the player side and +2 follows in the next update
     std::uint16_t vehicleType = 0;     // +0x2ec
     std::uint16_t musicTrack = 0;      // +0x2ee
     std::uint8_t flags311 = 0;
@@ -58,6 +59,7 @@ struct VehicleRecord {
     std::uint8_t healthStart = 0;      // +0x30d
     std::array<float, 3> driverPosition = {0, 0, 0};  // +0x27c
     bool hasDriverPosition = false;
+    std::array<float, 3> centreOfMass = {0, 0, 0};  // class value CentreOfMass: the origin of the physics body relative to the node
     float cameraPosY = 0, cameraPosZ = 0, cameraLookY = 0, cameraLookZ = 0, cameraPanScale = 1.0f;  // +0x2f0..+0x300
     std::uint8_t wheelCount = 0;       // +0x314 (class value numWheels)
     std::vector<VehicleWheel> wheels;  // +0x318: one per found "Wheel%02u" up to wheelCount
@@ -90,7 +92,11 @@ public:
     // The first update promotes the requested state to the current one (stand-in VEH-S5: the original transition function was not found).
     void settle();
 
-    // Instance name of the vehicle a character sits in (0x24255c); empty on foot. The port has no entering yet, so the default is "on foot".
+    // The player side writes +4 (5 while he drives, 3 after he jumps out); +2 takes it one update later (oracle, docs/re/vehicles.md, entry 2026-10-15T08:15:49).
+    void requestState(std::size_t index, std::uint16_t state);
+    void promotePending();
+
+    // Instance name of the vehicle a character sits in (0x24255c); empty on foot. Without a lookup everybody is on foot.
     using OccupantLookup = std::function<std::string(const std::string&)>;
     void setOccupantLookup(OccupantLookup lookup) { occupant_ = std::move(lookup); }
 

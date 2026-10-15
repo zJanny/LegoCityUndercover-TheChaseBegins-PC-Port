@@ -55,6 +55,8 @@ void readParameters(const ParamReader& reader, const std::vector<VehicleTableRow
             std::memcpy(record.driverPosition.data(), position->blocks[0].data(), 12);
             record.hasDriverPosition = true;
         }
+    if (const assets::LevelParam* centre = reader.get("CentreOfMass"))
+        if (centre->type == 2 && !centre->blocks.empty() && centre->blocks[0].size() >= 12) std::memcpy(record.centreOfMass.data(), centre->blocks[0].data(), 12);
     const std::int32_t tableHealth = record.vehicleType < table.size() ? table[record.vehicleType].health : 0;
     record.health = std::uint8_t(tableHealth);
     record.healthStart = record.health;
@@ -168,6 +170,20 @@ VehicleRecord* VehicleSet::mutableFind(const std::string& lowerCaseInstance) {
 
 void VehicleSet::settle() {
     for (VehicleRecord& record : records_) record.state = record.requestedState;
+}
+
+void VehicleSet::requestState(std::size_t index, std::uint16_t state) {
+    if (index >= records_.size()) return;
+    records_[index].requestedState = state;
+    records_[index].statePending = true;
+}
+
+void VehicleSet::promotePending() {
+    for (VehicleRecord& record : records_)
+        if (record.statePending) {
+            record.state = record.requestedState;
+            record.statePending = false;
+        }
 }
 
 bool VehicleSet::apply(VehicleNativeKind kind, const std::string& lowerCaseInstance, float value) {
