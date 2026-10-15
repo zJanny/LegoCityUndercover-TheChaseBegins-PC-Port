@@ -139,6 +139,15 @@ void conditions() {
     require(runner.variable("Other") == 2, "else taken");
 }
 
+void cameraFollowNeedsNoHandler() {
+    Level level;
+    add(level, "f", {{"CameraFollow", {}}, {"PlaySound", {"1"}}});
+    PlacedObjectState state;
+    ScriptRunner runner(level, state);
+    runner.start("f");
+    require(runner.unhandledCalls("camerafollow") == 0 && runner.unhandledCalls("playsound") == 1 && runner.threadCount() == 0, "CameraFollow handled");
+}
+
 void unhandledFunctionsAreRecorded() {
     Level level;
     add(level, "u", {{"PlaySound", {"1"}}, {"PlaySound", {"2"}}, {"EnableObject", {"Crate", "0"}}});
@@ -451,6 +460,7 @@ int main() {
         newThreadsWaitForTheNextPass();
         conditions();
         unhandledFunctionsAreRecorded();
+        cameraFollowNeedsNoHandler();
         triggerObjectSendsMessages();
         boundTriggersFireOnTheEdge();
         roomBoundsCountOnlyWhileTheRoomIsLoaded();

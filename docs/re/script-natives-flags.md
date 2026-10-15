@@ -100,3 +100,14 @@ Unknowns:
 - What fills the kind list at 0x3743ec, and whether it is the same list at other times.
 - Which end of the probe segment is the ray origin, and the effect of the hit (a ceiling above a character?); no scripted PositionPlayer call is reachable from a saved state (the 11 calls in lvl_01 are scene-change arrivals and two 1-8 waypoints).
 - Meaning of ctrl+0x315 masks 0x4 and 0x10 and who sets them again; the effect of message 8 (0x2414b4 / 0x2eafc8) on the player.
+
+<a id="ts-20261015-134200"></a>
+
+## 2026-10-15T13:42:00+02:00 — CameraFollow 0x1bf7c8 and PositionObject of a vehicle (SCRIPT-201; llvm-objdump only)
+
+- CameraFollow 0x1bf7c8 (no arguments): loads the global `*0x3770d8` (read again at 0x182110..0x182170 where the level start passes it to 0x226a30; probably the gameplay camera object, not verified) and calls 0x226a30, which stores it in the camera manager (0x376870) at +0x28; returns 1. Other callers of 0x226a30 set the same field (0x189558, 0x19683c, 0x21da14, 0x298c30, 0x2a36d4, 0x2b0e70, 0x2bc7ac, 0x2f72a8, 0x182170). The readers of manager +0x28 were not read. The port has one gameplay camera object and handles the call as a labelled no-op (stand-in).
+- PositionObject 0x1d9e6c for a vehicle (kind byte 183): copies the target node's matrix into the object's node (0x24c118), room link, then 0x22a1f4 only if the object is the global at 0x3745d4, the physics body at comp+0x2a4 gets the position (0x2554c0 into body+0x58), kinds 179 / 183 / 243 copy the position into comp+0x38 (0x2429d0), and the driver (entity+0x84) is placed at the node (0x20cc30, 0x23091c). Port: matrix, drive position, heading and fall height are set from the target placement (`LevelSession::placeVehicle`); the body velocity and the driver branch (the player stays seated through the boarding state) are not read.
+
+Unknowns:
+- Readers of camera manager +0x28.
+- Whether the vehicle's speed and body velocity are cleared by the placement.

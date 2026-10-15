@@ -6,6 +6,8 @@ The camera while the player drives: preset chooser 0x1597c8, the InVehicle prese
 
 ## 2026-10-15T12:07:18+02:00 — InVehicle preset, record overrides, 15 m behind, automatic turn, pitch clamp, enter and leave (VEH-8, CAMERA-14; llvm-objdump and REA Ghidra 12.1.2 pseudo code, Azahar GDB memtrace on `drv-police-car-seated` and the user's `m11-2-patrol-car`, one RPC screenshot pair)
 
+Corrected by [§2026-10-15T13:41](#ts-20261015-134100): the seed clearance is 1.0 in the original too; the shorter seed comes from the reset's obstruction branch, and the vertical spring is 0.5 in the original as well.
+
 Evidence IDs: chooser 0x1597c8 ev_b2100b5b…, input block 0x2e0800 ev_00697d81…, 0x2e06f4 ev_8a061ecc…, target switch 0x23f488 ev_9f3e3b83…, strategy update 0x3310d0 ev_7c08f084…, timers 0x330f8c ev_44b1fde3…, pitch clamp 0x2e0a50 ev_ff0bd884…. The pre-step 0x330e4c, the provider 0x32f334 (vtable 0x36553c) and the stick term 0x200ae0 were read with llvm-objdump (`--mattr=+vfp3`). Scenarios `tools/oracle/camera-vehicle-drive.txt`, `camera-vehicle-enter.txt` and `camera-vehicle-handback.txt` (measuring aids as for the state `drv-police-car-seated`: the locked bit of the car record cleared and the player teleported 1.9 m beside the car with `poke` and `teleport`, nothing of the user's save written), converter `tools/export_camera_vehicle_trace.py`, test `camera-vehicle-real-data`. Replaces the "InVehicle is open" unknown of [camera-follow.md §2026-10-13T14:39](camera-follow.md#ts-20261013-143958) and of [vehicles-system.md §2026-10-14T22:44:38](vehicles-system.md#ts-20261014-224438).
 
 **Chooser 0x1597c8 (called every update from 0x2e5158).** Reads the player controller (`*0x3772b8 + 0x7c`), asks `0x24255c` for the vehicle (ctrl+0x6c is 0x11c or 0x19b, else none) and sets the camera system object's target and preset through 0x23f488(K, target, preset): K[0] = target entity, K+0x160 = preset pointer, K+0x158 = *0x3770bc. Nothing is reset: the follow controller keeps its wanted and tracked points, so entering and leaving only change the target and the preset (a change of target also sets K+0x150 = 1.0 and calls 0x229e54, not read).
@@ -34,3 +36,22 @@ Unknowns:
 - The model half height is the union of the mesh bounds; the node's own bounds also contain the wheel children (x and z are about 0.002 and 0.008 larger than the mesh union), so the value the original uses for other models may differ in the fourth digit.
 - Why the original's vertical spring (S+0x24) is back on by update 305 of the hand-back and why its swing round the car starts two updates later than the replica's; what sets the stale clearance (0.97 against 1.0) of the seed (CAMERA-15).
 - The sweep state of the camera object is not restored in the drive replay (first 12 updates of the idle phase differ by up to 0.3 and converge).
+
+<a id="ts-20261015-134100"></a>
+
+## 2026-10-15T13:41:00+02:00 — Hand-back after the release director camera: the stale clearance is refuted, the seed is shorter for another reason (CAMERA-15; Azahar GDB memtrace and ctrace on `m11-2-patrol-car`, llvm-objdump, no RPC)
+
+Scenario `tools/oracle/camera-vehicle-handback.txt` with the strategy object S = `*(K+0x158)` = 0x58d3e0 added to the memtrace (S+0x00..0x5f), and a ctrace of 0x1b4864, 0x2313c8, 0x3310b0, 0x2a8c4c, 0x2e0bf0, 0x3313c0 over the same 305 updates. [Corrects §2026-10-15T12:07](#ts-20261015-120718): the clearance explanation ("stale clearance 1.0 against about 0.97").
+
+**Measured.**
+- S+4 (clearance) is 1.0 for the whole frozen period (rows 0 to 296) and in the hand-over frame the order is 1b4864, reset 0x2313c8, strategy reset 0x3310b0 (S+4 = 1), 0x2a8c4c, then two follow updates (0x2e0bf0 with 0x3313c0 each), 0x2a8c4c. There is no follow update before the reset. S+4 after the two updates is 0.90942 (port 0.9091), then 0.894, 0.887, 0.883, ... towards 0.8788, back to 1.0 at row 316.
+- The port seed is therefore scaled with the right clearance (1.0) and yet its tracked eye after the two updates is 0.45 further out (897.50 against 897.18 in x). Fitting the seed scale in the port gives a horizontal seed distance of about 0.946 x 15 m (best 0.94 to 0.946: eye error at most 0.08 over rows 297 to 304), so the original places the camera shorter than D x S+4. That is the argument-360 branch of 0x2313c8 (line test 0x22b108 on B to A, otherwise ray test 0x21ab20 and pull-in 0x23b92c; CAMERA-10): the 180 degree candidate 15 m behind the car runs into level geometry. Not transcribed.
+- The vertical spring is not "off in the port only": S+0x24 is 0.5 from row 297 to the end in the original too (0x330f8c subtracts dt from S+0x24 and S+0x1c only while the look point moves, the car is parked; S+0x20 and S+0x18 count down always). The automatic turn S+0x14 is 0 in all rows (S+0x1c = 0.5 > 0.4 switches it off). The rise of the original to y 22.61 and the swing round the car (rows 307 to 316) come from the sweep side and vertical pushes, and K+0x130 is set back to 2.0 at row 307 (in+0x49). Both start two updates later in the original because the sweep state (K+0x1c8, the near limit, 1.475 after the two updates against 0.941 in the port) starts from the longer seed.
+- With the seed scale forced to 0.946 the first rows agree (seed error 0.05) but the swing still starts a row early (306 against 307) and the settled height is 0.5 m low, so the seed distance is not the whole difference.
+
+**Port.** `camera-vehicle-real-data` now compares the whole hand-back track from row 297 (eye, look) and the settled height; limits are pinned at today's errors (seed 0.45, track eye 2.30, look 0.10, horizontal when settled 0.0099, height 0.245), see the test source.
+
+Unknowns:
+- Which geometry the 0x22b108 / 0x21ab20 test hits for the 180 degree candidate and where 0x23b92c puts the camera (seed about 0.946 x D).
+- Why the settled camera of the original is 0.245 m higher (pushes of the sweep after the seed).
+- The RPC screenshot pair of the police car after the release camera was not taken (time box).

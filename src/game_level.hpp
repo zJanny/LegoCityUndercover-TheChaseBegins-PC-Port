@@ -108,6 +108,7 @@ private:
     void updateFollowCamera(float dt);
     void loadBoardingVehicles(const std::map<std::string, std::pair<std::size_t, chase::render::Mat4>>& placedInstances);
     void driveVehicles(float dt);
+    bool placeVehicle(const std::string& instance, const chase::assets::Placement& target);
     std::optional<chase::runtime::WaypointVehicle> waypointVehicle() const;
     void suppressDrivenVehicleCollision();
     chase::runtime::BoardingInput boardingInput(float dt);

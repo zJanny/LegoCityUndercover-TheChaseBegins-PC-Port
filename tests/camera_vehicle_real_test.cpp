@@ -29,9 +29,12 @@ namespace {
 constexpr std::size_t kSettlingRows = 12;
 // The recorded camera had just been pushed by a vertical push (S+0x24 = 0.5) and one moving update had passed (the value also seen in the street, 0.467).
 constexpr float kLeaveSpringHold = 0.467f;
-// After the release director camera of mission 1-1 (CAMERA-15): the seed (rows 297 to 304) is compared in full; later the replica swings round the car
-// a few updates earlier and keeps the vertical spring off (S+0x24), so only the horizontal position of the settled camera is compared.
+// After the release director camera of mission 1-1 (CAMERA-15): seed rows 297 to 304, the whole track from row 297 and the settled camera from row 340.
 constexpr std::size_t kHandBackSeedFirstRow = 297, kHandBackSeedRows = 8, kHandBackSettledRow = 340;
+// Limits pinned at the measured errors of the replica (CAMERA-15 is open, so they are not tolerances of a match): the seed and the swing timing
+// differ, and the settled camera is lower than the recorded one by the vertical push history (docs/re/camera-vehicle.md).
+// Provenance: this test, handback.csv from tools/oracle/camera-vehicle-handback.txt.
+constexpr float kHandBackSeedLimit = 0.5f, kHandBackTrackEyeLimit = 2.5f, kHandBackTrackLookLimit = 0.15f, kHandBackSettledHeightLimit = 0.3f;
 constexpr const char* kPoliceCar = "1-1_police_car";
 constexpr std::uint16_t kDrivingState = 0x11c;
 constexpr std::uint8_t kVehicleObjectType = 183;
@@ -232,7 +235,7 @@ int main(int argc, char** argv) {
             returning.setSubject(onFoot.preset, onFoot.bodyHeight, onFoot.modelHalfHeight);
             returning.restore(rows[0].wanted, rows[0].eye, rows[0].look, rows[0].player, 0.0f);
             bool vehicleSubject = false, wasOnTop = true;
-            float seedError = 0, settledError = 0;
+            float seedError = 0, settledError = 0, trackEye = 0, trackLook = 0, settledHeight = 0;
             std::size_t compared = 0;
             for (std::size_t i = 1; i < rows.size(); ++i) {
                 const Row& row = rows[i];
@@ -258,16 +261,24 @@ int main(int argc, char** argv) {
                     wasOnTop = true;
                 }
                 returning.update(input);
+                if (i >= kHandBackSeedFirstRow) {
+                    trackEye = std::max(trackEye, distance(returning.eye(), row.eye));
+                    trackLook = std::max(trackLook, distance(returning.lookAt(), row.look));
+                }
                 if (i < kHandBackSeedFirstRow + kHandBackSeedRows) {
                     seedError = std::max(seedError, distance(returning.eye(), row.eye));
                 } else if (i >= kHandBackSettledRow) {
                     const float dx = returning.eye()[0] - row.eye[0], dz = returning.eye()[2] - row.eye[2];
                     settledError = std::max(settledError, std::sqrt(dx * dx + dz * dz));
+                    settledHeight = std::max(settledHeight, std::fabs(returning.eye()[1] - row.eye[1]));
                     ++compared;
                 }
             }
-            std::cout << "after the release director camera: seed " << seedError << ", horizontal error when settled " << settledError << '\n';
-            if (compared < 30 || seedError > 0.5f || settledError > 2e-2f) throw std::runtime_error("hand-back differs from the recorded camera");
+            std::cout << "after the release director camera: seed " << seedError << ", whole track eye " << trackEye << " look " << trackLook
+                      << ", horizontal error when settled " << settledError << ", height " << settledHeight << '\n';
+            if (compared < 30 || seedError > kHandBackSeedLimit || trackEye > kHandBackTrackEyeLimit || trackLook > kHandBackTrackLookLimit ||
+                settledError > 2e-2f || settledHeight > kHandBackSettledHeightLimit)
+                throw std::runtime_error("hand-back differs from the recorded camera");
         }
         std::cout << "vehicle camera: worst eye error " << worstEye << " (" << worstFile << " row " << worstRow << "), look " << worstLook << '\n';
         if (worstEye > 5e-3f || worstLook > 5e-3f) throw std::runtime_error("replay differs from the recorded camera");

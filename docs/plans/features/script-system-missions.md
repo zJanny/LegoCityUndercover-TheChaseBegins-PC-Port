@@ -32,7 +32,7 @@ IN_PROGRESS, updated 2026-10-15T11:12:11+02:00. Mission 1-2 was compared with th
 - [ ] SCRIPT-115 — Only the scripted start of mission 1-2 (330 updates) was traced; the free-play parts (bounds `ShowTheDog`, `Prop_Smash_Hint`, the detective spots, `Waypoint_02_Script`, `MissionEnd` with the dog truck) were not walked in the oracle and need states made by the user (position, mission progress after each part). evidence: [scripts-missions.md §2026-10-14T21:39](../../re/scripts-missions.md#ts-20261014-213921).
 
 - [ ] SCRIPT-200 — The mission 1-1 run (`game-mission-1-1`) replaces walks and the drive to room 33 by dev teleports (`at X Y Z`); real walking along the original's paths, the police car drive and the timing between the stops are not compared with the original. needs: VEH-6. evidence: [scripts-missions.md §2026-10-15T12:41](../../re/scripts-missions.md#ts-20261015-124140).
-- [ ] SCRIPT-201 — Mission 1-1 calls natives with no handler (CameraFollow, EnableTrafficAndPedestrians, OverrideMusic, AutomaticMusic) and a PositionObject of a non-player object (`1-1_Police_Car` to `1-1_Dcam_Exclusion_Police_Car_Resnap` at the end of `1-1_Release_Car_Script`) that the port ignores. evidence: [scripts-missions.md §2026-10-15T12:41](../../re/scripts-missions.md#ts-20261015-124140).
+- [ ] SCRIPT-201 — Mission 1-1 still calls natives with no handler: EnableTrafficAndPedestrians, OverrideMusic, AutomaticMusic (CameraFollow is a labelled stand-in, CAMERA-S20; the PositionObject of `1-1_Police_Car` is applied by `LevelSession::placeVehicle`, the body velocity is open). evidence: [script-natives-flags.md §2026-10-15T13:42](../../re/script-natives-flags.md#ts-20261015-134200).
 
 ## 6. Findings summary
 

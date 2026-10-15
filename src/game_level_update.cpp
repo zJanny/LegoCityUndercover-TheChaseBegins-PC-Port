@@ -89,7 +89,7 @@ void LevelSession::applyPlacement(const runtime::ScriptPlacement& request) {
             runtime::resetControllerAfterPlacement(player->vertical);
         cancelBoardingByPlacement();
         player->pose(scene);
-    } else {
+    } else if (!target || !placeVehicle(request.object, *target)) {
         std::cout << "PositionObject not applied (only the player is moved): " << request.object << " to " << request.target << '\n';
     }
 }

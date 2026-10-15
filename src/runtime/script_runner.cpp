@@ -24,7 +24,7 @@ enum class Word {
     EnableObject, EnableCollision, TriggerObject, EnableTrigger, EnableBound, GetGameComplete, IsLevelUnlocked, IsRedBrickExtraActive,
     WarningDialogBox, InformationBox, FadeScreen, PositionObject, PositionPlayer, SceneChange,
     KillScript, ObjectNative, VehicleNative, ProgressNative, TextNative, ObjectiveNative, AiNative, AnimationNative, CutsceneNative,
-    StartDCam, StartDCamTrack, DCamActive, WaitForDCam, EndDCam, SnapCamera, ShakeScreen, Set3DFocusObject, SetDCamStartWait, SetDCamEndWait
+    StartDCam, StartDCamTrack, DCamActive, WaitForDCam, EndDCam, SnapCamera, ShakeScreen, Set3DFocusObject, SetDCamStartWait, SetDCamEndWait, CameraFollow
 };
 
 struct ScriptFunction {
@@ -68,6 +68,7 @@ constexpr ScriptFunction kScriptFunctions[] = {
     {"set3dfocusobject", Word::Set3DFocusObject, true},
     {"setdcamstartwait", Word::SetDCamStartWait, false},
     {"setdcamendwait", Word::SetDCamEndWait, false},
+    {"camerafollow", Word::CameraFollow, true},
 };
 
 Word wordOf(const std::string& function) {
@@ -449,6 +450,7 @@ ScriptRunner::Result ScriptRunner::native(ScriptThread& thread, const ScriptCall
     case Word::SnapCamera: director_.snapFollowCamera(); break;
     case Word::ShakeScreen: shakeScreenNative(director_, args, [this](const std::string& token) { return read(token); }); break;
     case Word::Set3DFocusObject: break;
+    case Word::CameraFollow: break;
     case Word::SetDCamStartWait:
         if (!args.empty()) director_.setStartWait(read(args[0]));
         break;
