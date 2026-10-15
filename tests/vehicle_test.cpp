@@ -1,4 +1,4 @@
-// Vehicle records and flag natives (src/runtime/vehicle.cpp, docs/re/vehicles.md). The synthetic part pins the parameter reader 0x23ed0c and the
+// Vehicle records and flag natives (src/runtime/vehicle.cpp, docs/re/vehicles-system.md). The synthetic part pins the parameter reader 0x23ed0c and the
 // five handlers (0x26fe78, 0x29ea7c, 0x2b9df0, 0x27c014, 0x29eaa8) as read from the disassembly. With FIB NAMES the real part checks lvl_01 against
 // the vehicle records read from the original in the oracle state street-after-1-1 (GDB reads of the three parked vehicles, 2026-10-15, no pokes) and
 // the collision the vehicles register. Exits with 77 without data.

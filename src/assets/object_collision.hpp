@@ -23,7 +23,7 @@ struct PlacedObjectState {
 // The model bounds 0x242eb0 (union of the mesh boxes of the nodes that are not NoBounds); false when the model has none.
 bool modelBounds(FuseArchive& archive, const std::string& modelPath, float centre[3], float half[3]);
 // Bounding box of the root node of the model's first collision item. It is the entity box (+0x60 / +0x6c) of vehicles: the oracle values of the
-// police trooper and the worker equal it to four decimals (docs/re/vehicles.md, entry 2026-10-15T08:15:49). False when the model has no collision item.
+// police trooper and the worker equal it to four decimals (docs/re/vehicles-boarding.md, entry 2026-10-15T08:15:49). False when the model has no collision item.
 bool modelCollisionBox(FuseArchive& archive, const std::string& modelPath, float centre[3], float half[3]);
 
 // One collision entry the original registers in its world grid for a placed object (0x30e0d8 with 0x23aff8).

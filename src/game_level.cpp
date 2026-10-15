@@ -152,8 +152,10 @@ LevelSession::LevelSession(const Shared& sharedState)
         const std::size_t placedIndex = std::size_t(std::find(placedSceneIndex.begin(), placedSceneIndex.end(), owner->second.first) - placedSceneIndex.begin());
         for (const runtime::VehicleWheel& wheel : vehicle.wheels) {
             const std::size_t wheelIndex = scene.instances();
-            if (scene.addModel(meshModelPath(wheel.local.mesh), chase::assets::multiply(placementMatrix(wheel.local), owner->second.second)))
+            if (scene.addModel(meshModelPath(wheel.local.mesh), chase::assets::multiply(placementMatrix(wheel.local), owner->second.second))) {
                 wheelSceneIndex.push_back({placedIndex, wheelIndex});
+                wheelLocalPlacements.push_back(wheel.local);
+            }
         }
     }
     loadBoardingVehicles(placedInstances);

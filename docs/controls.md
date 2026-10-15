@@ -37,6 +37,15 @@ For example, `A key Space hold` makes Space press the A button.
 - When the window loses focus, every button is released.
 - The left mouse button acts as the touch screen inside the lower-screen area.
 
+## Driving a vehicle
+
+In the [development runtime](commands.md#development-runtime), once the character sits in a vehicle:
+
+- **A** accelerates. **B** brakes, and reverses when the vehicle stands still.
+- The **stick** steers. The **left and right D-pad** (A and D, or the arrow keys by default) steer fully to the left or right.
+- **X** jumps out again. **Y** (the horn) does nothing yet.
+- Pressing A and B together brakes.
+
 ## Default controls
 
 | Button | Default |

@@ -181,6 +181,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         if (shared.audio) shared.audio->play(call);
     };
     runtime::applyObjectCollisionState(collision, objectState);
+    suppressDrivenVehicleCollision();
     if (player && !cutscenePlaying()) {
         player->sounds.clear();
         runtime::StickIntentInput stick;

@@ -2,6 +2,7 @@
 
 #include "assets/object_classes.hpp"
 #include "runtime/level_start.hpp"
+#include "runtime/vehicle_drive.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -64,6 +65,7 @@ void readParameters(const ParamReader& reader, const std::vector<VehicleTableRow
     if (override > 0.0f) record.health = record.healthStart = std::uint8_t(std::int32_t(override));
     setBit(record.flags311, kVehicleInvulnerable, reader.flag("Invulnerable"));
     setBit(record.flags311, kVehicleCameraOverride, reader.flag("ATTR_CameraOverride"));
+    record.topSpeed = floatOf(reader.get("TopSpeed"), 0.0f);
     record.cameraPosY = floatOf(reader.get("ATTR_CameraPosY"), 0.0f);
     record.cameraPosZ = floatOf(reader.get("ATTR_CameraPosZ"), 0.0f);
     record.cameraLookY = floatOf(reader.get("ATTR_CameraLookY"), 0.0f);
@@ -184,6 +186,16 @@ void VehicleSet::promotePending() {
             record.state = record.requestedState;
             record.statePending = false;
         }
+}
+
+void VehicleSet::playerEntered(std::size_t index) {
+    if (index >= records_.size()) return;
+    if (const std::optional<std::uint16_t> state = requestedStateOnPlayerEntered(records_[index].state)) requestState(index, *state);
+}
+
+void VehicleSet::playerExited(std::size_t index) {
+    if (index >= records_.size()) return;
+    if (const std::optional<std::uint16_t> state = requestedStateOnPlayerExited(records_[index].state)) requestState(index, *state);
 }
 
 bool VehicleSet::apply(VehicleNativeKind kind, const std::string& lowerCaseInstance, float value) {

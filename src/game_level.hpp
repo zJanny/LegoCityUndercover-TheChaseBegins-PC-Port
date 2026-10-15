@@ -31,6 +31,7 @@
 #include "runtime/script_runner.hpp"
 #include "runtime/studs.hpp"
 #include "runtime/vehicle_boarding.hpp"
+#include "runtime/vehicle_drive.hpp"
 #include <SDL.h>
 #include <map>
 #include <cstddef>
@@ -100,6 +101,8 @@ private:
     void updateLevelCharacters(float dt);
     void updateFollowCamera(float dt);
     void loadBoardingVehicles(const std::map<std::string, std::pair<std::size_t, chase::render::Mat4>>& placedInstances);
+    void driveVehicles(float dt);
+    void suppressDrivenVehicleCollision();
     chase::runtime::BoardingStep stepBoarding(float dt);
     game_player::PlayerAnimation applyBoarding(const chase::runtime::BoardingStep& step);
     bool holdForMovie(float dt);
@@ -144,6 +147,14 @@ private:
     std::optional<chase::runtime::VehicleBoarding> boarding;
     std::vector<chase::runtime::BoardingVehicle> boardingVehicles;
     std::vector<std::size_t> boardingRecords;
+    struct VehicleDrive {
+        chase::runtime::DriveBody body;
+        float groundOffset = 0;
+        bool started = false;
+        std::size_t placedIndex = 0;
+    };
+    std::vector<VehicleDrive> vehicleDrives;
+    std::vector<chase::assets::Placement> wheelLocalPlacements;
     float radius = 0;
     PlaceholderCamera camera;
     std::optional<chase::runtime::CameraRig> follow;

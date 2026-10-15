@@ -1,4 +1,4 @@
-// The player side of boarding a vehicle (src/runtime/vehicle_boarding.cpp, docs/re/vehicles.md, entry 2026-10-15T08:15:49). The synthetic part pins the vehicle search rule
+// The player side of boarding a vehicle (src/runtime/vehicle_boarding.cpp, docs/re/vehicles-boarding.md, entry 2026-10-15T08:15:49). The synthetic part pins the vehicle search rule
 // 0x225d94, the jump in and jump out paths against positions read from the original in the oracle (Azahar, RPC reads, 2026-10-15) and the state
 // requests. With FIB NAMES the real part checks the entity boxes, the centre of mass offsets and the length of the jump animation in lvl_01.
 // Exits with 77 without data.
@@ -9,6 +9,7 @@
 #include "runtime/script_runner.hpp"
 #include "runtime/vehicle.hpp"
 #include "runtime/vehicle_boarding.hpp"
+#include "runtime/vehicle_drive.hpp"
 #include <algorithm>
 #include <cmath>
 #include <filesystem>
@@ -284,7 +285,7 @@ void real(const char* fib, const char* names) {
         float mass[3];
         float driver[3];
     };
-    // Entity box (+0x60 / +0x6c) read in the oracle: police car 0x08a88440 in m11-2-patrol-car; FP_Vehicle_03 from docs/re/vehicles.md (street-after-1-1).
+    // Entity box (+0x60 / +0x6c) read in the oracle: police car 0x08a88440 in m11-2-patrol-car; FP_Vehicle_03 from docs/re/vehicles-boarding.md (street-after-1-1).
     // The body offset is where the hidden player stood while driving: police (887.378, 17.074, 1117.315) at node (887.377, 17.824, 1117.312);
     // worker 0.2 ahead and 1.15 below; donut van 0.22 ahead and 0.897 below; van_dulmen 0.9 below.
     const Expected expected[] = {
@@ -304,12 +305,12 @@ void real(const char* fib, const char* names) {
     const runtime::VehicleRecord* police = set.find("1-1_police_car");
     const std::size_t policeIndex = std::size_t(police - set.records().data());
     set.settle();
-    set.requestState(policeIndex, runtime::kVehicleRequestDriven);
+    set.requestState(policeIndex, runtime::kVehicleStateDriven);
     require(set.records()[policeIndex].requestedState == 5 && set.records()[policeIndex].state == runtime::kVehicleStateUnshovable,
             "the request writes +4 (the record reads 10 here: SpawnUnshovable)");
     set.promotePending();
     require(set.records()[policeIndex].state == 5, "+2 follows one update later (oracle: (4, 5) for one update, then (5, 5))");
-    set.requestState(policeIndex, runtime::kVehicleRequestHandBrake);
+    set.requestState(policeIndex, runtime::kVehicleStateHandBrake);
     set.promotePending();
     require(set.records()[policeIndex].state == 3 && set.records()[policeIndex].requestedState == 3, "the hand brake request after the jump out: (5, 3) then (3, 3)");
 

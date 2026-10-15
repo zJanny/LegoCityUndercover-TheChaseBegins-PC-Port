@@ -106,7 +106,7 @@ Unknowns:
 - Game progress: mission 1-1 finished, mission 1-2 not started (the user confirmed it on 2026-10-14).
 - Read from memory (2026-10-14T23:13:01+02:00, GDB, `--renderer opengl`, lead's own port 24730 and home `artifacts/oracle/lead-home`, after `frames 2`):
   - Player entity 0x085526f0, ctrl 0x08552790. Locomotion state ctrl+0x6c = 0x11c (driving), ctrl+0x130 = vehicle entity 0x08b7d640. Player at (613.370, 17.072, 1062.515), forward (-0.199, -0.002, 0.980).
-  - Vehicle entity: type byte +0x12 = 0xb7 (183), owner flags +0x10 = 0x1300 (the traffic value of [vehicles.md](vehicles.md#ts-20261014-224438)), word +8 = 0x2b69676d, record +0x7c = 0x08b7d6e0 with state +2 = 5 (driven by the player).
+  - Vehicle entity: type byte +0x12 = 0xb7 (183), owner flags +0x10 = 0x1300 (the traffic value of [vehicles-system.md](vehicles-system.md#ts-20261014-224438)), word +8 = 0x2b69676d, record +0x7c = 0x08b7d6e0 with state +2 = 5 (driven by the player).
   - `VehicleType` record+0x2ec = 37: row 37 of `tablescharacters` sheet 4 is `van_dulmen` (a van; the donut van is 36). The user took it from the traffic in the street, not a parked vehicle.
   - Vehicle node 0x08b7da40, world translation node+0x8c = (613.37, 17.97, 1062.50).
 
@@ -136,3 +136,11 @@ Unknowns:
 Unknowns:
 - The level variables (StoryProgress, `1-1_IntroPlayed`) and which waypoints and triggers are enabled in each state; not read yet.
 - The player's controller state in the van states (the `player` command prints the intent state only).
+
+<a id="ts-20261015-093500"></a>
+
+## 2026-10-15T09:35:00+02:00 — State drv-police-car-seated (made for the driving measurements, VEH-5)
+
+- Made by the vehicle-drive agent from the user's `m11-2-patrol-car` (game progress: mission 1-1 step 2, the police car waits behind `1-1_Waypoint_02`; nothing of the user's save was changed): with `--rpc` writes as measuring aids the locked bit (+0x311 bit 1) of the record of `1-1_Police_Car` (entity 0x08a88440, record 0x08a884e0) was cleared and the player was teleported 1.9 m beside the car (car position plus its right axis); X was pressed, then `savestate drv-police-car-seated` (New 3DS, OpenGL renderer).
+- Contents: the player sits in the police car (ctrl+0x6c = 0x11c, vehicle state (5, 5)), the forced stop byte +0x310 is still 1 (set by VanBreakdown, cleared by a script call of SetForcedStopOnMyVehicle in the first update after A is pressed), the car stands at (887.377, 17.809, 1117.318). Use: speed, brake, steering and hand brake measurements in [vehicles-driving.md §2026-10-15T09:30:35](vehicles-driving.md#ts-20261015-093035).
+

@@ -32,6 +32,9 @@ void LevelSession::loadBoardingVehicles(const std::map<std::string, std::pair<st
         std::copy(record.centreOfMass.begin(), record.centreOfMass.end(), vehicle.centreOfMass);
         boardingVehicles.push_back(vehicle);
         boardingRecords.push_back(index);
+        VehicleDrive drive;
+        drive.placedIndex = std::size_t(std::find_if(placedObjects.begin(), placedObjects.end(), [&](const Placement& p) { return p.instance == record.instance; }) - placedObjects.begin());
+        vehicleDrives.push_back(drive);
     }
     std::cout << "boardable vehicles: " << boardingVehicles.size() << '\n';
     levelScripts.vehicles().setOccupantLookup([this](const std::string& character) -> std::string {
@@ -40,15 +43,64 @@ void LevelSession::loadBoardingVehicles(const std::map<std::string, std::pair<st
     });
 }
 
+void LevelSession::driveVehicles(float dt) {
+    const std::optional<std::size_t> seated = boarding ? boarding->seatedVehicle() : std::nullopt;
+    runtime::DriveInput playerInput;
+    if (!levelScripts.playerControlTaken() && !carry.busy() && !cutscenePlaying())
+        playerInput = runtime::readDriveInput({pad.slot(kSlotStickX).value, pad.channel(14).value, pad.channel(15).value, pad.channel(16).value, pad.channel(17).value});
+    for (std::size_t i = 0; i < boardingVehicles.size(); ++i) {
+        runtime::VehicleRecord& record = *levelScripts.vehicles().mutableRecord(boardingRecords[i]);
+        VehicleDrive& drive = vehicleDrives[i];
+        runtime::BoardingVehicle& vehicle = boardingVehicles[i];
+        const bool driven = seated && *seated == i && record.state == runtime::kVehicleStateDriven;
+        if (!driven && drive.body.speed == 0.0f) continue;
+        runtime::GroundProbe probe;
+        probe.forwardX = 0.0f;
+        probe.forwardZ = 1.0f;
+        probe.dt = dt;
+        probe.distance = 1.5f;
+        const auto groundAt = [&](const std::array<float, 3>& at) {
+            probe.x = at[0];
+            probe.y = at[1];
+            probe.z = at[2];
+            return runtime::groundHeight(collision, probe);
+        };
+        if (!drive.started) {
+            drive.started = true;
+            suppressDrivenVehicleCollision();
+            drive.body.position = {vehicle.matrix[12], vehicle.matrix[13], vehicle.matrix[14]};
+            drive.body.heading = runtime::vehicleHeading(vehicle);
+            if (const std::optional<float> ground = groundAt(drive.body.position)) drive.groundOffset = drive.body.position[1] - *ground;
+        }
+        const runtime::DriveCommand command = runtime::commandForState(record.state, driven ? playerInput : runtime::DriveInput{}, record.forcedStop != 0, drive.body.speed);
+        runtime::stepDriveBody(drive.body, command, record.topSpeed, dt);
+        if (runtime::updateStuckTimer(record.stuckTimer, 1.0f, false, std::fabs(drive.body.speed), dt)) levelScripts.vehicles().requestState(boardingRecords[i], runtime::kVehicleStateStuck);
+        if (const std::optional<float> ground = groundAt(drive.body.position)) drive.body.position[1] = *ground + drive.groundOffset;
+        const float sine = std::sin(drive.body.heading), cosine = std::cos(drive.body.heading);
+        vehicle.matrix = {cosine, 0, -sine, 0, 0, 1, 0, 0, sine, 0, cosine, 0, drive.body.position[0], drive.body.position[1], drive.body.position[2], 1};
+        scene.setTransform(placedSceneIndex[drive.placedIndex], vehicle.matrix);
+        for (std::size_t w = 0; w < wheelSceneIndex.size(); ++w)
+            if (wheelSceneIndex[w].first == drive.placedIndex) scene.setTransform(wheelSceneIndex[w].second, chase::assets::multiply(placementMatrix(wheelLocalPlacements[w]), vehicle.matrix));
+    }
+}
+
+void LevelSession::suppressDrivenVehicleCollision() {
+    for (std::size_t i = 0; i < boardingVehicles.size(); ++i)
+        if (vehicleDrives[i].started)
+            for (runtime::CollisionWorld::Entry& entry : collision.mutableEntries())
+                if (entry.owner == boardingVehicles[i].instance) entry.active = false;
+}
+
 runtime::BoardingStep LevelSession::stepBoarding(float dt) {
     levelScripts.vehicles().promotePending();
+    driveVehicles(dt);
     if (!boarding || !player || cutscenePlaying()) return {};
     const std::vector<runtime::VehicleRecord>& records = levelScripts.vehicles().records();
     for (std::size_t i = 0; i < boardingVehicles.size(); ++i) {
         const runtime::VehicleRecord& record = records[boardingRecords[i]];
         boardingVehicles[i].disabled = objectState.isDisabled(boardingVehicles[i].instance);
         boardingVehicles[i].locked = record.locked();
-        boardingVehicles[i].jumpOutAllowed = record.jumpOutAllowed();
+        boardingVehicles[i].jumpOutAllowed = record.jumpOutAllowed() && record.stuckTimer <= 0.0f;
     }
     runtime::BoardingInput input;
     input.action = pad.slot(kSlotButtonX).press > 0;
@@ -77,10 +129,10 @@ runtime::BoardingStep LevelSession::stepBoarding(float dt) {
         static const char* const names[] = {"jump in started", "entered", "exiting", "left"};
         std::cout << "vehicle " << instance << ": " << names[int(event.kind)] << " at update " << updatesForLog << '\n';
         if (event.kind == runtime::BoardingEventKind::Entered) {
-            levelScripts.vehicles().requestState(record, runtime::kVehicleRequestDriven);
+            levelScripts.vehicles().playerEntered(record);
             levelScripts.fireObjectEvent("playervehicleentered", instance);
         } else if (event.kind == runtime::BoardingEventKind::Exiting) {
-            levelScripts.vehicles().requestState(record, runtime::kVehicleRequestHandBrake);
+            levelScripts.vehicles().playerExited(record);
             levelScripts.fireObjectEvent("playervehicleexiting", instance);
         }
     }

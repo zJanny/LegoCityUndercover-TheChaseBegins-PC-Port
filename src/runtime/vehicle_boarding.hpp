@@ -1,8 +1,8 @@
 #pragma once
-// The player side of getting into and out of a vehicle (docs/re/vehicles.md, entry 2026-10-15T08:15:49): the search for a vehicle in reach 0x225d94, the
+// The player side of getting into and out of a vehicle (docs/re/vehicles-boarding.md, entry 2026-10-15T08:15:49): the search for a vehicle in reach 0x225d94, the
 // enter event 0x322a04, the states Drive Jump In 0x11a (begin 0x31fffc, update 0x3201b0), Drive 0x11c (begin 0x307abc, end 0x307bcc) and
 // Drive Jump Out 0x11b (begin 0x3222f4, update 0x322778, end 0x32273c), the leave test 0x322aa4 and the candidate search for the exit
-// position. Driving is not part of it: the vehicle stays where it is while the player sits in it. No SDL dependency.
+// position. The vehicle's matrix is the caller's; driving moves it (vehicle_drive.hpp). No SDL dependency.
 #include "assets/assets.hpp"
 #include "runtime/player_vertical.hpp"
 
@@ -19,10 +19,6 @@ namespace chase::runtime {
 constexpr std::uint16_t kStateDriveJumpIn = 0x11a;
 constexpr std::uint16_t kStateDriveJumpOut = 0x11b;
 constexpr std::uint16_t kStateDrive = 0x11c;
-
-// Vehicle states the player side requests (record +4): 5 while the player drives, 3 (hand brake) once he jumps out.
-constexpr std::uint16_t kVehicleRequestDriven = 5;
-constexpr std::uint16_t kVehicleRequestHandBrake = 3;
 
 // 0x225d94: a vehicle is taken when its squared distance to the player is below 4.0 (*0x225f4c), the player position is tested against the
 // entity box in the vehicle's frame and the height rule uses the slack 0.25 (*0x225f58).

@@ -227,7 +227,7 @@ int main(int argc, char** argv) {
                         "Police_Door_02 box changed");
             }
             require(doorFound, "Police_Door_02 not registered");
-            // 824 + 16: the vehicles of class type 183 that are enabled at the level start register the first item of their model (docs/re/vehicles.md).
+            // 824 + 16: the vehicles of class type 183 that are enabled at the level start register the first item of their model (docs/re/vehicles-system.md).
             require(objects.size() == 840 && meshes == 430 && lamps == 58 && barriers == 33, "placed object totals changed: " + std::to_string(objects.size()) + " " + std::to_string(meshes) + " " + std::to_string(lamps) + " " + std::to_string(barriers));
         }
 

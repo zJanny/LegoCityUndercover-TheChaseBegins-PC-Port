@@ -139,6 +139,7 @@ BoardingStep VehicleBoarding::update(const std::vector<BoardingVehicle>& vehicle
     case BoardingPhase::Seated: {
         const BoardingVehicle& vehicle = vehicles[vehicle_];
         const std::array<float, 3> seatedAt = bodyPosition(vehicle);
+        toHeading_ = vehicleHeading(vehicle);
         if (!input.action || !input.playerFree || !vehicle.jumpOutAllowed) return step(phase_, seatedAt, heading(toHeading_), false, true);
         phase_ = BoardingPhase::JumpOut;
         elapsed_ = 0;

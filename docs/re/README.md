@@ -65,7 +65,10 @@ Read this index, then open only the file you need.
 | [player.md](player.md) | Player entity and controller: pointers to the three files below |
 | [player-entity-input.md](player-entity-input.md) | Player entity pointer, scene node, controller fields, stick-to-intent, position and character source, head attachment |
 | [player-locomotion.md](player-locomotion.md) | Locomotion rules and root motion, replica, ground following, derivation of the speeds |
-| [vehicles.md](vehicles.md) | Vehicle class 183: record, handling data in class files and the vehicle table, update chain, physics body (located), enter and leave states, natives of mission 1-1, entering and leaving (paths, timing, events) |
+| [vehicles.md](vehicles.md) | Vehicles: pointers to the three files below |
+| [vehicles-system.md](vehicles-system.md) | Vehicle class 183: record, handling data in class files and the vehicle table, update chain, physics body (located), natives of mission 1-1, wheels, police car collision |
+| [vehicles-boarding.md](vehicles-boarding.md) | Entering and leaving a vehicle (paths, timing, events) |
+| [vehicles-driving.md](vehicles-driving.md) | Driving: input, state machine, measurements |
 | [player-falling-jumping.md](player-falling-jumping.md) | Falling, landing stun, jumping, step-off slide, slope slow-down, state table |
 | [front-end.md](front-end.md) | Boot sequencer 0x302080, screen order and triggers from power-on to the first level, prompt state machine 0x313368, save indicator, language, savegameflow pages, loading screen, intro movie bubble and title card |
 | [collision.md](collision.md) | Level collision data (model+0x1c section), ground probe by box bisection, wall slide, placed objects (world grid, registration, shapes, query layers), differential test against traces |

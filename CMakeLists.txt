@@ -43,7 +43,7 @@ target_link_libraries(chase_runtime PUBLIC chase_assets)
 target_include_directories(chase_runtime PUBLIC src)
 target_compile_options(chase_runtime PRIVATE -Wall -Wextra -Wpedantic -ffp-contract=off)
 set_target_properties(chase_runtime PROPERTIES POSITION_INDEPENDENT_CODE ON)
-target_sources(chase_runtime PRIVATE src/runtime/studs.cpp src/runtime/sound_events.cpp src/runtime/music.cpp src/runtime/level_start.cpp src/runtime/script_runner.cpp src/runtime/natives_objects.cpp src/runtime/natives_animation.cpp src/runtime/natives_cutscene.cpp src/runtime/natives_progress.cpp src/runtime/door.cpp src/runtime/scene_change.cpp src/runtime/room_streaming.cpp src/runtime/room_streamer.cpp src/runtime/scene_start.cpp src/runtime/dcam.cpp src/runtime/debug_metrics.cpp src/runtime/object_visibility.cpp src/runtime/script_text.cpp src/runtime/script_triggers.cpp src/runtime/objectives.cpp src/runtime/ai.cpp src/runtime/ai_simple_path.cpp src/runtime/fog.cpp src/runtime/script_placement.cpp src/runtime/ai_go_to_target.cpp src/runtime/nav_grid.cpp src/runtime/nav_path.cpp src/runtime/nav_follow.cpp src/runtime/nav_load.cpp src/runtime/room_locator.cpp src/runtime/ai_super_jump.cpp src/runtime/ai_face_target.cpp src/runtime/waypoints.cpp src/runtime/buildit.cpp src/runtime/buildit_set.cpp src/runtime/vehicle.cpp src/runtime/vehicle_boarding.cpp src/runtime/carry.cpp src/runtime/cutscene_cast.cpp src/runtime/collision_enable.cpp src/runtime/game_random.cpp src/runtime/npc_idle.cpp)
+target_sources(chase_runtime PRIVATE src/runtime/studs.cpp src/runtime/sound_events.cpp src/runtime/music.cpp src/runtime/level_start.cpp src/runtime/script_runner.cpp src/runtime/natives_objects.cpp src/runtime/natives_animation.cpp src/runtime/natives_cutscene.cpp src/runtime/natives_progress.cpp src/runtime/door.cpp src/runtime/scene_change.cpp src/runtime/room_streaming.cpp src/runtime/room_streamer.cpp src/runtime/scene_start.cpp src/runtime/dcam.cpp src/runtime/debug_metrics.cpp src/runtime/object_visibility.cpp src/runtime/script_text.cpp src/runtime/script_triggers.cpp src/runtime/objectives.cpp src/runtime/ai.cpp src/runtime/ai_simple_path.cpp src/runtime/fog.cpp src/runtime/script_placement.cpp src/runtime/ai_go_to_target.cpp src/runtime/nav_grid.cpp src/runtime/nav_path.cpp src/runtime/nav_follow.cpp src/runtime/nav_load.cpp src/runtime/room_locator.cpp src/runtime/ai_super_jump.cpp src/runtime/ai_face_target.cpp src/runtime/waypoints.cpp src/runtime/buildit.cpp src/runtime/buildit_set.cpp src/runtime/vehicle.cpp src/runtime/vehicle_boarding.cpp src/runtime/vehicle_drive.cpp src/runtime/carry.cpp src/runtime/cutscene_cast.cpp src/runtime/collision_enable.cpp src/runtime/game_random.cpp src/runtime/npc_idle.cpp)
 # Front end (boot to the slot list): CPU-drawn screens, no SDL dependency.
 add_library(chase_frontend src/frontend/script.cpp src/frontend/frontend.cpp src/frontend/pages.cpp src/frontend/canvas.cpp src/frontend/resources.cpp src/frontend/layout.cpp src/frontend/flow.cpp src/frontend/hud.cpp src/frontend/script_text_pages.cpp src/frontend/minimap.cpp src/frontend/slot_summaries.cpp)
 target_link_libraries(chase_frontend PUBLIC chase_assets chase_runtime chase_save_progress)
@@ -279,6 +279,10 @@ if(BUILD_TESTING)
   add_test(NAME vehicle-boarding COMMAND vehicle-boarding-test)
   add_test(NAME vehicle-boarding-real-data COMMAND vehicle-boarding-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
   set_tests_properties(vehicle-boarding-real-data PROPERTIES SKIP_RETURN_CODE 77)
+  add_executable(vehicle-drive-test tests/vehicle_drive_test.cpp)
+  target_link_libraries(vehicle-drive-test PRIVATE chase_runtime chase_assets)
+  target_compile_options(vehicle-drive-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME vehicle-drive COMMAND vehicle-drive-test)
   add_executable(vehicle-test tests/vehicle_test.cpp)
   target_link_libraries(vehicle-test PRIVATE chase_runtime chase_assets)
   target_compile_options(vehicle-test PRIVATE -Wall -Wextra -Wpedantic)
@@ -717,6 +721,17 @@ if(BUILD_TESTING)
       --start "899.5 17.6393 1101" --facing 249.363 --script "0 150 40" --screenshot game-script-ledge.bmp)
     set_tests_properties(game-script-ledge PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen"
       PASS_REGULAR_EXPRESSION "heights: (17\\.6393 )+17\\.5898 17\\.4908 17\\.3423 17\\.1443 16\\.8968 16\\.57.*saved game-script-ledge.bmp")
+    # Drive the police car of mission 1-1 (the dev options run VanBreakdown and Get_Car, which unlock it): X gets in after the 22 updates of the jump,
+    # the release script of the mission holds the controls for about 9 s, A drives it 60 updates (about 24 units, oracle: 24.3 to 25.5 in 60 updates
+    # from the first move, docs/re/vehicles-driving.md), X jumps out of the moved car.
+    add_test(NAME game-vehicle-drive COMMAND chase-game
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
+      --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes
+      --call-script 1-1_VanBreakdown --call-script 1-1_Get_Car --start "886.0289 17.8243 1118.6516"
+      --script "0 0 1500;0 0 3 X;0 0 330;0 0 60 A;0 0 3 X;0 0 90")
+    set_tests_properties(game-vehicle-drive PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
+      PASS_REGULAR_EXPRESSION "entered at update 1523.*exiting at update 1893.*left at update 1916.*player moved 24\\.[0-9]+ units")
     # Walk into Police_Station_Transition_Lower after 1-1_MissionSkip enabled it (the dev option --call-script): the script
     # Police_ExtToInt opens WarningDialogBox, A answers it and PositionObject puts the player on
     # Enter_Police_Station_Position_Lower (yaw 45.4542 deg = heading 8275, height 16.5773 as in the oracle); the AIMove that follows
