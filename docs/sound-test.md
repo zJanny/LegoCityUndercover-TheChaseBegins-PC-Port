@@ -10,6 +10,6 @@ build/chase-soundtest --id 1 --id 5
 - All listed sounds play at the same time.
 - Looping sounds play for 10 seconds. Use `--seconds N` to change that.
 - `--id N` plays a sound effect by its number in the game's sound table, at the volume the table gives. You can repeat `--id` and mix it with file names.
-- Which sound the game plays for which event is not known yet.
+- The sound for each event is known only for some events, for example the character and the coins. See [Sound](game-runtime.md#sound).
 
 Without a sound card, for example on a server, run it with `SDL_AUDIODRIVER=dummy`.
