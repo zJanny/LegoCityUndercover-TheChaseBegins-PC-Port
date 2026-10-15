@@ -737,6 +737,18 @@ if(BUILD_TESTING)
       --script "0 0 1500;0 0 3 X;0 0 330;0 0 60 A;0 0 3 X;0 0 90")
     set_tests_properties(game-vehicle-drive PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
       PASS_REGULAR_EXPRESSION "entered at update 1523.*exiting at update 1893.*left at update 1916.*player moved 24\\.[0-9]+ units")
+    # Mission 1-1 steps 7 and 8 (docs/re/vehicles-waypoints.md): 1-1_SO_VanFixed makes the van drivable; X at update 60 starts the jump in, the oracle (Azahar GDB,
+    # state m11-4-van-parts, X at update 179) enters 23 updates later (202) and 1-1_Van_Waypoint_Enter starts its script 33 updates after the X (212): 83 and 93 here.
+    # The drive (stick left 106 updates, then straight, A held) reaches 1-1_Waypoint_05 at update 642; 1-1_VanEscorted calls VehicleJumpOut and PositionObject
+    # in one update, as the oracle's update 53 after the hit does (state 0x11b, then state 1).
+    add_test(NAME game-van-escort COMMAND chase-game
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
+      --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes
+      --call-script 1-1_SO_VanFixed --start "866.0 52.0 691.0"
+      --script "0 0 60;0 0 3 X;0 0 140;-100 0 106 A;0 0 345 A;0 0 1 A")
+    set_tests_properties(game-van-escort PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
+      PASS_REGULAR_EXPRESSION "jump in started at update 60.*entered at update 83.*Van_Waypoint_Enter_Script at update 93.*1-1_VanEscorted at update 642.*exiting at update 643.*left at update 643")
     # Walk into Police_Station_Transition_Lower after 1-1_MissionSkip enabled it (the dev option --call-script): the script
     # Police_ExtToInt opens WarningDialogBox, A answers it and PositionObject puts the player on
     # Enter_Police_Station_Position_Lower (yaw 45.4542 deg = heading 8275, height 16.5773 as in the oracle); the AIMove that follows

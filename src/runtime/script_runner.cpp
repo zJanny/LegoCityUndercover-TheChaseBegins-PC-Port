@@ -219,10 +219,15 @@ void ScriptRunner::update(float dt) {
     }
 }
 
-std::vector<std::string> ScriptRunner::updateWaypoints(float dt, const float player[3], bool playerInVehicle) {
-    const WaypointUpdate update = waypoints_.update(dt, player, playerInVehicle, [this](const std::string& room) {
+std::vector<std::string> ScriptRunner::updateWaypoints(float dt, const float player[3], const WaypointVehicle* vehicle) {
+    const WaypointUpdate update = waypoints_.update(dt, player, vehicle, [this](const std::string& room) {
         return allRoomsLoaded_ || loadedRooms_.count(lower(room)) > 0;
     });
+    for (const WaypointVehicleAction& action : update.vehicleActions) {
+        vehicles_.apply(VehicleNativeKind::SetForcedStop, action.vehicle, action.stop ? 1.0f : 0.0f);
+        if (action.stop) vehicles_.limitSpeed(action.vehicle, kWaypointVehicleSpeedLimit);
+    }
+    if (update.vehicleHint) text_.showTip(kWaypointVehicleHintKey, kWaypointVehicleHintSeconds);
     for (const std::string& name : update.deactivated) objectives_.setWaypointActive(name, false);
     for (const std::string& name : update.startScripts)
         if (const LevelScript* script = find(name)) create(*script);
@@ -418,8 +423,14 @@ ScriptRunner::Result ScriptRunner::native(ScriptThread& thread, const ScriptCall
         break;
     case Word::VehicleNative:
         if (const auto kind = vehicleNativeKind(lower(call.function)); kind && !args.empty()) {
-            const bool needsValue = vehicleNativeTakesValue(*kind);
-            if ((!needsValue || args.size() >= 2) && !vehicles_.apply(*kind, lower(args[0]), needsValue ? read(args[1]) : 0.0f)) return Result::Block;
+            const VehicleNativeArgs shape = vehicleNativeArgs(*kind);
+            const bool second = shape == VehicleNativeArgs::NameValue || shape == VehicleNativeArgs::NameName;
+            if (!second || args.size() >= 2) {
+                const std::string name = shape == VehicleNativeArgs::Value ? std::string() : lower(args[0]);
+                const float value = shape == VehicleNativeArgs::NameValue ? read(args[1]) : shape == VehicleNativeArgs::Value ? read(args[0]) : 0.0f;
+                const std::string other = shape == VehicleNativeArgs::NameName ? lower(args[1]) : std::string();
+                if (!vehicles_.apply(*kind, name, value, other)) return Result::Block;
+            }
         }
         break;
     case Word::StartDCam: startDCamNative(director_, level_, args, [this](const std::string& token) { return read(token); }); break;

@@ -183,7 +183,7 @@ public:
     const ObjectiveState& objectives() const { return objectives_; }
     // Waypoint class (waypoints.hpp): reaching an active waypoint starts the level script named by its TriggerScript.
     void loadWaypoints(const assets::ClassLookup& classOf) { waypoints_.load(level_, classOf); }
-    std::vector<std::string> updateWaypoints(float dt, const float player[3], bool playerInVehicle);
+    std::vector<std::string> updateWaypoints(float dt, const float player[3], const WaypointVehicle* vehicle);
     // A waypoint script that took the controls, or the player held by an active director camera (director_hold.hpp).
     bool playerControlTaken() const { return waypoints_.playerControlTaken() || director_.holdsControl(); }
     const WaypointSet& waypoints() const { return waypoints_; }

@@ -101,7 +101,7 @@ Sum (at the census): 224 unhandled natives in batches, 20 implemented, 1 stand-i
 | OverrideScannable | 0x27bce4 | 2 | 76 / 17 / 11 / 0 | 6 | stand-in | 31 | handled as a stand-in that records its call (SCRIPT-S26): [objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919) |
 | enablestudsbygroup | 0x285ed4 | 2 | 74 / 13 / 0 / 0 | 8 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
 | GiveReward | 0x1a2f18 | 1 | 74 / 9 / 1 / 4 | 14 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
-| VehicleJumpOut | 0x1da8d8 | 1 | 70 / 5 / 0 / 0 | 8 | C | 36 |  |
+| VehicleJumpOut | 0x1da8d8 | 1 | 70 / 5 / 0 / 0 | 8 | done | 36 | player: [vehicles-waypoints.md §2026-10-15T11:35](vehicles-waypoints.md#ts-20261015-113500) |
 | StopMusic | 0x195054 | 1 | 68 / 15 / 0 / 0 | 7 | C | 33 |  |
 | AutomaticMusic | 0x1d9c70 | 0 | 67 / 15 / 1 / 0 | 7 | C | 33 |  |
 | DestroyProp | 0x1a2fe4 | 1 | 66 / 7 / 0 / 0 | 8 | A | 26 | open: entity destruction 0x23cd80, needs SCRIPT-58 |
@@ -148,13 +148,13 @@ Sum (at the census): 224 unhandled natives in batches, 20 implemented, 1 stand-i
 | ScaleSoundFrequency | 0x2a8afc | 3 | 23 / 0 / 0 / 0 | 6 | C | 33 |  |
 | AddStuds | 0x18838c | 1 | 22 / 3 / 0 / 0 | 7 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
 | SubObjectiveArrowEnemyEnable | 0x2c87f0 | 2 | 22 / 8 / 0 / 0 | 6 | stand-in | 31 | handled as a stand-in that records its call (SCRIPT-S26): [objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919) |
-| VehicleJumpIn | 0x1cdec0 | 2 | 22 / 4 / 0 / 0 | 6 | C | 36 |  |
+| VehicleJumpIn | 0x1cdec0 | 2 | 22 / 4 / 0 / 0 | 6 | done | 36 | player: [vehicles-waypoints.md §2026-10-15T11:35](vehicles-waypoints.md#ts-20261015-113500) |
 | RideableIdle | 0x1bfb14 | 1 | 21 / 0 / 0 / 0 | 1 | C | 37 |  |
 | StopRiding | 0x1a3180 | 2 | 21 / 0 / 0 / 0 | 1 | C | 37 |  |
 | RideableRun | 0x1b2618 | 1 | 20 / 0 / 0 / 0 | 1 | C | 37 |  |
 | RideableSetPath | 0x26376c | 2 | 20 / 0 / 0 / 0 | 1 | C | 37 |  |
 | ToggleUpdateFlag | 0x270094 | 2 | 20 / 0 / 0 / 0 | 3 | A | 26 | handled; doors honour the flag (reader: update loop 0x1a4098), other readers open (SCRIPT-56, SCRIPT-S18) |
-| StopPlayerVehicle | 0x27c040 | 1 | 18 / 8 / 0 / 0 | 4 | C | 36 |  |
+| StopPlayerVehicle | 0x27c040 | 1 | 18 / 8 / 0 / 0 | 4 | done | 36 | [vehicles-waypoints.md §2026-10-15T11:35](vehicles-waypoints.md#ts-20261015-113500) |
 | VehicleSetChased | 0x26fe54 | 3 | 18 / 2 / 0 / 0 | 8 | C | 36 |  |
 | VehicleSetInvulnerable | 0x2ad904 | 2 | 17 / 2 / 0 / 0 | 6 | C | 36 |  |
 | ?! | 0x18a7e4 | 3 | 16 / 7 / 0 / 0 | 7 | done |  |  |
@@ -162,7 +162,7 @@ Sum (at the census): 224 unhandled natives in batches, 20 implemented, 1 stand-i
 | KillObject | 0x1a2fe4 | 1 | 15 / 0 / 0 / 0 | 2 | A | 26 | open: same handler as DestroyProp, needs SCRIPT-58 |
 | PlayParticlesGO | 0x27e8b4 | 6 | 15 / 2 / 0 / 4 | 2 | C | 38 |  |
 | RideableClearPath | 0x27bdcc | 1 | 14 / 0 / 0 / 0 | 1 | C | 37 |  |
-| VehicleSetTopSpeed | 0x2860d4 | 2 | 14 / 2 / 0 / 0 | 6 | C | 36 |  |
+| VehicleSetTopSpeed | 0x2860d4 | 2 | 14 / 2 / 0 / 0 | 6 | done | 36 | [vehicles-waypoints.md §2026-10-15T11:35](vehicles-waypoints.md#ts-20261015-113500) |
 | SetDCamEndWait | 0x1da690 | 1 | 13 / 0 / 0 / 0 | 3 | done | 28 | handled |
 | WaitForPlatform | 0x263b84 | 1 | 13 / 3 / 0 / 0 | 5 | B | 37 | returns 1 when the platform value is 1.0 or its state is 5 |
 | AttachToBone | 0x1ddb90 | 4 | 12 / 1 / 1 / 1 | 6 | stand-in | 32 | stand-in: parent and both bone names recorded: [script-natives-animation.md §2026-10-14T21:36](script-natives-animation.md#ts-20261014-213649) |

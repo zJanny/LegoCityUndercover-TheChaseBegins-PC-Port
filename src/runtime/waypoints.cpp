@@ -12,6 +12,8 @@ namespace {
 constexpr const char* kClassNames[] = {"props/map_waypoint", "props/map_vehiclewaypoint", "props/map_getintovehiclewaypoint"};
 constexpr std::uint32_t kHashTriggerScript = 0xd3575d66, kHashFadeScaleIn = 0xd7954f4e, kHashFadeScaleOut = 0x190be976;
 constexpr std::uint32_t kHashTakePlayerControl = 0x59521dda, kHashAutoTrigger = 0xc93e4625, kHashVehicleString = 0x7629ded9;
+constexpr std::uint32_t kHashVehicleType = 0x5be19715, kHashGetIntoVehicle = 0xcae408a0;
+constexpr const char* kRemoteControlVehicle = "5-8_vehicle_rc";
 constexpr const char* kBoundName = "TriggerBound";
 
 std::string lower(std::string text) {
@@ -71,7 +73,18 @@ void WaypointSet::load(const assets::Level& level, const assets::ClassLookup& cl
         waypoint.fadeScaleOut = floatOf(effectiveParam(object, *cls, kHashFadeScaleOut), 0.0f);
         waypoint.takePlayerControl = intOf(effectiveParam(object, *cls, kHashTakePlayerControl), 0) != 0;
         waypoint.autoTrigger = intOf(effectiveParam(object, *cls, kHashAutoTrigger), 0) != 0;
-        waypoint.kind = findParam(object.params, kHashVehicleString) ? WaypointKind::Vehicle : WaypointKind::OnFoot;
+        waypoint.getIntoVehicle = intOf(effectiveParam(object, *cls, kHashGetIntoVehicle), 0) != 0;
+        if (const assets::LevelParam* vehicleString = effectiveParam(object, *cls, kHashVehicleString)) {
+            waypoint.kind = WaypointKind::Vehicle;
+            const std::uint32_t named = assets::objectReferenceHash(*vehicleString);
+            if (named)
+                for (const assets::LevelObject& other : level.objects)
+                    if (assets::nameHash(other.instance) == named) {
+                        waypoint.namedVehicle = lower(other.instance);
+                        break;
+                    }
+            if (waypoint.namedVehicle.empty()) waypoint.vehicleType = std::int8_t(intOf(effectiveParam(object, *cls, kHashVehicleType), 0));
+        }
         for (const assets::LevelBound& bound : cls->bounds)
             if (bound.name == kBoundName) {
                 waypoint.hasBound = true;
@@ -119,24 +132,93 @@ bool WaypointSet::setActive(const std::string& lowerName, bool enable) {
     return enable;
 }
 
-bool WaypointSet::inBound(const Waypoint& waypoint, const float player[3]) {
-    if (!waypoint.hasBound || !waypoint.bound.active) return false;
-    const float yaw = waypoint.yawDegrees * 3.14159265358979f / 180.0f;
-    const float dx = player[0] - waypoint.position[0], dy = player[1] - waypoint.position[1], dz = player[2] - waypoint.position[2];
-    const float c = std::cos(yaw), s = std::sin(yaw);
-    const float x = dx * c - dz * s - waypoint.bound.centre[0];
-    const float y = dy - waypoint.bound.centre[1];
-    const float z = dx * s + dz * c - waypoint.bound.centre[2];
-    switch (waypoint.bound.shape) {
+namespace {
+
+bool boundContains(const WaypointBound& bound, const float local[3]) {
+    if (!bound.active) return false;
+    const float x = local[0] - bound.centre[0], y = local[1] - bound.centre[1], z = local[2] - bound.centre[2];
+    switch (bound.shape) {
     case 4:
-    case 6: return std::sqrt(x * x + z * z) < waypoint.bound.half[0] && std::fabs(y) < waypoint.bound.half[1];
-    case 3: return std::fabs(x) < waypoint.bound.half[0] && std::fabs(y) < waypoint.bound.half[1] && std::fabs(z) < waypoint.bound.half[2];
-    case 2: return std::sqrt(x * x + y * y + z * z) < waypoint.bound.half[0];
+    case 6: return std::sqrt(x * x + z * z) < bound.half[0] && std::fabs(y) < bound.half[1];
+    case 3: return std::fabs(x) < bound.half[0] && std::fabs(y) < bound.half[1] && std::fabs(z) < bound.half[2];
+    case 2: return std::sqrt(x * x + y * y + z * z) < bound.half[0];
     default: return false;
     }
 }
 
-WaypointUpdate WaypointSet::update(float dt, const float player[3], bool playerInVehicle,
+assets::Matrix waypointMatrix(const Waypoint& waypoint) {
+    const float yaw = waypoint.yawDegrees * 3.14159265358979f / 180.0f;
+    const float c = std::cos(yaw), s = std::sin(yaw);
+    return {c, 0, -s, 0, 0, 1, 0, 0, s, 0, c, 0, waypoint.position[0], waypoint.position[1], waypoint.position[2], 1};
+}
+
+assets::Matrix relativeTo(const assets::Matrix& a, const assets::Matrix& b) {
+    float inverseTranslation[3];
+    for (int i = 0; i < 3; ++i) {
+        float value = -b[12] * b[i * 4];
+        value -= b[13] * b[i * 4 + 1];
+        value -= b[14] * b[i * 4 + 2];
+        inverseTranslation[i] = value;
+    }
+    assets::Matrix out{};
+    for (int k = 0; k < 4; ++k) {
+        for (int i = 0; i < 3; ++i) {
+            float value = a[k * 4] * b[i * 4];
+            value += a[k * 4 + 1] * b[i * 4 + 1];
+            value += a[k * 4 + 2] * b[i * 4 + 2];
+            value += a[k * 4 + 3] * inverseTranslation[i];
+            out[k * 4 + i] = value;
+        }
+        out[k * 4 + 3] = a[k * 4 + 3];
+    }
+    return out;
+}
+
+float clampToBox(float value, float centre, float half) {
+    const float low = centre - half, high = centre + half;
+    if (value < low) return low;
+    return value <= high ? value : high;
+}
+
+}
+
+bool WaypointSet::inBound(const Waypoint& waypoint, const float player[3]) {
+    if (!waypoint.hasBound) return false;
+    const float yaw = waypoint.yawDegrees * 3.14159265358979f / 180.0f;
+    const float dx = player[0] - waypoint.position[0], dy = player[1] - waypoint.position[1], dz = player[2] - waypoint.position[2];
+    const float c = std::cos(yaw), s = std::sin(yaw);
+    const float local[3] = {dx * c - dz * s, dy, dx * s + dz * c};
+    return boundContains(waypoint.bound, local);
+}
+
+bool WaypointSet::vehicleInBound(const Waypoint& waypoint, const WaypointVehicle& vehicle) {
+    if (!waypoint.hasBound) return false;
+    const assets::Matrix m = relativeTo(waypointMatrix(waypoint), vehicle.matrix);
+    const float centred[3] = {waypoint.bound.centre[0] - m[12], waypoint.bound.centre[1] - m[13], waypoint.bound.centre[2] - m[14]};
+    float turned[3];
+    for (int k = 0; k < 3; ++k) {
+        float value = centred[0] * m[k * 4];
+        value += centred[1] * m[k * 4 + 1];
+        value += centred[2] * m[k * 4 + 2];
+        turned[k] = value;
+    }
+    float clamped[3];
+    for (int k = 0; k < 3; ++k) clamped[k] = clampToBox(turned[k], vehicle.boxCentre[k], vehicle.boxHalf[k]);
+    float local[3];
+    local[0] = (clamped[1] * m[4] + clamped[2] * m[8]) + (m[12] + clamped[0] * m[0]);
+    local[1] = (clamped[1] * m[5] + clamped[2] * m[9]) + (m[13] + clamped[0] * m[1]);
+    local[2] = (clamped[1] * m[6] + clamped[2] * m[10]) + (m[14] + clamped[0] * m[2]);
+    return boundContains(waypoint.bound, local);
+}
+
+bool WaypointSet::vehicleMatches(const Waypoint& waypoint, const WaypointVehicle* vehicle) {
+    if (waypoint.kind != WaypointKind::Vehicle) return true;
+    if (!waypoint.namedVehicle.empty()) return vehicle && vehicle->instance == waypoint.namedVehicle;
+    if (!vehicle) return false;
+    return waypoint.vehicleType == 0 || vehicle->type == waypoint.vehicleType;
+}
+
+WaypointUpdate WaypointSet::update(float dt, const float player[3], const WaypointVehicle* vehicle,
                                    const std::function<bool(const std::string&)>& roomLoaded) {
     WaypointUpdate result;
     for (Waypoint& waypoint : waypoints_) {
@@ -158,7 +240,10 @@ WaypointUpdate WaypointSet::update(float dt, const float player[3], bool playerI
                     break;
                 case 3:
                     if (!waypoint.triggerScript.empty()) result.startScripts.push_back(waypoint.triggerScript);
-                    if (waypoint.takePlayerControl) controlTaken_ = false;
+                    if (waypoint.takePlayerControl) {
+                        controlTaken_ = false;
+                        if (!waypoint.firedVehicle.empty()) result.vehicleActions.push_back({waypoint.firedVehicle, false});
+                    }
                     waypoint.active = false;
                     result.deactivated.push_back(waypoint.instance);
                     break;
@@ -167,12 +252,17 @@ WaypointUpdate WaypointSet::update(float dt, const float player[3], bool playerI
             }
         }
         if (!waypoint.active || !waypoint.autoTrigger || !waypoint.hasBound || waypoint.fired) continue;
-        const bool eligible = waypoint.kind == WaypointKind::OnFoot || playerInVehicle;
-        if (!eligible || (waypoint.kind == WaypointKind::OnFoot && playerInVehicle)) continue;
-        if (!inBound(waypoint, player)) continue;
+        if (!vehicleMatches(waypoint, vehicle)) continue;
+        if (!inBound(waypoint, player) && !(vehicle && vehicleInBound(waypoint, *vehicle))) continue;
+        if (waypoint.kind == WaypointKind::OnFoot && vehicle) {
+            if (vehicle->instance != kRemoteControlVehicle) result.vehicleHint = true;
+            continue;
+        }
         waypoint.fired = true;
         waypoint.state = 2;
         waypoint.timer = kWaypointHitTimer;
+        waypoint.firedVehicle = vehicle ? vehicle->instance : std::string();
+        if (vehicle && waypoint.takePlayerControl && !waypoint.getIntoVehicle) result.vehicleActions.push_back({vehicle->instance, true});
     }
     return result;
 }

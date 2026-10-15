@@ -95,6 +95,9 @@ struct BoardingEvent {
 struct BoardingInput {
     bool action = false;      // the X button went down in this update
     bool playerFree = true;   // a ground state of the player that takes event 200, and no script holds his controls
+    bool groundState = true;  // the state takes event 200 (a script's VehicleJumpIn / VehicleJumpOut posts it whatever holds the controls)
+    bool scriptJumpOut = false;                  // VehicleJumpOut 0x1da8d8: event 200 while seated
+    std::optional<std::size_t> scriptJumpIn;     // VehicleJumpIn 0x1cdec0: event 200 with the vehicle as argument (no search)
     BoardingPlayer player;
     std::int16_t facing = 0;  // player heading, 65536 = 2 pi
     std::uint32_t ticks = 100;  // clock ticks of this update (3000 per second)
@@ -121,9 +124,13 @@ public:
     explicit VehicleBoarding(std::uint32_t jumpLengthTicks) : length_(jumpLengthTicks) {}
 
     BoardingStep update(const std::vector<BoardingVehicle>& vehicles, const BoardingInput& input);
+    // PositionObject / PositionPlayer on the player: message 8 pushes state 1 (docs/re/vehicles-waypoints.md), the jump or the drive ends and he is shown.
+    BoardingStep placed(const BoardingInput& input);
 
     BoardingPhase phase() const { return phase_; }
     // 0x24255c: the vehicle while the state is 0x11c, none during the jumps.
+    // 0x22ec10: the vehicle in the states 0x11a, 0x11b and 0x11c.
+    std::optional<std::size_t> boardedVehicle() const { return phase_ == BoardingPhase::OnFoot ? std::nullopt : std::optional<std::size_t>(vehicle_); }
     std::optional<std::size_t> seatedVehicle() const { return phase_ == BoardingPhase::Seated ? std::optional<std::size_t>(vehicle_) : std::nullopt; }
 
 private:

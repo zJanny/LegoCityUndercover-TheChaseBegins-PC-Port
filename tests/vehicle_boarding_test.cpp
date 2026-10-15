@@ -229,6 +229,37 @@ void jumpOut() {
     require(!boarding.update(vehicles, input).takesControl, "after the landing the player moves on his own");
 }
 
+// Oracle (Azahar GDB ctrace, state m11-6-van-to-shop, A held, dt 0.033, docs/re/vehicles-waypoints.md): in update 53 the thread of 1-1_VanEscorted calls
+// VehicleJumpOut (0x1da8d8), which posts event 200 (0x21e1d4); the controller pushes state 0x11b (0x2414b4 from 0x322b24) inside that call; the next native,
+// PositionObject, pushes state 1 (message 8, 0x2414b4 from 0x18edb0) in the same update.
+void scriptedBoarding() {
+    std::vector<BoardingVehicle> vehicles = {policeCar()};
+    VehicleBoarding boarding(2200);
+    runtime::BoardingInput input = inputAt(886.0f, 16.6f, 1115.6f, false);
+    input.scriptJumpIn = 0;
+    runtime::BoardingStep step = boarding.update(vehicles, input);
+    require(step.phase == BoardingPhase::JumpIn && step.events.size() == 1 && step.events[0].kind == BoardingEventKind::JumpInStarted,
+            "VehicleJumpIn gives event 200 with the vehicle: the jump starts without the vehicle search and without X");
+    input.scriptJumpIn.reset();
+    for (int i = 0; i < 22; ++i) boarding.update(vehicles, input);
+    require(boarding.phase() == BoardingPhase::Seated, "seated");
+
+    input.playerFree = false;
+    vehicles[0].jumpOutAllowed = false;
+    input.scriptJumpOut = true;
+    require(boarding.update(vehicles, input).phase == BoardingPhase::Seated, "the leave test 0x322aa4 still refuses with VehicleAllowJumpOut 0");
+    vehicles[0].jumpOutAllowed = true;
+    step = boarding.update(vehicles, input);
+    require(step.phase == BoardingPhase::JumpOut && step.events.size() == 1 && step.events[0].kind == BoardingEventKind::Exiting && step.visible,
+            "VehicleJumpOut starts state 0x11b although a script holds the controls: only the pad is blocked, not event 200");
+    input.scriptJumpOut = false;
+    step = boarding.placed(inputAt(824.136f, 16.826f, 1050.35f, false));
+    require(step.phase == BoardingPhase::OnFoot && !step.takesControl && step.visible && step.events.size() == 1 && step.events[0].kind == BoardingEventKind::Left &&
+                step.position[0] == 824.136f,
+            "PositionObject on the player in the jump out: state 1, shown, at the target");
+    require(!boarding.boardedVehicle() && boarding.placed(inputAt(0, 0, 0, false)).events.empty(), "a placement on foot changes nothing");
+}
+
 void exitCandidates() {
     BoardingVehicle car = policeCar();
     std::vector<std::array<float, 4>> asked;
@@ -263,6 +294,7 @@ void synthetic() {
     jumpIn();
     seatedAndLeave();
     jumpOut();
+    scriptedBoarding();
     exitCandidates();
     require(runtime::animationLengthTicks(12, 15.0f) == 2200, "11 intervals at 15 frames per second are 2200 ticks");
 }

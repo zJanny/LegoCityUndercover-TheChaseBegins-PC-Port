@@ -95,15 +95,19 @@ void findWheels(const assets::Level& cls, const assets::ClassLookup& classOf, Ve
 struct NativeEntry {
     const char* name;
     VehicleNativeKind kind;
-    bool takesValue;
+    VehicleNativeArgs args;
 };
 
 constexpr NativeEntry kNatives[] = {
-    {"vehiclesetlocked", VehicleNativeKind::SetLocked, true},
-    {"vehiclesetforcedstop", VehicleNativeKind::SetForcedStop, true},
-    {"setforcedstoponmyvehicle", VehicleNativeKind::SetForcedStopOnMyVehicle, true},
-    {"vehicleallowjumpout", VehicleNativeKind::AllowJumpOut, true},
-    {"vehiclesetunshovable", VehicleNativeKind::SetUnshovable, false},
+    {"vehiclesetlocked", VehicleNativeKind::SetLocked, VehicleNativeArgs::NameValue},
+    {"vehiclesetforcedstop", VehicleNativeKind::SetForcedStop, VehicleNativeArgs::NameValue},
+    {"setforcedstoponmyvehicle", VehicleNativeKind::SetForcedStopOnMyVehicle, VehicleNativeArgs::NameValue},
+    {"vehicleallowjumpout", VehicleNativeKind::AllowJumpOut, VehicleNativeArgs::NameValue},
+    {"vehiclesetunshovable", VehicleNativeKind::SetUnshovable, VehicleNativeArgs::Name},
+    {"vehiclejumpout", VehicleNativeKind::JumpOut, VehicleNativeArgs::Name},
+    {"vehiclejumpin", VehicleNativeKind::JumpIn, VehicleNativeArgs::NameName},
+    {"stopplayervehicle", VehicleNativeKind::StopPlayerVehicle, VehicleNativeArgs::Value},
+    {"vehiclesettopspeed", VehicleNativeKind::SetTopSpeed, VehicleNativeArgs::NameValue},
 };
 
 }
@@ -139,10 +143,10 @@ std::vector<std::string> vehicleNativeNames() {
     return names;
 }
 
-bool vehicleNativeTakesValue(VehicleNativeKind kind) {
+VehicleNativeArgs vehicleNativeArgs(VehicleNativeKind kind) {
     for (const NativeEntry& entry : kNatives)
-        if (entry.kind == kind) return entry.takesValue;
-    return false;
+        if (entry.kind == kind) return entry.args;
+    return VehicleNativeArgs::Name;
 }
 
 void VehicleSet::load(const assets::Level& level, const assets::ClassLookup& classOf, const std::vector<VehicleTableRow>& table) {
@@ -198,8 +202,28 @@ void VehicleSet::playerExited(std::size_t index) {
     if (const std::optional<std::uint16_t> state = requestedStateOnPlayerExited(records_[index].state)) requestState(index, *state);
 }
 
-bool VehicleSet::apply(VehicleNativeKind kind, const std::string& lowerCaseInstance, float value) {
+void VehicleSet::limitSpeed(const std::string& lowerCaseInstance, float maxSpeed) {
+    if (VehicleRecord* record = mutableFind(lowerCaseInstance)) record->pendingSpeedLimit = maxSpeed;
+}
+
+bool VehicleSet::apply(VehicleNativeKind kind, const std::string& lowerCaseInstance, float value, const std::string& lowerCaseOther) {
     const bool on = value != 0.0f;
+    const std::string seated = occupant_ ? lower(occupant_("player1")) : std::string();
+    if (kind == VehicleNativeKind::JumpOut) {
+        if (lowerCaseInstance == "player1" && !seated.empty() && boarding_) boarding_(BoardingRequestKind::JumpOut, seated);
+        return true;
+    }
+    if (kind == VehicleNativeKind::JumpIn) {
+        if (lowerCaseInstance == "player1" && mutableFind(lowerCaseOther) && boarding_) boarding_(BoardingRequestKind::JumpIn, lowerCaseOther);
+        return true;
+    }
+    if (kind == VehicleNativeKind::StopPlayerVehicle) {
+        if (VehicleRecord* record = seated.empty() ? nullptr : mutableFind(seated)) {
+            record->pendingSpeedLimit = 0.0f;
+            record->forcedStop = on ? 1 : 0;
+        }
+        return true;
+    }
     if (kind == VehicleNativeKind::SetForcedStopOnMyVehicle) {
         const std::string vehicle = occupant_ ? occupant_(lowerCaseInstance) : std::string();
         if (VehicleRecord* record = vehicle.empty() ? nullptr : mutableFind(lower(vehicle))) record->forcedStop = on ? 1 : 0;
@@ -215,7 +239,11 @@ bool VehicleSet::apply(VehicleNativeKind kind, const std::string& lowerCaseInsta
         if (record->state == kVehicleStateBlocksUnshovableA || record->state == kVehicleStateBlocksUnshovableB) return false;
         record->requestedState = kVehicleStateUnshovable;
         break;
-    case VehicleNativeKind::SetForcedStopOnMyVehicle: break;
+    case VehicleNativeKind::SetTopSpeed: record->topSpeed = value; break;
+    case VehicleNativeKind::SetForcedStopOnMyVehicle:
+    case VehicleNativeKind::JumpOut:
+    case VehicleNativeKind::JumpIn:
+    case VehicleNativeKind::StopPlayerVehicle: break;
     }
     return true;
 }

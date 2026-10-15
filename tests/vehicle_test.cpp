@@ -152,10 +152,14 @@ void natives() {
     Fixture fixture;
     VehicleSet set;
     set.load(fixture.level, fixture.lookup(), fixture.table);
-    require(runtime::vehicleNativeKind("vehiclesetlocked") == VehicleNativeKind::SetLocked && !runtime::vehicleNativeKind("vehiclejumpout"),
+    require(runtime::vehicleNativeKind("vehiclesetlocked") == VehicleNativeKind::SetLocked && runtime::vehicleNativeKind("vehiclejumpout") == VehicleNativeKind::JumpOut &&
+                runtime::vehicleNativeKind("stopplayervehicle") == VehicleNativeKind::StopPlayerVehicle && !runtime::vehicleNativeKind("vehiclestop"),
             "native names");
-    require(runtime::vehicleNativeTakesValue(VehicleNativeKind::SetLocked) && !runtime::vehicleNativeTakesValue(VehicleNativeKind::SetUnshovable),
-            "VehicleSetUnshovable has only the vehicle argument");
+    require(runtime::vehicleNativeArgs(VehicleNativeKind::SetLocked) == runtime::VehicleNativeArgs::NameValue &&
+                runtime::vehicleNativeArgs(VehicleNativeKind::SetUnshovable) == runtime::VehicleNativeArgs::Name &&
+                runtime::vehicleNativeArgs(VehicleNativeKind::JumpIn) == runtime::VehicleNativeArgs::NameName &&
+                runtime::vehicleNativeArgs(VehicleNativeKind::StopPlayerVehicle) == runtime::VehicleNativeArgs::Value,
+            "VehicleSetUnshovable has only the vehicle argument, StopPlayerVehicle only a value (handler 0x27c040 reads the first value)");
 
     require(set.apply(VehicleNativeKind::SetLocked, "plain", 1.0f) && set.find("plain")->locked(), "VehicleSetLocked 1: bit 1 of +0x311");
     set.apply(VehicleNativeKind::SetLocked, "plain", 0.0f);
@@ -190,6 +194,36 @@ void natives() {
     require(set.find("parked")->forcedStop == 0, "and clears it");
 
     require(set.apply(VehicleNativeKind::SetLocked, "nobody", 1.0f), "an unknown vehicle is ignored");
+}
+
+void boardingNatives() {
+    Fixture fixture;
+    VehicleSet set;
+    set.load(fixture.level, fixture.lookup(), fixture.table);
+    std::vector<std::pair<runtime::BoardingRequestKind, std::string>> requests;
+    set.setBoardingHandler([&](runtime::BoardingRequestKind kind, const std::string& vehicle) { requests.emplace_back(kind, vehicle); });
+    require(set.apply(VehicleNativeKind::JumpOut, "player1", 0.0f) && requests.empty(), "VehicleJumpOut does nothing for a player on foot (0x24255c is 0, the state test 0x17f fails)");
+    set.setOccupantLookup([](const std::string& character) { return character == "player1" ? std::string("Parked") : std::string(); });
+    set.apply(VehicleNativeKind::JumpOut, "someone_else", 0.0f);
+    require(requests.empty(), "only the player's seat is modelled; other characters are ignored");
+    set.apply(VehicleNativeKind::JumpOut, "player1", 0.0f);
+    require(requests.size() == 1 && requests[0].first == runtime::BoardingRequestKind::JumpOut && requests[0].second == "parked",
+            "VehicleJumpOut for the seated player posts event 200 (0x1da8d8)");
+    set.apply(VehicleNativeKind::JumpIn, "player1", 0.0f, "plain");
+    require(requests.size() == 2 && requests[1].first == runtime::BoardingRequestKind::JumpIn && requests[1].second == "plain",
+            "VehicleJumpIn(player, vehicle) posts event 200 with the vehicle (0x1cdec0)");
+    set.apply(VehicleNativeKind::JumpIn, "player1", 0.0f, "nobody");
+    require(requests.size() == 2, "VehicleJumpIn with an unknown vehicle is ignored");
+
+    set.apply(VehicleNativeKind::StopPlayerVehicle, "", 1.0f);
+    require(set.find("parked")->forcedStop == 1 && set.find("parked")->pendingSpeedLimit && *set.find("parked")->pendingSpeedLimit == 0.0f &&
+                set.find("plain")->forcedStop == 0,
+            "StopPlayerVehicle 1 zeroes the velocities of the player's vehicle and sets +0x310 (0x27c040; the vectors 0x56d3a0 and 0x56d400 read zero in the oracle)");
+    set.apply(VehicleNativeKind::StopPlayerVehicle, "", 0.0f);
+    require(set.find("parked")->forcedStop == 0, "StopPlayerVehicle 0 clears +0x310");
+
+    set.apply(VehicleNativeKind::SetTopSpeed, "plain", 32.0f);
+    require(set.find("plain")->topSpeed == 32.0f, "VehicleSetTopSpeed writes the top speed of the body (0x1afec4 stores +0x2a0)");
 }
 
 void scriptRunner() {
@@ -304,6 +338,7 @@ int main(int argc, char** argv) {
     try {
         parameterReader();
         natives();
+        boardingNatives();
         scriptRunner();
         if (argc == 3) {
             if (!std::filesystem::exists(argv[1]) || !std::filesystem::exists(argv[2])) {

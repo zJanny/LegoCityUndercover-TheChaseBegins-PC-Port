@@ -1,5 +1,6 @@
 #include "game_level.hpp"
 #include "runtime/scheduler.hpp"
+#include <algorithm>
 #include <cmath>
 #include <iostream>
 
@@ -37,10 +38,24 @@ void LevelSession::loadBoardingVehicles(const std::map<std::string, std::pair<st
         vehicleDrives.push_back(drive);
     }
     std::cout << "boardable vehicles: " << boardingVehicles.size() << '\n';
+    levelScripts.vehicles().setBoardingHandler([this](runtime::BoardingRequestKind kind, const std::string& vehicle) { scriptBoardingRequest(kind, vehicle); });
     levelScripts.vehicles().setOccupantLookup([this](const std::string& character) -> std::string {
         const std::optional<std::size_t> seated = boarding ? boarding->seatedVehicle() : std::nullopt;
         return character == "player1" && seated ? boardingVehicles[*seated].instance : std::string();
     });
+}
+
+std::optional<runtime::WaypointVehicle> LevelSession::waypointVehicle() const {
+    const std::optional<std::size_t> boarded = boarding ? boarding->boardedVehicle() : std::nullopt;
+    if (!boarded) return std::nullopt;
+    const runtime::BoardingVehicle& vehicle = boardingVehicles[*boarded];
+    runtime::WaypointVehicle result;
+    result.instance = vehicle.instance;
+    result.type = std::int8_t(levelScripts.vehicles().records()[boardingRecords[*boarded]].vehicleType);
+    result.matrix = vehicle.matrix;
+    std::copy(vehicle.boxCentre, vehicle.boxCentre + 3, result.boxCentre);
+    std::copy(vehicle.boxHalf, vehicle.boxHalf + 3, result.boxHalf);
+    return result;
 }
 
 void LevelSession::driveVehicles(float dt) {
@@ -58,7 +73,7 @@ void LevelSession::driveVehicles(float dt) {
         probe.forwardX = 0.0f;
         probe.forwardZ = 1.0f;
         probe.dt = dt;
-        probe.distance = 1.5f;
+        probe.distance = 8.0f;
         const auto groundAt = [&](const std::array<float, 3>& at) {
             probe.x = at[0];
             probe.y = at[1];
@@ -71,6 +86,10 @@ void LevelSession::driveVehicles(float dt) {
             drive.body.position = {vehicle.matrix[12], vehicle.matrix[13], vehicle.matrix[14]};
             drive.body.heading = runtime::vehicleHeading(vehicle);
             if (const std::optional<float> ground = groundAt(drive.body.position)) drive.groundOffset = drive.body.position[1] - *ground;
+        }
+        if (record.pendingSpeedLimit) {
+            drive.body.speed = std::clamp(drive.body.speed, -*record.pendingSpeedLimit, *record.pendingSpeedLimit);
+            record.pendingSpeedLimit.reset();
         }
         const runtime::DriveCommand command = runtime::commandForState(record.state, driven ? playerInput : runtime::DriveInput{}, record.forcedStop != 0, drive.body.speed);
         runtime::stepDriveBody(drive.body, command, record.topSpeed, dt);
@@ -91,10 +110,7 @@ void LevelSession::suppressDrivenVehicleCollision() {
                 if (entry.owner == boardingVehicles[i].instance) entry.active = false;
 }
 
-runtime::BoardingStep LevelSession::stepBoarding(float dt) {
-    levelScripts.vehicles().promotePending();
-    driveVehicles(dt);
-    if (!boarding || !player || cutscenePlaying()) return {};
+runtime::BoardingInput LevelSession::boardingInput(float dt) {
     const std::vector<runtime::VehicleRecord>& records = levelScripts.vehicles().records();
     for (std::size_t i = 0; i < boardingVehicles.size(); ++i) {
         const runtime::VehicleRecord& record = records[boardingRecords[i]];
@@ -104,7 +120,8 @@ runtime::BoardingStep LevelSession::stepBoarding(float dt) {
     }
     runtime::BoardingInput input;
     input.action = pad.slot(kSlotButtonX).press > 0;
-    input.playerFree = !levelScripts.playerControlTaken() && !carry.busy() && player->vertical.posture == runtime::Posture::Ground;
+    input.groundState = player->vertical.posture == runtime::Posture::Ground;
+    input.playerFree = !levelScripts.playerControlTaken() && !carry.busy() && input.groundState;
     input.player.position[0] = player->motion.x;
     input.player.position[1] = player->vertical.y;
     input.player.position[2] = player->motion.z;
@@ -122,8 +139,11 @@ runtime::BoardingStep LevelSession::stepBoarding(float dt) {
         if (!contact) return std::nullopt;
         return contact->height;
     };
-    const runtime::BoardingStep step = boarding->update(boardingVehicles, input);
-    for (const runtime::BoardingEvent& event : step.events) {
+    return input;
+}
+
+void LevelSession::handleBoardingEvents(const std::vector<runtime::BoardingEvent>& events) {
+    for (const runtime::BoardingEvent& event : events) {
         const std::size_t record = boardingRecords[event.vehicle];
         const std::string& instance = boardingVehicles[event.vehicle].instance;
         static const char* const names[] = {"jump in started", "entered", "exiting", "left"};
@@ -136,7 +156,36 @@ runtime::BoardingStep LevelSession::stepBoarding(float dt) {
             levelScripts.fireObjectEvent("playervehicleexiting", instance);
         }
     }
+}
+
+runtime::BoardingStep LevelSession::stepBoarding(float dt) {
+    levelScripts.vehicles().promotePending();
+    driveVehicles(dt);
+    if (!boarding || !player || cutscenePlaying()) return {};
+    const runtime::BoardingStep step = boarding->update(boardingVehicles, boardingInput(dt));
+    handleBoardingEvents(step.events);
     return step;
+}
+
+void LevelSession::scriptBoardingRequest(runtime::BoardingRequestKind kind, const std::string& vehicle) {
+    if (!boarding || !player) return;
+    runtime::BoardingInput input = boardingInput(0.0f);
+    input.ticks = 0;
+    input.action = false;
+    if (kind == runtime::BoardingRequestKind::JumpOut) input.scriptJumpOut = true;
+    else
+        for (std::size_t i = 0; i < boardingVehicles.size(); ++i)
+            if (boardingVehicles[i].instance == vehicle) input.scriptJumpIn = i;
+    const runtime::BoardingStep step = boarding->update(boardingVehicles, input);
+    handleBoardingEvents(step.events);
+    if (step.takesControl) applyBoarding(step);
+}
+
+void LevelSession::cancelBoardingByPlacement() {
+    if (!boarding || !player || boarding->phase() == runtime::BoardingPhase::OnFoot) return;
+    const runtime::BoardingStep step = boarding->placed(boardingInput(0.0f));
+    handleBoardingEvents(step.events);
+    player->setVisible(scene, true);
 }
 
 game_player::PlayerAnimation LevelSession::applyBoarding(const runtime::BoardingStep& step) {

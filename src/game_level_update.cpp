@@ -59,6 +59,7 @@ void LevelSession::applyPlacement(const runtime::ScriptPlacement& request) {
         player->motion.lastIntent = player->motion.facing;
         if (runtime::entityHasController(runtime::kPlayerEntityKind, 0, runtime::measuredControllerKindList()))
             runtime::resetControllerAfterPlacement(player->vertical);
+        cancelBoardingByPlacement();
         player->pose(scene);
     } else {
         std::cout << "PositionObject not applied (only the player is moved): " << request.object << " to " << request.target << '\n';
@@ -233,8 +234,9 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         const float playerPosition[3] = {player->motion.x, player->vertical.y, player->motion.z};
         const bool inVehicle = boarding && boarding->seatedVehicle();
         levelScripts.checkTriggers(playerPosition, inVehicle);
-        for (const std::string& started : levelScripts.updateWaypoints(dt, playerPosition, inVehicle))
+        for (const std::string& started : levelScripts.updateWaypoints(dt, playerPosition, previousWaypointVehicle ? &*previousWaypointVehicle : nullptr))
             std::cout << "waypoint started script " << started << " at update " << updates << '\n';
+        previousWaypointVehicle = waypointVehicle();
     }
     reportUnhandled();
     for (const std::string& bound : levelScripts.takeSceneChanges())

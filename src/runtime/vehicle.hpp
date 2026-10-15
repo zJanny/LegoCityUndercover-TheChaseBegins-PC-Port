@@ -63,6 +63,7 @@ struct VehicleRecord {
     std::array<float, 3> centreOfMass = {0, 0, 0};  // class value CentreOfMass: the origin of the physics body relative to the node
     float cameraPosY = 0, cameraPosZ = 0, cameraLookY = 0, cameraLookZ = 0, cameraPanScale = 1.0f;  // +0x2f0..+0x300
     float topSpeed = 0;                // class value TopSpeed, the limit of the stand-in body
+    std::optional<float> pendingSpeedLimit;  // a waypoint hit clamps the body's speed (0x17b3d4..0x17b454) once the drive code runs
     std::uint8_t wheelCount = 0;       // +0x314 (class value numWheels)
     std::vector<VehicleWheel> wheels;  // +0x318: one per found "Wheel%02u" up to wheelCount
 
@@ -78,11 +79,19 @@ enum class VehicleNativeKind {
     SetForcedStopOnMyVehicle,  // SetForcedStopOnMyVehicle 0x2b9df0
     AllowJumpOut,            // VehicleAllowJumpOut 0x27c014
     SetUnshovable,           // VehicleSetUnshovable 0x29eaa8
+    JumpOut,                 // VehicleJumpOut 0x1da8d8
+    JumpIn,                  // VehicleJumpIn 0x1cdec0
+    StopPlayerVehicle,       // StopPlayerVehicle 0x27c040
+    SetTopSpeed,             // VehicleSetTopSpeed 0x2860d4
 };
+
+enum class VehicleNativeArgs { Name, NameValue, NameName, Value };
+
+enum class BoardingRequestKind { JumpOut, JumpIn };
 
 std::optional<VehicleNativeKind> vehicleNativeKind(const std::string& lowerCaseName);
 std::vector<std::string> vehicleNativeNames();
-bool vehicleNativeTakesValue(VehicleNativeKind kind);
+VehicleNativeArgs vehicleNativeArgs(VehicleNativeKind kind);
 
 class VehicleSet {
 public:
@@ -101,6 +110,7 @@ public:
     // The vehicle message handler 0x17a458 (message 84) and 0x17a530 (message 85): the requested state follows the rules in vehicle_drive.hpp.
     void playerEntered(std::size_t index);
     void playerExited(std::size_t index);
+    void limitSpeed(const std::string& lowerCaseInstance, float maxSpeed);
     VehicleRecord* mutableRecord(std::size_t index) { return index < records_.size() ? &records_[index] : nullptr; }
 
     // Instance name of the vehicle a character sits in (0x24255c); empty on foot. Without a lookup everybody is on foot.
@@ -110,13 +120,17 @@ public:
     // The handlers read the vehicle record and write one flag. Returns false when the handler returns 0 (the script thread repeats the
     // call): only VehicleSetUnshovable does, while the vehicle state is 6 or 7. Unknown names and non-vehicles are ignored like a
     // script object of the wrong type would be by the original after the lookup.
-    bool apply(VehicleNativeKind kind, const std::string& lowerCaseInstance, float value);
+    bool apply(VehicleNativeKind kind, const std::string& lowerCaseInstance, float value, const std::string& lowerCaseOther = {});
+
+    using BoardingHandler = std::function<void(BoardingRequestKind, const std::string& vehicleInstance)>;
+    void setBoardingHandler(BoardingHandler handler) { boarding_ = std::move(handler); }
 
 private:
     VehicleRecord* mutableFind(const std::string& lowerCaseInstance);
 
     std::vector<VehicleRecord> records_;
     OccupantLookup occupant_;
+    BoardingHandler boarding_;
 };
 
 }

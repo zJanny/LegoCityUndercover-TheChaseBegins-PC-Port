@@ -102,8 +102,13 @@ private:
     void updateFollowCamera(float dt);
     void loadBoardingVehicles(const std::map<std::string, std::pair<std::size_t, chase::render::Mat4>>& placedInstances);
     void driveVehicles(float dt);
+    std::optional<chase::runtime::WaypointVehicle> waypointVehicle() const;
     void suppressDrivenVehicleCollision();
+    chase::runtime::BoardingInput boardingInput(float dt);
+    void handleBoardingEvents(const std::vector<chase::runtime::BoardingEvent>& events);
     chase::runtime::BoardingStep stepBoarding(float dt);
+    void scriptBoardingRequest(chase::runtime::BoardingRequestKind kind, const std::string& vehicle);
+    void cancelBoardingByPlacement();
     game_player::PlayerAnimation applyBoarding(const chase::runtime::BoardingStep& step);
     bool holdForMovie(float dt);
     bool cutscenePlaying() const { return levelScripts.cutscenes().playing() != nullptr; }
@@ -147,6 +152,7 @@ private:
     std::optional<chase::runtime::VehicleBoarding> boarding;
     std::vector<chase::runtime::BoardingVehicle> boardingVehicles;
     std::vector<std::size_t> boardingRecords;
+    std::optional<chase::runtime::WaypointVehicle> previousWaypointVehicle;
     struct VehicleDrive {
         chase::runtime::DriveBody body;
         float groundOffset = 0;

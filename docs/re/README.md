@@ -69,6 +69,7 @@ Read this index, then open only the file you need.
 | [vehicles-system.md](vehicles-system.md) | Vehicle class 183: record, handling data in class files and the vehicle table, update chain, physics body (located), natives of mission 1-1, wheels, police car collision |
 | [vehicles-boarding.md](vehicles-boarding.md) | Entering and leaving a vehicle (paths, timing, events) |
 | [vehicles-driving.md](vehicles-driving.md) | Driving: input, state machine, measurements |
+| [vehicles-waypoints.md](vehicles-waypoints.md) | Waypoints reached in a vehicle, script jump in / out natives |
 | [player-falling-jumping.md](player-falling-jumping.md) | Falling, landing stun, jumping, step-off slide, slope slow-down, state table |
 | [front-end.md](front-end.md) | Boot sequencer 0x302080, screen order and triggers from power-on to the first level, prompt state machine 0x313368, save indicator, language, savegameflow pages, loading screen, intro movie bubble and title card |
 | [collision.md](collision.md) | Level collision data (model+0x1c section), ground probe by box bisection, wall slide, placed objects (world grid, registration, shapes, query layers), differential test against traces |

@@ -102,13 +102,22 @@ std::array<float, 3> VehicleBoarding::arc(float u) const {
     return position;
 }
 
+BoardingStep VehicleBoarding::placed(const BoardingInput& input) {
+    const bool wasOn = phase_ != BoardingPhase::OnFoot;
+    phase_ = BoardingPhase::OnFoot;
+    BoardingStep result = step(phase_, {input.player.position[0], input.player.position[1], input.player.position[2]}, input.facing, true, false);
+    if (wasOn) result.events.push_back({BoardingEventKind::Left, vehicle_});
+    return result;
+}
+
 BoardingStep VehicleBoarding::update(const std::vector<BoardingVehicle>& vehicles, const BoardingInput& input) {
     const std::array<float, 3> here = {input.player.position[0], input.player.position[1], input.player.position[2]};
     const auto heading = [&](float radians) { return headingUnits(radians); };
     switch (phase_) {
     case BoardingPhase::OnFoot: {
-        if (!input.action || !input.playerFree) return step(phase_, here, input.facing, true, false);
-        const std::optional<std::size_t> found = findVehicleToEnter(vehicles, input.player);
+        const bool scripted = input.scriptJumpIn && input.groundState;
+        if (!scripted && (!input.action || !input.playerFree)) return step(phase_, here, input.facing, true, false);
+        const std::optional<std::size_t> found = scripted ? input.scriptJumpIn : findVehicleToEnter(vehicles, input.player);
         if (!found) return step(phase_, here, input.facing, true, false);
         vehicle_ = *found;
         phase_ = BoardingPhase::JumpIn;
@@ -140,7 +149,8 @@ BoardingStep VehicleBoarding::update(const std::vector<BoardingVehicle>& vehicle
         const BoardingVehicle& vehicle = vehicles[vehicle_];
         const std::array<float, 3> seatedAt = bodyPosition(vehicle);
         toHeading_ = vehicleHeading(vehicle);
-        if (!input.action || !input.playerFree || !vehicle.jumpOutAllowed) return step(phase_, seatedAt, heading(toHeading_), false, true);
+        const bool leave = (input.action && input.playerFree) || (input.scriptJumpOut && input.groundState);
+        if (!leave || !vehicle.jumpOutAllowed) return step(phase_, seatedAt, heading(toHeading_), false, true);
         phase_ = BoardingPhase::JumpOut;
         elapsed_ = 0;
         from_ = seatPosition(vehicle);
