@@ -79,6 +79,7 @@ void CarrySet::load(assets::FuseArchive& archive, const assets::Level& level, co
             CarryTarget target;
             target.instance = lower(object.instance);
             target.useObject = referenceName(object, *cls, "UseObject", names);
+            target.placeObject = referenceName(object, *cls, "PlaceObject", names);
             target.triggerObject = referenceName(object, *cls, "TriggerObject", names);
             std::copy_n(placed->position, 3, target.position);
             if (const assets::LevelParam* param = effectiveParam(object, *cls, assets::nameHash("ATTR_SFX_DROP"))) target.sfx = param->value;
@@ -215,6 +216,7 @@ void applyCarryActions(const CarrySet& set, const std::vector<CarryAction>& acti
         } else if (action.kind == CarryActionKind::Used) {
             const CarryTarget& target = set.targets()[action.target];
             if (!target.useObject.empty()) state.disabled.insert(target.useObject);
+            if (!target.placeObject.empty()) state.disabled.erase(target.placeObject);
             if (!target.triggerObject.empty()) scripts.triggerObjectEnabling(target.triggerObject);
         }
     }

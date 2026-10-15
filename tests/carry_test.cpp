@@ -139,6 +139,19 @@ int main() {
             require(runner.threadCount() == 1, "the respawn fires TriggerOnRespawn");
         }
         {
+            chase::assets::Level level;
+            chase::assets::PlacedObjectState placeState;
+            placeState.disabled.insert("place_marker");
+            ScriptRunner runner(level, placeState);
+            CarrySet set = makeSet();
+            CarryTarget placing = set.targets()[0];
+            placing.placeObject = "place_marker";
+            CarrySet placeSet;
+            placeSet.add(placing);
+            applyCarryActions(placeSet, {{CarryActionKind::Used, 0, 0}}, placeState, runner);
+            require(!placeState.isDisabled("place_marker"), "using the target enables its PlaceObject (0x25e354 calls 0x242cf0 on +0x1c)");
+        }
+        {
             CarrySet set = makeSet();
             set.update(state, at(11, 10, true));
             while (set.busy()) set.update(state, at(11, 10, false));

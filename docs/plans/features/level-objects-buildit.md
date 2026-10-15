@@ -33,5 +33,5 @@ IN_PROGRESS, updated 2026-10-14T23:59:00+02:00. `chase-game` builds `1-1_BI_Donu
 
 ## 7. Code and tests
 
-- `src/runtime/buildit.*` (state machine), `src/runtime/buildit_set.*` (level objects, zone, actions), `ScriptRunner::fireObjectTriggered`, `assets::modelBounds`; glue `updateBuildits` in `src/game_level_update.cpp`.
-- CTest: `buildit`, `buildit-real-data`.
+- `src/runtime/buildit.*` (state machine), `src/runtime/buildit_set.*` (level objects, zone, actions), `src/runtime/reference_trigger.*` (step 0x23211c), `ScriptRunner::triggerObjectEnabling`, `assets::modelBounds`; glue `updateBuildits` in `src/game_level_update.cpp`.
+- CTest: `buildit`, `buildit-real-data`, `reference-trigger`.

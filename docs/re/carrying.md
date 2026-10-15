@@ -43,6 +43,8 @@ Unknowns:
 
 ## 2026-10-15T11:11:15+02:00 — The code-side ObjectTriggered call 0x244f40: what it does, who calls it for carry objects and build-its (llvm-objdump)
 
+Corrected by [buildit.md §2026-10-15T13:07](buildit.md#ts-20261015-130720): the build-it fires `TriggerObject` through the reference-trigger step 0x23211c, a wrapper the static search here did not follow. The other callers of 0x22fc84 and PlaceObject: see the next entries of this file.
+
 Source: `llvm-objdump -d --triple=armv6k --mattr=+vfp2` of `artifacts/game/game.arm.elf` (no REA session, no emulator run). Extends [the carry entry](#ts-20261015-001729).
 
 **0x244f40(object, instigator).** Three steps: (1) 0x242cf0(object): when the entity flag bit 0 (+0x10) is set it clears it and runs the enable work (the same helper the build-it uses on its final prop); (2) 0x244fc8(object, 0xff, instigator), the generic object message send (dispatch through the class table entry +0x14 of the class byte at entity+0x12); (3) 0x23cee8(`*0x3775d0` = ObjectTriggered, object, instigator, 0xff, 0). 0x244f88 is the untrigger twin without the enable (message 0xfe, `*0x3775d4`). 0x23cee8 finds the trigger record with 0x23cff4(type, owner entity) (scene list +0x2f4/+0x2f8, entries with enable byte set, +8 = owner, +4 = type) and calls 0x21a560(trigger, instigator, 0xffff, ...); a name loop for the `Player1`/`Player%d` variants runs first. The owner is therefore the entity named by the reference parameter itself, the instigator is the second argument (the carrier, the target, ...). The port keys triggers by the owner's instance name, which is the same lookup; it has no instigator.
@@ -62,3 +64,17 @@ Unknowns:
 - Whether the class at 0x1bc4d4 is `scriptobject` and whether lvl_01 script objects have children.
 - The other callers of 0x22fc84 (0x1769e4, 0x176d40) and what raises them; `TargetObject01..04`, `TargetBound01..04` and the other carry classes of lvl_01 were not read.
 - The instigator is not used by the port; what 0x21a560 stores of it was not read here.
+
+<a id="ts-20261015-130800"></a>
+
+## 2026-10-15T13:08:00+02:00 — Carry target PlaceObject and the callers of the respawn function 0x22fc84 (llvm-objdump)
+
+Extends [the 0x244f40 entry](#ts-20261015-111115); the build-it question of that entry is answered in [buildit.md §2026-10-15T13:07](buildit.md#ts-20261015-130720).
+
+- **PlaceObject.** The carry target state change enables the `PlaceObject` reference (record +0x1c) with 0x242cf0 after disabling `UseObject` and before the `TriggerObject` call. The port now erases it from the disabled set in `applyCarryActions` (test `carry`).
+- **0x22fc84 callers in the carry object handler 0x1767c8.** The call at 0x1769e4 belongs to message 0x80000003 (case at 0x1769a0): it runs when the entity word +0xc has bit 5, the object byte +0x9e bit 0 is clear and the float at +0x70 is above a constant (0x176ad0); not identified further. The call at 0x176d40 belongs to message 8, the reset the build-it state change sends to carry objects near its final prop: it plays a sound (0x23aebc) when a flag byte is set, then respawns the object (r2 = 0, r1 = 0x100). Both start with `TriggerOnRespawn` (0x244f40) when the reference is set, like the countdown caller.
+- The port does not send message 8 from the build-it to nearby carry objects; the sphere query 0x237f30 radius was not read.
+
+Unknowns:
+- What sends message 0x80000003 and the meaning of +0x70 / +0x9e bit 0.
+- The sphere of the message 8 query (flag +0x3b `SpawnCheck`) and whether mission 1-1 has a carry object in it.

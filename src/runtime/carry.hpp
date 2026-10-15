@@ -57,6 +57,7 @@ struct CarryObject {
 struct CarryTarget {
     std::string instance;       // lower case
     std::string useObject;      // UseObject, lower case: the only carry object this target takes
+    std::string placeObject;    // PlaceObject (record +0x1c), lower case, empty when unset: enabled when the target is used
     std::string triggerObject;  // TriggerObject, lower case
     float position[3] = {0, 0, 0};
     float zoneCentre[3] = {0, 0, 0};  // UseBound of the class file, relative to the position
@@ -73,7 +74,7 @@ enum class CarryActionKind {
     PickedUp,   // the object attached to the player: TriggerPickup is fired
     Placed,     // the object was released into a target
     Dropped,    // the object was released at the player
-    Used,       // the target changed to state 1: UseObject is disabled, TriggerObject is fired, the drop sound plays
+    Used,       // the target changed to state 1: UseObject is disabled, PlaceObject is enabled, TriggerObject is fired, the drop sound plays
     Respawned,  // a dropped object returned to its start position
 };
 

@@ -4,6 +4,7 @@
 #include "assets/assets.hpp"
 #include "assets/object_collision.hpp"
 #include "runtime/buildit.hpp"
+#include "runtime/reference_trigger.hpp"
 #include "runtime/script_runner.hpp"
 #include <string>
 #include <vector>
@@ -31,7 +32,7 @@ enum class BuilditActionKind {
     BrickStarted,
     BrickDone,
     Reveal,     // state 10 starts: the final prop is shown and the parts are hidden
-    Built,      // state 11: the final prop is enabled, the parts are disabled, TriggerObject is fired
+    Built,      // state 11: the final prop is enabled, the parts are disabled, TriggerObject is activated
 };
 
 struct BuilditAction {
@@ -48,13 +49,15 @@ public:
     std::vector<BuilditAction> update(const assets::PlacedObjectState& state, const float player[3], bool actionHeld);
     const std::vector<BuilditObject>& objects() const { return objects_; }
     const BuilditObject* find(const std::string& lowerInstance) const;
+    ReferenceTriggers& references() { return references_; }
     static bool inZone(const BuilditObject& object, const float player[3]);
 
 private:
     std::vector<BuilditObject> objects_;
+    ReferenceTriggers references_;  // one per object, same index (TriggerObject)
 };
 
-// What the actions change: Reveal shows the final prop and disables the parts, Built also fires the ObjectTriggered of TriggerObject.
-void applyBuilditActions(const BuilditSet& set, const std::vector<BuilditAction>& actions, assets::PlacedObjectState& state, ScriptRunner& scripts);
+// What the actions change: Reveal shows the final prop and disables the parts, Built runs the reference-trigger step 0x23211c on TriggerObject (reference_trigger.hpp).
+void applyBuilditActions(BuilditSet& set, const std::vector<BuilditAction>& actions, assets::PlacedObjectState& state, ScriptRunner& scripts);
 
 }

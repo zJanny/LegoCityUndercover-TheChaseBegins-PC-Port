@@ -33,6 +33,7 @@ int brickCount(assets::FuseArchive& archive, const std::string& modelPath) {
 
 void BuilditSet::load(assets::FuseArchive& archive, const assets::Level& level, const assets::ClassLookup& classOf) {
     objects_.clear();
+    references_.clear();
     std::map<std::uint32_t, std::string> names;
     for (const assets::LevelObject& object : level.objects) names[assets::nameHash(object.instance)] = lower(object.instance);
     const std::uint32_t finalProp = assets::nameHash("BuilditFinalProp"), triggerObject = assets::nameHash("TriggerObject"),
@@ -64,6 +65,7 @@ void BuilditSet::load(assets::FuseArchive& archive, const assets::Level& level, 
             bricks = brickCount(archive, path);
         }
         build.build = BuilditState(bricks);
+        references_.add(build.instance, build.triggerObject);
         objects_.push_back(std::move(build));
     }
 }
@@ -104,7 +106,7 @@ std::vector<BuilditAction> BuilditSet::update(const assets::PlacedObjectState& s
     return actions;
 }
 
-void applyBuilditActions(const BuilditSet& set, const std::vector<BuilditAction>& actions, assets::PlacedObjectState& state, ScriptRunner& scripts) {
+void applyBuilditActions(BuilditSet& set, const std::vector<BuilditAction>& actions, assets::PlacedObjectState& state, ScriptRunner& scripts) {
     for (const BuilditAction& action : actions) {
         const BuilditObject& object = set.objects()[action.index];
         if (action.kind == BuilditActionKind::Reveal) {
@@ -113,7 +115,8 @@ void applyBuilditActions(const BuilditSet& set, const std::vector<BuilditAction>
         } else if (action.kind == BuilditActionKind::Built) {
             if (!object.finalProp.empty()) state.disabled.erase(object.finalProp);
             state.disabled.insert(object.instance);
-            if (!object.triggerObject.empty()) scripts.fireObjectTriggered(object.triggerObject);
+            const ReferenceActivation activation = set.references().activate(action.index);
+            if (activation.fired) scripts.triggerObjectEnabling(activation.target);
         }
     }
 }

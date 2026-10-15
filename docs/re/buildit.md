@@ -59,7 +59,31 @@ Unknowns:
 
 ## 2026-10-15T11:12:11+02:00 — Who fires the TriggerObject of a type 21 build-it: not the class code (llvm-objdump)
 
+Corrected by [buildit.md §2026-10-15T13:07](#ts-20261015-130720): the state change 0x1ab00c fires it through the reference-trigger step 0x23211c.
+
 Result of the static search in [carrying.md §2026-10-15T11:11](carrying.md#ts-20261015-111115): none of the type 21 class functions (create, link, update, destroy, handler, state table, state change) calls the code-side ObjectTriggered path 0x244f40 / 0x23cee8; the state change to 11 only sends message 8 to nearby carry objects. The path that fires `1-1_SO_VanFixed` is still unknown; the port keeps its queue at the end of the build as a stand-in (SCRIPT-S190 in [script-system-missions.md](../plans/features/script-system-missions.md)). A state change with the same layout (0x26d550) fires its `TriggerObject` through 0x244f40 on completion.
 
 Unknowns:
 - The origin of the event for type 21 (a generic step, the final prop, or another class); a `ctrace` of 0x244f40 over a build would settle it (earlier traces of 0x21a560 and 0x23cee8 did not finish, see the entry above).
+
+<a id="ts-20261015-130720"></a>
+
+## 2026-10-15T13:07:20+02:00 — The build-it fires TriggerObject through the reference-trigger step 0x23211c (oracle ctrace, llvm-objdump)
+
+[Corrects §2026-10-15T11:12](#ts-20261015-111211) and [Corrects carrying.md §2026-10-15T11:11](carrying.md#ts-20261015-111115): the type 21 class does fire the event, through a wrapper the earlier static search did not follow.
+
+**Oracle.** State `m11-4-van-parts` (user state, New 3DS), `--renderer opengl`, GDB only, no RPC, nothing poked. Scenario (scratch): `frames 2`, `dt 0.033 0.033`, `hold A`, `ctrace 0x244f40,0x23cee8 100 NAME`, `hold -`. Two breakpoints and 100 updates ran in 128 s (the earlier attempts that did not finish used the busy 0x21a560 / 0x244fc8). Result: 0x244f40 was **not** called in the 100 updates; 0x23cee8 stopped exactly twice, both in update 86 of the run (one update after the build ended in update 85):
+- `0x23cee8(*0x3775d8, object = 1-1_BI_DonutVanParts, instigator = the same object, 0xff, 0)`, lr 0x2321e0 (call at 0x2321dc).
+- `0x23cee8(*0x3775d0 = ObjectTriggered, object = the script object named by TriggerObject, instigator = the build-it, 0xff, 0)`, lr 0x23243c (call at 0x232438).
+
+**0x23211c(owner, ref, mode).** A reference-trigger step on one reference parameter (`ref` points at the parameter record: byte 0 low 5 bits = kind 0 idle / 1 registered / 2 fired, byte 1 = sound id or 0xff, +4 the name slot resolved by 0x238354); with `ref` 0 it searches the list at 0x591d88 (count 0x377424, entries {owner, record}, 8 bytes) for the owner. Activate mode (r2 = 1): kind 1 returns at once (0x2321b4); otherwise kind becomes 1 and `0x23cee8(*0x3775d8, owner, owner)` is raised. With the target resolved: if another entry of the list with the same resolved target has kind 0 the step sends message 10 to the target and returns (0x232234: an AND-join over all references to one target); otherwise message 10 goes to the target, every entry with that target becomes kind 2 and gets message 0xff to its owner, then the target is enabled (0x242cf0), gets message 0xff (0x244fc8, instigator = owner) and `0x23cee8(*0x3775d0, target, owner, 0xff, 0)` is raised. Finally, when byte 1 is not 0xff, 0x22c470(*0x37754c, id, 1) runs. Deactivate mode (r2 = 0, 0x23226c): kind 0 returns; kind 2 with a target sets the entries back to 1, sends 0xfe, and raises ObjectUntriggered (*0x3775d4); then 0x22c470(..., 0), `0x23cee8(*0x3775dc, owner, owner)` and kind 0.
+
+**Build-it caller.** The state change to 11 (0x1ab00c) ends, after the parts reset and the final prop enable (0x242cf0 at 0x1ab080), with 0x23211c(object, record + 0xc, 0) when the kind is 1 or 2 (0x1ab1a4), then 0x23211c(object, record + 0xc, 1) (0x1ab1b4). Record +0xc is the `TriggerObject` reference. 0x23211c has about 30 callers (0x174a7c, 0x17648c, 0x181bb0, 0x18bc50, 0x18c328, 0x19a5f0, 0x1a6c70, 0x1a6ca4, 0x1a91c4, 0x1aef94, 0x1aefa4, 0x1aeffc, 0x1b50f8, 0x1bc15c, 0x215128, 0x22c80c, 0x22c8bc, 0x23a2e8, 0x23cdb0, 0x26d674, 0x26d684, 0x273b68, 0x27f968, 0x2891d4, 0x2892d0, 0x29c4b8, 0x29c4e8, 0x2aaac8 besides the build-it ones); the other classes were not read. The sequence enable, message 0xff, ObjectTriggered of the target equals 0x244f40 for the target, so the port's `triggerObjectEnabling` has the same effect.
+
+**Port.** `src/runtime/reference_trigger.*` models the activate mode with the join; `BuilditSet` registers one reference per build-it (owner, `TriggerObject`) and `applyBuilditActions` calls `triggerObjectEnabling` for the target when the step fires. Test `reference-trigger`; `buildit-real-data` and `game-mission-1-1` unchanged.
+
+Unknowns:
+- The names of the events `*0x3775d8` (raised on the owner at activation) and `*0x3775dc` (deactivate); the port raises neither and no level trigger was checked for them.
+- Message 10 (to the target) and message 0xff to the owners are not modelled; their handlers were not read.
+- Which other classes register references in the list at 0x591d88; the port registers build-it references only, so a join with a reference of another class would be missed.
+- Deactivate mode (a rebuild) is not ported.
