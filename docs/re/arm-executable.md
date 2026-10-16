@@ -2,6 +2,19 @@
 
 Reverse-engineering findings, moved verbatim from the progress log. Entries are chronological; later entries may correct earlier ones. Evidence IDs are shortened with an ellipsis.
 
+## Current state
+
+- The ELF has 8086 procedures and 4927 strings (REA Ghidra); VA = file offset + 0xff000; entry 0x100000, main loop 0x100108 (`while (0x100448()) 0x10057c();`). [§2026-10-13T22:17:29](#ts-20261013-221729), [§2026-10-13T10:45](#ts-20261013-1045)
+- Services are opened through `srv:GetServiceHandle` 0x258fa4 (dsp::DSP, fs:USER, ndm:u, hid:USER and others); HID shared memory is mapped at 0x5941f8 (pad +0, touch +0xa8, accel +0x108, gyro +0x158). [§2026-10-12T15:25:00](#ts-20261012-152500), [§2026-10-13T10:45](#ts-20261013-1045)
+- Pad read 0x10a4dc; stick clamp min 40, max 145, divided by 105; the 20-byte channel layer 0x103dc8 maps the pad bits to channels (D-pad 12 to 15, A 16, B 17, X 18, Y 19, Start 6, L 8, R 10; Select is not mapped). [§2026-10-13T10:45](#ts-20261013-1045)
+- The input slot table 0x3769e8 (18 words) holds channel indices for press edges; slots 6/7 (A/B) are used by gameplay, slots 4/5 by UI, slots 14 to 17 read the axes by value; 0x2289b8 turns a stick push past about 0.6 into D-pad presses (state 0x376a30). [§2026-10-13T09:22:53](#ts-20261013-092253), [§2026-10-13T09:20:40](#ts-20261013-092040)
+- The scheduler 0x100f44 is a clamped variable step: dt is the elapsed time clamped to C+0x10 = 0.03 and C+0x14 = 0.07 s, with catch-up cap 1 and the backlog dropped; the clock runs at 3000 ticks per second. This corrects the earlier fixed-step reading. [§2026-10-13T10:35:31](#ts-20261013-103531)
+- The GSP interrupt thread 0x1300c8 runs the callbacks; ids 2 and 3 increment the vblank counters 0x593d14 and 0x593d18, and 0x257a68(mode) waits on them. The mode byte 0x52a1f4 is 2 at run time. [§2026-10-13T09:38:42](#ts-20261013-093842), [§2026-10-13T10:35:31](#ts-20261013-103531)
+- The present 0x25a6f0 waits until the timer 0x529e30 (one unit per vblank, 60 per second) advanced by word 0x529de8 (1 or 2) since the last present; with interval 2 gameplay updates run at 30 per second with dt 100/3000 s. The port reproduces this with `FramePacer`. [§2026-10-13T09:41:32](#ts-20261013-094132), [§2026-10-15T17:44:00](#ts-20261015-174400)
+- The irregular dt of the old port loop skipped vehicle world steps (cause of the camera skipping while driving). [§2026-10-15T17:36:41](#ts-20261015-173641)
+- Open: which states use interval 1 or 2 and what writes 0x529de8, the writer of timer+8 and of C+0x10..0x1c, the meaning of channel 7, the bit 0x2000 and channels 2 and 3, command 0x4f (service behind handle 0x386578).
+
+
 <a id="ts-20261012-151000"></a>
 
 ## 2026-10-12T15:10:00+02:00 — S3 focused analysis (REA, Hopper provider, ELF sha256 5152ed14…0881)

@@ -2,6 +2,17 @@
 
 How a level character (`char_ai_actor` and similar) animates while it stands: the animation slot, the idle state function, the random choice between `idle` and `idle2`, the generator. Skeleton and animation data: [skeleton-animation.md](skeleton-animation.md). Natives that start animations from scripts: [script-natives-animation.md](script-natives-animation.md). Items: [animation-characters.md](../plans/features/animation-characters.md), [level-objects.md](../plans/features/level-objects.md).
 
+## Current state
+
+- An idle character with an animation player runs the idle state 0x1d5070 each update; when the slot kind (0x22f560) is 6 it picks an id with 0x214870 / 0x219614 and starts it via 0x21941c (blend 0.1, speed 1.0). With id 0 the generator 0x25b2b8 chooses `idle` or `idle2` (id 280) 50/50. [§2026-10-15T09:29:00](#ts-20261015-092900)
+- The generator is a lagged recurrence over an 11-word table at 0x52fcb8: `v = ror(t[first] + t[second], 29)`, cursors 0 and 7 after seeding (xorshift32 steps 13, 17, 5). The boot seed is time based. [§2026-10-15T09:29:00](#ts-20261015-092900)
+- Only entities with an animation player animate (20 of 110 in the measured state); disabled characters and those of unloaded rooms have none. The clock is 3000 ticks per second; idle is 19 frames and idle2 69 frames at 15 fps, and a character starts the next clip at the first update after the previous one finished. [§2026-10-15T09:29:00](#ts-20261015-092900)
+- The slot player: a 0x58-byte slot, newest first; start 0x245b40, position 0x24cbd4 (modes 0 to 6, loop bit 13), kind 0x22f560, stop 0x225c5c, offset 0x22c2fc, type callbacks in the 0x24-byte table at 0x52ce8c. Length, rate and loop bit come from the type callbacks (loop bit = joint table bit 29, so length = frames). [§2026-10-15T18:33:06](#ts-20261015-183306)
+- Port: `src/runtime/animation_slots.*`, `npc_idle.*`, `game_random.*`, `game_characters.*`; the pose is clamped to `frames - 1` (stand-in ANIM-S2). [§2026-10-15T18:33:06](#ts-20261015-183306)
+- The donut-shop view matches the original in layout; the idle phase was not compared. [§2026-10-15T10:50:38](#ts-20261015-105038)
+- Open: seed formula of 0x105d8c (the port uses a fixed seed), which slot 0x252878 picks as current, who pauses slots (0x24f8fc), the pose sampler's handling of [span, span + 1), blend between clips, gang classes and the AIMillAbout state.
+
+
 <a id="ts-20261015-092900"></a>
 
 ## 2026-10-15T09:29:00+02:00 — Idle state 0x1d5070, animation slots, RNG 0x25b2b8 (REA/Ghidra pseudo-code and llvm-objdump of `game.arm.elf`; oracle `m11-1-donut-shop` (user state, New 3DS) through GDB memory reads and execution traps, no RPC)

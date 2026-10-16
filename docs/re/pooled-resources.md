@@ -2,6 +2,14 @@
 
 Reverse-engineering findings, moved verbatim from the progress log. Entries are chronological; later entries may correct earlier ones. Evidence IDs are shortened with an ellipsis.
 
+## Current state
+
+- Every pooled `b*` resource (12500 of 12500 files) has one layout: header `u32 table_words<<8, u32 header_bytes`, a table of pool markers (-14/-15/-16) followed by block sizes, then the block data; -16 data is inside `header_bytes`, -14 and -15 data follow in table order to the end of the file. [§2026-10-12T15:55](#ts-20261012-1555)
+- The deserializer is 0x10ccf4 (`.fnmdl` rewritten to `.bfnmdl` by 0x107288); it brackets reads with 0x250620/0x250610 and takes blocks through 0x253800 / 0x24b740. [§2026-10-12T15:55](#ts-20261012-1555)
+- The decoder is `chase::assets::parsePooled` with checks in tests/assets_real_test.cpp; `tools/tt_resource.py` is removed and the census values stay valid. [§2026-10-13T15:08:53](#ts-20261013-150853)
+- Open: block-to-field mapping of each format (from the deserializer, not inferred) and the 336 non-pooled files (.srt, .loc, .bin, .txt, .cam, .tnf).
+
+
 <a id="ts-20261012-1555"></a>
 
 ## 2026-10-12T15:55+02:00 — Shared TT pooled-resource layout (all b* formats)

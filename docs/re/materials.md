@@ -2,6 +2,18 @@
 
 Reverse-engineering findings. Entries are chronological; later entries may correct earlier ones. Evidence IDs are shortened with an ellipsis. Addresses are for the Europe v1.0 build.
 
+## Current state
+
+- Per-draw setup is 0x128dc8 (32-bit key from the material, regenerated only when it changes), the stage generator is 0x12e460, texture binding 0x12df94, blend/alpha/depth/cull 0x1292fc, colour packing 0x12edfc. [§2026-10-13T22:24:39](#ts-20261013-222439)
+- The material record is 0x60 bytes; bytes 1, 2, 3, 5 give mode, lighting, texture and alpha, byte 0x13 is the material alpha, and the texture slot roles are 0 diffuse, 1 second texture, 2 lightmap, 5 reflection cube. [§2026-10-13T22:24:39](#ts-20261013-222439)
+- The census of 16122 parts in 3113 models has 38 distinct types, none unsupported. [§2026-10-13T22:24:39](#ts-20261013-222439)
+- Level surfaces (lighting 1) are baked vertex colour x texture x2 with fragment primary 0; the global ambient is the per-frame sum of the type 0 lights (this corrects the single read of 0x5943d0): [rendering-lighting.md §2026-10-15T17:47](rendering-lighting.md#ts-20261015-174725). [§2026-10-13T22:24:39](#ts-20261013-222439)
+- The texture alpha of Chase's face is ignored by the combiner, so the eyes are drawn, not discarded. [§2026-10-13T22:24:39](#ts-20261013-222439)
+- Lightmap surfaces match the oracle on the police-station lobby wall (the floor is about 8 percent lighter in the port). [§2026-10-14T09:50:11](#ts-20261014-095011)
+- The white quad is the `Checker1.tga` part of room1 (also room3, room5): flat y = 0, 4.2 x 4.2, opaque. [§2026-10-14T09:50:11](#ts-20261014-095011)
+- Open: whether the original draws the `Checker1.tga` quads, texture-unit to UV-set mapping, wrap flags, cube sampling, fog conditions, colour pulse over time, draw sort order 0x115128.
+
+
 <a id="ts-20261013-222439"></a>
 
 ## 2026-10-13T22:24:39+02:00 — Material record to PICA texture-environment stages (REA Ghidra 12.1.2, llvm-objdump, oracle reads)

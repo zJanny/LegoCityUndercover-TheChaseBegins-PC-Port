@@ -2,6 +2,15 @@
 
 Reverse-engineering findings, moved verbatim from the progress log. Entries are chronological; later entries may correct earlier ones. Evidence IDs are shortened with an ellipsis.
 
+## Current state
+
+- The 49 `romfs/cutscenes/*.moflex` files are Mobiclip video with IMA-ADPCM audio at 22050 Hz stereo, decoded by system FFmpeg in `chase-fmv`; subtitles are fib `cutscenes/<video>_<lang>.srt` (17 videos x 12 languages, German as `_de_de.srt`). [§2026-10-13T11:05](#ts-20261013-1105)
+- 47 of 49 movies are stereoscopic: left and right eye pictures alternate, so 01_gameintro is 2044 pairs at 29.97 per second; the layout byte at file offset 28 is 0 for 47 files and 6 only for splash5. The original shows the first frame of each pair; the port keeps only that one (`Decoder::eyePairs`). [§2026-10-13T20:58:38](#ts-20261013-205838)
+- Playback ends when decoding is finished, no frames are pending and the audio queue is empty (without audio, one frame after the last). [§2026-10-13T11:40](#ts-20261013-1140)
+- Subtitle parsing is strict SubRip (204 files, 2921 cues, decoded-text FNV-1a 0xe37a66e1). [§2026-10-13T11:40](#ts-20261013-1140)
+- Open: layout values other than 0 and 6, where the game's player reads the layout, which font and position the game uses for subtitles, live A/V sync and Escape handling. [§2026-10-14T13:39:59](#ts-20261014-133959)
+
+
 <a id="ts-20261013-1105"></a>
 
 ## 2026-10-13T11:05+02:00 — FMV player with subtitles: WIP, not merged

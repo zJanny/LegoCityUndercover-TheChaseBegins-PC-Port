@@ -2,6 +2,16 @@
 
 Handlers of the 21 natives of batch SCRIPT-27 and what they touch. Census and batches: [script-natives.md](script-natives.md). Items: [script-system-natives.md](../plans/features/script-system-natives.md) (SCRIPT-27, SCRIPT-61 to SCRIPT-65).
 
+## Current state
+
+- All 21 handlers of batch SCRIPT-27 are read; 5 run exactly (CountRacesWon, IsRacingCarAwarded, UnlockLevel, GetCharacterUnlocked, IsRedbrickBought), 16 as stand-ins. [§2026-10-14T14:41:55](#ts-20261014-144155)
+- CountRacesWon is not blocking, and EnableStudsByGroup's second argument is not an enable flag (this corrects script-natives.md). [§2026-10-14T14:41:55](#ts-20261014-144155)
+- Arguments sit at `[r1 + 8 i + 4]` (object at `[r1]`); a raw integer is read by `ldr`, a float by `vldr` + `vcvt`; all handlers return 1. [§2026-10-14T14:41:55](#ts-20261014-144155)
+- The live save slot is at 0x51b6b0; abilities, levels, races, racing car, red bricks and character unlock bits sit at the slot offsets in the entry's table (+0x51e0, +0x51ee, +0x5200, +0x520c, +0x51b8, +0x51bb, +0x51bc, +0x51e3). [§2026-10-14T14:41:55](#ts-20261014-144155)
+- The port state is `ProgressNativeState` (src/runtime/natives_progress.*); cheat flags are not modelled. [§2026-10-14T14:41:55](#ts-20261014-144155)
+- Open: character table columns (+4, +0x22, +0x23 of 0x372e10), new-game slot defaults 0x1a25cc, the reward switch 0x210480 and the readers of ability, scanner, super brick, parachute and race state.
+
+
 <a id="ts-20261014-144155"></a>
 
 ## 2026-10-14T14:41:55+02:00 — Batch 27 (SCRIPT-27): the 21 handlers read, 5 run exactly, 16 as stand-ins (llvm-objdump on game.arm.elf with `--triple=armv7a --mattr=+vfp3`, C++ runner tests; no emulator, no REA session)

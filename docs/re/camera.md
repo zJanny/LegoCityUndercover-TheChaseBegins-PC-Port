@@ -7,3 +7,10 @@ Split by subtopic because of the 40 KB limit:
 - [camera-follow.md](camera-follow.md): camera chain, manager and modes, follow camera law, yaw word, checks
 - [camera-collision-sweep.md](camera-collision-sweep.md): slab sweep, pull-in, side and vertical push, box slicing and layer of placed objects
 - [camera-records-blending.md](camera-records-blending.md): camera lock and its icon, record selection and record pose 0x298cd8, fade between commands and pose filter
+
+## Current state
+
+- The camera chain, manager, modes, follow law and the yaw word 0x376894 are in [camera-follow.md](camera-follow.md).
+- Collision (slab sweep, pull-in, side and vertical push, box slicing) is in [camera-collision-sweep.md](camera-collision-sweep.md).
+- Camera lock, record selection (pose 0x298cd8), fade between commands and the pose filter are in [camera-records-blending.md](camera-records-blending.md).
+- Each subtopic file has its own `Current state` section.

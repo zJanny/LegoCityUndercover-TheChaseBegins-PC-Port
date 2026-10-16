@@ -2,6 +2,18 @@
 
 Reverse-engineering findings. Entries are chronological; later entries may correct earlier ones. Addresses are for the Europe v1.0 build. Feature file: [rendering](../plans/features/rendering.md). Related: [materials.md](materials.md) (draw state 0x1292fc), [streaming-rooms.md](streaming-rooms.md) (which rooms are loaded).
 
+## Current state
+
+- Fog state is `setFog` 0x22d808 (enable 0x3760fc, near/far floats 0x376160 / 0x376164, colour dword 0x376168); the no-fog override byte is 0x3760fd. [§2026-10-14T17:35:00](#ts-20261014-173500)
+- Values come from level objects of class `lighting/lightambient` (`FogStart`, `FogEnd`, `FogColour`) through 0x1a293c: the plain names are read first and `DS_` names override them (this corrects the first entry); loop 1 over the scene objects, loop 2 over the loaded rooms, last accepted object wins. lvl_01 has one object: start 220, end 260, colour (183, 199, 221). [§2026-10-14T18:59:10](#ts-20261014-185910)
+- Per draw, fog is on when 0x3760fc is set, material byte 0xb bit 6 is clear, 0x3760fd is clear and material byte 9 (blend destination index) is not 1; register 0xe0 gets 5 and 0xe1 the colour. [§2026-10-14T17:35:00](#ts-20261014-173500)
+- The 128-entry LUT builder is 0x24e9d8: `d_i = near / (1 - ((i + 1) / 128) / A)`, `f_i = 1 - clamp((d_i - start) / (end - start))`, word `value << 13 | diff`; three captured LUTs are reproduced exactly. For the street the fade runs over the last depth interval (about 86 to 260), not from 220. [§2026-10-14T17:35:00](#ts-20261014-173500)
+- The projection near and far come from the follow update (K+0x14c = 260) through 0x23f168, not from the matrix at 0x529e30+544 (this corrects both earlier readings): [camera-vehicle.md §2026-10-16T08:26](camera-vehicle.md#ts-20261016-082640). [§2026-10-14T18:59:10](#ts-20261014-185910)
+- The top-screen clear colour is the level parameter `BackgroundColour` (lvl_01 to lvl_07 (183, 199, 221), lvl_00 black); the sky models are separate objects. `SkyboxOverride` is at 0x192254 and `SKY%02u` at 0x1813b4: [rendering-sky.md §2026-10-15T15:39](rendering-sky.md#ts-20261015-153917). [§2026-10-14T18:59:10](#ts-20261014-185910)
+- Rooms load at a nearest-box distance of 98 to 260; no abrupt pop-in was seen in the oracle (only Room4 and Room10 can pop in visibly, 1 to 3 percent of the far field). Fog at depth 197 to 360 matches within about 12 per channel; the near-ground offset of +10 is lighting. [§2026-10-14T20:47:14](#ts-20261014-204714), [§2026-10-14T21:42:20](#ts-20261014-214220)
+- Open: callers of 0x1ee98c and the other setFog sites, the OverrideFog reader (0x51654c), the per-frame reader of the clear colour, whether real hardware interpolates the LUT as Azahar does, a pixel-exact fade fit.
+
+
 <a id="ts-20261014-173500"></a>
 
 ## 2026-10-14T17:35:00+02:00 — The original's fog: level properties, the 128-entry LUT, the per-draw rule (llvm-objdump `--triple=armv6k --mattr=+vfp2` on `artifacts/game/game.arm.elf`, Azahar oracle with GDB traps and RPC reads, state `street-after-1-1`; REA was not used)

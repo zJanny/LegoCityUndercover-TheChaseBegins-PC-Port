@@ -5,9 +5,23 @@ Split from [vehicles.md](vehicles.md). Plan: [features/vehicles.md](../plans/fea
 Subtopics:
 - [vehicles-physics-collision.md](vehicles-physics-collision.md): the Bullet world, the floor collision pass 0x1c54f8, the sleep rule and the contacts with the static Bullet boxes (moved: [§2026-10-15T18:07:23](vehicles-physics-collision.md#ts-20261015-180723)).
 
+## Current state
+
+- A vehicle has two objects: the vehicle body (`entity+0x84`, 0xdd4 bytes, vtable 0x365910, constructor 0x33ce74) and the rigid body it points to at `+0x7c`, which holds the state. The world step 0x30c768 applies gravity, forces, damping and prediction per fixed step. The sleep rule is 0x30cdf8 (not a solver) and collision is in 0x1c54f8: [vehicles-physics-collision.md §2026-10-15T18:07:23](vehicles-physics-collision.md#ts-20261015-180723). [§2026-10-15T12:21:00](#ts-20261015-122100)
+- Linear damping is `DampingLinear * (0.04 * |v|)^2` (speed capped at 25) of the update before; angular damping is the constant `DampingAngular`. Rigid mass is the class `Mass` times the mass scale body+0x84 (2 while the player is seated); gravity -39 is the data float 0x376c40 that 0x242518 sets for every class, not a multiple of `Gravity` ([vehicles-physics-collision.md §2026-10-16T08:35:03](vehicles-physics-collision.md#ts-20261016-083503)). [§2026-10-15T12:21:00](#ts-20261015-122100)
+- Modes 2 and 5 are skipped by the gravity and update passes; a parked vehicle is mode 2 and becomes dynamic when driven. [§2026-10-15T12:21:00](#ts-20261015-122100)
+- The wheel suspension 0x339030 is reproduced to under 0.1 percent: force from stiffness, `WheelSuspensionScale`, the two run-time tables at 0x376eac / 0x376ed8 (c^2.5 and max(2 - 2 c^2.5, 0.25)) and damping chosen by the sign of the point velocity; the wheel ray is 0x33c718. [§2026-10-15T13:41:02](#ts-20261015-134102)
+- 0x33aea8 runs once per world step (1/30 s), not per game update; all per-update rates are per 1/30 s step. [§2026-10-15T15:58:54](#ts-20261015-155854)
+- The drivetrain, engine (0x339db0), final drive (0x2435d0), brake and gear rules, steering (0x33cb1c) and tyres (0x339374, 0x339538) are transcribed and match the traced updates (rpm to 0.1, velocity to 0.0005 m/s on straight updates); the car drives in gear 6 or reverse. The brake samples of vehicles-driving.md were 1.6 times too strong because RPC polling missed steps (this corrects them). [§2026-10-15T15:58:54](#ts-20261015-155854)
+- The wheel node pose is 0x33929c (M x body-origin matrix, steer and spin angles, suspension offset); the port has `vehicle_wheel_pose.*`, checked only by code reading. [§2026-10-15T18:35:42](#ts-20261015-183542)
+- The port has `vehicle_body.*`, `vehicle_wheels.*`, `vehicle_drivetrain.*`; inertia is the measured stand-in (VEH-S32). [§2026-10-15T15:58:54](#ts-20261015-155854)
+- Open: braking after the jump out (VEH-54), writers of body flags +0xc4 bits 3, 4, 0x18, air control 0x33ba70, the triangle choice of 0x23b5e8, the shape inertia function, collision updates that differ (VEH-40).
+
 <a id="ts-20261015-122100"></a>
 
 ## 2026-10-15T12:21:00+02:00 — Physics body, part 1: the rigid body, gravity and damping (REA Ghidra 12.1.2, llvm-objdump, Azahar GDB memory traces at fixed dt 0.033)
+
+Corrected by [vehicles-physics-collision.md §2026-10-16T08:35:03](vehicles-physics-collision.md#ts-20261016-083503): gravity -39 is the data float 0x376c40 set by 0x242518, not three times `Gravity`; the mass factor is the mass scale body+0x84; the 1/30 s step and the 2-step limit come from the static initialiser 0x343dfc.
 
 Corrected by [vehicles-physics-collision.md §2026-10-15T18:07:23](vehicles-physics-collision.md#ts-20261015-180723): 0x30cdf8 is the sleep rule, not the constraint solver; vehicle bodies collide with the level in 0x1c54f8.
 

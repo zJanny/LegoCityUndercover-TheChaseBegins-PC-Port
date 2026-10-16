@@ -4,6 +4,18 @@ Subtopic of the Azahar runtime oracle. Start with [oracle.md](oracle.md) for set
 
 The Azahar RPC server (UDP): memory reads and writes, screenshots, pad input without breakpoints, timings.
 
+## Current state
+
+- Use RPC only through `tools/azahar_oracle.py` (`--rpc`, `--rpc-input`). The server is Azahar's UDP server on the fixed port 45987, so only one RPC emulator per machine; a port clash is silent on the emulator side. [§2026-10-13T12:02:21](#ts-20261013-120221)
+- Requests run on the emulation thread, so reads are consistent and work while the GDB stub halts the CPU. Writes only work inside the process image, heap, linear heap and New 3DS extra RAM; the tool verifies every write by reading it back. [§2026-10-13T12:02:21](#ts-20261013-120221)
+- Screenshots: `TakeScreenshot` needs the OpenGL renderer and a running emulation (about 0.2 s); with the software renderer read the frames by RPC memory reads. [§2026-10-13T12:02:21](#ts-20261013-120221)
+- Buttons without breakpoints: the held-mask read at 0x10a578 is patched to a code cave at 0x356580. The circle pad (`freestick X Y`) uses a cave at 0x3565a0 patched over 0x10a540. Both are removed on exit and re-applied after `loadstate`. [§2026-10-13T12:02:21](#ts-20261013-120221), [§2026-10-14T21:42:40](#ts-20261014-214240)
+- Measure rates by `sample` in a free run (50.14 clock ticks per vblank); stepping inflates the clock by about 31 percent. [§2026-10-13T12:02:21](#ts-20261013-120221)
+- Polling by RPC misses game steps (about one row in ten spans two steps): check row continuity against a value the next step starts from instead of counting rows. [§2026-10-15T16:17:06](#ts-20261015-161706)
+- `waitbyte` and `shotloop` (OpenGL only) are the free-run scenario commands. [§2026-10-14T21:42:40](#ts-20261014-214240)
+- Open: what an RPC read of an unmapped address returns, why RPC is slower in the dialog state, why a teleport across the Room7/Room8 box does not change the room.
+
+
 <a id="ts-20261013-120221"></a>
 
 ## 2026-10-13T12:02:21+02:00 — RPC channel (non-halting memory access, breakpoint-free pad input)

@@ -2,6 +2,17 @@
 
 The per-update rule that decides which rooms of a world level are requested, loaded and unloaded. Data model, room links and scene array: [streaming.md](streaming.md). Feature file: [world-streaming](../plans/features/world-streaming.md). Replica: `src/runtime/room_streaming.{hpp,cpp}`, test `room-streaming-real-data` (`tests/room_streaming_real_test.cpp`).
 
+## Current state
+
+- Room requests come from the scene room update 0x197794 each update: every dirty room gets the default request word (0x376c7c), 0x2af6b0 requests the current room's neighbour list (entries of 0x18 bytes, `01 01 00 80` for the room itself, `01 01 01 80` for the others), and 0x279834 ranks the rest. A room outside the list and not preloaded is unloaded at once. [§2026-10-14T14:00:18](#ts-20261014-140018)
+- Ranking: key `dot(normalize(P - A), B)` (A player position, B camera look direction, P room node position); not-loaded neighbours get priority 255 or 254 minus rank; the anchor is the loaded non-current neighbour with the greatest key above 0, and the first three rooms of its list that are outside the current list are preloaded with priority `200 - i`. [§2026-10-14T14:00:18](#ts-20261014-140018)
+- The room node position is the centre of the vertex box of meshes 1 and up (all 43 rooms of lvl_01); this corrects the mesh 0 reading. The code that fills it was not found (stand-in WSTREAM-S3). [§2026-10-14T15:07:48](#ts-20261014-150748)
+- The current room (0x376c78) is written by 0x1f4244, called per update from 0x2e5aec with the room that owns the player's node (0x2234a8); the node moves between rooms in 0x2e6ce4 -> 0x237b04 -> 0x22d204 by the box rule (position lifted by 0.1, current list first, then scene array order, then the smallest vertical distance). This corrects the port's earlier smallest-containing-box rule; replica `roomAfterMove` matches all 160 recorded records. [§2026-10-14T20:51:26](#ts-20261014-205126)
+- Loads take 6 to 12 updates per room in the oracle (loader is a separate thread); the port uses 9 updates for every room in parallel (stand-in WSTREAM-S30). [§2026-10-14T20:51:26](#ts-20261014-205126)
+- The port runtime (`room_streamer`, `room_streaming`, `room_locator`) reproduces five oracle readings and the walk1 step. [§2026-10-14T15:07:48](#ts-20261014-150748)
+- Open: the writer of the room node position, the meaning of `[0x5163e8+0x26]` and `u16 [room+0x34]`, the unload and release path (0x234690), the loader's dequeue order, whether characters and studs of unloaded rooms are hidden.
+
+
 <a id="ts-20261014-140018"></a>
 
 ## 2026-10-14T14:00:18+02:00 — The request rule: neighbour list plus three view-ranked preloads (REA not used for this entry; llvm-objdump `--mcpu=arm1176jzf-s` on `artifacts/game/game.arm.elf`, Azahar oracle New 3DS, GDB reads and `memtrace`, no RPC)
