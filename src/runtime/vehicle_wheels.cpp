@@ -44,7 +44,7 @@ float suspensionForce(const WheelSuspension& wheel, float distance, float normal
     return std::max(force, 0.0f);
 }
 
-std::optional<WheelHit> castWheelRay(const CollisionWorld& world, const Vector3& from, const Vector3& to) {
+std::optional<WheelHit> castWheelRay(const CollisionWorld& world, const Vector3& from, const Vector3& to, const std::function<bool(const CollisionWorld::Entry&)>& skip) {
     const Vector3 segment = subtract(to, from);
     float low[3], high[3];
     for (std::size_t a = 0; a < 3; ++a) {
@@ -53,7 +53,7 @@ std::optional<WheelHit> castWheelRay(const CollisionWorld& world, const Vector3&
     }
     float best = 2.0f;
     WheelHit hit;
-    world.query(low, high, kPlayerLayer, [&](const CollisionWorld::Triangle& triangle) {
+    world.queryExcept(low, high, kPlayerLayer, [&](const CollisionWorld::Entry& entry) { return skip && skip(entry); }, [&](const CollisionWorld::Triangle& triangle) {
         const Vector3 normal = {triangle.record->normal[0], triangle.record->normal[1], triangle.record->normal[2]};
         const float startSide = dot(from, normal) - triangle.record->d;
         const float endSide = dot(to, normal) - triangle.record->d;

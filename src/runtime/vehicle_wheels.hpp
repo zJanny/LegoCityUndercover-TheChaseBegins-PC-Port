@@ -50,7 +50,7 @@ using WheelRay = std::function<std::optional<WheelHit>(const Vector3& from, cons
 // The ray of 0x33c718. 0x155888 accepts a triangle only when the start is on the front of its plane (record normal and d) and the end is
 // behind it. STAND-IN VEH-S31: 0x23b5e8 picks the triangle and 0x155888's inside test are not read; here it is the closest triangle of the
 // player's query layer that the segment crosses this way, and other bodies (0x1ea6a0) are not tested.
-std::optional<WheelHit> castWheelRay(const CollisionWorld& world, const Vector3& from, const Vector3& to);
+std::optional<WheelHit> castWheelRay(const CollisionWorld& world, const Vector3& from, const Vector3& to, const std::function<bool(const CollisionWorld::Entry&)>& skip = {});
 
 struct WheelState {
     Vector3 centre = {0, 0, 0};  // w+0x100: the wheel centre in the world

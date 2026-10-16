@@ -200,6 +200,7 @@ private:
         float massScale = 1.0f;
         bool started = false;
         bool awake = false;
+        bool settled = false;
         bool moved = false;
         std::size_t placedIndex = 0;
     };

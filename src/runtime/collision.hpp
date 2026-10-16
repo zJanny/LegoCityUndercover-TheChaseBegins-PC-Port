@@ -65,6 +65,12 @@ public:
             if (entry.active && !entry.item.nodes.empty() && layer.accepts(entry.mask)) walk(entry.item, 0, low, high, visit);
     }
 
+    template <class Skip, class Visit>
+    void queryExcept(const float low[3], const float high[3], const CollisionLayer& layer, Skip&& skip, Visit&& visit) const {
+        for (const Entry& entry : entries_)
+            if (entry.active && !entry.item.nodes.empty() && layer.accepts(entry.mask) && !skip(entry)) walk(entry.item, 0, low, high, visit);
+    }
+
 private:
     template <class Visit>
     static void walk(const assets::CollisionItem& item, std::uint32_t index, const float low[3], const float high[3],

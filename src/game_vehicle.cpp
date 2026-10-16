@@ -83,6 +83,7 @@ void LevelSession::driveVehicles(float dt) {
         const float massScale = runtime::vehicleMassScale(seated && *seated == i);
         if (!drive.started) {
             drive.started = true;
+            drive.awake = true;
             drive.shape = runtime::vehicleShapeBoxes(record, vehicle.boxCentre, vehicle.boxHalf);
             drive.massScale = massScale;
             drive.rigid = runtime::vehicleRigidBody(record, {vehicle.matrix[12], vehicle.matrix[13], vehicle.matrix[14]}, runtime::vehicleHeading(vehicle),
@@ -111,17 +112,22 @@ void LevelSession::driveVehicles(float dt) {
         members.push_back(i);
     }
     runtime::stepVehicleBodies(bodies, vehiclePairs,
-                               [this](const runtime::Vector3& from, const runtime::Vector3& to) { return runtime::castWheelRay(collision, from, to); }, steps);
+                               [this](const runtime::Vector3& from, const runtime::Vector3& to) {
+                                   return runtime::castWheelRay(collision, from, to, [this](const runtime::CollisionWorld::Entry& entry) { return std::any_of(boardingVehicles.begin(), boardingVehicles.end(), [&](const runtime::BoardingVehicle& vehicle) { return vehicle.instance == entry.owner; }); });
+                               }, steps);
     for (std::size_t n = 0; n < members.size(); ++n) {
         const std::size_t i = members[n];
         VehicleDrive& drive = vehicleDrives[i];
         if (floors[n]) drive.floorTracker = floors[n]->tracker;
         const bool driven = seated && *seated == i && levelScripts.vehicles().records()[boardingRecords[i]].state == runtime::kVehicleStateDriven;
-        if (!driven && !drive.awake) continue;
-        if (!drive.moved && !driven) std::cout << "vehicle " << boardingVehicles[i].instance << ": moved by a contact at update " << updatesForLog << '\n';
-        drive.moved = true;
+        if (!driven && !drive.awake && drive.settled) continue;
+        if (driven || drive.settled) {
+            if (!drive.moved && !driven) std::cout << "vehicle " << boardingVehicles[i].instance << ": moved by a contact at update " << updatesForLog << '\n';
+            drive.moved = true;
+        }
+        if (!drive.awake) drive.settled = true;
         runtime::VehicleRecord& record = *levelScripts.vehicles().mutableRecord(boardingRecords[i]);
-        if (runtime::updateStuckTimer(record.stuckTimer, 1.0f, false, std::fabs(runtime::forwardSpeed(drive.rigid)), dt))
+        if (drive.moved && runtime::updateStuckTimer(record.stuckTimer, 1.0f, false, std::fabs(runtime::forwardSpeed(drive.rigid)), dt))
             levelScripts.vehicles().requestState(boardingRecords[i], runtime::kVehicleStateStuck);
         boardingVehicles[i].matrix = runtime::vehicleNodeMatrix(drive.rigid, record.centreOfMass);
         scene.setTransform(placedSceneIndex[drive.placedIndex], boardingVehicles[i].matrix);

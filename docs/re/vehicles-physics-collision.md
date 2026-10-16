@@ -107,3 +107,24 @@ Unknowns:
 - Contacts with placed objects: none of them is in the Bullet world (only the 217 boxes and the vehicles); how the original stops a vehicle at lamp posts and barriers is not read (the sphere sweep of 0x1c54f8, VEH-61, or other code).
 - `BumpCollision` (body+0xc4 bit 0x10000) and damage (the vehicle message handler 0x1797c4 writes health +0x30c) are not read.
 - The thrown car after the dev teleport to (949, 17.8, 1122.7).
+
+<a id="ts-20261016-083503"></a>
+
+## 2026-10-16T08:35:03+02:00 — Physics body, part 7: gravity, sleep time and step record writers; parked bodies start awake and settle to the oracle's rest (llvm-objdump, Azahar heap reads by agent A)
+
+Evidence: llvm-objdump of `artifacts/game/game.arm.elf`: the world creation 0x2e3a9c, the static initialisers 0x34b304 and 0x343dfc, 0x242518, 0x2d41c8, 0x30c630, the add command 0x2e3390 (command 0, 0x2e3438), the callers of 0x242518 (0x15747c, 0x159cf8, 0x213da0, 0x2f7668, 0x33d010), the data image words at 0x376818..0x376c6c (read from `code.bin`). Oracle: agent A (round 14), Azahar New 3DS, OpenGL, RPC heap reads two seconds after loadstate without input, states `street-after-1-1` and `m11-2-patrol-car` (user saves); rigid bodies found by scanning the heap for Bullet's defaults and matched to the placements by position (local file in the lead's scratch directory, not committed).
+
+**Gravity.** The rigid body gravity +0x180 is set by 0x242518 (vector (0, y, 0, 0), virtual setGravity 0x1e64bc) from the global float 0x376c40, which holds -39.0 in the data image and is only read (7 literal references; the add command 0x2e3390 passes it at 0x2e3444 for every vehicle with owner flag bit 0 and collision flags & 3 clear; the vehicle body constructor path 0x33d010 and 0x213da0, 0x15747c, 0x159cf8, 0x2f7668 pass it too). So every vehicle class carries -39; it is not computed from the world's -13. The world gravity (0, -13, 0, 0) is built by the static initialiser 0x34b304 at 0x5863a4 and given to the world at creation (virtual +0x44, 0x2e3bc8). The force pass 0x2d41c8 adds gravity force (+0x170 = gravity x mass) times the linear factor +0x160.
+
+**Sleep time and step record.** The world creation 0x2e3a9c (new world, solver, dispatcher; limits -20000/20000) stores the literal 0.75 (0x2e3c80) into 0x376820 at 0x2e3c10; the data image holds 2.0 there, and the byte 0x376824 (data 0, no writer) stays clear. The thresholds 0.8 and 1.0 are Bullet's rigid body defaults. The record at 0x5163e8 (+0xc0 = 2 most steps, +0xc4 = 0x3d088889 = 1/30) is filled by the static initialiser 0x343dfc (stores 2 at 0x343f10 and the literal at 0x343f14). 0x101dc8 is a plain 0xd8-byte settings copy, not the writer.
+
+**Mass.** Rigid inverse mass comes from `Mass` times the mass scale body+0x84 (VEH-S81 in the feature file); the scale is the factor the entry already measured, not a separate 2 x Mass constant.
+
+**Parked bodies.** The world adds a parked vehicle as an awake dynamic body at its placement; it settles on its suspension and sleeps after 0.75 s of slow motion. The port now starts parked bodies awake (tests/vehicle_rest_test.cpp, CTest `vehicle-rest-real-data`): from the placement the body sleeps after 23 steps and rests at the oracle's poses to 0.4 mm or better: FP_Vehicle_03 (943.5023, 17.3800, 1116.9214; port 943.5024, 17.3799, 1116.9213), FP_Vehicle_04 (975.5808, 17.1212, 1136.9209; port 975.5807, 17.1212, 1136.9209), FP_Vehicle_05 (958.2173, 17.7667, 1157.5811; port the same) and the police car's simulated body (887.3775, 17.0743, 1117.3153; port 887.3776, 17.0740, 1117.3149). The other police car body (flags 0x180, mode 1) sits at the exact placement 887.3776, 17.0545, 1117.3188. The settled pose depends on the whole settling path, so the match also confirms the suspension, floor pass and sleep rule for the parked mass scale 1.
+
+**Port.** Wheel rays ignore the entries of every vehicle (`castWheelRay` skip predicate), because the vehicle's own collision mesh sits in the level's collision world and threw an awake car up to 19 m; STAND-IN VEH-S85 (the original's rule is not read). A parked body that has not slept yet does not count as moved by a contact (`settled`).
+
+Unknowns:
+- Which of the two police car bodies is 1-1_Police_Car, and the m11-2-patrol-car entry history (not known from the reads).
+- Why the camera's recorded car position in [camera-vehicle.md §2026-10-15T16:58](camera-vehicle.md#ts-20261015-165809) (887.3773, 17.8102, 1117.3175) differs from the node the oracle's body gives (about 17.8243 for rigid y 17.0743): it may not be the node.
+- How the original keeps a vehicle's wheel rays off its own mesh.

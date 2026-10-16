@@ -58,8 +58,8 @@ struct VehicleWheel {
     WheelGripSpec grip;
 };
 
-// body+0x84, the factor 0x243628 applies to the shock values; 2.0 in the trooper and the donut van (oracle). Where it is set is not read (VEH-33),
-// the same factor doubles the rigid body mass (STAND-IN VEH-S21).
+// body+0x84, the factor 0x243628 applies to the shock values; 2.0 in the trooper and the donut van (oracle). It is the mass scale set by 0x213dc8 (VEH-S81),
+// the same factor scales the rigid body mass.
 constexpr float kVehicleBodyMassFactor = 2.0f;
 
 struct VehicleRecord {

@@ -57,7 +57,7 @@ struct EngineSpec {
     float finalDrive = 0;           // +0x29c: 0x2435d0 replaces dtFinalDrive
     float speedLimit = 1000.0f;     // +0xdbc (constructor)
     float slowdown = 0.2f;          // +0xdc0 Slowdown
-    float mass = 0;                 // +0xc8: twice the class Mass (VEH-S21)
+    float mass = 0;                 // +0xc8: the class Mass times the mass scale
     SteeringSpec steering;
 };
 
