@@ -61,6 +61,7 @@ Unknowns:
 <a id="ts-20261013-211552"></a>
 
 ## 2026-10-13T21:15:52+0200 — Landing stun rule, step-off state 8 (slide), slope slow-down, state table (worker; REA Ghidra 12.1.2, objdump of artifacts/game/game.arm.elf, Azahar oracle without RPC)
+Corrected by [player-falling-jumping.md §2026-10-16T10:30:18+02:00](#ts-20261016-103018): the ground triangle choice among overlapping triangles comes from the candidate list order, 133 of 133 recorded normals agree
 
 Replica: `stunFinished`, `StunAnimation`, `slideStep` (src/runtime/player_vertical.*), `slideLocomotionUpdate`, `slideHeading`, `slopeFactor` (src/runtime/player_locomotion.*), `gameSin`/`gameCos` (src/runtime/player_intent.*), `groundContact` (src/runtime/collision.*), `playerMotionUpdate` (src/runtime/player_motion.*, used by `updatePlayer` of src/game.cpp). Tests: `runtime-core`, `fall-real-data`, `jump-real-data`, `slide-real-data` (tests/slide_real_test.cpp, `CHASE_SLIDE_TRACE_DIR`, default artifacts/oracle/slide-traces, scenario tools/oracle/slide-ledge.txt), `slope-real-data` (tests/slope_real_test.cpp, `CHASE_SLOPE_TRACE_DIR`, tools/oracle/slope-run.txt). Both new tests read `memtrace` recordings (tests/memtrace.hpp: entity, controller, extension `*(ctrl+0xe0)`, node).
 
@@ -91,3 +92,26 @@ Unknowns:
 - The second probe of the slide branch (`0x22f134` with flags 1, which takes the `0x22a7a4` path): it found nothing in any recording; the replica does not run it (`slideStep`). `0x23d3d0` (moving ground), the flag 255 passed to `0x21a73c` for surface 20, the 5 s timeout of state 8, ctrl+0x24c after a slide that ends on the ground, the sprint scale in state 8.
 - Which of two overlapping near-flat triangles `0x2023e4` reports as the ground triangle: `groundContact` takes the first of the last overlapping set and agrees with the recorded normal on 119 of 133 rows (the other 14 are the other triangle of the pair, differences below 0.15 in the normal).
 - Surface byte 6 on flat ground (slope branch with the counter in ext+8) and the constant 0x23ca4c (4.5 / that value per update); the states 16, 17, 73, 75 and 128..135 of `0x203d18` are not replicated.
+
+<a id="ts-20261016-103018"></a>
+
+## 2026-10-16T10:30:18+02:00 — Ground triangle choice solved (candidate order), push at the slide exit, state 8 timeout, landing after a slide (agent E round 16; REA Ghidra 12.1.2, recorded fall and slide traces, no emulator)
+
+Replica: `bisect` and `groundContact` (src/runtime/collision.cpp); `fall-real-data` now compares every recorded ground normal to 1e-5.
+
+**Which triangle the ground probe reports (found, [Corrects player-falling-jumping.md §2026-10-13T21:15](#ts-20261013-211552): "first of the last overlapping set", 119 of 133).** The order of the candidate list decides it, in two places:
+- `0x208d84` (called by the ground probe `0x1f9884` with flags 8) collects the tree-order triangles of the footprint box and passes the flags to `0x2092d8`, where flag 8 means: every entry that the box does not overlap is replaced by the last entry of the list (`0x209a2c`, the swapped-in entry is tested at the same index). The floor filter `0x2ce21c` (through `0x209a98`) keeps the order (memmove). The replica filtered in place, which kept the tree order.
+- The bisection `0x2023e4` asks `0x2092d8` with flags 0 for the upper half box: it returns at the first overlapping entry and reports it. For the lower half it uses flag 8 (the same swap-removal) and reports the last overlapping entry it visited. The out parameter of the deepest level that had an overlap is the ground triangle (`ctrl+0x1e8`, normal copied to `ctrl+0x1ec`).
+- Result: 133 of 133 recorded ground normals agree to 1e-5 (the 18 fall traces; before: 119, differences below 0.15). The lobby run of `game-script-run` / `game-script-camera` moves 8.104 instead of 8.054 units because it now picks the same triangle as the original on the steps (replica output, not measured).
+- Not replicated (same functions): the tree query returns at most 0x100 triangles per item (`0x1dc528` / `0x21ba0c`), the list holds 300 entries and the spatial grid query 100 entries (`0x20c850`), and `0x209a98` with flag 0x40 removes triangles whose 0x20-byte record equals an earlier one. The order of entries across items stays the replica's registration order (the original follows the grid cells).
+
+**Push at the end of a slide (measured from the recordings, cause not found).** In the update where state 8 ends (the probe finds no ground, event 0x26 starts state 5), the node moves by the stick step plus a vector of (-0.1035, -0.0393) (length 0.111, along the downhill direction). It is the same in all four exits (st8_walk row 34, st8_dt066 row 7, st8_dt0165 row 66, st8_w70_0 row 10) although the stick step differs by a factor of five (dt 0.0163 / 0.033 / 0.066) and the slope normals differ (st8_w70_0 slides on (-0.869, 0.369, -0.330)). The replica's wall pass removes the stick step there (corner rule) and its probe finds the slope; the original keeps the stick step, adds the push, and its probe finds only the flat floor below (the normal in `ctrl+0x1ec` becomes (-0.049, 0.987, 0.152), ext+0x5c stays the last slide vector, so the slide branch of `0x2b24bc` did not run). Read and ruled out as the source: `0x21a73c` and `0x208d84` (the wall response only subtracts the part of the movement that points into a wall; with the flattened normal it cannot add more than the movement had), `0x2b01e4` (moving ground only, `ctrl+0x174` is 0), `0x203b34` (no movement). In `0x20cd30` the vertical part of the movement is applied by a separate vertical move (`0x23d39c`) before the ground call `0x20b48c`.
+
+**State 8 timeout (found).** `0x25fa78`: when the clock is more than 5.0 s past `ctrl+0x24c` it calls `0x210c38` (sets bit 1 of the global 0x58db24 for the player) and `0x23cd80(entity, 0)`, which removes the character: it sends event 1 and sets entity flag 0x10 (the dead / respawn path); then the update goes on. The replica has no death or respawn.
+
+**Landing after a slide (narrowed).** The enter function `0x1abc5c` of state 6 starts a different animation (literal at 0x1abe2c, through `0x21941c`) instead of role 6 when bit 5 of `*(ctrl+0xe0)+0x130` is set, and the update `0x1d55cc` then skips the stick movement (`0x215804`). That byte is 0 in all rows of the slide recordings, so this is not why the stun lasts one update.
+
+Unknowns:
+- What adds the 0.111 push at the slide exit and why the probe there does not see the slope face.
+- Why the soft landing after a slide lasts one update: state 6 ends when `0x22f560` returns 6 or 1 (the slot's low 3 bits when they are not 0 or 2); the mode of the landing slot after a slide was not read.
+- The grid cell order of the entries across items.

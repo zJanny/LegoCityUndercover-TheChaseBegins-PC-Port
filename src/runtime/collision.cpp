@@ -47,26 +47,35 @@ void flattenAndNormalise(float normal[3]) {
 
 // 0x2023e4: halve the box height until the half height is below kBisectionStop, moving up when the upper
 // half touches a triangle, else down when the lower half does; nothing in either half returns the box top.
-// The out parameter of 0x2023e4 holds the triangle of the last half box that overlapped (`found` receives that set).
-float bisect(const float centre[3], const float half[3], std::vector<Triangle> triangles, std::vector<Triangle>& found) {
+// The upper test is 0x2092d8 with flags 0: it stops at the first overlapping triangle of the list and reports it. The
+// lower test is 0x2092d8 with flags 8: every non-overlapping entry is replaced by the list's last entry (the swapped-in
+// entry is tested at the same index) and the last overlapping triangle visited is reported. `found` keeps the report
+// of the deepest level that had one.
+float bisect(const float centre[3], const float half[3], std::vector<Triangle> triangles, std::optional<Triangle>& found) {
     const float quarter = half[1] * 0.5f + 1.1920929e-07f;
     if (quarter < kBisectionStop) return centre[1];
     float nextCentre[3] = {centre[0], centre[1], centre[2]};
     const float nextHalf[3] = {half[0], quarter, half[2]};
     nextCentre[1] = centre[1] + quarter;
-    std::vector<Triangle> upper;
     for (const Triangle& t : triangles)
-        if (boxOverlapsTriangle(nextCentre, nextHalf, t.vertex, t.record->normal, t.record->d)) upper.push_back(t);
-    if (!upper.empty()) {
-        found = upper;
-        return bisect(nextCentre, nextHalf, std::move(triangles), found);
-    }
+        if (boxOverlapsTriangle(nextCentre, nextHalf, t.vertex, t.record->normal, t.record->d)) {
+            found = t;
+            return bisect(nextCentre, nextHalf, std::move(triangles), found);
+        }
     nextCentre[1] = centre[1] - quarter;
-    triangles.erase(std::remove_if(triangles.begin(), triangles.end(), [&](const Triangle& t) {
-                        return !boxOverlapsTriangle(nextCentre, nextHalf, t.vertex, t.record->normal, t.record->d);
-                    }), triangles.end());
+    std::optional<Triangle> last;
+    for (std::size_t i = 0; i < triangles.size();) {
+        const Triangle t = triangles[i];
+        if (boxOverlapsTriangle(nextCentre, nextHalf, t.vertex, t.record->normal, t.record->d)) {
+            last = t;
+            ++i;
+        } else {
+            triangles[i] = triangles.back();
+            triangles.pop_back();
+        }
+    }
     if (triangles.empty()) return centre[1] + half[1];
-    found = triangles;
+    found = last;
     return bisect(nextCentre, nextHalf, std::move(triangles), found);
 }
 }
@@ -225,9 +234,18 @@ std::optional<GroundContact> groundContact(const CollisionWorld& world, const Gr
     std::vector<Triangle> candidates;
     const float low[3] = {centre[0] - half[0], centre[1] - half[1], centre[2] - half[2]};
     const float high[3] = {centre[0] + half[0], centre[1] + half[1], centre[2] + half[2]};
-    world.query(low, high, kPlayerLayer, [&](const Triangle& t) {
-        if (boxOverlapsTriangle(centre, half, t.vertex, t.record->normal, t.record->d)) candidates.push_back(t);
-    });
+    // 0x208d84 with 0x2092d8 flags 8: the tree-order candidates lose every triangle the footprint box does not
+    // overlap by taking the last entry's place, which permutes the order the bisection sees.
+    world.query(low, high, kPlayerLayer, [&](const Triangle& t) { candidates.push_back(t); });
+    for (std::size_t i = 0; i < candidates.size();) {
+        const Triangle& t = candidates[i];
+        if (boxOverlapsTriangle(centre, half, t.vertex, t.record->normal, t.record->d)) {
+            ++i;
+        } else {
+            candidates[i] = candidates.back();
+            candidates.pop_back();
+        }
+    }
     // 0x2ce21c: only floor-like triangles, with the looser limit when none is steep enough to be a wall-free floor.
     auto keep = [&](float limit) {
         std::vector<Triangle> floors;
@@ -238,12 +256,12 @@ std::optional<GroundContact> groundContact(const CollisionWorld& world, const Gr
     std::vector<Triangle> floors = keep(kFloorNormalMin);
     if (floors.empty()) floors = keep(kFloorNormalMinLoose);
     if (floors.empty()) return std::nullopt;
-    std::vector<Triangle> found;
+    std::optional<Triangle> found;
     const float ground = bisect(centre, half, std::move(floors), found);
     GroundContact contact;
     contact.height = std::fabs(probe.y - ground) < kGroundKeepTolerance ? probe.y : ground;
-    if (!found.empty()) {
-        const Triangle& chosen = found.front();
+    if (found) {
+        const Triangle& chosen = *found;
         std::copy(chosen.record->normal, chosen.record->normal + 3, contact.normal);
         contact.surface = chosen.record->surface;
         contact.triangle = true;

@@ -73,7 +73,7 @@ void checkUpdates(const CollisionWorld& world, const std::vector<Row>& rows, con
             float normalError = 0;
             for (int a = 0; a < 3; ++a) normalError = std::max(normalError, std::fabs(state.groundNormal[a] - after.normal[a]));
             if (normalError > 1e-5f) ++totals.otherTriangle;
-            if (normalError > 0.15f) {
+            if (normalError > 1e-5f) {
                 ++totals.wrongNormals;
                 std::cerr << name << " row " << i << ": ground normal " << state.groundNormal[0] << ' ' << state.groundNormal[1] << ' '
                           << state.groundNormal[2] << ", recorded " << after.normal[0] << ' ' << after.normal[1] << ' ' << after.normal[2] << '\n';
@@ -163,7 +163,7 @@ int main(int argc, char** argv) {
         std::cout << "falls: " << totals.traces << " traces, " << totals.updates << " updates, " << totals.starts << " fall starts, "
                   << totals.landings << " landings (" << totals.hardLandings << " hard, " << totals.softStuns << " soft with stun), "
                   << totals.stunChecks << " stun lengths, " << totals.stepOffs << " traces cut at the step-off state, " << totals.wrong << " wrong, worst height error " << totals.worstHeight
-                  << ", worst fall speed error " << totals.worstSpeed << ", " << totals.normalChecks << " ground normals (" << totals.otherTriangle << " another near-flat triangle of the overlapped pair, " << totals.wrongNormals << " wrong)\n";
+                  << ", worst fall speed error " << totals.worstSpeed << ", " << totals.normalChecks << " ground normals (" << totals.wrongNormals << " wrong; recorded normals compared to 1e-5, provenance docs/re/player-falling-jumping.md PLAYER-4 entry)\n";
         require(totals.traces >= 12 && totals.landings >= 8 && totals.hardLandings >= 3 && totals.starts >= 1,
                 "too little recorded fall data");
         require(totals.wrong == 0 && totals.wrongNormals == 0, "fall or landing differs from the recorded traces");

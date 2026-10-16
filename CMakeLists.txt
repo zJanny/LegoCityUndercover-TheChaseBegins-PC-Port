@@ -855,25 +855,25 @@ if(BUILD_TESTING)
     # The lobby's first-visit camera tour (Lobby_Dcam_Intro 0) holds the player (docs/re/dcam.md); these runs start after it.
     # Scripted stick (raw circle pad "x y updates;..." at dt 0.033): without collision 31 run updates at 6.9 u/s
     # and 9 sprint updates at 10.35 u/s would move the player 10.13 units; the lobby steps raise him to height
-    # 2.51 and the desk stops him after 8.05 units (the lobby has the record pose camera). 40 walk updates at 2.3 u/s move him 3.04 units on the floor.
+    # 2.51 and the desk stops him after 8.10 units (the lobby has the record pose camera). 40 walk updates at 2.3 u/s move him 3.04 units on the floor.
     # These two run without camera collision (the camera yaw sets the walking direction).
     add_test(NAME game-script-run COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --set-variable Lobby_Dcam_Intro=1 --script "0 150 40" --no-camera-collision --screenshot game-script-run.bmp)
     set_tests_properties(game-script-run PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen"
-      PASS_REGULAR_EXPRESSION "scripted: 40 updates, player moved 8\\.05[0-9]* units.*height 2\\.50[0-9]*.*saved game-script-run.bmp")
+      PASS_REGULAR_EXPRESSION "scripted: 40 updates, player moved 8\\.10[0-9]* units.*height 2\\.50[0-9]*.*saved game-script-run.bmp")
     add_test(NAME game-script-walk COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --set-variable Lobby_Dcam_Intro=1 --script "0 90 40" --no-camera-collision --screenshot game-script-walk.bmp)
     set_tests_properties(game-script-walk PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen"
       PASS_REGULAR_EXPRESSION "scripted: 40 updates, player moved 3\\.03[0-9]* units.*height 1\\.4[0-9]*.*saved game-script-walk.bmp")
     # In the police station lobby the record pose camera (docs/re/camera.md) is active, so the camera does not turn and
-    # the run goes straight up the lobby steps: 8.05 units (replica output, not measured in the original).
+    # the run goes straight up the lobby steps: 8.10 units (replica output, not measured in the original).
     add_test(NAME game-script-camera COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --set-variable Lobby_Dcam_Intro=1 --script "0 150 40" --screenshot game-script-camera.bmp)
     set_tests_properties(game-script-camera PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen"
-      PASS_REGULAR_EXPRESSION "scripted: 40 updates, player moved 8\\.05[0-9]* units.*height 2\\.50[0-9]*.*saved game-script-camera.bmp")
+      PASS_REGULAR_EXPRESSION "scripted: 40 updates, player moved 8\\.10[0-9]* units.*height 2\\.50[0-9]*.*saved game-script-camera.bmp")
     # Run west off the 1.06 m platform at x 897 in the Cherry Tree Hills street: the heights are the recorded
     # fall (tools/oracle/fall-ledge.txt: 17.5898, 17.4908, 17.3423, 17.1443, 16.8968 after the platform updates).
     add_test(NAME game-script-ledge COMMAND chase-game
