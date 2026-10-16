@@ -75,7 +75,8 @@ int main(int argc, char** argv) {
         std::size_t skinnedParts = 0, boneBatches = 0, jointSum = 0;
         std::size_t skeletons = 0, joints = 0, animations = 0, curves = 0;
         std::size_t longCurves = 0;
-        std::size_t subAnimations = 0, animTracks = 0, trackKeys = 0, cutsceneActorCount = 0;
+        std::size_t subAnimations = 0, animTracks = 0, trackKeys = 0, cutsceneActorCount = 0, cutsceneClips = 0, laterClips = 0;
+        unsigned donutboxStart = 0;
         std::vector<std::string> manifestPaths, missingManifestFiles;
         std::size_t tableFiles = 0, tableSheets = 0, tableCells = 0, studThreshold = 0;
         std::string cutsceneVideo;
@@ -135,8 +136,16 @@ int main(int argc, char** argv) {
                 manifestPaths.push_back(name.substr(0, name.rfind('/')));
                 for (const auto& actor : cutsceneActors(parseManifest(data), manifestPaths.back())) {
                     ++cutsceneActorCount;
-                    for (const auto& path : {actor.model, actor.skeleton, actor.animation})
+                    for (const auto& path : {actor.model, actor.skeleton})
                         if (!path.empty() && !archive.find(path)) missingManifestFiles.push_back(path);
+                    for (const auto& path : actor.animations) {
+                        if (!archive.find(path)) missingManifestFiles.push_back(path);
+                        if (actor.model.empty()) continue;
+                        const unsigned start = cutsceneClipStart(actor.name, path);
+                        ++cutsceneClips;
+                        laterClips += start > 0;
+                        if (path == "csdata/models/1_1_d/donutbox/donutbox_0100.bfnanm") donutboxStart = start;
+                    }
                 }
             }
             if (endsWith(name, ".bxaml")) {
@@ -461,9 +470,16 @@ int main(int argc, char** argv) {
             throw std::runtime_error("animation track totals differ from the recorded reference");
         // Reference: recorded from this C++ parser (2026-10-13) and checked with ls over
         // artifacts/fib/files/csdata/models: the only listed file absent from the archive.
-        if (manifestPaths.size() != 69 || cutsceneActorCount != 397 || missingManifestFiles.size() != 1 ||
-            missingManifestFiles[0] != "csdata/models/2_7_c/laundrycart/laundrycart.bfnskl")
+        // dunby_0000 of 2_1_b is listed but absent too (ls, 2026-10-16); the cutscene keeps only dunby_0020.
+        std::sort(missingManifestFiles.begin(), missingManifestFiles.end());
+        if (manifestPaths.size() != 69 || cutsceneActorCount != 397 || missingManifestFiles.size() != 2 ||
+            missingManifestFiles[0] != "csdata/models/2_1_b/dunby/dunby_0000_minifig.bfnanm" ||
+            missingManifestFiles[1] != "csdata/models/2_7_c/laundrycart/laundrycart.bfnskl")
             throw std::runtime_error("cutscene manifest totals differ from the recorded reference");
+        // Reference: clip names listed with ls over artifacts/fib/files/csdata/models (2026-10-16): every actor clip is named
+        // <actor>_<4 digits>, 330 clips, 61 with digits other than 0000 (start frame, 0x2ec30c); donutbox_0100 of 1_1_d starts at 100.
+        if (cutsceneClips != 330 || laterClips != 61 || donutboxStart != 100)
+            throw std::runtime_error("cutscene clip start totals differ from the recorded reference");
         // Reference: every sheet's computed stride equals its stored stride (checked in parseTable);
         // totals recorded from this C++ parser (2026-10-13). Cell values checked by hand against the
         // rows dumped by tools/tt_resource.py (at 9d04c91): tablescutscenes row 2 offset 1 -> "01_gameintro",

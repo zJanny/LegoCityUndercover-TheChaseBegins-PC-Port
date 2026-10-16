@@ -20,6 +20,8 @@ InEngine::~InEngine() {
 
 namespace {
 constexpr unsigned kFigureCheckUpdate = 10;
+// MOVIE-S31: a standalone actor before its first clip keeps an unposed node; the identity transform is assumed.
+const render::Mat4 kUnstartedActorMatrix = render::identity();
 
 void setVisible(render::Scene& scene, const render::CharacterInstance& instance, bool visible) {
     scene.setInstanceVisible(instance.bodyInstance, visible);
@@ -108,15 +110,22 @@ void InEngine::pose(const Loaded& cutscene, double seconds) {
     const double frame = std::min(seconds * cutscene.rate, double(cutscene.content.camera.frames - 1));
     for (std::size_t i = 0; i < cutscene.content.actors.size(); ++i) {
         const CutsceneCast& actor = cutscene.content.actors[i];
-        const double local = std::min(frame, double(actor.animation.frames ? actor.animation.frames - 1 : 0));
-        const render::Mat4 world = actorMatrix(actorPose(actor.animation, float(cutsceneNormalised(actor.animation, local))));
+        const std::optional<CutsceneClipFrame> clip = cutsceneClipAt(actor, frame);
         if (const auto& driven = cutscene.actors[i].driven) {
-            const std::vector<Matrix> skin = render::poseBody(scene_, driven->rig, driven->copy, actor.animation, local);
+            setVisible(scene_, driven->copy, clip.has_value());
+            setVisible(scene_, driven->original, !clip);
+            if (!clip) continue;
+            const render::Mat4 world = actorMatrix(actorPose(*clip->animation, float(cutsceneNormalised(*clip->animation, clip->frame))));
+            const std::vector<Matrix> skin = render::poseBody(scene_, driven->rig, driven->copy, *clip->animation, clip->frame);
             render::placeCharacter(scene_, driven->rig, driven->copy, skin, world);
             continue;
         }
-        scene_.setTransform(*cutscene.actors[i].standalone, world);
-        if (!actor.skeleton.joints.empty()) scene_.pose(actor.model, skinMatrices(actor.skeleton, actor.animation, local));
+        if (!clip) {
+            scene_.setTransform(*cutscene.actors[i].standalone, kUnstartedActorMatrix);
+            continue;
+        }
+        scene_.setTransform(*cutscene.actors[i].standalone, actorMatrix(actorPose(*clip->animation, float(cutsceneNormalised(*clip->animation, clip->frame)))));
+        if (!actor.skeleton.joints.empty()) scene_.pose(actor.model, skinMatrices(actor.skeleton, *clip->animation, clip->frame));
     }
 }
 

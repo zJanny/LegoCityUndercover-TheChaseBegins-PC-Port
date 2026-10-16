@@ -9,7 +9,9 @@ Which entities a cutscene's cast are, why the original draws no second Chase and
 - Only when no entity is found does the cutscene build its own model from the folder; at the end 0x196144 restores entity byte +0x18 and destroys own models. [§2026-10-15T07:54:38](#ts-20261015-075438)
 - The port draws a copy of the level character and hides the figure during the cutscene (stand-in MOVIE-S30); the double Chase after the van drive was a port bug, fixed so the figure stays hidden. [§2026-10-16T09:40:39](#ts-20261016-094039)
 - Original and port frames of `1_1_b` were compared but show different moments, so no actor comparison exists. [§2026-10-15T10:50:31](#ts-20261015-105031)
-- Open: meaning of entity byte +0x18 = 5, the player's position after a cutscene, actors `Donut1` and `Donutbox`, a close-up oracle state.
+- Each actor clip starts at the camera frame in its file name (`<actor>_NNNN`, 0x2ec30c) and is started by 0x2ec454 when the frame passes it; the clip started last drives the actor. Ported; this fixed the floating donut box of `1_1_d`. [§2026-10-16T14:05:18](#ts-20261016-140518)
+- The van of `1_1_d` is posed 5.8 below its bind height and the four wheels overlap: how props combine their track with their node matrices is open. [§2026-10-16T14:05:18](#ts-20261016-140518)
+- Open: prop posing from track and node matrices, meaning of entity byte +0x18 = 5, the player's position after a cutscene, actors `Donut1` and `Donutbox`, a close-up oracle state.
 
 <a id="ts-20261015-075438"></a>
 
@@ -61,3 +63,26 @@ Unknowns:
 
 Unknowns:
 - Where the player stands after the cutscene in the original (MOVIE-22); the port still restores the place of the figure.
+
+<a id="ts-20261016-140518"></a>
+
+## 2026-10-16T14:05:18+02:00 — Actor clips start at the frame in their file name; the van of 1_1_d is posed 5.8 below its bind height (REA with Ghidra on `artifacts/game/game.arm.elf`: 0x2d236c, 0x2ec6c8, 0x2ec30c, 0x2ec454; llvm-objdump; data probes with `chase_assets`; chase-game runs; no emulator)
+
+User report (2026-10-16): in cutscene `1_1_d` (the van brought back to the shop) the van is invisible, the donut box hangs in the air and the man does not hold it.
+
+Clip start frames (from the code):
+- The manifest constructor 0x2d236c builds the actors (0x2d1ddc per model) and then calls 0x2ec6c8(actor slot, manifest text, folder) for every slot. 0x2ec6c8 walks the `.fnanm` lines twice: it counts the clips of the slot, then fills an array of 8-byte entries at slot+0x224 (count at +0x228). Each entry is {float start frame, animation handle}. A file missing from the archive leaves its entry empty, and that clip never plays.
+- 0x2ec30c(slot, file name, &start) matches the file to the slot by the pattern `%s_????.*` (or `%s_????_%s.*` when the model has a suffix such as `minifig`), with the slot's actor name for `%s`. It parses the number after `<actor>_` with 0x203564. So `donutbox_0100.bfnanm` starts at frame 100.
+- 0x2ec454(previous frame, current frame, slot, ...) is the per-update actor step. Every entry with `previous < start <= current` starts its clip on the actor (0x245b40 for a model of its own, 0x23afc0 for an entity), and the clip started last becomes the current clip (slot+0x1fc). While `current - start` is inside the clip, the clip is re-synced (0x22c2fc) when its time is off from `current - start` by more than 0x3d088889 (1/30 s). The cutscene object starts with the previous frame at -1.0 (0x2d236c stores 0xbf800000 at +8), so a clip with start 0 begins in the first update.
+- Data: 330 actor clips are listed in the 69 manifests. All names match the pattern, and 61 have a start other than 0. For 37 of those 61, start plus clip length equals the camera length (`donutbox_0100`: 100 + 98 = 198). Two actors have two clips: `dunby` of 2_1_b (0000 and 0020; 0000 is listed but absent from the archive) and `plant` of 2_6_b (0000 and 0075).
+- The port played every clip from frame 0. So the box ran 100 frames early, ended in mid-air and never met the man's hand. `chase_assets` now keeps every clip of an actor with its start frame (`cutsceneClipStart`, `cutsceneClipAt`); `chase-game` and `chase-viewer` pose an actor from its current clip. After the change the box is not drawn before frame 100 and then moves up by the man (screenshots of the port at camera frames about 70, 137 and 190).
+
+The van (not fixed):
+- `prop_donutvan_0000` has one set of root tracks: position (820.207, 12.7203, 1051.31), yaw 0, scale 1, constant over all 198 frames. The model `prop_donutvan.bfnmdl` has five nodes whose matrices put the root and the chassis at (820.207, 18.5204, 1051.31). Its mesh 0 spans y -1.52 to 4.01 locally. Posed by the track, the body spans y 11.2 to 16.7, below the pavement near the shop (about 17 to 18.5), so the street hides it.
+- `prop_donutvanwheels` has four meshes, each centred on the origin, with one node each (wheel centres at y 17.24, x and z about 1.1 and 1.5 from the root). Its single track set sits at wheel 1's x and z with y 16.7431. The port draws all four meshes with the one actor transform, so the wheels overlap in one spot.
+- So the original combines a prop's root track with its node matrices in a way the port does not have. The difference for the van body is 5.8 in y only; x and z equal the bind pose.
+
+Unknowns:
+- How the original poses a cutscene prop from its track and its node matrices (bind pose, base of the accumulating branch of 0x287ca4), and so where the van and its wheels stand.
+- What an actor shows before its first clip starts (the node is not animated yet; the port uses the identity transform for its own models and the level figure for driven characters, stand-in MOVIE-S31).
+- Whether a finished clip holds its last frame (the port holds it) and whether a later clip blends with the earlier one (0x245b40 / 0x23afc0 get 1.0 and 0 as their first arguments).

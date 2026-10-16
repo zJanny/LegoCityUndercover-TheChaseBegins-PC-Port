@@ -241,8 +241,7 @@ int run(const Options& options) {
     struct Actor {
         std::string model;
         std::size_t instance = 0;
-        Skeleton skeleton;
-        Animation animation;
+        CutsceneCast cast;
     };
     std::vector<Actor> actors;
     Animation cameraAnimation;
@@ -252,9 +251,8 @@ int run(const Options& options) {
         for (auto& cast : content.actors) {
             Actor actor;
             actor.model = cast.model;
-            actor.animation = std::move(cast.animation);
-            actor.skeleton = std::move(cast.skeleton);
-            if (!scene.addModel(cast.model)) throw std::runtime_error("not in archive: " + cast.model);
+            actor.cast = std::move(cast);
+            if (!scene.addModel(actor.model)) throw std::runtime_error("not in archive: " + actor.model);
             actor.instance = scene.instances() - 1;
             actors.push_back(std::move(actor));
         }
@@ -365,10 +363,13 @@ int run(const Options& options) {
             double elapsed = std::min((now - cutsceneStart) * cutsceneRate / 1000.0, double(cameraAnimation.frames - 1));
             double frame = options.frame >= 0 ? options.frame : elapsed;
             for (const auto& actor : actors) {
-                double local = std::min(frame, double(actor.animation.frames ? actor.animation.frames - 1 : 0));
-                float t = float(normalised(actor.animation, local));
-                scene.setTransform(actor.instance, actorMatrix(actorPose(actor.animation, t)));
-                if (!actor.skeleton.joints.empty()) scene.pose(actor.model, skinMatrices(actor.skeleton, actor.animation, local));
+                const std::optional<CutsceneClipFrame> clip = cutsceneClipAt(actor.cast, frame);
+                if (!clip) {
+                    scene.setTransform(actor.instance, chase::render::identity());
+                    continue;
+                }
+                scene.setTransform(actor.instance, actorMatrix(actorPose(*clip->animation, float(normalised(*clip->animation, clip->frame)))));
+                if (!actor.cast.skeleton.joints.empty()) scene.pose(actor.model, skinMatrices(actor.cast.skeleton, *clip->animation, clip->frame));
             }
             CutsceneCamera camera = cutsceneCamera(cameraAnimation, float(normalised(cameraAnimation, frame)));
             eyeView = chase::render::cutsceneView(camera);

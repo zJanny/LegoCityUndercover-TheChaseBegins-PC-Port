@@ -982,8 +982,38 @@ void cutscenes() {
     require(actors.size() == 2 && actors[0].name == "cscamera" && actors[0].model.empty() &&
                 actors[1].model == "csdata/models/1_1_a/donutman/donutman_minifig.bfnmdl" &&
                 actors[1].skeleton == "csdata/models/1_1_a/donutman/donutman_minifig.bfnskl" &&
-                actors[1].animation == "csdata/models/1_1_a/donutman/donutman_0000_minifig.bfnanm",
+                actors[1].animations == std::vector<std::string>{"csdata/models/1_1_a/donutman/donutman_0000_minifig.bfnanm"},
             "cutscene actors");
+
+    // Clip start frames (0x2ec30c: "<actor>_????.*", number after "<actor>_"); names as in csdata/models/1_1_d and 1_2_b.
+    require(cutsceneClipStart("donutbox", "csdata/models/1_1_d/donutbox/donutbox_0100.bfnanm") == 100, "clip start 100");
+    require(cutsceneClipStart("donutman", "csdata/models/1_1_d/donutman/donutman_0000_minifig.bfnanm") == 0, "clip start with a model suffix");
+    require(cutsceneClipStart("dog", "csdata/models/1_2_b/dog/dog_0000_skincluster1.bfnanm") == 0, "clip start before another suffix");
+    for (const char* bad : {"csdata/models/x/box/box.bfnanm", "csdata/models/x/box/box_01.bfnanm", "csdata/models/x/box/crate_0100.bfnanm",
+                            "csdata/models/x/box/box_01a0.bfnanm"}) {
+        bool threw = false;
+        try {
+            cutsceneClipStart("box", bad);
+        } catch (const std::runtime_error&) {
+            threw = true;
+        }
+        require(threw, "a clip name without start frame is refused");
+    }
+
+    // Clip selection (0x2ec454): a clip starts when the camera frame reaches its start, the clip started last drives the
+    // actor and is held at its last frame; before the first start nothing drives it. Made-up clips of 10 and 4 frames.
+    CutsceneCast cast;
+    cast.clips.push_back({20, {}});
+    cast.clips.back().animation.frames = 10;
+    cast.clips.push_back({40, {}});
+    cast.clips.back().animation.frames = 4;
+    require(!cutsceneClipAt(cast, 19.5), "nothing before the first start");
+    auto clip = cutsceneClipAt(cast, 25);
+    require(clip && clip->animation == &cast.clips[0].animation && near(float(clip->frame), 5), "first clip from its start");
+    clip = cutsceneClipAt(cast, 35);
+    require(clip && clip->animation == &cast.clips[0].animation && near(float(clip->frame), 9), "first clip held at its last frame");
+    clip = cutsceneClipAt(cast, 41);
+    require(clip && clip->animation == &cast.clips[1].animation && near(float(clip->frame), 1), "the later clip takes over");
 }
 
 void tables() {

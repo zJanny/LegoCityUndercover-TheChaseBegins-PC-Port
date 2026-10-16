@@ -51,12 +51,12 @@ std::vector<CutsceneActor> cutsceneActors(const std::vector<std::string>& manife
         auto find = [&]() -> CutsceneActor& {
             for (auto& actor : actors)
                 if (actor.name == group) return actor;
-            actors.push_back({group, "", "", ""});
+            actors.push_back({group, "", "", {}});
             return actors.back();
         };
         if (path.size() > 6 && path.compare(path.size() - 6, 6, ".fnmdl") == 0) find().model = replaceSuffix(path, ".fnmdl", ".bfnmdl");
         else if (path.size() > 6 && path.compare(path.size() - 6, 6, ".fnskl") == 0) find().skeleton = replaceSuffix(path, ".fnskl", ".bfnskl");
-        else if (path.size() > 6 && path.compare(path.size() - 6, 6, ".fnanm") == 0) find().animation = replaceSuffix(path, ".fnanm", ".bfnanm");
+        else if (path.size() > 6 && path.compare(path.size() - 6, 6, ".fnanm") == 0) find().animations.push_back(replaceSuffix(path, ".fnanm", ".bfnanm"));
     }
     return actors;
 }
@@ -121,14 +121,15 @@ CutsceneContent loadCutscene(FuseArchive& archive, const std::string& id) {
     std::transform(folder.begin(), folder.end(), folder.begin(), [](unsigned char c) { return char(std::tolower(c)); });
     CutsceneContent content;
     for (const CutsceneActor& cast : cutsceneActors(parseManifest(read(folder + "/manifest.bstxt")), folder)) {
-        if (cast.animation.empty()) continue;
+        if (cast.animations.empty()) continue;
         if (cast.model.empty()) {
-            content.camera = parseAnimation(read(cast.animation));
+            content.camera = parseAnimation(read(cast.animations.front()));
             continue;
         }
         CutsceneCast actor;
         actor.model = cast.model;
-        actor.animation = parseAnimation(read(cast.animation));
+        for (const std::string& path : cast.animations)
+            if (archive.find(path)) actor.clips.push_back({cutsceneClipStart(cast.name, path), parseAnimation(read(path))});
         if (!cast.skeleton.empty() && archive.find(cast.skeleton)) actor.skeleton = parseSkeleton(read(cast.skeleton));
         content.actors.push_back(std::move(actor));
     }
@@ -141,5 +142,23 @@ CutsceneContent loadCutscene(FuseArchive& archive, const std::string& id) {
 double cutsceneNormalised(const Animation& animation, double frame) {
     const double last = animation.frames > 1 ? animation.frames - 1 : 1;
     return std::min(frame, last) / last;
+}
+
+unsigned cutsceneClipStart(const std::string& actor, const std::string& animationPath) {
+    const std::string file = animationPath.substr(animationPath.rfind('/') + 1), prefix = actor + "_";
+    const std::size_t end = prefix.size() + 4;
+    const bool matches = file.size() > end && file.compare(0, prefix.size(), prefix) == 0 && (file[end] == '.' || file[end] == '_') &&
+                         std::all_of(file.begin() + long(prefix.size()), file.begin() + long(end), [](unsigned char c) { return std::isdigit(c) != 0; });
+    if (!matches) throw std::runtime_error("cutscene clip name without start frame: " + animationPath);
+    return unsigned(std::stoul(file.substr(prefix.size(), 4)));
+}
+
+std::optional<CutsceneClipFrame> cutsceneClipAt(const CutsceneCast& actor, double cameraFrame) {
+    const CutsceneClip* driving = nullptr;
+    for (const CutsceneClip& clip : actor.clips)
+        if (clip.startFrame <= cameraFrame && (!driving || clip.startFrame >= driving->startFrame)) driving = &clip;
+    if (!driving) return std::nullopt;
+    const double last = driving->animation.frames ? driving->animation.frames - 1 : 0;
+    return CutsceneClipFrame{&driving->animation, std::min(cameraFrame - driving->startFrame, last)};
 }
 } // namespace chase::assets

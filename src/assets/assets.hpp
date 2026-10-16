@@ -606,9 +606,10 @@ std::vector<PlacedGlyph> layoutText(const Font& font, const std::string& utf8,
 // relative to the folder (e.g. "player1/player1_minifig.fnmdl").
 std::vector<std::string> parseManifest(const Bytes& data);
 // Manifest lines grouped by their first folder into model/skeleton/animation paths
-// (".fnmdl" -> ".bfnmdl" etc., lower case, prefixed with `folder`).
+// (".fnmdl" -> ".bfnmdl" etc., lower case, prefixed with `folder`); animations in manifest order.
 struct CutsceneActor {
-    std::string name, model, skeleton, animation;
+    std::string name, model, skeleton;
+    std::vector<std::string> animations;
 };
 std::vector<CutsceneActor> cutsceneActors(const std::vector<std::string>& manifest, const std::string& folder);
 // Camera tracks of a cutscene "ExportCam" animation, as handler 0x1c1fbc stores them.
@@ -635,22 +636,37 @@ Matrix actorMatrix(const ActorPose& pose);
 // 0x20e850: camera world matrix (row vectors) from rotation and position; x is negated.
 Matrix cameraMatrix(const CutsceneCamera& camera);
 
-// Everything one cutscene folder (csdata/models/<id>) holds: the cast with model, skeleton and animation, the camera
+// The camera frame at which an actor's clip starts (0x2ec30c): the file name matches "<actor>_????.*" and the four
+// characters after "<actor>_" are the number. Throws when the name does not match.
+unsigned cutsceneClipStart(const std::string& actor, const std::string& animationPath);
+struct CutsceneClip {
+    unsigned startFrame = 0;
+    Animation animation;
+};
+// Everything one cutscene folder (csdata/models/<id>) holds: the cast with model, skeleton and clips, the camera
 // animation and the soundtrack path (music/csaudio/<id>.bwav, empty when the archive has none).
 struct CutsceneCast {
     std::string model;
     Skeleton skeleton;
-    Animation animation;
+    std::vector<CutsceneClip> clips;
 };
 struct CutsceneContent {
     std::vector<CutsceneCast> actors;
     Animation camera;
     std::string soundPath;
 };
-// Throws when the folder, a listed file or the camera animation is missing. Actors without animation are skipped.
+// Throws when the folder, a listed model or skeleton or the camera animation is missing. A listed clip missing from the
+// archive is skipped, as 0x2ec6c8 leaves its entry empty; actors without animation are skipped.
 CutsceneContent loadCutscene(FuseArchive& archive, const std::string& id);
 // Frame position in 0..1 of an animation whose playback is held at `frame` (the last frame holds).
 double cutsceneNormalised(const Animation& animation, double frame);
+// The clip that drives an actor at a camera frame and the frame inside it, held at its last frame (0x2ec454: a clip starts
+// in the update whose frame passes its start, the clip started last drives the actor); none before the first start.
+struct CutsceneClipFrame {
+    const Animation* animation = nullptr;
+    double frame = 0;
+};
+std::optional<CutsceneClipFrame> cutsceneClipAt(const CutsceneCast& actor, double cameraFrame);
 
 // Data tables (tables/*.bxls, loader 0x10e1cc): sheets of fixed-stride rows with typed
 // columns. Column names are not stored; the game addresses columns by index.
