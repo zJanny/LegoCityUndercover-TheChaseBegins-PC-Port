@@ -84,6 +84,8 @@ Unknowns:
 
 ## 2026-10-15T16:45:00+02:00 — Hand-back solved: StartDCam clears K+0x178, the tracker jumps to the wanted position by the near plane test 0x2e0e28 (CAMERA-15, CAMERA-30, CAMERA-31; llvm-objdump, Azahar watchpoint, ctrace and memtrace on `m11-2-patrol-car`, RPC screenshots)
 
+Corrected by [camera-vehicle.md §2026-10-16T08:26](#ts-20261016-082640): the port now renders with the near plane test result and far 260 (the first Unknown).
+
 [Corrects §2026-10-15T15:22](#ts-20261015-152200): the recorded tracker does not imply a longer seed. The seed of the ray branch (12.99 m) is the original's; in the first update after the reset the tracker K+0x34 is set to the wanted position K+4 (14.05 m out), which is why it lies further out than the wall hit.
 
 Oracle runs (own port 24751, home `agentCAMQ-home`, outputs `artifacts/oracle/agentCAMQ-out/`, not committed; scenario `tools/oracle/camera-vehicle-handback-near.txt`): the steps of `tools/oracle/camera-vehicle-handback.txt` with `watch 0x589be8 2 40` (k178-watch), `ctrace 0x195038,0x1da878,0x286200,0x2ada8c,0x31bf58,0x2313c8 40` (k178-ctrace) and `memtrace 26 camq-near 0x589a70:0x3a00 *0x377544+0:0x100` from frame 490 (K with both sweep shapes, and the render camera).
@@ -112,3 +114,22 @@ Unknowns:
 Unknowns:
 - The enter, leave and update virtuals of the gameplay camera 0x377110 and of the cutscene camera 0x3768e8, and CameraFollow calls made while another camera is current (other scripts).
 - Which of the three sources of 0x19683c supplied 0x377110.
+
+<a id="ts-20261016-082640"></a>
+
+## 2026-10-16T08:26:40+02:00 — The render camera's near and far plane: writer 0x23f168, its callers, and what the port now renders with (CAMERA-50; llvm-objdump of `game.arm.elf`, recorded traces of §2026-10-15T16:45, port screenshot)
+
+[Corrects §2026-10-15T16:45](#ts-20261015-164500) (Unknowns): the port's render near plane is now the near plane test result. [Corrects rendering-fog.md §2026-10-14T18:59](rendering-fog.md#ts-20261014-185910) (its unknown, the source of projection near 1 and far 260).
+
+**0x23f168 (camera, s0 = near, s1 = far)** stores the two floats at camera +0xc4 / +0xc8 (`add r0, r0, #196; vstmia r0, {s0, s1}`). The getters are 0x24cf68 (near, +0xc4) and 0x24cf60 (far); the fog table builder 0x24e9d8 reads the same two floats at `[0x529e30+0x2c]` +196 / +200 ([rendering-fog.md §2026-10-14T17:35](rendering-fog.md#ts-20261014-173500)), so the render camera's near / far plane is the near / far of the projection and of the fog depth. Ten call sites:
+- 0x2e0da4 (follow update 0x2e0bf0, camera `*0x377544`): (near plane test result, K+0x14c). This is the source of near 1 and far 260 in the street fog traces (K+0x148 = 1.0 limits the near plane test; K+0x14c = 260).
+- 0x159a6c (tail of a per-frame function at ~0x1599xx, camera `*0x377544`): when the override pair at 0x5163e8 +372 / +376 is not (0, 0) it applies the override. The pair is written by 0x1bd154, called from 0x1cdb68, the handler of the script native `OverrideZClip` (0x1cdb54, census row, 4 uses): two floats (near, far); (0, 0) restores the values saved at +380 / +384 from the getters at the time of the override.
+- 0x2e8c58 / 0x2e8cbc (a class around 0x2e8b8c with state at +0xd58 .. +0xd60 saved far; `0x2131a4(400, 800)` calls beside them) and 0x2f711c (class around 0x2f67fc; values from 0x241280 reads, near clamped to at most 1.0 and far to at least a constant): other writers of `*0x377544`, not read further.
+- 0x1d2e1c (near 1.0, far 50.0, a camera created from the global at 0x372cec), 0x235090-0x2350b0 (camera creation with given near / far), 0x2ca7cc and 0x2dc7b0 (cameras of other globals, near 1.0 / 2.0): initial values of other camera objects.
+
+**Port.** `src/runtime/clip_planes.hpp` (`ClipPlanes`, `followClipPlanes`, `kFollowFarPlane` = 260). `LevelSession::draw` renders the follow camera with (`FollowCamera::nearPlane()`, 260) instead of the viewer-style planes (radius * 0.002 / radius * 20), and the fog table `buildFogLut(start, end, planes)` and the shader's depth use the same planes (the old constants `kFogProjectionNear/Far` are gone). The cutscene camera keeps the cutscene planes (MOVIE-S10). Test `clip-planes` (recorded near series 1.0 .. 0.2 of the hand-back and A = 1.0038609 of the fog matrix, fog table follows the near plane); the fog tests pin the table for planes (1, 260). A chase-game picture of lvl_01 after 300 updates differs from the one with the old planes in 12 pixels over 8 levels, all in the top 70 rows (distant buildings), nothing in the sky or ground disappears.
+
+Unknowns:
+- Who writes K+0x148 and K+0x14c (1.0 and 260 in every trace); the port keeps 260 as the recorded constant (CAMERA-S50).
+- The gameplay render camera's planes before the first follow update, and what the render camera holds while a director or record camera drives the view and during cutscenes (the port keeps the last follow value; cutscenes use the stand-in planes).
+- What the classes around 0x2e8b8c and 0x2f67fc are, and whether `OverrideZClip` (0x1cdb54, applied at 0x159a6c) is used by a level that runs the follow camera.

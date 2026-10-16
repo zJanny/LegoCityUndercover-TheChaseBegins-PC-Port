@@ -23,6 +23,8 @@
 #include "runtime/carry.hpp"
 #include "runtime/camera_lock_icon.hpp"
 #include "runtime/camera_rig.hpp"
+#include "runtime/camera_near_plane.hpp"
+#include "runtime/clip_planes.hpp"
 #include "runtime/collision.hpp"
 #include "runtime/debug_metrics.hpp"
 #include "runtime/level_start.hpp"
@@ -144,7 +146,7 @@ private:
     void updateRoomStreaming();
     void showLoadedRooms();
     bool roomShown(int room) const;
-    void applyFog() const;
+    void applyFog(const chase::runtime::ClipPlanes& planes) const;
     std::uint32_t now() const { return clockTicks(SDL_GetPerformanceCounter() - counterOrigin, counterFrequency); }
 
     Shared shared;

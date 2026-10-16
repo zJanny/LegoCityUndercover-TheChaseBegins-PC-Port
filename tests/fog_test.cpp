@@ -71,9 +71,9 @@ void requireLut(const FogLut& built, const FogLut& recorded, const std::string& 
 }
 
 void coreChecks() {
-    requireLut(buildFogLut(220.0f, 260.0f), recordedStreet(), "street 220 260");
-    requireLut(buildFogLut(20.0f, 120.0f), kRecordedB, "20 120");
-    requireLut(buildFogLut(60.0f, 200.0f), kRecordedC, "60 200");
+    requireLut(buildFogLut(220.0f, 260.0f, followClipPlanes(1.0f)), recordedStreet(), "street 220 260");
+    requireLut(buildFogLut(20.0f, 120.0f, followClipPlanes(1.0f)), kRecordedB, "20 120");
+    requireLut(buildFogLut(60.0f, 200.0f, followClipPlanes(1.0f)), kRecordedC, "60 200");
 
     std::vector<chase::assets::FogObject> objects(3);
     objects[0].instance = "Global";

@@ -7,13 +7,13 @@
 
 namespace chase::runtime {
 
-FogLut buildFogLut(float start, float end) {
-    const float depthScale = kFogProjectionFar / (kFogProjectionFar - kFogProjectionNear);
+FogLut buildFogLut(float start, float end, const ClipPlanes& planes) {
+    const float depthScale = planes.farZ / (planes.farZ - planes.nearZ);
     FogLut lut{};
     float previous = 1.0f;
     for (std::size_t i = 0; i < kFogLutEntries; ++i) {
         const float depth = float(i + 1) * (1.0f / float(kFogLutEntries));
-        const float distance = kFogProjectionNear / (1.0f - depth / depthScale);
+        const float distance = planes.nearZ / (1.0f - depth / depthScale);
         const float fraction = std::clamp((distance - start) / (end - start), 0.0f, 1.0f);
         const float current = 1.0f - fraction;
         const int value = std::clamp(int(std::floor(previous * 2048.0f)), 0, 0x7ff);

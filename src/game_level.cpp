@@ -334,12 +334,17 @@ void LevelSession::draw(int width, int height) {
     setViewport(screens.top);
     clearWindow({backgroundColour[0] / 255.0f, backgroundColour[1] / 255.0f, backgroundColour[2] / 255.0f, 1}, true);
     beginFrame(1.0f);
-    applyFog();
+    const runtime::ClipPlanes followPlanes = runtime::followClipPlanes(follow ? follow->follow().nearPlane() : runtime::kCameraNearLimit);
+    applyFog(followPlanes);
     const float* eye = follow ? follow->eye() : camera.eye;
     const float viewYaw = follow ? follow->yaw() : camera.yaw, viewPitch = follow ? follow->pitch() : camera.pitch;
     const float fieldOfView = follow ? follow->verticalFieldOfView() : 1.0f;
     Mat4 viewMatrix = chase::render::view(eye, viewYaw, viewPitch);
     float shownFieldOfView = fieldOfView, nearPlane = radius * 0.002f, farPlane = radius * 20;
+    if (follow) {
+        nearPlane = followPlanes.nearZ;
+        farPlane = followPlanes.farZ;
+    }
     if (const auto cutsceneCamera = cutsceneHost->camera(levelScripts.cutscenes())) {
         viewMatrix = cutsceneCamera->view;
         shownFieldOfView = cutsceneCamera->fieldOfView;

@@ -65,10 +65,10 @@ bool LevelSession::roomShown(int room) const {
     return !roomStreamer || !roomStreamer->rooms().count(room) || (roomStreamer->loaded(room) && room != shared.options.hideRoom);
 }
 
-void LevelSession::applyFog() const {
+void LevelSession::applyFog(const runtime::ClipPlanes& planes) const {
     const runtime::FogSetting fog = runtime::levelFog(fogObjects, roomStreamer ? roomStreamer->currentRoom() : 0);
     if (!fog.enabled) return;
-    chase::render::setFog({runtime::buildFogLut(fog.start, fog.end), fog.colour, runtime::kFogProjectionNear, runtime::kFogProjectionFar});
+    chase::render::setFog({runtime::buildFogLut(fog.start, fog.end, planes), fog.colour, planes.nearZ, planes.farZ});
 }
 
 void LevelSession::updateRoomStreaming() {

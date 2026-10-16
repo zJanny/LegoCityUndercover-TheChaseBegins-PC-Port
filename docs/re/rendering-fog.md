@@ -39,6 +39,8 @@ Unknowns:
 
 ## 2026-10-14T18:59:10+02:00 — Clear colour (BackgroundColour), fog object selection loops, the other setFog and fog-override callers (llvm-objdump `--triple=armv6k --mattr=+vfp2` on `artifacts/game/game.arm.elf`, Azahar oracle `read` and watchpoints without RPC, OpenGL renderer, states `street-after-1-1` and `police-station`; REA was not used)
 
+Corrected by [camera-vehicle.md §2026-10-16T08:26](camera-vehicle.md#ts-20261016-082640): the source of projection near and far is the follow update (near plane test result, K+0x14c = 260) through 0x23f168; the fog table follows them.
+
 Corrected by [rendering-sky.md §2026-10-15T15:39](rendering-sky.md#ts-20261015-153917): `SkyboxOverride` is at 0x192254 and `SKY%02u` at 0x1813b4, not 0x392254 / 0x3813b4.
 [Corrects §2026-10-14T17:35](#ts-20261014-173500) on two points: the matrix with A = 1.0038609 is not the one at 0x529e30+544 (see Projection below); and in 0x1a293c the plain names FogStart, FogEnd, FogColour are read first and the DS_ names override them (the old entry said DS_ first); the result without DS_ names is the same.
 
