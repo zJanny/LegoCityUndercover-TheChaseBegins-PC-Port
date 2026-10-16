@@ -649,7 +649,7 @@ std::vector<BoxBoxContact> boxBoxContacts(const BulletTransform& a, const Vector
     return out;
 }
 
-void refreshManifold(ContactManifold& manifold, const BulletTransform& a, const BulletTransform& b) {
+void refreshManifold(ContactManifold& manifold, const BulletTransform& a, const BulletTransform& b, const ManifoldPointObserver* observer) {
     for (int i = int(manifold.points.size()) - 1; i >= 0; i--) {
         ManifoldPoint& point = manifold.points[std::size_t(i)];
         point.worldA = bulletApply(a, point.localA);
@@ -659,14 +659,18 @@ void refreshManifold(ContactManifold& manifold, const BulletTransform& a, const 
     }
     const float threshold = manifold.breakingThreshold;
     for (int i = int(manifold.points.size()) - 1; i >= 0; i--) {
-        const ManifoldPoint& point = manifold.points[std::size_t(i)];
+        ManifoldPoint& point = manifold.points[std::size_t(i)];
         if (!(point.distance <= threshold)) {
             removeManifoldPoint(manifold, std::size_t(i));
             continue;
         }
         const Vector3 projected = sub(point.worldA, scale(point.normalOnB, point.distance));
         const Vector3 difference = sub(point.worldB, projected);
-        if (dot(difference, difference) > threshold * threshold) removeManifoldPoint(manifold, std::size_t(i));
+        if (dot(difference, difference) > threshold * threshold) {
+            removeManifoldPoint(manifold, std::size_t(i));
+            continue;
+        }
+        if (observer && *observer && (*observer)(point)) removeManifoldPoint(manifold, std::size_t(i));
     }
 }
 
@@ -831,7 +835,7 @@ VehicleBoxContacts vehicleBoxContacts(const Vector3& low, const Vector3& high, c
     return contacts;
 }
 
-void collideVehicleWithBoxes(const VehicleRigidBody& body, VehicleBoxContacts& contacts) {
+void collideVehicleWithBoxes(const VehicleRigidBody& body, VehicleBoxContacts& contacts, const ManifoldPointObserver* observer) {
     if (!contacts.boxes) return;
     const BulletTransform root = bulletBodyTransform(body);
     BulletTransform child = root;
@@ -847,7 +851,7 @@ void collideVehicleWithBoxes(const VehicleRigidBody& body, VehicleBoxContacts& c
         const bool overlap = !(childLow[0] > high[0] || childHigh[0] < low[0]) && !(childLow[2] > high[2] || childHigh[2] < low[2]) &&
                              !(childLow[1] > high[1] || childHigh[1] < low[1]);
         auto found = std::find_if(contacts.manifolds.begin(), contacts.manifolds.end(), [&](const ContactManifold& m) { return m.box == int(i); });
-        if (found != contacts.manifolds.end() && !found->points.empty()) refreshManifold(*found, root, box.transform);
+        if (found != contacts.manifolds.end() && !found->points.empty()) refreshManifold(*found, root, box.transform, observer);
         if (!overlap) {
             if (found != contacts.manifolds.end()) {
                 const std::size_t index = std::size_t(found - contacts.manifolds.begin());
@@ -866,7 +870,7 @@ void collideVehicleWithBoxes(const VehicleRigidBody& body, VehicleBoxContacts& c
         const float friction = kBulletVehicleFriction * kBulletBoxFriction;
         for (const BoxBoxContact& contact : boxBoxContacts(child, childHalf, box.transform, bulletBoxHalfExtents(box)))
             addManifoldContact(*found, root, box.transform, contact, friction, 0.0f);
-        if (!found->points.empty()) refreshManifold(*found, root, box.transform);
+        if (!found->points.empty()) refreshManifold(*found, root, box.transform, observer);
     }
 }
 
@@ -886,7 +890,7 @@ bool aabbOverlap(const Vector3& lowA, const Vector3& highA, const Vector3& lowB,
 }
 
 void collideVehiclePair(const VehicleRigidBody& first, const VehicleBoxContacts& firstShape, const VehicleRigidBody& second,
-                        const VehicleBoxContacts& secondShape, std::optional<ContactManifold>& manifold) {
+                        const VehicleBoxContacts& secondShape, std::optional<ContactManifold>& manifold, const ManifoldPointObserver* observer) {
     const BulletTransform rootFirst = bulletBodyTransform(first);
     const BulletTransform rootSecond = bulletBodyTransform(second);
     const BulletTransform childFirst = childTransform(first, firstShape);
@@ -895,12 +899,12 @@ void collideVehiclePair(const VehicleRigidBody& first, const VehicleBoxContacts&
     bulletBoxAabb(firstShape.child, childFirst, lowFirst, highFirst);
     bulletBoxAabb(secondShape.child, childSecond, lowSecond, highSecond);
     const bool overlap = aabbOverlap(lowFirst, highFirst, lowSecond, highSecond);
-    if (manifold && !manifold->points.empty()) refreshManifold(*manifold, rootSecond, rootFirst);
+    if (manifold && !manifold->points.empty()) refreshManifold(*manifold, rootSecond, rootFirst, observer);
     if (!overlap) {
         manifold.reset();
         return;
     }
-    if (manifold && !manifold->points.empty()) refreshManifold(*manifold, rootSecond, rootFirst);
+    if (manifold && !manifold->points.empty()) refreshManifold(*manifold, rootSecond, rootFirst, observer);
     if (!manifold) {
         manifold = ContactManifold{};
         manifold->breakingThreshold = std::min(bulletBoxBreakingThreshold(secondShape.child), bulletBoxBreakingThreshold(firstShape.child));
@@ -909,8 +913,7 @@ void collideVehiclePair(const VehicleRigidBody& first, const VehicleBoxContacts&
     for (const BoxBoxContact& contact :
          boxBoxContacts(childSecond, bulletBoxHalfExtents(secondShape.child), childFirst, bulletBoxHalfExtents(firstShape.child)))
         addManifoldContact(*manifold, rootSecond, rootFirst, contact, friction, 0.0f);
-    if (!manifold->points.empty()) refreshManifold(*manifold, rootSecond, rootFirst);
-    for (ManifoldPoint& point : manifold->points) point.flags = kVehiclePairContactFlagsStandIn;
+    if (!manifold->points.empty()) refreshManifold(*manifold, rootSecond, rootFirst, observer);
 }
 
 void stepVehicleBoxContacts(VehicleRigidBody& body, VehicleBoxContacts& contacts, float dt) {

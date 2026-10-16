@@ -15,12 +15,12 @@ bool vehiclePortraitShown(bool loaded, BoardingPhase phase) {
     return loaded && phase != BoardingPhase::OnFoot;
 }
 
-VehicleHud::Change VehicleHud::begin(std::uint8_t healthStart, const std::string& tableName, unsigned currentHearts,
+VehicleHud::Change VehicleHud::begin(std::uint8_t hearts, const std::string& tableName, unsigned currentHearts,
                                      const std::function<bool(const std::string&)>& exists) {
     portrait_ = vehiclePortraitPath(tableName, exists);
     savedHearts_ = currentHearts;
     active_ = true;
-    return {healthStart, true};
+    return {hearts, true};
 }
 
 std::optional<VehicleHud::Change> VehicleHud::end() {

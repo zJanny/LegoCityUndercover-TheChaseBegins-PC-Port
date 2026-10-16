@@ -296,7 +296,7 @@ void trackFloorCell(const FloorMesh& mesh, FloorTracker& tracker, const Vector3&
 }
 
 bool collideVehicleWithFloor(VehicleRigidBody& body, const FloorMesh& mesh, const VehicleCollisionBody& shape, FloorTracker& tracker,
-                             float surfaceFriction, float linearDamping, float angularDamping, float dt) {
+                             float surfaceFriction, float linearDamping, float angularDamping, float dt, const FloorContactObserver* observer) {
     if (tracker.cell == -1 || dt == 0.0f) return false;
     bool answered = false;
     std::array<int, 8> cells{};
@@ -327,6 +327,7 @@ bool collideVehicleWithFloor(VehicleRigidBody& body, const FloorMesh& mesh, cons
         const float upY = bodyAxes(body)[1][1];
         for (FloorContact& contact : contacts.items) {
             const std::uint8_t surface = mesh.triangle(contact.cell).surface;
+            if (observer && *observer) (*observer)(body, contact);
             contact.flags = floorContactFlags(shape, surface, contact);
             floorContactImpulse(body, contact, surface, surfaceFriction, upY);
         }

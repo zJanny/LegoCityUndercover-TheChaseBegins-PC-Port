@@ -20,6 +20,7 @@
 #include "render/studs.hpp"
 #include "runtime/animation_driver_chain.hpp"
 #include "runtime/buildit_set.hpp"
+#include "runtime/vehicle_damage.hpp"
 #include "game_carry.hpp"
 #include "runtime/carry.hpp"
 #include "runtime/camera_lock_icon.hpp"
@@ -126,6 +127,7 @@ private:
     void syncVehicleHud();
     void updateHeadIcon(float dt);
     void drawHeadIcon(chase::frontend::Canvas& top);
+    void vehicleImpact(std::size_t vehicleIndex, float speed, const chase::runtime::ContactOther& other);
     void enterVehicleHud(const chase::runtime::VehicleRecord& record);
     void leaveVehicleHud();
     bool placeVehicle(const std::string& instance, const chase::assets::Placement& target);

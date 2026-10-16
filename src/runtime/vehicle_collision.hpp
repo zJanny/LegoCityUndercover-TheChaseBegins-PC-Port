@@ -9,6 +9,7 @@
 #include "runtime/vehicle_body.hpp"
 
 #include <array>
+#include <functional>
 #include <vector>
 
 namespace chase::runtime {
@@ -118,9 +119,13 @@ struct VehicleCollisionBody {
 // is steeper than 45 degrees (|normal y| below 0x3f350481).
 std::uint16_t floorContactFlags(const VehicleCollisionBody& shape, std::uint8_t cellSurface, const FloorContact& contact);
 
+// The contact message of 0x181e68, sent to the entity just before the impulse 0x19c0a8 answers the contact.
+// STAND-IN VEH-S52: a reply 2000 (drop the contact) is not ported.
+using FloorContactObserver = std::function<void(const VehicleRigidBody&, const FloorContact&)>;
+
 // 0x1c54f8 for one world step after the forces are applied (0x2d46d4): without a tracked cell the body does not move. Returns whether a
-// contact was answered. STAND-IN VEH-S52: the contact messages of 0x181e68 to the entity (a reply 2000 drops the contact) are not ported.
+// contact was answered.
 bool collideVehicleWithFloor(VehicleRigidBody& body, const FloorMesh& mesh, const VehicleCollisionBody& shape, FloorTracker& tracker,
-                             float surfaceFriction, float linearDamping, float angularDamping, float dt);
+                             float surfaceFriction, float linearDamping, float angularDamping, float dt, const FloorContactObserver* observer = nullptr);
 
 }

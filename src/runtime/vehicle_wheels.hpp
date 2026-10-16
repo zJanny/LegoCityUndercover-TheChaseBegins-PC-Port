@@ -100,6 +100,7 @@ struct VehicleFloor {
     FloorTracker tracker;
     VehicleCollisionBody shape;
     VehicleBoxContacts* boxes = nullptr;
+    FloorContactObserver contactObserver = nullptr;
 };
 VehicleCollisionBody vehicleCollisionBody(const VehicleRecord& record);
 

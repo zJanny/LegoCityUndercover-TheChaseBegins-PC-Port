@@ -255,7 +255,8 @@ std::vector<WheelState> stepVehiclePhysics(VehicleRigidBody& body, DrivetrainSta
     stepDrivetrain(drive, record.engine, grips, forwardSpeed);
     applyRigidBodyForces(body, dt);
     if (floor) floor->shape.driven = controls.driver;
-    if (floor) collideVehicleWithFloor(body, floor->mesh, floor->shape, floor->tracker, kTyreSurfaceFriction, linearDamping, record.dampingAngular, dt);
+    if (floor) collideVehicleWithFloor(body, floor->mesh, floor->shape, floor->tracker, kTyreSurfaceFriction, linearDamping, record.dampingAngular, dt,
+                                                  &floor->contactObserver);
     else integrateRigidBody(body, linearDamping, record.dampingAngular, dt);
     return states;
 }

@@ -313,6 +313,10 @@ int real(const char* fib, const char* names) {
     bool trooperAwake = true, workerAwake = false;
     std::vector<VehicleWorldBody> bodies(2);
     bodies[0] = {0, &trooperBody, &trooperDrive, &trooperAwake, &trooperRecord, held, &trooperFloor, nullptr};
+    int impacts = 0;
+    bodies[0].impact = [&impacts](float, const ContactOther& other) {
+        if (other.entity) ++impacts;
+    };
     // The parked worker (SpawnParked, state 4) gets the hand brake of 0x23019c and has no driver (body flag +0xc4 = 0x8003, bit 3 clear).
     expect(worker->requestedState == 4, "FP_Vehicle_03 is parked (state 4)", worker->requestedState);
     BodyInputs parked = bodyInputs(commandForState(worker->requestedState, DriveInput{}, false, 0.0f));
@@ -339,6 +343,7 @@ int real(const char* fib, const char* names) {
         }
         expect(workerAwake, "the hit wakes the parked worker in the update of the contact");
     }
+    expect(impacts > 0, "the pair contacts send the trooper the contact message with the worker as the other entity", impacts);
     return 0;
 }
 

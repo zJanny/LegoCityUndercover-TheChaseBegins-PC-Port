@@ -167,6 +167,27 @@ void narrowphase() {
     }
 }
 
+void processedCallback() {
+    VehicleRigidBody body = trooperBody(k108.basis, k108.origin);
+    const std::vector<BulletBox> boxes = {obstacle()};
+    VehicleBoxContacts contacts = vehicleBoxContacts("vehicles/vehicle_police_trooper", &boxes);
+    contacts.manifolds.push_back(manifoldOf(k107));
+    int calls = 0;
+    const ManifoldPointObserver count = [&calls](const ManifoldPoint&) {
+        calls++;
+        return false;
+    };
+    collideVehicleWithBoxes(body, contacts, &count);
+    // Provenance: 0x1e518c refreshContactPoints calls gContactProcessedCallback (0x271764, stored by 0x2e3bec) for each surviving point; the step
+    // refreshes the four recorded points twice (before and after the box-box contacts), llvm-objdump 0x1e5468..0x1e5484.
+    expect(calls == 8, "the processed callback runs for every surviving point of both refreshes", calls);
+    VehicleBoxContacts dropped = vehicleBoxContacts("vehicles/vehicle_police_trooper", &boxes);
+    dropped.manifolds.push_back(manifoldOf(k107));
+    const ManifoldPointObserver dropAll = [](const ManifoldPoint&) { return true; };
+    collideVehicleWithBoxes(body, dropped, &dropAll);
+    expect(dropped.manifolds.size() == 1 && dropped.manifolds[0].points.empty(), "a reply 2000 drops every point at both refreshes");
+}
+
 void solver() {
     VehicleRigidBody body = trooperBody(k108.basis, k108.origin);
     for (std::size_t a = 0; a < 3; ++a) {
@@ -274,6 +295,7 @@ int real(const char* fib, const char* names) {
 int main(int argc, char** argv) {
     boxBoxSynthetic();
     narrowphase();
+    processedCallback();
     solver();
     if (argc == 3) {
         if (!std::filesystem::exists(argv[1]) || !std::filesystem::exists(argv[2])) {

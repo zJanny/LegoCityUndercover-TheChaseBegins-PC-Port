@@ -75,8 +75,13 @@ struct VehicleRecord {
     std::uint8_t flags312 = 0;
     std::uint8_t forcedStop = 0;       // +0x310
     float stuckTimer = 0;              // +0x31c: above 0 refuses the jump out (0x322aa4)
-    std::uint8_t health = 0;           // +0x30e
-    std::uint8_t healthStart = 0;      // +0x30d
+    std::uint8_t health = 0;           // +0x30e: the hearts of the vehicle table row
+    std::uint8_t hearts = 0;           // +0x30d: the hearts left, shown in the vehicle HUD
+    std::uint8_t healthPoints = 100;   // +0x30c: the part of the current heart, 0x1797c4 message 0 takes it down
+    float hitCooldown = 0;             // +0x304: seconds in which a heart is lost only once (0x3745a4)
+    float debrisCooldown = 0;          // +0x308: seconds between two brick bursts of a contact (0x3745c4)
+    bool destroyed = false;            // entity word +0xc bit 0x10 (0x23cd80)
+    bool bumpCollision = false;        // class value BumpCollision: body flag +0xc4 bit 0x10000 (0x159bd0)
     std::array<float, 3> driverPosition = {0, 0, 0};  // +0x27c
     bool hasDriverPosition = false;
     std::array<float, 3> centreOfMass = {0, 0, 0};  // class value CentreOfMass: the origin of the physics body relative to the node

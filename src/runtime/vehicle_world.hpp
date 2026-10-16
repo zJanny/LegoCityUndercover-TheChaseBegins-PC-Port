@@ -3,15 +3,21 @@
 // floor pass, then the collision detection of every body against the static boxes and of every pair of vehicle bodies (compound against
 // compound), then one solve of all manifolds (0x331814, the two-body rows of 0x332368) and the sleep rule. A sleeping body that a contact
 // reaches is woken by the solver (0x3318a0 sets activation state 1) and moves from the next step on. No SDL dependency.
+#include "runtime/vehicle_damage.hpp"
 #include "runtime/vehicle_wheels.hpp"
 
 #include <cstddef>
+#include <functional>
 #include <map>
 #include <optional>
 #include <utility>
 #include <vector>
 
 namespace chase::runtime {
+
+// The contact message 0x80000002 (0x271764 for Bullet manifold points, 0x181e68 for the floor pass) for one body: the closing speed of the contact
+// (0x19b5c4) and what the other body is.
+using VehicleImpactSink = std::function<void(float speed, const ContactOther& other)>;
 
 struct VehicleWorldBody {
     std::size_t id = 0;  // the broadphase pair order: the body with the lower id is the pair's first
@@ -22,6 +28,8 @@ struct VehicleWorldBody {
     BodyInputs controls;
     VehicleFloor* floor = nullptr;  // its `boxes` is the body's Bullet shape and static box contacts
     std::vector<WheelState>* lastWheels = nullptr;
+    VehicleImpactSink impact = nullptr;
+    bool destroyed = false;  // entity word +0xc bit 0x10, what the other side of a pair contact sees
 };
 
 // The boxes of a vehicle's Bullet shape from its entity box (modelCollisionBox): `shape` (vehicleShapeBox, the inertia) and `collision`
@@ -43,6 +51,13 @@ float vehicleMassScale(bool playerVehicle);
 // out of the world (collision flags 0x182, no broadphase handle). The port takes an enabled vehicle that is parked (state 4, or 10 for
 // SpawnUnshovable) or already has a body.
 bool vehicleHasDynamicBody(const VehicleRecord& record, bool hasBody, bool disabled);
+
+// 0x271764 for a point of a vehicle pair (body A the pair's second vehicle, body B its first): when both bodies have flag bit 0 and more than one
+// wheel on the ground (+0xda0), the flag word gets bit 0 for a driven A and bit 1 for a driven B (the solver scales that body's angular part, 0x331ac0),
+// and a driven body against a BumpCollision vehicle (body flag +0xc4 bit 0x10000) makes the point's friction 0.2 and its restitution 1.1.
+// STAND-IN VEH-S93: the body flags +0xc4 bit 7 (which refuses the rule) and bit 2 (which replaces the wheel count) are taken as clear; a body that has
+// no wheel states yet (asleep since the start) counts as having its wheels on the ground, as the oracle trace of the parked worker shows.
+void applyPairContactRule(ManifoldPoint& point, const VehicleWorldBody& a, const VehicleWorldBody& b);
 
 // The box-box manifolds of vehicle pairs, keyed by the ids (first, second).
 using VehiclePairManifolds = std::map<std::pair<std::size_t, std::size_t>, std::optional<ContactManifold>>;

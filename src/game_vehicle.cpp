@@ -109,6 +109,9 @@ void LevelSession::driveVehicles(float dt) {
                                                   runtime::vehicleCollisionBody(scaled.back(), drive.shape.collisionLow, drive.shape.collisionHigh, massScale), &drive.boxContacts};
         runtime::VehicleWorldBody body{i, &drive.rigid, &drive.drivetrain, &drive.awake, &scaled.back(), runtime::bodyInputs(command), floors.back() ? &*floors.back() : nullptr, &drive.wheels};
         body.controls.driver = driven;
+        body.destroyed = record.destroyed;
+        if (driven) body.impact = [this, i](float speed, const runtime::ContactOther& other) { vehicleImpact(i, speed, other); };
+        runtime::tickVehicleDamage(record, dt);
         bodies.push_back(body);
         members.push_back(i);
     }
@@ -214,11 +217,22 @@ void LevelSession::handleBoardingEvents(const std::vector<runtime::BoardingEvent
     }
 }
 
+void LevelSession::vehicleImpact(std::size_t vehicleIndex, float speed, const runtime::ContactOther& other) {
+    runtime::VehicleRecord& record = *levelScripts.vehicles().mutableRecord(boardingRecords[vehicleIndex]);
+    const runtime::ContactReply reply = runtime::vehicleContactReply(record, speed, other);
+    if (reply.brickBurst) std::cout << "vehicle " << record.instance << ": contact at " << speed << " m/s, brick burst of " << reply.brickCount << " (stand-in: no bricks)\n";
+    if (!reply.damage) return;
+    const runtime::DamageOutcome outcome = runtime::vehicleDamage(record, *reply.damage, true);
+    if (!outcome.heartLost) return;
+    std::cout << "vehicle " << record.instance << ": heart lost at " << speed << " m/s, " << unsigned(record.hearts) << " left" << (outcome.destroyed ? ", destroyed (stand-in: the break is not applied)" : "") << '\n';
+    if (hud) hud->setHearts(record.hearts, true);
+}
+
 void LevelSession::enterVehicleHud(const runtime::VehicleRecord& record) {
     if (!hud) return;
     const std::string name = record.vehicleType < vehicleTableNames.size() ? vehicleTableNames[record.vehicleType] : std::string();
     const runtime::VehicleHud::Change change =
-        vehicleHud.begin(record.healthStart, name, hud->hearts(), [this](const std::string& path) { return shared.archive.find(path) != nullptr; });
+        vehicleHud.begin(record.hearts, name, hud->hearts(), [this](const std::string& path) { return shared.archive.find(path) != nullptr; });
     hud->setHearts(change.hearts, change.vehicleImage);
 }
 

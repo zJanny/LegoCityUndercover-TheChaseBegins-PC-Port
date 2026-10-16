@@ -131,8 +131,8 @@ void parameterReader() {
     require(parked->requestedState == runtime::kVehicleStateParked, "SpawnParked sets +4 = 4");
     require(both->requestedState == runtime::kVehicleStateUnshovable, "SpawnUnshovable wins over SpawnParked: +4 = 10");
 
-    require(plain->vehicleType == 2 && plain->health == 4 && plain->healthStart == 4, "health comes from the vehicle table row of VehicleType");
-    require(both->vehicleType == 1 && both->health == 9 && both->healthStart == 9, "HealthOverride above zero replaces both health bytes");
+    require(plain->vehicleType == 2 && plain->health == 4 && plain->hearts == 4, "health comes from the vehicle table row of VehicleType");
+    require(both->vehicleType == 1 && both->health == 9 && both->hearts == 9, "HealthOverride above zero replaces both health bytes");
     require(plain->musicEnabled() && !both->musicEnabled(), "NoMusic clears bit 2 of +0x312, no NoMusic sets it");
     require(plain->flags311 == runtime::kVehicleCameraOverride && plain->flags312 == runtime::kVehicleMusicEnabled,
             "a parked or traffic vehicle reads +0x311 = 1 and +0x312 = 4 (oracle, street-after-1-1)");

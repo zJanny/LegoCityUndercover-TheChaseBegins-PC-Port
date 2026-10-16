@@ -60,9 +60,10 @@ void readParameters(const ParamReader& reader, const std::vector<VehicleTableRow
         if (centre->type == 2 && !centre->blocks.empty() && centre->blocks[0].size() >= 12) std::memcpy(record.centreOfMass.data(), centre->blocks[0].data(), 12);
     const std::int32_t tableHealth = record.vehicleType < table.size() ? table[record.vehicleType].health : 0;
     record.health = std::uint8_t(tableHealth);
-    record.healthStart = record.health;
+    record.hearts = record.health;
     const float override = floatOf(reader.get("HealthOverride"), -1.0f);
-    if (override > 0.0f) record.health = record.healthStart = std::uint8_t(std::int32_t(override));
+    if (override > 0.0f) record.health = record.hearts = std::uint8_t(std::int32_t(override));
+    record.bumpCollision = reader.flag("BumpCollision");
     setBit(record.flags311, kVehicleInvulnerable, reader.flag("Invulnerable"));
     setBit(record.flags311, kVehicleCameraOverride, reader.flag("ATTR_CameraOverride"));
     record.topSpeed = floatOf(reader.get("TopSpeed"), 0.0f);

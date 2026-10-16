@@ -29,7 +29,7 @@ public:
     // 0x262188 then SetHearts(record byte +0x30d) with the vehicle heart image (the player's state +0x6e is 0x11c). `currentHearts` is kept for the
     // end. STAND-IN HUD-S50: the player's health (ctrl+0x70) that 0x307bec restores is the hearts shown before the Drive state began, the
     // port has no player health value.
-    Change begin(std::uint8_t healthStart, const std::string& tableName, unsigned currentHearts, const std::function<bool(const std::string&)>& exists);
+    Change begin(std::uint8_t hearts, const std::string& tableName, unsigned currentHearts, const std::function<bool(const std::string&)>& exists);
     // 0x307bcc: SetHearts(ctrl+0x70) with the normal heart image (the state +0x6e is already 0x11b); nothing when no Drive state began.
     std::optional<Change> end();
     // 0x193604: the vehicle portrait path while it is shown; it is freed as soon as the player is on foot.
