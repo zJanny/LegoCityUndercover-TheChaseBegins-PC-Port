@@ -586,16 +586,40 @@ int main(int argc, char** argv) {
         // Filters BlendTime ShakeAmp ShakeRate ShakeRoll 3DOffset) = 31125.
         if (camFiles != 10 || camRoots != 10 || camBlocks != 2085 || camEntries != 31125 || camSetups != 2075)
             throw std::runtime_error("camera totals differ from the Python census");
-        // Reference: manual inspection and a line-based Python census of options3ds.txt, triggers.txt and
-        // letriggers.txt (1 + 2 + 34 blocks, 11 + 13 + 33 entries). The other three files fail the strict
-        // grammar: options.txt is only the header "options" without a body; scriptfns.txt line 843 lacks a
-        // closing ')'; gescriptfns.txt line 264 has an extra ')'.
-        if (configFiles != 3 || configBlocks != 37 || configEntries != 57 || configRejected.size() != 3)
+        {
+            // Reference: struct.unpack census of the 7 files and levelobjectscount.bin, 2026-10-16
+            // (non-empty slots of groups A, B, C and the sum of all 35 values per level).
+            const unsigned expectedSlots[7][4] = {{16, 5, 3, 1077}, {16, 5, 2, 1301}, {16, 5, 3, 918}, {16, 5, 3, 1369},
+                                                  {16, 5, 3, 1315}, {16, 5, 3, 1201}, {16, 5, 4, 1102}};
+            for (unsigned level = 1; level <= 7; ++level) {
+                const std::string path = "pregen/collectables_level" + std::to_string(level) + ".bin";
+                const FuseEntry* entry = archive.find(path);
+                if (!entry) throw std::runtime_error(path + " not found");
+                const CollectableLists lists = parseCollectableLists(archive.read(*entry));
+                unsigned a = 0, b = 0, c = 0, sum = 0;
+                for (auto v : lists.groupA) a += v != 0, sum += unsigned(int(v));
+                for (auto v : lists.groupB) b += v != 0, sum += unsigned(int(v));
+                for (auto v : lists.groupC) c += v != -1, sum += unsigned(int(v));
+                const unsigned* want = expectedSlots[level - 1];
+                if (a != want[0] || b != want[1] || c != want[2] || int(sum) != int(want[3]))
+                    throw std::runtime_error(path + " differs from the recorded census");
+            }
+            const FuseEntry* counts = archive.find("pregen/levelobjectscount.bin");
+            if (!counts) throw std::runtime_error("pregen/levelobjectscount.bin not found");
+            const std::vector<std::uint16_t> values = parseLevelObjectCounts(archive.read(*counts));
+            unsigned sum = 0, defaults = 0;
+            for (auto v : values) sum += v, defaults += v == 300;
+            if (values.size() != 82 || sum != 23724 || defaults != 68)
+                throw std::runtime_error("levelobjectscount.bin differs from the recorded census");
+        }
+        // Reference: manual inspection and a line-based Python census (2026-10-16) of options3ds.txt, triggers.txt,
+        // letriggers.txt, scriptfns.txt and gescriptfns.txt (1 + 2 + 34 + 301 + 70 blocks, 11 + 13 + 33 + 824 + 234
+        // entries). The generic reader 0x23bbe4 ends a value at the first ')' outside braces or at the line end, so the
+        // missing ')' of scriptfns.txt line 843 and the extra ')' lines of gescriptfns.txt parse. options.txt is only the
+        // header "options" without a body and stays rejected (the game never reads it).
+        if (configFiles != 5 || configBlocks != 408 || configEntries != 1115 || configRejected.size() != 1)
             throw std::runtime_error("config text totals differ from the Python census");
-        std::sort(configRejected.begin(), configRejected.end());
-        if (configRejected[0].rfind("levels/gescriptfns.txt: config text line 264:", 0) ||
-            configRejected[1].rfind("levels/scriptfns.txt: config text line 843:", 0) ||
-            configRejected[2].rfind("options.txt: config text line 2:", 0))
+        if (configRejected[0].rfind("options.txt: config text line 2:", 0))
             throw std::runtime_error("rejected config text files differ from the manual inspection");
         // Reference: convert_models.bone_batches/skin_joints (at 9d04c91) over every part (drawn vertices only).
         if (skinnedParts != 1457 || boneBatches != 1465 || jointSum != 3492824)

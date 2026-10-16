@@ -32,6 +32,16 @@ constexpr Rule kRules[] = {
     {"options3ds.txt", "parseConfigText"},
     {"levels/triggers.txt", "parseConfigText"},
     {"levels/letriggers.txt", "parseConfigText"},
+    {"levels/scriptfns.txt", "parseConfigText"},
+    {"levels/gescriptfns.txt", "parseConfigText"},
+    {"pregen/collectables_level1.bin", "parseCollectableLists"},
+    {"pregen/collectables_level2.bin", "parseCollectableLists"},
+    {"pregen/collectables_level3.bin", "parseCollectableLists"},
+    {"pregen/collectables_level4.bin", "parseCollectableLists"},
+    {"pregen/collectables_level5.bin", "parseCollectableLists"},
+    {"pregen/collectables_level6.bin", "parseCollectableLists"},
+    {"pregen/collectables_level7.bin", "parseCollectableLists"},
+    {"pregen/levelobjectscount.bin", "parseLevelObjectCounts"},
 };
 
 bool endsWith(const std::string& text, const char* suffix) {

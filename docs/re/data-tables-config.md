@@ -28,6 +28,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 
 ## 2026-10-13T10:15+02:00 — Brace-block config text parser (.cam, trigger and option lists)
 
+Corrected by [data-tables-config.md §2026-10-16T10:12:03+02:00](#ts-20261016-101203): the game's reader ends a value at the first `)` and tolerates a missing and an extra `)`; the port's parser now does too.
+
 - New parseConfigText / ConfigBlock and a typed parseCameraFollow (src/assets/config_text.cpp, in chase_assets).
 - Grammar: `Name {` blocks with `Key(value)` entries and nested blocks, CRLF and `//` comment lines. A value runs to the matching `)` on its line, with balanced inner parentheses. The parser is strict.
 - Census: the 10 .cam files hold 10 CameraFollow, 1822 Bound and 253 Room blocks: 2075 camera setups, each with the same 15 keys (Name, Type, RotationY, RotationX, Distance, Location, Lookat, Offset, FOV, Filters, BlendTime, ShakeAmp, ShakeRate, ShakeRoll, 3DOffset), 31125 entries.
@@ -128,3 +130,33 @@ Unknowns:
 - What the code at the sites above does with each file: the field layout of `collectables_level*.bin` and `levelobjectscount.bin`, and whether the script-list reader tolerates scriptfns line 843 (missing `)`) and gescriptfns line 264 (extra `)`); the strict parser is unchanged.
 - The users of the CustomChar, Traffic, Pedestrians and TouchGestures paths (no `add`-from-pc hit; other forms not scanned).
 - Whether the game reads `options.txt` / `options3ds.txt` under another name.
+
+<a id="ts-20261016-101203"></a>
+
+## 2026-10-16T10:12:03+02:00 — Pregen collectables and object counts, script-list reader, options files (Agent D, round 16)
+
+Tools: `llvm-objdump --triple=armv6k-none-eabi --mattr=+vfp2` over `artifacts/game/game.arm.elf` (VA = file offset + 0xFF000), Python `struct` census of the shipped files. No REA session, no emulator.
+
+**collectables_level1..7.bin** (loader 0x23b498, level number from [0x5163e8+38], files for levels 2..8 minus 1, i.e. 1..7; `Pregen/Collectables_Level%u.bin` 0x23b598)
+- The loader zeroes 40 bytes at +0 and 20 bytes at +40 of the destination record, sets five 16-bit values at +60..+68 to -1, opens the file, reads one byte and, only when it is 2, reads 70 bytes into the record. A file that fails to open or has another version leaves the defaults. All seven files are 71 bytes with version 2.
+- Layout of the 70 bytes (little-endian 16-bit): group A 20 values at +0, group B 10 values at +40, group C 5 values at +60 (-1 = empty). Zero is an empty slot in A and B.
+- Callers: 0x239184 (counting reader, record on the stack), 0x23b3c4 (removal helper 0x23b388) and the setter 0x2e6240 that stores the record at object+0x11a. The counting reader at 0x239184 totals and collects per group in the byte counters at 0x5208e0+0x2d..0x32: group A (+0x30 total, +0x2f collected): ids 1..7 are collected when the test 0x213444 on the byte at 0x3741b3+id is true, id 8 always counts as collected, other ids when a cheat byte at 0x375961 / 0x375962 has bit 0 or when bit 2*id (id < 141) of the bitset at 0x52086c is set; group B (+0x32 total, +0x31 collected): collected when bit 1 of those cheat bytes is set or bit 2*id-2 of the bitset at 0x520893; group C (+0x2e total, +0x2d collected): cheat bit 3 / bit 2 or bit id of the bitset at 0x51b6b0 + 0x51b5. Removal 0x23b388 decrements the half-word at 0x518054 for each A or B slot equal to the given id.
+- Census (all 7 files, 2026-10-16): 16 non-empty slots in A and 5 in B in every level; C holds 3 (levels 1, 3, 4, 5, 6), 2 (level 2) or 4 (level 7).
+
+**levelobjectscount.bin** (164 bytes = 82 little-endian 16-bit values, 68 of them 300, maximum 465, sum 23724)
+- The only reader is 0x2e6164 inside the level set-up 0x2e5ee0..: when the flags word at [0x375b08] has bit 3 or bit 9 set it opens the file, reads the first 56 bytes into 14 stack words zeroed beforehand and closes it. The buffer is not read again in that function. The meaning of the values is not shown by the code.
+
+**scriptfns.txt / gescriptfns.txt** (reader 0x15bf88..0x15c04c)
+- It registers the root block `ScriptFns` with the child block `Function` and the key `name` (handlers 0x1cd734 / 0x27bb34 / 0x1a2de8), then loads both files with the generic config reader 0x23bbe4 when 0x2501b4 says the file exists.
+- The generic reader works per line (0x23bc4c..): it drops spaces and tabs before the first `(`, cuts at CR / LF, skips lines starting with `{`, `//` or empty, and pops a block on `}`. A line without `(` is a block name (looked up among the child blocks; unknown names push a null block whose lines are ignored). A line with `(` is a key; the value tokens (0x23be14..) are split at `,`, trimmed, a `{` token runs to the next `}`, and the list ends at the first `)` outside braces or at the end of the line. Nothing after that `)` is read.
+- So a missing `)` (scriptfns.txt line 843) and an extra `)` (gescriptfns.txt line 264 and lines 424, 426, 433, 435) are accepted, with no nesting of parentheses. The port's parser now ends a value the same way and ignores the rest of the line; before, it rejected both. Census after the change: scriptfns.txt 301 blocks (root included), 824 entries; gescriptfns.txt 70 blocks, 234 entries (line-based Python count; the parser gives the same totals).
+
+**options.txt / options3ds.txt**
+- Their keys (`streamoptions`, `sinkoptions`, `sinkcreate`, `cheat`, `option`, `AllCharacters`, `CoopAI`, the log file names) and the block `options` do not occur in the executable in any case; the only "options" strings are UI sprite names and "User Options". No path is built from "options" + "3ds" + ".txt" (the "3ds" strings are UI image names, `LEGO_City3DS` and `lego_city3ds.fib`). Nothing in this build registers or reads them: they are shipped but unused debug logging and cheat settings.
+
+[Corrects data-tables-config.md §2026-10-13T10:15](#ts-20261013-1015): the game's reader ends a value at the first `)` and tolerates both defects.
+
+Unknowns:
+- The meaning of the three collectable groups (which collectable kind each is) and of the 82 object-count values.
+- The condition behind the flag bits 3 / 9 at [0x375b08] that gates reading levelobjectscount.bin.
+- Whether a header-only file such as options.txt would be accepted by the generic reader (the code suggests yes) is irrelevant for the shipped game, since nothing reads it.

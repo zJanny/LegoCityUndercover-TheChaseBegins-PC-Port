@@ -60,15 +60,15 @@ private:
 
     std::string readValue() {
         std::size_t begin = ++pos_;
-        unsigned depth = 1;
+        bool inBraces = false;
         while (pos_ < text_.size() && text_[pos_] != '\n') {
-            if (text_[pos_] == '(') ++depth;
-            if (text_[pos_] == ')' && --depth == 0) break;
+            if (text_[pos_] == '{') inBraces = true;
+            else if (text_[pos_] == '}') inBraces = false;
+            else if (text_[pos_] == ')' && !inBraces) break;
             ++pos_;
         }
-        if (depth) fail("missing ')' before the end of the line");
         std::string value = text_.substr(begin, pos_ - begin);
-        ++pos_;
+        while (pos_ < text_.size() && text_[pos_] != '\n') ++pos_;
         std::size_t first = value.find_first_not_of(" \t\r");
         if (first == std::string::npos) return {};
         return value.substr(first, value.find_last_not_of(" \t\r") - first + 1);

@@ -25,7 +25,8 @@ int main() {
         require(assets::fileDecoder("models/Textures/pc01_lombardstreet.BTGA") == "decodeTexture", "texture decoder");
         require(assets::fileDecoder("levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl") == "parseLevel", "level decoder");
         require(assets::fileDecoder("levels/triggers.txt") == "parseConfigText", "trigger list decoder");
-        require(assets::fileDecoder("levels/scriptfns.txt").empty(), "script function list has no decoder");
+        require(assets::fileDecoder("levels/scriptfns.txt") == "parseConfigText", "script function list decoder");
+        require(assets::fileDecoder("pregen/Collectables_Level3.bin") == "parseCollectableLists", "collectables decoder");
         require(assets::fileDecoder("pregen/customchar.bin").empty(), "pregenerated data has no decoder");
 
         require(assets::isDoorClass("Props/Prop_Door"), "door class case");

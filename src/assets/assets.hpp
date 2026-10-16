@@ -742,6 +742,20 @@ struct ConfigBlock {
 };
 std::vector<ConfigBlock> parseConfigText(const std::string& text);
 
+// pregen/collectables_level<N>.bin (N = 1..7), loader 0x23b498: a version byte 2 and 35 little-endian 16-bit values
+// copied into a 70-byte record whose defaults are 0 (groups A and B) and -1 (group C). Zero in group A or B and -1 in
+// group C is an empty slot; the counting reader 0x239184 totals and collects per group.
+struct CollectableLists {
+    std::array<std::int16_t, 20> groupA{};
+    std::array<std::int16_t, 10> groupB{};
+    std::array<std::int16_t, 5> groupC{};
+};
+CollectableLists parseCollectableLists(const std::vector<std::uint8_t>& data);
+
+// pregen/levelobjectscount.bin: 16-bit little-endian values; the only reader (0x2e6164) reads the first 56 bytes into a
+// local buffer that is never used afterwards.
+std::vector<std::uint16_t> parseLevelObjectCounts(const std::vector<std::uint8_t>& data);
+
 // Loader 0x3062e4 reads Name, Type, Location, Offset, FOV, Filters, BlendTime, Shake*, 3DOffset into a
 // 0x50-byte camera record; RotationY, RotationX, Distance and Lookat have no handler (editor data).
 struct CameraSetup {

@@ -6,7 +6,7 @@ Every format decoder in `chase_assets` (namespace `chase::assets`, no SDL): RomF
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-15T12:09:48+02:00. Decoders exist and are checked against every shipped file; level composition (materials, lighting, streaming, other sections) is incomplete. The small pregen and script-list files (ASSET-3, ASSET-5 to ASSET-7) have no decoder; the code sites that use their paths are located, the readers are not read yet.
+IN_PROGRESS, updated 2026-10-16T10:12:28+02:00. Decoders exist and are checked against every shipped file; level composition (materials, lighting, streaming, other sections) is incomplete. The collectables and object-count pregen files decode (`pregen.cpp`), the script-list files parse with the original reader's tolerance, and `options.txt` / `options3ds.txt` are unused by the game. Left in ASSET-3: customchar, traffic, pedestrians, map text files; meaning of the pregen values: ASSET-8.
 
 ## 3. Verified behaviour
 
@@ -23,11 +23,9 @@ IN_PROGRESS, updated 2026-10-15T12:09:48+02:00. Decoders exist and are checked a
 
 - [ ] ASSET-1 — Moved to [rendering.md](rendering.md) (materials recovered; lighting RENDER-1, reflections RENDER-2, fog RENDER-3).
 - [ ] ASSET-2 — The other `.blvl` sections: +0x1c event bindings and +0x34 room links are decoded; +0x20 and the +0x24 byte tuples remain (WSTREAM-5). `pregen/*.bin` is not streaming (traffic, pedestrians, collectables); its formats are undecoded. Streaming itself: [world-streaming.md](world-streaming.md). evidence: [streaming.md §2026-10-13T22:27](../../re/streaming.md#ts-20261013-222700).
-- [ ] ASSET-3 — Several smaller file types are not decoded. Left: `customchar.bin`, the traffic and pedestrian `.bin` files, the map `.txt` files, and ASSET-5 to ASSET-7.
+- [ ] ASSET-3 — Several smaller file types are not decoded. Left: `customchar.bin`, the traffic and pedestrian `.bin` files and the map `.txt` files (ASSET-5 to ASSET-7 are closed; ASSET-8 holds the pregen meanings).
 - [ ] ASSET-4 — `.cam` record selection details: first-gather values and pose blend rooms are open (see CAMERA-3); the `.cam` fields RotationY/X, Distance and Lookat are editor-only. evidence: [data-tables-config.md §2026-10-13T09:10](../../re/data-tables-config.md#ts-20261013-0910).
-- [ ] ASSET-5 — `pregen/collectables_level1..7.bin` and `pregen/levelobjectscount.bin` have no decoder: read the code that uses their paths (0x23b4f0, 0x2e6164) for the field layout. evidence: [data-tables-config.md §2026-10-15T12:09:48](../../re/data-tables-config.md#ts-20261015-120948).
-- [ ] ASSET-6 — `levels/scriptfns.txt` and `levels/gescriptfns.txt`: the reader around 0x15bf88..0x15c044 is not read, so the tolerance of line 843 and line 264 is unknown; the strict parser stays. evidence: [data-tables-config.md §2026-10-15T12:09:48](../../re/data-tables-config.md#ts-20261015-120948).
-- [ ] ASSET-7 — `options.txt` (and `options3ds.txt`, listed by the decoder table): no such string in the executable, so the game's use of them is unknown. evidence: [data-tables-config.md §2026-10-15T12:09:48](../../re/data-tables-config.md#ts-20261015-120948).
+- [ ] ASSET-8 — The meaning of the three collectable groups (which collectable kind each is) and of the 82 `levelobjectscount.bin` values is not known, and the port does not use the files yet; the only reader of the count file discards what it reads (gate: flags bits 3 / 9 at [0x375b08]). Needed: the callers of 0x239184 results (counters at 0x5208e0+0x2d..0x32) in the HUD / status screen. evidence: [data-tables-config.md §2026-10-16T10:12:03](../../re/data-tables-config.md#ts-20261016-101203).
 
 ## 6. Findings summary
 
@@ -38,5 +36,5 @@ IN_PROGRESS, updated 2026-10-15T12:09:48+02:00. Decoders exist and are checked a
 
 ## 7. Code and tests
 
-- `src/assets/` (`fuse.cpp`, `pooled.cpp`, `texture.cpp`, `audio.cpp`, `model.cpp`, `level.cpp`, `nav.cpp`, `text.cpp`, `table.cpp`, `config_text.cpp`, `c_api.cpp`).
+- `src/assets/` (`fuse.cpp`, `pooled.cpp`, `texture.cpp`, `audio.cpp`, `model.cpp`, `level.cpp`, `nav.cpp`, `text.cpp`, `table.cpp`, `config_text.cpp`, `pregen.cpp`, `c_api.cpp`).
 - CTest: `assets-core` (synthetic), `assets-real-data` (skips with 77 when the RomFS is absent).

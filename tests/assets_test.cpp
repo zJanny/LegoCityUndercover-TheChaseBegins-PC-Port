@@ -1071,7 +1071,33 @@ void sounds() {
 }
 }
 
+static void pregenFiles() {
+    std::vector<std::uint8_t> file(71, 0);
+    file[0] = 2;
+    file[1] = 11;
+    file[2] = 0;
+    file[1 + 2 * 20] = 0x16;
+    for (std::size_t i = 30; i < 35; ++i) file[1 + 2 * i] = file[2 + 2 * i] = 0xff;
+    file[1 + 2 * 30] = 9;
+    file[2 + 2 * 30] = 0;
+    CollectableLists lists = parseCollectableLists(file);
+    require(lists.groupA[0] == 11 && lists.groupA[1] == 0 && lists.groupB[0] == 0x16 && lists.groupC[0] == 9 &&
+                lists.groupC[4] == -1,
+            "collectables lists");
+    file[0] = 1;
+    requireThrows([&] { parseCollectableLists(file); }, "collectables version 1 accepted");
+    file[0] = 2;
+    file.push_back(0);
+    requireThrows([&] { parseCollectableLists(file); }, "oversized collectables accepted");
+    require(parseLevelObjectCounts({0xa8, 0x00, 0x2c, 0x01}) == std::vector<std::uint16_t>({168, 300}), "object counts");
+    requireThrows([&] { parseLevelObjectCounts({1, 2, 3}); }, "odd object counts accepted");
+    requireThrows([&] { parseLevelObjectCounts({}); }, "empty object counts accepted");
+}
+
 static void configText() {
+    auto tolerated = parseConfigText("Root\n{\n\tA(1, 2\r\n\tB(x, {y)}, z))\n\tC(3)\n}\n");
+    require(tolerated[0].value("A") == "1, 2" && tolerated[0].value("B") == "x, {y)}, z" && tolerated[0].value("C") == "3",
+            "config text tolerates a missing and an extra closing parenthesis");
     auto roots = parseConfigText("// header\r\nRoot \r\n{ \r\n\tChild\r\n\t{\r\n\t\tName(a b)\r\n\t\tNote(x, {y (z)} )\r\n\t\tEmpty()\r\n\t}\r\n\tLevel(3)\r\n\tList(1, 2.5,-3)\r\n}\r\nSecond{}");
     require(roots.size() == 2 && roots[0].name == "Root" && roots[1].name == "Second", "config roots");
     const ConfigBlock& root = roots[0];
@@ -1084,7 +1110,7 @@ static void configText() {
     require(!root.find("Name") && roots[1].blocks.empty(), "config lookup");
     requireThrows([&] { root.value("Missing"); }, "missing config key accepted");
     requireThrows([&] { child.number("Name"); }, "non-numeric config value accepted");
-    for (const char* bad : {"Root\n{\n", "Root\n{\n A(1\n}\n", "Root\n{\n A(1)\n}\n}", "Root\n", "Root\n{\n A\n}\n",
+    for (const char* bad : {"Root\n{\n", "Root\n{\n A(1)\n}\n}", "Root\n", "Root\n{\n A\n}\n",
                             "{\n}\n", "Root\n{\n A(1\n)\n}\n", "A(1)\n"})
         requireThrows([&] { parseConfigText(bad); }, bad);
 
@@ -1109,6 +1135,7 @@ static void configText() {
 int main() {
     try {
         configText();
+        pregenFiles();
         soundEffects();
         sounds();
         refpack();
