@@ -34,6 +34,7 @@
 #include "runtime/pad.hpp"
 #include "runtime/prop_animation.hpp"
 #include "save/save_writer.hpp"
+#include "runtime/object_rooms.hpp"
 #include "runtime/room_streamer.hpp"
 #include "runtime/head_icon.hpp"
 #include "runtime/vehicle_prop_smash.hpp"
@@ -150,6 +151,7 @@ private:
     bool cutscenePlaying() const { return levelScripts.cutscenes().playing() != nullptr; }
     void startRoomStreaming();
     void updateRoomStreaming();
+    void moveVehicleRooms();
     void showLoadedRooms();
     bool roomShown(int room) const;
     void applyFog(const chase::runtime::ClipPlanes& planes) const;
@@ -176,6 +178,7 @@ private:
     std::vector<std::pair<std::size_t, std::size_t>> wheelSceneIndex;
     std::vector<std::size_t> wheelNumbers;
     std::vector<chase::assets::Placement> placedObjects;
+    std::vector<int> placedRooms;
     std::vector<std::size_t> waypointSceneIndex;
     std::vector<chase::assets::Placement> waypointObjects;
     chase::runtime::ScriptRunner levelScripts;
@@ -244,6 +247,7 @@ private:
     std::vector<float> scriptedHeights;
     std::optional<chase::runtime::RoomStreamer> roomStreamer;
     std::map<int, std::vector<std::size_t>> roomInstances;
+    chase::runtime::ObjectRoomMover vehicleRoomMover;
     std::optional<game_characters::LevelCharacters> levelCharacters;
     chase::runtime::PropAnimations propAnimations;
     chase::runtime::AnimationDriverChain animationDrivers;

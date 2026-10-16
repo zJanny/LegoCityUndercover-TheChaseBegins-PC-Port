@@ -10,7 +10,8 @@ The per-update rule that decides which rooms of a world level are requested, loa
 - The current room (0x376c78) is written by 0x1f4244, called per update from 0x2e5aec with the room that owns the player's node (0x2234a8); the node moves between rooms in 0x2e6ce4 -> 0x237b04 -> 0x22d204 by the box rule (position lifted by 0.1, current list first, then scene array order, then the smallest vertical distance). This corrects the port's earlier smallest-containing-box rule; replica `roomAfterMove` matches all 160 recorded records. [§2026-10-14T20:51:26](#ts-20261014-205126)
 - Loads take 6 to 12 updates per room in the oracle (loader is a separate thread); the port uses 9 updates for every room in parallel (stand-in WSTREAM-S30). [§2026-10-14T20:51:26](#ts-20261014-205126)
 - The port runtime (`room_streamer`, `room_streaming`, `room_locator`) reproduces five oracle readings and the walk1 step. [§2026-10-14T15:07:48](#ts-20261014-150748)
-- Open: the writer of the room node position, the meaning of `[0x5163e8+0x26]` and `u16 [room+0x34]`, the unload and release path (0x234690), the loader's dequeue order, whether characters and studs of unloaded rooms are hidden.
+- Objects of the player's room and of one round-robin entry of the current room's list change rooms by the same box rule. The port applies it to vehicles, which fixes the car that vanished when its placement room unloaded (VEH-56). [§2026-10-16T13:47:45](#ts-20261016-134745)
+- Open: which object types the room lists hold, the writer of the room node position, the meaning of `[0x5163e8+0x26]` and `u16 [room+0x34]`, the unload and release path (0x234690), the loader's dequeue order, whether characters and studs of unloaded rooms are hidden.
 
 
 <a id="ts-20261014-140018"></a>
@@ -115,3 +116,23 @@ Unknowns:
 - What a non-zero `u16 [room+0x34]` is (all 36 rooms read have 0) and what the other object lists (k 1 to 3) and the table at 0x589410 (7 entries in `street-at-entrance`) move between rooms.
 - Whether the player's box centre changes with the animation (one reading).
 - The room order of other levels (only the street array was read).
+
+<a id="ts-20261016-134745"></a>
+
+## 2026-10-16T13:47:45+02:00 — Driven vehicles vanished when their placement room unloaded; vehicles now change rooms by the object rule (chase-game runs with temporary prints; no emulator, no REA, no new disassembly)
+
+Cause of the invisible car (VEH-56, user report with the place from the F3 overlay: 895.82, 31.49, 958.11, heading -162.4, the car vanishes when driven forward and shows again when driven back; the police car and the donut van of mission 1-1):
+- `chase-game` drew a placed object only while the room named in its placement record was loaded (`roomShown(roomNumber(placement.room))` in `LevelSession::draw`). `1-1_Police_Car` is placed in Room8, `1-1_DonutVan` in Room33. Run: `--call-script 1-1_VanBreakdown --call-script 1-1_Get_Car --start "886.0289 17.8243 1118.6516" --script "0 0 1500;0 0 3 X;0 0 330;at 895.82 31.49 958.11 -162.4;0 0 5;0 0 60 A"`. At the port's update 1879 the player switches from Room15 to Room21 and the loaded set becomes 14, 15, 16, 20, 21, 22, 26, 27, 28: Room8 is unloaded, so the car was hidden. Driving back into Room15 loads Room8 again, which matches the report.
+- The original moves objects between rooms. Per [§2026-10-14T20:51:26](#ts-20261014-205126), 0x2e6ce4 tests every object of the player's room and of one round-robin entry of the current room's list. An object whose lifted test point (node translation plus node box centre) has left its own room's box goes to the room 0x237b04 / 0x22d204 picks. So a driven car follows the player from room to room.
+
+Port change:
+- `objectRoomAfterMove` (`src/runtime/room_locator.cpp`) is that rule for any object: the own room is kept while it contains the point; otherwise the current room and its list are searched, then the rooms in number order, then the smallest vertical gap; with no result the own room is kept. `roomAfterMove` (the player) is now this rule with own room = current room.
+- `ObjectRoomMover` (`src/runtime/object_rooms.cpp`) runs the schedule: the player's room and one entry of the current room's list per update. The moves are applied after all tests, as the final loop of 0x2e6ce4 re-parents the nodes. It runs before the player's own room step in the same update.
+- `chase-game` keeps a room per placed object (`placedRooms`). Only vehicles take part, and their test point is the vehicle matrix translation plus the centre of the model bounds (stand-in WSTREAM-S33). Vehicles whose placement room is not `roomN` (room -1, for example the traffic cars) are not moved and stay drawn as before.
+- Result of the run above: `vehicle 1-1_Police_Car: room 8 -> 15 at update 1833` (the teleport) and `room 15 -> 21 at update 1879`, the same update as the player; the car stays drawn (screenshot at update 1928). Test points: (895.820007, 31.5676994, 958.029907) after the teleport, (892.770935, 32.3960686, 950.15509) at update 1878 (Room15) and (892.559814, 32.4092026, 949.58313) at update 1879 (Room21). Pinned in `room-streaming-real-data`, `object-rooms` (made-up rooms) and `game-vehicle-room`. In the mission 1-1 run the donut van moves from Room33 to Room15 at the teleport to the shop (update 2367).
+
+Unknowns:
+- Which object types are in the room lists (`room+0x58+8*k`; types 90, 179, 183, 243 are skipped) and which classes those types are; whether carried props, pushed props and characters change rooms the same way (WSTREAM-32).
+- The vehicle node's box centre (`node+0xa0`) was not read; the model bounds centre is assumed (WSTREAM-S33).
+- The start value and the step of the round-robin counter `this+0x18c` (WSTREAM-S32).
+- Whether the player's room `[[0x3772b8]+0x38]` is the vehicle's room while the player is seated.

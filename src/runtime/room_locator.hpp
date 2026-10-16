@@ -22,6 +22,12 @@ struct BoxApproach {
 
 BoxApproach approachToBox(const RoomBox& box, const Vec3& eye, const Vec3& view);
 
+// The room of a level object after one update's move (0x2e6ce4 -> 0x237b04 -> 0x22d204): the object's own room is kept
+// while it contains the lifted test point (node world translation plus node box centre); otherwise the current room and
+// then its list, then the first room in number order that contains it, then the room whose x/z range contains the point
+// with the smallest vertical gap; with none of these the own room is kept.
+int objectRoomAfterMove(const StreamRooms& rooms, const std::map<int, RoomBox>& boxes, int ownRoom, int currentRoom, const Vec3& testPoint);
+
 // The room the player is in after one update's move (0x2e6ce4 -> 0x237b04 -> 0x22d204): the room is kept while it still
 // contains the lifted point; otherwise the first room of the current room's list, then the first room in number order
 // that contains it, then the room whose x/z range contains the point with the smallest vertical gap.

@@ -148,6 +148,7 @@ LevelSession::LevelSession(const Shared& sharedState)
             placedInstances[placement.instance] = {instanceIndex, matrix};
             placedSceneIndex.push_back(instanceIndex);
             placedObjects.push_back(placement);
+            placedRooms.push_back(runtime::roomNumber(placement.room));
             roomInstances[runtime::roomNumber(placement.room)].push_back(instanceIndex);
         } else {
             ++unresolved;
@@ -359,9 +360,9 @@ void LevelSession::draw(int width, int height) {
     scene.setLighting(runtime::levelLights(lightObjects, roomStreamer ? roomStreamer->currentRoom() : 0), &viewToWorld[12]);
     const std::vector<bool> drawn = runtime::drawnPlacements(placedObjects, objectState);
     for (std::size_t i = 0; i < drawn.size(); ++i)
-        scene.setInstanceVisible(placedSceneIndex[i], drawn[i] && roomShown(runtime::roomNumber(placedObjects[i].room)));
+        scene.setInstanceVisible(placedSceneIndex[i], drawn[i] && roomShown(placedRooms[i]));
     for (const auto& [placedIndex, wheelIndex] : wheelSceneIndex)
-        scene.setInstanceVisible(wheelIndex, drawn[placedIndex] && roomShown(runtime::roomNumber(placedObjects[placedIndex].room)));
+        scene.setInstanceVisible(wheelIndex, drawn[placedIndex] && roomShown(placedRooms[placedIndex]));
     const runtime::ObjectiveState& objectives = levelScripts.objectives();
     std::vector<float> badgeFades(waypointObjects.size(), 1.0f);
     for (std::size_t i = 0; i < waypointObjects.size(); ++i) {
@@ -372,7 +373,7 @@ void LevelSession::draw(int width, int height) {
                                                             roomShown(runtime::roomNumber(waypointObjects[i].room)));
     }
     std::vector<bool> shownPlaced(drawn.size()), shownWaypoints(waypointObjects.size());
-    for (std::size_t i = 0; i < drawn.size(); ++i) shownPlaced[i] = drawn[i] && roomShown(runtime::roomNumber(placedObjects[i].room));
+    for (std::size_t i = 0; i < drawn.size(); ++i) shownPlaced[i] = drawn[i] && roomShown(placedRooms[i]);
     for (std::size_t i = 0; i < waypointObjects.size(); ++i)
         shownWaypoints[i] = objectives.waypointActive(game_doors::lowerCase(waypointObjects[i].instance)) && roomShown(runtime::roomNumber(waypointObjects[i].room));
     propParts.apply(scene, buildits, placedObjects, placedSceneIndex, shownPlaced, shownWaypoints, badgeFades);

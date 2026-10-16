@@ -198,6 +198,19 @@ int main(int argc, char** argv) {
                     "x 900.273 leaves Room8 for Room7");
         }
         {
+            // VEH-56: the seated police car of mission 1-1 at the user's place (chase-game, 2026-10-16: 1-1_Get_Car, X, then
+            // "at 895.82 31.49 958.11 -162.4" and A held). Test points (node translation plus model box centre, WSTREAM-S33)
+            // printed by the port: after the teleport Room8 gives way to Room15, and at the port's update 1879 Room15 to
+            // Room21, the update the streamer unloads Room8. The car used to stay in its placement room Room8 and vanished.
+            const RoomStreamer& rooms = *made;
+            require(objectRoomAfterMove(rooms.rooms(), rooms.boxes(), 8, 8, {895.820007f, 31.5676994f, 958.029907f}) == 15,
+                    "the teleported car leaves Room8 for Room15");
+            require(objectRoomAfterMove(rooms.rooms(), rooms.boxes(), 15, 15, {892.770935f, 32.3960686f, 950.15509f}) == 15,
+                    "update 1878: the car is still in Room15");
+            require(objectRoomAfterMove(rooms.rooms(), rooms.boxes(), 15, 15, {892.559814f, 32.4092026f, 949.58313f}) == 21,
+                    "update 1879: the car moves to Room21");
+        }
+        {
             // RENDER-31, oracle agentRS 2026-10-14 (memtrace with the camera object [0x377544]+0x5c: eye at +0x30, look
             // direction at +0x20): camera position and view at the update a room's state byte becomes 2, with the nearest
             // box point distance and its depth along the view printed by the analysis (docs/re/rendering-fog.md).

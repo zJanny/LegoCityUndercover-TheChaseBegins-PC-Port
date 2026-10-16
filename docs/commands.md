@@ -118,6 +118,7 @@ Single C++ tests, with `ctest --test-dir build -R <name>`:
 | `nav-path` | The AIMove path finder and the follower on small made-up grids: same cell, straight line, search around a wall, two linked grids, the walk across the link, a refused gate, a start beside a grid |
 | `nav-path-real-data` | The finder and follower on the real grids of lvl_01_cherrytreehills: the police entry case, and 3000 pairs of positions followed inside and across grids; skips with code 77 without `artifacts/romfs` |
 | `script-runner` | How level scripts run each update (waits, a script calling or starting another one, conditions, door requests, scripts started by walking into marked places), with made-up scripts, no game data needed |
+| `object-rooms` | The rule that moves an object to another room when it leaves its room's box, and which rooms are checked each update, with made-up rooms, no game data needed |
 | `dcam` | The script camera: its path curves, start and end waits, the end after the set time and the blocking of `WaitForDCam`, with made-up paths, no game data needed |
 | `dcam-real-data` | The camera paths of the first level against what the original showed in the police station entry (positions of the camera, the update on which the camera ends); skips with code 77 if `artifacts/romfs` is missing |
 | `save-core` | Save file checks, synthetic data, no SDL |
@@ -128,6 +129,7 @@ Single C++ tests, with `ctest --test-dir build -R <name>`:
 | `front-game-smoke`, `front-game-handoff`, `frontshot-real-smoke` | Run the start screens with a scripted pad: to the language list, through every screen into the level, and offscreen with `chase-frontshot`. Registered only if `artifacts/romfs` existed at configure time |
 | `hud-real-data` | The display during play: the stud bar's timing against a recorded pickup (`artifacts/oracle/hud-traces`, folder set with `-DCHASE_HUD_TRACE_DIR=...`), the icon bounce, the hearts, pictures of the display and the map screen; skips with code 77 if `artifacts/romfs` is missing and without the trace compares only the numbers pinned in the test |
 | `game-script-hud` | Runs the level offscreen with the character standing on a coin and checks that the coin was banked and the display shows the new total. Registered only if `artifacts/romfs` existed at configure time |
+| `game-vehicle-room` | Drives the police car of mission 1-1 forward from the spot where it used to vanish and checks that it moves from Room15 to Room21 with the player, so it stays drawn when Room8 unloads. Registered only if `artifacts/romfs` existed at configure time |
 | `game-room-streaming` | Walks the character from Room7 into Room8 in the street level and checks the room messages: nine rooms at the start, one room unloaded on entering Room8, one more loaded nine updates later. Registered only if `artifacts/romfs` existed at configure time |
 
 ## Programs

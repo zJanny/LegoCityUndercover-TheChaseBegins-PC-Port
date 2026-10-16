@@ -71,10 +71,25 @@ void LevelSession::applyFog(const runtime::ClipPlanes& planes) const {
     chase::render::setFog({runtime::buildFogLut(fog.start, fog.end, planes), fog.colour, planes.nearZ, planes.farZ});
 }
 
+// WSTREAM-S33: only vehicles change rooms, and their node box centre is the centre of the model bounds.
+void LevelSession::moveVehicleRooms() {
+    std::vector<runtime::MovingObject> objects;
+    for (std::size_t i = 0; i < vehicleDrives.size(); ++i) {
+        const VehicleDrive& drive = vehicleDrives[i];
+        if (drive.placedIndex >= placedRooms.size()) continue;
+        const chase::render::Mat4& matrix = boardingVehicles[i].matrix;
+        objects.push_back({drive.placedIndex, {matrix[12] + drive.nodeBounds.centre[0], matrix[13] + drive.nodeBounds.centre[1], matrix[14] + drive.nodeBounds.centre[2]}});
+    }
+    const int current = roomStreamer->currentRoom();
+    for (const runtime::ObjectRoomMove& move : vehicleRoomMover.update(roomStreamer->rooms(), roomStreamer->boxes(), current, current, objects, placedRooms))
+        std::cout << "vehicle " << placedObjects[move.index].instance << ": room " << move.from << " -> " << move.to << " at update " << updatesForLog << '\n';
+}
+
 void LevelSession::updateRoomStreaming() {
     if (!roomStreamer || !player || !follow) return;
     const int before = roomStreamer->currentRoom();
     const std::set<int> loadedBefore = roomStreamer->loadedRooms();
+    moveVehicleRooms();
     roomStreamer->update(player->position(), viewDirection(follow->yaw(), follow->pitch()));
     if (roomStreamer->currentRoom() != before) std::cout << "room " << before << " -> " << roomStreamer->currentRoom() << " at update " << updatesForLog << '\n';
     if (roomStreamer->loadedRooms() != loadedBefore) {

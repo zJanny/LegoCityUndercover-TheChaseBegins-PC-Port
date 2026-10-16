@@ -31,11 +31,10 @@ BoxApproach approachToBox(const RoomBox& box, const Vec3& eye, const Vec3& view)
     return approach;
 }
 
-int roomAfterMove(const StreamRooms& rooms, const std::map<int, RoomBox>& boxes, int currentRoom, const Vec3& playerPosition) {
-    const Vec3 ground = {playerPosition[0] + kPlayerBoxCentre[0], playerPosition[1] + kPlayerBoxCentre[1],
-                         playerPosition[2] + kPlayerBoxCentre[2]};
-    Vec3 point = ground;
+int objectRoomAfterMove(const StreamRooms& rooms, const std::map<int, RoomBox>& boxes, int ownRoom, int currentRoom, const Vec3& testPoint) {
+    Vec3 point = testPoint;
     point[1] += kRoomTestLift;
+    if (inside(boxes, ownRoom, point)) return ownRoom;
     if (inside(boxes, currentRoom, point)) return currentRoom;
     const auto current = rooms.find(currentRoom);
     if (current != rooms.end())
@@ -43,14 +42,14 @@ int roomAfterMove(const StreamRooms& rooms, const std::map<int, RoomBox>& boxes,
             if (inside(boxes, neighbour, point)) return neighbour;
     for (const auto& [number, box] : boxes)
         if (roomContains(box, point)) return number;
-    int best = currentRoom;
+    int best = ownRoom;
     float bestGap = 0.0f;
     bool found = false;
     for (const auto& [number, box] : boxes) {
         const Vec3 centre = box.centre();
         const Vec3 half = {(box.high[0] - box.low[0]) * 0.5f, (box.high[1] - box.low[1]) * 0.5f, (box.high[2] - box.low[2]) * 0.5f};
-        if (!(std::fabs(ground[0] - centre[0]) < half[0]) || !(std::fabs(ground[2] - centre[2]) < half[2])) continue;
-        const float gap = std::fabs(ground[1] - centre[1]) - half[1];
+        if (!(std::fabs(testPoint[0] - centre[0]) < half[0]) || !(std::fabs(testPoint[2] - centre[2]) < half[2])) continue;
+        const float gap = std::fabs(testPoint[1] - centre[1]) - half[1];
         if (!found || gap < bestGap) {
             best = number;
             bestGap = gap;
@@ -58,6 +57,12 @@ int roomAfterMove(const StreamRooms& rooms, const std::map<int, RoomBox>& boxes,
         }
     }
     return best;
+}
+
+int roomAfterMove(const StreamRooms& rooms, const std::map<int, RoomBox>& boxes, int currentRoom, const Vec3& playerPosition) {
+    const Vec3 testPoint = {playerPosition[0] + kPlayerBoxCentre[0], playerPosition[1] + kPlayerBoxCentre[1],
+                            playerPosition[2] + kPlayerBoxCentre[2]};
+    return objectRoomAfterMove(rooms, boxes, currentRoom, currentRoom, testPoint);
 }
 
 }
