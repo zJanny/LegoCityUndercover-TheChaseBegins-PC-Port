@@ -46,6 +46,7 @@ int main(int argc, char** argv) {
         require(animations.name(animations.clip(0, 2)) == "supercarry_idle", "idle with a big object");
         require(animations.name(animations.clip(1, 2)) == "supercarry_walk", "walk with a big object");
         require(animations.name(animations.clip(2, 2)) == "supercarry_walk", "run with a big object");
+        require(!runtime::runRoleSprints(animations.clip(2, 2)) && !runtime::runRoleSprints(animations.clip(2, 1)), "no sprint with a carried run role (0x1abe60)");
         require(animations.clip(runtime::kAnimationSprint, 2) == runtime::kAnimationSprint, "the sprint role has no carried variant");
         require(animations.clip(1, 0) == 1, "nothing carried changes nothing");
         require(animations.clip(0, 1) == 149, "idle with a small object is record variant 3");

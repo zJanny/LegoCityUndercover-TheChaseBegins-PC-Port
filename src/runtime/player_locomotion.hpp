@@ -47,6 +47,10 @@ enum class Regime { Idle, Walk, Run };
 constexpr float kSlopeSlowDown = 0.55f;   // literal 0x3f0ccccd at 0x1ac148
 float slopeFactor(std::int16_t facing, const float normal[3]);
 
+// 0x1abe60 runs the slope term, the run timer and the sprint only while the run role of the entity (0x219614(entity, 2))
+// is "run" 2, 0x6f or 0x83; the carried run roles (151 itemleft_run, 552 supercarry_walk) skip them.
+bool runRoleSprints(int runRole);
+
 struct LocomotionState {
     float x = 0, z = 0;                 // ground-plane position (node+0x8c, +0x94)
     std::int16_t facing = 0;            // ctrl+8, what the node forward vector shows
@@ -54,6 +58,7 @@ struct LocomotionState {
     float runTimer = 0;                 // ctrl+0x24c
     bool wasRunning = false;            // previous update was in the run regime
     bool carryingBig = false;           // the player holds a big carry object (0x225754 = 2), set before the update
+    int runRole = kAnimationRun;        // 0x219614(entity, 2), set before the update
     bool sprinting = false;             // sprint role active (ctrl+0x94 == sprintScale)
     float slope = 1.0f;                 // slope factor of ctrl+0x94 computed at the end of the previous run update
 };

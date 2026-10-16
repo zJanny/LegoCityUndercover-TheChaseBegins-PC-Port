@@ -12,7 +12,8 @@ The carry objects (object type 122, ASCII `z`) and the carry targets (type 123, 
 - The build-it does fire `TriggerObject` through a wrapper the static search missed. [Corrected by buildit.md §2026-10-15T13:07](buildit.md#ts-20261015-130720)
 - Carried walking multiplies the walk step by 2.5 (float 0x374368); the carried idle, walk and run clips come from the animation role table. [§2026-10-16T09:40](#ts-20261016-094004)
 - The pickup state lasts the clip (24 frames at 15 per second, about 48 updates); the place state ended at update 17 and the drop released at update 4 in earlier runs, unexplained against 26-update clips. [§2026-10-16T10:42](#ts-20261016-104210)
-- Open: sender of message 0x80000003, where released boxes land beyond the ray, track-hash to event table, place and drop end updates, other carry classes and `TargetObject01..04`.
+- A carrying player never sprints: 0x1abe60 runs the run timer and the sprint only for the run roles 2, 0x6f and 0x83, and the carried run roles are 552 (big) and 151 (small). Ported. [§2026-10-16T14:13:15](#ts-20261016-141315)
+- Open: sender of message 0x80000003, 0x2256e4 and the reader 0x20bb7c of the carry test, where released boxes land beyond the ray, track-hash to event table, place and drop end updates, other carry classes and `TargetObject01..04`.
 
 <a id="ts-20261015-001729"></a>
 
@@ -143,3 +144,18 @@ Unknowns (exact measurement for a later round):
 - Drop: state `m11-8-donuts-in-hand`, A pressed outside the target zone, same trace, 60 updates: release at update 4, end of state 0xa8.
 - Pickup: ctrace of 0x22f560 for frames 46..54 (not only 3..41) to see the return value at the end of the clip.
 - Build: state `m11-4-van-parts`, hold A, trap 0x276254 (player state 9 update) with ctrl+0x6c / ctrl+0xc for the first 5 and the updates 70..76: entry and exit update of state 9 against the build-it's update.
+
+<a id="ts-20261016-141315"></a>
+
+## 2026-10-16T14:13:15+02:00 — No sprint while carrying: the run-role gate of 0x1abe60 (REA with Ghidra on `artifacts/game/game.arm.elf`: 0x1abe60, 0x19d568, 0x1ab910, 0x2061f8 / 0x20614c, 0x206540 / 0x206510, 0x19de38; no emulator)
+
+User report (2026-10-16): while carrying the donut box Chase walks with the carrying clip, but after a while he starts to run and the animation breaks; in the original he cannot run while carrying.
+
+- **The gate.** The run update 0x1abe60 asks `role = 0x219614(entity, 2)` and runs its whole speed block only when `role` is 2, 0x83 or 0x6f (and byte 0x51640e is not 1). That block sets ctrl+0x94 to 1.0, applies the slope term, adds dt to the run timer ctrl+0x24c, and above 1.0 switches to role 12 (sprint) with ctrl+0x94 x 1.5 (x 1.3 when 0x219b80 and 0x2cd540 answer). Without the block it only keeps the clip of `role` playing (0x21941c).
+- **The carried run roles.** Record 2 of the role table is (2, 111, 131, 151, 162, 552, 272) ([player-locomotion.md §2026-10-13T17:02:03](player-locomotion.md#ts-20261013-170203)). 0x219614 picks index 5 (552 `supercarry_walk`) for a big object and index 3 (151 `itemleft_run`) for a small one ([§2026-10-16T09:40:04](#ts-20261016-094004)). Neither is 2, 0x6f or 0x83, so a carrying player never runs the timer and never sprints, and ctrl+0x94 keeps the 1.0 that the run-state entry 0x19d568 set (0x19d568 also keeps a sprint going when ctrl+0x94 is above 1.0 in states 0, 4 and 5, and otherwise resets the timer to 0). 0x1ab910 (an exit of the run state) also clears the timer.
+- **Port.** `runRoleSprints` and `LocomotionState::runRole` (`src/runtime/player_locomotion.*`); `chase-game` sets the run role from the carried variant (`CarryAnimations::clip(2, mode)`). Before, the port ran the timer whatever the role and switched to the plain sprint clip after 1 s of full stick. Tests `runtime-core` (60 updates with role 552 and 151) and `carry-animation-real-data` (the real roles of record 2 do not sprint).
+- **Other readers of the carry test 0x225754 read here.** 0x20614c (via 0x2061f8): when the player uses an object of type 0xc7 (-0x39) that 0x210f30 accepts and carries a big object, 0x2256e4(player, ctrl, 0) runs first (not read; probably drops the carried object). 0x206510 (via 0x206540): the use of an object of type 0xbb (-0x45) by the player needs ctrl+0x13c clear or the carry test 1 (small), and an entity byte +0x12 other than 0x9f. 0x19de38: a push or bump handler (messages 3 and 4) that skips a sender carrying a big object. None of them is ported.
+
+Unknowns:
+- Byte 0x51640e (when 1, the speed block is skipped for every role) and the 1.3 sprint scale (0x219b80, 0x2cd540).
+- 0x2256e4 and the object types 0xc7 and 0xbb of 0x20614c and 0x206510; the last unread reader 0x20bb7c.

@@ -268,6 +268,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
                                                               follow->pitch(), follow->verticalFieldOfView()));
         }
         player->motion.carryingBig = carry.carryingMode() == 2;
+        player->motion.runRole = player->carryAnimations ? player->carryAnimations->clip(runtime::kAnimationRun, carry.carryingMode()) : runtime::kAnimationRun;
         const runtime::BoardingStep boardingStep = stepBoarding(dt);
         game_player::PlayerAnimation shown =
             boardingStep.takesControl ? applyBoarding(boardingStep)

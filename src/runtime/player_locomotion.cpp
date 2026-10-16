@@ -73,6 +73,8 @@ void lockedFallLocomotion(LocomotionState& state) {
     state.sprinting = false;
 }
 
+bool runRoleSprints(int runRole) { return runRole == kAnimationRun || runRole == 0x6f || runRole == 0x83; }
+
 LocomotionStep locomotionUpdate(LocomotionState& state, float dt, const StickIntent& intent,
                                 const RootMotionSpeeds& speeds) {
     LocomotionStep step;
@@ -88,6 +90,12 @@ LocomotionStep locomotionUpdate(LocomotionState& state, float dt, const StickInt
         step.regime = Regime::Walk;
         speed = speeds.walk;
         state.wasRunning = false;
+        state.sprinting = false;
+    } else if (!runRoleSprints(state.runRole)) {
+        step.regime = Regime::Run;
+        speed = speeds.run;
+        if (!state.wasRunning) state.runTimer = 0;
+        state.wasRunning = true;
         state.sprinting = false;
     } else {
         step.regime = Regime::Run;

@@ -306,6 +306,28 @@ int main() {
             require(std::fabs(locomotionUpdate(state, 0.033f, walk).deltaZ - kCharacterSpeeds.walk * kCarryWalkStepScale * 0.033f) < 1e-6f, "walking with a big object");
             require(std::fabs(locomotionUpdate(state, 0.033f, forward).deltaZ - kCharacterSpeeds.walk * kCarryWalkStepScale * 0.033f) < 1e-6f, "running with a big object");
         }
+        // Carrying never sprints (0x1abe60): the run role is the carried variant of record 2 (2, 111, 131, 151, 162, 552, 272;
+        // heap read in docs/re/player-locomotion.md), 552 for a big and 151 for a small object, so the run timer and the sprint
+        // are skipped. Two seconds of full stick stay at the carried speed with the run role.
+        {
+            require(runRoleSprints(kAnimationRun) && runRoleSprints(111) && runRoleSprints(131) && !runRoleSprints(151) && !runRoleSprints(552),
+                    "run roles that sprint");
+            LocomotionState state;
+            state.carryingBig = true;
+            state.runRole = 552;
+            StickIntent forward;
+            forward.active = true;
+            forward.heldSet = kHeldMove;
+            LocomotionStep step;
+            for (int update = 0; update < 60; ++update) step = locomotionUpdate(state, 0.033f, forward);
+            require(!state.sprinting && state.runTimer == 0.0f && step.animation == kAnimationRun && step.animationScale == 1.0f &&
+                        std::fabs(step.deltaZ - kCharacterSpeeds.walk * kCarryWalkStepScale * 0.033f) < 1e-6f,
+                    "no sprint while carrying a big object");
+            state.carryingBig = false;
+            state.runRole = 151;
+            for (int update = 0; update < 60; ++update) step = locomotionUpdate(state, 0.033f, forward);
+            require(!state.sprinting && std::fabs(step.deltaZ - kCharacterSpeeds.run * 0.033f) < 1e-6f, "no sprint while carrying a small object");
+        }
 
         // Movement follows the last intent, forward = (sin h, cos h): heading 16384 moves along +x.
         {
