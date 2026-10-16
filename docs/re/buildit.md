@@ -92,6 +92,8 @@ Unknowns:
 
 ## 2026-10-15T18:31:45+02:00 — Brick animation of the build-it: scatter, flight and rise of the final prop (llvm-objdump, archive data)
 
+Corrected by [buildit.md §2026-10-16T09:35:36](#ts-20261016-093536): the built pose of a brick is not the animation's last frame (identity) but that frame times the final prop's world matrix times the inverse of the parts' own; the brick data, flight, hop and the rise are confirmed by an oracle trace.
+
 Corrected by [buildit.md §2026-10-15T19:52](#ts-20261015-195230): the wobble sound is made for the first three crossings (not four); start values and condition of the wobble are recovered.
 
 Source: llvm-objdump of `artifacts/game/game.arm.elf`, the extracted RomFS; no oracle run. Completes the unknowns of [§2026-10-14T23:55](#ts-20261014-235539).
@@ -138,3 +140,26 @@ Unknowns:
 - What fills the list of 0x1a0f6c and whether the class answer of 0x244fc8 adds conditions beyond the zone (the port tests the zone only).
 - The flag bit 2 of +0x36 (set by message 0x14) and bit 3 (sets target 7) in the state-2 check are not modelled.
 - The sound 5 and its volume.
+
+<a id="ts-20261016-093536"></a>
+
+## 2026-10-16T09:35:36+02:00 — Oracle trace of the brick node matrices: the bricks fly to the final prop (Azahar GDB + RPC, llvm-objdump)
+
+[Corrects §2026-10-15T18:31](#ts-20261015-183145) on the built pose: it is not the identity of the animation's last frame.
+
+Source: Azahar oracle, New 3DS, OpenGL, state `m11-4-van-parts` (user save, read-only), `hold A` and `trap 0x22b5a0 110` (registers, 32 stack words and 16 words at r2 per stop; the call at 0x19cb58 passes r2 = sp+8, the node matrix, row-vector 3x4 with the translation at +0x30); llvm-objdump of 0x21e96c, 0x2318c8, 0x258bc4; free-run RPC screenshots of the same build (about 25 per second). The trace has 222 stops: 156 from the hop (0x20706c), 54 from the flight (0x19cb5c, 9 per brick), 6 from the change to state 9 (0x1aaf54) and 6 from the change to state 11 (0x1ab13c).
+
+**Order and timing (update after the first press).** Brick k flies in updates 3+12k .. 11+12k (9 stops), its end pose is set in update 12+12k (0x1aaf54); updates 3..72 for six bricks. At update 85 (state 11) the six bricks are put back to their start pose (0x1ab13c) in one update. Bricks and nodes pair by index: brick 0 starts at Bit1's frame-0 pose (-0.5106, 1.045, -1.54), brick 5 at Bit6's (-1.3425, 3.1688, -5.1344), the others as the animation's frame 0.
+
+**Built pose.** Every brick ends at the same pose, position (-5.1974, -0.0594, -5.1371), first rotation row (0.564, 0.000, -0.826), not at the identity. 0x2318c8 builds a matrix M = F * inverse(P) (0x258bc4: A times the rigid inverse of B), with F the world matrix of the object at record +0x1c (0x2429d0, here `1-1_Donut_Van_Body`) and P the build-it's own (0x250810), multiplies the end key (+0xa0) of every brick by M and turns the result into quaternion and position; the start keys are unchanged. For the donut van, F * inverse(P) from the level placements (parts 874.6367 52.0105 696.9986, final 869.4393 51.9511 691.8615, yaw 55.6467) is exactly the traced pose, so the flown bricks end where the final prop stands. The port took the identity and flew the bricks to the parts' own place; the final prop then appeared elsewhere when the parts were hidden, which was the snap the user saw.
+
+**Flight.** The port's formula (slerp, linear position, hop 0.2 x 4t(1 - t) x (|dx| + |dz|)) reproduces the traced rows: brick 0 at progress 0.1 (update 4) at (-0.9793, 1.5310, -1.8997) with first row (0.140, -0.987, -0.080), brick 5 at (-1.7280, 3.1237, -5.1346) with (0.993, 0.096, -0.065).
+
+**Pictures.** Oracle free-run shots (build from the state, 7 s of A, then 3 s): the scattered bricks fly toward the van body standing behind the parts, the van rises and the broken van is gone at the end; the port after the fix shows bricks flying to the same van and no snap. The port run used the mission route of CTest `game-mission-1-1` (the camera and dialog boxes differ), so the pictures were compared by eye only; the numbers above are the evidence.
+
+**Port.** `BuilditBricks::buildAt`, `nodeRelativeTo` (0x258bc4), wired in `PropParts::loadBuildits`; test `prop-parts-real-data` pins the built pose and two flight rows from the trace.
+
+Unknowns:
+- Which field of the class record +0x1c is (the port uses the final prop's placement; the trace agrees for this build-it); a build-it without a final prop was not read.
+- What the player does visually during the build (building animation, LEVOBJ-41); the oracle shots show it, the port does not.
+- The order and update of the switch of `1-1_SO_VanFixed` from the broken van to the driveable van against the build's last update was not measured per update.

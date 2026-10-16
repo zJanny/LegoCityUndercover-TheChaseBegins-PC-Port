@@ -24,6 +24,9 @@ std::array<float, 4> nodeSlerp(const std::array<float, 4>& from, const std::arra
 // 0x19c9e0 without a via point: slerp of the rotations, linear position, and a hop of 0.2 * 4t(1 - t) * (|dx| + |dz|) added to y.
 NodeMatrix nodeFlight(const NodePose& start, const NodePose& end, float t);
 
+// 0x258bc4: target * rigid inverse of own (row-vector convention).
+NodeMatrix nodeRelativeTo(const NodeMatrix& target, const NodeMatrix& own);
+
 // Nodes of a model as the scene draws them: one matrix per node (row-vector convention, relative to the object), starting from the model's own
 // node matrices. A node without a mesh is skipped by the scene.
 struct PropNodes {

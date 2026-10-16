@@ -105,4 +105,14 @@ NodeMatrix PropNodes::world(std::size_t node, const NodeMatrix& placement) const
     return assets::multiply(local.at(node), placement);
 }
 
+NodeMatrix nodeRelativeTo(const NodeMatrix& target, const NodeMatrix& own) {
+    NodeMatrix inverse{};
+    for (std::size_t row = 0; row < 3; ++row)
+        for (std::size_t column = 0; column < 3; ++column) inverse[row * 4 + column] = own[column * 4 + row];
+    for (std::size_t column = 0; column < 3; ++column)
+        inverse[12 + column] = -(own[12] * inverse[column] + own[13] * inverse[4 + column] + own[14] * inverse[8 + column]);
+    inverse[15] = 1.0f;
+    return assets::multiply(target, inverse);
+}
+
 }

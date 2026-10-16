@@ -49,6 +49,10 @@ BuilditBricks BuilditBricks::load(assets::FuseArchive& archive, const std::strin
     return of(model, &animation);
 }
 
+void BuilditBricks::buildAt(const NodeMatrix& relative) {
+    for (BuilditBrick& brick : bricks_) brick.end = nodePoseOf(assets::multiply(nodeMatrixOf(brick.end), relative));
+}
+
 NodeMatrix BuilditBricks::matrix(std::size_t index, float t) const {
     const BuilditBrick& brick = bricks_.at(index);
     return nodeFlight(brick.start, brick.end, t);

@@ -59,6 +59,35 @@ int main(int argc, char** argv) {
         const runtime::NodeMatrix scattered = bricks.matrix(0, 0.0f);
         require(near(scattered[12], first.position[0], 1e-5f) && near(scattered[1], -1.0f, 2e-3f) && near(scattered[4], 1.0f, 2e-3f), "t = 0 is the scattered pose of Bit1 (a quarter turn about z)");
 
+        // Oracle trace (state m11-4-van-parts, hold A, trap of 0x22b5a0 over 110 updates; docs/re/buildit.md): every brick ends at the pose below, the final
+        // prop's world matrix times the inverse of the parts' own (0x2318c8 with 0x258bc4), and brick 0 at progress 0.1 (update 4 of the build) is at the
+        // second row.
+        {
+            const assets::FuseEntry* levelEntry = archive.find("levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl");
+            require(levelEntry != nullptr, "level file");
+            const assets::Level level = assets::parseLevel(archive.read(*levelEntry));
+            const auto placed = assets::objectPlacements(level, assets::archiveClassLookup(archive));
+            const assets::Placement *parts = nullptr, *finalProp = nullptr;
+            for (const assets::Placement& p : placed) {
+                if (p.instance == "1-1_BI_DonutVanParts") parts = &p;
+                if (p.instance == "1-1_Donut_Van_Body") finalProp = &p;
+            }
+            require(parts && finalProp, "parts and final prop placed");
+            runtime::BuilditBricks flown = bricks;
+            flown.buildAt(runtime::nodeRelativeTo(assets::placementMatrix(*finalProp), assets::placementMatrix(*parts)));
+            for (const runtime::BuilditBrick& brick : flown.bricks()) {
+                const runtime::NodeMatrix end = runtime::nodeMatrixOf(brick.end);
+                require(near(brick.end.position[0], -5.1974f, 2e-3f) && near(brick.end.position[1], -0.0594f, 2e-3f) && near(brick.end.position[2], -5.1371f, 2e-3f), "built pose position");
+                require(near(end[0], 0.564f, 2e-3f) && near(end[1], 0.0f, 2e-3f) && near(end[2], -0.826f, 2e-3f), "built pose rotation row 0");
+            }
+            const runtime::NodeMatrix flight = flown.matrix(0, 0.1f);
+            require(near(flight[12], -0.9793f, 2e-3f) && near(flight[13], 1.5310f, 2e-3f) && near(flight[14], -1.8997f, 2e-3f), "brick 0 at progress 0.1");
+            require(near(flight[0], 0.140f, 2e-3f) && near(flight[1], -0.987f, 2e-3f) && near(flight[2], -0.080f, 2e-3f), "brick 0 rotation at progress 0.1");
+            const runtime::NodeMatrix flightLast = flown.matrix(5, 0.1f);
+            require(near(flightLast[12], -1.7280f, 2e-3f) && near(flightLast[13], 3.1237f, 2e-3f) && near(flightLast[14], -5.1346f, 2e-3f), "brick 5 at progress 0.1");
+            require(near(flightLast[0], 0.993f, 2e-3f) && near(flightLast[1], 0.096f, 2e-3f) && near(flightLast[2], -0.065f, 2e-3f), "brick 5 rotation at progress 0.1");
+        }
+
         for (const char* className : {"props/map_waypoint", "props/map_vehiclewaypoint", "props/map_getintovehiclewaypoint"}) {
             const assets::FuseEntry* entry = archive.find(std::string("levels/") + className + ".blvl");
             require(entry != nullptr, std::string("class file ") + className);

@@ -154,3 +154,10 @@ Unknowns:
 
 Unknowns:
 - Why the save waited for the detach (the save key press is queued until the emulation thread runs).
+
+<a id="ts-20261016-093536"></a>
+
+## 2026-10-16T09:35:36+02:00 — State m11-7-box-prompt (made for the carry reference pictures, agent A of round 15)
+
+- Made from the user's `m11-7-collect-donuts` (mission 1-1, donut shop, nothing of the save changed; New 3DS, OpenGL): `freestick 0 120` for 1.3 s steps into the waypoint beam (the badge icon goes, the doughnut box and its A prompt appear), 2 s wait, `savestate m11-7-box-prompt`. The player stands at 816.3 23.92 1072.5, the tip says to press A at the box. A held for 0.12 s lifts the box (A before the beam does nothing).
+

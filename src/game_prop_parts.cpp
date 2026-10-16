@@ -30,6 +30,8 @@ void PropParts::loadBuildits(render::Scene& scene, assets::FuseArchive& archive,
         if (partsIndex < 0) continue;
         const assets::Placement& parts = placed[std::size_t(partsIndex)];
         Parts entry{b, std::size_t(partsIndex), finalIndex, runtime::BuilditBricks::load(archive, parts.mesh), {}};
+        if (finalIndex >= 0)
+            entry.bricks.buildAt(runtime::nodeRelativeTo(assets::placementMatrix(placed[std::size_t(finalIndex)]), assets::placementMatrix(parts)));
         entry.nodeInstance = scene.addModelNodes(assets::meshModelPath(parts.mesh), assets::placementMatrix(parts));
         if (entry.nodeInstance.empty()) continue;
         scene.setInstanceVisible(placedScene[std::size_t(partsIndex)], false);

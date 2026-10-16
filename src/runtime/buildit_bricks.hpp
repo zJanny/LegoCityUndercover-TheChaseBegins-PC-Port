@@ -24,6 +24,10 @@ public:
     static std::string animationPath(const std::string& mesh);
     static BuilditBricks load(assets::FuseArchive& archive, const std::string& mesh);
 
+    // 0x2318c8: the end matrix of every brick times `relative` (the final prop's world matrix times the inverse of the parts' own), so the bricks
+    // fly to the final prop's place; the start poses stay.
+    void buildAt(const NodeMatrix& relative);
+
     const std::vector<BuilditBrick>& bricks() const { return bricks_; }
     // Node matrix of brick `index` at flight progress `t` (0 scattered, 1 built).
     NodeMatrix matrix(std::size_t index, float t) const;
