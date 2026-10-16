@@ -22,6 +22,11 @@ std::string referenceName(const assets::LevelObject& object, const assets::Level
     return found == names.end() ? std::string() : found->second;
 }
 
+std::uint16_t soundParam(const assets::LevelObject& object, const assets::Level& cls, const char* name) {
+    const assets::LevelParam* param = effectiveParam(object, cls, assets::nameHash(name));
+    return param ? std::uint16_t(param->value) : std::uint16_t(0);
+}
+
 int brickCount(assets::FuseArchive& archive, const std::string& modelPath) {
     const assets::FuseEntry* entry = archive.find(modelPath);
     if (!entry) return 0;
@@ -50,6 +55,8 @@ void BuilditSet::load(assets::FuseArchive& archive, const assets::Level& level, 
         if (const assets::LevelParam* param = effectiveParam(object, *cls, studValue); param && param->type == 0) {
             std::memcpy(&build.studValue, &param->value, 4);
         }
+        build.soundBitDone = soundParam(object, *cls, "ATTR_SFXBitDone");
+        build.soundBuilt = soundParam(object, *cls, "ATTR_SFXBuilt");
         std::copy_n(placed->position, 3, build.position);
         int bricks = 0;
         if (!placed->mesh.empty()) {
@@ -96,8 +103,9 @@ void BuilditSet::updateWobble(BuilditObject& object, const float player[3]) {
     object.wobble.update(inZone(object, player), mayHop, [this] { return gameRandomUnit(random_); });
 }
 
-std::vector<BuilditAction> BuilditSet::update(const assets::PlacedObjectState& state, const float player[3], bool actionHeld) {
+std::vector<BuilditAction> BuilditSet::update(const assets::PlacedObjectState& state, const float player[3], bool actionHeld, bool playerCarrying) {
     std::vector<BuilditAction> actions;
+    lastUse_ = BuilditUse{};
     for (std::size_t i = 0; i < objects_.size(); ++i) {
         BuilditObject& object = objects_[i];
         if (state.isDisabled(object.instance) && object.build.state == static_cast<std::uint16_t>(BuilditPhase::Ready)) continue;
@@ -115,9 +123,23 @@ std::vector<BuilditAction> BuilditSet::update(const assets::PlacedObjectState& s
             }
             actions.push_back(action);
         }
-        if (!built && inZone(object, player)) builditUse(object.build, actionHeld);
+        if (built || playerCarrying || !inZone(object, player)) continue;
+        const bool takes = builditTakesAction(object.build) && actionHeld;
+        const int reply = builditUse(object.build, actionHeld);
+        if (!lastUse_.inZone) lastUse_ = BuilditUse{true, reply, takes, i};
     }
     return actions;
+}
+
+std::vector<SoundCall> builditSounds(const BuilditSet& set, const std::vector<BuilditAction>& actions, std::uint16_t ownerBase) {
+    std::vector<SoundCall> calls;
+    for (const BuilditAction& action : actions) {
+        const BuilditObject& object = set.objects()[action.index];
+        const std::uint16_t id = action.kind == BuilditActionKind::BrickDone ? object.soundBitDone : action.kind == BuilditActionKind::Built ? object.soundBuilt : 0;
+        if (id == 0) continue;
+        calls.push_back({id, {object.position[0], object.position[1], object.position[2]}, std::uint16_t(ownerBase + action.index)});
+    }
+    return calls;
 }
 
 void applyBuilditActions(BuilditSet& set, const std::vector<BuilditAction>& actions, assets::PlacedObjectState& state, ScriptRunner& scripts) {

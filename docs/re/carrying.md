@@ -100,3 +100,34 @@ Unknowns:
 - The table that maps animation track hashes to event types, and which track the drop hook 0x2cda2c reacts to.
 - The fixed matrix of 0x2ce4a4 for objects without `carryhandle`; where a released box lands (message 0x12) and the matrix it leaves the hand with.
 - Whether the player's ctrl+0x2cd class bits are clear for the starting character; the readers of 0x225754 other than 0x203d18 and 0x219614 (locomotion, jumping).
+
+<a id="ts-20261016-101840"></a>
+
+## 2026-10-16T10:18:40+02:00 — Release of a carried object (message 0x12), the drop hook and what ends a carry state (llvm-objdump of `artifacts/game/game.arm.elf`)
+
+Source: llvm-objdump of the type 122 handler 0x1767c8 (case 0x12 at 0x176b24), the hooks 0x2cda2c / 0x2ce4a4, the state update 0x2b3494 and the animation-slot functions 0x22f560 / 0x24cbd4. No oracle run for this entry;.
+
+- **Message 0x12 of the carry object (0x176b24).** Copies the node matrix, makes it upright: row 1 = the up vector at 0x56d424, row 0 = normalise(up x row 2), row 2 = normalise(row 0 x up) (0x23b960 is the cross product, 0x257ea0 normalises), so the heading of the held node is kept and pitch and roll are lost. Then the ray 0x22b108 (flags 512, mask 3) from (x, y + 3.0, z) to (x, y - 3.0, z) of the node translation (the constant 3.0 is at 0x176abc); when it hits, the translation is replaced by the hit point. The matrix is stored with 0x24c118, the entity flag 0x200 and the node flag 0x80000 are set, the carrier (record +0xc) is cleared, record flag bit 1 (+0x9e) is cleared, and the reset countdown +0x98 is set from +0x9a. With entity flag 0x20 the shadow record at +0x60 is reset. The object is therefore put on the floor under the hand at once, not dropped with a fall.
+- **Drop hook 0x2cda2c(entity, ctrl, event).** When ctrl+0x13c (the carried object) is set it calls 0x2256e4(entity, ..., 0, 0), the release, whatever the event type is; without a carried object it returns. So the drop (state 0xa8) releases at the first animation event of the clip, which is the track 0x13e3511c of `supercarry_putdown` (key time 2.9 updates, the measured release is update 4). The place hook (0x26b084 of state 0xd6) releases at the event the oracle measured at update 8 (track 0x98d31b7e).
+- **What ends the states.** 0x2b3494 (update of 0xa7 and 0xa8, also of the target state) first runs the locomotion step 0x20cd30, then asks the animation slot kind with 0x22f560 on the player's slot (via 0x233900); kind 6 or 1 requests state 1 (0x2414b4(entity, ctrl+0x50, 1, 0)) and sets ctrl+0x315 bit 0. 0x22f560 returns 6 when 0x24cbd4 sets bit 31 of its flag word: for a clip played once that is when the played time (elapsed ticks x slot speed (+0x30) / the animation's tick scale (anim +0xc), from the start time +0x34) reaches the slot's end minus start frame (+0x2e - +0x2c). Which values the slot has for `supercarry_putdown` (the oracle ended it at update 17, the file lasts 26) was not read.
+- **Port.** `CarrySet::update` releases the object at the hand position and heading (`CarryInput::hand`, `handYawDegrees`) with the floor height from the ground probe of the player's collision (`groundHeight`, 3.0 reach) as a stand-in for the ray (LEVOBJ-S75); test `carry`.
+
+Unknowns:
+- The slot fields and the update the state really ends at (requested from the oracle), the table from track hashes to event types, the flags 512 / mask 3 of the ray and which triangle it takes when several are hit.
+
+<a id="ts-20261016-104210"></a>
+
+## 2026-10-16T10:42:10+02:00 — The pickup state ends with its clip: slot fields traced in `m11-7-box-prompt` (Azahar oracle by agent A of round 16, RPC memory trace and ctrace)
+
+Extends [the release entry](#ts-20261016-101840). Source: state `m11-7-box-prompt` (New 3DS, fixed dt 0.033, 2 updates, then A held from trace frame 3); ctrace of 0x22f560 (entry and return 0x22f644) for 40 updates, memtrace of the 0x50 bytes at the slot object 0x0856a510 (the r0 of the per-update calls from lr 0x2b34d8 / 0x2b34ec, i.e. the calls of 0x2b3494) for 60 updates. Raw files are in agent A's scratch (`r16-a/out/ca.txt`, `cm.mem`), not kept.
+
+- The slot object holds, from the first A update until frame 51: +4 u16 = 0x400 (mode 0, played once), +0x2c = 0, **+0x2e = 24** (the `supercarry_pickup` length: 25 frames, length 24 at 15 frames per second = 1.6 s), +0x30 float = 15.0 (rate x speed), +0x34 = 776245 (start clock), +0x38 = 0xffffffff (running). In frame 52, **49 updates after the first A update**, the slot object is replaced: +0 word 0x08f0cf30 -> 0x08f0bfd0, +4 = 0x2400 (wrap bit 13), +0x2e = 40, +0x34 = 781096 (the next clip, a looping 40-frame clip: the carried idle). 1.6 s / 0.033 = 48.5 updates: the state ends in the update the played time reaches the length, as 0x24cbd4 (mode 0) says, and the player returns to the idle role of the carried variant.
+- The 40-update ctrace window ended before update 49, so it shows 0x22f560 returning 0 on every call for the player's slot; the returns 6 and 1 of the trace belong to other slots (lr 0x19389c, 0x2da674 give 6, 0x193838 gives 1). The update with the return 6 itself was not traced.
+- Result for the port: the pickup state lasts the clip (48 updates at 30 per second), not attach + 9 as copied from the place state; `carryTiming` sets `pickupEnd` from the clip length. That the traced object is the player's carry slot was not verified (r0 of the calls from 0x2b3494); the length 24 and the later replacement agree with the pickup clip.
+- The place state (0xd6) and the drop state (0xa8) use the same test (0x29aa5c, 0x2b3494) with 26-update clips, but the place state ended at update 17 in the earlier oracle run ([§2026-10-15T00:17](#ts-20261015-001729)); the difference is not explained.
+
+Unknowns (exact measurement for a later round):
+- Place: state `m11-9-delivery-goal`, A pressed in front of the target, ctrace 0x22f560 + memtrace of the slot (0x50 bytes) for 60 updates at dt 0.033: the slot fields (+0x2e, +0x34) and the update where state 0xd6 is left (17 measured, the clip is 26 updates).
+- Drop: state `m11-8-donuts-in-hand`, A pressed outside the target zone, same trace, 60 updates: release at update 4, end of state 0xa8.
+- Pickup: ctrace of 0x22f560 for frames 46..54 (not only 3..41) to see the return value at the end of the clip.
+- Build: state `m11-4-van-parts`, hold A, trap 0x276254 (player state 9 update) with ctrl+0x6c / ctrl+0xc for the first 5 and the updates 70..76: entry and exit update of state 9 against the build-it's update.

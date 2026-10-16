@@ -214,6 +214,34 @@ int main() {
             require(set.phaseClip() == kAnimationPutdownBig, "placing plays the put-down clip");
         }
         {
+            CarrySet set = makeSet();
+            CarryTiming quick;
+            quick.pickupAttach = 1;
+            quick.pickupEnd = 2;
+            quick.dropRelease = 2;
+            quick.dropEnd = 3;
+            set.setTiming(false, quick);
+            set.update(state, at(11, 10, true));
+            set.update(state, at(11, 10, false));
+            CarryInput hand = at(11, 10, false);
+            hand.hasHand = true;
+            hand.hand[0] = 12;
+            hand.hand[1] = 1.2f;
+            hand.hand[2] = 13;
+            hand.handYawDegrees = 40;
+            hand.hasGround = true;
+            hand.groundY = 0.25f;
+            while (set.busy()) set.update(state, hand);
+            set.update(state, at(11, 10, true));
+            set.update(state, hand);
+            set.update(state, hand);
+            const CarryObject* box = set.find("box");
+            require(box && !box->carried, "the box was released");
+            require(box->position[0] == 12 && box->position[2] == 13, "released where the hand held it (message 0x12, node position)");
+            require(box->position[1] == 0.25f, "the ray 3 above to 3 below puts it on the floor");
+            require(box->hasYaw && box->yawDegrees == 40, "it keeps the heading of the node");
+        }
+        {
             std::vector<float> rotation = {0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1, 0, 2, 3, 4, 1};
             chase::assets::Model model;
             model.nodeNames = {"Box", "carryhandle"};

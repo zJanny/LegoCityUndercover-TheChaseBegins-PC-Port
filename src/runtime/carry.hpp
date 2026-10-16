@@ -24,7 +24,7 @@ constexpr float kCarryZoneMargin[3] = {1.0f, 1.2f, 1.0f};
 constexpr unsigned kCarryUpdatesPerSecond = 30;
 constexpr float kCarryDefaultResetSeconds = 5.0f;
 
-// STAND-IN LEVOBJ-S32: without a hand position (CarryInput::hasHand) a carried object floats in front of the player at this offset; the original hangs
+// STAND-IN LEVOBJ-S75: without a hand position (CarryInput::hasHand) a carried object floats in front of the player at this offset; the original hangs
 // the object on the hand joint through its "carryhandle" node (0x28db30, hook 0x2ce4a4).
 constexpr float kCarryHeldForward = 0.5f;
 constexpr float kCarryHeldHeight = 0.9f;
@@ -43,6 +43,8 @@ struct CarryObject {
     unsigned resetUpdates = 0;  // ResetTime * 30 (record +0x9a)
     bool carried = false;
     unsigned resetCountdown = 0;  // record +0x98: counts down while the object lies where it was dropped
+    bool hasYaw = false;          // set by a release with a hand pose: the heading the object keeps (message 0x12 makes the matrix upright)
+    float yawDegrees = 0;
 };
 
 struct CarryTarget {
@@ -82,7 +84,14 @@ struct CarryInput {
     bool playerFree = true;       // the player is in a state that takes the action (idle, walk, run)
     bool hasHand = false;         // the object origin of a carried object (the hand joint and the handle offset), world position in `hand`
     float hand[3] = {0, 0, 0};
+    float handYawDegrees = 0;     // heading of the held object's node (its z axis projected on the ground), degrees, placement convention
+    bool hasGround = false;       // STAND-IN LEVOBJ-S75: the floor height below the hand (the original casts the ray 0x22b108 from 3 above to 3 below the object)
+    float groundY = 0;
 };
+
+// Message 0x12 (release, 0x176b24): the object keeps the position and the heading of its node (upright), and the ray from 3.0 above to 3.0 below the node
+// replaces the height by the hit point.
+constexpr float kCarryReleaseRayReach = 3.0f;
 
 class CarrySet {
 public:

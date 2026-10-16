@@ -69,8 +69,8 @@ CarryTiming carryTiming(const assets::Animation& pickup, const assets::Animation
     CarryTiming timing;
     if (const int attach = carryEventUpdate(pickup, kCarryEventTrackHash); attach >= 0) {
         timing.pickupAttach = unsigned(attach);
-        timing.pickupEnd = unsigned(attach) + kCarryPickupEndAfterAttach;
     }
+    timing.pickupEnd = unsigned(std::ceil(float(assets::animationLength(pickup)) * 30.0f / assets::animationFramesPerSecond(pickup) - 1e-3f));
     if (const int release = carryEventUpdate(putdown, kCarryEventTrackHash); release >= 0) timing.placeRelease = unsigned(release);
     return timing;
 }

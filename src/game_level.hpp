@@ -20,6 +20,7 @@
 #include "render/studs.hpp"
 #include "runtime/animation_driver_chain.hpp"
 #include "runtime/buildit_set.hpp"
+#include "runtime/buildit_player.hpp"
 #include "runtime/vehicle_damage.hpp"
 #include "game_carry.hpp"
 #include "runtime/carry.hpp"
@@ -116,7 +117,7 @@ private:
     void requestSceneChange(const chase::runtime::SceneChangeObject* object);
     void applyPlacement(const chase::runtime::ScriptPlacement& request);
     void updateDoors(const float playerPosition[3], const std::function<void(const chase::runtime::SoundCall&)>& emit);
-    void updateBuildits(const float playerPosition[3]);
+    std::vector<chase::runtime::SoundCall> updateBuildits(const float playerPosition[3]);
     std::vector<chase::frontend::MinimapMarker> activeMapMarkers() const;
     void updateCarry(const float playerPosition[3]);
     void updateLevelCharacters(float dt);
@@ -187,6 +188,7 @@ private:
     std::vector<chase::runtime::BulletBox> vehicleBoxes;
     std::vector<game_doors::DoorObject> doors;
     chase::runtime::BuilditSet buildits;
+    chase::runtime::BuilditPlayer builditPlayer;
     game_prop_parts::PropParts propParts;
     chase::runtime::CarrySet carry;
     game_carry::HeldObjects heldObjects;

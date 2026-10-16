@@ -46,8 +46,9 @@ private:
 // Updates of the three states, counted from the update the state is entered (update 0). The place values are measured in the oracle (state 0xd6
 // entered at update 0; release 8 updates later, back to state 1 at update 17); the drop release is 4 updates (state 0xa8). The attach and release
 // updates the game takes from the clip events (carry_animation.hpp: pickup 16, place 8 for a big object); the defaults below are the values of the
-// pickup before the clips were read. STAND-IN LEVOBJ-S30: the end of each state (the original ends them on the clip) copies the measured place end,
-// and the drop release is the one measurement.
+// pickup before the clips were read. The pickup ends with its clip (the animation slot finishes: 0x22f560, docs/re/carrying.md; oracle m11-7-box-prompt:
+// 24 frames at 15 per second, the slot is replaced at update 49 of dt 0.033); carryTiming sets it from the clip. STAND-IN LEVOBJ-S30: the ends of the place
+// and drop states copy the measured place end (17; the clip lasts 26 updates), and the drop release is the one measurement.
 struct CarryTiming {
     unsigned pickupAttach = 8;
     unsigned pickupEnd = 17;
@@ -56,11 +57,9 @@ struct CarryTiming {
     unsigned dropRelease = 4;
     unsigned dropEnd = 17;
 };
-// Updates between the attachment and the end of the pickup state (the measured gap between release and end of the place state).
-constexpr unsigned kCarryPickupEndAfterAttach = 9;
 
 // The timing a pair of clips gives: pickup attach from the event of `pickup`, place release from the event of `putdown`; the rest keeps the defaults
-// (ends: pickup attach + kCarryPickupEndAfterAttach). A clip without the event track leaves the default.
+// (pickup end: the clip length in updates). A clip without the event track leaves the default attach.
 CarryTiming carryTiming(const assets::Animation& pickup, const assets::Animation& putdown);
 
 // Update, counted from the start of the clip, at which `hash` first rises above 0.5 in a clip played once: key time x duration x 30 updates per second.

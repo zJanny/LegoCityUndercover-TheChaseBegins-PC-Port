@@ -3,6 +3,7 @@
 // ObjectTriggered of 1-1_SO_VanFixed, which switches the broken van off and the driveable van on. Zone values were read from the record
 // +0x28 of the object in the oracle state m11-4-van-parts (docs/re/buildit.md). Needs the extracted RomFS; exits with 77 without it.
 #include "assets/assets.hpp"
+#include "runtime/buildit_player.hpp"
 #include "runtime/buildit_set.hpp"
 #include "runtime/level_start.hpp"
 #include <cmath>
@@ -10,6 +11,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 namespace {
 constexpr const char* kLevelFile = "levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl";
@@ -46,6 +48,7 @@ int main(int argc, char** argv) {
         require(parts->finalProp == "1-1_donut_van_body", "BuilditFinalProp " + parts->finalProp);
         require(parts->triggerObject == "1-1_so_vanfixed", "TriggerObject " + parts->triggerObject);
         require(near(parts->studValue, 25.0f, 0.0f), "StudValue 25");
+        require(parts->soundBitDone == 0x243 && parts->soundBuilt == 0x244, "ATTR_SFXBitDone 0x243, ATTR_SFXBuilt 0x244 (class defaults of props/prop_buildit)");
         require(parts->build.progress.size() == 6, "six bricks, got " + std::to_string(parts->build.progress.size()));
         require(parts->hasZone, "use zone");
         const float centre[3] = {-0.4423f, 0.9966f, 0.9803f}, half[3] = {4.2706f, 2.5589f, 4.0072f};
@@ -67,9 +70,21 @@ int main(int argc, char** argv) {
         state.disabled.erase("1-1_brokenvan");
         require(state.isDisabled("1-1_DonutVan"), "driveable van off before the build");
 
-        int builtAt = -1;
+        int builtAt = -1, firstActive = -1, lastActive = -1;
+        std::vector<int> bitDoneAt;
+        std::vector<int> builtSoundAt;
+        runtime::BuilditPlayer player;
         for (int update = 1; update <= 120; ++update) {
-            const auto actions = set.update(state, standing, true);
+            const auto actions = set.update(state, standing, true, false);
+            player.update(set.lastUse(), update == 1, true, true);
+            if (player.active()) {
+                if (firstActive < 0) firstActive = update;
+                lastActive = update;
+            }
+            for (const runtime::SoundCall& call : runtime::builditSounds(set, actions, runtime::kBuilditSoundOwnerBase)) {
+                (call.id == 0x243 ? bitDoneAt : builtSoundAt).push_back(update);
+                require(near(call.position[0], parts->position[0], 0.0f) && call.owner == runtime::kBuilditSoundOwnerBase, "sound at the build-it");
+            }
             runtime::applyBuilditActions(set, actions, state, scripts);
             scripts.update(0.034f);
             scripts.checkTriggers(standing);
@@ -77,6 +92,9 @@ int main(int argc, char** argv) {
                 if (action.kind == runtime::BuilditActionKind::Built) builtAt = update;
         }
         require(builtAt == 85, "built at update " + std::to_string(builtAt));
+        require(bitDoneAt == std::vector<int>({12, 24, 36, 48, 60, 72}), "ATTR_SFXBitDone at the change to state 9 of every brick (oracle rows: state 9 at updates 12 + 12 k)");
+        require(builtSoundAt == std::vector<int>({85}), "ATTR_SFXBuilt at update 85");
+        require(firstActive == 1 && lastActive == 72, "the player's build state runs from the press to the update before state 10 (" + std::to_string(firstActive) + ".." + std::to_string(lastActive) + ")");
         require(state.isDisabled("1-1_BI_DonutVanParts"), "parts hidden after the build");
         require(state.isDisabled("1-1_BrokenVan"), "1-1_SO_VanFixed switched the broken van off");
         require(!state.isDisabled("1-1_DonutVan"), "1-1_SO_VanFixed switched the driveable van on");

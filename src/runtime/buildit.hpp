@@ -46,6 +46,9 @@ std::vector<BuilditEvent> builditUpdate(BuilditState& build);
 // Returns the handler result: 1 usable, 2 not usable (state 10 and up).
 int builditUse(BuilditState& build, bool buttonHeld);
 
+// The states 2, 3 and 4 take the action button (target 8).
+bool builditTakesAction(const BuilditState& build);
+
 // Height of the final prop above its placement while it rises (state 10): sin of the spin angle in degrees, one metre of amplitude.
 float builditPropRise(float spinDegrees);
 

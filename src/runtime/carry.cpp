@@ -133,6 +133,17 @@ bool CarrySet::inZone(const float zoneCentre[3], const float zoneHalf[3], const 
     return true;
 }
 
+namespace {
+bool releaseAtHand(CarryObject& object, const CarryInput& input) {
+    if (!input.hasHand) return false;
+    std::copy_n(input.hand, 3, object.position);
+    if (input.hasGround && std::fabs(input.groundY - input.hand[1]) <= kCarryReleaseRayReach) object.position[1] = input.groundY;
+    object.hasYaw = true;
+    object.yawDegrees = input.handYawDegrees;
+    return true;
+}
+}
+
 std::vector<CarryAction> CarrySet::update(const assets::PlacedObjectState& state, const CarryInput& input) {
     std::vector<CarryAction> actions;
     turn_ = false;
@@ -150,6 +161,7 @@ std::vector<CarryAction> CarrySet::update(const assets::PlacedObjectState& state
         if (object.carried || object.resetCountdown == 0) continue;
         if (--object.resetCountdown == 0) {
             std::copy_n(object.home, 3, object.position);
+            object.hasYaw = false;
             actions.push_back({CarryActionKind::Respawned, i, 0});
         }
     }
@@ -178,7 +190,7 @@ std::vector<CarryAction> CarrySet::update(const assets::PlacedObjectState& state
                 CarryObject& object = objects_[std::size_t(carried_)];
                 CarryTarget& target = targets_[std::size_t(placingTarget_)];
                 object.carried = false;
-                std::copy_n(target.position, 3, object.position);
+                if (!releaseAtHand(object, input)) std::copy_n(target.position, 3, object.position);
                 target.usePending = true;
                 actions.push_back({CarryActionKind::Placed, std::size_t(carried_), std::size_t(placingTarget_)});
                 carried_ = -1;
@@ -188,7 +200,7 @@ std::vector<CarryAction> CarrySet::update(const assets::PlacedObjectState& state
             if (phaseUpdates_ == timing.dropRelease && carried_ >= 0) {
                 CarryObject& object = objects_[std::size_t(carried_)];
                 object.carried = false;
-                std::copy_n(player_, 3, object.position);
+                if (!releaseAtHand(object, input)) std::copy_n(player_, 3, object.position);
                 object.resetCountdown = object.resetUpdates;
                 actions.push_back({CarryActionKind::Dropped, std::size_t(carried_), 0});
                 carried_ = -1;

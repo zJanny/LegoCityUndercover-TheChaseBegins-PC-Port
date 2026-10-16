@@ -3,6 +3,7 @@
 #include "render/character.hpp"
 #include "render/scene.hpp"
 #include "runtime/ai.hpp"
+#include "runtime/buildit_player.hpp"
 #include "runtime/carry_animation.hpp"
 #include "runtime/collision.hpp"
 #include "runtime/player_intent.hpp"

@@ -87,9 +87,12 @@ std::vector<BuilditEvent> builditUpdate(BuilditState& build) {
     return events;
 }
 
+bool builditTakesAction(const BuilditState& build) {
+    return build.state == phase(BuilditPhase::Ready) || build.state == 3 || build.state == 4;
+}
+
 int builditUse(BuilditState& build, bool buttonHeld) {
-    const bool takes = build.state == phase(BuilditPhase::Ready) || build.state == 3 || build.state == 4;
-    if (!takes) return build.state >= phase(BuilditPhase::Finishing) ? 2 : 1;
+    if (!builditTakesAction(build)) return build.state >= phase(BuilditPhase::Finishing) ? 2 : 1;
     if (buttonHeld) build.target = phase(BuilditPhase::Building);
     return 1;
 }

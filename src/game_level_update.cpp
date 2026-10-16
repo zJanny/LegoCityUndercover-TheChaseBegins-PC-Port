@@ -128,6 +128,16 @@ void LevelSession::updateCarry(const float playerPosition[3]) {
                 if (const auto world = heldWorld(held, i)) {
                     input.hasHand = true;
                     std::copy_n(world->data() + 12, 3, input.hand);
+                    input.handYawDegrees = std::atan2((*world)[8], (*world)[10]) * 57.2957795f;
+                    runtime::GroundProbe probe;
+                    probe.x = input.hand[0];
+                    probe.y = input.hand[1];
+                    probe.z = input.hand[2];
+                    probe.distance = runtime::kCarryReleaseRayReach;
+                    if (const auto ground = runtime::groundHeight(collision, probe)) {
+                        input.hasGround = true;
+                        input.groundY = *ground;
+                    }
                 }
     }
     runtime::applyCarryActions(carry, carry.update(objectState, input), objectState, levelScripts);
@@ -141,6 +151,7 @@ void LevelSession::updateCarry(const float playerPosition[3]) {
             }
             Placement moved = placedObjects[i];
             std::copy_n(object.position, 3, moved.position);
+            if (object.hasYaw) moved.orientation[0] = moved.orientation[2] = 0, moved.orientation[1] = object.yawDegrees;
             scene.setTransform(placedSceneIndex[i], placementMatrix(moved));
         }
 }
@@ -153,9 +164,14 @@ void LevelSession::updateLevelCharacters(float dt) {
     for (const runtime::PropPose& pose : propAnimations.poses()) scene.pose(pose.key, pose.skin);
 }
 
-void LevelSession::updateBuildits(const float playerPosition[3]) {
-    const std::vector<runtime::BuilditAction> actions = buildits.update(objectState, playerPosition, pad.slot(kSlotConfirmButton).value > 0.0f);
+std::vector<runtime::SoundCall> LevelSession::updateBuildits(const float playerPosition[3]) {
+    const bool held = pad.slot(kSlotConfirmButton).value > 0.0f;
+    const bool carrying = carry.carryingMode() != 0 || carry.busy();
+    const std::vector<runtime::BuilditAction> actions = buildits.update(objectState, playerPosition, held, carrying);
     runtime::applyBuilditActions(buildits, actions, objectState, levelScripts);
+    const bool free = !carrying && !levelScripts.playerControlTaken() && !cutscenePlaying() && player->vertical.posture == runtime::Posture::Ground;
+    builditPlayer.update(buildits.lastUse(), pad.slot(kSlotConfirmButton).press > 0, held, free);
+    return runtime::builditSounds(buildits, actions, runtime::kBuilditSoundOwnerBase);
 }
 
 void LevelSession::updateFollowCamera(float dt) {
@@ -239,7 +255,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         runtime::StickIntentInput stick;
         stick.slot14 = {pad.slot(kSlotStickX).value, pad.slot(kSlotStickX).deadzone};
         stick.slot15 = {pad.slot(kSlotStickY).value, pad.slot(kSlotStickY).deadzone};
-        const bool controlTaken = levelScripts.playerControlTaken() || carry.busy();
+        const bool controlTaken = levelScripts.playerControlTaken() || carry.busy() || builditPlayer.active();
         if (controlTaken) stick.slot14.value = stick.slot15.value = 0.0f;
         stick.entityType = game_player::kPlayerEntityType;
         stick.cameraYaw = follow->yaw();
@@ -260,7 +276,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
             game_player::applyAiPosition(*player, *driven);
             shown = game_player::aiMoveAnimation(*driven);
         }
-        player->animate(scene, dt, player->carriedRole(shown.role, carry.carryingMode(), carry.phaseClip()), shown.scale);
+        player->animate(scene, dt, player->carriedRole(shown.role, carry.carryingMode(), carry.phaseClip() ? carry.phaseClip() : builditPlayer.clip()), shown.scale);
         if (!script.empty()) scriptedHeights.push_back(player->vertical.y);
         for (const runtime::StudCollected& collected :
              studs.update(dt, runtime::studPickupPoint(player->motion.x, player->vertical.y, player->motion.z,
@@ -273,7 +289,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
     if (player) {
         const float playerPosition[3] = {player->motion.x, player->vertical.y, player->motion.z};
         updateDoors(playerPosition, emit);
-        updateBuildits(playerPosition);
+        for (const runtime::SoundCall& call : updateBuildits(playerPosition)) emit(call);
         updateCarry(playerPosition);
     }
     propParts.step(dt);

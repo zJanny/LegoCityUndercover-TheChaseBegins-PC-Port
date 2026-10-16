@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
                                                  assets::parseAnimation(read("models/char_minifig/class_generic/supercarry_putdown_minifig.bfnanm")));
         require(timing.placeRelease == 8, "put-down release at update " + std::to_string(timing.placeRelease));
         require(timing.pickupAttach == 16, "pickup attach at update " + std::to_string(timing.pickupAttach));
-        require(timing.pickupEnd == 16 + runtime::kCarryPickupEndAfterAttach, "pickup end");
+        require(timing.pickupEnd == 48, "the pickup state ends with its clip: 24 frames at 15 per second = 48 updates (oracle: slot replaced at update 49 with dt 0.033)");
 
         const assets::Model box = assets::parseModel(read("models/prop_box_o_donuts/prop_box_o_donuts_atlas_lvl_01_cherrytreehills_main.bfnmdl"));
         const std::array<float, 16> offset = runtime::carryHandOffset(box);
