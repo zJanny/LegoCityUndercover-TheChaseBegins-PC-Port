@@ -2,6 +2,18 @@
 
 Reverse-engineering findings, moved verbatim from the progress log. Entries are chronological; later entries may correct earlier ones. Evidence IDs are shortened with an ellipsis.
 
+## Current state
+
+- Skeleton loader 0x10f26c: joint records of 0x98 bytes (name, parent index, world bind matrix at +8, parent-relative matrix at +0x48); animation loader 0x10edec. Checked on 376 skeletons / 5280 joints and 1954 animations. [§2026-10-12T18:40](#ts-20261012-1840)
+- Curves are decoded by 0x248910 (bit reader, 12 channels: rotation, scale, shear, translation; raw-matrix header 0xfa); rotation uses the quaternion matrix of 0x248870, channels 6 to 8 are a shear. [§2026-10-12T19:05](#ts-20261012-1905), [§2026-10-12T20:15](#ts-20261012-2015)
+- Pose composition: local = rotation, shear, scale, translation (0x24c734), world = local times parent world, skin = rigid inverse of bind world times world (0x24c5a0). [§2026-10-12T20:15](#ts-20261012-2015)
+- Skin indices are positions in the per-batch bone palette (0x110-byte records, at most 26 entries), not joint minus 1. [§2026-10-12T21:30](#ts-20261012-2130)
+- Playback interpolates neighbouring frames and blends layers by quaternion sum; frame modes are clamp, loop, reverse, ping-pong. [§2026-10-12T22:10](#ts-20261012-2210)
+- The joint table word holds curve count (bits 0..12), rate index (13..14, rates 15, 30, 60), sample count (15..27), extra curve (bit 28) and long curve (bit 29); the extra curve is the root motion joint. [§2026-10-13T17:02:03](#ts-20261013-170203)
+- The frame count is u16 +4 masked with 0x3fff; one curve (selected by bits 28 and 29) stores frames + 1. [§2026-10-13T04:10](#ts-20261013-0410)
+- The decoders live in C++ (`src/assets/anim.cpp`); Python reaches them through `chase_native`. [§2026-10-13T03:00](#ts-20261013-0300)
+- Open: the 0xfa raw-matrix decomposition, the per-joint s16/256 post-scale, root joint lookup for animations without an extra curve, and the rate used for cutscene actors.
+
 <a id="ts-20261012-1840"></a>
 
 ## 2026-10-12T18:40+02:00 — Skeleton and animation containers (REA, Ghidra)

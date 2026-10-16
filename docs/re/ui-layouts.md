@@ -2,6 +2,14 @@
 
 Reverse-engineering findings, moved verbatim from the progress log. Entries are chronological; later entries may correct earlier ones. Evidence IDs are shortened with an ellipsis.
 
+## Current state
+
+- `.bxaml` layouts load through 0x217220 (second path 0x2ae5dc, falling back to `.xaml`); blocks in order: u32 header, element tree (0x4c-byte records, types 1 container, 2 image, 3 reference), optional storyboards. [§2026-10-13T11:00](#ts-20261013-1100)
+- Storyboards: 0x10 record per storyboard, 0x20 per track, 0x20 per keyframe; the runtime builder 0x1dbb80 skips tracks without a resolved target and sets the storyboard length to the longest track (duration times repeat). [§2026-10-13T09:12](#ts-20261013-0912)
+- All 55 real layouts consume every block: 383 containers, 614 images, 110 references, 161 storyboards, 1888 tracks, 6740 keyframes; the decoder is `src/assets/xaml.cpp`. [§2026-10-13T11:00](#ts-20261013-1100)
+- The meaning of element floats and track property ids (opacity, rotation, scale, position, translate) is a data fit only; the evaluator was not found. [§2026-10-13T09:12](#ts-20261013-0912)
+- Open: element +0x14, other flag bits, track +0x1c and keyframe +0x1c, and the property evaluator.
+
 <a id="ts-20261013-1100"></a>
 
 ## 2026-10-13T11:00+02:00 — .bxaml UI layouts decoded (REA, Ghidra 12.1.2)

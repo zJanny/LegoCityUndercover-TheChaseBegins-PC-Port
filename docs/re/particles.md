@@ -2,6 +2,17 @@
 
 Reverse-engineering findings for `particles/particledefs.bprt`. Entries are chronological; later entries may correct earlier ones. Evidence IDs are shortened with an ellipsis.
 
+## Current state
+
+- `particles/particledefs.bprt` is read by 0x27d71c: six header words (emitter limit 10, particle limit 25, texture count 97, record count 298), 97 texture names and a block of 298 records of 380 (0x17c) bytes. [§2026-10-13T09:00](#ts-20261013-0900)
+- Names hash with PJW over the lower-cased name (0x1886f0); at load, record +0x2c becomes the index into the loaded texture table (0 when no match; all 298 match). [§2026-10-13T09:08](#ts-20261013-0908)
+- The record has four key lists of (f32 time, 4 value bytes), at most 7 keys: emitter fade (+0x88), size (+0xc0), colour (+0xf8), particle alpha (+0x130); counts at +0x170 to +0x173. [§2026-10-13T09:07](#ts-20261013-0907)
+- +0x28 is particles per second, +0x7c the lifetime range, +0x38 the emitter duration (values above 98 do not age: 197 endless emitters), +0x175 the particle count. [§2026-10-13T09:05](#ts-20261013-0905)
+- +0x178 and +0x179 are atlas columns and rows, +0x176 the frame mode (0 whole, 1 random cell, 2 animated by +0x17b loops, 3 next cell), +0x17a the flip modes. [§2026-10-13T09:03](#ts-20261013-0903), [§2026-10-13T09:07](#ts-20261013-0907)
+- The per-particle step 0x221e9c integrates velocity, bounce (+0x74 restitution), drag (+0x24), gravity (+0x3c) and size growth; the spawner is 0x216244 and the init 0x222550 uses an LCG at emitter +0x134. [§2026-10-13T09:07](#ts-20261013-0907), [§2026-10-13T09:03](#ts-20261013-0903)
+- The decoder is `parseParticleDefs` and `pjwHash` in `src/assets/particles.cpp`.
+- Open: the ground height source E+0x11c, +0x6c/+0x70, the unlisted flag bits, which of +0x14 and +0x78 is the start speed, and header words 0, 1, 4 and 5 beyond their use as limits.
+
 <a id="ts-20261013-0900"></a>
 
 ## 2026-10-13T09:00+02:00 — particledefs.bprt container (REA Ghidra 12.1.2; read-only)

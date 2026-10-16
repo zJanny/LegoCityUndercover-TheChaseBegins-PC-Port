@@ -2,6 +2,17 @@
 
 Findings from the oracle (Azahar, fresh save, Old 3DS, software renderer, GDB stub screenshots) and objdump/REA reading of `game.arm.elf`. Related: [ui-layouts.md](ui-layouts.md), [fmv.md](fmv.md), [text-localisation-fonts.md](text-localisation-fonts.md), [save-format.md](save-format.md), [arm-executable.md](arm-executable.md) (0x1e7bac "any button" test).
 
+## Current state
+
+- The boot sequencer is mode object 0x51429c (update 0x302080) with 20-byte rows at 0x372eb4: preparing page (row 0, not black), logos (4.5 s, no skip), splash5 movie, language list (first run only), prompt state machine, autosave notice, slot list. [§2026-10-13T17:54:08](#ts-20261013-175408), [§2026-10-13T20:46:07](#ts-20261013-204607)
+- Logos need 66 updates at dt 0.07; the language list stores rows to indexes 1,2,3,4,5,7,6,9,8 in options +1. [§2026-10-13T17:54:08](#ts-20261013-175408)
+- The prompt mode 0x5143cc has a state byte at 0x372e73 (1 question, 2 to 7 notice pages); the oracle path is question Yes, StreetPass notice (state 6), HOME notice. The autosave notice drives the save indicator object at 0x37684c. [§2026-10-13T20:46:07](#ts-20261013-204607)
+- The intro movie is stereoscopic: 29.97 pictures per second, played against a clock, not one frame per update. [§2026-10-13T20:58:38](#ts-20261013-205838)
+- A used slot shows location, play time and percent; Y offers "Delete" with a confirmation page; A on a used slot goes to the loading screen without the "Saving Game..." page. [§2026-10-14T20:46:20](#ts-20261014-204620)
+- Subtitles: SubRip reader 0x2e20a0, draw 0x2e1760, breaker 0x21bc2c with wrap on and no line limit; the bubble is 48 rows for one line and 72 for two; the effective wrap width is 272 to 283 px (the port uses 280 as a stand-in). [§2026-10-14T21:36:17](#ts-20261014-213617)
+- The native `chase_frontend` flow reproduces the oracle screens at mean abs difference 0.2 to 2.2; durations, StreetPass state, the loading tip and the badge art are stand-ins. [§2026-10-13T20:46:07](#ts-20261013-204607)
+- Open: the returning-player flow, delete result, tip choice, loading and title card art, and why the wrap width is below the clip width.
+
 <a id="ts-20261013-175408"></a>
 
 ## 2026-10-13T17:54:08+02:00 — Screen flow and the boot sequencer (partial)

@@ -2,6 +2,18 @@
 
 Findings for driving a vehicle. Index: [vehicles.md](vehicles.md).
 
+## Current state
+
+- The game runs 30 updates per second; the vehicle node moves once per update (about 100 clock ticks per update). [§2026-10-15T09:30:35](#ts-20261015-093035)
+- The player input provider is 0x29cd9c: steer from the circle pad (dead zone, full lock at 156), A accelerates, B brakes, Y is the horn; the input copy 0x23019c turns the record inputs into body inputs and applies the hand brake in states 3, 4 and 0xb. [§2026-10-15T09:30:35](#ts-20261015-093035)
+- Vehicle states: 3 hand brake after jumping out, 4 parked, 5 driven by the player, 6 and 7 destroyed, 8 stuck, 10 unshovable, 11 hand brake. Message 84 (Drive begin) requests state 5, message 85 (jump out) state 3. [§2026-10-15T09:30:35](#ts-20261015-093035)
+- The forced stop (record +0x310) applies hand brake and brake until the speed is 0.1 or less; scripts clear it through SetForcedStopOnMyVehicle. [§2026-10-15T09:30:35](#ts-20261015-093035)
+- The stuck rule (0x16ce9c): a tipped vehicle slower than 2.0 for more than 2.0 s becomes state 8. [§2026-10-15T09:30:35](#ts-20261015-093035)
+- Acceleration of the police trooper (TopSpeed 28): 3.44 m/s after 5 updates, 12.73 after 30, 22.8 after 60; reverse about 3.9 m/s^2; steering curvature 0.01075 to 0.1207 for steer 0.291 to 1.0 at 8.7 m/s. These come from free-run RPC samples. [§2026-10-15T09:30:35](#ts-20261015-093035)
+- The brake, forced stop, hand brake and coast numbers of that entry are about 1.6 times too strong, because the sampler counted polled rows as updates; use the free-run samples of [vehicles-physics.md §2026-10-15T15:58:54](vehicles-physics.md#ts-20261015-155854).
+- The port drives a kinematic stand-in body (VEH-S3) without suspension, tyres, gears or collision; a user report says the car becomes invisible after hitting something (not investigated). [§2026-10-15T17:36:42](#ts-20261015-173642)
+- Open: the writer of the state copy +4 to +2, record +0x14, maximum reverse speed, steering at standstill, the traffic and tow input providers, and the cause of the invisible car.
+
 <a id="ts-20261015-093035"></a>
 
 ## 2026-10-15T09:30:35+02:00 — Driving: player input, state rules, state writers, forced stop, stuck rule and the oracle measurements of the police trooper (VEH-5)

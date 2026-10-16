@@ -2,6 +2,17 @@
 
 Object type 42: classes `props/prop_door` and `leprops/leprop_door`. Collision of their box: [collision.md](collision.md). Level scripts that can send them requests: [scripts.md](scripts.md).
 
+## Current state
+
+- Doors are object type 42 (class descriptor at 0x15c238); each has a 0x40-byte record at entity+0x7c (state, target state, timer in frames, open/close and auto-close frames, flags, sound ids). Seconds become frames as `(byte)(int)(seconds * 30)`. [§2026-10-13T21:17:00](#ts-20261013-211700)
+- States: 1 closed, 2 opening, 3 open, 4 closing; the update 0x1d16b8 runs only while state equals target; the player zone is the entity box with half extents (x, y + 0.25, z + 4.0). [§2026-10-13T21:17:00](#ts-20261013-211700)
+- Messages: 0xff opens, 0xfe closes, 0x29 partial opening, 0x36 open at once, 8 reset; scripts reach doors through `TriggerObject`. lvl_00 doors have AutoOpen 1, lvl_01 doors wait for a request. [§2026-10-13T21:17:00](#ts-20261013-211700)
+- Motion 0x26905c: the easing of `LerpShape`; hinged types 0 and 1 rotate about the node pivot; sliding types 5 to 8 and 0x11 translate by the slide vector. A Police door opens in 22 updates (linear 90 degrees). Types 2, 3, 4, 9 to 0x13 are not decoded. [§2026-10-13T21:17:00](#ts-20261013-211700)
+- Sounds all come from the state change 0x1a6b6c at the door position; stop events are played (they were wrongly listed as not played before). [§2026-10-13T21:51:17](#ts-20261013-215117)
+- Two-leaf doors pose the model's nodes 0 and 1 separately (node 1 gets the negated angle or slide); the renderer draws one instance per node. [§2026-10-14T09:50:11](#ts-20261014-095011)
+- The open door's collision box stays that of the closed door in the replica; the original's open-door walk was blocked differently, not explained. [§2026-10-13T21:17:00](#ts-20261013-211700)
+- Open: which scripts open the lvl_01 doors (the police door needs WarningDialogBox), the sound id 0 rule, the other door types, and the rest matrix order for node 1.
+
 <a id="ts-20261013-211700"></a>
 
 ## 2026-10-13T21:17:00+02:00 — State machine, timing, motion and sounds (REA Ghidra 12.1.2, llvm-objdump, Azahar oracle port 24692 without RPC)

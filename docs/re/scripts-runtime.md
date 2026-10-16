@@ -2,6 +2,18 @@
 
 Reverse-engineering findings on the trigger records and bound switches, WarningDialogBox, PositionObject, FadeScreen and a live script thread of the original. Split from [scripts.md](scripts.md) (script data, executor, per-update runner); entries are chronological and later entries may correct earlier ones.
 
+## Current state
+
+- Runtime trigger records are 0x20 bytes (enabled, skip, type, owner, script, setting, inside); bounds carry +0xa enabled and +0xb active, where +0xb is cleared for bounds of rooms that are not loaded. [§2026-10-14T10:06:40](#ts-20261014-100640)
+- The bound test 0x22f650 handles shapes 2 (sphere), 3 (box), 4 and 6 (cylinder); BoundEntered, Player1BoundEntered and BoundLeft fire on a change of inside, and PlayerOnFootBoundEntered applies while the player is not in a vehicle. [§2026-10-14T10:06:40](#ts-20261014-100640)
+- The police entrance did not start `Police_ExtToInt` in the early test because the bound `Police_Station_Transition_Lower` is disabled at the start by the startup script; the oracle state `street-after-1-1` shows the real behaviour. [§2026-10-14T10:06:40](#ts-20261014-100640)
+- Triggers 79 to 82 and 141 and three camera bounds are off at the start through two scene-start rules. [scene-start.md §2026-10-14T14:27](scene-start.md#ts-20261014-142739)
+- WarningDialogBox 0x2700d4 takes one result variable and no text (keys are immediates); A gives 2, B gives 1; it pushes mode 4 and the scripts do not run while the dialog is open. [§2026-10-14T10:54:32](#ts-20261014-105432)
+- PositionObject 0x1d9e6c copies the target node transform; for the player it also sets the heading and sends message 8. FadeScreen 0x1a2e8c blocks until a 0.5 s tween ends. [§2026-10-14T10:54:32](#ts-20261014-105432)
+- A live thread of `Police_ExtToInt` was recorded: Wait 3 subtracts dt per update (43 repeat calls at dt 0.07), then a blocked word at pc 18 and SceneChange. [§2026-10-14T11:13:12](#ts-20261014-111312)
+- The level switch shows its own "press A" loading prompt, which does not belong to WarningDialogBox (code not found). [§2026-10-14T10:54:32](#ts-20261014-105432)
+- Open: the trigger record builder, mode 4 drawing and input, PositionPlayer, non-player PositionObject, the script words after Wait, and the other trigger event checks.
+
 <a id="ts-20261014-100640"></a>
 
 ## 2026-10-14T10:06:40+02:00 — Trigger records, bound switches, the bound test and the police entrance explained (REA Ghidra 12.1.2, llvm-objdump, Azahar oracle port 24701 without RPC)

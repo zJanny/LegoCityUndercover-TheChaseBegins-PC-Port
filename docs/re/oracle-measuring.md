@@ -4,6 +4,16 @@ Subtopic of the Azahar runtime oracle. Start with [oracle.md](oracle.md) for set
 
 Watchpoints, execution traps, fixed dt, memory traces, poke, and the limits of traps.
 
+## Current state
+
+- `watch ADDR LEN N NAME [KIND]` sets a GDB watchpoint (the reported pc is at a block boundary, not the accessing instruction) and `trap ADDR[,ADDR] N NAME` an execution breakpoint; both dump registers and pointed memory per stop. [§2026-10-13T13:45:00](#ts-20261013-134500)
+- Trap single player-specific functions: a trap on a function called with an unmapped pointer-like value aborts the run, and frame numbers differ between runs from one state. [§2026-10-13T14:46:37](#ts-20261013-144637)
+- `ctrace ADDR[,ADDR...] N NAME` is the lean version (one register packet per stop, about 1 s per update) for call-order traces of the script executor; use `dt 0.033 0.033` to keep updates comparable. [§2026-10-14T21:40:25](#ts-20261014-214025)
+- `dt MIN MAX` fixes the scheduler step (quantised to the 1 ms game clock); stepped runs otherwise get dt 0.07. `trace N NAME mem` also records entity, controller and node memory. [§2026-10-13T13:45:00](#ts-20261013-134500)
+- `poke ADDR HEXBYTES` writes memory to send an object a request; a poked state is never saved as a reference state. [§2026-10-13T21:18:00](#ts-20261013-211800)
+- Use `--stop` and relaunch with `--state` after a killed scenario; a `pkill -f` pattern that matches the calling shell kills the shell. [§2026-10-13T21:18:00](#ts-20261013-211800), [§2026-10-14T21:40:25](#ts-20261014-214025)
+- Open: none recorded beyond the limits above.
+
 <a id="ts-20261013-134500"></a>
 
 ## 2026-10-13T13:45:00+02:00 — Watchpoints, execution traps, fixed dt and memory traces (locomotion work)

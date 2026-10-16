@@ -2,6 +2,18 @@
 
 Falling, landing, the landing stun, jumping and the vertical state table.
 
+## Current state
+
+- Falling is the no-ground branch of 0x20b48c: `node.y -= ctrl+0x2b8`, the speed grows by `0.05 * 30 * dt` per update up to 0.8 per update; the position change per update is the speed itself. [§2026-10-13T16:05:00](#ts-20261013-160500)
+- Landing (event 0x24, 0x2b24bc): a fall distance of 12.0 or more is a hard landing (state 7); otherwise a held stick goes straight to run or walk, a released stick gives a soft landing (state 6), or idle if the distance is 0.05 or less. [§2026-10-13T16:05:00](#ts-20261013-160500)
+- The landing stun is not a fitted time: states 6 and 7 end when the landing animation slot is finished (position `ticks * rate / 3000 >= frames - 1`, 13 for land, 18 for fallland, rate 15). [§2026-10-13T21:15:52](#ts-20261013-211552)
+- B jumps (A does nothing in the street). The height is animation root motion; the profile is the extra joint curve, not the sub-animation track, and the 0.8 horizontal factor in the air is a literal at 0x204028. [§2026-10-13T16:29:20](#ts-20261013-162920), [player-locomotion.md §2026-10-13T17:02](player-locomotion.md#ts-20261013-170203)
+- The jump scale factors k (0.860869 standing, 0.828197 running) are fitted, not read from the original. [§2026-10-13T16:29:20](#ts-20261013-162920)
+- State 8 is a slide down a steep slope (ground normal y below 0.6088), entered from 0x2b24bc; the state table at `*0x3742c8` has 24-byte entries per state id. [§2026-10-13T21:15:52](#ts-20261013-211552)
+- The run slow-down on slopes is `ctrl+0x94 = 1 - 0.55 * c * (1 - u)`, verified on 405 run rows. [§2026-10-13T21:15:52](#ts-20261013-211552)
+- The ground triangle choice comes from the candidate list order (swap-removal with flag 8): 133 of 133 recorded normals agree. State 8 after 5 s removes the character (death path). [§2026-10-16T10:30:18](#ts-20261016-103018)
+- Open: the 0.111 push at the slide exit, why a soft landing after a slide lasts one update, jumps that end in the air or under a ceiling, the source of k, and the grid cell order across items.
+
 <a id="ts-20261013-160500"></a>
 
 ## 2026-10-13T16:05:00+02:00 — Falling, landing and the landing stun (worker; REA Ghidra 12.1.2, objdump of artifacts/game/game.arm.elf, Azahar oracle)

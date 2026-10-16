@@ -11,6 +11,16 @@ Subtopics:
 - [oracle-routes.md](oracle-routes.md): the route to gameplay, scenario pitfalls (`teleport`, input that survives `loadstate`).
 - [oracle-measuring.md](oracle-measuring.md): watchpoints, execution traps, fixed dt, memory traces, `poke`.
 
+## Current state
+
+- Run the emulator only through `tools/azahar_oracle.py` (Azahar 2126.2, GDB stub, isolated XDG home under `artifacts/oracle/<home>/`, one port per emulator); Old 3DS mode is the default. [§2026-10-13T11:50:30](#ts-20261013-115030)
+- Start from save states (`--display xvfb`, `--state NAME`, `savestate NAME`, `loadstate NAME`): quick save is F1 and quick load F12, files in `artifacts/oracle/states/`; a state saved or loaded in the first 15 s after boot is refused. [§2026-10-13T11:50:30](#ts-20261013-115030)
+- Per-frame stepping (`frames`, `trace`) inflates the game clock by about 30 percent; measure rates in free-run intervals (`wait`) and use `--rpc` for timing. `--frame-limit 0` is for navigation only. [§2026-10-13T11:50:30](#ts-20261013-115030)
+- Screenshots need the software renderer and take about 11 s through the stub. [§2026-10-13T11:50:30](#ts-20261013-115030)
+- `--keep` leaves the emulator running, `--attach --port N` reconnects, `--stop` ends it. [§2026-10-13T11:50:30](#ts-20261013-115030)
+- Setup, RPC, states, routes and measuring aids are in the subtopic files listed above; new dated entries go there.
+- Open: whether a state saved during async loading is accepted, the exact boot time of the "pending operations" refusal, and slot names for other titles.
+
 <a id="ts-20261013-115030"></a>
 
 ## 2026-10-13T11:50:30+02:00 — Setup, fidelity rules and the fast workflow

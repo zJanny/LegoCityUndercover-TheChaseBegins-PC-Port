@@ -4,6 +4,18 @@ How the level's own scripts decide which placed objects are disabled when a leve
 
 Moved to [scripts-runtime.md](scripts-runtime.md): trigger records and bound switches, WarningDialogBox / PositionObject / FadeScreen, a live script thread.
 
+## Current state
+
+- Level scripts are stored in level section +0x18 (loader 0x1cfc50): per script a 0x1c-byte record, name hash at +0, call table with function names re-derived by hash; script words occupy function indices 0 to 7 (`?`, `!?`, `?!`, `??`, `=`, `=+`, `CallScript`, `SpawnScript`). [§2026-10-13T20:42:36](#ts-20261013-204236)
+- The native function table has 377 entries (16 bytes each, pointer at 0x376ca4); `scriptfns.txt` documents only 300 of them, and entries are bound to handlers by name. [script-natives.md §2026-10-14T13:33](script-natives.md#ts-20261014-133339)
+- The executor 0x234204 runs a thread until a handler returns 0 (blocked, same call repeated every update) or the pc reaches the call count; a finished child clears its parent's suspend bit. [§2026-10-14T09:52:52](#ts-20261014-095252)
+- Wait 0x174604 stores the seconds on the first call and subtracts dt on repeat calls; CallScript / SpawnScript 0x1c3730 create and run the child at once. [§2026-10-14T09:52:52](#ts-20261014-095252)
+- Threads start from scene start (a "startup" script of each owner), events by name (OnSceneEnter), and a pending trigger queue run after the runner pass; no thread is alive at the checkpoints gameplay-start and police-station. [§2026-10-14T09:52:52](#ts-20261014-095252)
+- Trigger enable byte and bound bytes +0xa / +0xb: see the correction in [scripts-runtime.md §2026-10-14T10:06](scripts-runtime.md#ts-20261014-100640).
+- The start state of placed objects is the result of the "startup" script (StoryProgress default 1.0 in lvl_01, unlock natives returning 0); revealer targets (BuilditFinalProp, PropToReveal, RevealObject) are disabled at start by a data rule, whose code was not found. [§2026-10-13T20:42:36](#ts-20261013-204236)
+- The port runs "startup" with the per-update runner, so waits take their time and SpawnScript returns when the child yields. [§2026-10-14T09:52:52](#ts-20261014-095252)
+- Open: which natives block, objects disabled by script but enabled in the original, the runtime trigger record builder, and why the police door trigger did not fire.
+
 <a id="ts-20261013-204236"></a>
 
 ## 2026-10-13T20:42:36+02:00 — Script data, executor, EnableObject, the startup script and the revealer links (REA Ghidra 12.1.2, llvm-objdump, Azahar oracle port 24692 without RPC)

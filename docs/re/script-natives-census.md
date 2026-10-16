@@ -4,6 +4,11 @@ Every native (script function) of the level and class scripts with its handler, 
 
 This file has no dated entries: the table is edited in place. When a native is read or implemented, update its row (CLAUDE.md "Script natives in batches"). The note of a row holds only its state (for example `handled`, `stand-in`, `open`), item IDs and links to the findings; addresses and details go into the linked docs/re entry. When this file passes 40 KB, split the table by batch into `script-natives-census-<first>-<last>.md`, one index row each.
 
+## Current state
+
+- The table lists every native with handler, argument count, call counts, levels, class (A to D, done, stand-in), batch and a state note; it has no dated entries and is edited in place.
+- A row's note holds only its state, item IDs and links to the findings; natives are read and implemented in batches, and each row is updated when its handler is read.
+
 ## Table (sorted by calls over all levels)
 
 | Native | Handler | Args | Calls all / lvl_01 / 1-1 / class files | Levels | Class | Batch | Note |
