@@ -36,6 +36,7 @@
 #include "save/save_writer.hpp"
 #include "runtime/room_streamer.hpp"
 #include "runtime/head_icon.hpp"
+#include "runtime/vehicle_prop_smash.hpp"
 #include "runtime/vehicle_hud.hpp"
 #include "runtime/scene_change.hpp"
 #include "runtime/scene_start.hpp"
@@ -124,6 +125,7 @@ private:
     void updateFollowCamera(float dt);
     void loadBoardingVehicles(const std::map<std::string, std::pair<std::size_t, chase::render::Mat4>>& placedInstances);
     void driveVehicles(float dt);
+    void smashProps(std::size_t vehicleIndex);
     void poseVehicleWheels(std::size_t vehicle);
     void syncVehicleHud();
     void updateHeadIcon(float dt);
@@ -209,8 +211,10 @@ private:
         bool settled = false;
         bool moved = false;
         std::size_t placedIndex = 0;
+        chase::runtime::SmashBox nodeBounds;
     };
     std::vector<VehicleDrive> vehicleDrives;
+    chase::runtime::VehiclePropSmasher propSmasher;
     chase::runtime::VehiclePairManifolds vehiclePairs;
     std::vector<std::string> vehicleTableNames;
     chase::runtime::VehicleHud vehicleHud;

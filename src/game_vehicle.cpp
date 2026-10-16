@@ -36,6 +36,9 @@ void LevelSession::loadBoardingVehicles(const std::map<std::string, std::pair<st
         boardingVehicles.push_back(vehicle);
         boardingRecords.push_back(index);
         VehicleDrive drive;
+        float nodeCentre[3], nodeHalf[3];
+        if (modelBounds(shared.archive, meshModelPath(placement->mesh), nodeCentre, nodeHalf))
+            drive.nodeBounds = runtime::SmashBox{{nodeCentre[0], nodeCentre[1], nodeCentre[2]}, {nodeHalf[0], nodeHalf[1], nodeHalf[2]}};
         drive.placedIndex = std::size_t(std::find_if(placedObjects.begin(), placedObjects.end(), [&](const Placement& p) { return p.instance == record.instance; }) - placedObjects.begin());
         vehicleDrives.push_back(drive);
     }
@@ -115,6 +118,7 @@ void LevelSession::driveVehicles(float dt) {
         bodies.push_back(body);
         members.push_back(i);
     }
+    for (const std::size_t i : members) smashProps(i);
     runtime::stepVehicleBodies(bodies, vehiclePairs,
                                [this](const runtime::Vector3& from, const runtime::Vector3& to) {
                                    return runtime::castWheelRay(collision, from, to, [this](const runtime::CollisionWorld::Entry& entry) { return std::any_of(boardingVehicles.begin(), boardingVehicles.end(), [&](const runtime::BoardingVehicle& vehicle) { return vehicle.instance == entry.owner; }); });
@@ -138,6 +142,20 @@ void LevelSession::driveVehicles(float dt) {
         poseVehicleWheels(i);
     }
     suppressDrivenVehicleCollision();
+}
+
+void LevelSession::smashProps(std::size_t vehicleIndex) {
+    const VehicleDrive& drive = vehicleDrives[vehicleIndex];
+    const runtime::BoardingVehicle& vehicle = boardingVehicles[vehicleIndex];
+    runtime::SmashingVehicle smashing;
+    smashing.node = vehicle.matrix;
+    smashing.nodeBounds = drive.nodeBounds;
+    smashing.entityBox = runtime::SmashBox{{vehicle.boxCentre[0], vehicle.boxCentre[1], vehicle.boxCentre[2]}, {vehicle.boxHalf[0], vehicle.boxHalf[1], vehicle.boxHalf[2]}};
+    std::copy(drive.rigid.velocity.begin(), drive.rigid.velocity.end(), smashing.velocity);
+    for (const std::string& name : propSmasher.smash(smashing, objectState)) {
+        objectState.disabled.insert(lowerCase(name));
+        std::cout << "prop " << name << ": smashed by " << vehicle.instance << " at update " << updatesForLog << '\n';
+    }
 }
 
 void LevelSession::poseVehicleWheels(std::size_t vehicleIndex) {

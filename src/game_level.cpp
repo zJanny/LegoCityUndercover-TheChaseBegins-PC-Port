@@ -258,6 +258,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     std::cout << "scripts: startup ended after " << startupUpdates << " updates, " << levelScripts.threadCount() << " threads running\n";
     const std::vector<ObjectCollision> placedCollisions = objectCollisionCandidates(archive, level);
     collision = loadCollision(archive, options.level, placedCollisions, vehicleBoxes);
+    propSmasher.load(level, classOf, placedCollisions);
     runtime::applyObjectCollisionState(collision, objectState);
     doors = game_doors::loadDoors(scene, archive, level, classOf, placedCollisions, placedInstances);
     for (const DoorObject& door : doors) game_doors::poseDoor(scene, door);
