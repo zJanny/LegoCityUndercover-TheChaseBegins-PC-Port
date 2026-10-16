@@ -480,6 +480,42 @@ int main(int argc, char** argv) {
         // <actor>_<4 digits>, 330 clips, 61 with digits other than 0000 (start frame, 0x2ec30c); donutbox_0100 of 1_1_d starts at 100.
         if (cutsceneClips != 330 || laterClips != 61 || donutboxStart != 100)
             throw std::runtime_error("cutscene clip start totals differ from the recorded reference");
+        {
+            // Oracle (state leadcut-1_1_d-early, made from m11-6-van-to-shop; RPC reads of the actor nodes, world translation at node +0x8c,
+            // 2026-10-16): the root tracks place each actor node, the clip's object tracks place the model nodes on it. Van and wheels at
+            // camera frame 0, the box (start 100) at frames 0 (resting at its first frame), 101.97 and 180.19 (held end).
+            const CutsceneContent cutscene = loadCutscene(archive, "1_1_d");
+            const auto actorNamed = [&](const std::string& part) -> const CutsceneCast& {
+                for (const CutsceneCast& actor : cutscene.actors)
+                    if (actor.model.find(part) != std::string::npos) return actor;
+                throw std::runtime_error("1_1_d has no actor " + part);
+            };
+            const auto rootAt = [](const CutsceneCast& actor, double frame) {
+                const std::optional<CutsceneClipFrame> started = cutsceneClipAt(actor, frame);
+                const CutsceneClipFrame clip = started ? *started : *cutsceneRestingClip(actor);
+                return std::make_pair(clip, actorMatrix(actorPose(*clip.animation, float(cutsceneNormalised(*clip.animation, clip.frame)))));
+            };
+            const auto at = [](const Matrix& m, float x, float y, float z) {
+                return std::fabs(m[12] - x) < 2e-3f && std::fabs(m[13] - y) < 2e-3f && std::fabs(m[14] - z) < 2e-3f;
+            };
+            const CutsceneCast& van = actorNamed("/prop_donutvan/");
+            const CutsceneCast& wheels = actorNamed("/prop_donutvanwheels/");
+            const CutsceneCast& box = actorNamed("/donutbox/");
+            if (!at(rootAt(van, 0).second, 820.2075f, 12.7203f, 1051.3093f) || !at(rootAt(wheels, 0).second, 821.2885f, 16.7431f, 1049.8235f) ||
+                !at(rootAt(box, 0).second, 820.0394f, 18.2891f, 1053.9601f) || !at(rootAt(box, 101.97).second, 820.0273f, 18.2809f, 1053.9751f) ||
+                !at(rootAt(box, 180.19).second, 820.7750f, 17.7669f, 1057.9631f))
+                throw std::runtime_error("1_1_d actor nodes differ from the oracle");
+            // The van and its wheels stand still: at frame 0 every mesh node lands on the model's own bind matrix (the original draws the
+            // van on the road, not 5.8 below it where the actor node is).
+            for (const CutsceneCast* prop : {&van, &wheels}) {
+                const auto [clip, root] = rootAt(*prop, 0);
+                const std::vector<Matrix> nodes = cutsceneNodeMatrices(*prop, clip, root);
+                const Model model = parseModel(archive.read(*archive.find(prop->model)));
+                for (std::size_t n = 0; n < nodes.size(); ++n)
+                    if (model.nodeMesh[n] >= 0 && !at(nodes[n], model.nodeMatrices[n][12], model.nodeMatrices[n][13], model.nodeMatrices[n][14]))
+                        throw std::runtime_error("1_1_d node " + model.nodeNames[n] + " is not at its bind position");
+            }
+        }
         // Reference: every sheet's computed stride equals its stored stride (checked in parseTable);
         // totals recorded from this C++ parser (2026-10-13). Cell values checked by hand against the
         // rows dumped by tools/tt_resource.py (at 9d04c91): tablescutscenes row 2 offset 1 -> "01_gameintro",

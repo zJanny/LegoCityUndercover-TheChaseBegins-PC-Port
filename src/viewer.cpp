@@ -241,6 +241,7 @@ int run(const Options& options) {
     struct Actor {
         std::string model;
         std::size_t instance = 0;
+        std::vector<std::ptrdiff_t> nodes;
         CutsceneCast cast;
     };
     std::vector<Actor> actors;
@@ -252,8 +253,13 @@ int run(const Options& options) {
             Actor actor;
             actor.model = cast.model;
             actor.cast = std::move(cast);
-            if (!scene.addModel(actor.model)) throw std::runtime_error("not in archive: " + actor.model);
-            actor.instance = scene.instances() - 1;
+            if (actor.cast.skeleton.joints.empty()) {
+                actor.nodes = scene.addModelNodes(actor.model, chase::render::identity());
+                if (actor.nodes.empty()) throw std::runtime_error("not in archive: " + actor.model);
+            } else {
+                if (!scene.addModel(actor.model)) throw std::runtime_error("not in archive: " + actor.model);
+                actor.instance = scene.instances() - 1;
+            }
             actors.push_back(std::move(actor));
         }
         cameraAnimation = std::move(content.camera);
@@ -363,13 +369,18 @@ int run(const Options& options) {
             double elapsed = std::min((now - cutsceneStart) * cutsceneRate / 1000.0, double(cameraAnimation.frames - 1));
             double frame = options.frame >= 0 ? options.frame : elapsed;
             for (const auto& actor : actors) {
-                const std::optional<CutsceneClipFrame> clip = cutsceneClipAt(actor.cast, frame);
-                if (!clip) {
-                    scene.setTransform(actor.instance, chase::render::identity());
+                const std::optional<CutsceneClipFrame> started = cutsceneClipAt(actor.cast, frame);
+                const std::optional<CutsceneClipFrame> clip = started ? started : cutsceneRestingClip(actor.cast);
+                if (!clip) continue;
+                const Matrix world = actorMatrix(actorPose(*clip->animation, float(normalised(*clip->animation, clip->frame))));
+                if (!actor.nodes.empty()) {
+                    const std::vector<Matrix> matrices = cutsceneNodeMatrices(actor.cast, *clip, world);
+                    for (std::size_t node = 0; node < actor.nodes.size() && node < matrices.size(); ++node)
+                        if (actor.nodes[node] >= 0) scene.setTransform(std::size_t(actor.nodes[node]), matrices[node]);
                     continue;
                 }
-                scene.setTransform(actor.instance, actorMatrix(actorPose(*clip->animation, float(normalised(*clip->animation, clip->frame)))));
-                if (!actor.cast.skeleton.joints.empty()) scene.pose(actor.model, skinMatrices(actor.cast.skeleton, *clip->animation, clip->frame));
+                scene.setTransform(actor.instance, world);
+                scene.pose(actor.model, skinMatrices(actor.cast.skeleton, *clip->animation, clip->frame));
             }
             CutsceneCamera camera = cutsceneCamera(cameraAnimation, float(normalised(cameraAnimation, frame)));
             eyeView = chase::render::cutsceneView(camera);

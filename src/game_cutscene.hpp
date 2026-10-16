@@ -65,6 +65,7 @@ private:
     };
     struct Actor {
         std::optional<std::size_t> standalone;
+        std::vector<std::ptrdiff_t> nodes;
         std::optional<Driven> driven;
     };
     struct Loaded {

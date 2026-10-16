@@ -20,8 +20,6 @@ InEngine::~InEngine() {
 
 namespace {
 constexpr unsigned kFigureCheckUpdate = 10;
-// MOVIE-S31: a standalone actor before its first clip keeps an unposed node; the identity transform is assumed.
-const render::Mat4 kUnstartedActorMatrix = render::identity();
 
 void setVisible(render::Scene& scene, const render::CharacterInstance& instance, bool visible) {
     scene.setInstanceVisible(instance.bodyInstance, visible);
@@ -70,6 +68,11 @@ std::optional<float> InEngine::load(const std::string& name) {
                 driven.original = standIn->original;
                 setVisible(scene_, driven.copy, false);
                 actor.driven = std::move(driven);
+            } else if (cast.skeleton.joints.empty()) {
+                actor.nodes = scene_.addModelNodes(cast.model, render::identity());
+                if (actor.nodes.empty()) throw std::runtime_error("not in archive: " + cast.model);
+                for (const std::ptrdiff_t node : actor.nodes)
+                    if (node >= 0) scene_.setInstanceVisible(std::size_t(node), false);
             } else {
                 if (!scene_.addModel(cast.model)) throw std::runtime_error("not in archive: " + cast.model);
                 actor.standalone = scene_.instances() - 1;
@@ -93,6 +96,8 @@ void InEngine::show(const std::string& name, bool visible) {
     if (found == loaded_.end()) return;
     for (const Actor& actor : found->second.actors) {
         if (actor.standalone) scene_.setInstanceVisible(*actor.standalone, visible);
+        for (const std::ptrdiff_t node : actor.nodes)
+            if (node >= 0) scene_.setInstanceVisible(std::size_t(node), visible);
         if (!actor.driven) continue;
         setVisible(scene_, actor.driven->copy, visible);
         setVisible(scene_, actor.driven->original, !visible);
@@ -120,12 +125,18 @@ void InEngine::pose(const Loaded& cutscene, double seconds) {
             render::placeCharacter(scene_, driven->rig, driven->copy, skin, world);
             continue;
         }
-        if (!clip) {
-            scene_.setTransform(*cutscene.actors[i].standalone, kUnstartedActorMatrix);
+        const std::optional<CutsceneClipFrame> shown = clip ? clip : cutsceneRestingClip(actor);
+        if (!shown) continue;
+        const render::Mat4 world = actorMatrix(actorPose(*shown->animation, float(cutsceneNormalised(*shown->animation, shown->frame))));
+        const std::vector<std::ptrdiff_t>& nodes = cutscene.actors[i].nodes;
+        if (!nodes.empty()) {
+            const std::vector<Matrix> matrices = cutsceneNodeMatrices(actor, *shown, world);
+            for (std::size_t node = 0; node < nodes.size() && node < matrices.size(); ++node)
+                if (nodes[node] >= 0) scene_.setTransform(std::size_t(nodes[node]), matrices[node]);
             continue;
         }
-        scene_.setTransform(*cutscene.actors[i].standalone, actorMatrix(actorPose(*clip->animation, float(cutsceneNormalised(*clip->animation, clip->frame)))));
-        if (!actor.skeleton.joints.empty()) scene_.pose(actor.model, skinMatrices(actor.skeleton, *clip->animation, clip->frame));
+        scene_.setTransform(*cutscene.actors[i].standalone, world);
+        scene_.pose(actor.model, skinMatrices(actor.skeleton, *shown->animation, shown->frame));
     }
 }
 

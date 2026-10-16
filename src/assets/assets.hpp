@@ -649,6 +649,8 @@ struct CutsceneCast {
     std::string model;
     Skeleton skeleton;
     std::vector<CutsceneClip> clips;
+    std::vector<std::string> nodeNames;  // the model's nodes and the mesh of each (-1 for none)
+    std::vector<int> nodeMesh;
 };
 struct CutsceneContent {
     std::vector<CutsceneCast> actors;
@@ -667,6 +669,15 @@ struct CutsceneClipFrame {
     double frame = 0;
 };
 std::optional<CutsceneClipFrame> cutsceneClipAt(const CutsceneCast& actor, double cameraFrame);
+// Before its first clip starts a cutscene model of its own already stands at frame 0 of that clip (the clip with the lowest start): oracle,
+// the donut box of 1_1_d (start 100) holds its first root-track values from camera frame 0. None without clips.
+std::optional<CutsceneClipFrame> cutsceneRestingClip(const CutsceneCast& actor);
+// An object track of a clip (section +0x0c, curve decoder 0x248910) at a frame inside the clip, held at both ends; between two frames
+// the two poses are blended as skinMatrices does.
+Matrix cutsceneObjectMatrix(const Animation& clip, std::size_t object, double frame);
+// Matrix of every node of a cutscene model of its own (oracle, 1_1_d): a node with an object track of the same name in the clip is drawn
+// at that object matrix times the actor matrix of the root tracks; a node without one at the actor matrix (stand-in MOVIE-S32).
+std::vector<Matrix> cutsceneNodeMatrices(const CutsceneCast& actor, const CutsceneClipFrame& clip, const Matrix& actorMatrix);
 
 // Data tables (tables/*.bxls, loader 0x10e1cc): sheets of fixed-stride rows with typed
 // columns. Column names are not stored; the game addresses columns by index.

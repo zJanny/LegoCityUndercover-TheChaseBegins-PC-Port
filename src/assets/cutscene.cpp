@@ -130,6 +130,9 @@ CutsceneContent loadCutscene(FuseArchive& archive, const std::string& id) {
         actor.model = cast.model;
         for (const std::string& path : cast.animations)
             if (archive.find(path)) actor.clips.push_back({cutsceneClipStart(cast.name, path), parseAnimation(read(path))});
+        const Model model = parseModel(read(cast.model));
+        actor.nodeNames = model.nodeNames;
+        actor.nodeMesh = model.nodeMesh;
         if (!cast.skeleton.empty() && archive.find(cast.skeleton)) actor.skeleton = parseSkeleton(read(cast.skeleton));
         content.actors.push_back(std::move(actor));
     }
@@ -160,5 +163,41 @@ std::optional<CutsceneClipFrame> cutsceneClipAt(const CutsceneCast& actor, doubl
     if (!driving) return std::nullopt;
     const double last = driving->animation.frames ? driving->animation.frames - 1 : 0;
     return CutsceneClipFrame{&driving->animation, std::min(cameraFrame - driving->startFrame, last)};
+}
+std::optional<CutsceneClipFrame> cutsceneRestingClip(const CutsceneCast& actor) {
+    const CutsceneClip* first = nullptr;
+    for (const CutsceneClip& clip : actor.clips)
+        if (!first || clip.startFrame < first->startFrame) first = &clip;
+    if (!first) return std::nullopt;
+    return CutsceneClipFrame{&first->animation, 0};
+}
+
+Matrix cutsceneObjectMatrix(const Animation& clip, std::size_t object, double frame) {
+    const unsigned frames = clip.frames ? clip.frames : 1;
+    const double held = std::min(std::max(frame, 0.0), double(frames - 1));
+    const unsigned first = unsigned(held), second = std::min(first + 1, frames - 1);
+    const float fraction = float(held - first);
+    const Bytes& curve = clip.objectBlocks.at(object)[0];
+    const JointChannels a = decodeChannels(curve, first, frames);
+    if (fraction == 0 || second == first || a.rawMatrix) return localMatrix(a);
+    const JointChannels b = decodeChannels(curve, second, frames);
+    if (b.rawMatrix) return localMatrix(a);
+    return poseMatrix(blendPoses({{jointPose(a), 1 - fraction}, {jointPose(b), fraction}}));
+}
+
+std::vector<Matrix> cutsceneNodeMatrices(const CutsceneCast& actor, const CutsceneClipFrame& clip, const Matrix& actorMatrix) {
+    const auto lower = [](std::string text) {
+        for (char& c : text) c = char(std::tolower(static_cast<unsigned char>(c)));
+        return text;
+    };
+    std::vector<Matrix> matrices;
+    for (const std::string& node : actor.nodeNames) {
+        const auto object = std::find_if(clip.animation->objects.begin(), clip.animation->objects.end(),
+                                         [&](const std::string& name) { return lower(name) == lower(node); });
+        matrices.push_back(object == clip.animation->objects.end()
+                               ? actorMatrix
+                               : multiply(cutsceneObjectMatrix(*clip.animation, std::size_t(object - clip.animation->objects.begin()), clip.frame), actorMatrix));
+    }
+    return matrices;
 }
 } // namespace chase::assets

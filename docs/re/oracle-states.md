@@ -13,6 +13,7 @@ Save states the oracle uses: which ones exist, the game progress of each, how ea
 - States after mission 1-1 (user): `police-station`, `street-after-1-1`, `info-barrier`, `mission-1-2-start` (1-2 not started, Auburn locked), `in-vehicle` (van_dulmen, slot 5); agent-made from them: `street-at-entrance`, `station-at-exit`, `station-exit-loadingpage`, `info-box-open`. [§2026-10-14T10:20:23](#ts-20261014-102023), [§2026-10-14T11:13:12](#ts-20261014-111312), [§2026-10-14T12:04:04](#ts-20261014-120404), [§2026-10-14T19:17:30](#ts-20261014-191730), [§2026-10-14T23:10:52](#ts-20261014-231052)
 - Mission 1-1 in progress (user): `m11-1-donut-shop` to `m11-9-delivery-goal`, with player positions in the table of the entry; `m11-7-box-prompt` is made from `m11-7-collect-donuts` for the carry pictures. [§2026-10-14T23:27:10](#ts-20261014-232710), [§2026-10-16T09:35:36](#ts-20261016-093536)
 - Agent states with progress: `cutscene-1-1-b` (mission 1-1 started, Old 3DS), `drv-police-car-seated` (step 2, player in the police car), `bullet-trooper-at-obstacle` (from it, trooper resting at the obstacle); `savecont-slotlist-user` and `slotlist-delete-confirm` hold the user's save slot 0 after mission 1-1. [§2026-10-14T20:46:10](#ts-20261014-204610), [§2026-10-15T09:35:00](#ts-20261015-093500), [§2026-10-15T19:07:36](#ts-20261015-190736), [§2026-10-14T15:22:24](#ts-20261014-152224), [§2026-10-14T20:46:10](#ts-20261014-204610)
+- `leadcut-1_1_d-early` (from `m11-6-van-to-shop`): cutscene `1_1_d` just loaded, for its actor nodes and pictures. [§2026-10-16T14:39:21](#ts-20261016-143921)
 - Open: whether mission 1-2 is active in the post-1-1 states, the level variables of the m11 states, a save with Continue byte +6 above 1, and the Old 3DS run of `savestate`.
 
 <a id="ts-20261013-232034"></a>
@@ -172,3 +173,10 @@ Unknowns:
 
 - Made from the user's `m11-7-collect-donuts` (mission 1-1, donut shop, nothing of the save changed; New 3DS, OpenGL): `freestick 0 120` for 1.3 s steps into the waypoint beam (the badge icon goes, the doughnut box and its A prompt appear), 2 s wait, `savestate m11-7-box-prompt`. The player stands at 816.3 23.92 1072.5, the tip says to press A at the box. A held for 0.12 s lifts the box (A before the beam does nothing).
 
+
+<a id="ts-20261016-143921"></a>
+
+## 2026-10-16T14:39:21+02:00 — State leadcut-1_1_d-early (made for the cutscene props of 1_1_d, MOVIE-32)
+
+- Made by the lead from the user's `m11-6-van-to-shop` (mission 1-1 step 6: the donut van driven to the shop, nothing of the save changed; New 3DS, OpenGL): `hold A` for 1.2 s drives into `1-1_Waypoint_05`, 1.3 s after the release `savestate leadcut-1_1_d-early`. In the state the cutscene `1_1_d` is loaded in slot 0 (object 0x08ffdd10) and starts about 1.2 s later; it plays to its end (frame 197) in a free run.
+- Use: RPC reads of the cutscene actors (object +0x70 actor array of 0x22c-byte slots, +0x78 count; slot +0x200 node, or entity for flag 1 with the node at entity +0x3c; world matrix at node +0x5c) and `shotloop` pictures with the frame float at object +8. Heap addresses are valid for this state only.

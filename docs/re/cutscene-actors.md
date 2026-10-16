@@ -10,8 +10,8 @@ Which entities a cutscene's cast are, why the original draws no second Chase and
 - The port draws a copy of the level character and hides the figure during the cutscene (stand-in MOVIE-S30); the double Chase after the van drive was a port bug, fixed so the figure stays hidden. [§2026-10-16T09:40:39](#ts-20261016-094039)
 - Original and port frames of `1_1_b` were compared but show different moments, so no actor comparison exists. [§2026-10-15T10:50:31](#ts-20261015-105031)
 - Each actor clip starts at the camera frame in its file name (`<actor>_NNNN`, 0x2ec30c) and is started by 0x2ec454 when the frame passes it; the clip started last drives the actor. Ported; this fixed the floating donut box of `1_1_d`. [§2026-10-16T14:05:18](#ts-20261016-140518)
-- The van of `1_1_d` is posed 5.8 below its bind height and the four wheels overlap: how props combine their track with their node matrices is open. [§2026-10-16T14:05:18](#ts-20261016-140518)
-- Open: prop posing from track and node matrices, meaning of entity byte +0x18 = 5, the player's position after a cutscene, actors `Donut1` and `Donutbox`, a close-up oracle state.
+- A cutscene model of its own is drawn per node: object track of the node x the actor node of the root tracks (oracle, `1_1_d`); before its first clip it stands at that clip's frame 0. Ported; this fixed the van under the street and the box not held by the man. [§2026-10-16T14:39:48](#ts-20261016-143948)
+- Open: the code that binds object tracks to nodes, the camera framing of `1_1_d`, meaning of entity byte +0x18 = 5, the player's position after a cutscene, actors `Donut1` and `Donutbox`, a close-up oracle state.
 
 <a id="ts-20261015-075438"></a>
 
@@ -67,6 +67,7 @@ Unknowns:
 <a id="ts-20261016-140518"></a>
 
 ## 2026-10-16T14:05:18+02:00 — Actor clips start at the frame in their file name; the van of 1_1_d is posed 5.8 below its bind height (REA with Ghidra on `artifacts/game/game.arm.elf`: 0x2d236c, 0x2ec6c8, 0x2ec30c, 0x2ec454; llvm-objdump; data probes with `chase_assets`; chase-game runs; no emulator)
+Corrected by [cutscene-actors.md §2026-10-16T14:39:48](#ts-20261016-143948): the van is not posed below the street in the original; the object tracks of the clip place the model nodes on the actor node, and a model of its own stands at frame 0 of its first clip before the start.
 
 User report (2026-10-16): in cutscene `1_1_d` (the van brought back to the shop) the van is invisible, the donut box hangs in the air and the man does not hold it.
 
@@ -86,3 +87,27 @@ Unknowns:
 - How the original poses a cutscene prop from its track and its node matrices (bind pose, base of the accumulating branch of 0x287ca4), and so where the van and its wheels stand.
 - What an actor shows before its first clip starts (the node is not animated yet; the port uses the identity transform for its own models and the level figure for driven characters, stand-in MOVIE-S31).
 - Whether a finished clip holds its last frame (the port holds it) and whether a later clip blends with the earlier one (0x245b40 / 0x23afc0 get 1.0 and 0 as their first arguments).
+
+<a id="ts-20261016-143948"></a>
+
+## 2026-10-16T14:39:48+02:00 — Cutscene props: object tracks place the model nodes on the actor node (Azahar oracle, New 3DS, OpenGL, `--rpc`, state `leadcut-1_1_d-early` from `m11-6-van-to-shop`; RPC reads and `shotloop`; REA with Ghidra on 0x287ca4, 0x245b40, 0x250810)
+
+[Corrects §2026-10-16T14:05:18](#ts-20261016-140518) (the van of `1_1_d` was taken as posed 5.8 below the street with the rule unknown, and a model of its own was assumed to keep the identity transform before its first clip).
+
+User report (2026-10-16, after the start frames): the donut box still does not look held by the man in `1_1_d`.
+
+Measurement (RPC sampler over the whole cutscene, one record per changed frame of object +8; actor array object +0x70, slots of 0x22c bytes, +0x78 count 6; world matrix at node +0x5c, 0x250810 returns node + 0x5c after refreshing it when node word 0 has 0x1000):
+- The actor nodes of the models of their own carry exactly the root tracks: van (820.2075, 12.7203, 1051.3093), wheels (821.2885, 16.7431, 1049.8235), both with identity rotation over the whole cutscene; the box (820.0394, 18.2891, 1053.9601) from camera frame 0, unchanged up to frame 100.97, moving from 101.97 (820.0273, 18.2809, 1053.9751) and held from about 180 (820.7750, 17.7669, 1057.9631). So the start frame 100 holds, and before it the box node already stands at frame 0 of its clip (identity only at frame -1, before the first update).
+- The actor nodes are siblings under the cutscene root (node +4 parent, +8 first child 0, +0xc next sibling: van -> box); their bounds (+0x98 radius, +0x9c centre, then half extents) stay the model's header box.
+- Pictures (`shotloop`, frame logged with each shot): the van stands on the road at its normal height and the man holds the box in front of him at frame 165.
+
+The rule (data, consistent with the measurement):
+- Each clip has an object track per model node (section +0x0c: name, block 0 a curve of the decoder 0x248910, block 1 one byte per frame). They are local to the actor node: the van's `Chassis` is (0, 5.8, 0) with a 180° turn, so object x actor node gives (820.2075, 18.5203, 1051.3093) with the turn, which is the model's bind matrix of `Chassis`; `Wheel_20x12` is (0, 0.4975, 0) on the wheels' actor node, the bind centre 17.2404, and the other three wheels have their own offsets (`Wheel_20x13` (-0.035, 0.4975, 3.04)). The box's `Box` track moves the box out of the van (frame 0 (-0.039, 0.033, 0.001) on the actor node) to the man (end (0.4275, 0.1675, 1.2031) with a 180° turn).
+- The port drew every mesh of such a model at the actor matrix alone: the van 5.8 too low, the four wheels in one spot and the box upright and turned, not in the man's hands. `cutsceneNodeMatrices` now draws node n at object(n) x actor (object matched by name, case-insensitive; `cutsceneObjectMatrix` blends two frames and holds at both ends), `cutsceneRestingClip` gives frame 0 of the first clip before its start; the game and the viewer draw one instance per node (`Scene::addModelNodes`). Test `assets-real-data` pins the actor nodes above and checks that every mesh node of the van and the wheels lands on its bind matrix at frame 0.
+- Census over all 69 cutscenes: 89 models of their own without skeleton with 104 mesh nodes; 89 have an object track of their name, 15 (nine models, for example `truck` of 4_2_a and `donutbox` of 2_3_d) belong to clips without any object track, and one object track has no node of its name.
+- 0x287ca4 (root-motion event 0xb945fcd8): for a slot with flag 0x800 (set by 0x2ec454 for cutscene clips) it copies position x, y, z and yaw straight into the target's transform record (target +4, fields +0x10..+0x1c) and returns; otherwise it adds weighted deltas per axis (the walking path). 0x245b40 is the generic slot player (blend, speed, start and end frame, mode bits); neither binds object tracks to nodes, so the binding code itself was not found.
+
+Unknowns:
+- The code that binds an object track to a model node (by name or by index; the data matches by name) and what a mesh node without an object track does (the port keeps it at the actor matrix, stand-in MOVIE-S32).
+- Whether the object tracks, like the root, also stand at frame 0 before the start (assumed; only the actor node was read) and what a driven figure shows before its start (MOVIE-S31).
+- The camera of `1_1_d`: at camera frames 120 and 137 the original still shows the close shot of the van while the port shows a wider shot; whether the port's frame count or its camera differs is open (MOVIE-33).
