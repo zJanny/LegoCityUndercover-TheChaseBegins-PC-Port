@@ -15,7 +15,7 @@ Subtopics:
 - The drivetrain, engine (0x339db0), final drive (0x2435d0), brake and gear rules, steering (0x33cb1c) and tyres (0x339374, 0x339538) are transcribed and match the traced updates (rpm to 0.1, velocity to 0.0005 m/s on straight updates); the car drives in gear 6 or reverse. The brake samples of vehicles-driving.md were 1.6 times too strong because RPC polling missed steps (this corrects them). [§2026-10-15T15:58:54](#ts-20261015-155854)
 - The wheel node pose is 0x33929c (M x body-origin matrix, steer and spin angles, suspension offset); the port has `vehicle_wheel_pose.*`, checked only by code reading. [§2026-10-15T18:35:42](#ts-20261015-183542)
 - The port has `vehicle_body.*`, `vehicle_wheels.*`, `vehicle_drivetrain.*`; inertia is the measured stand-in (VEH-S32). [§2026-10-15T15:58:54](#ts-20261015-155854)
-- Open: braking after the jump out (VEH-54), writers of body flags +0xc4 bits 3, 4, 0x18, air control 0x33ba70, the triangle choice of 0x23b5e8, the shape inertia function, collision updates that differ (VEH-40).
+- Open: braking after the jump out (VEH-54), writers of body flags +0xc4 bits 3, 4, 0x18, air control 0x33ba70, the triangle choice of 0x23b5e8, the shape inertia function.
 
 <a id="ts-20261015-122100"></a>
 

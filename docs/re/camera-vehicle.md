@@ -10,7 +10,7 @@ The camera while the player drives: preset chooser 0x1597c8, the InVehicle prese
 - Reset 0x2313c8: argument 360 with stored heading K+0x178 = 360 takes the line branch, every other case the ray branch (candidate loop, pull-in) [§2026-10-15T15:22](#ts-20261015-152200).
 - After the release director camera the seed is the ray-branch 12.99 m; StartDCam clears K+0x178 and the tracker jumps to the wanted position (14.05 m out) in the first update by the near plane test 0x2e0e28. This corrects the stale-clearance reading of [§2026-10-15T12:07](#ts-20261015-120718) and the longer-seed reading of [§2026-10-15T15:22](#ts-20261015-152200); the seed clearance is 1.0 in the original [§2026-10-15T13:41](#ts-20261015-134100), [§2026-10-15T16:45](#ts-20261015-164500).
 - The render camera's near/far come from the follow update (near plane test result, K+0x14c = 260) through 0x23f168 (camera +0xc4/+0xc8) [§2026-10-16T08:26](#ts-20261016-082640).
-- Port screenshot pair of the hand-back and the CameraFollow request in 1-1_VanBreakdown: [§2026-10-15T16:58](#ts-20261015-165809).
+- In 1-1_VanBreakdown the cutscene end (0x19683c) already requests the gameplay camera 0x377110; the later CameraFollow requests the same camera and the manager ignores it (a request equal to the current camera +0x2c does nothing) [§2026-10-15T16:58](#ts-20261015-165809).
 - Open: writers of K+0x148/K+0x14c (260 kept as a recorded constant, CAMERA-S50); settled camera 0.245 m higher in the original; presets for other player states and vehicle types 243/0x19b; render planes during cutscenes; `ATTR_CameraPanScale` reader.
 
 <a id="ts-20261015-120718"></a>

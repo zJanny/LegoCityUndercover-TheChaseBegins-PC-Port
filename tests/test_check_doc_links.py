@@ -151,6 +151,33 @@ class RuleChecksTest(unittest.TestCase):
                 links.main(['--root', str(self.root)] + argv)
             self.assertIn(argv[0], err.getvalue())
 
+    def test_unknown_prefix_and_unknown_holder_fail(self):
+        (self.features / 'f.md').write_text('- [ ] F-1 a\n')
+        for argv in (['--next', 'NOPE'], ['--reserve', 'NOPE', '2', 'who'], ['--release', 'ghost']):
+            with self.assertRaises(SystemExit), contextlib.redirect_stderr(io.StringIO()) as err:
+                links.main(['--root', str(self.root)] + argv)
+            self.assertIn(argv[0], err.getvalue())
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            self.assertEqual(links.main(['--root', str(self.root), '--next', 'NEW', '--new-prefix']), 0)
+        self.assertEqual(out.getvalue().strip(), 'NEW-1')
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            links.main(['--root', str(self.root), '--next', 'F-S'])
+        self.assertEqual(out.getvalue().strip(), 'F-S1')
+
+    def test_future_timestamp_in_a_findings_body_is_an_error(self):
+        (self.re_dir / 'a.md').write_text('## Current state\n\n- Seen at 2099-01-01T01:01:01+01:00.\n')
+        self.assertEqual(len(self.errors('future-timestamp')), 1)
+
+    def test_added_line_starting_with_plus_plus_is_content(self):
+        import subprocess
+        subprocess.run(['git', 'init', '-q', str(self.root)], check=True)
+        self.features.joinpath('f.md').write_text('# F\n')
+        subprocess.run(['git', '-C', str(self.root), 'add', '.'], check=True)
+        subprocess.run(['git', '-C', str(self.root), '-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qm', 'x'], check=True)
+        self.features.joinpath('f.md').write_text('# F\n++ b/x at 2026-01-01T01:00:00+01:00\n')
+        added = links.added_lines(self.root)
+        self.assertEqual([text for _, text in added['docs/plans/features/f.md']], ['++ b/x at 2026-01-01T01:00:00+01:00'])
+
     def test_future_timestamp_is_an_error(self):
         (self.re_dir / 'a.md').write_text('<a id="ts-20260101-010101"></a>\n\n## 2026-01-01T01:01:01+01:00 — Old\n')
         (self.re_dir / 'b.md').write_text('<a id="ts-20990101-010101"></a>\n\n## 2099-01-01T01:01:01+01:00 — Future\n')
@@ -175,10 +202,11 @@ class RuleChecksTest(unittest.TestCase):
             '- [ ] F-1 — gap. needs: F-2. blocks: F-3. evidence: [x](x.md)\n'
             '- [ ] F-2 — gap. blocks: F-3. needs: F-1.\n'
             '- F-S1 — stand-in. evidence: [x](x.md) needs: F-1\n'
+            '- F-S2 stand-in without a dash. blocks: F-1. needs: F-2.\n'
         )
         (self.features / 'f.closed.md').write_text('- [x] F-3 — done. evidence: e. blocks: F-1\n')
         found = self.errors('item-field-order')
-        self.assertEqual([e.split(': ')[0] for e in found], ['docs/plans/features/f.md:2', 'docs/plans/features/f.md:3', 'docs/plans/features/f.closed.md:1'])
+        self.assertEqual([e.split(': ')[0] for e in found], ['docs/plans/features/f.md:2', 'docs/plans/features/f.md:3', 'docs/plans/features/f.md:4', 'docs/plans/features/f.closed.md:1'])
 
     def test_superseded_entry_moves_to_history_and_links_follow(self):
         (self.re_dir / 'a.md').write_text(
@@ -217,7 +245,9 @@ class RuleChecksTest(unittest.TestCase):
         (self.re_dir / 'b-x.md').write_text('## Current state\n\n- S.\n\n<a id="ts-20260101-010101"></a>\n\n## 2026-01-01T01:01:01+01:00 — Moved\n')
         subprocess.run(['git', '-C', str(self.root), 'add', '.'], check=True)
         subprocess.run(['git', '-C', str(self.root), '-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qm', 'x'], check=True)
-        (self.re_dir / 'b.md').write_text(body + '\nSplit: [b-x.md](b-x.md)\n')
+        (self.re_dir / 'b.md').write_text(body + '\nSee also [b-x.md](b-x.md)\n')
+        self.assertEqual(links.split_leftover_warnings(self.root), [])
+        (self.re_dir / 'b.md').write_text(body + '\nSubtopics: [b-x.md](b-x.md)\n')
         warnings = links.split_leftover_warnings(self.root)
         self.assertEqual(len(warnings), 1)
         self.assertIn('current-state-split', warnings[0])

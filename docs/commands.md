@@ -46,6 +46,9 @@ python3 tools/check_doc_links.py --reserve VEH 10 "agent A"   # reserve a range 
 python3 tools/check_doc_links.py --release "agent A"          # drop that agent's reservations
 ```
 
+- An unknown prefix (a typo) stops `--next` and `--reserve` with an error; add `--new-prefix` only for a new feature.
+- `--release` with a name that holds no reservation stops with an error.
+
 ## Progress report
 
 ```sh

@@ -10,7 +10,7 @@ Size and shape rules (CLAUDE.md "Documentation rules"): a docs/re file is at mos
 20 entry lines. With --fix, older log lines move to the progress archive (a line the archive already holds, as
 after a merge of two branches that both archived it, is dropped instead of copied again) and closed items ("- [x] ID") of a feature
 file move to <feature>.closed.md. An item or stand-in ID defined twice in a feature and its closed file is an
-error. Every feature file has exactly one row (at most 300 characters, table preceded by a blank line) in the feature index, which groups its tables under "## <Area>" headings; closed-items files have none. Item lines keep the field order gap text, needs:, blocks:, evidence:. A timestamp later than the current time is an error; a ":00" second in a line new compared to HEAD is a warning. --next PREFIX [COUNT] prints free item IDs, --reserve PREFIX COUNT WHO reserves a range in docs/plans/features/id-reservations.md, --release WHO drops it. An entry with a "Superseded by" line under its heading moves with --fix to docs/re/<topic>.history.md and links follow. A link whose text starts with "Corrects" needs a "Corrected by" line under the corrected entry's heading
+error. Every feature file has exactly one row (at most 300 characters, table preceded by a blank line) in the feature index, which groups its tables under "## <Area>" headings; closed-items files have none. Item lines keep the field order gap text, needs:, blocks:, evidence:. A timestamp later than the current time is an error; a ":00" second in a line new compared to HEAD is a warning. --next PREFIX [COUNT] prints free item IDs, --reserve PREFIX COUNT WHO reserves a range in docs/plans/features/id-reservations.md, --release WHO drops it (an error when WHO holds none); an unknown PREFIX needs --new-prefix. An entry with a "Superseded by" line under its heading moves with --fix to docs/re/<topic>.history.md and links follow. A link whose text starts with "Corrects" needs a "Corrected by" line under the corrected entry's heading
 that links back, and every "Corrected by" line needs the matching "Corrects" link.
 """
 import argparse
@@ -42,11 +42,11 @@ RESERVATIONS = "id-reservations.md"
 HISTORY_SUFFIX = ".history.md"
 FIELD_ORDER = {"needs": 0, "blocks": 1, "evidence": 2}
 FIELD = re.compile(r"(?<![\w-])(needs|blocks|evidence):")
-ITEM_LINE = re.compile(r"^- (?:\[[ x]\] )?[A-Z][A-Z0-9]*-S?\d+ — ")
 TIMESTAMP = re.compile(r"\b(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)([+-]\d\d:\d\d|Z)")
 IDENTIFIER = re.compile(r"^([A-Z][A-Z0-9]*)-(S?)(\d+)")
 PREFIX = re.compile(r"^[A-Z][A-Z0-9]*(-S)?$")
 CURRENT_STATE = "## Current state"
+SUBTOPICS = "Subtopics:"
 SUPERSEDED = "Superseded by"
 MAX_LOG_LINES = 20
 MAX_CLAUDE_BYTES = 20480
@@ -323,7 +323,7 @@ def item_format_errors(root):
             if not member.is_file():
                 continue
             for number, line in enumerate(member.read_text(encoding="utf-8").split("\n")):
-                if not ITEM_LINE.match(line):
+                if not ITEM_ID.match(line):
                     continue
                 ranks = [FIELD_ORDER[m.group(1)] for m in FIELD.finditer(line)]
                 if ranks != sorted(set(ranks)):
@@ -363,11 +363,17 @@ def dated_paths(root):
     return paths + progress_files(root)
 
 
+def future_selector(root, path):
+    if path.is_relative_to(root / "docs" / "re") and not path.name.endswith(HISTORY_SUFFIX):
+        return lambda line: True
+    return line_selector(root, path)
+
+
 def timestamp_errors(root):
     errors = []
     now = current_time()
     for path in dated_paths(root):
-        selects = line_selector(root, path)
+        selects = future_selector(root, path)
         if selects is None:
             continue
         for number, line in enumerate(path.read_text(encoding="utf-8").split("\n")):
@@ -412,9 +418,7 @@ def split_leftover_warnings(root):
         if state is None:
             continue
         end = next((i for i in range(state + 1, len(lines)) if lines[i].startswith("<a id=") or lines[i].startswith("## ")), len(lines))
-        prefix = path.stem + "-"
-        outside = "\n".join(lines[:state] + lines[end:])
-        subtopics = {name for name in re.findall(r"\]\(([\w.-]+\.md)\)", outside) if name.startswith(prefix)}
+        subtopics = {name for line in lines if line.startswith(SUBTOPICS) for name in re.findall(r"\]\(([\w.-]+\.md)\)", line)}
         for number in range(state + 1, end):
             for name in re.findall(r"\]\(([\w.-]+\.md)#ts-", lines[number]):
                 if name in subtopics:
@@ -433,8 +437,11 @@ def added_lines(root):
     added = {}
     current = None
     number = 0
+    previous = ""
     for line in diff.split("\n"):
-        if line.startswith("+++ "):
+        header = line.startswith("+++ ") and previous.startswith("--- ")
+        previous = line
+        if header:
             current = line[6:] if line.startswith("+++ b/") else None
         elif line.startswith("@@"):
             number = int(re.match(r"@@ -\S+ \+(\d+)", line).group(1))
@@ -523,6 +530,16 @@ def free_numbers(root, key, count):
             result.append(candidate)
             candidate += 1
     return result
+
+
+def known_prefix(root, key):
+    base = key[:-2] if key.endswith("-S") else key
+    known = set(defined_numbers(root)) | {prefix for prefix, _, _, _, _ in reservation_rows(root)}
+    return base in known or base + "-S" in known or base in {k[:-2] for k in known if k.endswith("-S")}
+
+
+def known_prefixes(root):
+    return sorted({k[:-2] if k.endswith("-S") else k for k in defined_numbers(root)})
 
 
 def format_id(key, number):
@@ -866,24 +883,32 @@ def main(argv=None):
     parser.add_argument("--next", nargs="+", metavar=("PREFIX", "COUNT"), help="print the next free item IDs of PREFIX (PREFIX-S for stand-ins)")
     parser.add_argument("--reserve", nargs=3, metavar=("PREFIX", "COUNT", "WHO"), help="reserve COUNT item IDs of PREFIX for WHO")
     parser.add_argument("--release", metavar="WHO", help="drop the reservations of WHO")
+    parser.add_argument("--new-prefix", action="store_true", help="allow --next / --reserve for a prefix no feature file uses yet")
     args = parser.parse_args(argv)
     root = Path(args.root).resolve()
     if args.next is not None:
         valid = len(args.next) <= 2 and PREFIX.match(args.next[0]) and (len(args.next) == 1 or (args.next[1].isdigit() and int(args.next[1]) > 0))
         if not valid:
             parser.error("--next: expected PREFIX [COUNT] with PREFIX like VEH or VEH-S and COUNT a positive integer, got " + " ".join(args.next))
+        if not args.new_prefix and not known_prefix(root, args.next[0]):
+            parser.error(f"--next: unknown prefix {args.next[0]} (known: {', '.join(known_prefixes(root))}); add --new-prefix for a new feature")
         print("\n".join(next_ids(root, args.next[0], int(args.next[1]) if len(args.next) == 2 else 1)))
         return 0
     if args.reserve is not None:
         prefix, count, who = args.reserve
         if not PREFIX.match(prefix) or not count.isdigit() or int(count) <= 0 or not who.strip() or "|" in who:
             parser.error("--reserve: expected PREFIX COUNT WHO with PREFIX like VEH or VEH-S, COUNT a positive integer and WHO without '|', got " + " ".join(args.reserve))
+        if not args.new_prefix and not known_prefix(root, prefix):
+            parser.error(f"--reserve: unknown prefix {prefix} (known: {', '.join(known_prefixes(root))}); add --new-prefix for a new feature")
         print(reserve_ids(root, prefix, int(count), who.strip()))
         return 0
     if args.release is not None:
         if not args.release.strip():
             parser.error("--release: WHO must not be empty")
-        print(f"{release_ids(root, args.release.strip())} reservations released")
+        released = release_ids(root, args.release.strip())
+        if released == 0:
+            parser.error(f"--release: no reservation held by {args.release.strip()!r}")
+        print(f"{released} reservations released")
         return 0
     messages = []
     errors, added, rewritten, count = process(root, args.fix, messages)
