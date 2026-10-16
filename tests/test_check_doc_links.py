@@ -10,6 +10,10 @@ import check_doc_links as links  # noqa: E402
 
 RE_FILE = """# Topic
 
+## Current state
+
+- Summary.
+
 ## 2026-01-02T03:04:05+01:00 — First
 
 Text.
@@ -157,14 +161,13 @@ class RuleChecksTest(unittest.TestCase):
     def test_round_seconds_warning_only_for_new_lines(self):
         import subprocess
         subprocess.run(['git', 'init', '-q', str(self.root)], check=True)
-        self.re_dir.joinpath('a.md').write_text('<a id="ts-20260101-010000"></a>\n\n## 2026-01-01T01:00:00+01:00 — Old\n')
+        self.re_dir.joinpath('a.md').write_text('## Current state\n\n- S.\n\n<a id="ts-20260101-010000"></a>\n\n## 2026-01-01T01:00:00+01:00 — Old\n')
         subprocess.run(['git', '-C', str(self.root), 'add', '.'], check=True)
         subprocess.run(['git', '-C', str(self.root), '-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qm', 'x'], check=True)
         self.assertEqual(links.timestamp_warnings(self.root), [])
         self.re_dir.joinpath('a.md').write_text(self.re_dir.joinpath('a.md').read_text() + '\n<a id="ts-20260102-020000"></a>\n\n## 2026-01-02T02:00:00+01:00 — New\n')
-        warnings = links.timestamp_warnings(self.root)
+        warnings = [w for w in links.timestamp_warnings(self.root) if 'round-seconds-timestamp' in w]
         self.assertEqual(len(warnings), 1)
-        self.assertIn('round-seconds-timestamp', warnings[0])
         self.assertEqual(links.process(self.root, False)[0], [])
 
     def test_item_field_order(self):
@@ -201,6 +204,23 @@ class RuleChecksTest(unittest.TestCase):
         self.assertIn('(../../re/a.history.md#ts-20260101-010101)', (self.features / 'f.md').read_text())
         self.assertEqual(links.process(self.root, False)[0], [])
         self.assertEqual(links.process(self.root, True)[1:3], (0, 0))
+
+    def test_current_state_is_required(self):
+        (self.re_dir / 'a.md').write_text('<a id="ts-20260101-010101"></a>\n\n## 2026-01-01T01:01:01+01:00 — E\n')
+        self.assertEqual(len(self.errors('current-state-missing')), 1)
+
+    def test_split_leftover_warns_only_for_changed_files(self):
+        import subprocess
+        subprocess.run(['git', 'init', '-q', str(self.root)], check=True)
+        body = '## Current state\n\n- Fact [b-x.md §2026-01-01T01:01](b-x.md#ts-20260101-010101)\n\n<a id="ts-20260101-010102"></a>\n\n## 2026-01-01T01:01:02+01:00 — E\n'
+        (self.re_dir / 'b.md').write_text(body)
+        (self.re_dir / 'b-x.md').write_text('## Current state\n\n- S.\n\n<a id="ts-20260101-010101"></a>\n\n## 2026-01-01T01:01:01+01:00 — Moved\n')
+        subprocess.run(['git', '-C', str(self.root), 'add', '.'], check=True)
+        subprocess.run(['git', '-C', str(self.root), '-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qm', 'x'], check=True)
+        (self.re_dir / 'b.md').write_text(body + '\nSplit: [b-x.md](b-x.md)\n')
+        warnings = links.split_leftover_warnings(self.root)
+        self.assertEqual(len(warnings), 1)
+        self.assertIn('current-state-split', warnings[0])
 
     def test_current_state_must_precede_entries(self):
         (self.re_dir / 'a.md').write_text('<a id="ts-20260101-010101"></a>\n\n## 2026-01-01T01:01:01+01:00 — E\n\n## Current state\n')

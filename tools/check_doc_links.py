@@ -386,14 +386,40 @@ def current_state_errors(root):
     if not re_dir.is_dir():
         return errors
     for path in sorted(re_dir.glob("*.md")):
-        if path.name.endswith(HISTORY_SUFFIX):
+        if path.name.endswith(HISTORY_SUFFIX) or path.name == "README.md":
             continue
         lines = path.read_text(encoding="utf-8").split("\n")
         state = next((i for i, line in enumerate(lines) if line.strip() == CURRENT_STATE), None)
         first = next((i for i, line in enumerate(lines) if ENTRY_HEADING.match(line)), None)
+        if state is None and first is not None:
+            errors.append(f"{path.relative_to(root)}:1: current-state-missing: every topic file needs '{CURRENT_STATE}' before its first dated entry")
         if state is not None and first is not None and state > first:
             errors.append(f"{path.relative_to(root)}:{state + 1}: current-state-position: '{CURRENT_STATE}' must come before the first dated entry")
     return errors
+
+
+def split_leftover_warnings(root):
+    warnings = []
+    re_dir = root / "docs" / "re"
+    if not re_dir.is_dir():
+        return warnings
+    changed = {root / name for name in added_lines(root)}
+    for path in sorted(re_dir.glob("*.md")):
+        if path.name.endswith(HISTORY_SUFFIX) or path.name == "README.md" or path not in changed:
+            continue
+        lines = path.read_text(encoding="utf-8").split("\n")
+        state = next((i for i, line in enumerate(lines) if line.strip() == CURRENT_STATE), None)
+        if state is None:
+            continue
+        end = next((i for i in range(state + 1, len(lines)) if lines[i].startswith("<a id=") or lines[i].startswith("## ")), len(lines))
+        prefix = path.stem + "-"
+        outside = "\n".join(lines[:state] + lines[end:])
+        subtopics = {name for name in re.findall(r"\]\(([\w.-]+\.md)\)", outside) if name.startswith(prefix)}
+        for number in range(state + 1, end):
+            for name in re.findall(r"\]\(([\w.-]+\.md)#ts-", lines[number]):
+                if name in subtopics:
+                    warnings.append(f"{path.relative_to(root)}:{number + 1}: warning: current-state-split: links an entry of the split subtopic {name}; after a split that bullet belongs in {name}'s '{CURRENT_STATE}'")
+    return warnings
 
 
 def added_lines(root):
@@ -863,7 +889,7 @@ def main(argv=None):
     errors, added, rewritten, count = process(root, args.fix, messages)
     for message in messages:
         print(message)
-    for warning in timestamp_warnings(root):
+    for warning in timestamp_warnings(root) + split_leftover_warnings(root):
         print(warning)
     for error in errors:
         print(error)
