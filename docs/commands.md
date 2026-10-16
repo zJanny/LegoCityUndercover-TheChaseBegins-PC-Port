@@ -41,6 +41,9 @@ Run this before you commit any Markdown change. It checks every link between the
 ```sh
 python3 tools/check_doc_links.py          # list broken links and missing anchors
 python3 tools/check_doc_links.py --fix    # repair what can be repaired mechanically
+python3 tools/check_doc_links.py --next VEH 3          # next free item IDs (VEH-S for stand-ins)
+python3 tools/check_doc_links.py --reserve VEH 10 "agent A"   # reserve a range for a parallel agent
+python3 tools/check_doc_links.py --release "agent A"          # drop that agent's reservations
 ```
 
 ## Progress report
@@ -97,7 +100,7 @@ Single C++ tests, with `ctest --test-dir build -R <name>`:
 | `no-inline-shaders` | Fails when a `.cpp`, `.hpp` or `.h` file under `src/` contains shader code. Shaders live only in `.glsl` files under `src/render/shaders/` (see `CLAUDE.md`) |
 | `gl-only-in-render` | Fails when a `.cpp`, `.hpp` or `.h` file under `src/` outside `src/render/` contains an OpenGL call, `<epoxy/gl.h>`, a GL type or a GL constant. Rendering code goes into `src/render/` behind plain-type headers (see `CLAUDE.md`). `gl-only-in-render-rejects` checks that the guard fails on the bad file in `tests/gl_only_in_render/` |
 | `game-cpp-wiring` | Fails when `src/game.cpp` has more than 400 lines. That file only wires features together. New game logic goes into its own file under `src/runtime/` (see `CLAUDE.md`) |
-| `doc-links` | Checks the documentation rules (`tools/check_doc_links.py`). It fails on a broken link or anchor, a dated entry without an anchor, a `docs/re/` file over 40 KB, a feature file over 16 KB, the feature index over 40 lines, an item or stand-in ID defined twice in a feature and its closed file, a feature file without a row in the feature index (or a closed-items file with one), more than 20 entry lines in the session log, `CLAUDE.md` over 20 KiB, or a correction that is not marked at both ends. Add `--fix` to repair anchors and links, move closed items (`- [x]`) to `<feature>.closed.md` and move session log lines beyond the newest 20 to `docs/plans/linux-port.progress-archive.md`. |
+| `doc-links` | Checks the documentation rules (`tools/check_doc_links.py`). It fails on a broken link or anchor, a dated entry without an anchor, a `docs/re/` file over 40 KB, a feature file over 16 KB, a feature index row missing, duplicated, over 300 characters or after a table without a blank line, an item line with fields out of order, a timestamp in the future, an item or stand-in ID defined twice in a feature and its closed file, a feature file without a row in the feature index (or a closed-items file with one), more than 20 entry lines in the session log, `CLAUDE.md` over 20 KiB, or a correction that is not marked at both ends. It warns about a new `:00` timestamp. `--fix` also moves entries with a `Superseded by` line to `docs/re/<topic>.history.md`. Add `--fix` to repair anchors and links, move closed items (`- [x]`) to `<feature>.closed.md` and move session log lines beyond the newest 20 to `docs/plans/linux-port.progress-archive.md`. |
 | `studs-core` | Coin pickup rules on made-up coins, no game data needed |
 | `studs-real-data` | Replays coin pickups recorded from the original game (`artifacts/oracle/studs-traces`, folder set with `-DCHASE_STUDS_TRACE_DIR=...`); skips with code 77 if the traces or `artifacts/romfs` are missing |
 | `audio-mixer` | Mixer core, no SDL |

@@ -1,3 +1,5 @@
+import contextlib
+import io
 import sys
 import tempfile
 import unittest
@@ -105,17 +107,104 @@ class RuleChecksTest(unittest.TestCase):
         self.assertEqual(len(found), 1)
         self.assertTrue(found[0].startswith('docs/re/huge.md:1: re-file-size'))
 
-    def test_feature_byte_limit_and_index_line_limit(self):
+    def test_feature_byte_limit(self):
         (self.features / 'ok.md').write_text('x' * 16384)
         (self.features / 'big.md').write_text('x' * 16385)
         (self.features / 'big.closed.md').write_text('x' * 20000)
-        (self.features / 'README.md').write_text('line\n' * 41)
         self.assertEqual(len(self.errors('feature-file-size')), 1)
         self.assertTrue(self.errors('feature-file-size')[0].startswith('docs/plans/features/big.md:1: feature-file-size: 16385 bytes, limit 16384'))
-        self.assertEqual(len(self.errors('index-file-length')), 1)
-        self.assertTrue(self.errors('index-file-length')[0].startswith('docs/plans/features/README.md:41: index-file-length'))
-        (self.features / 'README.md').write_text('line\n' * 40)
-        self.assertEqual(self.errors('index-file-length'), [])
+
+    def test_index_has_no_line_limit(self):
+        (self.features / 'README.md').write_text('line\n' * 200)
+        self.assertEqual(self.errors('index-'), [])
+
+    def test_index_row_rules(self):
+        (self.features / 'f.md').write_text('# F\n')
+        index = self.features / 'README.md'
+        index.write_text('# Index\n\n## Area\n| Feature | Status |\n|---|---|\n| [f](f.md) | ' + 'x' * 300 + ' |\n| [f](f.md) | again |\n')
+        found = self.errors('index-')
+        self.assertEqual(sorted(e.split(': ')[1] for e in found), ['index-duplicate-row', 'index-row-length', 'index-table-spacing'])
+        index.write_text('# Index\n\n## Area\n\n| Feature | Status |\n|---|---|\n| [f](f.md) | ' + 'x' * 250 + ' |\n')
+        self.assertEqual(self.errors('index-'), [])
+
+    def test_next_counts_closed_split_files_and_skips_reservations(self):
+        (self.features / 'f.md').write_text('- [ ] F-3 a\n- [ ] F-S2 stand-in\n')
+        (self.features / 'f.closed.md').write_text('- [x] F-7 done\n')
+        (self.features / 'f-sub.md').write_text('- [ ] F-5 b\n')
+        self.assertEqual(links.next_ids(self.root, 'F', 2), ['F-8', 'F-9'])
+        self.assertEqual(links.next_ids(self.root, 'F-S', 1), ['F-S3'])
+        links.reserve_ids(self.root, 'F', 3, 'agent a')
+        self.assertEqual(links.next_ids(self.root, 'F', 2), ['F-11', 'F-12'])
+        rows = links.reservation_rows(self.root)
+        self.assertEqual(rows[0][:4], ('F', 8, 10, 'agent a'))
+        self.assertEqual(links.release_ids(self.root, 'agent a'), 1)
+        self.assertEqual(links.next_ids(self.root, 'F', 1), ['F-8'])
+        self.assertEqual(self.errors('index-'), [])
+
+    def test_next_rejects_bad_input(self):
+        for argv in (['--next', 'lower'], ['--next', 'F', '0'], ['--next', 'F', 'x'], ['--reserve', 'F', '0', 'who']):
+            with self.assertRaises(SystemExit), contextlib.redirect_stderr(io.StringIO()) as err:
+                links.main(['--root', str(self.root)] + argv)
+            self.assertIn(argv[0], err.getvalue())
+
+    def test_future_timestamp_is_an_error(self):
+        (self.re_dir / 'a.md').write_text('<a id="ts-20260101-010101"></a>\n\n## 2026-01-01T01:01:01+01:00 — Old\n')
+        (self.re_dir / 'b.md').write_text('<a id="ts-20990101-010101"></a>\n\n## 2099-01-01T01:01:01+01:00 — Future\n')
+        found = self.errors('future-timestamp')
+        self.assertEqual(len(found), 1)
+        self.assertTrue(found[0].startswith('docs/re/b.md:3:'))
+
+    def test_round_seconds_warning_only_for_new_lines(self):
+        import subprocess
+        subprocess.run(['git', 'init', '-q', str(self.root)], check=True)
+        self.re_dir.joinpath('a.md').write_text('<a id="ts-20260101-010000"></a>\n\n## 2026-01-01T01:00:00+01:00 — Old\n')
+        subprocess.run(['git', '-C', str(self.root), 'add', '.'], check=True)
+        subprocess.run(['git', '-C', str(self.root), '-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qm', 'x'], check=True)
+        self.assertEqual(links.timestamp_warnings(self.root), [])
+        self.re_dir.joinpath('a.md').write_text(self.re_dir.joinpath('a.md').read_text() + '\n<a id="ts-20260102-020000"></a>\n\n## 2026-01-02T02:00:00+01:00 — New\n')
+        warnings = links.timestamp_warnings(self.root)
+        self.assertEqual(len(warnings), 1)
+        self.assertIn('round-seconds-timestamp', warnings[0])
+        self.assertEqual(links.process(self.root, False)[0], [])
+
+    def test_item_field_order(self):
+        (self.features / 'f.md').write_text(
+            '- [ ] F-1 — gap. needs: F-2. blocks: F-3. evidence: [x](x.md)\n'
+            '- [ ] F-2 — gap. blocks: F-3. needs: F-1.\n'
+            '- F-S1 — stand-in. evidence: [x](x.md) needs: F-1\n'
+        )
+        (self.features / 'f.closed.md').write_text('- [x] F-3 — done. evidence: e. blocks: F-1\n')
+        found = self.errors('item-field-order')
+        self.assertEqual([e.split(': ')[0] for e in found], ['docs/plans/features/f.md:2', 'docs/plans/features/f.md:3', 'docs/plans/features/f.closed.md:1'])
+
+    def test_superseded_entry_moves_to_history_and_links_follow(self):
+        (self.re_dir / 'a.md').write_text(
+            '# A\n\n## Current state\n\nSummary.\n\n'
+            '<a id="ts-20260101-010101"></a>\n\n## 2026-01-01T01:01:01+01:00 — Old\n\n'
+            'Superseded by [a.md §2026-01-02T02:02:02](#ts-20260102-020202): wrong.\n\nSee [a.md §2026-01-02T02:02:02](#ts-20260102-020202).\n\n'
+            '<a id="ts-20260102-020202"></a>\n\n## 2026-01-02T02:02:02+01:00 — New\n\nBody, links [old](#ts-20260101-010101).\n'
+        )
+        (self.features / 'f.md').write_text('See [a.md §2026-01-01T01:01:01](../../re/a.md#ts-20260101-010101).\n')
+        self.assertEqual(links.process(self.root, False)[0], [])
+        messages = []
+        errors = links.process(self.root, True, messages)[0]
+        self.assertEqual(errors, [])
+        self.assertEqual(messages, ['1 superseded entries moved'])
+        topic = (self.re_dir / 'a.md').read_text()
+        history = (self.re_dir / 'a.history.md').read_text()
+        self.assertNotIn('Old', topic)
+        self.assertIn('## Current state', topic)
+        self.assertIn('[a.md](a.md)', history)
+        self.assertIn('<a id="ts-20260101-010101"></a>\n\n## 2026-01-01T01:01:01+01:00 — Old', history)
+        self.assertIn('(a.md#ts-20260102-020202)', history)
+        self.assertIn('(a.history.md#ts-20260101-010101)', topic)
+        self.assertIn('(../../re/a.history.md#ts-20260101-010101)', (self.features / 'f.md').read_text())
+        self.assertEqual(links.process(self.root, False)[0], [])
+        self.assertEqual(links.process(self.root, True)[1:3], (0, 0))
+
+    def test_current_state_must_precede_entries(self):
+        (self.re_dir / 'a.md').write_text('<a id="ts-20260101-010101"></a>\n\n## 2026-01-01T01:01:01+01:00 — E\n\n## Current state\n')
+        self.assertEqual(len(self.errors('current-state-position')), 1)
 
     def test_long_item_lines_are_not_limited(self):
         (self.features / 'f.md').write_text('- [ ] FOO-1 ' + 'y' * 900 + '\n')
