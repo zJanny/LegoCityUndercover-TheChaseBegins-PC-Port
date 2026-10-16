@@ -16,7 +16,7 @@ Run these commands from the repository folder:
 
 ```sh
 cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo
-cmake --build build
+cmake --build build -j"$(($(nproc) - 1))"
 ```
 
 The programs are written to `build/`. The build also makes `libchase_assets_c.so`, which the unpacking and conversion tools use (see [Extracting game data](extracting-game-data.md)). Build the project before you run them.
@@ -25,7 +25,7 @@ The programs are written to `build/`. The build also makes `libchase_assets_c.so
 
 ```sh
 cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCHASE_BUILD_TESTS=OFF
-cmake --build build
+cmake --build build -j"$(($(nproc) - 1))"
 ```
 
 - This skips every test program and every CTest test, so the build is shorter.
@@ -34,7 +34,7 @@ cmake --build build
 ## Check that everything works
 
 ```sh
-ctest --test-dir build -j8 --output-on-failure
+ctest --test-dir build -j"$(($(nproc) - 1))" --output-on-failure
 python3 -m unittest discover -s tests -p 'test_*.py' -v
 ```
 

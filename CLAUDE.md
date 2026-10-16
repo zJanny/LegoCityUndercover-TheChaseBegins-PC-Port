@@ -22,9 +22,9 @@ Plan and progress: `docs/plans/linux-port.md` and `docs/plans/linux-port.progres
 
 ```sh
 python3 -m unittest discover -s tests -p 'test_*.py' -v
-cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo && cmake --build build -j
-ctest --test-dir build -j8 -LE slow --output-on-failure   # while developing; -R <name> for one test
-ctest --test-dir build -j8 --output-on-failure            # all tests, once before the final commit
+cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo && cmake --build build -j"$(($(nproc) - 1))"
+ctest --test-dir build -j"$(($(nproc) - 1))" -LE slow --output-on-failure   # while developing; -R <name> for one test
+ctest --test-dir build -j"$(($(nproc) - 1))" --output-on-failure            # all tests, once before the final commit
 python3 tools/extract_game.py "<image>.cci" --output artifacts/game   # output dir must NOT exist
 ```
 

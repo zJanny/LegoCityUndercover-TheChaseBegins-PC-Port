@@ -15,10 +15,13 @@ warning-free build, ctest, Python tests. Pushing stays a separate, explicitly au
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import subprocess
 import sys
 from pathlib import Path
+
+JOBS = max(1, (os.cpu_count() or 2) - 1)
 
 FORBIDDEN = re.compile(
     r"(^|/)(artifacts|build(-[^/]*)?|graphify-out)/|\.(cci|3ds|cst|cia|bin|bmp|png|jpe?g|wav|bcstm|bcwav|fib|blvl|bfnmdl|dat)$",
@@ -136,7 +139,7 @@ def check_staged_content(root: Path) -> None:
 
 def build_warning_free(root: Path) -> None:
     run(["cmake", "-S", ".", "-B", "build", "-DCMAKE_BUILD_TYPE=RelWithDebInfo"], root, capture=True)
-    result = run(["cmake", "--build", "build", "-j"], root, check=False, capture=True)
+    result = run(["cmake", "--build", "build", "-j", str(JOBS)], root, check=False, capture=True)
     output = result.stdout + result.stderr
     if result.returncode != 0:
         raise MergeError("build failed:\n" + output[-4000:])
@@ -162,7 +165,7 @@ def run_checks(root: Path) -> None:
     run(["python3", "tools/progress_report.py", "--update-readme", "README.md"], root)
     run(["git", "add", "README.md", "docs/progress-trend.svg"], root)
     print("== ctest")
-    run(["ctest", "--test-dir", "build", "--output-on-failure", "-j", "8"], root)
+    run(["ctest", "--test-dir", "build", "--output-on-failure", "-j", str(JOBS)], root)
     print("== python tests")
     run(["python3", "-m", "unittest", "discover", "-s", "tests", "-p", "test_*.py"], root)
     print("== staged")

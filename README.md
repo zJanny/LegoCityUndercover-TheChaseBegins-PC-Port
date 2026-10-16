@@ -8,7 +8,7 @@ Game data is never stored in this repository. You need your own decrypted `.cci`
 
 ```sh
 cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo
-cmake --build build
+cmake --build build -j"$(($(nproc) - 1))"
 python3 tools/extract_romfs.py path/to/game.cci --output artifacts/romfs
 build/chase-game
 ```
