@@ -36,6 +36,14 @@ constexpr int kFloorSweepCells = 100;
 constexpr std::uint8_t kFloorSurfaceSoft = 0x24;
 constexpr std::uint8_t kFloorSurfaceWall = 0x25;
 
+// 0x164328 (second cell search): a point more than kSecondCellDepth below its cell, whose cell has flag bit 0, takes the first other cell within
+// kSecondCellRadius (0x1aa478) with a wall normal (|y| below kSecondCellWallNormal), not '$', that contains the point in the projection of 0x2384dc;
+// without one the point has no push-out (0x1c54f8) or keeps its cell (0x15c4a4).
+constexpr float kSecondCellRadius = 0.3f;     // 0x3e99999a
+constexpr float kSecondCellWallNormal = 0.2f; // 0x3e4ccccd
+constexpr float kSecondCellDepth = 0.1f;      // 0xbdcccccd
+int secondFloorCell(const FloorMesh& mesh, const Vector3& point, int cell);
+
 // The eight points at body+0xdc (0x243398) from the box of the collision shape in body axes: the four bottom corners, then the top corners with
 // x and z times 0.9. With body flag +0xc4 bit 0 the bottom is at most the mount height of wheels 0 and 2.
 std::array<Vector3, 8> vehicleProbePoints(const Vector3& low, const Vector3& high, const std::vector<VehicleWheel>& wheels);
@@ -68,8 +76,8 @@ struct FloorContacts {
 // 0x15c4a4 for one body point at `point` moving with `velocity` over `dt`, starting in `cell` (updated as the sweep crosses cells): a point
 // above the floor is swept along its velocity through the cells; it hits the floor plane inside the cell or a wall edge (an edge without a
 // neighbour; with `percentWalls` also an edge into a '%' cell). A point below the floor that moves into it is a contact at time 0 with its
-// depth. Keeps only the earliest contacts. Returns the contact time or -1. STAND-IN VEH-S51: the second cell search 0x164328 for a point more
-// than 0.1 below a cell with flag bit 0 is not read; the point keeps its cell.
+// depth. Keeps only the earliest contacts. Returns the contact time or -1. A point more than 0.1 below a cell with flag bit 0 first takes the cell
+// of secondFloorCell, if any.
 float sweepFloorPoint(const FloorMesh& mesh, float dt, int& cell, const Vector3& point, const Vector3& velocity, FloorContacts& contacts,
                       bool percentWalls);
 

@@ -5,6 +5,7 @@
 #include "assets/assets.hpp"
 
 #include <array>
+#include <vector>
 
 namespace chase::runtime {
 
@@ -37,5 +38,16 @@ constexpr int kFloorWalkSteps = 30;
 // edge without a neighbour Stay returns the cell, Fail returns -1 and Clip also moves `to` onto the edge (0.999 of the way from `from`, the w
 // word cleared; the edge length includes y).
 int walkFloor(const FloorMesh& mesh, int cell, const FloorPoint& from, FloorPoint& to, FloorWalkEdge edge);
+
+// 0x1aa478: the cells reached from `cell` across edges whose segment in the xz plane lies within `radius` of `point`, in discovery order, `cell`
+// first.
+std::vector<int> floorCellsWithin(const FloorMesh& mesh, float radius, const FloorPoint& point, int cell);
+
+// 0x2384dc: the two axes of the projection that drops the dominant component of `normal` (first, second).
+std::array<int, 2> floorProjectionAxes(const std::array<float, 3>& normal);
+
+// 0x158cb8 as 0x2384dc calls it: the three side tests of `point` against the triangle corners in the projection axes.
+bool floorProjectedContains(const FloorPoint& corner0, const FloorPoint& corner1, const FloorPoint& corner2, const FloorPoint& point,
+                            const std::array<int, 2>& axes);
 
 }

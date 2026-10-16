@@ -25,11 +25,11 @@ This starts the development runtime. It is not the game: it shows the start scre
 | Game files read | 99.6% of files, 99.9% of data | Files in the game archive (12836) that the port can decode, by count and by size. |
 | Open work | 296 open items, 191 stand-ins | Known gaps and temporary guesses in 23 feature areas. It has no total to reach; watch the trend. |
 | Checked against the original | 192 tests, 210 recorded traces | Automatic tests, and recordings of the original game that the tests compare with. |
-| Game code documented | 1628 of about 7575 (21.5%) | Functions of the game program that the notes or the source point to. The total is an estimate. |
+| Game code documented | 1635 of about 7575 (21.6%) | Functions of the game program that the notes or the source point to. The total is an estimate. |
 
 ![Progress trend](docs/progress-trend.svg)
 
-Updated 2026-10-16, commit 80dfa09. How the numbers are measured: [docs/progress.md](docs/progress.md).
+Updated 2026-10-16, commit 08b9eaa. How the numbers are measured: [docs/progress.md](docs/progress.md).
 <!-- progress:end -->
 
 ## Documentation

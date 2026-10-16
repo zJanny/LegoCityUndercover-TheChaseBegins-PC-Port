@@ -100,6 +100,19 @@ void vehicleCollisionBox(const std::string& className, const Vector3& entityCent
     vehicleShapeBox(entityCentre, entityHalf, centreOfMass, low, high);
 }
 
+int secondFloorCell(const FloorMesh& mesh, const Vector3& point, int cell) {
+    const std::vector<int> near = floorCellsWithin(mesh, kSecondCellRadius, {point[0], point[1], point[2]}, cell);
+    for (const int candidate : near) {
+        if (candidate == cell) continue;
+        const assets::CollisionTriangle& triangle = mesh.triangle(candidate);
+        if (!(std::fabs(triangle.normal[1]) < kSecondCellWallNormal) || triangle.surface == kFloorSurfaceSoft) continue;
+        if (floorProjectedContains(mesh.vertex(candidate, 0), mesh.vertex(candidate, 1), mesh.vertex(candidate, 2), {point[0], point[1], point[2]},
+                                   floorProjectionAxes({triangle.normal[0], triangle.normal[1], triangle.normal[2]})))
+            return candidate;
+    }
+    return -1;
+}
+
 float sweepFloorPoint(const FloorMesh& mesh, float dt, int& cell, const Vector3& point, const Vector3& velocity, FloorContacts& contacts,
                       bool percentWalls) {
     if (cell < 0) return -1.0f;
@@ -110,16 +123,27 @@ float sweepFloorPoint(const FloorMesh& mesh, float dt, int& cell, const Vector3&
     const Vector3 direction = {velocity[0] * speed, velocity[1] * speed, velocity[2] * speed};
     const float depth = planeDistance(mesh.triangle(cell), point);
     if (depth < 0.0f) {
-        const assets::CollisionTriangle& triangle = mesh.triangle(cell);
-        if (triangle.surface == kFloorSurfaceSoft) return -1.0f;
+        const assets::CollisionTriangle* cellTriangle = &mesh.triangle(cell);
+        if (cellTriangle->surface == kFloorSurfaceSoft) return -1.0f;
+        int contactCell = cell;
+        float contactDepth = depth;
+        if (depth < -kSecondCellDepth && (mesh.cell(cell).flags & 1) != 0) {
+            const int second = secondFloorCell(mesh, point, cell);
+            if (second >= 0) {
+                contactCell = second;
+                cellTriangle = &mesh.triangle(second);
+                contactDepth = planeDistance(*cellTriangle, point);
+            }
+        }
+        const assets::CollisionTriangle& triangle = *cellTriangle;
         if (dot(velocity, normalOf(triangle)) < 0.0f) {
             if (0.0f < contacts.earliest) contacts.items.clear();
             FloorContact contact;
             contact.time = 0.0f;
             contact.point = point;
             contact.normal = normalOf(triangle);
-            contact.cell = cell;
-            contact.depth = -depth;
+            contact.cell = contactCell;
+            contact.depth = -contactDepth;
             contacts.items.push_back(contact);
             contacts.earliest = contacts.items.front().time;
         }
@@ -313,13 +337,19 @@ bool collideVehicleWithFloor(VehicleRigidBody& body, const FloorMesh& mesh, cons
     }
     for (std::size_t i = 0; i < 8; ++i) {
         if (cells[i] < 0) continue;
-        const assets::CollisionTriangle& triangle = mesh.triangle(cells[i]);
-        const float depth = planeDistance(triangle, points[i]);
+        int cell = cells[i];
+        float depth = planeDistance(mesh.triangle(cell), points[i]);
         if (depth >= 0.0f) continue;
+        if (depth < -kSecondCellDepth && (mesh.cell(cell).flags & 1) != 0) {
+            cell = secondFloorCell(mesh, points[i], cell);
+            if (cell < 0) continue;
+            depth = planeDistance(mesh.triangle(cell), points[i]);
+        }
+        const assets::CollisionTriangle& triangle = mesh.triangle(cell);
         FloorContact contact;
         contact.point = points[i];
         contact.normal = normalOf(triangle);
-        contact.cell = cells[i];
+        contact.cell = cell;
         contact.depth = -depth;
         floorPushImpulse(body, contact, triangle.surface, surfaceFriction, shape.massTimesTwo);
     }

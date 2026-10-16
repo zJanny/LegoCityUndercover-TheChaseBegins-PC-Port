@@ -60,6 +60,7 @@ void probePoints() {
 
 // drop.mem (the same poke with 19.0): from update 1 the trooper falls 1.9 m onto its wheels, settles and sleeps in update 40 (rigid +0xdc
 // 0.7333 in update 39, 0.7667 and mode 2 in update 40); heights of update 12 (16.85740, lowest), 39 (17.0696068) and 40 (17.0701981).
+void overheadLayerAtTeleport(const assets::CollisionItem* floorItem, const WheelRay& ray, const VehicleRecord& record);
 void settleAndSleep(const assets::CollisionItem* floorItem, const WheelRay& ray, const VehicleRecord& record) {
     VehicleFloor floor{FloorMesh(*floorItem), FloorTracker{}, vehicleCollisionBody(record)};
     VehicleRigidBody body;
@@ -84,6 +85,30 @@ void settleAndSleep(const assets::CollisionItem* floorItem, const WheelRay& ray,
     near(body.position[1], 17.0701981, 2e-4, "height of the sleeping body (update 40)");
     expect(sleptAt == 40, "0x30cdf8: the body sleeps after 0.75 s below 0.8 m/s and 1 rad/s (update 40)", sleptAt);
     expect(body.velocity == Vector3{0, 0, 0} && body.angularVelocity == Vector3{0, 0, 0}, "a sleeping body loses its velocities");
+}
+
+// Oracle, 2026-10-16 (agent r14-a, state drv-police-car-seated, A held, rigid +0x34 of the seated trooper poked to (949, 17.8, 1122.7) and its
+// body+0x8c set to -1): the tracker 0x1edaac finds cell 12167, which lies about 69 above the street (an overhead layer of the floor graph), and
+// the trooper settles to 17.2..17.8 within 4 s instead of being pushed up: 0x1c54f8 drops the push-out of a point far below a cell with flag bit 0
+// when 0x164328 finds no wall cell.
+void overheadLayerAtTeleport(const assets::CollisionItem* floorItem, const WheelRay& ray, const VehicleRecord& record) {
+    VehicleFloor floor{FloorMesh(*floorItem), FloorTracker{}, vehicleCollisionBody(record)};
+    VehicleRigidBody body;
+    body.orientation = orientationFromAxes({-0.709558964f, 0.000611679628f, 0.704645634f}, {-0.000296625658f, 0.999999285f, -0.00116676034f},
+                                           {-0.704645872f, -0.00103690138f, -0.709558249f});
+    body.position = {949.0f, 17.8f, 1122.7f};
+    body.inverseMass = 1.0f / 2600.0f;
+    body.inverseInertia = vehicleInverseInertiaStandIn(record.className);
+    trackFloorCell(floor.mesh, floor.tracker, body.position);
+    expect(floor.tracker.cell == 12167, "0x1edaac finds the oracle's cell 12167 at the teleport spot", floor.tracker.cell);
+    DrivetrainState drive = vehicleDrivetrain(record);
+    float highest = body.position[1];
+    for (int step = 0; step < 120; ++step) {
+        stepVehiclePhysics(body, drive, record, BodyInputs{}, false, ray, kVehicleWorldStep, &floor);
+        highest = std::max(highest, body.position[1]);
+    }
+    expect(highest < 19.0f, "no push-out from the overhead layer", highest);
+    expect(body.position[1] > 16.9f && body.position[1] < 17.6f, "the trooper rests on the street", body.position[1]);
 }
 
 int real(const char* fib, const char* names) {
@@ -134,13 +159,30 @@ int real(const char* fib, const char* names) {
     }
     for (std::size_t a = 0; a < 3; ++a) near(body.angularVelocity[a], 0.0, 0.0, "angular velocity cleared after six passes");
     settleAndSleep(floorItem, ray, record);
+    overheadLayerAtTeleport(floorItem, ray, record);
     return 0;
 }
 
 }  // namespace
 
+// Manual reading of 0x2384dc / 0x158cb8 (REA assembly of 2026-10-16): the axes drop the dominant normal component; the point test is the three side tests.
+void projectionTests() {
+    expect(floorProjectionAxes({0.0f, 1.0f, 0.0f}) == std::array<int, 2>{2, 0}, "upward normal projects to (z, x)");
+    expect(floorProjectionAxes({0.0f, -1.0f, 0.0f}) == std::array<int, 2>{0, 2}, "downward normal projects to (x, z)");
+    expect(floorProjectionAxes({1.0f, 0.0f, 0.0f}) == std::array<int, 2>{1, 2}, "+x wall projects to (y, z)");
+    expect(floorProjectionAxes({-1.0f, 0.0f, 0.0f}) == std::array<int, 2>{2, 1}, "-x wall projects to (z, y)");
+    expect(floorProjectionAxes({0.0f, 0.0f, 1.0f}) == std::array<int, 2>{0, 1}, "+z wall projects to (x, y)");
+    expect(floorProjectionAxes({0.0f, 0.0f, -1.0f}) == std::array<int, 2>{1, 0}, "-z wall projects to (y, x)");
+    const std::array<int, 2> axes = {0, 1};
+    const FloorPoint a = {0, 0, 0}, b = {2, 0, 0}, c = {0, 2, 0};
+    expect(floorProjectedContains(a, b, c, {0.5f, 0.5f, 7.0f}, axes), "a point inside the projected triangle");
+    expect(!floorProjectedContains(a, b, c, {1.5f, 1.5f, 0.0f}, axes), "a point beyond the far edge");
+    expect(!floorProjectedContains(a, b, c, {-0.5f, 0.5f, 0.0f}, axes), "a point outside the first edge");
+}
+
 int main(int argc, char** argv) {
     probePoints();
+    projectionTests();
     if (argc == 3) {
         if (!std::filesystem::exists(argv[1]) || !std::filesystem::exists(argv[2])) {
             std::printf("vehicle-collision-test: data not available, skipped\n");

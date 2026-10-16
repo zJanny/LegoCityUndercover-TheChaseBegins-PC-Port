@@ -2,6 +2,8 @@
 
 Split from [vehicles-physics.md](vehicles-physics.md): the Bullet world of the vehicles, the floor collision pass and the contacts with the static Bullet boxes. Plan: [features/vehicles-physics.md](../plans/features/vehicles-physics.md).
 
+Newer entries on the second floor cell search, placed props and the broken car: [vehicles-physics-props.md](vehicles-physics-props.md).
+
 <a id="ts-20261015-180723"></a>
 
 ## 2026-10-15T18:07:23+02:00 — Physics body, part 4: the physics world is Bullet, the floor collision pass 0x1c54f8, the floor graph and the sleep rule (llvm-objdump, REA Ghidra 12.1.2, Azahar GDB reads, traps and memory traces at fixed dt 0.033)
