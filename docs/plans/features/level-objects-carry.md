@@ -6,7 +6,7 @@ Carry objects (`props/prop_carry`, object type 122) and carry targets (`props/pr
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-16T14:13:15+02:00. `chase-game` picks up `1-1_DonutsDEMO` with A inside its use zone: the player turns to the box, plays the original's `supercarry_pickup` clip, the box hangs on his right-hand joint (its `carryhandle` node on `weaponRight`) from update 16 of the clip, he walks and stands with the carried clips at the original's carrying step (walk step x 2.5), and drops it with A outside a matching target zone or places it with A inside `1-1_DonutTarget_DEMO`'s zone (`supercarry_putdown`, release at update 8 as in the oracle): `1-1_SO_Donuts_PickedUp`, `1-1_Deliver_Donuts` and `1-1_SO_MissionEnd` start as in the original's order. A released box is put where the hand held it, upright with its heading, on the floor under it (message 0x12 read from the code; the floor height comes from the player's ground probe as a stand-in for the ray). The pickup ends with its clip (oracle slot trace); the ends of the place and drop states and the effects are stand-ins.
+IN_PROGRESS, updated 2026-10-16T14:53:22+02:00. `chase-game` picks up `1-1_DonutsDEMO` with A inside its use zone: the player turns to the box, plays the original's `supercarry_pickup` clip, the box hangs on his right-hand joint (its `carryhandle` node on `weaponRight`) from update 16 of the clip, he walks and stands with the carried clips at the original's carrying step (walk step x 2.5), and drops it with A outside a matching target zone or places it with A inside `1-1_DonutTarget_DEMO`'s zone (`supercarry_putdown`, release at update 8 as in the oracle): `1-1_SO_Donuts_PickedUp`, `1-1_Deliver_Donuts` and `1-1_SO_MissionEnd` start as in the original's order. A released box is put where the hand held it, upright with its heading, on the floor under it (message 0x12 read from the code; the floor height comes from the player's ground probe as a stand-in for the ray). The pickup ends with its clip (oracle slot trace); the ends of the place and drop states and the effects are stand-ins.
 
 ## 3. Verified behaviour
 
@@ -15,6 +15,7 @@ IN_PROGRESS, updated 2026-10-16T14:13:15+02:00. `chase-game` picks up `1-1_Donut
 - Press logic, timers (place: release 8 updates after the press, target effect 1 later; drop release 4), reset after 150 updates; CTest `carry`.
 - Mission 1-1 steps 9 and 10 run end to end on the real level data; CTest `carry-real-data`.
 - Clips, hand joints, handle offset, event updates (put-down release 8 = oracle, pickup attach 16 derived, pickup end 48 = clip length, slot replaced at update 49 in the oracle) and the carried variants of the role records; CTest `carry-animation-real-data`, `carry`. Walking step with a big object (x 2.5, `0x374368` read in the oracle); CTest `runtime-core`.
+- No jump while holding a big object: the B branch of 0x20b984 skips the jump request when the carry test is not 1; a small object still jumps; CTest `carry`. evidence: [carrying.md §2026-10-16T14:53:22](../../re/carrying.md#ts-20261016-145322).
 - No sprint while carrying: 0x1abe60 runs the run timer and the sprint only for the run roles 2, 0x6f, 0x83, and the carried run roles are 552 (big) and 151 (small); CTest `runtime-core`, `carry-animation-real-data`. evidence: [carrying.md §2026-10-16T14:13:15](../../re/carrying.md#ts-20261016-141315).
 
 ## 4. Stand-ins
@@ -30,7 +31,7 @@ IN_PROGRESS, updated 2026-10-16T14:13:15+02:00. `chase-game` picks up `1-1_Donut
 ## 5. Open items
 
 - [ ] LEVOBJ-30 — Measure the pickup in the oracle (update of the attachment, end of state 0xa7, release of a drop from a second point) once the step-9 waypoint can be reached in a scripted walk; replace LEVOBJ-S30. evidence: [carrying.md §2026-10-15T00:17](../../re/carrying.md#ts-20261015-001729).
-- [ ] LEVOBJ-31 — Locomotion while carrying: the walk step x 2.5 and the missing sprint are done; port the uses that the carry test gates in 0x20614c (0x2256e4 first for a big object), 0x206510 and 0x19de38, and read the last reader 0x20bb7c. evidence: [carrying.md §2026-10-16T14:13:15](../../re/carrying.md#ts-20261016-141315).
+- [ ] LEVOBJ-31 — Locomotion while carrying: the walk step x 2.5, the missing sprint and the missing jump with a big object are done; port the uses that the carry test gates in 0x20614c (0x2256e4 first for a big object), 0x206510 and 0x19de38, the other jump conditions of 0x20b984 (state 0x101, the obstacle probe 0x203c10), and find which press the registry walk 0x1fee94 answers for carry objects. evidence: [carrying.md §2026-10-16T14:53:22](../../re/carrying.md#ts-20261016-145322).
 - [ ] LEVOBJ-32 — Effects of the carry system not played: sounds (`carryit_pickup_big_01`, `carryit_putdown_big_01`, `ATTR_SFX_DROP`, `ATTR_SFXReset`, `ATTR_SFXComplete`), the target's `SpawnDebris`, `DropParticle01/02`, `FadeAfterUse`, the blinking and reset effect of a dropped object, the HUD prompt "PICKUP CARRY IT" / "DROP CARRY IT". evidence: [carrying.md §2026-10-15T00:17](../../re/carrying.md#ts-20261015-001729).
 - [ ] LEVOBJ-33 — Other carry classes and parameters: `TargetObject01..04`, `TargetBound01..04`, `TriggerOnRespawn`, `CarryTargetType` 1 and 2, `ATTR_CarryType`, the variants in other levels (`prop_carry_walkie_talkie`, `prop_albatross_*`). evidence: [carrying.md §2026-10-15T00:17](../../re/carrying.md#ts-20261015-001729).
 - [ ] LEVOBJ-74 — The end of the place and drop states (place measured at 17 while the clip lasts 26, same test as the pickup, which ends with its clip) and the table from track hashes to event types; the pickup end is done. Measure: place from `m11-9-delivery-goal` and drop from `m11-8-donuts-in-hand`, ctrace 0x22f560 + memtrace of the slot 0x50 bytes, 60 updates at dt 0.033; pickup ctrace frames 46..54. blocks: LEVOBJ-S30, LEVOBJ-S72. evidence: [carrying.md §2026-10-16T10:42](../../re/carrying.md#ts-20261016-104210).
@@ -39,6 +40,7 @@ IN_PROGRESS, updated 2026-10-16T14:13:15+02:00. `chase-game` picks up `1-1_Donut
 
 ## 6. Findings summary
 
+- No jump with a big object, the press bits of 0x20b984 (user report 2026-10-16): [carrying.md §2026-10-16T14:53:22](../../re/carrying.md#ts-20261016-145322).
 - No sprint while carrying (user report 2026-10-16), other readers of the carry test: [carrying.md §2026-10-16T14:13:15](../../re/carrying.md#ts-20261016-141315).
 - Classes, records, zones, pickup, drop, placing, fired events and unknowns: [carrying.md §2026-10-15T00:17](../../re/carrying.md#ts-20261015-001729).
 - Pickup end by the slot (oracle): [carrying.md §2026-10-16T10:42](../../re/carrying.md#ts-20261016-104210).

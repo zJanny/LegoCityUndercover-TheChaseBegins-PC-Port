@@ -109,6 +109,8 @@ public:
     CarryPhase phase() const { return phase_; }
     // The player holds a carry object (ctrl+0x13c): 0 none, 2 a big object in the hands, 1 a small one (0x225754).
     int carryingMode() const;
+    // 0x20b984: the B press does not jump while the player holds an object whose carry test 0x225754 is not 1 (a big object).
+    bool allowsJump() const { return carryingMode() != 2; }
     bool busy() const { return phase_ != CarryPhase::Free; }
     // Timing of the states for big and small objects (default CarryTiming for both).
     void setTiming(bool small, const CarryTiming& timing) { timing_[small ? 1 : 0] = timing; }

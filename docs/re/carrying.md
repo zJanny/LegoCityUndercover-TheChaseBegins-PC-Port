@@ -12,12 +12,14 @@ The carry objects (object type 122, ASCII `z`) and the carry targets (type 123, 
 - The build-it does fire `TriggerObject` through a wrapper the static search missed. [Corrected by buildit.md §2026-10-15T13:07](buildit.md#ts-20261015-130720)
 - Carried walking multiplies the walk step by 2.5 (float 0x374368); the carried idle, walk and run clips come from the animation role table. [§2026-10-16T09:40](#ts-20261016-094004)
 - The pickup state lasts the clip (24 frames at 15 per second, about 48 updates); the place state ended at update 17 and the drop released at update 4 in earlier runs, unexplained against 26-update clips. [§2026-10-16T10:42](#ts-20261016-104210)
+- A player holding a big object never jumps: the B branch of 0x20b984 skips the jump request (state 4) while ctrl+0x13c is set and the carry test is not 1. Ported. [§2026-10-16T14:53:22](#ts-20261016-145322)
 - A carrying player never sprints: 0x1abe60 runs the run timer and the sprint only for the run roles 2, 0x6f and 0x83, and the carried run roles are 552 (big) and 151 (small). Ported. [§2026-10-16T14:13:15](#ts-20261016-141315)
 - Open: sender of message 0x80000003, 0x2256e4 and the reader 0x20bb7c of the carry test, where released boxes land beyond the ray, track-hash to event table, place and drop end updates, other carry classes and `TargetObject01..04`.
 
 <a id="ts-20261015-001729"></a>
 
 ## 2026-10-15T00:17:29+02:00 — Carry objects and targets: classes, pickup, drop, placing, fired events (REA Ghidra pseudo code, llvm-objdump, oracle states m11-7, m11-8, m11-9)
+Corrected by [carrying.md §2026-10-16T14:53:22](#ts-20261016-145322): ctrl+0xe bit 1 is the B press edge (A is bit 2); the registry walk of 0x20b984 sits on the B edge.
 
 Source: REA (Ghidra 12.1.2) pseudo code of `artifacts/game/game.arm.elf` (sha256 5152ed14…0881; `batch_decompile` evidence ev_453627c5…, ev_68f82cbe…, ev_bbcec8e3…, ev_e4f0ed0e…, ev_ee657a3d…, ev_6aed9ef2…, ev_8039a9d1…) and `llvm-objdump` for data words; oracle runs with the GDB stub only (`ctrace`, `watch`, `read`) on the user states in [oracle-states.md](oracle-states.md). The three user states loaded as described; at `m11-9-delivery-goal` the player stands 3.06 m from the target, outside its use zone (see Placing), which is normal play, not a fault of the state.
 
@@ -159,3 +161,19 @@ User report (2026-10-16): while carrying the donut box Chase walks with the carr
 Unknowns:
 - Byte 0x51640e (when 1, the speed block is skipped for every role) and the 1.3 sprint scale (0x219b80, 0x2cd540).
 - 0x2256e4 and the object types 0xc7 and 0xbb of 0x20614c and 0x206510; the last unread reader 0x20bb7c.
+
+<a id="ts-20261016-145322"></a>
+
+## 2026-10-16T14:53:22+02:00 — No jump with a big object: the B branch of 0x20b984 (REA with Ghidra on `artifacts/game/game.arm.elf`; chase-game run; no emulator)
+
+[Corrects §2026-10-15T00:17:29](#ts-20261015-001729) (the pickup paragraph calls ctrl+0xe bit 1 the A press edge).
+
+User report (2026-10-16): after the sprint fix, jumping with the donut box still breaks the carrying animation.
+
+- **The press bits.** ctrl+0xe bit 1 (value 2) is the B press edge and bit 2 (value 4) the A press edge ([player-falling-jumping.md](player-falling-jumping.md), "Which button"). In 0x20b984 the A edge goes to 0x2011b0 (states 1 to 3; through 0x26aca8 otherwise), the B edge to the rest of the function.
+- **The jump gate.** On the B edge, with the interaction flag ctrl+0x314 bit 6 set and `*(ctrl+0xe0)+0x130` bit 2 clear, 0x1fee94 first offers the press to a registered object (message 3); when none takes it and the entity is the player (`*0x3772c0`), the jump request `0x2414b4(entity, ctrl+0x50, 4, 0)` (state 4) is skipped when ctrl+0x13c is set and the carry test 0x225754 is not 1, when the state is 0x101, when `*(ctrl+0x1e8)+0x1c` is 9, when the object at `*(ctrl+0x1e4)+0x10` has type byte 0xb7, or when the probe 0x203c10 (reach ctrl+0x88 x 0.25, from 0x23d4c0 with 3.0) finds an obstacle whose normal y is below 0.6088. So the player never jumps with a big object (carry test 2) and still jumps with a small one (test 1).
+- **Port.** `CarrySet::allowsJump` (false while a big object is held) gates the jump press in `chase-game`; test `carry` (big object: no jump, after the drop and with a small object: jump). Run: the mission 1-1 route to the donut box, A, 70 updates, B and 10 updates: the height stays 23.94. Before, the port jumped and played the plain jump clip, which broke the carrying pose.
+
+Unknowns:
+- Which press the registry walk 0x1fee94 of carry objects answers in the original: in 0x20b984 it sits on the B edge, while the oracle pickups of mission 1-1 were made with A (0x2011b0 also turns the player to the box).
+- The state 0x101, the value 9 at `*(ctrl+0x1e8)+0x1c`, the type 0xb7 and the obstacle probe 0x203c10 are not ported.

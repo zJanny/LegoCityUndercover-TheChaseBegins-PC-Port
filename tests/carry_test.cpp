@@ -72,6 +72,7 @@ int main() {
                 picked += count(set.update(state, at(11.4f, 10.7f, true)), CarryActionKind::PickedUp);
             require(picked == 1, "the pickup fired once");
             require(set.carryingMode() == 2 && set.carriedIndex() == 0, "big object: carrying mode 2");
+            require(!set.allowsJump(), "no jump with a big object (0x20b984)");
             require(!set.busy(), "the pickup ended");
         }
         {
@@ -103,6 +104,7 @@ int main() {
             }
             require(released == CarryTiming{}.dropRelease, "dropped after " + std::to_string(released));
             require(set.carryingMode() == 0, "nothing carried after the drop");
+            require(set.allowsJump(), "jumping again after the drop");
             set.position("box", position);
             require(position[0] == 20 && position[2] == 20, "dropped at the player");
             unsigned respawn = 0;
@@ -251,6 +253,16 @@ int main() {
             const float expected[16] = {0, -1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, -3, 2, -4, 1};
             for (int i = 0; i < 16; ++i) require(std::fabs(offset[std::size_t(i)] - expected[i]) < 1e-6f, "hand offset element " + std::to_string(i));
             require(carryHandOffset(chase::assets::Model())[0] == 1, "no handle node gives the identity");
+        }
+        {
+            chase::assets::PlacedObjectState fresh;
+            CarrySet set;
+            CarryObject small = makeSet().objects()[0];
+            small.small = true;
+            set.add(small);
+            set.update(fresh, at(11.4f, 10.7f, true));
+            for (unsigned i = 0; i < 100 && set.carryingMode() == 0; ++i) set.update(fresh, at(11.4f, 10.7f, false));
+            require(set.carryingMode() == 1 && set.allowsJump(), "a small object still allows the jump (carry test 1, 0x20b984)");
         }
     } catch (const std::exception& error) {
         std::cerr << "carry-test: " << error.what() << '\n';
