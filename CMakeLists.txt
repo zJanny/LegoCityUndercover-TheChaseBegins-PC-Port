@@ -141,6 +141,8 @@ set(CHASE_HUD_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/hud-traces" CACHE 
     "Recorded original-game HUD stud bar traces for the opt-in HUD test")
 set(CHASE_AUDIO_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/audio-traces" CACHE PATH
     "Recorded original-game sound-call traces (CSV from tools/export_sound_trace.py) for the opt-in differential test")
+option(CHASE_BUILD_TESTS "Build the test programs and register the CTest tests" ON)
+set(BUILD_TESTING ${CHASE_BUILD_TESTS} CACHE BOOL "" FORCE)
 include(CTest)
 if(BUILD_TESTING)
   add_executable(input-test tests/input_test.cpp)

@@ -21,6 +21,16 @@ cmake --build build
 
 The programs are written to `build/`. The build also makes `libchase_assets_c.so`, which the unpacking and conversion tools use (see [Extracting game data](extracting-game-data.md)). Build the project before you run them.
 
+### Build only the game, without tests
+
+```sh
+cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCHASE_BUILD_TESTS=OFF
+cmake --build build
+```
+
+- This skips every test program and every CTest test, so the build is shorter.
+- `ctest` then finds no tests. To get them back, configure again with `-DCHASE_BUILD_TESTS=ON` (the default).
+
 ## Check that everything works
 
 ```sh
