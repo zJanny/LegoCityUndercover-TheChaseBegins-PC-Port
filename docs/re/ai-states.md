@@ -2,6 +2,15 @@
 
 Update functions and set-up functions behind the AI natives that are not movement along a path ([ai-natives.md](ai-natives.md), [ai-navigation.md](ai-navigation.md)). Evidence: llvm-objdump (`--triple=armv6k --mattr=+vfp2`) of `artifacts/game/game.arm.elf`; every address is for the Europe v1.0 build ([game-version.md](game-version.md)).
 
+## Current state
+
+- State table built at 0x2a3c24 (global 0x3771f0): record N at +16 N, word 0 is the update function; state 10 is 0x2c5bc4, 11 0x2c3bd8, 25 0x28b7a0, 27 0x2c1c90, 35 and 36 0x2ab6cc. [§2026-10-14T21:21:58](#ts-20261014-212158)
+- AISuperJump set-up 0x213300 computes heading, distance, frames and height (ctrl+0x308 / +0x30c) and requests state 11 after locomotion state 72; ported as `planSuperJump`. [§2026-10-14T21:21:58](#ts-20261014-212158)
+- State 11 ends when `ATTR_RunSpeed` (default 0.23; ctrl+0x8c, not "MinDistance") exceeds the horizontal distance to the target. [§2026-10-14T21:21:58](#ts-20261014-212158)
+- State 10 (face target) pins the node to its home position and turns toward the target each tick; it never ends by itself; ported as `stepFaceTarget`. [§2026-10-14T21:21:58](#ts-20261014-212158)
+- AIRunAway requests state 25 (0x228c70), AIStalkPlayer state 27 (0x282b88), AIPursuit state 35 or 36 (0x1d4688). [§2026-10-14T21:21:58](#ts-20261014-212158)
+- Open: the flight movement of state 72, the update functions of states 25, 27, 35, 36 and 2, the follow-up lookup 0x1f8d5c, and non-player `ATTR_RunSpeed` values.
+
 <a id="ts-20261014-212158"></a>
 
 ## 2026-10-14T21:21:58+02:00 — AISuperJump set-up 0x213300, state 10 (0x2c5bc4), state 11 arrival value, state numbers of stalk, run away and pursuit

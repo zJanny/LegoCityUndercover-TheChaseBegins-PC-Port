@@ -2,6 +2,16 @@
 
 Handlers of batch 26 (SCRIPT-26). Census and the other batches: [script-natives.md](script-natives.md).
 
+## Current state
+
+- Batch 26 (SCRIPT-26): 22 handlers read, 11 transcribed (PrintDebugString, revealcollectable, KillScript, ResetObject, SkipToFinalState, ToggleUseable, EnableTargetable, SetIndestructible, ActiveDuringDCam, ObjectUnshovable, ToggleUpdateFlag); all return 1. [§2026-10-14T14:16:21](#ts-20261014-141621)
+- Two-argument natives with an object first read the second value at `[r1 + 0xc]`; ActiveDuringDCam and PrintDebugString at `[r1 + 4]`. [§2026-10-14T14:16:21](#ts-20261014-141621)
+- ToggleUpdateFlag sets mask 0x4 (not 0x10) of the halfword at `obj+0x10` when the argument is 0; the entity update loop 0x1a4094 skips entities with mask 0x24, so they get no class update. [§2026-10-14T18:39:00](#ts-20261014-183900)
+- The player entity has kind byte 27, so PositionObject/PositionPlayer reset fall distance and fall speed (comp+0x2b4 / +0x2b8) and send message 8; the probe direction at 0x56d424 is (0, 1, 0) with length 5.0. [§2026-10-14T19:19:15](#ts-20261014-191915)
+- The PositionPlayer ground probe only fires for character kinds 179, 183 and 243; the port has no character entries, so it is a no-op stand-in. [§2026-10-14T19:19:15](#ts-20261014-191915)
+- CameraFollow 0x1bf7c8 stores a global camera object in manager +0x28 via 0x226a30 (labelled no-op in the port); PositionObject for vehicles is read in outline. [§2026-10-15T13:42:00](#ts-20261015-134200)
+- Open: readers of each flag, the kind byte per class (gates EnableShadow, EnableSwitch, fade natives), the fade consumer, message 8 and 54 effects, who fills the kind list at 0x3743ec.
+
 <a id="ts-20261014-141621"></a>
 
 ## 2026-10-14T14:16:21+02:00 — Batch 26 (SCRIPT-26): the 22 handlers read, 11 transcribed (llvm-objdump on game.arm.elf, C++ runner tests; no emulator, no REA session)

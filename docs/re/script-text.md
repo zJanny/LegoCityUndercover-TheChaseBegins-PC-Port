@@ -2,6 +2,14 @@
 
 Handlers of batch SCRIPT-30 and the objects they feed. Evidence: llvm-objdump (armv6k, vfp2) on `artifacts/game/game.arm.elf`, memory polled over RPC in Azahar (state `agent-doughnut-title`, Old 3DS) and oracle screenshots. No REA session was used.
 
+## Current state
+
+- Tip and dialogue natives (0x263850, 0x26ffec, 0x26ff84, 0x2a6d90) feed timed fade objects, drawn by 0x23c780 in a 9-slice box. [§2026-10-14T15:54:29](#ts-20261014-155429)
+- Pitch 17 (line gap -6; heading 23), half-pixel line tops and `_16` icons follow from 0x21bc2c; box alpha is squared. [§2026-10-14T19:25:00](#ts-20261014-192500)
+- Portrait at (200 - half width - 24 - 7, y - 1); tip alpha +/-0.2 per update. [§2026-10-14T16:51:43](#ts-20261014-165143)
+- ShowLevelText ends `startup`; InformationBox has no B button. [§2026-10-14T18:57:39](#ts-20261014-185739), [§2026-10-14T20:46:00](#ts-20261014-204600)
+- Open: reader of the `ShowDialogBG` byte, ShowTally / ShowBossHearts / ShowRaceStart layouts, ShowCharacterIntro against the oracle.
+
 <a id="ts-20261014-152500"></a>
 
 ## 2026-10-14T15:25:00+02:00 — Tip text and dialogue objects, handler arguments, measured timing and layout

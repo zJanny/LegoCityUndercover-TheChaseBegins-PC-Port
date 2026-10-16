@@ -2,6 +2,15 @@
 
 Which entities a cutscene's cast are, why the original draws no second Chase and gives the actors their faces and clothes. For the cutscene natives and fades see [cutscenes.md](cutscenes.md).
 
+## Current state
+
+- A cutscene's cast are the level's own characters: the manifest constructor 0x2d236c calls the actor builder 0x2d1ddc per model folder; slot setup 0x1f35f4 wraps an existing entity. [§2026-10-15T07:54:38](#ts-20261015-075438)
+- Folder `player1` resolves to `Player1.Player01` (Chase himself); other folders match the entity whose `CSCharacter` parameter equals the folder name; `cape` models get no entity. [§2026-10-15T07:54:38](#ts-20261015-075438)
+- Only when no entity is found does the cutscene build its own model from the folder; at the end 0x196144 restores entity byte +0x18 and destroys own models. [§2026-10-15T07:54:38](#ts-20261015-075438)
+- The port draws a copy of the level character and hides the figure during the cutscene (stand-in MOVIE-S30); the double Chase after the van drive was a port bug, fixed so the figure stays hidden. [§2026-10-16T09:40:39](#ts-20261016-094039)
+- Original and port frames of `1_1_b` were compared but show different moments, so no actor comparison exists. [§2026-10-15T10:50:31](#ts-20261015-105031)
+- Open: meaning of entity byte +0x18 = 5, the player's position after a cutscene, actors `Donut1` and `Donutbox`, a close-up oracle state.
+
 <a id="ts-20261015-075438"></a>
 
 ## 2026-10-15T07:54:38+02:00 — Cutscene actors are the level's own characters (REA/Ghidra on `artifacts/game/game.arm.elf`, llvm-objdump, level data scan; oracle slot-table reads inconclusive)

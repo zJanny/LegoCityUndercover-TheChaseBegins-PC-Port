@@ -2,6 +2,17 @@
 
 The camera chain, the follow camera law, the yaw word 0x376894 and the projection.
 
+## Current state
+
+- Camera manager update 0x23f174 (struct 0x376870) writes the yaw word 0x376894 = atan2(row2.x, row2.z) of the camera node's world matrix; the player controller 0x26be04 reads the previous update's value. [§2026-10-13T14:39:58](#ts-20261013-143958)
+- At the street start a single Room record hands over to controller 0x2a8bfc, which runs the follow camera update 0x2e0bf0 on object K (0x589a70); the record path 0x298cd8 serves rooms with several records and was not exercised. [§2026-10-13T14:39:58](#ts-20261013-143958)
+- OnFoot law: distance 10, height 1.7, look lift 0.2 from quadratic triples at t = 0.5; three trackers move by f = pow(0.75, 30 dt) (0.2478 per update at dt 0.033); the eye is pulled to exactly D from the player, yaw gain 0.6. [§2026-10-13T14:39:58](#ts-20261013-143958)
+- Inputs: shoulders turn the view by +/-0.0396 rad per update, the stick adds (v -/+ 0.25) * 4/3 beyond a 0.25 dead zone; L and R together reset the camera via 0x2313c8. [§2026-10-13T14:39:58](#ts-20261013-143958)
+- Projection 0x23458c: y scale cot(fov/2) * 4/3, x scale divided by aspect 5/3; pose FOV 40 gives a 30.5 degree vertical field. [§2026-10-13T14:39:58](#ts-20261013-143958)
+- Mode pose step 0x2821f8 does read record Type bits 0x100 and 0x200 (shift that decays by 0.06 otherwise). [§2026-10-13T14:39:58](#ts-20261013-143958)
+- `FollowCamera` replays nine oracle traces within 6.1e-4 (eye); the sweep push factor and timers S+0x18..0x24 are corrected in [camera-collision-sweep.md](camera-collision-sweep.md#ts-20261013-161935).
+- Open: wall and player push-out sweeps, pitch clamp 0x2e0a50, periodic re-snap, other presets (InVehicle, Skydive), pose FOV source, near and far planes.
+
 <a id="ts-20261013-143958"></a>
 
 ## 2026-10-13T14:39:58+02:00 — Camera chain, follow camera law, yaw word 0x376894, projection

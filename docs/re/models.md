@@ -2,6 +2,16 @@
 
 Reverse-engineering findings, moved verbatim from the progress log. Entries are chronological; later entries may correct earlier ones. Evidence IDs are shortened with an ellipsis.
 
+## Current state
+
+- `.bfnmdl` records: model (0x24), node (0x18), mesh (0x24), part (0x24), material (0x60), vertex buffer header (0x78); deserializer 0x10ccf4, material 0x114860, vertex buffer 0x11528c. [§2026-10-12T16:10](#ts-20261012-1610)
+- The model+0x1c section is collision geometry (see collision.md), not render data. [§2026-10-13T14:46:37](#ts-20261013-144637)
+- Vertex layout from mask 0x12095c: position f32x3, uv0/uv1 s16x2, normal s8x3, colour RGBA8, 8 bytes skin weights and indices (names vWeights/vIndex confirmed in the vertex shaders). [§2026-10-12T18:05](#ts-20261012-1805)
+- UVs are raw s16 times the f32 scales at vertex-buffer header +0x50; level vertices are in world space. [§2026-10-12T18:05](#ts-20261012-1805)
+- `parseModel` (`src/assets/model.cpp`) parses all 3113 models (16122 parts, 7211595 vertices, 4603391 triangles); the Python model tools are gone. [§2026-10-13T15:08:53](#ts-20261013-150853)
+- Combiner setups are recovered in [materials.md](materials.md); the lightmap modulation in the viewer is an approximation.
+- Open: meaning of node and mesh float3 fields, skin field semantics, material render states.
+
 <a id="ts-20261012-1610"></a>
 
 ## 2026-10-12T16:10+02:00 — .bfnmdl model format decoded (REA, Ghidra 12.1.2 provider)

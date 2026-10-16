@@ -2,6 +2,18 @@
 
 Camera records, the record pose blend, the camera lock and the command stack with fades.
 
+## Current state
+
+- The camera is locked (shoulder buttons do not turn it, the UI_CameraLocked icon shows) wherever the active camera command is not the follow controller 0x2a8bfc, i.e. in the record pose 0x298cd8; it is not a flag and not set by `CameraRotFixedSet` (one call, in lvl_07). [§2026-10-14T09:49:53](#ts-20261014-094953)
+- Camera records are the level bounds named `Camera*` (without `LookAt`), 0x50 bytes each, filled from the `.cam` blocks; the query 0x1d34ac keeps enabled bounds containing the player, dedupes overlaps of 0.5 or less, and lets the first Focus or Blocker record win alone. [§2026-10-14T10:44:00](#ts-20261014-104400)
+- Decision (0x1b4a30, 0x19b8c8): exactly one Room record and byte 0x3770c8 == 0 gives the follow controller, anything else the record pose with weighted records. [§2026-10-14T10:44:00](#ts-20261014-104400)
+- Record pose 0x298cd8: position and look point from Location / Offset by Type bits, FOV byte +0x49, weighted sum of records; checked against the oracle in the police station. [§2026-10-14T10:44:00](#ts-20261014-104400)
+- Lock icon: object *0x3758b0, 0.3 s fades, 0.5 s hold after the last trigger, drawn at (10, 240 - 10 - height) of the top screen. [§2026-10-14T10:44:00](#ts-20261014-104400)
+- Lock scope is tied to the camera bounds, not to rooms: the police station is locked in about 99 percent of its walkable cells; census table per level in the entry. [§2026-10-14T10:44:00](#ts-20261014-104400)
+- Command stack (capacity 4): pushing fades the weights by curve 5 (smoothstep) over the mean record BlendTime (record path) or 0.5 s (follow path); the oldest two entries are merged when full (0x2c584c). [§2026-10-14T12:07:46](#ts-20261014-120746)
+- Pose filter 0x2a00dc: `out += (new - out) * factor` per update; record bytes +0x4c / +0x4d give factors (1 - 0.02 byte)^2, byte 0 gives 0.3. `CameraRig` replays the lobby walk to about 6e-6. [§2026-10-14T12:07:46](#ts-20261014-120746)
+- Open: multi-record poses against the oracle (CAMERA-3), the follow controller's seed and jump reaction after a hand-over (CAMERA-9), Blocker pose, shake, writer of byte 0x3770c8, query order of the spatial structure.
+
 <a id="ts-20261013-231343"></a>
 
 ## 2026-10-13T23:13:43+02:00 — Camera lock: script native CameraRotFixedSet and the HUD icon UI_CameraLocked

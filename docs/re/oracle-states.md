@@ -4,6 +4,17 @@ Subtopic of the Azahar runtime oracle. Start with [oracle.md](oracle.md) for set
 
 Save states the oracle uses: which ones exist, the game progress of each, how each was made, and the New 3DS flag.
 
+## Current state
+
+- Procedure: start from a state with `--state NAME`; a state's `NAME.json` carries `new_3ds`, which the tool writes into the generated config (loading a New 3DS state in Old 3DS mode crashed with SIGILL); `savestate` writes the flag and `loadstate` refuses a mode mismatch. [§2026-10-13T23:20:34](#ts-20261013-232034), [§2026-10-14T11:30:36](#ts-20261014-113036)
+- New 3DS mode runs the CPU faster than Old 3DS; use New 3DS states for pictures, camera, door and layout checks and repeat timing-sensitive measurements in Old 3DS mode. [§2026-10-13T23:20:34](#ts-20261013-232034)
+- Use the OpenGL renderer: the software renderer crashed while loading `drv-police-car-seated` and states derived from it. [§2026-10-15T19:07:36](#ts-20261015-190736)
+- Poked states (`trans-poked-*`) are measuring aids, not reference states; the heap addresses of a state are valid only for that state. [§2026-10-14T10:07:15](#ts-20261014-100715)
+- States after mission 1-1 (user): `police-station`, `street-after-1-1`, `info-barrier`, `mission-1-2-start` (1-2 not started, Auburn locked), `in-vehicle` (van_dulmen, slot 5); agent-made from them: `street-at-entrance`, `station-at-exit`, `station-exit-loadingpage`, `info-box-open`. [§2026-10-14T10:20:23](#ts-20261014-102023), [§2026-10-14T11:13:12](#ts-20261014-111312), [§2026-10-14T12:04:04](#ts-20261014-120404), [§2026-10-14T19:17:30](#ts-20261014-191730), [§2026-10-14T23:10:52](#ts-20261014-231052)
+- Mission 1-1 in progress (user): `m11-1-donut-shop` to `m11-9-delivery-goal`, with player positions in the table of the entry; `m11-7-box-prompt` is made from `m11-7-collect-donuts` for the carry pictures. [§2026-10-14T23:27:10](#ts-20261014-232710), [§2026-10-16T09:35:36](#ts-20261016-093536)
+- Agent states with progress: `cutscene-1-1-b` (mission 1-1 started, Old 3DS), `drv-police-car-seated` (step 2, player in the police car), `bullet-trooper-at-obstacle` (from it, trooper resting at the obstacle); `savecont-slotlist-user` and `slotlist-delete-confirm` hold the user's save slot 0 after mission 1-1. [§2026-10-14T20:46:10](#ts-20261014-204610), [§2026-10-15T09:35:00](#ts-20261015-093500), [§2026-10-15T19:07:36](#ts-20261015-190736), [§2026-10-14T15:22:24](#ts-20261014-152224), [§2026-10-14T20:46:10](#ts-20261014-204610)
+- Open: whether mission 1-2 is active in the post-1-1 states, the level variables of the m11 states, a save with Continue byte +6 above 1, and the Old 3DS run of `savestate`.
+
 <a id="ts-20261013-232034"></a>
 
 ## 2026-10-13T23:20:34+02:00 — police-station checkpoint (from the user's own quick save) and New 3DS states

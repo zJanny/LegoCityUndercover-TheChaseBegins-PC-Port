@@ -4,6 +4,20 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 
 Moved to [save-format-state.md](save-format-state.md): level state blocks, unlock bits, object records, Continue, save request chain and slot row fields.
 
+## Current state
+
+- File `data:/savegame.dat` is 0xa694 bytes: CRC u32 (reflected 0xedb88320, init 0xffffffff, no final XOR, over [0x18, end)), u16 size (whole file), u16 version 30, magic "LEGO_ENGINE_SAVE", options block at 0x18 (0x21c bytes), slot 0 at 0x234 and slot 1 at 0x5464 (0x5230 bytes each). [§2026-10-13T10:30](#ts-20261013-1030), [§2026-10-13T12:10](#ts-20261013-1210)
+- Load check 0x1d0acc: bad magic gives status 3, CRC, size or version mismatch status 4; either resets to defaults (0x2081cc). [§2026-10-13T10:30](#ts-20261013-1030)
+- Options: +0 nibbles 8 and 10 (no reader found), +1 language, +2 last slot (0xff none), +3 bit 0 subtitles (inferred), bit 1 invert camera; +4/+5 are the sound volume and +6/+7 the music volume per slot (default 10 and 8). The earlier "two per-slot pairs" and music/SFX readings are corrected. [§2026-10-13T08:53](#ts-20261013-0853)
+- Reset defaults: options start `8a LL ff 21 0a 0a 08 08`, language mapped from the 3DS system language (2 to 2, 3 to 4, 4 to 3, 5 to 5, 7 to 12, 8 to 6, 9 to 8, 10 to 9, else 1); slot defaults depend on runtime values and are not reproduced. [§2026-10-13T12:30](#ts-20261013-1230)
+- Language indices 1..9: English, French, Italian, German, Spanish, Dutch, Danish, Portuguese, Russian; the picker rows map to 1, 2, 3, 4, 5, 7, 6, 9, 8. [§2026-10-13T08:53](#ts-20261013-0853)
+- Options +0xc + slot x 0x18 is a gift list (count, then type/id pairs); +0x1ec + slot x 0x18 is a 24-byte record whose "slot summary" meaning is unconfirmed. [§2026-10-13T08:56](#ts-20261013-0856)
+- Slot progress: character bits at +0x51bc (2 bits per id below 141), per-level blocks of 0x820 bytes (level 1 at +0x4928, levels 2..8 from +0x8) with u16[13] category counts; stud count u64 at +0x5148. [§2026-10-13T09:13](#ts-20261013-0913)
+- Completion 0x1cd3dc is min(1000, collected x 1000 / total) as an unsigned u16; the offline total is 711, and the exclusion loop reads character byte +0xc (only id 9 is excluded), not +0x24. [§2026-10-13T09:25](#ts-20261013-0925), [§2026-10-13T09:26:07](#ts-20261013-092607)
+- Totals come from `tablessupercounters.bxls` (13 categories x levels 2..8, one byte per cell), not from the save. [§2026-10-13T09:19](#ts-20261013-0919)
+- Later save findings are in [save-format-state.md](save-format-state.md).
+- Open: story progress inside the slot, the cheat-flag bits, meaning of the 13 categories, the five floats of the +0x1ec record, how the options block is restored on load.
+
 <a id="ts-20261013-1030"></a>
 
 ## 2026-10-13T10:30+02:00 — S4f save format recovered (REA, Ghidra 12.1.2; read-only)

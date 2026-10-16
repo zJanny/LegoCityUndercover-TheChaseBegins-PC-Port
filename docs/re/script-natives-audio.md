@@ -2,6 +2,18 @@
 
 Handlers of OverrideMusic, AutomaticMusic, StopMusic and EnableTrafficAndPedestrians and what reads their state. Census and batches: [script-natives.md](script-natives.md). Earlier music findings: [audio.md §2026-10-13T09:42](audio.md#ts-20261013-094203). Items: [script-system-natives.md](../plans/features/script-system-natives.md) (SCRIPT-33), [script-system-missions.md](../plans/features/script-system-missions.md) (SCRIPT-201), [audio.md](../plans/features/audio.md).
 
+## Current state
+
+- Music block 0x376b30: override byte +1, ramp byte +2, mood byte +3, master volume +0xc (0.8), track-name array +0x10, stream handle +0x1c, ramp step +0x20; current track record at 0x5861e0, queued record at 0x586230. [§2026-10-15T16:33:19](#ts-20261015-163319)
+- OverrideMusic 0x1cdb28 starts a track with loop 1, crossfade 1, fade 0.5 (0x240ec8 -> 0x24039c); a crossfade over a playing stream queues the track and ramps down first. [§2026-10-15T15:10:38](#ts-20261015-151038)
+- AutomaticMusic 0x1d9c70 clears the override byte and runs the combat/ambient chooser 0x204fe0; StopMusic 0x195054 stops at once for 0.0, else ramps to 0 with step 1/(30 arg). [§2026-10-15T15:10:38](#ts-20261015-151038)
+- The updater 0x240c3c ramps volume by step * 30 * dt (rate 30 confirmed in the oracle) and starts the queued track when the ramp reaches 0; mood route 0x206c40 and the level-start call (lvl_01 starts no music) are read. [§2026-10-15T16:33:19](#ts-20261015-163319)
+- EnableTrafficAndPedestrians 0x2c5780 sets bit 1 of the traffic and pedestrian manager bytes; with it clear every live entity is removed and nothing spawns (default on). [§2026-10-15T15:10:38](#ts-20261015-151038)
+- Camera manager +0x28 is the requested camera: CameraFollow is a camera switch request, not a flag. [§2026-10-15T15:10:38](#ts-20261015-151038)
+- Ten sound natives: handler argument layout is 8 bytes per argument (entity at +8i, value at +8i+4); play family 0x1b4394 / 0x295244 / 0x27bd48, stop family 0x1b43ec / 0x1d0d28, ScaleSoundFrequency 0x2a8afc, SetSoundVolume 0x272dcc. [§2026-10-15T17:27:05](#ts-20261015-172705)
+- Port stand-ins: object sound owner ids from 0x4000 (AUDIO-S30), volume and frequency on the voice (AUDIO-S31), registersound, VehicleEnableDrivingMusic and vehiclestopsounds recorded only (AUDIO-S32). [§2026-10-15T17:27:05](#ts-20261015-172705)
+- Open: the duck record and DuckMusicFor, who restarted track 16 in the oracle, the u16 at entity+0x14, readers of registered sound pairs, type-10 ambient emitters, spawn rules of traffic and pedestrians.
+
 <a id="ts-20261015-151038"></a>
 
 ## 2026-10-15T15:10:38+02:00 — OverrideMusic, AutomaticMusic, StopMusic, EnableTrafficAndPedestrians and the readers of camera manager +0x28 (llvm-objdump only, no REA session, no emulator)

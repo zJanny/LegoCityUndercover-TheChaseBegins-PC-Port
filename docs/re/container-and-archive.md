@@ -2,6 +2,15 @@
 
 Reverse-engineering findings, moved verbatim from the progress log. Entries are chronological; later entries may correct earlier ones. Evidence IDs are shortened with an ellipsis.
 
+## Current state
+
+- The image is a decrypted CCI (NCCH NoCrypto, product CTR-P-AA8P, `.code` compressed, SHA256 f895faae...); the original is never modified. [§2026-10-12T14:43:19](#ts-20261012-144319)
+- RomFS: IVFC with 4 KiB blocks, 51 files (`lego_city3ds.fib`, its CSV index, 49 `cutscenes/*.moflex`); `tools/extract_romfs.py` verifies the full hash tree. [§2026-10-12T15:25:37](#ts-20261012-152537)
+- FUSE archive: 20-byte header, then entries `{CRC, offset, size<<5 | flags}` sorted by CRC; codec = flags&3, block size 0x8000 << ((flags>>2)&7); open routine 0x17dea8, entry read 0x12894c. [§2026-10-12T15:32:32](#ts-20261012-153232)
+- Codec 1 is a headerless RefPack/QFS variant (0x12efe0) with rearranged bit fields; only codecs 0 and 1 occur in all 12836 entries. [§2026-10-12T15:32:32](#ts-20261012-153232)
+- Extraction (`tools/extract_fib.py`) yields 12836 entries, 12824 named through the CSV; sizes and offsets match the CSV. [§2026-10-12T15:32:32](#ts-20261012-153232)
+- Open: codec 3 (0x12d50c) is not analysed and does not occur in this image.
+
 <a id="ts-20261012-144319"></a>
 
 ## 2026-10-12T14:43:19.863039+02:00

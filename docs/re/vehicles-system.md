@@ -2,6 +2,19 @@
 
 Map of the vehicle system of the Europe v1.0 build, written for the plan in [features/vehicles.md](../plans/features/vehicles.md). Confidence is given per piece: **read** (pseudo code or disassembly read in full), **partly read** (entry and calls read, not every branch), **located** (address and size known, body not read). Split from [vehicles.md](vehicles.md).
 
+## Current state
+
+- Every vehicle class has ObjectType 0xb7 (183): create 0x156ee4, post-link 0x15624c, link 0x156f74, update 0x1571dc, message handler 0x159bd0; entity+0x7c is the 0x350-byte record, entity+0x84 the physics body. The search 0x225d94 also accepts types 0xb3 and 0xf3. [§2026-10-14T22:44:38](#ts-20261014-224438)
+- Handling data lives in the class files (about 120 parameters each), loaded by 0x243f90, 0x243e9c, 0x243c50, 0x243628 and 0x2435d0; the vehicle table is `tablescharacters` sheet 4 (49 rows, stride 0x18, health, horn id). [§2026-10-14T22:44:38](#ts-20261014-224438)
+- Parameter reader 0x23ed0c fills the record: `VehicleType` +0x2ec, `MusicTrack` +0x2ee, state word +4 = 10 for `SpawnUnshovable` else 4 for `SpawnParked`, health bytes +0x30c..0x30e, camera floats +0x2f0..+0x300, flags in +0x311 / +0x312. [§2026-10-14T23:59:31](#ts-20261014-235931)
+- Input provider: 0x29cd9c for the player's vehicle (steer slot 0, A accelerates, B brakes, slot 9 horn), 0x1d8df0 for AI and parked; 0x23019c copies inputs to the body and runs the effect machine; 0x16ce9c is the post step with the stuck rule (over 2.0 s gives state 8). [§2026-10-14T22:44:38](#ts-20261014-224438)
+- Record states seen: 1 traffic, 4 parked, 5 driven; 6 and 7 block VehicleSetUnshovable; 8 stuck; 10 unshovable. [§2026-10-14T22:44:38](#ts-20261014-224438)
+- Entering: holding X raises event 200, handler 0x322a04 pushes player state 0x11a (jump in), then 0x11c (drive); `0x24255c` returns the vehicle for states 0x11c and 0x19b; jump out is 0x11b. [§2026-10-14T22:44:38](#ts-20261014-224438)
+- Flag natives write record bits: locked +0x311 bit 1, jump out not allowed bit 6, forced stop byte +0x310; SetForcedStopOnMyVehicle takes a character as first argument (corrects the first map). [§2026-10-14T23:59:31](#ts-20261014-235931)
+- Collision: vehicles register one mesh item (mask 6, kind 1) through the generic entity set-up; owner flags 0x1340 parked, 0x1300 / 0x1301 traffic, bit 0 disabled. [§2026-10-14T23:59:31](#ts-20261014-235931)
+- The port's collision did not follow an `EnableObject` during play when this was checked (police car walked through). [§2026-10-15T00:09:07](#ts-20261015-000907)
+- Open: the physics body (integration, wheels, engine and gear model), who turns state 10 into 4, the state machine and its names, the AI input 0x1d8df0, owner flag 0x40, the hand-over between character and vehicle. Later vehicle findings are in the other vehicles-*.md files.
+
 <a id="ts-20261014-224438"></a>
 
 ## 2026-10-14T22:44:38+02:00 — Vehicle system map: class 183, handling data, update, entering, natives (REA Ghidra 12.1.2 pseudo code, llvm-objdump, class files, tables; oracle see the end)
