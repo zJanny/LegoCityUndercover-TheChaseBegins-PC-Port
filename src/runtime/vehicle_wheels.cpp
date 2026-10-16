@@ -1,4 +1,5 @@
 #include "runtime/vehicle_wheels.hpp"
+#include "runtime/vehicle_sphere_sweep.hpp"
 #include "runtime/vehicle_world.hpp"
 
 #include <algorithm>
@@ -77,6 +78,20 @@ std::optional<WheelHit> castWheelRay(const CollisionWorld& world, const Vector3&
     });
     if (best > 1.0f) return std::nullopt;
     return hit;
+}
+
+std::optional<WheelHit> castFloorWheelRay(const FloorMesh& mesh, int bodyCell, const Vector3& bodyPosition, const Vector3& from, const Vector3& to) {
+    if (bodyCell < 0) return std::nullopt;
+    FloorPoint start = {from[0], from[1], from[2]};
+    const int cell = walkFloor(mesh, bodyCell, {bodyPosition[0], bodyPosition[1], bodyPosition[2]}, start, FloorWalkEdge::Fail);
+    if (cell < 0) return std::nullopt;
+    const Vector3 segment = subtract(to, from);
+    const float length = std::sqrt(dot(segment, segment));
+    const Vector3 direction = {segment[0] / length, segment[1] / length, segment[2] / length};
+    const std::optional<FloorRayHit> hit = floorRay(mesh, cell, start, direction, length);
+    if (!hit) return std::nullopt;
+    const assets::CollisionTriangle& triangle = mesh.triangle(hit->cell);
+    return WheelHit{{hit->point[0], hit->point[1], hit->point[2]}, {triangle.normal[0], triangle.normal[1], triangle.normal[2]}};
 }
 
 std::vector<WheelState> applyWheelForces(VehicleRigidBody& body, const std::vector<VehicleWheel>& wheels, float suspensionScale,
@@ -174,6 +189,7 @@ VehicleCollisionBody vehicleCollisionBody(const VehicleRecord& record, const Vec
     VehicleCollisionBody shape;
     shape.points = vehicleProbePoints(low, high, record.wheels);
     shape.massTimesTwo = record.mass * massScale;
+    if (record.collSpheres) shape.sphereSet = buildVehicleSpheres(low, high, *record.collSpheres, record.collRadius, record.extraColSpheres);
     return shape;
 }
 
@@ -194,6 +210,7 @@ VehicleCollisionBody vehicleCollisionBody(const VehicleRecord& record) {
     VehicleCollisionBody shape;
     shape.points = vehicleProbePoints(low, high, record.wheels);
     shape.massTimesTwo = kVehicleBodyMassFactor * record.mass;
+    if (record.collSpheres) shape.sphereSet = buildVehicleSpheres(low, high, *record.collSpheres, record.collRadius, record.extraColSpheres);
     return shape;
 }
 
@@ -219,7 +236,10 @@ std::vector<WheelState> stepVehiclePhysics(VehicleRigidBody& body, DrivetrainSta
     drive.wheels.resize(record.wheels.size());
     if (!wokeThisUpdate) {
         for (std::size_t i = 0; i < record.wheels.size(); ++i) setupWheel(drive.wheels[i], grips[i], i, drive, axes);
-        states = applyWheelForces(body, record.wheels, record.suspensionScale, ray);
+        const WheelRay floorRay = [&](const Vector3& from, const Vector3& to) {
+            return castFloorWheelRay(floor->mesh, floor->tracker.cell, body.position, from, to);
+        };
+        states = applyWheelForces(body, record.wheels, record.suspensionScale, floor ? floorRay : ray);
         for (std::size_t i = 0; i < record.wheels.size(); ++i) {
             WheelSpinState& wheel = drive.wheels[i];
             if (i < 4) {
@@ -234,6 +254,7 @@ std::vector<WheelState> stepVehiclePhysics(VehicleRigidBody& body, DrivetrainSta
     }
     stepDrivetrain(drive, record.engine, grips, forwardSpeed);
     applyRigidBodyForces(body, dt);
+    if (floor) floor->shape.driven = controls.driver;
     if (floor) collideVehicleWithFloor(body, floor->mesh, floor->shape, floor->tracker, kTyreSurfaceFriction, linearDamping, record.dampingAngular, dt);
     else integrateRigidBody(body, linearDamping, record.dampingAngular, dt);
     return states;

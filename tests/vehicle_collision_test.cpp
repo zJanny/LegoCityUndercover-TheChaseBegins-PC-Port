@@ -180,9 +180,39 @@ void projectionTests() {
     expect(!floorProjectedContains(a, b, c, {-0.5f, 0.5f, 0.0f}, axes), "a point outside the first edge");
 }
 
+// 0x155888 by hand from the assembly of 2026-10-16: one floor triangle (0,0,0) (0,0,4) (4,0,0) with the normal up. A ray from (1, 1, 1) straight down
+// for 2 crosses the plane after half of it; a start behind the plane misses; a ray that ends above the plane inside the cell misses.
+void floorRayTests() {
+    assets::CollisionItem item;
+    item.vertices = {0, 0, 0, 0, 0, 4, 4, 0, 0};
+    assets::CollisionTriangle triangle;
+    triangle.normal[1] = 1.0f;
+    triangle.vertex[0] = 0;
+    triangle.vertex[1] = 1;
+    triangle.vertex[2] = 2;
+    item.triangles.push_back(triangle);
+    item.floor.emplace();
+    assets::FloorCell cell;
+    cell.itemTriangle = true;
+    cell.neighbour[0] = cell.neighbour[1] = cell.neighbour[2] = 0xffff;
+    item.floor->cells.push_back(cell);
+    const FloorMesh mesh(item);
+    const std::optional<FloorRayHit> hit = floorRay(mesh, 0, {1.0f, 1.0f, 1.0f}, {0.0f, -1.0f, 0.0f}, 2.0f);
+    expect(hit.has_value(), "the ray down through the cell hits the floor");
+    if (hit) {
+        near(hit->fraction, 0.5, 1e-7, "floor ray: the plane is crossed after half of the ray");
+        near(hit->point[1], 0.0, 1e-7, "floor ray: hit height");
+        near(hit->point[0], 1.0, 1e-7, "floor ray: hit x");
+    }
+    expect(!floorRay(mesh, 0, {1.0f, -1.0f, 1.0f}, {0.0f, -1.0f, 0.0f}, 2.0f), "a start behind the plane misses");
+    expect(!floorRay(mesh, 0, {1.0f, 1.0f, 1.0f}, {0.0f, -1.0f, 0.0f}, 0.5f), "a ray that ends above the plane inside the cell misses");
+    expect(!floorRay(mesh, 0, {3.0f, 1.0f, 3.0f}, {0.0f, -1.0f, 0.0f}, 2.0f), "a ray crossing the plane beyond the leaving edge goes on to the neighbour, none here");
+}
+
 int main(int argc, char** argv) {
     probePoints();
     projectionTests();
+    floorRayTests();
     if (argc == 3) {
         if (!std::filesystem::exists(argv[1]) || !std::filesystem::exists(argv[2])) {
             std::printf("vehicle-collision-test: data not available, skipped\n");

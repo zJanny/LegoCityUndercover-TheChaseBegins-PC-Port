@@ -132,6 +132,11 @@ public:
     // 0x22ec10: the vehicle in the states 0x11a, 0x11b and 0x11c.
     std::optional<std::size_t> boardedVehicle() const { return phase_ == BoardingPhase::OnFoot ? std::nullopt : std::optional<std::size_t>(vehicle_); }
     std::optional<std::size_t> seatedVehicle() const { return phase_ == BoardingPhase::Seated ? std::optional<std::size_t>(vehicle_) : std::nullopt; }
+    // The vehicle whose mass scale body+0x84 is 2: Jump In begins (0x31fffc, state 0x11a) with 0x213dc8(vehicle, *0x3745b4) and Jump Out begins
+    // (0x3222f4, state 0x11b) with 0x213dc8(vehicle, 1.0).
+    std::optional<std::size_t> massScaledVehicle() const {
+        return phase_ == BoardingPhase::JumpIn || phase_ == BoardingPhase::Seated ? std::optional<std::size_t>(vehicle_) : std::nullopt;
+    }
 
 private:
     BoardingStep step(BoardingPhase phase, const std::array<float, 3>& position, std::int16_t facing, bool visible, bool takesControl) const;

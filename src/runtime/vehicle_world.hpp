@@ -30,13 +30,15 @@ struct VehicleShapeBoxes {
     Vector3 shapeLow{}, shapeHigh{}, collisionLow{}, collisionHigh{};
 };
 VehicleShapeBoxes vehicleShapeBoxes(const VehicleRecord& record, const float entityCentre[3], const float entityHalf[3]);
-// The mass scale body+0x84 of a vehicle: 2 while the player sits in it (the enter path 0x31fffc), else 1 (the leave path 0x3222f4, the parked
-// worker in the oracle). STAND-IN VEH-S81: the port switches with its own boarding phase; which boarding step runs the enter and leave paths is not
-// read.
-float vehicleMassScale(bool playerSeated);
+// The mass scale body+0x84 of a vehicle: 2 from the begin of the player's Jump In (state 0x11a, 0x31fffc) until the begin of his Jump Out (state
+// 0x11b, 0x3222f4 sets 1), else 1 (the parked worker in the oracle). The value 2 is the global 0x3745b4 as the oracle held it (the data image
+// holds 0 there; its writer is not read).
+float vehicleMassScale(bool playerVehicle);
 
 // STAND-IN VEH-S82: whether a vehicle is a dynamic body of the Bullet world. The link 0x156f74 adds the body (0x243300 with 1), makes it
-// kinematic for owner flag 0x4 or 0x400 (0x2432d8) and removes it again (0x243300 with 0); the code that adds it later is not read. Oracle
+// kinematic for owner flag 0x4 or 0x400 (0x2432d8) and removes it again (0x243300 with 0). The vehicle handler adds it again on message
+// 0x80000004 (0x17a618, sent when the entity joins the active list in 0x173534) unless the entity word +0x10 has bit 0, and removes it on
+// message 0x80000003 (0x17a648, sent by the removal at 0x22d4a4); what activates a given vehicle is not read. Oracle
 // (drv-police-car-seated): the dynamic bodies are the trooper and the parked FP_Vehicle_03, 04 and 05; the traffic vehicles are kinematic and
 // out of the world (collision flags 0x182, no broadphase handle). The port takes an enabled vehicle that is parked (state 4, or 10 for
 // SpawnUnshovable) or already has a body.

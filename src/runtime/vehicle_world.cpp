@@ -20,7 +20,7 @@ bool vehicleHasDynamicBody(const VehicleRecord& record, bool hasBody, bool disab
     return parked(record.state) || parked(record.requestedState);
 }
 
-float vehicleMassScale(bool playerSeated) { return playerSeated ? kVehicleBodyMassFactor : 1.0f; }
+float vehicleMassScale(bool playerVehicle) { return playerVehicle ? kVehicleBodyMassFactor : 1.0f; }
 
 void stepVehicleBodies(std::vector<VehicleWorldBody>& bodies, VehiclePairManifolds& pairs, const WheelRay& ray, int steps) {
     for (int step = 0; step < steps; ++step) {

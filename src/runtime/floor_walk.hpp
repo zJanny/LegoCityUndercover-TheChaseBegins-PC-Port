@@ -5,6 +5,7 @@
 #include "assets/assets.hpp"
 
 #include <array>
+#include <optional>
 #include <vector>
 
 namespace chase::runtime {
@@ -42,6 +43,17 @@ int walkFloor(const FloorMesh& mesh, int cell, const FloorPoint& from, FloorPoin
 // 0x1aa478: the cells reached from `cell` across edges whose segment in the xz plane lies within `radius` of `point`, in discovery order, `cell`
 // first.
 std::vector<int> floorCellsWithin(const FloorMesh& mesh, float radius, const FloorPoint& point, int cell);
+
+// Hit of the floor ray 0x155888.
+struct FloorRayHit {
+    float fraction = 0;
+    FloorPoint point = {0, 0, 0};
+    int cell = -1;
+};
+// 0x155888: the ray from `start` along the unit `direction` for `length` through the cells from `cell`, which must hold the start (the start must
+// lie on the front side of its plane). In each cell the ray crosses the plane inside the edge it leaves through, or leaves through that edge
+// into the neighbour, at most 29 cells; a ray that ends inside its cell without crossing the plane, or leaves the graph, misses.
+std::optional<FloorRayHit> floorRay(const FloorMesh& mesh, int cell, const FloorPoint& start, const std::array<float, 3>& direction, float length);
 
 // 0x2384dc: the two axes of the projection that drops the dominant component of `normal` (first, second).
 std::array<int, 2> floorProjectionAxes(const std::array<float, 3>& normal);

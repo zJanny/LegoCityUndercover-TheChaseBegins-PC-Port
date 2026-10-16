@@ -76,6 +76,14 @@ void readParameters(const ParamReader& reader, const std::vector<VehicleTableRow
             std::memcpy(value.data(), scale->blocks[0].data(), 12);
             record.inertiaScale = value;
         }
+    if (const assets::LevelParam* spheres = reader.get("CollSpheres"))
+        if (spheres->type == 2 && !spheres->blocks.empty() && spheres->blocks[0].size() >= 12) {
+            std::array<float, 3> value{};
+            std::memcpy(value.data(), spheres->blocks[0].data(), 12);
+            record.collSpheres = value;
+        }
+    record.collRadius = floatOf(reader.get("CollRadius"), 0.49f);
+    record.extraColSpheres = (std::uint32_t(floatOf(reader.get("ExtraColSpheres1"), 0.0f)) & 1u) != 0;
     record.cameraPosY = floatOf(reader.get("ATTR_CameraPosY"), 0.0f);
     record.cameraPosZ = floatOf(reader.get("ATTR_CameraPosZ"), 0.0f);
     record.cameraLookY = floatOf(reader.get("ATTR_CameraLookY"), 0.0f);

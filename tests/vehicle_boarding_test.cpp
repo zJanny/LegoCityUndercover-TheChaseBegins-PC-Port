@@ -132,6 +132,8 @@ void jumpIn() {
             "the press starts state 0x11a");
     requireNear(step.position[0], 886.0f, 1e-6f, "the begin update does not move");
     require(!step.jumpAnimation, "the animation starts in the next update");
+    require(boarding.massScaledVehicle() == std::optional<std::size_t>(0) && !boarding.seatedVehicle(),
+            "Jump In begins with the vehicle's mass scale 2 (0x31fffc calls 0x213dc8), before 0x24255c returns the vehicle");
 
     input.action = false;
     for (int k = 1; k <= 21; ++k) {
@@ -178,6 +180,7 @@ void seatedAndLeave() {
     require(step.phase == BoardingPhase::JumpOut && step.events.size() == 1 && step.events[0].kind == BoardingEventKind::Exiting && step.visible,
             "the press starts state 0x11b, fires PlayerVehicleExiting and shows the player");
     require(!boarding.seatedVehicle(), "0x24255c returns 0 during the jump out");
+    require(!boarding.massScaledVehicle(), "Jump Out begins with the vehicle's mass scale 1 (0x3222f4 calls 0x213dc8)");
 }
 
 // van_dulmen as the user's state in-vehicle had it: node (613.369, 17.972, 1062.516), forward (-0.1995, 0, 0.9795), DriverPosition (0, -0.2, 0). X pressed

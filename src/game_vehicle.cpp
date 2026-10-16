@@ -63,6 +63,7 @@ std::optional<runtime::WaypointVehicle> LevelSession::waypointVehicle() const {
 
 void LevelSession::driveVehicles(float dt) {
     const std::optional<std::size_t> seated = boarding ? boarding->seatedVehicle() : std::nullopt;
+    const std::optional<std::size_t> massScaled = boarding ? boarding->massScaledVehicle() : std::nullopt;
     runtime::DriveInput playerInput;
     if (!levelScripts.playerControlTaken() && !carry.busy() && !cutscenePlaying())
         playerInput = runtime::readDriveInput({pad.slot(kSlotStickX).value, pad.channel(14).value, pad.channel(15).value, pad.channel(16).value, pad.channel(17).value});
@@ -80,7 +81,7 @@ void LevelSession::driveVehicles(float dt) {
         runtime::BoardingVehicle& vehicle = boardingVehicles[i];
         const bool driven = seated && *seated == i && record.state == runtime::kVehicleStateDriven;
         if (!runtime::vehicleHasDynamicBody(record, driven || drive.started, objectState.isDisabled(vehicle.instance))) continue;
-        const float massScale = runtime::vehicleMassScale(seated && *seated == i);
+        const float massScale = runtime::vehicleMassScale(massScaled && *massScaled == i);
         if (!drive.started) {
             drive.started = true;
             drive.awake = true;

@@ -21,6 +21,47 @@ int floorNeighbour(std::uint16_t raw) {
     return value > -4 ? value : int(raw);
 }
 
+namespace {
+float planeSide(const assets::CollisionTriangle& triangle, const FloorPoint& p) {
+    float sum = triangle.normal[0] * p[0];
+    sum += triangle.normal[1] * p[1];
+    sum += triangle.normal[2] * p[2];
+    return sum - triangle.d;
+}
+
+int leavingEdge(const FloorMesh& mesh, int cell, const FloorPoint& from, float dx, float dz) {
+    const auto side = [&](const FloorPoint& v) { return (v[2] - from[2]) * dx - dz * (v[0] - from[0]); };
+    if (side(mesh.vertex(cell, 0)) > 0.0f) return side(mesh.vertex(cell, 1)) <= 0.0f ? 0 : 1;
+    return side(mesh.vertex(cell, 2)) > 0.0f ? 2 : 1;
+}
+}
+
+std::optional<FloorRayHit> floorRay(const FloorMesh& mesh, int cell, const FloorPoint& start, const std::array<float, 3>& direction, float length) {
+    if (cell < 0 || planeSide(mesh.triangle(cell), start) < 0.0f) return std::nullopt;
+    const FloorPoint end = {start[0] + direction[0] * length, start[1] + direction[1] * length, start[2] + direction[2] * length};
+    for (int steps = 29; steps > 0; --steps) {
+        const assets::CollisionTriangle& triangle = mesh.triangle(cell);
+        const int edge = leavingEdge(mesh, cell, start, direction[0], direction[2]);
+        const FloorPoint a = mesh.vertex(cell, edge);
+        const FloorPoint b = mesh.vertex(cell, (edge + 1) % 3);
+        const float ex = b[0] - a[0];
+        const float ez = b[2] - a[2];
+        const float endSide = planeSide(triangle, end);
+        if (endSide < 0.0f) {
+            const float startSide = planeSide(triangle, start);
+            const float fraction = startSide / (startSide - endSide);
+            const float reach = length * fraction;
+            const FloorPoint point = {start[0] + direction[0] * reach, start[1] + direction[1] * reach, start[2] + direction[2] * reach};
+            if ((point[0] - a[0]) * ez - ex * (point[2] - a[2]) > 0.0f) return FloorRayHit{fraction, point, cell};
+        }
+        if (0.0f < (end[0] - a[0]) * ez - ex * (end[2] - a[2])) return std::nullopt;
+        const int next = floorNeighbour(mesh.cell(cell).neighbour[edge]);
+        if (next < 0) return std::nullopt;
+        cell = next;
+    }
+    return std::nullopt;
+}
+
 int walkFloor(const FloorMesh& mesh, int cell, const FloorPoint& from, FloorPoint& to, FloorWalkEdge edge) {
     const float dx = to[0] - from[0];
     const float dz = to[2] - from[2];

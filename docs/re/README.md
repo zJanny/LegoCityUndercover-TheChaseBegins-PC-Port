@@ -78,7 +78,7 @@ Read this index, then open only the file you need.
 | [vehicles-waypoints.md](vehicles-waypoints.md) | Waypoints reached in a vehicle, script jump in / out natives |
 | [vehicles-physics.md](vehicles-physics.md) | Vehicle physics body: rigid body, world step, wheels, engine, tyres, wheel pose |
 | [vehicles-physics-collision.md](vehicles-physics-collision.md) | Vehicle physics collision: the Bullet world, floor collision pass, sleep rule, contacts with the static Bullet boxes |
-| [vehicles-physics-props.md](vehicles-physics-props.md) | Vehicle physics: the second floor cell search 0x164328 (push-out of points below an overhead layer), the vehicle against placed props, the car breaking into bricks |
+| [vehicles-physics-props.md](vehicles-physics-props.md) | Vehicle physics: the second floor cell search 0x164328 (push-out of points below an overhead layer), the vehicle against placed props, the car breaking into bricks, the sphere sweep of the floor pass 0x1c54f8 (0x1b6ef8, 0x16788c, set-up 0x33a4fc), the wheel ray through the floor graph 0x155888, mass scale and body activation messages |
 | [player-falling-jumping.md](player-falling-jumping.md) | Falling, landing stun, jumping, step-off slide, slope slow-down, state table |
 | [front-end.md](front-end.md) | Boot sequencer 0x302080, screen order and triggers from power-on to the first level, prompt state machine 0x313368, save indicator, language, savegameflow pages, loading screen, intro movie bubble and title card |
 | [collision.md](collision.md) | Level collision data (model+0x1c section), ground probe by box bisection, wall slide, placed objects (world grid, registration, shapes, query layers), differential test against traces |

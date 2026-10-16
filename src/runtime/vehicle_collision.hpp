@@ -98,8 +98,17 @@ int locateFloorCell(const FloorMesh& mesh, const Vector3& point);
 // 0x20c0e4 (called by 0x33aea8 every step): without a cell the search, else the walk from the last position (failing at the graph's edge).
 void trackFloorCell(const FloorMesh& mesh, FloorTracker& tracker, const Vector3& position);
 
+// The spheres of body+0x17c..+0x184 and the reach rigid+0x208 (the larger length of the shape's box corners).
+struct VehicleCollisionSpheres {
+    std::vector<Vector3> centres;
+    std::vector<float> radii;
+    float reach = 0;
+};
+
 struct VehicleCollisionBody {
     std::array<Vector3, 8> points{};
+    VehicleCollisionSpheres sphereSet;  // empty when the class has no CollSpheres
+    bool driven = false;                // body flag +0xc4 bit 3 (a driver): the sphere sweep looks at the 2 << edge walls instead of 0x10 << edge
     float massTimesTwo = 0;     // body+0xc8
     bool percentWalls = false;  // body flag +0xc4 bit 6
     bool spheres = true;        // body flag +0xc4 bit 0 (set in the trooper and the donut van: +0xc4 = 0x800b)
@@ -110,8 +119,7 @@ struct VehicleCollisionBody {
 std::uint16_t floorContactFlags(const VehicleCollisionBody& shape, std::uint8_t cellSurface, const FloorContact& contact);
 
 // 0x1c54f8 for one world step after the forces are applied (0x2d46d4): without a tracked cell the body does not move. Returns whether a
-// contact was answered. STAND-IN VEH-S52: the sphere sweep of the CollSpheres against flagged cell edges (0x1b6ef8, 0x16788c, body flag bit 0)
-// and the contact messages of 0x181e68 to the entity (a reply 2000 drops the contact) are not ported.
+// contact was answered. STAND-IN VEH-S52: the contact messages of 0x181e68 to the entity (a reply 2000 drops the contact) are not ported.
 bool collideVehicleWithFloor(VehicleRigidBody& body, const FloorMesh& mesh, const VehicleCollisionBody& shape, FloorTracker& tracker,
                              float surfaceFriction, float linearDamping, float angularDamping, float dt);
 

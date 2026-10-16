@@ -1,5 +1,7 @@
 #include "runtime/vehicle_collision.hpp"
 
+#include "runtime/vehicle_sphere_sweep.hpp"
+
 #include <algorithm>
 #include <cmath>
 #include <cstring>
@@ -309,6 +311,7 @@ bool collideVehicleWithFloor(VehicleRigidBody& body, const FloorMesh& mesh, cons
             cells[i] = walkFloor(mesh, tracker.cell, body.position, points[i], FloorWalkEdge::Clip);
         }
         FloorContacts contacts;
+        if (shape.spheres && !shape.sphereSet.centres.empty()) sweepVehicleSpheres(mesh, tracker, body, shape.sphereSet, shape.driven, dt, contacts);
         for (std::size_t i = 0; i < 8; ++i)
             if (cells[i] >= 0) sweepFloorPoint(mesh, dt, cells[i], points[i], velocities[i], contacts, shape.percentWalls);
         if (contacts.items.empty()) {

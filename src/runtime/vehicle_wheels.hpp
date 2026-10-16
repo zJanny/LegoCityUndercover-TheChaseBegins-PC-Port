@@ -47,9 +47,13 @@ struct WheelHit {
 // Closest hit of the segment from `from` to `to`, nothing without one.
 using WheelRay = std::function<std::optional<WheelHit>(const Vector3& from, const Vector3& to)>;
 
-// The ray of 0x33c718. 0x155888 accepts a triangle only when the start is on the front of its plane (record normal and d) and the end is
-// behind it. STAND-IN VEH-S31: 0x23b5e8 picks the triangle and 0x155888's inside test are not read; here it is the closest triangle of the
-// player's query layer that the segment crosses this way, and other bodies (0x1ea6a0) are not tested.
+// The wheel ray of 0x33c718: the cell that holds the ray start is found by the walk 0x23b5e8 from the body's cell (end 0, fails at the graph's
+// edge) and the ray goes through the floor graph (0x155888, floorRay). It never sees entity meshes, so a vehicle's own collision mesh cannot
+// catch its wheels. STAND-IN VEH-S87: the original then sweeps the static Bullet boxes within 5 units (0x2e2f48, 0x1ea6a0); that is not ported.
+std::optional<WheelHit> castFloorWheelRay(const FloorMesh& mesh, int bodyCell, const Vector3& bodyPosition, const Vector3& from, const Vector3& to);
+
+// The ray of a body without a floor graph (a test setup): the closest triangle of the player's query layer whose front faces the ray start.
+// STAND-IN VEH-S31: this is not the original's ray; a body with a floor graph uses castFloorWheelRay.
 std::optional<WheelHit> castWheelRay(const CollisionWorld& world, const Vector3& from, const Vector3& to, const std::function<bool(const CollisionWorld::Entry&)>& skip = {});
 
 struct WheelState {
