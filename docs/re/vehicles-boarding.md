@@ -2,6 +2,18 @@
 
 Split from [vehicles.md](vehicles.md). Plan: [features/vehicles-boarding.md](../plans/features/vehicles-boarding.md).
 
+## Current state
+
+- States: Drive Jump In 0x11a (begin 0x31fffc, update 0x3201b0) ends by pushing 0x11c; Drive 0x11c (begin 0x307abc, update 0x307cac); Drive Jump Out 0x11b (begin 0x3222f4) ends by pushing state 1 [§2026-10-15T08:15](#ts-20261015-081549).
+- Enter: an X press edge on foot (event 200, 0x322a04) through the search 0x225d94; holding X from before enters once and does not leave again while held [§2026-10-15T08:15](#ts-20261015-081549).
+- Jump In: position = lerp(start, seat, u) + (0, 2.1 x sin(pi u), 0) (player jump height `*0x3742a0` = 2.1), heading lerped to the vehicle's forward axis; message 83 goes to the vehicle at begin [§2026-10-15T08:15](#ts-20261015-081549).
+- Drive begin hides the player node (flag bits 0x60), sends message 84 and fires `PlayerVehicleEntered` (events registered at 0x15b888: VehicleChaseEnded, PlayerVehicleEntered, PlayerVehicleExiting, PlayerVehicleBoundEntered) [§2026-10-15T08:15](#ts-20261015-081549).
+- Vehicle record states `+2/+4`: parked car (4,4) during jump in, (4,5) at Drive begin, (5,5) after; a previously driven vehicle starts at (3,3) [§2026-10-15T08:15](#ts-20261015-081549).
+- Leave: a new X press edge; refused when entity word `+0xc` bit 4, record `+0x31c` > 0, or `+0x311` bit 6 (`VehicleAllowJumpOut` 0) is set [§2026-10-15T08:15](#ts-20261015-081549).
+- The vehicle entity box is the root node of the first collision item of its model (`modelCollisionBox`) [§2026-10-15T08:15](#ts-20261015-081549).
+- X prompt: object "HeadIcons" at 0x517ddc (18 icons from TablesCharacters sheet 5), drawn from the player update 0x1835d0 via `0x22d7c0(9, 0)`; while seated 0x262188 loads the vehicle portrait and hearts from record byte `+0x30d`. The portrait background order corrects hud.md [§2026-10-15T18:35](#ts-20261015-183555).
+- Open: prompt conditions (ctrl+0xe0+0x130/+0x131 bit 2 writers), blend state of the icon quad, writers of entity `+0x70` and of SetHearts for vehicle damage, animation variants by class.
+
 <a id="ts-20261015-081549"></a>
 
 ## 2026-10-15T08:15:49+02:00 — Getting into and out of a vehicle: states, timing, paths, events (VEH-4)

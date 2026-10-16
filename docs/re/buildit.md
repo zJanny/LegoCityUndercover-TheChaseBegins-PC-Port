@@ -2,6 +2,18 @@
 
 The build-it class (object type 0x15): record, use zone, state machine, completion. Entries are dated; new entries go at the end. For developers; no game assets.
 
+## Current state
+
+- Class: object type 0x15, descriptor built at 0x15d274, update 0x16cc78, message handler 0x176160, record of 0x98 bytes at entity+0x7c; parameters and use zone (box from node bounds when `UseBound`/`UseRadius` are absent) in [§2026-10-14T23:55](#ts-20261014-235539).
+- State machine: update 0x16cc78 runs 0x2424d0 with post check 0x1d428c, then the state change 0x1aad90; the idle record is state 2, target 2 (measured on `m11-4-van-parts`); the build runs while A is held in the use zone [§2026-10-14T23:59](#ts-20261014-235937).
+- `TriggerObject` is fired by the state change through the reference-trigger step 0x23211c (an AND-join over all references to one target), not by the class code directly [§2026-10-15T13:07](#ts-20261015-130720), which corrects [§2026-10-15T11:12](#ts-20261015-111211).
+- Bricks: 228-byte records, six flown bricks of the donut van; brick k flies in updates 3+12k..11+12k, flight is slerp plus linear position plus a hop of 0.2 x 4t(1-t) x (|dx|+|dz|) [§2026-10-16T09:35](#ts-20261016-093536).
+- Built pose of a brick is end key x F x inverse(P) (final prop's world matrix times the inverse of the parts'), not the identity; this replaces the pose in [§2026-10-15T18:31](#ts-20261015-183145) [§2026-10-16T09:35](#ts-20261016-093536).
+- Unbuilt bricks wobble (start values 0x18275c, condition `0x210f30`, sound for the first three crossings per update, not four) [§2026-10-15T19:52](#ts-20261015-195230).
+- Rise of the final prop in state 10: y = base y + sin(spin), spin grows by 12 per update (24 from 90 degrees); state 11 writes the base y back [§2026-10-15T18:31](#ts-20261015-183145).
+- The player enters state 9 "BUILD IT" (enter 0x1d4b14, update 0x276254, exit 0x1c72f0); the use query's `2414b4(..., 9, 0)` is a state request, not a clip id; sounds and unported effects are listed there [§2026-10-16T10:17](#ts-20261016-101726).
+- Open: seed of the original random source; what fills the list of 0x1a0f6c; player's animation/turn/camera during the build; per-update timing of the van switch; builds without a final prop.
+
 <a id="ts-20261014-235539"></a>
 
 ## 2026-10-14T23:55:39+02:00 — Class record, messages and state machine of the build-it (read from the code)

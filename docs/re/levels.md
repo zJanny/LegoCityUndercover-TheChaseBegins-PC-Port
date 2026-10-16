@@ -2,6 +2,17 @@
 
 Reverse-engineering findings, moved verbatim from the progress log. Entries are chronological; later entries may correct earlier ones. Evidence IDs are shortened with an ellipsis.
 
+## Current state
+
+- The generic .blvl deserializer is 0x1cfc50 (xref ".blvl" at 0x1d0028); the name hash is CRC-32 of the lower-cased name (0x24da28, `zlib.crc32` reproduces it); parameters are 12 bytes {name hash, u16, type, value} [§2026-10-12T17:20](#ts-20261012-1720).
+- Mesh record byte 0 bit 0 set means vertices are relative to the float3 at mesh+8 (bbox centre); no exceptions over all models [§2026-10-12T17:45](#ts-20261012-1745).
+- Placement rotation is `initialorientation` times 0.0174533 through 0x237c48, i.e. Rz*Ry*Rx for row vectors (x first); this replaces the Ry*Rx*Rz assumption of the first two entries [§2026-10-12T23:05](#ts-20261012-2305).
+- Census: 856 levels, 18469 objects, 6563 placements, 6561 meshnames resolve (only xx_goldstud and Prop_Hotspot_Mission do not); level models live in `models/<level>/` as `lvl_*` and `room<N>` [§2026-10-12T23:25](#ts-20261012-2325). The `Pregen/*.bin` streaming claim there is wrong, see [streaming.md §2026-10-13T22:27](streaming.md#ts-20261013-222700).
+- Nav grids `.bfnnav` (`<level>_<room>.bfnnav`, loader 0x1971c4): 0x3c-byte grid records, per-grid cell bytes and extras, 0x20-byte path records; the descriptors in level section +0x30 (cell size 0.3 in lvl_00) match all 700 nav files [§2026-10-12T23:55](#ts-20261012-2355).
+- The world is left-handed: forward = (sin yaw, cos yaw) in (x, z); the viewer and cutscene path mirror x accordingly [§2026-10-13T12:49](#ts-20261013-1249).
+- Python level tools are reduced to listing objects through the C++ parser; the census totals are pinned in `tests/assets_real_test.cpp` [§2026-10-13T15:08](#ts-20261013-150853).
+- Open: culling winding in the original; the game's field of view against the viewer's 1 rad; other classes using `initialorientation` assumed to share 0x237c48.
+
 <a id="ts-20261012-1720"></a>
 
 ## 2026-10-12T17:20+02:00 — S4c: .blvl level format decoded (REA, Ghidra)

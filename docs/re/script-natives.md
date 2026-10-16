@@ -2,6 +2,16 @@
 
 Every native (script function) of the level scripts: handler address, argument count, use in the levels, class and work batch. Script engine itself: [scripts.md](scripts.md). Items: [script-system-natives.md](../plans/features/script-system-natives.md) (SCRIPT-26 to SCRIPT-45). Batch 27 (progress, saves, studs): [script-natives-progress.md](script-natives-progress.md).
 
+## Current state
+
+- 245 natives are used by level and class scripts; handlers come from the static table at 0x359154 (69 entries of {name, handler, info = argument count | types << 8, 0}) and about 290 registrations `bl 0x23912c` from 0x15f8f8 [§2026-10-14T13:33](#ts-20261014-133339).
+- `scriptfns.txt` documents only 300 of the 377 table entries, so "lists every native" in scripts.md is wrong [§2026-10-14T13:33](#ts-20261014-133339).
+- Handler ABI: `handler(r0 = thread, r1 = array of argument value pointers)`; return 1 = done, 0 = blocked (the executor repeats the call every update with thread flag bit 2 set); object arguments resolve through 0x22dacc [§2026-10-14T13:33](#ts-20261014-133339).
+- Classes: A flag/state getters and setters, B blocking, C needs a missing system, D debug only; batches 26 to 39 (SCRIPT-26..39) are one agent session each, listed in the batch table [§2026-10-14T13:33](#ts-20261014-133339).
+- Corrections to the census rows live in the batch entries: CountRacesWon is class A and EnableStudsByGroup's second argument is not an enable flag ([script-natives-progress.md §2026-10-14T14:41](script-natives-progress.md#ts-20261014-144155)); all 17 batch 34 natives return 1 ([ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311)); PlayCharAnim is 0x29e5f0 and does not block ([script-natives-animation.md §2026-10-14T21:36](script-natives-animation.md#ts-20261014-213649)); PrintDebugString 0x26fde8 is a no-op ([script-natives-flags.md §2026-10-14T14:16](script-natives-flags.md#ts-20261014-141621)).
+- The live census table is [script-natives-census.md](script-natives-census.md); only that file is edited in place.
+- Open: which class A entries are plain flag writes (only handlers with a Note were read); which class C natives block; the meaning of the type byte beyond the argument count.
+
 <a id="ts-20261014-133339"></a>
 
 ## 2026-10-14T13:33:39+02:00 — Census of the 245 natives used by level and class scripts, handler addresses, classes A-D and batches (llvm-objdump on game.arm.elf, C++ level loader; no emulator, no REA session)

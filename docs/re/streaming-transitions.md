@@ -2,6 +2,18 @@
 
 Reverse-engineering findings on the observed transition chain: why the Lower bound did not fire, the station entry, the lobby exit and the scene change update. Split from [streaming.md](streaming.md) (world levels, room links, the SceneChange chain); entries are chronological and later entries may correct earlier ones.
 
+## Current state
+
+- The Lower/Upper police-station bounds did not fire because the bound record's byte +0xa (enabled flag, 40-byte records of level section +0x24) is 0; `1-1_MissionHide` sets it to 0, `1-1_MissionEnd`/`MissionSkip` to 1 [§2026-10-14T10:07](#ts-20261014-100715), which corrects streaming.md.
+- `WarningDialogBox` (handler 0x2700d4) blocks on its first call and stores the answer as `DIALOG_RETURNCODE` on a later call [§2026-10-14T10:07](#ts-20261014-100715).
+- Mode switch: the `SceneChange` native (or a walk-in) reaches manager slot +0x2c 0x3037e8, which stores the request and opens the loading page; 0x303480 (slot +8, run by the main loop) executes it only after the A press on the page [§2026-10-14T11:13](#ts-20261014-111312).
+- The lobby exit is not script-driven: the scenechange entity update 0x1c47e8 (SceneChangeBound, SceneChangeTo) calls slot +0x2c when the player is inside an enabled master bound; this corrects the "not involved" remark of [§2026-10-14T11:13](#ts-20261014-111312) [§2026-10-14T12:02](#ts-20261014-120258).
+- Destination: 20-byte reference record (+0 world-level hash, +4 point hash, +0xd scene index byte); 0x303480 places the player at the destination point; lobby to street lands at (902.00848, 16.57730, 1111.12634), 5 updates after the A press [§2026-10-14T12:02](#ts-20261014-120258).
+- Loading page object (vtable 0x361fb4, enter 0x2e1324): waits for A in the generic menu widget; the port's page is a stand-in (TRANS-S3) [§2026-10-14T12:02](#ts-20261014-120258).
+- Room-state reading of `street-at-entrance` (seven rooms, rank as distance) is superseded by [streaming-rooms.md §2026-10-14T14:00](streaming-rooms.md#ts-20261014-140018).
+- The original shows a "checking save data" popup and a spinning 3D badge loading screen when leaving the station; the port shows a flat page [§2026-10-14T23:41](#ts-20261014-234123).
+- Open: order of popup and badge screen and whether it is the level-switch autosave; how 0x26344c qualifies the script bound name; second destination hash 0xccaaccdd; Continue key and top key art; what runs slot +0x28.
+
 <a id="ts-20261014-100715"></a>
 
 ## 2026-10-14T10:07:15+02:00 — Why the Lower bound did not fire; the transition chain observed (Azahar oracle, no RPC, GDB `poke` and traps)
@@ -34,6 +46,8 @@ All addresses are for the reference build. Evidence is from the stub's trap dump
 
 ## 2026-10-14T11:13:12+02:00 — The station entry from an unmodified state: trigger, dialog, SceneChange, switch request order; room states while walking (Azahar oracle New 3DS, GDB pad injection, no RPC, no poke; llvm-objdump)
 
+
+Corrected by [streaming-transitions.md §2026-10-14T12:02](#ts-20261014-120258): the scenechange update 0x1c47e8 is involved; the walk-in of an enabled bound calls the manager slot without a script.
 Corrected by [streaming-rooms.md §2026-10-14T14:00](streaming-rooms.md#ts-20261014-140018): the seven-room reading of `street-at-entrance` was taken before the two preloads finished loading, the ranking key of 0x279834 is the view direction dot product (not a distance), and the per-update requests, the unload rule and the state writer are explained there.
 
 States: `street-after-1-1` (user) and `street-at-entrance` ([oracle-states.md §2026-10-14T11:13](oracle-states.md#ts-20261014-111312)). Traps with `trap` (stub breakpoints) from `street-at-entrance`: the player walks forward into the bound with the pad (stick (0,100) after the approach). Three full runs (the first and two repeats in one scenario) and one run up to the dialog gave the same order with the same update numbers (the run is repeatable in this state; the earlier remark about unrepeatable runs came from poked states). Update numbers are the trap's frame counter of one run.
@@ -69,6 +83,7 @@ States: `street-after-1-1` (user) and `street-at-entrance` ([oracle-states.md §
 ## 2026-10-14T12:02:58+02:00 — Lobby exit from an unmodified state, the scenechange update and its destination (Azahar oracle New 3DS with RPC, GDB `trap`/`trace`, llvm-objdump; no REA session)
 
 [Corrects streaming.md §2026-10-13T22:27](streaming.md#ts-20261013-222700): the scene index is byte +0xd of the 20-byte reference record `[[entity+0x7c]+0x14]`, not of the destination entity.
+[Corrects §2026-10-14T11:13](#ts-20261014-111312): the scenechange update 0x1c47e8 is involved in the transition (see Corrections of earlier entries).
 
 States: `police-station` (user), new `station-at-exit` (player 0.9 m before the exit bound, stick released) and `station-exit-loadingpage` (loading page open, waiting for A), both unmodified (their JSON has a `source` key). Replica: `src/runtime/scene_change.{hpp,cpp}`, `ScriptRunner::takeSceneChanges` / `playerInNamedBound`, the run-time switch in `chase-game`. Tests: `scene-change-real-data`, `game-scene-change-exit`, `game-scene-change-entry`, `script-runner`.
 

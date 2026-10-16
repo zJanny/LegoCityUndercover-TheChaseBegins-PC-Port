@@ -2,6 +2,17 @@
 
 Reverse-engineering findings on the level state blocks, unlock bits, object records, where Continue starts and the save request chain. Split from [save-format.md](save-format.md) (file layout, CRC, options, slot progress, level table); entries are chronological and later entries may correct earlier ones.
 
+## Current state
+
+- Level block: 0x820 bytes (0x203464), `+0x1a` state-data length, `+0x1c` StoryProgress at save time, `+0x1e` "state saved", `+0x1f` 2048 bytes of state data, `+0x81f` collected; writer 0x2e80fc/0x192f60 via serializer 0x1c26dc, reader 0x2e8054 via 0x192e14 and restore 0x1c2400 [§2026-10-14T11:53](#ts-20261014-115300).
+- Unlock bits: 0x21d450(level, which) reads bit `2*level+which` of slot `+0x51e0`; a new game has level 2 unlocked; `GetGameComplete` compares collected byte `+0x81f` of block 8 with TablesLevels row 8 byte `+0x40` [§2026-10-14T11:53](#ts-20261014-115300).
+- State data is records {name hash, size, payload}; hash 0 is the level data; only four classes have restore callbacks (0x15 build-it, 0x43 prop, 0x62 superbuildit, 0xfc TASKS_COMPLETE), called only when object halfword `+0x82` has bit 0 [§2026-10-14T13:41](#ts-20261014-134146).
+- Mode word 0x376aac is always 2, so the bounds and end bit sets are never filled; the second unlock bit (`which` 1) is never set by shipped code (both callers pass 0) [§2026-10-14T13:41](#ts-20261014-134146).
+- Slot byte `+6` is the current level id; Continue only chooses that level and enters it at the object `Player1Start`, no position is saved (measured only for level 1) [§2026-10-14T15:19](#ts-20261014-151903).
+- Save request: 0x21cf38 (QuickSave, SetRaceWon, AwardRacingCar, GiveReward) builds the summary 0x17caf8 and level state 0x192f60, then queues a task through request handler 0x1a5248 case 0 [§2026-10-14T16:34](#ts-20261014-163403).
+- Slot row builder 0x2cc298: ticks at 1/30 s give the time, per mille the percent ("%u%s%u%%", 1000 gives "100%"); verified byte for byte on the user's save copy (slot 0: 05:48, 0.2%, level 1) [§2026-10-14T16:34](#ts-20261014-163403).
+- Open: Continue at level 2 or later; what 0x2baddc does with the world path and whether the queue coalesces requests; values at 0x593418; serializer source of StoryProgress (SAVE-14); what `scene+0x12f4` counts.
+
 <a id="ts-20261014-115300"></a>
 
 ## 2026-10-14T11:53:00+02:00 — Level state blocks, unlock bits and the progress natives (llvm-objdump, REA-free static reading of artifacts/game/game.arm.elf; real save copy; oracle `read` on `street-after-1-1`, OpenGL renderer, no RPC)

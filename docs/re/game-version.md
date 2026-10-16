@@ -2,6 +2,14 @@
 
 > **WARNING: every address, offset, struct layout, literal location and evidence ID in `docs/re/`, in code comments and in tests refers to exactly the build below.** A different region, revision or an installed update almost certainly moves the code and data. With any other image, treat all `docs/re/` addresses as wrong until they are re-verified, and do not compare oracle traces from it with the pinned test values.
 
+## Current state
+
+- All `docs/re/` addresses are for one build: Europe, title ID `00040000000AD600`, product code `CTR-P-AA8P`, remaster version 0 (no update).
+- Authoritative check: the image SHA-256 `078faf7e...b759ad` (table below); for a re-dump compare `product_code`, `decoded_code.sha256` and `analysis_elf.sha256` in the extractor manifest.
+- Decompressed `.code` is 2650112 bytes; ARM segments text 0x100000, rodata 0x357000, data 0x36b000.
+- With any other image, treat all addresses as wrong, stop and report; do not compare its oracle traces with pinned test values.
+- Open: none; new findings are recorded against this build only.
+
 ## The build used for all reverse engineering
 
 | Field | Value |

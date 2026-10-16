@@ -2,6 +2,17 @@
 
 The camera while the player drives: preset chooser 0x1597c8, the InVehicle preset block, the record's `ATTR_Camera*` floats, the input provider, the automatic turn and the pitch clamp. Entries are dated; new entries go at the end.
 
+## Current state
+
+- Preset chooser 0x1597c8 runs every update from 0x2e5158: when ctrl+0x6c is 0x11c (Drive) or 0x19b it sets target and preset through 0x23f488; the switch happens in the update the state becomes 0x11c, the camera continues from its tracked state, and leaving follows the player again from 0x11b [§2026-10-15T12:07](#ts-20261015-120718).
+- InVehicle preset block 0x376fdc: distance 4.5/5.5/6.5, height 0.2/0.35/0.5, automatic-turn gain 1.0 (+0x38), position smoothing base 0.7, look smoothing 0; body height is the target's centre y plus half collision-box height [§2026-10-15T12:07](#ts-20261015-120718).
+- Automatic turn 0x3310d0: wanted turn 0.25 |a| a with a = atan2(x, -z) in the target frame, limited to +-dt x gain; the stick does not turn the camera in a type-183 vehicle; the pitch clamp 0x2e0a50 applies on foot only [§2026-10-15T12:07](#ts-20261015-120718).
+- Reset 0x2313c8: argument 360 with stored heading K+0x178 = 360 takes the line branch, every other case the ray branch (candidate loop, pull-in) [§2026-10-15T15:22](#ts-20261015-152200).
+- After the release director camera the seed is the ray-branch 12.99 m; StartDCam clears K+0x178 and the tracker jumps to the wanted position (14.05 m out) in the first update by the near plane test 0x2e0e28. This corrects the stale-clearance reading of [§2026-10-15T12:07](#ts-20261015-120718) and the longer-seed reading of [§2026-10-15T15:22](#ts-20261015-152200); the seed clearance is 1.0 in the original [§2026-10-15T13:41](#ts-20261015-134100), [§2026-10-15T16:45](#ts-20261015-164500).
+- The render camera's near/far come from the follow update (near plane test result, K+0x14c = 260) through 0x23f168 (camera +0xc4/+0xc8) [§2026-10-16T08:26](#ts-20261016-082640).
+- Port screenshot pair of the hand-back and the CameraFollow request in 1-1_VanBreakdown: [§2026-10-15T16:58](#ts-20261015-165809).
+- Open: writers of K+0x148/K+0x14c (260 kept as a recorded constant, CAMERA-S50); settled camera 0.245 m higher in the original; presets for other player states and vehicle types 243/0x19b; render planes during cutscenes; `ATTR_CameraPanScale` reader.
+
 <a id="ts-20261015-120718"></a>
 
 ## 2026-10-15T12:07:18+02:00 — InVehicle preset, record overrides, 15 m behind, automatic turn, pitch clamp, enter and leave (VEH-8, CAMERA-14; llvm-objdump and REA Ghidra 12.1.2 pseudo code, Azahar GDB memtrace on `drv-police-car-seated` and the user's `m11-2-patrol-car`, one RPC screenshot pair)

@@ -2,6 +2,17 @@
 
 What each trigger type checks in the trigger pass 0x1746c0, and which types the mission 1 levels use. The record layout, the queue 0x21a560 and the first transcription are in [scripts.md](scripts.md); the start rule of the records is in [scene-start.md](scene-start.md). Items: [script-system-triggers.md](../plans/features/script-system-triggers.md).
 
+## Current state
+
+- The trigger pass is 0x1746c0; the point tested is the entity node translation (0x250810, node+0x30) minus the level root translation, test 0x22f650; a bound reads as outside when its byte `+0xa` (enabled) or `+0xb` (room loaded) is 0 [§2026-10-14T15:53](#ts-20261014-155345).
+- BoundEntered 0x28aef4, BoundBothEntered 0x2b0cd0 and Player1BoundEntered 0x2c185c fire `0x21a560` on a change from 0 to the player; BoundLeft 0x26a20c fires on the change back to 0 and never fires for a switched-off bound [§2026-10-14T15:53](#ts-20261014-155345).
+- BoundInside 0x282028 and BoundOutside 0x28af68 fire every pass with no skip test; Player2BoundEntered 0x2c194c never fires [§2026-10-14T15:53](#ts-20261014-155345).
+- PlayerOnFootBoundEntered 0x2ca6b8 acts only when 0x24255c (vehicle test: state 0x11c or 0x19b) is 0; PlayerVehicleBoundEntered 0x2cb578 is the opposite [§2026-10-14T15:53](#ts-20261014-155345).
+- ObjectBound* checks use the object named in trigger+8 (the name "Player1" with class byte 0x41 selects the player) and need only bound byte `+0xa` [§2026-10-14T15:53](#ts-20261014-155345).
+- Not fired by the pass: ObjectTriggered/ObjectUntriggered (TriggerObject), AIMove, PlayerVehicleEntered, Character*, PursuitEnded, VehicleChaseEnded, Reset come through 0x23cee8 -> 0x23cff4 -> 0x21a560 [§2026-10-14T15:53](#ts-20261014-155345).
+- Census: lvl_01 has 241 triggers (ObjectTriggered 123, BoundEntered 62, ObjectBoundEntered 23), lvl_00 has 53; oracle runs on `street-at-entrance` confirm the word timing of triggers 203/204 [§2026-10-14T15:53](#ts-20261014-155345).
+- Open: object flag bit 0x20 and `object+0xc` bit 0x100000; owner of triggers in unloaded rooms; vehicle-variant record behaviour over time; who calls CharacterCulled.
+
 <a id="ts-20261014-155345"></a>
 
 ## 2026-10-14T15:53:45+02:00 — Check functions of all bound trigger types, census of lvl_01 and lvl_00, oracle runs of BoundLeft and PlayerOnFootBoundEntered (llvm-objdump on game.arm.elf, Azahar oracle `street-at-entrance` New 3DS, port 24810, GDB `trap` and `read` only, no RPC)

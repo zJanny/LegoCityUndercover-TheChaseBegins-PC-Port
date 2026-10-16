@@ -2,6 +2,17 @@
 
 How an AIMove finds and follows a path over the nav grids (`.bfnnav`, format in [levels.md](levels.md#ts-20261012-2355)). Evidence: llvm-objdump (`--triple=armv6k --mattr=+vfp2`) of `artifacts/game/game.arm.elf`; every address is for the Europe v1.0 build ([game-version.md](game-version.md)). Callers and the front end: [ai-natives.md](ai-natives.md#ts-20261014-184240). Code: `src/runtime/nav_grid.*`, `nav_path.*`, `nav_follow.*`, `ai_go_to_target.*`.
 
+## Current state
+
+- Path finder 0x204284(record, start, goal) returns 0 arrived, 1 failed, 2 blocked, 3 path; grid search 0x294768 (label-correcting), exit cell 0x27d90c, cell search 0x208338 (Bresenham seed, diagonal cost 3, straight 2) [§2026-10-14T19:47](#ts-20261014-194710).
+- Follower 0x1faf04 dispatches on the phase in record `+0x7e` (0 arrived, 1 failed, 2 inside a grid via 0x27ddb4, 3 after a transition, 4 start beside a grid); bit 0 of `+0x7c` is set only for AIMoveNoAvoid, bit 3 of `+0xd9` is the avoid argument [§2026-10-14T19:47](#ts-20261014-194710), which corrects ai-natives.md.
+- The caller 0x2c5d3c (states 4 and 5) raises the AIMove event 0x23cee8 with component byte 0 at 0x2c630c when the follower returns code 0 [§2026-10-14T19:47](#ts-20261014-194710).
+- State 11 (0x2c3bd8) is the AISuperJump state (0x213300); its "MinDistance" ctrl+0x8c is `ATTR_RunSpeed` (0.23) after set-up 0x236d74, per [ai-states.md §2026-10-14T21:21](ai-states.md#ts-20261014-212158).
+- Oracle check on the police-entry AIMove (start 904.652/16.577/1113.197, goal 910.74/16.577/1119.44): one finder call at update 3, path record phase 2 from update 4, 37 open cells [§2026-10-14T20:01](#ts-20261014-200116).
+- Nav data is loaded per room with the room object (`<level>_<room>.bfnnav`, loader 0x1971c4); runtime cells and grids never keep kind 3 / bit 14 (loader fix-up), and 0x27e12c is the recovery for an unclosed start cell node, not a rebuild across grids; this corrects [§2026-10-14T19:47](#ts-20261014-194710) [§2026-10-14T20:39](#ts-20261014-203953).
+- The active section comes from setter 0x1dd670 (called at level load after 0x168e6c); grid transition 0x272598 and gate handlers 0x2684b8 (gates 0 and 1 registered) are in [§2026-10-14T20:39](#ts-20261014-203953).
+- Open: which section is active in levels with several (the port takes the first match); no original AIMove across grids compared; the unexplained `+0x40` of 143 vs 39; lookup tolerance `+0x70` and obstacle pass not measured.
+
 <a id="ts-20261014-194710"></a>
 
 ## 2026-10-14T19:47:10+02:00 — Nav path finder 0x204284, follower 0x27ddb4 and state 11 (0x2c3bd8)

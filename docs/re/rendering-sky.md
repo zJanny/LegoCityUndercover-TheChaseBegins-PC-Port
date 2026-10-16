@@ -2,6 +2,16 @@
 
 Reverse-engineering findings. Entries are chronological. Addresses are for the Europe v1.0 build. Feature file: [rendering](../plans/features/rendering.md). Related: [rendering-fog.md](rendering-fog.md), [materials.md](materials.md).
 
+## Current state
+
+- The sky pass is 0x180fac (called with r0 = 1 from 0x2e4980 and 0x2e4e34 after the colour clear, before the world draw 0x228d20) [§2026-10-15T15:39](#ts-20261015-153917).
+- The camera matrix is copied with its translation row set to (0, lift, 0), so the dome follows the camera in position; lift = 20 x clamp(player y - y of the object "Sea", 0, 120) / 120, and 0 without a Sea object [§2026-10-15T15:39](#ts-20261015-153917).
+- `props/prop_skybox` has no code of its own; its model is a dome of radius 99.94 with one mesh node, unlit and unfogged; the placement matrix does not put the dome around the camera [§2026-10-15T15:39](#ts-20261015-153917).
+- Before the draw the pass writes depth entries `[0x52a138] = [0x52a13c] * -0.99951` and the same at 0x52a620, pushing the sky to the far end of the depth range [§2026-10-15T15:39](#ts-20261015-153917).
+- `SkyboxOverride` is at 0x192254 and `SKY%02u` at 0x1813b4, which corrects the addresses in rendering-fog.md [§2026-10-15T15:39](#ts-20261015-153917).
+- Port: `src/runtime/sky.*` draws the sky at (eye.x, eye.y - lift, eye.z) after the clear without depth test or write; the top-row colour check against the oracle is within 2 per channel [§2026-10-15T15:39](#ts-20261015-153917).
+- Open: exact depth the sky gets; what `SkyboxOverride` does; the per-frame reader of `SetBackgroundColour`; which of two sky objects in lvl_06 is used; the uninitialised gate flag.
+
 <a id="ts-20261015-153917"></a>
 
 ## 2026-10-15T15:39:17+02:00 — The sky pass 0x180fac: camera orientation with the eye at (0, lift, 0), drawn after the clear and before the world (llvm-objdump on `artifacts/game/game.arm.elf`, Azahar oracle `read` of memory in state `street-after-1-1`; REA was not used)

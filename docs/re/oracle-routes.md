@@ -4,6 +4,15 @@ Subtopic of the Azahar runtime oracle. Start with [oracle.md](oracle.md) for set
 
 Scripted routes to a point in the game, and the pitfalls of scenario files (teleport, input that survives a load).
 
+## Current state
+
+- `tools/oracle/to-gameplay.txt` reaches player control from boot in about 340 s (English A, StreetPass B, HOME and autosave notices A, slot 1 New Game A, intro runs itself, "Doughnut Disaster" card A) and ends with `savestate gameplay-start`; the player starts at (886.764, 16.589, 1111.166) [§2026-10-13T12:43](#ts-20261013-124333).
+- Use OpenGL with RPC for gameplay work; the software renderer crashes in Pica::Texture::LookupTexture [§2026-10-13T12:43](#ts-20261013-124333).
+- `teleport X Y Z` writes world (node+0x8c) and local (node+0x4c) translation, refuses when they differ, and a teleported standing player does not fall until it moves; run one `frames` before the first trace row [§2026-10-13T16:05](#ts-20261013-160530).
+- Scenario input (`stick`, `hold`) survives `loadstate`: start every scenario with `stick 0 0` and `hold -` [§2026-10-13T16:05](#ts-20261013-160530).
+- Steer vehicles in stepped scenarios with `hold A+RIGHT` / `A+LEFT` (D-pad channels 15 and 14 of 0x29cd9c), not with `stick` [§2026-10-15T16:07](#ts-20261015-160734).
+- Open: meaning of controller state 255; why the raw circle-pad words at 0x10a540 do not reach the vehicle input channel 0.
+
 <a id="ts-20261013-124333"></a>
 
 ## 2026-10-13T12:43:33+02:00 — Route to gameplay and the gameplay-start checkpoint

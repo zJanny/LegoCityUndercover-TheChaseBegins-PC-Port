@@ -2,6 +2,17 @@
 
 The vehicle message handler 0x1797c4 (contact message 0x80000002, damage message 0), the closing speed of a contact, the hearts and health points of the vehicle record, the cool-downs, what the handler does when the last heart is gone, and the vehicle bump pass 0x2d4af0. Plan: [features/vehicles-damage.md](../plans/features/vehicles-damage.md).
 
+## Current state
+
+- Health in the vehicle record: byte `+0x30c` = 100 (health of the current heart), `+0x30e` = table health column (trooper 5), `+0x30d` = hearts left; starting values `+0x2ec` = 22 for the trooper [§2026-10-16T10:21](#ts-20261016-102153).
+- Static floats at 0x3745a4 (init 0x34498c): 0.5 s after a lost heart, 1.0 s between brick bursts, 6.0 and 2.0 (mass scale), others 0.15, 30, 0.8, 132, 3.5 [§2026-10-16T10:21](#ts-20261016-102153).
+- Contact message 0x80000002 comes from Bullet's `gContactProcessedCallback` 0x271764 (stored at 0x379d54, called by `refreshContactPoints`); closing speed 0x19b5c4 is the contact normal dotted with the relative point velocity [§2026-10-16T10:21](#ts-20261016-102153).
+- The player's vehicle above 10 m/s with cool-down `+0x308` = 0 bursts bricks (count from speed 10..40 mapped to 1..3, colours `DebrisColour`/`DebrisColour2`); above 3 m/s it plays its sound id [§2026-10-16T10:21](#ts-20261016-102153).
+- Self damage when the other has no `+0xc` bit 0x10 and speed exceeds 20: x = (min(speed, 60) - 20) x 0.125, whole part in word `+0xc`, fraction in float `+0x10` [§2026-10-16T10:21](#ts-20261016-102153).
+- Damage message 0 is ignored while cool-down `+0x304` > 0, `Invulnerable` (`+0x311` bit 2) or byte `+0x15` != 0 (unless type `+0x17` is 6); both cool-downs tick down in the update 0x1571dc [§2026-10-16T10:21](#ts-20261016-102153).
+- The destroy call 0x23cd80 disables the attachment slot through 0x23211c (driver gets messages 10 and 0xff); the vehicle bump pass 0x2d4af0 sets body flag `+0xc4` bit 17 while it sends its messages [§2026-10-16T10:21](#ts-20261016-102153).
+- Open: what the wreck state 6 does and the 30 s return with 5 hearts; timer 0x25207c and the broadcast lists; writer of the bump cool-down `+0x194`; why the water test 0x23019c turned true in the oracle run; target logic (states 2 and 3).
+
 <a id="ts-20261016-102153"></a>
 
 ## 2026-10-16T10:21:53+02:00 — Contact damage of the vehicle handler 0x1797c4: hearts, health points, brick bursts, the destroy call (REA Ghidra 12.1.2, llvm-objdump of artifacts/game/game.arm.elf; no emulator run in this entry)
