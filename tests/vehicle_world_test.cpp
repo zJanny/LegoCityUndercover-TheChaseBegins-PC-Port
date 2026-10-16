@@ -212,7 +212,7 @@ void pairSolve() {
 void pairDetect() {
     const VehicleRigidBody trooperBody = bodyAt(kTrooper27.pose);
     const VehicleRigidBody workerBody = bodyAt(kWorker27.pose);
-    VehicleBoxContacts trooperShape = vehicleBoxContacts("vehicles/vehicle_police_trooper", nullptr);
+    VehicleBoxContacts trooperShape = trooper::boxContacts(nullptr);
     VehicleBoxContacts workerShape;
     workerShape.childOffset = {0.0f, 0x1.62db86p+0f, -0x1.1ba81cp-2f};
     workerShape.child.transform.basis = {Vector3{1, 0, 0}, Vector3{0, 1, 0}, Vector3{0, 0, 1}};
@@ -257,8 +257,8 @@ int real(const char* fib, const char* names) {
     }
     // world.txt: the worker's compound child at (0, 1.3862, -0.2770) with half extents (0.9674, 1.2978, 3.0767) (box shape +0x20 plus margin).
     Vector3 workerLow, workerHigh, policeLow, policeHigh;
-    vehicleCollisionBox(worker->className, workerCentre, workerHalf, worker->centreOfMass, workerLow, workerHigh);
-    vehicleCollisionBox(police->className, policeCentre, policeHalf, police->centreOfMass, policeLow, policeHigh);
+    vehicleShapeBox(workerCentre, workerHalf, worker->centreOfMass, workerLow, workerHigh);
+    vehicleShapeBox(policeCentre, policeHalf, police->centreOfMass, policeLow, policeHigh);
     near((workerLow[1] + workerHigh[1]) * 0.5f, 1.3862, 1e-4, "worker child offset y (entity box minus CentreOfMass)");
     near((workerLow[2] + workerHigh[2]) * 0.5f, -0.2770, 1e-4, "worker child offset z");
     near((workerHigh[2] - workerLow[2]) * 0.5f, 3.0767, 1e-4, "worker child half length");

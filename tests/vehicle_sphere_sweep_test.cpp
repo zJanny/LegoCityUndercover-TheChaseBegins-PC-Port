@@ -64,7 +64,7 @@ constexpr std::uint16_t kNone = 0xffff;
 
 void sphereGrid() {
     Vector3 low, high;
-    vehicleCollisionBoxStandIn("vehicles/vehicle_police_trooper", low, high);
+    trooper::box(low, high);
     const VehicleCollisionSpheres trooper = buildVehicleSpheres(low, high, {2, 1, 6}, 0.6f, false);
     expect(trooper.centres.size() == 13, "trooper: 2 x 1 x 6 spheres and the extra one are the recorded 13 (body+0x17c)", double(trooper.centres.size()));
     expect(trooper.radii.size() == 13, "one radius per sphere");
@@ -76,7 +76,7 @@ void sphereGrid() {
     expect(trooper.centres[12] == Vector3{0.0f, 0.18f, 0.0f} && trooper.radii[12] == 0.2f, "the last sphere sits at (0, 0.18, 0) with radius 0.2");
     near(trooper.reach, std::sqrt(high[0] * high[0] + high[1] * high[1] + high[2] * high[2]), 1e-5, "reach is the larger corner length (rigid +0x208)");
     Vector3 vanLow, vanHigh;
-    vehicleCollisionBoxStandIn("vehicles/vehicle_van_donut", vanLow, vanHigh);
+    vehicleShapeBox({0.0f, 1.4032f, 0.0f}, {1.14375f, 2.54695f, 2.66857f}, {0.0f, -0.9f, 0.2f}, vanLow, vanHigh);
     expect(buildVehicleSpheres(vanLow, vanHigh, {2, 1, 3}, 0.9f, false).centres.size() == 7, "donut van: 2 x 1 x 3 and the extra sphere are the recorded 7");
     const VehicleCollisionSpheres extra = buildVehicleSpheres(low, high, {2, 1, 6}, 0.6f, true);
     expect(extra.centres.size() == 15, "ExtraColSpheres1 adds two spheres");
@@ -199,8 +199,8 @@ int real(const char* fib, const char* names) {
     VehicleRecord record = trooper::record();
     record.collSpheres = std::array<float, 3>{2.0f, 1.0f, 6.0f};
     record.collRadius = 0.6f;
-    VehicleBoxContacts contacts = vehicleBoxContacts(record.className, &boxes);
-    VehicleFloor floor{FloorMesh(*floorItem), FloorTracker{}, vehicleCollisionBody(record), &contacts};
+    VehicleBoxContacts contacts = trooper::boxContacts(&boxes);
+    VehicleFloor floor{FloorMesh(*floorItem), FloorTracker{}, trooper::collisionBody(record), &contacts};
     expect(floor.shape.sphereSet.centres.size() == 13, "the trooper's class values give 13 spheres", double(floor.shape.sphereSet.centres.size()));
     VehicleRigidBody body;
     body.orientation = orientationFromBasis(kRun43Basis);

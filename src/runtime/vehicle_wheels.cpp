@@ -204,16 +204,6 @@ std::array<float, 16> vehicleNodeMatrix(const VehicleRigidBody& body, const std:
     return matrix;
 }
 
-VehicleCollisionBody vehicleCollisionBody(const VehicleRecord& record) {
-    Vector3 low, high;
-    vehicleCollisionBoxStandIn(record.className, low, high);
-    VehicleCollisionBody shape;
-    shape.points = vehicleProbePoints(low, high, record.wheels);
-    shape.massTimesTwo = kVehicleBodyMassFactor * record.mass;
-    if (record.collSpheres) shape.sphereSet = buildVehicleSpheres(low, high, *record.collSpheres, record.collRadius, record.extraColSpheres);
-    return shape;
-}
-
 DrivetrainState vehicleDrivetrain(const VehicleRecord& record) {
     DrivetrainState drive;
     drive.rpm = record.engine.idleRpm;

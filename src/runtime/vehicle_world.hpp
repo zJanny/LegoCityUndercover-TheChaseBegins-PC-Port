@@ -33,7 +33,7 @@ struct VehicleWorldBody {
 };
 
 // The boxes of a vehicle's Bullet shape from its entity box (modelCollisionBox): `shape` (vehicleShapeBox, the inertia) and `collision`
-// (vehicleCollisionBox, the compound's child box and the collision points).
+// (the same box: the compound's child box and the collision points).
 struct VehicleShapeBoxes {
     Vector3 shapeLow{}, shapeHigh{}, collisionLow{}, collisionHigh{};
 };

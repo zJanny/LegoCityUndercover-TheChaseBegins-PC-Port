@@ -140,7 +140,7 @@ void boxBoxSynthetic() {
     for (const BoxBoxContact& e : edges) window = std::min(window, e.depth);
     expect(window < 0.0f, "crossed boxes penetrate");
 
-    BulletBox child = vehicleBoxContacts("vehicles/vehicle_police_trooper", nullptr).child;
+    BulletBox child = trooper::boxContacts(nullptr).child;
     // Manifold 0x08472cb0 +0x470: 0x3d7951 63 = 0.0608686; the trooper box (disc 3.0434) is smaller than the obstacle's.
     near(std::min(bulletBoxBreakingThreshold(child), bulletBoxBreakingThreshold(obstacle())), 0x1.f2a2c6p-5, 1e-7, "manifold breaking threshold");
 }
@@ -148,7 +148,7 @@ void boxBoxSynthetic() {
 void narrowphase() {
     VehicleRigidBody body = trooperBody(k108.basis, k108.origin);
     const std::vector<BulletBox> boxes = {obstacle()};
-    VehicleBoxContacts contacts = vehicleBoxContacts("vehicles/vehicle_police_trooper", &boxes);
+    VehicleBoxContacts contacts = trooper::boxContacts(&boxes);
     contacts.manifolds.push_back(manifoldOf(k107));
     collideVehicleWithBoxes(body, contacts);
     expect(contacts.manifolds.size() == 1 && contacts.manifolds[0].points.size() == 4, "the manifold keeps four points");
@@ -170,7 +170,7 @@ void narrowphase() {
 void processedCallback() {
     VehicleRigidBody body = trooperBody(k108.basis, k108.origin);
     const std::vector<BulletBox> boxes = {obstacle()};
-    VehicleBoxContacts contacts = vehicleBoxContacts("vehicles/vehicle_police_trooper", &boxes);
+    VehicleBoxContacts contacts = trooper::boxContacts(&boxes);
     contacts.manifolds.push_back(manifoldOf(k107));
     int calls = 0;
     const ManifoldPointObserver count = [&calls](const ManifoldPoint&) {
@@ -181,7 +181,7 @@ void processedCallback() {
     // Provenance: 0x1e518c refreshContactPoints calls gContactProcessedCallback (0x271764, stored by 0x2e3bec) for each surviving point; the step
     // refreshes the four recorded points twice (before and after the box-box contacts), llvm-objdump 0x1e5468..0x1e5484.
     expect(calls == 8, "the processed callback runs for every surviving point of both refreshes", calls);
-    VehicleBoxContacts dropped = vehicleBoxContacts("vehicles/vehicle_police_trooper", &boxes);
+    VehicleBoxContacts dropped = trooper::boxContacts(&boxes);
     dropped.manifolds.push_back(manifoldOf(k107));
     const ManifoldPointObserver dropAll = [](const ManifoldPoint&) { return true; };
     collideVehicleWithBoxes(body, dropped, &dropAll);
@@ -257,8 +257,8 @@ int real(const char* fib, const char* names) {
     }
     const WheelRay ray = [&world](const Vector3& from, const Vector3& to) { return castWheelRay(world, from, to); };
     const VehicleRecord record = trooper::record();
-    VehicleBoxContacts contacts = vehicleBoxContacts(record.className, &boxes);
-    VehicleFloor floor{FloorMesh(*floorItem), FloorTracker{}, vehicleCollisionBody(record), &contacts};
+    VehicleBoxContacts contacts = trooper::boxContacts(&boxes);
+    VehicleFloor floor{FloorMesh(*floorItem), FloorTracker{}, trooper::collisionBody(record), &contacts};
     VehicleRigidBody body = trooperBody(kRun105.basis, kRun105.origin);
     body.velocity = kRun105.velocity;
     body.angularVelocity = kRun105.angularVelocity;

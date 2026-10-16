@@ -92,7 +92,7 @@ struct Car {
             startHeading = kStreetHeading + heading;
             body = vehicleRigidBody(record, {0.0f, 0.0f, 0.0f}, startHeading);
             body.position = kStreetStart;
-            floor = VehicleFloor{FloorMesh(*street->floor), FloorTracker{}, vehicleCollisionBody(record)};
+            floor = VehicleFloor{FloorMesh(*street->floor), FloorTracker{}, trooper::collisionBody(record)};
         } else {
             body = vehicleRigidBody(record, {0.0f, 0.95f, 0.0f}, heading);
             startHeading = heading;

@@ -73,33 +73,12 @@ std::array<Vector3, 8> vehicleProbePoints(const Vector3& low, const Vector3& hig
             Vector3{low[0] * s, high[1], low[2] * s}, Vector3{high[0] * s, high[1], low[2] * s}};
 }
 
-void vehicleCollisionBoxStandIn(const std::string& className, Vector3& low, Vector3& high) {
-    const std::string van = "vehicle_van_donut";
-    if (className.size() >= van.size() && className.compare(className.size() - van.size(), van.size(), van) == 0) {
-        low = {-0x1.24ccc8p+0f, -0x1.884b5cp-2f, -0x1.6f2d6cp+1f};
-        high = {0x1.24ccc8p+0f, 0x1.3668d2p+2f, 0x1.3bfa38p+1f};
-        return;
-    }
-    low = {-0x1.f06dd8p-1f, 0x1.0a46p-8f, -0x1.6e0004p+1f};
-    high = {0x1.f06dd8p-1f, 0x1.a7f832p+0f, 0x1.55999cp+1f};
-}
-
 void vehicleShapeBox(const Vector3& entityCentre, const Vector3& entityHalf, const std::array<float, 3>& centreOfMass, Vector3& low, Vector3& high) {
     for (std::size_t a = 0; a < 3; ++a) {
         const float centre = entityCentre[a] - centreOfMass[a];
         low[a] = centre - entityHalf[a];
         high[a] = centre + entityHalf[a];
     }
-}
-
-void vehicleCollisionBox(const std::string& className, const Vector3& entityCentre, const Vector3& entityHalf, const std::array<float, 3>& centreOfMass,
-                         Vector3& low, Vector3& high) {
-    const std::string van = "vehicle_van_donut";
-    if (className.size() >= van.size() && className.compare(className.size() - van.size(), van.size(), van) == 0) {
-        vehicleCollisionBoxStandIn(className, low, high);
-        return;
-    }
-    vehicleShapeBox(entityCentre, entityHalf, centreOfMass, low, high);
 }
 
 int secondFloorCell(const FloorMesh& mesh, const Vector3& point, int cell) {

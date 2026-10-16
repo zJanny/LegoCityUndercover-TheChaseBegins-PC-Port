@@ -129,15 +129,14 @@ std::vector<bool> solveContactGroup(const std::vector<VehicleRigidBody*>& bodies
 void solveVehicleContacts(VehicleRigidBody& body, std::vector<ContactManifold>& manifolds, const BulletSolverInfo& info);
 
 // The vehicle's Bullet collision shape: a compound with one box child (vtable 0x362444 with a 0x361974 child).
-// STAND-IN VEH-S50: the child box is the AABB of the compound read in the oracle (vehicleCollisionBoxStandIn); its centre is the child offset.
+// The child box is vehicleShapeBox; its centre is the child offset.
 struct VehicleBoxContacts {
     const std::vector<BulletBox>* boxes = nullptr;
     Vector3 childOffset{};
     BulletBox child;
     std::vector<ContactManifold> manifolds;
 };
-VehicleBoxContacts vehicleBoxContacts(const std::string& className, const std::vector<BulletBox>* boxes);
-// The same shape from the box `low`..`high` of vehicleCollisionBox.
+// The same shape from the box `low`..`high` of vehicleShapeBox.
 VehicleBoxContacts vehicleBoxContacts(const Vector3& low, const Vector3& high, const std::vector<BulletBox>* boxes);
 // The collision detection of 0x30c768 for the vehicle against the static boxes (0x32367c): manifolds of boxes whose AABB the child box no longer
 // overlaps are released; the others are refreshed, take the box-box contacts and are refreshed again.

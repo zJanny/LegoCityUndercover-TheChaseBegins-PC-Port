@@ -9,7 +9,8 @@ VehicleShapeBoxes vehicleShapeBoxes(const VehicleRecord& record, const float ent
     const Vector3 half = {entityHalf[0], entityHalf[1], entityHalf[2]};
     VehicleShapeBoxes boxes;
     vehicleShapeBox(centre, half, record.centreOfMass, boxes.shapeLow, boxes.shapeHigh);
-    vehicleCollisionBox(record.className, centre, half, record.centreOfMass, boxes.collisionLow, boxes.collisionHigh);
+    boxes.collisionLow = boxes.shapeLow;
+    boxes.collisionHigh = boxes.shapeHigh;
     return boxes;
 }
 

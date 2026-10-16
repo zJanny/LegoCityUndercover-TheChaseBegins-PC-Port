@@ -3,9 +3,11 @@
 // memtrace of 2026-10-15 in artifacts/oracle/agentVEH32-out/tA.mem frame 7 and agentVPHYS-out/body0.mem): class values after the loaders
 // 0x243f90, 0x243e9c, 0x243c50, 0x243628 and 0x2435d0. Shared by the vehicle tests.
 #include "runtime/vehicle.hpp"
+#include "runtime/vehicle_box_contact.hpp"
 #include "runtime/vehicle_wheels.hpp"
 
 #include <optional>
+#include <vector>
 
 namespace trooper {
 
@@ -31,6 +33,24 @@ inline chase::runtime::VehicleWheel wheel(std::size_t index) {
     wheel.grip.frictionDynamic = 0.0f;
     wheel.grip.driftScale = rear ? 0.9f : 0.95f;
     return wheel;
+}
+
+// Oracle words of the trooper's probe points (state drv-police-car-seated, body+0xdc..+0x158): the box equals its entity box minus CentreOfMass.
+inline void box(chase::runtime::Vector3& low, chase::runtime::Vector3& high) {
+    low = {-0x1.f06dd8p-1f, 0x1.0a46p-8f, -0x1.6e0004p+1f};
+    high = {0x1.f06dd8p-1f, 0x1.a7f832p+0f, 0x1.55999cp+1f};
+}
+
+inline chase::runtime::VehicleCollisionBody collisionBody(const chase::runtime::VehicleRecord& record) {
+    chase::runtime::Vector3 low, high;
+    box(low, high);
+    return chase::runtime::vehicleCollisionBody(record, low, high, chase::runtime::kVehicleBodyMassFactor);
+}
+
+inline chase::runtime::VehicleBoxContacts boxContacts(const std::vector<chase::runtime::BulletBox>* boxes) {
+    chase::runtime::Vector3 low, high;
+    box(low, high);
+    return chase::runtime::vehicleBoxContacts(low, high, boxes);
 }
 
 inline chase::runtime::VehicleRecord record() {

@@ -88,7 +88,7 @@ Vector3 vehicleLocalInertia(float mass, const Vector3& low, const Vector3& high,
 VehicleRigidBody vehicleRigidBody(const VehicleRecord& record, const Vector3& node, float heading, const Vector3& shapeLow, const Vector3& shapeHigh,
                                   float massScale);
 void setVehicleMassScale(VehicleRigidBody& body, const VehicleRecord& record, const Vector3& shapeLow, const Vector3& shapeHigh, float massScale);
-// The collision points of the box `low`..`high` (vehicleCollisionBox) and body+0xc8 = Mass * scale.
+// The collision points of the box `low`..`high` (vehicleShapeBox) and body+0xc8 = Mass * scale.
 VehicleCollisionBody vehicleCollisionBody(const VehicleRecord& record, const Vector3& low, const Vector3& high, float massScale);
 // The node matrix (rows right, up, forward, translation) of a rigid body.
 std::array<float, 16> vehicleNodeMatrix(const VehicleRigidBody& body, const std::array<float, 3>& centreOfMass);
@@ -102,7 +102,6 @@ struct VehicleFloor {
     VehicleBoxContacts* boxes = nullptr;
     FloorContactObserver contactObserver = nullptr;
 };
-VehicleCollisionBody vehicleCollisionBody(const VehicleRecord& record);
 
 // The drivetrain state of a new vehicle body: the engine at IdleSpeed (0x243e9c), gear 2 (0x33ce74), one spin state per wheel.
 DrivetrainState vehicleDrivetrain(const VehicleRecord& record);

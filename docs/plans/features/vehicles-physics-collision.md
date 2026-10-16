@@ -6,7 +6,7 @@ The vehicle body's collision in the physics world: the floor collision pass 0x1c
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-16T11:30+02:00. The body collides with the level floor through the original's floor pass and sleeps by the original's rule (VEH-40, VEH-53 closed), with the 217 static Bullet boxes (VEH-60, VEH-63 closed) and with the other vehicle bodies through the original's pair contacts and two-body solve. The floor pass has the second cell search (VEH-94) and the sphere sweep against floor-graph wall cells (VEH-61), and the wheels cast their rays through the floor graph (VEH-97). Still missing: the compound shape of the donut van (VEH-62), details of the Bullet contacts (VEH-70, VEH-90), body activation (VEH-91), the contact message (VEH-100), the wheel ray's box sweep (VEH-101).
+IN_PROGRESS, updated 2026-10-16T11:31+02:00. The body collides with the level floor through the original's floor pass and sleeps by the original's rule (VEH-40, VEH-53 closed), with the 217 static Bullet boxes (VEH-60, VEH-63 closed) and with the other vehicle bodies through the original's pair contacts and two-body solve. The floor pass has the second cell search (VEH-94) and the sphere sweep against floor-graph wall cells (VEH-61), and the wheels cast their rays through the floor graph (VEH-97). Still missing: details of the Bullet contacts (VEH-70, VEH-90), body activation (VEH-91), the contact message (VEH-100), the wheel ray's box sweep (VEH-101).
 
 ## 3. Verified behaviour
 
@@ -21,7 +21,6 @@ IN_PROGRESS, updated 2026-10-16T11:30+02:00. The body collides with the level fl
 
 ## 4. Stand-ins
 
-- VEH-S50 The donut van's Bullet child box and collision points are the box read in the oracle (its low y -0.3831 is the clamped bottom of the probe points); the oracle child of the van is exactly the entity box minus `CentreOfMass`, as for every other class. needs: VEH-105. evidence: [vehicles-physics-props.md §2026-10-16T11:15:22](../../re/vehicles-physics-props.md#ts-20261016-111522)
 - [x] VEH-S51 — removed 2026-10-16: the second cell search 0x164328 (with 0x1aa478, 0x2384dc, 0x158cb8) is ported; a point more than 0.1 below a cell with flag bit 0 takes the first wall cell near it or is dropped from the push-out. evidence: [vehicles-physics-props.md §2026-10-16T08:59:49](../../re/vehicles-physics-props.md#ts-20261016-085949)
 - VEH-S52 The floor pass leaves out what 0x181e68 does besides the flag bit: the reply 2000 (drop the contact), the friction float +0x2c, body+0x90 bit 5 and byte +0x41 for surface 6; the message itself is sent ([vehicles-damage.md](vehicles-damage.md)). needs: VEH-100. evidence: [vehicles-physics-props.md §2026-10-16T09:53:49](../../re/vehicles-physics-props.md#ts-20261016-095349)
 - [x] VEH-S85 — removed 2026-10-16: a body with a floor graph casts its wheel rays through the floor graph (0x155888), which never sees entity meshes; the vehicle skip of `castWheelRay` only serves bodies without a floor. evidence: [vehicles-physics-props.md §2026-10-16T09:53:49](../../re/vehicles-physics-props.md#ts-20261016-095349)

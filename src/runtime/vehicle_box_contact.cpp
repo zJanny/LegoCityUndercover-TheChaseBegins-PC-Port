@@ -819,12 +819,6 @@ void solveVehicleContacts(VehicleRigidBody& body, std::vector<ContactManifold>& 
     solveContactGroup({&body}, entries, info);
 }
 
-VehicleBoxContacts vehicleBoxContacts(const std::string& className, const std::vector<BulletBox>* boxes) {
-    Vector3 low, high;
-    vehicleCollisionBoxStandIn(className, low, high);
-    return vehicleBoxContacts(low, high, boxes);
-}
-
 VehicleBoxContacts vehicleBoxContacts(const Vector3& low, const Vector3& high, const std::vector<BulletBox>* boxes) {
     VehicleBoxContacts contacts;
     contacts.boxes = boxes;

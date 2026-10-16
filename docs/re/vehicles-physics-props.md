@@ -93,3 +93,16 @@ Unknowns:
 - Whether classes other than the wobbly one (indestructible, respawnable, doors) react to message 0, and what a mesh-kind prop's grid shape is in the test of mode 1.
 - The kinematic vehicle branch of 0x16ce9c (0x24ef70, the states 2, 3, 5, 8, 9).
 - The return values and contact lists of 0x16788c at the pillar.
+
+<a id="ts-20261016-113100"></a>
+
+## 2026-10-16T11:31:00+02:00 — The donut van takes the general shape box; the box stand-in is gone (VEH-105)
+
+Evidence: the oracle read of [§2026-10-16T11:15:22](#ts-20261016-111522) (van compound child y -0.24375..4.85015 = entity box centre (0, 1.4032, 0), half (1.14375, 2.54695, 2.66857) minus CentreOfMass (0, -0.9, 0.2)); port output after VEH-105 (ctest, all tests pass).
+
+`vehicleCollisionBoxStandIn` and `vehicleCollisionBox` are removed: `vehicleShapeBoxes` uses `vehicleShapeBox` (entity box minus `CentreOfMass`) for the inertia box, the compound child box and the probe points of every class; the probe points keep their wheel clamp (`vehicleProbePoints`). The class-name overloads `vehicleCollisionBody(record)` and `vehicleBoxContacts(className, boxes)` are removed; the tests take the trooper box from `tests/vehicle_trooper.hpp` (`trooper::box`, the recorded probe-point words, equal to its entity box minus CentreOfMass).
+
+Test values that moved (vehicle-collision, vehicle-sphere-sweep): the van box low y -0.3831 -> -0.24375 (oracle child), high y 4.8502 -> 4.85015, probe point 6 z -2.5817 -> -2.86857 times 0.9 (oracle child z); the bottom raised by 1 for a body without wheels 0.6169 -> 0.75625 (port output after VEH-105). The sphere count 7 for the van is unchanged. No recorded oracle comparison of another vehicle changed.
+
+Unknowns:
+- Whether the van's collision spheres (2 x 1 x 3, radius 0.9) built from this box match the oracle's sphere set; only their count is pinned.
