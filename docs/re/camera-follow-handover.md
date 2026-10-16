@@ -2,6 +2,16 @@
 
 How the follow controller (0x2a8bfc, camera system object K at 0x589a70) takes over from another camera command: the seed of 0x2313c8, the near rule and the filter ramp of 0x1b4864. Entries are dated; new entries go at the end.
 
+## Current state
+
+- Take-over 0x1b4864 returns at once when the follow controller is already on top, calls the reset 0x2313c8, applies the near rule, pushes the follow command and sets both pose filter slots. [§2026-10-15T11:20:28](#ts-20261015-112028)
+- The reset places the camera at the first of eight candidate angles (180, 0, 90, 270, 45, 135, 225, 315), with distance and height scaled by the stale clearance S+4 of the last sweep. [§2026-10-15T11:20:28](#ts-20261015-112028)
+- Near rule (only after a record pose): if the look point is closer than 2 x 10.0 = 20 m to the camera node, the seed is the current camera node position and the filter rate is 0.1, else 1.0. [§2026-10-15T11:20:28](#ts-20261015-112028)
+- Filter factors ramp as `f += (1 - f) * 0.1` per update; the hand-over frame runs the follow update twice. [§2026-10-15T11:20:28](#ts-20261015-112028)
+- The apparent reaction to a 33 m jump is the level collision; the follow law itself is unchanged. [§2026-10-15T11:20:28](#ts-20261015-112028)
+- Port: `FollowCamera::takeOver`, `FilterRamp`, double update in `CameraRig`; test `camera-blend-real-data`. [§2026-10-15T11:20:28](#ts-20261015-112028)
+- Open: later candidate angles (line test 0x22b108 has no counterpart), the argument 0 branch and director hand-back wiring, the gameplay start, and the pitch clamp 0x2e0a50.
+
 <a id="ts-20261015-112028"></a>
 
 ## 2026-10-15T11:20:28+02:00 — Follow take-over: seed, near rule, filter ramp (CAMERA-9; llvm-objdump and REA Ghidra 12.1.2 pseudo code, Azahar GDB memtrace and trap on `street-after-1-1`, no pokes, no RPC)

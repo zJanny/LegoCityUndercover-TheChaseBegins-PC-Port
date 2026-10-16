@@ -4,6 +4,19 @@ Split from [vehicles-physics.md](vehicles-physics.md): the Bullet world of the v
 
 Newer entries on the second floor cell search, placed props and the broken car: [vehicles-physics-props.md](vehicles-physics-props.md).
 
+## Current state
+
+- The physics world is Bullet 2.78: vehicle bodies (flags 0x100) are integrated by 0x2d46d4 before the collision detection; 0x30cdf8 is the sleep rule, not the solver. [§2026-10-15T18:07:23](#ts-20261015-180723)
+- Vehicle against the level: the floor pass 0x1c54f8 walks the floor graph with 8 probe points (0x15c4a4, impulses 0x19c0a8 and 0x1b79ac); the floor graph cells come from `collision_floor`. [§2026-10-15T18:07:23](#ts-20261015-180723)
+- Static boxes: the 217 `Collision_Vehicle__NNN` records become btBoxShape static bodies; box-box detection is dBoxBox2 (0x2cf72c) with persistent manifolds, and the solver is Bullet's sequential impulse solver (10 iterations, erp 0.2, warm start 0.85) run after the floor pass. [§2026-10-15T19:04:12](#ts-20261015-190412)
+- Every vehicle has friction 0.5 (`BodyFriction` is read and dropped); the compound shape builder 0x2184a4 uses the entity box minus `CentreOfMass`. [§2026-10-15T19:12:47](#ts-20261015-191247)
+- Corrected by [vehicles-physics-props.md §2026-10-16T11:15:22](vehicles-physics-props.md#ts-20261016-111522): the donut van's child box follows the general rule too; the "0.139 lower" box was the clamped probe points. [§2026-10-15T19:12:47](#ts-20261015-191247)
+- Vehicle against vehicle: broadphase pairs with the lower proxy id first, two-body solve with the flag word 2 on pair points, mass scale `body+0x84` (2.0 for the player's car) and inertia from the compound AABB. [§2026-10-15T20:27:24](#ts-20261015-202724)
+- Gravity is -39 for every vehicle (global 0x376c40), the world's is -13; bodies sleep after 0.75 s below speed 0.8 and spin 1.0; parked vehicles start awake and settle to the oracle poses within 0.4 mm. [§2026-10-16T08:35:03](#ts-20261016-083503)
+- The port's wheel-ray skip of all vehicle entries (VEH-S85) is a stand-in; the original casts through the floor graph and static boxes only ([vehicles-physics-props.md §2026-10-16T09:53:49](vehicles-physics-props.md#ts-20261016-095349)). [§2026-10-16T08:35:03](#ts-20261016-083503)
+- Later entries on the second cell search, sphere sweep and props: [vehicles-physics-props.md](vehicles-physics-props.md).
+- Open: the writer of the pair-point flag word 2, how traffic vehicles are kinematic in the world, contacts with placed objects, `BumpCollision` and damage, and the last-bit differences from armcc float reassociation.
+
 <a id="ts-20261015-180723"></a>
 
 ## 2026-10-15T18:07:23+02:00 — Physics body, part 4: the physics world is Bullet, the floor collision pass 0x1c54f8, the floor graph and the sleep rule (llvm-objdump, REA Ghidra 12.1.2, Azahar GDB reads, traps and memory traces at fixed dt 0.033)

@@ -2,6 +2,16 @@
 
 Reverse-engineering findings, moved verbatim from the progress log. Entries are chronological; later entries may correct earlier ones. Evidence IDs are shortened with an ellipsis.
 
+## Current state
+
+- `.loc` files: "LOCA", version 2, count, table bytes, string bytes, then sorted (u32 key, u32 offset) pairs and NUL-terminated Latin-1 strings; 66 files, 25207 entries. [§2026-10-13T00:25](#ts-20261013-0025)
+- Keys are the sdbm hash `h = h * 65599 + c` of the upper-case identifier; data-only evidence, the hash routine was not found in code. [§2026-10-13T00:25](#ts-20261013-0025)
+- Text escape `0x01 '2' c` is character `c - 0x30` of `localisation/extended_chars_utf8.txt` (84 characters); no escapes remain after decoding. [§2026-10-13T00:45](#ts-20261013-0045)
+- Files with the suffix `_pl` hold Dutch text. [§2026-10-13T00:45](#ts-20261013-0045)
+- `.tnf` fonts: u16 end code, u8 first code (0x20), u8 line height, then (end - first) records of (u16 width, height, x, y) into `<name>.btga`; 6 fonts, 1521 glyphs. [§2026-10-13T01:05](#ts-20261013-0105)
+- Codes at or above 0x100 are the extended characters in file order; the escape probably means code `('2' - 0x31) * 0x100 + (c - 0x30)`. [§2026-10-13T01:05](#ts-20261013-0105)
+- Open: the byte 0xac for the trademark sign, the meaning of the '2' byte and other escape first bytes, and whether "ź" and "ż" are swapped in the atlas.
+
 <a id="ts-20261013-0025"></a>
 
 ## 2026-10-13T00:25+02:00 — Localisation tables (.loc) decoded

@@ -2,6 +2,17 @@
 
 The 17 AI natives of the level scripts, the AI component fields they write, the requested-state numbers and the AIMove trigger event. Evidence: llvm-objdump (`--triple=armv6k --mattr=+vfp2`) of `artifacts/game/game.arm.elf`, level data (`parseLevel`); no emulator run, no REA session. Census of all natives: [script-natives.md](script-natives.md). Items: [script-system-natives.md](../plans/features/script-system-natives.md) (SCRIPT-34, SCRIPT-42, SCRIPT-75, SCRIPT-79 to SCRIPT-84).
 
+## Current state
+
+- All 17 batch 34 AI natives return 1 (none blocks); the AI component is `entity + 0x7c`, and `Player1` resolves to the global 0x3772c0. [§2026-10-14T16:33:11](#ts-20261014-163311)
+- Component fields: `+0x14` state, `+0x15` requested state (0 idle, 1 none, 5 path, 9 mill about, 10 face target, 35/36 pursuit), `+0xd8` bit 4 enabled / bit 6 invulnerable, `+0xd9` bit 0 ignore player, `+0xb8` home, `+0xac` move target. [§2026-10-14T16:33:11](#ts-20261014-163311)
+- The AIMove trigger event (type `*0x3775e8`) is raised by 0x23cee8 at arrival in state 11, at the end of the path state and at 0x2cbf10 (start argument 255, end of an open simple path). [§2026-10-14T16:33:11](#ts-20261014-163311), [§2026-10-14T18:42:40](#ts-20261014-184240)
+- AIFollowSimplePath is state 22 (update 0x2cbe14): a node counts as reached below 0.5 in x/z, closed paths wrap, open paths end. [§2026-10-14T18:42:40](#ts-20261014-184240)
+- AIMove front end 0x22d85c runs the path finder, requests state 4 and sets `+0x84` = 5; the path finder 0x204284 works on the nav grids and is not ported. [§2026-10-14T18:42:40](#ts-20261014-184240)
+- Corrected by [ai-navigation.md §2026-10-14T19:47](ai-navigation.md#ts-20261014-194710): phase table of `+0x7e`, bit 0 of `+0x7c` only for AIMoveNoAvoid, state 11 is the AISuperJump state. [§2026-10-14T18:42:40](#ts-20261014-184240)
+- Walk stand-in: the player moves 0.11 per 1/30 s update on police entry (oracle). [§2026-10-14T16:33:11](#ts-20261014-163311)
+- Open: the state AIMove installs, speeds of non-player characters, meaning of entity flag 0x10, and the effects of AISuperJump, AIPursuit, AIStalkPlayer and AIRunAway.
+
 <a id="ts-20261014-163311"></a>
 
 ## 2026-10-14T16:33:11+02:00 — Handlers of the 17 AI natives, AI component fields, requested states and the AIMove event

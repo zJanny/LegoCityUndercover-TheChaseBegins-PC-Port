@@ -2,6 +2,15 @@
 
 Split from [vehicles.md](vehicles.md). Plan: [features/vehicles.md](../plans/features/vehicles.md) (VEH-9, VEH-11). The waypoint class itself: [scripts-missions.md](scripts-missions.md#ts-20261014-224825).
 
+## Current state
+
+- Waypoint setup 0x170fd8: `VehicleString` names a vehicle (kind 1 for `map_vehiclewaypoint` and `map_getintovehiclewaypoint`), else the int `VehicleType` is used; bit 5 of +0x8e is `TakePlayerControl` and not `GetIntoVehicle`. [§2026-10-15T11:35:00](#ts-20261015-113500)
+- Reach test 0x17b0c8 to 0x17b4a0: the player's vehicle counts during jump in, seat and jump out; a second test 0x17b21c clamps the bound centre into the vehicle box. [§2026-10-15T11:35:00](#ts-20261015-113500)
+- With `TakePlayerControl` a hit sets the forced stop byte, clamps the vehicle speed to 12.0 and runs the script 32 updates later (oracle, waypoint 05). [§2026-10-15T11:35:00](#ts-20261015-113500)
+- The waypoint update sees the vehicle state of the previous update; the enter waypoint hits one update after X. [§2026-10-15T11:35:00](#ts-20261015-113500)
+- Natives VehicleJumpOut 0x1da8d8, VehicleJumpIn 0x1cdec0, StopPlayerVehicle 0x27c040 and VehicleSetTopSpeed 0x2860d4 are transcribed (top speed gear value not). [§2026-10-15T11:35:00](#ts-20261015-113500)
+- Open: body+0x1158 meaning, no oracle case for the second test, event 200 refusal in other player states, AI cases, waypoint update order.
+
 <a id="ts-20261015-113500"></a>
 
 ## 2026-10-15T11:35:00+02:00 — Vehicle part of the waypoint class 0x17acbc, VehicleJumpOut / VehicleJumpIn / StopPlayerVehicle / VehicleSetTopSpeed (llvm-objdump on game.arm.elf, no REA; Azahar GDB only, no RPC, fixed dt 0.033)

@@ -2,6 +2,19 @@
 
 Walking and running measured in the oracle, the locomotion replica, ground following and the derivation of the speeds.
 
+## Current state
+
+- Stick movement is not animation root motion: `0x20cd30` falls back to `0x203d18`, which steps `dt * 30.0 * ATTR_RunSpeed * ctrl+0x94`. [§2026-10-13T17:02:03](#ts-20261013-170203)
+- Speeds: `ATTR_RunSpeed` defaults to 0.23 (literal at 0x37450c, not listed in `char_player`), so run 6.9 u/s, walk 6.9 / 3 = 2.3 u/s, sprint x 1.5 (10.35 u/s after the run timer passes 1.0 s). [§2026-10-13T17:02:03](#ts-20261013-170203)
+- Walk/run switch is at raw stick 117 / 118 (flag `v^2 < 0.5`), activation at `v > 0.1`; there is no acceleration; the run timer `ctrl+0x24c` gains dt per run update and is reset at run re-entry. [§2026-10-13T13:42:20](#ts-20261013-134220), [§2026-10-13T13:58:27](#ts-20261013-135827)
+- Facing turns per update by `sign(d) * min(6400, ceil(f32(0.3) * |d|))` toward the last intent (exact on 292 of 295 steps). [§2026-10-13T13:42:20](#ts-20261013-134220)
+- Update order: intent uses the previous camera yaw, then facing, then movement along the last intent, then the run timer. [§2026-10-13T13:58:27](#ts-20261013-135827)
+- Animation playback rates come from `{15, 30, 60, 0}` fps at 0x376764 (police: 15 fps, sprint 30 fps). [§2026-10-13T17:02:03](#ts-20261013-170203)
+- Jump height scale is `2.1 / (max.y - min.y)` of the extra joint curve (0.8608763 for jump); the horizontal factor 0.8 after take-off is the literal at 0x204028; landing stun equals the landing animation length. [§2026-10-13T17:02:03](#ts-20261013-170203)
+- Ground height comes from the probe of 0x20b48c, so the kerb steps in the ramp trace are not a slope model. [§2026-10-13T14:46:45](#ts-20261013-144645)
+- Corrected by the 17:02:03 entry: the 13:58:27 `kMeasuredRootMotionSpeeds` were provisional measured values. [§2026-10-13T13:58:27](#ts-20261013-135827)
+- Open: slope term of 0x1abe60 (ctrl+0x94 about 1.33 on ramps), other `0x203d18` states, the code that ends landing states 6 and 7, `ATTR_RunSpeed` of other characters, and the skipped facing step at frame 59.
+
 <a id="ts-20261013-134220"></a>
 
 ## 2026-10-13T13:42:20+02:00 — Player locomotion measured in the oracle (worker; Azahar 2126.2 old 3DS, REA Ghidra 12.1.2 for the code)

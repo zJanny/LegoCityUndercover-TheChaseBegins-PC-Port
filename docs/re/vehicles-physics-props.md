@@ -2,6 +2,18 @@
 
 Split from [vehicles-physics-collision.md](vehicles-physics-collision.md) (that file passed 40 KB): the second floor cell search of the push-out, the vehicle against placed props and the broken car. Plan: [features/vehicles-physics-collision.md](../plans/features/vehicles-physics-collision.md).
 
+## Current state
+
+- Second floor cell search 0x164328: a point more than 0.1 below its cell's plane whose cell has flag bit 0 looks for a nearby wall cell (|plane y| below 0.2, surface not '$') and is dropped when none is found; this ends the VEH-94 throw. [§2026-10-16T08:59:49](#ts-20261016-085949)
+- Sphere sweep: a body with flag +0xc4 bit 0 carries `CollSpheres` grid spheres (trooper 13, donut van 7) plus the last sphere (0, 0.18, 0) r 0.2; wall cells come from `findWallEdgeCells` (0x1b6ef8) and each sphere runs 0x16788c against them. [§2026-10-16T09:53:49](#ts-20261016-095349)
+- The wheel ray (0x33c718) is cast through the floor graph and static Bullet boxes only; vehicle meshes and compounds never touch a wheel. [§2026-10-16T09:53:49](#ts-20261016-095349)
+- Body mass scale is 2 from Jump In (state 0x11a) and 1 from Jump Out (0x11b). [§2026-10-16T09:53:49](#ts-20261016-095349)
+- The vehicle smashes props: the vehicle update 0x16ce9c calls 0x275c00, which sends message 0 with damage 100 to grid entries (mask 4 or 6) whose entity box overlaps the vehicle's (filter 0x2c02c8); the wobbly prop handler 0x2a3390 destroys a prop when `WobbleHealth` drops to 0. [§2026-10-16T11:15:22](#ts-20261016-111522)
+- Corrects the 08:59:49 claim of object-side smash code and the 09:53:49 claim of a van-specific child box. [§2026-10-16T11:15:22](#ts-20261016-111522)
+- Every vehicle class, the donut van included, takes its compound child box as the entity box minus `CentreOfMass`; the van stand-in is removed. [§2026-10-16T11:15:22](#ts-20261016-111522), [§2026-10-16T11:31:00](#ts-20261016-113100)
+- Break at a static box: hearts drop at the impact, the car breaks into bricks (E+0xc bit 4) later; measurements are in the vehicles-damage feature file. [§2026-10-16T11:15:22](#ts-20261016-111522)
+- Open: indestructible props, the wobble reaction for health above 0, the kinematic branch of 0x16ce9c, contact lists at the pillar, the pair-contact flag word and the writers of 0x3745b4.
+
 <a id="ts-20261016-085949"></a>
 
 ## 2026-10-16T08:59:49+02:00 — Second floor cell search 0x164328 (the throw of VEH-94), vehicle against placed props, the car breaking into bricks (REA Ghidra 12.1.2, llvm-objdump, Azahar RPC reads and pokes, fixed dt 0.033)

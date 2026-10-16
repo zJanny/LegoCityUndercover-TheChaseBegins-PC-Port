@@ -2,6 +2,20 @@
 
 Reverse-engineering findings, moved verbatim from the progress log. Entries are chronological; later entries may correct earlier ones. Evidence IDs are shortened with an ellipsis.
 
+## Current state
+
+- `.bxls` tables: header of sheet count and flags, 0x1c-byte sheet records, column types 0 to 10 with fields aligned to their size; all 24 tables (54 sheets, 23512 cells) parse. Column names are not in the files. [§2026-10-13T03:50](#ts-20261013-0350)
+- Config text (`.cam`, triggers, scriptfns): the game's generic reader 0x23bbe4 works per line and ends a value at the first `)`, so a missing or an extra `)` is accepted; the port's parser does the same. [§2026-10-16T10:12:03](#ts-20261016-101203)
+- `.cam` loader 0x3062e4 builds one 0x50-byte record per level object named "Camera..." (not "LookAt"); only Room and Bound blocks have key handlers, `RotationY`, `RotationX`, `Distance` and `Lookat` are editor data. [§2026-10-13T09:10](#ts-20261013-0910), [§2026-10-13T09:28](#ts-20261013-0928)
+- `Type` is a bit set (stored as `atoi | 0x80`): 0x01/0x02/0x04 fix position axes in world space, 0x08/0x10/0x20 look at the target on that axis, 0x400 sets `L = P + Offset`. [§2026-10-13T09:28](#ts-20261013-0928), [§2026-10-13T09:32](#ts-20261013-0932)
+- Bit 0x100 is read by 0x2821f8 (pose step 0x181fe0), together with 0x200. [§2026-10-13T14:41:13](#ts-20261013-144113)
+- Record selection 0x1d34ac is purely spatial; Focus or Blocker records win alone, else weights are the XZ distances normalised to sum 1; the weights are fixed when the set changes. [§2026-10-13T09:32](#ts-20261013-0932)
+- Pose output of 0x298cd8: look point at out+0x00, position at +0x24, FOV at +0x30, 3DOffset at +0x38. With one active Room record the follow controller is used instead (the street). [§2026-10-13T09:32](#ts-20261013-0932), [§2026-10-13T14:41:13](#ts-20261013-144113)
+- `collectables_level1..7.bin` (71 bytes, version 2) hold groups of 20, 10 and 5 16-bit ids read at 0x23b498; `levelobjectscount.bin` is read once at 0x2e6164 and not used further there. [§2026-10-16T10:12:03](#ts-20261016-101203)
+- `options.txt` and `options3ds.txt` are shipped but never read by this build. [§2026-10-16T10:12:03](#ts-20261016-101203)
+- Corrected by [camera-records-blending.md §2026-10-14T10:44](camera-records-blending.md#ts-20261014-104400): camera records are level bounds, not level objects. [§2026-10-13T09:10](#ts-20261013-0910)
+- Open: column meanings of the tables, `Type` and `Filters` values, easing of the blend, what the three collectable groups and the 82 object counts mean, and the users of the CustomChar, Traffic, Pedestrians and TouchGestures paths.
+
 <a id="ts-20261013-0350"></a>
 
 ## 2026-10-13T03:50+02:00 — Data tables (.bxls) decoded (REA, Ghidra 12.1.2)

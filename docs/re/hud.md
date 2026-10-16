@@ -2,6 +2,17 @@
 
 Findings from REA (Ghidra 12.1.2 pseudo-code of `artifacts/game/game.arm.elf`, evidence IDs shortened), `llvm-objdump` and the Azahar oracle (OpenGL with RPC screenshots, port 24690, home `artifacts/oracle/hud-home`, state `gameplay-start`). Related: [ui-layouts.md](ui-layouts.md), [studs.md](studs.md), [camera.md](camera.md), [front-end.md](front-end.md). Replica: `chase::frontend::Hud` (src/frontend/hud.*), `drawMinimap` (src/frontend/minimap.*), `StudField` flight (src/runtime/studs.*), presentation in src/game_hud.hpp and src/game.cpp.
 
+## Current state
+
+- Layouts: `sprites/ui_hud/blend/main.bxaml` (400x240) with `UI_HUD`, `Stud_Count`, `UI_Hearts` (six hearts) and the boss and strike references; page init 0x2cedb8, hearts 0x17bb14. [§2026-10-13T21:31:01](#ts-20261013-213101)
+- Portrait: draw callback 0x193604 picks `heartsBG_<class>` by character flag tests 0x19 to 0x1f and the portrait from `sprites/portraits/<name>.png` (player 1 row 9, "police"). The class 0x1f background is builder and the fallback is generic. [§2026-10-13T21:31:01](#ts-20261013-213101), [vehicles-boarding.md §2026-10-15T18:35:55](vehicles-boarding.md#ts-20261015-183555)
+- Hearts: `SetHearts` 0x2316b4 stores up to 6; the default "Health" is 4 (no class file sets it); only the last heart pulses. [§2026-10-13T21:31:01](#ts-20261013-213101)
+- Stud bar (0x519760): states hidden, on 0.5 s, shown with hold 2.0 s, off 0.5 s; the number is printed with `%llu`, the icon bounces by `8 * sin(0.2 pi n)`; pickups show the new total at once, only `AddStuds` (0x1584e0) is delayed (not replicated). [§2026-10-13T21:31:01](#ts-20261013-213101)
+- Flying studs (0x180168 state 4) move `(target - position) / (30 * timer)` to the unprojected sink (0x24c1d0); sink 0 is (203, -14.5, 5.5); replay matches to 2e-3. [§2026-10-13T21:31:01](#ts-20261013-213101)
+- Bottom screen: level map texture turned by camera yaw, one world unit is one screen pixel (fitted stand-in constants in `src/frontend/minimap.hpp`). [§2026-10-13T21:31:01](#ts-20261013-213101)
+- Corrected by [objective-hud.md §2026-10-15T19:56](objective-hud.md#ts-20261015-195600): the waypoint marker is `WayPoint.tga` with line circles, and the map matrix and icon drawing are read. [§2026-10-13T21:31:01](#ts-20261013-213101)
+- Open: who switches the HUD on and off, the overlay tick, number spacing source, the combat counter and boss hearts, and the real map drawing code.
+
 <a id="ts-20261013-213101"></a>
 
 ## 2026-10-13T21:31:01+02:00 — Layouts, hearts, stud bar, flying studs, map screen

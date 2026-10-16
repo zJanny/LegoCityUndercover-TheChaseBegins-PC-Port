@@ -2,6 +2,18 @@
 
 Where the player entity lives, how the stick becomes intent, where it gets its position and character, head attachment and appearance.
 
+## Current state
+
+- The player entity is "Player1.Player01" (looked up by 0x19f41c), stored in 0x3772c0 and 0x3772b8; its node gives the world matrix at node+0x5c, controller = `*(entity+0x7c)`. [§2026-10-13T10:42:27](#ts-20261013-104227)
+- Stick to intent (0x200354): each axis becomes `sqrt(|v|) * v` unless the entity type is 0x14b or 0x189; heading is `atan2(slot 14, slot 15) * 10430.378` plus the camera yaw word, wrapped to 16 bits; the heading is 0 when the stick is inactive. [§2026-10-13T10:59:11](#ts-20261013-105911)
+- The active test uses each channel's own dead zone; the walk flag (ctrl+0xc bit 3) is set only when the raw `x^2 + y^2` is strictly below 0.5. [§2026-10-13T10:59:11](#ts-20261013-105911)
+- The atan2f at 0x2473ec is a custom routine, ported bit-exact as `gameAtan2` (needs `-ffp-contract=off`); the D-pad heading path is dead code. [§2026-10-13T10:59:11](#ts-20261013-105911)
+- The yaw word 0x376894 is written by the camera manager update 0x23f174, and the player's entity type is 3. [§2026-10-13T14:41:13](#ts-20261013-144113)
+- Spawn transform is `Player1Start` (not the `Player1` object); the starting character is `char_player` with CharacterEnum 9 ("police") as a guess. [§2026-10-13T11:08:12](#ts-20261013-110812)
+- Head attachment: head matrix = translate(head joint bind position) * skin(head) * player; builder 0x2442b4 attaches `HeadModel` on "head" and `HatModel` on "hat". The rule shown under Assembly in the 11:08:12 entry is wrong. [§2026-10-13T12:56:22](#ts-20261013-125622)
+- The appearance path is shared with level characters (`addCharacter`, `poseBody`, `placeCharacter`). [§2026-10-13T16:34:30](#ts-20261013-163430)
+- Open: gate byte 0x372d44 writers, the draw-time consumer of node+0x10, the real start character and hat assembly, and the AttachRelative parameters.
+
 <a id="ts-20261013-104227"></a>
 
 ## 2026-10-13T10:42:27+02:00 — Player entity pointer, scene node, stick-to-intent (worker, REA Ghidra 12.1.2; key claims re-checked with objdump)

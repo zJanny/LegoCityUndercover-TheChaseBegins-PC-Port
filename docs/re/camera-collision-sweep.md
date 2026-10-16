@@ -2,6 +2,18 @@
 
 How the camera moves against geometry and placed objects.
 
+## Current state
+
+- The camera is not a sphere or ray sweep: the follow strategy step 0x3313c0 slices the geometry with two slabs (side and up) around the wanted view line and finds the widest free gap per shape. [§2026-10-13T16:19:35](#ts-20261013-161935)
+- Triangles count when `(1 << surface) & 0x01000010 == 0` (surfaces 4 and 24 excluded); at most 0x100 triangles per object, 200 raw segments, 50 intervals. [§2026-10-13T16:19:35](#ts-20261013-161935)
+- Clearance S+4 halves towards the gap-derived ratio (clamped to [0.01, 1]) and recovers by `dt / 2` while clear; it scales the next update's distance and height. [§2026-10-13T16:19:35](#ts-20261013-161935)
+- Side push `2.5 * middle` and vertical push `1.25 * middle` (not turning only) start timers of 0.5 s; the vertical timer switches the height spring off. [§2026-10-13T16:19:35](#ts-20261013-161935)
+- There is no separate player push-out; the player's own model is excluded from the query. [§2026-10-13T16:19:35](#ts-20261013-161935)
+- Placed props take part (descriptor K+0x184 accepts masks 1, 4 and 6); boxes are cut with 0x2eb5d4, not triangulated, and the small-object rules read the previous update's near limit K+0x1c8. [§2026-10-13T17:35:30](#ts-20261013-173530)
+- Replay: 699 of 700 sweep frames have the recorded segment count; the follow camera matches within 5.5e-4 (eye) over the wall traces (`camera-real-data`, `camera-sweep-real-data`). [§2026-10-13T17:35:30](#ts-20261013-173530)
+- Corrects camera-follow.md §2026-10-13T14:39:58: the push factor is the middle of the widest free gap, not a penetration depth. [§2026-10-13T16:19:35](#ts-20261013-161935)
+- Open: re-snap with ray casts (see [camera-follow-handover.md](camera-follow-handover.md#ts-20261015-112028)), other presets, the pitch clamp, first-gather near limit, and characters and vehicles not registered.
+
 <a id="ts-20261013-161935"></a>
 
 ## 2026-10-13T16:19:35+02:00 — Camera obstruction: slab sweep, pull-in, side and vertical push (0x3313c0 recovered)

@@ -2,6 +2,16 @@
 
 What starts script threads and switches triggers and bounds when a level or a scene is entered, besides the level's own `startup` script. The script engine is in [scripts.md](scripts.md), the load sequence in [streaming.md](streaming.md). Items: [script-system.md](../plans/features/script-system.md).
 
+## Current state
+
+- Scene start 0x197c3c walks the owner array last to first and runs each owner's `startup` script at once, so the level's own `startup` (element 0) runs last. [§2026-10-14T14:27:39](#ts-20261014-142739)
+- Class startups of lvl_01 objects (24 objects) only enable sub-objects, load animations or hide items; they change nothing in the level's own objects, bounds or triggers and do not explain SCRIPT-2. [§2026-10-14T14:27:39](#ts-20261014-142739)
+- The camera bound system (init 0x2ff35c) switches a bound off at start when an entity has the `CameraBound` / `UseableCameraBound` parameter; in lvl_01 this explains bounds 266, 271 and 272. [§2026-10-14T14:27:39](#ts-20261014-142739)
+- Triggers: data fit only: a trigger whose object name names no object of the level is disabled (lvl_01 triggers 79 to 82 and 141). [§2026-10-14T14:27:39](#ts-20261014-142739)
+- Event 0x1ecc50 formats `"%s%d"` with the start room number, then starts the plain name in all room entities; `OnSceneEnter<n>` exists in several levels, no `OnSceneExit` anywhere. [§2026-10-14T14:27:39](#ts-20261014-142739)
+- ScriptCheckExtras 0x2e5638 starts when byte +0x35 of the struct at 0x5163e8 is set, which happens on leaving the Extras screen. [§2026-10-14T14:27:39](#ts-20261014-142739)
+- Open: runtime trigger record builder, startup versus camera bound init order at the initial load, empty object name resolution, camera bound update 0x2ff7c8, and the second script at 0x2f6870.
+
 <a id="ts-20261014-142739"></a>
 
 ## 2026-10-14T14:27:39+02:00 — Class startups, camera bound switches, OnSceneEnter and ScriptCheckExtras (llvm-objdump on game.arm.elf, REA Ghidra 12.1.2 strings and xrefs, C++ level census, Azahar oracle `police-station` New 3DS, port 24780, `read` only, no RPC)
