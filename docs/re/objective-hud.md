@@ -2,9 +2,23 @@
 
 Handlers of batch SCRIPT-31 as far as mission 1-1 uses them, and what the original shows for an active waypoint. Evidence: REA (Ghidra 12.1.2 pseudo code of `artifacts/game/game.arm.elf`, sha256 5152ed14...0881), llvm-objdump, level data (`parseLevel`) and RPC screenshots of Azahar (states `gameplay-start`, Old 3DS, with `teleport` as measuring aid, output `artifacts/oracle/agentOH-out/`, never committed).
 
+## Current state
+
+- SetActiveWayPoint 0x27bde8 shows or hides the placed waypoint object; a disable is skipped when bit 4 of `component + 0x8e` is clear. [§2026-10-14T15:59](#ts-20261014-155919), [scripts-missions.md §2026-10-14T22:48](scripts-missions.md#ts-20261014-224825)
+- SubObjectiveGoToEnable fills the registry at 0x51a3a8 (0xc4-byte records); the per-update 0x2be934 centroid and effect are read, not transcribed. [§2026-10-14T15:59](#ts-20261014-155919)
+- A waypoint is the column model `Prop_Waypoint_Small` plus a child `Badge` (`dummymeshbouncer`, turns and hops); the class files carry the child. [§2026-10-15T18:31](#ts-20261015-183130)
+- Column and badge fade in and out through node tweens (registry 0x21b7cc, flags 3: alpha and colour). [§2026-10-15T19:58](#ts-20261015-195841)
+- The waypoint is reached through its class update and `TriggerScript`, which starts the mission script; mission 1-1 has 11 steps. [§2026-10-14T21:23](#ts-20261014-212357), [scripts-missions.md §2026-10-14T22:48](scripts-missions.md#ts-20261014-224825)
+- The map marker is the sprite `WayPoint.tga` plus two line circles, not `mapiconmission`; the scale is 0.94977 pixels per world unit with the map matrix at struct + 0x308 and zoom 1.55. [§2026-10-15T19:56](#ts-20261015-195600)
+- Off-screen icons sit on the ellipse (A 104.8, B 100.8) with an arrow; the pulse rings use a 3.0 s clock (active 2.0 s) with radii 200 and 20 shrinking to 2. [§2026-10-15T19:56](#ts-20261015-195600)
+- Group markers draw icons 14, 13, 15 for go to, enemy and carry. [§2026-10-15T19:56](#ts-20261015-195600)
+- Open: icon type selector of other classes, ring line colour, zoom control, how node alpha enters the draw (HUD-S70), arrow classes and their handlers.
+
 <a id="ts-20261014-155919"></a>
 
 ## 2026-10-14T15:59:19+02:00 — SetActiveWayPoint, SubObjectiveGoToEnable, the sub-objective registry and the waypoint marker on the map
+
+Corrected by [scripts-missions.md §2026-10-14T22:48](scripts-missions.md#ts-20261014-224825): a disable of SetActiveWayPoint is ignored when bit 4 of `component + 0x8e` is clear.
 
 Corrected by [objective-hud.md §2026-10-15T19:56](#ts-20261015-195600): the map marker is the sprite `WayPoint.tga` with two line circles, the unit is 0.94977 pixels per world unit, and the code and clock of the pulse are read.
 

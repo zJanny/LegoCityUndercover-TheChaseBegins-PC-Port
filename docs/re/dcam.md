@@ -2,6 +2,17 @@
 
 Reverse-engineering findings for the script camera: level paths, StartDCam / StartDCamTrack, the phase machine, the busy test of WaitForDCam, the end and the hand-back. Entries are chronological; later entries may correct earlier ones. Evidence IDs are shortened with an ellipsis. Replica: `src/runtime/dcam.*`, `CameraRig::setDirector`; tests `dcam`, `dcam-real-data`.
 
+## Current state
+
+- DCam path arguments resolve through 0x22a3b0 in level section +0x20 (0x28-byte records, 12-byte points); type 0 is a uniform Catmull-Rom spline, type 1 is not used by lvl_01. [§2026-10-14T14:36](#ts-20261014-143600)
+- StartDCam 0x194fd8 picks a command routine by the arguments (both paths: 0x2665e4); the pose is FOV 43, near 0.035, far 8.0; progress is a curve-5 smoothstep of elapsed / duration. [§2026-10-14T14:36](#ts-20261014-143600)
+- Busy test 0x236104 (WaitForDCam returns its negation): a cutscene is playing or the DCam is active and current; the end test 0x196784 hands the camera back to the follow command one update later. [§2026-10-14T14:36](#ts-20261014-143600)
+- Oracle traces fit the replica: 33 ms per update, done when elapsed >= 4000 ms, eye within 1.6e-4 for one- and two-point paths. [§2026-10-14T14:36](#ts-20261014-143600)
+- While the director camera is current, the character update swaps its control callback: the player without AI has held, press and heading zeroed; AI characters run only with DCamActive 1; others do nothing. [§2026-10-15T09:37](#ts-20261015-093712)
+- The hold lasts from the update after StartDCam to the update after the end test (274 updates in the patrol-car run). [§2026-10-15T09:37](#ts-20261015-093712)
+- StartDCam pauses a stopwatch object and the end test resumes it; SetDCamStartWait / EndWait store D+4 / D+8. [§2026-10-15T09:37](#ts-20261015-093712), [§2026-10-14T14:36](#ts-20261014-143600)
+- Open: clock ticks per second (1000 assumed), routines 0x270ff4 / 0x2879b0 and the other start natives, three-plus-point path comparison, effects on HUD and other objects, shake and follow reset.
+
 <a id="ts-20261014-143600"></a>
 
 ## 2026-10-14T14:36:00+02:00 — DCam system, level paths, phase machine, end test, oracle traces (REA Ghidra 12.1.2, llvm-objdump `--mattr=+vfp3`, Azahar New 3DS states street-at-entrance and dcam-police-dialog; SCRIPT-28, SCRIPT-40)

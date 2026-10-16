@@ -4,11 +4,24 @@ How the original organises levels, loads and unloads rooms and switches between 
 
 Moved to [streaming-transitions.md](streaming-transitions.md): the observed transition chain (Lower bound, station entry, lobby exit).
 
+## Current state
+
+- The game does not stream with `Pregen/*.bin` (AI route and collectable data); the port's whole-level composition is a stand-in. [§2026-10-13T22:27](#ts-20261013-222700)
+- `lvl_the_city.blvl` is the master level: it lists the eight world levels (instance `WorldLevel_NN_*` with `initialposition`) and 35 `scenechange` objects; only the master level and the current world level are resident. [§2026-10-13T22:27](#ts-20261013-222700)
+- A world level holds its rooms; room links come from level section +0x34 (loader 0x1cfc50, consumer 0x173f94). At gameplay-start in lvl_01 Room8 plus its links and rooms 17, 22, 23 are loaded. [§2026-10-13T22:27](#ts-20261013-222700)
+- Room streaming objects and natives (`StreamRoomIn`, `RoomStreamingWait`) are used by scripts only, not for walking. [§2026-10-13T22:27](#ts-20261013-222700)
+- `SceneChange <bound>` (0x1b262c) sends message 0xff to the `scenechange` entity; execution 0x303480 frees and rebuilds the world with progress steps 0, 25, 50, 100 when the destination is not loaded. [§2026-10-13T22:27](#ts-20261013-222700)
+- The station-entry bound did not fire because it was disabled (`EnableBound`, byte +0xa of the bound record), not because of the position. [streaming-transitions.md §2026-10-14T10:07](streaming-transitions.md#ts-20261014-100715)
+- The scene index is byte +0xd of the reference record, not of the entity. [streaming-transitions.md §2026-10-14T12:02](streaming-transitions.md#ts-20261014-120258)
+- Event bindings are level section +0x1c records (object, script, event name, two arguments). [§2026-10-13T22:27](#ts-20261013-222700)
+- Open: the rule that picks the rooms to load and unload, use of the WorldLevel offsets, the qualification of the `SceneChange` bound with the world level name, section +0x20 and the +0x24 byte tuples.
+
 <a id="ts-20261013-222700"></a>
 
 ## 2026-10-13T22:27:00+0200 — World levels, room links, scene change chain (REA Ghidra 12.1.2, llvm-objdump `--mcpu=arm1176jzf-s`, Azahar oracle port 24691 without RPC)
 
 Corrected by [streaming-transitions.md §2026-10-14T10:07](streaming-transitions.md#ts-20261014-100715): the bound was disabled, not out of position
+Corrected by [streaming-transitions.md §2026-10-14T12:02](streaming-transitions.md#ts-20261014-120258): the scene index is byte +0xd of the reference record `[[entity+0x7c]+0x14]`, not of the destination entity
 
 All addresses are for the reference build. Evidence IDs are shortened. Replica: `Level::roomLinks`, `Level::triggers` (src/assets/level.cpp); test `streaming-real-data` (tests/streaming_real_test.cpp).
 

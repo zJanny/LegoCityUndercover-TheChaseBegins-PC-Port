@@ -68,6 +68,8 @@ States: `street-after-1-1` (user) and `street-at-entrance` ([oracle-states.md §
 
 ## 2026-10-14T12:02:58+02:00 — Lobby exit from an unmodified state, the scenechange update and its destination (Azahar oracle New 3DS with RPC, GDB `trap`/`trace`, llvm-objdump; no REA session)
 
+[Corrects streaming.md §2026-10-13T22:27](streaming.md#ts-20261013-222700): the scene index is byte +0xd of the 20-byte reference record `[[entity+0x7c]+0x14]`, not of the destination entity.
+
 States: `police-station` (user), new `station-at-exit` (player 0.9 m before the exit bound, stick released) and `station-exit-loadingpage` (loading page open, waiting for A), both unmodified (their JSON has a `source` key). Replica: `src/runtime/scene_change.{hpp,cpp}`, `ScriptRunner::takeSceneChanges` / `playerInNamedBound`, the run-time switch in `chase-game`. Tests: `scene-change-real-data`, `game-scene-change-exit`, `game-scene-change-entry`, `script-runner`.
 
 **Corrections of earlier entries**

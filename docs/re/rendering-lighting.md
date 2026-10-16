@@ -2,6 +2,16 @@
 
 Reverse-engineering findings. Entries are chronological. Addresses are for the Europe v1.0 build. Feature file: [rendering](../plans/features/rendering.md). Related: [materials.md](materials.md), [rendering-fog.md](rendering-fog.md).
 
+## Current state
+
+- Lights come from objects of the classes `lighting/light{ambient,directional,point,specular,spot}` (record with `Colour`, `SpecularColour`, `LightType`, `Intensity`, `MaxRange`); lvl_01 has an ambient (136, 159, 179), a sun (254, 209, 169) and a specular light. [§2026-10-15T17:47](#ts-20261015-174725)
+- The global ambient 0x5943d0 is the per-frame sum of the type 0 lights (floats 0..1); [Corrects materials.md §2026-10-13T22:24](materials.md#ts-20261013-222439).
+- The light list has 8 slots (types 1 and 2 only), refilled every frame by 0x2523cc; type 1 stores the direction towards the light. [§2026-10-15T17:47](#ts-20261015-174725)
+- Per draw 0x12d884 writes the PICA registers (0x1c0 ambient, 0x142 diffuse, 0x140 specular, 0x144/0x145 light vector in view space) with a mask from the material's lighting byte. [§2026-10-15T17:47](#ts-20261015-174725)
+- Lighting init 0x115850 sets config 0x88000400 / 0xff7effff and builds the LUTs (D0 pow(x, 20), DA 1 - x, SP 0.5 + 0.5x). [§2026-10-15T17:47](#ts-20261015-174725)
+- The port evaluates the registers per fragment (`scene.frag.glsl`); the shirt colour moved from (62.6, 94.2, 141.5) to (76.5, 108.1, 153.8) against the oracle (80.9, 112.7, 157.9). [§2026-10-15T17:47](#ts-20261015-174725)
+- Open: writer of the exponent 20, per-room light selection, `LightMask`, flicker and spot cones, LUT scale 0x1d2 and decode (PICA docs only), runtime change of material colours, point lights against the oracle.
+
 <a id="ts-20261015-174725"></a>
 
 ## 2026-10-15T17:47:25+02:00 — Fragment lighting from light objects to the PICA registers (llvm-objdump on `artifacts/game/game.arm.elf`, Azahar oracle traps, watchpoints and command-list reads in state `gameplay-start`; REA was not used)

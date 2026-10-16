@@ -2,6 +2,16 @@
 
 How the level's stud objects are created, drawn, collected and counted. Replica: `StudObject` / `drawableObjects` (src/assets/level.cpp), `StudField` (src/runtime/studs.*), `StudSprites` (src/render/studs.*), wiring in src/game.cpp. Level objects in general: [objects.md](objects.md).
 
+## Current state
+
+- Stud classes are pickup objects (object type 0x3d, `pickuptype` 0 silver, 1 gold, 2 blue, 3 purple), drawn as camera-facing sprites from `Pickups_commonstud.tga`, never as models. [§2026-10-13T17:09](#ts-20261013-170941)
+- The record (0x4c bytes) sits 0.56 above `initialposition`; `DisabledOnStartUp` hides it until a group sequencer enables it. [§2026-10-13T17:09](#ts-20261013-170941)
+- Sprite frame comes from a clock of 3000 ticks per second (15 frames per second); quad half size 0.19, tint per type. [§2026-10-13T17:09](#ts-20261013-170941)
+- Pickup rule 0x180168: 3D distance from the stud to the player's pickup point (offset (0, 1.153, 0.08)) below radius 1.5; the skip counter limit is 30 (not 17). [§2026-10-13T17:09](#ts-20261013-170941), [§2026-10-13T21:35](#ts-20261013-213500)
+- Collecting flies the stud to the HUD sink for 1.0 s (step `(target - pos) / (30 * timer)`), then adds 10 / 100 / 1000 / 10000 (times the multiplier mask) and sets the HUD bar. [§2026-10-13T21:35](#ts-20261013-213500), [§2026-10-13T17:09](#ts-20261013-170941)
+- The collect sound is played: 64 for silver and gold, 63 for blue and purple. [§2026-10-13T21:48](#ts-20261013-214838)
+- Open: groups and `GroupOrder`, magnet, dropped studs (state 2), multiplier mask, clock origin, radius for other characters, gold/blue/purple recorded pickups.
+
 <a id="ts-20261013-170941"></a>
 
 ## 2026-10-13T17:09:41+02:00 — Pickup pool, sprite drawing, pickup rule and counter (REA Ghidra 12.1.2 pseudo-code, llvm-objdump, oracle port 24770 without RPC)

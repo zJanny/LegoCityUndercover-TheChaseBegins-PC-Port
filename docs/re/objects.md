@@ -2,6 +2,17 @@
 
 How the .blvl objects (section +0x2c) find their model and transform. Format of the level file: [levels.md](levels.md).
 
+## Current state
+
+- A class `N` is the file `levels/N.blvl`; its two parameter tables (12-byte records, hash/flags/type/value) are read by the lookup 0x217080, and an instance parameter the class does not list does not exist. [§2026-10-13T15:39](#ts-20261013-153915)
+- The model path is `models/<dir>/<leaf>.bfnmdl` from `meshname` (loader 0x2442b4); `initialposition` and `initialorientation` (degrees, matrix 0x237c48) place it. [§2026-10-13T15:39](#ts-20261013-153915)
+- Minifig characters are drawn with body, head joint, textures replacing the `*_TEST.tga` names; the pose is frame 0 of `class_generic/idle_minifig` (stand-in). [§2026-10-13T16:34](#ts-20261013-163430)
+- Studs are pickup sprites, not models; they are not counted as model-less. [§2026-10-13T17:09](#ts-20261013-170941), [studs.md §2026-10-13T17:09](studs.md#ts-20261013-170941)
+- Custom characters (`CharacterEnum` 1..8, 0x2372e0) take their look from the saved custom character, not from level data; they are not drawn. [§2026-10-13T16:34](#ts-20261013-163430)
+- The start state (which objects are disabled) comes from the `startup` script and the reveal links, not from a flag in the .blvl. [§2026-10-13T21:17](#ts-20261013-211741)
+- EnableObject sets entity flag bit 0 and hides the node (0x23f734, flags 0x60); a disabled object is not drawn (127 of 1198 hidden at lvl_01 start, e.g. `Police_Plaque_Floor`). [§2026-10-14T15:05](#ts-20261014-150541)
+- Open: per-class start visibility (`DisabledOnStartUp`, `ShowOnObjectScan`, flags bit 2), hidden characters still drawn, NPC start animations, animal rigs, the scene code that skips nodes with 0x60.
+
 <a id="ts-20261013-153915"></a>
 
 ## 2026-10-13T15:39:15+02:00 — Object census, parameter slots and the model lookup

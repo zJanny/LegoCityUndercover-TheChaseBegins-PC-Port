@@ -2,6 +2,18 @@
 
 Findings about the static collision of a level and how the player uses it. The player's other relations (objects, vehicles, falling) are listed as unknowns at the end.
 
+## Current state
+
+- Collision section of a model (loader 0x114640): items of 0x2c bytes, nodes 0x1c bytes (box centre + half extents, info word), triangles 0x20 bytes (normal, plane offset, 3 vertex indices, surface byte); the level master model holds the static world in world coordinates. [§2026-10-13T14:45](#ts-20261013-144500)
+- Ground: probe box from the node, floor triangles need normal y above 0.60876 (looser 0.087), bisection 0x2023e4 gives the highest floor to about 0.005; margins 0.24 shrink the player box. [§2026-10-13T14:45](#ts-20261013-144500)
+- Wall slide 0x21a73c: candidates with normal y <= 0.6088 facing the movement, normal flattened, movement projected per wall; a second pass stops the character in a corner. [§2026-10-13T14:45](#ts-20261013-144500)
+- The layer rule is the 10-word query descriptor: the player passes masks 1 (static) and 6 (props) and needs owner flag 0x200 without bits 0 and 1; the camera has its own descriptor. [§2026-10-13T17:34](#ts-20261013-173400)
+- All dynamic entities live in one world grid (DAT_00578dfc); registration 0x2ba3f4 gives each a box (CollisionBound record, else automatic node-matrix box, MeshCollision item). [§2026-10-13T17:34](#ts-20261013-173400), [§2026-10-13T20:53](#ts-20261013-205344)
+- The automatic box moves each node's mesh box by the node matrix (Police_Door_02 centre 2^-24); the disabled-object state comes from the level start state, not a stand-in list. [§2026-10-13T20:53](#ts-20261013-205344), [§2026-10-13T20:43](#ts-20261013-204340)
+- During play EnableObject and EnableCollision only change owner flags; the grid is filled once and never loses entries. [§2026-10-15T07:58](#ts-20261015-075843)
+- Replay tests (`collision-real-data`) match recorded ground and wall traces; the car comparison screenshot is not valid yet (COLL-22). [§2026-10-15T10:50](#ts-20261015-105024)
+- Open: falling path, the owner-flag-0 setter, 147+7 static entries against 153 items, other constructors (vehicles, characters), box-top standing, door_back contact.
+
 <a id="ts-20261013-144500"></a>
 
 ## 2026-10-13T14:45:00+02:00 — Collision data, ground height and wall slide recovered (REA Ghidra 12.1.2 on artifacts/game/game.arm.elf, objdump, Azahar oracle)

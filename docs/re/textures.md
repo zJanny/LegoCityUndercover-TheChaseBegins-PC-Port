@@ -2,6 +2,14 @@
 
 Reverse-engineering findings, moved verbatim from the progress log. Entries are chronological; later entries may correct earlier ones. Evidence IDs are shortened with an ellipsis.
 
+## Current state
+
+- Texture container (.btga/.bpng/.bdds): 56-byte header (size, u16 width and height, PICA200 format byte, cubemap flag, mip count), then the mip chain, largest first, 8x8 Morton-tiled and bottom-up; all 3991 headers are valid and 14 PICA formats decode. [§2026-10-12T15:40](#ts-20261012-1540)
+- UV v = 0 is the top row of the decoded top-down image; the viewer uploads rows unflipped. [§2026-10-12T22:40](#ts-20261012-2240)
+- The game links Nintendo DMPGL (dmp_* uniform table at 0x35b288); no static TEV command headers exist in code.bin. [§2026-10-12T22:40](#ts-20261012-2240)
+- `convert_textures.py` decodes through the C++ `decodeTexture`; the output of all 3991 textures equals the old Python decoder and the FNV-1a pins stay valid. [§2026-10-13T15:08](#ts-20261013-150853)
+- Open: cubemap face order, tracing the combiner setup through the uniform-location use.
+
 <a id="ts-20261012-1540"></a>
 
 ## 2026-10-12T15:40+02:00 — Texture container decoded (.btga/.bpng/.bdds)

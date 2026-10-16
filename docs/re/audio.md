@@ -2,6 +2,17 @@
 
 Reverse-engineering findings, moved verbatim from the progress log. Entries are chronological; later entries may correct earlier ones. Evidence IDs are shortened with an ellipsis.
 
+## Current state
+
+- A `.bwav` wraps one CWAV (word count 4) or one mono CWAV per channel (word count 6, music); all 1361 decode (DSP-ADPCM, PCM, IMA) in `chase_assets`. [§2026-10-12T15:45](#ts-20261012-1545), [§2026-10-12T18:25](#ts-20261012-1825); the version word is the word count: [pooled-resources.md §2026-10-12T15:55](pooled-resources.md#ts-20261012-1555)
+- Effect sound ids are rows of `tablessoundfx.bxls` sheet 0; the name is `sounds/<name>.bwav` for all 757 named rows; column 13 is the volume percent. [§2026-10-13T09:39](#ts-20261013-093936)
+- Core play function 0x23fa54(id, pos, param, flag) walks the sound banks; 0x23ae84 plays at an object's node position with owner u16 at object+0x14. [§2026-10-13T09:33](#ts-20261013-093338)
+- Positional gain: full up to paramA, zero from paramB, linear between, pan from the listener-space x/z offset, times the master SFX volume. [§2026-10-13T17:54](#ts-20261013-175424)
+- Player events: jump 288, footstep 178 (animation track 0x68cc6917 sampled as a step), landings 410 / 285, studs 64 and 63. [§2026-10-13T17:54](#ts-20261013-175424)
+- Stop 0x23ae50 finds the voice by (id, owner); a negative fade takes sheet 0 column 16, 0.0 ends it at once (all door sounds). [§2026-10-13T21:51](#ts-20261013-215117)
+- Music: sheet 1 rows are track ids for `OverrideMusic`, files `music/<name>.bwav`; the level music set (level record byte +0x39, sheet 2) gives no start music in lvl_00 or lvl_01. [§2026-10-13T09:42](#ts-20261013-094203), [§2026-10-13T17:54](#ts-20261013-175424)
+- Open: volume ramp and ducking, meaning of sheets 3-5 and the other columns, who fills the music name array, NPC and vehicle sounds, the mode 3 id remap.
+
 <a id="ts-20261012-1545"></a>
 
 ## 2026-10-12T15:45+02:00 — Sound container decoded (.bwav)

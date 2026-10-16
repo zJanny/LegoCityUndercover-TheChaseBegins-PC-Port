@@ -4,6 +4,14 @@ Subtopic of the Azahar runtime oracle. Start with [oracle.md](oracle.md) for set
 
 Launching Azahar for the oracle: Xvfb, the render window race, the launch retry, and the visible desktop mode.
 
+## Current state
+
+- Launch under Xvfb: the software renderer can abort on a state load (a paint race between the Qt thread and the state load, Azahar 2126.2); the tool runs with `singleWindowMode=false` and unmaps the render window, after which 8 of 8 runs and 6 x 8 loads succeeded. [§2026-10-13T12:41](#ts-20261013-124127)
+- The tool relaunches at most 3 times when the emulator dies before the scenario starts, saves `crash<N>-*` logs, and kills only the process groups of the emulator and Xvfb it started. [§2026-10-13T12:41](#ts-20261013-124127)
+- `--display desktop` runs on the current X display for a person to watch; agents keep using `xvfb`, and `--rpc-input` must not be combined with it. [§2026-10-13T22:45](#ts-20261013-224508)
+- Default keys of the generated config: circle pad arrows, A = A, B = S, X = Z, Y = X, L = Q, R = W, D-pad T/F/G/H, Start = M, Select = N, F1 quick save, F12 quick load. [§2026-10-13T22:45](#ts-20261013-224508)
+- Open: crashes on a plain boot, whether an unmapped window changes timing, the cause of one launch that ended after 4 loads, crashes of a visible OpenGL window.
+
 <a id="ts-20261013-124127"></a>
 
 ## 2026-10-13T12:41:27+02:00 — Azahar abort on quick load under Xvfb, launch retry and cleanup

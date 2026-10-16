@@ -2,6 +2,18 @@
 
 Reverse-engineering findings, moved verbatim from the progress log. Entries are chronological; later entries may correct earlier ones. Evidence IDs are shortened with an ellipsis.
 
+## Current state
+
+- Track records are 0x18 bytes (u16 key count at +4); keys are cubic Bezier curves in normalised time; 1954 animations, 62293 keys decode. [§2026-10-13T02:30](#ts-20261013-0230)
+- Cutscene folders `csdata/models/<id>` (69) list their cast in `manifest.bstxt`; the camera handler 0x1c1fbc reads position, rotation and fov (default 35). [§2026-10-13T02:30](#ts-20261013-0230)
+- The camera matrix (0x20e850) negates x; the world is left-handed, so the row flip alone mirrors the signs. [Corrected by levels.md §2026-10-13T12:49](levels.md#ts-20261013-1249)
+- Joint orientation: after sampling, the skeleton record's +0x88 quaternion is multiplied in (Hamilton product, 0x2485d8). [§2026-10-13T02:30](#ts-20261013-0230)
+- Cutscenes play at 30 frames per second (data evidence); soundtrack `music/csaudio/<id>.bwav` exists for 57 of 69. [§2026-10-13T03:20](#ts-20261013-0320)
+- Natives work on 8 slots of 0x24 bytes at 0x58976c: Load takes a free slot and builds the object, Play starts the cutscene mode without blocking, Wait returns `!busy(name)`, Free clears the object. [§2026-10-14T22:49](#ts-20261014-224929)
+- Flag a of Play is a 0.5 s fade to black before the start; the end fade (0.5 s out, 4 vblanks black, 0.7 s in) is measured, its code is not found. [§2026-10-14T23:52](#ts-20261014-235214)
+- The level start plays `01_GameIntro` and then `1_1_a` through the `startup` script. [§2026-10-14T23:52](#ts-20261014-235214)
+- Open: Load's retry field `args[0]+0x44`, flags b, c, d, the generic fade code of the cutscene mode, 113 actor animations with a frame count differing from the camera, camera fields 7-11.
+
 <a id="ts-20261013-0230"></a>
 
 ## 2026-10-13T02:30+02:00 — Cutscene tracks, cameras and joint orientations (REA, Ghidra 12.1.2)

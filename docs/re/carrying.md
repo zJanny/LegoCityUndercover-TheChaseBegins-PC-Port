@@ -2,6 +2,18 @@
 
 The carry objects (object type 122, ASCII `z`) and the carry targets (type 123, `{`): class records, the action-button pickup, the carried state, the drop, the placing into a target and the script objects they fire. Entries are dated; new entries go at the end. For developers; no game assets.
 
+## Current state
+
+- Carry objects are type 122 (record 0xa0 bytes), targets type 123 (record 0x2c); object references hold the target's name hash. [§2026-10-15T00:17](#ts-20261015-001729)
+- Use zones are axis-aligned, translation-only boxes (class `UseBound`, else node bounds plus about (1, 1.2, 1)); the A press walks the registry and sends object message 3 (pickup, drop or place). [§2026-10-15T00:17](#ts-20261015-001729)
+- Pickup enters state 0xa7, drop 0xa8, place 0xd6; the object attaches at the animation hook 0x2ce4a4 (joint weaponLeft for small, weaponRight for big objects via the `carryhandle` offset). [§2026-10-16T09:40](#ts-20261016-094004)
+- Release (message 0x12) puts the object upright on the floor under the hand (ray 3.0 up and down) and starts the reset countdown `ResetTime` x 30; the drop hook releases at the first animation event. [§2026-10-16T10:18](#ts-20261016-101840)
+- Placing fires the target state change 0x25e354: UseObject off, PlaceObject on, `TriggerObject` via 0x244f40, drop sound. The code-side 0x244f40 enables its object first; the script native `TriggerObject` does not. [§2026-10-15T11:11](#ts-20261015-111115), [§2026-10-15T13:08](#ts-20261015-130800)
+- The build-it does fire `TriggerObject` through a wrapper the static search missed. [Corrected by buildit.md §2026-10-15T13:07](buildit.md#ts-20261015-130720)
+- Carried walking multiplies the walk step by 2.5 (float 0x374368); the carried idle, walk and run clips come from the animation role table. [§2026-10-16T09:40](#ts-20261016-094004)
+- The pickup state lasts the clip (24 frames at 15 per second, about 48 updates); the place state ended at update 17 and the drop released at update 4 in earlier runs, unexplained against 26-update clips. [§2026-10-16T10:42](#ts-20261016-104210)
+- Open: sender of message 0x80000003, where released boxes land beyond the ray, track-hash to event table, place and drop end updates, other carry classes and `TargetObject01..04`.
+
 <a id="ts-20261015-001729"></a>
 
 ## 2026-10-15T00:17:29+02:00 — Carry objects and targets: classes, pickup, drop, placing, fired events (REA Ghidra pseudo code, llvm-objdump, oracle states m11-7, m11-8, m11-9)
