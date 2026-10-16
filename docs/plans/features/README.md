@@ -8,7 +8,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | [collision](collision.md) | IN_PROGRESS | COLL-1 broad phase stand-in; COLL-2 constructors missing (vehicles, characters) |
 | [level-objects](level-objects.md) | IN_PROGRESS | LEVOBJ-3 objects frozen (needs SCRIPT-1); LEVOBJ-2 NPC start animation; LEVOBJ-12/13 hidden characters, per-class visibility |
 | [level-objects-buildit](level-objects-buildit.md) | IN_PROGRESS | LEVOBJ-40 brick animation; LEVOBJ-41 sounds, studs; LEVOBJ-43 built state not saved (needs SAVE-8) |
-| [level-objects-carry](level-objects-carry.md) | IN_PROGRESS | LEVOBJ-30 pickup timing; LEVOBJ-31 locomotion while carrying; LEVOBJ-32 sounds and effects |
+| [level-objects-carry](level-objects-carry.md) | IN_PROGRESS | LEVOBJ-74 end of the carry states; LEVOBJ-75 release of the box; LEVOBJ-31 locomotion while carrying; LEVOBJ-32 sounds and effects |
 | [vehicles](vehicles.md) | IN_PROGRESS | VEH-7 driving collision; VEH-21 driving details; VEH-10 sounds |
 | [vehicles-physics](vehicles-physics.md) | IN_PROGRESS | VEH-42 inertia; VEH-50 air control; VEH-54 jump-out braking |
 | [vehicles-physics-collision](vehicles-physics-collision.md) | IN_PROGRESS | VEH-61 sphere sweep; VEH-62 compound shape; VEH-70 Bullet contact details |

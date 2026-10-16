@@ -40,7 +40,7 @@ void CarrySet::load(assets::FuseArchive& archive, const assets::Level& level, co
     objects_.clear();
     targets_.clear();
     phase_ = CarryPhase::Free;
-    carried_ = placingTarget_ = pickingUp_ = -1;
+    carried_ = placingTarget_ = pickingUp_ = phaseObject_ = -1;
     std::map<std::uint32_t, std::string> names;
     for (const assets::LevelObject& object : level.objects) names[assets::nameHash(object.instance)] = lower(object.instance);
     for (const assets::LevelObject& object : level.objects) {
@@ -109,6 +109,19 @@ bool CarrySet::position(const std::string& lowerInstance, float out[3]) const {
     return false;
 }
 
+int CarrySet::phaseClip() const {
+    if (phase_ == CarryPhase::Free) return 0;
+    const bool small = objects_[std::size_t(phaseObject_)].small;
+    if (phase_ == CarryPhase::PickingUp) return small ? kAnimationPickupSmall : kAnimationPickupBig;
+    return small ? kAnimationPutdownSmall : kAnimationPutdownBig;
+}
+
+bool CarrySet::turnTarget(float out[3]) const {
+    if (!turn_) return false;
+    std::copy_n(turnTarget_, 3, out);
+    return true;
+}
+
 int CarrySet::carryingMode() const {
     if (carried_ < 0) return 0;
     return objects_[std::size_t(carried_)].small ? 1 : 2;
@@ -122,6 +135,7 @@ bool CarrySet::inZone(const float zoneCentre[3], const float zoneHalf[3], const 
 
 std::vector<CarryAction> CarrySet::update(const assets::PlacedObjectState& state, const CarryInput& input) {
     std::vector<CarryAction> actions;
+    turn_ = false;
     std::copy_n(input.player, 3, player_);
     std::copy_n(input.facing, 3, facing_);
     for (std::size_t i = 0; i < targets_.size(); ++i) {
@@ -141,21 +155,26 @@ std::vector<CarryAction> CarrySet::update(const assets::PlacedObjectState& state
     }
     if (carried_ >= 0) {
         CarryObject& held = objects_[std::size_t(carried_)];
-        for (int a = 0; a < 3; ++a) held.position[a] = player_[a] + facing_[a] * kCarryHeldForward;
-        held.position[1] += kCarryHeldHeight;
+        if (input.hasHand) {
+            std::copy_n(input.hand, 3, held.position);
+        } else {
+            for (int a = 0; a < 3; ++a) held.position[a] = player_[a] + facing_[a] * kCarryHeldForward;
+            held.position[1] += kCarryHeldHeight;
+        }
     }
     if (phase_ != CarryPhase::Free) {
         ++phaseUpdates_;
+        const CarryTiming& timing = timing_[objects_[std::size_t(phaseObject_)].small ? 1 : 0];
         if (phase_ == CarryPhase::PickingUp) {
-            if (phaseUpdates_ == kCarryPickupAttachUpdates) {
+            if (phaseUpdates_ == timing.pickupAttach) {
                 carried_ = pickingUp_;
                 objects_[std::size_t(carried_)].carried = true;
                 objects_[std::size_t(carried_)].resetCountdown = 0;
                 actions.push_back({CarryActionKind::PickedUp, std::size_t(carried_), 0});
             }
-            if (phaseUpdates_ >= kCarryPickupEndUpdates) phase_ = CarryPhase::Free;
+            if (phaseUpdates_ >= timing.pickupEnd) phase_ = CarryPhase::Free;
         } else if (phase_ == CarryPhase::Placing) {
-            if (phaseUpdates_ == kCarryPlaceReleaseUpdates && carried_ >= 0) {
+            if (phaseUpdates_ == timing.placeRelease && carried_ >= 0) {
                 CarryObject& object = objects_[std::size_t(carried_)];
                 CarryTarget& target = targets_[std::size_t(placingTarget_)];
                 object.carried = false;
@@ -164,9 +183,9 @@ std::vector<CarryAction> CarrySet::update(const assets::PlacedObjectState& state
                 actions.push_back({CarryActionKind::Placed, std::size_t(carried_), std::size_t(placingTarget_)});
                 carried_ = -1;
             }
-            if (phaseUpdates_ >= kCarryPlaceEndUpdates) phase_ = CarryPhase::Free;
+            if (phaseUpdates_ >= timing.placeEnd) phase_ = CarryPhase::Free;
         } else {
-            if (phaseUpdates_ == kCarryDropReleaseUpdates && carried_ >= 0) {
+            if (phaseUpdates_ == timing.dropRelease && carried_ >= 0) {
                 CarryObject& object = objects_[std::size_t(carried_)];
                 object.carried = false;
                 std::copy_n(player_, 3, object.position);
@@ -174,7 +193,7 @@ std::vector<CarryAction> CarrySet::update(const assets::PlacedObjectState& state
                 actions.push_back({CarryActionKind::Dropped, std::size_t(carried_), 0});
                 carried_ = -1;
             }
-            if (phaseUpdates_ >= kCarryDropEndUpdates) phase_ = CarryPhase::Free;
+            if (phaseUpdates_ >= timing.dropEnd) phase_ = CarryPhase::Free;
         }
         return actions;
     }
@@ -188,9 +207,12 @@ std::vector<CarryAction> CarrySet::update(const assets::PlacedObjectState& state
             if (!inZone(target.zoneCentre, target.zoneHalf, target.position, player_)) continue;
             phase_ = CarryPhase::Placing;
             placingTarget_ = int(i);
+            turn_ = true;
+            std::copy_n(target.position, 3, turnTarget_);
             break;
         }
         phaseUpdates_ = 0;
+        phaseObject_ = carried_;
         return actions;
     }
     for (std::size_t i = 0; i < objects_.size(); ++i) {
@@ -200,6 +222,9 @@ std::vector<CarryAction> CarrySet::update(const assets::PlacedObjectState& state
         phase_ = CarryPhase::PickingUp;
         phaseUpdates_ = 0;
         pickingUp_ = int(i);
+        phaseObject_ = int(i);
+        turn_ = true;
+        std::copy_n(object.position, 3, turnTarget_);
         break;
     }
     return actions;

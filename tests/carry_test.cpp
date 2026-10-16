@@ -1,6 +1,8 @@
 // Carrying rules (src/runtime/carry.cpp) on a synthetic level: pickup in the use zone, the carried state, drop, placing into the target that
 // names the object, the delayed effect of the target and the reset of a dropped object. Values: docs/re/carrying.md.
 #include "runtime/carry.hpp"
+#include <algorithm>
+#include <array>
 #include <cmath>
 #include <iostream>
 #include <stdexcept>
@@ -87,8 +89,8 @@ int main() {
                 ++updates;
                 if (count(set.update(state, at(11, 10, false)), CarryActionKind::PickedUp)) attachedAfter = updates;
             }
-            require(attachedAfter == kCarryPickupAttachUpdates, "attached after " + std::to_string(attachedAfter));
-            require(updates == kCarryPickupEndUpdates, "pickup ended after " + std::to_string(updates));
+            require(attachedAfter == CarryTiming{}.pickupAttach, "attached after " + std::to_string(attachedAfter));
+            require(updates == CarryTiming{}.pickupEnd, "pickup ended after " + std::to_string(updates));
             float position[3];
             require(set.position("box", position), "position of the box");
             set.update(state, at(20, 20, true));
@@ -99,7 +101,7 @@ int main() {
                 ++updates;
                 if (count(set.update(state, at(20, 20, false)), CarryActionKind::Dropped)) released = updates;
             }
-            require(released == kCarryDropReleaseUpdates, "dropped after " + std::to_string(released));
+            require(released == CarryTiming{}.dropRelease, "dropped after " + std::to_string(released));
             require(set.carryingMode() == 0, "nothing carried after the drop");
             set.position("box", position);
             require(position[0] == 20 && position[2] == 20, "dropped at the player");
@@ -165,7 +167,7 @@ int main() {
                 if (count(actions, CarryActionKind::Used)) used = updates;
                 if (used) break;
             }
-            require(placed == kCarryPlaceReleaseUpdates, "placed after " + std::to_string(placed));
+            require(placed == CarryTiming{}.placeRelease, "placed after " + std::to_string(placed));
             require(used == placed + 1, "the target effect runs one update after the release");
             require(set.targets()[0].used, "target used");
         }
@@ -182,6 +184,45 @@ int main() {
             busy.playerFree = false;
             set.update(state, busy);
             require(!set.busy(), "a player in another state does not take the button");
+        }
+        {
+            CarrySet set = makeSet();
+            CarryTiming slow;
+            slow.pickupAttach = 3;
+            slow.pickupEnd = 5;
+            set.setTiming(false, slow);
+            float turn[3];
+            set.update(state, at(11, 10, true));
+            require(set.turnTarget(turn) && turn[0] == 10 && turn[2] == 10, "the pickup turns the player towards the box");
+            require(set.phaseClip() == kAnimationPickupBig, "the pickup plays the big pickup clip");
+            set.update(state, at(11, 10, false));
+            require(!set.turnTarget(turn), "the turn is set once");
+            for (unsigned i = 0; i < 2; ++i) set.update(state, at(11, 10, false));
+            require(set.carryingMode() == 2, "attached after the configured update");
+            CarryInput hand = at(11, 10, false);
+            hand.hasHand = true;
+            hand.hand[0] = 1;
+            hand.hand[1] = 2;
+            hand.hand[2] = 3;
+            set.update(state, hand);
+            float position[3];
+            set.position("box", position);
+            require(position[0] == 1 && position[1] == 2 && position[2] == 3, "a carried object follows the hand position");
+            while (set.busy()) set.update(state, hand);
+            set.update(state, at(30, 30, true));
+            require(set.turnTarget(turn) && turn[0] == 30, "placing turns the player towards the target");
+            require(set.phaseClip() == kAnimationPutdownBig, "placing plays the put-down clip");
+        }
+        {
+            std::vector<float> rotation = {0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1, 0, 2, 3, 4, 1};
+            chase::assets::Model model;
+            model.nodeNames = {"Box", "carryhandle"};
+            model.nodeMatrices = {std::array<float, 16>{1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1}, {}};
+            std::copy(rotation.begin(), rotation.end(), model.nodeMatrices[1].begin());
+            const std::array<float, 16> offset = carryHandOffset(model);
+            const float expected[16] = {0, -1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, -3, 2, -4, 1};
+            for (int i = 0; i < 16; ++i) require(std::fabs(offset[std::size_t(i)] - expected[i]) < 1e-6f, "hand offset element " + std::to_string(i));
+            require(carryHandOffset(chase::assets::Model())[0] == 1, "no handle node gives the identity");
         }
     } catch (const std::exception& error) {
         std::cerr << "carry-test: " << error.what() << '\n';

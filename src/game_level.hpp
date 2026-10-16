@@ -20,6 +20,7 @@
 #include "render/studs.hpp"
 #include "runtime/animation_driver_chain.hpp"
 #include "runtime/buildit_set.hpp"
+#include "game_carry.hpp"
 #include "runtime/carry.hpp"
 #include "runtime/camera_lock_icon.hpp"
 #include "runtime/camera_rig.hpp"
@@ -186,6 +187,7 @@ private:
     chase::runtime::BuilditSet buildits;
     game_prop_parts::PropParts propParts;
     chase::runtime::CarrySet carry;
+    game_carry::HeldObjects heldObjects;
     std::optional<chase::runtime::VehicleBoarding> boarding;
     std::vector<chase::runtime::BoardingVehicle> boardingVehicles;
     std::vector<std::size_t> boardingRecords;

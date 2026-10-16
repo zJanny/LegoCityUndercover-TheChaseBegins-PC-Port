@@ -5,6 +5,7 @@
 #include "assets/assets.hpp"
 #include "assets/object_collision.hpp"
 #include "runtime/script_runner.hpp"
+#include "runtime/carry_animation.hpp"
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -23,18 +24,8 @@ constexpr float kCarryZoneMargin[3] = {1.0f, 1.2f, 1.0f};
 constexpr unsigned kCarryUpdatesPerSecond = 30;
 constexpr float kCarryDefaultResetSeconds = 5.0f;
 
-// STAND-IN LEVOBJ-S31: the original ends each of these on events of its animations (docs/re/carrying.md). The place values are measured in
-// the oracle (state 0xd6 entered at update 0; release 8 updates later, back to state 1 at update 17); the drop release is 4 updates (state
-// 0xa8); the pickup values are copies of the place values.
-constexpr unsigned kCarryPickupAttachUpdates = 8;
-constexpr unsigned kCarryPickupEndUpdates = 17;
-constexpr unsigned kCarryPlaceReleaseUpdates = 8;
-constexpr unsigned kCarryPlaceEndUpdates = 17;
-constexpr unsigned kCarryDropReleaseUpdates = 4;
-constexpr unsigned kCarryDropEndUpdates = 17;
-
-// STAND-IN LEVOBJ-S32: the original hangs the object on the player's hand bone through its "carryhandle" node (0x28db30); until the skeleton
-// attachment exists a carried object floats in front of the player at this offset.
+// STAND-IN LEVOBJ-S32: without a hand position (CarryInput::hasHand) a carried object floats in front of the player at this offset; the original hangs
+// the object on the hand joint through its "carryhandle" node (0x28db30, hook 0x2ce4a4).
 constexpr float kCarryHeldForward = 0.5f;
 constexpr float kCarryHeldHeight = 0.9f;
 
@@ -89,6 +80,8 @@ struct CarryInput {
     float facing[3] = {0, 0, 1};  // unit vector the player looks along
     bool actionPressed = false;   // the action button went down in this update
     bool playerFree = true;       // the player is in a state that takes the action (idle, walk, run)
+    bool hasHand = false;         // the object origin of a carried object (the hand joint and the handle offset), world position in `hand`
+    float hand[3] = {0, 0, 0};
 };
 
 class CarrySet {
@@ -108,6 +101,15 @@ public:
     // The player holds a carry object (ctrl+0x13c): 0 none, 2 a big object in the hands, 1 a small one (0x225754).
     int carryingMode() const;
     bool busy() const { return phase_ != CarryPhase::Free; }
+    // Timing of the states for big and small objects (default CarryTiming for both).
+    void setTiming(bool small, const CarryTiming& timing) { timing_[small ? 1 : 0] = timing; }
+    // The clip of the state the player is in (kAnimationPickup*, kAnimationPutdown*), 0 while the player is free.
+    int phaseClip() const;
+    // The object the state is about (picked up, carried, put down); -1 when free.
+    // The position the player turns towards at the update a pickup or a placing began (the message 3 handlers set the facing target, 0x2011b0 and
+    // 0x1767c8); false in every other update. The drop does not turn.
+    bool turnTarget(float out[3]) const;
+    int phaseObject() const { return phase_ == CarryPhase::Free ? -1 : phaseObject_; }
     int carriedIndex() const { return carried_; }
     static bool inZone(const float zoneCentre[3], const float zoneHalf[3], const float origin[3], const float point[3]);
 
@@ -119,6 +121,10 @@ private:
     int carried_ = -1;
     int placingTarget_ = -1;
     int pickingUp_ = -1;
+    int phaseObject_ = -1;
+    bool turn_ = false;
+    float turnTarget_[3] = {0, 0, 0};
+    CarryTiming timing_[2];
     float player_[3] = {0, 0, 0};
     float facing_[3] = {0, 0, 1};
 };

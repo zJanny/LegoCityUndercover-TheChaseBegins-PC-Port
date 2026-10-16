@@ -98,6 +98,8 @@ LocomotionStep locomotionUpdate(LocomotionState& state, float dt, const StickInt
         state.runTimer += dt;
         state.sprinting = state.runTimer > kSprintTime;
     }
+    if (state.carryingBig && speed != 0)
+        speed *= kCarryWalkStepScale * (step.regime == Regime::Run ? speeds.walk / speeds.run : 1.0f);
     if (step.regime == Regime::Walk) step.animation = kAnimationWalk;
     if (step.regime == Regime::Run) step.animation = state.sprinting ? kAnimationSprint : kAnimationRun;
     step.animationScale = state.sprinting ? speeds.sprintScale : 1.0f;

@@ -114,6 +114,12 @@ std::vector<Matrix> poseBody(Scene& scene, const CharacterRig& rig, const Charac
     return skin;
 }
 
+std::optional<Mat4> jointWorld(const CharacterRig& rig, const std::string& lowerJointName, const std::vector<Matrix>& skin, const Mat4& world) {
+    const std::optional<std::size_t> joint = jointIndex(rig.skeleton, lowerJointName);
+    if (!joint) return std::nullopt;
+    return onJoint(rig, *joint, skin, world);
+}
+
 void placeCharacter(Scene& scene, const CharacterRig& rig, const CharacterInstance& instance,
                     const std::vector<Matrix>& skin, const Mat4& world) {
     scene.setTransform(instance.bodyInstance, world);

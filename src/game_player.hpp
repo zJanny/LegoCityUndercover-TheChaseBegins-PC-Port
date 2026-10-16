@@ -3,6 +3,7 @@
 #include "render/character.hpp"
 #include "render/scene.hpp"
 #include "runtime/ai.hpp"
+#include "runtime/carry_animation.hpp"
 #include "runtime/collision.hpp"
 #include "runtime/player_intent.hpp"
 #include "runtime/player_locomotion.hpp"
@@ -22,6 +23,7 @@ inline constexpr const char* kPlayerCharacter = "levels/chars/char_police.blvl";
 inline constexpr const char* kPlayerBaseCharacter = "levels/chars/char_player.blvl";
 inline constexpr const char* kPlayerAnimationDirectory = "models/char_minifig/class_police/";
 inline constexpr const char* kPlayerAnimationSuffix = "_minifig.bfnanm";
+inline constexpr const char* kCarryAnimationDirectory = "models/char_minifig/class_generic/";
 // ctrl+0x6c of the player (read in the oracle, locomotion traces).
 inline constexpr std::uint16_t kPlayerEntityType = 3;
 
@@ -34,6 +36,8 @@ struct PlayerRig {
     chase::render::CharacterRig character;
     chase::render::CharacterInstance instance;
     std::map<int, chase::assets::Animation> animations;  // 0 = idle, runtime::kAnimationWalk / Run / Sprint
+    std::optional<chase::runtime::CarryAnimations> carryAnimations;  // the clips of the carried variants and of the pickup and put-down states are in `animations`
+    mutable std::vector<chase::assets::Matrix> skin;                  // skin matrices of the last pose
     int animation = 0;
     double frame = 0;
     float startX = 0, startZ = 0;
@@ -46,6 +50,10 @@ struct PlayerRig {
     void animate(chase::render::Scene& scene, float dt, int role, float scale);
     void pose(chase::render::Scene& scene) const;
     void setVisible(chase::render::Scene& scene, bool visible) const;
+    // World transform of a model hung on the joint `lowerJointName` in the last pose; nothing without the joint.
+    std::optional<chase::render::Mat4> jointWorld(const std::string& lowerJointName) const;
+    // The clip to play for `role` while carrying (`carryingMode` 0, 1, 2 as CarrySet::carryingMode) or in a pickup / put-down state (`stateClip`, 0 when none).
+    int carriedRole(int role, int carryingMode, int stateClip) const;
 };
 
 struct PlayerAnimation {

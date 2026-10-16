@@ -196,6 +196,7 @@ public:
     std::size_t triangles() const;
     void setTransform(std::size_t instance, const Mat4& transform) { instances_.at(instance).transform = transform; }
     void setInstanceVisible(std::size_t instance, bool visible) { instances_.at(instance).visible = visible; }
+    bool instanceVisible(std::size_t instance) const { return instances_.at(instance).visible; }
     void setInstanceFade(std::size_t instance, float fade) { instances_.at(instance).fade = fade; }
     std::size_t missingTextures() const { return missing_; }
     std::size_t instances() const { return instances_.size(); }
@@ -642,6 +643,8 @@ std::size_t Scene::triangles() const { return impl_->triangles(); }
 void Scene::setTransform(std::size_t instance, const Mat4& transform) { impl_->setTransform(instance, transform); }
 
 void Scene::setInstanceVisible(std::size_t instance, bool visible) { impl_->setInstanceVisible(instance, visible); }
+
+bool Scene::instanceVisible(std::size_t instance) const { return impl_->instanceVisible(instance); }
 
 void Scene::setInstanceFade(std::size_t instance, float fade) { impl_->setInstanceFade(instance, fade); }
 

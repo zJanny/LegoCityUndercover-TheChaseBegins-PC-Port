@@ -294,6 +294,18 @@ int main() {
             locomotionUpdate(state, 0.033f, forward);
             require(near(state.runTimer, 0.033f), "walk to run restarts the timer");
         }
+        // Carrying a big object (0x203d18): the walk step times 2.5 (0x374368, oracle heap read of m11-8-donuts-in-hand) in the walk and the run regime.
+        {
+            LocomotionState state;
+            state.carryingBig = true;
+            StickIntent forward;
+            forward.active = true;
+            forward.heldSet = kHeldMove;
+            StickIntent walk = forward;
+            walk.heldSet |= kHeldSlow;
+            require(std::fabs(locomotionUpdate(state, 0.033f, walk).deltaZ - kCharacterSpeeds.walk * kCarryWalkStepScale * 0.033f) < 1e-6f, "walking with a big object");
+            require(std::fabs(locomotionUpdate(state, 0.033f, forward).deltaZ - kCharacterSpeeds.walk * kCarryWalkStepScale * 0.033f) < 1e-6f, "running with a big object");
+        }
 
         // Movement follows the last intent, forward = (sin h, cos h): heading 16384 moves along +x.
         {

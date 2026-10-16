@@ -266,6 +266,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     std::cout << "build-its: " << buildits.objects().size() << '\n';
     propParts.loadBuildits(scene, archive, buildits, placedObjects, placedSceneIndex);
     carry.load(archive, level, classOf);
+    if (player) game_carry::applyClipTimings(carry, *player);
     std::cout << "carry objects: " << carry.objects().size() << ", carry targets: " << carry.targets().size() << '\n';
     std::cout << "collision: " << collision.triangleCount() << " triangles in " << collision.entries().size() << " entries\n";
 

@@ -74,6 +74,7 @@ private:
         double rate = 30;
     };
     void show(const std::string& name, bool visible);
+    std::size_t visibleOriginals(const std::string& name) const;
     void pose(const Loaded& cutscene, double seconds);
 
     chase::assets::FuseArchive& archive_;
@@ -83,6 +84,7 @@ private:
     std::map<std::string, Loaded> loaded_;
     std::string shown_;
     int voice_ = 0;
+    unsigned shownUpdates_ = 0;
 };
 
 class Movies {

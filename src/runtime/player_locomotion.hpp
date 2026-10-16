@@ -19,6 +19,9 @@ constexpr int kAnimationSprint = 281;
 constexpr float kRunSpeedPerStep = 0.23f;          // ATTR_RunSpeed default *0x37450c (stored by 0x343de4), ctrl+0x8c (0x236ec0)
 constexpr float kWalkSpeedFraction = 0.33333334f;  // literal 0x3eaaaaab at 0x2371b0, ctrl+0x90 = ctrl+0x8c * this
 constexpr float kStepsPerSecond = 30.0f;           // literal 0x41f00000 at 0x204014
+// 0x203d18: while the player carries a big object (0x225754 = 2) the movement always uses the walk step (index forced to 1) multiplied by the float at 0x374368.
+// Value 2.5 read from the heap in the oracle (state m11-8-donuts-in-hand, 0x374368 = 0x40200000, standing and walking; docs/re/carrying.md).
+constexpr float kCarryWalkStepScale = 2.5f;
 constexpr float kSprintSpeedScale = 1.5f;          // literal 0x3fc00000 at 0x1ac154, multiplied into ctrl+0x94 by 0x1abe60 (1.3 variant at 0x1ac150)
 
 // Speed in world units per second at playback scale 1.0.
@@ -50,6 +53,7 @@ struct LocomotionState {
     std::int16_t lastIntent = 0;        // ctrl+0xa, last intent heading of an active stick, kept after release
     float runTimer = 0;                 // ctrl+0x24c
     bool wasRunning = false;            // previous update was in the run regime
+    bool carryingBig = false;           // the player holds a big carry object (0x225754 = 2), set before the update
     bool sprinting = false;             // sprint role active (ctrl+0x94 == sprintScale)
     float slope = 1.0f;                 // slope factor of ctrl+0x94 computed at the end of the previous run update
 };

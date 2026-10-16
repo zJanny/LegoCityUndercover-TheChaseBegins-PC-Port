@@ -90,6 +90,7 @@ public:
     std::size_t triangles() const;
     void setTransform(std::size_t instance, const Mat4& transform);
     void setInstanceVisible(std::size_t instance, bool visible);
+    bool instanceVisible(std::size_t instance) const;
     // HUD-S70: the node alpha and colour of a node tween (0x21b7cc with flags 3, value 0..1) multiply the instance's colour and alpha.
     void setInstanceFade(std::size_t instance, float fade);
     std::size_t missingTextures() const;

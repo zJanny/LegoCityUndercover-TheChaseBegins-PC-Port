@@ -41,3 +41,14 @@ Unknowns:
 - Whether the port's 1-1 sequence (from the donut shop) matches the original's order of cutscenes 1_1_a and 1_1_b; not read.
 - The actors in the original frames are too far to compare; a close-up state is needed for the actor check.
 - Which code draws the original's bottom-screen hexagon panel during a cutscene, and its textures; not searched.
+
+<a id="ts-20261016-094039"></a>
+
+## 2026-10-16T09:40:39+02:00 — MOVIE-31: Chase drawn twice in the cutscene after the van drive was a port bug (port run of `game-van-escort`, oracle shots `m11-6b` of agent A, round 15; no new code read)
+
+- **Original.** The oracle shots of `m11-6-van-to-shop` (hold A, then the cutscene to its end, `r15-b/oracle/m11-6b_NNN.png`) show Chase once: standing right of the parked van, seen from behind; the donut seller runs in with the red box. This matches [the actor entry](#ts-20261015-075438): the actor is the player's own figure.
+- **Port before the fix.** `chase-game --call-script 1-1_SO_VanFixed --start "866.0 52.0 691.0"` with the script of CTest `game-van-escort` (jump into the van, short drive, `at 820.0 18.5 1047.0`, the waypoint) showed two Chases for the whole cutscene 1_1_d. Cause: `1-1_VanEscorted` calls `VehicleJumpOut` and `PositionObject`; the placement runs `LevelSession::cancelBoardingByPlacement`, which showed the player figure again after the cutscene host had hidden it (MOVIE-S30), so the hidden original and the cast copy were both drawn.
+- **Fix.** `cancelBoardingByPlacement` leaves the figure hidden while a cutscene plays; the host shows it again when the cutscene ends. The cutscene host logs `cutscene NAME: N level figures drawn beside their cast copies` ten updates into every cutscene; `game-van-escort` expects 0 for 1_1_d. Port picture after the fix: one Chase beside the van and the seller's box (scratch only).
+
+Unknowns:
+- Where the player stands after the cutscene in the original (MOVIE-22); the port still restores the place of the figure.

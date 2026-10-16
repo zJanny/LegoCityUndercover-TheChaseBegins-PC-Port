@@ -279,7 +279,7 @@ void LevelSession::cancelBoardingByPlacement() {
     if (!boarding || !player || boarding->phase() == runtime::BoardingPhase::OnFoot) return;
     const runtime::BoardingStep step = boarding->placed(boardingInput(0.0f));
     handleBoardingEvents(step.events);
-    player->setVisible(scene, true);
+    if (!cutscenePlaying()) player->setVisible(scene, true);
 }
 
 game_player::PlayerAnimation LevelSession::applyBoarding(const runtime::BoardingStep& step) {

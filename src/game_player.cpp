@@ -68,8 +68,19 @@ void PlayerRig::animate(Scene& scene, float dt, int role, float scale) {
 
 void PlayerRig::pose(Scene& scene) const {
     const Mat4 player = matrix();
-    const std::vector<Matrix> skin = poseBody(scene, character, instance, animations.at(animation), frame);
+    skin = poseBody(scene, character, instance, animations.at(animation), frame);
     placeCharacter(scene, character, instance, skin, player);
+}
+
+std::optional<Mat4> PlayerRig::jointWorld(const std::string& lowerJointName) const {
+    return chase::render::jointWorld(character, lowerJointName, skin, matrix());
+}
+
+int PlayerRig::carriedRole(int role, int carryingMode, int stateClip) const {
+    if (stateClip != 0 && animations.count(stateClip)) return stateClip;
+    if (carryingMode == 0 || !carryAnimations) return role;
+    const int clip = carryAnimations->clip(role, carryingMode);
+    return animations.count(clip) ? clip : role;
 }
 
 void PlayerRig::setVisible(Scene& scene, bool visible) const {
@@ -109,6 +120,16 @@ std::optional<PlayerRig> placePlayer(FuseArchive& archive, Scene& scene, const L
         if (category < sounds.characterSounds.size()) rig.characterSounds = runtime::CharacterSounds(sounds.characterSounds[category]);
     }
 
+    if (const FuseEntry* animationTable = archive.find("tables/tablesanimations.bxls")) {
+        rig.carryAnimations.emplace(parseTable(archive.read(*animationTable)));
+        std::vector<int> clips = rig.carryAnimations->carriedClips();
+        for (const int id : {runtime::kAnimationPickupBig, runtime::kAnimationPickupSmall, runtime::kAnimationPutdownBig, runtime::kAnimationPutdownSmall})
+            clips.push_back(id);
+        for (const int id : clips) {
+            const std::string path = std::string(kCarryAnimationDirectory) + rig.carryAnimations->name(id) + kPlayerAnimationSuffix;
+            if (!rig.animations.count(id) && archive.find(path)) rig.animations[id] = loadAnimation(archive, path);
+        }
+    }
     rig.vertical.y = start->position[1];
     rig.motion.x = start->position[0];
     rig.motion.z = start->position[2];

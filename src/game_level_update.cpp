@@ -118,10 +118,27 @@ void LevelSession::updateCarry(const float playerPosition[3]) {
     input.facing[2] = std::cos(heading);
     input.actionPressed = pad.slot(kSlotConfirmButton).press > 0;
     input.playerFree = !levelScripts.playerControlTaken() && !cutscenePlaying();
+    const auto heldWorld = [&](const runtime::CarryObject& object, std::size_t placedIndex) {
+        return object.carried ? heldObjects.world(shared.archive, placedObjects[placedIndex], object.small, *player) : std::nullopt;
+    };
+    if (carry.carriedIndex() >= 0) {
+        const runtime::CarryObject& held = carry.objects()[std::size_t(carry.carriedIndex())];
+        for (std::size_t i = 0; i < placedObjects.size(); ++i)
+            if (game_doors::lowerCase(placedObjects[i].instance) == held.instance)
+                if (const auto world = heldWorld(held, i)) {
+                    input.hasHand = true;
+                    std::copy_n(world->data() + 12, 3, input.hand);
+                }
+    }
     runtime::applyCarryActions(carry, carry.update(objectState, input), objectState, levelScripts);
+    if (float target[3]; carry.turnTarget(target)) player->motion.lastIntent = game_carry::headingTowards(*player, target);
     for (const runtime::CarryObject& object : carry.objects())
         for (std::size_t i = 0; i < placedObjects.size(); ++i) {
             if (game_doors::lowerCase(placedObjects[i].instance) != object.instance) continue;
+            if (const auto world = heldWorld(object, i)) {
+                scene.setTransform(placedSceneIndex[i], *world);
+                continue;
+            }
             Placement moved = placedObjects[i];
             std::copy_n(object.position, 3, moved.position);
             scene.setTransform(placedSceneIndex[i], placementMatrix(moved));
@@ -234,6 +251,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
             studs.setFlightTarget(runtime::unprojectTopScreen(sink.x, sink.y, fe::kStudSinkDepth, follow->eye(), follow->yaw(),
                                                               follow->pitch(), follow->verticalFieldOfView()));
         }
+        player->motion.carryingBig = carry.carryingMode() == 2;
         const runtime::BoardingStep boardingStep = stepBoarding(dt);
         game_player::PlayerAnimation shown =
             boardingStep.takesControl ? applyBoarding(boardingStep)
@@ -242,7 +260,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
             game_player::applyAiPosition(*player, *driven);
             shown = game_player::aiMoveAnimation(*driven);
         }
-        player->animate(scene, dt, shown.role, shown.scale);
+        player->animate(scene, dt, player->carriedRole(shown.role, carry.carryingMode(), carry.phaseClip()), shown.scale);
         if (!script.empty()) scriptedHeights.push_back(player->vertical.y);
         for (const runtime::StudCollected& collected :
              studs.update(dt, runtime::studPickupPoint(player->motion.x, player->vertical.y, player->motion.z,

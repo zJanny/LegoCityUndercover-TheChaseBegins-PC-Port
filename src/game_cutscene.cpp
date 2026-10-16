@@ -19,6 +19,8 @@ InEngine::~InEngine() {
 }
 
 namespace {
+constexpr unsigned kFigureCheckUpdate = 10;
+
 void setVisible(render::Scene& scene, const render::CharacterInstance& instance, bool visible) {
     scene.setInstanceVisible(instance.bodyInstance, visible);
     scene.setInstanceVisible(instance.headInstance, visible);
@@ -95,6 +97,13 @@ void InEngine::show(const std::string& name, bool visible) {
     }
 }
 
+std::size_t InEngine::visibleOriginals(const std::string& name) const {
+    std::size_t count = 0;
+    for (const Actor& actor : loaded_.at(name).actors)
+        if (actor.driven && scene_.instanceVisible(actor.driven->original.bodyInstance)) ++count;
+    return count;
+}
+
 void InEngine::pose(const Loaded& cutscene, double seconds) {
     const double frame = std::min(seconds * cutscene.rate, double(cutscene.content.camera.frames - 1));
     for (std::size_t i = 0; i < cutscene.content.actors.size(); ++i) {
@@ -120,12 +129,16 @@ void InEngine::update(runtime::CutsceneNativeState& state) {
         if (audio_) audio_->stopBuffer(voice_);
         voice_ = 0;
         shown_ = name;
+        shownUpdates_ = 0;
         if (!name.empty()) {
             show(name, true);
             if (audio_ && loaded_.at(name).sound) voice_ = audio_->playBuffer(loaded_.at(name).sound);
         }
     }
-    if (playing) pose(loaded_.at(name), playing->elapsed);
+    if (!playing) return;
+    pose(loaded_.at(name), playing->elapsed);
+    if (++shownUpdates_ == kFigureCheckUpdate)
+        std::cout << "cutscene " << name << ": " << visibleOriginals(name) << " level figures drawn beside their cast copies\n";
 }
 
 std::optional<CameraView> InEngine::camera(const runtime::CutsceneNativeState& state) const {
