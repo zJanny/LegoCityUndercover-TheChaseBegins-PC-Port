@@ -106,6 +106,8 @@ The original runs in Azahar as a measuring reference. Read `docs/re/oracle.md` b
 - Never push without explicit user authorization; permission does not carry over between requests.
 - Run `python3 tools/progress_report.py --update-readme README.md` before the final commit of a branch and after every merge (CTest `progress-readme`); on a conflict in that section regenerate it. Measures: `docs/progress.md`.
 - Keep `.gitignore` current; never ignore files to hide unintended changes.
+- Write concise, human-readable commit subjects describing the primary change, not a list of findings, addresses, IDs, or implementation details. Use imperative mood, present tense, and sentence case; omit the trailing period. Aim for 50 characters or fewer and use 72 as a soft maximum, never a reason to make the subject vague. Put supporting details in the body when useful: explain what changed, why, and any important reverse-engineering evidence. Move exhaustive findings, addresses, feature IDs, and status updates to their authoritative documentation. Use a body only when it adds context that the subject cannot convey. Each commit covers one coherent change. Before committing, read the subject alone and make sure it clearly describes the change.
+- Do not use an entire session summary as a commit subject. If a commit covers multiple unrelated changes, split it into focused commits rather than listing them all in the title.
 
 **Code and files**
 - No explanatory comments; clear names and simple control flow. Keep license notices, tool directives and comments on non-obvious correctness or unavoidable constraints.
