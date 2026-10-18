@@ -24,7 +24,7 @@ enum class Word {
     Unhandled, If, Else, ElseIf, EndIf, Assign, AssignArithmetic, CallScript, SpawnScript, Wait,
     EnableObject, EnableCollision, TriggerObject, EnableTrigger, EnableBound, GetGameComplete, IsLevelUnlocked, IsRedBrickExtraActive,
     WarningDialogBox, InformationBox, FadeScreen, PositionObject, PositionPlayer, SceneChange,
-    KillScript, ObjectNative, VehicleNative, ProgressNative, MusicNative, SoundNative, TextNative, ObjectiveNative, AiNative, AnimationNative, CutsceneNative,
+    KillScript, ObjectNative, VehicleNative, ProgressNative, MusicNative, SoundNative, TextNative, ObjectiveNative, AiNative, AnimationNative, CutsceneNative, EffectNative, WorldNative,
     StartDCam, StartDCamTrack, DCamActive, WaitForDCam, EndDCam, SnapCamera, ShakeScreen, Set3DFocusObject, SetDCamStartWait, SetDCamEndWait, CameraFollow
 };
 
@@ -85,6 +85,8 @@ Word wordOf(const std::string& function) {
     if (objectiveNativeKind(name)) return Word::ObjectiveNative;
     if (aiNativeKind(name)) return Word::AiNative;
     if (animationNativeKind(name)) return Word::AnimationNative;
+    if (effectNativeKind(name)) return Word::EffectNative;
+    if (worldNativeKind(name)) return Word::WorldNative;
     return cutsceneNativeKind(name) ? Word::CutsceneNative : Word::Unhandled;
 }
 
@@ -164,6 +166,8 @@ ScriptFunctionSupport scriptFunctionSupport(const std::string& name) {
     if (aiNativeKind(key)) return ScriptFunctionSupport::StandIn;
     if (animationNativeKind(key)) return ScriptFunctionSupport::StandIn;
     if (cutsceneNativeKind(key)) return ScriptFunctionSupport::StandIn;
+    if (effectNativeKind(key)) return ScriptFunctionSupport::StandIn;
+    if (const auto kind = worldNativeKind(key)) return worldNativeIsStandIn(*kind) ? ScriptFunctionSupport::StandIn : ScriptFunctionSupport::Implemented;
     return ScriptFunctionSupport::None;
 }
 
@@ -180,6 +184,8 @@ std::vector<std::string> handledScriptFunctions() {
     for (const std::string& name : aiNativeNames()) names.push_back(name);
     for (const std::string& name : animationNativeNames()) names.push_back(name);
     for (const std::string& name : cutsceneNativeNames()) names.push_back(name);
+    for (const std::string& name : effectNativeNames()) names.push_back(name);
+    for (const std::string& name : worldNativeNames()) names.push_back(name);
     return names;
 }
 
@@ -216,6 +222,7 @@ bool ScriptRunner::start(const std::string& scriptName) {
 void ScriptRunner::update(float dt) {
     dt_ = dt;
     text_.update(dt);
+    effectNatives_.update(dt);
     ai_.update(dt);
     cutscenes_.update(dt);
     fireAiMoveEvents();
@@ -432,6 +439,10 @@ ScriptRunner::Result ScriptRunner::native(ScriptThread& thread, const ScriptCall
         break;
     case Word::ObjectNative:
         if (const auto kind = objectNativeKind(lower(call.function)); kind && !args.empty()) {
+            if (*kind == ObjectNativeKind::DestroyProp || *kind == ObjectNativeKind::KillObject) {
+                destroyNative(lower(args[0]));
+                break;
+            }
             const bool needsValue = objectNativeTakesValue(*kind);
             if (!needsValue || args.size() >= 2) objectNatives_.apply(*kind, lower(args[0]), needsValue ? read(args[1]) : 0.0f);
         }
@@ -486,6 +497,11 @@ ScriptRunner::Result ScriptRunner::native(ScriptThread& thread, const ScriptCall
         break;
     case Word::CutsceneNative:
         return cutsceneNative(thread, call);
+    case Word::EffectNative:
+        effectNative(call);
+        break;
+    case Word::WorldNative:
+        return worldNative(call);
     case Word::InformationBox:
         if (!(thread.flags & kScriptBlocked)) {
             if (args.empty()) break;
@@ -855,6 +871,7 @@ bool ScriptRunner::pointInBound(std::size_t index, const float player[3], bool r
 }
 
 void ScriptRunner::setRoomLoaded(const std::string& room, bool loaded) {
+    knownRooms_.insert(lower(room));
     if (loaded) loadedRooms_.insert(lower(room));
     else loadedRooms_.erase(lower(room));
 }

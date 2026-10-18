@@ -3,8 +3,10 @@
 // The handlers only store the value; the systems that read the flags (targeting, interaction prompts, shove, destruction,
 // door update) are not ported yet, so the state is recorded here. No SDL dependency.
 #include <cstdint>
+#include <functional>
 #include <map>
 #include <optional>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -21,6 +23,8 @@ enum class ObjectNativeKind {
     SkipToFinalState,
     PrintDebugString,
     RevealCollectable,
+    DestroyProp,
+    KillObject,
 };
 
 std::optional<ObjectNativeKind> objectNativeKind(const std::string& lowerCaseName);
@@ -31,6 +35,8 @@ bool objectNativeIsStandIn(ObjectNativeKind kind);
 // ResetObject 0x1b25f8 and SkipToFinalState 0x270078 call the class message handler 0x244fc8 with these numbers.
 constexpr std::uint8_t kMessageReset = 8;
 constexpr std::uint8_t kMessageSkipToFinalState = 54;
+// DestroyProp / KillObject 0x1a2fe4 -> 0x23cd80 send the class message 1 (the vehicle class handles it as its break, 0x159bd0).
+constexpr std::uint8_t kMessageDestroy = 1;
 struct ObjectClassMessage {
     std::string instance;
     std::uint8_t message = 0;
@@ -56,6 +62,12 @@ struct ObjectNativeFlags {
 class ObjectNativeState {
 public:
     void apply(ObjectNativeKind kind, const std::string& lowerCaseInstance, float value);
+    // 0x23cd80: nothing when the entity is disabled (halfword +0x10 bit 0) or already destroyed (word +0xc bit 0x10). Otherwise message 1 goes to
+    // the class (`classHandles` says whether its handler took it); an unhandled message destroys the entity (bit 0x10 of +0xc, node dropped
+    // by 0x2320f8). True when the entity was destroyed by this call.
+    using ClassHandles = std::function<bool(const std::string&, std::uint8_t)>;
+    bool destroy(const std::string& lowerCaseInstance, bool disabled, const ClassHandles& classHandles);
+    bool destroyed(const std::string& lowerCaseInstance) const { return destroyed_.count(lowerCaseInstance) != 0; }
     const ObjectNativeFlags* flags(const std::string& lowerCaseInstance) const;
     bool entityUpdateSkipped(const std::string& lowerCaseInstance) const;
     std::vector<ObjectClassMessage> takeMessages();
@@ -63,6 +75,7 @@ public:
 private:
     std::map<std::string, ObjectNativeFlags> flags_;
     std::vector<ObjectClassMessage> messages_;
+    std::set<std::string> destroyed_;
 };
 
 }

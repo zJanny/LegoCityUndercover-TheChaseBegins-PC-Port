@@ -161,6 +161,9 @@ private:
     void startRoomStreaming();
     void updateRoomStreaming();
     void moveVehicleRooms();
+    void installScriptHooks();
+    void applyScriptNatives();
+    void applyObjectFades(std::vector<bool>& drawn);
     void showLoadedRooms();
     bool roomShown(int room) const;
     void applyFog(const chase::runtime::ClipPlanes& planes) const;
@@ -264,6 +267,8 @@ private:
     std::vector<float> scriptedHeights;
     std::optional<chase::runtime::RoomStreamer> roomStreamer;
     std::map<int, std::vector<std::size_t>> roomInstances;
+    std::set<int> scriptedRooms;
+    std::vector<std::size_t> pendingVehicleBreaks;
     chase::runtime::ObjectRoomMover vehicleRoomMover;
     std::optional<game_characters::LevelCharacters> levelCharacters;
     chase::runtime::PropAnimations propAnimations;

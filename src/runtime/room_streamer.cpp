@@ -64,7 +64,7 @@ void RoomStreamer::settle(int startRoom, const Vec3& player, const Vec3& view) {
     }
 }
 
-void RoomStreamer::update(const Vec3& player, const Vec3& view) {
+void RoomStreamer::update(const Vec3& player, const Vec3& view, const std::set<int>& scripted) {
     for (auto it = loading_.begin(); it != loading_.end();) {
         if (--it->second == 0) {
             loaded_.insert(it->first);
@@ -79,6 +79,7 @@ void RoomStreamer::update(const Vec3& player, const Vec3& view) {
     input.playerPosition = player;
     input.viewDirection = view;
     input.loaded = loaded_;
+    input.scripted = scripted;
     apply(planRoomStreaming(rooms_, input));
 }
 

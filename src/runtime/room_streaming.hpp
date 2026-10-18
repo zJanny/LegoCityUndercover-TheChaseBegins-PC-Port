@@ -14,6 +14,8 @@ constexpr unsigned kRoomPreloadLimit = 3;
 constexpr int kPreloadBasePriority = 200;
 constexpr int kCurrentRoomPriority = 255;
 constexpr int kNeighbourBasePriority = 254;
+// 0x2b9cf8 requests every room of the global request list (0x375d70, filled by StreamRoomIn 0x20f194) with byte 0 = 1 and priority 0.
+constexpr int kScriptedRequestPriority = 0;
 
 using Vec3 = std::array<float, 3>;
 

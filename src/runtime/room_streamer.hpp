@@ -23,7 +23,8 @@ public:
 
     // The level load: the rooms wanted around the start are loaded before the first update.
     void settle(int startRoom, const Vec3& player, const Vec3& view);
-    void update(const Vec3& player, const Vec3& view);
+    // `scripted`: the rooms the scripts asked for in this update (StreamRoomIn); they count as wanted like the rooms of the current list.
+    void update(const Vec3& player, const Vec3& view, const std::set<int>& scripted = {});
 
     int currentRoom() const { return currentRoom_; }
     bool loaded(int room) const { return loaded_.count(room) > 0; }

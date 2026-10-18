@@ -43,6 +43,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | [script-system-triggers](script-system-triggers.md) | IN_PROGRESS | SCRIPT-75 / 76 AI and vehicle trigger events; SCRIPT-77 / 78 object bound checks |
 | [script-system-missions](script-system-missions.md) | IN_PROGRESS | SCRIPT-110 waypoint class starts mission scripts; SCRIPT-111 class-fired ObjectTriggered events; SCRIPT-113 unnamed mission scripts |
 | [script-system-natives](script-system-natives.md) | IN_PROGRESS | SCRIPT-7 natives in batches SCRIPT-29 to SCRIPT-39, SCRIPT-57 to SCRIPT-65 |
+| [script-system-natives-world](script-system-natives-world.md) | IN_PROGRESS | SCRIPT-279 party swap; SCRIPT-280 destroy message 1 per class; SCRIPT-281 effect fade rest; SCRIPT-282 distance fade gate; SCRIPT-283 AddToSemiTransList |
 | [script-system-natives-animation](script-system-natives-animation.md) | IN_PROGRESS | SCRIPT-270 player animations; SCRIPT-271 / 272 props and attach (need agent X's node transforms); SCRIPT-273 / 274 states, loaded set |
 | [script-system-ai-navigation](script-system-ai-navigation.md) | IN_PROGRESS | SCRIPT-93 AIMove across grids; SCRIPT-94 nav grids into chase-game; SCRIPT-103 AISuperJump flight, SCRIPT-104 pursuit / stalk / run-away states |
 | [script-system-dcam](script-system-dcam.md) | IN_PROGRESS | SCRIPT-46 director camera commands, SCRIPT-48 / 49 / 50 / 181 / 182 details |

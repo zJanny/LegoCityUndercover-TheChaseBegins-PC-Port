@@ -141,7 +141,12 @@ RoomStreamPlan planRoomStreaming(const StreamRooms& rooms, const RoomStreamInput
             }
         }
     }
-    for (int number : input.scripted) plan.wanted.insert(number);
+    for (int number : input.scripted) {
+        if (!rooms.count(number)) continue;
+        plan.wanted.insert(number);
+        if (!input.loaded.count(number) && !std::any_of(plan.loadOrder.begin(), plan.loadOrder.end(), [&](const RoomRequest& request) { return request.room == number; }))
+            plan.loadOrder.push_back({number, kScriptedRequestPriority, false});
+    }
     return plan;
 }
 

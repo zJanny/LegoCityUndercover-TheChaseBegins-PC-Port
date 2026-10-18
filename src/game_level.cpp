@@ -170,6 +170,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     animationDrivers.add(&propAnimations);
     levelScripts.setAnimationDriver(&animationDrivers);
     levelScripts.loadAnimationOffsets(classOf);
+    installScriptHooks();
     studSprites.emplace(archive);
     player = game_player::placePlayer(archive, scene, level);
     levelScripts.setAllRoomsLoaded();
@@ -362,7 +363,8 @@ void LevelSession::draw(int width, int height) {
         perspective(shownFieldOfView, float(fe::kTopWidth) / float(fe::kScreenHeight), nearPlane, farPlane), viewMatrix);
     const Mat4 viewToWorld = chase::render::rigidInverse(viewMatrix);
     scene.setLighting(runtime::levelLights(lightObjects, roomStreamer ? roomStreamer->currentRoom() : 0), &viewToWorld[12]);
-    const std::vector<bool> drawn = runtime::drawnPlacements(placedObjects, objectState);
+    std::vector<bool> drawn = runtime::drawnPlacements(placedObjects, objectState);
+    applyObjectFades(drawn);
     for (std::size_t i = 0; i < drawn.size(); ++i)
         scene.setInstanceVisible(placedSceneIndex[i], drawn[i] && roomShown(placedRooms[i]) && !wreckHides(i, std::nullopt));
     for (std::size_t w = 0; w < wheelSceneIndex.size(); ++w) {

@@ -10,6 +10,7 @@ What the scripts of one mission call, which natives and trigger events the port 
 - The 13 natives of mission 1-2 without a handler and the 12 class-driven ObjectTriggered events are listed in the entry; `HouseArrival` (3388757305) and `Spawn_Doorlock` (3035472981) are the `TriggerScript` values of two waypoints. [§2026-10-14T21:44:29](#ts-20261014-214429)
 - lvl_01 startup runs the scripts for the current `StoryProgress` (1 starts `1-1_MissionStart`, 2 starts `1-2_MissionAvailable`); the new-game start is `movie 01_GameIntro`, cutscene `1_1_a`, then `1-1_MissionStart`. [§2026-10-14T23:52:14](#ts-20261014-235214), [§2026-10-15T12:41:40](#ts-20261015-124140)
 - Mission 1-1 runs end to end in `chase-game` in the original's step order (11 steps, StoryProgress 2 after 5831 updates), with teleports standing in for walks; `1-1_Deliver_Donuts` only fires after `1-1_Carry_Object_Tutorial` has ended. [§2026-10-15T12:41:40](#ts-20261015-124140) The user played it end to end in real play on 2026-10-18 [§2026-10-18T10:37:46](#ts-20261018-103746).
+- Neither unnamed script (2451216995 dumpster peek, 2494968948 hint) is named by any text of the archive or by a code literal; 35 of 314 scripts of lvl_01 have no string reference; the alley and crying states start only the known waypoint scripts. [§2026-10-18T11:14:04](#ts-20261018-111404)
 - Open: starters of scripts 2451216995 and 2494968948, the vehicle bound test 0x17b21c, who fires class-driven ObjectTriggered events, missing natives in mission 1-1 (CameraFollow, EnableTrafficAndPedestrians, music), original update numbers between steps.
 
 
@@ -137,3 +138,21 @@ Unknowns:
 
 Unknowns:
 - Timings between the stops and details of the look were not compared in real play; the user's report covers playability only.
+
+<a id="ts-20261018-111404"></a>
+
+## 2026-10-18T11:14:04+02:00 — The two unnamed mission 1-2 scripts: contents, negative name searches and a start trace (C++ level loader scans; Azahar GDB, states `m12-3-alley-trigger` and `m12-2-crying-trigger`, no RPC)
+
+Partial result for SCRIPT-113: the names are still unknown.
+
+- **2451216995 (0x921a9a63), 12 calls:** `TriggerObject(1-2_Doorlock_Spawner, 1)`, `Wait(0.1)`, `StartDCamTrack(Dcam_Dumpster, 1-2_Dumpster_Open, 0, 5)`, `PlayCharAnim(1-2_Doorlock_Holmes, "dumpster_peak_minifig", ...)`, `LoadAnimation(1-2_Dumpster_Open, "dumpster_peak", ...)`, `EnableObject(1-2_Dumpster_Closed, 0)`, `EnableObject(1-2_Dumpster_Open, 1)`, `PlayAnimation(1-2_Dumpster_Open, "dumpster_peak", ...)`, `WaitForDCam`, `SnapCamera`, `Wait(1.5)`, `EnableObject(1-2_Doorlock_Holmes, 0)`: Doorlock Holmes peeks out of the dumpster; `1-2_Spawn_Doorlock` (0xb4eda455) later loads `dumpster_exit`.
+- **2494968948 (0x94b63474), 1 call:** `PrintDebugString("HINT: Blue and white objects can be used to access new areas.", 5)`.
+- **No text names them.** No NUL-delimited printable run (also UTF-16LE) of `lvl_01_cherrytreehills_main.blvl` or of any of the 4959 non-media files of the archive hashes to either value (whole runs and substrings of up to 80 characters starting in the first 8 characters of a run); neither value is a literal in `game.arm.elf`; no instance, class, bound, trigger or script-argument name of the level combined with about 60 suffixes (`_Count`, `_ON`, `_OFF`, `_Tally`, `_Script`, ...) and 8 prefixes hashes to them.
+- **Where the hashes occur in the level file:** both as script records (section +0x18, stride 0x1c); 0x94b63474 also in the level's default parameter table (section +0x10, 52 entries {name hash, type, value}, the level variables), as do the hashes of three other scripts (0xf1781a95, 0x64e1bad5, 0xa3ed4e71).
+- **35 of the 314 scripts of lvl_01 are named by no trigger, CallScript / SpawnScript / KillScript and no string parameter.** Seven of them are named after a variable, an object or a mission (`1-3_BuildingSite_Supercounter`, `GameComplete`, `Race01Progress05Player`, `music_timer`, `1-5_WireTap_02`, `1-4_AI_Goon_10_Run_Off_Script`, `1-3_MissionEnd`), `startup` is started by name from code, 27 remain unnamed (including both). So scripts are started by names that are built or taken at run time. The `=` handler 0x17efc0 only stores the value (no script start).
+- **The code that starts scripts:** thread creation 0x22ce9c is called from 0x174744, 0x17b03c (waypoint class), 0x1c3744 (CallScript), 0x1ecc9c and 0x1ecd00 (`startup` / `OnSceneEnter%d` by name, 0x1ecc50), 0x2e567c, 0x2f688c and 0x2fe44c; the lookup by name 0x2388e4 from 0x17abb4 (the waypoint's `TriggerScript` parameter), 0x197c98, 0x1a56f4, 0x1ecc84, 0x1eccec, 0x211fe4 (name from a parameter token, 0x21b3fc), 0x2238f8, 0x2e5658, 0x2f6870 and 0x2fe440. Format strings in the executable that make script names: `OnSceneEnter%d` (0x97768), `%i-%u_MissionStart` and `%i-%u_MissionEnd` (0xa1940, 0xa1928), `%s_Count`, `%s_ON`, `%s_OFF`, `%s_Tally` (0x5c4a4 to 0x5c4f4).
+- **Oracle trace (ctrace of 0x22ce9c, `dt 0.033`, stick forward):** from `m12-3-alley-trigger` one thread is created in update 28 with lr 0x17b040 and the script record's first word 0xb4eda455 (= `nameHash("1-2_Spawn_Doorlock")` = 3035472981): the waypoint class starts `Spawn_Doorlock`, as known. From `m12-2-crying-trigger` one thread is created in update 28 with lr 0x17b040 (record 0x08618d7c, hash not read) and none in the next 172 updates. Neither shows the dumpster script or the hint.
+
+Unknowns:
+- Who starts 0x921a9a63 and 0x94b63474. Candidates left: a name made from a variable or object name by code (0x211fe4, 0x1a56f4, 0x197c98 not read), or a start in a step of the mission the traces did not reach (the dumpster peek comes before `Spawn_Doorlock`; the hint with the bound `1-2_Prop_Smash_Hint`). Next: ctrace of 0x22ce9c and 0x2388e4 from a state before the alley with the player walking into the dumpster area.
+- The meaning of scripts that share their hash with a level variable.

@@ -125,7 +125,10 @@ bool modelCollisionBox(FuseArchive& archive, const std::string& modelPath, float
     return true;
 }
 
-bool PlacedObjectState::isDisabled(const std::string& instance) const { return disabled.count(lower(instance)) != 0; }
+bool PlacedObjectState::isDisabled(const std::string& instance) const {
+    const std::string key = lower(instance);
+    return disabled.count(key) != 0 || destroyed.count(key) != 0;
+}
 
 bool PlacedObjectState::collisionEnabled(const std::string& instance, bool initial) const {
     const auto found = collisionOverride.find(lower(instance));

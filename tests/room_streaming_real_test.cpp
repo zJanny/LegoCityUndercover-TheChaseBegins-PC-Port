@@ -237,6 +237,23 @@ int main(int argc, char** argv) {
             require(streamer.loadedRooms() == kReadings[index].loaded,
                     std::string(kReadings[index].provenance) + ": streamer set " + show(streamer.loadedRooms()));
         }
+        {
+            // StreamRoomIn (0x1bfba4 -> 0x20f194, consumer 0x2b9cf8, docs/re/script-natives-world.md): a scripted request is a wanted room with
+            // priority 0 that loads like any other (the 9 updates are the port's constant, WSTREAM-S30) and unloads when the request stops.
+            RoomStreamer scripted = *made;
+            scripted.settle(7, kReadings[0].player, kReadings[0].view);
+            require(!scripted.loaded(40), "Room40 is not part of the walking set at the start");
+            for (int update = 1; update <= int(kRoomLoadUpdates); ++update) {
+                scripted.update(kReadings[0].player, kReadings[0].view, {40});
+                require(!scripted.loaded(40) && scripted.loading().count(40), "Room40 loads asynchronously after the request");
+            }
+            scripted.update(kReadings[0].player, kReadings[0].view, {40});
+            require(scripted.loaded(40), "Room40 is loaded after the load time");
+            scripted.update(kReadings[0].player, kReadings[0].view);
+            require(!scripted.loaded(40), "without the request the room falls out of the wanted set and unloads at once");
+            scripted.update(kReadings[0].player, kReadings[0].view, {9999});
+            require(!scripted.loaded(9999) && scripted.loading().count(9999) == 0, "a room the world level does not have is ignored");
+        }
     } catch (const std::exception& error) {
         std::cerr << "room-streaming-real-test: FAIL: " << error.what() << "\n";
         return 1;

@@ -5,6 +5,8 @@
 #include "assets/object_collision.hpp"
 #include "runtime/natives_animation.hpp"
 #include "runtime/natives_cutscene.hpp"
+#include "runtime/natives_effects.hpp"
+#include "runtime/natives_world.hpp"
 #include "runtime/natives_objects.hpp"
 #include "runtime/ai.hpp"
 #include "runtime/dcam.hpp"
@@ -157,6 +159,7 @@ public:
     // its room is loaded. Room names compare without case. No room is loaded until one is set.
     void setRoomLoaded(const std::string& room, bool loaded);
     void setAllRoomsLoaded();
+    bool roomKnown(const std::string& room) const;
     void clearAllRoomsLoaded() { allRoomsLoaded_ = false; }
     bool boundActive(std::size_t bound) const;
     // Trigger events whose check is not transcribed, by name, in the order they were first met.
@@ -177,6 +180,14 @@ public:
     // Flags and class messages written by the object natives (natives_objects.hpp).
     const ObjectNativeState& objectNatives() const { return objectNatives_; }
     std::vector<ObjectClassMessage> takeObjectClassMessages() { return objectNatives_.takeMessages(); }
+    // The class message handler 0x244fc8 of DestroyProp / KillObject: true when the object's class takes message 1 itself (vehicles break), which
+    // leaves the entity in place.
+    void setClassMessageHandler(ObjectNativeState::ClassHandles handler) { classHandles_ = std::move(handler); }
+    // EffectFadeObject, EnableDistanceFade and AddToSemiTransNearCameraList (natives_effects.hpp).
+    const EffectNativeState& effects() const { return effectNatives_; }
+    // SetPartyCharacter requests and the rooms StreamRoomIn asked for since the last call (lower case, "room40"), once per update the script waits.
+    std::vector<PartyRequest> takePartyRequests();
+    std::vector<std::string> takeRoomRequests();
     // Progress, stud and switch natives (natives_progress.hpp); the slot image is the one of a loaded save.
     ProgressNativeState& progressNatives() { return progressNatives_; }
     const ProgressNativeState& progressNatives() const { return progressNatives_; }
@@ -236,6 +247,9 @@ private:
     void aiNative(const assets::ScriptCall& call);
     bool animationNative(const assets::ScriptCall& call);
     Result cutsceneNative(ScriptThread& thread, const assets::ScriptCall& call);
+    void effectNative(const assets::ScriptCall& call);
+    Result worldNative(const assets::ScriptCall& call);
+    void destroyNative(const std::string& lowerInstance);
     void fireAiMoveEvents();
     float read(const std::string& token) const;
     bool holds(const assets::ScriptCall& call) const;
@@ -272,6 +286,11 @@ private:
     std::vector<ScriptPlacement> placements_;
     std::vector<std::string> sceneChanges_;
     ObjectNativeState objectNatives_;
+    ObjectNativeState::ClassHandles classHandles_;
+    EffectNativeState effectNatives_;
+    std::vector<PartyRequest> partyRequests_;
+    std::vector<std::string> roomRequests_;
+    std::set<std::string> knownRooms_;
     ProgressNativeState progressNatives_;
     MusicNativeState musicNatives_;
     SoundNativeState soundNatives_;

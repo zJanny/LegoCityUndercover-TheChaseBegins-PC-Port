@@ -145,9 +145,60 @@ void batchNativesAreListedAsHandled() {
     for (const char* name : {"PrintDebugString", "RevealCollectable", "KillScript"})
         require(chase::runtime::scriptFunctionSupport(name) == chase::runtime::ScriptFunctionSupport::Implemented, name);
     for (const char* name : {"ToggleUseable", "EnableTargetable", "SetIndestructible", "ActiveDuringDCam", "ObjectUnshovable", "ToggleUpdateFlag",
-                             "ResetObject", "SkipToFinalState"})
+                             "ResetObject", "SkipToFinalState", "DestroyProp", "KillObject"})
         require(chase::runtime::scriptFunctionSupport(name) == chase::runtime::ScriptFunctionSupport::StandIn, name);
-    require(chase::runtime::scriptFunctionSupport("DestroyProp") == chase::runtime::ScriptFunctionSupport::None, "DestroyProp stays unhandled");
+}
+
+// 0x23cd80 (disassembly, docs/re/script-natives-world.md): DestroyProp and KillObject share 0x1a2fe4. An entity that is disabled
+// (halfword +0x10 bit 0) or already destroyed (word +0xc bit 0x10) is left alone; otherwise message 1 goes to the class and an unhandled
+// message destroys the entity.
+void destroyPropRemovesAnEnabledEntity() {
+    Level level;
+    add(level, "d", {{"DestroyProp", {"Crate"}}, {"KillObject", {"Fence"}}, {"DestroyProp", {"Crate"}}});
+    PlacedObjectState state;
+    ScriptRunner runner(level, state);
+    require(runner.start("d") && runner.threadCount() == 0, "runs to the end at once");
+    require(state.destroyed.count("crate") && state.destroyed.count("fence"), "both entities are destroyed");
+    require(state.isDisabled("Crate"), "a destroyed entity counts as removed");
+    const auto messages = runner.takeObjectClassMessages();
+    require(messages.size() == 2 && messages[0].instance == "crate" && messages[0].message == 1 && messages[1].instance == "fence",
+            "message 1 once per entity; the second DestroyProp finds the destroyed bit and sends nothing");
+    require(runner.unhandledFunctions().empty(), "no native is reported as unhandled");
+}
+
+void destroyPropLeavesDisabledEntities() {
+    Level level;
+    add(level, "d", {{"EnableObject", {"Car", "0"}}, {"DestroyProp", {"Car"}}, {"EnableObject", {"Car", "1"}}});
+    PlacedObjectState state;
+    ScriptRunner runner(level, state);
+    runner.start("d");
+    require(state.destroyed.empty() && runner.takeObjectClassMessages().empty(), "0x23cd80 returns at once for a disabled entity");
+    require(!state.isDisabled("car"), "the later EnableObject works as before");
+}
+
+void destroyPropRespectsAClassThatHandlesMessageOne() {
+    Level level;
+    add(level, "d", {{"DestroyProp", {"Truck"}}, {"DestroyProp", {"Truck"}}, {"EnableObject", {"Crate", "0"}}, {"DestroyProp", {"Crate"}}, {"EnableObject", {"Crate", "1"}}});
+    PlacedObjectState state;
+    ScriptRunner runner(level, state);
+    int handled = 0;
+    runner.setClassMessageHandler([&](const std::string& instance, std::uint8_t message) {
+        ++handled;
+        return instance == "truck" && message == 1;
+    });
+    runner.start("d");
+    require(handled == 2, "the handler is asked for each call that gets past the disabled and destroyed tests (the truck twice, the disabled crate not)");
+    require(state.destroyed.empty(), "a handled message leaves the entity (the vehicle breaks instead, 0x159bd0)");
+    require(runner.takeObjectClassMessages().size() == 2, "each call still sent the message");
+}
+
+void destroyedEntityStaysDestroyedAfterEnableObject() {
+    Level level;
+    add(level, "d", {{"DestroyProp", {"Crate"}}, {"EnableObject", {"Crate", "1"}}});
+    PlacedObjectState state;
+    ScriptRunner runner(level, state);
+    runner.start("d");
+    require(state.isDisabled("crate"), "EnableObject does not bring a destroyed entity back (stand-in SCRIPT-S231: the original's 0x1ddd00 on a destroyed entity is not read)");
 }
 }
 
@@ -162,6 +213,10 @@ int main() {
         killScriptWithoutThreadOrScriptIsHarmless();
         killScriptKillsEveryThreadOfTheScript();
         batchNativesAreListedAsHandled();
+        destroyPropRemovesAnEnabledEntity();
+        destroyPropLeavesDisabledEntities();
+        destroyPropRespectsAClassThatHandlesMessageOne();
+        destroyedEntityStaysDestroyedAfterEnableObject();
     } catch (const std::exception& error) {
         std::cerr << "natives-objects-test: FAIL: " << error.what() << '\n';
         return 1;

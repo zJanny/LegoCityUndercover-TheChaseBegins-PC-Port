@@ -23,6 +23,8 @@ constexpr Entry kEntries[] = {
     {"skiptofinalstate", ObjectNativeKind::SkipToFinalState, false, true},
     {"printdebugstring", ObjectNativeKind::PrintDebugString, false, false},
     {"revealcollectable", ObjectNativeKind::RevealCollectable, false, false},
+    {"destroyprop", ObjectNativeKind::DestroyProp, false, true},
+    {"killobject", ObjectNativeKind::KillObject, false, true},
 };
 
 }
@@ -62,8 +64,18 @@ void ObjectNativeState::apply(ObjectNativeKind kind, const std::string& instance
     case ObjectNativeKind::ResetObject: messages_.push_back({instance, kMessageReset}); break;
     case ObjectNativeKind::SkipToFinalState: messages_.push_back({instance, kMessageSkipToFinalState}); break;
     case ObjectNativeKind::PrintDebugString:
-    case ObjectNativeKind::RevealCollectable: break;
+    case ObjectNativeKind::RevealCollectable:
+    case ObjectNativeKind::DestroyProp:
+    case ObjectNativeKind::KillObject: break;
     }
+}
+
+bool ObjectNativeState::destroy(const std::string& instance, bool disabled, const ClassHandles& classHandles) {
+    if (disabled || destroyed_.count(instance)) return false;
+    messages_.push_back({instance, kMessageDestroy});
+    if (classHandles && classHandles(instance, kMessageDestroy)) return false;
+    destroyed_.insert(instance);
+    return true;
 }
 
 const ObjectNativeFlags* ObjectNativeState::flags(const std::string& instance) const {

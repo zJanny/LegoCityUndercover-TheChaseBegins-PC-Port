@@ -21,6 +21,7 @@ namespace game_player {
 // The class whose CharacterEnum 9 row ("police") is the one character the completion count excludes,
 // taken as the starting character (inference). The idle animation is picked by file name only.
 inline constexpr const char* kPlayerCharacter = "levels/chars/char_police.blvl";
+inline constexpr std::uint16_t kPlayerCharacterId = 9;
 inline constexpr const char* kPlayerBaseCharacter = "levels/chars/char_player.blvl";
 inline constexpr const char* kPlayerAnimationDirectory = "models/char_minifig/class_police/";
 inline constexpr const char* kPlayerAnimationSuffix = "_minifig.bfnanm";
