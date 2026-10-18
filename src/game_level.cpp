@@ -170,6 +170,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     animationDrivers.add(&propAnimations);
     levelScripts.setAnimationDriver(&animationDrivers);
     levelScripts.loadAnimationOffsets(classOf);
+    levelScripts.loadObjectKinds(classOf);
     installScriptHooks();
     studSprites.emplace(archive);
     player = game_player::placePlayer(archive, scene, level);

@@ -11,7 +11,8 @@ Handlers of batch 26 (SCRIPT-26). Census and the other batches: [script-natives.
 - The PositionPlayer ground probe only fires for character kinds 179, 183 and 243; the port has no character entries, so it is a no-op stand-in. [§2026-10-14T19:19:15](#ts-20261014-191915)
 - CameraFollow 0x1bf7c8 stores a global camera object in manager +0x28 via 0x226a30 (labelled no-op in the port); PositionObject for vehicles is read in outline. [§2026-10-15T13:42:00](#ts-20261015-134200)
 - PositionObject of a level character: the node takes the target's matrix and the room link follows; the controller part applies only when 0x21aae0 is true. Ported for characters, Holmes of mission 1-2 stands at `1-2_Doorlock_Teleport` after the Doorlock scene (seen in the oracle and in the port). [§2026-10-18T16:37:52](#ts-20261018-163752)
-- Open: readers of each flag, the kind byte per class (gates EnableShadow, EnableSwitch, fade natives), the fade consumer, message 8 and 54 effects, who fills the kind list at 0x3743ec.
+- The kind byte (entity +0x12) is the class file's ObjectType; every class of the main levels has one, and the ToggleUseable group case, EnableShadow and EnableSwitch gates are read: [object-kinds.md §2026-10-18T21:36:13](object-kinds.md#ts-20261018-213613).
+- Open: readers of each flag, the fade natives' kind gate (enableobjectfade), the fade consumer, message 8 and 54 effects, who fills the kind list at 0x3743ec.
 
 <a id="ts-20261014-141621"></a>
 

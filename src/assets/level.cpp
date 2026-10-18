@@ -301,6 +301,8 @@ bool float3Of(const LevelParam* param, float* out) {
 
 bool isStudObject(const LevelObject& object, const Level& classFile) { return isStudClass(object, classFile); }
 
+std::uint8_t objectKind(const LevelObject& object, const Level& classFile) { return std::uint8_t(effectiveEnum(object, classFile, "ObjectType")); }
+
 std::vector<Placement> placements(const Level& level) {
     std::vector<Placement> out;
     for (const auto& obj : level.objects) {

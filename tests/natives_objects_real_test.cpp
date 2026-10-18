@@ -87,6 +87,56 @@ int main(int argc, char** argv) {
             const runtime::ObjectNativeFlags* zone = runner.objectNatives().flags("1-2_scannerzoneaudio");
             require(zone && zone->usable == false, "ToggleUseable(1-2_ScannerZoneAudio, 0)");
         }
+        {
+            // Call texts of the main levels (dumped with the C++ loader, 2026-10-18): lvl_06 ToggleUseable(5-2_Crate_Push, 1) on a
+            // leprops/leprop_pushable (kind 71) that nests four leprops/leprop_pushhandle (kind 72); lvl_01 EnableShadow(1-4_Booster_Strange, 0)
+            // on a character (kind 27); lvl_04 EnableSwitch(4-6_Pig_01_SwitchWheel_Fake, 0) on a prop_switchpull (kind 58) and lvl_07
+            // EnableSwitch(7-4_Skylight, 0) on an ability_breakandenter_skylight01 (kind 185).
+            const auto loaded = [&](const char* levelFile) {
+                const assets::FuseEntry* found = archive.find(levelFile);
+                require(found != nullptr, std::string("not in archive: ") + levelFile);
+                return assets::parseLevel(archive.read(*found));
+            };
+            const auto mainLevel = [](const char* name) { return std::string("levels/levels/") + name + "/" + name + "_main.blvl"; };
+            {
+                const assets::Level cityLevel = loaded(mainLevel("lvl_06_apolloisland").c_str());
+                runtime::ObjectNativeState natives;
+                natives.loadKinds(cityLevel, classOf);
+                require(natives.kindOf("5-2_crate_push") == runtime::kKindPushable, "5-2_Crate_Push is a pushable");
+                natives.apply(runtime::ObjectNativeKind::ToggleUseable, "5-2_crate_push", 1.0f);
+                require(natives.flags("5-2_crate_push") && natives.flags("5-2_crate_push")->usable == true, "pushable flag");
+                for (const char* handle : {"handle01", "handle02", "handle03", "handle04"}) {
+                    const std::string key = std::string("5-2_crate_push.") + handle;
+                    require(natives.kindOf(key) == runtime::kKindPushHandle, key + " kind");
+                    require(natives.flags(key) && natives.flags(key)->usable == true, key + " flag");
+                }
+                natives.apply(runtime::ObjectNativeKind::ToggleUseable, "5-2_crate_push", 0.0f);
+                require(natives.flags("5-2_crate_push.handle03")->usable == false, "handle flag follows the pushable");
+            }
+            {
+                const assets::Level level01 = loaded(kLevelFile);
+                runtime::ObjectNativeState natives;
+                natives.loadKinds(level01, classOf);
+                natives.apply(runtime::ObjectNativeKind::EnableShadow, "1-4_booster_strange", 0.0f);
+                require(natives.flags("1-4_booster_strange") && natives.flags("1-4_booster_strange")->shadow == false, "EnableShadow on a character");
+            }
+            {
+                const assets::Level level04 = loaded(mainLevel("lvl_04_fortmeadows").c_str());
+                runtime::ObjectNativeState natives;
+                natives.loadKinds(level04, classOf);
+                natives.apply(runtime::ObjectNativeKind::EnableSwitch, "4-6_pig_01_switchwheel_fake", 0.0f);
+                const runtime::ObjectNativeFlags* flags = natives.flags("4-6_pig_01_switchwheel_fake");
+                require(flags && flags->switchState == 3 && flags->usable == false, "EnableSwitch off on kind 58");
+            }
+            {
+                const assets::Level level07 = loaded(mainLevel("lvl_07_downtown").c_str());
+                runtime::ObjectNativeState natives;
+                natives.loadKinds(level07, classOf);
+                natives.apply(runtime::ObjectNativeKind::EnableSwitch, "7-4_skylight", 0.0f);
+                const runtime::ObjectNativeFlags* flags = natives.flags("7-4_skylight");
+                require(flags && !flags->switchState && flags->usable == false, "EnableSwitch off on kind 185 writes no state");
+            }
+        }
     } catch (const std::exception& error) {
         std::cerr << "natives-objects-real-test: FAIL: " << error.what() << '\n';
         return 1;

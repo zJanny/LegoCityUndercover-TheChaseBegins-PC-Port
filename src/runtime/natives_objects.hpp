@@ -2,6 +2,7 @@
 // Script natives that write one flag of an object or send it a class message (batch SCRIPT-26, docs/re/script-natives.md).
 // The handlers only store the value; the systems that read the flags (targeting, interaction prompts, shove, destruction,
 // door update) are not ported yet, so the state is recorded here. No SDL dependency.
+#include "assets/assets.hpp"
 #include <cstdint>
 #include <functional>
 #include <map>
@@ -25,6 +26,8 @@ enum class ObjectNativeKind {
     RevealCollectable,
     DestroyProp,
     KillObject,
+    EnableShadow,
+    EnableSwitch,
 };
 
 std::optional<ObjectNativeKind> objectNativeKind(const std::string& lowerCaseName);
@@ -37,6 +40,9 @@ constexpr std::uint8_t kMessageReset = 8;
 constexpr std::uint8_t kMessageSkipToFinalState = 54;
 // DestroyProp / KillObject 0x1a2fe4 -> 0x23cd80 send the class message 1 (the vehicle class handles it as its break, 0x159bd0).
 constexpr std::uint8_t kMessageDestroy = 1;
+// Kind bytes (entity +0x12, the class file's ObjectType, docs/re/object-kinds.md) the natives test.
+constexpr std::uint8_t kKindPushable = 71;
+constexpr std::uint8_t kKindPushHandle = 72;
 struct ObjectClassMessage {
     std::string instance;
     std::uint8_t message = 0;
@@ -48,6 +54,8 @@ struct ObjectClassMessage {
 //  indestructible: SetIndestructible, bit 0 of +0xde of the component;
 //  activeDuringDcam: ActiveDuringDCam, bit 1 of +0x312 of the component;
 //  unshovable: ObjectUnshovable, bit 0x100 of the flag word at +0x10 and bit 0x20000 of the one at +0xc;
+//  shadow: EnableShadow 0x1bf84c, bit 2 of +0x316 of the component, written only for the kinds 27 and 149;
+//  switchState: EnableSwitch 0x1bf8a4, halfword +4 of the component, 3 when switched off and the kind is 94, 139, 100 or 58;
 //  updateFlagBit: ToggleUpdateFlag, mask 0x4 of the halfword at +0x10, set for an argument of 0; the entity update loop 0x1a4094 skips an
 //  entity whose halfword has mask 0x24 set (docs/re/script-natives-flags.md).
 struct ObjectNativeFlags {
@@ -56,12 +64,18 @@ struct ObjectNativeFlags {
     std::optional<bool> indestructible;
     std::optional<bool> activeDuringDcam;
     std::optional<bool> unshovable;
+    std::optional<bool> shadow;
+    std::optional<std::uint16_t> switchState;
     std::optional<bool> updateFlagBit;
 };
 
 class ObjectNativeState {
 public:
     void apply(ObjectNativeKind kind, const std::string& lowerCaseInstance, float value);
+    // Kind byte of every placed object (key: lower-case instance) and of the objects nested in class files (key: parent.child, as scripts
+    // name them). ToggleUseable on a kind 71 object also writes its nested kind 72 objects (0x1cdcf8).
+    void loadKinds(const assets::Level& level, const assets::ClassLookup& classOf);
+    std::optional<std::uint8_t> kindOf(const std::string& lowerCaseInstance) const;
     // 0x23cd80: nothing when the entity is disabled (halfword +0x10 bit 0) or already destroyed (word +0xc bit 0x10). Otherwise message 1 goes to
     // the class (`classHandles` says whether its handler took it); an unhandled message destroys the entity (bit 0x10 of +0xc, node dropped
     // by 0x2320f8). True when the entity was destroyed by this call.
@@ -74,6 +88,8 @@ public:
 
 private:
     std::map<std::string, ObjectNativeFlags> flags_;
+    std::map<std::string, std::uint8_t> kinds_;
+    std::map<std::string, std::vector<std::string>> pushHandles_;
     std::vector<ObjectClassMessage> messages_;
     std::set<std::string> destroyed_;
 };

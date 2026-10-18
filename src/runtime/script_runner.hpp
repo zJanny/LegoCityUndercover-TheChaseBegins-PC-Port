@@ -208,6 +208,7 @@ public:
     void loadWaypoints(const assets::ClassLookup& classOf) { waypoints_.load(level_, classOf); }
     // The AnimationOffset parameter of every placed object whose class lists it (PlayAnimation 0x268240).
     void loadAnimationOffsets(const assets::ClassLookup& classOf);
+    void loadObjectKinds(const assets::ClassLookup& classOf) { objectNatives_.loadKinds(level_, classOf); }
     // Who plays the animation natives' requests; null records them only.
     void setAnimationDriver(AnimationDriver* driver) { animationDriver_ = driver; }
     std::vector<std::string> updateWaypoints(float dt, const float player[3], const WaypointVehicle* vehicle);

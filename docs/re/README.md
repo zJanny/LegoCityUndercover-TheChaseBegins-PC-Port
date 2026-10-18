@@ -21,6 +21,7 @@ Read this index, then open only the file you need.
 | [levels.md](levels.md) | `.blvl`, placements, Euler order, nav grids (`.bfnnav`) |
 | [level-transitions.md](level-transitions.md) | Details moved out of the level-transition feature items (natives without handler, loading page code) |
 | [objects.md](objects.md) | Level objects: classes, class files (+0x10/+0x14), parameter slots, how the model is found, drawn classes |
+| [object-kinds.md](object-kinds.md) | Kind byte of a placed entity (entity +0x12 = ObjectType): where it is set, the kind of every class of the main levels, what it gates (ToggleUseable group, EnableShadow, EnableSwitch) |
 | [buildit.md](buildit.md) | Build-its (`props/prop_buildit`): class record, use zone, state machine and timing, completion and the event it fires |
 | [buildit-bricks.md](buildit-bricks.md) | Build-it bricks: scatter, flight, built pose, hop of unbuilt bricks, rise of the final prop |
 | [abilities-detective.md](abilities-detective.md) | Detective tool: detective spot, reveal spot, reveal prop, footprints, the player's detective states and their timing |

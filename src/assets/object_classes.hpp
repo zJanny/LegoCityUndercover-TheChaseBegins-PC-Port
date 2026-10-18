@@ -20,6 +20,9 @@ bool isVehicleClassFile(const Level& classFile);
 // Instance with the stud object type (0x3d) and a pickup type of 0..3: collected by the stud system.
 bool isStudObject(const LevelObject& object, const Level& classFile);
 
+// Kind byte of the placed entity (entity +0x12): the low byte of the effective ObjectType, 0 when the class has none (docs/re/script-natives-flags.md).
+std::uint8_t objectKind(const LevelObject& object, const Level& classFile);
+
 enum ObjectBehaviour : unsigned {
     BehaviourCollision = 1,  // objectCollisions registers a shape for it
     BehaviourDoor = 2,       // the door state machine drives it

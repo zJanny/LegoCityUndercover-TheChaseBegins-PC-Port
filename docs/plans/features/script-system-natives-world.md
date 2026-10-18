@@ -29,6 +29,9 @@ IN_PROGRESS, updated 2026-10-18T11:03:52+02:00. The six natives have handlers re
 - [ ] SCRIPT-280 — Which classes handle message 1 of the destroy 0x23cd80 (table 0x245004 + kind x 40, +0x14), what the broadcasts 0x23cee8 over 0x3775c0 / 0x3775c4 do, and EnableObject (0x1ddd00) on a destroyed entity. blocks: SCRIPT-S231. evidence: same entry.
 - [ ] SCRIPT-281 — EffectFadeObject: the third node property (0x23f540, flag bit 2), the particle node case, the clock of 0x23f74c (real time or update time) and fading level characters and other non-placed nodes. needs: HUD-70. blocks: SCRIPT-S232. evidence: same entry.
 - [ ] SCRIPT-282 — EnableDistanceFade: the node kind gate (global 0x37674c) and the child recursion 0x2b65dc per placed class, DistanceFadeMid, and the AI target scorers 0x2df0dc / 0x2ee214 that scale their ranges with the tier of 0x28781c. needs: RENDER-66. blocks: SCRIPT-S233, SCRIPT-57. evidence: same entry.
+- [ ] SCRIPT-289 — Which classes register a use zone (0x23e130, 56 call sites), the registries 0x236624 and 0x2219bc test. blocks: SCRIPT-57, SCRIPT-S17. uses: ToggleUseable, EnableSwitch. evidence: [object-kinds.md §2026-10-18T21:36:13](../../re/object-kinds.md#ts-20261018-213613).
+- [ ] SCRIPT-290 — enableobjectfade: which handlers of kinds 29, 17, 20, 0, 47, 56, 86, 138, 1, 67, 113, 127, 145 answer message 24. needs: SCRIPT-57. uses: enableobjectfade. evidence: same entry.
+- [ ] SCRIPT-291 — EnableShadow gate: who fills the kind list at 0x3743ec and what sets flag bit 14 of `obj + 0xc`. blocks: SCRIPT-57, SCRIPT-S238. uses: EnableShadow. evidence: same entry.
 - [ ] SCRIPT-283 — AddToSemiTransList 0x2a059c and AddToSemiTransListBound 0x2c08e8 (13 calls, the other callers of the list entry creator 0x1f40d8) are not read. needs: RENDER-67. blocks: SCRIPT-38. evidence: same entry.
 
 ## 6. Findings summary
