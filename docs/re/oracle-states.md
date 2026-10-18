@@ -206,3 +206,21 @@ Unknowns:
 Unknowns:
 - The level variables (StoryProgress, mission 1-2 flags) and which waypoints and triggers are enabled in each state; not read yet.
 - Whether the white sound scanner view is an emulation fault of both renderers or of the user's renderer only.
+
+<a id="ts-20261018-122739"></a>
+<a id="ts-20261018-122739"></a>
+
+## 2026-10-18T12:27:39+02:00 — User states of the rest of mission 1-2
+
+The user played mission 1-2 past the roof sound scanner and to its end and saved quick-save slots 1 to 6 (2026-10-18, 12:24 to 12:27, New 3DS). Copied read-only, not loaded or checked yet:
+
+| State | Slot | Where (user report) |
+|---|---|---|
+| `m12-9-zipline` | 1 | standing under the zipline (jump to use it) |
+| `m12-10-pole-climb` | 2 | on the pole, climbing up the house |
+| `m12-11-brick-climb` | 3 | climbing up a set of bricks |
+| `m12-12-railing` | 4 | climbing along a railing |
+| `m12-13-cage-trigger` | 5 | standing on the trigger in front of the dog cage |
+| `m12-14-mission-complete` | 6 | mission 1-2 complete |
+
+Progress: mission 1-1 finished; slots 1 to 5 mission 1-2 in progress (past the scanner), slot 6 mission 1-2 finished. The user got the scanner working in Azahar; how is not recorded yet.
