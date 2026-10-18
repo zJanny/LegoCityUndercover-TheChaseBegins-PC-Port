@@ -18,6 +18,7 @@ Save states the oracle uses: which ones exist, the game progress of each, how ea
 - Vehicle brick effects (user): `veh-smash-prop` (lamp post), `veh-smash-car` (moving car ahead), `veh-break-low-hearts` (one heart left). [§2026-10-18T12:45:56](#ts-20261018-124556)
 - `veh-wall-full-speed` (user): police car with four hearts at speed towards a brick wall, for VEH-128. [§2026-10-18T15:06:16](#ts-20261018-150616)
 - Pole mount (user, for TRAV-1): `m12-10a-pole-foot` (0.8 m from the drain pipe, facing away; walking into the pipe mounts it), `m12-10b-pole-side` (2.4 m left of the pipe axis, facing the wall). [§2026-10-18T15:46:24](#ts-20261018-154624)
+- Table and trampoline of mission 1-2 (user, for PLAYER-12 and LEVOBJ-86): `m12-table-before`, `m12-table-broken`, `m12-trampoline-built`, loaded and checked. [§2026-10-18T17:25:22](#ts-20261018-172522)
 - `leadcut-1_1_d-early` (from `m11-6-van-to-shop`): cutscene `1_1_d` just loaded, for its actor nodes and pictures. [§2026-10-16T14:39:21](#ts-20261016-143921)
 - Open: whether mission 1-2 is active in the post-1-1 states, the level variables of the m11 states, a save with Continue byte +6 above 1, and the Old 3DS run of `savestate`.
 
@@ -272,4 +273,23 @@ Progress: mission 1-2 in progress, past the scanner and the zipline, as `m12-10`
 
 Unknowns:
 - Which message of the pole handler the walk-in mount uses (the pressed path of 0x191ac0 was read, the walk-in not).
+
+<a id="ts-20261018-172522"></a>
+
+## 2026-10-18T17:25:22+02:00 — User states at the table and the trampoline of mission 1-2
+
+Asked for the attack on foot (PLAYER-12) and the table and trampoline (LEVOBJ-86). The user quick-saved three slots (2026-10-18 17:23, New 3DS); copied read-only (`cp --no-clobber`, identical by `cmp`). Each was loaded once by the lead (`--state NAME --display xvfb --renderer opengl --rpc`, scenario `wait 2`, `player`, `screenshot`):
+
+| State | Slot | Where (user report) | Player position | Facing (x, z) | Seen at load |
+|---|---|---|---|---|---|
+| `m12-table-before` | 1 (17:23:17) | in front of the table | 715.442 32.714 641.616 | (-0.090, 0.996) | the green table with its umbrella straight ahead, 2.06 m from `DonutTable_14` (715.63 32.53 643.67), on foot, four hearts: matches |
+| `m12-table-broken` | 2 (17:23:28) | in front of the broken table | 715.726 32.668 640.255 | (-0.011, 1.000) | the table is gone; a round green build-it base with grey bricks where it stood; trampoline not built: matches |
+| `m12-trampoline-built` | 3 (17:23:35) | the built trampoline | 719.135 32.618 639.895 | (-0.217, -0.976) | a black trampoline with a green rim beside Chase, about 2.6 m from `Trampoline_03` (720.20 32.58 637.47): matches |
+
+The user's earlier note gave the hit position 718.06 32.68 642.69 facing -80.2 degrees; `m12-table-before` stands at another spot of the same table and faces it from the south.
+
+Progress: mission 1-2 in progress, past the first detective point, before the zipline (user report, implied by the step).
+
+Unknowns:
+- Whether the table in `m12-table-before` has taken any hit already (its health was not read).
 
