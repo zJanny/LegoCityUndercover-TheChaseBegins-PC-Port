@@ -9,7 +9,7 @@ What the scripts of one mission call, which natives and trigger events the port 
 - Mission 1-2 in the original: `1-2_MissionStart` runs its natives in a fixed order (title camera 153 updates, then Wait until update 331); the port is one update later at both points. [§2026-10-14T21:39:21](#ts-20261014-213921)
 - The 13 natives of mission 1-2 without a handler and the 12 class-driven ObjectTriggered events are listed in the entry; `HouseArrival` (3388757305) and `Spawn_Doorlock` (3035472981) are the `TriggerScript` values of two waypoints. [§2026-10-14T21:44:29](#ts-20261014-214429)
 - lvl_01 startup runs the scripts for the current `StoryProgress` (1 starts `1-1_MissionStart`, 2 starts `1-2_MissionAvailable`); the new-game start is `movie 01_GameIntro`, cutscene `1_1_a`, then `1-1_MissionStart`. [§2026-10-14T23:52:14](#ts-20261014-235214), [§2026-10-15T12:41:40](#ts-20261015-124140)
-- Mission 1-1 runs end to end in `chase-game` in the original's step order (11 steps, StoryProgress 2 after 5831 updates), with teleports standing in for walks; `1-1_Deliver_Donuts` only fires after `1-1_Carry_Object_Tutorial` has ended. [§2026-10-15T12:41:40](#ts-20261015-124140)
+- Mission 1-1 runs end to end in `chase-game` in the original's step order (11 steps, StoryProgress 2 after 5831 updates), with teleports standing in for walks; `1-1_Deliver_Donuts` only fires after `1-1_Carry_Object_Tutorial` has ended. [§2026-10-15T12:41:40](#ts-20261015-124140) The user played it end to end in real play on 2026-10-18 [§2026-10-18T10:37:46](#ts-20261018-103746).
 - Open: starters of scripts 2451216995 and 2494968948, the vehicle bound test 0x17b21c, who fires class-driven ObjectTriggered events, missing natives in mission 1-1 (CameraFollow, EnableTrafficAndPedestrians, music), original update numbers between steps.
 
 
@@ -128,3 +128,12 @@ Method: `chase-game --script` with the new dev step `at X Y Z [FACING]` (telepor
 Unknowns:
 - Whether the original's update numbers between the steps agree with the port's; only single steps were measured so far.
 - The 442 update length of `1_1_b` in the port against the original.
+
+<a id="ts-20261018-103746"></a>
+
+## 2026-10-18T10:37:46+02:00 — Mission 1-1 played end to end in chase-game (user)
+
+- The user played mission 1-1 through in `chase-game` on main at f639069 or later (car break and particles merged) and reported that it can be played end to end. No difference to the original was reported.
+
+Unknowns:
+- Timings between the stops and details of the look were not compared in real play; the user's report covers playability only.
