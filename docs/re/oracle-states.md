@@ -14,6 +14,7 @@ Save states the oracle uses: which ones exist, the game progress of each, how ea
 - Mission 1-1 in progress (user): `m11-1-donut-shop` to `m11-9-delivery-goal`, with player positions in the table of the entry; `m11-7-box-prompt` is made from `m11-7-collect-donuts` for the carry pictures. [§2026-10-14T23:27:10](#ts-20261014-232710), [§2026-10-16T09:35:36](#ts-20261016-093536)
 - Agent states with progress: `cutscene-1-1-b` (mission 1-1 started, Old 3DS), `drv-police-car-seated` (step 2, player in the police car), `bullet-trooper-at-obstacle` (from it, trooper resting at the obstacle); `savecont-slotlist-user` and `slotlist-delete-confirm` hold the user's save slot 0 after mission 1-1. [§2026-10-14T20:46:10](#ts-20261014-204610), [§2026-10-15T09:35:00](#ts-20261015-093500), [§2026-10-15T19:07:36](#ts-20261015-190736), [§2026-10-14T15:22:24](#ts-20261014-152224), [§2026-10-14T20:46:10](#ts-20261014-204610)
 - Mission 1-2 in progress (user): `m12-1-mission-trigger` to `m12-8-roof-sound-scanner`, positions in the table of the entry; the sound scanner view is white in Azahar (user report), so its pictures are no reference. [§2026-10-18T10:13:06](#ts-20261018-101306)
+- Rest of mission 1-2 (user, loaded and checked): `m12-9-zipline` to `m12-13-cage-trigger`, and `m12-14-mission-complete` with mission 1-2 finished; positions in the table of the entry. [§2026-10-18T12:27:39](#ts-20261018-122739)
 - `leadcut-1_1_d-early` (from `m11-6-van-to-shop`): cutscene `1_1_d` just loaded, for its actor nodes and pictures. [§2026-10-16T14:39:21](#ts-20261016-143921)
 - Open: whether mission 1-2 is active in the post-1-1 states, the level variables of the m11 states, a save with Continue byte +6 above 1, and the Old 3DS run of `savestate`.
 
@@ -212,15 +213,15 @@ Unknowns:
 
 ## 2026-10-18T12:27:39+02:00 — User states of the rest of mission 1-2
 
-The user played mission 1-2 past the roof sound scanner and to its end and saved quick-save slots 1 to 6 (2026-10-18, 12:24 to 12:27, New 3DS). Copied read-only, not loaded or checked yet:
+The user played mission 1-2 past the roof sound scanner and to its end and saved quick-save slots 1 to 6 (2026-10-18, 12:24 to 12:27, New 3DS). Copied read-only; each was loaded once (`--state NAME --rpc`, `wait 3`, `player`, screenshot) and shows what the user described:
 
-| State | Slot | Where (user report) |
-|---|---|---|
-| `m12-9-zipline` | 1 | standing under the zipline (jump to use it) |
-| `m12-10-pole-climb` | 2 | on the pole, climbing up the house |
-| `m12-11-brick-climb` | 3 | climbing up a set of bricks |
-| `m12-12-railing` | 4 | climbing along a railing |
-| `m12-13-cage-trigger` | 5 | standing on the trigger in front of the dog cage |
-| `m12-14-mission-complete` | 6 | mission 1-2 complete |
+| State | Slot | Where (user report) | Player position |
+|---|---|---|---|
+| `m12-9-zipline` | 1 | standing under the zipline (jump to use it) | 870.226 66.001 630.961 |
+| `m12-10-pole-climb` | 2 | on the pole, climbing up the house | 940.542 60.181 683.410 |
+| `m12-11-brick-climb` | 3 | climbing up a set of bricks | 908.942 65.698 673.170 |
+| `m12-12-railing` | 4 | climbing along a railing | 908.066 70.147 669.126 |
+| `m12-13-cage-trigger` | 5 | standing on the trigger in front of the dog cage | 916.702 64.431 663.724 |
+| `m12-14-mission-complete` | 6 | mission 1-2 complete | 745.951 30.055 636.281 |
 
-Progress: mission 1-1 finished; slots 1 to 5 mission 1-2 in progress (past the scanner), slot 6 mission 1-2 finished. The user got the scanner working in Azahar; how is not recorded yet.
+Progress: mission 1-1 finished; slots 1 to 5 mission 1-2 in progress (past the scanner), slot 6 mission 1-2 finished (back on the street with the dialogue "McCain, stop messing around and get back to the station."). Each `NAME.json` names the emulator load slot `00040000000AD600.00.cst` in `file`, like the other states. The user got the scanner working in Azahar; how is not recorded yet.
