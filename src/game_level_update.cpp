@@ -274,6 +274,8 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         player->motion.runRole = player->carryAnimations ? player->carryAnimations->clip(runtime::kAnimationRun, carry.carryingMode()) : runtime::kAnimationRun;
         player->motion.detectiveWalk = detective.modeActive();
         if (detective.modeActive() && detectiveRoles) player->motion.runRole = detectiveRoles->clip(runtime::kAnimationRun);
+        pole.cameraYaw = follow->yaw();
+        pole.usePressed = !controlTaken && pad.slot(kSlotConfirmButton).press > 0;
         const runtime::BoardingStep boardingStep = stepBoarding(dt);
         game_player::PlayerAnimation shown =
             boardingStep.takesControl ? applyBoarding(boardingStep)

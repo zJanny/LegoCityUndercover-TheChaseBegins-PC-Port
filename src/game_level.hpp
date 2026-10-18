@@ -30,6 +30,7 @@
 #include "runtime/scanner.hpp"
 #include "runtime/zipline.hpp"
 #include "runtime/brick_grab.hpp"
+#include "runtime/pole.hpp"
 #include "runtime/camera_lock_icon.hpp"
 #include "runtime/camera_rig.hpp"
 #include "runtime/camera_near_plane.hpp"
@@ -140,6 +141,7 @@ private:
     game_player::PlayerAnimation movePlayer(const chase::runtime::StickIntent& intent, bool jumpPressed, float dt);
     game_player::PlayerAnimation moveClimbingPlayer(const chase::runtime::StickIntent& intent, bool jumpPressed, bool usePressed, float dt);
     game_player::PlayerAnimation climbBarMovePlayer(const chase::runtime::StickIntent& intent, bool jumpPressed, bool usePressed, float dt);
+    game_player::PlayerAnimation movePlayerWithPole(const chase::runtime::StickIntent& intent, bool jumpPressed, float dt);
     bool scannerView(float eye[3], float& yaw, float& pitch, float& fieldOfView) const;
     void updateLevelCharacters(float dt);
     void updateFollowCamera(float dt);
@@ -254,6 +256,7 @@ private:
     chase::runtime::ClimbBarSet climbBars;
     chase::runtime::ClimbBarRider climbBarRider;
     std::optional<chase::assets::RootMotion> ledgeLeftMotion, ledgeRightMotion;
+    chase::runtime::PoleSession pole;
     std::optional<chase::runtime::VehicleBoarding> boarding;
     std::vector<chase::runtime::BoardingVehicle> boardingVehicles;
     std::vector<std::size_t> boardingRecords;

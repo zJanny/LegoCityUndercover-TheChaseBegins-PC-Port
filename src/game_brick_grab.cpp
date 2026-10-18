@@ -18,10 +18,10 @@ bool hasBrickClips(const game_player::PlayerRig& player) {
 }
 
 // The player step with the climbing bricks (docs/re/player-traversal.md): the brick update 0x1a649c, then the brick states 141..152 own
-// the player while they run; otherwise movePlayer runs and, in a jump update that runs the grab tests, the brick test 0x273f6c follows
+// the player while they run; otherwise the pole step (movePlayerWithPole) runs and, in a jump update that runs the grab tests, the brick test 0x273f6c follows
 // the line test.
 game_player::PlayerAnimation LevelSession::moveClimbingPlayer(const runtime::StickIntent& intent, bool jumpPressed, bool usePressed, float dt) {
-    if (grabBricks.empty() || !hasBrickClips(*player)) return movePlayer(intent, jumpPressed, dt);
+    if (grabBricks.empty() || !hasBrickClips(*player)) return movePlayerWithPole(intent, jumpPressed, dt);
     runtime::updateGrabBricks(grabBricks);
     runtime::BrickInput input;
     input.dt = dt;
@@ -58,7 +58,7 @@ game_player::PlayerAnimation LevelSession::moveClimbingPlayer(const runtime::Sti
         if (step.exit == runtime::BrickExit::Jump) {
             std::cout << "brick grab: jump at update " << updates << '\n';
             player->vertical.posture = runtime::Posture::Ground;
-            const game_player::PlayerAnimation shown = movePlayer(intent, true, dt);
+            const game_player::PlayerAnimation shown = movePlayerWithPole(intent, true, dt);
             runtime::brickJumpTick(brickClimber, true, false);
             return shown;
         }
@@ -73,7 +73,7 @@ game_player::PlayerAnimation LevelSession::moveClimbingPlayer(const runtime::Sti
     };
     if (brickClimber.active()) return apply(runtime::brickGrabUpdate(brickClimber, grabBricks, input));
     const runtime::Posture before = player->vertical.posture;
-    const game_player::PlayerAnimation shown = movePlayer(intent, jumpPressed, dt);
+    const game_player::PlayerAnimation shown = movePlayerWithPole(intent, jumpPressed, dt);
     const bool jumping = player->vertical.posture == runtime::Posture::Jumping;
     const bool started = before != runtime::Posture::Jumping && jumping;
     if (!runtime::brickJumpTick(brickClimber, started, before == runtime::Posture::Jumping) || !jumping || carry.carryingMode() != 0) return shown;

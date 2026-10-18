@@ -125,7 +125,9 @@ std::optional<PlayerRig> placePlayer(FuseArchive& archive, Scene& scene, const L
         rig.carryAnimations.emplace(parseTable(archive.read(*animationTable)));
         std::vector<int> clips = rig.carryAnimations->carriedClips();
         for (const int id : {runtime::kAnimationBuildit, runtime::kAnimationPickupBig, runtime::kAnimationPickupSmall, runtime::kAnimationPutdownBig, runtime::kAnimationPutdownSmall,
-                             runtime::kAnimationScannerOut, runtime::kAnimationScannerIn})
+                             runtime::kAnimationScannerOut, runtime::kAnimationScannerIn,
+                             runtime::kAnimationPoleMount, runtime::kAnimationPoleIdle, runtime::kAnimationPoleUp, runtime::kAnimationPoleDown,
+                             runtime::kAnimationPoleDismount})
             clips.push_back(id);
         clips.insert(clips.end(), runtime::kBrickGrabAnimations.begin(), runtime::kBrickGrabAnimations.end());
         for (const int id : clips) {

@@ -87,7 +87,10 @@ Read this index, then open only the file you need.
 | [vehicles-damage.md](vehicles-damage.md) | Vehicle contact damage: the contact and damage messages of 0x1797c4, hearts and health points, cool-downs, the pair rule of 0x271764, the break 0x16cccc, the oracle run into the box |
 | [vehicles-physics-props.md](vehicles-physics-props.md) | Vehicle physics: the second floor cell search 0x164328 (push-out of points below an overhead layer), the vehicle against placed props, the car breaking into bricks, the sphere sweep of the floor pass 0x1c54f8 (0x1b6ef8, 0x16788c, set-up 0x33a4fc), the wheel ray through the floor graph 0x155888, mass scale and body activation messages |
 | [player-falling-jumping.md](player-falling-jumping.md) | Falling, landing stun, jumping, step-off slide, slope slow-down, state table |
-| [player-traversal.md](player-traversal.md) | Zipline (type 101: grab test, states 42..44, slide, dismount, oracle ride), survey of pole (187), climbing bricks (20), climb wall (30), climb bar (29, 218) and ledge states |
+| [player-traversal.md](player-traversal.md) | Zipline (type 101: grab test, states 42..44, slide, dismount, oracle ride), survey of the climbing moves |
+| [player-traversal-pole.md](player-traversal-pole.md) | Pole and drain pipe (type 187): walk-in and A-press mount, climb, exits, dismount (m12-10) |
+| [player-traversal-bricks.md](player-traversal-bricks.md) | Climbing bricks (type 20, states 141..152), the climb wall entry (type 30) (m12-11) |
+| [player-traversal-rails.md](player-traversal-rails.md) | Rails, climb bars (type 29) and the corner rail (type 218), ledge states 23 / 24 (m12-12) |
 | [front-end.md](front-end.md) | Boot sequencer 0x302080, screen order and triggers from power-on to the first level, prompt state machine 0x313368, save indicator, language, savegameflow pages, loading screen, intro movie bubble and title card |
 | [collision.md](collision.md) | Level collision data (model+0x1c section), ground probe by box bisection, wall slide, placed objects (world grid, registration, shapes, query layers), differential test against traces |
 | [dcam.md](dcam.md) | Director camera: level paths, StartDCam commands, phase machine, busy test and end of WaitForDCam, hand-back, oracle timing |
