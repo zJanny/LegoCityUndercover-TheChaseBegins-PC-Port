@@ -275,6 +275,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     carry.load(archive, level, classOf);
     if (player) game_carry::applyClipTimings(carry, *player);
     std::cout << "carry objects: " << carry.objects().size() << ", carry targets: " << carry.targets().size() << '\n';
+    loadDetective(archive);
     std::cout << "collision: " << collision.triangleCount() << " triangles in " << collision.entries().size() << " entries\n";
 
     float centre[3];
@@ -385,6 +386,7 @@ void LevelSession::draw(int width, int height) {
     for (std::size_t i = 0; i < waypointObjects.size(); ++i)
         shownWaypoints[i] = objectives.waypointActive(game_doors::lowerCase(waypointObjects[i].instance)) && roomShown(runtime::roomNumber(waypointObjects[i].room));
     propParts.apply(scene, buildits, placedObjects, placedSceneIndex, shownPlaced, shownWaypoints, badgeFades);
+    drawFootprints();
     if (skyInstance) {
         const float lift = player && seaHeight ? runtime::skyLift(player->vertical.y, *seaHeight) : 0.0f;
         const Mat4 cameraToWorld = chase::render::rigidInverse(viewMatrix);

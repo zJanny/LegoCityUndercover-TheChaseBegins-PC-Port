@@ -257,7 +257,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         runtime::StickIntentInput stick;
         stick.slot14 = {pad.slot(kSlotStickX).value, pad.slot(kSlotStickX).deadzone};
         stick.slot15 = {pad.slot(kSlotStickY).value, pad.slot(kSlotStickY).deadzone};
-        const bool controlTaken = levelScripts.playerControlTaken() || carry.busy() || builditPlayer.active();
+        const bool controlTaken = levelScripts.playerControlTaken() || carry.busy() || builditPlayer.active() || detective.controlTaken();
         if (controlTaken) stick.slot14.value = stick.slot15.value = 0.0f;
         stick.entityType = game_player::kPlayerEntityType;
         stick.cameraYaw = follow->yaw();
@@ -271,15 +271,17 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         }
         player->motion.carryingBig = carry.carryingMode() == 2;
         player->motion.runRole = player->carryAnimations ? player->carryAnimations->clip(runtime::kAnimationRun, carry.carryingMode()) : runtime::kAnimationRun;
+        player->motion.detectiveWalk = detective.modeActive();
+        if (detective.modeActive() && detectiveRoles) player->motion.runRole = detectiveRoles->clip(runtime::kAnimationRun);
         const runtime::BoardingStep boardingStep = stepBoarding(dt);
         game_player::PlayerAnimation shown =
             boardingStep.takesControl ? applyBoarding(boardingStep)
-                                      : game_player::updatePlayer(*player, collision, runtime::stickIntent(stick), !controlTaken && carry.allowsJump() && pad.slot(kSlotJumpButton).press > 0, dt);
+                                      : game_player::updatePlayer(*player, collision, runtime::stickIntent(stick), !controlTaken && carry.allowsJump() && !detective.modeActive() && pad.slot(kSlotJumpButton).press > 0, dt);
         if (const runtime::AiCharacter* driven = levelScripts.ai().moving("player1") ? levelScripts.ai().character("player1") : nullptr) {
             game_player::applyAiPosition(*player, *driven);
             shown = game_player::aiMoveAnimation(*driven);
         }
-        player->animate(scene, dt, player->carriedRole(shown.role, carry.carryingMode(), carry.phaseClip() ? carry.phaseClip() : builditPlayer.clip()), shown.scale);
+        player->animate(scene, dt, detectiveClip(player->carriedRole(shown.role, carry.carryingMode(), carry.phaseClip() ? carry.phaseClip() : builditPlayer.clip())), shown.scale);
         if (!script.empty()) scriptedHeights.push_back(player->vertical.y);
         for (const runtime::StudCollected& collected :
              studs.update(dt, runtime::studPickupPoint(player->motion.x, player->vertical.y, player->motion.z,
@@ -294,6 +296,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         updateDoors(playerPosition, emit);
         for (const runtime::SoundCall& call : updateBuildits(playerPosition)) emit(call);
         updateCarry(playerPosition);
+        updateDetective(dt, carry.carryingMode() == 0 && !carry.busy() && !builditPlayer.active() && !buildits.lastUse().inZone, emit);
     }
     propParts.step(dt);
     sceneStart.startRequested();
@@ -331,11 +334,13 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
                 requestSceneChange(&object);
     }
     for (const runtime::ScriptPlacement& request : levelScripts.takePlacements()) applyPlacement(request);
-    for (const runtime::ScriptObjectMessage& sent : levelScripts.takeObjectMessages())
+    for (const runtime::ScriptObjectMessage& sent : levelScripts.takeObjectMessages()) {
+        if (sent.message == runtime::kMessageTrigger) detective.triggerMessage(sent.instance);
         for (DoorObject& door : doors)
             if (game_doors::lowerCase(door.instance) == sent.instance)
                 runtime::doorMessage(door.state, door.params,
                                      sent.message == runtime::kMessageTrigger ? runtime::DoorMessage::Open : runtime::DoorMessage::Close);
+    }
     provisionalStudClockSeconds += double(dt);
     updateLevelCharacters(dt);
     if (follow) updateFollowCamera(dt);

@@ -22,6 +22,9 @@ constexpr float kStepsPerSecond = 30.0f;           // literal 0x41f00000 at 0x20
 // 0x203d18: while the player carries a big object (0x225754 = 2) the movement always uses the walk step (index forced to 1) multiplied by the float at 0x374368.
 // Value 2.5 read from the heap in the oracle (state m11-8-donuts-in-hand, 0x374368 = 0x40200000, standing and walking; docs/re/carrying.md).
 constexpr float kCarryWalkStepScale = 2.5f;
+// 0x203d18: while ext+0x130 bit 2 is set (detective mode) the walk step is multiplied by the float at 0x374370, and bit 3 forces the walk step.
+// Value 1.4 read from the heap in the oracle (state m12-4-detective-point, 0x374364 + 0xc = 0x3fb33333; docs/re/abilities-detective.md).
+constexpr float kDetectiveWalkStepScale = 1.4f;
 constexpr float kSprintSpeedScale = 1.5f;          // literal 0x3fc00000 at 0x1ac154, multiplied into ctrl+0x94 by 0x1abe60 (1.3 variant at 0x1ac150)
 
 // Speed in world units per second at playback scale 1.0.
@@ -58,6 +61,7 @@ struct LocomotionState {
     float runTimer = 0;                 // ctrl+0x24c
     bool wasRunning = false;            // previous update was in the run regime
     bool carryingBig = false;           // the player holds a big carry object (0x225754 = 2), set before the update
+    bool detectiveWalk = false;         // detective mode (ext+0x130 bits 2 and 3), set before the update
     int runRole = kAnimationRun;        // 0x219614(entity, 2), set before the update
     bool sprinting = false;             // sprint role active (ctrl+0x94 == sprintScale)
     float slope = 1.0f;                 // slope factor of ctrl+0x94 computed at the end of the previous run update

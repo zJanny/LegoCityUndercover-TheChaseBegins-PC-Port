@@ -22,6 +22,7 @@ Read this index, then open only the file you need.
 | [level-transitions.md](level-transitions.md) | Details moved out of the level-transition feature items (natives without handler, loading page code) |
 | [objects.md](objects.md) | Level objects: classes, class files (+0x10/+0x14), parameter slots, how the model is found, drawn classes |
 | [buildit.md](buildit.md) | Build-its (`props/prop_buildit`): class record, use zone, state machine and timing, completion and the event it fires |
+| [abilities-detective.md](abilities-detective.md) | Detective tool: detective spot, reveal spot, reveal prop, footprints, the player's detective states and their timing |
 | [carrying.md](carrying.md) | Carry objects and targets (`props/prop_carry*`): class records, use zones, pickup, drop, placing, fired events |
 | [carrying-animation.md](carrying-animation.md) | Carry states (pickup, drop, place): clips, hand attachment, the release, what ends each state, the track event that attaches and releases |
 | [skeleton-animation.md](skeleton-animation.md) | `.bfnskl`, `.bfnanm`, curves, pose composition, skinning, bone palettes |

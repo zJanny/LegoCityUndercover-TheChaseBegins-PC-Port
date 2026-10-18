@@ -11,7 +11,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | [collision](collision.md) | IN_PROGRESS | COLL-1 broad phase stand-in; COLL-2 constructors missing (vehicles, characters) |
 | [animation-characters](animation-characters.md) | IN_PROGRESS | ANIM-3 blending; ANIM-10 slot bookkeeping; ANIM-11 model folders |
 | [input](input.md) | DONE (lab, mapping) | INPUT-2 readers of input slots 16/17 |
-| [abilities-detective](abilities-detective.md) | NOT_STARTED | detective classes and their ObjectTriggered events (SCRIPT-111) |
+| [abilities-detective](abilities-detective.md) | IN_PROGRESS | DETECT-2 first point never enabled (Doorlock script waits); DETECT-1 use-state approach; DETECT-4 particles, fades, flight |
 | [abilities-scanner](abilities-scanner.md) | NOT_STARTED | sound scanner class and its scanner scripts (SCRIPT-111) |
 
 ## Level objects

@@ -40,8 +40,9 @@ const std::vector<std::string> kDisabledAtStart = {
     "Fast_Travel_Ferry", "GrappleGun", "Police_Plaque_Floor", "Race01EndBanner", "Race01StartBanner", "Trampoline_03",
     "Trampoline_06", "Trampoline_07",
 };
-// In the same list, but nothing in the level data hides them: detective X-spots that have no collision (open item).
-const std::vector<std::string> kNotExplained = {"1-2_Dtv_DogPath_XSpot", "1-3_Dtv_BrickSpot_XSpot_02"};
+// In the same list but not explained by the level data: none since the detective spot's post-link 0x177a4c hides its RevealSwitch, which
+// covers the X spots 1-2_Dtv_DogPath_XSpot and 1-3_Dtv_BrickSpot_XSpot_02 (docs/re/abilities-detective.md).
+const std::vector<std::string> kNotExplained = {};
 // Co-located twins: the grid read has two entities at the position, flags 0x741 (bit 0 set) and 0x740. The first is the one named here.
 const std::vector<std::string> kTwinDisabled = {"1-2_Dumpster_Open", "1-3_Garage_Key_Switch", "1-5_WireTap_01", "1-5_WireTap_02",
                                                 "1-5_WireTap_03", "1-5_WireTap_04", "Donut_Box", "FP_Warp_01"};
@@ -93,8 +94,9 @@ int main(int argc, char** argv) {
         require(!state.collisionEnabled("Police_Door_02", false) && state.collisionEnabled("Police_Door_02", true), "default collision flag changed");
         std::cout << "level-start: " << state.disabled.size() << " disabled instances\n";
         // Provenance: an exploration script (Python, same control words) disabled 226 names through the startup script alone;
-        // the total of the script and the revealer links is the value this test recorded from the C++ implementation.
-        require(state.disabled.size() == 249, "disabled instance count: " + std::to_string(state.disabled.size()));
+        // the total of the script and the revealer links is the value this test recorded from the C++ implementation (249, plus the three
+        // X spots the RevealSwitch link hides: 1-2_Dtv_DogPath_XSpot, 1-2_Dtv_DogPath_XSpot01, 1-3_Dtv_BrickSpot_XSpot_02).
+        require(state.disabled.size() == 252, "disabled instance count: " + std::to_string(state.disabled.size()));
 
         // Provenance: LEVOBJ-11. The pale disc at the police entrance was the placement Police_Plaque_Floor
         // (props/prop_respawnabledestructible, the Prop_PolicePlaque model lying on the ground); the original hides it at
@@ -114,8 +116,9 @@ int main(int argc, char** argv) {
             }
             require(floorFound && grappleFound && wallDrawn, "Police plaque placements changed");
             std::cout << "level-start: " << hidden << " of " << drawn.size() << " drawable objects hidden at the start\n";
-            // The count is the value recorded from the C++ implementation (the disabled set is pinned against the oracle above).
-            require(hidden == 127, "hidden drawable object count: " + std::to_string(hidden));
+            // The count is the value recorded from the C++ implementation (the disabled set is pinned against the oracle above); 127 plus the
+            // three hidden X spots.
+            require(hidden == 130, "hidden drawable object count: " + std::to_string(hidden));
         }
 
         chase::assets::PlacedObjectState runState = chase::runtime::levelInitialState(level, chase::assets::archiveClassLookup(archive));

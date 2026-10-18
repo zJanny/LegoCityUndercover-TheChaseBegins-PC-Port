@@ -22,7 +22,8 @@ const LevelParam* findParam(const std::vector<LevelParam>& params, std::uint32_t
 }
 
 void hideRevealedObjects(const Level& level, const assets::ClassLookup& classOf, assets::PlacedObjectState& state) {
-    const std::uint32_t links[] = {assets::nameHash("BuilditFinalProp"), assets::nameHash("PropToReveal"), assets::nameHash("RevealObject")};
+    const std::uint32_t links[] = {assets::nameHash("BuilditFinalProp"), assets::nameHash("PropToReveal"), assets::nameHash("RevealObject"),
+                                   assets::nameHash("RevealSwitch")};
     std::map<std::uint32_t, std::string> instanceByHash;
     for (const LevelObject& object : level.objects) instanceByHash[assets::nameHash(object.instance)] = lower(object.instance);
     for (const LevelObject& object : level.objects) {

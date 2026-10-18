@@ -32,6 +32,7 @@
 #include "runtime/clip_planes.hpp"
 #include "runtime/collision.hpp"
 #include "runtime/debug_metrics.hpp"
+#include "runtime/detective.hpp"
 #include "runtime/level_start.hpp"
 #include "runtime/pad.hpp"
 #include "runtime/prop_animation.hpp"
@@ -124,6 +125,11 @@ private:
     std::vector<chase::runtime::SoundCall> updateBuildits(const float playerPosition[3]);
     std::vector<chase::frontend::MinimapMarker> activeMapMarkers() const;
     void updateCarry(const float playerPosition[3]);
+    void loadDetective(chase::assets::FuseArchive& archive);
+    void updateDetective(float dt, bool actionFree, const std::function<void(const chase::runtime::SoundCall&)>& emit);
+    int detectiveClip(int role) const;
+    void drawFootprints();
+    void logDetectiveStates();
     void updateLevelCharacters(float dt);
     void updateFollowCamera(float dt);
     void loadBoardingVehicles(const std::map<std::string, std::pair<std::size_t, chase::render::Mat4>>& placedInstances);
@@ -213,6 +219,10 @@ private:
     game_prop_parts::PropParts propParts;
     chase::runtime::CarrySet carry;
     game_carry::HeldObjects heldObjects;
+    chase::runtime::DetectiveSet detective;
+    std::optional<chase::runtime::DetectiveRoles> detectiveRoles;
+    std::vector<std::size_t> footprintInstances;
+    std::vector<int> loggedDetectiveStates;
     std::optional<chase::runtime::VehicleBoarding> boarding;
     std::vector<chase::runtime::BoardingVehicle> boardingVehicles;
     std::vector<std::size_t> boardingRecords;
