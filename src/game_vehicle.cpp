@@ -119,7 +119,7 @@ void LevelSession::driveVehicles(float dt) {
         runtime::VehicleWorldBody body{i, &drive.rigid, &drive.drivetrain, &drive.awake, &scaled.back(), runtime::bodyInputs(command), floors.back() ? &*floors.back() : nullptr, &drive.wheels};
         body.controls.driver = driven;
         body.destroyed = record.destroyed;
-        if (driven) body.impact = [this, i](float speed, const runtime::ContactOther& other) { vehicleImpact(i, speed, other); };
+        if (driven) body.impact = [this, i](float speed, const runtime::ContactOther& other, const runtime::Vector3& point) { vehicleImpact(i, speed, other, point); };
         runtime::tickVehicleDamage(record, dt);
         bodies.push_back(body);
         members.push_back(i);
@@ -165,9 +165,10 @@ void LevelSession::smashProps(std::size_t vehicleIndex) {
     smashing.nodeBounds = drive.nodeBounds;
     smashing.entityBox = runtime::SmashBox{{vehicle.boxCentre[0], vehicle.boxCentre[1], vehicle.boxCentre[2]}, {vehicle.boxHalf[0], vehicle.boxHalf[1], vehicle.boxHalf[2]}};
     std::copy(drive.rigid.velocity.begin(), drive.rigid.velocity.end(), smashing.velocity);
-    for (const std::string& name : propSmasher.smash(smashing, objectState)) {
-        objectState.disabled.insert(lowerCase(name));
-        std::cout << "prop " << name << ": smashed by " << vehicle.instance << " at update " << updatesForLog << '\n';
+    for (const runtime::SmashedProp& smashed : propSmasher.smash(smashing, objectState)) {
+        objectState.disabled.insert(lowerCase(smashed.instance));
+        std::cout << "prop " << smashed.instance << ": smashed by " << vehicle.instance << " at update " << updatesForLog << '\n';
+        propDestroyedEffects(smashed);
     }
 }
 
@@ -248,10 +249,14 @@ void LevelSession::handleBoardingEvents(const std::vector<runtime::BoardingEvent
     }
 }
 
-void LevelSession::vehicleImpact(std::size_t vehicleIndex, float speed, const runtime::ContactOther& other) {
+void LevelSession::vehicleImpact(std::size_t vehicleIndex, float speed, const runtime::ContactOther& other, const runtime::Vector3& point) {
     runtime::VehicleRecord& record = *levelScripts.vehicles().mutableRecord(boardingRecords[vehicleIndex]);
     const runtime::ContactReply reply = runtime::vehicleContactReply(record, speed, other);
-    if (reply.brickBurst) std::cout << "vehicle " << record.instance << ": contact at " << speed << " m/s, brick burst of " << reply.brickCount << " (stand-in: no bricks)\n";
+    if (reply.brickBurst) {
+        std::cout << "vehicle " << record.instance << ": contact at " << speed << " m/s, brick burst (super brick value " << reply.superBrickValue
+                  << " not used: VEH-S103) at update " << updatesForLog << '\n';
+        vehicleBrickBurst(vehicleIndex, point);
+    }
     if (reply.damage) applyVehicleDamage(vehicleIndex, *reply.damage, speed);
 }
 

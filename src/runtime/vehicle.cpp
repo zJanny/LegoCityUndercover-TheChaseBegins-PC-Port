@@ -1,6 +1,7 @@
 #include "runtime/vehicle.hpp"
 
 #include "assets/object_classes.hpp"
+#include "runtime/debris.hpp"
 #include "runtime/level_start.hpp"
 #include "runtime/vehicle_drive.hpp"
 
@@ -8,6 +9,7 @@
 #include <cctype>
 #include <cstdio>
 #include <cstring>
+#include <utility>
 
 namespace chase::runtime {
 namespace {
@@ -64,6 +66,15 @@ void readParameters(const ParamReader& reader, const std::vector<VehicleTableRow
     const float override = floatOf(reader.get("HealthOverride"), -1.0f);
     if (override > 0.0f) record.health = record.hearts = std::uint8_t(std::int32_t(override));
     record.bumpCollision = reader.flag("BumpCollision");
+    for (auto [name, colour] : {std::pair{"DebrisColour", &record.debrisColour}, std::pair{"DebrisColour2", &record.debrisColour2}})
+        if (const assets::LevelParam* value = reader.get(name))
+            if (value->type == 2 && !value->blocks.empty() && value->blocks[0].size() >= 12) {
+                std::array<float, 3> rgb{};
+                std::memcpy(rgb.data(), value->blocks[0].data(), 12);
+                *colour = debrisColourOf(rgb);
+            }
+    if (const float amount = floatOf(reader.get("DebrisAmount"), 0.0f); amount > 0.0f) record.debrisAmount = unsigned(std::int32_t(amount) & 0xff);
+    record.debrisRatio = floatOf(reader.get("DebrisRatio"), 0.0f);
     setBit(record.flags311, kVehicleInvulnerable, reader.flag("Invulnerable"));
     setBit(record.flags311, kVehicleCameraOverride, reader.flag("ATTR_CameraOverride"));
     record.topSpeed = floatOf(reader.get("TopSpeed"), 0.0f);

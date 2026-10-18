@@ -80,6 +80,12 @@ struct VehicleRecord {
     std::uint8_t healthPoints = 100;   // +0x30c: the part of the current heart, 0x1797c4 message 0 takes it down
     float hitCooldown = 0;             // +0x304: seconds in which a heart is lost only once (0x3745a4)
     float debrisCooldown = 0;          // +0x308: seconds between two brick bursts of a contact (0x3745c4)
+    std::uint8_t flashCounter = 15;    // +0x30f: the hit flash (0x18cca0), 15 when idle (0x23edc8)
+    bool flashWhite = false;           // 0x230ae8 has turned the materials of the node tree into mode 3 (constant white)
+    std::uint32_t debrisColour = 0xffffffffu;   // class value DebrisColour (0x179e88): r, g, b, a bytes
+    std::uint32_t debrisColour2 = 0xffff00ffu;  // class value DebrisColour2 (0x179f30); r 255, g 0, b 255 is "none"
+    unsigned debrisAmount = 6;         // class value DebrisAmount when above 0: the bricks of the break (0x16cccc -> 0x23aebc -> 0x20c938)
+    float debrisRatio = 0;             // class value DebrisRatio (0x20c938)
     bool destroyed = false;            // entity word +0xc bit 0x10 (0x23cd80)
     bool bumpCollision = false;        // class value BumpCollision: body flag +0xc4 bit 0x10000 (0x159bd0)
     std::array<float, 3> driverPosition = {0, 0, 0};  // +0x27c

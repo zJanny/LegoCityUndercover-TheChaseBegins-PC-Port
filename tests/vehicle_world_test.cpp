@@ -314,7 +314,7 @@ int real(const char* fib, const char* names) {
     std::vector<VehicleWorldBody> bodies(2);
     bodies[0] = {0, &trooperBody, &trooperDrive, &trooperAwake, &trooperRecord, held, &trooperFloor, nullptr};
     int impacts = 0;
-    bodies[0].impact = [&impacts](float, const ContactOther& other) {
+    bodies[0].impact = [&impacts](float, const ContactOther& other, const Vector3&) {
         if (other.entity) ++impacts;
     };
     // The parked worker (SpawnParked, state 4) gets the hand brake of 0x23019c and has no driver (body flag +0xc4 = 0x8003, bit 3 clear).

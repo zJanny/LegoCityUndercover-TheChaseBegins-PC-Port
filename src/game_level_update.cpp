@@ -246,6 +246,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         return;
     }
     particles.update(dt);
+    stepVehicleFlashes();
     const auto emit = [&](const runtime::SoundCall& call) {
         soundLog.emplace_back(updates, call.id);
         if (shared.audio) shared.audio->play(call);
@@ -287,6 +288,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
              studs.update(dt, runtime::studPickupPoint(player->motion.x, player->vertical.y, player->motion.z,
                                                        runtime::headingRadians(player->motion.facing))))
             player->sounds.push_back(runtime::studCollectCall(collected, studs.studs()[collected.index].centre));
+        effects.update(dt, {follow->eye()[0], follow->eye()[1], follow->eye()[2]});
         for (const runtime::SoundCall& call : player->sounds) emit(call);
         if (hud)
             for (const runtime::StudBanked& banked : studs.takeBanked()) hud->studsBanked(unsigned(banked.kind), banked.total);

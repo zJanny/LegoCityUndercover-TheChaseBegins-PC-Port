@@ -93,6 +93,11 @@ public:
     bool instanceVisible(std::size_t instance) const;
     // HUD-S70: the node alpha and colour of a node tween (0x21b7cc with flags 3, value 0..1) multiply the instance's colour and alpha.
     void setInstanceFade(std::size_t instance, float fade);
+    // STAND-IN VEH-S100: the node colour of 0x23e110 (mesh node key 1, node +0x118) multiplies the fragment colour; where the original's draw
+    // applies it is not read.
+    void setInstanceTint(std::size_t instance, const std::array<float, 3>& tint);
+    // 0x230ae8: the instance is drawn with the materials of assets::whiteMaterialPart while set.
+    void setInstanceWhiteMaterials(std::size_t instance, bool white);
     std::size_t missingTextures() const;
     std::size_t instances() const;
 

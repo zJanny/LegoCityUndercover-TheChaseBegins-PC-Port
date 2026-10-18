@@ -27,6 +27,7 @@ public:
     void draw(const chase::render::Mat4& view, const chase::render::Mat4& viewProjection);
     void releaseGl() { renderer_.reset(); }
     chase::runtime::ParticleSystem& system() { return *system_; }
+    chase::runtime::GameRandom& random() { return random_; }
 
 private:
     chase::runtime::GameRandom random_{kStandInSeed};

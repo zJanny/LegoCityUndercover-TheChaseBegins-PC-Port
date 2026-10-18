@@ -8,7 +8,7 @@ uniform bool lightingOn; uniform vec3 globalAmbient; uniform int lightCount; uni
 uniform vec3 lightDiffuse[8]; uniform vec3 lightAmbient[8]; uniform vec3 lightSpecular[8]; uniform vec3 lightVector[8];
 uniform int lightFlags[8]; uniform float lightDistanceScale[8];
 uniform uvec4 lutDistribution[64]; uniform uvec4 lutSpot[64]; uniform uvec4 lutDistance[64];
-uniform float instanceFade;
+uniform float instanceFade; uniform vec3 instanceTint;
 uniform bool fogOn; uniform vec3 fogColour; uniform vec2 fogProjection; uniform uint fogLut[128];
 out vec4 fragColour;
 
@@ -148,7 +148,7 @@ void main() {
         float shade = 1.0;
         if (hasNormal && dot(vNormal, vNormal) > 0.0)
             shade = 0.45 + 0.55 * max(dot(normalize(vNormal), normalize(vec3(0.4, 0.8, 0.45))), 0.0);
-        fragColour = vec4(applyFog(min(c.rgb * shade * brightness, vec3(1.0))) * instanceFade, instanceFade);
+        fragColour = vec4(applyFog(min(c.rgb * instanceTint * shade * brightness, vec3(1.0))) * instanceFade, instanceFade);
         return;
     }
     vec4 fragPrimary, fragSecondary;
@@ -170,5 +170,5 @@ void main() {
         previous = vec4(rgb, a);
     }
     if (alphaReference >= 0.0 && !(previous.a > alphaReference)) discard;
-    fragColour = vec4(applyFog(min(previous.rgb * brightness, vec3(1.0))) * instanceFade, previous.a * instanceFade);
+    fragColour = vec4(applyFog(min(previous.rgb * instanceTint * brightness, vec3(1.0))) * instanceFade, previous.a * instanceFade);
 }

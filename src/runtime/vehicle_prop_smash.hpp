@@ -7,6 +7,7 @@
 // health halfword (record +0x10, the `WobbleHealth` parameter) and for a health at or below 0 destroys the entity (0x23cd80). No SDL dependency.
 #include "assets/assets.hpp"
 #include "assets/object_collision.hpp"
+#include "runtime/prop_destroy.hpp"
 
 #include <array>
 #include <cstdint>
@@ -57,13 +58,19 @@ SmashOutcome applySmashDamage(std::int16_t health);
 
 // The wobbly props of a level (class leprops/leprop_wobblydestructible, handler type 119) and their health. STAND-IN VEH-S88: an object with other
 // classes is not smashed; the grid entry's shape is the entity box (a mesh entry's shape differs); the destroyed entity is reported by name and
-// the caller treats it as disabled (the original deletes it, 0x23cd80, and spawns bricks and dust, PART-1).
+// the caller treats it as disabled (the original deletes it, 0x23cd80).
+struct SmashedProp {
+    std::string instance;
+    SmashableProp prop;
+    PropDestroyEffects effects;  // message 1 of the destroyed entity (0x1f8948, 0x2aa5c8)
+};
+
 class VehiclePropSmasher {
 public:
     void load(const assets::Level& level, const assets::ClassLookup& classOf, const std::vector<assets::ObjectCollision>& placed);
     // Runs the query for one vehicle; returns the instances destroyed by it. Props whose entity is disabled or without collision flag 0x200 are
     // not found by the query layer.
-    std::vector<std::string> smash(const SmashingVehicle& vehicle, const assets::PlacedObjectState& state);
+    std::vector<SmashedProp> smash(const SmashingVehicle& vehicle, const assets::PlacedObjectState& state);
     std::size_t propCount() const { return props_.size(); }
 
 private:
@@ -71,6 +78,7 @@ private:
         std::string instance;
         bool collisionDefault = true;
         SmashableProp prop;
+        PropDestroyEffects effects;
         bool destroyed = false;
     };
     std::vector<Entry> props_;

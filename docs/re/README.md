@@ -36,6 +36,7 @@ Read this index, then open only the file you need.
 | [save-format-state.md](save-format-state.md) | Level state blocks, unlock bits, object records, where Continue starts, the save request chain and slot row fields |
 | [ui-layouts.md](ui-layouts.md) | `.bxaml` UI layouts and storyboards |
 | [fmv.md](fmv.md) | Mobiclip `.moflex` video and subtitles |
+| [debris.md](debris.md) | Brick debris of vehicle contacts, destroyed props and the car break (dropped pickup records, Debris01..20), the hit flash of a vehicle, its smoke emitter, oracle traces |
 | [particles.md](particles.md) | `particledefs.bprt` definitions and the particle runtime: start entry, emitter update, particle init and step, quad draw state, callers, oracle check |
 | [scripts.md](scripts.md) | Level scripts (section +0x18), the script executor 0x234204 and its words, the per-update runner, EnableObject / EnableCollision, the `startup` script, the revealer links, the start state of placed objects; runtime entries: [scripts-runtime.md](scripts-runtime.md) |
 | [scripts-runtime.md](scripts-runtime.md) | Trigger records and bound switches, the police entrance, WarningDialogBox / PositionObject / FadeScreen, a live script thread of the original |

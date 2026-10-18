@@ -272,6 +272,8 @@ LevelSession::LevelSession(const Shared& sharedState)
     buildits.load(archive, level, classOf);
     std::cout << "build-its: " << buildits.objects().size() << '\n';
     propParts.loadBuildits(scene, archive, buildits, placedObjects, placedSceneIndex);
+    effects.load(scene, archive, particles.random());
+    std::cout << "debris objects: " << effects.debrisInstances() << '\n';
     carry.load(archive, level, classOf);
     if (player) game_carry::applyClipTimings(carry, *player);
     std::cout << "carry objects: " << carry.objects().size() << ", carry targets: " << carry.targets().size() << '\n';
@@ -391,6 +393,7 @@ void LevelSession::draw(int width, int height) {
     for (std::size_t i = 0; i < waypointObjects.size(); ++i)
         shownWaypoints[i] = objectives.waypointActive(game_doors::lowerCase(waypointObjects[i].instance)) && roomShown(runtime::roomNumber(waypointObjects[i].room));
     propParts.apply(scene, buildits, placedObjects, placedSceneIndex, shownPlaced, shownWaypoints, badgeFades);
+    effects.apply(scene);
     drawFootprints();
     if (skyInstance) {
         const float lift = player && seaHeight ? runtime::skyLift(player->vertical.y, *seaHeight) : 0.0f;

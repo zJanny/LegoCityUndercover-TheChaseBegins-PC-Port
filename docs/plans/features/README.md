@@ -23,14 +23,14 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | [level-objects-carry](level-objects-carry.md) | IN_PROGRESS | LEVOBJ-75 release of the box; LEVOBJ-30 attach update; LEVOBJ-31 locomotion while carrying; LEVOBJ-32 sounds and effects |
 | [doors](doors.md) | IN_PROGRESS | DOOR-1 script-requested doors stay closed (needs SCRIPT-7); DOOR-3 open-door box |
 | [studs](studs.md) | IN_PROGRESS | STUD-1 magnet and multiplier; STUD-4 groups (needs SCRIPT-1) |
-| [particles](particles.md) | IN_PROGRESS | PART-2 nothing starts emitters; PART-3 `particles` level object; PART-5 update trace |
+| [particles](particles.md) | IN_PROGRESS | PART-2 script natives and most callers start no emitters; PART-3 `particles` level object; PART-5 update trace |
 
 ## Vehicles
 
 | Feature | Status | Top open items |
 |---|---|---|
 | [vehicles](vehicles.md) | IN_PROGRESS | VEH-7 driving collision; VEH-21 driving details; VEH-10 sounds |
-| [vehicles-damage](vehicles-damage.md) | IN_PROGRESS | VEH-121 break effects (needs PART-2); VEH-120 rest of the return; VEH-122 break of vehicles not driven |
+| [vehicles-damage](vehicles-damage.md) | IN_PROGRESS | VEH-123 super bricks; VEH-125 debris line tests; VEH-121 rest of the break effects; VEH-120 rest of the return |
 | [vehicles-physics](vehicles-physics.md) | IN_PROGRESS | VEH-42 inertia; VEH-50 air control; VEH-54 jump-out braking |
 | [vehicles-physics-collision](vehicles-physics-collision.md) | IN_PROGRESS | VEH-102 sphere contact at a wall; VEH-70 Bullet contact details; VEH-91 vehicle activation |
 | [vehicles-boarding](vehicles-boarding.md) | IN_PROGRESS | VEH-19 boarding gates and exit probes; VEH-20 boarding state reactions; VEH-80 head icons |

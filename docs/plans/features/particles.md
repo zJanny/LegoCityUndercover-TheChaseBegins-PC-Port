@@ -6,7 +6,7 @@
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-18T09:41:20+02:00. Emitters and particles run with the original's rules and are drawn in `chase-game`; the first quad of a siren-light emitter equals the oracle bit for bit. Nothing in the game starts an emitter yet: the development option `--particle "DEFINITION X Y Z"` is the only caller.
+IN_PROGRESS, updated 2026-10-18T09:41:20+02:00. Emitters and particles run with the original's rules and are drawn in `chase-game`; the first quad of a siren-light emitter equals the oracle bit for bit. The game starts two kinds of emitters: the smoke of a vehicle that loses a heart (0x22a124) and the `ExplosionParticleDef` of a destroyed prop (0x2aa5c8); the development option `--particle "DEFINITION X Y Z"` starts any definition.
 
 ## 3. Verified behaviour
 
@@ -24,7 +24,7 @@ IN_PROGRESS, updated 2026-10-18T09:41:20+02:00. Emitters and particles run with 
 
 ## 5. Open items
 
-- [ ] PART-2 — Nothing starts emitters: the script natives (`PlayParticlesGO`, `EffectPlayParticles`, `EffectAttachParticles`, `EffectAttachParticlesOffset`, `EffectAttachParticlesToPath`), the vehicle effects (smoke 0x22a124 with ids 0x11e / 0x11f, lights) and the other callers of 0x23de24 (about 70 sites) are not ported. blocks: SCRIPT-38, PART-3, VEH-104, VEH-121. evidence: [particles.md §2026-10-18T09:40](../../re/particles.md#ts-20261018-094004).
+- [ ] PART-2 — Most callers do not start emitters: the script natives (`PlayParticlesGO`, `EffectPlayParticles`, `EffectAttachParticles`, `EffectAttachParticlesOffset`, `EffectAttachParticlesToPath`), the vehicle's other emitter slots (+0x2ac, +0x2c4) and the other callers of 0x23de24 (about 68 sites); the vehicle smoke 0x22a124 and the prop explosion of 0x2aa5c8 are ported. blocks: SCRIPT-38, PART-3. evidence: [particles.md §2026-10-18T09:40](../../re/particles.md#ts-20261018-094004).
 - [ ] PART-3 — The level object class `particles` (constructor 0x1a7f30, handlers 0x1a8394 and 0x1a7d30: `ParticleDef`, `ReTriggerTime`, `TimeRandomiser`, damage, sound, spawn point or path) is read only in outline; port it with its trigger and damage rules. needs: PART-2. evidence: [particles.md §2026-10-18T09:40](../../re/particles.md#ts-20261018-094004).
 - [ ] PART-4 — Parent nodes and rooms: spawner modes 1 and 2 with a parent object, the room lookup (`*0x376c78`, 0x239838), the visibility removal and bounds of 0x20db0c, E+0x148 / +0x160 / +0x164 and the callback owner. blocks: PART-S2. evidence: [particles.md §2026-10-18T09:40](../../re/particles.md#ts-20261018-094004).
 - [ ] PART-5 — The update and step have no recorded trace: only the init is compared with the oracle. Record a young emitter (a driving car's smoke, a siren light being created) for many updates with `memtrace` and replay it with the recorded frame times. evidence: [particles.md §2026-10-18T09:40](../../re/particles.md#ts-20261018-094004).

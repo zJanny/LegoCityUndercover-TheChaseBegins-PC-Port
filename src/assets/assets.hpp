@@ -219,6 +219,9 @@ struct MaterialState {
     bool fogged = true;              // 0x1292fc: fog applies unless material byte 0xb bit 6 is set or byte 9 (blend destination index) is 1
 };
 MaterialState materialState(const ModelPart& part);
+// 0x230ae8 with argument 1 and colour 0xffffffff (the hit flash of a vehicle): mode byte 1 = 3 (constant white), bytes 0x10..0x12 = 255, the
+// texture count (byte 10 bits 3..5) cleared and byte 0xb bit 7 set. The part keeps only the material, its extra block and the texture slots.
+ModelPart whiteMaterialPart(const ModelPart& part);
 
 unsigned vertexFlags(const std::uint8_t* material);
 // Byte stride implied by a flag mask; throws for the unrecovered flag-1 layout.

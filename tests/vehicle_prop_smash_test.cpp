@@ -109,14 +109,24 @@ void real(const char* fib, const char* names) {
     expect(smasher.propCount() == 281, "281 wobbly props of lvl_01 register a box (the rest registers a mesh)", double(smasher.propCount()));
     const assets::PlacedObjectState untouched;
     int firstSmash = -1, smasherRow = -1;
+    PropDestroyEffects phoneBoxEffects;
     for (const Recorded& recorded : kRows) {
         trooper.node = recorded.node;
         if (vehicleSmashPassRuns(trooper) && vehicleSmashesProp(trooper, prop) && firstSmash < 0) firstSmash = recorded.row;
-        for (const std::string& name : smasher.smash(trooper, untouched))
-            if (name == "Phone_Box_01" && smasherRow < 0) smasherRow = recorded.row;
+        for (const SmashedProp& smashed : smasher.smash(trooper, untouched))
+            if (smashed.instance == "Phone_Box_01" && smasherRow < 0) {
+                smasherRow = recorded.row;
+                phoneBoxEffects = smashed.effects;
+            }
     }
     expect(firstSmash + 1 == kFirstRowWithSmash, "the first node matrix that touches the phone box is row 18; the oracle shows the smash one update later (the pass runs before the node moves)", double(firstSmash));
     expect(smasherRow == firstSmash, "the smasher destroys the phone box (WobbleHealth 4 from the level data) at the same row", double(smasherRow));
+    expect(phoneBoxEffects.explosionParticle == 10 && phoneBoxEffects.spawnDebris && phoneBoxEffects.debrisAmount == 6 && phoneBoxEffects.respawn,
+           "Phone_Box_01 (lvl_01 and leprop_wobblydestructible values): ExplosionParticleDef 10, SpawnDebris 1, DebrisAmount 6, Respawn 1",
+           double(phoneBoxEffects.explosionParticle));
+    expect(phoneBoxEffects.colour == 0xff818181u && phoneBoxEffects.secondColour == 0xff00bedfu && phoneBoxEffects.ratio == 0.0f,
+           "its DebrisColour (129, 129, 129) and DebrisColour2 (223, 190, 0) with DebrisRatio 0 (level data, 0x20c938 byte order r, g, b, a)",
+           double(phoneBoxEffects.colour));
 }
 
 }  // namespace

@@ -7,6 +7,7 @@
 #include "runtime/vehicle_box_contact.hpp"
 #include "runtime/vehicle_collision.hpp"
 
+#include <array>
 #include <cstdint>
 #include <optional>
 
@@ -53,8 +54,8 @@ struct ContactOther {
 };
 
 struct ContactReply {
-    bool brickBurst = false;
-    int brickCount = 0;  // the byte of the particle descriptor, 1 to 3
+    bool brickBurst = false;     // 0x229fb8: kDebrisDefaultCount bricks at the contact point (runtime/debris.hpp)
+    int superBrickValue = 0;     // 0x179e3c..0x179e64: byte +5 of the block {vehicle, 0x67, value, 6} handed to 0x229fb8, 1 to 3 (super bricks, 0x2c8278)
     std::optional<DamageMessage> damage;
     bool impactSound = false;  // speed above 3: the vehicle's sound at record +0x28 (0x229ef0, 0x229e80)
 };
@@ -75,5 +76,24 @@ DamageOutcome vehicleDamage(VehicleRecord& record, const DamageMessage& message,
 
 // End of the vehicle update 0x1571dc (0x157430): both cool-downs count down by the update's time and stop at 0.
 void tickVehicleDamage(VehicleRecord& record, float dt);
+
+// 0x18cca0: the node colour of the flash counter n (1 to 15): r 255, g and b ((|n - 8| x 32) & 0xff) | 0x1f, a 255.
+std::uint32_t vehicleFlashColour(std::uint8_t counter);
+
+struct VehicleFlashStep {
+    std::optional<std::uint32_t> colour;  // 0x23e110 on the vehicle node tree (recursive)
+    bool restoreMaterials = false;        // 0x230ae8 with 0: the node tree's materials are the model's again
+};
+
+// The end of the vehicle update 0x1aff24 (0x1b02b0..0x1b034c): 0x18cca0 counts +0x30f up to 15 and sets the node colour, then a counter of 2
+// restores the materials that the hit turned white.
+VehicleFlashStep stepVehicleFlash(VehicleRecord& record);
+
+// 0x22a124: the smoke emitter of a hit sits at the entity box centre (entity +0x60) in the node's world matrix plus the node's row 2 times
+// 0.85 x the box half extent z (entity +0x74). `node` is row major with the translation in row 3.
+std::array<float, 3> vehicleSmokePosition(const std::array<float, 3>& boxCentre, float boxHalfZ, const std::array<float, 16>& node);
+// 0x22a124 stops the previous smoke emitter with a fade of 0.1 s (0x3dcccccd); message 1 (0x17a318) stops it with 0.5 s (0x17a5f8).
+constexpr float kVehicleSmokeReplaceFade = 0.1f;
+constexpr float kVehicleSmokeDestroyFade = 0.5f;
 
 }

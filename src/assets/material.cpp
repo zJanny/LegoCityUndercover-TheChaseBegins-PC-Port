@@ -39,6 +39,21 @@ std::uint32_t packedColour(const std::uint8_t* material) {
 }
 }
 
+ModelPart whiteMaterialPart(const ModelPart& part) {
+    ModelPart out;
+    out.flags = part.flags;
+    out.textures = part.textures;
+    out.material = part.material;
+    out.materialExtra = part.materialExtra;
+    out.textureSlots = part.textureSlots;
+    if (out.material.size() < 0x60) return out;
+    out.material[1] = 3;
+    for (std::size_t i = 0x10; i < 0x13; ++i) out.material[i] = 0xff;
+    out.material[10] = std::uint8_t(out.material[10] & 0xc7);
+    out.material[0xb] = std::uint8_t(out.material[0xb] | 0x80);
+    return out;
+}
+
 MaterialState materialState(const ModelPart& part) {
     MaterialState out;
     if (part.material.size() < 0x60) return out;

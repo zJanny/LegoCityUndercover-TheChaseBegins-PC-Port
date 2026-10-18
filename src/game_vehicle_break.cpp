@@ -10,6 +10,7 @@ void LevelSession::applyVehicleDamage(std::size_t vehicleIndex, const runtime::D
     runtime::VehicleRecord& record = *levelScripts.vehicles().mutableRecord(boardingRecords[vehicleIndex]);
     const runtime::DamageOutcome outcome = runtime::vehicleDamage(record, message, true);
     if (!outcome.heartLost) return;
+    vehicleDamageEffects(vehicleIndex, outcome);
     std::cout << "vehicle " << record.instance << ": heart lost (type " << unsigned(message.type) << ", " << speed << " m/s), " << unsigned(record.hearts)
               << " left" << (outcome.destroyed ? ", destroyed" : "") << '\n';
     if (hud) hud->setHearts(record.hearts, true);
@@ -44,8 +45,9 @@ void LevelSession::breakVehicleNode(std::size_t vehicleIndex) {
     drive.wreck = runtime::breakVehicle(boardingVehicles[vehicleIndex].matrix, wheels, breakRandomStandIn);
     drive.stuck = {};
     levelScripts.vehicles().requestState(boardingRecords[vehicleIndex], runtime::kVehicleStateDestroyed);
+    vehicleBreakBurst(vehicleIndex);
     std::cout << "vehicle " << boardingVehicles[vehicleIndex].instance << ": broken at update " << updatesForLog
-              << " (stand-in VEH-S98: no effect 0x23aebc, no sound, no wheel fade 0x29cf70, wheel ray instead of 0x21ab20)\n";
+              << " (stand-in VEH-S98: no sound, no wheel fade 0x29cf70, wheel ray instead of 0x21ab20)\n";
 }
 
 bool LevelSession::stepVehicleWreck(std::size_t vehicleIndex, float dt) {

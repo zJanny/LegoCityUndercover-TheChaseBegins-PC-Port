@@ -61,7 +61,7 @@ void brickBursts() {
     VehicleRecord record = trooper();
     expect(!vehicleContactReply(record, 10.0f, {}).brickBurst, "10 m/s is not above the burst speed");
     ContactReply slow = vehicleContactReply(record, 12.0f, {});
-    expect(slow.brickBurst && slow.brickCount == 1 && !slow.damage, "12 m/s: one brick burst of 1, no damage");
+    expect(slow.brickBurst && slow.superBrickValue == 1 && !slow.damage, "12 m/s: one brick burst with the super brick value 1, no damage");
     expect(record.debrisCooldown == kVehicleDebrisCooldown, "the burst starts the 1 s cool-down");
     expect(!vehicleContactReply(record, 30.0f, {}).brickBurst, "no second burst in the cool-down");
     tickVehicleDamage(record, 0.5f);
@@ -69,9 +69,9 @@ void brickBursts() {
     tickVehicleDamage(record, 0.6f);
     expect(record.debrisCooldown == 0.0f, "and stops at 0");
     const ContactReply mid = vehicleContactReply(record, 25.0f, {});
-    expect(mid.brickBurst && mid.brickCount == 2, "25 m/s gives 1 + 2 * 15 / 30 = 2");
+    expect(mid.brickBurst && mid.superBrickValue == 2, "25 m/s gives 1 + 2 * 15 / 30 = 2");
     record.debrisCooldown = 0.0f;
-    expect(vehicleContactReply(record, 90.0f, {}).brickCount == 3, "the burst speed is capped at 40: 3");
+    expect(vehicleContactReply(record, 90.0f, {}).superBrickValue == 3, "the burst speed is capped at 40: 3");
 }
 
 void damageMessage() {
@@ -202,7 +202,48 @@ void pairRule() {
 
 }
 
+void hitFlash() {
+    VehicleRecord record = trooper();
+    expect(record.flashCounter == 15 && !record.flashWhite, "the parameter reader sets +0x30f to 15 (0x23edc8; oracle drv-police-car-seated: 0x0f)");
+    expect(!stepVehicleFlash(record).colour && record.flashCounter == 15, "an idle counter of 15 is left alone (0x18cca0 returns above 0xe)");
+    expect(vehicleFlashColour(1) == 0xffffffffu && vehicleFlashColour(2) == 0xffdfdfffu && vehicleFlashColour(8) == 0xff1f1fffu &&
+               vehicleFlashColour(15) == 0xffffffffu,
+           "0x18cca0: r 255, g = b = ((|n - 8| << 5) & 0xff) | 0x1f, a 255: n 1 white, 2 0xdf, 8 0x1f, 15 white");
+    // Oracle (round 20, request R20-C-2, state veh-smash-car, fixed dt 0.033, B for 60 updates then A until the van broke at update 203): the
+    // van node's colour N+0x118 (bytes r, g, b, a) while +0x30f counted 1 to 15 in updates 203..217.
+    const std::uint32_t recorded[15] = {0xffffffffu, 0xffdfdfffu, 0xffbfbfffu, 0xff9f9fffu, 0xff7f7fffu, 0xff5f5fffu, 0xff3f3fffu, 0xff1f1fffu,
+                                        0xff3f3fffu, 0xff5f5fffu, 0xff7f7fffu, 0xff9f9fffu, 0xffbfbfffu, 0xffdfdfffu, 0xffffffffu};
+    bool same = true;
+    for (unsigned n = 1; n <= 15; ++n) same = same && vehicleFlashColour(std::uint8_t(n)) == recorded[n - 1];
+    expect(same, "the node colour of every counter value equals the oracle's N+0x118");
+    DamageMessage hit;
+    hit.hearts = 1;
+    hit.kind = kVehicleDamageKindContact;
+    vehicleDamage(record, hit, true);
+    expect(record.flashCounter == 0 && record.flashWhite, "a lost heart runs 0x230ae8 (materials white) and zeroes +0x30f (0x179c70, 0x179c78)");
+    VehicleFlashStep step = stepVehicleFlash(record);
+    expect(step.colour == 0xffffffffu && !step.restoreMaterials && record.flashWhite, "update 1: counter 1, colour white, the materials stay white");
+    step = stepVehicleFlash(record);
+    expect(step.colour == 0xffdfdfffu && step.restoreMaterials && !record.flashWhite,
+           "update 2: counter 2 restores the materials (0x1b02c0..0x1b034c) after the colour is set");
+    int updates = 2;
+    while (stepVehicleFlash(record).colour) ++updates;
+    expect(updates == 15 && record.flashCounter == 15,
+           "the counter reaches 15 in 15 updates (oracle drv-police-car-seated, agent A of round 16: +0x30f 1 to 0xf after the hit at row 115)");
+}
+
+void smokePosition() {
+    const std::array<float, 16> turned = {0, 0, -1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 10, 20, 30, 1};
+    const std::array<float, 3> p = vehicleSmokePosition({0.0f, 1.0f, 0.5f}, 2.0f, turned);
+    expect(near(p[0], 10.0f + 0.5f + 1.7f, 1e-5f) && near(p[1], 21.0f, 1e-5f) && near(p[2], 30.0f, 1e-5f),
+           "0x22a124: the box centre through the node matrix plus row 2 times 0.85 x the half extent z (0x2408c4)");
+    expect(kVehicleSmokeReplaceFade == 0.1f && kVehicleSmokeDestroyFade == 0.5f && kVehicleSmokeDamaged == 0x11e && kVehicleSmokeLastHeart == 0x11f,
+           "fades 0x3dcccccd (0x22a124) and 0x17a5f8 = 0.5 (message 1); definitions 0x11e and 0x11f");
+}
+
 int main() {
+    hitFlash();
+    smokePosition();
     constants();
     impactSpeeds();
     brickBursts();

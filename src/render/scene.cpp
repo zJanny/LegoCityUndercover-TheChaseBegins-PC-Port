@@ -118,6 +118,8 @@ void beginFrame(float brightness) {
     glUniform1i(glGetUniformLocation(program, "unit2"), 2);
     glUniform1f(glGetUniformLocation(program, "brightness"), brightness);
     glUniform1f(glGetUniformLocation(program, "instanceFade"), 1.0f);
+    const float noTint[3] = {1, 1, 1};
+    glUniform3fv(glGetUniformLocation(program, "instanceTint"), 1, noTint);
     static const runtime::LightLut distribution = runtime::distributionLut(), spot = runtime::spotLut(), distance = runtime::distanceLut();
     uploadLut(program, "lutDistribution", distribution);
     uploadLut(program, "lutSpot", spot);
@@ -198,6 +200,8 @@ public:
     void setInstanceVisible(std::size_t instance, bool visible) { instances_.at(instance).visible = visible; }
     bool instanceVisible(std::size_t instance) const { return instances_.at(instance).visible; }
     void setInstanceFade(std::size_t instance, float fade) { instances_.at(instance).fade = fade; }
+    void setInstanceTint(std::size_t instance, const std::array<float, 3>& tint) { instances_.at(instance).tint = tint; }
+    void setInstanceWhiteMaterials(std::size_t instance, bool white) { instances_.at(instance).whiteMaterials = white; }
     std::size_t missingTextures() const { return missing_; }
     std::size_t instances() const { return instances_.size(); }
 
@@ -209,6 +213,7 @@ private:
         bool hasMaterial = false;
         bool secondUv = false;
         assets::MaterialState material;
+        assets::MaterialState whiteMaterial;
         GLuint unitTexture[3] = {0, 0, 0};
         float unitFlat[3][4] = {};
         bool unitIsFlat[3] = {false, false, false};
@@ -236,12 +241,14 @@ private:
         bool visible = true;
         bool sky = false;
         float fade = 1.0f;
+        std::array<float, 3> tint{1, 1, 1};
+        bool whiteMaterials = false;
     };
     void drawInstances(const Mat4& viewProjection, bool skyPass) const;
     const TextureInfo& texture(const std::string& name, const std::string& modelDir);
     DrawPart upload(const ModelPart& part, LoadedModel& model);
-    void drawPart(GLuint program, const DrawPart& part, bool culling, bool skyPass) const;
-    void setPartLighting(GLuint program, const DrawPart& part) const;
+    void drawPart(GLuint program, const DrawPart& part, bool culling, bool skyPass, bool white) const;
+    void setPartLighting(GLuint program, const DrawPart& part, bool white) const;
 
     FuseArchive& archive_;
     std::vector<std::string> exclude_;
@@ -380,12 +387,12 @@ void SceneImpl::bounds(float centre[3], float& radius) const {
     }
 }
 
-void SceneImpl::drawPart(GLuint program, const DrawPart& part, bool culling, bool skyPass) const {
-    const MaterialState& m = part.material;
+void SceneImpl::drawPart(GLuint program, const DrawPart& part, bool culling, bool skyPass, bool white) const {
+    const MaterialState& m = white ? part.whiteMaterial : part.material;
     glUniform1i(glGetUniformLocation(program, "stageCount"), part.hasMaterial ? GLint(m.stages.size()) : 0);
     glUniform1i(glGetUniformLocation(program, "hasNormal"), part.hasNormal);
     glUniform1i(glGetUniformLocation(program, "hasSecondUv"), part.secondUv);
-    setPartLighting(program, part);
+    setPartLighting(program, part, white);
     glUniform1f(glGetUniformLocation(program, "alphaReference"), m.alphaTest ? float(m.alphaReference) / 255.0f : -1.0f);
     glUniform1i(glGetUniformLocation(program, "fogOn"), fogActive && part.hasMaterial && m.fogged);
     if (part.hasMaterial) {
@@ -441,9 +448,10 @@ void SceneImpl::drawPart(GLuint program, const DrawPart& part, bool culling, boo
     glDrawElements(GL_TRIANGLES, part.count, GL_UNSIGNED_SHORT, nullptr);
 }
 
-void SceneImpl::setPartLighting(GLuint program, const DrawPart& part) const {
+void SceneImpl::setPartLighting(GLuint program, const DrawPart& part, bool white) const {
+    const std::uint8_t whiteColour[4] = {255, 255, 255, part.colour[3]};
     const runtime::FragmentLighting lighting =
-        part.hasMaterial ? runtime::fragmentLighting(lights_, part.material.lightingKey, part.colour, part.specular, part.doubled)
+        part.hasMaterial ? runtime::fragmentLighting(lights_, part.material.lightingKey, white ? whiteColour : part.colour, part.specular, part.doubled)
                          : runtime::FragmentLighting{};
     glUniform1i(glGetUniformLocation(program, "lightingOn"), lighting.enabled);
     if (!lighting.enabled) return;
@@ -487,6 +495,7 @@ void SceneImpl::drawInstances(const Mat4& viewProjection, bool skyPass) const {
     GLint mvp = glGetUniformLocation(program, "mvp");
     GLint model = glGetUniformLocation(program, "model");
     const GLint fadeLocation = glGetUniformLocation(program, "instanceFade");
+    const GLint tintLocation = glGetUniformLocation(program, "instanceTint");
     const bool culling = glIsEnabled(GL_CULL_FACE);
     for (int pass = 0; pass < 2; ++pass) {
         for (const auto& instance : instances_) {
@@ -495,6 +504,7 @@ void SceneImpl::drawInstances(const Mat4& viewProjection, bool skyPass) const {
             glUniformMatrix4fv(mvp, 1, GL_FALSE, m.data());
             glUniformMatrix4fv(model, 1, GL_FALSE, instance.transform.data());
             glUniform1f(fadeLocation, instance.fade);
+            glUniform3fv(tintLocation, 1, instance.tint.data());
             for (const auto& part : instance.model->parts) {
                 const bool blended = part.hasMaterial && (part.material.blendSource != 1 || part.material.blendDestination != 0);
                 if (blended != (pass == 1)) continue;
@@ -505,12 +515,14 @@ void SceneImpl::drawInstances(const Mat4& viewProjection, bool skyPass) const {
                 } else {
                     glDisable(GL_BLEND);
                 }
-                drawPart(program, part, culling, skyPass);
+                drawPart(program, part, culling, skyPass, instance.whiteMaterials && part.hasMaterial && part.whiteMaterial.supported);
             }
         }
     }
     glDisable(GL_BLEND);
     glUniform1f(fadeLocation, 1.0f);
+    const float noTint[3] = {1, 1, 1};
+    glUniform3fv(tintLocation, 1, noTint);
     glDepthMask(GL_TRUE);
     glDepthFunc(GL_LEQUAL);
     glUniform1i(glGetUniformLocation(program, "stageCount"), 0);
@@ -581,6 +593,7 @@ SceneImpl::DrawPart SceneImpl::upload(const ModelPart& part, LoadedModel& model)
     if (part.material.size() >= 0x60) {
         d.material = materialState(part);
         d.hasMaterial = d.material.supported;
+        d.whiteMaterial = materialState(whiteMaterialPart(part));
         std::copy_n(part.material.begin() + 0x10, 4, d.colour);
         std::copy_n(part.material.begin() + 0x14, 4, d.specular);
         d.doubled = (part.material[0xb] >> 5) & 1;
@@ -647,6 +660,10 @@ void Scene::setInstanceVisible(std::size_t instance, bool visible) { impl_->setI
 bool Scene::instanceVisible(std::size_t instance) const { return impl_->instanceVisible(instance); }
 
 void Scene::setInstanceFade(std::size_t instance, float fade) { impl_->setInstanceFade(instance, fade); }
+
+void Scene::setInstanceTint(std::size_t instance, const std::array<float, 3>& tint) { impl_->setInstanceTint(instance, tint); }
+
+void Scene::setInstanceWhiteMaterials(std::size_t instance, bool white) { impl_->setInstanceWhiteMaterials(instance, white); }
 
 std::size_t Scene::missingTextures() const { return impl_->missingTextures(); }
 

@@ -52,7 +52,7 @@ ContactReply vehicleContactReply(VehicleRecord& record, float speed, const Conta
     if (record.debrisCooldown == 0.0f && speed > kVehicleBrickBurstSpeed) {
         const float capped = std::min(speed, kVehicleBrickSpeedCap);
         reply.brickBurst = true;
-        reply.brickCount = int(std::floor(remapSpeed(kVehicleBrickBurstSpeed, kVehicleBrickSpeedCap, capped, 1.0f, 3.0f)));
+        reply.superBrickValue = int(std::floor(remapSpeed(kVehicleBrickBurstSpeed, kVehicleBrickSpeedCap, capped, 1.0f, 3.0f)));
         record.debrisCooldown = kVehicleDebrisCooldown;
     }
     const bool otherAlive = !other.entity || !other.destroyed;
@@ -88,6 +88,8 @@ DamageOutcome vehicleDamage(VehicleRecord& record, const DamageMessage& message,
     if (message.type != kVehicleDamageTypeScripted) lost = 1;
     record.hitCooldown = kVehicleHitCooldown;
     outcome.heartLost = true;
+    record.flashWhite = true;
+    record.flashCounter = 0;
     if (lost < record.hearts) {
         record.hearts = std::uint8_t(record.hearts - lost);
         record.healthPoints = kVehicleFullHealthPoints;
@@ -105,6 +107,34 @@ DamageOutcome vehicleDamage(VehicleRecord& record, const DamageMessage& message,
 void tickVehicleDamage(VehicleRecord& record, float dt) {
     record.hitCooldown = std::max(record.hitCooldown - dt, 0.0f);
     if (record.debrisCooldown > 0.0f) record.debrisCooldown = std::max(record.debrisCooldown - dt, 0.0f);
+}
+
+std::uint32_t vehicleFlashColour(std::uint8_t counter) {
+    const unsigned n = counter & 0xfu;
+    const unsigned distance = n < 8 ? 8 - n : n - 8;
+    const std::uint32_t v = ((distance << 5) & 0xffu) | 0x1fu;
+    return 0xff0000ffu | (v << 8) | (v << 16);
+}
+
+VehicleFlashStep stepVehicleFlash(VehicleRecord& record) {
+    VehicleFlashStep step;
+    if ((record.flashCounter & 0x7f) <= 0xe) {
+        record.flashCounter = std::uint8_t(record.flashCounter + 1);
+        step.colour = vehicleFlashColour(record.flashCounter);
+    }
+    if (record.flashCounter == 2) {
+        record.flashWhite = false;
+        step.restoreMaterials = true;
+    }
+    return step;
+}
+
+std::array<float, 3> vehicleSmokePosition(const std::array<float, 3>& boxCentre, float boxHalfZ, const std::array<float, 16>& node) {
+    std::array<float, 3> out{};
+    const float reach = boxHalfZ * 0.85f;
+    for (unsigned i = 0; i < 3; ++i)
+        out[i] = boxCentre[0] * node[i] + boxCentre[1] * node[4 + i] + boxCentre[2] * node[8 + i] + node[12 + i] + node[8 + i] * reach;
+    return out;
 }
 
 }

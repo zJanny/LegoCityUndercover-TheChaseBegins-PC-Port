@@ -16,8 +16,8 @@
 namespace chase::runtime {
 
 // The contact message 0x80000002 (0x271764 for Bullet manifold points, 0x181e68 for the floor pass) for one body: the closing speed of the contact
-// (0x19b5c4) and what the other body is.
-using VehicleImpactSink = std::function<void(float speed, const ContactOther& other)>;
+// (0x19b5c4), what the other body is and the contact position (0x1c604c: the floor record +4, or the manifold point +0x30, its world point on A).
+using VehicleImpactSink = std::function<void(float speed, const ContactOther& other, const Vector3& point)>;
 
 struct VehicleWorldBody {
     std::size_t id = 0;  // the broadphase pair order: the body with the lower id is the pair's first

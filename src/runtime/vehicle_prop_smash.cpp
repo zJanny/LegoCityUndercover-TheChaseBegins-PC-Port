@@ -72,12 +72,13 @@ void VehiclePropSmasher::load(const assets::Level& level, const assets::ClassLoo
         prop.prop.node = entry.matrix;
         prop.prop.entityBox = SmashBox{{entry.centre[0], entry.centre[1], entry.centre[2]}, {entry.half[0], entry.half[1], entry.half[2]}};
         prop.prop.health = std::int16_t(std::int32_t(value));
+        prop.effects = propDestroyEffects(*object, *cls);
         props_.push_back(prop);
     }
 }
 
-std::vector<std::string> VehiclePropSmasher::smash(const SmashingVehicle& vehicle, const assets::PlacedObjectState& state) {
-    std::vector<std::string> destroyed;
+std::vector<SmashedProp> VehiclePropSmasher::smash(const SmashingVehicle& vehicle, const assets::PlacedObjectState& state) {
+    std::vector<SmashedProp> destroyed;
     if (!vehicleSmashPassRuns(vehicle)) return destroyed;
     for (Entry& entry : props_) {
         if (entry.destroyed || state.isDisabled(entry.instance) || !state.collisionEnabled(entry.instance, entry.collisionDefault)) continue;
@@ -86,7 +87,7 @@ std::vector<std::string> VehiclePropSmasher::smash(const SmashingVehicle& vehicl
         entry.prop.health = outcome.health;
         if (!outcome.destroyed) continue;
         entry.destroyed = true;
-        destroyed.push_back(entry.instance);
+        destroyed.push_back({entry.instance, entry.prop, entry.effects});
     }
     return destroyed;
 }

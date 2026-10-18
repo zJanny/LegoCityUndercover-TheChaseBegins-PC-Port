@@ -11,6 +11,7 @@
 #include "game_characters.hpp"
 #include "game_cutscene.hpp"
 #include "game_doors.hpp"
+#include "game_effects.hpp"
 #include "game_prop_parts.hpp"
 #include "game_hud.hpp"
 #include "game_options.hpp"
@@ -144,7 +145,14 @@ private:
     void syncVehicleHud();
     void updateHeadIcon(float dt);
     void drawHeadIcon(chase::frontend::Canvas& top);
-    void vehicleImpact(std::size_t vehicleIndex, float speed, const chase::runtime::ContactOther& other);
+    void vehicleImpact(std::size_t vehicleIndex, float speed, const chase::runtime::ContactOther& other, const chase::runtime::Vector3& point);
+    void vehicleBrickBurst(std::size_t vehicleIndex, const chase::runtime::Vector3& point);
+    void vehicleBreakBurst(std::size_t vehicleIndex);
+    void vehicleDamageEffects(std::size_t vehicleIndex, const chase::runtime::DamageOutcome& outcome);
+    void stepVehicleFlashes();
+    void propDestroyedEffects(const chase::runtime::SmashedProp& prop);
+    // STAND-IN VEH-S104: the line tests 0x21ab20 / 0x22b108 of a brick burst are the wheel ray of the collision world, vehicles skipped.
+    chase::runtime::DebrisLineTest debrisLineStandIn() const;
     void applyVehicleDamage(std::size_t vehicleIndex, const chase::runtime::DamageMessage& message, float speed);
     void breakVehicleNode(std::size_t vehicleIndex);
     bool stepVehicleWreck(std::size_t vehicleIndex, float dt);
@@ -189,6 +197,7 @@ private:
     std::vector<std::pair<unsigned, std::uint16_t>> soundLog;
     std::optional<chase::render::StudSprites> studSprites;
     game_particles::LevelParticles particles;
+    game_effects::LevelEffects effects;
     double provisionalStudClockSeconds = 0;
     std::optional<game_player::PlayerRig> player;
     chase::assets::ClassLookup classOf;

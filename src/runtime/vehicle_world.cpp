@@ -71,7 +71,7 @@ void stepVehicleBodies(std::vector<VehicleWorldBody>& bodies, VehiclePairManifol
                 continue;
             }
             if (entry.floor && entry.impact)
-                entry.floor->contactObserver = [&entry](const VehicleRigidBody& rigid, const FloorContact& contact) { entry.impact(floorImpactSpeed(rigid, contact), ContactOther{}); };
+                entry.floor->contactObserver = [&entry](const VehicleRigidBody& rigid, const FloorContact& contact) { entry.impact(floorImpactSpeed(rigid, contact), ContactOther{}, contact.point); };
             std::vector<WheelState> wheels = stepVehiclePhysics(body, drive, *entry.record, entry.controls, woke, ray, kVehicleWorldStep, entry.floor);
             if (entry.floor) entry.floor->contactObserver = nullptr;
             if (entry.lastWheels) *entry.lastWheels = std::move(wheels);
@@ -79,7 +79,7 @@ void stepVehicleBodies(std::vector<VehicleWorldBody>& bodies, VehiclePairManifol
         for (VehicleWorldBody& entry : bodies) {
             if (!*entry.awake || !entry.floor || !entry.floor->boxes) continue;
             const ManifoldPointObserver observer = [&entry](ManifoldPoint& point) {
-                if (entry.impact) entry.impact(manifoldImpactSpeed(*entry.body, true, point, nullptr), ContactOther{});
+                if (entry.impact) entry.impact(manifoldImpactSpeed(*entry.body, true, point, nullptr), ContactOther{}, point.worldA);
                 return false;
             };
             collideVehicleWithBoxes(*entry.body, *entry.floor->boxes, &observer);
@@ -94,8 +94,8 @@ void stepVehicleBodies(std::vector<VehicleWorldBody>& bodies, VehiclePairManifol
                 const auto otherOf = [&](const VehicleWorldBody& entry) { return ContactOther{true, entry.destroyed, true, false}; };
                 const ManifoldPointObserver observer = [&](ManifoldPoint& point) {
                     applyPairContactRule(point, bodies[j], bodies[i]);
-                    if (bodies[j].impact) bodies[j].impact(manifoldImpactSpeed(*bodies[j].body, true, point, bodies[i].body), otherOf(bodies[i]));
-                    if (bodies[i].impact) bodies[i].impact(manifoldImpactSpeed(*bodies[i].body, false, point, bodies[j].body), otherOf(bodies[j]));
+                    if (bodies[j].impact) bodies[j].impact(manifoldImpactSpeed(*bodies[j].body, true, point, bodies[i].body), otherOf(bodies[i]), point.worldA);
+                    if (bodies[i].impact) bodies[i].impact(manifoldImpactSpeed(*bodies[i].body, false, point, bodies[j].body), otherOf(bodies[j]), point.worldA);
                     return false;
                 };
                 collideVehiclePair(*bodies[i].body, *bodies[i].floor->boxes, *bodies[j].body, *bodies[j].floor->boxes, manifold, &observer);
