@@ -14,6 +14,7 @@
 #include "game_prop_parts.hpp"
 #include "game_hud.hpp"
 #include "game_options.hpp"
+#include "game_particles.hpp"
 #include "game_player.hpp"
 #include "render/hud_overlay.hpp"
 #include "render/scene.hpp"
@@ -173,6 +174,7 @@ private:
     chase::runtime::StudField studs;
     std::vector<std::pair<unsigned, std::uint16_t>> soundLog;
     std::optional<chase::render::StudSprites> studSprites;
+    game_particles::LevelParticles particles;
     double provisionalStudClockSeconds = 0;
     std::optional<game_player::PlayerRig> player;
     chase::assets::ClassLookup classOf;

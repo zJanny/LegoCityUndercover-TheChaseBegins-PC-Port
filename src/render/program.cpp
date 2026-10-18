@@ -20,10 +20,10 @@ GLuint compile(GLenum type, const char* source) {
     return shader;
 }
 
-GLuint createSceneProgram() {
+GLuint link(const char* vertex, const char* fragment) {
     GLuint program = glCreateProgram();
-    glAttachShader(program, compile(GL_VERTEX_SHADER, shaders::sceneVertex));
-    glAttachShader(program, compile(GL_FRAGMENT_SHADER, shaders::sceneFragment));
+    glAttachShader(program, compile(GL_VERTEX_SHADER, vertex));
+    glAttachShader(program, compile(GL_FRAGMENT_SHADER, fragment));
     glLinkProgram(program);
     GLint linked = 0;
     glGetProgramiv(program, GL_LINK_STATUS, &linked);
@@ -34,7 +34,12 @@ GLuint createSceneProgram() {
 }
 
 GLuint sceneProgram() {
-    static const GLuint program = createSceneProgram();
+    static const GLuint program = link(shaders::sceneVertex, shaders::sceneFragment);
+    return program;
+}
+
+GLuint particleProgram() {
+    static const GLuint program = link(shaders::particleVertex, shaders::particleFragment);
     return program;
 }
 

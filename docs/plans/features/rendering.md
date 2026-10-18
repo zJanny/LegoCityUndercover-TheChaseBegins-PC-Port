@@ -6,7 +6,7 @@ How `chase_render` (`src/render/scene.*`, used by `chase-viewer` and `chase-game
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-15T17:47:25+02:00. Sky models are drawn (RENDER-37). Combiner setups of all 16122 shipped parts are recovered and run in the shader. Fragment lighting follows the original: level light objects, the per-draw registers of 0x12d884 and the lookup tables of the lighting init (RENDER-1, RENDER-5).
+IN_PROGRESS, updated 2026-10-18T09:41:47+02:00. Particle quads are drawn after the scene (blend, depth state of the original; PART-1). Sky models are drawn (RENDER-37). Combiner setups of all 16122 shipped parts are recovered and run in the shader. Fragment lighting follows the original: level light objects, the per-draw registers of 0x12d884 and the lookup tables of the lighting init (RENDER-1, RENDER-5).
 
 ## 3. Verified behaviour
 
@@ -28,6 +28,8 @@ IN_PROGRESS, updated 2026-10-15T17:47:25+02:00. Sky models are drawn (RENDER-37)
 - RENDER-S7 The fog table interpolation at fragment level follows Citra/Azahar behaviour, not measured on a console. evidence: [rendering-fog.md §2026-10-14T17:35](../../re/rendering-fog.md#ts-20261014-173500).
 - RENDER-S50 The sky draws without depth test and depth write, standing in for the original's depth scale (0.99951 on the projection depth entries, values at draw time not captured). needs: RENDER-50. evidence: [rendering-sky.md §2026-10-15T15:39](../../re/rendering-sky.md#ts-20261015-153917).
 - RENDER-S51 A level with two sky objects (lvl_06) uses the first; the original's choice is not read. needs: RENDER-50. evidence: [rendering-sky.md §2026-10-15T15:39](../../re/rendering-sky.md#ts-20261015-153917).
+- RENDER-S63 The particle pass uses texture x vertex colour with linear filtering and clamp to edge: the combiner registers of the draw 0x2722cc were not read, only its state bytes (texture alpha x vertex alpha, vertex colour). needs: RENDER-64. evidence: [particles.md §2026-10-18T09:40](../../re/particles.md#ts-20261018-094004).
+- RENDER-S64 Emitters are drawn in creation order after the scene and the studs, and the view depth of a particle (near fade, far-to-near sort) is the distance along the camera's forward axis; the original's draw item order and model-view product were not read. needs: RENDER-65. evidence: [particles.md §2026-10-18T09:40](../../re/particles.md#ts-20261018-094004).
 - ASSET-S1 (replaced by the above for materials; normals and the view vector now feed the fragment lighting, see RENDER-S61).
 
 ## 5. Open items
@@ -36,8 +38,10 @@ IN_PROGRESS, updated 2026-10-15T17:47:25+02:00. Sky models are drawn (RENDER-37)
 - [ ] RENDER-30 Fog fade at pixel level: the oracle and the port at the same pose (`street-after-1-1`) agree within about 12 per channel at depth 197 to 360, but windows of identical content were rare; needs one material seen over depth 86 to 260 in both pictures. evidence: [rendering-fog.md §2026-10-14T21:42](../../re/rendering-fog.md#ts-20261014-214220).
 - [ ] RENDER-42 The port's near ground (fog 0, depth 17 to 33) is lighter than the oracle by about (+11, +10, +13) at the `street-after-1-1` pose; lighting or texture filtering of level surfaces. RENDER-1 is done; re-measure. evidence: [rendering-fog.md §2026-10-14T21:42](../../re/rendering-fog.md#ts-20261014-214220).
 - [ ] RENDER-33 Shadows (0x37796c). blocks: RENDER-9.
+- [ ] RENDER-64 Compare the particle draw with the original: an oracle picture (`--rpc` screenshot, OpenGL renderer) of the siren-light emitters of state `in-vehicle` (record 242) against `chase-game --particle` at the same pose: blend, colour, alpha and size. blocks: RENDER-S63. evidence: [particles.md §2026-10-18T09:40](../../re/particles.md#ts-20261018-094004).
+- [ ] RENDER-65 Where the particle pass sits among the other blended draws: the draw item order of 0x2722cc's callers, the sort 0x115128 and the semi-transparent lists (script natives `AddToSemiTransList*`). needs: RENDER-35. blocks: RENDER-S64. evidence: [particles.md §2026-10-18T09:40](../../re/particles.md#ts-20261018-094004).
 - [ ] RENDER-34 Material colour pulse over time.
-- [ ] RENDER-35 Draw sorting (0x115128). blocks: RENDER-S3.
+- [ ] RENDER-35 Draw sorting (0x115128). blocks: RENDER-S3, RENDER-65.
 - [ ] RENDER-50 Sky details: the projection depth scale of the pass (0x1811f4, values at draw time), the gate word `[[0x3772d0] + 0x8a]`, the choice among several sky objects, `SkyboxOverride` (string 0x192254, parameter of another class, constructor 0x192008) and the dome's lower rim at a high pose (rooftop (472.6, 104, 874.6) in lvl_01): compare with the original. blocks: RENDER-S50, RENDER-S51. evidence: [rendering-sky.md §2026-10-15T15:39](../../re/rendering-sky.md#ts-20261015-153917).
 - [ ] RENDER-38 Clear colour: apply the script native `SetBackgroundColour` (0x291624, 5 call sites in the level scripts) and find the per-frame reader of the colour (not 0x589890). evidence: [rendering-fog.md §2026-10-14T18:59](../../re/rendering-fog.md#ts-20261014-185910). The native writes r, g, b (float to int) and 255 to offsets 4 to 7 of the singleton from 0x23878c (level setup 0x1bd054 writes the same bytes); implement it with the natives batch (SCRIPT-26..39). Reader still open: [rendering-sky.md §2026-10-15T15:39](../../re/rendering-sky.md#ts-20261015-153917).
 - [ ] RENDER-39 Fog loop 2 over the loaded rooms (0x21b51c, room object chain `[room+0x60]`) and the object enable byte `[[obj+0x3c]+0xd8]`: replicate once the room load state is known; check on lvl_00, lvl_02 and lvl_05 against the oracle. blocks: RENDER-S6. evidence: [rendering-fog.md §2026-10-14T18:59](../../re/rendering-fog.md#ts-20261014-185910).
@@ -52,12 +56,13 @@ IN_PROGRESS, updated 2026-10-15T17:47:25+02:00. Sky models are drawn (RENDER-37)
 
 - Fog: [rendering-fog.md §2026-10-14T17:35](../../re/rendering-fog.md#ts-20261014-173500), clear colour and selection loops: [rendering-fog.md §2026-10-14T18:59](../../re/rendering-fog.md#ts-20261014-185910).
 - Sky: [rendering-sky.md §2026-10-15T15:39](../../re/rendering-sky.md#ts-20261015-153917).
+- Particle draw state and quads: [particles.md §2026-10-18T09:40](../../re/particles.md#ts-20261018-094004).
 - Lighting: [rendering-lighting.md §2026-10-15T17:47](../../re/rendering-lighting.md#ts-20261015-174725).
 - [materials.md §2026-10-13T22:24](../../re/materials.md#ts-20261013-222439); UV scales and vertex shaders: [models.md §2026-10-12T18:05](../../re/models.md#ts-20261012-1805).
 
 ## 7. Code and tests
 
-- `src/assets/material.cpp`, `src/render/scene.cpp` (`src/render/shaders/scene.frag.glsl` runs the stages; all shaders are `.glsl` files embedded at build time by `tools/embed_shaders.cmake`; OpenGL 4.6 core), CTest `no-inline-shaders`, `src/materials.cpp` (`chase-materials`: census, or stages of the models given).
+- `src/assets/material.cpp`, `src/render/scene.cpp` (`src/render/shaders/scene.frag.glsl` runs the stages; all shaders are `.glsl` files embedded at build time by `tools/embed_shaders.cmake`; OpenGL 4.6 core), CTest `no-inline-shaders`, `src/render/particles.*` with `particle.{vert,frag}.glsl` (particle quads), `src/materials.cpp` (`chase-materials`: census, or stages of the models given).
 - All OpenGL calls are in `src/render/*.cpp`. Callers outside `src/render/` see plain-type headers only: `scene.hpp`, `studs.hpp`, `debug_overlay.hpp`, `window.hpp` (viewports, scissor, clears, depth and culling), `hud_overlay.hpp` (two-screen overlay) and `front_presenter.hpp` (front-end screens). Each keeps its GL objects behind a pointer to an implementation class in its `.cpp`. `program.hpp` (shared scene shader) is internal to `src/render/`. CTest `gl-only-in-render` (guard) and `gl-only-in-render-rejects` (fixture `tests/gl_only_in_render/`).
 - Sky: `src/runtime/sky.cpp` (lift, translation), `Scene::drawSky` in `src/render/scene.cpp`, wiring in `LevelSession::draw` (`src/game_level.cpp`); CTest `sky-core`, `sky-real-data`.
 - Lighting: `src/runtime/lighting.cpp` (light objects to light list, per-draw registers, LUTs), `assets::lightObjects` (`src/assets/level.cpp`), `fragmentLighting` in `scene.frag.glsl`, `Scene::setLighting`; CTest `lighting-core`, `lighting-real-data`.

@@ -110,6 +110,7 @@ LevelSession::LevelSession(const Shared& sharedState)
       level(readLevel(shared.archive, shared.options.level)),
       drawable(drawableObjects(shared.archive, level)),
       studs(studSpawns(drawable)),
+      particles(shared.archive, shared.options.particles),
       classOf(archiveClassLookup(shared.archive)),
       objectState(runtime::levelInitialState(level, classOf)),
       fogObjects(chase::assets::fogObjects(level, classOf)),
@@ -399,6 +400,7 @@ void LevelSession::draw(int width, int height) {
             sprites.push_back({{stud.centre[0], stud.centre[1], stud.centre[2]}, runtime::kStudTint[std::size_t(stud.kind)]});
     studSprites->draw(viewMatrix, mvp, sprites, runtime::studSpriteFrame(std::uint32_t(provisionalStudClockSeconds * double(runtime::kClockTicksPerSecond))),
                      runtime::kStudHalfSize);
+    particles.draw(viewMatrix, mvp);
     setScissorTest(false);
     if (hud && !cutscenePlaying()) {
         hudCanvas.clearTransparent();
@@ -494,6 +496,7 @@ runtime::DebugGameValues LevelSession::debugValues() const {
 
 void LevelSession::releaseOverlays() {
     studSprites.reset();
+    particles.releaseGl();
     overlay.reset();
 }
 

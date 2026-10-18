@@ -73,6 +73,10 @@ void testValidValues() {
     const game_options::Options start = parseArgs({"--start", "886.764 16.589 1111.166", "--facing", "-90.5"});
     if (!start.start || std::fabs((*start.start)[0] - 886.764f) > 1e-3f || std::fabs((*start.start)[2] - 1111.166f) > 1e-3f || !start.gameplay) fail("valid --start changed");
     if (!start.facing || *start.facing != -90.5f) fail("valid --facing changed");
+    const game_options::Options particles = parseArgs({"--particle", "286 1 2.5 -3", "--particle", "0 0 0 0"});
+    if (particles.particles.size() != 2 || particles.particles[0].definition != 286 || particles.particles[0].position[1] != 2.5f ||
+        particles.particles[0].position[2] != -3.0f || !particles.gameplay)
+        fail("valid --particle changed");
     if (parseArgs({"--hide-room", "4"}).hideRoom != 4 || parseArgs({}).hideRoom) fail("valid --hide-room changed");
 
     const game_options::Options script = parseArgs({"--script", "0 150 40;0 0 1 AB;-156 0 0"});
@@ -128,6 +132,13 @@ void testRejections() {
     expectRejected({"--start", "1 2"}, "--start: expected X Y Z: '1 2'");
     expectRejected({"--start", "1 2 3x"}, "--start: not a number: '3x'");
     expectRejected({"--start", "1 2 3 4"}, "--start: expected X Y Z: '1 2 3 4'");
+    expectRejected({"--particle", "1 2 3"}, "--particle: expected DEFINITION X Y Z: '1 2 3'");
+    expectRejected({"--particle", "1 2 3 4 5"}, "--particle: expected DEFINITION X Y Z: '1 2 3 4 5'");
+    expectRejected({"--particle", "x 2 3 4"}, "--particle: not a whole number: 'x'");
+    expectRejected({"--particle", "-1 2 3 4"}, "--particle: out of range, allowed 0 to 65535: '-1'");
+    expectRejected({"--particle", "65536 2 3 4"}, "--particle: out of range, allowed 0 to 65535: '65536'");
+    expectRejected({"--particle", "1 2 3 4x"}, "--particle: not a number: '4x'");
+    expectRejected({"--particle"}, "--particle: missing value: ''");
 
     expectRejected({"--script", "0 150"}, "--script: expected X Y COUNT [BUTTONS]: '0 150'");
     expectRejected({"--script", "0 150 40;"}, "--script: expected X Y COUNT [BUTTONS]: ''");

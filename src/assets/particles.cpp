@@ -98,6 +98,27 @@ ParticleDefs parseParticleDefs(const Bytes& data) {
         def.gravity = readFloat(data, at + 0x3c);
         def.drag = readFloat(data, at + 0x24);
         def.bounce = readFloat(data, at + 0x74);
+        for (std::size_t axis = 0; axis < 3; ++axis) {
+            def.axis[axis] = readFloat(data, at + 4 * axis);
+            def.box[axis] = readFloat(data, at + 0x54 + 4 * axis);
+        }
+        def.startSpeed = readFloat(data, at + 0x14);
+        def.endSpeed = readFloat(data, at + 0x78);
+        def.elevation = readFloat(data, at + 0x18);
+        def.spinMin = readFloat(data, at + 0x40);
+        def.spinMax = readFloat(data, at + 0x44);
+        def.spiralStep = readFloat(data, at + 0x48);
+        def.pivotX = readFloat(data, at + 0x4c);
+        def.pivotY = readFloat(data, at + 0x50);
+        def.scale = readFloat(data, at + 0x60);
+        def.sizeRandomX = readFloat(data, at + 0x64);
+        def.sizeRandomY = readFloat(data, at + 0x68);
+        def.sway = readFloat(data, at + 0x6c);
+        def.swayRate = readFloat(data, at + 0x70);
+        def.initialAlpha = data[at + 0x8c];
+        def.speedVariation = data[at + 0x16f];
+        def.spinMode = data[at + 0x174];
+        def.blendMode = data[at + 0x177];
         def.fadeKeys = keys(data, at, 0x88, 0x170);
         def.sizeKeys = keys(data, at, 0xc0, 0x171);
         def.colourKeys = keys(data, at, 0xf8, 0x172);

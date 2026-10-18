@@ -1,9 +1,10 @@
 #pragma once
-// Internal to src/render: the shader program shared by Scene and StudSprites. Not included outside this directory.
+// Internal to src/render: the shader programs shared by Scene, StudSprites and ParticleRenderer. Not included outside this directory.
 #include <epoxy/gl.h>
 
 namespace chase::render {
 
 GLuint sceneProgram();
+GLuint particleProgram();
 
 }

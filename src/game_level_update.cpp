@@ -245,6 +245,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         ++updatesThisSecond;
         return;
     }
+    particles.update(dt);
     const auto emit = [&](const runtime::SoundCall& call) {
         soundLog.emplace_back(updates, call.id);
         if (shared.audio) shared.audio->play(call);

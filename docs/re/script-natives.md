@@ -45,7 +45,7 @@ Corrected by [script-natives-flags.md §2026-10-14T14:16](script-natives-flags.m
 | 35 | SCRIPT-35 | characters, party, weapons, boss hooks (18) | C | 157 / 28 / 5 | SCRIPT-42 |
 | 36 | SCRIPT-36 | vehicles and traffic (19) | C | 725 / 91 / 7 | SCRIPT-43 |
 | 37 | SCRIPT-37 | platforms and rideables (14) | C, B | 161 / 8 / 0 | SCRIPT-44 |
-| 38 | SCRIPT-38 | effects, particles, streaming, semi-transparent lists (20) | C | 553 / 55 / 5 | PART-1 |
+| 38 | SCRIPT-38 | effects, particles, streaming, semi-transparent lists (20) | C | 553 / 55 / 5 | PART-2 |
 | 39 | SCRIPT-39 | hub, shops, minigames (10) | C | 14 / 0 / 0 | SCRIPT-45 |
 
 Sum (at the census): 224 unhandled natives in batches, 20 implemented, 1 stand-in (FadeScreen); batch 26 and 27 changed this, see their entries. The "needs" column names the system whose absence stops the native from doing anything visible; a batch agent can still transcribe the handler's argument handling and state writes, and mark the effect as a stand-in.

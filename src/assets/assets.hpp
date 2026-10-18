@@ -885,7 +885,7 @@ struct ParticleDef {
     std::uint8_t animationLoops = 0;  // +0x17b, frame mode 2: atlas cycles per particle lifetime
     std::uint8_t flipModes = 0;     // +0x17a: low nibble U, high nibble V; 1 random, 2 alternate, 3 always
     float rate = 0;                 // +0x28, particles per second
-    float duration = 0;             // +0x38, seconds; above 98 the emitter runs until stopped
+    float duration = 0;             // +0x38, seconds; 98 and above the emitter does not age and runs until stopped (0x20db0c)
     float lifetimeMin = 0;          // +0x7c, seconds
     float lifetimeMax = 0;          // +0x80
     float sizeX = 0, sizeY = 0;     // +0x0c, +0x10, start size before random growth
@@ -893,6 +893,21 @@ struct ParticleDef {
     float gravity = 0;              // +0x3c, added to velocity y per second
     float drag = 0;                 // +0x24, velocity *= 1 - drag * dt
     float bounce = 0;               // +0x74, > 0: ground bounce restitution
+    std::array<float, 3> axis{};    // +0x00, unit vector: the emitter's z axis (the spawner 0x216244 builds its basis from it)
+    float startSpeed = 0;           // +0x14, particle speed at the emitter's start; +0x78 is the speed at its end
+    float endSpeed = 0;             // +0x78, 0x222550: used when above 0
+    float elevation = 0;            // +0x18, degrees: cone half angle (random) or the fixed angle with a spiral
+    float spinMin = 0, spinMax = 0; // +0x40, +0x44, spin speed range (x 100 per update)
+    float spiralStep = 0;           // +0x48, degrees the azimuth advances per particle; 0 = random azimuth
+    float pivotX = 0.5f, pivotY = 0.5f;  // +0x4c, +0x50, quad pivot in 0..1 (0x2ae968)
+    std::array<float, 3> box{};     // +0x54, +0x58, +0x5c, half extents of the start offset box
+    float scale = 0;                // +0x60, per-definition scale (0 = none), times the global scale 0x376b94
+    float sizeRandomX = 0, sizeRandomY = 0;  // +0x64, +0x68, random extra start size
+    float sway = 0, swayRate = 0;   // +0x6c, +0x70, horizontal sine sway amplitude and rate (0x2b5970)
+    std::uint8_t initialAlpha = 0;  // +0x8c, alpha of the particles created with the emitter
+    std::uint8_t speedVariation = 0;  // +0x16f, +- percent
+    std::uint8_t spinMode = 0;      // +0x174: 0 none, 1 spin, 2 reversed, 3 random direction, 4 and 5 aim along the velocity
+    std::uint8_t blendMode = 0;     // +0x177: 0 alpha blend, 1 additive, 2 reverse subtract, 3 multiply by source colour (0x2722cc)
     std::vector<ParticleKey> fadeKeys;    // +0x88, count +0x170: value[0] emitter alpha over its duration
     std::vector<ParticleKey> sizeKeys;    // +0xc0, count +0x171: (value[0] - 128) / 128 growth factor
     std::vector<ParticleKey> colourKeys;  // +0xf8, count +0x172: value[0..2] colour over particle life

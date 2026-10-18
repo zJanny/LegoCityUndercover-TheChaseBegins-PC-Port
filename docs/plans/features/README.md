@@ -21,7 +21,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | [level-objects-carry](level-objects-carry.md) | IN_PROGRESS | LEVOBJ-74 end of the carry states; LEVOBJ-75 release of the box; LEVOBJ-31 locomotion while carrying; LEVOBJ-32 sounds and effects |
 | [doors](doors.md) | IN_PROGRESS | DOOR-1 script-requested doors stay closed (needs SCRIPT-7); DOOR-3 open-door box |
 | [studs](studs.md) | IN_PROGRESS | STUD-1 magnet and multiplier; STUD-4 groups (needs SCRIPT-1) |
-| [particles](particles.md) | IN_PROGRESS | PART-1 no particle rendering |
+| [particles](particles.md) | IN_PROGRESS | PART-2 nothing starts emitters; PART-3 `particles` level object; PART-5 update trace |
 
 ## Vehicles
 

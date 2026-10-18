@@ -8,6 +8,11 @@
 
 namespace game_options {
 
+struct ParticleRequest {
+    unsigned definition = 0;
+    std::array<float, 3> position{};
+};
+
 struct Options {
     std::string fib = "artifacts/romfs/romfs/lego_city3ds.fib";
     std::string names = "artifacts/romfs/romfs/lego_city3ds.csv";
@@ -28,6 +33,7 @@ struct Options {
     bool debugOverlay = false;
     std::optional<std::array<float, 3>> start;
     std::optional<float> facing;
+    std::vector<ParticleRequest> particles;
     std::optional<int> hideRoom;
     std::string startRoom;
     // Options volumes 0..10 (the game divides them by 10). Read in the oracle at the gameplay start of a new game:

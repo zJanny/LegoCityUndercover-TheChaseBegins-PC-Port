@@ -16,13 +16,14 @@ namespace {
 constexpr long long kCirclePadLimit = 156;
 constexpr long long kMaxCount = 1000000;
 constexpr long long kMaxRoomNumber = 99;
+constexpr long long kMaxParticleDefinition = 65535;
 constexpr long long kMaxWindowSize = 16384;
 constexpr long long kMinWindowWidth = 200, kMinWindowHeight = 240;
 constexpr double kAnyRealLow = std::numeric_limits<double>::lowest(), kAnyRealHigh = std::numeric_limits<double>::max();
 
 const char* const kUsage = "usage: chase-game [--fib F] [--names CSV] [--config CFG] [--gameplay] "
                            "[--level levels/levels/<name>/<name>_main.blvl] [--screenshot OUT.bmp] [--frames N] "
-                           "[--script \"X Y COUNT [BUTTONS];at X Y Z [FACING];...\"] [--save savegame.dat] [--save-out FILE] [--front-save savegame.dat] [--slot 0|1] [--start \"X Y Z\"] [--facing DEGREES] [--hide-room N] [--no-camera-collision] [--no-start-cutscenes] [--set-variable NAME=VALUE] [--debug-overlay] [--sound-volume 0-10] [--music-volume 0-10] "
+                           "[--script \"X Y COUNT [BUTTONS];at X Y Z [FACING];...\"] [--save savegame.dat] [--save-out FILE] [--front-save savegame.dat] [--slot 0|1] [--start \"X Y Z\"] [--particle \"DEFINITION X Y Z\"] [--facing DEGREES] [--hide-room N] [--no-camera-collision] [--no-start-cutscenes] [--set-variable NAME=VALUE] [--debug-overlay] [--sound-volume 0-10] [--music-volume 0-10] "
                            "[--front-script \"run 5; press A; until slot; ...\"] [--language 1-9] [--returning] [--window WIDTHxHEIGHT]";
 
 std::uint32_t buttonOf(char letter) {
@@ -71,6 +72,16 @@ void parseStart(Options& o, const std::string& text) {
     o.gameplay = true;
 }
 
+void parseParticle(Options& o, const std::string& text) {
+    const std::vector<std::string> fields = strict::words(text);
+    if (fields.size() != 4) strict::reject("expected DEFINITION X Y Z", text);
+    ParticleRequest request;
+    request.definition = unsigned(strict::integer(fields[0], 0, kMaxParticleDefinition));
+    for (std::size_t i = 0; i < 3; ++i) request.position[i] = float(strict::real(fields[i + 1], kAnyRealLow, kAnyRealHigh));
+    o.particles.push_back(request);
+    o.gameplay = true;
+}
+
 void parseVariable(Options& o, const std::string& text) {
     const std::size_t separator = text.find('=');
     if (separator == std::string::npos) strict::reject("expected NAME=VALUE", text);
@@ -115,6 +126,7 @@ bool applyOption(Options& o, const std::string& arg, const std::function<std::st
     else if (arg == "--hide-room") o.hideRoom = int(strict::integer(value(), 1, kMaxRoomNumber));
     else if (arg == "--facing") o.facing = float(strict::real(value(), kAnyRealLow, kAnyRealHigh));
     else if (arg == "--start") parseStart(o, value());
+    else if (arg == "--particle") parseParticle(o, value());
     else return false;
     return true;
 }

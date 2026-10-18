@@ -84,6 +84,7 @@ Unknowns:
 
 ## 2026-10-15T13:08:00+02:00 — Carry target PlaceObject and the callers of the respawn function 0x22fc84 (llvm-objdump)
 
+Corrected by [particles.md §2026-10-18T09:40](particles.md#ts-20261018-094004): 0x23aebc starts the debris burst (0x20c938), not a sound
 Extends [the 0x244f40 entry](#ts-20261015-111115); the build-it question of that entry is answered in [buildit.md §2026-10-15T13:07](buildit.md#ts-20261015-130720).
 
 - **PlaceObject.** The carry target state change enables the `PlaceObject` reference (record +0x1c) with 0x242cf0 after disabling `UseObject` and before the `TriggerObject` call. The port now erases it from the disabled set in `applyCarryActions` (test `carry`).
