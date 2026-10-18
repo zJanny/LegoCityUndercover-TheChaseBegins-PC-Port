@@ -23,13 +23,13 @@ This starts the development runtime. It is not the game: it shows the start scre
 | Script commands | 44 of 239 (18.4%) | Different commands the level scripts call that the port runs. They cover 66.6% of all calls. 119 more run with a stand-in result. |
 | Object types | 152 of 506 (30.0%) | Different object types in the levels that the port treats with recovered rules (collision, doors, studs). They cover 54.0% of all placed objects. |
 | Game files read | 99.7% of files, 99.9% of data | Files in the game archive (12836) that the port can decode, by count and by size. |
-| Open work | 369 open items, 260 stand-ins | Known gaps and temporary guesses in 26 feature areas. It has no total to reach; watch the trend. |
+| Open work | 373 open items, 260 stand-ins | Known gaps and temporary guesses in 26 feature areas. It has no total to reach; watch the trend. |
 | Checked against the original | 238 tests, 210 recorded traces | Automatic tests, and recordings of the original game that the tests compare with. |
-| Game code documented | 1998 of about 7575 (26.4%) | Functions of the game program that the notes or the source point to. The total is an estimate. |
+| Game code documented | 2012 of about 7575 (26.6%) | Functions of the game program that the notes or the source point to. The total is an estimate. |
 
 ![Progress trend](docs/progress-trend.svg)
 
-Updated 2026-10-18, commit 7749597. How the numbers are measured: [docs/progress.md](docs/progress.md).
+Updated 2026-10-18, commit 9248a03. How the numbers are measured: [docs/progress.md](docs/progress.md).
 <!-- progress:end -->
 
 ## Documentation

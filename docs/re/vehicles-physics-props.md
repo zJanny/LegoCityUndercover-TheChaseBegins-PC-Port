@@ -14,7 +14,8 @@ Split from [vehicles-physics-collision.md](vehicles-physics-collision.md) (that 
 - Break at a static box: hearts drop at the impact, the car breaks into bricks (E+0xc bit 4) later; measurements are in the vehicles-damage feature file. [§2026-10-16T11:15:22](#ts-20261016-111522)
 - At the pillar (879.9, 17.1, 1115.66) the sphere sweep produces no contact in updates 26..37; the car's climb comes from elsewhere in the floor pass. [§2026-10-18T10:42:53](#ts-20261018-104253)
 - A destroyed prop (message 1, 0x1f8948 -> 0x2aa5c8) starts `ExplosionParticleDef` and with `SpawnDebris` bursts `DebrisAmount` bricks: [debris.md §2026-10-18T14:40:56](debris.md#ts-20261018-144056).
-- Open: indestructible props, the wobble reaction for health above 0, the kinematic branch of 0x16ce9c, a scene with a sphere contact, the pair-contact flag word and the writers of 0x3745b4.
+- Which props a vehicle contact destroys per class, mesh-kind entries and the lamp posts: [vehicles-prop-smash.md](vehicles-prop-smash.md#ts-20261018-195624).
+- Open: the wobble reaction for health above 0, the kinematic branch of 0x16ce9c, a scene with a sphere contact, the pair-contact flag word and the writers of 0x3745b4.
 
 <a id="ts-20261016-085949"></a>
 

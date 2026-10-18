@@ -6,7 +6,7 @@ Studs as the original handles them: pickup-system sprites (object type 0x3d, pic
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-13T21:46:46+0200. Studs spin, are picked up, fly to the HUD counter and are counted and shown in `chase-game`. Resolved and removed: STUD-S2 (skip limit is the read 30), STUD-S4 (studs fly to the counter), STUD-7 (oracle pictures exist).
+IN_PROGRESS, updated 2026-10-18T19:58+02:00. Dropped studs are not ported (STUD-11); a car drops none from a traffic light or a wobbly tree. Studs spin, are picked up, fly to the HUD counter and are counted and shown in `chase-game`. Resolved and removed: STUD-S2 (skip limit is the read 30), STUD-S4 (studs fly to the counter), STUD-7 (oracle pictures exist).
 
 ## 3. Verified behaviour
 
@@ -23,11 +23,12 @@ IN_PROGRESS, updated 2026-10-13T21:46:46+0200. Studs spin, are picked up, fly to
 
 ## 5. Open items
 
-- [ ] STUD-1 — Missing: multiplier mask, magnet, group enabling, dropped studs. evidence: [studs.md §2026-10-13T17:09](../../re/studs.md#ts-20261013-170941).
+- [ ] STUD-1 — Missing: multiplier mask, magnet, group enabling (dropped studs: STUD-11). evidence: [studs.md §2026-10-13T17:09](../../re/studs.md#ts-20261013-170941).
 - [ ] STUD-3 — Blue and purple collect sound (id 63, coinblue) has no recorded oracle pickup. Silver (id 64) is replayed from a recorded pickup (`audio-real-data`, trace `stud.csv`); gold (id 64) has no recording either. see AUDIO-5. evidence: [audio.md §2026-10-13T17:54](../../re/audio.md#ts-20261013-175424).
 - [ ] STUD-4 — How a group is enabled (0x28a2cc sequencer, `EnableStudsByGroup` and `SpawnStuds` script functions, `StudSpawn*` parameters, meaning of `GroupOrder` +0x33). needs: SCRIPT-1. evidence: [studs.md §2026-10-13T17:09](../../re/studs.md#ts-20261013-170941).
 - [ ] STUD-9 — `EnableStudsByGroup(group, value)` only records the request (the sequencer entry 0x58f710 and its per-frame update 0x28a2cc are not ported; `value` is 6 or 8 in lvl_01); hidden studs stay hidden. blocks: SCRIPT-64. evidence: [script-natives-progress.md §2026-10-14T14:41](../../re/script-natives-progress.md#ts-20261014-144155).
 - [ ] STUD-10 — `AddStuds` adds to the counter (`StudField::addToCounter`) but not the timestamp +0x44 and the HUD hook 0x240fc0 of 0x1584e0; the HUD does not show the added amount. evidence: [script-natives-progress.md §2026-10-14T14:41](../../re/script-natives-progress.md#ts-20261014-144155).
+- [ ] STUD-11 — Dropped studs are not ported: 0x23a6b0 -> 0x2149ac -> 0x21e2e4 modes 0..2 (pool records 0..19) -> 0x19913c, with the callers of the non-lethal wobble hit 0x2bc370 (`WobbleStudValue`), the hit-sequence slots 0x2b7894, the car break 0x1aad90, the player hurt 0x20bd18 and the `StudValue` behaviours; a car destroying a traffic light or a wobbly tree drops none (oracle). blocks: VEH-127. evidence: [studs.md §2026-10-18T19:57:26](../../re/studs.md#ts-20261018-195726).
 - [ ] STUD-5 — Where the per-frame clock origin of 0x5165c8 comes from and whether the game restarts it at level start. evidence: [studs.md §2026-10-13T17:09](../../re/studs.md#ts-20261013-170941).
 - [ ] STUD-6 — The per-level stud total; whether the radius 1.5 holds for all characters and abilities (setter 0x2744d0). evidence: [studs.md §2026-10-13T17:09](../../re/studs.md#ts-20261013-170941).
 - [ ] STUD-8 — Whether other stud types use other HUD sinks (the type table +0x5c byte is 0 for all four), the flying sprite's blend state, dropped and magnet studs. needs: STUD-1. evidence: [hud.md](../../re/hud.md).

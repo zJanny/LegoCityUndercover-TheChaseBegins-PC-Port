@@ -11,6 +11,7 @@
 
 #include <array>
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -38,15 +39,16 @@ struct SmashingVehicle {
 struct SmashableProp {
     assets::Matrix node{};       // the prop node's world matrix
     SmashBox entityBox;          // entity+0x60 / +0x6c
-    std::int16_t health = 0;     // record +0x10, WobbleHealth
+    std::optional<SmashBox> meshRoot;  // grid entry kind 1 (entity+0x78): the shape is the root node of the collision item, in the model's space
+    std::int16_t health = 0;     // WobbleHealth (record +0x10 of 0x2a3390, +0x110 of 0x1bc38c); 1 for the classes that any damage destroys
 };
 
 constexpr std::int16_t kVehicleSmashDamage = 100;
 
 // The vehicle pass runs (0x16ce9c: dynamic body and a velocity of non-zero length; the states of a kinematic body are not ported).
 bool vehicleSmashPassRuns(const SmashingVehicle& vehicle);
-// The grid query of 0x275c00 followed by the filter 0x2c02c8: the vehicle's node bounds overlap the prop's world box, and the vehicle's world
-// entity box, moved into the prop's frame (0x237eb4, inverse rotation), overlaps the prop's entity box.
+// The grid query of 0x275c00 followed by the filter 0x2c02c8: the vehicle's node bounds overlap the prop's grid shape under its node matrix (the entity
+// box of a box entry, the collision item's root node of a mesh entry: 0x237f30 mode 1), and the vehicle's world entity box, moved into the prop's frame (0x237eb4, inverse rotation), overlaps the prop's entity box.
 bool vehicleSmashesProp(const SmashingVehicle& vehicle, const SmashableProp& prop);
 // The wobbly handler 0x2a3390 for message 0 with damage 100: the new health and whether the entity is destroyed.
 struct SmashOutcome {
@@ -56,9 +58,11 @@ struct SmashOutcome {
 SmashOutcome applySmashDamage(std::int16_t health);
 
 
-// The wobbly props of a level (class leprops/leprop_wobblydestructible, handler type 119) and their health. STAND-IN VEH-S88: an object with other
-// classes is not smashed; the grid entry's shape is the entity box (a mesh entry's shape differs); the destroyed entity is reported by name and
-// the caller treats it as disabled (the original deletes it, 0x23cd80).
+// The props of a level whose message 0 handler destroys them at health 0 or on any damage: leprops/leprop_wobblydestructible (type 119, 0x2a3390) and
+// props/prop_trafficlight (type 204, 0x1bc38c) with their WobbleHealth, props/prop_respawnabledestructible (type 214, 0x2b3fcc) and
+// leprops/leprop_simpledestructible (type 85) through the base handler 0x1f8948 (damage not 0). STAND-IN VEH-S105: an object with other classes is
+// not smashed (the hit sequences of type 67, 0x15e408, are not ported); a wobbly prop with a fall-apart clip is destroyed at once instead of
+// playing it. The destroyed entity is reported by name and the caller treats it as disabled (the original deletes it, 0x23cd80).
 struct SmashedProp {
     std::string instance;
     SmashableProp prop;

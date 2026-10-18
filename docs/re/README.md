@@ -86,6 +86,7 @@ Read this index, then open only the file you need.
 | [vehicles-physics-collision.md](vehicles-physics-collision.md) | Vehicle physics collision: the Bullet world, floor collision pass, sleep rule, contacts with the static Bullet boxes |
 | [vehicles-damage.md](vehicles-damage.md) | Vehicle contact damage: the contact and damage messages of 0x1797c4, hearts and health points, cool-downs, the pair rule of 0x271764, the break 0x16cccc, the oracle run into the box |
 | [vehicles-physics-props.md](vehicles-physics-props.md) | Vehicle physics: the second floor cell search 0x164328 (push-out of points below an overhead layer), the vehicle against placed props, the car breaking into bricks, the sphere sweep of the floor pass 0x1c54f8 (0x1b6ef8, 0x16788c, set-up 0x33a4fc), the wheel ray through the floor graph 0x155888, mass scale and body activation messages |
+| [vehicles-prop-smash.md](vehicles-prop-smash.md) | Which props a vehicle contact destroys: mesh-kind grid entries, the reaction of each prop class to message 0, bricks released, timing against the oracle. |
 | [player-falling-jumping.md](player-falling-jumping.md) | Falling, landing stun, jumping, step-off slide, slope slow-down, state table |
 | [player-attack.md](player-attack.md) | Attack on foot: Y tap, combat action states 0xa3 / 0xa4, combo, target search, hit test, messages 62 and 0 to the target |
 | [player-traversal.md](player-traversal.md) | Zipline (type 101: grab test, states 42..44, slide, dismount, oracle ride), survey of the climbing moves |

@@ -33,7 +33,8 @@ bool vehicleSmashPassRuns(const SmashingVehicle& vehicle) {
 }
 
 bool vehicleSmashesProp(const SmashingVehicle& vehicle, const SmashableProp& prop) {
-    if (!smashBoxesOverlap(worldSmashBox(vehicle.node, vehicle.nodeBounds), worldSmashBox(prop.node, prop.entityBox))) return false;
+    const SmashBox& gridShape = prop.meshRoot ? *prop.meshRoot : prop.entityBox;
+    if (!smashBoxesOverlap(worldSmashBox(vehicle.node, vehicle.nodeBounds), worldSmashBox(prop.node, gridShape))) return false;
     const SmashBox vehicleWorld = worldSmashBox(vehicle.node, vehicle.entityBox);
     SmashBox inPropFrame;
     inPropFrame.half = vehicleWorld.half;
@@ -51,27 +52,45 @@ SmashOutcome applySmashDamage(std::int16_t health) {
 }
 
 
+namespace {
+
+constexpr float kWobbleHealthDefault = 2.0f;
+constexpr std::int16_t kAnyDamageHealth = 1;
+
+bool wobbleClass(const std::string& className) { return className == "leprops/leprop_wobblydestructible" || className == "props/prop_trafficlight"; }
+bool anyDamageClass(const std::string& className) { return className == "props/prop_respawnabledestructible" || className == "leprops/leprop_simpledestructible"; }
+
+std::int16_t smashHealth(const std::string& className, const assets::LevelObject& object, const assets::Level& cls) {
+    if (anyDamageClass(className)) return kAnyDamageHealth;
+    float value = kWobbleHealthDefault;
+    if (const assets::LevelParam* param = effectiveParam(object, cls, assets::nameHash("WobbleHealth"))) {
+        if (param->type == 0) std::memcpy(&value, &param->value, 4);
+        else value = float(std::int32_t(param->value));
+    }
+    return std::int16_t(std::int32_t(value));
+}
+
+}
+
 void VehiclePropSmasher::load(const assets::Level& level, const assets::ClassLookup& classOf, const std::vector<assets::ObjectCollision>& placed) {
     props_.clear();
-    const std::uint32_t health = assets::nameHash("WobbleHealth");
     for (const assets::ObjectCollision& entry : placed) {
-        if (entry.className != "leprops/leprop_wobblydestructible" || entry.mesh) continue;
+        if (!wobbleClass(entry.className) && !anyDamageClass(entry.className)) continue;
         const assets::LevelObject* object = nullptr;
         for (const assets::LevelObject& candidate : level.objects)
             if (candidate.instance == entry.instance) object = &candidate;
         const assets::Level* cls = classOf(entry.className);
         if (!object || !cls) continue;
-        const assets::LevelParam* param = effectiveParam(*object, *cls, health);
-        if (!param) continue;
-        float value = 0.0f;
-        if (param->type == 0) std::memcpy(&value, &param->value, 4);
-        else value = float(std::int32_t(param->value));
         Entry prop;
         prop.instance = entry.instance;
         prop.collisionDefault = entry.collisionDefault;
         prop.prop.node = entry.matrix;
         prop.prop.entityBox = SmashBox{{entry.centre[0], entry.centre[1], entry.centre[2]}, {entry.half[0], entry.half[1], entry.half[2]}};
-        prop.prop.health = std::int16_t(std::int32_t(value));
+        if (entry.mesh && !entry.mesh->nodes.empty()) {
+            const assets::CollisionNode& root = entry.mesh->nodes.front();
+            prop.prop.meshRoot = SmashBox{{root.centre[0], root.centre[1], root.centre[2]}, {root.half[0], root.half[1], root.half[2]}};
+        }
+        prop.prop.health = smashHealth(entry.className, *object, *cls);
         prop.effects = propDestroyEffects(*object, *cls);
         props_.push_back(prop);
     }

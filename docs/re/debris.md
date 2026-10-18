@@ -8,7 +8,7 @@ The bricks that fly from a vehicle contact, a destroyed prop and a broken car, t
 - A vehicle contact above 10 m/s bursts six bricks (0x229fb8); the 1..3 of the speed is the value of super bricks, not a count. A destroyed prop (0x2aa5c8) starts `ExplosionParticleDef` and, with `SpawnDebris`, `DebrisAmount` bricks at the bottom of its box; the car break (0x16cccc) bursts the same way at the car. [§2026-10-18T14:40:56](#ts-20261018-144056)
 - The hit flash: 0x230ae8 turns the vehicle's materials into mode 3 (constant white), 0x18cca0 counts +0x30f from 0 to 15 and sets the node colour (255, v, v); the materials come back at count 2. [§2026-10-18T14:40:56](#ts-20261018-144056)
 - The smoke of a lost heart is an emitter of definition 0x11e (0x11f with one heart left) fixed in the world at the front of the entity box; message 1 stops it with a fade of 0.5 s. [§2026-10-18T14:40:56](#ts-20261018-144056)
-- Oracle: the brick motion of a van contact and a lamp post replays exactly; the fade distances are 5 and 10, super bricks are on in the user states (a lamp post bursts nine bricks, three of them super bricks). [§2026-10-18T14:46:04](#ts-20261018-144604)
+- Oracle: the brick motion of a van contact and of a traffic light replays exactly; the fade distances are 5 and 10, super bricks are on in the user states (a traffic light and a tree each burst nine bricks, three of them super bricks). [§2026-10-18T14:46:04](#ts-20261018-144604)
 - The flash colours of the counter 1..15 equal the oracle's node colour at a break; the smoke of a lost heart is not seen in the oracle yet. [§2026-10-18T14:55:03](#ts-20261018-145503)
 - A head-on wall contact at about 0.85 units per update (`veh-wall-full-speed`) bursts bricks but costs no heart; the 4 to 0 change about 100 updates later with A held fits the stuck-timer break (reading, not traced). [§2026-10-18T15:06:16](#ts-20261018-150616)
 - Open: the line tests 0x21ab20 / 0x22b108 of the burst, super bricks (0x2c8278), the alpha and spin of the debris objects, the screen shake, flash light, sound, `TriggerObject` and `Respawn` of a destroyed prop, the wobble reaction 0x16b958.
@@ -54,6 +54,8 @@ Unknowns:
 <a id="ts-20261018-144604"></a>
 
 ## 2026-10-18T14:46:04+02:00 — Oracle traces of a vehicle contact burst and a lamp post burst (Azahar RPC by the round 20 emulator servant for r20-C)
+
+Corrected by [vehicles-prop-smash.md §2026-10-18T19:56:24](vehicles-prop-smash.md#ts-20261018-195624): the prop destroyed at update 18 of `veh-smash-prop` is the traffic light `Trafficlight31`, not a lamp post
 
 Source: request R20-C-1, Azahar New 3DS, OpenGL, `--rpc --rpc-input`, fixed dt 0.033, nothing poked, a Python driver over `tools/azahar_oracle.py` advancing one update per row; the user states `veh-smash-car` and `veh-smash-prop` ([oracle-states.md §2026-10-18T12:45:56](oracle-states.md#ts-20261018-124556)). Per update: the 24 brick records (pool A = 0x08dec3d0 + 20 x 0x4c), the slot table 0x58f630, R+0x2e4, +0x304, +0x308, +0x30c..+0x30f, N+0x118, [0x376b6c]; once: 0x3743f0..0x3743ff, 0x377278..0x3772bb, the type row 0x58f2c4, 0x56d400, 0x58f590. Raw files stay in the servant's scratch directory (`r20-D`, not committed).
 

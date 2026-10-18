@@ -10,7 +10,8 @@ How the level's stud objects are created, drawn, collected and counted. Replica:
 - Pickup rule 0x180168: 3D distance from the stud to the player's pickup point (offset (0, 1.153, 0.08)) below radius 1.5; the skip counter limit is 30 (not 17). [§2026-10-13T17:09](#ts-20261013-170941), [§2026-10-13T21:35](#ts-20261013-213500)
 - Collecting flies the stud to the HUD sink for 1.0 s (step `(target - pos) / (30 * timer)`), then adds 10 / 100 / 1000 / 10000 (times the multiplier mask) and sets the HUD bar. [§2026-10-13T21:35](#ts-20261013-213500), [§2026-10-13T17:09](#ts-20261013-170941)
 - The collect sound is played: 64 for silver and gold, 63 for blue and purple. [§2026-10-13T21:48](#ts-20261013-214838)
-- Open: groups and `GroupOrder`, magnet, dropped studs (state 2), multiplier mask, clock origin, radius for other characters, gold/blue/purple recorded pickups.
+- A car that destroys a traffic light (type 204) or a wobbly tree (type 119) releases bricks only: no dropped stud (0x21e2e4 modes 0..2, 0x23a6b0, 0x2149ac, 0x22ca88 not entered). The stud spawn chain and its callers (non-lethal wobble hit 0x2bc370, hit-sequence slots, car break, player hurt, behaviours) are listed, not ported. [§2026-10-18T19:57:26](#ts-20261018-195726)
+- Open: groups and `GroupOrder`, magnet, dropped studs (modes 0..2 of 0x21e2e4), multiplier mask, clock origin, radius for other characters, gold/blue/purple recorded pickups.
 
 <a id="ts-20261013-170941"></a>
 
@@ -79,3 +80,28 @@ Unknowns
 
 Unknowns:
 - A recorded original pickup of a gold, blue or purple stud.
+
+<a id="ts-20261018-195726"></a>
+
+## 2026-10-18T19:57:26+02:00 — Dropped studs: no stud is released when a car destroys a traffic light or a wobbly prop; the callers of the stud spawners (llvm-objdump and REA of artifacts/game/game.arm.elf; own Azahar GDB runs, no RPC, port 24732, state `veh-smash-prop`, fixed dt 0.033)
+
+Evidence: `ctrace 0x21e2e4,0x2149ac,0x23a6b0,0x22ca88,0x2bc370,0x23cd80,0x229fb8,0x23aebc,0x2aa5c8,0x2a3390,0x1bc38c,0x19913c` over 160 updates with A held (stops: the traffic light destroyed in frame 19, the tree in frame 50, the van's own contact bursts in frames 58 and 159); static reading of 0x23a6b0, 0x2149ac, 0x22ca88, 0x21e2e4, 0x2bc370, 0x2a3390, 0x1bc38c, 0x1f8948, 0x2aa5c8, 0x2b7894, 0x15e408; the class files and the level data (`StudValue`, `WobbleStudValue`, `SpawnDir`). The raw files stay in artifacts/oracle/r23B-out.
+
+**Negative trace.** Two props were destroyed by the van: `Trafficlight31` (props/prop_trafficlight, ObjectType 204, handler 0x1bc38c, `StudValue` 0) and `Generic_Tree_13` (leprops/leprop_wobblydestructible, ObjectType 119, handler 0x2a3390, class `StudValue` 25, instance `SpawnDir` 337, `Respawn` 1). Each destroy gave one 0x21e2e4 call with mode 3 and count 9 (bricks: six plus three super bricks, [debris.md](debris.md#ts-20261018-144056)) and nothing else: 0x21e2e4 with a mode 0..2, 0x23a6b0, 0x2149ac and 0x22ca88 were never entered, and no stud record of the pool (records 0..19) was used. The destroy path of both classes (0x23cd80, message 1, 0x1f8948 -> 0x239898, 0x2aa5c8, 0x23ae84, `TriggerObject`) contains no stud code. So for these two classes a vehicle contact releases no studs; the same holds for the other wobbly props of lvl_01 by code (one handler), but only these two instances were traced. A lamp post (wobbly, class `StudValue` 25, instance `SpawnDir`) was destroyed in a second run (frame 45); its stud calls were not traced.
+
+**The stud spawn chain.** `0x23a6b0(entity, count, flag, flag2, extra)` finds the child node `SpawnLoc` of the entity (0x24242c) and calls `0x2149ac(entity, node, count, flag, flag2, extra)`: it reads `SpawnCone` (float, 1.0), `SpawnLocal` (bool) and `SpawnDir` (int, 999 = none, else degrees turned into a direction), takes the position of the node (else the entity's), calls the hook `[0x377278 + 0x28]` when one is set, else `0x21e2e4(mode, count, position, direction, ...)` with the mode 1 when its fourth argument is 0 and the mode 0 otherwise. `0x21e2e4` takes the records 0..19 of the pickup pool for the modes 0..2 (mode 1 becomes 2 with probability 1/3), sorts them, and `0x19913c` spawns them ([debris.md](debris.md#ts-20261018-144056) for the bricks of mode 3, which share the code). `0x22ca88(entity, ...)` is the same with the parameter `StudValue` (or `ForceStudValue`) as the count.
+
+**Callers (static).**
+- Non-lethal wobble hit: `0x2bc370` (from 0x2a3488 in the wobbly handler and 0x1bc438 in the traffic light handler, after the wobble reaction 0x16b958 when the health stays above 0) bursts `WobbleDebrisAmount` bricks (class value 1) and calls `0x23a6b0(entity, WobbleStudValue, 1, 1, 1)` with `WobbleStudValue` default 2. Every wobbly prop of lvl_01 has a `WobbleHealth` of 2 to 6, so a vehicle (damage 100) never takes this path; an on-foot hit with a small damage can.
+- Hit-sequence slots: `0x2b7894` (from 0x2398d8 of the type 67 handler 0x15e408 and from 0x16b06c of the handler 0x15aa70 shared by the types 67 and 204) calls 0x23a6b0 with the slot byte +0x16 as the count, at the first or last frame of the slot's clip (`StudSpawnFrame%.2u`, `StudSpawnValue%.2u` and the other `StudSpawn*` names of the parameter reader).
+- Car break: `0x16ccb4 -> 0x1aad90` reads `StudValue` of the vehicle and calls 0x2149ac.
+- The player hurt: `0x20bd18` calls 0x21e2e4 with mode 0 and count 30 (flag byte +0x12e bit 0 of the player's record).
+- Behaviours and classes that read `StudValue` / `ForceStudValue` (not traced): 0x22ca88 from the prop_faller (type 45, 0x174c70), topple (102, 0x18c100), legohazard (154, 0x191130) classes, from 0x1ba5e8, from the generic state machine 0x22c6d0 (nine callers) and from 0x2aaa78; 0x23a6b0 from the critter (225, 0x16dc74), legosilver (155, 0x19ea30), wiretap (195, through 0x1b0454), 0x273448, 0x28d81c, 0x2bd750 and 0x319f3c; the script native `SpawnStuds` (0x1a3134); 0x21e2e4 directly from 0x18ebcc, 0x18ec7c, 0x1c875c, 0x1c87ac, 0x1d6c2c and 0x26d2d4, 0x2c91f8.
+- `StudValue` of the objects of lvl_01: class value 25 for leprop_wobblydestructible, prop_respawnabledestructible, prop_prop and leprop_prop, 0 for prop_trafficlight; instance values 24 (14 fences and containers), 75 (2 computers), 50 (a plant) and 0 (7).
+
+**Port.** Dropped studs (modes 0..2) are not ported; the bricks of mode 3 are (`DebrisField`). Item STUD-11.
+
+Unknowns:
+- Where the class `StudValue` of a wobbly prop is read (not in its message 0 / 1 paths nor in 0x2bc370); whether a destroy by the player on foot or a fall-apart clip releases it.
+- The mode and count each caller above passes at run time, the motion of a dropped stud (the bricks' physics of 0x180168 state 2 is known, the pickup test of a flying stud was not read), and whether a car break (0x1aad90) drops studs in the oracle.
+- Whether the lamp post trace of the steered run contains stud calls (only 0x23cd80 was trapped).
