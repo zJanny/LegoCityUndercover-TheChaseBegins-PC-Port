@@ -283,6 +283,8 @@ LevelSession::LevelSession(const Shared& sharedState)
     std::cout << "scanner zones: " << scanner.zones().size() << ", scannable objects: " << scanner.objects().size() << '\n';
     ziplines = runtime::loadZiplineAnchors(level, classOf);
     std::cout << "zipline anchors: " << ziplines.size() << '\n';
+    grabBricks = runtime::loadGrabBricks(level, classOf);
+    std::cout << "climbing bricks: " << grabBricks.size() << '\n';
     std::cout << "collision: " << collision.triangleCount() << " triangles in " << collision.entries().size() << " entries\n";
 
     float centre[3];

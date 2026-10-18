@@ -1,4 +1,5 @@
 #include "game_player.hpp"
+#include "runtime/brick_grab.hpp"
 #include "runtime/player_motion.hpp"
 #include <cmath>
 #include <iostream>
@@ -126,6 +127,7 @@ std::optional<PlayerRig> placePlayer(FuseArchive& archive, Scene& scene, const L
         for (const int id : {runtime::kAnimationBuildit, runtime::kAnimationPickupBig, runtime::kAnimationPickupSmall, runtime::kAnimationPutdownBig, runtime::kAnimationPutdownSmall,
                              runtime::kAnimationScannerOut, runtime::kAnimationScannerIn})
             clips.push_back(id);
+        clips.insert(clips.end(), runtime::kBrickGrabAnimations.begin(), runtime::kBrickGrabAnimations.end());
         for (const int id : clips) {
             const std::string path = std::string(kCarryAnimationDirectory) + rig.carryAnimations->name(id) + kPlayerAnimationSuffix;
             if (!rig.animations.count(id) && archive.find(path)) rig.animations[id] = loadAnimation(archive, path);
