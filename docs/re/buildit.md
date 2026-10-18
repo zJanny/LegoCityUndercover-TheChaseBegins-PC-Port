@@ -12,7 +12,8 @@ The build-it class (object type 0x15): record, use zone, state machine, completi
 - Unbuilt bricks wobble (start values 0x18275c, condition `0x210f30`, sound for the first three crossings per update, not four) [§2026-10-15T19:52](#ts-20261015-195230).
 - Rise of the final prop in state 10: y = base y + sin(spin), spin grows by 12 per update (24 from 90 degrees); state 11 writes the base y back [§2026-10-15T18:31](#ts-20261015-183145).
 - The player enters state 9 "BUILD IT" (enter 0x1d4b14, update 0x276254, exit 0x1c72f0); the use query's `2414b4(..., 9, 0)` is a state request, not a clip id; sounds and unported effects are listed there [§2026-10-16T10:17](#ts-20261016-101726).
-- Open: seed of the original random source; what fills the list of 0x1a0f6c; player's animation/turn/camera during the build; per-update timing of the van switch; builds without a final prop.
+- The player's state 9 lasts from the press update to the update the build-it reaches state 10 (updates 0..72 of the six-brick van build, the object updates first); clip 183 loops (slot mode 1) [§2026-10-18T10:08](#ts-20261018-100804).
+- Open: seed of the original random source; what fills the list of 0x1a0f6c; player's turn and camera during the build, 0x22c500; per-update timing of the van switch; builds without a final prop.
 
 <a id="ts-20261014-235539"></a>
 
@@ -196,3 +197,20 @@ Unknowns:
 - Whether the held-A condition (ctrl+0xc bit 2) is exactly the bit the state tests (read from the code, not traced).
 - The turn the state does (`0x1ff030` with `*0x3598c4`): the port does not turn the player.
 - The two-target camera (0x1b4aa0), 0x22c500 at the build's end, the body of 0x21e2e4.
+
+<a id="ts-20261018-100804"></a>
+
+## 2026-10-18T10:08:04+02:00 — The player's state 9 traced against the build of the donut van (Azahar GDB + RPC trace by agent r18-A, llvm-objdump)
+
+Extends [§2026-10-16T10:17:26](#ts-20261016-101726). Source: Azahar New 3DS, OpenGL, `--rpc --rpc-input`, port 24701, home `artifacts/oracle/r18-A`, state `m11-4-van-parts` (loaded as described, nothing poked), fixed dt 0.033, A held from update 0 for 100 updates. Per update: player controller 0x08552790 +0x6c (state), +0xc, +0x48, +0x6, +0xa, the player's forward axis, the build-it record 0x08a75580 (+2, +4, +0x35, +0x40) and the player's animation slot 0x0856a510. Breakpoints: the reply of the use query in 0x276254 (0x2762a0), 0x2414b4 for the player, the enter 0x1d4b14, the exit 0x1c72f0, 0x22c500, 0x290fd8 and 0x21941c for the player. Scripts `build.py` / `drive.py` and `build1.txt` stay in the agent's scratch directory. llvm-objdump of 0x276254..0x276334 and 0x290fd8.
+
+- **Entry.** In update 0 the hint code's use query (0x2414b4 with 9 from lr 0x17632c) requests state 9; the enter 0x1d4b14 runs in the same update and starts clip 183 with r2 = 1. The slot then holds +4 = 0x2401 (mode 1 and the wrap bit 0x2000) and +0x2e = 17: the `buildit` clip loops. The query asks for state 9 again at every change of the build-it to state 8 (updates 12, 24, 36, 48, 60; two requests each) without a new entry.
+- **Exit.** The build-it is in state 9 at the start of update 72 and in state 10 after it; in update 72 the reply at 0x2762a0 is 2, 0x276254 requests state 1 (lr 0x2762d8), calls 0x290fd8 with s0 = 1.0 (literal 0x276334; it stores the float at 0x51a224 + 0x140) and the exit 0x1c72f0 runs; the player plays the idle clip from update 73. So the object's update runs before the player's in an update, and the state lasts updates 0..72 of a six-brick build (state 1 from update 73). The reply 1 with the held bit stores 0.0 (literal 0x276330) to ctrl+0x48 every update.
+- **Turn.** The facing (ctrl+0xa = -25284, forward (-0.6575, -0.7534)) did not change in the whole run; the intent heading of the state already matched it, so the turn of 0x1ff030 is not shown by this trace.
+- **End of the build.** 0x22c500(4, 4, 4, 0) is called from 0x1ab07c in update 84, the change of the build-it to state 11 (record +2 = 2 again from update 85).
+- **Port.** `BuilditPlayer` enters in the update of the press, keeps the state while the reply is 1 with A held, and leaves in the update the reply is 2, after `BuilditSet::update`; all player clips loop. That matches the trace; no code change.
+
+Unknowns:
+- What 0x22c500 and the float at 0x51a224 + 0x140 do.
+- The turn of 0x1ff030 with `*0x3598c4` when the intent heading differs from the facing.
+- 0x276254 keeps the state when the reply is 0 and the object's halfword +0x10 bit 0 is clear (0x2762f4); the port leaves the state on any reply other than 1 (not traced).

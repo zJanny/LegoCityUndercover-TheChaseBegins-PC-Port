@@ -1,5 +1,6 @@
 // The player's state 9 "BUILD IT" (src/runtime/buildit_player.cpp). Rules from the code: 0x176160 case 3 (reply 1 / 2), 0x276254 (the state stays while
-// the reply is 1 and the held flag ctrl+0xc bit 2 is set), 0x1d4b14 (clip 183 "buildit"); docs/re/buildit.md. No oracle trace of the player's state exists.
+// the reply is 1 and the held flag ctrl+0xc bit 2 is set), 0x1d4b14 (clip 183 "buildit"); docs/re/buildit.md. Oracle trace (r18-A, m11-4-van-parts,
+// dt 0.033, docs/re/buildit.md §2026-10-18T10:08:04): entered in the press update, left in the update the build-it answers 2.
 #include "runtime/buildit_player.hpp"
 #include <iostream>
 #include <string>

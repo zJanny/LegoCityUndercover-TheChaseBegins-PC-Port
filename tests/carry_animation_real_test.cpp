@@ -56,6 +56,11 @@ int main(int argc, char** argv) {
         require(timing.placeRelease == 8, "put-down release at update " + std::to_string(timing.placeRelease));
         require(timing.pickupAttach == 16, "pickup attach at update " + std::to_string(timing.pickupAttach));
         require(timing.pickupEnd == 48, "the pickup state ends with its clip: 24 frames at 15 per second = 48 updates (oracle: slot replaced at update 49 with dt 0.033)");
+        require(timing.placeEnd == 26 && timing.dropEnd == 26,
+                "place and drop end with the put-down clip: 13 frames at 15 per second = 26 updates (oracle r18-A place3 / drop1, m11-9-delivery-goal and "
+                "m11-8-donuts-in-hand, dt 0.033: 0x22f560 kind 6 and state 1 at update 27)");
+        require(timing.dropRelease == 8, "the drop releases at the event of the put-down clip (oracle r18-A drop1: 0x2256e4 at update 8, dt 0.033), got " +
+                                             std::to_string(timing.dropRelease));
 
         const assets::Model box = assets::parseModel(read("models/prop_box_o_donuts/prop_box_o_donuts_atlas_lvl_01_cherrytreehills_main.bfnmdl"));
         const std::array<float, 16> offset = runtime::carryHandOffset(box);

@@ -11,6 +11,10 @@ constexpr int kVariantSmall = 3, kVariantBig = 5;
 constexpr float kRiseThreshold = 0.5f;
 constexpr float kUpdatesPerSecond = 30.0f;
 
+unsigned clipUpdates(const assets::Animation& animation) {
+    return unsigned(std::ceil(float(assets::animationLength(animation)) * kUpdatesPerSecond / assets::animationFramesPerSecond(animation) - 1e-3f));
+}
+
 std::string lowerCase(std::string text) {
     std::transform(text.begin(), text.end(), text.begin(), [](unsigned char c) { return char(std::tolower(c)); });
     return text;
@@ -70,8 +74,9 @@ CarryTiming carryTiming(const assets::Animation& pickup, const assets::Animation
     if (const int attach = carryEventUpdate(pickup, kCarryEventTrackHash); attach >= 0) {
         timing.pickupAttach = unsigned(attach);
     }
-    timing.pickupEnd = unsigned(std::ceil(float(assets::animationLength(pickup)) * 30.0f / assets::animationFramesPerSecond(pickup) - 1e-3f));
-    if (const int release = carryEventUpdate(putdown, kCarryEventTrackHash); release >= 0) timing.placeRelease = unsigned(release);
+    timing.pickupEnd = clipUpdates(pickup);
+    timing.placeEnd = timing.dropEnd = clipUpdates(putdown);
+    if (const int release = carryEventUpdate(putdown, kCarryEventTrackHash); release >= 0) timing.placeRelease = timing.dropRelease = unsigned(release);
     return timing;
 }
 

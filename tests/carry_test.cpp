@@ -68,7 +68,7 @@ int main() {
             set.update(state, at(11.4f, 10.7f, true));
             require(set.phase() == CarryPhase::PickingUp && set.busy(), "button in the zone starts the pickup");
             unsigned picked = 0;
-            for (unsigned update = 0; update < 30 && set.busy(); ++update)
+            for (unsigned update = 0; update <= CarryTiming{}.pickupEnd && set.busy(); ++update)
                 picked += count(set.update(state, at(11.4f, 10.7f, true)), CarryActionKind::PickedUp);
             require(picked == 1, "the pickup fired once");
             require(set.carryingMode() == 2 && set.carriedIndex() == 0, "big object: carrying mode 2");

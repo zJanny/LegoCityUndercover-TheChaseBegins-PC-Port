@@ -12,7 +12,8 @@ Split from [vehicles-physics-collision.md](vehicles-physics-collision.md) (that 
 - Corrects the 08:59:49 claim of object-side smash code and the 09:53:49 claim of a van-specific child box. [§2026-10-16T11:15:22](#ts-20261016-111522)
 - Every vehicle class, the donut van included, takes its compound child box as the entity box minus `CentreOfMass`; the van stand-in is removed. [§2026-10-16T11:15:22](#ts-20261016-111522), [§2026-10-16T11:31:00](#ts-20261016-113100)
 - Break at a static box: hearts drop at the impact, the car breaks into bricks (E+0xc bit 4) later; measurements are in the vehicles-damage feature file. [§2026-10-16T11:15:22](#ts-20261016-111522)
-- Open: indestructible props, the wobble reaction for health above 0, the kinematic branch of 0x16ce9c, contact lists at the pillar, the pair-contact flag word and the writers of 0x3745b4.
+- At the pillar (879.9, 17.1, 1115.66) the sphere sweep produces no contact in updates 26..37; the car's climb comes from elsewhere in the floor pass. [§2026-10-18T10:42:53](#ts-20261018-104253)
+- Open: indestructible props, the wobble reaction for health above 0, the kinematic branch of 0x16ce9c, a scene with a sphere contact, the pair-contact flag word and the writers of 0x3745b4.
 
 <a id="ts-20261016-085949"></a>
 
@@ -118,3 +119,17 @@ Test values that moved (vehicle-collision, vehicle-sphere-sweep): the van box lo
 
 Unknowns:
 - Whether the van's collision spheres (2 x 1 x 3, radius 0.9) built from this box match the oracle's sphere set; only their count is pinned.
+
+<a id="ts-20261018-104253"></a>
+
+## 2026-10-18T10:42:53+02:00 — The pillar run has no sphere contact (Azahar GDB + RPC trace by agent r18-A)
+
+Extends [§2026-10-16T11:15:22](#ts-20261016-111522) (pillar run). Source: Azahar New 3DS, OpenGL, `--rpc --rpc-input`, port 24701, home `artifacts/oracle/r18-A`, state `drv-police-car-seated`, fixed dt 0.033, A held from update 0, no steering; after update 14 the rigid body 0x08e16f40 position (+0x34) was poked to (879.9, 17.1, 1115.66) and body 0x08e16100 +0x8c to -1 (measuring aids, as in the round-16 run). Per update: the rigid position, velocity (+0x13c) and body +0x8c. From the first update with x below 878.8 (update 26) to update 37: breakpoints at the returns of both calls of 0x16788c in 0x1c54f8 (0x1c59f4, 0x1c5a4c; the contact list is the caller's sp + 0x68, its count at [r11]), at 0x167c90 (plane crossing inside the triangle), 0x167ca0 (that crossing taken as the contact) and around the edge call 0x167e4c / 0x167e50. Scripts `pillar.py` / `drive.py` and `pillar4.txt` stay in the agent's scratch directory. A first try with the poke at update 0 left the car standing still for 36 updates; a poke after update 14 started it at once. Two runs (pillar3, pillar4) gave the same rows.
+
+- The car accelerated from (879.83, 17.09, 1115.59) at update 15 to 7.4 m/s at (878.14, 17.06, 1113.89) in update 29. In update 30 the horizontal speed fell to 2.7 m/s and the vertical speed rose to 1.8 m/s; the car climbed to (876.95, 17.52, 1112.76) by update 37 (vertical speed 2.7) and came to rest at (876.78, 17.71, 1112.65) at update 42.
+- In updates 26 to 37 the contact count after every call of 0x16788c stayed 0, 0x167c90 was never reached (no swept plane crossing inside a triangle), so the overlap branch, the in-triangle contact and the case of VEH-S86 did not occur. The climb at the pillar comes from another part of the floor pass (the eight points and their 0x15c4a4 sweeps, or the wheels), not from the sphere sweep.
+
+Unknowns:
+- Which contact makes the car climb at update 30 (the floor pass points, the wheel rays or a static Bullet box were not trapped).
+- Why the car poked at update 0 did not move (the body's activation after the poke was not read).
+- A scene where a sphere of the sweep hits a wall cell and the VEH-S86 case occurs.

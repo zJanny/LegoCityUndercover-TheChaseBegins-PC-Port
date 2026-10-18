@@ -86,7 +86,7 @@ int main(int argc, char** argv) {
         };
         step(pickupPoint, true);
         bool pickedScript = false;
-        for (int i = 0; i < 30; ++i) {
+        for (unsigned i = 0; i <= runtime::CarryTiming{}.pickupEnd; ++i) {
             step(pickupPoint, false);
             pickedScript = pickedScript || scripts.running("1-1_SO_Donuts_PickedUp", false);
         }
@@ -96,7 +96,7 @@ int main(int argc, char** argv) {
         step(inTarget, true);
         const auto deliverTip = [&]() { return scripts.text().tip().active && scripts.text().tip().key == 4094106651u; };
         bool deliver = deliverTip(), missionEnd = false;
-        for (int i = 0; i < 30; ++i) {
+        for (unsigned i = 0; i <= runtime::CarryTiming{}.placeEnd; ++i) {
             step(inTarget, false);
             deliver = deliver || deliverTip();
             missionEnd = missionEnd || scripts.running("1-1_SO_MissionEnd", false);
