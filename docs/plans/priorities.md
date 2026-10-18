@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 640 open items and stand-ins, 124 linked to game usage, 516 with unknown reach.
+Items: 642 open items and stand-ins, 124 linked to game usage, 518 with unknown reach.
 
 ## Top 50 overall
 
@@ -138,7 +138,7 @@ Items: 640 open items and stand-ins, 124 linked to game usage, 516 with unknown 
 
 ## Scripts and missions
 
-66 of 132 items linked.
+66 of 134 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -233,7 +233,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md)
 - [script-system-ai-navigation.md](features/script-system-ai-navigation.md): SCRIPT-92 (+30), SCRIPT-94 (+16), SCRIPT-101 (+14), SCRIPT-95 (+14), SCRIPT-100 (+13), SCRIPT-79 (+12), SCRIPT-S100, SCRIPT-S101, SCRIPT-S102, SCRIPT-S104, SCRIPT-S31, SCRIPT-S93, SCRIPT-S94, SCRIPT-S95
 - [script-system-dcam.md](features/script-system-dcam.md): SCRIPT-40 (+15), SCRIPT-182 (+1), SCRIPT-48 (+1), SCRIPT-50 (+1), SCRIPT-181, SCRIPT-49, SCRIPT-S142
 - [script-system-hud-natives.md](features/script-system-hud-natives.md): SCRIPT-68, SCRIPT-69, SCRIPT-70
-- [script-system-missions.md](features/script-system-missions.md): SCRIPT-220 (+1), SCRIPT-284 (+1), SCRIPT-115, SCRIPT-142, SCRIPT-221, SCRIPT-S141, SCRIPT-S236, SCRIPT-S237
+- [script-system-missions.md](features/script-system-missions.md): SCRIPT-115 (+1), SCRIPT-220 (+1), SCRIPT-284 (+1), SCRIPT-142, SCRIPT-221, SCRIPT-292, SCRIPT-293, SCRIPT-S141, SCRIPT-S236, SCRIPT-S237
 - [script-system-natives-animation.md](features/script-system-natives-animation.md): SCRIPT-272 (+1), SCRIPT-S110
 - [script-system-natives-world.md](features/script-system-natives-world.md): SCRIPT-279 (+14)
 - [script-system-natives.md](features/script-system-natives.md): SCRIPT-43 (+17), SCRIPT-44 (+15), SCRIPT-45 (+13), SCRIPT-7 (+11), SCRIPT-150 (+1), SCRIPT-56 (+1), SCRIPT-64 (+1), SCRIPT-98 (+1), SCRIPT-S97
