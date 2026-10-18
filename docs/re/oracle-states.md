@@ -17,7 +17,7 @@ Save states the oracle uses: which ones exist, the game progress of each, how ea
 - Rest of mission 1-2 (user, loaded and checked): `m12-9-zipline` to `m12-13-cage-trigger`, and `m12-14-mission-complete` with mission 1-2 finished; positions in the table of the entry. [§2026-10-18T12:27:39](#ts-20261018-122739)
 - Vehicle brick effects (user): `veh-smash-prop` (lamp post), `veh-smash-car` (moving car ahead), `veh-break-low-hearts` (one heart left). [§2026-10-18T12:45:56](#ts-20261018-124556)
 - `veh-wall-full-speed` (user): police car with four hearts at speed towards a brick wall, for VEH-128. [§2026-10-18T15:06:16](#ts-20261018-150616)
-- Pole mount (user, for TRAV-1): `m12-10a-pole-foot` (on the ground in front of the drain pipe, facing away), `m12-10b-pole-side` (0.5 m left of the pipe, facing the wall). [§2026-10-18T15:46:24](#ts-20261018-154624)
+- Pole mount (user, for TRAV-1): `m12-10a-pole-foot` (0.8 m from the drain pipe, facing away; walking into the pipe mounts it), `m12-10b-pole-side` (2.4 m left of the pipe axis, facing the wall). [§2026-10-18T15:46:24](#ts-20261018-154624)
 - `leadcut-1_1_d-early` (from `m11-6-van-to-shop`): cutscene `1_1_d` just loaded, for its actor nodes and pictures. [§2026-10-16T14:39:21](#ts-20261016-143921)
 - Open: whether mission 1-2 is active in the post-1-1 states, the level variables of the m11 states, a save with Continue byte +6 above 1, and the Old 3DS run of `savestate`.
 
@@ -257,12 +257,19 @@ Unknowns:
 
 ## 2026-10-18T15:46:24+02:00 — User states at the foot of the drain pipe of `m12-10`
 
-Asked by r21-A for the pole mount (TRAV-1). The user quick-saved two slots (2026-10-18, New 3DS); copied read-only (`cp --no-clobber`, identical by `cmp`):
+Asked by r21-A for the pole mount (TRAV-1). The user quick-saved two slots (2026-10-18, New 3DS); copied read-only (`cp --no-clobber`, identical by `cmp`). Both were loaded and checked by the servant r20-D (`--state NAME --rpc --renderer opengl`, read before any input, screenshot; a first load after a fresh start and a repeated `loadstate` gave the same values). Pole origin of `1-5_Drain_Pipe05`: 940.457 45.371 683.463.
 
-| State | Slot | Where (user report) |
-|---|---|---|
-| `m12-10a-pole-foot` | 0 (15:44) | on the ground directly in front of the drain pipe climbed in `m12-10` (`1-5_Drain_Pipe05`), facing away from it; turning 180 degrees and walking forward mounts the pipe |
-| `m12-10b-pole-side` | 2 (15:45) | facing the wall about 0.5 m to the left of the same pipe |
+| State | Slot | Where (user report) | Player position | Seen at load |
+|---|---|---|---|---|
+| `m12-10a-pole-foot` | 0 (15:44) | on the ground directly in front of the drain pipe climbed in `m12-10`, facing away from it | 941.112 58.336 683.057 | 0.77 m from the pole axis, facing (0.899, 0, -0.438), 174 degrees away from the pipe; ctrl+0x6c = 1; standing beside the blue pipe, not carrying, not on it: matches |
+| `m12-10b-pole-side` | 2 (15:45) | facing the wall about 0.5 m to the left of the pipe | 939.263 58.301 681.421 | facing (-0.455, 0, 0.891), the pipe 57 degrees to the right of the facing; ctrl+0x6c = 1; seen from behind facing the wall with the pipe to his right: matches, but 2.36 m from the pole axis, not about 0.5 m |
 
-Progress: mission 1-2 in progress, past the scanner and the zipline, as `m12-10` (user). User observation: in the original the pipe is mounted by walking into it. Not loaded yet by the lead.
+The pole origin lies 13 below the player's feet (y 45.37 against 58.3); the player stands on the pavement in both states.
+
+Walk check from `m12-10a-pole-foot` (one try, stepped updates with dt 0.033, stick each update towards the pole origin, no button): update 1 ctrl+0x6c 1 -> 2; update 4 -> 285 (0x11d, POLE MOUNT) and the player moves to the pipe (0.80 -> 0.10 m over updates 4 to 9); update 9 -> 288 (0x120, POLE IDLE) at 940.542 58.32 683.410, 0.1 from the pole axis (the drain pipe's snap offset); updates 9 to 60 unchanged with the stick still towards the pipe; the picture shows Chase holding the pipe at its foot. The pipe is mounted by walking into it without a button press, as the user said. State names from [player-traversal.md](player-traversal.md#ts-20261018-145230).
+
+Progress: mission 1-2 in progress, past the scanner and the zipline, as `m12-10` (user).
+
+Unknowns:
+- Which message of the pole handler the walk-in mount uses (the pressed path of 0x191ac0 was read, the walk-in not).
 
