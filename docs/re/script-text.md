@@ -166,7 +166,6 @@ Unknowns:
 - The warning dialog's own box width (296) is not explained by the same rule (its two-button row may widen it); its button positions stay the earlier fitted values.
 
 <a id="ts-20261014-214151"></a>
-<a id="ts-20261014-214151"></a>
 
 ## 2026-10-14T21:41:51+02:00 — HUD-31: why the port's picture of the InformationBox shows no HUD and a dialogue background (port runs and the oracle picture `ib3.png`; no new disassembly, REA was not used)
 

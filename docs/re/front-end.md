@@ -141,7 +141,6 @@ Unknowns:
 - Whether the percent's shift comes from the page's code (right edge of a resized element) or from the layout.
 
 <a id="ts-20261014-213617"></a>
-<a id="ts-20261014-213617"></a>
 
 ## 2026-10-14T21:36:17+02:00 — Movie subtitles: wrap, box height, the original's text code
 

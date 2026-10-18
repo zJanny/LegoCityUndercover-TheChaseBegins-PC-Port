@@ -10,7 +10,6 @@ The detective spot (ObjectType 182, `props/ability_detective`), the reveal spot 
 - Open: the use state's approach phase, the footprint pool models, fades, the bounce helper 0x2077a8, question particles, camera effects of detective mode.
 
 <a id="ts-20261018-112621"></a>
-<a id="ts-20261018-112621"></a>
 
 ## 2026-10-18T11:26:21+02:00 — Detective classes, footprints, player states and their timing (REA on game.arm.elf, llvm-objdump, Azahar GDB states m12-4, m12-5, m12-6)
 

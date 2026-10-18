@@ -210,7 +210,6 @@ Unknowns:
 - Whether the white sound scanner view is an emulation fault of both renderers or of the user's renderer only.
 
 <a id="ts-20261018-122739"></a>
-<a id="ts-20261018-122739"></a>
 
 ## 2026-10-18T12:27:39+02:00 — User states of the rest of mission 1-2
 
@@ -227,7 +226,6 @@ The user played mission 1-2 past the roof sound scanner and to its end and saved
 
 Progress: mission 1-1 finished; slots 1 to 5 mission 1-2 in progress (past the scanner), slot 6 mission 1-2 finished (back on the street with the dialogue "McCain, stop messing around and get back to the station."). Each `NAME.json` names the emulator load slot `00040000000AD600.00.cst` in `file`, like the other states. The user got the scanner working in Azahar; how is not recorded yet.
 
-<a id="ts-20261018-124556"></a>
 <a id="ts-20261018-124556"></a>
 
 ## 2026-10-18T12:45:56+02:00 — User states for vehicle smashes and the car break

@@ -75,7 +75,6 @@ Unknowns:
 - Circle-pad injection without a breakpoint (needs a patch of 0x10a540 and 0x10a550 to load full words from spare RAM, or a stub in the code cave).
 
 <a id="ts-20261014-214240"></a>
-<a id="ts-20261014-214240"></a>
 
 ## 2026-10-14T21:42:40+02:00 — Breakpoint-free circle pad, wait for a byte, screenshot loop (`tools/azahar_oracle.py`; llvm-objdump on `artifacts/game/game.arm.elf`, oracle run on `street-at-entrance`; REA was not used)
 

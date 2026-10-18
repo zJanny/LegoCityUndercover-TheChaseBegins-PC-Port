@@ -60,6 +60,26 @@ class CheckDocLinksTest(unittest.TestCase):
         self.assertIn('(../../re/topic.md#ts-20260102-030405)', self.feature.read_text())
         self.assertNotIn('ts-20260102-031000', (self.root / 'docs' / 're' / 'topic.md').read_text())
 
+    def test_anchor_directly_above_heading_is_not_duplicated(self):
+        topic = self.root / 'docs' / 're' / 'topic.md'
+        topic.write_text(RE_FILE.replace('## 2026-01-02T03:04:05', '<a id="ts-20260102-030405"></a>\n## 2026-01-02T03:04:05'))
+        links.process(self.root, True)
+        text = topic.read_text()
+        self.assertEqual(text.count('<a id="ts-20260102-030405"></a>'), 1)
+        self.assertIn('<a id="ts-20260102-030405"></a>\n\n## 2026-01-02T03:04:05', text)
+        self.assertEqual(links.process(self.root, False)[0], [])
+
+    def test_duplicate_anchor_fails_and_fix_removes_it(self):
+        topic = self.root / 'docs' / 're' / 'topic.md'
+        links.process(self.root, True)
+        anchor = '<a id="ts-20260102-030405"></a>'
+        topic.write_text(topic.read_text().replace(anchor, f'{anchor}\n{anchor}'))
+        errors = links.process(self.root, False)[0]
+        self.assertTrue(any('duplicate anchor ts-20260102-030405' in e for e in errors))
+        links.process(self.root, True)
+        self.assertEqual(topic.read_text().count(anchor), 1)
+        self.assertEqual(links.process(self.root, False)[0], [])
+
     def test_missing_file_anchor_and_stamp(self):
         links.process(self.root, True)
         self.feature.write_text(

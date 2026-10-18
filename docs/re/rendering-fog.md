@@ -109,7 +109,6 @@ Unknowns:
 - The fog depth source (projection near 1 and far 260) is still the stand-in of [RENDER-S5](../plans/features/rendering.md).
 
 <a id="ts-20261014-214220"></a>
-<a id="ts-20261014-214220"></a>
 
 ## 2026-10-14T21:42:20+02:00 — RENDER-41 pop-in and RENDER-30 fog against oracle screenshots (Azahar oracle New 3DS, OpenGL, `--rpc --rpc-input`, states `street-at-entrance` and `street-after-1-1`; port `chase-game --hide-room`; no new disassembly, REA was not used)
 

@@ -50,7 +50,6 @@ Unknowns:
 - `Language_Spanish` is a saved parameter (type 5) of unknown meaning.
 
 <a id="ts-20261014-134146"></a>
-<a id="ts-20261014-134146"></a>
 
 ## 2026-10-14T13:41:46+02:00 — Object records, end bit set, current level and the second unlock bit (llvm-objdump on artifacts/game/game.arm.elf; oracle `read` on `street-after-1-1`, OpenGL, no RPC; real save copy)
 

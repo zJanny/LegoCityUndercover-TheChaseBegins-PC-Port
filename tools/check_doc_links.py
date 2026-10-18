@@ -130,10 +130,16 @@ class Doc:
         out = []
         for number, line in enumerate(self.lines):
             if not self.in_code[number]:
+                if ANCHOR_LINE.match(line) and out and out[-1].strip() == line.strip():
+                    added += 1
+                    continue
                 match = ENTRY_HEADING.match(line)
                 if match:
                     anchor = entry_anchor(match)
-                    if len(out) < 2 or out[-2].strip() != f'<a id="{anchor}"></a>':
+                    if out and out[-1].strip() == f'<a id="{anchor}"></a>':
+                        out.append("")
+                        added += 1
+                    elif len(out) < 2 or out[-2].strip() != f'<a id="{anchor}"></a>':
                         out.append(f'<a id="{anchor}"></a>')
                         out.append("")
                         added += 1
@@ -816,6 +822,13 @@ def process(root, fix, messages=None):
             for number, anchor in doc.entries():
                 if number == 0 or doc.lines[number - 2].strip() != f'<a id="{anchor}"></a>':
                     errors.append(f"{path.relative_to(root)}:{number + 1}: entry has no anchor {anchor}")
+            seen = set()
+            for number, line in enumerate(doc.lines):
+                match = ANCHOR_LINE.match(line)
+                if match and not doc.in_code[number]:
+                    if match.group(1) in seen:
+                        errors.append(f"{path.relative_to(root)}:{number + 1}: duplicate anchor {match.group(1)}")
+                    seen.add(match.group(1))
     for path in files:
         doc = load(path)
         rel = path.relative_to(root)
@@ -919,7 +932,7 @@ def main(argv=None):
     for error in errors:
         print(error)
     if args.fix:
-        print(f"{count} files checked, {added} anchors added, {rewritten} links rewritten")
+        print(f"{count} files checked, {added} anchors fixed, {rewritten} links rewritten")
     elif not errors:
         print(f"{count} files checked, all links and anchors resolve")
     return 1 if errors else 0
