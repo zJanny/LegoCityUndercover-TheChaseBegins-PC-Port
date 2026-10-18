@@ -139,6 +139,7 @@ private:
     void updateScanner();
     game_player::PlayerAnimation movePlayer(const chase::runtime::StickIntent& intent, bool jumpPressed, float dt);
     game_player::PlayerAnimation moveClimbingPlayer(const chase::runtime::StickIntent& intent, bool jumpPressed, bool usePressed, float dt);
+    game_player::PlayerAnimation climbBarMovePlayer(const chase::runtime::StickIntent& intent, bool jumpPressed, bool usePressed, float dt);
     bool scannerView(float eye[3], float& yaw, float& pitch, float& fieldOfView) const;
     void updateLevelCharacters(float dt);
     void updateFollowCamera(float dt);
@@ -250,6 +251,9 @@ private:
     std::vector<chase::runtime::GrabBrick> grabBricks;
     chase::runtime::BrickClimber brickClimber;
     std::map<int, chase::assets::RootMotion> brickMotions;
+    chase::runtime::ClimbBarSet climbBars;
+    chase::runtime::ClimbBarRider climbBarRider;
+    std::optional<chase::assets::RootMotion> ledgeLeftMotion, ledgeRightMotion;
     std::optional<chase::runtime::VehicleBoarding> boarding;
     std::vector<chase::runtime::BoardingVehicle> boardingVehicles;
     std::vector<std::size_t> boardingRecords;

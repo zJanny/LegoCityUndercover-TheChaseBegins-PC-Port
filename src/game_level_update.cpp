@@ -277,7 +277,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         const runtime::BoardingStep boardingStep = stepBoarding(dt);
         game_player::PlayerAnimation shown =
             boardingStep.takesControl ? applyBoarding(boardingStep)
-                                      : moveClimbingPlayer(runtime::stickIntent(stick), !controlTaken && carry.allowsJump() && !detective.modeActive() && pad.slot(kSlotJumpButton).press > 0,
+                                      : climbBarMovePlayer(runtime::stickIntent(stick), !controlTaken && carry.allowsJump() && !detective.modeActive() && pad.slot(kSlotJumpButton).press > 0,
                                                            !controlTaken && pad.slot(kSlotConfirmButton).press > 0, dt);
         if (const runtime::AiCharacter* driven = levelScripts.ai().moving("player1") ? levelScripts.ai().character("player1") : nullptr) {
             game_player::applyAiPosition(*player, *driven);

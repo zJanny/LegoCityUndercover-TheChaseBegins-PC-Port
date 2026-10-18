@@ -132,6 +132,10 @@ std::optional<PlayerRig> placePlayer(FuseArchive& archive, Scene& scene, const L
             const std::string path = std::string(kCarryAnimationDirectory) + rig.carryAnimations->name(id) + kPlayerAnimationSuffix;
             if (!rig.animations.count(id) && archive.find(path)) rig.animations[id] = loadAnimation(archive, path);
         }
+        for (const int id : {runtime::kAnimationLedgeIdle, runtime::kAnimationLedgeLeft, runtime::kAnimationLedgeRight}) {
+            const std::string path = std::string(kCarryAnimationDirectory) + rig.carryAnimations->name(id) + kPlayerAnimationSuffix;
+            if (archive.find(path)) rig.animations[id] = loadAnimation(archive, path);
+        }
         for (const int id : {runtime::kAnimationZiplineSlide, runtime::kAnimationZiplineGrab, runtime::kAnimationZiplineDismount}) {
             const std::string path = std::string(kPlayerAnimationDirectory) + rig.carryAnimations->name(id) + kPlayerAnimationSuffix;
             if (archive.find(path)) rig.animations[id] = loadAnimation(archive, path);

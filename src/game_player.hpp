@@ -7,6 +7,7 @@
 #include "runtime/carry_animation.hpp"
 #include "runtime/scanner.hpp"
 #include "runtime/zipline.hpp"
+#include "runtime/climb_bar.hpp"
 #include "runtime/collision.hpp"
 #include "runtime/player_intent.hpp"
 #include "runtime/player_locomotion.hpp"
