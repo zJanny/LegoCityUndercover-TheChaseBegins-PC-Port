@@ -30,7 +30,7 @@ IN_PROGRESS, updated 2026-10-18T19:30:15+02:00. Detective spot (type 182), revea
 
 - [ ] DETECT-1 — The use state's approach (0x207be4, about 2.3 units in the oracle) and its event table are not read. blocks: DETECT-S1. evidence: [abilities-detective.md §2026-10-18T11:26:21](../../re/abilities-detective.md#ts-20261018-112621).
 - [ ] DETECT-3 — Nothing read leaves state 2 of a spot, so `1-2_Dtv_DogSpot_01_Script` never runs (also not in the oracle); confirm in a longer trace. evidence: [abilities-detective.md §2026-10-18T11:26:21](../../re/abilities-detective.md#ts-20261018-112621).
-- [ ] DETECT-4 — Not drawn: question particles, footprint rotation, fades, the dust particle and the bone's flight. blocks: DETECT-S2, DETECT-S3. evidence: [abilities-detective.md §2026-10-18T11:26:21](../../re/abilities-detective.md#ts-20261018-112621).
+- [ ] DETECT-4 — Not drawn: question particles, footprint rotation, fades, the dust particle and the bone's flight. blocks: DETECT-S2, DETECT-S3, DETECT-14. evidence: [abilities-detective.md §2026-10-18T11:26:21](../../re/abilities-detective.md#ts-20261018-112621).
 - [ ] DETECT-5 — Other readers of ext+0x130 bit 2 (camera, prompts, vehicle entry 0x1835d0) and 0x2a62b8 are not ported. evidence: [abilities-detective.md §2026-10-18T11:26:21](../../re/abilities-detective.md#ts-20261018-112621).
 - [ ] DETECT-6 — Ability 25 check, the list 0x529c44 and the registry order between object kinds are not modelled. blocks: DETECT-S6. evidence: [abilities-detective.md §2026-10-18T11:26:21](../../re/abilities-detective.md#ts-20261018-112621).
 - [ ] DETECT-8 — The same track (0xba1e5b53) shows other items in about 20 clips (hammer, axe, handcuffs, tea cup, fish, blowtorch, wire tap, zipline, whistle); only the glass is drawn (`runtime::HandItemTrack` is generic). blocks: DETECT-S7. evidence: [abilities-detective.md §2026-10-18T19:30:00](../../re/abilities-detective.md#ts-20261018-193000).
@@ -39,6 +39,7 @@ IN_PROGRESS, updated 2026-10-18T19:30:15+02:00. Detective spot (type 182), revea
 - [ ] DETECT-11 — Bottom screen: the magnifier button disappears in active mode and a white circle ripples out from the map arrow (about 1.5 s); not read, not drawn. evidence: [abilities-detective.md §2026-10-18T19:30:00](../../re/abilities-detective.md#ts-20261018-193000).
 - [ ] DETECT-12 — Hand item events: previous-value handling on a clip start, weighting, the per-frame bone update 0x242814 (glass orientation), the glass during `detect_find` and when the mode ends without `detect_in`. needs: DETECT-S7, DETECT-S8. evidence: [abilities-detective.md §2026-10-18T19:30:00](../../re/abilities-detective.md#ts-20261018-193000).
 - [ ] DETECT-13 — Compare the glass pose with the oracle at the same camera and clip frame (the port's camera differs in the shots so far; compared by eye only). blocks: DETECT-S8. evidence: [abilities-detective.md §2026-10-18T19:30:00](../../re/abilities-detective.md#ts-20261018-193000).
+- [ ] DETECT-14 — The user sees the marks that detective mode reveals drawn a bit off in `chase-game` (2026-10-18 playtest; position or turn not yet said); the footprints are drawn unrotated (DETECT-S3), not compared with the oracle. needs: DETECT-4. evidence: [abilities-detective.md §2026-10-18T11:26:21](../../re/abilities-detective.md#ts-20261018-112621).
 
 ## 6. Findings summary
 
