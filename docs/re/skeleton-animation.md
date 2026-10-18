@@ -5,7 +5,7 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 ## Current state
 
 - Skeleton loader 0x10f26c: joint records of 0x98 bytes (name, parent index, world bind matrix at +8, parent-relative matrix at +0x48); animation loader 0x10edec. Checked on 376 skeletons / 5280 joints and 1954 animations. [§2026-10-12T18:40](#ts-20261012-1840)
-- Curves are decoded by 0x248910 (bit reader, 12 channels: rotation, scale, shear, translation; raw-matrix header 0xfa); rotation uses the quaternion matrix of 0x248870, channels 6 to 8 are a shear. [§2026-10-12T19:05](#ts-20261012-1905), [§2026-10-12T20:15](#ts-20261012-2015)
+- Curves are decoded by 0x248910 (bit reader, 12 channels: rotation, scale, shear, translation); a header 0xfa curve stores one 4x4 matrix per frame, decomposed by 0x1324f8 into the same channels [§2026-10-18T21:40:55+02:00](#ts-20261018-214055); rotation uses the quaternion matrix of 0x248870, channels 6 to 8 are a shear. [§2026-10-12T19:05](#ts-20261012-1905), [§2026-10-12T20:15](#ts-20261012-2015)
 - Pose composition: local = rotation, shear, scale, translation (0x24c734), world = local times parent world, skin = rigid inverse of bind world times world (0x24c5a0). [§2026-10-12T20:15](#ts-20261012-2015)
 - Skin indices are positions in the per-batch bone palette (0x110-byte records, at most 26 entries), not joint minus 1. [§2026-10-12T21:30](#ts-20261012-2130)
 - Playback interpolates neighbouring frames and blends layers by quaternion sum; frame modes are clamp, loop, reverse, ping-pong. [§2026-10-12T22:10](#ts-20261012-2210)
@@ -203,3 +203,19 @@ Corrected by [skeleton-animation.md §2026-10-13T04:10](#ts-20261013-0410): one 
 Moved from the feature files so that the items stay short (CLAUDE.md, "Documentation rules"). The text below is the former wording of each item.
 
 - **ANIM-1** (animation-characters.md): Cutscene actors play on the camera's clock; whether an actor's own stored rate applies is not recovered. An animation that stores rate 0 holds frame 0 in the viewer; whether any shipped animation stores it is not checked. evidence: [skeleton-animation.md §2026-10-12T22:10](#ts-20261012-2210), [skeleton-animation.md §2026-10-13T17:02](#ts-20261013-170203).
+
+<a id="ts-20261018-214055"></a>
+
+## 2026-10-18T21:40:55+02:00 — The 0xfa raw-matrix joint curves: cause of the missing attack animation, decomposition 0x1324f8 (objdump, probes over the extracted clips)
+
+- Cause of PLAYER-19: all 22 joint curves of combo_1, combo_2, combo_3 (clips 122..125, `class_generic`) start with header 0xfa. `decodeChannels` reported only a flag and `skinMatrices` kept the bind local matrix for such joints, so the rig stayed in the bind pose while the clip id and frame advanced. Walk and idle have no 0xfa curves (probe over the extracted `.bfnanm` files). 65 of 1954 animations are all-0xfa (35 in `class_generic`, 4 to 5 per character class, 4 flower platforms); none is mixed; no cutscene object block uses 0xfa.
+- Curve layout: header byte, then one stored row-vector 4x4 float matrix (64 bytes) per frame at 1 + frame x 64; the blob has 3 padding bytes at the end (964 = 1 + 15 x 64 + 3). The matrices are plain floats (rows of combo_1 joint 3, frame 0: 0.9948 0.0938 -0.0391 / -0.1014 0.9433 -0.3161 / 0.0073 0.3184 0.9479, translation row -0.0007 -0.2052 -0.1165).
+- Original: 0x248910 branch 0x248c38 copies the 64 bytes of the frame (`memcpy` 0x25415c) and calls 0x1324f8 with the 12-float output, returns the mask 0xfff. 0x1324f8 (llvm-objdump, read in full):
+  - Translation = row 3. Row 0 is normalized by 0x257ea0 (length to scale x; a vector shorter than 2^-23 becomes (0, 0, 1)).
+  - Shear 0 = row0 . row1; row1 -= row0 x shear 0; scale y = length(row1) (row1 normalized); if |scale y| > 1e-5, shear 0 /= scale y.
+  - Shear 1 = row0 . row2; row2 -= row0 x shear 1; shear 2 = row1 . row2; row2 -= row1 x shear 2; scale z = length(row2) (normalized); if |scale z| > 1e-5, shear 1 and shear 2 /= scale z.
+  - If row0 . (row1 x row2) < 0: the three scales and the 3x3 are negated.
+  - Rotation: 0x247660 takes cy = sqrt(m00^2 + m10^2). If cy > 2^-19: (atan2(-m21, m22), atan2(m20, cy), atan2(-m10, m00)); otherwise (atan2(m12, m11), atan2(m20, cy), 0). Of that triple and (x + pi, pi - y, z + pi) the one with the smaller length is stored (the second on equality). 0x24765c / 0x2473ec is a float atan2(y, x); the port uses `std::atan2` (rounding may differ in the last bit).
+- Port: `decomposeMatrix` in `src/assets/anim.cpp`; `decodeChannels` fills the 12 channels for 0xfa curves and throws on a frame past the data; `skinMatrices` and the cutscene object matrix no longer skip them. Check: all 22 joints x all frames of combo_1..3 recompose (`localMatrix`) to the stored matrix within 7e-7, scale 1, shear 0 (so the Euler convention of 0x248248 matches). Tests: `assets` (synthetic matrix, mirrored matrix, truncation), `player-attack-real-data` (combo_1 joint 3, frames 0 and 7).
+- The joint orientation (record +0x88) is applied to 0xfa channels like to the others by `orientedPose`; where the original applies it was not read, so this is unverified for 0xfa curves.
+- Unknowns: that a screen render of the punch now looks right (not yet viewed; needs an RPC screenshot or a run of `chase-game`); the per-joint s16/256 post-scale (still not replicated); the root step PLAYER-S7 still comes from the sub-animation track, not from the root joint curve (the root joint curve 21 / the long curve of these clips was not compared with it).

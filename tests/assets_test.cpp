@@ -671,7 +671,29 @@ void animations() {
     require(f0.values[3] == 1 && f0.values[4] == 1 && f0.values[5] == 1, "absent scale defaults to 1");
     Bytes negative = bitstream({{0x01, 8}, {1, 3}, {(1u << 12) - 100, 12}, {0, 4}});
     require(near(decodeChannels(negative, 0, 1).values[0], -2.0f), "signed rotation base");
-    require(decodeChannels(Bytes{0xfa}, 0, 1).rawMatrix, "raw matrix header");
+    {
+        JointChannels source;
+        const float sourceValues[12] = {0.3f, -0.2f, 0.5f, 2, 1.5f, 0.5f, 0, 0, 0, 1, 2, 3};
+        std::memcpy(source.values, sourceValues, sizeof sourceValues);
+        source.mask = 0xe3f;
+        Bytes raw{0xfa};
+        for (const Matrix& frame : {localMatrix(source), Matrix{-1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 4, 5, 6, 1}}) {
+            const Bytes bytes = matrixBytes(frame);
+            raw.insert(raw.end(), bytes.begin(), bytes.end());
+        }
+        const JointChannels split = decodeChannels(raw, 0, 2);
+        bool same = split.rawMatrix && split.mask == 0xfff;
+        for (int k = 0; k < 12; ++k) same = same && near(split.values[k], sourceValues[k]);
+        require(same, "raw matrix decomposes into rotation, scale and translation (0x1324f8)");
+        const JointChannels mirrored = decodeChannels(raw, 1, 2);
+        require(near(mirrored.values[3], -1) && near(mirrored.values[4], -1) && near(mirrored.values[5], -1) && mirrored.values[9] == 4,
+                "a negative determinant flips the scale signs");
+        const Matrix rebuilt = localMatrix(mirrored);
+        const Matrix mirror = {-1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 4, 5, 6, 1};
+        for (std::size_t i = 0; i < 16; ++i) require(near(rebuilt[i], mirror[i]), "the mirrored matrix recomposes");
+        requireThrows([&] { decodeChannels(raw, 2, 3); }, "raw matrix frame past the data accepted");
+        requireThrows([&] { decodeChannels(Bytes{0xfa}, 0, 1); }, "truncated raw matrix accepted");
+    }
 
     JointChannels pose;
     const float values[12] = {0, 0, float(M_PI / 2), 2, 1, 1, 0, 0, 0, 1, 2, 3};

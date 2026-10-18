@@ -179,9 +179,8 @@ Matrix cutsceneObjectMatrix(const Animation& clip, std::size_t object, double fr
     const float fraction = float(held - first);
     const Bytes& curve = clip.objectBlocks.at(object)[0];
     const JointChannels a = decodeChannels(curve, first, frames);
-    if (fraction == 0 || second == first || a.rawMatrix) return localMatrix(a);
+    if (fraction == 0 || second == first) return localMatrix(a);
     const JointChannels b = decodeChannels(curve, second, frames);
-    if (b.rawMatrix) return localMatrix(a);
     return poseMatrix(blendPoses({{jointPose(a), 1 - fraction}, {jointPose(b), fraction}}));
 }
 

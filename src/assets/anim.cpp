@@ -90,6 +90,79 @@ Matrix rigidInverse(const Matrix& m) {
     out[15] = 1;
     return out;
 }
+
+// 0x257ea0: normalizes in place and returns the length; a vector shorter than 2^-23 becomes (0, 0, 1).
+float normalizeRow(float* row) {
+    const float length = std::sqrt(row[0] * row[0] + row[1] * row[1] + row[2] * row[2]);
+    if (length > 1.1920929e-7f) {
+        const float inverse = 1.0f / length;
+        for (int k = 0; k < 3; ++k) row[k] *= inverse;
+    } else {
+        row[0] = row[1] = 0;
+        row[2] = 1;
+    }
+    return length;
+}
+
+float dotRows(const float* a, const float* b) { return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]; }
+
+void subtractScaled(float* row, const float* other, float factor) {
+    for (int k = 0; k < 3; ++k) row[k] -= other[k] * factor;
+}
+
+// 0x247660: Euler angles of a 3x3 rotation (rows of stride 4); of the two equivalent triples the one with the smaller length wins.
+void matrixToEuler(const float* m, float* out) {
+    constexpr float pi = 3.14159274f;
+    const float cy = std::sqrt(m[0] * m[0] + m[4] * m[4]);
+    float a[3];
+    if (cy > 1.9073486e-6f) {
+        a[0] = std::atan2(-m[9], m[10]);
+        a[1] = std::atan2(m[8], cy);
+        a[2] = std::atan2(-m[4], m[0]);
+    } else {
+        a[0] = std::atan2(m[6], m[5]);
+        a[1] = std::atan2(m[8], cy);
+        a[2] = 0;
+    }
+    const float b[3] = {a[0] + pi, pi - a[1], a[2] + pi};
+    const auto length = [](const float* v) { return std::sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]); };
+    const float* chosen = length(a) >= length(b) ? b : a;
+    std::copy_n(chosen, 3, out);
+}
+
+// 0x1324f8: splits a stored row-vector 4x4 into Euler rotation, scale, shear and translation.
+void decomposeMatrix(const float* matrix, float* values) {
+    float m[16];
+    std::copy_n(matrix, 16, m);
+    std::copy_n(matrix + 12, 3, values + 9);
+    float* scale = values + 3;
+    float* shear = values + 6;
+    float* row0 = m;
+    float* row1 = m + 4;
+    float* row2 = m + 8;
+    scale[0] = normalizeRow(row0);
+    shear[0] = dotRows(row0, row1);
+    subtractScaled(row1, row0, shear[0]);
+    scale[1] = normalizeRow(row1);
+    if (std::fabs(scale[1]) > 1e-5f) shear[0] /= scale[1];
+    shear[1] = dotRows(row0, row2);
+    subtractScaled(row2, row0, shear[1]);
+    shear[2] = dotRows(row1, row2);
+    subtractScaled(row2, row1, shear[2]);
+    scale[2] = normalizeRow(row2);
+    if (std::fabs(scale[2]) > 1e-5f) {
+        shear[1] /= scale[2];
+        shear[2] /= scale[2];
+    }
+    const float determinant = row0[0] * (row1[1] * row2[2] - row1[2] * row2[1]) + row0[1] * (row1[2] * row2[0] - row1[0] * row2[2]) +
+                              row0[2] * (row1[0] * row2[1] - row1[1] * row2[0]);
+    if (determinant < 0) {
+        for (int k = 0; k < 3; ++k) scale[k] = -scale[k];
+        for (int row = 0; row < 3; ++row)
+            for (int column = 0; column < 3; ++column) m[row * 4 + column] = -m[row * 4 + column];
+    }
+    matrixToEuler(m, values);
+}
 }
 
 Matrix multiply(const Matrix& a, const Matrix& b) {
@@ -241,7 +314,13 @@ JointChannels decodeChannels(const Bytes& curve, unsigned frame, unsigned frames
     Bits bits{curve};
     unsigned head = unsigned(bits.read(8));
     if (head == rawMatrixHeader) {
+        const std::size_t offset = 1 + std::size_t(frame) * 64;
+        if (curve.size() < offset + 64) throw std::runtime_error("raw matrix frame out of range");
+        float matrix[16];
+        for (std::size_t k = 0; k < 16; ++k) matrix[k] = readF32(curve, offset + 4 * k);
         out.rawMatrix = true;
+        out.mask = 0xfff;
+        decomposeMatrix(matrix, out.values);
         return out;
     }
     unsigned shift = head >> 4, extra = 0;
@@ -418,11 +497,10 @@ std::vector<Matrix> skinMatrices(const Skeleton& skeleton, const Animation& anim
             unsigned samples = animation.frames + (int(i) == animation.longCurve ? 1 : 0);
             JointChannels a = decodeChannels(animation.jointCurves[i], first, samples);
             if (fraction == 0) {
-                if (!a.rawMatrix) local = poseMatrix(orientedPose(a, joint));
+                local = poseMatrix(orientedPose(a, joint));
             } else {
                 JointChannels b = decodeChannels(animation.jointCurves[i], second, samples);
-                if (!a.rawMatrix && !b.rawMatrix)
-                    local = poseMatrix(blendPoses({{orientedPose(a, joint), 1 - fraction}, {orientedPose(b, joint), fraction}}));
+                local = poseMatrix(blendPoses({{orientedPose(a, joint), 1 - fraction}, {orientedPose(b, joint), fraction}}));
             }
         }
         world.push_back(joint.parent < 0 ? local : multiply(local, world[std::size_t(joint.parent)]));

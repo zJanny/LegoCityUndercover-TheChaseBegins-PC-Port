@@ -19,6 +19,7 @@ Chase's punch on foot: the button, the combat action states, the target search, 
   - 0 at the hit (0x319ffc -> 0x1f7f28 hit test), record {0, player, 0, damage 1, 0, kind 1, 0}.
   - Message 45 comes from the wall slide 0x21a73c, not from the attack.
   [§2026-10-18T19:59:57](#ts-20261018-195957)
+- The joint curves of the combo clips are 0xfa raw matrices; they are decoded now (cause of the missing punch animation): [skeleton-animation.md §2026-10-18T21:40:55+02:00](skeleton-animation.md#ts-20261018-214055)
 - Port: `src/runtime/player_attack.*`, glue `src/game_attack.cpp` (stand-ins PLAYER-S5 to PLAYER-S9). [§2026-10-18T19:59:57](#ts-20261018-195957)
 - Open: the track-to-event table, the writers of the range, the angle and the combo length, the line-of-sight test 0x219990, other target types and characters, the jump attack 0x1d5308, the weapon-out state 0x9a, and the exact update order of the tap read in the attack states.
 

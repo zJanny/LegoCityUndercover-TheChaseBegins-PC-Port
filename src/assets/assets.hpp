@@ -520,7 +520,7 @@ std::optional<RootMotion> rootMotion(const Animation& animation);
 struct JointChannels {
     float values[12] = {0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0};
     unsigned mask = 0;                     // bit per present channel
-    bool rawMatrix = false;                // header 0xfa: stored 4x4 per frame, not decoded
+    bool rawMatrix = false;                // header 0xfa: stored 4x4 per frame, decomposed by 0x1324f8
 };
 JointChannels decodeChannels(const Bytes& curve, unsigned frame, unsigned frames);
 // 0x248248: Euler radians to quaternion (x, y, z, w).

@@ -1,7 +1,7 @@
 // Tests of Chase's attack on foot (src/runtime/player_attack.*; docs/re/player-attack.md). Recorded values: Azahar oracle, state m12-table-before
 // (the user's, mission 1-2), own emulator without RPC, fixed dt 1/30, scenarios tools/oracle/attack-tap.txt (run atap), attack-variants.txt (runs
 // ahold3, ahold12, acombo10, acombo3 and the memory reads), attack-record.txt (run aaway), attack-tap-hit.txt and attack-combo-hit.txt (traps of
-// the wobbly handler 0x2a3390). Rows count updates after the load like the trace files (the Y press is held in row 6). Exits with 77 without data.
+// the wobbly handler 0x2a3390); joint channel values of combo_1: decodeChannels over the extracted clip, 2026-10-18 (docs/re/skeleton-animation.md). Rows count updates after the load like the trace files (the Y press is held in row 6). Exits with 77 without data.
 #include "assets/assets.hpp"
 #include "assets/object_collision.hpp"
 #include "runtime/carry_animation.hpp"
@@ -227,7 +227,30 @@ void combo(const Session& session, const char* what, const std::vector<int>& tap
     expect(firstIdle == idleRow, text, firstIdle);
 }
 
+void comboJointPoses(const char* fib, const char* names) {
+    assets::FuseArchive archive(fib);
+    archive.loadNames(names);
+    const assets::FuseEntry* entry = archive.find("models/char_minifig/class_generic/combo_1_minifig.bfnanm");
+    if (!entry) {
+        std::printf("FAIL: combo_1 not in archive\n");
+        ++failures;
+        return;
+    }
+    const assets::Animation combo = assets::parseAnimation(archive.read(*entry));
+    expect(combo.jointCurves.size() == 22 && combo.frames == 15, "combo_1 has 22 joint curves over 15 frames");
+    const auto near = [](float a, float b) { return std::fabs(a - b) < 2e-5f; };
+    const assets::JointChannels first = assets::decodeChannels(combo.jointCurves[3], 0, combo.frames);
+    const float firstValues[12] = {-0.324052f, 0.007267f, 0.101547f, 1, 1, 1, 0, 0, 0, -0.000738f, -0.205178f, -0.116543f};
+    bool match = first.rawMatrix && first.mask == 0xfff;
+    for (int k = 0; k < 12; ++k) match = match && near(first.values[k], firstValues[k]);
+    expect(match, "combo_1 joint 3 frame 0 decomposes to the recorded channels (raw matrix rows 0.9948 0.0938 -0.0391 / -0.1014 0.9433 -0.3161 / 0.0073 0.3184 0.9479)");
+    const assets::JointChannels later = assets::decodeChannels(combo.jointCurves[3], 7, combo.frames);
+    expect(near(later.values[0], 0.162400f) && near(later.values[1], 0.089193f) && near(later.values[2], 0.218579f),
+           "combo_1 joint 3 frame 7 rotation channels");
+}
+
 void real(const char* fib, const char* names) {
+    comboJointPoses(fib, names);
     Session session;
     if (!load(fib, names, session)) return;
     clipsMatch(session);
