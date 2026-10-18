@@ -74,7 +74,7 @@ Read this index, then open only the file you need.
 | [camera-vehicle.md](camera-vehicle.md) | Vehicle camera: chooser 0x1597c8, InVehicle block and record floats, 15 m behind, automatic turn, pitch clamp 0x2e0a50, enter and leave |
 | [camera-collision-sweep.md](camera-collision-sweep.md) | Obstruction by level geometry and placed objects (slab sweep, pull-in, side and vertical push, box slicing) |
 | [camera-records-blending.md](camera-records-blending.md) | Camera lock, level-bound records, record pose 0x298cd8, fade between commands, pose filter |
-| [player.md](player.md) | Player entity and controller: pointers to the three files below |
+| [player.md](player.md) | Player entity and controller: pointers to the subtopic files below |
 | [player-entity-input.md](player-entity-input.md) | Player entity pointer, scene node, controller fields, stick-to-intent, position and character source, head attachment |
 | [player-locomotion.md](player-locomotion.md) | Locomotion rules and root motion, replica, ground following, derivation of the speeds |
 | [vehicles.md](vehicles.md) | Vehicles: pointers to the three files below |
@@ -87,6 +87,7 @@ Read this index, then open only the file you need.
 | [vehicles-damage.md](vehicles-damage.md) | Vehicle contact damage: the contact and damage messages of 0x1797c4, hearts and health points, cool-downs, the pair rule of 0x271764, the break 0x16cccc, the oracle run into the box |
 | [vehicles-physics-props.md](vehicles-physics-props.md) | Vehicle physics: the second floor cell search 0x164328 (push-out of points below an overhead layer), the vehicle against placed props, the car breaking into bricks, the sphere sweep of the floor pass 0x1c54f8 (0x1b6ef8, 0x16788c, set-up 0x33a4fc), the wheel ray through the floor graph 0x155888, mass scale and body activation messages |
 | [player-falling-jumping.md](player-falling-jumping.md) | Falling, landing stun, jumping, step-off slide, slope slow-down, state table |
+| [player-attack.md](player-attack.md) | Attack on foot: Y tap, combat action states 0xa3 / 0xa4, combo, target search, hit test, messages 62 and 0 to the target |
 | [player-traversal.md](player-traversal.md) | Zipline (type 101: grab test, states 42..44, slide, dismount, oracle ride), survey of the climbing moves |
 | [player-traversal-pole.md](player-traversal-pole.md) | Pole and drain pipe (type 187): walk-in and A-press mount, climb, exits, dismount (m12-10) |
 | [player-traversal-bricks.md](player-traversal-bricks.md) | Climbing bricks (type 20, states 141..152), the climb wall entry (type 30) (m12-11) |

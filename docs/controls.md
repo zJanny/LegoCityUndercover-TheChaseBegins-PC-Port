@@ -37,6 +37,14 @@ For example, `A key Space hold` makes Space press the A button.
 - When the window loses focus, every button is released.
 - The left mouse button acts as the touch screen inside the lower-screen area.
 
+## Attacking
+
+In the [development runtime](commands.md#development-runtime), on foot:
+
+- A short press of **Y** punches. Chase attacks when you let go of the button. A press held longer than about a third of a second does nothing.
+- Chase turns toward the nearest smashable prop in front of him, such as a table, and hits it.
+- Press **Y** again near the end of a punch to chain up to four punches.
+
 ## Driving a vehicle
 
 In the [development runtime](commands.md#development-runtime), once the character sits in a vehicle:

@@ -1,0 +1,12 @@
+# Attack on foot in m12-table-before (Chase 2.06 m south of DonutTable_14, facing it). Y tapped for one update,
+# then released; fixed dt 1/30. 'stick 0 0' and 'hold -' first: input survives loadstate.
+frames 3
+stick 0 0
+hold -
+dt 0.033333335 0.033333335
+frames 2
+trace 2 atap-1 mem
+hold Y
+trace 1 atap-2 mem
+hold -
+trace 80 atap-3 mem

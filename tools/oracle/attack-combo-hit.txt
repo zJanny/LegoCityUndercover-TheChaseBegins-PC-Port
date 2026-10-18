@@ -1,0 +1,19 @@
+# The hits of a three-step combo in m12-table-before: Y taps in updates 6, 15 and 24 (as attack-variants.txt, run
+# acombo10), the wobbly prop handler 0x2a3390 trapped over the combo. Fixed dt 1/30.
+frames 3
+stick 0 0
+hold -
+dt 0.033333335 0.033333335
+frames 2
+hold Y
+frames 1
+hold -
+trap 0x2a3390 8 acombohit-1
+hold Y
+trap 0x2a3390 1 acombohit-2
+hold -
+trap 0x2a3390 8 acombohit-3
+hold Y
+trap 0x2a3390 1 acombohit-4
+hold -
+trap 0x2a3390 14 acombohit-5

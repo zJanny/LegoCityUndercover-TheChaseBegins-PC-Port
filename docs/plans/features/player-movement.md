@@ -2,11 +2,11 @@
 
 ## 1. Scope
 
-How the main character moves on foot: stick to heading, walk/run/sprint, facing, ground following, jumping, falling, landing stun, slope slow-down and the slide down steep slopes. Not covered: fighting, climbing and ziplines ([player-traversal.md](player-traversal.md)), vehicles, other characters' abilities. Level collision itself is [collision.md](collision.md); the camera is [camera.md](camera.md).
+How the main character moves on foot: stick to heading, walk/run/sprint, facing, ground following, jumping, falling, landing stun, slope slow-down, the slide down steep slopes and the attack on foot (punch and combo). Not covered: fighting characters (grab, arrest, counters), climbing and ziplines ([player-traversal.md](player-traversal.md)), vehicles, other characters' abilities. Level collision itself is [collision.md](collision.md); the camera is [camera.md](camera.md).
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-16T10:30:26+0200. Runs in `chase-game` (`--gameplay`, `--start`, `--script`).
+IN_PROGRESS, updated 2026-10-18T19:59:57+0200. Runs in `chase-game` (`--gameplay`, `--start`, `--script`); the attack on foot (Y) hits wobbly props.
 
 ## 3. Verified behaviour
 
@@ -16,11 +16,17 @@ IN_PROGRESS, updated 2026-10-16T10:30:26+0200. Runs in `chase-game` (`--gameplay
 - Jumping (B, root-motion height curve of jump_minifig / jump_run_minifig, forward speed 0.8 of ground speed, no double jump): `jump-real-data` (12 jumps, 0 wrong).
 - Landing stun ends by the animation-finished test (ticks * rate / 3000 >= frames - 1); step-off state 8 is a slide down a steep slope (`slideStep`, `slide-real-data` over 7 recordings, 4 slide exits skipped, PLAYER-2); the ground probe's triangle choice agrees with 133 of 133 recorded normals (`fall-real-data`, candidate order of 0x2092d8 flag 8); slope slow-down of 0x1abe60 (`slopeFactor`, `slope-real-data`, error 0 on 405 run rows).
 - Exact library sin/cos (`gameSin`/`gameCos`).
+- Attack on foot: Y tap (release within 9 held updates), state 0xa3 / 0xa4, combo clips 122..125, facing turn to the target, root step 0.07548, hit message 0 (damage 1) in update 5 / 5 / 4 of combo_1..3, message 62 at the entry; target search and hit test of the original: `player-attack-real-data` (oracle m12-table-before), `game-script-attack-table`.
 
 ## 4. Stand-ins
 
 - PLAYER-S1 `kSlideLandingStunStandIn` — the soft landing after a slide lasts one update — rule not recovered, see PLAYER-1.
 - PLAYER-S2 `gameSin`/`gameCos` use libm for arguments of 12868 or more — the library slow path 0x132ec8 is not replicated.
+- PLAYER-S5 `kPlayerMeleeRangeStandIn` 2.2, `kPlayerAttackAngleStandIn` 90, `kPlayerComboLengthStandIn` 4 — heap values read in the oracle, writers not read. needs: PLAYER-16.
+- PLAYER-S6 `kAttackHitTrackStandIn` / `kAttackComboTrackStandIn` — the clip tracks behind the hit and combo-window events, inferred from the measured updates. needs: PLAYER-16.
+- PLAYER-S7 `kAttackRootTrackStandIn` — the root step of the combo clips taken from sub-animation track 0xdcd633e2 (their 0xfa joint curves are not decoded). needs: PLAYER-16.
+- PLAYER-S8 the attack uses libm `acos` for the library acosf 0x2584c8 and treats the line of sight 0x219990 as clear. needs: PLAYER-14.
+- PLAYER-S9 `attackTargetObjects` — only `leprop_wobblydestructible` props are attack targets, and the glue allows the attack only in idle / walk / run / sprint on the ground. needs: PLAYER-14, PLAYER-15.
 - PLAYER-S4 keyboard `Walk` key (Left Alt, own non-3DS action in `config/controls.cfg`) stands in for a half-tilted circle pad — part of the input mapping, see INPUT-1.
 
 ## 5. Open items
@@ -34,7 +40,12 @@ IN_PROGRESS, updated 2026-10-16T10:30:26+0200. Runs in `chase-game` (`--gameplay
 - [ ] PLAYER-6 — The other `0x203d18` states (strafing 16/17, 73, 75, 128..135) and `ATTR_RunSpeed` of other character classes are not replicated. evidence: [player-falling-jumping.md §2026-10-13T21:15](../../re/player-falling-jumping.md#ts-20261013-211552).
 - [ ] PLAYER-7 — Player completeness beyond walking: fighting, vehicles, abilities; the climbing moves are in [player-traversal.md](player-traversal.md) (zipline ported). needs: TRAV-1, TRAV-2, TRAV-3, TRAV-4.
 - [ ] PLAYER-8 — The chase-game level start differs slightly from the oracle spawn in lvl_01 (camera reference comparison is framing-only).
-- [ ] PLAYER-12 — No attack on foot: mission 1-2 needs it to smash `DonutTable_14` (`leprop_wobblydestructible`), whose bricks build `Trampoline_03_Buildits`. blocks: LEVOBJ-86. evidence: [scripts-missions.md §2026-10-18T15:27:22](../../re/scripts-missions.md#ts-20261018-152722).
+- [ ] PLAYER-13 — The collision entry of the mesh-kind wobbly props is 0.009 higher than the oracle's entity box (`DonutTable_14` half y 1.52876 against 1.5197); the attack's box test uses the port's value. evidence: [player-attack.md §2026-10-18T19:59:57](../../re/player-attack.md#ts-20261018-195957).
+- [ ] PLAYER-14 — The attack's other targets are not ported: characters (grab and arrest search, team test 0x219ba0, weights), the other entity types of 0x21a2d4, and the line-of-sight test 0x219990. blocks: PLAYER-S8, PLAYER-S9. evidence: [player-attack.md §2026-10-18T19:59:57](../../re/player-attack.md#ts-20261018-195957).
+- [ ] PLAYER-15 — Other attack paths: the jump attack (0x1d5254 / 0x1d5308), which other callers of 0x20b984 allow the attack, the weapon-out state 0x9a, the damage-99 flag. blocks: PLAYER-S9. evidence: [player-attack.md §2026-10-18T19:59:57](../../re/player-attack.md#ts-20261018-195957).
+- [ ] PLAYER-16 — Sources of the attack values: the writers of ctrl+0x80, *0x372e44 and the combo length, the table from clip track hashes to event types, the decoding of the 0xfa joint curves. blocks: PLAYER-S5, PLAYER-S6, PLAYER-S7. evidence: [player-attack.md §2026-10-18T19:59:57](../../re/player-attack.md#ts-20261018-195957).
+- [ ] PLAYER-17 — The attack plays no sounds (melee table entries +0xa / +0xc of 0x23ae84). evidence: [player-attack.md §2026-10-18T19:59:57](../../re/player-attack.md#ts-20261018-195957).
+- [ ] PLAYER-18 — Next to the table the oracle's root step slides sideways against the table's entity (contact message 45 of 0x21a73c); the port slides against the collision box and ends 0.3 m away from the oracle's position after one attack. evidence: [player-attack.md §2026-10-18T19:59:57](../../re/player-attack.md#ts-20261018-195957).
 
 ## 6. Findings summary
 
@@ -44,10 +55,11 @@ IN_PROGRESS, updated 2026-10-16T10:30:26+0200. Runs in `chase-game` (`--gameplay
 - Fall and jump rules: [player-falling-jumping.md §2026-10-13T16:05](../../re/player-falling-jumping.md#ts-20261013-160500), [player-falling-jumping.md §2026-10-13T16:29](../../re/player-falling-jumping.md#ts-20261013-162920).
 - Landing stun, slide, slope slow-down: [player-falling-jumping.md §2026-10-13T21:15](../../re/player-falling-jumping.md#ts-20261013-211552).
 - Ground triangle order, slide-exit push, state 8 timeout: [player-falling-jumping.md §2026-10-16T10:30:18](../../re/player-falling-jumping.md#ts-20261016-103018).
+- Attack on foot: Y tap, combat action states, target search, hit test and the messages to the target: [player-attack.md §2026-10-18T19:59:57](../../re/player-attack.md#ts-20261018-195957).
 - Player entity pointer 0x3772b8, outfit and appearance rule: [player-entity-input.md §2026-10-13T10:42](../../re/player-entity-input.md#ts-20261013-104227), [player-entity-input.md §2026-10-13T16:34](../../re/player-entity-input.md#ts-20261013-163430).
 
 ## 7. Code and tests
 
-- `src/runtime/player_intent.*`, `player_locomotion.*`, `player_vertical.*`, `player_motion.*`; `src/game_player.{hpp,cpp}` (rig, placement, per-update step), `src/game_level_update.cpp` (the update order), `src/game.cpp` (wiring).
-- CTest: `runtime-core`, `locomotion-real-data`, `fall-real-data` (also pins the ground normals to 1e-5), `jump-real-data`, `slide-real-data`, `slope-real-data`, `game-script-run`, `game-script-walk`, `game-script-ledge`, `game-script-jump`.
-- Trace dirs: `CHASE_LOCO_TRACE_DIR`, `CHASE_FALL_TRACE_DIR`, `CHASE_JUMP_TRACE_DIR` (defaults under `artifacts/oracle/`). Scenarios: `tools/oracle/loco-*.txt`, `fall-*.txt`, `jump-*.txt`, `slide-ledge.txt`, `slope-run.txt`.
+- `src/runtime/player_intent.*`, `player_locomotion.*`, `player_vertical.*`, `player_motion.*`, `player_attack.*` (glue `src/game_attack.cpp`); `src/game_player.{hpp,cpp}` (rig, placement, per-update step), `src/game_level_update.cpp` (the update order), `src/game.cpp` (wiring).
+- CTest: `player-attack`, `player-attack-real-data`, `game-script-attack-table`, `runtime-core`, `locomotion-real-data`, `fall-real-data` (also pins the ground normals to 1e-5), `jump-real-data`, `slide-real-data`, `slope-real-data`, `game-script-run`, `game-script-walk`, `game-script-ledge`, `game-script-jump`.
+- Trace dirs: `CHASE_LOCO_TRACE_DIR`, `CHASE_FALL_TRACE_DIR`, `CHASE_JUMP_TRACE_DIR` (defaults under `artifacts/oracle/`). Scenarios: `tools/oracle/attack-*.txt`, `tools/oracle/loco-*.txt`, `fall-*.txt`, `jump-*.txt`, `slide-ledge.txt`, `slope-run.txt`.

@@ -1,0 +1,10 @@
+# Who requests the attack state: call trace of the attack request 0x214f40 (first run: 0x2414b4 and the state functions 0x307e7c, 0x3085dc, 0x3084f4) around a Y tap in m12-table-before.
+frames 3
+stick 0 0
+hold -
+dt 0.033333335 0.033333335
+frames 2
+hold Y
+frames 1
+hold -
+ctrace 0x214f40,0x19bb58 2 atapc2

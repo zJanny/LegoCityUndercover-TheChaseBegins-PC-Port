@@ -22,6 +22,10 @@ struct PlayerMotionStep {
     bool jumpMoving = false;           // a jump started in this update with the stick held
 };
 
+// One update with a given ground-plane step instead of the stick (the root step of the attack states, 0x1fa7e0 -> 0x20cd30 with the stick bit
+// cleared): wall slide (0x21a73c) along the facing, then the vertical step without a move request.
+PlayerMotionStep playerRootStepUpdate(LocomotionState& motion, VerticalState& vertical, const CollisionWorld& world, float deltaX, float deltaZ, float dt);
+
 PlayerMotionStep playerMotionUpdate(LocomotionState& motion, VerticalState& vertical, const JumpProfiles& jumps,
                                     const CollisionWorld& world, const StickIntent& intent, bool jumpPressed, float dt);
 

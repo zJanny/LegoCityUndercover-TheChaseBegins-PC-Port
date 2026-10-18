@@ -6,7 +6,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 
 | Feature | Status | Top open items |
 |---|---|---|
-| [player-movement](player-movement.md) | IN_PROGRESS | PLAYER-1 slide landing stun rule; PLAYER-2 slide exit; PLAYER-6 other 0x203d18 states |
+| [player-movement](player-movement.md) | IN_PROGRESS | PLAYER-1 slide landing stun rule; PLAYER-2 slide exit; PLAYER-14 attack targets beyond props (attack on foot ported) |
 | [player-traversal](player-traversal.md) | IN_PROGRESS | TRAV-34 pole A mount; TRAV-19 brick side jumps; TRAV-7 zipline rope; TRAV-2 climb wall (zipline and bricks ported) |
 | [player-traversal-pole](player-traversal-pole.md) | IN_PROGRESS | TRAV-11 entry from the air; TRAV-13 walk-in touch; TRAV-15 sounds (pole ported) |
 | [player-traversal-rails](player-traversal-rails.md) | IN_PROGRESS | TRAV-27 bar variants; TRAV-28 hang offset; TRAV-31 other corner direction (rails ported) |

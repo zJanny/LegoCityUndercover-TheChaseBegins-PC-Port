@@ -3,6 +3,31 @@
 
 namespace chase::runtime {
 
+PlayerMotionStep playerRootStepUpdate(LocomotionState& motion, VerticalState& vertical, const CollisionWorld& world, float deltaX, float deltaZ, float dt) {
+    PlayerMotionStep result;
+    VerticalInput input;
+    input.dt = dt;
+    input.ticks = stepTicks(dt);
+    const float heading = headingRadians(motion.facing);
+    input.forwardX = std::sin(heading);
+    input.forwardZ = std::cos(heading);
+    float dx = deltaX, dz = deltaZ;
+    const float rootDelta = std::hypot(dx, dz);
+    if (rootDelta > 0 && !world.empty())
+        slideAlongWalls(world, motion.x, vertical.y, motion.z, input.forwardX, input.forwardZ, dx, dz, PlayerBox(), kPlayerExcludedSurfaces, 0.0f);
+    motion.x += dx;
+    motion.z += dz;
+    input.x = motion.x;
+    input.z = motion.z;
+    input.rootDelta = rootDelta;
+    result.locomotion.deltaX = dx;
+    result.locomotion.deltaZ = dz;
+    result.vertical = verticalUpdate(vertical, world, input);
+    motion.x += result.vertical.moveX;
+    motion.z += result.vertical.moveZ;
+    return result;
+}
+
 PlayerMotionStep playerMotionUpdate(LocomotionState& motion, VerticalState& vertical, const JumpProfiles& jumps,
                                     const CollisionWorld& world, const StickIntent& intent, bool jumpPressed, float dt) {
     PlayerMotionStep result;

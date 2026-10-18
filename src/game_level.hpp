@@ -32,6 +32,7 @@
 #include "runtime/zipline.hpp"
 #include "runtime/brick_grab.hpp"
 #include "runtime/pole.hpp"
+#include "runtime/player_attack.hpp"
 #include "runtime/camera_lock_icon.hpp"
 #include "runtime/camera_rig.hpp"
 #include "runtime/camera_near_plane.hpp"
@@ -143,6 +144,9 @@ private:
     game_player::PlayerAnimation moveClimbingPlayer(const chase::runtime::StickIntent& intent, bool jumpPressed, bool usePressed, float dt);
     game_player::PlayerAnimation climbBarMovePlayer(const chase::runtime::StickIntent& intent, bool jumpPressed, bool usePressed, float dt);
     game_player::PlayerAnimation movePlayerWithPole(const chase::runtime::StickIntent& intent, bool jumpPressed, float dt);
+    void loadAttack(chase::assets::FuseArchive& archive, const std::vector<chase::assets::ObjectCollision>& placed);
+    game_player::PlayerAnimation attackMovePlayer(const chase::runtime::StickIntent& intent, bool jumpPressed, bool usePressed, bool attackHeld,
+                                                  bool attackAllowed, float dt);
     bool scannerView(float eye[3], float& yaw, float& pitch, float& fieldOfView) const;
     void updateLevelCharacters(float dt);
     void updateFollowCamera(float dt);
@@ -284,6 +288,11 @@ private:
     };
     std::vector<VehicleDrive> vehicleDrives;
     chase::runtime::VehiclePropSmasher propSmasher;
+    chase::runtime::AttackTap attackTap;
+    chase::runtime::PlayerAttack attack;
+    chase::runtime::AttackClips attackClips;
+    std::vector<chase::runtime::AttackTargetObject> attackTargets;
+    std::vector<std::pair<std::string, chase::runtime::AttackMessage>> attackMessages;  // the messages the attack sent in this update, by target instance
     chase::runtime::VehiclePairManifolds vehiclePairs;
     std::vector<std::string> vehicleTableNames;
     chase::runtime::VehicleHud vehicleHud;
