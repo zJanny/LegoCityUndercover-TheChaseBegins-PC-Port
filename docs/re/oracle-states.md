@@ -16,6 +16,7 @@ Save states the oracle uses: which ones exist, the game progress of each, how ea
 - Mission 1-2 in progress (user): `m12-1-mission-trigger` to `m12-8-roof-sound-scanner`, positions in the table of the entry; the sound scanner view is white in Azahar (user report), so its pictures are no reference. [§2026-10-18T10:13:06](#ts-20261018-101306)
 - Rest of mission 1-2 (user, loaded and checked): `m12-9-zipline` to `m12-13-cage-trigger`, and `m12-14-mission-complete` with mission 1-2 finished; positions in the table of the entry. [§2026-10-18T12:27:39](#ts-20261018-122739)
 - Vehicle brick effects (user): `veh-smash-prop` (lamp post), `veh-smash-car` (moving car ahead), `veh-break-low-hearts` (one heart left). [§2026-10-18T12:45:56](#ts-20261018-124556)
+- `veh-wall-full-speed` (user): police car with four hearts at speed towards a brick wall, for VEH-128. [§2026-10-18T15:06:16](#ts-20261018-150616)
 - `leadcut-1_1_d-early` (from `m11-6-van-to-shop`): cutscene `1_1_d` just loaded, for its actor nodes and pictures. [§2026-10-16T14:39:21](#ts-20261016-143921)
 - Open: whether mission 1-2 is active in the post-1-1 states, the level variables of the m11 states, a save with Continue byte +6 above 1, and the Old 3DS run of `savestate`.
 
@@ -239,3 +240,15 @@ The user saved quick-save slots 1 to 3 (2026-10-18, 12:44 to 12:45, New 3DS) for
 | `veh-break-low-hearts` | 3 | in a car with one heart left, aimed at a wall a few metres away | 602.002 16.810 1095.447 | police van, one heart; straight ahead the picture shows open road, the wall is not in view |
 
 Progress: missions 1-1 and 1-2 finished (user report). Not checked yet: which object the van hits first when A is held in `veh-break-low-hearts`.
+
+<a id="ts-20261018-150616"></a>
+
+## 2026-10-18T15:06:16+02:00 — User state `veh-wall-full-speed`
+
+The user quick-saved slot 0 (2026-10-18 14:57, New 3DS) "with a police car going full speed and heading directly for a wall". Copied read-only (`cp --no-clobber`, identical by `cmp`) to `artifacts/oracle/states/veh-wall-full-speed.cst`. Loaded once by the servant r20-D (`--state veh-wall-full-speed --rpc`, read before any input): the player is in a vehicle, R+0x30c..0x30f = `6404040f` (four hearts), the picture shows the car, four hearts and a brick wall ahead. Position over three stepped updates without input: x 773.119, 774.000, 774.824 (z 784.234, 784.053, 783.883), about 0.85 to 0.88 units per update at the state's own dt.
+
+Progress: not reported by the user; presumably the playthrough of the other vehicle states (missions 1-1 and 1-2 finished), not confirmed.
+
+Unknowns:
+- The game progress of the slot.
+

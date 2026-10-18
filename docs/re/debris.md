@@ -10,6 +10,7 @@ The bricks that fly from a vehicle contact, a destroyed prop and a broken car, t
 - The smoke of a lost heart is an emitter of definition 0x11e (0x11f with one heart left) fixed in the world at the front of the entity box; message 1 stops it with a fade of 0.5 s. [§2026-10-18T14:40:56](#ts-20261018-144056)
 - Oracle: the brick motion of a van contact and a lamp post replays exactly; the fade distances are 5 and 10, super bricks are on in the user states (a lamp post bursts nine bricks, three of them super bricks). [§2026-10-18T14:46:04](#ts-20261018-144604)
 - The flash colours of the counter 1..15 equal the oracle's node colour at a break; the smoke of a lost heart is not seen in the oracle yet. [§2026-10-18T14:55:03](#ts-20261018-145503)
+- A head-on wall contact at about 0.85 units per update (`veh-wall-full-speed`) bursts bricks but costs no heart; the 4 to 0 change about 100 updates later with A held fits the stuck-timer break (reading, not traced). [§2026-10-18T15:06:16](#ts-20261018-150616)
 - Open: the line tests 0x21ab20 / 0x22b108 of the burst, super bricks (0x2c8278), the alpha and spin of the debris objects, the screen shake, flash light, sound, `TriggerObject` and `Respawn` of a destroyed prop, the wobble reaction 0x16b958.
 
 <a id="ts-20261018-144056"></a>
@@ -81,3 +82,23 @@ Source: request R20-C-2, try 1: state `veh-smash-car`, Azahar New 3DS, OpenGL, `
 Unknowns:
 - The smoke emitter of a lost heart (definition, position, lifetime) in the oracle; a hit between 20 and 60 m/s that leaves hearts is still needed.
 - The caller that sets the van's node colour to 0xfefefe / 0xffffff (writer pc 0x33c92c).
+
+<a id="ts-20261018-150616"></a>
+
+## 2026-10-18T15:06:16+02:00 — Wall contact at speed in `veh-wall-full-speed`: bricks, no heart loss, later wreck (servant r20-D, RPC, stepped updates)
+
+Request R20-C-3: state `veh-wall-full-speed` ([oracle-states.md §2026-10-18T15:06:16](oracle-states.md#ts-20261018-150616)), dt fixed at 0.033, A held from update 0 without steering, nothing poked, one row per stepped update (0..172), vehicle chain E/R/N as in [§2026-10-18T14:46:04](#ts-20261018-144604).
+
+- Update 15: the contact burst (R+0x308 = 1.0 in rows 15 to 45); R+0x30d stays 4, R+0x2e4 stays 0. A head-on wall contact from about 0.85 units per update did not cost a heart.
+- Update 112 (A still held against the wall): R+0x30c..0x30f goes from `6404040f` to `64000401` in one update, hearts 4 to 0; the picture at +8 shows no van, two wheels and bricks flying (the wreck). R+0x2e4 stays 0, the handle read at 112 and 122 is 0. After it R+0x30f counts 1 to 0x0f over 15 updates, R+0x304 falls from 0.5 by 0.033 per update, N+0x118 pulses ffdfdfff down to ff1f1fff and back, [0x376b6c] stays 4.
+- Four replays changed hearts at updates 119, 111, 114 and 114 (recording 112).
+- The same 4 to 0 change without a smoke handle was seen in R20-C-2 (`veh-smash-car`, reverse then A).
+
+Reading (not traced): the wreck about 100 updates after the contact while the car is pushed against the wall fits the stuck timer of the break ([vehicles-damage.md](vehicles-damage.md), VEH-111) better than a contact heart loss; which contact speed costs one heart was not observed.
+
+Files of the servant (scratchpad, not kept): `vwall_veh-wall-full-speed.jsonl`, `vwall_summary.json`, screenshots `vwall_loss+1/+3/+8/+30.png`.
+
+Unknowns:
+- The contact speed of update 15 (no speed address was read) and whether the port's heart-loss rule would take a heart at this contact.
+- A contact that costs exactly one heart, and the smoke emitter it starts.
+
