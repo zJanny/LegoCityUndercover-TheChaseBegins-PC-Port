@@ -33,7 +33,6 @@ IN_PROGRESS, updated 2026-10-13T21:29:01+0200. Level collision and placed object
 - [ ] COLL-6 — Unexplained: `door_back` rows 125/128/130 (static contact near (901.8, 1096)), 153 master-model items vs 147 + 7 static entries.
 - [ ] COLL-7 — Collision with parked cars and people, and objects that break or move, is not replicated (cars and people fall under COLL-2).
 - [ ] COLL-21 — Pin the player-into-police-car stop as an oracle trace with the port camera at the same yaw (the 3.06 / 3.22 unit stop agrees only roughly), and read 0x242b08 to settle COLL-S4. blocks: COLL-S4. evidence: [collision.md §2026-10-15T07:58](../../re/collision.md#ts-20261015-075843); screenshots: [collision.md §2026-10-15T10:50](../../re/collision.md#ts-20261015-105024).
-- [ ] COLL-23 — Street lamps (`leprop_wobblydestructible`, 63 in lvl_01) do not block the player on foot. evidence: [scripts-missions.md §2026-10-18T15:27:22](../../re/scripts-missions.md#ts-20261018-152722).
 
 ## 6. Findings summary
 

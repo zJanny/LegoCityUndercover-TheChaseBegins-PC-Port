@@ -11,7 +11,7 @@ What the scripts of one mission call, which natives and trigger events the port 
 - lvl_01 startup runs the scripts for the current `StoryProgress` (1 starts `1-1_MissionStart`, 2 starts `1-2_MissionAvailable`); the new-game start is `movie 01_GameIntro`, cutscene `1_1_a`, then `1-1_MissionStart`. [§2026-10-14T23:52:14](#ts-20261014-235214), [§2026-10-15T12:41:40](#ts-20261015-124140)
 - Mission 1-1 runs end to end in `chase-game` in the original's step order (11 steps, StoryProgress 2 after 5831 updates), with teleports standing in for walks; `1-1_Deliver_Donuts` only fires after `1-1_Carry_Object_Tutorial` has ended. [§2026-10-15T12:41:40](#ts-20261015-124140) The user played it end to end in real play on 2026-10-18 [§2026-10-18T10:37:46](#ts-20261018-103746).
 - Neither unnamed script (2451216995 dumpster peek, 2494968948 hint) is named by any text of the archive or by a code literal; 35 of 314 scripts of lvl_01 have no string reference; the alley and crying states start only the known waypoint scripts. [§2026-10-18T11:14:04](#ts-20261018-111404)
-- User playtest of mission 1-2 in `chase-game` (2026-10-18): past the Doorlock scene and the first detective point; next blocker is the smashable table `DonutTable_14` that gives the bricks of the trampoline build-it, which needs an attack on foot. [§2026-10-18T15:27:22](#ts-20261018-152722)
+- User playtest of mission 1-2 in `chase-game` (2026-10-18): past the Doorlock scene and the first detective point; next blocker is the smashable table `DonutTable_14` that gives the bricks of the trampoline build-it, which needs an attack on foot; cars drive through street lamps without breaking them (VEH-103). [§2026-10-18T15:27:22](#ts-20261018-152722)
 - Open: starters of scripts 2451216995 and 2494968948, the vehicle bound test 0x17b21c, who fires class-driven ObjectTriggered events, missing natives in mission 1-1 (CameraFollow, EnableTrafficAndPedestrians, music), original update numbers between steps.
 
 
@@ -160,16 +160,16 @@ Unknowns:
 
 <a id="ts-20261018-152722"></a>
 
-## 2026-10-18T15:27:22+02:00 — User playtest of mission 1-2 in `chase-game`: detective point, the table to smash, street lamps on foot
+## 2026-10-18T15:27:22+02:00 — User playtest of mission 1-2 in `chase-game`: detective point, the table to smash, cars and street lamps
 
 Source: the user's own play of `chase-game` from their save (`--save ... --slot 0`, street level) after the round 20 merges, and the level data of lvl_01 (`tools/convert_levels.py --param-names`).
 
 - After the Doorlock scene the first detective point at 723.58 29.77 630.54 works with A (Space): the user sees the footprints on the ground. The user reports that the detective look is "a bit off" and that Chase's magnifying glass is not drawn.
 - `1-2_Doorlock_Holmes` stays in the bin (the `PositionObject` gap of SCRIPT-287).
 - Next step of the mission in the original (user): hit the table at 718.06 32.68 642.69 (facing -80.2 degrees); when it is destroyed its bricks build a trampoline. Level data around that spot (room40): `DonutTable_14` (class `leprops/leprop_wobblydestructible`, 715.63 32.53 643.67, with `DonutTable_14_Script`), the build-it `Trampoline_03_Buildits` (`props/prop_buildit`, 718.07 32.62 643.32), the bouncer `Trampoline_03` (`leprops/leprop_bouncer`, 720.20 32.58 637.47) and `1-2_Temp_Trampoline` (`props/prop_prop`). The port has no attack on foot, and the class `leprop_bouncer` is not ported.
-- On foot, street lamps have no collision in `chase-game` (vehicles do smash them). lvl_01 has 63 objects of `leprops/leprop_wobblydestructible`, the class of the lamp posts and of the table.
+- Cars drive through street lamps in `chase-game` without breaking them; other props do break (user). lvl_01 has 63 lamp objects of class `leprops/leprop_wobblydestructible`, the class of the table too. The port smashes only the wobbly props with a box shape, not the mesh kind (VEH-103); which kind these lamps are was not checked.
 
 Unknowns:
 - Whether a hit of the attack, a vehicle or something else destroys the table in the original, and how the build-it is enabled from its bricks (`DonutTable_14_Script` not read).
-- The on-foot collision shape of `leprop_wobblydestructible`.
+- Whether the street lamps are wobbly props of the mesh kind (VEH-103).
 
