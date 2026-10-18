@@ -179,7 +179,11 @@ Animation parseAnimation(const Bytes& data) {
             for (std::uint32_t i = 0; i < readU32(countBlock, 0); ++i) tracks.push_back(readTrack(r, records, i));
             anim.subAnimations.push_back(std::move(tracks));
             r.skip();
-            for (std::uint32_t i = 0; i < readU32(fixups, 0); ++i) r.skip();
+            const std::uint32_t fixupCount = readU32(fixups, 0);
+            if (fixups.size() != 4 + std::size_t(fixupCount) * 4) throw std::runtime_error("sub-animation fixup list size mismatch");
+            std::vector<AnimationTarget> targets;
+            for (std::uint32_t i = 0; i < fixupCount; ++i) targets.push_back({readU32(fixups, 4 + std::size_t(i) * 4), cString(r.next())});
+            anim.subAnimationTargets.push_back(std::move(targets));
         }
     }
     r.cursor.pop();

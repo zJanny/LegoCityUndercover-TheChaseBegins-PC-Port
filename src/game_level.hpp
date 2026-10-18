@@ -10,6 +10,7 @@
 #include "game_audio.hpp"
 #include "game_characters.hpp"
 #include "game_cutscene.hpp"
+#include "game_detective_glass.hpp"
 #include "game_doors.hpp"
 #include "game_effects.hpp"
 #include "game_prop_parts.hpp"
@@ -244,6 +245,7 @@ private:
     chase::runtime::UseSpotSet useSpots;
     std::optional<chase::runtime::DetectiveRoles> detectiveRoles;
     std::vector<std::size_t> footprintInstances;
+    game_detective_glass::Glass detectiveGlass;
     std::vector<int> loggedDetectiveStates;
     chase::runtime::Scanner scanner;
     unsigned scannerCallsSeen = 0;

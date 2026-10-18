@@ -291,6 +291,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
             shown = game_player::aiMoveAnimation(*driven);
         }
         player->animate(scene, dt, detectiveClip(player->carriedRole(shown.role, carry.carryingMode(), carry.phaseClip() ? carry.phaseClip() : builditPlayer.clip() ? builditPlayer.clip() : scanner.playerClip())), shown.scale);
+        detectiveGlass.update(*player);
         if (!script.empty()) scriptedHeights.push_back(player->vertical.y);
         for (const runtime::StudCollected& collected :
              studs.update(dt, runtime::studPickupPoint(player->motion.x, player->vertical.y, player->motion.z,

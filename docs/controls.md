@@ -50,7 +50,7 @@ In the [development runtime](commands.md#development-runtime), once the characte
 
 In the [development runtime](commands.md#development-runtime), on a detective point of a mission:
 
-- **A** takes out the detective tool. The character walks slowly and cannot jump; footprints appear ahead.
+- **A** takes out the detective tool: the character holds up a magnifying glass. He walks slowly and cannot jump; footprints appear ahead.
 - Walk along the footprints. Facing the X at their end puts the tool away; **A** on the X reveals what is hidden.
 - **A** away from any usable object puts the tool away. Moving far from the footprints does the same.
 

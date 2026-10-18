@@ -470,6 +470,10 @@ struct AnimTrack {
     std::uint32_t hash = 0;                // name hash; names unknown (e.g. 0x191a8df3 camera x)
     std::vector<CurveKey> keys;
 };
+struct AnimationTarget {
+    std::uint32_t offset = 0;
+    std::string text;
+};
 // .bfnanm animation (loader 0x10edec); every block is consumed and checked.
 struct Animation {
     unsigned frames = 0;                   // header u16 +4 & 0x3fff (0x114b58); bit 14 set in cutscenes
@@ -484,6 +488,9 @@ struct Animation {
     std::vector<std::array<Bytes, 2>> objectBlocks;  // the two data blocks that follow each name of section +0x0c
     std::vector<AnimTrack> tracks;         // section +0x18 (unused in shipped data)
     std::vector<std::vector<AnimTrack>> subAnimations;
+    // Per sub-animation, the strings its fixup list points the words of its data block at (docs/re/abilities-detective.md): the
+    // byte offset of the word in the data block and its text, in fixup order. Hand item tracks keep the object name at 0 and the bone name at 4.
+    std::vector<std::vector<AnimationTarget>> subAnimationTargets;
 };
 // Value of a track at normalised time 0..1 (Bezier solved for time by bisection).
 float evaluateTrack(const AnimTrack& track, float time);
