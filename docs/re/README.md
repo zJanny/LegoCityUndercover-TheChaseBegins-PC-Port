@@ -23,6 +23,7 @@ Read this index, then open only the file you need.
 | [objects.md](objects.md) | Level objects: classes, class files (+0x10/+0x14), parameter slots, how the model is found, drawn classes |
 | [buildit.md](buildit.md) | Build-its (`props/prop_buildit`): class record, use zone, state machine and timing, completion and the event it fires |
 | [abilities-detective.md](abilities-detective.md) | Detective tool: detective spot, reveal spot, reveal prop, footprints, the player's detective states and their timing |
+| [abilities-scanner.md](abilities-scanner.md) | Sound scanner (`props/prop_scannerzoneaudio`, type 201): use press, player states 0x156..0x158, view, zoom, lock, scan, fired events |
 | [carrying.md](carrying.md) | Carry objects and targets (`props/prop_carry*`): class records, use zones, pickup, drop, placing, fired events |
 | [carrying-animation.md](carrying-animation.md) | Carry states (pickup, drop, place): clips, hand attachment, the release, what ends each state, the track event that attaches and releases |
 | [skeleton-animation.md](skeleton-animation.md) | `.bfnskl`, `.bfnanm`, curves, pose composition, skinning, bone palettes |

@@ -37,6 +37,8 @@ public:
     // (column 16; 0 stops it at once). False when none runs.
     // A fade time of 0 or more replaces the column 16 time (0x23f75c: only a negative argument takes the table's).
     bool stop(std::uint32_t id, std::uint16_t owner, float fadeSeconds = -1.0f);
+    // 0x2247f0: a voice that `id` started for `owner` still runs.
+    bool playing(std::uint32_t id, std::uint16_t owner) { return voices_.find(id, owner) >= 0; }
 
     // SetSoundVolume 0x219178 and ScaleSoundFrequency 0x22f770 on the voice that `id` started for `owner`.
     // AUDIO-S31: the volume is a factor on the gains and the rate is (int)(scale * source rate); the original's

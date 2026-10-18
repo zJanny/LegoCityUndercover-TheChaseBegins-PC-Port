@@ -276,6 +276,8 @@ LevelSession::LevelSession(const Shared& sharedState)
     if (player) game_carry::applyClipTimings(carry, *player);
     std::cout << "carry objects: " << carry.objects().size() << ", carry targets: " << carry.targets().size() << '\n';
     loadDetective(archive);
+    scanner.load(archive, level, classOf);
+    std::cout << "scanner zones: " << scanner.zones().size() << ", scannable objects: " << scanner.objects().size() << '\n';
     std::cout << "collision: " << collision.triangleCount() << " triangles in " << collision.entries().size() << " entries\n";
 
     float centre[3];
@@ -346,8 +348,10 @@ void LevelSession::draw(int width, int height) {
     const runtime::ClipPlanes followPlanes = runtime::followClipPlanes(follow ? follow->follow().nearPlane() : runtime::kCameraNearLimit);
     applyFog(followPlanes);
     const float* eye = follow ? follow->eye() : camera.eye;
-    const float viewYaw = follow ? follow->yaw() : camera.yaw, viewPitch = follow ? follow->pitch() : camera.pitch;
-    const float fieldOfView = follow ? follow->verticalFieldOfView() : 1.0f;
+    float viewYaw = follow ? follow->yaw() : camera.yaw, viewPitch = follow ? follow->pitch() : camera.pitch;
+    float fieldOfView = follow ? follow->verticalFieldOfView() : 1.0f;
+    float scannerEye[3];
+    if (scannerView(scannerEye, viewYaw, viewPitch, fieldOfView)) eye = scannerEye;
     Mat4 viewMatrix = chase::render::view(eye, viewYaw, viewPitch);
     float shownFieldOfView = fieldOfView, nearPlane = radius * 0.002f, farPlane = radius * 20;
     if (follow) {

@@ -123,7 +123,8 @@ std::optional<PlayerRig> placePlayer(FuseArchive& archive, Scene& scene, const L
     if (const FuseEntry* animationTable = archive.find("tables/tablesanimations.bxls")) {
         rig.carryAnimations.emplace(parseTable(archive.read(*animationTable)));
         std::vector<int> clips = rig.carryAnimations->carriedClips();
-        for (const int id : {runtime::kAnimationBuildit, runtime::kAnimationPickupBig, runtime::kAnimationPickupSmall, runtime::kAnimationPutdownBig, runtime::kAnimationPutdownSmall})
+        for (const int id : {runtime::kAnimationBuildit, runtime::kAnimationPickupBig, runtime::kAnimationPickupSmall, runtime::kAnimationPutdownBig, runtime::kAnimationPutdownSmall,
+                             runtime::kAnimationScannerOut, runtime::kAnimationScannerIn})
             clips.push_back(id);
         for (const int id : clips) {
             const std::string path = std::string(kCarryAnimationDirectory) + rig.carryAnimations->name(id) + kPlayerAnimationSuffix;

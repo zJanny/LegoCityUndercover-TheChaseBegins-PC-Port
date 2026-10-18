@@ -92,6 +92,11 @@ public:
         else if (ownerFits && request.kind == Kind::SetVolume) sounds_->setVolume(request.id, owner, request.value);
         else if (ownerFits && request.kind == Kind::SetFrequency) sounds_->scaleFrequency(request.id, owner, request.value);
     }
+    bool playing(std::uint32_t id, std::uint16_t owner) {
+        if (!device_) return false;
+        std::lock_guard<std::mutex> guard(lock_);
+        return sounds_->playing(id, owner);
+    }
     void playUi(unsigned id) {
         if (!device_) return;
         std::lock_guard<std::mutex> guard(lock_);

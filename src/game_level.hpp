@@ -26,6 +26,7 @@
 #include "runtime/vehicle_damage.hpp"
 #include "game_carry.hpp"
 #include "runtime/carry.hpp"
+#include "runtime/scanner.hpp"
 #include "runtime/camera_lock_icon.hpp"
 #include "runtime/camera_rig.hpp"
 #include "runtime/camera_near_plane.hpp"
@@ -130,6 +131,8 @@ private:
     int detectiveClip(int role) const;
     void drawFootprints();
     void logDetectiveStates();
+    void updateScanner();
+    bool scannerView(float eye[3], float& yaw, float& pitch, float& fieldOfView) const;
     void updateLevelCharacters(float dt);
     void updateFollowCamera(float dt);
     void loadBoardingVehicles(const std::map<std::string, std::pair<std::size_t, chase::render::Mat4>>& placedInstances);
@@ -223,6 +226,8 @@ private:
     std::optional<chase::runtime::DetectiveRoles> detectiveRoles;
     std::vector<std::size_t> footprintInstances;
     std::vector<int> loggedDetectiveStates;
+    chase::runtime::Scanner scanner;
+    unsigned scannerCallsSeen = 0;
     std::optional<chase::runtime::VehicleBoarding> boarding;
     std::vector<chase::runtime::BoardingVehicle> boardingVehicles;
     std::vector<std::size_t> boardingRecords;

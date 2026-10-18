@@ -5,6 +5,7 @@
 #include "runtime/ai.hpp"
 #include "runtime/buildit_player.hpp"
 #include "runtime/carry_animation.hpp"
+#include "runtime/scanner.hpp"
 #include "runtime/collision.hpp"
 #include "runtime/player_intent.hpp"
 #include "runtime/player_locomotion.hpp"
