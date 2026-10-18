@@ -33,6 +33,7 @@ IN_PROGRESS, updated 2026-10-14T15:05:41+02:00. Objects are drawn standing at th
 
 - [ ] LEVOBJ-12 — Disabled characters and the sub-objects of disabled objects are still drawn (only placed props follow the disabled state). evidence: [objects.md §2026-10-14T15:05](../../re/objects.md#ts-20261014-150541).
 - [ ] LEVOBJ-13 — Per-class start visibility (`DisabledOnStartUp` of non-stud classes, `ShowOnObjectScan`, `ShowOnMap`) and the effect of flags bit 2 (value 6 in the +0x14 table) are not applied. evidence: [objects.md §2026-10-14T13:39](../../re/objects.md#ts-20261014-133957).
+- [ ] LEVOBJ-86 — The destroy on foot of `leprop_wobblydestructible` and the trampoline class `leprop_bouncer` (`Trampoline_03`) are not ported. needs: PLAYER-12. evidence: [scripts-missions.md §2026-10-18T15:27:22](../../re/scripts-missions.md#ts-20261018-152722).
 
 ## 6. Findings summary
 

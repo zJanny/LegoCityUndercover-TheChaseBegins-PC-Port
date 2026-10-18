@@ -34,6 +34,7 @@ IN_PROGRESS, updated 2026-10-16T10:30:26+0200. Runs in `chase-game` (`--gameplay
 - [ ] PLAYER-6 — The other `0x203d18` states (strafing 16/17, 73, 75, 128..135) and `ATTR_RunSpeed` of other character classes are not replicated. evidence: [player-falling-jumping.md §2026-10-13T21:15](../../re/player-falling-jumping.md#ts-20261013-211552).
 - [ ] PLAYER-7 — Player completeness beyond walking: fighting, vehicles, abilities; the climbing moves are in [player-traversal.md](player-traversal.md) (zipline ported). needs: TRAV-1, TRAV-2, TRAV-3, TRAV-4.
 - [ ] PLAYER-8 — The chase-game level start differs slightly from the oracle spawn in lvl_01 (camera reference comparison is framing-only).
+- [ ] PLAYER-12 — No attack on foot: mission 1-2 needs it to smash `DonutTable_14` (`leprop_wobblydestructible`), whose bricks build `Trampoline_03_Buildits`. blocks: LEVOBJ-86. evidence: [scripts-missions.md §2026-10-18T15:27:22](../../re/scripts-missions.md#ts-20261018-152722).
 
 ## 6. Findings summary
 
