@@ -28,6 +28,7 @@
 #include "game_carry.hpp"
 #include "runtime/carry.hpp"
 #include "runtime/scanner.hpp"
+#include "runtime/zipline.hpp"
 #include "runtime/camera_lock_icon.hpp"
 #include "runtime/camera_rig.hpp"
 #include "runtime/camera_near_plane.hpp"
@@ -135,6 +136,7 @@ private:
     void drawFootprints();
     void logDetectiveStates();
     void updateScanner();
+    game_player::PlayerAnimation movePlayer(const chase::runtime::StickIntent& intent, bool jumpPressed, float dt);
     bool scannerView(float eye[3], float& yaw, float& pitch, float& fieldOfView) const;
     void updateLevelCharacters(float dt);
     void updateFollowCamera(float dt);
@@ -240,6 +242,9 @@ private:
     std::vector<int> loggedDetectiveStates;
     chase::runtime::Scanner scanner;
     unsigned scannerCallsSeen = 0;
+    std::vector<chase::runtime::ZiplineAnchor> ziplines;
+    chase::runtime::ZiplineRider ziplineRider;
+    std::optional<chase::assets::RootMotion> ziplineDismount;
     std::optional<chase::runtime::VehicleBoarding> boarding;
     std::vector<chase::runtime::BoardingVehicle> boardingVehicles;
     std::vector<std::size_t> boardingRecords;

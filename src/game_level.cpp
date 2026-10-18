@@ -281,6 +281,8 @@ LevelSession::LevelSession(const Shared& sharedState)
     useSpots.load(level, classOf);
     scanner.load(archive, level, classOf);
     std::cout << "scanner zones: " << scanner.zones().size() << ", scannable objects: " << scanner.objects().size() << '\n';
+    ziplines = runtime::loadZiplineAnchors(level, classOf);
+    std::cout << "zipline anchors: " << ziplines.size() << '\n';
     std::cout << "collision: " << collision.triangleCount() << " triangles in " << collision.entries().size() << " entries\n";
 
     float centre[3];

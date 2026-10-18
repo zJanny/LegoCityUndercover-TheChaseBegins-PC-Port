@@ -2,7 +2,7 @@
 
 ## 1. Scope
 
-How the main character moves on foot: stick to heading, walk/run/sprint, facing, ground following, jumping, falling, landing stun, slope slow-down and the slide down steep slopes. Not covered: fighting, climbing, vehicles, other characters' abilities. Level collision itself is [collision.md](collision.md); the camera is [camera.md](camera.md).
+How the main character moves on foot: stick to heading, walk/run/sprint, facing, ground following, jumping, falling, landing stun, slope slow-down and the slide down steep slopes. Not covered: fighting, climbing and ziplines ([player-traversal.md](player-traversal.md)), vehicles, other characters' abilities. Level collision itself is [collision.md](collision.md); the camera is [camera.md](camera.md).
 
 ## 2. Status
 
@@ -32,7 +32,7 @@ IN_PROGRESS, updated 2026-10-16T10:30:26+0200. Runs in `chase-game` (`--gameplay
 - [ ] PLAYER-11 — Player death / respawn (the state 8 timeout, falling out of the world) is not modelled. blocks: PLAYER-3. evidence: [player-falling-jumping.md §2026-10-16T10:30:18](../../re/player-falling-jumping.md#ts-20261016-103018).
 - [ ] PLAYER-5 — The landing animation's root motion drag; `rootMotion` handles only animations with the extra curve. evidence: [player-falling-jumping.md §2026-10-13T21:15](../../re/player-falling-jumping.md#ts-20261013-211552).
 - [ ] PLAYER-6 — The other `0x203d18` states (strafing 16/17, 73, 75, 128..135) and `ATTR_RunSpeed` of other character classes are not replicated. evidence: [player-falling-jumping.md §2026-10-13T21:15](../../re/player-falling-jumping.md#ts-20261013-211552).
-- [ ] PLAYER-7 — Player completeness beyond walking: fighting, climbing, vehicles, abilities. Not started.
+- [ ] PLAYER-7 — Player completeness beyond walking: fighting, vehicles, abilities; the climbing moves are in [player-traversal.md](player-traversal.md) (zipline ported). needs: TRAV-1, TRAV-2, TRAV-3, TRAV-4.
 - [ ] PLAYER-8 — The chase-game level start differs slightly from the oracle spawn in lvl_01 (camera reference comparison is framing-only).
 
 ## 6. Findings summary

@@ -7,6 +7,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | Feature | Status | Top open items |
 |---|---|---|
 | [player-movement](player-movement.md) | IN_PROGRESS | PLAYER-1 slide landing stun rule; PLAYER-2 slide exit; PLAYER-6 other 0x203d18 states |
+| [player-traversal](player-traversal.md) | IN_PROGRESS | TRAV-1 pole climb; TRAV-2 bricks and climb wall; TRAV-3 rails and climb bars (zipline ported) |
 | [camera](camera.md) | IN_PROGRESS | CAMERA-51 parked car after the hand-back; CAMERA-3 multi-record weights, Blocker pose; CAMERA-2 characters and vehicles not registered |
 | [collision](collision.md) | IN_PROGRESS | COLL-1 broad phase stand-in; COLL-2 constructors missing (vehicles, characters) |
 | [animation-characters](animation-characters.md) | IN_PROGRESS | ANIM-3 blending; ANIM-10 slot bookkeeping; ANIM-11 model folders |
