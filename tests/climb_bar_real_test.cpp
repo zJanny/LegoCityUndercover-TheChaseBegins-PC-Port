@@ -265,6 +265,49 @@ int main(int argc, char** argv) {
             require(near(arrived.position[1], kJumpY[22], 3e-4f) && rider.phase == ClimbPhase::Idle && rider.enteredThisUpdate, "arrival snaps to the hang point");
         }
 
+
+        // Grab of 1-2_FlagPole_01 from the bounce of the built trampoline (docs/re/player-traversal-rails.md, TRAV-36). Oracle: user state
+        // m12-trampoline-built, `teleport 720.20 32.618 637.47`, B held, `dt 0.033333335`, `trace 340 t2 mem` (scratch output, not kept):
+        // after the take-off at speed 0.9 the node rises to 42.21911 (state 26), the fall update (state 5, y 42.06911) grabs the pole and the
+        // arrival runs in the same update: rows (x, y, z) 720.26990 41.81580 637.51532; 720.33978 41.56249 637.56067; 720.36835 41.45909
+        // 637.57922 with the request for state 93 (acrobat pole); the first update of state 93: 721.36157 41.45909 637.57922, facing (0, -1).
+        {
+            const int pole01 = find(set, "1-2_flagpole_01");
+            const runtime::ClimbBar& pole = set.bars[std::size_t(pole01)];
+            require(pole.acrobatPole && near(pole.yawDegrees, 180.0f, 1e-3f), "flag pole is an acrobat pole turned by 180 degrees");
+            require(near(pole.position[0], 723.11157f, 1e-3f) && near(pole.position[1], 43.4695f, 1e-3f) && near(pole.position[2], 637.55219f, 1e-3f), "flag pole position");
+            runtime::ClimbBarRider rider;
+            rider.jumpLatch = true;
+            const std::int16_t facing = -30488;
+            const float fallen[3] = {720.20001f, 42.06911f, 637.46997f};
+            require(runtime::climbBarGrabTest(set, rider, fallen, facing, {}) == pole01, "fall update at y 42.06911 grabs 1-2_FlagPole_01");
+            const float apex[3] = {720.20001f, 38.0f, 637.46997f};
+            require(runtime::climbBarGrabTest(set, rider, apex, facing, {}) < 0, "no grab below the pole");
+            input.position[0] = fallen[0];
+            input.position[1] = fallen[1];
+            input.position[2] = fallen[2];
+            input.facing = facing;
+            input.stickHeld = false;
+            input.aPressed = false;
+            input.bHeld = true;
+            runtime::climbBarGrab(rider, set, pole01, input);
+            const float expected[3][3] = {{720.26990f, 41.81580f, 637.51532f}, {720.33978f, 41.56249f, 637.56067f}, {720.36835f, 41.45909f, 637.57922f}};
+            for (int k = 0; k < 3; ++k) {
+                const runtime::ClimbBarStep step = runtime::climbBarUpdate(rider, set, input);
+                require(step.riding, "acrobat arrival: riding");
+                for (int axis = 0; axis < 3; ++axis)
+                    require(near(step.position[axis], expected[k][axis], 2e-3f), "acrobat arrival row " + std::to_string(k) + " axis " + std::to_string(axis));
+                std::copy(step.position, step.position + 3, input.position);
+                require(step.facing == facing, "arrival keeps the facing");
+            }
+            require(rider.phase == ClimbPhase::Idle && rider.enteredThisUpdate, "arrival ends in the third update");
+            const runtime::ClimbBarStep entered = runtime::climbBarUpdate(rider, set, input);
+            require(near(entered.position[0], 721.36157f, 2e-3f) && near(entered.position[1], 41.45909f, 2e-3f) && near(entered.position[2], 637.57922f, 2e-3f),
+                    "state 93 stands at the pole centre");
+            require(std::abs(int(entered.facing) - 32768) <= 1 || std::abs(int(entered.facing) + 32768) <= 1, "facing -z for a pole grabbed from the front");
+            input.bHeld = false;
+        }
+
         // Drop (A press) and the first fall update: y 70.14743 in the press update, then the fall of the port takes over.
         {
             runtime::ClimbBarRider rider;

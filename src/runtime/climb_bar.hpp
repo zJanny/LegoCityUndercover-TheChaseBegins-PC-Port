@@ -32,6 +32,11 @@ constexpr int kClimbBarGrabJumpCount = 4;             // the grab tests of the j
 // for Chase (0, -1.0606986, 0.3636877); the original samples the hand joint of the ledge clip (0x27086c) and does not store a constant.
 constexpr float kClimbBarHangOffsetY = -1.0606986f;
 constexpr float kClimbBarHangOffsetZ = 0.36368772f;
+// TRAV-S21: ctrl+0x2e8 for an AcrobatPole (flag poles), the hanging player's offset from the bar line (bar-local y and z), measured in the
+// oracle (m12-trampoline-built, grab of 1-2_FlagPole_01 from the bounce): the player ends the arrival at 41.45909 / 637.57922 under the pole
+// at 723.11157 / 43.46950 / 637.55219 with yaw 180; the original samples the hand joint of the clip 0x2c.
+constexpr float kAcrobatPoleHangOffsetY = -2.0104117f;
+constexpr float kAcrobatPoleHangOffsetZ = -0.027031898f;
 // Player box of the grab test 0x295da0: entity+0x60 (0, 1.15, 0.08) is its centre, entity+0x6c (0.6, 0.85, 0.52) its half extents
 // (read in m12-12) with y scaled by *0x377220 - *0x37721c = 0.7 - 0.2 = 0.5.
 constexpr float kClimbBarPlayerBoxCentre[3] = {0.0f, 1.15f, 0.08f};
@@ -81,6 +86,7 @@ struct ClimbBarRider {
     bool jumpLatch = false;       // ctrl+0x315 bit 0: the B press was used to leave
     float t = 0;                  // ctrl+0x24c on a corner
     float clipFrame = 0;          // playing time (frames) of the ledge_left / ledge_right clip since the state was entered
+    bool grabbedFromBehind = false;  // the player was on the side of the bar's -z row (decides the facing of an acrobat pole)
     bool enteredThisUpdate = false;  // TRAV-S17: the first update of Idle after the arrival only places the player (enter 0x27fccc)
     int jumpCount = -1;           // ctrl+0x2cf while the jump state runs, -1 outside it
     bool active() const { return phase != ClimbPhase::None; }

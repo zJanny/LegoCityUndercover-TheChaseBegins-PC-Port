@@ -1237,6 +1237,15 @@ if(BUILD_TESTING)
       --call-script Trampoline_03_Buildits_Script --start "720.2 32.62 637.47" --facing 0 --script "0 0 3;0 0 2 B;0 0 60")
     set_tests_properties(game-script-bounce PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
       PASS_REGULAR_EXPRESSION "bounce: trampoline_03 launches at 0.3 at update 22.*at update 35.*at update 48.*at update 61")
+    # B held on the built trampoline: the speed grows by 0.1 per bounce, the take-off at 0.9 (update 143) is the one whose fall update grabs
+    # 1-2_FlagPole_01 20 updates later (oracle state m12-trampoline-built, trace t2: take-off at 0.9 in row 139, state 88 in row 159; TRAV-36).
+    add_test(NAME game-script-bounce-grab COMMAND chase-game
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
+      --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes
+      --call-script Trampoline_03_Buildits_Script --start "720.2 32.62 637.47" --facing 0 --script "0 0 3;0 0 165 B;0 0 5")
+    set_tests_properties(game-script-bounce-grab PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
+      PASS_REGULAR_EXPRESSION "launches at 0.8 at update 110.*launches at 0.9 at update 143.*climb bar: grab 1-2_flagpole_01 from the fall at update 163")
     # 1-8_Zip_Line05 on its platform, facing it, A gets on and B does not. The spot is derived from the level data (anchor 868.094 69.992 630.977,
     # UseBound), not an oracle position (TRAV-8).
     add_test(NAME game-script-zipline-use-a COMMAND chase-game

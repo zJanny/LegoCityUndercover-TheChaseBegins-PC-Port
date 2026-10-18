@@ -42,6 +42,7 @@ game_player::PlayerAnimation LevelSession::climbBarMovePlayer(const runtime::Sti
         player->motion.z = step.position[2];
         player->motion.facing = player->motion.lastIntent = step.facing;
         player->vertical.posture = runtime::Posture::Ground;
+        player->vertical.groundRecord = nullptr;
         player->vertical.jump = nullptr;
         player->vertical.fallSpeed = 0.0f;
         player->vertical.fallDistance = 0.0f;
@@ -74,15 +75,23 @@ game_player::PlayerAnimation LevelSession::climbBarMovePlayer(const runtime::Sti
         return step.riding ? apply(step) : leave(step);
     }
     const runtime::Posture before = player->vertical.posture;
+    const bool flightBefore = player->vertical.bouncing || player->vertical.bounceSettling;
     const game_player::PlayerAnimation shown = moveClimbingPlayer(intent, jumpPressed, usePressed, dt);
     if (ziplineRider.active() || brickClimber.active()) return shown;
     const bool started = before != runtime::Posture::Jumping && player->vertical.posture == runtime::Posture::Jumping;
-    if (!runtime::climbBarJumpTick(climbBarRider, started, before == runtime::Posture::Jumping)) return shown;
+    const bool jumpTest = runtime::climbBarJumpTick(climbBarRider, started, before == runtime::Posture::Jumping);
+    const bool fallTest = before == runtime::Posture::Falling && player->vertical.posture == runtime::Posture::Falling && !flightBefore;
+    if (!jumpTest && !fallTest) return shown;
     readPlayer();
     const int grabbed = runtime::climbBarGrabTest(climbBars, climbBarRider, input.position, input.facing, input.enabled);
     if (grabbed < 0) return shown;
-    std::cout << "climb bar: grab " << climbBars.bars[std::size_t(grabbed)].instance << " at update " << updates << '\n';
-    return apply(runtime::climbBarGrab(climbBarRider, climbBars, grabbed, input));
+    std::cout << "climb bar: grab " << climbBars.bars[std::size_t(grabbed)].instance << (jumpTest ? "" : " from the fall") << " at update " << updates << '\n';
+    const game_player::PlayerAnimation grabbedShown = apply(runtime::climbBarGrab(climbBarRider, climbBars, grabbed, input));
+    if (jumpTest) return grabbedShown;
+    climbBarRider.jumpLatch = input.bHeld;
+    readPlayer();
+    const runtime::ClimbBarStep arrival = runtime::climbBarUpdate(climbBarRider, climbBars, input);
+    return arrival.riding ? apply(arrival) : leave(arrival);
 }
 
 }
