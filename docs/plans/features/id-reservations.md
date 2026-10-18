@@ -4,8 +4,5 @@ Ranges of item IDs held by parallel agents; the lead reserves them with `tools/c
 
 | Prefix | First | Last | Holder | Date |
 |---|---|---|---|---|
-| PLAYER | 20 | 22 | r25-B | 2026-10-18T21:27:03+02:00 |
-| PLAYER-S | 10 | 11 | r25-B | 2026-10-18T21:27:04+02:00 |
-| LEVOBJ | 96 | 97 | r25-servant | 2026-10-18T21:27:04+02:00 |
 | TOOLS | 14 | 15 | r25-D | 2026-10-18T21:36:31+02:00 |
 | TOOLS-S | 1 | 1 | r25-D | 2026-10-18T21:36:31+02:00 |
