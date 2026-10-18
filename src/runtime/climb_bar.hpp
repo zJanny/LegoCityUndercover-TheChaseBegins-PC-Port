@@ -42,6 +42,14 @@ constexpr float kAcrobatPoleHangOffsetZ = -0.027031898f;
 constexpr float kClimbBarPlayerBoxCentre[3] = {0.0f, 1.15f, 0.08f};
 constexpr float kClimbBarPlayerBoxHalf[3] = {0.6f, 0.85f * 0.5f, 0.52f};
 
+// A bar's links comp+0x20.. (PrimaryNextBar, PrimaryPrevBar, SecondaryNextBar, SecondaryPrevBar): the linked object and its placement.
+struct ClimbBarLink {
+    bool present = false;
+    std::string instance;                 // lower case
+    float position[3] = {0, 0, 0};
+    int bar = -1;                         // index in ClimbBarSet::bars when the linked object is a bar (type 29)
+};
+
 struct ClimbBar {
     std::string instance;                 // lower case
     std::size_t order = 0;
@@ -51,6 +59,7 @@ struct ClimbBar {
     bool hasGrabBound = false;
     bool acrobatPole = false, narrowBar = false, faceJumpDir = true, immediateJump = false, ledge = false;  // comp+0x3c bits 0..4
     std::uint16_t grabSound = 0, swingSound = 0;                                                         // ATTR_SFX_GRAB / ATTR_SFX_SWING
+    std::array<ClimbBarLink, 4> links;
 };
 
 struct CornerRail {
@@ -86,7 +95,6 @@ struct ClimbBarRider {
     bool jumpLatch = false;       // ctrl+0x315 bit 0: the B press was used to leave
     float t = 0;                  // ctrl+0x24c on a corner
     float clipFrame = 0;          // playing time (frames) of the ledge_left / ledge_right clip since the state was entered
-    bool grabbedFromBehind = false;  // the player was on the side of the bar's -z row (decides the facing of an acrobat pole)
     bool enteredThisUpdate = false;  // TRAV-S17: the first update of Idle after the arrival only places the player (enter 0x27fccc)
     int jumpCount = -1;           // ctrl+0x2cf while the jump state runs, -1 outside it
     bool active() const { return phase != ClimbPhase::None; }
@@ -135,6 +143,30 @@ ClimbBarStep climbBarUpdate(ClimbBarRider& rider, const ClimbBarSet& set, const 
 
 // The jump counter ctrl+0x2cf as for the zipline: whether the grab tests of the jump update run in this update.
 bool climbBarJumpTick(ClimbBarRider& rider, bool jumpStarted, bool jumping);
+
+// Acrobat pole states (static initialiser 0x347e34): idle, flip, jump to the next pole, jump again, jump to the fall, jump to a target that
+// is not a pole.
+constexpr int kAcrobatPoleIdleState = 93;
+constexpr int kAcrobatPoleFlipState = 94;
+constexpr int kAcrobatPoleJumpState = 95;
+constexpr int kAcrobatPoleJumpAgainState = 96;
+constexpr int kAcrobatPoleJumpToFallState = 97;
+constexpr int kAcrobatPoleJumpToLandState = 98;
+
+// 0x1f80d4: the facing on an acrobat pole: the pole's z row when the player's z row points the same way (dot > 0), else turned by pi.
+std::int16_t acrobatPoleFacing(const ClimbBar& pole, std::int16_t playerFacing);
+
+struct AcrobatPoleJump {
+    int state = kAcrobatPoleJumpToFallState;
+    int link = -1;                        // ctrl+0x140: index into the pole's links, -1 for none
+};
+
+// 0x211b88: the jump off an acrobat pole. The links ahead of the player's z row (dot of the direction from the pole > 0) are the
+// candidates: the first primary one, else a secondary one; with two and the stick held the comparison of the stick heading ctrl+6 with
+// the heights of the two picks the other (as read, meaning not known). No link: state 97; a link that is not a bar: 98; else 96 from
+// state 95 and 95 otherwise.
+AcrobatPoleJump acrobatPoleJump(const ClimbBar& pole, std::int16_t playerFacing, int currentState, bool stickHeld, std::int16_t stickHeading,
+                                const std::function<bool(const ClimbBarLink&)>& linkEnabled);
 
 // Left the bar by a jump or a fall: remember it in ctrl+0x138.
 void climbBarLeave(ClimbBarRider& rider);

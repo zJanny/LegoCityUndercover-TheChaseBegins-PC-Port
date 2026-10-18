@@ -308,6 +308,33 @@ int main(int argc, char** argv) {
             input.bHeld = false;
         }
 
+        // Acrobat pole jumps (0x211b88, docs/re/player-traversal-rails.md §2026-10-18T21:33:08). Oracle traces of r24-C (scratch output, not
+        // kept): t1 from the user state m12-trampoline-pole (hanging on 01 facing (0, 1), no stick, B held, `trace 160 t1 mem`): states
+        // 93 -> 95 (ctrl+0x140 = 1-2_FlagPole_02) -> 96 (03) -> 95 (04) -> 98 -> 5 -> 1; t2 (bounce grab of 01, facing (0, -1) after the
+        // arrival, B held, `trace 340 t2 mem`): 93 -> 97 (ctrl+0x140 = 0) -> 5 -> 6 -> 1.
+        {
+            const int poles[4] = {find(set, "1-2_flagpole_01"), find(set, "1-2_flagpole_02"), find(set, "1-2_flagpole_03"), find(set, "1-2_flagpole_04")};
+            const std::int16_t towardsPlusZ = 0, towardsMinusZ = -32768;
+            const runtime::ClimbBar& pole01 = set.bars[std::size_t(poles[0])];
+            require(runtime::acrobatPoleFacing(pole01, towardsPlusZ) == towardsPlusZ, "t1: facing (0, 1) stays on the pole");
+            require(runtime::acrobatPoleFacing(pole01, -30488) == towardsMinusZ, "t2: arrival facing (-0.217, -0.976) turns to (0, -1)");
+            const int states[4] = {runtime::kAcrobatPoleIdleState, runtime::kAcrobatPoleJumpState, runtime::kAcrobatPoleJumpAgainState,
+                                   runtime::kAcrobatPoleJumpState};
+            const int expected[4] = {runtime::kAcrobatPoleJumpState, runtime::kAcrobatPoleJumpAgainState, runtime::kAcrobatPoleJumpState,
+                                     runtime::kAcrobatPoleJumpToLandState};
+            for (int k = 0; k < 4; ++k) {
+                const runtime::ClimbBar& pole = set.bars[std::size_t(poles[k])];
+                const runtime::AcrobatPoleJump jump = runtime::acrobatPoleJump(pole, towardsPlusZ, states[k], false, 0, {});
+                require(jump.state == expected[k], "t1: jump state off pole " + std::to_string(k + 1));
+                require(jump.link >= 0, "t1: a target ahead of pole " + std::to_string(k + 1));
+                const runtime::ClimbBarLink& target = pole.links[std::size_t(jump.link)];
+                if (k < 3) require(target.bar == poles[k + 1], "t1: the next pole after pole " + std::to_string(k + 1));
+                else require(target.bar < 0 && target.instance == "1-2_flagpole_landing_point", "t1: the last jump goes to the landing point");
+            }
+            const runtime::AcrobatPoleJump away = runtime::acrobatPoleJump(pole01, towardsMinusZ, runtime::kAcrobatPoleIdleState, false, 0, {});
+            require(away.state == runtime::kAcrobatPoleJumpToFallState && away.link < 0, "t2: no pole ahead, jump to the fall");
+        }
+
         // Drop (A press) and the first fall update: y 70.14743 in the press update, then the fall of the port takes over.
         {
             runtime::ClimbBarRider rider;
