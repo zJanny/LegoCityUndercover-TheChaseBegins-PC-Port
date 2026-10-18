@@ -8,13 +8,15 @@ The class `leprops/leprop_wobblydestructible` (object type 119: tables, lamp pos
 - Message 0 (the hit): the player's punch sends {0, player, 0, damage 1, 0, kind 1, 0}; the car sends damage 100. The handler subtracts the damage from the u16 health (`WobbleHealth`, 5 for `DonutTable_14`), raises the event ObjectHit (*0x3775e0), and for health above 0 wobbles the prop (spring 0x16b958, brick burst 0x2bc370, sound `ATTR_SFX_HIT`), else destroys it (0x23cd80). Oracle: five punches destroy the table, health 4, 3, 2, 1, 0. [§2026-10-18T20:25:42](#ts-20261018-202542)
 - The destroy raises Dead (*0x3775c0), then the base handler 0x1f8948 runs the effects of [debris.md](debris.md), plays `ATTR_SFX_DESTROYED` and calls 0x244f40 on `TriggerObject` (enable, message 0xff, ObjectTriggered). For the table that object is `DonutTable_14_Script`, which enables the build-it `Trampoline_03_Buildits`; the build-it's own script then switches `Trampoline_03` on and `1-2_Temp_Trampoline` off. [§2026-10-18T20:25:42](#ts-20261018-202542)
 - The bouncer: the player's landing handler 0x2b24bc sends message 15 through 0x20b78c when the floor it landed on belongs to a type-19 entity; the take-off (state 25 "Bounce Take Off", enter 0x2f4e10) sets ctrl+0x2b8 to -speed, the speed is clamped to `LowestTakeOffSpeed` 0.3 .. `HighestTakeOffSpeed` 1.0 and grows by `JumpSpeedChange` 0.1 per bounce with B held, falls by 0.2 without (and stays at 0.3). The flight rises by the speed, +0.05 per update. [§2026-10-18T20:25:42](#ts-20261018-202542)
-- Walking over the pad does not bounce and is not blocked; only a landing bounces. [§2026-10-18T20:25:42](#ts-20261018-202542)
+- Walking does not bounce; only a landing bounces [§2026-10-18T20:25:42](#ts-20261018-202542). A walk from outside is stopped on a circle of about 2.41 m around the `Trampoline_03` origin; the earlier "not blocked" walk started inside that circle [§2026-10-18T21:30:45](#ts-20261018-213045).
 - In the original Chase grabs the flag poles above the trampoline in a fall update after a bounce with B held (take-off at 0.9 reaches them): bar test 0x206240 from the fall state's grab chain; ported ([player-traversal-rails.md §2026-10-18T21:10:23](player-traversal-rails.md#ts-20261018-211023)). The user's state m12-trampoline-pole is Chase already hanging on the pole. [§2026-10-18T20:42:03](#ts-20261018-204203)
 - Open: the wobble spring, the studs of a wobbling hit, the states 25 and 26 beyond the motion, the pad's query rules; see the unknowns of the entry.
 
 <a id="ts-20261018-202542"></a>
 
 ## 2026-10-18T20:25:42+02:00 — The hit on a wobbly prop, the destroy chain to the trampoline build-it, the bouncer and the bounce flight (llvm-objdump of `artifacts/game/game.arm.elf`, Azahar GDB traces of m12-table-before and m12-trampoline-built, level data)
+
+Corrected by [props-wobbly-bouncer.md §2026-10-18T21:30:45](#ts-20261018-213045): the walk over the pad started inside the circle the original blocks; from outside the frame stops the player.
 
 Evidence. Disassembly (`--triple=armv6k --mattr=+vfp2`) of 0x2a3390..0x2a3580, 0x1f8948, 0x23cd80, 0x23211c, 0x244f40, 0x24242c, 0x1c54ac, 0x16b958, 0x2f5af8, 0x2bc370, 0x18abd0..0x18b020, 0x1988f4..0x198ad8, 0x20b78c, 0x2b2d20..0x2b2e10, 0x2f4e10..0x2f5440, 0x2414b4, 0x281c3c and the descriptor builders at 0x1748a0 and 0x246240 callers; the level data of lvl_01 (scripts and objects, class files with `ObjectType`); the Azahar oracle (own emulator on port 24734, GDB only, no RPC, user states of [oracle-states.md](oracle-states.md#ts-20261018-172522), New 3DS). Raw traces stay in `artifacts/oracle/r23D-out`.
 
@@ -67,3 +69,16 @@ Unknowns:
 
 Unknowns:
 - Which objects the poles are (class and type; climb bars of type 29 are one candidate), and which code of the bounce states (0x2f4e10, 0x2f5134) or of the grab tests checks them.
+
+<a id="ts-20261018-213045"></a>
+
+## 2026-10-18T21:30:45+02:00 — The built trampoline stops a walk from outside (oracle, RPC servant of round 25)
+
+Source: Azahar RPC run by the round 25 servant (request servant-1), user state `m12-trampoline-built`, one scripted try, no teleport; output `artifacts/oracle/r25-servant-out/servant1_walk.csv` (`sample 4 0.01`, 400 samples), `servant1_before.png`, `servant1_after.png`. [Corrects §2026-10-18T20:25:42](#ts-20261018-202542): its walk over the pad was placed at 720.20 32.618 639.30, 1.83 m from the origin, inside the circle below.
+
+- Start 719.135 32.618 639.895, 2.648 m from the `Trampoline_03` origin (720.20, 637.47); input `freestick 75 -93` (full run toward the origin).
+- Chase turns on the spot (to t 0.31 s), then one update steps 0.23 m toward the origin onto a circle of about 2.41 m, and from then on (to t 3.98 s) stays on that circle and slides along it, slowing from 0.01 to under 0.001 m per update. Final 719.755 32.630 639.859, distance 2.430; y stays 32.630; no bounce, no lift onto the pad, no pass through the rim.
+- The trampoline's visible disc has a radius of about 2 m, so the circle includes the player's own radius.
+
+Unknowns:
+- What produces the block (a collision entry of the bouncer other than the floor, its shape, why the walk from inside crossed); the impact at full run speed from 3 m or more (the state leaves 0.2 m of run-up after the turn).
