@@ -13,6 +13,7 @@ Save states the oracle uses: which ones exist, the game progress of each, how ea
 - States after mission 1-1 (user): `police-station`, `street-after-1-1`, `info-barrier`, `mission-1-2-start` (1-2 not started, Auburn locked), `in-vehicle` (van_dulmen, slot 5); agent-made from them: `street-at-entrance`, `station-at-exit`, `station-exit-loadingpage`, `info-box-open`. [§2026-10-14T10:20:23](#ts-20261014-102023), [§2026-10-14T11:13:12](#ts-20261014-111312), [§2026-10-14T12:04:04](#ts-20261014-120404), [§2026-10-14T19:17:30](#ts-20261014-191730), [§2026-10-14T23:10:52](#ts-20261014-231052)
 - Mission 1-1 in progress (user): `m11-1-donut-shop` to `m11-9-delivery-goal`, with player positions in the table of the entry; `m11-7-box-prompt` is made from `m11-7-collect-donuts` for the carry pictures. [§2026-10-14T23:27:10](#ts-20261014-232710), [§2026-10-16T09:35:36](#ts-20261016-093536)
 - Agent states with progress: `cutscene-1-1-b` (mission 1-1 started, Old 3DS), `drv-police-car-seated` (step 2, player in the police car), `bullet-trooper-at-obstacle` (from it, trooper resting at the obstacle); `savecont-slotlist-user` and `slotlist-delete-confirm` hold the user's save slot 0 after mission 1-1. [§2026-10-14T20:46:10](#ts-20261014-204610), [§2026-10-15T09:35:00](#ts-20261015-093500), [§2026-10-15T19:07:36](#ts-20261015-190736), [§2026-10-14T15:22:24](#ts-20261014-152224), [§2026-10-14T20:46:10](#ts-20261014-204610)
+- Mission 1-2 in progress (user): `m12-1-mission-trigger` to `m12-8-roof-sound-scanner`, positions in the table of the entry; the sound scanner view is white in Azahar (user report), so its pictures are no reference. [§2026-10-18T10:13:06](#ts-20261018-101306)
 - `leadcut-1_1_d-early` (from `m11-6-van-to-shop`): cutscene `1_1_d` just loaded, for its actor nodes and pictures. [§2026-10-16T14:39:21](#ts-20261016-143921)
 - Open: whether mission 1-2 is active in the post-1-1 states, the level variables of the m11 states, a save with Continue byte +6 above 1, and the Old 3DS run of `savestate`.
 
@@ -180,3 +181,28 @@ Unknowns:
 
 - Made by the lead from the user's `m11-6-van-to-shop` (mission 1-1 step 6: the donut van driven to the shop, nothing of the save changed; New 3DS, OpenGL): `hold A` for 1.2 s drives into `1-1_Waypoint_05`, 1.3 s after the release `savestate leadcut-1_1_d-early`. In the state the cutscene `1_1_d` is loaded in slot 0 (object 0x08ffdd10) and starts about 1.2 s later; it plays to its end (frame 197) in a free run.
 - Use: RPC reads of the cutscene actors (object +0x70 actor array of 0x22c-byte slots, +0x78 count; slot +0x200 node, or entity for flag 1 with the node at entity +0x3c; world matrix at node +0x5c) and `shotloop` pictures with the frame float at object +8. Heap addresses are valid for this state only.
+
+<a id="ts-20261018-101306"></a>
+
+## 2026-10-18T10:13:06+02:00 — Mission 1-2 step states m12-1 to m12-8 (user slots 1 to 8)
+
+- The user played mission 1-2 on their own Azahar and quick-saved at each step (saved 09:57 to 10:05). Copied read-only (`cp --no-clobber`, identical by `cmp`, files made read-only) from `~/.local/share/azahar-emu/states/00040000000AD600.0N.cst` to `artifacts/oracle/states/`; `new_3ds: true` (the user's Azahar runs in New 3DS mode).
+- Game progress of all eight: mission 1-1 finished, mission 1-2 in progress, not finished (user report). The step descriptions are the user's.
+- Each state was loaded once by the lead (port 24730, home `artifacts/oracle/lead-home`, OpenGL, `frames 2`, `player`); all loaded. Player world position and forward vector:
+
+| State | Slot | Point in mission 1-2 (user) | Player position | Forward |
+|---|---|---|---|---|
+| `m12-1-mission-trigger` | 1 | in front of the mission's start trigger | 881.280 16.589 1108.467 | 0.079 0 -0.997 |
+| `m12-2-crying-trigger` | 2 | in front of the first trigger of the mission (the character plays the crying animation) | 743.169 31.158 643.128 | -0.383 0 -0.924 |
+| `m12-3-alley-trigger` | 3 | in front of the trigger in the alleyway | 738.819 29.389 631.241 | -1.000 0 0 |
+| `m12-4-detective-point` | 4 | standing on the point that activates the detective tool | 723.675 29.768 630.775 | -0.929 0 0.370 |
+| `m12-5-detective-active` | 5 | detective tool activated | 720.772 29.779 630.714 | -0.926 0 0.378 |
+| `m12-6-doghouse-x` | 6 | standing on the X in front of the dog house | 710.082 32.677 638.595 | -0.404 0 0.915 |
+| `m12-7-detective-waypoint-2` | 7 | standing on the second detective waypoint | 720.021 37.035 654.390 | -0.942 0 0.335 |
+| `m12-8-roof-sound-scanner` | 8 | on a roof, on the sound scanner trigger | 869.659 65.997 645.594 | -0.122 0 -0.993 |
+
+- User report: in the user's Azahar the sound scanner view shows only a white screen instead of its proper picture; pictures of that view from the oracle are not a reference for how it looks (memory reads and traces are not affected by this).
+
+Unknowns:
+- The level variables (StoryProgress, mission 1-2 flags) and which waypoints and triggers are enabled in each state; not read yet.
+- Whether the white sound scanner view is an emulation fault of both renderers or of the user's renderer only.
