@@ -58,6 +58,14 @@ python3 tools/progress_report.py --update-readme README.md  # rewrite the progre
 python3 tools/progress_report.py --check README.md          # fails when the README table is out of date
 ```
 
+## Priority ranking
+
+```sh
+python3 tools/priority_report.py                                    # print the ranking
+python3 tools/priority_report.py --update docs/plans/priorities.md  # rewrite the file
+python3 tools/priority_report.py --check docs/plans/priorities.md   # fails when the file is out of date
+```
+
 Needs the built `build/libchase_assets_c.so` and the extracted game data. See [Progress](progress.md).
 
 ## Merging an agent branch
@@ -100,6 +108,7 @@ Single C++ tests, with `ctest --test-dir build -R <name>`:
 | `soundtest-real-smoke`, `soundtest-id-smoke` | Play one sound by file name and one by number on the dummy audio driver. Same conditions |
 | `progress-tables` | The tables behind the progress report: which script commands, object types and file types the port handles. No game data needed |
 | `progress-readme` | Fails when the progress table in `README.md` is out of date (`tools/progress_report.py --check`); skips with code 77 if `artifacts/romfs` or the built library is missing |
+| `priorities-current` | Fails when `docs/plans/priorities.md` is out of date (`tools/priority_report.py --check`); skips with code 77 if `artifacts/romfs` or the built library is missing |
 | `no-inline-shaders` | Fails when a `.cpp`, `.hpp` or `.h` file under `src/` contains shader code. Shaders live only in `.glsl` files under `src/render/shaders/` (see `CLAUDE.md`) |
 | `gl-only-in-render` | Fails when a `.cpp`, `.hpp` or `.h` file under `src/` outside `src/render/` contains an OpenGL call, `<epoxy/gl.h>`, a GL type or a GL constant. Rendering code goes into `src/render/` behind plain-type headers (see `CLAUDE.md`). `gl-only-in-render-rejects` checks that the guard fails on the bad file in `tests/gl_only_in_render/` |
 | `game-cpp-wiring` | Fails when `src/game.cpp` has more than 400 lines. That file only wires features together. New game logic goes into its own file under `src/runtime/` (see `CLAUDE.md`) |

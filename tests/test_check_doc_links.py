@@ -228,6 +228,16 @@ class RuleChecksTest(unittest.TestCase):
         found = self.errors('item-field-order')
         self.assertEqual([e.split(': ')[0] for e in found], ['docs/plans/features/f.md:2', 'docs/plans/features/f.md:3', 'docs/plans/features/f.md:4', 'docs/plans/features/f.closed.md:1'])
 
+    def test_item_field_order_with_uses(self):
+        (self.features / 'f.md').write_text(
+            '- [ ] F-1 — gap. needs: F-2. blocks: F-3. uses: EnableObject, props/prop_platform. evidence: [x](x.md)\n'
+            '- [ ] F-2 — gap. uses: EnableObject. blocks: F-3.\n'
+            '- [ ] F-3 — gap. evidence: [x](x.md) uses: EnableObject\n'
+            '- F-S1 stand-in. uses: A.\n'
+        )
+        found = self.errors('item-field-order')
+        self.assertEqual([e.split(': ')[0] for e in found], ['docs/plans/features/f.md:2', 'docs/plans/features/f.md:3'])
+
     def test_superseded_entry_moves_to_history_and_links_follow(self):
         (self.re_dir / 'a.md').write_text(
             '# A\n\n## Current state\n\nSummary.\n\n'

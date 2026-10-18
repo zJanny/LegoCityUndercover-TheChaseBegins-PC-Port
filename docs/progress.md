@@ -36,3 +36,7 @@ It needs the built library (`cmake --build build`) and the extracted game data (
 - `--check README.md` fails if the README table no longer matches the project. The test `progress-readme` runs it.
 
 After a change that moves a number, run `--update-readme` and commit the README with the change.
+
+## Priority ranking
+
+`docs/plans/priorities.md` ranks the open items and stand-ins of the feature files by how much of the game they touch: script calls and placed objects in the 8 main levels, and how many other items they unblock. `python3 tools/priority_report.py --update docs/plans/priorities.md` writes it from the feature files and the level census; `tools/merge_agent.py` regenerates it at every merge and the test `priorities-current` checks it. The file explains its columns and limits. Reach is a hint for choosing work, not an importance score.

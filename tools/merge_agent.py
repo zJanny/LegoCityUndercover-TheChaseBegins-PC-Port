@@ -5,11 +5,12 @@
   merge_agent.py check                   run the checks on the staged merge (after resolving conflicts or review edits)
   merge_agent.py finish BRANCH -m FILE   run the checks, commit with the message in FILE, remove the worktree and branch
 
-Conflicts inside the README progress section and in docs/progress-trend.svg are regenerated; a README conflict outside that
+Conflicts inside the README progress section and in docs/progress-trend.svg are regenerated, and a conflict in
+docs/plans/priorities.md takes main's copy (the checks regenerate it); a README conflict outside that
 section stops the merge like any other. Conflicts in a session log archive keep the lines of both sides (check_doc_links.py
 --fix then drops duplicates). Other conflicts stop the merge.
 
-Checks: no game-derived or binary files staged, doc fixes (check_doc_links.py --fix, restaged), doc links, README progress section regenerated,
+Checks: no game-derived or binary files staged, doc fixes (check_doc_links.py --fix, restaged), doc links, README progress section and docs/plans/priorities.md regenerated,
 warning-free build, ctest, Python tests. Pushing stays a separate, explicitly authorized step.
 """
 from __future__ import annotations
@@ -27,7 +28,8 @@ FORBIDDEN = re.compile(
     r"(^|/)(artifacts|build(-[^/]*)?|graphify-out)/|\.(cci|3ds|cst|cia|bin|bmp|png|jpe?g|wav|bcstm|bcwav|fib|blvl|bfnmdl|dat)$",
     re.IGNORECASE,
 )
-GENERATED_FILES = ["README.md", "docs/progress-trend.svg"]
+PRIORITIES = "docs/plans/priorities.md"
+GENERATED_FILES = ["README.md", "docs/progress-trend.svg", PRIORITIES]
 PROGRESS_START = "<!-- progress:start -->"
 PROGRESS_END = "<!-- progress:end -->"
 ARCHIVE_SUFFIX = "-archive.md"
@@ -70,6 +72,11 @@ def resolve_progress_conflicts(text: str) -> str | None:
 
 def resolve_generated(root: Path, unmerged: list[str]) -> list[str]:
     remaining = list(unmerged)
+    readme_files = [path for path in ("README.md", "docs/progress-trend.svg") if path in remaining]
+    if PRIORITIES in remaining:
+        run(["git", "checkout", "--ours", "--", PRIORITIES], root)
+        run(["git", "add", PRIORITIES], root)
+        remaining.remove(PRIORITIES)
     if "README.md" in remaining:
         resolved = resolve_progress_conflicts((root / "README.md").read_text(encoding="utf-8"))
         if resolved is None:
@@ -79,8 +86,9 @@ def resolve_generated(root: Path, unmerged: list[str]) -> list[str]:
     if "docs/progress-trend.svg" in remaining:
         run(["git", "checkout", "--ours", "--", "docs/progress-trend.svg"], root)
         remaining.remove("docs/progress-trend.svg")
-    run(["python3", "tools/progress_report.py", "--update-readme", "README.md"], root)
-    run(["git", "add", *GENERATED_FILES], root)
+    if readme_files:
+        run(["python3", "tools/progress_report.py", "--update-readme", "README.md"], root)
+        run(["git", "add", "README.md", "docs/progress-trend.svg"], root)
     return remaining
 
 
@@ -164,6 +172,9 @@ def run_checks(root: Path) -> None:
     print("== README progress section")
     run(["python3", "tools/progress_report.py", "--update-readme", "README.md"], root)
     run(["git", "add", "README.md", "docs/progress-trend.svg"], root)
+    print("== priorities")
+    run(["python3", "tools/priority_report.py", "--update", PRIORITIES], root, capture=True)
+    run(["git", "add", PRIORITIES], root)
     print("== ctest")
     run(["ctest", "--test-dir", "build", "--output-on-failure", "-j", str(JOBS)], root)
     print("== python tests")

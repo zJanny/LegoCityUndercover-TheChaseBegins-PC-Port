@@ -120,6 +120,29 @@ class MergeAgentTest(unittest.TestCase):
                 "| 5 tests |\n<!-- progress:end -->\n")
         self.assertIsNone(merge_agent.resolve_progress_conflicts(text))
 
+    def test_priorities_conflict_takes_main_and_is_staged(self) -> None:
+        sys.path.insert(0, str(SCRIPT.parent))
+        import merge_agent
+
+        target = self.repo / merge_agent.PRIORITIES
+        target.parent.mkdir(parents=True)
+        target.write_text("base\n")
+        git(self.repo, "add", "-A")
+        git(self.repo, "commit", "-q", "-m", "priorities")
+        git(self.repo, "checkout", "-q", "-b", "agent")
+        target.write_text("from agent\n")
+        git(self.repo, "commit", "-q", "-am", "agent")
+        git(self.repo, "checkout", "-q", "main")
+        target.write_text("from main\n")
+        git(self.repo, "commit", "-q", "-am", "main")
+        subprocess.run(["git", "merge", "--squash", "agent"], cwd=self.repo, capture_output=True)
+        unmerged = subprocess.run(["git", "diff", "--name-only", "--diff-filter=U"], cwd=self.repo, text=True, capture_output=True).stdout.split()
+        self.assertEqual(unmerged, [merge_agent.PRIORITIES])
+        self.assertEqual(merge_agent.resolve_generated(self.repo, unmerged), [])
+        self.assertEqual(target.read_text(), "from main\n")
+        left = subprocess.run(["git", "diff", "--name-only", "--diff-filter=U"], cwd=self.repo, text=True, capture_output=True).stdout
+        self.assertEqual(left, "")
+
 
 if __name__ == "__main__":
     unittest.main()

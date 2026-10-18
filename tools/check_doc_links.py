@@ -10,7 +10,7 @@ Size and shape rules (CLAUDE.md "Documentation rules"): a docs/re file is at mos
 20 entry lines. With --fix, older log lines move to the progress archive (a line the archive already holds, as
 after a merge of two branches that both archived it, is dropped instead of copied again) and closed items ("- [x] ID") of a feature
 file move to <feature>.closed.md. An item or stand-in ID defined twice in a feature and its closed file is an
-error. Every feature file has exactly one row (at most 300 characters, table preceded by a blank line) in the feature index, which groups its tables under "## <Area>" headings; closed-items files have none. Item lines keep the field order gap text, needs:, blocks:, evidence:. A timestamp later than the current time is an error; a ":00" second in a line new compared to HEAD is a warning. --next PREFIX [COUNT] prints free item IDs, --reserve PREFIX COUNT WHO reserves a range in docs/plans/features/id-reservations.md, --release WHO drops it (an error when WHO holds none); an unknown PREFIX needs --new-prefix. An entry with a "Superseded by" line under its heading moves with --fix to docs/re/<topic>.history.md and links follow. A link whose text starts with "Corrects" needs a "Corrected by" line under the corrected entry's heading
+error. Every feature file has exactly one row (at most 300 characters, table preceded by a blank line) in the feature index, which groups its tables under "## <Area>" headings; closed-items files have none. Item lines keep the field order gap text, needs:, blocks:, uses:, evidence:. A timestamp later than the current time is an error; a ":00" second in a line new compared to HEAD is a warning. --next PREFIX [COUNT] prints free item IDs, --reserve PREFIX COUNT WHO reserves a range in docs/plans/features/id-reservations.md, --release WHO drops it (an error when WHO holds none); an unknown PREFIX needs --new-prefix. An entry with a "Superseded by" line under its heading moves with --fix to docs/re/<topic>.history.md and links follow. A link whose text starts with "Corrects" needs a "Corrected by" line under the corrected entry's heading
 that links back, and every "Corrected by" line needs the matching "Corrects" link.
 """
 import argparse
@@ -40,8 +40,8 @@ MAX_FEATURE_BYTES = 16384
 MAX_INDEX_ROW = 300
 RESERVATIONS = "id-reservations.md"
 HISTORY_SUFFIX = ".history.md"
-FIELD_ORDER = {"needs": 0, "blocks": 1, "evidence": 2}
-FIELD = re.compile(r"(?<![\w-])(needs|blocks|evidence):")
+FIELD_ORDER = {"needs": 0, "blocks": 1, "uses": 2, "evidence": 3}
+FIELD = re.compile(r"(?<![\w-])(needs|blocks|uses|evidence):")
 TIMESTAMP = re.compile(r"\b(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)([+-]\d\d:\d\d|Z)")
 IDENTIFIER = re.compile(r"^([A-Z][A-Z0-9]*)-(S?)(\d+)")
 PREFIX = re.compile(r"^[A-Z][A-Z0-9]*(-S)?$")
@@ -333,7 +333,7 @@ def item_format_errors(root):
                     continue
                 ranks = [FIELD_ORDER[m.group(1)] for m in FIELD.finditer(line)]
                 if ranks != sorted(set(ranks)):
-                    errors.append(f"{member.relative_to(root)}:{number + 1}: item-field-order: fields must follow gap text, needs:, blocks:, evidence: (each at most once, evidence last)")
+                    errors.append(f"{member.relative_to(root)}:{number + 1}: item-field-order: fields must follow gap text, needs:, blocks:, uses:, evidence: (each at most once, evidence last)")
     return errors
 
 
