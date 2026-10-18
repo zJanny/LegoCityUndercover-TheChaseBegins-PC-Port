@@ -276,6 +276,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     if (player) game_carry::applyClipTimings(carry, *player);
     std::cout << "carry objects: " << carry.objects().size() << ", carry targets: " << carry.targets().size() << '\n';
     loadDetective(archive);
+    useSpots.load(level, classOf);
     scanner.load(archive, level, classOf);
     std::cout << "scanner zones: " << scanner.zones().size() << ", scannable objects: " << scanner.objects().size() << '\n';
     std::cout << "collision: " << collision.triangleCount() << " triangles in " << collision.entries().size() << " entries\n";

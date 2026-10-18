@@ -3,6 +3,10 @@
 namespace chase::runtime {
 
 bool NpcIdle::update(AnimationSlots& slots, std::int64_t now, GameRandom& random, const AnimationClipInfo& idle, const AnimationClipInfo& idle2) {
+    if (scripted_) {
+        if (slots.kind(now) == kAnimationStopped) scripted_ = false;
+        return false;
+    }
     if (slots.kind(now) != kAnimationStopped) return false;
     started_ = true;
     variant_ = (random.next() & kIdleRandomBit) != 0 ? NpcIdleVariant::Idle2 : NpcIdleVariant::Idle;

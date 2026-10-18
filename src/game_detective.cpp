@@ -93,6 +93,15 @@ void LevelSession::updateDetective(float dt, bool actionFree, const std::functio
     }
 }
 
+void LevelSession::updateUseSpots(bool actionFree) {
+    const float position[3] = {player->motion.x, player->vertical.y, player->motion.z};
+    const bool free = actionFree && !levelScripts.playerControlTaken() && !cutscenePlaying() && !detective.controlTaken() && player->vertical.posture == runtime::Posture::Ground;
+    for (const runtime::UseSpotAction& action : useSpots.update(objectState, position, pad.slot(kSlotConfirmButton).press > 0, free)) {
+        std::cout << "use spot: " << action.spot << " triggers " << action.target << " at update " << updates << '\n';
+        levelScripts.triggerObjectEnabling(action.target);
+    }
+}
+
 void LevelSession::logDetectiveStates() {
     std::vector<int> states;
     for (const runtime::DetectiveSpot& spot : detective.spots()) states.push_back(spot.state);

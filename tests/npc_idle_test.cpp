@@ -122,11 +122,33 @@ void testScriptedLoopKeepsIdleAway() {
     AnimationSlots slots;
     NpcIdle idle;
     const AnimationClipInfo stuck{3, 42, 15, true};
+    idle.enterScriptAnimation();
     slots.start(stuck, kAnimationLoop, 0, kAnimationFrameDefault, 1.0f, 0.1f, 0);
     for (std::int64_t now = 100; now < 60 * kTicks; now += 100)
         require(!idle.update(slots, now, random, kIdle, kIdle2), "a looping animation is never finished (kind 1)");
     slots.stop(60 * kTicks);
-    require(idle.update(slots, 60 * kTicks + 100, random, kIdle, kIdle2), "after StopCharAnim the idle state starts again");
+    require(!idle.update(slots, 60 * kTicks + 100, random, kIdle, kIdle2), "the user-anim state only requests state 1 (0x2a47b0)");
+    require(idle.update(slots, 60 * kTicks + 200, random, kIdle, kIdle2), "after StopCharAnim the idle state starts again");
+}
+
+// DETECT-2: PlayCharAnim enters state 0x50; the finished script animation is seen as kind 6 for one update, so the wait
+// of WaitForCurrentCharAnim passes (0x263ae4) before an idle replaces it.
+void testFinishedScriptAnimationStaysForOneUpdate() {
+    GameRandom random = recordedGenerator();
+    AnimationSlots slots;
+    NpcIdle idle;
+    idle.update(slots, 0, random, kIdle, kIdle2);
+    const AnimationClipInfo exit{4, 28, 15, false};
+    idle.enterScriptAnimation();
+    slots.start(exit, kAnimationOnce, 0, kAnimationFrameDefault, 1.0f, 0.1f, 1000);
+    const std::int64_t length = 28 * kTicks / 15;
+    require(!idle.update(slots, 1000 + length - 100, random, kIdle, kIdle2) && slots.kind(1000 + length - 100) != kAnimationStopped,
+            "running");
+    const std::int64_t done = 1000 + length + 50;
+    require(!idle.update(slots, done, random, kIdle, kIdle2), "no idle in the update that sees the end");
+    require(slots.kind(done) == kAnimationStopped && slots.current()->clip == 4, "finished and still the script clip");
+    require(!idle.scripted(), "state 1 requested");
+    require(idle.update(slots, done + 100, random, kIdle, kIdle2), "the idle starts in the next update");
 }
 }
 
@@ -141,6 +163,7 @@ int main() {
         testPositionIsRateTimesTime();
         testDegenerateClipRestartsEveryUpdate();
         testScriptedLoopKeepsIdleAway();
+        testFinishedScriptAnimationStaysForOneUpdate();
     } catch (const std::exception& error) {
         std::cerr << "npc-idle-test: " << error.what() << '\n';
         return 1;

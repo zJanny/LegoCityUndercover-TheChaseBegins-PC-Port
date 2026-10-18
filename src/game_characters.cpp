@@ -75,6 +75,7 @@ const LevelCharacters::Entry* LevelCharacters::find(const std::string& instance)
 void LevelCharacters::play(const runtime::AnimationPlay& play) {
     Entry* entry = find(play.instance);
     if (!entry) return;
+    if (play.request.character) entry->idleState.enterScriptAnimation();
     const auto clip = clipOf(characterAnimationPath(play.request.classFolder, play.request.name));
     if (!clip) return;
     const runtime::AnimationClipInfo& info = clips_[*clip].info;

@@ -10,6 +10,7 @@ How a level character (`char_ai_actor` and similar) animates while it stands: th
 - The slot player: a 0x58-byte slot, newest first; start 0x245b40, position 0x24cbd4 (modes 0 to 6, loop bit 13), kind 0x22f560, stop 0x225c5c, offset 0x22c2fc, type callbacks in the 0x24-byte table at 0x52ce8c. Length, rate and loop bit come from the type callbacks (loop bit = joint table bit 29, so length = frames). [§2026-10-15T18:33:06](#ts-20261015-183306)
 - Port: `src/runtime/animation_slots.*`, `npc_idle.*`, `game_random.*`, `game_characters.*`; the pose is clamped to `frames - 1` (stand-in ANIM-S2). [§2026-10-15T18:33:06](#ts-20261015-183306)
 - The donut-shop view matches the original in layout; the idle phase was not compared. [§2026-10-15T10:50:38](#ts-20261015-105038)
+- A script animation (PlayCharAnim) puts the character into state 0x50, whose update starts no idle and only requests state 1 once the clip is finished, so a finished script clip stays visible for one update. [§2026-10-18T14:28:08+02:00](#ts-20261018-142808)
 - Open: seed formula of 0x105d8c (the port uses a fixed seed), which slot 0x252878 picks as current, who pauses slots (0x24f8fc), the pose sampler's handling of [span, span + 1), blend between clips, gang classes and the AIMillAbout state.
 
 
@@ -76,3 +77,15 @@ Unknowns:
 - What 0x252878 picks as the current slot, and the release and blend bookkeeping (0x24cf70, 0x1ce608, the type compare at `*0x376758`).
 - Who pauses and resumes a slot (callers of 0x24f8fc); the donut lady's slot was paused for 12338 ticks before the state was saved. The port's clock runs for every character all the time.
 - How the pose sampler 0x24bf80 treats positions in [span, span + 1) of a looping clip; the port clamps the pose to frames - 1 (ANIM-S2).
+
+<a id="ts-20261018-142808"></a>
+
+## 2026-10-18T14:28:08+02:00 — Script animations and the idle state: the user-animation state 0x50 (REA on game.arm.elf; found while fixing DETECT-2)
+
+- **PlayCharAnim enters state 0x50.** 0x29e5f0 calls 0x295a8c (play) and then requests state 0x50 (0x51 for PlayCutscene) with 0x2414b4. The state table entry (24 bytes at `*0x3742c8 + id * 0x18`; descriptor words at 0x3577f4..0x35780c: update 0x2a47b0, enter 0x25fbec, name "USER ANIM"; 0x51 the same pair) has the update 0x2a47b0: `0x22f560` of the entity's slot; when the kind is 6 (no slot or finished) it requests state 1 with 0x2414b4(entity, ctrl+0x50, 1, 0); then 0x215804 (locomotion helper, not read) and `ctrl+10 = ctrl+8`. It never starts an idle clip.
+- **Consequence.** While a script animation plays the idle state 0x1d5070 does not run, and in the update that sees the end only the state change is requested, so a finished script clip is visible as kind 6 to `WaitForCurrentCharAnim` / `WaitForCurrentAnim` (0x263ae4, 0x2a06a8) until the next update, when the new state starts an idle. The port started the next idle in the same update that saw the end, so the wait never saw the finished clip and the Doorlock script stalled at pc 17 (DETECT-2, [abilities-detective.md](abilities-detective.md)). Fix: `NpcIdle::enterScriptAnimation` (PlayCharAnim on a level character), tests `npc-idle` (`testFinishedScriptAnimationStaysForOneUpdate`) and `game-doorlock-detective-1-2` (the script ends at update 1064 of a run from the alley; the detective point then enables `1-2_Dtv_DogSpot_01`).
+- **Not read:** the enter function 0x25fbec (no procedure at that address in REA), 0x215804, what state 1 is for characters other than the player (the idle state is described as state 0 above, the carrying doc names state 1 as the default), and whether the request takes effect in the same update (the port gives the wait one update either way).
+- **Seen in the port after the fix (lead check, `chase-game --call-script 1-2_Spawn_Doorlock` from the alley, 1100 updates):** the script ends at update 1064 and the first detective point is on, but `PositionObject 1-2_Doorlock_Holmes 1-2_Doorlock_Teleport` is not applied (`chase-game` places only the player and vehicles and prints `PositionObject not applied`), so Holmes stays where the bin animation leaves him; whether he is visible jumping out was not checked frame by frame.
+
+Unknowns:
+- The enter function 0x25fbec and 0x215804; the state number the idle state has for level characters.

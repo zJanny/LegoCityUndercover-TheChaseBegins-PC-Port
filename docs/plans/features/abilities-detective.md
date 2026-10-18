@@ -6,7 +6,7 @@ The detective tool of mission 1-2 and later missions: the `ability_detective*` o
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-18T11:26:21+02:00. Detective spot (type 182), reveal spot (238) and reveal prop (74) run in `chase-game` with the oracle's timing; from the second detective point the mission reaches `1-2_SO_Dspot_02_X` (test `game-detective-1-2`). The first point is never enabled in real play (DETECT-2).
+IN_PROGRESS, updated 2026-10-18T14:29:01+02:00. Detective spot (type 182), reveal spot (238) and reveal prop (74) run in `chase-game` with the oracle's timing; from the second detective point the mission reaches `1-2_SO_Dspot_02_X` (test `game-detective-1-2`). The Doorlock script now passes its wait (DETECT-2 closed), so the first point is enabled in `chase-game`.
 
 ## 3. Verified behaviour
 
@@ -26,7 +26,6 @@ IN_PROGRESS, updated 2026-10-18T11:26:21+02:00. Detective spot (type 182), revea
 ## 5. Open items
 
 - [ ] DETECT-1 — The use state's approach (0x207be4, about 2.3 units in the oracle) and its event table are not read. blocks: DETECT-S1. evidence: [abilities-detective.md §2026-10-18T11:26:21](../../re/abilities-detective.md#ts-20261018-112621).
-- [ ] DETECT-2 — In `chase-game` the Doorlock script (`1-2_Spawn_Doorlock`, 3035472981) never passes `WaitForCurrentCharAnim 1-2_Doorlock_Holmes` (pc 17), so `1-2_Dtv_DogSpot_01` is never enabled; a bare ScriptRunner finishes it in about 950 updates. evidence: [abilities-detective.md §2026-10-18T11:26:21](../../re/abilities-detective.md#ts-20261018-112621).
 - [ ] DETECT-3 — Nothing read leaves state 2 of a spot, so `1-2_Dtv_DogSpot_01_Script` never runs (also not in the oracle); confirm in a longer trace. evidence: [abilities-detective.md §2026-10-18T11:26:21](../../re/abilities-detective.md#ts-20261018-112621).
 - [ ] DETECT-4 — Not drawn: question particles, footprint rotation, fades, the dust particle and the bone's flight. blocks: DETECT-S2, DETECT-S3. evidence: [abilities-detective.md §2026-10-18T11:26:21](../../re/abilities-detective.md#ts-20261018-112621).
 - [ ] DETECT-5 — Other readers of ext+0x130 bit 2 (camera, prompts, vehicle entry 0x1835d0) and 0x2a62b8 are not ported. evidence: [abilities-detective.md §2026-10-18T11:26:21](../../re/abilities-detective.md#ts-20261018-112621).
@@ -39,4 +38,4 @@ IN_PROGRESS, updated 2026-10-18T11:26:21+02:00. Detective spot (type 182), revea
 ## 7. Code and tests
 
 - `src/runtime/detective.{hpp,cpp}` (classes, footprints, player states), `src/game_detective.cpp` (LevelSession glue, footprint drawing), RevealSwitch link in `src/runtime/level_start.cpp`, detective walk in `player_locomotion`.
-- Tests `detective`, `detective-real-data`, `game-detective-1-2`, `level-start-real-data`.
+- Tests `detective`, `detective-real-data`, `game-detective-1-2`, `game-doorlock-detective-1-2` (slow), `level-start-real-data`; the idle fix is in `src/runtime/npc_idle.*` (`npc-idle`).

@@ -297,6 +297,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         for (const runtime::SoundCall& call : updateBuildits(playerPosition)) emit(call);
         updateCarry(playerPosition);
         updateDetective(dt, carry.carryingMode() == 0 && !carry.busy() && !builditPlayer.active() && !buildits.lastUse().inZone, emit);
+        updateUseSpots(carry.carryingMode() == 0 && !carry.busy() && !builditPlayer.active() && !buildits.lastUse().inZone);
         updateScanner();
     }
     propParts.step(dt);
