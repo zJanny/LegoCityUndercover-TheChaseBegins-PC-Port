@@ -15,6 +15,7 @@ Save states the oracle uses: which ones exist, the game progress of each, how ea
 - Agent states with progress: `cutscene-1-1-b` (mission 1-1 started, Old 3DS), `drv-police-car-seated` (step 2, player in the police car), `bullet-trooper-at-obstacle` (from it, trooper resting at the obstacle); `savecont-slotlist-user` and `slotlist-delete-confirm` hold the user's save slot 0 after mission 1-1. [§2026-10-14T20:46:10](#ts-20261014-204610), [§2026-10-15T09:35:00](#ts-20261015-093500), [§2026-10-15T19:07:36](#ts-20261015-190736), [§2026-10-14T15:22:24](#ts-20261014-152224), [§2026-10-14T20:46:10](#ts-20261014-204610)
 - Mission 1-2 in progress (user): `m12-1-mission-trigger` to `m12-8-roof-sound-scanner`, positions in the table of the entry; the sound scanner view is white in Azahar (user report), so its pictures are no reference. [§2026-10-18T10:13:06](#ts-20261018-101306)
 - Rest of mission 1-2 (user, loaded and checked): `m12-9-zipline` to `m12-13-cage-trigger`, and `m12-14-mission-complete` with mission 1-2 finished; positions in the table of the entry. [§2026-10-18T12:27:39](#ts-20261018-122739)
+- Vehicle brick effects (user): `veh-smash-prop` (lamp post), `veh-smash-car` (moving car ahead), `veh-break-low-hearts` (one heart left). [§2026-10-18T12:45:56](#ts-20261018-124556)
 - `leadcut-1_1_d-early` (from `m11-6-van-to-shop`): cutscene `1_1_d` just loaded, for its actor nodes and pictures. [§2026-10-16T14:39:21](#ts-20261016-143921)
 - Open: whether mission 1-2 is active in the post-1-1 states, the level variables of the m11 states, a save with Continue byte +6 above 1, and the Old 3DS run of `savestate`.
 
@@ -225,3 +226,18 @@ The user played mission 1-2 past the roof sound scanner and to its end and saved
 | `m12-14-mission-complete` | 6 | mission 1-2 complete | 745.951 30.055 636.281 |
 
 Progress: mission 1-1 finished; slots 1 to 5 mission 1-2 in progress (past the scanner), slot 6 mission 1-2 finished (back on the street with the dialogue "McCain, stop messing around and get back to the station."). Each `NAME.json` names the emulator load slot `00040000000AD600.00.cst` in `file`, like the other states. The user got the scanner working in Azahar; how is not recorded yet.
+
+<a id="ts-20261018-124556"></a>
+<a id="ts-20261018-124556"></a>
+
+## 2026-10-18T12:45:56+02:00 — User states for vehicle smashes and the car break
+
+The user saved quick-save slots 1 to 3 (2026-10-18, 12:44 to 12:45, New 3DS) for the brick effects of PART-2, VEH-104, VEH-112 and VEH-121. Copied read-only; each was loaded once (`--state NAME --rpc`, `wait 3`, `player`, screenshot):
+
+| State | Slot | Where (user report) | Player position | Seen at load |
+|---|---|---|---|---|
+| `veh-smash-prop` | 1 | in a car in front of a smashable lamp post | 857.112 31.175 923.384 | police van, four hearts, lamp post ahead on the pavement |
+| `veh-smash-car` | 2 | in a car in front of another moving car | 877.466 31.160 935.964 | police van, four hearts, a green car and a blue truck ahead |
+| `veh-break-low-hearts` | 3 | in a car with one heart left, aimed at a wall a few metres away | 602.002 16.810 1095.447 | police van, one heart; straight ahead the picture shows open road, the wall is not in view |
+
+Progress: missions 1-1 and 1-2 finished (user report). Not checked yet: which object the van hits first when A is held in `veh-break-low-hearts`.
