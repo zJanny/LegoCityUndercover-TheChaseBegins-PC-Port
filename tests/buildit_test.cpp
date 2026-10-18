@@ -1,8 +1,12 @@
 // Build-it state machine (src/runtime/buildit.cpp). The expected rows are the record fields of the object 1-1_BI_DonutVanParts read in
 // the oracle after every update with the action button held from the state m11-4-van-parts (command and result: docs/re/buildit.md,
 // entry "Build of 1-1_BI_DonutVanParts measured"): row i is the state after i updates, each update being the object update followed
-// by the use message. Six bricks.
+// by the use message. Six bricks. turnedZone: the use zone is tested in the node's frame (0x221570 turns the player with the node's world matrix,
+// 0x2536c0, before the box test 0x22f650); read from the code, entry "The use zone is turned with the placement" of docs/re/buildit.md.
+#include "assets/assets.hpp"
 #include "runtime/buildit.hpp"
+#include "runtime/buildit_set.hpp"
+#include <algorithm>
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
@@ -124,9 +128,46 @@ void flightAndRise() {
     require(rising.state == 11 || rising.built, "rise ends");
     require(rising.propRise == 0.0f && rising.flight[0] == 0.0f, "the change to state 11 resets the bricks and the rise");
 }
+
+void placementYaw(BuilditObject& object, float degrees) {
+    chase::assets::Placement placement;
+    placement.orientation[1] = degrees;
+    const chase::assets::Matrix node = chase::assets::placementMatrix(placement);
+    for (int row = 0; row < 3; ++row) std::copy_n(node.begin() + 4 * row, 3, object.zoneAxes + 3 * row);
+}
+
+void turnedZone() {
+    BuilditObject object;
+    object.hasZone = true;
+    object.position[0] = 100.0f;
+    object.position[1] = 10.0f;
+    object.position[2] = -50.0f;
+    object.zoneCentre[0] = 3.0f;
+    object.zoneCentre[1] = 0.5f;
+    object.zoneHalf[0] = 1.0f;
+    object.zoneHalf[1] = 2.0f;
+    object.zoneHalf[2] = 4.0f;
+    const float unturned[3] = {103.5f, 10.5f, -47.0f}, behind[3] = {96.5f, 10.5f, -47.0f};
+    require(BuilditSet::inZone(object, unturned) && !BuilditSet::inZone(object, behind), "an unturned node keeps the zone on its +x side");
+
+    placementYaw(object, 180.0f);
+    require(!BuilditSet::inZone(object, unturned) && BuilditSet::inZone(object, behind), "a node turned by 180 degrees has the zone on its -x side");
+    float centre[3];
+    BuilditSet::zoneWorldCentre(object, centre);
+    require(near(centre[0], 97.0f) && near(centre[1], 10.5f) && near(centre[2], -50.0f), "the world centre follows the turn");
+
+    placementYaw(object, 90.0f);
+    const float turnedCentre[3] = {100.0f, 10.5f, -53.0f}, nearEdge[3] = {100.0f + 3.9f, 10.5f, -53.0f}, acrossEdge[3] = {100.0f + 4.1f, 10.5f, -53.0f};
+    BuilditSet::zoneWorldCentre(object, centre);
+    require(near(centre[0], turnedCentre[0]) && near(centre[2], turnedCentre[2]), "a quarter turn moves the centre onto -z");
+    require(BuilditSet::inZone(object, nearEdge) && !BuilditSet::inZone(object, acrossEdge), "the local z half extent of 4 lies along the world x axis after a quarter turn");
+    const float notBeyondLocalX[3] = {100.0f, 10.5f, -53.0f - 1.1f};
+    require(!BuilditSet::inZone(object, notBeyondLocalX), "the local x half extent of 1 lies along the world z axis after a quarter turn");
+}
 }
 
 int main() {
+    turnedZone();
     flightAndRise();
     replay();
     releasedButton();

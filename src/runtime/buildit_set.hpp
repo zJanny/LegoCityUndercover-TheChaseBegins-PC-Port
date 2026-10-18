@@ -19,7 +19,9 @@ constexpr std::uint16_t kBuilditSoundOwnerBase = 0x4000;
 
 constexpr const char* kBuilditClass = "props/prop_buildit";
 
-// Use zone (record +0x28): the box of the object's node bounds relative to the node, every half extent widened by 1.0 (*0x56d40c).
+// Use zone (record +0x28): the box of the object's node bounds in the node's own frame, every half extent widened by 1.0 (*0x56d40c).
+// The query (0x221570 -> 0x22f650) turns the player into that frame with the node's world matrix (0x2536c0, flag bit 5 clear), so the box is
+// turned with the placement's orientation (docs/re/buildit.md).
 constexpr float kBuilditZoneMargin = 1.0f;
 
 struct BuilditObject {
@@ -30,8 +32,9 @@ struct BuilditObject {
     std::uint16_t soundBitDone = 0;  // ATTR_SFXBitDone (record +0x88), played by the change to state 9
     std::uint16_t soundBuilt = 0;    // ATTR_SFXBuilt (record +0x8a), played by the change to state 11
     float position[3] = {0, 0, 0};
-    float zoneCentre[3] = {0, 0, 0};  // relative to position
+    float zoneCentre[3] = {0, 0, 0};  // node frame, relative to position
     float zoneHalf[3] = {0, 0, 0};
+    float zoneAxes[9] = {1, 0, 0, 0, 1, 0, 0, 0, 1};  // rows of the node's world matrix: node x, y and z axes in world space
     bool hasZone = false;
     BuilditState build;
     BuilditWobble wobble;  // LEVOBJ-S70: the start values come from the stand-in random source
@@ -72,6 +75,7 @@ public:
     const BuilditObject* find(const std::string& lowerInstance) const;
     ReferenceTriggers& references() { return references_; }
     static bool inZone(const BuilditObject& object, const float player[3]);
+    static void zoneWorldCentre(const BuilditObject& object, float centre[3]);
 
 private:
     void updateWobble(BuilditObject& object, const float player[3]);

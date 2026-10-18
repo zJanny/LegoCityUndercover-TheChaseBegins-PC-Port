@@ -58,6 +58,8 @@ void BuilditSet::load(assets::FuseArchive& archive, const assets::Level& level, 
         build.soundBitDone = soundParam(object, *cls, "ATTR_SFXBitDone");
         build.soundBuilt = soundParam(object, *cls, "ATTR_SFXBuilt");
         std::copy_n(placed->position, 3, build.position);
+        const assets::Matrix node = assets::placementMatrix(*placed);
+        for (int row = 0; row < 3; ++row) std::copy_n(node.begin() + 4 * row, 3, build.zoneAxes + 3 * row);
         int bricks = 0;
         if (!placed->mesh.empty()) {
             const std::string path = assets::meshModelPath(placed->mesh);
@@ -86,9 +88,21 @@ const BuilditObject* BuilditSet::find(const std::string& lowerInstance) const {
 
 bool BuilditSet::inZone(const BuilditObject& object, const float player[3]) {
     if (!object.hasZone) return false;
-    for (int a = 0; a < 3; ++a)
-        if (!(std::fabs(player[a] - object.position[a] - object.zoneCentre[a]) < object.zoneHalf[a])) return false;
+    float offset[3];
+    for (int a = 0; a < 3; ++a) offset[a] = player[a] - object.position[a];
+    for (int a = 0; a < 3; ++a) {
+        const float* axis = object.zoneAxes + 3 * a;
+        const float local = offset[0] * axis[0] + offset[1] * axis[1] + offset[2] * axis[2];
+        if (!(std::fabs(local - object.zoneCentre[a]) < object.zoneHalf[a])) return false;
+    }
     return true;
+}
+
+void BuilditSet::zoneWorldCentre(const BuilditObject& object, float centre[3]) {
+    for (int a = 0; a < 3; ++a) {
+        centre[a] = object.position[a];
+        for (int row = 0; row < 3; ++row) centre[a] += object.zoneCentre[row] * object.zoneAxes[3 * row + a];
+    }
 }
 
 void BuilditSet::updateWobble(BuilditObject& object, const float player[3]) {

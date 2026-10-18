@@ -122,7 +122,7 @@ void realData(const char* fib, const char* names) {
     require(state.isDisabled("Trampoline_03"), "the trampoline stays off until the build is done");
 
     float standing[3];
-    for (int a = 0; a < 3; ++a) standing[a] = trampoline->position[a] + trampoline->zoneCentre[a];
+    BuilditSet::zoneWorldCentre(*trampoline, standing);
     bool built = false;
     for (int update = 1; update <= 400 && !built; ++update) {
         const auto actions = set.update(state, standing, true, false);

@@ -12,12 +12,14 @@ Subtopics: [buildit-bricks.md](buildit-bricks.md)
 - Bricks (flight, built pose, hop of unbuilt bricks, rise of the final prop): [buildit-bricks.md](buildit-bricks.md).
 - The player enters state 9 "BUILD IT" (enter 0x1d4b14, update 0x276254, exit 0x1c72f0); the use query's `2414b4(..., 9, 0)` is a state request, not a clip id; sounds and unported effects are listed there [§2026-10-16T10:17](#ts-20261016-101726).
 - The player's state 9 lasts from the press update to the update the build-it reaches state 10 (updates 0..72 of the six-brick van build, the object updates first); clip 183 loops (slot mode 1) [§2026-10-18T10:08](#ts-20261018-100804).
-- The port's use zone ignores the build-it's rotation: the trampoline build-it of mission 1-2 (yaw 160.7) builds only about 5 m east of where its zone should be (LEVOBJ-93) [§2026-10-18T20:40:17](#ts-20261018-204017).
+- The use zone is the model bounds in the node frame and the query turns the player into that frame with the node's world matrix, so the box follows the placement's orientation (the port ignored it until LEVOBJ-93; the trampoline build-it of mission 1-2 stands at yaw 160.7) [§2026-10-18T20:59](#ts-20261018-205928), which corrects the wording of [§2026-10-14T23:55](#ts-20261014-235539); found by [§2026-10-18T20:40:17](#ts-20261018-204017).
 - Open: seed of the original random source; what fills the list of 0x1a0f6c; player's turn and camera during the build, 0x22c500; per-update timing of the van switch; builds without a final prop.
 
 <a id="ts-20261014-235539"></a>
 
 ## 2026-10-14T23:55:39+02:00 — Class record, messages and state machine of the build-it (read from the code)
+
+Corrected by [buildit.md §2026-10-18T20:59](#ts-20261018-205928): the use zone is the node bounds as they are, not "minus the node position"; the box is turned with the placement.
 
 Source: llvm-objdump of `artifacts/game/game.arm.elf` (`llvm-objdump -d --triple=armv6k --mattr=+vfp2`), no REA session. Evidence of the numbers: the next entry.
 
@@ -151,3 +153,22 @@ Unknowns:
 
 Unknowns:
 - Whether the node bounds of 0x242df4 are a world-space box around the turned model (an axis-aligned box of the rotated bounds) or something else; their values for this build-it were not read in the oracle.
+
+<a id="ts-20261018-205928"></a>
+
+## 2026-10-18T20:59:28+02:00 — The use zone is turned with the placement (code reading of 0x242df4, 0x242eb0, 0x221570, 0x2536c0, 0x22f650; port fix)
+
+Source: llvm-objdump of `artifacts/game/game.arm.elf` (`--triple=armv6k --mattr=+vfp2`), no REA session, no oracle run. Level data scan of all `levels/levels/*.blvl` with `parseLevel`. Answers the unknown of [§2026-10-18T20:40:17](#ts-20261018-204017) and corrects the wording of [§2026-10-14T23:55](#ts-20261014-235539).
+
+- **[Corrects §2026-10-14T23:55](#ts-20261014-235539), use zone.** 0x242df4 does not subtract the node position. It builds the corners `node+0xa0 - node+0xac` and `node+0xa0 + node+0xac` (0x257f14, 0x23f50c), adds them and halves (centre), subtracts them and halves (half extent); the centre and half extent are the node's own `+0xa0` / `+0xac`. The world centre it computes first (0x250da8 of `+0xa0` with the matrix at node+0x1c) is not used.
+- **The node bounds are in the model's frame.** 0x242eb0 fills `+0xa0` / `+0xac` from the model's mesh boxes (records of 36 bytes, min at +8, max at +20), taking the eight corners of each through a 64-byte matrix of the model (the pose array at node+0x110 + 64 x entry when the node has one, else the model's matrix table) and keeping the minimum and maximum; the result is cached (node word bit 9). The node's world matrix is not part of it, so the box is the port's `modelBounds` and does not change when the node is placed or turned. (The oracle record of the donut van, yaw 0 in the level file, therefore does not tell the two readings apart; the cached value would be stale after a move otherwise.)
+- **The test turns the player into the node's frame.** The registry entry {zone record, flag byte at +4} and the zone record (0x28 bytes: +8 node index, +9 shape, +0xa active, +0x10 centre, +0x1c half extent) are built by 0x23e130; the flag byte holds the face-towards bits 0..2, bit 3 "record owned", bit 4 active and, from the last argument of 0x23e130, bit 5 "world". The three calls of the build-it link 0x16c808 (class bound `UseBound` at 0x16ca8c, `UseRadius` at 0x16cb1c, node bounds at 0x16cb84) pass 0, as does the carry object's create (0x16d17c; `mov r6,#0` at 0x16d0c0, no other write). The query 0x221570(entity, zone, ..., player matrix) with bit 5 clear calls 0x2536c0 with the player position and the node's world matrix (0x250810): local = (p - t) . row k for k = 0, 1, 2, i.e. the inverse rotation of the matrix (scale is not undone), then 0x22f650: |local - centre| < half on each axis for shape 3 (box), (0x221570 passes no node, so the node-index turn of 0x22f650 is not used). So the zone is an oriented box that follows the placement's orientation; with bit 5 set the point would be used as it is.
+- **Trampoline_03_Buildits** (orientation (0, 160.692, 0), position 718.07 32.6237 643.323; model bounds centre (2.56658, 0.255292, -0.515729), half with margin (3.72938, 1.51023, 4.08327)): world centre of the zone 715.477 32.879 642.961 (the unturned port had 720.64 32.88 642.81). `DonutTable_14` (715.628 32.5276 643.666), the `m12-table-broken` spot (715.726 32.668 640.255) and the east spot 718.5 32.7 641.5 that built before are all inside; the old centre is outside.
+- **Port.** `BuilditObject::zoneAxes` holds the rows of the placement matrix (`assets::placementMatrix`, the rotation of 0x237c48); `BuilditSet::inZone` turns the player the same way and `zoneWorldCentre` gives the box centre in world space. CTest `buildit` (turned zone with a half-turn and quarter-turn), `buildit-real-data` (the trampoline's values and the three positions), `prop-wobbly` (builds the trampoline from the zone centre).
+- **Scope in the data.** 87 `props/prop_buildit` objects in all levels, 54 with a non-zero orientation. One instance sets `UseBound` (`4-5_PigPen_Sat_Static_Buildit_Bits`, lvl_04; the port still uses the node bounds for it, LEVOBJ-42); none sets `UseRadius` or `UseExcludeBound`. In the link, `UseRadius` builds a zone struct whose centre is the node's world translation and whose half extents are the radius three times, shape byte 4; its test (0x22f650 case 4, 0x20e968) was not read.
+- **Other zone owners.** The carry object's zone is registered with the same flag 0, so its test should also turn the player into the node frame; [carrying.md §2026-10-15T00:17](carrying.md#ts-20261015-001729) records it as translation-only (a pickup at dx 1.42 from the box turned 90 degrees). The two disagree; the port's carry, use-spot and detective zones are translation-only (LEVOBJ-94).
+
+Unknowns:
+- The node `+0xa0` / `+0xac` of a turned build-it were not read in the oracle (a gdb read of the node in `m12-table-broken` would pin the box; only the code was read).
+- Whether the matrix scale matters: the placement has no scale parameter, so the port uses the rotation only.
+- Why the carry measurement of 0x221570 gave a translation-only result; the 0x23e130 call sites of the other classes were not checked for their last argument (56 call sites).
