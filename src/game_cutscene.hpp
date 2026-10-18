@@ -76,6 +76,8 @@ private:
     };
     void show(const std::string& name, bool visible);
     std::size_t visibleOriginals(const std::string& name) const;
+    std::size_t visibleOwnModels(const std::string& name) const;
+    void showOwnModel(const Actor& actor, bool started);
     void pose(const Loaded& cutscene, double seconds);
 
     chase::assets::FuseArchive& archive_;

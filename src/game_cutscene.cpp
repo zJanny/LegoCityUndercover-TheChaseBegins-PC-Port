@@ -111,6 +111,24 @@ std::size_t InEngine::visibleOriginals(const std::string& name) const {
     return count;
 }
 
+// STAND-IN MOVIE-S33: a model of its own is drawn from the update its first clip starts; the rule that hides it before is not read.
+void InEngine::showOwnModel(const Actor& actor, bool started) {
+    if (actor.standalone) scene_.setInstanceVisible(*actor.standalone, started);
+    for (const std::ptrdiff_t node : actor.nodes)
+        if (node >= 0) scene_.setInstanceVisible(std::size_t(node), started);
+}
+
+std::size_t InEngine::visibleOwnModels(const std::string& name) const {
+    std::size_t count = 0;
+    for (const Actor& actor : loaded_.at(name).actors) {
+        bool shown = actor.standalone && scene_.instanceVisible(*actor.standalone);
+        for (const std::ptrdiff_t node : actor.nodes)
+            if (node >= 0 && scene_.instanceVisible(std::size_t(node))) shown = true;
+        if (shown) ++count;
+    }
+    return count;
+}
+
 void InEngine::pose(const Loaded& cutscene, double seconds) {
     const double frame = std::min(seconds * cutscene.rate, double(cutscene.content.camera.frames - 1));
     for (std::size_t i = 0; i < cutscene.content.actors.size(); ++i) {
@@ -125,10 +143,11 @@ void InEngine::pose(const Loaded& cutscene, double seconds) {
             render::placeCharacter(scene_, driven->rig, driven->copy, skin, world);
             continue;
         }
-        const std::optional<CutsceneClipFrame> shown = clip ? clip : cutsceneRestingClip(actor);
-        if (!shown) continue;
-        const render::Mat4 world = actorMatrix(actorPose(*shown->animation, float(cutsceneNormalised(*shown->animation, shown->frame))));
         const std::vector<std::ptrdiff_t>& nodes = cutscene.actors[i].nodes;
+        showOwnModel(cutscene.actors[i], clip.has_value());
+        if (!clip) continue;
+        const std::optional<CutsceneClipFrame>& shown = clip;
+        const render::Mat4 world = actorMatrix(actorPose(*shown->animation, float(cutsceneNormalised(*shown->animation, shown->frame))));
         if (!nodes.empty()) {
             const std::vector<Matrix> matrices = cutsceneNodeMatrices(actor, *shown, world);
             for (std::size_t node = 0; node < nodes.size() && node < matrices.size(); ++node)
@@ -158,7 +177,8 @@ void InEngine::update(runtime::CutsceneNativeState& state) {
     if (!playing) return;
     pose(loaded_.at(name), playing->elapsed);
     if (++shownUpdates_ == kFigureCheckUpdate)
-        std::cout << "cutscene " << name << ": " << visibleOriginals(name) << " level figures drawn beside their cast copies\n";
+        std::cout << "cutscene " << name << ": " << visibleOriginals(name) << " level figures drawn beside their cast copies, " << visibleOwnModels(name)
+                  << " models of their own drawn\n";
 }
 
 std::optional<CameraView> InEngine::camera(const runtime::CutsceneNativeState& state) const {

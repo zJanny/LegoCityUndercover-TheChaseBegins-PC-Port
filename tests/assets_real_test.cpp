@@ -516,6 +516,18 @@ int main(int argc, char** argv) {
                         throw std::runtime_error("1_1_d node " + model.nodeNames[n] + " is not at its bind position");
             }
         }
+        {
+            // Reference: loadCutscene over csdata/models/1_2_a (2026-10-18): the magnifying glass prop has one clip, prop_magnifyingglass_0478, so it
+            // starts at camera frame 478 of 651 (ls over artifacts/fib/files/csdata/models/1_2_a); no cutscene clip carries the hand item track
+            // (scan of all 330 clips with runtime::handItem, 2026-10-18).
+            const CutsceneContent cutscene = loadCutscene(archive, "1_2_a");
+            const CutsceneCast* glass = nullptr;
+            for (const CutsceneCast& actor : cutscene.actors)
+                if (actor.model.find("/prop_magnifyingglass/") != std::string::npos) glass = &actor;
+            if (!glass || glass->clips.size() != 1 || glass->clips[0].startFrame != 478 || cutscene.camera.frames != 651 ||
+                cutsceneClipAt(*glass, 477.9) || !cutsceneClipAt(*glass, 478.0))
+                throw std::runtime_error("1_2_a magnifying glass does not start at camera frame 478");
+        }
         // Reference: every sheet's computed stride equals its stored stride (checked in parseTable);
         // totals recorded from this C++ parser (2026-10-13). Cell values checked by hand against the
         // rows dumped by tools/tt_resource.py (at 9d04c91): tablescutscenes row 2 offset 1 -> "01_gameintro",

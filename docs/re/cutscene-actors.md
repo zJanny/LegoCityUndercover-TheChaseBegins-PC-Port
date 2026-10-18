@@ -11,7 +11,7 @@ Which entities a cutscene's cast are, why the original draws no second Chase and
 - Original and port frames of `1_1_b` were compared but show different moments, so no actor comparison exists. [§2026-10-15T10:50:31](#ts-20261015-105031)
 - Each actor clip starts at the camera frame in its file name (`<actor>_NNNN`, 0x2ec30c) and is started by 0x2ec454 when the frame passes it; the clip started last drives the actor. Ported; this fixed the floating donut box of `1_1_d`. [§2026-10-16T14:05:18](#ts-20261016-140518)
 - A cutscene model of its own is drawn per node: object track of the node x the actor node of the root tracks (oracle, `1_1_d`); before its first clip it stands at that clip's frame 0. Ported; this fixed the van under the street and the box not held by the man. [§2026-10-16T14:39:48](#ts-20261016-143948)
-- User report: the magnifying glass floats in the port's beginning cutscene, unlike the original (cause not checked, MOVIE-34). [§2026-10-18T20:38:55](#ts-20261018-203855)
+- User report: the magnifying glass floats in the port's mission 1-2 intro; the cause was the prop `prop_magnifyingglass` of `1_2_a` (clip start frame 478) drawn at its frame-0 pose from the start. The port now draws a model of its own only once its first clip starts (stand-in MOVIE-S33); the original's gate was not found. [§2026-10-18T20:38:55](#ts-20261018-203855), [§2026-10-18T21:06:57](#ts-20261018-210657)
 - Open: the code that binds object tracks to nodes, the camera framing of `1_1_d`, meaning of entity byte +0x18 = 5, the player's position after a cutscene, actors `Donut1` and `Donutbox`, a close-up oracle state.
 
 <a id="ts-20261015-075438"></a>
@@ -122,3 +122,19 @@ Unknowns:
 
 Unknowns:
 - Which cutscene it is, which instance shows the glass, and how the original keeps it hidden before Chase pulls it out (the hand item track 0xba1e5b53 in the cutscene clip is one candidate).
+
+<a id="ts-20261018-210657"></a>
+
+## 2026-10-18T21:06:57+02:00 — The floating glass is the prop of cutscene `1_2_a`, drawn before its clip starts (`chase-game` offscreen runs, scan of all cutscene clips with `runtime::handItem`, REA with Ghidra on 0x2ec454, 0x2d19cc, 0x2d1ddc, 0x245b40)
+
+Corrects the open question of [§2026-10-18T20:38:55](#ts-20261018-203855) (which instance drew the glass): it was not the player's glass glue.
+
+- **Which cutscene:** `1_2_a`, the intro of mission 1-2 (`1-2_HouseArrival`, `chase-game --call-script 1-2_HouseArrival`). Its cast is `dog_owner`, `player1` and the model-of-its-own prop `prop_magnifyingglass` (nodes `polySurface7`, `glow1`) with one clip `prop_magnifyingglass_0478`, so it starts at camera frame 478 of 651 and ends at frame 650. Cutscene `1_1_a` (the beginning of a new game) has no glass: its cast is `player1`, the donut man, the eater, `Donut1`, `Donutbox`; runs with the front end and with `--level` showed no glass at any sampled frame (the player's glass glue never showed it either, instrumented run over 2700 updates of lvl_01 and 600 of the police station).
+- **Cause (port):** the resting rule of [§2026-10-16T14:39:48](#ts-20261016-143948) posed a model of its own at frame 0 of its first clip before the start, and `show` made it visible for the whole cutscene. The glass therefore stood from the first update at (741.292, 31.061, 637.666), beside the dog owner at (740.9, 30.0, 636.7), and hung there still until frame 478 (`chase-game` at update 20: glass beside the owner; after the change it is gone, and at update 520 it is in Chase's raised hand).
+- **Data:** none of the 330 cutscene clips has the hand item track 0xba1e5b53 (scan with `runtime::handItem`), so the glass in a cutscene is only this prop; the player's glass glue is not involved. No other cutscene folder has a glass prop except `1_4_c/glass` (a window).
+- **Original:** the user observed that the glass is not seen in the emulator until Chase pulls it out (2026-10-18, relayed by the lead; no oracle measurement). The code read does not show the gate: 0x2ec454 (per actor step, caller 0x2d19cc) starts a clip when `previous < start <= current` and for a model of its own sets 0x80000000 in the skeleton resource's flags word (`slot+0x208 -> +4`, the same word gates a branch of 0x2d19cc that sets the node's orientation (0x292ca8, 0x20e850, 0x24c118), so it looks like a motion flag, not a visibility bit; not proven); 0x2d19cc attaches the model's node to the room found at its world position (0x239838) on every update; 0x245b40 only starts the animation slot. Nothing read hides the node before the clip. The donut box of `1_1_d` (clip start 100) would be hidden before frame 100 by the same rule; not measured.
+- **Port now:** a model of its own is drawn from the update its first clip starts and hidden before (`InEngine::showOwnModel`), stand-in MOVIE-S33. `chase-game` prints how many models of their own are drawn at update 10 of a cutscene; CTest `game-cutscene-glass-hidden` expects 0 for `1_2_a`; `assets-real-data` pins the start frame 478 of 651.
+
+Unknowns:
+- The original's gate for a model of its own before its first clip (a flag, the room attach, or the node at frame 0 being outside the view), and whether it applies to every prop; the donut box of `1_1_d` before frame 100 and the glass at frames 0 to 477 of `1_2_a` as pictures from the oracle (needs RPC).
+- `chase-viewer --cutscene` still draws such models at their resting pose.
