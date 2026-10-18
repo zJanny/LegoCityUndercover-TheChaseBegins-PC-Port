@@ -7,7 +7,7 @@ Subtopics: [player-traversal-pole.md](player-traversal-pole.md), [player-travers
 ## Current state
 
 - Zipline: type 101 with `GrappleLineType` 1 (0 is the tightrope); create 0x1a999c (`ZipLineSpeed` +0x154, default 7), link 0x19b074 (`TargetTightropeAnchor` +0xf4, node forward turned horizontal towards the target, `WalkBound` spread along the line), post-link 0x1a9bb4 (line list 0x592490), handler 0x1b6664 (message 3). [§2026-10-18T14:52:30](#ts-20261018-145230)
-- Entry: the jump update 0x1d5254 runs the grab tests once the jump counter ctrl+0x2cf exceeds 4 (the 7th jump update); 0x2bbbb8 -> 0x2a9d94 tests the line list against the player point; a B press inside the high anchor's `UseBound` (facing it) also enters. Measured in m12-9: grab in the 7th jump update. [§2026-10-18T14:52:30](#ts-20261018-145230)
+- Entry: the jump update 0x1d5254 runs the grab tests once the jump counter ctrl+0x2cf exceeds 4 (the 7th jump update); 0x2bbbb8 -> 0x2a9d94 tests the line list against the player point; an A press inside the high anchor's `UseBound` (facing it) also enters (not B: [§2026-10-18T16:37:26](#ts-20261018-163726)). Measured in m12-9: grab in the 7th jump update. [§2026-10-18T14:52:30](#ts-20261018-145230)
 - States 42 "Zipline Get On" (clip `zipline_grab`, loop sound 107), 43 "Zipline Slide" (`zipline_slide`), 44 "Zipline Jump" (`zipline_dismount` root motion), then state 5; all behaviour in the state objects' virtual functions (table entries 42..44 hold only the object). Slide speed = `ZipLineSpeed` scaled by (30 dt)^2: 6.79 u/s on 1-8_Zip_Line05 at dt 1/30 (rate 0.27367 per second over 25.578). [§2026-10-18T14:52:30](#ts-20261018-145230)
 - Other moves surveyed only (classes, descriptors, state numbers): pole states 0x11d..0x121, climb wall states 99..110, climb bar states 89..92, ledge dismount states 23 / 24. [§2026-10-18T14:52:30](#ts-20261018-145230)
 - Pole and drain pipe (type 187), ported: [player-traversal-pole.md](player-traversal-pole.md).
@@ -67,3 +67,17 @@ Unknowns:
 - The entity id +0x14 that orders the line list (level order is not it: 0x740 for object 848); the fall-state path 0x2010d4 and the other jump-update tests.
 - 0x215804: ground contact while the dismount runs, the exact rule of ctrl+0x2b4, the key interpolation (5e-4 off at the end).
 - The use press on an anchor was not measured; the rope drawing; the code of the pole, brick, wall, bar and ledge states.
+
+<a id="ts-20261018-163726"></a>
+
+## 2026-10-18T16:37:26+02:00 — Zipline use press: A (0x2011b0 -> 0x1fef10 with pressed 1), not B (REA pseudocode; port fixed)
+
+REA (Ghidra 12.1.2) pseudocode read again: 0x2011b0, 0x1fef10, 0x1b6664. Confirms [§2026-10-18T16:08:28](player-traversal-pole.md#ts-20261018-160828), which already corrected the B press of [§2026-10-18T14:52:30](#ts-20261018-145230), and records the port fix.
+
+- 0x1fef10(entity, pressed, out) walks the use registry; for each zone that passes 0x221570 and is not flagged 4 it sends message 3 (4 for entities other than the player) with a record {entity, ability byte of entity+0x7c+0x2cc, pressed}; the first result other than 0 and 0xff is returned. 0x2011b0 (the A press path, `pressed` 1) calls it with 1 for the player; the B path 0x1fee94 uses pressed 0 (a hint query).
+- The zipline handler 0x1b6664 (message 3) returns 0xff unless the pressing entity has ability 0xb or 0xc (0x23a87c on the ability byte), and acts only when the record's pressed byte is set: it stores the anchor in ctrl+0x130 / 0x134 and requests state 0x29 (anchor type 0) or, for type 1, state 0x2a only when the anchor is higher than the target (else 0xff). So the press that gets on is A, and B never does.
+- Port: `LevelSession::movePlayer` (`src/game_zipline.cpp`) runs `ziplineUseTest` on the A press (`pole.usePressed`, the A edge) on the ground; B gets on only through the jump grab. The pole use test runs first in the chain, so a pole zone overlapping an anchor's zone takes the press (registry order not modelled). CTests `game-script-zipline-use-a` / `-use-b` stand 0.19 m before 1-8_Zip_Line05 (level data, not an oracle position).
+
+Unknowns:
+- The press was not measured in the oracle (no state on a zipline start platform); the ability test 0xb / 0xc of the handler is not in the port.
+- The order of the use registry between a pole and a zipline zone.

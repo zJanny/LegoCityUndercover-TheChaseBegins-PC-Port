@@ -6,7 +6,7 @@ The climbing and sliding moves of the player: zipline and tightrope (object type
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-18T16:14:01+02:00. Ported in `chase-game` from the original, with values pinned against the user's mission 1-2 states: the zipline (grab from a jump, use press at the high anchor, Get On, Slide, Dismount, fall), the pole and drain pipe (walk-in and A-press mount, climb up and down, A / B / bottom exits, dismount at the top), the climbing bricks (grab, hang, reach, jump to the adjacent brick, drop, jump off) and the rails (grab, arrival, hang, shuffle, the corner rail onto the next rail, A drop, B jump off). The player step chains them: rails around bricks around the pole around the usual step, so the jump off the last brick grabs the rail as in the original. The free climb wall (not on the mission route) is not ported.
+IN_PROGRESS, updated 2026-10-18T16:38:10+02:00. Ported in `chase-game` from the original, with values pinned against the user's mission 1-2 states: the zipline (grab from a jump, use press at the high anchor, Get On, Slide, Dismount, fall), the pole and drain pipe (walk-in and A-press mount, climb up and down, A / B / bottom exits, dismount at the top), the climbing bricks (grab, hang, reach, jump to the adjacent brick, drop, jump off) and the rails (grab, arrival, hang, shuffle, the corner rail onto the next rail, A drop, B jump off). The player step chains them: rails around bricks around the pole around the usual step, so the jump off the last brick grabs the rail as in the original. The free climb wall (not on the mission route) is not ported.
 
 ## 3. Verified behaviour
 
@@ -25,6 +25,7 @@ IN_PROGRESS, updated 2026-10-18T16:14:01+02:00. Ported in `chase-game` from the 
 - TRAV-S12 — the scaled brick jump (149..151) and state 152 move by the root track along the hanging axes without the collision of 0x20cd30; the x / z axis use is inferred. evidence: [player-traversal-bricks.md §2026-10-18T15:57:46](../../re/player-traversal-bricks.md#ts-20261018-155746)
 - TRAV-S13 — the camera row 2 for the no-stick brick jump direction is built from the follow camera's yaw and pitch in `src/game_brick_grab.cpp`. evidence: [player-traversal-bricks.md §2026-10-18T15:57:46](../../re/player-traversal-bricks.md#ts-20261018-155746)
 - TRAV-S4 — the loop sound 107 starts at the player's position with owner 0 and does not follow him; the original plays it on the player entity (0x23ae84). evidence: [player-traversal.md §2026-10-18T14:52:30](../../re/player-traversal.md#ts-20261018-145230)
+- TRAV-S20 — Use registry order: the pole use test runs before the zipline use test in the player chain, so a pole zone and an anchor zone that overlap give the press to the pole; the original walks one registry in order (0x1fef10). evidence: [player-traversal.md §2026-10-18T16:37:26](../../re/player-traversal.md#ts-20261018-163726)
 
 ## 5. Open items
 
@@ -33,11 +34,12 @@ IN_PROGRESS, updated 2026-10-18T16:14:01+02:00. Ported in `chase-game` from the 
 - [ ] TRAV-20 — Brick state 152 (`IsTopBrick`) not measured; its ground probe 0x20b48c and the collision of 0x20cd30 in the brick jumps are not ported. evidence: [player-traversal-bricks.md §2026-10-18T15:57:46](../../re/player-traversal-bricks.md#ts-20261018-155746)
 - [ ] TRAV-21 — Brick use handler 0x1b53a8 (messages 3 / 4 into state 145): sender unknown; `TriggerObject` switching (0x244f40 / 0x244f88) not ported. evidence: [player-traversal-bricks.md §2026-10-18T15:57:46](../../re/player-traversal-bricks.md#ts-20261018-155746)
 - [ ] TRAV-22 — Brick checks not ported: the character test 0x227b5c for type 20, brick +0x8c bit 4 and entity+0xc bit 4 (the port checks only the disabled flag and carrying). evidence: [player-traversal-bricks.md §2026-10-18T15:57:46](../../re/player-traversal-bricks.md#ts-20261018-155746)
-- [ ] TRAV-12 — The A-press mount of a pole (0x2011b0, ported) is not measured, and the zipline's use press is the A press too (0x1fef10 with pressed 1), while the port uses B (TRAV-8). needs: oracle state facing the pipe in its use zone. evidence: [player-traversal-pole.md §2026-10-18T16:08:28](../../re/player-traversal-pole.md#ts-20261018-160828)
+- [ ] TRAV-34 — The A-press mount of a pole (0x2011b0 -> 0x1fef10, ported) is not measured. needs: oracle state facing a pipe in its use zone. evidence: [player-traversal-pole.md §2026-10-18T16:08:28](../../re/player-traversal-pole.md#ts-20261018-160828)
+- [ ] TRAV-35 — The zipline handler 0x1b6664 answers 0xff unless the pressing entity has ability 0xb or 0xc; the port does not test it (Chase has it, other characters unknown). evidence: [player-traversal.md §2026-10-18T16:37:26](../../re/player-traversal.md#ts-20261018-163726)
 - [ ] TRAV-5 — The other grab tests of the jump update (0x206668 .. 0x21e038, 0x273f6c, 0x20614c) and the fall-state path 0x2010d4 (a zipline grabbed while falling) are not read. evidence: [player-traversal.md §2026-10-18T14:52:30](../../re/player-traversal.md#ts-20261018-145230)
 - [ ] TRAV-6 — Ground contact during the dismount (0x215804): the port moves by the root track without collision until state 5. evidence: [player-traversal.md §2026-10-18T14:52:30](../../re/player-traversal.md#ts-20261018-145230)
 - [ ] TRAV-7 — Rope between the anchors (draw 0x1a9dc4 -> 0x297b7c, `RopeTexture`, `RenderWidth` 0.03, fade near the camera) is not drawn. evidence: [player-traversal.md §2026-10-18T14:52:30](../../re/player-traversal.md#ts-20261018-145230)
-- [ ] TRAV-8 — The use press at a high anchor (0x1b6664) is ported but not measured; needs an oracle state on a zipline start platform. evidence: [player-traversal.md §2026-10-18T14:52:30](../../re/player-traversal.md#ts-20261018-145230)
+- [ ] TRAV-8 — The use press at a high anchor (0x1b6664, A press) is ported but not measured; needs an oracle state on a zipline start platform (stand 0.2 m before the high anchor of a zipline on the mission 1-2 route, facing it). evidence: [player-traversal.md §2026-10-18T16:37:26](../../re/player-traversal.md#ts-20261018-163726)
 - [ ] TRAV-9 — Tightrope (`GrappleLineType` 0, states 39..41) not ported. evidence: [player-traversal.md §2026-10-18T14:52:30](../../re/player-traversal.md#ts-20261018-145230)
 - [ ] TRAV-10 — The hanging pose on the line (clip root against the line point) is not compared with the original's picture. evidence: [player-traversal.md §2026-10-18T14:52:30](../../re/player-traversal.md#ts-20261018-145230)
 
@@ -45,10 +47,11 @@ IN_PROGRESS, updated 2026-10-18T16:14:01+02:00. Ported in `chase-game` from the 
 
 - Subtopic files: [player-traversal-pole.md](player-traversal-pole.md) (pole and drain pipe), [player-traversal-rails.md](player-traversal-rails.md) (rails, climb bars, corner rail).
 - Zipline class, grab test, states 42..44, oracle ride and the survey of the other moves: [player-traversal.md §2026-10-18T14:52:30](../../re/player-traversal.md#ts-20261018-145230).
+- Zipline use press is A: [player-traversal.md §2026-10-18T16:37:26](../../re/player-traversal.md#ts-20261018-163726).
 - Climbing bricks, the m12-11 runs and the climb wall's entry: [player-traversal-bricks.md §2026-10-18T15:57:46](../../re/player-traversal-bricks.md#ts-20261018-155746).
 
 ## 7. Code and tests
 
 - `src/runtime/zipline.{hpp,cpp}` (anchors, link, grab and use tests, attach, slide, dismount, jump counter), `src/game_zipline.cpp` (LevelSession::movePlayer: zipline states around the player step), clips loaded in `src/game_player.cpp`.
-- CTest `zipline` (made-up line, hand values), `zipline-real-data` (lvl_01 anchors and the m12-9 ride replay), `game-script-zipline` (chase-game from the m12-9 position: grab at update 8, fall at update 140).
+- CTest `zipline` (made-up line, hand values), `zipline-real-data` (lvl_01 anchors and the m12-9 ride replay), `game-script-zipline` (chase-game from the m12-9 position: grab at update 8, fall at update 140), `game-script-zipline-use-a` / `-use-b` (A gets on at 1-8_Zip_Line05, B does not).
 - `src/runtime/brick_grab.{hpp,cpp}` (bricks, grab test 0x273fe4, states 141..152), `src/game_brick_grab.cpp` (LevelSession::moveClimbingPlayer around movePlayer), brick clips loaded in `src/game_player.cpp`. CTest `brick-grab` (made-up bricks), `brick-grab-real-data` (lvl_01 bricks, m12-11 runs `up` and `drop`), `game-script-brick-grab` (chase-game from the m12-11 landing point: grab, jump up, jump off).

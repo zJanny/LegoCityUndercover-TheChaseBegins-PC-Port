@@ -88,6 +88,13 @@ void LevelCharacters::play(const runtime::AnimationPlay& play) {
     }
 }
 
+bool LevelCharacters::place(const std::string& instance, const Matrix& world) {
+    Entry* entry = find(instance);
+    if (!entry) return false;
+    entry->world = world;
+    return true;
+}
+
 void LevelCharacters::stop(const std::string& instance) {
     if (Entry* entry = find(instance)) entry->slots.stop(clock_);
 }

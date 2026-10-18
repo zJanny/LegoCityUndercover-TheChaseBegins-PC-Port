@@ -10,6 +10,7 @@ Handlers of batch 26 (SCRIPT-26). Census and the other batches: [script-natives.
 - The player entity has kind byte 27, so PositionObject/PositionPlayer reset fall distance and fall speed (comp+0x2b4 / +0x2b8) and send message 8; the probe direction at 0x56d424 is (0, 1, 0) with length 5.0. [§2026-10-14T19:19:15](#ts-20261014-191915)
 - The PositionPlayer ground probe only fires for character kinds 179, 183 and 243; the port has no character entries, so it is a no-op stand-in. [§2026-10-14T19:19:15](#ts-20261014-191915)
 - CameraFollow 0x1bf7c8 stores a global camera object in manager +0x28 via 0x226a30 (labelled no-op in the port); PositionObject for vehicles is read in outline. [§2026-10-15T13:42:00](#ts-20261015-134200)
+- PositionObject of a level character: the node takes the target's matrix and the room link follows; the controller part applies only when 0x21aae0 is true. Ported for characters, Holmes of mission 1-2 stands at `1-2_Doorlock_Teleport` after the Doorlock scene (seen in the oracle and in the port). [§2026-10-18T16:37:52](#ts-20261018-163752)
 - Open: readers of each flag, the kind byte per class (gates EnableShadow, EnableSwitch, fade natives), the fade consumer, message 8 and 54 effects, who fills the kind list at 0x3743ec.
 
 <a id="ts-20261014-141621"></a>
@@ -121,3 +122,18 @@ Unknowns:
 Unknowns:
 - Readers of camera manager +0x28.
 - Whether the vehicle's speed and body velocity are cleared by the placement.
+
+<a id="ts-20261018-163752"></a>
+
+## 2026-10-18T16:37:52+02:00 — PositionObject of a level character (SCRIPT-287; REA pseudocode of 0x1d9e6c, Azahar RPC screenshots)
+
+REA (Ghidra 12.1.2) pseudocode of 0x1d9e6c read again, now for a character target (not the player or a vehicle). Adds to [§2026-10-15T13:42:00](#ts-20261015-134200).
+
+- Every entity: the object's node takes the target node's matrix (0x24c118), the old room link is dropped (0x245048) and the node is linked to the target's room (0x245008); then 0x242b08 on the entity. Nothing else depends on the kind for this part, so a level character (Holmes) needs nothing besides the matrix and the room.
+- Only when 0x21aae0(entity) is true (kind 27 / 149, kind in the run-time list, or flag 0x4000) the controller gets heading ctrl+8 = ctrl+10 = atan2(target matrix x, z) x 10430.378, fall distance and speed 0, bits 0x14 of ctrl+0x315 cleared, 0x215988 when ctrl+0xc8 is set, and message 8 for the player. A rider (entity+0x84) is moved to the node afterwards.
+- Port: `LevelCharacters::place` (`src/game_characters.cpp`) sets the character's world matrix from the target placement; `LevelSession::applyPlacement` tries player, vehicle, then character. CTest `game-doorlock-detective-1-2` expects the `PositionObject: 1-2_doorlock_holmes to 1-2_doorlock_teleport` line before the script ends (update 1064). Holmes' start and the target are both in room40 (teleport 712.494 29.7673 630.131, rotation 86.49 degrees; start 728.951 29.5504 632.927), so the port's room test (the character keeps its start room) gives the same result here.
+- Oracle (state m12-3-alley-trigger, forward stick 8 s, 50 s of free run, teleport of the player to (718.0, 29.768, 630.4), OpenGL RPC screenshots, port 24740, home `artifacts/oracle/r22-C`): Holmes stands beside the green dumpster west of the player, at the teleport point. The port (`--call-script 1-2_Spawn_Doorlock`, `at` to the same spot, 1106 updates) shows the figure at the same place beside the dumpster. Compared by eye, not by coordinates (Holmes' entity address not found).
+
+Unknowns:
+- The kind byte of level characters (decides the controller part), whether the room link of a moved character changes which room shows him (not needed here: same room).
+- PositionObject of props and other placed objects (the same node copy, with collision and physics follow-ups not read).

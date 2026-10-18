@@ -41,6 +41,11 @@ public:
     void stop(const std::string& lowerCaseInstance) override;
     std::optional<bool> currentNearEnd(const std::string& lowerCaseInstance) const override;
 
+    // PositionObject 0x1d9e6c: the character's node takes the target's matrix. False when the instance is not a level character.
+    // STAND-IN SCRIPT-S237: the controller part of 0x1d9e6c (heading ctrl+8/+10, fall reset when 0x21aae0 is true) is not applied; the kind
+    // byte of level characters was not read and nothing in the port reads a character's heading.
+    bool place(const std::string& lowerCaseInstance, const assets::Matrix& world);
+
     std::size_t animated() const { return entries_.size(); }
     std::size_t started() const;
     std::optional<CharacterPose> pose(const std::string& instance) const;

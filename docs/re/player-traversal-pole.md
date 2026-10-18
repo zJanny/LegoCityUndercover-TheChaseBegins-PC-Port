@@ -5,7 +5,7 @@ The pole and drain pipe (object type 187, player states 0x11d..0x121): the walk-
 ## Current state
 
 - Pole (type 187), ported in `src/runtime/pole.{hpp,cpp}`: the player mounts by walking into it (0x26aca8 -> 0x2010d4 -> 0x206510: the pole touched in the move, stick within a quarter turn of it, use zone with FaceTowards) or by the A press (0x2011b0 -> 0x1fef10, pressed 1); mount blend 6.6667 dt, climb step = root motion of vpole_up / vpole_down, top test 21.8 <= height + 1.8325, A / B / bottom exits stand the player 0.77038 m from the axis, dismount = root motion of vpole_dismount (34 updates) with floor contact. Measured in m12-10 / m12-10a, replayed in CTest `pole-real-data`. [§2026-10-18T16:08:28](#ts-20261018-160828)
-- The zipline's use press is the A press (0x2011b0), not the B gate 0x1fee94 (pressed 0); the port still uses B. [§2026-10-18T16:08:28](#ts-20261018-160828)
+- The zipline's use press is the A press (0x2011b0), not the B gate 0x1fee94 (pressed 0); the port uses A since [§2026-10-18T16:37:26](player-traversal.md#ts-20261018-163726). [§2026-10-18T16:08:28](#ts-20261018-160828)
 - Open: the air entry, the object gather behind the walk-in touch, the ability table for ability 32, the ground contact of the exits and the dismount, the pole sounds.
 
 <a id="ts-20261018-145541"></a>

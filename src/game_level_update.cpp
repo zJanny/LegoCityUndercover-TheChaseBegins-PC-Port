@@ -91,9 +91,14 @@ void LevelSession::applyPlacement(const runtime::ScriptPlacement& request) {
             runtime::resetControllerAfterPlacement(player->vertical);
         cancelBoardingByPlacement();
         player->pose(scene);
-    } else if (!target || !placeVehicle(request.object, *target)) {
-        std::cout << "PositionObject not applied (only the player is moved): " << request.object << " to " << request.target << '\n';
+        return;
     }
+    if (target && placeVehicle(request.object, *target)) return;
+    if (target && levelCharacters->place(request.object, placementMatrix(*target))) {
+        std::cout << "PositionObject: " << request.object << " to " << request.target << " at update " << updates << '\n';
+        return;
+    }
+    std::cout << "PositionObject not applied (only the player, vehicles and level characters are moved): " << request.object << " to " << request.target << '\n';
 }
 
 void LevelSession::updateDoors(const float playerPosition[3], const std::function<void(const runtime::SoundCall&)>& emit) {

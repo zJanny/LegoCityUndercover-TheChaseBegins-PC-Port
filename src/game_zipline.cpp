@@ -17,7 +17,7 @@ bool hasZiplineClips(const game_player::PlayerRig& player) {
 }
 }
 
-// The player step of one update: the zipline states while riding, else the locomotion and vertical step, with the use press on a zipline
+// The player step of one update: the zipline states while riding, else the locomotion and vertical step, with the use press (A, 0x2011b0 -> 0x1fef10 with pressed 1) on a zipline
 // anchor before it and the grab test of the jump update after it (docs/re/player-traversal.md).
 game_player::PlayerAnimation LevelSession::movePlayer(const runtime::StickIntent& intent, bool jumpPressed, float dt) {
     if (ziplines.empty() || !hasZiplineClips(*player)) return game_player::updatePlayer(*player, collision, intent, jumpPressed, dt);
@@ -59,7 +59,7 @@ game_player::PlayerAnimation LevelSession::movePlayer(const runtime::StickIntent
         input.jumpPressed = jumpPressed;
         return apply(runtime::ziplineUpdate(ziplineRider, ziplines, input));
     }
-    if (jumpPressed && player->vertical.posture == runtime::Posture::Ground) {
+    if (pole.usePressed && player->vertical.posture == runtime::Posture::Ground) {
         const int used = runtime::ziplineUseTest(ziplines, input.position, input.facing, input.enabled);
         if (used >= 0) {
             std::cout << "zipline: use " << ziplines[std::size_t(used)].instance << " at update " << updates << '\n';

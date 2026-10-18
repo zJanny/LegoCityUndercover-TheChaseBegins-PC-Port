@@ -1096,7 +1096,7 @@ if(BUILD_TESTING)
     # Mission 1-2, the alley (DETECT-2): the Doorlock script 1-2_Spawn_Doorlock (the waypoint's TriggerScript) passes WaitForCurrentCharAnim on
     # 1-2_Doorlock_Holmes because PlayCharAnim leaves the idle state (state 0x50, docs/re/abilities-detective.md), ends, and then A on the first
     # detective point (oracle state m12-4-detective-point, the teleport stands in for the walk) switches the detective tool on and enables
-    # 1-2_Dtv_DogSpot_01. The update numbers are the port's, not oracle values.
+    # 1-2_Dtv_DogSpot_01; the script's PositionObject moves Holmes to 1-2_Doorlock_Teleport (SCRIPT-287). The update numbers are the port's, not oracle values.
     add_test(NAME game-doorlock-detective-1-2 COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
@@ -1104,7 +1104,7 @@ if(BUILD_TESTING)
       --start "738.819 29.389 631.241" --facing 270 --call-script 1-2_Spawn_Doorlock
       --script "0 0 1100;at 723.675 29.768 630.775 291.7;0 0 2;0 0 1 A;0 0 40")
     set_tests_properties(game-doorlock-detective-1-2 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
-      PASS_REGULAR_EXPRESSION "script 1-2_Spawn_Doorlock ended at update [0-9]+.*detective: player state 1 at update [0-9]+.*1-2_dtv_dogspot_01 state 1 at update [0-9]+")
+      PASS_REGULAR_EXPRESSION "PositionObject: 1-2_doorlock_holmes to 1-2_doorlock_teleport at update [0-9]+.*script 1-2_Spawn_Doorlock ended at update [0-9]+.*detective: player state 1 at update [0-9]+.*1-2_dtv_dogspot_01 state 1 at update [0-9]+")
     # The new-game start of the level (--no-start-cutscenes absent): 1-1_MissionStart plays the intro movie 01_GameIntro, then the in-engine cutscene 1_1_a
     # (docs/re/scripts-missions.md, 1-1_MissionStart order), then ends; this is also the order of MOVIE-23.
     add_test(NAME game-mission-1-1-start COMMAND chase-game
@@ -1175,6 +1175,23 @@ if(BUILD_TESTING)
       --start "870.226 66.001 630.961" --facing 102.8 --script "0 0 2;0 0 1 B;0 0 140")
     set_tests_properties(game-script-zipline PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
       PASS_REGULAR_EXPRESSION "zipline: grab 1-8_zip_line05 at update 8.*zipline: fall at update 140.*sounds: 2:288 8:107")
+    # The use press at the high anchor is the A press (0x2011b0 -> 0x1fef10 with pressed 1; 0x1b6664 needs it, TRAV-12): standing 0.19 before
+    # 1-8_Zip_Line05 on its platform, facing it, A gets on and B does not. The spot is derived from the level data (anchor 868.094 69.992 630.977,
+    # UseBound), not an oracle position (TRAV-8).
+    add_test(NAME game-script-zipline-use-a COMMAND chase-game
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
+      --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes
+      --start "867.9 69.95 630.98" --facing 90 --script "0 0 2;0 0 1 A;0 0 20")
+    set_tests_properties(game-script-zipline-use-a PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
+      PASS_REGULAR_EXPRESSION "zipline: use 1-8_zip_line05 at update 2")
+    add_test(NAME game-script-zipline-use-b COMMAND chase-game
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
+      --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes
+      --start "867.9 69.95 630.98" --facing 90 --script "0 0 2;0 0 1 B;0 0 20")
+    set_tests_properties(game-script-zipline-use-b PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
+      PASS_REGULAR_EXPRESSION "player ended at" FAIL_REGULAR_EXPRESSION "zipline: use")
     # Climbing bricks of mission 1-2: the player stands under 1-2_Brick_Grab_08 where the oracle run `drop` from m12-11-brick-climb landed,
     # jumps (B) and grabs 08 in the 7th jump update (state 141, as the zipline grab), hangs (145 after the 22 updates of brickgrab_grab),
     # reaches up with the stick (146), jumps up to 07 with B (149, 16 updates), grabs it (142, 14 updates), and B on 07, which has no
