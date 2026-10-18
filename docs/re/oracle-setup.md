@@ -10,6 +10,7 @@ Launching Azahar for the oracle: Xvfb, the render window race, the launch retry,
 - The tool relaunches at most 3 times when the emulator dies before the scenario starts, saves `crash<N>-*` logs, and kills only the process groups of the emulator and Xvfb it started. [§2026-10-13T12:41](#ts-20261013-124127)
 - `--display desktop` runs on the current X display for a person to watch; agents keep using `xvfb`, and `--rpc-input` must not be combined with it. [§2026-10-13T22:45](#ts-20261013-224508)
 - Default keys of the generated config: circle pad arrows, A = A, B = S, X = Z, Y = X, L = Q, R = W, D-pad T/F/G/H, Start = M, Select = N, F1 quick save, F12 quick load. [§2026-10-13T22:45](#ts-20261013-224508)
+- The tool runs a Cemuhook DSU motion server for every session (default `--port` + 1000, `--motion-port`) and writes `motion_device` into the isolated config; "level" is DSU accel (0, 0, -1) g, `tilt` changes it. With gravity on DSU y the scanner yaw is NaN, with gravity on z the scanner view runs. [§2026-10-18T22:03:32](#ts-20261018-220332)
 - Open: crashes on a plain boot, whether an unmapped window changes timing, the cause of one launch that ended after 4 loads, crashes of a visible OpenGL window.
 
 <a id="ts-20261013-124127"></a>
@@ -45,3 +46,22 @@ Unknowns:
 
 Unknowns:
 - Whether the known software-renderer paint crash during state loads also hits a visible OpenGL window (not seen in the one run).
+
+<a id="ts-20261018-220332"></a>
+
+## 2026-10-18T22:03:32+02:00 — Virtual motion source (Cemuhook DSU) for the oracle emulator (Azahar 2126.2 strings and config, `tools/oracle_motion.py`, oracle port 24753 with RPC, state `m12-8-roof-sound-scanner`)
+
+**Why:** the camera yaw word 0x376894 turned NaN in every oracle run of the sound scanner ([abilities-scanner.md §2026-10-18T11:27:21](abilities-scanner.md#ts-20261018-112721)); the user's own Azahar (PS5 controller as `motion_device`, `engine:sdl`) shows the scanner. The oracle home had no motion device, so Azahar fed the game its default motion.
+
+- **Build support:** `/usr/bin/azahar` (Arch package 1:2126.2-1) contains `InputCommon::CemuhookUDP::UDPMotionFactory`, the engine name `cemuhookudp` and the settings `udp_input_address`, `udp_input_port`, `udp_pad_index` (`strings`). The user's `qt-config.ini` (read only) lists these three keys in the `[Controls]` profile next to `motion_device`.
+- **Config the tool writes** (isolated home, section `[Controls]`, profile 1): `motion_device="engine:cemuhookudp,ip:127.0.0.1,port:<P>,pad_index:0"` plus `udp_input_address=127.0.0.1`, `udp_input_port=<P>`, `udp_pad_index=0`. The parameter names `ip`, `port` and `pad_index` of `motion_device` are from memory of the Citra source, not from this build's source; the evidence is that Azahar registers with the server on start (`motion-source.log`: "pad data client registered") and the game's HID accelerometer follows the server.
+- **Server:** `tools/oracle_motion.py serve --port P --state FILE`, Python standard library only, started by `tools/azahar_oracle.py` for the session (default UDP port = `--port` + 1000, `--motion-port` overrides; it is recorded in `session.json` and stopped by `--stop`). It answers version and port requests, sends a pad-data packet every 10 ms to every client that registered, and re-reads the state file (written by the script step `tilt AX AY AZ [GP GY GR]`).
+- **Protocol source:** the Cemuhook protocol document (https://v1993.github.io/cemuhook-protocol/, protocol version 1001): 16-byte header (magic `DSUS` / `DSUC`, version u16, length u16 without the header, CRC32 of the whole packet with the CRC field zeroed, id u32), message type u32 (0x100000 version, 0x100001 ports, 0x100002 pad data), pad data = 100 bytes with the motion timestamp at packet offset 68, accelerometer in g at 76 and gyroscope in degrees per second at 88. The unit test `tests/test_oracle_motion.py` pins these offsets and the standard CRC32 check value 0xCBF43926.
+- **Axes measured** (RPC reads of the HID shared memory at 0x10002000, accelerometer at +0x108, entries of 3 s16 from +0x20, scale 512 per g): DSU accel (x, y, z) arrives in the game as (-x, y, -z) times 512; a read of one test run gave y = -512 for DSU y = -1, +512 for +1, x = -512 for DSU x = +1 and z = -512 for DSU z = +1. The gyroscope axes were not mapped.
+- **Result at the scanner** (state `m12-8-roof-sound-scanner`, A pressed, 80 updates later): with DSU gravity on y (-1: HID y = -512) the yaw 0x376894 is NaN (0x7fc00000), as in the earlier runs without a motion source (whose HID values were not read); with DSU (0, 0, -1) (HID z = +512) it reads 1.5499 and the screenshot shows the scanner view (cyan overlay, zoom bar, headphone icon, map on the lower screen; `artifacts/oracle/r25D-out/scan2.png`, not committed). One load per setting (the first run with y gravity started the session, the second loaded the state again). So the NaN depends on the motion input: gravity on the HID y axis breaks it, gravity on HID z does not. The tool's default is therefore "level" = (0, 0, -1) g, zero rotation.
+- A scanner run after the first NaN stays NaN while the motion changes (tilt 0 0 -1 applied in the poisoned session did not repair it); reload the state.
+
+Unknowns:
+- Which code turns the HID accelerometer into the yaw or camera matrix (not traced) and why y gravity yields NaN; whether a real console held level reports z = +512 (the default is a measured choice, stand-in TOOLS-S1).
+- The gyroscope axis mapping, and whether any gyroscope input changes the scanner aim (only zero rotation was run).
+- The exact Azahar parameter names of `motion_device` beyond what the registration and the HID values show.

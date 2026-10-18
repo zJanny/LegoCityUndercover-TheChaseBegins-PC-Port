@@ -18,6 +18,7 @@ Subtopics:
 - Per-frame stepping (`frames`, `trace`) inflates the game clock by about 30 percent; measure rates in free-run intervals (`wait`) and use `--rpc` for timing. `--frame-limit 0` is for navigation only. [§2026-10-13T11:50:30](#ts-20261013-115030)
 - Screenshots need the software renderer and take about 11 s through the stub. [§2026-10-13T11:50:30](#ts-20261013-115030)
 - `--keep` leaves the emulator running, `--attach --port N` reconnects, `--stop` ends it. [§2026-10-13T11:50:30](#ts-20261013-115030)
+- Every session gets a virtual motion source (Cemuhook DSU, level pose); without it the scanner yaw is NaN. Details: [oracle-setup.md §2026-10-18T22:03:32](oracle-setup.md#ts-20261018-220332).
 - Setup, RPC, states, routes and measuring aids are in the subtopic files listed above; new dated entries go there.
 - Open: whether a state saved during async loading is accepted, the exact boot time of the "pending operations" refusal, and slot names for other titles.
 

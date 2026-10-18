@@ -55,11 +55,18 @@ class LaunchedTest(unittest.TestCase):
 class SessionModeTest(unittest.TestCase):
     def launch(self, new_3ds):
         home = Path(tempfile.mkdtemp())
-        args = types.SimpleNamespace(display='offscreen', port=24799, rpc=False, renderer='software')
-        with mock.patch.object(oracle.subprocess, 'Popen') as popen:
+        args = types.SimpleNamespace(display='offscreen', port=24799, rpc=False, renderer='software',
+                                    motion_port=25799)
+        with mock.patch.object(oracle.subprocess, 'Popen') as popen, \
+                mock.patch.object(oracle, 'start_motion_source') as motion:
             popen.return_value.pid = 4242
+            motion.return_value.pid = 4243
             oracle.launch_emulator(args, home, '/nonexistent/azahar', Path('game.cci'), new_3ds)
         return json.loads((home / 'session.json').read_text())
+
+    def test_session_records_the_motion_source(self):
+        session = self.launch(True)
+        self.assertEqual((session['motion_pid'], session['motion_port']), (4243, 25799))
 
     def test_session_records_new_3ds_mode(self):
         self.assertIs(self.launch(True)['new_3ds'], True)

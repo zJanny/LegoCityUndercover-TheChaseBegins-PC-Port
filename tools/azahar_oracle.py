@@ -48,6 +48,9 @@ A scenario file drives the run, one command per line ('#' starts a comment):
                         at a ledge without walking there; the node's parent has an identity transform at gameplay-start)
   dt MIN MAX            write the scheduler's dt limits (floats at C+0x10 and C+0x14); MIN == MAX fixes the step
   read ADDR LEN         print LEN bytes at ADDR as hex words
+  tilt AX AY AZ [GP GY GR]
+                        set what the virtual motion source reports: accelerometer in g (default level: 0 0 -1), gyroscope in
+                        degrees per second (default 0 0 0); the game sees it within a few updates
   poke ADDR HEXBYTES    write the bytes (hex digits, e.g. 0200) at ADDR through the stub (a measuring aid, for example to
                         send an object a request that its script would send; the write clears the instruction cache)
   sample SECONDS INTERVAL NAME
@@ -176,7 +179,21 @@ confirmClose=false
 confirmClose\\default=false
 singleWindowMode={single_window}
 singleWindowMode\\default={single_default}
-{shortcuts}"""
+{shortcuts}[Controls]
+profile=0
+profile\\default=false
+profiles\\1\\name=Default
+profiles\\1\\name\\default=false
+profiles\\1\\motion_device="engine:cemuhookudp,ip:127.0.0.1,port:{motion_port},pad_index:0"
+profiles\\1\\motion_device\\default=false
+profiles\\1\\udp_input_address=127.0.0.1
+profiles\\1\\udp_input_address\\default=false
+profiles\\1\\udp_input_port={motion_port}
+profiles\\1\\udp_input_port\\default=false
+profiles\\1\\udp_pad_index=0
+profiles\\1\\udp_pad_index\\default=false
+profiles\\size=1
+"""
 
 QUICK_SAVE_KEY = 'F1'
 QUICK_LOAD_KEY = 'F12'
@@ -589,8 +606,9 @@ def stop_process(process):
 class Launched:
     """The emulator process and the Xvfb the tool started for it; stop() kills and reaps exactly these."""
 
-    def __init__(self, process, xvfb, display, keys, visible=False):
+    def __init__(self, process, xvfb, display, keys, visible=False, motion=None):
         self.process = process
+        self.motion = motion
         self.xvfb = xvfb
         self.display = display
         self.keys = keys
@@ -634,6 +652,8 @@ class Launched:
         stop_process(self.process)
         if self.xvfb:
             stop_process(self.xvfb)
+        if self.motion:
+            stop_process(self.motion)
 
 
 def describe_exit(code):
@@ -669,11 +689,57 @@ def stop_session(home):
     session = load_session(home)
     if not session:
         raise SystemExit('no kept emulator recorded in %s' % session_file(home))
-    for key in ('pid', 'xvfb_pid'):
+    for key in ('pid', 'xvfb_pid', 'motion_pid'):
         if session.get(key):
             kill_group(session[key])
     session_file(home).unlink()
     print('stopped emulator pid %d port %d' % (session['pid'], session['port']))
+
+
+def load_motion_module():
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import oracle_motion as module
+    return module
+
+
+def motion_state_file(home):
+    return home / 'motion.json'
+
+
+def udp_port_free(port):
+    probe = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        probe.bind(('127.0.0.1', port))
+    except OSError:
+        return False
+    finally:
+        probe.close()
+    return True
+
+
+def start_motion_source(home, port):
+    """Start the virtual motion source (tools/oracle_motion.py) for this session's emulator and wait until it
+    listens; it is its own process group so that --keep leaves it running and --stop can kill it."""
+    if not udp_port_free(port):
+        raise SystemExit('UDP port %d for the virtual motion source is already in use; pick another with '
+                         '--motion-port' % port)
+    oracle_motion = load_motion_module()
+    state = motion_state_file(home)
+    state.write_text(json.dumps(oracle_motion.level_state()))
+    log = open(home / 'motion-source.log', 'wb')
+    try:
+        process = subprocess.Popen([sys.executable, str(Path(oracle_motion.__file__).resolve()), 'serve',
+                                    '--port', str(port), '--state', str(state)],
+                                   stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
+    finally:
+        log.close()
+    deadline = time.monotonic() + 10.0
+    while udp_port_free(port):
+        if process.poll() is not None or time.monotonic() > deadline:
+            stop_process(process)
+            raise SystemExit('the virtual motion source did not start (log: %s)' % (home / 'motion-source.log'))
+        time.sleep(0.05)
+    return process
 
 
 def lock_owner_alive(lock):
@@ -1367,7 +1433,7 @@ def parse_freetrap(number, args):
     return seconds, addresses, args[2]
 
 
-def run_scenario(oracle, lines):
+def run_scenario(oracle, lines, motion_file=None):
     for number, line in enumerate(lines, 1):
         words = line.split('#', 1)[0].split()
         if not words:
@@ -1421,6 +1487,14 @@ def run_scenario(oracle, lines):
             oracle.set_dt(float(args[0]), float(args[1]))
         elif op == 'teleport':
             oracle.teleport(float(args[0]), float(args[1]), float(args[2]))
+        elif op == 'tilt':
+            if motion_file is None:
+                raise ValueError('line %d: tilt needs the virtual motion source of the session' % number)
+            try:
+                state = load_motion_module().parse_tilt(args)
+            except ValueError as error:
+                raise ValueError('line %d: tilt: %s' % (number, error)) from None
+            motion_file.write_text(json.dumps(state))
         elif op == 'report':
             oracle.report()
         elif op == 'poke':
@@ -1469,9 +1543,10 @@ def launch_emulator(args, home, azahar, image, new_3ds):
     env = dict(os.environ, XDG_CONFIG_HOME=str(home / 'config'), XDG_DATA_HOME=str(home / 'data'),
                XDG_CACHE_HOME=str(home / 'cache'))
     log = open(home / 'azahar-stdout.log', 'wb')
-    xvfb = keys = process = None
+    xvfb = keys = process = motion = None
     display = None
     try:
+        motion = start_motion_source(home, args.motion_port)
         if args.display == 'xvfb':
             xvfb, display = start_xvfb(log)
             env.update(QT_QPA_PLATFORM='xcb', DISPLAY=display)
@@ -1489,7 +1564,7 @@ def launch_emulator(args, home, azahar, image, new_3ds):
     except BaseException:
         if keys:
             keys.close()
-        for started in (process, xvfb):
+        for started in (process, xvfb, motion):
             if started:
                 stop_process(started)
         raise
@@ -1497,8 +1572,9 @@ def launch_emulator(args, home, azahar, image, new_3ds):
         log.close()
     session_file(home).write_text(json.dumps({
         'pid': process.pid, 'port': args.port, 'xvfb_pid': xvfb.pid if xvfb else None,
-        'display': display, 'rpc': args.rpc, 'renderer': args.renderer, 'new_3ds': new_3ds}))
-    return Launched(process, xvfb, display, keys, visible=args.display == 'desktop')
+        'display': display, 'rpc': args.rpc, 'renderer': args.renderer, 'new_3ds': new_3ds,
+        'motion_pid': motion.pid, 'motion_port': args.motion_port}))
+    return Launched(process, xvfb, display, keys, visible=args.display == 'desktop', motion=motion)
 
 
 def start_emulator(args, home, azahar, image, output, emulator_states, saved_states, new_3ds):
@@ -1547,6 +1623,9 @@ def main():
     parser.add_argument('--states', type=Path, default=REPO / 'artifacts/oracle/states',
                         help='where savestate/loadstate keep their named state files')
     parser.add_argument('--port', type=int, default=24690)
+    parser.add_argument('--motion-port', type=int,
+                        help='UDP port of the virtual motion source (Cemuhook DSU server) for this emulator '
+                             '(default: --port + 1000)')
     parser.add_argument('--renderer', choices=('software', 'opengl'), default='software',
                         help='software writes frames to emulated VRAM (screenshots work) but delivers vblanks late; '
                              'opengl keeps timing faithful but screenshots show stale VRAM')
@@ -1570,6 +1649,10 @@ def main():
     parser.add_argument('--fresh', action='store_true', help='delete the isolated home first (resets the emulated save)')
     args = parser.parse_args()
     args.rpc = args.rpc or args.rpc_input
+    if args.motion_port is None:
+        args.motion_port = args.port + 1000
+    if not 1024 <= args.motion_port <= 65535:
+        parser.error('--motion-port %d is outside 1024..65535' % args.motion_port)
 
     home = args.home.resolve()
     if args.stop:
@@ -1622,13 +1705,15 @@ def main():
                               .replace('{single_window}', 'false' if args.display in ('xvfb', 'desktop') else 'true')
                               .replace('{single_default}', 'false' if args.display in ('xvfb', 'desktop') else 'true')
                               .replace('{shortcuts}', shortcut_lines())
+                              .replace('{motion_port}', str(args.motion_port))
                               .replace('{new_3ds}', 'true' if new_3ds else 'false'))
             if args.state:
                 place_state(saved_states, args.state, emulator_states)
             launched, oracle = start_emulator(args, home, azahar, image, output, emulator_states, saved_states,
                                               new_3ds)
             rpc = oracle.rpc
-        run_scenario(oracle, scenario)
+        session = load_session(home) or {}
+        run_scenario(oracle, scenario, motion_state_file(home) if session.get('motion_pid') else None)
     finally:
         if keep and oracle is not None:
             try:

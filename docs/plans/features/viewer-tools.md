@@ -20,7 +20,8 @@ IN_PROGRESS, updated 2026-10-14T14:37:06+02:00. All tools run; the oracle suppor
 
 ## 4. Stand-ins
 
-- None. (The viewer uses the level lights of RENDER-1 with the room stand-in RENDER-S60.)
+- [ ] TOOLS-S1 — The oracle's level motion pose (DSU accel 0 0 -1 g, zero rotation) was chosen because the scanner works with it and not with gravity on y; it is not read from the original or from a console. evidence: [oracle-setup.md §2026-10-18T22:03:32](../../re/oracle-setup.md#ts-20261018-220332).
+- The viewer uses the level lights of RENDER-1 with the room stand-in RENDER-S60.
 
 ## 5. Open items
 
@@ -29,9 +30,11 @@ IN_PROGRESS, updated 2026-10-14T14:37:06+02:00. All tools run; the oracle suppor
 
 - [ ] TOOLS-3 — The function total of the progress report is an estimate (7575 call and pointer targets against 8086 procedures in REA); an exact list needs a stored REA procedure list. evidence: [arm-executable.md §2026-10-13T22:17](../../re/arm-executable.md#ts-20261013-221729).
 - [ ] TOOLS-4 — "Object types with behaviour" is decided per class from the class file (props with a `CollisionBound`, the prop family, doors, studs); it does not check that an instance produced a shape, and characters and vehicles count as none until they get rules (COLL-2).
+- [ ] TOOLS-15 — The gyroscope axis mapping of the virtual motion source, and the code that turns the accelerometer into the NaN camera yaw when gravity lies on the HID y axis. evidence: [oracle-setup.md §2026-10-18T22:03:32](../../re/oracle-setup.md#ts-20261018-220332).
 
 ## 6. Findings summary
 
+- Virtual motion source (DSU), axes, scanner result: [oracle-setup.md §2026-10-18T22:03:32](../../re/oracle-setup.md#ts-20261018-220332).
 - Setup, fidelity rules, fast workflow: [oracle.md §2026-10-13T11:50](../../re/oracle.md#ts-20261013-115030); RPC channel: [oracle-rpc.md §2026-10-13T12:02](../../re/oracle-rpc.md#ts-20261013-120221); route to gameplay: [oracle-routes.md §2026-10-13T12:43](../../re/oracle-routes.md#ts-20261013-124333).
 - Function count estimate of the game program: [arm-executable.md §2026-10-13T22:17](../../re/arm-executable.md#ts-20261013-221729).
 - Watchpoints, traps, memory traces, teleport, poke: [oracle-measuring.md §2026-10-13T13:45](../../re/oracle-measuring.md#ts-20261013-134500), [oracle-routes.md §2026-10-13T16:05](../../re/oracle-routes.md#ts-20261013-160530), [oracle-measuring.md §2026-10-13T21:18](../../re/oracle-measuring.md#ts-20261013-211800).
@@ -42,3 +45,4 @@ IN_PROGRESS, updated 2026-10-14T14:37:06+02:00. All tools run; the oracle suppor
 - `tools/progress_report.py`, `tests/test_progress_report.py`, `tools/check_doc_links.py`, `tests/test_check_doc_links.py`, `src/assets/object_classes.*`, `src/assets/file_decoders.*`, `handledScriptFunctions` in `src/runtime/level_start.*`, the census entry points in `src/assets/c_api.cpp`, `tests/progress_tables_test.cpp`.
 - Debug overlay: `src/runtime/debug_metrics.*` (no SDL: frame-time window, `/proc/self/status` parser, CPU meter, text lines), `src/render/debug_text.*` (own 5x7 font), `src/render/debug_overlay.*` (draws with the HUD shaders), `LevelSession::debugValues`, `--debug-overlay` in `src/game_options.cpp`, `tools/check_debug_overlay_shots.py`, `tests/debug_metrics_test.cpp`, `tests/debug_text_test.cpp`; user doc `docs/debug-overlay.md`. CTest: `debug-metrics-core`, `debug-text-core`, `debug-overlay-off`, `debug-overlay-on`, `debug-overlay-area`, `game-option-debug-overlay-value`.
 - CTest: `game-options-core`, `game-option-slot-range`, `game-option-number-trailing`, `game-option-start-malformed`, `game-option-script-step`, `game-option-front-script-step`, `game-option-unknown`, `viewer-option-number`, `viewer-option-cull`, `viewer-option-fps`, `viewer-option-eye`, `viewer-option-unknown`, `soundtest-option-id-range`, `soundtest-option-seconds`, `soundtest-option-missing`, `fmv-option-time`, `frontshot-option-language`, `frontshot-option-script`, `hudshot-option-script`, `hudshot-option-unknown`, `savecheck-option-unknown`, `tabledump-option-unknown`, `input-lab-option-unknown`, `progress-tables`, `progress-readme`, `doc-links`, `viewer-real-smoke`, `viewer-cutscene-smoke`, `soundtest-real-smoke`, `soundtest-id-smoke`, `fmv-real-smoke`, `frontshot-real-smoke`; Python: `python3 -m unittest discover -s tests -p 'test_*.py'`., `debug-metrics-core`, `debug-text-core`, `debug-overlay-off`, `debug-overlay-on`, `debug-overlay-area`, `game-option-debug-overlay-value`
+- Virtual motion source: `tools/oracle_motion.py`, wiring and the `tilt` step in `tools/azahar_oracle.py`, tests `tests/test_oracle_motion.py` and `tests/test_azahar_oracle_launch.py` (Python unittest, no emulator needed).

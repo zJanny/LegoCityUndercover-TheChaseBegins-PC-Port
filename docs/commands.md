@@ -269,3 +269,11 @@ python3 tools/azahar_oracle.py measure.txt --display xvfb --state gameplay-start
 - `--rpc-input` presses buttons without stopping the game on every frame. It changes one instruction of the game in memory while the tool runs. The tool restores it before it leaves a kept emulator.
 - Only one emulator at a time can use `--rpc`, because it always uses the network port 45987. The tool stops with a message if that port is taken.
 - Without `--rpc` the tool works as before.
+
+### Motion input
+
+The game reads the 3DS motion sensors (the sound scanner needs them). Every emulator session gets a virtual motion source: a small server (`tools/oracle_motion.py`) that the tool starts and stops with the emulator. It holds the console level and still.
+
+- `--motion-port PORT` sets its UDP port (1024 to 65535, default: `--port` plus 1000). Give a different one to each emulator that runs at the same time.
+- The script step `tilt AX AY AZ [GP GY GR]` changes what it reports: acceleration in g and, optionally, rotation in degrees per second. The level pose is `tilt 0 0 -1`. Wrong numbers or a wrong count stop the script with an error.
+- Details and axes: `docs/re/oracle-setup.md`.
