@@ -40,6 +40,7 @@ void LevelSession::loadBoardingVehicles(const std::map<std::string, std::pair<st
         if (modelBounds(shared.archive, meshModelPath(placement->mesh), nodeCentre, nodeHalf))
             drive.nodeBounds = runtime::SmashBox{{nodeCentre[0], nodeCentre[1], nodeCentre[2]}, {nodeHalf[0], nodeHalf[1], nodeHalf[2]}};
         drive.placedIndex = std::size_t(std::find_if(placedObjects.begin(), placedObjects.end(), [&](const Placement& p) { return p.instance == record.instance; }) - placedObjects.begin());
+        drive.history = runtime::VehicleMatrixHistory(vehicle.matrix);
         vehicleDrives.push_back(drive);
     }
     loadVehicleCameras();
@@ -82,7 +83,12 @@ void LevelSession::driveVehicles(float dt) {
         runtime::VehicleRecord& record = *levelScripts.vehicles().mutableRecord(boardingRecords[i]);
         VehicleDrive& drive = vehicleDrives[i];
         runtime::BoardingVehicle& vehicle = boardingVehicles[i];
+        if (drive.wreck.active && stepVehicleWreck(i, dt)) continue;
         const bool driven = seated && *seated == i && record.state == runtime::kVehicleStateDriven;
+        if (seated && *seated == i) recordVehicleReturnPlace(i);
+        if (driven && drive.started)
+            if (const std::optional<runtime::DamageMessage> message = runtime::stuckDestroyMessage(drive.stuck, record.forcedStop != 0)) applyVehicleDamage(i, *message, 0.0f);
+        if (drive.wreck.active) continue;
         if (!runtime::vehicleHasDynamicBody(record, driven || drive.started, objectState.isDisabled(vehicle.instance))) continue;
         const float massScale = runtime::vehicleMassScale(massScaled && *massScaled == i);
         if (!drive.started) {
@@ -126,7 +132,12 @@ void LevelSession::driveVehicles(float dt) {
     for (std::size_t n = 0; n < members.size(); ++n) {
         const std::size_t i = members[n];
         VehicleDrive& drive = vehicleDrives[i];
+        if (drive.wreck.active) continue;
         if (floors[n]) drive.floorTracker = floors[n]->tracker;
+        if (bodies[n].controls.driver && drive.awake)
+            for (int step = 0; step < steps; ++step)
+                runtime::stepDrivenStuckTimer(drive.stuck, runtime::forwardSpeed(drive.rigid), bodies[n].controls.accelerate, bodies[n].controls.brake,
+                                              drive.rigid.angularVelocity[1], runtime::kVehicleWorldStep);
         const bool driven = seated && *seated == i && levelScripts.vehicles().records()[boardingRecords[i]].state == runtime::kVehicleStateDriven;
         if (!driven && !drive.awake && drive.settled) continue;
         if (driven || drive.settled) {
@@ -138,6 +149,8 @@ void LevelSession::driveVehicles(float dt) {
         if (drive.moved && runtime::updateStuckTimer(record.stuckTimer, 1.0f, false, std::fabs(runtime::forwardSpeed(drive.rigid)), dt))
             levelScripts.vehicles().requestState(boardingRecords[i], runtime::kVehicleStateStuck);
         boardingVehicles[i].matrix = runtime::vehicleNodeMatrix(drive.rigid, record.centreOfMass);
+        drive.returnPlaceGood = runtime::vehicleReturnPlaceGood(std::size_t(std::count_if(drive.wheels.begin(), drive.wheels.end(), [](const runtime::WheelState& w) { return w.contact; })),
+                                                                record.wheels.size(), boardingVehicles[i].matrix[5], drive.rigid.velocity[1], record.destroyed);
         scene.setTransform(placedSceneIndex[drive.placedIndex], boardingVehicles[i].matrix);
         poseVehicleWheels(i);
     }
@@ -191,7 +204,7 @@ runtime::BoardingInput LevelSession::boardingInput(float dt) {
         const runtime::VehicleRecord& record = records[boardingRecords[i]];
         boardingVehicles[i].disabled = objectState.isDisabled(boardingVehicles[i].instance);
         boardingVehicles[i].locked = record.locked();
-        boardingVehicles[i].jumpOutAllowed = record.jumpOutAllowed() && record.stuckTimer <= 0.0f;
+        boardingVehicles[i].jumpOutAllowed = record.jumpOutAllowed() && record.stuckTimer <= 0.0f && !record.destroyed;
     }
     runtime::BoardingInput input;
     input.action = pad.slot(kSlotButtonX).press > 0;
@@ -239,11 +252,7 @@ void LevelSession::vehicleImpact(std::size_t vehicleIndex, float speed, const ru
     runtime::VehicleRecord& record = *levelScripts.vehicles().mutableRecord(boardingRecords[vehicleIndex]);
     const runtime::ContactReply reply = runtime::vehicleContactReply(record, speed, other);
     if (reply.brickBurst) std::cout << "vehicle " << record.instance << ": contact at " << speed << " m/s, brick burst of " << reply.brickCount << " (stand-in: no bricks)\n";
-    if (!reply.damage) return;
-    const runtime::DamageOutcome outcome = runtime::vehicleDamage(record, *reply.damage, true);
-    if (!outcome.heartLost) return;
-    std::cout << "vehicle " << record.instance << ": heart lost at " << speed << " m/s, " << unsigned(record.hearts) << " left" << (outcome.destroyed ? ", destroyed (stand-in: the break is not applied)" : "") << '\n';
-    if (hud) hud->setHearts(record.hearts, true);
+    if (reply.damage) applyVehicleDamage(vehicleIndex, *reply.damage, speed);
 }
 
 void LevelSession::enterVehicleHud(const runtime::VehicleRecord& record) {

@@ -5,6 +5,7 @@
 #include "runtime/script_placement.hpp"
 #include <cmath>
 #include <iostream>
+#include <utility>
 
 namespace game_level {
 using namespace chase::assets;
@@ -198,7 +199,7 @@ void LevelSession::updateFollowCamera(float dt) {
         return placed.has_value();
     });
     follow->setDirector(director.pose(), director.takeRequests());
-    if (director.takeSnapRequest()) follow->snapFollow(input.target, input.targetFacing);
+    if (director.takeSnapRequest() || std::exchange(cameraSnapRequest, false)) follow->snapFollow(input.target, input.targetFacing);
     follow->update(input);
     if (follow->locked() && (pad.slot(kSlotLeftShoulder).value != 0.0f || pad.slot(kSlotRightShoulder).value != 0.0f))
         cameraLockIcon.trigger();

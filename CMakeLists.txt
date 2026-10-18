@@ -46,7 +46,7 @@ target_link_libraries(chase_runtime PUBLIC chase_assets)
 target_include_directories(chase_runtime PUBLIC src)
 target_compile_options(chase_runtime PRIVATE -Wall -Wextra -Wpedantic -ffp-contract=off)
 set_target_properties(chase_runtime PROPERTIES POSITION_INDEPENDENT_CODE ON)
-target_sources(chase_runtime PRIVATE src/runtime/studs.cpp src/runtime/sound_events.cpp src/runtime/music.cpp src/runtime/level_start.cpp src/runtime/script_runner.cpp src/runtime/natives_objects.cpp src/runtime/natives_animation.cpp src/runtime/natives_cutscene.cpp src/runtime/natives_progress.cpp src/runtime/natives_music.cpp src/runtime/natives_sound.cpp src/runtime/music_block.cpp src/runtime/door.cpp src/runtime/scene_change.cpp src/runtime/room_streaming.cpp src/runtime/room_streamer.cpp src/runtime/scene_start.cpp src/runtime/dcam.cpp src/runtime/debug_metrics.cpp src/runtime/object_visibility.cpp src/runtime/script_text.cpp src/runtime/script_triggers.cpp src/runtime/objectives.cpp src/runtime/ai.cpp src/runtime/ai_simple_path.cpp src/runtime/fog.cpp src/runtime/lighting.cpp src/runtime/sky.cpp src/runtime/script_placement.cpp src/runtime/ai_go_to_target.cpp src/runtime/nav_grid.cpp src/runtime/nav_path.cpp src/runtime/nav_follow.cpp src/runtime/nav_load.cpp src/runtime/room_locator.cpp src/runtime/object_rooms.cpp src/runtime/ai_super_jump.cpp src/runtime/ai_face_target.cpp src/runtime/waypoints.cpp src/runtime/buildit.cpp src/runtime/buildit_set.cpp src/runtime/buildit_wobble.cpp src/runtime/prop_animation.cpp src/runtime/prop_nodes.cpp src/runtime/buildit_bricks.cpp src/runtime/mesh_bouncer.cpp src/runtime/reference_trigger.cpp src/runtime/vehicle.cpp src/runtime/vehicle_boarding.cpp src/runtime/vehicle_drive.cpp src/runtime/vehicle_body.cpp src/runtime/vehicle_wheels.cpp src/runtime/vehicle_drivetrain.cpp src/runtime/vehicle_wheel_pose.cpp src/runtime/vehicle_hud.cpp src/runtime/vehicle_damage.cpp src/runtime/head_icon.cpp src/runtime/floor_walk.cpp src/runtime/vehicle_collision.cpp src/runtime/vehicle_box_contact.cpp src/runtime/carry.cpp src/runtime/carry_animation.cpp src/runtime/cutscene_cast.cpp src/runtime/collision_enable.cpp src/runtime/game_random.cpp src/runtime/npc_idle.cpp src/runtime/animation_slots.cpp src/runtime/director_hold.cpp src/runtime/script_thread_log.cpp src/runtime/vehicle_world.cpp src/runtime/vehicle_sphere_sweep.cpp src/runtime/buildit_player.cpp src/runtime/vehicle_prop_smash.cpp)
+target_sources(chase_runtime PRIVATE src/runtime/studs.cpp src/runtime/sound_events.cpp src/runtime/music.cpp src/runtime/level_start.cpp src/runtime/script_runner.cpp src/runtime/natives_objects.cpp src/runtime/natives_animation.cpp src/runtime/natives_cutscene.cpp src/runtime/natives_progress.cpp src/runtime/natives_music.cpp src/runtime/natives_sound.cpp src/runtime/music_block.cpp src/runtime/door.cpp src/runtime/scene_change.cpp src/runtime/room_streaming.cpp src/runtime/room_streamer.cpp src/runtime/scene_start.cpp src/runtime/dcam.cpp src/runtime/debug_metrics.cpp src/runtime/object_visibility.cpp src/runtime/script_text.cpp src/runtime/script_triggers.cpp src/runtime/objectives.cpp src/runtime/ai.cpp src/runtime/ai_simple_path.cpp src/runtime/fog.cpp src/runtime/lighting.cpp src/runtime/sky.cpp src/runtime/script_placement.cpp src/runtime/ai_go_to_target.cpp src/runtime/nav_grid.cpp src/runtime/nav_path.cpp src/runtime/nav_follow.cpp src/runtime/nav_load.cpp src/runtime/room_locator.cpp src/runtime/object_rooms.cpp src/runtime/ai_super_jump.cpp src/runtime/ai_face_target.cpp src/runtime/waypoints.cpp src/runtime/buildit.cpp src/runtime/buildit_set.cpp src/runtime/buildit_wobble.cpp src/runtime/prop_animation.cpp src/runtime/prop_nodes.cpp src/runtime/buildit_bricks.cpp src/runtime/mesh_bouncer.cpp src/runtime/reference_trigger.cpp src/runtime/vehicle.cpp src/runtime/vehicle_boarding.cpp src/runtime/vehicle_drive.cpp src/runtime/vehicle_body.cpp src/runtime/vehicle_wheels.cpp src/runtime/vehicle_drivetrain.cpp src/runtime/vehicle_wheel_pose.cpp src/runtime/vehicle_hud.cpp src/runtime/vehicle_damage.cpp src/runtime/vehicle_break.cpp src/runtime/head_icon.cpp src/runtime/floor_walk.cpp src/runtime/vehicle_collision.cpp src/runtime/vehicle_box_contact.cpp src/runtime/carry.cpp src/runtime/carry_animation.cpp src/runtime/cutscene_cast.cpp src/runtime/collision_enable.cpp src/runtime/game_random.cpp src/runtime/npc_idle.cpp src/runtime/animation_slots.cpp src/runtime/director_hold.cpp src/runtime/script_thread_log.cpp src/runtime/vehicle_world.cpp src/runtime/vehicle_sphere_sweep.cpp src/runtime/buildit_player.cpp src/runtime/vehicle_prop_smash.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/vehicle_camera.cpp)
 # Front end (boot to the slot list): CPU-drawn screens, no SDL dependency.
 add_library(chase_frontend src/frontend/script.cpp src/frontend/frontend.cpp src/frontend/pages.cpp src/frontend/canvas.cpp src/frontend/resources.cpp src/frontend/layout.cpp src/frontend/flow.cpp src/frontend/hud.cpp src/frontend/script_text_pages.cpp src/frontend/minimap.cpp src/frontend/map_marker.cpp src/frontend/slot_summaries.cpp)
@@ -106,7 +106,7 @@ if(EPOXY_FOUND)
   target_link_libraries(chase-viewer PRIVATE chase_render chase_audio chase_input)
   target_compile_options(chase-viewer PRIVATE -Wall -Wextra -Wpedantic)
   if(FFMPEG_FOUND)
-    add_executable(chase-game src/game.cpp src/game_options.cpp src/game_player.cpp src/game_carry.cpp src/game_doors.cpp src/game_prop_parts.cpp src/game_level.cpp src/game_level_update.cpp src/game_vehicle.cpp src/game_vehicle_place.cpp src/game_vehicle_camera.cpp src/game_level_rooms.cpp src/game_cutscene.cpp src/game_level_cutscene.cpp src/game_characters.cpp)
+    add_executable(chase-game src/game.cpp src/game_options.cpp src/game_player.cpp src/game_carry.cpp src/game_doors.cpp src/game_prop_parts.cpp src/game_level.cpp src/game_level_update.cpp src/game_vehicle.cpp src/game_vehicle_break.cpp src/game_vehicle_place.cpp src/game_vehicle_camera.cpp src/game_level_rooms.cpp src/game_cutscene.cpp src/game_level_cutscene.cpp src/game_characters.cpp)
     target_link_libraries(chase-game PRIVATE chase_render chase_runtime chase_input chase_audio chase_frontend_movie chase_save_progress chase_save_tables)
     target_compile_options(chase-game PRIVATE -Wall -Wextra -Wpedantic)
   endif()
@@ -407,6 +407,10 @@ if(BUILD_TESTING)
   target_link_libraries(vehicle-damage-test PRIVATE chase_runtime chase_assets)
   target_compile_options(vehicle-damage-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME vehicle-damage COMMAND vehicle-damage-test)
+  add_executable(vehicle-break-test tests/vehicle_break_test.cpp)
+  target_link_libraries(vehicle-break-test PRIVATE chase_runtime chase_assets)
+  target_compile_options(vehicle-break-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME vehicle-break COMMAND vehicle-break-test)
   add_executable(vehicle-hud-test tests/vehicle_hud_test.cpp)
   target_link_libraries(vehicle-hud-test PRIVATE chase_runtime chase_assets)
   target_compile_options(vehicle-hud-test PRIVATE -Wall -Wextra -Wpedantic)
@@ -950,6 +954,17 @@ if(BUILD_TESTING)
       --script "0 0 1500;0 0 3 X;0 0 330;at 936.39 17.85 1123.94 134.7;0 0 40 A;0 0 3 X;0 0 30")
     set_tests_properties(game-vehicle-hit PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
       PASS_REGULAR_EXPRESSION "fp_vehicle_03: Bullet body, mass scale 1.*entered at update 1523.*fp_vehicle_03: moved by a contact at update 1857.*left at update 1896")
+    # The seated police car is moved next to the static box at (846.0, 17.26, 1078.9) and held against it with A: the stuck timer of the driven body (0x33aea8,
+    # 3 s below 3 m/s) makes 0x23019c send the type 6 message, the car breaks (0x16cccc) and comes back 62 updates later with 5 hearts, as in the oracle
+    # trace of agent r18-B (break row 112, state 5 again in row 174, docs/re/vehicles-damage.md). The other update numbers are the port's.
+    add_test(NAME game-vehicle-break COMMAND chase-game
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
+      --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes
+      --call-script 1-1_VanBreakdown --call-script 1-1_Get_Car --start "886.0289 17.8243 1118.6516"
+      --script "0 0 1500;0 0 3 X;0 0 330;at 855.0 17.8 1085.0 -135;0 0 200 A")
+    set_tests_properties(game-vehicle-break PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
+      PASS_REGULAR_EXPRESSION "heart lost \\(type 6, 0 m/s\\), 0 left, destroyed\nvehicle 1-1_police_car: broken at update 1965.*back with 5 hearts at update 2027")
     # The seated police car drives into the bus shelter (a wobbly prop with a box) 25 m from the oracle's phone box pass: the vehicle pass of the original sends
     # the props damage 100 and the prop is destroyed (docs/re/vehicles-physics-props.md, entry of the smash). The update number is the port's, not an oracle value.
     add_test(NAME game-vehicle-smash COMMAND chase-game
@@ -1086,7 +1101,7 @@ add_executable(camera-lock-census tools/camera_lock_census.cpp)
 target_link_libraries(camera-lock-census PRIVATE chase_runtime chase_assets)
 target_compile_options(camera-lock-census PRIVATE -Wall -Wextra -Wpedantic)
 
-foreach(slow_test game-mission-1-1 game-mission-1-1-start game-vehicle-drive game-vehicle-room game-vehicle-hit game-vehicle-smash game-director-hold game-director-release game-van-escort waypoint-marker-shot audio-real-data)
+foreach(slow_test game-mission-1-1 game-mission-1-1-start game-vehicle-drive game-vehicle-room game-vehicle-hit game-vehicle-smash game-vehicle-break game-director-hold game-director-release game-van-escort waypoint-marker-shot audio-real-data)
   if(TEST ${slow_test})
     set_property(TEST ${slow_test} APPEND PROPERTY LABELS slow)
   endif()

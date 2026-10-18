@@ -28,7 +28,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | Feature | Status | Top open items |
 |---|---|---|
 | [vehicles](vehicles.md) | IN_PROGRESS | VEH-7 driving collision; VEH-21 driving details; VEH-10 sounds |
-| [vehicles-damage](vehicles-damage.md) | IN_PROGRESS | VEH-110 the break and the wreck state; VEH-111 trigger of the destroy; VEH-113 bump pass |
+| [vehicles-damage](vehicles-damage.md) | IN_PROGRESS | VEH-111 trigger of the destroy; VEH-113 bump pass; VEH-121 break effects |
 | [vehicles-physics](vehicles-physics.md) | IN_PROGRESS | VEH-42 inertia; VEH-50 air control; VEH-54 jump-out braking |
 | [vehicles-physics-collision](vehicles-physics-collision.md) | IN_PROGRESS | VEH-61 sphere sweep; VEH-62 compound shape; VEH-70 Bullet contact details |
 | [vehicles-boarding](vehicles-boarding.md) | IN_PROGRESS | VEH-17 enter prompt; VEH-19 boarding gates and exit probes |

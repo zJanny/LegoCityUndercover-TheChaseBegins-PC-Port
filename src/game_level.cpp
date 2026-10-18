@@ -186,6 +186,9 @@ LevelSession::LevelSession(const Shared& sharedState)
                 wheelSceneIndex.push_back({placedIndex, wheelIndex});
                 wheelLocalPlacements.push_back(wheel.local);
                 wheelNumbers.push_back(std::size_t(&wheel - vehicle.wheels.data()));
+                float centre[3] = {0, 0, 0}, half[3] = {0, 0, 0};
+                modelBounds(archive, meshModelPath(wheel.local.mesh), centre, half);
+                wheelBounds.push_back({{centre[0], centre[1], centre[2]}, half[0]});
             }
         }
     }
@@ -360,9 +363,11 @@ void LevelSession::draw(int width, int height) {
     scene.setLighting(runtime::levelLights(lightObjects, roomStreamer ? roomStreamer->currentRoom() : 0), &viewToWorld[12]);
     const std::vector<bool> drawn = runtime::drawnPlacements(placedObjects, objectState);
     for (std::size_t i = 0; i < drawn.size(); ++i)
-        scene.setInstanceVisible(placedSceneIndex[i], drawn[i] && roomShown(placedRooms[i]));
-    for (const auto& [placedIndex, wheelIndex] : wheelSceneIndex)
-        scene.setInstanceVisible(wheelIndex, drawn[placedIndex] && roomShown(placedRooms[placedIndex]));
+        scene.setInstanceVisible(placedSceneIndex[i], drawn[i] && roomShown(placedRooms[i]) && !wreckHides(i, std::nullopt));
+    for (std::size_t w = 0; w < wheelSceneIndex.size(); ++w) {
+        const auto& [placedIndex, wheelIndex] = wheelSceneIndex[w];
+        scene.setInstanceVisible(wheelIndex, drawn[placedIndex] && roomShown(placedRooms[placedIndex]) && !wreckHides(placedIndex, wheelNumbers[w]));
+    }
     const runtime::ObjectiveState& objectives = levelScripts.objectives();
     std::vector<float> badgeFades(waypointObjects.size(), 1.0f);
     for (std::size_t i = 0; i < waypointObjects.size(); ++i) {

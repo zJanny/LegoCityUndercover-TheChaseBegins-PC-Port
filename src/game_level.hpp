@@ -21,6 +21,7 @@
 #include "runtime/animation_driver_chain.hpp"
 #include "runtime/buildit_set.hpp"
 #include "runtime/buildit_player.hpp"
+#include "runtime/vehicle_break.hpp"
 #include "runtime/vehicle_damage.hpp"
 #include "game_carry.hpp"
 #include "runtime/carry.hpp"
@@ -132,6 +133,13 @@ private:
     void updateHeadIcon(float dt);
     void drawHeadIcon(chase::frontend::Canvas& top);
     void vehicleImpact(std::size_t vehicleIndex, float speed, const chase::runtime::ContactOther& other);
+    void applyVehicleDamage(std::size_t vehicleIndex, const chase::runtime::DamageMessage& message, float speed);
+    void breakVehicleNode(std::size_t vehicleIndex);
+    bool stepVehicleWreck(std::size_t vehicleIndex, float dt);
+    void returnVehicle(std::size_t vehicleIndex);
+    void recordVehicleReturnPlace(std::size_t vehicleIndex);
+    chase::assets::Matrix wheelWorldMatrix(std::size_t wheelEntry) const;
+    bool wreckHides(std::size_t placedIndex, std::optional<std::size_t> wheelNumber) const;
     void enterVehicleHud(const chase::runtime::VehicleRecord& record);
     void leaveVehicleHud();
     bool placeVehicle(const std::string& instance, const chase::assets::Placement& target);
@@ -177,6 +185,9 @@ private:
     std::optional<float> seaHeight;
     std::vector<std::pair<std::size_t, std::size_t>> wheelSceneIndex;
     std::vector<std::size_t> wheelNumbers;
+    std::vector<std::pair<chase::runtime::Vector3, float>> wheelBounds;
+    chase::runtime::GameRandom breakRandomStandIn{game_characters::kStandInSeed};
+    bool cameraSnapRequest = false;
     std::vector<chase::assets::Placement> placedObjects;
     std::vector<int> placedRooms;
     std::vector<std::size_t> waypointSceneIndex;
@@ -215,6 +226,10 @@ private:
         bool moved = false;
         std::size_t placedIndex = 0;
         chase::runtime::SmashBox nodeBounds;
+        chase::runtime::DrivenStuckTimer stuck;
+        chase::runtime::VehicleWreck wreck;
+        chase::runtime::VehicleMatrixHistory history;
+        bool returnPlaceGood = false;
     };
     std::vector<VehicleDrive> vehicleDrives;
     chase::runtime::VehiclePropSmasher propSmasher;
