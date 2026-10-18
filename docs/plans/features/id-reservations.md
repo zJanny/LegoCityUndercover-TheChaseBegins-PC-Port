@@ -4,10 +4,6 @@ Ranges of item IDs held by parallel agents; the lead reserves them with `tools/c
 
 | Prefix | First | Last | Holder | Date |
 |---|---|---|---|---|
-| VEH | 116 | 119 | r18-A | 2026-10-18T09:02:23+02:00 |
-| VEH-S | 94 | 95 | r18-A | 2026-10-18T09:02:23+02:00 |
-| LEVOBJ | 79 | 82 | r18-A | 2026-10-18T09:02:23+02:00 |
-| LEVOBJ-S | 76 | 77 | r18-A | 2026-10-18T09:02:23+02:00 |
 | DETECT | 1 | 12 | r19-A | 2026-10-18T10:35:53+02:00 |
 | DETECT-S | 1 | 6 | r19-A | 2026-10-18T10:35:53+02:00 |
 | SCRIPT | 275 | 278 | r19-A | 2026-10-18T10:35:53+02:00 |
