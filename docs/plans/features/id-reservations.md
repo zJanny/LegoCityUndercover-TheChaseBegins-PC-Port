@@ -6,5 +6,3 @@ Ranges of item IDs held by parallel agents; the lead reserves them with `tools/c
 |---|---|---|---|---|
 | TRAV | 11 | 18 | r21-A | 2026-10-18T15:27:29+02:00 |
 | TRAV-S | 5 | 9 | r21-A | 2026-10-18T15:27:29+02:00 |
-| TRAV | 27 | 34 | r21-C | 2026-10-18T15:27:29+02:00 |
-| TRAV-S | 15 | 19 | r21-C | 2026-10-18T15:27:29+02:00 |
