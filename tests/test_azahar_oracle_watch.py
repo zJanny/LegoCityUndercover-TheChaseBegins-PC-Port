@@ -112,5 +112,69 @@ class TeleportTest(unittest.TestCase):
         self.assertEqual(probe.writes, [])
 
 
+class FreeTrapRemote:
+    def __init__(self, stops):
+        self.stops = list(stops)
+        self.breakpoints = {0x100f44}
+        self.sent = []
+        self.registers = None
+
+    def command(self, body):
+        self.sent.append(body)
+        if body == 'g':
+            return ''.join(struct.pack('<I', v).hex() for v in self.registers)
+        return 'OK'
+
+    def register(self, index):
+        return 0
+
+    def send(self, body):
+        self.sent.append(body)
+
+    def wait_stop(self, deadline):
+        if not self.stops:
+            return None
+        self.registers = self.stops.pop(0)
+        return 'T05'
+
+    def read(self, address, length):
+        return bytes(length)
+
+
+class FreeTrapTest(unittest.TestCase):
+    def test_free_trap_records_each_stop_and_restores_breakpoints(self):
+        with tempfile.TemporaryDirectory() as directory:
+            probe = object.__new__(oracle.Oracle)
+            probe.output = Path(directory)
+            stop = [0x0870f6f0, 0x08618d7c, 0, 0] + [0] * 10 + [0x17b040, 0x22ce9c]
+            probe.remote = FreeTrapRemote([stop])
+            probe.free_trap(5.0, [0x22ce9c], 'demo')
+            text = (Path(directory) / 'demo.txt').read_text()
+            self.assertIn('pc 0x0022ce9c', text)
+            self.assertIn('[r1] 00000000', text)
+            sent = probe.remote.sent
+            self.assertEqual(sent[:2], ['z0,100f44,4', 'Z0,22ce9c,4'])
+            self.assertEqual(sent[-2:], ['z0,22ce9c,4', 'Z0,100f44,4'])
+            self.assertIn('s', sent)
+
+    def test_malformed_freetrap_lines_are_rejected(self):
+        probe = type('Probe', (), {'free_trap': lambda self, *args: self.calls.append(args)})()
+        probe.calls = []
+        cases = (('freetrap 10 0x22ce9c', '10 0x22ce9c'), ('freetrap 10 0x22ce9c demo extra', 'demo extra'),
+                 ('freetrap 0 0x22ce9c demo', "'0'"), ('freetrap -1 0x22ce9c demo', "'-1'"), ('freetrap ten 0x22ce9c demo', "'ten'"),
+                 ('freetrap inf 0x22ce9c demo', "'inf'"), ('freetrap nan 0x22ce9c demo', "'nan'"),
+                 ('freetrap 10 0x22zz demo', "'0x22zz'"), ('freetrap 10 0x22ce9c,,0x2388e4 demo', "''"),
+                 ('freetrap 10 0x22ce9e demo', "'0x22ce9e'"), ('freetrap 10 0x1000 demo', "'0x1000'"),
+                 ('freetrap 10 -0x22ce9c demo', "'-0x22ce9c'"), ('freetrap 10 0x22ce9c ../demo', "'../demo'"))
+        for line, bad in cases:
+            with self.assertRaises(ValueError, msg=line) as caught:
+                oracle.run_scenario(probe, [line])
+            self.assertIn('freetrap', str(caught.exception))
+            self.assertIn(bad, str(caught.exception))
+        self.assertEqual(probe.calls, [])
+        oracle.run_scenario(probe, ['freetrap 2.5 0x22ce9c,0x2388e4 demo'])
+        self.assertEqual(probe.calls, [(2.5, [0x22ce9c, 0x2388e4], 'demo')])
+
+
 if __name__ == '__main__':
     unittest.main()

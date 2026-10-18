@@ -12,6 +12,7 @@ Watchpoints, execution traps, fixed dt, memory traces, poke, and the limits of t
 - `dt MIN MAX` fixes the scheduler step (quantised to the 1 ms game clock); stepped runs otherwise get dt 0.07. `trace N NAME mem` also records entity, controller and node memory. [§2026-10-13T13:45:00](#ts-20261013-134500)
 - `poke ADDR HEXBYTES` writes memory to send an object a request; a poked state is never saved as a reference state. [§2026-10-13T21:18:00](#ts-20261013-211800)
 - Use `--stop` and relaunch with `--state` after a killed scenario; a `pkill -f` pattern that matches the calling shell kills the shell. [§2026-10-13T21:18:00](#ts-20261013-211800), [§2026-10-14T21:40:25](#ts-20261014-214025)
+- `freetrap SECONDS ADDR[,ADDR...] NAME` traps rare calls in a free run: only the given breakpoints, no stop per update, so the guest runs at its real speed (the stepped `trap` took over 40 minutes for 1800 updates); input steps do not apply during it. [§2026-10-18T19:58:54](#ts-20261018-195854)
 - Open: none recorded beyond the limits above.
 
 <a id="ts-20261013-134500"></a>
@@ -49,3 +50,11 @@ Watchpoints, execution traps, fixed dt, memory traces, poke, and the limits of t
 - `ctrace ADDR[,ADDR...] N NAME` is `trap` without the stack dump and the pointed-memory reads: one GDB `g` packet per stop, written as `frame N pc 0x... ` plus the 16 registers to `NAME.txt`. A `trap` stop costs about 30 round trips; `ctrace` about 8, so a trace with many stops per update (the script executor) runs at about 1 s per update.
 - Use: `ctrace 0x2342b4,0x22ce9c,0x23cee8 N NAME` at the state `mission-1-2-start`: 0x2342b4 is the executor's `blx r2` of the native handler (r2 = handler address, r7 = thread record), 0x22ce9c a thread creation (lr tells the caller), 0x23cee8 the trigger event firer. Mapping the handler addresses to names with the census of [script-natives.md](script-natives.md) gives the call order. Findings: [scripts-missions.md §2026-10-14T21:39](scripts-missions.md#ts-20261014-213921).
 - Pitfalls met: a scenario that releases the stick before the trigger is reached traces nothing; a trap list with a stop in every update needs `dt 0.033 0.033` to keep updates comparable with the port; `pkill -f` with a pattern that also matches the calling shell kills the shell.
+
+<a id="ts-20261018-195854"></a>
+
+## 2026-10-18T19:58:54+02:00 — `freetrap`: execution breakpoints in a free run
+
+- `freetrap SECONDS ADDR[,ADDR...] NAME` removes the per-update scheduler breakpoint, sets only the given execution breakpoints and lets the emulator run for SECONDS of wall-clock time. At each stop it reads the registers (`g`) and 64 bytes at each pointer-like r0..r3, steps over the breakpoint and continues; at the end it interrupts the target (`\x03`) and restores the breakpoints that were set before. `NAME.txt` holds one block per stop with the seconds since the start, the registers and the pointed bytes.
+- Why: a stepped `trap` of 0x22ce9c, 0x2238d0 and 0x2388e4 over 1800 updates from `m12-2-crying-trigger` had not finished after 40 minutes; `freetrap 150` covered the whole `1-2_HouseArrival` cutscene in 150 s. Check: from `m12-3-alley-trigger` (20 stepped updates with the stick up, then `freetrap 120`) it caught the waypoint start of `1-2_Spawn_Doorlock` (lr 0x17b040, record word 0xb4eda455) at 0.63 s and the trigger-pass start of `1-2_Doorlock_Bound_Entered_01` (lr 0x174748, 0x149fd6c7) at 39 s. Findings: [scripts-missions.md §2026-10-18T19:58:54](scripts-missions.md#ts-20261018-195854).
+- Limits: held buttons and the stick are injected through the per-update breakpoints, so they do not apply during a `freetrap` (walk with stepped updates first); there are no update numbers, only seconds; a breakpoint on a function that runs every update makes the run as slow as stepping.

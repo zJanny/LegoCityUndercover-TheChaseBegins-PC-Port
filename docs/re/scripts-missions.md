@@ -10,9 +10,9 @@ What the scripts of one mission call, which natives and trigger events the port 
 - The 13 natives of mission 1-2 without a handler and the 12 class-driven ObjectTriggered events are listed in the entry; `HouseArrival` (3388757305) and `Spawn_Doorlock` (3035472981) are the `TriggerScript` values of two waypoints. [§2026-10-14T21:44:29](#ts-20261014-214429)
 - lvl_01 startup runs the scripts for the current `StoryProgress` (1 starts `1-1_MissionStart`, 2 starts `1-2_MissionAvailable`); the new-game start is `movie 01_GameIntro`, cutscene `1_1_a`, then `1-1_MissionStart`. [§2026-10-14T23:52:14](#ts-20261014-235214), [§2026-10-15T12:41:40](#ts-20261015-124140)
 - Mission 1-1 runs end to end in `chase-game` in the original's step order (11 steps, StoryProgress 2 after 5831 updates), with teleports standing in for walks; `1-1_Deliver_Donuts` only fires after `1-1_Carry_Object_Tutorial` has ended. [§2026-10-15T12:41:40](#ts-20261015-124140) The user played it end to end in real play on 2026-10-18 [§2026-10-18T10:37:46](#ts-20261018-103746).
-- Neither unnamed script (2451216995 dumpster peek, 2494968948 hint) is named by any text of the archive or by a code literal; 35 of 314 scripts of lvl_01 have no string reference; the alley and crying states start only the known waypoint scripts. [§2026-10-18T11:14:04](#ts-20261018-111404)
+- The two unnamed scripts have no starter in this build: every thread start resolves a name string (24 call sites read) and no name hashes to them. The dumpster peek 2451216995 is a copy of what `1-2_HouseArrival` does inline; 2494968948 is a single no-op `PrintDebugString`. [§2026-10-18T11:14:04](#ts-20261018-111404), [§2026-10-18T19:58:54](#ts-20261018-195854)
 - User playtest of mission 1-2 in `chase-game` (2026-10-18): past the Doorlock scene and the first detective point; next blocker is the smashable table `DonutTable_14` that gives the bricks of the trampoline build-it, which needs an attack on foot; cars drive through street lamps without breaking them (VEH-103). [§2026-10-18T15:27:22](#ts-20261018-152722)
-- Open: starters of scripts 2451216995 and 2494968948, the vehicle bound test 0x17b21c, who fires class-driven ObjectTriggered events, missing natives in mission 1-1 (CameraFollow, EnableTrafficAndPedestrians, music), original update numbers between steps.
+- Open: an unnamed code path firing `1-2_Door_Lock_Hint_Script`'s ObjectTriggered (not excluded), the vehicle bound test 0x17b21c, who fires class-driven ObjectTriggered events, missing natives in mission 1-1 (CameraFollow, EnableTrafficAndPedestrians, music), original update numbers between steps.
 
 
 <a id="ts-20261014-213921"></a>
@@ -173,3 +173,39 @@ Unknowns:
 - Whether a hit of the attack, a vehicle or something else destroys the table in the original, and how the build-it is enabled from its bricks (`DonutTable_14_Script` not read).
 - Whether the street lamps are wobbly props of the mesh kind (VEH-103).
 
+
+<a id="ts-20261018-195854"></a>
+
+## 2026-10-18T19:58:54+02:00 — The two unnamed mission 1-2 scripts have no starter in this build; Door_Lock_Hint_Script's object trigger (REA and objdump on game.arm.elf, full substring scan, Azahar GDB traps without RPC)
+
+Resolves the unknown of [§2026-10-18T11:14:04](#ts-20261018-111404) for SCRIPT-113 and narrows SCRIPT-285.
+
+**What the two scripts are.**
+- `1-2_HouseArrival` (3388757305, the `TriggerScript` of `1-2_Waypoint_02`) carries the dumpster peek inline: after `PlayCharAnim(1-2_AI_Dogman, crying_idle_minifig)` and `Wait 1` it calls `TriggerObject(1-2_Doorlock_Spawner, 1)`, `Wait 0.1`, `StartDCamTrack(Dcam_Dumpster, 1-2_Dumpster_Open, 0, 5)`, then a dialogue line, the same `PlayCharAnim` / `LoadAnimation` / `EnableObject` x2 / `PlayAnimation` of the dumpster, `wait 1`, the enable of `1-2_Waypoint_03`, `WaitForDCam`, `SnapCamera`, `Wait 0.6` and `EnableObject(1-2_Doorlock_Holmes, 0)`. All ten non-wait calls of 0x921a9a63 appear there in the same order with the same arguments; only the last wait differs (0.6 against 1.5). So the peek runs as part of `HouseArrival`; 0x921a9a63 is a copy of it.
+- 0x94b63474 is one `PrintDebugString("HINT: Blue and white objects can be used to access new areas.", 5)`; the handler 0x26fde8 is `mov r0,#1; bx lr` ([script-natives-census.md](script-natives-census.md)), so the script has no effect even when run. (Not the smash hint: that is the named `1-2_Prop_Smash_Hint`, BoundEntered of the bound of that name.)
+
+**Every thread start needs a name string (static).**
+- Threads come from the free list 0x589734. Its only users (REA xrefs) are the pool setup 0x15bdfc, the scene start 0x197c3c (creation inlined, name `startup`), the return to the list in 0x1a5338 (end of all threads of a scene) and 0x234358 (end of a thread), and the two creators 0x22ce9c(owner, record) and 0x2238d0(owner, name). 0x2238d0 is a second start-by-name helper that the earlier list missed: it looks the name up with 0x2388e4 and creates the thread inline.
+- 0x2388e4(owner, name) hashes the part of the name after its last `.` (0x23895c; the whole name when there is no dot or the dot is at index 0) with the lowercased CRC-32 (0x24da28, `assets::nameHash`) and compares it with the first word of the owner's script records (+0x24 → +0x18, stride 0x1c).
+- The 24 direct call sites (objdump, ARM) and their name sources. 0x22ce9c: 0x174744 trigger queue (record from the trigger's script name, resolved by name in the trigger setup 0x1a553c at 0x1a56f4); 0x17b03c waypoint (record from the `TriggerScript` string, 0x17abb4); 0x1c3744 CallScript / SpawnScript (record from the argument token, looked up at run time by the argument evaluator 0x211e04 at 0x211fe4, whose only caller is the executor 0x234204); 0x1ecc9c / 0x1ecd00 (`startup`, `OnSceneEnter%d`, 0x1ecc84 / 0x1eccec); 0x2e567c (`ScriptCheckExtras`); 0x2f688c (the name in 0x516422, written only by the native `PlayScriptOnStartup` 0x2915d4 from its string argument); 0x2fe44c (`RaceEventToggled`). 0x2238d0: 0x189b80 / 0x189c10 (`EffectScript`, `EffectStoppedScript`), 0x1ef224 (`3-5_AfterMinigame`), 0x26fd04 and 0x27bca0 (the string arguments of the natives `IfPartyCharacter` and `IfPlayerCharacter`), 0x2c1824 (`registersounds`), 0x2d7dbc (`CraneDropOffControl%02d`, slot 1 to 3).
+- So every script start resolves a name that comes from level script text (trigger script names, a waypoint parameter, script-call arguments), from a literal of the executable or from a format string of the executable.
+
+**No such name hashes to either script.**
+- Every substring of up to 160 characters of every printable run (ASCII and UTF-16LE) of all 12836 extracted archive files, `code.bin`, `exheader.bin` and the ExeFS (1.19e9 substrings, scratch C++ scanner): the only hits of 0x921a9a63 and 0x94b63474 are one each inside texture pixel data (`lightmap_apollo_drheinriks_lab000.btga`) and model index data (`char_head_dogwalker.bfnmdl`), as expected from random CRC collisions at that count (about 0.3 per value), not names. This covers the suffix after a dot as well.
+- Run-time names: `OnSceneEnter0..999`, `CraneDropOffControl00..999` and `%i-%u_MissionStart` / `_MissionEnd` for missions -5..29 and 0..49 do not match. The other format strings that make names (`%s_Count`, `%s_ON`, `%s_OFF`, `%s_Tally` and similar) are not on any start path above.
+- Level data (`assets::parseLevel`): no trigger script name, string parameter, object reference or script-call argument of lvl_01 hashes to either value (CTest `script-starters-real-data`).
+
+Conclusion: in this build nothing can start 0x921a9a63 or 0x94b63474. They are leftovers: the peek was folded into `HouseArrival`, the hint is a debug print.
+
+**Supporting traps (own emulator, port 24735, home `artifacts/oracle/r23E-home`, OpenGL, no RPC; new command `freetrap`, [oracle-measuring.md §2026-10-18T19:58:54](oracle-measuring.md#ts-20261018-195854)).** Breakpoints at 0x22ce9c, 0x2238d0 and 0x2388e4, and from m12-7 on also 0x244f40 and 0x21a560; the record word at [r1] names the script:
+- `m12-2-crying-trigger`: 40 stepped updates with the stick up start `HouseArrival` (0xc9fc5539) in update 28 from the waypoint (lr 0x17b040), then `freetrap 150`: no stop, and the player ends at 745.731 29.236 631.241 facing -x (the `PositionObject` of the script's end), so the peek ran inside `HouseArrival` with no other start.
+- `m12-3-alley-trigger`: 20 stepped updates with the stick up, then `freetrap 120`: `Spawn_Doorlock` (0xb4eda455) by the waypoint at 0.63 s and `1-2_Doorlock_Bound_Entered_01` (0x149fd6c7, lr 0x174748) at 39 s, nothing else.
+- `m12-7-detective-waypoint-2`: `freetrap 20`, A held for 4 stepped updates, 2 more, `freetrap 60`: no stop at all (no thread start, no 0x244f40 and no queued trigger).
+- `m12-13-cage-trigger`: A for 3 updates fires 0x244f40 from the use spot (lr 0x192358) and the queue 0x21a560, and starts `Cage_Key_Target_Script` (0x652f4480, lr 0x174748); in the next 60 s CallScript starts `1-2_MissionEnd`, `1-3_MissionStart` and `1-3_Animations`, each by its argument text through 0x211fe4 → 0x2388e4 and 0x1c3748 → 0x22ce9c.
+- `m12-table-before`: `freetrap 60` with no input: no stop.
+
+**`1-2_Door_Lock_Hint_Script` (SCRIPT-285).** The name occurs in the whole archive only in lvl_01: the scriptobject's instance name, the object of its ObjectTriggered trigger and the script name of that trigger and of the BoundEntered trigger of the bound `1-2_Door_Lock_Hint`. No object reference points at the scriptobject (resolved scan of all type-4 parameters of lvl_01); the detective spot next to it, `1-2_Dtv_DogSpot_02` (720.391 37.040 654.534), has no `TriggerObject`, while `1-2_Dtv_DogSpot_01` has one (`1-2_Dtv_DogSpot_01_Script`). No script calls `TriggerObject` on it. The trap from `m12-7` (standing in the bound, A pressed) saw no 0x244f40 and no queued trigger. The hint therefore runs from its bound, as the port does.
+
+Unknowns:
+- ObjectTriggered of `1-2_Door_Lock_Hint_Script` from code that finds an entity without a name (by position or class) is not excluded: the 28 call sites of 0x244f40 and the 53 of the event firer 0x23cee8 were not read one by one.
+- Whether a thread can switch to another script record after its creation (thread +0x10 written elsewhere) was not checked.

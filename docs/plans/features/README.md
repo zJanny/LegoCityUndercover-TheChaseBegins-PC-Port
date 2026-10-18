@@ -44,7 +44,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 |---|---|---|
 | [script-system](script-system.md) | IN_PROGRESS | SCRIPT-1 mission flow (needs SCRIPT-7 natives, SCRIPT-75 / 76 trigger events); runner, scene start, class startups |
 | [script-system-triggers](script-system-triggers.md) | IN_PROGRESS | SCRIPT-75 / 76 AI and vehicle trigger events; SCRIPT-77 / 78 object bound checks |
-| [script-system-missions](script-system-missions.md) | IN_PROGRESS | SCRIPT-111 cage use spot and door lock hint; SCRIPT-113 unnamed mission scripts; SCRIPT-190 carry gaps |
+| [script-system-missions](script-system-missions.md) | IN_PROGRESS | SCRIPT-285 door lock hint object trigger; SCRIPT-190 carry gaps |
 | [script-system-natives](script-system-natives.md) | IN_PROGRESS | SCRIPT-7 natives in batches SCRIPT-29 to SCRIPT-39, SCRIPT-57 to SCRIPT-65 |
 | [script-system-natives-world](script-system-natives-world.md) | IN_PROGRESS | SCRIPT-279 party swap; SCRIPT-280 destroy message 1 per class; SCRIPT-281 effect fade rest; SCRIPT-282 distance fade gate; SCRIPT-283 AddToSemiTransList |
 | [script-system-natives-animation](script-system-natives-animation.md) | IN_PROGRESS | SCRIPT-270 player animations; SCRIPT-272 attach node changes; SCRIPT-273 / 274 states, loaded set |

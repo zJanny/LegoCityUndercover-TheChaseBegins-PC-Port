@@ -7,6 +7,7 @@ A zone object that fires one `TriggerObject` when the player presses the action 
 - The class (`props/prop_simpleuse`, 32-byte component) has the parameters `TriggerObject` (record +0x18) and `SendPlayerObject` (+0x1c); its zone is the class bound `UseBound` (centre 0, half 2 2 2) registered by 0x23e130 with `UseStartActive` default 1. [§2026-10-18T14:28:33+02:00](#ts-20261018-142833)
 - Message 3 with the action flag fires 0x244f40 on the target, asks the player for state 1 and switches the zone off (0x236624); message 8 switches it on again. Confirmed in the oracle from `m12-13-cage-trigger`. [§2026-10-18T14:28:33+02:00](#ts-20261018-142833)
 - `1-2_Door_Lock_Hint_Script` (the scriptobject) is referenced by no object and no script call; the hint dialogue runs from the bound `1-2_Door_Lock_Hint` (BoundEntered), which the port already delivers. [§2026-10-18T14:28:33+02:00](#ts-20261018-142833)
+- No name source for the scriptobject exists besides the level's own trigger records, the detective spot next to it has no `TriggerObject`, and a trap from `m12-7` saw no object trigger; code that finds the entity without a name is not excluded. [scripts-missions.md §2026-10-18T19:58:54](scripts-missions.md#ts-20261018-195854)
 
 <a id="ts-20261018-142833"></a>
 

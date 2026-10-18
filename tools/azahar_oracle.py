@@ -40,6 +40,10 @@ A scenario file drives the run, one command per line ('#' starts a comment):
   ctrace ADDR[,ADDR...] N NAME
                         like trap but lean: one 'g' packet per stop, one line 'frame pc r0..r15' per stop in NAME.txt
                         (no stack and no pointed memory; use it for call-order traces with many stops per update)
+  freetrap SECONDS ADDR[,ADDR...] NAME
+                        let the game run freely for a wall-clock time with only these execution breakpoints (no stop per
+                        update, so the guest runs at its real speed; held buttons and stick do not apply) and write the
+                        registers and 64 bytes at each pointer-like r0..r3 of every stop to NAME.txt (for rare events)
   teleport X Y Z        write the world and local translation of the player node (a measuring aid: places the player
                         at a ledge without walking there; the node's parent has an identity transform at gameplay-start)
   dt MIN MAX            write the scheduler's dt limits (floats at C+0x10 and C+0x14); MIN == MAX fixes the step
@@ -296,6 +300,29 @@ class GdbRemote:
         for address, kind in sorted(self.watchpoints):
             self.command('z%d,%x,1' % (kind, address))
         self.watchpoints.clear()
+
+    def wait_stop(self, deadline):
+        try:
+            while True:
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    self.sock.settimeout(None)
+                    self.sock.sendall(b'\x03')
+                    reply = self._packet()
+                    if not reply.startswith(('T', 'S')):
+                        raise ConnectionError('unexpected stop reply %r' % reply)
+                    return None
+                self.sock.settimeout(min(remaining, 0.5))
+                try:
+                    reply = self._packet()
+                except socket.timeout:
+                    continue
+                if not reply.startswith(('T', 'S')):
+                    raise ConnectionError('unexpected stop reply %r' % reply)
+                self.last_stop = parse_stop_reply(reply)
+                return reply
+        finally:
+            self.sock.settimeout(None)
 
     def run_to_breakpoint(self):
         pc = self.register(15)
@@ -938,6 +965,54 @@ class Oracle:
     def wait(self, seconds):
         self.run_free(time.sleep, seconds)
 
+    def free_trap(self, seconds, addresses, name):
+        r = self.remote
+        installed = sorted(r.breakpoints)
+        for address in installed:
+            r.command('z0,%x,4' % address)
+        armed = []
+        hits = []
+        start = time.monotonic()
+        try:
+            for address in addresses:
+                if r.command('Z0,%x,4' % address) != 'OK':
+                    raise IOError('cannot set breakpoint at 0x%x' % address)
+                armed.append(address)
+            pc = r.register(15)
+            while True:
+                if pc in armed:
+                    r.command('z0,%x,4' % pc)
+                    r.command('s')
+                    r.command('Z0,%x,4' % pc)
+                r.send('c')
+                if r.wait_stop(start + seconds) is None:
+                    break
+                registers = list(struct.unpack('<16I', bytes.fromhex(r.command('g')[:128])))
+                pc = registers[15]
+                pointed = {}
+                for index in range(4):
+                    value = registers[index]
+                    if 0x00100000 <= value < 0x10000000 or 0x14000000 <= value < 0x1c000000:
+                        try:
+                            pointed[index] = r.read(value, 0x40)
+                        except IOError:
+                            pass
+                hits.append((time.monotonic() - start, registers, pointed))
+                print('  stop %.2f s pc 0x%08x lr 0x%08x' % (hits[-1][0], pc, registers[14]), flush=True)
+        finally:
+            for address in armed:
+                r.command('z0,%x,4' % address)
+            for address in installed:
+                r.command('Z0,%x,4' % address)
+            self.frame_object = None
+            with open(self.output / ('%s.txt' % name), 'w') as out:
+                for elapsed, registers, pointed in hits:
+                    out.write('second %.3f pc 0x%08x\n' % (elapsed, registers[15]))
+                    out.write('  r0-r15 %s\n' % ' '.join('%08x' % v for v in registers))
+                    for index, data in sorted(pointed.items()):
+                        out.write('  [r%d] %s\n' % (index, data.hex(' ', 4)))
+        print('  %d stops in %.1f s -> %s' % (len(hits), seconds, self.output / ('%s.txt' % name)))
+
     def detach(self):
         r = self.remote
         installed = sorted(r.breakpoints)
@@ -1266,6 +1341,32 @@ def parse_buttons(text):
     return mask
 
 
+def parse_freetrap(number, args):
+    def fail(what, text):
+        raise ValueError('line %d: freetrap %s, got %r' % (number, what, text))
+
+    if len(args) != 3:
+        fail('needs SECONDS ADDR[,ADDR...] NAME', ' '.join(args))
+    try:
+        seconds = float(args[0])
+    except ValueError:
+        fail('SECONDS must be a number', args[0])
+    if not 0 < seconds < float('inf'):
+        fail('SECONDS must be positive and finite', args[0])
+    addresses = []
+    for item in args[1].split(','):
+        try:
+            address = int(item, 0)
+        except ValueError:
+            fail('address is not a number', item)
+        if not 0x00100000 <= address < 0x10000000 or address % 4:
+            fail('address must be a word-aligned code address from 0x100000 to 0xfffffff', item)
+        addresses.append(address)
+    if not all(c.isalnum() or c in '_-.' for c in args[2]) or args[2].startswith('.'):
+        fail('NAME must use only letters, digits, _, - and . and not start with .', args[2])
+    return seconds, addresses, args[2]
+
+
 def run_scenario(oracle, lines):
     for number, line in enumerate(lines, 1):
         words = line.split('#', 1)[0].split()
@@ -1314,6 +1415,8 @@ def run_scenario(oracle, lines):
             oracle.trap([int(a, 0) for a in args[0].split(',')], int(args[1]), args[2])
         elif op == 'ctrace':
             oracle.ctrace([int(a, 0) for a in args[0].split(',')], int(args[1]), args[2])
+        elif op == 'freetrap':
+            oracle.free_trap(*parse_freetrap(number, args))
         elif op == 'dt':
             oracle.set_dt(float(args[0]), float(args[1]))
         elif op == 'teleport':

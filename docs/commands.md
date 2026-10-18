@@ -222,6 +222,7 @@ python3 tools/azahar_oracle.py tools/oracle/boot.txt
 - `tools/oracle/loco-*.txt` measure how the player moves. Each one starts with `loadstate gameplay-start` (a saved state that `tools/oracle/to-gameplay.txt` creates). Run them with `--display xvfb --renderer opengl --rpc --rpc-input`.
 - The emulator uses its own settings and save folder in `artifacts/oracle/home/`. Your normal Azahar settings and saves are not used or changed. `--fresh` deletes that folder first.
 - Stepping frames is slow: 600 frames take about 4 minutes. Waiting is faster: `wait 25` reaches the language screen in about 35 seconds.
+- `freetrap SECONDS ADDR[,ADDR...] NAME` catches rare calls without stepping: the game runs normally for that many seconds and stops only at the given code addresses. Each stop's registers and the memory they point to go to `NAME.txt`. Held buttons and the stick do not work during it, so do the walking first with stepped frames. The script stops with an error on a wrong number of words, a time that is not a positive number, an address that is not a word-aligned code address (0x100000 to 0xfffffff), or a name with characters other than letters, digits, `_`, `-` and `.`.
 
 ### Working faster
 
