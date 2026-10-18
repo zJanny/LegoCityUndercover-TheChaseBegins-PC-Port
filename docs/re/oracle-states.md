@@ -19,6 +19,7 @@ Save states the oracle uses: which ones exist, the game progress of each, how ea
 - `veh-wall-full-speed` (user): police car with four hearts at speed towards a brick wall, for VEH-128. [§2026-10-18T15:06:16](#ts-20261018-150616)
 - Pole mount (user, for TRAV-1): `m12-10a-pole-foot` (0.8 m from the drain pipe, facing away; walking into the pipe mounts it), `m12-10b-pole-side` (2.4 m left of the pipe axis, facing the wall). [§2026-10-18T15:46:24](#ts-20261018-154624)
 - Table and trampoline of mission 1-2 (user, for PLAYER-12 and LEVOBJ-86): `m12-table-before`, `m12-table-broken`, `m12-trampoline-built`, loaded and checked. [§2026-10-18T17:25:22](#ts-20261018-172522)
+- Bars above the trampoline (user, for TRAV-36): `m12-trampoline-pole`, Chase high above the pad next to the bars; keep pressing jump to grab. [§2026-10-18T20:44:42](#ts-20261018-204442)
 - `leadcut-1_1_d-early` (from `m11-6-van-to-shop`): cutscene `1_1_d` just loaded, for its actor nodes and pictures. [§2026-10-16T14:39:21](#ts-20261016-143921)
 - Open: whether mission 1-2 is active in the post-1-1 states, the level variables of the m11 states, a save with Continue byte +6 above 1, and the Old 3DS run of `savestate`.
 
@@ -293,3 +294,16 @@ Progress: mission 1-2 in progress, past the first detective point, before the zi
 Unknowns:
 - Whether the table in `m12-table-before` has taken any hit already (its health was not read).
 
+
+<a id="ts-20261018-204442"></a>
+
+## 2026-10-18T20:44:42+02:00 — User state above the trampoline of mission 1-2
+
+Asked for TRAV-36 (Chase grabs the poles above the trampoline in the original). The user quick-saved in slot 0 (2026-10-18 20:43:15, New 3DS); copied read-only (`cp --no-clobber`, identical by `cmp`, file made read-only) as `m12-trampoline-pole`. The user's note: Chase is close to grabbing the pole, and jump probably has to be pressed again for him to grab it.
+
+Loaded once by the lead (`--state m12-trampoline-pole --display xvfb --renderer opengl --rpc`, scenario `wait 1`, `player`, `screenshot`): after one second of free run Chase is at 721.362 41.459 637.579, facing (0, 0, 1), about 8.9 m above `Trampoline_03` (720.20 32.58 637.47), beside two blue and white horizontal bars on posts at the house wall; the RPC player read gives state 1. Matches the user's description.
+
+Progress: mission 1-2 in progress, the trampoline built (user report, implied by the step).
+
+Unknowns:
+- Whether Chase already holds a bar after the one-second wait (state 1 was read; the picture shows him at the bar), and which class the bars are.
