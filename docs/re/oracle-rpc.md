@@ -13,6 +13,7 @@ The Azahar RPC server (UDP): memory reads and writes, screenshots, pad input wit
 - Measure rates by `sample` in a free run (50.14 clock ticks per vblank); stepping inflates the clock by about 31 percent. [§2026-10-13T12:02:21](#ts-20261013-120221)
 - Polling by RPC misses game steps (about one row in ten spans two steps): check row continuity against a value the next step starts from instead of counting rows. [§2026-10-15T16:17:06](#ts-20261015-161706)
 - `waitbyte` and `shotloop` (OpenGL only) are the free-run scenario commands. [§2026-10-14T21:42:40](#ts-20261014-214240)
+- One screenshot per update: `--frame-limit 10` slow motion with `shotloop` and the clock 0x376b0c, not stepping (a screenshot runs about 9 updates); after `--stop` wait a few seconds before the next `--rpc` start. [§2026-10-18T20:38:04](#ts-20261018-203804)
 - Open: what an RPC read of an unmapped address returns, why RPC is slower in the dialog state, why a teleport across the Room7/Room8 box does not change the room.
 
 
@@ -93,3 +94,15 @@ Unknowns:
 - A Python loop that polls guest memory over RPC while the game runs freely does not see every update: in a run that read the clock, 12 bytes of the rigid body and two small body fields per poll, about one row in ten spanned two vehicle world steps (the clock difference was 170 to 200 ticks instead of 100, and once 0). Counting rows as updates overstates every rate per update; the brake samples of [vehicles-driving.md §2026-10-15T09:30:35](vehicles-driving.md#ts-20261015-093035) showed about 1.6 times too strong braking this way.
 - Check continuity instead of counting rows: keep a value that the next step starts from (for a vehicle the forward speed body+0xc0 that 0x33aea8 writes at the start of a step from the velocity the step before ended with) and accept a row as the next step only when it equals the end value of the row before. Read as little as possible per poll, and record the clock to see gaps (one game step is 100 ticks of 0x376b0c in the trooper's free run).
 - Findings: [vehicles-physics.md §2026-10-15T15:58:54](vehicles-physics.md#ts-20261015-155854).
+
+<a id="ts-20261018-203804"></a>
+
+## 2026-10-18T20:38:04+02:00 — One screenshot per update needs slow motion; restart pitfalls (round 23 emulator servant)
+
+- An OpenGL `TakeScreenshot` lets the emulation run while it captures (about 9 game updates in the servant's stepped tries), so a stepped run cannot give one screenshot per update, and the software renderer crashed on the m12 scenes.
+- What worked for per-update visibility (request C-2, the detective glass): start the emulator with `--frame-limit 10` (about 6 vblanks and 3 updates per second), fix dt with `dt 0.033333335 0.033333335` after each `loadstate`, and run `shotloop` logging the clock bytes 0x376b0c..0x376b0e; the update number is (clock - start) / 100, one to two shots per update. Two runs from fresh loads agreed. Times from such a run are meaningless; only update numbers count. Restart at normal speed afterwards.
+- After `--stop` the UDP port 45987 stays busy for a few seconds, and an immediate `--rpc` restart is refused as "port already in use"; waiting a few seconds works.
+- A restart once failed with an X `BadWindow` error from the tool; stopping and starting again worked.
+
+Unknowns:
+- Why the screenshot advances the game by about 9 updates and whether that count is fixed.

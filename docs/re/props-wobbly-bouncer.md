@@ -9,6 +9,7 @@ The class `leprops/leprop_wobblydestructible` (object type 119: tables, lamp pos
 - The destroy raises Dead (*0x3775c0), then the base handler 0x1f8948 runs the effects of [debris.md](debris.md), plays `ATTR_SFX_DESTROYED` and calls 0x244f40 on `TriggerObject` (enable, message 0xff, ObjectTriggered). For the table that object is `DonutTable_14_Script`, which enables the build-it `Trampoline_03_Buildits`; the build-it's own script then switches `Trampoline_03` on and `1-2_Temp_Trampoline` off. [§2026-10-18T20:25:42](#ts-20261018-202542)
 - The bouncer: the player's landing handler 0x2b24bc sends message 15 through 0x20b78c when the floor it landed on belongs to a type-19 entity; the take-off (state 25 "Bounce Take Off", enter 0x2f4e10) sets ctrl+0x2b8 to -speed, the speed is clamped to `LowestTakeOffSpeed` 0.3 .. `HighestTakeOffSpeed` 1.0 and grows by `JumpSpeedChange` 0.1 per bounce with B held, falls by 0.2 without (and stays at 0.3). The flight rises by the speed, +0.05 per update. [§2026-10-18T20:25:42](#ts-20261018-202542)
 - Walking over the pad does not bounce and is not blocked; only a landing bounces. [§2026-10-18T20:25:42](#ts-20261018-202542)
+- In the original Chase grabs poles above the trampoline during the bounce; the port does not (user report, TRAV-36). [§2026-10-18T20:42:03](#ts-20261018-204203)
 - Open: the wobble spring, the studs of a wobbling hit, the states 25 and 26 beyond the motion, the pad's query rules; see the unknowns of the entry.
 
 <a id="ts-20261018-202542"></a>
@@ -56,3 +57,13 @@ Unknowns:
 - The rest of state 26 (0x2f5134: its use of ctrl+0x317 bit 3, *0x377464 and B), the events 10 and 11, the trick bounces (`TrickBounce`, speeds above 0.65), the clip 182 timing, the meaning of the sound pitch from `FrequencyRange` (0x22f770) and of the globals written at 0x198a84.
 - When ctrl+0x2dc returns to 0 after leaving the pad, and the value of ctrl+0x2b8 at a landing from a jump (the jump state has no fall speed in the port).
 - Why the original's wall pass does not see the pad while its ground query does (an entry mask or a different query descriptor).
+
+<a id="ts-20261018-204203"></a>
+
+## 2026-10-18T20:42:03+02:00 — User report: Chase grabs the poles above the trampoline in the original
+
+- The user played the trampoline of mission 1-2 in `chase-game` after round 23: in the original, Chase bounces and at a certain height grabs poles above the pad; in the port he keeps bouncing and grabs nothing.
+- The port runs no grab tests during the bounce states 25 and 26 (`VerticalState::bouncing` only moves the node); the climb bars and rails are grabbed only from the paths of [player-traversal-rails.md](player-traversal-rails.md).
+
+Unknowns:
+- Which objects the poles are (class and type; climb bars of type 29 are one candidate), and which code of the bounce states (0x2f4e10, 0x2f5134) or of the grab tests checks them.

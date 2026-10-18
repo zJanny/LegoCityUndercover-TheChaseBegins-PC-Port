@@ -11,6 +11,7 @@ Which entities a cutscene's cast are, why the original draws no second Chase and
 - Original and port frames of `1_1_b` were compared but show different moments, so no actor comparison exists. [§2026-10-15T10:50:31](#ts-20261015-105031)
 - Each actor clip starts at the camera frame in its file name (`<actor>_NNNN`, 0x2ec30c) and is started by 0x2ec454 when the frame passes it; the clip started last drives the actor. Ported; this fixed the floating donut box of `1_1_d`. [§2026-10-16T14:05:18](#ts-20261016-140518)
 - A cutscene model of its own is drawn per node: object track of the node x the actor node of the root tracks (oracle, `1_1_d`); before its first clip it stands at that clip's frame 0. Ported; this fixed the van under the street and the box not held by the man. [§2026-10-16T14:39:48](#ts-20261016-143948)
+- User report: the magnifying glass floats in the port's beginning cutscene, unlike the original (cause not checked, MOVIE-34). [§2026-10-18T20:38:55](#ts-20261018-203855)
 - Open: the code that binds object tracks to nodes, the camera framing of `1_1_d`, meaning of entity byte +0x18 = 5, the player's position after a cutscene, actors `Donut1` and `Donutbox`, a close-up oracle state.
 
 <a id="ts-20261015-075438"></a>
@@ -111,3 +112,13 @@ Unknowns:
 - The code that binds an object track to a model node (by name or by index; the data matches by name) and what a mesh node without an object track does (the port keeps it at the actor matrix, stand-in MOVIE-S32).
 - Whether the object tracks, like the root, also stand at frame 0 before the start (assumed; only the actor node was read) and what a driven figure shows before its start (MOVIE-S31).
 - The camera of `1_1_d`: at camera frames 120 and 137 the original still shows the close shot of the van while the port shows a wider shot; whether the port's frame count or its camera differs is open (MOVIE-33).
+
+<a id="ts-20261018-203855"></a>
+
+## 2026-10-18T20:38:55+02:00 — User report: the magnifying glass floats in the opening cutscene
+
+- The user played `chase-game` after round 23 (glass drawn from the hand item track, [abilities-detective.md §2026-10-18T19:30:00](abilities-detective.md#ts-20261018-193000)): in the beginning cutscene the magnifying glass is visible, standing still in the air; in the emulator it is not seen until Chase pulls it out.
+- Not checked yet: which cutscene the user means, and which part of the port draws the glass there (the player's hand item glue, or the cutscene's per-node drawing of a model of its own, [§2026-10-16T14:39:48](#ts-20261016-143948)).
+
+Unknowns:
+- Which cutscene it is, which instance shows the glass, and how the original keeps it hidden before Chase pulls it out (the hand item track 0xba1e5b53 in the cutscene clip is one candidate).

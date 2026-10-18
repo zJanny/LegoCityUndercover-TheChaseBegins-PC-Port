@@ -22,6 +22,7 @@ Read this index, then open only the file you need.
 | [level-transitions.md](level-transitions.md) | Details moved out of the level-transition feature items (natives without handler, loading page code) |
 | [objects.md](objects.md) | Level objects: classes, class files (+0x10/+0x14), parameter slots, how the model is found, drawn classes |
 | [buildit.md](buildit.md) | Build-its (`props/prop_buildit`): class record, use zone, state machine and timing, completion and the event it fires |
+| [buildit-bricks.md](buildit-bricks.md) | Build-it bricks: scatter, flight, built pose, hop of unbuilt bricks, rise of the final prop |
 | [abilities-detective.md](abilities-detective.md) | Detective tool: detective spot, reveal spot, reveal prop, footprints, the player's detective states and their timing |
 | [use-spot.md](use-spot.md) | Use spot (`props/prop_simpleuse`): class record, handler 0x1922e8, one-shot rule, oracle trace, the unfired Door_Lock_Hint_Script object |
 | [abilities-scanner.md](abilities-scanner.md) | Sound scanner (`props/prop_scannerzoneaudio`, type 201): use press, player states 0x156..0x158, view, zoom, lock, scan, fired events |

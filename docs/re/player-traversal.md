@@ -13,6 +13,7 @@ Subtopics: [player-traversal-pole.md](player-traversal-pole.md), [player-travers
 - Pole and drain pipe (type 187), ported: [player-traversal-pole.md](player-traversal-pole.md).
 - Climbing bricks (type 20), ported, and the climb wall entry: [player-traversal-bricks.md](player-traversal-bricks.md).
 - Rails, climb bars and the corner rail (types 29, 218), ported: [player-traversal-rails.md](player-traversal-rails.md).
+- The A presses at the zipline anchor and at the pole are not measurable from `m12-9`, `m12-10a` or `m12-10b`; the states they need are listed in [§2026-10-18T20:38:04](#ts-20261018-203804).
 - Open: the grab height of attachment set 18 for other characters, the fall-state grab path 0x2010d4, ground contact during the zipline dismount (0x215804), the rope drawing (0x297b7c), the tightrope; the other moves in their subtopic files.
 
 <a id="ts-20261018-145230"></a>
@@ -81,3 +82,15 @@ REA (Ghidra 12.1.2) pseudocode read again: 0x2011b0, 0x1fef10, 0x1b6664. Confirm
 Unknowns:
 - The press was not measured in the oracle (no state on a zipline start platform); the ability test 0xb / 0xc of the handler is not in the port.
 - The order of the use registry between a pole and a zipline zone.
+
+<a id="ts-20261018-203804"></a>
+
+## 2026-10-18T20:38:04+02:00 — The A presses at the zipline anchor and the pole are not measurable from the existing states (round 23 emulator servant, RPC, one try each)
+
+- `m12-9-zipline` (three loads agree): Chase stands on the ground at 870.226 66.001 630.961 (state 1) in front of the blue pole, about 4 m below the anchor of 1-8_Zip_Line05 (868.094 69.992 630.977); the state fits the jump grab only. A held there does nothing (state stays 1, position unchanged over 70 updates at dt 1/30). Teleports onto the platform (867.9 69.95 630.98 and four other x values) gave no grab either, but Chase never moved in y afterwards, so those runs are not evidence about the press (unusable measuring aid; scenario files in the servant's scratch directory, output `artifacts/oracle/r23-servant-out/zipa*`, `zsw*`, not committed).
+- `m12-10b-pole-side`: Chase at 939.263 58.301 681.421, facing (-0.455, 0, 0.891), 2.36 m from the axis of 1-5_Drain_Pipe05 with the pipe 57 degrees to his right; A held for updates 1 to 3 (edge in update 2) gives no mount through update 13 (`poleb_A.csv`, `poleb_post.csv`). The zone size behind that outcome was not read.
+- `m12-10a-pole-foot` faces 174 degrees away from the pipe; turning to it walks him into it, and the walk-in mounts without A, so an A press there cannot be told apart.
+- States that would settle both (the user deferred them, 2026-10-18): Chase on foot within about 0.5 m of a zipline high anchor on its platform, facing it (and a second one about 2 m back); Chase standing 1.0 to 1.5 m from the drain pipe axis of m12-10, facing the pipe, without touching it (and a second one at 0.9 m).
+
+Unknowns:
+- Whether the teleported spots on the zipline platform were inside the anchor's `UseBound` and on a floor.
