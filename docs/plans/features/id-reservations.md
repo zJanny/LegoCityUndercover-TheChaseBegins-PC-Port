@@ -9,3 +9,4 @@ Ranges of item IDs held by parallel agents; the lead reserves them with `tools/c
 | DETECT | 8 | 13 | r23-C | 2026-10-18T17:32:54+02:00 |
 | LEVOBJ | 87 | 92 | r23-D | 2026-10-18T17:32:54+02:00 |
 | SCRIPT | 289 | 294 | r23-E | 2026-10-18T17:32:54+02:00 |
+| STUD | 11 | 14 | r23-B | 2026-10-18T19:02:34+02:00 |
