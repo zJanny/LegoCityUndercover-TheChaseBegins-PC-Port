@@ -7,7 +7,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | Feature | Status | Top open items |
 |---|---|---|
 | [player-movement](player-movement.md) | IN_PROGRESS | PLAYER-1 slide landing stun rule; PLAYER-2 slide exit; PLAYER-6 other 0x203d18 states |
-| [camera](camera.md) | IN_PROGRESS | CAMERA-50 render near plane, CAMERA-51 parked car after the hand-back; CAMERA-3 multi-record weights, Blocker pose, shake |
+| [camera](camera.md) | IN_PROGRESS | CAMERA-51 parked car after the hand-back; CAMERA-3 multi-record weights, Blocker pose; CAMERA-2 characters and vehicles not registered |
 | [collision](collision.md) | IN_PROGRESS | COLL-1 broad phase stand-in; COLL-2 constructors missing (vehicles, characters) |
 | [animation-characters](animation-characters.md) | IN_PROGRESS | ANIM-3 blending; ANIM-10 slot bookkeeping; ANIM-11 model folders |
 | [input](input.md) | DONE (lab, mapping) | INPUT-2 readers of input slots 16/17 |
@@ -18,8 +18,8 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 
 | Feature | Status | Top open items |
 |---|---|---|
-| [level-objects](level-objects.md) | IN_PROGRESS | LEVOBJ-3 objects frozen (needs SCRIPT-1); LEVOBJ-2 NPC start animation; LEVOBJ-12/13 hidden characters, per-class visibility |
-| [level-objects-buildit](level-objects-buildit.md) | IN_PROGRESS | LEVOBJ-40 brick animation; LEVOBJ-41 sounds, studs; LEVOBJ-43 built state not saved (needs SAVE-8) |
+| [level-objects](level-objects.md) | IN_PROGRESS | LEVOBJ-3 objects frozen (needs SCRIPT-1); LEVOBJ-16 other NPC states; LEVOBJ-12/13 hidden characters, per-class visibility |
+| [level-objects-buildit](level-objects-buildit.md) | IN_PROGRESS | LEVOBJ-76 studs of the build; LEVOBJ-77 two-target camera; LEVOBJ-43 built state not saved (needs SAVE-8) |
 | [level-objects-carry](level-objects-carry.md) | IN_PROGRESS | LEVOBJ-75 release of the box; LEVOBJ-30 attach update; LEVOBJ-31 locomotion while carrying; LEVOBJ-32 sounds and effects |
 | [doors](doors.md) | IN_PROGRESS | DOOR-1 script-requested doors stay closed (needs SCRIPT-7); DOOR-3 open-door box |
 | [studs](studs.md) | IN_PROGRESS | STUD-1 magnet and multiplier; STUD-4 groups (needs SCRIPT-1) |
@@ -30,10 +30,10 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | Feature | Status | Top open items |
 |---|---|---|
 | [vehicles](vehicles.md) | IN_PROGRESS | VEH-7 driving collision; VEH-21 driving details; VEH-10 sounds |
-| [vehicles-damage](vehicles-damage.md) | IN_PROGRESS | VEH-111 trigger of the destroy; VEH-113 bump pass; VEH-121 break effects |
+| [vehicles-damage](vehicles-damage.md) | IN_PROGRESS | VEH-121 break effects (needs PART-2); VEH-120 rest of the return; VEH-122 break of vehicles not driven |
 | [vehicles-physics](vehicles-physics.md) | IN_PROGRESS | VEH-42 inertia; VEH-50 air control; VEH-54 jump-out braking |
-| [vehicles-physics-collision](vehicles-physics-collision.md) | IN_PROGRESS | VEH-61 sphere sweep; VEH-62 compound shape; VEH-70 Bullet contact details |
-| [vehicles-boarding](vehicles-boarding.md) | IN_PROGRESS | VEH-17 enter prompt; VEH-19 boarding gates and exit probes |
+| [vehicles-physics-collision](vehicles-physics-collision.md) | IN_PROGRESS | VEH-102 sphere contact at a wall; VEH-70 Bullet contact details; VEH-91 vehicle activation |
+| [vehicles-boarding](vehicles-boarding.md) | IN_PROGRESS | VEH-19 boarding gates and exit probes; VEH-20 boarding state reactions; VEH-80 head icons |
 
 ## Scripts and missions
 
@@ -41,11 +41,11 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 |---|---|---|
 | [script-system](script-system.md) | IN_PROGRESS | SCRIPT-1 mission flow (needs SCRIPT-7 natives, SCRIPT-75 / 76 trigger events); runner, scene start, class startups |
 | [script-system-triggers](script-system-triggers.md) | IN_PROGRESS | SCRIPT-75 / 76 AI and vehicle trigger events; SCRIPT-77 / 78 object bound checks |
-| [script-system-missions](script-system-missions.md) | IN_PROGRESS | SCRIPT-110 waypoint class starts mission scripts; SCRIPT-111 class-fired ObjectTriggered events; SCRIPT-113 unnamed mission scripts |
+| [script-system-missions](script-system-missions.md) | IN_PROGRESS | SCRIPT-111 cage use spot and door lock hint; SCRIPT-113 unnamed mission scripts; SCRIPT-190 carry gaps |
 | [script-system-natives](script-system-natives.md) | IN_PROGRESS | SCRIPT-7 natives in batches SCRIPT-29 to SCRIPT-39, SCRIPT-57 to SCRIPT-65 |
 | [script-system-natives-world](script-system-natives-world.md) | IN_PROGRESS | SCRIPT-279 party swap; SCRIPT-280 destroy message 1 per class; SCRIPT-281 effect fade rest; SCRIPT-282 distance fade gate; SCRIPT-283 AddToSemiTransList |
-| [script-system-natives-animation](script-system-natives-animation.md) | IN_PROGRESS | SCRIPT-270 player animations; SCRIPT-271 / 272 props and attach (need agent X's node transforms); SCRIPT-273 / 274 states, loaded set |
-| [script-system-ai-navigation](script-system-ai-navigation.md) | IN_PROGRESS | SCRIPT-93 AIMove across grids; SCRIPT-94 nav grids into chase-game; SCRIPT-103 AISuperJump flight, SCRIPT-104 pursuit / stalk / run-away states |
+| [script-system-natives-animation](script-system-natives-animation.md) | IN_PROGRESS | SCRIPT-270 player animations; SCRIPT-272 attach node changes; SCRIPT-273 / 274 states, loaded set |
+| [script-system-ai-navigation](script-system-ai-navigation.md) | IN_PROGRESS | SCRIPT-79 AI movement; SCRIPT-94 active nav grid set; SCRIPT-103 AISuperJump flight, SCRIPT-104 pursuit / stalk / run-away states |
 | [script-system-dcam](script-system-dcam.md) | IN_PROGRESS | SCRIPT-46 director camera commands, SCRIPT-48 / 49 / 50 / 181 / 182 details |
 | [script-system-hud-natives](script-system-hud-natives.md) | IN_PROGRESS | SCRIPT-66 to SCRIPT-70 text screens; SCRIPT-71 to SCRIPT-74 objective markers, arrows, map |
 
@@ -60,10 +60,10 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 
 | Feature | Status | Top open items |
 |---|---|---|
-| [front-end](front-end.md) | IN_PROGRESS | FE-1 existing slots and Continue (needs SAVE-2, FE-11); FE-3 loading screen 3D badge |
-| [hud-ui](hud-ui.md) | IN_PROGRESS | HUD-6 hearts never change; HUD-11 map levels and mission icons, HUD-60 other map icon types; HUD-8 other counters; HUD-13 text screens |
-| [audio](audio.md) | IN_PROGRESS | AUDIO-20 duck record; AUDIO-21 sound natives; AUDIO-3 world sounds |
-| [movies-cutscenes](movies-cutscenes.md) | IN_PROGRESS | MOVIE-2 cutscenes not in game flow (blocks FE-4) |
+| [front-end](front-end.md) | IN_PROGRESS | FE-1 existing slots and Continue (needs SAVE-2); FE-30 delete confirmation; FE-3 loading screen 3D badge |
+| [hud-ui](hud-ui.md) | IN_PROGRESS | HUD-6 hearts never change; HUD-11 map levels and mission icons, HUD-60 other map icon types; HUD-8 other counters |
+| [audio](audio.md) | IN_PROGRESS | AUDIO-20 duck record; AUDIO-11 action music; AUDIO-3 world sounds |
+| [movies-cutscenes](movies-cutscenes.md) | IN_PROGRESS | MOVIE-33 camera of 1_1_d; MOVIE-3 short actor clips; MOVIE-1 layout values |
 | [saves-options](saves-options.md) | IN_PROGRESS | SAVE-13 Continue at level 2 and later, SAVE-8 object record meaning (needs a richer save), SAVE-2 slot display (blocks FE-1) |
 
 ## Rendering and assets
@@ -71,7 +71,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | Feature | Status | Top open items |
 |---|---|---|
 | [assets-formats](assets-formats.md) | IN_PROGRESS | ASSET-2 streaming |
-| [rendering](rendering.md) | IN_PROGRESS | RENDER-1 fragment lighting; RENDER-2 reflections; RENDER-30 fog oracle comparison; RENDER-33 shadows |
+| [rendering](rendering.md) | IN_PROGRESS | RENDER-33 shadows; RENDER-66 distance fade; RENDER-2 reflections; RENDER-30 fog oracle comparison |
 
 ## Platform and tools
 
