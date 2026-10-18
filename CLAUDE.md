@@ -117,6 +117,10 @@ The original runs in Azahar as a measuring reference. Read `docs/re/oracle.md` b
 
 **Subagents**
 - Cheapest model that can do the task; narrow tasks with only the needed files and rules. Do not delegate correctness-critical verification.
+- **Model choice (rounds 19 to 21):** Sonnet for work with a known starting point: a bug with a known symptom, a class whose handlers are already named, a move shaped like a ported one, and the emulator servant. Opus for open-ended reverse engineering: the driving class or system is unknown, or behaviour is spread over many virtual functions. Haiku only for mechanical edits without reverse engineering. A Sonnet worker stuck on code reading is reported to the user with a proposal to switch to Opus, not left to grind.
+- **Every brief names:** CLAUDE.md, the Graphify queries to start from (the report lists the queries run; skipping Graphify is a review finding), stand-in labelling (gates and conditions the agent chose are stand-ins too), the reserved ID ranges, the emulator `--port` / `--home` and `--renderer opengl` (the software renderer crashes in the sandbox), and, when parallel workers touch the same function, a separate glue file each.
+- **Review checks beyond the tests:** unlabelled stand-ins; a test that reaches the point under test by teleport or `--call-script` while the user plays the real path: the lead runs the real path once from the user's save before reporting a blocker fixed.
+- **Emulator servant:** only when two or more workers need `--rpc`; requests go through the lead with an ID (`R<round>-<worker>-<n>`); one scripted try per goal, then a report with what a user state would need; the first load after an emulator start may disagree with later loads (use repeated loads that agree); it ends the round with `pgrep` output.
 - An agent in a git worktree first runs `ln -s <main checkout>/artifacts artifacts` in the worktree root (gitignored); without it real-data tests skip and the README update refuses to run. Every agent brief says so.
 
 Always use current system time (`date -Iseconds`) when putting a time into a file!
