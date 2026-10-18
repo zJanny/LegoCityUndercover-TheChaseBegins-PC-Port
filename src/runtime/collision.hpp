@@ -39,6 +39,7 @@ public:
         std::string owner;              // lower-case instance name of a placed object, empty for level items
         bool collisionDefault = true;   // owner flag 0x200 before any EnableCollision
         bool active = true;             // owner flags allow the query layers to accept the entry (bit 0 clear, 0x200 set)
+        bool floorOnly = false;         // STAND-IN LEVOBJ-S78: the player's ground probe finds the entry but its wall pass does not (leprop_bouncer pads)
     };
     void add(const assets::CollisionItem& item, std::uint32_t mask = kStaticMask) {
         Entry entry;
@@ -52,6 +53,8 @@ public:
     const std::vector<Entry>& entries() const { return entries_; }
     std::vector<Entry>& mutableEntries() { return entries_; }
     std::size_t triangleCount() const;
+    // The lower-case instance of the placed object whose collision item holds `record`; empty for level items and unknown triangles.
+    const std::string& ownerOf(const assets::CollisionTriangle* record) const;
 
     struct Triangle {
         const assets::CollisionTriangle* record;
@@ -137,6 +140,7 @@ struct GroundContact {
     float normal[3] = {0, 1, 0};
     std::uint8_t surface = 0;
     bool triangle = false;
+    const assets::CollisionTriangle* record = nullptr;  // the triangle itself: CollisionWorld::ownerOf names its placed object
 };
 std::optional<GroundContact> groundContact(const CollisionWorld& world, const GroundProbe& probe, const PlayerBox& box = {});
 

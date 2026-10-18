@@ -32,6 +32,8 @@
 #include "runtime/zipline.hpp"
 #include "runtime/brick_grab.hpp"
 #include "runtime/pole.hpp"
+#include "runtime/prop_bouncer.hpp"
+#include "runtime/prop_wobbly_destructible.hpp"
 #include "runtime/player_attack.hpp"
 #include "runtime/camera_lock_icon.hpp"
 #include "runtime/camera_rig.hpp"
@@ -153,6 +155,11 @@ private:
     void loadBoardingVehicles(const std::map<std::string, std::pair<std::size_t, chase::render::Mat4>>& placedInstances);
     void driveVehicles(float dt);
     void smashProps(std::size_t vehicleIndex);
+    void loadDestructibleProps(chase::assets::FuseArchive& archive);
+    bool deliverPropHit(const std::string& lowerInstance, const chase::runtime::WobbleHitMessage& message);
+    void deliverAttackHits();
+    void bounceOnLanding(chase::runtime::Posture before, float fallSpeedBefore);
+    void playPropSound(std::uint16_t id, const std::array<float, 3>& position);
     void poseVehicleWheels(std::size_t vehicle);
     void syncVehicleHud();
     void updateHeadIcon(float dt);
@@ -288,6 +295,9 @@ private:
     };
     std::vector<VehicleDrive> vehicleDrives;
     chase::runtime::VehiclePropSmasher propSmasher;
+    chase::runtime::WobblyProps wobblyProps;
+    chase::runtime::BouncerSet bouncers;
+    chase::runtime::BounceMemory bounceMemory;
     chase::runtime::AttackTap attackTap;
     chase::runtime::PlayerAttack attack;
     chase::runtime::AttackClips attackClips;

@@ -31,6 +31,7 @@ std::optional<GroundContact> probeGround(VerticalState& state, const CollisionWo
     if (!contact) return std::nullopt;
     std::copy(contact->normal, contact->normal + 3, state.groundNormal);
     state.groundSurface = contact->surface;
+    state.groundRecord = contact->record;
     return contact;
 }
 
@@ -169,6 +170,22 @@ LandingAnimations landingAnimations(const assets::Animation& land, const assets:
 namespace {
 VerticalStep verticalUpdateStep(VerticalState& state, const CollisionWorld& world, const VerticalInput& input) {
     VerticalStep step;
+    if (state.posture != Posture::Falling) state.bouncing = state.bounceSettling = false;
+    if (state.bouncing) {
+        if (!(state.fallSpeed > 0)) {
+            state.y -= state.fallSpeed;
+            state.fallSpeed += kBounceRiseStep;
+            return step;
+        }
+        state.bouncing = false;
+        state.bounceSettling = true;
+        gravityStep(state, input.dt);
+        return step;
+    }
+    if (state.bounceSettling) {
+        state.bounceSettling = false;
+        return step;
+    }
     if (state.posture == Posture::Sliding) {
         slideStep(state, world, input, step);
         return step;

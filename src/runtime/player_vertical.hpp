@@ -13,6 +13,9 @@ constexpr float kGravity = 0.05f;                 // *0x3771ac, per update at 30
 constexpr float kGravityRate = 30.0f;             // literal at 0x18f5a0
 constexpr float kTerminalFallSpeed = 0.8f;        // *0x3771b0 through 0x2b75d0, per update
 constexpr float kHardLandingDistance = 12.0f;     // *0x374360, compared with ctrl+0x2b4
+// States 25 and 26 (bounce take-off and rise): every update the node rises by the speed and the speed grows by this step, not scaled by dt (oracle, state
+// m12-trampoline-built, dt 0.033 and 0.07, docs/re/props-wobbly-bouncer.md); the first update with a positive speed is an ordinary falling update and the next one does not move the node.
+constexpr float kBounceRiseStep = 0.05f;
 
 // States 6 (soft landing) and 7 (hard landing) end when the animation they started has played to its last frame: the
 // update functions 0x1d55cc and 0x2a47b0 ask 0x22f560, which asks 0x24cbd4, which tests
@@ -87,6 +90,9 @@ struct VerticalState {
     float jumpElapsed = 0;
     float jumpBase = 0;
     float slide[3] = {0, 0, 0};         // ext+0x5c: the slide vector of the last state-8 update
+    const assets::CollisionTriangle* groundRecord = nullptr;  // the triangle of the last ground probe that found a floor
+    bool bouncing = false;              // states 25 and 26 (docs/re/props-wobbly-bouncer.md): posture Falling, risen by the bounce speed
+    bool bounceSettling = false;        // the update after the last rise update (state 5 entered): the node does not move
     bool slideFall = false;             // state 5 entered from state 8
     std::uint32_t slideFallTicks = 0;   // clock ticks since that state 5 began
     bool steeringLocked() const { return posture == Posture::Falling && slideFall && slideFallTicks <= kSlideFallLockTicks; }

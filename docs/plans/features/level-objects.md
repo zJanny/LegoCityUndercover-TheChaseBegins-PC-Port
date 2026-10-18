@@ -6,7 +6,7 @@ The objects a level places: how the class file supplies model and parameters, wh
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-14T15:05:41+02:00. Objects are drawn standing at their level state; characters stand in place; nothing moves or reacts.
+IN_PROGRESS, updated 2026-10-18T20:26:36+02:00. Objects are drawn standing at their level state; characters stand in place; nothing else moves. The wobbly destructible props take hits from any sender (the punch of Chase, health, bricks, destroy, `TriggerObject`) and the trampolines bounce Chase (LEVOBJ-86 closed, gaps LEVOBJ-87..92).
 
 ## 3. Verified behaviour
 
@@ -20,6 +20,10 @@ IN_PROGRESS, updated 2026-10-14T15:05:41+02:00. Objects are drawn standing at th
 - LEVOBJ-S4 The random generator of the idle choice uses a fixed seed; the original seeds from the clock (0x105d8c). evidence: [npc-animation.md §2026-10-15T09:29](../../re/npc-animation.md#ts-20261015-092900).
 - LEVOBJ-S2 Everything else with a model is drawn standing still at its placement; props are hidden while the start state disables them (EnableObject, build-it targets), but characters, sub-objects and per-class start visibility (`ShowOnObjectScan`, `ShowOnMap`) are not applied (LEVOBJ-12, LEVOBJ-13).
 - LEVOBJ-S3 `props/map_*` markers (mission waypoints, `Prop_Waypoint_*`) are filtered out by an observation-based class-name rule (five lie within 12 units of the player at the gameplay start and none appears in the oracle reference).
+- LEVOBJ-S77 The hit of a sender other than the player is never dropped as "already wobbling" (0x1c54ac) and a wobbling prop shows no wobble: the spring table is not ported. needs: LEVOBJ-87. evidence: [props-wobbly-bouncer.md §2026-10-18T20:25:42](../../re/props-wobbly-bouncer.md#ts-20261018-202542).
+- LEVOBJ-S78 The collision of a bouncer is floor-only for the player (`CollisionWorld::Entry::floorOnly`: the ground probe finds it, the wall pass skips it), so Chase walks over the pad as in the oracle; the original's reason is not recovered. needs: LEVOBJ-90. evidence: [props-wobbly-bouncer.md §2026-10-18T20:25:42](../../re/props-wobbly-bouncer.md#ts-20261018-202542).
+- LEVOBJ-S79 The bounce plays only the motion: no `bounce_up` clip, no bouncer animation, no pitch from `FrequencyRange`, no particle; `ATTR_SFX` plays at the player's position at the take-off. needs: LEVOBJ-89. evidence: [props-wobbly-bouncer.md §2026-10-18T20:25:42](../../re/props-wobbly-bouncer.md#ts-20261018-202542).
+- LEVOBJ-S80 The take-off memory (ctrl+0x2dc) is cleared when the player lands on a floor that is not a bouncer, and a landing from a jump passes fall speed 0 to the first-bounce formula. needs: LEVOBJ-92. evidence: [props-wobbly-bouncer.md §2026-10-18T20:25:42](../../re/props-wobbly-bouncer.md#ts-20261018-202542).
 
 ## 5. Open items
 
@@ -33,10 +37,16 @@ IN_PROGRESS, updated 2026-10-14T15:05:41+02:00. Objects are drawn standing at th
 
 - [ ] LEVOBJ-12 — Disabled characters and the sub-objects of disabled objects are still drawn (only placed props follow the disabled state). evidence: [objects.md §2026-10-14T15:05](../../re/objects.md#ts-20261014-150541).
 - [ ] LEVOBJ-13 — Per-class start visibility (`DisabledOnStartUp` of non-stud classes, `ShowOnObjectScan`, `ShowOnMap`) and the effect of flags bit 2 (value 6 in the +0x14 table) are not applied. evidence: [objects.md §2026-10-14T13:39](../../re/objects.md#ts-20261014-133957).
-- [ ] LEVOBJ-86 — The destroy on foot of `leprop_wobblydestructible` and the trampoline class `leprop_bouncer` (`Trampoline_03`) are not ported. needs: PLAYER-12. evidence: [scripts-missions.md §2026-10-18T15:27:22](../../re/scripts-missions.md#ts-20261018-152722).
+- [ ] LEVOBJ-87 — The wobble of a hit that leaves health: the spring entry (0x16b958, 0x2f5af8, table 0x593440), what frees its slot and so the "already wobbling" drop of other senders (0x1c54ac), and the node motion it drives. blocks: LEVOBJ-S77. evidence: [props-wobbly-bouncer.md §2026-10-18T20:25:42](../../re/props-wobbly-bouncer.md#ts-20261018-202542).
+- [ ] LEVOBJ-88 — The studs of a wobbling hit (`WobbleStudValue`, 0x2bc370 -> 0x23a6b0) are not spawned; the bricks of the hit are. needs: STUD-11. evidence: [props-wobbly-bouncer.md §2026-10-18T20:25:42](../../re/props-wobbly-bouncer.md#ts-20261018-202542).
+- [ ] LEVOBJ-89 — The bounce states 25 "Bounce Take Off" and 26 "Bounce Up" beyond the motion: the clip `bounce_up`, the done and fail events (more than 300 ticks after the enter; bouncer disabled), the update 0x2f5134 of state 26 (B, ctrl+0x317 bit 3), trick bounces (`TrickBounce`, speed above 0.65), the sound pitch from `FrequencyRange`, the particle. blocks: LEVOBJ-S79. evidence: [props-wobbly-bouncer.md §2026-10-18T20:25:42](../../re/props-wobbly-bouncer.md#ts-20261018-202542).
+- [ ] LEVOBJ-90 — The bouncer object itself: its `bounce` animation on a landing, the `hit` animation and `ATTR_SFXHit` of its message 0, `AutoBounce`, and the rule that lets the original's ground query find the pad while its wall pass does not. blocks: LEVOBJ-S78. evidence: [props-wobbly-bouncer.md §2026-10-18T20:25:42](../../re/props-wobbly-bouncer.md#ts-20261018-202542).
+- [ ] LEVOBJ-91 — The rest of the wobbly destroy: the `WobbleFallApartAnim` branch (0x2a34b8), the second Dead event for the room object (0x23ce08), `Respawn`, and the entity box of a prop with `MeshCollision` (the effects use the model bounds). evidence: [props-wobbly-bouncer.md §2026-10-18T20:25:42](../../re/props-wobbly-bouncer.md#ts-20261018-202542).
+- [ ] LEVOBJ-92 — When ctrl+0x2dc (the last take-off speed) is cleared after leaving a pad, and the ctrl+0x2b8 a landing from a jump passes to the first-bounce formula (the jump has no fall speed in the port). blocks: LEVOBJ-S80. evidence: [props-wobbly-bouncer.md §2026-10-18T20:25:42](../../re/props-wobbly-bouncer.md#ts-20261018-202542).
 
 ## 6. Findings summary
 
+- Wobbly props (hit message, health, destroy chain, the table's script to the trampoline build-it) and bouncers (message 15, take-off speed, flight): [props-wobbly-bouncer.md §2026-10-18T20:25:42](../../re/props-wobbly-bouncer.md#ts-20261018-202542).
 - Hidden props (EnableObject, flag bit 0, node hidden) and the police entrance disc: [objects.md §2026-10-14T15:05](../../re/objects.md#ts-20261014-150541).
 - Object census, parameter slots, class files (+0x10/+0x14) and the model lookup: [objects.md §2026-10-13T15:39](../../re/objects.md#ts-20261013-153915).
 - Characters: body, head, textures, starting pose, custom characters, animation class: [objects.md §2026-10-13T16:34](../../re/objects.md#ts-20261013-163430).
@@ -47,4 +57,5 @@ IN_PROGRESS, updated 2026-10-14T15:05:41+02:00. Objects are drawn standing at th
 
 - `objectPlacements`, `drawableObjects` (`DrawableObjects::characters`), `LevelParam::flags`, `Level::classParams` in `src/assets/level.cpp`; rig code `src/render/character.*`; `chase-game`, `chase-viewer`.
 - `drawnPlacements` in `src/runtime/object_visibility.*`, `Scene::setInstanceVisible`.
-- CTest: `assets-core`, `assets-real-data`, `game-real-smoke`, `viewer-real-smoke`, `runtime-core`, `level-start-real-data`, `police-entrance-shot` + `police-entrance-no-disc`.
+- `src/runtime/prop_wobbly_destructible.*`, `src/runtime/prop_bouncer.*`, the bounce flight in `src/runtime/player_vertical.cpp`, glue `src/game_props_destructible.cpp`.
+- CTest: `prop-wobbly`, `prop-wobbly-real-data`, `prop-bouncer`, `prop-bouncer-real-data`, `game-script-wobbly-table`, `game-script-bounce`, `assets-core`, `assets-real-data`, `game-real-smoke`, `viewer-real-smoke`, `runtime-core`, `level-start-real-data`, `police-entrance-shot` + `police-entrance-no-disc`.

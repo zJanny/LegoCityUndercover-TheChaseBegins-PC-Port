@@ -88,6 +88,15 @@ std::size_t CollisionWorld::triangleCount() const {
     return count;
 }
 
+const std::string& CollisionWorld::ownerOf(const assets::CollisionTriangle* record) const {
+    static const std::string none;
+    for (const Entry& entry : entries_) {
+        const std::vector<assets::CollisionTriangle>& triangles = entry.item.triangles;
+        if (!triangles.empty() && record >= triangles.data() && record < triangles.data() + triangles.size()) return entry.owner;
+    }
+    return none;
+}
+
 namespace {
 void transformPoint(const assets::Matrix& m, const float in[3], float out[3]) {
     for (int a = 0; a < 3; ++a) out[a] = in[0] * m[std::size_t(a)] + in[1] * m[4 + std::size_t(a)] + in[2] * m[8 + std::size_t(a)] + m[12 + std::size_t(a)];
@@ -265,6 +274,7 @@ std::optional<GroundContact> groundContact(const CollisionWorld& world, const Gr
         std::copy(chosen.record->normal, chosen.record->normal + 3, contact.normal);
         contact.surface = chosen.record->surface;
         contact.triangle = true;
+        contact.record = chosen.record;
     }
     return contact;
 }
@@ -296,7 +306,7 @@ WallPass wallPass(const CollisionWorld& world, const PlayerBox& box, const float
     const float high[3] = {centre[0] + reach[0], centre[1] + reach[1], centre[2] + reach[2]};
     const float requested[3] = {movement[0], movement[1], movement[2]};
     WallPass pass;
-    world.query(low, high, kPlayerLayer, [&](const Triangle& t) {
+    world.queryExcept(low, high, kPlayerLayer, [](const CollisionWorld::Entry& entry) { return entry.floorOnly; }, [&](const Triangle& t) {
         const float* normal = t.record->normal;
         if (normal[1] > kFloorNormalMin) return;
         if (t.record->surface < 32 && ((excluded >> t.record->surface) & 1)) return;

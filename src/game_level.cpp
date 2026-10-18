@@ -265,6 +265,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     const std::vector<ObjectCollision> placedCollisions = objectCollisionCandidates(archive, level);
     collision = loadCollision(archive, options.level, placedCollisions, vehicleBoxes);
     propSmasher.load(level, classOf, placedCollisions);
+    loadDestructibleProps(archive);
     loadAttack(archive, placedCollisions);
     runtime::applyObjectCollisionState(collision, objectState);
     doors = game_doors::loadDoors(scene, archive, level, classOf, placedCollisions, placedInstances);
