@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 714 open items and stand-ins, 153 linked to game usage, 561 with unknown reach.
+Items: 717 open items and stand-ins, 152 linked to game usage, 565 with unknown reach.
 
 ## Top 50 overall
 
@@ -57,7 +57,7 @@ Items: 714 open items and stand-ins, 153 linked to game usage, 561 with unknown 
 | 21 | [SCRIPT-74](features/script-system-hud-natives.md?display=source#L31) | 538 | 0 | 7 | 1 | 1 stand-in | `setactivewaypoint` | SetActiveWayPoint 0x26e168 skips a disable when bit 4 of component +0x8e is clear (meaning unknown), and its ... |
 | 22 | [SCRIPT-S98](features/script-system-natives.md?display=source#L24) | 537 | 0 | 8 | 0 | 1 stand-in, 1 implemented | `positionobject`, `positionplayer` | PositionObject / PositionPlayer clear only the fall floats of the controller; `comp[0x315]` bits and message ... |
 | 23 | [SCRIPT-274](features/script-system-natives-animation.md?display=source#L32) | 497 | 0 | 8 | 2 | 3 stand-in | `loadanimation`, `playanimation`, `unloadanimation` | LoadAnimation and UnloadAnimation keep a name list only (0x23e6e4 / 0x23e518 load and release are not ported) ... |
-| 24 | [LEVOBJ-100](features/level-objects.md?display=source#L49) | 495 | 0 | 8 | 0 | 1 implemented | `positionobject` | The released dog: `PositionObject 1-2_Dog 1-2_Dog_Position_End` is applied (SCRIPT-288); cutscene `1_2_c` ... |
+| 24 | [LEVOBJ-100](features/level-objects.md?display=source#L52) | 495 | 0 | 8 | 0 | 1 implemented | `positionobject` | The released dog: `PositionObject 1-2_Dog 1-2_Dog_Position_End` is applied (SCRIPT-288); cutscene `1_2_c` ... |
 | 25 | [SCRIPT-S255](features/script-system-missions.md?display=source#L26) | 495 | 0 | 8 | 0 | 1 implemented | `positionobject` | `PositionObject` of a prop moves its collision entries but no physics body (none found) |
 | 26 | [SCRIPT-S4](features/script-system.md?display=source#L25) | 484 | 0 | 8 | 0 | 1 stand-in, 1 implemented | `dcamcutscenewait`, `waitfordcam` | A function without a handler does nothing and continues at once; `chase-game` prints its name the first time ... |
 | 27 | [HUD-S9](features/hud-ui.md?display=source#L37) | 442 | 0 | 7 | 0 | 1 stand-in | `showdialogbg` | The dialogue background is drawn at full opacity as long as ShowDialogBG is on (no fade) |
@@ -104,20 +104,20 @@ Items: 714 open items and stand-ins, 153 linked to game usage, 561 with unknown 
 
 ## Level objects
 
-14 of 92 items linked.
+13 of 95 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
-| 1 | [LEVOBJ-100](features/level-objects.md?display=source#L49) | 495 | 0 | 8 | 0 | 1 implemented | `positionobject` | The released dog: `PositionObject 1-2_Dog 1-2_Dog_Position_End` is applied (SCRIPT-288); cutscene `1_2_c` ... |
+| 1 | [LEVOBJ-100](features/level-objects.md?display=source#L52) | 495 | 0 | 8 | 0 | 1 implemented | `positionobject` | The released dog: `PositionObject 1-2_Dog 1-2_Dog_Position_End` is applied (SCRIPT-288); cutscene `1_2_c` ... |
 | 2 | [PART-3](features/particles.md?display=source#L28) | 0 | 281 | 8 | 0 | - | `particles` | The level object class `particles` (constructor 0x1a7f30, handlers 0x1a8394 and 0x1a7d30: `ParticleDef` ... |
 | 3 | [LEVOBJ-S1](features/level-objects.md?display=source#L21) | 0 | 120 | 8 | 0 | - | `chars/char_ai_actor` | Characters other than pedestrians run the idle state of `char_ai_actor` (verified for `char_ai_actor` ... |
 | 4 | [STUD-4](features/studs.md?display=source#L28) | 109 | 0 | 7 | 0 | 1 stand-in, 1 none | `enablestudsbygroup`, `spawnstuds` | How a group is enabled (0x28a2cc sequencer, `EnableStudsByGroup` and `SpawnStuds` script functions ... |
 | 5 | [STUD-9](features/studs.md?display=source#L29) | 73 | 0 | 7 | 2 | 1 stand-in | `enablestudsbygroup` | `EnableStudsByGroup(group, value)` only records the request (the sequencer entry 0x58f710 and its per-frame ... |
 | 6 | [LEVOBJ-32](features/level-objects-carry.md?display=source#L33) | 57 | 0 | 3 | 0 | 1 none | `spawndebris` | Effects of the carry system not played: sounds (`carryit_pickup_big_01`, `carryit_putdown_big_01` ... |
-| 7 | [LEVOBJ-7](features/level-objects.md?display=source#L41) | 0 | 51 | 7 | 0 | - | `chars/ride_pig`, `props/prop_sharkattack` | Classes without a recovered create are not created (shared with COLL-2): among the animals `chars/ride_pig` ... |
-| 8 | [LEVOBJ-4](features/level-objects.md?display=source#L38) | 0 | 37 | 7 | 0 | - | `chars/ride_pig` | The 8 custom lineup characters (`CharacterEnum` 1..8 through 0x2372e0) and the ride_pig and shark rigs ... |
-| 9 | [LEVOBJ-99](features/level-objects.md?display=source#L47) | 0 | 28 | 7 | 0 | - | `props/ability_freeplay_fireman_cat` | The fireman cats stand still: what the cat rescue use spot (kind 124, create 0x1829ac, update 0x182b38 -> ... |
-| 10 | [STUD-10](features/studs.md?display=source#L30) | 21 | 0 | 6 | 0 | 1 stand-in | `addstuds` | `AddStuds` adds to the counter (`StudField::addToCounter`) but not the timestamp +0x44 and the HUD hook ... |
+| 7 | [LEVOBJ-7](features/level-objects.md?display=source#L43) | 0 | 51 | 7 | 0 | - | `chars/ride_pig`, `props/prop_sharkattack` | Classes without a recovered create are not created (shared with COLL-2): among the animals `chars/ride_pig` ... |
+| 8 | [LEVOBJ-4](features/level-objects.md?display=source#L40) | 0 | 37 | 7 | 0 | - | `chars/ride_pig` | The 8 custom lineup characters (`CharacterEnum` 1..8 through 0x2372e0) and the ride_pig and shark rigs ... |
+| 9 | [STUD-10](features/studs.md?display=source#L30) | 21 | 0 | 6 | 0 | 1 stand-in | `addstuds` | `AddStuds` adds to the counter (`StudField::addToCounter`) but not the timestamp +0x44 and the HUD hook ... |
+| 10 | [DOOR-1](features/doors.md?display=source#L28) | 16 | 0 | 7 | 0 | 1 implemented | `warningdialogbox` | Some doors in lvl_01 open only when a game script asks; `Police_ExtToInt` stops at `WarningDialogBox`, which ... |
 
 ## Vehicles
 
@@ -220,7 +220,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [input.md](features/input.md): INPUT-1, INPUT-2, INPUT-3, INPUT-S1
 - [level-objects-buildit.md](features/level-objects-buildit.md): LEVOBJ-71 (+1), LEVOBJ-79 (+1), LEVOBJ-42, LEVOBJ-43, LEVOBJ-61, LEVOBJ-70, LEVOBJ-76, LEVOBJ-77, LEVOBJ-85, LEVOBJ-94, LEVOBJ-S41, LEVOBJ-S70, LEVOBJ-S71, LEVOBJ-S74, LEVOBJ-S76
 - [level-objects-carry.md](features/level-objects-carry.md): LEVOBJ-75 (+1), LEVOBJ-30, LEVOBJ-31, LEVOBJ-34, LEVOBJ-S31, LEVOBJ-S33, LEVOBJ-S34, LEVOBJ-S73, LEVOBJ-S75
-- [level-objects.md](features/level-objects.md): LEVOBJ-8 (+2), LEVOBJ-101 (+1), LEVOBJ-105 (+1), LEVOBJ-87 (+1), LEVOBJ-89 (+1), LEVOBJ-90 (+1), LEVOBJ-92 (+1), LEVOBJ-96 (+1), LEVOBJ-102, LEVOBJ-104, LEVOBJ-3, LEVOBJ-5, LEVOBJ-6, LEVOBJ-88, LEVOBJ-91, LEVOBJ-97, LEVOBJ-S2, LEVOBJ-S3, LEVOBJ-S4, LEVOBJ-S77, LEVOBJ-S79, LEVOBJ-S80, LEVOBJ-S81, LEVOBJ-S82, LEVOBJ-S83, LEVOBJ-S84, LEVOBJ-S85
+- [level-objects.md](features/level-objects.md): LEVOBJ-8 (+2), LEVOBJ-101 (+1), LEVOBJ-105 (+1), LEVOBJ-108 (+1), LEVOBJ-87 (+1), LEVOBJ-89 (+1), LEVOBJ-90 (+1), LEVOBJ-92 (+1), LEVOBJ-96 (+1), LEVOBJ-102, LEVOBJ-104, LEVOBJ-109, LEVOBJ-3, LEVOBJ-5, LEVOBJ-6, LEVOBJ-88, LEVOBJ-91, LEVOBJ-97, LEVOBJ-S2, LEVOBJ-S3, LEVOBJ-S4, LEVOBJ-S77, LEVOBJ-S79, LEVOBJ-S80, LEVOBJ-S81, LEVOBJ-S82, LEVOBJ-S83, LEVOBJ-S84, LEVOBJ-S85, LEVOBJ-S88, LEVOBJ-S89
 - [level-transitions.md](features/level-transitions.md): TRANS-3 (+3), TRANS-13 (+2), TRANS-8 (+2), TRANS-10 (+1), TRANS-11 (+1), TRANS-12 (+1), TRANS-14 (+1), TRANS-S1, TRANS-S3, TRANS-S4, TRANS-S5
 - [movies-cutscenes.md](features/movies-cutscenes.md): MOVIE-22 (+1), MOVIE-24 (+1), MOVIE-36 (+1), MOVIE-37 (+1), MOVIE-S33 (+1), MOVIE-1, MOVIE-12, MOVIE-20, MOVIE-21, MOVIE-3, MOVIE-33, MOVIE-35, MOVIE-4, MOVIE-S1, MOVIE-S10, MOVIE-S11, MOVIE-S2, MOVIE-S21, MOVIE-S3, MOVIE-S30, MOVIE-S31, MOVIE-S32, MOVIE-S34
 - [particles.md](features/particles.md): PART-4 (+1), PART-6 (+1), PART-5, PART-7, PART-S1, PART-S2, PART-S3, PART-S4

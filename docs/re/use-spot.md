@@ -9,6 +9,7 @@ A zone object that fires one `TriggerObject` when the player presses the action 
 - A use marker (the spinning `useGeneric` disc, 2 m across, 0.1 above the ground) shows at each usable zone of 36 entity kinds within 25 m of the camera or player, fading in and out over 0.15 s; ported for use spots. [§2026-10-19T09:25:34](#ts-20261019-092534)
 - After the release the original goes black (FadeScreen 0) and the cutscene mode of `1_2_c` fades the screen in again; `chase-game` now does the same and continues to `1-2_MissionEnd` and `1-3_MissionStart`. [§2026-10-19T09:12:53](#ts-20261019-091253)
 - `1-2_Door_Lock_Hint_Script` (the scriptobject) is referenced by no object and no script call; the hint dialogue runs from the bound `1-2_Door_Lock_Hint` (BoundEntered), which the port already delivers. [§2026-10-18T14:28:33+02:00](#ts-20261018-142833)
+- The cat rescue spot (kind 124, 4 in lvl_01) keeps its cat sitting: state 1 plays `idle_sat` in a loop; states 4, 6, 7 (`rescuecat_jump`, `rescuecat_jump_idle`, `rescuecat_rescue`) and 8 (cat and spot disabled) follow requests written by the player's rescue code, which needs the fireman ability 30 and is not ported. [§2026-10-19T12:58:16+02:00](#ts-20261019-125816)
 - No name source for the scriptobject exists besides the level's own trigger records, the detective spot next to it has no `TriggerObject`, and a trap from `m12-7` saw no object trigger; code that finds the entity without a name is not excluded. [scripts-missions.md §2026-10-18T19:58:54](scripts-missions.md#ts-20261018-195854)
 
 <a id="ts-20261018-142833"></a>
@@ -70,3 +71,35 @@ Unknowns:
 Unknowns:
 - The fader manager that counts the hold down; the multiplier of the clock 0x241098; the render state that 0x1b29f0 passes to 0x25511c; the test 0x2397a0 of the list builder and the rebuild trigger *0x376c78; what 0x23de70 reports.
 - The kinds other than 165 (carry objects, build-its, detective spots and the rest of the list) and the `HeadMarker` path.
+
+<a id="ts-20261019-125816"></a>
+
+## 2026-10-19T12:58:16+02:00 — The cat rescue use spot: resting clip and state machine (REA Ghidra 12.1.2 pseudo-code of 0x16d6a8, 0x1829ac, 0x176e04, 0x182a5c, 0x182b38, 0x1c6aa8, 0x18e1b8, 0x23afc0, 0x23e6e4; level data through the C++ loader; no emulator)
+
+Closes the first part of the question left in [objects.md §2026-10-19T09:59:14](objects.md#ts-20261019-095914).
+
+**Descriptor 0x16d6a8** (kind 124, class `props/ability_freeplay_fireman_cat_usespot`, 28 objects in all levels, 4 in lvl_01: `FP_Task_FIREMAN_CTH_01..04_UseSpot` in rooms 7, 10, 16, 26): create 0x1829ac, parameter reader 0x176e04, post-link 0x182a5c, update 0x182b38, message handler 0x18e1b8, component size 0x7c.
+
+**Create 0x1829ac.** Entity of 0x88 bytes, `catrescue` string object at +0x3c, flags byte +0x18 = 2, record of 0x70 bytes at +0x7c with the state word +4 = 1 (requested state) and +2 not written (current state, taken as 0 from the zeroed allocation 0x25c030, not checked); registers a use zone (0x23e130, record +0xc) and stores 0x3f266666 (0.65) at record +0x64 (unread).
+
+**Record.** +2 current state, +4 requested state, +0x10 flags (bit 4 cleared by state 8), +0x18 `TriggerObject` (0x176e04), +0x1c `Cat` (the second parameter read by 0x176e04; its name is the string "Cat" at 0x176e50, type 4 object reference), +0x20 the instigator object (set by the message handler), +0x24 / +0x28 / +0x2c / +0x30 the clips, +0x40 / +0x4c start and target points, +0x58 launch velocity, +0x6c state timer.
+
+**Post-link 0x182a5c (indirect call, no direct caller).** When the `Cat` link resolved it loads four clips on the cat with 0x23e6e4(cat, name, 0, 0, 0, 1), which builds `models/<cat model folder>/<name>`: +0x24 `idle_sat`, +0x28 `rescuecat_jump`, +0x2c `rescuecat_jump_idle`, +0x30 `rescuecat_rescue`. All four exist as `models/char_cat/*.bfnanm` in the archive, and the four cats of lvl_01 (`FP_Task_FIREMAN_CTH_01..04`, class `props/ability_freeplay_fireman_cat`, `char_cat`) are the `Cat` targets.
+
+**Update 0x182b38.** The generic object update 0x2424d0, then the state change 0x1c6aa8.
+
+**State change 0x1c6aa8.** Equal states: the timer +0x6c grows by the frame time (0x23602c). Otherwise, by the requested state:
+- 1: `idle_sat` on the cat with 0x23afc0(1.0, 0, cat, clip, 1, 0), i.e. 0x245b40 with blend 0, mode 1 (loop), speed 1.0, when the clip exists. This is the clip the cat plays at rest, from the first update of the spot on (the state starts at 0).
+- 4: start point = the cat node translation, end point = the instigator's node translation plus 0.5 x its row 2 and 1.5 x its row 1 (0x2408c4 read as a scaled add, not checked); the launch velocity at +0x58 is (end - start) / T with T = 5 x |end - start|, its y component (dy + g/2 T^2) / T with g the float at 0x374290 (zero in the file: set at run time); then `rescuecat_jump` once (mode 0).
+- 6: `rescuecat_jump_idle` looping.
+- 7: `rescuecat_rescue` once, then 0x24c118(cat node, instigator node): the cat is hung on the instigator's node.
+- 8: clears bit 4 of the flags and disables the cat and the spot (0x2428c0).
+Every change then stores the requested state as current and zeroes the timer. The update itself never moves the cat along the launch arc; whatever applies +0x58 is outside this class.
+
+**Message handler 0x18e1b8.** Message 3 (the action press, as for the other use spots): only in state 1; it needs the ability test 0x23a87c(character byte, 0x1e) (ability 30; a character without it gets code 0xff); with the pressed flag it sends message 0x1a6 from the spot to the instigator (0x2366bc), writes the angle toward the cat into the instigator's record (+0x296 = atan2 x 10430.378 from the instigator's +0x280 point and the cat node) and stores the instigator at +0x20; returns 1. Message 0x58: when 0x225cfc() is nonzero and 0x225ca8(*0x51640e) is zero, the cat and the spot are disabled. Who writes the requested state 4, 6, 7 and 8 was not found: the handler does not; the player's rescue state (reacting to message 0x1a6) is the likely writer.
+
+**Port.** `src/runtime/cat_rescue.{hpp,cpp}` (`CatRescueSet`: `Cat` link, states 0/1/4/6/7/8, clip choice, timer, disabled list; `request` stands for the writer of record +4); glue in `src/game_level.cpp` (cats become skinned props) and `src/game_animals.cpp` (the clip starts go to `PropAnimations`). Test: CTest `cat-rescue-real-data` (four spots, links, clips in the archive, the state to clip table, the sitting cat's pose changes).
+
+Unknowns:
+- Who writes the requested state (4, 6, 7, 8) and applies the launch velocity; the fireman ability (30) and the player's reaction to message 0x1a6 are not in the port.
+- Whether the idle clip starts only when the cat's room is loaded (the port starts it at level start); the unread bytes at record +0x64 and the message 0x58 condition (0x225cfc, 0x225ca8).

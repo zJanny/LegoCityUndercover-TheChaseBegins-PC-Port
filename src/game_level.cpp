@@ -127,7 +127,9 @@ LevelSession::LevelSession(const Shared& sharedState)
     FuseArchive& archive = shared.archive;
     std::size_t placed = 0, unresolved = 0;
     std::map<std::string, std::pair<std::size_t, Mat4>> placedInstances;
-    const std::set<std::string> animationTargets = runtime::animationTargets(level);
+    std::set<std::string> animationTargets = runtime::animationTargets(level);
+    catRescue.load(level, classOf);
+    for (const std::string& cat : catRescue.cats()) animationTargets.insert(cat);
     std::vector<runtime::AnimatedProp> animatedProps;
     if (const auto sea = chase::assets::objectStart(level, "Sea")) seaHeight = sea->position[1];
     for (const auto& placement : drawable.objects) {

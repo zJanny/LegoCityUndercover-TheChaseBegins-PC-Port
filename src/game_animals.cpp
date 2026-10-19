@@ -4,6 +4,7 @@ namespace game_level {
 namespace runtime = chase::runtime;
 
 void LevelSession::updatePropAnimations(float dt) {
+    for (const runtime::AnimationPlay& start : catRescue.update(dt)) propAnimations.play(start);
     propAnimations.update(dt);
     for (const runtime::PropPose& pose : propAnimations.poses()) {
         scene.pose(pose.key, pose.skin);

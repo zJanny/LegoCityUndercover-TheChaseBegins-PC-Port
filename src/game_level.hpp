@@ -50,6 +50,7 @@
 #include "runtime/debug_metrics.hpp"
 #include "runtime/detective.hpp"
 #include "runtime/use_marker.hpp"
+#include "runtime/cat_rescue.hpp"
 #include "runtime/use_spot.hpp"
 #include "runtime/level_start.hpp"
 #include "runtime/pad.hpp"
@@ -368,6 +369,7 @@ private:
     std::optional<game_characters::LevelCharacters> levelCharacters;
     chase::runtime::PropAnimations propAnimations;
     chase::runtime::PlayerScriptAnimation playerScriptAnimation;
+    chase::runtime::CatRescueSet catRescue;
     chase::runtime::AnimationDriverChain animationDrivers;
     std::optional<game_cutscene::InEngine> cutsceneHost;
     std::optional<game_cutscene::Movies> movies;
