@@ -49,5 +49,5 @@ IN_PROGRESS, updated 2026-10-19T17:50:50+02:00. Detective spot (type 182), revea
 
 ## 7. Code and tests
 
-- `src/runtime/detective.{hpp,cpp}` (classes, footprints with orientation and ground, player states), `src/game_detective.cpp` (LevelSession glue, footprint drawing), `src/game_detective_glass.{hpp,cpp}` (the glass), `src/runtime/hand_item.{hpp,cpp}` (hand item track, `Animation::subAnimationTargets`), RevealSwitch link in `src/runtime/level_start.cpp`, detective walk in `player_locomotion`.
+- `src/runtime/detective.{hpp,cpp}` (classes, footprints with orientation and ground, player states), `src/game_detective.cpp` (LevelSession glue, footprint drawing), `src/game_hand_items.{hpp,cpp}` (the glass and the scanner device), `src/runtime/hand_item.{hpp,cpp}` (hand item track, `Animation::subAnimationTargets`), RevealSwitch link in `src/runtime/level_start.cpp`, detective walk in `player_locomotion`.
 - Tests `hand-item`, `hand-item-real-data`, `detective`, `detective-real-data`, `game-detective-1-2`, `game-doorlock-detective-1-2` (slow), `level-start-real-data`; the idle fix is in `src/runtime/npc_idle.*` (`npc-idle`).

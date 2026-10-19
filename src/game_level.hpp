@@ -11,7 +11,7 @@
 #include "game_audio.hpp"
 #include "game_characters.hpp"
 #include "game_cutscene.hpp"
-#include "game_detective_glass.hpp"
+#include "game_hand_items.hpp"
 #include "game_doors.hpp"
 #include "game_effects.hpp"
 #include "game_stud_drops.hpp"
@@ -301,7 +301,7 @@ private:
     std::optional<chase::runtime::DetectiveRoles> detectiveRoles;
     std::vector<std::size_t> footprintInstances;
     std::array<chase::assets::Matrix, 2> footprintNodeMatrices;
-    game_detective_glass::Glass detectiveGlass;
+    game_hand_items::HandItems handItems;
     std::vector<int> loggedDetectiveStates;
     chase::runtime::Scanner scanner;
     unsigned scannerCallsSeen = 0;

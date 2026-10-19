@@ -4,6 +4,7 @@ The sound scanner of mission 1-2 and later missions: the zone class `props/prop_
 
 ## Current state
 
+- Chase holds the scanner device: the clips `scanner_out` and `scanner_in` of `class_generic` carry the hand item track of the magnifying glass, naming `Ability_Scanner` (model `weap_scannerdevice`) and `weaponRight`; the port draws it through the glass's mechanism. [§2026-10-19T18:21:29](#ts-20261019-182129)
 - Type 201 descriptor 0x1863c8: create 0x19f6d0, parameter reader 0x192008, message handler 0x1aea24 (message 3 = use), no update. The zone's trigger objects sit at component +0x5c..+0x74; `ScannerMode` at +0x4c. [§2026-10-18T11:27:21](#ts-20261018-112721)
 - Enter: A press in `UseBound` -> message 3 -> 0x2249e0(1, zone) -> player event 201 -> state 0x156 "Scanner Enter" (clip `scanner_out`) and the alignment 0x2248c4; when the clip ends state 0x157 "Scanner Active" (0x1bf2d0) starts the spinner transition; `EnterScanTriggerObject` fires 20 updates later (0x2bee98; real-time count, see the last bullet). [§2026-10-18T11:27:21](#ts-20261018-112721)
 - View: camera update 0x26f0b4 (settings block 0x1e06ac: zoom 43..20 at 35 per second with L/R, turn 60 degrees per second, pitch -25..40); `ZoomedInTriggerObject` fires in every update at full zoom (oracle: from frame 49 on). Lock 0x2ef4c8 (1.5 per second, `LockedOnTriggerObject`), scan 0x2ef310 (A held, 0.75 per second, `TriggerScanned` of the target once). [§2026-10-18T11:27:21](#ts-20261018-112721)
@@ -218,3 +219,17 @@ REA (Ghidra 12.1.2) pseudocode of the UI setup FUN_0016785c (0x1be9e4), 0x1bf148
 
 Unknowns:
 - The writers of 0x375e64 (icon textures) and 0x375e6c (tint colour), the name of ability bit 28, and the reader of the zone's `Scanner_PFX` (+0x54); what 0x2c5774()+0xc is (shown while the mode index is 1); the storyboard name at 0x2e9e7c.
+
+<a id="ts-20261019-182129"></a>
+
+## 2026-10-19T18:21:29+02:00 — The scanner device in Chase's hand (hand item track of the scanner clips, parseAnimation scan, chase-game run; no new REA)
+
+Reads the mechanism of [abilities-detective.md §2026-10-18T19:30:00](abilities-detective.md#ts-20261018-193000) (track hash 0xba1e5b53, attach 0x2ca88c, show 0x242cf0 / hide 0x2428c0 in the handler 0x185668); no new function was read.
+
+- `models/char_minifig/class_generic/scanner_out_minifig.bfnanm` (19 frames) and `scanner_in_minifig.bfnanm` (10 frames), the clips of the player roles 0x208 and 0x207, carry the track. Both name the object `Ability_Scanner` and the bone `weaponRight` (`runtime::handItem`).
+- Track values (step sampling as for the glass): `scanner_out` 0 up to 0.3 of the clip, 1 from 0.4 to the end (shown); `scanner_in` 0 at the start, 1 from 0.1 to 0.6, 0 from 0.7 (hidden). So the device appears during the take-out, stays through the whole view and disappears near the end of `scanner_in`.
+- The object `Ability_Scanner` of `levels/players.blvl` has the meshname `Weap_ScannerDevice` (model `models/weap_scannerdevice/weap_scannerdevice.bfnmdl`), a sibling of the glass among the ability items of that file.
+- Port: `game_hand_items::HandItems` (`src/game_hand_items.cpp`, the former glass class) keeps one record per item (object, scene instance, shown flag, bone) and applies each event of the one track detector to the item it names; test `hand-item-real-data` checks the clips, track values and the object. A `chase-game` run on the roof of mission 1-2 (scanner enabled by a local test edit that ignored the zone's disabled state, not committed) shows the device in Chase's right hand during `scanner_out`.
+
+Unknowns:
+- The pose of the device (the bone's bind matrix, as for the glass, DETECT-S8) was not compared with an oracle picture; whether the device is drawn in the scanner view (the first-person camera) was not checked; the previous-value handling at the start of `scanner_in`, whose first sample is 0 while the item is shown.

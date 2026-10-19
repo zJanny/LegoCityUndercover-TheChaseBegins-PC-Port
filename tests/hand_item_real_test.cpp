@@ -2,7 +2,8 @@
 // Provenance: the track hash 0xba1e5b53 and its rise / fall handling from REA pseudo code of 0x185668 (branch at 0x1d5c24); the clip data from
 // `parseAnimation` over models/char_minifig/class_police/detect_*_minifig.bfnanm (sub-animation 0 holds the track, its data block words point at
 // the strings Ability_MagnifyingGlass and weaponRight); the object from levels/players.blvl through `placements` (meshname Ability_MagnifyingGlass),
-// all read 2026-10-18 (docs/re/abilities-detective.md).
+// all read 2026-10-18 (docs/re/abilities-detective.md); the scanner_out / scanner_in clips of class_generic and the Ability_Scanner object read
+// 2026-10-19 the same way (docs/re/abilities-scanner.md).
 #include "assets/assets.hpp"
 #include "runtime/hand_item.hpp"
 #include <filesystem>
@@ -50,6 +51,15 @@ int main(int argc, char** argv) {
         require(runtime::handItemTrackValue(idle, 0.0f) == 1.0f && runtime::handItemTrackValue(idle, 0.99f) == 1.0f, "detect_idle keeps it");
         require(runtime::handItemTrackValue(run, 0.5f) == 1.0f && runtime::handItemTrackValue(run, 1.0f) == 0.0f, "detect_run falls at its last key");
 
+        const auto genericClip = [&](const std::string& name) { return assets::parseAnimation(read("models/char_minifig/class_generic/" + name + "_minifig.bfnanm")); };
+        const assets::Animation scannerOut = genericClip("scanner_out"), scannerIn = genericClip("scanner_in");
+        for (const assets::Animation* clipOfScanner : {&scannerOut, &scannerIn}) {
+            const auto item = runtime::handItem(*clipOfScanner);
+            require(item && item->object == runtime::kScannerObject && item->bone == "weaponRight", "scanner clips hang Ability_Scanner on weaponRight");
+        }
+        require(runtime::handItemTrackValue(scannerOut, 0.3f) == 0.0f && runtime::handItemTrackValue(scannerOut, 0.4f) == 1.0f, "scanner_out shows the scanner from 0.4 of the clip");
+        require(runtime::handItemTrackValue(scannerIn, 0.6f) == 1.0f && runtime::handItemTrackValue(scannerIn, 0.7f) == 0.0f, "scanner_in hides the scanner at 0.7 of the clip");
+
         const assets::Level players = assets::parseLevel(read("levels/players.blvl"));
         bool found = false;
         for (const assets::Placement& placement : assets::placements(players))
@@ -59,6 +69,14 @@ int main(int argc, char** argv) {
                 require(archive.find(assets::meshModelPath(placement.mesh)) != nullptr, "its model is in the archive");
             }
         require(found, "players.blvl has Ability_MagnifyingGlass");
+        bool foundScanner = false;
+        for (const assets::Placement& placement : assets::placements(players))
+            if (placement.instance == runtime::kScannerObject) {
+                foundScanner = true;
+                require(placement.mesh == "Weap_ScannerDevice", "the scanner object's meshname");
+                require(archive.find(assets::meshModelPath(placement.mesh)) != nullptr, "the scanner model is in the archive");
+            }
+        require(foundScanner, "players.blvl has Ability_Scanner");
     } catch (const std::exception& error) {
         std::cerr << "hand-item-real-test: " << error.what() << '\n';
         return 1;

@@ -12,6 +12,7 @@ namespace chase::runtime {
 
 constexpr std::uint32_t kHandItemTrackHash = 0xba1e5b53;
 constexpr const char* kMagnifyingGlassObject = "Ability_MagnifyingGlass";
+constexpr const char* kScannerObject = "Ability_Scanner";
 
 struct HandItem {
     std::string object, bone;

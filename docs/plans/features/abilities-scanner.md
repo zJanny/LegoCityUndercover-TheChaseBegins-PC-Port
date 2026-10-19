@@ -28,6 +28,8 @@ IN_PROGRESS, updated 2026-10-19T14:06:22+02:00. The audio zone (type 201, Scanne
 - SCAN-S9 — Wash passes: every non-sky draw takes the draw-list override 0xd5 (additive draws skipped); which draws the original puts in pass 3 (0x17fc38, 0x95) is not read; the wash follows the shown view, not the mode exit of 0x2befc0. needs: SCAN-1. evidence: [abilities-scanner.md §2026-10-19T14:06:22](../../re/abilities-scanner.md#ts-20261019-140622)
 - SCAN-S8 — Map screen of the scanner view: audio (disabled look) and exit buttons at their final place without the slide-in storyboards; no scanner map circle, arrow icon or touch handling. needs: SCAN-11. evidence: [abilities-scanner.md §2026-10-19T10:01:16](../../re/abilities-scanner.md#ts-20261019-100116)
 
+- SCAN-S10 — The scanner device sits on `weaponRight` with the glass's inferred attach (bone bind matrix times skin matrix, DETECT-S8); its pose was not compared with the original. blocks: SCAN-15. evidence: [abilities-scanner.md §2026-10-19T18:21:29](../../re/abilities-scanner.md#ts-20261019-182129).
+
 ## 5. Open items
 
 - [ ] SCAN-2 — Other type 201 zones: photo (ScannerMode 4 in the class, sub-mode 0 values of 0x2ef814), physical (kind 2), satellite (mode 3, `SatellitePower`), cannon; `EnableScanner 1` without a zone. evidence: [abilities-scanner.md §2026-10-18T11:27:21](../../re/abilities-scanner.md#ts-20261018-112721)
@@ -40,10 +42,11 @@ IN_PROGRESS, updated 2026-10-19T14:06:22+02:00. The audio zone (type 201, Scanne
 - [ ] SCAN-13 — Frame and zoom-meter tint with the colour 0x375e6c when the player character has ability bit 28 (0x23a87c), and the zone's `Scanner_PFX` (+0x54): the colour writer, the ability name and the PFX reader are unread; the port draws white (Chase's police outfit, as in the oracle). needs: SCAN-1. evidence: [abilities-scanner.md §2026-10-19T14:13:26](../../re/abilities-scanner.md#ts-20261019-141326)
 - [ ] SCAN-10 — Sonar segments (six; formula of 0x2e9030 transcribed in [abilities-scanner.md §2026-10-19T14:13:26](../../re/abilities-scanner.md#ts-20261019-141326), not ported) and the delay unit and sort order of the sound markers (SCAN-S7). needs: SCAN-1. blocks: SCAN-S7. evidence: [abilities-scanner.md §2026-10-19T10:01:16](../../re/abilities-scanner.md#ts-20261019-100116)
 - [ ] SCAN-11 — Bottom screen of the scanner view: slide-in of the buttons, map circle and scanner arrow icon, hint box, the tutorial box after the exit, touch handling of the back button (needs touch input). needs: SCAN-1. blocks: SCAN-S8. evidence: [abilities-scanner.md §2026-10-19T10:01:16](../../re/abilities-scanner.md#ts-20261019-100116)
-- [ ] SCAN-14 — Chase holds no model while using the scanner (user playtest); the scanner's hand item is not shown. evidence: [playtests.md §2026-10-19T17:56:41](../../re/playtests.md#ts-20261019-175641).
+- [ ] SCAN-15 — Compare the held scanner device with the oracle (pose, whether it shows in the scanner view, `scanner_in` first sample). needs: SCAN-S10. evidence: [abilities-scanner.md §2026-10-19T18:21:29](../../re/abilities-scanner.md#ts-20261019-182129).
 
 ## 6. Findings summary
 
+- Held scanner device (hand item track of `scanner_out` / `scanner_in`, `Ability_Scanner`): [abilities-scanner.md §2026-10-19T18:21:29](../../re/abilities-scanner.md#ts-20261019-182129).
 - Overlay leftovers (unused storyboards, info boxes, frame tint, sonar formula): [abilities-scanner.md §2026-10-19T14:13:26](../../re/abilities-scanner.md#ts-20261019-141326).
 - Cyan wash (material override 0x530834, no fog, glow arguments), no green dog: [abilities-scanner.md §2026-10-19T14:06:22](../../re/abilities-scanner.md#ts-20261019-140622).
 - Sound markers, map-screen buttons, exit by B: [abilities-scanner.md §2026-10-19T10:01:16](../../re/abilities-scanner.md#ts-20261019-100116).
@@ -51,6 +54,7 @@ IN_PROGRESS, updated 2026-10-19T14:06:22+02:00. The audio zone (type 201, Scanne
 
 ## 7. Code and tests
 
+- `src/game_hand_items.{hpp,cpp}` (the glass and the scanner device on `weaponRight`, shared with [abilities-detective.md](abilities-detective.md)), test `hand-item-real-data`.
 - `src/runtime/scanner_render.{hpp,cpp}` (override values of the audio mode), `assets::materialState(part, MaterialOverride)`, `render::Scene::setMaterialOverride`, glue in `LevelSession::draw`; CTest `scanner-render`.
 - `src/runtime/scanner.{hpp,cpp}` (zone and scannable load, state machine, view, lock, scan, events), `src/game_scanner.cpp` (LevelSession glue: pad, EnableScanner, triggers, sounds, player pose, view override), `SoundPlayer::playing` / `GameAudio::playing`.
 - CTest `scanner` (made-up zone: timings, lock 20 updates, scan, zoom, exit, pitch limits) `scanner-reticle`, `scanner-overlay-data` (layout values and drawing), `scanner-markers` (fade, distance fade, pulse restart; `src/runtime/scanner_markers.*`), `hud-real-data` (scanner buttons on the map screen), and `scanner-real-data` (lvl_01 from the m12-8 position: Enter, Zoomed, Locked, Scanned_Pringles, EnableScanner 0 exit).

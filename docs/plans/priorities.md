@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 764 open items and stand-ins, 165 linked to game usage, 599 with unknown reach.
+Items: 765 open items and stand-ins, 165 linked to game usage, 600 with unknown reach.
 
 ## Top 50 overall
 
@@ -87,7 +87,7 @@ Items: 764 open items and stand-ins, 165 linked to game usage, 599 with unknown 
 
 ## Player and camera
 
-14 of 179 items linked.
+14 of 180 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -99,8 +99,8 @@ Items: 764 open items and stand-ins, 165 linked to game usage, 599 with unknown 
 | 6 | [CAMERA-S51](features/camera.md?display=source#L25) | 145 | 0 | 7 | 0 | 1 stand-in | `shakescreen` | The ShakeScreen shake moves only the eye of the gameplay camera (`CameraRig::setEyeShake`); the cutscene ... |
 | 7 | [TRAV-48](features/player-traversal.md?display=source#L48) | 0 | 22 | 5 | 1 | - | `props/parkour_tightrope` | The ropes of the tightrope anchors (`GrappleLineType` 0) use the same draw 0x1a9dc4 and are not loaded, so ... |
 | 8 | [TRAV-54](features/player-traversal.md?display=source#L52) | 0 | 22 | 5 | 0 | - | `props/parkour_tightrope` | The poles of the tightrope anchors (`props/parkour_tightrope`, 4 in lvl_01) are drawn at ... |
-| 9 | [SCAN-2](features/abilities-scanner.md?display=source#L33) | 7 | 0 | 3 | 0 | 1 stand-in | `enablescanner` | Other type 201 zones: photo (ScannerMode 4 in the class, sub-mode 0 values of 0x2ef814), physical (kind 2) ... |
-| 10 | [SCAN-5](features/abilities-scanner.md?display=source#L35) | 7 | 0 | 3 | 0 | 1 stand-in | `enablescanner` | `EnableScanner` is applied at the next scanner update (the original toggles inside the native) |
+| 9 | [SCAN-2](features/abilities-scanner.md?display=source#L35) | 7 | 0 | 3 | 0 | 1 stand-in | `enablescanner` | Other type 201 zones: photo (ScannerMode 4 in the class, sub-mode 0 values of 0x2ef814), physical (kind 2) ... |
+| 10 | [SCAN-5](features/abilities-scanner.md?display=source#L37) | 7 | 0 | 3 | 0 | 1 stand-in | `enablescanner` | `EnableScanner` is applied at the next scanner update (the original toggles inside the native) |
 
 ## Level objects
 
@@ -207,7 +207,7 @@ No script native or object class is linked to these items (`+N` is Unblocks). Ad
 Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?display=source#L33) (+29), [RENDER-35](features/rendering.md?display=source#L48) (+23), [VEH-6](features/vehicles-physics.md?display=source#L30) (+22), [SCRIPT-43](features/script-system-natives.md?display=source#L31) (+17), [SCRIPT-94](features/script-system-ai-navigation.md?display=source#L34) (+16), [SCRIPT-40](features/script-system-dcam.md?display=source#L27) (+15), [SCRIPT-44](features/script-system-natives.md?display=source#L32) (+15), [SCRIPT-101](features/script-system-ai-navigation.md?display=source#L37) (+14), [SCRIPT-95](features/script-system-ai-navigation.md?display=source#L35) (+14), [SCRIPT-100](features/script-system-ai-navigation.md?display=source#L36) (+13)
 
 - [abilities-detective.md](features/abilities-detective.md): DETECT-13 (+2), DETECT-8 (+2), DETECT-1 (+1), DETECT-15 (+1), DETECT-4 (+1), DETECT-6 (+1), DETECT-S7 (+1), DETECT-S8 (+1), DETECT-S9 (+1), DETECT-10, DETECT-11, DETECT-12, DETECT-3, DETECT-5, DETECT-9, DETECT-S1, DETECT-S10, DETECT-S2, DETECT-S4, DETECT-S5, DETECT-S6
-- [abilities-scanner.md](features/abilities-scanner.md): SCAN-10 (+1), SCAN-11 (+1), AUDIO-S33, SCAN-12, SCAN-13, SCAN-14, SCAN-3, SCAN-6, SCAN-S1, SCAN-S2, SCAN-S3, SCAN-S4, SCAN-S5, SCAN-S6, SCAN-S7, SCAN-S8, SCAN-S9
+- [abilities-scanner.md](features/abilities-scanner.md): SCAN-10 (+1), SCAN-11 (+1), SCAN-S10 (+1), AUDIO-S33, SCAN-12, SCAN-13, SCAN-15, SCAN-3, SCAN-6, SCAN-S1, SCAN-S2, SCAN-S3, SCAN-S4, SCAN-S5, SCAN-S6, SCAN-S7, SCAN-S8, SCAN-S9
 - [animation-characters.md](features/animation-characters.md): ANIM-3 (+2), ANIM-10 (+1), ANIM-11 (+1), ANIM-13 (+1), ANIM-14 (+1), ANIM-1, ANIM-4, ANIM-S10, ANIM-S11, ANIM-S2
 - [assets-formats.md](features/assets-formats.md): ASSET-1, ASSET-2, ASSET-3, ASSET-4, ASSET-8, ASSET-S1, ASSET-S2
 - [audio.md](features/audio.md): AUDIO-3 (+2), AUDIO-30 (+2), AUDIO-20 (+1), AUDIO-31 (+1), AUDIO-32 (+1), AUDIO-34 (+1), AUDIO-1, AUDIO-5, AUDIO-6, AUDIO-7, AUDIO-S1, AUDIO-S2, AUDIO-S20, AUDIO-S3, AUDIO-S30, AUDIO-S4, AUDIO-S5, AUDIO-S6, AUDIO-S7

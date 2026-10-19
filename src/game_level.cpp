@@ -294,7 +294,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     if (player) game_carry::applyClipTimings(carry, *player);
     std::cout << "carry objects: " << carry.objects().size() << ", carry targets: " << carry.targets().size() << '\n';
     loadDetective(archive);
-    detectiveGlass.load(archive, scene);
+    handItems.load(archive, scene);
     useSpots.load(level, classOf);
     scanner.load(archive, level, classOf);
     std::cout << "scanner zones: " << scanner.zones().size() << ", scannable objects: " << scanner.objects().size() << '\n';
@@ -427,7 +427,7 @@ void LevelSession::draw(int width, int height) {
     effects.apply(scene);
     fallApart.apply(scene);
     drawFootprints();
-    if (player) detectiveGlass.draw(scene, *player);
+    if (player) handItems.draw(scene, *player);
     if (skyInstance) {
         const float lift = player && seaHeight ? runtime::skyLift(player->vertical.y, *seaHeight) : 0.0f;
         const Mat4 cameraToWorld = chase::render::rigidInverse(viewMatrix);

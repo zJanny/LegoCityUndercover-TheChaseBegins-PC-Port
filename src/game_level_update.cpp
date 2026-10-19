@@ -320,7 +320,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         if (const std::optional<unsigned> entered = playerScriptAnimation.enteredState()) runtime::applyScriptStateEnter(*entered, player->vertical);
         player->animate(scene, dt, detectiveClip(player->carriedRole(shown.role, carry.carryingMode(), carry.phaseClip() ? carry.phaseClip() : builditPlayer.clip() ? builditPlayer.clip() : scanner.playerClip())), shown.scale);
         if (const auto* clip = playerScriptAnimation.posesScriptClip() ? playerScriptAnimation.animation() : nullptr) player->poseClip(scene, *clip, playerScriptAnimation.frame());
-        detectiveGlass.update(*player);
+        handItems.update(*player);
         if (!script.empty()) scriptedHeights.push_back(player->vertical.y);
         const std::array<float, 3> pickupPoint =
             runtime::studPickupPoint(player->motion.x, player->vertical.y, player->motion.z, runtime::headingRadians(player->motion.facing));
