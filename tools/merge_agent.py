@@ -10,8 +10,9 @@ docs/plans/priorities.md takes main's copy (the checks regenerate it); a README 
 section stops the merge like any other. Conflicts in a session log archive keep the lines of both sides (check_doc_links.py
 --fix then drops duplicates). Other conflicts stop the merge.
 
-Checks: no game-derived or binary files staged, doc fixes (check_doc_links.py --fix, restaged), doc links, README progress section and docs/plans/priorities.md regenerated,
-warning-free build, ctest, Python tests. Pushing stays a separate, explicitly authorized step.
+Checks: no game-derived or binary files staged, warning-free build, docs/plans/priorities.md regenerated (its item links are checked by the doc fixes),
+doc fixes (check_doc_links.py --fix, restaged), doc links, README progress section and priorities regenerated,
+ctest, Python tests. Pushing stays a separate, explicitly authorized step.
 """
 from __future__ import annotations
 
@@ -161,20 +162,26 @@ def fix_docs(root: Path) -> None:
     run(["git", "add", "-A", "--", "docs"], root)
 
 
+def update_priorities(root: Path) -> None:
+    run(["python3", "tools/priority_report.py", "--update", PRIORITIES], root, capture=True)
+    run(["git", "add", PRIORITIES], root)
+
+
 def run_checks(root: Path) -> None:
     check_staged_content(root)
+    print("== build")
+    build_warning_free(root)
+    print("== priorities (before the doc fixes, which check its item links)")
+    update_priorities(root)
     print("== doc fixes (session log rotation, closed items, anchors)")
     fix_docs(root)
     print("== doc links")
     run(["python3", "tools/check_doc_links.py", "--root", "."], root)
-    print("== build")
-    build_warning_free(root)
     print("== README progress section")
     run(["python3", "tools/progress_report.py", "--update-readme", "README.md"], root)
     run(["git", "add", "README.md", "docs/progress-trend.svg"], root)
     print("== priorities")
-    run(["python3", "tools/priority_report.py", "--update", PRIORITIES], root, capture=True)
-    run(["git", "add", PRIORITIES], root)
+    update_priorities(root)
     print("== ctest")
     run(["ctest", "--test-dir", "build", "--output-on-failure", "-j", str(JOBS)], root)
     print("== python tests")
