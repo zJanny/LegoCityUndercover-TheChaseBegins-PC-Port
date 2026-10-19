@@ -1,7 +1,8 @@
 #pragma once
 // PlayCharAnim, StopCharAnim and WaitForCurrentCharAnim on Player1 (docs/re/script-natives-animation.md): the script clip runs in the
 // player's animation slots while the player is in the "USER ANIM" state 0x50 (update 0x2a47b0, enter 0x25fbec), which runs no locomotion; once the
-// slot kind (0x22f560) is 6 the state requests state 1 and locomotion takes over in the next update. No SDL dependency.
+// slot kind (0x22f560) is 6 the state requests state 1 and locomotion takes over in the next update. A request is applied (enter function) at the
+// end of the update that follows it, after the previous state's update (0x226100 after the dispatcher 0x31e6e8, docs/re/script-natives-animation.md). No SDL dependency.
 #include "assets/assets.hpp"
 #include "runtime/animation_slots.hpp"
 #include "runtime/natives_animation.hpp"
@@ -38,9 +39,16 @@ public:
     void stop(const std::string& lowerCaseInstance) override;
     std::optional<bool> currentNearEnd(const std::string& lowerCaseInstance) const override;
 
-    // One player update, before the locomotion: advances the clock, applies a pending state request, and runs the user-animation update.
-    // True while the script clip owns the player's pose in this update.
+    // One player update, before the locomotion: advances the clock and runs the update of the current state (0x2a47b0 in state 0x50), then applies a
+    // pending state request (its enter function runs at the end of the update, the new state's update starts in the next one).
+    // True while the user-animation state's update ran, so the script clip owns the movement of the player in this update.
     bool update(float dt);
+
+    // The state whose enter function ran at the end of the last update(), if a request was applied.
+    std::optional<unsigned> enteredState() const { return entered_; }
+    // STAND-IN SCRIPT-S272: the pose follows the slot, which holds the script clip from the play on, so it is shown in the update that applies the
+    // request too (the old state's update decides in the original whether it restarts a locomotion clip).
+    bool posesScriptClip() const { return state_ == kUserAnimState || entered_ == kUserAnimState; }
 
     // The clip and its sampled frame while update() returned true.
     const assets::Animation* animation() const;
@@ -68,6 +76,7 @@ private:
     bool scriptLoaded_ = false;
     unsigned state_ = kLocomotionState;
     std::optional<unsigned> requested_;
+    std::optional<unsigned> entered_;
     std::int64_t clock_ = 0;
     std::optional<RootSample> lastRoot_;
     std::uint32_t lastRootStart_ = 0;
@@ -77,6 +86,9 @@ private:
 
 // Moves the player by a root step: wall slide and the vertical step run as for the attack root step (playerRootStepUpdate); the turn sets the facing
 // and the intent heading (0x22f03c writes ctrl+8 and ctrl+10).
+// The enter functions' writes to the vertical state: state 0x50 (0x25fbec) sets ctrl+0x2b8 = 0, state 1 (0x1abbb0) sets ctrl+0x2b8 and ctrl+0x2b4 = 0.
+void applyScriptStateEnter(unsigned state, VerticalState& vertical);
+
 void applyScriptRootStep(const ScriptRootStep& step, LocomotionState& motion, VerticalState& vertical, const CollisionWorld& world, float dt);
 
 }

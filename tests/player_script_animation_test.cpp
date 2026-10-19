@@ -51,26 +51,45 @@ void run(const AnimationLoader& loader) {
         animation.play(playOf("player1", "Idle_Minifig", false));
         require(!animation.inUserAnimation() && animation.currentNearEnd("player1") == std::optional<bool>(false),
                 "the request is pending until the next update; the wait already blocks");
-        require(animation.update(kStep) && animation.inUserAnimation(), "state 0x50 is entered in the next update");
-        require(animation.animation() && animation.animation()->frames == 19 && animation.frame() > 0.0, "the script clip owns the pose");
-        for (int update = 2; update < 38; ++update) {
+        require(!animation.update(kStep) && animation.inUserAnimation() && animation.enteredState() == std::optional<unsigned>(kUserAnimState),
+                "the update after the request runs the previous state's update; state 0x50 is entered at its end");
+        require(animation.posesScriptClip() && animation.animation() && animation.animation()->frames == 19, "the slot holds the script clip from the play on (SCRIPT-S272)");
+        require(animation.update(kStep) && !animation.enteredState() && animation.frame() > 0.0, "the update of state 0x50 starts one update later and owns the pose");
+        for (int update = 3; update < 38; ++update) {
             require(animation.update(kStep), "the clip owns the pose until it ends");
             require(animation.currentNearEnd("player1") == std::optional<bool>(false), "play-once clip blocks the wait");
         }
-        require(animation.update(kStep) && animation.currentNearEnd("player1") == std::optional<bool>(true),
+        require(animation.update(kStep) && animation.currentNearEnd("player1") != std::optional<bool>(false),
                 "update 38 (3800 ticks, 19 frames at 15 fps) sees kind 6: the pose is the last frame and the wait is done");
         require(animation.frame() == 18.0, "the pose is clamped to the last sample");
-        require(!animation.update(kStep) && !animation.inUserAnimation(), "locomotion takes over one update after the end");
+        require(!animation.inUserAnimation() && animation.enteredState() == std::optional<unsigned>(kLocomotionState),
+                "the request for state 1 is applied at the end of the update that saw kind 6");
+        require(!animation.update(kStep) && !animation.enteredState() && !animation.posesScriptClip(), "locomotion runs in the next update");
         require(!animation.currentNearEnd("player1"), "the wait completes at once after the hand-back");
     }
     {
         PlayerScriptAnimation animation(loader);
         animation.play(playOf("player1", "idle_minifig", true));
-        require(animation.update(kStep), "looping clip entered");
+        require(!animation.update(kStep) && animation.update(kStep), "looping clip entered one update after the request");
         for (int update = 0; update < 200; ++update) require(animation.update(kStep), "a looping clip keeps the state");
         animation.stop("player1");
-        require(animation.update(kStep) && animation.currentNearEnd("player1") == std::optional<bool>(true), "StopCharAnim makes the slot kind 6");
+        require(animation.update(kStep) && animation.currentNearEnd("player1") != std::optional<bool>(false), "StopCharAnim makes the slot kind 6");
         require(!animation.update(kStep), "locomotion resumes after the stop");
+    }
+    {
+        PlayerScriptAnimation animation(loader);
+        animation.play(playOf("player1", "idle_minifig", true));
+        animation.update(kStep);
+        animation.update(kStep);
+        animation.play(playOf("player1", "idle_minifig", true));
+        require(animation.update(kStep) && !animation.enteredState(), "a request for the state the player is in does not run the enter function");
+        VerticalState vertical;
+        vertical.fallSpeed = 0.3f;
+        vertical.fallDistance = 1.5f;
+        applyScriptStateEnter(kUserAnimState, vertical);
+        require(vertical.fallSpeed == 0.0f && vertical.fallDistance == 1.5f, "the enter of state 0x50 clears ctrl+0x2b8 only (0x25fbec)");
+        applyScriptStateEnter(kLocomotionState, vertical);
+        require(vertical.fallDistance == 0.0f, "the enter of state 1 clears ctrl+0x2b4 and ctrl+0x2b8 (0x1abbb0)");
     }
     {
         PlayerScriptAnimation animation(loader);
@@ -87,7 +106,7 @@ void rootMotion(const AnimationLoader& loader) {
     {
         PlayerScriptAnimation animation(loader);
         animation.play(playOf("player1", "combo_1_minifig", false));
-        require(animation.update(kStep), "state entered");
+        require(!animation.update(kStep) && animation.update(kStep), "state entered at the end of the first update, its update runs in the second");
         require(!animation.rootMotion(0), "the first update of a clip only stores the root sample");
         float dx = 0, dy = 0, dz = 0;
         int steps = 0;
@@ -102,11 +121,12 @@ void rootMotion(const AnimationLoader& loader) {
         }
         require(steps > 5, "one step per update of the clip");
         require(std::fabs(dx) < 1e-4f && std::fabs(dy) < 1e-4f, "combo_1 moves along z only");
-        require(dz > 0.95f && dz < 1.06f, "the steps add up to the root z travel of the clip (1.05684 from frame 0 to 14, archive scan) minus the first sample");
+        require(dz > 0.88f && dz < 0.93f, "the steps add up to the root z travel of the clip from frame 1, where the first 0x50 update samples (1.05684 from frame 0 to 14, archive scan; 0.90586 is this replica's own value, pinned as a regression bound)");
     }
     {
         PlayerScriptAnimation animation(loader);
         animation.play(playOf("player1", "bluebell_interrogated_intro_minifig", false));
+        animation.update(kStep);
         std::int16_t facing = 0;
         float dz = 0;
         while (animation.update(kStep)) {

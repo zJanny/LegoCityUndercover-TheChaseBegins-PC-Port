@@ -68,13 +68,17 @@ std::optional<bool> PlayerScriptAnimation::currentNearEnd(const std::string& ins
 
 bool PlayerScriptAnimation::update(float dt) {
     clock_ += std::llround(double(dt) * double(kAnimationClockTicksPerSecond));
+    entered_.reset();
+    const bool updated = state_ == kUserAnimState;
+    if (updated && slots_.kind(clock_) == kAnimationStopped) requested_ = kLocomotionState;
     if (requested_) {
-        state_ = *requested_;
+        if (*requested_ != state_) {
+            state_ = *requested_;
+            entered_ = state_;
+        }
         requested_.reset();
     }
-    if (state_ != kUserAnimState) return false;
-    if (slots_.kind(clock_) == kAnimationStopped) requested_ = kLocomotionState;
-    return true;
+    return updated;
 }
 
 const assets::Animation* PlayerScriptAnimation::animation() const {
@@ -128,6 +132,11 @@ std::optional<ScriptRootStep> PlayerScriptAnimation::rootMotion(std::int16_t fac
         lastFacing_ = turned;
     }
     return step;
+}
+
+void applyScriptStateEnter(unsigned state, VerticalState& vertical) {
+    vertical.fallSpeed = 0;
+    if (state == kLocomotionState) vertical.fallDistance = 0;
 }
 
 void applyScriptRootStep(const ScriptRootStep& step, LocomotionState& motion, VerticalState& vertical, const CollisionWorld& world, float dt) {

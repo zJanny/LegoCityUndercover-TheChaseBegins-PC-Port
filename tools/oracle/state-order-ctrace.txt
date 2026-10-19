@@ -1,0 +1,12 @@
+# Order of the state machine inside one player update: ctrace of the controller step (0x2779cc), the pending-state apply (0x1c7520) and the update
+# and enter functions of the states 1 (idle), 4 (jump), 5 (fall) and 6 (land) around one B jump from gameplay-start. Fixed dt 0.033.
+loadstate gameplay-start
+frames 3
+stick 0 0
+hold -
+dt 0.033 0.033
+frames 2
+hold B
+frames 1
+hold -
+ctrace 0x2779cc,0x1c7520,0x1d5070,0x1abbb0,0x1d5254,0x200cc4,0x1d4ce0,0x1ab910,0x1d55cc,0x1abc5c 90 stateorder

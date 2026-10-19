@@ -20,7 +20,7 @@ This file has no dated entries: the table is edited in place. When a native is r
 | EnableTrigger | 0x268164 | 2 | 1050 / 160 / 18 / 18 | 14 | done |  |  |
 | = | 0x17efc0 | 2 | 856 / 102 / 29 / 4 | 9 | done |  |  |
 | StartDCam | 0x194fd8 | 5 | 665 / 121 / 6 / 0 | 11 | done | 28 | handled (path and path command; the other commands are not): [dcam.md §2026-10-14T14:36](dcam.md#ts-20261014-143600) |
-| PlayCharAnim | 0x1bf9cc | 4 | 625 / 96 / 0 / 0 | 10 | stand-in | 32 | stand-in: plays on level characters and on Player1, records the rest (SCRIPT-S110, SCRIPT-S262, SCRIPT-273, SCRIPT-319, ANIM-S11, ANIM-S12): [script-natives-animation.md §2026-10-19T12:55](script-natives-animation.md#ts-20261019-125503) |
+| PlayCharAnim | 0x1bf9cc | 4 | 625 / 96 / 0 / 0 | 10 | stand-in | 32 | stand-in: plays on level characters and on Player1, records the rest (SCRIPT-S110, SCRIPT-S262, SCRIPT-S272, SCRIPT-273, SCRIPT-319, ANIM-S11, ANIM-S12): [script-natives-animation.md §2026-10-19T12:55](script-natives-animation.md#ts-20261019-125503) |
 | ? | 0x16354c | 3 | 554 / 69 / 27 / 4 | 10 | done |  |  |
 | ?? | 0x17efb8 | 0 | 554 / 69 / 27 / 4 | 10 | done |  |  |
 | SetActiveWayPoint | 0x27bde8 | 2 | 540 / 79 / 23 / 0 | 8 | stand-in | 31 | handled: show and hide chain with map slot and disable fade (SCRIPT-74 closed); stand-in SCRIPT-S269: [objective-hud.md §2026-10-19T15:00](objective-hud.md#ts-20261019-150002) |

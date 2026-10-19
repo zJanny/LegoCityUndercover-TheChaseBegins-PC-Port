@@ -317,8 +317,9 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
             game_player::applyAiPosition(*player, *driven);
             shown = game_player::aiMoveAnimation(*driven);
         }
+        if (const std::optional<unsigned> entered = playerScriptAnimation.enteredState()) runtime::applyScriptStateEnter(*entered, player->vertical);
         player->animate(scene, dt, detectiveClip(player->carriedRole(shown.role, carry.carryingMode(), carry.phaseClip() ? carry.phaseClip() : builditPlayer.clip() ? builditPlayer.clip() : scanner.playerClip())), shown.scale);
-        if (const auto* clip = scriptClip ? playerScriptAnimation.animation() : nullptr) player->poseClip(scene, *clip, playerScriptAnimation.frame());
+        if (const auto* clip = playerScriptAnimation.posesScriptClip() ? playerScriptAnimation.animation() : nullptr) player->poseClip(scene, *clip, playerScriptAnimation.frame());
         detectiveGlass.update(*player);
         if (!script.empty()) scriptedHeights.push_back(player->vertical.y);
         const std::array<float, 3> pickupPoint =
