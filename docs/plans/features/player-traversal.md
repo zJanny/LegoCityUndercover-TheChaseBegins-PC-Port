@@ -48,6 +48,7 @@ IN_PROGRESS, updated 2026-10-18T16:38:10+02:00. Ported in `chase-game` from the 
 - [ ] TRAV-8 — The use press at a high anchor (0x1b6664, A press) is ported but not measured; `m12-9-zipline` is on the ground below the anchor (user state deferred); needs an oracle state on a zipline start platform (stand 0.2 m before the high anchor of a zipline on the mission 1-2 route, facing it). evidence: [player-traversal.md §2026-10-18T20:38:04](../../re/player-traversal.md#ts-20261018-203804)
 - [ ] TRAV-9 — Tightrope (`GrappleLineType` 0, states 39..41) not ported. evidence: [player-traversal.md §2026-10-18T14:52:30](../../re/player-traversal.md#ts-20261018-145230)
 - [ ] TRAV-10 — The hanging pose on the line (clip root against the line point) is not compared with the original's picture. evidence: [player-traversal.md §2026-10-18T14:52:30](../../re/player-traversal.md#ts-20261018-145230)
+- [ ] TRAV-53 — The zipline anchors' model (`ability_parkour_zip_line.bfnmdl`, class `props/parkour_zipline`) is not drawn: the rope hangs between invisible poles (user playtest). uses: parkour_zipline. evidence: [playtests.md §2026-10-19T17:56:41](../../re/playtests.md#ts-20261019-175641).
 
 ## 6. Findings summary
 

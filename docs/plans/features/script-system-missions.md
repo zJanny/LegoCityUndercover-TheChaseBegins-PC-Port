@@ -47,6 +47,8 @@ IN_PROGRESS, updated 2026-10-19T09:27:22+02:00. The dog cage of mission 1-2 has 
 - [ ] SCRIPT-308 — Byte +0x10 of the mode object (0x2369c4) per game mode. blocks: SCRIPT-S242. uses: DCamCutScenePlay. evidence: [cutscenes.md §2026-10-19T10:04:29](../../re/cutscenes.md#ts-20261019-100429).
 - [ ] SCRIPT-309 — Mode switch push 0x25d26c: the wait before the enter 0x2fadb8. blocks: SCRIPT-S243. uses: DCamCutScenePlay. evidence: [cutscenes.md §2026-10-19T10:04:29](../../re/cutscenes.md#ts-20261019-100429).
 - [ ] SCRIPT-310 — Writer of the byte at 0x51a2bd and the blend of the fade quad (0x254350 / 0x25511c). blocks: SCRIPT-S253, SCRIPT-S254. uses: FadeScreen. evidence: [cutscenes.md §2026-10-19T10:04:29](../../re/cutscenes.md#ts-20261019-100429).
+- [ ] SCRIPT-341 — The dog is not visible in the end cutscene of mission 1-2 (user playtest). evidence: [playtests.md §2026-10-19T17:56:41](../../re/playtests.md#ts-20261019-175641).
+- [ ] SCRIPT-342 — The dog truck with the dog inside sits in the ground in the end cutscene of mission 1-2 (user playtest). evidence: [playtests.md §2026-10-19T17:56:41](../../re/playtests.md#ts-20261019-175641).
 
 ## 6. Findings summary
 

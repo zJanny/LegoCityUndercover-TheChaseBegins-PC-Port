@@ -40,6 +40,7 @@ IN_PROGRESS, updated 2026-10-19T14:06:22+02:00. The audio zone (type 201, Scanne
 - [ ] SCAN-13 — Frame and zoom-meter tint with the colour 0x375e6c when the player character has ability bit 28 (0x23a87c), and the zone's `Scanner_PFX` (+0x54): the colour writer, the ability name and the PFX reader are unread; the port draws white (Chase's police outfit, as in the oracle). needs: SCAN-1. evidence: [abilities-scanner.md §2026-10-19T14:13:26](../../re/abilities-scanner.md#ts-20261019-141326)
 - [ ] SCAN-10 — Sonar segments (six; formula of 0x2e9030 transcribed in [abilities-scanner.md §2026-10-19T14:13:26](../../re/abilities-scanner.md#ts-20261019-141326), not ported) and the delay unit and sort order of the sound markers (SCAN-S7). needs: SCAN-1. blocks: SCAN-S7. evidence: [abilities-scanner.md §2026-10-19T10:01:16](../../re/abilities-scanner.md#ts-20261019-100116)
 - [ ] SCAN-11 — Bottom screen of the scanner view: slide-in of the buttons, map circle and scanner arrow icon, hint box, the tutorial box after the exit, touch handling of the back button (needs touch input). needs: SCAN-1. blocks: SCAN-S8. evidence: [abilities-scanner.md §2026-10-19T10:01:16](../../re/abilities-scanner.md#ts-20261019-100116)
+- [ ] SCAN-14 — Chase holds no model while using the scanner (user playtest); the scanner's hand item is not shown. evidence: [playtests.md §2026-10-19T17:56:41](../../re/playtests.md#ts-20261019-175641).
 
 ## 6. Findings summary
 

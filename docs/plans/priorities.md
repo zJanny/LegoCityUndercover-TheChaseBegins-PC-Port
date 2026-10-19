@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 758 open items and stand-ins, 164 linked to game usage, 594 with unknown reach.
+Items: 761 open items and stand-ins, 165 linked to game usage, 596 with unknown reach.
 
 ## Top 50 overall
 
@@ -87,7 +87,7 @@ Items: 758 open items and stand-ins, 164 linked to game usage, 594 with unknown 
 
 ## Player and camera
 
-13 of 177 items linked.
+14 of 178 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -97,10 +97,10 @@ Items: 758 open items and stand-ins, 164 linked to game usage, 594 with unknown 
 | 4 | [ANIM-S13](features/animation-characters.md?display=source#L25) | 623 | 0 | 8 | 0 | 1 stand-in | `playcharanim` | The player's script clip (PlayCharAnim on Player1) is sampled without the 0.1 blend and without the slot ... |
 | 5 | [COLL-2](features/collision.md?display=source#L29) | 0 | 183 | 7 | 1 | - | `props/parkour_skydive`, `props/prop_prop` | Only the classes with a recovered constructor rule register (props, doors, dummycollision, vehicles) ... |
 | 6 | [CAMERA-S51](features/camera.md?display=source#L25) | 145 | 0 | 7 | 0 | 1 stand-in | `shakescreen` | The ShakeScreen shake moves only the eye of the gameplay camera (`CameraRig::setEyeShake`); the cutscene ... |
-| 7 | [TRAV-48](features/player-traversal.md?display=source#L47) | 0 | 22 | 5 | 0 | - | `props/parkour_tightrope` | The ropes of the tightrope anchors (`GrappleLineType` 0) use the same draw 0x1a9dc4 and are not loaded, so ... |
-| 8 | [SCAN-2](features/abilities-scanner.md?display=source#L33) | 7 | 0 | 3 | 0 | 1 stand-in | `enablescanner` | Other type 201 zones: photo (ScannerMode 4 in the class, sub-mode 0 values of 0x2ef814), physical (kind 2) ... |
-| 9 | [SCAN-5](features/abilities-scanner.md?display=source#L35) | 7 | 0 | 3 | 0 | 1 stand-in | `enablescanner` | `EnableScanner` is applied at the next scanner update (the original toggles inside the native) |
-| 10 | [CAMERA-40](features/camera.md?display=source#L45) | 2 | 0 | 2 | 1 | 1 stand-in | `camerafollow` | The enter / leave / update virtuals of the gameplay camera 0x377110 and the cutscene camera 0x3768e8, and ... |
+| 7 | [TRAV-53](features/player-traversal.md?display=source#L51) | 0 | 66 | 7 | 0 | - | `props/parkour_zipline` | The zipline anchors' model (`ability_parkour_zip_line.bfnmdl`, class `props/parkour_zipline`) is not drawn ... |
+| 8 | [TRAV-48](features/player-traversal.md?display=source#L47) | 0 | 22 | 5 | 0 | - | `props/parkour_tightrope` | The ropes of the tightrope anchors (`GrappleLineType` 0) use the same draw 0x1a9dc4 and are not loaded, so ... |
+| 9 | [SCAN-2](features/abilities-scanner.md?display=source#L33) | 7 | 0 | 3 | 0 | 1 stand-in | `enablescanner` | Other type 201 zones: photo (ScannerMode 4 in the class, sub-mode 0 values of 0x2ef814), physical (kind 2) ... |
+| 10 | [SCAN-5](features/abilities-scanner.md?display=source#L35) | 7 | 0 | 3 | 0 | 1 stand-in | `enablescanner` | `EnableScanner` is applied at the next scanner update (the original toggles inside the native) |
 
 ## Level objects
 
@@ -138,7 +138,7 @@ Items: 758 open items and stand-ins, 164 linked to game usage, 594 with unknown 
 
 ## Scripts and missions
 
-102 of 188 items linked.
+102 of 190 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -207,7 +207,7 @@ No script native or object class is linked to these items (`+N` is Unblocks). Ad
 Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?display=source#L33) (+29), [RENDER-35](features/rendering.md?display=source#L48) (+23), [VEH-6](features/vehicles-physics.md?display=source#L30) (+22), [SCRIPT-43](features/script-system-natives.md?display=source#L31) (+17), [SCRIPT-94](features/script-system-ai-navigation.md?display=source#L34) (+16), [SCRIPT-40](features/script-system-dcam.md?display=source#L27) (+15), [SCRIPT-44](features/script-system-natives.md?display=source#L32) (+15), [SCRIPT-101](features/script-system-ai-navigation.md?display=source#L37) (+14), [SCRIPT-95](features/script-system-ai-navigation.md?display=source#L35) (+14), [SCRIPT-100](features/script-system-ai-navigation.md?display=source#L36) (+13)
 
 - [abilities-detective.md](features/abilities-detective.md): DETECT-13 (+2), DETECT-8 (+2), DETECT-1 (+1), DETECT-15 (+1), DETECT-4 (+1), DETECT-6 (+1), DETECT-S7 (+1), DETECT-S8 (+1), DETECT-S9 (+1), DETECT-10, DETECT-11, DETECT-12, DETECT-3, DETECT-5, DETECT-9, DETECT-S1, DETECT-S10, DETECT-S2, DETECT-S4, DETECT-S5, DETECT-S6
-- [abilities-scanner.md](features/abilities-scanner.md): SCAN-10 (+1), SCAN-11 (+1), AUDIO-S33, SCAN-12, SCAN-13, SCAN-3, SCAN-6, SCAN-S1, SCAN-S2, SCAN-S3, SCAN-S4, SCAN-S5, SCAN-S6, SCAN-S7, SCAN-S8, SCAN-S9
+- [abilities-scanner.md](features/abilities-scanner.md): SCAN-10 (+1), SCAN-11 (+1), AUDIO-S33, SCAN-12, SCAN-13, SCAN-14, SCAN-3, SCAN-6, SCAN-S1, SCAN-S2, SCAN-S3, SCAN-S4, SCAN-S5, SCAN-S6, SCAN-S7, SCAN-S8, SCAN-S9
 - [animation-characters.md](features/animation-characters.md): ANIM-3 (+2), ANIM-10 (+1), ANIM-11 (+1), ANIM-13 (+1), ANIM-14 (+1), ANIM-1, ANIM-4, ANIM-S10, ANIM-S11, ANIM-S2
 - [assets-formats.md](features/assets-formats.md): ASSET-1, ASSET-2, ASSET-3, ASSET-4, ASSET-8, ASSET-S1, ASSET-S2
 - [audio.md](features/audio.md): AUDIO-3 (+2), AUDIO-30 (+2), AUDIO-20 (+1), AUDIO-31 (+1), AUDIO-32 (+1), AUDIO-34 (+1), AUDIO-1, AUDIO-5, AUDIO-6, AUDIO-7, AUDIO-S1, AUDIO-S2, AUDIO-S20, AUDIO-S3, AUDIO-S30, AUDIO-S4, AUDIO-S5, AUDIO-S6, AUDIO-S7
@@ -225,7 +225,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [level-transitions.md](features/level-transitions.md): TRANS-3 (+3), TRANS-13 (+2), TRANS-8 (+2), TRANS-10 (+1), TRANS-11 (+1), TRANS-12 (+1), TRANS-14 (+1), TRANS-S1, TRANS-S3, TRANS-S4, TRANS-S5
 - [movies-cutscenes.md](features/movies-cutscenes.md): MOVIE-22 (+1), MOVIE-24 (+1), MOVIE-36 (+1), MOVIE-37 (+1), MOVIE-S33 (+1), MOVIE-1, MOVIE-12, MOVIE-20, MOVIE-21, MOVIE-3, MOVIE-33, MOVIE-35, MOVIE-4, MOVIE-S1, MOVIE-S10, MOVIE-S11, MOVIE-S2, MOVIE-S21, MOVIE-S3, MOVIE-S30, MOVIE-S31, MOVIE-S32, MOVIE-S34
 - [particles.md](features/particles.md): PART-4 (+1), PART-6 (+1), PART-5, PART-7, PART-S1, PART-S2, PART-S3, PART-S4
-- [player-movement.md](features/player-movement.md): PLAYER-16 (+4), PLAYER-14 (+2), PLAYER-11 (+1), PLAYER-15 (+1), PLAYER-19 (+1), PLAYER-22 (+1), PLAYER-25 (+1), PLAYER-1, PLAYER-10, PLAYER-13, PLAYER-18, PLAYER-2, PLAYER-21, PLAYER-23, PLAYER-24, PLAYER-3, PLAYER-5, PLAYER-6, PLAYER-7, PLAYER-8, PLAYER-S1, PLAYER-S10, PLAYER-S11, PLAYER-S2, PLAYER-S4, PLAYER-S5, PLAYER-S6, PLAYER-S8
+- [player-movement.md](features/player-movement.md): PLAYER-14 (+2), PLAYER-16 (+2), PLAYER-11 (+1), PLAYER-15 (+1), PLAYER-22 (+1), PLAYER-25 (+1), PLAYER-1, PLAYER-10, PLAYER-13, PLAYER-18, PLAYER-2, PLAYER-21, PLAYER-23, PLAYER-24, PLAYER-3, PLAYER-5, PLAYER-6, PLAYER-7, PLAYER-8, PLAYER-S1, PLAYER-S10, PLAYER-S11, PLAYER-S2, PLAYER-S4, PLAYER-S5, PLAYER-S6, PLAYER-S8
 - [player-traversal-pole.md](features/player-traversal-pole.md): TRAV-S9 (+1), TRAV-11, TRAV-13, TRAV-14, TRAV-15, TRAV-16, TRAV-S5, TRAV-S6, TRAV-S7, TRAV-S8
 - [player-traversal-rails.md](features/player-traversal-rails.md): TRAV-28 (+3), TRAV-38 (+1), TRAV-43 (+1), TRAV-44 (+1), TRAV-45 (+1), TRAV-S16 (+1), TRAV-S18 (+1), TRAV-S19 (+1), TRAV-27, TRAV-29, TRAV-31, TRAV-32, TRAV-33, TRAV-42, TRAV-S15, TRAV-S17, TRAV-S21, TRAV-S23, TRAV-S24, TRAV-S25, TRAV-S26
 - [player-traversal.md](features/player-traversal.md): TRAV-2 (+1), TRAV-49 (+1), TRAV-52 (+1), TRAV-9 (+1), TRAV-S12 (+1), TRAV-10, TRAV-19, TRAV-20, TRAV-22, TRAV-34, TRAV-35, TRAV-5, TRAV-6, TRAV-8, TRAV-S1, TRAV-S10, TRAV-S11, TRAV-S13, TRAV-S2, TRAV-S20, TRAV-S29, TRAV-S3, TRAV-S30, TRAV-S31, TRAV-S32, TRAV-S4
@@ -234,7 +234,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [script-system-ai-navigation.md](features/script-system-ai-navigation.md): SCRIPT-92 (+29), SCRIPT-94 (+16), SCRIPT-101 (+14), SCRIPT-95 (+14), SCRIPT-100 (+13), SCRIPT-79 (+12), SCRIPT-S100, SCRIPT-S101, SCRIPT-S102, SCRIPT-S104, SCRIPT-S31, SCRIPT-S93, SCRIPT-S94, SCRIPT-S95
 - [script-system-dcam.md](features/script-system-dcam.md): SCRIPT-40 (+15), SCRIPT-182 (+1), SCRIPT-48 (+1), SCRIPT-50 (+1), SCRIPT-181, SCRIPT-332, SCRIPT-49, SCRIPT-S142
 - [script-system-hud-natives.md](features/script-system-hud-natives.md): SCRIPT-329 (+1), SCRIPT-330 (+1), SCRIPT-331, SCRIPT-68, SCRIPT-69, SCRIPT-70, SCRIPT-S270
-- [script-system-missions.md](features/script-system-missions.md): SCRIPT-220 (+1), SCRIPT-284 (+1), SCRIPT-115, SCRIPT-142, SCRIPT-221, SCRIPT-S141, SCRIPT-S236, SCRIPT-S237, SCRIPT-S243, SCRIPT-S247, SCRIPT-S248, SCRIPT-S249, SCRIPT-S254, SCRIPT-S255
+- [script-system-missions.md](features/script-system-missions.md): SCRIPT-220 (+1), SCRIPT-284 (+1), SCRIPT-115, SCRIPT-142, SCRIPT-221, SCRIPT-341, SCRIPT-342, SCRIPT-S141, SCRIPT-S236, SCRIPT-S237, SCRIPT-S243, SCRIPT-S247, SCRIPT-S248, SCRIPT-S249, SCRIPT-S254, SCRIPT-S255
 - [script-system-natives-animation.md](features/script-system-natives-animation.md): SCRIPT-324 (+3), SCRIPT-272 (+1), SCRIPT-325 (+1), SCRIPT-334 (+1), SCRIPT-S110, SCRIPT-S266, SCRIPT-S267
 - [script-system-natives-party.md](features/script-system-natives-party.md): SCRIPT-338 (+2), SCRIPT-340 (+1)
 - [script-system-natives-state.md](features/script-system-natives-state.md): SCRIPT-335 (+1), SCRIPT-56 (+1), SCRIPT-64 (+1), SCRIPT-S97
