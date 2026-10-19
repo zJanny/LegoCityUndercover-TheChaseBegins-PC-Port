@@ -587,6 +587,13 @@ int main() {
             require(drawn.size() == 2 && drawn[0] && !drawn[1], "a disabled object is not drawn, an enabled one is");
             state.disabled.erase("police_plaque_floor");
             require(drawnPlacements({hidden}, state)[0], "EnableObject 1 draws the object again");
+            chase::assets::CharacterObject goon, guard;
+            goon.placement.instance = "1-5_Balcony_Goon_01";
+            guard.placement.instance = "1-4_AI_Goon_01";
+            state.disabled.insert("1-5_balcony_goon_01");
+            const std::vector<bool> drawnCharacterFlags = drawnCharacters({goon, guard}, state);
+            require(drawnCharacterFlags.size() == 2 && !drawnCharacterFlags[0] && drawnCharacterFlags[1], "a disabled character is not drawn");
+            require(nestedObjectDrawn(true) && !nestedObjectDrawn(false), "a nested object is drawn while its owner is");
         }
     } catch (const std::exception& e) {
         std::cerr << "FAIL: " << e.what() << '\n';

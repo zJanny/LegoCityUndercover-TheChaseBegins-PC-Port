@@ -9,4 +9,13 @@ std::vector<bool> drawnPlacements(const std::vector<assets::Placement>& placemen
     return drawn;
 }
 
+std::vector<bool> drawnCharacters(const std::vector<assets::CharacterObject>& characters, const assets::PlacedObjectState& state) {
+    std::vector<bool> drawn;
+    drawn.reserve(characters.size());
+    for (const assets::CharacterObject& character : characters) drawn.push_back(!state.isHidden(character.placement.instance));
+    return drawn;
+}
+
+bool nestedObjectDrawn(bool ownerDrawn) { return ownerDrawn; }
+
 }

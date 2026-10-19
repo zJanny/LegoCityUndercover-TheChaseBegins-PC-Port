@@ -163,7 +163,7 @@ LevelSession::LevelSession(const Shared& sharedState)
         waypointObjects.push_back(waypoint);
         propParts.addWaypointChildren(scene, classOf, waypointObjects.size() - 1, waypoint);
     }
-    const auto placedCharacters = placeLevelCharacters(scene, archive, drawable.characters);
+    placedCharacters = placeLevelCharacters(scene, archive, drawable.characters);
     const std::size_t characters = std::size_t(std::count_if(placedCharacters.begin(), placedCharacters.end(), [](const auto& placed) { return placed.has_value(); }));
     levelCharacters.emplace(archive, drawable.characters, placedCharacters);
     propAnimations = runtime::PropAnimations(archive, animatedProps);
@@ -388,11 +388,12 @@ void LevelSession::draw(int width, int height) {
     scene.setLighting(runtime::levelLights(lightObjects, roomStreamer ? roomStreamer->currentRoom() : 0), &viewToWorld[12]);
     std::vector<bool> drawn = runtime::drawnPlacements(placedObjects, objectState);
     applyObjectFades(drawn);
+    characterVisibility.apply(scene, drawable.characters, placedCharacters, objectState);
     for (std::size_t i = 0; i < drawn.size(); ++i)
         scene.setInstanceVisible(placedSceneIndex[i], drawn[i] && roomShown(placedRooms[i]) && !wreckHides(i, std::nullopt));
     for (std::size_t w = 0; w < wheelSceneIndex.size(); ++w) {
         const auto& [placedIndex, wheelIndex] = wheelSceneIndex[w];
-        scene.setInstanceVisible(wheelIndex, drawn[placedIndex] && roomShown(placedRooms[placedIndex]) && !wreckHides(placedIndex, wheelNumbers[w]));
+        scene.setInstanceVisible(wheelIndex, runtime::nestedObjectDrawn(drawn[placedIndex]) && roomShown(placedRooms[placedIndex]) && !wreckHides(placedIndex, wheelNumbers[w]));
     }
     const runtime::ObjectiveState& objectives = levelScripts.objectives();
     std::vector<float> badgeFades(waypointObjects.size(), 1.0f);

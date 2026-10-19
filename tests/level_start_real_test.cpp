@@ -125,6 +125,53 @@ int main(int argc, char** argv) {
             require(hidden == 133, "hidden drawable object count: " + std::to_string(hidden));
         }
 
+        // Provenance: LEVOBJ-12 / LEVOBJ-13. 0x2428c0 (EnableObject 0) hides the entity's node and, through 0x1dd4f8, the nodes of every nested
+        // object, whatever the entity's kind (llvm-objdump of artifacts/game/game.arm.elf). The census of this level with the C++ parser
+        // (artifacts/scratch/r29-D/census.cpp): 1-5_Balcony_Goon_01 (chars/char_ai_cherrytreehillsgang4) is disabled by the startup script,
+        // 1-4_AI_Goon_01 is not; 41 of the 99 drawable characters are disabled at the start (value recorded from the C++ implementation); 1-1_DonutVan (vehicles/vehicle_van_donut, disabled) nests Wheel01..04 (vehicles/wheel).
+        {
+            const chase::assets::ClassLookup classOf = chase::assets::archiveClassLookup(archive);
+            const chase::assets::DrawableObjects drawable = chase::assets::drawableObjects(archive, level);
+            const std::vector<bool> drawnCharacters = chase::runtime::drawnCharacters(drawable.characters, state);
+            std::size_t hiddenCharacters = 0;
+            bool balconyFound = false, guardFound = false;
+            for (std::size_t i = 0; i < drawnCharacters.size(); ++i) {
+                hiddenCharacters += drawnCharacters[i] ? 0 : 1;
+                const std::string& name = drawable.characters[i].placement.instance;
+                if (name == "1-5_Balcony_Goon_01") balconyFound = true, require(!drawnCharacters[i], "disabled character is drawn: " + name);
+                if (name == "1-4_AI_Goon_01") guardFound = true, require(drawnCharacters[i], "enabled character is hidden: " + name);
+            }
+            require(balconyFound && guardFound, "goon placements changed");
+            std::cout << "level-start: " << hiddenCharacters << " of " << drawnCharacters.size() << " characters hidden at the start\n";
+            require(hiddenCharacters == 41, "hidden character count: " + std::to_string(hiddenCharacters));
+
+            const chase::assets::Level* vanClass = classOf("vehicles/vehicle_van_donut");
+            require(vanClass && vanClass->objects.size() == 4 && vanClass->objects[0].instance == "Wheel01" &&
+                        vanClass->objects[0].className == "vehicles/wheel",
+                    "1-1_DonutVan nests four wheels");
+            require(state.isHidden("1-1_DonutVan") && !chase::runtime::nestedObjectDrawn(!state.isHidden("1-1_DonutVan")),
+                    "the wheels of the disabled 1-1_DonutVan are hidden");
+
+            // Provenance: no code reads the parameters for the model: the strings "DisabledOnStartUp" (0x17fc14) is referenced only by the stud
+            // constructor 0x17f8e0 (pc-relative reference scan of the disassembly), "ShowOnObjectScan" (0x358a98) by 0x2ce434 / 0x2c529c (scanner
+            // lists) and "ShowOnMap" (0x2c5430, 0x2ad71c, 0x191fcc) by the map icon / scanner records 0x191e9c, 0x2ad580, 0x2c529c. In lvl_01 every object
+            // with an effective DisabledOnStartUp is a stud (1040 of 1040, census), and 1-2_Dog_Prop (ShowOnObjectScan 1) is hidden by 1-2_MissionHide only.
+            const std::uint32_t disabledOnStartUp = chase::assets::nameHash("DisabledOnStartUp"), showOnObjectScan = chase::assets::nameHash("ShowOnObjectScan");
+            std::size_t withDisabledOnStartUp = 0, studs = 0, withShowOnObjectScan = 0;
+            for (const chase::assets::LevelObject& object : level.objects) {
+                const chase::assets::Level* cls = classOf(object.className);
+                if (!cls) continue;
+                if (chase::runtime::effectiveParam(object, *cls, disabledOnStartUp)) {
+                    ++withDisabledOnStartUp;
+                    studs += object.className.find("stud") != std::string::npos ? 1 : 0;
+                }
+                if (chase::runtime::effectiveParam(object, *cls, showOnObjectScan)) ++withShowOnObjectScan;
+            }
+            require(withDisabledOnStartUp == 1040 && studs == 1040, "DisabledOnStartUp on a non-stud class");
+            require(withShowOnObjectScan == 69, "ShowOnObjectScan count: " + std::to_string(withShowOnObjectScan));
+            require(state.isDisabled("1-2_Dog_Prop") && !state.isDisabled("FP_Superbrick_01"), "scan-listed objects follow EnableObject only");
+        }
+
         chase::assets::PlacedObjectState runState = chase::runtime::levelInitialState(level, chase::assets::archiveClassLookup(archive));
         chase::runtime::ScriptRunner runner(level, runState);
         const chase::assets::ClassLookup classOf = chase::assets::archiveClassLookup(archive);

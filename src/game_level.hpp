@@ -13,6 +13,7 @@
 #include "game_detective_glass.hpp"
 #include "game_doors.hpp"
 #include "game_effects.hpp"
+#include "game_object_visibility.hpp"
 #include "game_prop_parts.hpp"
 #include "game_hud.hpp"
 #include "game_options.hpp"
@@ -361,6 +362,8 @@ private:
     std::set<int> scriptedRooms;
     std::vector<std::size_t> pendingVehicleBreaks;
     chase::runtime::ObjectRoomMover vehicleRoomMover;
+    std::vector<std::optional<chase::render::CharacterInstance>> placedCharacters;
+    game_object_visibility::CharacterVisibility characterVisibility;
     std::optional<game_characters::LevelCharacters> levelCharacters;
     chase::runtime::PropAnimations propAnimations;
     chase::runtime::AnimationDriverChain animationDrivers;
