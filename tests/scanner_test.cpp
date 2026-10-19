@@ -79,7 +79,7 @@ void enterAndLock() {
     require(animation, "state 0x156 plays role 0x208 (scanner_out, 0x322ba8)");
     input = standing();
     unsigned turned = 0;
-    for (unsigned i = 1; i < 36; ++i) {
+    for (unsigned i = 1; i < kScannerTakeOutUpdates; ++i) {
         input.player[0] = scanner.playerPosition()[0];
         input.player[2] = scanner.playerPosition()[2];
         input.facing = scanner.playerFacing();
@@ -90,14 +90,13 @@ void enterAndLock() {
     require(turned == 7, "the facing turns 0x800 per update from 0 to 90 degrees (0x2248c4), the first step in the press update: " + std::to_string(turned));
     require(std::fabs(scanner.playerPosition()[0]) < 0.01f && std::fabs(scanner.playerPosition()[2]) < 0.01f, "the player is moved onto the zone");
     events = scanner.update(input);
-    require(scanner.phase() == ScannerPhase::Entering && scanner.active(), "36 updates (scanner_out 18 frames at 15 per second) enter state 0x157");
+    require(scanner.phase() == ScannerPhase::Entering && scanner.active(), "49 updates from the press enter state 0x157 (oracle B-1: 4894 clock ticks from the toggle clear)");
     require(played(events, kScannerSoundEnter), "0x1bf2d0 plays sound 0x19");
     for (unsigned i = 1; i < kScannerEnterCallbackUpdates; ++i) require(!fired(scanner.update(input), "enter"), "no EnterScan before the callback");
     events = scanner.update(input);
-    require(fired(events, "enter") && scanner.phase() == ScannerPhase::Active, "EnterScanTriggerObject fires in 0x2bee98, 3 updates after the entry");
-    scanner.update(input);
-    scanner.update(input);
-    require(scanner.records().empty(), "no camera before update 6 after the entry");
+    require(fired(events, "enter") && scanner.phase() == ScannerPhase::Active, "EnterScanTriggerObject fires in 0x2bee98, 20 updates after the entry (oracle B-1: 1978 ticks)");
+    for (unsigned i = kScannerEnterCallbackUpdates + 1; i < kScannerCameraStartUpdates; ++i) scanner.update(input);
+    require(scanner.records().empty(), "no camera before update 56 after the entry (oracle B-1: yaw valid with the toggle byte, 3619 ticks after the callback)");
     events = scanner.update(input);
     require(std::fabs(scanner.zoom() - 43.0f) < 1e-6f, "the camera starts at zoom 43 ([5])");
     require(scanner.records().size() == 1 && scanner.records()[0].visible, "the dog 20 ahead of the view is visible");
@@ -127,9 +126,10 @@ void enterAndLock() {
     scanner.requestEnabled(false);
     scanner.update(input);
     require(scanner.phase() == ScannerPhase::Exiting, "EnableScanner 0 toggles the active scanner off (0x1cd9dc)");
-    scanner.update(input);
-    scanner.update(input);
-    require(fired(scanner.update(input), "exit"), "ExitScanTriggerObject fires in the exit callback 0x2befc0");
+    for (unsigned i = 1; i < kScannerExitCallbackUpdates; ++i) scanner.update(input);
+    require(fired(scanner.update(input), "exit"), "ExitScanTriggerObject fires in the exit callback 0x2befc0 (SCAN-S1: placed at 20 updates)");
+    for (unsigned i = kScannerExitCallbackUpdates + 1; i < kScannerExitEndUpdates; ++i) scanner.update(input);
+    require(scanner.phase() == ScannerPhase::Exiting, "the exit transition runs 57 updates (oracle B-1: 5706 ticks)");
     scanner.update(input);
     require(scanner.phase() == ScannerPhase::Idle && !scanner.active(), "the end callback 0x1a2824 clears the active flag");
 }
@@ -143,7 +143,7 @@ void cancelAndAim() {
     input.takeOutUpdates = 1;
     scanner.update(input);
     input.usePressed = false;
-    for (int i = 0; i < 10; ++i) scanner.update(input);
+    for (unsigned i = 0; i < kScannerCameraStartUpdates + kScannerEnterCallbackUpdates; ++i) scanner.update(input);
     require(scanner.phase() == ScannerPhase::Active && !scanner.records().empty(), "active with a camera");
     input.stickX = 1.0f;
     scanner.update(input);

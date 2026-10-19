@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 663 open items and stand-ins, 132 linked to game usage, 531 with unknown reach.
+Items: 666 open items and stand-ins, 132 linked to game usage, 534 with unknown reach.
 
 ## Top 50 overall
 
@@ -87,7 +87,7 @@ Items: 663 open items and stand-ins, 132 linked to game usage, 531 with unknown 
 
 ## Player and camera
 
-12 of 158 items linked.
+12 of 161 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -207,7 +207,7 @@ No script native or object class is linked to these items (`+N` is Unblocks). Ad
 Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md) (+30), [RENDER-35](features/rendering.md) (+23), [VEH-6](features/vehicles-physics.md) (+22), [SCRIPT-43](features/script-system-natives.md) (+17), [SCRIPT-94](features/script-system-ai-navigation.md) (+16), [SCRIPT-40](features/script-system-dcam.md) (+15), [SCRIPT-44](features/script-system-natives.md) (+15), [SCRIPT-101](features/script-system-ai-navigation.md) (+14), [SCRIPT-279](features/script-system-natives-world.md) (+14), [SCRIPT-95](features/script-system-ai-navigation.md) (+14)
 
 - [abilities-detective.md](features/abilities-detective.md): DETECT-4 (+3), DETECT-13 (+2), DETECT-8 (+2), DETECT-1 (+1), DETECT-6 (+1), DETECT-S7 (+1), DETECT-S8 (+1), DETECT-10, DETECT-11, DETECT-12, DETECT-14, DETECT-3, DETECT-5, DETECT-9, DETECT-S1, DETECT-S2, DETECT-S3, DETECT-S4, DETECT-S5, DETECT-S6
-- [abilities-scanner.md](features/abilities-scanner.md): AUDIO-S33, SCAN-1, SCAN-3, SCAN-4, SCAN-6, SCAN-S1, SCAN-S2, SCAN-S3, SCAN-S4
+- [abilities-scanner.md](features/abilities-scanner.md): AUDIO-S33, SCAN-3, SCAN-6, SCAN-7, SCAN-8, SCAN-9, SCAN-S1, SCAN-S2, SCAN-S3, SCAN-S4, SCAN-S5, SCAN-S6
 - [animation-characters.md](features/animation-characters.md): ANIM-10 (+1), ANIM-11 (+1), ANIM-1, ANIM-3, ANIM-4, ANIM-S10, ANIM-S11, ANIM-S2
 - [assets-formats.md](features/assets-formats.md): ASSET-1, ASSET-2, ASSET-3, ASSET-4, ASSET-8, ASSET-S1, ASSET-S2
 - [audio.md](features/audio.md): AUDIO-3 (+2), AUDIO-20 (+1), AUDIO-30 (+1), AUDIO-31 (+1), AUDIO-32 (+1), AUDIO-1, AUDIO-5, AUDIO-6, AUDIO-7, AUDIO-S1, AUDIO-S2, AUDIO-S20, AUDIO-S3, AUDIO-S30, AUDIO-S4, AUDIO-S5, AUDIO-S6, AUDIO-S7

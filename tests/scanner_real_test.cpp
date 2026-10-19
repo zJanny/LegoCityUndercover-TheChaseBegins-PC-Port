@@ -117,7 +117,7 @@ int main(int argc, char** argv) {
         while (scanner.phase() != runtime::ScannerPhase::Active && update < 100) step();
         require(scanner.phase() == runtime::ScannerPhase::Active, "the scanner view starts");
         require(near(scanner.playerPosition()[0], 869.48f, 0.01f) && near(scanner.playerPosition()[2], 645.766f, 0.01f), "the player stands on the zone");
-        for (int i = 0; i < 8; ++i) step();
+        while (scanner.records().empty() && update < 200) step();
         require(scanner.records()[dogIndex].distance > 30.0f && scanner.records()[dogIndex].distance < 100.0f,
                 "the dog is beyond 30 but within the linked range 100: " + std::to_string(scanner.records()[dogIndex].distance));
         input.shoulderR = 1.0f;

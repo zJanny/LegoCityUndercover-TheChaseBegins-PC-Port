@@ -5,14 +5,18 @@ The sound scanner of mission 1-2 and later missions: the zone class `props/prop_
 ## Current state
 
 - Type 201 descriptor 0x1863c8: create 0x19f6d0, parameter reader 0x192008, message handler 0x1aea24 (message 3 = use), no update. The zone's trigger objects sit at component +0x5c..+0x74; `ScannerMode` at +0x4c. [§2026-10-18T11:27:21](#ts-20261018-112721)
-- Enter: A press in `UseBound` -> message 3 -> 0x2249e0(1, zone) -> player event 201 -> state 0x156 "Scanner Enter" (clip `scanner_out`) and the alignment 0x2248c4; when the clip ends state 0x157 "Scanner Active" (0x1bf2d0) starts the spinner transition; `EnterScanTriggerObject` fires 3 updates later (0x2bee98). Measured in the oracle. [§2026-10-18T11:27:21](#ts-20261018-112721)
+- Enter: A press in `UseBound` -> message 3 -> 0x2249e0(1, zone) -> player event 201 -> state 0x156 "Scanner Enter" (clip `scanner_out`) and the alignment 0x2248c4; when the clip ends state 0x157 "Scanner Active" (0x1bf2d0) starts the spinner transition; `EnterScanTriggerObject` fires 20 updates later (0x2bee98; real-time count, see the last bullet). [§2026-10-18T11:27:21](#ts-20261018-112721)
 - View: camera update 0x26f0b4 (settings block 0x1e06ac: zoom 43..20 at 35 per second with L/R, turn 60 degrees per second, pitch -25..40); `ZoomedInTriggerObject` fires in every update at full zoom (oracle: from frame 49 on). Lock 0x2ef4c8 (1.5 per second, `LockedOnTriggerObject`), scan 0x2ef310 (A held, 0.75 per second, `TriggerScanned` of the target once). [§2026-10-18T11:27:21](#ts-20261018-112721)
 - Exit: B (slot 7) or `EnableScanner 0` (0x1cd9dc) -> event 201 -> state 0x158 (0x1bf478) -> transition with 0x2befc0 (`ExitScanTriggerObject`, clip `scanner_in`) and 0x1a2824 (`CompleteExitTriggerObject`, flags cleared). [§2026-10-18T11:27:21](#ts-20261018-112721)
 - Emulator: in Azahar the camera yaw word 0x376894 reads NaN once the scanner runs, the scannable records never get a screen position, and the game stops responding after the exit (both runs). This is the likely cause of the white view; lock, scan and exit timing could not be measured there. [§2026-10-18T11:27:21](#ts-20261018-112721)
+- Real time (oracle with the motion source): state 0x157 49 updates after the press, enter callback +20, end callback and camera +56, lock 20, scan 39, script exit 57; no hang, yaw finite. [§20261019-084345](#ts-20261019-084345)
+- Overlay: layouts of `sprites/blend/DRC_Scanner` at half scale centred on the screen, zoom meter time = zoom progress x 3.0 s, reticle storyboards `Ret_Focus` / `Ret_LockingOn` by lock state, scan meter by scan progress; the reticle position follows 0x2ef4c8. [§20261019-085330](#ts-20261019-085330)
 
 <a id="ts-20261018-112721"></a>
 
 ## 2026-10-18T11:27:21+02:00 — The sound scanner: classes, player states, view, triggers (REA, objdump, Azahar GDB traces of m12-8)
+
+Corrected by [abilities-scanner.md §2026-10-19T08:43:45](#ts-20261019-084345): the enter / exit counts 3 / 4 / 6 are stepped-frame counts; real time is 49 / 20 / 56 / 57 updates, and the exit does not hang with the motion source.
 
 ### Method
 
@@ -57,3 +61,52 @@ Unknowns:
 - The UI spinner timing of the transition (states of 0x26eee0) in real time; the counts 3 / 4 / 6 above are stepped-frame counts.
 - Order of 0x187f78 and the use handler in one update; the camera pitch sign of 0x1b7540 (the clamp's base angles were not transcribed); the projection 0x22e1cc and radius 0x25b578; the list builder of the scannable lists 0x526aec; `CompleteTriggerObject`, `SkyboxOverride`, `TeleportTo`, the alien / reward branch 0x2ef144 and the shown-object handling (message 0xfb).
 - Exit timing in the original (not measured because of the hang).
+
+<a id="ts-20261019-084345"></a>
+
+## 2026-10-19T08:43:45+02:00 — Scanner timing in real time with the motion source (oracle run B-1, state m12-8-roof-sound-scanner)
+
+### Method
+
+One real-time run by the emulator servant (Azahar, OpenGL, level motion source of [oracle-setup.md §2026-10-18T22:03:32](oracle-setup.md#ts-20261018-220332)), RPC sampling of 0x375eb4 (0x38 bytes), the mode object 0x5216ac +0x20..0x40 and the camera yaw 0x376894 about 900 times per second (103,810 rows); presses by RPC input (A, R, D-pad, A held, B). Raw data: `artifacts/oracle/r27-servant-out/b1/b1_sample.csv` and `b1_events.csv` (not committed). The game clock (0x5165c8, 3000 ticks per second) advances by 100 per update, so ticks / 100 counts updates of 1/30 s (the emulator ran at about 0.94 of real time; ticks are game time).
+
+### Measured
+
+- Enter: the press clears the toggle byte +2 (0x375eb6) in the same update (3 vblanks, 100 ticks); state 0x157 is entered (+0x34 and +0x35 = 1) 4894 ticks = 49 updates later; the mode index (+0x36 = 1, the enter callback 0x2bee98) 1978 ticks = 20 updates after that; the toggle byte back to 1 (end callback 0x1a27e0) and the first valid camera yaw (1.7402 -> 1.5499) 3619 ticks = 36 updates after the callback, so 56 updates after the entry of 0x157. The stepped counts 3 / 4 / 6 of [Corrects §2026-10-18T11:27:21](#ts-20261018-112721) are therefore wrong for real time; `scanner_out` (1.2 s) does not explain the 49 updates (1.63 s).
+- Lock: state 0 -> 1 -> 2 (progress 1.0) in 2006 ticks (20 updates, 1.5 per second as read in 0x2ef4c8). Scan: A held at 3626277, state 5 one update later, state 6 (progress 1.0) after 3911 ticks (39 updates, 0.75 per second). Both agree with the port.
+- Script exit: after the scan (state 6) the scanned object's script closes the scanner; the exit transition started 47 updates after state 6 (matches `Wait 1.5` of 1-2_Scanned_Pringles); +0x35 stayed 1 and +0x34, +0x35, +0x36, the zone pointer and the byte at +1 cleared and the toggle byte returned to 1 together 5706 ticks = 57 updates after it started (the callbacks inside were not separately visible in the sampled bytes).
+- Yaw stayed finite in all rows and the game answered input after the exit: the old hang after the exit does not occur with the motion source.
+- The B press (3 s later) found the scanner already closed (the script exit came first), so a B exit was not measured.
+- Screenshots (not committed): the view shows a cyan tint over the 3D view, a white thin frame with corner pieces, a vertical zoom meter with plus / minus on the left, a headphone hexagon top right, and a ring reticle with green rings and a centre dot when the dog is locked; the lower screen shows the hint box with an "i" badge (`Hold A to lock on to the audio source.`) before the view, and the map with a headphone and a return-arrow button during the view.
+
+### Port
+
+`kScannerTakeOutUpdates` 49, `kScannerEnterCallbackUpdates` 20, `kScannerEnterEndUpdates` and `kScannerCameraStartUpdates` 56, `kScannerExitEndUpdates` 57; the exit callback count 20 is a stand-in (SCAN-S1). The take-out count no longer comes from the `scanner_out` clip length.
+
+Unknowns:
+- Why state 0x157 comes 49 updates after the press (clip length 1.2 s, alignment 0.67 s); the animation clocks of the spinner transition (20 + 36 updates) and the exit callback time; the exit by B.
+
+<a id="ts-20261019-085330"></a>
+
+## 2026-10-19T08:53:30+02:00 — The audio scanner overlay: layouts and storyboard rules (REA 0x16785c region, 0x2e9030, 0x1d99a8, 0x263400, 0x2ef4c8, 0x1ebd14, 0x245b40; oracle B-1 screenshots)
+
+### Method
+
+REA (Ghidra 12.1.2) pseudocode of the UI setup (the function around 0x1be9e4 / 0x1befcc, name FUN_0016785c), 0x2e9c1c, 0x2e9eec, 0x2e9030, 0x2ef4c8, 0x1ebd14, 0x245b40, 0x227228, 0x233948, 0x2119d4, 0x263400, 0x20f540, 0x234c04 and the assembly of 0x1d99a8; the layouts with the C++ decoder (`parseLayout`); the screenshots of [§2026-10-19T08:43:45](#ts-20261019-084345). The vtable-like table at 0x34cf94 and the audio / physical / photo reticle objects (0x52451c, 0x5244e8, 0x526834) were read only as far as their setup.
+
+### Layouts
+
+- Setup loads `Sprites/blend/DRC_Scanner/DRC_scanner` (1024 x 512 units; children `Common` = border, mirrored border, `Zoom_Meter`, `Signal_Meter`, `ModeButtons` (opacity 0), `iconAudioMode`; `ModeLayers` with `Physical` and `Audio` (`Reticule_Audio` at 262, 128, 500 x 256, and the six `SonarSegment`s); `info_top`, `info_bot`), the layouts `ScanMeter` (three instances, storyboards `Scanning`, `Off`), `SoundCentre` (50 instances, storyboard `Pulsing`) and `SoundPulse` (45 instances, `Pulse`) and the photo layouts. Every scene's `LayoutRoot` gets the scale 0.5 / 0.5 from 0x20f540 (`0x20f540(0.5, 0.5, scene, 1)`) and 0x234c04 centres it on the 400 x 240 screen. The screenshot confirms it: the zoom meter icons are 93 pixels apart for 187 layout units, and the headphone icon and frame corners land where the half-scale layout (512 x 256, offset -56, -8) puts them.
+- Zoom meter (0x1d99a8): the storyboard `Zoom` of `zoom_meter.bxaml` (3.0 s) is set to time = progress x length (0x23caa4) with progress = 1 - (zoom - min) / (max - min) (0x263400; settings +0x18 = 20, +0x1c = 43), so zoom 43 is time 0 (arrow at the minus end) and zoom 20 time 3.0. The same function tints `border`, `border_Copy` and `iconAudioMode` with white, or with a stored colour (+0x18 of 0x1d9ae4) when a flag of the player's component passes 0x23a87c (not read); the three are white in the pictures.
+- Reticle (0x2e9030, parameters dt and the reticle UI; its +4 pointer is the mode record +0x14, so the byte +0x28 is the lock state +0x3c, +0x14 the lock progress, +0x1c the scan progress, +4 / +8 the reticle position): the root of `Reticule_Audio` sits at the layout position plus (reticle position - screen centre); the mode position +0x18 / +0x1c comes from 0x2ef4c8 (state 1: linear blend from +0x20 to the target's screen position by the lock progress, 0x2119d4; state 2: on the target; states 5 to 8: on the scanned object or the screen centre; states 0, 3, 4 write nothing).
+- Storyboards by state (0x1ebd14 starts the new storyboard and resets the previous one to time 0): states 0 to 4: `Ret_LockingOn` restarted every update (time 0), `Ret_Focus` set to progress x 0.26 with the lock progress, the scan meter restarted; states 5 and 7: `Ret_LockingOn` at scan progress x 2.26 and the `Scanning` storyboard of ScanMeter (3.0 s) at scan progress x length; state 6: `Ret_LockingOn` at its length, ScanMeter storyboard `Off` once when the state changed; state 8: `Ret_Focus` at scan progress x 0.26. Storyboard lengths from the data: Zoom 3.0, Ret_Focus 0.26, Ret_LockingOn 2.26, Scanning 3.0.
+- The pieces of `ScanMeter` are 28 images with static rotations (`rot`), `ScaleRoot` scale 0.28: 350 x 0.28 x 0.5 = 49 pixels across, the size of the white arc around the centre of the mid-scan screenshot.
+- Zoom timing (0x26f0b4) and the camera yaw are in [§2026-10-18T11:27:21](#ts-20261018-112721).
+
+### Port
+
+`src/runtime/scanner_reticle.{hpp,cpp}` (state to storyboard fractions and reticle position, test `scanner-reticle`), `src/frontend/scanner_overlay.{hpp,cpp}` (draws `drc_scanner.bxaml`, `reticule_audio.bxaml` and `scanmeter.bxaml` with the half-scale layout; `LayoutScene::rotations` makes the layout drawer apply element rotation and track property 5 and lets scale tracks replace the element scale; test `scanner-overlay-data`), glue `LevelSession::drawScannerOverlay` in `src/game_scanner.cpp`. While the view is shown the overlay replaces the hearts HUD on the top screen (the oracle shows no hearts in the view, B-1 screenshot `04_full_zoom`). In state 6 the port draws the scan meter at the end of `Scanning` instead of the `Off` storyboard (SCAN-S6). A chase-game run from the roof trigger shows the frame, zoom meter and headphone icon like the oracle picture.
+
+Unknowns:
+- The cyan wash over the 3D view and the green dog (message 0xfb) are not in these layouts (not found). The lock state 2 screenshot shows a large green ring (`ReticuleFocus`) that the rule above (`Ret_LockingOn` at time 0, where `ReticuleFocus` has opacity 0) does not produce; what 0x245b40 / 0x233948 do to a restarted storyboard is not settled.
+- What starts `Reticule_Spinner`, `ScanButtonPrompt_*`, `WAV*` and `TargetAquired_On`, the sonar segment intensities (0x2e9030 computes them from the direction of every sound source) and the `SoundCentre` / `SoundPulse` markers; the bottom-screen scanner UI (map with the headphone and return buttons, hint box); the scan meter position beyond "centred on the reticle".

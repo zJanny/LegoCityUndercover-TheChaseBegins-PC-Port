@@ -27,8 +27,8 @@ float easedFraction(const float spline[4], float fraction) {
 }
 
 struct Pose {
-    float translateX = 0, translateY = 0, scaleX = 1, scaleY = 1, opacity = 1;
-    bool hasOpacity = false;
+    float translateX = 0, translateY = 0, scaleX = 1, scaleY = 1, rotation = 0, opacity = 1;
+    bool hasOpacity = false, hasScaleX = false, hasScaleY = false, hasRotation = false;
 };
 
 void applyStoryboard(Pose& pose, const assets::UiLayout& layout, const std::string& storyboard, float time,
@@ -41,8 +41,18 @@ void applyStoryboard(Pose& pose, const assets::UiLayout& layout, const std::stri
             switch (track.property) {
             case 1: pose.translateX = value; break;
             case 2: pose.translateY = value; break;
-            case 3: pose.scaleX = value; break;
-            case 4: pose.scaleY = value; break;
+            case 3:
+                pose.scaleX = value;
+                pose.hasScaleX = true;
+                break;
+            case 4:
+                pose.scaleY = value;
+                pose.hasScaleY = true;
+                break;
+            case 5:
+                pose.rotation = value;
+                pose.hasRotation = true;
+                break;
             case 6:
                 pose.opacity = value;
                 pose.hasOpacity = true;
@@ -113,7 +123,13 @@ private:
             if (width <= 1e-6f) width = float(image->width);
             if (height <= 1e-6f) height = float(image->height);
         }
-        const float scaleX = e.scale[0] * pose.scaleX, scaleY = e.scale[1] * pose.scaleY;
+        float scaleX = e.scale[0] * pose.scaleX, scaleY = e.scale[1] * pose.scaleY;
+        float rotation = 0;
+        if (scene_.rotations) {
+            scaleX = pose.hasScaleX ? pose.scaleX : e.scale[0];
+            scaleY = pose.hasScaleY ? pose.scaleY : e.scale[1];
+            rotation = pose.hasRotation ? pose.rotation : e.rotation;
+        }
         const float localX = e.position[0] + pose.translateX, localY = e.position[1] + pose.translateY;
         const float pivotX = e.origin[0] * width, pivotY = e.origin[1] * height;
         const float boxX = localX + pivotX * (1 - scaleX), boxY = localY + pivotY * (1 - scaleY);
@@ -125,8 +141,12 @@ private:
         frame.opacity = parent.opacity * (pose.hasOpacity ? pose.opacity : e.opacity);
         if (image) {
             const Colour tint{1, 1, 1, frame.opacity};
-            canvas_.drawScaled(*image, {0, 0, image->width, image->height}, frame.x, frame.y, width * frame.scaleX,
-                               height * frame.scaleY, tint);
+            if (rotation != 0)
+                canvas_.drawRotated(*image, {0, 0, image->width, image->height}, frame.x + width * frame.scaleX / 2,
+                                    frame.y + height * frame.scaleY / 2, width * frame.scaleX, height * frame.scaleY, rotation, tint);
+            else
+                canvas_.drawScaled(*image, {0, 0, image->width, image->height}, frame.x, frame.y, width * frame.scaleX,
+                                   height * frame.scaleY, tint);
         } else if (e.type == assets::UiElementType::Reference || scene_.attachedLayouts.count(e.name)) {
             const auto attached = scene_.attachedLayouts.find(e.name);
             const auto board = scene_.referenceStoryboards.find(e.name);
@@ -242,9 +262,9 @@ std::vector<std::string> wrapText(const BitmapFont& font, const std::vector<std:
 }
 
 void drawLayout(Canvas& canvas, Resources& resources, const std::string& layoutPath, const LayoutScene& scene, float x,
-                float y) {
+                float y, float scale) {
     Drawer drawer(canvas, resources, scene);
-    drawer.layout(layoutPath, {x, y, 1, 1, scene.opacity}, scene.storyboard, std::string(), scene.time,
+    drawer.layout(layoutPath, {x, y, scale, scale, scene.opacity}, scene.storyboard, std::string(), scene.time,
                   scene.laterStoryboards);
 }
 

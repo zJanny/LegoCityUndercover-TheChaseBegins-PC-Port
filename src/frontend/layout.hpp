@@ -43,13 +43,16 @@ struct LayoutScene {
     std::map<std::string, std::string> attachedLayouts;
     float opacity = 1;
     int textSpacing = -2;
+    // STAND-IN (SCAN-S5): the scanner overlay draws rotation (element rotation field and track property 5) and lets scale tracks
+    // replace the element scale; the original's property evaluator is not recovered. Off for every other layout.
+    bool rotations = false;
 };
 
 std::string layoutTexturePath(const std::string& layoutPath, const std::string& source);
 std::string layoutFolder(const std::string& layoutPath);
 
 void drawLayout(Canvas& canvas, Resources& resources, const std::string& layoutPath, const LayoutScene& scene, float x,
-                float y);
+                float y, float scale = 1.0f);
 
 float evaluateTrack(const assets::UiTrack& track, float time);
 std::vector<std::string> wrapText(const BitmapFont& font, const std::vector<std::string>& extended,

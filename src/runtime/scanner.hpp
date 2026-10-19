@@ -52,13 +52,19 @@ constexpr float kScannerAlignRate = 1.5f;
 constexpr int kScannerAlignTurnStep = 0x800;
 // 0x1ebe88: the view sits at the player position plus 1.7 times the player height (+0x70) plus the zone's CameraYOffset.
 constexpr float kScannerEyeHeightFactor = 1.7f;
-// Updates from the entry of state 0x157 (0x1bf2d0) to the enter callback 0x2bee98 and to the end callback 0x1a27e0 of the spinner transition
-// 0x26eee0 (kind 1). SCAN-S1: measured in stepped oracle runs (dt 0.07, m12-8), not derived from the spinner animation's own clock.
-constexpr unsigned kScannerEnterCallbackUpdates = 3;
-constexpr unsigned kScannerEnterEndUpdates = 4;
-// SCAN-S1: the first camera update 0x26f0b4 (gated by the byte 0x3760c5 == 3 in 0x187f78) came 6 updates after the entry of state 0x157 in the
-// same runs (frames 20 -> 26, s1 and s4); the target search of the mode (+0x20, 0x1ec470) is started with it here.
-constexpr unsigned kScannerCameraStartUpdates = 6;
+// Real-time counts of the scanner transitions, in updates (the game clock advances 100 of 3000 ticks per second per update, so one update is
+// 1/30 s). Measured in the oracle with the motion source (state m12-8-roof-sound-scanner, request B-1, docs/re/abilities-scanner.md): the
+// press clears the toggle byte 0x375eb6 in its own update, state 0x157 is entered 49 updates later, the enter callback 0x2bee98 (mode index set,
+// EnterScanTriggerObject) comes 20 updates after that, and the end callback 0x1a27e0 (toggle byte back to 1) together with the first camera update
+// 0x26f0b4 (camera yaw valid) 56 updates after the entry. SCAN-S1: the counts are measured, the animation clocks behind them are not read.
+constexpr unsigned kScannerTakeOutUpdates = 49;
+constexpr unsigned kScannerEnterCallbackUpdates = 20;
+constexpr unsigned kScannerEnterEndUpdates = 56;
+constexpr unsigned kScannerCameraStartUpdates = 56;
+// The exit (state 0x158, transition kind 1 with 0x2befc0 / 0x1a2824) cleared the flags 57 updates after the entry of the transition (the exit
+// triggered by the script's EnableScanner 0, same run). SCAN-S1: the exit callback 0x2befc0 is placed at the enter callback's count (not observed).
+constexpr unsigned kScannerExitCallbackUpdates = 20;
+constexpr unsigned kScannerExitEndUpdates = 57;
 // Player animation roles (tablesanimations rows): 0x208 "scanner_out" (state 0x156 enter 0x322ba8), 0x207 "scanner_in" (exit 0x2befc0).
 constexpr int kAnimationScannerOut = 0x208;
 constexpr int kAnimationScannerIn = 0x207;
@@ -119,7 +125,7 @@ struct ScannerInput {
     float stickX = 0, stickY = 0;  // channels 0 and 1
     bool dpadUp = false, dpadDown = false, dpadLeft = false, dpadRight = false;  // slots 0..3
     float shoulderL = 0, shoulderR = 0;  // slots 12 and 13
-    unsigned takeOutUpdates = 36;  // updates until the scanner_out clip has ended
+    unsigned takeOutUpdates = kScannerTakeOutUpdates;  // updates from the press to the entry of state 0x157
     std::function<bool(const std::string&)> enabled;  // object not disabled (scannables)
     std::function<bool(std::uint32_t)> soundPlaying;  // 0x2247f0; without it a sound counts as playing from its play to its stop
 };
@@ -165,12 +171,14 @@ public:
     bool viewShown() const { return phase_ == ScannerPhase::Active; }
     ScannerView view() const;
     float zoom() const { return zoom_; }
+    const ScannerSettings& settings() const { return settings_; }
     float yawOffset() const { return aim_[1]; }
     float pitchOffset() const { return aim_[0]; }
     int targetState() const { return state_; }  // mode +0x3c
     float lockProgress() const { return lockProgress_; }
     float scanProgress() const { return scanProgress_; }
     int target() const { return target_; }
+    int current() const { return current_; }  // +0x44: the object being scanned or scanned last
     const std::vector<ScannerRecord>& records() const { return records_; }
     const std::vector<ScannerZone>& zones() const { return zones_; }
     const std::vector<ScannableObject>& objects() const { return objects_; }

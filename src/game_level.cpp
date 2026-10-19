@@ -431,8 +431,10 @@ void LevelSession::draw(int width, int height) {
     setScissorTest(false);
     if (hud && !cutscenePlaying()) {
         hudCanvas.clearTransparent();
-        hud->draw(hudCanvas, provisionalStudClockSeconds);
-        drawHeadIcon(hudCanvas);
+        if (!drawScannerOverlay(hudCanvas)) {
+            hud->draw(hudCanvas, provisionalStudClockSeconds);
+            drawHeadIcon(hudCanvas);
+        }
         fe::MinimapView mapView;
         mapView.x = player->motion.x;
         mapView.z = player->motion.z;

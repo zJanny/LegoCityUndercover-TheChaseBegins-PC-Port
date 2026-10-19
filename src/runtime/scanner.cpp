@@ -183,7 +183,7 @@ ScannerView Scanner::view() const {
 
 int Scanner::playerClip() const {
     if (phase_ == ScannerPhase::Idle) return 0;
-    if (phase_ == ScannerPhase::Exiting && phaseUpdates_ >= kScannerEnterCallbackUpdates) return kAnimationScannerIn;
+    if (phase_ == ScannerPhase::Exiting && phaseUpdates_ >= kScannerExitCallbackUpdates) return kAnimationScannerIn;
     return kAnimationScannerOut;
 }
 
@@ -289,7 +289,7 @@ std::vector<ScannerEvent> Scanner::update(const ScannerInput& input) {
         updateTarget(input, events);
         break;
     case ScannerPhase::Exiting:
-        if (phaseUpdates_ == kScannerEnterCallbackUpdates) {
+        if (phaseUpdates_ == kScannerExitCallbackUpdates) {
             const ScannerZone& z = zones_[std::size_t(zone_)];
             fire(z.exitTrigger, events);
             ScannerEvent animation;
@@ -300,7 +300,7 @@ std::vector<ScannerEvent> Scanner::update(const ScannerInput& input) {
             ScannerEvent pose;
             pose.kind = ScannerEventKind::PlayerPose;
             events.push_back(pose);
-        } else if (phaseUpdates_ == kScannerEnterEndUpdates) {
+        } else if (phaseUpdates_ == kScannerExitEndUpdates) {
             phase_ = ScannerPhase::Idle;
             activeFlag_ = false;
             canToggle_ = true;

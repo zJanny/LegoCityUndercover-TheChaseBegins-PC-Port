@@ -31,6 +31,7 @@
 #include "game_carry.hpp"
 #include "runtime/carry.hpp"
 #include "runtime/scanner.hpp"
+#include "runtime/scanner_reticle.hpp"
 #include "runtime/zipline.hpp"
 #include "runtime/brick_grab.hpp"
 #include "runtime/pole.hpp"
@@ -157,6 +158,7 @@ private:
     game_player::PlayerAnimation attackMovePlayer(const chase::runtime::StickIntent& intent, bool jumpPressed, bool usePressed, bool attackHeld,
                                                   bool attackAllowed, float dt);
     bool scannerView(float eye[3], float& yaw, float& pitch, float& fieldOfView) const;
+    bool drawScannerOverlay(chase::frontend::Canvas& top);
     void updateLevelCharacters(float dt);
     void updateFollowCamera(float dt);
     void loadBoardingVehicles(const std::map<std::string, std::pair<std::size_t, chase::render::Mat4>>& placedInstances);
@@ -267,6 +269,7 @@ private:
     std::vector<int> loggedDetectiveStates;
     chase::runtime::Scanner scanner;
     unsigned scannerCallsSeen = 0;
+    chase::runtime::ScannerReticle scannerReticle;
     std::vector<chase::runtime::ZiplineAnchor> ziplines;
     chase::runtime::ZiplineRider ziplineRider;
     std::vector<chase::runtime::ZiplineRope> ziplineRopes;

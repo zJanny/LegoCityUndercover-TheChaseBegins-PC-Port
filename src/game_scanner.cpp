@@ -1,4 +1,5 @@
 #include "game_level.hpp"
+#include "frontend/scanner_overlay.hpp"
 #include "runtime/follow_camera.hpp"
 #include <cmath>
 #include <iostream>
@@ -7,12 +8,6 @@ namespace game_level {
 using namespace chase;
 
 namespace {
-unsigned clipUpdates(const game_player::PlayerRig& player, int role, unsigned fallback) {
-    const auto found = player.animations.find(role);
-    if (found == player.animations.end()) return fallback;
-    return unsigned(std::ceil(float(assets::animationLength(found->second)) * 30.0f / assets::animationFramesPerSecond(found->second) - 1e-3f));
-}
-
 const char* phaseName(runtime::ScannerPhase phase) {
     switch (phase) {
     case runtime::ScannerPhase::Idle: return "idle";
@@ -57,7 +52,6 @@ void LevelSession::updateScanner() {
     input.dpadRight = pad.slot(3).value != 0.0f;
     input.shoulderL = pad.slot(kSlotLeftShoulder).value;
     input.shoulderR = pad.slot(kSlotRightShoulder).value;
-    input.takeOutUpdates = clipUpdates(*player, runtime::kAnimationScannerOut, input.takeOutUpdates);
     input.enabled = [this](const std::string& instance) { return !objectState.isDisabled(instance); };
     if (shared.audio) input.soundPlaying = [this](std::uint32_t id) { return shared.audio->playing(id, std::uint16_t(runtime::kScannerSoundOwner)); };
     const runtime::ScannerPhase before = scanner.phase();
@@ -90,6 +84,33 @@ bool LevelSession::scannerView(float eye[3], float& yaw, float& pitch, float& fi
     yaw = view.yaw;
     pitch = view.pitch;
     fieldOfView = runtime::FollowCamera::verticalFieldOfView(view.zoomDegrees);
+    return true;
+}
+
+bool LevelSession::drawScannerOverlay(frontend::Canvas& top) {
+    if (!scanner.viewShown()) {
+        scannerReticle.reset();
+        return false;
+    }
+    runtime::ScannerReticleInput input;
+    input.zoom = scanner.zoom();
+    input.zoomMin = scanner.settings().zoomMin;
+    input.zoomMax = scanner.settings().zoomMax;
+    input.state = scanner.targetState();
+    input.lockProgress = scanner.lockProgress();
+    input.scanProgress = scanner.scanProgress();
+    const auto& records = scanner.records();
+    if (scanner.target() >= 0 && std::size_t(scanner.target()) < records.size()) {
+        input.hasTarget = true;
+        input.targetScreen[0] = records[std::size_t(scanner.target())].screen[0];
+        input.targetScreen[1] = records[std::size_t(scanner.target())].screen[1];
+    }
+    if (scanner.current() >= 0 && std::size_t(scanner.current()) < records.size()) {
+        input.hasCurrent = true;
+        input.currentScreen[0] = records[std::size_t(scanner.current())].screen[0];
+        input.currentScreen[1] = records[std::size_t(scanner.current())].screen[1];
+    }
+    frontend::drawScannerOverlay(top, hudResources, scannerReticle.update(input), float(updates) / 30.0f);
     return true;
 }
 
