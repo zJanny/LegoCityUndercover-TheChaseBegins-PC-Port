@@ -1,5 +1,6 @@
 #include "runtime/vehicle_prop_smash.hpp"
 
+#include "assets/object_classes.hpp"
 #include "runtime/level_start.hpp"
 
 #include <algorithm>
@@ -84,12 +85,13 @@ void VehiclePropSmasher::load(const assets::Level& level, const assets::ClassLoo
     props_.clear();
     for (const assets::ObjectCollision& entry : placed) {
         const bool smashable = wobbleClass(entry.className) || anyDamageClass(entry.className);
-        if (!smashable && !scriptDestroyedClass(entry.className)) continue;
         const assets::LevelObject* object = nullptr;
         for (const assets::LevelObject& candidate : level.objects)
             if (candidate.instance == entry.instance) object = &candidate;
         const assets::Level* cls = classOf(entry.className);
         if (!object || !cls) continue;
+        const DestroyEffectSet set = destroyEffectSet(assets::objectKind(*object, *cls));
+        if (!smashable && !scriptDestroyedClass(entry.className) && !destroyEffectsPorted(set)) continue;
         Entry prop;
         prop.instance = entry.instance;
         prop.collisionDefault = entry.collisionDefault;
@@ -101,7 +103,30 @@ void VehiclePropSmasher::load(const assets::Level& level, const assets::ClassLoo
             prop.prop.meshRoot = SmashBox{{root.centre[0], root.centre[1], root.centre[2]}, {root.half[0], root.half[1], root.half[2]}};
         }
         prop.prop.health = smashHealth(entry.className, *object, *cls);
-        prop.effects = propDestroyEffects(*object, *cls);
+        prop.effects = propDestroyEffects(*object, *cls, destroyEffectsPorted(set) ? set : DestroyEffectSet::BaseProp);
+        props_.push_back(prop);
+    }
+}
+
+void VehiclePropSmasher::loadScriptDestroyed(const assets::Level& level, const assets::ClassLookup& classOf, const std::vector<assets::Placement>& placements,
+                                             const BoundsOf& boundsOf) {
+    for (const assets::Placement& placement : placements) {
+        if (placement.objectIndex >= level.objects.size()) continue;
+        const auto known = std::find_if(props_.begin(), props_.end(), [&](const Entry& entry) { return entry.instance == placement.instance; });
+        if (known != props_.end()) continue;
+        const assets::LevelObject& object = level.objects[placement.objectIndex];
+        const assets::Level* cls = classOf(object.className);
+        if (!cls) continue;
+        const DestroyEffectSet set = destroyEffectSet(assets::objectKind(object, *cls));
+        if (!destroyEffectsPorted(set)) continue;
+        const std::optional<SmashBox> box = boundsOf(placement);
+        if (!box) continue;
+        Entry prop;
+        prop.instance = placement.instance;
+        prop.smashable = false;
+        prop.prop.node = assets::placementMatrix(placement);
+        prop.prop.entityBox = *box;
+        prop.effects = propDestroyEffects(object, *cls, set);
         props_.push_back(prop);
     }
 }

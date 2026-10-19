@@ -37,9 +37,11 @@ void colourValue(const assets::LevelParam* value, std::uint32_t& colour) {
 
 }
 
-PropDestroyEffects propDestroyEffects(const assets::LevelObject& object, const assets::Level& cls) {
+PropDestroyEffects propDestroyEffects(const assets::LevelObject& object, const assets::Level& cls, DestroyEffectSet set) {
     PropDestroyEffects effects;
-    effects.explosionParticle = intValue(param(object, cls, "ExplosionParticleDef"), -1);
+    const bool defaultHandler = set == DestroyEffectSet::DefaultHandler;
+    effects.explosionParticle = intValue(param(object, cls, "ExplosionParticleDef"), defaultHandler ? kDefaultDestroyExplosion : -1);
+    effects.sound = defaultHandler ? kDefaultDestroySound : std::uint16_t(intValue(param(object, cls, "ATTR_SFX_DESTROYED"), 0));
     effects.spawnDebris = intValue(param(object, cls, "SpawnDebris"), 0) != 0;
     const float amount = floatValue(param(object, cls, "DebrisAmount"), 0.0f);
     if (amount > 0.0f) effects.debrisAmount = unsigned(std::int32_t(amount) & 0xff);

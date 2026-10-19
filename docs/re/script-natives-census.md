@@ -73,7 +73,7 @@ This file has no dated entries: the table is edited in place. When a native is r
 | VehicleJumpOut | 0x1da8d8 | 1 | 70 / 5 / 0 / 0 | 8 | done | 36 | player: [vehicles-waypoints.md §2026-10-15T11:35](vehicles-waypoints.md#ts-20261015-113500) |
 | StopMusic | 0x195054 | 1 | 68 / 15 / 0 / 0 | 7 | stand-in | 33 | block ramp (AUDIO-S20) [§2026-10-15T15:10](script-natives-audio.md#ts-20261015-151038) |
 | AutomaticMusic | 0x1d9c70 | 0 | 67 / 15 / 1 / 0 | 7 | stand-in | 33 | clears 0x376b31; mood step needs combat [§2026-10-15T15:10](script-natives-audio.md#ts-20261015-151038) |
-| DestroyProp | 0x1a2fe4 | 1 | 66 / 7 / 0 / 0 | 8 | stand-in | 26 | stand-in: SCRIPT-S245, SCRIPT-S246, SCRIPT-280 (closed), SCRIPT-58: [script-natives-world.md §2026-10-19T08:53:30](script-natives-world.md#ts-20261019-085330) |
+| DestroyProp | 0x1a2fe4 | 1 | 66 / 7 / 0 / 0 | 8 | stand-in | 26 | stand-in: effects of kinds 67, 204, 71, 64, 132 ported; SCRIPT-S245, SCRIPT-S246, SCRIPT-S250..S252, SCRIPT-305..307, SCRIPT-58: [script-natives-world.md §2026-10-19T10:02:26](script-natives-world.md#ts-20261019-100226) |
 | SwapAllegiance | 0x1da88c | 1 | 66 / 2 / 0 / 0 | 8 | C | 35 |  |
 | OverrideMusic | 0x1cdb28 | 1 | 65 / 19 / 0 / 0 | 7 | stand-in | 33 | through the block queue and ramp (AUDIO-S20) [§2026-10-15T15:10](script-natives-audio.md#ts-20261015-151038) |
 | PanMapToObject | 0x1d9e04 | 4 | 65 / 2 / 0 / 0 | 6 | stand-in | 31 | records its call (SCRIPT-S26): [objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919) |
@@ -128,7 +128,7 @@ This file has no dated entries: the table is edited in place. When a native is r
 | VehicleSetInvulnerable | 0x2ad904 | 2 | 17 / 2 / 0 / 0 | 6 | C | 36 |  |
 | ?! | 0x18a7e4 | 3 | 16 / 7 / 0 / 0 | 7 | done |  |  |
 | WarningDialogBox | 0x2700d4 | 1 | 16 / 7 / 0 / 0 | 7 | done |  |  |
-| KillObject | 0x1a2fe4 | 1 | 15 / 0 / 0 / 0 | 2 | stand-in | 26 | stand-in: same handler as DestroyProp (SCRIPT-S245, SCRIPT-S246, SCRIPT-280 closed): [script-natives-world.md §2026-10-19T08:53:30](script-natives-world.md#ts-20261019-085330) |
+| KillObject | 0x1a2fe4 | 1 | 15 / 0 / 0 / 0 | 2 | stand-in | 26 | stand-in: same handler as DestroyProp (SCRIPT-S245, SCRIPT-S246, SCRIPT-305, SCRIPT-306): [script-natives-world.md §2026-10-19T10:02:26](script-natives-world.md#ts-20261019-100226) |
 | PlayParticlesGO | 0x27e8b4 | 6 | 15 / 2 / 0 / 4 | 2 | C | 38 |  |
 | RideableClearPath | 0x27bdcc | 1 | 14 / 0 / 0 / 0 | 1 | C | 37 |  |
 | VehicleSetTopSpeed | 0x2860d4 | 2 | 14 / 2 / 0 / 0 | 6 | done | 36 | [vehicles-waypoints.md §2026-10-15T11:35](vehicles-waypoints.md#ts-20261015-113500) |

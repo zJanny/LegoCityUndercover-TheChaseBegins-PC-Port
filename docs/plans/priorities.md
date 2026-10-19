@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 682 open items and stand-ins, 137 linked to game usage, 545 with unknown reach.
+Items: 687 open items and stand-ins, 142 linked to game usage, 545 with unknown reach.
 
 ## Top 50 overall
 
@@ -138,7 +138,7 @@ Items: 682 open items and stand-ins, 137 linked to game usage, 545 with unknown 
 
 ## Scripts and missions
 
-79 of 150 items linked.
+84 of 155 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|

@@ -11,6 +11,7 @@
 
 #include <array>
 #include <cstdint>
+#include <functional>
 #include <optional>
 #include <string>
 #include <vector>
@@ -76,8 +77,14 @@ public:
     // not found by the query layer.
     std::vector<SmashedProp> smash(const SmashingVehicle& vehicle, const assets::PlacedObjectState& state);
     std::size_t propCount() const;
-    // The node, entity box and message 1 effects of a prop that the base prop handler 0x1f8948 destroys (smashable classes and
-    // props/ability_dynamitedestructible, which only scripts and the player's dynamite destroy); null for any other instance.
+    // Adds the objects that scripts destroy and whose kind has ported message 1 effects (destroyEffectsPorted) but that have no collision entry
+    // (props/prop_prop, prop_platform, ability_rocksmash, ...): the node matrix is the placement's, the entity box is the model's bounds
+    // (`boundsOf`, 0x242eb0). STAND-IN SCRIPT-S251: the entity box (+0x60 / +0x6c) of these classes is set by constructors that are not read.
+    using BoundsOf = std::function<std::optional<SmashBox>(const assets::Placement&)>;
+    void loadScriptDestroyed(const assets::Level& level, const assets::ClassLookup& classOf, const std::vector<assets::Placement>& placements, const BoundsOf& boundsOf);
+    // The node, entity box and message 1 effects of a prop whose destroy message has ported effects (destroyEffectsPorted: the smashable classes,
+    // props/ability_dynamitedestructible, which only scripts and the player's dynamite destroy, and the kinds 64, 67, 71, 132, 204 that scripts
+    // destroy); null for any other instance and for objects without a collision entry (no entity box: STAND-IN SCRIPT-S251).
     std::optional<SmashedProp> destroyData(const std::string& lowerInstance) const;
 
 private:
