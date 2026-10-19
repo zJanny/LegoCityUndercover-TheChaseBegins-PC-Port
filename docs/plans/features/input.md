@@ -2,7 +2,7 @@
 
 ## 1. Scope
 
-Mapping the 3DS controls to keyboard and mouse (configurable bindings, hold/toggle, focus reset, touch mapping inside the aspect-fitted 320x240 viewport) and the pad pipeline that feeds the game logic (input slot table, channels, stick to D-pad). Mapping is part of the port, not a QoL feature, and must not change game behaviour. Rule (user, 2026-10-19): the bottom-screen UI (map buttons, menus, every touch control) is operated by clicking it with the mouse, as the touch screen; touch-only controls get no keyboard keys. Buttons the original also reads from the pad keep their pad bindings. Player rules that consume the stick are in [player-movement.md](player-movement.md).
+Mapping the 3DS controls to keyboard and mouse (configurable bindings, hold/toggle, focus reset, touch mapping inside the aspect-fitted 320x240 viewport) and the pad pipeline that feeds the game logic (input slot table, channels, stick to D-pad). Mapping is part of the port, not a QoL feature, and must not change game behaviour. Rule (user, 2026-10-19): the bottom-screen menus and UI (map buttons, menus) are operated by clicking them with the mouse, as the touch screen, not with extra keyboard keys. Buttons the original also reads from the pad keep their pad bindings. Player rules that consume the stick are in [player-movement.md](player-movement.md).
 
 ## 2. Status
 
