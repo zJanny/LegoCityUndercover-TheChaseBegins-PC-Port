@@ -43,7 +43,7 @@ A. <title> — <item IDs> — <model> (<reason, max 8 words>) — ~<minutes> min
    Why now: <one line>
    Scope: <what gets ported or measured, one or two lines> | Glue: <file or "none">
    RPC: <no | holds the slot | via servant> | States: <name (game progress)> or none
-   Review: code <model or "skip">, docs <model>
+   Review: <"combined sonnet" for a small package with no new reverse engineering | code <model or "skip">, docs <model>>
 B. ...
 C. ...
 Servant: <none | sonnet, idle jobs: ID, ID>

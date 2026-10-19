@@ -76,18 +76,22 @@ The worker's report is short. Its details are in `artifacts/rounds/rN/rN-X.repor
    ```sh
    git -C <worktree> diff --stat main...HEAD | tail -1
    git -C <worktree> diff --name-only main...HEAD | cut -d/ -f1 | sort | uniq -c
+   git -C <worktree> diff --shortstat main...HEAD -- src tests tools CMakeLists.txt
    ```
-2. Launch the reviewers in **one message**, in the background, without isolation:
-   - **Code reviewer:** only when the branch touches `src/`, `tests/`, `tools/` or `CMakeLists.txt`.
-   - **Docs reviewer:** always.
+2. Choose the review, in this order:
+   - **Combined review** (one Sonnet agent, `combined-review.md`): the branch is small and transcribes nothing new from the original. "Small" is defined in `models.md`, "Combined review".
+   - **Docs reviewer only:** the branch touches no `src/`, `tests/`, `tools/` or `CMakeLists.txt`.
+   - **Otherwise**, both reviewers in **one message**: the code reviewer (`code-review.md`) and the docs reviewer (`docs-review.md`).
 
-   The proposal names their models. Adjust them with the rules in `.claude/skills/lead-round/references/models.md`. Prompt:
-   `You are the <code|docs> reviewer of rN-X. Read .claude/skills/lead-round/references/<code|docs>-review.md and follow it. Worktree: <path>. Branch: <branch>. Brief: <brief path>. Worker report: <report path>.`
+   Launch them in the background, without isolation. The proposal names the models. Adjust them with the rules in `.claude/skills/lead-round/references/models.md`. Prompt:
+   `You are the <code|docs|combined> reviewer of rN-X. Read .claude/skills/lead-round/references/<code|docs|combined>-review.md and follow it. Worktree: <path>. Branch: <branch>. Brief: <brief path>. Worker report: <report path>.`
+
+   **A combined reviewer answers `SPLIT`** when the branch is bigger than it looked. Then launch the two separate reviewers. If its reason is new reverse engineering, the code reviewer runs on Opus.
 3. Each verdict is `PASS`, `FIXED` or `RETURN`, in at most 25 lines.
    - **`RETURN`:** send the worker the reviewer's "Return" list unchanged with `SendMessage`, plus any "Docs follow-ups" from the code reviewer. The worker knows best how its own fix changes the docs. When the worker replies, resume the reviewer that returned, and the docs reviewer as well if the worker changed docs. Each one checks only the returned points and the new commits in its own area.
    - **Second `RETURN` for the same branch:** stop and ask the user. Show them both lists.
    - **"Docs follow-ups" with a `PASS` or `FIXED` code verdict:** pass them to the docs reviewer. Resume it if it has already finished.
-4. When both reviewers report `PASS` or `FIXED`, merge.
+4. When every reviewer of the branch reports `PASS` or `FIXED`, merge.
 
 ## Merge
 
@@ -150,6 +154,7 @@ Workers: <3, or what the user asked for>.
 - `references/planner.md`: the planner's two phases and the proposal format.
 - `references/worker-brief.md`, `references/servant-brief.md`: the templates the planner fills in.
 - `references/code-review.md`, `references/docs-review.md`: the reviewer checklists, the quick-fix rule and the verdict format.
+- `references/combined-review.md`: one reviewer doing both checklists on a small branch.
 - `references/recorder.md`: how user reports and states are recorded.
 - `references/models.md`: model choice and what drives cost.
 

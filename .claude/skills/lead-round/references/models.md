@@ -26,16 +26,28 @@ Prices from the claude-api skill, cached 2026-10-06, in dollars per million toke
 | Worker, open-ended reverse engineering | Opus | The driving class or system is unknown, or the behaviour is spread over many functions |
 | Emulator servant | Sonnet | |
 | Code reviewer | Sonnet | **Opus** when the branch transcribes new handlers or constants from the disassembly that must be checked against it, or when a correctness argument spans several systems. **Skip it** when the branch touches no code |
+| Combined reviewer | Sonnet | Replaces both reviewers on a small branch (see "Combined review" below). Never Haiku: it judges code |
 | Docs reviewer | Sonnet | **Haiku** when the docs change is bookkeeping only: status lines, closed items, a log line, at most one small `docs/re` entry, about 150 changed lines or fewer |
 | Recorder | Sonnet | **Haiku** when it only registers a save state the user described completely |
 | One-off reader | Haiku | **Sonnet** when the answer needs judgement, not just finding text |
 
 The CLAUDE.md "Model choice" rule for workers is the source of this table. If the two ever disagree, CLAUDE.md wins.
 
+## Combined review
+
+Each reviewer pays for reading `CLAUDE.md`, the brief, the report and the diff, which is about the same on a small branch as on a big one. One combined reviewer saves one of those reads, roughly $0.80 per branch. Use it when **all** of these hold:
+
+- **Small:** at most about 250 changed lines in total (insertions plus deletions), with at most about 80 of them in `src/`, `tests/`, `tools/` and `CMakeLists.txt`.
+- **No new reverse engineering:** the report's "Read from the original" line says "none", or names only addresses that `docs/re` already recorded before this round. A branch that transcribes new handlers or constants gets a separate Opus code reviewer.
+- **Code is touched:** a docs-only branch needs only the docs reviewer.
+
+If a combined reviewer answers `SPLIT`, launch the two separate reviewers.
+
 ## Adjusting a reviewer at review time
 
-The lead sees only `git diff --stat` and the top-level directories a branch touches:
+The lead sees only `git diff --stat`, `--shortstat` for the code paths and the top-level directories a branch touches:
 
+- **Small branch with no new reverse engineering:** one combined reviewer (above).
 - **No `src/`, `tests/`, `tools/` or `CMakeLists.txt`:** no code reviewer.
 - **Planner said Sonnet for the code reviewer, but the worker's short report says it read and transcribed new handlers:** Opus.
 - **Docs reviewer:** keep the planner's choice unless the docs diff is far larger or smaller than the planner expected.
