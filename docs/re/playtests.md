@@ -6,6 +6,7 @@ What the user saw when playing `chase-game` against their knowledge of the origi
 
 - Mission 1-2 played end to end in `chase-game`: flag poles, trampoline, the scanner's look, the dog at the cage and its release, the punch and the dog footprints in detective mode look and work as in the original; four bugs were found (zipline poles, scanner held model, dog and dog truck in the end cutscene). [§2026-10-19T17:56:41](#ts-20261019-175641)
 - Mission 1-3: the ladder to the roof is not fully visible in the port. [§2026-10-19T18:02:53](#ts-20261019-180253)
+- The zipline poles can be walked through in the port. [§2026-10-19T20:15:35](#ts-20261019-201535)
 
 <a id="ts-20261019-175641"></a>
 
@@ -38,3 +39,12 @@ While making the mission 1-3 save states ([oracle-states.md §2026-10-19T18:02:5
 
 Unknowns:
 - Which object the ladder is and which part of it is missing in the port.
+
+<a id="ts-20261019-201535"></a>
+
+## 2026-10-19T20:15:35+02:00 — The zipline poles can be walked through (user report)
+
+The user reported (2026-10-19) that in `chase-game` the player walks through the zipline poles (the pole model of the anchor class `props/parkour_zipline`, drawn since [player-traversal.md §2026-10-19T18:16:50](player-traversal.md#ts-20261019-181650)). In the original they are solid, from the user's knowledge of the game.
+
+Unknowns:
+- Whether the original's pole collision comes from the pole model's collision section, a class bound or the object collision rules ([collision.md](collision.md)); the port's pole collision was not checked (the same question is an unknown of [player-traversal.md §2026-10-19T18:16:50](player-traversal.md#ts-20261019-181650)).

@@ -49,6 +49,7 @@ IN_PROGRESS, updated 2026-10-18T16:38:10+02:00. Ported in `chase-game` from the 
 - [ ] TRAV-9 — Tightrope (`GrappleLineType` 0, states 39..41) not ported. evidence: [player-traversal.md §2026-10-18T14:52:30](../../re/player-traversal.md#ts-20261018-145230)
 - [ ] TRAV-10 — The hanging pose on the line (clip root against the line point) is not compared with the original's picture. evidence: [player-traversal.md §2026-10-18T14:52:30](../../re/player-traversal.md#ts-20261018-145230)
 - [ ] TRAV-54 — The poles of the tightrope anchors (`props/parkour_tightrope`, 4 in lvl_01) are drawn at `initialorientation`; the link 0x19b074 would turn them towards their target. needs: TRAV-48. uses: parkour_tightrope. evidence: [player-traversal.md §2026-10-19T18:16:50](../../re/player-traversal.md#ts-20261019-181650)
+- [ ] TRAV-55 — The zipline poles (`props/parkour_zipline` anchors) can be walked through in `chase-game` (user report); in the original they are solid. Where their collision comes from is not read. uses: parkour_zipline. evidence: [playtests.md §2026-10-19T20:15:35](../../re/playtests.md#ts-20261019-201535)
 
 ## 6. Findings summary
 
