@@ -436,8 +436,17 @@ struct StudObject {
     std::uint32_t groupOrder = 0;      // GroupOrder (low byte)
     std::string instance, room;
 };
+// A placed pickup of object type 0x84 with pickuptype 103 (pickup_sbbrick2x2 / 2x4): the super build brick of runtime/super_brick.hpp. It is also in
+// DrawableObjects::objects (drawn as a model); `placedIndex` is its index there.
+struct SuperBrickObject {
+    float position[3] = {0, 0, 0};     // initialposition (the node translation)
+    std::uint16_t value = 0;           // SuperBuildValue as the constructor 0x1ac8a0 stores it (record +0x16, an integer)
+    std::size_t placedIndex = 0;
+    std::string instance, room;
+};
 struct DrawableObjects {
     std::vector<Placement> objects;
+    std::vector<SuperBrickObject> superBricks;
     std::vector<CharacterObject> characters;
     std::vector<StudObject> studs;
     std::size_t missingModel = 0;

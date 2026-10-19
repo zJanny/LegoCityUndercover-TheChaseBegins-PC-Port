@@ -15,6 +15,7 @@
 #include "game_doors.hpp"
 #include "game_effects.hpp"
 #include "game_stud_drops.hpp"
+#include "game_super_bricks.hpp"
 #include "game_fall_apart.hpp"
 #include "game_object_visibility.hpp"
 #include "game_prop_parts.hpp"
@@ -177,6 +178,8 @@ private:
     bool drawScannerOverlay(chase::frontend::Canvas& top);
     void updateLevelCharacters(float dt);
     void updatePropAnimations(float dt);
+    void updateSuperBricks(float dt);
+    void applySuperBricks();
     void updateFollowCamera(float dt);
     void applyScreenShake(float dt);
     void loadBoardingVehicles(const std::map<std::string, std::pair<std::size_t, chase::render::Mat4>>& placedInstances);
@@ -255,6 +258,7 @@ private:
     std::optional<chase::render::GlowPass> glowPass;
     game_particles::LevelParticles particles;
     game_stud_drops::LevelStudDrops studDrops;
+    game_super_bricks::LevelSuperBricks superBricks;
     game_effects::LevelEffects effects;
     game_fall_apart::LevelFallApart fallApart;
     double provisionalStudClockSeconds = 0;

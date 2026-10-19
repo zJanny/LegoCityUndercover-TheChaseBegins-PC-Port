@@ -95,6 +95,8 @@ Unknowns:
 
 ## 2026-10-14T16:34:03+02:00 — Save request chain, slot commit and the slot row fields (llvm-objdump on artifacts/game/game.arm.elf; no emulator)
 
+Corrected by [super-bricks.md §2026-10-19T19:20:44](super-bricks.md#ts-20261019-192044): the u32 at 0x593418 + 0x18 (slot +0x5190) is the super brick count, not a stud total.
+
 Resolves the writer part of [script-natives-progress.md §2026-10-14T14:41](script-natives-progress.md#ts-20261014-144155) (SAVE-10) and the data side of SAVE-2. Code: `src/save/save_writer.*`, tests `save-writer`, `save-writer-real-data`, `game-options-core`.
 
 - **0x21cf38(0)** (QuickSave, SetRaceWon, AwardRacingCar, GiveReward): sets byte 0x5163e8+0x34 = arg, calls 0x17caf8 (summary), for a level id (signed byte 0x5163e8+0x26) of at most 8 (unsigned compare) calls 0x229740 (formats "levels/%s/main.lvl.world" from the level row +0x30 and hands it to 0x2baddc; purpose unknown) and 0x192f60 (level state, below), then queues 0x2400a0(0x1a5248, 0x261a1c, 0). 0x261a1c starts a level transition only when byte +0x34 is set, so the request with 0 starts none.

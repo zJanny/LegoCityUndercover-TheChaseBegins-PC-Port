@@ -180,6 +180,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     installScriptHooks();
     fallApart.load(archive, particles.random(), chase::render::readBaseAppearance(archive));
     studDrops.load(particles.random());
+    superBricks.load(drawable.superBricks, placedObjects);
     studSprites.emplace(archive);
     glowPass.emplace();
     player = game_player::placePlayer(archive, scene, level);
@@ -402,6 +403,7 @@ void LevelSession::draw(int width, int height) {
     std::vector<bool> drawn = runtime::drawnPlacements(placedObjects, objectState);
     for (std::size_t i = 0; i < drawn.size(); ++i) drawn[i] = runtime::drawnWhileHeld(drawn[i], cutsceneHost->holdsObject(placedObjects[i].objectIndex));
     applyObjectFades(drawn);
+    applySuperBricks();
     characterVisibility.apply(scene, drawable.characters, placedCharacters, objectState,
                               [this](std::size_t objectIndex) { return cutsceneHost->holdsObject(objectIndex); });
     for (std::size_t i = 0; i < drawn.size(); ++i)
@@ -514,6 +516,7 @@ void LevelSession::reportScripted() const {
     std::cout << "player ended at " << player->motion.x << ' ' << player->vertical.y << ' ' << player->motion.z << '\n';
     std::cout << "studs: counter " << studs.counter() << ", " << studs.count(runtime::StudState::Collecting) << " collecting, "
               << studs.count(runtime::StudState::Done) << " collected, " << studs.count(runtime::StudState::Idle) << " left\n";
+    std::cout << superBricks.report() << '\n';
     if (hud) std::cout << "hud: " << hud->hearts() << " hearts, stud display " << hud->studDisplay() << ", bar state "
                        << int(hud->studBarState()) << '\n';
     std::cout << "doors:";

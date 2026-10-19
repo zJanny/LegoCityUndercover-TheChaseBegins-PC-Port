@@ -341,6 +341,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         updateUseSpots(carry.carryingMode() == 0 && !carry.busy() && !builditPlayer.active() && !buildits.lastUse().inZone);
         updateUseMarkers(dt);
         updateScanner();
+        updateSuperBricks(dt);
     }
     propParts.step(dt);
     sceneStart.startRequested();

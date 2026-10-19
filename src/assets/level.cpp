@@ -21,6 +21,7 @@ constexpr const char* minifigMesh = "char_minifig";
 constexpr const char* defaultAnimationClass = "CLASS_Generic";
 constexpr std::uint32_t firstCustomCharacter = 1, lastCustomCharacter = 8;
 constexpr std::uint32_t studObjectType = 0x3d, lastStudKind = 3;
+constexpr std::uint32_t pickupObjectType = 0x84, superBuildBrickKind = 103;
 
 void need(const Bytes& block, std::size_t size) {
     if (block.size() < size) throw std::runtime_error("level block too small");
@@ -297,6 +298,10 @@ bool isStudClass(const LevelObject& obj, const Level& cls) {
     return effectiveEnum(obj, cls, "ObjectType") == studObjectType && effectiveEnum(obj, cls, "pickuptype") <= lastStudKind;
 }
 
+bool isSuperBuildBrickClass(const LevelObject& obj, const Level& cls) {
+    return effectiveEnum(obj, cls, "ObjectType") == pickupObjectType && effectiveEnum(obj, cls, "pickuptype") == superBuildBrickKind;
+}
+
 bool float3Of(const LevelParam* param, float* out) {
     if (!param || param->type != 2 || param->blocks.empty() || param->blocks[0].size() < 12) return false;
     std::memcpy(out, param->blocks[0].data(), 12);
@@ -305,6 +310,8 @@ bool float3Of(const LevelParam* param, float* out) {
 }
 
 bool isStudObject(const LevelObject& object, const Level& classFile) { return isStudClass(object, classFile); }
+
+bool isSuperBuildBrickObject(const LevelObject& object, const Level& classFile) { return isSuperBuildBrickClass(object, classFile); }
 
 std::uint8_t objectKind(const LevelObject& object, const Level& classFile) { return std::uint8_t(effectiveEnum(object, classFile, "ObjectType")); }
 
@@ -455,6 +462,15 @@ DrawableObjects drawableObjects(FuseArchive& archive, const Level& level) {
         } else if (!archive.find(meshModelPath(placement.mesh))) {
             ++out.missingModel;
         } else {
+            if (isSuperBuildBrickClass(*object, cls)) {
+                SuperBrickObject brick;
+                std::copy_n(placement.position, 3, brick.position);
+                brick.value = std::uint16_t(std::uint32_t(std::int32_t(effectiveFloat(*object, cls, "SuperBuildValue"))) & 0xffff);
+                brick.placedIndex = out.objects.size();
+                brick.instance = placement.instance;
+                brick.room = placement.room;
+                out.superBricks.push_back(std::move(brick));
+            }
             out.objects.push_back(std::move(placement));
         }
     }

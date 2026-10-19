@@ -20,6 +20,9 @@ bool isVehicleClassFile(const Level& classFile);
 // Instance with the stud object type (0x3d) and a pickup type of 0..3: collected by the stud system.
 bool isStudObject(const LevelObject& object, const Level& classFile);
 
+// Instance with the pickup object type 0x84 and the pickup type 103 (the super build bricks, runtime/super_brick.hpp).
+bool isSuperBuildBrickObject(const LevelObject& object, const Level& classFile);
+
 // Kind byte of the placed entity (entity +0x12): the low byte of the effective ObjectType, 0 when the class has none (docs/re/script-natives-flags.md).
 std::uint8_t objectKind(const LevelObject& object, const Level& classFile);
 
@@ -37,6 +40,7 @@ enum ObjectBehaviour : unsigned {
     BehaviourDoor = 2,       // the door state machine drives it
     BehaviourStud = 4,       // the stud system collects it
     BehaviourVehicle = 8,    // the vehicle records and flag natives act on it (runtime/vehicle.hpp)
+    BehaviourSuperBrick = 16,  // the super brick field picks it up (runtime/super_brick.hpp)
 };
 
 // Bit set of ObjectBehaviour for one placed object; 0 when the runtime only draws it or ignores it.

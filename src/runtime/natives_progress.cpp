@@ -145,6 +145,13 @@ void ProgressNativeState::unlockCharacter(std::uint32_t id) {
     setBit(kCharacterBitsOffset, 2 * id, true);
 }
 
+void ProgressNativeState::requestSave(std::uint32_t superBrickCount) {
+    constexpr std::size_t kSuperBrickCountOffset = 0x5190;
+    ++saveRequests_;
+    if (slot_.size() < kSuperBrickCountOffset + 4) return;
+    for (unsigned i = 0; i < 4; ++i) slot_[kSuperBrickCountOffset + i] = std::uint8_t(superBrickCount >> (8 * i));
+}
+
 ProgressNativeResult ProgressNativeState::run(ProgressNativeKind kind, const std::vector<float>& values, const std::string& object) {
     ProgressNativeResult result;
     const float first = values.empty() ? 0.0f : values[0];

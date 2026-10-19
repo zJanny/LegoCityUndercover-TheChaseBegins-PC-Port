@@ -96,6 +96,9 @@ public:
     std::vector<StudGroupRequest> takeStudGroupRequests();
     std::uint64_t takeStudsAdded();
     unsigned saveRequests() const { return saveRequests_; }
+    // The save request 0x21cf38(0) made by the destroy of a super build brick (0x1d737c): the summary 0x17caf8 first copies the u32 at 0x593430 (the
+    // super brick count) into slot +0x5190.
+    void requestSave(std::uint32_t superBrickCount);
     const std::vector<std::uint32_t>& rewards() const { return rewards_; }
     const std::vector<std::uint32_t>& charactersUnlocked() const { return charactersUnlocked_; }
     // LockCharacter requests; the removal from the party (0x23b388) is not modelled (SCRIPT-S31).

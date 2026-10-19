@@ -50,6 +50,7 @@ unsigned objectBehaviours(const LevelObject& object, const Level& classFile) {
     if (vehicle) behaviours |= BehaviourVehicle;
     if (isDoorClass(object.className)) behaviours |= BehaviourDoor;
     if (isStudObject(object, classFile)) behaviours |= BehaviourStud;
+    if (isSuperBuildBrickObject(object, classFile)) behaviours |= BehaviourSuperBrick;
     return behaviours;
 }
 
@@ -64,6 +65,7 @@ std::string behaviourNames(unsigned behaviours) {
     add(BehaviourDoor, "door");
     add(BehaviourStud, "stud");
     add(BehaviourVehicle, "vehicle");
+    add(BehaviourSuperBrick, "super-brick");
     return names;
 }
 

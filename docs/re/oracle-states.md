@@ -20,7 +20,7 @@ Save states the oracle uses: which ones exist, the game progress of each, how ea
 - Pole mount (user, for TRAV-1): `m12-10a-pole-foot` (0.8 m from the drain pipe, facing away; walking into the pipe mounts it), `m12-10b-pole-side` (2.4 m left of the pipe axis, facing the wall). [§2026-10-18T15:46:24](#ts-20261018-154624)
 - Table and trampoline of mission 1-2 (user, for PLAYER-12 and LEVOBJ-86): `m12-table-before`, `m12-table-broken`, `m12-trampoline-built`, loaded and checked. [§2026-10-18T17:25:22](#ts-20261018-172522)
 - Bars above the trampoline (user, for TRAV-36): `m12-trampoline-pole`, Chase high above the pad next to the bars; keep pressing jump to grab. [§2026-10-18T20:44:42](#ts-20261018-204442)
-- Mission 1-3 in progress (user, not loaded yet): `m13-1-roof-superbrick`, `m13-2-ladder`, `m13-3-helipad-needs-bricks`, `m13-4-helipad-300-bricks`, `m13-5-helipad-built-menu`. [§2026-10-19T18:02:53](#ts-20261019-180253)
+- Mission 1-3 in progress (user): `m13-1-roof-superbrick`, `m13-2-ladder`, `m13-3-helipad-needs-bricks`, `m13-4-helipad-300-bricks`, `m13-5-helipad-built-menu`. `m13-1` stands on the roof 2.53 from the super brick `1-3_Rainbow_02` with 96 super bricks (296 after the pickup), `m13-3` has 296, `m13-4` 302. [§2026-10-19T18:02:53](#ts-20261019-180253), [§2026-10-19T19:22:01](#ts-20261019-192201)
 - `leadcut-1_1_d-early` (from `m11-6-van-to-shop`): cutscene `1_1_d` just loaded, for its actor nodes and pictures. [§2026-10-16T14:39:21](#ts-20261016-143921)
 - Open: whether mission 1-2 is active in the post-1-1 states, the level variables of the m11 states, a save with Continue byte +6 above 1, and the Old 3DS run of `savestate`.
 
@@ -327,3 +327,17 @@ Progress: missions 1-1 and 1-2 done, mission 1-3 in progress (user report, impli
 
 Unknowns:
 - None of the five was loaded yet: positions, facing and the level of each are not checked.
+
+<a id="ts-20261019-192201"></a>
+
+## 2026-10-19T19:22:01+02:00 — `m13-1`, `m13-3` and `m13-4` loaded: positions and the super brick count (Azahar, New 3DS, OpenGL, port 45692, no RPC; `player`, `read`)
+
+The first loads kept the previous state or booted a fresh game because the JSON `file` named slot 01..05 and the emulator's Quick Load reads slot 00; with a private states directory whose JSON named `00040000000AD600.00.cst` the states loaded. Reported to the lead, who corrected the JSON files.
+
+- `m13-1-roof-superbrick`: Chase at (905.671, 30.719, 1130.679), facing (-0.862, 0, 0.507), camera yaw 0.458, state 1; the placed super brick `1-3_Rainbow_02` is at (904.929, 30.697, 1133.099), 2.53 away. Byte 0x3743f2 = 1 (`EnableSuperBricks` was called), 0x3743f0 = 1, 0x3743f1 = 0xff. The live super brick count (0x593430) is 96, the studs (0x593418) 5230 after the pickup walk.
+- `m13-3-helipad-needs-bricks`: count 296, `m13-4-helipad-300-bricks`: count 302 (the studs 5350 and 5450); the slot copy still holds 296 in both (the last save request). The count is documented in [super-bricks.md](super-bricks.md#ts-20261019-192044).
+
+Progress: as the user said (missions 1-1 and 1-2 done, 1-3 in progress); `m13-2` and `m13-5` were not loaded.
+
+Unknowns:
+- Positions and facing of `m13-2-ladder`, `m13-3`, `m13-4` and `m13-5`; the level (all three loaded states show lvl_01 objects; the level id was not read).

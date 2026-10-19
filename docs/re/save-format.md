@@ -22,6 +22,8 @@ Moved to [save-format-state.md](save-format-state.md): level state blocks, unloc
 
 ## 2026-10-13T10:30+02:00 — S4f save format recovered (REA, Ghidra 12.1.2; read-only)
 
+Corrected by [super-bricks.md §2026-10-19T19:20:44](super-bricks.md#ts-20261019-192044): slot +0x5190 is not a stud total but the super brick count (the u32 at 0x593430).
+
 Corrected by [save-format.md §2026-10-13T12:30](#ts-20261013-1230): +4..+7 are two per-slot pairs
 Corrected by [save-format.md §2026-10-13T08:53](#ts-20261013-0853): options +4/+5 are sound volume, +6/+7 music volume
 Corrected by [save-format.md §2026-10-13T08:56](#ts-20261013-0856): the slot summary guess is unconfirmed
