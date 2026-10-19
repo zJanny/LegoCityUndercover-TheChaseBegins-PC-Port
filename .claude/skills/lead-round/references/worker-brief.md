@@ -22,6 +22,7 @@ You are worker {{rN-X}} of round {{N}} of the PC port of *LEGO City Undercover: 
   - Never claim REA work that did not happen.
 - **Generic over hardcoded:** one rule for all users, as the original does it. A special case needs evidence from the original.
 - **Reserved IDs:** {{ranges}}. Use them in order from the first one, and report the unused ones. Take no other IDs.
+- **Long commands:** run builds and tests in the foreground or with `run_in_background`, which reports when they exit. Never wait in a `pgrep -f` loop: the pattern matches your own shell command, so the loop never ends.
 - **Code placement:** new runtime logic goes into its own file under `src/runtime/` (or the matching library), with its own CTest. `game.cpp` gets at most a few lines of glue. Your glue file: {{file}}.
   - Parallel workers: {{who edits what}}. Stay out of their files. If you need their result, read it through a small interface and mark a labelled stand-in until the merge.
 - **Tests:**
