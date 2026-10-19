@@ -19,3 +19,5 @@ Ranges of item IDs held by parallel agents; the lead reserves them with `tools/c
 | HUD-S | 74 | 77 | r38-C | 2026-10-19T19:56:47+02:00 |
 | STUD | 22 | 25 | r38-C | 2026-10-19T19:56:47+02:00 |
 | STUD-S | 12 | 14 | r38-C | 2026-10-19T19:56:47+02:00 |
+| DETECT | 18 | 19 | r38-C | 2026-10-19T20:07:04+02:00 |
+| DETECT-S | 11 | 11 | r38-C | 2026-10-19T20:07:04+02:00 |
