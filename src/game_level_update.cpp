@@ -212,9 +212,11 @@ void LevelSession::updateFollowCamera(float dt) {
             for (int a = 0; a < 3; ++a) out[a] = placed->position[a];
         return placed.has_value();
     });
+    follow->setBoundsEnabled(levelScripts.boundsEnabled());
     follow->setDirector(director.pose(), director.takeRequests());
     if (director.takeSnapRequest() || std::exchange(cameraSnapRequest, false)) follow->snapFollow(input.target, input.targetFacing);
     follow->update(input);
+    applyScreenShake(dt);
     if (follow->locked() && (pad.slot(kSlotLeftShoulder).value != 0.0f || pad.slot(kSlotRightShoulder).value != 0.0f))
         cameraLockIcon.trigger();
     cameraLockIcon.update(dt);

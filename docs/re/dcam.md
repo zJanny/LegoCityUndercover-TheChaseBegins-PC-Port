@@ -11,6 +11,7 @@ Reverse-engineering findings for the script camera: level paths, StartDCam / Sta
 - While the director camera is current, the character update swaps its control callback: the player without AI has held, press and heading zeroed; AI characters run only with DCamActive 1; others do nothing. [§2026-10-15T09:37](#ts-20261015-093712)
 - The hold lasts from the update after StartDCam to the update after the end test (274 updates in the patrol-car run). [§2026-10-15T09:37](#ts-20261015-093712)
 - StartDCam pauses a stopwatch object and the end test resumes it; SetDCamStartWait / EndWait store D+4 / D+8. [§2026-10-15T09:37](#ts-20261015-093712), [§2026-10-14T14:36](#ts-20261014-143600)
+- ShakeScreen sets a shake (amplitude bytes x 0.1, seconds, optional damp) that the camera manager update adds to the eye after the pose filter; the camera records skip bounds switched off by EnableBound. [§2026-10-19T15:09:12](#ts-20261019-150912)
 - Open: clock ticks per second (1000 assumed), routines 0x270ff4 / 0x2879b0 and the other start natives, three-plus-point path comparison, effects on HUD and other objects, shake and follow reset.
 
 <a id="ts-20261014-143600"></a>
@@ -66,3 +67,16 @@ Unknowns:
 - 0x1571dc / 0x158134 and their routines 0x26d934 / 0x29cd9c (the director variant was not read).
 - What reads the stereoscopic words 0x56d550 / 0x56d554 / 0x56d558 (no effect expected in mono).
 - That a character without a pad and without AI (frozen by 0x29bf30) also stops animating was not measured; the port only stops its AI moves.
+
+<a id="ts-20261019-150912"></a>
+
+## 2026-10-19T15:09:12+02:00 — ShakeScreen and the enable byte of camera bounds
+
+Read with llvm-objdump (`--mattr=+vfp2`) on `artifacts/game/game.arm.elf`; the camera manager state is the block at 0x376870 (M).
+
+- **ShakeScreen 0x1b2690.** Argument 0 is truncated to an integer (vcvt.s32.f32) and masked with 255 for all three axes, argument 1 (seconds) and argument 2 (damp, any non-zero value gives 1) follow; the call is `0x22c500(amp, amp, amp, damp, 0, seconds)` with the lock byte 0 on the stack.
+- **Start 0x22c500.** Returns without change while M+4 (seconds left) is not 0 and the byte M+0 (lock) is set. Otherwise M+0 = lock, M+4 = seconds, the vector at 0x56d47c = amp x 0.1 per axis (float of the byte), M+0x34 = seconds when damp else 0.0.
+- **Application in the manager update 0x23f174** (0x23f2cc to 0x23f384, inside the branch where the camera is active, after the pose filter 0x1cf0b8 and the matrix build 0x2ca814): if the override routine M+0x18 is set it is called instead; else if M+4 > 0, three values are drawn with 0x2345dc (random word 0x25b2b8 low 16 bits x 2^-16, the same generator as `GameRandom`) in the order z (vector+8), y (vector+4), x (vector+0), each (r - 0.5) x vector. When M+0x34 is not 0 the offset is multiplied by M+4 / M+0x34. 0x23d39c adds it to the translation (matrix +0x30) of the matrix handed to the camera node 0x24c118, so only the eye moves, the pose filter state does not. M+4 then drops by the update time 0x23602c (the frame time, +0x78 of the clock object); it is not clamped, so it ends slightly below 0.
+- **Camera records.** The volume filter 0x20bf6c reads `record[+0x20]` (the bound) and skips the record when `bound[+0xa]` is 0 (0x20c01c); `EnableBound` 0x1d0ce8 writes that byte. The port now passes `ScriptRunner::boundsEnabled()` to `CameraRig::setBoundsEnabled` each update (test `camera-records`).
+- Port: `ScreenShake` (`src/runtime/screen_shake.*`, test `screen-shake`, values derived by hand from the code above, no oracle measurement), glue `src/game_screen_shake.cpp`, `CameraRig::setEyeShake`. The random stream is a stand-in (SCRIPT-S271).
+- Unknown: what 0x1c607c (the per-record shake, reads the record Type bit 0x80 and `.cam` values) does in detail, the override routine M+0x18, other callers of 0x22c500 with the lock byte (the build-it end calls it at 0x1ab07c with (4, 4, 4, 0)), the moving bound matrices.

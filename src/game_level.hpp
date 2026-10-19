@@ -48,6 +48,7 @@
 #include "runtime/prop_wobbly_destructible.hpp"
 #include "runtime/player_attack.hpp"
 #include "runtime/camera_lock_icon.hpp"
+#include "runtime/screen_shake.hpp"
 #include "runtime/camera_rig.hpp"
 #include "runtime/camera_near_plane.hpp"
 #include "runtime/clip_planes.hpp"
@@ -174,6 +175,7 @@ private:
     void updateLevelCharacters(float dt);
     void updatePropAnimations(float dt);
     void updateFollowCamera(float dt);
+    void applyScreenShake(float dt);
     void loadBoardingVehicles(const std::map<std::string, std::pair<std::size_t, chase::render::Mat4>>& placedInstances);
     void driveVehicles(float dt);
     void smashProps(std::size_t vehicleIndex);
@@ -362,6 +364,7 @@ private:
     PlaceholderCamera camera;
     std::optional<chase::runtime::CameraRig> follow;
     chase::runtime::CameraLockIcon cameraLockIcon;
+    chase::runtime::ScreenShake screenShake;
     chase::frontend::Resources hudResources;
     chase::frontend::MapMarkerField mapMarkerField;
     std::optional<chase::frontend::Hud> hud;

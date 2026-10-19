@@ -42,6 +42,20 @@ int main() {
         require(records.records().size() == 2, "records are the Camera bounds without LookAt");
         require(records.records()[0].type == 0x80 && records.records()[1].type == (7 | 0x80), "Type is stored with the loaded bit");
 
+        {
+            // Provenance: 0x20bf6c reads bound[+0xa] of each record (ldrb at 0x20c01c, skip when 0), EnableBound 0x1d0ce8 writes it.
+            CameraRecords toggled(level, kCam);
+            const float inside[3] = {-8, 0, 0};
+            require(queryCameraRecords(toggled, inside).records.size() == 1, "enabled bound is found");
+            std::vector<std::uint8_t> enabled(level.bounds.size(), 1);
+            enabled[1] = 0;
+            toggled.setBoundsEnabled(enabled);
+            require(queryCameraRecords(toggled, inside).records[0] == kRoomRecord, "a bound switched off by EnableBound is skipped");
+            enabled[1] = 1;
+            toggled.setBoundsEnabled(enabled);
+            require(queryCameraRecords(toggled, inside).records.size() == 1 && queryCameraRecords(toggled, inside).records[0] != kRoomRecord, "switched on again");
+        }
+
         const float outside[3] = {50, 0, 0};
         CameraRecordSelector selector(records);
         require(selector.update(outside) == CameraCommand::Follow, "a point in no volume selects the follow controller");

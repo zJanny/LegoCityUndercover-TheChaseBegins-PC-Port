@@ -135,6 +135,7 @@ CameraRecords::CameraRecords(const assets::Level& level, const std::string& camT
         record.blocker = contains(bound.name, "Blocker");
         record.shape = bound.shape;
         record.enabled = bound.enabled != 0;
+        record.boundIndex = index;
         record.radius = bound.extent;
         for (int a = 0; a < 3; ++a) {
             record.centre[a] = bound.centre[a];
@@ -167,6 +168,11 @@ CameraRecords::CameraRecords(const assets::Level& level, const std::string& camT
                 break;
             }
     }
+}
+
+void CameraRecords::setBoundsEnabled(const std::vector<std::uint8_t>& enabled) {
+    for (CameraRecord& record : records_)
+        if (record.boundIndex < enabled.size()) record.enabled = enabled[record.boundIndex] != 0;
 }
 
 CameraRecordSet queryCameraRecords(const CameraRecords& records, const float point[3]) {

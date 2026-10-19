@@ -54,7 +54,7 @@ public:
     // DCamActive 0x1a2e48: flag bit 1 of the object's component (what reads it is not recovered).
     void setObjectActiveDuringDirector(const std::string& object, bool active);
     bool objectActiveDuringDirector(const std::string& object) const;
-    // ShakeScreen 0x1b2690 stores its arguments here; nothing draws the shake yet (stand-in).
+    // ShakeScreen 0x1b2690 stores its arguments here; screen_shake.hpp applies them.
     struct Shake {
         float amount = 0, seconds = 0;
         bool damp = false;
@@ -62,6 +62,12 @@ public:
     };
     void shakeScreen(float amount, float seconds, bool damp);
     const Shake& shake() const { return shake_; }
+    bool takeShake(Shake& out) {
+        out = shake_;
+        const bool had = shake_.pending;
+        shake_.pending = false;
+        return had;
+    }
     // SnapCamera 0x1a30fc: asks the follow camera to take its start pose again.
     void snapFollowCamera() { snapRequested_ = true; }
     bool takeSnapRequest();

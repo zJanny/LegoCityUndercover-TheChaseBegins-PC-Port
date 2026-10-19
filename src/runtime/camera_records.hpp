@@ -10,8 +10,8 @@
 //
 // Not recovered: the order in which the spatial structure at 0x598300 returns the records (level order is used), the
 // fixed pose of a Blocker record (0x58d42c), the shake
-// (0x1c607c), the second follow target, the byte 0x3770c8 and the counter 0x3770e0 (both read as 0), movement of the
-// matrices that carry bounds, and which record volumes are switched off by EnableBound.
+// (0x1c607c), the second follow target, the byte 0x3770c8 and the counter 0x3770e0 (both read as 0) and movement of the
+// matrices that carry bounds (stand-in CAMERA-S4: static).
 #include "assets/assets.hpp"
 #include <array>
 #include <cstdint>
@@ -37,6 +37,7 @@ struct CameraRecord {
     // into the extents +0x20 and +0x24.
     std::uint8_t shape = 3;
     bool enabled = true;                // bound +0x0a
+    std::size_t boundIndex = 0;         // index into Level::bounds
     float radius = 0;                   // bound +0x0c
     float centre[3] = {0, 0, 0};        // +0x10
     float extent[3] = {0, 0, 0};        // +0x1c, +0x20, +0x24
@@ -51,6 +52,9 @@ public:
     CameraRecords(const assets::Level& level, const std::string& camText);
     const std::vector<CameraRecord>& records() const { return records_; }
     std::vector<CameraRecord>& records() { return records_; }
+    // Bound byte +0x0a per Level::bounds entry (EnableBound 0x1d0ce8 writes it; the volume filter 0x20bf6c skips a
+    // record whose bound byte is 0).
+    void setBoundsEnabled(const std::vector<std::uint8_t>& enabled);
 
 private:
     std::vector<CameraRecord> records_;

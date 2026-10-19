@@ -44,11 +44,17 @@ public:
     // last update. A start pushes a director entry (0x21cc80), an end pushes the gameplay command again (0x196784).
     void setDirector(const RecordPose& pose, std::vector<DirectorRequest> requests);
     // SnapCamera 0x1a30fc: the follow controller takes its start pose behind the player again.
+    void setBoundsEnabled(const std::vector<std::uint8_t>& enabled) { records_.setBoundsEnabled(enabled); }
     void snapFollow(const float target[3], float facing);
 
     // True while the record pose is the top camera command: 0x217b14 returns 0.
     bool locked() const { return !stack_.empty() && stack_.front().kind == Entry::Kind::Record; }
-    const float* eye() const { return output_.eye; }
+    // The camera shake (screen_shake.hpp) moves the eye of the camera matrix after the pose filter; the filter state is not shaken.
+    void setEyeShake(const float offset[3]) { for (int a = 0; a < 3; ++a) eyeShake_[a] = offset[a]; }
+    const float* eye() const {
+        for (int a = 0; a < 3; ++a) shakenEye_[a] = output_.eye[a] + eyeShake_[a];
+        return shakenEye_;
+    }
     const float* lookAt() const { return output_.look; }
     float yaw() const { return poseYaw(output_); }
     float pitch() const { return posePitch(output_); }
@@ -82,6 +88,8 @@ private:
     CameraRecordSelector selector_;
     std::vector<Entry> stack_;  // front = newest command
     RecordPose output_;
+    float eyeShake_[3] = {0, 0, 0};
+    mutable float shakenEye_[3] = {0, 0, 0};
     RecordPose directorPose_;
     std::vector<DirectorRequest> directorRequests_, delayedDirectorEnds_;
     FilterRamp eyeFilter_;
