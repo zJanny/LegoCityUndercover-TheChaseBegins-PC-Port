@@ -29,6 +29,11 @@ struct CharacterPose {
     float frame = 0;
 };
 
+struct BodyPose {
+    render::Mat4 world;
+    std::optional<render::Mat4> head, hat;
+};
+
 class LevelCharacters : public runtime::AnimationDriver {
 public:
     LevelCharacters(assets::FuseArchive& archive, const std::vector<assets::CharacterObject>& characters,
@@ -49,6 +54,8 @@ public:
     std::size_t animated() const { return entries_.size(); }
     std::size_t started() const;
     std::optional<CharacterPose> pose(const std::string& instance) const;
+    // The character's node matrix and, once it was posed, its head and hat on their joints as placeCharacter draws them.
+    std::optional<BodyPose> bodyPose(const std::string& lowerCaseInstance) const;
 
 private:
     struct Clip {
@@ -65,6 +72,7 @@ private:
         runtime::AnimationSlots slots;
         runtime::NpcIdle idleState;
         bool scriptLoaded = false;
+        std::vector<assets::Matrix> skin;
     };
     std::optional<std::uint32_t> clipOf(const std::string& path);
     Entry* find(const std::string& lowerCaseInstance);

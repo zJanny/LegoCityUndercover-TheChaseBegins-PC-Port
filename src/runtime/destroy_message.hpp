@@ -22,9 +22,11 @@ bool destroyReactionRead(std::uint8_t kind);
 // Which routine of message 1 makes the visible effects (docs/re/script-natives-world.md, entry 2026-10-19T10:02:26). BaseProp: 0x1f8948 (85, 119, 134, 214); HitMachine:
 // 0x2398d8 case 1 (67, 204): the same explosion, screen shake and bricks as 0x2aa5c8 without its light flash, and the sound at the entity;
 // Pushable: 0x1a958c (71) = 0x2aa5c8 and the sound; DefaultHandler: 0x221760 (64, 132) = 0x163f00: the default sound, the default explosion
-// when the class names none, the bricks. Falling apart (27, 121, 242: ragdoll 0x1d3b50, bricks) and the topple (102) are not ported.
+// when the class names none, the bricks. CharacterFallApart: the character handler 0x18e93c (27, 121, 242), ported apart from the props in
+// runtime/character_death.hpp; the topple (102) is not ported.
 enum class DestroyEffectSet { None, BaseProp, HitMachine, Pushable, DefaultHandler, CharacterFallApart, Topple };
 DestroyEffectSet destroyEffectSet(std::uint8_t kind);
+// The sets ported as prop effects (the props of VehiclePropSmasher); CharacterFallApart has its own path.
 bool destroyEffectsPorted(DestroyEffectSet set);
 
 }

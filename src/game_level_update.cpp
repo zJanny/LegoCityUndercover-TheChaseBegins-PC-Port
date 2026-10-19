@@ -367,6 +367,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
     }
     provisionalStudClockSeconds += double(dt);
     updateLevelCharacters(dt);
+    fallApart.update(debrisLineStandIn(), updates);
     if (follow) updateFollowCamera(dt);
     else camera.update(dt, pad);
     updateRoomStreaming();

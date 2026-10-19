@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 719 open items and stand-ins, 151 linked to game usage, 568 with unknown reach.
+Items: 723 open items and stand-ins, 155 linked to game usage, 568 with unknown reach.
 
 ## Top 50 overall
 
@@ -65,10 +65,10 @@ Items: 719 open items and stand-ins, 151 linked to game usage, 568 with unknown 
 | 29 | [SCRIPT-57](features/script-system-natives.md?display=source#L32) | 362 | 0 | 7 | 13 | 3 stand-in, 1 none | `distancefademid`, `enableshadow`, `enableswitch`, `toggleuseable` | Kind-gated natives: the kind of every class is read (`objectKind`); ToggleUseable, EnableSwitch (use-zone ... |
 | 30 | [SCRIPT-S239](features/script-system-natives-world.md?display=source#L34) | 351 | 0 | 7 | 0 | 2 stand-in | `enableswitch`, `toggleuseable` | ToggleUseable and EnableSwitch write the use flag only for instances whose kind registers a use zone ... |
 | 31 | [SCRIPT-36](features/script-system-natives.md?display=source#L43) | 347 | 0 | 7 | 12 | 9 implemented | `setforcedstoponmyvehicle`, `stopplayervehicle`, `vehicleallowjumpout`, `vehiclejumpin` +5 | Batch 11 (C, 10 left): VehicleSetLocked, VehicleSetForcedStop, SetForcedStopOnMyVehicle, VehicleAllowJumpOut ... |
-| 32 | [SCRIPT-294](features/script-system-natives-world.md?display=source#L51) | 342 | 0 | 7 | 1 | 1 stand-in | `toggleuseable` | The hint registry 0x2219bc searches (records at `*(0x58e9a4 + 0x24)`, singleton "LEGOHintBounds"): who adds ... |
-| 33 | [SCRIPT-296](features/script-system-natives-world.md?display=source#L53) | 342 | 0 | 7 | 1 | 1 stand-in | `toggleuseable` | The registration conditions of the use zone: what sets halfword `[entity + 0x10]` bit 7 (post-link of kinds ... |
+| 32 | [SCRIPT-294](features/script-system-natives-world.md?display=source#L50) | 342 | 0 | 7 | 1 | 1 stand-in | `toggleuseable` | The hint registry 0x2219bc searches (records at `*(0x58e9a4 + 0x24)`, singleton "LEGOHintBounds"): who adds ... |
+| 33 | [SCRIPT-296](features/script-system-natives-world.md?display=source#L52) | 342 | 0 | 7 | 1 | 1 stand-in | `toggleuseable` | The registration conditions of the use zone: what sets halfword `[entity + 0x10]` bit 7 (post-link of kinds ... |
 | 34 | [PART-3](features/particles.md?display=source#L28) | 0 | 281 | 8 | 0 | - | `particles` | The level object class `particles` (constructor 0x1a7f30, handlers 0x1a8394 and 0x1a7d30: `ParticleDef` ... |
-| 35 | [SCRIPT-281](features/script-system-natives-world.md?display=source#L48) | 271 | 0 | 6 | 1 | 1 stand-in | `effectfadeobject` | EffectFadeObject: the third node property (0x23f540, flag bit 2), the particle node case, the clock of ... |
+| 35 | [SCRIPT-281](features/script-system-natives-world.md?display=source#L47) | 271 | 0 | 6 | 1 | 1 stand-in | `effectfadeobject` | EffectFadeObject: the third node property (0x23f540, flag bit 2), the particle node case, the clock of ... |
 | 36 | [SCRIPT-S232](features/script-system-natives-world.md?display=source#L30) | 271 | 0 | 6 | 0 | 1 stand-in | `effectfadeobject` | EffectFadeObject drives `Scene::setInstanceFade` and the instance visibility of placed objects (and their ... |
 | 37 | [SCRIPT-67](features/script-system-hud-natives.md?display=source#L24) | 266 | 0 | 8 | 0 | 2 stand-in | `setmissionsummary`, `setmissiontitle` | SetMissionTitle / SetMissionSummary store the key (0x375f98 / 0x375f9c); no reader found, so the title and ... |
 | 38 | [SCRIPT-71](features/script-system-hud-natives.md?display=source#L28) | 260 | 0 | 7 | 1 | 1 stand-in | `subobjectivegotoenable` | SubObjectiveGoToEnable keeps its group (registry 0x1fce14 / 0x2a62b8) but the group marker is not drawn ... |
@@ -138,7 +138,7 @@ Items: 719 open items and stand-ins, 151 linked to game usage, 568 with unknown 
 
 ## Scripts and missions
 
-92 of 165 items linked.
+96 of 169 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -240,7 +240,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [script-system-natives.md](features/script-system-natives.md): SCRIPT-43 (+17), SCRIPT-44 (+15), SCRIPT-45 (+13), SCRIPT-7 (+11), SCRIPT-150 (+1), SCRIPT-56 (+1), SCRIPT-64 (+1), SCRIPT-98 (+1), SCRIPT-S97
 - [script-system-triggers.md](features/script-system-triggers.md): SCRIPT-76 (+10), SCRIPT-51 (+3), SCRIPT-77 (+1), SCRIPT-78 (+1), SCRIPT-S15, SCRIPT-S28, SCRIPT-S30, SCRIPT-S8
 - [script-system.md](features/script-system.md): SCRIPT-1 (+9), SCRIPT-53 (+2), SCRIPT-2, SCRIPT-3, SCRIPT-5, SCRIPT-54, SCRIPT-55, SCRIPT-9, SCRIPT-S1, SCRIPT-S14, SCRIPT-S16, SCRIPT-S3, SCRIPT-S6, SCRIPT-S7
-- [studs.md](features/studs.md): STUD-11 (+2), STUD-1 (+1), STUD-3, STUD-5, STUD-6, STUD-8, STUD-S1, STUD-S3, STUD-S5
+- [studs.md](features/studs.md): STUD-11 (+4), STUD-1 (+1), STUD-3, STUD-5, STUD-6, STUD-8, STUD-S1, STUD-S3, STUD-S5
 - [vehicles-boarding.md](features/vehicles-boarding.md): VEH-19 (+2), VEH-80 (+2), HUD-50 (+1), HUD-S50, HUD-S51, VEH-20, VEH-S10, VEH-S70, VEH-S8, VEH-S9
 - [vehicles-damage.md](features/vehicles-damage.md): VEH-120 (+3), VEH-125 (+3), VEH-113 (+2), VEH-115 (+2), VEH-124 (+2), VEH-121 (+1), VEH-123 (+1), VEH-122, VEH-128, VEH-S100, VEH-S101, VEH-S103, VEH-S104, VEH-S90, VEH-S93, VEH-S96, VEH-S97, VEH-S98, VEH-S99
 - [vehicles-physics-collision.md](features/vehicles-physics-collision.md): VEH-70 (+2), VEH-91 (+2), VEH-100 (+1), VEH-101 (+1), VEH-102 (+1), VEH-S52, VEH-S60, VEH-S62, VEH-S81, VEH-S82, VEH-S86, VEH-S87

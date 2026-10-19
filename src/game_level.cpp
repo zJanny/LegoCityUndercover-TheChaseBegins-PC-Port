@@ -177,6 +177,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     levelScripts.loadAnimationOffsets(classOf);
     levelScripts.loadObjectKinds(classOf);
     installScriptHooks();
+    fallApart.load(archive, particles.random(), chase::render::readBaseAppearance(archive));
     studSprites.emplace(archive);
     player = game_player::placePlayer(archive, scene, level);
     levelScripts.setAllRoomsLoaded();
@@ -416,6 +417,7 @@ void LevelSession::draw(int width, int height) {
         shownWaypoints[i] = objectives.waypointActive(game_doors::lowerCase(waypointObjects[i].instance)) && roomShown(runtime::roomNumber(waypointObjects[i].room));
     propParts.apply(scene, buildits, placedObjects, placedSceneIndex, shownPlaced, shownWaypoints, badgeFades);
     effects.apply(scene);
+    fallApart.apply(scene);
     drawFootprints();
     if (player) detectiveGlass.draw(scene, *player);
     if (skyInstance) {

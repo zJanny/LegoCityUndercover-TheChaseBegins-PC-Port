@@ -114,8 +114,8 @@ void LevelCharacters::update(render::Scene& scene, float dt, const std::function
         if (!slot) continue;
         const Animation& animation = clips_[slot->clip].animation;
         const float frame = runtime::AnimationSlots::position(*slot, clock_).frame;
-        const std::vector<Matrix> skin = render::poseBody(scene, *entry.rig, entry.instance, animation, lastSampleFrame(animation, frame));
-        render::placeCharacter(scene, *entry.rig, entry.instance, skin, entry.world);
+        entry.skin = render::poseBody(scene, *entry.rig, entry.instance, animation, lastSampleFrame(animation, frame));
+        render::placeCharacter(scene, *entry.rig, entry.instance, entry.skin, entry.world);
     }
 }
 
@@ -128,6 +128,16 @@ std::optional<CharacterPose> LevelCharacters::pose(const std::string& instance) 
     if (!entry || !entry->slots.current()) return std::nullopt;
     const runtime::AnimationSlot& slot = *entry->slots.current();
     return CharacterPose{clips_[slot.clip].path, runtime::AnimationSlots::position(slot, clock_).frame};
+}
+
+std::optional<BodyPose> LevelCharacters::bodyPose(const std::string& instance) const {
+    const Entry* entry = find(instance);
+    if (!entry) return std::nullopt;
+    BodyPose pose{entry->world, std::nullopt, std::nullopt};
+    if (entry->skin.empty()) return pose;
+    pose.head = render::jointWorld(*entry->rig, "head", entry->skin, entry->world);
+    pose.hat = render::jointWorld(*entry->rig, "hat", entry->skin, entry->world);
+    return pose;
 }
 
 }

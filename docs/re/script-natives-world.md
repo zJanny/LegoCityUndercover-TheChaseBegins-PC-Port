@@ -2,7 +2,7 @@
 
 Handlers of the six natives that mission 1-2 called without a handler, what the port does with them and what the original does besides. Census and the other batches: [script-natives.md](script-natives.md), table: [script-natives-census.md](script-natives-census.md). Items: [script-system-natives-world.md](../plans/features/script-system-natives-world.md) (SCRIPT-279 to SCRIPT-283, SCRIPT-302 to SCRIPT-304, SCRIPT-S232 to SCRIPT-S235, SCRIPT-S245, SCRIPT-S246), [script-system-natives.md](../plans/features/script-system-natives.md) (SCRIPT-35, SCRIPT-38, SCRIPT-57, SCRIPT-58). The node tween registry behind EffectFadeObject was read for the waypoint column first: [objective-hud.md](objective-hud.md) (§2026-10-15T19:58).
 
-Subtopics: [script-natives-world-reset.md](script-natives-world-reset.md)
+Subtopics: [script-natives-world-reset.md](script-natives-world-reset.md), [script-natives-world-death.md](script-natives-world-death.md)
 
 ## Current state
 
@@ -12,9 +12,10 @@ Subtopics: [script-natives-world-reset.md](script-natives-world-reset.md)
 - AddToSemiTransNearCameraList 0x2cb734 adds the model of the first argument to the semi-transparent lists of the rooms (entry flag bit 4, tag = second argument); the draw side is not read. [§2026-10-18T11:01:40](#ts-20261018-110140)
 - SetPartyCharacter 0x27beb4 maps the character id to a party index (table 0x51b24c) and swaps the player entity through 0x245258; it returns at once when that character already is the player. All 9 calls of mission 1-2 with id 9 are therefore no-ops for Chase, one call with id 16 is a swap. [§2026-10-18T11:01:40](#ts-20261018-110140)
 - StreamRoomIn 0x1bfba4 finds the room whose name suffix equals the argument, appends it to the request list 0x375d70 (0x20f194) and returns 1 only when the room is loaded (state 2 with a resource, 0x2284bc); 0x2b9cf8 hands the list to the loader with priority 0 each update. [§2026-10-18T11:01:40](#ts-20261018-110140)
-- Message 1 effects per kind (the routine, not only the hide): the hit machine 0x2398d8 case 1 (kinds 67, 204) makes the explosion, screen shake and bricks of 0x2aa5c8 without its flash, plays the sound at record +200 and does not call TriggerObject; kind 71 runs 0x2aa5c8 and the sound of record +0x28 (its +0x5c trigger is never written); kinds 64 and 132 use the default handler 0x163f00: sound 29, `ExplosionParticleDef` or the default definition 1, `SpawnDebris`; ResetObject on them: see the Current state bullet on message 8; characters 27, 121, 242 fall apart (mode `DisableFallapart`, 0 for all targets) and 102 draws bricks from stack bytes. No level file binds the second and third Dead broadcast. [§2026-10-19T10:02:26](#ts-20261019-100226)
-- Open: the loop sound control at the end of the hit machine's case 1, the fall-apart body of characters, kind 102's bricks, kinds 31, 45, 100, 121, 125, 132, 138, 155, 159, 208, 222, 243, the third tween property (flag bit 4), the draw paths of the node alpha, the distance fade and the semi-transparent list, the party swap, and when the room request list is cleared.
+- Message 1 effects per kind (the routine, not only the hide): the hit machine 0x2398d8 case 1 (kinds 67, 204) makes the explosion, screen shake and bricks of 0x2aa5c8 without its flash, plays the sound at record +200 and does not call TriggerObject; kind 71 runs 0x2aa5c8 and the sound of record +0x28 (its +0x5c trigger is never written); kinds 64 and 132 use the default handler 0x163f00: sound 29, `ExplosionParticleDef` or the default definition 1, `SpawnDebris`; ResetObject on them: see the Current state bullet on message 8; characters 27, 121, 242: see the death subtopic; 102 draws bricks from stack bytes. No level file binds the second and third Dead broadcast. [§2026-10-19T10:02:26](#ts-20261019-100226)
+- Open: the loop sound control at the end of the hit machine's case 1, kind 102's bricks, kinds 31, 45, 100, 121, 125, 132, 138, 155, 159, 208, 222, 243, the third tween property (flag bit 4), the draw paths of the node alpha, the distance fade and the semi-transparent list, the party swap, and when the room request list is cleared.
 - ResetObject (message 8) and EnableSwitch above 0: see [script-natives-world-reset.md](script-natives-world-reset.md).
+- The death of characters (kinds 27, 121, 242: fall-apart body, bricks, stud drop, respawn tail): see [script-natives-world-death.md](script-natives-world-death.md).
 
 <a id="ts-20261018-110140"></a>
 
@@ -113,6 +114,8 @@ Corrected by [script-natives-world-reset.md §2026-10-19T11:06:52](script-native
 <a id="ts-20261019-100226"></a>
 
 ## 2026-10-19T10:02:26+02:00 — What message 1 does per kind for the objects that scripts destroy: hit machine, pushable, default handler, characters, Dead broadcasts (llvm-objdump of artifacts/game/game.arm.elf; C++ census over the 30 level files; no emulator, no REA run)
+
+Corrected by [script-natives-world-death.md §2026-10-19T13:21:05](script-natives-world-death.md#ts-20261019-132105): a character that stays dead drops studs with 0x21e2e4 mode 1 and count 0 (mode 0 with count 30 only when byte +0x12e bit 5 is set), and 0x22b0b4 is a global test, not one of the entity.
 
 Continues [§2026-10-19T08:53:30](#ts-20261019-085330) (its census of targets and its Unknowns for kinds 67, 64, 71, 102, 27 / 242 and the second and third Dead broadcast). Method: the message 1 path of each handler was read instruction by instruction (vector instructions through `llvm-objdump --triple=armv6k --mattr=+vfp2`, the strings behind `add rX, pc` resolved from the image); the class parameters of every DestroyProp / KillObject target come from a throwaway C++ program over the loader (`ObjectNativeState::loadKinds` kinds, `effectiveParam`), run on 2026-10-19.
 

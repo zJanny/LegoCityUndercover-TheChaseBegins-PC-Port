@@ -48,6 +48,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | [script-system-missions](script-system-missions.md) | IN_PROGRESS | SCRIPT-285 door lock hint object trigger; SCRIPT-190 carry gaps |
 | [script-system-natives](script-system-natives.md) | IN_PROGRESS | SCRIPT-7 natives in batches SCRIPT-29 to SCRIPT-39, SCRIPT-57 to SCRIPT-65 |
 | [script-system-natives-world](script-system-natives-world.md) | IN_PROGRESS | SCRIPT-279 party swap; SCRIPT-280 destroy message 1 per class; SCRIPT-281 effect fade rest; SCRIPT-282 distance fade gate; SCRIPT-283 AddToSemiTransList |
+| [script-system-natives-world-death](script-system-natives-world-death.md) | IN_PROGRESS | SCRIPT-321 stud drop of a dead character; SCRIPT-322 respawn tail; SCRIPT-323 sound table, clock, textures |
 | [script-system-natives-animation](script-system-natives-animation.md) | IN_PROGRESS | SCRIPT-270 player animations; SCRIPT-272 attach node changes; SCRIPT-273 / 274 states, loaded set |
 | [script-system-ai-navigation](script-system-ai-navigation.md) | IN_PROGRESS | SCRIPT-79 AI movement; SCRIPT-94 active nav grid set; SCRIPT-103 AISuperJump flight, SCRIPT-104 pursuit / stalk / run-away states |
 | [script-system-dcam](script-system-dcam.md) | IN_PROGRESS | SCRIPT-46 director camera commands, SCRIPT-48 / 49 / 50 / 181 / 182 details |

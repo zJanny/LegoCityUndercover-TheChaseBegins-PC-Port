@@ -13,6 +13,7 @@
 #include "game_detective_glass.hpp"
 #include "game_doors.hpp"
 #include "game_effects.hpp"
+#include "game_fall_apart.hpp"
 #include "game_object_visibility.hpp"
 #include "game_prop_parts.hpp"
 #include "game_hud.hpp"
@@ -188,6 +189,7 @@ private:
     void stepVehicleFlashes();
     void propDestroyedEffects(const chase::runtime::SmashedProp& prop);
     void propDestroyMessage(const std::string& lowerInstance);
+    bool characterDeathMessage(const std::string& lowerInstance);
     void loadScriptDestroyProps(chase::assets::FuseArchive& archive);
     // STAND-IN VEH-S104: the line tests 0x21ab20 / 0x22b108 of a brick burst are the wheel ray of the collision world, vehicles skipped.
     chase::runtime::DebrisLineTest debrisLineStandIn() const;
@@ -237,6 +239,7 @@ private:
     std::optional<chase::render::StudSprites> studSprites;
     game_particles::LevelParticles particles;
     game_effects::LevelEffects effects;
+    game_fall_apart::LevelFallApart fallApart;
     double provisionalStudClockSeconds = 0;
     std::optional<game_player::PlayerRig> player;
     chase::assets::ClassLookup classOf;

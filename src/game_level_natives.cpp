@@ -15,7 +15,7 @@ void LevelSession::installScriptHooks() {
                 pendingVehicleBreaks.push_back(i);
                 return;
             }
-        propDestroyMessage(instance);
+        if (!characterDeathMessage(instance)) propDestroyMessage(instance);
     });
 }
 
