@@ -10,7 +10,7 @@ The game data is never part of this repository. You need your own copy of the ga
 
 - A computer with Linux (x86_64) and a graphics card that supports OpenGL 4.6.
 - About 3 GB of free disk space.
-- Your own **decrypted `.cci` image** of the European version of the game (title ID `00040000000AD600`, version 1.0). Other versions or regions do not work. Check your file with `sha256sum "game.cci"`. It must print `078faf7e231381e53d7d7503d4729feab390e3cd1b8e739dc44f9933d8b759ad`. More in [Getting started](docs/getting-started.md#check-your-game-file).
+- Your own **decrypted `.cci` image** of the game. Only the European version 1.0 (title ID `00040000000AD600`) is tested. Other regions may work, because the port reads only the game's asset files, but nobody has tried them yet. More in [Getting started](docs/getting-started.md#check-your-game-file).
 - A keyboard. A mouse is optional.
 
 ## Step by step
@@ -86,7 +86,8 @@ All keys and how to change them: [Controls](docs/controls.md).
 
 - **`build/chase-game` does not exist after the build.** libepoxy or FFmpeg was not found. Install the packages of step 2 and run the two commands of step 3 again.
 - **`chase-game: cannot open archive: artifacts/romfs/...`.** Run the game from the project folder, and do step 4 first.
-- **The extraction says "encrypted" or a hash does not match.** Your image is not the supported decrypted European version. See [Getting started](docs/getting-started.md#check-your-game-file).
+- **The extraction says "encrypted".** Your image is still encrypted. Dump it again as a decrypted image. See [Getting started](docs/getting-started.md#check-your-game-file).
+- **The extraction says a hash does not match.** The image file is damaged or incomplete. Dump it again.
 - **The extraction says "output already exists".** Delete the folder `artifacts/romfs` and run step 4 again.
 - **The window does not open or stays black.** Update your graphics driver. The game needs OpenGL 4.6.
 - More help: [Getting started](docs/getting-started.md#problems).

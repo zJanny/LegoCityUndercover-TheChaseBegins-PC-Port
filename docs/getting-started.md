@@ -15,9 +15,10 @@ The [README](../README.md) has the short path from a fresh checkout to a running
 
 ## Check your game file
 
-- Only the decrypted European image works: title ID `00040000000AD600`, product code `CTR-P-AA8P`, version 1.0 (no update).
-- Run `sha256sum "game.cci"`. It must print `078faf7e231381e53d7d7503d4729feab390e3cd1b8e739dc44f9933d8b759ad`.
-- If the hash differs, the image may still be a re-dump of the same build. The developer notes explain how to compare it: [reference game version](re/game-version.md).
+- The image must be decrypted.
+- The tested version is the European one: title ID `00040000000AD600`, product code `CTR-P-AA8P`, version 1.0 (no update). The reference dump prints `078faf7e231381e53d7d7503d4729feab390e3cd1b8e739dc44f9933d8b759ad` for `sha256sum "game.cci"`.
+- A different hash does not mean the image is wrong: a trimmed dump of the same build has another hash. The developer notes explain how to compare the build itself: [reference game version](re/game-version.md).
+- Other regions are untested. `chase-game` reads only the asset files, not the game program, so another region may work. Some parts are taken from the European version and may not match: for example the language list of the start screens has the nine European languages. Please report what happens.
 - An encrypted image is refused by the extraction tools.
 - The tools never change your image.
 
