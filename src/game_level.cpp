@@ -372,6 +372,7 @@ std::vector<fe::MinimapMarker> LevelSession::activeMapMarkers() const {
 }
 
 void LevelSession::draw(int width, int height) {
+    if (drawPause(width, height)) return;
     const game_hud::Screens screens = game_hud::screensFor(width, height);
     setScissorTest(false);
     setViewport({0, 0, width, height});

@@ -7,6 +7,7 @@
 #include "frontend/canvas.hpp"
 #include "frontend/hud.hpp"
 #include "frontend/minimap.hpp"
+#include "frontend/pause_menu.hpp"
 #include "frontend/resources.hpp"
 #include "game_audio.hpp"
 #include "game_characters.hpp"
@@ -245,6 +246,8 @@ private:
     bool holdForMovie(float dt);
     void loadSuperBuildits();
     bool holdForSuperBuildit(float dt);
+    bool holdForPause(float dt, const chase::runtime::PadState& padInput);
+    bool drawPause(int width, int height);
     void updateSuperBuildits(const float playerPosition[3], float dt);
     void drawSuperBuildit(chase::frontend::Canvas& top);
     void drawSuperBuilditPrompt(chase::frontend::Canvas& top, const chase::runtime::SuperBuilditPrompt& prompt);
@@ -312,6 +315,9 @@ private:
     chase::runtime::BuilditPlayer builditPlayer;
     chase::runtime::SuperBuilditSet superBuildits;
     game_super_buildit::State superBuild;
+    std::optional<chase::frontend::PauseMenu> pauseMenu;
+    bool pauseRequested = false;
+    std::size_t pauseStickDirection = chase::runtime::kNoStickDirection;
     game_prop_parts::PropParts propParts;
     chase::runtime::CarrySet carry;
     game_carry::HeldObjects heldObjects;

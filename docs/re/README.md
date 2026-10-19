@@ -41,6 +41,7 @@ Read this index, then open only the file you need.
 | [save-format.md](save-format.md) | `savegame.dat` layout, CRC, save thread, options, slot progress, level table; later entries: [save-format-state.md](save-format-state.md) |
 | [save-format-state.md](save-format-state.md) | Level state blocks, unlock bits, object records, where Continue starts, the save request chain and slot row fields |
 | [ui-layouts.md](ui-layouts.md) | `.bxaml` UI layouts and storyboards |
+| [ui-screens.md](ui-screens.md) | Census of every UI screen (55 layouts and code-drawn screens: loader, opener, screen, port state); the pause screen: mode 0x527358, page manager, round menu 0x376014, touch |
 | [fmv.md](fmv.md) | Mobiclip `.moflex` video and subtitles |
 | [debris.md](debris.md) | Brick debris of vehicle contacts, destroyed props and the car break (dropped pickup records, Debris01..20), the hit flash of a vehicle, its smoke emitter, oracle traces |
 | [particles.md](particles.md) | `particledefs.bprt` definitions and the particle runtime: start entry, emitter update, particle init and step, quad draw state, callers, oracle check |

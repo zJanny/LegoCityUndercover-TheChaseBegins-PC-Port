@@ -135,6 +135,7 @@ The path is the level's place inside the game archive, as in the example. Each l
 A new game in Cherry Tree Hills starts as in the original:
 
 - The intro movie plays (once), then the first cutscene of mission 1-1 with the donut shop, then the first tip.
+- Start opens the pause menu of the original: the upper screen shows the collectibles panel (without its numbers yet), the lower screen the wheel with Resume, Options, Credits and Exit, Back and Select. The wheel turns and chooses as in the original, also by clicking or swiping on the lower screen ([controls](controls.md#pause-menu)). Resume, B and Start go back to the game. Options, Credits and Exit do nothing yet, and the short black screen of the original before the menu appears is not there.
 - Cutscenes fade the top screen to black before they start (when the script asks for it) and at their end, then fade the game picture back in. The fades come from the original's code: 0.5 s each, black quad over the top screen only. The short black pause before the picture returns is a stand-in measured in the original.
 - The player is held during the cutscene. Add `--no-start-cutscenes` to skip the movie and the first cutscene while testing.
 

@@ -111,4 +111,22 @@ void PadDevice::poll(const PadState& state) {
     }
 }
 
+void stickToDpad(PadDevice& pad, std::size_t& lastChannel) {
+    const float x = pad.slot(14).value, y = pad.slot(15).value;
+    const float ax = std::fabs(x), ay = std::fabs(y);
+    std::size_t channel = kNoStickDirection;
+    if ((ax > kStickDpadThreshold ? ax : ay) > kStickDpadThreshold) {
+        if (ax <= ay) channel = y > 0.0f ? kSlotChannels[0] : kSlotChannels[1];
+        else channel = x > 0.0f ? kSlotChannels[3] : kSlotChannels[2];
+        Channel& direction = pad.channel(channel);
+        if (lastChannel != channel) direction.press = 1;
+        direction.release = 0;
+        direction.value = 1.0f;
+        lastChannel = channel;
+        return;
+    }
+    if (lastChannel != kNoStickDirection) pad.channel(lastChannel).release = 1;
+    lastChannel = channel;
+}
+
 }

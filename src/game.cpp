@@ -10,6 +10,7 @@
 #include "game_level.hpp"
 #include "game_options.hpp"
 #include "game_save.hpp"
+#include "game_touch.hpp"
 #include "input.hpp"
 #include "render/debug_overlay.hpp"
 #include "render/scene.hpp"
@@ -67,9 +68,10 @@ runtime::PadState padState(const chase::InputState& input) {
     return state;
 }
 
-void pollEvents(chase::InputState& input, bool& running) {
+void pollEvents(chase::InputState& input, bool& running, game_touch::Tracker& touch, SDL_Window* window) {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
+        if (touch.consume(event, window)) continue;
         switch (event.type) {
         case SDL_QUIT: running = false; break;
         case SDL_KEYDOWN: case SDL_KEYUP:
@@ -161,15 +163,18 @@ int run(const Options& given) {
     for (;;) {
         game_level::LevelSession session({archive, options, audio, master, sceneChanges, scriptOffset, afterSwitch, progress});
         bool running = true;
+        game_touch::Tracker touch;
         Uint32 secondStart = SDL_GetTicks();
         while (running) {
-            pollEvents(input, running);
+            pollEvents(input, running, touch, window);
             if (!session.frameDue()) {
                 SDL_Delay(1);
                 continue;
             }
             debugMetrics.frame();
-            session.advance(padState(input));
+            runtime::PadState pad = padState(input);
+            touch.apply(pad);
+            session.advance(pad);
 
             SDL_GL_GetDrawableSize(window, &width, &height);
             const bool debugVisible = options.debugOverlay != input.active(chase::Action::DebugOverlay);

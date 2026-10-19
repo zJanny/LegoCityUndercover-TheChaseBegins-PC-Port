@@ -17,6 +17,8 @@ enum PadButton : std::uint32_t {
 struct PadState {
     std::uint32_t held = 0;
     std::int16_t stickX = 0, stickY = 0;
+    bool touch = false;                    // the touch screen is pressed (HID shared memory +0xa8)
+    std::int16_t touchX = 0, touchY = 0;   // bottom-screen pixels
 };
 
 // Channel record {f32 value, u8 type, f32 deadzone, f32 threshold, s16 press, s16 release}.
@@ -58,5 +60,12 @@ private:
 };
 
 constexpr std::array<std::uint8_t, 18> kSlotChannels = {12, 13, 14, 15, 16, 17, 16, 17, 18, 19, 6, 7, 8, 10, 0, 1, 2, 3};
+
+// 0x2289b8 (menus: the pause update 0x300378 calls it): a circle pad push past 0.6 on its larger axis (slots 14, 15) feeds the
+// D-pad channel of that direction (value 1, a press edge only when the direction changed, release 0); when the push ends the last
+// direction gets a release edge. `lastChannel` is the state word 0x376a30 (kNoStickDirection when none).
+constexpr std::size_t kNoStickDirection = 0x2b;
+constexpr float kStickDpadThreshold = 0.6f;
+void stickToDpad(PadDevice& pad, std::size_t& lastChannel);
 
 }

@@ -37,6 +37,17 @@ For example, `A key Space hold` makes Space press the A button.
 - When the window loses focus, every button is released.
 - The left mouse button acts as the touch screen inside the lower-screen area.
 - The menus and buttons on the lower screen (map buttons, menus) are used by clicking them. There are no extra keys for them.
+- In the [development runtime](commands.md#development-runtime) a left click that starts on the lower screen is a touch, not A. A left click on the upper screen is still A.
+
+## Pause menu
+
+In the [development runtime](commands.md#development-runtime), while you play:
+
+- **Start** (Return) opens the pause menu. The game stops.
+- The lower screen shows Resume, Options, Credits and Exit on a wheel. Turn it with **left and right** (A and D, or the arrow keys), or click the button left or right of the middle one, or swipe sideways with the mouse.
+- **A** (Space), or a click on the middle button, chooses the entry in the middle. Resume goes back to the game.
+- **B** (Q or right mouse) or **Start** go back to the game.
+- Options, Credits and Exit do nothing yet. The numbers on the upper screen are not shown yet.
 
 ## Attacking
 

@@ -28,7 +28,8 @@ const char* const kUsage = "usage: chase-game [--fib F] [--names CSV] [--config 
 
 std::uint32_t buttonOf(char letter) {
     const std::pair<char, runtime::PadButton> buttons[] = {{'A', runtime::PadA}, {'B', runtime::PadB}, {'X', runtime::PadX},
-                                                          {'Y', runtime::PadY}, {'L', runtime::PadL}, {'R', runtime::PadR}};
+                                                          {'Y', runtime::PadY}, {'L', runtime::PadL}, {'R', runtime::PadR},
+                                                          {'S', runtime::PadStart}};
     const auto found = std::find_if(std::begin(buttons), std::end(buttons), [&](const auto& entry) { return entry.first == letter; });
     if (found == std::end(buttons)) strict::reject("unknown button", std::string(1, letter));
     return found->second;

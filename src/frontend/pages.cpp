@@ -132,6 +132,27 @@ void drawSelectShortcut(Canvas& bottom, Resources& resources, const std::string&
     drawLayout(bottom, resources, kShortcutsLayout, shortcuts, kShortcutsX, kShortcutsY);
 }
 
+void drawBackSelectShortcuts(Canvas& bottom, Resources& resources, const ShortcutView& back, const ShortcutView& select) {
+    LayoutScene shortcuts;
+    shortcuts.hidden = {"BackButton_DS", "SelectButton_DS", "ExtraButton_DS", "ExtraButton_3DS"};
+    shortcuts.textSpacing = 1;
+    const auto place = [&](const ShortcutView& view, const std::string& element, Align align) {
+        if (!view.drawn) {
+            shortcuts.hidden.insert(element);
+            return;
+        }
+        TextSlot text;
+        text.text = view.label;
+        text.align = align;
+        shortcuts.text[element + "/Text_Title"] = text;
+        shortcuts.referenceStoryboards[element] = view.storyboard;
+        shortcuts.referenceTimes[element] = view.time;
+    };
+    place(back, "BackButton_3DS", Align::Left);
+    place(select, "SelectButton_3DS", Align::Right);
+    drawLayout(bottom, resources, kShortcutsLayout, shortcuts, kShortcutsX, kShortcutsY);
+}
+
 void drawSlotPage(Canvas& bottom, Resources& resources, const std::string& header, const std::string& selectLabel,
                   const std::string& deleteLabel, const std::vector<SlotRow>& rows, unsigned selected, float seconds,
                   float selectedSeconds, float confirmSeconds) {

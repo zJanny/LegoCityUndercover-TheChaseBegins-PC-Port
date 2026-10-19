@@ -269,6 +269,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         return;
     }
     if (holdForSuperBuildit(dt)) return;
+    if (holdForPause(dt, padInput)) return;
     particles.update(dt);
     stepVehicleFlashes();
     const auto emit = [&](const runtime::SoundCall& call) {

@@ -1,11 +1,15 @@
 // chase-hudshot: draws the in-game HUD offscreen for a scripted sequence and saves the transparent top-screen canvas as a
-// BMP over black plus an alpha mask BMP. Script: "run N; hearts N; studs TYPE TOTAL; shot NAME; marker X Z; ring SECONDS; map LEVEL X Z CAMERAYAW PLAYERYAW NAME" (updates are 1/30 s).
+// BMP over black plus an alpha mask BMP. Script: "run N; hearts N; studs TYPE TOTAL; shot NAME; marker X Z; ring SECONDS; map LEVEL X Z CAMERAYAW PLAYERYAW NAME;
+// pause; press START|A|B|LEFT|RIGHT; touch X Y N" (updates are 1/30 s). After `pause` the pause screen runs and `shot` saves both screens (400x480).
 #include "frontend/hud.hpp"
+#include "frontend/pause_menu.hpp"
 #include "frontend/minimap.hpp"
 #include "strict_parse.hpp"
+#include <algorithm>
 #include <cstdint>
 #include <iostream>
 #include <limits>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -23,7 +27,7 @@ constexpr long long kMaxRunUpdates = 1000000;
 constexpr int kMapSettleUpdates = 45;
 
 struct Command {
-    enum class Kind { Run, Hearts, Studs, Map, Shot, Marker, Ring };
+    enum class Kind { Run, Hearts, Studs, Map, Shot, Marker, Ring, Pause, Press, Touch };
     Kind kind = Kind::Run;
     unsigned count = 0;
     unsigned type = 0;
@@ -73,6 +77,22 @@ Command parseCommand(const std::string& text) {
         requireFields(fields, 2, "ring SECONDS", text);
         command.kind = Command::Kind::Ring;
         command.seconds = float(strict::real(fields[1], 0.0, kRingCycleSeconds));
+    } else if (verb == "pause") {
+        requireFields(fields, 1, "pause", text);
+        command.kind = Command::Kind::Pause;
+    } else if (verb == "press") {
+        requireFields(fields, 2, "press START|A|B|LEFT|RIGHT", text);
+        command.kind = Command::Kind::Press;
+        const std::string buttons[] = {"START", "A", "B", "LEFT", "RIGHT"};
+        const auto found = std::find(std::begin(buttons), std::end(buttons), fields[1]);
+        if (found == std::end(buttons)) strict::reject("unknown button", fields[1]);
+        command.name = fields[1];
+    } else if (verb == "touch") {
+        requireFields(fields, 4, "touch X Y N", text);
+        command.kind = Command::Kind::Touch;
+        command.x = float(strict::real(fields[1], 0.0, double(kBottomWidth - 1)));
+        command.z = float(strict::real(fields[2], 0.0, double(kScreenHeight - 1)));
+        command.count = unsigned(strict::integer(fields[3], 1, kMaxRunUpdates));
     } else if (verb == "shot") {
         requireFields(fields, 2, "shot NAME", text);
         command.kind = Command::Kind::Shot;
@@ -130,11 +150,36 @@ int run(const Options& options) {
     MapMarkerField markerField;
     std::vector<MinimapMarker> pendingMarkers;
     float ringSeconds = 0;
+    std::optional<PauseMenu> pause;
+    const auto pauseStep = [&](const PauseInput& input) {
+        pause->update(1.0f / 30, input);
+        for (const int id : pause->takeSounds()) std::cout << "pause sound " << id << '\n';
+        for (const PauseEntry entry : pause->takeUnported()) std::cout << "pause entry " << int(entry) << " not ported\n";
+    };
     for (const Command& command : parseScript(options.script)) {
         if (command.kind == Command::Kind::Run) {
             for (unsigned i = 0; i < command.count; ++i) {
                 hud.update(1.0f / 30);
                 spin += options.spinPerUpdate;
+                if (pause) pauseStep({});
+            }
+        } else if (command.kind == Command::Kind::Pause) {
+            pause.emplace(pauseMenuSetup(resources, "localisation/gametext_uk.loc", "localisation/systemtext_uk.loc"));
+            pause->open();
+        } else if (command.kind == Command::Kind::Press || command.kind == Command::Kind::Touch) {
+            if (!pause) throw std::runtime_error(command.kind == Command::Kind::Press ? "press needs pause first" : "touch needs pause first");
+            PauseInput input;
+            if (command.kind == Command::Kind::Press) {
+                input.start = command.name == "START";
+                input.a = command.name == "A";
+                input.b = command.name == "B";
+                input.left = command.name == "LEFT";
+                input.right = command.name == "RIGHT";
+                pauseStep(input);
+            } else {
+                input.touch = {true, command.x, command.z};
+                for (unsigned i = 0; i < command.count; ++i) pauseStep(input);
+                pauseStep({});
             }
         } else if (command.kind == Command::Kind::Marker) {
             pendingMarkers.push_back({int(pendingMarkers.size()), command.x, command.z});
@@ -153,6 +198,13 @@ int run(const Options& options) {
             view.markerField = &markerField;
             drawMinimap(bottom, resources, command.level, view);
             bottom.writeBmp(options.output + "/" + command.name + ".bmp");
+        } else if (pause) {
+            Canvas pauseTop(kTopWidth, kScreenHeight), pauseBottom(kBottomWidth, kScreenHeight);
+            pause->drawTop(pauseTop, resources);
+            pause->drawBottom(pauseBottom, resources);
+            composeScreens(pauseTop, pauseBottom).writeBmp(options.output + "/" + command.name + ".bmp");
+            std::cout << command.name << ": pause selected " << pause->round().selected() << ", menu state " << int(pause->round().state())
+                      << (pause->finished() ? ", closed" : "") << '\n';
         } else {
             top.clearTransparent();
             hud.draw(top, spin);

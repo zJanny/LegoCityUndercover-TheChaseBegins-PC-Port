@@ -30,6 +30,16 @@ void drawSaveSpinner(Canvas& bottom, Resources& resources, float phase, float op
 
 void drawSelectShortcut(Canvas& bottom, Resources& resources, const std::string& selectLabel, const std::string& extraLabel = {});
 
+// One Back or Select button of the shortcut bar 0x2203ac (layout sprites/blend/UI_Frontend/Shortcuts), with the button layout's storyboard.
+// STAND-IN UI-S2: shown means TransitionOn from 0 and hidden TransitionOff from 0; the switch 0x21ef20 that 0x228ad0 calls is not read.
+struct ShortcutView {
+    std::string label;
+    std::string storyboard;
+    float time = 0;
+    bool drawn = false;
+};
+void drawBackSelectShortcuts(Canvas& bottom, Resources& resources, const ShortcutView& back, const ShortcutView& select);
+
 struct SlotRow {
     int number = 1;
     std::string text;
