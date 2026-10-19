@@ -14,6 +14,3 @@ Ranges of item IDs held by parallel agents; the lead reserves them with `tools/c
 | SCRIPT | 321 | 323 | r31-D | 2026-10-19T12:47:13+02:00 |
 | SCRIPT-S | 264 | 265 | r31-D | 2026-10-19T12:47:14+02:00 |
 | PART | 8 | 8 | r31-D | 2026-10-19T12:47:14+02:00 |
-| PLAYER | 23 | 24 | r31-E | 2026-10-19T12:47:14+02:00 |
-| PLAYER-S | 11 | 11 | r31-E | 2026-10-19T12:47:14+02:00 |
-| AUDIO | 34 | 34 | r31-E | 2026-10-19T12:47:14+02:00 |
