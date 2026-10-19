@@ -6,13 +6,14 @@ The detective tool of mission 1-2 and later missions: the `ability_detective*` o
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-19T09:11:04+02:00. Detective spot (type 182), reveal spot (238) and reveal prop (74) run in `chase-game` with the oracle's timing; from the second detective point the mission reaches `1-2_SO_Dspot_02_X` (test `game-detective-1-2`). The Doorlock script now passes its wait (DETECT-2 closed), so the first point is enabled in `chase-game`. Chase holds the magnifying glass in detective mode (DETECT-7 closed); footprints are turned by the path orientation and stand on the ray test's ground (DETECT-14 closed); the other look differences against the oracle are open items.
+IN_PROGRESS, updated 2026-10-19T17:50:50+02:00. Detective spot (type 182), reveal spot (238) and reveal prop (74) run in `chase-game` with the oracle's timing; from the second detective point the mission reaches `1-2_SO_Dspot_02_X` (test `game-detective-1-2`). The Doorlock script now passes its wait (DETECT-2 closed), so the first point is enabled in `chase-game`. Chase holds the magnifying glass in detective mode (DETECT-7 closed); footprints are turned by the path orientation and stand on the ray test's ground (DETECT-14 closed); the dog footprints look as in the original by the user's check (DETECT-16, DETECT-17 closed); the other look differences against the oracle are open items.
 
 ## 3. Verified behaviour
 
 - Footprint offsets of `1-2_Dtv_DogSpot_01` equal the oracle record (33 of 33). The 13 matrices of the oracle traps E-1 and E-2 (identity rotation, ground heights) are reproduced.
 - Intervals of the oracle traces: spot state 1 one update after the A press, detect_out 37, X ahead → state 2 and detect_in (19) in one update, use-state event 43 and end 116, X spot state 2 after 32 more, reveal prop launch after 30 and trigger after 18.
 - Detective walk step x 1.4, no jump, `detect_*` role clips; the X spots start hidden (RevealSwitch link).
+- The dog footprints in detective mode look as in the original (user's visual check, 2026-10-19).
 - The glass (`Ability_MagnifyingGlass` on `weaponRight`) first shows 14 updates after the A press, as in the oracle; detective mode changes neither camera nor screen tint.
 
 ## 4. Stand-ins
@@ -20,7 +21,7 @@ IN_PROGRESS, updated 2026-10-19T09:11:04+02:00. Detective spot (type 182), revea
 - DETECT-S1 — The X-spot use state's event (43) and end (116) are measured numbers, not derived from its approach phase and the clip's event table. evidence: [abilities-detective.md §2026-10-18T11:26:21](../../re/abilities-detective.md#ts-20261018-112621).
 - DETECT-S2 — Fades (FadeObject, RevealObject, the X spot's own fade-out) are a show or hide at the fade's start. evidence: [abilities-detective.md §2026-10-18T11:26:21](../../re/abilities-detective.md#ts-20261018-112621).
 - DETECT-S9 — Footprint ground: the ray test uses the camera's query (surface mask 0x01000010), not the footprint's own query words; it matches the 13 oracle hit points. blocks: DETECT-15. evidence: [abilities-detective.md §2026-10-19T09:11:04](../../re/abilities-detective.md#ts-20261019-091104).
-- DETECT-S10 — The dog footprint card is drawn with its model's node 0 matrix (it cancels the card's own offset exactly); the original's draw of the pool objects is not read. needs: DETECT-16. evidence: [abilities-detective.md §2026-10-19T09:55:20+02:00](../../re/abilities-detective.md#ts-20261019-095520).
+- DETECT-S10 — The dog footprint card is drawn with its model's node 0 matrix (it cancels the card's own offset exactly); the original's draw of the pool objects is not read. evidence: [abilities-detective.md §2026-10-19T09:55:20+02:00](../../re/abilities-detective.md#ts-20261019-095520).
 - DETECT-S4 — One sound owner key for all detective objects. evidence: [abilities-detective.md §2026-10-18T11:26:21](../../re/abilities-detective.md#ts-20261018-112621).
 - DETECT-S5 — Bounce phases of the reveal prop count down one per update (0x2077a8 not read), which places its second trigger. evidence: [abilities-detective.md §2026-10-18T11:26:21](../../re/abilities-detective.md#ts-20261018-112621).
 - DETECT-S6 — Registry order: detective objects get the A press only when no carry object, build-it zone or build is active; the revealed prop appears at its placement without the flight path. evidence: [abilities-detective.md §2026-10-18T11:26:21](../../re/abilities-detective.md#ts-20261018-112621).
@@ -41,8 +42,6 @@ IN_PROGRESS, updated 2026-10-19T09:11:04+02:00. Detective spot (type 182), revea
 - [ ] DETECT-12 — Hand item events: previous-value handling on a clip start, weighting, the per-frame bone update 0x242814 (glass orientation), the glass during `detect_find` and when the mode ends without `detect_in`. needs: DETECT-S7, DETECT-S8. evidence: [abilities-detective.md §2026-10-18T19:30:00](../../re/abilities-detective.md#ts-20261018-193000).
 - [ ] DETECT-13 — Compare the glass pose with the oracle at the same camera and clip frame (the port's camera differs in the shots so far; compared by eye only). blocks: DETECT-S8. evidence: [abilities-detective.md §2026-10-18T19:30:00](../../re/abilities-detective.md#ts-20261018-193000).
 - [ ] DETECT-15 — The footprint's own ray query words (stack 0x2603f4..0x260444, descriptor 0x362298 and a word 512) are not decoded; the camera's query is used. blocks: DETECT-S9. evidence: [abilities-detective.md §2026-10-19T09:11:04](../../re/abilities-detective.md#ts-20261019-091104).
-- [ ] DETECT-16 — The dog footprints were drawn displaced by the card's node matrix (fixed, DETECT-S10); the card's look and direction on screen are not compared with the original yet: waits for a user save state with the footprints visible at the later spot (user, 2026-10-19). blocks: DETECT-S10, DETECT-17. evidence: [abilities-detective.md §2026-10-19T09:55:20+02:00](../../re/abilities-detective.md#ts-20261019-095520).
-- [ ] DETECT-17 — The dog card's material names Brick_Top.tga and FX_Specular.tga with lighting on, unlike the foot's own footprint texture: what the original draws there is unknown. needs: DETECT-16. evidence: [abilities-detective.md §2026-10-19T09:55:20+02:00](../../re/abilities-detective.md#ts-20261019-095520).
 
 ## 6. Findings summary
 

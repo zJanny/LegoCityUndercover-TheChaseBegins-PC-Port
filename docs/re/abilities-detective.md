@@ -11,6 +11,7 @@ The detective spot (ObjectType 182, `props/ability_detective`), the reveal spot 
 - Detective mode changes no camera and puts no tint on the screen in the oracle; the differences left (question particles, blue glow of objects, footstep dots, bottom screen) are open items. [§2026-10-18T19:30:00](#ts-20261018-193000)
 - Footprints: the pool objects are `DetectiveFP00..15` / `DogFP00..15` of `levels/charbits.blvl`; each stores the path orientation as four bytes and is placed with that rotation and the hit point of the ray test 0x21ab20 (not the player's ground probe); the dog paths of mission 1-2 are unrotated in the original too. [§2026-10-19T09:11:04](#ts-20261019-091104)
 - The dog footprint card sits 0.85 / 2.9 units away from its model origin and node 0's matrix (model+0x20) moves it back exactly; the port ignored it and drew the dog footprints displaced, now it applies it (stand-in: the original's draw of the pool objects is not read); the dog card's material (Brick_Top, FX_Specular, lighting on) is unexplained. [§2026-10-19T09:55:20+02:00](#ts-20261019-095520)
+- The user's visual check of the dog footprints in detective mode against the original found them correct; the original's draw code of the pool objects and the card material are still not read. [§2026-10-19T17:50:50](#ts-20261019-175050)
 - Open: the use state's approach phase, fades, the bounce helper 0x2077a8, question particles, the hand item event details (previous value, per-frame bone update) and the look items of the entry above.
 
 <a id="ts-20261018-112621"></a>
@@ -88,3 +89,12 @@ Unknowns:
 Unknowns:
 - What the original draws on the dog card (texture, direction, blend); needs a save state with the footprints visible at the later spot (user, 2026-10-19).
 - Whether the original applies node 0's matrix of the pool objects (not read).
+
+<a id="ts-20261019-175050"></a>
+
+## 2026-10-19T17:50:50+02:00 — Dog footprints in detective mode: the user's visual check (user playtest, no code reading)
+
+The user looked at the dog footprints in detective mode in `chase-game` against the original and reports that they now look correct (2026-10-19). This settles the open visual comparison of [§2026-10-19T09:55:20+02:00](#ts-20261019-095520) (look and direction of the dog card at the later spot) without the save state requested there; the request is withdrawn.
+
+Unknowns:
+- The original's draw of the footprint pool objects (whether it applies node 0's matrix) and why the dog card's material names `Brick_Top.tga` and `FX_Specular.tga` are still not read from the code; the port's result matches the original on screen.
