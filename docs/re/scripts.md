@@ -10,6 +10,7 @@ Moved to [scripts-runtime.md](scripts-runtime.md): trigger records and bound swi
 - The native function table has 377 entries (16 bytes each, pointer at 0x376ca4); `scriptfns.txt` documents only 300 of them, and entries are bound to handlers by name. [script-natives.md §2026-10-14T13:33](script-natives.md#ts-20261014-133339)
 - The executor 0x234204 runs a thread until a handler returns 0 (blocked, same call repeated every update) or the pc reaches the call count; a finished child clears its parent's suspend bit. [§2026-10-14T09:52:52](#ts-20261014-095252)
 - Wait 0x174604 stores the seconds on the first call and subtracts dt on repeat calls; CallScript / SpawnScript 0x1c3730 create and run the child at once. [§2026-10-14T09:52:52](#ts-20261014-095252)
+- CallScript / SpawnScript of a script the owner does not have read a null script and fault (no guard in 0x1c3730 / 0x22ce9c); the 894 calls of the main levels all resolve. [§2026-10-19T15:12:09](#ts-20261019-151209)
 - Threads start from scene start (a "startup" script of each owner), events by name (OnSceneEnter), and a pending trigger queue run after the runner pass; no thread is alive at the checkpoints gameplay-start and police-station. [§2026-10-14T09:52:52](#ts-20261014-095252)
 - Trigger enable byte and bound bytes +0xa / +0xb: see the correction in [scripts-runtime.md §2026-10-14T10:06](scripts-runtime.md#ts-20261014-100640).
 - The start state of placed objects is the result of the "startup" script (StoryProgress default 1.0 in lvl_01, unlock natives returning 0); revealer targets (BuilditFinalProp, PropToReveal, RevealObject) are disabled at start by a data rule, whose code was not found. [§2026-10-13T20:42:36](#ts-20261013-204236)
@@ -74,6 +75,8 @@ Unknowns
 <a id="ts-20261014-095252"></a>
 
 ## 2026-10-14T09:52:52+02:00 — Per-update script runner, thread record, Wait, CallScript / SpawnScript, script starters and the trigger path (llvm-objdump, REA Ghidra 12.1.2, Azahar oracle port 24701 without RPC)
+
+Corrected by [scripts.md §2026-10-19T15:12:09](#ts-20261019-151209): a CallScript or SpawnScript of a missing script faults in the original (the port stops with an error)
 
 Corrected by [scripts-runtime.md §2026-10-14T10:06](scripts-runtime.md#ts-20261014-100640): trigger enable byte and bound bytes +0xa / +0xb
 
@@ -144,3 +147,17 @@ Unknowns
 - The runtime trigger record builder (where the enable byte +0 comes from), bound bytes +0xa / +0xb and EnableBound 0x1d0ce8, the box test 0x22f650, and why the PlayerOnFootBoundEntered walk above did not start `Police_ExtToInt`.
 - Order of the scene owners (+0x24) against `Level::objects`; thread pool size; the second runner caller 0x2d1d6c; the script argument slots (+0x18..) and how a script reads them.
 - Where in 0x2e5158 the runner sits relative to the player and camera updates (`chase-game` runs scripts after the doors).
+
+<a id="ts-20261019-151209"></a>
+
+## 2026-10-19T15:12:09+02:00 — CallScript / SpawnScript of a missing script: the original faults (SCRIPT-S5; llvm-objdump on game.arm.elf, C++ level loader census; no REA session, no emulator)
+
+[Corrects scripts.md §2026-10-14T09:52:52](#ts-20261014-095252): its stand-in line "a CallScript or SpawnScript of a missing script continues" no longer holds.
+
+- The script argument of the two natives is resolved by 0x211e04 (type 5, 0x211fc8): 0x21b3fc gives the owner, 0x2388e4 looks the name hash up in the owner's script table (owner+0x24, table +0x18, count u16 +6). A miss falls back to a dotted global lookup (0x22cf94 splits the name at '.', 0x2ec94c resolves it) only when the calling thread's owner is the level (0x23c188); otherwise the value stays 0. The handler receives {owner, script}.
+- 0x1c3730 passes both to 0x22ce9c. With a record on the free list (0x589734) 0x22ce9c stores the script at record +0x10 without a test and returns the record; with an empty list it dereferences the script (`ldr r0, [r7]` at 0x22ced8). It returns 0 only when the list is empty and no thread of the scene can be reused. The handler then reads the script's halfword +4 (`ldrh` at 0x1c3764) and the call count. So a null script is an unguarded read at address 4 (or 0): the original faults; it neither continues nor blocks.
+- The 894 CallScript / SpawnScript calls of the eight main levels (110, 104, 89, 110, 102, 151, 223 and 5 in lvl_01..lvl_07 and lvl_00) all name a script of their own level (C++ loader, 2026-10-19), so the fault is not reached with shipped data. Test `script-call-targets-real-data`.
+- Port: `ScriptRunner` throws an error naming the call and the script instead of continuing; test `script-runner` (`callOfAMissingScriptStops`). Only owner 0 runs threads in the port, so no thread can look into another owner's table.
+
+Unknowns:
+- The dotted global lookup (0x22cf94 / 0x2ec94c) is not needed by shipped main-level data; its table was not read.

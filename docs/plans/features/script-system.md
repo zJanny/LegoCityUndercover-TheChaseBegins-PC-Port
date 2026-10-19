@@ -23,7 +23,8 @@ IN_PROGRESS, updated 2026-10-14T16:48:13+02:00. `ScriptRunner` runs threads ever
 - SCRIPT-S2 Closed 2026-10-14: `IsLevelUnlocked`, `GetGameComplete` and `IsRedBrickExtraActive` read the loaded slot ([save-format-state.md §2026-10-14T11:53](../../re/save-format-state.md#ts-20261014-115300)); without `--save` they return the new-game values (level 2 unlocked, rest 0). The mask of `IsRedBrickExtraActive` is a runtime value that is 0 after a load.
 - SCRIPT-S3 The revealer rule is a data fit, not traced to its code; verified only in lvl_01.
 - SCRIPT-S4 A function without a handler does nothing and continues at once; `chase-game` prints its name the first time (`script function without handler`). The original may block in it (WaitForDCam, DCamCutSceneWait, AIMove, ...). See SCRIPT-7.
-- SCRIPT-S5 A CallScript / SpawnScript of a script the level does not have continues (the original's result with a null script is unknown).
+- SCRIPT-S5 Closed 2026-10-19: the original faults on a null script in 0x1c3730 and all 894 calls of the main levels resolve; `ScriptRunner` stops with an error. evidence: [scripts.md §2026-10-19T15:12:09](../../re/scripts.md#ts-20261019-151209).
+- SCRIPT-S275 The bits 0x14 of ctrl+0x315 cleared by a placement are recorded in `VerticalState::placement` and read by no locomotion code. needs: PLAYER-25. evidence: [script-natives-flags.md §2026-10-19T15:12:32](../../re/script-natives-flags.md#ts-20261019-151232).
 - SCRIPT-S6 `chase-game` runs the scripts and the trigger pass after the door update; where 0x2e5158 runs them relative to the player and camera was not compared.
 - SCRIPT-S7 For the bound switch +0xb `chase-game` counts the rooms of the room streamer as loaded (street level, since WSTREAM-3). The startup scripts before the first frame and levels without streaming (WSTREAM-S1) still count every room as loaded.
 - SCRIPT-S14 Class `startup` scripts run for every placed object of the level whose class has one (the original: entities of loaded rooms) in a private `ScriptRunner` with a private object state; sub-objects of the class are not instantiated and an empty object name is not merged into the owner. needs: LEVOBJ-8, SCRIPT-52.
@@ -41,6 +42,7 @@ IN_PROGRESS, updated 2026-10-14T16:48:13+02:00. `ScriptRunner` runs threads ever
 - [ ] SCRIPT-53 — Order at the initial load: whether 0x2f67fc (class and level startup) precedes 0x2e6264 (camera bound init, `OnSceneEnter`); the second script 0x2f6870 starts by a stored name; which rooms' entities get class startups. blocks: SCRIPT-S14, SCRIPT-S16. evidence: [scene-start.md §2026-10-14T14:27](../../re/scene-start.md#ts-20261014-142739).
 - [ ] SCRIPT-54 — `ScriptCheckExtras` has no source: the Extras screen (flag 0x5163e8+0x35 set by 0x290310 when it is left) is not in the port, and its race natives have no handlers. evidence: [scene-start.md §2026-10-14T14:27](../../re/scene-start.md#ts-20261014-142739).
 - [ ] SCRIPT-55 — Camera bound system update 0x2ff7c8 (when a switched-off bound comes on again) and `CameraBoundArrive` (0x3345f8) are not read; the bounds stay off. evidence: [scene-start.md §2026-10-14T14:27](../../re/scene-start.md#ts-20261014-142739).
+- [ ] SCRIPT-337 — No game test runs PositionPlayer with a seated player (the vehicle arrival scripts such as `CTH-DT_Vehicle_Transition` do) or reads the entity at +0x84 of a non-vehicle object. evidence: [script-natives-flags.md §2026-10-19T15:12:32](../../re/script-natives-flags.md#ts-20261019-151232).
 
 ## 6. Findings summary
 
@@ -54,3 +56,4 @@ IN_PROGRESS, updated 2026-10-14T16:48:13+02:00. `ScriptRunner` runs threads ever
 
 - `Level::scripts` / `triggers` / `bounds` / `boundMatrices` / `objectReferenceHash` (`src/assets/level.cpp`), `ScriptRunner` (`src/runtime/script_runner.cpp`), `levelInitialState` / `runLevelStartup` / `levelStartState` (`src/runtime/level_start.cpp`), `PlacedObjectState` (`src/assets/object_collision.*`), the runner hook and the door messages in `src/game_level_update.cpp`, level setup in `src/game_level.cpp`.
 - `SceneStart`, `cameraBoundsSwitchedOffAtStart`, `triggersWithoutObject` (`src/runtime/scene_start.*`); `levelStartState` and the session start in `src/game_level.cpp` call it.
+- Placement effects (`src/runtime/placement_message.*`, test in `script-runner`), the missing-script stop (`script-runner`, `script-call-targets-real-data`).

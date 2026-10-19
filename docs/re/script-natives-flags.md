@@ -11,9 +11,10 @@ Handlers of batch 26 (SCRIPT-26). Census and the other batches: [script-natives.
 - The PositionPlayer ground probe only fires for character kinds 179, 183 and 243; the port has no character entries, so it is a no-op stand-in. [§2026-10-14T19:19:15](#ts-20261014-191915)
 - CameraFollow 0x1bf7c8 stores a global camera object in manager +0x28 via 0x226a30 (labelled no-op in the port); PositionObject for vehicles is read in outline. [§2026-10-15T13:42:00](#ts-20261015-134200)
 - PositionObject of a level character: the node takes the target's matrix and the room link follows; the controller part applies only when 0x21aae0 is true. Ported for characters, Holmes of mission 1-2 stands at `1-2_Doorlock_Teleport` after the Doorlock scene (seen in the oracle and in the port). [§2026-10-18T16:37:52](#ts-20261018-163752)
-- PositionObject of a placed prop or object: the scene node, the room and the animated prop's root-motion base take the target's matrix; the collision entries follow, a physics body was not found (SCRIPT-S255); 0x242b08 only re-buckets the entity by room. [§2026-10-19T10:39:23+02:00](#ts-20261019-103923), [§2026-10-19T11:03:27+02:00](#ts-20261019-110327)
+- PositionObject of a placed prop or object: the scene node, the room and the animated prop's root-motion base take the target's matrix; the collision entries follow, no physics body (SCRIPT-S255 closed); 0x242b08 only re-buckets the entity by room. [§2026-10-19T10:39:23+02:00](#ts-20261019-103923), [§2026-10-19T11:03:27+02:00](#ts-20261019-110327)
 - The kind byte (entity +0x12) is the class file's ObjectType; every class of the main levels has one, and the ToggleUseable group case, EnableShadow and EnableSwitch gates are read: [object-kinds.md §2026-10-18T21:36:13](object-kinds.md#ts-20261018-213613).
-- Open: readers of each flag, the fade natives' kind gate (enableobjectfade), the fade consumer, message 8 and 54 effects, who fills the kind list at 0x3743ec.
+- Message 8 to the player requests state 1 (0x2414b4 / 0x2eafc8), shows the node and enables the entity; the placement natives clear ctrl+0x315 bits 0x14, which the next locomotion step 0x20cd30 sets again and which select its first-step branch; PositionPlayer in a vehicle moves the vehicle instead and sends no message 8; a PositionObject of a prop touches no physics body (SCRIPT-98, SCRIPT-S255 closed). [§2026-10-19T15:12:32](#ts-20261019-151232)
+- Open: readers of each flag, the fade natives' kind gate (enableobjectfade), the fade consumer, message 54 effects, who fills the kind list at 0x3743ec.
 
 <a id="ts-20261014-141621"></a>
 
@@ -170,3 +171,32 @@ Reads the call that [§2026-10-18T16:37:52](#ts-20261018-163752) left open. Disa
 Unknowns:
 - Cell bounds of a moved dynamic entry (who updates +8 / +0xb): the port queries trees without a grid.
 - The physics body of a prop was not found in this function; whether props have one outside vehicles is open.
+
+<a id="ts-20261019-151232"></a>
+
+## 2026-10-19T15:12:32+02:00 — Message 8 to the player, ctrl+0x315 bits 0x14, the vehicle branch of PositionPlayer and props without a physics body (SCRIPT-98, SCRIPT-S255; llvm-objdump on game.arm.elf, no REA session, no emulator)
+
+Continues [§2026-10-14T19:19:15](#ts-20261014-191915) (its unknowns on message 8 and ctrl+0x315) and [§2026-10-19T11:03:27](#ts-20261019-110327). Disassembly of 0x18ed9c, 0x2414b4, 0x2eafc8, 0x23f734, 0x242cf0, 0x1d9e6c, 0x1da0dc, 0x24255c, 0x245008 / 0x245048, 0x22a1f4 and the locomotion step 0x20cd30.
+
+**Message 8 to the player (0x18ed9c)**
+- 0x2414b4(entity, ctrl+0x50, 1, 0): a hook at `[0x377194 + 4]` (set at run time, not in the file) maps the class state 1 to a table index; when the entity flag 0x10 is set and the last argument is 0, only index 11 passes. Then 0x2eafc8(ctrl+0x50, entry) stores the entry from the table at `*0x3742c8` (24-byte rows, +0x14) at ctrl+0x5c, sets the pending byte ctrl+0x64 to 1 and recomputes the two halfwords ctrl+0x6c / +0x6e from the entries (0x1eb868). So the message requests state 1 of the player's state machine for the next update; state 1 is the default that carry put-down and build-it end also request (0x2414b4(..., 1, 0), [carrying-animation.md](carrying-animation.md), [buildit.md](buildit.md)).
+- For an entity other than the global player the byte ctrl+0x2ce becomes 136 (skipped for the player). 0x23f734(node, 1) clears mask 0x60 of the node's first word (shows the node), 0x21e218 runs for other entities only, and 0x242cf0(entity) clears the disabled bit 0 of the entity flags when it is set (and then shows the node again, re-buckets by room 0x242b08 and enables the children); with the bit clear, as for the player, it returns at once.
+- PositionPlayer sends it only when 0x24255c found no vehicle (0x1da3fc); PositionObject sends it when the moved object is the global player (0x1d9f8c).
+
+**ctrl+0x315 bits 0x14**
+- Cleared by both placement natives (0x1d9f64, 0x1da3e0). The locomotion step 0x20cd30 sets them again at its end (`orr 0x14` at 0x20d5e0) in every call that reaches that point, so they are clear only from the placement to the next step (as measured on 2026-10-14: 0xfe after the update with the poke).
+- Readers inside the step: bit 4 at 0x20d3bc (reached from 0x20d2c4 when [ctrl+0x174] is 0): with the bit clear the step calls 0x20b48c(..., flag 16, 0.0) instead of 0x289b80 / 0x203b34; bits 2 and 3 at 0x20cf20 (both set: the 0x20cf28 check of ctrl+0x314 bit 6 and the contact gather run). Other writers and readers of the byte (bit 0 B-press latch, bit 3, bit 6, bit 7 mill about) are listed by the 166 accesses of the disassembly; not read one by one.
+- Port: `PlacementEffects` (src/runtime/placement_message.*) records the two as flags; the port's locomotion has no counterpart of the 0x20b48c branch yet.
+
+**PositionPlayer vehicle branch (0x1da0dc)**
+- When the first object is the global player (0x3772c0) and 0x24255c returns a vehicle (ctrl+0x6c is 284 or 411; the result is [ctrl+0x130]), the node that is moved is the vehicle's, no ground probe runs, and the target y gets `+ [vehicle +0x70]` (0x1da2c8); then 0x29f014(vehicle) (searches a table of vehicle pointers at +0x40 with the count at +0xc0 of the object at its literal pool, not decoded) selects: vehicle controller state halfword +2 == 6 runs 0x22b224, the requested state +4 becomes 5, bit 2 of +0x311 is cleared, 0x242554 nonzero runs 0x204e98(vehicle, 1), and 0x242cf0(vehicle) enables it. The common tail copies the target matrix to the node (0x24c118), re-links the room (0x245048 / 0x245008), re-buckets (0x242b08). The player's controller still gets the heading, the fall floats and the bit clear, but no message 8; the driver entity (+0x84 of the vehicle) is placed at the node (0x20cc30) and 0x23091c repositions it.
+- Port: `LevelSession::applyPlacement` places the seated vehicle through `placeSeatedVehicle` (no +0x70 offset, no state 5) and resets the fall floats; the earlier port threw the player out of the vehicle.
+
+**PositionObject of a prop (SCRIPT-S255)**
+- The non-controller tail 0x1da000 touches a physics body (`[ctrl+0x2a4]`, position into body +0x58) and the copy into comp+0x38 only for kind bytes 179, 183 and 243 (vehicles and characters); 0x22a1f4 only acts on the global at 0x3745d4. A prop (any other kind) gets the node matrix copy 0x24c118, the node re-link under the room node (0x245048 unlinks, 0x245008 links as the room's child: plain list edits) and the room re-bucket 0x242b08, nothing else. So a prop has no physics body to move; its collision entry follows through the node.
+- Every kind then places the entity at `entity +0x84` (0x20cc30: its node takes the placed node's matrix through 0x2429d0 / 0x2429fc); who owns an entity at +0x84 besides the driver of a vehicle was not read.
+
+Unknowns:
+- Entity +0x70 of a vehicle (writers not found) and what 0x29f014 tests; the hook at `[0x377194 + 4]` that maps state 1; the state machine consumer of ctrl+0x64.
+- What the first-step branch 0x20b48c (flag 16) does in the player's locomotion.
+- Which entities of props carry an entity at +0x84.

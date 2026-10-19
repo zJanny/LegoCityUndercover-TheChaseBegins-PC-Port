@@ -25,11 +25,11 @@ This file has no dated entries: the table is edited in place. When a native is r
 | ?? | 0x17efb8 | 0 | 554 / 69 / 27 / 4 | 10 | done |  |  |
 | SetActiveWayPoint | 0x27bde8 | 2 | 540 / 79 / 23 / 0 | 8 | stand-in | 31 | handled: show and hide chain with map slot and disable fade (SCRIPT-74 closed); stand-in SCRIPT-S269: [objective-hud.md §2026-10-19T15:00](objective-hud.md#ts-20261019-150002) |
 | PrintDebugString | 0x26fde8 | 2 | 514 / 125 / 6 / 6 | 24 | D | 26 | handled: 0x26fde8 is `mov r0,#1; bx lr`, no text is drawn or logged (corrects the old note: 0x2665d0 belongs to the next function 0x26fdf0) |
-| PositionObject | 0x1d9e6c | 2 | 498 / 89 / 4 / 0 | 9 | done |  | player, vehicles and level characters (SCRIPT-287); props SCRIPT-288 |
-| CallScript | 0x1c3730 | 1 | 485 / 67 / 64 / 2 | 9 | done |  |  |
+| PositionObject | 0x1d9e6c | 2 | 498 / 89 / 4 / 0 | 9 | done |  | player, vehicles and level characters (SCRIPT-287); props SCRIPT-288, no physics body (SCRIPT-S255 closed) |
+| CallScript | 0x1c3730 | 1 | 485 / 67 / 64 / 2 | 9 | done |  | handled; a missing script stops the runner (SCRIPT-S5 closed): [scripts.md §2026-10-19T15:12:09](scripts.md#ts-20261019-151209) |
 | ShowDialogBG | 0x1bfb64 | 1 | 443 / 64 / 4 / 0 | 8 | stand-in | 30 | handled as a stand-in, drawn with fitted layout: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
 | WaitForDCam | 0x1883ec | 0 | 429 / 120 / 4 / 0 | 10 | done | 28 | handled, busy test without the cutscene part (SCRIPT-29): [dcam.md §2026-10-14T14:36](dcam.md#ts-20261014-143600) |
-| SpawnScript | 0x1c3730 | 1 | 424 / 43 / 6 / 0 | 9 | done |  |  |
+| SpawnScript | 0x1c3730 | 1 | 424 / 43 / 6 / 0 | 9 | done |  | handled; a missing script stops the runner (SCRIPT-S5 closed): [scripts.md §2026-10-19T15:12:09](scripts.md#ts-20261019-151209) |
 | ShowDialogueText | 0x26ff84 | 3 | 409 / 25 / 0 / 0 | 6 | stand-in | 30 | handled as a stand-in, drawn with fitted layout: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
 | AIEnable | 0x1881d4 | 2 | 404 / 74 / 2 / 0 | 10 | stand-in | 34 | flag or requested state recorded; returns 1: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
 | ShowDialogueTextTimed | 0x2a6d90 | 4 | 400 / 106 / 8 / 0 | 6 | stand-in | 30 | handled as a stand-in, drawn with fitted layout: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
@@ -97,7 +97,7 @@ This file has no dated entries: the table is edited in place. When a native is r
 | VehicleStop | 0x1b27e8 | 1 | 43 / 6 / 0 / 0 | 6 | C | 36 |  |
 | enableobjectfade | 0x26fac4 | 2 | 42 / 1 / 0 / 0 | 7 | A | 26 | stand-in: ends like EnableObject unless the kind answers message 24 (SCRIPT-S241, SCRIPT-295) |
 | EnableTrafficAndPedestrians | 0x2c5780 | 1 | 42 / 12 / 0 / 0 | 6 | stand-in | 36 | flag only, no traffic [§2026-10-15T15:10](script-natives-audio.md#ts-20261015-151038) |
-| PositionPlayer | 0x1da0dc | 2 | 42 / 11 / 0 / 0 | 7 | stand-in | 26 | handled like PositionObject for the player (fall reset); ground probe, vehicle branch, message 8: [script-natives-flags.md §2026-10-14T19:19](script-natives-flags.md#ts-20261014-191915) |
+| PositionPlayer | 0x1da0dc | 2 | 42 / 11 / 0 / 0 | 7 | stand-in | 26 | handled like PositionObject for the player (fall reset, message 8 and bits recorded SCRIPT-S274, SCRIPT-S275; a seated player moves the vehicle SCRIPT-S276); ground probe SCRIPT-59: [script-natives-flags.md §2026-10-19T15:12:32](script-natives-flags.md#ts-20261019-151232) |
 | AddToSemiTransNearCameraList | 0x2cb734 | 2 | 41 / 5 / 5 / 0 | 7 | stand-in | 38 | stand-in: entries recorded, not drawn (SCRIPT-S233, RENDER-67, SCRIPT-38): [script-natives-world.md §2026-10-18T11:01:40](script-natives-world.md#ts-20261018-110140) |
 | enabletrafficpath | 0x27bc30 | 2 | 40 / 0 / 0 / 0 | 2 | C | 36 |  |
 | StreamRoomIn | 0x1bfba4 | 1 | 40 / 9 / 0 / 0 | 6 | done | 38 | handled: requests the room, blocks until loaded (SCRIPT-S235, WSTREAM-33, SCRIPT-38): [script-natives-world.md §2026-10-18T11:01:40](script-natives-world.md#ts-20261018-110140) |

@@ -10,9 +10,10 @@ bool entityHasController(std::uint8_t kind, std::uint32_t flags, const std::vect
     return (flags & kEntityFlagController) != 0;
 }
 
-void resetControllerAfterPlacement(VerticalState& state) {
+void resetControllerAfterPlacement(VerticalState& state, bool inVehicle) {
     state.fallDistance = 0.0f;
     state.fallSpeed = 0.0f;
+    placePlayerEffects(state.placement, inVehicle);
 }
 
 bool isProbeCharacterKind(std::uint8_t kind) { return kind == 179 || kind == 183 || kind == 243; }

@@ -3,6 +3,7 @@
 // fall branch), the event 0x26 handler (gravity step) and the landing decision of event 0x24 (0x2b24bc).
 // Evidence and traces: docs/re/player.md, 2026-10-13 falling entry. No SDL dependency.
 #include "runtime/collision.hpp"
+#include "runtime/placement_message.hpp"
 #include "runtime/player_locomotion.hpp"
 #include "runtime/scheduler.hpp"
 #include <vector>
@@ -95,6 +96,7 @@ struct VerticalState {
     bool bounceSettling = false;        // the update after the last rise update (state 5 entered): the node does not move
     bool slideFall = false;             // state 5 entered from state 8
     std::uint32_t slideFallTicks = 0;   // clock ticks since that state 5 began
+    PlacementEffects placement;         // what the last PositionPlayer / PositionObject left on the player (placement_message.hpp)
     bool steeringLocked() const { return posture == Posture::Falling && slideFall && slideFallTicks <= kSlideFallLockTicks; }
 };
 

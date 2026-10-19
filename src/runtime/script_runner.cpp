@@ -7,6 +7,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
+#include <stdexcept>
 
 namespace chase::runtime {
 namespace {
@@ -368,11 +369,9 @@ ScriptRunner::Result ScriptRunner::call(ScriptThread& thread, const ScriptCall& 
 
 ScriptRunner::Result ScriptRunner::callScript(ScriptThread& thread, const ScriptCall& call, bool suspendParent) {
     const LevelScript* script = call.arguments.empty() ? nullptr : find(call.arguments[0]);
-    if (!script) {
-        const std::string name = lower(call.function) + " " + (call.arguments.empty() ? std::string() : lower(call.arguments[0]));
-        if (unhandled_[name]++ == 0) unhandledOrder_.push_back(name);
-        return Result::Continue;
-    }
+    if (!script)
+        throw std::runtime_error(call.function + " of a script the level does not have: " + (call.arguments.empty() ? std::string("(no argument)") : call.arguments[0]) +
+                                 " (the original 0x1c3730 reads the null script at address 4 and faults)");
     ScriptThread* child = create(*script);
     if (suspendParent) {
         child->parent = &thread;

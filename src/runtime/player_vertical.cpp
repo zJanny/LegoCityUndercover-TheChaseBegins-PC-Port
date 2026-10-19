@@ -256,6 +256,7 @@ VerticalStep verticalUpdateStep(VerticalState& state, const CollisionWorld& worl
 VerticalStep verticalUpdate(VerticalState& state, const CollisionWorld& world, const VerticalInput& input) {
     VerticalStep step = verticalUpdateStep(state, world, input);
     if (state.posture == Posture::Falling && state.slideFall) state.slideFallTicks += input.ticks;
+    locomotionStepEnded(state.placement);
     return step;
 }
 

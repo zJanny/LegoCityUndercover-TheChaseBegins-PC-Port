@@ -81,6 +81,13 @@ void LevelSession::reportUnhandled() {
 
 void LevelSession::applyPlacement(const runtime::ScriptPlacement& request) {
     const std::optional<Placement> target = objectStart(level, request.target);
+    if (request.object == "player1" && player && target && boarding && boarding->seatedVehicle()) {
+        if (placeSeatedVehicle(target->position, target->orientation[1])) {
+            runtime::resetControllerAfterPlacement(player->vertical, true);
+            std::cout << "PositionPlayer: the seated vehicle to " << request.target << " at update " << updates << '\n';
+            return;
+        }
+    }
     if (request.object == "player1" && player && target) {
         player->motion.x = target->position[0];
         player->vertical.y = target->position[1];

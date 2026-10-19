@@ -1,5 +1,6 @@
 #pragma once
 
+#include "runtime/placement_message.hpp"
 #include "runtime/player_vertical.hpp"
 #include <cstdint>
 #include <vector>
@@ -23,9 +24,10 @@ inline const std::vector<std::uint8_t>& measuredControllerKindList() {
 bool entityHasController(std::uint8_t kind, std::uint32_t flags, const std::vector<std::uint8_t>& kindList);
 
 // The controller reset of PositionObject 0x1d9e6c (0x1d9f68..0x1d9f6c) and PositionPlayer 0x1da0dc (0x1da3e4..0x1da3e8):
-// ctrl+0x2b4 (fall distance) and ctrl+0x2b8 (fall speed) become 0.0. The same code clears bits 0x14 of ctrl+0x315 and sends
-// message 8, which the port does not model (SCRIPT-S98).
-void resetControllerAfterPlacement(VerticalState& state);
+// ctrl+0x2b4 (fall distance) and ctrl+0x2b8 (fall speed) become 0.0. The same code clears bits 0x14 of ctrl+0x315 and, when the
+// player is not in a vehicle, sends message 8; both are recorded in `state.placement` (placement_message.hpp, SCRIPT-S274,
+// SCRIPT-S275).
+void resetControllerAfterPlacement(VerticalState& state, bool inVehicle = false);
 
 // PositionPlayer 0x1da0dc ground probe: a gather 0x237f30 around the target (query mask 4, the character kinds 179, 183 and
 // 243) must find a character before the probe segment of length 5.0 along the global float3 at 0x56d424 runs.

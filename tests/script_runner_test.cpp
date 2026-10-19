@@ -90,6 +90,25 @@ void callScriptSuspendsTheParent() {
     require(runner.variable("ParentDone") == 1 && runner.threadCount() == 0, "the child is ahead of its parent: the parent resumes in the same update");
 }
 
+// 0x1c3730 with a null script: 0x22ce9c stores it in the new thread without a check, then the handler reads the script's
+// halfword +4 (ldrh at 0x1c3764) and faults; the port stops with an error naming the call instead of continuing.
+void callOfAMissingScriptStops() {
+    for (const char* function : {"CallScript", "SpawnScript"}) {
+        Level level;
+        add(level, "parent", {{function, {"nothere"}}, {"=", {"ParentDone", "1"}}});
+        PlacedObjectState state;
+        ScriptRunner runner(level, state);
+        bool stopped = false;
+        try {
+            runner.start("parent");
+        } catch (const std::runtime_error& error) {
+            stopped = std::string(error.what()).find("nothere") != std::string::npos;
+        }
+        require(stopped, std::string(function) + " of a missing script stops with an error");
+        require(runner.variable("ParentDone") == 0, "the caller does not continue");
+    }
+}
+
 void callScriptOfAnEndingChildContinuesAtOnce() {
     Level level;
     add(level, "parent", {{"CallScript", {"child"}}, {"=", {"ParentDone", "1"}}});
@@ -379,6 +398,23 @@ void placementControllerCondition() {
     require(vertical.fallDistance == 0.0f && vertical.fallSpeed == 0.0f, "fall distance and speed are cleared");
 }
 
+// Disassembly of 0x1d9f64 / 0x1da3e0 (bic 0x14 on ctrl+0x315), 0x20d5e0 (orr 0x14 at the end of the locomotion step 0x20cd30),
+// 0x1da3fc (message 8 skipped when 0x24255c found a vehicle) and the oracle read of 2026-10-14 (ctrl+0x315 0xff -> 0xfe after
+// the update, docs/re/script-natives-flags.md): the bits are clear only between the placement and the next locomotion step.
+void placementEffectsOfThePlayer() {
+    chase::runtime::VerticalState vertical;
+    require(!vertical.placement.settleStepPending && !vertical.placement.defaultStateRequested, "nothing pending at the start");
+    chase::runtime::resetControllerAfterPlacement(vertical);
+    require(vertical.placement.settleStepPending && vertical.placement.defaultStateRequested && vertical.placement.nodeShown &&
+                vertical.placement.entityEnabled,
+            "on foot: bits cleared and message 8 effects");
+    chase::runtime::locomotionStepEnded(vertical.placement);
+    require(!vertical.placement.settleStepPending && vertical.placement.defaultStateRequested, "the step sets the bits again");
+    chase::runtime::VerticalState seated;
+    chase::runtime::resetControllerAfterPlacement(seated, true);
+    require(seated.placement.settleStepPending && !seated.placement.defaultStateRequested, "in a vehicle: bits cleared, no message 8");
+}
+
 void placementProbeSegment() {
     // Oracle: 0x56d424 = (0, 1, 0) (words 00000000 3f800000 00000000), length 5.0 from the literal pool 0x1da550.
     const float start[3] = {1.0f, 2.0f, 3.0f};
@@ -456,6 +492,7 @@ int main() {
         waitZeroYieldsOnce();
         callScriptSuspendsTheParent();
         callScriptOfAnEndingChildContinuesAtOnce();
+        callOfAMissingScriptStops();
         spawnScriptDoesNotSuspend();
         newThreadsWaitForTheNextPass();
         conditions();
@@ -473,6 +510,7 @@ int main() {
         positionObjectIsRecorded();
         positionPlayerIsRecordedLikePositionObject();
         placementControllerCondition();
+        placementEffectsOfThePlayer();
         placementProbeSegment();
         sceneChangeIsRecorded();
     } catch (const std::exception& error) {
