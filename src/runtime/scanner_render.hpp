@@ -12,6 +12,8 @@ struct ScannerRender {
     assets::MaterialOverride drawList;  // pass 4 of 0x2e4858
     bool overrideSky = false;           // 0x3772cd == 0: 0x180fac keeps the override for the sky
     bool noFog = false;                 // 0x3760fd
+    float glowStrength = 0.0f;          // pass 5 of 0x2e4858: 0x2bf830 (0.6, 1.4) instead of (0x516410, 0.7); the literals 0x2e50c8 / 0x2e50c4
+    float glowSecond = 0.0f;
 };
 
 // 0x2e4858 case 3: flags 0x95, mode 3, texture 0, extra bit 0 cleared (the other bits of 0x530840 read 0 in the oracle), constant 0xffab8126.
@@ -19,6 +21,8 @@ constexpr std::uint8_t kScannerWorldOverrideFlags = 0x95;
 constexpr std::uint8_t kScannerDrawListOverrideFlags = 0xd5;
 constexpr std::uint8_t kScannerOverrideMode = 3;
 constexpr std::uint32_t kScannerOverrideConstant = 0xffab8126;
+constexpr float kScannerGlowStrength = 0.6f;
+constexpr float kScannerGlowSecond = 1.4f;
 
 ScannerRender scannerRender(bool audioModeEntered);
 

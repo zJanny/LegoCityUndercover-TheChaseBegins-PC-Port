@@ -43,4 +43,9 @@ GLuint particleProgram() {
     return program;
 }
 
+GLuint glowProgram() {
+    static const GLuint program = link(shaders::glowVertex, shaders::glowFragment);
+    return program;
+}
+
 }

@@ -25,6 +25,7 @@
 #include "game_player.hpp"
 #include "render/hud_overlay.hpp"
 #include "render/scene.hpp"
+#include "render/glow.hpp"
 #include "render/studs.hpp"
 #include "runtime/animation_driver_chain.hpp"
 #include "runtime/player_script_animation.hpp"
@@ -239,6 +240,7 @@ private:
     chase::runtime::StudField studs;
     std::vector<std::pair<unsigned, std::uint16_t>> soundLog;
     std::optional<chase::render::StudSprites> studSprites;
+    std::optional<chase::render::GlowPass> glowPass;
     game_particles::LevelParticles particles;
     game_stud_drops::LevelStudDrops studDrops;
     game_effects::LevelEffects effects;

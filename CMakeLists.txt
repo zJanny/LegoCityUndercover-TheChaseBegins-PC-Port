@@ -53,7 +53,7 @@ target_sources(chase_runtime PRIVATE src/runtime/prop_wobbly_destructible.cpp sr
 # Front end (boot to the slot list): CPU-drawn screens, no SDL dependency.
 add_library(chase_frontend src/frontend/script.cpp src/frontend/frontend.cpp src/frontend/pages.cpp src/frontend/canvas.cpp src/frontend/resources.cpp src/frontend/layout.cpp src/frontend/flow.cpp src/frontend/hud.cpp src/frontend/script_text_pages.cpp src/frontend/minimap.cpp src/frontend/map_marker.cpp src/frontend/slot_summaries.cpp)
 target_sources(chase_frontend PRIVATE src/frontend/scanner_overlay.cpp)
-target_sources(chase_runtime PRIVATE src/runtime/scanner_reticle.cpp src/runtime/scanner_markers.cpp src/runtime/scanner_render.cpp)
+target_sources(chase_runtime PRIVATE src/runtime/scanner_reticle.cpp src/runtime/scanner_markers.cpp src/runtime/scanner_render.cpp src/runtime/glow.cpp)
 target_link_libraries(chase_frontend PUBLIC chase_assets chase_runtime chase_save_progress)
 target_compile_options(chase_frontend PRIVATE -Wall -Wextra -Wpedantic -ffp-contract=off)
 add_executable(chase-hudshot src/hudshot.cpp)
@@ -92,13 +92,13 @@ endif()
 pkg_check_modules(EPOXY IMPORTED_TARGET epoxy)
 if(EPOXY_FOUND)
   set(CHASE_SHADER_DIR ${CMAKE_SOURCE_DIR}/src/render/shaders)
-  set(CHASE_SHADER_SOURCES sceneVertex:scene.vert.glsl sceneFragment:scene.frag.glsl hudVertex:hud.vert.glsl hudFragment:hud.frag.glsl particleVertex:particle.vert.glsl particleFragment:particle.frag.glsl)
+  set(CHASE_SHADER_SOURCES sceneVertex:scene.vert.glsl sceneFragment:scene.frag.glsl hudVertex:hud.vert.glsl hudFragment:hud.frag.glsl particleVertex:particle.vert.glsl particleFragment:particle.frag.glsl glowVertex:glow.vert.glsl glowFragment:glow.frag.glsl)
   set(CHASE_SHADERS_CPP ${CMAKE_BINARY_DIR}/generated/shaders.cpp)
   add_custom_command(OUTPUT ${CHASE_SHADERS_CPP}
     COMMAND ${CMAKE_COMMAND} "-DSHADERS=${CHASE_SHADER_SOURCES}" -DSHADER_DIR=${CHASE_SHADER_DIR} -DOUTPUT=${CHASE_SHADERS_CPP}
       -P ${CMAKE_SOURCE_DIR}/tools/embed_shaders.cmake
     DEPENDS ${CHASE_SHADER_DIR}/scene.vert.glsl ${CHASE_SHADER_DIR}/scene.frag.glsl ${CHASE_SHADER_DIR}/hud.vert.glsl ${CHASE_SHADER_DIR}/hud.frag.glsl
-      ${CHASE_SHADER_DIR}/particle.vert.glsl ${CHASE_SHADER_DIR}/particle.frag.glsl
+      ${CHASE_SHADER_DIR}/particle.vert.glsl ${CHASE_SHADER_DIR}/particle.frag.glsl ${CHASE_SHADER_DIR}/glow.vert.glsl ${CHASE_SHADER_DIR}/glow.frag.glsl
       ${CMAKE_SOURCE_DIR}/tools/embed_shaders.cmake
     VERBATIM)
   add_library(chase_render src/render/scene.cpp src/render/character.cpp ${CHASE_SHADERS_CPP})
@@ -106,7 +106,7 @@ if(EPOXY_FOUND)
   target_link_libraries(chase_render PUBLIC chase_assets chase_runtime PkgConfig::SDL2 PkgConfig::EPOXY)
   target_compile_options(chase_render PRIVATE -Wall -Wextra -Wpedantic)
   target_sources(chase_render PRIVATE src/render/studs.cpp src/render/debug_text.cpp src/render/debug_overlay.cpp
-    src/render/program.cpp src/render/particles.cpp src/render/rope.cpp src/render/window.cpp src/render/hud_overlay.cpp src/render/front_presenter.cpp src/render/frame_stats.cpp)
+    src/render/program.cpp src/render/particles.cpp src/render/rope.cpp src/render/window.cpp src/render/hud_overlay.cpp src/render/front_presenter.cpp src/render/frame_stats.cpp src/render/glow.cpp)
   add_executable(chase-viewer src/viewer.cpp)
   target_link_libraries(chase-viewer PRIVATE chase_render chase_audio chase_input)
   target_compile_options(chase-viewer PRIVATE -Wall -Wextra -Wpedantic)
@@ -385,6 +385,10 @@ if(BUILD_TESTING)
   target_link_libraries(scanner-render-test PRIVATE chase_runtime chase_assets)
   target_compile_options(scanner-render-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME scanner-render COMMAND scanner-render-test)
+  add_executable(glow-test tests/glow_test.cpp)
+  target_link_libraries(glow-test PRIVATE chase_runtime chase_assets)
+  target_compile_options(glow-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME glow COMMAND glow-test)
   add_executable(scanner-overlay-test tests/scanner_overlay_test.cpp)
   target_link_libraries(scanner-overlay-test PRIVATE chase_frontend)
   target_compile_options(scanner-overlay-test PRIVATE -Wall -Wextra -Wpedantic)

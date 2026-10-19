@@ -15,6 +15,8 @@ ScannerRender scannerRender(bool audioModeEntered) {
     out.drawList.flags = kScannerDrawListOverrideFlags;
     out.overrideSky = true;
     out.noFog = true;
+    out.glowStrength = kScannerGlowStrength;
+    out.glowSecond = kScannerGlowSecond;
     return out;
 }
 

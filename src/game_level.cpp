@@ -6,6 +6,7 @@
 #include "game_save.hpp"
 #include "game_screen_fade.hpp"
 #include "runtime/fog.hpp"
+#include "runtime/glow.hpp"
 #include "runtime/follow_camera.hpp"
 #include "runtime/nav_load.hpp"
 #include "runtime/object_visibility.hpp"
@@ -180,6 +181,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     fallApart.load(archive, particles.random(), chase::render::readBaseAppearance(archive));
     studDrops.load(particles.random());
     studSprites.emplace(archive);
+    glowPass.emplace();
     player = game_player::placePlayer(archive, scene, level);
     levelScripts.setAllRoomsLoaded();
     levelScripts.loadWaypoints(classOf);
@@ -448,6 +450,7 @@ void LevelSession::draw(int width, int height) {
     drawUseMarkers(mvp);
     particles.draw(viewMatrix, mvp);
     drawZiplineRopes(viewMatrix, mvp);
+    if (runtime::glowRuns(scannerLook.glowStrength, false)) glowPass->apply(screens.top, runtime::glowComposite(scannerLook.glowStrength, scannerLook.glowSecond));
     setScissorTest(false);
     if (hud && !cutscenePlaying()) {
         hudCanvas.clearTransparent();
@@ -545,6 +548,7 @@ runtime::DebugGameValues LevelSession::debugValues() const {
 
 void LevelSession::releaseOverlays() {
     studSprites.reset();
+    glowPass.reset();
     particles.releaseGl();
     useMarkerRenderer.reset();
     ropeRenderer.reset();
