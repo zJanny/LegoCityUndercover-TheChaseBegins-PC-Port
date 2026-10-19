@@ -24,6 +24,10 @@ struct MinimapView {
     float playerYaw = 0;         // radians, the player's heading
     std::vector<MinimapMarker> markers;
     const MapMarkerField* markerField = nullptr;
+    // The scanner view (docs/re/abilities-scanner.md): the characters button gives way to the audio (greyed) and exit buttons.
+    // STAND-IN (SCAN-S8): the buttons stand at their final place without the slide-in storyboards, the audio button uses the
+    // "disabled" look read from the oracle picture, and the player arrow and the map circle of the scanner screen are not drawn.
+    bool scanner = false;
 };
 
 void drawMinimap(Canvas& bottom, Resources& resources, const std::string& levelName, const MinimapView& view);

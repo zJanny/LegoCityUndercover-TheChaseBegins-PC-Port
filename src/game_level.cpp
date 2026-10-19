@@ -442,6 +442,7 @@ void LevelSession::draw(int width, int height) {
         mapView.cameraYaw = follow->yaw();
         mapView.playerYaw = runtime::headingRadians(player->motion.facing);
         mapView.markers = activeMapMarkers();
+        mapView.scanner = scanner.viewShown();
         mapView.markerField = &mapMarkerField;
         fe::drawMinimap(mapCanvas, hudResources, levelName, mapView);
     } else {

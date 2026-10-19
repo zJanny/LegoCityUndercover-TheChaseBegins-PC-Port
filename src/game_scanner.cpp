@@ -90,6 +90,7 @@ bool LevelSession::scannerView(float eye[3], float& yaw, float& pitch, float& fi
 bool LevelSession::drawScannerOverlay(frontend::Canvas& top) {
     if (!scanner.viewShown()) {
         scannerReticle.reset();
+        scannerMarkers.reset();
         return false;
     }
     runtime::ScannerReticleInput input;
@@ -110,7 +111,14 @@ bool LevelSession::drawScannerOverlay(frontend::Canvas& top) {
         input.currentScreen[0] = records[std::size_t(scanner.current())].screen[0];
         input.currentScreen[1] = records[std::size_t(scanner.current())].screen[1];
     }
-    frontend::drawScannerOverlay(top, hudResources, scannerReticle.update(input), float(updates) / 30.0f);
+    std::vector<runtime::ScannerMarkerInput> markerRecords(records.size());
+    for (std::size_t i = 0; i < records.size(); ++i) {
+        markerRecords[i].visible = records[i].visible;
+        markerRecords[i].screen[0] = records[i].screen[0];
+        markerRecords[i].screen[1] = records[i].screen[1];
+    }
+    frontend::drawScannerOverlay(top, hudResources, scannerReticle.update(input), float(updates) / 30.0f,
+                                 scannerMarkers.update(runtime::kScannerUpdateSeconds, markerRecords));
     return true;
 }
 

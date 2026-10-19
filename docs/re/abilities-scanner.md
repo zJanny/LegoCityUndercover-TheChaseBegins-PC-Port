@@ -11,6 +11,7 @@ The sound scanner of mission 1-2 and later missions: the zone class `props/prop_
 - Emulator: in Azahar the camera yaw word 0x376894 reads NaN once the scanner runs, the scannable records never get a screen position, and the game stops responding after the exit (both runs). This is the likely cause of the white view; lock, scan and exit timing could not be measured there. [§2026-10-18T11:27:21](#ts-20261018-112721)
 - Real time (oracle with the motion source): state 0x157 49 updates after the press, enter callback +20, end callback and camera +56, lock 20, scan 39, script exit 57; no hang, yaw finite. [§20261019-084345](#ts-20261019-084345)
 - Overlay: layouts of `sprites/blend/DRC_Scanner` at half scale centred on the screen, zoom meter time = zoom progress x 3.0 s, reticle storyboards `Ret_Focus` / `Ret_LockingOn` by lock state, scan meter by scan progress; the reticle position follows 0x2ef4c8. [§20261019-085330](#ts-20261019-085330)
+- Markers: every scannable on screen gets a `SoundCentre` pip and one of 15 `SoundPulse` ring triplets (the large green rings); the map screen shows the audio and exit buttons; the exit by B ends 57 updates after the press; the wash is not in the layouts or the scanner-active callers. [§2026-10-19T10:01:16](#ts-20261019-100116)
 
 <a id="ts-20261018-112721"></a>
 
@@ -90,6 +91,8 @@ Unknowns:
 
 ## 2026-10-19T08:53:30+02:00 — The audio scanner overlay: layouts and storyboard rules (REA 0x16785c region, 0x2e9030, 0x1d99a8, 0x263400, 0x2ef4c8, 0x1ebd14, 0x245b40; oracle B-1 screenshots)
 
+Corrected by [abilities-scanner.md §2026-10-19T10:01:16](#ts-20261019-100116): the large green ring at lock state 2 is the SoundPulse markers, not a reticle storyboard state.
+
 ### Method
 
 REA (Ghidra 12.1.2) pseudocode of the UI setup (the function around 0x1be9e4 / 0x1befcc, name FUN_0016785c), 0x2e9c1c, 0x2e9eec, 0x2e9030, 0x2ef4c8, 0x1ebd14, 0x245b40, 0x227228, 0x233948, 0x2119d4, 0x263400, 0x20f540, 0x234c04 and the assembly of 0x1d99a8; the layouts with the C++ decoder (`parseLayout`); the screenshots of [§2026-10-19T08:43:45](#ts-20261019-084345). The vtable-like table at 0x34cf94 and the audio / physical / photo reticle objects (0x52451c, 0x5244e8, 0x526834) were read only as far as their setup.
@@ -110,3 +113,38 @@ REA (Ghidra 12.1.2) pseudocode of the UI setup (the function around 0x1be9e4 / 0
 Unknowns:
 - The cyan wash over the 3D view and the green dog (message 0xfb) are not in these layouts (not found). The lock state 2 screenshot shows a large green ring (`ReticuleFocus`) that the rule above (`Ret_LockingOn` at time 0, where `ReticuleFocus` has opacity 0) does not produce; what 0x245b40 / 0x233948 do to a restarted storyboard is not settled.
 - What starts `Reticule_Spinner`, `ScanButtonPrompt_*`, `WAV*` and `TargetAquired_On`, the sonar segment intensities (0x2e9030 computes them from the direction of every sound source) and the `SoundCentre` / `SoundPulse` markers; the bottom-screen scanner UI (map with the headphone and return buttons, hint box); the scan meter position beyond "centred on the reticle".
+
+<a id="ts-20261019-100116"></a>
+
+## 2026-10-19T10:01:16+02:00 — Scanner sound markers, map-screen buttons, exit by B, where the wash is not (REA, oracle B-1 and B-2 of round 28)
+
+### Method
+
+REA (Ghidra 12.1.2) pseudocode of 0x2e9030 (re-read for its per-object part), 0x1948dc, 0x262d94 (the UI part of the scanner entry, named FUN_001bf2d0 by the decompiler), 0x2d9f84, 0x2eec90, 0x2b9cf8, 0x1ee2d0 and llvm-objdump of the callers of the scanner getters 0x246128 (active, +0x34 of 0x375ee4), 0x23601c (zone object), 0x1948cc (mode index), 0x2b9d8c (+1 of 0x375eb4), 0x2ce434, 0x2c529c, 0x245b40, 0x231cec; the layouts `soundcentre.bxaml`, `soundpulse.bxaml` and `mapbuttons.bxaml` with the layout decoder. Oracle (emulator servant, state m12-8-roof-sound-scanner): B-1 exit by B (`artifacts/oracle/r28B-out/b1/`), B-2 twelve screenshots of the locked view with ticks of 0x376b0c (`artifacts/oracle/r28B-out/b2/`, not committed). Note: 0x5165c8 is not a clock (constant); the game clock is 0x376b0c, 100 ticks per update.
+
+### Per-object markers (the large green rings)
+
+- The large green ring at lock state 2 is not part of the reticle storyboards. 0x2e9030 gives every record of the mode's scannable list (count at +0xc80 of the list block, 0x28 bytes per record, sorted with 0x26eec4) whose +0x24 bit 0 is set a `SoundCentre` instance (50 instances, storyboard `Pulsing`, 0.459 s, restarted when it has ended) and, for the first 15 such records, a triplet of `SoundPulse` instances (45 instances, storyboard `Pulse`, 1.1 s: ring image `AudioSurface_WhiteGrad1`, a green ring, opacity 0 -> 0.5 at 0.3 s -> 0, scale 0 -> 1.5, size 256 at layout scale 0.5).
+- Per record: when it first shows, the fade timer is 0; it grows by 2 per second to 1. The layout opacity is timer x distance fade, with the distance of the record's screen position from the screen centre (200, 120): 1 up to 20 pixels, then 1 - (d - 20) / 180 clamped (0 from 200). Centre pip and rings are placed at the record's screen position minus half their size.
+- Pulses: the first update starts the three ring storyboards with speed 1 + 0.2 k and a delay argument 3 k (k = 0, 1, 2) through 0x245b40(speed, 0, board, 0, delay, 0xffff, 0, 0); when all three have ended (state 6) a 0.3 s wait runs, then they start again.
+- The B-2 pictures (12 updates of a locked dog) show three concentric green rings that grow and fade; the series is too short to give the delay unit. Port: `src/runtime/scanner_markers.{hpp,cpp}`, drawn by `src/frontend/scanner_overlay.cpp` before the frame, test `scanner-markers`. The reticle storyboard mapping of [Corrects §2026-10-19T08:53:30 (unknown about the ring)](#ts-20261019-085330) is otherwise confirmed: 0x2e9c1c stores `Ret_Focus` at +0x20 and `Ret_LockingOn` at +0x24.
+
+### Bottom screen in the scanner view
+
+- The oracle picture shows the map with the headphone button (greyed) at (0, 116) and a back-arrow button at (0, 176): the `buttonAudio` and `buttonExit` references of `mapbuttons.bxaml` (64 x 64, icons `buttonicon_audio` and `buttonicon_exit`); the characters button is gone. 0x262d94 (scanner entry) shows and hides the button layouts at 0x519e24 + n x 0x28 by mode (mode 2 for a type 201 zone) and plays their slide-in storyboards (`AudioOnDelay`, `ExitOnDelay`). Port: `MinimapView::scanner` draws both buttons at their final place, the audio button in the `disabled` look.
+- After the exit the bottom screen showed the tutorial box "Press L or R to zoom in and out." (B-1 picture `b1_after.png`).
+
+### Exit by B (oracle B-1, retry)
+
+Byte pattern (0x375eb6, +0x34, +0x35, +0x36): idle (1,0,0,0) -> after A (0,0,0,0) -> 37 updates later (0,1,1,0) -> 20 later (0,1,0,1) -> 36 later view shown (1,1,0,1); 93 updates from the press to the view. B pressed in the view: one update later (0,1,1,1); 56 updates later all four return to idle in the same sample. The exit by B therefore ends 57 updates after the press, like the script exit (57); the exit callback inside is not visible in the sampled bytes (SCAN-S1 stays). The first try pressed B while the view was still entering and B was ignored.
+
+### Where the cyan wash is not
+
+- Not in the DRC layouts and not in any caller of the scanner-active getter 0x246128 that was checked (155fac, 16642c, 17cb74 (HUD hide), 1af3d0, 1b0748, 1ee848, 20ac88, 235358, 26be04, 2ace20, 2d3738, 2d9d0c, 2d9f84 (map screen), 2e5158, 303990, 309a5c): they handle gameplay state, the map screen and camera modes. 0x2b9cf8 (called by 0x279834 every frame) writes an entity colour record (bytes at +0x3c, 0x205b5c) for every entity of the list at 0x375d70 with 1 / 1 / 1 / 0 when 0x2297b0 or 0x236104 hold; this is a highlight flag, not cyan.
+- The game embeds PICA shader programs (data 0x378225: `Lit`, `PostProcess`, `UAVOverlay`, `Outline`, `PlasmaShell`, `Shockwave`, `ScreenRipple`, `RingEffect`, `ShadowMap`, `Cubemap`, `TexCoords`) and a per-vertex `VColourTint` uniform; which draw path the scanner changes was not found. The picture shows a luminance-like blue-cyan mapping of the whole 3D view including the sky (sky pixel 80, 255, 255; dark pixels 16, 91, 139 in 04_full_zoom): red about 0.2 to 0.3 of green, blue about 1.4 of green, clamped.
+- 0x1948dc is the scannable list builder of SCAN-S3: five lists (kinds 0xcd, 0xd3, 0xd4, 0xd5, 0xdf, 0x148 bytes apart at 0x526aec); kind 0xd3 takes objects whose class passes 0x2ce434 (type 205: `ShowOnObjectScan`, type 211: `ShowOnAudioScan`), have `ScannerPickup` and not `ScannerTempDisable` and sit in the list of the player's area (0x21cf7c); kind 0xcd (physical) takes entities of type 0x1b with bound flag 0x80 and, through 0x2ce434(0xcd), other objects with `ShowOnObjectScan`; so `ShowOnObjectScan` belongs to the physical list and `ShowOnAudioScan` to the audio list.
+
+Unknowns:
+- Where the wash and the green dog are produced (the draw path or shader state the scanner view changes).
+- The unit of the pulse delay argument, the sort order 0x26eec4 (it only decides which records get one of the 15 ring triplets), the sonar segment intensities that 0x2e9030 also computes, and the start of the first `Pulsing` time of a centre pip.
+- The slide-in timing of the map buttons, the map circle and arrow icon of the scanner screen, the touch handling of the back button and what 0x24581c / 0x2134c8 / 0x217d0c do exactly.

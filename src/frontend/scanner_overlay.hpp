@@ -6,6 +6,7 @@
 // satellite meter, button prompt, sound pulses) are not drawn; the Reticule_Spinner loop starts with the view; the animation evaluator is the
 // data fit of layout.hpp with rotation.
 #include "frontend/layout.hpp"
+#include "runtime/scanner_markers.hpp"
 #include "runtime/scanner_reticle.hpp"
 
 namespace chase::frontend {
@@ -17,6 +18,11 @@ constexpr float kScannerLayoutScale = 0.5f;
 constexpr float kScannerLayoutWidth = 1024.0f, kScannerLayoutHeight = 512.0f;
 constexpr float kScannerReticleSpinnerSeconds = 6.0f;
 
-void drawScannerOverlay(Canvas& top, Resources& resources, const runtime::ScannerReticlePose& pose, float seconds);
+constexpr const char* kScannerCentreLayout = "sprites/blend/drc_scanner/soundcentre.bxaml";
+constexpr const char* kScannerPulseLayout = "sprites/blend/drc_scanner/soundpulse.bxaml";
+constexpr float kScannerCentreSize = 32.0f, kScannerPulseSize = 256.0f;
+
+void drawScannerOverlay(Canvas& top, Resources& resources, const runtime::ScannerReticlePose& pose, float seconds,
+                        const std::vector<runtime::ScannerMarkerPose>& markers = {});
 
 }

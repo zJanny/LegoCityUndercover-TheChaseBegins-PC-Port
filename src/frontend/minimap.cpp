@@ -98,6 +98,15 @@ void drawMinimap(Canvas& bottom, Resources& resources, const std::string& levelN
                     "portrait_0", "portrait_1", "portrait_2", "portrait_3", "portrait_4", "portrait_5", "portrait_6", "portrait_7",
                     "area_0", "area_1", "area_2", "area_3", "area_4", "area_5", "area_exit", "textWindow"};
     scene.referenceStoryboards["buttonChars"] = "default";
+    if (view.scanner) {
+        scene.hidden.erase("buttonExit");
+        scene.hidden.erase("buttonAudio");
+        scene.hidden.insert("buttonChars");
+        scene.images["buttonAudio/icon"] = "sprites/blend/mapbuttons/images/buttonicon_audio.bpng";
+        scene.images["buttonExit/icon"] = "sprites/blend/mapbuttons/images/buttonicon_exit.bpng";
+        scene.referenceStoryboards["buttonAudio"] = "disabled";
+        scene.referenceStoryboards["buttonExit"] = "default";
+    }
     drawLayout(bottom, resources, kButtonsLayout, scene, 0, 0);
 }
 

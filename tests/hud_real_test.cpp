@@ -164,6 +164,15 @@ void minimap(Resources& resources) {
             "the edge marker and its arrow sit where the oracle shows them (centroid 172.74, 222.08)");
     drawMinimap(bottom, resources, "lvl_missing", view);
     require(bottom.pixel(10, 200)[0] == 0 && bottom.pixel(10, 200)[1] == 0, "a level without a map shows no map");
+    // Provenance: oracle B-1 pictures 04_full_zoom (round 27): during the scanner view the headphone button stands at (0, 116) and the
+    // exit button at (0, 176) of the bottom screen (mapbuttons.bxaml buttonAudio / buttonExit) and the characters button is gone.
+    MinimapView scanning = view;
+    scanning.scanner = true;
+    drawMinimap(bottom, resources, "lvl_missing", scanning);
+    require(bottom.pixel(32, 208)[0] + bottom.pixel(32, 208)[1] + bottom.pixel(32, 208)[2] > 0, "the exit button is drawn in the scanner view");
+    require(bottom.pixel(32, 148)[0] + bottom.pixel(32, 148)[1] + bottom.pixel(32, 148)[2] > 0, "the audio button is drawn in the scanner view");
+    drawMinimap(bottom, resources, "lvl_missing", view);
+    require(bottom.pixel(32, 208)[0] + bottom.pixel(32, 208)[1] + bottom.pixel(32, 208)[2] == 0, "no exit button outside the scanner view");
 }
 }
 
