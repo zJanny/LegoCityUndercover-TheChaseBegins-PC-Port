@@ -1,0 +1,26 @@
+{
+  "skill_name": "lead-round",
+  "evals": [
+    {
+      "id": 1,
+      "name": "session-start",
+      "prompt": "Start the lead session for the next round. No special requests from me this round, pick the topics yourself. 3 workers as usual.",
+      "expected_output": "Lead takes stock with a few small commands, does not read feature files, priorities.md or docs/re itself, and launches one planner agent (sonnet, no isolation) whose prompt points at references/planner.md with the user's 'no requests' and 3 workers. No briefs written, no workers launched before approval.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "worker-finished-review",
+      "prompt": "Worker r39-B just finished. Its final message:\n\nr39-B: DONE\nBranch: worktree-agent-r39b  Worktree: .claude/worktrees/agent-r39b  Commits: 4, last 9f1c2ab\nClosed: LEVOBJ-118  Opened: LEVOBJ-120  Stand-ins: LEVOBJ-S96  Unused IDs: LEVOBJ-121\nTests: ctest -LE slow 412/412; unittests ok\nGraphify: \"helipad fast travel pad\" -> src/runtime/super_buildit.cpp; \"menu layout ui\" -> src/runtime/ui_layout.cpp\nRead from the original: transcribed handlers 0x1f2a40 (pad trigger) and 0x1f2b88 (menu open), constants 0x5c and 2.5f\nEmulator: not used\nDocs: docs/re/level-objects-buildit.md#ts-20261020-101500; level-objects-buildit.md\nWaiting on the user: none\nNotes for reviewers: menu page order taken from layout data, see entry\n\nThe planner's proposal said for B: 'Review: code sonnet, docs sonnet'. The brief is artifacts/rounds/r39/r39-B.md. (DRY RUN NOTE: this worktree does not exist. Treat `git diff --stat main...HEAD | tail -1` as printing ' 9 files changed, 412 insertions(+), 37 deletions(-)' and the top-level directory count as '3 src, 1 tests, 1 CMakeLists.txt, 4 docs'.)",
+      "expected_output": "Lead runs only the stat commands, does not read the diff or docs, launches the code reviewer and the docs reviewer in one message, in the background, without isolation. The code reviewer is upgraded to opus because handlers were transcribed; the docs reviewer stays sonnet. Prompts name the checklist file, worktree, branch, brief and report path. No merge yet.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "review-returned",
+      "prompt": "The reviewers of r39-A are back.\n\nCODE REVIEW r39-A: RETURN\nGraphify: \"zipline rope draw\"\nChecked against the disassembly: 0x226644 ok\nFixed (b81d0e3):\n- src/runtime/zipline_rope.cpp:88 — no explanatory comments — removed comment\nReturn (worker must fix):\n- src/runtime/zipline_rope.cpp:142 — invented behaviour — the 0.35 sag factor has no source; read it from the rope handler or label it as a stand-in and list it\n- tests/zipline_rope_test.cpp — recorded values — the pinned anchor heights have no provenance; add the state and rpc read next to them\nDocs follow-ups:\n- if 0.35 stays a stand-in, list it in player-traversal.md\nTests run: ctest -R zipline 3/3\n\nDOCS REVIEW r39-A: FIXED\ncheck_doc_links: pass\nFixed (c02e771):\n- docs/plans/features/player-traversal.md:44 — needs/blocks both sides — added blocks: TRAV-60\n\nThis is the first RETURN for r39-A. The worker is agent r39-A (still addressable by SendMessage).",
+      "expected_output": "Lead sends the worker the Return list unchanged via SendMessage, waits for the worker, then resumes only the code reviewer to re-check the returned points; passes the docs follow-up to the docs reviewer after the worker's change. No merge, no new agents, no escalation to the user (first return). Lead does not read the code itself.",
+      "files": []
+    }
+  ]
+}
