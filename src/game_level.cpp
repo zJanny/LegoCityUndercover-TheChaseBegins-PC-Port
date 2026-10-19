@@ -300,6 +300,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     std::cout << "scanner zones: " << scanner.zones().size() << ", scannable objects: " << scanner.objects().size() << '\n';
     ziplines = runtime::loadZiplineAnchors(level, classOf);
     loadZiplineRopes(archive);
+    placeZiplinePoles(archive);
     std::cout << "zipline anchors: " << ziplines.size() << '\n';
     grabBricks = runtime::loadGrabBricks(level, classOf);
     std::cout << "climbing bricks: " << grabBricks.size() << '\n';

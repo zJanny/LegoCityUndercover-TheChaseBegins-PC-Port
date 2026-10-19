@@ -18,6 +18,7 @@ Subtopics: [player-traversal-pole.md](player-traversal-pole.md), [player-travers
 - The rope's facing and render state: the row at 0x529fec is the camera's view direction (measured, m12-9), the render state is the record of 0x252254 with the mode bytes of 0x297b7c, which the port's reading of the record turns into the states the port already used; the texture sampler is open; the original drew two strips per line. [§2026-10-19T10:00:18](#ts-20261019-100018)
 - The rope is fogged with the scene's fog (the state record clears the no-fog bit); the shared particle program has a fog switch that only the rope turns on. [§2026-10-19T10:38:41+02:00](#ts-20261019-103841)
 - Every textured zipline line is drawn twice, once from each anchor, because the anchor has no update handler and the gate 0x226644 then treats the target as not live. [§2026-10-19T11:04:28+02:00](#ts-20261019-110428)
+- The anchors draw their pole model: create 0x1a999c loads the `meshname` model unless `NoMesh` is set; the model's node matrix (translation y -27.432) lifts the stored mesh onto the anchor and the link turns it along the line; the port ignored the matrix, so the poles hung 25 m above. [§2026-10-19T18:16:50](#ts-20261019-181650)
 - Open: the grab height of attachment set 18 for other characters, the fall-state grab path 0x2010d4, ground contact during the zipline dismount (0x215804), the rope's facing and render states, the tightrope; the other moves in their subtopic files.
 
 <a id="ts-20261018-145230"></a>
@@ -164,3 +165,20 @@ Answers the open question of [§2026-10-19T10:00:18](#ts-20261019-100018) and [�
 
 Unknowns:
 - What flag bits 2 and 5 of the halfword +0x10 are and whether any anchor has them set; whether +0x13 of an anchor changes after the post-link.
+
+<a id="ts-20261019-181650"></a>
+
+## 2026-10-19T18:16:50+02:00 — Why the zipline poles were not drawn: the node matrix of the pole model (round 36, llvm-objdump of 0x1a999c, 0x2451d0, 0x2442b4; C++ parser dumps; REA was not used)
+
+**Cause.** The port did place the anchors: all 24 `props/parkour_zipline` objects of lvl_01 were drawable placements (class `meshname` `Ability_Parkour_Zip_Line`, `models/ability_parkour_zip_line/ability_parkour_zip_line.bfnmdl`) and added to the scene. The model has one node (`Mesh`, mesh 0) and a node matrix (model+0x20) with a 90 degree turn and translation (0, -27.432, 0); its mesh is stored at y 23.39 .. 27.58 (pivot y 27.432). The static draw ignored that matrix, so every pole hung 23 to 28 above its anchor, out of sight. The tightrope model is not affected (its node matrix is the identity).
+
+**The original loads the model.** Create 0x1a999c looks up the parameter `NoMesh` (string at 0x1a9b3c, 0x2451d0); the class has none, so it calls 0x2442b4 (the model of `meshname`, see [objects.md §2026-10-13T15:39](objects.md#ts-20261013-153915)); only with `NoMesh` it allocates an empty node instead (0x255c3c). So the anchor draws its pole as any model entity does. The anchor node is the one the link 0x19b074 turns towards the target (rows right, up, forward), so the pole follows the line direction and not `initialorientation`.
+
+**Port.** `src/runtime/zipline_pole.{hpp,cpp}`: pole = node matrix * anchor node (translation the anchor position; rows from the link for an anchor with a target, else the placement); glue `LevelSession::placeZiplinePoles` in `src/game_zipline.cpp` sets the scene transform of the placed instance. With it the mesh of every anchor lies at y -4.05 .. +0.16 below the node and within 0.9 sideways (CTest `zipline-pole-real-data`; the pole stands 0.38 behind the anchor, in line with the `WalkBound` centre z 0.4). `chase-game --start "870.226 66.001 630.961" --facing 102.8` shows blue poles with the rope ending on a hook at the top (screenshot not kept).
+
+**Wider gap.** Other single-node models with a valid node matrix are drawn without it as well: lvl_01 has 14 `leprop_wobblydestructible` (`Prop_Plant_04`), 6 `leprop_simpleindestructible` (`Prop_Construction_Elevator_Runners`), one `prop_door` (own door path, applies it) and two `vehicle_van_dulmen` (own vehicle path). Whether the generic draw of the original applies node 0 for those was not read; the port changes only the zipline poles (LEVOBJ-113).
+
+Unknowns:
+- The order of the node matrix and the anchor node in the original's model draw (the port uses node matrix first, as doors and the detective cards do; TRAV-S33).
+- The tightrope poles are drawn at `initialorientation`; the link would turn them towards their target (TRAV-54).
+- The collision of the pole (object collision uses the placement orientation).

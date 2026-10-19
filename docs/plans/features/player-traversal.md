@@ -28,6 +28,7 @@ IN_PROGRESS, updated 2026-10-18T16:38:10+02:00. Ported in `chase-game` from the 
 - TRAV-S31 `RopeRenderer` fog — the rope uses the scene's current fog (same table, colour and projection planes) because the fog registers are global state; the draw path 0x297b7c was not read for its own fog writes. needs: TRAV-52. evidence: [player-traversal.md §2026-10-19T10:38:41+02:00](../../re/player-traversal.md#ts-20261019-103841)
 - TRAV-S30 `RopeRenderer` — the texture is clamped across, repeated along and linear filtered without mipmaps (the original's sampler is not read); the disabled flag 0x10 bit 0 of the draw gate is taken from the placed object's disabled state. needs: TRAV-49. evidence: [player-traversal.md §2026-10-19T10:00:18](../../re/player-traversal.md#ts-20261019-100018)
 - TRAV-S32 `ziplineRopeDraws` — flag bits 2 and 5 of the gate 0x226644 (mask 0x25) are taken as clear for the target; their meaning is not read. evidence: [player-traversal.md §2026-10-19T11:04:28+02:00](../../re/player-traversal.md#ts-20261019-110428)
+- TRAV-S33 `ziplinePoleMatrix` — pole = model node matrix * anchor node (node matrix first, as doors and the detective cards do); the generic model draw of the original is not read. evidence: [player-traversal.md §2026-10-19T18:16:50](../../re/player-traversal.md#ts-20261019-181650)
 - TRAV-S4 — the loop sound 107 starts at the player's position with owner 0 and does not follow him; the original plays it on the player entity (0x23ae84). evidence: [player-traversal.md §2026-10-18T14:52:30](../../re/player-traversal.md#ts-20261018-145230)
 - TRAV-S20 — Use registry order: the pole use test runs before the zipline use test in the player chain, so a pole zone and an anchor zone that overlap give the press to the pole; the original walks one registry in order (0x1fef10). evidence: [player-traversal.md §2026-10-18T16:37:26](../../re/player-traversal.md#ts-20261018-163726)
 
@@ -48,7 +49,7 @@ IN_PROGRESS, updated 2026-10-18T16:38:10+02:00. Ported in `chase-game` from the 
 - [ ] TRAV-8 — The use press at a high anchor (0x1b6664, A press) is ported but not measured; `m12-9-zipline` is on the ground below the anchor (user state deferred); needs an oracle state on a zipline start platform (stand 0.2 m before the high anchor of a zipline on the mission 1-2 route, facing it). evidence: [player-traversal.md §2026-10-18T20:38:04](../../re/player-traversal.md#ts-20261018-203804)
 - [ ] TRAV-9 — Tightrope (`GrappleLineType` 0, states 39..41) not ported. evidence: [player-traversal.md §2026-10-18T14:52:30](../../re/player-traversal.md#ts-20261018-145230)
 - [ ] TRAV-10 — The hanging pose on the line (clip root against the line point) is not compared with the original's picture. evidence: [player-traversal.md §2026-10-18T14:52:30](../../re/player-traversal.md#ts-20261018-145230)
-- [ ] TRAV-53 — The zipline anchors' model (`ability_parkour_zip_line.bfnmdl`, class `props/parkour_zipline`) is not drawn: the rope hangs between invisible poles (user playtest). uses: parkour_zipline. evidence: [playtests.md §2026-10-19T17:56:41](../../re/playtests.md#ts-20261019-175641).
+- [ ] TRAV-54 — The poles of the tightrope anchors (`props/parkour_tightrope`, 4 in lvl_01) are drawn at `initialorientation`; the link 0x19b074 would turn them towards their target. needs: TRAV-48. uses: parkour_tightrope. evidence: [player-traversal.md §2026-10-19T18:16:50](../../re/player-traversal.md#ts-20261019-181650)
 
 ## 6. Findings summary
 
@@ -56,6 +57,7 @@ IN_PROGRESS, updated 2026-10-18T16:38:10+02:00. Ported in `chase-game` from the 
 - Zipline class, grab test, states 42..44, oracle ride and the survey of the other moves: [player-traversal.md §2026-10-18T14:52:30](../../re/player-traversal.md#ts-20261018-145230).
 - Zipline rope: [player-traversal.md §2026-10-19T08:51:31](../../re/player-traversal.md#ts-20261019-085131); fog on the rope: [player-traversal.md §2026-10-19T10:38:41+02:00](../../re/player-traversal.md#ts-20261019-103841).
 - Zipline use press is A: [player-traversal.md §2026-10-18T16:37:26](../../re/player-traversal.md#ts-20261018-163726).
+- Zipline pole model and its node matrix: [player-traversal.md §2026-10-19T18:16:50](../../re/player-traversal.md#ts-20261019-181650).
 - Climbing bricks, the m12-11 runs and the climb wall's entry: [player-traversal-bricks.md §2026-10-18T15:57:46](../../re/player-traversal-bricks.md#ts-20261018-155746).
 
 ## 7. Code and tests
@@ -63,4 +65,5 @@ IN_PROGRESS, updated 2026-10-18T16:38:10+02:00. Ported in `chase-game` from the 
 - `src/runtime/zipline.{hpp,cpp}` (anchors, link, grab and use tests, attach, slide, dismount, jump counter), `src/game_zipline.cpp` (LevelSession::movePlayer: zipline states around the player step), clips loaded in `src/game_player.cpp`.
 - CTest `zipline` (made-up line, hand values), `zipline-real-data` (lvl_01 anchors and the m12-9 ride replay), `game-script-zipline` (chase-game from the m12-9 position: grab at update 8, fall at update 140), `game-script-zipline-use-a` / `-use-b` (A gets on at 1-8_Zip_Line05, B does not).
 - `src/runtime/zipline_rope.{hpp,cpp}` (rope data, fade, strip, draw filter), `src/render/rope.{hpp,cpp}` (GL), `LevelSession::drawZiplineRopes` in `src/game_zipline.cpp`; CTests `zipline-rope` (made-up line) and `zipline-rope-real-data` (lvl_01 ropes and the strip of 1-8_Zip_Line05).
+- `src/runtime/zipline_pole.{hpp,cpp}` (pole matrix), `LevelSession::placeZiplinePoles` in `src/game_zipline.cpp`; CTests `zipline-pole` (hand values) and `zipline-pole-real-data` (24 lvl_01 poles lie under their anchors).
 - `src/runtime/brick_grab.{hpp,cpp}` (bricks, grab test 0x273fe4, states 141..152), `src/game_brick_grab.cpp` (LevelSession::moveClimbingPlayer around movePlayer), brick clips loaded in `src/game_player.cpp`. CTest `brick-grab` (made-up bricks), `brick-grab-real-data` (lvl_01 bricks, m12-11 runs `up` and `drop`), `game-script-brick-grab` (chase-game from the m12-11 landing point: grab, jump up, jump off).

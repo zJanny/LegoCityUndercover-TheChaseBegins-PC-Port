@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 762 open items and stand-ins, 165 linked to game usage, 597 with unknown reach.
+Items: 764 open items and stand-ins, 165 linked to game usage, 599 with unknown reach.
 
 ## Top 50 overall
 
@@ -42,7 +42,7 @@ Items: 762 open items and stand-ins, 165 linked to game usage, 597 with unknown 
 | 6 | [SCRIPT-285](features/script-system-missions.md?display=source#L38) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Nothing known fires the ObjectTriggered of `1-2_Door_Lock_Hint_Script`: no name source besides its own ... |
 | 7 | [SCRIPT-4](features/script-system.md?display=source#L38) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The code that hides the revealer targets; the role of the other type-4 parameters (Destination, ObjectTo ... |
 | 8 | [SCRIPT-S220](features/script-system-missions.md?display=source#L19) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The reference-trigger join (reference_trigger.cpp) knows only the `TriggerObject` references of build-its ... |
-| 9 | [TRAV-21](features/player-traversal.md?display=source#L39) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Brick use handler 0x1b53a8 (messages 3 / 4 into state 145): sender unknown; `TriggerObject` switching ... |
+| 9 | [TRAV-21](features/player-traversal.md?display=source#L40) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Brick use handler 0x1b53a8 (messages 3 / 4 into state 145): sender unknown; `TriggerObject` switching ... |
 | 10 | [SCRIPT-273](features/script-system-natives-animation.md?display=source#L32) | 881 | 0 | 8 | 1 | 2 stand-in | `playanimation`, `playcharanim` | PlayCharAnim's state request 81 (the cutscene call, state 0x51 has the same functions) and its cape animation ... |
 | 11 | [SCRIPT-190](features/script-system-missions.md?display=source#L34) | 0 | 736 | 8 | 2 | - | `scriptobject` | Carry gaps: the instigator argument of 0x244f40 is not modelled; the handler 0x1bc4d4 forwards message 0xff ... |
 | 12 | [SCRIPT-114](features/script-system-missions.md?display=source#L41) | 687 | 0 | 8 | 0 | 2 stand-in | `destroyprop`, `playcharanim` | The port runs `1-2_MissionStart` one update later than the original at the end of the title camera ... |
@@ -87,24 +87,24 @@ Items: 762 open items and stand-ins, 165 linked to game usage, 597 with unknown 
 
 ## Player and camera
 
-14 of 178 items linked.
+14 of 179 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
 | 1 | [PLAYER-S9](features/player-movement.md?display=source#L29) | 0 | 2513 | 8 | 0 | - | `leprops/leprop_wobblydestructible` | `attackTargetObjects` — only `leprop_wobblydestructible` props are attack targets, and the glue allows the ... |
-| 2 | [TRAV-21](features/player-traversal.md?display=source#L39) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Brick use handler 0x1b53a8 (messages 3 / 4 into state 145): sender unknown; `TriggerObject` switching ... |
+| 2 | [TRAV-21](features/player-traversal.md?display=source#L40) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Brick use handler 0x1b53a8 (messages 3 / 4 into state 145): sender unknown; `TriggerObject` switching ... |
 | 3 | [ANIM-S12](features/animation-characters.md?display=source#L24) | 623 | 0 | 8 | 0 | 1 stand-in | `playcharanim` | The "already loaded" test of PlayCharAnim (0x21e8b4) knows a character's idle clips and its current script ... |
 | 4 | [ANIM-S13](features/animation-characters.md?display=source#L25) | 623 | 0 | 8 | 0 | 1 stand-in | `playcharanim` | The player's script clip (PlayCharAnim on Player1) is sampled without the 0.1 blend and without the slot ... |
 | 5 | [COLL-2](features/collision.md?display=source#L29) | 0 | 183 | 7 | 1 | - | `props/parkour_skydive`, `props/prop_prop` | Only the classes with a recovered constructor rule register (props, doors, dummycollision, vehicles) ... |
 | 6 | [CAMERA-S51](features/camera.md?display=source#L25) | 145 | 0 | 7 | 0 | 1 stand-in | `shakescreen` | The ShakeScreen shake moves only the eye of the gameplay camera (`CameraRig::setEyeShake`); the cutscene ... |
-| 7 | [TRAV-53](features/player-traversal.md?display=source#L51) | 0 | 66 | 7 | 0 | - | `props/parkour_zipline` | The zipline anchors' model (`ability_parkour_zip_line.bfnmdl`, class `props/parkour_zipline`) is not drawn ... |
-| 8 | [TRAV-48](features/player-traversal.md?display=source#L47) | 0 | 22 | 5 | 0 | - | `props/parkour_tightrope` | The ropes of the tightrope anchors (`GrappleLineType` 0) use the same draw 0x1a9dc4 and are not loaded, so ... |
+| 7 | [TRAV-48](features/player-traversal.md?display=source#L48) | 0 | 22 | 5 | 1 | - | `props/parkour_tightrope` | The ropes of the tightrope anchors (`GrappleLineType` 0) use the same draw 0x1a9dc4 and are not loaded, so ... |
+| 8 | [TRAV-54](features/player-traversal.md?display=source#L52) | 0 | 22 | 5 | 0 | - | `props/parkour_tightrope` | The poles of the tightrope anchors (`props/parkour_tightrope`, 4 in lvl_01) are drawn at ... |
 | 9 | [SCAN-2](features/abilities-scanner.md?display=source#L33) | 7 | 0 | 3 | 0 | 1 stand-in | `enablescanner` | Other type 201 zones: photo (ScannerMode 4 in the class, sub-mode 0 values of 0x2ef814), physical (kind 2) ... |
 | 10 | [SCAN-5](features/abilities-scanner.md?display=source#L35) | 7 | 0 | 3 | 0 | 1 stand-in | `enablescanner` | `EnableScanner` is applied at the next scanner update (the original toggles inside the native) |
 
 ## Level objects
 
-14 of 102 items linked.
+14 of 103 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -221,14 +221,14 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [level-objects-buildit.md](features/level-objects-buildit.md): LEVOBJ-71 (+1), LEVOBJ-79 (+1), LEVOBJ-42, LEVOBJ-43, LEVOBJ-61, LEVOBJ-70, LEVOBJ-76, LEVOBJ-77, LEVOBJ-85, LEVOBJ-94, LEVOBJ-S41, LEVOBJ-S70, LEVOBJ-S71, LEVOBJ-S74, LEVOBJ-S76
 - [level-objects-carry.md](features/level-objects-carry.md): LEVOBJ-75 (+1), LEVOBJ-30, LEVOBJ-31, LEVOBJ-34, LEVOBJ-S31, LEVOBJ-S33, LEVOBJ-S34, LEVOBJ-S73, LEVOBJ-S75
 - [level-objects-wobbly.md](features/level-objects-wobbly.md): LEVOBJ-87 (+3), LEVOBJ-112 (+1), LEVOBJ-89 (+1), LEVOBJ-90 (+1), LEVOBJ-92 (+1), LEVOBJ-96 (+1), LEVOBJ-91, LEVOBJ-97, LEVOBJ-S77, LEVOBJ-S79, LEVOBJ-S80, LEVOBJ-S81
-- [level-objects.md](features/level-objects.md): LEVOBJ-8 (+2), LEVOBJ-101 (+1), LEVOBJ-106 (+1), LEVOBJ-108 (+1), LEVOBJ-110 (+1), LEVOBJ-111 (+1), LEVOBJ-102, LEVOBJ-104, LEVOBJ-109, LEVOBJ-3, LEVOBJ-5, LEVOBJ-6, LEVOBJ-S2, LEVOBJ-S3, LEVOBJ-S4, LEVOBJ-S82, LEVOBJ-S83, LEVOBJ-S84, LEVOBJ-S86, LEVOBJ-S88, LEVOBJ-S89, LEVOBJ-S90, LEVOBJ-S91
+- [level-objects.md](features/level-objects.md): LEVOBJ-8 (+2), LEVOBJ-101 (+1), LEVOBJ-106 (+1), LEVOBJ-108 (+1), LEVOBJ-110 (+1), LEVOBJ-111 (+1), LEVOBJ-102, LEVOBJ-104, LEVOBJ-109, LEVOBJ-113, LEVOBJ-3, LEVOBJ-5, LEVOBJ-6, LEVOBJ-S2, LEVOBJ-S3, LEVOBJ-S4, LEVOBJ-S82, LEVOBJ-S83, LEVOBJ-S84, LEVOBJ-S86, LEVOBJ-S88, LEVOBJ-S89, LEVOBJ-S90, LEVOBJ-S91
 - [level-transitions.md](features/level-transitions.md): TRANS-3 (+3), TRANS-13 (+2), TRANS-8 (+2), TRANS-10 (+1), TRANS-11 (+1), TRANS-12 (+1), TRANS-14 (+1), TRANS-S1, TRANS-S3, TRANS-S4, TRANS-S5
 - [movies-cutscenes.md](features/movies-cutscenes.md): MOVIE-22 (+1), MOVIE-24 (+1), MOVIE-36 (+1), MOVIE-37 (+1), MOVIE-S33 (+1), MOVIE-1, MOVIE-12, MOVIE-20, MOVIE-21, MOVIE-3, MOVIE-33, MOVIE-35, MOVIE-4, MOVIE-S1, MOVIE-S10, MOVIE-S11, MOVIE-S2, MOVIE-S21, MOVIE-S3, MOVIE-S30, MOVIE-S31, MOVIE-S32, MOVIE-S34
 - [particles.md](features/particles.md): PART-4 (+1), PART-6 (+1), PART-5, PART-7, PART-S1, PART-S2, PART-S3, PART-S4
 - [player-movement.md](features/player-movement.md): PLAYER-14 (+2), PLAYER-16 (+2), PLAYER-11 (+1), PLAYER-15 (+1), PLAYER-22 (+1), PLAYER-25 (+1), PLAYER-1, PLAYER-10, PLAYER-13, PLAYER-18, PLAYER-2, PLAYER-21, PLAYER-23, PLAYER-24, PLAYER-3, PLAYER-5, PLAYER-6, PLAYER-7, PLAYER-8, PLAYER-S1, PLAYER-S10, PLAYER-S11, PLAYER-S2, PLAYER-S4, PLAYER-S5, PLAYER-S6, PLAYER-S8
 - [player-traversal-pole.md](features/player-traversal-pole.md): TRAV-S9 (+1), TRAV-11, TRAV-13, TRAV-14, TRAV-15, TRAV-16, TRAV-S5, TRAV-S6, TRAV-S7, TRAV-S8
 - [player-traversal-rails.md](features/player-traversal-rails.md): TRAV-28 (+3), TRAV-38 (+1), TRAV-43 (+1), TRAV-44 (+1), TRAV-45 (+1), TRAV-S16 (+1), TRAV-S18 (+1), TRAV-S19 (+1), TRAV-27, TRAV-29, TRAV-31, TRAV-32, TRAV-33, TRAV-42, TRAV-S15, TRAV-S17, TRAV-S21, TRAV-S23, TRAV-S24, TRAV-S25, TRAV-S26
-- [player-traversal.md](features/player-traversal.md): TRAV-2 (+1), TRAV-49 (+1), TRAV-52 (+1), TRAV-9 (+1), TRAV-S12 (+1), TRAV-10, TRAV-19, TRAV-20, TRAV-22, TRAV-34, TRAV-35, TRAV-5, TRAV-6, TRAV-8, TRAV-S1, TRAV-S10, TRAV-S11, TRAV-S13, TRAV-S2, TRAV-S20, TRAV-S29, TRAV-S3, TRAV-S30, TRAV-S31, TRAV-S32, TRAV-S4
+- [player-traversal.md](features/player-traversal.md): TRAV-9 (+2), TRAV-2 (+1), TRAV-49 (+1), TRAV-52 (+1), TRAV-S12 (+1), TRAV-10, TRAV-19, TRAV-20, TRAV-22, TRAV-34, TRAV-35, TRAV-5, TRAV-6, TRAV-8, TRAV-S1, TRAV-S10, TRAV-S11, TRAV-S13, TRAV-S2, TRAV-S20, TRAV-S29, TRAV-S3, TRAV-S30, TRAV-S31, TRAV-S32, TRAV-S33, TRAV-S4
 - [rendering.md](features/rendering.md): RENDER-35 (+23), RENDER-50 (+2), RENDER-69 (+2), RENDER-33 (+1), RENDER-39 (+1), RENDER-60 (+1), RENDER-63 (+1), RENDER-64 (+1), ASSET-S1, RENDER-2, RENDER-30, RENDER-34, RENDER-42, RENDER-6, RENDER-61, RENDER-70, RENDER-71, RENDER-9, RENDER-S2, RENDER-S3, RENDER-S4, RENDER-S50, RENDER-S51, RENDER-S6, RENDER-S60, RENDER-S61, RENDER-S62, RENDER-S63, RENDER-S64, RENDER-S65, RENDER-S66, RENDER-S7
 - [saves-options.md](features/saves-options.md): SAVE-8 (+3), SAVE-13 (+1), SAVE-14 (+1), SAVE-15 (+1), SAVE-2 (+1), SAVE-11, SAVE-3, SAVE-4, SAVE-5, SAVE-S1, SAVE-S2, SAVE-S3, SAVE-S4, SAVE-S5
 - [script-system-ai-navigation.md](features/script-system-ai-navigation.md): SCRIPT-92 (+29), SCRIPT-94 (+16), SCRIPT-101 (+14), SCRIPT-95 (+14), SCRIPT-100 (+13), SCRIPT-79 (+12), SCRIPT-S100, SCRIPT-S101, SCRIPT-S102, SCRIPT-S104, SCRIPT-S31, SCRIPT-S93, SCRIPT-S94, SCRIPT-S95

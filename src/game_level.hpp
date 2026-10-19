@@ -22,6 +22,7 @@
 #include "game_options.hpp"
 #include "game_particles.hpp"
 #include "render/rope.hpp"
+#include "runtime/zipline_pole.hpp"
 #include "runtime/zipline_rope.hpp"
 #include "game_player.hpp"
 #include "render/hud_overlay.hpp"
@@ -158,6 +159,7 @@ private:
     int detectiveClip(int role) const;
     void drawFootprints();
     void loadZiplineRopes(chase::assets::FuseArchive& archive);
+    void placeZiplinePoles(chase::assets::FuseArchive& archive);
     void drawZiplineRopes(const chase::render::Mat4& view, const chase::render::Mat4& viewProjection);
     void logDetectiveStates();
     void updateScanner();

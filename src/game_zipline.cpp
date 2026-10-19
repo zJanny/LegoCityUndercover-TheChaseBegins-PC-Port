@@ -85,6 +85,19 @@ void LevelSession::loadZiplineRopes(assets::FuseArchive& archive) {
     ropeRenderer.emplace(archive);
 }
 
+void LevelSession::placeZiplinePoles(assets::FuseArchive& archive) {
+    for (const runtime::ZiplineAnchor& anchor : ziplines) {
+        for (std::size_t i = 0; i < placedObjects.size(); ++i) {
+            if (game_doors::lowerCase(placedObjects[i].instance) != anchor.instance) continue;
+            const assets::FuseEntry* entry = archive.find(assets::meshModelPath(placedObjects[i].mesh));
+            if (!entry) break;
+            const std::optional<assets::Matrix> node = runtime::modelRootNodeMatrix(assets::parseModel(archive.read(*entry)));
+            if (node) scene.setTransform(placedSceneIndex[i], runtime::ziplinePoleMatrix(*node, anchor, assets::placementMatrix(placedObjects[i])));
+            break;
+        }
+    }
+}
+
 void LevelSession::drawZiplineRopes(const render::Mat4& view, const render::Mat4& viewProjection) {
     if (!ropeRenderer || ziplines.empty()) return;
     const runtime::ParticleCamera camera = game_particles::cameraOf(view);

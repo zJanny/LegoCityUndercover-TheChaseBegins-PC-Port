@@ -49,6 +49,7 @@ IN_PROGRESS, updated 2026-10-19T13:47:56+02:00. Objects are drawn standing at th
 - [ ] LEVOBJ-101 — Where an animation record's root axis word +8 is set (record from 0x1dbf0c) for clips other than `dog_cage_open`, and what 0x245f84() returns 6 for (root motion off). blocks: LEVOBJ-S82. evidence: [objects.md §2026-10-19T10:10:34](../../re/objects.md#ts-20261019-101034).
 - [ ] LEVOBJ-102 — The create-time clip start of 0x234004 (`Animation`, `AnimationVelocity`, `AnimationOffset` of kinds 0 and 67) is not ported; no lvl_01 object sets it, six objects of other main levels do. evidence: [objects.md §2026-10-19T09:59:14](../../re/objects.md#ts-20261019-095914).
 - [ ] LEVOBJ-106 — Other props with a `CSCharacter` (parrot, squirrel, chalkboards, shuttle, hoop, key, safe, pallet, crane lift) when their cutscene runs in the port: they need a scene key of their own or node instances to be posed. blocks: LEVOBJ-S86. evidence: [cutscene-actors.md §2026-10-19T12:59:54](../../re/cutscene-actors.md#ts-20261019-125954).
+- [ ] LEVOBJ-113 — Single-node models with a valid node matrix (lvl_01: 14 `Prop_Plant_04`, 6 `Prop_Construction_Elevator_Runners`) are drawn without it; only the zipline poles apply it. Read the generic model draw to see whether node 0 applies. evidence: [player-traversal.md §2026-10-19T18:16:50](../../re/player-traversal.md#ts-20261019-181650)
 
 ## 6. Findings summary
 
