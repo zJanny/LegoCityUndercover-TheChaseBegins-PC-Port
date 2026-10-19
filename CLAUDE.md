@@ -112,6 +112,7 @@ The original runs in Azahar as a measuring reference. Read `docs/re/oracle.md` b
 - Do not use an entire session summary as a commit subject. If a commit covers multiple unrelated changes, split it into focused commits rather than listing them all in the title.
 
 **Code and files**
+- **Generic over hardcoded:** where possible, implement one general rule for all its users (as the original's shared draw, table or name lookup does), not fixed lists, names or per-object special cases; a special case needs evidence from the original.
 - No explanatory comments; clear names and simple control flow. Keep license notices, tool directives and comments on non-obvious correctness or unavoidable constraints.
 - Prefer the native Read/Edit/Write tools; scripts only for bulk or structured edits. Review the diff afterwards.
 - **Short tests:** no test or development script walks or drives long distances or runs for minutes, and nobody tunes routes. Start close to the point under test (`at X Y Z`, a level data position, a replay of recorded data). A test above about 5 seconds gets the label `slow` (list at the end of `CMakeLists.txt`).
