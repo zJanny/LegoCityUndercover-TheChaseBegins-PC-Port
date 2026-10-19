@@ -113,7 +113,7 @@ if(EPOXY_FOUND)
   if(FFMPEG_FOUND)
     add_executable(chase-game src/game.cpp src/game_options.cpp src/game_player.cpp src/game_carry.cpp src/game_scanner.cpp src/game_doors.cpp src/game_prop_parts.cpp src/game_level.cpp src/game_level_update.cpp src/game_vehicle.cpp src/game_vehicle_break.cpp src/game_vehicle_place.cpp src/game_vehicle_camera.cpp src/game_level_rooms.cpp src/game_cutscene.cpp src/game_level_cutscene.cpp src/game_characters.cpp src/game_particles.cpp src/game_level_natives.cpp src/game_detective.cpp src/game_use_spot.cpp src/game_detective_glass.cpp src/game_effects.cpp src/game_vehicle_effects.cpp src/game_zipline.cpp src/game_brick_grab.cpp src/game_climb_bar.cpp src/game_acrobat_pole.cpp src/game_pole.cpp)
     target_sources(chase-game PRIVATE src/game_props_destructible.cpp src/game_prop_destroy.cpp)
-    target_sources(chase-game PRIVATE src/game_attack.cpp)
+    target_sources(chase-game PRIVATE src/game_attack.cpp src/game_screen_fade.cpp)
     target_link_libraries(chase-game PRIVATE chase_render chase_runtime chase_input chase_audio chase_frontend_movie chase_save_progress chase_save_tables)
     target_compile_options(chase-game PRIVATE -Wall -Wextra -Wpedantic)
   endif()
@@ -247,6 +247,10 @@ if(BUILD_TESTING)
   target_link_libraries(natives-world-test PRIVATE chase_runtime)
   target_compile_options(natives-world-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME natives-world COMMAND natives-world-test)
+  add_executable(screen-fade-test tests/screen_fade_test.cpp)
+  target_link_libraries(screen-fade-test PRIVATE chase_runtime)
+  target_compile_options(screen-fade-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME screen-fade COMMAND screen-fade-test)
   add_executable(natives-cutscene-test tests/natives_cutscene_test.cpp)
   target_link_libraries(natives-cutscene-test PRIVATE chase_runtime)
   target_compile_options(natives-cutscene-test PRIVATE -Wall -Wextra -Wpedantic)
@@ -1118,7 +1122,7 @@ if(BUILD_TESTING)
       --call-script 1-1_VanBreakdown --call-script 1-1_Get_Car --start "886.0289 17.8243 1118.6516"
       --script "0 0 1500;0 0 3 X;0 0 330;at 936.39 17.85 1123.94 134.7;0 0 40 A;0 0 3 X;0 0 30")
     set_tests_properties(game-vehicle-hit PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
-      PASS_REGULAR_EXPRESSION "fp_vehicle_03: Bullet body, mass scale 1.*entered at update 1523.*fp_vehicle_03: moved by a contact at update 1857.*left at update 1896")
+      PASS_REGULAR_EXPRESSION "fp_vehicle_03: Bullet body, mass scale 1.*entered at update 1523.*fp_vehicle_03: moved by a contact at update 1856.*left at update 1896")
     # The seated police car is moved next to the static box at (846.0, 17.26, 1078.9) and held against it with A: the stuck timer of the driven body (0x33aea8,
     # 3 s below 3 m/s) makes 0x23019c send the type 6 message, the car breaks (0x16cccc) and comes back 62 updates later with 5 hearts, as in the oracle
     # trace of agent r18-B (break row 112, state 5 again in row 174, docs/re/vehicles-damage.md). The other update numbers are the port's.
@@ -1208,7 +1212,7 @@ if(BUILD_TESTING)
       --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl
       --script "0 0 2600")
     set_tests_properties(game-mission-1-1-start PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 900
-      PASS_REGULAR_EXPRESSION "movie 01_GameIntro started at update 0.*movie 01_GameIntro ended at update 2066.*cutscene 1_1_a started at update 2066.*cutscene 1_1_a ended at update 2506.*script 1-1_MissionStart ended at update 2537")
+      PASS_REGULAR_EXPRESSION "movie 01_GameIntro started at update 0.*movie 01_GameIntro ended at update 2066.*cutscene 1_1_a started at update 2066.*cutscene 1_1_a ended at update 2525.*script 1-1_MissionStart ended at update 2556")
     # Walk into Police_Station_Transition_Lower after 1-1_MissionSkip enabled it (the dev option --call-script): the script
     # Police_ExtToInt opens WarningDialogBox, A answers it and PositionObject puts the player on
     # Enter_Police_Station_Position_Lower (yaw 45.4542 deg = heading 8275, height 16.5773 as in the oracle); the AIMove that follows

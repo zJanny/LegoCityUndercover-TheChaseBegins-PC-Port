@@ -64,9 +64,9 @@ int main(int argc, char** argv) {
             if (!runner.cutscenes().loaded("1_1_b")) freedAt = i;
         }
         require(freedAt > 0, "DCamCutSceneFree follows the Wait");
-        const int expected = int(std::ceil((lengthB + chase::runtime::kCutsceneFadeSeconds) * 30.0f));
-        require(freedAt >= expected - 1 && freedAt <= expected + 1,
-                "Wait blocks for the fade before the start (flag a of 1-1_VanBreakdown is 1) and the cutscene length: freed at update " + std::to_string(freedAt) + ", expected about " + std::to_string(expected));
+        const int expected = int(std::ceil((lengthB + 2 * chase::runtime::kCutsceneFadeSeconds + chase::runtime::kCutsceneExitWaitSeconds) * 30.0f));
+        require(freedAt >= expected - 1 && freedAt <= expected + 3,
+                "Wait blocks for the fade before the start (flag a of 1-1_VanBreakdown is 1), the cutscene length, the end fade and the exit wait: freed at update " + std::to_string(freedAt) + ", expected about " + std::to_string(expected));
         require(runner.cutscenes().playing() == nullptr, "the cutscene has ended when Free runs");
     } catch (const std::exception& error) {
         std::cerr << "natives-cutscene-real-test: " << error.what() << '\n';

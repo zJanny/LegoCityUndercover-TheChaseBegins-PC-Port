@@ -4,6 +4,7 @@
 #include "frontend/minimap.hpp"
 #include "frontend/pages.hpp"
 #include "game_save.hpp"
+#include "game_screen_fade.hpp"
 #include "runtime/fog.hpp"
 #include "runtime/follow_camera.hpp"
 #include "runtime/nav_load.hpp"
@@ -475,9 +476,7 @@ void LevelSession::draw(int width, int height) {
         fe::drawLoadingTop(hudCanvas, hudResources);
         fe::drawSceneChangeBottom(mapCanvas, hudResources, hudResources.textForKey(kSystemTextFile, kContinueTextKey));
     }
-    fe::drawBlackVeil(hudCanvas, 1.0f - levelScripts.fadeLevel());
-    fe::drawBlackVeil(hudCanvas, levelScripts.cutscenes().veil());
-    fe::drawBlackVeil(mapCanvas, 1.0f - levelScripts.fadeLevel());
+    game_screen_fade::draw(levelScripts.screenFade(), hudCanvas, mapCanvas);
     if (movies->playing()) movies->draw(hudCanvas, mapCanvas);
     overlay->draw(game_hud::pixelsOf(hudCanvas), game_hud::pixelsOf(mapCanvas), screens.top, screens.bottom, width, height);
 }

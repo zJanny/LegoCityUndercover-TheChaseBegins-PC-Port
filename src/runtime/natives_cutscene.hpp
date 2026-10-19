@@ -29,12 +29,17 @@ struct CutsceneRequest {
 // What DCamCutScenePlay 0x1964dc stored: the object of the slot becomes the active one. The four flags are the
 // script's a b c d; the original turns each into 0.5 (set) or 0 (clear), a and b going to the mode start 0x25d26c and
 // c, d to the block at 0x58988c + 0x2c / 0x30. Their meaning is not recovered (SCRIPT-150).
-// STAND-IN MOVIE-S20: the fade times are measured in the oracle (docs/re/cutscenes.md), not read from the code. A linear fade
-// to black of 0.5 s (30 vblanks) before the start when flag a is set, the same fade over the last 0.5 s of the cutscene, then
-// black for 4 vblanks and a fade in of the game picture over 43 vblanks. The fades cover the top screen only.
+// The fades of the cutscene mode are the screen fade (screen_fade.hpp) started with screen byte 1 (top screen): the update
+// 0x2fae68 fades to black over 0.5 s once the cutscene has ended (0x2d19cc returns 0), the mode switch waits until the fade
+// has ended, and the exit 0x2fac7c fades in over 0.5 s unless the cutscene is `7_9_A`.
 constexpr float kCutsceneFadeSeconds = 0.5f;
-constexpr float kCutsceneBlackSeconds = 4.0f / 60.0f;
-constexpr float kCutsceneFadeInSeconds = 43.0f / 60.0f;
+// STAND-IN MOVIE-S34: between the end of the fade and the exit the mode switch (0x109708 .. 0x1097a0) sleeps once and waits
+// for two ticks of the render counter at 0x529e30 + 0x3d4; the port takes the two ticks as 2 / 30 s (the 4 vblanks of black
+// measured in the oracle) and the sleep as 0.
+constexpr float kCutsceneExitWaitSeconds = 2.0f / kCutsceneFramesPerSecond;
+const char* const kCutsceneWithoutExitFade = "7_9_a";
+
+enum class CutsceneFadeRequest { None, Out, In };
 
 struct CutscenePlaying {
     std::string name;
@@ -62,14 +67,14 @@ public:
     void free(const std::string& name);
     // 0x2297b0: a loaded slot (named `name`; any slot for an empty name) holds the active object.
     bool busy(const std::string& name) const;
-    void update(float dt);
+    void update(float dt, bool screenFadeRunning);
 
     const CutscenePlaying* playing() const { return playing_ ? &*playing_ : nullptr; }
     // The picture is the cutscene: it is playing and the fade before its start has ended.
     bool shown() const { return playing_ && playing_->startFadeLeft <= 0; }
-    // Opacity of the black veil of the cutscene end on the top screen, 0 clear to 1 black (the fade before the start is
-    // the screen fade of the script runner).
-    float veil() const;
+    // The fade the host starts on the screen fade (top screen) after an update: the end fade out of the update 0x2fae68 or
+    // the fade in of the exit 0x2fac7c.
+    CutsceneFadeRequest takeFadeRequest();
     // Once per cutscene: the cutscene mode was entered (0x2fadb8), at the end of the fade before the start.
     // STAND-IN SCRIPT-S243: the mode switch of 0x25d26c is not read; the port enters at the end of the delay of flag a.
     bool takeModeEntered();
@@ -101,7 +106,9 @@ private:
     std::vector<CutsceneRequest> requests_;
     std::optional<MovieRequest> movie_;
     bool movieFinished_ = false;
-    float afterEnd_ = -1;
+    enum class EndPhase { None, Fading, Waiting } endPhase_ = EndPhase::None;
+    float exitWaitLeft_ = 0;
+    CutsceneFadeRequest fadeRequest_ = CutsceneFadeRequest::None;
     bool fadeDisabled_ = false;
     bool hostPlaysMovies_ = false;
     bool modeEntered_ = false;

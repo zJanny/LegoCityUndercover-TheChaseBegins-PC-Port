@@ -225,8 +225,13 @@ void ScriptRunner::update(float dt) {
     effectNatives_.update(dt);
     ai_.update(dt);
     screenFade_.update(dt);
-    cutscenes_.update(dt);
-    if (cutscenes_.takeModeEntered()) screenFade_.fadeIn(kCutsceneModeFadeSeconds);
+    cutscenes_.update(dt, screenFade_.running());
+    if (cutscenes_.takeModeEntered()) screenFade_.fadeIn(kCutsceneModeFadeSeconds, kCutsceneFadeScreens);
+    switch (cutscenes_.takeFadeRequest()) {
+    case CutsceneFadeRequest::Out: screenFade_.fadeOut(kCutsceneFadeSeconds, kCutsceneFadeScreens); break;
+    case CutsceneFadeRequest::In: screenFade_.fadeIn(kCutsceneFadeSeconds, kCutsceneFadeScreens); break;
+    case CutsceneFadeRequest::None: break;
+    }
     fireAiMoveEvents();
     for (auto it = threads_.begin(); it != threads_.end();) {
         const auto next = std::next(it);
@@ -540,8 +545,8 @@ ScriptRunner::Result ScriptRunner::native(ScriptThread& thread, const ScriptCall
     case Word::FadeScreen:
         if (!(thread.flags & kScriptBlocked)) {
             if (args.empty()) break;
-            if (read(args[0]) == 0.0f) screenFade_.fadeOut(kFadeSeconds);
-            else screenFade_.fadeIn(kFadeSeconds);
+            if (read(args[0]) == 0.0f) screenFade_.fadeOut(kFadeSeconds, kFadeScreenFlagScreens);
+            else screenFade_.fadeIn(kFadeSeconds, kFadeScreenFlagScreens);
         }
         if (screenFade_.running()) return Result::Block;
         break;
@@ -695,7 +700,7 @@ ScriptRunner::Result ScriptRunner::cutsceneNative(ScriptThread& thread, const Sc
     case CutsceneNativeKind::Load: cutscenes_.load(name); break;
     case CutsceneNativeKind::Play:
         if (cutscenes_.play(name, {read(args[1]) != 0.0f, read(args[2]) != 0.0f, read(args[3]) != 0.0f, read(args[4]) != 0.0f}))
-            screenFade_.fadeOut(read(args[1]) != 0.0f ? kCutsceneModeFadeSeconds : kCutscenePlayFadeWithoutFlagA);
+            screenFade_.fadeOut(read(args[1]) != 0.0f ? kCutsceneModeFadeSeconds : kCutscenePlayFadeWithoutFlagA, kCutsceneFadeScreens);
         break;
     case CutsceneNativeKind::Wait: return cutscenes_.busy(name) ? Result::Block : Result::Continue;
     case CutsceneNativeKind::Free: cutscenes_.free(name); break;

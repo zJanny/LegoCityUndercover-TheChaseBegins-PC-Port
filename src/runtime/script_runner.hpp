@@ -98,6 +98,11 @@ struct ScriptPlacement {
 // FadeScreen 0x1a2e8c starts the screen fade (screen_fade.hpp) with 0.5 s: 0x2520e8 for 0, 0x252068 otherwise, and
 // blocks until it is done (0x25207c).
 constexpr float kFadeSeconds = 0.5f;
+// STAND-IN SCRIPT-S253: FadeScreen passes the signed byte at 0x51a2bd (0x1d9584) != 0 as the screen byte; its writer is not
+// found and it read 1 in gameplay (state gameplay-start), so the port fades the top screen only.
+constexpr FadeScreens kFadeScreenFlagScreens = FadeScreens::Top;
+// Every fade of DCamCutScenePlay 0x26fa18 and of the cutscene mode (0x2fadb8, 0x2fae68, 0x2fac7c) passes the screen byte 1.
+constexpr FadeScreens kCutsceneFadeScreens = FadeScreens::Top;
 // The fades of DCamCutScenePlay 0x26fa18 (to black, 0.5 s with flag a) and of the cutscene mode enter 0x2fadb8 (from black).
 constexpr float kCutsceneModeFadeSeconds = 0.5f;
 // STAND-IN SCRIPT-S242: without flag a, 0x26fa18 fades to black in 0 s only when byte +0x10 of the current game mode
@@ -206,6 +211,7 @@ public:
     const SoundNativeState& soundNatives() const { return soundNatives_; }
     // Brightness of the screen set by FadeScreen: 1 normal, 0 black.
     float fadeLevel() const { return screenFade_.brightness(); }
+    const ScreenFade& screenFade() const { return screenFade_; }
     DirectorCamera& director() { return director_; }
     // Tip text, dialogue lines, dialogue background, mission title and summary (script_text.hpp).
     const ScriptTextState& text() const { return text_; }

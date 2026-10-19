@@ -130,6 +130,7 @@ Single C++ tests, with `ctest --test-dir build -R <name>`:
 | `nav-path` | The AIMove path finder and the follower on small made-up grids: same cell, straight line, search around a wall, two linked grids, the walk across the link, a refused gate, a start beside a grid |
 | `nav-path-real-data` | The finder and follower on the real grids of lvl_01_cherrytreehills: the police entry case, and 3000 pairs of positions followed inside and across grids; skips with code 77 without `artifacts/romfs` |
 | `script-runner` | How level scripts run each update (waits, a script calling or starting another one, conditions, door requests, scripts started by walking into marked places), with made-up scripts, no game data needed |
+| `screen-fade` | The screen fade: timer, opacity of the black quad and which screens it covers; no game data needed |
 | `natives-world` | The script natives DestroyProp / KillObject (destroy rules), EffectFadeObject (fade values, hidden state, full table), EnableDistanceFade, AddToSemiTransNearCameraList, SetPartyCharacter and StreamRoomIn (request and wait) with made-up scripts, no game data needed |
 | `natives-world-real-data` | The same natives in the real mission 1-2 scripts of lvl_01_cherrytreehills (the police car fade-in, the cage key script waiting for Room40); skips with code 77 without `artifacts/romfs` |
 | `use-marker` | The use marker on the ground at usable spots: fade in and out, hold, range of 25 m and the turning quad, with made-up spots; no game data needed |

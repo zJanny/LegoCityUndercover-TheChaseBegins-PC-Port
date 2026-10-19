@@ -67,13 +67,17 @@ bool CutsceneNativeState::play(const std::string& name, const std::array<bool, 4
     started.flags = flags;
     started.startFadeLeft = flags[0] ? kCutsceneFadeSeconds : 0.0f;
     modeEntered_ = !flags[0];
-    afterEnd_ = -1;
+    endPhase_ = EndPhase::None;
+    fadeRequest_ = CutsceneFadeRequest::None;
     playing_ = started;
     requests_.push_back({CutsceneRequest::Kind::Play, name});
     return true;
 }
 
-void CutsceneNativeState::end() { playing_.reset(); }
+void CutsceneNativeState::end() {
+    playing_.reset();
+    endPhase_ = EndPhase::None;
+}
 
 void CutsceneNativeState::free(const std::string& name) {
     const int index = find(name);
@@ -90,31 +94,42 @@ bool CutsceneNativeState::busy(const std::string& name) const {
     return name.empty() || slots_[std::size_t(index)].name == name;
 }
 
-void CutsceneNativeState::update(float dt) {
-    if (!playing_) {
-        if (afterEnd_ >= 0) afterEnd_ += dt;
-        return;
-    }
+void CutsceneNativeState::update(float dt, bool screenFadeRunning) {
+    if (!playing_) return;
     if (playing_->startFadeLeft > 0) {
         playing_->startFadeLeft -= dt;
         if (playing_->startFadeLeft <= 0) modeEntered_ = true;
         return;
     }
-    playing_->elapsed += dt;
-    if (playing_->elapsed >= playing_->length) {
-        end();
-        afterEnd_ = 0;
+    switch (endPhase_) {
+    case EndPhase::None:
+        playing_->elapsed += dt;
+        if (playing_->elapsed >= playing_->length) {
+            playing_->elapsed = playing_->length;
+            endPhase_ = EndPhase::Fading;
+            fadeRequest_ = CutsceneFadeRequest::Out;
+        }
+        break;
+    case EndPhase::Fading:
+        if (fadeRequest_ == CutsceneFadeRequest::None && !screenFadeRunning) {
+            endPhase_ = EndPhase::Waiting;
+            exitWaitLeft_ = kCutsceneExitWaitSeconds;
+        }
+        break;
+    case EndPhase::Waiting:
+        exitWaitLeft_ -= dt;
+        if (exitWaitLeft_ <= 0) {
+            if (playing_->name != kCutsceneWithoutExitFade) fadeRequest_ = CutsceneFadeRequest::In;
+            end();
+        }
+        break;
     }
 }
 
-float CutsceneNativeState::veil() const {
-    if (playing_) {
-        if (playing_->startFadeLeft > 0) return 0.0f;
-        return 1.0f - std::clamp((playing_->length - playing_->elapsed) / kCutsceneFadeSeconds, 0.0f, 1.0f);
-    }
-    if (afterEnd_ < 0) return 0.0f;
-    if (afterEnd_ < kCutsceneBlackSeconds) return 1.0f;
-    return 1.0f - std::clamp((afterEnd_ - kCutsceneBlackSeconds) / kCutsceneFadeInSeconds, 0.0f, 1.0f);
+CutsceneFadeRequest CutsceneNativeState::takeFadeRequest() {
+    const CutsceneFadeRequest request = fadeRequest_;
+    fadeRequest_ = CutsceneFadeRequest::None;
+    return request;
 }
 
 bool CutsceneNativeState::takeModeEntered() {

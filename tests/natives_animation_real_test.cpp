@@ -100,7 +100,7 @@ int main(int argc, char** argv) {
             for (int i = 0; i < 2400 && runner.threadCount(); ++i) {
                 runner.update(1.0f / 30.0f);
                 runner.director().update(1.0f / 30.0f, noObject);
-                runner.cutscenes().update(1.0f / 30.0f);
+                runner.cutscenes().update(1.0f / 30.0f, false);
             }
             require(recorder.plays.size() == 1 && recorder.plays[0].instance == "1-1_ai_donutlady", "one play for the van driver");
             const runtime::AnimationRequest& request = recorder.plays[0].request;

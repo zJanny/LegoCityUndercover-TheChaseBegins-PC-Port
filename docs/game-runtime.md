@@ -132,7 +132,7 @@ The path is the level's place inside the game archive, as in the example. Each l
 A new game in Cherry Tree Hills starts as in the original:
 
 - The intro movie plays (once), then the first cutscene of mission 1-1 with the donut shop, then the first tip.
-- Cutscenes fade the top screen to black before they start (when the script asks for it) and at their end, then fade the game picture back in. The fade times were measured in the original, not read from its code.
+- Cutscenes fade the top screen to black before they start (when the script asks for it) and at their end, then fade the game picture back in. The fades come from the original's code: 0.5 s each, black quad over the top screen only. The short black pause before the picture returns is a stand-in measured in the original.
 - The player is held during the cutscene. Add `--no-start-cutscenes` to skip the movie and the first cutscene while testing.
 
 For the other options, such as `--screenshot` and `--frames`, see the [command reference](commands.md#development-runtime). Giving `--gameplay`, `--level`, `--script`, `--start` or `--save` also skips the front-end screens.

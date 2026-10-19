@@ -47,35 +47,84 @@ void slotsAndBusyTest() {
     require(!state.busy("short") && !state.busy(""), "loaded but not played is not busy");
     state.play("short", {false, true, true, true});
     require(state.busy("short") && state.busy("") && !state.busy("long"), "the played slot is busy, others are not");
-    state.update(0.5f);
+    state.update(0.5f, false);
     require(state.busy("short"), "busy before the length");
-    state.update(0.5f);
-    require(!state.busy("short") && state.playing() == nullptr, "the cutscene ends at its length");
+    state.update(0.5f, false);
+    require(state.busy("short"), "busy through the end fade and the wait before the exit");
+    state.takeFadeRequest();
+    state.update(0.1f, false);
+    state.update(chase::runtime::kCutsceneExitWaitSeconds, false);
+    require(!state.busy("short") && state.playing() == nullptr, "the cutscene ends at the exit after its length");
 }
 
-void fadesAroundTheCutscene() {
+// Update 0x2fae68: once the cutscene has ended (0x2d19cc returns 0) it starts the screen fade to black (0x2520e8, 0.5 s, screen
+// byte 1); the mode switch waits until the fade has ended (loop 0x109708) and then two render ticks; the exit 0x2fac7c fades
+// in over 0.5 s (0x252068) unless the cutscene is 7_9_A. Provenance: llvm-objdump of those addresses and the ctrace of
+// state cutscene-1-1-b (artifacts/oracle/r28E-out/endtrace.txt): 0x256a14 from lr 0x2faf38 (r1 = 1), 0x2fac7c, 0x256a14
+// from lr 0x2face8 (r1 = 1), nothing else (docs/re/cutscenes.md).
+void endFadesAreReadFromTheCode() {
+    using chase::runtime::CutsceneFadeRequest;
     CutsceneNativeState state;
     state.setLengthSource(lengths());
-    require(state.veil() == 0.0f, "no veil before any cutscene");
     state.play("long", {true, true, true, true});
-    require(state.playing() != nullptr && !state.shown() && state.veil() == 0.0f, "flag a: the game picture stays during the fade, veil starts clear");
-    state.update(chase::runtime::kCutsceneFadeSeconds / 2);
-    require(state.veil() == 0.0f && !state.takeModeEntered(), "the fade before the start is the screen fade of the runner, not the veil");
-    state.update(chase::runtime::kCutsceneFadeSeconds / 2 + 0.001f);
-    require(state.shown() && state.playing()->elapsed == 0.0f, "the cutscene starts after the fade and its time starts at 0");
-    require(state.takeModeEntered() && !state.takeModeEntered(), "the cutscene mode is entered once, at the end of the fade");
-    state.update(4.0f);
-    require(state.veil() == 0.0f, "clear until the last 0.5 s");
-    state.update(0.75f);
-    require(std::fabs(state.veil() - 0.5f) < 0.01f, "half black 0.25 s before the end");
-    state.update(0.3f);
-    require(state.playing() == nullptr && state.veil() == 1.0f, "black when the cutscene ends");
-    state.update(chase::runtime::kCutsceneBlackSeconds + chase::runtime::kCutsceneFadeInSeconds / 2);
-    require(std::fabs(state.veil() - 0.5f) < 0.01f, "the game picture fades in");
-    state.update(1.0f);
-    require(state.veil() == 0.0f, "clear again");
+    state.update(chase::runtime::kCutsceneFadeSeconds + 0.001f, false);
+    require(state.shown() && state.takeModeEntered() && !state.takeModeEntered(), "the cutscene mode is entered once, at the end of the fade");
+    require(state.takeFadeRequest() == CutsceneFadeRequest::None, "no fade request while the cutscene plays");
+    state.update(4.9f, false);
+    require(state.shown() && state.takeFadeRequest() == CutsceneFadeRequest::None, "the cutscene plays up to its length");
+    state.update(0.2f, false);
+    require(state.shown() && state.playing()->elapsed == 5.0f, "at the end the cutscene is still the picture, held on its last time");
+    require(state.takeFadeRequest() == CutsceneFadeRequest::Out && state.takeFadeRequest() == CutsceneFadeRequest::None,
+            "the update asks for one fade out");
+    state.update(0.25f, true);
+    state.update(0.25f, true);
+    require(state.shown() && state.busy("long"), "the mode switch waits while the fade runs");
+    state.update(1.0f / 60.0f, false);
+    state.update(chase::runtime::kCutsceneExitWaitSeconds / 2, false);
+    require(state.busy("long") && state.takeFadeRequest() == CutsceneFadeRequest::None, "and two render ticks after it");
+    state.update(chase::runtime::kCutsceneExitWaitSeconds / 2, false);
+    require(state.playing() == nullptr && !state.busy("long"), "the exit ends the cutscene");
+    require(state.takeFadeRequest() == CutsceneFadeRequest::In, "and fades in");
+}
+
+void noExitFadeForTheLastCutscene() {
+    using chase::runtime::CutsceneFadeRequest;
+    CutsceneNativeState state;
+    state.setLengthSource([](const std::string&) -> std::optional<float> { return 1.0f; });
+    state.play("7_9_a", {false, true, true, true});
+    state.update(1.0f, false);
+    state.takeFadeRequest();
+    state.update(0.1f, false);
+    state.update(1.0f, false);
+    require(state.playing() == nullptr && state.takeFadeRequest() == CutsceneFadeRequest::None, "0x25ad90 finds the 7_9_A path: no fade in at the exit");
     state.play("short", {false, true, true, true});
     require(state.shown() && state.takeModeEntered(), "without flag a the cutscene starts at once");
+}
+
+// The whole sequence on the screen fade of the runner: the end fade takes 0.5 s on the top screen, black until the exit,
+// then 0.5 s back; the bottom screen is never covered (docs/re/cutscenes.md: the measured end fade left it clear).
+void endSequenceOnTheScreenFade() {
+    using chase::runtime::DisplayScreen;
+    Level level;
+    add(level, "s", {{"DCamCutScenePlay", {"\"short\"", "0", "1", "1", "1"}}});
+    PlacedObjectState state;
+    ScriptRunner runner(level, state);
+    runner.cutscenes().setLengthSource(lengths());
+    runner.start("s");
+    const float step = 1.0f / 60.0f;
+    for (int i = 0; i < 40; ++i) runner.update(step);
+    require(runner.cutscenes().shown() && runner.screenFade().opacityOn(DisplayScreen::Top) == 0.0f, "clear while the cutscene plays");
+    int guard = 0;
+    while (!runner.screenFade().running() && ++guard < 100) runner.update(step);
+    require(runner.cutscenes().playing() != nullptr && runner.screenFade().running(), "the end fade runs while the cutscene is still the picture");
+    require(runner.screenFade().opacityOn(DisplayScreen::Bottom) == 0.0f, "the bottom screen stays clear");
+    guard = 0;
+    while (runner.cutscenes().playing() && ++guard < 200) runner.update(step);
+    require(runner.cutscenes().playing() == nullptr, "the exit came after the fade and the wait");
+    require(runner.screenFade().opacityOn(DisplayScreen::Top) == 1.0f, "black when the exit starts the fade in");
+    require(runner.screenFade().opacityOn(DisplayScreen::Bottom) == 0.0f, "and the bottom screen is still clear");
+    for (int i = 0; i < 31; ++i) runner.update(step);
+    require(runner.screenFade().opacityOn(DisplayScreen::Top) == 0.0f, "clear 0.5 s later");
 }
 
 // FadeScreen 0 leaves the screen black; DCamCutScenePlay (handler 0x26fa18, flag a 0) fades to black in 0 s and the
@@ -142,7 +191,9 @@ void waitBlocksForTheLength() {
     for (int i = 0; i < 148; ++i) runner.update(1.0f / 30.0f);
     require(runner.variable("Done") == 0, "still waiting before 5 s");
     for (int i = 0; i < 5; ++i) runner.update(1.0f / 30.0f);
-    require(runner.variable("Done") == 1 && !runner.cutscenes().loaded("long"), "Wait ends at the length and Free follows");
+    require(runner.variable("Done") == 0, "still waiting through the end fade");
+    for (int i = 0; i < 30; ++i) runner.update(1.0f / 30.0f);
+    require(runner.variable("Done") == 1 && !runner.cutscenes().loaded("long"), "Wait ends at the exit after the length and Free follows");
 }
 
 void waitForDCamCountsTheCutscene() {
@@ -153,7 +204,7 @@ void waitForDCamCountsTheCutscene() {
     runner.cutscenes().setLengthSource(lengths());
     runner.start("s");
     require(runner.variable("Done") == 0, "0x2297b0 with name 0 counts any playing cutscene");
-    for (int i = 0; i < 40; ++i) runner.update(1.0f / 30.0f);
+    for (int i = 0; i < 60; ++i) runner.update(1.0f / 30.0f);
     require(runner.variable("Done") == 1, "WaitForDCam ends with the cutscene");
 }
 
@@ -197,7 +248,9 @@ int main() {
     try {
         slotsAndBusyTest();
         freeEndsThePlayingCutscene();
-        fadesAroundTheCutscene();
+        endFadesAreReadFromTheCode();
+        noExitFadeForTheLastCutscene();
+        endSequenceOnTheScreenFade();
         waitBlocksForTheLength();
         waitForDCamCountsTheCutscene();
         movieBlocksUntilFinished();
