@@ -1,5 +1,5 @@
 // Cutscene natives of batch SCRIPT-29 (src/runtime/natives_cutscene.cpp, ScriptRunner). The rules come from the handlers
-// DCamCutSceneLoad 0x2889a4 / 0x196390, DCamCutScenePlay 0x2889e4 / 0x1964dc, DCamCutSceneWait 0x288a40 (returns the
+// DCamCutSceneLoad 0x2889a4 / 0x196390, DCamCutScenePlay 0x26fa18 / 0x2889e4 / 0x1964dc, DCamCutSceneWait 0x288a40 (returns the
 // negated busy test 0x2297b0), DCamCutSceneFree 0x28898c / 0x196144, PlayCutscene 0x1bf9dc (docs/re/cutscenes.md,
 // entry on the cutscene natives). The scripts and lengths here are made up.
 #include "runtime/script_runner.hpp"
@@ -60,9 +60,10 @@ void fadesAroundTheCutscene() {
     state.play("long", {true, true, true, true});
     require(state.playing() != nullptr && !state.shown() && state.veil() == 0.0f, "flag a: the game picture stays during the fade, veil starts clear");
     state.update(chase::runtime::kCutsceneFadeSeconds / 2);
-    require(std::fabs(state.veil() - 0.5f) < 1e-4f, "the veil is half black in the middle of the fade before the start");
+    require(state.veil() == 0.0f && !state.takeModeEntered(), "the fade before the start is the screen fade of the runner, not the veil");
     state.update(chase::runtime::kCutsceneFadeSeconds / 2 + 0.001f);
     require(state.shown() && state.playing()->elapsed == 0.0f, "the cutscene starts after the fade and its time starts at 0");
+    require(state.takeModeEntered() && !state.takeModeEntered(), "the cutscene mode is entered once, at the end of the fade");
     state.update(4.0f);
     require(state.veil() == 0.0f, "clear until the last 0.5 s");
     state.update(0.75f);
@@ -74,7 +75,45 @@ void fadesAroundTheCutscene() {
     state.update(1.0f);
     require(state.veil() == 0.0f, "clear again");
     state.play("short", {false, true, true, true});
-    require(state.shown(), "without flag a the cutscene starts at once");
+    require(state.shown() && state.takeModeEntered(), "without flag a the cutscene starts at once");
+}
+
+// FadeScreen 0 leaves the screen black; DCamCutScenePlay (handler 0x26fa18, flag a 0) fades to black in 0 s and the
+// cutscene mode enter 0x2fadb8 fades in over 0.5 s (0x252068), so the cutscene is seen (1-2_Cage_Key_Target_Script,
+// gdb trace from m12-13-cage-trigger, docs/re/cutscenes.md).
+void cutsceneModeBringsTheScreenBack() {
+    Level level;
+    add(level, "c", {{"FadeScreen", {"0"}}, {"DCamCutScenePlay", {"\"short\"", "0", "1", "1", "1"}}, {"DCamCutSceneWait", {"\"short\""}},
+                     {"=", {"Done", "1"}}});
+    PlacedObjectState state;
+    ScriptRunner runner(level, state);
+    runner.cutscenes().setLengthSource(lengths());
+    runner.start("c");
+    for (int i = 0; i < 8; ++i) runner.update(0.07f);
+    require(runner.fadeLevel() == 0.0f && runner.cutscenes().playing() != nullptr, "black when the cutscene is played");
+    runner.update(0.07f);
+    require(std::fabs(runner.fadeLevel() - 0.0f) < 1e-6f, "the mode enter starts the fade in from black");
+    for (int i = 0; i < 3; ++i) runner.update(0.07f);
+    require(std::fabs(runner.fadeLevel() - 0.42f) < 1e-4f, "the fade in takes 0.5 s");
+    for (int i = 0; i < 5; ++i) runner.update(0.07f);
+    require(runner.fadeLevel() == 1.0f, "the cutscene is seen");
+}
+
+// Flag a: 0x26fa18 fades to black over 0.5 s before the cutscene mode starts, then the mode fades in.
+void flagAFadesTheScreenOut() {
+    Level level;
+    add(level, "c", {{"DCamCutScenePlay", {"\"long\"", "1", "1", "1", "1"}}});
+    PlacedObjectState state;
+    ScriptRunner runner(level, state);
+    runner.cutscenes().setLengthSource(lengths());
+    runner.start("c");
+    require(runner.fadeLevel() == 1.0f, "the fade starts from the game picture");
+    runner.update(0.25f);
+    require(std::fabs(runner.fadeLevel() - 0.5f) < 1e-4f, "half way to black");
+    runner.update(0.251f);
+    require(runner.cutscenes().shown() && runner.fadeLevel() == 0.0f, "the mode is entered at black");
+    runner.update(0.5f);
+    require(runner.fadeLevel() == 1.0f, "and fades in");
 }
 
 void freeEndsThePlayingCutscene() {
@@ -164,6 +203,8 @@ int main() {
         movieBlocksUntilFinished();
         movieWithoutHostEndsAtOnce();
         noFadeBackIn();
+        cutsceneModeBringsTheScreenBack();
+        flagAFadesTheScreenOut();
     } catch (const std::exception& error) {
         std::cerr << "natives-cutscene-test: " << error.what() << '\n';
         return 1;

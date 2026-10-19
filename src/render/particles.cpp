@@ -9,7 +9,8 @@ using namespace chase::assets;
 
 class ParticleRendererImpl {
 public:
-    ParticleRendererImpl(FuseArchive& archive, std::vector<std::string> names) : archive_(archive), names_(std::move(names)) {
+    ParticleRendererImpl(FuseArchive& archive, std::vector<std::string> names, std::string directory)
+        : archive_(archive), names_(std::move(names)), directory_(std::move(directory)) {
         textures_.assign(names_.size(), 0);
         failed_.assign(names_.size(), false);
         glGenVertexArrays(1, &vao_);
@@ -39,7 +40,7 @@ public:
         if (index < 0 || std::size_t(index) >= names_.size() || failed_[std::size_t(index)]) return 0;
         GLuint& id = textures_[std::size_t(index)];
         if (id) return id;
-        const FuseEntry* entry = archive_.find("particles/" + names_[std::size_t(index)] + ".btga");
+        const FuseEntry* entry = archive_.find(directory_ + names_[std::size_t(index)] + ".btga");
         if (!entry) {
             failed_[std::size_t(index)] = true;
             return 0;
@@ -128,14 +129,15 @@ public:
 private:
     FuseArchive& archive_;
     std::vector<std::string> names_;
+    std::string directory_;
     std::vector<GLuint> textures_;
     std::vector<bool> failed_;
     std::vector<std::uint32_t> indices_;
     GLuint vao_ = 0, vbo_ = 0, ibo_ = 0;
 };
 
-ParticleRenderer::ParticleRenderer(FuseArchive& archive, std::vector<std::string> textureNames)
-    : impl_(std::make_unique<ParticleRendererImpl>(archive, std::move(textureNames))) {}
+ParticleRenderer::ParticleRenderer(FuseArchive& archive, std::vector<std::string> textureNames, std::string directory)
+    : impl_(std::make_unique<ParticleRendererImpl>(archive, std::move(textureNames), std::move(directory))) {}
 
 ParticleRenderer::~ParticleRenderer() = default;
 

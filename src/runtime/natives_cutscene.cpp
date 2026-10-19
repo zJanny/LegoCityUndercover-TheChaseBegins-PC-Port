@@ -57,18 +57,20 @@ void CutsceneNativeState::load(const std::string& name) {
     requests_.push_back({CutsceneRequest::Kind::Load, name});
 }
 
-void CutsceneNativeState::play(const std::string& name, const std::array<bool, 4>& flags) {
+bool CutsceneNativeState::play(const std::string& name, const std::array<bool, 4>& flags) {
     if (find(name) < 0) load(name);
     const int index = find(name);
-    if (index < 0) return;
+    if (index < 0) return false;
     CutscenePlaying started;
     started.name = name;
     started.length = slots_[std::size_t(index)].length;
     started.flags = flags;
     started.startFadeLeft = flags[0] ? kCutsceneFadeSeconds : 0.0f;
+    modeEntered_ = !flags[0];
     afterEnd_ = -1;
     playing_ = started;
     requests_.push_back({CutsceneRequest::Kind::Play, name});
+    return true;
 }
 
 void CutsceneNativeState::end() { playing_.reset(); }
@@ -95,6 +97,7 @@ void CutsceneNativeState::update(float dt) {
     }
     if (playing_->startFadeLeft > 0) {
         playing_->startFadeLeft -= dt;
+        if (playing_->startFadeLeft <= 0) modeEntered_ = true;
         return;
     }
     playing_->elapsed += dt;
@@ -106,12 +109,18 @@ void CutsceneNativeState::update(float dt) {
 
 float CutsceneNativeState::veil() const {
     if (playing_) {
-        if (playing_->startFadeLeft > 0) return 1.0f - std::clamp(playing_->startFadeLeft / kCutsceneFadeSeconds, 0.0f, 1.0f);
+        if (playing_->startFadeLeft > 0) return 0.0f;
         return 1.0f - std::clamp((playing_->length - playing_->elapsed) / kCutsceneFadeSeconds, 0.0f, 1.0f);
     }
     if (afterEnd_ < 0) return 0.0f;
     if (afterEnd_ < kCutsceneBlackSeconds) return 1.0f;
     return 1.0f - std::clamp((afterEnd_ - kCutsceneBlackSeconds) / kCutsceneFadeInSeconds, 0.0f, 1.0f);
+}
+
+bool CutsceneNativeState::takeModeEntered() {
+    const bool entered = modeEntered_;
+    modeEntered_ = false;
+    return entered;
 }
 
 std::vector<CutsceneRequest> CutsceneNativeState::takeRequests() {

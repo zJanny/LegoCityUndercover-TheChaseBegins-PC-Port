@@ -314,6 +314,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         updateCarry(playerPosition);
         updateDetective(dt, carry.carryingMode() == 0 && !carry.busy() && !builditPlayer.active() && !buildits.lastUse().inZone, emit);
         updateUseSpots(carry.carryingMode() == 0 && !carry.busy() && !builditPlayer.active() && !buildits.lastUse().inZone);
+        updateUseMarkers(dt);
         updateScanner();
     }
     propParts.step(dt);

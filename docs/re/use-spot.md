@@ -6,6 +6,8 @@ A zone object that fires one `TriggerObject` when the player presses the action 
 
 - The class (`props/prop_simpleuse`, 32-byte component) has the parameters `TriggerObject` (record +0x18) and `SendPlayerObject` (+0x1c); its zone is the class bound `UseBound` (centre 0, half 2 2 2) registered by 0x23e130 with `UseStartActive` default 1. [§2026-10-18T14:28:33+02:00](#ts-20261018-142833)
 - Message 3 with the action flag fires 0x244f40 on the target, asks the player for state 1 and switches the zone off (0x236624); message 8 switches it on again. Confirmed in the oracle from `m12-13-cage-trigger`. [§2026-10-18T14:28:33+02:00](#ts-20261018-142833)
+- A use marker (the spinning `useGeneric` disc, 2 m across, 0.1 above the ground) shows at each usable zone of 36 entity kinds within 25 m of the camera or player, fading in and out over 0.15 s; ported for use spots. [§2026-10-19T09:25:34](#ts-20261019-092534)
+- After the release the original goes black (FadeScreen 0) and the cutscene mode of `1_2_c` fades the screen in again; `chase-game` now does the same and continues to `1-2_MissionEnd` and `1-3_MissionStart`. [§2026-10-19T09:12:53](#ts-20261019-091253)
 - `1-2_Door_Lock_Hint_Script` (the scriptobject) is referenced by no object and no script call; the hint dialogue runs from the bound `1-2_Door_Lock_Hint` (BoundEntered), which the port already delivers. [§2026-10-18T14:28:33+02:00](#ts-20261018-142833)
 - No name source for the scriptobject exists besides the level's own trigger records, the detective spot next to it has no `TriggerObject`, and a trap from `m12-7` saw no object trigger; code that finds the entity without a name is not excluded. [scripts-missions.md §2026-10-18T19:58:54](scripts-missions.md#ts-20261018-195854)
 
@@ -27,3 +29,44 @@ A zone object that fires one `TriggerObject` when the player presses the action 
 
 Unknowns:
 - Message 8 senders for the use spot; the hint-query behaviour of the class (the hint prompt text and when 0x1cba8c asks it); whether code builds the name of `1-2_Door_Lock_Hint_Script` at run time (callers of 0x2388e4 not read, SCRIPT-113).
+
+<a id="ts-20261019-091253"></a>
+
+## 2026-10-19T09:12:53+02:00 — What follows the release of the dog, and why `chase-game` stayed black (level data through the C++ loader, Azahar GDB `freetrap` from `m12-13-cage-trigger`, `chase-game` runs)
+
+**Script.** `1-2_Cage_Key_Target_Script` (the ObjectTriggered script the spot fires): AIEnable Player1 1, cage collision off, the dog prop swapped for `1-2_Dog`, the player to `1-2_Chase_Position_Dog_Cage`, StartDCam `Dcam_Dog_Cage_Open`, the cage and dog animations and `dog_cage_open_minifig`, Wait 3, DCamCutSceneLoad `1_2_c`, **FadeScreen 0**, objects moved and switched off, the player to `1-2_Chase_Position_End`, StreamRoomIn `Room40`, `TriggerObject 1-2_Dcam_Exclusion_DogHouse`, wait 1.5, DCamCutScenePlay `1_2_c` 0 1 1 1, ShowDialogBG 1, DCamCutSceneWait, DCamCutSceneFree, ShowDialogBG 0, the dog truck on, the dog house room objects off, SpawnScript `1-2_MissionEnd`, AIEnable Player1 0. No FadeScreen 1 follows; `1-2_MissionEnd` (StoryProgress 3, reward, tip texts, dialogue, SpawnScript `1-3_MissionStart`) has none either, and `1-4_RobberCaught` has the same pattern.
+
+**Original.** The cutscene mode brings the screen back: the trace of [cutscenes.md §2026-10-19T09:12:06](cutscenes.md#ts-20261019-091206) shows FadeScreen's fade to black, the DCamCutScenePlay handler's fade, the mode enter's 0.5 s fade in, the end fades and SpawnScript `1-2_MissionEnd` about 26 s after the press, then `1-3_MissionStart` and `1-3_Animations` (as in [scripts-missions.md §2026-10-18T19:58:54](scripts-missions.md#ts-20261018-195854)).
+
+**Port before.** `chase-game` from the spot (`--start "916.702 64.431 663.724" --call-script 1-2_Pringles_Cage_Locked`, A at update 5) ran the whole chain (cutscene `1_2_c` from update 169 to 726, `1-2_MissionEnd` at 726, `1-3_MissionStart` at 1304, player at 745.951 29.973 636.281, StoryProgress 3), but the brightness of FadeScreen stayed 0 because only FadeScreen changed it: every picture after update 5 plus the fade was black (screenshot at update 906: all colour bytes 0).
+
+**Port now.** The screen fade is shared (`ScreenFade`), so the cutscene mode fades in: black from the FadeScreen to the cutscene start (update 150 still black, as in the original), the cutscene from update 169, the game picture with the scanner tip after the end (screenshot at update 906). CTest `game-cage-release-1-2`.
+
+Unknowns:
+- The update numbers of the original between the press and the cutscene start were not measured (the trap gives wall-clock seconds with stop overhead).
+
+<a id="ts-20261019-092534"></a>
+
+## 2026-10-19T09:25:34+02:00 — The use marker on the ground (llvm-objdump on `artifacts/game/game.arm.elf`; RPC screenshots A-1 by the emulator servant and Azahar GDB `freetrap`, port 24771, state `m12-13-cage-trigger`; REA was not used)
+
+**What it is.** The A-1 screenshots of `m12-13-cage-trigger` (on the spot, and 2.2 m back at 914.601 64.431 663.204, still inside the zone) show a flat disc about 2 m across on the ground at the spot: the texture `sprites/game/usemarkers/usegeneric.btga` (a dark disc with a ring and coloured dots). The use spot class has no mesh (`levels/props/prop_simpleuse.blvl` holds only the class id 165, two vectors and the bound), so the disc is drawn by a separate system.
+
+**Textures and kinds (0x162adc, called from 0x2e43e4).** Loads `Sprites/Game/UseMarkers/use{Generic, Police, Robber, Miner, Astronaut, Farmer, Chicken, Pig, Fireman, Construction, Locked}.tga` into the table 0x5295ec (index 0 to 10) and `Sprites/Buttons/DSButtonA.tga` into 0x37603c + 8, sets a bit in the kind bitmap 0x5289cc for each entity kind of the zero-ended list 0x374640 (13, 36, 58, 73, 77, 110, 15, 144, 146, 145, 130, 153, 165, 94, 169, 171, 173, 181, 182, 185, 186, 190, 191, 195, 201, 209, 210, 231, 233, 150, 127, 200, 133, 124, 232, 227; 165 is `props/prop_simpleuse`), and makes 32 fader slots of 0x30 bytes at 0x529618 with 0x23cb90(owner 0x518218, slot, callback 0x17218c, 1, fade in 0.15 s, fade out 0.15 s).
+
+**List (0x1c015c).** From the use registry of the scene (the list 0x236624 searches), every entry whose entity kind is in the bitmap and that passes 0x2397a0 for a player position lifted by 1.0 goes into the list 0x5289ec (0x18 bytes: entity, zone record, marker position at +8, new flag +0x14), and the zone record's +8 is set to 25.0. Rebuilt by the marker update when *0x376c78 changes and from 0x1b227c.
+
+**Update (0x172254, per update).** Nothing while the player is in a vehicle (0x24255c). For each list entry it skips: the entity the player is using (ctrl+0x130), entities 0x23de70 reports, entity flag +0x10 bit 0, a zone without the usable bit 4, a node with flag bit 5, a parent that is off, and special cases of kinds 58, 150, 183 and 210. It then sends message 3 with no player and the action flag 0 (0x1922e8 returns 1 when `TriggerObject` is set) and needs a non-zero answer, and the camera (0x22e1f4) or the player within the zone record's +8 (25.0) of the entity. It takes the slot that has the entity, else a free one, else one whose entity 0x23de70 reports; a slot in state 0 marks the entry new, which places it with 0x1db800. With the entity's int parameter `HeadMarker` at its default -1 it calls 0x23cc00(slot, 0, hold 0.1); other values ask the player's character for ability `HeadMarker + 24` and call 0x22d7c0 instead.
+
+**Placement (0x1db800).** From the zone centre (zone record +0x10) in the entity frame, a line 5 m down the node's up axis, objects in the box gathered (0x237f30, up to 50), a ray (0x204764, or 0x22a7a4 stepping up 0.5); the hit, in the entity frame, is the marker position; without a hit the zone centre.
+
+**Fader (0x23cc00 show, 0x235e2c value).** State +0x10: 0 hidden, 1 fading in (value (now - start) / 0.15), 2 shown (1), 3 fading out (1 - (now - start) / 0.15), clamped to [0, 1]. Show: 0 → 1 with start = now; 2 restarts the start time; 3 → 1 with the start moved so the value goes on from where it was; all store the hold (+0x1c) of 0.1 s. What counts the hold down and starts state 3 was not found.
+
+**Draw (callback 0x17218c → 0x236080 → 0x1b29f0).** 0x17218c frees the slot when it is fading out and its value x 255 is below 4; otherwise it transforms the marker position by the node matrix and submits 0x1b29f0. 0x1b29f0: alpha = value x 255; matrix = the node rotation with the marker position as translation, turned about its up axis by clock / 240 radians (0x241098, 0x237bc4; 0x247ac8 reduces by 2/pi, so radians); texture 0x292388 (index from the kind; 0 for kinds it does not list, such as 165); four vertices (-1, 0.1, -1) uv (1, 0), (1, 0.1, -1) uv (0, 0), (1, 0.1, 1) uv (0, 1), (-1, 0.1, 1) uv (1, 1), colour white with that alpha.
+
+**Oracle (`artifacts/scratch/r27-A/marker_draw.txt` → `artifacts/oracle/r27A-out/markerdraw.txt`).** `frames 2`, `freetrap 4` at 0x1b29f0, 0x1b2a40 and 0x1db800: the draw runs every frame for slot 0x529678 (state 2, fade times 0.15, hold 0.1, callback 0x17218c, entry 0x5289ec); the clock after 0x241098 reads 0x7fed, 0x7fef, 0x7ff1, 0x7ff3 in successive draws (2 per frame, so 60 per second at 30 updates per second); 0x1db800 did not run (the marker was placed before the state was saved).
+
+**Port.** `src/runtime/use_marker.{hpp,cpp}` (`UseMarkers`: 32 slots, the fader, range, quad and spin), glue `src/game_use_spot.cpp` (`LevelSession::updateUseMarkers` / `drawUseMarkers`, the quads go through the particle quad renderer with the use marker texture directory); only use spots feed it. `chase-game` from the spot: `use marker: 1-2_dog_cage_use_spot shown at update 0`, gone at update 13 after the A press at update 5 (hold and fade out); the screenshot shows the disc where the oracle has it. Tests `use-marker` (synthetic), `use-spot-real-data`, `game-use-spot-1-2`.
+
+Unknowns:
+- The fader manager that counts the hold down; the multiplier of the clock 0x241098; the render state that 0x1b29f0 passes to 0x25511c; the test 0x2397a0 of the list builder and the rebuild trigger *0x376c78; what 0x23de70 reports.
+- The kinds other than 165 (carry objects, build-its, detective spots and the rest of the list) and the `HeadMarker` path.

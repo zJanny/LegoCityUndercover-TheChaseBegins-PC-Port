@@ -85,7 +85,7 @@ This file has no dated entries: the table is edited in place. When a native is r
 | DCamCutSceneWait | 0x288a40 | 1 | 57 / 13 / 2 / 0 | 7 | stand-in | 29 | returns !0x2297b0(name): [cutscenes.md §2026-10-14T22:49](cutscenes.md#ts-20261014-224929) |
 | SpawnDebris | 0x1b26f0 | 4 | 57 / 0 / 0 / 1 | 3 | C | 38 |  |
 | DCamCutSceneFree | 0x28898c | 1 | 56 / 13 / 2 / 0 | 7 | stand-in | 29 | 0x196144: [cutscenes.md §2026-10-14T22:49](cutscenes.md#ts-20261014-224929) |
-| DCamCutScenePlay | 0x2889e4 | 5 | 56 / 13 / 2 / 0 | 7 | stand-in | 29 | 0x1964dc, flags a b c d: [cutscenes.md §2026-10-14T22:49](cutscenes.md#ts-20261014-224929) |
+| DCamCutScenePlay | 0x26fa18 | 5 | 56 / 13 / 2 / 0 | 7 | stand-in | 29 | fades handled (SCRIPT-S242, SCRIPT-S243); flags b c d open: [cutscenes.md §2026-10-14T22:49](cutscenes.md#ts-20261014-224929), [cutscenes.md §2026-10-19T09:12:06](cutscenes.md#ts-20261019-091206) |
 | WaitForCurrentAnim | 0x2a06a8 | 1 | 53 / 8 / 0 / 1 | 7 | stand-in | 32 | stand-in: blocks on level characters and skinned placed props as the original, completes at once otherwise (SCRIPT-S110): [script-natives-animation.md §2026-10-15T20:04](script-natives-animation.md#ts-20261015-200440) |
 | ainostate | 0x194e0c | 1 | 50 / 6 / 0 / 0 | 6 | stand-in | 34 | flag or requested state recorded; returns 1: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
 | StopAnim | 0x1883d0 | 1 | 49 / 10 / 0 / 0 | 5 | stand-in | 32 | stand-in: stops level characters and skinned placed props, records the rest (SCRIPT-S110): [script-natives-animation.md §2026-10-15T20:04](script-natives-animation.md#ts-20261015-200440) |

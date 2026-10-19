@@ -32,6 +32,7 @@ void UseSpotSet::load(const assets::Level& level, const assets::ClassLookup& cla
         spot.instance = lower(object.instance);
         spot.objectIndex = index;
         std::copy_n(placed->position, 3, spot.position);
+        spot.matrix = assets::placementMatrix(*placed);
         if (const assets::LevelParam* param = effectiveParam(object, *cls, triggerObject)) {
             const auto found = names.find(assets::objectReferenceHash(*param));
             if (found != names.end()) spot.triggerObject = found->second;

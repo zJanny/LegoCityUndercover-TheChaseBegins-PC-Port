@@ -224,7 +224,9 @@ void ScriptRunner::update(float dt) {
     text_.update(dt);
     effectNatives_.update(dt);
     ai_.update(dt);
+    screenFade_.update(dt);
     cutscenes_.update(dt);
+    if (cutscenes_.takeModeEntered()) screenFade_.fadeIn(kCutsceneModeFadeSeconds);
     fireAiMoveEvents();
     for (auto it = threads_.begin(); it != threads_.end();) {
         const auto next = std::next(it);
@@ -538,17 +540,10 @@ ScriptRunner::Result ScriptRunner::native(ScriptThread& thread, const ScriptCall
     case Word::FadeScreen:
         if (!(thread.flags & kScriptBlocked)) {
             if (args.empty()) break;
-            fadeTarget_ = read(args[0]) == 0.0f ? 0.0f : 1.0f;
-            fadeStart_ = fadeLevel_;
-            fadeElapsed_ = 0;
-            return Result::Block;
+            if (read(args[0]) == 0.0f) screenFade_.fadeOut(kFadeSeconds);
+            else screenFade_.fadeIn(kFadeSeconds);
         }
-        fadeElapsed_ += dt_;
-        if (fadeElapsed_ < kFadeSeconds) {
-            fadeLevel_ = fadeStart_ + (fadeTarget_ - fadeStart_) * (fadeElapsed_ / kFadeSeconds);
-            return Result::Block;
-        }
-        fadeLevel_ = fadeTarget_;
+        if (screenFade_.running()) return Result::Block;
         break;
     default: break;
     }
@@ -699,7 +694,8 @@ ScriptRunner::Result ScriptRunner::cutsceneNative(ScriptThread& thread, const Sc
     switch (*kind) {
     case CutsceneNativeKind::Load: cutscenes_.load(name); break;
     case CutsceneNativeKind::Play:
-        cutscenes_.play(name, {read(args[1]) != 0.0f, read(args[2]) != 0.0f, read(args[3]) != 0.0f, read(args[4]) != 0.0f});
+        if (cutscenes_.play(name, {read(args[1]) != 0.0f, read(args[2]) != 0.0f, read(args[3]) != 0.0f, read(args[4]) != 0.0f}))
+            screenFade_.fadeOut(read(args[1]) != 0.0f ? kCutsceneModeFadeSeconds : kCutscenePlayFadeWithoutFlagA);
         break;
     case CutsceneNativeKind::Wait: return cutscenes_.busy(name) ? Result::Block : Result::Continue;
     case CutsceneNativeKind::Free: cutscenes_.free(name); break;

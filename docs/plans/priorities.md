@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 671 open items and stand-ins, 134 linked to game usage, 537 with unknown reach.
+Items: 677 open items and stand-ins, 137 linked to game usage, 540 with unknown reach.
 
 ## Top 50 overall
 
@@ -74,16 +74,16 @@ Items: 671 open items and stand-ins, 134 linked to game usage, 537 with unknown 
 | 38 | [SCRIPT-71](features/script-system-hud-natives.md) | 260 | 0 | 7 | 1 | 1 stand-in | `subobjectivegotoenable` | SubObjectiveGoToEnable keeps its group (registry 0x1fce14 / 0x2a62b8) but the group marker is not drawn ... |
 | 39 | [SCRIPT-S11](features/script-system-dcam.md) | 256 | 0 | 8 | 0 | 1 stand-in | `startdcamtrack` | `StartDCamTrack` looks at the placement position of the object (the live position for the player), not at its ... |
 | 40 | [SCRIPT-S20](features/script-system-natives.md) | 248 | 0 | 7 | 0 | 10 stand-in | `addstuds`, `disablesuperbuiltitsave`, `enablestudsbygroup`, `enablesuperbricks` +6 | Ten batch 27 natives (UnlockAbility, LockAbility, UnlockScanner, EnableSuperBricks, SetParachuteDeployHeight ... |
-| 41 | [VEH-131](features/vehicles.md) | 0 | 225 | 7 | 1 | - | `leprops/leprop_prop`, `props/prop_prop` | The 57 classes of ObjectType 67 (prop_prop 16 and leprop_prop 4 in lvl_01) react to the car's message 0 ... |
-| 42 | [SCRIPT-286](features/script-system-missions.md) | 193 | 0 | 8 | 0 | 1 stand-in | `stopcharanim` | The user-animation state 0x50 is modelled only as "no idle until the clip has finished plus one update": the ... |
-| 43 | [SCRIPT-S12](features/script-system-dcam.md) | 184 | 0 | 7 | 0 | 2 stand-in | `shakescreen`, `snapcamera` | `ShakeScreen` stores its arguments and draws nothing; `SnapCamera` runs the reset 0x2313c8 with argument 0 ... |
-| 44 | [COLL-2](features/collision.md) | 0 | 183 | 7 | 1 | - | `props/parkour_skydive`, `props/prop_prop` | Only the classes with a recovered constructor rule register (props, doors, dummycollision, vehicles) ... |
-| 45 | [SCRIPT-13](features/script-system-natives.md) | 176 | 0 | 7 | 2 | 1 stand-in | `fadescreen` | Mode 4 (the dialog pushed by `0x25d26c`): its drawing, input, open / close code; why `0x1a142c` refuses it ... |
-| 46 | [SCRIPT-S10](features/script-system-natives.md) | 176 | 0 | 7 | 0 | 1 stand-in | `fadescreen` | `FadeScreen` fades linearly over 0.5 s (the duration is the handler's immediate) with a black veil; the tween ... |
-| 47 | [SCRIPT-S18](features/script-system-natives.md) | 175 | 0 | 7 | 0 | 2 stand-in | `resetobject`, `skiptofinalstate` | The six flag natives and ResetObject / SkipToFinalState store their value or message by instance name without ... |
-| 48 | [HUD-S60](features/hud-ui.md) | 0 | 159 | 7 | 0 | - | `props/map_waypoint` | Every waypoint is drawn as icon type 0 (the type byte is a class parameter, read for `map_waypoint` only) ... |
-| 49 | [SCRIPT-73](features/script-system-hud-natives.md) | 150 | 0 | 6 | 1 | 6 stand-in | `blackoutmap`, `disableicon`, `enableminimapwipe`, `enablescanner` +2 | Map and scanner natives (EnableMinimapWipe 0x187f28, EnableScanner, OverrideScannable, PanMapToObject, map ... |
-| 50 | [RENDER-62](features/rendering.md) | 0 | 137 | 8 | 0 | - | `point` | Point lights (type 2) against the oracle: lvl_00 `Point`/`Point01` (Intensity 2, MaxRange 1) on baked surfaces |
+| 41 | [SCRIPT-298](features/script-system-missions.md) | 232 | 0 | 7 | 3 | 2 stand-in | `dcamcutsceneplay`, `fadescreen` | Screen fade gaps: the draw function 0x24bda4 (curve and screens), byte +0x10 of the game modes (0x2369c4) ... |
+| 42 | [VEH-131](features/vehicles.md) | 0 | 225 | 7 | 1 | - | `leprops/leprop_prop`, `props/prop_prop` | The 57 classes of ObjectType 67 (prop_prop 16 and leprop_prop 4 in lvl_01) react to the car's message 0 ... |
+| 43 | [SCRIPT-286](features/script-system-missions.md) | 193 | 0 | 8 | 0 | 1 stand-in | `stopcharanim` | The user-animation state 0x50 is modelled only as "no idle until the clip has finished plus one update": the ... |
+| 44 | [SCRIPT-S12](features/script-system-dcam.md) | 184 | 0 | 7 | 0 | 2 stand-in | `shakescreen`, `snapcamera` | `ShakeScreen` stores its arguments and draws nothing; `SnapCamera` runs the reset 0x2313c8 with argument 0 ... |
+| 45 | [COLL-2](features/collision.md) | 0 | 183 | 7 | 1 | - | `props/parkour_skydive`, `props/prop_prop` | Only the classes with a recovered constructor rule register (props, doors, dummycollision, vehicles) ... |
+| 46 | [SCRIPT-13](features/script-system-natives.md) | 176 | 0 | 7 | 2 | 1 stand-in | `fadescreen` | Mode 4 (the dialog pushed by `0x25d26c`): its drawing, input, open / close code; why `0x1a142c` refuses it ... |
+| 47 | [SCRIPT-S10](features/script-system-natives.md) | 176 | 0 | 7 | 0 | 1 stand-in | `fadescreen` | `FadeScreen` fades linearly over 0.5 s (the duration is the handler's immediate) with a black veil; the tween ... |
+| 48 | [SCRIPT-S18](features/script-system-natives.md) | 175 | 0 | 7 | 0 | 2 stand-in | `resetobject`, `skiptofinalstate` | The six flag natives and ResetObject / SkipToFinalState store their value or message by instance name without ... |
+| 49 | [HUD-S60](features/hud-ui.md) | 0 | 159 | 7 | 0 | - | `props/map_waypoint` | Every waypoint is drawn as icon type 0 (the type byte is a class parameter, read for `map_waypoint` only) ... |
+| 50 | [SCRIPT-73](features/script-system-hud-natives.md) | 150 | 0 | 6 | 1 | 6 stand-in | `blackoutmap`, `disableicon`, `enableminimapwipe`, `enablescanner` +2 | Map and scanner natives (EnableMinimapWipe 0x187f28, EnableScanner, OverrideScannable, PanMapToObject, map ... |
 
 ## Player and camera
 
@@ -138,7 +138,7 @@ Items: 671 open items and stand-ins, 134 linked to game usage, 537 with unknown 
 
 ## Scripts and missions
 
-76 of 144 items linked.
+79 of 150 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -233,7 +233,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md)
 - [script-system-ai-navigation.md](features/script-system-ai-navigation.md): SCRIPT-92 (+30), SCRIPT-94 (+16), SCRIPT-101 (+14), SCRIPT-95 (+14), SCRIPT-100 (+13), SCRIPT-79 (+12), SCRIPT-S100, SCRIPT-S101, SCRIPT-S102, SCRIPT-S104, SCRIPT-S31, SCRIPT-S93, SCRIPT-S94, SCRIPT-S95
 - [script-system-dcam.md](features/script-system-dcam.md): SCRIPT-40 (+15), SCRIPT-182 (+1), SCRIPT-48 (+1), SCRIPT-50 (+1), SCRIPT-181, SCRIPT-49, SCRIPT-S142
 - [script-system-hud-natives.md](features/script-system-hud-natives.md): SCRIPT-68, SCRIPT-69, SCRIPT-70
-- [script-system-missions.md](features/script-system-missions.md): SCRIPT-115 (+1), SCRIPT-220 (+1), SCRIPT-284 (+1), SCRIPT-142, SCRIPT-221, SCRIPT-292, SCRIPT-293, SCRIPT-S141, SCRIPT-S236, SCRIPT-S237
+- [script-system-missions.md](features/script-system-missions.md): SCRIPT-220 (+1), SCRIPT-284 (+1), SCRIPT-115, SCRIPT-142, SCRIPT-221, SCRIPT-S141, SCRIPT-S236, SCRIPT-S237, SCRIPT-S243, SCRIPT-S244, SCRIPT-S247, SCRIPT-S248, SCRIPT-S249
 - [script-system-natives-animation.md](features/script-system-natives-animation.md): SCRIPT-272 (+1), SCRIPT-S110
 - [script-system-natives-world.md](features/script-system-natives-world.md): SCRIPT-279 (+14)
 - [script-system-natives.md](features/script-system-natives.md): SCRIPT-43 (+17), SCRIPT-44 (+15), SCRIPT-45 (+13), SCRIPT-7 (+11), SCRIPT-150 (+1), SCRIPT-56 (+1), SCRIPT-64 (+1), SCRIPT-98 (+1), SCRIPT-S97

@@ -5,6 +5,7 @@
 #include "assets/object_collision.hpp"
 #include "runtime/natives_animation.hpp"
 #include "runtime/natives_cutscene.hpp"
+#include "runtime/screen_fade.hpp"
 #include "runtime/natives_effects.hpp"
 #include "runtime/natives_world.hpp"
 #include "runtime/natives_objects.hpp"
@@ -94,9 +95,14 @@ struct ScriptPlacement {
     std::string target;
 };
 
-// FadeScreen 0x1a2e8c starts a fade of 0.5 s (immediate of its two start functions 0x252068 / 0x2520e8) and blocks
-// until it is done (0x25207c). STAND-IN: the curve is linear and the end is the elapsed time (SCRIPT-S6).
+// FadeScreen 0x1a2e8c starts the screen fade (screen_fade.hpp) with 0.5 s: 0x2520e8 for 0, 0x252068 otherwise, and
+// blocks until it is done (0x25207c).
 constexpr float kFadeSeconds = 0.5f;
+// The fades of DCamCutScenePlay 0x26fa18 (to black, 0.5 s with flag a) and of the cutscene mode enter 0x2fadb8 (from black).
+constexpr float kCutsceneModeFadeSeconds = 0.5f;
+// STAND-IN SCRIPT-S242: without flag a, 0x26fa18 fades to black in 0 s only when byte +0x10 of the current game mode
+// (0x2369c4) is not 1; the port has no game modes and always takes that path (the one the oracle took in mission 1-2).
+constexpr float kCutscenePlayFadeWithoutFlagA = 0.0f;
 
 // What the natives IsLevelUnlocked 0x2636e4, GetGameComplete 0x2635d0 and IsRedBrickExtraActive 0x2a6d34 read from the
 // loaded slot (docs/re/save-format.md). The defaults are those of a new game: only level 2 is unlocked (the slot
@@ -199,7 +205,7 @@ public:
     SoundNativeState& soundNatives() { return soundNatives_; }
     const SoundNativeState& soundNatives() const { return soundNatives_; }
     // Brightness of the screen set by FadeScreen: 1 normal, 0 black.
-    float fadeLevel() const { return fadeLevel_; }
+    float fadeLevel() const { return screenFade_.brightness(); }
     DirectorCamera& director() { return director_; }
     // Tip text, dialogue lines, dialogue background, mission title and summary (script_text.hpp).
     const ScriptTextState& text() const { return text_; }
@@ -307,7 +313,7 @@ private:
     AnimationNativeState animation_;
     AnimationDriver* animationDriver_ = nullptr;
     CutsceneNativeState cutscenes_;
-    float fadeLevel_ = 1.0f, fadeStart_ = 1.0f, fadeTarget_ = 1.0f, fadeElapsed_ = 0;
+    ScreenFade screenFade_;
     DirectorCamera director_;
 };
 

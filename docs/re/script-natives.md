@@ -4,7 +4,7 @@ Every native (script function) of the level scripts: handler address, argument c
 
 ## Current state
 
-- 245 natives are used by level and class scripts; handlers come from the static table at 0x359154 (69 entries of {name, handler, info = argument count | types << 8, 0}) and about 290 registrations `bl 0x23912c` from 0x15f8f8 [§2026-10-14T13:33](#ts-20261014-133339).
+- 245 natives are used by level and class scripts; handlers come from the static table at 0x359154 (69 entries of {name, handler, info = argument count | types << 8, 0}) and about 290 registrations `bl 0x23912c` from 0x15f8f8 [§2026-10-14T13:33](#ts-20261014-133339). A registration replaces the static entry: DCamCutScenePlay runs 0x26fa18, not the table's 0x2889e4 [cutscenes.md §2026-10-19T09:12:06](cutscenes.md#ts-20261019-091206).
 - `scriptfns.txt` documents only 300 of the 377 table entries, so "lists every native" in scripts.md is wrong [§2026-10-14T13:33](#ts-20261014-133339).
 - Handler ABI: `handler(r0 = thread, r1 = array of argument value pointers)`; return 1 = done, 0 = blocked (the executor repeats the call every update with thread flag bit 2 set); object arguments resolve through 0x22dacc [§2026-10-14T13:33](#ts-20261014-133339).
 - Classes: A flag/state getters and setters, B blocking, C needs a missing system, D debug only; batches 26 to 39 (SCRIPT-26..39) are one agent session each, listed in the batch table [§2026-10-14T13:33](#ts-20261014-133339).
@@ -15,6 +15,8 @@ Every native (script function) of the level scripts: handler address, argument c
 <a id="ts-20261014-133339"></a>
 
 ## 2026-10-14T13:33:39+02:00 — Census of the 245 natives used by level and class scripts, handler addresses, classes A-D and batches (llvm-objdump on game.arm.elf, C++ level loader; no emulator, no REA session)
+
+Corrected by [cutscenes.md §2026-10-19T09:12:06](cutscenes.md#ts-20261019-091206): the two handler sources do not agree for DCamCutScenePlay; the registration binds 0x26fa18 (which then calls the static-table handler 0x2889e4), and the trace shows 0x26fa18 running.
 Corrected by [script-natives-progress.md §2026-10-14T14:41](script-natives-progress.md#ts-20261014-144155): CountRacesWon is class A (not blocking) and the second argument of EnableStudsByGroup is not an enable flag.
 Corrected by [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311): none of the 17 batch 34 natives blocks (all return 1; class C with B? was wrong).
 Corrected by [script-natives-animation.md §2026-10-14T21:36](script-natives-animation.md#ts-20261014-213649): PlayCharAnim's handler is 0x29e5f0 and it does not block; PlayCutscene has its own body.

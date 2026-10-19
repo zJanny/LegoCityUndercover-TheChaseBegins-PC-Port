@@ -426,6 +426,7 @@ void LevelSession::draw(int width, int height) {
             sprites.push_back({{stud.centre[0], stud.centre[1], stud.centre[2]}, runtime::kStudTint[std::size_t(stud.kind)]});
     studSprites->draw(viewMatrix, mvp, sprites, runtime::studSpriteFrame(std::uint32_t(provisionalStudClockSeconds * double(runtime::kClockTicksPerSecond))),
                      runtime::kStudHalfSize);
+    drawUseMarkers(mvp);
     particles.draw(viewMatrix, mvp);
     drawZiplineRopes(viewMatrix, mvp);
     setScissorTest(false);
@@ -484,6 +485,7 @@ void LevelSession::reportScripted() const {
     std::cout << "scripted: " << updates << " updates, player moved " << std::hypot(moveX, moveZ)
               << " units, facing " << player->motion.facing << ", run timer " << player->motion.runTimer << ", height " << player->vertical.y << '\n';
     std::cout << "StoryProgress " << levelScripts.variable("StoryProgress") << '\n';
+    std::cout << "screen brightness " << levelScripts.fadeLevel() << '\n';
     std::cout << "player ended at " << player->motion.x << ' ' << player->vertical.y << ' ' << player->motion.z << '\n';
     std::cout << "studs: counter " << studs.counter() << ", " << studs.count(runtime::StudState::Collecting) << " collecting, "
               << studs.count(runtime::StudState::Done) << " collected, " << studs.count(runtime::StudState::Idle) << " left\n";
@@ -526,6 +528,7 @@ runtime::DebugGameValues LevelSession::debugValues() const {
 void LevelSession::releaseOverlays() {
     studSprites.reset();
     particles.releaseGl();
+    useMarkerRenderer.reset();
     ropeRenderer.reset();
     overlay.reset();
 }

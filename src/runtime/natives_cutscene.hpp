@@ -1,5 +1,5 @@
 #pragma once
-// Cutscene natives of batch SCRIPT-29 (docs/re/cutscenes.md): DCamCutSceneLoad 0x2889a4, DCamCutScenePlay 0x2889e4,
+// Cutscene natives of batch SCRIPT-29 (docs/re/cutscenes.md): DCamCutSceneLoad 0x2889a4, DCamCutScenePlay 0x26fa18 (-> 0x2889e4),
 // DCamCutSceneWait 0x288a40, DCamCutSceneFree 0x28898c, DCamCutsceneFadeDisable 0x2c09ec, PlayCutscene 0x1bf9dc and
 // PlayCutsceneNoFadeBackIn 0x2b9dac. The slot table of the original (8 slots of 0x24 bytes at 0x58976c, the object
 // pointer at +0x20) and its busy test 0x2297b0 are kept; the host loads and draws the in-engine cutscene and plays the
@@ -57,7 +57,8 @@ public:
     void setLengthSource(LengthSource source) { lengthSource_ = std::move(source); }
 
     void load(const std::string& name);
-    void play(const std::string& name, const std::array<bool, 4>& flags);
+    // False when the cutscene has no data (nothing plays).
+    bool play(const std::string& name, const std::array<bool, 4>& flags);
     void free(const std::string& name);
     // 0x2297b0: a loaded slot (named `name`; any slot for an empty name) holds the active object.
     bool busy(const std::string& name) const;
@@ -66,8 +67,12 @@ public:
     const CutscenePlaying* playing() const { return playing_ ? &*playing_ : nullptr; }
     // The picture is the cutscene: it is playing and the fade before its start has ended.
     bool shown() const { return playing_ && playing_->startFadeLeft <= 0; }
-    // Opacity of the black veil on the top screen, 0 clear to 1 black.
+    // Opacity of the black veil of the cutscene end on the top screen, 0 clear to 1 black (the fade before the start is
+    // the screen fade of the script runner).
     float veil() const;
+    // Once per cutscene: the cutscene mode was entered (0x2fadb8), at the end of the fade before the start.
+    // STAND-IN SCRIPT-S243: the mode switch of 0x25d26c is not read; the port enters at the end of the delay of flag a.
+    bool takeModeEntered();
     bool loaded(const std::string& name) const;
     bool fadeDisabled() const { return fadeDisabled_; }
     std::vector<CutsceneRequest> takeRequests();
@@ -99,6 +104,7 @@ private:
     float afterEnd_ = -1;
     bool fadeDisabled_ = false;
     bool hostPlaysMovies_ = false;
+    bool modeEntered_ = false;
 };
 
 }

@@ -46,6 +46,7 @@
 #include "runtime/collision.hpp"
 #include "runtime/debug_metrics.hpp"
 #include "runtime/detective.hpp"
+#include "runtime/use_marker.hpp"
 #include "runtime/use_spot.hpp"
 #include "runtime/level_start.hpp"
 #include "runtime/pad.hpp"
@@ -141,6 +142,8 @@ private:
     void updateCarry(const float playerPosition[3]);
     void loadDetective(chase::assets::FuseArchive& archive);
     void updateUseSpots(bool actionFree);
+    void updateUseMarkers(float dt);
+    void drawUseMarkers(const chase::render::Mat4& viewProjection);
     void updateDetective(float dt, bool actionFree, const std::function<void(const chase::runtime::SoundCall&)>& emit);
     int detectiveClip(int role) const;
     void drawFootprints();
@@ -264,6 +267,8 @@ private:
     game_carry::HeldObjects heldObjects;
     chase::runtime::DetectiveSet detective;
     chase::runtime::UseSpotSet useSpots;
+    chase::runtime::UseMarkers useMarkers;
+    std::optional<chase::render::ParticleRenderer> useMarkerRenderer;
     std::optional<chase::runtime::DetectiveRoles> detectiveRoles;
     std::vector<std::size_t> footprintInstances;
     game_detective_glass::Glass detectiveGlass;

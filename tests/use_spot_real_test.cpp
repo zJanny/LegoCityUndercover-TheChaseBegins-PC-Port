@@ -29,6 +29,8 @@ void cageSpot(const assets::Level& level, const assets::ClassLookup& classOf) {
                 spot.zoneHalf[2] == 2.0f,
             "UseBound centre 0, half 2");
     require(!spot.sendPlayerObject && spot.active, "defaults of SendPlayerObject and UseStartActive");
+    require(spot.matrix[12] == spot.position[0] && spot.matrix[13] == spot.position[1] && spot.matrix[14] == spot.position[2] && spot.matrix[5] == 1.0f,
+            "the node matrix of the spot (the frame of its use marker) stands at its position, upright");
 
     const assets::PlacedObjectState state;
     const float oracle[3] = {916.702f, 64.431f, 663.724f};

@@ -4,6 +4,7 @@
 #include "assets/assets.hpp"
 #include "assets/object_collision.hpp"
 
+#include <array>
 #include <string>
 #include <vector>
 
@@ -18,6 +19,7 @@ struct UseSpot {
     std::string instance;  // lower case
     std::size_t objectIndex = 0;
     float position[3] = {0, 0, 0};
+    std::array<float, 16> matrix{};  // node rows right, up, forward, translation (assets::placementMatrix)
     float zoneCentre[3] = {0, 0, 0};
     float zoneHalf[3] = {0, 0, 0};
     std::string triggerObject;      // record +0x18

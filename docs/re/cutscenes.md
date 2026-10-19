@@ -10,9 +10,9 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - Joint orientation: after sampling, the skeleton record's +0x88 quaternion is multiplied in (Hamilton product, 0x2485d8). [§2026-10-13T02:30](#ts-20261013-0230)
 - Cutscenes play at 30 frames per second (data evidence); soundtrack `music/csaudio/<id>.bwav` exists for 57 of 69. [§2026-10-13T03:20](#ts-20261013-0320)
 - Natives work on 8 slots of 0x24 bytes at 0x58976c: Load takes a free slot and builds the object, Play starts the cutscene mode without blocking, Wait returns `!busy(name)`, Free clears the object. [§2026-10-14T22:49](#ts-20261014-224929)
-- Flag a of Play is a 0.5 s fade to black before the start; the end fade (0.5 s out, 4 vblanks black, 0.7 s in) is measured, its code is not found. [§2026-10-14T23:52](#ts-20261014-235214)
+- One screen fade (block 0x529e30) serves FadeScreen and the cutscene mode; the DCamCutScenePlay handler 0x26fa18 fades to black (0.5 s with flag a, else at once), the mode enter 0x2fadb8 fades in 0.5 s, its update fades out 0.5 s at the end and the exit fades in 0.5 s (not after `7_9_A`). [§2026-10-19T09:12:06](#ts-20261019-091206) The end fade measured with `1_1_b` (0.5 s out, 4 vblanks black, 0.7 s in) is what the port still uses. [§2026-10-14T23:52](#ts-20261014-235214)
 - The level start plays `01_GameIntro` and then `1_1_a` through the `startup` script. [§2026-10-14T23:52](#ts-20261014-235214)
-- Open: Load's retry field `args[0]+0x44`, flags b, c, d, the generic fade code of the cutscene mode, 113 actor animations with a frame count differing from the camera, camera fields 7-11.
+- Open: Load's retry field `args[0]+0x44`, flags b, c, d, the fade draw function 0x24bda4 and the mode switch timing, 113 actor animations with a frame count differing from the camera, camera fields 7-11.
 
 <a id="ts-20261013-0230"></a>
 
@@ -56,6 +56,8 @@ Corrected by [levels.md §2026-10-13T12:49](levels.md#ts-20261013-1249): the row
 
 ## 2026-10-14T22:49:29+02:00 — Cutscene natives, slot table and the oracle run of 1_1_b (llvm-objdump on `artifacts/game/game.arm.elf`, oracle run on `gameplay-start`; REA was not used)
 
+Corrected by [cutscenes.md §2026-10-19T09:12:06](#ts-20261019-091206): the handler bound to DCamCutScenePlay is 0x26fa18, which fades and sets byte 0x376d18 before it calls 0x2889e4, so scripts always start mode 4.
+
 Handlers read: DCamCutSceneLoad 0x2889a4 (loader 0x196390), DCamCutScenePlay 0x2889e4 (0x1964dc), DCamCutSceneWait 0x288a40 (busy test 0x2297b0), DCamCutSceneFree 0x28898c (0x196144), PlayCutscene 0x1bf9dc, PlayCutsceneNoFadeBackIn 0x2b9dac, DCamCutsceneFadeDisable 0x2c09ec, cutscene end 0x2fac7c.
 
 - Slot table: 8 slots of 0x24 bytes at 0x58976c; a 32-byte name at +0, the cutscene object pointer at +0x20. Names compare with 0x25c8ac. The block at 0x58988c holds the active object at +0x28 (0x5898b4), c at +0x2c and d at +0x30.
@@ -77,6 +79,8 @@ Unknowns:
 
 ## 2026-10-14T23:52:14+02:00 — Cutscene fades measured in the oracle, the level start plays the intro (llvm-objdump on `artifacts/game/game.arm.elf`; Azahar OpenGL, RPC, port 24711, states `cutscene-1-1-b` and `gameplay-start`; REA was not used)
 
+Corrected by [cutscenes.md §2026-10-19T09:12:06](#ts-20261019-091206): 0x25ad90 is a string compare that is non-zero when the strings differ, so 0x2fac7c fades in after every cutscene except `7_9_A`; the fades of the cutscene mode are read there.
+
 - Cutscene end 0x2fac7c (the cutscene object's teardown): when byte 0x376d18 is set it compares the object's path with the string `DCSData/models/7_9_A/` (0x2fad98) and only for that cutscene starts a fade of 0.5 s (0x252068(colour 0x1166bc, 1, 0, s0 = 0.5), a wrapper of 0x256a14 with s1 = 0, s2 = 1); then it frees the object and clears +0x28 / +0x50. So the end fade of `1_1_b` does not come from this function; the generic fade belongs to the cutscene mode that 0x25d26c starts (a pushed event record in the table at 0x58613c, 12 bytes each, with the float a as its value) and was not traced.
 - Oracle `endfade` (state `cutscene-1-1-b`, `shotloop` back to back, 274 shots, mean brightness of the top screen; `artifacts/oracle/agentS-out/endfade_*`, local): the top picture is clear until vblank 118, falls linearly to black at vblank 148 (30 vblanks, 0.5 s), stays black for about 4 vblanks, the active cutscene pointer (0x5898b4) becomes 0 at vblank 149, then the game picture (camera behind the player) fades in linearly over about 43 vblanks (0.7 s) up to vblank 194. The bottom screen does not fade; it changes to the map at vblanks 174 to 194.
 - Oracle `startfade` (state `gameplay-start`, teleport onto the waypoint at vblank 20): the active pointer is set at vblank 57 and the top picture falls from 60.5 to 25.7 over the next 32 vblanks (0.5 s, linear) with the HUD still drawn at the start; then the cutscene picture appears. `1_1_b` is played with flags 1 1 1 1; `1_1_a` with 0 1 1 1, so flag a is the only difference and fits the fade before the start (a = 0 has none).
@@ -86,3 +90,24 @@ Unknowns:
 Unknowns:
 - The generic fade code of the cutscene mode (the consumer of the 0x25d26c record), what flags b, c and d control, whether `1_1_a` fades at its end like `1_1_b`, and whether the fade-in after the end is part of the cutscene mode or of the camera return.
 - The 0.7 s fade-in may include the camera blend back to the game camera.
+
+<a id="ts-20261019-091206"></a>
+
+## 2026-10-19T09:12:06+02:00 — One screen fade for FadeScreen and the cutscene mode, the DCamCutScenePlay handler 0x26fa18 (llvm-objdump on `artifacts/game/game.arm.elf`; Azahar GDB `freetrap`, OpenGL, port 24771, state `m12-13-cage-trigger`, no RPC; REA was not used)
+
+[Corrects §2026-10-14T22:49:29](#ts-20261014-224929) (the handler bound to DCamCutScenePlay), [Corrects §2026-10-14T23:52:14](#ts-20261014-235214) (the fade of the cutscene end 0x2fac7c) and [Corrects script-natives.md §2026-10-14T13:33:39](script-natives.md#ts-20261014-133339) (the two handler sources agree).
+
+**The screen fade (block 0x529e30).** The start 0x256a14(kind r0, byte r1, colour r2, s0 = seconds, s1 = start, s2 = rate) stores the kind (a draw function: 0x1166bc for the black fade, 0x1198d8, and 0x1166c0 = no fade, set by the init at 0x105c98) at +0x114, r1 at +0x118, the colour at +0x12c (r2's vector, else white for kind 0x1198d8 and black otherwise, alpha 1) and sets the timer at +0x11c: duration = seconds in clock ticks (0x114aa4), position = start x duration (0x1150e0), rate (0x1140a0). The position (0x1202f8) is (clock - start tick) x rate, clamped to [0, duration]; the value 0x252880 is position / duration, and 0 when the duration is 0. 0x2520e8 = start 1, rate -1 (to black); 0x252068 = start 0, rate +1 (from black). The test 0x25207c returns 0 for kind 0x1166c0, else 1 while the value is below 1 (rate >= 0) or above 0 (rate < 0). FadeScreen 0x1a2e8c starts 0x2520e8 for 0 and 0x252068 otherwise, kind 0x1166bc, s0 = 0.5, r1 = 0x1d9584() != 0, and returns `!0x25207c()`. Every start replaces the fade before; there is one fade for the whole game.
+
+**DCamCutScenePlay is 0x26fa18.** The registration at 0x1625e8 (`bl 0x23912c`, name at 0x16290c, 5 arguments) binds `DCamCutScenePlay` to 0x26fa18; the static table entry at 0x359528 holds 0x2889e4, which 0x26fa18 tail-calls. Arguments are 8 bytes apart (argument 0 at +4, the next at +0xc; the same in 0x2889e4). 0x26fa18 sets byte 0x376d18 to 1, clears bytes +0x23 and +0x24 of the block 0x5163e8, and then: flag a set: 0x2520e8 with 0.5 s; flag a clear: when byte +0x10 of the current game mode (0x2369c4) is 1, byte 0x374600 = 1 and no fade, else 0x2520e8 with 0 s (black at once). Then 0x2889e4 → 0x1964dc, which pushes mode 4 (byte 0x376d18 set) through 0x25d26c.
+
+**The cutscene mode (vtable 0x363134: +8 enter 0x2fadb8, +0x1c update 0x2fae68, +0x20 exit 0x2fac7c).** Enter: with byte 0x376d18 set, 0x252068 with 0.5 s (from black). Update: when 0x2d19cc(cutscene) returns 0 and the byte is set, 0x2520e8 with 0.5 s, then 0x197134(1, the floats +0x2c / +0x30 of 0x58988c). Exit: with the byte set, `0x25ad90(object path, "DCSData/models/7_9_A/")` (a case-insensitive string compare, non-zero when different) decides a 0x252068 with 0.5 s, so every cutscene except `7_9_A` fades in after its end; then the byte is cleared.
+
+**Oracle (`artifacts/scratch/r27-A/cage_fade.txt` → `artifacts/oracle/r27A-out/cagefade.txt`).** `hold A`, `frames 3`, `hold -`, `frames 2`, then `freetrap 75` at 0x256a14, 0x25d26c, 0x22ce9c and 0x2fac7c (seconds are wall clock including the stops): 3.78 s 0x256a14 kind 0x1166bc from FadeScreen (lr 0x1a2ee8, r1 0); 7.96 s from 0x26fa18 (lr 0x26faa0: the flag-a-clear path of `DCamCutScenePlay "1_2_c" 0 1 1 1`); 8.27 s 0x25d26c mode 4 (lr 0x1966f0); 8.97 s kind 0x1166bc, r1 1, r2 0 through the virtual call at 0x1098bc (the enter 0x2fadb8, the only `b 0x252068` with r1 = 1); 28.83 s from the update (lr 0x2faf38); 29.76 s exit 0x2fac7c (lr 0x10967c); 30.03 s the exit's fade in (lr 0x2face8); 30.51 s SpawnScript `1-2_MissionEnd` (lr 0x1c3748); 50.74 s and 51.09 s `1-3_MissionStart` and `1-3_Animations`.
+
+**Port.** `src/runtime/screen_fade.{hpp,cpp}` (`ScreenFade`) holds the fade; `ScriptRunner` advances it every update, FadeScreen starts it and blocks while it runs, DCamCutScenePlay fades to black (0.5 s with flag a, else 0 s) when the cutscene plays, and `CutsceneNativeState::takeModeEntered` starts the 0.5 s fade in at the end of the flag-a delay. `fadeLevel()` is the value. The veil of the cutscene end (MOVIE-S20) is unchanged; the fade before the start is now the screen fade, not the veil. Test `natives-cutscene` (synthetic) and `game-cage-release-1-2` (chase-game from the cage).
+
+Unknowns:
+- Byte +0x10 of the game mode records (0x2369c4) in the game modes other than the one seen here; the mode switch of 0x25d26c and when the enter runs relative to the fade before it; what 0x2d19cc tests at the end and what 0x197134 does with the two floats.
+- The draw function 0x24bda4 behind kind 0x1166bc (how the value becomes the picture, and on which screen: the end fade measured in §2026-10-14T23:52:14 did not darken the bottom screen); r1 of the start (+0x118).
+- Other names whose static-table handler differs from the registered one were not checked.

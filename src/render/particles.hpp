@@ -15,7 +15,8 @@ class ParticleRendererImpl;
 
 class ParticleRenderer {
 public:
-    ParticleRenderer(assets::FuseArchive& archive, std::vector<std::string> textureNames);
+    // Textures load from <directory><name>.btga.
+    ParticleRenderer(assets::FuseArchive& archive, std::vector<std::string> textureNames, std::string directory = "particles/");
     ~ParticleRenderer();
     ParticleRenderer(const ParticleRenderer&) = delete;
     ParticleRenderer& operator=(const ParticleRenderer&) = delete;

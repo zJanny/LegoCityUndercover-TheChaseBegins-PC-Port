@@ -46,7 +46,7 @@ target_link_libraries(chase_runtime PUBLIC chase_assets)
 target_include_directories(chase_runtime PUBLIC src)
 target_compile_options(chase_runtime PRIVATE -Wall -Wextra -Wpedantic -ffp-contract=off)
 set_target_properties(chase_runtime PROPERTIES POSITION_INDEPENDENT_CODE ON)
-target_sources(chase_runtime PRIVATE src/runtime/studs.cpp src/runtime/sound_events.cpp src/runtime/music.cpp src/runtime/level_start.cpp src/runtime/script_runner.cpp src/runtime/natives_objects.cpp src/runtime/natives_effects.cpp src/runtime/natives_world.cpp src/runtime/script_runner_natives.cpp src/runtime/natives_animation.cpp src/runtime/natives_cutscene.cpp src/runtime/natives_progress.cpp src/runtime/natives_music.cpp src/runtime/natives_sound.cpp src/runtime/music_block.cpp src/runtime/door.cpp src/runtime/scene_change.cpp src/runtime/room_streaming.cpp src/runtime/room_streamer.cpp src/runtime/scene_start.cpp src/runtime/dcam.cpp src/runtime/debug_metrics.cpp src/runtime/object_visibility.cpp src/runtime/script_text.cpp src/runtime/script_triggers.cpp src/runtime/objectives.cpp src/runtime/ai.cpp src/runtime/ai_simple_path.cpp src/runtime/fog.cpp src/runtime/lighting.cpp src/runtime/sky.cpp src/runtime/script_placement.cpp src/runtime/ai_go_to_target.cpp src/runtime/nav_grid.cpp src/runtime/nav_path.cpp src/runtime/nav_follow.cpp src/runtime/nav_load.cpp src/runtime/room_locator.cpp src/runtime/object_rooms.cpp src/runtime/ai_super_jump.cpp src/runtime/ai_face_target.cpp src/runtime/waypoints.cpp src/runtime/buildit.cpp src/runtime/buildit_set.cpp src/runtime/buildit_wobble.cpp src/runtime/prop_animation.cpp src/runtime/prop_nodes.cpp src/runtime/buildit_bricks.cpp src/runtime/mesh_bouncer.cpp src/runtime/reference_trigger.cpp src/runtime/vehicle.cpp src/runtime/vehicle_boarding.cpp src/runtime/vehicle_drive.cpp src/runtime/vehicle_body.cpp src/runtime/vehicle_wheels.cpp src/runtime/vehicle_drivetrain.cpp src/runtime/vehicle_wheel_pose.cpp src/runtime/vehicle_hud.cpp src/runtime/vehicle_damage.cpp src/runtime/vehicle_break.cpp src/runtime/head_icon.cpp src/runtime/floor_walk.cpp src/runtime/vehicle_collision.cpp src/runtime/vehicle_box_contact.cpp src/runtime/carry.cpp src/runtime/carry_animation.cpp src/runtime/scanner.cpp src/runtime/cutscene_cast.cpp src/runtime/collision_enable.cpp src/runtime/game_random.cpp src/runtime/npc_idle.cpp src/runtime/animation_slots.cpp src/runtime/director_hold.cpp src/runtime/script_thread_log.cpp src/runtime/vehicle_world.cpp src/runtime/vehicle_sphere_sweep.cpp src/runtime/buildit_player.cpp src/runtime/vehicle_prop_smash.cpp src/runtime/detective.cpp src/runtime/hand_item.cpp src/runtime/use_spot.cpp src/runtime/zipline.cpp src/runtime/zipline_rope.cpp src/runtime/brick_grab.cpp src/runtime/climb_bar.cpp src/runtime/acrobat_pole.cpp src/runtime/pole.cpp)
+target_sources(chase_runtime PRIVATE src/runtime/studs.cpp src/runtime/sound_events.cpp src/runtime/music.cpp src/runtime/level_start.cpp src/runtime/script_runner.cpp src/runtime/natives_objects.cpp src/runtime/natives_effects.cpp src/runtime/natives_world.cpp src/runtime/script_runner_natives.cpp src/runtime/natives_animation.cpp src/runtime/natives_cutscene.cpp src/runtime/screen_fade.cpp src/runtime/natives_progress.cpp src/runtime/natives_music.cpp src/runtime/natives_sound.cpp src/runtime/music_block.cpp src/runtime/door.cpp src/runtime/scene_change.cpp src/runtime/room_streaming.cpp src/runtime/room_streamer.cpp src/runtime/scene_start.cpp src/runtime/dcam.cpp src/runtime/debug_metrics.cpp src/runtime/object_visibility.cpp src/runtime/script_text.cpp src/runtime/script_triggers.cpp src/runtime/objectives.cpp src/runtime/ai.cpp src/runtime/ai_simple_path.cpp src/runtime/fog.cpp src/runtime/lighting.cpp src/runtime/sky.cpp src/runtime/script_placement.cpp src/runtime/ai_go_to_target.cpp src/runtime/nav_grid.cpp src/runtime/nav_path.cpp src/runtime/nav_follow.cpp src/runtime/nav_load.cpp src/runtime/room_locator.cpp src/runtime/object_rooms.cpp src/runtime/ai_super_jump.cpp src/runtime/ai_face_target.cpp src/runtime/waypoints.cpp src/runtime/buildit.cpp src/runtime/buildit_set.cpp src/runtime/buildit_wobble.cpp src/runtime/prop_animation.cpp src/runtime/prop_nodes.cpp src/runtime/buildit_bricks.cpp src/runtime/mesh_bouncer.cpp src/runtime/reference_trigger.cpp src/runtime/vehicle.cpp src/runtime/vehicle_boarding.cpp src/runtime/vehicle_drive.cpp src/runtime/vehicle_body.cpp src/runtime/vehicle_wheels.cpp src/runtime/vehicle_drivetrain.cpp src/runtime/vehicle_wheel_pose.cpp src/runtime/vehicle_hud.cpp src/runtime/vehicle_damage.cpp src/runtime/vehicle_break.cpp src/runtime/head_icon.cpp src/runtime/floor_walk.cpp src/runtime/vehicle_collision.cpp src/runtime/vehicle_box_contact.cpp src/runtime/carry.cpp src/runtime/carry_animation.cpp src/runtime/scanner.cpp src/runtime/cutscene_cast.cpp src/runtime/collision_enable.cpp src/runtime/game_random.cpp src/runtime/npc_idle.cpp src/runtime/animation_slots.cpp src/runtime/director_hold.cpp src/runtime/script_thread_log.cpp src/runtime/vehicle_world.cpp src/runtime/vehicle_sphere_sweep.cpp src/runtime/buildit_player.cpp src/runtime/vehicle_prop_smash.cpp src/runtime/detective.cpp src/runtime/hand_item.cpp src/runtime/use_spot.cpp src/runtime/use_marker.cpp src/runtime/zipline.cpp src/runtime/zipline_rope.cpp src/runtime/brick_grab.cpp src/runtime/climb_bar.cpp src/runtime/acrobat_pole.cpp src/runtime/pole.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/player_attack.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/vehicle_camera.cpp src/runtime/particles.cpp src/runtime/debris.cpp src/runtime/prop_destroy.cpp src/runtime/destroy_message.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/prop_wobbly_destructible.cpp src/runtime/prop_bouncer.cpp)
@@ -111,7 +111,7 @@ if(EPOXY_FOUND)
   target_link_libraries(chase-viewer PRIVATE chase_render chase_audio chase_input)
   target_compile_options(chase-viewer PRIVATE -Wall -Wextra -Wpedantic)
   if(FFMPEG_FOUND)
-    add_executable(chase-game src/game.cpp src/game_options.cpp src/game_player.cpp src/game_carry.cpp src/game_scanner.cpp src/game_doors.cpp src/game_prop_parts.cpp src/game_level.cpp src/game_level_update.cpp src/game_vehicle.cpp src/game_vehicle_break.cpp src/game_vehicle_place.cpp src/game_vehicle_camera.cpp src/game_level_rooms.cpp src/game_cutscene.cpp src/game_level_cutscene.cpp src/game_characters.cpp src/game_particles.cpp src/game_level_natives.cpp src/game_detective.cpp src/game_detective_glass.cpp src/game_effects.cpp src/game_vehicle_effects.cpp src/game_zipline.cpp src/game_brick_grab.cpp src/game_climb_bar.cpp src/game_acrobat_pole.cpp src/game_pole.cpp)
+    add_executable(chase-game src/game.cpp src/game_options.cpp src/game_player.cpp src/game_carry.cpp src/game_scanner.cpp src/game_doors.cpp src/game_prop_parts.cpp src/game_level.cpp src/game_level_update.cpp src/game_vehicle.cpp src/game_vehicle_break.cpp src/game_vehicle_place.cpp src/game_vehicle_camera.cpp src/game_level_rooms.cpp src/game_cutscene.cpp src/game_level_cutscene.cpp src/game_characters.cpp src/game_particles.cpp src/game_level_natives.cpp src/game_detective.cpp src/game_use_spot.cpp src/game_detective_glass.cpp src/game_effects.cpp src/game_vehicle_effects.cpp src/game_zipline.cpp src/game_brick_grab.cpp src/game_climb_bar.cpp src/game_acrobat_pole.cpp src/game_pole.cpp)
     target_sources(chase-game PRIVATE src/game_props_destructible.cpp src/game_prop_destroy.cpp)
     target_sources(chase-game PRIVATE src/game_attack.cpp)
     target_link_libraries(chase-game PRIVATE chase_render chase_runtime chase_input chase_audio chase_frontend_movie chase_save_progress chase_save_tables)
@@ -251,6 +251,10 @@ if(BUILD_TESTING)
   target_link_libraries(natives-cutscene-test PRIVATE chase_runtime)
   target_compile_options(natives-cutscene-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME natives-cutscene COMMAND natives-cutscene-test)
+  add_executable(use-marker-test tests/use_marker_test.cpp)
+  target_link_libraries(use-marker-test PRIVATE chase_runtime)
+  target_compile_options(use-marker-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME use-marker COMMAND use-marker-test)
   add_executable(cutscene-cast-test tests/cutscene_cast_test.cpp)
   target_link_libraries(cutscene-cast-test PRIVATE chase_runtime chase_assets)
   target_compile_options(cutscene-cast-test PRIVATE -Wall -Wextra -Wpedantic)
@@ -1152,7 +1156,8 @@ if(BUILD_TESTING)
     set_tests_properties(game-detective-1-2 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
       PASS_REGULAR_EXPRESSION "detective: player state 1 at update 160.*1-2_dtv_dogspot_02 state 1 at update 161.*player state 0 at update 197.*1-2_dtv_dogspot_02 state 2 at update 202.*player state 2 at update 202.*player state 3 at update 226.*1-2_dtv_dogpath_xspot01 state 1 at update 270.*1-2_dtv_dogpath_xspot01 state 2 at update 302.*1-2_trapdoor_03 state 2 at update 333.*script 1-2_SO_Dspot_02_X started at update 351")
     # Mission 1-2, the dog cage (SCRIPT-111): 1-2_Pringles_Cage_Locked enables the use spot 1-2_Dog_Cage_Use_Spot, A on the user's trigger position
-    # (oracle state m12-13-cage-trigger) fires 1-2_Cage_Key_Target_Script through the spot's TriggerObject.
+    # (oracle state m12-13-cage-trigger) fires 1-2_Cage_Key_Target_Script through the spot's TriggerObject. The use marker (SCRIPT-292) is shown
+    # while the spot is usable (seen on the ground in the oracle in that state) and goes after the use, when 0x236624 switched the zone off.
     add_test(NAME game-use-spot-1-2 COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
@@ -1160,7 +1165,19 @@ if(BUILD_TESTING)
       --start "916.702 64.431 663.724" --facing 0 --call-script 1-2_Pringles_Cage_Locked
       --script "0 0 5;0 0 1 A;0 0 60")
     set_tests_properties(game-use-spot-1-2 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
-      PASS_REGULAR_EXPRESSION "use spot: 1-2_dog_cage_use_spot triggers 1-2_cage_key_target_script at update [0-9]+.*script 1-2_Cage_Key_Target_Script started at update [0-9]+")
+      PASS_REGULAR_EXPRESSION "use marker: 1-2_dog_cage_use_spot shown at update 0.*use spot: 1-2_dog_cage_use_spot triggers 1-2_cage_key_target_script at update [0-9]+.*script 1-2_Cage_Key_Target_Script started at update [0-9]+.*use marker: 1-2_dog_cage_use_spot gone at update [0-9]+")
+    # Mission 1-2, the dog released (SCRIPT-293): 1-2_Cage_Key_Target_Script fades the screen to black (FadeScreen 0), the
+    # cutscene mode of 1_2_c fades it in again (DCamCutScenePlay handler 0x26fa18, mode enter 0x2fadb8; gdb trace from the user's
+    # state m12-13-cage-trigger, docs/re/cutscenes.md), and after the cutscene 1-2_MissionEnd follows with the game picture.
+    # The player starts on the use spot (oracle position of m12-13-cage-trigger); the update numbers are the port's.
+    add_test(NAME game-cage-release-1-2 COMMAND chase-game
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
+      --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes
+      --start "916.702 64.431 663.724" --facing 0 --call-script 1-2_Pringles_Cage_Locked
+      --script "0 0 5;0 0 1 A;0 0 760")
+    set_tests_properties(game-cage-release-1-2 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
+      PASS_REGULAR_EXPRESSION "cutscene 1_2_c started at update [0-9]+.*cutscene 1_2_c ended at update [0-9]+.*script 1-2_MissionEnd started at update [0-9]+.*screen brightness 1\n")
     # Mission 1-2, the alley (DETECT-2): the Doorlock script 1-2_Spawn_Doorlock (the waypoint's TriggerScript) passes WaitForCurrentCharAnim on
     # 1-2_Doorlock_Holmes because PlayCharAnim leaves the idle state (state 0x50, docs/re/abilities-detective.md), ends, and then A on the first
     # detective point (oracle state m12-4-detective-point, the teleport stands in for the walk) switches the detective tool on and enables
@@ -1422,7 +1439,7 @@ add_executable(camera-lock-census tools/camera_lock_census.cpp)
 target_link_libraries(camera-lock-census PRIVATE chase_runtime chase_assets)
 target_compile_options(camera-lock-census PRIVATE -Wall -Wextra -Wpedantic)
 
-foreach(slow_test game-doorlock-detective-1-2 game-mission-1-1 game-mission-1-1-start game-vehicle-drive game-vehicle-room game-vehicle-hit game-vehicle-smash game-vehicle-break game-director-hold game-director-release game-van-escort waypoint-marker-shot audio-real-data)
+foreach(slow_test game-doorlock-detective-1-2 game-cage-release-1-2 game-mission-1-1 game-mission-1-1-start game-vehicle-drive game-vehicle-room game-vehicle-hit game-vehicle-smash game-vehicle-break game-director-hold game-director-release game-van-escort waypoint-marker-shot audio-real-data)
   if(TEST ${slow_test})
     set_property(TEST ${slow_test} APPEND PROPERTY LABELS slow)
   endif()
