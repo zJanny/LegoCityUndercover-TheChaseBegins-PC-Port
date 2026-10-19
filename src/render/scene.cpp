@@ -197,6 +197,7 @@ public:
                   const std::map<std::string, std::string>& textureOverrides = {}, const std::string& key = "", int onlyMesh = -1);
     bool setInstanceMesh(std::size_t instance, const std::string& path, int mesh);
     std::vector<std::ptrdiff_t> addModelNodes(const std::string& path, const Mat4& placement);
+    void setNodeMatrix(std::size_t instance, int node, const Matrix& matrix) { instances_.at(instance).nodeMatrix[node] = matrix; }
     void pose(const std::string& key, const std::vector<Matrix>& skin);
     std::size_t skinnedParts(const std::string& path) const;
     void bounds(float centre[3], float& radius) const;
@@ -236,6 +237,9 @@ private:
         std::vector<bool> slotIsFlat;
         std::uint8_t colour[4] = {255, 255, 255, 255}, specular[4] = {255, 255, 255, 255};
         bool doubled = false;
+        int node = -1;
+        Mat4 nodeMatrix = identity();
+        bool placed = false;
     };
     struct TextureInfo {
         GLuint id = 0;
@@ -260,10 +264,11 @@ private:
         float fade = 1.0f;
         std::array<float, 3> tint{1, 1, 1};
         bool whiteMaterials = false;
+        std::map<int, Mat4> nodeMatrix = {};
     };
     void drawInstances(const Mat4& viewProjection, bool skyPass) const;
     const TextureInfo& texture(const std::string& name, const std::string& modelDir);
-    DrawPart upload(const ModelPart& part, LoadedModel& model);
+    DrawPart upload(const ModelPart& part, LoadedModel& model, const Mat4& nodeMatrix = identity());
     void drawPart(GLuint program, const DrawPart& part, const MaterialState& m, bool culling, bool skyPass, bool white) const;
     void setPartLighting(GLuint program, const DrawPart& part, const MaterialState& m, bool white) const;
     const MaterialState& overriddenState(const DrawPart& part) const;
@@ -305,17 +310,20 @@ bool SceneImpl::addModel(const std::string& path, const Mat4& transform,
         Model model = parseModel(archive_.read(*entry));
         LoadedModel out;
         const std::string dir = directory(lower(path));
-        for (std::size_t meshIndex = 0; meshIndex < model.meshes.size(); ++meshIndex) {
-            if (onlyMesh >= 0 && int(meshIndex) != onlyMesh) continue;
-            for (const auto& unplaced : model.meshes[meshIndex].parts) {
-                std::optional<ModelPart> placedSkin;
-                if (unplaced.flags & AttrSkin) placedSkin = skinnedPartInModelSpace(model, meshIndex, unplaced);
-                const ModelPart& part = placedSkin ? *placedSkin : unplaced;
+        for (std::size_t node = 0; node < model.nodeMesh.size(); ++node) {
+            const int meshIndex = model.nodeMesh[node];
+            if (meshIndex < 0 || std::size_t(meshIndex) >= model.meshes.size()) continue;
+            if (onlyMesh >= 0 && meshIndex != onlyMesh) continue;
+            const Mat4 nodeMatrix = onlyMesh >= 0 ? identity() : nodeDrawMatrix(model, node);
+            for (const auto& part : model.meshes[std::size_t(meshIndex)].parts) {
                 std::string texName = part.textures.empty() ? "" : part.textures.front();
                 bool skip = false;
                 for (const auto& word : exclude_) skip |= lower(texName).find(word) != std::string::npos;
                 if (skip || part.indices.empty()) continue;
-                DrawPart d = upload(part, out);
+                DrawPart d = upload(part, out, nodeMatrix);
+                d.node = int(node);
+                d.nodeMatrix = nodeMatrix;
+                d.placed = nodeMatrix != identity();
                 const std::size_t slots = d.hasMaterial ? part.textures.size() : 0;
                 d.slotTexture.assign(slots, 0);
                 d.slotFlat.assign(slots, {1, 1, 1, 1});
@@ -540,11 +548,17 @@ void SceneImpl::drawInstances(const Mat4& viewProjection, bool skyPass) const {
     for (int pass = 0; pass < 2; ++pass) {
         for (const auto& instance : instances_) {
             if (!instance.visible || instance.sky != skyPass) continue;
-            Mat4 m = multiply(viewProjection, instance.transform);
+            const Mat4 m = multiply(viewProjection, instance.transform);
+            const auto setMatrices = [&](const Mat4& world) {
+                const Mat4 clip = multiply(viewProjection, world);
+                glUniformMatrix4fv(mvp, 1, GL_FALSE, clip.data());
+                glUniformMatrix4fv(model, 1, GL_FALSE, world.data());
+            };
             glUniformMatrix4fv(mvp, 1, GL_FALSE, m.data());
             glUniformMatrix4fv(model, 1, GL_FALSE, instance.transform.data());
             glUniform1f(fadeLocation, instance.fade);
             glUniform3fv(tintLocation, 1, instance.tint.data());
+            bool partMatrices = false;
             for (const auto& part : instance.model->parts) {
                 const bool blended = part.hasMaterial && (part.material.blendSource != 1 || part.material.blendDestination != 0);
                 if (blended != (pass == 1)) continue;
@@ -556,6 +570,14 @@ void SceneImpl::drawInstances(const Mat4& viewProjection, bool skyPass) const {
                     glBlendFunc(factors[std::min(part.material.blendSource, 9u)], factors[std::min(part.material.blendDestination, 9u)]);
                 } else {
                     glDisable(GL_BLEND);
+                }
+                const auto replaced = instance.nodeMatrix.find(part.node);
+                if (replaced != instance.nodeMatrix.end() || part.placed) {
+                    setMatrices(multiply(instance.transform, replaced != instance.nodeMatrix.end() ? replaced->second : part.nodeMatrix));
+                    partMatrices = true;
+                } else if (partMatrices) {
+                    setMatrices(instance.transform);
+                    partMatrices = false;
                 }
                 const bool white = instance.whiteMaterials && part.hasMaterial && part.whiteMaterial.supported;
                 const MaterialState* state = white ? &part.whiteMaterial : &part.material;
@@ -621,14 +643,15 @@ const SceneImpl::TextureInfo& SceneImpl::texture(const std::string& name, const 
     return textures_.emplace(key, info).first->second;
 }
 
-SceneImpl::DrawPart SceneImpl::upload(const ModelPart& part, LoadedModel& model) {
+SceneImpl::DrawPart SceneImpl::upload(const ModelPart& part, LoadedModel& model, const Mat4& nodeMatrix) {
     std::vector<GpuVertex> vertices;
     vertices.reserve(part.vertices.size());
     for (const auto& v : part.vertices) {
         vertices.push_back(toGpu(v, part.flags));
         for (int i = 0; i < 3; ++i) {
-            model.lo[i] = std::min(model.lo[i], v.position[i]);
-            model.hi[i] = std::max(model.hi[i], v.position[i]);
+            const float p = v.position[0] * nodeMatrix[i] + v.position[1] * nodeMatrix[4 + i] + v.position[2] * nodeMatrix[8 + i] + nodeMatrix[12 + i];
+            model.lo[i] = std::min(model.lo[i], p);
+            model.hi[i] = std::max(model.hi[i], p);
         }
     }
     DrawPart d;
@@ -683,6 +706,8 @@ bool Scene::setInstanceMesh(std::size_t instance, const std::string& path, int m
 std::vector<std::ptrdiff_t> Scene::addModelNodes(const std::string& path, const Mat4& placement) {
     return impl_->addModelNodes(path, placement);
 }
+
+void Scene::setNodeMatrix(std::size_t instance, int node, const Matrix& matrix) { impl_->setNodeMatrix(instance, node, matrix); }
 
 void Scene::pose(const std::string& key, const std::vector<Matrix>& skin) { impl_->pose(key, skin); }
 

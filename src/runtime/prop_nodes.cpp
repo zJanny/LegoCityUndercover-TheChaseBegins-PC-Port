@@ -95,9 +95,7 @@ NodeMatrix nodeFlight(const NodePose& start, const NodePose& end, float t) {
 PropNodes PropNodes::of(const assets::Model& model) {
     PropNodes nodes;
     nodes.mesh = model.nodeMesh;
-    nodes.local.resize(model.nodeMesh.size(), identityMatrix());
-    for (std::size_t n = 0; n < model.nodeMatrices.size() && n < nodes.local.size(); ++n)
-        if (model.nodeMatrices[n][15] != 0.0f) nodes.local[n] = model.nodeMatrices[n];
+    for (std::size_t n = 0; n < model.nodeMesh.size(); ++n) nodes.local.push_back(assets::nodeDrawMatrix(model, n));
     return nodes;
 }
 

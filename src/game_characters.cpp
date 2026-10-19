@@ -135,8 +135,8 @@ std::optional<BodyPose> LevelCharacters::bodyPose(const std::string& instance) c
     if (!entry) return std::nullopt;
     BodyPose pose{entry->world, std::nullopt, std::nullopt};
     if (entry->skin.empty()) return pose;
-    pose.head = render::jointWorld(*entry->rig, "head", entry->skin, entry->world);
-    pose.hat = render::jointWorld(*entry->rig, "hat", entry->skin, entry->world);
+    if (entry->rig->headJoint) pose.head = render::attachedModelWorld(entry->rig->headJoint, entry->skin, entry->world);
+    if (entry->rig->hatJoint) pose.hat = render::attachedModelWorld(entry->rig->hatJoint, entry->skin, entry->world);
     return pose;
 }
 

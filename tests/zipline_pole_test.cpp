@@ -1,4 +1,5 @@
-// The matrix of a zipline anchor's pole (src/runtime/zipline_pole.cpp): the model's node matrix applied first, then the anchor's node.
+// The pole of a zipline anchor: the model draw applies the model's node matrix (assets::nodeDrawMatrix, 0x10e028) before the anchor's node
+// (src/runtime/zipline_pole.cpp).
 #include "runtime/zipline_pole.hpp"
 
 #include <cmath>
@@ -24,14 +25,14 @@ int main() {
     using namespace chase;
     try {
         assets::Model model;
-        require(!runtime::modelRootNodeMatrix(model), "a model without nodes has no root matrix");
         model.nodeMesh = {0};
         model.nodeMatrices.resize(1);
-        require(!runtime::modelRootNodeMatrix(model), "a zero matrix is not a root matrix");
+        const Matrix identity = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
+        require(assets::nodeDrawMatrix(model, 0) == identity, "a node matrix with w 0 draws with the identity");
         // Recorded from models/ability_parkour_zip_line/ability_parkour_zip_line.bfnmdl (parseModel dump of node 0).
         model.nodeMatrices[0] = {0, 0, -1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, -27.432f, 0, 1};
-        const auto root = runtime::modelRootNodeMatrix(model);
-        require(root.has_value(), "node 0 matrix");
+        const Matrix node = assets::nodeDrawMatrix(model, 0);
+        require(node == model.nodeMatrices[0], "node 0 matrix");
 
         runtime::ZiplineAnchor anchor;
         anchor.position[0] = 10;
@@ -40,13 +41,13 @@ int main() {
         const Matrix placement = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 10, 50, 20, 1};
         const float top[3] = {0.5f, 27.5f, 0.0f};
         float out[3];
-        point(runtime::ziplinePoleMatrix(*root, anchor, placement), top, out);
+        point(assets::multiply(node, runtime::ziplineAnchorNode(anchor, placement)), top, out);
         require(near(out[0], 10) && std::fabs(out[1] - 50.068f) < 1e-3f && near(out[2], 19.5f), "untargeted pole uses the placement");
 
         anchor.target = 0;
         anchor.right[0] = 0; anchor.right[2] = -1;
         anchor.forward[0] = 1; anchor.forward[2] = 0;
-        point(runtime::ziplinePoleMatrix(*root, anchor, placement), top, out);
+        point(assets::multiply(node, runtime::ziplineAnchorNode(anchor, placement)), top, out);
         require(near(out[0], 9.5f) && std::fabs(out[1] - 50.068f) < 1e-3f && near(out[2], 20.0f), "linked pole is turned by the node rows");
     } catch (const std::exception& error) {
         std::cerr << "zipline-pole-test: " << error.what() << '\n';

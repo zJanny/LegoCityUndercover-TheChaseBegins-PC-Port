@@ -192,10 +192,11 @@ struct Model {
     std::vector<CollisionItem> collision;
 };
 Model parseModel(const Bytes& data);
-// A skinned mesh's vertices are stored in the space of its node: the skeleton's bind joints sit at the node's matrix times the vertices
-// (policebarker: the wheel vertices average 1.0936 below the Wheels joints' 0.4976 height, the node matrix lifts them by 1.5909; prop_furnacevent
-// 0.1905 in x). Returns the part with the node matrix applied to positions and normals, unchanged for a mesh without a placed node.
-ModelPart skinnedPartInModelSpace(const Model& model, std::size_t meshIndex, const ModelPart& part);
+// The matrix a model node's mesh is drawn with before the node world: the model draw 0x205160 asks 0x10e028 for every node with a mesh,
+// which takes the node's entry of the scene node's palette (node+0x110, a copy of model+0x20 once 0x22cbbc has set an entry) or of
+// model+0x20 when the entry's w (+0x3c) is not 0, else the identity, and composes palette entry · node world (0x2588f4, row vectors).
+// Skinned vertices are skinned first: the vertex shader multiplies by the bone palette and then by the matrix (docs/re/models.md).
+std::array<float, 16> nodeDrawMatrix(const Model& model, std::size_t node);
 
 // One PICA texture-environment stage as the game writes it (0x12e460, command record from 0x24c56c):
 // the SOURCE, OPERAND, COMBINER, COLOR and SCALE register values of registers 0xc0 + 8 * stage .. + 4
@@ -456,6 +457,7 @@ struct DrawableObjects {
     std::vector<Placement> waypoints;  // props/map_* markers that have a model; drawn only while a script switched them on
 };
 DrawableObjects drawableObjects(FuseArchive& archive, const Level& level);
+DrawableObjects drawableObjects(FuseArchive& archive, const Level& level, const ClassLookup& classOf);
 // The point object "Player1Start": loader 0x2e6264 finds it by name (0x23b350) and gives the
 // player's scene node its transform (0x213284 builds the matrix, 0x24c118 stores it).
 std::optional<Placement> playerStart(const Level& level);

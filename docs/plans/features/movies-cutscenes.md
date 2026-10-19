@@ -6,7 +6,7 @@ Mobiclip `.moflex` movies with subtitles (FMV player and the shared `chase_movie
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-19T10:05:56+02:00. The cutscene end fades come from the code (SCRIPT-298 closed, MOVIE-S20 replaced by MOVIE-S34). Movies play in `chase-fmv` and in the front end; in-engine cutscenes play in `chase-viewer --cutscene` and in `chase-game` (DCamCutScene natives, `1_1_b` compared with the oracle); `PlayCutscene` movies play in the game, the level start plays the intro movie and `1_1_a`, and cutscenes fade to and from black. Actor clips start at the frame in their file name and models of their own are drawn per node from the clip's object tracks, as measured in the oracle for `1_1_d`.
+IN_PROGRESS, updated 2026-10-19T19:29:47+02:00. Skinned meshes get their node matrix after the skinning, as every model (MOVIE-39 closed). The cutscene end fades come from the code (SCRIPT-298 closed, MOVIE-S20 replaced by MOVIE-S34). Movies play in `chase-fmv` and in the front end; in-engine cutscenes play in `chase-viewer --cutscene` and in `chase-game` (DCamCutScene natives, `1_1_b` compared with the oracle); `PlayCutscene` movies play in the game, the level start plays the intro movie and `1_1_a`, and cutscenes fade to and from black. Actor clips start at the frame in their file name and models of their own are drawn per node from the clip's object tracks, as measured in the oracle for `1_1_d`.
 
 ## 3. Verified behaviour
 
@@ -30,7 +30,6 @@ IN_PROGRESS, updated 2026-10-19T10:05:56+02:00. The cutscene end fades come from
 - MOVIE-S33 A model of its own (prop) is drawn only from the update its first clip starts; before, it is hidden. This matches the user's observation of the glass in `1_2_a` (not measured in the oracle); the original's rule is not read. blocks: MOVIE-35. evidence: [cutscene-actors.md §2026-10-18T21:06:57](../../re/cutscene-actors.md#ts-20261018-210657).
 - MOVIE-S30 An actor that is a level character (or the player) is drawn as a copy of that character and the level's own figure is hidden while the cutscene shows; the original drives the figure itself. The copy ends at the same place the figure stood, which matches the teardown's restore of the node matrix. needs: MOVIE-22. evidence: [cutscene-actors.md §2026-10-15T07:54](../../re/cutscene-actors.md#ts-20261015-075438).
 - MOVIE-S34 `kCutsceneExitWaitSeconds`: between the end of the cutscene's fade out and the exit the mode switch sleeps and waits two ticks of the render counter (0x529e30 + 0x3d4); the port waits 2 / 30 s (the 4 vblanks of black measured). needs: MOVIE-37. evidence: [cutscenes.md §2026-10-19T10:04:29](../../re/cutscenes.md#ts-20261019-100429).
-- MOVIE-S35 The node matrix of a skinned mesh (dog truck of `1_2_c`: 1.59 m up; `prop_furnacevent`: 0.19 m in x) is applied to its vertices before the skin palette; a data fit (the wheel vertex centroids meet the joints), the original's skinned draw was not read. blocks: MOVIE-39. evidence: [cutscene-actors-props.md §2026-10-19T18:30:11](../../re/cutscene-actors-props.md#ts-20261019-183011).
 - MOVIE-S21 With the front end new game `kNewGameStart` (the oracle player position at gameplay-start) is applied before the intro cutscene; the script then moves the player to `1-1_Chase_Intro_Shot_Dummy` (891.47, 1109.06), 4.7 m from it, as in the original order; where the original player stands after the intro was not compared.
 
 ## 5. Open items
@@ -39,7 +38,7 @@ IN_PROGRESS, updated 2026-10-19T10:05:56+02:00. The cutscene end fades come from
 - [ ] MOVIE-3 — Actor clips shorter than the camera: 61 of 330 start later (start frames, ported), 37 of them end with the camera; whether a finished clip holds its last frame (the port holds it); the meaning of camera fields 7-11, the fov axis and the base value of the actor scale are unknown. evidence: [cutscenes.md §2026-10-13T02:30](../../re/cutscenes.md#ts-20261013-0230).
 - [ ] MOVIE-4 — The extra (root motion) curve use in cutscenes; the 12 cutscene folders without soundtrack and the outliers 6_4_a, 2_11_a, 1_4_c. evidence: [cutscenes.md §2026-10-13T03:20](../../re/cutscenes.md#ts-20261013-0320).
 
-- [ ] MOVIE-39 — Read how the original's skinned draw uses the node matrix of a mesh node (policebarker, prop_furnacevent) and replace the fit. blocks: MOVIE-S35. evidence: [cutscene-actors-props.md §2026-10-19T18:30:11](../../re/cutscene-actors-props.md#ts-20261019-183011).
+- [ ] MOVIE-40 — Nodes bound to a joint by name (node record +0x14: `head` of the csdata minifigs, `JNT_10`, `Master_Jnt`; 155 nodes) are drawn with node matrix · that joint's skin matrix · node world (0x10e028); the port draws them without the skin matrix, so the baked head of a cutscene minifig stays in the bind pose. evidence: [models.md §2026-10-19T19:24:18](../../re/models.md#ts-20261019-192418).
 - [ ] MOVIE-38 — Whether the script native DCamCutSceneFree 0x196144 (clears the entity layers, no matrix restore) runs on a cutscene object after the exit 0x2fac7c already restored them, and the order of the two. evidence: [cutscene-actors-props.md §2026-10-19T13:47:29](../../re/cutscene-actors-props.md#ts-20261019-134729).
 - [ ] MOVIE-36 — What 0x2d19cc tests for the end of a cutscene object (the port ends at max(camera frames / 30, soundtrack), MOVIE-S10). blocks: MOVIE-S10. evidence: [cutscenes.md §2026-10-19T10:04:29](../../re/cutscenes.md#ts-20261019-100429).
 - [ ] MOVIE-37 — The oracle measured a fade in of 43 vblanks after `1_1_b` while the code fades in over 0.5 s (30 vblanks); find out whether the game clock is capped under the measurement or something else adds time (`memtrace` of the fade timer with `dt` unset). blocks: MOVIE-S34. evidence: [cutscenes.md §2026-10-19T10:04:29](../../re/cutscenes.md#ts-20261019-100429).
@@ -54,6 +53,7 @@ IN_PROGRESS, updated 2026-10-19T10:05:56+02:00. The cutscene end fades come from
 ## 6. Findings summary
 
 - The dog of `1_2_c` hidden by the prop's own clip and the dog truck 1.59 m low (node matrix of skinned meshes): [cutscene-actors-props.md §2026-10-19T18:30:11](../../re/cutscene-actors-props.md#ts-20261019-183011).
+- The model draw applies every node matrix, skinned meshes after their skinning: [models.md §2026-10-19T19:24:18](../../re/models.md#ts-20261019-192418).
 - The floating glass of `1_2_a` and the hidden-before-start rule: [cutscene-actors.md §2026-10-18T21:06:57](../../re/cutscene-actors.md#ts-20261018-210657).
 - Models of their own drawn per node from object tracks (oracle, `1_1_d`): [cutscene-actors.md §2026-10-16T14:39:48](../../re/cutscene-actors.md#ts-20261016-143948).
 - Clip start frames, the floating box and the van of `1_1_d`: [cutscene-actors.md §2026-10-16T14:05:18](../../re/cutscene-actors.md#ts-20261016-140518).
@@ -66,4 +66,4 @@ IN_PROGRESS, updated 2026-10-19T10:05:56+02:00. The cutscene end fades come from
 ## 7. Code and tests
 
 - `src/movie/` (`chase_movie`), `src/fmv.cpp` (`chase-fmv`), `src/assets/subtitles.cpp`, `src/assets/cutscene.cpp`; `chase-viewer --cutscene`; `src/runtime/natives_cutscene.*`, `src/runtime/screen_fade.*`, `src/game_screen_fade.*`, `src/runtime/cutscene_cast.*`, `src/game_cutscene.*`, `src/game_level_cutscene.cpp` (game side), `loadCutscene`, `cutsceneClipStart`, `cutsceneClipAt`, `cutsceneRestingClip`, `cutsceneNodeMatrices` in `chase_assets`.
-- CTest: `assets-core`, `assets-real-data`, `fmv-real-smoke`, `viewer-cutscene-smoke`, `frontend-real-data`, `natives-cutscene`, `natives-cutscene-real-data`, `screen-fade`, `cutscene-cast`, `skinned-node-matrix`, `game-cutscene-glass-hidden`.
+- CTest: `assets-core`, `assets-real-data`, `fmv-real-smoke`, `viewer-cutscene-smoke`, `frontend-real-data`, `natives-cutscene`, `natives-cutscene-real-data`, `screen-fade`, `cutscene-cast`, `node-draw-matrix-real-data`, `game-cutscene-glass-hidden`.

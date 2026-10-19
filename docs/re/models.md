@@ -10,7 +10,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - UVs are raw s16 times the f32 scales at vertex-buffer header +0x50; level vertices are in world space. [§2026-10-12T18:05](#ts-20261012-1805)
 - `parseModel` (`src/assets/model.cpp`) parses all 3113 models (16122 parts, 7211595 vertices, 4603391 triangles); the Python model tools are gone. [§2026-10-13T15:08:53](#ts-20261013-150853)
 - Combiner setups are recovered in [materials.md](materials.md); the lightmap modulation in the viewer is an approximation.
-- Open: meaning of node and mesh float3 fields, skin field semantics, material render states.
+- The model draw 0x205160 draws each node's mesh with the node's matrix (palette node+0x110, else model+0x20, when w is not 0) before the node world, skinned vertices after their skinning; `assets::nodeDrawMatrix`. [§2026-10-19T19:24:18](#ts-20261019-192418)
+- Open: meaning of node and mesh float3 fields, skin field semantics, material render states, the node override list 0x5300f4.
 
 <a id="ts-20261012-1610"></a>
 
@@ -100,3 +101,33 @@ The combiner setups that this entry lists as unrecovered were recovered later: [
 ## 2026-10-13T14:46:37+02:00 — Correction: the model+0x1c section is collision geometry
 
 - The "model+0x1c section" that earlier entries ([Corrects models.md §2026-10-12T16:10](#ts-20261012-1610) and the loader notes of 0x114640/0x11fd20) skipped as unrecovered holds the collision mesh: items with a name, a bounding-box tree, 0x20-byte triangle records and vertices. Format, queries and tests: [collision.md](collision.md). `parseModel` now keeps it in `Model::collision`.
+
+<a id="ts-20261019-192418"></a>
+
+## 2026-10-19T19:24:18+02:00 — The model draw applies every node's matrix (model+0x20) to its mesh, after skinning (REA with Ghidra 12.1.2, llvm-objdump, a PICA200 disassembly of vertex program 0, census over all models with the C++ parser)
+
+Answers the open order in [player-traversal.md §2026-10-19T18:16:50](player-traversal.md#ts-20261019-181650). [Corrects cutscene-actors-props.md §2026-10-19T18:30:11](cutscene-actors-props.md#ts-20261019-183011): the original skins first and applies the node matrix after. [Corrects player-entity-input.md §2026-10-13T12:56:22](player-entity-input.md#ts-20261013-125622): the head's 1.364 offset is its own node matrix.
+
+**Method.** REA (Ghidra 12.1.2) pseudocode of 0x2442b4, 0x2123cc, 0x22356c, 0x242eb0, 0x250830, 0x22cbbc, 0x205160, 0x10e028, 0x10bbe8, 0x188778, 0x188aac, 0x2273f8, 0x1dcaa8, 0x2390fc, 0x250ed0, 0x253a00, 0x253b6c, 0x10da18, 0x253e70, 0x108238, 0x2121e8, 0x24f444, 0x2023bc, 0x242814, 0x22690c; llvm-objdump (`--triple=armv6k --mattr=+vfp2`) of the multiplies 0x2588f4, 0x258a10 and the copy 0x258858 (vector mode, length 4); a scratch PICA200 decoder over the DVLB at code.bin 0x2779a0 (program 0, code 0x00..0x4a). The model node record +0x14 blocks were dumped with a temporary print in `parseModel` (not committed).
+
+**Scene node of a model.** 0x22356c (called by 0x2123cc for `models/<meshname>/<leaf>.fnmdl`, from the create's 0x2442b4) allocates a 0x11c-byte node: +0xc0 the model resource (and +0xc4 a `_lod1` resource), +0xc8 the controller (0x2123c4), +0x110 the palette (null until set), +0x114 a per-node hide bit set. 0x250830(resource) returns the parsed model (resource +0x14 when its state byte +8 is 2).
+
+**Draw 0x205160** (one scene node): picks the LOD (0x10da18), gets a skin palette from the controller when node +0xc8 is set (0x253e70 through the type table 0x52ce94: joint count `0x5300a4`, palette `0x5300f0`, 0x40 bytes per joint), then walks the model's nodes (record 0x18 bytes: +0x10 mesh index, +0x12 parent index, +0x14 joint name) and for every node with a mesh that the hide bits do not hide calls **0x10e028(model, scene node, node index, node world)**:
+- an override list (`0x5300f4` records of 0x4c bytes, matched by node name, byte +0x48 hides the node) gives the matrix first (filled elsewhere, not traced);
+- else the palette entry `node+0x110 + i*0x40`, or `model+0x20 + i*0x40` when the palette is null, when its w (+0x3c) is not 0;
+- when the node record +0x14 is set and the controller has a skeleton, the skin matrix of that joint (0x24f444 matches the name against the skeleton's joint records) follows;
+- the result is matrix · [joint skin ·] node world (0x2588f4 out = a · b for row vectors; 0x258a10 out = out · b), else the node world itself.
+The parts of the mesh are then queued (0x10bbe8 / 0x188aac) with that matrix as the model matrix (0x253b6c) and, for a skinned node, the palette pointer and joint count (0x2390fc). The bounds routine 0x242eb0 ([collision.md §2026-10-13T20:53:44](collision.md#ts-20261013-205344)) uses the same palette rule.
+
+**Palette 0x22cbbc(node, i, matrix, recurse, ...)** writes entry i; on the first write it allocates the palette and copies the whole model+0x20 block (identity entries when the model has none); with recurse set, every child node (record +0x12 == i) gets its model matrix · the new matrix. So doors, animated nodes and cutscene object tracks replace an entry; the draw takes the stored matrix per node with no parent chain.
+
+**Skinned vertices: skin first, node matrix after.** 0x188778 sets the record's model matrix (0x253b6c) and palette (0x2390fc); 0x2273f8 uploads the bones of each batch raw (0x1dcaa8: `Bones` registers from palette[batch joint]); 0x250ed0 composes the model matrix (with the node's scale and offset) into the matrix the shader gets. Vertex program 0: `r0 = vPos`; when bool `Skinned` (b0) is set, the subroutine at 0x10 computes Σ weight · (r0 · Bones[index]); then `o0 = r0 · ViewComposite` (c0..c3). So a skinned vertex is drawn at (Σ w · v · skin) · node matrix · node world.
+
+**Data (census over 3113 models).** 926 models carry the model+0x20 block, 614 of them a non-identity matrix on a node with a mesh (379 with more than one node); no mesh is shared by two nodes and no mesh is without a node. Examples: every minifig head (`head`, translation 0, 1.364, 0.0381; 117 of 117 heads used by level characters, `Char_Head_Chase` too), the trooper's `BrakeLight` (z -0.708: its mesh at z -2.115 moves to the rear bumper, -2.82), wheels (`veh_wheel_17x6_a` x -0.1906 centres the hub), `Prop_Plant_04` (y -0.0378), `Prop_Construction_Elevator_Runners` (a 90 degree turn), the zipline pole (y -27.432), `veh_van_dulmen` (z -0.1905), the dog footprint card and the two skinned models (`policebarker`, `prop_furnacevent`). 155 nodes name a joint in record +0x14 (`head` in the csdata minifigs, `JNT_10`, `Master_Jnt`); no runtime head model does.
+
+**Port.** `assets::nodeDrawMatrix` (src/assets/model.cpp) is the rule; `Scene::addModel` draws every node's mesh with it before the instance transform, skinned parts after their CPU skinning, bounds included; `Scene::setNodeMatrix` replaces one entry (doors). Removed special cases: the zipline pole matrix, the skinned fit `skinnedPartInModelSpace`, the detective card's node matrix (which the port had applied after the card's turn). Instances with `onlyMesh` (prop nodes, cutscene object tracks) keep a caller-written node matrix, as 0x22cbbc does. Heads and hats hang on their joint's skin matrix and get their own node matrix from the scene. CTest `node-draw-matrix-real-data`, `zipline-pole`, `zipline-pole-real-data`.
+
+Unknowns:
+- Who fills the override list `0x5300f4` and the second list `0x5300fc` / `0x530104`; the LOD switch (`_lod1`, distance node +0xb8) is not ported.
+- The joint-bound nodes (record +0x14) are drawn without their joint's skin matrix in the port (MOVIE-40).
+- The consumer of the attach record 0x242814 stores at node+0x10 for a `HeadModel` / `HatModel` node (LEVOBJ-S92); 0x2121e8 also lowers the attached node by `0x376ab8` for `char_minifig_small`.

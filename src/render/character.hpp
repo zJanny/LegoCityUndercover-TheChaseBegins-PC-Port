@@ -45,6 +45,8 @@ std::vector<assets::Matrix> poseBody(Scene& scene, const CharacterRig& rig, cons
 // World transform of a model hung on the joint named `lowerJointName` (lower case, e.g. "weaponleft"): the model's own origin sits on the joint, as the
 // head does; nothing when the skeleton has no such joint.
 std::optional<Mat4> jointWorld(const CharacterRig& rig, const std::string& lowerJointName, const std::vector<assets::Matrix>& skin, const Mat4& world);
+// The node world of the head or hat model hung on `joint` (rig.headJoint, rig.hatJoint); `world` when the skeleton has no such joint.
+Mat4 attachedModelWorld(const std::optional<std::size_t>& joint, const std::vector<assets::Matrix>& skin, const Mat4& world);
 // Places the body at `world` and moves the head and hat to their joints.
 void placeCharacter(Scene& scene, const CharacterRig& rig, const CharacterInstance& instance,
                     const std::vector<assets::Matrix>& skin, const Mat4& world);

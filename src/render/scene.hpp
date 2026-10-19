@@ -73,12 +73,19 @@ public:
     // only applies when the model is loaded for the first time under `key`. The GPU data is shared by every
     // instance with the same key (the path when `key` is empty), so models that differ in textures or in pose
     // need distinct keys.
+    // The transform is the scene node's world: every node of the model with a mesh is drawn with assets::nodeDrawMatrix first (0x205160 /
+    // 0x10e028), skinned parts after their skinning. With onlyMesh set the instance draws that mesh alone and the caller's transform already
+    // holds the node's matrix (doors' leaves, animated prop nodes and cutscene object tracks write it, as 0x22cbbc writes a palette entry).
     bool addModel(const std::string& path, const Mat4& transform = identity(),
                   const std::map<std::string, std::string>& textureOverrides = {}, const std::string& key = "", int onlyMesh = -1);
     bool setInstanceMesh(std::size_t instance, const std::string& path, int mesh);
     // One instance per node of the model that has a mesh (the mesh's GPU data is shared by key "path#mesh"); the result holds the
-    // instance index of every node, -1 for a node without a mesh, and is empty when the model is missing. Move a node with setTransform().
+    // instance index of every node, -1 for a node without a mesh, and is empty when the model is missing. Move a node with setTransform(),
+    // whose matrix holds the node's matrix as well.
     std::vector<std::ptrdiff_t> addModelNodes(const std::string& path, const Mat4& placement);
+    // Replaces the matrix of one model node of a whole-model instance (the palette entry 0x22cbbc writes at node+0x110), row vectors
+    // applied before the instance transform.
+    void setNodeMatrix(std::size_t instance, int node, const assets::Matrix& matrix);
     // Re-skins every skinned part of the model loaded under `key` on the CPU.
     void pose(const std::string& key, const std::vector<assets::Matrix>& skin);
     std::size_t skinnedParts(const std::string& path) const;

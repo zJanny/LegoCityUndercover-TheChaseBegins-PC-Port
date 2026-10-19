@@ -10,7 +10,7 @@ Where the player entity lives, how the stick becomes intent, where it gets its p
 - The atan2f at 0x2473ec is a custom routine, ported bit-exact as `gameAtan2` (needs `-ffp-contract=off`); the D-pad heading path is dead code. [§2026-10-13T10:59:11](#ts-20261013-105911)
 - The yaw word 0x376894 is written by the camera manager update 0x23f174, and the player's entity type is 3. [§2026-10-13T14:41:13](#ts-20261013-144113)
 - Spawn transform is `Player1Start` (not the `Player1` object); the starting character is `char_player` with CharacterEnum 9 ("police") as a guess. [§2026-10-13T11:08:12](#ts-20261013-110812)
-- Head attachment: head matrix = translate(head joint bind position) * skin(head) * player; builder 0x2442b4 attaches `HeadModel` on "head" and `HatModel` on "hat". The rule shown under Assembly in the 11:08:12 entry is wrong. [§2026-10-13T12:56:22](#ts-20261013-125622)
+- Head attachment: builder 0x2442b4 attaches `HeadModel` on "head" and `HatModel` on "hat" [§2026-10-13T12:56:22](#ts-20261013-125622); the head is drawn with its model's node matrix (0, 1.364, 0.0381) on the joint's skin matrix: head node matrix * skin(head) * player (the node+0x10 consumer is not read) [models.md §2026-10-19T19:24:18](models.md#ts-20261019-192418).
 - The appearance path is shared with level characters (`addCharacter`, `poseBody`, `placeCharacter`). [§2026-10-13T16:34:30](#ts-20261013-163430)
 - Open: gate byte 0x372d44 writers, the draw-time consumer of node+0x10, the real start character and hat assembly, and the AttachRelative parameters.
 
@@ -85,6 +85,8 @@ Unknowns:
 <a id="ts-20261013-125622"></a>
 
 ## 2026-10-13T12:56:22+02:00 — Head attachment: correction of the "Assembly (guess)" entry (worker; objdump of artifacts/game/game.arm.elf, model/skeleton dumps through chase_assets)
+
+Corrected by [models.md §2026-10-19T19:24:18](models.md#ts-20261019-192418): the head model carries its offset (0, 1.364, 0.0381) as its node matrix, which the model draw applies; the head hangs on the joint's skin matrix without the bind translation.
 
 Replica: `jointAttachment` in src/assets/anim.cpp, used by `placePlayer` in src/game.cpp; pinned in tests/assets_test.cpp (synthetic) and tests/assets_real_test.cpp (police idle frame 0).
 

@@ -34,6 +34,13 @@ std::string idleAnimationPath(const std::string& animationClass, const char* nam
 Mat4 onJoint(const CharacterRig& rig, std::size_t joint, const std::vector<Matrix>& skin, const Mat4& world) {
     return chase::assets::multiply(jointAttachment(rig.skeleton.joints[joint], skin[joint]), world);
 }
+
+// STAND-IN LEVOBJ-S92: the node of a HeadModel / HatModel follows its joint with the joint's skin matrix, as 0x10e028 composes a node bound to a
+// joint (node matrix · skin · node world); the consumer of the attach record 0x242814 stores at node+0x10 is not read. The model's own node
+// matrix (heads: translation 0, 1.364, 0.0381) is applied by the scene.
+Mat4 attachedWorld(std::size_t joint, const std::vector<Matrix>& skin, const Mat4& world) {
+    return chase::assets::multiply(skin[joint], world);
+}
 }
 
 CharacterRig loadCharacterRig(FuseArchive& archive, const std::string& bodyModelPath) {
@@ -120,12 +127,15 @@ std::optional<Mat4> jointWorld(const CharacterRig& rig, const std::string& lower
     return onJoint(rig, *joint, skin, world);
 }
 
+Mat4 attachedModelWorld(const std::optional<std::size_t>& joint, const std::vector<Matrix>& skin, const Mat4& world) {
+    return joint && *joint < skin.size() ? attachedWorld(*joint, skin, world) : world;
+}
+
 void placeCharacter(Scene& scene, const CharacterRig& rig, const CharacterInstance& instance,
                     const std::vector<Matrix>& skin, const Mat4& world) {
     scene.setTransform(instance.bodyInstance, world);
-    scene.setTransform(instance.headInstance, rig.headJoint ? onJoint(rig, *rig.headJoint, skin, world) : world);
-    if (instance.hatInstance)
-        scene.setTransform(*instance.hatInstance, rig.hatJoint ? onJoint(rig, *rig.hatJoint, skin, world) : world);
+    scene.setTransform(instance.headInstance, attachedModelWorld(rig.headJoint, skin, world));
+    if (instance.hatInstance) scene.setTransform(*instance.hatInstance, attachedModelWorld(rig.hatJoint, skin, world));
 }
 
 }

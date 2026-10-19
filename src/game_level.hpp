@@ -161,7 +161,9 @@ private:
     int detectiveClip(int role) const;
     void drawFootprints();
     void loadZiplineRopes(chase::assets::FuseArchive& archive);
-    void placeZiplinePoles(chase::assets::FuseArchive& archive);
+    void placeZiplinePoles();
+    void placeNestedProps(chase::assets::FuseArchive& archive);
+    void showNestedProps(const std::vector<bool>& drawn);
     void drawZiplineRopes(const chase::render::Mat4& view, const chase::render::Mat4& viewProjection);
     void logDetectiveStates();
     void updateScanner();
@@ -272,6 +274,7 @@ private:
     std::optional<std::size_t> skyInstance;
     std::optional<float> seaHeight;
     std::vector<std::pair<std::size_t, std::size_t>> wheelSceneIndex;
+    std::vector<std::pair<std::size_t, std::size_t>> nestedPropSceneIndex;
     std::vector<std::size_t> wheelNumbers;
     std::vector<std::pair<chase::runtime::Vector3, float>> wheelBounds;
     chase::runtime::GameRandom breakRandomStandIn{game_characters::kStandInSeed};
@@ -306,7 +309,6 @@ private:
     std::optional<chase::render::ParticleRenderer> useMarkerRenderer;
     std::optional<chase::runtime::DetectiveRoles> detectiveRoles;
     std::vector<std::size_t> footprintInstances;
-    std::array<chase::assets::Matrix, 2> footprintNodeMatrices;
     game_hand_items::HandItems handItems;
     std::vector<int> loggedDetectiveStates;
     chase::runtime::Scanner scanner;

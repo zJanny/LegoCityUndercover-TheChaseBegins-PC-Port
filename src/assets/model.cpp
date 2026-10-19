@@ -354,22 +354,8 @@ Model parseModel(const Bytes& data) {
     return model;
 }
 
-// STAND-IN MOVIE-S35: data fit, the original's skinned draw was not read.
-ModelPart skinnedPartInModelSpace(const Model& model, std::size_t meshIndex, const ModelPart& part) {
-    for (std::size_t node = 0; node < model.nodeMesh.size() && node < model.nodeMatrices.size(); ++node) {
-        if (model.nodeMesh[node] != int(meshIndex)) continue;
-        const std::array<float, 16>& m = model.nodeMatrices[node];
-        if (m[15] == 0.0f) return part;
-        ModelPart moved = part;
-        for (Vertex& v : moved.vertices) {
-            const float p[3] = {v.position[0], v.position[1], v.position[2]}, n[3] = {v.normal[0], v.normal[1], v.normal[2]};
-            for (int i = 0; i < 3; ++i) {
-                v.position[i] = p[0] * m[i] + p[1] * m[4 + i] + p[2] * m[8 + i] + m[12 + i];
-                v.normal[i] = n[0] * m[i] + n[1] * m[4 + i] + n[2] * m[8 + i];
-            }
-        }
-        return moved;
-    }
-    return part;
+std::array<float, 16> nodeDrawMatrix(const Model& model, std::size_t node) {
+    if (node < model.nodeMatrices.size() && model.nodeMatrices[node][15] != 0.0f) return model.nodeMatrices[node];
+    return {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
 }
 } // namespace chase::assets

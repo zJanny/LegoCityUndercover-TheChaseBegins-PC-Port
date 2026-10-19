@@ -159,6 +159,7 @@ LevelSession::LevelSession(const Shared& sharedState)
             ++unresolved;
         }
     }
+    placeNestedProps(archive);
     for (const auto& waypoint : drawable.waypoints) {
         const std::size_t instanceIndex = scene.instances();
         if (!scene.addModel(meshModelPath(waypoint.mesh), placementMatrix(waypoint))) continue;
@@ -283,7 +284,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     loadAttack(archive, placedCollisions);
     loadObjectiveBoxes(placedCollisions);
     runtime::applyObjectCollisionState(collision, objectState);
-    doors = game_doors::loadDoors(scene, archive, level, classOf, placedCollisions, placedInstances);
+    doors = game_doors::loadDoors(archive, level, classOf, placedCollisions, placedInstances);
     for (const DoorObject& door : doors) game_doors::poseDoor(scene, door);
     std::cout << "doors: " << doors.size() << '\n';
     buildits.load(archive, level, classOf);
@@ -301,7 +302,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     std::cout << "scanner zones: " << scanner.zones().size() << ", scannable objects: " << scanner.objects().size() << '\n';
     ziplines = runtime::loadZiplineAnchors(level, classOf);
     loadZiplineRopes(archive);
-    placeZiplinePoles(archive);
+    placeZiplinePoles();
     std::cout << "zipline anchors: " << ziplines.size() << '\n';
     grabBricks = runtime::loadGrabBricks(level, classOf);
     std::cout << "climbing bricks: " << grabBricks.size() << '\n';
@@ -408,6 +409,7 @@ void LevelSession::draw(int width, int height) {
                               [this](std::size_t objectIndex) { return cutsceneHost->holdsObject(objectIndex); });
     for (std::size_t i = 0; i < drawn.size(); ++i)
         scene.setInstanceVisible(placedSceneIndex[i], drawn[i] && roomShown(placedRooms[i]) && !wreckHides(i, std::nullopt));
+    showNestedProps(drawn);
     for (std::size_t w = 0; w < wheelSceneIndex.size(); ++w) {
         const auto& [placedIndex, wheelIndex] = wheelSceneIndex[w];
         scene.setInstanceVisible(wheelIndex, runtime::nestedObjectDrawn(drawn[placedIndex]) && roomShown(placedRooms[placedIndex]) && !wreckHides(placedIndex, wheelNumbers[w]));

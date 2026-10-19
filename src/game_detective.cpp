@@ -1,7 +1,6 @@
 #include "game_level.hpp"
 #include "runtime/collision.hpp"
 #include "runtime/player_locomotion.hpp"
-#include "runtime/prop_nodes.hpp"
 #include <cmath>
 #include <iostream>
 
@@ -33,13 +32,6 @@ void LevelSession::loadDetective(FuseArchive& archive) {
                 const std::string path = std::string(game_player::kPlayerAnimationDirectory) + player->carryAnimations->name(id) + game_player::kPlayerAnimationSuffix;
                 if (!player->animations.count(id) && archive.find(path)) player->animations[id] = chase::render::loadAnimation(archive, path);
             }
-        }
-    }
-    for (std::size_t type = 0; type < footprintNodeMatrices.size(); ++type) {
-        footprintNodeMatrices[type] = chase::render::identity();
-        if (const FuseEntry* entry = archive.find(kFootprintModels[type])) {
-            const runtime::PropNodes nodes = runtime::PropNodes::of(parseModel(archive.read(*entry)));
-            if (!nodes.local.empty()) footprintNodeMatrices[type] = nodes.local[0];
         }
     }
     for (unsigned slot = 0; slot < runtime::kFootprintPoolSize; ++slot) {
@@ -138,9 +130,7 @@ void LevelSession::drawFootprints() {
             float point[3];
             for (int a = 0; a < 3; ++a) point[a] = spot.position[a] + float(footprint.offset[std::size_t(a)]) * 0.25f;
             if (const auto ground = runtime::footprintGroundHeight(collision, point)) point[1] = *ground;
-            const std::size_t type = std::min<std::size_t>(std::size_t(footprint.slot) / runtime::kFootprintPoolPerType, 1);
-            const chase::render::Mat4 matrix = chase::render::multiply(footprintNodeMatrices[type], runtime::detectiveFootprintMatrix(footprint.rotation, point));
-            scene.setTransform(instance, matrix);
+            scene.setTransform(instance, runtime::detectiveFootprintMatrix(footprint.rotation, point));
             scene.setInstanceFade(instance, float(footprint.alpha) / 255.0f);
             scene.setInstanceVisible(instance, footprint.alpha != 0);
         }

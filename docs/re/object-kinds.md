@@ -11,6 +11,7 @@ Where the kind byte of an entity comes from, which kind each class file of the m
 
 - 0x23e130 is the only adder of the use-zone registry that ToggleUseable and EnableSwitch change through 0x236624: 52 kinds register in their create or (21, 30, 56, 98, 114) post-link function, with a few conditions; doors (42) and kinds 67, 86, 113, 119, 183, 189, 253 do not, so 20 of the 342 ToggleUseable calls of the main levels (and the 11 on kind 71 pushables themselves) change nothing. The second registry 0x2219bc belongs to the "LEGOHintBounds" singleton; who fills it is not known. [§2026-10-19T07:55:07](#ts-20261019-075507)
 - The EnableShadow gate is kinds 27 and 149, the kinds created through 0x23e394 (121, 159, 242; list at 0x3743ec, cleared at level reset) or bit 14 of `+0xc` (parameter `Boss_IsBoss` in the character setup 0x24166c). No handler of the 13 kinds named by enableobjectfade answers message 24, so it ends like EnableObject without message 251; kinds 27 and 102 do answer it (not read). [§2026-10-19T07:55:07](#ts-20261019-075507)
+- The upper half of the crane ladders (`props/prop_crane_ladderlarge`, the mission 1-3 ladder to the roof) is the nested object `ladder_part_02`; the port draws the plain models of nested objects. [§2026-10-19T19:25:32](#ts-20261019-192532)
 
 <a id="ts-20261018-213613"></a>
 
@@ -203,3 +204,23 @@ Unknowns:
 - The classes that reach the character setup 0x24166c through 0x22b79c (callers 0x175ac4, 0x224f54, 0x29ee04) and so may set bit 14.
 - What the handlers of kinds 27 (0x18e4c8..) and 102 (0x18c100) do with message 24 and what they return; the scan for a compare with 24 cannot see table-driven dispatch in kinds outside the 13 read by hand.
 - The meaning of halfword `[entity + 0x10]` bit 7 that stops the post-link registration of kinds 21 and 98.
+
+<a id="ts-20261019-192532"></a>
+
+## 2026-10-19T19:25:32+02:00 — The mission 1-3 ladder's upper half is a nested object of `props/prop_crane_ladderlarge` (Azahar `m13-2-ladder`, OpenGL, no RPC, port 45691; class files through the C++ loaders; `chase-game` screenshot)
+
+Answers [playtests.md §2026-10-19T18:02:53](playtests.md#ts-20261019-180253).
+
+**Where Chase stands (oracle).** The user state `m13-2-ladder` (scenario `wait 3; player`, loaded after the m13 state fix of the lead): player world (894.080, 23.623, 1134.047), forward (0.814, 0, 0.581), state 1.
+
+**The ladder.** The nearest ladder object is `1-4_Ladder01`, class `props/prop_crane_ladderlarge`, model `Prop_Ladder_Large` (one node, identity matrix, mesh y 0 .. 6.096), at (894.707, 18.516, 1135.146), yaw 225. Its class file nests one object, `ladder_part_02` of class `props/prop_ladderlarge` (same model) at (0, 6.088, 0) relative to it, so the ladder runs from y 18.5 to 30.70, the roof of the helipad building (the mission blockers stand at y 30.8). Chase stands at y 23.6 in front of the upper half. `1-4_Ladder02` (912.951, 18.544, 1142.513) is the same class; `1-4_Ladder03` is a plain `prop_ladderlarge`.
+
+**Cause.** The object loader 0x1a4130 creates the nested objects after their parent ([§2026-10-18T21:36:13](#ts-20261018-213613)); the port drew only the placed objects of the level, so the upper half of both crane ladders was missing.
+
+**Census of lvl_01 (nested objects with a model in the archive).** 144, of them 133 vehicle wheels (drawn by the vehicle path), the two `ladder_part_02`, the climb bar of `1-5_Vertical_Wall_Run`, the cannon pig and iron sights of `FP_Task_FARMER_CTH_Cannon01`, the generator of the four construction tasks and the gem of the four miner tasks (both classes have a `startup` script), the token of `CharacterLocker` (`startup` script) and the robbers and victims of the five cop-crime tasks (minifigs).
+
+**Port.** `runtime::nestedProps` (src/runtime/nested_props.cpp) gives the drawable plain models of a class file (drawableObjects of the class file, without wheels and without classes that have a `startup` script, stand-in LEVOBJ-S93); `LevelSession::placeNestedProps` (src/game_nested_props.cpp) adds each at its placement · the parent's placement and shows it while the parent is drawn and its room shown. lvl_01 draws 5. `chase-game --start "894.08 23.623 1134.047" --facing 54.5` shows the ladder running up past Chase to the roof (screenshot not kept). CTest `nested-props-real-data`.
+
+Unknowns:
+- Whether the cannon pig and iron sights are drawn before the farmer task starts in the original.
+- The climbing of a ladder is not in the port.

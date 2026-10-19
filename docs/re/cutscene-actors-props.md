@@ -6,7 +6,7 @@ Entries about cutscene actors that are placed level entities (props, vehicles) a
 
 - The binding loop tests no kind: a prop or platform with a matching `CSCharacter` is an actor too, and the cutscene poses that entity (no model of its own). `1_2_c`'s dog is `1-2_Dog`; the port poses the placed prop (props without a scene key of their own keep a model of their own, stand-in LEVOBJ-S86). [§2026-10-19T12:59:54](#ts-20261019-125954)
 - The cutscene setup 0x2d1524 enables a disabled actor entity and shows its node, saves the node's 64-byte local matrix and swaps its animation layers for an empty array; the teardown 0x2d135c (the mode exit 0x2fac7c) disables it again, puts the matrix and the layers back. So a disabled actor is drawn during the cutscene and the dog of `1_2_c` ends at its place before the cutscene. Entity byte +0x18 is the room-activity class: 5 sets both table bits for every room type. Ported for props and characters (`CutsceneHold`). [§2026-10-19T13:47:29](#ts-20261019-134729)
-- The dog of `1_2_c` was invisible because the port's prop animation pass ran after the cutscene pose and put the dog back at its End node; the held prop is no longer posed by its own clip. The dog truck (`policebarker`) stood 1.59 m low because the port skinned vertices without the node matrix, which the skeleton's bind joints need (data fit, oracle pictures: wheels on the pavement). [§2026-10-19T18:30:11](#ts-20261019-183011)
+- The dog of `1_2_c` was invisible because the port's prop animation pass ran after the cutscene pose and put the dog back at its End node; the held prop is no longer posed by its own clip. The dog truck (`policebarker`) stood 1.59 m low because the port skinned vertices without the node matrix, which the skeleton's bind joints need (oracle pictures: wheels on the pavement) [§2026-10-19T18:30:11](#ts-20261019-183011); the model draw applies it after the skinning, as for every model ([models.md §2026-10-19T19:24:18](models.md#ts-20261019-192418)).
 
 <a id="ts-20261019-125954"></a>
 
@@ -67,6 +67,8 @@ Unknowns:
 <a id="ts-20261019-183011"></a>
 
 ## 2026-10-19T18:30:11+02:00 — The dog of `1_2_c` was overwritten by its own clip and the dog truck lacked its node matrix (user playtest; port screenshots, level and model data through the C++ loaders, Azahar OpenGL RPC shots from `m12-13-cage-trigger` port 45683; no code read, REA not used)
+
+Corrected by [models.md §2026-10-19T19:24:18](models.md#ts-20261019-192418): the original skins the vertices first and applies the node matrix after (model draw 0x205160, vertex program 0); the port now does so for every model.
 
 Answers [playtests.md §2026-10-19T17:56:41](playtests.md#ts-20261019-175641) (dog invisible, dog truck in the ground).
 

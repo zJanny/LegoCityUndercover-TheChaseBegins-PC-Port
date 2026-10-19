@@ -1,8 +1,8 @@
 // The poles of the 24 zipline anchors of lvl_01_cherrytreehills: each anchor is a drawable placement of the model
 // models/ability_parkour_zip_line/ability_parkour_zip_line.bfnmdl (class meshname `Ability_Parkour_Zip_Line`; the create 0x1a999c loads it unless
-// "NoMesh" is set), and with the node 0 matrix of the model (translation y -27.432, found with a parseModel dump) the mesh lies below the anchor
-// node: y from -4.05 to 0.16, x / z within 0.8. Without the matrix the mesh hangs 23 to 28 above the anchor. Needs the extracted RomFS; exits 77
-// without it.
+// "NoMesh" is set), and with the node 0 matrix of the model that the model draw applies first (assets::nodeDrawMatrix, 0x10e028; translation
+// y -27.432, found with a parseModel dump) the mesh lies below the anchor node: y from -4.05 to 0.16, x / z within 0.8. Without the matrix the
+// mesh hangs 23 to 28 above the anchor. Needs the extracted RomFS; exits 77 without it.
 #include "assets/assets.hpp"
 #include "runtime/zipline_pole.hpp"
 
@@ -46,8 +46,8 @@ int main(int argc, char** argv) {
         const assets::FuseEntry* modelEntry = archive.find("models/ability_parkour_zip_line/ability_parkour_zip_line.bfnmdl");
         require(modelEntry != nullptr, "the pole model is in the archive");
         const assets::Model model = assets::parseModel(archive.read(*modelEntry));
-        const auto node = runtime::modelRootNodeMatrix(model);
-        require(node.has_value(), "the pole model has a root node matrix");
+        require(model.nodeMatrices.size() == 1 && model.nodeMatrices[0][15] != 0.0f, "the pole model has a node matrix");
+        const assets::Matrix node = assets::nodeDrawMatrix(model, 0);
         std::size_t checked = 0;
         for (const runtime::ZiplineAnchor& anchor : anchors) {
             const assets::Placement* placement = nullptr;
@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
                 if (lower(candidate.instance) == anchor.instance) placement = &candidate;
             require(placement != nullptr, anchor.instance + " is a drawable placement");
             require(assets::meshModelPath(placement->mesh) == "models/ability_parkour_zip_line/ability_parkour_zip_line.bfnmdl", anchor.instance + " has the pole model");
-            const assets::Matrix world = runtime::ziplinePoleMatrix(*node, anchor, assets::placementMatrix(*placement));
+            const assets::Matrix world = assets::multiply(node, runtime::ziplineAnchorNode(anchor, assets::placementMatrix(*placement)));
             for (const assets::ModelPart& part : model.meshes.at(std::size_t(model.nodeMesh[0])).parts)
                 for (const assets::Vertex& vertex : part.vertices) {
                     float out[3];

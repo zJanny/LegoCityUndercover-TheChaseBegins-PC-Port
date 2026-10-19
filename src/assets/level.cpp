@@ -419,8 +419,9 @@ ClassLookup archiveClassLookup(FuseArchive& archive) {
     };
 }
 
-DrawableObjects drawableObjects(FuseArchive& archive, const Level& level) {
-    const ClassLookup classOf = archiveClassLookup(archive);
+DrawableObjects drawableObjects(FuseArchive& archive, const Level& level) { return drawableObjects(archive, level, archiveClassLookup(archive)); }
+
+DrawableObjects drawableObjects(FuseArchive& archive, const Level& level, const ClassLookup& classOf) {
     DrawableObjects out;
     for (auto& placement : objectPlacements(level, classOf)) {
         const std::string mesh = lowered(placement.mesh);
