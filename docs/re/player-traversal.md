@@ -14,9 +14,10 @@ Subtopics: [player-traversal-pole.md](player-traversal-pole.md), [player-travers
 - Climbing bricks (type 20), ported, and the climb wall entry: [player-traversal-bricks.md](player-traversal-bricks.md).
 - Rails, climb bars and the corner rail (types 29, 218), ported: [player-traversal-rails.md](player-traversal-rails.md).
 - The A presses at the zipline anchor and at the pole are not measurable from `m12-9`, `m12-10a` or `m12-10b`; the states they need are listed in [§2026-10-18T20:38:04](#ts-20261018-203804).
-- The rope is ported: a straight textured ribbon (`RopeTexture`, `RenderWidth` 0.03) between the anchor nodes, drawn by the anchor with the higher entity id, faded out by the camera's distance from the line only with `FadeNearCamera`; the ribbon's facing, render states and the tightrope ropes are open. [§2026-10-19T08:51:31](#ts-20261019-085131)
+- The rope is ported: a straight textured ribbon (`RopeTexture`, `RenderWidth` 0.03) between the anchor nodes, drawn from both anchors (two strips per line), faded out by the camera's distance from the line only with `FadeNearCamera`; the ribbon's facing, render states and the tightrope ropes are open. [§2026-10-19T08:51:31](#ts-20261019-085131)
 - The rope's facing and render state: the row at 0x529fec is the camera's view direction (measured, m12-9), the render state is the record of 0x252254 with the mode bytes of 0x297b7c, which the port's reading of the record turns into the states the port already used; the texture sampler is open; the original drew two strips per line. [§2026-10-19T10:00:18](#ts-20261019-100018)
 - The rope is fogged with the scene's fog (the state record clears the no-fog bit); the shared particle program has a fog switch that only the rope turns on. [§2026-10-19T10:38:41+02:00](#ts-20261019-103841)
+- Every textured zipline line is drawn twice, once from each anchor, because the anchor has no update handler and the gate 0x226644 then treats the target as not live. [§2026-10-19T11:04:28+02:00](#ts-20261019-110428)
 - Open: the grab height of attachment set 18 for other characters, the fall-state grab path 0x2010d4, ground contact during the zipline dismount (0x215804), the rope's facing and render states, the tightrope; the other moves in their subtopic files.
 
 <a id="ts-20261018-145230"></a>
@@ -148,3 +149,18 @@ Double draw (TRAV-50, second half). Read as in [§2026-10-19T10:00:18](#ts-20261
 Unknowns:
 - No oracle picture of the fogged rope exists, so the fog on the rope is taken from the state record and the shared GPU fog state, not compared with the original's image (needs RPC screenshots at a distance of about 220 .. 260 m from a rope, or a gdb read of the fog registers while 0x297b7c draws).
 - Why the line's other anchor passes the gate 0x226644, and whether other lines draw once.
+
+<a id="ts-20261019-110428"></a>
+
+## 2026-10-19T11:04:28+02:00 — Why every zipline line is drawn twice: the gate 0x226644 (round 30, llvm-objdump of 0x1a9dc4, 0x226644, 0x173534, 0x18c054; REA was not used)
+
+Answers the open question of [§2026-10-19T10:00:18](#ts-20261019-100018) and [§2026-10-19T10:38:41+02:00](#ts-20261019-103841) (TRAV-51).
+
+- Gate 0x226644(entity) returns 1 ("live") when the halfword +0x10 has none of the bits 0, 2, 5 (mask 0x25) and (the halfword +0x1a is not 0xffff or the byte +0x13 is not 0).
+- Entity +0x1a is the slot in the per-frame update list (0x173534 adds the entity at the end of the list at 0x580564 and stores the index; 0x22d480 removes it and stores 0xffff). 0x173534 adds only entities whose type record (table 0x583124, stride 40, byte +0x12 is the type) has a non-zero update handler at +0xc.
+- The registrar of type 101 (0x18c054) stores create 0x1a999c, message 0x1b6664, draw 0x1a9dc4, link 0x19b074, 0x1a9f18 and post-link 0x1a9bb4 in the record's fields +0, +4, +0x10, +0x14, +0x18, +0x1c and zero in +0x8 and +0xc: the zipline anchor has no update handler, so +0x1a stays 0xffff.
+- So the target is live only when its byte +0x13 is not 0 (the post-link sets it to 2 for an anchor without rope texture) and its flags +0x10 have none of the bits 0, 2, 5. The draw 0x1a9dc4 skips the anchor with the lower entity id only then. With textures on both anchors (+0x13 = 0), as for all 24 anchors of lvl_01, the gate never skips: every line is drawn twice, once from each anchor (swapped ends, same geometry), as measured on m12-9.
+- Port: `ziplineRopeDraws` skips the lower-id anchor only when the target has no rope texture and is enabled; flag bits 2 and 5 of the target are taken as clear (TRAV-S32). A faded rope (`FadeNearCamera`) blends twice.
+
+Unknowns:
+- What flag bits 2 and 5 of the halfword +0x10 are and whether any anchor has them set; whether +0x13 of an anchor changes after the post-link.

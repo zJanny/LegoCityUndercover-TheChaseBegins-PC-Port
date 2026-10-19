@@ -47,8 +47,9 @@ int ziplineRopeAlpha(const ZiplineAnchor& anchor, const ZiplineAnchor& target, c
 // (TRAV-S29).
 std::array<RopeVertex, 4> ziplineRopeStrip(const float start[3], const float end[3], float width, const float viewDirection[3], std::uint8_t alpha);
 
-// The draws of one update: every anchor with a rope texture and a target whose object is enabled, except the one that the other end of the line
-// draws (0x1a9dc4: an anchor with a lower entity id than its target leaves the line to the target while the target is enabled).
+// The draws of one update: every anchor with a rope texture and an enabled object. Anchors have no update handler, so the gate 0x226644 calls the
+// target live only when it has no rope texture (byte +0x13 = 2); then the lower id anchor leaves the line to the target (0x1a9dc4). Otherwise both
+// anchors draw the line, as the original does (TRAV-S32: flag bits 2 and 5 of the target are taken as clear).
 std::vector<RopeDraw> ziplineRopeDraws(const std::vector<ZiplineAnchor>& anchors, const std::vector<ZiplineRope>& ropes, const float camera[3],
                                        const float viewDirection[3], const std::function<bool(const ZiplineAnchor&)>& enabled);
 

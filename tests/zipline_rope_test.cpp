@@ -95,25 +95,30 @@ int main() {
 
         const auto all = [](const ZiplineAnchor&) { return true; };
         const auto draws = ziplineRopeDraws(anchors, ropes, farCamera, view, all);
-        require(draws.size() == 1, "one draw per line: " + std::to_string(draws.size()));
-        require(near(draws[0].strip[0].position[0], 20.0f, 0.04f), "the higher entity id draws, from its own node");
+        require(draws.size() == 2, "two draws per textured line (gate 0x226644, docs/re/player-traversal.md): " + std::to_string(draws.size()));
+        require(near(draws[0].strip[0].position[0], 0.0f, 0.04f) && near(draws[1].strip[0].position[0], 20.0f, 0.04f), "each anchor draws from its own node");
         require(draws[0].texture == rope.texture && draws[0].alpha == 255, "draw texture and alpha");
 
         const auto bDisabled = [](const ZiplineAnchor& a) { return a.instance != "b"; };
         const auto backup = ziplineRopeDraws(anchors, ropes, farCamera, view, bDisabled);
-        require(backup.size() == 1 && near(backup[0].strip[0].position[0], 0.0f, 0.04f), "the lower id anchor draws when its target is disabled");
+        require(backup.size() == 1 && near(backup[0].strip[0].position[0], 0.0f, 0.04f), "only the enabled anchor draws");
         const auto bothDisabled = [](const ZiplineAnchor&) { return false; };
         require(ziplineRopeDraws(anchors, ropes, farCamera, view, bothDisabled).empty(), "no draw when both are disabled");
 
         std::vector<ZiplineRope> fading = ropes;
-        fading[1].fadeNearCamera = true;
+        fading[0].fadeNearCamera = fading[1].fadeNearCamera = true;
         const auto faded = ziplineRopeDraws(anchors, fading, middleCamera, view, all);
-        require(faded.empty() || faded[0].alpha != 255, "a fading rope near the camera is not opaque");
+        require(faded.size() == 2 && faded[0].alpha != 255 && faded[1].alpha != 255, "a fading rope near the camera is not opaque and blends once per anchor");
         require(ziplineRopeDraws(anchors, fading, nearCamera, view, all).empty(), "a fading rope inside the fade distance is not drawn");
 
         std::vector<ZiplineRope> bare = ropes;
         bare[1].texture.clear();
-        require(ziplineRopeDraws(anchors, bare, farCamera, view, all).empty(), "an anchor without RopeTexture draws nothing");
+        require(ziplineRopeDraws(anchors, bare, farCamera, view, all).empty(), "the higher id anchor without RopeTexture is live (byte +0x13 = 2) and the lower id anchor leaves the line to it");
+        require(ziplineRopeDraws(anchors, bare, farCamera, view, bDisabled).size() == 1, "a disabled target is not live, so the lower id anchor draws");
+        bare[1].texture = rope.texture;
+        bare[0].texture.clear();
+        const auto lowerBare = ziplineRopeDraws(anchors, bare, farCamera, view, all);
+        require(lowerBare.size() == 1 && near(lowerBare[0].strip[0].position[0], 20.0f, 0.04f), "the lower id anchor without RopeTexture draws nothing, the other draws");
         std::cout << "zipline-rope-test: ok\n";
     } catch (const std::exception& error) {
         std::cerr << "zipline-rope-test: " << error.what() << '\n';

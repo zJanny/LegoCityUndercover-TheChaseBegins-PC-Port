@@ -103,7 +103,7 @@ std::vector<RopeDraw> ziplineRopeDraws(const std::vector<ZiplineAnchor>& anchors
         const ZiplineRope& rope = ropes[i];
         if (rope.texture.empty() || anchor.target < 0) continue;
         const ZiplineAnchor& target = anchors[std::size_t(anchor.target)];
-        if (anchor.order < target.order && (!enabled || enabled(target))) continue;
+        if (anchor.order < target.order && ropes[std::size_t(anchor.target)].texture.empty() && (!enabled || enabled(target))) continue;
         if (enabled && !enabled(anchor)) continue;
         int alpha = 255;
         if (rope.fadeNearCamera) alpha = ziplineRopeAlpha(anchor, target, camera);
