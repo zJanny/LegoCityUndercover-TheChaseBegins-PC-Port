@@ -25,6 +25,7 @@ public:
     const std::vector<std::string>& extendedCharacters();
     std::string text(const std::string& file, const std::string& identifier);
     std::string textForKey(const std::string& file, std::uint32_t key);
+    std::string tableText(const std::string& path, std::size_t sheet, std::size_t row, std::size_t column);
 
 private:
     const std::map<std::uint32_t, std::string>& table(const std::string& file);
@@ -32,6 +33,7 @@ private:
     std::map<std::string, assets::Image> images_;
     std::map<std::string, BitmapFont> fonts_;
     std::map<std::string, assets::UiLayout> layouts_;
+    std::map<std::string, assets::Table> dataTables_;
     std::map<std::string, std::map<std::uint32_t, std::string>> tables_;
     std::vector<std::string> extended_;
     bool extendedLoaded_ = false;

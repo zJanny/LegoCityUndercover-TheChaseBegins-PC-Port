@@ -6,11 +6,12 @@
 // STAND-INS (listed in docs/plans/features/ui-menus.md):
 // - UI-S4 Options, Credits and Exit play the select sound and do nothing else (pages 0x364888 and 0x51456c and the quit question are not ported).
 // - UI-S5 The six collectible counts, the ability count and the ticker text of the top screen are not drawn (save progress 0x20a630 / 0x20a7fc,
-//   0x239184 and the ticker 0x2ba8c8 are not ported); the ability icon is the one of case 0 (UI_Scanner_DistressedCitizen) and the
+//   0x239184 are not ported; the ticker font, line top and spacing are stand-ins, see runtime/pause_ticker.hpp); the ability icon is the one of case 0 (UI_Scanner_DistressedCitizen) and the
 //   portrait border is portrait_border_cop (the class tables 0x51b24c, 0x519454 and 0x519474 are not read).
 // - UI-S6 The page manager 0x376d6c is busy only while the screen closes; its other busy tests (0x25207c, 0x1ff080, 0x1fbedc, 0x272fcc,
 //   0x214bf8) are not modelled.
 #include "frontend/round_menu.hpp"
+#include "runtime/pause_ticker.hpp"
 #include <string>
 #include <vector>
 
@@ -70,11 +71,14 @@ public:
     // Entries chosen whose effect is not ported (UI-S4), in order.
     std::vector<PauseEntry> takeUnported();
     std::vector<int> takeSounds();
+    // The ticker text of draw 0x29ec00; empty while no mission title is set.
+    void setTickerText(const std::string& text) { tickerText_ = text; }
     LayoutScene topScene() const;
     void drawTop(Canvas& top, Resources& resources) const;
     void drawBottom(Canvas& bottom, Resources& resources) const;
 
 private:
+    void drawTicker(Canvas& top, Resources& resources) const;
     void enterPage();
     void requestClose();
     void pageSelect();
@@ -84,6 +88,9 @@ private:
     bool opened_ = false, finished_ = false, closing_ = false;
     bool pageRequested_ = false, page_ = false, justSwitched_ = false;
     int savedSelection_ = 0;
+    std::string tickerText_;
+    mutable runtime::PauseTicker ticker_;
+    mutable float tickerSeconds_ = 0;
     float topTime_ = 0, topOnTime_ = 0;  // since the last top-screen storyboard started, since TransitionOn started
     ShortcutState back_, select_;
     std::vector<PauseEntry> unported_;

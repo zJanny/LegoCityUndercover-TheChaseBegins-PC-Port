@@ -4,6 +4,7 @@
 // screens 400x480; top (5,120) and (200,230) = 7 15 30, bottom (160,120) = 255 222 22, (60,120) = 161 168 106, (260,120) = 42 101 150,
 // (160,60) = 6 47 121); the texts are gametext_uk / systemtext_uk entries of the keys in pause_menu.hpp. Needs the extracted RomFS; exits
 // with 77 without it.
+#include <algorithm>
 #include "frontend/pause_menu.hpp"
 #include <cmath>
 #include <cstdlib>
@@ -62,6 +63,20 @@ int main(int argc, char** argv) {
         pixel(bottom, 60, 120, 161, 168, 106, "Exit picture");
         pixel(bottom, 260, 120, 42, 101, 150, "Options picture");
         pixel(bottom, 160, 60, 6, 47, 121, "round menu background");
+
+        Canvas before(kTopWidth, kScreenHeight), after(kTopWidth, kScreenHeight);
+        menu.update(1.0f, {});
+        menu.drawTop(before, resources);
+        menu.setTickerText("Cherry Tree Hills / A title / A summary");
+        menu.drawTop(after, resources);
+        bool changed = false, outsideClip = false;
+        for (int y = 0; y < kScreenHeight; ++y)
+            for (int x = 0; x < kTopWidth; ++x) {
+                const bool differs = !std::equal(before.pixel(x, y), before.pixel(x, y) + 3, after.pixel(x, y));
+                changed = changed || differs;
+                outsideClip = outsideClip || (differs && (x < 25 || x >= 375));
+            }
+        require(changed && !outsideClip, "the ticker draws inside the clip rectangle 25..375 only");
     } catch (const std::exception& error) {
         std::cerr << "pause-menu-real-test: " << error.what() << '\n';
         return 1;

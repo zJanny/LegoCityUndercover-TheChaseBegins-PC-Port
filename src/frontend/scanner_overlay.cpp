@@ -1,5 +1,6 @@
 #include "frontend/scanner_overlay.hpp"
 #include <algorithm>
+#include <cctype>
 #include <cmath>
 
 namespace chase::frontend {
@@ -40,10 +41,43 @@ void drawMarkers(Canvas& top, Resources& resources, const std::vector<runtime::S
     }
 }
 
+const assets::UiElement* findElement(const assets::UiElement& root, const std::string& name) {
+    if (root.name == name) return &root;
+    for (const assets::UiElement& child : root.children)
+        if (const assets::UiElement* found = findElement(child, name)) return found;
+    return nullptr;
+}
+
+std::string iconTexture(Resources& resources, int icon) {
+    std::string path = resources.tableText(kScannerInfoIconTable, 0, std::size_t(icon), 1);
+    for (char& c : path) c = char(std::tolower(static_cast<unsigned char>(c)));
+    if (path.size() > 4 && path.compare(path.size() - 4, 4, ".png") == 0) path.replace(path.size() - 4, 4, ".bpng");
+    return path;
+}
+
+void drawInfo(Canvas& top, Resources& resources, const runtime::ScannerInfoPose& info, float originX, float originY) {
+    if (info.box == runtime::ScannerInfoBox::None) return;
+    const bool upper = info.box == runtime::ScannerInfoBox::Top;
+    const std::string name = upper ? "info_top" : "info_bot";
+    const assets::UiElement* placed = findElement(resources.layout(kScannerLayout).root, name);
+    if (!placed) return;
+    const std::string folder = "sprites/blend/drc_scanner/images/";
+    LayoutScene scene;
+    scene.rotations = true;
+    scene.opacity = info.opacity;
+    scene.storyboard = info.leaving ? "InfoOff" : "InfoOn";
+    scene.time = info.time;
+    scene.images[name + "_box"] = folder + "info_box_green.bpng";
+    scene.images[name + "_i"] = folder + "info_i_green.bpng";
+    scene.images[name + "_object_icon"] = iconTexture(resources, info.icon);
+    drawLayout(top, resources, kScannerInfoLayouts[upper ? 0 : 1], scene, originX + placed->position[0] * kScannerLayoutScale + info.offset[0],
+               originY + placed->position[1] * kScannerLayoutScale + info.offset[1], kScannerLayoutScale);
+}
+
 }
 
 void drawScannerOverlay(Canvas& top, Resources& resources, const runtime::ScannerReticlePose& pose, float seconds,
-                        const std::vector<runtime::ScannerMarkerPose>& markers) {
+                        const std::vector<runtime::ScannerMarkerPose>& markers, const runtime::ScannerInfoPose& info) {
     const float originX = (float(top.width()) - kScannerLayoutWidth * kScannerLayoutScale) / 2;
     const float originY = (float(top.height()) - kScannerLayoutHeight * kScannerLayoutScale) / 2;
 
@@ -77,6 +111,7 @@ void drawScannerOverlay(Canvas& top, Resources& resources, const runtime::Scanne
         drawLayout(top, resources, kScannerMeterLayout, meter, reticleX + (500.0f - 350.0f) * 0.5f * kScannerLayoutScale,
                    reticleY + (256.0f - 350.0f) * 0.5f * kScannerLayoutScale, kScannerLayoutScale);
     }
+    drawInfo(top, resources, info, originX, originY);
 }
 
 }

@@ -11,11 +11,14 @@ Handlers of batch SCRIPT-30 and the objects they feed. Evidence: llvm-objdump (a
 - Portrait at (200 - half width - 24 - 7, y - 1); tip alpha +/-0.2 per update. [§2026-10-14T16:51:43](#ts-20261014-165143)
 - ShowLevelText ends `startup`; InformationBox has no B button. [§2026-10-14T18:57:39](#ts-20261014-185739), [§2026-10-14T20:46:00](#ts-20261014-204600)
 - Bottom screen panel, dialogue background fade, ShowDialogBG byte and BlackoutMap: [script-text-bottom-screen.md](script-text-bottom-screen.md).
+- Mission title and summary are read only by the pause top ticker (0x29ec00): "<level name> / <title> / <summary>" scrolling left at about 63 pixels per second. [§2026-10-20T00:18:56+02:00](#ts-20261020-001856)
 - Open: ShowTally / ShowBossHearts / ShowRaceStart layouts, ShowCharacterIntro against the oracle.
 
 <a id="ts-20261014-152500"></a>
 
 ## 2026-10-14T15:25:00+02:00 — Tip text and dialogue objects, handler arguments, measured timing and layout
+
+Corrected by [script-text.md §2026-10-20T00:18:56](#ts-20261020-001856): the readers of the mission title and summary are in the pause top ticker 0x29ec00.
 
 Corrected by [script-text-bottom-screen.md §2026-10-19T23:15:01](script-text-bottom-screen.md#ts-20261019-231501): ShowDialogBG only stores the byte 0x51a2bd; the dialogue background is drawn by the panel alpha that tips and BlackoutMap raise.
 
@@ -171,3 +174,28 @@ Unknowns:
 - The 0.2 pixel vertical offset of the oracle's body glyph rows (bilinear sampling at a fractional position); the origin of the first line's offset (-5 against the centred block of four lines) was not found in 0x23c780.
 - ShowCharacterIntro: no state at mission 1-4 exists yet.
 - The warning dialog's own box width (296) is not explained by the same rule (its two-button row may widen it); its button positions stay the earlier fitted values.
+
+<a id="ts-20261020-001856"></a>
+
+## 2026-10-20T00:18:56+02:00 — SetMissionTitle / SetMissionSummary: the reader is the pause top ticker (llvm-objdump)
+
+[Corrects §2026-10-14T15:25 (the readers of the mission title and summary)](#ts-20261014-152500): the literal pool search missed the readers because they use the base 0x375f90 with the offsets +8 and +0xc.
+
+### Method
+
+Literal-pool search for 0x375f6c..0x375fa8 and loads at the key offsets from the base 0x375f90 (only 0x29ec00 reads them); llvm-objdump (`--mattr=+vfp2,+vfp3`) of 0x29ec00, 0x300204 and the text helpers (0x220674, 0x235538, 0x235cc4, 0x254d80, 0x223cf8, 0x23602c). No REA.
+
+### The ticker (0x29ec00, called by the draw 0x300204 in pass 6, the pause screen's top screen)
+
+- Returns at once when the title key (0x375f98) is 0 or 0xefed6b90 (the hash of the empty text, literal 0x29edcc); then nothing is drawn and the scroll stays. Both keys start as 0.
+- Text: the level text (key = field +8 of the 84-byte level row, as for ShowLevelText, from the table 0x375964), then " / " and the title (table 0x37596c, the one the tip natives use), then, when the summary key is set, " / " and the summary.
+- Scroll (float at the pause object + 0x2ec, set to -350 by the enter 0x30004c): += 35 x frame time (0x23602c) per draw; when the measured text width (0x235538 in the current font) is below it, it becomes -350. The clip rectangle is (25, 0, 350, 240) (0x223cf8; 0x529e30 + 0x44 times 0.5 minus 175, 0, 350, screen height); the text is drawn at x = -scroll, y = 17.0 (0x254d80) with alpha 255 through 0x235cc4 in the font 0x220674(12) selected from a three-font table (0x52ebf8) whose sizes are filled at run time.
+
+### Port
+
+`src/runtime/pause_ticker.hpp` (text rule and scroll), `PauseMenu::drawTicker` (`src/frontend/pause_menu.cpp`: the clip is a strip canvas composited onto the top screen), glue in `game_pause_menu.cpp` at the opening of the screen; tests `pause-ticker`, `pause-menu-real-data`.
+
+Unknowns:
+- The font of size 12 (the port uses `frontendfont`), whether y 17 is the line top, the glyph spacing, the language table of 0x375964 (the port uses the game text, as for ShowLevelText), and the frame time source 0x23602c (a clock object's +0x78, not read).
+
+Oracle (servant C-1, state m12-8-roof-sound-scanner, three loads agree; `r40-servant-out/c1_L*`): title key 0x42ef342a, summary key 0x55fcc258; the text reads "Cherry Tree Hills / Where's Mr Waggles? / Find the lost ...", clipped at both sides; the scroll float at [0x375f94] + 0x2ec rises 1.05 per vblank (about 63 pixels per second), so the frame time per draw is 0.03 (35 x 0.03).

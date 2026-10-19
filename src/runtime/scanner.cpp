@@ -141,6 +141,7 @@ void Scanner::load(assets::FuseArchive& archive, const assets::Level& level, con
             if (assets::modelBounds(archive, assets::meshModelPath(placed->mesh), centre, half))
                 for (int a = 0; a < 3; ++a) scannable.point[a] += centre[a];
         }
+        if (const assets::LevelParam* icon = effectiveParam(object, *cls, assets::nameHash("InfoIcon"))) scannable.infoIcon = int(icon->value);
         scannable.triggerScanned = referenceName(object, *cls, "TriggerScanned", names);
         objects_.push_back(std::move(scannable));
     }

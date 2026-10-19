@@ -43,6 +43,7 @@
 #include "game_carry.hpp"
 #include "runtime/carry.hpp"
 #include "runtime/scanner.hpp"
+#include "runtime/scanner_info.hpp"
 #include "runtime/scanner_markers.hpp"
 #include "runtime/scanner_reticle.hpp"
 #include "runtime/scanner_render.hpp"
@@ -337,6 +338,7 @@ private:
     unsigned scannerCallsSeen = 0;
     chase::runtime::ScannerReticle scannerReticle;
     chase::runtime::ScannerMarkers scannerMarkers;
+    chase::runtime::ScannerInfo scannerInfo;
     std::vector<chase::runtime::ZiplineAnchor> ziplines;
     chase::runtime::ZiplineRider ziplineRider;
     std::vector<chase::runtime::ZiplineRope> ziplineRopes;

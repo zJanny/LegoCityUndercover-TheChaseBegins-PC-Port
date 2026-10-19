@@ -79,6 +79,26 @@ int main(int argc, char** argv) {
         scanning.clearTransparent();
         frontend::drawScannerOverlay(scanning, resources, state.update(input), 0.0f);
         require(litPixels(scanning) > idlePixels + 200, "scanning adds the reticle rings and the scan meter");
+
+        require(resources.tableText(frontend::kScannerInfoIconTable, 0, 13, 1).find("ui_scanner_dog.png") != std::string::npos,
+                "tablespoi.bxls sheet 0 row 13 is the dog icon (chase-tabledump tables/tablespoi.bxls; class value InfoIcon 13 of 1-2_Dog_Prop)");
+        require(std::fabs(boardLength(resources.layout(frontend::kScannerInfoLayouts[0]), "InfoOn") - runtime::kScannerInfoOnSeconds) < 1e-4f &&
+                    std::fabs(boardLength(resources.layout(frontend::kScannerInfoLayouts[1]), "InfoOff") - runtime::kScannerInfoOffSeconds) < 1e-4f,
+                "InfoOn is 0.7 s and InfoOff 0.2 s long (chase-layoutdump --tracks info_top.bxaml)");
+        runtime::ScannerInfoPose shownInfo;
+        shownInfo.box = runtime::ScannerInfoBox::Top;
+        shownInfo.opacity = 1.0f;
+        shownInfo.time = runtime::kScannerInfoOnSeconds;
+        shownInfo.icon = 13;
+        frontend::Canvas withInfo(400, 240);
+        withInfo.clearTransparent();
+        runtime::ScannerReticle plain;
+        const runtime::ScannerReticlePose basePose = plain.update(runtime::ScannerReticleInput());
+        frontend::drawScannerOverlay(withInfo, resources, basePose, 0.0f, {}, shownInfo);
+        frontend::Canvas without(400, 240);
+        without.clearTransparent();
+        frontend::drawScannerOverlay(without, resources, basePose, 0.0f);
+        require(litPixels(withInfo) > litPixels(without) + 500, "the info box adds its hexagon and icon");
     } catch (const std::exception& error) {
         std::cerr << "scanner-overlay-test: " << error.what() << '\n';
         return 1;

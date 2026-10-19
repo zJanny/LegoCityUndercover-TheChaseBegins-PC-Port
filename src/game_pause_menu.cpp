@@ -6,6 +6,7 @@
 // and animation slots of 0x2e6a60 are not reproduced.
 #include "game_hud.hpp"
 #include "game_level.hpp"
+#include "frontend/script_text_pages.hpp"
 #include <iostream>
 
 namespace game_level {
@@ -14,6 +15,7 @@ namespace fe = chase::frontend;
 
 namespace {
 constexpr const char* kGameText = "localisation/gametext_uk.loc";
+constexpr const char* kHintText = "localisation/hinttext_uk.loc";
 constexpr const char* kSystemText = "localisation/systemtext_uk.loc";
 constexpr std::size_t kSlotStart = 10, kSlotDpadLeft = 2, kSlotDpadRight = 3;
 const char* const kEntryNames[fe::kPauseEntryCount] = {"Resume", "Options", "Credits", "Exit"};
@@ -39,6 +41,10 @@ bool LevelSession::holdForPause(float dt, const runtime::PadState& padInput) {
         pauseRequested = false;
         if (!pauseMenu) pauseMenu.emplace(fe::pauseMenuSetup(hudResources, kGameText, kSystemText));
         pauseMenu->open();
+        const runtime::ScriptTextState& missionText = levelScripts.text();
+        pauseMenu->setTickerText(runtime::pauseTickerText(hudResources.textForKey(kGameText, fe::levelHeadingKey(hudResources, levelName)),
+                                                          missionText.missionTitle(), hudResources.textForKey(kHintText, missionText.missionTitle()),
+                                                          missionText.missionSummary(), hudResources.textForKey(kHintText, missionText.missionSummary())));
         std::cout << "pause menu opened at update " << updates << '\n';
     } else {
         if (pad.slot(kSlotStart).press > 0 && !cutscenePlaying()) pauseRequested = true;

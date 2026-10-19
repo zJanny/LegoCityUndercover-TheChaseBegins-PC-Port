@@ -53,6 +53,8 @@ void PauseMenu::open() {
     opened_ = true;
     finished_ = closing_ = false;
     topTime_ = topOnTime_ = 0;
+    ticker_.reset();
+    tickerSeconds_ = 0;
     round_ = RoundMenu(setup_.round, setup_.centres);
     round_.create();
     round_.setTitle(setup_.texts.title);
@@ -92,6 +94,7 @@ void PauseMenu::pageSelect() {
 void PauseMenu::update(float dt, const PauseInput& input) {
     if (!isOpen()) return;
     topTime_ += dt;
+    tickerSeconds_ += dt;
     topOnTime_ += dt;
     back_.time += dt;
     select_.time += dt;
@@ -163,6 +166,28 @@ LayoutScene PauseMenu::topScene() const {
 void PauseMenu::drawTop(Canvas& top, Resources& resources) const {
     top.clear(0, 0, 0);
     drawLayout(top, resources, kPauseTopLayout, topScene(), 0, 0);
+    drawTicker(top, resources);
+}
+
+void PauseMenu::drawTicker(Canvas& top, Resources& resources) const {
+    if (tickerText_.empty()) return;
+    const BitmapFont& font = resources.font("frontendfont");
+    const auto& extended = resources.extendedCharacters();
+    ticker_.advance(tickerSeconds_, float(textWidth(font, extended, tickerText_, 0)));
+    tickerSeconds_ = 0;
+    const int clipX = int(runtime::kPauseTickerClip[0]), clipWidth = int(runtime::kPauseTickerClip[2]);
+    Canvas strip(clipWidth, top.height());
+    strip.clearTransparent();
+    drawText(strip, font, extended, tickerText_, ticker_.x() - float(clipX), runtime::kPauseTickerY, Align::Left, Colour{1, 1, 1, 1}, 0);
+    for (int y = 0; y < strip.height(); ++y)
+        for (int x = 0; x < clipWidth; ++x) {
+            const std::uint8_t* source = strip.pixel(x, y);
+            if (source[3] == 0) continue;
+            std::uint8_t* target = top.pixel(clipX + x, y);
+            const float alpha = float(source[3]) / 255.0f;
+            for (int c = 0; c < 3; ++c) target[c] = std::uint8_t(float(source[c]) * alpha + float(target[c]) * (1.0f - alpha) + 0.5f);
+            target[3] = 255;
+        }
 }
 
 void PauseMenu::drawBottom(Canvas& bottom, Resources& resources) const {

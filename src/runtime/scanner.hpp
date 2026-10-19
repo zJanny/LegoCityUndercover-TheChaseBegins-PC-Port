@@ -99,6 +99,7 @@ struct ScannableObject {
     float radius = 1.0f;         // component +0x1c, 1 when 0 (0x29125c)
     std::string triggerScanned;  // TriggerScanned, lower case
     bool hasShownObject = true;  // component +4: the model entity; gives kScannerLinkedRange
+    int infoIcon = 0;            // class value InfoIcon: row of tables/tablespoi.bxls sheet 0 (SCAN-S12)
     bool scanned = false;        // component flag bit 1: TriggerScanned already fired
 };
 

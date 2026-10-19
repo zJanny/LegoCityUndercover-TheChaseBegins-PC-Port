@@ -91,6 +91,7 @@ bool LevelSession::drawScannerOverlay(frontend::Canvas& top) {
     if (!scanner.viewShown()) {
         scannerReticle.reset();
         scannerMarkers.reset();
+        scannerInfo.reset();
         return false;
     }
     runtime::ScannerReticleInput input;
@@ -117,8 +118,24 @@ bool LevelSession::drawScannerOverlay(frontend::Canvas& top) {
         markerRecords[i].screen[0] = records[i].screen[0];
         markerRecords[i].screen[1] = records[i].screen[1];
     }
-    frontend::drawScannerOverlay(top, hudResources, scannerReticle.update(input), float(updates) / 30.0f,
-                                 scannerMarkers.update(runtime::kScannerUpdateSeconds, markerRecords));
+    const runtime::ScannerReticlePose reticlePose = scannerReticle.update(input);
+    const auto infoRecord = [&](int index, runtime::ScannerInfoRecord& out) -> const runtime::ScannerInfoRecord* {
+        if (index < 0 || std::size_t(index) >= records.size()) return nullptr;
+        const runtime::ScannerRecord& record = records[std::size_t(index)];
+        out.screen[0] = record.screen[0];
+        out.screen[1] = record.screen[1];
+        out.distanceSquared = record.distanceSquared;
+        out.icon = scanner.objects()[record.object].infoIcon;
+        return &out;
+    };
+    runtime::ScannerInfoRecord currentRecord, targetRecord;
+    runtime::ScannerInfoInput infoInput;
+    infoInput.state = scanner.targetState();
+    infoInput.current = infoRecord(scanner.current(), currentRecord);
+    infoInput.target = infoRecord(scanner.target(), targetRecord);
+    infoInput.reticleY = reticlePose.position[1];
+    frontend::drawScannerOverlay(top, hudResources, reticlePose, float(updates) / 30.0f,
+                                 scannerMarkers.update(runtime::kScannerUpdateSeconds, markerRecords), scannerInfo.update(infoInput));
     return true;
 }
 

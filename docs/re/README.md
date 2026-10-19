@@ -29,6 +29,7 @@ Read this index, then open only the file you need.
 | [abilities-detective.md](abilities-detective.md) | Detective tool: detective spot, reveal spot, reveal prop, footprints, the player's detective states and their timing |
 | [use-spot.md](use-spot.md) | Use spot (`props/prop_simpleuse`): class record, handler 0x1922e8, one-shot rule, oracle trace, the unfired Door_Lock_Hint_Script object |
 | [abilities-scanner.md](abilities-scanner.md) | Sound scanner (`props/prop_scannerzoneaudio`, type 201): use press, player states 0x156..0x158, view, zoom, lock, scan, fired events |
+| [abilities-scanner-overlay.md](abilities-scanner-overlay.md) | Sound scanner overlay: layouts, reticle, sound markers, info boxes, frame tint, sonar |
 | [playtests.md](playtests.md) | What the user saw playing `chase-game`: confirmed behaviour and the bugs found, each with a feature item |
 | [carrying.md](carrying.md) | Carry objects and targets (`props/prop_carry*`): class records, use zones, pickup, drop, placing, fired events |
 | [carrying-animation.md](carrying-animation.md) | Carry states (pickup, drop, place): clips, hand attachment, the release, what ends each state, the track event that attaches and releases |
