@@ -61,6 +61,8 @@ std::string stringOf(const assets::LevelParam* param) {
 void WaypointSet::load(const assets::Level& level, const assets::ClassLookup& classOf) {
     waypoints_.clear();
     controlTaken_ = false;
+    slotUsed_.fill(false);
+    vehicleWaypoint_.clear();
     for (const assets::LevelObject& object : level.objects) {
         if (std::find(std::begin(kClassNames), std::end(kClassNames), object.className) == std::end(kClassNames)) continue;
         const assets::Level* cls = classOf(object.className);
@@ -75,6 +77,7 @@ void WaypointSet::load(const assets::Level& level, const assets::ClassLookup& cl
         waypoint.takePlayerControl = intOf(effectiveParam(object, *cls, kHashTakePlayerControl), 0) != 0;
         waypoint.autoTrigger = intOf(effectiveParam(object, *cls, kHashAutoTrigger), 0) != 0;
         waypoint.getIntoVehicle = intOf(effectiveParam(object, *cls, kHashGetIntoVehicle), 0) != 0;
+        waypoint.waypointType = intOf(effectiveParam(object, *cls, assets::nameHash("WaypointType")), 0);
         if (const assets::LevelParam* vehicleString = effectiveParam(object, *cls, kHashVehicleString)) {
             waypoint.kind = WaypointKind::Vehicle;
             const std::uint32_t named = assets::objectReferenceHash(*vehicleString);
@@ -117,29 +120,47 @@ bool WaypointSet::active(const std::string& lowerName) const {
     return waypoint && waypoint->active;
 }
 
+int WaypointSet::takeMapSlot() {
+    for (int slot = 0; slot < kWaypointMapSlots; ++slot)
+        if (!slotUsed_[std::size_t(slot)]) {
+            slotUsed_[std::size_t(slot)] = true;
+            return slot;
+        }
+    return -1;
+}
+
+void WaypointSet::freeMapSlot(Waypoint& waypoint) {
+    if (waypoint.mapSlot < 0) return;
+    slotUsed_[std::size_t(waypoint.mapSlot)] = false;
+    waypoint.mapSlot = -1;
+}
+
 bool WaypointSet::setActive(const std::string& lowerName, bool enable) {
     for (Waypoint& waypoint : waypoints_) {
         if (waypoint.instance != lowerName) continue;
         const bool notAutoTrigger = !waypoint.autoTrigger;
         if (!enable && !notAutoTrigger) return waypoint.active;
-        const bool wasActive = waypoint.active;
+        if (enable) waypoint.entityEnabled = true;
         waypoint.active = enable;
+        const bool namedVehicleWaypoint = waypoint.kind == WaypointKind::Vehicle && !waypoint.namedVehicle.empty();
         if (!enable) {
-            if (wasActive && waypoint.state != 3) {
+            if (namedVehicleWaypoint) vehicleWaypoint_.clear();
+            freeMapSlot(waypoint);
+            if (waypoint.state != 3) {
                 waypoint.columnTween = NodeTween::start(1.0f, 0.0f, waypoint.fadeScaleIn);
                 waypoint.badgeTween = NodeTween::start(1.0f, 0.0f, kWaypointBadgeHideSeconds);
                 waypoint.disableFade = true;
             }
             return false;
         }
+        if (waypoint.mapSlot < 0) waypoint.mapSlot = takeMapSlot();
         waypoint.disableFade = false;
-        {
-            waypoint.fired = false;
-            waypoint.state = 0;
-            waypoint.timer = kWaypointEnableTimer;
-            waypoint.columnTween = NodeTween::start(0.0f, 0.0f, 0.0f);
-            waypoint.badgeTween = NodeTween::start(0.0f, 0.0f, 0.0f);
-        }
+        waypoint.fired = false;
+        waypoint.state = 0;
+        waypoint.timer = kWaypointEnableTimer;
+        waypoint.columnTween = NodeTween::start(0.0f, 0.0f, 0.0f);
+        waypoint.badgeTween = NodeTween::start(0.0f, 0.0f, 0.0f);
+        if (namedVehicleWaypoint && waypoint.waypointType != kWaypointTypeGetInto && !waypoint.getIntoVehicle) vehicleWaypoint_ = waypoint.instance;
         return waypoint.active;
     }
     return enable;
@@ -273,6 +294,7 @@ WaypointUpdate WaypointSet::update(float dt, const float player[3], const Waypoi
                         if (!waypoint.firedVehicle.empty()) result.vehicleActions.push_back({waypoint.firedVehicle, false});
                     }
                     waypoint.active = false;
+                    freeMapSlot(waypoint);
                     result.deactivated.push_back(waypoint.instance);
                     break;
                 default: break;

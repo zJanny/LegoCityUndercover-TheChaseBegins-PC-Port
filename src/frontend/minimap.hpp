@@ -15,8 +15,8 @@ namespace chase::frontend {
 constexpr float kMapPlayerScreenX = kMapCentreX, kMapPlayerScreenY = kMapCentreY;
 
 // Waypoint icons on the map (docs/re/objective-hud.md): placement, edge ellipse, arrow, halo, grow and ring come from the
-// original's drawing code in frontend/map_marker.hpp. STAND-INS (HUD-S60): every waypoint is drawn as icon type 0 (the type
-// is a class parameter that was read for one waypoint only) and the ring lines are white.
+// original's drawing code in frontend/map_marker.hpp. Every waypoint is icon type 0: WaypointType is 0 in the three class files
+// (docs/re/objective-hud.md). STAND-IN (HUD-S60): the ring lines are white.
 using MinimapMarker = MapMarkerSource;
 
 // A sub-objective record on the map (0x2dbb04): the icon of every enabled target at alpha (1 - slot fade); and its slot (0x2db0dc,

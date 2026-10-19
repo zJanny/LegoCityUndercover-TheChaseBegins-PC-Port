@@ -97,6 +97,7 @@ void LevelSession::applyPlacement(const runtime::ScriptPlacement& request) {
         if (runtime::entityHasController(runtime::kPlayerEntityKind, 0, runtime::measuredControllerKindList()))
             runtime::resetControllerAfterPlacement(player->vertical);
         cancelBoardingByPlacement();
+        if (runtime::takeNodeShow(player->vertical.placement) && !cutscenePlaying()) player->setVisible(scene, true);
         player->pose(scene);
         return;
     }

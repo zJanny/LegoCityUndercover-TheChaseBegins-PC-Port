@@ -14,6 +14,7 @@ Subtopics: [objective-hud-map.md](objective-hud-map.md)
 - The waypoint is reached through its class update and `TriggerScript`, which starts the mission script; mission 1-1 has 11 steps. [§2026-10-14T21:23](#ts-20261014-212357), [scripts-missions.md §2026-10-14T22:48](scripts-missions.md#ts-20261014-224825)
 - Map screen placement, edge ellipse, arrow, halo, grow and pulse rings: [objective-hud-map.md](objective-hud-map.md).
 - Group targets draw as icons 14, 13, 15 at alpha 1 - slot fade; "on the map" is the inner ellipse 98.4 / 62.4. [§2026-10-19T15:00](#ts-20261019-150002)
+- A disable starts the fade for any accepted disable outside state 3, frees the map slot (16 slots, first free, -1 when full) and clears the vehicle waypoint global; the entity disable is conditional on a global that is never a waypoint; `WaypointType` is 0 in all shipped waypoint classes, so every waypoint is icon type 0. [§2026-10-19T23:06](#ts-20261019-230637)
 - Open: icon type selector of other classes, ring line colour, zoom control, how node alpha enters the draw (HUD-S70), the global *(0x529c18 + 0x24), entity boxes of other entities, oracle pictures of group markers and arrows.
 
 <a id="ts-20261014-155919"></a>
@@ -162,3 +163,19 @@ Unknowns:
 - The entity box (+0x60 / +0x6c) of characters other than the player and of props without a collision entry, the vehicle record points +0x2e8 / +0x43c, the class of hash 0x365f7679, and the origin of the clock 0x2355c0.
 - The render state of the arrow quad (bytes 4, 2, 5, 3, blend 5, 7) and the map alpha +0x4a0 (taken as 1).
 - What the original shows: no oracle picture of a group dot, a group slot or an arrow exists.
+
+<a id="ts-20261019-230637"></a>
+
+## 2026-10-19T23:06:37+02:00 — SetActiveWayPoint disable: map slots, vehicle waypoint, entity flag and WaypointType (llvm-objdump on game.arm.elf, class files; no REA session, no emulator)
+
+Completes [§2026-10-19T15:00:02](#ts-20261019-150002) (SCRIPT-S269). Disassembly of 0x229c98, 0x229b9c, 0x1a2114, 0x2b4dac, 0x230ef4, 0x2428c0, 0x186d44, 0x186d50, 0x17aa34 and the map draw 0x2db0dc, plus the class files `props/map_waypoint`, `map_vehiclewaypoint` and `map_getintovehiclewaypoint`.
+
+- **Disable path 0x229d70, in order.** (1) A waypoint with +0x50 non-zero and kind +0x8c == 1 stores 0 in *(0x529c18 + 0x28) (0x2b4dac is `str r0, [0x529c18 + 0x28]`). (2) The map slot is freed (0x229b9c: 16 slots at *(0x519e24 + 0x24) + 0xe0 + 4 i; the slot record is released with 0x25c27c and the entry zeroed). (3) 0x2428c0(entity) runs only when 0x230ef4 (= *(0x529c18 + 0x24)) equals the waypoint; 0x2428c0 sets the entity's disabled bit (halfword +0x10 bit 0). (4) The Badge child is disabled. (5) Outside state 3 the tweens start, **for every accepted disable, whether or not the waypoint was active**: the column 1 to 0 over FadeScaleInTime, the Badge (when bit 1 of +0x8f) 1 to 0 over 2^-23 s. The original needs no "was active" test because a waypoint that was never enabled has its entity disabled by the setup 0x170fd8 and is not drawn.
+- **Enable path.** 0x1a2114 is called only from 0x229cd8: it scans the 16 slots from 0 for the first free one, creates the 40-byte slot record (entity at +0x10, type byte +0x1c, +0x1d) and returns the index, or -1 when all are used (0x1a2148); the waypoint keeps -1 and is still active. The vehicle waypoint global is set at 0x229d54 only for +0x50 non-zero, kind == 1, `WaypointType` (+0x88) != 11 and bit 0 of +0x8f (GetIntoVehicle) clear. The self switch-off of state 3 (0x17b090) also frees the slot, when the UseMarker pointer +0x58 is 0.
+- **0x230ef4** returns *(0x529c18 + 0x24). It has 24 callers (0x16d638, 0x18e91c, 0x19cfbc, 0x1b9d84, 0x1c7ed0, 0x1cb1a0, 0x1da8bc, 0x22b318, 0x2bec1c, ...) that use it where a character entity is expected (0x22b318 hands it to 0x230e60, the enemy group fill; 0x2bec1c counts the group key into the centroid when the key equals it, [§2026-10-19T15:00:02](#ts-20261019-150002)). No store to the field was found among the eight literal pools of 0x529c18 (0x229b98, 0x230f00, 0x29f308, 0x2ae124, 0x2b4db8, 0x2c3110, 0x2e77f4, 0x34b114), so its writer is unknown. A waypoint is a prop, so the port treats the comparison as never true (inference).
+- **Message 251 with argument 0 (handler 0x186d50)** of a waypoint with bit 0 of +0x8e set frees its slot, removes it from the active list and clears the bit. The waypoint tweens pass no linked object (0x229e54 hands r2 = 0 on), so the tween end does not send it.
+- **`WaypointType`** (+0x88, hash 0xc471915a, read in 0x17aa34 with the name string at 0x17ac18) is a float parameter of the class files, 0.0 in all three waypoint classes, flags 5 (no instance override). The map draw 0x2db0dc reads it through the getter 0x186d44 as the icon type of the slot's entity (a slot without entity uses its type byte +0x1c): so every waypoint of the shipped data is icon type 0, which is what the port draws (HUD-S60 narrowed). The class parameter `LevelName` (0x17aca0) is stored in +0x8d; not read further.
+
+Unknowns:
+- The writer of *(0x529c18 + 0x24) and the reader of *(0x529c18 + 0x28).
+- Whether another entity class takes 0x1a2114 slots through a path other than 0x229c98 (none found; 0x29f228, 0x2beccc and 0x2e7634 free +0x84 slots of the same component layout).

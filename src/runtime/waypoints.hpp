@@ -6,6 +6,7 @@
 // 0x17b03c). The waypoint then switches itself off. No SDL dependency.
 #include "assets/assets.hpp"
 #include "runtime/node_tween.hpp"
+#include <array>
 #include <cstdint>
 #include <functional>
 #include <string>
@@ -34,10 +35,13 @@ struct Waypoint {
     WaypointBound bound;
     std::string namedVehicle;
     std::int8_t vehicleType = 0;
+    int waypointType = 0;
     bool getIntoVehicle = false;
     std::string firedVehicle;
 
     bool active = false;
+    bool entityEnabled = false;
+    int mapSlot = -1;
     bool fired = false;
     std::uint8_t state = 0;
     float timer = 0;
@@ -49,7 +53,7 @@ struct Waypoint {
     float badgeFade() const { return badgeTween.value(); }
     // 0x229c98 with enable 0 outside state 3: the column fades out over FadeScaleInTime while the waypoint is already off.
     bool disableFade = false;
-    bool columnShown() const { return active || (disableFade && columnTween.value() > 0.0f); }
+    bool columnShown() const { return entityEnabled && (active || (disableFade && columnTween.value() > 0.0f)); }
 };
 
 constexpr float kWaypointVehicleSpeedLimit = 12.0f;
@@ -57,6 +61,8 @@ constexpr std::uint32_t kWaypointVehicleHintKey = 0xa0fc8748;
 constexpr float kWaypointVehicleHintSeconds = 0.5f;
 constexpr float kWaypointEnableTimer = 0x1p-23f;
 constexpr float kWaypointHitTimer = 0x1.0624dep-10f;
+constexpr int kWaypointMapSlots = 16;      // 0x1a2114: the first free of 16 map slots
+constexpr int kWaypointTypeGetInto = 11;   // 0x229d3c: a vehicle waypoint of WaypointType 11 does not become the vehicle waypoint
 constexpr float kWaypointBadgeHideSeconds = 0x1p-23f;  // 0x229e48, the duration of the badge tween 1 to 0 of a disable
 
 struct WaypointVehicle {
@@ -84,11 +90,13 @@ public:
     void load(const assets::Level& level, const assets::ClassLookup& classOf);
     bool known(const std::string& lowerName) const;
     bool active(const std::string& lowerName) const;
-    // 0x26e168 / 0x229c98: enabling resets state and timer; a disable is ignored unless AutoTrigger is 0 (bit 4 of +0x8e).
-    // An accepted disable outside state 3 starts the column tween 1 to 0 over FadeScaleInTime (+0x6c) and the badge tween 1 to 0
-    // over 2^-23 s. STAND-IN (SCRIPT-S269): the fade starts only for a waypoint that was active; the original starts it for any
-    // disable outside state 3 and relies on the entity flag, which the port does not keep for waypoints. Returns whether the
-    // waypoint is active afterwards.
+    // 0x26e168 / 0x229c98: enabling clears the entity's disabled flag (0x242cf0), resets state and timer, takes the first free of the
+    // 16 map slots when it holds none (-1 when all are used) and, for a vehicle waypoint with a named vehicle, WaypointType other than 11 and
+    // GetIntoVehicle clear, becomes the vehicle waypoint *(0x529c18 + 0x28). A disable is ignored unless AutoTrigger is 0 (bit 4 of
+    // +0x8e). An accepted disable clears the vehicle waypoint, frees the map slot and, outside state 3, starts the column tween 1 to 0
+    // over FadeScaleInTime (+0x6c) and the badge tween 1 to 0 over 2^-23 s, whether or not the waypoint was active; the entity disable
+    // 0x2428c0 happens only when *(0x529c18 + 0x24) (0x230ef4) is this waypoint, which the port never models (SCRIPT-S269: the global's
+    // writer was not found; its readers use it as a character). Returns whether the waypoint is active afterwards.
     bool setActive(const std::string& lowerName, bool enable);
     // 0x17acbc for every active waypoint of a loaded room, in object order; the disable fades of switched-off waypoints advance too. The player position is the player node.
     // `vehicle` is the vehicle of 0x22ec10 / 0x24255c (jump in, seated and jump out count), null on foot.
@@ -97,6 +105,8 @@ public:
     bool playerControlTaken() const { return controlTaken_; }
     const std::vector<Waypoint>& waypoints() const { return waypoints_; }
     const Waypoint* find(const std::string& lowerName) const;
+    // *(0x529c18 + 0x28) (0x2b4dac): the instance of the last enabled vehicle waypoint, empty after its disable or none. No reader found.
+    const std::string& vehicleWaypoint() const { return vehicleWaypoint_; }
 
     static bool inBound(const Waypoint& waypoint, const float player[3]);
     // 0x17b21c: the closest point of the vehicle's box to the bound centre, seen from the waypoint, tested against the bound.
@@ -105,7 +115,12 @@ public:
 
 private:
     std::vector<Waypoint> waypoints_;
+    int takeMapSlot();
+    void freeMapSlot(Waypoint& waypoint);
+
     bool controlTaken_ = false;
+    std::array<bool, kWaypointMapSlots> slotUsed_{};
+    std::string vehicleWaypoint_;
 };
 
 }

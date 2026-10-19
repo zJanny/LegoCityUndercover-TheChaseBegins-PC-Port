@@ -159,6 +159,7 @@ private:
     void updateDoors(const float playerPosition[3], const std::function<void(const chase::runtime::SoundCall&)>& emit);
     std::vector<chase::runtime::SoundCall> updateBuildits(const float playerPosition[3]);
     std::vector<chase::frontend::MinimapMarker> activeMapMarkers() const;
+    bool waypointOnMap(const std::string& instance) const;
     void updateCarry(const float playerPosition[3]);
     void loadDetective(chase::assets::FuseArchive& archive);
     void updateUseSpots(bool actionFree);

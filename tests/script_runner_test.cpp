@@ -413,6 +413,9 @@ void placementEffectsOfThePlayer() {
     chase::runtime::VerticalState seated;
     chase::runtime::resetControllerAfterPlacement(seated, true);
     require(seated.placement.settleStepPending && !seated.placement.defaultStateRequested, "in a vehicle: bits cleared, no message 8");
+    require(!chase::runtime::takeNodeShow(seated.placement), "in a vehicle: 0x23f734(node, 1) is not called");
+    require(chase::runtime::takeNodeShow(vertical.placement) && !chase::runtime::takeNodeShow(vertical.placement),
+            "message 8 shows the player's node once (0x18ed9c: 0x23f734(node, 1) clears mask 0x60)");
 }
 
 void placementProbeSegment() {

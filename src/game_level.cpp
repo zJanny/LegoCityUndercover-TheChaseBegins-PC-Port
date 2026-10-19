@@ -363,10 +363,16 @@ LevelSession::LevelSession(const Shared& sharedState)
     for (const game_options::ScriptStep& step : script) scriptLength += step.updates;
 }
 
+bool LevelSession::waypointOnMap(const std::string& instance) const {
+    if (!levelScripts.objectives().waypointActive(instance)) return false;
+    const runtime::Waypoint* waypoint = levelScripts.waypoints().find(instance);
+    return !waypoint || waypoint->mapSlot >= 0;
+}
+
 std::vector<fe::MinimapMarker> LevelSession::activeMapMarkers() const {
     std::vector<fe::MinimapMarker> markers;
     for (std::size_t i = 0; i < waypointObjects.size(); ++i)
-        if (levelScripts.objectives().waypointActive(game_doors::lowerCase(waypointObjects[i].instance)))
+        if (waypointOnMap(game_doors::lowerCase(waypointObjects[i].instance)))
             markers.push_back({int(i), waypointObjects[i].position[0], waypointObjects[i].position[2]});
     return markers;
 }

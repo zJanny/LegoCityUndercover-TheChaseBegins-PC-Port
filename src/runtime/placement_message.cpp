@@ -8,6 +8,13 @@ void placePlayerEffects(PlacementEffects& effects, bool inVehicle) {
     effects.defaultStateRequested = true;
     effects.nodeShown = true;
     effects.entityEnabled = true;
+    effects.nodeShowPending = true;
+}
+
+bool takeNodeShow(PlacementEffects& effects) {
+    const bool pending = effects.nodeShowPending;
+    effects.nodeShowPending = false;
+    return pending;
 }
 
 void locomotionStepEnded(PlacementEffects& effects) { effects.settleStepPending = false; }

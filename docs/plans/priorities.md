@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 824 open items and stand-ins, 169 linked to game usage, 655 with unknown reach.
+Items: 825 open items and stand-ins, 168 linked to game usage, 657 with unknown reach.
 
 ## Top 50 overall
 
@@ -52,8 +52,8 @@ Items: 824 open items and stand-ins, 169 linked to game usage, 655 with unknown 
 | 16 | [ANIM-S13](features/animation-characters.md?display=source#L25) | 623 | 0 | 8 | 0 | 1 stand-in | `playcharanim` | The player's script clip (PlayCharAnim on Player1) is sampled without the 0.1 blend and without the slot ... |
 | 17 | [SCRIPT-S262](features/script-system-natives-animation.md?display=source#L23) | 623 | 0 | 8 | 0 | 1 stand-in | `playcharanim` | The state change of PlayCharAnim on Player1 is applied at the end of the next player update after the ... |
 | 18 | [SCRIPT-S272](features/script-system-natives-animation.md?display=source#L27) | 623 | 0 | 8 | 0 | 1 stand-in | `playcharanim` | In the update that applies the PlayCharAnim request the old state's update runs as the port's locomotion (the ... |
-| 19 | [SCRIPT-S269](features/script-system-hud-natives.md?display=source#L18) | 538 | 0 | 7 | 0 | 1 stand-in | `setactivewaypoint` | SetActiveWayPoint: the disable fade starts only for a waypoint that was active (the original starts it for ... |
-| 20 | [SCRIPT-S274](features/script-system-natives-state.md?display=source#L22) | 537 | 0 | 8 | 0 | 1 stand-in, 1 implemented | `positionobject`, `positionplayer` | Message 8 of PositionObject / PositionPlayer to the player is recorded in `PlacementEffects` (state 1 ... |
+| 19 | [SCRIPT-S269](features/script-system-hud-natives.md?display=source#L18) | 538 | 0 | 7 | 0 | 1 stand-in | `setactivewaypoint` | SetActiveWayPoint: the entity disable of 0x229c98 (only when *(0x529c18 + 0x24) is the waypoint) is never ... |
+| 20 | [SCRIPT-S274](features/script-system-natives-state.md?display=source#L22) | 537 | 0 | 8 | 0 | 1 stand-in, 1 implemented | `positionobject`, `positionplayer` | Message 8 of PositionObject / PositionPlayer to the player shows the player's scene instance ... |
 | 21 | [SCRIPT-274](features/script-system-natives-animation.md?display=source#L37) | 497 | 0 | 8 | 2 | 3 stand-in | `loadanimation`, `playanimation`, `unloadanimation` | LoadAnimation and UnloadAnimation keep a name list only (0x23e6e4 / 0x23e518 load and release are not ported) ... |
 | 22 | [SCRIPT-S4](features/script-system.md?display=source#L25) | 484 | 0 | 8 | 0 | 1 stand-in, 1 implemented | `dcamcutscenewait`, `waitfordcam` | A function without a handler does nothing and continues at once; `chase-game` prints its name the first time ... |
 | 23 | [HUD-S9](features/hud-ui-text.md?display=source#L23) | 442 | 0 | 7 | 0 | 1 stand-in | `showdialogbg` | The dialogue background is drawn at full opacity as long as ShowDialogBG is on (no fade) |
@@ -78,12 +78,12 @@ Items: 824 open items and stand-ins, 169 linked to game usage, 655 with unknown 
 | 42 | [SCRIPT-S10](features/script-system-natives.md?display=source#L18) | 176 | 0 | 7 | 0 | 1 stand-in | `fadescreen` | `FadeScreen` fades linearly over 0.5 s (the duration is the handler's immediate) with a black veil; the tween ... |
 | 43 | [SCRIPT-S253](features/script-system-missions.md?display=source#L24) | 176 | 0 | 7 | 0 | 1 stand-in | `fadescreen` | `kFadeScreenFlagScreens`: FadeScreen passes the signed byte at 0x51a2bd as the screen byte; it read 1 in ... |
 | 44 | [SCRIPT-S18](features/script-system-natives-state.md?display=source#L18) | 175 | 0 | 7 | 0 | 2 stand-in | `resetobject`, `skiptofinalstate` | The six flag natives and ResetObject / SkipToFinalState store their value or message by instance name without ... |
-| 45 | [HUD-S60](features/hud-ui.md?display=source#L28) | 0 | 159 | 7 | 0 | - | `props/map_waypoint` | Every waypoint is drawn as icon type 0 (the type byte is a class parameter, read for `map_waypoint` only) ... |
-| 46 | [TRANS-5](features/level-transitions.md?display=source#L31) | 127 | 25 | 7 | 0 | 4 stand-in, 5 none, 1 implemented | `charsetallowvehicleentry`, `playcredits`, `playscriptonstartup`, `positionplayer` +7 | The 31 scripts of the shipped levels that call SceneChange, CharSetAllowVehicleEntry or ... |
-| 47 | [SCRIPT-73](features/script-system-hud-natives.md?display=source#L30) | 150 | 0 | 6 | 1 | 6 stand-in | `blackoutmap`, `disableicon`, `enableminimapwipe`, `enablescanner` +2 | Map and scanner natives (EnableMinimapWipe 0x187f28, EnableScanner, OverrideScannable, PanMapToObject, map ... |
-| 48 | [CAMERA-S51](features/camera.md?display=source#L25) | 145 | 0 | 7 | 0 | 1 stand-in | `shakescreen` | The ShakeScreen shake moves only the eye of the gameplay camera (`CameraRig::setEyeShake`); the cutscene ... |
-| 49 | [SCRIPT-S271](features/script-system-dcam.md?display=source#L21) | 145 | 0 | 7 | 0 | 1 stand-in | `shakescreen` | `ShakeScreen` draws its random numbers from `breakRandomStandIn`, the port's stand-in stream; the seed and ... |
-| 50 | [RENDER-62](features/rendering.md?display=source#L54) | 0 | 137 | 8 | 0 | - | `point` | Point lights (type 2) against the oracle: lvl_00 `Point`/`Point01` (Intensity 2, MaxRange 1) on baked surfaces |
+| 45 | [TRANS-5](features/level-transitions.md?display=source#L31) | 127 | 25 | 7 | 0 | 4 stand-in, 5 none, 1 implemented | `charsetallowvehicleentry`, `playcredits`, `playscriptonstartup`, `positionplayer` +7 | The 31 scripts of the shipped levels that call SceneChange, CharSetAllowVehicleEntry or ... |
+| 46 | [SCRIPT-73](features/script-system-hud-natives.md?display=source#L30) | 150 | 0 | 6 | 1 | 6 stand-in | `blackoutmap`, `disableicon`, `enableminimapwipe`, `enablescanner` +2 | Map and scanner natives (EnableMinimapWipe 0x187f28, EnableScanner, OverrideScannable, PanMapToObject, map ... |
+| 47 | [CAMERA-S51](features/camera.md?display=source#L25) | 145 | 0 | 7 | 0 | 1 stand-in | `shakescreen` | The ShakeScreen shake moves only the eye of the gameplay camera (`CameraRig::setEyeShake`); the cutscene ... |
+| 48 | [SCRIPT-S271](features/script-system-dcam.md?display=source#L21) | 145 | 0 | 7 | 0 | 1 stand-in | `shakescreen` | `ShakeScreen` draws its random numbers from `breakRandomStandIn`, the port's stand-in stream; the seed and ... |
+| 49 | [RENDER-62](features/rendering.md?display=source#L54) | 0 | 137 | 8 | 0 | - | `point` | Point lights (type 2) against the oracle: lvl_00 `Point`/`Point01` (Intensity 2, MaxRange 1) on baked surfaces |
+| 50 | [SCRIPT-S233](features/script-system-natives-world.md?display=source#L31) | 130 | 0 | 7 | 0 | 2 stand-in | `addtosemitransnearcameralist`, `enabledistancefade` | EnableDistanceFade and AddToSemiTransNearCameraList only record their arguments; every mesh stays opaque at ... |
 
 ## Player and camera
 
@@ -138,7 +138,7 @@ Items: 824 open items and stand-ins, 169 linked to game usage, 655 with unknown 
 
 ## Scripts and missions
 
-103 of 188 items linked.
+103 of 189 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -167,20 +167,20 @@ Items: 824 open items and stand-ins, 169 linked to game usage, 655 with unknown 
 
 ## Front end, HUD, saves
 
-15 of 166 items linked.
+14 of 166 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
 | 1 | [HUD-S9](features/hud-ui-text.md?display=source#L23) | 442 | 0 | 7 | 0 | 1 stand-in | `showdialogbg` | The dialogue background is drawn at full opacity as long as ShowDialogBG is on (no fade) |
-| 2 | [HUD-S60](features/hud-ui.md?display=source#L28) | 0 | 159 | 7 | 0 | - | `props/map_waypoint` | Every waypoint is drawn as icon type 0 (the type byte is a class parameter, read for `map_waypoint` only) ... |
-| 3 | [AUDIO-S11](features/audio.md?display=source#L29) | 67 | 0 | 7 | 0 | 1 stand-in | `automaticmusic` | AutomaticMusic clears the override byte 0x376b31 and runs the evaluation 0x204fe0 only as far as the mood-0 ... |
-| 4 | [MOVIE-38](features/movies-cutscenes.md?display=source#L42) | 56 | 0 | 7 | 0 | 1 stand-in | `dcamcutscenefree` | Whether the script native DCamCutSceneFree 0x196144 (clears the entity layers, no matrix restore) runs on a ... |
-| 5 | [HUD-22](features/hud-ui-text.md?display=source#L28) | 39 | 0 | 6 | 3 | 4 stand-in | `showbosshearts`, `showportraitovervehicle`, `showracestart`, `showtally` | Remaining text screens: ShowTally, ShowBossHearts, ShowRaceStart, ShowPortraitOverVehicle (their layouts and ... |
-| 6 | [AUDIO-S31](features/audio.md?display=source#L33) | 26 | 0 | 6 | 0 | 2 stand-in | `scalesoundfrequency`, `setsoundvolume` | SetSoundVolume is a factor on the voice's gains and ScaleSoundFrequency sets the voice rate to (int)(scale * ... |
-| 7 | [HUD-9](features/hud-ui.md?display=source#L39) | 21 | 0 | 6 | 1 | 1 stand-in | `addstuds` | Script path `AddStuds` (0x1584e0): shows the old total, adds 1.75 s later |
-| 8 | [MOVIE-S12](features/movies-cutscenes.md?display=source#L27) | 9 | 0 | 6 | 0 | 1 stand-in | `playcutscene` | A new game from the front end shows `01_GameIntro` in the front end and skips the script's `PlayCutscene` in ... |
-| 9 | [HUD-30](features/hud-ui-text.md?display=source#L33) | 7 | 0 | 6 | 1 | 1 stand-in | `showcharacterintro` | ShowCharacterIntro against the oracle (no state at mission 1-4 yet), an information or warning box with other ... |
-| 10 | [HUD-25](features/hud-ui-text.md?display=source#L29) | 7 | 0 | 6 | 0 | 1 stand-in | `showcharacterintro` | ShowCharacterIntro also sets the HUD's "Portrait" image to the character (0x1cc8a4); the port only shows the ... |
+| 2 | [AUDIO-S11](features/audio.md?display=source#L29) | 67 | 0 | 7 | 0 | 1 stand-in | `automaticmusic` | AutomaticMusic clears the override byte 0x376b31 and runs the evaluation 0x204fe0 only as far as the mood-0 ... |
+| 3 | [MOVIE-38](features/movies-cutscenes.md?display=source#L42) | 56 | 0 | 7 | 0 | 1 stand-in | `dcamcutscenefree` | Whether the script native DCamCutSceneFree 0x196144 (clears the entity layers, no matrix restore) runs on a ... |
+| 4 | [HUD-22](features/hud-ui-text.md?display=source#L28) | 39 | 0 | 6 | 3 | 4 stand-in | `showbosshearts`, `showportraitovervehicle`, `showracestart`, `showtally` | Remaining text screens: ShowTally, ShowBossHearts, ShowRaceStart, ShowPortraitOverVehicle (their layouts and ... |
+| 5 | [AUDIO-S31](features/audio.md?display=source#L33) | 26 | 0 | 6 | 0 | 2 stand-in | `scalesoundfrequency`, `setsoundvolume` | SetSoundVolume is a factor on the voice's gains and ScaleSoundFrequency sets the voice rate to (int)(scale * ... |
+| 6 | [HUD-9](features/hud-ui.md?display=source#L39) | 21 | 0 | 6 | 1 | 1 stand-in | `addstuds` | Script path `AddStuds` (0x1584e0): shows the old total, adds 1.75 s later |
+| 7 | [MOVIE-S12](features/movies-cutscenes.md?display=source#L27) | 9 | 0 | 6 | 0 | 1 stand-in | `playcutscene` | A new game from the front end shows `01_GameIntro` in the front end and skips the script's `PlayCutscene` in ... |
+| 8 | [HUD-30](features/hud-ui-text.md?display=source#L33) | 7 | 0 | 6 | 1 | 1 stand-in | `showcharacterintro` | ShowCharacterIntro against the oracle (no state at mission 1-4 yet), an information or warning box with other ... |
+| 9 | [HUD-25](features/hud-ui-text.md?display=source#L29) | 7 | 0 | 6 | 0 | 1 stand-in | `showcharacterintro` | ShowCharacterIntro also sets the HUD's "Portrait" image to the character (0x1cc8a4); the port only shows the ... |
+| 10 | [AUDIO-11](features/audio.md?display=source#L39) | 6 | 0 | 3 | 5 | 1 stand-in | `vehicleenabledrivingmusic` | Action music: the combat scan of 0x204fe0 (table 0x58deb0), OverrideMusicMood, PauseMusic, DuckMusicFor ... |
 
 ## Rendering and assets
 
@@ -218,7 +218,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [front-end.md](features/front-end.md): FE-3 (+9), FE-30 (+1), FE-40 (+1), FE-1, FE-2, FE-4, FE-5, FE-6, FE-7, FE-8, FE-9, FE-S1, FE-S2, FE-S3, FE-S31, FE-S32, FE-S33, FE-S4, FE-S40, FE-S41, FE-S5, FE-S6
 - [hud-ui-super-bricks.md](features/hud-ui-super-bricks.md): HUD-79 (+1), HUD-80 (+1), HUD-82 (+1), HUD-81, HUD-S74, HUD-S75, HUD-S76
 - [hud-ui-text.md](features/hud-ui-text.md): HUD-15, HUD-27, HUD-28, HUD-29, HUD-32, HUD-33, HUD-S15
-- [hud-ui.md](features/hud-ui.md): HUD-70 (+3), HUD-11 (+2), HUD-60 (+1), HUD-61 (+1), HUD-71 (+1), HUD-74 (+1), HUD-75 (+1), HUD-10, HUD-12, HUD-18, HUD-3, HUD-6, HUD-7, HUD-73, HUD-8, HUD-S1, HUD-S2, HUD-S3, HUD-S4, HUD-S6, HUD-S7, HUD-S70, HUD-S71, HUD-S73
+- [hud-ui.md](features/hud-ui.md): HUD-70 (+3), HUD-11 (+2), HUD-60 (+1), HUD-61 (+1), HUD-71 (+1), HUD-74 (+1), HUD-75 (+1), HUD-10, HUD-12, HUD-18, HUD-3, HUD-6, HUD-7, HUD-73, HUD-8, HUD-S1, HUD-S2, HUD-S3, HUD-S4, HUD-S6, HUD-S60, HUD-S7, HUD-S70, HUD-S71, HUD-S73
 - [input.md](features/input.md): INPUT-1, INPUT-2, INPUT-3, INPUT-S1
 - [level-objects-buildit.md](features/level-objects-buildit.md): LEVOBJ-117 (+1), LEVOBJ-71 (+1), LEVOBJ-79 (+1), LEVOBJ-118, LEVOBJ-119, LEVOBJ-42, LEVOBJ-43, LEVOBJ-61, LEVOBJ-70, LEVOBJ-76, LEVOBJ-77, LEVOBJ-85, LEVOBJ-94, LEVOBJ-S41, LEVOBJ-S70, LEVOBJ-S71, LEVOBJ-S74, LEVOBJ-S76, LEVOBJ-S94, LEVOBJ-S95
 - [level-objects-carry.md](features/level-objects-carry.md): LEVOBJ-75 (+1), LEVOBJ-30, LEVOBJ-31, LEVOBJ-34, LEVOBJ-S31, LEVOBJ-S33, LEVOBJ-S34, LEVOBJ-S73, LEVOBJ-S75
@@ -235,7 +235,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [saves-options.md](features/saves-options.md): SAVE-8 (+3), SAVE-13 (+1), SAVE-14 (+1), SAVE-16 (+1), SAVE-17 (+1), SAVE-18 (+1), SAVE-19 (+1), SAVE-2 (+1), SAVE-20 (+1), SAVE-3, SAVE-4, SAVE-5, SAVE-S1, SAVE-S10, SAVE-S11, SAVE-S2, SAVE-S3, SAVE-S4, SAVE-S5, SAVE-S6, SAVE-S7, SAVE-S8, SAVE-S9
 - [script-system-ai-navigation.md](features/script-system-ai-navigation.md): SCRIPT-92 (+29), SCRIPT-94 (+16), SCRIPT-101 (+14), SCRIPT-95 (+14), SCRIPT-100 (+13), SCRIPT-79 (+12), SCRIPT-S100, SCRIPT-S101, SCRIPT-S102, SCRIPT-S104, SCRIPT-S31, SCRIPT-S93, SCRIPT-S94, SCRIPT-S95
 - [script-system-dcam.md](features/script-system-dcam.md): SCRIPT-40 (+15), SCRIPT-182 (+1), SCRIPT-48 (+1), SCRIPT-50 (+1), SCRIPT-181, SCRIPT-332, SCRIPT-49, SCRIPT-S142
-- [script-system-hud-natives.md](features/script-system-hud-natives.md): SCRIPT-329 (+1), SCRIPT-330 (+1), SCRIPT-331, SCRIPT-68, SCRIPT-69, SCRIPT-70, SCRIPT-S270
+- [script-system-hud-natives.md](features/script-system-hud-natives.md): SCRIPT-329 (+1), SCRIPT-330 (+1), SCRIPT-349 (+1), SCRIPT-331, SCRIPT-68, SCRIPT-69, SCRIPT-70, SCRIPT-S270
 - [script-system-missions.md](features/script-system-missions.md): SCRIPT-220 (+1), SCRIPT-284 (+1), SCRIPT-115, SCRIPT-142, SCRIPT-221, SCRIPT-S141, SCRIPT-S236, SCRIPT-S237, SCRIPT-S243, SCRIPT-S247, SCRIPT-S248, SCRIPT-S249, SCRIPT-S254, SCRIPT-S255
 - [script-system-natives-animation.md](features/script-system-natives-animation.md): SCRIPT-324 (+3), SCRIPT-272 (+1), SCRIPT-325 (+1), SCRIPT-334 (+1), SCRIPT-S110, SCRIPT-S266, SCRIPT-S267
 - [script-system-natives-party.md](features/script-system-natives-party.md): SCRIPT-338 (+2), SCRIPT-340 (+1)

@@ -14,6 +14,7 @@ Handlers of batch 26 (SCRIPT-26). Census and the other batches: [script-natives.
 - PositionObject of a placed prop or object: the scene node, the room and the animated prop's root-motion base take the target's matrix; the collision entries follow, no physics body (SCRIPT-S255 closed); 0x242b08 only re-buckets the entity by room. [§2026-10-19T10:39:23+02:00](#ts-20261019-103923), [§2026-10-19T11:03:27+02:00](#ts-20261019-110327)
 - The kind byte (entity +0x12) is the class file's ObjectType; every class of the main levels has one, and the ToggleUseable group case, EnableShadow and EnableSwitch gates are read: [object-kinds.md §2026-10-18T21:36:13](object-kinds.md#ts-20261018-213613).
 - Message 8 to the player requests state 1 (0x2414b4 / 0x2eafc8), shows the node and enables the entity; the placement natives clear ctrl+0x315 bits 0x14, which the next locomotion step 0x20cd30 sets again and which select its first-step branch; PositionPlayer in a vehicle moves the vehicle instead and sends no message 8; a PositionObject of a prop touches no physics body (SCRIPT-98, SCRIPT-S255 closed). [§2026-10-19T15:12:32](#ts-20261019-151232)
+- Message 8 of a placement shows the player's node in the port; the state 1 request stays recorded. [§2026-10-19T23:06](#ts-20261019-230637)
 - Open: readers of each flag, the fade natives' kind gate (enableobjectfade), the fade consumer, message 54 effects, who fills the kind list at 0x3743ec.
 
 <a id="ts-20261014-141621"></a>
@@ -200,3 +201,13 @@ Unknowns:
 - Entity +0x70 of a vehicle (writers not found) and what 0x29f014 tests; the hook at `[0x377194 + 4]` that maps state 1; the state machine consumer of ctrl+0x64.
 - What the first-step branch 0x20b48c (flag 16) does in the player's locomotion.
 - Which entities of props carry an entity at +0x84.
+
+<a id="ts-20261019-230637"></a>
+
+## 2026-10-19T23:06:37+02:00 — Message 8 of a placement shows the player's node (SCRIPT-S274; llvm-objdump on game.arm.elf, no REA session, no emulator)
+
+Continues [§2026-10-19T15:12:32](#ts-20261019-151232). The three effects of message 8 to the player (0x18ed9c): 0x23f734(node, 1) clears mask 0x60 of the node flags (shows the node), 0x242cf0 clears the disabled bit of the entity (a return at once for the player, whose bit is never set in the port), and 0x2414b4(entity, ctrl+0x50, 1, 0) requests state 1. The port now applies the first: `LevelSession::applyPlacement` shows the player's scene instance after a PositionPlayer / PositionObject of the player that does not move a seated vehicle (`takeNodeShow`, `src/runtime/placement_message.*`); before, only a boarding phase other than on foot did. The state machine side stays recorded: the table entry for state 1 comes from `[0x377194 + 4]`, set at run time, and the update that consumes the pending byte ctrl+0x64 was not matched to the player's state machine (0x2f1788 reads a per-slot byte +0x64 of a different, four-slot object).
+
+Unknowns:
+- The consumer of ctrl+0x64 of the player's state machine and the table entry of state 1 (SCRIPT-335).
+- Whether the original shows the node during a cutscene; the port skips the show then because it hides the player by its own cast copy (stand-in, SCRIPT-S274).

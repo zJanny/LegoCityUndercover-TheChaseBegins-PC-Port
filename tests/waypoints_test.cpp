@@ -177,6 +177,110 @@ void fades() {
     require(off->columnFade() == 0.0f && !off->columnShown(), "hidden when the tween reaches 0 (0x23f734)");
 }
 
+void disableAndSlots() {
+    const assets::Level cls = syntheticClass();
+    const assets::ClassLookup classOf = [&](const std::string&) { return &cls; };
+    assets::Level manual = syntheticClass();
+    for (assets::LevelParam& param : manual.classParams)
+        if (param.hash == 0xc93e4625) param.value = 0;
+    const assets::ClassLookup manualOf = [&](const std::string&) { return &manual; };
+    const assets::Level level = syntheticLevel("props/map_waypoint");
+    const float dt = 0.4f, outside[3] = {12.0f, 5.5f, 20.0f};
+    const auto near = [](float a, float b) { return std::fabs(a - b) < 1e-5f; };
+    {
+        WaypointSet set;
+        set.load(level, manualOf);
+        const runtime::Waypoint* wp = set.find("wp_a");
+        require(!wp->entityEnabled && !wp->columnShown() && wp->mapSlot == -1, "a waypoint starts hidden (0x170fd8 disables it) without a map slot");
+        require(!set.setActive("wp_a", false), "AutoTrigger 0: the disable of a never enabled waypoint is accepted");
+        require(wp->disableFade && near(wp->columnFade(), 1.0f), "0x229dc8: any disable outside state 3 starts the tween, whether or not the waypoint was active");
+        require(!wp->columnShown(), "the entity is still disabled, so nothing is drawn (the original relies on the entity flag)");
+        set.update(dt, outside, nullptr, nullptr);
+        set.update(dt, outside, nullptr, nullptr);
+        require(wp->columnFade() == 0.0f && !wp->disableFade, "the tween runs out");
+        set.setActive("wp_a", true);
+        require(wp->entityEnabled && wp->mapSlot == 0 && wp->columnShown() && wp->columnFade() == 0.0f, "enable: 0x242cf0 clears the disabled flag, 0x1a2114 gives slot 0; column alpha is 0 until state 0 ends");
+        set.update(dt, outside, nullptr, nullptr);
+        set.update(dt, outside, nullptr, nullptr);
+        require(wp->columnShown() && near(wp->columnFade(), 0.5f), "shown while fading in");
+        set.setActive("wp_a", false);
+        require(wp->mapSlot == -1, "0x229b9c frees the slot at once");
+        require(wp->entityEnabled && wp->columnShown(), "a disable does not disable the entity (0x230ef4 is not the waypoint): the column fades out instead");
+    }
+    {
+        WaypointSet set;
+        set.load(level, manualOf);
+        set.setActive("wp_a", true);
+        for (int i = 0; i < 8; ++i) set.update(dt, outside, nullptr, nullptr);
+        const_cast<runtime::Waypoint*>(set.find("wp_a"))->state = 3;
+        set.setActive("wp_a", false);
+        require(!set.find("wp_a")->disableFade, "state 3: no tween (0x229dc8 cmp #3)");
+    }
+    {
+        assets::Level many;
+        for (int i = 0; i < 17; ++i) {
+            assets::LevelObject object = level.objects[0];
+            object.instance = "Wp_" + std::to_string(i);
+            many.objects.push_back(object);
+        }
+        WaypointSet set;
+        set.load(many, manualOf);
+        for (int i = 0; i < 17; ++i) set.setActive("wp_" + std::to_string(i), true);
+        for (int i = 0; i < 16; ++i) require(set.find("wp_" + std::to_string(i))->mapSlot == i, "the first free of 16 slots in order (0x1a2114 loop to 16)");
+        require(set.find("wp_16")->mapSlot == -1 && set.find("wp_16")->active, "all 16 used: slot -1 (0x1a2148), the waypoint is still on");
+        set.setActive("wp_3", false);
+        set.setActive("wp_16", true);
+        require(set.find("wp_16")->mapSlot == 3, "a freed slot is reused");
+        set.setActive("wp_16", true);
+        require(set.find("wp_16")->mapSlot == 3, "an enabled waypoint with a slot keeps it (0x229cc8 tests +0x84 < 0)");
+    }
+    {
+        WaypointSet set;
+        set.load(level, classOf);
+        set.setActive("wp_a", true);
+        set.update(dt, outside, nullptr, nullptr);
+        const float inside[3] = {10.5f, 5.5f, 20.0f};
+        for (int i = 0; i < 8 && set.find("wp_a")->active; ++i) set.update(dt, inside, nullptr, nullptr);
+        require(!set.find("wp_a")->active && set.find("wp_a")->mapSlot == -1, "the switch-off of state 3 frees the slot (0x17b0a8)");
+    }
+    {
+        assets::Level vehicleClass = syntheticClass(true, false, 4.0f);
+        assets::Level typeEleven = vehicleClass;
+        typeEleven.defaults.push_back(intParam(assets::nameHash("WaypointType"), 11, 2));
+        assets::Level getInto = syntheticClass(true, true, 4.0f);
+        const auto build = [&](const assets::Level& cls) {
+            const assets::ClassLookup lookup = [&](const std::string&) { return &cls; };
+            WaypointSet set;
+            set.load(syntheticLevel("props/map_vehiclewaypoint", "Some_Car"), lookup);
+            set.setActive("wp_a", true);
+            return set.vehicleWaypoint();
+        };
+        require(build(vehicleClass) == "wp_a", "0x2b4dac: a kind 1 waypoint with a named vehicle becomes *(0x529c18 + 0x28)");
+        require(build(typeEleven).empty(), "WaypointType 11 (0x229d3c) does not");
+        require(build(getInto).empty(), "GetIntoVehicle (bit 0 of +0x8f) does not");
+        const assets::ClassLookup lookup = [&](const std::string&) { return &vehicleClass; };
+        WaypointSet set;
+        set.load(syntheticLevel("props/map_vehiclewaypoint", "Some_Car"), lookup);
+        set.setActive("wp_a", true);
+        set.setActive("wp_a", false);
+        require(set.vehicleWaypoint().empty() == false, "AutoTrigger set: the disable is ignored and the global stays");
+        const assets::ClassLookup manualVehicle = [&](const std::string&) {
+            static assets::Level cls = [] {
+                assets::Level c = syntheticClass(true, false, 4.0f);
+                for (assets::LevelParam& param : c.classParams)
+                    if (param.hash == 0xc93e4625) param.value = 0;
+                return c;
+            }();
+            return &cls;
+        };
+        WaypointSet manualSet;
+        manualSet.load(syntheticLevel("props/map_vehiclewaypoint", "Some_Car"), manualVehicle);
+        manualSet.setActive("wp_a", true);
+        manualSet.setActive("wp_a", false);
+        require(manualSet.vehicleWaypoint().empty(), "0x229d7c: the disable clears the global");
+    }
+}
+
 void synthetic() {
     const assets::Level cls = syntheticClass();
     const assets::ClassLookup classOf = [&](const std::string&) { return &cls; };
@@ -358,6 +462,8 @@ void real(const std::string& fib, const std::string& names) {
         require(enter->bound.half[0] == 4.0f && std::fabs(enter->bound.half[1] - 3.4f) < 1e-6f && std::fabs(enter->bound.centre[1] - 3.4f) < 1e-6f,
                 "class bound of the large waypoints: radius 4, half height 3.4, centre y 3.4");
     }
+    require(donut->waypointType == 0 && runner.waypoints().find("1-1_van_waypoint_enter")->waypointType == 0 && runner.waypoints().find("1-1_waypoint_05")->waypointType == 0,
+            "WaypointType (hash 0xc471915a, a float 0 in the three class files, flags 5: no instance override) is 0 for every waypoint of lvl_01");
     require(runner.start("ActivateWaypoint") && runner.objectives().waypointActive("1-1_waypoint_01"), "SetActiveWayPoint");
 
     const float dt = 0.033f;
@@ -385,6 +491,7 @@ int main(int argc, char** argv) {
     try {
         synthetic();
         fades();
+        disableAndSlots();
         if (argc == 1) {
             std::cout << "waypoints-test: synthetic part passed\n";
             return 0;
