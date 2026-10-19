@@ -69,6 +69,10 @@ game_player::PlayerAnimation LevelSession::attackMovePlayer(const runtime::Stick
         else
             std::cout << "attack: message " << message.id << " to " << instance << " at update " << updates << '\n';
     }
+    for (const runtime::SoundCall& call : player->attackSounds.calls(step, player->position())) {
+        player->sounds.push_back(call);
+        std::cout << "attack: sound " << call.id << " at update " << updates << '\n';
+    }
     if (step.started) std::cout << "attack: state " << step.state << " clip " << step.clip << " at update " << updates << '\n';
     if (step.finished) {
         std::cout << "attack: ended at update " << updates << '\n';

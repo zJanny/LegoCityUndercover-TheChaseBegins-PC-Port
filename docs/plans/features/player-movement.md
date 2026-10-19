@@ -6,7 +6,7 @@ How the main character moves on foot: stick to heading, walk/run/sprint, facing,
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-18T19:59:57+0200. Runs in `chase-game` (`--gameplay`, `--start`, `--script`); the attack on foot (Y) hits wobbly props.
+IN_PROGRESS, updated 2026-10-19T12:55:42+0200. Runs in `chase-game` (`--gameplay`, `--start`, `--script`); the attack on foot (Y) hits wobbly props.
 
 ## 3. Verified behaviour
 
@@ -27,6 +27,7 @@ IN_PROGRESS, updated 2026-10-18T19:59:57+0200. Runs in `chase-game` (`--gameplay
 - PLAYER-S10 The root step of the combo clips is the z translation of the extra joint curve at frame k x framesPerUpdate with linear interpolation between frames; the x and y axes (zero in these clips), the slot weight and the original's interpolation are not read. needs: PLAYER-22. evidence: [player-attack.md §2026-10-19T08:03:14](../../re/player-attack.md#ts-20261019-080314).
 - PLAYER-S8 the attack uses libm `acos` for the library acosf 0x2584c8 and treats the line of sight 0x219990 as clear. needs: PLAYER-14.
 - PLAYER-S9 `attackTargetObjects` — only `leprop_wobblydestructible` props are attack targets, and the glue allows the attack only in idle / walk / run / sprint on the ground. needs: PLAYER-14, PLAYER-15.
+- PLAYER-S11 `kAttackSoundOwnerStandIn` 0 — the owner key of the attack sounds (u16 at the player entity +0x14) is not read; the attack sounds are never stopped, so it has no effect. needs: AUDIO-30.
 - PLAYER-S4 keyboard `Walk` key (Left Alt, own non-3DS action in `config/controls.cfg`) stands in for a half-tilted circle pad — part of the input mapping, see INPUT-1.
 
 ## 5. Open items
@@ -44,10 +45,11 @@ IN_PROGRESS, updated 2026-10-18T19:59:57+0200. Runs in `chase-game` (`--gameplay
 - [ ] PLAYER-14 — The attack's other targets are not ported: characters (grab and arrest search, team test 0x219ba0, weights), the other entity types of 0x21a2d4, and the line-of-sight test 0x219990. blocks: PLAYER-S8, PLAYER-S9. evidence: [player-attack.md §2026-10-18T19:59:57](../../re/player-attack.md#ts-20261018-195957).
 - [ ] PLAYER-15 — Other attack paths: the jump attack (0x1d5254 / 0x1d5308), which other callers of 0x20b984 allow the attack, the weapon-out state 0x9a, the damage-99 flag. blocks: PLAYER-S9. evidence: [player-attack.md §2026-10-18T19:59:57](../../re/player-attack.md#ts-20261018-195957).
 - [ ] PLAYER-16 — Sources of the attack values: the writers of ctrl+0x80, *0x372e44 and the combo length, the table from clip track hashes to event types. blocks: PLAYER-S5, PLAYER-S6, PLAYER-19. evidence: [player-attack.md §2026-10-18T19:59:57](../../re/player-attack.md#ts-20261018-195957).
-- [ ] PLAYER-17 — The attack plays no sounds (melee table entries +0xa / +0xc of 0x23ae84). evidence: [player-attack.md §2026-10-18T19:59:57](../../re/player-attack.md#ts-20261018-195957).
 - [ ] PLAYER-18 — Next to the table the oracle's root step slides sideways against the table's entity (contact message 45 of 0x21a73c); the port slides against the collision box and ends 0.3 m away from the oracle's position after one attack. evidence: [player-attack.md §2026-10-18T19:59:57](../../re/player-attack.md#ts-20261018-195957).
 - [ ] PLAYER-19 — The user saw no attack animation in `chase-game` (2026-10-18 playtest). Cause found: the combo clips' joint curves are 0xfa raw matrices that were not decoded, so the rig stayed in the bind pose; the decoder is ported. Open: nobody has looked at the punch in `chase-game` yet. blocks: PLAYER-21. evidence: [skeleton-animation.md §2026-10-18T21:40:55+02:00](../../re/skeleton-animation.md#ts-20261018-214055).
 - [ ] PLAYER-22 — Trap 0x270778 during a punch (m12-table-before) to confirm that the root sampler runs for the combo slot and what it returns per update. blocks: PLAYER-S10. evidence: [player-attack.md §2026-10-19T08:03:14](../../re/player-attack.md#ts-20261019-080314).
+- [ ] PLAYER-23 — What 0x2b80f4 does in the hit event before the hit sound is played (callees 0x2554c0, 0x254250, 0x227790, 0x2408c4, 0x25b2b8, 0x22a9ec unread; a hit effect is likely). evidence: [player-attack.md §2026-10-19T12:54:52](../../re/player-attack.md#ts-20261019-125452).
+- [ ] PLAYER-24 — Whether the original sounds anything on a punch (animation sound events of the combo clips, other callers); no audio recording of a punch was compared. needs: AUDIO-34. evidence: [player-attack.md §2026-10-19T12:54:52](../../re/player-attack.md#ts-20261019-125452).
 - [ ] PLAYER-21 — Look at the punch in `chase-game` (pose against the clip frames, no foot sliding) and check where the original applies the joint orientation (record +0x88) to 0xfa channels. needs: PLAYER-19. evidence: [skeleton-animation.md §2026-10-18T21:40:55+02:00](../../re/skeleton-animation.md#ts-20261018-214055).
 
 ## 6. Findings summary
@@ -60,10 +62,11 @@ IN_PROGRESS, updated 2026-10-18T19:59:57+0200. Runs in `chase-game` (`--gameplay
 - Landing stun, slide, slope slow-down: [player-falling-jumping.md §2026-10-13T21:15](../../re/player-falling-jumping.md#ts-20261013-211552).
 - Ground triangle order, slide-exit push, state 8 timeout: [player-falling-jumping.md §2026-10-16T10:30:18](../../re/player-falling-jumping.md#ts-20261016-103018).
 - Attack on foot: Y tap, combat action states, target search, hit test and the messages to the target: [player-attack.md §2026-10-18T19:59:57](../../re/player-attack.md#ts-20261018-195957).
+- Attack sounds: swing on entering a state and hit on the hit event, from the weapon table row of the character; all ids are 0: [player-attack.md §2026-10-19T12:54:52](../../re/player-attack.md#ts-20261019-125452).
 - Player entity pointer 0x3772b8, outfit and appearance rule: [player-entity-input.md §2026-10-13T10:42](../../re/player-entity-input.md#ts-20261013-104227), [player-entity-input.md §2026-10-13T16:34](../../re/player-entity-input.md#ts-20261013-163430).
 
 ## 7. Code and tests
 
-- `src/runtime/player_intent.*`, `player_locomotion.*`, `player_vertical.*`, `player_motion.*`, `player_attack.*` (glue `src/game_attack.cpp`); `src/game_player.{hpp,cpp}` (rig, placement, per-update step), `src/game_level_update.cpp` (the update order), `src/game.cpp` (wiring).
-- CTest: `player-attack`, `player-attack-real-data`, `game-script-attack-table`, `runtime-core`, `locomotion-real-data`, `fall-real-data` (also pins the ground normals to 1e-5), `jump-real-data`, `slide-real-data`, `slope-real-data`, `game-script-run`, `game-script-walk`, `game-script-ledge`, `game-script-jump`.
+- `src/runtime/player_intent.*`, `player_locomotion.*`, `player_vertical.*`, `player_motion.*`, `player_attack.*`, `attack_sounds.*` (glue `src/game_attack.cpp`); `src/game_player.{hpp,cpp}` (rig, placement, per-update step), `src/game_level_update.cpp` (the update order), `src/game.cpp` (wiring).
+- CTest: `player-attack`, `player-attack-real-data`, `attack-sounds`, `attack-sounds-real-data`, `game-script-attack-table`, `runtime-core`, `locomotion-real-data`, `fall-real-data` (also pins the ground normals to 1e-5), `jump-real-data`, `slide-real-data`, `slope-real-data`, `game-script-run`, `game-script-walk`, `game-script-ledge`, `game-script-jump`.
 - Trace dirs: `CHASE_LOCO_TRACE_DIR`, `CHASE_FALL_TRACE_DIR`, `CHASE_JUMP_TRACE_DIR` (defaults under `artifacts/oracle/`). Scenarios: `tools/oracle/attack-*.txt`, `tools/oracle/loco-*.txt`, `fall-*.txt`, `jump-*.txt`, `slide-ledge.txt`, `slope-run.txt`.

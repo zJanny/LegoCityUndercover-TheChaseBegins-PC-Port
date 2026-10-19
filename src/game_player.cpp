@@ -126,6 +126,9 @@ std::optional<PlayerRig> placePlayer(FuseArchive& archive, Scene& scene, const L
         const std::uint8_t category = characterSoundCategory(parseTable(archive.read(*characterTable)), character.characterEnum);
         if (category < sounds.characterSounds.size()) rig.characterSounds = runtime::CharacterSounds(sounds.characterSounds[category]);
     }
+    const FuseEntry* weaponTable = archive.find("tables/tablesweapons.bxls");
+    if (characterTable && weaponTable)
+        rig.attackSounds = runtime::attackSoundsOf(parseTable(archive.read(*characterTable)), parseTable(archive.read(*weaponTable)), character.characterEnum);
 
     if (const FuseEntry* animationTable = archive.find("tables/tablesanimations.bxls")) {
         rig.carryAnimations.emplace(parseTable(archive.read(*animationTable)));

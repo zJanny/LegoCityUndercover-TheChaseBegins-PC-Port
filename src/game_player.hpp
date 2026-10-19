@@ -3,6 +3,7 @@
 #include "render/character.hpp"
 #include "render/scene.hpp"
 #include "runtime/ai.hpp"
+#include "runtime/attack_sounds.hpp"
 #include "runtime/buildit_player.hpp"
 #include "runtime/carry_animation.hpp"
 #include "runtime/scanner.hpp"
@@ -49,6 +50,7 @@ struct PlayerRig {
     float startX = 0, startZ = 0;
     chase::runtime::FootstepDetector footsteps;
     chase::runtime::CharacterSounds characterSounds;
+    chase::runtime::AttackSounds attackSounds;
     std::vector<chase::runtime::SoundCall> sounds;  // the sound calls of the update, filled by updatePlayer and animate
 
     std::array<float, 3> position() const { return {motion.x, vertical.y, motion.z}; }

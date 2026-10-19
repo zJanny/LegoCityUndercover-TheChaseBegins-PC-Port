@@ -765,6 +765,15 @@ std::uint8_t levelMusicSet(const Table& levels, std::size_t row);
 // sits at byte +0x21, the byte that 0x200e70 and 0x1abc5c read from the character table at 0x372e10. Row "police" is
 // category 2 (the oracle landing id 410 is slot 7 of category 2).
 std::uint8_t characterSoundCategory(const Table& characters, std::size_t row);
+// tables/tablescharacters.bxls sheet 0, column 71: the melee weapon row, byte +0x17 of the character record (read by 0x307e7c and 0x319ffc).
+std::uint8_t characterMeleeWeapon(const Table& characters, std::size_t row);
+// tables/tablesweapons.bxls sheet 0 (24-byte rows at *0x376050): the u16 sound ids at +0xa (column 5, played on a hit) and +0xc (column 6,
+// played when the attack starts). Id 0 plays nothing (0x23fa54).
+struct WeaponSounds {
+    std::uint16_t hit = 0;
+    std::uint16_t swing = 0;
+};
+WeaponSounds weaponSounds(const Table& weapons, std::size_t row);
 struct ConfigEntry {
     std::string key;
     std::string value;

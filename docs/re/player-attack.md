@@ -21,6 +21,7 @@ Chase's punch on foot: the button, the combat action states, the target search, 
   [§2026-10-18T19:59:57](#ts-20261018-195957)
 - The joint curves of the combo clips are 0xfa raw matrices; they are decoded now (cause of the missing punch animation): [skeleton-animation.md §2026-10-18T21:40:55+02:00](skeleton-animation.md#ts-20261018-214055)
 - The root step of the combo clips is the z translation of the extra joint curve (joint 21: 0.07549 per frame, 1.05684, 0.90586 and 0.67939 at the end of combo_1..3), sampled by 0x2327b4 through 0x270778; the equal sub-animation track 0xdcd633e2 is not its source. [§2026-10-19T08:03:14+02:00](#ts-20261019-080314)
+- Sounds: the enter 0x307e7c plays the weapon table (*0x376050) u16 +0xc through 0x23ae84, the hit event 0x319ffc plays +0xa when the hit test passes; the weapon row is byte +0x17 of the character record. Both ids are 0 for every character (id 0 plays nothing, 0x23fa54), so the attack is silent through these hooks. Port: `src/runtime/attack_sounds.*`. [§2026-10-19T12:54:52](#ts-20261019-125452)
 - Port: `src/runtime/player_attack.*`, glue `src/game_attack.cpp` (stand-ins PLAYER-S5 to PLAYER-S9). [§2026-10-18T19:59:57](#ts-20261018-195957)
 - Open: the track-to-event table, the writers of the range, the angle and the combo length, the line-of-sight test 0x219990, other target types and characters, the jump attack 0x1d5308, the weapon-out state 0x9a, and the exact update order of the tap read in the attack states.
 
@@ -29,6 +30,8 @@ Chase's punch on foot: the button, the combat action states, the target search, 
 ## 2026-10-18T19:59:57+02:00 — The attack on foot: Y tap, states 0xa3 / 0xa4, target search, hit test and messages (REA, objdump, Azahar GDB traces of m12-table-before)
 
 Corrected by [player-attack.md §2026-10-19T08:03:14+02:00](#ts-20261019-080314): the root step of the combo clips comes from the extra joint curve (joint 21), not from the sub-animation track 0xdcd633e2; the values are equal.
+
+Corrected by [player-attack.md §2026-10-19T12:54:52](#ts-20261019-125452): the sounds of the attack come from the weapon table row of character byte +0x17 (+0xc on entering, +0xa on the hit), not from "the melee entry".
 
 ### Method
 
@@ -145,3 +148,37 @@ Unknowns:
 - That 0x270778 runs for the punch slot (not trapped in the oracle; read from the code and the equal values only).
 - The interpolation between two frames of the curve and the weighting of the slot (the combo clips run one frame per update at weight 1 in the measured steps).
 - x and y of the delta are zero in these clips; the port keeps the z axis only.
+
+<a id="ts-20261019-125452"></a>
+
+## 2026-10-19T12:54:52+02:00 — The sounds of the attack: swing in the enter, hit in the hit event, both from the melee weapon row, which has id 0 for every character (llvm-objdump of 0x307e7c, 0x319ffc, 0x23ae84, 0x23fa54; tablesweapons and tablescharacters dumps)
+
+[Corrects player-attack.md §2026-10-18T19:59:57](#ts-20261018-195957): "sound table entry +0xc of the melee entry" and "melee table 0x23ae84" were loose; 0x23ae84 is the play routine, and the table is the weapon table at *0x376050.
+
+### Method
+
+- llvm-objdump (`--triple=armv6k --mattr=+vfp2`) of `artifacts/game/game.arm.elf`: 0x307e7c..0x3084cc (enter of states 0xa3 / 0xa4), 0x319ffc..0x31a3d8 (animation event handler, hit event), 0x23ae84, 0x23fa54, the pool words 0x3084cc / 0x3084d0 / 0x3084d4 and 0x31a3cc. No REA session was used for this entry.
+- Data: `build/chase-tabledump tables/tablesweapons.bxls` and `tables/tablescharacters.bxls`, offsets from the column types (type 8 = 8 bits per stored byte), the same rule as docs/re/save-format.md §2026-10-13T09:25.
+
+### Tables
+
+- Character table `*0x372e10` (tablescharacters sheet 0, stride 0x28), indexed by the byte ctrl+0x2cc of the character (row 9 `police` for Chase): byte +0x17 (column 71) is the weapon row of both attack sounds. The weapon flag test of the enter (0x307ff4..0x308064) picks byte +0x18 for variants 0 and 3, +0x17 for 1 and 4 and +0x19 otherwise. Chase: +0x17 = 13, +0x18 = 8, +0x19 = 0.
+- Weapon table `*0x376050` (tablesweapons sheet 0, 17 rows, stride 24; the pool word sits at 0x3084d0 and 0x31a3cc): +0 string, then u16 at +4 (flags; bit 3 is tested at 0x308040), +6, +8, +0xa, +0xc, +0xe, +0x10, +0x12, +0x14, +0x16 (columns 2..11).
+- Rows used by the 192 character rows at +0x17: 13 (174 rows, including Chase), 15 pickaxe (14), 16 (2), 0 (2). Their +8, +0xa and +0xc are all 0. Non-zero values in those columns exist only in the gadget rows (row 4 hazardcannon +0xa = 501, row 8 grapplegun +0xa = 501 and +0x10 / +0x12 = 517 / 518, row 7 energygun +0xa = 513, row 9 chickengun +0xa = 162).
+
+### Where the sounds play
+
+- Swing: the enter 0x307e7c, after the notice message 62 (or without it) at 0x3082c4..0x3082f4: `0x23ae84(ldrh [weapon row of byte +0x17] +0xc, entity)`, before the clip starts (0x3082f8). It runs for every entered state (0xa3 and 0xa4), also without a target. The branch at 0x3080e8 (variants 1, 2 and the 0x2106d8 path) uses byte +0x18 and the +8 column; it is not reached by Chase's variants 0 and 3 (jump table at 0x307fb0: variants 0 and 3 go to 0x308180).
+- Hit: the animation event handler 0x319ffc, event type 3 (value above 0.5), after the candidate passes 0x2a39a8 (the hit test) and the message record is built: `0x2b80f4(entity, ctrl)`, then `0x23ae84(ldrh [weapon row of byte +0x17] +0xa, player)` at 0x31a378, then message 0 to the target through 0x244fc8. No sound plays when no target is hit.
+- Call: 0x23ae84(id, object) = `0x23fb78(object, &pos)` (the node position) and `0x23fa54(id, &pos, u16 object+0x14, 0)`; positional, no volume or pitch arguments (the sound record gives them). 0x23fa54 masks the id with the negated byte at 0x376ce4 (`ands r0, -byte, id`) and returns at once when the result is 0, so id 0 plays nothing.
+
+### Result
+
+Chase's attack plays no sound through these hooks: the swing and the hit id are 0 in his weapon row, and in the row of every character of the table. The audible punch of the original, if any, does not come from them. No audio recording of a punch was compared.
+
+Port: `src/runtime/attack_sounds.*` reads the two ids from the tables (`assets::characterMeleeWeapon`, `assets::weaponSounds`) and turns an attack step into sound calls (swing when a state was entered, hit for each hit message, at the player's position). Test `attack-sounds` / `attack-sounds-real-data`.
+
+Unknowns:
+- What 0x2b80f4 (called in the hit event before the sound) does: its callees 0x2554c0, 0x250810, 0x254250, 0x227790, 0x2408c4, 0x25b2b8 and 0x22a9ec were not read (a hit effect is likely).
+- The u16 at entity+0x14 (owner of the voice); the port uses 0 (PLAYER-S11).
+- Whether the combo clips carry sound events (the clip tracks other than the hit and combo-window keys were not listed), and whether the original sounds anything on a punch.

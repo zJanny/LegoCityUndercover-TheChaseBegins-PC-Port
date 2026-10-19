@@ -167,4 +167,14 @@ std::uint8_t characterSoundCategory(const Table& characters, std::size_t row) {
     if (characters.sheets.empty()) throw std::runtime_error("character table has no sheets");
     return std::uint8_t(tableValue(characters.sheets[0], row, 95).bits);
 }
+
+std::uint8_t characterMeleeWeapon(const Table& characters, std::size_t row) {
+    if (characters.sheets.empty()) throw std::runtime_error("character table has no sheets");
+    return std::uint8_t(tableValue(characters.sheets[0], row, 71).bits);
+}
+
+WeaponSounds weaponSounds(const Table& weapons, std::size_t row) {
+    if (weapons.sheets.empty()) throw std::runtime_error("weapon table has no sheets");
+    return {std::uint16_t(tableValue(weapons.sheets[0], row, 5).bits), std::uint16_t(tableValue(weapons.sheets[0], row, 6).bits)};
+}
 } // namespace chase::assets
