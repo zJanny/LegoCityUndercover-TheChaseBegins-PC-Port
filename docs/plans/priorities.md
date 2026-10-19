@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 723 open items and stand-ins, 155 linked to game usage, 568 with unknown reach.
+Items: 726 open items and stand-ins, 155 linked to game usage, 571 with unknown reach.
 
 ## Top 50 overall
 
@@ -46,7 +46,7 @@ Items: 723 open items and stand-ins, 155 linked to game usage, 568 with unknown 
 | 10 | [SCRIPT-S220](features/script-system-missions.md?display=source#L19) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The reference-trigger join (reference_trigger.cpp) knows only the `TriggerObject` references of build-its ... |
 | 11 | [TRAV-21](features/player-traversal.md?display=source#L39) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Brick use handler 0x1b53a8 (messages 3 / 4 into state 145): sender unknown; `TriggerObject` switching ... |
 | 12 | [SCRIPT-S5](features/script-system.md?display=source#L26) | 894 | 0 | 8 | 0 | 2 implemented | `callscript`, `spawnscript` | A CallScript / SpawnScript of a script the level does not have continues (the original's result with a null ... |
-| 13 | [SCRIPT-273](features/script-system-natives-animation.md?display=source#L29) | 881 | 0 | 8 | 1 | 2 stand-in | `playanimation`, `playcharanim` | PlayCharAnim's state request 81 (the cutscene call, state 0x51 has the same functions) and its cape animation ... |
+| 13 | [SCRIPT-273](features/script-system-natives-animation.md?display=source#L31) | 881 | 0 | 8 | 1 | 2 stand-in | `playanimation`, `playcharanim` | PlayCharAnim's state request 81 (the cutscene call, state 0x51 has the same functions) and its cape animation ... |
 | 14 | [SCRIPT-S26](features/script-system-hud-natives.md?display=source#L17) | 798 | 0 | 7 | 0 | 2 stand-in | `setactivewaypoint`, `subobjectivegotoenable` | SetActiveWayPoint shows or hides the waypoint object (disable always applies) and SubObjectiveGoToEnable ... |
 | 15 | [SCRIPT-190](features/script-system-missions.md?display=source#L34) | 0 | 736 | 8 | 2 | - | `scriptobject` | Carry gaps: the instigator argument of 0x244f40 is not modelled; the handler 0x1bc4d4 forwards message 0xff ... |
 | 16 | [SCRIPT-114](features/script-system-missions.md?display=source#L42) | 687 | 0 | 8 | 0 | 2 stand-in | `destroyprop`, `playcharanim` | The port runs `1-2_MissionStart` one update later than the original at the end of the title camera ... |
@@ -56,7 +56,7 @@ Items: 723 open items and stand-ins, 155 linked to game usage, 568 with unknown 
 | 20 | [SCRIPT-S262](features/script-system-natives-animation.md?display=source#L23) | 623 | 0 | 8 | 0 | 1 stand-in | `playcharanim` | The state change of PlayCharAnim on Player1 is applied at the start of the next player update and that update ... |
 | 21 | [SCRIPT-74](features/script-system-hud-natives.md?display=source#L31) | 538 | 0 | 7 | 1 | 1 stand-in | `setactivewaypoint` | SetActiveWayPoint 0x26e168 skips a disable when bit 4 of component +0x8e is clear (meaning unknown), and its ... |
 | 22 | [SCRIPT-S98](features/script-system-natives.md?display=source#L24) | 537 | 0 | 8 | 0 | 1 stand-in, 1 implemented | `positionobject`, `positionplayer` | PositionObject / PositionPlayer clear only the fall floats of the controller; `comp[0x315]` bits and message ... |
-| 23 | [SCRIPT-274](features/script-system-natives-animation.md?display=source#L32) | 497 | 0 | 8 | 2 | 3 stand-in | `loadanimation`, `playanimation`, `unloadanimation` | LoadAnimation and UnloadAnimation keep a name list only (0x23e6e4 / 0x23e518 load and release are not ported) ... |
+| 23 | [SCRIPT-274](features/script-system-natives-animation.md?display=source#L35) | 497 | 0 | 8 | 2 | 3 stand-in | `loadanimation`, `playanimation`, `unloadanimation` | LoadAnimation and UnloadAnimation keep a name list only (0x23e6e4 / 0x23e518 load and release are not ported) ... |
 | 24 | [SCRIPT-S255](features/script-system-missions.md?display=source#L26) | 495 | 0 | 8 | 0 | 1 implemented | `positionobject` | `PositionObject` of a prop moves its collision entries but no physics body (none found) |
 | 25 | [SCRIPT-S4](features/script-system.md?display=source#L25) | 484 | 0 | 8 | 0 | 1 stand-in, 1 implemented | `dcamcutscenewait`, `waitfordcam` | A function without a handler does nothing and continues at once; `chase-game` prints its name the first time ... |
 | 26 | [HUD-S9](features/hud-ui.md?display=source#L37) | 442 | 0 | 7 | 0 | 1 stand-in | `showdialogbg` | The dialogue background is drawn at full opacity as long as ShowDialogBG is on (no fade) |
@@ -138,7 +138,7 @@ Items: 723 open items and stand-ins, 155 linked to game usage, 568 with unknown 
 
 ## Scripts and missions
 
-96 of 169 items linked.
+96 of 172 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -147,7 +147,7 @@ Items: 723 open items and stand-ins, 155 linked to game usage, 568 with unknown 
 | 3 | [SCRIPT-4](features/script-system.md?display=source#L37) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The code that hides the revealer targets; the role of the other type-4 parameters (Destination, ObjectTo ... |
 | 4 | [SCRIPT-S220](features/script-system-missions.md?display=source#L19) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The reference-trigger join (reference_trigger.cpp) knows only the `TriggerObject` references of build-its ... |
 | 5 | [SCRIPT-S5](features/script-system.md?display=source#L26) | 894 | 0 | 8 | 0 | 2 implemented | `callscript`, `spawnscript` | A CallScript / SpawnScript of a script the level does not have continues (the original's result with a null ... |
-| 6 | [SCRIPT-273](features/script-system-natives-animation.md?display=source#L29) | 881 | 0 | 8 | 1 | 2 stand-in | `playanimation`, `playcharanim` | PlayCharAnim's state request 81 (the cutscene call, state 0x51 has the same functions) and its cape animation ... |
+| 6 | [SCRIPT-273](features/script-system-natives-animation.md?display=source#L31) | 881 | 0 | 8 | 1 | 2 stand-in | `playanimation`, `playcharanim` | PlayCharAnim's state request 81 (the cutscene call, state 0x51 has the same functions) and its cape animation ... |
 | 7 | [SCRIPT-S26](features/script-system-hud-natives.md?display=source#L17) | 798 | 0 | 7 | 0 | 2 stand-in | `setactivewaypoint`, `subobjectivegotoenable` | SetActiveWayPoint shows or hides the waypoint object (disable always applies) and SubObjectiveGoToEnable ... |
 | 8 | [SCRIPT-190](features/script-system-missions.md?display=source#L34) | 0 | 736 | 8 | 2 | - | `scriptobject` | Carry gaps: the instigator argument of 0x244f40 is not modelled; the handler 0x1bc4d4 forwards message 0xff ... |
 | 9 | [SCRIPT-114](features/script-system-missions.md?display=source#L42) | 687 | 0 | 8 | 0 | 2 stand-in | `destroyprop`, `playcharanim` | The port runs `1-2_MissionStart` one update later than the original at the end of the title camera ... |
@@ -235,7 +235,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [script-system-dcam.md](features/script-system-dcam.md): SCRIPT-40 (+15), SCRIPT-182 (+1), SCRIPT-48 (+1), SCRIPT-50 (+1), SCRIPT-181, SCRIPT-49, SCRIPT-S142
 - [script-system-hud-natives.md](features/script-system-hud-natives.md): SCRIPT-68, SCRIPT-69, SCRIPT-70
 - [script-system-missions.md](features/script-system-missions.md): SCRIPT-220 (+1), SCRIPT-284 (+1), SCRIPT-115, SCRIPT-142, SCRIPT-221, SCRIPT-S141, SCRIPT-S236, SCRIPT-S237, SCRIPT-S243, SCRIPT-S247, SCRIPT-S248, SCRIPT-S249, SCRIPT-S254
-- [script-system-natives-animation.md](features/script-system-natives-animation.md): SCRIPT-320 (+2), SCRIPT-272 (+1), SCRIPT-319 (+1), SCRIPT-S110
+- [script-system-natives-animation.md](features/script-system-natives-animation.md): SCRIPT-324 (+3), SCRIPT-320 (+2), SCRIPT-272 (+1), SCRIPT-325 (+1), SCRIPT-S110, SCRIPT-S266, SCRIPT-S267
 - [script-system-natives-world.md](features/script-system-natives-world.md): SCRIPT-279 (+14)
 - [script-system-natives.md](features/script-system-natives.md): SCRIPT-43 (+17), SCRIPT-44 (+15), SCRIPT-45 (+13), SCRIPT-7 (+11), SCRIPT-150 (+1), SCRIPT-56 (+1), SCRIPT-64 (+1), SCRIPT-98 (+1), SCRIPT-S97
 - [script-system-triggers.md](features/script-system-triggers.md): SCRIPT-76 (+10), SCRIPT-51 (+3), SCRIPT-77 (+1), SCRIPT-78 (+1), SCRIPT-S15, SCRIPT-S28, SCRIPT-S30, SCRIPT-S8

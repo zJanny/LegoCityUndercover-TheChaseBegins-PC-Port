@@ -3,7 +3,7 @@
 
 namespace chase::runtime {
 
-PlayerMotionStep playerRootStepUpdate(LocomotionState& motion, VerticalState& vertical, const CollisionWorld& world, float deltaX, float deltaZ, float dt) {
+PlayerMotionStep playerRootStepUpdate(LocomotionState& motion, VerticalState& vertical, const CollisionWorld& world, float deltaX, float deltaZ, float dt, float deltaY) {
     PlayerMotionStep result;
     VerticalInput input;
     input.dt = dt;
@@ -17,6 +17,7 @@ PlayerMotionStep playerRootStepUpdate(LocomotionState& motion, VerticalState& ve
         slideAlongWalls(world, motion.x, vertical.y, motion.z, input.forwardX, input.forwardZ, dx, dz, PlayerBox(), kPlayerExcludedSurfaces, 0.0f);
     motion.x += dx;
     motion.z += dz;
+    vertical.y += deltaY;
     input.x = motion.x;
     input.z = motion.z;
     input.rootDelta = rootDelta;

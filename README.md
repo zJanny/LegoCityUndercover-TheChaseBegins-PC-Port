@@ -99,13 +99,13 @@ All keys and how to change them: [Controls](docs/controls.md).
 | Script commands | 44 of 239 (18.4%) | Different commands the level scripts call that the port runs. They cover 66.6% of all calls. 122 more run with a stand-in result. |
 | Object types | 152 of 506 (30.0%) | Different object types in the levels that the port treats with recovered rules (collision, doors, studs). They cover 54.0% of all placed objects. |
 | Game files read | 99.7% of files, 99.9% of data | Files in the game archive (12836) that the port can decode, by count and by size. |
-| Open work | 425 open items, 313 stand-ins | Known gaps and temporary guesses in 26 feature areas. It has no total to reach; watch the trend. |
+| Open work | 426 open items, 315 stand-ins | Known gaps and temporary guesses in 26 feature areas. It has no total to reach; watch the trend. |
 | Checked against the original | 273 tests, 210 recorded traces | Automatic tests, and recordings of the original game that the tests compare with. |
 | Game code documented | 2245 of about 7575 (29.6%) | Functions of the game program that the notes or the source point to. The total is an estimate. |
 
 ![Progress trend](docs/progress-trend.svg)
 
-Updated 2026-10-19, commit a77746f. How the numbers are measured: [docs/progress.md](docs/progress.md).
+Updated 2026-10-19, commit 953da2a. How the numbers are measured: [docs/progress.md](docs/progress.md).
 <!-- progress:end -->
 
 ## More documentation

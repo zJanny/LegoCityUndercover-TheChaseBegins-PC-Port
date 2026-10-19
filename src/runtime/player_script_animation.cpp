@@ -53,6 +53,7 @@ void PlayerScriptAnimation::play(const AnimationPlay& play) {
     const bool loaded = scriptLoaded_ && current && current->clip == clip->info.clip;
     playCharacterAnimation(slots_, scriptLoaded_, clip->info, loaded, play.request.loop, clock_);
     requested_ = kUserAnimState;
+    lastRoot_.reset();
 }
 
 void PlayerScriptAnimation::stop(const std::string& instance) {
@@ -89,6 +90,50 @@ double PlayerScriptAnimation::frame() const {
     if (!slot || !clip) return 0.0;
     const double position = AnimationSlots::position(*slot, clock_).frame;
     return std::clamp(position, 0.0, double(clip->frames > 0 ? clip->frames - 1 : 0));
+}
+
+}
+
+namespace chase::runtime {
+namespace {
+constexpr float kHeadingUnitsPerRadian = 10430.378f;
+}
+
+std::optional<ScriptRootStep> PlayerScriptAnimation::rootMotion(std::int16_t facing) {
+    const AnimationSlot* slot = slots_.current();
+    const assets::Animation* clip = animation();
+    if (!slot || !clip) return std::nullopt;
+    const std::optional<RootSample> root = rootSample(*clip, frame());
+    if (!root) return std::nullopt;
+    const bool continued = lastRoot_ && lastRootStart_ == slot->startId;
+    const RootSample previous = continued ? *lastRoot_ : *root;
+    lastRoot_ = root;
+    lastRootStart_ = slot->startId;
+    if (!continued) return std::nullopt;
+    if (!lastFacing_ || *lastFacing_ != facing) nodeHeading_ = float(facing) / kHeadingUnitsPerRadian;
+    assets::Placement placement;
+    placement.orientation[1] = nodeHeading_ * 57.29578f;
+    const assets::Matrix node = assets::placementMatrix(placement);
+    const RootSample delta = rootDelta(previous, *root);
+    const assets::Matrix moved = applyRootDelta(node, delta);
+    ScriptRootStep step;
+    step.dx = moved[12];
+    step.dy = moved[13];
+    step.dz = moved[14];
+    lastFacing_ = facing;
+    if (delta.yaw != 0.0f) {
+        nodeHeading_ = std::atan2(moved[8], moved[10]);
+        const std::int16_t turned = std::int16_t(std::uint16_t(int(nodeHeading_ * kHeadingUnitsPerRadian) & 0xffff));
+        step.facing = turned;
+        lastFacing_ = turned;
+    }
+    return step;
+}
+
+void applyScriptRootStep(const ScriptRootStep& step, LocomotionState& motion, VerticalState& vertical, const CollisionWorld& world, float dt) {
+    if (step.facing) motion.facing = *step.facing;
+    motion.lastIntent = motion.facing;
+    playerRootStepUpdate(motion, vertical, world, step.dx, step.dz, dt, step.dy);
 }
 
 }

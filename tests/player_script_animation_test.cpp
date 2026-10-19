@@ -8,6 +8,7 @@
 #include "assets/assets.hpp"
 #include "runtime/player_script_animation.hpp"
 
+#include <cmath>
 #include <filesystem>
 #include <iostream>
 #include <stdexcept>
@@ -81,6 +82,53 @@ void run(const AnimationLoader& loader) {
     }
     require(PlayerScriptAnimation::clipPath("class_generic", "Idle_Minifig") == kIdlePath, "clip path");
 }
+
+void rootMotion(const AnimationLoader& loader) {
+    {
+        PlayerScriptAnimation animation(loader);
+        animation.play(playOf("player1", "combo_1_minifig", false));
+        require(animation.update(kStep), "state entered");
+        require(!animation.rootMotion(0), "the first update of a clip only stores the root sample");
+        float dx = 0, dy = 0, dz = 0;
+        int steps = 0;
+        while (animation.update(kStep)) {
+            const std::optional<ScriptRootStep> step = animation.rootMotion(0);
+            if (!step) continue;
+            dx += step->dx;
+            dy += step->dy;
+            dz += step->dz;
+            require(!step->facing, "a clip without a turn leaves the facing alone");
+            ++steps;
+        }
+        require(steps > 5, "one step per update of the clip");
+        require(std::fabs(dx) < 1e-4f && std::fabs(dy) < 1e-4f, "combo_1 moves along z only");
+        require(dz > 0.95f && dz < 1.06f, "the steps add up to the root z travel of the clip (1.05684 from frame 0 to 14, archive scan) minus the first sample");
+    }
+    {
+        PlayerScriptAnimation animation(loader);
+        animation.play(playOf("player1", "bluebell_interrogated_intro_minifig", false));
+        std::int16_t facing = 0;
+        float dz = 0;
+        while (animation.update(kStep)) {
+            const std::optional<ScriptRootStep> step = animation.rootMotion(facing);
+            if (!step) continue;
+            if (step->facing) facing = *step->facing;
+            dz += step->dz;
+        }
+        require(facing > 16300 && facing < 16400, "the turn of 1.57125 rad (53 frames, archive scan) ends near 16389");
+        require(dz > 0.0f && dz < 10.7f, "the walk bends with the turn, so z stays below the straight 10.63");
+    }
+    {
+        LocomotionState motion;
+        VerticalState vertical;
+        CollisionWorld world;
+        ScriptRootStep step;
+        step.dz = 0.5f;
+        step.facing = 16384;
+        applyScriptRootStep(step, motion, vertical, world, kStep);
+        require(motion.facing == 16384 && motion.lastIntent == 16384, "the turn writes ctrl+8 and ctrl+10");
+    }
+}
 }
 
 int main(int argc, char** argv) {
@@ -103,6 +151,7 @@ int main(int argc, char** argv) {
         chase::assets::FuseArchive archive(argv[1]);
         archive.loadNames(argv[2]);
         run(archiveAnimationLoader(archive));
+        rootMotion(archiveAnimationLoader(archive));
     } catch (const std::exception& error) {
         std::cerr << "player-script-animation-test: " << error.what() << '\n';
         return 1;

@@ -288,8 +288,11 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         const runtime::BoardingStep boardingStep = stepBoarding(dt);
         const runtime::Posture postureBeforeStep = player->vertical.posture;
         const float fallSpeedBeforeStep = player->vertical.fallSpeed;
+        const std::optional<runtime::ScriptRootStep> scriptRoot = scriptClip ? playerScriptAnimation.rootMotion(player->motion.facing) : std::nullopt;
+        if (scriptRoot) runtime::applyScriptRootStep(*scriptRoot, player->motion, player->vertical, collision, dt);
         game_player::PlayerAnimation shown =
             boardingStep.takesControl ? applyBoarding(boardingStep)
+            : scriptRoot              ? game_player::PlayerAnimation{}
                                       : attackMovePlayer(runtime::stickIntent(stick), !controlTaken && carry.allowsJump() && !detective.modeActive() && pad.slot(kSlotJumpButton).press > 0,
                                                          !controlTaken && pad.slot(kSlotConfirmButton).press > 0, pad.slot(kSlotButtonY).value > 0.0f,
                                                          !controlTaken && carry.carryingMode() == 0 && !detective.modeActive(), dt);
