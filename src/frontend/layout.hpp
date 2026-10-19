@@ -4,6 +4,7 @@
 // property ids) is not recovered. Track properties follow the data fit of ui-layouts.md (1/2 translate x/y,
 // 3/4 scale x/y, 5 rotation, 6 opacity) and keyframes use the spline stored in the file as a cubic Bezier.
 #include "frontend/resources.hpp"
+#include <array>
 #include <map>
 #include <set>
 #include <string>
@@ -41,6 +42,8 @@ struct LayoutScene {
     float time = 0;
     std::vector<PlayingStoryboard> laterStoryboards;
     std::map<std::string, std::string> attachedLayouts;
+    // Element positions set by code (the layout node's x and y replaced, as 0x20354c does for one axis); storyboard offsets still apply.
+    std::map<std::string, std::array<float, 2>> positions;
     float opacity = 1;
     int textSpacing = -2;
     // STAND-IN (SCAN-S5): the scanner overlay draws rotation (element rotation field and track property 5) and lets scale tracks

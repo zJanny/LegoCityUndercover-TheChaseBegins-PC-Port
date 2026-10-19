@@ -290,6 +290,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     buildits.load(archive, level, classOf);
     std::cout << "build-its: " << buildits.objects().size() << '\n';
     propParts.loadBuildits(scene, archive, buildits, placedObjects, placedSceneIndex);
+    loadSuperBuildits();
     effects.load(scene, archive, particles.random(), studDrops.planes());
     std::cout << "debris objects: " << effects.debrisInstances() << '\n';
     carry.load(archive, level, classOf);
@@ -491,6 +492,7 @@ void LevelSession::draw(int width, int height) {
                                 ? hudResources.textForKey(kGameTextFile, fe::characterNameKey(hudResources, scriptText.dialogue().character))
                                 : hudResources.textForKey(kHintTextFile, scriptText.dialogue().key),
                             scriptText.dialogue().alpha);
+    drawSuperBuildit(hudCanvas);
     if (levelScripts.dialogOpen()) {
         const runtime::ScriptDialog dialog = levelScripts.dialog();
         if (dialog.cancelKey == runtime::kInformationBoxCancelKey)

@@ -268,6 +268,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         ++updatesThisSecond;
         return;
     }
+    if (holdForSuperBuildit(dt)) return;
     particles.update(dt);
     stepVehicleFlashes();
     const auto emit = [&](const runtime::SoundCall& call) {
@@ -336,6 +337,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         const float playerPosition[3] = {player->motion.x, player->vertical.y, player->motion.z};
         updateDoors(playerPosition, emit);
         for (const runtime::SoundCall& call : updateBuildits(playerPosition)) emit(call);
+        updateSuperBuildits(playerPosition, dt);
         updateCarry(playerPosition);
         updateDetective(dt, carry.carryingMode() == 0 && !carry.busy() && !builditPlayer.active() && !buildits.lastUse().inZone, emit);
         updateUseSpots(carry.carryingMode() == 0 && !carry.busy() && !builditPlayer.active() && !buildits.lastUse().inZone);

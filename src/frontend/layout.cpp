@@ -130,7 +130,10 @@ private:
             scaleY = pose.hasScaleY ? pose.scaleY : e.scale[1];
             rotation = pose.hasRotation ? pose.rotation : e.rotation;
         }
-        const float localX = e.position[0] + pose.translateX, localY = e.position[1] + pose.translateY;
+        const auto placed = scene_.positions.find(e.name);
+        const float baseX = placed != scene_.positions.end() ? placed->second[0] : e.position[0];
+        const float baseY = placed != scene_.positions.end() ? placed->second[1] : e.position[1];
+        const float localX = baseX + pose.translateX, localY = baseY + pose.translateY;
         const float pivotX = e.origin[0] * width, pivotY = e.origin[1] * height;
         const float boxX = localX + pivotX * (1 - scaleX), boxY = localY + pivotY * (1 - scaleY);
         Frame frame;

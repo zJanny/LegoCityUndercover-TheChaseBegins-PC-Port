@@ -20,7 +20,7 @@ Save states the oracle uses: which ones exist, the game progress of each, how ea
 - Pole mount (user, for TRAV-1): `m12-10a-pole-foot` (0.8 m from the drain pipe, facing away; walking into the pipe mounts it), `m12-10b-pole-side` (2.4 m left of the pipe axis, facing the wall). [§2026-10-18T15:46:24](#ts-20261018-154624)
 - Table and trampoline of mission 1-2 (user, for PLAYER-12 and LEVOBJ-86): `m12-table-before`, `m12-table-broken`, `m12-trampoline-built`, loaded and checked. [§2026-10-18T17:25:22](#ts-20261018-172522)
 - Bars above the trampoline (user, for TRAV-36): `m12-trampoline-pole`, Chase high above the pad next to the bars; keep pressing jump to grab. [§2026-10-18T20:44:42](#ts-20261018-204442)
-- Mission 1-3 in progress (user): `m13-1-roof-superbrick`, `m13-2-ladder`, `m13-3-helipad-needs-bricks`, `m13-4-helipad-300-bricks`, `m13-5-helipad-built-menu`. `m13-1` stands on the roof 2.53 from the super brick `1-3_Rainbow_02` with 96 super bricks (296 after the pickup), `m13-3` has 296, `m13-4` 302. [§2026-10-19T18:02:53](#ts-20261019-180253), [§2026-10-19T19:22:01](#ts-20261019-192201)
+- Mission 1-3 in progress (user): `m13-1-roof-superbrick`, `m13-2-ladder`, `m13-3-helipad-needs-bricks`, `m13-4-helipad-300-bricks`, `m13-5-helipad-built-menu`. `m13-1` stands on the roof 2.53 from the super brick `1-3_Rainbow_02` with 96 super bricks (296 after the pickup), `m13-3` has 296, `m13-4` 302. [§2026-10-19T18:02:53](#ts-20261019-180253), [§2026-10-19T19:22:01](#ts-20261019-192201) The helipad states load as described [§2026-10-19T19:24:35](#ts-20261019-192435).
 - `leadcut-1_1_d-early` (from `m11-6-van-to-shop`): cutscene `1_1_d` just loaded, for its actor nodes and pictures. [§2026-10-16T14:39:21](#ts-20261016-143921)
 - Open: whether mission 1-2 is active in the post-1-1 states, the level variables of the m11 states, a save with Continue byte +6 above 1, and the Old 3DS run of `savestate`.
 
@@ -341,3 +341,20 @@ Progress: as the user said (missions 1-1 and 1-2 done, 1-3 in progress); `m13-2`
 
 Unknowns:
 - Positions and facing of `m13-2-ladder`, `m13-3`, `m13-4` and `m13-5`; the level (all three loaded states show lvl_01 objects; the level id was not read).
+
+<a id="ts-20261019-192435"></a>
+
+## 2026-10-19T19:24:35+02:00 — The helipad states m13-3 to m13-5 loaded
+
+Loaded with `--state` / `loadstate` (New 3DS, OpenGL, `--rpc`) after their JSONs were pointed at the quick-save slot 00; each shows what the user described:
+
+| State | Player (world) | Super bricks 0x593430 | Seen |
+|---|---|---|---|
+| `m13-3-helipad-needs-bricks` | 901.454 30.903 1139.463 | 296 | the prompt "Helipad / 300 / Not enough Super Bricks!" |
+| `m13-4-helipad-300-bricks` | 901.203 30.899 1141.268 | 302 | the prompt with A "Build" |
+| `m13-5-helipad-built-menu` | 906.561 31.445 1138.943 | 2 | built helipad, the player on the fast travel pad; A opens the menu |
+
+Findings: [super-buildit.md §2026-10-19T19:23:11](super-buildit.md#ts-20261019-192311).
+
+Unknowns:
+- `m13-2` was not loaded in this session (`m13-1`: [§2026-10-19T19:22:01](#ts-20261019-192201)).

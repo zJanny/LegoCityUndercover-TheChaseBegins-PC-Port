@@ -19,6 +19,7 @@
 #include "game_fall_apart.hpp"
 #include "game_object_visibility.hpp"
 #include "game_prop_parts.hpp"
+#include "game_super_buildit.hpp"
 #include "game_hud.hpp"
 #include "game_options.hpp"
 #include "game_particles.hpp"
@@ -34,6 +35,7 @@
 #include "runtime/player_script_animation.hpp"
 #include "runtime/buildit_set.hpp"
 #include "runtime/buildit_player.hpp"
+#include "runtime/super_buildit.hpp"
 #include "runtime/vehicle_break.hpp"
 #include "runtime/vehicle_damage.hpp"
 #include "game_carry.hpp"
@@ -237,6 +239,11 @@ private:
     void cancelBoardingByPlacement();
     game_player::PlayerAnimation applyBoarding(const chase::runtime::BoardingStep& step);
     bool holdForMovie(float dt);
+    void loadSuperBuildits();
+    bool holdForSuperBuildit(float dt);
+    void updateSuperBuildits(const float playerPosition[3], float dt);
+    void drawSuperBuildit(chase::frontend::Canvas& top);
+    void drawSuperBuilditPrompt(chase::frontend::Canvas& top, const chase::runtime::SuperBuilditPrompt& prompt);
     bool cutscenePlaying() const { return levelScripts.cutscenes().playing() != nullptr; }
     void startRoomStreaming();
     void updateRoomStreaming();
@@ -297,6 +304,8 @@ private:
     std::vector<game_doors::DoorObject> doors;
     chase::runtime::BuilditSet buildits;
     chase::runtime::BuilditPlayer builditPlayer;
+    chase::runtime::SuperBuilditSet superBuildits;
+    game_super_buildit::State superBuild;
     game_prop_parts::PropParts propParts;
     chase::runtime::CarrySet carry;
     game_carry::HeldObjects heldObjects;

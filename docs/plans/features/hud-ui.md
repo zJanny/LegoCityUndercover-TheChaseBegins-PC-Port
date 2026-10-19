@@ -36,6 +36,7 @@ IN_PROGRESS, updated 2026-10-19T15:05:12+02:00. The map also shows the sub-objec
 - HUD-S71 Group slots are drawn after all waypoint markers instead of in the original's shared slot order (16 slots, 0x2db0dc), and the map alpha (+0x4a0) is 1. needs: HUD-71. evidence: [objective-hud.md §2026-10-19T15:00](../../re/objective-hud.md#ts-20261019-150002).
 - HUD-S70 The waypoint column and badge fade as the original's tweens (linear, class times), but the node alpha and colour are applied as a multiplier of the finished fragment's colour and alpha (`Scene::setInstanceFade`); the original's draw path was not read. needs: HUD-70. evidence: [objective-hud.md §2026-10-15T19:58](../../re/objective-hud.md#ts-20261015-195841).
 - HUD-S15 The information box places its first text line at the box top + 3 (measured for three lines only); the warning dialog keeps its earlier fitted button positions. needs: HUD-30. evidence: [script-text.md §2026-10-14T20:46](../../re/script-text.md#ts-20261014-204600).
+- HUD-S73 Super build-it prompt: name and cost white (oracle), frontendfont. needs: HUD-75. evidence: [super-buildit.md §2026-10-19T19:23:11](../../re/super-buildit.md#ts-20261019-192311).
 - HUD-S9 The dialogue background is drawn at full opacity as long as ShowDialogBG is on (no fade). needs: HUD-22. evidence: [script-text.md §2026-10-14T15:25](../../re/script-text.md#ts-20261014-152500).
 
 ## 5. Open items
@@ -65,6 +66,8 @@ IN_PROGRESS, updated 2026-10-19T15:05:12+02:00. The map also shows the sub-objec
 - [ ] HUD-30 — ShowCharacterIntro against the oracle (no state at mission 1-4 yet), an information or warning box with other line counts than three, and the warning dialog's width rule. blocks: HUD-S15. evidence: [script-text.md §2026-10-14T20:46](../../re/script-text.md#ts-20261014-204600).
 - [ ] HUD-32 — Does the original's HUD clock (TransitionOn, heart and stud bar animations) keep running while a dialog box is open? The port freezes `hud->update` during a dialog. evidence: [script-text.md §2026-10-14T21:41](../../re/script-text.md#ts-20261014-214151).
 - [ ] HUD-33 — After the release director camera of mission 1-1 the port shows the driving tip ("Press and hold A…") on the bottom screen, while the original shows the hexagon panel and then the map with no tip at +3, +10 and +30 updates; when the original shows this tip is not measured. needs: MOVIE-24. evidence: [script-text.md §2026-10-15T17:19](../../re/script-text.md#ts-20261015-171916)
+- [ ] HUD-74 — The brick models of the super build-it prompt are not drawn. evidence: [super-buildit.md §2026-10-19T19:23:11](../../re/super-buildit.md#ts-20261019-192311).
+- [ ] HUD-75 — Layout text ignores `fontSize` (table 0x52ebf8). blocks: HUD-S73. evidence: [super-buildit.md §2026-10-19T19:23:11](../../re/super-buildit.md#ts-20261019-192311).
 
 ## 6. Findings summary
 
@@ -77,5 +80,5 @@ IN_PROGRESS, updated 2026-10-19T15:05:12+02:00. The map also shows the sub-objec
 
 ## 7. Code and tests
 
-- `src/frontend/hud.*` (`Hud`, `setCameraLockAlpha`), `src/runtime/camera_lock_icon.*`, `src/frontend/minimap.*`, `src/game_hud.hpp` (two-screen presentation), `chase-hudshot`, `LayoutScene` in `src/frontend/layout.*`; `Canvas::clearTransparent`; `src/frontend/script_text_pages.*` (`drawTipPage`, `drawDialogueBox`, `drawHeadingBox`, `levelHeadingKey`, `drawDialogueBackground`), `src/runtime/script_text.*`, `script-text-pages-real-data`.
+- `src/frontend/super_build_prompt.*`, `src/frontend/hud.*` (`Hud`, `setCameraLockAlpha`), `src/runtime/camera_lock_icon.*`, `src/frontend/minimap.*`, `src/game_hud.hpp` (two-screen presentation), `chase-hudshot`, `LayoutScene` in `src/frontend/layout.*`; `Canvas::clearTransparent`; `src/frontend/script_text_pages.*` (`drawTipPage`, `drawDialogueBox`, `drawHeadingBox`, `levelHeadingKey`, `drawDialogueBackground`), `src/runtime/script_text.*`, `script-text-pages-real-data`.
 - CTest: `script-text`, `script-text-real-data`, `tip-text-shot`, `tip-text-panel`, `hud-real-data` (trace dir `CHASE_HUD_TRACE_DIR`), `game-script-hud`, `studs-core`, `frontend-real-data`. Scenarios: `tools/oracle/hud-*.txt`. Pictures (not committed): `artifacts/review/hud/`.
