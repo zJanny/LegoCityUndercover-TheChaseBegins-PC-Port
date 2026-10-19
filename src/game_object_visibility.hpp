@@ -4,6 +4,7 @@
 #include "render/character.hpp"
 #include "render/scene.hpp"
 #include "runtime/object_visibility.hpp"
+#include <functional>
 #include <optional>
 #include <vector>
 
@@ -12,7 +13,8 @@ namespace game_object_visibility {
 class CharacterVisibility {
 public:
     void apply(chase::render::Scene& scene, const std::vector<chase::assets::CharacterObject>& characters,
-               const std::vector<std::optional<chase::render::CharacterInstance>>& placed, const chase::assets::PlacedObjectState& state);
+               const std::vector<std::optional<chase::render::CharacterInstance>>& placed, const chase::assets::PlacedObjectState& state,
+               const std::function<bool(std::size_t)>& heldByCutscene);
 
 private:
     std::vector<bool> wasHidden_;

@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 726 open items and stand-ins, 155 linked to game usage, 571 with unknown reach.
+Items: 728 open items and stand-ins, 156 linked to game usage, 572 with unknown reach.
 
 ## Top 50 overall
 
@@ -104,7 +104,7 @@ Items: 726 open items and stand-ins, 155 linked to game usage, 571 with unknown 
 
 ## Level objects
 
-12 of 97 items linked.
+12 of 98 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -113,8 +113,8 @@ Items: 726 open items and stand-ins, 155 linked to game usage, 571 with unknown 
 | 3 | [STUD-4](features/studs.md?display=source#L28) | 109 | 0 | 7 | 0 | 1 stand-in, 1 none | `enablestudsbygroup`, `spawnstuds` | How a group is enabled (0x28a2cc sequencer, `EnableStudsByGroup` and `SpawnStuds` script functions ... |
 | 4 | [STUD-9](features/studs.md?display=source#L29) | 73 | 0 | 7 | 2 | 1 stand-in | `enablestudsbygroup` | `EnableStudsByGroup(group, value)` only records the request (the sequencer entry 0x58f710 and its per-frame ... |
 | 5 | [LEVOBJ-32](features/level-objects-carry.md?display=source#L33) | 57 | 0 | 3 | 0 | 1 none | `spawndebris` | Effects of the carry system not played: sounds (`carryit_pickup_big_01`, `carryit_putdown_big_01` ... |
-| 6 | [LEVOBJ-7](features/level-objects.md?display=source#L40) | 0 | 51 | 7 | 0 | - | `chars/ride_pig`, `props/prop_sharkattack` | Classes without a recovered create are not created (shared with COLL-2): among the animals `chars/ride_pig` ... |
-| 7 | [LEVOBJ-4](features/level-objects.md?display=source#L37) | 0 | 37 | 7 | 0 | - | `chars/ride_pig` | The 8 custom lineup characters (`CharacterEnum` 1..8 through 0x2372e0) and the ride_pig and shark rigs ... |
+| 6 | [LEVOBJ-7](features/level-objects.md?display=source#L41) | 0 | 51 | 7 | 0 | - | `chars/ride_pig`, `props/prop_sharkattack` | Classes without a recovered create are not created (shared with COLL-2): among the animals `chars/ride_pig` ... |
+| 7 | [LEVOBJ-4](features/level-objects.md?display=source#L38) | 0 | 37 | 7 | 0 | - | `chars/ride_pig` | The 8 custom lineup characters (`CharacterEnum` 1..8 through 0x2372e0) and the ride_pig and shark rigs ... |
 | 8 | [STUD-10](features/studs.md?display=source#L30) | 21 | 0 | 6 | 0 | 1 stand-in | `addstuds` | `AddStuds` adds to the counter (`StudField::addToCounter`) but not the timestamp +0x44 and the HUD hook ... |
 | 9 | [DOOR-1](features/doors.md?display=source#L28) | 16 | 0 | 7 | 0 | 1 implemented | `warningdialogbox` | Some doors in lvl_01 open only when a game script asks; `Police_ExtToInt` stops at `WarningDialogBox`, which ... |
 | 10 | [PART-2](features/particles.md?display=source#L27) | 15 | 0 | 2 | 14 | 1 none | `playparticlesgo` | Most callers do not start emitters: the script natives (`PlayParticlesGO`, `EffectPlayParticles` ... |
@@ -167,20 +167,20 @@ Items: 726 open items and stand-ins, 155 linked to game usage, 571 with unknown 
 
 ## Front end, HUD, saves
 
-13 of 117 items linked.
+14 of 118 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
 | 1 | [HUD-S9](features/hud-ui.md?display=source#L37) | 442 | 0 | 7 | 0 | 1 stand-in | `showdialogbg` | The dialogue background is drawn at full opacity as long as ShowDialogBG is on (no fade) |
 | 2 | [HUD-S60](features/hud-ui.md?display=source#L34) | 0 | 159 | 7 | 0 | - | `props/map_waypoint` | Every waypoint is drawn as icon type 0 (the type byte is a class parameter, read for `map_waypoint` only) ... |
 | 3 | [AUDIO-S11](features/audio.md?display=source#L29) | 67 | 0 | 7 | 0 | 1 stand-in | `automaticmusic` | AutomaticMusic clears the override byte 0x376b31 and runs the evaluation 0x204fe0 only as far as the mood-0 ... |
-| 4 | [HUD-22](features/hud-ui.md?display=source#L55) | 39 | 0 | 6 | 3 | 4 stand-in | `showbosshearts`, `showportraitovervehicle`, `showracestart`, `showtally` | Remaining text screens: ShowTally, ShowBossHearts, ShowRaceStart, ShowPortraitOverVehicle (their layouts and ... |
-| 5 | [AUDIO-S31](features/audio.md?display=source#L33) | 26 | 0 | 6 | 0 | 2 stand-in | `scalesoundfrequency`, `setsoundvolume` | SetSoundVolume is a factor on the voice's gains and ScaleSoundFrequency sets the voice rate to (int)(scale * ... |
-| 6 | [HUD-9](features/hud-ui.md?display=source#L46) | 21 | 0 | 6 | 1 | 1 stand-in | `addstuds` | Script path `AddStuds` (0x1584e0): shows the old total, adds 1.75 s later |
-| 7 | [MOVIE-S12](features/movies-cutscenes.md?display=source#L27) | 9 | 0 | 6 | 0 | 1 stand-in | `playcutscene` | A new game from the front end shows `01_GameIntro` in the front end and skips the script's `PlayCutscene` in ... |
-| 8 | [HUD-30](features/hud-ui.md?display=source#L60) | 7 | 0 | 6 | 1 | 1 stand-in | `showcharacterintro` | ShowCharacterIntro against the oracle (no state at mission 1-4 yet), an information or warning box with other ... |
-| 9 | [HUD-25](features/hud-ui.md?display=source#L56) | 7 | 0 | 6 | 0 | 1 stand-in | `showcharacterintro` | ShowCharacterIntro also sets the HUD's "Portrait" image to the character (0x1cc8a4); the port only shows the ... |
-| 10 | [AUDIO-11](features/audio.md?display=source#L39) | 6 | 0 | 3 | 5 | 1 stand-in | `vehicleenabledrivingmusic` | Action music: the combat scan of 0x204fe0 (table 0x58deb0), OverrideMusicMood, PauseMusic, DuckMusicFor ... |
+| 4 | [MOVIE-38](features/movies-cutscenes.md?display=source#L41) | 56 | 0 | 7 | 0 | 1 stand-in | `dcamcutscenefree` | Whether the script native DCamCutSceneFree 0x196144 (clears the entity layers, no matrix restore) runs on a ... |
+| 5 | [HUD-22](features/hud-ui.md?display=source#L55) | 39 | 0 | 6 | 3 | 4 stand-in | `showbosshearts`, `showportraitovervehicle`, `showracestart`, `showtally` | Remaining text screens: ShowTally, ShowBossHearts, ShowRaceStart, ShowPortraitOverVehicle (their layouts and ... |
+| 6 | [AUDIO-S31](features/audio.md?display=source#L33) | 26 | 0 | 6 | 0 | 2 stand-in | `scalesoundfrequency`, `setsoundvolume` | SetSoundVolume is a factor on the voice's gains and ScaleSoundFrequency sets the voice rate to (int)(scale * ... |
+| 7 | [HUD-9](features/hud-ui.md?display=source#L46) | 21 | 0 | 6 | 1 | 1 stand-in | `addstuds` | Script path `AddStuds` (0x1584e0): shows the old total, adds 1.75 s later |
+| 8 | [MOVIE-S12](features/movies-cutscenes.md?display=source#L27) | 9 | 0 | 6 | 0 | 1 stand-in | `playcutscene` | A new game from the front end shows `01_GameIntro` in the front end and skips the script's `PlayCutscene` in ... |
+| 9 | [HUD-30](features/hud-ui.md?display=source#L60) | 7 | 0 | 6 | 1 | 1 stand-in | `showcharacterintro` | ShowCharacterIntro against the oracle (no state at mission 1-4 yet), an information or warning box with other ... |
+| 10 | [HUD-25](features/hud-ui.md?display=source#L56) | 7 | 0 | 6 | 0 | 1 stand-in | `showcharacterintro` | ShowCharacterIntro also sets the HUD's "Portrait" image to the character (0x1cc8a4); the port only shows the ... |
 
 ## Rendering and assets
 
@@ -221,7 +221,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [level-objects-buildit.md](features/level-objects-buildit.md): LEVOBJ-71 (+1), LEVOBJ-79 (+1), LEVOBJ-42, LEVOBJ-43, LEVOBJ-61, LEVOBJ-70, LEVOBJ-76, LEVOBJ-77, LEVOBJ-85, LEVOBJ-94, LEVOBJ-S41, LEVOBJ-S70, LEVOBJ-S71, LEVOBJ-S74, LEVOBJ-S76
 - [level-objects-carry.md](features/level-objects-carry.md): LEVOBJ-75 (+1), LEVOBJ-30, LEVOBJ-31, LEVOBJ-34, LEVOBJ-S31, LEVOBJ-S33, LEVOBJ-S34, LEVOBJ-S73, LEVOBJ-S75
 - [level-objects-wobbly.md](features/level-objects-wobbly.md): LEVOBJ-87 (+1), LEVOBJ-89 (+1), LEVOBJ-90 (+1), LEVOBJ-92 (+1), LEVOBJ-96 (+1), LEVOBJ-88, LEVOBJ-91, LEVOBJ-97, LEVOBJ-S77, LEVOBJ-S79, LEVOBJ-S80, LEVOBJ-S81
-- [level-objects.md](features/level-objects.md): LEVOBJ-105 (+2), LEVOBJ-8 (+2), LEVOBJ-101 (+1), LEVOBJ-106 (+1), LEVOBJ-108 (+1), LEVOBJ-102, LEVOBJ-104, LEVOBJ-107, LEVOBJ-109, LEVOBJ-3, LEVOBJ-5, LEVOBJ-6, LEVOBJ-S2, LEVOBJ-S3, LEVOBJ-S4, LEVOBJ-S82, LEVOBJ-S83, LEVOBJ-S84, LEVOBJ-S85, LEVOBJ-S86, LEVOBJ-S88, LEVOBJ-S89
+- [level-objects.md](features/level-objects.md): LEVOBJ-8 (+2), LEVOBJ-101 (+1), LEVOBJ-106 (+1), LEVOBJ-108 (+1), LEVOBJ-110 (+1), LEVOBJ-111 (+1), LEVOBJ-102, LEVOBJ-104, LEVOBJ-109, LEVOBJ-3, LEVOBJ-5, LEVOBJ-6, LEVOBJ-S2, LEVOBJ-S3, LEVOBJ-S4, LEVOBJ-S82, LEVOBJ-S83, LEVOBJ-S84, LEVOBJ-S86, LEVOBJ-S88, LEVOBJ-S89, LEVOBJ-S90, LEVOBJ-S91
 - [level-transitions.md](features/level-transitions.md): TRANS-3 (+3), TRANS-13 (+2), TRANS-8 (+2), TRANS-10 (+1), TRANS-11 (+1), TRANS-12 (+1), TRANS-14 (+1), TRANS-S1, TRANS-S3, TRANS-S4, TRANS-S5
 - [movies-cutscenes.md](features/movies-cutscenes.md): MOVIE-22 (+1), MOVIE-24 (+1), MOVIE-36 (+1), MOVIE-37 (+1), MOVIE-S33 (+1), MOVIE-1, MOVIE-12, MOVIE-20, MOVIE-21, MOVIE-3, MOVIE-33, MOVIE-35, MOVIE-4, MOVIE-S1, MOVIE-S10, MOVIE-S11, MOVIE-S2, MOVIE-S21, MOVIE-S3, MOVIE-S30, MOVIE-S31, MOVIE-S32, MOVIE-S34
 - [particles.md](features/particles.md): PART-4 (+1), PART-6 (+1), PART-5, PART-7, PART-S1, PART-S2, PART-S3, PART-S4

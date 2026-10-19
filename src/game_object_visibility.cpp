@@ -1,4 +1,5 @@
 #include "game_object_visibility.hpp"
+#include "runtime/cutscene_hold.hpp"
 
 namespace game_object_visibility {
 namespace render = chase::render;
@@ -12,8 +13,11 @@ void setVisible(render::Scene& scene, const render::CharacterInstance& instance,
 }
 
 void CharacterVisibility::apply(render::Scene& scene, const std::vector<chase::assets::CharacterObject>& characters,
-                                const std::vector<std::optional<render::CharacterInstance>>& placed, const chase::assets::PlacedObjectState& state) {
-    const std::vector<bool> drawn = chase::runtime::drawnCharacters(characters, state);
+                                const std::vector<std::optional<render::CharacterInstance>>& placed, const chase::assets::PlacedObjectState& state,
+                                const std::function<bool(std::size_t)>& heldByCutscene) {
+    std::vector<bool> drawn = chase::runtime::drawnCharacters(characters, state);
+    for (std::size_t i = 0; i < drawn.size() && i < characters.size(); ++i)
+        drawn[i] = chase::runtime::drawnWhileHeld(drawn[i], heldByCutscene(characters[i].placement.objectIndex));
     wasHidden_.resize(drawn.size(), false);
     for (std::size_t i = 0; i < drawn.size() && i < placed.size(); ++i) {
         if (!placed[i]) continue;

@@ -203,6 +203,7 @@ public:
     void setTransform(std::size_t instance, const Mat4& transform) { instances_.at(instance).transform = transform; }
     void setInstanceVisible(std::size_t instance, bool visible) { instances_.at(instance).visible = visible; }
     bool instanceVisible(std::size_t instance) const { return instances_.at(instance).visible; }
+    Mat4 instanceTransform(std::size_t instance) const { return instances_.at(instance).transform; }
     void setInstanceFade(std::size_t instance, float fade) { instances_.at(instance).fade = fade; }
     void setInstanceTint(std::size_t instance, const std::array<float, 3>& tint) { instances_.at(instance).tint = tint; }
     void setInstanceWhiteMaterials(std::size_t instance, bool white) { instances_.at(instance).whiteMaterials = white; }
@@ -662,6 +663,8 @@ void Scene::setTransform(std::size_t instance, const Mat4& transform) { impl_->s
 void Scene::setInstanceVisible(std::size_t instance, bool visible) { impl_->setInstanceVisible(instance, visible); }
 
 bool Scene::instanceVisible(std::size_t instance) const { return impl_->instanceVisible(instance); }
+
+Mat4 Scene::instanceTransform(std::size_t instance) const { return impl_->instanceTransform(instance); }
 
 void Scene::setInstanceFade(std::size_t instance, float fade) { impl_->setInstanceFade(instance, fade); }
 

@@ -8,6 +8,7 @@
 #include "assets/object_classes.hpp"
 #include "assets/object_collision.hpp"
 #include "runtime/collision.hpp"
+#include "runtime/cutscene_hold.hpp"
 #include "runtime/prop_animation.hpp"
 #include <cctype>
 #include <cmath>
@@ -128,6 +129,12 @@ int main(int argc, char** argv) {
         require(!props.place("no_such_prop", target), "an unknown instance is not a prop");
         const runtime::PropPose after = props.poses()[0];
         require(after.moved && after.node == target, "the dog's node is the target's matrix");
+        runtime::CutsceneHold hold;
+        hold.begin(0, after.node);
+        const runtime::CutsceneHold::Released released = hold.end(0);
+        require(released.held && released.node && *released.node == target && (*released.node)[12] == end->position[0] &&
+                    (*released.node)[13] == end->position[1] && (*released.node)[14] == end->position[2],
+                "after 1_2_c the dog's node is the one the cutscene found (0x2d135c restores it with 0x241540), at 1-2_Dog_Position_End");
         props.update(1.0f / 30.0f);
         require(std::fabs(props.poses()[0].node[12] - target[12]) < 1e-3f && std::fabs(props.poses()[0].node[14] - target[14]) < 1e-3f,
                 "the finished clip adds no further root motion at the target");

@@ -85,7 +85,9 @@ std::optional<float> InEngine::load(const std::string& name) {
             const bool poseLevelProp = target.kind == runtime::CastTargetKind::LevelProp && !cast.skeleton.joints.empty() && !roster_.props[target.index].key.empty();
             if (poseLevelProp) {
                 actor.levelProp = target.index;
+                actor.entity = roster_.props[target.index].order;
             } else if (standIn) {
+                if (target.kind == runtime::CastTargetKind::LevelCharacter) actor.entity = standIn->order;
                 Driven driven;
                 driven.rig = render::loadCharacterRig(archive_, meshModelPath(standIn->look.body));
                 driven.copy = render::addCharacter(scene_, roster_.base, standIn->look, standIn->hat, "cutscene|" + name + "|" + cast.model,
@@ -126,6 +128,29 @@ void InEngine::show(const std::string& name, bool visible) {
         if (!actor.driven) continue;
         setVisible(scene_, actor.driven->copy, visible);
         setVisible(scene_, actor.driven->original, !visible);
+    }
+}
+
+void InEngine::hold(const std::string& name) {
+    const auto found = loaded_.find(name);
+    if (found == loaded_.end()) return;
+    for (const Actor& actor : found->second.actors) {
+        if (!actor.entity) continue;
+        if (actor.levelProp) hold_.begin(*actor.entity, scene_.instanceTransform(roster_.props[*actor.levelProp].instance));
+        else hold_.begin(*actor.entity);
+    }
+}
+
+void InEngine::release(const std::string& name) {
+    const auto found = loaded_.find(name);
+    if (found == loaded_.end()) return;
+    for (const Actor& actor : found->second.actors) {
+        if (!actor.entity) continue;
+        const runtime::CutsceneHold::Released released = hold_.end(*actor.entity);
+        if (!released.node || !actor.levelProp) continue;
+        const PropStandIn& prop = roster_.props[*actor.levelProp];
+        scene_.setTransform(prop.instance, *released.node);
+        std::cout << "cutscene " << name << " ended: level prop at " << (*released.node)[12] << ' ' << (*released.node)[13] << ' ' << (*released.node)[14] << '\n';
     }
 }
 
@@ -201,12 +226,14 @@ void InEngine::update(runtime::CutsceneNativeState& state) {
     const std::string name = playing ? playing->name : std::string();
     if (name != shown_) {
         show(shown_, false);
+        release(shown_);
         if (audio_) audio_->stopBuffer(voice_);
         voice_ = 0;
         shown_ = name;
         shownUpdates_ = 0;
         if (!name.empty()) {
             show(name, true);
+            hold(name);
             if (audio_ && loaded_.at(name).sound) voice_ = audio_->playBuffer(loaded_.at(name).sound);
         }
     }

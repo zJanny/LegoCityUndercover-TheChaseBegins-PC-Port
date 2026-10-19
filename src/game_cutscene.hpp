@@ -9,6 +9,7 @@
 #include "game_movie_sound.hpp"
 #include "render/character.hpp"
 #include "render/scene.hpp"
+#include "runtime/cutscene_hold.hpp"
 #include "runtime/natives_cutscene.hpp"
 #include "runtime/prop_animation.hpp"
 #include <map>
@@ -73,6 +74,8 @@ public:
     // Applies the requests the natives made and poses the cast for the cutscene that plays.
     void update(chase::runtime::CutsceneNativeState& state);
     std::optional<CameraView> camera(const chase::runtime::CutsceneNativeState& state) const;
+    // True for the level entity (by object index) that the shown cutscene holds as an actor; the original enables it for the cutscene (0x2d1524).
+    bool holdsObject(std::size_t objectIndex) const { return hold_.holds(objectIndex); }
 
 private:
     struct Driven {
@@ -84,6 +87,7 @@ private:
         std::vector<std::ptrdiff_t> nodes;
         std::optional<Driven> driven;
         std::optional<std::size_t> levelProp;
+        std::optional<std::size_t> entity;
     };
     struct Loaded {
         chase::assets::CutsceneContent content;
@@ -92,6 +96,8 @@ private:
         double rate = 30;
     };
     void show(const std::string& name, bool visible);
+    void hold(const std::string& name);
+    void release(const std::string& name);
     std::size_t visibleOriginals(const std::string& name) const;
     std::size_t visibleOwnModels(const std::string& name) const;
     std::size_t drivenProps(const std::string& name) const;
@@ -103,6 +109,7 @@ private:
     std::optional<GameAudio>& audio_;
     Roster roster_;
     std::map<std::string, Loaded> loaded_;
+    chase::runtime::CutsceneHold hold_;
     std::string shown_;
     int voice_ = 0;
     unsigned shownUpdates_ = 0;

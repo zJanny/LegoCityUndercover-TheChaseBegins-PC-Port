@@ -394,8 +394,10 @@ void LevelSession::draw(int width, int height) {
     const Mat4 viewToWorld = chase::render::rigidInverse(viewMatrix);
     scene.setLighting(runtime::levelLights(lightObjects, roomStreamer ? roomStreamer->currentRoom() : 0), &viewToWorld[12]);
     std::vector<bool> drawn = runtime::drawnPlacements(placedObjects, objectState);
+    for (std::size_t i = 0; i < drawn.size(); ++i) drawn[i] = runtime::drawnWhileHeld(drawn[i], cutsceneHost->holdsObject(placedObjects[i].objectIndex));
     applyObjectFades(drawn);
-    characterVisibility.apply(scene, drawable.characters, placedCharacters, objectState);
+    characterVisibility.apply(scene, drawable.characters, placedCharacters, objectState,
+                              [this](std::size_t objectIndex) { return cutsceneHost->holdsObject(objectIndex); });
     for (std::size_t i = 0; i < drawn.size(); ++i)
         scene.setInstanceVisible(placedSceneIndex[i], drawn[i] && roomShown(placedRooms[i]) && !wreckHides(i, std::nullopt));
     for (std::size_t w = 0; w < wheelSceneIndex.size(); ++w) {
