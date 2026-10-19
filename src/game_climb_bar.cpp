@@ -17,6 +17,7 @@ bool hasLedgeClips(const game_player::PlayerRig& player) {
 // The player step with the climb bar states around it (docs/re/player-traversal.md): while a bar or corner state owns the player it
 // replaces the locomotion; otherwise the climbing-brick step runs and the bar grab test of the jump update follows it.
 game_player::PlayerAnimation LevelSession::climbBarMovePlayer(const runtime::StickIntent& intent, bool jumpPressed, bool usePressed, float dt) {
+    if (acrobatPoleRider.active()) return acrobatPoleMovePlayer(intent, dt);
     if (climbBars.bars.empty() || !hasLedgeClips(*player) || ziplineRider.active()) return moveClimbingPlayer(intent, jumpPressed, usePressed, dt);
     runtime::ClimbBarInput input;
     input.dt = dt;
@@ -72,7 +73,9 @@ game_player::PlayerAnimation LevelSession::climbBarMovePlayer(const runtime::Sti
     if (climbBarRider.active()) {
         readPlayer();
         const runtime::ClimbBarStep step = runtime::climbBarUpdate(climbBarRider, climbBars, input);
-        return step.riding ? apply(step) : leave(step);
+        const game_player::PlayerAnimation shown = step.riding ? apply(step) : leave(step);
+        acrobatPoleHandOver();
+        return shown;
     }
     const runtime::Posture before = player->vertical.posture;
     const bool flightBefore = player->vertical.bouncing || player->vertical.bounceSettling;
@@ -91,7 +94,9 @@ game_player::PlayerAnimation LevelSession::climbBarMovePlayer(const runtime::Sti
     climbBarRider.jumpLatch = input.bHeld;
     readPlayer();
     const runtime::ClimbBarStep arrival = runtime::climbBarUpdate(climbBarRider, climbBars, input);
-    return arrival.riding ? apply(arrival) : leave(arrival);
+    const game_player::PlayerAnimation arrived = arrival.riding ? apply(arrival) : leave(arrival);
+    acrobatPoleHandOver();
+    return arrived;
 }
 
 }

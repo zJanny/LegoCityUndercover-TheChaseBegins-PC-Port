@@ -32,6 +32,7 @@
 #include "runtime/zipline.hpp"
 #include "runtime/brick_grab.hpp"
 #include "runtime/pole.hpp"
+#include "runtime/acrobat_pole.hpp"
 #include "runtime/prop_bouncer.hpp"
 #include "runtime/prop_wobbly_destructible.hpp"
 #include "runtime/player_attack.hpp"
@@ -145,6 +146,8 @@ private:
     game_player::PlayerAnimation movePlayer(const chase::runtime::StickIntent& intent, bool jumpPressed, float dt);
     game_player::PlayerAnimation moveClimbingPlayer(const chase::runtime::StickIntent& intent, bool jumpPressed, bool usePressed, float dt);
     game_player::PlayerAnimation climbBarMovePlayer(const chase::runtime::StickIntent& intent, bool jumpPressed, bool usePressed, float dt);
+    bool acrobatPoleHandOver();
+    game_player::PlayerAnimation acrobatPoleMovePlayer(const chase::runtime::StickIntent& intent, float dt);
     game_player::PlayerAnimation movePlayerWithPole(const chase::runtime::StickIntent& intent, bool jumpPressed, float dt);
     void loadAttack(chase::assets::FuseArchive& archive, const std::vector<chase::assets::ObjectCollision>& placed);
     game_player::PlayerAnimation attackMovePlayer(const chase::runtime::StickIntent& intent, bool jumpPressed, bool usePressed, bool attackHeld,
@@ -269,6 +272,8 @@ private:
     chase::runtime::ClimbBarSet climbBars;
     chase::runtime::ClimbBarRider climbBarRider;
     std::optional<chase::assets::RootMotion> ledgeLeftMotion, ledgeRightMotion;
+    chase::runtime::AcrobatPoleRider acrobatPoleRider;
+    std::optional<chase::runtime::AcrobatPoleClips> acrobatPoleClips;
     chase::runtime::PoleSession pole;
     std::optional<chase::runtime::VehicleBoarding> boarding;
     std::vector<chase::runtime::BoardingVehicle> boardingVehicles;

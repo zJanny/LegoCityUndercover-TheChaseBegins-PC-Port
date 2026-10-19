@@ -1,4 +1,5 @@
 #include "game_player.hpp"
+#include "runtime/acrobat_pole.hpp"
 #include "runtime/brick_grab.hpp"
 #include "runtime/player_motion.hpp"
 #include <cmath>
@@ -134,7 +135,8 @@ std::optional<PlayerRig> placePlayer(FuseArchive& archive, Scene& scene, const L
             const std::string path = std::string(kCarryAnimationDirectory) + rig.carryAnimations->name(id) + kPlayerAnimationSuffix;
             if (!rig.animations.count(id) && archive.find(path)) rig.animations[id] = loadAnimation(archive, path);
         }
-        for (const int id : {runtime::kAnimationLedgeIdle, runtime::kAnimationLedgeLeft, runtime::kAnimationLedgeRight}) {
+        for (const int id : {runtime::kAnimationLedgeIdle, runtime::kAnimationLedgeLeft, runtime::kAnimationLedgeRight, runtime::kAnimationAcrobatPoleIdle,
+                             runtime::kAnimationAcrobatPoleFlip, runtime::kAnimationAcrobatPoleJump, runtime::kAnimationAcrobatPoleJumpOff}) {
             const std::string path = std::string(kCarryAnimationDirectory) + rig.carryAnimations->name(id) + kPlayerAnimationSuffix;
             if (archive.find(path)) rig.animations[id] = loadAnimation(archive, path);
         }

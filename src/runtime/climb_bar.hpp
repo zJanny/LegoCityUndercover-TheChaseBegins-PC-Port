@@ -48,6 +48,7 @@ struct ClimbBarLink {
     std::string instance;                 // lower case
     float position[3] = {0, 0, 0};
     int bar = -1;                         // index in ClimbBarSet::bars when the linked object is a bar (type 29)
+    int objectType = -1;                  // class ObjectType of the linked object
 };
 
 struct ClimbBar {
@@ -152,6 +153,12 @@ constexpr int kAcrobatPoleJumpState = 95;
 constexpr int kAcrobatPoleJumpAgainState = 96;
 constexpr int kAcrobatPoleJumpToFallState = 97;
 constexpr int kAcrobatPoleJumpToLandState = 98;
+
+// 0x1f80d4: the middle of the two hang points of 0x1fb8d8 for the hang offset ctrl+0x2e8 (bar-local y and z).
+std::array<float, 3> acrobatPoleCentre(const ClimbBar& pole, float offsetY, float offsetZ);
+
+// The bar's GrabBound centre in world (0x250da8 of comp+0x10 +0x10 with the bar node).
+std::array<float, 3> climbBarGrabCentre(const ClimbBar& bar);
 
 // 0x1f80d4: the facing on an acrobat pole: the pole's z row when the player's z row points the same way (dot > 0), else turned by pi.
 std::int16_t acrobatPoleFacing(const ClimbBar& pole, std::int16_t playerFacing);

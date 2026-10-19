@@ -92,16 +92,19 @@ std::int16_t hangFacing(const ClimbBar& bar, std::int16_t playerFacing) {
 }
 
 // 0x1fb8d8: the two ends of the hang line, +x end first (A) and -x end (B), at the hanging height.
-void hangLine(const ClimbBar& bar, Vec& a, Vec& b) {
+void hangLine(const ClimbBar& bar, float offsetY, float offsetZ, Vec& a, Vec& b) {
     const Frame frame = frameOf(bar.position, bar.yawDegrees);
     const Vec centre = frame.world(vec(bar.grabCentre));
     const Vec along = scaled(frame.right, bar.grabHalf[0]);
-    const float offsetY = bar.acrobatPole ? kAcrobatPoleHangOffsetY : kClimbBarHangOffsetY;
-    const float offsetZ = bar.acrobatPole ? kAcrobatPoleHangOffsetZ : kClimbBarHangOffsetZ;
     Vec offset = scaled(frame.up, offsetY);
     offset = add(offset, scaled(frame.forward, offsetZ));
     a = add(add(centre, along), offset);
     b = add(sub(centre, along), offset);
+}
+
+void hangLine(const ClimbBar& bar, Vec& a, Vec& b) {
+    if (bar.acrobatPole) hangLine(bar, kAcrobatPoleHangOffsetY, kAcrobatPoleHangOffsetZ, a, b);
+    else hangLine(bar, kClimbBarHangOffsetY, kClimbBarHangOffsetZ, a, b);
 }
 
 // 0x2bbdc0: the hang point nearest to the player on the line, moved along the bar by `step` and held between the ends.
@@ -121,13 +124,6 @@ Vec hangPoint(const ClimbBar& bar, const Vec& position, float step) {
         point = a;
     }
     return point;
-}
-
-// 0x1f80d4: the player on an acrobat pole stands at the middle of the two hang points of 0x1fb8d8.
-Vec acrobatPoleCentre(const ClimbBar& bar) {
-    Vec a, b;
-    hangLine(bar, a, b);
-    return scaled(add(a, b), 0.5f);
 }
 
 ClimbBarStep riding(const Vec& position, std::int16_t facing, int animation) {
@@ -315,8 +311,17 @@ float placementYaw(const float orientation[3]) {
 }
 }
 
+namespace {
+int objectTypeOf(const assets::Level* cls) {
+    if (!cls) return -1;
+    for (const assets::LevelParam& param : cls->classParams)
+        if (param.hash == assets::nameHash("ObjectType")) return int(param.value);
+    return -1;
+}
+}
+
 ClimbBarLink linkParam(const assets::Level& level, const assets::LevelObject& object, const assets::Level& cls, const char* name,
-                       const std::map<std::uint32_t, std::string>& names) {
+                       const std::map<std::uint32_t, std::string>& names, const assets::ClassLookup& classOf) {
     ClimbBarLink link;
     const assets::LevelParam* param = effectiveParam(object, cls, assets::nameHash(name));
     if (!param) return link;
@@ -327,6 +332,8 @@ ClimbBarLink linkParam(const assets::Level& level, const assets::LevelObject& ob
     link.present = true;
     link.instance = lower(found->second);
     std::copy_n(placed->position, 3, link.position);
+    for (const assets::LevelObject& target : level.objects)
+        if (target.instance == found->second) link.objectType = objectTypeOf(classOf(target.className));
     return link;
 }
 
@@ -365,7 +372,7 @@ ClimbBarSet loadClimbBars(const assets::Level& level, const assets::ClassLookup&
             bar.ledge = intParam(object, *cls, "Ledge", 0) != 0;
             bar.grabSound = std::uint16_t(intParam(object, *cls, "ATTR_SFX_GRAB", 0));
             bar.swingSound = std::uint16_t(intParam(object, *cls, "ATTR_SFX_SWING", 0));
-            for (std::size_t k = 0; k < bar.links.size(); ++k) bar.links[k] = linkParam(level, object, *cls, linkNames[k], names);
+            for (std::size_t k = 0; k < bar.links.size(); ++k) bar.links[k] = linkParam(level, object, *cls, linkNames[k], names, classOf);
             if (bar.hasGrabBound) set.bars.push_back(bar);
         } else {
             CornerRail rail;
@@ -486,7 +493,7 @@ ClimbBarStep climbBarUpdate(ClimbBarRider& rider, const ClimbBarSet& set, const 
     Vec position = vec(input.position);
     if (rider.enteredThisUpdate) {
         rider.enteredThisUpdate = false;
-        if (bar.acrobatPole) position = acrobatPoleCentre(bar);
+        if (bar.acrobatPole) position = acrobatPoleCentre(bar, kAcrobatPoleHangOffsetY, kAcrobatPoleHangOffsetZ);
         else placeOnBar(bar, rider, 0.0f, input, position);
         return riding(position, hangFacing(bar, input.facing), kAnimationLedgeIdle);
     }
@@ -513,6 +520,16 @@ ClimbBarStep climbBarUpdate(ClimbBarRider& rider, const ClimbBarSet& set, const 
         setPhase(rider, ClimbPhase::Left);
     }
     return riding(position, hangFacing(bar, input.facing), animationOf(rider.phase));
+}
+
+std::array<float, 3> acrobatPoleCentre(const ClimbBar& pole, float offsetY, float offsetZ) {
+    Vec a, b;
+    hangLine(pole, offsetY, offsetZ, a, b);
+    return scaled(add(a, b), 0.5f);
+}
+
+std::array<float, 3> climbBarGrabCentre(const ClimbBar& bar) {
+    return frameOf(bar.position, bar.yawDegrees).world(vec(bar.grabCentre));
 }
 
 std::int16_t acrobatPoleFacing(const ClimbBar& pole, std::int16_t playerFacing) {
