@@ -32,9 +32,44 @@ void footprints() {
     const auto feet = runtime::detectiveFootprints(straightPath(3, 0), origin);
     const std::vector<std::array<std::int16_t, 3>> expected = {{0, 0, -1}, {1, 0, 1}, {4, 0, -1}, {7, 0, 1}, {10, 0, -1}};
     require(feet.size() == expected.size(), "footprint count " + std::to_string(feet.size()));
-    for (std::size_t i = 0; i < feet.size(); ++i) require(feet[i] == expected[i], "footprint " + std::to_string(i));
+    for (std::size_t i = 0; i < feet.size(); ++i) require(feet[i].offset == expected[i], "footprint " + std::to_string(i));
     const auto across = runtime::detectiveFootprints(straightPath(0, 3), origin);
-    require(across[0][0] == -1 && across[0][2] == 0 && across[1][0] == 1, "a path along z puts the side offset on x");
+    require(across[0].offset[0] == -1 && across[0].offset[2] == 0 && across[1].offset[0] == 1, "a path along z puts the side offset on x");
+}
+
+// Hand-evaluated against 0x270b70 / 0x21a600: halfway between the identity and a quarter turn about y the spherical interpolation gives the
+// eighth turn (0, sin 22.5, 0, cos 22.5); the position is clamped on an open path; the stored bytes are the components x127 truncated, and the
+// matrix 0x248870 makes of them has the rotation rows in floats 0..2, 4..6 and 8..10 and the translation in 12..14.
+void orientations() {
+    assets::LevelPath path = straightPath(3, 0);
+    const float turn = 0.70710678f;
+    path.orientations = {{0, 0, 0, 1}, {0, turn, 0, turn}};
+    float q[4];
+    runtime::detectivePathOrientation(path, 0.0f, q);
+    require(q[1] == 0.0f && q[3] == 1.0f, "identity at the first point");
+    runtime::detectivePathOrientation(path, 0.5f, q);
+    require(std::abs(q[1] - 0.38268343f) < 1e-5f && std::abs(q[3] - 0.92387953f) < 1e-5f && q[0] == 0.0f && q[2] == 0.0f, "eighth turn halfway");
+    runtime::detectivePathOrientation(path, 7.0f, q);
+    require(std::abs(q[1] - turn) < 1e-6f && std::abs(q[3] - turn) < 1e-6f, "clamped to the last point");
+    path.orientations.clear();
+    runtime::detectivePathOrientation(path, 0.5f, q);
+    require(q[0] == 0.0f && q[1] == 0.0f && q[2] == 0.0f && q[3] == 1.0f, "a path without orientations gives the identity");
+
+    path.orientations = {{0, turn, 0, turn}, {0, turn, 0, turn}};
+    const float origin[3] = {0, 0, 0};
+    for (const runtime::DetectiveFootprintRecord& record : runtime::detectiveFootprints(path, origin))
+        require(record.rotation == std::array<std::int8_t, 4>({0, 89, 0, 89}), "bytes are the components x127 truncated");
+
+    const float place[3] = {1, 2, 3};
+    const std::array<float, 16> identity = runtime::detectiveFootprintMatrix({0, 0, 0, 127}, place);
+    require(identity[0] == 1.0f && identity[5] == 1.0f && identity[10] == 1.0f && identity[1] == 0.0f && identity[12] == 1.0f && identity[13] == 2.0f &&
+                identity[14] == 3.0f && identity[15] == 1.0f,
+            "identity bytes give the identity rotation at the translation");
+    const std::array<float, 16> quarter = runtime::detectiveFootprintMatrix({0, 89, 0, 89}, place);
+    const float yy = 2.0f * (89.0f * 0.00787402f) * (89.0f * 0.00787402f);
+    require(std::abs(quarter[0] - (1.0f - yy)) < 1e-5f && std::abs(quarter[2] - yy) < 1e-5f && std::abs(quarter[8] + yy) < 1e-5f &&
+                std::abs(quarter[10] - (1.0f - yy)) < 1e-5f && quarter[5] == 1.0f,
+            "quarter turn about y: rows (1 - yy, 0, yy) and (-yy, 0, 1 - yy)");
 }
 
 runtime::DetectiveSet madeUpSet() {
@@ -46,7 +81,7 @@ runtime::DetectiveSet madeUpSet() {
     spot.useZone.centre[1] = 1.0f;
     spot.useZone.half[0] = spot.useZone.half[1] = spot.useZone.half[2] = 1.5f;
     spot.footprintType = 0;
-    for (int i = 0; i < 20; ++i) spot.footprints.push_back({{std::int16_t(-4 * i), 0, 0}, -1, 0});
+    for (int i = 0; i < 20; ++i) spot.footprints.push_back({{std::int16_t(-4 * i), 0, 0}, {0, 0, 0, 127}, -1, 0});
     set.spots().push_back(spot);
     return set;
 }
@@ -140,6 +175,7 @@ void revealProp() {
 int main() {
     try {
         footprints();
+        orientations();
         scanAndFade();
         waysOut();
         revealProp();

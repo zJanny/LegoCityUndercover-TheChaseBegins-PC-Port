@@ -4,9 +4,11 @@
 // _trapdoor ...), the footprints along the spot's DetectivePath and the player's detective states 0x117, 0x118 and 0x1a2. No SDL dependency.
 #include "assets/assets.hpp"
 #include "assets/object_collision.hpp"
+#include "runtime/collision.hpp"
 
 #include <array>
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -30,6 +32,10 @@ constexpr float kFootprintsPerUnit = 1.6666666f;
 constexpr unsigned kPathLengthSteps = 10;
 constexpr float kFootprintSide = 0.45f;
 constexpr float kFootprintUnitsPerStep = 4.0f;
+// Each footprint also stores the path's orientation at its position (0x270b70) as four signed bytes, x127 (literal 0x177d88); the draw
+// (0x26024c) reads them back with the factor 0x3c010204 (1/127), makes the matrix with 0x248870 and puts the ray hit point into its translation.
+constexpr float kFootprintRotationScale = 127.0f;
+constexpr float kFootprintRotationInverse = 0.00787402f;
 // Scan 0x1c7bec: a footprint in front of the player (dot(forward, player - footprint) < 0) and closer than 2.5 horizontally is revealed; the spot
 // stays in detective mode while any footprint is closer than 8 (squared 6.25 and 64, literals 0x40c80000 / 0x42800000 compared as integers).
 constexpr float kFootprintRevealDistanceSquared = 6.25f;
@@ -58,8 +64,22 @@ constexpr float kRevealPropDefaultTime = 0.5f;
 constexpr int kRevealPropDefaultDelay = 1;
 constexpr int kRevealFramesPerSecond = 30;
 
-// Footprint offsets of a DetectivePath relative to the spot position, as the post-link stores them.
-std::vector<std::array<std::int16_t, 3>> detectiveFootprints(const assets::LevelPath& path, const float spot[3]);
+struct DetectiveFootprintRecord {
+    std::array<std::int16_t, 3> offset{};
+    std::array<std::int8_t, 4> rotation{};
+};
+// Footprint offsets of a DetectivePath relative to the spot position and the quantised path orientation, as the post-link stores them.
+std::vector<DetectiveFootprintRecord> detectiveFootprints(const assets::LevelPath& path, const float spot[3]);
+// Path orientation 0x270b70: spherical interpolation (0x21a600, shortest way, linear above dot 0x3f7fff58) between the quaternion records of the
+// two points around `position`; the identity (0, 0, 0, 1) when the path has none.
+void detectivePathOrientation(const assets::LevelPath& path, float position, float out[4]);
+// The ground of a footprint (0x26024c): the nearest hit of the ray test 0x21ab20 from 1 above to 1 below `point` (0x2501ac with +1.0 / -1.0), in the
+// hit point's height; nothing when the ray hits nothing (the original then keeps whatever its stack held).
+// STAND-IN DETECT-S9: the test is the camera's query (CameraResetProbe, surface mask 0x01000010); the footprint's own query words (stack at
+// 0x2603f4..0x260444, a word 512) were not decoded. It reproduces the 10 hit points of the oracle trap E-1 to 1e-4.
+std::optional<float> footprintGroundHeight(const CollisionWorld& world, const float point[3]);
+// Matrix 0x248870 makes from the stored bytes, in the layout of the original (rotation in floats 0..2, 4..6, 8..10, translation in 12..14).
+std::array<float, 16> detectiveFootprintMatrix(const std::array<std::int8_t, 4>& rotation, const float translation[3]);
 // Path length 0x22a6c0 (cumulative table) with `steps` per segment; the last entry is the total.
 std::vector<float> detectivePathLengths(const assets::LevelPath& path, unsigned steps);
 // Point index of the arc length fraction `t` (0x22a4c0).
@@ -69,6 +89,7 @@ void detectivePathTangent(const assets::LevelPath& path, float position, float o
 
 struct DetectiveFootprint {
     std::array<std::int16_t, 3> offset{};
+    std::array<std::int8_t, 4> rotation{0, 0, 0, 127};
     int slot = -1;           // pool entry, -1 when not shown
     std::uint8_t alpha = 0;  // 255 when revealed, minus 8 per update
 };

@@ -327,6 +327,8 @@ struct LevelPath {
     float unknownFloat = 0;
     std::string room;
     std::vector<std::array<float, 3>> points;
+    // Block at record +0x10 (runtime path +8): 0x40 bytes of head, then one quaternion (x, y, z, w) per 16 bytes, read by 0x270b70.
+    std::vector<std::array<float, 4>> orientations;
 };
 struct Level {
     std::vector<LevelPath> paths;

@@ -1,4 +1,5 @@
 #include "runtime/detective.hpp"
+#include "runtime/camera_reset_probe.hpp"
 #include "runtime/dcam.hpp"
 #include "runtime/level_start.hpp"
 
@@ -183,24 +184,98 @@ void detectivePathTangent(const assets::LevelPath& path, float position, float o
     for (int a = 0; a < 3; ++a) out[a] = derivative[a] * inverse;
 }
 
-std::vector<std::array<std::int16_t, 3>> detectiveFootprints(const assets::LevelPath& path, const float spot[3]) {
-    std::vector<std::array<std::int16_t, 3>> footprints;
+void detectivePathOrientation(const assets::LevelPath& path, float position, float out[4]) {
+    const int count = int(path.points.size());
+    if (path.orientations.empty()) {
+        out[0] = out[1] = out[2] = 0.0f;
+        out[3] = 1.0f;
+        return;
+    }
+    if (!path.closed) {
+        if (position < 0.0f) position = 0.0f;
+        if (position > float(count - 1)) position = float(count - 1);
+    }
+    const int floored = int(std::floor(position));
+    const float t = position - float(floored);
+    int from = floored, to = floored + 1;
+    if (path.closed) {
+        from = floored % count;
+        if (from < 0) from += count;
+    } else if (to > count - 1) {
+        to = count - 1;
+    }
+    const std::size_t last = path.orientations.size() - 1;
+    const std::array<float, 4>& a = path.orientations[std::min<std::size_t>(std::size_t(std::max(from, 0)), last)];
+    const std::array<float, 4>& b = path.orientations[std::min<std::size_t>(std::size_t(std::max(to, 0)), last)];
+    float dot = a[0] * b[0];
+    dot = dot + a[1] * b[1];
+    dot = dot + a[2] * b[2];
+    dot = dot + a[3] * b[3];
+    float sign = 1.0f;
+    if (dot < 0.0f) {
+        dot = -dot;
+        sign = -1.0f;
+    }
+    float weightFrom = 1.0f - t, weightTo;
+    std::int32_t dotBits;
+    std::memcpy(&dotBits, &dot, 4);
+    if (dotBits > 0x3f7fff58) {
+        weightTo = sign * t;
+    } else {
+        const float theta = std::acos(dot);
+        const float sine = std::sin(theta);
+        weightFrom = std::sin((1.0f - t) * theta) / sine;
+        weightTo = std::sin(t * theta) / sine * sign;
+    }
+    for (int k = 0; k < 4; ++k) out[k] = a[std::size_t(k)] * weightFrom + weightTo * b[std::size_t(k)];
+}
+
+std::optional<float> footprintGroundHeight(const CollisionWorld& world, const float point[3]) {
+    const float from[3] = {point[0], point[1] + 1.0f, point[2]};
+    const float to[3] = {point[0], point[1] - 1.0f, point[2]};
+    if (const auto hit = CameraResetProbe(world, "").nearestHit(from, to)) return (*hit)[1];
+    return std::nullopt;
+}
+
+std::array<float, 16> detectiveFootprintMatrix(const std::array<std::int8_t, 4>& rotation, const float translation[3]) {
+    const float x = float(rotation[0]) * kFootprintRotationInverse, y = float(rotation[1]) * kFootprintRotationInverse,
+                z = float(rotation[2]) * kFootprintRotationInverse, w = float(rotation[3]) * kFootprintRotationInverse;
+    const float xx = x * (x + x), wx = w * (x + x), yy = y * (y + y), zz = z * (z + z), yz = y * (z + z), xy = x * (y + y), xz = x * (z + z),
+                wz = w * (z + z), wy = w * (y + y);
+    std::array<float, 16> m = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
+    m[0] = 1.0f - (yy + zz);
+    m[1] = xy - wz;
+    m[2] = xz + wy;
+    m[4] = xy + wz;
+    m[5] = 1.0f - (xx + zz);
+    m[6] = yz - wx;
+    m[8] = xz - wy;
+    m[9] = yz + wx;
+    m[10] = 1.0f - (xx + yy);
+    for (int a = 0; a < 3; ++a) m[std::size_t(12 + a)] = translation[a];
+    return m;
+}
+
+std::vector<DetectiveFootprintRecord> detectiveFootprints(const assets::LevelPath& path, const float spot[3]) {
+    std::vector<DetectiveFootprintRecord> footprints;
     const std::vector<float> lengths = detectivePathLengths(path, kPathLengthSteps);
     if (lengths.empty()) return footprints;
     const unsigned count = unsigned(int(std::ceil(lengths.back() * kFootprintsPerUnit)));
     for (unsigned index = 0; index < count; ++index) {
         const float position = detectivePathParameter(path, lengths, float(index) / float(count));
-        float point[3], tangent[3];
+        float point[3], tangent[3], orientation[4];
         sampleDirectorPath(path, position, point);
         detectivePathTangent(path, position, tangent);
+        detectivePathOrientation(path, position, orientation);
         const float side = (index & 1u) ? kFootprintSide : -kFootprintSide;
         const float across[3] = {tangent[2], tangent[1], tangent[0]};
-        std::array<std::int16_t, 3> offset{};
+        DetectiveFootprintRecord record;
         for (int a = 0; a < 3; ++a) {
             point[a] = point[a] + across[a] * side;
-            offset[std::size_t(a)] = std::int16_t(int((point[a] - spot[a]) * kFootprintUnitsPerStep));
+            record.offset[std::size_t(a)] = std::int16_t(int((point[a] - spot[a]) * kFootprintUnitsPerStep));
         }
-        footprints.push_back(offset);
+        for (int a = 0; a < 4; ++a) record.rotation[std::size_t(a)] = std::int8_t(int(orientation[a] * kFootprintRotationScale));
+        footprints.push_back(record);
     }
     return footprints;
 }
@@ -242,7 +317,8 @@ void DetectiveSet::load(const assets::Level& level, const assets::ClassLookup& c
             spot.triggerObject = referenceName(object, *cls, "TriggerObject", names);
             spot.footprintType = unsigned(std::max(0, intParam(object, *cls, "FootprintType", 0)));
             if (const assets::LevelPath* path = findLevelPath(level, stringParam(object, *cls, "DetectivePath")))
-                for (const std::array<std::int16_t, 3>& offset : detectiveFootprints(*path, spot.position)) spot.footprints.push_back({offset, -1, 0});
+                for (const DetectiveFootprintRecord& record : detectiveFootprints(*path, spot.position))
+                    spot.footprints.push_back({record.offset, record.rotation, -1, 0});
             spots_.push_back(std::move(spot));
         } else if (type == kRevealSpotType) {
             RevealSpot spot;

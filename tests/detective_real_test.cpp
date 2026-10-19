@@ -9,6 +9,7 @@
 #include <cmath>
 #include <filesystem>
 #include <iostream>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -50,6 +51,54 @@ bool activates(const std::vector<runtime::DetectiveAction>& actions, const std::
     for (const runtime::DetectiveAction& action : actions)
         if (action.kind == runtime::DetectiveActionKind::Activate && action.instance == instance) return true;
     return false;
+}
+
+// Provenance: oracle trap E-1 (state m12-5-detective-active, circle pad forward for 220 updates, breakpoint 0x26049c in the footprint placing function
+// 0x26024c, artifacts/oracle/r27E-out/E-1.txt; docs/re/abilities-detective.md): the matrix at r1 of every hit. Rotation rows are the identity for all of them;
+// the translation is the point the ray hit. The x / z are the matrix's own; the last two are on the dog house stairs.
+const float kOracleHits[13][3] = {{718.1799f, 29.7764f, 631.0478f}, {717.9299f, 29.7738f, 630.5478f}, {716.9299f, 29.7790f, 631.5478f},
+                                  {716.9299f, 29.7763f, 631.0478f}, {716.6799f, 29.7842f, 632.5478f}, {715.9299f, 29.7817f, 632.0478f},
+                                  {716.4299f, 29.9572f, 633.7978f}, {715.6799f, 29.7890f, 633.2978f}, {715.6799f, 30.4681f, 634.5478f},
+                                  {716.4299f, 30.7363f, 635.0478f},
+                                  // Provenance: oracle trap E-2 (state m12-7-detective-waypoint-2, A press, then forward), the second spot: identity rows too.
+                                  {719.1412f, 37.0395f, 656.7838f}, {718.1412f, 37.0395f, 656.0338f}, {719.1412f, 37.0395f, 658.0338f}};
+
+void footprintGround(assets::FuseArchive& archive) {
+    const assets::FuseEntry* master = archive.find("models/lvl_01_cherrytreehills/lvl_01_cherrytreehills.bfnmdl");
+    require(master != nullptr, "level master model");
+    const assets::Model model = assets::parseModel(archive.read(*master));
+    runtime::CollisionWorld world;
+    for (const assets::CollisionItem& item : model.collision) world.add(item);
+    for (const auto& hit : kOracleHits) {
+        const float point[3] = {hit[0], hit[1] + 0.1f, hit[2]};
+        const std::optional<float> ground = runtime::footprintGroundHeight(world, point);
+        require(ground && std::fabs(*ground - hit[1]) < 2e-4f, "footprint ground at " + std::to_string(hit[0]) + " " + std::to_string(hit[2]));
+    }
+}
+
+void footprintModels(assets::FuseArchive& archive) {
+    const assets::FuseEntry* charbits = archive.find("levels/charbits.blvl");
+    require(charbits != nullptr, "levels/charbits.blvl");
+    const assets::Level bits = assets::parseLevel(archive.read(*charbits));
+    int found = 0;
+    for (const assets::Placement& placement : assets::placements(bits)) {
+        if (placement.instance == "DetectiveFP00") require(placement.mesh == "Ability_Detective_Foot", "DetectiveFP00 mesh " + placement.mesh), ++found;
+        if (placement.instance == "DogFP15") require(placement.mesh == "Ability_Detective_Dog", "DogFP15 mesh " + placement.mesh), ++found;
+    }
+    require(found == 2, "pool objects found");
+}
+
+// Provenance: the quaternion block of the paths (level section +0x20, record +0x10) read by 0x270b70; the DetectivePaths of 1-2_Dtv_DogSpot_01 and _02
+// carry only identity quaternions (dump of Level::paths), which the oracle trap E-1 confirms (identity rows). The bytes of 1-3_Dtv_BrickSpot_01 are
+// computed with the port's reading of 0x270b70 / 0x21a600 (no oracle measurement; the state is not available).
+void footprintRotation(const runtime::DetectiveSet& set) {
+    for (const char* name : {"1-2_dtv_dogspot_01", "1-2_dtv_dogspot_02"})
+        for (const runtime::DetectiveFootprint& footprint : spotNamed(set, name).footprints)
+            require(footprint.rotation == std::array<std::int8_t, 4>({0, 0, 0, 127}), std::string("identity rotation on ") + name);
+    const runtime::DetectiveSpot& brick = spotNamed(set, "1-3_dtv_brickspot_01");
+    require(brick.footprints.size() == 69, "brick spot footprints");
+    require(brick.footprints[0].rotation == std::array<std::int8_t, 4>({0, 126, 0, -4}), "brick spot footprint 0 rotation");
+    require(brick.footprints[6].rotation == std::array<std::int8_t, 4>({0, 120, 0, -39}), "brick spot footprint 6 rotation");
 }
 
 void objects(const runtime::DetectiveSet& set) {
@@ -169,6 +218,9 @@ int main(int argc, char** argv) {
         runtime::DetectiveSet set;
         set.load(level, classOf);
         objects(set);
+        footprintRotation(set);
+        footprintGround(archive);
+        footprintModels(archive);
         run(level, classOf);
     } catch (const std::exception& error) {
         std::cerr << "detective-real-test: " << error.what() << '\n';

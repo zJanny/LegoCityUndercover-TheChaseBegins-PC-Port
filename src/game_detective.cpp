@@ -9,14 +9,12 @@ using namespace chase::assets;
 namespace runtime = chase::runtime;
 
 namespace {
-// STAND-IN DETECT-S3: the models of the footprint pool (the 32 entities at 0x515cf0 are made by code that was not read); FootprintType 0 and 1
-// take the archive models whose names match.
+// The pool 0x2f3a9c finds the 16 objects DetectiveFP00..15 (FootprintType 0) and DogFP00..15 (1) of levels/charbits.blvl; their meshes are
+// Ability_Detective_Foot and Ability_Detective_Dog.
 constexpr const char* kFootprintModels[] = {"models/ability_detective_foot/ability_detective_foot.bfnmdl",
                                             "models/ability_detective_dog/ability_detective_dog.bfnmdl"};
 // STAND-IN DETECT-S4: one sound owner key for every detective object (the u16 at entity +0x14 in the original).
 constexpr std::uint16_t kDetectiveSoundOwnerBase = 0x5000;
-// The footprint 0x26024c places on the ground: a ray from 1 above to 1 below the stored point (0x2501ac with +1.0 / -1.0, 0x21ab20).
-constexpr float kFootprintRayAbove = 1.0f, kFootprintRayLength = 2.0f;
 }
 
 void LevelSession::loadDetective(FuseArchive& archive) {
@@ -130,16 +128,8 @@ void LevelSession::drawFootprints() {
             if (instance == std::size_t(-1)) continue;
             float point[3];
             for (int a = 0; a < 3; ++a) point[a] = spot.position[a] + float(footprint.offset[std::size_t(a)]) * 0.25f;
-            runtime::GroundProbe probe;
-            probe.x = point[0];
-            probe.y = point[1] + kFootprintRayAbove;
-            probe.z = point[2];
-            probe.distance = kFootprintRayLength;
-            if (const auto ground = runtime::groundHeight(collision, probe)) point[1] = *ground;
-            chase::render::Mat4 matrix = chase::render::identity();
-            matrix[12] = point[0];
-            matrix[13] = point[1];
-            matrix[14] = point[2];
+            if (const auto ground = runtime::footprintGroundHeight(collision, point)) point[1] = *ground;
+            const chase::render::Mat4 matrix = runtime::detectiveFootprintMatrix(footprint.rotation, point);
             scene.setTransform(instance, matrix);
             scene.setInstanceFade(instance, float(footprint.alpha) / 255.0f);
             scene.setInstanceVisible(instance, footprint.alpha != 0);

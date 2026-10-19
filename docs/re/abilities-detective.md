@@ -9,7 +9,8 @@ The detective spot (ObjectType 182, `props/ability_detective`), the reveal spot 
 - `1-2_Dtv_DogSpot_01_Script` is fired only when a spot leaves state 2, which no code path read does; it did not fire in the oracle either. [§2026-10-18T11:26:21](#ts-20261018-112621)
 - Chase's magnifying glass is the object `Ability_MagnifyingGlass` of `levels/players.blvl` (model `ability_magnifyingglass`, body plus a glow card). The animation track 0xba1e5b53 of the `detect_*` clips shows it (value rises) and hides it (value falls) on the bone `weaponRight`; the port draws it and its first update matches the oracle (14 updates after the A press). [§2026-10-18T19:30:00](#ts-20261018-193000)
 - Detective mode changes no camera and puts no tint on the screen in the oracle; the differences left (question particles, blue glow of objects, footstep dots, bottom screen) are open items. [§2026-10-18T19:30:00](#ts-20261018-193000)
-- Open: the use state's approach phase, the footprint pool models, fades, the bounce helper 0x2077a8, question particles, the hand item event details (previous value, per-frame bone update) and the look items of the entry above.
+- Footprints: the pool objects are `DetectiveFP00..15` / `DogFP00..15` of `levels/charbits.blvl`; each stores the path orientation as four bytes and is placed with that rotation and the hit point of the ray test 0x21ab20 (not the player's ground probe); the dog paths of mission 1-2 are unrotated in the original too. [§2026-10-19T09:11:04](#ts-20261019-091104)
+- Open: the use state's approach phase, fades, the bounce helper 0x2077a8, question particles, the hand item event details (previous value, per-frame bone update) and the look items of the entry above.
 
 <a id="ts-20261018-112621"></a>
 
@@ -55,3 +56,20 @@ Unknowns:
 - The per-frame update of an attached item (0x242814) and so the exact orientation of the glass; the previous-value handling of the track when a slot starts a clip (the port takes the first sample without an event, as the footstep detector does) and its weighting.
 - Whether the glass stays shown while the X-spot use clip `detect_find` plays (it has no track) and when the mode ends other than through `detect_in`.
 - The faint blue glow of objects, the footstep dots and the bottom-screen changes.
+
+<a id="ts-20261019-091104"></a>
+
+## 2026-10-19T09:11:04+02:00 — Footprint pool objects, turn and ground (REA on game.arm.elf, llvm-objdump, level dump, Azahar GDB traps E-1 on m12-5 and E-2 on m12-7)
+
+**Pool.** The pool builder 0x2f3a9c looks up, for type 0 and 1, the 16 objects `%s%02u` named `DetectiveFP00..15` (type 0) and `DogFP00..15` (type 1) under the scene (0x2450f0 on 0x23b370) and keeps them at 0x515cf0 + 4 x (16 x type + i). They are `dummy/dummymesh` objects of `levels/charbits.blvl` with the meshes `Ability_Detective_Foot` and `Ability_Detective_Dog` (models `ability_detective_foot` / `_dog`: flat cards at y 0.0237 / 0.0260, the foot 0.5 x 0.5, the dog paw about 0.2 x 0.2, both centred). The port's model choice was right; their initial position in the file is overwritten by the placing function.
+
+**Turn.** The post-link 0x177a4c stores, beside the offsets, four signed bytes per footprint: the path orientation 0x270b70 at the same arc position, times 127. The path's quaternions are the block read for the record field +0x10 (`LevelPath::orientations`, 16-byte records from block offset 0x40, `points + 4` of them; the second block is not read). 0x270b70 clamps the position on an open path (wraps a closed one), takes the records at floor(p) and floor(p) + 1 (clamped) and interpolates with 0x21a600 (shortest way: flip when the dot is negative; linear weights above dot bits 0x3f7fff58, else sin((1-t)a)/sin a and sin(t a)/sin a); without the block the identity. The placing function 0x26024c reads the bytes back (x 1/127), makes the matrix with 0x248870 (rotation rows in floats 0..2, 4..6, 8..10 as the standard quaternion matrix rows), puts the hit point of the ray test into floats 12..14 and gives it to the pool object (0x24c118). Ported in `detectivePathOrientation`, `detectiveFootprintMatrix`.
+The two dog paths of mission 1-2 (`1-2_Dtv_DogSpot_01` and `_02`) carry only identity quaternions, so the original draws their footprints unrotated: the oracle matrices of E-1 (spot 1, 10 hits) and E-2 (spot 2, 3 hits) have identity rows. Only paths of other missions (for example `1-3_Dtv_BrickSpot_01`: bytes (0, 126, 0, -4) rising to (0, 120, 0, -39) at footprint 6) turn their footprints; those values come from the port's reading, not from an oracle measurement.
+
+**Ground.** The height of a footprint is the nearest hit of the ray test 0x21ab20 from 1 above to 1 below the stored point, not a player ground probe. The port used the player's `groundHeight` and put footprints on the dog house stairs up to 0.24 too high (hits 7 to 10 of E-1: oracle 29.9572, 29.7890, 30.4681, 30.7363; probe 30.1978, 29.9546, 30.7087, 30.9769). `CameraResetProbe::nearestHit` (the camera's query: 0x27cab4 against the level's collision, surface mask 0x01000010) reproduces all 13 oracle hit points of E-1 and E-2 to 1e-4, so the port now uses it (`footprintGroundHeight`). The footprint's own query words (stack 0x2603f4..0x260444: descriptor 0x362298, a word 512) were not decoded.
+
+**Oracle.** E-1: m12-5-detective-active, circle pad forward (`stick 0 156`) for 220 updates, trap 0x26049c (the `bl 0x24c118`), r1 = the matrix; the player reached 715.09 633.03, so the stairs were reached only by the last four hits. E-2: m12-7-detective-waypoint-2, A for 3 updates, 70 updates, forward for 150 updates; three hits. Raw: `artifacts/oracle/r27E-out/E-1.txt`, `E-2.txt` (not committed).
+
+Unknowns:
+- The user's report that the footprints at the later spot point the wrong way is not explained by the rotation: both the original and the port draw them unrotated. The texture's own direction on the card and the placing of the dog model's node matrix were not compared on screen.
+- The footprint's own ray query (mask words), the second block of the path orientation data, and what the original shows when the ray hits nothing (it keeps its stack contents).
