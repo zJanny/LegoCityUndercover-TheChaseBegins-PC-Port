@@ -164,6 +164,7 @@ private:
     bool scannerView(float eye[3], float& yaw, float& pitch, float& fieldOfView) const;
     bool drawScannerOverlay(chase::frontend::Canvas& top);
     void updateLevelCharacters(float dt);
+    void updatePropAnimations(float dt);
     void updateFollowCamera(float dt);
     void loadBoardingVehicles(const std::map<std::string, std::pair<std::size_t, chase::render::Mat4>>& placedInstances);
     void driveVehicles(float dt);

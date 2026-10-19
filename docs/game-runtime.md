@@ -112,7 +112,7 @@ What is not like the original yet:
 - Objects stay as they are at the start of the level. Nothing breaks or moves, and doors open only when the character comes close. An open door keeps the same blocking box as a closed one here. One measurement in the original differed, and the reason is not known yet.
 - When the camera is stuck behind a wall for a longer time, the original places it again. That is not done here.
 - Other characters do not block the character. Parked vehicles do: the character stops at them.
-- Animals and the eight line-up characters of the police station are not shown. Their look is not worked out yet.
+- The dog of mission 1-2, the cats on the roofs and the crow of mission 1-3 are shown standing still where the level puts them. When you free the dog, it jumps out of its cage to Chase as in the original. The pigs, the sharks and the eight line-up characters of the police station are not shown yet.
 - Walking slowly off a ledge looks different from the original, which first plays a short step.
 - Jumping onto something higher, or under a ceiling, may not match the original.
 - The animations do not blend. Their speed is an estimate.

@@ -11,7 +11,9 @@ How the .blvl objects (section +0x2c) find their model and transform. Format of 
 - Custom characters (`CharacterEnum` 1..8, 0x2372e0) take their look from the saved custom character, not from level data; they are not drawn. [§2026-10-13T16:34](#ts-20261013-163430)
 - The start state (which objects are disabled) comes from the `startup` script and the reveal links, not from a flag in the .blvl. [§2026-10-13T21:17](#ts-20261013-211741)
 - EnableObject sets entity flag bit 0 and hides the node (0x23f734, flags 0x60); a disabled object is not drawn (127 of 1198 hidden at lvl_01 start, e.g. `Police_Plaque_Floor`). [§2026-10-14T15:05](#ts-20261014-150541)
-- Open: per-class start visibility (`DisabledOnStartUp`, `ShowOnObjectScan`, flags bit 2), hidden characters still drawn, NPC start animations, animal rigs, the scene code that skips nodes with 0x60.
+- Animal rigs of kinds 0, 64 and 67 (the mission 1-2 dogs `1-2_Dog` / `1-2_Dog_Prop`, the fireman cats, the crow) are props: their create builds the model with 0x2442b4 and starts only an `Animation` parameter (0x234004), which none of them has; ride_pig (159) and the sharks (239) have creates of their own. [§2026-10-19T09:59:14](#ts-20261019-095914)
+- A prop with a playing clip moves by the clip's root motion (prop update 0x16b06c with 0x2327b4); the released dog leaves the cage and ends where the oracle trap has its node (915.2977 64.3605 663.6295, yaw -87.64). [§2026-10-19T10:10:34](#ts-20261019-101034)
+- Open: per-class start visibility (`DisabledOnStartUp`, `ShowOnObjectScan`, flags bit 2), hidden characters still drawn, NPC start animations, the pose of a skinned model without a clip, the root-motion axis bits of a clip, the ride_pig and shark creates, the scene code that skips nodes with 0x60.
 
 <a id="ts-20261013-153915"></a>
 
@@ -74,6 +76,7 @@ Per-class parameter lists come from a scratch tool over the C++ parser (not comm
 ## 2026-10-13T16:34:30+02:00 — Characters in the level: body, head, textures and starting pose (worker; REA Ghidra 12.1.2 pseudo-code, objdump, class and instance dumps through parseLevel)
 
 Corrected by [objects.md §2026-10-13T21:17](#ts-20261013-211741): the start state comes from the startup script and reveal links
+Corrected by [objects.md §2026-10-19T09:59:14](#ts-20261019-095914): the dog, cat and crow rigs of lvl_01 are props of kinds 0, 64 and 67 and are drawn
 
 Replica: `drawableObjects` / `CharacterObject` in src/assets/level.cpp, `addLevelCharacters` in src/render/character.cpp (shared with the player through `addCharacter` / `poseBody` / `placeCharacter`; chase-game and `chase-viewer --characters`). Tests: `assets-real-data` (counts and three resolved rigs).
 
@@ -139,3 +142,53 @@ Unknowns:
 - Which code in the scene traversal skips nodes with bits 0x60 was not located (no `tst #0x60` pattern in the executable: the test may be split into two single-bit tests or read through a getter). The rule rests on 0x2428c0 hiding the node, the grid read of flag bit 0 and the oracle picture without the disc.
 - The scene instances of disabled characters (and sub-objects of classes) are still drawn: only placed props are filtered (LEVOBJ-12).
 - Per-class start visibility (`DisabledOnStartUp`, `ShowOnObjectScan`, `ShowOnMap`) and flags bit 2 of the +0x14 table are not applied (LEVOBJ-13); the shadow (blob or projected) under the player in the oracle picture is not drawn by the port (RENDER-9).
+
+<a id="ts-20261019-095914"></a>
+
+## 2026-10-19T09:59:14+02:00 — The mission 1-2 dog and the other animals of lvl_01 are placed props (REA Ghidra 12.1.2 pseudo-code and llvm-objdump on `artifacts/game/game.arm.elf`, class files through the C++ loader, RPC screenshots A-1 by the emulator servant)
+
+[Corrects objects.md §2026-10-13T16:34:30](#ts-20261013-163430): the animal rigs of lvl_01 are not characters with a constructor of their own; the dog, the cats and the crow are props of kinds 0, 64 and 67.
+
+**The objects.** lvl_01 places the dog twice, both with `meshname` `char_dog` in room32 at the roof cage: `1-2_Dog_Prop` (class `props/prop_dogwaggles`, kind 0, 918.664 64.763 663.005, facing -65.738; `ShowOnObjectScan` 1, `TriggerScanned` `1-2_Scanned_Pringles`) is the caged dog the scanner finds, `1-2_Dog` (class `props/prop_prop`, kind 67, 918.717 64.668 662.731, facing -54.984, `CSCharacter` `dog`, `Immovable` 2) is the dog the cage key script releases. The class `chars/char_dog` (kind 158) is not placed in lvl_01. The other animal rigs of lvl_01: the four `props/ability_freeplay_fireman_cat` (`char_cat`, kind 0), `1-3_Crow` (`leprops/leprop_platform`, `char_Crow`, kind 64), five `chars/ride_pig` (`char_pig`, kind 159) and four `props/prop_sharkattack` (`char_shark`, kind 239).
+
+**Creates (ev_e2f1a97e, ev_9c4b0291, ev_154f92cd, ev_e00aef2d, ev_aa23d9c8, ev_c462629d).**
+- Kind 0 is registered by 0x17f2f4 (`mov r0, r4` with r4 = 0 before `bl 0x246240` at 0x17f33c): create 0x1d1450, post-link 0x1c3ee0, +0x1c 0x1d1690. 0x1d1450 copies the 0x88-byte info record, calls 0x234004(entity, 0), builds a `dummy` node when there is no model, and reads `CollisionBound` (a box only when the class lists one; `prop_dogwaggles` and the cat class do not).
+- Kind 67 (`props/prop_prop`, registered by 0x1564b8): create 0x15a4b4 reads `Destructable` and calls the prop create 0x16a268, which calls 0x234004(entity, 0) first; the rest sets up destruction, sounds, `ControlledAnim`, judder, rotation and stud spawns (none of these is set for `1-2_Dog`).
+- Kind 64 (platforms, registered by 0x180c98): create 0x199adc calls the model loader 0x2442b4 directly, then the platform setup.
+- 0x234004 = model loader 0x2442b4(entity, 0), then, when the entity has a skeleton (+0x44) and its `Animation` parameter is not empty, starts that clip (0x23e6e4, 0x23afc0 with `AnimationVelocity`, offset `AnimationOffset`). `prop_prop` has `Animation` "" and `prop_dogwaggles` and the cat class have none; no object or class of lvl_01 sets one. So **no clip runs on the dogs, the cats or the crow at creation**; they stand in the pose of a skeleton without animation until a script plays a clip. In all eight main levels six objects set `Animation` (`Sea_Waves`, `4-6_PiggyTractor_Crashed`, `5-8_Chopper_Circling`, three `7-9_Goon_Chopper*`), none of them an animal.
+- 0x2442b4 loads `models/<dir>/<leaf>.fnmdl` into the node (+0x3c) and the skeleton `<dir>.fnskl` of the same folder into +0x40/+0x44 (0x212420), then the attachments, head, hat and the upper/lower/face/cape texture replacement (0x226750). Nothing in it is specific to animals.
+- Kinds 159 (`chars/ride_pig`, created through 0x23e394) and 239 (sharks: create 0x15eec0 makes only the first shark of the level and returns 0 for the others, with `AttackFrame01..03`) have creates of their own; they were not read further.
+
+**Why the port showed no dog.** `drawableObjects` left out every model whose name starts with `char_` other than the minifig body, a rule of the port, not of the original. Now an object with such a model is a placed prop when its kind is 0, 64 or 67 (`createsModelAsProp`, src/assets/level.cpp): lvl_01 draws 1205 placed objects (7 more) and 9 other rigs stay out (pigs and sharks); over all levels 78 such objects are placed props and 92 rigs stay out.
+
+**The release (script `1-2_Cage_Key_Target_Script`).** `EnableObject 1-2_Dog_Prop 0`, `EnableObject 1-2_Dog 1`, `EnableCollision 1-2_Dog 0`, `PlayAnimation 1-2_Dog "dog_cage_open"` (`models/char_dog/dog_cage_open.bfnanm`, 45 frames, played once), `Wait 3`, `FadeScreen 0`, `PositionObject 1-2_Dog 1-2_Dog_Position_End` (730.328 31.599 645.549, at the dog house), the cutscene `1_2_c`, whose actor folder `dog` matches the `CSCharacter` of `1-2_Dog` (so the original's cutscene drives that entity, [cutscene-actors.md §2026-10-15T07:54:38](cutscene-actors.md#ts-20261015-075438)), then `EnableObject 1-2_Dog 0`. The path out of the cage is the clip's root motion ([§2026-10-19T10:10:34](#ts-20261019-101034)). In `chase-game` the dog plays the clip from the use spot; `PositionObject` of a prop is not applied (SCRIPT-288) and the cutscene draws a dog of its own.
+
+**Start state.** The level start (`1-2_MissionHide`, `1-3_MissionHide`) disables both dogs and the crow; the cats are drawn (CTest `level-start-real-data`). `1-2_Waypoint_02_Script` enables `1-2_Dog_Prop`.
+
+**Oracle (A-1).** `m12-13-cage-trigger`, no input, screenshots at 0, 60 and 150 updates (`artifacts/oracle/r28-servant-out/a1/`): the cage is closed and its barred side shows a dark interior, so the dog's pose cannot be seen; the pictures do not change.
+
+Port: `createsModelAsProp` in src/assets/object_classes.hpp; CTest `animal-props-real-data` (instances, classes, kinds, positions, models, the release clip), `assets-real-data`, `level-start-real-data`.
+
+Unknowns:
+- The pose the original draws for a skinned model without a clip (the port draws the stored vertices); not compared, the cage hides the dog.
+- What the cat rescue use spot (kind 124, create 0x1829ac, post-link 0x176e04 reads `TriggerObject` and the cat link, update 0x182b38 -> 0x1c6aa8) does with its cat (clips `idle_sat`, `rescuecat_*`).
+- The creates of `ride_pig` (0x23e394) and of the sharks beyond the first lines; the crow's platform motion (`LerpShape`, `ObjectTo`, `Speed`).
+- Whether the cutscene binds `1-2_Dog` while it is moved (the binding code 0x2d1ddc was not read for props).
+
+<a id="ts-20261019-101034"></a>
+
+## 2026-10-19T10:10:34+02:00 — Props move by the root motion of their clip: the dog leaves the cage (REA Ghidra 12.1.2 pseudo-code of 0x15aa70, 0x16b06c, 0x2327b4, 0x270778, 0x23d6c4; llvm-objdump of 0x16b2bc..0x16b3a8; C++ curve dump; RPC screenshots A-2 by the emulator servant; Azahar GDB trap, port 24781, no RPC)
+
+**Oracle (A-2).** `m12-13-cage-trigger`, A pressed 30 updates after the load, screenshots 10, 30, 50 and 80 updates after the press (`artifacts/oracle/r28-servant-out/a2/`, ticks in `a2_shots.csv`): the camera stays; at +10 the cage is closed, at +30 its door is up and a shadow is in the air, at +50 the dog is out in front of Chase on the left, at +80 the door is down again and the dog stands against Chase beside the fence. `chase-game` before this entry: the dog reared up at the cage and came back to it.
+
+**Data.** `dog_cage_open` (joint table word 0x10168013) has bit 28 set: curve 19, the last of 20 (the skeleton has 19 joints), is the extra root curve. It stays 0 up to frame 11, then moves to translation (-1.2263, -0.3075, 3.3163) and yaw -0.570 rad by frame 18 and holds (C++ dump with `decodeChannels` / `localMatrix`, scratch `artifacts/scratch/r28-A/tools/rootdump.cpp`). The joint curves alone bring the body back to the cage by frame 40.
+
+**Code.** Kind 67's update 0x15aa70 ends with 0x16b06c(entity, 0). At 0x16b2bc..0x16b3a8: when the entity's current animation (0x23ad24(entity + 0x40)) has any of the bits 0xf of its word +8 and 0x245f84() is not 6, it calls 0x23602c and 0x2327b4(skeleton +0x44, out); on a non-zero return it builds R = Ry(out.yaw) with translation out.xyz (0x24d434, 0x237bc4, 0x2554c0 into the translation row), R = R x node (0x258a10), copies R's rotation into the node matrix (0x232788) and stores it (0x24c118), then moves the entity by R.translation - node.translation (0x249030 with the negated position, 0x23d39c adds) through 0x23d6c4(entity, move, 0, ...), which with the collision flag 0x200 clear (EnableCollision 0) and flags 0 only adds the move to the node position. 0x2327b4 per playing slot: 0x270778 samples the extra curve (joint table bit 28) at the slot's frame, a matrix 0x247fb0 / 0x2588f4, translation and yaw = 0x2473ec of the third row; components whose bit (1 x, 2 y, 4 z, 8 yaw) in the animation's word +8 is clear are zeroed; with flag 0x8000 of the slot (start) or weight 0 the sample is only stored; else the output is B x inverse(A) of the stored sample A and the new one B (translation in A's frame, yaw difference), weighted per slot by its weight and the factors +0x18..+0x24; wraps of a looping clip subtract the clip's whole motion (0x29f97c). So the node turns by the yaw difference and moves by the translation difference taken through its rotation before the turn.
+
+**Oracle (GDB trap).** `m12-13-cage-trigger`, scenario `artifacts/scratch/r28-A/release_root.txt` (30 frames, A held for 1 frame, `trap 0x16b2d4,0x16b358 60`; output `artifacts/oracle/r28A-out/release_trap.txt`): at 0x16b2d4 r1 (the animation's word +8) is 0x0000000f in every stop, so all four axes are on for `dog_cage_open`. At 0x16b358 the matrix r1 points to is the dog's node: it stands at the placement (918.7173 64.6680 662.7309, yaw -54.98 degrees) until stepped frame 45, moves over frames 46..54 (for example frame 49: 917.5319 65.0376 663.2573, yaw -85.09) and stays at **915.2977 64.3605 663.6295, yaw -87.64 degrees** to frame 76. The stepped frames do not run at the real rate, so the timing of the move was not compared.
+
+**Port.** `src/runtime/prop_root_motion.{hpp,cpp}` (`rootSample`, `rootDelta`, `applyRootDelta`), used by `PropAnimations::update` for every animated prop with a node from its placement; glue `src/game_animals.cpp` sets the scene transform of a moved prop. The dog ends at 915.298 64.361 663.629 facing -87.6 degrees (placement 918.717 64.668 662.731, -54.98 degrees), the trap's end pose to the fourth decimal. `chase-game` from the spot (`--start "916.702 64.431 663.724" --facing 0 --call-script 1-2_Pringles_Cage_Locked --script "0 0 5;0 0 1 A;0 0 N"`, N = 10, 30, 49, 79): at +49 and +79 the dog stands left of the cage and turned towards Chase where the A-2 pictures have it (`artifacts/scratch/r28-A/p3_grid.png`: port above, oracle below). Chase himself does not move in the port (his `dog_cage_open_minifig` has root motion of its own; PlayCharAnim on the player is not ported), and the cage is hidden in that port run because the test path skips the script that shows it. Tests `prop-root-motion` (synthetic), `animal-props-real-data` (end position).
+
+Unknowns:
+- Where the word +8 of an animation record is set (0x1dbf0c allocates the record; `dog_cage_open` has 0xf, other clips were not read; the port applies all four axes to every clip); the test 0x245f84() != 6 (not applied); how 0x287124 interpolates a fractional frame (linear in the port); the timing of the move in real updates.
+- The weights and per-axis factors (+0x18..+0x24) of 0x2327b4 for more than one slot; 0x23602c.

@@ -145,7 +145,7 @@ LevelSession::LevelSession(const Shared& sharedState)
         const bool animated = animationTargets.count(lowerInstance) != 0;
         const std::string modelPath = meshModelPath(placement.mesh);
         if (scene.addModel(modelPath, matrix, {}, animated ? runtime::propSceneKey(modelPath, lowerInstance) : std::string())) {
-            if (animated) animatedProps.push_back({lowerInstance, modelPath, placement.mesh});
+            if (animated) animatedProps.push_back({lowerInstance, modelPath, placement.mesh, matrix});
             ++placed;
             placedInstances[placement.instance] = {instanceIndex, matrix};
             placedSceneIndex.push_back(instanceIndex);

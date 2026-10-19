@@ -43,6 +43,7 @@ PropAnimations::PropAnimations(assets::FuseArchive& archive, const std::vector<A
         entry.prop = prop;
         entry.key = propSceneKey(prop.modelPath, prop.instance);
         entry.skeleton = assets::parseSkeleton(archive.read(*skeleton));
+        entry.node = prop.node;
         entries_.push_back(std::move(entry));
     }
 }
@@ -93,7 +94,22 @@ std::optional<bool> PropAnimations::currentNearEnd(const std::string& instance) 
     return entry->slots.currentNearEnd(clock_);
 }
 
-void PropAnimations::update(float dt) { clock_ += std::llround(double(dt) * double(kAnimationClockTicksPerSecond)); }
+void PropAnimations::update(float dt) {
+    clock_ += std::llround(double(dt) * double(kAnimationClockTicksPerSecond));
+    for (Entry& entry : entries_) {
+        const AnimationSlot* slot = entry.slots.current();
+        if (!slot) continue;
+        const assets::Animation& animation = clips_[slot->clip].animation;
+        const std::optional<RootSample> root = rootSample(animation, lastSampleFrame(animation, AnimationSlots::position(*slot, clock_).frame));
+        if (!root) continue;
+        if (entry.lastRoot && entry.lastRootStart == slot->startId) {
+            entry.node = applyRootDelta(entry.node, rootDelta(*entry.lastRoot, *root));
+            entry.moved = true;
+        }
+        entry.lastRoot = root;
+        entry.lastRootStart = slot->startId;
+    }
+}
 
 std::vector<PropPose> PropAnimations::poses() const {
     std::vector<PropPose> result;
@@ -102,7 +118,7 @@ std::vector<PropPose> PropAnimations::poses() const {
         if (!slot) continue;
         const assets::Animation& animation = clips_[slot->clip].animation;
         const double frame = lastSampleFrame(animation, AnimationSlots::position(*slot, clock_).frame);
-        result.push_back({entry.key, assets::skinMatrices(entry.skeleton, animation, frame)});
+        result.push_back({entry.key, assets::skinMatrices(entry.skeleton, animation, frame), entry.prop.instance, entry.moved, entry.node});
     }
     return result;
 }

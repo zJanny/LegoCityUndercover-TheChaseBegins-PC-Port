@@ -5,6 +5,7 @@
 #include "assets/assets.hpp"
 #include "runtime/animation_slots.hpp"
 #include "runtime/natives_animation.hpp"
+#include "runtime/prop_root_motion.hpp"
 
 #include <cstdint>
 #include <map>
@@ -25,11 +26,15 @@ struct AnimatedProp {
     std::string instance;   // lower case
     std::string modelPath;  // models/<dir>/<dir>.bfnmdl
     std::string mesh;       // placement mesh "Dir/File": the animation folder is models/<dir lower case>/
+    assets::Matrix node = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};  // node matrix at the level start (placementMatrix)
 };
 
 struct PropPose {
     std::string key;
     std::vector<assets::Matrix> skin;
+    std::string instance;   // lower case
+    bool moved = false;     // the clip's root motion moved the node (0x16b06c)
+    assets::Matrix node{};  // node matrix after the root motion
 };
 
 class PropAnimations : public AnimationDriver {
@@ -41,6 +46,7 @@ public:
     void stop(const std::string& lowerCaseInstance) override;
     std::optional<bool> currentNearEnd(const std::string& lowerCaseInstance) const override;
 
+    // Advances the clock and applies the root delta of each playing slot to its node (prop update 0x15aa70 -> 0x16b06c).
     void update(float dt);
     // Skin matrices of the props that started an animation, at the frame of the current slot (the last frame once a play-once clip ended).
     std::vector<PropPose> poses() const;
@@ -58,6 +64,10 @@ private:
         std::string key;
         assets::Skeleton skeleton;
         AnimationSlots slots;
+        assets::Matrix node{};
+        bool moved = false;
+        std::optional<RootSample> lastRoot;
+        std::uint32_t lastRootStart = 0;
     };
     std::optional<std::uint32_t> clipOf(const std::string& path);
     Entry* find(const std::string& lowerCaseInstance);

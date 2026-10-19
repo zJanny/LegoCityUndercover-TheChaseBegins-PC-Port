@@ -23,6 +23,12 @@ bool isStudObject(const LevelObject& object, const Level& classFile);
 // Kind byte of the placed entity (entity +0x12): the low byte of the effective ObjectType, 0 when the class has none (docs/re/script-natives-flags.md).
 std::uint8_t objectKind(const LevelObject& object, const Level& classFile);
 
+// Kinds whose create builds the model with the loader 0x2442b4 and no character setup: 0 (0x1d1450 through 0x234004),
+// 64 (0x199adc) and 67 (0x15a4b4 through 0x16a268 and 0x234004). Their objects with an animal rig ("char_dog", "char_cat",
+// "char_Crow") are placed props (docs/re/objects.md). STAND-IN LEVOBJ-S84: until a clip plays, such a skinned model is drawn with its
+// stored vertices; the original's pose of a skeleton without a clip was not compared.
+bool createsModelAsProp(std::uint8_t kind);
+
 enum ObjectBehaviour : unsigned {
     BehaviourCollision = 1,  // objectCollisions registers a shape for it
     BehaviourDoor = 2,       // the door state machine drives it

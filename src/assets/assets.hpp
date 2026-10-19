@@ -410,7 +410,8 @@ struct CharacterObject {
 // objectPlacements split by kind. Static geometry: models that exist in the archive. Characters: objects
 // with the "char_minifig" body, except the custom characters. Left out and counted: the mission markers of
 // class "props/map_*" (observed hidden at the start, see docs/re/objects.md), other skeletal "char_*"
-// models (animals, they have their own rigs), objects whose model the archive does not hold (emitters,
+// models of kinds with their own create (ride_pig, the sharks; animals of kinds 0, 64 and 67 are placed
+// props, createsModelAsProp), objects whose model the archive does not hold (emitters,
 // hearts), the studs (collectible coins: object type 0x3d with pickuptype 0..3, drawn as sprites, see
 // docs/re/studs.md) and the custom characters (CharacterEnum 1..8, 0x2372e0 builds their look from the saved
 // custom character, not from the object's parameters).

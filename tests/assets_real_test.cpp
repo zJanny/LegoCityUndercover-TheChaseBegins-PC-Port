@@ -358,9 +358,10 @@ int main(int argc, char** argv) {
         // Pinned totals recorded from chase_assets drawableObjects over all .blvl, 2026-10-13: class files supply
         // meshname (and the transform) where the instance does not set it (lookup 0x217080).
         // The 886 skeletal "char_*" objects of that recording are now split: minifig characters drawn, custom
-        // characters (CharacterEnum 1..8, 0x2372e0) and the other rigs.
-        if (drawable != 7657 || drawableMissing != 423 || drawableStuds != 4835 || drawableMarkers != 405 ||
-            drawableCharacters + drawableCustom + drawableSkeletal != 886 || drawableCharacters != 708 || drawableCustom != 8 || drawableSkeletal != 170)
+        // characters (CharacterEnum 1..8, 0x2372e0), 78 animal rigs of kinds 0, 64 and 67 drawn as placed props
+        // (createsModelAsProp, 2026-10-19; 7657 drawn before) and the other rigs.
+        if (drawable != 7735 || drawableMissing != 423 || drawableStuds != 4835 || drawableMarkers != 405 ||
+            drawableCharacters + drawableCustom + drawableSkeletal + 78 != 886 || drawableCharacters != 708 || drawableCustom != 8 || drawableSkeletal != 92)
             throw std::runtime_error("drawable object totals differ from the recorded values");
         // Reference: python3 tools/convert_levels.py (at 9d04c91) on lvl_00_policestation_main.blvl with parameter names from
         // code.bin (object Player1Start, class point, room1) and on chars/char_police.blvl (s10 defaults).
@@ -399,7 +400,8 @@ int main(int argc, char** argv) {
                 std::fabs(crate->position[1] - 2.5029f) > 1e-3f || std::fabs(crate->position[2] + 16.2848f) > 1e-3f)
                 throw std::runtime_error("lvl_00 Portrait_Box01 (class default model) differs from the recorded values");
             DrawableObjects city = drawableObjects(archive, read("levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl"));
-            if (city.objects.size() != 1198 || city.missingModel != 11 || city.skeletal != 16 || city.markers != 44 ||
+            // Two dogs, four cats and the crow are placed props (1198 and 16 other rigs before, 2026-10-19).
+            if (city.objects.size() != 1205 || city.missingModel != 11 || city.skeletal != 9 || city.markers != 44 ||
                 city.characters.size() != 99 || city.customCharacters != 0)
                 throw std::runtime_error("lvl_01 drawable objects differ from the recorded values");
             // Studs (object type 0x3d, pickuptype 0..3 silver, gold, blue, purple). Provenance: the per-class census of

@@ -107,18 +107,22 @@ int main(int argc, char** argv) {
             const std::vector<bool> drawn = chase::runtime::drawnPlacements(drawable.objects, state);
             std::size_t hidden = 0;
             bool floorFound = false, wallDrawn = false, grappleFound = false;
+            std::size_t animalsHidden = 0, catsDrawn = 0;
             for (std::size_t i = 0; i < drawn.size(); ++i) {
                 hidden += drawn[i] ? 0 : 1;
                 const std::string& name = drawable.objects[i].instance;
                 if (name == "Police_Plaque_Floor") floorFound = true, require(!drawn[i], "Police_Plaque_Floor is drawn");
                 if (name == "GrappleGun") grappleFound = true, require(!drawn[i], "GrappleGun is drawn");
                 if (name == "Police_Plaque") wallDrawn = drawn[i];
+                if (name == "1-2_Dog" || name == "1-2_Dog_Prop" || name == "1-3_Crow") ++animalsHidden, require(!drawn[i], name + " is drawn");
+                if (drawable.objects[i].className == "props/ability_freeplay_fireman_cat") ++catsDrawn, require(drawn[i], name + " is hidden");
             }
+            require(animalsHidden == 3 && catsDrawn == 4, "animal placements changed");
             require(floorFound && grappleFound && wallDrawn, "Police plaque placements changed");
             std::cout << "level-start: " << hidden << " of " << drawn.size() << " drawable objects hidden at the start\n";
             // The count is the value recorded from the C++ implementation (the disabled set is pinned against the oracle above); 127 plus the
-            // three hidden X spots.
-            require(hidden == 130, "hidden drawable object count: " + std::to_string(hidden));
+            // three hidden X spots and the three animal props that 1-2_MissionHide and 1-3_MissionHide disable (the two dogs, the crow).
+            require(hidden == 133, "hidden drawable object count: " + std::to_string(hidden));
         }
 
         chase::assets::PlacedObjectState runState = chase::runtime::levelInitialState(level, chase::assets::archiveClassLookup(archive));

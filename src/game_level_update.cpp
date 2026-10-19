@@ -166,8 +166,7 @@ void LevelSession::updateLevelCharacters(float dt) {
     levelCharacters->update(scene, dt, [this](const chase::assets::CharacterObject& character) {
         return !objectState.isDisabled(character.placement.instance) && roomShown(runtime::roomNumber(character.placement.room));
     });
-    propAnimations.update(dt);
-    for (const runtime::PropPose& pose : propAnimations.poses()) scene.pose(pose.key, pose.skin);
+    updatePropAnimations(dt);
 }
 
 std::vector<runtime::SoundCall> LevelSession::updateBuildits(const float playerPosition[3]) {

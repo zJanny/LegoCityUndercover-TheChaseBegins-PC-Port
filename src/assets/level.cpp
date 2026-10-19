@@ -308,6 +308,8 @@ bool isStudObject(const LevelObject& object, const Level& classFile) { return is
 
 std::uint8_t objectKind(const LevelObject& object, const Level& classFile) { return std::uint8_t(effectiveEnum(object, classFile, "ObjectType")); }
 
+bool createsModelAsProp(std::uint8_t kind) { return kind == 0 || kind == 64 || kind == 67; }
+
 std::vector<Placement> placements(const Level& level) {
     std::vector<Placement> out;
     for (const auto& obj : level.objects) {
@@ -446,7 +448,7 @@ DrawableObjects drawableObjects(FuseArchive& archive, const Level& level) {
             character.animationClass = lowered(animationClass.empty() ? defaultAnimationClass : animationClass);
             character.placement = std::move(placement);
             out.characters.push_back(std::move(character));
-        } else if (mesh.rfind("char_", 0) == 0) {
+        } else if (mesh.rfind("char_", 0) == 0 && !createsModelAsProp(objectKind(*object, cls))) {
             ++out.skeletal;
         } else if (!archive.find(meshModelPath(placement.mesh))) {
             ++out.missingModel;
