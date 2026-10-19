@@ -280,6 +280,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     loadScriptDestroyProps(archive);
     loadDestructibleProps(archive);
     loadAttack(archive, placedCollisions);
+    loadObjectiveBoxes(placedCollisions);
     runtime::applyObjectCollisionState(collision, objectState);
     doors = game_doors::loadDoors(scene, archive, level, classOf, placedCollisions, placedInstances);
     for (const DoorObject& door : doors) game_doors::poseDoor(scene, door);
@@ -414,8 +415,8 @@ void LevelSession::draw(int width, int height) {
         const runtime::Waypoint* waypoint = levelScripts.waypoints().find(game_doors::lowerCase(waypointObjects[i].instance));
         scene.setInstanceFade(waypointSceneIndex[i], waypoint ? waypoint->columnFade() : 1.0f);
         if (waypoint) badgeFades[i] = waypoint->badgeFade();
-        scene.setInstanceVisible(waypointSceneIndex[i], objectives.waypointActive(game_doors::lowerCase(waypointObjects[i].instance)) &&
-                                                            roomShown(runtime::roomNumber(waypointObjects[i].room)));
+        const bool columnShown = waypoint ? waypoint->columnShown() : objectives.waypointActive(game_doors::lowerCase(waypointObjects[i].instance));
+        scene.setInstanceVisible(waypointSceneIndex[i], columnShown && roomShown(runtime::roomNumber(waypointObjects[i].room)));
     }
     std::vector<bool> shownPlaced(drawn.size()), shownWaypoints(waypointObjects.size());
     for (std::size_t i = 0; i < drawn.size(); ++i) shownPlaced[i] = drawn[i] && roomShown(placedRooms[i]);
@@ -448,6 +449,7 @@ void LevelSession::draw(int width, int height) {
     studSprites->draw(viewMatrix, mvp, sprites, runtime::studSpriteFrame(std::uint32_t(provisionalStudClockSeconds * double(runtime::kClockTicksPerSecond))),
                      runtime::kStudHalfSize);
     drawUseMarkers(mvp);
+    drawObjectiveArrows(mvp, viewToWorld);
     particles.draw(viewMatrix, mvp);
     drawZiplineRopes(viewMatrix, mvp);
     if (runtime::glowRuns(scannerLook.glowStrength, false)) glowPass->apply(screens.top, runtime::glowComposite(scannerLook.glowStrength, scannerLook.glowSecond));
@@ -466,6 +468,7 @@ void LevelSession::draw(int width, int height) {
         mapView.markers = activeMapMarkers();
         mapView.scanner = scanner.viewShown();
         mapView.markerField = &mapMarkerField;
+        addObjectiveMapIcons(mapView);
         fe::drawMinimap(mapCanvas, hudResources, levelName, mapView);
     } else {
         hudCanvas.clearTransparent();

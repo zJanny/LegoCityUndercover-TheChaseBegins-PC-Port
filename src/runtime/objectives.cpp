@@ -16,10 +16,10 @@ struct Entry {
 
 constexpr Entry kEntries[] = {
     {"setactivewaypoint", ObjectiveNativeKind::SetActiveWayPoint, 2, true},
-    {"subobjectivegotoenable", ObjectiveNativeKind::SubObjectiveGoToEnable, 3, true},
+    {"subobjectivegotoenable", ObjectiveNativeKind::SubObjectiveGoToEnable, 3, false},
     {"subobjectiveenemyenable", ObjectiveNativeKind::SubObjectiveEnemyEnable, 3, false},
-    {"subobjectivearrowgotoenable", ObjectiveNativeKind::SubObjectiveArrowGoToEnable, 2, true},
-    {"subobjectivearrowenemyenable", ObjectiveNativeKind::SubObjectiveArrowEnemyEnable, 2, true},
+    {"subobjectivearrowgotoenable", ObjectiveNativeKind::SubObjectiveArrowGoToEnable, 2, false},
+    {"subobjectivearrowenemyenable", ObjectiveNativeKind::SubObjectiveArrowEnemyEnable, 2, false},
     {"enableminimapwipe", ObjectiveNativeKind::EnableMinimapWipe, 1, true},
     {"enablescanner", ObjectiveNativeKind::EnableScanner, 1, true},
     {"overridescannable", ObjectiveNativeKind::OverrideScannable, 2, true},
@@ -69,9 +69,9 @@ bool ObjectiveState::waypointActive(const std::string& waypoint) const {
     return std::find(active_.begin(), active_.end(), waypoint) != active_.end();
 }
 
-void ObjectiveState::setSubObjective(const std::string& waypoint, const std::string& target, std::uint8_t type, bool enable) {
-    const auto record = std::find_if(groups_.begin(), groups_.end(),
-                                     [&](const SubObjectiveGroup& group) { return group.waypoint == waypoint && group.type == type; });
+void ObjectiveState::setSubObjective(const std::string& waypoint, const std::string& target, std::uint8_t type, bool enable, bool targetEnabled) {
+    auto record = std::find_if(groups_.begin(), groups_.end(),
+                               [&](const SubObjectiveGroup& group) { return group.waypoint == waypoint && group.type == type; });
     if (enable) {
         SubObjectiveGroup* group;
         if (record == groups_.end()) {
@@ -81,15 +81,45 @@ void ObjectiveState::setSubObjective(const std::string& waypoint, const std::str
             group = &*record;
         }
         if (std::find(group->targets.begin(), group->targets.end(), target) != group->targets.end()) return;
-        if (group->targets.size() < kSubObjectiveTargetLimit) group->targets.push_back(target);
+        if (group->targets.size() >= kSubObjectiveTargetLimit) return;
+        group->seenEnabled[group->targets.size()] = targetEnabled ? 1 : 0;
+        group->targets.push_back(target);
         return;
     }
+    if (record == groups_.end())
+        record = std::find_if(groups_.begin(), groups_.end(), [&](const SubObjectiveGroup& group) {
+            return group.type == type && std::find(group.targets.begin(), group.targets.end(), target) != group.targets.end();
+        });
     if (record == groups_.end()) return;
     auto& targets = record->targets;
-    const auto found = std::find(targets.begin(), targets.end(), target);
-    if (found == targets.end()) return;
-    *found = targets.back();
-    targets.pop_back();
+    for (std::size_t i = targets.size(); i-- > 0;) {
+        if (targets[i] != target) continue;
+        targets[i] = targets.back();
+        targets.pop_back();
+        return;
+    }
+}
+
+void ObjectiveState::setArrow(std::size_t list, const std::string& target, bool enable) {
+    if (list >= kObjectiveArrowLists) return;
+    std::vector<ObjectiveArrow>& arrows = arrows_[list];
+    const auto found = std::find_if(arrows.begin(), arrows.end(), [&](const ObjectiveArrow& arrow) { return arrow.target == target; });
+    if (enable) {
+        if (found != arrows.end() || arrows.size() >= kObjectiveArrowLimit) return;
+        ObjectiveArrow arrow;
+        arrow.target = target;
+        arrows.push_back(arrow);
+        return;
+    }
+    if (found == arrows.end()) return;
+    *found = arrows.back();
+    arrows.pop_back();
+}
+
+void ObjectiveState::requestArrowHide(const std::string& target) {
+    for (std::vector<ObjectiveArrow>& arrows : arrows_)
+        for (ObjectiveArrow& arrow : arrows)
+            if (arrow.target == target) arrow.hideRequest = true;
 }
 
 const SubObjectiveGroup* ObjectiveState::group(const std::string& waypoint, std::uint8_t type) const {

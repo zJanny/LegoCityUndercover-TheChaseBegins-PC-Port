@@ -30,6 +30,32 @@ MapMarkerPlacement placeMapMarker(float playerX, float playerZ, float cameraYaw,
     return placement;
 }
 
+bool mapPositionOnMap(float playerX, float playerZ, float cameraYaw, float x, float z) {
+    const MapMarkerPlacement placement = placeMapMarker(playerX, playerZ, cameraYaw, x, z);
+    const float ex = placement.x - kMapCentreX, ey = placement.y - kMapCentreY;
+    return ex * ex / (kOnMapHalfWidth * kOnMapHalfWidth) + ey * ey / (kOnMapHalfHeight * kOnMapHalfHeight) <= 1.0f;
+}
+
+const char* mapIconTexture(int iconType) {
+    switch (iconType) {
+    case 0: return "sprites/ui_bottomscreen/maps/waypoint.btga";
+    case 13: return "sprites/ui_bottomscreen/maps/subobjectiveenemy.btga";
+    case 14: return "sprites/ui_bottomscreen/maps/subobjectivepoint.btga";
+    case 15: return "sprites/ui_bottomscreen/maps/subobjectivepointgreen.btga";
+    default: return nullptr;
+    }
+}
+
+const char* mapOffscreenArrowTexture(int iconType) {
+    switch (iconType) {
+    case 0: return "sprites/ui_bottomscreen/maps/waypointoffscreen.btga";
+    case 13: return "sprites/ui_bottomscreen/maps/waypointoffscreenred.btga";
+    case 14: return "sprites/ui_bottomscreen/maps/waypointoffscreenblue.btga";
+    case 15: return "sprites/ui_bottomscreen/maps/waypointoffscreengreen.btga";
+    default: return "sprites/ui_bottomscreen/maps/waypointoffscreenwhite.btga";
+    }
+}
+
 float arrowRotation(const MapMarkerPlacement& placement) { return kPi - std::atan2(placement.directionX, placement.directionY); }
 
 void MapMarkerField::advance(float dt, float playerX, float playerZ, float cameraYaw, const std::vector<MapMarkerSource>& markers) {

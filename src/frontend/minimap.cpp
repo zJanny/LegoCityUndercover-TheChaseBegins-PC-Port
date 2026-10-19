@@ -36,6 +36,41 @@ void drawRing(Canvas& bottom, float centreX, float centreY, const MapRing& ring)
     }
 }
 
+void drawGroupTargets(Canvas& bottom, Resources& resources, const MinimapView& view) {
+    for (const MinimapGroupTargets& group : view.groupTargets) {
+        const char* texture = mapIconTexture(group.iconType);
+        if (!texture || !(0.0f < group.alpha)) continue;
+        const assets::Image& icon = resources.image(texture);
+        const float alpha = float(int(group.alpha * 255.0f)) / 255.0f;
+        for (const std::array<float, 2>& target : group.targets) {
+            const MapMarkerPlacement placement = placeMapMarker(view.x, view.z, view.cameraYaw, target[0], target[1]);
+            bottom.drawScaled(icon, {0, 0, icon.width, icon.height}, placement.x - kGroupTargetHalfSize, placement.y - kGroupTargetHalfSize,
+                              kGroupTargetHalfSize * 2, kGroupTargetHalfSize * 2, {1, 1, 1, alpha});
+        }
+    }
+}
+
+void drawGroupSlots(Canvas& bottom, Resources& resources, const MinimapView& view) {
+    for (const MinimapGroupSlot& slot : view.groupSlots) {
+        const char* texture = mapIconTexture(slot.iconType);
+        if (!texture) continue;
+        const assets::Image& icon = resources.image(texture);
+        const float alpha = float(int(slot.alpha * 255.0f) & 0xff) / 255.0f;
+        const MapMarkerPlacement placement = placeMapMarker(view.x, view.z, view.cameraYaw, slot.x, slot.z);
+        float shownX = float(roundedCoordinate(placement.x)), shownY = float(roundedCoordinate(placement.y));
+        if (placement.outsideEllipse) {
+            const assets::Image& arrow = resources.image(mapOffscreenArrowTexture(slot.iconType));
+            const float arrowX = placement.edgeX + placement.directionX * kArrowOffset, arrowY = placement.edgeY + placement.directionY * kArrowOffset;
+            bottom.drawRotated(arrow, {0, 0, arrow.width, arrow.height}, arrowX, arrowY, float(arrow.width), float(arrow.height),
+                               arrowRotation(placement), {1, 1, 1, alpha});
+            shownX = float(roundedCoordinate(placement.edgeX));
+            shownY = float(roundedCoordinate(placement.edgeY));
+        }
+        const float half = float(icon.width) * 0.5f;
+        bottom.drawScaled(icon, {0, 0, icon.width, icon.height}, shownX - half, shownY - half, half * 2, half * 2, {1, 1, 1, alpha});
+    }
+}
+
 void drawMarkers(Canvas& bottom, Resources& resources, const MinimapView& view) {
     if (view.markers.empty() || !view.markerField) return;
     const assets::Image& icon = resources.image("sprites/ui_bottomscreen/maps/waypoint.btga");
@@ -92,7 +127,9 @@ void drawMinimap(Canvas& bottom, Resources& resources, const std::string& levelN
     const assets::Image& arrow = resources.image("sprites/ui_bottomscreen/maps/playericon.btga");
     bottom.drawRotated(arrow, {0, 0, arrow.width, arrow.height}, kMapPlayerScreenX, kMapPlayerScreenY, float(arrow.width),
                        float(arrow.height), view.playerYaw - view.cameraYaw);
+    drawGroupTargets(bottom, resources, view);
     drawMarkers(bottom, resources, view);
+    drawGroupSlots(bottom, resources, view);
     LayoutScene scene;
     scene.hidden = {"blackBG", "buttonScan", "buttonExit", "buttonAudio", "buttonRedBricks", "buttonHint", "buttonFreeplay",
                     "portrait_0", "portrait_1", "portrait_2", "portrait_3", "portrait_4", "portrait_5", "portrait_6", "portrait_7",

@@ -1,5 +1,6 @@
 #pragma once
 #include <array>
+#include <map>
 #include <optional>
 #include "assets/assets.hpp"
 #include "assets/object_collision.hpp"
@@ -185,6 +186,12 @@ private:
     void syncVehicleHud();
     void updateHeadIcon(float dt);
     void drawHeadIcon(chase::frontend::Canvas& top);
+    void loadObjectiveBoxes(const std::vector<chase::assets::ObjectCollision>& placed);
+    bool objectiveTargetPosition(const std::string& instance, float out[3]) const;
+    bool objectiveUseMarker(const std::string& instance, float out[3], float& alpha) const;
+    void updateObjectiveMarkers(float dt);
+    void addObjectiveMapIcons(chase::frontend::MinimapView& view) const;
+    void drawObjectiveArrows(const chase::render::Mat4& viewProjection, const chase::render::Mat4& viewToWorld);
     void vehicleImpact(std::size_t vehicleIndex, float speed, const chase::runtime::ContactOther& other, const chase::runtime::Vector3& point);
     void vehicleBrickBurst(std::size_t vehicleIndex, const chase::runtime::Vector3& point);
     void vehicleBreakBurst(std::size_t vehicleIndex);
@@ -283,6 +290,9 @@ private:
     chase::runtime::DetectiveSet detective;
     chase::runtime::UseSpotSet useSpots;
     chase::runtime::UseMarkers useMarkers;
+    std::map<std::string, float> objectiveBoxTops;
+    std::optional<chase::render::ParticleRenderer> objectiveArrowRenderer;
+    float objectiveArrowClock = 0;
     std::optional<chase::render::ParticleRenderer> useMarkerRenderer;
     std::optional<chase::runtime::DetectiveRoles> detectiveRoles;
     std::vector<std::size_t> footprintInstances;

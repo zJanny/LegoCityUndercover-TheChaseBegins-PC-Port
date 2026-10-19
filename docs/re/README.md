@@ -44,7 +44,8 @@ Read this index, then open only the file you need.
 | [scripts.md](scripts.md) | Level scripts (section +0x18), the script executor 0x234204 and its words, the per-update runner, EnableObject / EnableCollision, the `startup` script, the revealer links, the start state of placed objects; runtime entries: [scripts-runtime.md](scripts-runtime.md) |
 | [scripts-runtime.md](scripts-runtime.md) | Trigger records and bound switches, the police entrance, WarningDialogBox / PositionObject / FadeScreen, a live script thread of the original |
 | [script-text.md](script-text.md) | Tip text, dialogue lines, dialogue background, mission title: handlers of batch 30, the timed objects 0x517ef8 / 0x5189cc, measured timing and layout |
-| [objective-hud.md](objective-hud.md) | Waypoints, sub-objective registry and the waypoint marker on the map: handlers of batch 31 (SetActiveWayPoint 0x27bde8, SubObjectiveGoToEnable 0x2adaac), registry 0x51a3a8, measured marker |
+| [objective-hud.md](objective-hud.md) | Waypoints, sub-objective records and arrows: handlers of batch 31 (SetActiveWayPoint 0x27bde8, SubObjectiveGoToEnable 0x2adaac, arrow natives), the manager update 0x2ed8d8 / 0x2be934, group map slots, arrow quads |
+| [objective-hud-map.md](objective-hud-map.md) | Map screen icons: placement 0x1ee7a8, edge ellipse and arrow, halo, grow, pulse rings (0x2db0dc, 0x2ddd64) |
 | [ai-natives.md](ai-natives.md) | The 17 AI natives of batch 34 (AIMove 0x171f7c, AIEnable 0x1881d4, ...): AI component fields, requested state numbers, the AIMove trigger event |
 | [ai-navigation.md](ai-navigation.md) | AIMove path finder 0x204284 on the nav grids, grid and cell search, follower 0x27ddb4, arrival and the AIMove event 0x2c630c, state 11 (AISuperJump) 0x2c3bd8 |
 | [ai-states.md](ai-states.md) | AISuperJump set-up 0x213300 (frames, +0x308, +0x30c), state 10 face target 0x2c5bc4, state 11 arrival value (ATTR_RunSpeed), state numbers 25 / 27 / 35 / 36 |

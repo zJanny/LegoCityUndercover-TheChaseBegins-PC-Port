@@ -156,6 +156,25 @@ void fades() {
     require(wp->state == 3 && near(wp->columnFade(), 1.0f) && near(wp->badgeFade(), 1.0f), "state 3: the column tween 1 to 0 starts at 1; the badge is not faded (0x17aebc)");
     set.update(dt, inside, nullptr, nullptr);
     require(!wp->active && wp->columnFade() == 0.0f, "FadeScaleOutTime 0.4: transparent when the waypoint switches off");
+    require(!wp->columnShown(), "no disable fade after state 3");
+
+    assets::Level manual = syntheticClass();
+    for (assets::LevelParam& param : manual.classParams)
+        if (param.hash == 0xc93e4625) param.value = 0;
+    const assets::ClassLookup manualOf = [&](const std::string&) { return &manual; };
+    WaypointSet scripted;
+    scripted.load(level, manualOf);
+    scripted.setActive("wp_a", true);
+    for (int i = 0; i < 3; ++i) scripted.update(dt, outside, nullptr, nullptr);
+    const runtime::Waypoint* off = scripted.find("wp_a");
+    require(!scripted.setActive("wp_a", false), "AutoTrigger 0: SetActiveWayPoint 0 switches the waypoint off (bit 4 of +0x8e set)");
+    require(off->columnShown() && near(off->columnFade(), 1.0f) && off->badgeFade() == 1.0f,
+            "0x229c98 disable: column tween from 1 (0x229e50) to 0 (0x229e4c), applied at once");
+    scripted.update(dt, outside, nullptr, nullptr);
+    require(near(off->columnFade(), 0.5f) && off->badgeFade() == 0.0f,
+            "the column fades over FadeScaleInTime +0x6c (0.8 s, half after 0.4 s); the badge tween lasts 2^-23 s (0x229e48)");
+    scripted.update(dt, outside, nullptr, nullptr);
+    require(off->columnFade() == 0.0f && !off->columnShown(), "hidden when the tween reaches 0 (0x23f734)");
 }
 
 void synthetic() {

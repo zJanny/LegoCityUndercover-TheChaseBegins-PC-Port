@@ -78,8 +78,27 @@ void ring() {
 }
 }
 
+void onMap() {
+    // 0x33dccc: half axes 320 * 0.42 - 36 = 98.4 and 240 * 0.41 - 36 = 62.4 (literals 0x33de40, 0x33de44, 0x33de48), boundary inside.
+    require(near(kOnMapHalfWidth, 98.4f, 0.001f) && near(kOnMapHalfHeight, 62.4f, 0.001f), "inner ellipse of the sub-objective update");
+    const float ahead = 62.4f / kMapPixelsPerUnit;
+    require(mapPositionOnMap(0, 0, 0, 0, ahead * 0.999f) && !mapPositionOnMap(0, 0, 0, 0, ahead * 1.01f), "ahead: 62.4 pixels up");
+    const float side = 98.4f / kMapPixelsPerUnit;
+    require(mapPositionOnMap(0, 0, 0, side * 0.999f, 0) && !mapPositionOnMap(0, 0, 0, side * 1.01f, 0), "aside: 98.4 pixels right");
+    require(std::string(mapIconTexture(14)).find("subobjectivepoint.btga") != std::string::npos &&
+                std::string(mapIconTexture(13)).find("subobjectiveenemy.btga") != std::string::npos &&
+                std::string(mapIconTexture(15)).find("subobjectivepointgreen.btga") != std::string::npos,
+            "icons 13, 14, 15 of the table 0x3588a0");
+    require(std::string(mapOffscreenArrowTexture(14)).find("blue") != std::string::npos &&
+                std::string(mapOffscreenArrowTexture(13)).find("red") != std::string::npos &&
+                std::string(mapOffscreenArrowTexture(15)).find("green") != std::string::npos &&
+                std::string(mapOffscreenArrowTexture(7)).find("white") != std::string::npos,
+            "offscreen arrows 40, 42, 41 and 43 of 0x2db0dc");
+}
+
 int main() {
     placement();
+    onMap();
     arrow();
     animation();
     ring();

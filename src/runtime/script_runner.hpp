@@ -15,6 +15,7 @@
 #include "runtime/natives_sound.hpp"
 #include "runtime/natives_progress.hpp"
 #include "runtime/objectives.hpp"
+#include "runtime/sub_objectives.hpp"
 #include "runtime/vehicle.hpp"
 #include "runtime/waypoints.hpp"
 #include "runtime/script_text.hpp"
@@ -228,6 +229,8 @@ public:
     // Who plays the animation natives' requests; null records them only.
     void setAnimationDriver(AnimationDriver* driver) { animationDriver_ = driver; }
     std::vector<std::string> updateWaypoints(float dt, const float player[3], const WaypointVehicle* vehicle);
+    // 0x2ed8d8: arrows and sub-objective records; missing lookups default to the object state and the object position source.
+    void updateObjectiveMarkers(float dt, SubObjectiveWorld world);
     // A waypoint script that took the controls, or the player held by an active director camera (director_hold.hpp).
     bool playerControlTaken() const { return waypoints_.playerControlTaken() || director_.holdsControl(); }
     const WaypointSet& waypoints() const { return waypoints_; }

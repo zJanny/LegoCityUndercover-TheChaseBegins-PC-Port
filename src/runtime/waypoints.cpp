@@ -122,8 +122,18 @@ bool WaypointSet::setActive(const std::string& lowerName, bool enable) {
         if (waypoint.instance != lowerName) continue;
         const bool notAutoTrigger = !waypoint.autoTrigger;
         if (!enable && !notAutoTrigger) return waypoint.active;
+        const bool wasActive = waypoint.active;
         waypoint.active = enable;
-        if (enable) {
+        if (!enable) {
+            if (wasActive && waypoint.state != 3) {
+                waypoint.columnTween = NodeTween::start(1.0f, 0.0f, waypoint.fadeScaleIn);
+                waypoint.badgeTween = NodeTween::start(1.0f, 0.0f, kWaypointBadgeHideSeconds);
+                waypoint.disableFade = true;
+            }
+            return false;
+        }
+        waypoint.disableFade = false;
+        {
             waypoint.fired = false;
             waypoint.state = 0;
             waypoint.timer = kWaypointEnableTimer;
@@ -225,7 +235,14 @@ WaypointUpdate WaypointSet::update(float dt, const float player[3], const Waypoi
                                    const std::function<bool(const std::string&)>& roomLoaded) {
     WaypointUpdate result;
     for (Waypoint& waypoint : waypoints_) {
-        if (!waypoint.active) continue;
+        if (!waypoint.active) {
+            if (waypoint.disableFade) {
+                waypoint.columnTween.step(dt);
+                waypoint.badgeTween.step(dt);
+                if (waypoint.columnTween.value() <= 0.0f) waypoint.disableFade = false;
+            }
+            continue;
+        }
         if (roomLoaded && !waypoint.room.empty() && !roomLoaded(waypoint.room)) continue;
         waypoint.columnTween.step(dt);
         waypoint.badgeTween.step(dt);

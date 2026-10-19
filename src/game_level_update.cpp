@@ -338,6 +338,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
     levelScripts.update(dt);
     applyScriptNatives();
     if (player && follow) mapMarkerField.advance(dt, player->motion.x, player->motion.z, follow->yaw(), activeMapMarkers());
+    updateObjectiveMarkers(dt);
     cutsceneHost->update(levelScripts.cutscenes());
     if (player && levelScripts.ai().movedLastUpdate("player1")) game_player::applyAiPosition(*player, *levelScripts.ai().character("player1"));
     studs.addToCounter(levelScripts.progressNatives().takeStudsAdded());

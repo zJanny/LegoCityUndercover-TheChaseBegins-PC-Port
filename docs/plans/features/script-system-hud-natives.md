@@ -6,16 +6,18 @@ The objective natives (SetActiveWayPoint, SubObjectiveGoToEnable, arrows, map an
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-14T19:00:00+02:00. The 14 objective natives of batch 31 run as stand-ins: an active waypoint shows its object and a map marker. The 16 text natives of batch 30 run as stand-ins: tip text, dialogue lines, headings, the character intro and the information box are drawn with the layout of the draw code.
+IN_PROGRESS, updated 2026-10-19T15:03:47+02:00. SetActiveWayPoint, SubObjectiveGoToEnable and the two arrow natives follow the original: waypoints fade out on a script disable, sub-objective groups show their target icons and a fading group slot on the map, and arrows are drawn as world quads over their targets. Ten batch 31 map and scanner natives run as stand-ins. The 16 text natives of batch 30 run as stand-ins: tip text, dialogue lines, headings, the character intro and the information box are drawn with the layout of the draw code.
 
 ## 3. Verified behaviour
 
+- SetActiveWayPoint chain, sub-objective record update, group map slots and arrows from the code (0x229c98, 0x2be934, 0x2ed8d8, 0x29de50; pinned by `waypoints`, `sub-objectives`, `map-marker`), not compared with oracle pictures: [objective-hud.md §2026-10-19T15:00](../../re/objective-hud.md#ts-20261019-150002).
 - The waypoint marker position and the tip fade were measured on the oracle: [objective-hud.md §2026-10-14T15:59](../../re/objective-hud.md#ts-20261014-155919), [script-text.md §2026-10-14T15:25](../../re/script-text.md#ts-20261014-152500).
 
 ## 4. Stand-ins
 
-- SCRIPT-S26 SetActiveWayPoint shows or hides the waypoint object (disable always applies) and SubObjectiveGoToEnable keeps the registry group without its marker effect. needs: SCRIPT-71, SCRIPT-74. evidence: [objective-hud.md §2026-10-14T15:59](../../re/objective-hud.md#ts-20261014-155919).
-- SCRIPT-S27 Twelve batch 31 natives (arrows, minimap wipe, scanner, pan map, map dummy, blackout, DisableIcon) only record call counts and last values. needs: SCRIPT-72, SCRIPT-73. evidence: [objective-hud.md §2026-10-14T15:59](../../re/objective-hud.md#ts-20261014-155919).
+- SCRIPT-S269 SetActiveWayPoint: the disable fade starts only for a waypoint that was active (the original starts it for any disable outside state 3 and relies on the entity flag); the 16-slot limit of the map, the vehicle waypoint global *(0x529c18 + 0x28) and the entity disable of 0x230ef4 are not modelled. evidence: [objective-hud.md §2026-10-19T15:00](../../re/objective-hud.md#ts-20261019-150002).
+- SCRIPT-S270 Sub-objective update and arrows: the key is always counted into the centroid (0x230ef4 not found); the arrow height uses the player's box for characters, the collision box for props and 0 otherwise, vehicles and class 0x365f7679 get no offset, the use marker test uses the port's marker slots, the bob clock starts at the level start, and the quad is drawn with the particle renderer's blend and depth state. needs: SCRIPT-329, SCRIPT-330. evidence: [objective-hud.md §2026-10-19T15:00](../../re/objective-hud.md#ts-20261019-150002).
+- SCRIPT-S27 Ten batch 31 natives (minimap wipe, scanner, pan map, map dummy, blackout, DisableIcon) only record call counts and last values. needs: SCRIPT-73. evidence: [objective-hud.md §2026-10-14T15:59](../../re/objective-hud.md#ts-20261014-155919).
 - SCRIPT-S23 The 16 batch 30 natives are stand-ins: tip text, dialogue line and dialogue background are drawn with the layout of the draw code (fitted rest HUD-S8) and the measured five-update tip fade; mission title and summary only store the key; ShowIntroText, ShowCharacterIntro and InformationBox follow the handlers (HUD-S14 for the box); the other five only count calls. needs: SCRIPT-66. evidence: [script-text.md §2026-10-14T15:25](../../re/script-text.md#ts-20261014-152500).
 
 ## 5. Open items
@@ -25,17 +27,18 @@ IN_PROGRESS, updated 2026-10-14T19:00:00+02:00. The 14 objective natives of batc
 - [ ] SCRIPT-68 — The skip byte 0x37751c of both tip natives (1 = no tip) is not modelled (treated as 0, the value in the oracle). evidence: [script-text.md §2026-10-14T15:25](../../re/script-text.md#ts-20261014-152500).
 - [ ] SCRIPT-69 — The speaker object of the dialogue natives (0x17cc58) and the follow-up call 0x1ffaac (player row == id) are not modelled; the speaker is only stored. evidence: [script-text.md §2026-10-14T15:25](../../re/script-text.md#ts-20261014-152500).
 - [ ] SCRIPT-70 — The tip alpha follows its writer 0x2de284 (0.2 per update, found); the dialogue fade is from code (5.0 per second in, 0.25 s out); the state machine 0x23cc00 is not transcribed (state times are approximated by dt sums). evidence: [script-text.md §2026-10-14T15:54](../../re/script-text.md#ts-20261014-155429).
-- [ ] SCRIPT-71 — SubObjectiveGoToEnable keeps its group (registry 0x1fce14 / 0x2a62b8) but the group marker is not drawn: update 0x2be934 (centroid of the targets, effect 0x0e / 0x0d / 0x0f, fade) is not transcribed or compared with the oracle. needs: HUD-16. blocks: SCRIPT-S26. evidence: [objective-hud.md §2026-10-14T15:59](../../re/objective-hud.md#ts-20261014-155919).
-- [ ] SCRIPT-72 — The arrow natives (SubObjectiveArrowGoToEnable 0x2c57b0 -> 0x2c289c, SubObjectiveArrowEnemyEnable 0x2c87f0 -> 0x230dbc) only record; their arrows (textures SubObjectiveArrow*) are not drawn; mission 1-2 and later use them. blocks: SCRIPT-S27. evidence: [objective-hud.md §2026-10-14T15:59](../../re/objective-hud.md#ts-20261014-155919).
 - [ ] SCRIPT-73 — Map and scanner natives (EnableMinimapWipe 0x187f28, EnableScanner, OverrideScannable, PanMapToObject, map dummy location, BlackoutMap, DisableIcon, scanner marker) only record their arguments. needs: HUD-11. blocks: SCRIPT-S27. evidence: [objective-hud.md §2026-10-14T15:59](../../re/objective-hud.md#ts-20261014-155919).
-- [ ] SCRIPT-74 — SetActiveWayPoint 0x26e168 skips a disable when bit 4 of component +0x8e is clear (meaning unknown), and its show / hide chain 0x229c98 / 0x242cf0 is not transcribed. blocks: SCRIPT-S26. evidence: [objective-hud.md §2026-10-14T15:59](../../re/objective-hud.md#ts-20261014-155919).
+- [ ] SCRIPT-329 — The arrow hide request 0x2b9c28 comes from the use hint 0x1cba8c (kinds 122, 123, 159 when their use query answers 1), which is not ported, so carried objects and carry targets never hide their arrows. blocks: SCRIPT-S270. evidence: [objective-hud.md §2026-10-19T15:00](../../re/objective-hud.md#ts-20261019-150002)
+- [ ] SCRIPT-330 — Compare a group dot, a group slot with its edge arrow and an objective arrow with oracle pictures (needs an `--rpc` session: mission 1-1 after `1-1_Get_Car`, mission 1-2 at the detective spot). blocks: SCRIPT-S270. evidence: [objective-hud.md §2026-10-19T15:00](../../re/objective-hud.md#ts-20261019-150002)
+- [ ] SCRIPT-331 — Enemy groups (0x230e60, type 1, called at 0x22b328 and 0x2bdfbc), carry groups (0x22fbe8, type 2, at 0x231c78) and the carry arrow list (0x22fb44) are filled by code that is not ported. evidence: [objective-hud.md §2026-10-19T15:00](../../re/objective-hud.md#ts-20261019-150002).
 
 ## 6. Findings summary
 
+- SetActiveWayPoint chain, sub-objective manager update, group map slots and arrows: [objective-hud.md §2026-10-19T15:00](../../re/objective-hud.md#ts-20261019-150002).
 - Batch 31 handlers (SetActiveWayPoint, SubObjectiveGoToEnable registry, waypoint marker measured on the oracle): [objective-hud.md §2026-10-14T15:59](../../re/objective-hud.md#ts-20261014-155919).
 - Batch 30 handlers (tip text, dialogue lines, dialogue background, mission title; timed objects 0x517ef8 / 0x5189cc, measured fade and layout): [script-text.md §2026-10-14T15:25](../../re/script-text.md#ts-20261014-152500).
 
 ## 7. Code and tests
 
-- Objectives: `ObjectiveState` (`src/runtime/objectives.*`, dispatched by `ScriptRunner::objectiveNative`); CTest `objectives`, `objectives-real-data`, `waypoint-marker-shot`, `waypoint-marker-position`.
+- Objectives: `ObjectiveState` (`src/runtime/objectives.*`, dispatched by `ScriptRunner::objectiveNative`), its update `src/runtime/sub_objectives.*` (`ScriptRunner::updateObjectiveMarkers`), glue `src/game_objective_markers.cpp`; CTest `objectives`, `objectives-real-data`, `sub-objectives`, `waypoints`, `waypoint-marker-shot`, `waypoint-marker-position`.
 - Script text: `ScriptTextState` (`src/runtime/script_text.*`, dispatched by `ScriptRunner::textNative`), `drawTipPage` / `drawDialogueBox` / `drawDialogueBackground` (`src/frontend/script_text_pages.*`); CTest `script-text`, `script-text-real-data`, `tip-text-shot`, `tip-text-panel` (`tools/check_tip_shot.py`).

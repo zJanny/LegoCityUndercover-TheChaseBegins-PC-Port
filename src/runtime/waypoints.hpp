@@ -47,6 +47,9 @@ struct Waypoint {
     NodeTween badgeTween = NodeTween::start(0.0f, 0.0f, 0.0f);   // alpha of the Badge child: 0 until state 1 ends, then 0 to 1
     float columnFade() const { return columnTween.value(); }
     float badgeFade() const { return badgeTween.value(); }
+    // 0x229c98 with enable 0 outside state 3: the column fades out over FadeScaleInTime while the waypoint is already off.
+    bool disableFade = false;
+    bool columnShown() const { return active || (disableFade && columnTween.value() > 0.0f); }
 };
 
 constexpr float kWaypointVehicleSpeedLimit = 12.0f;
@@ -54,6 +57,7 @@ constexpr std::uint32_t kWaypointVehicleHintKey = 0xa0fc8748;
 constexpr float kWaypointVehicleHintSeconds = 0.5f;
 constexpr float kWaypointEnableTimer = 0x1p-23f;
 constexpr float kWaypointHitTimer = 0x1.0624dep-10f;
+constexpr float kWaypointBadgeHideSeconds = 0x1p-23f;  // 0x229e48, the duration of the badge tween 1 to 0 of a disable
 
 struct WaypointVehicle {
     std::string instance;
@@ -81,9 +85,12 @@ public:
     bool known(const std::string& lowerName) const;
     bool active(const std::string& lowerName) const;
     // 0x26e168 / 0x229c98: enabling resets state and timer; a disable is ignored unless AutoTrigger is 0 (bit 4 of +0x8e).
-    // Returns whether the waypoint is active afterwards.
+    // An accepted disable outside state 3 starts the column tween 1 to 0 over FadeScaleInTime (+0x6c) and the badge tween 1 to 0
+    // over 2^-23 s. STAND-IN (SCRIPT-S269): the fade starts only for a waypoint that was active; the original starts it for any
+    // disable outside state 3 and relies on the entity flag, which the port does not keep for waypoints. Returns whether the
+    // waypoint is active afterwards.
     bool setActive(const std::string& lowerName, bool enable);
-    // 0x17acbc for every active waypoint of a loaded room, in object order. The player position is the player node.
+    // 0x17acbc for every active waypoint of a loaded room, in object order; the disable fades of switched-off waypoints advance too. The player position is the player node.
     // `vehicle` is the vehicle of 0x22ec10 / 0x24255c (jump in, seated and jump out count), null on foot.
     WaypointUpdate update(float dt, const float player[3], const WaypointVehicle* vehicle, const std::function<bool(const std::string&)>& roomLoaded);
     // Bit 3 of +0x8e (TakePlayerControl) sets bit 4 of the player's byte +0xd8 in state 2 and clears it when the script starts.

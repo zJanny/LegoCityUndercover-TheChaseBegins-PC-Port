@@ -39,6 +39,17 @@ struct MapMarkerPlacement {
 };
 
 MapMarkerPlacement placeMapMarker(float playerX, float playerZ, float cameraYaw, float markerX, float markerZ);
+
+// 0x33dccc (called through 0x29de40 by the sub-objective update): a world position is "on the map" when its placement lies
+// inside the ellipse with half axes 320 * 0.42 - 36 and 240 * 0.41 - 36 (literals 0x33de40, 0x33de44, 0x33de48) around the
+// screen centre, the boundary included.
+constexpr float kOnMapHalfWidth = kMapScreenWidth * 0.42f - 36.0f, kOnMapHalfHeight = kMapScreenHeight * 0.41f - 36.0f;
+bool mapPositionOnMap(float playerX, float playerZ, float cameraYaw, float x, float z);
+
+// Map icon types of the sub-objective groups (table 0x3588a0) and the offscreen arrow of each type (0x2db0dc).
+const char* mapIconTexture(int iconType);
+const char* mapOffscreenArrowTexture(int iconType);
+constexpr float kGroupTargetHalfSize = 8.0f;  // 0x2dbb04: a 16 x 16 quad around each target
 float arrowRotation(const MapMarkerPlacement& placement);
 int roundedCoordinate(float value);
 

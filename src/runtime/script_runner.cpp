@@ -255,6 +255,13 @@ std::vector<std::string> ScriptRunner::updateWaypoints(float dt, const float pla
     return update.startScripts;
 }
 
+void ScriptRunner::updateObjectiveMarkers(float dt, SubObjectiveWorld world) {
+    if (!world.hidden) world.hidden = [this](const std::string& name) { return state_.isHidden(name); };
+    if (!world.destroyed) world.destroyed = [this](const std::string& name) { return state_.destroyed.count(lower(name)) != 0; };
+    if (!world.position) world.position = [this](const std::string& name, float out[3]) { return objectPosition_ && objectPosition_(name, out); };
+    objectives_.update(dt, world);
+}
+
 bool ScriptRunner::running(const std::string& scriptName, bool requireActive) const {
     const std::uint32_t hash = assets::nameHash(scriptName);
     for (const ScriptThread& thread : threads_)
@@ -646,8 +653,12 @@ void ScriptRunner::objectiveNative(const ScriptCall& call) {
         objectives_.setWaypointActive(waypoint, waypoints_.known(waypoint) ? waypoints_.setActive(waypoint, enable) : enable);
         break;
     }
-    case ObjectiveNativeKind::SubObjectiveGoToEnable: objectives_.setSubObjective(lower(args[0]), lower(args[1]), 0, read(args[2]) != 0.0f); break;
+    case ObjectiveNativeKind::SubObjectiveGoToEnable:
+        objectives_.setSubObjective(lower(args[0]), lower(args[1]), 0, read(args[2]) != 0.0f, !state_.isHidden(lower(args[1])));
+        break;
     case ObjectiveNativeKind::SubObjectiveEnemyEnable: break;
+    case ObjectiveNativeKind::SubObjectiveArrowGoToEnable: objectives_.setArrow(0, lower(args[0]), read(args[1]) != 0.0f); break;
+    case ObjectiveNativeKind::SubObjectiveArrowEnemyEnable: objectives_.setArrow(1, lower(args[0]), read(args[1]) != 0.0f); break;
     default: {
         std::vector<float> values;
         for (const std::string& token : args) values.push_back(read(token));

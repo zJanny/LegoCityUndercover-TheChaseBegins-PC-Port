@@ -57,10 +57,10 @@ void synthetic() {
             "removing the first entry moves the last one into its place (0x2a62b8)");
     require(!objectives.waypointActive("wp_a") && objectives.waypointActive("wp_b"), "waypoint off");
 
-    require(runtime::scriptFunctionSupport("SetActiveWayPoint") == runtime::ScriptFunctionSupport::StandIn, "SetActiveWayPoint skips the bit 4 test (SCRIPT-S26)");
-    require(runtime::scriptFunctionSupport("SubObjectiveGoToEnable") == runtime::ScriptFunctionSupport::StandIn, "GoToEnable draws no group effect (SCRIPT-71)");
-    require(runtime::scriptFunctionSupport("SubObjectiveEnemyEnable") == runtime::ScriptFunctionSupport::Implemented, "EnemyEnable is the no-op");
-    for (const char* name : {"SubObjectiveArrowGoToEnable", "SubObjectiveArrowEnemyEnable", "EnableMinimapWipe", "EnableScanner", "OverrideScannable",
+    require(runtime::scriptFunctionSupport("SetActiveWayPoint") == runtime::ScriptFunctionSupport::StandIn, "SetActiveWayPoint keeps stand-in details (SCRIPT-S269)");
+    for (const char* name : {"SubObjectiveGoToEnable", "SubObjectiveEnemyEnable", "SubObjectiveArrowGoToEnable", "SubObjectiveArrowEnemyEnable"})
+        require(runtime::scriptFunctionSupport(name) == runtime::ScriptFunctionSupport::Implemented, std::string("transcribed ") + name);
+    for (const char* name : {"EnableMinimapWipe", "EnableScanner", "OverrideScannable",
                              "PanMapToObject", "SetMapDummyLocObj", "ClearMapDummyLocObj", "EnableScannerButton", "BlackoutMap",
                              "RemoveScannerMapMarker", "DisableIcon"})
         require(runtime::scriptFunctionSupport(name) == runtime::ScriptFunctionSupport::StandIn, std::string("stand-in ") + name);

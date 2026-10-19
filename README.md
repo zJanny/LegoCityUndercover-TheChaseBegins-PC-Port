@@ -97,16 +97,16 @@ All keys and how to change them: [Controls](docs/controls.md).
 <!-- progress:start -->
 | Measure | Now | What it means |
 |---|---|---|
-| Script commands | 44 of 239 (18.4%) | Different commands the level scripts call that the port runs. They cover 66.6% of all calls. 122 more run with a stand-in result. |
+| Script commands | 47 of 239 (19.7%) | Different commands the level scripts call that the port runs. They cover 67.8% of all calls. 119 more run with a stand-in result. |
 | Object types | 152 of 506 (30.0%) | Different object types in the levels that the port treats with recovered rules (collision, doors, studs). They cover 54.0% of all placed objects. |
 | Game files read | 99.7% of files, 99.9% of data | Files in the game archive (12836) that the port can decode, by count and by size. |
-| Open work | 432 open items, 322 stand-ins | Known gaps and temporary guesses in 26 feature areas. It has no total to reach; watch the trend. |
-| Checked against the original | 280 tests, 210 recorded traces | Automatic tests, and recordings of the original game that the tests compare with. |
-| Game code documented | 2284 of about 7575 (30.1%) | Functions of the game program that the notes or the source point to. The total is an estimate. |
+| Open work | 433 open items, 325 stand-ins | Known gaps and temporary guesses in 26 feature areas. It has no total to reach; watch the trend. |
+| Checked against the original | 281 tests, 210 recorded traces | Automatic tests, and recordings of the original game that the tests compare with. |
+| Game code documented | 2305 of about 7575 (30.4%) | Functions of the game program that the notes or the source point to. The total is an estimate. |
 
 ![Progress trend](docs/progress-trend.svg)
 
-Updated 2026-10-19, commit f223597. How the numbers are measured: [docs/progress.md](docs/progress.md).
+Updated 2026-10-19, commit 1a91e1c. How the numbers are measured: [docs/progress.md](docs/progress.md).
 <!-- progress:end -->
 
 ## More documentation
