@@ -28,62 +28,62 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 666 open items and stand-ins, 132 linked to game usage, 534 with unknown reach.
+Items: 670 open items and stand-ins, 134 linked to game usage, 536 with unknown reach.
 
 ## Top 50 overall
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
-| 1 | [SCRIPT-S231](features/script-system-natives-world.md) | 7091 | 0 | 8 | 0 | 2 stand-in, 1 implemented | `destroyprop`, `enableobject`, `killobject` | DestroyProp and KillObject destroy every enabled entity (hidden, no collision ... |
-| 2 | [SCRIPT-280](features/script-system-natives-world.md) | 7016 | 0 | 8 | 1 | 1 implemented | `enableobject` | Which classes handle message 1 of the destroy 0x23cd80 (table 0x245004 + kind x 40, +0x14), what the ... |
-| 3 | [LEVOBJ-S2](features/level-objects.md) | 7016 | 0 | 8 | 0 | 1 implemented | `enableobject` | Everything else with a model is drawn standing still at its placement; props are hidden while the start state ... |
-| 4 | [VEH-S2](features/vehicles.md) | 7016 | 0 | 8 | 0 | 1 implemented | `enableobject` | Owner flags (0x1340 parked, 0x1300 traffic, bit 0 disabled) are not modelled: a vehicle collides while its ... |
-| 5 | [SCRIPT-52](features/script-system.md) | 3101 | 0 | 8 | 1 | 2 implemented | `enablebound`, `enabletrigger` | Class owners: an empty object name as the owner itself, the variable `TaskComplete.TASK_COMPLETE` (saved per ... |
-| 6 | [VEH-S105](features/vehicles.md) | 0 | 3014 | 8 | 0 | - | `leprops/leprop_prop`, `leprops/leprop_simpledestructible`, `leprops/leprop_wobblydestructible`, `props/prop_prop` +2 | The prop smash covers leprop_wobblydestructible, prop_trafficlight, prop_respawnabledestructible and ... |
-| 7 | [PLAYER-S9](features/player-movement.md) | 0 | 2513 | 8 | 0 | - | `leprops/leprop_wobblydestructible` | `attackTargetObjects` — only `leprop_wobblydestructible` props are attack targets, and the glue allows the ... |
-| 8 | [CAMERA-7](features/camera.md) | 2075 | 0 | 8 | 0 | 1 implemented | `enablebound` | The lock scope census treats all camera bounds as enabled; which are switched off by EnableBound and what the ... |
-| 9 | [TRANS-6](features/level-transitions.md) | 2075 | 0 | 8 | 0 | 1 implemented | `enablebound` | Building entries inside a level (lift in lvl_00 between room1/3/5, `Lobby2Basement_SceneChange` objects with ... |
-| 10 | [TRANS-5](features/level-transitions.md) | 1930 | 0 | 8 | 0 | 5 stand-in, 2 none, 2 implemented | `aienable`, `aimove`, `charsetallowvehicleentry`, `dcamactive` +5 | Natives for the transition scripts still without handler: `PositionPlayer`, `SnapCamera`, `AIMove` ... |
-| 11 | [VEH-126](features/vehicles.md) | 1019 | 0 | 8 | 2 | 1 implemented | `triggerobject` | The rest of a prop's destroy message: screen shake 0x22c500 (`DestroyScreenShakeTime` ... |
-| 12 | [SCRIPT-285](features/script-system-missions.md) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Nothing known fires the ObjectTriggered of `1-2_Door_Lock_Hint_Script`: no name source besides its own ... |
-| 13 | [SCRIPT-4](features/script-system.md) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The code that hides the revealer targets; the role of the other type-4 parameters (Destination, ObjectTo ... |
-| 14 | [SCRIPT-S220](features/script-system-missions.md) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The reference-trigger join (reference_trigger.cpp) knows only the `TriggerObject` references of build-its ... |
-| 15 | [TRAV-21](features/player-traversal.md) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Brick use handler 0x1b53a8 (messages 3 / 4 into state 145): sender unknown; `TriggerObject` switching ... |
-| 16 | [VEH-129](features/vehicles.md) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | A prop destroyed by a car does not fire its `TriggerObject` (0x244f40 from message 1, base handler 0x1f8948) ... |
-| 17 | [VEH-S102](features/vehicles.md) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | A destroyed prop has no screen shake (0x22c500), flash light (0x239698), sound (`ATTR_SFX_DESTROYED`) ... |
-| 18 | [SCRIPT-S5](features/script-system.md) | 894 | 0 | 8 | 0 | 2 implemented | `callscript`, `spawnscript` | A CallScript / SpawnScript of a script the level does not have continues (the original's result with a null ... |
-| 19 | [SCRIPT-273](features/script-system-natives-animation.md) | 881 | 0 | 8 | 1 | 2 stand-in | `playanimation`, `playcharanim` | PlayCharAnim's state requests 80 / 81 and its cape animation (0x1b71e8), PlayAnimation's class message 253 ... |
-| 20 | [SCRIPT-270](features/script-system-natives-animation.md) | 862 | 0 | 8 | 1 | 3 stand-in | `playcharanim`, `stopcharanim`, `waitforcurrentcharanim` | PlayCharAnim, StopCharAnim and WaitForCurrentCharAnim on Player1 (the player entity through 0x22dacc) do not ... |
-| 21 | [SCRIPT-S26](features/script-system-hud-natives.md) | 798 | 0 | 7 | 0 | 2 stand-in | `setactivewaypoint`, `subobjectivegotoenable` | SetActiveWayPoint shows or hides the waypoint object (disable always applies) and SubObjectiveGoToEnable ... |
-| 22 | [SCRIPT-190](features/script-system-missions.md) | 0 | 736 | 8 | 2 | - | `scriptobject` | Carry gaps: the instigator argument of 0x244f40 is not modelled; the handler 0x1bc4d4 forwards message 0xff ... |
-| 23 | [SCRIPT-114](features/script-system-missions.md) | 687 | 0 | 8 | 0 | 2 stand-in | `destroyprop`, `playcharanim` | The port runs `1-2_MissionStart` one update later than the original at the end of the title camera ... |
-| 24 | [SCRIPT-201](features/script-system-missions.md) | 671 | 0 | 8 | 0 | 4 stand-in, 1 implemented | `automaticmusic`, `camerafollow`, `enabletrafficandpedestrians`, `overridemusic` +1 | Mission 1-1 has a handler (stand-in) for every native it calls: EnableTrafficAndPedestrians (SCRIPT-S230) ... |
-| 25 | [ANIM-S12](features/animation-characters.md) | 623 | 0 | 8 | 0 | 1 stand-in | `playcharanim` | The "already loaded" test of PlayCharAnim (0x21e8b4) knows a character's idle clips and its current script ... |
-| 26 | [SCRIPT-74](features/script-system-hud-natives.md) | 538 | 0 | 7 | 1 | 1 stand-in | `setactivewaypoint` | SetActiveWayPoint 0x26e168 skips a disable when bit 4 of component +0x8e is clear (meaning unknown), and its ... |
-| 27 | [SCRIPT-S98](features/script-system-natives.md) | 537 | 0 | 8 | 0 | 1 stand-in, 1 implemented | `positionobject`, `positionplayer` | PositionObject / PositionPlayer clear only the fall floats of the controller; `comp[0x315]` bits and message ... |
-| 28 | [SCRIPT-274](features/script-system-natives-animation.md) | 497 | 0 | 8 | 2 | 3 stand-in | `loadanimation`, `playanimation`, `unloadanimation` | LoadAnimation and UnloadAnimation keep a name list only (0x23e6e4 / 0x23e518 load and release are not ported) ... |
-| 29 | [SCRIPT-288](features/script-system-missions.md) | 495 | 0 | 8 | 0 | 1 implemented | `positionobject` | `PositionObject` of props and other placed objects (not characters, vehicles or the player) is not applied ... |
-| 30 | [SCRIPT-S4](features/script-system.md) | 484 | 0 | 8 | 0 | 1 stand-in, 1 implemented | `dcamcutscenewait`, `waitfordcam` | A function without a handler does nothing and continues at once; `chase-game` prints its name the first time ... |
-| 31 | [HUD-S9](features/hud-ui.md) | 442 | 0 | 7 | 0 | 1 stand-in | `showdialogbg` | The dialogue background is drawn at full opacity as long as ShowDialogBG is on (no fade) |
-| 32 | [SCRIPT-38](features/script-system-natives.md) | 435 | 0 | 7 | 12 | 2 stand-in, 4 none, 1 implemented | `addtosemitranslist`, `addtosemitransnearcameralist`, `effectfadeobject`, `playparticlesgo` +3 | Batch 13 (C, 20): EffectFadeObject, AddToSemiTransNearCameraList and StreamRoomIn run ... |
-| 33 | [VEH-132](features/vehicles.md) | 0 | 406 | 8 | 0 | - | `leprops/leprop_simpleindestructible` | Measure in the oracle that a leprop_simpleindestructible or a door in the car's way does not stop it (by code ... |
-| 34 | [SCRIPT-57](features/script-system-natives.md) | 362 | 0 | 7 | 13 | 3 stand-in, 1 none | `distancefademid`, `enableshadow`, `enableswitch`, `toggleuseable` | Kind-gated natives: the kind of every class is read (`objectKind`); ToggleUseable, EnableSwitch (use-zone ... |
-| 35 | [SCRIPT-S239](features/script-system-natives-world.md) | 351 | 0 | 7 | 0 | 2 stand-in | `enableswitch`, `toggleuseable` | ToggleUseable and EnableSwitch write the use flag only for instances whose kind registers a use zone ... |
-| 36 | [SCRIPT-36](features/script-system-natives.md) | 347 | 0 | 7 | 12 | 9 implemented | `setforcedstoponmyvehicle`, `stopplayervehicle`, `vehicleallowjumpout`, `vehiclejumpin` +5 | Batch 11 (C, 10 left): VehicleSetLocked, VehicleSetForcedStop, SetForcedStopOnMyVehicle, VehicleAllowJumpOut ... |
-| 37 | [SCRIPT-294](features/script-system-natives-world.md) | 342 | 0 | 7 | 1 | 1 stand-in | `toggleuseable` | The hint registry 0x2219bc searches (records at `*(0x58e9a4 + 0x24)`, singleton "LEGOHintBounds"): who adds ... |
-| 38 | [SCRIPT-296](features/script-system-natives-world.md) | 342 | 0 | 7 | 1 | 1 stand-in | `toggleuseable` | The registration conditions of the use zone: what sets halfword `[entity + 0x10]` bit 7 (post-link of kinds ... |
-| 39 | [PART-3](features/particles.md) | 0 | 281 | 8 | 0 | - | `particles` | The level object class `particles` (constructor 0x1a7f30, handlers 0x1a8394 and 0x1a7d30: `ParticleDef` ... |
-| 40 | [SCRIPT-281](features/script-system-natives-world.md) | 271 | 0 | 6 | 1 | 1 stand-in | `effectfadeobject` | EffectFadeObject: the third node property (0x23f540, flag bit 2), the particle node case, the clock of ... |
-| 41 | [SCRIPT-S232](features/script-system-natives-world.md) | 271 | 0 | 6 | 0 | 1 stand-in | `effectfadeobject` | EffectFadeObject drives `Scene::setInstanceFade` and the instance visibility of placed objects (and their ... |
-| 42 | [SCRIPT-67](features/script-system-hud-natives.md) | 266 | 0 | 8 | 0 | 2 stand-in | `setmissionsummary`, `setmissiontitle` | SetMissionTitle / SetMissionSummary store the key (0x375f98 / 0x375f9c); no reader found, so the title and ... |
-| 43 | [SCRIPT-71](features/script-system-hud-natives.md) | 260 | 0 | 7 | 1 | 1 stand-in | `subobjectivegotoenable` | SubObjectiveGoToEnable keeps its group (registry 0x1fce14 / 0x2a62b8) but the group marker is not drawn ... |
-| 44 | [SCRIPT-S11](features/script-system-dcam.md) | 256 | 0 | 8 | 0 | 1 stand-in | `startdcamtrack` | `StartDCamTrack` looks at the placement position of the object (the live position for the player), not at its ... |
-| 45 | [SCRIPT-S20](features/script-system-natives.md) | 248 | 0 | 7 | 0 | 10 stand-in | `addstuds`, `disablesuperbuiltitsave`, `enablestudsbygroup`, `enablesuperbricks` +6 | Ten batch 27 natives (UnlockAbility, LockAbility, UnlockScanner, EnableSuperBricks, SetParachuteDeployHeight ... |
-| 46 | [VEH-131](features/vehicles.md) | 0 | 225 | 7 | 1 | - | `leprops/leprop_prop`, `props/prop_prop` | The 57 classes of ObjectType 67 (prop_prop 16 and leprop_prop 4 in lvl_01) react to the car's message 0 ... |
-| 47 | [SCRIPT-286](features/script-system-missions.md) | 193 | 0 | 8 | 0 | 1 stand-in | `stopcharanim` | The user-animation state 0x50 is modelled only as "no idle until the clip has finished plus one update": the ... |
-| 48 | [SCRIPT-S12](features/script-system-dcam.md) | 184 | 0 | 7 | 0 | 2 stand-in | `shakescreen`, `snapcamera` | `ShakeScreen` stores its arguments and draws nothing; `SnapCamera` runs the reset 0x2313c8 with argument 0 ... |
-| 49 | [COLL-2](features/collision.md) | 0 | 183 | 7 | 1 | - | `props/parkour_skydive`, `props/prop_prop` | Only the classes with a recovered constructor rule register (props, doors, dummycollision, vehicles) ... |
-| 50 | [SCRIPT-13](features/script-system-natives.md) | 176 | 0 | 7 | 2 | 1 stand-in | `fadescreen` | Mode 4 (the dialog pushed by `0x25d26c`): its drawing, input, open / close code; why `0x1a142c` refuses it ... |
+| 1 | [LEVOBJ-S2](features/level-objects.md) | 7016 | 0 | 8 | 0 | 1 implemented | `enableobject` | Everything else with a model is drawn standing still at its placement; props are hidden while the start state ... |
+| 2 | [VEH-S2](features/vehicles.md) | 7016 | 0 | 8 | 0 | 1 implemented | `enableobject` | Owner flags (0x1340 parked, 0x1300 traffic, bit 0 disabled) are not modelled: a vehicle collides while its ... |
+| 3 | [SCRIPT-52](features/script-system.md) | 3101 | 0 | 8 | 1 | 2 implemented | `enablebound`, `enabletrigger` | Class owners: an empty object name as the owner itself, the variable `TaskComplete.TASK_COMPLETE` (saved per ... |
+| 4 | [VEH-S105](features/vehicles.md) | 0 | 3014 | 8 | 0 | - | `leprops/leprop_prop`, `leprops/leprop_simpledestructible`, `leprops/leprop_wobblydestructible`, `props/prop_prop` +2 | The prop smash covers leprop_wobblydestructible, prop_trafficlight, prop_respawnabledestructible and ... |
+| 5 | [PLAYER-S9](features/player-movement.md) | 0 | 2513 | 8 | 0 | - | `leprops/leprop_wobblydestructible` | `attackTargetObjects` — only `leprop_wobblydestructible` props are attack targets, and the glue allows the ... |
+| 6 | [CAMERA-7](features/camera.md) | 2075 | 0 | 8 | 0 | 1 implemented | `enablebound` | The lock scope census treats all camera bounds as enabled; which are switched off by EnableBound and what the ... |
+| 7 | [TRANS-6](features/level-transitions.md) | 2075 | 0 | 8 | 0 | 1 implemented | `enablebound` | Building entries inside a level (lift in lvl_00 between room1/3/5, `Lobby2Basement_SceneChange` objects with ... |
+| 8 | [TRANS-5](features/level-transitions.md) | 1930 | 0 | 8 | 0 | 5 stand-in, 2 none, 2 implemented | `aienable`, `aimove`, `charsetallowvehicleentry`, `dcamactive` +5 | Natives for the transition scripts still without handler: `PositionPlayer`, `SnapCamera`, `AIMove` ... |
+| 9 | [SCRIPT-285](features/script-system-missions.md) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Nothing known fires the ObjectTriggered of `1-2_Door_Lock_Hint_Script`: no name source besides its own ... |
+| 10 | [SCRIPT-4](features/script-system.md) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The code that hides the revealer targets; the role of the other type-4 parameters (Destination, ObjectTo ... |
+| 11 | [SCRIPT-S220](features/script-system-missions.md) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The reference-trigger join (reference_trigger.cpp) knows only the `TriggerObject` references of build-its ... |
+| 12 | [TRAV-21](features/player-traversal.md) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Brick use handler 0x1b53a8 (messages 3 / 4 into state 145): sender unknown; `TriggerObject` switching ... |
+| 13 | [SCRIPT-S5](features/script-system.md) | 894 | 0 | 8 | 0 | 2 implemented | `callscript`, `spawnscript` | A CallScript / SpawnScript of a script the level does not have continues (the original's result with a null ... |
+| 14 | [SCRIPT-273](features/script-system-natives-animation.md) | 881 | 0 | 8 | 1 | 2 stand-in | `playanimation`, `playcharanim` | PlayCharAnim's state requests 80 / 81 and its cape animation (0x1b71e8), PlayAnimation's class message 253 ... |
+| 15 | [SCRIPT-270](features/script-system-natives-animation.md) | 862 | 0 | 8 | 1 | 3 stand-in | `playcharanim`, `stopcharanim`, `waitforcurrentcharanim` | PlayCharAnim, StopCharAnim and WaitForCurrentCharAnim on Player1 (the player entity through 0x22dacc) do not ... |
+| 16 | [SCRIPT-S26](features/script-system-hud-natives.md) | 798 | 0 | 7 | 0 | 2 stand-in | `setactivewaypoint`, `subobjectivegotoenable` | SetActiveWayPoint shows or hides the waypoint object (disable always applies) and SubObjectiveGoToEnable ... |
+| 17 | [SCRIPT-190](features/script-system-missions.md) | 0 | 736 | 8 | 2 | - | `scriptobject` | Carry gaps: the instigator argument of 0x244f40 is not modelled; the handler 0x1bc4d4 forwards message 0xff ... |
+| 18 | [SCRIPT-114](features/script-system-missions.md) | 687 | 0 | 8 | 0 | 2 stand-in | `destroyprop`, `playcharanim` | The port runs `1-2_MissionStart` one update later than the original at the end of the title camera ... |
+| 19 | [SCRIPT-201](features/script-system-missions.md) | 671 | 0 | 8 | 0 | 4 stand-in, 1 implemented | `automaticmusic`, `camerafollow`, `enabletrafficandpedestrians`, `overridemusic` +1 | Mission 1-1 has a handler (stand-in) for every native it calls: EnableTrafficAndPedestrians (SCRIPT-S230) ... |
+| 20 | [ANIM-S12](features/animation-characters.md) | 623 | 0 | 8 | 0 | 1 stand-in | `playcharanim` | The "already loaded" test of PlayCharAnim (0x21e8b4) knows a character's idle clips and its current script ... |
+| 21 | [SCRIPT-74](features/script-system-hud-natives.md) | 538 | 0 | 7 | 1 | 1 stand-in | `setactivewaypoint` | SetActiveWayPoint 0x26e168 skips a disable when bit 4 of component +0x8e is clear (meaning unknown), and its ... |
+| 22 | [SCRIPT-S98](features/script-system-natives.md) | 537 | 0 | 8 | 0 | 1 stand-in, 1 implemented | `positionobject`, `positionplayer` | PositionObject / PositionPlayer clear only the fall floats of the controller; `comp[0x315]` bits and message ... |
+| 23 | [SCRIPT-274](features/script-system-natives-animation.md) | 497 | 0 | 8 | 2 | 3 stand-in | `loadanimation`, `playanimation`, `unloadanimation` | LoadAnimation and UnloadAnimation keep a name list only (0x23e6e4 / 0x23e518 load and release are not ported) ... |
+| 24 | [SCRIPT-288](features/script-system-missions.md) | 495 | 0 | 8 | 0 | 1 implemented | `positionobject` | `PositionObject` of props and other placed objects (not characters, vehicles or the player) is not applied ... |
+| 25 | [SCRIPT-S4](features/script-system.md) | 484 | 0 | 8 | 0 | 1 stand-in, 1 implemented | `dcamcutscenewait`, `waitfordcam` | A function without a handler does nothing and continues at once; `chase-game` prints its name the first time ... |
+| 26 | [HUD-S9](features/hud-ui.md) | 442 | 0 | 7 | 0 | 1 stand-in | `showdialogbg` | The dialogue background is drawn at full opacity as long as ShowDialogBG is on (no fade) |
+| 27 | [SCRIPT-38](features/script-system-natives.md) | 435 | 0 | 7 | 12 | 2 stand-in, 4 none, 1 implemented | `addtosemitranslist`, `addtosemitransnearcameralist`, `effectfadeobject`, `playparticlesgo` +3 | Batch 13 (C, 20): EffectFadeObject, AddToSemiTransNearCameraList and StreamRoomIn run ... |
+| 28 | [VEH-132](features/vehicles.md) | 0 | 406 | 8 | 0 | - | `leprops/leprop_simpleindestructible` | Measure in the oracle that a leprop_simpleindestructible or a door in the car's way does not stop it (by code ... |
+| 29 | [SCRIPT-57](features/script-system-natives.md) | 362 | 0 | 7 | 13 | 3 stand-in, 1 none | `distancefademid`, `enableshadow`, `enableswitch`, `toggleuseable` | Kind-gated natives: the kind of every class is read (`objectKind`); ToggleUseable, EnableSwitch (use-zone ... |
+| 30 | [SCRIPT-S239](features/script-system-natives-world.md) | 351 | 0 | 7 | 0 | 2 stand-in | `enableswitch`, `toggleuseable` | ToggleUseable and EnableSwitch write the use flag only for instances whose kind registers a use zone ... |
+| 31 | [SCRIPT-36](features/script-system-natives.md) | 347 | 0 | 7 | 12 | 9 implemented | `setforcedstoponmyvehicle`, `stopplayervehicle`, `vehicleallowjumpout`, `vehiclejumpin` +5 | Batch 11 (C, 10 left): VehicleSetLocked, VehicleSetForcedStop, SetForcedStopOnMyVehicle, VehicleAllowJumpOut ... |
+| 32 | [SCRIPT-294](features/script-system-natives-world.md) | 342 | 0 | 7 | 1 | 1 stand-in | `toggleuseable` | The hint registry 0x2219bc searches (records at `*(0x58e9a4 + 0x24)`, singleton "LEGOHintBounds"): who adds ... |
+| 33 | [SCRIPT-296](features/script-system-natives-world.md) | 342 | 0 | 7 | 1 | 1 stand-in | `toggleuseable` | The registration conditions of the use zone: what sets halfword `[entity + 0x10]` bit 7 (post-link of kinds ... |
+| 34 | [PART-3](features/particles.md) | 0 | 281 | 8 | 0 | - | `particles` | The level object class `particles` (constructor 0x1a7f30, handlers 0x1a8394 and 0x1a7d30: `ParticleDef` ... |
+| 35 | [SCRIPT-281](features/script-system-natives-world.md) | 271 | 0 | 6 | 1 | 1 stand-in | `effectfadeobject` | EffectFadeObject: the third node property (0x23f540, flag bit 2), the particle node case, the clock of ... |
+| 36 | [SCRIPT-S232](features/script-system-natives-world.md) | 271 | 0 | 6 | 0 | 1 stand-in | `effectfadeobject` | EffectFadeObject drives `Scene::setInstanceFade` and the instance visibility of placed objects (and their ... |
+| 37 | [SCRIPT-67](features/script-system-hud-natives.md) | 266 | 0 | 8 | 0 | 2 stand-in | `setmissionsummary`, `setmissiontitle` | SetMissionTitle / SetMissionSummary store the key (0x375f98 / 0x375f9c); no reader found, so the title and ... |
+| 38 | [SCRIPT-71](features/script-system-hud-natives.md) | 260 | 0 | 7 | 1 | 1 stand-in | `subobjectivegotoenable` | SubObjectiveGoToEnable keeps its group (registry 0x1fce14 / 0x2a62b8) but the group marker is not drawn ... |
+| 39 | [SCRIPT-S11](features/script-system-dcam.md) | 256 | 0 | 8 | 0 | 1 stand-in | `startdcamtrack` | `StartDCamTrack` looks at the placement position of the object (the live position for the player), not at its ... |
+| 40 | [SCRIPT-S20](features/script-system-natives.md) | 248 | 0 | 7 | 0 | 10 stand-in | `addstuds`, `disablesuperbuiltitsave`, `enablestudsbygroup`, `enablesuperbricks` +6 | Ten batch 27 natives (UnlockAbility, LockAbility, UnlockScanner, EnableSuperBricks, SetParachuteDeployHeight ... |
+| 41 | [VEH-131](features/vehicles.md) | 0 | 225 | 7 | 1 | - | `leprops/leprop_prop`, `props/prop_prop` | The 57 classes of ObjectType 67 (prop_prop 16 and leprop_prop 4 in lvl_01) react to the car's message 0 ... |
+| 42 | [SCRIPT-286](features/script-system-missions.md) | 193 | 0 | 8 | 0 | 1 stand-in | `stopcharanim` | The user-animation state 0x50 is modelled only as "no idle until the clip has finished plus one update": the ... |
+| 43 | [SCRIPT-S12](features/script-system-dcam.md) | 184 | 0 | 7 | 0 | 2 stand-in | `shakescreen`, `snapcamera` | `ShakeScreen` stores its arguments and draws nothing; `SnapCamera` runs the reset 0x2313c8 with argument 0 ... |
+| 44 | [COLL-2](features/collision.md) | 0 | 183 | 7 | 1 | - | `props/parkour_skydive`, `props/prop_prop` | Only the classes with a recovered constructor rule register (props, doors, dummycollision, vehicles) ... |
+| 45 | [SCRIPT-13](features/script-system-natives.md) | 176 | 0 | 7 | 2 | 1 stand-in | `fadescreen` | Mode 4 (the dialog pushed by `0x25d26c`): its drawing, input, open / close code; why `0x1a142c` refuses it ... |
+| 46 | [SCRIPT-S10](features/script-system-natives.md) | 176 | 0 | 7 | 0 | 1 stand-in | `fadescreen` | `FadeScreen` fades linearly over 0.5 s (the duration is the handler's immediate) with a black veil; the tween ... |
+| 47 | [SCRIPT-S18](features/script-system-natives.md) | 175 | 0 | 7 | 0 | 2 stand-in | `resetobject`, `skiptofinalstate` | The six flag natives and ResetObject / SkipToFinalState store their value or message by instance name without ... |
+| 48 | [HUD-S60](features/hud-ui.md) | 0 | 159 | 7 | 0 | - | `props/map_waypoint` | Every waypoint is drawn as icon type 0 (the type byte is a class parameter, read for `map_waypoint` only) ... |
+| 49 | [SCRIPT-73](features/script-system-hud-natives.md) | 150 | 0 | 6 | 1 | 6 stand-in | `blackoutmap`, `disableicon`, `enableminimapwipe`, `enablescanner` +2 | Map and scanner natives (EnableMinimapWipe 0x187f28, EnableScanner, OverrideScannable, PanMapToObject, map ... |
+| 50 | [RENDER-62](features/rendering.md) | 0 | 137 | 8 | 0 | - | `point` | Point lights (type 2) against the oracle: lvl_00 `Point`/`Point01` (Intensity 2, MaxRange 1) on baked surfaces |
 
 ## Player and camera
 
@@ -121,37 +121,37 @@ Items: 666 open items and stand-ins, 132 linked to game usage, 534 with unknown 
 
 ## Vehicles
 
-12 of 82 items linked.
+11 of 83 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
 | 1 | [VEH-S2](features/vehicles.md) | 7016 | 0 | 8 | 0 | 1 implemented | `enableobject` | Owner flags (0x1340 parked, 0x1300 traffic, bit 0 disabled) are not modelled: a vehicle collides while its ... |
 | 2 | [VEH-S105](features/vehicles.md) | 0 | 3014 | 8 | 0 | - | `leprops/leprop_prop`, `leprops/leprop_simpledestructible`, `leprops/leprop_wobblydestructible`, `props/prop_prop` +2 | The prop smash covers leprop_wobblydestructible, prop_trafficlight, prop_respawnabledestructible and ... |
-| 3 | [VEH-126](features/vehicles.md) | 1019 | 0 | 8 | 2 | 1 implemented | `triggerobject` | The rest of a prop's destroy message: screen shake 0x22c500 (`DestroyScreenShakeTime` ... |
-| 4 | [VEH-129](features/vehicles.md) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | A prop destroyed by a car does not fire its `TriggerObject` (0x244f40 from message 1, base handler 0x1f8948) ... |
-| 5 | [VEH-S102](features/vehicles.md) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | A destroyed prop has no screen shake (0x22c500), flash light (0x239698), sound (`ATTR_SFX_DESTROYED`) ... |
-| 6 | [VEH-132](features/vehicles.md) | 0 | 406 | 8 | 0 | - | `leprops/leprop_simpleindestructible` | Measure in the oracle that a leprop_simpleindestructible or a door in the car's way does not stop it (by code ... |
-| 7 | [VEH-131](features/vehicles.md) | 0 | 225 | 7 | 1 | - | `leprops/leprop_prop`, `props/prop_prop` | The 57 classes of ObjectType 67 (prop_prop 16 and leprop_prop 4 in lvl_01) react to the car's message 0 ... |
-| 8 | [VEH-22](features/vehicles.md) | 56 | 0 | 7 | 13 | 1 stand-in, 1 implemented | `positionplayer`, `vehiclesettopspeed` | Script jump in / out for characters other than the player (state 0x17f with vehicle type 0xe9 gets state ... |
-| 9 | [VEH-10](features/vehicles.md) | 6 | 0 | 3 | 0 | 1 stand-in | `vehicleenabledrivingmusic` | Sounds and music: engine start / rev loop / stop, horn (table row +0x12), skid, impact, siren, `MusicTrack` ... |
-| 10 | [VEH-14](features/vehicles.md) | 0 | 5 | 5 | 1 | - | `vehicles/vehicle_aircraft_ufo` | Vehicle class 243 (0xf3, `vehicle_aircraft_ufo`, accepted by the vehicle search) and type 0xb3 have no record ... |
+| 3 | [VEH-132](features/vehicles.md) | 0 | 406 | 8 | 0 | - | `leprops/leprop_simpleindestructible` | Measure in the oracle that a leprop_simpleindestructible or a door in the car's way does not stop it (by code ... |
+| 4 | [VEH-131](features/vehicles.md) | 0 | 225 | 7 | 1 | - | `leprops/leprop_prop`, `props/prop_prop` | The 57 classes of ObjectType 67 (prop_prop 16 and leprop_prop 4 in lvl_01) react to the car's message 0 ... |
+| 5 | [VEH-133](features/vehicles.md) | 64 | 0 | 7 | 1 | 1 stand-in | `destroyprop` | A vehicle that DestroyProp destroyed counts as disabled in the port (no boarding, no dynamic body); the ... |
+| 6 | [VEH-S106](features/vehicles.md) | 64 | 0 | 7 | 0 | 1 stand-in | `destroyprop` | A scripted DestroyProp of a vehicle sets the destroyed state that every `isDisabled` consumer treats as ... |
+| 7 | [VEH-22](features/vehicles.md) | 56 | 0 | 7 | 13 | 1 stand-in, 1 implemented | `positionplayer`, `vehiclesettopspeed` | Script jump in / out for characters other than the player (state 0x17f with vehicle type 0xe9 gets state ... |
+| 8 | [VEH-10](features/vehicles.md) | 6 | 0 | 3 | 0 | 1 stand-in | `vehicleenabledrivingmusic` | Sounds and music: engine start / rev loop / stop, horn (table row +0x12), skid, impact, siren, `MusicTrack` ... |
+| 9 | [VEH-14](features/vehicles.md) | 0 | 5 | 5 | 1 | - | `vehicles/vehicle_aircraft_ufo` | Vehicle class 243 (0xf3, `vehicle_aircraft_ufo`, accepted by the vehicle search) and type 0xb3 have no record ... |
+| 10 | [VEH-S22](features/vehicles.md) | 0 | 5 | 5 | 0 | - | `vehicles/vehicle_aircraft_ufo` | Every boardable vehicle gets the camera of type 183 (record overrides, no stick turn); class 243 ... |
 
 ## Scripts and missions
 
-73 of 141 items linked.
+76 of 144 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
-| 1 | [SCRIPT-S231](features/script-system-natives-world.md) | 7091 | 0 | 8 | 0 | 2 stand-in, 1 implemented | `destroyprop`, `enableobject`, `killobject` | DestroyProp and KillObject destroy every enabled entity (hidden, no collision ... |
-| 2 | [SCRIPT-280](features/script-system-natives-world.md) | 7016 | 0 | 8 | 1 | 1 implemented | `enableobject` | Which classes handle message 1 of the destroy 0x23cd80 (table 0x245004 + kind x 40, +0x14), what the ... |
-| 3 | [SCRIPT-52](features/script-system.md) | 3101 | 0 | 8 | 1 | 2 implemented | `enablebound`, `enabletrigger` | Class owners: an empty object name as the owner itself, the variable `TaskComplete.TASK_COMPLETE` (saved per ... |
-| 4 | [SCRIPT-285](features/script-system-missions.md) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Nothing known fires the ObjectTriggered of `1-2_Door_Lock_Hint_Script`: no name source besides its own ... |
-| 5 | [SCRIPT-4](features/script-system.md) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The code that hides the revealer targets; the role of the other type-4 parameters (Destination, ObjectTo ... |
-| 6 | [SCRIPT-S220](features/script-system-missions.md) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The reference-trigger join (reference_trigger.cpp) knows only the `TriggerObject` references of build-its ... |
-| 7 | [SCRIPT-S5](features/script-system.md) | 894 | 0 | 8 | 0 | 2 implemented | `callscript`, `spawnscript` | A CallScript / SpawnScript of a script the level does not have continues (the original's result with a null ... |
-| 8 | [SCRIPT-273](features/script-system-natives-animation.md) | 881 | 0 | 8 | 1 | 2 stand-in | `playanimation`, `playcharanim` | PlayCharAnim's state requests 80 / 81 and its cape animation (0x1b71e8), PlayAnimation's class message 253 ... |
-| 9 | [SCRIPT-270](features/script-system-natives-animation.md) | 862 | 0 | 8 | 1 | 3 stand-in | `playcharanim`, `stopcharanim`, `waitforcurrentcharanim` | PlayCharAnim, StopCharAnim and WaitForCurrentCharAnim on Player1 (the player entity through 0x22dacc) do not ... |
-| 10 | [SCRIPT-S26](features/script-system-hud-natives.md) | 798 | 0 | 7 | 0 | 2 stand-in | `setactivewaypoint`, `subobjectivegotoenable` | SetActiveWayPoint shows or hides the waypoint object (disable always applies) and SubObjectiveGoToEnable ... |
+| 1 | [SCRIPT-52](features/script-system.md) | 3101 | 0 | 8 | 1 | 2 implemented | `enablebound`, `enabletrigger` | Class owners: an empty object name as the owner itself, the variable `TaskComplete.TASK_COMPLETE` (saved per ... |
+| 2 | [SCRIPT-285](features/script-system-missions.md) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Nothing known fires the ObjectTriggered of `1-2_Door_Lock_Hint_Script`: no name source besides its own ... |
+| 3 | [SCRIPT-4](features/script-system.md) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The code that hides the revealer targets; the role of the other type-4 parameters (Destination, ObjectTo ... |
+| 4 | [SCRIPT-S220](features/script-system-missions.md) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The reference-trigger join (reference_trigger.cpp) knows only the `TriggerObject` references of build-its ... |
+| 5 | [SCRIPT-S5](features/script-system.md) | 894 | 0 | 8 | 0 | 2 implemented | `callscript`, `spawnscript` | A CallScript / SpawnScript of a script the level does not have continues (the original's result with a null ... |
+| 6 | [SCRIPT-273](features/script-system-natives-animation.md) | 881 | 0 | 8 | 1 | 2 stand-in | `playanimation`, `playcharanim` | PlayCharAnim's state requests 80 / 81 and its cape animation (0x1b71e8), PlayAnimation's class message 253 ... |
+| 7 | [SCRIPT-270](features/script-system-natives-animation.md) | 862 | 0 | 8 | 1 | 3 stand-in | `playcharanim`, `stopcharanim`, `waitforcurrentcharanim` | PlayCharAnim, StopCharAnim and WaitForCurrentCharAnim on Player1 (the player entity through 0x22dacc) do not ... |
+| 8 | [SCRIPT-S26](features/script-system-hud-natives.md) | 798 | 0 | 7 | 0 | 2 stand-in | `setactivewaypoint`, `subobjectivegotoenable` | SetActiveWayPoint shows or hides the waypoint object (disable always applies) and SubObjectiveGoToEnable ... |
+| 9 | [SCRIPT-190](features/script-system-missions.md) | 0 | 736 | 8 | 2 | - | `scriptobject` | Carry gaps: the instigator argument of 0x244f40 is not modelled; the handler 0x1bc4d4 forwards message 0xff ... |
+| 10 | [SCRIPT-114](features/script-system-missions.md) | 687 | 0 | 8 | 0 | 2 stand-in | `destroyprop`, `playcharanim` | The port runs `1-2_MissionStart` one update later than the original at the end of the title camera ... |
 
 ## World and levels
 
@@ -244,6 +244,6 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md)
 - [vehicles-damage.md](features/vehicles-damage.md): VEH-120 (+3), VEH-125 (+3), VEH-113 (+2), VEH-115 (+2), VEH-124 (+2), VEH-121 (+1), VEH-123 (+1), VEH-122, VEH-128, VEH-S100, VEH-S101, VEH-S103, VEH-S104, VEH-S90, VEH-S93, VEH-S96, VEH-S97, VEH-S98, VEH-S99
 - [vehicles-physics-collision.md](features/vehicles-physics-collision.md): VEH-70 (+2), VEH-91 (+2), VEH-100 (+1), VEH-101 (+1), VEH-102 (+1), VEH-S52, VEH-S60, VEH-S62, VEH-S81, VEH-S82, VEH-S86, VEH-S87
 - [vehicles-physics.md](features/vehicles-physics.md): VEH-6 (+22), VEH-51 (+3), VEH-42 (+2), VEH-41 (+1), VEH-50 (+1), VEH-81 (+1), VEH-54, VEH-55, VEH-S30, VEH-S31, VEH-S32, VEH-S40, VEH-S41, VEH-S43, VEH-S7
-- [vehicles.md](features/vehicles.md): VEH-16 (+2), VEH-13 (+1), VEH-130 (+1), VEH-21 (+1), VEH-99 (+1), VEH-106, VEH-127, VEH-15, VEH-23, VEH-7, VEH-S11, VEH-S4, VEH-S5, VEH-S89
+- [vehicles.md](features/vehicles.md): VEH-16 (+2), VEH-126 (+1), VEH-13 (+1), VEH-130 (+1), VEH-21 (+1), VEH-99 (+1), VEH-106, VEH-127, VEH-15, VEH-23, VEH-7, VEH-S102, VEH-S11, VEH-S4, VEH-S5, VEH-S89
 - [viewer-tools.md](features/viewer-tools.md): TOOLS-1, TOOLS-15, TOOLS-2, TOOLS-3, TOOLS-4, TOOLS-S1
 - [world-streaming.md](features/world-streaming.md): WSTREAM-9 (+5), WSTREAM-30 (+2), WSTREAM-32 (+1), WSTREAM-10, WSTREAM-11, WSTREAM-12, WSTREAM-14, WSTREAM-31, WSTREAM-4, WSTREAM-5, WSTREAM-S1, WSTREAM-S3, WSTREAM-S30, WSTREAM-S31, WSTREAM-S32, WSTREAM-S33

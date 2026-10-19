@@ -36,6 +36,26 @@ int main(int argc, char** argv) {
         const assets::ClassLookup classOf = assets::archiveClassLookup(archive);
 
         {
+            // DestroyProp targets of lvl_01 (census over the 30 level files with the C++ loader, 2026-10-19): 1-3_smash_crate is a leprops/leprop_prop
+            // (kind 67), 1-3_Fence_08 a leprops/leprop_wobblydestructible (119), 1-4_Police_Car a vehicles/vehicle_police_trooper (183). Reactions of
+            // message 1: docs/re/script-natives-world.md, entry 2026-10-19T08:53:30.
+            assets::Level destroyLevel = level;
+            assets::LevelScript script;
+            script.nameHash = assets::nameHash("r27_destroy");
+            script.calls = {{"DestroyProp", {"1-3_smash_crate"}}, {"DestroyProp", {"1-3_Fence_08"}}, {"DestroyProp", {"1-4_Police_Car"}}};
+            destroyLevel.scripts.push_back(script);
+            assets::PlacedObjectState state = runtime::levelInitialState(destroyLevel, classOf);
+            runtime::ScriptRunner runner(destroyLevel, state);
+            runner.loadObjectKinds(classOf);
+            const runtime::ObjectNativeState& natives = runner.objectNatives();
+            require(natives.kindOf("1-3_smash_crate") == 67 && natives.kindOf("1-3_fence_08") == 119 && natives.kindOf("1-4_police_car") == 183, "kinds of the targets");
+            require(runner.start("r27_destroy") && runner.threadCount() == 0, "r27_destroy");
+            require(state.destroyed.count("1-3_smash_crate") && state.isHidden("1-3_smash_crate"), "kind 67 is destroyed and hidden");
+            require(state.destroyed.count("1-3_fence_08") && state.isHidden("1-3_fence_08"), "kind 119 is destroyed and hidden");
+            require(state.destroyed.count("1-4_police_car") && !state.isHidden("1-4_police_car"), "the vehicle is destroyed and stays visible (it breaks)");
+        }
+
+        {
             // Script 1-3_parkour_working: ToggleUseable(1-3_grab_01..04, 1), EnableObject(BrickGrab_Mount_Hint_06, 1).
             assets::PlacedObjectState state = runtime::levelInitialState(level, classOf);
             runtime::ScriptRunner runner(level, state);

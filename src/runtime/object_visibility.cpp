@@ -5,7 +5,7 @@ namespace chase::runtime {
 std::vector<bool> drawnPlacements(const std::vector<assets::Placement>& placements, const assets::PlacedObjectState& state) {
     std::vector<bool> drawn;
     drawn.reserve(placements.size());
-    for (const assets::Placement& placement : placements) drawn.push_back(!state.isDisabled(placement.instance));
+    for (const assets::Placement& placement : placements) drawn.push_back(!state.isHidden(placement.instance));
     return drawn;
 }
 

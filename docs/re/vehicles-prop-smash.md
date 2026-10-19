@@ -1,6 +1,6 @@
 # Vehicles: which props a vehicle contact destroys
 
-What a moving vehicle does to the placed props of a level: the grid test for box and mesh entries, the reaction of each prop class to the vehicle's message 0, the bricks it releases and the timing against the port. The first findings (the pass 0x16ce9c -> 0x275c00, the wobbly handler) are in [vehicles-physics-props.md](vehicles-physics-props.md#ts-20261016-111522). Plan: [features/vehicles.md](../plans/features/vehicles.md) (VEH-103 closed here, VEH-129..132 open).
+What a moving vehicle does to the placed props of a level: the grid test for box and mesh entries, the reaction of each prop class to the vehicle's message 0, the bricks it releases and the timing against the port. The first findings (the pass 0x16ce9c -> 0x275c00, the wobbly handler) are in [vehicles-physics-props.md](vehicles-physics-props.md#ts-20261016-111522). Plan: [features/vehicles.md](../plans/features/vehicles.md) (VEH-103 and VEH-129 closed here, VEH-130..132 open).
 
 ## Current state
 
@@ -8,7 +8,8 @@ What a moving vehicle does to the placed props of a level: the grid test for box
 - Per class, the vehicle's message 0 (damage 100, kind 11) destroys leprop_wobblydestructible (health), prop_trafficlight (health), prop_respawnabledestructible and leprop_simpledestructible (any damage); doors and leprop_simpleindestructible ignore it; the 57 classes of ObjectType 67 use the hit-sequence machine (not ported). [§2026-10-18T19:56:24](#ts-20261018-195624)
 - The prop that `veh-smash-prop` destroys at update 18 is a traffic light, not a lamp post; a smashed prop releases 9 bricks (six plus three super bricks) in the oracle, 6 in the port. [§2026-10-18T19:56:24](#ts-20261018-195624)
 - The port destroys the traffic light in frame 19 and the tree in frame 50 as the oracle does, and a lamp post one update early (frame 44 against 45). [§2026-10-18T19:56:24](#ts-20261018-195624)
-- Open: that lamp update (VEH-130), the type 67 hit sequences (VEH-131), indestructible props in the car's way (VEH-132), the prop's TriggerObject on a car smash (VEH-129).
+- A prop a car smashes goes through the same entity destroy as an on-foot hit: the Dead event, message 1 (explosion, bricks), the prop's TriggerObject and the hide. [script-natives-world.md §2026-10-19T08:53:30](script-natives-world.md#ts-20261019-085330)
+- Open: that lamp update (VEH-130), the type 67 hit sequences (VEH-131), indestructible props in the car's way (VEH-132).
 
 <a id="ts-20261018-195624"></a>
 

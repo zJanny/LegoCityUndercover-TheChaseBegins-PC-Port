@@ -6,6 +6,7 @@
 // -96 = 0xffa0 from row 19). The first row that shows the smash is row 19. Exits with 77 without data.
 #include "assets/assets.hpp"
 #include "assets/object_collision.hpp"
+#include "runtime/script_runner.hpp"
 #include "runtime/vehicle_prop_smash.hpp"
 
 #include <cmath>
@@ -115,6 +116,26 @@ const Recorded kCarRows[] = {
 
 constexpr int kLampPortFrame = 44;
 
+// A prop that a car smashes goes through the same entity destroy as an on-foot hit (0x23cd80, message 1 of the base prop handler 0x1f8948), so its
+// TriggerObject fires. 1-3_Crate_Swing is a leprops/leprop_wobblydestructible (kind 119) of lvl_01 whose TriggerObject names the object
+// 1-3_Crate_Swing_Script (level data, census of the C++ loader 2026-10-19).
+void realTriggerObject(const assets::Level& level, const VehiclePropSmasher& smasher, const assets::ClassLookup& classOf) {
+    const std::optional<SmashedProp> data = smasher.destroyData("1-3_crate_swing");
+    expect(data.has_value() && data->effects.explosionParticle != 0, "the crate has the data the car path hands to the destroy");
+    assets::PlacedObjectState state;
+    state.disabled.insert("1-3_crate_swing_script");
+    ScriptRunner runner(level, state);
+    runner.loadObjectKinds(classOf);
+    runner.destroyEntity("1-3_crate_swing");
+    expect(state.destroyed.count("1-3_crate_swing") == 1 && state.isHidden("1-3_crate_swing"), "the smashed crate is destroyed and hidden");
+    expect(!state.isHidden("1-3_crate_swing_script"), "TriggerObject enables its object (0x244f40)");
+    bool sent = false;
+    for (const ScriptObjectMessage& message : runner.takeObjectMessages()) sent |= message.instance == "1-3_crate_swing_script" && message.message == kMessageTrigger;
+    expect(sent, "and sends it the trigger message 0xff");
+    runner.destroyEntity("1-3_crate_swing");
+    expect(runner.takeObjectClassMessages().size() == 1, "a second destroy of the same entity does nothing");
+}
+
 void realOtherClasses(const assets::Level& level, const std::vector<assets::ObjectCollision>& candidates, const assets::ClassLookup& classOf) {
     SmashingVehicle car;
     car.nodeBounds = SmashBox{{-0.00140833855f, 0.0381139517f, -0.0761752129f}, {1.18461537f, 1.25735652f, 2.51457548f}};
@@ -190,6 +211,7 @@ void real(const char* fib, const char* names) {
     smasher.load(level, assets::archiveClassLookup(archive), candidates);
     realOtherClasses(level, candidates, assets::archiveClassLookup(archive));
     realLamp(level, candidates, assets::archiveClassLookup(archive));
+    realTriggerObject(level, smasher, assets::archiveClassLookup(archive));
     expect(smasher.propCount() == 727, "727 smashable props in lvl_01: 674 leprop_wobblydestructible, 38 prop_trafficlight, 15 prop_respawnabledestructible (level data census, box and mesh entries)", double(smasher.propCount()));
     const assets::PlacedObjectState untouched;
     int firstSmash = -1, smasherRow = -1;

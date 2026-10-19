@@ -130,6 +130,8 @@ bool PlacedObjectState::isDisabled(const std::string& instance) const {
     return disabled.count(key) != 0 || destroyed.count(key) != 0;
 }
 
+bool PlacedObjectState::isHidden(const std::string& instance) const { return disabled.count(lower(instance)) != 0; }
+
 bool PlacedObjectState::collisionEnabled(const std::string& instance, bool initial) const {
     const auto found = collisionOverride.find(lower(instance));
     return found == collisionOverride.end() ? initial : found->second;

@@ -1,6 +1,7 @@
 #include "runtime/natives_objects.hpp"
 
 #include "assets/object_classes.hpp"
+#include "runtime/level_start.hpp"
 #include <algorithm>
 #include <cctype>
 #include <cstdint>
@@ -160,11 +161,19 @@ std::vector<std::string> registerNested(const std::string& path, const assets::L
 void ObjectNativeState::loadKinds(const assets::Level& level, const assets::ClassLookup& classOf) {
     kinds_.clear();
     pushHandles_.clear();
+    destroyTriggers_.clear();
+    std::map<std::uint32_t, std::string> instanceByHash;
+    for (const assets::LevelObject& object : level.objects) instanceByHash[assets::nameHash(object.instance)] = lower(object.instance);
     for (const assets::LevelObject& object : level.objects) {
         const assets::Level* classFile = classOf(object.className);
         if (!classFile) continue;
         const std::string path = lower(object.instance);
         kinds_[path] = assets::objectKind(object, *classFile);
+        if (destroyRunsPropHandler(kinds_[path]))
+            if (const assets::LevelParam* reference = effectiveParam(object, *classFile, assets::nameHash("TriggerObject"))) {
+                const auto target = instanceByHash.find(assets::objectReferenceHash(*reference));
+                if (target != instanceByHash.end()) destroyTriggers_[path] = target->second;
+            }
         std::vector<std::string> descendants = registerNested(path, *classFile, classOf, kinds_, 0);
         if (kinds_[path] != kKindPushable) continue;
         std::vector<std::string>& handles = pushHandles_[path];
@@ -179,12 +188,16 @@ std::optional<std::uint8_t> ObjectNativeState::kindOf(const std::string& instanc
     return found->second;
 }
 
-bool ObjectNativeState::destroy(const std::string& instance, bool disabled, const ClassHandles& classHandles) {
-    if (disabled || destroyed_.count(instance)) return false;
+std::optional<ObjectNativeState::DestroyResult> ObjectNativeState::destroy(const std::string& instance, bool inactive, const ClassMessage& classMessage) {
+    if (inactive || destroyed_.count(instance)) return std::nullopt;
     messages_.push_back({instance, kMessageDestroy});
-    if (classHandles && classHandles(instance, kMessageDestroy)) return false;
+    if (classMessage) classMessage(instance, kMessageDestroy);
     destroyed_.insert(instance);
-    return true;
+    DestroyResult result;
+    if (const auto kind = kindOf(instance)) result.reaction = destroyReaction(*kind);
+    const auto trigger = destroyTriggers_.find(instance);
+    if (trigger != destroyTriggers_.end()) result.triggerObject = trigger->second;
+    return result;
 }
 
 const ObjectNativeFlags* ObjectNativeState::flags(const std::string& instance) const {

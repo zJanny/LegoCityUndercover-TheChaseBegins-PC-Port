@@ -8,6 +8,7 @@
 #include <map>
 #include <stdexcept>
 #include <string>
+#include <tuple>
 
 namespace {
 using chase::assets::Level;
@@ -177,31 +178,6 @@ void destroyPropLeavesDisabledEntities() {
     require(!state.isDisabled("car"), "the later EnableObject works as before");
 }
 
-void destroyPropRespectsAClassThatHandlesMessageOne() {
-    Level level;
-    add(level, "d", {{"DestroyProp", {"Truck"}}, {"DestroyProp", {"Truck"}}, {"EnableObject", {"Crate", "0"}}, {"DestroyProp", {"Crate"}}, {"EnableObject", {"Crate", "1"}}});
-    PlacedObjectState state;
-    ScriptRunner runner(level, state);
-    int handled = 0;
-    runner.setClassMessageHandler([&](const std::string& instance, std::uint8_t message) {
-        ++handled;
-        return instance == "truck" && message == 1;
-    });
-    runner.start("d");
-    require(handled == 2, "the handler is asked for each call that gets past the disabled and destroyed tests (the truck twice, the disabled crate not)");
-    require(state.destroyed.empty(), "a handled message leaves the entity (the vehicle breaks instead, 0x159bd0)");
-    require(runner.takeObjectClassMessages().size() == 2, "each call still sent the message");
-}
-
-void destroyedEntityStaysDestroyedAfterEnableObject() {
-    Level level;
-    add(level, "d", {{"DestroyProp", {"Crate"}}, {"EnableObject", {"Crate", "1"}}});
-    PlacedObjectState state;
-    ScriptRunner runner(level, state);
-    runner.start("d");
-    require(state.isDisabled("crate"), "EnableObject does not bring a destroyed entity back (stand-in SCRIPT-S231: the original's 0x1ddd00 on a destroyed entity is not read)");
-}
-
 chase::assets::LevelParam objectType(std::uint32_t value) {
     chase::assets::LevelParam param;
     param.hash = chase::assets::nameHash("ObjectType");
@@ -220,6 +196,129 @@ struct KindClasses {
         };
     }
 };
+
+chase::assets::LevelParam triggerObjectParam(std::uint32_t flags, const std::string& target) {
+    chase::assets::LevelParam param;
+    param.hash = chase::assets::nameHash("TriggerObject");
+    param.flags = std::uint16_t(flags);
+    param.type = 4;
+    chase::assets::Bytes block(8, 0);
+    const std::uint32_t hash = target.empty() ? 0 : chase::assets::nameHash(target);
+    for (int i = 0; i < 4; ++i) block[4 + i] = std::uint8_t(hash >> (8 * i));
+    param.blocks.push_back(block);
+    return param;
+}
+
+// Level with one object per (instance, class, kind). Kinds and the reaction of message 1 per kind: docs/re/script-natives-world.md, entry
+// 2026-10-19T08:53:30. The class names are the real classes of the kinds (kind 85 leprops/leprop_simpledestructible, 64 props/prop_platform,
+// 58 props/ability_phil_m_test, 42 leprops/leprop_door, 183 vehicles/vehicle_police_trooper, 27 chars/char_ai_prisoner01, 67 props/prop_prop).
+struct DestroyFixture {
+    KindClasses kinds;
+    Level level;
+    void object(const std::string& instance, const std::string& className, int kind, const std::string& triggerTarget = std::string()) {
+        Level classFile;
+        classFile.defaults.push_back(objectType(std::uint32_t(kind)));
+        if (!triggerTarget.empty()) classFile.defaults.push_back(triggerObjectParam(2, std::string()));
+        kinds.classes[className] = classFile;
+        chase::assets::LevelObject placed;
+        placed.instance = instance;
+        placed.className = className;
+        if (!triggerTarget.empty()) placed.params.push_back(triggerObjectParam(2, triggerTarget));
+        level.objects.push_back(placed);
+    }
+};
+
+void destroyPropActsPerKind() {
+    DestroyFixture fixture;
+    for (const auto& [instance, className, kind] : std::vector<std::tuple<std::string, std::string, int>>{
+             {"Crate", "leprops/leprop_simpledestructible", 85}, {"Platform", "props/prop_platform", 64}, {"Switch", "props/ability_phil_m_test", 58},
+             {"Door", "leprops/leprop_door", 42}, {"Truck", "vehicles/vehicle_police_trooper", 183}, {"Prisoner", "chars/char_ai_prisoner01", 27},
+             {"Sign", "props/prop_prop", 67}})
+        fixture.object(instance, className, kind);
+    add(fixture.level, "d", {{"DestroyProp", {"Crate"}}, {"DestroyProp", {"Platform"}}, {"DestroyProp", {"Switch"}}, {"DestroyProp", {"Door"}},
+                             {"DestroyProp", {"Truck"}}, {"KillObject", {"Prisoner"}}, {"KillObject", {"Sign"}}, {"DestroyProp", {"Crate"}},
+                             {"DestroyProp", {"Nobody"}}});
+    PlacedObjectState state;
+    ScriptRunner runner(fixture.level, state);
+    runner.loadObjectKinds(fixture.kinds.lookup());
+    std::vector<std::string> told;
+    runner.setClassMessageHandler([&](const std::string& instance, std::uint8_t message) {
+        require(message == 1, "only message 1 reaches the class");
+        told.push_back(instance);
+    });
+    require(runner.start("d") && runner.threadCount() == 0, "runs to the end");
+    for (const char* name : {"crate", "platform", "switch", "door", "truck", "prisoner", "sign"})
+        require(state.destroyed.count(name) == 1, std::string("no handler returns non-zero for message 1: ") + name + " is destroyed");
+    for (const char* hidden : {"crate", "platform", "prisoner", "sign"})
+        require(state.isHidden(hidden), std::string("message 1 reaches the disable 0x2428c0 for ") + hidden);
+    for (const char* shown : {"switch", "door", "truck"})
+        require(!state.isHidden(shown) && state.isDisabled(shown), std::string(shown) + " is destroyed but not disabled (stays visible)");
+    require(told.size() == 8 && told[0] == "crate" && told[7] == "nobody", "the class is told once per entity that gets past the destroyed test");
+    require(state.destroyed.count("nobody") == 1 && !state.isHidden("nobody"), "an instance without a kind has no reaction");
+}
+
+void destroyedEntityComesBackWithEnableObjectButWithoutCollision() {
+    DestroyFixture fixture;
+    fixture.object("Crate", "leprops/leprop_simpledestructible", 85);
+    add(fixture.level, "d", {{"DestroyProp", {"Crate"}}, {"EnableObject", {"Crate", "1"}}, {"DestroyProp", {"Crate"}}});
+    PlacedObjectState state;
+    ScriptRunner runner(fixture.level, state);
+    runner.loadObjectKinds(fixture.kinds.lookup());
+    runner.start("d");
+    require(!state.isHidden("crate"), "EnableObject clears the disabled bit and shows the node (0x242cf0 does not test the destroyed bit)");
+    require(state.isDisabled("crate") && state.destroyed.count("crate") == 1, "the destroyed bit stays, so the collision body stays gone");
+    require(runner.takeObjectClassMessages().size() == 1, "a destroyed entity gets no second message 1 even when it is shown again");
+}
+
+void destroyRaisesTheDeadEventAndTheTriggerObjectOfThePropHandler() {
+    DestroyFixture fixture;
+    fixture.object("Crate", "leprops/leprop_simpledestructible", 85, "Gate");
+    fixture.object("Gate", "props/prop_plain", 86);
+    fixture.object("Sign", "props/prop_prop", 67, "Gate");
+    chase::assets::LevelTrigger dead;
+    dead.nameHash = chase::assets::nameHash("CrateDead");
+    dead.event = "Dead";
+    dead.objectName = "Crate";
+    dead.scriptName = "crate_dead";
+    fixture.level.triggers.push_back(dead);
+    chase::assets::LevelTrigger triggered;
+    triggered.nameHash = chase::assets::nameHash("GateOn");
+    triggered.event = "ObjectTriggered";
+    triggered.objectName = "Gate";
+    triggered.scriptName = "gate_on";
+    fixture.level.triggers.push_back(triggered);
+    add(fixture.level, "sign", {{"EnableObject", {"Gate", "0"}}, {"DestroyProp", {"Sign"}}});
+    add(fixture.level, "crate", {{"DestroyProp", {"Crate"}}});
+    add(fixture.level, "crate_dead", {{"=", {"CrateDead", "1"}}});
+    add(fixture.level, "gate_on", {{"=", {"GateOn", "1"}}});
+    PlacedObjectState state;
+    ScriptRunner runner(fixture.level, state);
+    runner.loadObjectKinds(fixture.kinds.lookup());
+    runner.start("sign");
+    require(state.destroyed.count("sign") == 1 && state.isHidden("sign"), "kind 67 hides");
+    require(state.isHidden("gate"), "kind 67 does not run the TriggerObject of the base prop handler");
+    runner.start("crate");
+    const float player[3] = {0, 0, 0};
+    runner.checkTriggers(player);
+    runner.update(0.034f);
+    runner.checkTriggers(player);
+    runner.update(0.034f);
+    require(runner.variable("CrateDead") == 1, "the Dead event is raised before the entity is disabled, so its trigger finds it enabled");
+    require(runner.variable("GateOn") == 1 && !state.isDisabled("gate"), "kind 85 runs the base prop handler: TriggerObject enables the Gate and raises ObjectTriggered");
+    bool triggerMessage = false;
+    for (const auto& message : runner.takeObjectMessages()) triggerMessage |= message.instance == "gate" && message.message == chase::runtime::kMessageTrigger;
+    require(triggerMessage, "0x244f40 sends message 0xff to the triggered object");
+}
+
+void destroyReactionTableKeepsRealClassKinds() {
+    using chase::runtime::DestroyReaction;
+    using chase::runtime::destroyReaction;
+    for (const int hides : {27, 64, 67, 71, 85, 102, 119, 134, 204, 214, 242}) require(destroyReaction(std::uint8_t(hides)) == DestroyReaction::HidesEntity, "hides " + std::to_string(hides));
+    for (const int none : {42, 58, 38, 139, 141, 185, 186, 6, 255}) require(destroyReaction(std::uint8_t(none)) == DestroyReaction::NoReaction, "no reaction " + std::to_string(none));
+    require(destroyReaction(183) == DestroyReaction::BreaksVehicle, "the vehicle class breaks");
+    for (const int unread : {31, 45, 100, 125, 159, 208, 222, 243}) require(!chase::runtime::destroyReactionRead(std::uint8_t(unread)), "unread " + std::to_string(unread));
+    require(chase::runtime::destroyReactionRead(85) && chase::runtime::destroyReactionRead(58), "read kinds");
+}
 
 void kindGatesDecideTheRegistryAndShadowNatives() {
     // Kinds from docs/re/object-kinds.md: 58 (prop_switchpull) and 20 (parkour_brickgrab_new) register a use zone with 0x23e130, 42
@@ -302,8 +401,10 @@ int main() {
         batchNativesAreListedAsHandled();
         destroyPropRemovesAnEnabledEntity();
         destroyPropLeavesDisabledEntities();
-        destroyPropRespectsAClassThatHandlesMessageOne();
-        destroyedEntityStaysDestroyedAfterEnableObject();
+        destroyPropActsPerKind();
+        destroyedEntityComesBackWithEnableObjectButWithoutCollision();
+        destroyRaisesTheDeadEventAndTheTriggerObjectOfThePropHandler();
+        destroyReactionTableKeepsRealClassKinds();
         kindGatesDecideTheRegistryAndShadowNatives();
         enableObjectFadeEndsLikeEnableObjectUnlessTheKindAnswers();
     } catch (const std::exception& error) {

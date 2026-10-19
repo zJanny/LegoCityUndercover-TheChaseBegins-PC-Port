@@ -179,6 +179,7 @@ private:
     void vehicleDamageEffects(std::size_t vehicleIndex, const chase::runtime::DamageOutcome& outcome);
     void stepVehicleFlashes();
     void propDestroyedEffects(const chase::runtime::SmashedProp& prop);
+    void propDestroyMessage(const std::string& lowerInstance);
     // STAND-IN VEH-S104: the line tests 0x21ab20 / 0x22b108 of a brick burst are the wheel ray of the collision world, vehicles skipped.
     chase::runtime::DebrisLineTest debrisLineStandIn() const;
     void applyVehicleDamage(std::size_t vehicleIndex, const chase::runtime::DamageMessage& message, float speed);

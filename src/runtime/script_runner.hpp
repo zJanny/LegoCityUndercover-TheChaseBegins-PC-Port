@@ -180,9 +180,12 @@ public:
     // Flags and class messages written by the object natives (natives_objects.hpp).
     const ObjectNativeState& objectNatives() const { return objectNatives_; }
     std::vector<ObjectClassMessage> takeObjectClassMessages() { return objectNatives_.takeMessages(); }
-    // The class message handler 0x244fc8 of DestroyProp / KillObject: true when the object's class takes message 1 itself (vehicles break), which
-    // leaves the entity in place.
-    void setClassMessageHandler(ObjectNativeState::ClassHandles handler) { classHandles_ = std::move(handler); }
+    // The host's effect of message 1 that DestroyProp / KillObject send to a class (0x244fc8): the vehicle break, the prop's explosion and bricks.
+    // Whether the entity is hidden and destroyed afterwards follows destroyReaction (destroy_message.hpp).
+    // 0x23cd80 for an entity that a damage handler destroys (a prop hit on foot or by a car) or that DestroyProp / KillObject name: the Dead event,
+    // message 1 to the class, the TriggerObject of the prop handler, then the destroyed bit and, for the classes that hide, the disabled bit.
+    void destroyEntity(const std::string& lowerInstance);
+    void setClassMessageHandler(ObjectNativeState::ClassMessage handler) { classMessage_ = std::move(handler); }
     // EffectFadeObject, EnableDistanceFade and AddToSemiTransNearCameraList (natives_effects.hpp).
     const EffectNativeState& effects() const { return effectNatives_; }
     // SetPartyCharacter requests and the rooms StreamRoomIn asked for since the last call (lower case, "room40"), once per update the script waits.
@@ -287,7 +290,7 @@ private:
     std::vector<ScriptPlacement> placements_;
     std::vector<std::string> sceneChanges_;
     ObjectNativeState objectNatives_;
-    ObjectNativeState::ClassHandles classHandles_;
+    ObjectNativeState::ClassMessage classMessage_;
     EffectNativeState effectNatives_;
     std::vector<PartyRequest> partyRequests_;
     std::vector<std::string> roomRequests_;

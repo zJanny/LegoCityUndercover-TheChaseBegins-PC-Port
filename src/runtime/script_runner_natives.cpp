@@ -18,8 +18,16 @@ std::string withoutQuotes(const std::string& text) {
 
 }
 
-void ScriptRunner::destroyNative(const std::string& lowerInstance) {
-    if (objectNatives_.destroy(lowerInstance, state_.isDisabled(lowerInstance), classHandles_)) state_.destroyed.insert(lowerInstance);
+void ScriptRunner::destroyNative(const std::string& lowerInstance) { destroyEntity(lowerInstance); }
+
+void ScriptRunner::destroyEntity(const std::string& lowerInstance) {
+    if (state_.isDisabled(lowerInstance)) return;
+    fireObjectEvent("dead", lowerInstance);
+    const std::optional<ObjectNativeState::DestroyResult> result = objectNatives_.destroy(lowerInstance, false, classMessage_);
+    if (!result) return;
+    if (!result->triggerObject.empty()) triggerObjectEnabling(result->triggerObject);
+    state_.destroyed.insert(lowerInstance);
+    if (result->reaction == DestroyReaction::HidesEntity) state_.disabled.insert(lowerInstance);
 }
 
 void ScriptRunner::effectNative(const assets::ScriptCall& call) {

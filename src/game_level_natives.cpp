@@ -9,13 +9,13 @@ namespace runtime = chase::runtime;
 
 void LevelSession::installScriptHooks() {
     levelScripts.setClassMessageHandler([this](const std::string& instance, std::uint8_t message) {
-        if (message != runtime::kMessageDestroy) return false;
+        if (message != runtime::kMessageDestroy) return;
         for (std::size_t i = 0; i < boardingVehicles.size() && i < vehicleDrives.size(); ++i)
             if (game_doors::lowerCase(boardingVehicles[i].instance) == instance) {
                 pendingVehicleBreaks.push_back(i);
-                return true;
+                return;
             }
-        return false;
+        propDestroyMessage(instance);
     });
 }
 

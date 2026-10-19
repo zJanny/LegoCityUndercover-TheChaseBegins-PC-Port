@@ -3,6 +3,7 @@
 // The handlers only store the value; the systems that read the flags (targeting, interaction prompts, shove, destruction,
 // door update) are not ported yet, so the state is recorded here. No SDL dependency.
 #include "assets/assets.hpp"
+#include "runtime/destroy_message.hpp"
 #include <cstdint>
 #include <functional>
 #include <map>
@@ -39,7 +40,7 @@ bool objectNativeIsStandIn(ObjectNativeKind kind);
 // ResetObject 0x1b25f8 and SkipToFinalState 0x270078 call the class message handler 0x244fc8 with these numbers.
 constexpr std::uint8_t kMessageReset = 8;
 constexpr std::uint8_t kMessageSkipToFinalState = 54;
-// DestroyProp / KillObject 0x1a2fe4 -> 0x23cd80 send the class message 1 (the vehicle class handles it as its break, 0x159bd0).
+// DestroyProp / KillObject 0x1a2fe4 -> 0x23cd80 send the class message 1 (the vehicle class answers it with its break, 0x159bd0; destroy_message.hpp).
 constexpr std::uint8_t kMessageDestroy = 1;
 // Kind bytes (entity +0x12, the class file's ObjectType, docs/re/object-kinds.md) the natives test.
 constexpr std::uint8_t kKindPushable = 71;
@@ -85,11 +86,17 @@ public:
     // enableobjectfade sends message 24 first; true when no handler of the instance's kind answers it, so the native ends like EnableObject
     // without the message 251 (0x26fb10 / 0x26fb1c). An instance of an unknown kind counts as not answering.
     bool enableObjectFadeFallsBack(const std::string& lowerCaseInstance) const;
-    // 0x23cd80: nothing when the entity is disabled (halfword +0x10 bit 0) or already destroyed (word +0xc bit 0x10). Otherwise message 1 goes to
-    // the class (`classHandles` says whether its handler took it); an unhandled message destroys the entity (bit 0x10 of +0xc, node dropped
-    // by 0x2320f8). True when the entity was destroyed by this call.
-    using ClassHandles = std::function<bool(const std::string&, std::uint8_t)>;
-    bool destroy(const std::string& lowerCaseInstance, bool disabled, const ClassHandles& classHandles);
+    // 0x23cd80: nothing when the entity is `inactive` (disabled, halfword +0x10 bit 0, or destroyed, word +0xc bit 0x10). Otherwise message 1 goes
+    // to the class (`classMessage` is the host's effect of the handler) and the entity is destroyed whatever the class does, because no handler
+    // returns non-zero for message 1 (bit 0x10 of +0xc, collision body freed by 0x2320f8). `reaction` says what the class's message does (an
+    // instance of an unknown kind has none); `triggerObject` is the object the base prop handler 0x1f8948 enables and triggers (parameter
+    // TriggerObject of the kinds destroyRunsPropHandler), empty for the others.
+    using ClassMessage = std::function<void(const std::string&, std::uint8_t)>;
+    struct DestroyResult {
+        DestroyReaction reaction = DestroyReaction::NoReaction;
+        std::string triggerObject;
+    };
+    std::optional<DestroyResult> destroy(const std::string& lowerCaseInstance, bool inactive, const ClassMessage& classMessage);
     bool destroyed(const std::string& lowerCaseInstance) const { return destroyed_.count(lowerCaseInstance) != 0; }
     const ObjectNativeFlags* flags(const std::string& lowerCaseInstance) const;
     bool entityUpdateSkipped(const std::string& lowerCaseInstance) const;
@@ -102,6 +109,7 @@ private:
     std::map<std::string, std::vector<std::string>> pushHandles_;
     std::vector<ObjectClassMessage> messages_;
     std::set<std::string> destroyed_;
+    std::map<std::string, std::string> destroyTriggers_;
 };
 
 }

@@ -30,18 +30,8 @@ bool LevelSession::deliverPropHit(const std::string& lowerInstance, const runtim
         std::cout << "prop " << lowerInstance << ": hit, health " << hit.health << " at update " << updatesForLog << '\n';
         return true;
     }
-    objectState.destroyed.insert(lowerInstance);
-    levelScripts.fireObjectEvent("dead", lowerInstance);
-    const runtime::WobblyProp& prop = reaction->prop;
-    runtime::SmashedProp destroyed;
-    destroyed.instance = lowerInstance;
-    destroyed.prop.node = prop.node;
-    destroyed.prop.entityBox = runtime::SmashBox{prop.boundsCentre, prop.boundsHalf};
-    destroyed.prop.health = hit.health;
-    destroyed.effects = prop.destroyEffects;
-    propDestroyedEffects(destroyed);
+    levelScripts.destroyEntity(lowerInstance);
     std::cout << "prop " << lowerInstance << ": destroyed at update " << updatesForLog << '\n';
-    if (!reaction->triggerObject.empty()) levelScripts.triggerObjectEnabling(reaction->triggerObject);
     return true;
 }
 

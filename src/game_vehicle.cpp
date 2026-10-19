@@ -166,9 +166,8 @@ void LevelSession::smashProps(std::size_t vehicleIndex) {
     smashing.entityBox = runtime::SmashBox{{vehicle.boxCentre[0], vehicle.boxCentre[1], vehicle.boxCentre[2]}, {vehicle.boxHalf[0], vehicle.boxHalf[1], vehicle.boxHalf[2]}};
     std::copy(drive.rigid.velocity.begin(), drive.rigid.velocity.end(), smashing.velocity);
     for (const runtime::SmashedProp& smashed : propSmasher.smash(smashing, objectState)) {
-        objectState.disabled.insert(lowerCase(smashed.instance));
         std::cout << "prop " << smashed.instance << ": smashed by " << vehicle.instance << " at update " << updatesForLog << '\n';
-        propDestroyedEffects(smashed);
+        levelScripts.destroyEntity(lowerCase(smashed.instance));
     }
 }
 

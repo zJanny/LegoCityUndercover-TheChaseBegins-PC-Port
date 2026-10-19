@@ -75,12 +75,16 @@ public:
     // Runs the query for one vehicle; returns the instances destroyed by it. Props whose entity is disabled or without collision flag 0x200 are
     // not found by the query layer.
     std::vector<SmashedProp> smash(const SmashingVehicle& vehicle, const assets::PlacedObjectState& state);
-    std::size_t propCount() const { return props_.size(); }
+    std::size_t propCount() const;
+    // The node, entity box and message 1 effects of a prop that the base prop handler 0x1f8948 destroys (smashable classes and
+    // props/ability_dynamitedestructible, which only scripts and the player's dynamite destroy); null for any other instance.
+    std::optional<SmashedProp> destroyData(const std::string& lowerInstance) const;
 
 private:
     struct Entry {
         std::string instance;
         bool collisionDefault = true;
+        bool smashable = true;
         SmashableProp prop;
         PropDestroyEffects effects;
         bool destroyed = false;

@@ -79,7 +79,7 @@ void LevelSession::propDestroyedEffects(const runtime::SmashedProp& prop) {
         effects.debris()->burst(runtime::propDebrisBurst(e, runtime::propDebrisPosition(prop.prop.entityBox.centre, prop.prop.entityBox.half, prop.prop.node)),
                                 debrisLineStandIn(), debrisLineStandIn());
     std::cout << "prop " << prop.instance << ": explosion particle " << e.explosionParticle << ", " << (e.spawnDebris ? e.debrisAmount : 0u)
-              << " bricks (stand-in VEH-S102: no screen shake, flash light, sound, TriggerObject or Respawn)\n";
+              << " bricks (stand-in VEH-S102: no screen shake, flash light, sound or Respawn)\n";
 }
 
 }
