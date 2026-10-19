@@ -14,7 +14,8 @@ Subtopics: [player-traversal-pole.md](player-traversal-pole.md), [player-travers
 - Climbing bricks (type 20), ported, and the climb wall entry: [player-traversal-bricks.md](player-traversal-bricks.md).
 - Rails, climb bars and the corner rail (types 29, 218), ported: [player-traversal-rails.md](player-traversal-rails.md).
 - The A presses at the zipline anchor and at the pole are not measurable from `m12-9`, `m12-10a` or `m12-10b`; the states they need are listed in [§2026-10-18T20:38:04](#ts-20261018-203804).
-- Open: the grab height of attachment set 18 for other characters, the fall-state grab path 0x2010d4, ground contact during the zipline dismount (0x215804), the rope drawing (0x297b7c), the tightrope; the other moves in their subtopic files.
+- The rope is ported: a straight textured ribbon (`RopeTexture`, `RenderWidth` 0.03) between the anchor nodes, drawn by the anchor with the higher entity id, faded out by the camera's distance from the line only with `FadeNearCamera`; the ribbon's facing, render states and the tightrope ropes are open. [§2026-10-19T08:51:31](#ts-20261019-085131)
+- Open: the grab height of attachment set 18 for other characters, the fall-state grab path 0x2010d4, ground contact during the zipline dismount (0x215804), the rope's facing and render states, the tightrope; the other moves in their subtopic files.
 
 <a id="ts-20261018-145230"></a>
 
@@ -94,3 +95,23 @@ Unknowns:
 
 Unknowns:
 - Whether the teleported spots on the zipline platform were inside the anchor's `UseBound` and on a floor.
+
+<a id="ts-20261019-085131"></a>
+
+## 2026-10-19T08:51:31+02:00 — The zipline rope: draw 0x1a9dc4 -> 0x297b7c -> strip 0x1f9590 (round 27, REA with the Ghidra provider on `game.arm.elf`)
+
+Read: 0x1a9dc4 (descriptor draw), 0x297b7c (batch draw), 0x1f9590 (strip), 0x1a999c (create), 0x1a9bb4 (post-link), 0x19b074 (link), and the helpers 0x2536c0, 0x22859c, 0x24d434, 0x23b998, 0x23b960, 0x226644, 0x22e1f4, 0x24a6cc. Ported in `src/runtime/zipline_rope.{hpp,cpp}` (data, fade, strip, draw filter) and `src/render/rope.{hpp,cpp}` (GL), glue in `src/game_zipline.cpp`; CTests `zipline-rope` and `zipline-rope-real-data`.
+
+- Per anchor (create 0x1a999c): `RenderWidth` (+0x158, default literal 0x3cf5c28f = 0.03), `FadeNearCamera` (+0x163 bit 1). `RopeTexture` (+0x15c) is a string parameter loaded by name in the post-link 0x1a9bb4 (0x250244); an empty or missing name sets entity byte +0x13 to 2 and nothing is drawn. The bounds the post-link builds for the rope node are not needed for the picture. All 24 anchors of lvl_01 use the class value `models/textures/prop_generic_ropealphat_a3i5.tga`, width 0.03 (the class has no instance override), `FadeNearCamera` 0.
+- Link 0x19b074 also builds a frame at +0x114 (identity, then 0x22859c): row 2 the unit direction from this anchor to its target (0x23b998, fallback (0, 0, 1)), row 0 `(dz, 0, -dx)` when |dy| < 0.98 (compared as the integer 0x3f7ae149) else `(0, -dz, dy)`, normalised, row 1 = row 2 x row 0, translation (+0x144) the anchor node position; alpha byte +0x164 starts at 0xff.
+- Draw 0x1a9dc4 per anchor: nothing when there is no texture; nothing when the anchor's own entity id (+0x14) is lower than its target's and the target is "live" (0x226644: flags +0x10 & 0x25 == 0 and (+0x1a != -1 or +0x13 != 0)), so the anchor with the higher id draws the line, as it is the one in the line list; nothing when its own flags +0x10 bit 0 are set. The queue position is the midpoint of the two node positions (0x236080 with the callback 0x297b7c).
+- Fade (only with `FadeNearCamera`): the camera node position (0x22e1f4(0), 0x250810, +0x30) expressed in the frame at +0x114 (0x2536c0); d = sqrt(x^2 + y^2) of its first two components, the camera's distance from the infinite line. d >= 5: alpha 255; d <= 2: not drawn (stored 0); between: `(int)((d - 2) * 0.33333334 * 255)`. Without the flag the alpha stays 255.
+- Batch 0x297b7c: render state from the alpha: alpha 255 gives mode bytes (1, 0) and sets state flag bit 3 (opaque path), any other alpha gives (4, 5) and clears bit 3 (blend path); the state is applied (0x25511c) whenever the texture changes or the alpha changes between 255 and not 255. The test of a texture alpha channel (0x19613c) is a stub that returns 0. Each strip: `0x1f9590(width, 0.0, 1.0, own node position, target node position, colour = alpha << 24 | 0xffffff)`.
+- Strip 0x1f9590: `side = normalise(cross(end - start, normalise(N)))` with N the three floats at 0x529fec; the vertices are relative to the midpoint, the model matrix is the identity with the midpoint as translation (0x253b6c). Triangle strip (primitive mode 6, format 7 at 0x254d90): (start + side w, u 1, v 0), (start - side w, u 0, v 0), (end + side w, u 1, v L), (end - side w, u 0, v L), colour (255, 255, 255, alpha) for each, w = RenderWidth. L = max(|dx|, 2 |dy|, |dz|) of the end minus start (divided by param 3 = 1.0). No sag: the rope is straight between the two nodes. The matrix inverse 0x258858 / 0x253b6c work on a copy of 0x52fce4 and do not change the geometry.
+- 0x529fec is row 2 (floats 8..10) of the 4x4 matrix cache written by 0x24a6cc, which the begin and end calls of the primitive (0x254d90, 0x254460) fill from the current matrix. It holds the matrix of the previous draw call, not a constant; the port uses the camera's view direction for it (TRAV-S27).
+- Port check: `chase-game` from the m12-9 position (`--start "870.226 66.001 630.961" --facing 102.8`) shows a thin textured rope going from the anchor of 1-8_Zip_Line05 down to 1-8_Zip_Line04 (screenshot not kept, no game pictures in git). The rope draws after the scene and the particles; fully opaque ropes write depth and do not blend, faded ones blend without depth writes (TRAV-S28).
+
+Unknowns:
+- The value of the matrix row at 0x529fec when 0x1f9590 runs (TRAV-46); only the sign and the screen-facing of the ribbon depend on it.
+- The meaning of the mode bytes (1, 0) / (4, 5) and the state bit 3 in 0x297b7c (blend factors, depth write, alpha test), and the texture wrap and filter (TRAV-47).
+- The tightrope anchors (`GrappleLineType` 0) share the descriptor 0x18c054 and so draw the same rope; they are not loaded as anchors yet (TRAV-48).

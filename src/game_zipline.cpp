@@ -80,4 +80,18 @@ game_player::PlayerAnimation LevelSession::movePlayer(const runtime::StickIntent
     return apply(runtime::ziplineEnter(ziplineRider, ziplines, grabbed, input));
 }
 
+void LevelSession::loadZiplineRopes(assets::FuseArchive& archive) {
+    ziplineRopes = runtime::loadZiplineRopes(level, classOf, ziplines);
+    ropeRenderer.emplace(archive);
+}
+
+void LevelSession::drawZiplineRopes(const render::Mat4& view, const render::Mat4& viewProjection) {
+    if (!ropeRenderer || ziplines.empty()) return;
+    const runtime::ParticleCamera camera = game_particles::cameraOf(view);
+    const float position[3] = {camera.position[0], camera.position[1], camera.position[2]};
+    const float forward[3] = {camera.forward[0], camera.forward[1], camera.forward[2]};
+    const auto enabled = [this](const runtime::ZiplineAnchor& anchor) { return !objectState.isDisabled(anchor.instance); };
+    ropeRenderer->draw(viewProjection, runtime::ziplineRopeDraws(ziplines, ziplineRopes, position, forward, enabled));
+}
+
 }

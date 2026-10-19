@@ -17,6 +17,8 @@
 #include "game_hud.hpp"
 #include "game_options.hpp"
 #include "game_particles.hpp"
+#include "render/rope.hpp"
+#include "runtime/zipline_rope.hpp"
 #include "game_player.hpp"
 #include "render/hud_overlay.hpp"
 #include "render/scene.hpp"
@@ -141,6 +143,8 @@ private:
     void updateDetective(float dt, bool actionFree, const std::function<void(const chase::runtime::SoundCall&)>& emit);
     int detectiveClip(int role) const;
     void drawFootprints();
+    void loadZiplineRopes(chase::assets::FuseArchive& archive);
+    void drawZiplineRopes(const chase::render::Mat4& view, const chase::render::Mat4& viewProjection);
     void logDetectiveStates();
     void updateScanner();
     game_player::PlayerAnimation movePlayer(const chase::runtime::StickIntent& intent, bool jumpPressed, float dt);
@@ -265,6 +269,8 @@ private:
     unsigned scannerCallsSeen = 0;
     std::vector<chase::runtime::ZiplineAnchor> ziplines;
     chase::runtime::ZiplineRider ziplineRider;
+    std::vector<chase::runtime::ZiplineRope> ziplineRopes;
+    std::optional<chase::render::RopeRenderer> ropeRenderer;
     std::optional<chase::assets::RootMotion> ziplineDismount;
     std::vector<chase::runtime::GrabBrick> grabBricks;
     chase::runtime::BrickClimber brickClimber;

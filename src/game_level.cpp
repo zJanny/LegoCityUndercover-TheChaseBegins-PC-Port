@@ -286,6 +286,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     scanner.load(archive, level, classOf);
     std::cout << "scanner zones: " << scanner.zones().size() << ", scannable objects: " << scanner.objects().size() << '\n';
     ziplines = runtime::loadZiplineAnchors(level, classOf);
+    loadZiplineRopes(archive);
     std::cout << "zipline anchors: " << ziplines.size() << '\n';
     grabBricks = runtime::loadGrabBricks(level, classOf);
     std::cout << "climbing bricks: " << grabBricks.size() << '\n';
@@ -426,6 +427,7 @@ void LevelSession::draw(int width, int height) {
     studSprites->draw(viewMatrix, mvp, sprites, runtime::studSpriteFrame(std::uint32_t(provisionalStudClockSeconds * double(runtime::kClockTicksPerSecond))),
                      runtime::kStudHalfSize);
     particles.draw(viewMatrix, mvp);
+    drawZiplineRopes(viewMatrix, mvp);
     setScissorTest(false);
     if (hud && !cutscenePlaying()) {
         hudCanvas.clearTransparent();
@@ -522,6 +524,7 @@ runtime::DebugGameValues LevelSession::debugValues() const {
 void LevelSession::releaseOverlays() {
     studSprites.reset();
     particles.releaseGl();
+    ropeRenderer.reset();
     overlay.reset();
 }
 
