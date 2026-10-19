@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 655 open items and stand-ins, 131 linked to game usage, 524 with unknown reach.
+Items: 656 open items and stand-ins, 131 linked to game usage, 525 with unknown reach.
 
 ## Top 50 overall
 
@@ -104,7 +104,7 @@ Items: 655 open items and stand-ins, 131 linked to game usage, 524 with unknown 
 
 ## Level objects
 
-12 of 83 items linked.
+12 of 84 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -220,11 +220,11 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md)
 - [input.md](features/input.md): INPUT-1, INPUT-2, INPUT-3, INPUT-S1
 - [level-objects-buildit.md](features/level-objects-buildit.md): LEVOBJ-71 (+1), LEVOBJ-79 (+1), LEVOBJ-42, LEVOBJ-43, LEVOBJ-61, LEVOBJ-70, LEVOBJ-76, LEVOBJ-77, LEVOBJ-85, LEVOBJ-94, LEVOBJ-S41, LEVOBJ-S70, LEVOBJ-S71, LEVOBJ-S74, LEVOBJ-S76
 - [level-objects-carry.md](features/level-objects-carry.md): LEVOBJ-75 (+1), LEVOBJ-30, LEVOBJ-31, LEVOBJ-34, LEVOBJ-S31, LEVOBJ-S33, LEVOBJ-S34, LEVOBJ-S73, LEVOBJ-S75
-- [level-objects.md](features/level-objects.md): LEVOBJ-8 (+2), LEVOBJ-90 (+2), LEVOBJ-87 (+1), LEVOBJ-89 (+1), LEVOBJ-92 (+1), LEVOBJ-12, LEVOBJ-13, LEVOBJ-3, LEVOBJ-5, LEVOBJ-6, LEVOBJ-7, LEVOBJ-88, LEVOBJ-91, LEVOBJ-95, LEVOBJ-S3, LEVOBJ-S4, LEVOBJ-S77, LEVOBJ-S78, LEVOBJ-S79, LEVOBJ-S80
+- [level-objects.md](features/level-objects.md): LEVOBJ-8 (+2), LEVOBJ-87 (+1), LEVOBJ-89 (+1), LEVOBJ-90 (+1), LEVOBJ-92 (+1), LEVOBJ-96 (+1), LEVOBJ-12, LEVOBJ-13, LEVOBJ-3, LEVOBJ-5, LEVOBJ-6, LEVOBJ-7, LEVOBJ-88, LEVOBJ-91, LEVOBJ-97, LEVOBJ-S3, LEVOBJ-S4, LEVOBJ-S77, LEVOBJ-S79, LEVOBJ-S80, LEVOBJ-S81
 - [level-transitions.md](features/level-transitions.md): TRANS-3 (+3), TRANS-13 (+2), TRANS-8 (+2), TRANS-10 (+1), TRANS-11 (+1), TRANS-12 (+1), TRANS-14 (+1), TRANS-S1, TRANS-S3, TRANS-S4, TRANS-S5
 - [movies-cutscenes.md](features/movies-cutscenes.md): MOVIE-22 (+1), MOVIE-24 (+1), MOVIE-S33 (+1), MOVIE-1, MOVIE-12, MOVIE-20, MOVIE-21, MOVIE-3, MOVIE-33, MOVIE-35, MOVIE-4, MOVIE-S1, MOVIE-S10, MOVIE-S11, MOVIE-S2, MOVIE-S20, MOVIE-S21, MOVIE-S3, MOVIE-S30, MOVIE-S31, MOVIE-S32
 - [particles.md](features/particles.md): PART-4 (+1), PART-6 (+1), PART-5, PART-7, PART-S1, PART-S2, PART-S3, PART-S4
-- [player-movement.md](features/player-movement.md): PLAYER-16 (+5), PLAYER-14 (+2), PLAYER-11 (+1), PLAYER-15 (+1), PLAYER-19 (+1), PLAYER-20 (+1), PLAYER-1, PLAYER-10, PLAYER-13, PLAYER-17, PLAYER-18, PLAYER-2, PLAYER-21, PLAYER-3, PLAYER-5, PLAYER-6, PLAYER-7, PLAYER-8, PLAYER-S1, PLAYER-S2, PLAYER-S4, PLAYER-S5, PLAYER-S6, PLAYER-S7, PLAYER-S8
+- [player-movement.md](features/player-movement.md): PLAYER-16 (+4), PLAYER-14 (+2), PLAYER-11 (+1), PLAYER-15 (+1), PLAYER-19 (+1), PLAYER-22 (+1), PLAYER-1, PLAYER-10, PLAYER-13, PLAYER-17, PLAYER-18, PLAYER-2, PLAYER-21, PLAYER-3, PLAYER-5, PLAYER-6, PLAYER-7, PLAYER-8, PLAYER-S1, PLAYER-S10, PLAYER-S2, PLAYER-S4, PLAYER-S5, PLAYER-S6, PLAYER-S8
 - [player-traversal-pole.md](features/player-traversal-pole.md): TRAV-S9 (+1), TRAV-11, TRAV-13, TRAV-14, TRAV-15, TRAV-16, TRAV-S5, TRAV-S6, TRAV-S7, TRAV-S8
 - [player-traversal-rails.md](features/player-traversal-rails.md): TRAV-39 (+3), TRAV-40 (+3), TRAV-41 (+3), TRAV-37 (+2), TRAV-38 (+1), TRAV-S15 (+1), TRAV-S16 (+1), TRAV-S18 (+1), TRAV-S19 (+1), TRAV-27, TRAV-28, TRAV-29, TRAV-31, TRAV-32, TRAV-33, TRAV-S17, TRAV-S21, TRAV-S23
 - [player-traversal.md](features/player-traversal.md): TRAV-2 (+1), TRAV-S12 (+1), TRAV-10, TRAV-19, TRAV-20, TRAV-22, TRAV-34, TRAV-35, TRAV-5, TRAV-6, TRAV-7, TRAV-8, TRAV-9, TRAV-S1, TRAV-S10, TRAV-S11, TRAV-S13, TRAV-S2, TRAV-S20, TRAV-S3, TRAV-S4

@@ -81,14 +81,20 @@ std::vector<float> keyFrames(const assets::Animation& animation, std::uint32_t h
     return frames;
 }
 
-std::vector<float> sampleTrack(const assets::Animation& animation, std::uint32_t hash, unsigned updates) {
-    const assets::AnimTrack* track = findTrack(animation, hash);
-    if (!track) return std::vector<float>(updates + 1, 0.0f);
-    const float duration = assets::animationDuration(animation);
+std::vector<float> sampleRootCurve(const assets::Animation& animation, unsigned updates, float framesPerUpdate) {
+    const std::optional<assets::RootMotion> motion = assets::rootMotion(animation);
     std::vector<float> values;
     for (unsigned k = 0; k <= updates; ++k) {
-        const float time = duration > 0.0f ? std::min(1.0f, float(k) / kUpdatesPerSecond / duration) : 1.0f;
-        values.push_back(assets::evaluateTrack(*track, time));
+        if (!motion || motion->translation.empty()) {
+            values.push_back(0.0f);
+            continue;
+        }
+        const float frame = float(k) * framesPerUpdate;
+        const std::size_t last = motion->translation.size() - 1;
+        const std::size_t low = std::min<std::size_t>(std::size_t(frame), last);
+        const std::size_t high = std::min(low + 1, last);
+        const float fraction = std::min(1.0f, frame - float(low));
+        values.push_back(motion->translation[low][2] + (motion->translation[high][2] - motion->translation[low][2]) * fraction);
     }
     return values;
 }
@@ -111,7 +117,7 @@ AttackClip makeAttackClip(int id, const assets::Animation& animation) {
     clip.framesPerUpdate = assets::animationFramesPerSecond(animation) / kUpdatesPerSecond;
     clip.hitFrames = keyFrames(animation, kAttackHitTrackStandIn);
     clip.windowFrames = keyFrames(animation, kAttackComboTrackStandIn);
-    clip.root = sampleTrack(animation, kAttackRootTrackStandIn, clip.updates);
+    clip.root = sampleRootCurve(animation, clip.updates, clip.framesPerUpdate);
     return clip;
 }
 

@@ -128,6 +128,10 @@ void clipsMatch(const Session& session) {
     const AttackClip* second = session.clips.find(0x7b);
     const AttackClip* third = session.clips.find(0x7c);
     expect(second && second->updates == 12 && third && third->updates == 9, "combo_2 lasts 12 and combo_3 9 updates (acombo10: combo_3 in rows 26..34)");
+    // Extra joint curve (joint 21) of combo_1..3, z at the last frame, read with assets::rootMotion (scratch r26-B/root.cpp, 2026-10-19); the sub-animation
+    // track 0xdcd633e2 ends on the same values.
+    expect(first && std::fabs(first->root[14] - 1.05684f) < 1e-4f && std::fabs(first->root[1] - 0.07549f) < 1e-5f, "combo_1 root step from the extra joint curve: 0.07549 per update to 1.05684");
+    expect(second && std::fabs(second->root[12] - 0.90586f) < 1e-4f && third && std::fabs(third->root[9] - 0.67939f) < 1e-4f, "combo_2 and combo_3 root curve end values 0.90586 and 0.67939");
 }
 
 void table(const Session& session) {

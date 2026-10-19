@@ -8,8 +8,6 @@ namespace runtime = chase::runtime;
 void LevelSession::loadDestructibleProps(chase::assets::FuseArchive& archive) {
     wobblyProps.load(archive, level, classOf);
     bouncers.load(level, classOf);
-    for (runtime::CollisionWorld::Entry& entry : collision.mutableEntries())
-        if (bouncers.find(entry.owner)) entry.floorOnly = true;
     std::cout << "wobbly props: " << wobblyProps.size() << ", bouncers: " << bouncers.size() << '\n';
 }
 

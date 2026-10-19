@@ -39,7 +39,6 @@ public:
         std::string owner;              // lower-case instance name of a placed object, empty for level items
         bool collisionDefault = true;   // owner flag 0x200 before any EnableCollision
         bool active = true;             // owner flags allow the query layers to accept the entry (bit 0 clear, 0x200 set)
-        bool floorOnly = false;         // STAND-IN LEVOBJ-S78: the player's ground probe finds the entry but its wall pass does not (leprop_bouncer pads)
     };
     void add(const assets::CollisionItem& item, std::uint32_t mask = kStaticMask) {
         Entry entry;
@@ -66,6 +65,15 @@ public:
     void query(const float low[3], const float high[3], const CollisionLayer& layer, Visit&& visit) const {
         for (const Entry& entry : entries_)
             if (entry.active && !entry.item.nodes.empty() && layer.accepts(entry.mask)) walk(entry.item, 0, low, high, visit);
+    }
+
+    template <class Visit>
+    void queryEntries(const float low[3], const float high[3], const CollisionLayer& layer, Visit&& visit) const {
+        for (const Entry& entry : entries_)
+            if (entry.active && !entry.item.nodes.empty() && layer.accepts(entry.mask)) {
+                auto forEntry = [&](const Triangle& triangle) { visit(entry, triangle); };
+                walk(entry.item, 0, low, high, forEntry);
+            }
     }
 
     template <class Skip, class Visit>

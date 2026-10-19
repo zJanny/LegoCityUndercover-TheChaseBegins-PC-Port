@@ -11,6 +11,7 @@ Findings about the static collision of a level and how the player uses it. The p
 - All dynamic entities live in one world grid (DAT_00578dfc); registration 0x2ba3f4 gives each a box (CollisionBound record, else automatic node-matrix box, MeshCollision item). [§2026-10-13T17:34](#ts-20261013-173400), [§2026-10-13T20:53](#ts-20261013-205344)
 - The automatic box moves each node's mesh box by the node matrix (Police_Door_02 centre 2^-24); the disabled-object state comes from the level start state, not a stand-in list. [§2026-10-13T20:53](#ts-20261013-205344), [§2026-10-13T20:43](#ts-20261013-204340)
 - During play EnableObject and EnableCollision only change owner flags; the grid is filled once and never loses entries. [§2026-10-15T07:58](#ts-20261015-075843)
+- A wall triangle of a placed object (every pooled entry) counts only while the player's box centre, before the movement, is in front of its plane; a walk that starts inside a prop crosses it. [§2026-10-19T07:58:53](#ts-20261019-075853)
 - Replay tests (`collision-real-data`) match recorded ground and wall traces; the car comparison screenshot is not valid yet (COLL-22). [§2026-10-15T10:50](#ts-20261015-105024)
 - Open: falling path, the owner-flag-0 setter, 147+7 static entries against 153 items, other constructors (vehicles, characters), box-top standing, door_back contact.
 
@@ -184,3 +185,20 @@ Unknowns:
 Unknowns:
 - Why the port frame at update 25 shows the harbour view and no HUD (camera at the start, the `--call-script` start, or the port's view state); not read.
 - The original's camera yaw at the frame (about 1.01 rad in the trace above) and the port's yaw at update 25 were not matched, so the frames are not expected to agree in any case.
+
+<a id="ts-20261019-075853"></a>
+
+## 2026-10-19T07:58:53+02:00 — Placed-object walls block only from their front side: the wall candidate filter 0x209a98 (llvm-objdump of `artifacts/game/game.arm.elf`, Azahar RPC read of the entry pool)
+
+Evidence. Disassembly (`--triple=armv6k --mattr=+vfp2`) of 0x209a98..0x209cb4 (candidate filter), 0x208d84..0x2092d8 (query driver, calls at 0x209058 and 0x209090), the wall call at 0x21a8c4, 0x254250 (point times matrix), 0x257e78 (dot product), 0x21bb78 (entry matrix); the entry pool 0x56defc (1216 entries) and the owners' header words read through RPC from user state m12-trampoline-built (own emulator on port 24762, scratch `artifacts/scratch/r26-B/ents.pkl`).
+
+- **The filter.** 0x208d84 calls 0x209a98 with flags 0x4c | 0x20 = 0x6c for the player's wall query (the stack argument 76 of the call at 0x21a8c4). Per candidate (entry, triangle) the flags decide: 0x40 skips a triangle whose surface is in the exclusion mask (0x250e20); 0x4 tests the normal's y against the limit; 0x8 removes a triangle whose normal has a dot product with the movement vector of 0 or more; **0x20 (and always 0x10) removes a triangle when the owner entity's u16 at +0x14 is non-zero and dot(p, normal) is below the triangle's plane offset d at +0xc**, that is when the reference point p lies behind the plane (0x209c5c..0x209c78). The test runs in the entry's local space (p moved by the inverse entry matrix, the triangle as stored), which equals the world test for a rigid matrix.
+- **The reference point p** for the wall query of the player (r8 equal to the player entity, call at 0x21a8c4 with r1 = the box at entity+0x60 / +0x6c, r2 = the node matrix 0x250810(node), r3 = the movement): the centre of the player's box (entity+0x60) transformed by the node matrix, i.e. at the position before this update's movement (0x20907c..0x209090 builds it from the box with 0x254250). It does not include the movement.
+- **Which entries.** In the pool every one of the 1216 entries (masks 4, 6 and 38, kinds 0 and 1: boxes of characters and props, mesh items of props) has a non-zero u16 at owner+0x14, so the test applies to all of them; a static level triangle goes through the tree query of 0x20c850 instead of the pool and was not read whether it passes the test.
+- **Consequence.** A prop's wall triangle (outward normals, closed shapes such as the trampoline frame, `Ability_Trampoline_Large`: a hexagonal prism of 30 triangles, apothem 1.903, 32.579 to 33.677) blocks a player outside it and lets a player whose box centre is inside it walk through. This is the whole difference between the two oracle walks of [props-wobbly-bouncer.md §20261019-075855](props-wobbly-bouncer.md#ts-20261019-075855); the bouncer needs no special collision.
+- **Port.** `wallPass` in `src/runtime/collision.cpp` skips a triangle of an entry with a mask other than 1 when dot(reference, normal) < d, the reference being the box centre at the node's current position; `CollisionWorld::queryEntries` hands the entry to the visitor. Test `prop-wall-side` (synthetic wall, both sides, static and dynamic) and `prop-wall-side-real-data` (Trampoline_03).
+
+Unknowns:
+- Whether a static level triangle goes through the same side test; the port applies none (an owner of the tree-query entries was not read).
+- What owner+0x14 holds for entities that would fail the non-zero test (every pooled entity in this state had a value).
+- The wall filter of the camera sweep and the vehicle wheels (their flags were not read).

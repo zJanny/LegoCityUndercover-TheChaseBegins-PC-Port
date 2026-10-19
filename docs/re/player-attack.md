@@ -20,12 +20,15 @@ Chase's punch on foot: the button, the combat action states, the target search, 
   - Message 45 comes from the wall slide 0x21a73c, not from the attack.
   [§2026-10-18T19:59:57](#ts-20261018-195957)
 - The joint curves of the combo clips are 0xfa raw matrices; they are decoded now (cause of the missing punch animation): [skeleton-animation.md §2026-10-18T21:40:55+02:00](skeleton-animation.md#ts-20261018-214055)
+- The root step of the combo clips is the z translation of the extra joint curve (joint 21: 0.07549 per frame, 1.05684, 0.90586 and 0.67939 at the end of combo_1..3), sampled by 0x2327b4 through 0x270778; the equal sub-animation track 0xdcd633e2 is not its source. [§2026-10-19T08:03:14+02:00](#ts-20261019-080314)
 - Port: `src/runtime/player_attack.*`, glue `src/game_attack.cpp` (stand-ins PLAYER-S5 to PLAYER-S9). [§2026-10-18T19:59:57](#ts-20261018-195957)
 - Open: the track-to-event table, the writers of the range, the angle and the combo length, the line-of-sight test 0x219990, other target types and characters, the jump attack 0x1d5308, the weapon-out state 0x9a, and the exact update order of the tap read in the attack states.
 
 <a id="ts-20261018-195957"></a>
 
 ## 2026-10-18T19:59:57+02:00 — The attack on foot: Y tap, states 0xa3 / 0xa4, target search, hit test and messages (REA, objdump, Azahar GDB traces of m12-table-before)
+
+Corrected by [player-attack.md §2026-10-19T08:03:14+02:00](#ts-20261019-080314): the root step of the combo clips comes from the extra joint curve (joint 21), not from the sub-animation track 0xdcd633e2; the values are equal.
 
 ### Method
 
@@ -127,3 +130,18 @@ Unknowns:
 - Whether the attack states read the stick bit of the current or the previous update (the port uses the current one), and which other callers of 0x20b984 (0x25f280, 0x2a4f18, 0x1d6fa0) allow the attack.
 - The jump attack (0x1d5254 tests ctrl+0xe bit 0x20 at 0x1d5294, 0x214f40 from 0x1d5308), the weapon-out state 0x9a and its counterpart 0xc, the damage 99 flag, and the sounds of the attack (melee entry +0xa / +0xc).
 - Why the port's entity box of the mesh-kind wobbly props is 0.009 higher than the oracle's.
+
+<a id="ts-20261019-080314"></a>
+
+## 2026-10-19T08:03:14+02:00 — The root step of the combo clips is the extra joint curve (llvm-objdump of 0x270778 and 0x2327b4, probes over combo_1..3)
+
+[Corrects player-attack.md §2026-10-18T19:59:57](#ts-20261018-195957): its root step came from the sub-animation track 0xdcd633e2 (inferred, PLAYER-S7).
+
+- Data (probe `assets::rootMotion` and `decodeChannels` over `models/char_minifig/class_generic/combo_{1,2,3}_minifig.bfnanm`, scratch `artifacts/scratch/r26-B/root.cpp`): the joint table words 0x1007a015, 0x1006a015 and 0x10052015 have bit 28 set and name curve 21, the last of 22, as the extra (root motion) curve. Its translation is (0, 0, z) with z = 0.07549 x frame (rows of the 0xfa matrices decomposed by 0x1324f8, see [skeleton-animation.md §2026-10-18T21:40:55+02:00](skeleton-animation.md#ts-20261018-214055)): 1.05684 at frame 14 of combo_1, 0.90586 at frame 12 of combo_2, 0.67939 at frame 9 of combo_3. The sub-animation track 0xdcd633e2 has the same end values and the same slope; dcd633e0 and dcd633e1 stay 0.
+- Code: the root delta of 0x2c9770 comes from 0x2327b4, which samples the root block of each playing slot with 0x270778. 0x270778 reads the animation's joint table word: with bit 28 it indexes the joint curve array with word & 0x1fff (else the root joint's curve), decodes the curve at the frame (0x287124, 0x24a0c8) into a pose entry and, for the extra curve, builds a matrix from it (0x247fb0, 0x2588f4) and stores three floats of it to the caller's vector (0x270830). What exactly those three floats are (the translation row) was not traced. The sub-animation tracks (event tracks with hashes) are not read there. So the curve is the source, as for the jumps ([player-locomotion.md §2026-10-13T17:02:03](player-locomotion.md#ts-20261013-170203)).
+- Port: `makeAttackClip` samples `assets::rootMotion` (z of the extra curve) at the frame k x framesPerUpdate of every update; the step per update stays 0.07549 (oracle 0.07548). The stand-in `kAttackRootTrackStandIn` is removed; PLAYER-S7 is replaced by PLAYER-S10, the interpolation between frames and the unused x and y axes. Test `player-attack-real-data` (end values and first step).
+
+Unknowns:
+- That 0x270778 runs for the punch slot (not trapped in the oracle; read from the code and the equal values only).
+- The interpolation between two frames of the curve and the weighting of the slot (the combo clips run one frame per update at weight 1 in the measured steps).
+- x and y of the delta are zero in these clips; the port keeps the z axis only.

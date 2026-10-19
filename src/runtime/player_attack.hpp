@@ -41,9 +41,8 @@ constexpr unsigned kPlayerComboLengthStandIn = 4;     // high nibble of the comb
 // table from track hashes to event types is not read.
 constexpr std::uint32_t kAttackHitTrackStandIn = 0xb684fd50;     // event type 3 (value above 0.5): the hit
 constexpr std::uint32_t kAttackComboTrackStandIn = 0xc99766ba;   // event type 7 (value above 0.5): the combo window bit 3 of record +0x10
-// STAND-IN PLAYER-S7: the root step of 0x2c9770 for the combo clips comes from the sub-animation track 0xdcd633e2 (z of dcd633e0..e2), inferred
-// from the measured step 0.07548 per update (combo_1 ends at 1.05684 after 14 updates); the joint curves of these clips (header 0xfa) are not decoded.
-constexpr std::uint32_t kAttackRootTrackStandIn = 0xdcd633e2;
+// The root step of 0x2c9770 comes from the extra joint curve of the clip (0x2327b4 -> 0x270778: joint table bit 28, curve index word & 0x1fff; joint 21 of the
+// combo clips, z rising 0.07549 per frame). STAND-IN PLAYER-S10: the value between two frames is interpolated linearly (the combo clips run one frame per update).
 
 // 0x1bb690 for bit 0x20 of ctrl+0xc: true in the update in which a short Y press is released.
 class AttackTap {

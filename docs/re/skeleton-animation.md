@@ -12,6 +12,7 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - The joint table word holds curve count (bits 0..12), rate index (13..14, rates 15, 30, 60), sample count (15..27), extra curve (bit 28) and long curve (bit 29); the extra curve is the root motion joint. [§2026-10-13T17:02:03](#ts-20261013-170203)
 - The frame count is u16 +4 masked with 0x3fff; one curve (selected by bits 28 and 29) stores frames + 1. [§2026-10-13T04:10](#ts-20261013-0410)
 - The decoders live in C++ (`src/assets/anim.cpp`); Python reaches them through `chase_native`. [§2026-10-13T03:00](#ts-20261013-0300)
+- The root step of the combo clips is the extra curve (joint 21 of 22), equal to the sub-animation track 0xdcd633e2 that was used before. [player-attack.md §2026-10-19T08:03:14+02:00](player-attack.md#ts-20261019-080314)
 - Open: the 0xfa raw-matrix decomposition, the per-joint s16/256 post-scale, root joint lookup for animations without an extra curve, and the rate used for cutscene actors.
 
 <a id="ts-20261012-1840"></a>

@@ -305,9 +305,13 @@ WallPass wallPass(const CollisionWorld& world, const PlayerBox& box, const float
     const float low[3] = {centre[0] - reach[0], centre[1] - reach[1], centre[2] - reach[2]};
     const float high[3] = {centre[0] + reach[0], centre[1] + reach[1], centre[2] + reach[2]};
     const float requested[3] = {movement[0], movement[1], movement[2]};
+    float reference[3];
+    for (int a = 0; a < 3; ++a) reference[a] = node[a] + box.centre[0] * right[a] + box.centre[1] * up[a] + box.centre[2] * forward[a];
     WallPass pass;
-    world.queryExcept(low, high, kPlayerLayer, [](const CollisionWorld::Entry& entry) { return entry.floorOnly; }, [&](const Triangle& t) {
+    world.queryEntries(low, high, kPlayerLayer, [&](const CollisionWorld::Entry& entry, const Triangle& t) {
         const float* normal = t.record->normal;
+        // STAND-IN LEVOBJ-S81: the side test of 0x209a98 is applied only to placed objects; static level entries were not read.
+        if (entry.mask != kStaticMask && dot3(reference, normal) < t.record->d) return;
         if (normal[1] > kFloorNormalMin) return;
         if (t.record->surface < 32 && ((excluded >> t.record->surface) & 1)) return;
         if (dot3(normal, requested) >= 0) return;
