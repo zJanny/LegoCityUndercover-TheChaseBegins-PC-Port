@@ -14,6 +14,7 @@ The Azahar RPC server (UDP): memory reads and writes, screenshots, pad input wit
 - Polling by RPC misses game steps (about one row in ten spans two steps): check row continuity against a value the next step starts from instead of counting rows. [§2026-10-15T16:17:06](#ts-20261015-161706)
 - `waitbyte` and `shotloop` (OpenGL only) are the free-run scenario commands. [§2026-10-14T21:42:40](#ts-20261014-214240)
 - One screenshot per update: `--frame-limit 10` slow motion with `shotloop` and the clock 0x376b0c, not stepping (a screenshot runs about 9 updates); after `--stop` wait a few seconds before the next `--rpc` start. [§2026-10-18T20:38:04](#ts-20261018-203804)
+- Screenshot paths are relative to `--output` (bare names only); a custom sampler must call `Oracle.inject_input()` after `loadstate`; presses of 0.12 s (A) and 0.3 s (START) were sometimes missed, 0.3 s (A) and 0.5 s (START) worked. [§2026-10-20T00:56:12](#ts-20261020-005612)
 - Open: what an RPC read of an unmapped address returns, why RPC is slower in the dialog state, why a teleport across the Room7/Room8 box does not change the room.
 
 
@@ -106,3 +107,15 @@ Unknowns:
 
 Unknowns:
 - Why the screenshot advances the game by about 9 updates and whether that count is fixed.
+
+<a id="ts-20261020-005612"></a>
+
+## 2026-10-20T00:56:12+02:00 — Screenshot paths, input injection after loadstate, short button presses (round 40 emulator servant)
+
+Tool findings from the round 40 emulator servant; evidence: `artifacts/oracle/r40-servant-out/` (`b1probe.py`, `c1probe.py`).
+- The output path of the `screenshot` and `shotloop` commands of `tools/azahar_oracle.py` is relative to `--output`, so bare file names must be used with `--output artifacts/oracle/r40-servant-out`. A path with directories failed on the first try.
+- A custom RPC sampler must call `Oracle.inject_input()` after a `loadstate`, or the A mailbox write does nothing.
+- Button presses of 0.12 s (A) and 0.3 s (START) were sometimes missed; 0.3 s (A) and 0.5 s (START) worked.
+
+Unknowns:
+- The shortest press length that is always seen, and why short presses are missed.
