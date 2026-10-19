@@ -7,6 +7,7 @@
 #include "assets/assets.hpp"
 #include "runtime/debris.hpp"
 #include "runtime/prop_destroy.hpp"
+#include "runtime/stud_callers.hpp"
 
 #include <array>
 #include <cstdint>
@@ -57,7 +58,8 @@ struct WobblyProp {
     std::array<float, 3> boundsCentre{};  // node bounds (node+0xa0), the union of the model's mesh boxes; also the entity box of a prop without MeshCollision
     std::array<float, 3> boundsHalf{};
     WobbleBurstParams burst;
-    unsigned studValue = 2;               // WobbleStudValue: the studs of a wobbling hit (0x23a6b0) need STUD-11
+    unsigned studValue = 2;               // WobbleStudValue: the studs of a wobbling hit (0x2bc370 -> 0x23a6b0)
+    StudSpawnSource studSpawn;            // SpawnCone, SpawnLocal, SpawnDir, SpawnLoc
     std::uint16_t soundHit = 0;           // ATTR_SFX_HIT
     std::uint16_t soundDestroyed = 0;     // ATTR_SFX_DESTROYED
 };
@@ -66,7 +68,8 @@ struct WobblyReaction {
     std::string instance;
     WobbleHitResult hit;
     std::optional<DebrisBurst> wobbleBricks;   // the burst of 0x2bc370 at the node bounds centre
-    unsigned wobbleStudValue = 0;              // studs of the hit, not spawned (STUD-11)
+    unsigned wobbleStudValue = 0;              // studs of the hit
+    std::optional<StudDropRequest> wobbleStuds;  // 0x2bc370 after the bricks: none for a value of 0
     std::uint16_t sound = 0;                   // ATTR_SFX_HIT for a wobble, ATTR_SFX_DESTROYED for a destroy
     std::array<float, 3> soundPosition{};      // the node position
     std::string triggerObject;                 // on a destroy: the object 0x244f40 enables, messages and raises ObjectTriggered for

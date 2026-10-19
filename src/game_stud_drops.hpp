@@ -16,6 +16,8 @@ public:
     // The wall planes of the bursts, shared with the bricks (LevelEffects).
     chase::runtime::DebrisPlaneRing& planes() { return planes_; }
     chase::runtime::StudDropField* field() { return field_ ? &*field_ : nullptr; }
+    std::optional<chase::runtime::StudDropMode> drop(const std::optional<chase::runtime::StudDropRequest>& request, const chase::runtime::DebrisLineTest& wall,
+                                                     const chase::runtime::DebrisLineTest& ground);
     // STAND-IN STUD-S6: the volume and frequency scale of the sounds are not applied.
     std::vector<chase::runtime::SoundCall> update(float frameDelta, const std::array<float, 3>& pickupPoint,
                                                   const std::optional<std::array<float, 3>>& flightTarget, chase::runtime::StudField& counter);

@@ -178,6 +178,12 @@ std::vector<runtime::SoundCall> LevelSession::updateBuildits(const float playerP
     const bool carrying = carry.carryingMode() != 0 || carry.busy();
     const std::vector<runtime::BuilditAction> actions = buildits.update(objectState, playerPosition, held, carrying);
     runtime::applyBuilditActions(buildits, actions, objectState, levelScripts);
+    for (const runtime::BuilditAction& action : actions)
+        if (action.kind == runtime::BuilditActionKind::Built) {
+            const runtime::BuilditObject& built = buildits.objects()[action.index];
+            if (const auto mode = studDrops.drop(runtime::builditFinishStuds(built), debrisLineStandIn(), debrisLineStandIn()))
+                std::cout << "buildit " << built.instance << ": stud drop mode " << unsigned(*mode) << '\n';
+        }
     const bool free = !carrying && !levelScripts.playerControlTaken() && !cutscenePlaying() && player->vertical.posture == runtime::Posture::Ground;
     builditPlayer.update(buildits.lastUse(), pad.slot(kSlotConfirmButton).press > 0, held, free);
     return runtime::builditSounds(buildits, actions, runtime::kBuilditSoundOwnerBase);

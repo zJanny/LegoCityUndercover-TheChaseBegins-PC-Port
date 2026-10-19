@@ -10,7 +10,8 @@ The class `leprops/leprop_wobblydestructible` (object type 119: tables, lamp pos
 - The bouncer: the player's landing handler 0x2b24bc sends message 15 through 0x20b78c when the floor it landed on belongs to a type-19 entity; the take-off (state 25 "Bounce Take Off", enter 0x2f4e10) sets ctrl+0x2b8 to -speed, the speed is clamped to `LowestTakeOffSpeed` 0.3 .. `HighestTakeOffSpeed` 1.0 and grows by `JumpSpeedChange` 0.1 per bounce with B held, falls by 0.2 without (and stays at 0.3). The flight rises by the speed, +0.05 per update. [§2026-10-18T20:25:42](#ts-20261018-202542)
 - Walking does not bounce; only a landing bounces [§2026-10-18T20:25:42](#ts-20261018-202542). A walk from outside is stopped on a circle of about 2.41 m around the `Trampoline_03` origin; the earlier "not blocked" walk started inside that circle [§2026-10-18T21:30:45](#ts-20261018-213045). It is an ordinary prop wall: a placed object's wall triangle only blocks while the player's box centre is in front of its plane, so the walk from inside crosses; no bouncer-specific collision [§2026-10-19T07:58:55](#ts-20261019-075855).
 - In the original Chase grabs the flag poles above the trampoline in a fall update after a bounce with B held (take-off at 0.9 reaches them): bar test 0x206240 from the fall state's grab chain; ported ([player-traversal-rails.md §2026-10-18T21:10:23](player-traversal-rails.md#ts-20261018-211023)). The user's state m12-trampoline-pole is Chase already hanging on the pole. [§2026-10-18T20:42:03](#ts-20261018-204203)
-- Open: the wobble spring, the studs of a wobbling hit, the states 25 and 26 beyond the motion, the pad's query rules; see the unknowns of the entry.
+- The studs of a wobbling hit drop through the stud drop. [studs.md §2026-10-19T14:36:25](studs.md#ts-20261019-143625)
+- Open: the wobble spring, the states 25 and 26 beyond the motion, the pad's query rules; see the unknowns of the entry.
 
 <a id="ts-20261018-202542"></a>
 

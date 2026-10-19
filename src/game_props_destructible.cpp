@@ -28,6 +28,8 @@ bool LevelSession::deliverPropHit(const std::string& lowerInstance, const runtim
     if (hit.wobble) {
         if (effects.debris()) effects.debris()->burst(*reaction->wobbleBricks, debrisLineStandIn(), debrisLineStandIn());
         std::cout << "prop " << lowerInstance << ": hit, health " << hit.health << " at update " << updatesForLog << '\n';
+        if (const auto mode = studDrops.drop(reaction->wobbleStuds, debrisLineStandIn(), debrisLineStandIn()))
+            std::cout << "prop " << lowerInstance << ": stud drop mode " << unsigned(*mode) << " count " << reaction->wobbleStuds->count << '\n';
         return true;
     }
     levelScripts.destroyEntity(lowerInstance);

@@ -9,6 +9,8 @@
 #include "runtime/reference_trigger.hpp"
 #include "runtime/sound_events.hpp"
 #include "runtime/script_runner.hpp"
+#include "runtime/stud_callers.hpp"
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -29,6 +31,9 @@ struct BuilditObject {
     std::string finalProp;      // BuilditFinalProp, lower case, empty when the reference is unset
     std::string triggerObject;  // TriggerObject, lower case, empty when the reference is unset
     float studValue = kBuilditDefaultStudValue;
+    StudSpawnSource studSpawn;       // SpawnCone, SpawnLocal, SpawnDir of the build-it
+    std::array<float, 16> finalPropNode{};  // the final prop at its placement (0x2429d0 of its node)
+    bool hasFinalPropNode = false;
     std::uint16_t soundBitDone = 0;  // ATTR_SFXBitDone (record +0x88), played by the change to state 9
     std::uint16_t soundBuilt = 0;    // ATTR_SFXBuilt (record +0x8a), played by the change to state 11
     float position[3] = {0, 0, 0};
@@ -49,6 +54,9 @@ struct BuilditUse {
     bool accepted = false;   // the action button was taken: a state 2, 3 or 4 got target 8
     std::size_t object = 0;
 };
+
+// 0x1aad90 change to state 11: the stud drop of a finished build (none without a final prop placement or with StudValue 0).
+std::optional<StudDropRequest> builditFinishStuds(const BuilditObject& object);
 
 enum class BuilditActionKind {
     BrickStarted,

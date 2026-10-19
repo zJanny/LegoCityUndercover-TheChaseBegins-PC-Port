@@ -91,6 +91,7 @@ void WobblyProps::load(assets::FuseArchive& archive, const assets::Level& level,
         prop.burst.ratio = floatValue(param(object, *cls, "DebrisRatio"), 0.0f);
         const float studs = floatValue(param(object, *cls, "WobbleStudValue"), 2.0f);
         prop.studValue = unsigned(std::int32_t(studs));
+        prop.studSpawn = studSpawnSource(level, object, *cls);
         if (const assets::LevelParam* sound = param(object, *cls, "ATTR_SFX_HIT")) prop.soundHit = std::uint16_t(sound->value);
         if (const assets::LevelParam* sound = param(object, *cls, "ATTR_SFX_DESTROYED")) prop.soundDestroyed = std::uint16_t(sound->value);
         props_.push_back(std::move(prop));
@@ -122,6 +123,7 @@ std::optional<WobblyReaction> WobblyProps::deliver(const std::string& lowerInsta
             burst.ratio = prop.burst.ratio;
             reaction.wobbleBricks = burst;
             reaction.wobbleStudValue = prop.studValue;
+            reaction.wobbleStuds = wobbleHitStudRequest(prop.studSpawn, prop.studValue, prop.node);
             reaction.sound = prop.soundHit;
         } else {
             prop.destroyed = true;

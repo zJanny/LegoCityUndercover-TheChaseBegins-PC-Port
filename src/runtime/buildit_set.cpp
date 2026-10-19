@@ -55,6 +55,17 @@ void BuilditSet::load(assets::FuseArchive& archive, const assets::Level& level, 
         if (const assets::LevelParam* param = effectiveParam(object, *cls, studValue); param && param->type == 0) {
             std::memcpy(&build.studValue, &param->value, 4);
         }
+        build.studSpawn = studSpawnSource(level, object, *cls);
+        if (!build.finalProp.empty()) {
+            for (const assets::LevelObject& other : level.objects) {
+                if (lower(other.instance) != build.finalProp) continue;
+                if (const std::optional<assets::Placement> finalPlaced = assets::objectStart(level, other.instance)) {
+                    build.finalPropNode = assets::placementMatrix(*finalPlaced);
+                    build.hasFinalPropNode = true;
+                }
+                break;
+            }
+        }
         build.soundBitDone = soundParam(object, *cls, "ATTR_SFXBitDone");
         build.soundBuilt = soundParam(object, *cls, "ATTR_SFXBuilt");
         std::copy_n(placed->position, 3, build.position);
@@ -78,6 +89,11 @@ void BuilditSet::load(assets::FuseArchive& archive, const assets::Level& level, 
         references_.add(build.instance, build.triggerObject);
         objects_.push_back(std::move(build));
     }
+}
+
+std::optional<StudDropRequest> builditFinishStuds(const BuilditObject& object) {
+    if (!object.hasFinalPropNode) return std::nullopt;
+    return builditStudRequest(object.studSpawn, object.studValue, object.finalPropNode);
 }
 
 const BuilditObject* BuilditSet::find(const std::string& lowerInstance) const {

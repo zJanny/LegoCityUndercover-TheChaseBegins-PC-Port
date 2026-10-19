@@ -5,6 +5,12 @@ namespace runtime = chase::runtime;
 
 void LevelStudDrops::load(runtime::GameRandom& random) { field_.emplace(random, planes_); }
 
+std::optional<runtime::StudDropMode> LevelStudDrops::drop(const std::optional<runtime::StudDropRequest>& request, const runtime::DebrisLineTest& wall,
+                                                          const runtime::DebrisLineTest& ground) {
+    if (!request || !field_) return std::nullopt;
+    return field_->drop(*request, wall, ground);
+}
+
 std::vector<runtime::SoundCall> LevelStudDrops::update(float frameDelta, const std::array<float, 3>& pickupPoint,
                                                        const std::optional<std::array<float, 3>>& flightTarget, runtime::StudField& counter) {
     std::vector<runtime::SoundCall> calls;
