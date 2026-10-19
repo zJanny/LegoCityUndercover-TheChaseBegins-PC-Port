@@ -66,6 +66,8 @@ python3 tools/priority_report.py --update docs/plans/priorities.md  # rewrite th
 python3 tools/priority_report.py --check docs/plans/priorities.md   # fails when the file is out of date
 ```
 
+Each item in the ranking links to its line in the source view of its feature file (`?display=source#L<n>`). The line numbers change when a feature file changes: run `--update` after editing one. `python3 tools/check_doc_links.py --fix` follows moved lines; a link to an item that no longer exists fails `doc-links`.
+
 Needs the built `build/libchase_assets_c.so` and the extracted game data. See [Progress](progress.md).
 
 ## Merging an agent branch

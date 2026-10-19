@@ -346,6 +346,33 @@ class RuleChecksTest(unittest.TestCase):
         kept = [l for l in (plans / 'x.progress.md').read_text().split('\n') if l.startswith('- 2026')]
         self.assertEqual(kept, lines[3:])
 
+    def write_priorities(self, line_number, text='F-3'):
+        target = f'features/f.md?display=source#L{line_number}'
+        (self.root / 'docs' / 'plans' / 'priorities.md').write_text(f'# P\n\n[{text}]({target})\n')
+
+    def test_item_source_line_links_are_checked(self):
+        (self.features / 'f.md').write_text('# F\n\n- [ ] F-1 open\n- F-S1 stand-in\n- [ ] F-3 third\n')
+        self.write_priorities(5)
+        self.assertEqual(links.process(self.root, False)[0], [])
+        self.write_priorities(3)
+        found = links.process(self.root, False)[0]
+        self.assertEqual(found, ['docs/plans/priorities.md:3: link features/f.md?display=source#L3 must be features/f.md?display=source#L5'])
+        links.process(self.root, True)
+        self.assertEqual(links.process(self.root, False)[0], [])
+        self.write_priorities(5, 'F-9')
+        self.assertEqual(links.process(self.root, False)[0], ['docs/plans/priorities.md:3: no item F-9 in features/f.md'])
+
+    def test_item_source_line_link_follows_a_move_and_fails_for_a_closed_item(self):
+        feature = self.features / 'f.md'
+        feature.write_text('# F\n\n- [x] F-2 done\n- [ ] F-3 third\n')
+        self.write_priorities(4)
+        links.process(self.root, True)
+        self.assertEqual(feature.read_text(), '# F\n\n- [ ] F-3 third\n')
+        self.assertEqual(links.process(self.root, False)[0], [])
+        self.assertIn('?display=source#L3', (self.root / 'docs' / 'plans' / 'priorities.md').read_text())
+        self.write_priorities(3, 'F-2')
+        self.assertEqual(links.process(self.root, False)[0], ['docs/plans/priorities.md:3: no item F-2 in features/f.md'])
+
     def test_fix_moves_closed_items_in_order(self):
         feature = self.features / 'f.md'
         feature.write_text('# F\n\n- [ ] F-1 open\n- [x] F-2 done\n- F-S1 stand-in\n- [x] F-3 also done\nProse.\n')

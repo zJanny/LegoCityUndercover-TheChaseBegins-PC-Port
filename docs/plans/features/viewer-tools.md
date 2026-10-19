@@ -21,6 +21,7 @@ IN_PROGRESS, updated 2026-10-14T14:37:06+02:00. All tools run; the oracle suppor
 ## 4. Stand-ins
 
 - [ ] TOOLS-S1 — The oracle's level motion pose (DSU accel 0 0 -1 g, zero rotation) was chosen because the scanner works with it and not with gravity on y; it is not read from the original or from a console. evidence: [oracle-setup.md §2026-10-18T22:03:32](../../re/oracle-setup.md#ts-20261018-220332).
+- [ ] TOOLS-S2 — Stand-in for a rendered landing: the line link of TOOLS-16 shows the Markdown source, not the rendered item. needs: TOOLS-17. evidence: tools/priority_report.py.
 - The viewer uses the level lights of RENDER-1 with the room stand-in RENDER-S60.
 
 ## 5. Open items
@@ -31,6 +32,7 @@ IN_PROGRESS, updated 2026-10-14T14:37:06+02:00. All tools run; the oracle suppor
 - [ ] TOOLS-3 — The function total of the progress report is an estimate (7575 call and pointer targets against 8086 procedures in REA); an exact list needs a stored REA procedure list. evidence: [arm-executable.md §2026-10-13T22:17](../../re/arm-executable.md#ts-20261013-221729).
 - [ ] TOOLS-4 — "Object types with behaviour" is decided per class from the class file (props with a `CollisionBound`, the prop family, doors, studs); it does not check that an instance produced a shape, and characters and vehicles count as none until they get rules (COLL-2).
 - [ ] TOOLS-15 — The gyroscope axis mapping of the virtual motion source, and the code that turns the accelerometer into the NaN camera yaw when gravity lies on the HID y axis. evidence: [oracle-setup.md §2026-10-18T22:03:32](../../re/oracle-setup.md#ts-20261018-220332).
+- [ ] TOOLS-17 — Item links open the source view, not the rendered page; a rendered landing needs an `<a id>` per item line in the feature files, which the 16 KB limit of the nearly full files does not allow. blocks: TOOLS-S2. evidence: tools/priority_report.py.
 
 ## 6. Findings summary
 

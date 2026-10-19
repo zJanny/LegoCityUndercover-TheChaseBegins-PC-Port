@@ -31,6 +31,7 @@ EXPLICIT_ID = re.compile(r'<a\s+[^>]*?\b(?:id|name)="([^"]+)"')
 FENCE = re.compile(r"^\s*(```|~~~)")
 ITEM_ID = re.compile(r"^- (?:\[[ x]\] )?([A-Z][A-Z0-9]*-S?\d+)\b")
 CLOSED_ITEM_LINE = re.compile(r"^- \[x\] [A-Z][A-Z0-9]*-\d+\b")
+SOURCE_LINE_TARGET = re.compile(r"^(.*)\?display=source#L(\d+)$")
 INDEX_ROW = re.compile(r"^\|\s*\[[^\]]*\]\(([^)#\s]+\.md)\)")
 LOG_HEADING = "## Session Log"
 CLOSED_SUFFIX = ".closed.md"
@@ -175,6 +176,20 @@ def entry_anchor_at(doc, number):
             break
         current = anchor
     return current
+
+
+def source_line_link(path, text, file_part, line_number):
+    """(error or None, corrected line number) of a link to one line of the source view of a Markdown file."""
+    lines = path.read_text(encoding="utf-8").split("\n")
+    if not IDENTIFIER.match(text):
+        if 1 <= line_number <= len(lines):
+            return None, line_number
+        return f"line {line_number} is outside {file_part}", line_number
+    for number, line in enumerate(lines, 1):
+        match = ITEM_ID.match(line)
+        if match and match.group(1) == text:
+            return None, number
+    return f"no item {text} in {file_part}", line_number
 
 
 def link_targets(path, line, masked):
@@ -843,7 +858,23 @@ def process(root, fix, messages=None):
                 head, target, tail = line[match.start(1):match.end(1)], line[match.start(2):match.end(2)], line[match.start(3):match.end(3)]
                 new_target = target
                 where = f"{rel}:{number + 1}"
-                if target and not external(target):
+                source_link = SOURCE_LINE_TARGET.match(target)
+                if source_link:
+                    file_part, wanted = source_link.group(1), int(source_link.group(2))
+                    dest = (path.parent / file_part).resolve()
+                    if not dest.is_file() or dest.suffix != ".md":
+                        errors.append(f"{where}: missing file {target}")
+                    else:
+                        problem, actual = source_line_link(dest, head[1:-2], file_part, wanted)
+                        if problem:
+                            errors.append(f"{where}: {problem}")
+                        elif actual != wanted:
+                            new_target = f"{file_part}?display=source#L{actual}"
+                            if fix:
+                                links_rewritten += 1
+                            else:
+                                errors.append(f"{where}: link {target} must be {new_target}")
+                elif target and not external(target):
                     file_part, _, fragment = target.partition("#")
                     dest = (path.parent / file_part).resolve() if file_part else path.resolve()
                     stamp = SECTION_STAMP.search(head)

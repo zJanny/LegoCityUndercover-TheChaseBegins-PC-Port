@@ -60,7 +60,7 @@ def identifiers_of(text):
 def parse_items(text, file_name):
     """Open items and stand-ins of one feature file: [{id, file, gap, blocks, needs, uses}]."""
     items = []
-    for line in text.splitlines():
+    for number, line in enumerate(text.splitlines(), 1):
         match = ITEM_ID.match(line)
         if not match or not OPEN_ITEM.match(line):
             continue
@@ -71,7 +71,7 @@ def parse_items(text, file_name):
         uses = None
         if 'uses' in fields:
             uses = [name.strip().strip('`') for name in fields['uses'].rstrip('.').split(',') if name.strip()]
-        items.append({'id': item_id, 'file': file_name, 'text': remainder, 'gap': gap.strip(),
+        items.append({'id': item_id, 'file': file_name, 'line': number, 'text': remainder, 'gap': gap.strip(),
                       'blocks': identifiers_of(fields.get('blocks', '')), 'needs': identifiers_of(fields.get('needs', '')),
                       'uses': uses})
     return items
@@ -229,11 +229,15 @@ def linked_text(row):
     return shown.replace('|', '\\|')
 
 
+def item_link(row):
+    return '[%s](features/%s?display=source#L%d)' % (row['id'], row['file'], row['line'])
+
+
 def table(rows):
     lines = ['| # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |', '|---|---|---|---|---|---|---|---|---|']
     for rank, row in enumerate(rows, 1):
-        lines.append('| %d | [%s](features/%s) | %d | %d | %d | %d | %s | %s | %s |' % (
-            rank, row['id'], row['file'], row['calls'], row['placed'], row['levels'], row['unblocks'], state_text(row),
+        lines.append('| %d | %s | %d | %d | %d | %d | %s | %s | %s |' % (
+            rank, item_link(row), row['calls'], row['placed'], row['levels'], row['unblocks'], state_text(row),
             linked_text(row), short_gap(row)))
     return lines
 
@@ -289,7 +293,7 @@ def render(rows, areas):
               'No script native or object class is linked to these items (`+N` is Unblocks). Add `uses:` to an item when its fix changes the game.', '']
     widest = sorted((row for row in unlinked if row['unblocks']), key=lambda r: (-r['unblocks'], r['id']))[:TOP_AREA]
     if widest:
-        lines += ['Widest Unblocks among them: ' + ', '.join('[%s](features/%s) (+%d)' % (r['id'], r['file'], r['unblocks']) for r in widest), '']
+        lines += ['Widest Unblocks among them: ' + ', '.join('%s (+%d)' % (item_link(r), r['unblocks']) for r in widest), '']
     by_file = {}
     for row in sorted(unlinked, key=lambda r: (-r['unblocks'], r['id'])):
         by_file.setdefault(row['file'], []).append('%s%s' % (row['id'], ' (+%d)' % row['unblocks'] if row['unblocks'] else ''))

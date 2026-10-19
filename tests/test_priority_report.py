@@ -114,6 +114,13 @@ class RenderTests(unittest.TestCase):
         self.assertIn('## Reach unknown', first)
         self.assertIn('[sample.md](features/sample.md): SAMP-3 (+3)', first)
 
+    def test_item_links_point_at_the_item_line_of_the_source_view(self):
+        items = report.parse_items(FEATURE, 'sample.md')
+        self.assertEqual([item['line'] for item in items][:2], [5, 6])
+        text = report.render(report.measure(items, FUNCTIONS, CLASSES), [('Area', ['sample.md'])])
+        self.assertIn('| [SAMP-1](features/sample.md?display=source#L5) |', text)
+        self.assertIn('[SAMP-3](features/sample.md?display=source#L7) (+3)', text)
+
 
 class ArgumentTests(unittest.TestCase):
     def run_main(self, *args):
