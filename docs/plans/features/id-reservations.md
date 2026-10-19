@@ -4,11 +4,6 @@ Ranges of item IDs held by parallel agents; the lead reserves them with `tools/c
 
 | Prefix | First | Last | Holder | Date |
 |---|---|---|---|---|
-| RENDER | 72 | 73 | r37-A | 2026-10-19T18:42:53+02:00 |
-| RENDER-S | 67 | 68 | r37-A | 2026-10-19T18:42:53+02:00 |
-| LEVOBJ | 114 | 116 | r37-A | 2026-10-19T18:42:53+02:00 |
-| LEVOBJ-S | 92 | 93 | r37-A | 2026-10-19T18:42:53+02:00 |
-| MOVIE | 40 | 40 | r37-A | 2026-10-19T18:42:53+02:00 |
 | LEVOBJ | 117 | 119 | r37-C | 2026-10-19T18:42:53+02:00 |
 | LEVOBJ-S | 94 | 95 | r37-C | 2026-10-19T18:42:53+02:00 |
 | HUD | 74 | 75 | r37-C | 2026-10-19T18:42:54+02:00 |
