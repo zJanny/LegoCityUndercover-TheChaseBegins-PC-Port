@@ -54,16 +54,21 @@ ModelPart whiteMaterialPart(const ModelPart& part) {
     return out;
 }
 
-MaterialState materialState(const ModelPart& part) {
+MaterialState materialState(const ModelPart& part) { return materialState(part, MaterialOverride{}); }
+
+MaterialState materialState(const ModelPart& part, const MaterialOverride& override) {
     MaterialState out;
     if (part.material.size() < 0x60) return out;
     const std::uint8_t* m = part.material.data();
-    out.mode = m[1] & 0x1f;
-    out.lightingKey = m[2] & 0xf;
-    out.textureKey = m[3] & 0xf;
-    out.alphaKey = m[5] & 7;
+    const unsigned flags = override.flags;
+    out.mode = (flags & 1 ? override.mode : m[1]) & 0x1f;
+    out.lightingKey = (flags & 2 ? override.lighting : m[2]) & 0xf;
+    out.textureKey = (flags & 4 ? override.texture : m[3]) & 0xf;
+    out.alphaKey = (flags & 8 ? override.alpha : m[5]) & 7;
     const unsigned textureCount = (m[10] & 0x3fu) >> 3;
-    const bool vertexColour = m[10] & 0x40, bump = m[0xd] & 2, materialColour = m[0xc] & 0x40;
+    const bool vertexColour = flags & 0x10 ? (override.extra & 1) : (m[10] & 0x40);
+    const bool bump = flags & 0x80 ? true : (m[0xd] & 2);
+    const bool materialColour = m[0xc] & 0x40;
     out.reflection = out.textureKey == 5 || out.textureKey == 6 || out.textureKey == 7;
     out.lighting = lightingByM2[out.lightingKey] != 0;
 
@@ -89,7 +94,7 @@ MaterialState materialState(const ModelPart& part) {
         stages.push_back(stage(1, diffuse | second << 4 | 0xf00, 0, Lerp, 0xffffff));
         break;
     case 2: stages.push_back(stage(0, diffuse | second << 4, 0, Add, 0xffffff)); break;
-    case 3: stages.push_back(stage(0, 0xe, 0, Replace, 0xffffff)); break;
+    case 3: stages.push_back(stage(0, 0xe, 0, Replace, flags & 1 ? override.constant & 0xffffff : 0xffffff)); break;
     default: return out;
     }
     std::uint32_t buffer = 0;
@@ -164,7 +169,7 @@ MaterialState materialState(const ModelPart& part) {
         stages[1].combiner |= 0x10000;
         break;
     }
-    stages.back().scale = (m[0xb] & 0x3f) >> 5;
+    stages.back().scale = flags & 0x20 ? (override.extra & 3u) >> 1 : (m[0xb] & 0x3fu) >> 5;
     out.bufferUpdate = buffer;
 
     out.alphaTest = m[0xb] & 0x10;
@@ -177,6 +182,7 @@ MaterialState materialState(const ModelPart& part) {
     out.depthTest = (m[0xb] & 7) != 6;
     out.depthWrite = m[0xb] & 8;
     out.fogged = !(m[0xb] & 0x40) && m[9] != 1;
+    out.additive = m[9] == 1;
     const unsigned cull = m[0xc] & 3;
     out.cullMode = cull == 0 ? 1 : cull == 1 ? 2 : 0;
     out.supported = true;

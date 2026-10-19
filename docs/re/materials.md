@@ -11,6 +11,7 @@ Reverse-engineering findings. Entries are chronological; later entries may corre
 - The texture alpha of Chase's face is ignored by the combiner, so the eyes are drawn, not discarded. [§2026-10-13T22:24:39](#ts-20261013-222439)
 - Lightmap surfaces match the oracle on the police-station lobby wall (the floor is about 8 percent lighter in the port). [§2026-10-14T09:50:11](#ts-20261014-095011)
 - The white quad is the `Checker1.tga` part of room1 (also room3, room5): flat y = 0, 4.2 x 4.2, opaque. [§2026-10-14T09:50:11](#ts-20261014-095011)
+- The override block 0x530834 (flags, mode, lighting, texture, alpha, constant, extra) replaces material bytes in 0x128dc8 / 0x129560 / 0x12e460; the scanner's audio mode is its writer (0x2e4858): [abilities-scanner.md §2026-10-19T14:06:22](abilities-scanner.md#ts-20261019-140622).
 - Open: whether the original draws the `Checker1.tga` quads, texture-unit to UV-set mapping, wrap flags, cube sampling, fog conditions, colour pulse over time, draw sort order 0x115128.
 
 

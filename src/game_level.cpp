@@ -372,7 +372,8 @@ void LevelSession::draw(int width, int height) {
     clearWindow({backgroundColour[0] / 255.0f, backgroundColour[1] / 255.0f, backgroundColour[2] / 255.0f, 1}, true);
     beginFrame(1.0f);
     const runtime::ClipPlanes followPlanes = runtime::followClipPlanes(follow ? follow->follow().nearPlane() : runtime::kCameraNearLimit);
-    applyFog(followPlanes);
+    const runtime::ScannerRender scannerLook = runtime::scannerRender(scanner.viewShown());
+    if (!scannerLook.noFog) applyFog(followPlanes);
     const float* eye = follow ? follow->eye() : camera.eye;
     float viewYaw = follow ? follow->yaw() : camera.yaw, viewPitch = follow ? follow->pitch() : camera.pitch;
     float fieldOfView = follow ? follow->verticalFieldOfView() : 1.0f;
@@ -431,9 +432,12 @@ void LevelSession::draw(int width, int height) {
         Mat4 skyModel = identity();
         std::copy(offset.begin(), offset.end(), skyModel.begin() + 12);
         scene.setTransform(*skyInstance, skyModel);
+        if (scannerLook.overrideSky) scene.setMaterialOverride(scannerLook.world);
         scene.drawSky(mvp);
     }
+    if (scannerLook.active) scene.setMaterialOverride(scannerLook.drawList);
     scene.draw(mvp);
+    scene.setMaterialOverride(std::nullopt);
     std::vector<StudSprite> sprites;
     for (const runtime::Stud& stud : studs.studs())
         if (stud.state == runtime::StudState::Idle || stud.state == runtime::StudState::Collecting)

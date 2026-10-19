@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -100,6 +101,9 @@ public:
     void setInstanceTint(std::size_t instance, const std::array<float, 3>& tint);
     // 0x230ae8: the instance is drawn with the materials of assets::whiteMaterialPart while set.
     void setInstanceWhiteMaterials(std::size_t instance, bool white);
+    // The override block 0x530834 for the following draws (assets::MaterialOverride); with flag 6 set, draws whose material is additive
+    // (blend destination index 1) are skipped like the draw list 0x188778 does.
+    void setMaterialOverride(const std::optional<assets::MaterialOverride>& override);
     std::size_t missingTextures() const;
     std::size_t instances() const;
 

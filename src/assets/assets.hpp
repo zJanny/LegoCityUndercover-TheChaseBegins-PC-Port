@@ -217,8 +217,18 @@ struct MaterialState {
     bool depthTest = true, depthWrite = true;
     unsigned cullMode = 1;           // PICA: 0 none, 1 culls counter-clockwise, 2 culls clockwise
     bool fogged = true;              // 0x1292fc: fog applies unless material byte 0xb bit 6 is set or byte 9 (blend destination index) is 1
+    bool additive = false;           // byte 9 (blend destination index) is 1: the draw list 0x188778 skips it under override flag 6
 };
 MaterialState materialState(const ModelPart& part);
+// The override block 0x530834 that 0x128dc8, 0x129560 and 0x12e460 read before the material's own bytes: flags (+0) bit 0 replaces the
+// mode (+1) and makes mode 3 use the constant (+8) instead of white, bit 1 the lighting key (+2), bit 2 the texture key (+3), bit 3 the
+// alpha key (+4), bit 4 the vertex colour flag with extra (+0xc) bit 0, bit 5 the scale of the last stage with extra bit 1, bit 7 forces
+// the bump stages (key bit 22); bit 6 is read by the draw list 0x188778 only.
+struct MaterialOverride {
+    std::uint8_t flags = 0, mode = 0, lighting = 0, texture = 0, alpha = 0, extra = 0;
+    std::uint32_t constant = 0;
+};
+MaterialState materialState(const ModelPart& part, const MaterialOverride& override);
 // 0x230ae8 with argument 1 and colour 0xffffffff (the hit flash of a vehicle): mode byte 1 = 3 (constant white), bytes 0x10..0x12 = 255, the
 // texture count (byte 10 bits 3..5) cleared and byte 0xb bit 7 set. The part keeps only the material, its extra block and the texture slots.
 ModelPart whiteMaterialPart(const ModelPart& part);

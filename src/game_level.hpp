@@ -37,6 +37,7 @@
 #include "runtime/scanner.hpp"
 #include "runtime/scanner_markers.hpp"
 #include "runtime/scanner_reticle.hpp"
+#include "runtime/scanner_render.hpp"
 #include "runtime/zipline.hpp"
 #include "runtime/brick_grab.hpp"
 #include "runtime/pole.hpp"

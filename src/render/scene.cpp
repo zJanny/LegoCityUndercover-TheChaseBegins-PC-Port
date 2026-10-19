@@ -7,6 +7,7 @@
 #include <cctype>
 #include <cmath>
 #include <cstddef>
+#include <optional>
 #include <stdexcept>
 
 namespace chase::render {
@@ -18,6 +19,13 @@ FogParameters activeFog{};
 
 void uploadLut(GLuint program, const char* name, const runtime::LightLut& lut) {
     glUniform4uiv(glGetUniformLocation(program, name), GLsizei(lut.size() / 4), lut.data());
+}
+
+bool slotUsed(const MaterialState& state, const ModelPart& part, int slot) {
+    for (const int used : state.unitSlot)
+        if (used == slot) return true;
+    const int unreflected = std::min(part.material.size() > 10 ? (part.material[10] & 0x3f) >> 3 : 0, 3);
+    return slot < unreflected;
 }
 
 struct GpuVertex {
@@ -207,6 +215,7 @@ public:
     void setInstanceFade(std::size_t instance, float fade) { instances_.at(instance).fade = fade; }
     void setInstanceTint(std::size_t instance, const std::array<float, 3>& tint) { instances_.at(instance).tint = tint; }
     void setInstanceWhiteMaterials(std::size_t instance, bool white) { instances_.at(instance).whiteMaterials = white; }
+    void setMaterialOverride(const std::optional<MaterialOverride>& override) { override_ = override; }
     std::size_t missingTextures() const { return missing_; }
     std::size_t instances() const { return instances_.size(); }
 
@@ -219,9 +228,12 @@ private:
         bool secondUv = false;
         assets::MaterialState material;
         assets::MaterialState whiteMaterial;
-        GLuint unitTexture[3] = {0, 0, 0};
-        float unitFlat[3][4] = {};
-        bool unitIsFlat[3] = {false, false, false};
+        assets::ModelPart source;
+        mutable assets::MaterialState overridden;
+        mutable std::uint64_t overriddenKey = ~std::uint64_t(0);
+        std::vector<GLuint> slotTexture;
+        std::vector<std::array<float, 4>> slotFlat;
+        std::vector<bool> slotIsFlat;
         std::uint8_t colour[4] = {255, 255, 255, 255}, specular[4] = {255, 255, 255, 255};
         bool doubled = false;
     };
@@ -252,8 +264,9 @@ private:
     void drawInstances(const Mat4& viewProjection, bool skyPass) const;
     const TextureInfo& texture(const std::string& name, const std::string& modelDir);
     DrawPart upload(const ModelPart& part, LoadedModel& model);
-    void drawPart(GLuint program, const DrawPart& part, bool culling, bool skyPass, bool white) const;
-    void setPartLighting(GLuint program, const DrawPart& part, bool white) const;
+    void drawPart(GLuint program, const DrawPart& part, const MaterialState& m, bool culling, bool skyPass, bool white) const;
+    void setPartLighting(GLuint program, const DrawPart& part, const MaterialState& m, bool white) const;
+    const MaterialState& overriddenState(const DrawPart& part) const;
 
     FuseArchive& archive_;
     std::vector<std::string> exclude_;
@@ -265,6 +278,7 @@ private:
     std::size_t missing_ = 0;
     runtime::LightSet lights_;
     float eye_[3] = {0, 0, 0};
+    std::optional<MaterialOverride> override_;
 };
 
 SceneImpl::SceneImpl(FuseArchive& archive, std::vector<std::string> exclude) : archive_(archive), exclude_(std::move(exclude)) {
@@ -299,18 +313,21 @@ bool SceneImpl::addModel(const std::string& path, const Mat4& transform,
                 for (const auto& word : exclude_) skip |= lower(texName).find(word) != std::string::npos;
                 if (skip || part.indices.empty()) continue;
                 DrawPart d = upload(part, out);
-                for (int unit = 0; unit < 3 && d.hasMaterial; ++unit) {
-                    const int slot = d.material.unitSlot[unit];
-                    if (slot < 0 || std::size_t(slot) >= part.textures.size()) continue;
-                    std::string name = part.textures[std::size_t(slot)];
+                const std::size_t slots = d.hasMaterial ? part.textures.size() : 0;
+                d.slotTexture.assign(slots, 0);
+                d.slotFlat.assign(slots, {1, 1, 1, 1});
+                d.slotIsFlat.assign(slots, false);
+                for (std::size_t slot = 0; slot < slots; ++slot) {
+                    if (!slotUsed(d.material, part, int(slot))) continue;
+                    std::string name = part.textures[slot];
                     const auto replacement = textureOverrides.find(stem(name));
                     if (replacement != textureOverrides.end()) name = replacement->second;
                     const TextureInfo& info = texture(name, dir);
                     if (info.cube) {
-                        d.unitIsFlat[unit] = true;
-                        std::copy_n(info.average, 4, d.unitFlat[unit]);
+                        d.slotIsFlat[slot] = true;
+                        std::copy_n(info.average, 4, d.slotFlat[slot].begin());
                     } else {
-                        d.unitTexture[unit] = info.id;
+                        d.slotTexture[slot] = info.id;
                     }
                 }
                 if (part.flags & AttrSkin) out.skinned.push_back({out.parts.size(), part.vertices, part.flags});
@@ -392,12 +409,23 @@ void SceneImpl::bounds(float centre[3], float& radius) const {
     }
 }
 
-void SceneImpl::drawPart(GLuint program, const DrawPart& part, bool culling, bool skyPass, bool white) const {
-    const MaterialState& m = white ? part.whiteMaterial : part.material;
+const MaterialState& SceneImpl::overriddenState(const DrawPart& part) const {
+    const MaterialOverride& o = *override_;
+    const std::uint64_t key = std::uint64_t(o.flags & ~0x40u) | std::uint64_t(o.mode) << 8 | std::uint64_t(o.lighting & 0xf) << 16 |
+                              std::uint64_t(o.texture & 0xf) << 20 | std::uint64_t(o.alpha & 7) << 24 | std::uint64_t(o.extra & 3) << 28 |
+                              std::uint64_t(o.constant & 0xffffff) << 32;
+    if (part.overriddenKey != key) {
+        part.overridden = materialState(part.source, o);
+        part.overriddenKey = key;
+    }
+    return part.overridden;
+}
+
+void SceneImpl::drawPart(GLuint program, const DrawPart& part, const MaterialState& m, bool culling, bool skyPass, bool white) const {
     glUniform1i(glGetUniformLocation(program, "stageCount"), part.hasMaterial ? GLint(m.stages.size()) : 0);
     glUniform1i(glGetUniformLocation(program, "hasNormal"), part.hasNormal);
     glUniform1i(glGetUniformLocation(program, "hasSecondUv"), part.secondUv);
-    setPartLighting(program, part, white);
+    setPartLighting(program, part, m, white);
     glUniform1f(glGetUniformLocation(program, "alphaReference"), m.alphaTest ? float(m.alphaReference) / 255.0f : -1.0f);
     glUniform1i(glGetUniformLocation(program, "fogOn"), fogActive && part.hasMaterial && m.fogged);
     if (part.hasMaterial) {
@@ -414,17 +442,21 @@ void SceneImpl::drawPart(GLuint program, const DrawPart& part, bool culling, boo
         glUniform4iv(glGetUniformLocation(program, "stageWords"), 6, words);
         glUniform4fv(glGetUniformLocation(program, "stageConstant"), 6, constants);
         glUniform1i(glGetUniformLocation(program, "bufferBits"), GLint(m.bufferUpdate));
-        GLint modes[3];
-        GLfloat flat[12];
+        GLint modes[3] = {0, 0, 0};
+        GLfloat flat[12] = {};
+        GLuint unitTexture[3] = {0, 0, 0};
         for (int unit = 0; unit < 3; ++unit) {
-            modes[unit] = part.unitIsFlat[unit] ? 2 : part.unitTexture[unit] != 0 ? 1 : 0;
-            std::copy_n(part.unitFlat[unit], 4, flat + unit * 4);
+            const int slot = m.unitSlot[unit];
+            if (slot < 0 || std::size_t(slot) >= part.slotTexture.size()) continue;
+            unitTexture[unit] = part.slotTexture[std::size_t(slot)];
+            modes[unit] = part.slotIsFlat[std::size_t(slot)] ? 2 : unitTexture[unit] != 0 ? 1 : 0;
+            std::copy_n(part.slotFlat[std::size_t(slot)].begin(), 4, flat + unit * 4);
         }
         glUniform1iv(glGetUniformLocation(program, "unitMode"), 3, modes);
         glUniform4fv(glGetUniformLocation(program, "unitFlat"), 3, flat);
         for (int unit = 2; unit >= 0; --unit) {
             glActiveTexture(GLenum(GL_TEXTURE0 + unit));
-            glBindTexture(GL_TEXTURE_2D, part.unitTexture[unit]);
+            glBindTexture(GL_TEXTURE_2D, unitTexture[unit]);
         }
         if (m.depthTest) {
             static const GLenum functions[8] = {GL_NEVER, GL_ALWAYS, GL_EQUAL, GL_NOTEQUAL, GL_LESS, GL_LEQUAL, GL_GREATER, GL_GEQUAL};
@@ -444,8 +476,8 @@ void SceneImpl::drawPart(GLuint program, const DrawPart& part, bool culling, boo
         }
     } else {
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, part.unitTexture[0]);
-        GLint modes[3] = {part.unitTexture[0] != 0 ? 1 : 0, 0, 0};
+        glBindTexture(GL_TEXTURE_2D, 0);
+        GLint modes[3] = {0, 0, 0};
         glUniform1iv(glGetUniformLocation(program, "unitMode"), 3, modes);
     }
     glBindVertexArray(part.vao);
@@ -453,10 +485,10 @@ void SceneImpl::drawPart(GLuint program, const DrawPart& part, bool culling, boo
     glDrawElements(GL_TRIANGLES, part.count, GL_UNSIGNED_SHORT, nullptr);
 }
 
-void SceneImpl::setPartLighting(GLuint program, const DrawPart& part, bool white) const {
+void SceneImpl::setPartLighting(GLuint program, const DrawPart& part, const MaterialState& m, bool white) const {
     const std::uint8_t whiteColour[4] = {255, 255, 255, part.colour[3]};
     const runtime::FragmentLighting lighting =
-        part.hasMaterial ? runtime::fragmentLighting(lights_, part.material.lightingKey, white ? whiteColour : part.colour, part.specular, part.doubled)
+        part.hasMaterial ? runtime::fragmentLighting(lights_, m.lightingKey, white ? whiteColour : part.colour, part.specular, part.doubled)
                          : runtime::FragmentLighting{};
     glUniform1i(glGetUniformLocation(program, "lightingOn"), lighting.enabled);
     if (!lighting.enabled) return;
@@ -513,6 +545,8 @@ void SceneImpl::drawInstances(const Mat4& viewProjection, bool skyPass) const {
             for (const auto& part : instance.model->parts) {
                 const bool blended = part.hasMaterial && (part.material.blendSource != 1 || part.material.blendDestination != 0);
                 if (blended != (pass == 1)) continue;
+                const bool overridden = override_ && part.hasMaterial;
+                if (overridden && (override_->flags & 0x40) && part.material.additive) continue;
                 if (blended) {
                     glEnable(GL_BLEND);
                     glBlendEquation(equations[std::min(part.material.blendEquation, 4u)]);
@@ -520,7 +554,10 @@ void SceneImpl::drawInstances(const Mat4& viewProjection, bool skyPass) const {
                 } else {
                     glDisable(GL_BLEND);
                 }
-                drawPart(program, part, culling, skyPass, instance.whiteMaterials && part.hasMaterial && part.whiteMaterial.supported);
+                const bool white = instance.whiteMaterials && part.hasMaterial && part.whiteMaterial.supported;
+                const MaterialState* state = white ? &part.whiteMaterial : &part.material;
+                if (overridden && !white && overriddenState(part).supported) state = &overriddenState(part);
+                drawPart(program, part, *state, culling, skyPass, white);
             }
         }
     }
@@ -599,6 +636,8 @@ SceneImpl::DrawPart SceneImpl::upload(const ModelPart& part, LoadedModel& model)
         d.material = materialState(part);
         d.hasMaterial = d.material.supported;
         d.whiteMaterial = materialState(whiteMaterialPart(part));
+        d.source.material = part.material;
+        d.source.textureSlots = part.textureSlots;
         std::copy_n(part.material.begin() + 0x10, 4, d.colour);
         std::copy_n(part.material.begin() + 0x14, 4, d.specular);
         d.doubled = (part.material[0xb] >> 5) & 1;
@@ -671,6 +710,8 @@ void Scene::setInstanceFade(std::size_t instance, float fade) { impl_->setInstan
 void Scene::setInstanceTint(std::size_t instance, const std::array<float, 3>& tint) { impl_->setInstanceTint(instance, tint); }
 
 void Scene::setInstanceWhiteMaterials(std::size_t instance, bool white) { impl_->setInstanceWhiteMaterials(instance, white); }
+
+void Scene::setMaterialOverride(const std::optional<MaterialOverride>& override) { impl_->setMaterialOverride(override); }
 
 std::size_t Scene::missingTextures() const { return impl_->missingTextures(); }
 

@@ -52,6 +52,7 @@ IN_PROGRESS, updated 2026-10-18T09:41:47+02:00. Particle quads are drawn after t
 - [ ] RENDER-62 Point lights (type 2) against the oracle: lvl_00 `Point`/`Point01` (Intensity 2, MaxRange 1) on baked surfaces. evidence: [rendering-lighting.md §2026-10-15T17:47](../../re/rendering-lighting.md#ts-20261015-174725)
 - [ ] RENDER-63 The writer of 0x37798c (the specular exponent of LUT D0) and whether it changes per level. blocks: RENDER-S62. evidence: [rendering-lighting.md §2026-10-15T17:47](../../re/rendering-lighting.md#ts-20261015-174725)
 - [ ] RENDER-9 — The player's shadow (dark patch beside the feet in the oracle picture of the police entrance) is not drawn; part of RENDER-33 (shadows 0x37796c). needs: RENDER-33. The pale disc seen there earlier was an object (LEVOBJ-11, closed). evidence: [objects.md §2026-10-14T15:05](../../re/objects.md#ts-20261014-150541).
+- [ ] RENDER-68 The glow post-process 0x2bf830 (pass 5 of 0x2e4858): screen copied to a 256 x 128 target, three blurs with the table modes 0xc / 0xd, added back with mode 0x12; off in normal lvl_01 play (0x516410 = 0), on in the scanner view with (0.6, 1.4). Needs the blur tables and the downsample material read in the oracle, then a `.glsl` pass in `src/render/`. evidence: [abilities-scanner.md §2026-10-19T14:06:22](../../re/abilities-scanner.md#ts-20261019-140622)
 - [ ] RENDER-6 — The white quad above the police-station entrance is the `Checker1.tga` part of `room1.bfnmdl` (also room3, room5), seen far away outside; not RENDER-S3. Unknown whether the original draws it. Not fixed (related: WSTREAM-3). evidence: [materials.md §2026-10-14T13:40](../../re/materials.md#ts-20261014-134000).
 
 ## 6. Findings summary
@@ -60,6 +61,7 @@ IN_PROGRESS, updated 2026-10-18T09:41:47+02:00. Particle quads are drawn after t
 - Sky: [rendering-sky.md §2026-10-15T15:39](../../re/rendering-sky.md#ts-20261015-153917).
 - Particle draw state and quads: [particles.md §2026-10-18T09:40](../../re/particles.md#ts-20261018-094004).
 - Lighting: [rendering-lighting.md §2026-10-15T17:47](../../re/rendering-lighting.md#ts-20261015-174725).
+- Material override 0x530834 (scanner wash) and the glow post-process 0x2bf830: [abilities-scanner.md §2026-10-19T14:06:22](../../re/abilities-scanner.md#ts-20261019-140622).
 - [materials.md §2026-10-13T22:24](../../re/materials.md#ts-20261013-222439); UV scales and vertex shaders: [models.md §2026-10-12T18:05](../../re/models.md#ts-20261012-1805).
 
 ## 7. Code and tests

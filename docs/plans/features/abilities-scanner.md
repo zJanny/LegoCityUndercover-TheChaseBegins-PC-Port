@@ -6,7 +6,7 @@ The sound scanner of mission 1-2 and later missions: the `prop_scannerzoneaudio`
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-19T10:01:16+02:00. The audio zone (type 201, ScannerMode 1), the scannable objects, the player states 0x156 / 0x157 / 0x158, aim, zoom, lock, scan, exit and all zone and target triggers are ported in `chase-game`; from the roof trigger of mission 1-2 the four scanner scripts start and `EnableScanner 0` closes the scanner (test `scanner-real-data`). The overlay (frame, zoom meter, headphone icon, reticle, scan meter) is drawn from the original layouts; the per-object sound markers (green rings) and the audio / exit buttons of the map screen are drawn; the cyan wash, the dog shown only in the scanner and the rest of the bottom-screen scanner UI are not (SCAN-8, SCAN-9). Real-time transition counts are ported.
+IN_PROGRESS, updated 2026-10-19T14:06:22+02:00. The audio zone (type 201, ScannerMode 1), the scannable objects, the player states 0x156 / 0x157 / 0x158, aim, zoom, lock, scan, exit and all zone and target triggers are ported in `chase-game`; from the roof trigger of mission 1-2 the four scanner scripts start and `EnableScanner 0` closes the scanner (test `scanner-real-data`). The overlay (frame, zoom meter, headphone icon, reticle, scan meter) is drawn from the original layouts; the per-object sound markers (green rings) and the audio / exit buttons of the map screen are drawn; the cyan wash (the material override of the audio mode, no fog) is drawn, but without the glow pass (RENDER-68); the info boxes, the sonar segments and the rest of the bottom-screen scanner UI are not (SCAN-10, SCAN-11, SCAN-12). Real-time transition counts are ported.
 
 ## 3. Verified behaviour
 
@@ -25,6 +25,7 @@ IN_PROGRESS, updated 2026-10-19T10:01:16+02:00. The audio zone (type 201, Scanne
 - SCAN-S6 — Reticle storyboards: `Reticule_Spinner` runs from the start of the update clock, state 6 shows `Scanning` at its end (the original starts `Off` once), the restart semantics of 0x245b40 are read as "time 0". evidence: [abilities-scanner.md §2026-10-19T08:53:30](../../re/abilities-scanner.md#ts-20261019-085330)
 
 - SCAN-S7 — Sound markers: the start delay of ring k is 3 k updates of 1/30 s (unit of the argument of 0x245b40 unread), the marker slot of a record is its list index (0x26eec4 sort unread), the centre pip starts at time 0 when first shown, markers are drawn before the frame. needs: SCAN-10. evidence: [abilities-scanner.md §2026-10-19T10:01:16](../../re/abilities-scanner.md#ts-20261019-100116)
+- SCAN-S9 — Wash passes: every non-sky draw takes the draw-list override 0xd5 (additive draws skipped); which draws the original puts in pass 3 (0x17fc38, 0x95) is not read; the wash follows the shown view, not the mode exit of 0x2befc0. needs: SCAN-1. evidence: [abilities-scanner.md §2026-10-19T14:06:22](../../re/abilities-scanner.md#ts-20261019-140622)
 - SCAN-S8 — Map screen of the scanner view: audio (disabled look) and exit buttons at their final place without the slide-in storyboards; no scanner map circle, arrow icon or touch handling. needs: SCAN-11. evidence: [abilities-scanner.md §2026-10-19T10:01:16](../../re/abilities-scanner.md#ts-20261019-100116)
 
 ## 5. Open items
@@ -35,17 +36,20 @@ IN_PROGRESS, updated 2026-10-19T10:01:16+02:00. The audio zone (type 201, Scanne
 - [ ] SCAN-6 — A `chase-game --script` run from the roof trigger (only the runtime test drives the sequence so far). evidence: [abilities-scanner.md §2026-10-18T11:27:21](../../re/abilities-scanner.md#ts-20261018-112721)
 
 
-- [ ] SCAN-8 — The cyan wash over the 3D view and the dog drawn green only in the scanner (message 0xfb, `ShowOnObjectScan`): where the original does it is not found (not in the DRC_Scanner layouts, not in the callers of the scanner-active getter; leads: PICA shaders PostProcess / UAVOverlay / Outline, per-vertex VColourTint). needs: SCAN-1. evidence: [abilities-scanner.md §2026-10-19T10:01:16](../../re/abilities-scanner.md#ts-20261019-100116)
-- [ ] SCAN-9 — Remaining overlay parts: `ScanButtonPrompt_*` / `WAV*` / `TargetAquired_On` triggers, `Scanner_PFX`, info boxes, the tint rule of 0x1d99a8. needs: SCAN-1. evidence: [abilities-scanner.md §2026-10-19T10:01:16](../../re/abilities-scanner.md#ts-20261019-100116)
-- [ ] SCAN-10 — Sonar segments (six, intensities from the direction of every sound source in 0x2e9030) and the delay unit and sort order of the sound markers (SCAN-S7). needs: SCAN-1. blocks: SCAN-S7. evidence: [abilities-scanner.md §2026-10-19T10:01:16](../../re/abilities-scanner.md#ts-20261019-100116)
+- [ ] SCAN-12 — Info boxes `info_top` / `info_bot` (state machine 0x2d2e14 on scan state 6, `InfoOn` / `InfoOff`, opacity by screen distance, icon from the run-time table 0x375e64 by object byte +0x24): not drawn; the icon table writer is unread. needs: SCAN-1. evidence: [abilities-scanner.md §2026-10-19T14:13:26](../../re/abilities-scanner.md#ts-20261019-141326)
+- [ ] SCAN-13 — Frame and zoom-meter tint with the colour 0x375e6c when the player character has ability bit 28 (0x23a87c), and the zone's `Scanner_PFX` (+0x54): the colour writer, the ability name and the PFX reader are unread; the port draws white (Chase's police outfit, as in the oracle). needs: SCAN-1. evidence: [abilities-scanner.md §2026-10-19T14:13:26](../../re/abilities-scanner.md#ts-20261019-141326)
+- [ ] SCAN-10 — Sonar segments (six; formula of 0x2e9030 transcribed in [abilities-scanner.md §2026-10-19T14:13:26](../../re/abilities-scanner.md#ts-20261019-141326), not ported) and the delay unit and sort order of the sound markers (SCAN-S7). needs: SCAN-1. blocks: SCAN-S7. evidence: [abilities-scanner.md §2026-10-19T10:01:16](../../re/abilities-scanner.md#ts-20261019-100116)
 - [ ] SCAN-11 — Bottom screen of the scanner view: slide-in of the buttons, map circle and scanner arrow icon, hint box, the tutorial box after the exit, touch handling of the back button (needs touch input). needs: SCAN-1. blocks: SCAN-S8. evidence: [abilities-scanner.md §2026-10-19T10:01:16](../../re/abilities-scanner.md#ts-20261019-100116)
 
 ## 6. Findings summary
 
-- Sound markers, map-screen buttons, exit by B, where the wash is not: [abilities-scanner.md §2026-10-19T10:01:16](../../re/abilities-scanner.md#ts-20261019-100116).
+- Overlay leftovers (unused storyboards, info boxes, frame tint, sonar formula): [abilities-scanner.md §2026-10-19T14:13:26](../../re/abilities-scanner.md#ts-20261019-141326).
+- Cyan wash (material override 0x530834, no fog, glow arguments), no green dog: [abilities-scanner.md §2026-10-19T14:06:22](../../re/abilities-scanner.md#ts-20261019-140622).
+- Sound markers, map-screen buttons, exit by B: [abilities-scanner.md §2026-10-19T10:01:16](../../re/abilities-scanner.md#ts-20261019-100116).
 - Overlay layouts and storyboard rules: [abilities-scanner.md §2026-10-19T08:53:30](../../re/abilities-scanner.md#ts-20261019-085330). Real-time timing: [abilities-scanner.md §2026-10-19T08:43:45](../../re/abilities-scanner.md#ts-20261019-084345). Scanner classes, states, view and triggers: [abilities-scanner.md §2026-10-18T11:27:21](../../re/abilities-scanner.md#ts-20261018-112721). Mission 1-2 gap list: [scripts-missions.md §2026-10-14T21:39](../../re/scripts-missions.md#ts-20261014-213921); oracle state `m12-8`: [oracle-states.md §2026-10-18T10:13:06](../../re/oracle-states.md#ts-20261018-101306).
 
 ## 7. Code and tests
 
+- `src/runtime/scanner_render.{hpp,cpp}` (override values of the audio mode), `assets::materialState(part, MaterialOverride)`, `render::Scene::setMaterialOverride`, glue in `LevelSession::draw`; CTest `scanner-render`.
 - `src/runtime/scanner.{hpp,cpp}` (zone and scannable load, state machine, view, lock, scan, events), `src/game_scanner.cpp` (LevelSession glue: pad, EnableScanner, triggers, sounds, player pose, view override), `SoundPlayer::playing` / `GameAudio::playing`.
 - CTest `scanner` (made-up zone: timings, lock 20 updates, scan, zoom, exit, pitch limits) `scanner-reticle`, `scanner-overlay-data` (layout values and drawing), `scanner-markers` (fade, distance fade, pulse restart; `src/runtime/scanner_markers.*`), `hud-real-data` (scanner buttons on the map screen), and `scanner-real-data` (lvl_01 from the m12-8 position: Enter, Zoomed, Locked, Scanned_Pringles, EnableScanner 0 exit).

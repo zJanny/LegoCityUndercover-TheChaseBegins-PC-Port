@@ -11,7 +11,9 @@ The sound scanner of mission 1-2 and later missions: the zone class `props/prop_
 - Emulator: in Azahar the camera yaw word 0x376894 reads NaN once the scanner runs, the scannable records never get a screen position, and the game stops responding after the exit (both runs). This is the likely cause of the white view; lock, scan and exit timing could not be measured there. [§2026-10-18T11:27:21](#ts-20261018-112721)
 - Real time (oracle with the motion source): state 0x157 49 updates after the press, enter callback +20, end callback and camera +56, lock 20, scan 39, script exit 57; no hang, yaw finite. [§20261019-084345](#ts-20261019-084345)
 - Overlay: layouts of `sprites/blend/DRC_Scanner` at half scale centred on the screen, zoom meter time = zoom progress x 3.0 s, reticle storyboards `Ret_Focus` / `Ret_LockingOn` by lock state, scan meter by scan progress; the reticle position follows 0x2ef4c8. [§20261019-085330](#ts-20261019-085330)
-- Markers: every scannable on screen gets a `SoundCentre` pip and one of 15 `SoundPulse` ring triplets (the large green rings); the map screen shows the audio and exit buttons; the exit by B ends 57 updates after the press; the wash is not in the layouts or the scanner-active callers. [§2026-10-19T10:01:16](#ts-20261019-100116)
+- Markers: every scannable on screen gets a `SoundCentre` pip and one of 15 `SoundPulse` ring triplets (the large green rings); the map screen shows the audio and exit buttons; the exit by B ends 57 updates after the press. [§2026-10-19T10:01:16](#ts-20261019-100116)
+- Overlay leftovers: `TargetAquired_On`, `ScanButtonPrompt_*` and `WAV*` are never started; the info boxes follow the state machine 0x2d2e14 on scan state 6; the frame tint depends on ability bit 28; the sonar formula of 0x2e9030 is transcribed. [§2026-10-19T14:13:26](#ts-20261019-141326)
+- Cyan wash: the audio mode's enter 0x2ef664 sets 0x51641e (render override on), 0x3772cd = 0 (sky included) and 0x3760fd (no fog); the frame function 0x2e4858 then draws the world and sky with the material override 0x530834 = 0x95 and the draw list with 0xd5 (additive draws skipped): mode 3 constant 0xffab8126, no texture, the bump stages give luminance(lighting) x that colour; pass 5 turns on the glow 0x2bf830 (0.6, 1.4). There is no green dog: the green shape is the 2D spinner, and the dog is behind a wall. [§2026-10-19T14:06:22](#ts-20261019-140622)
 
 <a id="ts-20261018-112721"></a>
 
@@ -92,6 +94,7 @@ Unknowns:
 ## 2026-10-19T08:53:30+02:00 — The audio scanner overlay: layouts and storyboard rules (REA 0x16785c region, 0x2e9030, 0x1d99a8, 0x263400, 0x2ef4c8, 0x1ebd14, 0x245b40; oracle B-1 screenshots)
 
 Corrected by [abilities-scanner.md §2026-10-19T10:01:16](#ts-20261019-100116): the large green ring at lock state 2 is the SoundPulse markers, not a reticle storyboard state.
+Corrected by [abilities-scanner.md §2026-10-19T14:13:26](#ts-20261019-141326): 0x1d99a8 tints the Zoom_Meter LayoutRoot, not iconAudioMode, and the tint depends on ability bit 28 of the player character.
 
 ### Method
 
@@ -117,6 +120,8 @@ Unknowns:
 <a id="ts-20261019-100116"></a>
 
 ## 2026-10-19T10:01:16+02:00 — Scanner sound markers, map-screen buttons, exit by B, where the wash is not (REA, oracle B-1 and B-2 of round 28)
+
+Corrected by [abilities-scanner.md §2026-10-19T14:06:22](#ts-20261019-140622): the wash is the material override 0x530834 of the audio mode, and there is no green dog (the green shape is the 2D spinner).
 
 ### Method
 
@@ -148,3 +153,68 @@ Unknowns:
 - Where the wash and the green dog are produced (the draw path or shader state the scanner view changes).
 - The unit of the pulse delay argument, the sort order 0x26eec4 (it only decides which records get one of the 15 ring triplets), the sonar segment intensities that 0x2e9030 also computes, and the start of the first `Pulsing` time of a centre pip.
 - The slide-in timing of the map buttons, the map circle and arrow icon of the scanner screen, the touch handling of the back button and what 0x24581c / 0x2134c8 / 0x217d0c do exactly.
+
+<a id="ts-20261019-140622"></a>
+
+## 2026-10-19T14:06:22+02:00 — The cyan wash: the material override 0x530834 of the audio mode (REA, llvm-objdump, oracle m12-8)
+
+### Method
+
+REA (Ghidra 12.1.2) pseudocode of 0x2bee98, 0x2ef664, 0x2ef694, 0x2befc0, 0x285c68, 0x29123c, 0x1ee98c, 0x2e4858, 0x128dc8, 0x12e460, 0x1292fc, 0x12df94, 0x180fac, 0x2128c8, 0x228d20, 0x17fc38, 0x2bf830, 0x2b9cf8; llvm-objdump (`--mattr=+vfp2`) of 0x129560 (reads of 0x530834), 0x188778 (draw list item) and the vtable 0x362968. Oracle: state `m12-8-roof-sound-scanner`, OpenGL, `--rpc --rpc-input`, port 45645: `read` of the bytes below before the A press, in the view (A, 5 s later) and after the exit by B; screenshots in the agent's scratch folder (not committed).
+
+### Mechanism
+
+- The audio mode object 0x5216ac (vtable 0x362968: +8 enter 0x2ef664, +0x14 exit 0x2ef694) is entered by the enter callback 0x2bee98 and left by the exit callback 0x2befc0. The enter calls 0x285c68(1): 0x51641e = 1, 0x3772cd = 0; and 0x1ee98c(1): the no-fog byte 0x3760fd = 1 (fog off for every material, rule of 0x128dc8 in [rendering-fog.md](rendering-fog.md)); it also sets 0x52a1cd = 1 (reader 0x1718b8 not followed). The exit clears 0x52a1cd, 0x3760fd and, through 0x29123c, 0x51641e and 0x3772cd.
+- The frame function 0x2e4858 (one call per pass) reads 0x51641e. Pass 3 (0x17fc38, then the sky 0x180fac): override block 0x530834 = flags 0x95, 0x530835 (mode) = 3, 0x530837 (texture key) = 0, 0x530840 bit 0 cleared, 0x53083c = 0xffab8126; reset to 0 after the pass. Pass 4 (the sorted draw list 0x228d20(0) -> 0x2128c8): flags 0xd5, reset after. Pass 5 calls the glow post-process 0x2bf830 with (0.6, 1.4) instead of (0x516410, 0.7). Pass 1 skips a camera block (0x52a430 = 0).
+- The override block (read by 0x128dc8 for the material key, by 0x129560 for the shader choice and the reflection flag 0x37796d, and by 0x12e460 for the stages): flag bit 0 replaces material byte 1 (mode) with +1 and gives mode 3 the constant +8 instead of white; bit 1 byte 2 (lighting) with +2; bit 2 byte 3 (texture) with +3; bit 3 byte 5 (alpha) with +4; bit 4 the vertex colour flag (key bit 19) with bit 0 of +0xc; bit 5 the scale of the last stage with bit 1 of +0xc; bit 7 forces key bit 22 (the bump stages); bit 6 makes the draw list item 0x188778 skip draws whose material byte 9 (blend destination index) is 1.
+- With 0x95 every material becomes: stage 0 the constant (0x26, 0x81, 0xab); the lighting stage of its own lighting key, with modulate turned into replace (so it outputs the fragment lighting, the vertex colour plus lighting, or the constant); then the bump stages of 0x12e460: multiply-add with 0x7f7f7f (0.498 x + 0.498) and dot3 with 0x8ecba6, which is the luminance 0.300 r + 0.590 g + 0.114 b, and a modulate by the combiner buffer, which holds stage 0 (update mask bit of stage 0); the last stage keeps the scale of byte 0xb bit 5 (x2 for doubled materials). Textures are not sampled (texture key 0), but the alpha still comes from the texture slot of the alpha key, so cut-outs (palm leaves) stay. Result: luminance(lighting) x (0.149, 0.506, 0.671), times 2 on doubled materials, clamped: a fully lit doubled surface gives (76, 255, 255), the colour of most sky and wall pixels of the oracle picture.
+- 0x180fac (the sky) saves 0x530834 and clears it while 0x3772cd is set; the audio mode clears 0x3772cd, so the sky is washed too. Another mode's enter (0x304698, 0x285c68(0)) sets 0x3772cd = 1 and keeps the normal sky.
+- The glow post-process 0x2bf830: copies the screen into a 256 x 128 target (0x52a6b8), blurs it three times between 0x52a6d8 and 0x52a6f8 with the table modes 0xc / 0xd, and adds it to the screen with the table mode 0x12 (read: stage 0 multiply-add of vertex alpha x texture alpha + vertex colour, stages 1 and 2 modulate by the texture, so 2 x (a + c) x T^2 with the x2 flag set when the two arguments add up to more than 1), vertex colour (0.3, 0.3, 0.3, 0.7), blend factors one / one (destination index 0x516414 = 1). In normal play of lvl_01 the first argument 0x516410 is 0, so the glow is off; in the scanner it is on. This explains why the oracle colours are more saturated than the plain formula (red about 0.24 of green instead of 0.295).
+
+### Oracle (m12-8, port 45645)
+
+- In the view: 0x51641e = 1, 0x3760fc / 0x3760fd = 1 / 1, 0x52a1cd = 1, 0x3772cd = 0, 0x530834 = 0 (reset between the passes), 0x530835 = 3, 0x53083c = 0xffab8126, 0x530840 = 0, 0x375ee8..ea = 1, 0, 1. 0x516410 = 0.0, 0x516414 = 1. The table entry of mode 0x12 at 0x596260 holds three stages (source 0x30, operand 0x22, combiner 8; source 0x000f003f, combiner 1; the same again).
+- After the exit by B the mode exit had run (0x51641e = 0, 0x3760fd = 0, 0x52a1cd = 0) while 0x375ee8 and +1 were still 1 and the screen showed the full-screen hexagon panel of the transition; 5 s later the scanner was idle and the street view normal.
+
+### Correction of the "green dog"
+
+[Corrects §2026-10-19T10:01:16 (unknown about the wash and the green dog)](#ts-20261019-100116). The SCAN-8 wording "draws the dog green (message 0xfb, `ShowOnObjectScan`)" is not supported by any picture: the green zigzag of the B-1 pictures `02` and `03` (and of this run) is a 2D overlay shape that turns between the pictures (the reticle spinner), and in the locked pictures the dog sits behind a wall, marked only by the centre pip and the rings. In the draw path the dog takes the same override as every other mesh of the draw list. Message 0xfb is `EnableObject` ([scripts.md](scripts.md)), and 0x2b9cf8 (the entity colour record) depends on camera states 0x2297b0 / 0x236104, not on the scanner.
+
+### Port
+
+`assets::MaterialOverride` and `materialState(part, override)` (src/assets/material.cpp), `runtime::scannerRender` (src/runtime/scanner_render.*, values above), `Scene::setMaterialOverride` (src/render/scene.cpp: the overridden stages run through the existing texenv shader `scene.frag.glsl`; flag 6 skips additive draws; the texture units follow the overridden state), glue in `LevelSession::draw`: no fog, the world override for the sky, the draw-list override for the rest while the scanner view is shown. Test `scanner-render`. A `chase-game` picture at the m12-8 spot (the zone forced usable for the picture) shows the same hue as the oracle, darker and less saturated because the glow pass is missing (RENDER-68).
+
+Unknowns:
+- Which port draws belong to pass 3 (0x17fc38, 0x95, additive kept) and which to the draw list of pass 4 (0xd5, additive skipped): the port applies the draw-list rule to every non-sky draw (SCAN-S9).
+- The wash ends at the mode exit (exit callback 0x2befc0); the port ends it with the view (the exit callback count is SCAN-S1).
+- The reader of 0x52a1cd, the blur table modes 0xc / 0xd and the downsample material of 0x2bf830, and the camera block that pass 1 skips.
+
+<a id="ts-20261019-141326"></a>
+
+## 2026-10-19T14:13:26+02:00 — Scanner overlay leftovers: unused storyboards, info boxes, frame tint, sonar segments (REA)
+
+### Method
+
+REA (Ghidra 12.1.2) pseudocode of the UI setup FUN_0016785c (0x1be9e4), 0x1bf148, 0x2e9b3c, 0x2e9c1c, 0x2e9eec, 0x2e9030, 0x2d2e14, 0x2ad730, 0x23a87c and 0x2dec28 (the function that contains 0x1d99a8); `strings` and literal-pool search of the ELF; the initial data at 0x375e3c / 0x375e64 / 0x375e6c read from the ELF. No oracle.
+
+### Storyboards the code never starts
+
+- `TargetAquired_On` is looked up by 0x2e9c1c and stored at reticle +0x28, and only freed again by 0x2e9b3c. 0x2e9030 never uses +0x28, so it is never played. `ScanButtonPrompt_*` and `WAV*` are not named anywhere in the code (no string). The port does not play any of them, which matches.
+
+### Info boxes (0x2d2e14, called first by 0x2e9030)
+
+- Setup: `info_top` and `info_bot` of DRC_scanner, each with `LayoutRoot`, `*_object_icon`, `*_box`, `*_i` and the storyboards `InfoOn` / `InfoOff`; the green box and "i" images `info_box_green.png` / `info_i_green.png` are loaded (0x375e78 / 0x375e7c). The audio enter 0x1bf148 hides both boxes (0x24581c(box, 0, 0, 1)).
+- State byte +0x10 of the box object: 0, then 1 when the scan state (mode +0x3c) becomes 6 (was not 6). State 1: target = the scanned record (mode +0x34), show the boxes, rewind `InfoOff`, start `InfoOn` on both, set the icon through 0x2ad730, go to 2. State 2: when both `InfoOn` have ended go to 3. State 3: when the scan state leaves 6 go to 4. State 4: rewind `InfoOn`, start `InfoOff`, go to 5. State 5: when both have ended, hide the boxes and go back to 0.
+- Every update with a target: box opacity 1 while the record's squared screen distance (+0x20) is below 625 (25 pixels), else 1 - (d² - 625) / 2975, clamped at 0 (0 from 60 pixels); both boxes sit at their base position plus the record's screen position (+0x14, +0x18).
+- Icon (0x2ad730): the texture of the table 0x375e64 (filled at run time, zero in the ELF) at the index of the object's component byte +0x24, or index 0 when that byte is 5 and the player character lacks ability bit 28.
+
+### Frame tint (0x2dec28, around 0x1d99a8)
+
+- `border`, `border_Copy` and the `Zoom_Meter` `LayoutRoot` (0x52694c; not `iconAudioMode` as [Corrects §2026-10-19T08:53:30 (the third tinted element)](#ts-20261019-085330) said) get colour 0xffffffff, or the colour at 0x375e6c (zero in the ELF, written at run time) when 0x23a87c(player component +0x2cc, 0x1c) passes. 0x23a87c builds a bit mask with bit 28 and asks 0x210e38 whether the character (+0x2cc is the character index) has that ability. Chase's police outfit shows white in the oracle pictures.
+
+### Sonar segments (0x2e9030, for SCAN-10)
+
+- For each visible record: offset = screen position - (200, 120) (0x529e74 / 0x529e78 halved); angle = atan2(x, -y) moved into [0, 2π); segment i = trunc(angle x 0.95493) (6 / 2π); weight 0 below 50 pixels, 1 up to 300, then 1 - (d - 300) / 100 clamped. Segments i and i + 1 each get (1 - |table[k] - angle| x 0.95493) x weight, with the angle table at 0x375e3c = 0, π/3, 2π/3, π, 4π/3, 5π/3 and a 0 after it (index 6 for i = 5). Each sum is clamped at 1 and becomes the opacity of `SonarSegment_k` (0x21d384); its storyboard (name at 0x2e9e7c) restarts when it has ended. 0x2e9eec places the six segment roots at setup.
+
+Unknowns:
+- The writers of 0x375e64 (icon textures) and 0x375e6c (tint colour), the name of ability bit 28, and the reader of the zone's `Scanner_PFX` (+0x54); what 0x2c5774()+0xc is (shown while the mode index is 1); the storyboard name at 0x2e9e7c.
