@@ -1,5 +1,7 @@
 # Script text: tip text, dialogue lines, dialogue background, mission title
 
+Subtopics: [script-text-bottom-screen.md](script-text-bottom-screen.md).
+
 Handlers of batch SCRIPT-30 and the objects they feed. Evidence: llvm-objdump (armv6k, vfp2) on `artifacts/game/game.arm.elf`, memory polled over RPC in Azahar (state `agent-doughnut-title`, Old 3DS) and oracle screenshots. No REA session was used.
 
 ## Current state
@@ -8,11 +10,14 @@ Handlers of batch SCRIPT-30 and the objects they feed. Evidence: llvm-objdump (a
 - Pitch 17 (line gap -6; heading 23), half-pixel line tops and `_16` icons follow from 0x21bc2c; box alpha is squared. [§2026-10-14T19:25:00](#ts-20261014-192500)
 - Portrait at (200 - half width - 24 - 7, y - 1); tip alpha +/-0.2 per update. [§2026-10-14T16:51:43](#ts-20261014-165143)
 - ShowLevelText ends `startup`; InformationBox has no B button. [§2026-10-14T18:57:39](#ts-20261014-185739), [§2026-10-14T20:46:00](#ts-20261014-204600)
-- Open: reader of the `ShowDialogBG` byte, ShowTally / ShowBossHearts / ShowRaceStart layouts, ShowCharacterIntro against the oracle.
+- Bottom screen panel, dialogue background fade, ShowDialogBG byte and BlackoutMap: [script-text-bottom-screen.md](script-text-bottom-screen.md).
+- Open: ShowTally / ShowBossHearts / ShowRaceStart layouts, ShowCharacterIntro against the oracle.
 
 <a id="ts-20261014-152500"></a>
 
 ## 2026-10-14T15:25:00+02:00 — Tip text and dialogue objects, handler arguments, measured timing and layout
+
+Corrected by [script-text-bottom-screen.md §2026-10-19T23:15:01](script-text-bottom-screen.md#ts-20261019-231501): ShowDialogBG only stores the byte 0x51a2bd; the dialogue background is drawn by the panel alpha that tips and BlackoutMap raise.
 
 **Argument arrays.** `handler(r0 = thread, r1 = array)`; a text or number argument is read at `[r1 + 4]`, `[r1 + 0xc]` for the second; an object argument is the slot at `[r1 + 0x10]` and the argument after it is read at `[r1 + 0x1c]` (ShowDialogueTextTimed: key +4, id +0xc, object +0x10, seconds +0x1c; the object slot pair is the gap described in script-natives.md). Text arguments are 32-bit loc keys (sdbm hashes) written as decimal numbers in the level file, for example `4094106649`; they do not fit a float. Tip and dialogue texts are in `localisation/hinttext_<lang>.loc` (all 5 keys of 1-1 checked; `ShowDialogueTextTimed` of the intro too).
 
@@ -94,6 +99,8 @@ Unknowns:
 
 ## 2026-10-14T18:57:39+02:00 — ShowLevelText caller, ShowIntroText, ShowCharacterIntro, InformationBox; the other natives of batch 30
 
+Corrected by [script-text-bottom-screen.md §2026-10-19T23:15:01](script-text-bottom-screen.md#ts-20261019-231501): the byte 0x51a2bd is read by FadeScreen (0x1d9584) and 0x2d9d0c; the background fade is the panel alpha 0x51a2d4 and does not read it.
+
 Corrected by [script-text.md §2026-10-14T20:46](#ts-20261014-204600): the InformationBox box is 288 px wide with the blue-ring A icon and no B (not the warning dialog's box with an empty B text); ShowIntroText compared with the oracle.
 
 Evidence: llvm-objdump (armv6k, vfp2) on `artifacts/game/game.arm.elf`, the level's scripts through `parseLevel` (scratch tool, not committed), `tools/convert_loc.py` and `chase-tabledump` for texts and table columns, Azahar oracle (state `gameplay-start`, Old 3DS, `--rpc`, pokes none; teleport only). No REA session. Companion entries: [§2026-10-14T16:51](#ts-20261014-165143) (heading object), [scripts-runtime.md §2026-10-14T10:54](scripts-runtime.md#ts-20261014-105432) (the dialog mode).
@@ -164,32 +171,3 @@ Unknowns:
 - The 0.2 pixel vertical offset of the oracle's body glyph rows (bilinear sampling at a fractional position); the origin of the first line's offset (-5 against the centred block of four lines) was not found in 0x23c780.
 - ShowCharacterIntro: no state at mission 1-4 exists yet.
 - The warning dialog's own box width (296) is not explained by the same rule (its two-button row may widen it); its button positions stay the earlier fitted values.
-
-<a id="ts-20261014-214151"></a>
-
-## 2026-10-14T21:41:51+02:00 — HUD-31: why the port's picture of the InformationBox shows no HUD and a dialogue background (port runs and the oracle picture `ib3.png`; no new disassembly, REA was not used)
-
-Evidence: `chase-game ... --window 400x480` runs, the oracle picture `artifacts/oracle/agentOC-out/ib3.png` of [§2026-10-14T20:46](#ts-20261014-204600), the port's draw and update code (`src/game_level.cpp`, `src/game_level_update.cpp`, `src/frontend/hud.cpp`). Own pictures (not committed): `artifacts/oracle/agentVIS-out/port_ib.png` (`--call-script No_Entry_Auburn_On_Foot`, 20 updates), `port_p0.png` (no script), `port_walk_ib.png` (walking into the barrier).
-
-**Cause: two artefacts of the port's test set-up, not a difference in what the barrier script switches.**
-- Top screen: the HUD layout is drawn from the storyboard `TransitionOn` at the HUD's own time, and that time only advances in `LevelSession::simulate` after the dialog check; while a script dialog is open the update returns before `hud->update(dt)`. `--call-script` opens the box in update 0, so the HUD stays at time 0 of its fade-in (nothing drawn) while the box is open. Without `--call-script` the HUD is drawn at update 20 (`port_p0.png`).
-- Bottom screen: the start of `lvl_01` with the start progress runs the mission 1-1 start script (heading and first tip with `ShowDialogBG`); background and tip stay until the player moves on. The oracle state is past that (mission 1-1 finished, no tip), so it shows the map. The barrier script does not call `ShowDialogBG`, a HUD native or the map: with the player walked into the barrier (`--start "755.09 26.5 598" --facing 180 --script "0 100 150"`, the box opens at update 104) the port's top screen shows portrait and hearts as in `ib3.png`, and the bottom screen shows the pending mission 1-1 tip.
-
-**Result.** The port matches the oracle picture once the set-up matches (HUD above the box, map below when no tip or background is active). Nothing was changed in the HUD or map code.
-
-Unknowns:
-- Whether the original's HUD clock (`TransitionOn`, heart and stud bar animations) keeps running while a dialog box is open; the port freezes `hud->update` during a dialog (HUD-32).
-- The reader of the `ShowDialogBG` byte (HUD-S9) is still not found.
-
-<a id="ts-20261015-171916"></a>
-
-## 2026-10-15T17:19:16+02:00 — Bottom screen after the release director camera of mission 1-1 (observation)
-
-- Source: the oracle RPC screenshots that agent Q took 3, 10 and 30 updates after the hand-back of the release director camera ([camera-vehicle.md §2026-10-15T16:58](camera-vehicle.md#ts-20261015-165809)), next to `chase-game` pictures of the same moments.
-- Original: at +3 the bottom screen shows the hexagon panel with the police badge (the panel of MOVIE-24), at +10 the panel is in a closing animation, at +30 it shows the map. No tip box is visible in the three pictures.
-- Port: from the hand-back on, the bottom screen shows the tip "Press and hold A to accelerate and B to brake and reverse." over the map.
-- Only three moments were looked at; whether the original shows this tip earlier, later or not at all is not measured. The top screen also differs in the vehicle portrait and blue hearts, which is VEH-18.
-
-Unknowns:
-- Which script line or code shows the driving tip in the original, and when.
-- The code and textures of the hexagon panel (MOVIE-24) and its closing animation.

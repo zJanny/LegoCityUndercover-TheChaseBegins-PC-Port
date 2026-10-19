@@ -2,6 +2,7 @@
 #include "runtime/director_hold.hpp"
 #include "runtime/level_start.hpp"
 #include "runtime/script_triggers.hpp"
+#include "runtime/script_word.hpp"
 #include <algorithm>
 #include <cctype>
 #include <cmath>
@@ -55,7 +56,7 @@ constexpr ScriptFunction kScriptFunctions[] = {
     {"isredbrickextraactive", Word::IsRedBrickExtraActive, false},
     {"warningdialogbox", Word::WarningDialogBox, false},
     {"informationbox", Word::InformationBox, true},
-    {"fadescreen", Word::FadeScreen, true},
+    {"fadescreen", Word::FadeScreen, false},
     {"positionobject", Word::PositionObject, false},
     {"positionplayer", Word::PositionPlayer, true},
     {"scenechange", Word::SceneChange, false},
@@ -225,7 +226,7 @@ bool ScriptRunner::start(const std::string& scriptName) {
 
 void ScriptRunner::update(float dt) {
     dt_ = dt;
-    text_.update(dt);
+    text_.update(dt, objectives_.mapBlackout());
     effectNatives_.update(dt);
     ai_.update(dt);
     screenFade_.update(dt);
@@ -562,8 +563,9 @@ ScriptRunner::Result ScriptRunner::native(ScriptThread& thread, const ScriptCall
     case Word::FadeScreen:
         if (!(thread.flags & kScriptBlocked)) {
             if (args.empty()) break;
-            if (read(args[0]) == 0.0f) screenFade_.fadeOut(kFadeSeconds, kFadeScreenFlagScreens);
-            else screenFade_.fadeIn(kFadeSeconds, kFadeScreenFlagScreens);
+            const FadeScreens screens = fadeScreenScreens(text_.dialogBgFlag());
+            if (read(args[0]) == 0.0f) screenFade_.fadeOut(kFadeSeconds, screens);
+            else screenFade_.fadeIn(kFadeSeconds, screens);
         }
         if (screenFade_.running()) return Result::Block;
         break;
@@ -631,7 +633,7 @@ void ScriptRunner::textNative(const ScriptCall& call) {
     case TextNativeKind::ShowTipTextTimed: text_.showTip(key(0), read(args[1])); break;
     case TextNativeKind::ShowDialogueText: text_.showDialogue(key(0), std::uint16_t(read(args[1])), lower(args[2]), kDialogueDefaultSeconds); break;
     case TextNativeKind::ShowDialogueTextTimed: text_.showDialogue(key(0), std::uint16_t(read(args[1])), lower(args[2]), read(args[3])); break;
-    case TextNativeKind::ShowDialogBG: text_.setDialogueBackground(read(args[0]) != 0.0f); break;
+    case TextNativeKind::ShowDialogBG: text_.setDialogBgFlag(scriptWordIsSet(read(args[0]))); break;
     case TextNativeKind::ShowLevelText:
         if (levelHeadingKey_) text_.showHeading(levelHeadingKey_);
         else text_.record(*kind, {});

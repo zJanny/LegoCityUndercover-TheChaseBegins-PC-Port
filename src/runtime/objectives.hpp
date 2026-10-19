@@ -104,6 +104,9 @@ public:
     unsigned recordedCalls(ObjectiveNativeKind kind) const { return recorded_[static_cast<std::size_t>(kind)]; }
     bool minimapWipe() const { return minimapWipe_; }
     bool scannerFlag() const { return scannerFlag_; }
+    // BlackoutMap 0x1b23f4 -> 0x19464c: the argument word != 0 in the byte 0x519e24 + 0x484, which raises the panel alpha (dialog_bg_fade.hpp).
+    // STAND-IN HUD-S77: its second reader, the map alpha +0x4a0 direction at 0x2de3b0, is not ported (HUD-83).
+    bool mapBlackout() const { return mapBlackout_; }
     const std::string& panMapObject() const { return panMapObject_; }
     const std::string& mapDummyObject() const { return mapDummyObject_; }
 
@@ -113,6 +116,7 @@ private:
     std::array<std::vector<ObjectiveArrow>, kObjectiveArrowLists> arrows_;
     unsigned recorded_[kObjectiveNativeCount] = {};
     bool minimapWipe_ = false;
+    bool mapBlackout_ = false;
     bool scannerFlag_ = false;
     std::string panMapObject_, mapDummyObject_;
 };

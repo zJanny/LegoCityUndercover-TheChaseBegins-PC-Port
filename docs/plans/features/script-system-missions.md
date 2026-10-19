@@ -6,7 +6,7 @@ What a whole mission needs from the script system beyond natives and trigger eve
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-19T09:27:22+02:00. The dog cage of mission 1-2 has its use marker and the release runs on to the mission end with the screen faded back in (SCRIPT-292, SCRIPT-293 closed). The two unnamed mission 1-2 scripts have no starter in the original build (SCRIPT-113 closed). Mission 1-2 was compared with the original (gap list in [scripts-missions.md](../../re/scripts-missions.md)): its scripts run (`1-2_MissionStart` ends one update later than in the original), 12 of its 22 triggers are fired by object classes the port does not have. Of its 13 functions that had no handler, six got one in round 19 (DestroyProp, EffectFadeObject, StreamRoomIn, SetPartyCharacter, EnableDistanceFade, AddToSemiTransNearCameraList: [script-system-natives-world.md](script-system-natives-world.md)); the waypoint class starts `1-2_MissionStart` by play.
+IN_PROGRESS, updated 2026-10-19T23:18:02+02:00. FadeScreen fades the top screen only while the ShowDialogBG byte is set, both screens otherwise (SCRIPT-310 closed). The dog cage of mission 1-2 has its use marker and the release runs on to the mission end with the screen faded back in (SCRIPT-292, SCRIPT-293 closed). The two unnamed mission 1-2 scripts have no starter in the original build (SCRIPT-113 closed). Mission 1-2 was compared with the original (gap list in [scripts-missions.md](../../re/scripts-missions.md)): its scripts run (`1-2_MissionStart` ends one update later than in the original), 12 of its 22 triggers are fired by object classes the port does not have. Of its 13 functions that had no handler, six got one in round 19 (DestroyProp, EffectFadeObject, StreamRoomIn, SetPartyCharacter, EnableDistanceFade, AddToSemiTransNearCameraList: [script-system-natives-world.md](script-system-natives-world.md)); the waypoint class starts `1-2_MissionStart` by play.
 
 ## 3. Verified behaviour
 
@@ -21,8 +21,6 @@ IN_PROGRESS, updated 2026-10-19T09:27:22+02:00. The dog cage of mission 1-2 has 
 - SCRIPT-S237 `LevelCharacters::place` applies only the node matrix; the controller part of 0x1d9e6c (heading ctrl+8/+10, fall reset, when 0x21aae0 is true) and the room link are not, because the kind byte of level characters was not read (Holmes stays in room40). evidence: [script-natives-flags.md §2026-10-18T16:37:52](../../re/script-natives-flags.md#ts-20261018-163752).
 - SCRIPT-S242 `kCutscenePlayFadeWithoutFlagA`: without flag a DCamCutScenePlay always fades to black at once; the handler 0x26fa18 skips it when byte +0x10 of the current mode object (0x2369c4) is 1; the port has no game modes. needs: SCRIPT-308. evidence: [cutscenes.md §2026-10-19T10:04:29](../../re/cutscenes.md#ts-20261019-100429).
 - SCRIPT-S243 `CutsceneNativeState::takeModeEntered`: the cutscene mode's 0.5 s fade in starts at the end of the flag-a delay (at once without flag a); the push path's wait before the enter is not applied. needs: SCRIPT-309. evidence: [cutscenes.md §2026-10-19T10:04:29](../../re/cutscenes.md#ts-20261019-100429).
-- SCRIPT-S253 `kFadeScreenFlagScreens`: FadeScreen passes the signed byte at 0x51a2bd as the screen byte; it read 1 in gameplay (state `gameplay-start`), so the port fades the top screen only. needs: SCRIPT-310. evidence: [cutscenes.md §2026-10-19T10:04:29](../../re/cutscenes.md#ts-20261019-100429).
-- SCRIPT-S254 The fade is a black quad of opacity |1 - value| (`ScreenFade::opacityOn`); its blend is not read. needs: SCRIPT-310. evidence: [cutscenes.md §2026-10-19T10:04:29](../../re/cutscenes.md#ts-20261019-100429).
 - SCRIPT-S255 Closed 2026-10-19: a prop has no physics body to move; only vehicles and characters do. evidence: [script-natives-flags.md §2026-10-19T15:12:32](../../re/script-natives-flags.md#ts-20261019-151232).
 - SCRIPT-S247 `kUseMarkerClockUnitsPerSecondStandIn` (60): the clock of the marker spin advanced 2 per frame in the oracle; the multiplier of 0x241098 is not read. needs: SCRIPT-299. evidence: [use-spot.md §2026-10-19T09:25:34](../../re/use-spot.md#ts-20261019-092534).
 - SCRIPT-S248 `UseMarkers::step`: the hold of 0.1 s counts down by the update time and then the marker fades out; the fader manager that does it in the original was not found. needs: SCRIPT-299. evidence: [use-spot.md §2026-10-19T09:25:34](../../re/use-spot.md#ts-20261019-092534).
@@ -46,7 +44,6 @@ IN_PROGRESS, updated 2026-10-19T09:27:22+02:00. The dog cage of mission 1-2 has 
 - [ ] SCRIPT-299 — Use markers of the other 35 entity kinds of the list 0x374640 (carry objects, build-its, detective spots and others), their textures (0x292388), the `HeadMarker` path, the special cases of kinds 58, 150, 183 and 210, and the list builder tests (0x2397a0, rebuild on *0x376c78) are not ported. blocks: SCRIPT-S247, SCRIPT-S248, SCRIPT-S249. uses: prop_simpleuse. evidence: [use-spot.md §2026-10-19T09:25:34](../../re/use-spot.md#ts-20261019-092534).
 - [ ] SCRIPT-308 — Byte +0x10 of the mode object (0x2369c4) per game mode. blocks: SCRIPT-S242. uses: DCamCutScenePlay. evidence: [cutscenes.md §2026-10-19T10:04:29](../../re/cutscenes.md#ts-20261019-100429).
 - [ ] SCRIPT-309 — Mode switch push 0x25d26c: the wait before the enter 0x2fadb8. blocks: SCRIPT-S243. uses: DCamCutScenePlay. evidence: [cutscenes.md §2026-10-19T10:04:29](../../re/cutscenes.md#ts-20261019-100429).
-- [ ] SCRIPT-310 — Writer of the byte at 0x51a2bd and the blend of the fade quad (0x254350 / 0x25511c). blocks: SCRIPT-S253, SCRIPT-S254. uses: FadeScreen. evidence: [cutscenes.md §2026-10-19T10:04:29](../../re/cutscenes.md#ts-20261019-100429).
 
 ## 6. Findings summary
 
@@ -59,6 +56,7 @@ IN_PROGRESS, updated 2026-10-19T09:27:22+02:00. The dog cage of mission 1-2 has 
 - The release at the dog cage, the shared screen fade and the cutscene mode fades, gdb trace from `m12-13-cage-trigger`: [use-spot.md §2026-10-19T09:12:53](../../re/use-spot.md#ts-20261019-091253), [cutscenes.md §2026-10-19T09:12:06](../../re/cutscenes.md#ts-20261019-091206).
 - Use markers: textures, list, update, fader, placement, draw and the oracle run: [use-spot.md §2026-10-19T09:25:34](../../re/use-spot.md#ts-20261019-092534).
 - Code-side ObjectTriggered call 0x244f40 (enable, message 0xff, event), its carry callers and the missing build-it caller: [carrying.md §2026-10-15T11:11](../../re/carrying.md#ts-20261015-111115).
+- FadeScreen's screen byte (ShowDialogBG) and the blend of the fade quad: [script-text-bottom-screen.md §2026-10-19T23:15:01](../../re/script-text-bottom-screen.md#ts-20261019-231501).
 
 ## 7. Code and tests
 

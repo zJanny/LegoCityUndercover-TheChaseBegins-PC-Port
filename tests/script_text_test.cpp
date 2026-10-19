@@ -52,7 +52,7 @@ void synthetic() {
     for (int i = 0; i < 90; ++i) runner.update(1.0f / 30);
     require(text.tip().key == 4094106651u && text.tip().duration == 1.5f && text.tip().alpha == 1.0f,
             "the Wait 3 ends, the next tip replaces the text without a fade");
-    require(text.dialogueBackground() && text.missionTitle() == 1122972713u && text.missionSummary() == 1442628183u, "background, title, summary");
+    require(text.dialogBgFlag() && text.missionTitle() == 1122972713u && text.missionSummary() == 1442628183u, "background, title, summary");
     require(text.dialogue().active && text.dialogue().key == 4060995036u && text.dialogue().character == 88 && text.dialogue().speaker == "npc" &&
                 text.dialogue().duration == 4.0f,
             "ShowDialogueText replaces the timed line and uses 4.0 s");

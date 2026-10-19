@@ -1,4 +1,5 @@
 #include "runtime/objectives.hpp"
+#include "runtime/script_word.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -132,6 +133,7 @@ void ObjectiveState::record(ObjectiveNativeKind kind, const std::vector<float>& 
     ++recorded_[static_cast<std::size_t>(kind)];
     switch (kind) {
     case ObjectiveNativeKind::EnableMinimapWipe: minimapWipe_ = !values.empty() && values[0] != 0.0f; break;
+    case ObjectiveNativeKind::BlackoutMap: mapBlackout_ = !values.empty() && scriptWordIsSet(values[0]); break;
     case ObjectiveNativeKind::EnableScanner: scannerFlag_ = !values.empty() && values[0] != 0.0f; break;
     case ObjectiveNativeKind::PanMapToObject: panMapObject_ = firstObject; break;
     case ObjectiveNativeKind::SetMapDummyLocObj: mapDummyObject_ = firstObject; break;

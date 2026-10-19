@@ -2,6 +2,8 @@
 // On-screen text of the level scripts (batch SCRIPT-30, docs/re/script-text.md): tip text, dialogue lines, the
 // dialogue background, mission title and summary. The two timed objects have the layout of the original (state byte,
 // fade, duration, text); the drawing is in frontend/pages. No SDL dependency.
+#include "runtime/dialog_bg_fade.hpp"
+
 #include <cstdint>
 #include <optional>
 #include <string>
@@ -41,9 +43,7 @@ constexpr float kTipZeroDurationSeconds = 4.0f;
 constexpr float kDialogueDefaultSeconds = 4.0f;
 constexpr float kCharacterIntroSeconds = 4.0f;
 constexpr std::uint32_t kTipColour = 0xffffad4a;
-// The tip's draw alpha (float 0x51a2d4) is written by the update at 0x2de284 / 0x2de2a0: 0.2 (literal 0x2de44c) per update up while the tip
-// object's state byte (0x517f08) is not 0, down while it is 0, clamped to 0..1. State 3 lasts the object's fade-out time 0.25 s (+0x18).
-constexpr float kFadeStep = 0.2f;
+// The tip's draw alpha is the panel alpha 0x51a2d4 (dialog_bg_fade.hpp). State 3 lasts the object's fade-out time 0.25 s (+0x18).
 constexpr float kTipFadeOutSeconds = 0.25f;
 // Dialogue draw code 0x1cc550: alpha rises by dt * 5.0 (literal 0x1cc878) per update up to 1.0; in state 3 the alpha is the
 // remaining fraction of the fade-out time +0x18 = 0.25 s (0x235e2c).
@@ -87,30 +87,36 @@ public:
     void showHeading(std::uint32_t key, bool hintText = false);
     // ShowCharacterIntro 0x2c2af8 -> 0x1be0ac(id, 4.0): the dialogue object with the character's portrait and name; duration literal 0x2c2b50.
     void showCharacterIntro(std::uint32_t character);
-    void setDialogueBackground(bool on) { dialogueBackground_ = on; }
+    // ShowDialogBG 0x1bfb64 -> 0x1a21dc stores flag != 0 in the byte 0x51a2bd (0x519e24 + 0x499). Its readers are FadeScreen
+    // (0x1d9584, the screen byte) and 0x2d9d0c (with the byte +0x485 it hides the prompt object 0x5190bc); the dialogue
+    // background does not read it.
+    void setDialogBgFlag(bool on) { dialogBgFlag_ = on; }
     void setMissionTitle(std::uint32_t key) { missionTitle_ = key; }
     void setMissionSummary(std::uint32_t key) { missionSummary_ = key; }
     // STAND-IN: natives whose effect is not drawn only count their calls (see SCRIPT-S23).
     void record(TextNativeKind kind, const std::vector<float>& values);
 
-    void update(float dt);
+    void update(float dt, bool mapBlackout = false);
 
     const TimedText& tip() const { return tip_; }
     const TimedText& dialogue() const { return dialogue_; }
     const HeadingText& heading() const { return heading_; }
-    bool dialogueBackground() const { return dialogueBackground_; }
+    bool dialogBgFlag() const { return dialogBgFlag_; }
+    const DialogBackgroundFade& dialogueBackground() const { return background_; }
     std::uint32_t missionTitle() const { return missionTitle_; }
     std::uint32_t missionSummary() const { return missionSummary_; }
     unsigned recordedCalls(TextNativeKind kind) const;
 
 private:
     static void start(TimedText& text, std::uint32_t key, float seconds);
-    static void step(TimedText& text, float dt);
+    // The tip draw 0x15b518 reads the panel alpha 0x51a2d4 through 0x1b1fe0: the tip has no alpha of its own.
+    void stepTip(float dt);
     static void stepDialogue(TimedText& text, float dt);
 
     TimedText tip_, dialogue_;
     HeadingText heading_;
-    bool dialogueBackground_ = false;
+    bool dialogBgFlag_ = false;
+    DialogBackgroundFade background_;
     std::uint32_t missionTitle_ = 0, missionSummary_ = 0;
     unsigned recorded_[16] = {};
 };

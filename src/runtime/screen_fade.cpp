@@ -41,7 +41,7 @@ bool ScreenFade::coversScreen(DisplayScreen screen) const {
 
 float ScreenFade::opacityOn(DisplayScreen screen) const {
     if (!coversScreen(screen)) return 0.0f;
-    return std::fabs(1.0f - brightness());
+    return float(int(std::fabs(1.0f - brightness()) * 255.0f)) / 255.0f;
 }
 
 }

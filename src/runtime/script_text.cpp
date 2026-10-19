@@ -63,6 +63,7 @@ void ScriptTextState::start(TimedText& text, std::uint32_t key, float seconds) {
 
 void ScriptTextState::showTip(std::uint32_t key, float seconds) {
     start(tip_, key, seconds);
+    tip_.alpha = background_.alpha();
 }
 
 void ScriptTextState::showDialogue(std::uint32_t key, std::uint32_t character, const std::string& speaker, float seconds) {
@@ -95,15 +96,15 @@ unsigned ScriptTextState::recordedCalls(TextNativeKind kind) const {
     return recorded_[std::size_t(kind)];
 }
 
-void ScriptTextState::step(TimedText& text, float dt) {
+void ScriptTextState::stepTip(float dt) {
+    TimedText& text = tip_;
+    text.alpha = background_.alpha();
     if (!text.active) return;
     text.elapsed += dt;
     if (text.released) {
-        text.alpha = std::max(0.0f, text.alpha - kFadeStep);
         if (text.alpha <= 0) text.active = false;
         return;
     }
-    text.alpha = std::min(1.0f, text.alpha + kFadeStep);
     if (text.fadingOut) {
         text.fadeOutElapsed += dt;
         if (text.fadeOutElapsed >= kTipFadeOutSeconds) text.released = true;
@@ -125,8 +126,9 @@ void ScriptTextState::stepDialogue(TimedText& text, float dt) {
     if (text.elapsed >= text.duration) text.fadingOut = true;
 }
 
-void ScriptTextState::update(float dt) {
-    step(tip_, dt);
+void ScriptTextState::update(float dt, bool mapBlackout) {
+    background_.update(tip_.active && !tip_.released, mapBlackout);
+    stepTip(dt);
     stepDialogue(dialogue_, dt);
     if (!heading_.active) return;
     heading_.elapsed += dt;

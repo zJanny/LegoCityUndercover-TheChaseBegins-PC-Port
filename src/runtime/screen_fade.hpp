@@ -5,7 +5,9 @@
 // rate (0x1140a0), and stores the screen byte r1 at +0x118. The value 0x252880 is position / duration (0 for a duration
 // of 0), the position (0x1202f8) moves with the clock at the rate and stays inside [0, duration]. The value is the
 // brightness: 1 normal, 0 black. Whatever starts a fade replaces the one before. The draw 0x24bda4 (thunk 0x1166bc) does
-// nothing at value 1 and otherwise draws a black quad over the whole screen with opacity |1 - value| (docs/re/cutscenes.md);
+// nothing at value 1 and otherwise draws a black quad over the whole screen with the alpha byte |1 - value| * 255 (record
+// byte 0x13), blended source alpha / one minus source alpha with equation add (record bytes 8 = 4, 9 = 5, 7 = 0; GPU blend
+// register 0x101 written by 0x1292fc through the factor table 0x37628c) (docs/re/cutscenes.md, docs/re/script-text.md);
 // the screen gate 0x1087ec decides from the screen byte which screens get it. No SDL dependency.
 
 namespace chase::runtime {
@@ -27,7 +29,7 @@ public:
     // 0x1087ec with both screens rendered (render mode byte 0x529e30 + 0x3c4 = 2, measured in gameplay): byte 0 draws on
     // both screens, 1 on the top screen only, 2 on the bottom screen only.
     bool coversScreen(DisplayScreen screen) const;
-    // 0x24bda4: 0 at value 1, else |1 - value|; the quad is black.
+    // 0x24bda4: 0 at value 1, else the alpha byte (int)(|1 - value| * 255) (0x24be58 / 0x24be70, truncated) / 255; the quad is black.
     float opacityOn(DisplayScreen screen) const;
 
 private:

@@ -17,7 +17,8 @@ void require(bool condition, const std::string& message) {
 
 bool near(float a, float b) { return std::fabs(a - b) < 1e-5f; }
 
-// 0x24bda4: opacity |1 - value| (byte [sp + 0x13] = (1 - value) * 255 for value <= 1); nothing is drawn at value 1.
+// 0x24bda4: the alpha byte [sp + 0x13] = (int)((1 - value) * 255) for value <= 1 (vcvt.s32 truncates, 0x24be58 / 0x24be70); nothing
+// is drawn at value 1. 0.25 * 255 = 63.75 gives byte 63, 0.5 * 255 = 127.5 gives byte 127.
 // Provenance: llvm-objdump 0x24be4c..0x24be78 and the linear brightness fall measured in the oracle
 // (docs/re/cutscenes.md §2026-10-14T23:52:14, 30 vblanks for 0.5 s).
 void opacityFollowsTheValue() {
@@ -26,13 +27,13 @@ void opacityFollowsTheValue() {
     fade.fadeOut(0.5f);
     require(fade.opacityOn(DisplayScreen::Top) == 0.0f, "value 1: nothing is drawn");
     fade.update(0.125f);
-    require(near(fade.opacityOn(DisplayScreen::Top), 0.25f) && near(fade.brightness(), 0.75f), "linear fall");
+    require(near(fade.opacityOn(DisplayScreen::Top), 63.0f / 255.0f) && near(fade.brightness(), 0.75f), "linear fall, alpha byte truncated");
     fade.update(1.0f);
     require(fade.opacityOn(DisplayScreen::Top) == 1.0f && !fade.running(), "black at the end of the fade out");
     fade.fadeIn(0.5f);
     require(fade.opacityOn(DisplayScreen::Top) == 1.0f && fade.running(), "a fade in starts black");
     fade.update(0.25f);
-    require(near(fade.opacityOn(DisplayScreen::Top), 0.5f), "linear rise");
+    require(near(fade.opacityOn(DisplayScreen::Top), 127.0f / 255.0f), "linear rise, alpha byte 127");
     fade.update(0.25f);
     require(fade.opacityOn(DisplayScreen::Top) == 0.0f && !fade.running(), "clear at the end");
 }
@@ -44,15 +45,15 @@ void screenByteSelectsTheScreens() {
     ScreenFade all;
     all.fadeOut(1.0f, FadeScreens::All);
     all.update(0.5f);
-    require(near(all.opacityOn(DisplayScreen::Top), 0.5f) && near(all.opacityOn(DisplayScreen::Bottom), 0.5f), "byte 0: both screens");
+    require(near(all.opacityOn(DisplayScreen::Top), 127.0f / 255.0f) && near(all.opacityOn(DisplayScreen::Bottom), 127.0f / 255.0f), "byte 0: both screens");
     ScreenFade top;
     top.fadeOut(1.0f, FadeScreens::Top);
     top.update(0.5f);
-    require(near(top.opacityOn(DisplayScreen::Top), 0.5f) && top.opacityOn(DisplayScreen::Bottom) == 0.0f, "byte 1: top screen only");
+    require(near(top.opacityOn(DisplayScreen::Top), 127.0f / 255.0f) && top.opacityOn(DisplayScreen::Bottom) == 0.0f, "byte 1: top screen only");
     ScreenFade bottom;
     bottom.fadeOut(1.0f, FadeScreens::Bottom);
     bottom.update(0.5f);
-    require(bottom.opacityOn(DisplayScreen::Top) == 0.0f && near(bottom.opacityOn(DisplayScreen::Bottom), 0.5f), "byte 2: bottom screen only");
+    require(bottom.opacityOn(DisplayScreen::Top) == 0.0f && near(bottom.opacityOn(DisplayScreen::Bottom), 127.0f / 255.0f), "byte 2: bottom screen only");
 }
 
 void startReplacesTheFade() {

@@ -55,7 +55,7 @@ void drawTitleTop(Canvas& top, Resources& resources, const std::string& suffix, 
 
 // Screens drawn from textures by code rather than from a .bxaml layout. Every size and position here is a STAND-IN
 // fitted to oracle screenshots (docs/re/front-end.md): the drawing code of the original is not read.
-void drawDialogBackground(Canvas& bottom, Resources& resources);
+void drawDialogBackground(Canvas& bottom, Resources& resources, float alpha = 1.0f);
 void drawSubtitleBubble(Canvas& bottom, Resources& resources, const std::vector<std::string>& lines);
 void drawLoadingTop(Canvas& top, Resources& resources);
 void drawLoadingBottom(Canvas& bottom, Resources& resources, const std::string& tip);

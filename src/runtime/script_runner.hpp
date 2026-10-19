@@ -100,9 +100,9 @@ struct ScriptPlacement {
 // FadeScreen 0x1a2e8c starts the screen fade (screen_fade.hpp) with 0.5 s: 0x2520e8 for 0, 0x252068 otherwise, and
 // blocks until it is done (0x25207c).
 constexpr float kFadeSeconds = 0.5f;
-// STAND-IN SCRIPT-S253: FadeScreen passes the signed byte at 0x51a2bd (0x1d9584) != 0 as the screen byte; its writer is not
-// found and it read 1 in gameplay (state gameplay-start), so the port fades the top screen only.
-constexpr FadeScreens kFadeScreenFlagScreens = FadeScreens::Top;
+// FadeScreen passes the signed byte 0x51a2bd (0x1d9584) != 0 as the screen byte: the ShowDialogBG flag (0x1a21dc) fades the
+// top screen only, without it both screens.
+constexpr FadeScreens fadeScreenScreens(bool dialogBgFlag) { return dialogBgFlag ? FadeScreens::Top : FadeScreens::All; }
 // Every fade of DCamCutScenePlay 0x26fa18 and of the cutscene mode (0x2fadb8, 0x2fae68, 0x2fac7c) passes the screen byte 1.
 constexpr FadeScreens kCutsceneFadeScreens = FadeScreens::Top;
 // The fades of DCamCutScenePlay 0x26fa18 (to black, 0.5 s with flag a) and of the cutscene mode enter 0x2fadb8 (from black).

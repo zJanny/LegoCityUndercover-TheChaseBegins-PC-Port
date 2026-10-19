@@ -118,8 +118,8 @@ void drawHeadingBox(Canvas& bottom, Resources& resources, const std::string& tex
              Colour{1, 1, 1, float(byteAlpha) / 255.0f}, 0);
 }
 
-void drawDialogueBackground(Canvas& bottom, Resources& resources) {
-    drawDialogBackground(bottom, resources);
+void drawDialogueBackground(Canvas& bottom, Resources& resources, float alpha) {
+    drawDialogBackground(bottom, resources, alpha);
 }
 
 void drawTipPage(Canvas& bottom, Resources& resources, const std::string& text, float alpha) {

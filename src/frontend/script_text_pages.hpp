@@ -21,7 +21,7 @@ std::string buttonIconFile(const std::string& token);
 std::uint32_t levelHeadingKey(Resources& resources, const std::string& levelName);
 
 void drawTipPage(Canvas& bottom, Resources& resources, const std::string& text, float alpha);
-void drawDialogueBackground(Canvas& bottom, Resources& resources);
+void drawDialogueBackground(Canvas& bottom, Resources& resources, float alpha);
 // Level heading box above the tip panel of the bottom screen (0x193f00, ShowLevelText).
 void drawHeadingBox(Canvas& bottom, Resources& resources, const std::string& text, float alpha);
 void drawDialogueBox(Canvas& top, Resources& resources, unsigned character, const std::string& text, float alpha);

@@ -27,7 +27,7 @@ This file has no dated entries: the table is edited in place. When a native is r
 | PrintDebugString | 0x26fde8 | 2 | 514 / 125 / 6 / 6 | 24 | D | 26 | handled: 0x26fde8 is `mov r0,#1; bx lr`, no text is drawn or logged (corrects the old note: 0x2665d0 belongs to the next function 0x26fdf0) |
 | PositionObject | 0x1d9e6c | 2 | 498 / 89 / 4 / 0 | 9 | done |  | player, vehicles and level characters (SCRIPT-287); props SCRIPT-288, no physics body (SCRIPT-S255 closed) |
 | CallScript | 0x1c3730 | 1 | 485 / 67 / 64 / 2 | 9 | done |  | handled; a missing script stops the runner (SCRIPT-S5 closed): [scripts.md §2026-10-19T15:12:09](scripts.md#ts-20261019-151209) |
-| ShowDialogBG | 0x1bfb64 | 1 | 443 / 64 / 4 / 0 | 8 | stand-in | 30 | handled as a stand-in, drawn with fitted layout: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
+| ShowDialogBG | 0x1bfb64 | 1 | 443 / 64 / 4 / 0 | 8 | stand-in | 30 | byte handled, prompt reader open (SCRIPT-346): [script-text-bottom-screen.md §2026-10-19T23:15:01](script-text-bottom-screen.md#ts-20261019-231501) |
 | WaitForDCam | 0x1883ec | 0 | 429 / 120 / 4 / 0 | 10 | done | 28 | handled, busy test without the cutscene part (SCRIPT-29): [dcam.md §2026-10-14T14:36](dcam.md#ts-20261014-143600) |
 | SpawnScript | 0x1c3730 | 1 | 424 / 43 / 6 / 0 | 9 | done |  | handled; a missing script stops the runner (SCRIPT-S5 closed): [scripts.md §2026-10-19T15:12:09](scripts.md#ts-20261019-151209) |
 | ShowDialogueText | 0x26ff84 | 3 | 409 / 25 / 0 / 0 | 6 | stand-in | 30 | handled as a stand-in, drawn with fitted layout: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
@@ -47,7 +47,7 @@ This file has no dated entries: the table is edited in place. When a native is r
 | StopCharAnim | 0x1bfb84 | 1 | 193 / 30 / 0 / 0 | 8 | stand-in | 32 | stand-in: stops level characters and Player1 (SCRIPT-S110, SCRIPT-S262): [script-natives-animation.md §2026-10-19T12:55](script-natives-animation.md#ts-20261019-125503) |
 | AIFaceTarget | 0x1bf570 | 2 | 182 / 18 / 0 / 0 | 8 | stand-in | 34 | state 10 (0x2c5bc4) ported: heading toward the target each tick, x/z pinned to home; returns 1 ([ai-states.md §2026-10-14T21:21](ai-states.md#ts-20261014-212158)): [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
 | registersound | 0x1cdbdc | 2 | 180 / 22 / 0 / 0 | 8 | stand-in | 33 | stand-in, records only (AUDIO-S32) [§2026-10-15T17:27](script-natives-audio.md#ts-20261015-172705) |
-| FadeScreen | 0x1a2e8c | 1 | 178 / 39 / 0 / 0 | 8 | stand-in |  | top screen only (SCRIPT-S253) |
+| FadeScreen | 0x1a2e8c | 1 | 178 / 39 / 0 / 0 | 8 | done |  | handled: [script-text-bottom-screen.md §2026-10-19T23:15:01](script-text-bottom-screen.md#ts-20261019-231501) |
 | SubObjectiveEnemyEnable | 0x2b4c3c | 3 | 152 / 37 / 0 / 0 | 5 | done | 31 | exact: handler is `mov r0, #1; bx lr`: [objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919) |
 | ShakeScreen | 0x1b2690 | 3 | 149 / 4 / 0 / 1 | 10 | done | 28 | SCRIPT-S271, SCRIPT-332, CAMERA-S51, CAMERA-54 |
 | !? | 0x174428 | 0 | 140 / 14 / 5 / 1 | 8 | done |  |  |
@@ -210,7 +210,7 @@ This file has no dated entries: the table is edited in place. When a native is r
 | 1-8_RejoinFight | 0x26353c | 1 | 2 / 2 / 0 / 0 | 1 | stand-in | 35 | boss requested state 6 recorded (SCRIPT-S278, SCRIPT-339): [script-natives-party.md §2026-10-19T15:53:02](script-natives-party.md#ts-20261019-155302) |
 | AddToSemiTransList | 0x2a059c | 2 | 2 / 0 / 0 / 0 | 1 | C | 38 |  |
 | AIMoveNoAvoid | 0x1cd798 | 3 | 2 / 2 / 0 / 0 | 1 | stand-in | 34 | handled: as AIMove, records the no-avoid flag: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
-| BlackoutMap | 0x1b23f4 | 1 | 2 / 0 / 0 / 0 | 1 | stand-in | 31 | records its call (SCRIPT-S27): [objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919) |
+| BlackoutMap | 0x1b23f4 | 1 | 2 / 0 / 0 / 0 | 1 | stand-in | 31 | panel alpha handled, map alpha open (HUD-S77, HUD-83): [script-text-bottom-screen.md §2026-10-19T23:15:01](script-text-bottom-screen.md#ts-20261019-231501) |
 | EnableMinimapWipe | 0x27bbe8 | 1 | 2 / 2 / 2 / 0 | 1 | stand-in | 31 | records its call (SCRIPT-S27): [objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919) |
 | getinmech | 0x194e7c | 2 | 2 / 0 / 0 / 0 | 1 | stand-in | 35 | pilot pair recorded (SCRIPT-S279, SCRIPT-340): [script-natives-party.md §2026-10-19T15:53:02](script-natives-party.md#ts-20261019-155302) |
 | ifplayercharacter | 0x27bc58 | 2 | 2 / 0 / 0 / 0 | 1 | C | 39 |  |

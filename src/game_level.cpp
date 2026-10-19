@@ -491,7 +491,7 @@ void LevelSession::draw(int width, int height) {
         mapCanvas.clear(0, 0, 0);
     }
     const runtime::ScriptTextState& scriptText = levelScripts.text();
-    if (scriptText.dialogueBackground()) fe::drawDialogueBackground(mapCanvas, hudResources);
+    if (scriptText.dialogueBackground().drawn()) fe::drawDialogueBackground(mapCanvas, hudResources, scriptText.dialogueBackground().drawnAlpha());
     if (scriptText.heading().active)
         fe::drawHeadingBox(mapCanvas, hudResources, hudResources.textForKey(scriptText.heading().hintText ? kHintTextFile : kGameTextFile, scriptText.heading().key), scriptText.heading().alpha);
     if (scriptText.tip().active)

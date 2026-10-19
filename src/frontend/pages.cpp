@@ -219,11 +219,12 @@ void drawTitleTop(Canvas& top, Resources& resources, const std::string& suffix, 
     }
 }
 
-void drawDialogBackground(Canvas& bottom, Resources& resources) {
+void drawDialogBackground(Canvas& bottom, Resources& resources, float alpha) {
     const assets::Image& left = resources.image("sprites/ui_dialog/ui_dialog_a.btga");
     const assets::Image& right = resources.image("sprites/ui_dialog/ui_dialog_b.btga");
-    bottom.draw(left, {0, 0, left.width, kScreenHeight}, 0, 0);
-    bottom.draw(right, {0, 0, kBottomWidth - left.width, kScreenHeight}, left.width, 0);
+    const Colour tint{1, 1, 1, alpha};
+    bottom.draw(left, {0, 0, left.width, kScreenHeight}, 0, 0, tint);
+    bottom.draw(right, {0, 0, kBottomWidth - left.width, kScreenHeight}, left.width, 0, tint);
 }
 
 void drawSubtitleBubble(Canvas& bottom, Resources& resources, const std::vector<std::string>& cueLines) {
