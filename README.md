@@ -29,7 +29,7 @@ This starts the development runtime. It is not the game: it shows the start scre
 
 ![Progress trend](docs/progress-trend.svg)
 
-Updated 2026-10-19, commit 2269274. How the numbers are measured: [docs/progress.md](docs/progress.md).
+Updated 2026-10-19, commit 08ffbe2. How the numbers are measured: [docs/progress.md](docs/progress.md).
 <!-- progress:end -->
 
 ## Documentation
