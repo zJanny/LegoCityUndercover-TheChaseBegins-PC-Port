@@ -11,6 +11,3 @@ Ranges of item IDs held by parallel agents; the lead reserves them with `tools/c
 | SCRIPT-S | 283 | 284 | r39-B | 2026-10-19T22:53:15+02:00 |
 | HUD | 83 | 84 | r39-B | 2026-10-19T22:53:15+02:00 |
 | HUD-S | 77 | 77 | r39-B | 2026-10-19T22:53:15+02:00 |
-| SCRIPT | 349 | 351 | r39-C | 2026-10-19T22:53:15+02:00 |
-| SCRIPT-S | 285 | 286 | r39-C | 2026-10-19T22:53:15+02:00 |
-| HUD | 85 | 86 | r39-C | 2026-10-19T22:53:15+02:00 |
