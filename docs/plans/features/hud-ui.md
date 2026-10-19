@@ -2,7 +2,7 @@
 
 ## 1. Scope
 
-The in-game HUD (portrait, hearts, stud counter, studs flying to the counter, the bottom-screen map) and the `.bxaml` UI layouts and storyboards that draw it, plus later menus. The script text screens (tips, dialogue, headings, boxes) are [hud-ui-text.md](hud-ui-text.md). Front-end screens are [front-end.md](front-end.md); the stud rule is [studs.md](studs.md). Fonts and text are in [assets-formats.md](assets-formats.md).
+The in-game HUD (portrait, hearts, stud counter, studs flying to the counter, the bottom-screen map) and the `.bxaml` UI layouts and storyboards that draw it, plus later menus. The script text screens (tips, dialogue, headings, boxes) are [hud-ui-text.md](hud-ui-text.md). Front-end screens are [front-end.md](front-end.md); the stud rule is [studs.md](studs.md); the super brick display is [hud-ui-super-bricks.md](hud-ui-super-bricks.md). Fonts and text are in [assets-formats.md](assets-formats.md).
 
 ## 2. Status
 
@@ -26,7 +26,6 @@ IN_PROGRESS, updated 2026-10-19T15:05:12+02:00. The map also shows the sub-objec
 - HUD-S6 `userControl`, `UI_Strike` and `Struggle_Button` of the main page are hidden by hand (the original does not draw them at the gameplay start; why is not traced).
 - HUD-S7 The stud icon (HUD and flying) is drawn alpha-tested/blended normally, not with the original's blend state (see STUD-S5).
 - HUD-S60 Every waypoint is drawn as icon type 0 (the type byte is a class parameter, read for `map_waypoint` only), the ring lines are white (colour register of the line draw not read), the zoom is fixed at 1.55 and the map matrix, edge factors 0.44 and 0.57 and ring constants are values read from memory (lvl_01 only; `maps/<level>.txt` is not read). needs: HUD-60, HUD-61. evidence: [objective-hud-map.md §2026-10-15T19:56](../../re/objective-hud-map.md#ts-20261015-195600).
-- HUD-S72 The HUD shows nothing for super bricks (the count is printed by `--script`); the display fader 0x5198b0 and its fields are not modelled. needs: HUD-72. evidence: [super-bricks.md §2026-10-19T19:20:44](../../re/super-bricks.md#ts-20261019-192044).
 - HUD-S71 Group slots are drawn after all waypoint markers instead of in the original's shared slot order (16 slots, 0x2db0dc), and the map alpha (+0x4a0) is 1. needs: HUD-71. evidence: [objective-hud.md §2026-10-19T15:00](../../re/objective-hud.md#ts-20261019-150002).
 - HUD-S70 The waypoint column and badge fade as the original's tweens (linear, class times), but the node alpha and colour are applied as a multiplier of the finished fragment's colour and alpha (`Scene::setInstanceFade`); the original's draw path was not read. needs: HUD-70. evidence: [objective-hud.md §2026-10-15T19:58](../../re/objective-hud.md#ts-20261015-195841).
 - HUD-S73 Super build-it prompt: name and cost white (oracle), frontendfont. needs: HUD-75. evidence: [super-buildit.md §2026-10-19T19:23:11](../../re/super-buildit.md#ts-20261019-192311).
@@ -42,7 +41,6 @@ IN_PROGRESS, updated 2026-10-19T15:05:12+02:00. The map also shows the sub-objec
 - [ ] HUD-11 — Bottom screen: `maps/<level>.txt` for the other levels (HUD-S60), mission and collectible icons (needs SCRIPT-1 for missions), the `_2` map pieces, no map picture for lvl_00 (the original shows the city map: oracle state `police-station`), the characters button's behaviour.
 - [ ] HUD-60 — Map icons of the other types: enemy, point of interest and collectibles (code read, nothing drawn; needs the objects that add slots, callers of 0x2258bc). The group markers (0x2dbb04, slots of types 14/13/15 with their arrows) are drawn since 2026-10-19 ([objective-hud.md §2026-10-19T15:00](../../re/objective-hud.md#ts-20261019-150002)). blocks: HUD-S60. evidence: [objective-hud-map.md §2026-10-15T19:56](../../re/objective-hud-map.md#ts-20261015-195600).
 - [ ] HUD-61 — Map zoom levels (3.8, 2.5, 1.55 by struct + 0x368, 0.6 factor, the zoom buttons) and what changes the level. blocks: HUD-S60. evidence: [objective-hud-map.md §2026-10-15T19:56](../../re/objective-hud-map.md#ts-20261015-195600).
-- [ ] HUD-72 — The super brick display: the fader 0x5198b0 shown by 0x2144f8 at a pickup, the HUD fields +0x2a0..+0x2ac, the `brickAndBuildMenu` sprites and models loaded at 0x290b1c; the draw was not read and no picture exists. blocks: HUD-S72. evidence: [super-bricks.md §2026-10-19T19:20:44](../../re/super-bricks.md#ts-20261019-192044)
 - [ ] HUD-73 — The pending add of the HUD update 0x2a5f80 (HUD +0x2ac, applied 35 ticks after the stamp) and its writers (probably the debris super bricks). needs: VEH-123. evidence: [super-bricks.md §2026-10-19T19:20:44](../../re/super-bricks.md#ts-20261019-192044)
 - [ ] HUD-71 — The shared 16 map slots of waypoints and groups (allocation 0x1f865c, order, a full table) and the map alpha +0x4a0 are not modelled. blocks: HUD-S71. evidence: [objective-hud.md §2026-10-19T15:00](../../re/objective-hud.md#ts-20261019-150002)
 - [ ] HUD-70 — How the node alpha and colour of a tween enter the draw (0x23f708, 0x23f6d0 and their readers), the `UseMarker` classes (other `props/map_*`) and the sound 0x35 of state 0. blocks: HUD-S70, SCRIPT-S232. evidence: [objective-hud.md §2026-10-15T19:58](../../re/objective-hud.md#ts-20261015-195841).
@@ -55,7 +53,7 @@ IN_PROGRESS, updated 2026-10-19T15:05:12+02:00. The map also shows the sub-objec
 
 - `.bxaml` layout format and storyboards: [ui-layouts.md §2026-10-13T11:00](../../re/ui-layouts.md#ts-20261013-1100), runtime layout [ui-layouts.md §2026-10-13T09:12](../../re/ui-layouts.md#ts-20261013-0912).
 - HUD page, hearts, stud bar, flight, map screen and the fit: [hud.md](../../re/hud.md).
-- Super brick display (fader 0x5198b0, HUD +0x2a0..+0x2ac): [super-bricks.md §2026-10-19T19:20:44](../../re/super-bricks.md#ts-20261019-192044).
+- Super brick display: [hud-ui-super-bricks.md](hud-ui-super-bricks.md).
 - Sub-objective group icons and slots on the map: [objective-hud.md §2026-10-19T15:00](../../re/objective-hud.md#ts-20261019-150002).
 - Camera lock icon object, states and drawing 0x1b1150: [camera-records-blending.md §2026-10-14T10:44](../../re/camera-records-blending.md#ts-20261014-104400).
 

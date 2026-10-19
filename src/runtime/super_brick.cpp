@@ -11,6 +11,21 @@ std::array<float, 16> superBrickMatrix(const std::array<float, 3>& position, std
     return {c, 0, -s, 0, 0, 1, 0, 0, s, 0, c, 0, position[0], position[1], position[2], 1};
 }
 
+void SuperBrickTint::update(float dt) {
+    const float x = phase_ * float(kSuperBrickTintEntries);
+    const unsigned index = (x > 0.0f ? unsigned(x) : 0u) % kSuperBrickTintEntries;
+    const unsigned next = (index + 1) % kSuperBrickTintEntries;
+    const float mix = x - float(index);
+    for (std::size_t channel = 0; channel < 3; ++channel) {
+        const float from = float(kSuperBrickTintTable[index][channel]) * 0.003921569f;
+        const float to = float(kSuperBrickTintTable[next][channel]) * 0.003921569f;
+        const int value = int((from + (to - from) * mix) * 255.0f);
+        bytes_[channel] = std::uint8_t(std::clamp(value, 0, 255));
+    }
+    phase_ += dt * kSuperBrickTintPerSecond;
+    if (phase_ > 1.0f) phase_ -= 1.0f;
+}
+
 float superBrickAlpha(float timer) {
     const int alpha = int(timer * 255.0f);
     return float(std::clamp(alpha, 0, 255)) / 255.0f;
@@ -28,7 +43,8 @@ std::size_t SuperBrickField::count(SuperBrickState state) const {
     return std::size_t(std::count_if(bricks_.begin(), bricks_.end(), [state](const SuperBrick& brick) { return brick.state == state; }));
 }
 
-void SuperBrickField::updateOne(std::size_t index, float dt, const std::array<float, 3>& playerPosition, bool blocked, SuperBrickStep& step) {
+void SuperBrickField::updateOne(std::size_t index, float dt, const std::array<float, 3>& playerPosition, bool blocked,
+                                const std::optional<std::array<float, 3>>& flightTarget, SuperBrickStep& step) {
     SuperBrick& brick = bricks_[index];
     if (brick.state == SuperBrickState::Idle) {
         if (blocked || brick.timer > 0.0f) return;
@@ -42,7 +58,13 @@ void SuperBrickField::updateOne(std::size_t index, float dt, const std::array<fl
     }
     if (brick.state != SuperBrickState::Collected) return;
     brick.timer -= dt;
-    if (0.0f < brick.timer) return;
+    if (0.0f < brick.timer) {
+        if (flightTarget) {
+            const float rate = 1.0f / (kStudFlightRate * brick.timer);
+            for (std::size_t axis = 0; axis < 3; ++axis) brick.position[axis] += ((*flightTarget)[axis] - brick.position[axis]) * rate;
+        }
+        return;
+    }
     brick.state = SuperBrickState::Done;
     total_ += brick.value;
     SuperBrickBanked banked;

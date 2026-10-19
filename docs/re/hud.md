@@ -11,6 +11,7 @@ Findings from REA (Ghidra 12.1.2 pseudo-code of `artifacts/game/game.arm.elf`, e
 - Flying studs (0x180168 state 4) move `(target - position) / (30 * timer)` to the unprojected sink (0x24c1d0); sink 0 is (203, -14.5, 5.5); replay matches to 2e-3. [§2026-10-13T21:31:01](#ts-20261013-213101)
 - Bottom screen: level map texture turned by camera yaw, one world unit is one screen pixel (fitted stand-in constants in `src/frontend/minimap.hpp`). [§2026-10-13T21:31:01](#ts-20261013-213101)
 - Corrected by [objective-hud-map.md §2026-10-15T19:56](objective-hud-map.md#ts-20261015-195600): the waypoint marker is `WayPoint.tga` with line circles, and the map matrix and icon drawing are read. [§2026-10-13T21:31:01](#ts-20261013-213101)
+- The super brick count display is the tail of the HUD callback (0x2a5f80): fader 0x5198b0, the yellow number at the sink 2 anchor (186, 21) and the spinning brick model; the counter 0x593430 is shown there. [super-bricks.md §2026-10-19T20:35:01+02:00](super-bricks.md#ts-20261019-203501)
 - Open: who switches the HUD on and off, the overlay tick, number spacing source, the combat counter and boss hearts, and the real map drawing code.
 
 <a id="ts-20261013-213101"></a>

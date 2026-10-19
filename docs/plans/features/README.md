@@ -71,6 +71,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | [hud-ui](hud-ui.md) | IN_PROGRESS | HUD-6 hearts never change; HUD-11 map levels and mission icons, HUD-60 other map icon types; HUD-8 other counters |
 | [hud-ui-text](hud-ui-text.md) | IN_PROGRESS | HUD-22 remaining text screens; HUD-30 character intro and box line counts; HUD-33 tip after the release camera |
 | [ui-menus](ui-menus.md) | IN_PROGRESS | UI-1 map buttons; UI-2 pause fades and gates; UI-3 pause Exit; UI-4 options pages (pause screen ported) |
+| [hud-ui-super-bricks](hud-ui-super-bricks.md) | IN_PROGRESS | HUD-79 icon through the HUD camera; HUD-80 number font; HUD-81 build-menu placeholders |
 | [audio](audio.md) | IN_PROGRESS | AUDIO-20 duck record; AUDIO-11 action music; AUDIO-3 world sounds |
 | [movies-cutscenes](movies-cutscenes.md) | IN_PROGRESS | MOVIE-33 camera of 1_1_d; MOVIE-3 short actor clips; MOVIE-1 layout values |
 | [saves-options](saves-options.md) | IN_PROGRESS | SAVE-14 level state refresh of a save request, SAVE-18 HUD studs after a load, SAVE-13 Continue at level 2 and later, SAVE-2 slot display (blocks FE-1) |

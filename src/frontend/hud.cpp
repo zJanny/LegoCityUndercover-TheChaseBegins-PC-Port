@@ -53,7 +53,7 @@ std::string heartContainer(int index) {
 
 }
 
-Hud::Hud(Resources& resources, const HudConfig& config) : resources_(resources), config_(config) {
+Hud::Hud(Resources& resources, const HudConfig& config) : resources_(resources), config_(config), superBrickDraw_(resources) {
     const assets::UiLayout& layout = resources_.layout(kHudLayout);
     onLength_ = storyboardLength(layout, "Studs_ON");
     offLength_ = storyboardLength(layout, "Studs_OFF");
@@ -106,6 +106,7 @@ void Hud::studsBanked(unsigned type, std::uint64_t total) {
 void Hud::update(float dt) {
     seconds_ += dt;
     ++updates_;
+    superBrick_.update(dt);
     for (auto& heart : heart_) heart.time += dt;
     const float gainLength = boardLength(kHeartControlLayout, "Gain_Heart"), loseLength = boardLength(kHeartControlLayout, "Lose_Heart");
     const int last = int(hearts_) - 1;
@@ -222,6 +223,7 @@ void Hud::draw(Canvas& top, double spinSeconds) {
                                                                           : seconds_ - barStart_});
     drawLayout(top, resources_, kHudLayout, scene, 0, 0);
     drawStudBar(top, spinSeconds);
+    superBrickDraw_.draw(top, superBrick_.view());
     if (cameraLockAlpha_ > 0.0f) {
         const assets::Image& icon = resources_.image(kCameraLockedSprite);
         top.drawScaled(icon, {0, 0, icon.width, icon.height}, 10.0f, float(kScreenHeight) - 10.0f - float(icon.height), float(icon.width),

@@ -1,5 +1,5 @@
 // chase-hudshot: draws the in-game HUD offscreen for a scripted sequence and saves the transparent top-screen canvas as a
-// BMP over black plus an alpha mask BMP. Script: "run N; hearts N; studs TYPE TOTAL; shot NAME; marker X Z; ring SECONDS; map LEVEL X Z CAMERAYAW PLAYERYAW NAME;
+// BMP over black plus an alpha mask BMP. Script: "run N; hearts N; studs TYPE TOTAL; brickcount TOTAL; brick; brickbank TOTAL; shot NAME; marker X Z; ring SECONDS; map LEVEL X Z CAMERAYAW PLAYERYAW NAME;
 // pause; press START|A|B|LEFT|RIGHT; touch X Y N" (updates are 1/30 s). After `pause` the pause screen runs and `shot` saves both screens (400x480).
 #include "frontend/hud.hpp"
 #include "frontend/pause_menu.hpp"
@@ -27,7 +27,7 @@ constexpr long long kMaxRunUpdates = 1000000;
 constexpr int kMapSettleUpdates = 45;
 
 struct Command {
-    enum class Kind { Run, Hearts, Studs, Map, Shot, Marker, Ring, Pause, Press, Touch };
+    enum class Kind { Run, Hearts, Studs, Map, Shot, Marker, Ring, BrickCount, BrickPickup, BrickBank, Pause, Press, Touch };
     Kind kind = Kind::Run;
     unsigned count = 0;
     unsigned type = 0;
@@ -59,6 +59,13 @@ Command parseCommand(const std::string& text) {
         command.kind = Command::Kind::Studs;
         command.type = unsigned(strict::integer(fields[1], 0, 3));
         command.total = std::uint64_t(strict::integer(fields[2], 0, std::numeric_limits<long long>::max()));
+    } else if (verb == "brickcount" || verb == "brickbank") {
+        requireFields(fields, 2, "brickcount TOTAL / brickbank TOTAL", text);
+        command.kind = verb == "brickcount" ? Command::Kind::BrickCount : Command::Kind::BrickBank;
+        command.total = std::uint64_t(strict::integer(fields[1], 0, 4294967295LL));
+    } else if (verb == "brick") {
+        requireFields(fields, 1, "brick", text);
+        command.kind = Command::Kind::BrickPickup;
     } else if (verb == "map") {
         requireFields(fields, 7, "map LEVEL X Z CAMERAYAW PLAYERYAW NAME", text);
         command.kind = Command::Kind::Map;
@@ -189,6 +196,12 @@ int run(const Options& options) {
             hud.setHearts(command.count);
         } else if (command.kind == Command::Kind::Studs) {
             hud.studsBanked(command.type, command.total);
+        } else if (command.kind == Command::Kind::BrickCount) {
+            hud.setSuperBrickCount(std::uint32_t(command.total));
+        } else if (command.kind == Command::Kind::BrickPickup) {
+            hud.superBrickPickedUp();
+        } else if (command.kind == Command::Kind::BrickBank) {
+            hud.superBrickBanked(std::uint32_t(command.total));
         } else if (command.kind == Command::Kind::Map) {
             Canvas bottom(kBottomWidth, kScreenHeight);
             MinimapView view = command.view;

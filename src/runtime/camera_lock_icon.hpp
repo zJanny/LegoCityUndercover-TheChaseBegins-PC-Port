@@ -16,16 +16,22 @@ public:
 
     CameraLockIcon() = default;
     // The same state machine with other durations (the head icon of 0x22d7c0 uses 0.15 and 0.1).
-    CameraLockIcon(float fadeSeconds, float holdSeconds) : fade_(fadeSeconds), hold_(holdSeconds) {}
+    CameraLockIcon(float fadeSeconds, float holdSeconds) : fadeIn_(fadeSeconds), fadeOut_(fadeSeconds), hold_(holdSeconds) {}
+    // Different fade times (+0x14, +0x18); a negative hold (-1.0 in 0x23cc00(object, -1.0, 0)) keeps the state until `hide()` (0x2459d8). The
+    // super brick display's fader 0x5198b0 is one (runtime/super_brick_display.hpp).
+    CameraLockIcon(float fadeInSeconds, float fadeOutSeconds, float holdSeconds) : fadeIn_(fadeInSeconds), fadeOut_(fadeOutSeconds), hold_(holdSeconds) {}
 
     // 0x23cc00: called by 0x193aa4 while L or R is pressed and the camera command is not the follow controller.
     void trigger();
+    // 0x2459d8: from fading in or shown to fading out (an object without a fade-out time goes straight to hidden). STAND-IN: the fading-in case
+    // continues the fade value (the branch at 0x245a40 was read only in part).
+    void hide();
     void update(float dt);
     float alpha() const;
     State state() const { return state_; }
 
 private:
-    float fade_ = kFadeSeconds, hold_ = kHoldSeconds;
+    float fadeIn_ = kFadeSeconds, fadeOut_ = kFadeSeconds, hold_ = kHoldSeconds;
     State state_ = State::Hidden;
     float now_ = 0, start_ = 0;
 };

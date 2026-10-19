@@ -3,6 +3,8 @@
 // Evidence: page init 0x2cedb8 / 0x17bb14, draw callback 0x193604, heart switch 0x2316b4, stud bar 0x15b2f0 / 0x166e08 /
 // 0x22ddf4 / 0x240fc0.
 #include "frontend/canvas.hpp"
+#include "frontend/super_brick_display.hpp"
+#include "runtime/super_brick_display.hpp"
 #include "frontend/layout.hpp"
 #include "frontend/resources.hpp"
 #include <array>
@@ -48,6 +50,11 @@ public:
     void setVehiclePortrait(const std::string& path) { vehiclePortrait_ = path; }
     // 0x22ddf4 via the pickup hook 0x29c090: the counter now shows `total` with the icon of stud type 0..3.
     void studsBanked(unsigned type, std::uint64_t total);
+    // The super brick count display (runtime/super_brick_display.hpp): 0x2144f8 at a pickup, 0x262778 at the destroy with the new count.
+    void superBrickPickedUp() { superBrick_.show(); }
+    void superBrickBanked(std::uint32_t total) { superBrick_.banked(total); }
+    void setSuperBrickCount(std::uint32_t total) { superBrick_.setCount(total); }
+    const runtime::SuperBrickDisplay& superBrickDisplay() const { return superBrick_; }
     // STAND-IN: `spinSeconds`, the clock of the icon animation (15 frames per second), has the same unrecovered origin as
     // the studs in the world.
     // STAND-IN: the page's TransitionOn storyboard starts when the Hud is created (the original starts it when 0x17c0f4
@@ -98,6 +105,8 @@ private:
     unsigned changeUpdate_ = 0;
     float baseX_ = 0, baseY_ = 0, width_ = 0, height_ = 0;
     StudSink sink_;
+    runtime::SuperBrickDisplay superBrick_;
+    SuperBrickDisplayDraw superBrickDraw_;
 };
 
 }
