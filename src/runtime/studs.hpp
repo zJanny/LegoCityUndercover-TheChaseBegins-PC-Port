@@ -85,9 +85,13 @@ public:
     // World position the collecting studs fly towards (the HUD's counter icon unprojected at depth 5.5 in front of the
     // camera, 0x180168 state 4). Without one they stay where they are.
     void setFlightTarget(const std::optional<std::array<float, 3>>& target) { flightTarget_ = target; }
+    const std::optional<std::array<float, 3>>& flightTarget() const { return flightTarget_; }
     std::vector<StudBanked> takeBanked();
 
     std::uint64_t counter() const { return counter_; }
+    // 0x28a128 for a stud of `kind` whose collect timer ran out (also the dropped studs of runtime/stud_drop.hpp): its value added, clamped at
+    // kStudCounterLimit, and the new total handed to the HUD hook.
+    void bank(StudKind kind);
     // AddStuds 0x18838c adds through 0x1584e0 to the counter object without the clamp of 0x28a128.
     void addToCounter(std::uint64_t amount) { counter_ += amount; }
     const std::vector<Stud>& studs() const { return studs_; }

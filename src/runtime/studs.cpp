@@ -63,12 +63,16 @@ std::vector<StudCollected> StudField::update(float dt, const std::array<float, 3
                 }
             } else {
                 stud.state = StudState::Done;
-                counter_ = std::min(counter_ + kStudValues[std::size_t(stud.kind)], kStudCounterLimit);
-                banked_.push_back({stud.kind, counter_});
+                bank(stud.kind);
             }
         }
     }
     return collected;
+}
+
+void StudField::bank(StudKind kind) {
+    counter_ = std::min(counter_ + kStudValues[std::size_t(kind)], kStudCounterLimit);
+    banked_.push_back({kind, counter_});
 }
 
 std::vector<StudBanked> StudField::takeBanked() {

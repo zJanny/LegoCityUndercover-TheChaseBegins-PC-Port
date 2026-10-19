@@ -8,8 +8,8 @@ namespace game_effects {
 namespace assets = chase::assets;
 namespace runtime = chase::runtime;
 
-void LevelEffects::load(chase::render::Scene& scene, assets::FuseArchive& archive, runtime::GameRandom& random) {
-    field_.emplace(random);
+void LevelEffects::load(chase::render::Scene& scene, assets::FuseArchive& archive, runtime::GameRandom& random, runtime::DebrisPlaneRing& planes) {
+    field_.emplace(random, planes);
     instances_.assign(runtime::kDebrisObjectCount, -1);
     const assets::FuseEntry* entry = archive.find(kDebrisLevel);
     if (!entry) return;

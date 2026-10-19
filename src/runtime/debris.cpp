@@ -68,25 +68,70 @@ std::array<float, 9> debrisRotation(float a, float b, float c) {
     return {cb * cc, sa * sb * cc + ca * sc, sa * sc - ca * sb * cc, -(cb * sc), ca * cc - sa * sb * sc, sa * cc + ca * sb * sc, sb, -(sa * cb), ca * cb};
 }
 
-// 0x21e2e4 lines 0x21e3c0..0x21e598: a counting sort of the mode's records by state (stable, by index), then the records of states 1 to 4 by
-// pickup type and remaining life, both ascending; 0x342d04 keeps the first ten.
-std::array<std::uint8_t, kDebrisBurstLimit> DebrisField::chooseRecords() const {
+std::array<std::uint8_t, kDebrisBurstLimit> choosePickupRecords(const PickupSortKey* keys, unsigned count) {
     std::array<unsigned, 5> ends{};
-    for (const DebrisRecord& record : records_) ++ends[std::uint8_t(record.state)];
+    for (unsigned i = 0; i < count; ++i) ++ends[keys[i].state];
     for (unsigned s = 1; s < ends.size(); ++s) ends[s] += ends[s - 1];
     std::array<unsigned, 5> cursor = ends;
-    std::array<std::uint8_t, kDebrisRecordCount> order{};
-    for (unsigned i = kDebrisRecordCount; i-- > 0;) order[--cursor[std::uint8_t(records_[i].state)]] = std::uint8_t(i);
+    std::array<std::uint8_t, 64> order{};
+    for (unsigned i = count; i-- > 0;) order[--cursor[keys[i].state]] = std::uint8_t(i);
     for (unsigned bucket = 0; bucket + 1 < ends.size(); ++bucket)
         for (unsigned pass = ends[bucket]; pass < ends[bucket + 1]; ++pass)
             for (unsigned j = ends[bucket] + 1; j < ends[bucket + 1]; ++j) {
-                const DebrisRecord& earlier = records_[order[j - 1]];
-                const DebrisRecord& later = records_[order[j]];
+                const PickupSortKey& earlier = keys[order[j - 1]];
+                const PickupSortKey& later = keys[order[j]];
                 if (later.type < earlier.type || (later.type == earlier.type && later.life < earlier.life)) std::swap(order[j - 1], order[j]);
             }
     std::array<std::uint8_t, kDebrisBurstLimit> chosen{};
     for (unsigned i = 0; i < kDebrisBurstLimit; ++i) chosen[i] = order[i];
     return chosen;
+}
+
+DebrisBurstRays debrisBurstRays(const DebrisVec3& position, const DebrisVec3& direction, bool bricks, float scale, const DebrisLineTest& wall,
+                                const DebrisLineTest& ground, DebrisPlaneRing& ring) {
+    DebrisBurstRays rays;
+    for (unsigned a = 0; a < 3; ++a) rays.start[a] = direction[a] * kStartReach + position[a];
+    rays.end = rays.start;
+    rays.end[1] -= kGroundRayLength;
+    DebrisVec3 groundAt = rays.start;
+    if (bricks) groundAt[1] = rays.end[1];
+    if (wall)
+        if (const std::optional<DebrisLineHit> hit = wall(position, rays.start)) {
+            ring.planes[ring.next] = {hit->normal[0], hit->normal[1], hit->normal[2], -dot(hit->point, hit->normal)};
+            rays.plane = std::int8_t(ring.next);
+            ring.next = (ring.next + 1) & (kDebrisPlaneCount - 1);
+            rays.end[0] = hit->point[0] + (hit->point[0] - rays.end[0]) * kWallNudge;
+            rays.start[0] = rays.end[0];
+            rays.end[2] = hit->point[2] + (hit->point[2] - rays.end[2]) * kWallNudge;
+            rays.start[2] = rays.end[2];
+        }
+    if (const std::optional<DebrisLineHit> hit = ground ? ground(rays.start, rays.end) : std::nullopt) groundAt = hit->point;
+    else groundAt[1] -= kGroundMissDrop;
+    rays.restHeight = groundAt[1] + scale * kRestHeight;
+    return rays;
+}
+
+float debrisAheadGround(const DebrisBurstRays& rays, const DebrisVec3& velocity, float scale, const DebrisLineTest& ground, float fallback) {
+    if (!ground) return fallback;
+    const DebrisVec3 flat = normalised({velocity[0], 0, velocity[2]});
+    DebrisVec3 from{}, to{};
+    for (unsigned a = 0; a < 3; ++a) {
+        from[a] = rays.start[a] + flat[a] * kAheadReach;
+        to[a] = rays.end[a] + flat[a] * kAheadReach;
+    }
+    if (const std::optional<DebrisLineHit> hit = ground(from, to)) return hit->point[1] + scale * kRestHeight;
+    return fallback;
+}
+
+void debrisReflectAtPlane(const DebrisVec3& position, DebrisVec3& velocity, const std::array<float, 4>& plane) {
+    const DebrisVec3 normal = {plane[0], plane[1], plane[2]};
+    const DebrisVec3 next = {position[0] + velocity[0], position[1] + velocity[1], position[2] + velocity[2]};
+    if (!(dot(next, normal) + plane[3] < 0.0f)) return;
+    DebrisVec3 back = normalised(velocity);
+    for (float& v : back) v *= -1.0f;
+    const float k = dot(back, normal) * 2.0f;
+    const float speed = length(velocity);
+    for (unsigned a = 0; a < 3; ++a) velocity[a] = (normal[a] * k - back[a]) * speed;
 }
 
 void DebrisField::setRecord(unsigned index, const DebrisRecord& record) {
@@ -103,27 +148,10 @@ void DebrisField::burst(const DebrisBurst& request, const DebrisLineTest& wall, 
     DebrisVec3 position = request.position;
     position[1] += kBurstLift;
     random_.next();
-    const std::array<std::uint8_t, kDebrisBurstLimit> chosen = chooseRecords();
-
-    DebrisVec3 start = position;
-    DebrisVec3 end = start;
-    end[1] -= kGroundRayLength;
-    DebrisVec3 groundAt = start;
-    groundAt[1] = end[1];
-    std::int8_t plane = -1;
-    if (wall)
-        if (const std::optional<DebrisLineHit> hit = wall(position, start)) {
-            planes_[planeIndex_] = {hit->normal[0], hit->normal[1], hit->normal[2], -dot(hit->point, hit->normal)};
-            plane = std::int8_t(planeIndex_);
-            planeIndex_ = (planeIndex_ + 1) & (kDebrisPlaneCount - 1);
-            end[0] = hit->point[0] + (hit->point[0] - end[0]) * kWallNudge;
-            start[0] = end[0];
-            end[2] = hit->point[2] + (hit->point[2] - end[2]) * kWallNudge;
-            start[2] = end[2];
-        }
-    if (const std::optional<DebrisLineHit> hit = ground ? ground(start, end) : std::nullopt) groundAt = hit->point;
-    else groundAt[1] -= kGroundMissDrop;
-    const float groundY = groundAt[1] + settings.scale * kRestHeight;
+    std::array<PickupSortKey, kDebrisRecordCount> keys{};
+    for (unsigned i = 0; i < kDebrisRecordCount; ++i) keys[i] = {std::uint8_t(records_[i].state), records_[i].type, records_[i].life};
+    const std::array<std::uint8_t, kDebrisBurstLimit> chosen = choosePickupRecords(keys.data(), kDebrisRecordCount);
+    const DebrisBurstRays rays = debrisBurstRays(position, {0, 0, 0}, true, settings.scale, wall, ground, ring());
 
     unsigned remaining = request.count;
     for (unsigned i = 0; remaining != 0 && i < kDebrisBurstLimit; ++i) {
@@ -136,18 +164,13 @@ void DebrisField::burst(const DebrisBurst& request, const DebrisLineTest& wall, 
         record.life = kSpawnLife;
         record.flags49 = std::uint8_t((record.flags49 & 0xfcu) | (request.slow ? 2u : 0u));
         record.position = position;
-        record.plane = plane;
+        record.plane = rays.plane;
         const float rx = gameRandomUnit(random_);
         record.velocity = {request.spread * (rx - 0.5f) * kSpreadScale, kSpawnRise, 0};
         const float rz = gameRandomUnit(random_);
         record.velocity[2] = request.spread * (rz - 0.5f) * kSpreadScale;
         for (float& v : record.velocity) v *= settings.scale;
-        record.ground = groundY - kGroundMargin;
-        const DebrisVec3 flat = normalised({record.velocity[0], 0, record.velocity[2]});
-        const DebrisVec3 aheadFrom = {start[0] + flat[0] * kAheadReach, start[1] + flat[1] * kAheadReach, start[2] + flat[2] * kAheadReach};
-        const DebrisVec3 aheadTo = {end[0] + flat[0] * kAheadReach, end[1] + flat[1] * kAheadReach, end[2] + flat[2] * kAheadReach};
-        if (ground)
-            if (const std::optional<DebrisLineHit> hit = ground(aheadFrom, aheadTo)) record.ground = hit->point[1] + settings.scale * kRestHeight;
+        record.ground = debrisAheadGround(rays, record.velocity, settings.scale, ground, rays.restHeight - kGroundMargin);
 
         record.type = kDebrisPickupType;
         record.flags22 = std::uint8_t((record.flags22 & ~0x07u) | (random_.next() & 1u));
@@ -218,19 +241,7 @@ void DebrisField::update(float frameDelta, const DebrisVec3& camera) {
     for (DebrisRecord& record : records_) {
         if (record.state != DebrisState::Resting && record.state != DebrisState::Flying) continue;
         if (record.state == DebrisState::Flying) {
-            if (record.plane != -1) {
-                const std::array<float, 4>& p = planes_[unsigned(record.plane)];
-                const DebrisVec3 normal = {p[0], p[1], p[2]};
-                const DebrisVec3 next = {record.position[0] + record.velocity[0], record.position[1] + record.velocity[1],
-                                         record.position[2] + record.velocity[2]};
-                if (dot(next, normal) + p[3] < 0.0f) {
-                    DebrisVec3 back = normalised(record.velocity);
-                    for (float& v : back) v *= -1.0f;
-                    const float k = dot(back, normal) * 2.0f;
-                    const float speed = length(record.velocity);
-                    for (unsigned a = 0; a < 3; ++a) record.velocity[a] = (normal[a] * k - back[a]) * speed;
-                }
-            }
+            if (record.plane != -1) debrisReflectAtPlane(record.position, record.velocity, ring().planes[unsigned(record.plane)]);
             for (unsigned a = 0; a < 3; ++a) record.position[a] += record.velocity[a];
             if (!(record.position[1] < record.ground)) {
                 if (kDebrisTypeGravity > 0.0f) record.velocity[1] -= ((record.flags49 & 2) ? kSlowFall : kFall) * kDebrisTypeGravity;

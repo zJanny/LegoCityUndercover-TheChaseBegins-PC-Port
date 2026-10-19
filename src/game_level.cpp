@@ -178,6 +178,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     levelScripts.loadObjectKinds(classOf);
     installScriptHooks();
     fallApart.load(archive, particles.random(), chase::render::readBaseAppearance(archive));
+    studDrops.load(particles.random());
     studSprites.emplace(archive);
     player = game_player::placePlayer(archive, scene, level);
     levelScripts.setAllRoomsLoaded();
@@ -284,7 +285,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     buildits.load(archive, level, classOf);
     std::cout << "build-its: " << buildits.objects().size() << '\n';
     propParts.loadBuildits(scene, archive, buildits, placedObjects, placedSceneIndex);
-    effects.load(scene, archive, particles.random());
+    effects.load(scene, archive, particles.random(), studDrops.planes());
     std::cout << "debris objects: " << effects.debrisInstances() << '\n';
     carry.load(archive, level, classOf);
     if (player) game_carry::applyClipTimings(carry, *player);
@@ -437,6 +438,7 @@ void LevelSession::draw(int width, int height) {
     for (const runtime::Stud& stud : studs.studs())
         if (stud.state == runtime::StudState::Idle || stud.state == runtime::StudState::Collecting)
             sprites.push_back({{stud.centre[0], stud.centre[1], stud.centre[2]}, runtime::kStudTint[std::size_t(stud.kind)]});
+    studDrops.appendSprites(sprites);
     studSprites->draw(viewMatrix, mvp, sprites, runtime::studSpriteFrame(std::uint32_t(provisionalStudClockSeconds * double(runtime::kClockTicksPerSecond))),
                      runtime::kStudHalfSize);
     drawUseMarkers(mvp);

@@ -69,6 +69,37 @@ struct DebrisLineHit {
 // A line test from `from` to `to`: 0x21ab20 (nearest hit) for the ground, 0x22b108 (any hit) for the wall of a burst.
 using DebrisLineTest = std::function<std::optional<DebrisLineHit>(const DebrisVec3& from, const DebrisVec3& to)>;
 
+// 0x19913c: the wall planes (normal, -dot(point, normal)) of the bursts in the ring 0x58f6d0, next slot 0x377294 & 3; the bricks and the dropped
+// studs (runtime/stud_drop.hpp) share it.
+struct DebrisPlaneRing {
+    std::array<std::array<float, 4>, kDebrisPlaneCount> planes{};
+    unsigned next = 0;
+};
+
+// The rays of one 0x19913c call before its records: `start` = position + direction x 2.5, `end` = start - 10 in y, both moved to the wall hit of
+// 0x22b108(position, start); `restHeight` = the ground test's hit y (else the reference y - 20) + 0.56 x scale, the reference y being the end's for
+// the bricks (mode 3) and the start's otherwise; `plane` the ring slot of the wall hit, -1 without one.
+struct DebrisBurstRays {
+    DebrisVec3 start{}, end{};
+    float restHeight = 0;
+    std::int8_t plane = -1;
+};
+// `direction` is the burst direction times 0x37728c, zero without one.
+DebrisBurstRays debrisBurstRays(const DebrisVec3& position, const DebrisVec3& direction, bool bricks, float scale, const DebrisLineTest& wall,
+                                const DebrisLineTest& ground, DebrisPlaneRing& ring);
+// The second ground test of 0x19913c from start and end moved 2 units along the horizontal velocity (0x257ea0): hit y + 0.56 x scale, else `fallback`.
+float debrisAheadGround(const DebrisBurstRays& rays, const DebrisVec3& velocity, float scale, const DebrisLineTest& ground, float fallback);
+// 0x180168 state 2 with a plane: when position + velocity lies behind it the velocity is reflected (u = -normalise(v), v = (2 (u . n) n - u) |v|).
+void debrisReflectAtPlane(const DebrisVec3& position, DebrisVec3& velocity, const std::array<float, 4>& plane);
+
+// 0x21e2e4 lines 0x21e3c0..0x21e598: the pool records of one mode by state (a stable counting sort), the records of states 1 to 4 then by pickup type
+// and remaining life (+0x3c), both ascending; 0x342d04 keeps the first ten indices.
+struct PickupSortKey {
+    std::uint8_t state = 0, type = 0;
+    float life = 0;
+};
+std::array<std::uint8_t, kDebrisBurstLimit> choosePickupRecords(const PickupSortKey* keys, unsigned count);
+
 // The descriptor of 0x21e2e4 with mode 3 and the colour block of 0x229fb8 / 0x20c938.
 struct DebrisBurst {
     DebrisVec3 position{};                         // 0x21e2e4 adds 0.5 to y
@@ -95,6 +126,8 @@ struct DebrisSettings {
 class DebrisField {
 public:
     explicit DebrisField(GameRandom& random) : random_(random) {}
+    // The wall planes shared with the dropped studs (runtime/stud_drop.hpp).
+    DebrisField(GameRandom& random, DebrisPlaneRing& planes) : random_(random), sharedRing_(&planes) {}
 
     DebrisSettings settings;
 
@@ -108,18 +141,19 @@ public:
     // Puts a recorded record (pool index kDebrisRecordFirst + index) into the field, with its debris object enabled.
     void setRecord(unsigned index, const DebrisRecord& record);
     const std::array<DebrisObject, kDebrisObjectCount>& objects() const { return objects_; }
-    const std::array<std::array<float, 4>, kDebrisPlaneCount>& planes() const { return planes_; }
+    const std::array<std::array<float, 4>, kDebrisPlaneCount>& planes() const { return sharedRing_ ? sharedRing_->planes : ownRing_.planes; }
 
 private:
-    std::array<std::uint8_t, kDebrisBurstLimit> chooseRecords() const;
     void release(DebrisRecord& record);
     void place(DebrisRecord& record);
 
     GameRandom& random_;
     std::array<DebrisRecord, kDebrisRecordCount> records_{};
     std::array<DebrisObject, kDebrisObjectCount> objects_{};
-    std::array<std::array<float, 4>, kDebrisPlaneCount> planes_{};
-    unsigned planeIndex_ = 0;
+    DebrisPlaneRing& ring() { return sharedRing_ ? *sharedRing_ : ownRing_; }
+
+    DebrisPlaneRing ownRing_;
+    DebrisPlaneRing* sharedRing_ = nullptr;
     DebrisVec3 cameraPosition_{};
 };
 

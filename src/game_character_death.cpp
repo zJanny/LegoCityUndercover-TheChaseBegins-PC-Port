@@ -1,8 +1,10 @@
 #include "game_level.hpp"
 #include "runtime/character_death.hpp"
+#include "runtime/character_respawn.hpp"
 
 #include <algorithm>
 #include <iostream>
+#include <string>
 
 namespace game_level {
 namespace runtime = chase::runtime;
@@ -31,9 +33,23 @@ bool LevelSession::characterDeathMessage(const std::string& lowerInstance) {
     // STAND-IN SCRIPT-S264: the bricks start at the node position; the character's entity box (+0x60 / +0x70) is not known.
     if (steps.smashBricks && effects.debris())
         effects.debris()->burst(runtime::characterSmashBurst(*input.smashColours, *object, *cls, position), debrisLineStandIn(), debrisLineStandIn());
+    std::string studLog;
+    if (const auto drop = runtime::characterStudDropRequest(steps.studDrop, {position[0], position[1], position[2]}); drop && studDrops.field()) {
+        const runtime::StudDropMode mode = studDrops.field()->drop(*drop, debrisLineStandIn(), debrisLineStandIn());
+        studLog = ", stud drop mode " + std::to_string(unsigned(mode)) + " count " + std::to_string(drop->count);
+    }
+    std::string afterLog;
+    if (steps.afterDeathAi) {
+        const runtime::CharacterAfterDeath after = runtime::characterAfterDeath({input.friendly, input.millAbout || input.respawnEveryone, false});
+        if (after == runtime::CharacterAfterDeath::BackToSpawn && levelCharacters && character != drawable.characters.end())
+            levelCharacters->place(lowerInstance, chase::assets::placementMatrix(character->placement));
+        afterLog = after == runtime::CharacterAfterDeath::BackToSpawn ? ", back to its spawn place"
+                   : after == runtime::CharacterAfterDeath::MillAbout ? ", mill-about hand-over (not ported, SCRIPT-328)"
+                                                                        : ", leaves the engaged table (not ported, SCRIPT-328)";
+    }
     std::cout << "character " << lowerInstance << ": dies at update " << updatesForLog << (fell ? ", falls apart" : "") << (steps.smashBricks ? ", bricks" : "")
-              << (steps.comesBack ? ", comes back (not ported, SCRIPT-S264)" : "")
-              << " (stand-in SCRIPT-S264: no stud drop, character sound, dropped weapons or AI after-death)\n";
+              << studLog << afterLog << (steps.comesBack ? ", comes back (not shown, SCRIPT-326)" : "")
+              << " (stand-in SCRIPT-S264: no character sound or dropped weapons)\n";
     return true;
 }
 

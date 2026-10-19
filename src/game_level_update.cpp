@@ -306,9 +306,10 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         if (const auto* clip = scriptClip ? playerScriptAnimation.animation() : nullptr) player->poseClip(scene, *clip, playerScriptAnimation.frame());
         detectiveGlass.update(*player);
         if (!script.empty()) scriptedHeights.push_back(player->vertical.y);
-        for (const runtime::StudCollected& collected :
-             studs.update(dt, runtime::studPickupPoint(player->motion.x, player->vertical.y, player->motion.z,
-                                                       runtime::headingRadians(player->motion.facing))))
+        const std::array<float, 3> pickupPoint =
+            runtime::studPickupPoint(player->motion.x, player->vertical.y, player->motion.z, runtime::headingRadians(player->motion.facing));
+        for (const runtime::SoundCall& call : studDrops.update(dt, pickupPoint, studs.flightTarget(), studs)) player->sounds.push_back(call);
+        for (const runtime::StudCollected& collected : studs.update(dt, pickupPoint))
             player->sounds.push_back(runtime::studCollectCall(collected, studs.studs()[collected.index].centre));
         effects.update(dt, {follow->eye()[0], follow->eye()[1], follow->eye()[2]});
         for (const runtime::SoundCall& call : player->sounds) emit(call);

@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 728 open items and stand-ins, 156 linked to game usage, 572 with unknown reach.
+Items: 732 open items and stand-ins, 159 linked to game usage, 573 with unknown reach.
 
 ## Top 50 overall
 
@@ -104,20 +104,20 @@ Items: 728 open items and stand-ins, 156 linked to game usage, 572 with unknown 
 
 ## Level objects
 
-12 of 98 items linked.
+13 of 100 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
 | 1 | [PART-3](features/particles.md?display=source#L28) | 0 | 281 | 8 | 0 | - | `particles` | The level object class `particles` (constructor 0x1a7f30, handlers 0x1a8394 and 0x1a7d30: `ParticleDef` ... |
 | 2 | [LEVOBJ-S1](features/level-objects.md?display=source#L21) | 0 | 120 | 8 | 0 | - | `chars/char_ai_actor` | Characters other than pedestrians run the idle state of `char_ai_actor` (verified for `char_ai_actor` ... |
-| 3 | [STUD-4](features/studs.md?display=source#L28) | 109 | 0 | 7 | 0 | 1 stand-in, 1 none | `enablestudsbygroup`, `spawnstuds` | How a group is enabled (0x28a2cc sequencer, `EnableStudsByGroup` and `SpawnStuds` script functions ... |
-| 4 | [STUD-9](features/studs.md?display=source#L29) | 73 | 0 | 7 | 2 | 1 stand-in | `enablestudsbygroup` | `EnableStudsByGroup(group, value)` only records the request (the sequencer entry 0x58f710 and its per-frame ... |
+| 3 | [STUD-4](features/studs.md?display=source#L30) | 109 | 0 | 7 | 0 | 1 stand-in, 1 none | `enablestudsbygroup`, `spawnstuds` | How a group is enabled (0x28a2cc sequencer, `EnableStudsByGroup` and `SpawnStuds` script functions ... |
+| 4 | [STUD-9](features/studs.md?display=source#L31) | 73 | 0 | 7 | 2 | 1 stand-in | `enablestudsbygroup` | `EnableStudsByGroup(group, value)` only records the request (the sequencer entry 0x58f710 and its per-frame ... |
 | 5 | [LEVOBJ-32](features/level-objects-carry.md?display=source#L33) | 57 | 0 | 3 | 0 | 1 none | `spawndebris` | Effects of the carry system not played: sounds (`carryit_pickup_big_01`, `carryit_putdown_big_01` ... |
 | 6 | [LEVOBJ-7](features/level-objects.md?display=source#L41) | 0 | 51 | 7 | 0 | - | `chars/ride_pig`, `props/prop_sharkattack` | Classes without a recovered create are not created (shared with COLL-2): among the animals `chars/ride_pig` ... |
 | 7 | [LEVOBJ-4](features/level-objects.md?display=source#L38) | 0 | 37 | 7 | 0 | - | `chars/ride_pig` | The 8 custom lineup characters (`CharacterEnum` 1..8 through 0x2372e0) and the ride_pig and shark rigs ... |
-| 8 | [STUD-10](features/studs.md?display=source#L30) | 21 | 0 | 6 | 0 | 1 stand-in | `addstuds` | `AddStuds` adds to the counter (`StudField::addToCounter`) but not the timestamp +0x44 and the HUD hook ... |
-| 9 | [DOOR-1](features/doors.md?display=source#L28) | 16 | 0 | 7 | 0 | 1 implemented | `warningdialogbox` | Some doors in lvl_01 open only when a game script asks; `Police_ExtToInt` stops at `WarningDialogBox`, which ... |
-| 10 | [PART-2](features/particles.md?display=source#L27) | 15 | 0 | 2 | 14 | 1 none | `playparticlesgo` | Most callers do not start emitters: the script natives (`PlayParticlesGO`, `EffectPlayParticles` ... |
+| 8 | [STUD-12](features/studs.md?display=source#L33) | 36 | 0 | 4 | 1 | 1 none | `spawnstuds` | No caller drops studs in the port: the non-lethal wobble hit 0x2bc370 (`WobbleStudValue`), the hit-sequence ... |
+| 9 | [STUD-10](features/studs.md?display=source#L32) | 21 | 0 | 6 | 0 | 1 stand-in | `addstuds` | `AddStuds` adds to the counter (`StudField::addToCounter`) but not the timestamp +0x44 and the HUD hook ... |
+| 10 | [DOOR-1](features/doors.md?display=source#L28) | 16 | 0 | 7 | 0 | 1 implemented | `warningdialogbox` | Some doors in lvl_01 open only when a game script asks; `Police_ExtToInt` stops at `WarningDialogBox`, which ... |
 
 ## Vehicles
 
@@ -138,7 +138,7 @@ Items: 728 open items and stand-ins, 156 linked to game usage, 572 with unknown 
 
 ## Scripts and missions
 
-96 of 172 items linked.
+98 of 174 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -240,7 +240,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [script-system-natives.md](features/script-system-natives.md): SCRIPT-43 (+17), SCRIPT-44 (+15), SCRIPT-45 (+13), SCRIPT-7 (+11), SCRIPT-150 (+1), SCRIPT-56 (+1), SCRIPT-64 (+1), SCRIPT-98 (+1), SCRIPT-S97
 - [script-system-triggers.md](features/script-system-triggers.md): SCRIPT-76 (+10), SCRIPT-51 (+3), SCRIPT-77 (+1), SCRIPT-78 (+1), SCRIPT-S15, SCRIPT-S28, SCRIPT-S30, SCRIPT-S8
 - [script-system.md](features/script-system.md): SCRIPT-1 (+9), SCRIPT-53 (+2), SCRIPT-2, SCRIPT-3, SCRIPT-5, SCRIPT-54, SCRIPT-55, SCRIPT-9, SCRIPT-S1, SCRIPT-S14, SCRIPT-S16, SCRIPT-S3, SCRIPT-S6, SCRIPT-S7
-- [studs.md](features/studs.md): STUD-11 (+4), STUD-1 (+1), STUD-3, STUD-5, STUD-6, STUD-8, STUD-S1, STUD-S3, STUD-S5
+- [studs.md](features/studs.md): STUD-1 (+1), STUD-13 (+1), STUD-3, STUD-5, STUD-6, STUD-8, STUD-S1, STUD-S3, STUD-S5, STUD-S6
 - [vehicles-boarding.md](features/vehicles-boarding.md): VEH-19 (+2), VEH-80 (+2), HUD-50 (+1), HUD-S50, HUD-S51, VEH-20, VEH-S10, VEH-S70, VEH-S8, VEH-S9
 - [vehicles-damage.md](features/vehicles-damage.md): VEH-120 (+3), VEH-125 (+3), VEH-113 (+2), VEH-115 (+2), VEH-124 (+2), VEH-121 (+1), VEH-123 (+1), VEH-122, VEH-128, VEH-S100, VEH-S101, VEH-S103, VEH-S104, VEH-S90, VEH-S93, VEH-S96, VEH-S97, VEH-S98, VEH-S99
 - [vehicles-physics-collision.md](features/vehicles-physics-collision.md): VEH-70 (+2), VEH-91 (+2), VEH-100 (+1), VEH-101 (+1), VEH-102 (+1), VEH-S52, VEH-S60, VEH-S62, VEH-S81, VEH-S82, VEH-S86, VEH-S87

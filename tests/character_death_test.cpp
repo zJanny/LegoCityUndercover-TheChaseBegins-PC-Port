@@ -6,6 +6,7 @@
 #include "assets/assets.hpp"
 #include "assets/object_collision.hpp"
 #include "runtime/character_death.hpp"
+#include "runtime/character_respawn.hpp"
 #include "runtime/fall_apart.hpp"
 #include "runtime/level_start.hpp"
 
@@ -205,6 +206,47 @@ std::optional<CharacterDeathInput> targetInput(const assets::Level& level, const
     return std::nullopt;
 }
 
+// The tail of 0x18e93c after the death branch, docs/re/script-natives-world-death.md entry 2026-10-19 "The respawn tail": the stud drop request of
+// 0x18ec60 / 0x18eb94, the after-death 0x21e218 and the spawn counter 0x225f5c with the DEAD update 0x1d4ba0 (llvm-objdump; values by hand).
+void respawn() {
+    const auto dropped = characterStudDropRequest(CharacterStudDrop::Dropped, {1, 2, 3});
+    expect(dropped && dropped->mode == StudDropMode::Random && dropped->count == 0 && dropped->skip == 30 && dropped->position[1] == 2.0f &&
+               dropped->spread == 1.0f && !dropped->collectAtOnce,
+           "0x18ec60: 0x21e2e4(1.0, 1.0, mode 1, count 0, the node position, 0x56d400, 0, 0, 0, 30, 0, 0)");
+    const auto thirty = characterStudDropRequest(CharacterStudDrop::Thirty, {1, 2, 3});
+    expect(thirty && thirty->mode == StudDropMode::Count && thirty->count == 30, "0x18eb94 (byte +0x12e bit 5): mode 0, count 30");
+    expect(!characterStudDropRequest(CharacterStudDrop::None, {1, 2, 3}), "a character that comes back drops nothing");
+
+    expect(characterAfterDeath({}) == CharacterAfterDeath::LeaveEngaged, "0x21e218: not friendly, flags clear: 0x21decc");
+    expect(characterAfterDeath({true, false, false}) == CharacterAfterDeath::BackToSpawn, "AIFriendly: back to the spawn place");
+    expect(characterAfterDeath({true, true, false}) == CharacterAfterDeath::MillAbout, "AIFriendly and AIMillAbout: 0x22471c");
+    expect(characterAfterDeath({false, false, true}) == CharacterAfterDeath::BackToSpawn, "the global flags 0x3771d7 & 0x377540 count like AIFriendly");
+
+    expect(characterComeBackColour(66) == 0xff5f5fffu && characterComeBackColour(70) == 0xffdfdfffu && characterComeBackColour(72) == 0xffffffffu &&
+               characterComeBackColour(79) == 0xff1f1fffu && characterComeBackColour(136) == 0xffffffffu,
+           "colour: n = counter & 15 folded at 8, green and blue n x 32 | 31 (66: 95, 70: 223, 72: 255, 79: 31), white at 136");
+    CharacterComeBack state;
+    unsigned leftAt = 0, firstShown = 0, colours = 0;
+    bool event = false;
+    for (unsigned update = 1; update <= 150; ++update) {
+        const CharacterComeBackStep step = characterComeBackStep(state, true, 27);
+        if (step.leavesDead) leftAt = update, event = step.raisesEvent;
+        if (step.shown && !firstShown) firstShown = update;
+        colours += step.colour.has_value();
+    }
+    expect(leftAt == 65 && event, "the DEAD update leaves for IDLE at the first counter above 64 and raises the event *0x3775ec");
+    expect(firstShown == 66 && colours == 71 && state.counter == 136, "shown and coloured for the counters 66..136, then the counter stays at 136");
+    CharacterComeBack mech;
+    unsigned mechColours = 0;
+    bool mechEvent = false;
+    for (unsigned update = 1; update <= 70; ++update) {
+        const CharacterComeBackStep step = characterComeBackStep(mech, false, 159);
+        mechColours += step.colour.has_value();
+        mechEvent = mechEvent || step.raisesEvent;
+    }
+    expect(mechColours == 0 && !mechEvent, "kind 159 gets no colour; without AIFriendly and AIRespawnIfFriendly no event");
+}
+
 void real(const char* fib, const char* names) {
     assets::FuseArchive archive(fib);
     archive.loadNames(names);
@@ -224,6 +266,10 @@ void real(const char* fib, const char* names) {
         expect(faller && faller->friendly && !faller->respawnIfFriendly, "00_GoonFaller: instance AIFriendly 1, AIRespawnIfFriendly 0");
         const auto fighter = targetInput(level, classOf, "2-4_GoonA01", 27);
         expect(fighter && !fighter->friendly && fighter->respawnIfFriendly, "2-4_GoonA01: class AIFriendly 0, AIRespawnIfFriendly 1");
+        expect(faller && !faller->millAbout && characterAfterDeath({faller->friendly, faller->millAbout, false}) == CharacterAfterDeath::BackToSpawn,
+               "00_GoonFaller (no AIMillAbout; probe run 2026-10-19): 0x21e218 puts its node back to its spawn place");
+        expect(fighter && !fighter->millAbout && characterAfterDeath({fighter->friendly, fighter->millAbout, false}) == CharacterAfterDeath::LeaveEngaged,
+               "2-4_GoonA01: 0x21decc takes it out of the engaged table");
     }
     {
         const assets::Level level = loadLevel(archive, "levels/levels/lvl_05_bluebellwood/lvl_05_bluebellwood_main.blvl");
@@ -261,6 +307,7 @@ void real(const char* fib, const char* names) {
 
 int main(int argc, char** argv) {
     steps();
+    respawn();
     motion();
     pool();
     if (argc == 3) {

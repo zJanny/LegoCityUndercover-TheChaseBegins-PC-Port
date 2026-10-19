@@ -75,6 +75,21 @@ CharacterDeathSteps characterDeathSteps(const CharacterDeathInput& input) {
     return steps;
 }
 
+std::optional<StudDropRequest> characterStudDropRequest(CharacterStudDrop drop, const DebrisVec3& nodePosition) {
+    if (drop == CharacterStudDrop::None) return std::nullopt;
+    StudDropRequest request;
+    request.position = nodePosition;
+    request.skip = kStudDropDefaultSkip;
+    if (drop == CharacterStudDrop::Thirty) {
+        request.mode = StudDropMode::Count;
+        request.count = kCharacterStudDropThirty;
+    } else {
+        request.mode = StudDropMode::Random;
+        request.count = 0;
+    }
+    return request;
+}
+
 CharacterDeathInput characterDeathInput(std::uint8_t kind, const assets::LevelObject& object, const assets::Level& cls) {
     CharacterDeathInput input;
     input.mode = CharacterDeathMode(intParam(object, cls, "DisableFallapart", 0) & 3);
@@ -88,6 +103,7 @@ CharacterDeathInput characterDeathInput(std::uint8_t kind, const assets::LevelOb
         input.smashColours = std::pair{*first, colourParam(object, cls, "SmashDebrisColour2").value_or(*first)};
     input.friendly = (intParam(object, cls, "AIFriendly", 0) & 1) != 0;
     input.respawnIfFriendly = intParam(object, cls, "AIRespawnIfFriendly", 1) != 0;
+    input.millAbout = intParam(object, cls, "AIMillAbout", 0) != 0;
     return input;
 }
 

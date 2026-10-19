@@ -20,7 +20,7 @@ constexpr const char* kDebrisLevel = "levels/charbits.blvl";
 class LevelEffects {
 public:
     // One hidden scene instance per debris object, with the model of its meshname.
-    void load(chase::render::Scene& scene, chase::assets::FuseArchive& archive, chase::runtime::GameRandom& random);
+    void load(chase::render::Scene& scene, chase::assets::FuseArchive& archive, chase::runtime::GameRandom& random, chase::runtime::DebrisPlaneRing& planes);
     chase::runtime::DebrisField* debris() { return field_ ? &*field_ : nullptr; }
     std::size_t debrisInstances() const;
     void update(float frameDelta, const chase::runtime::DebrisVec3& camera);

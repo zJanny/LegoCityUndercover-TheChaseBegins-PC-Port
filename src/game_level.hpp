@@ -13,6 +13,7 @@
 #include "game_detective_glass.hpp"
 #include "game_doors.hpp"
 #include "game_effects.hpp"
+#include "game_stud_drops.hpp"
 #include "game_fall_apart.hpp"
 #include "game_object_visibility.hpp"
 #include "game_prop_parts.hpp"
@@ -238,6 +239,7 @@ private:
     std::vector<std::pair<unsigned, std::uint16_t>> soundLog;
     std::optional<chase::render::StudSprites> studSprites;
     game_particles::LevelParticles particles;
+    game_stud_drops::LevelStudDrops studDrops;
     game_effects::LevelEffects effects;
     game_fall_apart::LevelFallApart fallApart;
     double provisionalStudClockSeconds = 0;

@@ -5,6 +5,7 @@
 // No SDL dependency.
 #include "assets/assets.hpp"
 #include "runtime/debris.hpp"
+#include "runtime/stud_drop.hpp"
 
 #include <cstdint>
 #include <optional>
@@ -32,6 +33,7 @@ struct CharacterDeathInput {
     bool respawnEveryone = false;     // 0x22b0b4: byte 0x5163e8 + 0x25 equals 1 (writer not read; the port keeps it clear, STAND-IN SCRIPT-S264)
     bool friendly = false;            // record byte +0xdb bit 2: `AIFriendly` (0x1c6f04)
     bool respawnIfFriendly = true;    // `AIRespawnIfFriendly` (0x2451d0 default 1)
+    bool millAbout = false;           // `AIMillAbout` (0x1c6e84 into record +0x315 bit 7, default 0)
 };
 
 struct CharacterDeathSteps {
@@ -46,6 +48,10 @@ struct CharacterDeathSteps {
 };
 
 CharacterDeathSteps characterDeathSteps(const CharacterDeathInput& input);
+
+// 0x18ec60 / 0x18eb94: 0x21e2e4(s0 = s1 = 1.0, mode 1, count 0, the node position, 0x56d400, stack 0, 0, 0, 30, 0, 0), or with byte +0x12e bit 5
+// mode 0, count 30 (stack 1, 0, 0, 30, 0, 0). Count 0 reaches no record of 0x19913c: only the two random draws of 0x21e2e4 remain.
+std::optional<StudDropRequest> characterStudDropRequest(CharacterStudDrop drop, const DebrisVec3& nodePosition);
 
 // The input as the class parameters of a placed character give it: `DisableFallapart` (0x236d74 at 0x23700c, default 0), the smash colours,
 // `AIFriendly` and `AIRespawnIfFriendly`. 0x22716c: for kinds 27 and 149 and for a class with `Boss_IsBoss` (bit 14 of +0xc) the character byte
