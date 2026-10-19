@@ -76,6 +76,20 @@ ScriptRunner::Result ScriptRunner::worldNative(const assets::ScriptCall& call) {
     return Result::Continue;
 }
 
+void ScriptRunner::partyNative(const assets::ScriptCall& call) {
+    const auto kind = partyNativeKind(lowerCase(call.function));
+    if (!kind) return;
+    const PartyNativeShape shape = partyNativeShape(*kind);
+    const auto& args = call.arguments;
+    if (args.size() < shape.objects + shape.numbers + (shape.output ? 1u : 0u)) return;
+    std::vector<std::string> objects;
+    std::vector<float> numbers;
+    for (unsigned i = 0; i < shape.objects; ++i) objects.push_back(lowerCase(args[i]));
+    for (unsigned i = 0; i < shape.numbers; ++i) numbers.push_back(read(args[shape.objects + i]));
+    const PartyNativeResult result = partyNatives_.run(*kind, objects, numbers, progressNatives_);
+    if (shape.output && result.output) variables_[assets::nameHash(args[shape.objects + shape.numbers])] = *result.output;
+}
+
 bool ScriptRunner::roomKnown(const std::string& room) const { return knownRooms_.count(lowerCase(room)) != 0; }
 
 std::vector<PartyRequest> ScriptRunner::takePartyRequests() {

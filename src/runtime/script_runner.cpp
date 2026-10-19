@@ -25,7 +25,7 @@ enum class Word {
     Unhandled, If, Else, ElseIf, EndIf, Assign, AssignArithmetic, CallScript, SpawnScript, Wait,
     EnableObject, EnableCollision, TriggerObject, EnableTrigger, EnableBound, GetGameComplete, IsLevelUnlocked, IsRedBrickExtraActive,
     WarningDialogBox, InformationBox, FadeScreen, PositionObject, PositionPlayer, SceneChange,
-    KillScript, ObjectNative, VehicleNative, ProgressNative, MusicNative, SoundNative, TextNative, ObjectiveNative, AiNative, AnimationNative, CutsceneNative, EffectNative, WorldNative,
+    KillScript, ObjectNative, VehicleNative, ProgressNative, MusicNative, SoundNative, TextNative, ObjectiveNative, AiNative, AnimationNative, CutsceneNative, EffectNative, WorldNative, PartyNative,
     StartDCam, StartDCamTrack, DCamActive, WaitForDCam, EndDCam, SnapCamera, ShakeScreen, Set3DFocusObject, SetDCamStartWait, SetDCamEndWait, CameraFollow
 };
 
@@ -88,6 +88,7 @@ Word wordOf(const std::string& function) {
     if (animationNativeKind(name)) return Word::AnimationNative;
     if (effectNativeKind(name)) return Word::EffectNative;
     if (worldNativeKind(name)) return Word::WorldNative;
+    if (partyNativeKind(name)) return Word::PartyNative;
     return cutsceneNativeKind(name) ? Word::CutsceneNative : Word::Unhandled;
 }
 
@@ -169,6 +170,7 @@ ScriptFunctionSupport scriptFunctionSupport(const std::string& name) {
     if (cutsceneNativeKind(key)) return ScriptFunctionSupport::StandIn;
     if (effectNativeKind(key)) return ScriptFunctionSupport::StandIn;
     if (const auto kind = worldNativeKind(key)) return worldNativeIsStandIn(*kind) ? ScriptFunctionSupport::StandIn : ScriptFunctionSupport::Implemented;
+    if (const auto kind = partyNativeKind(key)) return partyNativeIsStandIn(*kind) ? ScriptFunctionSupport::StandIn : ScriptFunctionSupport::Implemented;
     return ScriptFunctionSupport::None;
 }
 
@@ -187,6 +189,7 @@ std::vector<std::string> handledScriptFunctions() {
     for (const std::string& name : cutsceneNativeNames()) names.push_back(name);
     for (const std::string& name : effectNativeNames()) names.push_back(name);
     for (const std::string& name : worldNativeNames()) names.push_back(name);
+    for (const std::string& name : partyNativeNames()) names.push_back(name);
     return names;
 }
 
@@ -525,6 +528,9 @@ ScriptRunner::Result ScriptRunner::native(ScriptThread& thread, const ScriptCall
         break;
     case Word::WorldNative:
         return worldNative(call);
+    case Word::PartyNative:
+        partyNative(call);
+        break;
     case Word::InformationBox:
         if (!(thread.flags & kScriptBlocked)) {
             if (args.empty()) break;

@@ -14,6 +14,7 @@
 #include "runtime/natives_music.hpp"
 #include "runtime/natives_sound.hpp"
 #include "runtime/natives_progress.hpp"
+#include "runtime/natives_party.hpp"
 #include "runtime/objectives.hpp"
 #include "runtime/sub_objectives.hpp"
 #include "runtime/vehicle.hpp"
@@ -207,6 +208,9 @@ public:
     // Progress, stud and switch natives (natives_progress.hpp); the slot image is the one of a loaded save.
     ProgressNativeState& progressNatives() { return progressNatives_; }
     const ProgressNativeState& progressNatives() const { return progressNatives_; }
+    // SwapAllegiance, SetWeaponEnabled, boss hooks and the other batch 35 natives (natives_party.hpp).
+    PartyNativeState& partyNatives() { return partyNatives_; }
+    const PartyNativeState& partyNatives() const { return partyNatives_; }
     MusicNativeState& musicNatives() { return musicNatives_; }
     const MusicNativeState& musicNatives() const { return musicNatives_; }
     SoundNativeState& soundNatives() { return soundNatives_; }
@@ -269,6 +273,7 @@ private:
     Result cutsceneNative(ScriptThread& thread, const assets::ScriptCall& call);
     void effectNative(const assets::ScriptCall& call);
     Result worldNative(const assets::ScriptCall& call);
+    void partyNative(const assets::ScriptCall& call);
     void destroyNative(const std::string& lowerInstance);
     void fireAiMoveEvents();
     float read(const std::string& token) const;
@@ -312,6 +317,7 @@ private:
     std::vector<std::string> roomRequests_;
     std::set<std::string> knownRooms_;
     ProgressNativeState progressNatives_;
+    PartyNativeState partyNatives_;
     MusicNativeState musicNatives_;
     SoundNativeState soundNatives_;
     ScriptTextState text_;
