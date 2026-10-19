@@ -1,19 +1,95 @@
 # The Chase Begins — PC port (work in progress)
 
-This project is building a PC port of *LEGO City Undercover: The Chase Begins* (Nintendo 3DS). The goal is a port that plays exactly like the original, from start to finish. It runs on Linux first. A Windows version is planned for after the Linux version is finished. **The game is not playable on PC yet.** Today the project can extract and decode the game's files, show models, levels and animated characters in development tools, and let you walk the main character around a level and try parts of the first mission.
+This project builds a PC port of *LEGO City Undercover: The Chase Begins* (Nintendo 3DS). The goal is a port that plays exactly like the original, from start to finish. It runs on Linux first. A Windows version is planned for after the Linux version is finished.
 
-Game data is never stored in this repository. You need your own decrypted `.cci` image.
+**The game is not playable on PC yet.** What you can start today is `chase-game`, an early development runtime. It shows the start screens of the original game. After them you can play mission 1-1 from start to end in one street of the city. Mission 1-2 is partly playable. Nothing else of the game works yet. See [the project status](docs/status.md).
 
-## Quick start
+The game data is never part of this repository. You need your own copy of the game, dumped from your own 3DS.
+
+## What you need
+
+- A computer with Linux (x86_64) and a graphics card that supports OpenGL 4.6.
+- About 3 GB of free disk space.
+- Your own **decrypted `.cci` image** of the European version of the game (title ID `00040000000AD600`, version 1.0). Other versions or regions do not work. Check your file with `sha256sum "game.cci"`. It must print `078faf7e231381e53d7d7503d4729feab390e3cd1b8e739dc44f9933d8b759ad`. More in [Getting started](docs/getting-started.md#check-your-game-file).
+- A keyboard. A mouse is optional.
+
+## Step by step
+
+All commands go into a terminal. Run them one after the other.
+
+**1. Get the code.**
 
 ```sh
-cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo
+git clone ssh://git@forgejo.zjanny.org:222/zJanny/LegoCityUndercover-TheChaseBegins-PC-Port.git
+cd LegoCityUndercover-TheChaseBegins-PC-Port
+```
+
+This downloads the project into a new folder and opens it. You should see no error. Run every command below from this folder.
+
+**2. Install the packages.** Pick the line for your Linux.
+
+```sh
+# Debian, Ubuntu, Linux Mint
+sudo apt install git build-essential cmake pkg-config python3 libsdl2-dev libepoxy-dev libavformat-dev libavcodec-dev libswscale-dev libswresample-dev libavutil-dev
+
+# Fedora
+sudo dnf install git gcc-c++ cmake pkgconf-pkg-config python3 SDL2-devel libepoxy-devel ffmpeg-free-devel
+
+# Arch, Manjaro
+sudo pacman -S git base-devel cmake python sdl2 libepoxy ffmpeg
+```
+
+This installs the compiler, the build tool, Python and the libraries the game needs. Your system may ask for your password.
+
+**3. Build the game.**
+
+```sh
+cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCHASE_BUILD_TESTS=OFF
 cmake --build build -j"$(($(nproc) - 1))"
-python3 tools/extract_romfs.py path/to/game.cci --output artifacts/romfs
+```
+
+This compiles the program into the folder `build`. It takes a few minutes. At the end you should see `[100%] Built target chase-game`.
+
+**4. Extract the game data from your image.** Replace `path/to/game.cci` with the path of your file. Keep the quotes if the name has spaces.
+
+```sh
+python3 tools/extract_romfs.py "path/to/game.cci" --output artifacts/romfs
+```
+
+This copies the game files out of your image into the folder `artifacts/romfs`. Your image is not changed. You should see a line like `51 files, 763156067 bytes -> artifacts/romfs`.
+
+**5. Start the game.**
+
+```sh
 build/chase-game
 ```
 
-This starts the development runtime. It is not the game: it shows the start screens of the original (logos, language, slot list, intro movie), and after them you can walk the player around a street, with parts of mission 1-1 and a car you can get into. See [the development runtime guide](docs/game-runtime.md).
+A window opens. It shows the start screens of the original game: logos, language list, slot list and the intro movie. After the title card the level starts, and you can move the main character. Press Escape to quit.
+
+## Controls
+
+| Action | Keys |
+|---|---|
+| Menus: confirm, back | Space (A), Q (B) |
+| Menus: up and down | Arrow keys or W and S |
+| Walk, run and sprint | Arrow keys or W, A, S, D |
+| Walk slowly | Hold Left Alt |
+| Jump | Q or right mouse button |
+| Punch | R |
+| Use, get in a car | Space or left mouse button |
+| Turn the camera | Z and C |
+| Quit | Escape |
+
+All keys and how to change them: [Controls](docs/controls.md).
+
+## If something goes wrong
+
+- **`build/chase-game` does not exist after the build.** libepoxy or FFmpeg was not found. Install the packages of step 2 and run the two commands of step 3 again.
+- **`chase-game: cannot open archive: artifacts/romfs/...`.** Run the game from the project folder, and do step 4 first.
+- **The extraction says "encrypted" or a hash does not match.** Your image is not the supported decrypted European version. See [Getting started](docs/getting-started.md#check-your-game-file).
+- **The extraction says "output already exists".** Delete the folder `artifacts/romfs` and run step 4 again.
+- **The window does not open or stays black.** Update your graphics driver. The game needs OpenGL 4.6.
+- More help: [Getting started](docs/getting-started.md#problems).
 
 ## Progress
 
@@ -29,18 +105,18 @@ This starts the development runtime. It is not the game: it shows the start scre
 
 ![Progress trend](docs/progress-trend.svg)
 
-Updated 2026-10-19, commit 04b6db4. How the numbers are measured: [docs/progress.md](docs/progress.md).
+Updated 2026-10-19, commit a77746f. How the numbers are measured: [docs/progress.md](docs/progress.md).
 <!-- progress:end -->
 
-## Documentation
+## More documentation
 
-- [Building the tools](docs/building.md)
-- [Command reference](docs/commands.md)
-- [Extracting game data](docs/extracting-game-data.md)
-- [Model viewer](docs/model-viewer.md)
-- [Development runtime](docs/game-runtime.md)
-- [Sound test](docs/sound-test.md)
-- [Video player](docs/fmv-player.md)
+- [Getting started](docs/getting-started.md): requirements, version check, package details, the other programs and more problems.
+- [Development runtime](docs/game-runtime.md): what `chase-game` does and its options.
+- [Project status](docs/status.md): what works and what does not.
 - [Controls and the input laboratory](docs/controls.md)
-- [Project status](docs/status.md)
+- [Building the tools](docs/building.md), including tests
+- [Extracting game data](docs/extracting-game-data.md): all extraction and conversion tools
+- [Command reference](docs/commands.md)
+- [Model viewer](docs/model-viewer.md), [sound test](docs/sound-test.md), [video player](docs/fmv-player.md), [debug overlay](docs/debug-overlay.md)
 - [How progress is measured](docs/progress.md)
+- For developers: [`CLAUDE.md`](CLAUDE.md) (rules), [the plan](docs/plans/linux-port.md), [the work log](docs/plans/linux-port.progress.md), [feature pages](docs/plans/features/README.md), [reverse-engineering notes](docs/re/README.md).

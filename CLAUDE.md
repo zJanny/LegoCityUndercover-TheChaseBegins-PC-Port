@@ -73,7 +73,8 @@ Three places, never copied between them, only linked: **findings** in `docs/re/`
 - Never create per-feature plan/progress pairs; the `feature-development` workflow applies only to `linux-port.md` / `.progress.md`. A new feature gets a file from the template and an index line.
 
 **User docs (`docs/` except `re/` and `plans/`)**
-- Plain language, short sentences, lists. Update them in the same step as any change to user-visible behaviour, setup, controls or workflows. Document the current version, not its history; link instead of duplicating. `README.md` stays minimal.
+- Plain language, short sentences, lists. Update them in the same step as any change to user-visible behaviour, setup, controls or workflows. Document the current version, not its history; link instead of duplicating.
+- **`README.md` is the player's entry point:** it keeps the shortest verified path from a fresh checkout to starting the game (honest state line, requirements, numbered copy-paste steps with what to expect, basic controls, common problems), then the generated progress section and links. Technical and development details live in `docs/` and are linked from it, never deleted. Any change to setup, build, extraction, start commands or controls updates that path in the same step, and you check it by following it.
 
 ## Runtime oracle (Azahar)
 
