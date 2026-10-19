@@ -271,6 +271,7 @@ private:
     std::optional<chase::render::ParticleRenderer> useMarkerRenderer;
     std::optional<chase::runtime::DetectiveRoles> detectiveRoles;
     std::vector<std::size_t> footprintInstances;
+    std::array<chase::assets::Matrix, 2> footprintNodeMatrices;
     game_detective_glass::Glass detectiveGlass;
     std::vector<int> loggedDetectiveStates;
     chase::runtime::Scanner scanner;

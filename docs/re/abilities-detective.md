@@ -10,6 +10,7 @@ The detective spot (ObjectType 182, `props/ability_detective`), the reveal spot 
 - Chase's magnifying glass is the object `Ability_MagnifyingGlass` of `levels/players.blvl` (model `ability_magnifyingglass`, body plus a glow card). The animation track 0xba1e5b53 of the `detect_*` clips shows it (value rises) and hides it (value falls) on the bone `weaponRight`; the port draws it and its first update matches the oracle (14 updates after the A press). [§2026-10-18T19:30:00](#ts-20261018-193000)
 - Detective mode changes no camera and puts no tint on the screen in the oracle; the differences left (question particles, blue glow of objects, footstep dots, bottom screen) are open items. [§2026-10-18T19:30:00](#ts-20261018-193000)
 - Footprints: the pool objects are `DetectiveFP00..15` / `DogFP00..15` of `levels/charbits.blvl`; each stores the path orientation as four bytes and is placed with that rotation and the hit point of the ray test 0x21ab20 (not the player's ground probe); the dog paths of mission 1-2 are unrotated in the original too. [§2026-10-19T09:11:04](#ts-20261019-091104)
+- The dog footprint card sits 0.85 / 2.9 units away from its model origin and node 0's matrix (model+0x20) moves it back exactly; the port ignored it and drew the dog footprints displaced, now it applies it (stand-in: the original's draw of the pool objects is not read); the dog card's material (Brick_Top, FX_Specular, lighting on) is unexplained. [§2026-10-19T09:55:20+02:00](#ts-20261019-095520)
 - Open: the use state's approach phase, fades, the bounce helper 0x2077a8, question particles, the hand item event details (previous value, per-frame bone update) and the look items of the entry above.
 
 <a id="ts-20261018-112621"></a>
@@ -73,3 +74,17 @@ The two dog paths of mission 1-2 (`1-2_Dtv_DogSpot_01` and `_02`) carry only ide
 Unknowns:
 - The user's report that the footprints at the later spot point the wrong way is not explained by the rotation: both the original and the port draw them unrotated. The texture's own direction on the card and the placing of the dog model's node matrix were not compared on screen.
 - The footprint's own ray query (mask words), the second block of the path orientation data, and what the original shows when the ray hits nothing (it keeps its stack contents).
+
+<a id="ts-20261019-095520"></a>
+
+## 2026-10-19T09:55:20+02:00 — Dog footprint card: the node matrix (parseModel dump of the two footprint models, chase-game run of the later spot)
+
+**Cause found in the data.** `models/ability_detective_dog/ability_detective_dog.bfnmdl` has one node (`mesh`, mesh 0) and a node matrix block (model+0x20, 0x40 bytes) with translation (-0.854697, 0, 2.90713) and w 1. Its single part is a flat 20-gon fan (21 vertices, y 0.0259912) whose ring is centred at (0.8501, -2.9071); the matrix translation cancels that offset to within 0.005 in x and exactly in z. So a footprint is centred on its hit point only when node 0's matrix is applied before the placing matrix (row vectors: node matrix times placement, the order of `PropNodes::world`). The foot model has no matrix block and its card (0.5 x 0.5, centred) needs none. The port's scene ignored node matrices for these pool objects, so every dog footprint was drawn about 0.85 right and 2.9 behind (model space, unrotated) of the hit point, along the path's direction a shifted, wrong-looking trail. `LevelSession::drawFootprints` now multiplies node 0's matrix in; test `detective-real-data` (`footprintCardCentre`) pins the translation and the centred card. Whether the original draw applies the node matrix to these pool objects was not read (the exact cancellation is the evidence): stand-in DETECT-S10.
+
+**Material.** The dog part's material (0x60 bytes) names the textures `Brick_Top.tga` (slot 0) and `FX_Specular.tga` (slot 1), mode 0, lighting on, 4 TEV stages, no blend, depth write on, whereas the foot uses `fx_det_footprint.tga`, source-alpha blend, no lighting, no depth write. The UVs of the dog card are a ring of radius about 0.1 around (0.5, 0.51), the shape of a paw pad in a texture, which `Brick_Top` (a plain brick) is not. What the original shows on the dog card is not known; the card's look and direction were not compared on screen.
+
+**Scripted A press.** A press on the detective spot with `--script` (or an emulator script) only starts the mode after `1-2_SO_IntroCamOff` ended: in the port that script ends at update 127, an A at update 5 or 60 does nothing. At update 160 the port's player state goes 1 at 160 and 0 at 197, spot `1-2_dtv_dogspot_02` state 1 at 161, and walking forward from 720.021 37.035 654.390 ends at 720.635 656.201, the position the servant read in the original after its two failed tries (D-1, D-1b): those tries most probably pressed A before the camera script ended.
+
+Unknowns:
+- What the original draws on the dog card (texture, direction, blend); needs a save state with the footprints visible at the later spot (user, 2026-10-19).
+- Whether the original applies node 0's matrix of the pool objects (not read).

@@ -88,6 +88,22 @@ void footprintModels(assets::FuseArchive& archive) {
     require(found == 2, "pool objects found");
 }
 
+// Provenance: dump of models/ability_detective_dog (parseModel): the 20 card vertices ring (0.8501, 0.026, -2.9071) in model space and node 0 has the
+// matrix translation (-0.8547, 0, 2.9071); the foot model has no matrix block and its card is centred on the origin.
+void footprintCardCentre(assets::FuseArchive& archive) {
+    const assets::FuseEntry* dog = archive.find("models/ability_detective_dog/ability_detective_dog.bfnmdl");
+    require(dog != nullptr, "dog footprint model");
+    const assets::Model model = assets::parseModel(archive.read(*dog));
+    require(model.nodeMatrices.size() == 1 && model.nodeMatrices[0][15] == 1.0f, "dog node matrix");
+    require(std::fabs(model.nodeMatrices[0][12] + 0.8547f) < 1e-3f && model.nodeMatrices[0][13] == 0.0f && std::fabs(model.nodeMatrices[0][14] - 2.9071f) < 1e-3f,
+            "dog node translation");
+    float sum[3] = {0, 0, 0};
+    const assets::ModelPart& part = model.meshes.at(0).parts.at(0);
+    for (const assets::Vertex& vertex : part.vertices)
+        for (int a = 0; a < 3; ++a) sum[a] += vertex.position[a] + model.nodeMatrices[0][12 + a];
+    require(std::fabs(sum[0] / float(part.vertices.size())) < 0.01f && std::fabs(sum[2] / float(part.vertices.size())) < 0.01f, "dog card is centred by its node matrix");
+}
+
 // Provenance: the quaternion block of the paths (level section +0x20, record +0x10) read by 0x270b70; the DetectivePaths of 1-2_Dtv_DogSpot_01 and _02
 // carry only identity quaternions (dump of Level::paths), which the oracle trap E-1 confirms (identity rows). The bytes of 1-3_Dtv_BrickSpot_01 are
 // computed with the port's reading of 0x270b70 / 0x21a600 (no oracle measurement; the state is not available).
@@ -221,6 +237,7 @@ int main(int argc, char** argv) {
         footprintRotation(set);
         footprintGround(archive);
         footprintModels(archive);
+        footprintCardCentre(archive);
         run(level, classOf);
     } catch (const std::exception& error) {
         std::cerr << "detective-real-test: " << error.what() << '\n';

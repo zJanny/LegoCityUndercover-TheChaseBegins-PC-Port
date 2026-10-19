@@ -1,6 +1,6 @@
 // The zipline rope (src/runtime/zipline_rope.cpp) on a made-up line, no game data needed. Every expected value is a hand evaluation (numpy, float32) of
 // the rules read in 0x1a9dc4 (fade), 0x1f9590 (strip) and the draw filter of docs/re/player-traversal.md on the anchors A (0, 10, 0) and B (20, 5, 0)
-// that point at each other, with the stand-in view direction (0, 0, 1) of TRAV-S27.
+// that point at each other, with the stand-in view direction (0, 0, 1) of TRAV-S29.
 #include "runtime/zipline_rope.hpp"
 #include <cmath>
 #include <iostream>
@@ -54,6 +54,43 @@ int main() {
                     "vertex " + std::to_string(i) + " position");
             require(near(v.uv[0], expected[i][3], 1e-6f) && near(v.uv[1], expected[i][4], 1e-4f), "vertex " + std::to_string(i) + " uv");
             require(v.rgba[0] == 255 && v.rgba[1] == 255 && v.rgba[2] == 255 && v.rgba[3] == 255, "vertex colour");
+        }
+
+        // Provenance: gdb trap T46 (oracle state m12-9-zipline, round 28, artifacts/oracle/r28D-out/T46.txt): at 0x1f9590 r0 = 892.20288 64.4198 632.59888
+        // (start), r1 = 868.09351 69.9924 630.97711 (end); at 0x1f95bc the row at 0x529fec = (0.96139693, -0.1675961, -0.21823755), the camera's view
+        // direction (its horizontal part matches the camera yaw 1.794 of the player report). The side vector is the formula of 0x1f95bc..0x1f95e4;
+        // the expected vertices come from it (numpy), not from a measured vertex buffer.
+        {
+            const float measuredStart[3] = {892.20288f, 64.4197998f, 632.598877f}, measuredEnd[3] = {868.093506f, 69.9924011f, 630.977112f};
+            const float measuredRow[3] = {0.961396933f, -0.167596102f, -0.218237549f};
+            const auto measured = ziplineRopeStrip(measuredStart, measuredEnd, 0.03f, measuredRow, 255);
+            const float expectedStart[2][3] = {{892.1965975f, 64.39099708f, 632.59331615f}, {892.20916422f, 64.44860253f, 632.60443775f}};
+            for (int i = 0; i < 2; ++i)
+                for (int axis = 0; axis < 3; ++axis) require(near(measured[std::size_t(i)].position[axis], expectedStart[i][axis], 2e-3f), "measured strip vertex " + std::to_string(i));
+        }
+
+        // Provenance: the state record 0x252254 builds (read, round 28): 0x60 bytes of zero, then byte 0xa = 9 (one texture), 0xb = 8 (depth write) with bit 6
+        // set, 0xc = 0x3e (cull none), 0xe = 0xcb, colours 0x10 / 0x14 = 0xffffffff, byte 6 = 127; 0x297b7c sets byte 5 = 1, bit 6 of 0xb cleared and the mode
+        // bytes 8 / 9 to (1, 0) with bit 3 set (alpha 255) or (4, 5) with bit 3 cleared (other alpha). Fed through the port's reading of the record (0x128dc8,
+        // 0x1292fc) it gives the render state the rope uses.
+        for (const bool faded : {false, true}) {
+            chase::assets::ModelPart part;
+            part.material.assign(0x60, 0);
+            auto& m = part.material;
+            m[0xa] = 9;
+            m[0xb] = faded ? 0 : 8;
+            m[0xc] = 0x3e;
+            m[0xe] = 0xcb;
+            for (int i = 0x10; i < 0x18; ++i) m[std::size_t(i)] = 0xff;
+            m[5] = 1;
+            m[6] = 127;
+            m[8] = faded ? 4 : 1;
+            m[9] = faded ? 5 : 0;
+            part.textureSlots = {0, 0, 0, 0, 0, 0, 5, 0};
+            const chase::assets::MaterialState state = chase::assets::materialState(part);
+            require(state.supported && !state.alphaTest && state.depthTest && state.depthFunction == 5 && state.cullMode == 0 && state.depthWrite == !faded, "rope depth, cull, alpha test");
+            require(state.blendEquation == 0 && state.blendSource == (faded ? 6u : 1u) && state.blendDestination == (faded ? 7u : 0u), "rope blend factors");
+            require(state.fogged && state.unitSlot[0] == 0 && state.unitSlot[1] == -1, "rope fog and texture unit");
         }
 
         const auto all = [](const ZiplineAnchor&) { return true; };

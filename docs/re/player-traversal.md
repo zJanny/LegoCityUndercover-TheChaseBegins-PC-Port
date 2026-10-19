@@ -15,6 +15,7 @@ Subtopics: [player-traversal-pole.md](player-traversal-pole.md), [player-travers
 - Rails, climb bars and the corner rail (types 29, 218), ported: [player-traversal-rails.md](player-traversal-rails.md).
 - The A presses at the zipline anchor and at the pole are not measurable from `m12-9`, `m12-10a` or `m12-10b`; the states they need are listed in [§2026-10-18T20:38:04](#ts-20261018-203804).
 - The rope is ported: a straight textured ribbon (`RopeTexture`, `RenderWidth` 0.03) between the anchor nodes, drawn by the anchor with the higher entity id, faded out by the camera's distance from the line only with `FadeNearCamera`; the ribbon's facing, render states and the tightrope ropes are open. [§2026-10-19T08:51:31](#ts-20261019-085131)
+- The rope's facing and render state: the row at 0x529fec is the camera's view direction (measured, m12-9), the render state is the record of 0x252254 with the mode bytes of 0x297b7c, which the port's reading of the record turns into the states the port already used; the texture sampler and fog are open; the original drew two strips per line. [§2026-10-19T10:00:18](#ts-20261019-100018)
 - Open: the grab height of attachment set 18 for other characters, the fall-state grab path 0x2010d4, ground contact during the zipline dismount (0x215804), the rope's facing and render states, the tightrope; the other moves in their subtopic files.
 
 <a id="ts-20261018-145230"></a>
@@ -100,6 +101,8 @@ Unknowns:
 
 ## 2026-10-19T08:51:31+02:00 — The zipline rope: draw 0x1a9dc4 -> 0x297b7c -> strip 0x1f9590 (round 27, REA with the Ghidra provider on `game.arm.elf`)
 
+Corrected by [player-traversal.md §2026-10-19T10:00:18](#ts-20261019-100018): in the oracle view of m12-9 both anchors of the line drew it (two strips per frame with swapped ends), not only the one with the higher id.
+
 Read: 0x1a9dc4 (descriptor draw), 0x297b7c (batch draw), 0x1f9590 (strip), 0x1a999c (create), 0x1a9bb4 (post-link), 0x19b074 (link), and the helpers 0x2536c0, 0x22859c, 0x24d434, 0x23b998, 0x23b960, 0x226644, 0x22e1f4, 0x24a6cc. Ported in `src/runtime/zipline_rope.{hpp,cpp}` (data, fade, strip, draw filter) and `src/render/rope.{hpp,cpp}` (GL), glue in `src/game_zipline.cpp`; CTests `zipline-rope` and `zipline-rope-real-data`.
 
 - Per anchor (create 0x1a999c): `RenderWidth` (+0x158, default literal 0x3cf5c28f = 0.03), `FadeNearCamera` (+0x163 bit 1). `RopeTexture` (+0x15c) is a string parameter loaded by name in the post-link 0x1a9bb4 (0x250244); an empty or missing name sets entity byte +0x13 to 2 and nothing is drawn. The bounds the post-link builds for the rope node are not needed for the picture. All 24 anchors of lvl_01 use the class value `models/textures/prop_generic_ropealphat_a3i5.tga`, width 0.03 (the class has no instance override), `FadeNearCamera` 0.
@@ -115,3 +118,20 @@ Unknowns:
 - The value of the matrix row at 0x529fec when 0x1f9590 runs (TRAV-46); only the sign and the screen-facing of the ribbon depend on it.
 - The meaning of the mode bytes (1, 0) / (4, 5) and the state bit 3 in 0x297b7c (blend factors, depth write, alpha test), and the texture wrap and filter (TRAV-47).
 - The tightrope anchors (`GrappleLineType` 0) share the descriptor 0x18c054 and so draw the same rope; they are not loaded as anchors yet (TRAV-48).
+
+<a id="ts-20261019-100018"></a>
+
+## 2026-10-19T10:00:18+02:00 — The rope ribbon's facing and render state (round 28: gdb trap T46 on m12-9-zipline, llvm-objdump of 0x297b7c, 0x252254, 0x25511c)
+
+[Corrects player-traversal.md §2026-10-19T08:51:31](#ts-20261019-085131) on the draw gate: the line is drawn twice.
+
+**Facing (TRAV-46).** Trap at 0x1f9590 and 0x1f95bc (state `m12-9-zipline`, `dt 0.033`, 4 updates, port 24784, raw `artifacts/oracle/r28D-out/T46.txt`): per update two calls of 0x1f9590 from 0x297ce4 with start and end swapped: (892.20288, 64.4198, 632.59888) to (868.09351, 69.9924, 630.97711) and the reverse, colour 0xffffffff (alpha 255). At 0x1f95bc r1 = 0x529fec holds (0.96139693, -0.1675961, -0.21823755) in all four updates, a unit vector; its horizontal part (0.9753, -0.2214) equals the camera's (sin, cos of the camera yaw 1.7940) and the next four floats of the matrix cache hold the camera position (860.47, 69.90, 633.17). So row 2 of the cache is the camera's view direction while the rope draws, as the port assumed (`viewDirection`); `side = normalize(cross(end - start, N))` follows. The port's strip with these inputs is pinned in `zipline-rope` (expected vertices computed from the 0x1f95bc formula, not from a measured vertex buffer). Only one view and one camera (4 identical updates) were measured.
+
+**Two draws per line.** The batch 0x297b7c loops over the queued entries (16 bytes each, anchor at +8) and calls 0x1f9590 once per entry with (own node, target node); both anchors of the m12-9 line were queued, so the original draws the line twice (opposite end order, same geometry). The draw gate of 0x1a9dc4 skips the lower-id anchor only when its target is "live" (0x226644), which was not the case here. The port draws one strip per line; with alpha 255 the second strip is invisible; with a faded rope (`FadeNearCamera`, not used in lvl_01) it would blend twice.
+
+**Render state (TRAV-47).** 0x297b7c builds a 0x60-byte material record with 0x252254 (zero, byte 0xa = 9: one texture, byte 0xb |= 0x48, byte 0xc = 0x3e: cull none, colours 0x10 and 0x14 = 0xffffffff, byte 6 = 127, the one texture slot with byte 6 = 5), clears bit 6 of byte 0xb (so fog applies), sets byte 5 = 1 and the blend bytes 8 / 9: (1, 0) with bit 3 set (depth write) for alpha 255, (4, 5) with bit 3 cleared otherwise; 0x25511c applies it through 0x128dc8 / 0x1292fc like a model part. Through the port's `materialState`: opaque = blend one / zero, depth write, depth test LEQUAL, no alpha test, culling off; faded = source alpha / one minus source alpha, no depth write; colours = texture x vertex colour, alpha from the texture times the constant (not from the vertex alpha); fog on. This matches the states the port already used (TRAV-S28), pinned in `zipline-rope`. Note that the opaque path ignores the texture's alpha (A3I5 texture `prop_generic_ropealphat_a3i5`): transparent texels are drawn with their colour.
+
+Unknowns:
+- The texture's wrap and filter: the state's texture slot has bytes 4 and 5 zero and 0x25511c takes only the texture handle (+0x14) from it, so the sampler comes from the texture object (the loader 0x250244 was not read).
+- Fog on the rope: the record asks for it; the port's rope pass has none.
+- Why the line's other anchor was not skipped (the state of 0x226644 for the anchors) and whether other lines draw once.

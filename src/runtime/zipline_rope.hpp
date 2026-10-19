@@ -44,7 +44,7 @@ std::vector<ZiplineRope> loadZiplineRopes(const assets::Level& level, const asse
 int ziplineRopeAlpha(const ZiplineAnchor& anchor, const ZiplineAnchor& target, const float camera[3]);
 
 // The four vertices of 0x1f9590 for the rope from `start` to `end`. `viewDirection` stands in for row 2 of the matrix cache at 0x529fec
-// (TRAV-S27).
+// (TRAV-S29).
 std::array<RopeVertex, 4> ziplineRopeStrip(const float start[3], const float end[3], float width, const float viewDirection[3], std::uint8_t alpha);
 
 // The draws of one update: every anchor with a rope texture and a target whose object is enabled, except the one that the other end of the line
