@@ -4,6 +4,7 @@
 #include "assets/assets.hpp"
 #include "runtime/level_start.hpp"
 #include "runtime/script_runner.hpp"
+#include <cctype>
 #include <cmath>
 #include <filesystem>
 #include <iostream>
@@ -58,32 +59,43 @@ int main(int argc, char** argv) {
 
         {
             // lvl_04 4-1_Crate_Faller_Platform is a props/prop_platform (kind 64, DestroyProp target of the census, docs/re/script-natives-world.md 2026-10-19T10:02:26).
-            // Message 8 of the default handler 0x221800 (docs/re/script-natives-world.md, ResetObject entry): initialposition / initialorientation, enable, clear the destroyed bit.
+            // Message 8 of kind 64 is its own platform reset (0x1a90b8, docs/re/script-natives-world-reset.md 2026-10-19T11:06:52): it enables the entity and leaves the destroyed bit.
             const assets::FuseEntry* faller = archive.find("levels/levels/lvl_04_fortmeadows/lvl_04_fortmeadows_main.blvl");
             require(faller != nullptr, "lvl_04 level file");
             assets::Level resetLevel = assets::parseLevel(archive.read(*faller));
+            auto lowered = [](std::string text) {
+                for (char& c : text) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+                return text;
+            };
+            std::string pickup;
+            {
+                assets::PlacedObjectState probeState;
+                runtime::ScriptRunner probe(resetLevel, probeState);
+                probe.loadObjectKinds(classOf);
+                for (const assets::LevelObject& object : resetLevel.objects)
+                    if (pickup.empty() && probe.objectNatives().kindOf(lowered(object.instance)) == 132) pickup = object.instance;
+            }
+            require(!pickup.empty(), "lvl_04 has a kind 132 pickup");
             assets::LevelScript script;
-            script.nameHash = assets::nameHash("r29_reset");
-            script.calls = {{"DestroyProp", {"4-1_Crate_Faller_Platform"}}, {"ResetObject", {"4-1_Crate_Faller_Platform"}}};
+            script.nameHash = assets::nameHash("r30_reset");
+            script.calls = {{"DestroyProp", {"4-1_Crate_Faller_Platform"}}, {"ResetObject", {"4-1_Crate_Faller_Platform"}}, {"DestroyProp", {pickup}}, {"ResetObject", {pickup}}};
             resetLevel.scripts.push_back(script);
             assets::PlacedObjectState state = runtime::levelInitialState(resetLevel, classOf);
             runtime::ScriptRunner runner(resetLevel, state);
             runner.loadObjectKinds(classOf);
             require(runner.objectNatives().kindOf("4-1_crate_faller_platform") == 64, "kind 64");
-            require(runner.start("r29_reset") && runner.threadCount() == 0, "r29_reset");
+            require(runner.start("r30_reset") && runner.threadCount() == 0, "r30_reset");
             const std::string name = "4-1_crate_faller_platform";
-            require(!state.destroyed.count(name) && !state.isHidden(name), "reset clears the destroyed bit and enables the entity");
-            require(state.collisionDropped.count(name) && state.isDisabled(name), "nothing on the path rebuilds the collision body freed by the destroy");
-            const runtime::PlacementReset* placement = runner.objectNatives().restoredPlacement(name);
-            require(placement && placement->hasPosition && placement->hasOrientation, "placement restored");
-            auto near = [](float a, float b) { return std::fabs(a - b) < 0.01f; };
-            require(near(placement->position[0], 1359.36f) && near(placement->position[1], 48.4659f) && near(placement->position[2], -1081.43f),
-                    "initialposition of 4-1_Crate_Faller_Platform (printed by this test with the C++ loader, 2026-10-19)");
-            require(placement->orientationDegrees[0] == 0.0f && placement->orientationDegrees[1] == 0.0f && placement->orientationDegrees[2] == 0.0f,
-                    "initialorientation of 4-1_Crate_Faller_Platform (same run)");
+            require(state.destroyed.count(name) && !state.isHidden(name), "the platform reset enables the entity and keeps the destroyed bit");
+            require(runner.objectNatives().restoredPlacement(name) == nullptr, "no placement is recorded for kind 64");
+            const std::string pickupKey = lowered(pickup);
+            require(!state.destroyed.count(pickupKey) && !state.isHidden(pickupKey), "the pickup reset clears the destroyed bit and enables the entity");
+            const runtime::PlacementReset* placement = runner.objectNatives().restoredPlacement(pickupKey);
+            require(placement && placement->hasPosition, "pickup placement restored");
             for (const assets::Placement& placed : assets::objectPlacements(resetLevel, classOf))
-                if (placed.instance == "4-1_Crate_Faller_Platform")
-                    require(placed.position[0] == placement->position[0] && placed.position[2] == placement->position[2], "the restored placement is the one the level places");
+                if (lowered(placed.instance) == pickupKey)
+                    require(std::fabs(placed.position[0] - placement->position[0]) < 0.01f && std::fabs(placed.position[2] - placement->position[2]) < 0.01f,
+                            "the restored placement is the one the level places");
         }
         {
             // Script 1-3_parkour_working: ToggleUseable(1-3_grab_01..04, 1), EnableObject(BrickGrab_Mount_Hint_06, 1).

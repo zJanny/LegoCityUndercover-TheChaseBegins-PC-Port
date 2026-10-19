@@ -44,6 +44,8 @@ constexpr std::uint8_t kMessageSkipToFinalState = 54;
 // DestroyProp / KillObject 0x1a2fe4 -> 0x23cd80 send the class message 1 (the vehicle class answers it with its break, 0x159bd0; destroy_message.hpp).
 constexpr std::uint8_t kMessageDestroy = 1;
 // Kind bytes (entity +0x12, the class file's ObjectType, docs/re/object-kinds.md) the natives test.
+constexpr std::uint8_t kKindPlatform = 64;
+constexpr std::uint8_t kKindPickup = 132;
 constexpr std::uint8_t kKindPushable = 71;
 constexpr std::uint8_t kKindPushHandle = 72;
 // Kinds whose create or post-link function registers a use zone with 0x23e130, the only function that adds to the registry 0x236624
@@ -51,8 +53,9 @@ constexpr std::uint8_t kKindPushHandle = 72;
 bool objectKindRegistersUseZone(std::uint8_t kind);
 // Kinds whose class message handler compares the message with 24 (enableobjectfade 0x26fac4); the other kinds do not answer it.
 bool objectKindAnswersFadeMessage(std::uint8_t kind);
-// What message 8 of the default handler 0x221800 (kinds 64, 132) wrote: `initialposition` and `initialorientation` of the object (degrees, the
-// handler multiplies by 0.0174533), read from the level object and its class. Nothing in the port moves such an object yet, so this is the record.
+// What message 8 of kind 132 (0x1ba268, the same writes as the default handler 0x221800) wrote: `initialposition` and `initialorientation` of the
+// object (degrees, the handler multiplies by 0.0174533), read from the level object and its class. Nothing in the port moves such an object yet,
+// so this is the record.
 struct PlacementReset {
     std::array<float, 3> position{};
     std::array<float, 3> orientationDegrees{};
@@ -106,9 +109,10 @@ public:
         std::string triggerObject;
     };
     std::optional<DestroyResult> destroy(const std::string& lowerCaseInstance, bool inactive, const ClassMessage& classMessage);
-    // Message 8 of the default handler 0x221800: for kinds 64 and 132 the placement is restored, the entity enabled and the destroyed bit cleared
-    // (the caller clears the state bits); false for every other kind (their handlers are not ported).
-    bool resetDefaultHandler(const std::string& lowerCaseInstance);
+    // Message 8 of ResetObject: kind 132 (0x1ba268) restores the placement, enables the entity and clears the destroyed bit; kind 64 (0x1a90b8) enables
+    // it and leaves the destroyed bit set (its placement reset, from the platform record, is not ported: SCRIPT-317, SCRIPT-S261); other kinds are not ported.
+    enum class ResetEffect { None, EnableOnly, EnableAndClearDestroyed };
+    ResetEffect resetMessage(const std::string& lowerCaseInstance);
     const PlacementReset* restoredPlacement(const std::string& lowerCaseInstance) const;
     bool destroyed(const std::string& lowerCaseInstance) const { return destroyed_.count(lowerCaseInstance) != 0; }
     const ObjectNativeFlags* flags(const std::string& lowerCaseInstance) const;

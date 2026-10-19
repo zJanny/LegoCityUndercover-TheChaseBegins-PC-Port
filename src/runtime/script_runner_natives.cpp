@@ -27,14 +27,14 @@ void ScriptRunner::destroyEntity(const std::string& lowerInstance) {
     if (!result) return;
     if (!result->triggerObject.empty()) triggerObjectEnabling(result->triggerObject);
     state_.destroyed.insert(lowerInstance);
-    state_.collisionDropped.insert(lowerInstance);
     if (result->reaction == DestroyReaction::HidesEntity) state_.disabled.insert(lowerInstance);
 }
 
 void ScriptRunner::resetEntity(const std::string& lowerInstance) {
-    if (!objectNatives_.resetDefaultHandler(lowerInstance)) return;
+    const ObjectNativeState::ResetEffect effect = objectNatives_.resetMessage(lowerInstance);
+    if (effect == ObjectNativeState::ResetEffect::None) return;
     state_.disabled.erase(lowerInstance);
-    state_.destroyed.erase(lowerInstance);
+    if (effect == ObjectNativeState::ResetEffect::EnableAndClearDestroyed) state_.destroyed.erase(lowerInstance);
 }
 
 void ScriptRunner::effectNative(const assets::ScriptCall& call) {

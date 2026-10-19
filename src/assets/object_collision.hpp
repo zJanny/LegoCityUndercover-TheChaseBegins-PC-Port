@@ -12,14 +12,12 @@ namespace chase::assets {
 
 // State of the placed objects at the start of a level, by lower-case instance name: entity flag bit 0 (disabled, set by
 // EnableObject with 0 and not registered with the queries) and flag 0x200 (collision, EnableCollision) overrides.
-// `destroyed` holds the entities DestroyProp / KillObject and the destroy of a prop 0x23cd80 reached (flag 0x10 of +0xc set, collision body freed):
-// isDisabled counts them. EnableObject clears only `disabled` (0x242cf0 does not test the destroyed bit), so a destroyed entity that the destroy
-// also hid is drawn again after EnableObject, still without collision; isHidden is the draw test. `collisionDropped` holds the entities whose
-// body 0x2320f8 freed; the reset of the default handler (message 8) clears `destroyed` but nothing on its path builds the body again.
+// `destroyed` holds the entities DestroyProp / KillObject and the destroy of a prop 0x23cd80 reached (flag 0x10 of +0xc set):
+// isDisabled counts them (SCRIPT-304). EnableObject clears only `disabled` (0x242cf0 does not test the destroyed bit), so a destroyed entity that
+// the destroy also hid is drawn again after EnableObject, still without collision; isHidden is the draw test.
 struct PlacedObjectState {
     std::set<std::string> disabled;
     std::set<std::string> destroyed;
-    std::set<std::string> collisionDropped;
     std::map<std::string, bool> collisionOverride;
 
     bool isDisabled(const std::string& instance) const;

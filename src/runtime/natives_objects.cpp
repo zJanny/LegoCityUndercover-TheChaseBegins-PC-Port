@@ -191,7 +191,7 @@ void ObjectNativeState::loadKinds(const assets::Level& level, const assets::Clas
                 const auto target = instanceByHash.find(assets::objectReferenceHash(*reference));
                 if (target != instanceByHash.end()) destroyTriggers_[path] = target->second;
             }
-        if (destroyEffectSet(kinds_[path]) == DestroyEffectSet::DefaultHandler) initialPlacements_[path] = initialPlacement(object, *classFile);
+        if (kinds_[path] == kKindPickup) initialPlacements_[path] = initialPlacement(object, *classFile);
         std::vector<std::string> descendants = registerNested(path, *classFile, classOf, kinds_, 0);
         if (kinds_[path] != kKindPushable) continue;
         std::vector<std::string>& handles = pushHandles_[path];
@@ -218,12 +218,14 @@ std::optional<ObjectNativeState::DestroyResult> ObjectNativeState::destroy(const
     return result;
 }
 
-bool ObjectNativeState::resetDefaultHandler(const std::string& instance) {
+ObjectNativeState::ResetEffect ObjectNativeState::resetMessage(const std::string& instance) {
+    const auto kind = kindOf(instance);
+    if (kind == kKindPlatform) return ResetEffect::EnableOnly;
     const auto initial = initialPlacements_.find(instance);
-    if (initial == initialPlacements_.end()) return false;
+    if (kind != kKindPickup || initial == initialPlacements_.end()) return ResetEffect::None;
     restoredPlacements_[instance] = initial->second;
     destroyed_.erase(instance);
-    return true;
+    return ResetEffect::EnableAndClearDestroyed;
 }
 
 const PlacementReset* ObjectNativeState::restoredPlacement(const std::string& instance) const {

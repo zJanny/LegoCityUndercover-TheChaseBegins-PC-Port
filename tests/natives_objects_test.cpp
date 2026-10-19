@@ -266,33 +266,38 @@ void destroyedEntityComesBackWithEnableObjectButWithoutCollision() {
     runner.loadObjectKinds(fixture.kinds.lookup());
     runner.start("d");
     require(!state.isHidden("crate"), "EnableObject clears the disabled bit and shows the node (0x242cf0 does not test the destroyed bit)");
-    require(state.isDisabled("crate") && state.destroyed.count("crate") == 1, "the destroyed bit stays, so the collision body stays gone");
+    require(state.isDisabled("crate") && state.destroyed.count("crate") == 1, "the destroyed bit stays (the port counts it as disabled for collision, SCRIPT-304)");
     require(runner.takeObjectClassMessages().size() == 1, "a destroyed entity gets no second message 1 even when it is shown again");
 }
 
-void resetObjectRestoresADestroyedDefaultHandlerObject() {
+void resetObjectAnswersMessage8PerKind() {
     DestroyFixture fixture;
     fixture.object("Platform", "props/prop_platform", 64);
+    fixture.object("Pickup", "pickups/pickup_redbrick", 132);
     fixture.object("Crate", "leprops/leprop_simpledestructible", 85);
-    add(fixture.level, "d", {{"DestroyProp", {"Platform"}}, {"DestroyProp", {"Crate"}}, {"ResetObject", {"Platform"}}, {"ResetObject", {"Crate"}}});
+    add(fixture.level, "d", {{"DestroyProp", {"Platform"}}, {"DestroyProp", {"Pickup"}}, {"DestroyProp", {"Crate"}},
+                             {"ResetObject", {"Platform"}}, {"ResetObject", {"Pickup"}}, {"ResetObject", {"Crate"}}});
     PlacedObjectState state;
     ScriptRunner runner(fixture.level, state);
     runner.loadObjectKinds(fixture.kinds.lookup());
     runner.start("d");
-    require(!state.destroyed.count("platform") && !state.isHidden("platform"), "message 8 of the default handler clears the destroyed bit and enables the entity (0x2218a8, 0x242cf0)");
-    require(state.collisionDropped.count("platform") && state.isDisabled("platform"), "the collision body freed by the destroy is not rebuilt on that path");
-    require(runner.objectNatives().restoredPlacement("platform") != nullptr, "the placement is restored");
+    require(!state.isHidden("platform") && state.destroyed.count("platform") == 1,
+            "kind 64 answers message 8 itself (0x1a90b8): it enables the entity (0x242cf0) and never clears the destroyed bit");
+    require(runner.objectNatives().restoredPlacement("platform") == nullptr, "the platform's placement comes from its record (SCRIPT-317), not initialposition");
+    require(!state.isHidden("pickup") && state.destroyed.count("pickup") == 0 && runner.objectNatives().restoredPlacement("pickup") != nullptr,
+            "kind 132 answers message 8 itself (0x1ba268): placement restored, enabled, destroyed bit (0x1ba320) cleared");
+    require(state.isDisabled("platform") && !state.isDisabled("pickup"), "a reset pickup collides again; the destroyed platform still counts as disabled (SCRIPT-304)");
     require(state.destroyed.count("crate") && state.isHidden("crate") && runner.objectNatives().restoredPlacement("crate") == nullptr,
             "kind 85 has another handler for message 8 that is not ported");
     DestroyFixture again;
-    again.object("Platform", "props/prop_platform", 64);
-    add(again.level, "d", {{"DestroyProp", {"Platform"}}, {"ResetObject", {"Platform"}}, {"DestroyProp", {"Platform"}}});
+    again.object("Pickup", "pickups/pickup_redbrick", 132);
+    add(again.level, "d", {{"DestroyProp", {"Pickup"}}, {"ResetObject", {"Pickup"}}, {"DestroyProp", {"Pickup"}}});
     PlacedObjectState secondState;
     ScriptRunner second(again.level, secondState);
     second.loadObjectKinds(again.kinds.lookup());
     second.start("d");
-    require(second.takeObjectClassMessages().size() == 3 && secondState.destroyed.count("platform") && secondState.isHidden("platform"),
-            "a reset entity gets message 1 again: the destroyed test passes after the reset");
+    require(second.takeObjectClassMessages().size() == 3 && secondState.destroyed.count("pickup") && secondState.isHidden("pickup"),
+            "a reset pickup gets message 1 again: the destroyed test passes after the reset");
 }
 
 void destroyRaisesTheDeadEventAndTheTriggerObjectOfThePropHandler() {
@@ -428,7 +433,7 @@ int main() {
         destroyPropLeavesDisabledEntities();
         destroyPropActsPerKind();
         destroyedEntityComesBackWithEnableObjectButWithoutCollision();
-        resetObjectRestoresADestroyedDefaultHandlerObject();
+        resetObjectAnswersMessage8PerKind();
         destroyRaisesTheDeadEventAndTheTriggerObjectOfThePropHandler();
         destroyReactionTableKeepsRealClassKinds();
         kindGatesDecideTheRegistryAndShadowNatives();
