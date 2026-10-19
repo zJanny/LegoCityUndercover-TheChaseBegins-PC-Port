@@ -4,10 +4,6 @@ Ranges of item IDs held by parallel agents; the lead reserves them with `tools/c
 
 | Prefix | First | Last | Holder | Date |
 |---|---|---|---|---|
-| SCRIPT | 326 | 328 | r32-C | 2026-10-19T13:34:51+02:00 |
-| SCRIPT-S | 268 | 269 | r32-C | 2026-10-19T13:34:51+02:00 |
-| STUD | 12 | 13 | r32-C | 2026-10-19T13:34:51+02:00 |
-| STUD-S | 6 | 6 | r32-C | 2026-10-19T13:34:51+02:00 |
 | SCAN | 12 | 13 | r32-E | 2026-10-19T13:40:15+02:00 |
 | SCAN-S | 9 | 10 | r32-E | 2026-10-19T13:40:16+02:00 |
 | RENDER | 68 | 68 | r32-E | 2026-10-19T13:40:16+02:00 |
