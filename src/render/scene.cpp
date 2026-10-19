@@ -14,6 +14,7 @@ using namespace chase::assets;
 
 namespace {
 bool fogActive = false;
+FogParameters activeFog{};
 
 void uploadLut(GLuint program, const char* name, const runtime::LightLut& lut) {
     glUniform4uiv(glGetUniformLocation(program, name), GLsizei(lut.size() / 4), lut.data());
@@ -142,8 +143,11 @@ void setFog(const FogParameters& fog) {
     glUniform3f(glGetUniformLocation(program, "fogColour"), float(fog.colour[0]) / 255.0f, float(fog.colour[1]) / 255.0f,
                 float(fog.colour[2]) / 255.0f);
     glUniform2f(glGetUniformLocation(program, "fogProjection"), fog.projectionNear, fog.projectionFar);
+    activeFog = fog;
     fogActive = true;
 }
+
+const FogParameters* currentFog() { return fogActive ? &activeFog : nullptr; }
 
 std::string lower(std::string s) {
     std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return char(std::tolower(c)); });

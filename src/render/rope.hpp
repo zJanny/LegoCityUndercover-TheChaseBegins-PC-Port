@@ -1,7 +1,7 @@
 #pragma once
 // Zipline ropes of chase-game (draw 0x297b7c): textured triangle strips from runtime::ziplineRopeDraws, drawn after the opaque scene. A rope at full
 // alpha is drawn without blending and writes depth; a faded rope blends. Textures load from the archive path of the RopeTexture name with its
-// extension turned into .btga. Render states are read from 0x297b7c, the sampler is a stand-in (TRAV-S30).
+// extension turned into .btga. Render states are read from 0x297b7c (fog on, with the scene's fog); the sampler is a stand-in (TRAV-S30).
 #include "assets/assets.hpp"
 #include "render/scene.hpp"
 #include "runtime/zipline_rope.hpp"

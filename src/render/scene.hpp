@@ -44,6 +44,7 @@ struct FogParameters {
     float projectionNear, projectionFar;
 };
 void setFog(const FogParameters& fog);
+const FogParameters* currentFog();
 
 std::string lower(std::string s);
 

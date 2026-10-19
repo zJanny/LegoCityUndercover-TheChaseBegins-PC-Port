@@ -15,7 +15,8 @@ Subtopics: [player-traversal-pole.md](player-traversal-pole.md), [player-travers
 - Rails, climb bars and the corner rail (types 29, 218), ported: [player-traversal-rails.md](player-traversal-rails.md).
 - The A presses at the zipline anchor and at the pole are not measurable from `m12-9`, `m12-10a` or `m12-10b`; the states they need are listed in [§2026-10-18T20:38:04](#ts-20261018-203804).
 - The rope is ported: a straight textured ribbon (`RopeTexture`, `RenderWidth` 0.03) between the anchor nodes, drawn by the anchor with the higher entity id, faded out by the camera's distance from the line only with `FadeNearCamera`; the ribbon's facing, render states and the tightrope ropes are open. [§2026-10-19T08:51:31](#ts-20261019-085131)
-- The rope's facing and render state: the row at 0x529fec is the camera's view direction (measured, m12-9), the render state is the record of 0x252254 with the mode bytes of 0x297b7c, which the port's reading of the record turns into the states the port already used; the texture sampler and fog are open; the original drew two strips per line. [§2026-10-19T10:00:18](#ts-20261019-100018)
+- The rope's facing and render state: the row at 0x529fec is the camera's view direction (measured, m12-9), the render state is the record of 0x252254 with the mode bytes of 0x297b7c, which the port's reading of the record turns into the states the port already used; the texture sampler is open; the original drew two strips per line. [§2026-10-19T10:00:18](#ts-20261019-100018)
+- The rope is fogged with the scene's fog (the state record clears the no-fog bit); the shared particle program has a fog switch that only the rope turns on. [§2026-10-19T10:38:41+02:00](#ts-20261019-103841)
 - Open: the grab height of attachment set 18 for other characters, the fall-state grab path 0x2010d4, ground contact during the zipline dismount (0x215804), the rope's facing and render states, the tightrope; the other moves in their subtopic files.
 
 <a id="ts-20261018-145230"></a>
@@ -135,3 +136,15 @@ Unknowns:
 - The texture's wrap and filter: the state's texture slot has bytes 4 and 5 zero and 0x25511c takes only the texture handle (+0x14) from it, so the sampler comes from the texture object (the loader 0x250244 was not read).
 - Fog on the rope: the record asks for it; the port's rope pass has none.
 - Why the line's other anchor was not skipped (the state of 0x226644 for the anchors) and whether other lines draw once.
+
+<a id="ts-20261019-103841"></a>
+
+## 2026-10-19T10:38:41+02:00 — Fog on the zipline rope (round 29, r29-C: port change, no new emulator run)
+
+Fog (TRAV-50). The render state of the rope ([§2026-10-19T10:00:18](#ts-20261019-100018)) clears bit 6 of byte 0xb of the material record built by 0x297b7c, so the material is fogged like a model part whose fog bit is set. The PICA fog registers (table at 0xe8, colour, projection) are global GPU state written by the scene setup, so the rope sees the fog of the room the scene is in: in the port `LevelSession::applyFog` sets it once per frame through `render::setFog`, and `RopeRenderer::draw` now reads it with `render::currentFog()` and uploads the same table, colour and projection near / far to the particle program. The particle program (shared by particles and the rope) got the scene shader's `applyFog` and a `fogOn` switch that is never set for particles, so their output is unchanged; the rope sets it for its draws and clears it afterwards. Fog applies to the colour before blending, as for model parts. Values for lvl_01: range 220 .. 260, colour (183, 199, 221) (oracle 0x376160 / 0x376164 / 0x376168, see [rendering-fog.md](rendering-fog.md)), pinned for the rope in `zipline-rope-real-data` (the rope fog is the scene fog `levelFog` gives for Room7).
+
+Double draw (TRAV-50, second half). Read as in [§2026-10-19T10:00:18](#ts-20261019-100018): the original draws the lvl_01 line twice (swapped ends, same geometry); at alpha 255 with depth write the second strip does not change the image, so the port keeps one strip. A faded rope (not in lvl_01) would blend twice; not ported.
+
+Unknowns:
+- No oracle picture of the fogged rope exists, so the fog on the rope is taken from the state record and the shared GPU fog state, not compared with the original's image (needs RPC screenshots at a distance of about 220 .. 260 m from a rope, or a gdb read of the fog registers while 0x297b7c draws).
+- Why the line's other anchor passes the gate 0x226644, and whether other lines draw once.

@@ -3,7 +3,9 @@
 // stand-in view direction (0, 0, 1) (TRAV-S29), expected values evaluated with numpy float32 from the node positions in the level data. Needs the
 // extracted RomFS; exits with 77 without it.
 #include "assets/assets.hpp"
+#include "runtime/fog.hpp"
 #include "runtime/zipline_rope.hpp"
+#include <array>
 #include <cmath>
 #include <filesystem>
 #include <iostream>
@@ -63,6 +65,10 @@ int main(int argc, char** argv) {
                     "vertex " + std::to_string(i));
             require(near(v.uv[1], expected[i][3], 2e-3f), "vertex v " + std::to_string(i));
         }
+        const std::vector<assets::FogObject> fogObjects = assets::fogObjects(level, classOf);
+        const runtime::FogSetting fog = runtime::levelFog(fogObjects, 7);
+        require(fog.enabled && fog.start == 220.0f && fog.end == 260.0f, "rope fog range 220 260: the scene's fog (LevelSession::applyFog), pinned in fog-real-data from the oracle 0x376160 / 0x376164; the rope state record 0x252254 / 0x297b7c clears byte 0xb bit 6, so fog applies");
+        require(fog.colour == std::array<std::uint8_t, 3>({183, 199, 221}), "rope fog colour (183, 199, 221): oracle 0x376168, pinned in fog-real-data");
         std::cout << "zipline-rope-real-test: ok\n";
     } catch (const std::exception& error) {
         std::cerr << "zipline-rope-real-test: " << error.what() << '\n';

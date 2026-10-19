@@ -69,6 +69,14 @@ public:
         glUniform1i(glGetUniformLocation(program, "diffuse"), 0);
         glUniform1i(glGetUniformLocation(program, "alphaTest"), 0);
         glUniform1f(glGetUniformLocation(program, "alphaReference"), 0.0f);
+        const FogParameters* fog = currentFog();
+        glUniform1i(glGetUniformLocation(program, "fogOn"), fog != nullptr);
+        if (fog) {
+            glUniform1uiv(glGetUniformLocation(program, "fogLut"), 128, fog->table.data());
+            glUniform3f(glGetUniformLocation(program, "fogColour"), float(fog->colour[0]) / 255.0f, float(fog->colour[1]) / 255.0f,
+                        float(fog->colour[2]) / 255.0f);
+            glUniform2f(glGetUniformLocation(program, "fogProjection"), fog->projectionNear, fog->projectionFar);
+        }
         glActiveTexture(GL_TEXTURE0);
         glDisable(GL_CULL_FACE);
         glEnable(GL_DEPTH_TEST);
@@ -90,6 +98,7 @@ public:
             countDrawCall();
             glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         }
+        glUniform1i(glGetUniformLocation(program, "fogOn"), 0);
         glBlendFunc(GL_ONE, GL_ZERO);
         glDepthMask(depthMaskWas);
         if (!depthWas) glDisable(GL_DEPTH_TEST);
