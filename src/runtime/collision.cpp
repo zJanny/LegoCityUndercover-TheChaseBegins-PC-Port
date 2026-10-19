@@ -177,6 +177,7 @@ void CollisionWorld::addObject(const assets::ObjectCollision& object) {
     entry.collisionDefault = object.collisionDefault;
     if (object.mesh) {
         entry.item = movedItem(*object.mesh, object.matrix);
+        entry.localMesh = object.mesh;
     } else {
         entry.item = boxItem(object.matrix, object.centre, object.half);
         entry.box = true;
@@ -185,6 +186,21 @@ void CollisionWorld::addObject(const assets::ObjectCollision& object) {
         std::copy(object.half, object.half + 3, entry.half);
     }
     entries_.push_back(std::move(entry));
+}
+
+bool CollisionWorld::moveObject(const std::string& owner, const assets::Matrix& matrix) {
+    bool moved = false;
+    for (Entry& entry : entries_) {
+        if (entry.owner.empty() || entry.owner != owner) continue;
+        if (entry.localMesh) {
+            entry.item = movedItem(*entry.localMesh, matrix);
+        } else {
+            entry.item = boxItem(matrix, entry.centre, entry.half);
+            entry.matrix = matrix;
+        }
+        moved = true;
+    }
+    return moved;
 }
 
 bool boxOverlapsTriangle(const float centre[3], const float half[3], const float vertex[3][3], const float normal[3], float d) {

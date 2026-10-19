@@ -6,6 +6,7 @@
 #include "assets/assets.hpp"
 #include "assets/object_collision.hpp"
 #include <cstdint>
+#include <memory>
 #include <optional>
 #include <string>
 #include <vector>
@@ -36,6 +37,7 @@ public:
         assets::Matrix matrix{};        // node matrix of a box
         float centre[3] = {0, 0, 0};    // box in node space
         float half[3] = {0, 0, 0};
+        std::shared_ptr<const assets::CollisionItem> localMesh;  // mesh of a placed object in node space, null for boxes
         std::string owner;              // lower-case instance name of a placed object, empty for level items
         bool collisionDefault = true;   // owner flag 0x200 before any EnableCollision
         bool active = true;             // owner flags allow the query layers to accept the entry (bit 0 clear, 0x200 set)
@@ -48,6 +50,9 @@ public:
     }
     // Registers a placed object: its collision item or its box, moved into world coordinates by the node matrix.
     void addObject(const assets::ObjectCollision& object);
+    // The entry matrix of the original is the owner's node matrix read at query time (0x21bb78): after PositionObject the owner's
+    // entries stand at the new matrix. False when no entry has that owner.
+    bool moveObject(const std::string& owner, const assets::Matrix& matrix);
     bool empty() const { return entries_.empty(); }
     const std::vector<Entry>& entries() const { return entries_; }
     std::vector<Entry>& mutableEntries() { return entries_; }

@@ -20,6 +20,7 @@ bool LevelSession::placeProp(const std::string& instance, const chase::assets::P
         propAnimations.place(instance, node);
         scene.setTransform(placedSceneIndex[i], node);
         placedRooms[i] = runtime::roomNumber(target.room);
+        collision.moveObject(instance, node);
         return true;
     }
     return false;

@@ -6,7 +6,10 @@
 // no loop), whose extra root curve the prop update applies to the node (runtime/prop_root_motion.hpp). Needs the extracted RomFS; exits with 77 (skipped) when it is missing.
 #include "assets/assets.hpp"
 #include "assets/object_classes.hpp"
+#include "assets/object_collision.hpp"
+#include "runtime/collision.hpp"
 #include "runtime/prop_animation.hpp"
+#include <cctype>
 #include <cmath>
 #include <filesystem>
 #include <iostream>
@@ -128,6 +131,39 @@ int main(int argc, char** argv) {
         props.update(1.0f / 30.0f);
         require(std::fabs(props.poses()[0].node[12] - target[12]) < 1e-3f && std::fabs(props.poses()[0].node[14] - target[14]) < 1e-3f,
                 "the finished clip adds no further root motion at the target");
+
+        // Entry matrix = the owner's node matrix at query time (docs/re/collision.md, 0x21bb78; docs/re/script-natives-flags.md
+        // 2026-10-19T11:03:27): a placed object with a box (first such candidate of lvl_01, read through objectCollisionCandidates) moved to the same
+        // target is found there and no longer at its start.
+        runtime::CollisionWorld world;
+        const std::vector<assets::ObjectCollision> candidates = assets::objectCollisionCandidates(archive, level);
+        const assets::ObjectCollision* boxed = nullptr;
+        for (const assets::ObjectCollision& candidate : candidates)
+            if (!candidate.mesh && candidate.half[0] > 0.1f && candidate.half[2] > 0.1f) {
+                boxed = &candidate;
+                break;
+            }
+        require(boxed != nullptr, "a box candidate exists");
+        world.addObject(*boxed);
+        auto centreOf = [&](const assets::Matrix& matrix, float out[3]) {
+            for (int a = 0; a < 3; ++a)
+                out[a] = boxed->centre[0] * matrix[std::size_t(a)] + boxed->centre[1] * matrix[4 + std::size_t(a)] +
+                         boxed->centre[2] * matrix[8 + std::size_t(a)] + matrix[12 + std::size_t(a)];
+        };
+        auto hitsAt = [&](const float at[3]) {
+            const float low[3] = {at[0] - 0.05f, at[1] - 0.05f, at[2] - 0.05f}, high[3] = {at[0] + 0.05f, at[1] + 0.05f, at[2] + 0.05f};
+            int count = 0;
+            world.query(low, high, runtime::kPlayerLayer, [&](const runtime::CollisionWorld::Triangle&) { ++count; });
+            return count;
+        };
+        float before[3], afterCentre[3];
+        centreOf(boxed->matrix, before);
+        centreOf(target, afterCentre);
+        require(hitsAt(before) > 0 && hitsAt(afterCentre) == 0, "the box stands at its start before the move");
+        std::string lowerInstance = boxed->instance;
+        for (char& c : lowerInstance) c = char(std::tolower(static_cast<unsigned char>(c)));
+        require(world.moveObject(lowerInstance, target) && !world.moveObject("no_such_prop", target), "moveObject finds the owner's entries");
+        require(hitsAt(afterCentre) > 0 && hitsAt(before) == 0, "the moved box collides at the target and no longer at its start");
         std::cout << "animal-props-real-test: passed\n";
         return 0;
     } catch (const std::exception& error) {

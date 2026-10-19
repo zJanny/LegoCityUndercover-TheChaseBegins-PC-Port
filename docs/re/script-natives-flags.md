@@ -11,7 +11,7 @@ Handlers of batch 26 (SCRIPT-26). Census and the other batches: [script-natives.
 - The PositionPlayer ground probe only fires for character kinds 179, 183 and 243; the port has no character entries, so it is a no-op stand-in. [§2026-10-14T19:19:15](#ts-20261014-191915)
 - CameraFollow 0x1bf7c8 stores a global camera object in manager +0x28 via 0x226a30 (labelled no-op in the port); PositionObject for vehicles is read in outline. [§2026-10-15T13:42:00](#ts-20261015-134200)
 - PositionObject of a level character: the node takes the target's matrix and the room link follows; the controller part applies only when 0x21aae0 is true. Ported for characters, Holmes of mission 1-2 stands at `1-2_Doorlock_Teleport` after the Doorlock scene (seen in the oracle and in the port). [§2026-10-18T16:37:52](#ts-20261018-163752)
-- PositionObject of a placed prop or object: the scene node, the room and the animated prop's root-motion base take the target's matrix; collision entry and physics body do not follow (SCRIPT-S255). [§2026-10-19T10:39:23+02:00](#ts-20261019-103923)
+- PositionObject of a placed prop or object: the scene node, the room and the animated prop's root-motion base take the target's matrix; the collision entries follow, a physics body was not found (SCRIPT-S255); 0x242b08 only re-buckets the entity by room. [§2026-10-19T10:39:23+02:00](#ts-20261019-103923), [§2026-10-19T11:03:27+02:00](#ts-20261019-110327)
 - The kind byte (entity +0x12) is the class file's ObjectType; every class of the main levels has one, and the ToggleUseable group case, EnableShadow and EnableSwitch gates are read: [object-kinds.md §2026-10-18T21:36:13](object-kinds.md#ts-20261018-213613).
 - Open: readers of each flag, the fade natives' kind gate (enableobjectfade), the fade consumer, message 8 and 54 effects, who fills the kind list at 0x3743ec.
 
@@ -153,3 +153,18 @@ Applies the node copy that [§2026-10-18T16:37:52](#ts-20261018-163752) read for
 Unknowns:
 - The follow-up 0x242b08 on the entity (collision grid, physics body) was not read for props; the port moves neither the collision entry nor a physics body of a placed prop (stand-in SCRIPT-S255; the dog has collision switched off by the script).
 - Whether the cutscene `1_2_c` binds `1-2_Dog` at the new node is still open (LEVOBJ-100).
+
+<a id="ts-20261019-110327"></a>
+
+## 2026-10-19T11:03:27+02:00 — The follow-up 0x242b08 of PositionObject (SCRIPT-311; llvm-objdump on game.arm.elf, no REA session, no emulator)
+
+Reads the call that [§2026-10-18T16:37:52](#ts-20261018-163752) left open. Disassembly of 0x242b08 and its callees 0x23c2bc, 0x250638, 0x253f0c and 0x23c1a8.
+
+- 0x242b08(entity) re-buckets the entity by room. It first recurses into the entity's child entities (halfword +0x14 index, +0x16 count, table at scene+0x24). It then looks up the room entity that owns the scene node entity+0x3c (0x23c2bc scans the rooms' entity lists; the result is the room entity, or the scene's default room), unlinks the entity from its current list (0x250638: doubly linked list, next at +0, previous at +4), and when the room entity's node (+0x14) differs from entity+0x3c inserts the entity into that room's list (0x253f0c; list +0x70 when flag bit 0 of +0x10 is set, else +0x58 + 8 x byte +0x13), links the room (0x23c1a8) and stores the room entity in entity+0x38. Without a different room it reinserts the entity into the scene's own list and calls 0x23c1a8 with no room.
+- It touches no collision data and no physics body: no grid entry (the entry bounds are not written), no body, no velocity. The room entity lists are the ones 0x30e0d8 reads to register collision (docs/re/collision.md, registration of an entity), but registration is idempotent and runs at load.
+- The collision entry of a moved prop follows through the node: the entry matrix is the owner's scene node world matrix read at query time (0x21bb78, [collision.md](collision.md)), so after the node copy a query sees the mesh or box at the target. What the original does with the entry's stored cell bounds (+8 / +0xb) after a move was not read.
+- Port: the room number part is `placedRooms` (done in §2026-10-19T10:39:23, [§2026-10-19T10:39:23](#ts-20261019-103923)); the collision part is moving the owner's entry in `CollisionWorld` to the new node matrix.
+
+Unknowns:
+- Cell bounds of a moved dynamic entry (who updates +8 / +0xb): the port queries trees without a grid.
+- The physics body of a prop was not found in this function; whether props have one outside vehicles is open.
