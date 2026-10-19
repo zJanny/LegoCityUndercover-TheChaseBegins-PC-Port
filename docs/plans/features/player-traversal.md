@@ -51,6 +51,7 @@ IN_PROGRESS, updated 2026-10-18T16:38:10+02:00. Ported in `chase-game` from the 
 - [ ] TRAV-54 — The poles of the tightrope anchors (`props/parkour_tightrope`, 4 in lvl_01) are drawn at `initialorientation`; the link 0x19b074 would turn them towards their target. needs: TRAV-48. uses: parkour_tightrope. evidence: [player-traversal.md §2026-10-19T18:16:50](../../re/player-traversal.md#ts-20261019-181650)
 - [ ] TRAV-55 — The zipline poles (`props/parkour_zipline` anchors) can be walked through in `chase-game` (user report); in the original they are solid. Where their collision comes from is not read. uses: parkour_zipline. evidence: [playtests.md §2026-10-19T20:15:35](../../re/playtests.md#ts-20261019-201535)
 - [ ] TRAV-56 — The handcuffs Chase hangs from on the zipline (`Ability_Handcuffs`, `weap_hancuffs`, bone `weaponRight`, hand item track of the grab, slide and dismount clips) are not drawn (user report); `HandItems` loads only the glass and the scanner. needs: DETECT-8. evidence: [player-traversal.md §2026-10-19T20:23:05](../../re/player-traversal.md#ts-20261019-202305)
+- [ ] TRAV-57 — Ladders (object kind 56) cannot be climbed in `chase-game`; the mission 1-3 ladder to the roof (`1-4_Ladder01`, state `m13-2-ladder`) blocks the mission path (user report). Use, mount, climb and dismount are not read. uses: prop_crane_ladderlarge, prop_laddermedium, prop_ladderlarge. evidence: [playtests.md §2026-10-19T20:23:38](../../re/playtests.md#ts-20261019-202338)
 
 ## 6. Findings summary
 

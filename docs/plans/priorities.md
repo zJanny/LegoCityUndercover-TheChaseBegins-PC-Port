@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 781 open items and stand-ins, 167 linked to game usage, 614 with unknown reach.
+Items: 782 open items and stand-ins, 168 linked to game usage, 614 with unknown reach.
 
 ## Top 50 overall
 
@@ -87,7 +87,7 @@ Items: 781 open items and stand-ins, 167 linked to game usage, 614 with unknown 
 
 ## Player and camera
 
-15 of 180 items linked.
+16 of 181 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -98,9 +98,9 @@ Items: 781 open items and stand-ins, 167 linked to game usage, 614 with unknown 
 | 5 | [COLL-2](features/collision.md?display=source#L29) | 0 | 183 | 7 | 1 | - | `props/parkour_skydive`, `props/prop_prop` | Only the classes with a recovered constructor rule register (props, doors, dummycollision, vehicles) ... |
 | 6 | [CAMERA-S51](features/camera.md?display=source#L25) | 145 | 0 | 7 | 0 | 1 stand-in | `shakescreen` | The ShakeScreen shake moves only the eye of the gameplay camera (`CameraRig::setEyeShake`); the cutscene ... |
 | 7 | [TRAV-55](features/player-traversal.md?display=source#L52) | 0 | 66 | 7 | 0 | - | `props/parkour_zipline` | The zipline poles (`props/parkour_zipline` anchors) can be walked through in `chase-game` (user report); in ... |
-| 8 | [TRAV-48](features/player-traversal.md?display=source#L47) | 0 | 22 | 5 | 1 | - | `props/parkour_tightrope` | The ropes of the tightrope anchors (`GrappleLineType` 0) use the same draw 0x1a9dc4 and are not loaded, so ... |
-| 9 | [TRAV-54](features/player-traversal.md?display=source#L51) | 0 | 22 | 5 | 0 | - | `props/parkour_tightrope` | The poles of the tightrope anchors (`props/parkour_tightrope`, 4 in lvl_01) are drawn at ... |
-| 10 | [SCAN-2](features/abilities-scanner.md?display=source#L35) | 7 | 0 | 3 | 0 | 1 stand-in | `enablescanner` | Other type 201 zones: photo (ScannerMode 4 in the class, sub-mode 0 values of 0x2ef814), physical (kind 2) ... |
+| 8 | [TRAV-57](features/player-traversal.md?display=source#L54) | 0 | 24 | 6 | 0 | - | `props/prop_crane_ladderlarge`, `props/prop_ladderlarge`, `props/prop_laddermedium` | Ladders (object kind 56) cannot be climbed in `chase-game`; the mission 1-3 ladder to the roof ... |
+| 9 | [TRAV-48](features/player-traversal.md?display=source#L47) | 0 | 22 | 5 | 1 | - | `props/parkour_tightrope` | The ropes of the tightrope anchors (`GrappleLineType` 0) use the same draw 0x1a9dc4 and are not loaded, so ... |
+| 10 | [TRAV-54](features/player-traversal.md?display=source#L51) | 0 | 22 | 5 | 0 | - | `props/parkour_tightrope` | The poles of the tightrope anchors (`props/parkour_tightrope`, 4 in lvl_01) are drawn at ... |
 
 ## Level objects
 

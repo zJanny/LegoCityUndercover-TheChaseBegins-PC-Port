@@ -6,6 +6,7 @@ What the user saw when playing `chase-game` against their knowledge of the origi
 
 - Mission 1-2 played end to end in `chase-game`: flag poles, trampoline, the scanner's look, the dog at the cage and its release, the punch and the dog footprints in detective mode look and work as in the original; four bugs were found (zipline poles, scanner held model, dog and dog truck in the end cutscene). [§2026-10-19T17:56:41](#ts-20261019-175641)
 - Mission 1-3: the ladder to the roof is not fully visible in the port. [§2026-10-19T18:02:53](#ts-20261019-180253)
+- Mission 1-3: the ladder now draws but cannot be climbed. [§2026-10-19T20:23:38](#ts-20261019-202338)
 - The zipline poles can be walked through in the port. [§2026-10-19T20:15:35](#ts-20261019-201535)
 - The handcuffs Chase hangs from on the zipline are not drawn (user report; cause: [player-traversal.md §2026-10-19T20:23:05](player-traversal.md#ts-20261019-202305)).
 
@@ -49,3 +50,12 @@ The user reported (2026-10-19) that in `chase-game` the player walks through the
 
 Unknowns:
 - Whether the original's pole collision comes from the pole model's collision section, a class bound or the object collision rules ([collision.md](collision.md)); the port's pole collision was not checked (the same question is an unknown of [player-traversal.md §2026-10-19T18:16:50](player-traversal.md#ts-20261019-181650)).
+
+<a id="ts-20261019-202338"></a>
+
+## 2026-10-19T20:23:38+02:00 — Mission 1-3: the ladder draws but cannot be climbed (user report)
+
+After the merge of round 37 the user reported that the ladder to the roof of mission 1-3 (`1-4_Ladder01`, `props/prop_crane_ladderlarge`, its upper half drawn since [object-kinds.md §2026-10-19T19:25:32](object-kinds.md#ts-20261019-192532)) is now fully drawn, but Chase cannot climb it in `chase-game`. Climbing a ladder is not in the port; the ladders are object kind 56 ([object-kinds.md](object-kinds.md)). The user state `m13-2-ladder` stands in front of the ladder in the original.
+
+Unknowns:
+- The ladder's use, mount, climb and dismount code and clips are not read.
