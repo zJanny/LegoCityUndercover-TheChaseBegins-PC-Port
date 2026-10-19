@@ -10,6 +10,7 @@
 #include "render/character.hpp"
 #include "render/scene.hpp"
 #include "runtime/natives_cutscene.hpp"
+#include "runtime/prop_animation.hpp"
 #include <map>
 #include <memory>
 #include <optional>
@@ -30,19 +31,34 @@ struct CameraView {
 // the level's own figure, hidden while the cutscene shows (the original drives the level's figure itself, docs/re/cutscene-actors.md).
 struct StandIn {
     std::string cutsceneName;
+    std::size_t order = 0;
     chase::assets::CharacterAppearance look;
     std::string hat;
     chase::render::CharacterInstance original;
+};
+// A placed prop with a CSCharacter: the cutscene poses the level's own prop (docs/re/cutscene-actors.md). `key` is the scene key the
+// prop is skinned under, empty when the prop shares its model with others and cannot be posed on its own.
+struct PropStandIn {
+    std::string cutsceneName;
+    std::size_t order = 0;
+    std::size_t instance = 0;
+    std::string key;
 };
 struct Roster {
     chase::assets::CharacterAppearance base;
     std::vector<StandIn> characters;
     std::optional<StandIn> player;
+    std::vector<PropStandIn> props;
 };
+
+std::vector<PropStandIn> levelProps(const chase::assets::Level& level, const chase::assets::ClassLookup& classOf,
+                                    const std::vector<chase::assets::Placement>& placed, const std::vector<std::size_t>& sceneIndex,
+                                    const std::vector<chase::runtime::AnimatedProp>& animated);
 
 Roster makeRoster(chase::assets::FuseArchive& archive, const std::vector<chase::assets::CharacterObject>& characters,
                   const std::vector<std::optional<chase::render::CharacterInstance>>& placed,
-                  const chase::assets::CharacterAppearance& playerLook, const chase::render::CharacterInstance& playerInstance);
+                  const chase::assets::CharacterAppearance& playerLook, const chase::render::CharacterInstance& playerInstance,
+                  std::vector<PropStandIn> props);
 
 class InEngine {
 public:
@@ -67,6 +83,7 @@ private:
         std::optional<std::size_t> standalone;
         std::vector<std::ptrdiff_t> nodes;
         std::optional<Driven> driven;
+        std::optional<std::size_t> levelProp;
     };
     struct Loaded {
         chase::assets::CutsceneContent content;
@@ -77,6 +94,7 @@ private:
     void show(const std::string& name, bool visible);
     std::size_t visibleOriginals(const std::string& name) const;
     std::size_t visibleOwnModels(const std::string& name) const;
+    std::size_t drivenProps(const std::string& name) const;
     void showOwnModel(const Actor& actor, bool started);
     void pose(const Loaded& cutscene, double seconds);
 

@@ -29,6 +29,9 @@ std::uint8_t objectKind(const LevelObject& object, const Level& classFile);
 // stored vertices; the original's pose of a skeleton without a clip was not compared.
 bool createsModelAsProp(std::uint8_t kind);
 
+// CSCharacter of the object (the cutscene actor folder it stands in for, builder 0x2d1ddc), empty when unset (docs/re/cutscene-actors.md).
+std::string objectCutsceneCharacter(const LevelObject& object, const Level& classFile);
+
 enum ObjectBehaviour : unsigned {
     BehaviourCollision = 1,  // objectCollisions registers a shape for it
     BehaviourDoor = 2,       // the door state machine drives it

@@ -14,17 +14,24 @@ bool contains(const std::string& text, const char* part) {
 }
 }
 
-CastTarget resolveCastTarget(const std::string& folder, const std::string& modelFile, bool playerExists,
-                             const std::vector<std::string>& characterCutsceneNames) {
+CastTarget resolveCastTarget(const std::string& folder, const std::string& modelFile, bool playerExists, const std::vector<CastEntity>& entities) {
     if (contains(modelFile, "cape")) return {};
     const std::string name = lowered(folder);
     if (name.find("player") != std::string::npos) {
         if (playerExists && contains(modelFile, "minifig") && name == "player1") return {CastTargetKind::Player, 0};
         return {};
     }
-    for (std::size_t i = 0; i < characterCutsceneNames.size(); ++i)
-        if (!name.empty() && lowered(characterCutsceneNames[i]) == name) return {CastTargetKind::LevelCharacter, i};
+    for (const CastEntity& entity : entities)
+        if (!name.empty() && lowered(entity.cutsceneName) == name)
+            return {entity.prop ? CastTargetKind::LevelProp : CastTargetKind::LevelCharacter, entity.index};
     return {};
+}
+
+CastTarget resolveCastTarget(const std::string& folder, const std::string& modelFile, bool playerExists,
+                             const std::vector<std::string>& characterCutsceneNames) {
+    std::vector<CastEntity> entities;
+    for (std::size_t i = 0; i < characterCutsceneNames.size(); ++i) entities.push_back({characterCutsceneNames[i], false, i});
+    return resolveCastTarget(folder, modelFile, playerExists, entities);
 }
 
 }

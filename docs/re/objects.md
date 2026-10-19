@@ -151,6 +151,8 @@ Unknowns:
 
 ## 2026-10-19T09:59:14+02:00 — The mission 1-2 dog and the other animals of lvl_01 are placed props (REA Ghidra 12.1.2 pseudo-code and llvm-objdump on `artifacts/game/game.arm.elf`, class files through the C++ loader, RPC screenshots A-1 by the emulator servant)
 
+Corrected by [cutscene-actors.md §2026-10-19T12:59:54](cutscene-actors.md#ts-20261019-125954): the cutscene `1_2_c` binds the prop `1-2_Dog` (the binding loop tests no kind) and the port poses it instead of drawing a dog of its own.
+
 [Corrects objects.md §2026-10-13T16:34:30](#ts-20261013-163430): the animal rigs of lvl_01 are not characters with a constructor of their own; the dog, the cats and the crow are props of kinds 0, 64 and 67.
 
 **The objects.** lvl_01 places the dog twice, both with `meshname` `char_dog` in room32 at the roof cage: `1-2_Dog_Prop` (class `props/prop_dogwaggles`, kind 0, 918.664 64.763 663.005, facing -65.738; `ShowOnObjectScan` 1, `TriggerScanned` `1-2_Scanned_Pringles`) is the caged dog the scanner finds, `1-2_Dog` (class `props/prop_prop`, kind 67, 918.717 64.668 662.731, facing -54.984, `CSCharacter` `dog`, `Immovable` 2) is the dog the cage key script releases. The class `chars/char_dog` (kind 158) is not placed in lvl_01. The other animal rigs of lvl_01: the four `props/ability_freeplay_fireman_cat` (`char_cat`, kind 0), `1-3_Crow` (`leprops/leprop_platform`, `char_Crow`, kind 64), five `chars/ride_pig` (`char_pig`, kind 159) and four `props/prop_sharkattack` (`char_shark`, kind 239).

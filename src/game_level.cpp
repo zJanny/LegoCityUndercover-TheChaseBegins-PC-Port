@@ -234,7 +234,9 @@ LevelSession::LevelSession(const Shared& sharedState)
     if (!options.startRoom.empty()) startOptions.startRoom = runtime::roomNumber(options.startRoom);
     else if (const std::optional<Placement> start = playerStart(level)) startOptions.startRoom = runtime::roomNumber(start->room);
     cutsceneHost.emplace(archive, scene, shared.audio);
-    if (player) cutsceneHost->setRoster(game_cutscene::makeRoster(archive, drawable.characters, placedCharacters, game_player::playerAppearance(archive), player->instance));
+    if (player)
+        cutsceneHost->setRoster(game_cutscene::makeRoster(archive, drawable.characters, placedCharacters, game_player::playerAppearance(archive), player->instance,
+                                                          game_cutscene::levelProps(level, classOf, placedObjects, placedSceneIndex, animatedProps)));
     movies.emplace(archive, hudResources, (std::filesystem::path(options.fib).parent_path() / "cutscenes").string(), int(options.language));
     introMovieSkip = options.introMovieShown;
     const auto hostCutscenes = [this]() {

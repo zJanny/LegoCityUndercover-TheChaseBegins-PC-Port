@@ -308,6 +308,8 @@ bool isStudObject(const LevelObject& object, const Level& classFile) { return is
 
 std::uint8_t objectKind(const LevelObject& object, const Level& classFile) { return std::uint8_t(effectiveEnum(object, classFile, "ObjectType")); }
 
+std::string objectCutsceneCharacter(const LevelObject& object, const Level& classFile) { return effectiveString(object, classFile, "CSCharacter"); }
+
 bool createsModelAsProp(std::uint8_t kind) { return kind == 0 || kind == 64 || kind == 67; }
 
 std::vector<Placement> placements(const Level& level) {

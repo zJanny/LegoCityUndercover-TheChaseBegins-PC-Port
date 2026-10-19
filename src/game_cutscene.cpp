@@ -1,6 +1,7 @@
 #include "game_cutscene.hpp"
 #include "frontend/flow.hpp"
 #include "frontend/pages.hpp"
+#include "game_doors.hpp"
 #include "runtime/cutscene_cast.hpp"
 #include <algorithm>
 #include <iostream>
@@ -27,26 +28,43 @@ void setVisible(render::Scene& scene, const render::CharacterInstance& instance,
     if (instance.hatInstance) scene.setInstanceVisible(*instance.hatInstance, visible);
 }
 
-const StandIn* standInFor(const Roster& roster, const CutsceneCast& cast) {
+runtime::CastTarget castTarget(const Roster& roster, const CutsceneCast& cast) {
     const std::size_t fileStart = cast.model.rfind('/'), folderStart = cast.model.rfind('/', fileStart - 1) + 1;
     const std::string file = cast.model.substr(fileStart + 1), folder = cast.model.substr(folderStart, fileStart - folderStart);
-    std::vector<std::string> names;
-    for (const StandIn& character : roster.characters) names.push_back(character.cutsceneName);
-    const runtime::CastTarget target = runtime::resolveCastTarget(folder, file, roster.player.has_value(), names);
-    if (target.kind == runtime::CastTargetKind::Player) return &*roster.player;
-    if (target.kind == runtime::CastTargetKind::LevelCharacter) return &roster.characters[target.characterIndex];
-    return nullptr;
+    std::vector<std::pair<std::size_t, runtime::CastEntity>> ordered;
+    for (std::size_t i = 0; i < roster.characters.size(); ++i) ordered.push_back({roster.characters[i].order, {roster.characters[i].cutsceneName, false, i}});
+    for (std::size_t i = 0; i < roster.props.size(); ++i) ordered.push_back({roster.props[i].order, {roster.props[i].cutsceneName, true, i}});
+    std::stable_sort(ordered.begin(), ordered.end(), [](const auto& a, const auto& b) { return a.first < b.first; });
+    std::vector<runtime::CastEntity> entities;
+    for (const auto& entry : ordered) entities.push_back(entry.second);
+    return runtime::resolveCastTarget(folder, file, roster.player.has_value(), entities);
 }
+}
+
+std::vector<PropStandIn> levelProps(const Level& level, const ClassLookup& classOf, const std::vector<Placement>& placed,
+                                    const std::vector<std::size_t>& sceneIndex, const std::vector<runtime::AnimatedProp>& animated) {
+    std::vector<PropStandIn> props;
+    for (std::size_t i = 0; i < placed.size(); ++i) {
+        const std::string name = objectCutsceneCharacter(level.objects[placed[i].objectIndex], *classOf(placed[i].className));
+        if (name.empty()) continue;
+        PropStandIn prop{name, placed[i].objectIndex, sceneIndex[i], ""};
+        for (const runtime::AnimatedProp& candidate : animated)
+            if (candidate.instance == game_doors::lowerCase(placed[i].instance)) prop.key = runtime::propSceneKey(candidate.modelPath, candidate.instance);
+        props.push_back(std::move(prop));
+    }
+    return props;
 }
 
 Roster makeRoster(FuseArchive& archive, const std::vector<CharacterObject>& characters,
                   const std::vector<std::optional<render::CharacterInstance>>& placed, const CharacterAppearance& playerLook,
-                  const render::CharacterInstance& playerInstance) {
+                  const render::CharacterInstance& playerInstance, std::vector<PropStandIn> props) {
     Roster roster;
     roster.base = render::readBaseAppearance(archive);
     for (std::size_t i = 0; i < characters.size(); ++i)
-        if (placed[i]) roster.characters.push_back({characters[i].cutsceneName, characters[i].appearance, characters[i].hat, *placed[i]});
-    roster.player = StandIn{"player1", playerLook, "", playerInstance};
+        if (placed[i])
+            roster.characters.push_back({characters[i].cutsceneName, characters[i].placement.objectIndex, characters[i].appearance, characters[i].hat, *placed[i]});
+    roster.player = StandIn{"player1", 0, playerLook, "", playerInstance};
+    roster.props = std::move(props);
     return roster;
 }
 
@@ -60,7 +78,14 @@ std::optional<float> InEngine::load(const std::string& name) {
         cutscene.content = loadCutscene(archive_, name);
         for (const CutsceneCast& cast : cutscene.content.actors) {
             Actor actor;
-            if (const StandIn* standIn = standInFor(roster_, cast)) {
+            const runtime::CastTarget target = castTarget(roster_, cast);
+            const StandIn* standIn = target.kind == runtime::CastTargetKind::Player          ? &*roster_.player
+                                     : target.kind == runtime::CastTargetKind::LevelCharacter ? &roster_.characters[target.index]
+                                                                                              : nullptr;
+            const bool poseLevelProp = target.kind == runtime::CastTargetKind::LevelProp && !cast.skeleton.joints.empty() && !roster_.props[target.index].key.empty();
+            if (poseLevelProp) {
+                actor.levelProp = target.index;
+            } else if (standIn) {
                 Driven driven;
                 driven.rig = render::loadCharacterRig(archive_, meshModelPath(standIn->look.body));
                 driven.copy = render::addCharacter(scene_, roster_.base, standIn->look, standIn->hat, "cutscene|" + name + "|" + cast.model,
@@ -129,11 +154,22 @@ std::size_t InEngine::visibleOwnModels(const std::string& name) const {
     return count;
 }
 
+std::size_t InEngine::drivenProps(const std::string& name) const {
+    return std::size_t(std::count_if(loaded_.at(name).actors.begin(), loaded_.at(name).actors.end(), [](const Actor& actor) { return actor.levelProp.has_value(); }));
+}
+
 void InEngine::pose(const Loaded& cutscene, double seconds) {
     const double frame = std::min(seconds * cutscene.rate, double(cutscene.content.camera.frames - 1));
     for (std::size_t i = 0; i < cutscene.content.actors.size(); ++i) {
         const CutsceneCast& actor = cutscene.content.actors[i];
         const std::optional<CutsceneClipFrame> clip = cutsceneClipAt(actor, frame);
+        if (const auto& prop = cutscene.actors[i].levelProp) {
+            if (!clip) continue;
+            const PropStandIn& level = roster_.props[*prop];
+            scene_.setTransform(level.instance, actorMatrix(actorPose(*clip->animation, float(cutsceneNormalised(*clip->animation, clip->frame)))));
+            scene_.pose(level.key, skinMatrices(actor.skeleton, *clip->animation, clip->frame));
+            continue;
+        }
         if (const auto& driven = cutscene.actors[i].driven) {
             setVisible(scene_, driven->copy, clip.has_value());
             setVisible(scene_, driven->original, !clip);
@@ -178,7 +214,7 @@ void InEngine::update(runtime::CutsceneNativeState& state) {
     pose(loaded_.at(name), playing->elapsed);
     if (++shownUpdates_ == kFigureCheckUpdate)
         std::cout << "cutscene " << name << ": " << visibleOriginals(name) << " level figures drawn beside their cast copies, " << visibleOwnModels(name)
-                  << " models of their own drawn\n";
+                  << " models of their own drawn, " << drivenProps(name) << " level props posed\n";
 }
 
 std::optional<CameraView> InEngine::camera(const runtime::CutsceneNativeState& state) const {

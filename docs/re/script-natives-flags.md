@@ -158,6 +158,8 @@ Unknowns:
 
 ## 2026-10-19T11:03:27+02:00 — The follow-up 0x242b08 of PositionObject (SCRIPT-311; llvm-objdump on game.arm.elf, no REA session, no emulator)
 
+Corrected by [cutscene-actors.md §2026-10-19T12:59:54](cutscene-actors.md#ts-20261019-125954): the cutscene `1_2_c` binds `1-2_Dog` (LEVOBJ-100 closed).
+
 Reads the call that [§2026-10-18T16:37:52](#ts-20261018-163752) left open. Disassembly of 0x242b08 and its callees 0x23c2bc, 0x250638, 0x253f0c and 0x23c1a8.
 
 - 0x242b08(entity) re-buckets the entity by room. It first recurses into the entity's child entities (halfword +0x14 index, +0x16 count, table at scene+0x24). It then looks up the room entity that owns the scene node entity+0x3c (0x23c2bc scans the rooms' entity lists; the result is the room entity, or the scene's default room), unlinks the entity from its current list (0x250638: doubly linked list, next at +0, previous at +4), and when the room entity's node (+0x14) differs from entity+0x3c inserts the entity into that room's list (0x253f0c; list +0x70 when flag bit 0 of +0x10 is set, else +0x58 + 8 x byte +0x13), links the room (0x23c1a8) and stores the room entity in entity+0x38. Without a different room it reinserts the entity into the scene's own list and calls 0x23c1a8 with no room.

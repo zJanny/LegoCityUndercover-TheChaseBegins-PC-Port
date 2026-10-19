@@ -1122,6 +1122,15 @@ if(BUILD_TESTING)
       --call-script 1-2_HouseArrival --script "0 0 40")
     set_tests_properties(game-cutscene-glass-hidden PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
       PASS_REGULAR_EXPRESSION "cutscene 1_2_a started at update 0.*cutscene 1_2_a: 0 level figures drawn beside their cast copies, 0 models of their own drawn")
+    # The dog of cutscene 1_2_c is the level prop 1-2_Dog (CSCharacter "dog", builder 0x2d1ddc, LEVOBJ-100): the cutscene poses the prop, no model of its own.
+    add_test(NAME game-cutscene-dog-prop COMMAND chase-game
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
+      --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes
+      --start "916.702 64.431 663.724" --facing 0 --call-script 1-2_Pringles_Cage_Locked
+      --script "0 0 5;0 0 1 A;0 0 185")
+    set_tests_properties(game-cutscene-dog-prop PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
+      PASS_REGULAR_EXPRESSION "cutscene 1_2_c started at update 169.*cutscene 1_2_c: 0 level figures drawn beside their cast copies, 1 models of their own drawn, 1 level props posed")
     # The police car hits the parked FP_Vehicle_03 (docs/re/vehicles-physics-collision.md, the vehicle pair contacts): the dev step "at" turns the seated
     # car to the worker's heading 10 m behind it, where the oracle state veh7-poked-trooper-behind-parked starts; A held from update 1833, the car
     # hits the worker and wakes it in update 1857 (the oracle's trooper hits it 26 updates after A from rest). Update numbers are the port's.
