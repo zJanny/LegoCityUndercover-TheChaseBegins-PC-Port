@@ -266,7 +266,8 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         runtime::StickIntentInput stick;
         stick.slot14 = {pad.slot(kSlotStickX).value, pad.slot(kSlotStickX).deadzone};
         stick.slot15 = {pad.slot(kSlotStickY).value, pad.slot(kSlotStickY).deadzone};
-        const bool controlTaken = levelScripts.playerControlTaken() || carry.busy() || builditPlayer.active() || detective.controlTaken() || scanner.takesPlayerControl();
+        const bool scriptClip = playerScriptAnimation.update(dt);
+        const bool controlTaken = scriptClip || levelScripts.playerControlTaken() || carry.busy() || builditPlayer.active() || detective.controlTaken() || scanner.takesPlayerControl();
         if (controlTaken) stick.slot14.value = stick.slot15.value = 0.0f;
         stick.entityType = game_player::kPlayerEntityType;
         stick.cameraYaw = follow->yaw();
@@ -299,6 +300,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
             shown = game_player::aiMoveAnimation(*driven);
         }
         player->animate(scene, dt, detectiveClip(player->carriedRole(shown.role, carry.carryingMode(), carry.phaseClip() ? carry.phaseClip() : builditPlayer.clip() ? builditPlayer.clip() : scanner.playerClip())), shown.scale);
+        if (const auto* clip = scriptClip ? playerScriptAnimation.animation() : nullptr) player->poseClip(scene, *clip, playerScriptAnimation.frame());
         detectiveGlass.update(*player);
         if (!script.empty()) scriptedHeights.push_back(player->vertical.y);
         for (const runtime::StudCollected& collected :

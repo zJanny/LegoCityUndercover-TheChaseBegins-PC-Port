@@ -55,6 +55,7 @@ struct PlayerRig {
     chase::render::Mat4 matrix() const;
     void animate(chase::render::Scene& scene, float dt, int role, float scale);
     void pose(chase::render::Scene& scene) const;
+    void poseClip(chase::render::Scene& scene, const chase::assets::Animation& clip, double clipFrame) const;
     void setVisible(chase::render::Scene& scene, bool visible) const;
     // World transform of a model hung on the joint `lowerJointName` in the last pose; nothing without the joint.
     std::optional<chase::render::Mat4> jointWorld(const std::string& lowerJointName) const;

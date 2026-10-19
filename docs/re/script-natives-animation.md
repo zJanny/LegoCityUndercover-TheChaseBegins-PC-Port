@@ -5,6 +5,7 @@ Handlers of the 13 natives of batch 32 and what the port does with them. Census 
 ## Current state
 
 - The 13 natives of batch SCRIPT-32 are read: PlayCharAnim 0x1bf9cc (-> 0x29e5f0, never blocks), PlayAnimation 0x268240, LoadAnimation 0x2681a0, UnloadAnimation 0x27e9c4, StopCharAnim 0x1bfb84, StopAnim 0x1883d0, the waits 0x263ae4 / 0x2a06a8 and the Attach natives. [§2026-10-14T21:36:49](#ts-20261014-213649)
+- PlayCharAnim on Player1 puts the player into the user-animation state 0x50 (update 0x2a47b0 runs no locomotion and requests state 1 when the slot kind is 6; StopCharAnim ends the slot at once); the port poses the script clip through `runtime::PlayerScriptAnimation`. [§2026-10-19T12:55:03](#ts-20261019-125503)
 - The play itself is 0x295a8c (find or load the animation, start it with 0x23afc0 at blend 0.1, state request 80 or 81); 0x1b71e8 plays the cape animation, not the looked-up one (this corrects the first reading). [§2026-10-15T18:33:36](#ts-20261015-183336)
 - The waits block while the slot kind is 0, 2 or 3 and finish for kind 6, or for kind 1 or 5 when the position is within one frame of the length. [§2026-10-15T18:33:36](#ts-20261015-183336)
 - AttachObject, AttachToBone and AttachToBoneRot attach the second object to the first (this corrects the first reading); 0x245008 / 0x245048 link and unlink nodes keeping the world pose. [§2026-10-15T18:33:36](#ts-20261015-183336)
@@ -103,3 +104,27 @@ Unknowns:
 - The frame sampling of the original for a prop at a fractional position: the port uses `skinMatrices` as for characters (blend of the neighbouring frames).
 - The matrix of the bone attach (0x258858 from the argument, 0x23d39c) and the composition with the parent's bone: not transcribed, so the guns, booms and cameras stay at their placement (SCRIPT-272).
 - Class message 253 and the calls after the start (0x2b9e2c) for props, and which animations a prop class loads by itself.
+
+<a id="ts-20261019-125503"></a>
+
+## 2026-10-19T12:55:03+02:00 — PlayCharAnim, StopCharAnim and the character wait on Player1: the user-animation state 0x50 hands the pose to the script clip and back (llvm-objdump of `game.arm.elf`, data words from `code.bin`; no oracle run)
+
+Extends [§2026-10-15T18:33:36](#ts-20261015-183336) and the state description of [npc-animation.md §2026-10-18T14:28:08+02:00](npc-animation.md#ts-20261018-142808).
+
+**State table.** The words at 0x3577f4..0x357828 (read from `code.bin`) are {id, update, enter, 0, 0, name pointer, 0}: state 0x50 = {update 0x2a47b0, enter 0x25fbec}, 0x51 and 0x52 the same pair. A state request goes 0x2414b4 -> 0x2eafc8, which only stores the state object at [machine+0xc], sets the byte [machine+0x14] = 1 and tail-calls 0x1eb868 (copies the state ids of the stack entries into +0x1c / +0x1e). The enter and update functions run from the state runner 0x2424d0 in the controller update, so a request made by a script native takes effect in a later controller step, not inside the native.
+
+**PlayCharAnim 0x29e5f0, tail after the play.** 0x295a8c (play), 0x241304(entity) (sets ctrl+0x15 = 1), then 0x2414b4(entity, ctrl+0x50, 80, 0); with the caller flag r2 non-zero (the cutscene call) the request is 81. Then 0x1b71e8 (cape lookup) and, when it finds one, 0x23afc0 and 0x1fb894 on the cape. Nothing in this path touches the locomotion state except the request.
+
+**Enter 0x25fbec** (VFP code that llvm-objdump prints as `<unknown>`, decoded by hand): `ctrl+0x2b8 = 0.0`, `ctrl+0x315 |= 8`, return. The function after it (0x25fc08: `ctrl+0x24c = 0.0`, halfword `[r0+0x10] &= ~0x200`) belongs to another state.
+
+**Update 0x2a47b0(entity, ctrl)** (disassembly): kind = 0x22f560(0x233900(entity + 0x40)); when 6, 0x2414b4(entity, ctrl+0x50, 1, 0); then 0x215804(entity, ctrl, flag = ctrl+0x6c is 80 or 82, 0) and `ctrl+10 = ctrl+8`. 0x215804 runs the root-motion mover 0x20cd30 after a heading step (0x23df04 / 0x23deb4) in one case (machine byte +0x14 is 10, and the entity is not `*0x37719c` or ctrl+0xd8 bit 4 is clear). No locomotion function runs in this state, so the stick, jumps and attacks do nothing while the clip plays.
+
+**StopCharAnim 0x1bfb84:** 0x22dacc(object), 0x233900(entity + 0x40), 0x225c5c(slots), returns 1. 0x225c5c on a slot with an animation whose mode is not 6 pauses it (0x24f8fc) and sets mode 6, so the next update of state 0x50 sees kind 6 and requests state 1; locomotion runs again one controller step later. It does not request a state itself. The wait 0x263ae4 reads the same slot, so it ends in the update that sees kind 6 and, for a play-once clip, in the update the clip ends.
+
+**Port.** `runtime::PlayerScriptAnimation` (`src/runtime/player_script_animation.*`, an `AnimationDriver` for `player1`): `play` uses the 0x295a8c slot rules and queues state 0x50; `update(dt)`, called first in the player update, applies the queue and then the 0x2a47b0 rule; while it returns true `PlayerRig::poseClip` poses the clip frame (clamped to the last sample) and the stick is treated as taken like the other control-takers; `stop` is 0x225c5c; `currentNearEnd` is the slot test, or nothing once locomotion has taken over (the wait then completes at once, as before). Tests `player-script-animation` (synthetic idle clip: 19 frames, 15 fps, loop bit; the numbers come from [npc-animation.md §2026-10-15T09:29:00](npc-animation.md#ts-20261015-092900)) and `player-script-animation-real-data` (the same sequence on `idle_minifig.bfnanm`). `chase-game --call-script 1-2_Cage_Key_Target_Script` runs without error; the animation was not compared with the original.
+
+Unknowns:
+- Whether the update that applies the request already runs 0x2a47b0 (the port does) and whether the previous state's update runs in the update that switches.
+- 0x215804 / 0x20cd30 with the user-animation flag: whether the clip's root motion moves the player (the port applies none), the heading step, and what ctrl+0x315 bit 3 and ctrl+0x2b8 = 0 from the enter do.
+- The cape animation 0x1b71e8 (whether the police character has one), 0x1fb894 / 0x2b9e2c after the start, ctrl+700 / ctrl+0x310 and PlayAnimation's message 253 (all SCRIPT-273).
+- Whether gravity and the vertical state keep running in state 0x50 (the port keeps its vertical step), the blend of 0.1 between the script clip and the next locomotion clip, and the folder rule 0x22716c for the player (the port uses `models/char_minifig/<class>/`).

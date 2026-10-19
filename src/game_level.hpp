@@ -25,6 +25,7 @@
 #include "render/scene.hpp"
 #include "render/studs.hpp"
 #include "runtime/animation_driver_chain.hpp"
+#include "runtime/player_script_animation.hpp"
 #include "runtime/buildit_set.hpp"
 #include "runtime/buildit_player.hpp"
 #include "runtime/vehicle_break.hpp"
@@ -366,6 +367,7 @@ private:
     game_object_visibility::CharacterVisibility characterVisibility;
     std::optional<game_characters::LevelCharacters> levelCharacters;
     chase::runtime::PropAnimations propAnimations;
+    chase::runtime::PlayerScriptAnimation playerScriptAnimation;
     chase::runtime::AnimationDriverChain animationDrivers;
     std::optional<game_cutscene::InEngine> cutsceneHost;
     std::optional<game_cutscene::Movies> movies;

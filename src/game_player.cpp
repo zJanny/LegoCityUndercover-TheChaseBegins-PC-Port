@@ -74,6 +74,11 @@ void PlayerRig::pose(Scene& scene) const {
     placeCharacter(scene, character, instance, skin, player);
 }
 
+void PlayerRig::poseClip(Scene& scene, const Animation& clip, double clipFrame) const {
+    skin = poseBody(scene, character, instance, clip, clipFrame);
+    placeCharacter(scene, character, instance, skin, matrix());
+}
+
 std::optional<Mat4> PlayerRig::jointWorld(const std::string& lowerJointName) const {
     return chase::render::jointWorld(character, lowerJointName, skin, matrix());
 }

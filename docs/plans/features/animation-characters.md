@@ -22,6 +22,7 @@ IN_PROGRESS, updated 2026-10-15T18:40:00+02:00. Player and level characters are 
 - ANIM-S10 One animation clock for all level characters, advanced by the update's dt (100 ticks per 1/30 s update) and running while a character is switched off or its room is not shown; the original pauses and resumes slots (0x24f8fc). needs: ANIM-10. evidence: [npc-animation.md §2026-10-15T18:33](../../re/npc-animation.md#ts-20261015-183306).
 - ANIM-S11 Script animations of level characters are looked up in `models/char_minifig/<class>/`; the original picks `char_minifig`, `char_minifig_small` or `char_minifig_tall` from the character table (0x2270f8) or another folder when 0x22716c is false. needs: ANIM-11. evidence: [script-natives-animation.md §2026-10-15T18:33](../../re/script-natives-animation.md#ts-20261015-183336).
 - ANIM-S12 The "already loaded" test of PlayCharAnim (0x21e8b4) knows a character's idle clips and its current script clip only. needs: SCRIPT-274 (script-system-natives-animation.md). evidence: [script-natives-animation.md §2026-10-15T18:33](../../re/script-natives-animation.md#ts-20261015-183336).
+- ANIM-S13 The player's script clip (PlayCharAnim on Player1) is sampled without the 0.1 blend and without the slot player's weights, and the player's own locomotion clips are not played through the slot player. needs: ANIM-13, ANIM-3. evidence: [script-natives-animation.md §2026-10-19T12:55](../../re/script-natives-animation.md#ts-20261019-125503).
 
 ## 5. Open items
 
@@ -30,6 +31,7 @@ IN_PROGRESS, updated 2026-10-15T18:40:00+02:00. Player and level characters are 
 - [ ] ANIM-4 — The shared character rig code for animals and custom characters is missing (rigs of `char_pig`, `char_cat`, `char_dog`, `char_shark`, `char_Crow`). see LEVOBJ-4.
 - [ ] ANIM-10 — Slot bookkeeping of the player: who pauses and resumes slots (0x24f8fc), the current slot choice 0x252878, the release 0x24cf70, the blend start 0x1ce608 and the zero blend of a first slot. blocks: ANIM-S10. evidence: [npc-animation.md §2026-10-15T18:33](../../re/npc-animation.md#ts-20261015-183306).
 - [ ] ANIM-11 — Model folder of script animations: 0x22716c and 0x2270f8 for level characters (small and tall figures, the entity +0x40 folder). blocks: ANIM-S11. evidence: [script-natives-animation.md §2026-10-15T18:33](../../re/script-natives-animation.md#ts-20261015-183336).
+- [ ] ANIM-13 — The player's locomotion clips (idle, walk, run, jumps) are chosen by the port's locomotion code, not started in the player's slots with the original's blend as the user-animation state's hand-back needs. blocks: ANIM-S13. evidence: [script-natives-animation.md §2026-10-19T12:55](../../re/script-natives-animation.md#ts-20261019-125503).
 
 ## 6. Findings summary
 
@@ -38,9 +40,10 @@ IN_PROGRESS, updated 2026-10-15T18:40:00+02:00. Player and level characters are 
 - NPC idle state, slots, RNG: [npc-animation.md §2026-10-15T09:29](../../re/npc-animation.md#ts-20261015-092900).
 - The slot player (type callbacks, start, position, kind, stop, offset, the van driver's slot): [npc-animation.md §2026-10-15T18:33](../../re/npc-animation.md#ts-20261015-183306).
 - Script plays and the van driver in the mailbox: [script-natives-animation.md §2026-10-15T18:33](../../re/script-natives-animation.md#ts-20261015-183336).
+- The player's script clips and the user-animation state 0x50: [script-natives-animation.md §2026-10-19T12:55](../../re/script-natives-animation.md#ts-20261019-125503).
 - Head attachment: [player-entity-input.md §2026-10-13T12:56](../../re/player-entity-input.md#ts-20261013-125622).
 
 ## 7. Code and tests
 
-- `src/assets/anim.cpp`, `src/render/character.*`, `src/runtime/animation_slots.*`, `src/runtime/npc_idle.*`, `src/runtime/game_random.*`, `src/game_characters.*`, C ABI `chase_assets_c` (`tools/chase_native.py`).
+- `src/assets/anim.cpp`, `src/render/character.*`, `src/runtime/animation_slots.*`, `src/runtime/npc_idle.*`, `src/runtime/game_random.*`, `src/game_characters.*`, `src/runtime/player_script_animation.*`, C ABI `chase_assets_c` (`tools/chase_native.py`).
 - CTest: `animation-slots`, `npc-idle`, `npc-idle-real-data`, `natives-animation-real-data`, `assets-core`, `assets-real-data`, `viewer-real-smoke`.

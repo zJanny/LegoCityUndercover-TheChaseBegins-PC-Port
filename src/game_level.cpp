@@ -169,6 +169,8 @@ LevelSession::LevelSession(const Shared& sharedState)
     propAnimations = runtime::PropAnimations(archive, animatedProps);
     animationDrivers.add(&*levelCharacters);
     animationDrivers.add(&propAnimations);
+    playerScriptAnimation = runtime::PlayerScriptAnimation(runtime::archiveAnimationLoader(archive));
+    animationDrivers.add(&playerScriptAnimation);
     levelScripts.setAnimationDriver(&animationDrivers);
     levelScripts.loadAnimationOffsets(classOf);
     levelScripts.loadObjectKinds(classOf);
