@@ -4,5 +4,3 @@ Ranges of item IDs held by parallel agents; the lead reserves them with `tools/c
 
 | Prefix | First | Last | Holder | Date |
 |---|---|---|---|---|
-| TRAV | 58 | 60 | r40-A | 2026-10-19T23:53:21+02:00 |
-| TRAV-S | 34 | 35 | r40-A | 2026-10-19T23:53:21+02:00 |
