@@ -28,10 +28,12 @@ Choosing packages:
 - **Size (user, 2026-10-18):** every package finishes in well under an hour. That means one narrow item, or a few closely linked items, with a known starting point and little oracle work. Split anything bigger and propose the first part.
 - **Workers:** 3 by default, plus the servant if needed. More only if the user asked for this round.
 - **Independence:** no two workers edit the same function. When two touch the same file or area, give each its own glue file and name it in the proposal. A package that depends on another's result goes into a later round, or reads the result through a small interface with a labelled stand-in until the merge.
-- **RPC:** count the packages that need `--rpc`. One means that worker holds the slot. Two or more mean an emulator servant, and the workers send requests through the lead. Servant idle jobs come only from open items that need an oracle measurement with an existing state.
+- **RPC:** count the packages that need `--rpc`. One means that worker holds the slot. Two or more mean an emulator servant, and the workers send requests through the lead. With a servant, every package that needs RPC says `via servant`. `holds the slot` is allowed only when exactly one package needs RPC and there is no servant. Servant idle jobs come only from open items that need an oracle measurement with an existing state.
 - **Save states:** name the existing state and its game progress. If a package needs a state that does not exist, list it under "User actions", or choose another package. New state requests may be deferred by the user, so check Next Action.
 - **Feature files near 16 KB:** say that the worker splits the file first.
 - **Models:** follow `.claude/skills/lead-round/references/models.md`, including the models of the two reviewers.
+
+Before the final message, check that the `RPC:` lines and the `Servant:` line follow the RPC rule.
 
 Final message: the proposal, in **at most 40 lines** and exactly this shape. The lead shows it to the user unchanged.
 
@@ -55,7 +57,7 @@ Then end your turn. You keep your context and are resumed.
 
 ## Phase 2: briefs (after the lead resumes you with the user's decision)
 
-1. Apply the user's changes exactly. Read more only if the changes need it.
+1. Apply the user's changes exactly. Read more only if the changes need it. A conflict the rules already decide (such as the RPC rule) is fixed in the briefs, not handed to the lead. Report only conflicts the rules leave open.
 2. Run `date -Iseconds` and use that time.
 3. **Reserve IDs.** For each package and each prefix it needs, run `python3 tools/check_doc_links.py --reserve PREFIX COUNT rN-X` (stand-ins: `PREFIX-S`; a new prefix needs `--new-prefix`). Two or three per prefix are typical. Main must be clean apart from that file; if it is not, stop and report. Commit only `docs/plans/features/id-reservations.md` with the subject `Reserve the round N ID ranges` and your own `Co-Authored-By:` line. Do not push.
 4. **Emulator ports and homes.**

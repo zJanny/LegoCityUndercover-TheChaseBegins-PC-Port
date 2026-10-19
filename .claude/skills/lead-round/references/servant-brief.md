@@ -47,7 +47,7 @@ For each idle job: if the state does not fit, stop and report what user state wo
 
 ## Lifetime
 
-Stay available: after the idle jobs, end your turn and wait, because messages wake you. When the lead says the round is over:
+Do all idle jobs in one turn, unless a request arrives. Ending your turn does not end your job: the lead resumes you with each request and your context is kept. So never skip idle jobs because you think you cannot wait. After the idle jobs, end your turn with a short report. When the lead says the round is over:
 
 1. Stop everything you started.
 2. Check `pgrep -x azahar` and `pgrep -x Xvfb`.
