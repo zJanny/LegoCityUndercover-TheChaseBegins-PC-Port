@@ -197,6 +197,7 @@ profiles\\size=1
 
 QUICK_SAVE_KEY = 'F1'
 QUICK_LOAD_KEY = 'F12'
+QUICK_SLOT_SUFFIX = '.00.cst'
 STATE_SETTLE_SECONDS = 3.0
 STATE_RETRY_SECONDS = 5.0
 STATE_LOAD_TIMEOUT = 120.0
@@ -580,6 +581,9 @@ def state_frame(saved_states, name):
 
 def place_state(saved_states, name, emulator_states):
     meta = json.loads((saved_states / ('%s.json' % name)).read_text())
+    if not meta['file'].endswith(QUICK_SLOT_SUFFIX):
+        raise SystemExit('state %s: "file" is %r, but the quick load (%s) reads only the slot file ending in %s'
+                         % (name, meta['file'], QUICK_LOAD_KEY, QUICK_SLOT_SUFFIX))
     emulator_states.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(saved_states / ('%s.cst' % name), emulator_states / meta['file'])
 

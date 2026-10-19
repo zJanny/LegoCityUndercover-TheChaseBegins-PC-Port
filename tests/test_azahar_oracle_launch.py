@@ -112,6 +112,23 @@ class StateModeTest(unittest.TestCase):
             instance.loadstate('police-station')
 
 
+class PlaceStateTest(unittest.TestCase):
+    def test_place_state_refuses_a_slot_the_quick_load_does_not_read(self):
+        saved_states = Path(tempfile.mkdtemp())
+        (saved_states / 'm13-2-ladder.json').write_text(json.dumps({'file': '00040000000AD600.02.cst', 'new_3ds': True}))
+        (saved_states / 'm13-2-ladder.cst').write_bytes(b'state')
+        with self.assertRaisesRegex(SystemExit, 'state m13-2-ladder: "file" is \'00040000000AD600.02.cst\', but the quick load'):
+            oracle.place_state(saved_states, 'm13-2-ladder', saved_states / 'emulator')
+        self.assertFalse((saved_states / 'emulator').exists())
+
+    def test_place_state_copies_a_slot_00_state(self):
+        saved_states = Path(tempfile.mkdtemp())
+        (saved_states / 'gameplay-start.json').write_text(json.dumps({'file': '00040000000AD600.00.cst'}))
+        (saved_states / 'gameplay-start.cst').write_bytes(b'state')
+        oracle.place_state(saved_states, 'gameplay-start', saved_states / 'emulator')
+        self.assertEqual((saved_states / 'emulator' / '00040000000AD600.00.cst').read_bytes(), b'state')
+
+
 class FreeDisplayTest(unittest.TestCase):
     def test_lock_of_a_dead_process_is_reused_and_cleaned(self):
         root = Path(tempfile.mkdtemp())
