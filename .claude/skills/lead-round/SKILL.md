@@ -63,7 +63,7 @@ Give each agent the description `rN-X <short title>`. Run them in the background
 ## During the round: relay, don't analyse
 
 - **State requests** from workers (a `SendMessage` to `main`): pass them to the user unchanged, with the worker's name. When the user gives a save slot, launch the recorder (below) to register it, then tell the worker the state's name.
-- **RPC requests:** forward them to the servant with an ID `X-n` (worker letter, running number). Forward the servant's answer to the worker unchanged.
+- **RPC requests:** forward them to the servant with an ID `X-n` (worker letter, running number), by `SendMessage` to its agent ID. This also resumes a servant that has ended its turn, with its context; never launch a second servant. Forward the servant's answer to the worker unchanged.
 - **Reports from the user** (bugs from playing, corrections, playtests): launch the recorder with the user's words. If a running worker is affected, send it one short message.
 - **A worker stuck on code reading:** tell the user and propose a larger model. Don't let it grind.
 - **What belongs to the approved round:** reviewers, send-backs to workers, the recorder and one-off readers. Nothing else starts without the user's approval.
