@@ -106,7 +106,7 @@ All keys and how to change them: [Controls](docs/controls.md).
 
 ![Progress trend](docs/progress-trend.svg)
 
-Updated 2026-10-19, commit 059523a. How the numbers are measured: [docs/progress.md](docs/progress.md).
+Updated 2026-10-19, commit c10bb31. How the numbers are measured: [docs/progress.md](docs/progress.md).
 <!-- progress:end -->
 
 ## More documentation
