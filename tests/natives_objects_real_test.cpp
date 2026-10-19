@@ -104,7 +104,7 @@ int main(int argc, char** argv) {
                 natives.loadKinds(cityLevel, classOf);
                 require(natives.kindOf("5-2_crate_push") == runtime::kKindPushable, "5-2_Crate_Push is a pushable");
                 natives.apply(runtime::ObjectNativeKind::ToggleUseable, "5-2_crate_push", 1.0f);
-                require(natives.flags("5-2_crate_push") && natives.flags("5-2_crate_push")->usable == true, "pushable flag");
+                require(natives.flags("5-2_crate_push") == nullptr, "the pushable (kind 71) registers no use zone itself");
                 for (const char* handle : {"handle01", "handle02", "handle03", "handle04"}) {
                     const std::string key = std::string("5-2_crate_push.") + handle;
                     require(natives.kindOf(key) == runtime::kKindPushHandle, key + " kind");
@@ -127,6 +127,39 @@ int main(int argc, char** argv) {
                 natives.apply(runtime::ObjectNativeKind::EnableSwitch, "4-6_pig_01_switchwheel_fake", 0.0f);
                 const runtime::ObjectNativeFlags* flags = natives.flags("4-6_pig_01_switchwheel_fake");
                 require(flags && flags->switchState == 3 && flags->usable == false, "EnableSwitch off on kind 58");
+            }
+            {
+                // Call texts (dumped 2026-10-19 with the C++ loader): lvl_06 ToggleUseable(5-5_Door_02, 0) on a leprops/leprop_door (kind 42),
+                // lvl_04 ToggleUseable(4-2_ContainerDoors, 0) on a leprops/leprop_simpleindestructible (kind 86); neither kind's create or
+                // post-link function calls 0x23e130 (56 call sites read, docs/re/object-kinds.md), so 0x236624 finds no registry entry and
+                // changes nothing. lvl_06 ToggleUseable on a kind 71 pushable writes only its kind 72 handles.
+                const assets::Level cityLevel = loaded(mainLevel("lvl_06_apolloisland").c_str());
+                runtime::ObjectNativeState natives;
+                natives.loadKinds(cityLevel, classOf);
+                require(natives.kindOf("5-5_door_02") == 42, "5-5_Door_02 is a door");
+                natives.apply(runtime::ObjectNativeKind::ToggleUseable, "5-5_door_02", 0.0f);
+                require(natives.flags("5-5_door_02") == nullptr, "a door registers no use zone");
+                natives.apply(runtime::ObjectNativeKind::ToggleUseable, "5-2_crate_push", 1.0f);
+                require(natives.flags("5-2_crate_push") == nullptr && natives.flags("5-2_crate_push.handle01")->usable == true,
+                        "the pushable itself has no zone, its handles do");
+                const assets::Level level04 = loaded(mainLevel("lvl_04_fortmeadows").c_str());
+                runtime::ObjectNativeState natives04;
+                natives04.loadKinds(level04, classOf);
+                natives04.apply(runtime::ObjectNativeKind::ToggleUseable, "4-2_containerdoors", 0.0f);
+                require(natives04.kindOf("4-2_containerdoors") == 86 && natives04.flags("4-2_containerdoors") == nullptr, "kind 86 registers no use zone");
+            }
+            {
+                // enableobjectfade calls of the main levels (dumped 2026-10-19): lvl_02 on a dummy/dummymesh (kind 0), lvl_06 on a
+                // props/prop_fanlift (kind 47) and a props/prop_prop (kind 67); no handler of those kinds compares the message with 24.
+                const assets::Level level02 = loaded(mainLevel("lvl_02_albatrossisland").c_str());
+                runtime::ObjectNativeState natives;
+                natives.loadKinds(level02, classOf);
+                require(natives.kindOf("00_searchlightbeam01") == 0 && natives.enableObjectFadeFallsBack("00_searchlightbeam01"), "kind 0 does not answer 24");
+                const assets::Level cityLevel = loaded(mainLevel("lvl_06_apolloisland").c_str());
+                runtime::ObjectNativeState natives06;
+                natives06.loadKinds(cityLevel, classOf);
+                require(natives06.kindOf("fp_tokenfan_blower_01") == 47 && natives06.enableObjectFadeFallsBack("fp_tokenfan_blower_01"), "kind 47 does not answer 24");
+                require(natives06.kindOf("5-2_skylight_01_open") == 67 && natives06.enableObjectFadeFallsBack("5-2_skylight_01_open"), "kind 67 does not answer 24");
             }
             {
                 const assets::Level level07 = loaded(mainLevel("lvl_07_downtown").c_str());

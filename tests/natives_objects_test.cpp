@@ -5,6 +5,7 @@
 // 0x26fde8, revealcollectable 0x27bdb0, KillScript 0x1c3834 with 0x223a14. The scripts are made up.
 #include "runtime/script_runner.hpp"
 #include <iostream>
+#include <map>
 #include <stdexcept>
 #include <string>
 
@@ -200,6 +201,92 @@ void destroyedEntityStaysDestroyedAfterEnableObject() {
     runner.start("d");
     require(state.isDisabled("crate"), "EnableObject does not bring a destroyed entity back (stand-in SCRIPT-S231: the original's 0x1ddd00 on a destroyed entity is not read)");
 }
+
+chase::assets::LevelParam objectType(std::uint32_t value) {
+    chase::assets::LevelParam param;
+    param.hash = chase::assets::nameHash("ObjectType");
+    param.flags = 5;
+    param.type = 7;
+    param.value = value;
+    return param;
+}
+
+struct KindClasses {
+    std::map<std::string, Level> classes;
+    chase::assets::ClassLookup lookup() {
+        return [this](const std::string& name) -> const Level* {
+            const auto found = classes.find(name);
+            return found == classes.end() ? nullptr : &found->second;
+        };
+    }
+};
+
+void kindGatesDecideTheRegistryAndShadowNatives() {
+    // Kinds from docs/re/object-kinds.md: 58 (prop_switchpull) and 20 (parkour_brickgrab_new) register a use zone with 0x23e130, 42
+    // (prop_door), 86 and 71 do not; 27 is a character, 159 (chars/ride_pig) is in the shadow kind list through its creator 0x23e394.
+    KindClasses kinds;
+    for (const auto& [name, kind] : std::vector<std::pair<std::string, int>>{{"pull", 58}, {"grab", 20}, {"door", 42}, {"plain", 86}, {"char", 27}, {"pig", 159}, {"box", 67}}) {
+        Level classFile;
+        classFile.defaults.push_back(objectType(std::uint32_t(kind)));
+        kinds.classes[name] = classFile;
+    }
+    Level level;
+    for (const auto& [instance, className] : std::vector<std::pair<std::string, std::string>>{
+             {"Pull", "pull"}, {"Grab", "grab"}, {"Door", "door"}, {"Plain", "plain"}, {"Guy", "char"}, {"Pig", "pig"}, {"Box", "box"}}) {
+        chase::assets::LevelObject object;
+        object.instance = instance;
+        object.className = className;
+        level.objects.push_back(object);
+    }
+    chase::runtime::ObjectNativeState natives;
+    natives.loadKinds(level, kinds.lookup());
+    using chase::runtime::ObjectNativeKind;
+    for (const char* name : {"pull", "grab", "door", "plain"}) natives.apply(ObjectNativeKind::ToggleUseable, name, 1.0f);
+    require(natives.flags("pull")->usable == true && natives.flags("grab")->usable == true, "kinds 58 and 20 register a use zone");
+    require(natives.flags("door") == nullptr && natives.flags("plain") == nullptr, "kinds 42 and 86 register none");
+    natives.apply(ObjectNativeKind::EnableSwitch, "door", 0.0f);
+    natives.apply(ObjectNativeKind::EnableSwitch, "pull", 0.0f);
+    require(natives.flags("door") == nullptr || !natives.flags("door")->usable, "EnableSwitch writes no flag for an unregistered kind");
+    require(natives.flags("pull")->usable == false && natives.flags("pull")->switchState == 3, "EnableSwitch off on kind 58: flag and state 3");
+    natives.apply(ObjectNativeKind::EnableShadow, "guy", 0.0f);
+    natives.apply(ObjectNativeKind::EnableShadow, "pig", 1.0f);
+    natives.apply(ObjectNativeKind::EnableShadow, "box", 1.0f);
+    require(natives.flags("guy")->shadow == false && natives.flags("pig")->shadow == true && natives.flags("box") == nullptr,
+            "EnableShadow: kinds 27 and the creator-0x23e394 kinds act, kind 67 does not");
+}
+
+void enableObjectFadeEndsLikeEnableObjectUnlessTheKindAnswers() {
+    // Kinds 27 and 102 are the handlers that compare the message with 24 (0x18e588, 0x18c104); kind 102 is leprops/leprop_topple.
+    KindClasses kinds;
+    for (const auto& [name, kind] : std::vector<std::pair<std::string, int>>{{"plain", 0}, {"topple", 102}, {"fan", 47}}) {
+        Level classFile;
+        classFile.defaults.push_back(objectType(std::uint32_t(kind)));
+        kinds.classes[name] = classFile;
+    }
+    Level level;
+    for (const auto& [instance, className] : std::vector<std::pair<std::string, std::string>>{{"Beam", "plain"}, {"Tree", "topple"}, {"Blower", "fan"}}) {
+        chase::assets::LevelObject object;
+        object.instance = instance;
+        object.className = className;
+        level.objects.push_back(object);
+    }
+    add(level, "s", {{"enableobjectfade", {"Beam", "0"}}, {"enableobjectfade", {"Tree", "0"}}, {"enableobjectfade", {"Blower", "0"}},
+                     {"enableobjectfade", {"Blower", "1"}}, {"enableobjectfade", {"Beam", "0.5"}}});
+    PlacedObjectState state;
+    ScriptRunner runner(level, state);
+    runner.loadObjectKinds(kinds.lookup());
+    require(runner.start("s") && runner.threadCount() == 0, "runs to the end");
+    require(state.isDisabled("beam") == false, "0.5 is not 0: enabled again");
+    require(!state.isDisabled("blower"), "0 then 1 enables");
+    require(!state.isDisabled("tree"), "a kind with a message 24 handler is not ported (SCRIPT-S241)");
+    add(level, "t", {{"enableobjectfade", {"Beam", "0"}}});
+    PlacedObjectState second;
+    ScriptRunner other(level, second);
+    other.loadObjectKinds(kinds.lookup());
+    other.start("t");
+    require(second.isDisabled("beam"), "argument 0 disables like EnableObject");
+    require(chase::runtime::scriptFunctionSupport("enableobjectfade") == chase::runtime::ScriptFunctionSupport::StandIn, "listed as a stand-in");
+}
 }
 
 int main() {
@@ -217,6 +304,8 @@ int main() {
         destroyPropLeavesDisabledEntities();
         destroyPropRespectsAClassThatHandlesMessageOne();
         destroyedEntityStaysDestroyedAfterEnableObject();
+        kindGatesDecideTheRegistryAndShadowNatives();
+        enableObjectFadeEndsLikeEnableObjectUnlessTheKindAnswers();
     } catch (const std::exception& error) {
         std::cerr << "natives-objects-test: FAIL: " << error.what() << '\n';
         return 1;

@@ -28,6 +28,7 @@ enum class ObjectNativeKind {
     KillObject,
     EnableShadow,
     EnableSwitch,
+    EnableObjectFade,
 };
 
 std::optional<ObjectNativeKind> objectNativeKind(const std::string& lowerCaseName);
@@ -43,18 +44,23 @@ constexpr std::uint8_t kMessageDestroy = 1;
 // Kind bytes (entity +0x12, the class file's ObjectType, docs/re/object-kinds.md) the natives test.
 constexpr std::uint8_t kKindPushable = 71;
 constexpr std::uint8_t kKindPushHandle = 72;
+// Kinds whose create or post-link function registers a use zone with 0x23e130, the only function that adds to the registry 0x236624
+// searches (docs/re/object-kinds.md). Conditions inside those functions are stand-ins (SCRIPT-S239).
+bool objectKindRegistersUseZone(std::uint8_t kind);
+// Kinds whose class message handler compares the message with 24 (enableobjectfade 0x26fac4); the other kinds do not answer it.
+bool objectKindAnswersFadeMessage(std::uint8_t kind);
 struct ObjectClassMessage {
     std::string instance;
     std::uint8_t message = 0;
 };
 
 // Values the natives wrote, unset until a script wrote them. Meaning of the original bits:
-//  usable: ToggleUseable, registry flags set by 0x236624 and 0x2219bc, true for an argument above 0;
+//  usable: ToggleUseable, bit 4 of the use-zone registry record set by 0x236624, only for kinds that register a zone, true for an argument above 0;
 //  targetable: EnableTargetable, false when the argument truncated to an integer has a zero low byte (+0xda of the component);
 //  indestructible: SetIndestructible, bit 0 of +0xde of the component;
 //  activeDuringDcam: ActiveDuringDCam, bit 1 of +0x312 of the component;
 //  unshovable: ObjectUnshovable, bit 0x100 of the flag word at +0x10 and bit 0x20000 of the one at +0xc;
-//  shadow: EnableShadow 0x1bf84c, bit 2 of +0x316 of the component, written only for the kinds 27 and 149;
+//  shadow: EnableShadow 0x1bf84c, bit 2 of +0x316 of the component, written only for the kinds 27, 149 and the shadow list kinds 121, 159, 242;
 //  switchState: EnableSwitch 0x1bf8a4, halfword +4 of the component, 3 when switched off and the kind is 94, 139, 100 or 58;
 //  updateFlagBit: ToggleUpdateFlag, mask 0x4 of the halfword at +0x10, set for an argument of 0; the entity update loop 0x1a4094 skips an
 //  entity whose halfword has mask 0x24 set (docs/re/script-natives-flags.md).
@@ -76,6 +82,9 @@ public:
     // name them). ToggleUseable on a kind 71 object also writes its nested kind 72 objects (0x1cdcf8).
     void loadKinds(const assets::Level& level, const assets::ClassLookup& classOf);
     std::optional<std::uint8_t> kindOf(const std::string& lowerCaseInstance) const;
+    // enableobjectfade sends message 24 first; true when no handler of the instance's kind answers it, so the native ends like EnableObject
+    // without the message 251 (0x26fb10 / 0x26fb1c). An instance of an unknown kind counts as not answering.
+    bool enableObjectFadeFallsBack(const std::string& lowerCaseInstance) const;
     // 0x23cd80: nothing when the entity is disabled (halfword +0x10 bit 0) or already destroyed (word +0xc bit 0x10). Otherwise message 1 goes to
     // the class (`classHandles` says whether its handler took it); an unhandled message destroys the entity (bit 0x10 of +0xc, node dropped
     // by 0x2320f8). True when the entity was destroyed by this call.
@@ -87,6 +96,7 @@ public:
     std::vector<ObjectClassMessage> takeMessages();
 
 private:
+    void setUsable(const std::string& instance, bool value);
     std::map<std::string, ObjectNativeFlags> flags_;
     std::map<std::string, std::uint8_t> kinds_;
     std::map<std::string, std::vector<std::string>> pushHandles_;

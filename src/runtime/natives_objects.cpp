@@ -31,6 +31,7 @@ constexpr Entry kEntries[] = {
     {"killobject", ObjectNativeKind::KillObject, false, true},
     {"enableshadow", ObjectNativeKind::EnableShadow, true, true},
     {"enableswitch", ObjectNativeKind::EnableSwitch, true, true},
+    {"enableobjectfade", ObjectNativeKind::EnableObjectFade, true, true},
 };
 
 constexpr std::uint8_t kKindCharacter = 27;
@@ -38,6 +39,11 @@ constexpr std::uint8_t kKindShadowSecond = 149;
 constexpr std::uint8_t kSwitchResetKinds[] = {94, 139, 100, 58};
 constexpr std::uint16_t kSwitchOffState = 3;
 constexpr int kMaxNesting = 16;
+constexpr std::uint8_t kUseZoneKinds[] = {15,  17,  20,  21,  30,  56,  58,  72,  91,  94,  96,  98,  101, 114, 122, 123, 124, 126, 127, 130, 131, 133,
+                                          144, 145, 146, 149, 150, 156, 159, 165, 173, 182, 185, 186, 187, 190, 191, 195, 199, 200, 201, 206, 209, 210,
+                                          215, 225, 227, 231, 232, 233, 238, 242};
+constexpr std::uint8_t kShadowListKinds[] = {121, 159, 242};
+constexpr std::uint8_t kFadeMessageKinds[] = {27, 102};
 
 std::string lower(std::string text) {
     std::transform(text.begin(), text.end(), text.begin(), [](unsigned char c) { return char(std::tolower(c)); });
@@ -70,15 +76,34 @@ bool objectNativeIsStandIn(ObjectNativeKind kind) {
     return false;
 }
 
+bool objectKindRegistersUseZone(std::uint8_t kind) {
+    return std::find(std::begin(kUseZoneKinds), std::end(kUseZoneKinds), kind) != std::end(kUseZoneKinds);
+}
+
+bool objectKindAnswersFadeMessage(std::uint8_t kind) {
+    return std::find(std::begin(kFadeMessageKinds), std::end(kFadeMessageKinds), kind) != std::end(kFadeMessageKinds);
+}
+
+void ObjectNativeState::setUsable(const std::string& instance, bool value) {
+    const auto kind = kindOf(instance);
+    if (kind && !objectKindRegistersUseZone(*kind)) return;
+    flags_[instance].usable = value;
+}
+
+bool ObjectNativeState::enableObjectFadeFallsBack(const std::string& instance) const {
+    const auto kind = kindOf(instance);
+    return !kind || !objectKindAnswersFadeMessage(*kind);
+}
+
 void ObjectNativeState::apply(ObjectNativeKind kind, const std::string& instance, float value) {
     switch (kind) {
     case ObjectNativeKind::ToggleUseable: {
         if (kindOf(instance) == kKindPushable) {
             const auto handles = pushHandles_.find(instance);
             if (handles != pushHandles_.end())
-                for (const std::string& handle : handles->second) flags_[handle].usable = value > 0.0f;
+                for (const std::string& handle : handles->second) setUsable(handle, value > 0.0f);
         }
-        flags_[instance].usable = value > 0.0f;
+        setUsable(instance, value > 0.0f);
         break;
     }
     case ObjectNativeKind::EnableTargetable: flags_[instance].targetable = (static_cast<std::int32_t>(value) & 0xff) != 0; break;
@@ -90,22 +115,24 @@ void ObjectNativeState::apply(ObjectNativeKind kind, const std::string& instance
     case ObjectNativeKind::SkipToFinalState: messages_.push_back({instance, kMessageSkipToFinalState}); break;
     case ObjectNativeKind::EnableShadow: {
         const auto kind = kindOf(instance);
-        if (kind && (*kind == kKindCharacter || *kind == kKindShadowSecond)) flags_[instance].shadow = value > 0.0f;
+        const bool listed = kind && std::find(std::begin(kShadowListKinds), std::end(kShadowListKinds), *kind) != std::end(kShadowListKinds);
+        if (kind && (*kind == kKindCharacter || *kind == kKindShadowSecond || listed)) flags_[instance].shadow = value > 0.0f;
         break;
     }
     case ObjectNativeKind::EnableSwitch: {
         ObjectNativeFlags& flags = flags_[instance];
         if (value > 0.0f) {
             messages_.push_back({instance, kMessageReset});
-            flags.usable = true;
+            setUsable(instance, true);
             break;
         }
         const auto kind = kindOf(instance);
         if (kind && std::find(std::begin(kSwitchResetKinds), std::end(kSwitchResetKinds), *kind) != std::end(kSwitchResetKinds))
             flags.switchState = kSwitchOffState;
-        flags.usable = false;
+        setUsable(instance, false);
         break;
     }
+    case ObjectNativeKind::EnableObjectFade:
     case ObjectNativeKind::PrintDebugString:
     case ObjectNativeKind::RevealCollectable:
     case ObjectNativeKind::DestroyProp:

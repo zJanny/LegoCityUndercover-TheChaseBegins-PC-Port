@@ -443,6 +443,13 @@ ScriptRunner::Result ScriptRunner::native(ScriptThread& thread, const ScriptCall
                 destroyNative(lower(args[0]));
                 break;
             }
+            if (*kind == ObjectNativeKind::EnableObjectFade) {
+                if (args.size() >= 2 && objectNatives_.enableObjectFadeFallsBack(lower(args[0]))) {
+                    if (read(args[1]) == 0.0f) state_.disabled.insert(lower(args[0]));
+                    else state_.disabled.erase(lower(args[0]));
+                }
+                break;
+            }
             const bool needsValue = objectNativeTakesValue(*kind);
             if (!needsValue || args.size() >= 2) objectNatives_.apply(*kind, lower(args[0]), needsValue ? read(args[1]) : 0.0f);
         }

@@ -33,7 +33,7 @@ This file has no dated entries: the table is edited in place. When a native is r
 | ShowDialogueText | 0x26ff84 | 3 | 409 / 25 / 0 / 0 | 6 | stand-in | 30 | handled as a stand-in, drawn with fitted layout: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
 | AIEnable | 0x1881d4 | 2 | 404 / 74 / 2 / 0 | 10 | stand-in | 34 | flag or requested state recorded; returns 1: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
 | ShowDialogueTextTimed | 0x2a6d90 | 4 | 400 / 106 / 8 / 0 | 6 | stand-in | 30 | handled as a stand-in, drawn with fitted layout: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
-| ToggleUseable | 0x1cdcf8 | 2 | 347 / 26 / 7 / 4 | 8 | A | 26 | handled with the kind 71 group case, flags recorded (stand-in SCRIPT-S17, SCRIPT-289) |
+| ToggleUseable | 0x1cdcf8 | 2 | 347 / 26 / 7 / 4 | 8 | A | 26 | stand-in: kind 71 group case, flag recorded only for kinds with a use zone (SCRIPT-S239, SCRIPT-294, SCRIPT-296) |
 | PlaySound | 0x1b4394 | 2 | 277 / 25 / 0 / 0 | 8 | stand-in | 33 | stand-in (AUDIO-S30) [§2026-10-15T17:27](script-natives-audio.md#ts-20261015-172705) |
 | EffectFadeObject | 0x288a60 | 5 | 273 / 21 / 0 / 10 | 8 | stand-in | 38 | stand-in: node tween on the object's instances, flag bit 2 and particle nodes not ported (SCRIPT-S232, SCRIPT-281, SCRIPT-38): [script-natives-world.md §2026-10-18T11:01:40](script-natives-world.md#ts-20261018-110140) |
 | PlayAnimation | 0x268240 | 5 | 273 / 19 / 0 / 14 | 11 | stand-in | 32 | stand-in: plays a loaded animation on level characters and on skinned placed props with AnimationOffset, records the rest (SCRIPT-S110, SCRIPT-273): [script-natives-animation.md §2026-10-15T20:04](script-natives-animation.md#ts-20261015-200440) |
@@ -95,7 +95,7 @@ This file has no dated entries: the table is edited in place. When a native is r
 | CharacterInvulnerable | 0x2a6cfc | 2 | 45 / 6 / 0 / 0 | 7 | stand-in | 34 | flag or requested state recorded; returns 1: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
 | IsRedBrickExtraActive | 0x2a6d34 | 2 | 44 / 12 / 4 / 0 | 6 | done |  |  |
 | VehicleStop | 0x1b27e8 | 1 | 43 / 6 / 0 / 0 | 6 | C | 36 |  |
-| enableobjectfade | 0x26fac4 | 2 | 42 / 1 / 0 / 0 | 7 | A | 26 | open: message 24 handlers per kind, SCRIPT-290 |
+| enableobjectfade | 0x26fac4 | 2 | 42 / 1 / 0 / 0 | 7 | A | 26 | stand-in: ends like EnableObject unless the kind answers message 24 (SCRIPT-S241, SCRIPT-295) |
 | EnableTrafficAndPedestrians | 0x2c5780 | 1 | 42 / 12 / 0 / 0 | 6 | stand-in | 36 | flag only, no traffic [§2026-10-15T15:10](script-natives-audio.md#ts-20261015-151038) |
 | PositionPlayer | 0x1da0dc | 2 | 42 / 11 / 0 / 0 | 7 | stand-in | 26 | handled like PositionObject for the player (fall reset); ground probe, vehicle branch, message 8: [script-natives-flags.md §2026-10-14T19:19](script-natives-flags.md#ts-20261014-191915) |
 | AddToSemiTransNearCameraList | 0x2cb734 | 2 | 41 / 5 / 5 / 0 | 7 | stand-in | 38 | stand-in: entries recorded, not drawn (SCRIPT-S233, RENDER-67, SCRIPT-38): [script-natives-world.md §2026-10-18T11:01:40](script-natives-world.md#ts-20261018-110140) |
@@ -142,7 +142,7 @@ This file has no dated entries: the table is edited in place. When a native is r
 | ObjectUnshovable | 0x26fd68 | 2 | 11 / 0 / 0 / 0 | 3 | A | 26 | handled, flag recorded (SCRIPT-S18) |
 | VehicleAllowJumpOut | 0x27c014 | 2 | 10 / 4 / 1 / 0 | 4 | done | 36 | record +0x311 bit 6: [vehicles-system.md §2026-10-14T23:59:31](vehicles-system.md#ts-20261014-235931) |
 | VehicleSetUnshovable | 0x29eaa8 | 1 | 10 / 1 / 1 / 0 | 4 | done | 36 | +4 = 10, returns 0 (the thread repeats it) while +2 is 6 or 7: [vehicles-system.md §2026-10-14T23:59:31](vehicles-system.md#ts-20261014-235931) |
-| EnableSwitch | 0x1bf8a4 | 2 | 9 / 0 / 0 / 0 | 2 | A | 26 | stand-in: message 8, use flag and switch state recorded (SCRIPT-S238, SCRIPT-289) |
+| EnableSwitch | 0x1bf8a4 | 2 | 9 / 0 / 0 / 0 | 2 | A | 26 | stand-in: message 8, use flag (registered kinds) and switch state recorded (SCRIPT-S238, SCRIPT-S239) |
 | IsLevelUnlocked | 0x2636e4 | 2 | 9 / 5 / 5 / 0 | 4 | done |  |  |
 | PlayCutscene | 0x1bf9d4 | 1 | 9 / 3 / 2 / 0 | 6 | stand-in | 29 | own body 0x1bf9dc, blocks until the movie ends: [cutscenes.md §2026-10-14T22:49](cutscenes.md#ts-20261014-224929) |
 | PlayCutsceneNoFadeBackIn | 0x2b9dac | 1 | 9 / 0 / 0 / 0 | 6 | stand-in | 29 | sets byte 0x5163e8+0x184, then PlayCutscene with fade-back-in 0: [cutscenes.md §2026-10-14T22:49](cutscenes.md#ts-20261014-224929) |
@@ -151,7 +151,7 @@ This file has no dated entries: the table is edited in place. When a native is r
 | SetMapDummyLocObj | 0x27be84 | 1 | 9 / 0 / 0 / 0 | 4 | stand-in | 31 | records its call (SCRIPT-S26): [objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919) |
 | ShowCharacterIntro | 0x2c2af8 | 1 | 9 / 2 / 0 / 0 | 8 | stand-in | 30 | dialogue box with the character name; HUD portrait swap missing (HUD-25): [script-text.md §2026-10-14T18:57](script-text.md#ts-20261014-185739) |
 | clearmapdummylocobj | 0x26f9f4 | 0 | 8 / 0 / 0 / 0 | 4 | stand-in | 31 | records its call (SCRIPT-S26): [objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919) |
-| EnableShadow | 0x1bf84c | 2 | 8 / 8 / 0 / 0 | 1 | A | 26 | stand-in: recorded for kinds 27 and 149 (SCRIPT-S238, SCRIPT-291) |
+| EnableShadow | 0x1bf84c | 2 | 8 / 8 / 0 / 0 | 1 | A | 26 | stand-in: recorded for kinds 27, 149, 121, 159, 242 (SCRIPT-S238, SCRIPT-S240, SCRIPT-297) |
 | GetGameComplete | 0x2635d0 | 1 | 8 / 1 / 1 / 0 | 8 | done |  |  |
 | LockCharacter | 0x1cda60 | 1 | 8 / 0 / 0 / 0 | 6 | stand-in | 34 | handled: clears the group bit like UnlockCharacter sets it (party removal not modelled): [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
 | MovePlatform | 0x1bf958 | 3 | 8 / 0 / 0 / 0 | 2 | C | 37 |  |
