@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 780 open items and stand-ins, 167 linked to game usage, 613 with unknown reach.
+Items: 781 open items and stand-ins, 167 linked to game usage, 614 with unknown reach.
 
 ## Top 50 overall
 
@@ -87,7 +87,7 @@ Items: 780 open items and stand-ins, 167 linked to game usage, 613 with unknown 
 
 ## Player and camera
 
-15 of 179 items linked.
+15 of 180 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -206,7 +206,7 @@ No script native or object class is linked to these items (`+N` is Unblocks). Ad
 
 Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?display=source#L33) (+29), [RENDER-35](features/rendering.md?display=source#L48) (+23), [VEH-6](features/vehicles-physics.md?display=source#L30) (+22), [SCRIPT-43](features/script-system-natives.md?display=source#L31) (+17), [SCRIPT-94](features/script-system-ai-navigation.md?display=source#L34) (+16), [SCRIPT-40](features/script-system-dcam.md?display=source#L27) (+15), [SCRIPT-44](features/script-system-natives.md?display=source#L32) (+15), [SCRIPT-101](features/script-system-ai-navigation.md?display=source#L37) (+14), [SCRIPT-95](features/script-system-ai-navigation.md?display=source#L35) (+14), [SCRIPT-100](features/script-system-ai-navigation.md?display=source#L36) (+13)
 
-- [abilities-detective.md](features/abilities-detective.md): DETECT-13 (+2), DETECT-8 (+2), DETECT-1 (+1), DETECT-15 (+1), DETECT-4 (+1), DETECT-6 (+1), DETECT-S7 (+1), DETECT-S8 (+1), DETECT-S9 (+1), DETECT-10, DETECT-11, DETECT-12, DETECT-3, DETECT-5, DETECT-9, DETECT-S1, DETECT-S2, DETECT-S4, DETECT-S5, DETECT-S6
+- [abilities-detective.md](features/abilities-detective.md): DETECT-8 (+3), DETECT-13 (+2), DETECT-1 (+1), DETECT-15 (+1), DETECT-4 (+1), DETECT-6 (+1), DETECT-S7 (+1), DETECT-S8 (+1), DETECT-S9 (+1), DETECT-10, DETECT-11, DETECT-12, DETECT-3, DETECT-5, DETECT-9, DETECT-S1, DETECT-S2, DETECT-S4, DETECT-S5, DETECT-S6
 - [abilities-scanner.md](features/abilities-scanner.md): SCAN-10 (+1), SCAN-11 (+1), SCAN-S10 (+1), AUDIO-S33, SCAN-12, SCAN-13, SCAN-15, SCAN-3, SCAN-6, SCAN-S1, SCAN-S2, SCAN-S3, SCAN-S4, SCAN-S5, SCAN-S6, SCAN-S7, SCAN-S8, SCAN-S9
 - [animation-characters.md](features/animation-characters.md): ANIM-3 (+2), ANIM-10 (+1), ANIM-11 (+1), ANIM-13 (+1), ANIM-14 (+1), ANIM-1, ANIM-4, ANIM-S10, ANIM-S11, ANIM-S2
 - [assets-formats.md](features/assets-formats.md): ASSET-1, ASSET-2, ASSET-3, ASSET-4, ASSET-8, ASSET-S1, ASSET-S2
@@ -229,7 +229,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [player-movement.md](features/player-movement.md): PLAYER-14 (+2), PLAYER-16 (+2), PLAYER-11 (+1), PLAYER-15 (+1), PLAYER-22 (+1), PLAYER-25 (+1), PLAYER-1, PLAYER-10, PLAYER-13, PLAYER-18, PLAYER-2, PLAYER-21, PLAYER-23, PLAYER-24, PLAYER-3, PLAYER-5, PLAYER-6, PLAYER-7, PLAYER-8, PLAYER-S1, PLAYER-S10, PLAYER-S11, PLAYER-S2, PLAYER-S4, PLAYER-S5, PLAYER-S6, PLAYER-S8
 - [player-traversal-pole.md](features/player-traversal-pole.md): TRAV-S9 (+1), TRAV-11, TRAV-13, TRAV-14, TRAV-15, TRAV-16, TRAV-S5, TRAV-S6, TRAV-S7, TRAV-S8
 - [player-traversal-rails.md](features/player-traversal-rails.md): TRAV-28 (+3), TRAV-38 (+1), TRAV-43 (+1), TRAV-44 (+1), TRAV-45 (+1), TRAV-S16 (+1), TRAV-S18 (+1), TRAV-S19 (+1), TRAV-27, TRAV-29, TRAV-31, TRAV-32, TRAV-33, TRAV-42, TRAV-S15, TRAV-S17, TRAV-S21, TRAV-S23, TRAV-S24, TRAV-S25, TRAV-S26
-- [player-traversal.md](features/player-traversal.md): TRAV-9 (+2), TRAV-2 (+1), TRAV-49 (+1), TRAV-52 (+1), TRAV-S12 (+1), TRAV-10, TRAV-19, TRAV-20, TRAV-22, TRAV-34, TRAV-35, TRAV-5, TRAV-6, TRAV-8, TRAV-S1, TRAV-S10, TRAV-S11, TRAV-S13, TRAV-S2, TRAV-S20, TRAV-S29, TRAV-S3, TRAV-S30, TRAV-S31, TRAV-S32, TRAV-S4
+- [player-traversal.md](features/player-traversal.md): TRAV-9 (+2), TRAV-2 (+1), TRAV-49 (+1), TRAV-52 (+1), TRAV-S12 (+1), TRAV-10, TRAV-19, TRAV-20, TRAV-22, TRAV-34, TRAV-35, TRAV-5, TRAV-56, TRAV-6, TRAV-8, TRAV-S1, TRAV-S10, TRAV-S11, TRAV-S13, TRAV-S2, TRAV-S20, TRAV-S29, TRAV-S3, TRAV-S30, TRAV-S31, TRAV-S32, TRAV-S4
 - [rendering.md](features/rendering.md): RENDER-35 (+23), RENDER-50 (+2), RENDER-69 (+2), RENDER-33 (+1), RENDER-39 (+1), RENDER-60 (+1), RENDER-63 (+1), RENDER-64 (+1), ASSET-S1, RENDER-2, RENDER-30, RENDER-34, RENDER-42, RENDER-6, RENDER-61, RENDER-70, RENDER-9, RENDER-S2, RENDER-S3, RENDER-S4, RENDER-S50, RENDER-S51, RENDER-S6, RENDER-S60, RENDER-S61, RENDER-S62, RENDER-S63, RENDER-S64, RENDER-S65, RENDER-S66, RENDER-S7
 - [saves-options.md](features/saves-options.md): SAVE-8 (+3), SAVE-13 (+1), SAVE-14 (+1), SAVE-15 (+1), SAVE-2 (+1), SAVE-11, SAVE-3, SAVE-4, SAVE-5, SAVE-S1, SAVE-S2, SAVE-S3, SAVE-S4, SAVE-S5
 - [script-system-ai-navigation.md](features/script-system-ai-navigation.md): SCRIPT-92 (+29), SCRIPT-94 (+16), SCRIPT-101 (+14), SCRIPT-95 (+14), SCRIPT-100 (+13), SCRIPT-79 (+12), SCRIPT-S100, SCRIPT-S101, SCRIPT-S102, SCRIPT-S104, SCRIPT-S31, SCRIPT-S93, SCRIPT-S94, SCRIPT-S95

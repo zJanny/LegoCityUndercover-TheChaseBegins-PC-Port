@@ -19,6 +19,7 @@ Subtopics: [player-traversal-pole.md](player-traversal-pole.md), [player-travers
 - The rope is fogged with the scene's fog (the state record clears the no-fog bit); the shared particle program has a fog switch that only the rope turns on. [§2026-10-19T10:38:41+02:00](#ts-20261019-103841)
 - Every textured zipline line is drawn twice, once from each anchor, because the anchor has no update handler and the gate 0x226644 then treats the target as not live. [§2026-10-19T11:04:28+02:00](#ts-20261019-110428)
 - The anchors draw their pole model: create 0x1a999c loads the `meshname` model unless `NoMesh` is set; the model's node matrix (translation y -27.432) lifts the stored mesh onto the anchor and the link turns it along the line; the port ignored the matrix, so the poles hung 25 m above [§2026-10-19T18:16:50](#ts-20261019-181650); the model draw applies every node matrix before the node world ([models.md §2026-10-19T19:24:18](models.md#ts-20261019-192418)).
+- On the zipline Chase holds `Ability_Handcuffs` (`weap_hancuffs`) on `weaponRight` through the hand item track of the grab, slide and dismount clips; the port does not draw it. [§2026-10-19T20:23:05](#ts-20261019-202305)
 - Open: the grab height of attachment set 18 for other characters, the fall-state grab path 0x2010d4, ground contact during the zipline dismount (0x215804), the rope's facing and render states, the tightrope; the other moves in their subtopic files.
 
 <a id="ts-20261018-145230"></a>
@@ -182,3 +183,16 @@ Unknowns:
 - The order of the node matrix and the anchor node in the original's model draw (the port uses node matrix first, as doors and the detective cards do; TRAV-S33).
 - The tightrope poles are drawn at `initialorientation`; the link would turn them towards their target (TRAV-54).
 - The collision of the pole (object collision uses the placement orientation).
+
+<a id="ts-20261019-202305"></a>
+
+## 2026-10-19T20:23:05+02:00 — Chase hangs from the zipline by his handcuffs (C++ decoder dump of the police zipline clips and `levels/players.blvl`; no REA, no emulator)
+
+The user reported that the object Chase hooks onto the zipline is not drawn in `chase-game`.
+
+**Method.** A scratch program over `chase_assets` (not committed) printed `Animation::subAnimationTargets` of every `models/char_minifig/class_police/zipline_*_minifig.bfnanm` and the placements of `levels/players.blvl`.
+
+**Result.** `zipline_grab`, `zipline_slide` and `zipline_dismount` carry the hand item track 0xba1e5b53 ([abilities-detective.md §2026-10-18T19:30:00](abilities-detective.md#ts-20261018-193000)) with the object name `Ability_Handcuffs` (word 0) and the bone `weaponRight` (word 4); the six `zipline_left*` / `zipline_right*` clips have no such track. `Ability_Handcuffs` in `levels/players.blvl` has the model `models/weap_hancuffs/weap_hancuffs.bfnmdl` (spelled so in the archive). The port's `game_hand_items::HandItems` loads only the magnifying glass and the scanner, so the handcuffs are never drawn although the track is read generically (DETECT-8).
+
+Unknowns:
+- Whether the handcuffs stay shown through the `zipline_left*` / `zipline_right*` clips (no track: the item keeps its last state if the original only reacts to the track's changes) and how they sit on the line; not compared with the oracle.

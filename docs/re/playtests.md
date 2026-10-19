@@ -7,6 +7,7 @@ What the user saw when playing `chase-game` against their knowledge of the origi
 - Mission 1-2 played end to end in `chase-game`: flag poles, trampoline, the scanner's look, the dog at the cage and its release, the punch and the dog footprints in detective mode look and work as in the original; four bugs were found (zipline poles, scanner held model, dog and dog truck in the end cutscene). [§2026-10-19T17:56:41](#ts-20261019-175641)
 - Mission 1-3: the ladder to the roof is not fully visible in the port. [§2026-10-19T18:02:53](#ts-20261019-180253)
 - The zipline poles can be walked through in the port. [§2026-10-19T20:15:35](#ts-20261019-201535)
+- The handcuffs Chase hangs from on the zipline are not drawn (user report; cause: [player-traversal.md §2026-10-19T20:23:05](player-traversal.md#ts-20261019-202305)).
 
 <a id="ts-20261019-175641"></a>
 
