@@ -69,6 +69,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 |---|---|---|
 | [front-end](front-end.md) | IN_PROGRESS | FE-1 existing slots and Continue (needs SAVE-2); FE-30 delete confirmation; FE-3 loading screen 3D badge |
 | [hud-ui](hud-ui.md) | IN_PROGRESS | HUD-6 hearts never change; HUD-11 map levels and mission icons, HUD-60 other map icon types; HUD-8 other counters |
+| [hud-ui-text](hud-ui-text.md) | IN_PROGRESS | HUD-22 remaining text screens; HUD-30 character intro and box line counts; HUD-33 tip after the release camera |
 | [audio](audio.md) | IN_PROGRESS | AUDIO-20 duck record; AUDIO-11 action music; AUDIO-3 world sounds |
 | [movies-cutscenes](movies-cutscenes.md) | IN_PROGRESS | MOVIE-33 camera of 1_1_d; MOVIE-3 short actor clips; MOVIE-1 layout values |
 | [saves-options](saves-options.md) | IN_PROGRESS | SAVE-13 Continue at level 2 and later, SAVE-8 object record meaning (needs a richer save), SAVE-2 slot display (blocks FE-1) |
