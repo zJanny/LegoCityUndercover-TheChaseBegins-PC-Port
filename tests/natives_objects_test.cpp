@@ -270,6 +270,31 @@ void destroyedEntityComesBackWithEnableObjectButWithoutCollision() {
     require(runner.takeObjectClassMessages().size() == 1, "a destroyed entity gets no second message 1 even when it is shown again");
 }
 
+void resetObjectRestoresADestroyedDefaultHandlerObject() {
+    DestroyFixture fixture;
+    fixture.object("Platform", "props/prop_platform", 64);
+    fixture.object("Crate", "leprops/leprop_simpledestructible", 85);
+    add(fixture.level, "d", {{"DestroyProp", {"Platform"}}, {"DestroyProp", {"Crate"}}, {"ResetObject", {"Platform"}}, {"ResetObject", {"Crate"}}});
+    PlacedObjectState state;
+    ScriptRunner runner(fixture.level, state);
+    runner.loadObjectKinds(fixture.kinds.lookup());
+    runner.start("d");
+    require(!state.destroyed.count("platform") && !state.isHidden("platform"), "message 8 of the default handler clears the destroyed bit and enables the entity (0x2218a8, 0x242cf0)");
+    require(state.collisionDropped.count("platform") && state.isDisabled("platform"), "the collision body freed by the destroy is not rebuilt on that path");
+    require(runner.objectNatives().restoredPlacement("platform") != nullptr, "the placement is restored");
+    require(state.destroyed.count("crate") && state.isHidden("crate") && runner.objectNatives().restoredPlacement("crate") == nullptr,
+            "kind 85 has another handler for message 8 that is not ported");
+    DestroyFixture again;
+    again.object("Platform", "props/prop_platform", 64);
+    add(again.level, "d", {{"DestroyProp", {"Platform"}}, {"ResetObject", {"Platform"}}, {"DestroyProp", {"Platform"}}});
+    PlacedObjectState secondState;
+    ScriptRunner second(again.level, secondState);
+    second.loadObjectKinds(again.kinds.lookup());
+    second.start("d");
+    require(second.takeObjectClassMessages().size() == 3 && secondState.destroyed.count("platform") && secondState.isHidden("platform"),
+            "a reset entity gets message 1 again: the destroyed test passes after the reset");
+}
+
 void destroyRaisesTheDeadEventAndTheTriggerObjectOfThePropHandler() {
     DestroyFixture fixture;
     fixture.object("Crate", "leprops/leprop_simpledestructible", 85, "Gate");
@@ -403,6 +428,7 @@ int main() {
         destroyPropLeavesDisabledEntities();
         destroyPropActsPerKind();
         destroyedEntityComesBackWithEnableObjectButWithoutCollision();
+        resetObjectRestoresADestroyedDefaultHandlerObject();
         destroyRaisesTheDeadEventAndTheTriggerObjectOfThePropHandler();
         destroyReactionTableKeepsRealClassKinds();
         kindGatesDecideTheRegistryAndShadowNatives();

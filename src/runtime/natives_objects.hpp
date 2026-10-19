@@ -4,6 +4,7 @@
 // door update) are not ported yet, so the state is recorded here. No SDL dependency.
 #include "assets/assets.hpp"
 #include "runtime/destroy_message.hpp"
+#include <array>
 #include <cstdint>
 #include <functional>
 #include <map>
@@ -50,6 +51,14 @@ constexpr std::uint8_t kKindPushHandle = 72;
 bool objectKindRegistersUseZone(std::uint8_t kind);
 // Kinds whose class message handler compares the message with 24 (enableobjectfade 0x26fac4); the other kinds do not answer it.
 bool objectKindAnswersFadeMessage(std::uint8_t kind);
+// What message 8 of the default handler 0x221800 (kinds 64, 132) wrote: `initialposition` and `initialorientation` of the object (degrees, the
+// handler multiplies by 0.0174533), read from the level object and its class. Nothing in the port moves such an object yet, so this is the record.
+struct PlacementReset {
+    std::array<float, 3> position{};
+    std::array<float, 3> orientationDegrees{};
+    bool hasPosition = false;
+    bool hasOrientation = false;
+};
 struct ObjectClassMessage {
     std::string instance;
     std::uint8_t message = 0;
@@ -97,6 +106,10 @@ public:
         std::string triggerObject;
     };
     std::optional<DestroyResult> destroy(const std::string& lowerCaseInstance, bool inactive, const ClassMessage& classMessage);
+    // Message 8 of the default handler 0x221800: for kinds 64 and 132 the placement is restored, the entity enabled and the destroyed bit cleared
+    // (the caller clears the state bits); false for every other kind (their handlers are not ported).
+    bool resetDefaultHandler(const std::string& lowerCaseInstance);
+    const PlacementReset* restoredPlacement(const std::string& lowerCaseInstance) const;
     bool destroyed(const std::string& lowerCaseInstance) const { return destroyed_.count(lowerCaseInstance) != 0; }
     const ObjectNativeFlags* flags(const std::string& lowerCaseInstance) const;
     bool entityUpdateSkipped(const std::string& lowerCaseInstance) const;
@@ -109,6 +122,8 @@ private:
     std::map<std::string, std::vector<std::string>> pushHandles_;
     std::vector<ObjectClassMessage> messages_;
     std::set<std::string> destroyed_;
+    std::map<std::string, PlacementReset> initialPlacements_;
+    std::map<std::string, PlacementReset> restoredPlacements_;
     std::map<std::string, std::string> destroyTriggers_;
 };
 

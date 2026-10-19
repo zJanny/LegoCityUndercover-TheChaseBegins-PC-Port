@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cstdint>
+#include <cstring>
 #include <stdexcept>
 
 namespace chase::runtime {
@@ -142,6 +143,20 @@ void ObjectNativeState::apply(ObjectNativeKind kind, const std::string& instance
 }
 
 namespace {
+bool readFloat3(const assets::LevelParam* param, std::array<float, 3>& out) {
+    constexpr std::uint16_t kFloat3Type = 2;
+    if (!param || param->type != kFloat3Type || param->blocks.empty() || param->blocks[0].size() < sizeof(float) * 3) return false;
+    std::memcpy(out.data(), param->blocks[0].data(), sizeof(float) * 3);
+    return true;
+}
+
+PlacementReset initialPlacement(const assets::LevelObject& object, const assets::Level& classFile) {
+    PlacementReset placement;
+    placement.hasPosition = readFloat3(effectiveParam(object, classFile, assets::nameHash("initialposition")), placement.position);
+    placement.hasOrientation = readFloat3(effectiveParam(object, classFile, assets::nameHash("initialorientation")), placement.orientationDegrees);
+    return placement;
+}
+
 std::vector<std::string> registerNested(const std::string& path, const assets::Level& classFile, const assets::ClassLookup& classOf,
                                         std::map<std::string, std::uint8_t>& kinds, int depth) {
     if (depth > kMaxNesting) throw std::runtime_error("object classes nest too deeply at " + path);
@@ -162,6 +177,8 @@ void ObjectNativeState::loadKinds(const assets::Level& level, const assets::Clas
     kinds_.clear();
     pushHandles_.clear();
     destroyTriggers_.clear();
+    initialPlacements_.clear();
+    restoredPlacements_.clear();
     std::map<std::uint32_t, std::string> instanceByHash;
     for (const assets::LevelObject& object : level.objects) instanceByHash[assets::nameHash(object.instance)] = lower(object.instance);
     for (const assets::LevelObject& object : level.objects) {
@@ -174,6 +191,7 @@ void ObjectNativeState::loadKinds(const assets::Level& level, const assets::Clas
                 const auto target = instanceByHash.find(assets::objectReferenceHash(*reference));
                 if (target != instanceByHash.end()) destroyTriggers_[path] = target->second;
             }
+        if (destroyEffectSet(kinds_[path]) == DestroyEffectSet::DefaultHandler) initialPlacements_[path] = initialPlacement(object, *classFile);
         std::vector<std::string> descendants = registerNested(path, *classFile, classOf, kinds_, 0);
         if (kinds_[path] != kKindPushable) continue;
         std::vector<std::string>& handles = pushHandles_[path];
@@ -198,6 +216,19 @@ std::optional<ObjectNativeState::DestroyResult> ObjectNativeState::destroy(const
     const auto trigger = destroyTriggers_.find(instance);
     if (trigger != destroyTriggers_.end()) result.triggerObject = trigger->second;
     return result;
+}
+
+bool ObjectNativeState::resetDefaultHandler(const std::string& instance) {
+    const auto initial = initialPlacements_.find(instance);
+    if (initial == initialPlacements_.end()) return false;
+    restoredPlacements_[instance] = initial->second;
+    destroyed_.erase(instance);
+    return true;
+}
+
+const PlacementReset* ObjectNativeState::restoredPlacement(const std::string& instance) const {
+    const auto found = restoredPlacements_.find(instance);
+    return found == restoredPlacements_.end() ? nullptr : &found->second;
 }
 
 const ObjectNativeFlags* ObjectNativeState::flags(const std::string& instance) const {

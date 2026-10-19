@@ -458,7 +458,10 @@ ScriptRunner::Result ScriptRunner::native(ScriptThread& thread, const ScriptCall
                 break;
             }
             const bool needsValue = objectNativeTakesValue(*kind);
-            if (!needsValue || args.size() >= 2) objectNatives_.apply(*kind, lower(args[0]), needsValue ? read(args[1]) : 0.0f);
+            if (needsValue && args.size() < 2) break;
+            const float value = needsValue ? read(args[1]) : 0.0f;
+            objectNatives_.apply(*kind, lower(args[0]), value);
+            if (*kind == ObjectNativeKind::ResetObject || (*kind == ObjectNativeKind::EnableSwitch && value > 0.0f)) resetEntity(lower(args[0]));
         }
         break;
     case Word::VehicleNative:

@@ -196,6 +196,7 @@ public:
     // 0x23cd80 for an entity that a damage handler destroys (a prop hit on foot or by a car) or that DestroyProp / KillObject name: the Dead event,
     // message 1 to the class, the TriggerObject of the prop handler, then the destroyed bit and, for the classes that hide, the disabled bit.
     void destroyEntity(const std::string& lowerInstance);
+    void resetEntity(const std::string& lowerInstance);
     void setClassMessageHandler(ObjectNativeState::ClassMessage handler) { classMessage_ = std::move(handler); }
     // EffectFadeObject, EnableDistanceFade and AddToSemiTransNearCameraList (natives_effects.hpp).
     const EffectNativeState& effects() const { return effectNatives_; }

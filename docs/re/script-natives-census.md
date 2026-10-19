@@ -54,7 +54,7 @@ This file has no dated entries: the table is edited in place. When a native is r
 | setmissionsummary | 0x27be98 | 1 | 133 / 20 / 5 / 0 | 8 | stand-in | 30 | handled as a stand-in, key stored at 0x375f98 / 0x375f9c, no reader: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
 | setmissiontitle | 0x263788 | 1 | 133 / 20 / 5 / 0 | 8 | stand-in | 30 | handled as a stand-in, key stored at 0x375f98 / 0x375f9c, no reader: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
 | PlaySoundGO | 0x295244 | 3 | 114 / 1 / 0 / 0 | 7 | stand-in | 33 | stand-in (AUDIO-S30) [§2026-10-15T17:27](script-natives-audio.md#ts-20261015-172705) |
-| ResetObject | 0x1b25f8 | 1 | 107 / 5 / 0 / 0 | 11 | A | 26 | handled: class message 8 queued |
+| ResetObject | 0x1b25f8 | 1 | 107 / 5 / 0 / 0 | 11 | A | 26 | handled: class message 8 queued; kinds 64, 132 restore placement, enable, clear destroyed bit (SCRIPT-307, rest SCRIPT-313): [script-natives-world.md §2026-10-19T10:42:18](script-natives-world.md#ts-20261019-104218) |
 | VehicleSetLocked | 0x26fe78 | 2 | 102 / 13 / 3 / 0 | 8 | done | 36 | record +0x311 bit 1; src/runtime/vehicle.cpp: [vehicles-system.md §2026-10-14T23:59:31](vehicles-system.md#ts-20261014-235931) |
 | AIActive | 0x1881a4 | 1 | 101 / 16 / 0 / 0 | 6 | stand-in | 34 | flag or requested state recorded; returns 1: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
 | AttachObject | 0x1bf68c | 2 | 100 / 15 / 13 / 0 | 8 | stand-in | 32 | stand-in: parent of the second object recorded (SCRIPT-S110, SCRIPT-272): [script-natives-animation.md §2026-10-15T18:33](script-natives-animation.md#ts-20261015-183336) |

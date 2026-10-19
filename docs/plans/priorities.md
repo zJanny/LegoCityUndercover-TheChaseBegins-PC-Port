@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 704 open items and stand-ins, 149 linked to game usage, 555 with unknown reach.
+Items: 707 open items and stand-ins, 152 linked to game usage, 555 with unknown reach.
 
 ## Top 50 overall
 
@@ -65,13 +65,13 @@ Items: 704 open items and stand-ins, 149 linked to game usage, 555 with unknown 
 | 29 | [SCRIPT-38](features/script-system-natives.md?display=source#L45) | 435 | 0 | 7 | 12 | 2 stand-in, 4 none, 1 implemented | `addtosemitranslist`, `addtosemitransnearcameralist`, `effectfadeobject`, `playparticlesgo` +3 | Batch 13 (C, 20): EffectFadeObject, AddToSemiTransNearCameraList and StreamRoomIn run ... |
 | 30 | [VEH-132](features/vehicles.md?display=source#L39) | 0 | 406 | 8 | 0 | - | `leprops/leprop_simpleindestructible` | Measure in the oracle that a leprop_simpleindestructible or a door in the car's way does not stop it (by code ... |
 | 31 | [SCRIPT-57](features/script-system-natives.md?display=source#L32) | 362 | 0 | 7 | 13 | 3 stand-in, 1 none | `distancefademid`, `enableshadow`, `enableswitch`, `toggleuseable` | Kind-gated natives: the kind of every class is read (`objectKind`); ToggleUseable, EnableSwitch (use-zone ... |
-| 32 | [SCRIPT-S239](features/script-system-natives-world.md?display=source#L32) | 351 | 0 | 7 | 0 | 2 stand-in | `enableswitch`, `toggleuseable` | ToggleUseable and EnableSwitch write the use flag only for instances whose kind registers a use zone ... |
+| 32 | [SCRIPT-S239](features/script-system-natives-world.md?display=source#L34) | 351 | 0 | 7 | 0 | 2 stand-in | `enableswitch`, `toggleuseable` | ToggleUseable and EnableSwitch write the use flag only for instances whose kind registers a use zone ... |
 | 33 | [SCRIPT-36](features/script-system-natives.md?display=source#L43) | 347 | 0 | 7 | 12 | 9 implemented | `setforcedstoponmyvehicle`, `stopplayervehicle`, `vehicleallowjumpout`, `vehiclejumpin` +5 | Batch 11 (C, 10 left): VehicleSetLocked, VehicleSetForcedStop, SetForcedStopOnMyVehicle, VehicleAllowJumpOut ... |
-| 34 | [SCRIPT-294](features/script-system-natives-world.md?display=source#L47) | 342 | 0 | 7 | 1 | 1 stand-in | `toggleuseable` | The hint registry 0x2219bc searches (records at `*(0x58e9a4 + 0x24)`, singleton "LEGOHintBounds"): who adds ... |
-| 35 | [SCRIPT-296](features/script-system-natives-world.md?display=source#L49) | 342 | 0 | 7 | 1 | 1 stand-in | `toggleuseable` | The registration conditions of the use zone: what sets halfword `[entity + 0x10]` bit 7 (post-link of kinds ... |
+| 34 | [SCRIPT-294](features/script-system-natives-world.md?display=source#L50) | 342 | 0 | 7 | 1 | 1 stand-in | `toggleuseable` | The hint registry 0x2219bc searches (records at `*(0x58e9a4 + 0x24)`, singleton "LEGOHintBounds"): who adds ... |
+| 35 | [SCRIPT-296](features/script-system-natives-world.md?display=source#L52) | 342 | 0 | 7 | 1 | 1 stand-in | `toggleuseable` | The registration conditions of the use zone: what sets halfword `[entity + 0x10]` bit 7 (post-link of kinds ... |
 | 36 | [PART-3](features/particles.md?display=source#L28) | 0 | 281 | 8 | 0 | - | `particles` | The level object class `particles` (constructor 0x1a7f30, handlers 0x1a8394 and 0x1a7d30: `ParticleDef` ... |
-| 37 | [SCRIPT-281](features/script-system-natives-world.md?display=source#L44) | 271 | 0 | 6 | 1 | 1 stand-in | `effectfadeobject` | EffectFadeObject: the third node property (0x23f540, flag bit 2), the particle node case, the clock of ... |
-| 38 | [SCRIPT-S232](features/script-system-natives-world.md?display=source#L28) | 271 | 0 | 6 | 0 | 1 stand-in | `effectfadeobject` | EffectFadeObject drives `Scene::setInstanceFade` and the instance visibility of placed objects (and their ... |
+| 37 | [SCRIPT-281](features/script-system-natives-world.md?display=source#L47) | 271 | 0 | 6 | 1 | 1 stand-in | `effectfadeobject` | EffectFadeObject: the third node property (0x23f540, flag bit 2), the particle node case, the clock of ... |
+| 38 | [SCRIPT-S232](features/script-system-natives-world.md?display=source#L30) | 271 | 0 | 6 | 0 | 1 stand-in | `effectfadeobject` | EffectFadeObject drives `Scene::setInstanceFade` and the instance visibility of placed objects (and their ... |
 | 39 | [SCRIPT-67](features/script-system-hud-natives.md?display=source#L24) | 266 | 0 | 8 | 0 | 2 stand-in | `setmissionsummary`, `setmissiontitle` | SetMissionTitle / SetMissionSummary store the key (0x375f98 / 0x375f9c); no reader found, so the title and ... |
 | 40 | [SCRIPT-71](features/script-system-hud-natives.md?display=source#L28) | 260 | 0 | 7 | 1 | 1 stand-in | `subobjectivegotoenable` | SubObjectiveGoToEnable keeps its group (registry 0x1fce14 / 0x2a62b8) but the group marker is not drawn ... |
 | 41 | [SCRIPT-S11](features/script-system-dcam.md?display=source#L19) | 256 | 0 | 8 | 0 | 1 stand-in | `startdcamtrack` | `StartDCamTrack` looks at the placement position of the object (the live position for the player), not at its ... |
@@ -138,7 +138,7 @@ Items: 704 open items and stand-ins, 149 linked to game usage, 555 with unknown 
 
 ## Scripts and missions
 
-88 of 159 items linked.
+91 of 162 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -204,7 +204,7 @@ No linked items.
 
 No script native or object class is linked to these items (`+N` is Unblocks). Add `uses:` to an item when its fix changes the game.
 
-Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?display=source#L33) (+30), [RENDER-35](features/rendering.md?display=source#L46) (+23), [VEH-6](features/vehicles-physics.md?display=source#L30) (+22), [SCRIPT-43](features/script-system-natives.md?display=source#L48) (+17), [SCRIPT-94](features/script-system-ai-navigation.md?display=source#L34) (+16), [SCRIPT-40](features/script-system-dcam.md?display=source#L26) (+15), [SCRIPT-44](features/script-system-natives.md?display=source#L49) (+15), [SCRIPT-101](features/script-system-ai-navigation.md?display=source#L37) (+14), [SCRIPT-279](features/script-system-natives-world.md?display=source#L38) (+14), [SCRIPT-95](features/script-system-ai-navigation.md?display=source#L35) (+14)
+Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?display=source#L33) (+30), [RENDER-35](features/rendering.md?display=source#L46) (+23), [VEH-6](features/vehicles-physics.md?display=source#L30) (+22), [SCRIPT-43](features/script-system-natives.md?display=source#L48) (+17), [SCRIPT-94](features/script-system-ai-navigation.md?display=source#L34) (+16), [SCRIPT-40](features/script-system-dcam.md?display=source#L26) (+15), [SCRIPT-44](features/script-system-natives.md?display=source#L49) (+15), [SCRIPT-101](features/script-system-ai-navigation.md?display=source#L37) (+14), [SCRIPT-279](features/script-system-natives-world.md?display=source#L40) (+14), [SCRIPT-95](features/script-system-ai-navigation.md?display=source#L35) (+14)
 
 - [abilities-detective.md](features/abilities-detective.md): DETECT-13 (+2), DETECT-16 (+2), DETECT-8 (+2), DETECT-1 (+1), DETECT-15 (+1), DETECT-4 (+1), DETECT-6 (+1), DETECT-S7 (+1), DETECT-S8 (+1), DETECT-S9 (+1), DETECT-10, DETECT-11, DETECT-12, DETECT-17, DETECT-3, DETECT-5, DETECT-9, DETECT-S1, DETECT-S10, DETECT-S2, DETECT-S4, DETECT-S5, DETECT-S6
 - [abilities-scanner.md](features/abilities-scanner.md): SCAN-10 (+1), SCAN-11 (+1), AUDIO-S33, SCAN-3, SCAN-6, SCAN-8, SCAN-9, SCAN-S1, SCAN-S2, SCAN-S3, SCAN-S4, SCAN-S5, SCAN-S6, SCAN-S7, SCAN-S8
