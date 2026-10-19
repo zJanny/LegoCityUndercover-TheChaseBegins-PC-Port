@@ -21,6 +21,7 @@
 #include "game_object_visibility.hpp"
 #include "game_prop_parts.hpp"
 #include "game_super_buildit.hpp"
+#include "game_fast_travel.hpp"
 #include "game_hud.hpp"
 #include "game_options.hpp"
 #include "game_save.hpp"
@@ -251,6 +252,8 @@ private:
     bool holdForPause(float dt, const chase::runtime::PadState& padInput);
     bool drawPause(int width, int height);
     void updateSuperBuildits(const float playerPosition[3], float dt);
+    void loadFastTravel();
+    void updateFastTravel(float dt);
     void drawSuperBuildit(chase::frontend::Canvas& top);
     void drawSuperBuilditPrompt(chase::frontend::Canvas& top, const chase::runtime::SuperBuilditPrompt& prompt);
     bool cutscenePlaying() const { return levelScripts.cutscenes().playing() != nullptr; }
@@ -317,6 +320,8 @@ private:
     chase::runtime::BuilditPlayer builditPlayer;
     chase::runtime::SuperBuilditSet superBuildits;
     game_super_buildit::State superBuild;
+    chase::runtime::FastTravelPads fastTravel;
+    game_fast_travel::State fastTravelState;
     std::optional<chase::frontend::PauseMenu> pauseMenu;
     bool pauseRequested = false;
     std::size_t pauseStickDirection = chase::runtime::kNoStickDirection;

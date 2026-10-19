@@ -26,6 +26,7 @@ Read this index, then open only the file you need.
 | [buildit.md](buildit.md) | Build-its (`props/prop_buildit`): class record, use zone, state machine and timing, completion and the event it fires |
 | [buildit-bricks.md](buildit-bricks.md) | Build-it bricks: scatter, flight, built pose, hop of unbuilt bricks, rise of the final prop |
 | [super-buildit.md](super-buildit.md) | Super build-its (`props/prop_superbuildit`) and their holders: the helipad of mission 1-3, the "needs N super bricks" prompt page, the confirmation, the movie, the build and the super brick count |
+| [fast-travel.md](fast-travel.md) | Fast travel pad (`props/prop_fasttravelzone`, kind 227): use query, the player's states 0x180..0x183, the Helicopter's landing, what opens the fast travel map |
 | [abilities-detective.md](abilities-detective.md) | Detective tool: detective spot, reveal spot, reveal prop, footprints, the player's detective states and their timing |
 | [use-spot.md](use-spot.md) | Use spot (`props/prop_simpleuse`): class record, handler 0x1922e8, one-shot rule, oracle trace, the unfired Door_Lock_Hint_Script object |
 | [abilities-scanner.md](abilities-scanner.md) | Sound scanner (`props/prop_scannerzoneaudio`, type 201): use press, player states 0x156..0x158, view, zoom, lock, scan, fired events |

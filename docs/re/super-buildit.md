@@ -8,7 +8,7 @@ Super build-its (`props/prop_superbuildit`, kind 98) and their holder classes (`
 - The helipad of mission 1-3 is `1-3_Helipad` (`props/prop_sbhelipad_cherrytree`) with the nested plate `1-3_Helipad.SBPlate`; the link gives the plate the holder's `SuperBuildValue` 300 (the plate's own is 100). TextPopup 0x3f9b3c28 is "Helipad" (hinttext; gametext is tried first). [§2026-10-19T19:23:11](#ts-20261019-192311)
 - Prompt: the update shows the page while the player stands in the zone (node bounds + 0.5, 0.2, 0.5); the text is "Not enough Super Bricks!" in grey or "Build" with the A icon. A with enough bricks opens "Are you sure?" (OK / Cancel); OK plays `superbuildit_helipad`, and the update after the movie builds: the count drops by the value (302 -> 2 in the oracle), the plate goes, `SBHelipadProp` and the fast travel pad `SBFastTravel` come, and the holder's TriggerObject starts `1-3_Helipad_Built`. [§2026-10-19T19:23:11](#ts-20261019-192311)
 - The super brick count is the word 0x593430 ([super-bricks.md](super-bricks.md)); the build lowers it and its copy 0x5194b4 and makes the save request 0x21cf38(0). [§2026-10-19T19:23:11](#ts-20261019-192311)
-- The built helipad's pad opens the fast travel menu (helicopter, map of the city on the bottom screen): class `props/prop_fasttravelzone`, kind 227, not read. [§2026-10-19T19:23:11](#ts-20261019-192311)
+- The built helipad's pad (`props/prop_fasttravelzone`, kind 227) lands the Helicopter and opens the fast travel map: [fast-travel.md §2026-10-20T00:22:29](fast-travel.md#ts-20261020-002229).
 
 <a id="ts-20261019-192311"></a>
 

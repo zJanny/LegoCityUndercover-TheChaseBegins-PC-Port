@@ -294,6 +294,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     std::cout << "build-its: " << buildits.objects().size() << '\n';
     propParts.loadBuildits(scene, archive, buildits, placedObjects, placedSceneIndex);
     loadSuperBuildits();
+    loadFastTravel();
     effects.load(scene, archive, particles.random(), studDrops.planes());
     std::cout << "debris objects: " << effects.debrisInstances() << '\n';
     carry.load(archive, level, classOf);

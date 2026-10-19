@@ -291,7 +291,8 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         stick.slot15 = {pad.slot(kSlotStickY).value, pad.slot(kSlotStickY).deadzone};
         const runtime::PlayerStateStep scriptStep = playerScriptAnimation.update(dt);
         const bool scriptClip = scriptStep != runtime::PlayerStateStep::Locomotion;
-        const bool controlTaken = scriptClip || levelScripts.playerControlTaken() || carry.busy() || builditPlayer.active() || detective.controlTaken() || scanner.takesPlayerControl();
+        const bool controlTaken = scriptClip || levelScripts.playerControlTaken() || carry.busy() || builditPlayer.active() || detective.controlTaken() || scanner.takesPlayerControl() ||
+                                  fastTravel.takesPlayerControl();
         if (controlTaken) stick.slot14.value = stick.slot15.value = 0.0f;
         stick.entityType = game_player::kPlayerEntityType;
         stick.cameraYaw = follow->yaw();
@@ -330,7 +331,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
             runtime::applyScriptStateEnter(*entered, player->vertical);
             std::cout << "player state " << *entered << " entered at update " << updates << '\n';
         }
-        player->animate(scene, dt, detectiveClip(player->carriedRole(shown.role, carry.carryingMode(), carry.phaseClip() ? carry.phaseClip() : builditPlayer.clip() ? builditPlayer.clip() : scanner.playerClip())), shown.scale);
+        player->animate(scene, dt, detectiveClip(player->carriedRole(shown.role, carry.carryingMode(), carry.phaseClip() ? carry.phaseClip() : builditPlayer.clip() ? builditPlayer.clip() : fastTravel.playerClip() ? fastTravel.playerClip() : scanner.playerClip())), shown.scale);
         if (const auto* clip = playerScriptAnimation.posesScriptClip() ? playerScriptAnimation.animation() : nullptr) player->poseClip(scene, *clip, playerScriptAnimation.frame());
         handItems.update(*player);
         if (!script.empty()) scriptedHeights.push_back(player->vertical.y);
@@ -352,6 +353,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         updateDoors(playerPosition, emit);
         for (const runtime::SoundCall& call : updateBuildits(playerPosition)) emit(call);
         updateSuperBuildits(playerPosition, dt);
+        updateFastTravel(dt);
         updateCarry(playerPosition);
         updateDetective(dt, carry.carryingMode() == 0 && !carry.busy() && !builditPlayer.active() && !buildits.lastUse().inZone, emit);
         updateUseSpots(carry.carryingMode() == 0 && !carry.busy() && !builditPlayer.active() && !buildits.lastUse().inZone);
