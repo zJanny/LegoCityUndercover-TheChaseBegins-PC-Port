@@ -11,6 +11,7 @@
 #include <filesystem>
 #include <iostream>
 #include <map>
+#include <optional>
 #include <stdexcept>
 #include <string>
 
@@ -111,6 +112,22 @@ int main(int argc, char** argv) {
         require(last.moved && std::fabs(last.node[12] - 915.2977f) < 2e-3f && std::fabs(last.node[13] - 64.3605f) < 2e-3f &&
                     std::fabs(last.node[14] - 663.6295f) < 2e-3f && std::fabs(last.node[0] - 0.04113f) < 1e-3f,
                 "the root motion of dog_cage_open carries the dog out of the cage");
+
+        // The script's PositionObject 1-2_Dog 1-2_Dog_Position_End: level data of lvl_01 (docs/re/objects.md 2026-10-19T09:59:14) has the target at
+        // 730.328 31.599 645.549; the node takes its matrix (docs/re/script-natives-flags.md 2026-10-18T16:37:52, 0x1d9e6c / 0x24c118).
+        const std::optional<assets::Placement> end = assets::objectStart(level, "1-2_Dog_Position_End");
+        require(end.has_value(), "1-2_Dog_Position_End is placed");
+        require(std::fabs(end->position[0] - 730.328f) < 1e-3f && std::fabs(end->position[1] - 31.599f) < 1e-3f &&
+                    std::fabs(end->position[2] - 645.549f) < 1e-3f,
+                "target position");
+        const assets::Matrix target = assets::placementMatrix(*end);
+        require(props.place("1-2_dog", target), "PositionObject finds the animated prop");
+        require(!props.place("no_such_prop", target), "an unknown instance is not a prop");
+        const runtime::PropPose after = props.poses()[0];
+        require(after.moved && after.node == target, "the dog's node is the target's matrix");
+        props.update(1.0f / 30.0f);
+        require(std::fabs(props.poses()[0].node[12] - target[12]) < 1e-3f && std::fabs(props.poses()[0].node[14] - target[14]) < 1e-3f,
+                "the finished clip adds no further root motion at the target");
         std::cout << "animal-props-real-test: passed\n";
         return 0;
     } catch (const std::exception& error) {

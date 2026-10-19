@@ -198,6 +198,7 @@ private:
     void enterVehicleHud(const chase::runtime::VehicleRecord& record);
     void leaveVehicleHud();
     bool placeVehicle(const std::string& instance, const chase::assets::Placement& target);
+    bool placeProp(const std::string& instance, const chase::assets::Placement& target);
     bool placeSeatedVehicle(const float position[3], std::optional<float> facingDegrees);
     std::optional<chase::runtime::WaypointVehicle> waypointVehicle() const;
     void suppressDrivenVehicleCollision();

@@ -13,4 +13,16 @@ void LevelSession::updatePropAnimations(float dt) {
     }
 }
 
+bool LevelSession::placeProp(const std::string& instance, const chase::assets::Placement& target) {
+    for (std::size_t i = 0; i < placedObjects.size(); ++i) {
+        if (game_doors::lowerCase(placedObjects[i].instance) != instance) continue;
+        const chase::assets::Matrix node = placementMatrix(target);
+        propAnimations.place(instance, node);
+        scene.setTransform(placedSceneIndex[i], node);
+        placedRooms[i] = runtime::roomNumber(target.room);
+        return true;
+    }
+    return false;
+}
+
 }

@@ -48,6 +48,8 @@ public:
 
     // Advances the clock and applies the root delta of each playing slot to its node (prop update 0x15aa70 -> 0x16b06c).
     void update(float dt);
+    // PositionObject 0x1d9e6c: the node takes the target's matrix and later root motion starts from it. False when the instance is not an animated prop.
+    bool place(const std::string& lowerCaseInstance, const assets::Matrix& node);
     // Skin matrices of the props that started an animation, at the frame of the current slot (the last frame once a play-once clip ended).
     std::vector<PropPose> poses() const;
     std::size_t started() const;

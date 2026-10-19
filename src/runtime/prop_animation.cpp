@@ -111,6 +111,14 @@ void PropAnimations::update(float dt) {
     }
 }
 
+bool PropAnimations::place(const std::string& instance, const assets::Matrix& node) {
+    Entry* entry = find(instance);
+    if (!entry) return false;
+    entry->node = node;
+    entry->moved = true;
+    return true;
+}
+
 std::vector<PropPose> PropAnimations::poses() const {
     std::vector<PropPose> result;
     for (const Entry& entry : entries_) {

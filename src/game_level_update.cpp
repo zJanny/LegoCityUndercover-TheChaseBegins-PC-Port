@@ -98,7 +98,11 @@ void LevelSession::applyPlacement(const runtime::ScriptPlacement& request) {
         std::cout << "PositionObject: " << request.object << " to " << request.target << " at update " << updates << '\n';
         return;
     }
-    std::cout << "PositionObject not applied (only the player, vehicles and level characters are moved): " << request.object << " to " << request.target << '\n';
+    if (target && placeProp(request.object, *target)) {
+        std::cout << "PositionObject: " << request.object << " to " << request.target << " at update " << updates << '\n';
+        return;
+    }
+    std::cout << "PositionObject not applied (only the player, vehicles, level characters and placed props are moved): " << request.object << " to " << request.target << '\n';
 }
 
 void LevelSession::updateDoors(const float playerPosition[3], const std::function<void(const runtime::SoundCall&)>& emit) {

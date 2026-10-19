@@ -13,6 +13,7 @@ How the .blvl objects (section +0x2c) find their model and transform. Format of 
 - EnableObject sets entity flag bit 0 and hides the node (0x23f734, flags 0x60); a disabled object is not drawn (127 of 1198 hidden at lvl_01 start, e.g. `Police_Plaque_Floor`). [§2026-10-14T15:05](#ts-20261014-150541)
 - Animal rigs of kinds 0, 64 and 67 (the mission 1-2 dogs `1-2_Dog` / `1-2_Dog_Prop`, the fireman cats, the crow) are props: their create builds the model with 0x2442b4 and starts only an `Animation` parameter (0x234004), which none of them has; ride_pig (159) and the sharks (239) have creates of their own. [§2026-10-19T09:59:14](#ts-20261019-095914)
 - A prop with a playing clip moves by the clip's root motion (prop update 0x16b06c with 0x2327b4); the released dog leaves the cage and ends where the oracle trap has its node (915.2977 64.3605 663.6295, yaw -87.64). [§2026-10-19T10:10:34](#ts-20261019-101034)
+- PositionObject of a prop sets its node to the target's matrix, so the released dog is placed at the dog house after the release script. [script-natives-flags.md §2026-10-19T10:39:23](script-natives-flags.md#ts-20261019-103923)
 - Open: per-class start visibility (`DisabledOnStartUp`, `ShowOnObjectScan`, flags bit 2), hidden characters still drawn, NPC start animations, the pose of a skinned model without a clip, the root-motion axis bits of a clip, the ride_pig and shark creates, the scene code that skips nodes with 0x60.
 
 <a id="ts-20261013-153915"></a>

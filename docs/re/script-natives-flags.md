@@ -11,6 +11,7 @@ Handlers of batch 26 (SCRIPT-26). Census and the other batches: [script-natives.
 - The PositionPlayer ground probe only fires for character kinds 179, 183 and 243; the port has no character entries, so it is a no-op stand-in. [§2026-10-14T19:19:15](#ts-20261014-191915)
 - CameraFollow 0x1bf7c8 stores a global camera object in manager +0x28 via 0x226a30 (labelled no-op in the port); PositionObject for vehicles is read in outline. [§2026-10-15T13:42:00](#ts-20261015-134200)
 - PositionObject of a level character: the node takes the target's matrix and the room link follows; the controller part applies only when 0x21aae0 is true. Ported for characters, Holmes of mission 1-2 stands at `1-2_Doorlock_Teleport` after the Doorlock scene (seen in the oracle and in the port). [§2026-10-18T16:37:52](#ts-20261018-163752)
+- PositionObject of a placed prop or object: the scene node, the room and the animated prop's root-motion base take the target's matrix; collision entry and physics body do not follow (SCRIPT-S255). [§2026-10-19T10:39:23+02:00](#ts-20261019-103923)
 - The kind byte (entity +0x12) is the class file's ObjectType; every class of the main levels has one, and the ToggleUseable group case, EnableShadow and EnableSwitch gates are read: [object-kinds.md §2026-10-18T21:36:13](object-kinds.md#ts-20261018-213613).
 - Open: readers of each flag, the fade natives' kind gate (enableobjectfade), the fade consumer, message 8 and 54 effects, who fills the kind list at 0x3743ec.
 
@@ -138,3 +139,17 @@ REA (Ghidra 12.1.2) pseudocode of 0x1d9e6c read again, now for a character targe
 Unknowns:
 - The kind byte of level characters (decides the controller part), whether the room link of a moved character changes which room shows him (not needed here: same room).
 - PositionObject of props and other placed objects (the same node copy, with collision and physics follow-ups not read).
+
+<a id="ts-20261019-103923"></a>
+
+## 2026-10-19T10:39:23+02:00 — PositionObject of placed props (SCRIPT-288; port change, no new reading)
+
+Applies the node copy that [§2026-10-18T16:37:52](#ts-20261018-163752) read for every entity (target matrix into the node via 0x24c118, room link to the target's room via 0x245008) to placed props and other placed objects.
+
+- Port: `LevelSession::applyPlacement` tries the player, vehicles, level characters, then `LevelSession::placeProp` (`src/game_animals.cpp`): the scene node of the placed object takes `placementMatrix(target)`, its room number becomes the target's, and `PropAnimations::place` sets the animated prop's node base, so the root motion of a clip that plays later (docs/re/objects.md [§2026-10-19T10:10:34](objects.md#ts-20261019-101034)) continues from the target.
+- `chase-game` (`--level lvl_01 --no-start-cutscenes --start "916.702 64.431 663.724" --facing 0 --call-script 1-2_Cage_Key_Target_Script --script "0 0 300"`): prints `PositionObject: 1-2_dog to 1-2_dog_position_end at update 106`, after `PlayAnimation 1-2_Dog dog_cage_open`, `Wait 3` and `FadeScreen 0`.
+- Test `animal-props-real-data`: the target `1-2_Dog_Position_End` is at 730.328 31.599 645.549 (level data) and the dog's node equals its matrix after `PropAnimations::place`.
+
+Unknowns:
+- The follow-up 0x242b08 on the entity (collision grid, physics body) was not read for props; the port moves neither the collision entry nor a physics body of a placed prop (stand-in SCRIPT-S255; the dog has collision switched off by the script).
+- Whether the cutscene `1_2_c` binds `1-2_Dog` at the new node is still open (LEVOBJ-100).
