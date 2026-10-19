@@ -16,7 +16,7 @@ Plan and progress: `docs/plans/linux-port.md` and `docs/plans/linux-port.progres
 - **Order of work:** (1) the faithful Linux version; (2) only when the user says so, Windows; (3) only after the game is finished for PC, quality-of-life features. Until then no Windows work of any kind (builds, infrastructure, abstractions, preparation) and no QoL features or deviations.
 - **Behaviour comes from the original:** code (REA, objdump) and measurements (oracle). Do not "improve", round off or simplify it. Never invent game behaviour; record unknowns.
 - **Stand-ins:** anything not yet taken from the original (guessed asset, measured constant instead of its source, approximation) is labelled as a stand-in in code names or `docs/re/` and listed in the feature file. Never present a stand-in as original behaviour.
-- **Input mapping** (3DS controls to keyboard/mouse, stand-ins like the `Walk` key) is part of the port, not QoL, and must not change game behaviour. Input rules and their tests: `docs/plans/features/input.md`; binding format: `docs/controls.md`.
+- **Input mapping** (3DS controls to keyboard/mouse, stand-ins like the `Walk` key) is part of the port, not QoL, and must not change game behaviour. **Bottom-screen UI is used by clicking it with the mouse** (the touch screen); never add keyboard keys for touch-only controls (user rule). Input rules and their tests: `docs/plans/features/input.md`; binding format: `docs/controls.md`.
 
 ## Commands
 

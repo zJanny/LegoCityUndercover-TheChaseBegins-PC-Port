@@ -36,6 +36,7 @@ For example, `A key Space hold` makes Space press the A button.
 - Pressing two opposite directions at once cancels them out.
 - When the window loses focus, every button is released.
 - The left mouse button acts as the touch screen inside the lower-screen area.
+- Everything on the lower screen (map buttons, menus) is used by clicking it. There are no extra keys for it.
 
 ## Attacking
 
