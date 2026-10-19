@@ -73,6 +73,7 @@ struct SlotStart {
     bool gameComplete = false;
     std::vector<SavedVariable> variables;
     std::vector<ObjectRecord> objectRecords;
+    std::size_t endBitSetBytes = 0;  // the end bit set after the records of the saved state
     std::optional<unsigned> currentLevel;
     std::vector<std::uint8_t> slotBytes;  // the whole slot block, for the progress natives (natives_progress.hpp)
 };

@@ -139,13 +139,13 @@ int run(const Options& given) {
             shutDown(context, window);
             return 0;
         }
+        options.saveSlot = result.handoff.slot;
         if (result.handoff.newGame) {
             options.introMovieShown = true;
             options.level = game_options::kNewGameLevel;
             options.start = game_options::kNewGameStart;
         } else {
             options.saveFile = options.frontSave;
-            options.saveSlot = result.handoff.slot;
         }
     }
     if (!options.saveFile.empty() && !options.levelGiven) game_save::chooseContinueLevel(archive, options);
@@ -157,8 +157,9 @@ int run(const Options& given) {
     std::optional<chase::render::DebugOverlay> debugOverlay;
     unsigned scriptOffset = 0;
     bool afterSwitch = false;
+    game_save::Progress progress;
     for (;;) {
-        game_level::LevelSession session({archive, options, audio, master, sceneChanges, scriptOffset, afterSwitch});
+        game_level::LevelSession session({archive, options, audio, master, sceneChanges, scriptOffset, afterSwitch, progress});
         bool running = true;
         Uint32 secondStart = SDL_GetTicks();
         while (running) {
@@ -204,6 +205,7 @@ int run(const Options& given) {
         debugOverlay.reset();
         session.releaseOverlays();
         if (!session.switchTo) break;
+        session.handOverProgress();
         game_level::advanceToDestination(archive, options, *session.switchTo, session.updateCount(), scriptOffset, afterSwitch);
     }
     shutDown(context, window);

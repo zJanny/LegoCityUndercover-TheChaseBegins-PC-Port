@@ -37,7 +37,7 @@ target_compile_options(chase_save PRIVATE -Wall -Wextra -Wpedantic)
 add_library(chase_save_tables src/save/completion_tables.cpp)
 target_link_libraries(chase_save_tables PUBLIC chase_save chase_assets)
 target_compile_options(chase_save_tables PRIVATE -Wall -Wextra -Wpedantic)
-add_library(chase_save_progress src/save/slot_progress.cpp src/save/continue_start.cpp src/save/save_writer.cpp)
+add_library(chase_save_progress src/save/slot_progress.cpp src/save/continue_start.cpp src/save/save_writer.cpp src/save/new_game.cpp src/save/level_state.cpp)
 target_link_libraries(chase_save_progress PUBLIC chase_save chase_assets)
 target_compile_options(chase_save_progress PRIVATE -Wall -Wextra -Wpedantic)
 # Game runtime core (plan S4e): recovered frame logic, no SDL dependency.
@@ -113,7 +113,7 @@ if(EPOXY_FOUND)
   if(FFMPEG_FOUND)
     add_executable(chase-game src/game.cpp src/game_options.cpp src/game_player.cpp src/game_carry.cpp src/game_scanner.cpp src/game_doors.cpp src/game_prop_parts.cpp src/game_level.cpp src/game_level_update.cpp src/game_vehicle.cpp src/game_vehicle_break.cpp src/game_vehicle_place.cpp src/game_vehicle_camera.cpp src/game_level_rooms.cpp src/game_cutscene.cpp src/game_level_cutscene.cpp src/game_characters.cpp src/game_particles.cpp src/game_level_natives.cpp src/game_detective.cpp src/game_use_spot.cpp src/game_objective_markers.cpp src/game_hand_items.cpp src/game_effects.cpp src/game_vehicle_effects.cpp src/game_zipline.cpp src/game_brick_grab.cpp src/game_climb_bar.cpp src/game_acrobat_pole.cpp src/game_pole.cpp src/game_animals.cpp src/game_object_visibility.cpp src/game_nested_props.cpp src/game_super_buildit.cpp)
     target_sources(chase-game PRIVATE src/game_props_destructible.cpp src/game_prop_destroy.cpp src/game_character_death.cpp src/game_fall_apart.cpp src/game_stud_drops.cpp src/game_super_bricks.cpp)
-    target_sources(chase-game PRIVATE src/game_attack.cpp src/game_screen_fade.cpp src/game_screen_shake.cpp)
+    target_sources(chase-game PRIVATE src/game_attack.cpp src/game_screen_fade.cpp src/game_screen_shake.cpp src/game_save.cpp)
     target_link_libraries(chase-game PRIVATE chase_render chase_runtime chase_input chase_audio chase_frontend_movie chase_save_progress chase_save_tables)
     target_compile_options(chase-game PRIVATE -Wall -Wextra -Wpedantic)
   endif()
@@ -920,6 +920,20 @@ if(BUILD_TESTING)
   add_test(NAME save-writer-real-data COMMAND save-writer-real-test
     "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv" "${CHASE_REAL_SAVE}")
   set_tests_properties(save-writer-real-data PROPERTIES SKIP_RETURN_CODE 77)
+  add_executable(new-game-test tests/new_game_test.cpp)
+  target_link_libraries(new-game-test PRIVATE chase_save_progress chase_save_tables)
+  target_compile_options(new-game-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME new-game-slot COMMAND new-game-test)
+  add_test(NAME new-game-slot-real-data COMMAND new-game-test
+    "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv" "${CHASE_REAL_SAVE}")
+  set_tests_properties(new-game-slot-real-data PROPERTIES SKIP_RETURN_CODE 77)
+  add_executable(level-state-test tests/level_state_test.cpp)
+  target_link_libraries(level-state-test PRIVATE chase_save_progress)
+  target_compile_options(level-state-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME level-state COMMAND level-state-test)
+  add_test(NAME level-state-real-data COMMAND level-state-test
+    "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv" "${CHASE_REAL_SAVE}")
+  set_tests_properties(level-state-real-data PROPERTIES SKIP_RETURN_CODE 77)
   add_executable(assets-real-test tests/assets_real_test.cpp)
   target_link_libraries(assets-real-test PRIVATE chase_assets)
   target_compile_options(assets-real-test PRIVATE -Wall -Wextra -Wpedantic)
@@ -1212,6 +1226,26 @@ if(BUILD_TESTING)
       --script "at 948.327 95.031 1124.175 0;0 0 40")
     set_tests_properties(game-super-brick-freeplay PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
       PASS_REGULAR_EXPRESSION "super bricks: total 1500, 0 collecting, 1 collected, 7 left.*sounds: 31:14")
+    # Saves (docs/re/save-format-state.md, SAVE-15, SAVE-11, STUD-17): the same run as a new game writes the save request of the brick's destroy
+    # to the default save file (XDG_DATA_HOME is the test's own directory, set for every test below); a second run continues from that file
+    # and starts with the 1500 super bricks and the saved level state (StoryProgress 1 as in the oracle's gameplay-start slot, SAVE-14).
+    add_test(NAME game-save-new-game-clean COMMAND ${CMAKE_COMMAND} -E remove_directory "${CMAKE_BINARY_DIR}/test-xdg/game-save-new-game")
+    set_tests_properties(game-save-new-game-clean PROPERTIES FIXTURES_SETUP save_new_game_clean)
+    add_test(NAME game-save-new-game COMMAND chase-game
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
+      --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes
+      --script "at 948.327 95.031 1124.175 0;0 0 40")
+    set_tests_properties(game-save-new-game PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
+      FIXTURES_REQUIRED save_new_game_clean FIXTURES_SETUP save_new_game
+      PASS_REGULAR_EXPRESSION "save: new game in slot 0, save requests write [^\n]*/test-xdg/game-save-new-game/chase/savegame\\.dat.*save: level entry 2, studs 0, super bricks 0.*save: request 1 written to")
+    add_test(NAME game-save-reload COMMAND chase-game
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --save "${CMAKE_BINARY_DIR}/test-xdg/game-save-new-game/chase/savegame.dat" --slot 0
+      --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes --script "0 0 2")
+    set_tests_properties(game-save-reload PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
+      FIXTURES_REQUIRED save_new_game
+      PASS_REGULAR_EXPRESSION "save: loaded in slot 0[^\n]*\nsave: level entry 2, studs [0-9]+, super bricks 1500\nsave: slot 0, level 2, saved state of the level \\(StoryProgress 1, [0-9]+ variables\\), unlocked levels 0x4,.*super bricks: total 1500,")
     # The roof brick of mission 1-3: 1-3_Rainbow_02 (904.929 30.697 1133.099, level data) is hidden until 1-3_ArrivedAtStation has shown it (update
     # 1073 of the port's run). The player stands 2.53 from it on the roof (the position of the user's state m13-1-roof-superbrick) and is moved
     # to 1.05 from it at update 1100; the brick adds 200. About 10 s (slow).
@@ -1624,6 +1658,11 @@ target_compile_options(player-script-animation-test PRIVATE -Wall -Wextra -Wpeda
 add_test(NAME player-script-animation COMMAND player-script-animation-test)
 add_test(NAME player-script-animation-real-data COMMAND player-script-animation-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
 set_tests_properties(player-script-animation-real-data PROPERTIES SKIP_RETURN_CODE 77)
+
+get_property(chase_all_tests DIRECTORY PROPERTY TESTS)
+foreach(test_name ${chase_all_tests})
+  set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT "XDG_DATA_HOME=${CMAKE_BINARY_DIR}/test-xdg/${test_name}")
+endforeach()
 
 foreach(slow_test game-cutscene-dog-end game-super-buildit-build game-super-brick-roof game-doorlock-detective-1-2 game-cage-release-1-2 game-mission-1-1 game-mission-1-1-start game-vehicle-drive game-vehicle-room game-vehicle-hit game-vehicle-smash game-vehicle-break game-director-hold game-director-release game-van-escort waypoint-marker-shot audio-real-data)
   if(TEST ${slow_test})

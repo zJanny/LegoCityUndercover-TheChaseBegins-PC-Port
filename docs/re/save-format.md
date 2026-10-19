@@ -9,7 +9,7 @@ Moved to [save-format-state.md](save-format-state.md): level state blocks, unloc
 - File `data:/savegame.dat` is 0xa694 bytes: CRC u32 (reflected 0xedb88320, init 0xffffffff, no final XOR, over [0x18, end)), u16 size (whole file), u16 version 30, magic "LEGO_ENGINE_SAVE", options block at 0x18 (0x21c bytes), slot 0 at 0x234 and slot 1 at 0x5464 (0x5230 bytes each). [§2026-10-13T10:30](#ts-20261013-1030), [§2026-10-13T12:10](#ts-20261013-1210)
 - Load check 0x1d0acc: bad magic gives status 3, CRC, size or version mismatch status 4; either resets to defaults (0x2081cc). [§2026-10-13T10:30](#ts-20261013-1030)
 - Options: +0 nibbles 8 and 10 (no reader found), +1 language, +2 last slot (0xff none), +3 bit 0 subtitles (inferred), bit 1 invert camera; +4/+5 are the sound volume and +6/+7 the music volume per slot (default 10 and 8). The earlier "two per-slot pairs" and music/SFX readings are corrected. [§2026-10-13T08:53](#ts-20261013-0853)
-- Reset defaults: options start `8a LL ff 21 0a 0a 08 08`, language mapped from the 3DS system language (2 to 2, 3 to 4, 4 to 3, 5 to 5, 7 to 12, 8 to 6, 9 to 8, 10 to 9, else 1); slot defaults depend on runtime values and are not reproduced. [§2026-10-13T12:30](#ts-20261013-1230)
+- Reset defaults: options start `8a LL ff 21 0a 0a 08 08`, language mapped from the 3DS system language (2 to 2, 3 to 4, 4 to 3, 5 to 5, 7 to 12, 8 to 6, 9 to 8, 10 to 9, else 1). [§2026-10-13T12:30](#ts-20261013-1230) The slot defaults of a new game (callback 0x1a25cc) are in [save-format-state.md §2026-10-19T20:24:11](save-format-state.md#ts-20261019-202411).
 - Language indices 1..9: English, French, Italian, German, Spanish, Dutch, Danish, Portuguese, Russian; the picker rows map to 1, 2, 3, 4, 5, 7, 6, 9, 8. [§2026-10-13T08:53](#ts-20261013-0853)
 - Options +0xc + slot x 0x18 is a gift list (count, then type/id pairs); +0x1ec + slot x 0x18 is a 24-byte record whose "slot summary" meaning is unconfirmed. [§2026-10-13T08:56](#ts-20261013-0856)
 - Slot progress: character bits at +0x51bc (2 bits per id below 141), per-level blocks of 0x820 bytes (level 1 at +0x4928, levels 2..8 from +0x8) with u16[13] category counts; stud count u64 at +0x5148. [§2026-10-13T09:13](#ts-20261013-0913)
@@ -69,6 +69,7 @@ Corrected by [save-format.md §2026-10-13T08:56](#ts-20261013-0856): the slot su
 ## 2026-10-13T12:30+02:00 — Reset defaults 0x2081cc (REA, Ghidra 12.1.2; read-only)
 
 Corrected by [save-format.md §2026-10-13T08:53](#ts-20261013-0853): options +4/+5 are sound volume, +6/+7 music volume
+Corrected by [save-format-state.md §2026-10-19T20:24:11](save-format-state.md#ts-20261019-202411): the callback unlocks only the characters whose TablesCharacters byte +0xc is below 2 (only id 9), and in the New Game call the "live globals" are the slot itself
 
 - [Corrects save-format.md §2026-10-13T10:30](#ts-20261013-1030): +4..+7 are two per-slot pairs, not one music/SFX pair. The descriptor from 0x1a1fb8 (ev_c8c0b40e…) holds sizes, slot count 2, version 0x1e, the slot callback 0x1a25cc and the options callback 0x1a25a0.
 - 0x2081cc (ev_4e9c96fe…) zeroes the whole buffer (0x24d234), then sets the options block:

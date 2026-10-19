@@ -14,21 +14,28 @@ constexpr std::size_t kSlotPlayTicksOffset = 0;
 constexpr std::size_t kSlotPermilleOffset = 4;
 constexpr std::size_t kSlotStudsOffset = 0x5148;
 constexpr std::size_t kSlotStudFlagsOffset = 0x520b;
-constexpr std::size_t kSlotStudTotalOffset = 0x5190;
+constexpr std::size_t kSlotSuperBrickCountOffset = 0x5190;
 constexpr std::uint8_t kSlotStudFlagsMask = 0x1c;
 constexpr unsigned kPlayTicksPerSecond = 30;
 constexpr unsigned kLocationHashColumn = 11;  // TablesLevels sheet 0, row +8 of the table at 0x375914
 
-// The live values 0x17caf8 copies into the slot: 8 bytes at 0x593418, its u32 at +0x18 and the byte at 0x519760 + 0x40.
+// The live values 0x17caf8 copies into the slot: the stud counter (8 bytes at 0x593418), the super brick count (its u32
+// at +0x18) and the stud type of the HUD counter (byte 0x519760 + 0x40, set by 0x22ddf4).
 struct SlotSummaryInput {
     std::uint64_t studs = 0;
-    std::uint32_t studTotal = 0;
-    std::uint8_t displayByte = 0;
+    std::uint32_t superBricks = 0;
+    std::uint8_t studType = 0;
 };
 
-// 0x17caf8: studs at +0x5148, bits 2..4 of +0x520b from (displayByte << 2), the u32 at +0x5190, then the completion
+// 0x17caf8: studs at +0x5148, bits 2..4 of +0x520b from (studType << 2), the u32 at +0x5190, then the completion
 // per mille (0x1cd3dc) at +4. Returns false when the slot block is shorter than kSlotSize.
 bool writeSlotSummary(std::uint8_t* slot, std::size_t size, const SlotSummaryInput& input, std::uint16_t permille);
+
+// Bits 2..4 of slot +0x520b. 0x22ddf4 writes them from the stud type of the HUD counter (byte 0x519760 + 0x40) each time a
+// stud is banked; type 4 leaves the type unchanged. STAND-IN SAVE-S9: the port takes the HUD's type from these bits, also
+// before the first stud of a run (what the HUD byte holds after a load, 0x2cf080, was not read).
+std::uint8_t slotStudType(SlotView slot);
+void setSlotStudType(std::uint8_t* slot, unsigned type);
 
 // The per-update play time counter at slot +0 (incremented once per update by the four update loops 0x2d8a30,
 // 0x2e5338, 0x2f26e8 and 0x300444).
@@ -43,24 +50,26 @@ bool commitSlot(SaveImage& image, int activeSlot, const Bytes& liveSlot);
 
 void setSlotPermille(std::uint8_t* slot, std::uint16_t permille);
 
-// Development runtime glue for the save request: every new request of the progress natives (`requests` is their
-// running count) writes the live slot into a copy of the image and stores it at `path`, the port's own save file and
-// never the file the slot was loaded from. An empty path turns the writer off. The permille is recomputed from the
-// slot when `totals` is given; the other summary fields of 0x17caf8 are not taken from live state (SAVE-S5).
+// The save request 0x21cf38(0) on the live slot: the summary 0x17caf8 (with the completion per mille when `totals` is
+// given) is written into `liveSlot`, then the commit of task 0x2c8e5c copies it into the image, which is stored at `path`
+// (atomic replace). With an empty path only the summary is written. The level state refresh 0x192f60 is the caller's (level_state.hpp).
+// STAND-IN SAVE-S8: the store happens in the update of the request; the I/O time of the save thread and the single
+// pending request of the queue 0x2400a0 are not modelled.
 class SaveRequestWriter {
 public:
     SaveRequestWriter() = default;
     SaveRequestWriter(std::string path, SaveImage base, unsigned slot, std::optional<CompletionTotals> totals);
     bool enabled() const { return !path_.empty(); }
-    bool update(unsigned requests, const Bytes& liveSlot);
+    bool request(Bytes& liveSlot, const SlotSummaryInput& input);
     unsigned written() const { return written_; }
+    const std::string& path() const { return path_; }
+    const SaveImage& image() const { return image_; }
 
 private:
     std::string path_;
     SaveImage image_;
     unsigned slot_ = 0;
     std::optional<CompletionTotals> totals_;
-    unsigned seen_ = 0;
     unsigned written_ = 0;
 };
 

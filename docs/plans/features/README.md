@@ -72,7 +72,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | [hud-ui-text](hud-ui-text.md) | IN_PROGRESS | HUD-22 remaining text screens; HUD-30 character intro and box line counts; HUD-33 tip after the release camera |
 | [audio](audio.md) | IN_PROGRESS | AUDIO-20 duck record; AUDIO-11 action music; AUDIO-3 world sounds |
 | [movies-cutscenes](movies-cutscenes.md) | IN_PROGRESS | MOVIE-33 camera of 1_1_d; MOVIE-3 short actor clips; MOVIE-1 layout values |
-| [saves-options](saves-options.md) | IN_PROGRESS | SAVE-13 Continue at level 2 and later, SAVE-8 object record meaning (needs a richer save), SAVE-2 slot display (blocks FE-1) |
+| [saves-options](saves-options.md) | IN_PROGRESS | SAVE-14 level state refresh of a save request, SAVE-18 HUD studs after a load, SAVE-13 Continue at level 2 and later, SAVE-2 slot display (blocks FE-1) |
 
 ## Rendering and assets
 

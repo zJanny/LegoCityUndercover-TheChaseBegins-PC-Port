@@ -66,6 +66,14 @@ build/chase-game
 
 A window opens. It shows the start screens of the original game: logos, language list, slot list and the intro movie. After the title card the level starts, and you can move the main character. Press Escape to quit.
 
+The game saves at the same moments as the original (for example when the story saves or you collect a super brick). The file is `~/.local/share/chase/savegame.dat`; the terminal prints `save: request N written to ...` each time. To continue later, start from that file:
+
+```sh
+build/chase-game --save ~/.local/share/chase/savegame.dat --slot 0
+```
+
+You should see `save: level entry ..., studs ..., super bricks ...` in the terminal, and the level that slot was last in starts. Saving is new and incomplete: what you built or collected in a level is not stored yet.
+
 ## Controls
 
 | Action | Keys |
@@ -100,13 +108,13 @@ All keys and how to change them: [Controls](docs/controls.md).
 | Script commands | 49 of 239 (20.5%) | Different commands the level scripts call that the port runs. They cover 67.8% of all calls. 134 more run with a stand-in result. |
 | Object types | 156 of 506 (30.8%) | Different object types in the levels that the port treats with recovered rules (collision, doors, studs). They cover 54.4% of all placed objects. |
 | Game files read | 99.7% of files, 99.9% of data | Files in the game archive (12836) that the port can decode, by count and by size. |
-| Open work | 455 open items, 346 stand-ins | Known gaps and temporary guesses in 26 feature areas. It has no total to reach; watch the trend. |
-| Checked against the original | 297 tests, 210 recorded traces | Automatic tests, and recordings of the original game that the tests compare with. |
-| Game code documented | 2354 of about 7575 (31.1%) | Functions of the game program that the notes or the source point to. The total is an estimate. |
+| Open work | 457 open items, 352 stand-ins | Known gaps and temporary guesses in 26 feature areas. It has no total to reach; watch the trend. |
+| Checked against the original | 304 tests, 210 recorded traces | Automatic tests, and recordings of the original game that the tests compare with. |
+| Game code documented | 2362 of about 7575 (31.2%) | Functions of the game program that the notes or the source point to. The total is an estimate. |
 
 ![Progress trend](docs/progress-trend.svg)
 
-Updated 2026-10-19, commit 20d14cb. How the numbers are measured: [docs/progress.md](docs/progress.md).
+Updated 2026-10-19, commit 813551f. How the numbers are measured: [docs/progress.md](docs/progress.md).
 <!-- progress:end -->
 
 ## More documentation

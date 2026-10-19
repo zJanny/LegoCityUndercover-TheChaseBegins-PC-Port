@@ -32,11 +32,21 @@ void setSlotPermille(std::uint8_t* slot, std::uint16_t permille) {
 bool writeSlotSummary(std::uint8_t* slot, std::size_t size, const SlotSummaryInput& input, std::uint16_t permille) {
     if (size < kSlotSize) return false;
     for (int i = 0; i < 8; ++i) slot[kSlotStudsOffset + i] = std::uint8_t(input.studs >> (8 * i));
-    const std::uint8_t shifted = std::uint8_t(input.displayByte << 2) & kSlotStudFlagsMask;
+    const std::uint8_t shifted = std::uint8_t(input.studType << 2) & kSlotStudFlagsMask;
     slot[kSlotStudFlagsOffset] = std::uint8_t((slot[kSlotStudFlagsOffset] & ~kSlotStudFlagsMask) | shifted);
-    writeU32(slot + kSlotStudTotalOffset, input.studTotal);
+    writeU32(slot + kSlotSuperBrickCountOffset, input.superBricks);
     setSlotPermille(slot, permille);
     return true;
+}
+
+std::uint8_t slotStudType(SlotView slot) {
+    return slot.size > kSlotStudFlagsOffset ? std::uint8_t((slot.data[kSlotStudFlagsOffset] & kSlotStudFlagsMask) >> 2) : 0;
+}
+
+void setSlotStudType(std::uint8_t* slot, unsigned type) {
+    constexpr unsigned kKeepType = 4;
+    if (type == kKeepType) return;
+    slot[kSlotStudFlagsOffset] = std::uint8_t((slot[kSlotStudFlagsOffset] & ~kSlotStudFlagsMask) | ((type & 7) << 2));
 }
 
 std::uint32_t playTicks(SlotView slot) { return slot.size >= 4 ? readU32(slot.data + kSlotPlayTicksOffset) : 0; }
@@ -54,16 +64,17 @@ bool commitSlot(SaveImage& image, int activeSlot, const Bytes& liveSlot) {
 SaveRequestWriter::SaveRequestWriter(std::string path, SaveImage base, unsigned slot, std::optional<CompletionTotals> totals)
     : path_(std::move(path)), image_(std::move(base)), slot_(slot), totals_(std::move(totals)) {}
 
-bool SaveRequestWriter::update(unsigned requests, const Bytes& liveSlot) {
-    if (path_.empty() || requests == seen_) return false;
-    seen_ = requests;
-    Bytes slot = liveSlot;
-    if (totals_ && slot.size() == kSlotSize) {
-        const std::optional<std::uint16_t> permille = completionPermille(SlotView{slot.data(), slot.size()}, *totals_);
-        if (permille) setSlotPermille(slot.data(), *permille);
+bool SaveRequestWriter::request(Bytes& liveSlot, const SlotSummaryInput& input) {
+    if (liveSlot.size() != kSlotSize) return false;
+    const std::uint16_t permille = std::uint16_t(liveSlot[kSlotPermilleOffset] | liveSlot[kSlotPermilleOffset + 1] << 8);
+    writeSlotSummary(liveSlot.data(), liveSlot.size(), input, permille);
+    if (totals_) {
+        const std::optional<std::uint16_t> computed = completionPermille(SlotView{liveSlot.data(), liveSlot.size()}, *totals_);
+        if (computed) setSlotPermille(liveSlot.data(), *computed);
     }
+    if (path_.empty()) return false;
     SaveImage next = image_;
-    if (!commitSlot(next, int(slot_), slot)) return false;
+    if (!commitSlot(next, int(slot_), liveSlot)) return false;
     store(path_, next);
     image_ = std::move(next);
     ++written_;

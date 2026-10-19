@@ -218,14 +218,17 @@ LevelSession::LevelSession(const Shared& sharedState)
     });
     std::vector<runtime::NavWorld> navWorlds = runtime::loadNavWorlds(archive, options.level, level);
     if (!navWorlds.empty()) levelScripts.ai().setNavigation(std::move(navWorlds));
-    if (!options.saveFile.empty()) {
-        const chase::save::SlotStart saved = game_save::load(options.saveFile, options.saveSlot, archive, level, options.level);
-        game_save::apply(saved, levelScripts);
-        saveWriter = game_save::requestWriter(options, archive);
-        std::cout << "save: slot " << options.saveSlot << ", level " << saved.level << ", "
-                  << (saved.stateSaved ? "saved state of the level (StoryProgress " + std::to_string(saved.storyProgress) + ", " + std::to_string(saved.variables.size()) + " variables)" : std::string("no saved state of the level"))
-                  << ", unlocked levels 0x" << std::hex << saved.levelUnlocked << std::dec << ", game complete " << saved.gameComplete << '\n';
-    }
+    if (!shared.progress.started) game_save::start(shared.progress, options, archive, options.level);
+    else game_save::sceneEntered(shared.progress, archive, options.level);
+    studs.setCounter(shared.progress.studs);
+    superBricks.setTotal(shared.progress.superBricks);
+    const chase::save::SlotStart saved = game_save::slotStartFor(shared.progress, archive, level, options.level);
+    game_save::apply(saved, levelScripts);
+    saveLevelId = saved.level;
+    saveLevelState = game_save::levelStateInput(saved, levelScripts);
+    std::cout << "save: slot " << options.saveSlot << ", level " << saved.level << ", "
+              << (saved.stateSaved ? "saved state of the level (StoryProgress " + std::to_string(saved.storyProgress) + ", " + std::to_string(saved.variables.size()) + " variables)" : std::string("no saved state of the level"))
+              << ", unlocked levels 0x" << std::hex << saved.levelUnlocked << std::dec << ", game complete " << saved.gameComplete << '\n';
     if (!shared.afterSwitch)
         for (const auto& [name, value] : options.variables) {
             const std::uint32_t hash = chase::assets::nameHash(name);
@@ -555,6 +558,12 @@ runtime::DebugGameValues LevelSession::debugValues() const {
         values.headingDegrees = runtime::headingRadians(player->motion.facing) * 180.0f / float(M_PI);
     }
     return values;
+}
+
+void LevelSession::handOverProgress() {
+    shared.progress.slot = levelScripts.progressNatives().slotImage();
+    shared.progress.studs = studs.counter();
+    shared.progress.superBricks = superBricks.total();
 }
 
 void LevelSession::releaseOverlays() {

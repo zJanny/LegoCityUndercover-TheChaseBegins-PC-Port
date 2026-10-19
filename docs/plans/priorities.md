@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 782 open items and stand-ins, 168 linked to game usage, 614 with unknown reach.
+Items: 790 open items and stand-ins, 168 linked to game usage, 622 with unknown reach.
 
 ## Top 50 overall
 
@@ -104,7 +104,7 @@ Items: 782 open items and stand-ins, 168 linked to game usage, 614 with unknown 
 
 ## Level objects
 
-14 of 115 items linked.
+14 of 114 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -167,7 +167,7 @@ Items: 782 open items and stand-ins, 168 linked to game usage, 614 with unknown 
 
 ## Front end, HUD, saves
 
-14 of 127 items linked.
+14 of 136 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -231,7 +231,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [player-traversal-rails.md](features/player-traversal-rails.md): TRAV-28 (+3), TRAV-38 (+1), TRAV-43 (+1), TRAV-44 (+1), TRAV-45 (+1), TRAV-S16 (+1), TRAV-S18 (+1), TRAV-S19 (+1), TRAV-27, TRAV-29, TRAV-31, TRAV-32, TRAV-33, TRAV-42, TRAV-S15, TRAV-S17, TRAV-S21, TRAV-S23, TRAV-S24, TRAV-S25, TRAV-S26
 - [player-traversal.md](features/player-traversal.md): TRAV-9 (+2), TRAV-2 (+1), TRAV-49 (+1), TRAV-52 (+1), TRAV-S12 (+1), TRAV-10, TRAV-19, TRAV-20, TRAV-22, TRAV-34, TRAV-35, TRAV-5, TRAV-56, TRAV-6, TRAV-8, TRAV-S1, TRAV-S10, TRAV-S11, TRAV-S13, TRAV-S2, TRAV-S20, TRAV-S29, TRAV-S3, TRAV-S30, TRAV-S31, TRAV-S32, TRAV-S4
 - [rendering.md](features/rendering.md): RENDER-35 (+23), RENDER-50 (+2), RENDER-69 (+2), RENDER-33 (+1), RENDER-39 (+1), RENDER-60 (+1), RENDER-63 (+1), RENDER-64 (+1), ASSET-S1, RENDER-2, RENDER-30, RENDER-34, RENDER-42, RENDER-6, RENDER-61, RENDER-70, RENDER-9, RENDER-S2, RENDER-S3, RENDER-S4, RENDER-S50, RENDER-S51, RENDER-S6, RENDER-S60, RENDER-S61, RENDER-S62, RENDER-S63, RENDER-S64, RENDER-S65, RENDER-S66, RENDER-S7
-- [saves-options.md](features/saves-options.md): SAVE-8 (+3), SAVE-13 (+1), SAVE-14 (+1), SAVE-15 (+1), SAVE-2 (+1), SAVE-11, SAVE-3, SAVE-4, SAVE-5, SAVE-S1, SAVE-S2, SAVE-S3, SAVE-S4, SAVE-S5
+- [saves-options.md](features/saves-options.md): SAVE-8 (+3), SAVE-13 (+1), SAVE-14 (+1), SAVE-16 (+1), SAVE-17 (+1), SAVE-18 (+1), SAVE-19 (+1), SAVE-2 (+1), SAVE-20 (+1), SAVE-3, SAVE-4, SAVE-5, SAVE-S1, SAVE-S10, SAVE-S11, SAVE-S2, SAVE-S3, SAVE-S4, SAVE-S5, SAVE-S6, SAVE-S7, SAVE-S8, SAVE-S9
 - [script-system-ai-navigation.md](features/script-system-ai-navigation.md): SCRIPT-92 (+29), SCRIPT-94 (+16), SCRIPT-101 (+14), SCRIPT-95 (+14), SCRIPT-100 (+13), SCRIPT-79 (+12), SCRIPT-S100, SCRIPT-S101, SCRIPT-S102, SCRIPT-S104, SCRIPT-S31, SCRIPT-S93, SCRIPT-S94, SCRIPT-S95
 - [script-system-dcam.md](features/script-system-dcam.md): SCRIPT-40 (+15), SCRIPT-182 (+1), SCRIPT-48 (+1), SCRIPT-50 (+1), SCRIPT-181, SCRIPT-332, SCRIPT-49, SCRIPT-S142
 - [script-system-hud-natives.md](features/script-system-hud-natives.md): SCRIPT-329 (+1), SCRIPT-330 (+1), SCRIPT-331, SCRIPT-68, SCRIPT-69, SCRIPT-70, SCRIPT-S270
@@ -243,7 +243,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [script-system-natives.md](features/script-system-natives.md): SCRIPT-43 (+17), SCRIPT-44 (+15), SCRIPT-45 (+13), SCRIPT-7 (+11), SCRIPT-150 (+1)
 - [script-system-triggers.md](features/script-system-triggers.md): SCRIPT-76 (+10), SCRIPT-51 (+3), SCRIPT-77 (+1), SCRIPT-78 (+1), SCRIPT-S15, SCRIPT-S28, SCRIPT-S30, SCRIPT-S8
 - [script-system.md](features/script-system.md): SCRIPT-1 (+9), SCRIPT-53 (+2), SCRIPT-2, SCRIPT-3, SCRIPT-5, SCRIPT-54, SCRIPT-55, SCRIPT-9, SCRIPT-S1, SCRIPT-S14, SCRIPT-S16, SCRIPT-S275, SCRIPT-S3, SCRIPT-S5, SCRIPT-S6, SCRIPT-S7
-- [studs.md](features/studs.md): STUD-1 (+1), STUD-13 (+1), STUD-16 (+1), STUD-18 (+1), STUD-17, STUD-3, STUD-5, STUD-6, STUD-8, STUD-S1, STUD-S3, STUD-S5, STUD-S6, STUD-S7, STUD-S8, STUD-S9
+- [studs.md](features/studs.md): STUD-1 (+1), STUD-13 (+1), STUD-16 (+1), STUD-18 (+1), STUD-3, STUD-5, STUD-6, STUD-8, STUD-S1, STUD-S3, STUD-S5, STUD-S6, STUD-S7, STUD-S8, STUD-S9
 - [vehicles-boarding.md](features/vehicles-boarding.md): VEH-19 (+5), VEH-80 (+2), HUD-50 (+1), HUD-S50, HUD-S51, VEH-20, VEH-S10, VEH-S70, VEH-S8, VEH-S9
 - [vehicles-damage.md](features/vehicles-damage.md): VEH-120 (+3), VEH-125 (+3), VEH-113 (+2), VEH-115 (+2), VEH-123 (+2), VEH-124 (+2), VEH-121 (+1), VEH-122, VEH-128, VEH-S100, VEH-S101, VEH-S103, VEH-S104, VEH-S90, VEH-S93, VEH-S96, VEH-S97, VEH-S98, VEH-S99
 - [vehicles-physics-collision.md](features/vehicles-physics-collision.md): VEH-70 (+2), VEH-91 (+2), VEH-100 (+1), VEH-101 (+1), VEH-102 (+1), VEH-S52, VEH-S60, VEH-S62, VEH-S81, VEH-S82, VEH-S86, VEH-S87

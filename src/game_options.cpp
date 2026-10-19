@@ -142,8 +142,7 @@ std::vector<ScriptStep> parseScript(const std::string& text) {
 }
 
 void checkSaveOut(const Options& o) {
-    if (o.saveOut.empty()) return;
-    if (o.saveFile.empty()) throw std::runtime_error("--save-out: needs --save, the slot it writes comes from that file");
+    if (o.saveOut.empty() || o.saveFile.empty()) return;
     namespace fs = std::filesystem;
     std::error_code ignored;
     const bool same = fs::absolute(o.saveOut).lexically_normal() == fs::absolute(o.saveFile).lexically_normal() ||

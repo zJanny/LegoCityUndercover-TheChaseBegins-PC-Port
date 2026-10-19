@@ -54,18 +54,30 @@ void testSummary() {
     Bytes slot(kSlotSize, 0xaa);
     SlotSummaryInput input;
     input.studs = 0x0102030405060708ull;
-    input.studTotal = 0x11223344;
-    input.displayByte = 3;
+    input.superBricks = 0x11223344;
+    input.studType = 3;
     require(!writeSlotSummary(slot.data(), kSlotSize - 1, input, 7), "short slot accepted");
     require(writeSlotSummary(slot.data(), slot.size(), input, 0x0203), "summary");
     require(slot[kSlotStudsOffset] == 0x08 && slot[kSlotStudsOffset + 7] == 0x01, "studs bytes");
     require(slot[kSlotStudFlagsOffset] == ((0xaa & ~0x1c) | 0x0c), "flag bits 2..4");
-    require(slot[kSlotStudTotalOffset] == 0x44 && slot[kSlotStudTotalOffset + 3] == 0x11, "stud total");
+    require(slot[kSlotSuperBrickCountOffset] == 0x44 && slot[kSlotSuperBrickCountOffset + 3] == 0x11, "super brick count");
     require(slot[kSlotPermilleOffset] == 0x03 && slot[kSlotPermilleOffset + 1] == 0x02, "permille");
     require(slot[3] == 0xaa && slot[kSlotStudsOffset + 8] == 0xaa, "neighbours untouched");
-    input.displayByte = 0xff;
+    input.studType = 0xff;
     writeSlotSummary(slot.data(), slot.size(), input, 0);
     require(slot[kSlotStudFlagsOffset] == ((0xaa & ~0x1c) | 0x1c), "flag bits masked to 0x1c");
+}
+
+void testStudType() {
+    // Provenance: 0x22ddf4 (REA pseudo code): type 4 keeps byte 0x519760 + 0x40, then slot +0x520b bits 2..4 = (byte & 7) << 2.
+    Bytes slot(kSlotSize, 0);
+    slot[kSlotStudFlagsOffset] = 0xe3;
+    setSlotStudType(slot.data(), 2);
+    require(slot[kSlotStudFlagsOffset] == 0xeb && slotStudType({slot.data(), slot.size()}) == 2, "type 2");
+    setSlotStudType(slot.data(), 4);
+    require(slot[kSlotStudFlagsOffset] == 0xeb, "type 4 keeps the type");
+    setSlotStudType(slot.data(), 3);
+    require(slotStudType({slot.data(), slot.size()}) == 3 && (slot[kSlotStudFlagsOffset] & 0xe3) == 0xe3, "type 3, other bits kept");
 }
 
 void testPlayTicks() {
@@ -96,18 +108,28 @@ void testRequestWriter() {
     std::filesystem::create_directories(dir);
     const std::string path = (dir / "out" / "savegame.dat").string();
     Bytes live(kSlotSize, 0x5a);
+    SlotSummaryInput input;
+    input.studs = 1234;
+    input.superBricks = 296;
+    input.studType = 1;
     SaveRequestWriter off;
-    require(!off.enabled() && !off.update(1, live), "disabled writer");
-    SaveRequestWriter writer(path, SaveImage(), 0, std::nullopt);
-    require(writer.enabled() && !writer.update(0, live) && !std::filesystem::exists(path), "no request, no file");
-    require(writer.update(1, live) && writer.written() == 1, "first request");
+    require(!off.enabled() && !off.request(live, input), "disabled writer writes no file");
+    require(live[kSlotStudsOffset] == 0xd2 && live[kSlotStudsOffset + 1] == 0x04, "disabled writer still writes the summary");
+    std::fill(live.begin(), live.end(), 0x5a);
+    SaveRequestWriter writer(path, SaveImage(), 1, std::nullopt);
+    require(writer.enabled() && !std::filesystem::exists(path), "no request, no file");
+    Bytes shortSlot(kSlotSize - 1, 0);
+    require(!writer.request(shortSlot, input) && !std::filesystem::exists(path), "short live slot");
+    require(writer.request(live, input) && writer.written() == 1, "first request");
+    require(live[kSlotSuperBrickCountOffset] == 0x28 && live[kSlotSuperBrickCountOffset + 1] == 0x01, "summary in the live slot");
     LoadResult loaded = load(path);
     require(loaded.found && loaded.status == Status::Ok && loaded.image, "stored file valid");
-    require(std::equal(live.begin(), live.end(), loaded.image->slot(0)) && loaded.image->lastSlot() == std::size_t(0), "stored slot");
-    require(!writer.update(1, live) && writer.written() == 1, "same count writes nothing");
+    require(std::equal(live.begin(), live.end(), loaded.image->slot(1)) && loaded.image->lastSlot() == std::size_t(1), "stored slot");
+    require(loaded.image->slot(0)[0] == 0, "other slot untouched");
     live[10] = 1;
-    require(writer.update(2, live) && writer.written() == 2, "second request");
-    require(load(path).image->slot(0)[10] == 1, "second write stored");
+    input.superBricks = 302;
+    require(writer.request(live, input) && writer.written() == 2, "second request");
+    require(load(path).image->slot(1)[10] == 1 && load(path).image->slot(1)[kSlotSuperBrickCountOffset] == 0x2e, "second write stored");
     std::filesystem::remove_all(dir);
 }
 }
@@ -118,6 +140,7 @@ int main() {
         testPercent();
         testLocation();
         testSummary();
+        testStudType();
         testPlayTicks();
         testCommit();
         testRequestWriter();

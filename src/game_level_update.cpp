@@ -331,7 +331,10 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         effects.update(dt, {follow->eye()[0], follow->eye()[1], follow->eye()[2]});
         for (const runtime::SoundCall& call : player->sounds) emit(call);
         if (hud)
-            for (const runtime::StudBanked& banked : studs.takeBanked()) hud->studsBanked(unsigned(banked.kind), banked.total);
+            for (const runtime::StudBanked& banked : studs.takeBanked()) {
+                hud->studsBanked(unsigned(banked.kind), banked.total);
+                chase::save::setSlotStudType(levelScripts.progressNatives().slotImage().data(), unsigned(banked.kind));
+            }
     }
     if (player) {
         const float playerPosition[3] = {player->motion.x, player->vertical.y, player->motion.z};
@@ -359,7 +362,8 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         if (shared.audio) shared.audio->applyMusic(request);
     for (const runtime::SoundRequest& request : levelScripts.soundNatives().takeRequests())
         if (shared.audio) shared.audio->applySound(request);
-    saveWriter.update(levelScripts.progressNatives().saveRequests(), levelScripts.progressNatives().slotImage());
+    game_save::update(shared.progress, levelScripts.progressNatives(), seenSaveRequests, studs.counter(), superBricks.total(),
+                      [this](chase::save::Bytes& slot) { game_save::refreshLevelState(slot, level, saveLevelId, saveLevelState); });
     sceneStart.update(dt);
     if (player) {
         const float playerPosition[3] = {player->motion.x, player->vertical.y, player->motion.z};

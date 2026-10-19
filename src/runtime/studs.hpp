@@ -94,6 +94,8 @@ public:
     void bank(StudKind kind);
     // AddStuds 0x18838c adds through 0x1584e0 to the counter object without the clamp of 0x28a128.
     void addToCounter(std::uint64_t amount) { counter_ += amount; }
+    // The slot load 0x20a500 copies slot +0x5148 into the counter.
+    void setCounter(std::uint64_t counter) { counter_ = counter; }
     const std::vector<Stud>& studs() const { return studs_; }
     std::vector<Stud>& studs() { return studs_; }
     std::size_t count(StudState state) const;

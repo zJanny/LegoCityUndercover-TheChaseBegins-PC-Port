@@ -24,7 +24,7 @@
 - Collision with people, objects that break or move, the camera being placed again when it is stuck, and the character's other moves (fighting, climbing poles, bricks and rails). Vehicles are only partly done.
 - Most music, and the sounds of other people, animals, vehicles and objects. For the character and the coins the sound for each event is known.
 - Several smaller file types.
-- Most of what a save game contains. The save file can be checked, read and written safely. Only the completion totals, the last level, the missions done, unlocks and level variables are understood. `chase-game --save` starts from a slot; collected items and object states do not come from the save yet.
+- Most of what a save game contains. The save file can be checked, read and written safely. Only the completion totals, the last level, the missions done, unlocks, level variables, studs, super bricks and the play time are understood. `chase-game` writes the save at the original's save requests and `chase-game --save` starts from a slot; collected items and object states are not saved or loaded yet.
 
 ## For developers
 

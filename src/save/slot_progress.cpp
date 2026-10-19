@@ -157,6 +157,7 @@ SlotStart slotStart(SlotView slot, const assets::Level& level, unsigned levelId,
         const std::vector<SavedVariable> tasks = tasksCompleteVariables(*objects);
         start.variables.insert(start.variables.end(), tasks.begin(), tasks.end());
         start.objectRecords = objects->records;
+        start.endBitSetBytes = objects->endBitSetBytes;
     }
     start.currentLevel = slotCurrentLevel(slot);
     start.slotBytes.assign(slot.data, slot.data + slot.size);

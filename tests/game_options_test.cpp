@@ -100,7 +100,7 @@ void testValidValues() {
 
 void testRejections() {
     expectRejected({"--slot", "1x"}, "--slot: not a whole number: '1x'");
-    expectRejected({"--save-out", "out.dat"}, "--save-out: needs --save, the slot it writes comes from that file");
+    if (parseArgs({"--save-out", "out.dat"}).saveOut != "out.dat") fail("--save-out without --save: a new game writes there");
     expectRejected({"--save", "a.dat", "--save-out", "./a.dat"}, "--save-out: must not be the file given with --save: './a.dat'");
     expectRejected({"--save-out"}, "--save-out: missing value: ''");
     if (parseArgs({"--save", "a.dat", "--save-out", "b.dat"}).saveOut != "b.dat") fail("--save-out value lost");

@@ -68,6 +68,8 @@ public:
     std::uint32_t total() const { return total_; }
     // A finished super build-it (0x26d550 state 3) lowers the count by its value (runtime/super_buildit.hpp).
     void spend(std::uint32_t value) { total_ -= value; }
+    // The slot load 0x20a500 copies slot +0x5190 into the count.
+    void setTotal(std::uint32_t total) { total_ = total; }
     const std::vector<SuperBrick>& bricks() const { return bricks_; }
     std::size_t count(SuperBrickState state) const;
 

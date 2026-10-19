@@ -22,6 +22,7 @@
 #include "game_super_buildit.hpp"
 #include "game_hud.hpp"
 #include "game_options.hpp"
+#include "game_save.hpp"
 #include "game_particles.hpp"
 #include "render/rope.hpp"
 #include "runtime/zipline_pole.hpp"
@@ -121,6 +122,7 @@ struct Shared {
     const std::vector<chase::runtime::SceneChangeObject>& sceneChanges;
     unsigned scriptOffset;
     bool afterSwitch;
+    game_save::Progress& progress;
 };
 
 // One level of a run: its scene, the player, the level scripts, the doors, the studs, the camera and the HUD.
@@ -138,6 +140,8 @@ public:
     void reportRate();
     chase::runtime::DebugGameValues debugValues() const;
     void releaseOverlays();
+    // The live slot and the counters go back to the run's progress before the next level session (scene change).
+    void handOverProgress();
     unsigned updateCount() const { return updates; }
     bool frameDue() const { return !script.empty() || pacer.due(now()); }
     std::optional<chase::runtime::SceneChangeDestination> switchTo;
@@ -292,7 +296,9 @@ private:
     std::vector<chase::assets::Placement> waypointObjects;
     chase::runtime::ScriptRunner levelScripts;
     std::optional<chase::runtime::ScriptThreadLog> threadLog;
-    chase::save::SaveRequestWriter saveWriter;
+    unsigned seenSaveRequests = 0;
+    unsigned saveLevelId = 0;
+    chase::save::LevelStateInput saveLevelState;
     chase::runtime::SceneStart sceneStart;
     chase::runtime::WorldLevelEntry currentWorldLevel;
     chase::runtime::SceneChangeFlow sceneChangeFlow;

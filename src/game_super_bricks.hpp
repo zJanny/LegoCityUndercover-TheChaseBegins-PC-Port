@@ -30,6 +30,7 @@ public:
     void apply(chase::render::Scene& scene, const std::vector<std::size_t>& placedSceneIndex, const std::function<bool(const std::string&)>& disabled,
                std::uint32_t clockTicks);
     std::uint32_t total() const { return field_.total(); }
+    void setTotal(std::uint32_t total) { field_.setTotal(total); }
     void spend(std::uint32_t value) { field_.spend(value); }
     const chase::runtime::SuperBrickField& field() const { return field_; }
     std::string report() const;

@@ -276,9 +276,11 @@ bool ScriptRunner::running(const std::string& scriptName, bool requireActive) co
     return false;
 }
 
-float ScriptRunner::variable(const std::string& name) const {
-    const auto found = variables_.find(assets::nameHash(name));
-    return found == variables_.end() ? 0.0f : found->second;
+float ScriptRunner::variable(const std::string& name) const { return variable(assets::nameHash(name)).value_or(0.0f); }
+
+std::optional<float> ScriptRunner::variable(std::uint32_t nameHash) const {
+    const auto found = variables_.find(nameHash);
+    return found == variables_.end() ? std::nullopt : std::optional<float>(found->second);
 }
 
 std::uint32_t ScriptRunner::unhandledCalls(const std::string& lowerCaseName) const {

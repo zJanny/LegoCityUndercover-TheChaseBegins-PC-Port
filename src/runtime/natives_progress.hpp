@@ -85,6 +85,7 @@ public:
 
     void setSlotImage(const std::vector<std::uint8_t>& image);
     const std::vector<std::uint8_t>& slotImage() const { return slot_; }
+    std::vector<std::uint8_t>& slotImage() { return slot_; }
     bool bit(std::size_t offset, std::uint32_t index) const;
 
     // STAND-IN: the language option (*0x376adc) is not wired; 1 is English.
