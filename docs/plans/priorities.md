@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 833 open items and stand-ins, 163 linked to game usage, 670 with unknown reach.
+Items: 837 open items and stand-ins, 162 linked to game usage, 675 with unknown reach.
 
 ## Top 50 overall
 
@@ -87,7 +87,7 @@ Items: 833 open items and stand-ins, 163 linked to game usage, 670 with unknown 
 
 ## Player and camera
 
-16 of 184 items linked.
+15 of 188 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -98,9 +98,9 @@ Items: 833 open items and stand-ins, 163 linked to game usage, 670 with unknown 
 | 5 | [COLL-2](features/collision.md?display=source#L29) | 0 | 183 | 7 | 1 | - | `props/parkour_skydive`, `props/prop_prop` | Only the classes with a recovered constructor rule register (props, doors, dummycollision, vehicles) ... |
 | 6 | [CAMERA-S51](features/camera.md?display=source#L25) | 145 | 0 | 7 | 0 | 1 stand-in | `shakescreen` | The ShakeScreen shake moves only the eye of the gameplay camera (`CameraRig::setEyeShake`); the cutscene ... |
 | 7 | [TRAV-55](features/player-traversal.md?display=source#L52) | 0 | 66 | 7 | 0 | - | `props/parkour_zipline` | The zipline poles (`props/parkour_zipline` anchors) can be walked through in `chase-game` (user report); in ... |
-| 8 | [TRAV-57](features/player-traversal.md?display=source#L54) | 0 | 24 | 6 | 0 | - | `props/prop_crane_ladderlarge`, `props/prop_ladderlarge`, `props/prop_laddermedium` | Ladders (object kind 56) cannot be climbed in `chase-game`; the mission 1-3 ladder to the roof ... |
-| 9 | [TRAV-48](features/player-traversal.md?display=source#L47) | 0 | 22 | 5 | 1 | - | `props/parkour_tightrope` | The ropes of the tightrope anchors (`GrappleLineType` 0) use the same draw 0x1a9dc4 and are not loaded, so ... |
-| 10 | [TRAV-54](features/player-traversal.md?display=source#L51) | 0 | 22 | 5 | 0 | - | `props/parkour_tightrope` | The poles of the tightrope anchors (`props/parkour_tightrope`, 4 in lvl_01) are drawn at ... |
+| 8 | [TRAV-48](features/player-traversal.md?display=source#L47) | 0 | 22 | 5 | 1 | - | `props/parkour_tightrope` | The ropes of the tightrope anchors (`GrappleLineType` 0) use the same draw 0x1a9dc4 and are not loaded, so ... |
+| 9 | [TRAV-54](features/player-traversal.md?display=source#L51) | 0 | 22 | 5 | 0 | - | `props/parkour_tightrope` | The poles of the tightrope anchors (`props/parkour_tightrope`, 4 in lvl_01) are drawn at ... |
+| 10 | [SCAN-2](features/abilities-scanner.md?display=source#L37) | 7 | 0 | 3 | 0 | 1 stand-in | `enablescanner` | Other type 201 zones: photo (ScannerMode 4 in the class, sub-mode 0 values of 0x2ef814), physical (kind 2) ... |
 
 ## Level objects
 
@@ -228,6 +228,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [movies-cutscenes.md](features/movies-cutscenes.md): MOVIE-22 (+1), MOVIE-24 (+1), MOVIE-36 (+1), MOVIE-37 (+1), MOVIE-S33 (+1), MOVIE-1, MOVIE-12, MOVIE-20, MOVIE-21, MOVIE-3, MOVIE-33, MOVIE-35, MOVIE-4, MOVIE-40, MOVIE-S1, MOVIE-S10, MOVIE-S11, MOVIE-S2, MOVIE-S21, MOVIE-S3, MOVIE-S30, MOVIE-S31, MOVIE-S32, MOVIE-S34
 - [particles.md](features/particles.md): PART-4 (+1), PART-6 (+1), PART-5, PART-7, PART-S1, PART-S2, PART-S3, PART-S4
 - [player-movement.md](features/player-movement.md): PLAYER-14 (+2), PLAYER-16 (+2), PLAYER-11 (+1), PLAYER-15 (+1), PLAYER-22 (+1), PLAYER-25 (+1), PLAYER-1, PLAYER-10, PLAYER-13, PLAYER-18, PLAYER-2, PLAYER-21, PLAYER-23, PLAYER-24, PLAYER-3, PLAYER-5, PLAYER-6, PLAYER-7, PLAYER-8, PLAYER-S1, PLAYER-S10, PLAYER-S11, PLAYER-S2, PLAYER-S4, PLAYER-S5, PLAYER-S6, PLAYER-S8
+- [player-traversal-ladders.md](features/player-traversal-ladders.md): TRAV-59 (+1), TRAV-58, TRAV-60, TRAV-S34, TRAV-S35
 - [player-traversal-pole.md](features/player-traversal-pole.md): TRAV-S9 (+1), TRAV-11, TRAV-13, TRAV-14, TRAV-15, TRAV-16, TRAV-S5, TRAV-S6, TRAV-S7, TRAV-S8
 - [player-traversal-rails.md](features/player-traversal-rails.md): TRAV-28 (+3), TRAV-38 (+1), TRAV-43 (+1), TRAV-44 (+1), TRAV-45 (+1), TRAV-S16 (+1), TRAV-S18 (+1), TRAV-S19 (+1), TRAV-27, TRAV-29, TRAV-31, TRAV-32, TRAV-33, TRAV-42, TRAV-S15, TRAV-S17, TRAV-S21, TRAV-S23, TRAV-S24, TRAV-S25, TRAV-S26
 - [player-traversal.md](features/player-traversal.md): TRAV-9 (+2), TRAV-2 (+1), TRAV-49 (+1), TRAV-52 (+1), TRAV-S12 (+1), TRAV-10, TRAV-19, TRAV-20, TRAV-22, TRAV-34, TRAV-35, TRAV-5, TRAV-56, TRAV-6, TRAV-8, TRAV-S1, TRAV-S10, TRAV-S11, TRAV-S13, TRAV-S2, TRAV-S20, TRAV-S29, TRAV-S3, TRAV-S30, TRAV-S31, TRAV-S32, TRAV-S4

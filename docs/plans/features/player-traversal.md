@@ -2,7 +2,7 @@
 
 ## 1. Scope
 
-The climbing and sliding moves of the player: zipline and tightrope (object type 101), pole and drain pipe (type 187), climbing bricks (type 20), free climb wall (type 30), rails, climb bars and flag poles (type 29, corner type 218) and the ledge states. Mission 1-2 needs the zipline, the drain pipe, the bricks and the rail before the dog cage (oracle states `m12-9-zipline` to `m12-12-railing`). Walking, jumping and falling are in [player-movement.md](player-movement.md).
+The climbing and sliding moves of the player: zipline and tightrope (object type 101), pole and drain pipe (type 187), climbing bricks (type 20), free climb wall (type 30), rails, climb bars and flag poles (type 29, corner type 218), ladders (kind 56) and the ledge states. Mission 1-2 needs the zipline, the drain pipe, the bricks and the rail before the dog cage (oracle states `m12-9-zipline` to `m12-12-railing`). Walking, jumping and falling are in [player-movement.md](player-movement.md).
 
 ## 2. Status
 
@@ -51,11 +51,10 @@ IN_PROGRESS, updated 2026-10-18T16:38:10+02:00. Ported in `chase-game` from the 
 - [ ] TRAV-54 — The poles of the tightrope anchors (`props/parkour_tightrope`, 4 in lvl_01) are drawn at `initialorientation`; the link 0x19b074 would turn them towards their target. needs: TRAV-48. uses: parkour_tightrope. evidence: [player-traversal.md §2026-10-19T18:16:50](../../re/player-traversal.md#ts-20261019-181650)
 - [ ] TRAV-55 — The zipline poles (`props/parkour_zipline` anchors) can be walked through in `chase-game` (user report); in the original they are solid. Where their collision comes from is not read. uses: parkour_zipline. evidence: [playtests.md §2026-10-19T20:15:35](../../re/playtests.md#ts-20261019-201535)
 - [ ] TRAV-56 — The handcuffs Chase hangs from on the zipline (`Ability_Handcuffs`, `weap_hancuffs`, bone `weaponRight`, hand item track of the grab, slide and dismount clips) are not drawn (user report); `HandItems` loads only the glass and the scanner. Fix it generically if possible: load every object a clip's hand item track names (the original finds the object by name under the character at the event, 0x2450f0) instead of adding items to a fixed list one by one. needs: DETECT-8. evidence: [player-traversal.md §2026-10-19T20:23:05](../../re/player-traversal.md#ts-20261019-202305)
-- [ ] TRAV-57 — Ladders (object kind 56) cannot be climbed in `chase-game`; the mission 1-3 ladder to the roof (`1-4_Ladder01`, state `m13-2-ladder`) blocks the mission path (user report). Use, mount, climb and dismount are not read. uses: prop_crane_ladderlarge, prop_laddermedium, prop_ladderlarge. evidence: [playtests.md §2026-10-19T20:23:38](../../re/playtests.md#ts-20261019-202338)
 
 ## 6. Findings summary
 
-- Subtopic files: [player-traversal-pole.md](player-traversal-pole.md) (pole and drain pipe), [player-traversal-rails.md](player-traversal-rails.md) (rails, climb bars, corner rail).
+- Subtopic files: [player-traversal-pole.md](player-traversal-pole.md) (pole and drain pipe), [player-traversal-rails.md](player-traversal-rails.md) (rails, climb bars, corner rail), [player-traversal-ladders.md](player-traversal-ladders.md) (ladders).
 - Zipline class, grab test, states 42..44, oracle ride and the survey of the other moves: [player-traversal.md §2026-10-18T14:52:30](../../re/player-traversal.md#ts-20261018-145230).
 - Zipline rope: [player-traversal.md §2026-10-19T08:51:31](../../re/player-traversal.md#ts-20261019-085131); fog on the rope: [player-traversal.md §2026-10-19T10:38:41+02:00](../../re/player-traversal.md#ts-20261019-103841).
 - Zipline use press is A: [player-traversal.md §2026-10-18T16:37:26](../../re/player-traversal.md#ts-20261018-163726).

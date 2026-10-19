@@ -57,6 +57,9 @@ bool poleZoneHolds(const PoleObject& pole, const float player[3], std::int16_t f
 // 0x20cd30 touch of the pole's collision. TRAV-S7: the original sets DAT_00377134 in the wall gather 0x21a73c; here the player's box
 // (centre (0, 1.15, 0.08), half (0.6, 0.85, 0.52) in the node frame, yaw = facing) must overlap the pole's CollisionBound box.
 bool poleTouched(const PoleObject& pole, const float player[3], std::int16_t facing);
+// The same overlap for any object box: the box `centre` / `half` in the frame with rows `right`, `up`, `forward` at `origin` (yaw part only).
+bool playerBoxTouches(const float origin[3], const float right[3], const float up[3], const float forward[3], const float centre[3],
+                      const float half[3], const float player[3], std::int16_t facing);
 
 // 0x206510 (called by the walk update 0x26aca8 through 0x2010d4): the touched pole whose zone holds, with a stick held within a quarter
 // turn of the direction to the pole. Returns the index or -1. `disabled` tells whether the pole object is disabled.

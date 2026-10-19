@@ -315,6 +315,8 @@ LevelSession::LevelSession(const Shared& sharedState)
     std::cout << "climb bars: " << climbBars.bars.size() << ", corner rails: " << climbBars.corners.size() << '\n';
     pole.poles = runtime::loadPoles(level, classOf);
     std::cout << "poles: " << pole.poles.size() << '\n';
+    ladder.ladders = runtime::loadLadders(level, classOf);
+    std::cout << "ladders: " << ladder.ladders.size() << '\n';
     std::cout << "collision: " << collision.triangleCount() << " triangles in " << collision.entries().size() << " entries\n";
 
     float centre[3];

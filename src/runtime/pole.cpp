@@ -195,7 +195,8 @@ bool poleZoneHolds(const PoleObject& pole, const float player[3], std::int16_t f
     return true;
 }
 
-bool poleTouched(const PoleObject& pole, const float player[3], std::int16_t facing) {
+bool playerBoxTouches(const float origin[3], const float right[3], const float up[3], const float forward[3], const float centre[3],
+                      const float half[3], const float player[3], std::int16_t facing) {
     const float heading = headingRadians(facing);
     const float ps = std::sin(heading), pc = std::cos(heading);
     const float boxCentre[3] = {0.0f, 1.15f, 0.08f}, boxHalf[3] = {0.6f, 0.85f, 0.52f};
@@ -203,24 +204,26 @@ bool poleTouched(const PoleObject& pole, const float player[3], std::int16_t fac
     Vec centreA, centreB;
     for (int a = 0; a < 3; ++a) {
         centreA[a] = player[a] + boxCentre[0] * playerRight[a] + boxCentre[2] * playerForward[a];
-        centreB[a] = pole.position[a] + pole.collisionCentre[0] * pole.right[a] + pole.collisionCentre[1] * pole.up[a] +
-                     pole.collisionCentre[2] * pole.forward[a];
+        centreB[a] = origin[a] + centre[0] * right[a] + centre[1] * up[a] + centre[2] * forward[a];
     }
     centreA[1] = player[1] + boxCentre[1];
-    if (std::fabs(centreA[1] - centreB[1]) > boxHalf[1] + pole.collisionHalf[1]) return false;
-    const Vec poleRight = {pole.right[0], 0, pole.right[2]}, poleForward = {pole.forward[0], 0, pole.forward[2]};
-    const Vec axes[4] = {playerRight, playerForward, poleRight, poleForward};
+    if (std::fabs(centreA[1] - centreB[1]) > boxHalf[1] + half[1]) return false;
+    const Vec objectRight = {right[0], 0, right[2]}, objectForward = {forward[0], 0, forward[2]};
+    const Vec axes[4] = {playerRight, playerForward, objectRight, objectForward};
     const float d[2] = {centreB[0] - centreA[0], centreB[2] - centreA[2]};
     for (const Vec& axis : axes) {
         const float distance = std::fabs(d[0] * axis[0] + d[1] * axis[2]);
-        auto reach = [&](const Vec& right, const Vec& forward, float halfRight, float halfForward) {
-            return std::fabs(right[0] * axis[0] + right[2] * axis[2]) * halfRight + std::fabs(forward[0] * axis[0] + forward[2] * axis[2]) * halfForward;
+        auto reach = [&](const Vec& r, const Vec& f, float halfRight, float halfForward) {
+            return std::fabs(r[0] * axis[0] + r[2] * axis[2]) * halfRight + std::fabs(f[0] * axis[0] + f[2] * axis[2]) * halfForward;
         };
-        const float sum = reach(playerRight, playerForward, boxHalf[0], boxHalf[2]) +
-                          reach(poleRight, poleForward, pole.collisionHalf[0], pole.collisionHalf[2]);
+        const float sum = reach(playerRight, playerForward, boxHalf[0], boxHalf[2]) + reach(objectRight, objectForward, half[0], half[2]);
         if (distance > sum) return false;
     }
     return true;
+}
+
+bool poleTouched(const PoleObject& pole, const float player[3], std::int16_t facing) {
+    return playerBoxTouches(pole.position, pole.right, pole.up, pole.forward, pole.collisionCentre, pole.collisionHalf, player, facing);
 }
 
 int poleWalkInTest(const std::vector<PoleObject>& poles, const float player[3], std::int16_t facing, bool stickActive, std::int16_t stickHeading,

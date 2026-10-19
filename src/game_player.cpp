@@ -1,6 +1,7 @@
 #include "game_player.hpp"
 #include "runtime/acrobat_pole.hpp"
 #include "runtime/brick_grab.hpp"
+#include "runtime/ladder.hpp"
 #include "runtime/player_motion.hpp"
 #include <cmath>
 #include <iostream>
@@ -136,7 +137,8 @@ std::optional<PlayerRig> placePlayer(FuseArchive& archive, Scene& scene, const L
         for (const int id : {runtime::kAnimationBuildit, runtime::kAnimationPickupBig, runtime::kAnimationPickupSmall, runtime::kAnimationPutdownBig, runtime::kAnimationPutdownSmall,
                              runtime::kAnimationScannerOut, runtime::kAnimationScannerIn,
                              runtime::kAnimationPoleMount, runtime::kAnimationPoleIdle, runtime::kAnimationPoleUp, runtime::kAnimationPoleDown,
-                             runtime::kAnimationPoleDismount})
+                             runtime::kAnimationPoleDismount, runtime::kAnimationLadderIdle, runtime::kAnimationLadderUp,
+                             runtime::kAnimationLadderDown, runtime::kAnimationLadderDismount})
             clips.push_back(id);
         clips.insert(clips.end(), runtime::kBrickGrabAnimations.begin(), runtime::kBrickGrabAnimations.end());
         for (const int id : clips) {
