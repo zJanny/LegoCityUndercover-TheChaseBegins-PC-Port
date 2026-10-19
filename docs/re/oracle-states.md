@@ -20,6 +20,7 @@ Save states the oracle uses: which ones exist, the game progress of each, how ea
 - Pole mount (user, for TRAV-1): `m12-10a-pole-foot` (0.8 m from the drain pipe, facing away; walking into the pipe mounts it), `m12-10b-pole-side` (2.4 m left of the pipe axis, facing the wall). [§2026-10-18T15:46:24](#ts-20261018-154624)
 - Table and trampoline of mission 1-2 (user, for PLAYER-12 and LEVOBJ-86): `m12-table-before`, `m12-table-broken`, `m12-trampoline-built`, loaded and checked. [§2026-10-18T17:25:22](#ts-20261018-172522)
 - Bars above the trampoline (user, for TRAV-36): `m12-trampoline-pole`, Chase high above the pad next to the bars; keep pressing jump to grab. [§2026-10-18T20:44:42](#ts-20261018-204442)
+- Mission 1-3 in progress (user, not loaded yet): `m13-1-roof-superbrick`, `m13-2-ladder`, `m13-3-helipad-needs-bricks`, `m13-4-helipad-300-bricks`, `m13-5-helipad-built-menu`. [§2026-10-19T18:02:53](#ts-20261019-180253)
 - `leadcut-1_1_d-early` (from `m11-6-van-to-shop`): cutscene `1_1_d` just loaded, for its actor nodes and pictures. [§2026-10-16T14:39:21](#ts-20261016-143921)
 - Open: whether mission 1-2 is active in the post-1-1 states, the level variables of the m11 states, a save with Continue byte +6 above 1, and the Old 3DS run of `savestate`.
 
@@ -307,3 +308,22 @@ Progress: mission 1-2 in progress, the trampoline built (user report, implied by
 
 Unknowns:
 - Whether Chase already holds a bar after the one-second wait (state 1 was read; the picture shows him at the bar), and which class the bars are.
+
+<a id="ts-20261019-180253"></a>
+
+## 2026-10-19T18:02:53+02:00 — User states of mission 1-3: roof super brick, ladder, helipad
+
+The user quick-saved five slots on their own Azahar (2026-10-19 17:58 to 18:01, New 3DS: `is_new_3ds=true` in their config) for later work on mission 1-3. Copied read-only from `~/.local/share/azahar-emu/states/00040000000AD600.0N.cst` (identical by byte compare, files made read-only), each with its `NAME.json`:
+
+| State | Slot | Where (user report) |
+|---|---|---|
+| `m13-1-roof-superbrick` | 1 | in front of the super brick that is picked up on the roof |
+| `m13-2-ladder` | 2 | in front of the ladder that is climbed to reach the roof |
+| `m13-3-helipad-needs-bricks` | 3 | on the helipad; the game shows a UI saying 300 super bricks are needed to build it |
+| `m13-4-helipad-300-bricks` | 4 | on the helipad with the 300 super bricks needed to build it |
+| `m13-5-helipad-built-menu` | 5 | helipad built, standing on the trigger that opens its menu |
+
+Progress: missions 1-1 and 1-2 done, mission 1-3 in progress (user report, implied by the steps).
+
+Unknowns:
+- None of the five was loaded yet: positions, facing and the level of each are not checked.

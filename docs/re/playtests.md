@@ -5,6 +5,7 @@ What the user saw when playing `chase-game` against their knowledge of the origi
 ## Current state
 
 - Mission 1-2 played end to end in `chase-game`: flag poles, trampoline, the scanner's look, the dog at the cage and its release, the punch and the dog footprints in detective mode look and work as in the original; four bugs were found (zipline poles, scanner held model, dog and dog truck in the end cutscene). [§2026-10-19T17:56:41](#ts-20261019-175641)
+- Mission 1-3: the ladder to the roof is not fully visible in the port. [§2026-10-19T18:02:53](#ts-20261019-180253)
 
 <a id="ts-20261019-175641"></a>
 
@@ -28,3 +29,12 @@ The user played mission 1-2 through in `chase-game` (2026-10-19) and compared it
 
 Unknowns:
 - The other user-visible checks of rounds 33 and 34 (objective arrows and map group icons in mission 1-1, the screen shake, goons falling apart in lvl_02) were not answered yet.
+
+<a id="ts-20261019-180253"></a>
+
+## 2026-10-19T18:02:53+02:00 — Mission 1-3: the ladder to the roof (user report)
+
+While making the mission 1-3 save states ([oracle-states.md §2026-10-19T18:02:53](oracle-states.md#ts-20261019-180253)) the user noted that the ladder that is climbed to reach the roof is not fully visible in the port. The state `m13-2-ladder` stands in front of it in the original.
+
+Unknowns:
+- Which object the ladder is and which part of it is missing in the port.

@@ -57,6 +57,7 @@ IN_PROGRESS, updated 2026-10-19T14:45:21+02:00. The glow post-process 0x2bf830 r
 - [ ] RENDER-69 The vertex shader of program 2 (texture coordinates of units 1 and 2 for the blur modes 0xc / 0xd), the wrap mode and format of the glow targets, and the blurred alpha of the glow. blocks: RENDER-S65, RENDER-S66. evidence: [rendering-glow.md §2026-10-19T14:44:55](../../re/rendering-glow.md#ts-20261019-144455)
 - [ ] RENDER-70 Other glow users: the writer of 0x516410 (first strength of the normal call) and of 0x52ff94, and the mode that owns the second caller 0x303e78 with the globals 0x37594c / 0x375950 (read 0.0 / 0.6 in the scanner view). evidence: [rendering-glow.md §2026-10-19T14:44:55](../../re/rendering-glow.md#ts-20261019-144455)
 - [ ] RENDER-6 — The white quad above the police-station entrance is the `Checker1.tga` part of `room1.bfnmdl` (also room3, room5), seen far away outside; not RENDER-S3. Unknown whether the original draws it. Not fixed (related: WSTREAM-3). evidence: [materials.md §2026-10-14T13:40](../../re/materials.md#ts-20261014-134000).
+- [ ] RENDER-71 — The ladder to the roof in mission 1-3 is not fully visible in the port (user report; oracle state `m13-2-ladder`). evidence: [playtests.md §2026-10-19T18:02:53](../../re/playtests.md#ts-20261019-180253).
 
 ## 6. Findings summary
 
