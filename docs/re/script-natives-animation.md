@@ -6,7 +6,8 @@ Handlers of the 13 natives of batch 32 and what the port does with them. Census 
 
 - The 13 natives of batch SCRIPT-32 are read: PlayCharAnim 0x1bf9cc (-> 0x29e5f0, never blocks), PlayAnimation 0x268240, LoadAnimation 0x2681a0, UnloadAnimation 0x27e9c4, StopCharAnim 0x1bfb84, StopAnim 0x1883d0, the waits 0x263ae4 / 0x2a06a8 and the Attach natives. [§2026-10-14T21:36:49](#ts-20261014-213649)
 - PlayCharAnim on Player1 puts the player into the user-animation state 0x50 (update 0x2a47b0 runs no locomotion and requests state 1 when the slot kind is 6; StopCharAnim ends the slot at once); the port poses the script clip through `runtime::PlayerScriptAnimation`. [§2026-10-19T12:55:03](#ts-20261019-125503)
-- A state request is applied at the end of the next update by the machine function 0x226100 (exit, enter); the previous state's update runs in that update and the new state's update starts in the next one (measured for 4 -> 6 -> 1 with ctrace). State 0x50 follows the same rule in both directions; the hand-back enter 0x1abbb0 starts the idle at blend 0.1 and clears ctrl+0x2b4 / 0x2b8. [§2026-10-19T15:29:35](#ts-20261019-152935)
+- A state request is applied at the end of the update by 0x226100 (exit, enter), the new state's update starts in the next one; a request pending before the player's update skips the old state's update. PlayCharAnim (in the runner, before the player) enters 0x50 in its own update; the hand-back enter 0x1abbb0 starts a play-once idle at blend 0.1. [§2026-10-19T15:29:35](#ts-20261019-152935), [§2026-10-19T23:24:26](#ts-20261019-232426)
+- The script clip's weight is 0.33, 0.66, 0.99, 1.0 from the native's update on (dt 0.033). [§2026-10-19T23:24:26](#ts-20261019-232426)
 - The root motion of a script clip on Player1 moves the player: 0x215804 -> mover 0x20cd30 with flag 1 -> 0x2c9770 applies the clip's root delta (x, y, z, yaw) with the wall slide and the ground probe; the heading step runs only for AI-controlled characters; the enter 0x25fbec writes ctrl+0x2b8 = 0 and ctrl+0x315 bit 3; no gravity function runs in state 0x50. [§2026-10-19T13:43:01](#ts-20261019-134301)
 - The play itself is 0x295a8c (find or load the animation, start it with 0x23afc0 at blend 0.1, state request 80 or 81); 0x1b71e8 plays the cape animation, not the looked-up one (this corrects the first reading). [§2026-10-15T18:33:36](#ts-20261015-183336)
 - The waits block while the slot kind is 0, 2 or 3 and finish for kind 6, or for kind 1 or 5 when the position is within one frame of the length. [§2026-10-15T18:33:36](#ts-20261015-183336)
@@ -158,6 +159,8 @@ Unknowns:
 
 ## 2026-10-19T15:29:35+02:00 — Order of a state change inside the player's update, and what state 1 does on the hand-back (llvm-objdump of `game.arm.elf`, REA Ghidra pseudocode of 0x2424d0, ctrace oracle run from `gameplay-start`)
 
+Corrected by [§2026-10-19T23:24:26](#ts-20261019-232426): PlayCharAnim's request is applied in the update of the native and that update runs no state update (0x26a19c skips it while a request is pending); the script runner runs before the player's update.
+
 Extends [§2026-10-19T12:55:03](#ts-20261019-125503) and [§2026-10-19T13:43:01](#ts-20261019-134301). [Corrects §2026-10-19T12:55:03](#ts-20261019-125503): the state functions do not run from 0x2424d0 (it calls a pair of class callbacks), and the update that applies a request does not run the new state's update.
 
 **Two machine functions on `ctrl+0x50` (the state machine).**
@@ -178,3 +181,22 @@ Unknowns:
 - The timing of a request made by a script native relative to the player's update in the scheduler (the port applies it at the end of the next player update) and the old state's update in that update: whether state 1's idle code restarts a locomotion clip that replaces the script clip in the slot (SCRIPT-333).
 - The exit hook and the type-5 / type-4 broadcasts of the machine for states 1 and 0x50 (children of the state objects), and the third function (record +8).
 - Which function updates the player class (the order input, update, apply was read for the NPC class 0x190174 and measured for the player's state calls).
+
+<a id="ts-20261019-232426"></a>
+
+## 2026-10-19T23:24:26+02:00 — PlayCharAnim on Player1: request timing, first pose and hand-back measured (Azahar oracle `m12-13-cage-trigger` with RPC, `ctrace` and `trap`; llvm-objdump of `game.arm.elf`)
+
+[Corrects §2026-10-19T15:29:35](#ts-20261019-152935): the update that applies PlayCharAnim's request runs no state update. The order of the runner and the player's update and the skip rule of 0x26a19c are in [scripts-runtime.md §2026-10-19T23:24:26](scripts-runtime.md#ts-20261019-232426).
+
+- **Timing** (dt 0.033 = 99 ticks): PlayCharAnim(Player1, `dog_cage_open_minifig`: 44 frames, 15 fps, loop bit) and the enter 0x25fbec in update 9; 0x2a47b0 in updates 10 to 98; kind 6 and the enter 0x1abbb0 in update 98. 8800 ticks reach frame 44: the state step of update u sees (u - 9) * 99 ticks (update 97: 8712, update 98: 8811), so it runs on the clock the runner saw.
+- **First pose** (`tools/oracle/script-anim-blend-trap.txt`, trap at 0x253480 after the weight call 0x115ecc of the pose 0x2533e0, stack word 4 = weight; the player's animation player 0x08568d10): newest slot weight 1.0 in update 8, then 0.33 in update 9 (the script clip, older slot 0.67), 0.66, 0.99 and 1.0 from update 12. The pose of the native's own update shows the clip 99 ticks in, so the clock advances between the state step and the pose; the weights are 0x115ecc with blend 0.1 (300 ticks).
+- **State 1 on the hand-back:** 0x1abbb0 starts role 0 through 0x21941c with mode 0 (r2 = r3 = 0 at 0x1abc20), a play-once idle; the IDLE update 0x1d5070 starts the next idle only when the kind is 6. In the update that applies the native's request no old state update runs, so nothing replaces the script clip.
+- **Exit and record +8:** the IDLE record at 0x357554 is {update 0x1d5070, enter 0x1abbb0, 0x1b855c, 0x19d48c}; 0x1b855c and 0x19d48c are `bx lr` (word 0xe12fff1e). State 0x50 has neither.
+- **Missing clip:** 0x29e5f0 requests 80 (81 with r6 set) after the play 0x295a8c without testing its result (0x29e6e0..0x29e724), so a clip that is not found still enters state 0x50.
+
+**Port.** `PlayerScriptAnimation::update` returns `PlayerStateStep`: `Skipped` while a request is pending (no locomotion and no vertical step in `LevelSession::simulate`), `UserAnimation` for 0x2a47b0, `Locomotion` otherwise; the state step and the root sample use the clock before the update's advance, the pose the advanced clock. The level runner runs before the player. CTests `player-script-animation` (the `cageOrder` replay: enter in the play's update, hand-back after 89 updates), `game-player-script-animation` (`chase-game`: thread started in update 5, state 80 entered in 6, state 1 in 95).
+
+Unknowns:
+- The type-5 and type-4 broadcasts of 0x226100 to the children of the state objects of states 1 and 0x50 (SCRIPT-344).
+- Which function advances the player's animation clock between the state step and the pose.
+- `WaitForCurrentCharAnim` after the hand-back: the play-once idle of 0x1abbb0 is the newest slot; whether the wait reads it depends on the current slot choice 0x252878 (SCRIPT-334).

@@ -238,7 +238,8 @@ void LevelSession::updateFollowCamera(float dt) {
     }
 }
 
-// One update of the game: the player reads the pad and the camera yaw first, then the camera moves
+// One update of the game: the script runner runs before the player (its place against the other updates is STAND-IN SCRIPT-S281),
+// the player reads the pad and the camera yaw, then the camera moves
 // (the heading of the recorded traces is reproduced with the yaw from before the camera step).
 void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
     pad.poll(padInput);
@@ -277,6 +278,10 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         soundLog.emplace_back(updates, call.id);
         if (shared.audio) shared.audio->play(call);
     };
+    sceneStart.startRequested();
+    if (player && !levelScripts.ai().moving("player1")) levelScripts.ai().setPosition("player1", player->position().data());
+    levelScripts.update(dt);
+    applyScriptNatives();
     runtime::applyObjectCollisionState(collision, objectState);
     suppressDrivenVehicleCollision();
     if (player && !cutscenePlaying()) {
@@ -284,7 +289,8 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         runtime::StickIntentInput stick;
         stick.slot14 = {pad.slot(kSlotStickX).value, pad.slot(kSlotStickX).deadzone};
         stick.slot15 = {pad.slot(kSlotStickY).value, pad.slot(kSlotStickY).deadzone};
-        const bool scriptClip = playerScriptAnimation.update(dt);
+        const runtime::PlayerStateStep scriptStep = playerScriptAnimation.update(dt);
+        const bool scriptClip = scriptStep != runtime::PlayerStateStep::Locomotion;
         const bool controlTaken = scriptClip || levelScripts.playerControlTaken() || carry.busy() || builditPlayer.active() || detective.controlTaken() || scanner.takesPlayerControl();
         if (controlTaken) stick.slot14.value = stick.slot15.value = 0.0f;
         stick.entityType = game_player::kPlayerEntityType;
@@ -306,11 +312,11 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         const runtime::BoardingStep boardingStep = stepBoarding(dt);
         const runtime::Posture postureBeforeStep = player->vertical.posture;
         const float fallSpeedBeforeStep = player->vertical.fallSpeed;
-        const std::optional<runtime::ScriptRootStep> scriptRoot = scriptClip ? playerScriptAnimation.rootMotion(player->motion.facing) : std::nullopt;
+        const std::optional<runtime::ScriptRootStep> scriptRoot = scriptStep == runtime::PlayerStateStep::UserAnimation ? playerScriptAnimation.rootMotion(player->motion.facing) : std::nullopt;
         if (scriptRoot) runtime::applyScriptRootStep(*scriptRoot, player->motion, player->vertical, collision, dt);
         game_player::PlayerAnimation shown =
             boardingStep.takesControl ? applyBoarding(boardingStep)
-            : scriptRoot              ? game_player::PlayerAnimation{}
+            : scriptClip              ? game_player::PlayerAnimation{}
                                       : attackMovePlayer(runtime::stickIntent(stick), !controlTaken && carry.allowsJump() && !detective.modeActive() && pad.slot(kSlotJumpButton).press > 0,
                                                          !controlTaken && pad.slot(kSlotConfirmButton).press > 0, pad.slot(kSlotButtonY).value > 0.0f,
                                                          !controlTaken && carry.carryingMode() == 0 && !detective.modeActive(), dt);
@@ -320,7 +326,10 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
             game_player::applyAiPosition(*player, *driven);
             shown = game_player::aiMoveAnimation(*driven);
         }
-        if (const std::optional<unsigned> entered = playerScriptAnimation.enteredState()) runtime::applyScriptStateEnter(*entered, player->vertical);
+        if (const std::optional<unsigned> entered = playerScriptAnimation.enteredState()) {
+            runtime::applyScriptStateEnter(*entered, player->vertical);
+            std::cout << "player state " << *entered << " entered at update " << updates << '\n';
+        }
         player->animate(scene, dt, detectiveClip(player->carriedRole(shown.role, carry.carryingMode(), carry.phaseClip() ? carry.phaseClip() : builditPlayer.clip() ? builditPlayer.clip() : scanner.playerClip())), shown.scale);
         if (const auto* clip = playerScriptAnimation.posesScriptClip() ? playerScriptAnimation.animation() : nullptr) player->poseClip(scene, *clip, playerScriptAnimation.frame());
         handItems.update(*player);
@@ -351,10 +360,6 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         updateSuperBricks(dt);
     }
     propParts.step(dt);
-    sceneStart.startRequested();
-    if (player && !levelScripts.ai().moving("player1")) levelScripts.ai().setPosition("player1", player->position().data());
-    levelScripts.update(dt);
-    applyScriptNatives();
     if (player && follow) mapMarkerField.advance(dt, player->motion.x, player->motion.z, follow->yaw(), activeMapMarkers());
     updateObjectiveMarkers(dt);
     cutsceneHost->update(levelScripts.cutscenes());

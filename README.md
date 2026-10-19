@@ -6,6 +6,23 @@ This project builds a PC port of *LEGO City Undercover: The Chase Begins* (Ninte
 
 The game data is never part of this repository. You need your own copy of the game, dumped from your own 3DS.
 
+## Progress
+
+<!-- progress:start -->
+| Measure | Now | What it means |
+|---|---|---|
+| Script commands | 50 of 239 (20.9%) | Different commands the level scripts call that the port runs. They cover 68.3% of all calls. 133 more run with a stand-in result. |
+| Object types | 156 of 506 (30.8%) | Different object types in the levels that the port treats with recovered rules (collision, doors, studs). They cover 54.4% of all placed objects. |
+| Game files read | 99.7% of files, 99.9% of data | Files in the game archive (12836) that the port can decode, by count and by size. |
+| Open work | 484 open items, 365 stand-ins | Known gaps and temporary guesses in 27 feature areas. It has no total to reach; watch the trend. |
+| Checked against the original | 316 tests, 210 recorded traces | Automatic tests, and recordings of the original game that the tests compare with. |
+| Game code documented | 2443 of about 7575 (32.2%) | Functions of the game program that the notes or the source point to. The total is an estimate. |
+
+![Progress trend](docs/progress-trend.svg)
+
+Updated 2026-10-19, commit 9f904e3. How the numbers are measured: [docs/progress.md](docs/progress.md).
+<!-- progress:end -->
+
 ## What you need
 
 - A computer with Linux (x86_64) and a graphics card that supports OpenGL 4.6.
@@ -100,23 +117,6 @@ All keys and how to change them: [Controls](docs/controls.md).
 - **The extraction says "output already exists".** Delete the folder `artifacts/romfs` and run step 4 again.
 - **The window does not open or stays black.** Update your graphics driver. The game needs OpenGL 4.6.
 - More help: [Getting started](docs/getting-started.md#problems).
-
-## Progress
-
-<!-- progress:start -->
-| Measure | Now | What it means |
-|---|---|---|
-| Script commands | 50 of 239 (20.9%) | Different commands the level scripts call that the port runs. They cover 68.3% of all calls. 133 more run with a stand-in result. |
-| Object types | 156 of 506 (30.8%) | Different object types in the levels that the port treats with recovered rules (collision, doors, studs). They cover 54.4% of all placed objects. |
-| Game files read | 99.7% of files, 99.9% of data | Files in the game archive (12836) that the port can decode, by count and by size. |
-| Open work | 482 open items, 364 stand-ins | Known gaps and temporary guesses in 27 feature areas. It has no total to reach; watch the trend. |
-| Checked against the original | 315 tests, 210 recorded traces | Automatic tests, and recordings of the original game that the tests compare with. |
-| Game code documented | 2443 of about 7575 (32.2%) | Functions of the game program that the notes or the source point to. The total is an estimate. |
-
-![Progress trend](docs/progress-trend.svg)
-
-Updated 2026-10-19, commit d0051a1. How the numbers are measured: [docs/progress.md](docs/progress.md).
-<!-- progress:end -->
 
 ## More documentation
 

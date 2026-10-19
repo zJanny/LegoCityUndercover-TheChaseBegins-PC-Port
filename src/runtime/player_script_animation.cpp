@@ -66,11 +66,15 @@ std::optional<bool> PlayerScriptAnimation::currentNearEnd(const std::string& ins
     return slots_.currentNearEnd(clock_);
 }
 
-bool PlayerScriptAnimation::update(float dt) {
-    clock_ += std::llround(double(dt) * double(kAnimationClockTicksPerSecond));
+PlayerStateStep PlayerScriptAnimation::update(float dt) {
     entered_.reset();
-    const bool updated = state_ == kUserAnimState;
-    if (updated && slots_.kind(clock_) == kAnimationStopped) requested_ = kLocomotionState;
+    stateClock_ = clock_;
+    PlayerStateStep step = PlayerStateStep::Locomotion;
+    if (requested_ && *requested_ != state_) step = PlayerStateStep::Skipped;
+    else if (state_ == kUserAnimState) {
+        step = PlayerStateStep::UserAnimation;
+        if (slots_.kind(clock_) == kAnimationStopped) requested_ = kLocomotionState;
+    }
     if (requested_) {
         if (*requested_ != state_) {
             state_ = *requested_;
@@ -78,7 +82,8 @@ bool PlayerScriptAnimation::update(float dt) {
         }
         requested_.reset();
     }
-    return updated;
+    clock_ += std::llround(double(dt) * double(kAnimationClockTicksPerSecond));
+    return step;
 }
 
 const assets::Animation* PlayerScriptAnimation::animation() const {
@@ -88,11 +93,13 @@ const assets::Animation* PlayerScriptAnimation::animation() const {
     return found == byId_.end() ? nullptr : &found->second->animation;
 }
 
-double PlayerScriptAnimation::frame() const {
+double PlayerScriptAnimation::frame() const { return frameAt(clock_); }
+
+double PlayerScriptAnimation::frameAt(std::int64_t now) const {
     const AnimationSlot* slot = slots_.current();
     const assets::Animation* clip = animation();
     if (!slot || !clip) return 0.0;
-    const double position = AnimationSlots::position(*slot, clock_).frame;
+    const double position = AnimationSlots::position(*slot, now).frame;
     return std::clamp(position, 0.0, double(clip->frames > 0 ? clip->frames - 1 : 0));
 }
 
@@ -107,7 +114,7 @@ std::optional<ScriptRootStep> PlayerScriptAnimation::rootMotion(std::int16_t fac
     const AnimationSlot* slot = slots_.current();
     const assets::Animation* clip = animation();
     if (!slot || !clip) return std::nullopt;
-    const std::optional<RootSample> root = rootSample(*clip, frame());
+    const std::optional<RootSample> root = rootSample(*clip, frameAt(stateClock_));
     if (!root) return std::nullopt;
     const bool continued = lastRoot_ && lastRootStart_ == slot->startId;
     const RootSample previous = continued ? *lastRoot_ : *root;

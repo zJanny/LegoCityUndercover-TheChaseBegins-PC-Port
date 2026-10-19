@@ -1,0 +1,13 @@
+# First pose of PlayCharAnim on Player1: from m12-13-cage-trigger, A for 3 updates starts 1-2_Cage_Key_Target_Script, then a trap after the
+# blend weight call of the pose 0x2533e0 (0x253480: r7 = slot, r8 = animation player, stack word 4 = the slot's weight from 0x115ecc), with the
+# PlayCharAnim handler (0x1bf9cc), the enter of state 0x50 (0x25fbec) and its update (0x2a47b0). Fixed dt 0.033.
+loadstate m12-13-cage-trigger
+frames 3
+stick 0 0
+hold -
+dt 0.033 0.033
+frames 2
+hold A
+frames 3
+hold -
+trap 0x253480,0x1bf9cc,0x25fbec,0x2a47b0 7 scriptanim-blend

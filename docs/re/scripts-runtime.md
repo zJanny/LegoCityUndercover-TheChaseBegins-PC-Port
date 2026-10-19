@@ -12,7 +12,8 @@ Reverse-engineering findings on the trigger records and bound switches, WarningD
 - PositionObject 0x1d9e6c copies the target node transform; for the player it also sets the heading and sends message 8. FadeScreen 0x1a2e8c blocks until a 0.5 s tween ends. [§2026-10-14T10:54:32](#ts-20261014-105432)
 - A live thread of `Police_ExtToInt` was recorded: Wait 3 subtracts dt per update (43 repeat calls at dt 0.07), then a blocked word at pc 18 and SceneChange. [§2026-10-14T11:13:12](#ts-20261014-111312)
 - The level switch shows its own "press A" loading prompt, which does not belong to WarningDialogBox (code not found). [§2026-10-14T10:54:32](#ts-20261014-105432)
-- Open: the trigger record builder, mode 4 drawing and input, PositionPlayer, non-player PositionObject, the script words after Wait, and the other trigger event checks.
+- The script runner (0x169254 from 0x2e54b4) runs before the player's class update 0x1835d0 in the same update; the player's step runner 0x26a19c skips the current state's update while a state request is pending, and the request is applied at the end of the update (0x226100). The port runs the level runner first in its update. [§2026-10-19T23:24:26](#ts-20261019-232426)
+- Open: the trigger record builder, mode 4 drawing and input, PositionPlayer, non-player PositionObject, the script words after Wait, the other trigger event checks, and the order of the other gameplay updates against the runner.
 
 <a id="ts-20261014-100640"></a>
 
@@ -103,3 +104,20 @@ Sequence of events, trigger and switch request: [streaming-transitions.md §2026
 - Which words the script has at pc 15 to 19 beyond Wait (the executor was not read per word); the blocked word at pc 18 (probably `WaitForDCam`) and how long the camera path takes in the original.
 - The record of the second thread in the list (only the head was read), so the chain via +0 was seen only for the BoundLeft thread.
 - Free-run dt (about 0.033) was not used: all runs are stepped with the 0.07 clamp.
+
+<a id="ts-20261019-232426"></a>
+
+## 2026-10-19T23:24:26+02:00 — The script runner runs before the player's update; a pending state request skips the state update (Azahar oracle `m12-13-cage-trigger`, `ctrace` and `trap` with RPC, port 40391; llvm-objdump of `game.arm.elf`)
+
+**Measured** (`tools/oracle/script-anim-order-ctrace.txt`, user state `m12-13-cage-trigger` (New 3DS), OpenGL, fixed dt 0.033; A for 3 updates fires the dog cage use spot, which starts `1-2_Cage_Key_Target_Script`). In every traced update (frames 5 to 101) the runner 0x169254 runs twice from 0x2e54b8 (scenes 0x08501f30 and 0x085abd20) and then the player's state update (lr 0x31e718; player entity 0x085526f0, ctrl 0x08552790). So in one scheduler update the script threads run before the player's class update. The second load of the same scenario (`tools/oracle/script-anim-blend-trap.txt`, attached to the kept emulator) gave the same frames for PlayCharAnim, the enter and the first state 0x50 update.
+
+**The player's class update 0x1835d0** builds a table of step functions on the stack ({input step 0x26be04 or the word at 0x18395c, chosen by comparing `*0x183950` and `*0x183954`; 0x26be74; three more words at 0x183964..0x18396c}) and calls **0x26a19c(entity, table)**: it calls table[0] when it is set (`blxne r1` at 0x26a1b4, word 0x112fff31, decoded by hand), and tail-calls table[1] (`bx r1` at 0x26a1dc) only when `ctrl+0x6c == ctrl+0x6e` (the current and the pending state id of the machine at ctrl+0x50, written by 0x1eb868) and table[1] is set. Table[1] 0x26be74 runs the prelude 0x200234, reads dt (0x23602c) and tail-calls the machine's event function 0x2eaee0, which dispatches the current state's update. After 0x26a19c the class update calls 0x226210 and then the apply 0x226100 (at 0x183658). So **while a state request is pending, the current state's update does not run**; the request is applied at the end of the same update. A request made by the state's own update is pending only after that update ran, which is the order measured for 4 -> 6 -> 1 in [script-natives-animation.md §2026-10-19T15:29:35](script-natives-animation.md#ts-20261019-152935).
+
+**PlayCharAnim on Player1 in this trace.** Update 8: IDLE update 0x1d5070 of the player. Update 9: runner, PlayCharAnim 0x1bf9cc (lr 0x2342c0), the slot start 0x23afc0 of the player (lr 0x295bd4), then the enter 0x25fbec of state 0x50 (lr 0x2261a4) with no state update in between. Updates 10 to 98: the state 0x50 update 0x2a47b0 once per update; in update 98 it is followed by the enter 0x1abbb0 of state 1 (lr 0x2261a4), the role start 0x21941c (lr 0x1abc38, role 0) and its slot start (lr 0x219564). Update 99 on: the IDLE update 0x1d5070.
+
+**Port.** `LevelSession::simulate` (`src/game_level_update.cpp`) runs the scene start's ScriptCheckExtras request, the AI position of the player, the level runner and `applyScriptNatives` before the player block instead of after the player, doors, build-its, carry, detective, use spots, scanner and super bricks. The other updates keep their order among themselves. CTests `player-script-animation`, `player-script-animation-real-data`, `game-player-script-animation`; the full test set passed unchanged.
+
+Unknowns:
+- Where the other updates of the gameplay step (doors, build-its, carry, use spots, camera, triggers and waypoints) sit in 0x2e5158 relative to the runner; only the player's update was traced against it (SCRIPT-343).
+- The three later words of the step table (0x183964..0x18396c) and the input step chosen by `*0x183950 == *0x183954`.
+- How many updates pass in the original between the A press on the use spot and the first run of `1-2_Cage_Key_Target_Script` (the press was held for updates 5 to 7, PlayCharAnim came in update 9; the thread start 0x22ce9c was not traced); the port starts the script in the update of the press and runs it in the next.

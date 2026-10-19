@@ -1374,6 +1374,18 @@ if(BUILD_TESTING)
       --script "0 0 5;0 0 1 A;0 0 60")
     set_tests_properties(game-use-spot-1-2 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
       PASS_REGULAR_EXPRESSION "use marker: 1-2_dog_cage_use_spot shown at update 0.*use spot: 1-2_dog_cage_use_spot triggers 1-2_cage_key_target_script at update [0-9]+.*script 1-2_Cage_Key_Target_Script started at update [0-9]+.*use marker: 1-2_dog_cage_use_spot gone at update [0-9]+")
+    # PlayCharAnim(Player1, dog_cage_open_minifig) of 1-2_Cage_Key_Target_Script: the runner runs before the player's update, so state 0x50 is
+    # entered in the update of the native, the first run of the thread after its start; the hand-back to state 1 follows 89 updates later at
+    # dt 0.033 (oracle m12-13-cage-trigger: PlayCharAnim and the enter 0x25fbec in update 9, the enter 0x1abbb0 in update 98,
+    # tools/oracle/script-anim-order-ctrace.txt). The update numbers are the port's.
+    add_test(NAME game-player-script-animation COMMAND chase-game
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
+      --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes
+      --start "916.702 64.431 663.724" --facing 0 --call-script 1-2_Pringles_Cage_Locked
+      --script "0 0 5;0 0 1 A;0 0 100")
+    set_tests_properties(game-player-script-animation PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
+      PASS_REGULAR_EXPRESSION "script 1-2_Cage_Key_Target_Script started at update 5\nplayer state 80 entered at update 6\n.*player state 1 entered at update 95\n")
     # Mission 1-3, the helipad (LEVOBJ-117): the user's state m13-3-helipad-needs-bricks stands at 901.454 30.903 1139.463 on 1-3_Helipad, which
     # 1-3_Fade_Blockers enables; the plate's prompt asks for 300 super bricks (RPC reads of the plate's class data, docs/re/super-buildit.md). Without
     # super bricks the A press opens no dialog. The update numbers are the port's.
