@@ -192,6 +192,10 @@ struct Model {
     std::vector<CollisionItem> collision;
 };
 Model parseModel(const Bytes& data);
+// A skinned mesh's vertices are stored in the space of its node: the skeleton's bind joints sit at the node's matrix times the vertices
+// (policebarker: the wheel vertices average 1.0936 below the Wheels joints' 0.4976 height, the node matrix lifts them by 1.5909; prop_furnacevent
+// 0.1905 in x). Returns the part with the node matrix applied to positions and normals, unchanged for a mesh without a placed node.
+ModelPart skinnedPartInModelSpace(const Model& model, std::size_t meshIndex, const ModelPart& part);
 
 // One PICA texture-environment stage as the game writes it (0x12e460, command record from 0x24c56c):
 // the SOURCE, OPERAND, COMBINER, COLOR and SCALE register values of registers 0xc0 + 8 * stage .. + 4

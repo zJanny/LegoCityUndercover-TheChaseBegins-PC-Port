@@ -2,6 +2,8 @@
 
 Which entities a cutscene's cast are, why the original draws no second Chase and gives the actors their faces and clothes. For the cutscene natives and fades see [cutscenes.md](cutscenes.md).
 
+Subtopics: [cutscene-actors-props.md](cutscene-actors-props.md)
+
 ## Current state
 
 - A cutscene's cast are the level's own characters: the manifest constructor 0x2d236c calls the actor builder 0x2d1ddc per model folder; slot setup 0x1f35f4 wraps an existing entity. [§2026-10-15T07:54:38](#ts-20261015-075438)
@@ -12,8 +14,7 @@ Which entities a cutscene's cast are, why the original draws no second Chase and
 - Each actor clip starts at the camera frame in its file name (`<actor>_NNNN`, 0x2ec30c) and is started by 0x2ec454 when the frame passes it; the clip started last drives the actor. Ported; this fixed the floating donut box of `1_1_d`. [§2026-10-16T14:05:18](#ts-20261016-140518)
 - A cutscene model of its own is drawn per node: object track of the node x the actor node of the root tracks (oracle, `1_1_d`); before its first clip it stands at that clip's frame 0. Ported; this fixed the van under the street and the box not held by the man. [§2026-10-16T14:39:48](#ts-20261016-143948)
 - User report: the magnifying glass floats in the port's mission 1-2 intro; the cause was the prop `prop_magnifyingglass` of `1_2_a` (clip start frame 478) drawn at its frame-0 pose from the start. The port now draws a model of its own only once its first clip starts (stand-in MOVIE-S33); the original's gate was not found. [§2026-10-18T20:38:55](#ts-20261018-203855), [§2026-10-18T21:06:57](#ts-20261018-210657)
-- The binding loop tests no kind: a prop or platform with a matching `CSCharacter` is an actor too, and the cutscene poses that entity (no model of its own). `1_2_c`'s dog is `1-2_Dog`; the port poses the placed prop (props without a scene key of their own keep a model of their own, stand-in LEVOBJ-S86). [§2026-10-19T12:59:54](#ts-20261019-125954)
-- The cutscene setup 0x2d1524 enables a disabled actor entity and shows its node, saves the node's 64-byte local matrix and swaps its animation layers for an empty array; the teardown 0x2d135c (the mode exit 0x2fac7c) disables it again, puts the matrix and the layers back. So a disabled actor is drawn during the cutscene and the dog of `1_2_c` ends at its place before the cutscene. Entity byte +0x18 is the room-activity class: 5 sets both table bits for every room type. Ported for props and characters (`CutsceneHold`). [§2026-10-19T13:47:29](#ts-20261019-134729)
+- Props and level entities that are cutscene actors (the dog of `1_2_c`, setup and teardown, the dog truck): [cutscene-actors-props.md](cutscene-actors-props.md).
 - Open: the code that binds object tracks to nodes, the camera framing of `1_1_d`, the player's position after a cutscene, actors `Donut1` and `Donutbox`, a close-up oracle state.
 
 <a id="ts-20261015-075438"></a>
@@ -140,59 +141,3 @@ Corrects the open question of [§2026-10-18T20:38:55](#ts-20261018-203855) (whic
 Unknowns:
 - The original's gate for a model of its own before its first clip (a flag, the room attach, or the node at frame 0 being outside the view), and whether it applies to every prop; the donut box of `1_1_d` before frame 100 and the glass at frames 0 to 477 of `1_2_a` as pictures from the oracle (needs RPC).
 - `chase-viewer --cutscene` still draws such models at their resting pose.
-
-<a id="ts-20261019-125954"></a>
-
-## 2026-10-19T12:59:54+02:00 — A cutscene actor binds to any entity with a matching CSCharacter, props included: the dog of `1_2_c` is the prop `1-2_Dog` (llvm-objdump of 0x2d1ddc and 0x196144 on `artifacts/game/game.arm.elf`, level and cutscene data through the C++ loaders; no emulator, REA tools not used)
-
-Corrected by [cutscene-actors.md §2026-10-19T13:47:29](#ts-20261019-134729): the "End" paragraph is wrong; the teardown 0x2d135c puts the entity node matrix back to the one saved at the setup 0x2d1524, so the entity does not stay at the last pose.
-
-[Corrects objects.md §2026-10-19T09:59:14](objects.md#ts-20261019-095914): the cutscene does bind `1-2_Dog`; the port no longer draws a dog of its own for it. [Corrects script-natives-flags.md §2026-10-19T11:03:27](script-natives-flags.md#ts-20261019-110327): the open question whether `1_2_c` binds `1-2_Dog` is answered.
-
-**Rule (0x2d1ddc, instruction level).** After the `cape` and `player` tests of [§2026-10-15T07:54:38](#ts-20261015-075438) the loop at 0x2d1f88..0x2d1fec walks the scene object's entity array (`[scene+0x24]`, count `[scene+0x1c]`, index from 0) and for every non-null entry reads `CSCharacter` (0x241624, type 0x1000010) and compares it with the folder through 0x25ad90 (case-insensitive); the first equal entry is taken (0x2d1fc0). Nothing in the loop tests the entity's kind, its class, whether it is a character, whether it has a skeleton, or whether it is enabled. So a prop or platform with a `CSCharacter` is an actor like a minifig is. A found entity goes to 0x1f35f4 (slot +0 = 1, entity pointer at slot +0x200, entity byte +0x18 saved to slot +0x1fa and set to 5), as for characters.
-
-**Hidden or reused.** Reused: the actor is the entity itself; the cutscene poses the node `*(entity + 0x3c)`, no model is created (slot +1 stays 0). The loop does not test or change the entity's disabled state; the script `1-2_Cage_Key_Target_Script` has `EnableObject 1-2_Dog 1` before the cutscene and `EnableObject 1-2_Dog 0` after it, so the dog is drawn by the cutscene while it is enabled.
-
-**End (0x196144).** For every slot from the last to the first it frees the animation array and writes the saved byte back to entity +0x18 (0x196264..0x196268); a slot with its own model is destroyed (0x2427a4, 0x250b8c). No entity position or matrix is restored there (the call 0x24ce78 on a node field at the loop start was not read), so the entity stays where the cutscene's last pose left it; the script then disables it.
-
-**Data.** lvl_01 has exactly one object with `CSCharacter` `dog` (`1-2_Dog`, class `props/prop_prop`, kind 67); the cast of `1_2_c` is `dog` (19 joints, the same joint names as `models/char_dog/char_dog.bfnskl`; one clip starting at camera frame 180 of 521), `dog_owner`, `player1`, `policebarker` and `prop_heart` (start frame 419). Census of all main levels (scratch tool over `loadCutscene` and the class files, folders that some cutscene casts): objects with a `CSCharacter` that is not a character of the level: lvl_01 the dog; lvl_02 `2-3_Parrot01`, `2-4_Hoop01`, `2-4_KeyLocker`, `2-4_MiddleGateKey`, `2-5_Safecrack01`, `2-7_CellsKeypad`, `FP_GymEquipment07/08`; lvl_03 `3-0_CraneLift`, `3-4_DcutPallet`; lvl_05 `6-3_Squirrel01`, `6-3_SquirrelCage01`, five `6-6_ChalkBoard*`; lvl_06 `5-4_Shuttle`.
-
-**Port.** `resolveCastTarget` (src/runtime/cutscene_cast.cpp) takes the entities in level order and returns the first match, character or prop (`CastTargetKind::LevelProp`); `levelProps` / `InEngine::pose` (src/game_cutscene.cpp) pose the placed prop's own scene instance with the cutscene clip (transform of the actor tracks, skin from the cast skeleton under the prop's scene key), so there is one dog. `chase-game` from the cage (CTest `game-cutscene-dog-prop`) prints `1 level props posed` at update 10 of `1_2_c`; a debug print of the actor matrix gave the dog at 744.5 28.7 647.3 at its first frame and 745.4 30.9 642.7 in the middle of the clip. The prop is posed only when it has a scene key of its own (an animation target of the level's scripts) and the cutscene model has a skeleton; every other matching prop still gets a model of its own and keeps its placed prop (stand-in LEVOBJ-S86, LEVOBJ-106). CTest `cutscene-cast` pins the dog rule on lvl_01.
-
-Unknowns:
-- Whether the entity array of the cutscene object is in level order (the port takes the order of `Level::objects`); it matters only for equal `CSCharacter` values.
-- What the entity does with byte +0x18 = 5 and whether the node is drawn while the cutscene shows an entity that is disabled (LEVOBJ-105).
-- Where the dog stands after the cutscene: the port's prop update moves it back to its root-motion node; the original leaves it at the last cutscene pose and the script disables it (LEVOBJ-107).
-
-<a id="ts-20261019-134729"></a>
-
-## 2026-10-19T13:47:29+02:00 — A cutscene enables its actor entities and restores their node matrix at the end; byte +0x18 = 5 is a room-activity class (llvm-objdump of 0x2d1524, 0x2d135c, 0x2d19cc, 0x1f35f4, 0x2ec454, 0x196144, 0x24ce78, 0x23c1a8, 0x1590b0, 0x2405a0 on `artifacts/game/game.arm.elf`, level data through the C++ loaders; no emulator, REA tools not used)
-
-[Corrects cutscene-actors.md §2026-10-19T12:59:54](#ts-20261019-125954): the entity does not stay at the last cutscene pose. Answers LEVOBJ-105 and LEVOBJ-107.
-
-**Setup 0x2d1524** (called once by the cutscene mode enter right after the object is built, lr 0x2faddc), for every slot of the object (0x22c bytes, array at +0x70) whose entity E = `[slot + 0x200]` exists and whose name is not `CSCamera` (compared with the string at 0x35964c):
-- the controller word `[[E+0x44]+0xc]` and the room pointer `[E+0x20]` are saved (slot +0x44, +0x48);
-- **E is enabled for the cutscene:** when E's flags word `[E+0x10]` has bit 0 (disabled), slot byte +0x1b0 = 1, the node `[E+0x3c]` is shown with 0x23f734(node, 1) (clears 0x60 of the node's first word) and flags bit 0 is cleared (0x2d15d8..0x2d1600); otherwise slot +0x1b0 = 0;
-- 0x22c2ec(node, slot + 0x1b4) copies 64 bytes from node + 0x1c (the node's local matrix, copy routine 0x258858) into the slot;
-- for a name different from `CSCamera` it also saves the node byte +0xde, clears its bits 4..5 and sets +0xdd = 0xff, +0xdc = 0x10, saves the controller's layer array pointer (+0x2c), layer count (+2, low 5 bits) and flags (+4 without bit 31), clears 352 bytes at slot +0x50 and makes that the controller's layer array with count 0 (0x2d1658..0x2d16d8). So the entity's own animation layers do not run during the cutscene; the cutscene's clips use the empty array (0x24ce78 clears every layer: 88 bytes each).
-
-**Step 0x2d19cc** (per update, after the clips): for E it sets the node orientation from the controller when its flag bit 31 is set (0x2327b4, 0x20e850, 0x24c118), re-attaches the node to the room found at its world position (0x22d204 on `[E+0x20]`, 0x245048 / 0x245008, 0x23c1a8, 0x229bf0) and calls 0x2ec454, which writes 5 into E +0x18 again when something changed it (0x2ec480..0x2ec4a4; slot +0x1fa keeps the first value). It never calls 0x23f734, so the node stays shown for as long as the setup left it.
-
-**Teardown 0x2d135c** (called by the cutscene mode exit 0x2fac7c, lr 0x2fad70, which frees the object; [cutscenes.md §2026-10-19T10:04:29](cutscenes.md#ts-20261019-100429)), for every slot with E, name not `CSCamera`:
-- slot +0x1b0 set: node hidden again with 0x23f734(node, 0) and flags bit 0 set (0x2d13dc..0x2d13fc), so a disabled entity is disabled after the cutscene exactly as before;
-- 0x24ce78 clears the cutscene's layers; **0x241540(node, slot + 0x1b4) copies the 64 bytes back to node + 0x1c** (and sets the dirty bit 0x1000 on the node and its children), so the node's local matrix is the one saved at the setup, not the last cutscene pose; the saved layer array, count and flags and the node byte +0xde are put back; 0x271ccc(E) walks the layers like 0x1dd3f8 at the setup (waits for loading layers).
-- The room pointer `[E+0x20]` is put back too (0x2d13c0).
-
-**DCamCutSceneFree 0x196144** (script native, free by name; also 0x1ed614 at the level end) is a different path: per slot from the last it calls 0x24ce78 on the entity's controller (no matrix restore), frees the slot's array, writes the saved byte back to E +0x18 (0x196264) and destroys own models.
-
-**Byte +0x18 = 5.** Creates write 2 into it (e.g. 0x1733fc, 0x1c475c); 0x1c3f44 turns 3 into 4 and re-places the entity (0x23c1a8). The consumer is 0x23c1a8(E, room) (and 0x1dd590 / 0x1ffbd8 through the same table): it indexes the table of u16 flags `*0x376ad4` with row `[E+0x18]` (7 rows, 34 bytes each) and column `min([room+0x3a], 16)`. Entry bit 0 selects the active room node lists (`room+0x14` / `+0x18`) over the inactive one (`room+0x78`) for an enabled entity (a disabled entity always goes under `room+0x78`); bit 1 of an enabled entity whose `[E+0x13]` is 0 leads to 0x173534(E) (not read), every other case to 0x22d480(E) (a routine under the lock 0x25c828, not read to the end; as read from the disassembly, not measured). The table builder 0x1590b0 (via the setter 0x2405a0(row, first column, bit 0, bit 1)) gives row 5 both bits for all 17 room types (row 0: both except column 16 zero; row 1: both, column 16 bit 1 only; row 2: bit 1 only, column 16 none; row 3: none; row 4: bit 0 only, column 16 none; row 6: both except column 16 bit 0 only, rewritten by 0x16c09c and 0x2ed144). So class 5 means "always in the active lists of its room, whatever the room type".
-
-**Data.** The dog of `1_2_c`: `EnableObject 1-2_Dog 1` and `PositionObject 1-2_Dog 1-2_Dog_Position_End` (730.328 31.599 645.549, lvl_01) run before the cutscene, so the setup saves that matrix and the teardown restores it; then `EnableObject 1-2_Dog 0`. The earlier statement that it stays at the last cutscene pose was wrong.
-
-**Port.** `CutsceneHold` (src/runtime/cutscene_hold.*) records the held entities and the saved node matrices; `InEngine::hold` / `release` (src/game_cutscene.cpp) run when the cutscene is shown and when it ends: a held entity counts as drawn (`drawnWhileHeld`, used for props in `LevelSession::draw` and for characters in `CharacterVisibility::apply`), and a posed prop gets its saved matrix back. The level characters' figures are never moved by the port (the cutscene draws a copy), so their place after the cutscene already equals the original's. CTest `cutscene-hold` (rules), `animal-props-real-data` (the dog's node, lvl_01 level data) and slow `game-cutscene-dog-end` (chase-game prints `cutscene 1_2_c ended: level prop at 730.328 31.5987 645.549` at update 745).
-
-Unknowns:
-- Whether the cutscene enter calls the setup before or after the cutscene's first update (the port holds when the cutscene is shown).
-- The player's own entity (`player1`) goes through the same setup and teardown; where the player stands after a cutscene in the port is unchanged (MOVIE-22).
-- Whether a script `DCamCutSceneFree` after the cutscene clears the entity's restored layers again (MOVIE-38).
-- The layer swap: the port's prop clips keep running during a cutscene (LEVOBJ-110); the room classes are not modelled (LEVOBJ-111).

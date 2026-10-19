@@ -271,6 +271,10 @@ if(BUILD_TESTING)
   target_link_libraries(cutscene-hold-test PRIVATE chase_runtime)
   target_compile_options(cutscene-hold-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME cutscene-hold COMMAND cutscene-hold-test)
+  add_executable(skinned-node-matrix-test tests/skinned_node_matrix_test.cpp)
+  target_link_libraries(skinned-node-matrix-test PRIVATE chase_assets)
+  target_compile_options(skinned-node-matrix-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME skinned-node-matrix COMMAND skinned-node-matrix-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
   add_executable(natives-animation-test tests/natives_animation_test.cpp)
   target_link_libraries(natives-animation-test PRIVATE chase_runtime)
   target_compile_options(natives-animation-test PRIVATE -Wall -Wextra -Wpedantic)
@@ -1183,7 +1187,7 @@ if(BUILD_TESTING)
       --start "916.702 64.431 663.724" --facing 0 --call-script 1-2_Pringles_Cage_Locked
       --script "0 0 5;0 0 1 A;0 0 185")
     set_tests_properties(game-cutscene-dog-prop PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
-      PASS_REGULAR_EXPRESSION "cutscene 1_2_c started at update 169.*cutscene 1_2_c: 0 level figures drawn beside their cast copies, 1 models of their own drawn, 1 level props posed")
+      PASS_REGULAR_EXPRESSION "prop 1-2_dog: its own animation is not shown while a cutscene holds it.*cutscene 1_2_c started at update 169.*cutscene 1_2_c: 0 level figures drawn beside their cast copies, 1 models of their own drawn, 1 level props posed")
     # LEVOBJ-107: the teardown 0x2d135c puts the entity node back to the matrix saved at the setup 0x2d1524, so the dog of 1_2_c stands at
     # 1-2_Dog_Position_End (730.328 31.599 645.549, level data) after the cutscene, not at its last pose. The run is about 8 s (slow).
     add_test(NAME game-cutscene-dog-end COMMAND chase-game

@@ -1,4 +1,5 @@
 #include "game_level.hpp"
+#include <iostream>
 
 namespace game_level {
 namespace runtime = chase::runtime;
@@ -7,6 +8,13 @@ void LevelSession::updatePropAnimations(float dt) {
     for (const runtime::AnimationPlay& start : catRescue.update(dt)) propAnimations.play(start);
     propAnimations.update(dt);
     for (const runtime::PropPose& pose : propAnimations.poses()) {
+        bool heldByCutscene = false;
+        for (std::size_t i = 0; i < placedObjects.size(); ++i)
+            if (game_doors::lowerCase(placedObjects[i].instance) == pose.instance) heldByCutscene = cutsceneHost->holdsObject(placedObjects[i].objectIndex);
+        if (heldByCutscene) {
+            if (heldPropsLogged.insert(pose.instance).second) std::cout << "prop " << pose.instance << ": its own animation is not shown while a cutscene holds it\n";
+            continue;
+        }
         scene.pose(pose.key, pose.skin);
         if (!pose.moved) continue;
         for (std::size_t i = 0; i < placedObjects.size(); ++i)

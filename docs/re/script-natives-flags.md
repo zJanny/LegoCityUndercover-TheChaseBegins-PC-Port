@@ -159,7 +159,7 @@ Unknowns:
 
 ## 2026-10-19T11:03:27+02:00 — The follow-up 0x242b08 of PositionObject (SCRIPT-311; llvm-objdump on game.arm.elf, no REA session, no emulator)
 
-Corrected by [cutscene-actors.md §2026-10-19T12:59:54](cutscene-actors.md#ts-20261019-125954): the cutscene `1_2_c` binds `1-2_Dog` (LEVOBJ-100 closed).
+Corrected by [cutscene-actors-props.md §2026-10-19T12:59:54](cutscene-actors-props.md#ts-20261019-125954): the cutscene `1_2_c` binds `1-2_Dog` (LEVOBJ-100 closed).
 
 Reads the call that [§2026-10-18T16:37:52](#ts-20261018-163752) left open. Disassembly of 0x242b08 and its callees 0x23c2bc, 0x250638, 0x253f0c and 0x23c1a8.
 

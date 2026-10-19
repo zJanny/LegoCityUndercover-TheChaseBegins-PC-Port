@@ -307,7 +307,10 @@ bool SceneImpl::addModel(const std::string& path, const Mat4& transform,
         const std::string dir = directory(lower(path));
         for (std::size_t meshIndex = 0; meshIndex < model.meshes.size(); ++meshIndex) {
             if (onlyMesh >= 0 && int(meshIndex) != onlyMesh) continue;
-            for (const auto& part : model.meshes[meshIndex].parts) {
+            for (const auto& unplaced : model.meshes[meshIndex].parts) {
+                std::optional<ModelPart> placedSkin;
+                if (unplaced.flags & AttrSkin) placedSkin = skinnedPartInModelSpace(model, meshIndex, unplaced);
+                const ModelPart& part = placedSkin ? *placedSkin : unplaced;
                 std::string texName = part.textures.empty() ? "" : part.textures.front();
                 bool skip = false;
                 for (const auto& word : exclude_) skip |= lower(texName).find(word) != std::string::npos;

@@ -86,6 +86,7 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
+#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -282,6 +283,7 @@ private:
     chase::runtime::WorldLevelEntry currentWorldLevel;
     chase::runtime::SceneChangeFlow sceneChangeFlow;
     unsigned updatesForLog = 0;
+    std::set<std::string> heldPropsLogged;
     std::size_t reportedUnhandled = 0, reportedEvents = 0;
     chase::runtime::CollisionWorld collision;
     std::vector<chase::runtime::BulletBox> vehicleBoxes;

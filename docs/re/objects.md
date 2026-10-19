@@ -151,7 +151,7 @@ Unknowns:
 
 ## 2026-10-19T09:59:14+02:00 — The mission 1-2 dog and the other animals of lvl_01 are placed props (REA Ghidra 12.1.2 pseudo-code and llvm-objdump on `artifacts/game/game.arm.elf`, class files through the C++ loader, RPC screenshots A-1 by the emulator servant)
 
-Corrected by [cutscene-actors.md §2026-10-19T12:59:54](cutscene-actors.md#ts-20261019-125954): the cutscene `1_2_c` binds the prop `1-2_Dog` (the binding loop tests no kind) and the port poses it instead of drawing a dog of its own.
+Corrected by [cutscene-actors-props.md §2026-10-19T12:59:54](cutscene-actors-props.md#ts-20261019-125954): the cutscene `1_2_c` binds the prop `1-2_Dog` (the binding loop tests no kind) and the port poses it instead of drawing a dog of its own.
 
 [Corrects objects.md §2026-10-13T16:34:30](#ts-20261013-163430): the animal rigs of lvl_01 are not characters with a constructor of their own; the dog, the cats and the crow are props of kinds 0, 64 and 67.
 
