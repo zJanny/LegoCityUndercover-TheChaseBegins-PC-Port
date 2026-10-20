@@ -68,14 +68,14 @@ Port as far as you get, in this order: {{ordered goals}}. Anything left becomes 
    - ONE progress-log line in `docs/plans/{{plan}}.progress.md`, starting `Agent {{rN-X}} (round {{N}}, …)`
    - `python3 tools/priority_report.py --update docs/plans/priorities.md`
    - `python3 tools/check_doc_links.py --fix`
-2. Run the full `ctest -LE slow` and the Python unittests.
+2. Run the full `ctest`, slow tests included (most checks of chase-game output are `slow`), and the Python unittests.
 3. Write your report to `artifacts/rounds/r{{N}}/{{rN-X}}.report.md` (through your artifacts link, so it lands in the main checkout), and give the same text as your final message, in **at most 25 lines**. Findings belong in `docs/re`, not in the report.
 
 ```
 {{rN-X}}: DONE | PARTIAL | BLOCKED (<why, one line>)
 Branch: <branch>  Worktree: <path>  Commits: <count>, last <sha>
 Closed: <IDs>  Opened: <IDs>  Stand-ins: <IDs>  Unused IDs: <IDs>
-Tests: ctest -LE slow <passed>/<total>; unittests <ok | failures>
+Tests: ctest <passed>/<total>; unittests <ok | failures>
 Graphify: <queries run, and what you used from them, one line each>
 Read from the original: <addresses or handlers transcribed, or "none">
 Emulator: <pgrep output | not used>

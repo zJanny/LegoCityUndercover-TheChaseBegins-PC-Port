@@ -105,6 +105,7 @@ Four places, never copied between them, only linked: **findings** about the orig
 - No explanatory comments; clear names and simple control flow. Keep license notices, tool directives and comments on non-obvious correctness or unavoidable constraints.
 - Prefer the native Read/Edit/Write tools; scripts only for bulk or structured edits. Review the diff afterwards.
 - **Short tests:** no test or development script walks or drives long distances or runs for minutes, and nobody tunes routes. Start close to the point under test (`at X Y Z`, a level data position, a replay of recorded data). A test above about 5 seconds gets the label `slow` (list at the end of `CMakeLists.txt`).
+- **Log lines and output checks:** chase-game prints a line per event a test or developer checks, never per entity or per update for routine work (a spawn, a removal, a step). A `PASS_REGULAR_EXPRESSION` pins the order of lines, not their adjacency: join them with `\n.*`; a bare `\n` only where the same code prints both lines together. Most output checks are `slow`, so a worker runs the full `ctest` before its report.
 
 **Subagents**
 - Cheapest model that can do the task; narrow tasks with only the needed files and rules. The lead runs rounds with the `lead-round` skill (`.claude/skills/lead-round/`): a planner agent proposes, code and docs reviewer agents (one combined reviewer on a small branch) audit each branch; never let a worker verify its own change.
