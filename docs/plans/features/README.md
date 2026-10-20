@@ -64,7 +64,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 |---|---|---|
 | [world-streaming](world-streaming.md) | IN_PROGRESS | `chase-game` streams rooms (street level); WSTREAM-12 room position code; WSTREAM-30 loader cost; WSTREAM-4 visibility inside rooms |
 | [pedestrians-traffic](pedestrians-traffic.md) | IN_PROGRESS | PREGEN-3 traffic floor cell; derived path, tangent and room ported; pedestrian file used in chase-game |
-| [pedestrians-traffic-pedestrians](pedestrians-traffic-pedestrians.md) | IN_PROGRESS | run in chase-game; PED-5 message slot; PED-17 vehicle test not run; PED-10 vehicle speed; PED-12 spawn fade-in; PED-13 fade point |
+| [pedestrians-traffic-pedestrians](pedestrians-traffic-pedestrians.md) | IN_PROGRESS | run in chase-game with room moves; PED-5 message slot; PED-17 vehicle test not run; PED-12 spawn fade-in; PED-13 fade point |
 | [pedestrians-traffic-cars](pedestrians-traffic-cars.md) | IN_PROGRESS | TRAFFIC-1 wire the traffic manager; TRAFFIC-2 AI driver states; TRAFFIC-3 rest of the manager (manager rules ported) |
 | [level-transitions](level-transitions.md) | IN_PROGRESS | station exit and entry switch at run time; TRANS-3 master level (needs SCRIPT-1), TRANS-8 loading page code and look; TRANS-15 same-level entry timing, TRANS-16 oracle check of lift entries |
 

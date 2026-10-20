@@ -1,5 +1,6 @@
 #include "game_pedestrians.hpp"
 #include "game_level.hpp"
+#include "runtime/player_controller_state.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -38,6 +39,12 @@ float arrivalRadiusOf(assets::FuseArchive& archive, const assets::CharacterObjec
     if (!assets::modelBounds(archive, assets::meshModelPath(character.appearance.body), centre, half)) return 0.0f;
     return runtime::pedestrianEntityBox({centre[0], centre[1], centre[2]}, {half[0], half[1], half[2]}).radius;
 }
+
+runtime::PedestrianVec3 boundsCentreOf(assets::FuseArchive& archive, const assets::CharacterObject& character) {
+    float centre[3] = {0, 0, 0}, half[3] = {0, 0, 0};
+    if (!assets::modelBounds(archive, assets::meshModelPath(character.appearance.body), centre, half)) return {0, 0, 0};
+    return {centre[0], centre[1], centre[2]};
+}
 }
 
 void LevelPedestrians::load(assets::FuseArchive& archive, const assets::Level& level, const assets::ClassLookup& classOf,
@@ -60,6 +67,7 @@ void LevelPedestrians::load(assets::FuseArchive& archive, const assets::Level& l
             const assets::CharacterObject& character = characters[found->second];
             slot.animationClass = character.animationClass.empty() ? kGenericAnimationClass : character.animationClass;
             slot.instance = *placed[found->second];
+            slot.boundsCentre = boundsCentreOf(archive, character);
             const std::string bodyPath = assets::meshModelPath(character.appearance.body);
             auto rig = rigs_.find(bodyPath);
             if (rig == rigs_.end()) rig = rigs_.emplace(bodyPath, render::loadCharacterRig(archive, bodyPath)).first;
@@ -132,8 +140,8 @@ void LevelPedestrians::updateCharacters(render::Scene& scene, const CharacterInp
     step.dt = inputs.dt;
     step.playerPosition = inputs.playerPosition;
     step.playerInVehicle = inputs.playerInVehicle;
-    // STAND-IN PED-S4: the draw test 0x2930e0 and the hidden test 0x23de70 are false. STAND-IN PED-S6: the player state +0x6c is 0, so
-    // the walk never bumps.
+    step.playerState = inputs.playerState;
+    // STAND-IN PED-S4: the draw test 0x2930e0 and the hidden test 0x23de70 are false.
     // STAND-IN PED-S4: the ground probe 0x2058cc is the player's ground probe of the collision world.
     if (inputs.collision)
         step.groundProbe = [&](std::size_t, runtime::PedestrianVec3& position) {
@@ -176,11 +184,8 @@ void LevelSession::updatePedestrianSystem() {
     inputs.enabled = levelScripts.progressNatives().trafficAndPedestriansEnabled();
     inputs.view.position = {follow->eye()[0], follow->eye()[1], follow->eye()[2]};
     inputs.view.row2 = {forward[0], forward[1], forward[2]};
-    // STAND-IN PED-S6: the speed 0x34163c of the player's vehicle is the length of the driven body's velocity.
-    if (const std::optional<std::size_t> seated = boarding ? boarding->seatedVehicle() : std::nullopt) {
-        const chase::runtime::Vector3& velocity = vehicleDrives[*seated].rigid.velocity;
-        inputs.view.playerVehicleSpeed = std::sqrt(velocity[0] * velocity[0] + velocity[1] * velocity[1] + velocity[2] * velocity[2]);
-    }
+    if (const std::optional<std::size_t> seated = boarding ? boarding->seatedVehicle() : std::nullopt)
+        inputs.view.playerVehicleSpeed = chase::runtime::forwardSpeed(vehicleDrives[*seated].rigid);
     inputs.playerPosition = player->position();
     inputs.roomLoaded = [this](int room) { return roomShown(room); };
     pedestrians.updateSystem(inputs, objectState);
@@ -192,6 +197,7 @@ void LevelSession::updatePedestrianCharacters(float dt) {
     inputs.dt = dt;
     inputs.playerPosition = player->position();
     inputs.playerInVehicle = boarding && boarding->seatedVehicle();
+    inputs.playerState = chase::runtime::playerControllerState(player->vertical, player->animation);
     inputs.collision = &collision;
     pedestrians.updateCharacters(scene, inputs, objectState);
 }

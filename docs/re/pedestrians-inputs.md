@@ -9,12 +9,15 @@ Subtopic of [pedestrians.md](pedestrians.md): the pedestrian's vehicle test 0x1f
 - The pedestrian's class byte +0x18 is 0 from its create. Room +0x7c is the node that holds a room's faded-out mesh nodes. *0x37674c is 1 by the registration order. The fade record 0x376794 gives 3, 36 and 38, so the distance fade table is (3, 6, 12), (36, 72, 108), (38, 76, 114). [§2026-10-20T13:20:02](#ts-20261020-132002)
 - The second update caller 0x164240 is the cutscene mode's update 0x2fae68. The last loaded world sets the slots and the limit. [§2026-10-20T13:20:02](#ts-20261020-132002)
 - Port: `src/runtime/pedestrian_blocked.*` (test `pedestrian-blocked`) and `src/runtime/room_layers.*` (test `room-layers`), not wired. [§2026-10-20T13:20:02](#ts-20261020-132002)
+- A walking pedestrian is moved between rooms by the room pass 0x2e6ce4 like every other object (list 0 of its room, the player's room and the round-robin entry); its priority byte +0x19 is 128 from the object loader. Ported as `src/runtime/pedestrian_rooms.*`. [§2026-10-20T14:10:27](#ts-20261020-141027)
+- The speed 0x34163c is the signed velocity along the vehicle body's forward axis; the bump reads the player controller state +0x6c (2 run, 3 walk). Ported with the port's `forwardSpeed` and `src/runtime/player_controller_state.*`. [§2026-10-20T14:10:27](#ts-20261020-141027)
 - Open: the run-time values of *0x37674c, a live pedestrian's byte +0x18 and the room byte +0x3a; the third table push 0x17e544; the level root's slot values. [§2026-10-20T13:20:02](#ts-20261020-132002)
 
 <a id="ts-20261020-132002"></a>
 
 ## 2026-10-20T13:20:02+02:00 — The vehicle test 0x1ffcd4, the room layer table, the class byte, room +0x7c, *0x37674c, the fade record, the cutscene update caller (llvm-objdump only, no REA session, no emulator)
 
+Corrected by [pedestrians-inputs.md §2026-10-20T14:10:27](#ts-20261020-141027): the room pass walks three lists per room (n = 0 .. 2), not four.
 [Corrects pedestrians.md §2026-10-20T12:27:05](pedestrians.md#ts-20261020-122705): on 0x1ffcd4 (read in full; the spawn does not change the pedestrian).
 
 Method: `llvm-objdump -d --triple=armv6k-none-eabi --mattr=+vfp2` on `artifacts/game/game.arm.elf`, read instruction by instruction; literal words read from the ELF segments; throwaway Python scans of the disassembly for the pool words of 0x37674c, 0x376794, 0x376ad4 and 0x376d18 and the stores through them, and for the callers of 0x258eb0 reachable from the start-up 0x102100. Replicas: `src/runtime/pedestrian_blocked.*`, `src/runtime/room_layers.*`.
@@ -53,3 +56,29 @@ Unknowns:
 - The third table push 0x17e544 (the table at [[0x3768bc] +4] +0x28) and who calls it.
 - The filter of the query descriptor 0x362298 of the dodge ray.
 - The start values of the level root's slots (+0x2c / +0x30), and which worlds the list 0x589a18 holds together at run time.
+
+<a id="ts-20261020-141027"></a>
+
+## 2026-10-20T14:10:27+02:00 — Pedestrian room moves, the entity priority, the vehicle speed 0x34163c and the player state +0x6c (llvm-objdump only, no REA session, no emulator)
+
+[Corrects pedestrians-inputs.md §2026-10-20T13:20:02](#ts-20261020-132002): the room pass 0x2e6ce4 walks three lists per room, not four.
+
+Method: `llvm-objdump -d --triple=armv6k-none-eabi --mattr=+vfp2` on `artifacts/game/game.arm.elf`, read instruction by instruction: 0x2e6ce4 (full), 0x242b08 and 0x2428c0 (the disable), 0x1a4130 (the object loader), 0x1913f8, 0x34163c with 0x229948, 0x257e78 and 0x1fd8c8. Replica: `src/runtime/pedestrian_rooms.*` (test `pedestrian-rooms`, slow `game-pedestrian-rooms`), `src/runtime/player_controller_state.*` (test `player-controller-state`), glue `src/game_pedestrian_rooms.cpp`.
+
+**Room move of a walking pedestrian (PED-11).**
+- Pass 0x2e6ce4 handles per update the player's room and one round-robin entry of the current room's list ([streaming-rooms.md §2026-10-14T20:51:26](streaming-rooms.md#ts-20261014-205126)). Per room it walks the lists at room +0x58 + 8 n for n = 0, 1 and 2 (the loop stops when n reaches 3, 0x2e6dac), through the next pointer at entity +0. It skips the kinds 90, 179, 183 and 243.
+- Only list 0 is room-tested (0x2e6ec0: n must be 0). The entity needs hword +0x10 bit 2 clear (0x2e6ecc), the node word (node = entity +0x3c) bit 19 set (0x80000), entity bit 10 clear and the node's parent (node +4) equal to room +0x14. The test point is the node translation plus the node's local box centre +0xa0 (0x23f50c); 0x1fa5d4 (point lifted by 0.1 inside the room box) keeps the room. Otherwise 0x237b04 picks the room, and the final loop re-parents the node to the new room +0x14 (0x245048, 0x245008), sends message 0x51 to the entity (0x244fc8) and re-buckets it (0x242b08).
+- 0x242b08 buckets an entity by its own flags: the list at room +0x70 when hword +0x10 bit 0 is set, else list +0x58 + 8 x byte +0x13. The disable 0x2428c0 sets bit 0 of +0x10 (and re-buckets), so a disabled slot is in the disabled list and an enabled one in the list of its byte +0x13. The create 0x1913f8 stores 0 at +0x13 (0x191434). So an enabled pedestrian is in list 0 and is moved like any other object: it follows its walk into the room that contains its box centre. The port runs this for every enabled pedestrian with the player's room and the round-robin entry (the same `ObjectRoomMover` rule as the vehicles).
+- In a run of lvl_01 from the start (`--no-start-cutscenes --script "0 0 4000"`) pedestrians change room 11 times, first slot 9 from Room8 to Room9 at update 236 (the port's own run, not an oracle value and not measured in the original; the test `game-pedestrian-rooms` pins slot 9 Room8 to Room9 at update 236 from it).
+
+**The priority byte +0x19.** The object loader 0x1a4130 writes 128 (0x80) at +0x19 of the 0x88-byte record (strb at 0x1a4214, record base sp + 8), and the create 0x1913f8 copies the record and stores no other value, so a pedestrian's priority is 128. It is the sort key of the entity pass ([scripts-runtime.md §2026-10-20T09:22:38](scripts-runtime.md#ts-20261020-092238)); the port updates the pedestrians in the object phase instead (PED-S7).
+
+**The speed 0x34163c(body = vehicle +0x84).** It copies body +0x24 .. +0x30 (a direction, the body's forward row) and reads the rigid body's linear velocity ([body +0x7c] +0x13c), then returns their dot product (0x257e78). 0x229948 is the same dot product by way of 0x24092c, so 0x34163c is the signed velocity along the body's forward axis, as the port's `forwardSpeed` has it. It is not the length of the velocity: the spawn's view moves ahead only while this speed is above 0 (0x2ee0d4), so a car that reverses does not move it.
+
+**The player state +0x6c in the bump (0x1fd8c8).** It reads the halfword at +0x6c of the component [player +0x7c] (0x1fd938 .. 0x1fd944) and bumps for 2 or 3. That halfword is the controller state ([player-falling-jumping.md](player-falling-jumping.md): 1 idle, 2 run, 3 walk, 4 jump, 5 fall, 6 / 7 landing, 8 slide), which [player-entity-input.md](player-entity-input.md) calls the entity type. The port derives it from the posture and the playing locomotion role (PED-S14).
+
+Unknowns:
+- The run-time values of the node flag bit 19 and of the entity bits 2 and 10 of +0x10 for a pedestrian (PED-S13 takes bit 19 set and the others clear).
+- What a pedestrian does on message 0x51 (its handler 0x19efbc was read only at its start).
+- The states of the controller in the carry, vehicle, action and script cases, and whether 2 and 3 stay the walk and run states there.
+- Whether the round-robin entry is the same for the vehicles' list pass 0x2e6f70 (it runs for every vehicle regardless of room).

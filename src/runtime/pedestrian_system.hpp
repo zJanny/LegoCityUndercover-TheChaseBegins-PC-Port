@@ -105,6 +105,7 @@ public:
     const PedestrianManager& manager() const { return manager_; }
     const PedestrianBody& body(std::size_t slot) const { return bodies_[slot]; }
     int room(std::size_t slot) const { return rooms_[slot]; }
+    void setRoom(std::size_t slot, int room) { rooms_[slot] = room; }
     std::size_t spawnPointCount() const { return points_.size(); }
     // The leaf of the spawn tree that holds (x, z) (0x1eb490), as spawn points with their rooms; empty without spawn data.
     std::vector<PedestrianSpawnPoint> leafAt(float x, float z, const std::function<std::optional<PedestrianRoom>(int room)>& room) const;

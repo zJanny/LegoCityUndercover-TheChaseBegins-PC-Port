@@ -20,7 +20,7 @@ Items: [pedestrians-traffic-pedestrians.md](../plans/features/pedestrians-traffi
 - 0x2edc94 counts the level paths named PedestrianPath001 .. 128 (0x22a3b0 searches the path section) and loads nothing without one. The spawn hangs the pedestrian on room +0x14 of the point's room. [§2026-10-20T13:13:47](#ts-20261020-131347)
 - Wired in `chase-game` as `PedestrianSystem` (`src/runtime/pedestrian_system.*`): the manager in a system phase before the runner, the characters in the object phase; the level load disables the slots, a spawn enables one, a removal disables it and stops its clip. [§2026-10-20T13:13:47](#ts-20261020-131347)
 - The pedestrian character (kind 197): its create, state step, walk, avoidance and steady updates are in [pedestrians-character.md](pedestrians-character.md).
-- Open: the pedestrian's entity priority and room move, the vehicle speed 0x34163c and the spawn fade-in. [§2026-10-20T12:27:05](#ts-20261020-122705), [§2026-10-20T13:13:47](#ts-20261020-131347)
+- Open: the spawn fade-in. [§2026-10-20T12:27:05](#ts-20261020-122705), [§2026-10-20T13:13:47](#ts-20261020-131347). The room move, the priority 128 and the vehicle speed are in [pedestrians-inputs.md](pedestrians-inputs.md).
 
 <a id="ts-20261020-111742"></a>
 

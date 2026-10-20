@@ -9,6 +9,7 @@
 #include "runtime/animation_slots.hpp"
 #include "runtime/collision.hpp"
 #include "runtime/game_random.hpp"
+#include "runtime/pedestrian_rooms.hpp"
 #include "runtime/pedestrian_system.hpp"
 #include "runtime/room_streaming.hpp"
 
@@ -36,6 +37,7 @@ struct CharacterInputs {
     float dt = 0;
     runtime::PedestrianVec3 playerPosition{};
     bool playerInVehicle = false;
+    std::uint16_t playerState = 0;
     const runtime::CollisionWorld* collision = nullptr;
 };
 
@@ -50,9 +52,12 @@ public:
                     const std::map<int, runtime::RoomBox>* boxes, int currentRoom);
     // Slot +0x48 of the system list: spawns enable a slot's entity, removals disable it.
     void updateSystem(const SystemInputs& inputs, assets::PlacedObjectState& state);
-    // The entity pass: each live pedestrian's update, its clips and its posed body. STAND-IN PED-S7: it runs in the object phase, and a
-    // pedestrian keeps the room of its spawn point.
+    // The entity pass: each live pedestrian's update, its clips and its posed body. STAND-IN PED-S7: it runs in the object phase, not
+    // in the entity pass's order by priority 128 and type.
     void updateCharacters(render::Scene& scene, const CharacterInputs& inputs, const assets::PlacedObjectState& state);
+    // The room pass 0x2e6ce4 for the enabled pedestrians (game_pedestrian_rooms.cpp).
+    std::vector<runtime::PedestrianRoomMove> moveRooms(const runtime::StreamRooms& rooms, const std::map<int, runtime::RoomBox>& boxes,
+                                                       int currentRoom, int playerRoom, const assets::PlacedObjectState& state);
 
 private:
     struct Clip {
@@ -64,6 +69,7 @@ private:
         render::CharacterInstance instance;
         const render::CharacterRig* rig = nullptr;
         runtime::AnimationSlots animation;
+        runtime::PedestrianVec3 boundsCentre{};
     };
     std::optional<std::uint32_t> clipOf(const std::string& animationClass, runtime::PedestrianClip clip);
     bool clipFinished(std::size_t slot, runtime::PedestrianClip clip);
@@ -78,6 +84,7 @@ private:
     // STAND-IN PED-S6: one generator with the fixed seed of the level characters (LEVOBJ-S4), not the game's shared one.
     runtime::GameRandom random_{game_characters::kStandInSeed};
     std::int64_t clock_ = 0;
+    runtime::ObjectRoomMover roomMover_;
 };
 
 }

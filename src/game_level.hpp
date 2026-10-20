@@ -198,6 +198,7 @@ private:
     void updatePedestrianSystem();
     void updatePedestrianCharacters(float dt);
     void enterPedestrianScene();
+    void movePedestrianRooms();
     void updatePropAnimations(float dt);
     void updateSuperBricks(float dt);
     void applySuperBricks();

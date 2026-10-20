@@ -93,6 +93,7 @@ void LevelSession::updateRoomStreaming() {
     const int before = roomStreamer->currentRoom();
     const std::set<int> loadedBefore = roomStreamer->loadedRooms();
     moveVehicleRooms();
+    movePedestrianRooms();
     roomStreamer->update(player->position(), viewDirection(follow->yaw(), follow->pitch()), scriptedRooms);
     if (roomStreamer->currentRoom() != before) std::cout << "room " << before << " -> " << roomStreamer->currentRoom() << " at update " << updatesForLog << '\n';
     if (roomStreamer->loadedRooms() != loadedBefore) {
