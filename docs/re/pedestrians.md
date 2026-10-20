@@ -2,7 +2,7 @@
 
 The manager that spawns and removes the `chars/pedestrian` characters of a level, the `props/pedestriansystem` object (kind 198) and the spawn data of `Pregen/Pedestrians/<level>_Pedestrians.bin`. Script native: EnableTrafficAndPedestrians ([script-natives-audio.md](script-natives-audio.md)). Traffic has its own manager (0x527410).
 
-Subtopics: [pedestrians-character.md](pedestrians-character.md)
+Subtopics: [pedestrians-character.md](pedestrians-character.md), [pedestrians-inputs.md](pedestrians-inputs.md)
 
 Items: [pedestrians-traffic-pedestrians.md](../plans/features/pedestrians-traffic-pedestrians.md).
 
@@ -14,12 +14,13 @@ Items: [pedestrians-traffic-pedestrians.md](../plans/features/pedestrians-traffi
 - Bit 0 is the result of the pregen file load 0x2ee868, run by 0x2edc94 only when the level has a `props/pedestriansystem` (create 0x260d9c registers it at +0x94) with `PedestrianPath%03u` objects. [§2026-10-20T11:17:42](#ts-20261020-111742)
 - `Pedestrians_Max` is read from the scene's own level table (0x2451d0 on the level root, default 5): 5 in lvl_01, 10 in lvl_07. The level load runs once per loaded scene. [§2026-10-20T12:27:05](#ts-20261020-122705)
 - The update is slot +0x48 of the system list 0x5899f4 (priority 128), called once per gameplay step at its start (0x169374). Every scene enter (slot +0x40 0x2edbf8) loads the spawn data and sets the countdown to 0. Both pregen loaders run there, not in the init. [§2026-10-20T12:27:05](#ts-20261020-122705)
-- The fade tier, the hidden test, the room and layer test and the fade-node test are read. The blocked test 0x26cd38 loops over a vehicle list with 0x1ffcd4, which is not read in full. [§2026-10-20T12:27:05](#ts-20261020-122705)
+- The fade tier, the hidden test, the room and layer test and the fade-node test are read. [§2026-10-20T12:27:05](#ts-20261020-122705)
+- The vehicle test 0x1ffcd4 and its list, the room layer table, the class byte, room +0x7c, *0x37674c, the fade record and the cutscene update caller 0x164240 are in [pedestrians-inputs.md](pedestrians-inputs.md).
 - Port: `src/runtime/pedestrian_manager.*` (tests `pedestrian-manager`, `pedestrian-limit-real-data`). [§2026-10-20T12:27:05](#ts-20261020-122705)
 - 0x2edc94 counts the level paths named PedestrianPath001 .. 128 (0x22a3b0 searches the path section) and loads nothing without one. The spawn hangs the pedestrian on room +0x14 of the point's room. [§2026-10-20T13:13:47](#ts-20261020-131347)
 - Wired in `chase-game` as `PedestrianSystem` (`src/runtime/pedestrian_system.*`): the manager in a system phase before the runner, the characters in the object phase; the level load disables the slots, a spawn enables one, a removal disables it and stops its clip. [§2026-10-20T13:13:47](#ts-20261020-131347)
 - The pedestrian character (kind 197): its create, state step, walk, avoidance and steady updates are in [pedestrians-character.md](pedestrians-character.md).
-- Open: 0x1ffcd4 (the blocked test), the layer table contents, the class byte +0x18, which room node +0x7c is, the second caller 0x164240, the pedestrian's entity priority and room move, the vehicle speed 0x34163c and the spawn fade-in. [§2026-10-20T12:27:05](#ts-20261020-122705), [§2026-10-20T13:13:47](#ts-20261020-131347)
+- Open: the pedestrian's entity priority and room move, the vehicle speed 0x34163c and the spawn fade-in. [§2026-10-20T12:27:05](#ts-20261020-122705), [§2026-10-20T13:13:47](#ts-20261020-131347)
 
 <a id="ts-20261020-111742"></a>
 
@@ -97,6 +98,8 @@ Unknowns:
 <a id="ts-20261020-122705"></a>
 
 ## 2026-10-20T12:27:05+02:00 — Pedestrian manager inputs: the limit source, the scene enter, the update caller, the node and room tests, the walk helpers (llvm-objdump only, no REA session, no emulator)
+
+Corrected by [pedestrians-inputs.md §2026-10-20T13:20:02](pedestrians-inputs.md#ts-20261020-132002): 0x1ffcd4 is read in full; with the spawn's zero vector and 0.0 it only takes the slow branch (result 4 or 0) and does not change the pedestrian.
 
 [Corrects pregen-traffic.md §2026-10-20T11:16:20](pregen-traffic.md#ts-20261020-111620): neither pregen loader runs from its manager's init. The pedestrian loader 0x2ee868 (called at 0x2eded4 in 0x2edc94) runs from vtable slot +0x40 0x2edbf8, and the traffic loader 0x2e02d4 (called at 0x2df884 in 0x2df574) from slot +0x40 0x2dedbc, which calls 0x2df574 first. Slot +0x40 runs on every scene enter (see below).
 
