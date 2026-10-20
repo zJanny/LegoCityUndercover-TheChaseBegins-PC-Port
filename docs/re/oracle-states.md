@@ -21,6 +21,7 @@ Save states the oracle uses: which ones exist, the game progress of each, how ea
 - Table and trampoline of mission 1-2 (user, for PLAYER-12 and LEVOBJ-86): `m12-table-before`, `m12-table-broken`, `m12-trampoline-built`, loaded and checked. [§2026-10-18T17:25:22](#ts-20261018-172522)
 - Bars above the trampoline (user, for TRAV-36): `m12-trampoline-pole`, Chase high above the pad next to the bars; keep pressing jump to grab. [§2026-10-18T20:44:42](#ts-20261018-204442)
 - Mission 1-3 in progress (user): `m13-1-roof-superbrick`, `m13-2-ladder`, `m13-3-helipad-needs-bricks`, `m13-4-helipad-300-bricks`, `m13-5-helipad-built-menu`. `m13-1` stands on the roof 2.53 from the super brick `1-3_Rainbow_02` with 96 super bricks (296 after the pickup), `m13-3` has 296, `m13-4` 302. [§2026-10-19T18:02:53](#ts-20261019-180253), [§2026-10-19T19:22:01](#ts-20261019-192201) The helipad states load as described [§2026-10-19T19:24:35](#ts-20261019-192435).
+- `footprint-scanner-trigger` (user): in front of the footprint scanner trigger; progress not stated, not loaded yet. [§2026-10-20T21:37:28](#ts-20261020-213728)
 - `leadcut-1_1_d-early` (from `m11-6-van-to-shop`): cutscene `1_1_d` just loaded, for its actor nodes and pictures. [§2026-10-16T14:39:21](#ts-20261016-143921)
 - Open: whether mission 1-2 is active in the post-1-1 states, the level variables of the m11 states, a save with Continue byte +6 above 1, and the Old 3DS run of `savestate`.
 
@@ -358,3 +359,12 @@ Findings: [super-buildit.md §2026-10-19T19:23:11](super-buildit.md#ts-20261019-
 
 Unknowns:
 - `m13-2` was not loaded in this session (`m13-1`: [§2026-10-19T19:22:01](#ts-20261019-192201)).
+
+<a id="ts-20261020-213728"></a>
+
+## 2026-10-20T21:37:28+02:00 — User state in front of the footprint scanner trigger
+
+The user quick-saved on their own Azahar (slot 0, 2026-10-20 21:36:44, New 3DS) standing in front of the footprint scanner trigger. Copied read-only from `~/.local/share/azahar-emu/states/00040000000AD600.00.cst` to `footprint-scanner-trigger.cst` (identical by byte compare), with its `NAME.json` naming slot 00 as the quick load reads it.
+
+Unknowns:
+- The mission and progress it carries (not stated by the user), which footprint trigger it is, and the position and facing; the state was not loaded yet.
