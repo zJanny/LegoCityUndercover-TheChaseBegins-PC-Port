@@ -25,7 +25,7 @@ The original runs in Azahar as a measuring reference. Read `docs/re/oracle.md` b
 - Explore with one session (`--keep`, probe with `--attach`), save a state at each new screen. Navigate with `wait`; use `frames`/`trace` only for per-update data.
 - Use `--rpc` for screenshots, memory reads and timing (`sample`); never measure rates from stepped frames. `--rpc-input` for buttons. Only one emulator per machine may use `--rpc`; each agent has its own `--port` and `--home` under `artifacts/oracle/`.
 - Stop what you start (`--stop`), check `pgrep -x azahar` / `pgrep -x Xvfb`, never kill processes you did not start.
-- **Emulator servant:** only when two or more workers need `--rpc`; requests go through the lead with an ID (worker and number); one scripted try per goal, then a report with what a user state would need; the first load after an emulator start may disagree with later loads (use repeated loads that agree); when its work ends it stops everything it started and reports `pgrep` output.
+- **Emulator servant:** whenever any worker needs `--rpc` or an oracle state (no worker holds the slot); requests go through the lead with an ID (worker and number); one scripted try per goal, then a report with what a user state would need; the first load after an emulator start may disagree with later loads (use repeated loads that agree); when its work ends it stops everything it started and reports `pgrep` output.
 
 ## Briefs and review
 

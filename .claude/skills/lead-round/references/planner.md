@@ -29,7 +29,7 @@ Choosing packages:
 - **Size (user, 2026-10-18):** every package finishes in well under an hour. That means one narrow item, or a few closely linked items, with a known starting point and little oracle work. Split anything bigger and propose the first part.
 - **Workers:** 3 by default, plus the servant if needed. More only if the user asked for this round.
 - **Independence:** no two workers edit the same function. When two touch the same file or area, give each its own glue file and name it in the proposal. A package that depends on another's result goes into a later round, or reads the result through a small interface with a labelled stand-in until the merge.
-- **RPC** (`linux-port` only; other plans use no emulator unless their rule file says so): count the packages that need `--rpc`. One means that worker holds the slot. Two or more mean an emulator servant, and the workers send requests through the lead. With a servant, every package that needs RPC says `via servant`. `holds the slot` is allowed only when exactly one package needs RPC and there is no servant. Servant idle jobs come only from open items that need an oracle measurement with an existing state.
+- **RPC** (`linux-port` only; other plans use no emulator unless their rule file says so): if any package needs `--rpc` or an oracle state, plan an emulator servant and mark each such package `via servant`; the servant holds the only `--rpc` session and no worker does. Servant idle jobs come only from open items that need an oracle measurement with an existing state.
 - **Save states:** name the existing state and its game progress. If a package needs a state that does not exist, list it under "User actions", or choose another package. New state requests may be deferred by the user, so check Next Action.
 - **Feature files near 16 KB:** say that the worker splits the file first.
 - **Models:** follow `.claude/skills/lead-round/references/models.md`, including the models of the two reviewers.
@@ -46,7 +46,7 @@ Basis: <one line: user requests / Next Action item k / priorities.md rank r>
 A. <title> — <item IDs> — <model> (<reason, max 8 words>) — ~<minutes> min
    Why now: <one line>
    Scope: <what gets ported or measured, one or two lines> | Glue: <file or "none">
-   RPC: <no | holds the slot | via servant> | States: <name (game progress)> or none
+   RPC: <no | via servant> | States: <name (game progress)> or none
    Review: <"combined sonnet" for a small package with no new reverse engineering | code <model or "skip">, docs <model>>
 B. ...
 C. ...

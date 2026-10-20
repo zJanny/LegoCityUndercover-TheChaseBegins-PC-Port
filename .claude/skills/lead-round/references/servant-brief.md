@@ -1,6 +1,6 @@
 # Servant brief template
 
-The planner copies everything below the line into `artifacts/rounds/rN/rN-servant.md` and fills in every `{{…}}`. A servant is used only in rounds of the `linux-port` plan, when two or more workers of the round need `--rpc`.
+The planner copies everything below the line into `artifacts/rounds/rN/rN-servant.md` and fills in every `{{…}}`. A servant is used only in rounds of the `linux-port` plan, when any worker of the round needs `--rpc` or an oracle state.
 
 ---
 
