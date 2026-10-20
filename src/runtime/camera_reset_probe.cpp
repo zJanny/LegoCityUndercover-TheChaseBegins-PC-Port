@@ -80,6 +80,7 @@ struct MeshWalk {
     const Segment& segment;
     const float* direction;
     float& limit;
+    std::uint64_t excludedSurfaces;
     bool hit = false;
     float point[3] = {};
 
@@ -93,7 +94,7 @@ struct MeshWalk {
         }
         for (std::uint32_t i = 0; i < node.count(); ++i) {
             const assets::CollisionTriangle& triangle = item.triangles[node.first() + i];
-            if ((std::uint64_t(1) << triangle.surface) & kCameraExcludedSurfaces) continue;
+            if ((std::uint64_t(1) << triangle.surface) & excludedSurfaces) continue;
             float v[3][3];
             for (int k = 0; k < 3; ++k)
                 for (int a = 0; a < 3; ++a) v[k][a] = item.vertices[std::size_t(triangle.vertex[k]) * 3 + std::size_t(a)];
@@ -139,7 +140,7 @@ std::optional<std::array<float, 3>> CameraResetProbe::nearestHit(const float fro
     float limit = ray.length;
     std::optional<std::array<float, 3>> result;
     for (const CollisionWorld::Entry& entry : world_.entries()) {
-        if (!entry.active || entry.item.nodes.empty() || !kCameraLayer.accepts(entry.mask)) continue;
+        if (!entry.active || entry.item.nodes.empty() || !layer_.accepts(entry.mask)) continue;
         if (!excludedOwner_.empty() && entry.owner == excludedOwner_) continue;
         if (entry.box) {
             float start[3], end[3], fraction;
@@ -154,7 +155,7 @@ std::optional<std::array<float, 3>> CameraResetProbe::nearestHit(const float fro
             result = point;
             continue;
         }
-        MeshWalk walk{entry.item, segment, ray.direction, limit};
+        MeshWalk walk{entry.item, segment, ray.direction, limit, excludedSurfaces_};
         walk.visit(0);
         if (walk.hit) result = std::array<float, 3>{walk.point[0], walk.point[1], walk.point[2]};
     }

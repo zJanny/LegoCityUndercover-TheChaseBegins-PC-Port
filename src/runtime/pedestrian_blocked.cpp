@@ -1,5 +1,7 @@
 #include "runtime/pedestrian_blocked.hpp"
 
+#include "runtime/camera_reset_probe.hpp"
+
 #include <cmath>
 #include <cstring>
 
@@ -50,6 +52,24 @@ void slideAtFace(PedestrianVec3 normal, float now, float next, float limit, Pede
     }
 }
 
+}
+
+PedestrianBlockVehicle pedestrianBlockVehicle(const assets::Matrix& node, const PedestrianVec3& halfExtents, float speed, bool kinematic) {
+    PedestrianBlockVehicle vehicle;
+    for (std::size_t row = 0; row < 4; ++row)
+        for (std::size_t axis = 0; axis < 3; ++axis) vehicle.matrix[row][axis] = node[row * 4 + axis];
+    vehicle.halfExtents = halfExtents;
+    float squared = halfExtents[0] * halfExtents[0];
+    squared = squared + halfExtents[1] * halfExtents[1];
+    squared = squared + halfExtents[2] * halfExtents[2];
+    vehicle.radius = std::sqrt(squared);
+    vehicle.speed = speed;
+    vehicle.kinematic = kinematic;
+    return vehicle;
+}
+
+bool pedestrianDodgeRayBlocked(const CollisionWorld& world, const PedestrianVec3& from, const PedestrianVec3& to) {
+    return CameraResetProbe(world, "", kPedestrianDodgeRayLayer, kPedestrianDodgeRaySurfaces).segmentBlocked(from.data(), to.data());
 }
 
 int pedestrianVehicleBlock(PedestrianBody& body, float radius, const PedestrianVec3& position, PedestrianVec3& vector, float dt,
@@ -113,6 +133,13 @@ int pedestrianBlocked(PedestrianBody& body, float radius, const PedestrianVec3& 
         if (result != 0) return result;
     }
     return 0;
+}
+
+bool pedestrianSpawnBlocked(const PedestrianBody& body, float radius, const PedestrianVec3& position,
+                            const std::vector<PedestrianBlockVehicle>& vehicles, const PedestrianLineTest& lineBlocked, GameRandom& random) {
+    PedestrianBody copy = body;
+    PedestrianVec3 zero{};
+    return pedestrianBlocked(copy, radius, position, zero, 0.0f, vehicles, lineBlocked, random) != 0;
 }
 
 }

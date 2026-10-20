@@ -8,10 +8,11 @@ Subtopic of [pedestrians.md](pedestrians.md): the pedestrian's vehicle test 0x1f
 - The room layer table *0x376ad4 is a stack. The game set-up fills it (0x1590b0, then 0x2ed0b4 for class 6), each cutscene pushes a copy of the set-up table with class 6 cleared, and the cutscene end pops it. [§2026-10-20T13:20:02](#ts-20261020-132002)
 - The pedestrian's class byte +0x18 is 0 from its create. Room +0x7c is the node that holds a room's faded-out mesh nodes. *0x37674c is 2 (slot 0 of the node type table is reserved first; [pedestrians-fade.md §2026-10-20T14:12:57](pedestrians-fade.md#ts-20261020-141257)). The fade record 0x376794 gives 3, 36 and 38, so the distance fade table is (3, 6, 12), (36, 72, 108), (38, 76, 114). [§2026-10-20T13:20:02](#ts-20261020-132002)
 - The second update caller 0x164240 is the cutscene mode's update 0x2fae68. The last loaded world sets the slots and the limit. [§2026-10-20T13:20:02](#ts-20261020-132002)
-- Port: `src/runtime/pedestrian_blocked.*` (test `pedestrian-blocked`) and `src/runtime/room_layers.*` (test `room-layers`), not wired. [§2026-10-20T13:20:02](#ts-20261020-132002)
 - A walking pedestrian is moved between rooms by the room pass 0x2e6ce4 like every other object (list 0 of its room, the player's room and the round-robin entry); its priority byte +0x19 is 128 from the object loader. Ported as `src/runtime/pedestrian_rooms.*`. [§2026-10-20T14:10:27](#ts-20261020-141027)
 - The speed 0x34163c is the signed velocity along the vehicle body's forward axis; the bump reads the player controller state +0x6c (2 run, 3 walk). Ported with the port's `forwardSpeed` and `src/runtime/player_controller_state.*`. [§2026-10-20T14:10:27](#ts-20261020-141027)
-- Open: the run-time values of a live pedestrian's byte +0x18 and the room byte +0x3a; the third table push 0x17e544; the level root's slot values. [§2026-10-20T13:20:02](#ts-20261020-132002)
+- The dodge ray 0x22b108 uses a descriptor of class 0x362298 with include mask 1 and exclude mask 16 and no surface mask: only static level collision blocks it. The walk adds the step vector after the vehicle loop, so a slide changes the step. The list is rebuilt before each world step from the bodies with +0xc4 bit 0. A vehicle's radius +0x5c is the length of its entity box half extents. [§2026-10-20T14:11:29](#ts-20261020-141129)
+- Port: `src/runtime/pedestrian_blocked.*` (test `pedestrian-blocked`) and `src/runtime/room_layers.*` (test `room-layers`); `chase-game` runs the vehicle test and the set-up layer table, not the cutscene table. [§2026-10-20T14:11:29](#ts-20261020-141129)
+- Open: the run-time values of a live pedestrian's byte +0x18 and the room byte +0x3a; the third table push 0x17e544; the level root's slot values [§2026-10-20T13:20:02](#ts-20261020-132002); the body flag +0xc4 bit 0 of the list and the cutscene table in chase-game [§2026-10-20T14:11:29](#ts-20261020-141129).
 
 <a id="ts-20261020-132002"></a>
 
@@ -83,3 +84,26 @@ Unknowns:
 - What a pedestrian does on message 0x51 (its handler 0x19efbc was read only at its start).
 - The states of the controller in the carry, vehicle, action and script cases, and whether 2 and 3 stay the walk and run states there.
 - Whether the round-robin entry is the same for the vehicles' list pass 0x2e6f70 (it runs for every vehicle regardless of room).
+
+<a id="ts-20261020-141129"></a>
+
+## 2026-10-20T14:11:29+02:00 — The dodge ray's descriptor, the walk's vehicle loop, the list rebuild and the vehicle radius; the wiring in chase-game (llvm-objdump only, no REA session, no emulator)
+
+Method: `llvm-objdump -d --triple=armv6k-none-eabi --mattr=+vfp2` on `artifacts/game/game.arm.elf`, read instruction by instruction: 0x1ffe34 .. 0x1ffed8 (the descriptor on the stack), 0x22b108 .. 0x22b1ec, the walk's loop 0x2b932c .. 0x2b93c0, the list rebuild 0x2e2bc8 .. 0x2e2d40 and the collision set-up 0x23aff8 .. 0x23b240. Port: `src/runtime/pedestrian_blocked.*`, `src/runtime/pedestrian_walk.*`, `src/runtime/camera_reset_probe.*`, glue `src/game_pedestrian_blocking.*`.
+
+**The dodge ray's descriptor.** 0x1ffcd4 builds the descriptor at sp +0x28 for each side: +0 the vtable 0x362298 (pool word 0x200068 in r6), then the words include 1, exclude 16, kinds include -1, kinds exclude 0, owner +0xc include 0, owner +0xc exclude 0, owner +0x10 include 0x200, owner +0x10 exclude 3, excluded owner 0, and the mode byte 1 at +0x28. These are the ten words of the query layers in [collision.md §2026-10-13T17:34:00](collision.md#ts-20261013-173400), in the same order as the player's {3, 0x90, ...}. So 0x362298 is the vtable of the descriptor class, not a filter record. Mask 1 with exclude 16 passes only the static level collision (mask 1), not the vehicle boxes (17), props (6) or characters (4). The words +0x30 and +0x34 (sp +0x58, +0x5c) are 0. 0x22b108 loads them at 0x22b1d0 as the 64-bit surface exclusion mask of 0x266834, so the dodge ray excludes no surface.
+
+**0x22b108(from, to, descriptor, hit).** It gathers at most 100 entries (0x237f30 on the world grid 0x578dfc with descriptor +4) in the box at the middle of the segment with half extents |to - from| x 0.5, then calls 0x266834(from, to, entries, count, surface mask, hit), the same segment test as the camera's line test (`CameraResetProbe::segmentBlocked`).
+
+**The walk's loop.** At 0x2b9378 the walk calls 0x1ffcd4(r6 = the pedestrian entity, [sp +4] = node +0x30, r11 = sp +0x88 = the step vector, the vehicle, s16 = dt). A listed entity without a body (+0x84 is 0) is tested too; only one whose rigid body has +0xcc bit 1 is skipped. The first non-zero result leaves the loop; with none the result is r9 (0). 0x2b93c0 then adds sp +0x88 to the node position (0x23d39c on node +0x30), after any slide.
+
+**The list rebuild 0x2e2bc8.** Each physics update clears the count +0x3058 and walks the world's collision objects (+0x2c +0xe8, count +0xe0). A collision object counts when its user pointer +0x108 (the vehicle body) has bit 0 of +0xc4 and the body's entity (0x236174) has neither bit 0 nor bit 5 of its word +0x10. Its entity goes to +0x305c + 4 n and its body position +0x34 to +0x3124 + 12 n. The list is complete before the world step (the call through vtable +0x30 at 0x2e2d40).
+
+**The vehicle radius +0x5c.** The collision set-up 0x23aff8 stores the length of +0x6c (0x2536a8) in +0x5c on each branch: the CollisionBound record (0x23b048), the automatic box (0x23b1b8) and the MeshCollision box (0x23b240). A vehicle's entity box is the root node box of its first collision item (`modelCollisionBox`, checked against the oracle), the box of the MeshCollision branch, and vehicles register their collision through the generic set-up ([vehicles-system.md §2026-10-14T23:59:31](vehicles-system.md#ts-20261014-235931)). So the port takes the vehicle's radius as the length of its entity box half extents.
+
+**Port.** `PedestrianWalkWorld::blocked` takes the body and the step vector by reference, and the walk adds the vector the callback leaves (0x2b93c0). `CameraResetProbe` takes a descriptor's masks, and `pedestrianDodgeRayBlocked` is 0x22b108 with include 1, exclude 16 and no surface mask. `pedestrianBlockVehicle` builds a list entity from the node matrix, the entity box and the speed. `pedestrianSpawnBlocked` is 0x26cd38 with the zero vector and dt 0. In `chase-game` the manager update gets the spawn test and the set-up table `startupRoomLayers`, and the walk gets `pedestrianBlocked` with the dodge ray on the collision world. The list is the vehicles with a body in the port's vehicle world (stand-in PED-S9); the cutscene table is not pushed (stand-in PED-S10). A run of `chase-game` in lvl_01 (`--no-start-cutscenes`, 900 updates) lists the five parked vehicles FP_Vehicle_01 .. 05; no pedestrian came near one.
+
+Unknowns:
+- Which vehicle bodies have bit 0 of +0xc4, and what bit 5 of the entity word +0x10 is.
+- Whether a vehicle's +0x5c is written by 0x23aff8 (not traced on a vehicle).
+- The cutscene table push 0x196734 / 0x16c060 and pop 0x2fae68 and the cutscene mode's pedestrian update 0x164240 are not run in chase-game.

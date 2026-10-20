@@ -399,7 +399,8 @@ void PedestrianWalk::walk(PedestrianBody& body, const PedestrianWalkWorld& world
         }
     }
 
-    int result = world.blocked ? world.blocked(node[3], velocity, dt) : 0;
+    const PedestrianVec3 position = node[3];
+    int result = world.blocked ? world.blocked(body, position, velocity, dt) : 0;
     for (int a = 0; a < 3; ++a) node[3][a] = node[3][a] + velocity[a];
     const PedestrianVec3 right = unit(cross(kUp, node[2]));
     node[2] = unit(cross(right, kUp));

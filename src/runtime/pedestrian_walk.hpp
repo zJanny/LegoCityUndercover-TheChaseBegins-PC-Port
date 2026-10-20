@@ -145,8 +145,10 @@ struct PedestrianWalkWorld {
     bool visible = false;  // 0x2930e0 of the node, used without `drawTest`
     bool hidden = false;   // 0x23de70, used without `drawTest`
     bool splatRefresh = false;  // 0x278b04(player vehicle, entity) in state 6, used without `playerVehicleBox`
-    // 0x1ffcd4 over the list at 0x5863b4 + 0x305c: the first non-zero result (1, 2 sidestep, 3 sidestep at the target, 4 turn back).
-    std::function<int(const PedestrianVec3& position, const PedestrianVec3& velocity, float dt)> blocked;
+    // 0x1ffcd4 over the list at 0x5863b4 + 0x305c (0x2b9340 .. 0x2b93a4, pedestrianBlocked): the first non-zero result (3 sidestep
+    // at the target, 4 turn back), else 0. It can write the body's requested state, dodge side and walk byte and slide the velocity,
+    // which the walk then adds to the position (0x2b93c0).
+    std::function<int(PedestrianBody& body, const PedestrianVec3& position, PedestrianVec3& velocity, float dt)> blocked;
     // 0x2058cc: the ground probe of the node position (pedestrianGroundProbe with the caller's ray).
     std::function<void(PedestrianVec3& position)> groundProbe;
     // 0x21ab20 from `from` to `to`: the height of the hit.

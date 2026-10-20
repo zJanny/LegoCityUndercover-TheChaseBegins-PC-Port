@@ -214,8 +214,8 @@ std::vector<PedestrianCharacterUpdate> PedestrianSystem::updateCharacters(const 
         world.hidden = step.hidden && step.hidden(slot);
         if (step.drawTest) world.drawTest = step.drawTest(slot);
         if (step.blocked)
-            world.blocked = [&step, slot](const PedestrianVec3& position, const PedestrianVec3& velocity, float dt) {
-                return step.blocked(slot, position, velocity, dt);
+            world.blocked = [&step, slot](PedestrianBody& walker, const PedestrianVec3& position, PedestrianVec3& velocity, float dt) {
+                return step.blocked(slot, walker, position, velocity, dt);
             };
         if (step.groundProbe) world.groundProbe = [&step, slot](PedestrianVec3& position) { step.groundProbe(slot, position); };
         world.groundRay = step.groundRay;

@@ -4,6 +4,8 @@
 // and the walk (0x2b9340 .. 0x2b93a4, the step velocity and dt) run: listed entities whose body is kinematic are skipped, the
 // first non-zero result is returned, else 0. The test can write the pedestrian's requested state, its dodge side and its walk
 // byte, and slides the vector along the vehicle's box. No SDL dependency.
+#include "assets/assets.hpp"
+#include "runtime/collision.hpp"
 #include "runtime/game_random.hpp"
 #include "runtime/pedestrian_manager.hpp"
 #include "runtime/pedestrian_walk.hpp"
@@ -37,8 +39,22 @@ struct PedestrianBlockVehicle {
     bool kinematic = false;                  // the body's rigid body (+0x7c) has bit 1 of its flags +0xcc
 };
 
+// A vehicle of the list from its node matrix (0x250810 of entity +0x3c), its entity box half extents (+0x6c) and the speed 0x229948
+// of its body: the radius +0x5c is the length of +0x6c (0x2536a8), which the collision set-up 0x23aff8 stores at 0x23b048, 0x23b1b8
+// and 0x23b240.
+PedestrianBlockVehicle pedestrianBlockVehicle(const assets::Matrix& node, const PedestrianVec3& halfExtents, float speed, bool kinematic);
+
 // 0x22b108 from `from` to `to` with the descriptor {0x362298, 1, 16, -1, 0, 0, 0, 512, 3, 0, byte 1}: true when anything is hit.
 using PedestrianLineTest = std::function<bool(const PedestrianVec3& from, const PedestrianVec3& to)>;
+
+// The words of that descriptor after its vtable 0x362298 (stored at 0x1ffe80 .. 0x1ffed4) in the order of the query layers
+// (docs/re/collision.md): include mask 1 and exclude mask 16, so only the static level collision (mask 1) and not the vehicle boxes
+// (mask 17), the props (6) or the characters (4); every kind; owner +0x10 with 0x200 and without bits 0 and 1; no excluded owner;
+// mode 1. Its surface exclusion mask (+0x30, read by 0x22b108 at 0x22b1d0) is 0.
+constexpr CollisionLayer kPedestrianDodgeRayLayer{1, 16};
+constexpr std::uint64_t kPedestrianDodgeRaySurfaces = 0;
+// 0x22b108 (the grid gather 0x237f30 around the segment, then 0x266834) with that descriptor.
+bool pedestrianDodgeRayBlocked(const CollisionWorld& world, const PedestrianVec3& from, const PedestrianVec3& to);
 
 // 0x1ffcd4. `radius` is the pedestrian's entity +0x5c. Returns 0, 3 (a dodge was requested) or 4 (the target lies past the
 // vehicle). `vector` loses its part into a face of the box when it would cross that face.
@@ -48,5 +64,10 @@ int pedestrianVehicleBlock(PedestrianBody& body, float radius, const PedestrianV
 // 0x26cd38 and the walk's own loop: 0x1ffcd4 for each listed vehicle in list order, kinematic ones skipped.
 int pedestrianBlocked(PedestrianBody& body, float radius, const PedestrianVec3& position, PedestrianVec3& vector, float dt,
                       const std::vector<PedestrianBlockVehicle>& vehicles, const PedestrianLineTest& lineBlocked, GameRandom& random);
+
+// 0x26cd38 as the spawn 0x2ee068 calls it: the zero vector and dt 0.0, on a copy of the body. With a finite vehicle speed the step is
+// 0, so only the slow branch runs, which writes nothing and draws no random word.
+bool pedestrianSpawnBlocked(const PedestrianBody& body, float radius, const PedestrianVec3& position,
+                            const std::vector<PedestrianBlockVehicle>& vehicles, const PedestrianLineTest& lineBlocked, GameRandom& random);
 
 }

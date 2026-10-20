@@ -4,6 +4,7 @@
 #include "assets/assets.hpp"
 #include "assets/object_collision.hpp"
 #include "game_characters.hpp"
+#include "game_pedestrian_blocking.hpp"
 #include "game_pedestrian_fade.hpp"
 #include "render/character.hpp"
 #include "render/scene.hpp"
@@ -32,6 +33,7 @@ struct SystemInputs {
     runtime::PedestrianView view;
     runtime::PedestrianVec3 playerPosition{};
     std::function<bool(int room)> roomLoaded;
+    const game_pedestrian_blocking::Blocking* blocking = nullptr;
 };
 
 struct CharacterInputs {
@@ -40,6 +42,7 @@ struct CharacterInputs {
     bool playerInVehicle = false;
     std::uint16_t playerState = 0;
     const runtime::CollisionWorld* collision = nullptr;
+    const game_pedestrian_blocking::Blocking* blocking = nullptr;
     runtime::PedestrianVec3 fadePoint{};  // STAND-IN PED-S11: the camera eye
 };
 

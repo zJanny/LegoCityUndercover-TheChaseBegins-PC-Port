@@ -104,9 +104,7 @@ void LevelPedestrians::updateSystem(const SystemInputs& inputs, assets::PlacedOb
     step.playerPosition = inputs.playerPosition;
     step.entityEnabled = [&](std::size_t slot) { return !state.isDisabled(system_.slots()[slot].instance); };
     step.room = [&](int room) { return std::optional<runtime::PedestrianRoom>(runtime::pedestrianRoomObject(room, inputs.roomLoaded(room))); };
-    // STAND-IN PED-S2: every class and room type counts as active in the layer table *0x376ad4, and no vehicle blocks a spawn point.
-    step.layers.fill(2);
-    step.spawnBlocked = [](std::size_t, const runtime::PedestrianVec3&) { return false; };
+    game_pedestrian_blocking::wireSystemStep(step, inputs.blocking, system_, random_);
     step.meshNodeType = runtime::kMeshNodeType;
     const runtime::PedestrianUpdate update = system_.update(step, random_);
     if (update.spawned) {
@@ -162,6 +160,7 @@ void LevelPedestrians::updateCharacters(render::Scene& scene, const CharacterInp
             if (const std::optional<float> height = runtime::groundHeight(*inputs.collision, probe)) position[1] = *height;
         };
     step.clipFinished = [this](std::size_t slot, runtime::PedestrianClip clip) { return clipFinished(slot, clip); };
+    game_pedestrian_blocking::wireCharacterStep(step, inputs.blocking, system_, random_);
     step.drawTest = [&](std::size_t slot) { return fades_.drawTest(system_, slot, inputs.fadePoint); };
     for (const runtime::PedestrianCharacterUpdate& update : system_.updateCharacters(step, random_)) {
         Slot& slot = slots_[update.slot];
@@ -202,6 +201,8 @@ void LevelSession::updatePedestrianSystem() {
         inputs.view.playerVehicleSpeed = chase::runtime::forwardSpeed(vehicleDrives[*seated].rigid);
     inputs.playerPosition = player->position();
     inputs.roomLoaded = [this](int room) { return roomShown(room); };
+    const game_pedestrian_blocking::Blocking blocking = pedestrianBlocking();
+    inputs.blocking = &blocking;
     pedestrians.updateSystem(inputs, objectState);
 }
 
@@ -213,6 +214,8 @@ void LevelSession::updatePedestrianCharacters(float dt) {
     inputs.playerInVehicle = boarding && boarding->seatedVehicle();
     inputs.playerState = chase::runtime::playerControllerState(player->vertical, player->animation);
     inputs.collision = &collision;
+    const game_pedestrian_blocking::Blocking blocking = pedestrianBlocking();
+    inputs.blocking = &blocking;
     if (follow) inputs.fadePoint = {follow->eye()[0], follow->eye()[1], follow->eye()[2]};
     pedestrians.updateCharacters(scene, inputs, objectState);
 }

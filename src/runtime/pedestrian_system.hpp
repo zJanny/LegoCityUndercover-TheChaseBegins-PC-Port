@@ -71,7 +71,7 @@ struct PedestrianCharacterStep {
     std::function<bool(std::size_t slot)> visible;
     std::function<bool(std::size_t slot)> hidden;
     std::function<std::optional<PedestrianDrawTest>(std::size_t slot)> drawTest;
-    std::function<int(std::size_t slot, const PedestrianVec3& position, const PedestrianVec3& velocity, float dt)> blocked;
+    std::function<int(std::size_t slot, PedestrianBody& body, const PedestrianVec3& position, PedestrianVec3& velocity, float dt)> blocked;
     std::function<void(std::size_t slot, PedestrianVec3& position)> groundProbe;
     std::function<std::optional<float>(const PedestrianVec3& from, const PedestrianVec3& to)> groundRay;
     std::function<bool(std::size_t slot, PedestrianClip clip)> clipFinished;

@@ -8,7 +8,8 @@
 // probe per update (byte 0x375d5c) or one when tilted over 0.34906587 (0x2b9470), touch below 1.5 squared xz (0x1fd8c8) with
 // the push 0.1 (0x1fd9c4) and the bump (state 5) for player states 2 and 3, ray end y -1.0 (0x2b9478), the rows rebuilt
 // with up (0, 1, 0) (0x56d424), path step 0.3 (0x2b96b8), turn back 0.75 (0x2b96a8), sidestep 1.3 (0x2b96b0) with
-// +0x5d = 30, face the player for requests 3 / 4. Avoidance 0x2edf08: xz length below 2.0 (0x2ee05c), side |dot| below
+// +0x5d = 30, face the player for requests 3 / 4. The vehicle loop 0x2b9340 .. 0x2b93a4 passes the node position, the step
+// vector (sp +0x88) and dt to 0x1ffcd4, and 0x2b93c0 adds that vector to the position after the loop. Avoidance 0x2edf08: xz length below 2.0 (0x2ee05c), side |dot| below
 // 1.0 (0x2ee064), 2 for a positive side, else 1.
 // Steady updates 0x277c24: states 3, 4, 7 the root motion 0x277afc (translation through the node rows 0x258a10, minus the
 // position; wall test 0x2059ec with (x, 0, z) and the near radius +0x5c x 1.5 (0x205b54), probe 0x2058cc); state 5 0x277c94
@@ -168,13 +169,31 @@ void testArrival() {
 void testTurnBack() {
     Scene scene;
     GameRandom random(1);
-    scene.world.blocked = [](const PedestrianVec3&, const PedestrianVec3&, float) { return 4; };
+    scene.world.blocked = [](PedestrianBody&, const PedestrianVec3&, PedestrianVec3&, float) { return 4; };
     PedestrianBody body = walking({0, 0, 10}, {0, 0, 20});
     body.pathParameter = 1.5f;
     PedestrianWalk::update(body, scene.world, random);
     require(!body.forward, "direction flipped");
     require(near(body.pathParameter, 0.75f), "parameter - 0.75");
     require(nearVec(body.target, {0.0f, 0.0f, 7.5f}), "target at the new parameter");
+}
+
+void testBlockedSlide() {
+    Scene scene;
+    GameRandom random(1);
+    PedestrianVec3 seenPosition{}, seenVelocity{};
+    float seenDt = 0;
+    scene.world.blocked = [&](PedestrianBody&, const PedestrianVec3& position, PedestrianVec3& velocity, float dt) {
+        seenPosition = position;
+        seenVelocity = velocity;
+        seenDt = dt;
+        velocity = {0.05f, 0.0f, 0.0f};
+        return 0;
+    };
+    PedestrianBody body = walking({0, 0, 10}, {0, 0, 20});
+    PedestrianWalk::update(body, scene.world, random);
+    require(nearVec(seenPosition, {0, 0, 10}) && nearVec(seenVelocity, {0.0f, 0.0f, 0.1f}) && near(seenDt, 1.0f / 30.0f), "blocked inputs");
+    require(nearVec(body.node[3], {0.05f, 0.0f, 10.0f}), "the walk adds the slid velocity (0x2b93c0)");
 }
 
 void testAvoidance() {
@@ -246,8 +265,8 @@ void testDodgeFacesPlayer() {
     scene.world.playerPosition = {0.0f, 0.0f, -10.0f};
     PedestrianBody body = walking({0, 0, 0}, {0, 0, 20});
     body.dodgeSide = 1;
-    scene.world.blocked = [&](const PedestrianVec3&, const PedestrianVec3&, float) {
-        body.requested = 4;
+    scene.world.blocked = [](PedestrianBody& walker, const PedestrianVec3&, PedestrianVec3&, float) {
+        walker.requested = 4;
         return 0;
     };
     GameRandom random(1);
@@ -542,6 +561,7 @@ int main() {
         testTurn();
         testArrival();
         testTurnBack();
+        testBlockedSlide();
         testAvoidance();
         testBump();
         testDodgeFacesPlayer();
