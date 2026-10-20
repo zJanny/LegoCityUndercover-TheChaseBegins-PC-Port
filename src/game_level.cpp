@@ -121,6 +121,7 @@ LevelSession::LevelSession(const Shared& sharedState)
       levelScripts(level, objectState),
       sceneStart(level, classOf, levelScripts),
       currentWorldLevel(runtime::worldLevelOfFile(shared.master, shared.options.level)),
+      sameLevelEntries(runtime::sameLevelEntries(level, shared.sceneChanges, currentWorldLevel.instance)),
       hudResources(shared.archive),
       hudCanvas(fe::kTopWidth, fe::kScreenHeight),
       mapCanvas(fe::kBottomWidth, fe::kScreenHeight) {

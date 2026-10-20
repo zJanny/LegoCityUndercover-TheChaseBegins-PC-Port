@@ -47,6 +47,9 @@ void LevelSession::startRoomStreaming() {
         ++index;
     }
     levelScripts.clearAllRoomsLoaded();
+    std::set<std::string> sceneRooms;
+    for (const auto& room : roomStreamer->rooms()) sceneRooms.insert("Room" + std::to_string(room.first));
+    levelScripts.setSceneRooms(sceneRooms);
     showLoadedRooms();
     std::cout << "room streaming: " << roomStreamer->rooms().size() << " rooms, start Room" << startRoom << ", "
               << roomStreamer->loadedRooms().size() << " loaded\n";

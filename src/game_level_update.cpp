@@ -65,7 +65,20 @@ runtime::PadState LevelSession::scriptedPad(unsigned index) const {
     return scripted;
 }
 
+void LevelSession::requestSameLevelEntry(const runtime::SameLevelEntry* entry) {
+    if (entry && sameLevelFlow.request(*entry))
+        std::cout << "same-level entry requested by " << entry->instance << " at update " << updatesForLog << '\n';
+}
+
+void LevelSession::applySameLevelEntry(const runtime::SameLevelEntry& entry) {
+    const std::optional<Placement> point = runtime::destinationPoint(level, {{}, entry.pointHash});
+    if (!point) throw std::runtime_error("same-level entry destination point missing for " + entry.instance);
+    placePlayer(point->position, point->orientation[1]);
+    std::cout << "same-level entry " << entry.instance << " to " << point->instance << " at update " << updates << '\n';
+}
+
 void LevelSession::requestSceneChange(const runtime::SceneChangeObject* object) {
+    if (object && object->destination && runtime::destinationInLoadedLevel(*object->destination, currentWorldLevel.instance)) return;
     if (object && object->destination && sceneChangeFlow.request(*object->destination))
         std::cout << "scene change requested by " << object->instance << " at update " << updatesForLog << '\n';
 }
@@ -244,6 +257,8 @@ void LevelSession::updateFollowCamera(float dt) {
 void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
     pad.poll(padInput);
     updatesForLog = updates;
+    sameLevelFlow.update();
+    if (const auto due = sameLevelFlow.takeEntry()) applySameLevelEntry(*due);
     if (sceneChangeFlow.pending()) {
         sceneChangeFlow.update(pad.slot(kSlotConfirmButton).press > 0);
         if (const auto due = sceneChangeFlow.takeSwitch()) switchTo = due;
@@ -385,14 +400,18 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         previousWaypointVehicle = waypointVehicle();
     }
     reportUnhandled();
-    for (const std::string& bound : levelScripts.takeSceneChanges())
-        requestSceneChange(runtime::findSceneChange(shared.sceneChanges, currentWorldLevel.instance, bound));
+    for (const std::string& bound : levelScripts.takeSceneChanges()) {
+        if (const runtime::SameLevelEntry* entry = runtime::findSameLevelEntry(sameLevelEntries, bound)) requestSameLevelEntry(entry);
+        else requestSceneChange(runtime::findSceneChange(shared.sceneChanges, currentWorldLevel.instance, bound));
+    }
     if (player) {
         const float playerPosition[3] = {player->motion.x, player->vertical.y, player->motion.z};
         for (const runtime::SceneChangeObject& object : shared.sceneChanges)
             if (!object.boundName.empty() && object.boundWorldLevel == currentWorldLevel.instance &&
                 levelScripts.playerInNamedBound(object.boundName, playerPosition))
                 requestSceneChange(&object);
+        for (const runtime::SameLevelEntry& entry : sameLevelEntries)
+            if (levelScripts.playerInNamedBound(entry.boundName, playerPosition)) requestSameLevelEntry(&entry);
     }
     for (const runtime::ScriptPlacement& request : levelScripts.takePlacements()) applyPlacement(request);
     for (const runtime::ScriptObjectMessage& sent : levelScripts.takeObjectMessages()) {

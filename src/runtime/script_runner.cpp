@@ -909,9 +909,14 @@ void ScriptRunner::setRoomLoaded(const std::string& room, bool loaded) {
 
 void ScriptRunner::setAllRoomsLoaded() { allRoomsLoaded_ = true; }
 
+void ScriptRunner::setSceneRooms(const std::set<std::string>& rooms) {
+    sceneRooms_.emplace();
+    for (const std::string& room : rooms) sceneRooms_->insert(lower(room));
+}
+
 bool ScriptRunner::boundActive(std::size_t index) const {
     const std::string& room = level_.bounds[index].room;
-    return room.empty() || allRoomsLoaded_ || loadedRooms_.count(lower(room)) > 0;
+    return room.empty() || allRoomsLoaded_ || (sceneRooms_ && sceneRooms_->count(lower(room)) == 0) || loadedRooms_.count(lower(room)) > 0;
 }
 
 int ScriptRunner::triggerIndex(const std::string& name) const {

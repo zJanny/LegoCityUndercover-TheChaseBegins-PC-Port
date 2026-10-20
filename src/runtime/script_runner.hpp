@@ -173,6 +173,9 @@ public:
     // its room is loaded. Room names compare without case. No room is loaded until one is set.
     void setRoomLoaded(const std::string& room, bool loaded);
     void setAllRoomsLoaded();
+    // The rooms of the scene: the room setup 0x173944 clears byte +0xb only for bounds whose room is one of them, so a bound of any
+    // other room name stays active (docs/re/scripts-runtime.md). Without a call every named room counts as a scene room.
+    void setSceneRooms(const std::set<std::string>& rooms);
     bool roomKnown(const std::string& room) const;
     void clearAllRoomsLoaded() { allRoomsLoaded_ = false; }
     bool boundActive(std::size_t bound) const;
@@ -317,6 +320,7 @@ private:
     std::vector<PartyRequest> partyRequests_;
     std::vector<std::string> roomRequests_;
     std::set<std::string> knownRooms_;
+    std::optional<std::set<std::string>> sceneRooms_;
     ProgressNativeState progressNatives_;
     PartyNativeState partyNatives_;
     MusicNativeState musicNatives_;

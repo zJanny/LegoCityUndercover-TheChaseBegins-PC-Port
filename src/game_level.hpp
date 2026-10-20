@@ -27,6 +27,7 @@
 #include "game_save.hpp"
 #include "game_particles.hpp"
 #include "render/rope.hpp"
+#include "runtime/same_level_entry.hpp"
 #include "runtime/zipline_pole.hpp"
 #include "runtime/zipline_rope.hpp"
 #include "game_player.hpp"
@@ -158,6 +159,8 @@ private:
     void placePlayer(const float position[3], std::optional<float> facingDegrees);
     void reportUnhandled();
     void requestSceneChange(const chase::runtime::SceneChangeObject* object);
+    void requestSameLevelEntry(const chase::runtime::SameLevelEntry* entry);
+    void applySameLevelEntry(const chase::runtime::SameLevelEntry& entry);
     void applyPlacement(const chase::runtime::ScriptPlacement& request);
     void updateDoors(const float playerPosition[3], const std::function<void(const chase::runtime::SoundCall&)>& emit);
     std::vector<chase::runtime::SoundCall> updateBuildits(const float playerPosition[3]);
@@ -312,6 +315,8 @@ private:
     chase::runtime::SceneStart sceneStart;
     chase::runtime::WorldLevelEntry currentWorldLevel;
     chase::runtime::SceneChangeFlow sceneChangeFlow;
+    std::vector<chase::runtime::SameLevelEntry> sameLevelEntries;
+    chase::runtime::SameLevelEntryFlow sameLevelFlow;
     unsigned updatesForLog = 0;
     std::set<std::string> heldPropsLogged;
     std::size_t reportedUnhandled = 0, reportedEvents = 0;
