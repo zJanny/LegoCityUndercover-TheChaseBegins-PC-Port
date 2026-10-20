@@ -72,7 +72,7 @@ Unknowns:
 
 ### Method
 
-One real-time run by the emulator servant (Azahar, OpenGL, level motion source of [oracle-setup.md §2026-10-18T22:03:32](oracle-setup.md#ts-20261018-220332)), RPC sampling of 0x375eb4 (0x38 bytes), the mode object 0x5216ac +0x20..0x40 and the camera yaw 0x376894 about 900 times per second (103,810 rows); presses by RPC input (A, R, D-pad, A held, B). Raw data: `artifacts/oracle/r27-servant-out/b1/b1_sample.csv` and `b1_events.csv` (not committed). The game clock (0x5165c8, 3000 ticks per second) advances by 100 per update, so ticks / 100 counts updates of 1/30 s (the emulator ran at about 0.94 of real time; ticks are game time).
+One real-time run by the emulator servant (Azahar, OpenGL, level motion source of [oracle-setup.md §2026-10-18T22:03:32](oracle-setup.md#ts-20261018-220332)), RPC sampling of 0x375eb4 (0x38 bytes), the mode object 0x5216ac +0x20..0x40 and the camera yaw 0x376894 about 900 times per second (103,810 rows); presses by RPC input (A, R, D-pad, A held, B). The raw sample and event tables are not kept. The game clock (0x5165c8, 3000 ticks per second) advances by 100 per update, so ticks / 100 counts updates of 1/30 s (the emulator ran at about 0.94 of real time; ticks are game time).
 
 ### Measured
 

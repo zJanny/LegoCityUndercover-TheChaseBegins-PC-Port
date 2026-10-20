@@ -50,4 +50,4 @@ IN_PROGRESS, updated 2026-10-13T21:29:01+0200. Squash-merged to main; `chase-gam
 ## 7. Code and tests
 
 - `src/frontend/` (`chase_frontend`: Flow state machine, CPU-drawn screens), `src/movie/` (`chase_movie`), `chase-frontshot`, `src/game_front.hpp`.
-- Scenario `tools/oracle/front-screens.txt`. Review pictures (local) `artifacts/review/front-end/` (native, oracle, compare).
+- Scenario `tools/oracle/front-screens.txt`. Review pictures (native, oracle, compare) were local and are not kept.

@@ -42,7 +42,6 @@ python3 -m unittest discover -s tests -p 'test_*.py' -v
 Some tests need your extracted game data in `artifacts/romfs` (see [Extracting game data](extracting-game-data.md)). Without it, they are reported as skipped or are not added.
 
 - Use `-DCHASE_ROMFS_DIR=...` when you configure, if the data is somewhere else.
-- Use `-DCHASE_LOCO_TRACE_DIR=...` if the recorded movement traces are not in `artifacts/oracle/loco-out`. Without the traces, the movement comparison test is skipped. The other recorded traces have a folder option of their own (for example `-DCHASE_CAMERA_TRACE_DIR=...`); the [command reference](commands.md#c-tests) names them for each test.
 - The viewer, development runtime, sound, video player and start-screen tests are only added if the data existed when you ran the first `cmake` command. Run that command again after you extract the data.
 
 For extraction, converter and program commands, see the [command reference](commands.md).

@@ -37,7 +37,7 @@ Unknowns:
 
 ## 2026-10-19T18:02:53+02:00 — Mission 1-3: the ladder to the roof (user report)
 
-While making the mission 1-3 save states ([oracle-states.md §2026-10-19T18:02:53](oracle-states.md#ts-20261019-180253)) the user noted that the ladder that is climbed to reach the roof is not fully visible in the port. The state `m13-2-ladder` stands in front of it in the original.
+While making the mission 1-3 save states (user quick saves of 2026-10-19, missions 1-1 and 1-2 done, 1-3 in progress) the user noted that the ladder that is climbed to reach the roof is not fully visible in the port. The state `m13-2-ladder` stands in front of it in the original.
 
 Unknowns:
 - Which object the ladder is and which part of it is missing in the port.

@@ -31,7 +31,7 @@ IN_PROGRESS, updated 2026-10-18T16:15:36+02:00. Ported in `chase-game`: walk-in 
 ## 6. Findings summary
 
 - Pole walk-in, A press, climb, exits and dismount, measured in m12-10 / m12-10a: [player-traversal-pole.md §2026-10-18T16:08:28](../../re/player-traversal-pole.md#ts-20261018-160828).
-- Pole use handler, mount and climb updates: [player-traversal-pole.md §2026-10-18T14:55:41](../../re/player-traversal-pole.md#ts-20261018-145541). Oracle states of mission 1-2: [oracle-states-m12.md §2026-10-18T12:27:39](../../re/oracle-states-m12.md#ts-20261018-122739).
+- Pole use handler, mount and climb updates: [player-traversal-pole.md §2026-10-18T14:55:41](../../re/player-traversal-pole.md#ts-20261018-145541). Oracle states of mission 1-2 (user states made in mission 1-2 past the roof scanner): `m12-10-pole-climb` (on the pole, climbing up the house).
 
 ## 7. Code and tests
 

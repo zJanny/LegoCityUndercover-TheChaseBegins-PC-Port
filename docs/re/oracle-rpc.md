@@ -112,8 +112,8 @@ Unknowns:
 
 ## 2026-10-20T00:56:12+02:00 — Screenshot paths, input injection after loadstate, short button presses (round 40 emulator servant)
 
-Tool findings from the round 40 emulator servant; evidence: `artifacts/oracle/r40-servant-out/` (`b1probe.py`, `c1probe.py`).
-- The output path of the `screenshot` and `shotloop` commands of `tools/azahar_oracle.py` is relative to `--output`, so bare file names must be used with `--output artifacts/oracle/r40-servant-out`. A path with directories failed on the first try.
+Tool findings from the round 40 emulator servant.
+- The output path of the `screenshot` and `shotloop` commands of `tools/azahar_oracle.py` is relative to `--output`, so bare file names must be used with `--output DIR`. A path with directories failed on the first try.
 - A custom RPC sampler must call `Oracle.inject_input()` after a `loadstate`, or the A mailbox write does nothing.
 - Button presses of 0.12 s (A) and 0.3 s (START) were sometimes missed; 0.3 s (A) and 0.5 s (START) worked.
 

@@ -45,7 +45,7 @@ Corrected by [abilities-scanner.md §2026-10-19T14:06:22](abilities-scanner.md#t
 
 ### Method
 
-REA (Ghidra 12.1.2) pseudocode of 0x2e9030 (re-read for its per-object part), 0x1948dc, 0x262d94 (the UI part of the scanner entry, named FUN_001bf2d0 by the decompiler), 0x2d9f84, 0x2eec90, 0x2b9cf8, 0x1ee2d0 and llvm-objdump of the callers of the scanner getters 0x246128 (active, +0x34 of 0x375ee4), 0x23601c (zone object), 0x1948cc (mode index), 0x2b9d8c (+1 of 0x375eb4), 0x2ce434, 0x2c529c, 0x245b40, 0x231cec; the layouts `soundcentre.bxaml`, `soundpulse.bxaml` and `mapbuttons.bxaml` with the layout decoder. Oracle (emulator servant, state m12-8-roof-sound-scanner): B-1 exit by B (`artifacts/oracle/r28B-out/b1/`), B-2 twelve screenshots of the locked view with ticks of 0x376b0c (`artifacts/oracle/r28B-out/b2/`, not committed). Note: 0x5165c8 is not a clock (constant); the game clock is 0x376b0c, 100 ticks per update.
+REA (Ghidra 12.1.2) pseudocode of 0x2e9030 (re-read for its per-object part), 0x1948dc, 0x262d94 (the UI part of the scanner entry, named FUN_001bf2d0 by the decompiler), 0x2d9f84, 0x2eec90, 0x2b9cf8, 0x1ee2d0 and llvm-objdump of the callers of the scanner getters 0x246128 (active, +0x34 of 0x375ee4), 0x23601c (zone object), 0x1948cc (mode index), 0x2b9d8c (+1 of 0x375eb4), 0x2ce434, 0x2c529c, 0x245b40, 0x231cec; the layouts `soundcentre.bxaml`, `soundpulse.bxaml` and `mapbuttons.bxaml` with the layout decoder. Oracle (emulator servant, state m12-8-roof-sound-scanner): B-1 exit by B, B-2 twelve screenshots of the locked view with ticks of 0x376b0c (screenshots not kept). Note: 0x5165c8 is not a clock (constant); the game clock is 0x376b0c, 100 ticks per update.
 
 ### Per-object markers (the large green rings)
 
@@ -114,7 +114,7 @@ Unknowns:
 
 ### Method
 
-llvm-objdump (`--mattr=+vfp2,+vfp3`) of `artifacts/game/game.arm.elf`: 0x2d2e14 (literal pool 0x2d3130 = 0.0, 0x2d3134 = 1.0, 0x2d3138 = 625.0, 0x2d313c = 2975.0), 0x1f3494 (pool 0x1f35a0 = 0.5, 0x1f35a4 = 15.0, 0x1f35ac = 20.0, 0x1f35b0 = 1000.0), 0x2ad730 and 0x29e18c. Layouts with `chase-layoutdump --tracks`. Oracle: one run of the servant (state m12-8-roof-sound-scanner, New 3DS, OpenGL), pictures `artifacts/oracle/r40-servant-out/s12c_066.png` and `s12c_sheet2.png`. No REA.
+llvm-objdump (`--mattr=+vfp2,+vfp3`) of `artifacts/game/game.arm.elf`: 0x2d2e14 (literal pool 0x2d3130 = 0.0, 0x2d3134 = 1.0, 0x2d3138 = 625.0, 0x2d313c = 2975.0), 0x1f3494 (pool 0x1f35a0 = 0.5, 0x1f35a4 = 15.0, 0x1f35ac = 20.0, 0x1f35b0 = 1000.0), 0x2ad730 and 0x29e18c. Layouts with `chase-layoutdump --tracks`. Oracle: one run of the servant (state m12-8-roof-sound-scanner, New 3DS, OpenGL), pictures of the locked view (not kept). No REA.
 
 ### State machine 0x2d2e14 (this +4 is the mode record +0x14, so the byte +0x28 is the scan state)
 

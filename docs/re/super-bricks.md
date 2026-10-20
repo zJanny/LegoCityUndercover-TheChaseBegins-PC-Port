@@ -119,7 +119,7 @@ Unknowns:
 
 <a id="ts-20261020-221457"></a>
 
-## 2026-10-20T22:14:57+02:00 — Oracle: the pickup of the super debris bricks in `veh-smash-prop` (request B-1, run by the round 47 emulator servant with A-1: Azahar New 3DS, OpenGL, RPC, fixed dt 0.033, A held, one update per row, two loads x1 and x2; files in `artifacts/oracle/r47-servant-out/`, not committed)
+## 2026-10-20T22:14:57+02:00 — Oracle: the pickup of the super debris bricks in `veh-smash-prop` (request B-1, run by the round 47 emulator servant with A-1: Azahar New 3DS, OpenGL, RPC, fixed dt 0.033, A held, one update per row, two loads x1 and x2; files not kept)
 
 Confirms the reading of [§2026-10-20T22:04:29+02:00](#ts-20261020-220429) in both loads, for all ten super bricks (3 of the lamp post, 6 of the tree, 1 of the van contact):
 - A super record lands (state 1), +0x22 goes from 2 to 6 in that update, and state 3 starts in the next one: the magnet of the driving player pulls it at any distance (record 20 of x2: 14.2 from the player's node at update 53, 5.2 at 66, 1.5 at 81; the velocity +0x0c stays unchanged).

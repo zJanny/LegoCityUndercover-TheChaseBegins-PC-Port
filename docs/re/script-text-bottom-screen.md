@@ -13,7 +13,7 @@ Subtopic of [script-text.md](script-text.md): what the bottom screen shows while
 
 ## 2026-10-14T21:41:51+02:00 — HUD-31: why the port's picture of the InformationBox shows no HUD and a dialogue background (port runs and the oracle picture `ib3.png`; no new disassembly, REA was not used)
 
-Evidence: `chase-game ... --window 400x480` runs, the oracle picture `artifacts/oracle/agentOC-out/ib3.png` of [script-text.md §2026-10-14T20:46](script-text.md#ts-20261014-204600), the port's draw and update code (`src/game_level.cpp`, `src/game_level_update.cpp`, `src/frontend/hud.cpp`). Own pictures (not committed): `artifacts/oracle/agentVIS-out/port_ib.png` (`--call-script No_Entry_Auburn_On_Foot`, 20 updates), `port_p0.png` (no script), `port_walk_ib.png` (walking into the barrier).
+Evidence: `chase-game ... --window 400x480` runs, the oracle picture (box open, not kept) of [script-text.md §2026-10-14T20:46](script-text.md#ts-20261014-204600), the port's draw and update code (`src/game_level.cpp`, `src/game_level_update.cpp`, `src/frontend/hud.cpp`). Own pictures (not kept): `--call-script No_Entry_Auburn_On_Foot` after 20 updates, no script, and walking into the barrier.
 
 **Cause: two artefacts of the port's test set-up, not a difference in what the barrier script switches.**
 - Top screen: the HUD layout is drawn from the storyboard `TransitionOn` at the HUD's own time, and that time only advances in `LevelSession::simulate` after the dialog check; while a script dialog is open the update returns before `hud->update(dt)`. `--call-script` opens the box in update 0, so the HUD stays at time 0 of its fade-in (nothing drawn) while the box is open. Without `--call-script` the HUD is drawn at update 20 (`port_p0.png`).

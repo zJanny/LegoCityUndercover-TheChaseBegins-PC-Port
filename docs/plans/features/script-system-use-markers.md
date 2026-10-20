@@ -32,7 +32,7 @@ IN_PROGRESS, updated 2026-10-20T21:59:12+02:00. Use spots (165) and detective sp
 ## 6. Findings summary
 
 - Textures, list, update, fader, placement, draw and the oracle run for use spots: [use-spot.md §2026-10-19T09:25:34](../../re/use-spot.md#ts-20261019-092534).
-- Texture function 0x292388, ability tables, the detective spot's answer and the oracle state: [use-spot.md §2026-10-20T21:58:32](../../re/use-spot.md#ts-20261020-215832); state: [oracle-states.md §2026-10-20T21:58:04](../../re/oracle-states.md#ts-20261020-215804).
+- Texture function 0x292388, ability tables, the detective spot's answer and the oracle state: [use-spot.md §2026-10-20T21:58:32](../../re/use-spot.md#ts-20261020-215832); state: the user's `footprint-scanner-trigger` (mission 1-2 active, Chase 2.43 m from the second dog detective spot).
 
 ## 7. Code and tests
 

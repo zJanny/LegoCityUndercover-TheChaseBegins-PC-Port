@@ -63,7 +63,7 @@ Rows 1..5 have fade in 0.5, fade out 0.5, hold 4.0 (row 1) or 1.0. Row 3 is skip
 Corrected by [fmv.md §2026-10-13T20:58](fmv.md#ts-20261013-205838): the intro movie holds two eye pictures per frame pair
 Corrected by [front-end.md §2026-10-13T20:58](#ts-20261013-205838): the intro movie is stereoscopic, 29.97 pictures per second
 
-Sources: REA (Ghidra 12.1.2, `procedure_pseudo_code`) on `artifacts/game/game.arm.elf`; Azahar oracle (OpenGL + RPC screenshots, port 24690, home `artifacts/oracle/fe-home`, states front-lang / front-streetpass / front-selectslot, cold boot capture); native renders compared with the oracle screenshots (mean abs difference over a 400x480 composite).
+Sources: REA (Ghidra 12.1.2, `procedure_pseudo_code`) on `artifacts/game/game.arm.elf`; Azahar oracle (OpenGL + RPC screenshots, port 24690, own home, states front-lang / front-streetpass / front-selectslot, cold boot capture); native renders compared with the oracle screenshots (mean abs difference over a 400x480 composite).
 
 **Corrections of earlier entries**
 - Row 0 (0x5142c8, enter 0x312edc, update 0x313018) is not a black screen. A cold-boot capture shows the bottom screen with the `page_alerttext` layout on black (the TransitionOn storyboard, which hides the `image` element), the save indicator spinning, header "Preparing Game Card..." (systemtext 0x12e3d762), then header "Preparing save data..." (0x84828812 or 0xc1117bc4, same text) with body "Do not turn off the Nintendo 3DS system." (0x2c824a40). The top screen is black. 0x312edc starts the asynchronous load `0x2400a0(0x17ed04, 0x2c195c, row+0x50)`; 0x313018 leaves the row when the byte at row+0x50 is set (transition 0x22b6d4 with 0.5) and then reads the first-run flag (REA ev_b95d58f3…, ev_ef81d49a…). The earlier "black 34 updates" came from a state that was saved after this page.
@@ -96,7 +96,7 @@ Sources: REA (Ghidra 12.1.2, `procedure_pseudo_code`) on `artifacts/game/game.ar
 
 **Native implementation** (`src/frontend/`, library `chase_frontend`, no SDL; `src/movie/`, library `chase_movie`, FFmpeg)
 - `Flow` is the state machine: Boot (stand-in 3 s), Logos (4.5 s, 3 black updates after), FusionMovie (splash5, skippable only when the first-run flag is clear), Language (rows to indexes 1,2,3,4,5,7,6,9,8; sounds 18 and 20), Prompt (the state machine above), Autosave, SlotSelect, SavingGame, Loading, IntroMovie, MissionCard, Done with a hand-off (slot, new game). `FrontEnd` draws every screen into two CPU canvases. chase-game uploads them as textures and blits the two screens stacked (bottom centred), plays movie sound through its own SDL queue and the button sounds through the sound player.
-- Verification: `frontend-flow` (state machine), `frontend-real-data` (texts, wrapping, exact logo pixels, render hashes of six screens, movie lengths 189..194 updates for splash5 and 2040..2052 for the intro at 30 updates per second), `front-game-handoff` (a scripted run through every screen into Cherry Tree Hills). Review pictures: `artifacts/review/front-end/` (native, oracle, compare).
+- Verification: `frontend-flow` (state machine), `frontend-real-data` (texts, wrapping, exact logo pixels, render hashes of six screens, movie lengths 189..194 updates for splash5 and 2040..2052 for the intro at 30 updates per second), `front-game-handoff` (a scripted run through every screen into Cherry Tree Hills). Review pictures (native, oracle, compare) were local and are not kept.
 
 **Stand-ins (all labelled in the code)**: durations of the boot pages, saving page, loading screen and title card; the emptied slot page interval (0.5 s); save indicator off time (0.3 s); fade-in of the language screen (0.25 s); StreetPass environment; all slots empty; language to table suffix; the loading tip; flat badge, hexagon and card art; the top screen under the title card is black; page sizes and positions fitted to the oracle (spinner, body pitch, subtitle box, title layers).
 
@@ -127,7 +127,7 @@ Moved from the feature files so that the items stay short (CLAUDE.md, "Documenta
 
 ## 2026-10-14T20:46:20+02:00 — Slot list with a used slot, Continue and the delete confirmation (Azahar oracle, state savecont-slotlist-user, Old 3DS, OpenGL, RPC)
 
-Evidence: Azahar oracle (own port 24709, home `artifacts/oracle/agentOC-home`), `page_selectslot.bxaml` element names, [save-format-state.md §2026-10-14T16:34](save-format-state.md#ts-20261014-163403) for the row fields. No REA session. Pictures (not committed): `artifacts/oracle/agentOC-out/sl0.png` (slot 1 selected), `sd1.png` (slot 2 selected), `sy1.png` (delete confirmation), `sa00..sa08.png` (A on slot 1), state `slotlist-delete-confirm`.
+Evidence: Azahar oracle (own port 24709, own home), `page_selectslot.bxaml` element names, [save-format-state.md §2026-10-14T16:34](save-format-state.md#ts-20261014-163403) for the row fields. No REA session. Pictures (not kept): slot 1 selected, slot 2 selected, the delete confirmation, A on slot 1 (nine steps), state `slotlist-delete-confirm`.
 
 - **Used slot row.** Slot 1 shows three texts of `page_selectslot` ListItem1: `Text_Location` "The Police Station" (level name of slot byte +6 = 1), `Text_Time` "05:48" (play time) and `Text_Percent` "0.2%"; `Text_NoData` is hidden. Slot 2 is the "New Game" row. Location and time sit where the layout puts them (picture pixels equal); the percent's right edge is 37 px left of the layout element's (glyphs x 253..276), taken as a stand-in.
 - **Cursor and shortcuts.** Down selects slot 2 and Up slot 1 as before; the selected row is the bright one. With a used slot selected the bottom left shows the Y icon (`Screen_ExtraButton`) and the orange label "Delete" (gametext 0x24d3ab6b); with the "New Game" row selected only "Select A" shows. The `ExtraButton_3DS` entry of `shortcuts.bxaml` references the BackButton layout, so the Y image replaces its `Button_Image`.
@@ -144,7 +144,7 @@ Unknowns:
 
 ## 2026-10-14T21:36:17+02:00 — Movie subtitles: wrap, box height, the original's text code
 
-Evidence: llvm-objdump (armv6k, vfp2) on `artifacts/game/game.arm.elf`, oracle pictures `artifacts/review/front-end/oracle/intro/intro00..49.png` (local), one GDB-only Azahar run (state `agent-slot`, port 24714, memory read at 0x529f28). No REA session; no RPC (agent M held it). The attempt to trap the clip call during the intro movie did not reach the movie (the scripted A press from `front-selectslot` did not start New Game); not repeated.
+Evidence: llvm-objdump (armv6k, vfp2) on `artifacts/game/game.arm.elf`, oracle pictures of the intro (50 captures, not kept), one GDB-only Azahar run (state `agent-slot`, port 24714, memory read at 0x529f28). No REA session; no RPC (agent M held it). The attempt to trap the clip call during the intro movie did not reach the movie (the scripted A press from `front-selectslot` did not start New Game); not repeated.
 
 **Original code (addresses).**
 - Loader 0x223dbc builds `cutscenes/` + movie name + `_xx.srt` (literals 0x223f5c, 0x223f68; the `.moflex` literal 0x223f48) and calls the SubRip reader 0x2e20a0 when the file exists.

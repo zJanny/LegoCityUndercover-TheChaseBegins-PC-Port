@@ -19,7 +19,7 @@ Walking and running measured in the oracle, the locomotion replica, ground follo
 
 ## 2026-10-13T13:42:20+02:00 — Player locomotion measured in the oracle (worker; Azahar 2126.2 old 3DS, REA Ghidra 12.1.2 for the code)
 
-Method: state `gameplay-start`, `dt 0.033 0.033` (fixes the scheduler step), `stick` injection, `trace ... mem` (entity, controller and node bytes per frame). Scenarios: `tools/oracle/loco-*.txt`. A trace row is the state after the previous update; positions are `node+0x8c` (x, z are the ground plane, y is up). Speeds are world units (u) per second of game dt. CSVs and `.mem` files stay local (`artifacts/oracle/loco-out/`).
+Method: state `gameplay-start`, `dt 0.033 0.033` (fixes the scheduler step), `stick` injection, `trace ... mem` (entity, controller and node bytes per frame). Scenarios: `tools/oracle/loco-*.txt`. A trace row is the state after the previous update; positions are `node+0x8c` (x, z are the ground plane, y is up). Speeds are world units (u) per second of game dt. CSVs and `.mem` files are not kept.
 
 **Measured facts**
 
@@ -76,7 +76,7 @@ Unknowns:
 
 <a id="ts-20261013-135827"></a>
 
-## 2026-10-13T13:58:27+02:00 — Locomotion replica, root motion check, differential test (worker; recorded traces in artifacts/oracle/loco-out, REA Ghidra 12.1.2 for 0x2327b4)
+## 2026-10-13T13:58:27+02:00 — Locomotion replica, root motion check, differential test (worker; recorded traces, REA Ghidra 12.1.2 for 0x2327b4)
 
 Corrected by [player-locomotion.md §2026-10-13T14:46](#ts-20261013-144645): the height steps of the ramp are the ground probe at the kerb
 Corrected by [player-locomotion.md §2026-10-13T17:02](#ts-20261013-170203): the stick movement is not animation root motion

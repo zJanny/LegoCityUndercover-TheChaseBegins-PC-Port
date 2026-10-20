@@ -13,6 +13,7 @@ Split from [vehicles.md](vehicles.md). Plan: [features/vehicles-boarding.md](../
 - The vehicle entity box is the root node of the first collision item of its model (`modelCollisionBox`) [§2026-10-15T08:15](#ts-20261015-081549).
 - X prompt: object "HeadIcons" at 0x517ddc (18 icons from TablesCharacters sheet 5), drawn from the player update 0x1835d0 via `0x22d7c0(9, 0)`; while seated 0x262188 loads the vehicle portrait and hearts from record byte `+0x30d`. The portrait background order corrects hud.md [§2026-10-15T18:35](#ts-20261015-183555).
 - Open: prompt conditions (ctrl+0xe0+0x130/+0x131 bit 2 writers), blend state of the icon quad, writers of entity `+0x70` and of SetHearts for vehicle damage, animation variants by class.
+- A traffic van the player drove (user state `in-vehicle`: van_dulmen, mission 1-1 finished) has type byte +0x12 = 0xb7, owner flags +0x10 = 0x1300, `VehicleType` 37 and record state +2 = 5 while driven [§2026-10-20T23:27:45](#ts-20261020-232745).
 
 <a id="ts-20261015-081549"></a>
 
@@ -47,7 +48,7 @@ Unknowns:
 
 ## 2026-10-15T18:35:55+02:00 — The X prompt (head icon) and the HUD while seated (llvm-objdump, oracle pictures, entity traces)
 
-Evidence: objdump of 0x1835d0, 0x22d7c0, 0x1a0954 (draw), 0x1663f8, 0x2e70c4 / 0x2e7104 (HeadIcons release / loader), 0x344d78 (HeadIcons static init, name string "HeadIcons"), 0x262188, 0x307abc, 0x307bcc, 0x193604, 0x22ec10, 0x24255c, 0x17bb14, the strings of 0x1a0e0c..; `chase-tabledump tables/tablescharacters.bxls` sheet 5 (`*0x372e1c`); entity +0x70 in `artifacts/oracle/fall-out/*.mem` (player traces); oracle picture `artifacts/oracle/agentDRV-out/oracle_seated.png`. The oracle emulator did not start for this agent (three SIGABRT / SIGSEGV launches), so nothing new was measured live.
+Evidence: objdump of 0x1835d0, 0x22d7c0, 0x1a0954 (draw), 0x1663f8, 0x2e70c4 / 0x2e7104 (HeadIcons release / loader), 0x344d78 (HeadIcons static init, name string "HeadIcons"), 0x262188, 0x307abc, 0x307bcc, 0x193604, 0x22ec10, 0x24255c, 0x17bb14, the strings of 0x1a0e0c..; `chase-tabledump tables/tablescharacters.bxls` sheet 5 (`*0x372e1c`); entity +0x70 in the player traces (not kept); an oracle picture of the seated player (not kept). The oracle emulator did not start for this agent (three SIGABRT / SIGSEGV launches), so nothing new was measured live.
 
 **Prompt.** The object at 0x517ddc is "HeadIcons" (vtable 0x362044; 18 icon textures at +0x24 loaded by 0x2e7104 from the rows of TablesCharacters sheet 5: "%s/%s.tga" with folder and name, or "Sprites/Game/UseMarkers/%s.tga" without a folder; row 9 = `sprites/buttons/dsbuttonx`, row 8 = dsbuttona, 10 = speechbubble, 11..17 the head markers of the special tools). In the player update 0x1835d0 (not in the states 0x11a, 0x11b, 0x11c, 0x17e, 0x17f, 0x19a, 0x19b, 0x19c, and with ctrl+0xe0+0x130 bit 2 clear) the call `0x225d94(player, 0)` finding a vehicle and ctrl+0xe0+0x131 bit 2 set call `0x22d7c0(9, 0)`: icon +0x98 = 9, flag +0xa8 = 0 (icon over the player; with a pointer the position is copied to +0x9c and the flag is 1), then `0x23cc00` with hold 0.1. The overlay (registered by 0x2e7104 with fade in and out 0.15 s, draw callback 0x1663f8 queueing 0x1a0954) runs the generic fade state machine: alpha = 0x235e2c. Draw 0x1a0954: the icon is a camera-facing 1 x 1 world quad (vertices +-0.5, uv 0..1, white with the alpha byte, blend mode pair 5, 7) centred at the player's node position with y + 1.0 + 2.0 x (entity +0x70) (0.85 in every player trace, so 2.7); alpha byte = int(fade x 255), 0 when the distance to the camera position (the translation of the render matrix at 0x529e30 + 0x19c) is below 6.0, scaled by (distance - 6) / 4 up to 10.0 (floats at 0x374704). The other branch of 0x1835d0 (ctrl+0xe0+0x130 bit 2 set) starts the effect 0x2ed on the player (0x23ae84) and keeps it at the node (0x225d50); it stops it (0x23ae50, -1.0) when the bit is clear. Not traced further. Port: `src/runtime/head_icon.*` (fade, alpha, position, projection onto the top screen), glue `LevelSession::updateHeadIcon` / `drawHeadIcon`; tests `head-icon`.
 
@@ -59,3 +60,12 @@ Unknowns:
 - The depth and blend state of the icon quad (flags of 0x252254, pair 5, 7), the test of ctrl+0xe0+0x130 / +0x131 bit 2 (writers), the effect 0x2ed, and what the other icons (0..8, 10..17) are used for.
 - The writer of entity +0x70 (the 0.85 is read from traces), the player's health ctrl+0x70 and the writers of SetHearts for vehicle damage.
 - Whether the distance rule agrees with the oracle (the icon is hidden within 6 units of the camera by the code; the chase-game picture beside the trooper shows it, so the follow camera is farther than 6 units there); no oracle picture of the prompt was compared.
+
+<a id="ts-20261020-232745"></a>
+
+## 2026-10-20T23:27:45+02:00 — A traffic van seen from the driver's seat (user state `in-vehicle`, moved from the local state catalogue)
+
+The user quick-saved on their own Azahar (2026-10-14 23:10, New 3DS, level lvl_01) with the player sitting in a van taken from the traffic in the street (not a parked vehicle); missions: 1-1 finished, 1-2 not started (user, 2026-10-14). Read from memory (GDB, OpenGL, after `frames 2`): player locomotion state ctrl+0x6c = 0x11c (driving), ctrl+0x130 = the vehicle entity; player at (613.370, 17.072, 1062.515), forward (-0.199, -0.002, 0.980); vehicle node world translation (613.37, 17.97, 1062.50). Vehicle entity: type byte +0x12 = 0xb7 (183), owner flags +0x10 = 0x1300 (the traffic value of [vehicles-system.md](vehicles-system.md#ts-20261014-224438)), word +8 = 0x2b69676d, record +0x7c with state +2 = 5 (driven by the player). `VehicleType` (record +0x2ec) = 37: row 37 of `tablescharacters` sheet 4 is `van_dulmen` (a van; the donut van is 36).
+
+Unknowns:
+- Whether word +8 is the hash of an instance name (traffic vehicles may have none).

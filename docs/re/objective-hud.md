@@ -1,6 +1,6 @@
 # Objective HUD: waypoints, sub-objective groups and the map marker
 
-Handlers of batch SCRIPT-31 as far as mission 1-1 uses them, and what the original shows for an active waypoint. Evidence: REA (Ghidra 12.1.2 pseudo code of `artifacts/game/game.arm.elf`, sha256 5152ed14...0881), llvm-objdump, level data (`parseLevel`) and RPC screenshots of Azahar (states `gameplay-start`, Old 3DS, with `teleport` as measuring aid, output `artifacts/oracle/agentOH-out/`, never committed).
+Handlers of batch SCRIPT-31 as far as mission 1-1 uses them, and what the original shows for an active waypoint. Evidence: REA (Ghidra 12.1.2 pseudo code of `artifacts/game/game.arm.elf`, sha256 5152ed14...0881), llvm-objdump, level data (`parseLevel`) and RPC screenshots of Azahar (states `gameplay-start`, Old 3DS, with `teleport` as measuring aid, screenshots not kept).
 
 Subtopics: [objective-hud-map.md](objective-hud-map.md), [objective-hud-waypoints.md](objective-hud-waypoints.md)
 

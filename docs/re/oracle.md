@@ -7,7 +7,6 @@ This file is the entry point: setup and the fast workflow are below. New dated e
 Subtopics:
 - [oracle-setup.md](oracle-setup.md): launch with Xvfb, the render-window crash and launch retry, `--display desktop`.
 - [oracle-rpc.md](oracle-rpc.md): the RPC channel (`--rpc`, `--rpc-input`), memory access, screenshot and timing measurements.
-- [oracle-states.md](oracle-states.md): save states and checkpoints, their game progress, how each was made, New 3DS mode.
 - [oracle-routes.md](oracle-routes.md): the route to gameplay, scenario pitfalls (`teleport`, input that survives `loadstate`).
 - [oracle-measuring.md](oracle-measuring.md): watchpoints, execution traps, fixed dt, memory traces, `poke`.
 
@@ -19,7 +18,7 @@ Subtopics:
 - Screenshots need the software renderer and take about 11 s through the stub. [§2026-10-13T11:50:30](#ts-20261013-115030)
 - `--keep` leaves the emulator running, `--attach --port N` reconnects, `--stop` ends it. [§2026-10-13T11:50:30](#ts-20261013-115030)
 - Every session gets a virtual motion source (Cemuhook DSU, level pose); without it the scanner yaw is NaN. Details: [oracle-setup.md §2026-10-18T22:03:32](oracle-setup.md#ts-20261018-220332).
-- Setup, RPC, states, routes and measuring aids are in the subtopic files listed above; new dated entries go there.
+- Setup (including the console mode of save states), RPC, routes and measuring aids are in the subtopic files listed above; new dated entries go there.
 - Open: whether a state saved during async loading is accepted, the exact boot time of the "pending operations" refusal, and slot names for other titles.
 
 <a id="ts-20261013-115030"></a>
