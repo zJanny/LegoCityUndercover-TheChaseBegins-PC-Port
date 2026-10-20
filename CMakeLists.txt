@@ -54,6 +54,7 @@ target_sources(chase_runtime PRIVATE src/runtime/prop_wobbly_destructible.cpp sr
 target_sources(chase_runtime PRIVATE src/runtime/pedestrian_manager.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/pedestrian_blocked.cpp src/runtime/room_layers.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/pedestrian_system.cpp)
+target_sources(chase_runtime PRIVATE src/runtime/debris_pickup.cpp src/runtime/hud_pending_add.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/node_fade.cpp src/runtime/pedestrian_fade.cpp)
 # Front end (boot to the slot list): CPU-drawn screens, no SDL dependency.
 add_library(chase_frontend src/frontend/script.cpp src/frontend/frontend.cpp src/frontend/pages.cpp src/frontend/canvas.cpp src/frontend/resources.cpp src/frontend/layout.cpp src/frontend/flow.cpp src/frontend/hud.cpp src/frontend/super_brick_display.cpp src/frontend/script_text_pages.cpp src/frontend/minimap.cpp src/frontend/map_marker.cpp src/frontend/slot_summaries.cpp src/frontend/super_build_prompt.cpp src/frontend/round_menu.cpp src/frontend/pause_menu.cpp)
@@ -122,6 +123,7 @@ if(EPOXY_FOUND)
     add_executable(chase-game src/game.cpp src/game_options.cpp src/game_player.cpp src/game_carry.cpp src/game_scanner.cpp src/game_doors.cpp src/game_prop_parts.cpp src/game_level.cpp src/game_pause_menu.cpp src/game_level_update.cpp src/game_vehicle.cpp src/game_vehicle_break.cpp src/game_vehicle_place.cpp src/game_vehicle_camera.cpp src/game_level_rooms.cpp src/game_cutscene.cpp src/game_level_cutscene.cpp src/game_characters.cpp src/game_pedestrians.cpp src/game_pedestrian_fade.cpp src/game_pedestrian_rooms.cpp src/game_particles.cpp src/game_level_natives.cpp src/game_detective.cpp src/game_use_spot.cpp src/game_objective_markers.cpp src/game_hand_items.cpp src/game_effects.cpp src/game_vehicle_effects.cpp src/game_zipline.cpp src/game_brick_grab.cpp src/game_climb_bar.cpp src/game_acrobat_pole.cpp src/game_pole.cpp src/game_ladder.cpp src/game_animals.cpp src/game_object_visibility.cpp src/game_nested_props.cpp src/game_super_buildit.cpp src/game_fast_travel.cpp)
     target_sources(chase-game PRIVATE src/game_pedestrian_blocking.cpp)
     target_sources(chase-game PRIVATE src/game_props_destructible.cpp src/game_prop_destroy.cpp src/game_character_death.cpp src/game_fall_apart.cpp src/game_stud_drops.cpp src/game_super_bricks.cpp)
+    target_sources(chase-game PRIVATE src/game_debris_pickup.cpp)
     target_sources(chase-game PRIVATE src/game_debris_super.cpp)
     target_sources(chase-game PRIVATE src/game_attack.cpp src/game_screen_fade.cpp src/game_screen_shake.cpp src/game_save.cpp)
     target_link_libraries(chase-game PRIVATE chase_render chase_runtime chase_input chase_audio chase_frontend_movie chase_save_progress chase_save_tables)
@@ -1468,6 +1470,18 @@ if(BUILD_TESTING)
       --script "0 0 1500;0 0 3 X;0 0 330;at 854.43 17.1 1087.36 134.7;0 0 60 A;0 0 3 X;0 0 30")
     set_tests_properties(game-vehicle-smash PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
       PASS_REGULAR_EXPRESSION "vehicle 1-1_Police_Car: 1 super bricks in the brick burst\n.*prop Bus_Shelter_01: smashed by 1-1_police_car at update 1886\nprop Bus_Shelter_01: explosion particle 10, 9 bricks, 6 super bricks of value 6")
+    # The super bricks of the contact and of the smashed Bus_Shelter_01 come to rest, the magnet of the seated player (type row 6 +0x64 = 0) pulls each for
+    # its life 1.0 (30 updates at dt 0.033), the collected record flies to the HUD for 1.0 (31 updates), then 0x29c090 adds its value 1 to the count and
+    # 0x28a128 10 studs: the cycle of the oracle request B-1 (veh-smash-prop, stepped: state 1 -> 3 one update after the landing, 30 updates in state 3,
+    # 31 in state 4, +1 and +10 studs in the update of the free; docs/re/super-bricks.md, entry of the debris pickup). Update numbers are the port's.
+    add_test(NAME game-debris-super-pickup COMMAND chase-game
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
+      --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes
+      --call-script 1-1_VanBreakdown --call-script 1-1_Get_Car --start "886.0289 17.8243 1118.6516"
+      --script "0 0 1500;0 0 3 X;0 0 330;at 854.43 17.1 1087.36 134.7;0 0 60 A;0 0 100")
+    set_tests_properties(game-debris-super-pickup PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
+      PASS_REGULAR_EXPRESSION "prop Bus_Shelter_01: smashed by 1-1_police_car.*\n.*super debris brick banked: value 1, count 1 at update.*\n.*super debris brick banked: value 1, count 7 at update.*\n.*studs: counter 70,.*\n.*super bricks: total 7,")
     # Mission 1-1 from the first waypoint to 1-1_MissionEnd in one run (docs/re/scripts-missions.md, entry of the first end-to-end run). The dev steps "at X Y Z"
     # stand in for the walks between the stops: onto the shop waypoint, the police car, the van waypoint, the build-it, the van, the donut box and the target;
     # one moves the seated van next to 1-1_Waypoint_05 instead of the drive there (as in game-van-escort). Provenance of the positions: waypoint, build-it and
@@ -1883,6 +1897,10 @@ target_compile_options(super-brick-display-test PRIVATE -Wall -Wextra -Wpedantic
 add_test(NAME super-brick-display COMMAND super-brick-display-test)
 add_test(NAME super-brick-display-real-data COMMAND super-brick-display-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
 set_tests_properties(super-brick-display-real-data PROPERTIES SKIP_RETURN_CODE 77)
+add_executable(debris-pickup-test tests/debris_pickup_test.cpp)
+target_link_libraries(debris-pickup-test PRIVATE chase_runtime chase_assets)
+target_compile_options(debris-pickup-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME debris-pickup COMMAND debris-pickup-test)
 add_executable(prop-bouncer-test tests/prop_bouncer_test.cpp)
 target_link_libraries(prop-bouncer-test PRIVATE chase_runtime chase_assets)
 target_compile_options(prop-bouncer-test PRIVATE -Wall -Wextra -Wpedantic)
@@ -1916,7 +1934,7 @@ foreach(test_name ${chase_all_tests})
   set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT "XDG_DATA_HOME=${CMAKE_BINARY_DIR}/test-xdg/${test_name}")
 endforeach()
 
-foreach(slow_test game-cutscene-dog-end game-super-buildit-build game-super-brick-roof game-doorlock-detective-1-2 game-cage-release-1-2 game-mission-1-1 game-mission-1-1-start game-vehicle-drive game-vehicle-room game-pedestrian-rooms game-vehicle-hit game-vehicle-smash game-vehicle-break game-director-hold game-director-release game-van-escort game-pause-menu waypoint-marker-shot audio-real-data)
+foreach(slow_test game-debris-super-pickup game-cutscene-dog-end game-super-buildit-build game-super-brick-roof game-doorlock-detective-1-2 game-cage-release-1-2 game-mission-1-1 game-mission-1-1-start game-vehicle-drive game-vehicle-room game-pedestrian-rooms game-vehicle-hit game-vehicle-smash game-vehicle-break game-director-hold game-director-release game-van-escort game-pause-menu waypoint-marker-shot audio-real-data)
   if(TEST ${slow_test})
     set_property(TEST ${slow_test} APPEND PROPERTY LABELS slow)
   endif()

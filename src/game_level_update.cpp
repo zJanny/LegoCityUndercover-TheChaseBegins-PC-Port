@@ -360,7 +360,8 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         for (const runtime::SoundCall& call : studDrops.update(dt, pickupPoint, studs.flightTarget(), studs)) player->sounds.push_back(call);
         for (const runtime::StudCollected& collected : studs.update(dt, pickupPoint))
             player->sounds.push_back(runtime::studCollectCall(collected, studs.studs()[collected.index].centre));
-        effects.update(dt, {follow->eye()[0], follow->eye()[1], follow->eye()[2]});
+        for (const runtime::SoundCall& call : updateDebrisPickup(dt, pickupPoint)) player->sounds.push_back(call);
+        effects.update(dt, {follow->eye()[0], follow->eye()[1], follow->eye()[2]}, superBricks.tint());
         for (const runtime::SoundCall& call : player->sounds) emit(call);
         if (hud)
             for (const runtime::StudBanked& banked : studs.takeBanked()) {

@@ -205,6 +205,7 @@ private:
     void updatePropAnimations(float dt);
     void updateSuperBricks(float dt);
     void applySuperBricks();
+    std::vector<chase::runtime::SoundCall> updateDebrisPickup(float dt, const std::array<float, 3>& pickupPoint);
     void updateFollowCamera(float dt);
     void applyScreenShake(float dt);
     void loadBoardingVehicles(const std::map<std::string, std::pair<std::size_t, chase::render::Mat4>>& placedInstances);

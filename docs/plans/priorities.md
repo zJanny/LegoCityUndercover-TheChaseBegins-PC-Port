@@ -121,7 +121,7 @@ Items: 884 open items and stand-ins, 158 linked to game usage, 726 with unknown 
 
 ## Vehicles
 
-9 of 88 items linked.
+9 of 89 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -167,7 +167,7 @@ Items: 884 open items and stand-ins, 158 linked to game usage, 726 with unknown 
 
 ## Front end, HUD, saves
 
-15 of 164 items linked.
+15 of 163 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -218,7 +218,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [front-end.md](features/front-end.md): FE-3 (+10), FE-30 (+1), FE-40 (+1), FE-1, FE-2, FE-4, FE-5, FE-6, FE-7, FE-8, FE-9, FE-S1, FE-S2, FE-S3, FE-S31, FE-S32, FE-S33, FE-S4, FE-S40, FE-S41, FE-S5, FE-S6
 - [hud-ui-super-bricks.md](features/hud-ui-super-bricks.md): HUD-79 (+1), HUD-80 (+1), HUD-82 (+1), HUD-81, HUD-S74, HUD-S75, HUD-S76
 - [hud-ui-text.md](features/hud-ui-text.md): HUD-15, HUD-27, HUD-28, HUD-29, HUD-32, HUD-33, HUD-S15
-- [hud-ui.md](features/hud-ui.md): HUD-70 (+3), HUD-71 (+3), HUD-11 (+2), HUD-60 (+1), HUD-61 (+1), HUD-74 (+1), HUD-75 (+1), HUD-10, HUD-12, HUD-18, HUD-3, HUD-6, HUD-7, HUD-73, HUD-8, HUD-S1, HUD-S2, HUD-S3, HUD-S4, HUD-S6, HUD-S60, HUD-S7, HUD-S70, HUD-S71, HUD-S73
+- [hud-ui.md](features/hud-ui.md): HUD-70 (+3), HUD-71 (+3), HUD-11 (+2), HUD-60 (+1), HUD-61 (+1), HUD-74 (+1), HUD-75 (+1), HUD-10, HUD-12, HUD-18, HUD-3, HUD-6, HUD-7, HUD-8, HUD-S1, HUD-S2, HUD-S3, HUD-S4, HUD-S6, HUD-S60, HUD-S7, HUD-S70, HUD-S71, HUD-S73
 - [input.md](features/input.md): INPUT-1, INPUT-2, INPUT-3, INPUT-S1
 - [level-objects-buildit.md](features/level-objects-buildit.md): LEVOBJ-117 (+1), LEVOBJ-122 (+1), LEVOBJ-71 (+1), LEVOBJ-79 (+1), LEVOBJ-119, LEVOBJ-120, LEVOBJ-121, LEVOBJ-42, LEVOBJ-43, LEVOBJ-61, LEVOBJ-70, LEVOBJ-76, LEVOBJ-77, LEVOBJ-85, LEVOBJ-94, LEVOBJ-S41, LEVOBJ-S70, LEVOBJ-S71, LEVOBJ-S74, LEVOBJ-S76, LEVOBJ-S94, LEVOBJ-S95, LEVOBJ-S96
 - [level-objects-carry.md](features/level-objects-carry.md): LEVOBJ-75 (+1), LEVOBJ-30, LEVOBJ-31, LEVOBJ-34, LEVOBJ-S31, LEVOBJ-S33, LEVOBJ-S34, LEVOBJ-S73, LEVOBJ-S75
@@ -254,7 +254,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [studs.md](features/studs.md): STUD-22 (+2), STUD-1 (+1), STUD-13 (+1), STUD-16 (+1), STUD-23 (+1), STUD-24 (+1), STUD-26 (+1), STUD-25, STUD-27, STUD-3, STUD-5, STUD-6, STUD-8, STUD-S1, STUD-S12, STUD-S13, STUD-S14, STUD-S15, STUD-S3, STUD-S5, STUD-S6, STUD-S7, STUD-S8, STUD-S9
 - [ui-menus.md](features/ui-menus.md): UI-2 (+2), UI-1 (+1), UI-19 (+1), UI-3 (+1), UI-4 (+1), UI-5 (+1), UI-7 (+1), UI-9 (+1), UI-10, UI-11, UI-12, UI-13, UI-14, UI-15, UI-16, UI-18, UI-6, UI-8, UI-S1, UI-S2, UI-S3, UI-S4, UI-S5, UI-S6, UI-S7
 - [vehicles-boarding.md](features/vehicles-boarding.md): VEH-19 (+5), VEH-80 (+2), HUD-50 (+1), HUD-S50, HUD-S51, VEH-20, VEH-S10, VEH-S70, VEH-S8, VEH-S9
-- [vehicles-damage.md](features/vehicles-damage.md): VEH-120 (+3), VEH-125 (+3), VEH-113 (+2), VEH-115 (+2), VEH-124 (+2), VEH-121 (+1), VEH-123 (+1), VEH-122, VEH-128, VEH-S100, VEH-S101, VEH-S104, VEH-S109, VEH-S90, VEH-S93, VEH-S96, VEH-S97, VEH-S98, VEH-S99
+- [vehicles-damage.md](features/vehicles-damage.md): VEH-120 (+3), VEH-125 (+3), VEH-113 (+2), VEH-115 (+2), VEH-124 (+2), VEH-121 (+1), VEH-140 (+1), VEH-122, VEH-128, VEH-S100, VEH-S101, VEH-S104, VEH-S109, VEH-S112, VEH-S90, VEH-S93, VEH-S96, VEH-S97, VEH-S98, VEH-S99
 - [vehicles-physics-collision.md](features/vehicles-physics-collision.md): VEH-91 (+26), VEH-70 (+2), VEH-100 (+1), VEH-101 (+1), VEH-102 (+1), VEH-S52, VEH-S60, VEH-S62, VEH-S81, VEH-S82, VEH-S86, VEH-S87
 - [vehicles-physics.md](features/vehicles-physics.md): VEH-6 (+23), VEH-51 (+3), VEH-42 (+2), VEH-41 (+1), VEH-50 (+1), VEH-81 (+1), VEH-54, VEH-55, VEH-S30, VEH-S31, VEH-S32, VEH-S40, VEH-S41, VEH-S43, VEH-S7
 - [vehicles-prop-smash.md](features/vehicles-prop-smash.md): VEH-126 (+1), VEH-127 (+1), VEH-130 (+1), VEH-136 (+1), VEH-106, VEH-131, VEH-134, VEH-135, VEH-S102, VEH-S105, VEH-S107, VEH-S108, VEH-S89

@@ -26,7 +26,7 @@ public:
     chase::runtime::DebrisField* debris() { return field_ ? &*field_ : nullptr; }
     std::size_t debrisInstances() const;
     std::size_t superDebrisInstances() const { return super_.instances(); }
-    void update(float frameDelta, const chase::runtime::DebrisVec3& camera);
+    void update(float frameDelta, const chase::runtime::DebrisVec3& camera, const chase::runtime::SuperBrickTint& rainbow);
     // STAND-IN VEH-S101: a debris object is drawn while it is enabled and its alpha is not 0, without the alpha itself; the spin clip is not played.
     void apply(chase::render::Scene& scene) const;
 

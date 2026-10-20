@@ -17,15 +17,14 @@ public:
     // 0x2b3c48 (the tail of the debris load 0x2ecf30): the SBDebris objects with their SuperBuildValue into the field, one hidden scene instance each.
     void load(chase::render::Scene& scene, chase::assets::FuseArchive& archive, const chase::assets::Level& level, const chase::assets::ClassLookup& classOf,
               chase::runtime::DebrisField& field);
-    // 0x2c4f9c after the field's update, then the rainbow tint 0x2600dc (the last step of 0x180168). STAND-IN VEH-S109: the clock 0x5165c8 and the
-    // tint phase *0x3743f4 count from the level start, and the tint is this object's own copy of *0x3743f8.
-    void update(float frameDelta, chase::runtime::DebrisField& field);
+    // 0x2c4f9c after the field's update with `rainbow`, the tint *0x3743f8 of the placed super bricks (game_super_bricks.hpp) as of the last update
+    // (0x2600dc is the last step of 0x180168). STAND-IN VEH-S109: the clock 0x5165c8 and the tint phase *0x3743f4 count from the level start.
+    void update(float frameDelta, chase::runtime::DebrisField& field, const chase::runtime::SuperBrickTint& rainbow);
     void apply(chase::render::Scene& scene, const chase::runtime::DebrisField& field) const;
     std::size_t instances() const;
 
 private:
     std::array<std::ptrdiff_t, chase::runtime::kSuperDebrisObjectCount> instances_ = filled();
-    chase::runtime::SuperBrickTint tint_;
     float clock_ = 0;
     static std::array<std::ptrdiff_t, chase::runtime::kSuperDebrisObjectCount> filled() {
         std::array<std::ptrdiff_t, chase::runtime::kSuperDebrisObjectCount> out{};

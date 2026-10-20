@@ -12,7 +12,6 @@ namespace runtime = chase::runtime;
 void SuperDebrisObjects::load(chase::render::Scene& scene, assets::FuseArchive& archive, const assets::Level& level, const assets::ClassLookup& classOf,
                               runtime::DebrisField& field) {
     instances_ = filled();
-    tint_ = runtime::SuperBrickTint{};
     clock_ = 0;
     const assets::DrawableObjects drawable = assets::drawableObjects(archive, level, classOf);
     std::array<std::optional<std::uint16_t>, runtime::kSuperDebrisObjectCount> values{};
@@ -32,11 +31,10 @@ void SuperDebrisObjects::load(chase::render::Scene& scene, assets::FuseArchive& 
     field.loadSuperObjects(values);
 }
 
-void SuperDebrisObjects::update(float frameDelta, runtime::DebrisField& field) {
+void SuperDebrisObjects::update(float frameDelta, runtime::DebrisField& field, const runtime::SuperBrickTint& tint) {
     clock_ += frameDelta;
-    const std::array<std::uint8_t, 3>& rainbow = tint_.bytes();
+    const std::array<std::uint8_t, 3>& rainbow = tint.bytes();
     field.animateSuper(clock_, std::uint32_t(rainbow[0]) | std::uint32_t(rainbow[1]) << 8 | std::uint32_t(rainbow[2]) << 16 | 0xff000000u);
-    tint_.update(frameDelta);
 }
 
 void SuperDebrisObjects::apply(chase::render::Scene& scene, const runtime::DebrisField& field) const {

@@ -35,7 +35,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | Feature | Status | Top open items |
 |---|---|---|
 | [vehicles](vehicles.md) | IN_PROGRESS | VEH-7 driving collision; VEH-21 driving details; VEH-10 sounds |
-| [vehicles-damage](vehicles-damage.md) | IN_PROGRESS | VEH-123 super brick pickup; VEH-125 debris line tests; VEH-121 rest of the break effects; VEH-120 rest of the return |
+| [vehicles-damage](vehicles-damage.md) | IN_PROGRESS | VEH-125 debris line tests; VEH-140 rest of the debris pickup; VEH-121 rest of the break effects; VEH-120 rest of the return |
 | [vehicles-physics](vehicles-physics.md) | IN_PROGRESS | VEH-42 inertia; VEH-50 air control; VEH-54 jump-out braking |
 | [vehicles-physics-collision](vehicles-physics-collision.md) | IN_PROGRESS | VEH-102 sphere contact at a wall; VEH-70 Bullet contact details; VEH-91 vehicle activation |
 | [vehicles-prop-smash](vehicles-prop-smash.md) | IN_PROGRESS | VEH-131 oracle check of a kind 67 smash; VEH-134 hit sequence and lights modes; VEH-130 lamp post one update early |

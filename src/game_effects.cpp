@@ -40,10 +40,10 @@ std::size_t LevelEffects::debrisInstances() const {
     return count;
 }
 
-void LevelEffects::update(float frameDelta, const runtime::DebrisVec3& camera) {
+void LevelEffects::update(float frameDelta, const runtime::DebrisVec3& camera, const runtime::SuperBrickTint& rainbow) {
     if (!field_) return;
     field_->update(frameDelta, camera);
-    super_.update(frameDelta, *field_);
+    super_.update(frameDelta, *field_, rainbow);
 }
 
 void LevelEffects::apply(chase::render::Scene& scene) const {

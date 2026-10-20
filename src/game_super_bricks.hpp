@@ -37,6 +37,7 @@ public:
     void setTotal(std::uint32_t total) { field_.setTotal(total); }
     void spend(std::uint32_t value) { field_.spend(value); }
     const chase::runtime::SuperBrickField& field() const { return field_; }
+    const chase::runtime::SuperBrickTint& tint() const { return tint_; }
     std::string report() const;
 
 private:

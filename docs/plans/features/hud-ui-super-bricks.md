@@ -6,11 +6,12 @@ The display the HUD shows when a super brick is picked up: the fader 0x5198b0, t
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-19T20:35:01+02:00. `chase-game` shows the display at a pickup as the original does: fade-in 0.25 s, the number (yellow, 32 above its place before the slide, bouncing for 5 updates when the destroy changes it), the spinning brick icon, 80 updates in total, then a 0.1 s fade-out. The icon is a fitted CPU rasterisation of the original's model (stand-in); the number's font, the HUD camera of the icon and the build-menu placeholders are open.
+IN_PROGRESS, updated 2026-10-20T22:04:29+02:00. `chase-game` shows the display at a pickup of a placed or a debris super brick as the original does: fade-in 0.25 s, the number (yellow, 32 above its place before the slide, bouncing for 5 updates when the destroy changes it), the spinning brick icon, 80 updates in total, then a 0.1 s fade-out. The icon is a fitted CPU rasterisation of the original's model (stand-in); the number's font, the HUD camera of the icon and the build-menu placeholders are open.
 
 ## 3. Verified behaviour
 
 - The display lasts 80 updates from the pickup (oracle: about 160 vblanks); the number changes from 96 to 296 at the destroy 31 updates after the pickup; the digits' top row is y 16 and all 72 oracle yellow pixels are covered; the icon's silhouette matches the oracle's with IoU 0.897 and mean abs 12.4 over 15 pictures. Tests `super-brick-display`, `super-brick-display-real-data`. evidence: [super-bricks.md §2026-10-19T20:35:01+02:00](../../re/super-bricks.md#ts-20261019-203501)
+- The debris super bricks show the display at their collect (0x2c4f78 -> 0x2144f8) and change the number when their value is added 1.0 s later (0x29c090 -> 0x262778); the HUD starts the number at the count (0x17bda4); the pending add +0x2ac has no writer. Test `debris-pickup`. evidence: [super-bricks.md §2026-10-20T22:04:29+02:00](../../re/super-bricks.md#ts-20261020-220429)
 - The fader is the state machine shared with the camera lock icon (`runtime::CameraLockIcon` with separate fade times and a hold of -1). evidence: [super-bricks.md §2026-10-19T20:35:01+02:00](../../re/super-bricks.md#ts-20261019-203501)
 
 ## 4. Stand-ins
@@ -24,13 +25,14 @@ IN_PROGRESS, updated 2026-10-19T20:35:01+02:00. `chase-game` shows the display a
 - [ ] HUD-79 — The icon through the HUD camera, lights and material of 0x27b3e4 (scale, light, texture slots) instead of the fit. blocks: HUD-S74. evidence: [super-bricks.md §2026-10-19T20:35:01+02:00](../../re/super-bricks.md#ts-20261019-203501)
 - [ ] HUD-80 — The font 0x3757a0, the effect of 0x235cb0 / 0x235c9c and the bounce scale of the number. blocks: HUD-S75. evidence: [super-bricks.md §2026-10-19T20:35:01+02:00](../../re/super-bricks.md#ts-20261019-203501)
 - [ ] HUD-81 — The flag 0x37588c (the callback calls 0x2144f8 every update while it is set) and the two placeholder sprites drawn at the faders 0x519830 / 0x519870; its writer. needs: HUD-74. evidence: [super-bricks.md §2026-10-19T20:35:01+02:00](../../re/super-bricks.md#ts-20261019-203501)
-- [ ] HUD-82 — The origins of the spin angle 0x375890 and of the update count against the original's, and the shown count after a load (+0x2a8). needs: STUD-17. blocks: HUD-S76. evidence: [super-bricks.md §2026-10-19T20:35:01+02:00](../../re/super-bricks.md#ts-20261019-203501)
+- [ ] HUD-82 — The origins of the spin angle 0x375890 and of the update count against the original's (the shown count +0x2a8 starts at the counter, 0x17bda4; the counter after a load is STUD-17). needs: STUD-17. blocks: HUD-S76. evidence: [super-bricks.md §2026-10-19T20:35:01+02:00](../../re/super-bricks.md#ts-20261019-203501)
 
 ## 6. Findings summary
 
 - The display, fader, icon, flight and tint: [super-bricks.md §2026-10-19T20:35:01+02:00](../../re/super-bricks.md#ts-20261019-203501).
+- The debris pickup, its HUD calls and the pending add: [super-bricks.md §2026-10-20T22:04:29+02:00](../../re/super-bricks.md#ts-20261020-220429).
 
 ## 7. Code and tests
 
-- `SuperBrickDisplay` (`src/runtime/super_brick_display.*`), `SuperBrickDisplayDraw` (`src/frontend/super_brick_display.*`), `Hud::superBrickPickedUp` / `superBrickBanked`, the shared fader `runtime::CameraLockIcon`, glue `src/game_super_bricks.cpp`, `chase-hudshot` commands `brickcount`, `brick`, `brickbank`.
-- CTest: `super-brick-display`, `super-brick-display-real-data`, `hudshot-option-brickcount`, `hudshot-option-brick`.
+- `SuperBrickDisplay` (`src/runtime/super_brick_display.*`), `SuperBrickDisplayDraw` (`src/frontend/super_brick_display.*`), `Hud::superBrickPickedUp` / `superBrickBanked`, the shared fader `runtime::CameraLockIcon`, glue `src/game_super_bricks.cpp` and `src/game_debris_pickup.cpp`, `runtime::applyHudPendingAdd` (`src/runtime/hud_pending_add.*`, not called), `chase-hudshot` commands `brickcount`, `brick`, `brickbank`.
+- CTest: `super-brick-display`, `super-brick-display-real-data`, `debris-pickup`, `hudshot-option-brickcount`, `hudshot-option-brick`.
