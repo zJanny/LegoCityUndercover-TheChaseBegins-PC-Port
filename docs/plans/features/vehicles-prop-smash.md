@@ -6,7 +6,7 @@ What a moving vehicle does to the placed props of a level: the smash pass 0x16ce
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-20T09:32+02:00. A moving vehicle smashes wobbly props (box and mesh entries, so the lamp posts too), traffic lights, respawnable and simple destructible props, and the ObjectType 67 props whose `Destructable` mode a car can break (modes 1 and 4 without `AbilityDestructable`: five props of lvl_01, among them `1-2_RoofProp_03` and `1-3_Lawnmower_Final`); a destroyed prop starts its explosion emitter and bursts its bricks. Kind 67 props now register collision by their own rule (also for the player). No oracle run of a car smashing a kind 67 prop yet (VEH-131).
+IN_PROGRESS, updated 2026-10-20T22:11:34+02:00. A moving vehicle smashes wobbly props (box and mesh entries, so the lamp posts too), traffic lights, respawnable and simple destructible props, and the ObjectType 67 props whose `Destructable` mode a car can break (modes 1 and 4 without `AbilityDestructable`: five props of lvl_01, among them `1-2_RoofProp_03` and `1-3_Lawnmower_Final`); a destroyed prop starts its explosion emitter and bursts its bricks: nine with super bricks when it has a `SuperBuildValue` or is a simple, wobbly or respawnable destructible ([vehicles-damage](vehicles-damage.md)). Kind 67 props now register collision by their own rule (also for the player). No oracle run of a car smashing a kind 67 prop yet (VEH-131).
 
 ## 3. Verified behaviour
 

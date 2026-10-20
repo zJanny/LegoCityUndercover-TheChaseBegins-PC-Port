@@ -297,6 +297,153 @@ void replay(const Recorded (&rows)[N], int startUpdate, const char* run) {
     for (std::size_t i = 0; i < N; ++i) expect(rested[i] && freed[i], "every recorded brick rests and is freed within 120 updates");
 }
 
+// 0x2b3c48 / 0x2cdca4 / 0x2c8278 / 0x19913c (0x19983c, 0x1998b8) / 0x2c4f9c / 0x180874, read from llvm-objdump; charbits.blvl holds SBDebris01..20
+// (pickup_sbplate1x1 / sbbrick1x1, class SuperBuildValue 1.0), so every object is in the table of the value *0x3743f0 = 1.
+std::array<std::optional<std::uint16_t>, kSuperDebrisObjectCount> unitSuperObjects() {
+    std::array<std::optional<std::uint16_t>, kSuperDebrisObjectCount> values{};
+    for (auto& v : values) v = 1;
+    return values;
+}
+
+void superBricks() {
+    expect(!superDebrisBlock(0, 0xcc), "0x2cdca4: a kind outside 0x55, 0x77, 0x8a, 0xd6 without SuperBuildValue has no block");
+    const auto tree = superDebrisBlock(0, 0x77);
+    expect(tree && tree->value == 6 && tree->count == 9 && tree->kind == 103, "a wobbly prop (kind 0x77): value 6, count 9, kind 'g'");
+    const auto light = superDebrisBlock(3, 0xcc);
+    expect(light && light->value == 3 && light->count == 9, "prop_trafficlight (class SuperBuildValue 3.0): value 3, count 9");
+    expect(superDebrisBlock(500, 0)->value == 244, "the value is SuperBuildValue's low byte (strb at 0x2cdd04)");
+
+    PropDestroyEffects six;
+    expect(propDebrisBurst(six, {0, 0, 0}, light).count == 9 && propDebrisBurst(six, {0, 0, 0}, light).super,
+           "0x20cb50: the block's count 9 replaces DebrisAmount and the block goes to the burst");
+    expect(propDebrisBurst(six, {0, 0, 0}).count == 6 && !propDebrisBurst(six, {0, 0, 0}).super, "without a block the burst keeps DebrisAmount");
+
+    GameRandom random(77);
+    DebrisField field(random);
+    field.loadSuperObjects(unitSuperObjects());
+    field.listFreeSuperObjects();
+    DebrisBurst burst;
+    burst.position = {0, 10, 0};
+    burst.count = light->count;
+    burst.super = light;
+    field.burst(burst, {}, floorAt(10.0f));
+    unsigned supers = 0;
+    for (unsigned i = 0; i < 9; ++i) {
+        const DebrisRecord& r = field.records()[i];
+        const bool super = (r.flags22 & 2) != 0;
+        supers += super;
+        expect(super == (i < 3), "a value of 3 makes the first three bricks super bricks (one per brick, *0x3743f0 = 1)");
+        if (!super) {
+            expect(r.phase == 1 && r.superObject == kNoSuperDebrisObject && field.objects()[i].enabled, "a plain brick keeps Debris0N");
+            continue;
+        }
+        expect(r.kind == 103 && r.superValue == 1 && r.life == 8.0f && !(r.flags22 & 4), "kind 'g', value 1, life 255 / 30 = 8, bit 2 clear");
+        expect(r.superObject == i && field.superObjects()[i].enabled && !field.objects()[i].enabled, "the slot holds SBDebris0N, Debris0N stays off");
+        expect(field.objectOf(r) == &field.superObjects()[i], "objectOf gives the SBDebris object");
+    }
+    expect(supers == 3, "three super bricks of nine (oracle veh-smash-prop, debris.md §2026-10-18T14:46:04)");
+
+    for (int u = 0; u < 120 && field.records()[0].state != DebrisState::Resting; ++u) field.update(1.0f / 30.0f, {100, 100, 100});
+    DebrisRecord& rest = field.records()[0];
+    expect(rest.state == DebrisState::Resting, "the super brick comes to rest");
+    rest.colour = 0xff000000u;
+    rest.life = 4.0f;
+    field.animateSuper(0.5f, 0xff00ff00u);
+    const DebrisObject& object = field.superObjects()[0];
+    expect((rest.flags22 & 4) != 0, "0x2c504c: a resting super brick becomes pickable");
+    expect(((object.colour >> 8) & 0xff) == 255 && (object.colour & 0xff) == 0, "life 4: the mix (1 - 120 / 255) x 10 / 3 is clamped to 1");
+    const float spin = float(rest.phase) * 0.00392156886f * 6.2831855f + 0.5f * -3.14159274f;
+    expect(near(object.matrix[0], std::cos(spin), 1e-5f) && near(object.matrix[2], -std::sin(spin), 1e-5f), "the spin about y");
+    rest.life = 8.0f;
+    field.animateSuper(0.5f, 0xff00ff00u);
+    expect(((object.colour >> 8) & 0xff) == std::uint32_t(std::int32_t((1.0f - 240.0f / 255.0f) * 3.33333325f * 255.0f)),
+           "life 8: green = int(255 x (1 - 240 / 255) x 10 / 3)");
+
+    field.freeRecord(0);
+    expect(!field.superObjects()[0].enabled && field.objectOf(field.records()[0]) == nullptr, "the free path disables the object, clears the slot");
+    field.listFreeSuperObjects();
+    DebrisBurst again = burst;
+    again.super->value = 1;
+    field.burst(again, {}, floorAt(10.0f));
+    unsigned taken = 0;
+    for (const DebrisRecord& r : field.records())
+        if ((r.flags22 & 2) && r.state == DebrisState::Flying) {
+            ++taken;
+            expect(r.superObject == 0, "the next burst takes the first disabled SBDebris object");
+        }
+    expect(taken == 1, "a value of 1 gives one super brick");
+
+    GameRandom aimed(5);
+    DebrisField directed(aimed);
+    directed.loadSuperObjects(unitSuperObjects());
+    directed.listFreeSuperObjects();
+    DebrisBurst toward = burst;
+    toward.super->spawnDir = 90;
+    toward.super->spawnCone = 0.0f;
+    directed.burst(toward, {}, floorAt(10.0f));
+    const DebrisRecord& d = directed.records()[0];
+    expect(near(d.velocity[0], 0.1f, 1e-5f) && near(d.velocity[2], 0.0f, 1e-5f) && d.velocity[1] == 0.5f,
+           "SpawnDir 90 with cone 0: (sin, 0.5, cos) x 0.1 of the 64-step angle; y 0.5");
+}
+
+// Oracle A-1 of round 47 (servant, veh-smash-prop, two stepped loads, dt 0.033, A held; artifacts/oracle/r47-servant-out/x1.mem, x2.mem): the traffic
+// light bursts at update 18 (pool records 20..28), Generic_Tree_13 at update 49 (29..37), the van's contact at update 57 (38..43). Super bricks: records
+// 20..22 in slots 0..2 with SBDebris 0..2; 29..34 in slots 9..14 with SBDebris 3..8; 38 in slot 18 with SBDebris 9; record 39 takes slot 19 and 40..43 get
+// none. The tree's super bricks fly along SpawnDir 337: y velocity 0.45 after the burst update, x in -0.0916..-0.0073, z in 0.0477..0.1358, life 7.967.
+void superBricksOracle() {
+    GameRandom random(2024);
+    DebrisField field(random);
+    field.loadSuperObjects(unitSuperObjects());
+    const DebrisLineTest low = floorAt(-100.0f);
+    const auto burstWith = [&](std::optional<DebrisSuperBlock> block, unsigned count) {
+        field.listFreeSuperObjects();
+        DebrisBurst burst;
+        burst.position = {0, 30, 0};
+        burst.count = count;
+        burst.super = block;
+        const unsigned supers = field.burst(burst, {}, low);
+        field.update(0.033f, {100, 100, 100});
+        return supers;
+    };
+    DebrisSuperBlock light;
+    light.value = 3;
+    light.count = 9;
+    expect(burstWith(light, 9) == 3, "A-1 update 18: the traffic light (value 3) gives three super bricks");
+    for (int u = 19; u < 49; ++u) field.update(0.033f, {100, 100, 100});
+    DebrisSuperBlock tree;
+    tree.value = 6;
+    tree.count = 9;
+    tree.spawnDir = 337;
+    expect(burstWith(tree, 9) == 6, "A-1 update 49: the tree (kind 0x77, value 6) gives six");
+    for (int u = 50; u < 57; ++u) field.update(0.033f, {100, 100, 100});
+    DebrisSuperBlock van;
+    van.value = 1;
+    van.count = 6;
+    expect(burstWith(van, 6) == 1, "A-1 update 57: the van's contact (value 1) gives one");
+    const std::array<std::uint8_t, 24> superOf = {0, 1, 2, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 3, 4, 5, 6, 7, 8, 0xff, 0xff, 0xff, 9, 0xff, 0xff, 0xff, 0xff, 0xff};
+    for (unsigned i = 0; i < 24; ++i) {
+        const DebrisRecord& r = field.records()[i];
+        expect(r.superObject == superOf[i], "A-1: the SBDebris object of each record (slot table 0x58f630)");
+        expect(r.object == (i < 20 ? i : 0xff), "A-1: slots in record order, records 40..43 without one");
+    }
+    GameRandom again(2024);
+    DebrisField fresh(again);
+    fresh.loadSuperObjects(unitSuperObjects());
+    fresh.listFreeSuperObjects();
+    DebrisBurst burst;
+    burst.position = {0, 30, 0};
+    burst.count = 9;
+    burst.super = tree;
+    fresh.burst(burst, {}, low);
+    fresh.update(0.033f, {100, 100, 100});
+    for (unsigned i = 0; i < 6; ++i) {
+        const DebrisRecord& r = fresh.records()[i];
+        expect(r.velocity[1] == 0.45f && near(r.life, 7.967f, 1e-4f), "A-1: a SpawnDir super brick starts at y 0.5 per update, life 8");
+        expect(r.velocity[0] >= -0.0928f && r.velocity[0] <= 0.0072f && r.velocity[2] >= 0.0404f && r.velocity[2] <= 0.1404f,
+               "A-1: SpawnDir 337 through the 64-step angle (byte 55): x in (sin - 0.5) x 0.1 .. (sin + 0.5) x 0.1, z likewise with cos");
+    }
+}
+
 void oracleTraces() {
     replay(kCarRun, 17, "veh-smash-car");
     replay(kPropRun, 18, "veh-smash-prop");
@@ -314,6 +461,8 @@ int main() {
     wallPlane();
     props();
     whiteMaterial();
+    superBricks();
+    superBricksOracle();
     if (failures == 0) std::printf("debris: ok\n");
     return failures == 0 ? 0 : 1;
 }

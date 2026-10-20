@@ -36,14 +36,31 @@ inline constexpr float kDebrisTypeGravity = 1.0f;
 inline constexpr float kDebrisTypeBounce = 0.3f;
 inline constexpr float kDebrisTypeDamping = 0.0f;
 
-enum class DebrisState : std::uint8_t { Free = 0, Resting = 1, Flying = 2 };
+// States 3 (magnet) and 4 (collected) belong to the pickup of a super brick (runtime/debris_pickup.hpp); DebrisField::update leaves them alone.
+enum class DebrisState : std::uint8_t { Free = 0, Resting = 1, Flying = 2, Magnet = 3, Collected = 4 };
+
+// The super brick block (0x2cdca4, 0x22a048 for a vehicle contact) and the SBDebris objects (0x2b3c48: SBDebris01..SBDebris20 of charbits.blvl,
+// pickups of type 103 with SuperBuildValue 1).
+inline constexpr std::uint8_t kSuperDebrisKind = 103;   // 'g': block +4, record +0x1e
+inline constexpr unsigned kSuperDebrisObjectCount = 20;
+inline constexpr std::uint8_t kSuperDebrisUnitValue = 1;      // *0x3743f0 in the data image and the oracle
+inline constexpr std::uint8_t kSuperDebrisLargeValue = 0xff;  // *0x3743f1 in the data image and the oracle
+inline constexpr std::uint8_t kSuperDebrisPropCount = 9;      // 0x2cdca4: block +6
+inline constexpr std::uint8_t kSuperDebrisKindValue = 6;      // 0x2cdca4: the value of the kinds 0x55, 0x77, 0x8a, 0xd6 without SuperBuildValue
+inline constexpr std::int32_t kSuperDebrisNoSpawnDir = 999;   // 0x2c8278: the default of SpawnDir
+inline constexpr std::uint8_t kNoSuperDebrisObject = 0xff;
 
 struct DebrisRecord {
     DebrisVec3 position{};          // +0x00
     DebrisVec3 velocity{};          // +0x0c, units per update
     std::uint32_t colour = 0;       // +0x18, bytes r, g, b, a
     std::uint8_t object = 0xff;     // +0x1c: debris object slot, 0xff none
-    std::uint8_t flags22 = 0;       // +0x22: bit 0 random (spin mode 5), bit 1 super brick (0x2c8278), bit 2
+    std::uint8_t phase = 0;         // +0x1d: 1 for a brick; a super brick's spin phase (0x1998dc)
+    std::uint8_t kind = 0;          // +0x1e: kSuperDebrisKind for a super brick (0x2c8278)
+    std::uint16_t superValue = 0;   // +0x20: the value of a super brick (0x2c8310, strh)
+    std::uint8_t flags22 = 0;       // +0x22: bit 0 random (spin mode 5), bit 1 super brick (0x2c8278), bit 2 pickable (0x2c4f9c)
+    std::int16_t skip = 0;          // +0x30: the pickup test's skip counter (0 at the spawn, 0x1997c0)
+    std::uint8_t superObject = kNoSuperDebrisObject;  // the SBDebris object (0..19 for SBDebris01..20) in the slot table 0x58f630 entry of `object`
     float ground = 0;               // +0x38: the height the brick rests at
     float life = 0;                 // +0x3c: seconds
     DebrisState state = DebrisState::Free;  // +0x44
@@ -100,6 +117,23 @@ struct PickupSortKey {
 };
 std::array<std::uint8_t, kDebrisBurstLimit> choosePickupRecords(const PickupSortKey* keys, unsigned count);
 
+// The block of 0x2cdca4 / 0x179e4c {object, kind, value, count} that the colour block hands to 0x2c8278 at +0x14, with the parameters 0x2c8278
+// reads from the block's object: SpawnCone (float, 1.0), SpawnLocal (int, 0), SpawnDir (int degrees, 999 none) and the object's node matrix
+// (row major, translation in row 3).
+struct DebrisSuperBlock {
+    std::uint8_t kind = kSuperDebrisKind;
+    std::uint8_t value = 0;
+    std::uint8_t count = 0;
+    float spawnCone = 1.0f;
+    std::int32_t spawnLocal = 0;
+    std::int32_t spawnDir = kSuperDebrisNoSpawnDir;
+    std::array<float, 16> node{1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
+};
+
+// 0x2cdca4 for a destroyed object while 0x3743f2 is set: `superBuildValue` the integer SuperBuildValue of the object (0 none), `kind` the entity
+// kind byte +0x12. The value is SuperBuildValue's low byte, else 6 for the kinds 0x55, 0x77, 0x8a and 0xd6; none otherwise. Count 9.
+std::optional<DebrisSuperBlock> superDebrisBlock(std::int32_t superBuildValue, std::uint8_t kind);
+
 // The descriptor of 0x21e2e4 with mode 3 and the colour block of 0x229fb8 / 0x20c938.
 struct DebrisBurst {
     DebrisVec3 position{};                         // 0x21e2e4 adds 0.5 to y
@@ -110,6 +144,7 @@ struct DebrisBurst {
     float ratio = 0;                               // DebrisRatio; 0 picks the second colour with probability 1/2
     float spread = 1.0f;                           // s0 of 0x21e2e4 (1.0 for both callers)
     bool slow = false;                             // 0x37727e: entity word +0xc bit 22 (0x20c938)
+    std::optional<DebrisSuperBlock> super;         // colour block +0x14; 0x2c8278 is asked for every brick that found a debris slot
 };
 
 // STAND-IN VEH-S104: 0x3772a8 and 0x3772ac as the oracle held them (5.0 and 10.0 in the states veh-smash-car and veh-smash-prop; 0 in the data
@@ -121,6 +156,8 @@ struct DebrisSettings {
     float scale = 1.0f;          // 0x37728c (1.0 in the data image and in the oracle)
     float fadeNear = kDebrisFadeNearMeasured, fadeFar = kDebrisFadeFarMeasured;  // the alpha of a flying brick is (distance - near) / (far - near), clamped
     float rate = 30.0f;          // 0x23ca4c
+    std::uint8_t superUnit = kSuperDebrisUnitValue;    // *0x3743f0
+    std::uint8_t superLarge = kSuperDebrisLargeValue;  // *0x3743f1
 };
 
 class DebrisField {
@@ -131,25 +168,62 @@ public:
 
     DebrisSettings settings;
 
-    // 0x21e2e4 (mode 3) and 0x19913c. `wall` is the test of 0x22b108, `ground` the one of 0x21ab20.
-    void burst(const DebrisBurst& burst, const DebrisLineTest& wall, const DebrisLineTest& ground);
+    // 0x21e2e4 (mode 3) and 0x19913c. `wall` is the test of 0x22b108, `ground` the one of 0x21ab20. Returns the number of super bricks.
+    unsigned burst(const DebrisBurst& burst, const DebrisLineTest& wall, const DebrisLineTest& ground);
     // 0x180168 for the brick records and 0x28a4b0 for their objects, once per game update; `frameDelta` is 0x23602c, `camera` the position of
     // the camera node (0x22e1f4).
     void update(float frameDelta, const DebrisVec3& camera);
 
     const std::array<DebrisRecord, kDebrisRecordCount>& records() const { return records_; }
+    std::array<DebrisRecord, kDebrisRecordCount>& records() { return records_; }
     // Puts a recorded record (pool index kDebrisRecordFirst + index) into the field, with its debris object enabled.
     void setRecord(unsigned index, const DebrisRecord& record);
     const std::array<DebrisObject, kDebrisObjectCount>& objects() const { return objects_; }
+    std::array<DebrisObject, kDebrisObjectCount>& objects() { return objects_; }
+    // SBDebris01..SBDebris20; `superPresent` tells which of them the level has.
+    const std::array<DebrisObject, kSuperDebrisObjectCount>& superObjects() const { return superObjects_; }
+    std::array<DebrisObject, kSuperDebrisObjectCount>& superObjects() { return superObjects_; }
+    bool superPresent(unsigned index) const { return superValues_.at(index).has_value(); }
+    // The object the slot table 0x58f630 holds for the record's slot: its SBDebris object for a super brick, else Debris01..20; null without one.
+    DebrisObject* objectOf(const DebrisRecord& record);
+    // The free path of 0x180168 (0x180874..0x1808b4): state 0 and, for a brick with a slot, its object disabled and the slot entry cleared.
+    void freeRecord(unsigned index);
+
+    // 0x2b3c48: the SBDebris objects with their SuperBuildValue (none for a missing one); value superUnit goes to the table 0x515aa8, any other to
+    // 0x515b48 (*0x3743f1 takes the first such value while it is 0). All are disabled.
+    void loadSuperObjects(const std::array<std::optional<std::uint16_t>, kSuperDebrisObjectCount>& values);
+    // 0x2c51e4 (and the tail of 0x2cdca4): the lists 0x515be8 / 0x515c3c of the disabled objects of the two tables, in table order, cursor 0.
+    void listFreeSuperObjects();
+    // 0x2c4f9c for every super brick record with a slot (0x180c04..0x180c24, after the record's step): states 1 and 3 set +0x22 bit 2, spin the
+    // object about y by phase / 255 x 2 pi - pi x `clockSeconds` and mix its node colour from the record colour to `rainbow` (*0x3743f8) by
+    // min((1 - rate x life / 255) x 10 / 3, 1); state 4 sets the record colour.
+    void animateSuper(float clockSeconds, std::uint32_t rainbow);
     const std::array<std::array<float, 4>, kDebrisPlaneCount>& planes() const { return sharedRing_ ? sharedRing_->planes : ownRing_.planes; }
 
 private:
+    struct SuperList {
+        std::array<std::uint8_t, kSuperDebrisObjectCount> entries{};
+        std::uint8_t count = 0, next = 0;
+    };
     void release(DebrisRecord& record);
     void place(DebrisRecord& record);
+    bool slotFree(unsigned slot) const;
+    bool takeSuper(DebrisSuperBlock& block, DebrisRecord& record);
 
     GameRandom& random_;
     std::array<DebrisRecord, kDebrisRecordCount> records_{};
     std::array<DebrisObject, kDebrisObjectCount> objects_{};
+    std::array<std::uint8_t, kDebrisObjectCount> slotSuper_ = filledSlots();
+    std::array<DebrisObject, kSuperDebrisObjectCount> superObjects_{};
+    std::array<std::optional<std::uint16_t>, kSuperDebrisObjectCount> superValues_{};
+    std::array<std::uint8_t, kSuperDebrisObjectCount> unitTable_{}, largeTable_{};
+    std::uint8_t unitCount_ = 0, largeCount_ = 0;
+    SuperList unitList_, largeList_;
+    static std::array<std::uint8_t, kDebrisObjectCount> filledSlots() {
+        std::array<std::uint8_t, kDebrisObjectCount> slots{};
+        slots.fill(kNoSuperDebrisObject);
+        return slots;
+    }
     DebrisPlaneRing& ring() { return sharedRing_ ? *sharedRing_ : ownRing_; }
 
     DebrisPlaneRing ownRing_;

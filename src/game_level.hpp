@@ -226,7 +226,9 @@ private:
     void addObjectiveMapIcons(chase::frontend::MinimapView& view) const;
     void drawObjectiveArrows(const chase::render::Mat4& viewProjection, const chase::render::Mat4& viewToWorld);
     void vehicleImpact(std::size_t vehicleIndex, float speed, const chase::runtime::ContactOther& other, const chase::runtime::Vector3& point);
-    void vehicleBrickBurst(std::size_t vehicleIndex, const chase::runtime::Vector3& point);
+    void vehicleBrickBurst(std::size_t vehicleIndex, const chase::runtime::Vector3& point, int superBrickValue);
+    std::optional<chase::runtime::DebrisSuperBlock> destroyedSuperBlock(const std::optional<chase::runtime::DebrisSuperBlock>& block, const std::array<float, 16>& node);
+    std::optional<chase::runtime::DebrisSuperBlock> contactSuperBlock(std::size_t vehicleIndex, int value);
     void vehicleBreakBurst(std::size_t vehicleIndex);
     void vehicleDamageEffects(std::size_t vehicleIndex, const chase::runtime::DamageOutcome& outcome);
     void stepVehicleFlashes();

@@ -8,7 +8,8 @@ namespace game_effects {
 namespace assets = chase::assets;
 namespace runtime = chase::runtime;
 
-void LevelEffects::load(chase::render::Scene& scene, assets::FuseArchive& archive, runtime::GameRandom& random, runtime::DebrisPlaneRing& planes) {
+void LevelEffects::load(chase::render::Scene& scene, assets::FuseArchive& archive, const assets::ClassLookup& classOf, runtime::GameRandom& random,
+                        runtime::DebrisPlaneRing& planes) {
     field_.emplace(random, planes);
     instances_.assign(runtime::kDebrisObjectCount, -1);
     const assets::FuseEntry* entry = archive.find(kDebrisLevel);
@@ -30,6 +31,7 @@ void LevelEffects::load(chase::render::Scene& scene, assets::FuseArchive& archiv
             }
         }
     }
+    super_.load(scene, archive, level, classOf, *field_);
 }
 
 std::size_t LevelEffects::debrisInstances() const {
@@ -39,7 +41,9 @@ std::size_t LevelEffects::debrisInstances() const {
 }
 
 void LevelEffects::update(float frameDelta, const runtime::DebrisVec3& camera) {
-    if (field_) field_->update(frameDelta, camera);
+    if (!field_) return;
+    field_->update(frameDelta, camera);
+    super_.update(frameDelta, *field_);
 }
 
 void LevelEffects::apply(chase::render::Scene& scene) const {
@@ -54,6 +58,7 @@ void LevelEffects::apply(chase::render::Scene& scene) const {
         scene.setInstanceTint(instance, {float(object.colour & 0xff) / 255.0f, float((object.colour >> 8) & 0xff) / 255.0f,
                                          float((object.colour >> 16) & 0xff) / 255.0f});
     }
+    super_.apply(scene, *field_);
 }
 
 void LevelEffects::startSmoke(std::size_t vehicle, runtime::ParticleSystem& particles, unsigned definition, const runtime::ParticleVec3& position) {

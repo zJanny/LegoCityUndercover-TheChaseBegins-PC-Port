@@ -17,7 +17,7 @@ runtime::DebrisLineTest LevelSession::debrisLineStandIn() const {
     };
 }
 
-void LevelSession::vehicleBrickBurst(std::size_t vehicleIndex, const runtime::Vector3& point) {
+void LevelSession::vehicleBrickBurst(std::size_t vehicleIndex, const runtime::Vector3& point, int superBrickValue) {
     runtime::DebrisField* debris = effects.debris();
     if (!debris) return;
     const runtime::VehicleRecord& record = levelScripts.vehicles().records()[boardingRecords[vehicleIndex]];
@@ -25,7 +25,9 @@ void LevelSession::vehicleBrickBurst(std::size_t vehicleIndex, const runtime::Ve
     burst.position = point;
     burst.colour = record.debrisColour;
     burst.secondColour = record.debrisColour2;
-    debris->burst(burst, debrisLineStandIn(), debrisLineStandIn());
+    burst.super = contactSuperBlock(vehicleIndex, superBrickValue);
+    const unsigned supers = debris->burst(burst, debrisLineStandIn(), debrisLineStandIn());
+    std::cout << "vehicle " << record.instance << ": " << supers << " super bricks in the brick burst\n";
 }
 
 void LevelSession::vehicleBreakBurst(std::size_t vehicleIndex) {
@@ -75,11 +77,15 @@ void LevelSession::propDestroyedEffects(const runtime::SmashedProp& prop) {
     const runtime::DebrisVec3 centre = runtime::propEffectCentre(prop.prop.entityBox.centre, prop.prop.node);
     if (e.explosionParticle > 0 && std::size_t(e.explosionParticle) < particles.system().defs().defs.size())
         particles.system().start(unsigned(e.explosionParticle), {centre, std::nullopt, 0});
-    if (e.spawnDebris && effects.debris())
-        effects.debris()->burst(runtime::propDebrisBurst(e, runtime::propDebrisPosition(prop.prop.entityBox.centre, prop.prop.entityBox.half, prop.prop.node)),
-                                debrisLineStandIn(), debrisLineStandIn());
-    std::cout << "prop " << prop.instance << ": explosion particle " << e.explosionParticle << ", " << (e.spawnDebris ? e.debrisAmount : 0u)
-              << " bricks (stand-in VEH-S102: no screen shake, flash light, sound or Respawn)\n";
+    std::optional<runtime::DebrisBurst> burst;
+    unsigned supers = 0;
+    if (e.spawnDebris && effects.debris()) {
+        burst = runtime::propDebrisBurst(e, runtime::propDebrisPosition(prop.prop.entityBox.centre, prop.prop.entityBox.half, prop.prop.node),
+                                         destroyedSuperBlock(e.superBlock, prop.prop.node));
+        supers = effects.debris()->burst(*burst, debrisLineStandIn(), debrisLineStandIn());
+    }
+    std::cout << "prop " << prop.instance << ": explosion particle " << e.explosionParticle << ", " << (burst ? burst->count : 0u) << " bricks"
+              << (burst && burst->super ? ", " + std::to_string(supers) + " super bricks of value " + std::to_string(burst->super->value) : std::string()) << " (stand-in VEH-S102: no screen shake, flash light, sound or Respawn)\n";
 }
 
 }

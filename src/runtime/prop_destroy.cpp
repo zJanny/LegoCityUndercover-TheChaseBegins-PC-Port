@@ -1,4 +1,5 @@
 #include "runtime/prop_destroy.hpp"
+#include "assets/object_classes.hpp"
 #include "runtime/level_start.hpp"
 
 #include <cstring>
@@ -49,6 +50,12 @@ PropDestroyEffects propDestroyEffects(const assets::LevelObject& object, const a
     colourValue(param(object, cls, "DebrisColour2"), effects.secondColour);
     effects.ratio = floatValue(param(object, cls, "DebrisRatio"), 0.0f);
     effects.respawn = intValue(param(object, cls, "Respawn"), 0) != 0;
+    effects.superBlock = superDebrisBlock(intValue(param(object, cls, "SuperBuildValue"), 0), assets::objectKind(object, cls));
+    if (effects.superBlock) {
+        effects.superBlock->spawnCone = floatValue(param(object, cls, "SpawnCone"), 1.0f);
+        effects.superBlock->spawnLocal = intValue(param(object, cls, "SpawnLocal"), 0);
+        effects.superBlock->spawnDir = intValue(param(object, cls, "SpawnDir"), kSuperDebrisNoSpawnDir);
+    }
     return effects;
 }
 
@@ -64,10 +71,12 @@ DebrisVec3 propDebrisPosition(const std::array<float, 3>& boxCentre, const std::
     return out;
 }
 
-DebrisBurst propDebrisBurst(const PropDestroyEffects& effects, const DebrisVec3& position) {
+DebrisBurst propDebrisBurst(const PropDestroyEffects& effects, const DebrisVec3& position, const std::optional<DebrisSuperBlock>& super) {
     DebrisBurst burst;
     burst.position = position;
     burst.count = effects.debrisAmount;
+    burst.super = super;
+    if (super && super->count != 0) burst.count = super->count;
     burst.colour = effects.colour;
     burst.secondColour = effects.secondColour;
     burst.ratio = effects.ratio;

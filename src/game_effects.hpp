@@ -2,6 +2,7 @@
 // The brick debris and the smoke emitters of hits in chase-game (docs/re/vehicles-damage.md): runtime::DebrisField drawn with the level objects
 // Debris01..Debris20 of levels/charbits.blvl, and the vehicle smoke emitters of runtime::ParticleSystem.
 #include "assets/assets.hpp"
+#include "game_debris_super.hpp"
 #include "render/scene.hpp"
 #include "runtime/debris.hpp"
 #include "runtime/particles.hpp"
@@ -19,10 +20,12 @@ constexpr const char* kDebrisLevel = "levels/charbits.blvl";
 
 class LevelEffects {
 public:
-    // One hidden scene instance per debris object, with the model of its meshname.
-    void load(chase::render::Scene& scene, chase::assets::FuseArchive& archive, chase::runtime::GameRandom& random, chase::runtime::DebrisPlaneRing& planes);
+    // One hidden scene instance per debris object, with the model of its meshname, and the SBDebris objects (game_debris_super.hpp).
+    void load(chase::render::Scene& scene, chase::assets::FuseArchive& archive, const chase::assets::ClassLookup& classOf, chase::runtime::GameRandom& random,
+              chase::runtime::DebrisPlaneRing& planes);
     chase::runtime::DebrisField* debris() { return field_ ? &*field_ : nullptr; }
     std::size_t debrisInstances() const;
+    std::size_t superDebrisInstances() const { return super_.instances(); }
     void update(float frameDelta, const chase::runtime::DebrisVec3& camera);
     // STAND-IN VEH-S101: a debris object is drawn while it is enabled and its alpha is not 0, without the alpha itself; the spin clip is not played.
     void apply(chase::render::Scene& scene) const;
@@ -35,6 +38,7 @@ public:
 
 private:
     std::optional<chase::runtime::DebrisField> field_;
+    game_debris_super::SuperDebrisObjects super_;
     std::vector<std::ptrdiff_t> instances_;
     std::map<std::size_t, std::uint32_t> smoke_;
 };

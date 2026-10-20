@@ -14,6 +14,7 @@ Continues [studs.md](studs.md): the stud bursts 0x21e2e4 (modes 0..2), their spa
 ## 2026-10-18T19:57:26+02:00 — Dropped studs: no stud is released when a car destroys a traffic light or a wobbly prop; the callers of the stud spawners (llvm-objdump and REA of artifacts/game/game.arm.elf; own Azahar GDB runs, no RPC, port 24732, state `veh-smash-prop`, fixed dt 0.033)
 
 Corrected by [studs.md §2026-10-19T14:36:25](#ts-20261019-143625): 0x1aad90 is the build-it state change, not a car break; the car break calls no stud function.
+Corrected by [debris.md §2026-10-20T22:07:51](debris.md#ts-20261020-220751): the tree's nine bricks hold six super bricks (oracle A-1), the traffic light's three.
 
 Evidence: `ctrace 0x21e2e4,0x2149ac,0x23a6b0,0x22ca88,0x2bc370,0x23cd80,0x229fb8,0x23aebc,0x2aa5c8,0x2a3390,0x1bc38c,0x19913c` over 160 updates with A held (stops: the traffic light destroyed in frame 19, the tree in frame 50, the van's own contact bursts in frames 58 and 159); static reading of 0x23a6b0, 0x2149ac, 0x22ca88, 0x21e2e4, 0x2bc370, 0x2a3390, 0x1bc38c, 0x1f8948, 0x2aa5c8, 0x2b7894, 0x15e408; the class files and the level data (`StudValue`, `WobbleStudValue`, `SpawnDir`). The raw files stay in artifacts/oracle/r23B-out.
 

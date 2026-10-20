@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 884 open items and stand-ins, 159 linked to game usage, 725 with unknown reach.
+Items: 884 open items and stand-ins, 158 linked to game usage, 726 with unknown reach.
 
 ## Top 50 overall
 
@@ -63,7 +63,7 @@ Items: 884 open items and stand-ins, 159 linked to game usage, 725 with unknown 
 | 27 | [SCRIPT-281](features/script-system-natives-world.md?display=source#L47) | 271 | 0 | 6 | 1 | 1 stand-in | `effectfadeobject` | EffectFadeObject: the third node property (0x23f540, flag bit 2), the particle node case, the clock of ... |
 | 28 | [SCRIPT-S232](features/script-system-natives-world.md?display=source#L30) | 271 | 0 | 6 | 0 | 1 stand-in | `effectfadeobject` | EffectFadeObject drives `Scene::setInstanceFade` and the instance visibility of placed objects (and their ... |
 | 29 | [SCRIPT-S11](features/script-system-dcam.md?display=source#L19) | 256 | 0 | 8 | 0 | 1 stand-in | `startdcamtrack` | `StartDCamTrack` looks at the placement position of the object (the live position for the player), not at its ... |
-| 30 | [SCRIPT-S20](features/script-system-natives-state.md?display=source#L19) | 248 | 0 | 7 | 0 | 10 stand-in | `addstuds`, `disablesuperbuiltitsave`, `enablestudsbygroup`, `enablesuperbricks` +6 | Ten batch 27 natives (UnlockAbility, LockAbility, UnlockScanner, EnableSuperBricks, SetParachuteDeployHeight ... |
+| 30 | [SCRIPT-S20](features/script-system-natives-state.md?display=source#L19) | 248 | 0 | 7 | 0 | 10 stand-in | `addstuds`, `disablesuperbuiltitsave`, `enablestudsbygroup`, `enablesuperbricks` +6 | Nine batch 27 natives (UnlockAbility, LockAbility, UnlockScanner, SetParachuteDeployHeight ... |
 | 31 | [SCRIPT-351](features/script-system-natives-animation.md?display=source#L36) | 236 | 0 | 8 | 1 | 1 stand-in | `loadanimation` | What decides the load time of LoadAnimation (0x23e6e4 request, load record state byte +8 = 2 in 0x17e588) ... |
 | 32 | [COLL-2](features/collision.md?display=source#L29) | 0 | 183 | 7 | 1 | - | `props/parkour_skydive`, `props/prop_prop` | Only the classes with a recovered constructor rule register (props, doors, dummycollision, vehicles) ... |
 | 33 | [SCRIPT-S18](features/script-system-natives-state.md?display=source#L18) | 175 | 0 | 7 | 0 | 2 stand-in | `resetobject`, `skiptofinalstate` | The six flag natives and ResetObject / SkipToFinalState store their value or message by instance name without ... |
@@ -137,7 +137,7 @@ Items: 884 open items and stand-ins, 159 linked to game usage, 725 with unknown 
 
 ## Scripts and missions
 
-96 of 198 items linked.
+95 of 198 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -245,7 +245,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [script-system-missions.md](features/script-system-missions.md): SCRIPT-220 (+1), SCRIPT-230 (+1), SCRIPT-284 (+1), SCRIPT-115, SCRIPT-142, SCRIPT-221, SCRIPT-S141, SCRIPT-S236, SCRIPT-S237, SCRIPT-S243, SCRIPT-S255
 - [script-system-natives-animation.md](features/script-system-natives-animation.md): SCRIPT-324 (+3), SCRIPT-352 (+2), SCRIPT-272 (+1), SCRIPT-325 (+1), SCRIPT-334 (+1), SCRIPT-S284 (+1), SCRIPT-344, SCRIPT-353, SCRIPT-S110, SCRIPT-S262, SCRIPT-S266, SCRIPT-S267
 - [script-system-natives-party.md](features/script-system-natives-party.md): SCRIPT-338 (+2), SCRIPT-340 (+1)
-- [script-system-natives-state.md](features/script-system-natives-state.md): SCRIPT-335 (+1), SCRIPT-56 (+1), SCRIPT-S97
+- [script-system-natives-state.md](features/script-system-natives-state.md): SCRIPT-335 (+1), SCRIPT-56 (+1), SCRIPT-64 (+1), SCRIPT-S97
 - [script-system-natives-world.md](features/script-system-natives-world.md): SCRIPT-279 (+1)
 - [script-system-natives.md](features/script-system-natives.md): SCRIPT-43 (+18), SCRIPT-44 (+16), SCRIPT-45 (+14), SCRIPT-7 (+12), SCRIPT-13 (+1), SCRIPT-150 (+1)
 - [script-system-triggers.md](features/script-system-triggers.md): SCRIPT-76 (+11), SCRIPT-51 (+3), SCRIPT-77 (+1), SCRIPT-78 (+1), SCRIPT-S15, SCRIPT-S28, SCRIPT-S30, SCRIPT-S8
@@ -254,7 +254,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [studs.md](features/studs.md): STUD-22 (+2), STUD-1 (+1), STUD-13 (+1), STUD-16 (+1), STUD-23 (+1), STUD-24 (+1), STUD-26 (+1), STUD-25, STUD-27, STUD-3, STUD-5, STUD-6, STUD-8, STUD-S1, STUD-S12, STUD-S13, STUD-S14, STUD-S15, STUD-S3, STUD-S5, STUD-S6, STUD-S7, STUD-S8, STUD-S9
 - [ui-menus.md](features/ui-menus.md): UI-2 (+2), UI-1 (+1), UI-19 (+1), UI-3 (+1), UI-4 (+1), UI-5 (+1), UI-7 (+1), UI-9 (+1), UI-10, UI-11, UI-12, UI-13, UI-14, UI-15, UI-16, UI-18, UI-6, UI-8, UI-S1, UI-S2, UI-S3, UI-S4, UI-S5, UI-S6, UI-S7
 - [vehicles-boarding.md](features/vehicles-boarding.md): VEH-19 (+5), VEH-80 (+2), HUD-50 (+1), HUD-S50, HUD-S51, VEH-20, VEH-S10, VEH-S70, VEH-S8, VEH-S9
-- [vehicles-damage.md](features/vehicles-damage.md): VEH-120 (+3), VEH-125 (+3), VEH-113 (+2), VEH-115 (+2), VEH-123 (+2), VEH-124 (+2), VEH-121 (+1), VEH-122, VEH-128, VEH-S100, VEH-S101, VEH-S103, VEH-S104, VEH-S90, VEH-S93, VEH-S96, VEH-S97, VEH-S98, VEH-S99
+- [vehicles-damage.md](features/vehicles-damage.md): VEH-120 (+3), VEH-125 (+3), VEH-113 (+2), VEH-115 (+2), VEH-124 (+2), VEH-121 (+1), VEH-123 (+1), VEH-122, VEH-128, VEH-S100, VEH-S101, VEH-S104, VEH-S109, VEH-S90, VEH-S93, VEH-S96, VEH-S97, VEH-S98, VEH-S99
 - [vehicles-physics-collision.md](features/vehicles-physics-collision.md): VEH-91 (+26), VEH-70 (+2), VEH-100 (+1), VEH-101 (+1), VEH-102 (+1), VEH-S52, VEH-S60, VEH-S62, VEH-S81, VEH-S82, VEH-S86, VEH-S87
 - [vehicles-physics.md](features/vehicles-physics.md): VEH-6 (+23), VEH-51 (+3), VEH-42 (+2), VEH-41 (+1), VEH-50 (+1), VEH-81 (+1), VEH-54, VEH-55, VEH-S30, VEH-S31, VEH-S32, VEH-S40, VEH-S41, VEH-S43, VEH-S7
 - [vehicles-prop-smash.md](features/vehicles-prop-smash.md): VEH-126 (+1), VEH-127 (+1), VEH-130 (+1), VEH-136 (+1), VEH-106, VEH-131, VEH-134, VEH-135, VEH-S102, VEH-S105, VEH-S107, VEH-S108, VEH-S89

@@ -253,8 +253,8 @@ void LevelSession::vehicleImpact(std::size_t vehicleIndex, float speed, const ru
     const runtime::ContactReply reply = runtime::vehicleContactReply(record, speed, other);
     if (reply.brickBurst) {
         std::cout << "vehicle " << record.instance << ": contact at " << speed << " m/s, brick burst (super brick value " << reply.superBrickValue
-                  << " not used: VEH-S103) at update " << updatesForLog << '\n';
-        vehicleBrickBurst(vehicleIndex, point);
+                  << ") at update " << updatesForLog << '\n';
+        vehicleBrickBurst(vehicleIndex, point, reply.superBrickValue);
     }
     if (reply.damage) applyVehicleDamage(vehicleIndex, *reply.damage, speed);
 }

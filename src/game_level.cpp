@@ -299,8 +299,8 @@ LevelSession::LevelSession(const Shared& sharedState)
     propParts.loadBuildits(scene, archive, buildits, placedObjects, placedSceneIndex);
     loadSuperBuildits();
     loadFastTravel();
-    effects.load(scene, archive, particles.random(), studDrops.planes());
-    std::cout << "debris objects: " << effects.debrisInstances() << '\n';
+    effects.load(scene, archive, classOf, particles.random(), studDrops.planes());
+    std::cout << "debris objects: " << effects.debrisInstances() << ", super debris objects: " << effects.superDebrisInstances() << '\n';
     carry.load(archive, level, classOf);
     if (player) game_carry::applyClipTimings(carry, *player);
     std::cout << "carry objects: " << carry.objects().size() << ", carry targets: " << carry.targets().size() << '\n';

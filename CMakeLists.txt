@@ -122,6 +122,7 @@ if(EPOXY_FOUND)
     add_executable(chase-game src/game.cpp src/game_options.cpp src/game_player.cpp src/game_carry.cpp src/game_scanner.cpp src/game_doors.cpp src/game_prop_parts.cpp src/game_level.cpp src/game_pause_menu.cpp src/game_level_update.cpp src/game_vehicle.cpp src/game_vehicle_break.cpp src/game_vehicle_place.cpp src/game_vehicle_camera.cpp src/game_level_rooms.cpp src/game_cutscene.cpp src/game_level_cutscene.cpp src/game_characters.cpp src/game_pedestrians.cpp src/game_pedestrian_fade.cpp src/game_pedestrian_rooms.cpp src/game_particles.cpp src/game_level_natives.cpp src/game_detective.cpp src/game_use_spot.cpp src/game_objective_markers.cpp src/game_hand_items.cpp src/game_effects.cpp src/game_vehicle_effects.cpp src/game_zipline.cpp src/game_brick_grab.cpp src/game_climb_bar.cpp src/game_acrobat_pole.cpp src/game_pole.cpp src/game_ladder.cpp src/game_animals.cpp src/game_object_visibility.cpp src/game_nested_props.cpp src/game_super_buildit.cpp src/game_fast_travel.cpp)
     target_sources(chase-game PRIVATE src/game_pedestrian_blocking.cpp)
     target_sources(chase-game PRIVATE src/game_props_destructible.cpp src/game_prop_destroy.cpp src/game_character_death.cpp src/game_fall_apart.cpp src/game_stud_drops.cpp src/game_super_bricks.cpp)
+    target_sources(chase-game PRIVATE src/game_debris_super.cpp)
     target_sources(chase-game PRIVATE src/game_attack.cpp src/game_screen_fade.cpp src/game_screen_shake.cpp src/game_save.cpp)
     target_link_libraries(chase-game PRIVATE chase_render chase_runtime chase_input chase_audio chase_frontend_movie chase_save_progress chase_save_tables)
     target_compile_options(chase-game PRIVATE -Wall -Wextra -Wpedantic)
@@ -1456,7 +1457,9 @@ if(BUILD_TESTING)
       PASS_REGULAR_EXPRESSION "heart lost \\(type 6, 0 m/s\\), 0 left, destroyed\nvehicle 1-1_police_car: broken at update 1965.*back with 5 hearts at update 2027")
     # The seated police car drives into the bus shelter (a wobbly prop with a box) 25 m from the oracle's phone box pass: the vehicle pass of the original sends
     # the props damage 100 and the prop is destroyed (docs/re/vehicles-physics-props.md, entry of the smash). The update number is the port's, not an oracle value.
-    # The destroyed shelter starts its ExplosionParticleDef and bursts its DebrisAmount bricks (level data; docs/re/debris.md).
+    # The destroyed shelter starts its ExplosionParticleDef and bursts its bricks (level data; docs/re/debris.md): nine with super bricks, as 0x2b3c48 sets
+    # 0x3743f2 at the level load and 0x2cdca4 gives the wobbly kind 0x77 the value 6 (llvm-objdump, docs/re/debris.md, entry of round 47); the contact at
+    # 11.3 m/s before it has the value 1 (0x179e3c..0x179e64).
     add_test(NAME game-vehicle-smash COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
@@ -1464,7 +1467,7 @@ if(BUILD_TESTING)
       --call-script 1-1_VanBreakdown --call-script 1-1_Get_Car --start "886.0289 17.8243 1118.6516"
       --script "0 0 1500;0 0 3 X;0 0 330;at 854.43 17.1 1087.36 134.7;0 0 60 A;0 0 3 X;0 0 30")
     set_tests_properties(game-vehicle-smash PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
-      PASS_REGULAR_EXPRESSION "prop Bus_Shelter_01: smashed by 1-1_police_car at update 1886\nprop Bus_Shelter_01: explosion particle 10, 6 bricks")
+      PASS_REGULAR_EXPRESSION "vehicle 1-1_Police_Car: 1 super bricks in the brick burst\n.*prop Bus_Shelter_01: smashed by 1-1_police_car at update 1886\nprop Bus_Shelter_01: explosion particle 10, 9 bricks, 6 super bricks of value 6")
     # Mission 1-1 from the first waypoint to 1-1_MissionEnd in one run (docs/re/scripts-missions.md, entry of the first end-to-end run). The dev steps "at X Y Z"
     # stand in for the walks between the stops: onto the shop waypoint, the police car, the van waypoint, the build-it, the van, the donut box and the target;
     # one moves the seated van next to 1-1_Waypoint_05 instead of the drive there (as in game-van-escort). Provenance of the positions: waypoint, build-it and

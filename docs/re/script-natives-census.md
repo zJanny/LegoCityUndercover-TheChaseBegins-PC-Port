@@ -228,7 +228,7 @@ This file has no dated entries: the table is edited in place. When a native is r
 | CharacterShop | 0x1cd8e4 | 1 | 1 / 0 / 0 / 0 | 1 | C | 39 |  |
 | CharSetSkydiveMode | 0x1da6e4 | 2 | 1 / 0 / 0 / 0 | 1 | stand-in | 35 | state 129 / 1 and 0x376910 value recorded (SCRIPT-S277, SCRIPT-338): [script-natives-party.md §2026-10-19T15:53:02](script-natives-party.md#ts-20261019-155302) |
 | DisableIcon | 0x1b2414 | 2 | 1 / 1 / 0 / 0 | 1 | stand-in | 31 | records its call (SCRIPT-S27): [objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919) |
-| EnableSuperBricks | 0x27bc08 | 1 | 1 / 1 / 0 / 0 | 1 | A | 27 | handled as stand-in (SCRIPT-S20); gates debris bricks only (VEH-123), not the placed pickups (STUD-16) |
+| EnableSuperBricks | 0x27bc08 | 1 | 1 / 1 / 0 / 0 | 1 | done | 27 | exact: byte 0x3743f2, read by the debris super bricks ([debris.md §2026-10-20T22:07:51](debris.md#ts-20261020-220751)); not by the placed pickups (STUD-16) |
 | FireBeamWeapon | 0x1d9cb4 | 4 | 1 / 0 / 0 / 0 | 1 | stand-in | 35 | beam arguments recorded (SCRIPT-S277, SCRIPT-338): [script-natives-party.md §2026-10-19T15:53:02](script-natives-party.md#ts-20261019-155302) |
 | GetCharacterUnlocked | 0x29e2c0 | 2 | 1 / 1 / 0 / 0 | 1 | A | 27 | handled, exact (batch 27 entry) |
 | getlanguage | 0x1b241c | 1 | 1 / 1 / 0 / 0 | 1 | A | 27 | handled as stand-in (SCRIPT-S22) |

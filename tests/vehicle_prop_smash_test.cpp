@@ -146,11 +146,21 @@ void realOtherClasses(const assets::Level& level, const std::vector<assets::Obje
     smasher.load(level, classOf, candidates);
     const assets::PlacedObjectState untouched;
     std::map<std::string, int> firstFrame;
+    std::map<std::string, std::optional<DebrisSuperBlock>> superBlock;
     for (const Recorded& recorded : kCarRows) {
         car.node = recorded.node;
         for (const SmashedProp& smashed : smasher.smash(car, untouched))
-            if (!firstFrame.count(smashed.instance)) firstFrame[smashed.instance] = recorded.row + 3;
+            if (!firstFrame.count(smashed.instance)) {
+                firstFrame[smashed.instance] = recorded.row + 3;
+                superBlock[smashed.instance] = smashed.effects.superBlock;
+            }
     }
+    // 0x2cdca4 (llvm-objdump, docs/re/debris.md entry of round 47): the class SuperBuildValue 3.0 of props/prop_trafficlight; the wobbly kind 0x77 has
+    // none, so 6, with the instance's SpawnDir 337 (docs/re/studs-drops.md) that 0x2c8278 reads.
+    const auto& light = superBlock["Trafficlight31"];
+    expect(light && light->value == 3 && light->count == 9 && light->spawnDir == kSuperDebrisNoSpawnDir, "Trafficlight31: super brick value 3, nine bricks");
+    const auto& tree = superBlock["Generic_Tree_13"];
+    expect(tree && tree->value == 6 && tree->count == 9 && tree->spawnDir == 337, "Generic_Tree_13: kind 0x77 value 6, SpawnDir 337");
     expect(firstFrame.count("Trafficlight31") && firstFrame["Trafficlight31"] == 19,
            "Trafficlight31 (props/prop_trafficlight, box entry) is smashed in the update the oracle's 0x23cd80 runs in: frame 19", double(firstFrame["Trafficlight31"]));
     expect(firstFrame.count("Generic_Tree_13") && firstFrame["Generic_Tree_13"] == 50,

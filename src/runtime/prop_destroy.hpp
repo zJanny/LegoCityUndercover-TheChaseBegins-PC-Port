@@ -8,6 +8,7 @@
 
 #include <array>
 #include <cstdint>
+#include <optional>
 
 namespace chase::runtime {
 
@@ -20,6 +21,9 @@ struct PropDestroyEffects {
     float ratio = 0;              // DebrisRatio
     bool respawn = false;         // Respawn: 0x239898 queues the entity for its room (not ported)
     std::uint16_t sound = 0;      // the sound id the destroy requests through 0x23ae84 / 0x23fa54 (ATTR_SFX_DESTROYED, 29 for the default handler); 0 none
+    // The super brick block 0x2cdca4 makes while 0x3743f2 is set (SuperBuildValue, the entity kind) with SpawnCone, SpawnLocal and SpawnDir; the node
+    // matrix is the caller's.
+    std::optional<DebrisSuperBlock> superBlock;
 };
 
 // The default handler 0x163f00 (kinds 64, 132) plays this sound (halfword 0x377160 + 6) and, when the class has no ExplosionParticleDef, starts
@@ -35,7 +39,8 @@ PropDestroyEffects propDestroyEffects(const assets::LevelObject& object, const a
 DebrisVec3 propEffectCentre(const std::array<float, 3>& boxCentre, const std::array<float, 16>& node);
 // 0x23aebc with its fifth argument 1: that centre minus the box half extent y (entity +0x70).
 DebrisVec3 propDebrisPosition(const std::array<float, 3>& boxCentre, const std::array<float, 3>& boxHalf, const std::array<float, 16>& node);
-// 0x20c938 for a prop: the burst of `DebrisAmount` bricks in the prop's colours (spread 1.0, no direction).
-DebrisBurst propDebrisBurst(const PropDestroyEffects& effects, const DebrisVec3& position);
+// 0x20c938 for a prop: the burst of `DebrisAmount` bricks in the prop's colours (spread 1.0, no direction); with a super brick block (0x2cdca4
+// answered) the block goes to the colour block's +0x14 and its count (9) replaces the amount.
+DebrisBurst propDebrisBurst(const PropDestroyEffects& effects, const DebrisVec3& position, const std::optional<DebrisSuperBlock>& super = std::nullopt);
 
 }

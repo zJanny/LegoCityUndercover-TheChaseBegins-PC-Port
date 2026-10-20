@@ -6,11 +6,11 @@ Wobbly destructible props (`leprops/leprop_wobblydestructible`: hit message, hea
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-19T13:12:46+02:00. The wobbly destructible props take hits from any sender (the punch of Chase, health, bricks, destroy, `TriggerObject`) and the trampolines bounce Chase (LEVOBJ-86 closed, gaps LEVOBJ-87..92).
+IN_PROGRESS, updated 2026-10-20T22:11:34+02:00. The wobbly destructible props take hits from any sender (the punch of Chase, health, bricks, destroy, `TriggerObject`) and the trampolines bounce Chase (LEVOBJ-86 closed, gaps LEVOBJ-87..92).
 
 ## 3. Verified behaviour
 
-- Wobbly props take the hit message from any sender, lose health and run the destroy chain with bricks; CTest `prop-wobbly`, `prop-wobbly-real-data`, `game-script-wobbly-table`.
+- Wobbly props take the hit message from any sender, lose health and run the destroy chain with bricks; CTest `prop-wobbly`, `prop-wobbly-real-data`, `game-script-wobbly-table`. The destroy bursts nine bricks with six super bricks (kind 0x77), the wobble of a hit bricks without super bricks (0x2bc370 passes no block), as in the oracle: [debris.md §2026-10-20T22:07:51](../../re/debris.md#ts-20261020-220751).
 - Bouncers take message 15 and launch Chase with the take-off speed of the pad; CTest `prop-bouncer`, `prop-bouncer-real-data`, `game-script-bounce`.
 - The built trampoline frame blocks a walk from outside only (wall side test of placed objects); CTest `prop-wall-side`, `prop-wall-side-real-data`.
 
