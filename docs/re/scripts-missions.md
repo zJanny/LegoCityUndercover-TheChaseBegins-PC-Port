@@ -6,7 +6,7 @@ What the scripts of one mission call, which natives and trigger events the port 
 
 - Mission scripts are started by waypoint objects, not by the trigger pass: the class update 0x17acbc starts the thread of the `TriggerScript` parameter (component +0x64) at 0x17b03c once the fade-out state 3 is reached; the first script of a mission is the one named by `<mission>_Waypoint_01`. [§2026-10-14T22:48:25](#ts-20261014-224825), [§2026-10-14T21:44:29](#ts-20261014-214429)
 - Waypoint timing measured: a hit at horizontal distance below the bound radius 1 sets state 2; the thread starts exactly 14 updates later (FadeScaleOutTime 0.4 needs 13 more); the player is frozen during that time when `TakePlayerControl` is set. A disable of an AutoTrigger waypoint is ignored. [§2026-10-14T22:48:25](#ts-20261014-224825)
-- Mission 1-2 in the original: `1-2_MissionStart` runs its natives in a fixed order (title camera 153 updates, then Wait until update 331); the port is one update later at both points. [§2026-10-14T21:39:21](#ts-20261014-213921)
+- Mission 1-2 in the original: `1-2_MissionStart` runs its natives in a fixed order (title camera 153 updates, then Wait until update 331); the port matches at both points (the earlier one-update lag came from the scratch harness, [§2026-10-20T09:22](scripts-runtime.md#ts-20261020-092238)). [§2026-10-14T21:39:21](#ts-20261014-213921)
 - The 13 natives of mission 1-2 without a handler and the 12 class-driven ObjectTriggered events are listed in the entry; `HouseArrival` (3388757305) and `Spawn_Doorlock` (3035472981) are the `TriggerScript` values of two waypoints. [§2026-10-14T21:44:29](#ts-20261014-214429)
 - lvl_01 startup runs the scripts for the current `StoryProgress` (1 starts `1-1_MissionStart`, 2 starts `1-2_MissionAvailable`); the new-game start is `movie 01_GameIntro`, cutscene `1_1_a`, then `1-1_MissionStart`. [§2026-10-14T23:52:14](#ts-20261014-235214), [§2026-10-15T12:41:40](#ts-20261015-124140)
 - Mission 1-1 runs end to end in `chase-game` in the original's step order (11 steps, StoryProgress 2 after 5831 updates), with teleports standing in for walks; `1-1_Deliver_Donuts` only fires after `1-1_Carry_Object_Tutorial` has ended. [§2026-10-15T12:41:40](#ts-20261015-124140) The user played it end to end in real play on 2026-10-18 [§2026-10-18T10:37:46](#ts-20261018-103746).
@@ -19,6 +19,7 @@ What the scripts of one mission call, which natives and trigger events the port 
 <a id="ts-20261014-213921"></a>
 
 ## 2026-10-14T21:39:21+02:00 — Mission 1-2 (the dog Pringles): natives and trigger events of the whole mission, order and call counts in the original during its first 330 updates (C++ level loader dump, `chase-game`, Azahar GDB trace of state `mission-1-2-start`, no RPC)
+Corrected by [scripts-runtime.md §2026-10-20T09:22:38](scripts-runtime.md#ts-20261020-092238): the one-update lag came from the scratch harness, which updated the director after the runner; the port already matched at 153 and 305.
 
 ### Method
 

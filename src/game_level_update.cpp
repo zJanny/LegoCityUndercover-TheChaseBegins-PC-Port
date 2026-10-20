@@ -2,6 +2,7 @@
 #include "game_level.hpp"
 #include "runtime/follow_camera.hpp"
 #include "runtime/player_intent.hpp"
+#include "runtime/update_order.hpp"
 #include "runtime/script_placement.hpp"
 #include <cmath>
 #include <iostream>
@@ -251,9 +252,8 @@ void LevelSession::updateFollowCamera(float dt) {
     }
 }
 
-// One update of the game: the script runner runs before the player (its place against the other updates is STAND-IN SCRIPT-S281),
-// the player reads the pad and the camera yaw, then the camera moves
-// (the heading of the recorded traces is reproduced with the yaw from before the camera step).
+// One update of the game. The first part follows runtime::updatePhases() (docs/re/scripts-runtime.md); the parts without a phase
+// run after it in a fixed order (STAND-IN SCRIPT-S284). The heading of the recorded traces is reproduced with the yaw from before the camera step.
 void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
     pad.poll(padInput);
     updatesForLog = updates;
@@ -293,12 +293,16 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         soundLog.emplace_back(updates, call.id);
         if (shared.audio) shared.audio->play(call);
     };
-    sceneStart.startRequested();
-    if (player && !levelScripts.ai().moving("player1")) levelScripts.ai().setPosition("player1", player->position().data());
-    levelScripts.update(dt);
-    applyScriptNatives();
-    runtime::applyObjectCollisionState(collision, objectState);
-    suppressDrivenVehicleCollision();
+    runtime::UpdateSequence order;
+    order.at(runtime::UpdatePhase::Runner, [&] {
+        sceneStart.startRequested();
+        if (player && !levelScripts.ai().moving("player1")) levelScripts.ai().setPosition("player1", player->position().data());
+        levelScripts.update(dt);
+        applyScriptNatives();
+        runtime::applyObjectCollisionState(collision, objectState);
+        suppressDrivenVehicleCollision();
+    });
+    order.at(runtime::UpdatePhase::Characters, [&] {
     if (player && !cutscenePlaying()) {
         player->sounds.clear();
         runtime::StickIntentInput stick;
@@ -363,19 +367,29 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
                 chase::save::setSlotStudType(levelScripts.progressNatives().slotImage().data(), unsigned(banked.kind));
             }
     }
-    if (player) {
+    });
+    order.at(runtime::UpdatePhase::Objects, [&] {
+        if (!player) return;
         const float playerPosition[3] = {player->motion.x, player->vertical.y, player->motion.z};
         updateDoors(playerPosition, emit);
+    });
+    order.at(runtime::UpdatePhase::AfterCharactersStandIn, [&] {
+        if (!player) return;
+        const float playerPosition[3] = {player->motion.x, player->vertical.y, player->motion.z};
         for (const runtime::SoundCall& call : updateBuildits(playerPosition)) emit(call);
         updateSuperBuildits(playerPosition, dt);
         updateFastTravel(dt);
         updateCarry(playerPosition);
         updateDetective(dt, carry.carryingMode() == 0 && !carry.busy() && !builditPlayer.active() && !buildits.lastUse().inZone, emit);
+    });
+    order.at(runtime::UpdatePhase::UseSpots, [&] {
+        if (!player) return;
         updateUseSpots(carry.carryingMode() == 0 && !carry.busy() && !builditPlayer.active() && !buildits.lastUse().inZone);
         updateUseMarkers(dt);
         updateScanner();
         updateSuperBricks(dt);
-    }
+    });
+    order.run();
     propParts.step(dt);
     if (player && follow) mapMarkerField.advance(dt, player->motion.x, player->motion.z, follow->yaw(), activeMapMarkers());
     updateObjectiveMarkers(dt);

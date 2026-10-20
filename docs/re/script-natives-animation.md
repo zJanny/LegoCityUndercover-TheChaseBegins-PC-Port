@@ -15,12 +15,14 @@ Handlers of the 13 natives of batch 32 and what the port does with them. Census 
 - The van driver stuck in the mailbox is the `postboxstuck_idle_minifig` clip (42 frames, loop bit) started by `1-1_VanBreakdown`, with no offset. [§2026-10-15T18:33:36](#ts-20261015-183336)
 - Animated placed props are skinned (joint tracks, no object tracks) and play `models/<mesh folder>/<name>.bfnanm`; the port poses them with `skinMatrices`. [§2026-10-15T20:04:40](#ts-20261015-200440)
 - The Attach natives are read but not ported for bone attaches (SCRIPT-272); AttachObject, AttachToWorldRoot and AttachToRoom change nothing visible yet. [§2026-10-15T20:04:40](#ts-20261015-200440)
+- LoadAnimation blocks until its load ends; the load time is open (SCRIPT-345). [scripts-runtime.md §2026-10-20T09:22](scripts-runtime.md#ts-20261020-092238)
 - Open: state requests 80 / 81, class message 253, the loaded set of an entity (0x21e8b4), the bone-attach matrix (0x258858, 0x23d39c), 0x22716c.
 
 
 <a id="ts-20261014-213649"></a>
 
 ## 2026-10-14T21:36:49+02:00 — Batch 32 (SCRIPT-32): the 13 handlers read, all run as stand-ins (llvm-objdump on game.arm.elf, C++ runner tests; no REA session, no emulator for these handlers)
+Corrected by [scripts-runtime.md §2026-10-20T09:22:38](scripts-runtime.md#ts-20261020-092238): LoadAnimation blocks: it returns 0 until the load ends.
 
 Corrected by [script-natives-animation.md §2026-10-15T18:33](#ts-20261015-183336): 0x1b71e8 plays the cape animation, not the looked-up animation; the Attach natives attach the second object to the first.
 

@@ -41,7 +41,7 @@ This file has no dated entries: the table is edited in place. When a native is r
 | subobjectivegotoenable | 0x2adaac | 3 | 260 / 39 / 6 / 0 | 7 | done | 31 | exact: registry, record update and map slot drawn (SCRIPT-71 closed; update stand-in SCRIPT-S270): [objective-hud.md §2026-10-19T15:00](objective-hud.md#ts-20261019-150002) |
 | StartDCamTrack | 0x1da810 | 4 | 259 / 31 / 0 / 0 | 10 | stand-in | 28 | handled; look point is the placement of the object, not entity +0x60 with its node matrix |
 | ShowTipTextOnce | 0x263850 | 1 | 251 / 31 / 11 / 0 | 8 | stand-in | 30 | handled as a stand-in, drawn with fitted layout: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
-| LoadAnimation | 0x2681a0 | 4 | 244 / 18 / 5 / 19 | 10 | stand-in | 32 | stand-in: name and class recorded as loaded (SCRIPT-S110, SCRIPT-274): [script-natives-animation.md §2026-10-15T18:33](script-natives-animation.md#ts-20261015-183336) |
+| LoadAnimation | 0x2681a0 | 4 | 244 / 18 / 5 / 19 | 10 | stand-in | 32 | stand-in: name and class recorded as loaded (SCRIPT-S110, SCRIPT-274): [script-natives-animation.md §2026-10-15T18:33](script-natives-animation.md#ts-20261015-183336); the wait for the load: SCRIPT-345 ([scripts-runtime.md §2026-10-20T09:22](scripts-runtime.md#ts-20261020-092238)) |
 | EnableCollision | 0x27e9f4 | 2 | 240 / 33 / 2 / 5 | 9 | done |  |  |
 | VehicleSetChaseMaxSpeed | 0x2b4bec | 2 | 208 / 12 / 0 / 0 | 6 | C | 36 |  |
 | StopCharAnim | 0x1bfb84 | 1 | 193 / 30 / 0 / 0 | 8 | stand-in | 32 | stand-in: stops level characters and Player1 (SCRIPT-S110, SCRIPT-S262): [script-natives-animation.md §2026-10-19T12:55](script-natives-animation.md#ts-20261019-125503) |

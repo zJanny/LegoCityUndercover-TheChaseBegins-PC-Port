@@ -1,0 +1,5 @@
+loadstate m12-13-cage-trigger
+stick 0 0
+hold -
+dt 0.033 0.033
+ctrace 0x169374,0x169254,0x15e274,0x1a3f80,0x172254,0x1597c8,0x1746c0,0x1a548c,0x1835d0 3 b1-order
