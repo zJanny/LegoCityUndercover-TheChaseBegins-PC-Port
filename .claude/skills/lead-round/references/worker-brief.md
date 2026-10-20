@@ -36,12 +36,7 @@ You are worker {{rN-X}} of round {{N}} of the PC port of *LEGO City Undercover: 
   - Record next to each pinned value where it came from: command, state, address or trace.
   - Every new command-line option or script command gets a test for its rejection.
 - **No explanatory comments.** No before/after screenshots for the user.
-- [optional: emulator, this worker holds the RPC slot]
-  **Emulator:** you hold the only `--rpc` slot of this round. Use only `tools/azahar_oracle.py --renderer opengl --display xvfb --rpc --port {{port}} --home {{home}}`.
-  - Start from save states, never by booting through menus. Use one session with `--keep` and probe with `--attach`. Use RPC for timing (`sample`); never measure rates from stepped frames.
-  - The first load after an emulator start may disagree with later loads; use repeated loads that agree.
-  - Never `pkill`, `killall` or `pkill -f`. Stop with `--stop` (your port and home) or `kill <PID>` of a process you started. Report `pgrep -x azahar` and `pgrep -x Xvfb` at the end.
-- [optional: emulator, a servant owns RPC]
+- [optional: emulator, the package needs RPC or a state]
   **Emulator:** the servant owns the only `--rpc` session.
   - Send RPC requests to `main` with `SendMessage`, saying what to load, do and read. The lead forwards them and sends you the answer.
   - Never start an emulator with `--rpc`. Without RPC you may use `tools/azahar_oracle.py --renderer opengl --display xvfb --port {{port}} --home {{home}}` as CLAUDE.md allows.
