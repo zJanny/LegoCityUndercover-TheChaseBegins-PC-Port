@@ -42,6 +42,8 @@ constexpr Rule kRules[] = {
     {"pregen/collectables_level6.bin", "parseCollectableLists"},
     {"pregen/collectables_level7.bin", "parseCollectableLists"},
     {"pregen/levelobjectscount.bin", "parseLevelObjectCounts"},
+    {"_traffic.bin", "parsePregenSpawns"},
+    {"_pedestrians.bin", "parsePregenSpawns"},
 };
 
 bool endsWith(const std::string& text, const char* suffix) {

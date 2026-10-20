@@ -40,6 +40,7 @@ Read this index, then open only the file you need.
 | [cutscene-actors-props.md](cutscene-actors-props.md) | Cutscene actors that are level props or vehicles: the dog of `1_2_c`, setup and teardown, the dog truck |
 | [text-localisation-fonts.md](text-localisation-fonts.md) | `.loc`, text escapes, `.tnf` fonts |
 | [data-tables-config.md](data-tables-config.md) | `.bxls` tables, brace-block config text |
+| [pregen-traffic.md](pregen-traffic.md) | `Pregen/Traffic` and `Pregen/Pedestrians` spawn files: loaders 0x2e02d4 / 0x2ee868, spawn points on level paths, the quadtree of spawn lists and its lookup 0x1eb490, census |
 | [save-format.md](save-format.md) | `savegame.dat` layout, CRC, save thread, options, slot progress, level table; later entries: [save-format-state.md](save-format-state.md) |
 | [save-format-state.md](save-format-state.md) | Level state blocks, unlock bits, object records, where Continue starts, the save request chain and slot row fields |
 | [ui-layouts.md](ui-layouts.md) | `.bxaml` UI layouts and storyboards |

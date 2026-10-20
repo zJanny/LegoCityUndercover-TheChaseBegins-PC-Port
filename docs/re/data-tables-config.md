@@ -14,7 +14,7 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - `collectables_level1..7.bin` (71 bytes, version 2) hold groups of 20, 10 and 5 16-bit ids read at 0x23b498; `levelobjectscount.bin` is read once at 0x2e6164 and not used further there. [§2026-10-16T10:12:03](#ts-20261016-101203)
 - `options.txt` and `options3ds.txt` are shipped but never read by this build. [§2026-10-16T10:12:03](#ts-20261016-101203)
 - Corrected by [camera-records-blending.md §2026-10-14T10:44](camera-records-blending.md#ts-20261014-104400): camera records are level bounds, not level objects. [§2026-10-13T09:10](#ts-20261013-0910)
-- Open: column meanings of the tables, `Type` and `Filters` values, easing of the blend, what the three collectable groups and the 82 object counts mean, and the users of the CustomChar, Traffic, Pedestrians and TouchGestures paths.
+- Open: column meanings of the tables, `Type` and `Filters` values, easing of the blend, what the three collectable groups and the 82 object counts mean, and the users of the CustomChar and TouchGestures paths. The Traffic and Pedestrians files: [pregen-traffic.md](pregen-traffic.md).
 
 <a id="ts-20261013-0350"></a>
 
@@ -133,6 +133,8 @@ Corrected by [data-tables-config.md §2026-10-13T14:41](#ts-20261013-144113): ty
 <a id="ts-20261015-120948"></a>
 
 ## 2026-10-15T12:09:48+02:00 — Pregen, script-list and options files: where the code uses their paths
+
+Corrected by [pregen-traffic.md §2026-10-20T11:16:20](pregen-traffic.md#ts-20261020-111620): the Traffic and Pedestrians path strings start at 0x2e0560 and 0x2eeaa0; their users are the loaders 0x2e02d4 and 0x2ee868.
 
 Tools: Python scans of `artifacts/game/game.arm.elf` (VA = file offset + 0xFF000 in both loaded segments) for ARM `add`/`sub rd, pc, #imm` and `ldr rd, [pc, #imm]` that produce a string address; `llvm-objdump --triple=armv6k-none-eabi --mattr=+vfp2`. No REA session.
 

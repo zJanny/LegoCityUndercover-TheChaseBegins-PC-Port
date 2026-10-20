@@ -63,6 +63,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | Feature | Status | Top open items |
 |---|---|---|
 | [world-streaming](world-streaming.md) | IN_PROGRESS | `chase-game` streams rooms (street level); WSTREAM-12 room position code; WSTREAM-30 loader cost; WSTREAM-4 visibility inside rooms |
+| [pedestrians-traffic](pedestrians-traffic.md) | IN_PROGRESS | PREGEN-1 loader-derived fields (tangent, room, floor cell); PREGEN-2 closed-path samples; spawn files decoded |
 | [level-transitions](level-transitions.md) | IN_PROGRESS | station exit and entry switch at run time; TRANS-3 master level (needs SCRIPT-1), TRANS-8 loading page code and look; TRANS-15 same-level entry timing, TRANS-16 oracle check of lift entries |
 
 ## Front end, HUD, saves

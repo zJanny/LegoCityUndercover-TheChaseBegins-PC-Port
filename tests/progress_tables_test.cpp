@@ -27,6 +27,9 @@ int main() {
         require(assets::fileDecoder("levels/triggers.txt") == "parseConfigText", "trigger list decoder");
         require(assets::fileDecoder("levels/scriptfns.txt") == "parseConfigText", "script function list decoder");
         require(assets::fileDecoder("pregen/Collectables_Level3.bin") == "parseCollectableLists", "collectables decoder");
+        require(assets::fileDecoder("pregen/traffic/lvl_07_downtown_traffic.bin") == "parsePregenSpawns" &&
+                    assets::fileDecoder("Pregen/Pedestrians/lvl_test_playground_traffic_Pedestrians.bin") == "parsePregenSpawns",
+                "pregen spawn decoders");
         require(assets::fileDecoder("pregen/customchar.bin").empty(), "pregenerated data has no decoder");
 
         require(assets::isDoorClass("Props/Prop_Door"), "door class case");

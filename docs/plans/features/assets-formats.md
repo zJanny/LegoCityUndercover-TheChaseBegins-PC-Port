@@ -6,7 +6,7 @@ Every format decoder in `chase_assets` (namespace `chase::assets`, no SDL): RomF
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-16T10:12:28+02:00. Decoders exist and are checked against every shipped file; level composition (materials, lighting, streaming, other sections) is incomplete. The collectables and object-count pregen files decode (`pregen.cpp`), the script-list files parse with the original reader's tolerance, and `options.txt` / `options3ds.txt` are unused by the game. Left in ASSET-3: customchar, traffic, pedestrians, map text files; meaning of the pregen values: ASSET-8.
+IN_PROGRESS, updated 2026-10-16T10:12:28+02:00. Decoders exist and are checked against every shipped file; level composition (materials, lighting, streaming, other sections) is incomplete. The collectables and object-count pregen files decode (`pregen.cpp`), the script-list files parse with the original reader's tolerance, and `options.txt` / `options3ds.txt` are unused by the game. Left in ASSET-3: customchar, map text files (traffic and pedestrians: [pedestrians-traffic.md](pedestrians-traffic.md)); meaning of the pregen values: ASSET-8.
 
 ## 3. Verified behaviour
 
@@ -22,8 +22,8 @@ IN_PROGRESS, updated 2026-10-16T10:12:28+02:00. Decoders exist and are checked a
 ## 5. Open items
 
 - [ ] ASSET-1 — Moved to [rendering.md](rendering.md) (materials recovered; lighting RENDER-1, reflections RENDER-2, fog RENDER-3).
-- [ ] ASSET-2 — The other `.blvl` sections: +0x1c event bindings and +0x34 room links are decoded; +0x20 and the +0x24 byte tuples remain (WSTREAM-5). `pregen/*.bin` is not streaming (traffic, pedestrians, collectables); its formats are undecoded. Streaming itself: [world-streaming.md](world-streaming.md). evidence: [streaming.md §2026-10-13T22:27](../../re/streaming.md#ts-20261013-222700).
-- [ ] ASSET-3 — Several smaller file types are not decoded. Left: `customchar.bin`, the traffic and pedestrian `.bin` files and the map `.txt` files (ASSET-5 to ASSET-7 are closed; ASSET-8 holds the pregen meanings).
+- [ ] ASSET-2 — The other `.blvl` sections: +0x1c event bindings and +0x34 room links are decoded; +0x20 and the +0x24 byte tuples remain (WSTREAM-5). `pregen/*.bin` is not streaming (traffic, pedestrians, collectables); the traffic and pedestrian files are decoded in [pedestrians-traffic.md](pedestrians-traffic.md). Streaming itself: [world-streaming.md](world-streaming.md). evidence: [streaming.md §2026-10-13T22:27](../../re/streaming.md#ts-20261013-222700).
+- [ ] ASSET-3 — Several smaller file types are not decoded. Left: `customchar.bin` and the map `.txt` files (traffic and pedestrian files: [pedestrians-traffic.md](pedestrians-traffic.md)) (ASSET-5 to ASSET-7 are closed; ASSET-8 holds the pregen meanings).
 - [ ] ASSET-4 — `.cam` record selection details: first-gather values and pose blend rooms are open (see CAMERA-3); the `.cam` fields RotationY/X, Distance and Lookat are editor-only. evidence: [data-tables-config.md §2026-10-13T09:10](../../re/data-tables-config.md#ts-20261013-0910).
 - [ ] ASSET-8 — The meaning of the three collectable groups (which collectable kind each is) and of the 82 `levelobjectscount.bin` values is not known, and the port does not use the files yet; the only reader of the count file discards what it reads (gate: flags bits 3 / 9 at [0x375b08]). Needed: the callers of 0x239184 results (counters at 0x5208e0+0x2d..0x32) in the HUD / status screen. evidence: [data-tables-config.md §2026-10-16T10:12:03](../../re/data-tables-config.md#ts-20261016-101203).
 
