@@ -13,6 +13,10 @@ bool isDoorClass(const std::string& className);
 bool isPropFamilyClass(const std::string& className);
 bool isDummyCollisionClass(const std::string& className);
 
+// The prop kind 67 (props/prop_prop, leprops/leprop_prop and 55 other classes; create 0x15a4b4, post-link 0x15a640 -> 0x16aeb4): its post-link
+// registers collision with 0x23aff8 (automatic box, no margin) and `HasCollisionMesh` (0x2337e0), whatever the class folder (docs/re/vehicles-prop-smash.md).
+constexpr std::uint8_t kPropObjectKind = 67;
+
 // Class files of the vehicle object type (ObjectType 183, class descriptor 0x155b5c; section +0x14 of levels/vehicles/vehicle_*).
 constexpr std::uint32_t kVehicleObjectType = 183;
 bool isVehicleClassFile(const Level& classFile);

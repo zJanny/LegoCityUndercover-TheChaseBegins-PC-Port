@@ -10,6 +10,7 @@
 namespace chase::assets {
 namespace {
 constexpr float kMinimumHalf = 0.05f;  // 0x3d4ccccd clamp of the automatic box in 0x23aff8
+constexpr std::int32_t kNoBoundsHitMode = 6;  // `Destructable` 6: 0x16aeb4 clears 0x200 like `NoBoundCollisions`
 constexpr float kDoorMargin = 0x1.eb851ep-3f;  // *0x37713c / *0x377140 taken off the x and z half extents when 0x23aff8 gets param_6
 
 const LevelParam* findParam(const std::vector<LevelParam>& params, std::uint32_t hash) {
@@ -25,6 +26,14 @@ const LevelParam* effectiveParam(const LevelObject& object, const Level& cls, st
     if (classParam->flags & 2)
         if (const LevelParam* instance = findParam(object.params, hash)) return instance;
     return classParam;
+}
+
+std::int32_t intOf(const LevelParam* param) {
+    if (!param) return 0;
+    if (param->type != 0) return std::int32_t(param->value);
+    float value = 0;
+    std::memcpy(&value, &param->value, 4);
+    return std::int32_t(value);
 }
 
 bool float3Of(const LevelParam* param, float* out) {
@@ -149,7 +158,9 @@ std::vector<ObjectCollision> collectObjectCollisions(FuseArchive& archive, const
     };
     const std::uint32_t hashMesh = nameHash("meshname"), hashPosition = nameHash("initialposition"),
                         hashOrientation = nameHash("initialorientation"), hashMeshCollision = nameHash("MeshCollision"),
-                        hashBoundCollision = nameHash("BoundCollision"), hashCollisionBound = nameHash("CollisionBound");
+                        hashBoundCollision = nameHash("BoundCollision"), hashCollisionBound = nameHash("CollisionBound"),
+                        hashHasCollisionMesh = nameHash("HasCollisionMesh"), hashDestructable = nameHash("Destructable"),
+                        hashNoBoundCollisions = nameHash("NoBoundCollisions");
 
     std::vector<ObjectCollision> out;
     for (const LevelObject& object : level.objects) {
@@ -158,8 +169,9 @@ std::vector<ObjectCollision> collectObjectCollisions(FuseArchive& archive, const
         const bool dummyCollision = isDummyCollisionClass(object.className);
         const Level& cls = classOf(object.className);
         const bool vehicle = isVehicleClassFile(cls);
-        const bool propFamily = isPropFamilyClass(object.className) || vehicle;
-        if (!prop && !dummyCollision && !vehicle) continue;
+        const bool propKind = objectKind(object, cls) == kPropObjectKind;
+        const bool propFamily = isPropFamilyClass(object.className) || vehicle || propKind;
+        if (!prop && !dummyCollision && !vehicle && !propKind) continue;
         if (!keepInactive && state.isDisabled(object.instance)) continue;
 
         Placement placement;
@@ -204,10 +216,26 @@ std::vector<ObjectCollision> collectObjectCollisions(FuseArchive& archive, const
                         std::memcpy(half, record.half, sizeof half);
                     }
                 }
+                if (propKind && !mesh && intOf(effectiveParam(object, cls, hashHasCollisionMesh)) != 0) {
+                    if (model->firstItem && !model->firstItem->nodes.empty()) {
+                        mesh = model->firstItem;
+                        std::memcpy(centre, mesh->nodes.front().centre, sizeof centre);
+                        std::memcpy(half, mesh->nodes.front().half, sizeof half);
+                    } else if (!model->boxes.empty()) {
+                        const CollisionBox& record = model->boxes.front();
+                        transformPoint(record.matrix, record.position, centre);
+                        std::memcpy(half, record.half, sizeof half);
+                    }
+                }
             }
         }
         const LevelParam* boundCollision = effectiveParam(object, cls, hashBoundCollision);
-        const bool collisionDefault = !boundCollision || boundCollision->value != 0;
+        bool collisionDefault = !boundCollision || boundCollision->value != 0;
+        if (propKind) {
+            if (intOf(effectiveParam(object, cls, hashDestructable)) == kNoBoundsHitMode || intOf(effectiveParam(object, cls, hashNoBoundCollisions)) != 0)
+                collisionDefault = false;
+            if (!collisionDefault && !mesh) continue;
+        }
         if (!keepInactive && !state.collisionEnabled(object.instance, collisionDefault)) continue;
         if (!box && !mesh) continue;
 

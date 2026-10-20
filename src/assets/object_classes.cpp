@@ -44,7 +44,7 @@ bool isVehicleClassFile(const Level& classFile) {
 unsigned objectBehaviours(const LevelObject& object, const Level& classFile) {
     unsigned behaviours = 0;
     const bool vehicle = isVehicleClassFile(classFile);
-    const bool collision = isDummyCollisionClass(object.className) || vehicle ||
+    const bool collision = isDummyCollisionClass(object.className) || vehicle || objectKind(object, classFile) == kPropObjectKind ||
                            (isPropClass(object.className) && (isPropFamilyClass(object.className) || hasCollisionBound(classFile)));
     if (collision) behaviours |= BehaviourCollision;
     if (vehicle) behaviours |= BehaviourVehicle;

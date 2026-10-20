@@ -51,6 +51,9 @@ struct ObjectCollision {
 //    is narrowed by 0.24 on x and z): the first collision item of the
 //    model when the object's "MeshCollision" parameter is set, else a box (the model's collision box record when
 //    MeshCollision is set and the model has no item, else the union of the model's mesh bounds);
+//  - the objects of kind 67 (kPropObjectKind) in any class folder: the rule above without margin, then, when "HasCollisionMesh" is set and no
+//    item was taken, the model's first item with its root node as the box, or else the model's box record (0x16aeb4 -> 0x2337e0); `Destructable`
+//    6 or "NoBoundCollisions" clears 0x200, and such an object without an item is not registered (0x30e0d8 needs 0x200 or an item);
 //  - "dummy/dummycollision": a box with the half extents of the instance's "CollisionBound" parameter.
 // Characters, vehicles and classes with other constructors are not included. A "BoundCollision" parameter of 0
 // clears the collision flag 0x200 of the object unless `state` sets it again; disabled objects are left out.

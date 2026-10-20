@@ -64,6 +64,15 @@ bool wobbleClass(const std::string& className) { return className == "leprops/le
 bool anyDamageClass(const std::string& className) { return className == "props/prop_respawnabledestructible" || className == "leprops/leprop_simpledestructible"; }
 bool scriptDestroyedClass(const std::string& className) { return className == "props/ability_dynamitedestructible"; }
 
+bool hasPhysicsBody(const assets::LevelObject& object, const assets::Level& cls) {
+    const assets::LevelParam* param = effectiveParam(object, cls, assets::nameHash("NoPhysics"));
+    if (!param) return false;
+    if (param->type != 0) return param->value == 0;
+    float value = 1.0f;
+    std::memcpy(&value, &param->value, 4);
+    return value == 0.0f;
+}
+
 std::string lowerName(std::string text) {
     for (char& c : text) c = char(std::tolower(static_cast<unsigned char>(c)));
     return text;
@@ -84,25 +93,29 @@ std::int16_t smashHealth(const std::string& className, const assets::LevelObject
 void VehiclePropSmasher::load(const assets::Level& level, const assets::ClassLookup& classOf, const std::vector<assets::ObjectCollision>& placed) {
     props_.clear();
     for (const assets::ObjectCollision& entry : placed) {
-        const bool smashable = wobbleClass(entry.className) || anyDamageClass(entry.className);
         const assets::LevelObject* object = nullptr;
         for (const assets::LevelObject& candidate : level.objects)
             if (candidate.instance == entry.instance) object = &candidate;
         const assets::Level* cls = classOf(entry.className);
         if (!object || !cls) continue;
-        const DestroyEffectSet set = destroyEffectSet(assets::objectKind(*object, *cls));
+        const std::uint8_t kind = assets::objectKind(*object, *cls);
+        const bool hitMachine = kind == assets::kPropObjectKind && !hasPhysicsBody(*object, *cls);
+        const bool smashable = wobbleClass(entry.className) || anyDamageClass(entry.className) || hitMachine;
+        const DestroyEffectSet set = destroyEffectSet(kind);
         if (!smashable && !scriptDestroyedClass(entry.className) && !destroyEffectsPorted(set)) continue;
         Entry prop;
         prop.instance = entry.instance;
         prop.collisionDefault = entry.collisionDefault;
         prop.smashable = smashable;
+        prop.hitMachine = hitMachine;
+        if (hitMachine) prop.hit = hitMachineProp(*object, *cls);
         prop.prop.node = entry.matrix;
         prop.prop.entityBox = SmashBox{{entry.centre[0], entry.centre[1], entry.centre[2]}, {entry.half[0], entry.half[1], entry.half[2]}};
         if (entry.mesh && !entry.mesh->nodes.empty()) {
             const assets::CollisionNode& root = entry.mesh->nodes.front();
             prop.prop.meshRoot = SmashBox{{root.centre[0], root.centre[1], root.centre[2]}, {root.half[0], root.half[1], root.half[2]}};
         }
-        prop.prop.health = smashHealth(entry.className, *object, *cls);
+        prop.prop.health = hitMachine ? std::int16_t(prop.hit.health) : smashHealth(entry.className, *object, *cls);
         prop.effects = propDestroyEffects(*object, *cls, destroyEffectsPorted(set) ? set : DestroyEffectSet::BaseProp);
         props_.push_back(prop);
     }
@@ -137,9 +150,13 @@ std::vector<SmashedProp> VehiclePropSmasher::smash(const SmashingVehicle& vehicl
     for (Entry& entry : props_) {
         if (!entry.smashable || entry.destroyed || state.isDisabled(entry.instance) || !state.collisionEnabled(entry.instance, entry.collisionDefault)) continue;
         if (!vehicleSmashesProp(vehicle, entry.prop)) continue;
-        const SmashOutcome outcome = applySmashDamage(entry.prop.health);
-        entry.prop.health = outcome.health;
-        if (!outcome.destroyed) continue;
+        if (entry.hitMachine) {
+            if (hitMachineMessage0(entry.hit, vehicleSmashMessage()) != HitOutcome::Destroyed) continue;
+        } else {
+            const SmashOutcome outcome = applySmashDamage(entry.prop.health);
+            entry.prop.health = outcome.health;
+            if (!outcome.destroyed) continue;
+        }
         entry.destroyed = true;
         destroyed.push_back({entry.instance, entry.prop, entry.effects});
     }

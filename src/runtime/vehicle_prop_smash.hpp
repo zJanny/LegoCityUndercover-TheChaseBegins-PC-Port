@@ -8,6 +8,7 @@
 #include "assets/assets.hpp"
 #include "assets/object_collision.hpp"
 #include "runtime/prop_destroy.hpp"
+#include "runtime/prop_hit_sequence.hpp"
 
 #include <array>
 #include <cstdint>
@@ -38,7 +39,7 @@ struct SmashingVehicle {
 };
 
 struct SmashableProp {
-    assets::Matrix node{};       // the prop node's world matrix
+    assets::Matrix node{};       // the prop node's world matrix; STAND-IN VEH-S108: the placement matrix, also for a prop a script or cutscene moved
     SmashBox entityBox;          // entity+0x60 / +0x6c
     std::optional<SmashBox> meshRoot;  // grid entry kind 1 (entity+0x78): the shape is the root node of the collision item, in the model's space
     std::int16_t health = 0;     // WobbleHealth (record +0x10 of 0x2a3390, +0x110 of 0x1bc38c); 1 for the classes that any damage destroys
@@ -61,9 +62,10 @@ SmashOutcome applySmashDamage(std::int16_t health);
 
 // The props of a level whose message 0 handler destroys them at health 0 or on any damage: leprops/leprop_wobblydestructible (type 119, 0x2a3390) and
 // props/prop_trafficlight (type 204, 0x1bc38c) with their WobbleHealth, props/prop_respawnabledestructible (type 214, 0x2b3fcc) and
-// leprops/leprop_simpledestructible (type 85) through the base handler 0x1f8948 (damage not 0). STAND-IN VEH-S105: an object with other classes is
-// not smashed (the hit sequences of type 67, 0x15e408, are not ported); a wobbly prop with a fall-apart clip is destroyed at once instead of
-// playing it. The destroyed entity is reported by name and the caller treats it as disabled (the original deletes it, 0x23cd80).
+// leprops/leprop_simpledestructible (type 85) through the base handler 0x1f8948 (damage not 0), and every object of kind 67 without a physics body
+// (`NoPhysics` not 0; 0x275c00 sends no message 0 to a body) through its handler 0x15e408 (hitMachineMessage0). STAND-IN VEH-S105: a wobbly prop with
+// a fall-apart clip is destroyed at once instead of playing it. The destroyed entity is reported by name and the caller treats it as disabled (the
+// original deletes it, 0x23cd80).
 struct SmashedProp {
     std::string instance;
     SmashableProp prop;
@@ -78,7 +80,7 @@ public:
     std::vector<SmashedProp> smash(const SmashingVehicle& vehicle, const assets::PlacedObjectState& state);
     std::size_t propCount() const;
     // Adds the objects that scripts destroy and whose kind has ported message 1 effects (destroyEffectsPorted) but that have no collision entry
-    // (props/prop_prop, prop_platform, ability_rocksmash, ...): the node matrix is the placement's, the entity box is the model's bounds
+    // (props/prop_platform and other kinds whose collision rule is not read): the node matrix is the placement's, the entity box is the model's bounds
     // (`boundsOf`, 0x242eb0). STAND-IN SCRIPT-S251: the entity box (+0x60 / +0x6c) of these classes is set by constructors that are not read.
     using BoundsOf = std::function<std::optional<SmashBox>(const assets::Placement&)>;
     void loadScriptDestroyed(const assets::Level& level, const assets::ClassLookup& classOf, const std::vector<assets::Placement>& placements, const BoundsOf& boundsOf);
@@ -92,6 +94,8 @@ private:
         std::string instance;
         bool collisionDefault = true;
         bool smashable = true;
+        bool hitMachine = false;
+        HitMachineProp hit;
         SmashableProp prop;
         PropDestroyEffects effects;
         bool destroyed = false;

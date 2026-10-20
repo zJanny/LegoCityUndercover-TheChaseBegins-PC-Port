@@ -228,7 +228,9 @@ int main(int argc, char** argv) {
             }
             require(doorFound, "Police_Door_02 not registered");
             // 824 + 16: the vehicles of class type 183 that are enabled at the level start register the first item of their model (docs/re/vehicles-system.md).
-            require(objects.size() == 840 && meshes == 430 && lamps == 58 && barriers == 33, "placed object totals changed: " + std::to_string(objects.size()) + " " + std::to_string(meshes) + " " + std::to_string(lamps) + " " + std::to_string(barriers));
+            // + 9 (7 meshes): the enabled objects of kind 67 outside leprops/leprop_* (the post-link 0x16aeb4: 1-2_RoofProp_03, four skylights,
+            // 1-4_Window, 1-6_Roof_Door, two rock smashes); the enabled kind 67 set equals the entities without flag bit 0 of the oracle grid census r41-A-3.
+            require(objects.size() == 849 && meshes == 437 && lamps == 58 && barriers == 33, "placed object totals changed: " + std::to_string(objects.size()) + " " + std::to_string(meshes) + " " + std::to_string(lamps) + " " + std::to_string(barriers));
         }
 
         GroundTotals ground;

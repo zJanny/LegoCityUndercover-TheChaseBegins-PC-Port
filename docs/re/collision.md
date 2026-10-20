@@ -13,6 +13,7 @@ Findings about the static collision of a level and how the player uses it. The p
 - During play EnableObject and EnableCollision only change owner flags; the grid is filled once and never loses entries. [§2026-10-15T07:58](#ts-20261015-075843)
 - A wall triangle of a placed object (every pooled entry) counts only while the player's box centre, before the movement, is in front of its plane; a walk that starts inside a prop crosses it. [§2026-10-19T07:58:53](#ts-20261019-075853)
 - Replay tests (`collision-real-data`) match recorded ground and wall traces; the car comparison screenshot is not valid yet (COLL-22). [§2026-10-15T10:50](#ts-20261015-105024)
+- Kind 67 (props/prop_prop, leprops/leprop_prop and the other classes of that kind) registers by its post-link 0x16aeb4: 0x23aff8 without margin, then the `HasCollisionMesh` item with its root node as box or the model's box record; checked on the 22 entries of lvl_01. [vehicles-prop-smash.md §2026-10-20T09:30:16](vehicles-prop-smash.md#ts-20261020-093016)
 - Open: falling path, the owner-flag-0 setter, 147+7 static entries against 153 items, other constructors (vehicles, characters), box-top standing, door_back contact.
 
 <a id="ts-20261013-144500"></a>

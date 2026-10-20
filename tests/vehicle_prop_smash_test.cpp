@@ -11,6 +11,7 @@
 
 #include <cmath>
 #include <map>
+#include <set>
 #include <string>
 #include <cstdio>
 #include <filesystem>
@@ -156,6 +157,32 @@ void realOtherClasses(const assets::Level& level, const std::vector<assets::Obje
            "Generic_Tree_13 (leprop_wobblydestructible, box entry) is smashed in frame 50 like the oracle's 0x23cd80", double(firstFrame["Generic_Tree_13"]));
 }
 
+// Kind 67 (src/runtime/prop_hit_sequence.*): the van's boxes put on each object's node. The five objects of mode 1 (`Destructable`, Health 1) are
+// destroyed; mode 0 objects and the four roadblocks with a physics body (`NoPhysics` 0, no message from 0x275c00) are not. Level data of lvl_01 and the
+// oracle grid census r41-A-2 / A-3 (artifacts/oracle/r41-servant-out: records +0xcc = 1 for exactly these five entities).
+void realKind67(const assets::Level& level, const std::vector<assets::ObjectCollision>& candidates, const assets::ClassLookup& classOf) {
+    SmashingVehicle car;
+    car.nodeBounds = SmashBox{{-0.00140833855f, 0.0381139517f, -0.0761752129f}, {1.18461537f, 1.25735652f, 2.51457548f}};
+    car.entityBox = SmashBox{{-0.00197023153f, -0.0202310085f, -0.0392076969f}, {0.933585763f, 1.19856739f, 2.4914875f}};
+    car.velocity[0] = 8.0f;
+    VehiclePropSmasher smasher;
+    smasher.load(level, classOf, candidates);
+    const assets::PlacedObjectState untouched;
+    std::set<std::string> destroyed;
+    for (const char* instance : {"1-1_Donut_Van_Body", "1-2_Dog", "1-2_RoofProp_03", "1-2_Temp_Trampoline", "1-3_Lawnmower_Final", "1-1_BrokenVan",
+                                 "1-3_smash_crate", "1-4_Window", "1-4_Roadblock_12"}) {
+        for (const assets::ObjectCollision& candidate : candidates) {
+            if (candidate.instance != instance) continue;
+            car.node = assets::Matrix{1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, candidate.matrix[12], candidate.matrix[13], candidate.matrix[14], 1};
+            for (const SmashedProp& smashed : smasher.smash(car, untouched)) destroyed.insert(smashed.instance);
+        }
+    }
+    for (const char* instance : {"1-1_Donut_Van_Body", "1-2_Dog", "1-2_RoofProp_03", "1-2_Temp_Trampoline", "1-3_Lawnmower_Final"})
+        expect(destroyed.count(instance) == 1, (std::string("the car destroys the mode 1 object ") + instance).c_str());
+    for (const char* instance : {"1-1_BrokenVan", "1-3_smash_crate", "1-4_Window", "1-4_Roadblock_12"})
+        expect(destroyed.count(instance) == 0, (std::string("the car leaves ") + instance + " (mode 0, or a physics body)").c_str());
+}
+
 void realLamp(const assets::Level& level, const std::vector<assets::ObjectCollision>& candidates, const assets::ClassLookup& classOf) {
     bool lampIsMesh = false;
     for (const assets::ObjectCollision& candidate : candidates)
@@ -211,8 +238,10 @@ void real(const char* fib, const char* names) {
     smasher.load(level, assets::archiveClassLookup(archive), candidates);
     realOtherClasses(level, candidates, assets::archiveClassLookup(archive));
     realLamp(level, candidates, assets::archiveClassLookup(archive));
+    realKind67(level, candidates, assets::archiveClassLookup(archive));
     realTriggerObject(level, smasher, assets::archiveClassLookup(archive));
-    expect(smasher.propCount() == 727, "727 smashable props in lvl_01: 674 leprop_wobblydestructible, 38 prop_trafficlight, 15 prop_respawnabledestructible (level data census, box and mesh entries)", double(smasher.propCount()));
+    expect(smasher.propCount() == 743, "743 smashable props in lvl_01: 674 leprop_wobblydestructible, 38 prop_trafficlight, 15 prop_respawnabledestructible, "
+           "16 of kind 67 without a physics body (level data census, box and mesh entries; the 22 registered kind 67 objects match the oracle grid, r41-A-3)", double(smasher.propCount()));
     const assets::PlacedObjectState untouched;
     int firstSmash = -1, smasherRow = -1;
     PropDestroyEffects phoneBoxEffects;
