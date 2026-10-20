@@ -5,7 +5,7 @@ For a small branch, you do the work of both reviewers in one pass. A separate co
 ## How
 
 1. Read `.claude/skills/lead-round/references/code-review.md` and `docs-review.md`. Follow both, with these changes:
-   - **Read once:** read `CLAUDE.md`, the brief, the report and the diff once (`git -C <worktree> diff main...HEAD`) and use them for both checklists.
+   - **Read once:** read `CLAUDE.md`, the plan's rule file, the brief, the report and the diff once (`git -C <worktree> diff main...HEAD`) and use them for both checklists.
    - **Both areas are yours:** you may edit code and docs, so ignore the "edit only" path limits and the `index.lock` notes. A code fix that needs a docs change: make both in one go, with no "Docs follow-ups".
    - **Same quick-fix rule:** about 30 changed lines for code and 40 for docs. Everything else is RETURN, as in each checklist.
 2. **Branch bigger than the lead was told:** if the branch turns out bigger than "small", or it transcribes new handlers or constants that need checking against the disassembly, stop. Reply `COMBINED REVIEW rN-X: SPLIT — <why, one line>`, so the lead launches the two separate reviewers (Opus for the code reviewer when handlers were transcribed).

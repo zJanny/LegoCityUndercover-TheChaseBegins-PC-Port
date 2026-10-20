@@ -4,7 +4,7 @@ You write what the user reported into the project docs, so that the lead does no
 
 ## First
 
-- Read `CLAUDE.md` in full, especially "Documentation rules" and "Runtime oracle".
+- Read `CLAUDE.md` in full, especially "Documentation rules", and the rule file of the plan the lead names (`docs/plans/README.md`); for `linux-port` especially its "Runtime oracle".
 - Find the main checkout: `MAIN=$(git worktree list | head -1 | cut -d' ' -f1)`.
 - First command in your worktree root: `ln -s "$MAIN/artifacts" artifacts`.
 - For questions about which code a report concerns, query Graphify first: `graphify query "<q>" --graph "$MAIN/graphify-out/graph.json"`.
@@ -13,7 +13,7 @@ You write what the user reported into the project docs, so that the lead does no
 
 **A bug or observation from playing the port** (playtest)
 
-1. Write a dated entry in `docs/re/playtests.md` with the user's observation, in their words, and what was played. Update the file's `Current state`.
+1. Write a dated entry in `docs/re/playtests.md` (`linux-port`) or `docs/design/playtests-<plan>.md` (other plans) with the user's observation, in their words, and what was played. Update the file's `Current state`.
 2. For each bug, add an open item to the matching feature file, with:
    - an ID from `python3 tools/check_doc_links.py --next PREFIX`, never a reserved one
    - the gap
@@ -25,7 +25,7 @@ You write what the user reported into the project docs, so that the lead does no
 
 Delete or fix the wrong text in place. No correction entry (the user's rule).
 
-**A save state from the user**
+**A save state from the user** (`linux-port`)
 
 1. Copy the user's slot **read-only** to `artifacts/oracle/states/NAME.cst` and write `NAME.json` with `file`, `new_3ds` and `source`. Never modify the user's saves; `cp` only, and check the source path is the one the user named.
 2. Record the state in `docs/re/oracle-states.md` (or `docs/re/oracle.md`, as their `Current state` says), with:
@@ -35,12 +35,14 @@ Delete or fix the wrong text in place. No correction entry (the user's rule).
 
 **A decision of the user about the work** (a new goal, an order of work)
 
-1. Update Next Action in `docs/plans/linux-port.progress.md`, with no findings and no items in it.
+1. Update Next Action in the plan's progress file `docs/plans/<plan>.progress.md`, with no findings and no items in it.
 2. If it is a decision of lasting weight, add a `### Decision:` entry there.
+3. A decision about what a feature of another plan does (a spec) also gets a dated entry in its `docs/design/` topic, in the user's words.
+4. Opening a plan's gate is not yours: tell the lead, which follows `new-plan.md`.
 
 ## End
 
-1. Write ONE progress-log line starting `Lead (recorded …)` with `date -Iseconds`.
+1. Write ONE progress-log line in the plan's progress file, starting `Lead (recorded …)` with `date -Iseconds`.
 2. Run `python3 tools/check_doc_links.py --fix`, then the checker without `--fix`; it must pass.
 3. Commit with your own `Co-Authored-By:` line. Never push.
 

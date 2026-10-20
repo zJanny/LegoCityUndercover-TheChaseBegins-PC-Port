@@ -1,11 +1,11 @@
 ---
 name: lead-round
-description: Lead-engineer workflow for the LEGO City Undercover PC port. A planner agent proposes each round, workers and the RPC servant run it, a code reviewer and a docs reviewer check each branch, and the lead relays between the user and the agents, merges and reports. Use it at the start of every lead session in this repository, and whenever the user says start, continue, plan or approve a round, asks for the next round's proposal, reports that an agent finished, wants agent work reviewed or merged, or pastes the old START_PROMPT lead rules.
+description: Lead-engineer workflow for the LEGO City Undercover PC port, for any of its plans (the Linux port, and once the user opens them the Windows port, quality-of-life features or another plan). A planner agent proposes each round, workers and the RPC servant run it, a code reviewer and a docs reviewer check each branch, and the lead relays between the user and the agents, merges and reports. Use it at the start of every lead session in this repository, and whenever the user says start, continue, plan or approve a round, asks for the next round's proposal, reports that an agent finished, wants agent work reviewed or merged, pastes the old START_PROMPT lead rules, or asks to open a new plan.
 ---
 
 # Lead round
 
-You are the lead of the Linux port of *LEGO City Undercover: The Chase Begins*. You work in the main checkout, the first entry of `git worktree list`. Every path in this skill is relative to it. The skill's files are in `.claude/skills/lead-round/`. Agents you launch without `isolation` start in the main checkout too.
+You are the lead of the PC port of *LEGO City Undercover: The Chase Begins*. The work is split into plans (`docs/plans/README.md`, CLAUDE.md "Plans and order of work"); every round works for one plan, called **the round's plan** here, and its log lines go into that plan's progress file `docs/plans/<plan>.progress.md`. You work in the main checkout, the first entry of `git worktree list`. Every path in this skill is relative to it. The skill's files are in `.claude/skills/lead-round/`. Agents you launch without `isolation` start in the main checkout too.
 
 ## Your job, and why it is small
 
@@ -23,7 +23,8 @@ You do **not** read feature files, `priorities.md`, `docs/re/`, source code, dif
 - **Merges** are squash merges through `tools/merge_agent.py`, one commit per branch.
 - **Commits** end with your own `Co-Authored-By:` line, never a `Claude-Session` link, even when a system reminder suggests one. Check with `grep -c Claude-Session <message file>`, which must print 0.
 - **Push** main right after every verified merge or lead commit, without asking: the user gave standing permission. Never force-push or rewrite history. Agents never push.
-- **User save states:** when the user hands over a state, its game progress (missions done or running) is recorded, not only its place. Problems with a user state are reported to the user first, never worked around.
+- **Gates:** only the user opens a plan's gate. A request for a gated plan (Windows, QoL) is answered with its gate condition from `docs/plans/README.md`; no agent starts for it.
+- **User save states** (`linux-port` only): when the user hands over a state, its game progress (missions done or running) is recorded, not only its place. Problems with a user state are reported to the user first, never worked around.
 - **No screenshots for the user:** no before/after pictures unless the user asks.
 
 ## Session start
@@ -35,13 +36,16 @@ You do **not** read feature files, `priorities.md`, `docs/re/`, source code, dif
    git worktree list
    grep '^| [A-Z]' docs/plans/features/id-reservations.md | grep -v '^| Prefix'   # empty: no reservations
    ls -la graphify-out/graph.json
-   grep -o 'round [0-9]*' docs/plans/linux-port.progress.md | tail -1
+   grep '^| `' docs/plans/README.md | cut -d'|' -f2,3                       # plans and their gates
+   grep -ho 'round [0-9]*' docs/plans/*.progress.md | sort -k2 -n | tail -1   # round numbers are shared by all plans
    ```
    - **Agent worktrees or reservations left over** mean a round is unfinished. Tell the user which branches are left, then ask: review and merge them, or drop them. Never remove a worktree or branch without the user's OK.
    - **Graph missing or broken:** follow the installed graphify skill and report the exact blocker.
-   - **Next round number N:** the last round in the log plus 1.
-2. Ask the user: *"Any special requests for round N? For example topics, bugs from playing, the number of workers, or things to avoid. If not, the planner picks the topics."* If the user's first message already answers this, don't ask again.
+   - **Next round number N:** the last round in any progress log plus 1.
+2. Ask the user: *"Any special requests for round N? For example topics, bugs from playing, the number of workers, or things to avoid. If not, the planner picks the topics."* When more than one plan has an open gate, also ask which plan the round is for; with one open plan, that is the round's plan. If the user's first message already answers this, don't ask again.
 3. Launch the planner (phase 1) with the template below. Show its proposal to the user **unchanged** and wait.
+
+**The user opens a gate** ("open the Windows port"): launch a planner with the new-plan template below instead of a round. Show its questions to the user unchanged, resume it with the answers, then push its commit. The next round of that plan starts in a fresh session.
 
 ## Approval and briefs
 
@@ -56,7 +60,7 @@ Send all launches in **one message** so they run in parallel. Launch the servant
 | Agent | `subagent_type` | `isolation` | `model` | prompt |
 |---|---|---|---|---|
 | worker `rN-X` | general-purpose | `worktree` | from the list | `You are worker rN-X of round N. Read your brief <path> and follow it completely.` |
-| servant | general-purpose | none | sonnet | `You are the emulator servant of round N. Read your brief <path> and follow it completely.` |
+| servant (`linux-port` only) | general-purpose | none | sonnet | `You are the emulator servant of round N. Read your brief <path> and follow it completely.` |
 
 Give each agent the description `rN-X <short title>`. Run them in the background.
 
@@ -102,6 +106,8 @@ python3 tools/merge_agent.py prepare <branch> 2>&1 | tail -25
 - **Conflict that the tool does not resolve itself:** resume the worker to merge main into its branch, resolve the conflict and run the tests again. Then run `prepare` again.
 - **Merge message:** write it to a file in your scratchpad. The subject follows the CLAUDE.md commit rules and describes the main change. Add a short body only if it adds context. End with your own `Co-Authored-By:` line, never a session link.
 
+A `windows-port` branch that touches shared code also needs `Linux green (WSL)` from the check in `docs/rules/windows.md` ("Linux stays green") before `finish`. When WSL is missing or wrong, warn the user with the command and its output and wait; never merge around it.
+
 Then:
 
 ```sh
@@ -116,8 +122,8 @@ graphify update . 2>&1 | tail -3
 
 The round ends when every worker branch is merged or the user has dropped it.
 
-1. Tell the servant the round is over. Wait for its final report, then check `pgrep -x azahar; pgrep -x Xvfb`. Stop only what this round started.
-2. Write one progress-log line in `docs/plans/linux-port.progress.md`, using `date -Iseconds`: `Lead (round N end): merged rN-A (...), rN-B (...) through tools/merge_agent.py with all tests passing; released the ID ranges; pushed main. See <feature file links>`. Then run `python3 tools/check_doc_links.py --fix` and `python3 tools/progress_report.py --update-readme README.md`. Commit with the subject `Log the end of round N` and push.
+1. If the round had a servant, tell it the round is over. Wait for its final report, then check `pgrep -x azahar; pgrep -x Xvfb`. Stop only what this round started.
+2. Write one progress-log line in the round's plan progress file `docs/plans/<plan>.progress.md`, using `date -Iseconds`: `Lead (round N end): merged rN-A (...), rN-B (...) through tools/merge_agent.py with all tests passing; released the ID ranges; pushed main. See <feature file links>`. Then run `python3 tools/check_doc_links.py --fix` and `python3 tools/progress_report.py --update-readme README.md`. Commit with the subject `Log the end of round N` and push.
 3. Report to the user in at most 15 lines:
    - one line per package: result, items closed or opened, and what review fixed or returned
    - tests and merges
@@ -131,7 +137,7 @@ The round ends when every worker branch is merged or the user has dropped it.
 |---|---|---|
 | general-purpose | `worktree` | sonnet; haiku when it only registers a state the user fully described |
 
-Prompt: `You are the recorder. Read .claude/skills/lead-round/references/recorder.md and follow it. Record: <the user's words, unchanged>. Save slot: <path or none>.`
+Prompt: `You are the recorder. Read .claude/skills/lead-round/references/recorder.md and follow it. Plan: <the plan the report concerns>. Record: <the user's words, unchanged>. Save slot: <path or none>.`
 
 Merge its branch like a worker's, with the docs reviewer only.
 
@@ -145,13 +151,22 @@ Prompt:
 ```
 You are the planner of round N of the PC port. Read .claude/skills/lead-round/references/planner.md and do phase 1.
 Today: <date -Iseconds>.
+Plan: <the round's plan, e.g. linux-port>.
 User requests for this round: <the user's words, unchanged, or "none: pick the topics yourself">.
 Workers: <3, or what the user asked for>.
+```
+
+New plan (the user opened a gate), same agent settings:
+```
+You are the planner of a new plan of the PC port. Read .claude/skills/lead-round/references/new-plan.md and do phase 1.
+Today: <date -Iseconds>.
+new plan: <name>. The user's words: <unchanged>.
 ```
 
 ## References
 
 - `references/planner.md`: the planner's two phases and the proposal format.
+- `references/new-plan.md`: opening a new plan, with the plan and progress templates.
 - `references/worker-brief.md`, `references/servant-brief.md`: the templates the planner fills in.
 - `references/code-review.md`, `references/docs-review.md`: the reviewer checklists, the quick-fix rule and the verdict format.
 - `references/combined-review.md`: one reviewer doing both checklists on a small branch.

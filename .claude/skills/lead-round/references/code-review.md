@@ -18,22 +18,33 @@ CTest also guards `game.cpp` size (`game-cpp-wiring`), GL outside `src/render/` 
 
 ## Steps
 
-1. Read `CLAUDE.md` in full, then the brief and the report.
+1. Read `CLAUDE.md` in full, then the plan's rule file named in the brief (`docs/rules/<file>.md`), the brief and the report.
 2. Run one or two Graphify queries on the area the branch changes: `graphify query "<q>" --graph graphify-out/graph.json`. Use them to see the callers and neighbours of the changed code. List them in your verdict.
 3. `git -C <worktree> diff --stat main...HEAD`, then read the code diff only: `git -C <worktree> diff main...HEAD -- src tests tools CMakeLists.txt`. Open the surrounding source where a judgement needs it.
 4. Go through the checklist. Fix what falls under the quick-fix rule, then write the verdict.
 
 ## Checklist
 
-**Faithfulness**
+**Faithfulness** (`linux-port` branches)
 
 - **Every new behaviour has a source:** an address, a handler or an oracle measurement, recorded in the branch's `docs/re` entry. Behaviour without a source is invented: RETURN.
 - **Stand-ins are labelled:** every constant, gate, condition or approximation the worker chose is labelled in code names or `docs/re`, and listed in the feature file. Ask: "would the original do exactly this, and where does it say so?"
 - **Generic over hardcoded:** no fixed lists of names, objects or levels, and no per-object special case without evidence from the original.
-- **No Windows work, no QoL, no "improvements"** or roundings of original behaviour.
+- **No "improvements"** or roundings of original behaviour.
 - **Input:** bottom-screen UI is used by mouse clicks as touches, not by extra keys. The input mapping does not change game behaviour.
 - **Spot-check the reverse engineering:** pick 2 or 3 constants or branch conditions the worker says came from the original. Check them against the disassembly at the stated address (`llvm-objdump` on `artifacts/<dir>/game.arm.elf`, or REA via the installed skill). If the lead gave you Opus, check every newly transcribed handler's branches and constants. Never claim a check you did not do; write "not verified: …" instead.
-- **Script natives:** implemented as a batch item, never one by one. The census row is updated in place.
+- **Script natives** (`linux-port`): implemented as a batch item, never one by one. The census row is updated in place.
+
+**Spec and default behaviour** (branches of other plans)
+
+- **Every behaviour has a spec:** each choice is backed by an approved entry in `docs/design/`. A choice the worker made alone is invented: RETURN.
+- **The default stays faithful:** with every option at its default, game behaviour is unchanged and the port's tests are unchanged. A changed or deleted port test is RETURN.
+- **The rule file's review checks** (`docs/rules/<file>.md`, "Briefs and review"), for example: QoL off by default and switched only by the user's toggle mechanism, tests with the feature on and off; Windows platform code only in its own files, verified on Windows, `Linux green (WSL)` reported for shared code.
+- **Generic over hardcoded**, as above, with the spec in place of the original.
+
+**Gates** (all branches)
+
+- **Nothing for a closed plan:** no Windows work, no QoL features and no preparation for them in a branch of another plan, and no branch for a plan whose gate is closed in `docs/plans/README.md`.
 
 **Architecture**
 
@@ -48,7 +59,7 @@ CTest also guards `game.cpp` size (`game-cpp-wiring`), GL outside `src/render/` 
 
 - **Recorded values:** tests pin recorded reference values with their provenance next to them (command, state, address, trace), not a live second implementation.
 - **Short tests:** they start at the point under test. No long walks or drives, no tuned routes. A test that takes longer than about 5 s carries the `slow` label in `CMakeLists.txt`.
-- **No shortcut past the real path:** a test must not reach the point under test by teleport or `--call-script` when the user plays the real path. If the package fixes a blocker the user hit while playing, run the real path once in `chase-game` from where the user starts (a short run) and report what you saw.
+- **No shortcut past the real path** (`linux-port`): a test must not reach the point under test by teleport or `--call-script` when the user plays the real path. If the package fixes a blocker the user hit while playing, run the real path once in `chase-game` from where the user starts (a short run) and report what you saw.
 
 **Style and Git**
 

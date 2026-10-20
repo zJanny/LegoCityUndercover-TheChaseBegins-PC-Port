@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """Check (and with --fix repair) relative links and anchors in the repository's Markdown files.
 
-Every dated entry in docs/re/*.md (a "## YYYY-MM-DDTHH:MM:SS..." heading) gets an explicit,
+Every dated entry in docs/re/*.md and docs/design/*.md (a "## YYYY-MM-DDTHH:MM:SS..." heading) gets an explicit,
 stable anchor line "<a id="ts-YYYYMMDD-HHMMSS"></a>" in front of it. Every link whose text
 contains "§YYYY-MM-DDTHH:MM" must point at "file.md#ts-..." of the entry with that timestamp.
 
-Size and shape rules (CLAUDE.md "Documentation rules"): a docs/re file is at most 40 KB, a feature file at most
+Size and shape rules (CLAUDE.md "Documentation rules"): a docs/re or docs/design file is at most 40 KB, a feature file at most
 16 KB, CLAUDE.md at most 20 KiB, the session log of a progress file at most
 20 entry lines. With --fix, older log lines move to the progress archive (a line the archive already holds, as
 after a merge of two branches that both archived it, is dropped instead of copied again) and closed items ("- [x] ID") of a feature
 file move to <feature>.closed.md. An item or stand-in ID defined twice in a feature and its closed file is an
-error. Every feature file has exactly one row (at most 300 characters, table preceded by a blank line) in the feature index, which groups its tables under "## <Area>" headings; closed-items files have none. Item lines keep the field order gap text, needs:, blocks:, uses:, evidence:. A timestamp later than the current time is an error; a ":00" second in a line new compared to HEAD is a warning. --next PREFIX [COUNT] prints free item IDs, --reserve PREFIX COUNT WHO reserves a range in docs/plans/features/id-reservations.md, --release WHO drops it (an error when WHO holds none); an unknown PREFIX needs --new-prefix. An entry with a "Superseded by" line under its heading moves with --fix to docs/re/<topic>.history.md and links follow. A link whose text starts with "Corrects" needs a "Corrected by" line under the corrected entry's heading
+error. Every feature file has exactly one row (at most 300 characters, table preceded by a blank line) in the feature index, which groups its tables under "## <Area>" headings; closed-items files have none. Item lines keep the field order gap text, needs:, blocks:, uses:, evidence:. A timestamp later than the current time is an error; a ":00" second in a line new compared to HEAD is a warning. --next PREFIX [COUNT] prints free item IDs, --reserve PREFIX COUNT WHO reserves a range in docs/plans/features/id-reservations.md, --release WHO drops it (an error when WHO holds none); an unknown PREFIX needs --new-prefix. An entry with a "Superseded by" line under its heading moves with --fix to <topic>.history.md next to it and links follow. A link whose text starts with "Corrects" needs a "Corrected by" line under the corrected entry's heading
 that links back, and every "Corrected by" line needs the matching "Corrects" link.
 """
 import argparse
@@ -51,6 +51,15 @@ SUBTOPICS = "Subtopics:"
 SUPERSEDED = "Superseded by"
 MAX_LOG_LINES = 20
 MAX_CLAUDE_BYTES = 20480
+FINDINGS_DIRS = (Path("docs") / "re", Path("docs") / "design")
+
+
+def in_findings(root, path):
+    return any(path.is_relative_to(root / d) for d in FINDINGS_DIRS)
+
+
+def findings_files(root):
+    return [p for d in FINDINGS_DIRS if (root / d).is_dir() for p in sorted((root / d).glob("*.md"))]
 
 
 def markdown_files(root):
@@ -210,7 +219,7 @@ def correction_errors(root, files, load):
     for path in files:
         doc = load(path)
         rel = path.relative_to(root)
-        in_re = path.is_relative_to(root / "docs" / "re")
+        in_re = in_findings(root, path)
         for number, line in enumerate(doc.lines):
             if doc.in_code[number]:
                 continue
@@ -225,7 +234,7 @@ def correction_errors(root, files, load):
                 if is_corrected_by:
                     corrected_by.append((path, number, dest, fragment))
     for path in files:
-        if not path.is_relative_to(root / "docs" / "re"):
+        if not in_findings(root, path):
             continue
         doc = load(path)
         entries = list(doc.entries())
@@ -366,7 +375,7 @@ def parse_timestamp(match):
 
 
 def line_selector(root, path):
-    if path.is_relative_to(root / "docs" / "re") and not path.name.endswith(HISTORY_SUFFIX):
+    if in_findings(root, path) and not path.name.endswith(HISTORY_SUFFIX):
         return lambda line: ENTRY_HEADING.match(line) is not None
     if path.is_relative_to(feature_dir(root)):
         return lambda line: True
@@ -376,8 +385,7 @@ def line_selector(root, path):
 
 
 def dated_paths(root):
-    re_dir = root / "docs" / "re"
-    paths = list(re_dir.glob("*.md")) if re_dir.is_dir() else []
+    paths = findings_files(root)
     features = feature_dir(root)
     if features.is_dir():
         paths += [p for p in features.glob("*.md") if p.name not in ("README.md", RESERVATIONS)]
@@ -385,7 +393,7 @@ def dated_paths(root):
 
 
 def future_selector(root, path):
-    if path.is_relative_to(root / "docs" / "re") and not path.name.endswith(HISTORY_SUFFIX):
+    if in_findings(root, path) and not path.name.endswith(HISTORY_SUFFIX):
         return lambda line: True
     return line_selector(root, path)
 
@@ -409,10 +417,7 @@ def timestamp_errors(root):
 
 def current_state_errors(root):
     errors = []
-    re_dir = root / "docs" / "re"
-    if not re_dir.is_dir():
-        return errors
-    for path in sorted(re_dir.glob("*.md")):
+    for path in findings_files(root):
         if path.name.endswith(HISTORY_SUFFIX) or path.name == "README.md":
             continue
         lines = path.read_text(encoding="utf-8").split("\n")
@@ -427,11 +432,8 @@ def current_state_errors(root):
 
 def split_leftover_warnings(root):
     warnings = []
-    re_dir = root / "docs" / "re"
-    if not re_dir.is_dir():
-        return warnings
     changed = {root / name for name in added_lines(root)}
-    for path in sorted(re_dir.glob("*.md")):
+    for path in findings_files(root):
         if path.name.endswith(HISTORY_SUFFIX) or path.name == "README.md" or path not in changed:
             continue
         lines = path.read_text(encoding="utf-8").split("\n")
@@ -499,7 +501,7 @@ def timestamp_warnings(root):
                 for match in TIMESTAMP.finditer(text):
                     if match.group(6) == "00":
                         warnings.append(f"{name}:{number}: warning: round-seconds-timestamp: {match.group(0)} ends in :00; take times from date -Iseconds")
-        if path.is_relative_to(root / "docs" / "re") and not name.endswith(HISTORY_SUFFIX):
+        if in_findings(root, path) and not name.endswith(HISTORY_SUFFIX):
             stale = stale_current_state(path, lines)
             if stale:
                 warnings.append(f"{name}:{stale}: warning: current-state-stale: new dated entries but '{CURRENT_STATE}' unchanged")
@@ -644,11 +646,8 @@ def retarget_links(line, path, topic, history, moved, leaving):
 
 
 def move_superseded(root):
-    re_dir = root / "docs" / "re"
-    if not re_dir.is_dir():
-        return 0
     total = 0
-    for topic in sorted(re_dir.glob("*.md")):
+    for topic in findings_files(root):
         if topic.name.endswith(HISTORY_SUFFIX) or topic.name == "README.md":
             continue
         doc = Doc(topic)
@@ -779,14 +778,12 @@ def move_closed_items(root):
 
 def size_errors(root):
     errors = []
-    re_dir = root / "docs" / "re"
-    if re_dir.is_dir():
-        for path in sorted(re_dir.glob("*.md")):
-            if path.name.endswith(HISTORY_SUFFIX):
-                continue
-            size = path.stat().st_size
-            if size > MAX_RE_BYTES:
-                errors.append(f"{path.relative_to(root)}:1: re-file-size: {size} bytes, limit {MAX_RE_BYTES}; split it by subtopic")
+    for path in findings_files(root):
+        if path.name.endswith(HISTORY_SUFFIX):
+            continue
+        size = path.stat().st_size
+        if size > MAX_RE_BYTES:
+            errors.append(f"{path.relative_to(root)}:1: re-file-size: {size} bytes, limit {MAX_RE_BYTES}; split it by subtopic")
     features = feature_dir(root)
     if features.is_dir():
         for path in feature_files(root):
@@ -823,7 +820,7 @@ def process(root, fix, messages=None):
     anchors_added = 0
     if fix:
         for path in files:
-            if path.is_relative_to(root / "docs" / "re"):
+            if in_findings(root, path):
                 doc = load(path)
                 n = doc.add_missing_anchors()
                 if n:
@@ -832,7 +829,7 @@ def process(root, fix, messages=None):
     errors = []
     links_rewritten = 0
     for path in files:
-        if path.is_relative_to(root / "docs" / "re"):
+        if in_findings(root, path):
             doc = load(path)
             for number, anchor in doc.entries():
                 if number == 0 or doc.lines[number - 2].strip() != f'<a id="{anchor}"></a>':

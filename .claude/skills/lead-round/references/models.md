@@ -24,6 +24,7 @@ Prices from the claude-api skill, cached 2026-10-06, in dollars per million toke
 | Worker, mechanical | Haiku | Edits with no reverse engineering: renames, splitting a feature file, regenerating docs, a census row from data already recorded |
 | Worker, known start | Sonnet | A bug with a known symptom, a class whose handlers are named, a feature shaped like one already ported, a batch of natives whose handlers are listed |
 | Worker, open-ended reverse engineering | Opus | The driving class or system is unknown, or the behaviour is spread over many functions |
+| Worker, other plans (Windows, QoL) | Sonnet | A package with an approved spec has a known start. **Opus** for a design that spans several systems, such as a first platform layer. **Haiku** for mechanical edits |
 | Emulator servant | Sonnet | |
 | Code reviewer | Sonnet | **Opus** when the branch transcribes new handlers or constants from the disassembly that must be checked against it, or when a correctness argument spans several systems. **Skip it** when the branch touches no code |
 | Combined reviewer | Sonnet | Replaces both reviewers on a small branch (see "Combined review" below). Never Haiku: it judges code |

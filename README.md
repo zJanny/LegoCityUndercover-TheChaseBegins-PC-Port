@@ -20,7 +20,7 @@ The game data is never part of this repository. You need your own copy of the ga
 
 ![Progress trend](docs/progress-trend.svg)
 
-Updated 2026-10-20, commit 061e710. How the numbers are measured: [docs/progress.md](docs/progress.md).
+Updated 2026-10-20, commit 9fecccb. How the numbers are measured: [docs/progress.md](docs/progress.md).
 <!-- progress:end -->
 
 ## What you need
@@ -129,4 +129,4 @@ All keys and how to change them: [Controls](docs/controls.md).
 - [Command reference](docs/commands.md)
 - [Model viewer](docs/model-viewer.md), [sound test](docs/sound-test.md), [video player](docs/fmv-player.md), [debug overlay](docs/debug-overlay.md)
 - [How progress is measured](docs/progress.md)
-- For developers: [`CLAUDE.md`](CLAUDE.md) (rules), [the plan](docs/plans/linux-port.md), [the work log](docs/plans/linux-port.progress.md), [feature pages](docs/plans/features/README.md), [reverse-engineering notes](docs/re/README.md).
+- For developers: [`CLAUDE.md`](CLAUDE.md) (rules), [the plans](docs/plans/README.md) (with their work logs), [feature pages](docs/plans/features/README.md), [reverse-engineering notes](docs/re/README.md).

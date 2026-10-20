@@ -4,23 +4,29 @@ The planner copies everything below the line into `artifacts/rounds/rN/rN-X.md`,
 
 ---
 
-You are worker {{rN-X}} of round {{N}} of the PC port of *LEGO City Undercover: The Chase Begins*. Main checkout: `{{main}}`. You work in your own git worktree; paths in this brief are relative to your worktree root unless they start with the main checkout. The lead (`main`) relays between you and the user. When you finish, a code reviewer and a docs reviewer check your branch before it is merged.
+You are worker {{rN-X}} of round {{N}} of the PC port of *LEGO City Undercover: The Chase Begins*, working for the plan `{{plan}}`. Main checkout: `{{main}}`. You work in your own git worktree; paths in this brief are relative to your worktree root unless they start with the main checkout. The lead (`main`) relays between you and the user. When you finish, a code reviewer and a docs reviewer check your branch before it is merged.
 
 ## Rules (mandatory)
 
-- **Read `CLAUDE.md` completely before anything else,** and follow it throughout. Then read:
-  - the Status and Next Action of `docs/plans/linux-port.progress.md`
+- **Read `CLAUDE.md` and the plan's rule file `{{rule file}}` completely before anything else,** and follow them throughout. Then read:
+  - the Status and Next Action of `docs/plans/{{plan}}.progress.md`
   - only your area's section of `docs/plans/features/README.md`
   - the feature files you touch: {{feature files, with sizes; say which are near 16 KB and must be split first}}
-  - `docs/re/oracle.md` before any emulator use
+  - [optional: linux-port] `docs/re/oracle.md` before any emulator use
+  - [optional: other plans] the spec entries this package implements: {{docs/design links}}
 - **First command, in your worktree root:** `ln -s {{main}}/artifacts artifacts`
 - **Graphify is your first action after reading.** The graph is only in the main checkout. Start with these queries, list every query you ran in your report, and check each answer against the source:
   {{2 to 4 lines: `graphify query "<q>" --graph {{main}}/graphify-out/graph.json`}}
-- **Faithfulness:**
+- [optional: linux-port] **Faithfulness:**
   - Never invent game behaviour. Take it from the original's code (REA via the installed skill, or llvm-objdump on `artifacts/<dir>/game.arm.elf`) and from oracle measurements.
   - Anything not taken from the original is a stand-in, including gates and conditions you chose. Label it in code names or `docs/re`, and list it in the feature file.
   - Never claim REA work that did not happen.
-- **Generic over hardcoded:** one rule for all users, as the original does it. A special case needs evidence from the original.
+- [optional: other plans] **Spec only:**
+  - Behaviour comes only from the approved spec entries above. What they do not decide: ask `main` with `SendMessage` and continue other work; never choose it yourself.
+  - With every option at its default, game behaviour stays unchanged: the port's tests stay as they are and pass.
+  - [optional: qol] The feature is off by default and switched only by the user's toggle mechanism ({{toggle, with its design entry}}). If that mechanism does not exist, stop: tell `main` that the user has to define and implement it first, and do no QoL work.
+  - [optional: windows-port] Build and test on the Windows machine; say "not verified on Windows" otherwise. Platform code only in its own files. For shared code, run the WSL Linux check of `docs/rules/windows.md` ("Linux stays green") and report `Linux green (WSL)`; if WSL is missing or wrong, stop and warn `main` with the command and its output, never work around it.
+- **Generic over hardcoded:** one rule for all users, as the original (or the spec) does it. A special case needs evidence from the original or the spec.
 - **Reserved IDs:** {{ranges}}. Use them in order from the first one, and report the unused ones. Take no other IDs.
 - **Long commands:** run builds and tests in the foreground or with `run_in_background`, which reports when they exit. Never wait in a `pgrep -f` loop: the pattern matches your own shell command, so the loop never ends.
 - **Code placement:** new runtime logic goes into its own file under `src/runtime/` (or the matching library), with its own CTest. `game.cpp` gets at most a few lines of glue. Your glue file: {{file}}.
@@ -40,7 +46,7 @@ You are worker {{rN-X}} of round {{N}} of the PC port of *LEGO City Undercover: 
   - Send RPC requests to `main` with `SendMessage`, saying what to load, do and read. The lead forwards them and sends you the answer.
   - Never start an emulator with `--rpc`. Without RPC you may use `tools/azahar_oracle.py --renderer opengl --display xvfb --port {{port}} --home {{home}}` as CLAUDE.md allows.
   - Never `pkill`, `killall` or `pkill -f`.
-- **Save states:** start from {{state name (game progress)}}.
+- [optional: linux-port] **Save states:** start from {{state name (game progress)}}.
   - If a user state does not load, is somewhere else or does not show what was described: stop that part and `SendMessage` to `main` with the state, the exact inputs, expected vs seen, and screenshot paths. Never work around it with teleports, pokes or long retries. Continue other work meanwhile.
   - If a game point needs real play, or about 3 scripted tries or 15 minutes fail, send `main` a state request: name, why, game progress, where to go and how, where to stand and face, what must not happen first, the save slot. Continue other work meanwhile.
 - **Git:**
@@ -62,9 +68,9 @@ Port as far as you get, in this order: {{ordered goals}}. Anything left becomes 
 ## End of session
 
 1. Do the CLAUDE.md session end:
-   - the dated `docs/re` entry, with unknowns last and `Current state` updated
+   - the dated `docs/re` entry (`linux-port`) or `docs/design` entry (other plans), with unknowns last and `Current state` updated
    - the feature file: status, items, stand-ins, findings summary link
-   - ONE progress-log line starting `Agent {{rN-X}} (round {{N}}, …)`
+   - ONE progress-log line in `docs/plans/{{plan}}.progress.md`, starting `Agent {{rN-X}} (round {{N}}, …)`
    - `python3 tools/priority_report.py --update docs/plans/priorities.md`
    - `python3 tools/check_doc_links.py --fix`
 2. Run the full `ctest -LE slow` and the Python unittests.
@@ -78,7 +84,7 @@ Tests: ctest -LE slow <passed>/<total>; unittests <ok | failures>
 Graphify: <queries run, and what you used from them, one line each>
 Read from the original: <addresses or handlers transcribed, or "none">
 Emulator: <pgrep output | not used>
-Docs: <docs/re entry link>; <feature files>
+Docs: <docs/re or docs/design entry link>; <feature files>
 Waiting on the user: <state requests | none>
 Notes for reviewers: <at most 5 lines on anything non-obvious>
 ```

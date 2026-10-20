@@ -286,6 +286,21 @@ class RuleChecksTest(unittest.TestCase):
         (self.re_dir / 'a.md').write_text('<a id="ts-20260101-010101"></a>\n\n## 2026-01-01T01:01:01+01:00 — E\n\n## Current state\n')
         self.assertEqual(len(self.errors('current-state-position')), 1)
 
+    def test_design_files_follow_the_findings_rules(self):
+        design = self.root / 'docs' / 'design'
+        design.mkdir()
+        (design / 'd.md').write_text('# D\n\n## 2026-01-01T01:01:01+01:00 — Old\n\nSuperseded by [d.md §2026-01-02T02:02:02](#ts-20260102-020202): wrong.\n\n'
+                                     '## 2026-01-02T02:02:02+01:00 — New\n\nBody.\n')
+        errors = links.process(self.root, False)[0]
+        self.assertTrue(any('docs/design/d.md' in e and 'entry has no anchor ts-20260101-010101' in e for e in errors))
+        self.assertEqual(len(self.errors('current-state-missing')), 1)
+        (design / 'd.md').write_text('# D\n\n## Current state\n\n- New.\n\n' + (design / 'd.md').read_text().split('\n\n', 1)[1])
+        self.assertEqual(links.process(self.root, True)[0], [])
+        self.assertIn('## 2026-01-01T01:01:01+01:00 — Old', (design / 'd.history.md').read_text())
+        self.assertNotIn('Old', (design / 'd.md').read_text())
+        (design / 'big.md').write_text('## Current state\n\n' + 'x' * links.MAX_RE_BYTES)
+        self.assertEqual(len(self.errors('re-file-size')), 1)
+
     def test_long_item_lines_are_not_limited(self):
         (self.features / 'f.md').write_text('- [ ] FOO-1 ' + 'y' * 900 + '\n')
         self.assertEqual(links.process(self.root, False)[0], [])

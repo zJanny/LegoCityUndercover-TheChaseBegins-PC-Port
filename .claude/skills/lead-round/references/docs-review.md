@@ -21,7 +21,7 @@ The lead gives you the worktree, the branch, the worker's brief and the worker's
 
 ## Steps
 
-1. Read `CLAUDE.md` in full, especially "Documentation rules". Then read the brief and the report.
+1. Read `CLAUDE.md` in full, especially "Documentation rules", and the plan's rule file named in the brief. Then read the brief and the report.
 2. In the worktree:
    - `python3 tools/check_doc_links.py` (without `--fix`) for the mechanical state
    - `git diff --stat main...HEAD` for which code changed, so you know what the docs must cover
@@ -31,12 +31,13 @@ The lead gives you the worktree, the branch, the worker's brief and the worker's
 
 ## Checklist
 
-**Three places, linked, never copied**
+**Four places, linked, never copied**
 
-- **Findings** (addresses, layouts, measurements, evidence IDs, unknowns) are in `docs/re/`. **Gaps** (open items, stand-ins, feature state) are in the feature file. **Work state** is in the progress file.
+- **Findings** about the original (addresses, layouts, measurements, evidence IDs, unknowns) are in `docs/re/`. **Design decisions** of other plans (approved specs, the user's words and date, open questions) are in `docs/design/`. **Gaps** (open items, stand-ins, feature state) are in the feature file. **Work state** is in the plan's progress file.
+- A design entry records what the user approved, never a choice the worker made alone; such a choice is RETURN.
 - None of them copies another. A finding inside a feature item or the log line is moved to the `docs/re` entry, and the item links to it.
 
-**`docs/re` entry**
+**`docs/re` or `docs/design` entry**
 
 - **New dated entry:** the anchor sits directly above the heading. The timestamp is real: compare it with the branch's commit times, `git log --format='%h %aI' main..HEAD`.
 - **Inside the entry:** unknowns come last, and it does not rewrite old entries.
@@ -62,10 +63,10 @@ The lead gives you the worktree, the branch, the worker's brief and the worker's
 
 **Progress log**
 
-- **Exactly ONE new line,** starting `Agent rN-X (round N, …)`, with the timestamp, what was done, how far it got and a link to the feature file.
+- **Exactly ONE new line** in the progress file of the branch's plan, starting `Agent rN-X (round N, …)`, with the timestamp, what was done, how far it got and a link to the feature file.
 - **No findings, stand-ins or items** in the log line or in Next Action.
 
-**Census and oracle docs**
+**Census and oracle docs** (`linux-port`)
 
 - **Natives:** if the branch touched script natives, the census row in `docs/re/script-natives-census.md` was edited in place. The row's note holds its state, item IDs and links, never findings.
 - **New save states:** recorded in `docs/re/oracle.md` / `oracle-states.md` together with their game progress (missions done or running), not only the place.
@@ -77,6 +78,7 @@ The lead gives you the worktree, the branch, the worker's brief and the worker's
   - new options and test names are in `docs/commands.md`
   - controls are in `docs/controls.md`
 - **They describe the current version,** not its history. They link instead of duplicating.
+- **QoL options:** a new QoL feature is documented for the user with its toggle and that it is off by default.
 - **README:** if setup, build, extraction, start commands or controls changed, the README's path from checkout to game start is updated. Its state line still says the port is not playable yet.
 
 **No game content:** no game assets, no screenshots, nothing from `artifacts/`.
