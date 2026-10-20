@@ -139,6 +139,7 @@ The round ends when every worker branch is merged or the user has dropped it.
    - tests and merges
    - open user actions (state requests, things to play)
    - anything that needs a decision
+   - when N is a multiple of 10: the proposal of a user docs audit as a package of round N+1 (a docs reviewer in audit mode, `references/docs-review.md`); it starts only after the user approves
 4. Close with: *"Start a fresh session and run /lead-round to plan round N+1. Everything the next round needs is in the repository."* Then stop. Start nothing new.
 
 ## Recorder (user reports and save states)

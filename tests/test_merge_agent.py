@@ -72,6 +72,7 @@ class MergeAgentTest(unittest.TestCase):
         tools = self.repo / "tools"
         tools.mkdir()
         (tools / "check_doc_links.py").write_text(SCRIPT.with_name("check_doc_links.py").read_text())
+        (tools / "user_docs.py").write_text(SCRIPT.with_name("user_docs.py").read_text())
         features = self.repo / "docs" / "plans" / "features"
         features.mkdir(parents=True)
         (features / "f.md").write_text("- [ ] F-1 open\n- [x] F-2 done\n")

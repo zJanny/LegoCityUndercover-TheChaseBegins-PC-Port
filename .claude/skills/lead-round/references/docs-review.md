@@ -14,6 +14,7 @@ The lead gives you the worktree, the branch, the worker's brief and the worker's
 - the feature-file size limit and the index rows
 - ID field order and duplicate IDs
 - the `Current state` section exists
+- the user docs against the code (`tools/user_docs.py`): options, `chase-*` programs and paths
 - `Superseded by` moves
 - 20 log lines
 
@@ -77,6 +78,7 @@ The lead gives you the worktree, the branch, the worker's brief and the worker's
   - the user docs say so in plain language, with short sentences and lists
   - new options and test names are in `docs/commands.md`
   - controls are in `docs/controls.md`
+- **Top-level `docs/*.md`:** the owner list is in CLAUDE.md "User docs". For each file the branch's behaviour change makes wrong, check the statement, not only the option names the checker sees: `commands.md` (options, programs, test names, and the meaning of existing ones), `controls.md`, `game-runtime.md`, and `status.md` against the feature file's Status (a missing update is a quick fix when the feature file states the behaviour, otherwise RETURN).
 - **They describe the current version,** not its history. They link instead of duplicating.
 - **QoL options:** a new QoL feature is documented for the user with its toggle and that it is off by default.
 - **README:** if setup, build, extraction, start commands or controls changed, the README's path from checkout to game start is updated. Its state line still says the port is not playable yet.
@@ -127,3 +129,12 @@ Return (worker must fix):
 `PASS`: nothing to fix. `FIXED`: you fixed everything that was found. `RETURN`: at least one point is left for the worker; your own fixes are still committed and listed.
 
 If the lead resumes you with "docs follow-ups" from the code reviewer, or after a send-back, check only those points and the new commits, then give a new verdict.
+
+## Audit mode (every tenth round)
+
+The lead may hand you the user docs instead of a branch. Work in a fresh worktree of main, edit only the top-level `docs/*.md` and `README.md`, and commit as a branch for the normal merge.
+
+1. Run `python3 tools/check_doc_links.py`; it must pass first.
+2. For each top-level `docs/*.md`, check every statement against the code or a run, not against other docs: option meanings and defaults (`--help`, the option parser), program names, test names and what they check (`CMakeLists.txt`), key bindings (`docs/controls.md` against the default bindings), behaviour claims (the feature file's Verified behaviour and Stand-ins), and sentences marked as missing that are now done or the reverse.
+3. Correct what is wrong; remove what no longer exists; write nothing you cannot source from the code or the feature files. Anything you cannot decide goes to the verdict as a question.
+4. Verdict as above, plus one line per file: `<file>: ok | corrected (<n> statements) | question`.

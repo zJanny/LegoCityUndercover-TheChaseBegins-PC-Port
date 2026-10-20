@@ -65,6 +65,7 @@ Port as far as you get, in this order: {{ordered goals}}. Anything left becomes 
 1. Do the CLAUDE.md session end:
    - the dated `docs/re` entry (`linux-port`) or `docs/design` entry (other plans), with unknowns last and `Current state` updated
    - the feature file: status, items, stand-ins, findings summary link
+   - the top-level user docs your change makes wrong, as listed in CLAUDE.md "User docs" (`docs/commands.md` for every new or changed option, program or test, `docs/controls.md`, `docs/status.md`, `docs/game-runtime.md`)
    - ONE progress-log line in `docs/plans/{{plan}}.progress.md`, starting `Agent {{rN-X}} (round {{N}}, …)`
    - `python3 tools/priority_report.py --update docs/plans/priorities.md`
    - `python3 tools/check_doc_links.py --fix`

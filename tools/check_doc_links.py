@@ -12,6 +12,7 @@ after a merge of two branches that both archived it, is dropped instead of copie
 file move to <feature>.closed.md. An item or stand-in ID defined twice in a feature and its closed file is an
 error. Every feature file has exactly one row (at most 300 characters, table preceded by a blank line) in the feature index, which groups its tables under "## <Area>" headings; closed-items files have none. Item lines keep the field order gap text, needs:, blocks:, uses:, evidence:. A timestamp later than the current time is an error; a ":00" second in a line new compared to HEAD is a warning. --next PREFIX [COUNT] prints free item IDs, --reserve PREFIX COUNT WHO reserves a range in docs/plans/features/id-reservations.md, --release WHO drops it (an error when WHO holds none); an unknown PREFIX needs --new-prefix. An entry with a "Superseded by" line under its heading moves with --fix to <topic>.history.md next to it and links follow. A link whose text starts with "Corrects" needs a "Corrected by" line under the corrected entry's heading
 that links back, and every "Corrected by" line needs the matching "Corrects" link.
+The user docs (docs/*.md outside the subfolders, README.md) are checked against the code by user_docs.py: every option string of src/ and every chase-* program of CMakeLists.txt is named in them, and an option, chase-* program or tools/src/tests/docs path in their code spans or fences must exist.
 """
 import argparse
 import re
@@ -20,6 +21,8 @@ import sys
 import unicodedata
 from datetime import datetime, timezone
 from pathlib import Path
+
+import user_docs
 
 EXCLUDED_DIRS = {"artifacts", "build", ".claude", "graphify-out", ".git", "node_modules"}
 ENTRY_HEADING = re.compile(r"^## (\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d)(?::(\d\d))?")
@@ -796,6 +799,7 @@ def size_errors(root):
     errors.extend(timestamp_errors(root))
     errors.extend(current_state_errors(root))
     errors.extend(session_log_errors(root))
+    errors.extend(user_docs.user_doc_errors(root))
     claude = root / "CLAUDE.md"
     if claude.is_file() and claude.stat().st_size > MAX_CLAUDE_BYTES:
         errors.append(f"CLAUDE.md:1: claude-md-size: {claude.stat().st_size} bytes, limit {MAX_CLAUDE_BYTES}")
