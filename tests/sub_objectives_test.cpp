@@ -81,6 +81,20 @@ void records() {
     require(state.groups().empty(), "a destroyed target is removed and the empty record deleted");
 }
 
+void managerKey() {
+    World world;
+    world.positions = {{"carryit", {0, 0, 0}}, {"car", {30, 0, 0}}, {"van", {0, 0, 60}}};
+    ObjectiveState state;
+    state.setSubObjective("carryit", "car", 0, true, true);
+    state.setSubObjective("carryit", "van", 0, true, true);
+    SubObjectiveWorld view = world.view();
+    view.keyIsManagerEntity = [](const std::string& key) { return key == "carryit"; };
+    state.update(0.25f, view);
+    const SubObjectiveGroup* group = state.group("carryit", 0);
+    require(group && near(group->centroid[0], 15.0f) && near(group->centroid[2], 30.0f),
+            "0x2bec1c: a key equal to 0x230ef4 is not counted, (car + van) / 2");
+}
+
 void seenByte() {
     World world;
     world.positions = {{"wp", {0, 0, 0}}, {"box", {5, 0, 5}}};
@@ -150,6 +164,7 @@ void arrows() {
 int main() {
     try {
         records();
+        managerKey();
         seenByte();
         arrows();
     } catch (const std::exception& error) {

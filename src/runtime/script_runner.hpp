@@ -231,6 +231,7 @@ public:
     const ObjectiveState& objectives() const { return objectives_; }
     // Waypoint class (waypoints.hpp): reaching an active waypoint starts the level script named by its TriggerScript.
     void loadWaypoints(const assets::ClassLookup& classOf) { waypoints_.load(level_, classOf); }
+    void loadCarryItWaypoint(const assets::Level& bits, const assets::ClassLookup& classOf) { waypoints_.loadCarryItWaypoint(bits, classOf); }
     // The AnimationOffset parameter of every placed object whose class lists it (PlayAnimation 0x268240).
     void loadAnimationOffsets(const assets::ClassLookup& classOf);
     void loadObjectKinds(const assets::ClassLookup& classOf) { objectNatives_.loadKinds(level_, classOf); }

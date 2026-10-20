@@ -138,7 +138,7 @@ Unknowns:
 ## 2026-10-14T23:27:10+02:00 — Mission 1-1 step states m11-1 to m11-9 (user slots 6 to 10 and 1 to 4)
 
 - The user played mission 1-1 in a new playthrough on their own Azahar and quick-saved before each step. Copied read-only (`cp --no-clobber`, identical by `cmp`) from `~/.local/share/azahar-emu/states/00040000000AD600.NN.cst` (saved 23:18 to 23:23) to `artifacts/oracle/states/NAME.cst` with `NAME.json` (New 3DS). The user's saves were not modified. Slots 1 to 4 were overwritten by the user since the earlier copies (`info-barrier` and `mission-1-2-start` keep their own copies).
-- Game progress of all nine: mission 1-1 in progress, not finished (user report). The steps are those of [objective-hud.md §2026-10-14T21:23](objective-hud.md#ts-20261014-212357).
+- Game progress of all nine: mission 1-1 in progress, not finished (user report). The steps are those of [objective-hud-waypoints.md §2026-10-14T21:23](objective-hud-waypoints.md#ts-20261014-212357).
 - Each state was loaded once by the lead (port 24730, home `artifacts/oracle/lead-home`, OpenGL, `frames 2`, `player`); all loaded. Player world position and forward vector:
 
 | State | Slot | Point in mission 1-1 | Player position | Forward |

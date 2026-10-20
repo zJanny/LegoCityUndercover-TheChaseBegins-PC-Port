@@ -2,20 +2,19 @@
 
 Handlers of batch SCRIPT-31 as far as mission 1-1 uses them, and what the original shows for an active waypoint. Evidence: REA (Ghidra 12.1.2 pseudo code of `artifacts/game/game.arm.elf`, sha256 5152ed14...0881), llvm-objdump, level data (`parseLevel`) and RPC screenshots of Azahar (states `gameplay-start`, Old 3DS, with `teleport` as measuring aid, output `artifacts/oracle/agentOH-out/`, never committed).
 
-Subtopics: [objective-hud-map.md](objective-hud-map.md)
+Subtopics: [objective-hud-map.md](objective-hud-map.md), [objective-hud-waypoints.md](objective-hud-waypoints.md)
 
 ## Current state
 
 - SetActiveWayPoint 0x27bde8 -> 0x26e168 -> 0x229c98: a disable is ignored while AutoTrigger is set; enable makes a map slot, disable frees it and fades the column out over `FadeScaleInTime` (outside state 3). [§2026-10-19T15:00](#ts-20261019-150002), [scripts-missions.md §2026-10-14T22:48](scripts-missions.md#ts-20261014-224825)
 - SubObjectiveGoToEnable fills the table *0x51a3a8 (0xc4-byte records); the update 0x2be934 removes targets seen enabled and then disabled, keeps the centroid and, while no target is on the map, a map slot of icon 14 / 13 / 15 that fades in over 1.0 s. [§2026-10-19T15:00](#ts-20261019-150002)
 - The arrow natives fill three lists (go to, enemy, carry) drawn as 1 x 1 camera-facing world quads 1.2 above the entity box, bobbing by 0.2, with 0.5 s fades. [§2026-10-19T15:00](#ts-20261019-150002)
-- A waypoint is the column model `Prop_Waypoint_Small` plus a child `Badge` (`dummymeshbouncer`, turns and hops); the class files carry the child. [§2026-10-15T18:31](#ts-20261015-183130)
-- Column and badge fade in and out through node tweens (registry 0x21b7cc, flags 3: alpha and colour). [§2026-10-15T19:58](#ts-20261015-195841)
-- The waypoint is reached through its class update and `TriggerScript`, which starts the mission script; mission 1-1 has 11 steps. [§2026-10-14T21:23](#ts-20261014-212357), [scripts-missions.md §2026-10-14T22:48](scripts-missions.md#ts-20261014-224825)
+- The waypoint model, its badge and fades, and the mission 1-1 flow through waypoints: [objective-hud-waypoints.md](objective-hud-waypoints.md).
 - Map screen placement, edge ellipse, arrow, halo, grow and pulse rings: [objective-hud-map.md](objective-hud-map.md).
 - Group targets draw as icons 14, 13, 15 at alpha 1 - slot fade; "on the map" is the inner ellipse 98.4 / 62.4. [§2026-10-19T15:00](#ts-20261019-150002)
-- A disable starts the fade for any accepted disable outside state 3, frees the map slot (16 slots, first free, -1 when full) and clears the vehicle waypoint global; the entity disable is conditional on a global that is never a waypoint; `WaypointType` is 0 in all shipped waypoint classes, so every waypoint is icon type 0. [§2026-10-19T23:06](#ts-20261019-230637)
-- Open: icon type selector of other classes, ring line colour, zoom control, how node alpha enters the draw (HUD-S70), the global *(0x529c18 + 0x24), entity boxes of other entities, oracle pictures of group markers and arrows.
+- A disable starts the fade for any accepted disable outside state 3, frees the map slot (16 slots, first free, -1 when full) and clears the vehicle waypoint global; the entity disable runs for the carry-it waypoint `Bits.WaypointForCarryIt`, the value of *(0x529c18 + 0x24) ([§2026-10-20T10:24:09](#ts-20261020-102409)); `WaypointType` is 0 in all shipped waypoint classes, so every waypoint is icon type 0. [§2026-10-19T23:06](#ts-20261019-230637)
+- The waypoint system object 0x529c18 stores the entity Bits.WaypointForCarryIt (charbits) at +0x24 (start 0x2e7484; key of enemy and carry groups) and the vehicle waypoint at +0x28, which its update 0x2e7660 -> 0x2a57c0 moves to the vehicle it names (not ported, SCRIPT-354). [§2026-10-20T10:24](#ts-20261020-102409)
+- Open: icon type selector of other classes, ring line colour, zoom control, how node alpha enters the draw (HUD-S70), the vehicle waypoint steering 0x2a57c0 (SCRIPT-354), entity boxes of other entities, oracle pictures of group markers and arrows.
 
 <a id="ts-20261014-155919"></a>
 
@@ -27,7 +26,7 @@ Corrected by [objective-hud-map.md §2026-10-15T19:56](objective-hud-map.md#ts-2
 
 Corrected by [objective-hud.md §2026-10-19T15:00](#ts-20261019-150002): the "marker effect" of 0x2be934 is a map slot of icon 14 / 13 / 15 at the centroid, and the table is the pointer at 0x51a3a8.
 
-Corrected by [objective-hud.md §2026-10-15T18:31](#ts-20261015-183130): the badge is not part of the waypoint model; it is a child object of the class file (`dummymeshbouncer`) that the port did not instantiate, so the model was drawn without it rather than "drawn static".
+Corrected by [objective-hud-waypoints.md §2026-10-15T18:31](objective-hud-waypoints.md#ts-20261015-183130): the badge is not part of the waypoint model; it is a child object of the class file (`dummymeshbouncer`) that the port did not instantiate, so the model was drawn without it rather than "drawn static".
 
 **What mission 1-1 calls.** In lvl_01 (`1-1_*` scripts): `SetActiveWayPoint(object, 0|1)` and `SubObjectiveGoToEnable(waypoint, target, 0|1)`; `EnableMinimapWipe` appears in the `1-2` scripts. `1-1_MissionStart` (hash 1340660679) switches `1-1_Waypoint_01` on (the donut shop, world 817.35, 23.93, 1071.20); `1-1_SO_Donuts_PickedUp`-type scripts move the waypoint to `1-1_Waypoint_02` (police car), `_03` (donut van), `1-1_Van_Waypoint_Enter`, `_05`, `_Donuts`. The waypoint objects are placed objects of the classes `props/map_waypoint` (mesh `Prop_Waypoint_Small`), `props/map_getintovehiclewaypoint` and `props/map_vehiclewaypoint` (mesh `Prop_Waypoint_Large`); the classes have no script.
 
@@ -61,77 +60,6 @@ Unknowns:
 - Which code draws the map markers and which parameter selects the icon (the class values at hashes 0x6fef256, 0x51a935e, 0x59521dda, 0xc93e4625 of the waypoint classes are untested); markers outside the map screen (clamp or not) and the other icons (`subobjectiveenemy.btga`, `pointofinterest.btga`, mission icons).
 - Handlers 0x2c289c, 0x230dbc, 0x187f28, 0x246128, 0x241624, 0x236968, 0x19465c and the update 0x2be934 in detail; the effect ids 0x0d, 0x0e, 0x0f and what a go-to group looks like in the world; the arrow of SubObjectiveArrow* (not used by mission 1-1).
 - The pulse clock, the badge colours (the sprite drawn by the port looks darker than the oracle's badge, so the original probably uses another blend), the badge's turning in the world.
-
-<a id="ts-20261014-212357"></a>
-
-## 2026-10-14T21:23:57+02:00 — Mission 1-1 flow in the level data and what stops it in the port (donut shop waypoint)
-
-Source: `Level::scripts`, `Level::triggers` and the object parameters of `lvl_01_cherrytreehills_main.blvl` (`tools/convert_levels.py --param-names` and a scratch dump through `chase_assets` / `scriptFunctionSupport`, not kept). No oracle run.
-
-**User report 2026-10-14.** Walking into the donut shop marker at the start of mission 1-1 does nothing in `chase-game`.
-
-**Why.** The marker is `1-1_Waypoint_01` (class `props/map_waypoint`, 817.35, 23.93, 1071.20, room8). It has no trigger record: its instance parameter `TriggerScript` = `1-1_VanBreakdown` names the level script that the original starts when the player reaches the waypoint. The port shows the waypoint (SetActiveWayPoint) but has no reach test and never reads `TriggerScript`. All 23 waypoint objects of lvl_01 (`props/map_waypoint`, `props/map_vehiclewaypoint`, `props/map_getintovehiclewaypoint`) work this way.
-
-**Mission 1-1 order (scripts and what starts them).**
-
-| Step | Started by | Script | Needs in the port |
-|---|---|---|---|
-| 1 | `startup` (`1-<StoryProgress>_MissionStart`) | `1-1_MissionStart`: intro movie `01_GameIntro` once, in-engine cutscene `1_1_a`, waypoint 01 on | PlayCutscene, DCamCutScene* (SCRIPT-29, MOVIE-2), SetPartyCharacter, VehicleSetLocked / ForcedStop (vehicles) |
-| 2 | waypoint 01 reached | `1-1_VanBreakdown`: cutscene `1_1_b`, dialogue, police car and waypoint 02 on, broken van scene in room33 | waypoint reach and `TriggerScript`; PlayCharAnim; CameraFollow |
-| 3 | waypoint 02 reached (police car) | `1-1_Get_Car`: unlocks `1-1_Police_Car` | vehicles: enter and drive |
-| 4 | `PlayerVehicleEntered` of `1-1_Police_Car` (trigger 2) | `1-1_Release_Car_Script`: director cameras, waypoint 03 on | vehicle trigger events (SCRIPT-76) |
-| 5 | waypoint 03 reached (room33) | `1-1_Found_Van`: dialogue with `1-1_AI_DonutLady`, build-it `1-1_BI_DonutVanParts` on | AIFaceTarget, EnableTrafficAndPedestrians, PlayCharAnim |
-| 6 | build-it finished (inferred from the names; `ObjectTriggered` of the script object `1-1_SO_VanFixed`, trigger 7) | `1-1_SO_VanFixed`: driveable donut van, `1-1_Van_Waypoint_Enter` on | build-its (`props/prop_buildit`, parameters `BuilditFinalProp`, `TriggerObject`) |
-| 7 | `1-1_Van_Waypoint_Enter` reached (`props/map_getintovehiclewaypoint`, `TriggerScript`) | `1-1_Van_Waypoint_Enter_Script`: waypoint 05 on | vehicles; VehicleAllowJumpOut |
-| 8 | waypoint 05 reached in the van (`props/map_vehiclewaypoint`) | `1-1_VanEscorted`: cutscene `1_1_d`, player out of the van, donut box waypoint on | VehicleJumpOut, VehicleSetForcedStop |
-| 9 | `1-1_Waypoint_Donuts` reached | `1-1_Carry_Object_Tutorial`: carry box `1-1_DonutsDEMO` on, `1-1_Deliver_Donuts` trigger on | carrying (`props/prop_carry`, parameter `TriggerPickup`) |
-| 10 | box carried into its target (inferred from the names; `ObjectBoundEntered` of `1-1_DonutsDEMO`, trigger 1; target `1-1_DonutTarget_DEMO`, class `props/prop_carrytargetnomesh`, parameter `TriggerObject`) | `1-1_Deliver_Donuts`, then `1-1_SO_MissionEnd` (`ObjectTriggered`, trigger 6): cutscene `1_1_e` | carry target; moving object bounds (SCRIPT-77) |
-| 11 | `SpawnScript` | `1-1_MissionEnd`: StoryProgress 2, reward, director cameras, police station doors on, mission 1-2 waypoint | GiveReward, SnapCamera (stand-ins) |
-
-Side scripts: `1-1_Get_Back_To_Donuts` (BoundLeft, warns when the player walks away), `1-1_SO_Donuts_PickedUp` (`ObjectTriggered`, tip texts), `1-1_Buildit_Tutorial` (empty).
-
-**Script functions of mission 1-1 without any handler:** DCamCutSceneLoad / Play / Wait / Free, PlayCutscene, SetPartyCharacter, VehicleSetLocked, VehicleSetForcedStop, SetForcedStopOnMyVehicle, VehicleSetUnshovable, VehicleAllowJumpOut, VehicleJumpOut, EnableTrafficAndPedestrians, PlayCharAnim, CameraFollow, OverrideMusic, AutomaticMusic. The other calls run, many of them as stand-ins (tip texts, dialogue, waypoints, AIEnable, AIFaceTarget, GiveReward, SnapCamera, QuickSave).
-
-Unknowns:
-- The waypoint reach test: code (class behaviour of `props/map_waypoint` and the two vehicle classes), radius or bound, on foot or in a vehicle, and when the script starts relative to the trigger pass.
-- How a script object (class `scriptobject`) is fired by a build-it, a carry pickup or a carry target: the object reference parameters (`TriggerObject`, `TriggerPickup`, `BuilditFinalProp`, unnamed hash 0xc23d689b) print as unset (`None`) in the converter, so the link may be made elsewhere.
-- What the original shows at step 1 on a new game in the port's order (intro movie, then `1_1_a`).
-
-<a id="ts-20261015-183130"></a>
-
-## 2026-10-15T18:31:30+02:00 — The waypoint badge is a child object `Badge` of class `dummymeshbouncer`; it turns and hops (llvm-objdump, class files)
-
-[Corrects §2026-10-14T15:59](#ts-20261014-155919): the model `Prop_Waypoint_Small` (`models/prop_waypoint_small/`, one node `Waypoint_Small`, one mesh with the `marker_rings.tga` part, 128 vertices) holds only the light column. The police badge is a second model, `Prop_Waypoint_LCPDBadge` (`models/prop_waypoint_lcpdbadge/`, one node, one part `Prop_Waypoint_LCPDBadge_128.tga`, 107 vertices).
-
-**Why the port drew no badge.** The class files `levels/props/map_waypoint.blvl`, `map_vehiclewaypoint.blvl` and `map_getintovehiclewaypoint.blvl` carry one embedded object (section +0x2c, the same layout as a level's objects): instance `Badge`, class `dummymeshbouncer`, parameters `meshname` = `Prop_Waypoint_LCPDBadge`, `initialposition` (0, 0.3965, 0) in the small class and (0, 2.6375, 0) in the two large ones, and the bouncer parameters below. The port read only the objects of the level file, never the objects of a class file. The setup 0x170fd8 of the waypoint class looks the child up by name (0x2450f0 "Badge", stored at component +0x5c) and hides it with the waypoint (0x2428c0 at its end).
-
-**Class `dummymeshbouncer`** (type 228, `levels/dummymeshbouncer.blvl`; descriptor built at 0x1c8008: create 0x260528, destroy 0x26c858, update 0x260728, handler 0x26c87c = `return 0`). Create reads `RevsPerMin` (hash 7581f2b0) x 0.10471976 into +0x48, `BouncePerMin` (ba47dfdf) x 0.016666668 into +0x40 and `BounceAmount` (40d85717) into +0x44, all defaulting to 0, and keeps the child's placement matrix (0x2364cc from `initialposition` / `initialorientation`) as the record's first 0x40 bytes. Update 0x260728 (dt in s0): clock +0x4c += dt, wraps at 60 s (`if 60 <= clock then clock -= 60`); the matrix is the placement matrix with rows 0 and 2 turned about y by `RevsPerMin * 0.10471976 * clock` radians (0x237bc4: row0' = row0 c - row2 s, row2' = row2 c + row0 s) and the translation raised by `sin(BouncePerMin * 0.016666668 * clock * 2 pi) * BounceAmount` along (0, 1, 0) (the float3 at 0x56d424, measured (0, 1, 0) in [script-natives-flags.md §2026-10-14T19:19](script-natives-flags.md#ts-20261014-191915)); then set on the node (0x24c118). Values: small waypoint `RevsPerMin` 15, `BouncePerMin` 50, `BounceAmount` 0.08; both large classes 15, 20, 0.25. So the badge turns a quarter in 1 s and hops with a period of 1.2 s (small) or 3 s (large).
-
-**The column has no animation data.** The model has one node and the archive holds no `.bfnanm` for it (`models/prop_waypoint_*` has only the models and the chequered flag's `ufo_beam.bfnanm`). The waypoint update 0x17acbc animates it with a node tween (0x229e54 -> 0x21b7cc with flag byte 3: alpha and colour of the node, from the first to the second float over a time): state 0 starts a 0 to 1 fade of the waypoint node over `FadeScaleInTime` (+0x6c: 0.8 s small, 1.0 s large; the parameter name says "scale" but the tween flags are alpha and colour), state 1 fades the Badge 0 to 1 over `BadgeFadeInTime` (+0x68, 0.8 s small), state 2 fades the waypoint 1 to 0 over `FadeScaleOutTime` (+0x70, 0.4 s small). The tween evaluator and the effect of the flag bits on the draw (0x23f708, 0x2408f8, 0x23f540) were not read.
-
-**Port.** `src/runtime/mesh_bouncer.*` (class replica and `propChildren` for the class files), `src/game_prop_parts.*` (scene instances of the children, shown with their waypoint). Tests `prop-parts` (closed form) and `prop-parts-real-data` (class parameters). Picture check against the oracle picture `agentOH-out/tp3a.png`: the same cyan column with the bronze badge inside, and in the port the badge goes from edge-on to three-quarter view over 16 updates; no oracle number of the badge's angle or height exists.
-
-Unknowns:
-- The fade tweens of the column and the badge (alpha and colour over 0.8 s, 0.4 s out) are not drawn; the port shows both at full opacity as soon as the waypoint is switched on.
-- Where the child's clock starts (record +0x4c is zero from the allocation; the first update adds dt) and whether the bouncer runs while its parent is disabled (the flag byte +0x50 that stops the update has no writer found); the port runs it every update.
-- The effect of `UseMarker` waypoints (kind 2, other `props/map_*` classes) on the children.
-
-<a id="ts-20261015-195841"></a>
-
-## 2026-10-15T19:58:41+02:00 — Fade of the waypoint column and badge: the node tween (llvm-objdump)
-
-Source: llvm-objdump of `artifacts/game/game.arm.elf`; no oracle run. Completes the fade unknown of [§2026-10-15T18:31](#ts-20261015-183130).
-
-**Waypoint update 0x17acbc, timer +0x74 and state +0x78.** The timer is reduced by dt and clamped to 0; only the update in which it reaches 0 runs the state. State 0: the waypoint node gets a tween from 0 to 1 over `FadeScaleInTime` (+0x6c) through 0x229e54 (flags 3), the Badge child (+0x5c) a tween from 0 to 0, timer = +0x6c, state 1, sound 0x35. State 1 (only when the badge exists and bit 1 of +0x8f is set): the Badge gets a tween from 0 to 1 over `BadgeFadeInTime` (+0x68); the state stays 1. State 2: the waypoint node gets a tween from 1 to 0 over `FadeScaleOutTime` (+0x70), timer = +0x70, state 3 (the Badge is not touched). So the column is transparent at the start of its fade-in, the badge starts fading in when the column is opaque, and the column fades out while the badge keeps full opacity until the waypoint switches off.
-
-**Tween registry 0x21b7cc(manager, node, flags, from, to, duration, linked object).** A table of up to 20 entries of 28 bytes at manager +0x338 (count +0x334; an entry for the same node is reused, a full table drops the oldest): node, start time (0x23f74c), duration, from, to, linked object, flag byte. On registration the `from` value is applied at once. Evaluation 0x1593c8 (entry index, dt; dt of -1.0 means the time since the start): value = from + (to - from) elapsed / duration, 1.0 from 1.0 up, 0 at or below 0; a duration of 0 is skipped. Applying a value: flag bit 0 sets the node alpha to int(value x 255) (0x23f708), bit 1 sets the node colour to value x the float3 at 0x56d40c = (1, 1, 1) (0x2408f8, 0x23f6d0), bit 2 a third node property (0x23f540); at value 0 the node is hidden (0x23f734) and the linked object disabled with message 251 (0), shown again with message 251 (1) otherwise. The flags used by the waypoint are 3: alpha and colour.
-
-**Port.** `src/runtime/node_tween.hpp` (the evaluator), `Waypoint::columnTween` / `badgeTween` in `src/runtime/waypoints.*` (start points as above, `BadgeFadeInTime` read from the class), `Scene::setInstanceFade` (uniform `instanceFade` multiplies the colour and alpha of the whole instance in `scene.frag.glsl`), glue in `src/game_level.cpp` and `PropParts::apply`. Test `waypoints` (`fades`).
-
-Unknowns:
-- How the node alpha and colour enter the material of the draw (0x23f708, 0x23f6d0 store them in the node; the draw path that reads them was not read): the port multiplies colour and alpha of the finished fragment by the value (HUD-S70).
-- Bit 1 of +0x8f (condition for the badge fade-in; a distance test of 0x17ad20) is assumed set; the tween clock (time since registration) is advanced by dt per update from the next update on.
-- The tweens of the other `props/map_*` classes (`UseMarker`) and the sound 0x35 at the start of state 0.
 
 <a id="ts-20261019-150002"></a>
 
@@ -168,6 +96,8 @@ Unknowns:
 
 ## 2026-10-19T23:06:37+02:00 — SetActiveWayPoint disable: map slots, vehicle waypoint, entity flag and WaypointType (llvm-objdump on game.arm.elf, class files; no REA session, no emulator)
 
+Corrected by [objective-hud.md §2026-10-20T10:24:09](#ts-20261020-102409): the writer of *(0x529c18 + 0x24) is 0x2e7484 (the entity Bits.WaypointForCarryIt) and the reader of the vehicle waypoint *(0x529c18 + 0x28) is 0x2e7660 -> 0x2a57c0 (0x2b4dac is its setter).
+
 Completes [§2026-10-19T15:00:02](#ts-20261019-150002) (SCRIPT-S269). Disassembly of 0x229c98, 0x229b9c, 0x1a2114, 0x2b4dac, 0x230ef4, 0x2428c0, 0x186d44, 0x186d50, 0x17aa34 and the map draw 0x2db0dc, plus the class files `props/map_waypoint`, `map_vehiclewaypoint` and `map_getintovehiclewaypoint`.
 
 - **Disable path 0x229d70, in order.** (1) A waypoint with +0x50 non-zero and kind +0x8c == 1 stores 0 in *(0x529c18 + 0x28) (0x2b4dac is `str r0, [0x529c18 + 0x28]`). (2) The map slot is freed (0x229b9c: 16 slots at *(0x519e24 + 0x24) + 0xe0 + 4 i; the slot record is released with 0x25c27c and the entry zeroed). (3) 0x2428c0(entity) runs only when 0x230ef4 (= *(0x529c18 + 0x24)) equals the waypoint; 0x2428c0 sets the entity's disabled bit (halfword +0x10 bit 0). (4) The Badge child is disabled. (5) Outside state 3 the tweens start, **for every accepted disable, whether or not the waypoint was active**: the column 1 to 0 over FadeScaleInTime, the Badge (when bit 1 of +0x8f) 1 to 0 over 2^-23 s. The original needs no "was active" test because a waypoint that was never enabled has its entity disabled by the setup 0x170fd8 and is not drawn.
@@ -179,3 +109,24 @@ Completes [§2026-10-19T15:00:02](#ts-20261019-150002) (SCRIPT-S269). Disassembl
 Unknowns:
 - The writer of *(0x529c18 + 0x24) and the reader of *(0x529c18 + 0x28).
 - Whether another entity class takes 0x1a2114 slots through a path other than 0x229c98 (none found; 0x29f228, 0x2beccc and 0x2e7634 free +0x84 slots of the same component layout).
+
+<a id="ts-20261020-102409"></a>
+
+## 2026-10-20T10:24:09+02:00 — Waypoint system globals: the carry-it entity (writer 0x2e7484) and the vehicle waypoint steering 0x2a57c0 (llvm-objdump on game.arm.elf, port probe over every .blvl; no REA session, no emulator)
+
+[Corrects §2026-10-19T23:06:37](#ts-20261019-230637) (its unknowns: the writer of *(0x529c18 + 0x24), the reader of *(0x529c18 + 0x28)). SCRIPT-349, SCRIPT-S269, SCRIPT-S270.
+
+- **0x529c18 is the static object "WaypointSystem".** Its constructor 0x34b0ec stores the descriptor 0x36211c and the name string (0x34b118) at +0 / +4 and -1 at +0x1c / +0x20. The descriptor lists the callbacks 0x2e7814 (allocates the 344-byte block *(this + 0x134), zeroes +0x24, +0x28, +0x12c, +0x130), 0x2e77f8 (frees the block), 0x2e7484, 0x2e75f4 (zeroes the block and +0x24, +0x28, +0x12c) and 0x2e7660; the other slots are the stub 0x339ff8 family. The slot order was not read. Only eight literal pools name 0x529c18; the field stores are made through `this` in these callbacks, which is why the earlier literal-pool search found none.
+- **Writer of +0x24: 0x2e7484.** After a loop over the entities of the manager list *(*(0x589a18 + 4) + 0x24) with type byte +0x12 == 78 (per-room pair lists in the +0x134 block, not read further) it calls 0x23b350(*(0x589a18 + 4), "Bits.WaypointForCarryIt") (string at 0x2e75dc) and stores the result in this + 0x24 (0x2e75b0). When it is non-null the object at the entity's +0x3c is passed to 0x242eb0 with 0 (not modelled by the port; see the unknowns), and the entity is disabled with 0x2428c0 (tail call). The reset 0x2e75f4 and the create 0x2e7814 store 0.
+- **The entity** is the object `WaypointForCarryIt`, class props/map_waypoint, room Objects, of `levels/charbits.blvl` (probe over every .blvl of the archive, 2026-10-20T10:24:09: the only object whose name contains "carry" and "waypoint"). No level script call names it or the prefix "Bits." (all script calls of the archive searched for "carryit" and "bits."; 790 SetActiveWayPoint and SubObjectiveGoToEnable calls among them).
+- **Readers 0x230ef4 (24 callers).** Eleven were read (0x16d638, 0x16d66c, 0x18e91c, 0x19cfbc, 0x19cfe4, 0x1b9d84, 0x1b9f48, 0x1c7ed0, 0x1cb1a0, 0x1cb3e8, 0x1da8bc): each passes the value as the first argument of the group functions 0x230e60 (enemy group, type 1), 0x22fbe8 (carry group, type 2), 0x2a62b8 or 0x230dbc, that is as the key of an enemy or carry group; they are the unported fillers of SCRIPT-331, not character code. The compare at 0x2bec1c (a group key equal to it is not counted into the centroid) is the one the port uses. No caller of 0x229c98 passes it (0x17af60, 0x17b554, 0x26e1a4, 0x278d48, 0x2d2afc, 0x2d2c30, 0x2d2cbc), so the entity disable of the disable path runs only when a script or the carry code names the entity; no script does.
+- **Reader of +0x28: 0x2e7660 (the system's update).** Its last block (0x2e77d0) tail-calls 0x2a57c0(vehicle waypoint) when *(this + 0x28) is non-zero (0x2b4dac only stores it). 0x2a57c0 does nothing unless kind +0x8c == 1, WaypointType +0x88 != 11 and the linked entity +0x50 (the VehicleString entity found at 0x17102c) is non-null and not the player's current vehicle (0x24255c(*0x3772b8)). Then, when bit 19 of the waypoint node's flags is set, it moves the waypoint to the linked entity: s16 = 0x22ecdc(waypoint) (node +0xa4 minus node +0xb0), minus 1.2 (0x2a58f0) when the target's class byte 0x229e6c is 31; the target's node matrix 0x2429d0 is copied, its translation is moved along the matrix row 1 by s16 (0x2408c4), the matrix is set as the waypoint node's matrix (0x24c118), the entity at that point is looked up (0x239838) and the waypoint is attached to it (0x229bf0 -> 0x1b42e4). The last lines set bit 6 of +0x8e once (+0x78 byte 0, +0x74 float from 0x2a58f4) and clear bit 2. So the vehicle waypoint follows the vehicle it names while the player does not drive it. The port keeps every waypoint at its placement (SCRIPT-354).
+- **Port.** `WaypointSet::loadCarryItWaypoint` (`src/runtime/waypoint_global.cpp`) resolves the entity from the charbits level, disabled; the disable branch of `setActive` and the centroid key test (`SubObjectiveWorld::keyIsManagerEntity`) use it. CTests `waypoint-global`, `waypoint-global-real-data`, `sub-objectives`.
+
+Unknowns:
+- The meaning of the node floats +0xa4 / +0xb0 (the offset s16), of bit 19 of the node flags (set by 0x24c118 and 0x256938, cleared by 0x2527e0 for nodes with a body +0xf8; taken as always set for a waypoint node), of the class byte 31 of 0x229e6c, and the entity lookup 0x239838 / attach 0x229bf0.
+- The first loop of 0x2e7484 and the other 13 callers of 0x230ef4.
+- Whether the shipped missions ever show the vehicle waypoint away from its placement (no oracle picture).
+- What 0x242eb0 does with the object at the entity's +0x3c and the argument 0; the port does not model the call (no visible effect expected, because the carry-it entity has no scene instance).
+- When the original runs 0x2e7484. The port runs it once per level session, after `WaypointSet::load` (`src/game_level.cpp`); the descriptor slot order was not read, so this timing is an inference.
+- The carry-it entity has no scene instance in the port: a script that enabled it would not draw it. No script names it, so this cannot happen today (SCRIPT-S285).

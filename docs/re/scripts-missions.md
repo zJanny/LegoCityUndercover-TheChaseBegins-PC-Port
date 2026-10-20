@@ -80,7 +80,7 @@ Source: instance parameters of `lvl_01_cherrytreehills_main.blvl` (`tools/conver
 - `nameHash("1-2_HouseArrival")` = 3388757305 (the unnamed intro with cutscene `1_2_a`), parameter of `1-2_Waypoint_02` (room40).
 - `nameHash("1-2_Spawn_Doorlock")` = 3035472981 (the Doorlock Holmes entrance), parameter of `1-2_Waypoint_03` (room40).
 - `1-2_Waypoint_01` names `1-2_MissionStart`; `1-2_Waypoint_04` names `1-2_Waypoint_02_Script`.
-- The same mechanism starts mission 1-1's steps: `1-1_Waypoint_01` (the donut shop) names `1-1_VanBreakdown` ([objective-hud.md §2026-10-14T21:23](objective-hud.md#ts-20261014-212357)).
+- The same mechanism starts mission 1-1's steps: `1-1_Waypoint_01` (the donut shop) names `1-1_VanBreakdown` ([objective-hud-waypoints.md §2026-10-14T21:23](objective-hud-waypoints.md#ts-20261014-212357)).
 
 Unknowns:
 - Starters of 2451216995 and 2494968948 (no `TriggerScript` value hashes to them).

@@ -56,7 +56,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | [script-system-natives-state](script-system-natives-state.md) | IN_PROGRESS | SCRIPT-56 / 59 / 335 / 336 readers of placement and flags; SCRIPT-57 kind gates; SCRIPT-61 / 62 / 64 / 65 progress natives |
 | [script-system-ai-navigation](script-system-ai-navigation.md) | IN_PROGRESS | SCRIPT-79 AI movement; SCRIPT-94 active nav grid set; SCRIPT-103 AISuperJump flight, SCRIPT-104 pursuit / stalk / run-away states |
 | [script-system-dcam](script-system-dcam.md) | IN_PROGRESS | SCRIPT-46 director camera commands, SCRIPT-48 / 49 / 50 / 181 / 182 details |
-| [script-system-hud-natives](script-system-hud-natives.md) | IN_PROGRESS | SCRIPT-66 to SCRIPT-70 text screens; SCRIPT-73 map and scanner natives; SCRIPT-329 to SCRIPT-331 arrow hide, oracle check, enemy and carry groups |
+| [script-system-hud-natives](script-system-hud-natives.md) | IN_PROGRESS | SCRIPT-66 to SCRIPT-70 text screens; SCRIPT-73 map and scanner natives; SCRIPT-329 to SCRIPT-331 arrow hide, oracle check, enemy and carry groups; SCRIPT-354 vehicle waypoint steering |
 
 ## World and levels
 

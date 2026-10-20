@@ -63,48 +63,52 @@ void WaypointSet::load(const assets::Level& level, const assets::ClassLookup& cl
     controlTaken_ = false;
     slotUsed_.fill(false);
     vehicleWaypoint_.clear();
-    for (const assets::LevelObject& object : level.objects) {
-        if (std::find(std::begin(kClassNames), std::end(kClassNames), object.className) == std::end(kClassNames)) continue;
-        const assets::Level* cls = classOf(object.className);
-        if (!cls) continue;
-        Waypoint waypoint;
-        waypoint.instance = lower(object.instance);
-        waypoint.room = object.room;
-        waypoint.triggerScript = stringOf(effectiveParam(object, *cls, kHashTriggerScript));
-        waypoint.fadeScaleIn = floatOf(effectiveParam(object, *cls, kHashFadeScaleIn), 0.0f);
-        waypoint.fadeScaleOut = floatOf(effectiveParam(object, *cls, kHashFadeScaleOut), 0.0f);
-        waypoint.badgeFadeIn = floatOf(effectiveParam(object, *cls, assets::nameHash("BadgeFadeInTime")), 0.0f);
-        waypoint.takePlayerControl = intOf(effectiveParam(object, *cls, kHashTakePlayerControl), 0) != 0;
-        waypoint.autoTrigger = intOf(effectiveParam(object, *cls, kHashAutoTrigger), 0) != 0;
-        waypoint.getIntoVehicle = intOf(effectiveParam(object, *cls, kHashGetIntoVehicle), 0) != 0;
-        waypoint.waypointType = intOf(effectiveParam(object, *cls, assets::nameHash("WaypointType")), 0);
-        if (const assets::LevelParam* vehicleString = effectiveParam(object, *cls, kHashVehicleString)) {
-            waypoint.kind = WaypointKind::Vehicle;
-            const std::uint32_t named = assets::objectReferenceHash(*vehicleString);
-            if (named)
-                for (const assets::LevelObject& other : level.objects)
-                    if (assets::nameHash(other.instance) == named) {
-                        waypoint.namedVehicle = lower(other.instance);
-                        break;
-                    }
-            if (waypoint.namedVehicle.empty()) waypoint.vehicleType = std::int8_t(intOf(effectiveParam(object, *cls, kHashVehicleType), 0));
-        }
-        for (const assets::LevelBound& bound : cls->bounds)
-            if (bound.name == kBoundName) {
-                waypoint.hasBound = true;
-                std::copy_n(bound.centre, 3, waypoint.bound.centre);
-                std::copy_n(bound.half, 3, waypoint.bound.half);
-                waypoint.bound.shape = bound.shape;
-                waypoint.bound.active = bound.active != 0;
-                break;
-            }
-        const auto position = assets::objectStart(level, object.instance);
-        if (position) {
-            std::copy_n(position->position, 3, waypoint.position);
-            waypoint.yawDegrees = position->orientation[1];
-        }
-        waypoints_.push_back(std::move(waypoint));
+    carryIt_.clear();
+    for (const assets::LevelObject& object : level.objects)
+        if (std::optional<Waypoint> waypoint = buildWaypoint(level, object, classOf)) waypoints_.push_back(std::move(*waypoint));
+}
+
+std::optional<Waypoint> WaypointSet::buildWaypoint(const assets::Level& level, const assets::LevelObject& object, const assets::ClassLookup& classOf) {
+    if (std::find(std::begin(kClassNames), std::end(kClassNames), object.className) == std::end(kClassNames)) return std::nullopt;
+    const assets::Level* cls = classOf(object.className);
+    if (!cls) return std::nullopt;
+    Waypoint waypoint;
+    waypoint.instance = lower(object.instance);
+    waypoint.room = object.room;
+    waypoint.triggerScript = stringOf(effectiveParam(object, *cls, kHashTriggerScript));
+    waypoint.fadeScaleIn = floatOf(effectiveParam(object, *cls, kHashFadeScaleIn), 0.0f);
+    waypoint.fadeScaleOut = floatOf(effectiveParam(object, *cls, kHashFadeScaleOut), 0.0f);
+    waypoint.badgeFadeIn = floatOf(effectiveParam(object, *cls, assets::nameHash("BadgeFadeInTime")), 0.0f);
+    waypoint.takePlayerControl = intOf(effectiveParam(object, *cls, kHashTakePlayerControl), 0) != 0;
+    waypoint.autoTrigger = intOf(effectiveParam(object, *cls, kHashAutoTrigger), 0) != 0;
+    waypoint.getIntoVehicle = intOf(effectiveParam(object, *cls, kHashGetIntoVehicle), 0) != 0;
+    waypoint.waypointType = intOf(effectiveParam(object, *cls, assets::nameHash("WaypointType")), 0);
+    if (const assets::LevelParam* vehicleString = effectiveParam(object, *cls, kHashVehicleString)) {
+        waypoint.kind = WaypointKind::Vehicle;
+        const std::uint32_t named = assets::objectReferenceHash(*vehicleString);
+        if (named)
+            for (const assets::LevelObject& other : level.objects)
+                if (assets::nameHash(other.instance) == named) {
+                    waypoint.namedVehicle = lower(other.instance);
+                    break;
+                }
+        if (waypoint.namedVehicle.empty()) waypoint.vehicleType = std::int8_t(intOf(effectiveParam(object, *cls, kHashVehicleType), 0));
     }
+    for (const assets::LevelBound& bound : cls->bounds)
+        if (bound.name == kBoundName) {
+            waypoint.hasBound = true;
+            std::copy_n(bound.centre, 3, waypoint.bound.centre);
+            std::copy_n(bound.half, 3, waypoint.bound.half);
+            waypoint.bound.shape = bound.shape;
+            waypoint.bound.active = bound.active != 0;
+            break;
+        }
+    const auto position = assets::objectStart(level, object.instance);
+    if (position) {
+        std::copy_n(position->position, 3, waypoint.position);
+        waypoint.yawDegrees = position->orientation[1];
+    }
+    return waypoint;
 }
 
 const Waypoint* WaypointSet::find(const std::string& lowerName) const {
@@ -146,6 +150,7 @@ bool WaypointSet::setActive(const std::string& lowerName, bool enable) {
         if (!enable) {
             if (namedVehicleWaypoint) vehicleWaypoint_.clear();
             freeMapSlot(waypoint);
+            if (isCarryItWaypoint(waypoint.instance)) waypoint.entityEnabled = false;
             if (waypoint.state != 3) {
                 waypoint.columnTween = NodeTween::start(1.0f, 0.0f, waypoint.fadeScaleIn);
                 waypoint.badgeTween = NodeTween::start(1.0f, 0.0f, kWaypointBadgeHideSeconds);

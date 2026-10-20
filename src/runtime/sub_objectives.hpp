@@ -31,8 +31,8 @@ struct SubObjectiveWorld {
     // 0x1f8638 / 0x1f8564: the entity has a use marker in the list 0x5289ec; its world point and the marker's alpha 0x235e2c.
     std::function<bool(const std::string&, float[3], float&)> useMarker;
     std::array<float, 3> player{};
-    // STAND-IN (SCRIPT-S270): 0x230ef4 (*(0x529c18 + 0x24)) compared with the key of a record; its writer is not found, so the
-    // key is always counted into the centroid of a record with more than one target.
+    // 0x230ef4 (*(0x529c18 + 0x24), the carry-it waypoint of WaypointSet) compared with the key of a record: that key is not counted
+    // into the centroid of a record with more than one target. Unset: the key is always counted.
     std::function<bool(const std::string&)> keyIsManagerEntity;
 };
 

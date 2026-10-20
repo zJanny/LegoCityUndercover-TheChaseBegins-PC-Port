@@ -188,6 +188,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     player = game_player::placePlayer(archive, scene, level);
     levelScripts.setAllRoomsLoaded();
     levelScripts.loadWaypoints(classOf);
+    if (const chase::assets::FuseEntry* bits = archive.find("levels/charbits.blvl")) levelScripts.loadCarryItWaypoint(chase::assets::parseLevel(archive.read(*bits)), classOf);
     const std::vector<runtime::VehicleTableRow> vehicleRows = vehicleTable(archive);
     for (const runtime::VehicleTableRow& row : vehicleRows) vehicleTableNames.push_back(row.name);
     levelScripts.loadVehicles(classOf, vehicleRows);

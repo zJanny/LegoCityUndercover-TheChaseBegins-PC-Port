@@ -9,6 +9,7 @@
 #include <array>
 #include <cstdint>
 #include <functional>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -95,8 +96,8 @@ public:
     // GetIntoVehicle clear, becomes the vehicle waypoint *(0x529c18 + 0x28). A disable is ignored unless AutoTrigger is 0 (bit 4 of
     // +0x8e). An accepted disable clears the vehicle waypoint, frees the map slot and, outside state 3, starts the column tween 1 to 0
     // over FadeScaleInTime (+0x6c) and the badge tween 1 to 0 over 2^-23 s, whether or not the waypoint was active; the entity disable
-    // 0x2428c0 happens only when *(0x529c18 + 0x24) (0x230ef4) is this waypoint, which the port never models (SCRIPT-S269: the global's
-    // writer was not found; its readers use it as a character). Returns whether the waypoint is active afterwards.
+    // 0x2428c0 happens only when *(0x529c18 + 0x24) (0x230ef4) is this waypoint, the carry-it waypoint (loadCarryItWaypoint).
+    // Returns whether the waypoint is active afterwards.
     bool setActive(const std::string& lowerName, bool enable);
     // 0x17acbc for every active waypoint of a loaded room, in object order; the disable fades of switched-off waypoints advance too. The player position is the player node.
     // `vehicle` is the vehicle of 0x22ec10 / 0x24255c (jump in, seated and jump out count), null on foot.
@@ -105,8 +106,15 @@ public:
     bool playerControlTaken() const { return controlTaken_; }
     const std::vector<Waypoint>& waypoints() const { return waypoints_; }
     const Waypoint* find(const std::string& lowerName) const;
-    // *(0x529c18 + 0x28) (0x2b4dac): the instance of the last enabled vehicle waypoint, empty after its disable or none. No reader found.
+    // *(0x529c18 + 0x28) (0x2b4dac): the instance of the last enabled vehicle waypoint, empty after its disable or none. Its reader 0x2a57c0 (SCRIPT-354) is not ported.
     const std::string& vehicleWaypoint() const { return vehicleWaypoint_; }
+
+    // 0x2e7484 (the system's start): *(0x529c18 + 0x24) becomes the entity named "Bits.WaypointForCarryIt" (0x2e75dc), found with 0x23b350,
+    // and is disabled with 0x2428c0; the field is 0 when no such entity exists and after the resets 0x2e75f4 / 0x2e7814. The entity is the
+    // object WaypointForCarryIt of levels/charbits.blvl; it joins the set under its full name, disabled.
+    void loadCarryItWaypoint(const assets::Level& bits, const assets::ClassLookup& classOf);
+    // 0x230ef4 compared with an entity: the carry-it waypoint (full lower-case name) or nothing.
+    bool isCarryItWaypoint(const std::string& lowerName) const { return !carryIt_.empty() && lowerName == carryIt_; }
 
     static bool inBound(const Waypoint& waypoint, const float player[3]);
     // 0x17b21c: the closest point of the vehicle's box to the bound centre, seen from the waypoint, tested against the bound.
@@ -115,12 +123,14 @@ public:
 
 private:
     std::vector<Waypoint> waypoints_;
+    static std::optional<Waypoint> buildWaypoint(const assets::Level& level, const assets::LevelObject& object, const assets::ClassLookup& classOf);
     int takeMapSlot();
     void freeMapSlot(Waypoint& waypoint);
 
     bool controlTaken_ = false;
     std::array<bool, kWaypointMapSlots> slotUsed_{};
     std::string vehicleWaypoint_;
+    std::string carryIt_;
 };
 
 }

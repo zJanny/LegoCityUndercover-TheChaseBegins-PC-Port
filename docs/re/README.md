@@ -53,6 +53,7 @@ Read this index, then open only the file you need.
 | [script-text-bottom-screen.md](script-text-bottom-screen.md) | Bottom screen panel: dialogue background fade (panel alpha 0x51a2d4), ShowDialogBG byte 0x51a2bd and FadeScreen's screens, BlackoutMap, the InformationBox picture |
 | [objective-hud.md](objective-hud.md) | Waypoints, sub-objective records and arrows: handlers of batch 31 (SetActiveWayPoint 0x27bde8, SubObjectiveGoToEnable 0x2adaac, arrow natives), the manager update 0x2ed8d8 / 0x2be934, group map slots, arrow quads |
 | [objective-hud-map.md](objective-hud-map.md) | Map screen icons: placement 0x1ee7a8, edge ellipse and arrow, halo, grow, pulse rings (0x2db0dc, 0x2ddd64) |
+| [objective-hud-waypoints.md](objective-hud-waypoints.md) | The waypoint column and its badge, the node tween fades, mission 1-1 flow through waypoints |
 | [ai-natives.md](ai-natives.md) | The 17 AI natives of batch 34 (AIMove 0x171f7c, AIEnable 0x1881d4, ...): AI component fields, requested state numbers, the AIMove trigger event |
 | [ai-navigation.md](ai-navigation.md) | AIMove path finder 0x204284 on the nav grids, grid and cell search, follower 0x27ddb4, arrival and the AIMove event 0x2c630c, state 11 (AISuperJump) 0x2c3bd8 |
 | [ai-states.md](ai-states.md) | AISuperJump set-up 0x213300 (frames, +0x308, +0x30c), state 10 face target 0x2c5bc4, state 11 arrival value (ATTR_RunSpeed), state numbers 25 / 27 / 35 / 36 |

@@ -55,7 +55,7 @@ IN_PROGRESS, updated 2026-10-19T13:23:58+02:00. The six natives have handlers re
 ## 6. Findings summary
 
 - Handlers, the distance fade of mesh nodes with measured thresholds, the tween rules and the request list: [script-natives-world.md §2026-10-18T11:01:40](../../re/script-natives-world.md#ts-20261018-110140).
-- The node tween registry first read for the waypoint column: [objective-hud.md §2026-10-15T19:58](../../re/objective-hud.md#ts-20261015-195841).
+- The node tween registry first read for the waypoint column: [objective-hud-waypoints.md §2026-10-15T19:58](../../re/objective-hud-waypoints.md#ts-20261015-195841).
 - The destroy gate per class, the Dead events and EnableObject on a destroyed entity: [script-natives-world.md §2026-10-19T08:53:30](../../re/script-natives-world.md#ts-20261019-085330).
 - The routine per kind (hit machine, pushable, default handler, characters, 102) and the Dead broadcasts without consumer: [script-natives-world.md §2026-10-19T10:02:26](../../re/script-natives-world.md#ts-20261019-100226).
 - The death of characters (kinds 27, 121, 242): [script-natives-world-death.md §2026-10-19T13:21:05](../../re/script-natives-world-death.md#ts-20261019-132105).
