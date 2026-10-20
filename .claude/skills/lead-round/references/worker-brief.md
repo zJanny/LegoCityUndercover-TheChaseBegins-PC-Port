@@ -35,6 +35,7 @@ You are worker {{rN-X}} of round {{N}} of the PC port of *LEGO City Undercover: 
   - Short only. Start at the point under test (`at X Y Z`, a level data position, recorded data). No long walks or drives, no route tuning. A test over about 5 s gets the label `slow`.
   - Record next to each pinned value where it came from: command, state, address or trace.
   - Every new command-line option or script command gets a test for its rejection.
+- **No local-only data** (CLAUDE.md "No local-only data in the repo"): outputs go only under `artifacts/oracle/rN-…` or the scratchpad. Every value you use goes into the repo (test with provenance or `docs/re` entry) before the report. No local path in any committed file; tests read no local data.
 - **No explanatory comments.** No before/after screenshots for the user.
 - [optional: emulator, the package needs RPC or a state]
   **Emulator:** the servant owns the only `--rpc` session.

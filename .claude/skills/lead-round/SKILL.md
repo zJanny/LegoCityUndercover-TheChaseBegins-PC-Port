@@ -50,6 +50,7 @@ You do **not** read feature files, `priorities.md`, `docs/re/`, source code, dif
 ## Approval and briefs
 
 - **User approves, with or without changes:** resume the planner with `SendMessage`. Pass the user's exact words and "phase 2". It reserves the ID ranges, commits them on main, writes one brief file per agent and returns their paths. After that the planner is finished.
+- **Every brief names** the rule "No local-only data in the repo" (CLAUDE.md); you check it again at the merge: `python3 tools/check_local_data.py` passes and no generated file is staged.
 - **User rejects the proposal:** resume the planner with the reasons, for a new proposal.
 - **User approves a single replacement task mid-round:** start a new planner for it. The first planner is gone.
 

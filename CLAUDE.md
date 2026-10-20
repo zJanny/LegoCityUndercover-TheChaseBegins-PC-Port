@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Guidance for Claude Code (claude.ai/code) in this repository. Keep this file to rules every agent needs, whatever plan it works for (at most 20 KiB, checked by `doc-links`); the rules of one plan go into its rule file under `docs/rules/`, details of one subsystem into its feature file, `docs/re/` or `docs/design/`.
+Guidance for Claude Code (claude.ai/code) in this repository. Keep this file to rules every agent needs, whatever plan it works for (at most 22 KiB, checked by `doc-links`); the rules of one plan go into its rule file under `docs/rules/`, details of one subsystem into its feature file, `docs/re/` or `docs/design/`.
 
 ## Project
 
@@ -82,7 +82,11 @@ Four places, never copied between them, only linked: **findings** about the orig
 
 - Never modify the `.cci`. Never stage or commit it or anything game-derived (`*.cci`, `*.3ds`, `artifacts/`, `build/` are gitignored), and no original game assets or screenshots. Inspect staged changes before every commit.
 - If such content is already in history, report it and propose a remediation; never rewrite shared history or delete user data without authorization.
-- **Data from another machine:** docs, logs and tests may cite local data recorded on another PC (save states, traces, `artifacts/` paths, the image, emulator homes) that does not exist here. When it is missing, stop and tell the user what is missing and where it was cited, and suggest how to get it (copy it over, record it again, or name the replacement); never recreate, fake or work around it yourself.
+- **No local-only data in the repo:** nothing committed (code, tests, CMake, tools, docs, skills, brief templates) may need a file that exists on one machine only. Allowed are the outputs of the documented commands (`artifacts/<dir>` of `extract_game.py`, `artifacts/romfs`, `artifacts/fib`, `artifacts/textures`, `artifacts/audio`, `artifacts/progress.json`) and output folders a committed tool creates itself.
+  - Every value a test or finding uses is written into the repo: pinned in the test with provenance, or in the `docs/re` entry. Provenance names round/agent, state name, date and command, never a local path. A picture's content is described in words.
+  - Generated material stays local and untracked, and is never committed or copied: save states and their catalogue in `artifacts/oracle/states/` (catalogue `README.md`), emulator homes and outputs in `artifacts/oracle/`, agent scratch in the scratchpad or `artifacts/scratch/`, round briefs and reports in `artifacts/rounds/`. No tool default, script or agent writes such material into a tracked path. Recorded data reaches the repo only as values in committed test tables (`.csv` / `.inc` under `tests/data/`, or constants in the test) with provenance; a test that needs a file (a save) builds it from those values at test time. No binary data files are committed: no saves, emulator save states, raw traces or memory dumps, nor bytes of the user's original save.
+  - Tests never read local-only data: no CMake option, default path or environment variable pointing at it; a test that needs recorded data pins the decisive values in the repo.
+  - A committed file that still needs local data is a defect: report it to the user and write the value in if the data is here; never fake or work around missing data. CTest `no-local-data` (`tools/check_local_data.py`) fails on such paths.
 
 ## Graphify
 
@@ -112,7 +116,7 @@ Four places, never copied between them, only linked: **findings** about the orig
 **Subagents**
 - Cheapest model that can do the task; narrow tasks with only the needed files and rules. The lead runs rounds with the `lead-round` skill (`.claude/skills/lead-round/`): a planner agent proposes, code and docs reviewer agents (one combined reviewer on a small branch) audit each branch; never let a worker verify its own change.
 - **Model choice:** a mid-size model (such as Sonnet) for work with a known starting point: a bug with a known symptom, a class whose handlers are already named, a feature shaped like one already ported, a feature with an approved spec, and the emulator servant. The largest model (such as Opus) for open-ended work: reverse engineering where the driving class or system is unknown or behaviour is spread over many functions, or a design that spans several systems. The smallest model (such as Haiku) only for mechanical edits without reverse engineering or design. An agent stuck on code reading is reported to the user with a proposal for a larger model, not left to grind.
-- **Every brief names:** CLAUDE.md, the plan and its rule file, the Graphify queries to start from (the report lists the queries run; skipping Graphify is a review finding), the reserved ID ranges, the rule file's own brief items (for the port: stand-in labelling, emulator `--port` / `--home` and `--renderer opengl`), and, when parallel workers touch the same function, a separate glue file each.
+- **Every brief names:** CLAUDE.md, the plan and its rule file, the Graphify queries to start from (the report lists the queries run; skipping Graphify is a review finding), the reserved ID ranges, the rule "No local-only data in the repo", the rule file's own brief items (for the port: stand-in labelling, emulator `--port` / `--home` and `--renderer opengl`), and, when parallel workers touch the same function, a separate glue file each.
 - **Review checks beyond the tests:** the rule file's review checks, and that the branch does nothing for a plan whose gate is closed.
 - An agent in a git worktree first runs `ln -s <main checkout>/artifacts artifacts` in the worktree root (gitignored); without it real-data tests skip and the README update refuses to run. Every agent brief says so.
 

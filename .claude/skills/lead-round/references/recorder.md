@@ -28,10 +28,11 @@ Delete or fix the wrong text in place. No correction entry (the user's rule).
 **A save state from the user** (`linux-port`)
 
 1. Copy the user's slot **read-only** to `artifacts/oracle/states/NAME.cst` and write `NAME.json` with `file`, `new_3ds` and `source`. Never modify the user's saves; `cp` only, and check the source path is the one the user named.
-2. Record the state in `docs/re/oracle-states.md` (or `docs/re/oracle.md`, as their `Current state` says), with:
+2. Record the state in the local catalogue `artifacts/oracle/states/README.md` (not committed; never in `docs/re`), with:
    - where the player stands and faces
    - **its game progress:** missions done, running or not started
-3. If the game progress is unclear, ask the lead to ask the user instead of guessing.
+3. A finding that relies on the state says in words how to reach the equivalent game point (missions done, place), never the state's file.
+4. If the game progress is unclear, ask the lead to ask the user instead of guessing.
 
 **A decision of the user about the work** (a new goal, an order of work)
 

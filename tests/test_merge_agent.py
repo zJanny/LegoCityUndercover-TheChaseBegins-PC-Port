@@ -95,6 +95,15 @@ class MergeAgentTest(unittest.TestCase):
         self.assertFalse(merge_agent.FORBIDDEN.search("src/runtime/buildit.cpp"))
         self.assertFalse(merge_agent.FORBIDDEN.search("docs/re/buildit.md"))
 
+    def test_oracle_outputs_are_refused_but_test_tables_are_not(self) -> None:
+        sys.path.insert(0, str(SCRIPT.parent))
+        import merge_agent
+
+        for name in ("trace.mem", "tests/data/trace.mem", "state.cst", "oracle/session.json", "shot.png"):
+            self.assertTrue(merge_agent.FORBIDDEN.search(name), name)
+        for name in ("tests/data/camera/blend/street_in.csv", "tests/data/session_notes.json", "tools/oracle/to-gameplay.txt"):
+            self.assertFalse(merge_agent.FORBIDDEN.search(name), name)
+
     def test_archive_conflict_keeps_both_sides(self) -> None:
         sys.path.insert(0, str(SCRIPT.parent))
         import merge_agent

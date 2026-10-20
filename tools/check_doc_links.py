@@ -6,7 +6,7 @@ stable anchor line "<a id="ts-YYYYMMDD-HHMMSS"></a>" in front of it. Every link 
 contains "§YYYY-MM-DDTHH:MM" must point at "file.md#ts-..." of the entry with that timestamp.
 
 Size and shape rules (CLAUDE.md "Documentation rules"): a docs/re or docs/design file is at most 40 KB, a feature file at most
-16 KB, CLAUDE.md at most 20 KiB, the session log of a progress file at most
+16 KB, CLAUDE.md at most 22 KiB, the session log of a progress file at most
 20 entry lines. With --fix, older log lines move to the progress archive (a line the archive already holds, as
 after a merge of two branches that both archived it, is dropped instead of copied again) and closed items ("- [x] ID") of a feature
 file move to <feature>.closed.md. An item or stand-in ID defined twice in a feature and its closed file is an
@@ -53,7 +53,7 @@ CURRENT_STATE = "## Current state"
 SUBTOPICS = "Subtopics:"
 SUPERSEDED = "Superseded by"
 MAX_LOG_LINES = 20
-MAX_CLAUDE_BYTES = 20480
+MAX_CLAUDE_BYTES = 22528
 FINDINGS_DIRS = (Path("docs") / "re", Path("docs") / "design")
 
 

@@ -26,7 +26,7 @@ from pathlib import Path
 JOBS = max(1, (os.cpu_count() or 2) - 1)
 
 FORBIDDEN = re.compile(
-    r"(^|/)(artifacts|build(-[^/]*)?|graphify-out)/|\.(cci|3ds|cst|cia|bin|bmp|png|jpe?g|wav|bcstm|bcwav|fib|blvl|bfnmdl|dat)$",
+    r"(^|/)(artifacts|build(-[^/]*)?|graphify-out)/|\.(cci|3ds|cst|cia|bin|bmp|png|jpe?g|wav|bcstm|bcwav|fib|blvl|bfnmdl|dat|mem)$|(^|/)session\.json$",
     re.IGNORECASE,
 )
 PRIORITIES = "docs/plans/priorities.md"

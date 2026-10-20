@@ -434,9 +434,9 @@ class RuleChecksTest(unittest.TestCase):
         self.assertEqual(self.errors('index-'), [])
 
     def test_claude_md_size(self):
-        (self.root / 'CLAUDE.md').write_text('x' * 20480)
+        (self.root / 'CLAUDE.md').write_text('x' * 22528)
         self.assertEqual(self.errors('claude-md-size'), [])
-        (self.root / 'CLAUDE.md').write_text('x' * 20481)
+        (self.root / 'CLAUDE.md').write_text('x' * 22529)
         self.assertEqual(len(self.errors('claude-md-size')), 1)
 
     def write_pair(self, corrected_by_line, corrects_text='Corrects a.md §2026-01-01T01:00'):

@@ -15,12 +15,12 @@ The game data is never part of this repository. You need your own copy of the ga
 | Object types | 168 of 506 (33.2%) | Different object types in the levels that the port treats with recovered rules (collision, doors, studs). They cover 56.5% of all placed objects. |
 | Game files read | 99.8% of files, 100.0% of data | Files in the game archive (12836) that the port can decode, by count and by size. |
 | Open work | 512 open items, 403 stand-ins | Known gaps and temporary guesses in 28 feature areas. It has no total to reach; watch the trend. |
-| Checked against the original | 358 tests, 232 recorded traces | Automatic tests, and recordings of the original game that the tests compare with. |
+| Checked against the original | 359 tests, 232 recorded traces | Automatic tests, and recordings of the original game that the tests compare with. |
 | Game code documented | 2633 of about 7575 (34.8%) | Functions of the game program that the notes or the source point to. The total is an estimate. |
 
 ![Progress trend](docs/progress-trend.svg)
 
-Updated 2026-10-20, commit 42c88305. How the numbers are measured: [docs/progress.md](docs/progress.md).
+Updated 2026-10-21, commit 471fafdf. How the numbers are measured: [docs/progress.md](docs/progress.md).
 <!-- progress:end -->
 
 ## What you need

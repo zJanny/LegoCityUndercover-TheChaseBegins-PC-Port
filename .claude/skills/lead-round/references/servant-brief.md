@@ -25,6 +25,7 @@ You are the **emulator servant** of round {{N}} of the PC port of *LEGO City Und
 - **Processes:**
   - Check `pgrep -x azahar` and `pgrep -x Xvfb` first, and write down which PIDs were already running. Never touch those.
   - Never use `pkill`, `killall` or `pkill -f`. Stop with `--stop` (your port and home), or `kill <PID>` only for processes you started.
+- **No local-only data:** outputs only under `artifacts/oracle/r{{N}}-servant-out/`; every value you report is written out in your reply so the requester can pin it in the repo. No local path in any committed file.
 - **Files:** output goes only to `artifacts/oracle/r{{N}}-servant-out/`. Pass `--output artifacts/oracle/r{{N}}-servant-out` and give `screenshot` and `shotloop` a bare file name, because their names are relative to `--output`.
 - **Measuring:**
   - Use RPC for screenshots, memory reads and timing (`sample`, `waitbyte`, `shotloop`). Never measure rates from stepped frames.
