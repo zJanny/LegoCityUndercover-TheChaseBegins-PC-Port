@@ -18,7 +18,7 @@ IN_PROGRESS, updated 2026-10-19T19:27:54+02:00. Every model is drawn with its no
 
 ## 4. Stand-ins
 
-- LEVOBJ-S1 Characters other than pedestrians run the idle state of `char_ai_actor` (verified for `char_ai_actor`; assumed for the other classes, which were not measured); pedestrians stand in frame 0 of `idle_minifig`.
+- LEVOBJ-S1 Characters other than pedestrians run the idle state of `char_ai_actor` (verified for `char_ai_actor`; assumed for the other classes, which were not measured); pedestrians stand in frame 0 of `idle_minifig`. needs: PED-2.
 - LEVOBJ-S4 The random generator of the idle choice uses a fixed seed; the original seeds from the clock (0x105d8c). evidence: [npc-animation.md §2026-10-15T09:29](../../re/npc-animation.md#ts-20261015-092900).
 - LEVOBJ-S88 The cat rescue spots start their idle clip in the first update of the level, whether or not the cat's room is loaded; when the original creates the object and starts the state change is not read. evidence: [use-spot.md §2026-10-19T12:58:16](../../re/use-spot.md#ts-20261019-125816).
 - LEVOBJ-S89 The current state of a cat rescue spot starts at 0 (the record is taken as zeroed by its allocation 0x25c030, not checked), so the first update changes to the requested state 1. needs: LEVOBJ-108. evidence: [use-spot.md §2026-10-19T12:58:16](../../re/use-spot.md#ts-20261019-125816).
@@ -35,7 +35,7 @@ IN_PROGRESS, updated 2026-10-19T19:27:54+02:00. Every model is drawn with its no
 
 ## 5. Open items
 
-- [ ] LEVOBJ-16 — Other NPC states (pedestrian walk, AIMillAbout stop, patrol, gang classes) and the animation of classes not measured. needs: ANIM-5. evidence: [npc-animation.md §2026-10-15T09:29](../../re/npc-animation.md#ts-20261015-092900).
+- [ ] LEVOBJ-16 — Other NPC states (pedestrian walk, AIMillAbout stop, patrol, gang classes) and the animation of classes not measured. needs: ANIM-5, PED-2. evidence: [npc-animation.md §2026-10-15T09:29](../../re/npc-animation.md#ts-20261015-092900).
 - [ ] LEVOBJ-3 — Objects that move, break or react (platforms, scripted objects, NPC walking, mission flow) are frozen at their level state. needs: SCRIPT-1. evidence: [scripts.md §2026-10-13T20:42](../../re/scripts.md#ts-20261013-204236).
 - [ ] LEVOBJ-4 — The 8 custom lineup characters (`CharacterEnum` 1..8 through 0x2372e0) and the ride_pig and shark rigs (LEVOBJ-7) are not drawn; the jetpack `AttachModel` placement (bone name hash unresolved, value `chest`) and `AttachRelative`. evidence: [objects.md §2026-10-13T16:34](../../re/objects.md#ts-20261013-163430).
 - [ ] LEVOBJ-5 — The code that copies instance parameters into the slot array `obj + 0x2c` was not found (the rule is inferred); how `xx_particleemitter` and other `xx_*` objects are created; model LOD selection (`LOD_NumberofLods`); whether `Animation` start poses change placed props. evidence: [objects.md §2026-10-13T15:39](../../re/objects.md#ts-20261013-153915).

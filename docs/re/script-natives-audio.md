@@ -8,15 +8,17 @@ Handlers of OverrideMusic, AutomaticMusic, StopMusic and EnableTrafficAndPedestr
 - OverrideMusic 0x1cdb28 starts a track with loop 1, crossfade 1, fade 0.5 (0x240ec8 -> 0x24039c); a crossfade over a playing stream queues the track and ramps down first. [§2026-10-15T15:10:38](#ts-20261015-151038)
 - AutomaticMusic 0x1d9c70 clears the override byte and runs the combat/ambient chooser 0x204fe0; StopMusic 0x195054 stops at once for 0.0, else ramps to 0 with step 1/(30 arg). [§2026-10-15T15:10:38](#ts-20261015-151038)
 - The updater 0x240c3c ramps volume by step * 30 * dt (rate 30 confirmed in the oracle) and starts the queued track when the ramp reaches 0; mood route 0x206c40 and the level-start call (lvl_01 starts no music) are read. [§2026-10-15T16:33:19](#ts-20261015-163319)
-- EnableTrafficAndPedestrians 0x2c5780 sets bit 1 of the traffic and pedestrian manager bytes; with it clear every live entity is removed and nothing spawns (default on). [§2026-10-15T15:10:38](#ts-20261015-151038)
+- EnableTrafficAndPedestrians 0x2c5780 sets bit 1 of the traffic and pedestrian manager bytes; with it clear every live entity is removed and nothing spawns (default on). [§2026-10-15T15:10:38](#ts-20261015-151038); the pedestrian manager is 0x51b33c, its spawn and removal rules: [pedestrians.md §2026-10-20T11:17:42](pedestrians.md#ts-20261020-111742)
 - Camera manager +0x28 is the requested camera: CameraFollow is a camera switch request, not a flag. [§2026-10-15T15:10:38](#ts-20261015-151038)
 - Ten sound natives: handler argument layout is 8 bytes per argument (entity at +8i, value at +8i+4); play family 0x1b4394 / 0x295244 / 0x27bd48, stop family 0x1b43ec / 0x1d0d28, ScaleSoundFrequency 0x2a8afc, SetSoundVolume 0x272dcc. [§2026-10-15T17:27:05](#ts-20261015-172705)
 - Port stand-ins: object sound owner ids from 0x4000 (AUDIO-S30), volume and frequency on the voice (AUDIO-S31), registersound, VehicleEnableDrivingMusic and vehiclestopsounds recorded only (AUDIO-S32). [§2026-10-15T17:27:05](#ts-20261015-172705)
-- Open: the duck record and DuckMusicFor, who restarted track 16 in the oracle, the u16 at entity+0x14, readers of registered sound pairs, type-10 ambient emitters, spawn rules of traffic and pedestrians.
+- Open: the duck record and DuckMusicFor, who restarted track 16 in the oracle, the u16 at entity+0x14, readers of registered sound pairs, type-10 ambient emitters, spawn rules of traffic.
 
 <a id="ts-20261015-151038"></a>
 
 ## 2026-10-15T15:10:38+02:00 — OverrideMusic, AutomaticMusic, StopMusic, EnableTrafficAndPedestrians and the readers of camera manager +0x28 (llvm-objdump only, no REA session, no emulator)
+
+Corrected by [pedestrians.md §2026-10-20T11:17:42](pedestrians.md#ts-20261020-111742): the two managers are swapped; 0x51b33c (byte 0x51b3e0, update 0x2ee5e8) is the pedestrian manager and 0x527410 (byte 0x5277a0, update 0x2dfe88) the traffic manager, and the message 0x80000006 before the removal belongs to traffic.
 
 Method: `llvm-objdump -d --triple=armv6k-none-eabi --mattr=+vfp2` on `artifacts/game/game.arm.elf`; handler ABI as in [script-natives.md](script-natives.md) (r1 = argument pointers). Replica: `src/runtime/natives_music.*` (`MusicNativeState`), `ProgressNativeKind::EnableTrafficAndPedestrians`; tests `natives-music`, `natives-progress`.
 

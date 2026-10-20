@@ -1,8 +1,10 @@
 # Pedestrians and traffic
 
+Subtopics: [pedestrians-traffic-pedestrians.md](pedestrians-traffic-pedestrians.md)
+
 ## 1. Scope
 
-The pedestrian manager 0x51b33c and the traffic manager 0x527410 and their spawn data: the `Pregen/Traffic` and `Pregen/Pedestrians` files (spawn points on level paths, a quadtree of spawn lists). The managers' update and spawn rules are SCRIPT-230 in [script-system-missions.md](script-system-missions.md); traffic driving is VEH-12 in [vehicles.md](vehicles.md); related: VEH-91 (vehicle activation), VEH-106 (traffic smashing props), LEVOBJ-16 (pedestrian walk state).
+The spawn data of the pedestrian manager 0x51b33c and the traffic manager 0x527410: the `Pregen/Traffic` and `Pregen/Pedestrians` files (spawn points on level paths, a quadtree of spawn lists). The pedestrian manager's rules are in [pedestrians-traffic-pedestrians.md](pedestrians-traffic-pedestrians.md), the traffic manager's in pedestrians-traffic-cars.md; the native flag is SCRIPT-230 in [script-system-missions.md](script-system-missions.md); traffic driving is VEH-12 in [vehicles.md](vehicles.md); related: VEH-91 (vehicle activation), VEH-106 (traffic smashing props), LEVOBJ-16 (pedestrian walk state).
 
 ## 2. Status
 
@@ -20,13 +22,13 @@ IN_PROGRESS, updated 2026-10-20T11:16:20+02:00. Both spawn files decode in `chas
 
 ## 5. Open items
 
-- [ ] PREGEN-1 — The fields the loaders derive are not ported: the path record of each point (first loaded level whose path section holds the hash), the unit tangent of the path at the parameter (sampler table 0x358d58 / 0x358a14), the room (0x239838, +36) and, for traffic, the floor cell (0x1edaac, +40). blocks: SCRIPT-230, VEH-12. evidence: [pregen-traffic.md §2026-10-20T11:16:20](../../re/pregen-traffic.md#ts-20261020-111620)
+- [ ] PREGEN-1 — The fields the loaders derive are not ported: the path record of each point (first loaded level whose path section holds the hash), the unit tangent of the path at the parameter (sampler table 0x358d58 / 0x358a14), the room (0x239838, +36) and, for traffic, the floor cell (0x1edaac, +40). blocks: SCRIPT-230, VEH-12, PED-1. evidence: [pregen-traffic.md §2026-10-20T11:16:20](../../re/pregen-traffic.md#ts-20261020-111620)
 - [ ] PREGEN-2 — 47 pedestrian points on closed paths (42 in the test playground, 5 in lvl_07_downtown) lie up to 0.4 units from the port's closed-path sample at their parameter: the closed branch of 0x1c17c0 or a rounding of the stored parameter is not checked. evidence: [pregen-traffic.md §2026-10-20T11:16:20](../../re/pregen-traffic.md#ts-20261020-111620)
 
 ## 6. Findings summary
 
 - Spawn files, loaders, quadtree, census; which manager loads which file: [pregen-traffic.md §2026-10-20T11:16:20](../../re/pregen-traffic.md#ts-20261020-111620).
-- Manager flags and EnableTrafficAndPedestrians: [script-natives-audio.md §2026-10-15T15:10:38](../../re/script-natives-audio.md#ts-20261015-151038) (its manager names are swapped, see the entry above).
+- Manager flags and EnableTrafficAndPedestrians: [script-natives-audio.md §2026-10-15T15:10:38](../../re/script-natives-audio.md#ts-20261015-151038) (its manager names are swapped: [pedestrians.md §2026-10-20T11:17:42](../../re/pedestrians.md#ts-20261020-111742)).
 
 ## 7. Code and tests
 
