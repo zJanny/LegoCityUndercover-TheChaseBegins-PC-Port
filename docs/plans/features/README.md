@@ -27,7 +27,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | [level-objects-carry](level-objects-carry.md) | IN_PROGRESS | LEVOBJ-75 release of the box; LEVOBJ-30 attach update; LEVOBJ-31 locomotion while carrying; LEVOBJ-32 sounds and effects |
 | [level-objects-wobbly](level-objects-wobbly.md) | IN_PROGRESS | LEVOBJ-87 wobble of a hit; LEVOBJ-89 bounce states beyond the motion; LEVOBJ-90 the bouncer object |
 | [doors](doors.md) | IN_PROGRESS | DOOR-1 script-requested doors stay closed (needs SCRIPT-7); DOOR-3 open-door box |
-| [studs](studs.md) | IN_PROGRESS | STUD-1 magnet and multiplier; STUD-4 groups (needs SCRIPT-1); STUD-14, STUD-15 callers of the stud drop |
+| [studs](studs.md) | IN_PROGRESS | STUD-1 magnet and multiplier; STUD-4 groups (needs SCRIPT-1); STUD-15, STUD-25, STUD-26, STUD-27 callers of the stud drop |
 | [particles](particles.md) | IN_PROGRESS | PART-2 script natives and most callers start no emitters; PART-3 `particles` level object; PART-5 update trace |
 
 ## Vehicles
