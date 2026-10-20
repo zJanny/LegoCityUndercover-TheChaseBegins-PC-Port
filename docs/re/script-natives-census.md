@@ -96,7 +96,7 @@ This file has no dated entries: the table is edited in place. When a native is r
 | IsRedBrickExtraActive | 0x2a6d34 | 2 | 44 / 12 / 4 / 0 | 6 | done |  |  |
 | VehicleStop | 0x1b27e8 | 1 | 43 / 6 / 0 / 0 | 6 | C | 36 |  |
 | enableobjectfade | 0x26fac4 | 2 | 42 / 1 / 0 / 0 | 7 | A | 26 | stand-in: ends like EnableObject unless the kind answers message 24 (SCRIPT-S241, SCRIPT-295) |
-| EnableTrafficAndPedestrians | 0x2c5780 | 1 | 42 / 12 / 0 / 0 | 6 | stand-in | 36 | flag only, no traffic [§2026-10-15T15:10](script-natives-audio.md#ts-20261015-151038) |
+| EnableTrafficAndPedestrians | 0x2c5780 | 1 | 42 / 12 / 0 / 0 | 6 | stand-in | 36 | flag only, no traffic [§2026-10-15T15:10](script-natives-audio.md#ts-20261015-151038), managers corrected [pedestrians.md §2026-10-20T11:17:42](pedestrians.md#ts-20261020-111742) |
 | PositionPlayer | 0x1da0dc | 2 | 42 / 11 / 0 / 0 | 7 | stand-in | 26 | handled like PositionObject for the player (fall reset, message 8 and bits recorded SCRIPT-S274, SCRIPT-S275; a seated player moves the vehicle SCRIPT-S276); ground probe SCRIPT-59: [script-natives-flags.md §2026-10-19T15:12:32](script-natives-flags.md#ts-20261019-151232) |
 | AddToSemiTransNearCameraList | 0x2cb734 | 2 | 41 / 5 / 5 / 0 | 7 | stand-in | 38 | stand-in: entries recorded, not drawn (SCRIPT-S233, RENDER-67, SCRIPT-38): [script-natives-world.md §2026-10-18T11:01:40](script-natives-world.md#ts-20261018-110140) |
 | enabletrafficpath | 0x27bc30 | 2 | 40 / 0 / 0 / 0 | 2 | C | 36 |  |

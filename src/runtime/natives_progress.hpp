@@ -108,8 +108,8 @@ public:
     std::optional<bool> superBricksEnabled() const { return superBricks_; }
     std::optional<float> parachuteDeployHeight() const { return parachuteHeight_; }
     bool scannerUnlocked() const { return scannerUnlocked_; }
-    // EnableTrafficAndPedestrians 0x2c5780 writes bit 1 of the traffic manager (0x51b3e0) and of the pedestrian manager
-    // (0x5277a0); their update spawns while it is set and removes every entity while it is clear. No traffic exists yet
+    // EnableTrafficAndPedestrians 0x2c5780 writes bit 1 of the traffic manager (0x5277a0) and of the pedestrian manager
+    // (0x51b3e0); their update spawns while it is set and removes every entity while it is clear. No traffic exists yet
     // (SCRIPT-230), so the flag is only recorded.
     std::optional<bool> trafficAndPedestriansEnabled() const { return trafficAndPedestrians_; }
     const std::vector<ObjectSuperBuiltItSave>& superBuiltItSaves() const { return superBuiltItSaves_; }

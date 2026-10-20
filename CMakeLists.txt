@@ -1828,6 +1828,11 @@ target_compile_options(player-script-animation-test PRIVATE -Wall -Wextra -Wpeda
 add_test(NAME player-script-animation COMMAND player-script-animation-test)
 add_test(NAME player-script-animation-real-data COMMAND player-script-animation-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
 set_tests_properties(player-script-animation-real-data PROPERTIES SKIP_RETURN_CODE 77)
+target_sources(chase_runtime PRIVATE src/runtime/traffic_manager.cpp)
+add_executable(traffic-manager-test tests/traffic_manager_test.cpp)
+target_link_libraries(traffic-manager-test PRIVATE chase_runtime)
+target_compile_options(traffic-manager-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME traffic-manager COMMAND traffic-manager-test)
 
 get_property(chase_all_tests DIRECTORY PROPERTY TESTS)
 foreach(test_name ${chase_all_tests})
