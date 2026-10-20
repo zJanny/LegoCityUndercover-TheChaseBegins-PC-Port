@@ -59,4 +59,4 @@ IN_PROGRESS, updated 2026-10-19T15:05:12+02:00. The map also shows the sub-objec
 ## 7. Code and tests
 
 - `src/frontend/super_build_prompt.*`, `src/frontend/hud.*` (`Hud`, `setCameraLockAlpha`), `src/runtime/camera_lock_icon.*`, `src/frontend/minimap.*`, `src/game_hud.hpp` (two-screen presentation), `chase-hudshot`, `LayoutScene` in `src/frontend/layout.*`; `Canvas::clearTransparent`.
-- CTest: `hud-real-data` (trace dir `CHASE_HUD_TRACE_DIR`), `studs-core`, `frontend-real-data`. Scenarios: `tools/oracle/hud-*.txt`. Review pictures were local and are not kept.
+- CTest: `hud-real-data` (the recorded bar states are pinned in the test), `studs-core`, `frontend-real-data`. Scenarios: `tools/oracle/hud-*.txt`.

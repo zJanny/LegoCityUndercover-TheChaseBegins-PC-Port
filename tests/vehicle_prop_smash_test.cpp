@@ -169,7 +169,7 @@ void realOtherClasses(const assets::Level& level, const std::vector<assets::Obje
 
 // Kind 67 (src/runtime/prop_hit_sequence.*): the van's boxes put on each object's node. The five objects of mode 1 (`Destructable`, Health 1) are
 // destroyed; mode 0 objects and the four roadblocks with a physics body (`NoPhysics` 0, no message from 0x275c00) are not. Level data of lvl_01 and the
-// oracle grid census r41-A-2 / A-3 (artifacts/oracle/r41-servant-out: records +0xcc = 1 for exactly these five entities).
+// oracle grid census r41-A-2 / A-3 (round 41 servant: records +0xcc = 1 for exactly these five entities).
 void realKind67(const assets::Level& level, const std::vector<assets::ObjectCollision>& candidates, const assets::ClassLookup& classOf) {
     SmashingVehicle car;
     car.nodeBounds = SmashBox{{-0.00140833855f, 0.0381139517f, -0.0761752129f}, {1.18461537f, 1.25735652f, 2.51457548f}};

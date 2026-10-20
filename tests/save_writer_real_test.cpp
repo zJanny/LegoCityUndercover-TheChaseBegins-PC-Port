@@ -1,6 +1,6 @@
-// The save writer and the slot row on the user's real save (a copy, never committed, never modified).
-// Usage: save-writer-real-test <lego_city3ds.fib> <lego_city3ds.csv> <savegame.dat>; exits 77 (skip) when a file is
-// missing or the save is not the pinned one.
+// The save writer and the slot row on the user's save (built from the named values of save_fixture.hpp).
+// Usage: save-writer-real-test <lego_city3ds.fib> <lego_city3ds.csv>; exits 77 (skip) when a file is missing.
+#include "save_fixture.hpp"
 #include "save/completion_tables.hpp"
 #include "save/save_writer.hpp"
 #include <fstream>
@@ -11,7 +11,6 @@
 using namespace chase;
 
 namespace {
-constexpr std::uint32_t kPinnedCrc = 0x937dacf8;
 constexpr std::uint32_t kLevelOneLocationHash = 2577700376u;
 
 void require(bool condition, const std::string& message) {
@@ -20,32 +19,27 @@ void require(bool condition, const std::string& message) {
 }
 
 int main(int argc, char** argv) {
-    if (argc != 4 || !std::ifstream(argv[1]) || !std::ifstream(argv[2]) || !std::ifstream(argv[3])) {
+    if (argc != 3 || !std::ifstream(argv[1]) || !std::ifstream(argv[2])) {
         std::cout << "save-writer-real-test: data not available, skipped\n";
         return 77;
     }
     try {
-        std::ifstream file(argv[3], std::ios::binary);
-        const save::Bytes bytes((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-        const std::optional<save::SaveImage> loaded = save::SaveImage::fromBytes(bytes);
-        require(loaded && loaded->validate() == save::Status::Ok, "the save is not a valid image");
-        if (loaded->storedChecksum() != kPinnedCrc) {
-            std::cout << "save-writer-real-test: this is not the pinned save, skipped\n";
-            return 77;
-        }
-        save::SaveImage image = *loaded;
+        chase::assets::FuseArchive archive(argv[1]);
+        archive.loadNames(argv[2]);
+        const save::SaveImage loaded = testing::userSaveImage(archive);
+        require(loaded.validate() == save::Status::Ok, "the save is not a valid image");
+        const save::Bytes bytes = loaded.bytes();
+        save::SaveImage image = loaded;
 
         const save::SlotView slot0 = image.slotView(0);
         const std::optional<save::SlotRow> row = save::slotRow(slot0);
         require(row && row->used, "slot 0 row");
-        // Provenance: values read from the pinned copy with python struct at 0x234 (u32, u16, u8, u8): 10462, 2, 1, 4.
+        // Provenance: slot 0 of the user's save as read on 2026-10-20 (play ticks u32 +0, per mille u16 +4, level byte +6): 10462, 2, 1.
         require(row->playTicks == 10462 && row->permille == 2 && row->levelByte == 1, "slot 0 row values");
         require(save::formatPlayTime(row->playTicks) == "05:48" && save::formatPercent(row->permille, 1) == "0.2%", "row texts");
         require(!save::slotRow(image.slotView(1))->used, "slot 1 is empty");
 
         // Provenance: chase-tabledump tables/tableslevels.bxls, row 1, column 11 = -1717266920.
-        chase::assets::FuseArchive archive(argv[1]);
-        archive.loadNames(argv[2]);
         const chase::assets::FuseEntry* levels = archive.find("tables/tableslevels.bxls");
         require(levels != nullptr, "TablesLevels");
         const chase::assets::Table table = chase::assets::parseTable(archive.read(*levels));
@@ -57,7 +51,7 @@ int main(int argc, char** argv) {
 
         const save::Bytes live(slot0.data, slot0.data + slot0.size);
         require(save::commitSlot(image, 0, live), "commit");
-        require(image.bytes() == bytes, "committing the slot's own bytes reproduces the file byte for byte");
+        require(image.bytes() == bytes, "committing the slot's own bytes leaves the file unchanged");
 
         save::Bytes edited = live;
         save::setSlotPermille(edited.data(), 0x1234);

@@ -54,7 +54,7 @@ bool activates(const std::vector<runtime::DetectiveAction>& actions, const std::
 }
 
 // Provenance: oracle trap E-1 (state m12-5-detective-active, circle pad forward for 220 updates, breakpoint 0x26049c in the footprint placing function
-// 0x26024c, artifacts/oracle/r27E-out/E-1.txt; docs/re/abilities-detective.md): the matrix at r1 of every hit. Rotation rows are the identity for all of them;
+// 0x26024c, trap output E-1 of round 27 agent E; docs/re/abilities-detective.md): the matrix at r1 of every hit. Rotation rows are the identity for all of them;
 // the translation is the point the ray hit. The x / z are the matrix's own; the last two are on the dog house stairs.
 const float kOracleHits[13][3] = {{718.1799f, 29.7764f, 631.0478f}, {717.9299f, 29.7738f, 630.5478f}, {716.9299f, 29.7790f, 631.5478f},
                                   {716.9299f, 29.7763f, 631.0478f}, {716.6799f, 29.7842f, 632.5478f}, {715.9299f, 29.7817f, 632.0478f},

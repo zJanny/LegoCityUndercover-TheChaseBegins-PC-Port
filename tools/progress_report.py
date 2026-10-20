@@ -207,32 +207,32 @@ def cmake_blocks(text, call):
     return blocks
 
 
+DIFFERENTIAL_TESTS = frozenset({
+    'locomotion-real-data', 'collision-real-data', 'fall-real-data', 'jump-real-data', 'slide-real-data', 'slope-real-data',
+    'camera-real-data', 'camera-blend-real-data', 'camera-vehicle-real-data', 'camera-sweep-real-data',
+    'studs-real-data', 'hud-real-data', 'audio-real-data',
+})
+
+
 def measure_checks(root):
     cmake = (root / 'CMakeLists.txt').read_text(encoding='utf-8')
-    tests = {}
+    names = set()
     for block in cmake_blocks(cmake, 'add_test'):
         name = re.search(r'NAME\s+(\S+)', block)
         if name:
-            tests[name.group(1)] = bool(re.search(r'_TRACE_DIR', block))
-    trace_dirs = dict(re.findall(r'set\((CHASE_\w+_TRACE_DIR)\s+"\$\{CMAKE_SOURCE_DIR\}/(artifacts/[^"]+)"', cmake))
-    traces = {}
-    for variable, relative in sorted(trace_dirs.items()):
-        directory = root / relative
-        if not directory.is_dir():
-            traces[relative] = None
-            continue
-        recordings = [p for p in directory.iterdir() if p.suffix == '.mem'] or [p for p in directory.iterdir() if p.suffix == '.csv']
-        traces[relative] = len(recordings)
+            names.add(name.group(1))
+    data = root / 'tests' / 'data'
+    files = [p for p in data.rglob('*') if p.is_file()] if data.is_dir() else []
+    recordings = [p for p in files if p.suffix in ('.csv', '.mem')]
+    for table in (p for p in files if p.suffix == '.inc'):
+        groups = set(re.findall(r'^\{"([^"@]+)', table.read_text(encoding='utf-8'), re.M))
+        recordings.extend((table, group) for group in groups)
     python_tests = sum(len(re.findall(r'^\s+def test_', p.read_text(encoding='utf-8'), re.M)) for p in (root / 'tests').glob('test_*.py'))
-    missing = [d for d, n in traces.items() if n is None]
     return {
-        'ctest_tests': len(tests),
-        'ctest_tests_with_traces': sum(1 for uses in tests.values() if uses),
-        'trace_sets': len(trace_dirs),
-        'recorded_traces': sum(n for n in traces.values() if n),
-        'traces_per_directory': traces,
+        'ctest_tests': len(names),
+        'ctest_tests_with_traces': len(names & DIFFERENTIAL_TESTS),
+        'recorded_traces': len(recordings),
         'python_unit_tests': python_tests,
-        'missing_trace_directories': missing,
     }
 
 

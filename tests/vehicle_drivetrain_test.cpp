@@ -1,6 +1,6 @@
 // Tests of the engine, gears, steering and tyres (src/runtime/vehicle_drivetrain.*) and of the vehicle step that uses them. Every pinned number
 // is an Azahar oracle value of the police trooper (state drv-police-car-seated, GDB memtrace at fixed dt 0.033 of the body 0x08e16100 and the
-// rigid body 0x08e16f40, 2026-10-15, artifacts/oracle/agentVEH32-out: tA.mem = A held, sAR.mem = A and D-pad right). A replay case starts from
+// rigid body 0x08e16f40, 2026-10-15, agent VEH32: tA.mem = A held, sAR.mem = A and D-pad right). A replay case starts from
 // one traced update and compares the port's next world step (1/30 s) with the next traced update; the ground is the plane of each wheel's traced hit.
 // Evidence: docs/re/vehicles-physics.md.
 #include "runtime/vehicle_drivetrain.hpp"

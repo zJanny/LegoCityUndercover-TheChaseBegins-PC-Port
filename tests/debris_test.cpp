@@ -386,7 +386,7 @@ void superBricks() {
            "SpawnDir 90 with cone 0: (sin, 0.5, cos) x 0.1 of the 64-step angle; y 0.5");
 }
 
-// Oracle A-1 of round 47 (servant, veh-smash-prop, two stepped loads, dt 0.033, A held; artifacts/oracle/r47-servant-out/x1.mem, x2.mem): the traffic
+// Oracle A-1 of round 47 (servant, veh-smash-prop, two stepped loads, dt 0.033, A held; traces x1 and x2): the traffic
 // light bursts at update 18 (pool records 20..28), Generic_Tree_13 at update 49 (29..37), the van's contact at update 57 (38..43). Super bricks: records
 // 20..22 in slots 0..2 with SBDebris 0..2; 29..34 in slots 9..14 with SBDebris 3..8; 38 in slot 18 with SBDebris 9; record 39 takes slot 19 and 40..43 get
 // none. The tree's super bricks fly along SpawnDir 337: y velocity 0.45 after the burst update, x in -0.0916..-0.0073, z in 0.0477..0.1358, life 7.967.

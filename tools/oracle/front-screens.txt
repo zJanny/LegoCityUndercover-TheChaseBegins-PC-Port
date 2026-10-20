@@ -1,6 +1,6 @@
 # Screenshots of the front-end screens from the saved states (docs/re/front-end.md, 2026-10-13T20:46:07).
 # Run with: python3 tools/azahar_oracle.py tools/oracle/front-screens.txt --display xvfb --renderer opengl --rpc --rpc-input \
-#   --port PORT --home artifacts/oracle/HOME --states artifacts/oracle/states --output artifacts/review/front-end/oracle
+#   --port PORT --home <home> --states <states> --output <out>
 loadstate front-lang
 wait 1
 screenshot lang

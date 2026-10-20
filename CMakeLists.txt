@@ -132,20 +132,6 @@ if(EPOXY_FOUND)
 endif()
 set(CHASE_ROMFS_DIR "${CMAKE_SOURCE_DIR}/artifacts/romfs/romfs" CACHE PATH
     "Extracted RomFS directory for the opt-in real-data asset test")
-set(CHASE_CAMERA_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/cam-out" CACHE PATH
-    "Recorded original-game camera traces for the opt-in differential test")
-set(CHASE_CAMERA_BLEND_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/camera-blend-traces" CACHE PATH
-    "Recorded original-game camera traces of walks between camera records (exported CSV) for the opt-in blend test")
-set(CHASE_CAMERA_VEHICLE_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/camera-vehicle-traces" CACHE PATH
-    "Recorded original-game camera traces while driving the police car (exported CSV) for the vehicle camera test")
-set(CHASE_CAMERA_WALL_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/camwall-out" CACHE PATH
-    "Recorded original-game camera traces near walls (.mem memtraces and exported CSV) for the opt-in differential tests")
-set(CHASE_STUDS_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/studs-traces" CACHE PATH
-    "Recorded original-game stud pickup traces for the opt-in differential test")
-set(CHASE_HUD_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/hud-traces" CACHE PATH
-    "Recorded original-game HUD stud bar traces for the opt-in HUD test")
-set(CHASE_AUDIO_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/audio-traces" CACHE PATH
-    "Recorded original-game sound-call traces (CSV from tools/export_sound_trace.py) for the opt-in differential test")
 option(CHASE_BUILD_TESTS "Build the test programs and register the CTest tests" ON)
 set(BUILD_TESTING ${CHASE_BUILD_TESTS} CACHE BOOL "" FORCE)
 include(CTest)
@@ -181,7 +167,7 @@ if(BUILD_TESTING)
     target_link_libraries(hud-real-test PRIVATE chase_frontend)
     target_compile_options(hud-real-test PRIVATE -Wall -Wextra -Wpedantic)
     add_test(NAME hud-real-data COMMAND hud-real-test
-      "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv" "${CHASE_HUD_TRACE_DIR}")
+      "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
     set_tests_properties(hud-real-data PROPERTIES SKIP_RETURN_CODE 77)
   endif()
   add_executable(mixer-test tests/mixer_test.cpp)
@@ -197,7 +183,7 @@ if(BUILD_TESTING)
     target_link_libraries(audio-real-test PRIVATE chase_audio chase_runtime chase_assets)
     target_compile_options(audio-real-test PRIVATE -Wall -Wextra -Wpedantic)
     add_test(NAME audio-real-data COMMAND audio-real-test
-      "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv" "${CHASE_AUDIO_TRACE_DIR}"
+      "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       "$<TARGET_FILE:chase-game>" "${CMAKE_BINARY_DIR}/config/controls.cfg")
     set_tests_properties(audio-real-data PROPERTIES SKIP_RETURN_CODE 77)
   endif()
@@ -963,26 +949,26 @@ if(BUILD_TESTING)
   add_executable(camera-real-test tests/camera_real_test.cpp)
   target_link_libraries(camera-real-test PRIVATE chase_runtime chase_assets)
   target_compile_options(camera-real-test PRIVATE -Wall -Wextra -Wpedantic)
-  add_test(NAME camera-real-data COMMAND camera-real-test "${CHASE_CAMERA_TRACE_DIR}"
-    "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv" "${CHASE_CAMERA_WALL_TRACE_DIR}")
+  add_test(NAME camera-real-data COMMAND camera-real-test "${CMAKE_SOURCE_DIR}/tests/data/camera"
+    "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
   set_tests_properties(camera-real-data PROPERTIES SKIP_RETURN_CODE 77)
   add_executable(camera-blend-real-test tests/camera_blend_real_test.cpp)
   target_link_libraries(camera-blend-real-test PRIVATE chase_runtime chase_assets)
   target_compile_options(camera-blend-real-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME camera-blend-real-data COMMAND camera-blend-real-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib"
-    "${CHASE_ROMFS_DIR}/lego_city3ds.csv" "${CHASE_CAMERA_BLEND_TRACE_DIR}")
+    "${CHASE_ROMFS_DIR}/lego_city3ds.csv" "${CMAKE_SOURCE_DIR}/tests/data/camera")
   set_tests_properties(camera-blend-real-data PROPERTIES SKIP_RETURN_CODE 77)
   add_executable(camera-vehicle-real-test tests/camera_vehicle_real_test.cpp)
   target_link_libraries(camera-vehicle-real-test PRIVATE chase_runtime chase_assets)
   target_compile_options(camera-vehicle-real-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME camera-vehicle-real-data COMMAND camera-vehicle-real-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib"
-    "${CHASE_ROMFS_DIR}/lego_city3ds.csv" "${CHASE_CAMERA_VEHICLE_TRACE_DIR}")
+    "${CHASE_ROMFS_DIR}/lego_city3ds.csv" "${CMAKE_SOURCE_DIR}/tests/data/camera")
   set_tests_properties(camera-vehicle-real-data PROPERTIES SKIP_RETURN_CODE 77)
   add_executable(camera-sweep-real-test tests/camera_sweep_real_test.cpp)
   target_link_libraries(camera-sweep-real-test PRIVATE chase_runtime chase_assets)
   target_compile_options(camera-sweep-real-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME camera-sweep-real-data COMMAND camera-sweep-real-test
-    "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv" "${CHASE_CAMERA_WALL_TRACE_DIR}")
+    "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv" "${CMAKE_SOURCE_DIR}/tests/data/camera")
   set_tests_properties(camera-sweep-real-data PROPERTIES SKIP_RETURN_CODE 77)
   add_executable(save-test tests/save_test.cpp)
   target_link_libraries(save-test PRIVATE chase_save)
@@ -998,13 +984,17 @@ if(BUILD_TESTING)
   target_link_libraries(slot-progress-test PRIVATE chase_save_progress)
   target_compile_options(slot-progress-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME slot-progress COMMAND slot-progress-test)
-  set(CHASE_REAL_SAVE "${CMAKE_SOURCE_DIR}/artifacts/oracle/agentJ-saves/savegame.dat" CACHE FILEPATH
-    "A real savegame.dat (a copy of the user's save) for slot-progress-real-data; the test skips when it is missing")
+  add_executable(make-test-save tests/make_test_save.cpp)
+  target_link_libraries(make-test-save PRIVATE chase_save_progress chase_save_tables)
+  target_compile_options(make-test-save PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME test-save-build COMMAND make-test-save
+    "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv" "${CMAKE_BINARY_DIR}/test-save/savegame.dat")
+  set_tests_properties(test-save-build PROPERTIES FIXTURES_SETUP test_save)
   add_executable(slot-progress-real-test tests/slot_progress_real_test.cpp)
   target_link_libraries(slot-progress-real-test PRIVATE chase_save_progress chase_save_tables chase_runtime)
   target_compile_options(slot-progress-real-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME slot-progress-real-data COMMAND slot-progress-real-test
-    "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv" "${CHASE_REAL_SAVE}")
+    "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
   set_tests_properties(slot-progress-real-data PROPERTIES SKIP_RETURN_CODE 77)
   add_executable(save-writer-test tests/save_writer_test.cpp)
   target_link_libraries(save-writer-test PRIVATE chase_save_progress)
@@ -1018,21 +1008,21 @@ if(BUILD_TESTING)
   target_link_libraries(save-writer-real-test PRIVATE chase_save_progress chase_save_tables)
   target_compile_options(save-writer-real-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME save-writer-real-data COMMAND save-writer-real-test
-    "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv" "${CHASE_REAL_SAVE}")
+    "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
   set_tests_properties(save-writer-real-data PROPERTIES SKIP_RETURN_CODE 77)
   add_executable(new-game-test tests/new_game_test.cpp)
   target_link_libraries(new-game-test PRIVATE chase_save_progress chase_save_tables)
   target_compile_options(new-game-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME new-game-slot COMMAND new-game-test)
   add_test(NAME new-game-slot-real-data COMMAND new-game-test
-    "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv" "${CHASE_REAL_SAVE}")
+    "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
   set_tests_properties(new-game-slot-real-data PROPERTIES SKIP_RETURN_CODE 77)
   add_executable(level-state-test tests/level_state_test.cpp)
-  target_link_libraries(level-state-test PRIVATE chase_save_progress)
+  target_link_libraries(level-state-test PRIVATE chase_save_progress chase_save_tables)
   target_compile_options(level-state-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME level-state COMMAND level-state-test)
   add_test(NAME level-state-real-data COMMAND level-state-test
-    "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv" "${CHASE_REAL_SAVE}")
+    "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
   set_tests_properties(level-state-real-data PROPERTIES SKIP_RETURN_CODE 77)
   add_executable(pregen-derive-test tests/pregen_derive_test.cpp)
   target_link_libraries(pregen-derive-test PRIVATE chase_runtime chase_assets)
@@ -1059,11 +1049,9 @@ if(BUILD_TESTING)
   target_compile_options(studs-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME studs-core COMMAND studs-test)
   add_executable(studs-real-test tests/studs_real_test.cpp)
-  target_link_libraries(studs-real-test PRIVATE chase_runtime chase_assets)
+  target_link_libraries(studs-real-test PRIVATE chase_runtime)
   target_compile_options(studs-real-test PRIVATE -Wall -Wextra -Wpedantic)
-  add_test(NAME studs-real-data COMMAND studs-real-test
-    "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv" "${CHASE_STUDS_TRACE_DIR}")
-  set_tests_properties(studs-real-data PROPERTIES SKIP_RETURN_CODE 77)
+  add_test(NAME studs-real-data COMMAND studs-real-test "${CMAKE_SOURCE_DIR}/tests/data")
   add_executable(particles-test tests/particles_test.cpp)
   target_link_libraries(particles-test PRIVATE chase_runtime)
   target_compile_options(particles-test PRIVATE -Wall -Wextra -Wpedantic)
@@ -1228,24 +1216,22 @@ if(BUILD_TESTING)
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --gameplay --screenshot game-smoke.bmp --frames 2)
     set_tests_properties(game-real-smoke PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen"
       PASS_REGULAR_EXPRESSION "0 missing textures.*saved game-smoke.bmp after [0-9]+ update")
-    if(EXISTS "${CHASE_REAL_SAVE}")
       add_test(NAME game-save-continue COMMAND chase-game
         --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
-        --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --save "${CHASE_REAL_SAVE}" --slot 0 --frames 1 --screenshot game-continue.bmp)
-      set_tests_properties(game-save-continue PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
+        --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --save "${CMAKE_BINARY_DIR}/test-save/savegame.dat" --slot 0 --frames 1 --screenshot game-continue.bmp)
+      set_tests_properties(game-save-continue PROPERTIES FIXTURES_REQUIRED test_save ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
         PASS_REGULAR_EXPRESSION "continue: slot 0 starts level 1 \\(lvl_00_policestation\\).*player at -2\\.1713 1\\.4203 17\\.2821")
       add_test(NAME game-save-hud-studs COMMAND chase-game
         --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
-        --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --save "${CHASE_REAL_SAVE}" --slot 0
+        --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --save "${CMAKE_BINARY_DIR}/test-save/savegame.dat" --slot 0
         --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes --script "0 0 2")
-      set_tests_properties(game-save-hud-studs PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
+      set_tests_properties(game-save-hud-studs PROPERTIES FIXTURES_REQUIRED test_save ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
         PASS_REGULAR_EXPRESSION "save: level entry 2, studs 1130, super bricks 52.*hud: 4 hearts, stud display 1130, bar state 1")
       add_test(NAME game-save-continue-empty-slot COMMAND chase-game
         --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
-        --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --save "${CHASE_REAL_SAVE}" --slot 1 --frames 1)
-      set_tests_properties(game-save-continue-empty-slot PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
+        --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --save "${CMAKE_BINARY_DIR}/test-save/savegame.dat" --slot 1 --frames 1)
+      set_tests_properties(game-save-continue-empty-slot PROPERTIES FIXTURES_REQUIRED test_save ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
         PASS_REGULAR_EXPRESSION "the save slot is empty")
-    endif()
     # Front-end mode: runs the scripted pad to the language screen and saves the window; a second run goes through every
     # screen to the hand-off and then shows the level of a new game.
     add_test(NAME front-game-smoke COMMAND chase-game

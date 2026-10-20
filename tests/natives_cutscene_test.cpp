@@ -60,7 +60,7 @@ void slotsAndBusyTest() {
 // Update 0x2fae68: once the cutscene has ended (0x2d19cc returns 0) it starts the screen fade to black (0x2520e8, 0.5 s, screen
 // byte 1); the mode switch waits until the fade has ended (loop 0x109708) and then two render ticks; the exit 0x2fac7c fades
 // in over 0.5 s (0x252068) unless the cutscene is 7_9_A. Provenance: llvm-objdump of those addresses and the ctrace of
-// state cutscene-1-1-b (artifacts/oracle/r28E-out/endtrace.txt): 0x256a14 from lr 0x2faf38 (r1 = 1), 0x2fac7c, 0x256a14
+// state cutscene-1-1-b (round 28 agent E, endtrace): 0x256a14 from lr 0x2faf38 (r1 = 1), 0x2fac7c, 0x256a14
 // from lr 0x2face8 (r1 = 1), nothing else (docs/re/cutscenes.md).
 void endFadesAreReadFromTheCode() {
     using chase::runtime::CutsceneFadeRequest;

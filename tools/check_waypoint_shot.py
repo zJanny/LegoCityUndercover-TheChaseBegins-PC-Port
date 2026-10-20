@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Checks a chase-game screenshot (400x480, both screens) of the level start of mission 1-1 after the tips are gone: the map
 marker of 1-1_Waypoint_01 (blue disc ring, colour 74, 174, 255) must sit where the oracle shows it on the bottom screen.
-Oracle reference (state gameplay-start, RPC screenshot of the original, artifacts/oracle/agentOH-out/gs0.png): 74 pixels of
+Oracle reference (state gameplay-start, RPC screenshot of the original, picture gs0 of agent OH): 74 pixels of
 that colour near the marker, centroid (218.5, 285.7), measured with the player at world (886.76, 1111.17) looking at camera
 yaw -2.3501; the port's player starts at the same place. The top screen must not contain the colour in the map area."""
 import struct

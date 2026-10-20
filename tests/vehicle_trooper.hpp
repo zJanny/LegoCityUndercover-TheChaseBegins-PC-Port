@@ -1,6 +1,6 @@
 #pragma once
 // The police trooper's vehicle record as the oracle holds it (Azahar, state drv-police-car-seated, body 0x08e16100 and rigid body 0x08e16f40,
-// memtrace of 2026-10-15 in artifacts/oracle/agentVEH32-out/tA.mem frame 7 and agentVPHYS-out/body0.mem): class values after the loaders
+// memtrace of 2026-10-15 in agent VEH32 trace tA frame 7 and agent VPHYS trace body0): class values after the loaders
 // 0x243f90, 0x243e9c, 0x243c50, 0x243628 and 0x2435d0. Shared by the vehicle tests.
 #include "runtime/vehicle.hpp"
 #include "runtime/vehicle_box_contact.hpp"

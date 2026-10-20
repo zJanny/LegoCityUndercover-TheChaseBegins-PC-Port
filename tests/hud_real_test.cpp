@@ -1,6 +1,6 @@
-// The in-game HUD against the real game data and the recorded oracle trace (tools/oracle/hud-bar.txt): the stud bar's
-// timeline, the counter sink, the icon bounce and renders of the HUD and the map screen. Arguments: fib, names csv, trace
-// directory. Exit code 77 when the game data is missing; the trace comparison is skipped when the trace is missing.
+// The in-game HUD against the real game data and values recorded in the original game (tools/oracle/hud-bar.txt): the stud bar's
+// timeline, the counter sink, the icon bounce and renders of the HUD and the map screen. Arguments: fib, names csv. Exit code 77
+// when the game data is missing.
 #include "frontend/hud.hpp"
 #include "frontend/minimap.hpp"
 #include <cmath>
@@ -30,14 +30,15 @@ std::uint32_t fnv1a(const std::vector<std::uint8_t>& bytes) {
     return hash;
 }
 
-// The bar object states of update 25..37 of the recorded stud pickup (bar1.mem, byte +0x10 of the object at 0x519760): 1 turning
+// The bar object states of update 25..37 of the recorded stud pickup (Azahar memtrace bar1 of 2026-10-13, 160 updates, byte +0x10
+// of the object at 0x519760; the HUD showed four hearts in that state): 1 turning
 // on, 2 shown, 3 turning off, 0 hidden. The value 10 was banked in update 25. The game clock advanced 0.2667 s per stepped update
 // (the update-time field +0x28 went 228.733, 229.267, 231.4), i.e. the ON storyboard (0.5 s) ended at update 27, the hold of 2.0 s
 // at update 35 and the OFF storyboard (0.5 s) at update 37.
 constexpr float kRecordedClockStep = 0.26667f;
 constexpr int kBarStates[13] = {1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 0};
 
-void barTimeline(Resources& resources, const std::string& traceDirectory) {
+void barTimeline(Resources& resources) {
     Hud hud(resources, {});
     for (int update = 0; update < 25; ++update) hud.update(kRecordedClockStep);
     require(hud.studBarState() == StudBarState::Hidden, "the bar is hidden before the first pickup");
@@ -47,20 +48,6 @@ void barTimeline(Resources& resources, const std::string& traceDirectory) {
         if (row > 0) hud.update(kRecordedClockStep);
         require(int(hud.studBarState()) == kBarStates[row], "bar state at recorded update " + std::to_string(25 + row));
     }
-
-    std::ifstream in(traceDirectory + "/bar1.mem", std::ios::binary);
-    if (!in) {
-        std::cout << "hud-real-test: no trace " << traceDirectory << "/bar1.mem, skipping the comparison with it\n";
-        return;
-    }
-    constexpr std::size_t kRecordBytes = 208, kStateOffset = 8 + 8 + 0x10, kHeartsOffset = 8 + 8 + 112 + 76;
-    const std::vector<char> bytes((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-    require(bytes.size() == 160 * kRecordBytes, "trace size");
-    if (bytes.size() != 160 * kRecordBytes) return;
-    for (int row = 0; row < 13; ++row)
-        require(int(std::uint8_t(bytes[std::size_t(25 + row) * kRecordBytes + kStateOffset])) == kBarStates[row],
-                "the pinned state matches the trace at update " + std::to_string(25 + row));
-    require(std::uint8_t(bytes[kHeartsOffset]) == 4, "the HUD showed four hearts in the recorded state");
 }
 
 void sinkAndBounce(Resources& resources) {
@@ -101,7 +88,7 @@ void hearts(Resources& resources) {
 
 void renders(Resources& resources) {
     // Recorded with chase-hudshot at the commit that added this test. The HUD pixels agree with the oracle screenshots
-    // (artifacts/review/hud, docs/re/hud.md): mean abs difference over the opaque pixels 6.7 for the portrait, 2.5 for the
+    // (oracle screenshots of the HUD, docs/re/hud.md): mean abs difference over the opaque pixels 6.7 for the portrait, 2.5 for the
     // hearts and 5.8 for the stud number.
     Hud hud(resources, {});
     Canvas top(kTopWidth, kScreenHeight);
@@ -184,8 +171,8 @@ void minimap(Resources& resources) {
 }
 
 int main(int argc, char** argv) {
-    if (argc < 4) {
-        std::cerr << "usage: hud-real-test FIB CSV TRACE_DIR\n";
+    if (argc < 3) {
+        std::cerr << "usage: hud-real-test FIB CSV\n";
         return 2;
     }
     if (!std::ifstream(argv[1]).good() || !std::ifstream(argv[2]).good()) {
@@ -196,7 +183,7 @@ int main(int argc, char** argv) {
         assets::FuseArchive archive(argv[1]);
         archive.loadNames(argv[2]);
         Resources resources(archive);
-        barTimeline(resources, argv[3]);
+        barTimeline(resources);
         sinkAndBounce(resources);
         hearts(resources);
         renders(resources);

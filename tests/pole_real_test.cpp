@@ -1,7 +1,7 @@
 // Poles and drain pipes of lvl_01_cherrytreehills (src/runtime/pole.cpp): the pole objects from the level data and replays of the
 // oracle runs of mission 1-2 (docs/re/player-traversal.md, entry of 2026-10-18 on the pole). All runs: New 3DS states
 // `m12-10-pole-climb` (on the pipe 1-5_Drain_Pipe05) and `m12-10a-pole-foot` (standing 0.77 m from it), scheduler step fixed to 1/30
-// (`dt 0.033333335 0.033333335`), stick (0, 120) = up, rows are `trace N NAME mem` output of artifacts/oracle/r21-A-out/ (x, y, z of the
+// (`dt 0.033333335 0.033333335`), stick (0, 120) = up, rows are `trace N NAME mem` output of round 21 agent A (x, y, z of the
 // player node after each update). The clips vpole_up / vpole_down / vpole_dismount come from the extracted RomFS; exits with 77 without it.
 #include "assets/assets.hpp"
 #include "runtime/pole.hpp"

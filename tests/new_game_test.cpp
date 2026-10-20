@@ -1,6 +1,7 @@
 // The new-game slot (0x228274, 0x1a25cc), the level entry 0x20a4d4 and a save round trip (docs/re/save-format-state.md).
 // Usage: new-game-test [<lego_city3ds.fib> <lego_city3ds.csv> [<savegame.dat>]]; without arguments only the synthetic
 // part runs, with missing files it exits 77 (skip). The save is a copy of the user's save and is only read.
+#include "save_fixture.hpp"
 #include "save/completion_tables.hpp"
 #include "save/continue_start.hpp"
 #include "save/new_game.hpp"
@@ -174,11 +175,11 @@ void testRoundTrip(chase::assets::FuseArchive& archive) {
     std::filesystem::remove_all(dir);
 }
 
-void testRealSave(chase::assets::FuseArchive& archive, const std::string& file) {
-    // Provenance: the user's save copy, slot 0 read with python struct: studs u64 +0x5148 = 1130, u32 +0x5190 = 52, +6 = 1.
-    const LoadResult loaded = load(file);
-    require(loaded.found && loaded.status == Status::Ok && loaded.image, "the save copy is valid");
-    const SlotView view = loaded.image->slotView(0);
+void testRealSave(chase::assets::FuseArchive& archive) {
+    // Provenance: the user's save, slot 0 as read on 2026-10-20 (tests/save_fixture.hpp): studs u64 +0x5148 = 1130, u32 +0x5190 = 52, +6 = 1.
+    const SaveImage image = chase::testing::userSaveImage(archive);
+    require(image.validate() == Status::Ok, "the save is valid");
+    const SlotView view = image.slotView(0);
     Bytes slot(view.data, view.data + view.size);
     const LevelEntry entry = enterLevel(slot, slot[6], newGameTables(archive));
     require(entry.level == 1 && entry.studs == 1130 && entry.superBricks == 52, "the counters of the user's slot 0");
@@ -203,8 +204,7 @@ int main(int argc, char** argv) {
         archive.loadNames(argv[2]);
         testRealTables(archive);
         testRoundTrip(archive);
-        if (argc > 3 && std::ifstream(argv[3])) testRealSave(archive, argv[3]);
-        else std::cout << "new-game-test: no real save, the slot load of the user's save is skipped\n";
+        testRealSave(archive);
     } catch (const std::exception& error) {
         std::cerr << "new-game-test failed: " << error.what() << '\n';
         return 1;

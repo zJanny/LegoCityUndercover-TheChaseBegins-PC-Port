@@ -127,7 +127,7 @@ int main(int argc, char** argv) {
 
         // Provenance: LEVOBJ-12 / LEVOBJ-13. 0x2428c0 (EnableObject 0) hides the entity's node and, through 0x1dd4f8, the nodes of every nested
         // object, whatever the entity's kind (llvm-objdump of artifacts/game/game.arm.elf). The census of this level with the C++ parser
-        // (artifacts/scratch/r29-D/census.cpp): 1-5_Balcony_Goon_01 (chars/char_ai_cherrytreehillsgang4) is disabled by the startup script,
+        // (census of round 29 agent D): 1-5_Balcony_Goon_01 (chars/char_ai_cherrytreehillsgang4) is disabled by the startup script,
         // 1-4_AI_Goon_01 is not; 41 of the 99 drawable characters are disabled at the start (value recorded from the C++ implementation); 1-1_DonutVan (vehicles/vehicle_van_donut, disabled) nests Wheel01..04 (vehicles/wheel).
         {
             const chase::assets::ClassLookup classOf = chase::assets::archiveClassLookup(archive);
@@ -252,7 +252,7 @@ int main(int argc, char** argv) {
         // Provenance: oracle state police-station (New 3DS), `read` of the runtime trigger records (owner+0x34 = 0x08e65ac0,
         // 53 x 0x20 bytes) and of the 137 bound records (0x08fa4634, 0x28 each) of the lvl_00 level data 0x08f9cba0: all 53 trigger
         // enable bytes are 1 and bound byte +0xa is 0 for bounds 6, 13 and 14 only
-        // (artifacts/oracle/agentM-out/lvl00-police-station-read.txt, parsed with a Python script of the session).
+        // (heap read of agent M, parsed with a Python script of the session).
         const chase::assets::FuseEntry* stationEntry = archive.find(kStationFile);
         require(stationEntry != nullptr, "lvl_00 not in archive");
         const chase::assets::Level station = chase::assets::parseLevel(archive.read(*stationEntry));

@@ -1,5 +1,5 @@
 // The ropes of the zipline anchors of lvl_01_cherrytreehills (src/runtime/zipline_rope.cpp): RopeTexture, RenderWidth and FadeNearCamera of the class
-// props/parkour_zipline read from the level data (artifacts/scratch/r27-D/probe, 2026-10-19), and the strip of 1-8_Zip_Line05 -> 1-8_Zip_Line04 with the
+// props/parkour_zipline read from the level data (probe of round 27 agent D, 2026-10-19), and the strip of 1-8_Zip_Line05 -> 1-8_Zip_Line04 with the
 // stand-in view direction (0, 0, 1) (TRAV-S29), expected values evaluated with numpy float32 from the node positions in the level data. Needs the
 // extracted RomFS; exits with 77 without it.
 #include "assets/assets.hpp"

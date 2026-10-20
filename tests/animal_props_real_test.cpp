@@ -111,7 +111,7 @@ int main(int argc, char** argv) {
         require(props.poses()[0].skin != first[0].skin, "the dog moves while the clip plays");
         for (int i = 0; i < 90; ++i) props.update(1.0f / 30.0f);
         const runtime::PropPose last = props.poses()[0];
-        // Oracle: Azahar GDB trap at 0x16b358 from m12-13-cage-trigger after the A press (artifacts/scratch/r28-A/release_root.txt,
+        // Oracle: Azahar GDB trap at 0x16b358 from m12-13-cage-trigger after the A press (scenario release_root of r28-A,
         // docs/re/objects.md 2026-10-19T10:10:34): the dog's node ends at 915.2977 64.3605 663.6295, yaw -87.64 degrees (cos 0.0411).
         require(last.moved && std::fabs(last.node[12] - 915.2977f) < 2e-3f && std::fabs(last.node[13] - 64.3605f) < 2e-3f &&
                     std::fabs(last.node[14] - 663.6295f) < 2e-3f && std::fabs(last.node[0] - 0.04113f) < 1e-3f,

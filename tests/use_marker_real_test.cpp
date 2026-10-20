@@ -2,8 +2,8 @@
 // use_marker.cpp, docs/re/use-spot.md). Needs the extracted RomFS; exits with 77 without it.
 // Provenance: the table rows are tables/tablescharacters.bxls (sheet 0 row 9 "police" bytes +15..+22, row 167 all ones, sheet 2 byte +6 of 64 rows;
 // read with the loader of src/assets/table.cpp); the spot and its position are level data (lvl_01_cherrytreehills_main.blvl); the oracle is the user's
-// state footprint-scanner-trigger (servant answer C-1, docs/re/oracle-states.md): kind 182 entity at the node 720.39 37.04 654.53, state 0, marker
-// shown as the police disc (artifacts/oracle/r47-servant-out/c1_disc_sheet.png).
+// state footprint-scanner-trigger (servant answer C-1 of round 47; standing on the footprint scanner trigger of mission 1-2): kind 182 entity at the node 720.39 37.04 654.53, state 0, marker
+// shown as the police disc (servant picture c1_disc_sheet of round 47).
 #include "assets/assets.hpp"
 #include "runtime/ability_table.hpp"
 #include "runtime/detective.hpp"

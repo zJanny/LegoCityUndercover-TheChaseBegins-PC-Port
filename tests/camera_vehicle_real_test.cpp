@@ -2,7 +2,8 @@
 // drv-police-car-seated; tools/oracle/camera-vehicle-drive.txt, converted by tools/export_camera_vehicle_trace.py; docs/re/camera-vehicle.md).
 // The camera starts from the recorded state of the first row and gets the recorded vehicle position and heading and the pad of every
 // update: idle (A not held), A held, circle pad x 120, released. The eye tracker (K+0x34) and the look point (K+0x94 + K+0xf4) must
-// equal the recorded ones. Needs the extracted RomFS and the trace directory; exits with 77 (skipped) when either is missing.
+// equal the recorded ones. The rows of every trace are committed in tests/data/camera/vehicle (all rows of each trace; recorded
+// 2026-10-15). Needs the extracted RomFS; exits with 77 (skipped) when it is missing.
 #include "assets/assets.hpp"
 #include "assets/object_collision.hpp"
 #include "runtime/collision.hpp"
@@ -99,10 +100,10 @@ float distance(const float a[3], const float b[3]) {
 
 int main(int argc, char** argv) {
     if (argc != 4) {
-        std::cerr << "usage: camera-vehicle-real-test FIB NAMES TRACE_DIR\n";
+        std::cerr << "usage: camera-vehicle-real-test FIB NAMES DATA_DIR\n";
         return 2;
     }
-    if (!fs::exists(argv[1]) || !fs::exists(argv[2]) || !fs::exists(fs::path(argv[3]) / "veh_idle.csv")) {
+    if (!fs::exists(argv[1]) || !fs::exists(argv[2])) {
         std::cout << "camera-vehicle-real-test: data not available, skipped\n";
         return 77;
     }
@@ -145,7 +146,7 @@ int main(int argc, char** argv) {
         std::size_t worstRow = 0;
         PadDevice pad;
         for (const Phase& phase : phases) {
-            const std::vector<Row> rows = loadTrace(fs::path(argv[3]) / phase.file);
+            const std::vector<Row> rows = loadTrace(fs::path(argv[3]) / "vehicle" / phase.file);
             if (rows.size() != phase.rows) throw std::runtime_error(std::string("row count of ") + phase.file);
             for (std::size_t i = 0; i < rows.size(); ++i) {
                 const Row& row = rows[i];
@@ -170,7 +171,7 @@ int main(int argc, char** argv) {
                 worstLook = std::max(worstLook, lookError);
             }
         }
-        if (fs::exists(fs::path(argv[3]) / "enter_jump.csv")) {
+        {
             const VehicleCameraSubject onFoot = onFootCameraSubject();
             FollowCamera walking;
             walking.setCollision(&world);
@@ -178,7 +179,7 @@ int main(int argc, char** argv) {
             walking.setSubject(onFoot.preset, onFoot.bodyHeight, onFoot.modelHalfHeight);
             std::vector<Row> rows;
             for (const char* file : {"enter_rest.csv", "enter_press.csv", "enter_jump.csv"}) {
-                const std::vector<Row> part = loadTrace(fs::path(argv[3]) / file);
+                const std::vector<Row> part = loadTrace(fs::path(argv[3]) / "vehicle" / file);
                 rows.insert(rows.end(), part.begin(), part.end());
             }
             walking.restore(rows[0].wanted, rows[0].eye, rows[0].look, rows[0].player, 0.0f);
@@ -207,7 +208,7 @@ int main(int argc, char** argv) {
             if (compared < 20 || worstEnterEye > 5e-3f || worstEnterLook > 5e-3f)
                 throw std::runtime_error("entering differs from the recorded camera");
         }
-        if (fs::exists(fs::path(argv[3]) / "leave_out.csv")) {
+        {
             const VehicleCameraSubject onFoot = onFootCameraSubject();
             FollowCamera leaving;
             leaving.setCollision(&world);
@@ -215,7 +216,7 @@ int main(int argc, char** argv) {
             leaving.setSubject(subject.preset, subject.bodyHeight, subject.modelHalfHeight);
             std::vector<Row> rows;
             for (const char* file : {"leave_press.csv", "leave_out.csv"}) {
-                const std::vector<Row> part = loadTrace(fs::path(argv[3]) / file);
+                const std::vector<Row> part = loadTrace(fs::path(argv[3]) / "vehicle" / file);
                 rows.insert(rows.end(), part.begin(), part.end());
             }
             leaving.restore(rows[0].wanted, rows[0].eye, rows[0].look, rows[0].vehicle, rows[0].heading, 1.0f, kLeaveSpringHold);
@@ -236,9 +237,9 @@ int main(int argc, char** argv) {
             std::cout << "getting out: worst eye error " << worstLeaveEye << " (row " << worstLeaveRow << "), look " << worstLeaveLook << '\n';
             if (worstLeaveEye > 5e-3f || worstLeaveLook > 5e-3f) throw std::runtime_error("getting out differs from the recorded camera");
         }
-        if (fs::exists(fs::path(argv[3]) / "handback.csv")) {
+        {
             const VehicleCameraSubject onFoot = onFootCameraSubject();
-            const std::vector<Row> rows = loadTrace(fs::path(argv[3]) / "handback.csv");
+            const std::vector<Row> rows = loadTrace(fs::path(argv[3]) / "vehicle" / "handback.csv");
             FollowCamera returning;
             returning.setCollision(&world);
             returning.setSubject(onFoot.preset, onFoot.bodyHeight, onFoot.modelHalfHeight);

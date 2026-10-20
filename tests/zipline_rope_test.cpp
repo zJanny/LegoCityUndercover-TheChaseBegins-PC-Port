@@ -56,7 +56,7 @@ int main() {
             require(v.rgba[0] == 255 && v.rgba[1] == 255 && v.rgba[2] == 255 && v.rgba[3] == 255, "vertex colour");
         }
 
-        // Provenance: gdb trap T46 (oracle state m12-9-zipline, round 28, artifacts/oracle/r28D-out/T46.txt): at 0x1f9590 r0 = 892.20288 64.4198 632.59888
+        // Provenance: gdb trap T46 (oracle state m12-9-zipline, round 28 agent D, trap output T46): at 0x1f9590 r0 = 892.20288 64.4198 632.59888
         // (start), r1 = 868.09351 69.9924 630.97711 (end); at 0x1f95bc the row at 0x529fec = (0.96139693, -0.1675961, -0.21823755), the camera's view
         // direction (its horizontal part matches the camera yaw 1.794 of the player report). The side vector is the formula of 0x1f95bc..0x1f95e4;
         // the expected vertices come from it (numpy), not from a measured vertex buffer.

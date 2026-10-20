@@ -1,5 +1,5 @@
 // Tests of the vehicle body's Bullet contacts with the static boxes (src/runtime/vehicle_box_contact.*, docs/re/vehicles-physics-collision.md).
-// Pinned values: Azahar GDB reads and memory traces of 2026-10-15 (agent BULLET, artifacts/oracle/agentBULLET-out, not committed). hitA.mem:
+// Pinned values: Azahar GDB reads and memory traces of 2026-10-15 (agent BULLET, not committed). hitA.mem:
 // state bullet-trooper-at-obstacle (the trooper of drv-police-car-seated after the A run, resting against the obstacle), fixed dt 0.033, A
 // held; per update the rigid body 0x08e16f40 (0x240 bytes), the dispatcher 0x084aaf00 and its only manifold 0x08472cb0 (trooper against the
 // static box 0x08f49810, shape 0x08f49770). runA.mem (agentVEH40-out): the A run from drv-police-car-seated, rigid body per update. The real

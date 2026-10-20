@@ -1,6 +1,6 @@
 // The sound scanner of mission 1-2 in lvl_01_cherrytreehills (src/runtime/scanner.cpp): the zone 1-2_ScannerZoneAudio (object type 201) and
 // the scannable 1-2_Dog_Prop from the level data, then the scanner sequence from the roof trigger: the player stands where the oracle state
-// m12-8-roof-sound-scanner has him (869.659 65.997 645.594, docs/re/oracle-states.md), presses A, aims at the dog and holds A; the scripts
+// m12-8-roof-sound-scanner (user state in mission 1-2, on a roof at the sound scanner trigger) has him (869.659 65.997 645.594), presses A, aims at the dog and holds A; the scripts
 // 1-2_Scanner_Enter_Script, 1-2_Scanner_Zoomed_Script, 1-2_Scanner_Locked_Script and 1-2_Scanned_Pringles start in the original's order, and
 // the EnableScanner 0 of 1-2_Scanned_Pringles closes the scanner. Needs the extracted RomFS; exits with 77 without it.
 #include "assets/assets.hpp"

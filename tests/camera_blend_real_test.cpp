@@ -1,8 +1,8 @@
 // Replay of camera traces recorded in the original game while the player walks across the police station lobby
 // (Azahar oracle, New 3DS, state camera-lobby-walk; tools/oracle/camera-lobby-walk.txt: lobby_north = camera-lobby-north.mem (stick 0 150, 150 updates, one record), lobby_east = camera-lobby-east.mem (stick 150 0, 130 updates, walk west over five records), converted by
 // tools/export_camera_blend_trace.py; docs/re/camera.md). The rig gets the recorded player position and dt of every row and
-// must reproduce the recorded eye, look and FOV. Needs the extracted RomFS and the trace directory; exits with 77 (skipped)
-// when either is missing.
+// must reproduce the recorded eye, look and FOV. The rows of every trace are committed in tests/data/camera/blend (all rows of
+// each trace; recorded 2026-10-14 and 2026-10-15). Needs the extracted RomFS; exits with 77 (skipped) when it is missing.
 #include "assets/assets.hpp"
 #include "assets/object_collision.hpp"
 #include "runtime/camera_rig.hpp"
@@ -86,10 +86,10 @@ struct Replay {
 
 int main(int argc, char** argv) {
     if (argc != 4) {
-        std::cerr << "usage: camera-blend-real-test FIB NAMES TRACE_DIR\n";
+        std::cerr << "usage: camera-blend-real-test FIB NAMES DATA_DIR\n";
         return 2;
     }
-    if (!fs::exists(argv[1]) || !fs::exists(argv[2]) || !fs::exists(argv[3])) {
+    if (!fs::exists(argv[1]) || !fs::exists(argv[2])) {
         std::cout << "camera-blend-real-test: data not available, skipped\n";
         return 77;
     }
@@ -134,7 +134,7 @@ int main(int argc, char** argv) {
             for (const Replay::File& entry : replay.files) {
                 const char* file = entry.name;
                 const std::size_t expectedRows = entry.rows;
-                const fs::path path = fs::path(argv[3]) / file;
+                const fs::path path = fs::path(argv[3]) / "blend" / file;
                 if (!fs::exists(path)) {
                     std::cout << "camera-blend-real-test: " << path << " missing, skipped\n";
                     return 77;

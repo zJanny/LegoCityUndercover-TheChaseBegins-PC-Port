@@ -1,6 +1,7 @@
 // The level state refresh of a save request (0x192f60, 0x1c26dc; docs/re/save-format-state.md).
-// Usage: level-state-test [<lego_city3ds.fib> <lego_city3ds.csv> <savegame.dat>]; without arguments only the synthetic
-// part runs, with missing files it exits 77 (skip). The save is a copy of the user's save and is only read.
+// Usage: level-state-test [<lego_city3ds.fib> <lego_city3ds.csv>]; without arguments only the synthetic part runs, with
+// missing files it exits 77 (skip). The save is built from the named values of save_fixture.hpp.
+#include "save_fixture.hpp"
 #include "save/level_state.hpp"
 #include "save/save.hpp"
 
@@ -85,12 +86,12 @@ assets::Level readLevel(assets::FuseArchive& archive, const std::string& path) {
     return assets::parseLevel(archive.read(*entry));
 }
 
-void testRealSave(assets::FuseArchive& archive, const std::string& file) {
-    // The user's save copy: re-serialising each saved level block from its own variables and records gives the same
-    // bytes (level 1: 201, level 2: 823, read with python struct from the copy).
-    const LoadResult loaded = load(file);
-    require(loaded.found && loaded.status == Status::Ok && loaded.image, "the save copy is valid");
-    const SlotView slot = loaded.image->slotView(0);
+void testRealSave(assets::FuseArchive& archive) {
+    // The user's save as read on 2026-10-20 (save_fixture.hpp): re-serialising each saved level block from its own variables
+    // and records gives the same bytes. The blocks are written by the same serialiser here; the original's own bytes are not pinned.
+    const SaveImage image = testing::userSaveImage(archive);
+    require(image.validate() == Status::Ok, "the save is valid");
+    const SlotView slot = image.slotView(0);
     const std::pair<unsigned, const char*> levels[] = {
         {1, "levels/levels/lvl_00_policestation/lvl_00_policestation_main.blvl"},
         {2, "levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl"},
@@ -113,6 +114,8 @@ void testRealSave(assets::FuseArchive& archive, const std::string& file) {
         input.endBitSetBytes = records->endBitSetBytes;
         const std::optional<std::vector<std::uint8_t>> data = levelStateData(level, input);
         require(data && data->size() == state->size, "level " + std::to_string(id) + " length");
+        // Provenance: block lengths of the user's save, read on 2026-10-14 with python struct (docs/re/save-format-state.md): level 1 201, level 2 823.
+        require(state->size == (id == 1 ? 201u : 823u), "level " + std::to_string(id) + " length of the user's save");
         require(std::memcmp(data->data(), state->data, state->size) == 0, "level " + std::to_string(id) + " bytes");
         const std::optional<std::int32_t> story = storyProgressOf(level, input);
         require(!story || std::uint16_t(*story) == state->storyProgress, "level " + std::to_string(id) + " StoryProgress");
@@ -127,13 +130,13 @@ int main(int argc, char** argv) {
             std::cout << "level-state-test passed (synthetic)\n";
             return 0;
         }
-        if (argc != 4 || !std::ifstream(argv[1]) || !std::ifstream(argv[2]) || !std::ifstream(argv[3])) {
+        if (argc != 3 || !std::ifstream(argv[1]) || !std::ifstream(argv[2])) {
             std::cout << "level-state-test: data not available, skipped\n";
             return 77;
         }
         assets::FuseArchive archive(argv[1]);
         archive.loadNames(argv[2]);
-        testRealSave(archive, argv[3]);
+        testRealSave(archive);
     } catch (const std::exception& error) {
         std::cerr << "level-state-test failed: " << error.what() << '\n';
         return 1;

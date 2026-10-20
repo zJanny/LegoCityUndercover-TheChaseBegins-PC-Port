@@ -1,7 +1,8 @@
-// Differential test of the follow camera against traces recorded in the original game (Azahar oracle,
-// tools/oracle/camera-trace.txt and camwall-*.txt, converted by tools/export_camera_trace.py; docs/re/camera.md). The
-// wall traces also need the extracted RomFS (the level collision). Needs the local trace directory; exits with 77
-// (skipped) when it is missing.
+// Differential test of the follow camera against traces recorded in the original game (Azahar oracle, state
+// gameplay-start of Cherry Tree Hills, 2026-10-13; scenarios tools/oracle/camera-trace.txt and camwall-*.txt, converted by
+// tools/export_camera_trace.py; docs/re/camera.md). The rows of every trace are committed in tests/data/camera/follow and
+// tests/data/camera/wall (all rows of each trace). The wall traces also need the extracted RomFS (the level collision); the
+// test exits with 77 (skipped) when it is missing.
 #include "assets/assets.hpp"
 #include "runtime/follow_camera.hpp"
 #include "runtime/level_start.hpp"
@@ -121,11 +122,11 @@ void check(const std::string& name, const Result& result, float eyeLimit, float 
 
 int main(int argc, char** argv) {
     try {
-        if (argc < 2 || !fs::exists(fs::path(argv[1]) / "k_still.csv")) {
-            std::cout << "camera traces not found, skipping\n";
-            return 77;
+        if (argc < 2 || !fs::exists(fs::path(argv[1]) / "follow" / "k_still.csv")) {
+            std::cerr << "usage: camera-real-test DATA_DIR [FIB NAMES]\n";
+            return 2;
         }
-        const fs::path directory = argv[1];
+        const fs::path directory = fs::path(argv[1]) / "follow";
         // Tolerances: positions are float32 near 900 (one ulp 6e-5), the recorded L/R turn is exact to 1e-4.
         for (const char* name : {"k_still", "k_R", "k_Rrel", "k_L", "k_Lrel"}) {
             const auto rows = loadTrace(directory / (std::string(name) + ".csv"));
@@ -150,7 +151,7 @@ int main(int argc, char** argv) {
             const auto rows = loadTrace(directory / "k_dt16.csv");
             check("k_dt16", run(rows, 0, rows.size()), 2e-3f, 2e-4f);
         }
-        if (argc >= 5 && fs::exists(argv[2]) && fs::exists(argv[3]) && fs::exists(argv[4])) {
+        if (argc >= 4 && fs::exists(argv[2]) && fs::exists(argv[3])) {
             chase::assets::FuseArchive archive(argv[2]);
             archive.loadNames(argv[3]);
             const chase::assets::FuseEntry* entry = archive.find(kLevelModel);
@@ -162,7 +163,7 @@ int main(int argc, char** argv) {
             const chase::assets::Level level = chase::assets::parseLevel(archive.read(*levelEntry));
             const chase::assets::PlacedObjectState startState = chase::runtime::levelStartState(level, chase::assets::archiveClassLookup(archive));
             for (const auto& object : chase::assets::objectCollisions(archive, level, startState)) world.addObject(object);
-            // Wall traces (tools/oracle/camwall-circle.txt, camwall-east.txt; CSV from tools/export_camera_trace.py --extra 0x330).
+            // Wall traces (tools/oracle/camwall-circle.txt, camwall-east.txt; CSV from tools/export_camera_trace.py --extra 0x330, recorded 2026-10-13).
             // Every row is replayed: level collision and the placed objects (lamp posts, doors, plaques).
             struct WallTrace {
                 const char* name;
@@ -177,7 +178,7 @@ int main(int argc, char** argv) {
                 {"w_east_side", 0, 1000},  // stick pushed sideways: the stick turn path, large vertical pushes (the camera rises to y 29)
             };
             for (const WallTrace& wall : walls) {
-                const auto rows = loadTrace(fs::path(argv[4]) / (std::string(wall.name) + ".csv"));
+                const auto rows = loadTrace(fs::path(argv[1]) / "wall" / (std::string(wall.name) + ".csv"));
                 check(std::string(wall.name) + " (with level collision)", run(rows, wall.from, std::min(wall.to, rows.size()), &world), 1e-3f,
                       1e-4f);
             }

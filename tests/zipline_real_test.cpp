@@ -1,7 +1,7 @@
 // The zipline of mission 1-2 in lvl_01_cherrytreehills (src/runtime/zipline.cpp): the anchors 1-8_Zip_Line05 and 1-8_Zip_Line04 from the
 // level data, then a replay of the ride recorded in the oracle from the state m12-9-zipline (docs/re/player-traversal.md, entry of
 // 2026-10-18 on the zipline): scheduler step fixed to 1/30 (`dt 0.033333335 0.033333335`), B held for 3 updates, then `trace 200 zip-ride mem`
-// (artifacts/oracle/r20-A-out/zip-ride.csv / .mem, rows below are those frames). The grab happened in the 7th jump update (trap at 0x2a9f04:
+// (round 20 agent A, zip-ride, rows below are those frames). The grab happened in the 7th jump update (trap at 0x2a9f04:
 // node position (870.22626, 67.5988, 630.96051) after the jump step, grab point (870.3043, 67.5988, 630.9428)). Needs the extracted RomFS;
 // exits with 77 without it.
 #include "assets/assets.hpp"

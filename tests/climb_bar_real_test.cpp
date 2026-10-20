@@ -1,6 +1,6 @@
 // Rails of mission 1-2 in lvl_01_cherrytreehills (src/runtime/climb_bar.cpp): the bars 1-2_ClimbBar_02 / 03 and the corner rail 1-2_ClimbBar_04 from
 // the level data, then replays of runs recorded in the oracle from the user state m12-12-railing (docs/re/player-traversal.md): New 3DS, OpenGL,
-// no RPC, port 24731, home artifacts/oracle/r21-C, scheduler step fixed with `dt 0.033333335 0.033333335`, `trace N NAME mem` after `stick X 0`
+// no RPC, port 24731, scheduler step fixed with `dt 0.033333335 0.033333335`, `trace N NAME mem` after `stick X 0`
 // (railR: stick +120, railL: stick -120), `hold B` / `hold A` for 3 updates (barB1/barB2, barA1/barA2). Rows below are the frames of those traces
 // (scratch output of tools/azahar_oracle.py, not kept): update index, ctrl+6 (stick heading), position, facing. Needs the extracted RomFS; exits with 77 without it.
 #include "assets/assets.hpp"

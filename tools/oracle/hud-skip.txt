@@ -1,5 +1,5 @@
 # Skip counters of the whole pickup pool (docs/re/studs.md): 1130 records of 0x4c bytes at 0x8dec3d0, 45 updates from the
-# gameplay start. Run with --output artifacts/oracle/hud-traces; skip counter = s16 at record +0x30.
+# gameplay start. Run with --output <out>; skip counter = s16 at record +0x30.
 loadstate gameplay-start
 stick 0 0
 hold -

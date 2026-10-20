@@ -1,6 +1,6 @@
 // Tests of the vehicle world step with several bodies (src/runtime/vehicle_world.*, the two-body solve and the vehicle pair contacts of
 // src/runtime/vehicle_box_contact.*; docs/re/vehicles-physics-collision.md). Pinned values: Azahar GDB reads and memory traces of 2026-10-15
-// (agent VEH7, artifacts/oracle/agentVEH7-out, not committed). State veh7-poked-trooper-behind-parked (drv-police-car-seated with the trooper
+// (agent VEH7, not committed). State veh7-poked-trooper-behind-parked (drv-police-car-seated with the trooper
 // moved 10 m behind the parked FP_Vehicle_03 and turned to its heading by GDB writes of the rigid transform, a measuring aid), fixed dt 0.033,
 // A held: hitP4.mem, per update the trooper's rigid body 0x08e16f40 and the worker's 0x08e90b50 (0x240 bytes each), the dispatcher and the
 // pair manifold 0x08472cb0. The trooper hits the parked worker in update 27. world.txt: the shapes and the vehicle bodies (+0x84, +0xb0, +0xc8).

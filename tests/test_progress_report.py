@@ -111,19 +111,17 @@ class CMakeParserTests(unittest.TestCase):
     def test_counts_tests_with_traces(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            (root / 'tests').mkdir()
-            (root / 'artifacts' / 'oracle' / 'a-out').mkdir(parents=True)
-            for name in ('one.mem', 'two.mem', 'one.csv'):
-                (root / 'artifacts' / 'oracle' / 'a-out' / name).write_text('')
+            (root / 'tests' / 'data' / 'camera').mkdir(parents=True)
+            for name in ('one.csv', 'two.csv', 'notes.txt'):
+                (root / 'tests' / 'data' / 'camera' / name).write_text('')
+            (root / 'tests' / 'data' / 'jumps.inc').write_text(
+                '// header\n{"a", {\n{1},\n}},\n{"b@0", {\n{1},\n}},\n{"b@10", {\n{1},\n}},\n')
             (root / 'CMakeLists.txt').write_text(
-                'set(CHASE_A_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/a-out" CACHE PATH "x")\n'
-                'set(CHASE_B_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/b-out" CACHE PATH "x")\n'
                 'add_test(NAME plain COMMAND tool)\n'
-                'add_test(NAME traced COMMAND tool\n  "${CHASE_A_TRACE_DIR}" (nested))\n')
+                'add_test(NAME camera-real-data COMMAND tool\n  "data" (nested))\n')
             checks = report.measure_checks(root)
         self.assertEqual((checks['ctest_tests'], checks['ctest_tests_with_traces']), (2, 1))
-        self.assertEqual((checks['trace_sets'], checks['recorded_traces']), (2, 2))
-        self.assertEqual(checks['missing_trace_directories'], ['artifacts/oracle/b-out'])
+        self.assertEqual(checks['recorded_traces'], 4)
 
 
 class CodeMeasureTests(unittest.TestCase):

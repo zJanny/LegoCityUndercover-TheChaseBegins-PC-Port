@@ -1,8 +1,8 @@
 // Real-data checks of the sound layer: the sound tables of the extracted RomFS against values read in the original
-// game (Azahar oracle, docs/re/audio.md), the listener matrix of the oracle, and a replay of recorded sound-call
-// traces (tools/export_sound_trace.py, scenarios in tools/oracle/audio-*.txt) through chase-game's `--script` mode.
-// Arguments: fib, names, trace directory, chase-game executable, controls file. Exits with 77 (skipped) when the RomFS, the trace
-// directory or the executable is missing.
+// game (Azahar oracle, docs/re/audio.md), the listener matrix of the oracle, and a replay of sound-call traces recorded in the
+// original game (Azahar oracle, state gameplay-start, 2026-10-13; tools/export_sound_trace.py, scenarios in tools/oracle/audio-*.txt;
+// every recorded call is pinned in this file) through chase-game's `--script` mode.
+// Arguments: fib, names, chase-game executable, controls file. Exits with 77 (skipped) when the RomFS or the executable is missing.
 #include "assets/assets.hpp"
 #include "audio/spatial.hpp"
 #include "runtime/music.hpp"
@@ -11,7 +11,6 @@
 #include <cstdio>
 #include <cstdlib>
 #include <filesystem>
-#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -29,35 +28,7 @@ void require(bool condition, const std::string& message) {
 struct Call {
     int update = 0;
     unsigned id = 0;
-    float x = 0, y = 0, z = 0;
-    bool hasPosition = false;
 };
-
-std::vector<Call> readTrace(const fs::path& path) {
-    std::ifstream in(path);
-    require(bool(in), "cannot open " + path.string());
-    std::vector<Call> calls;
-    std::string line;
-    std::getline(in, line);
-    while (std::getline(in, line)) {
-        std::stringstream fields(line);
-        std::string field;
-        std::vector<std::string> columns;
-        while (std::getline(fields, field, ',')) columns.push_back(field);
-        require(columns.size() >= 4, "bad trace row in " + path.string());
-        Call call;
-        call.update = std::stoi(columns[0]);
-        call.id = unsigned(std::stoul(columns[1]));
-        if (columns.size() >= 7) {
-            call.x = std::stof(columns[4]);
-            call.y = std::stof(columns[5]);
-            call.z = std::stof(columns[6]);
-            call.hasPosition = true;
-        }
-        calls.push_back(call);
-    }
-    return calls;
-}
 
 std::vector<Call> runGame(const std::string& game, const std::string& config, const std::string& fib, const std::string& names, const std::string& arguments) {
     const std::string command = "SDL_VIDEODRIVER=offscreen SDL_AUDIODRIVER=dummy \"" + game + "\" --fib \"" + fib + "\" --names \"" + names +
@@ -104,11 +75,11 @@ void compare(const std::string& name, const std::vector<Call>& recorded, const s
 }
 
 int main(int argc, char** argv) {
-    if (argc < 6) {
-        std::cerr << "usage: audio-real-test FIB NAMES TRACE_DIR CHASE_GAME CONTROLS_CFG\n";
+    if (argc < 5) {
+        std::cerr << "usage: audio-real-test FIB NAMES CHASE_GAME CONTROLS_CFG\n";
         return 2;
     }
-    const std::string fibPath = argv[1], namesPath = argv[2], traceDir = argv[3], game = argv[4], config = argv[5];
+    const std::string fibPath = argv[1], namesPath = argv[2], game = argv[3], config = argv[4];
     if (!fs::exists(fibPath) || !fs::exists(namesPath) || !fs::exists(game)) {
         std::cout << "skipped: RomFS or chase-game missing\n";
         return 77;
@@ -163,51 +134,42 @@ int main(int argc, char** argv) {
                         std::fabs(listener.up[2] + 0.2449363f) < 1e-4f,
                     "listener row 1");
         }
-        if (!fs::exists(traceDir)) {
-            std::cout << "skipped: no sound traces in " << traceDir << " (tables and listener checked)\n";
-            return 77;
-        }
         const std::string spawn = "--start \"886.764 16.589 1111.166\" ";
         struct Scenario {
             const char* trace;
             std::string arguments;
             std::size_t exactCalls;
+            std::vector<Call> recorded;
         };
         // Scripts mirror the recorded input (tools/oracle/audio-events*.txt): the stick 0 90 / 0 150 from update 0, B pressed
-        // in update 3, falls from a teleport started by a one-update nudge (stick 0 70).
+        // in update 3, falls from a teleport started by a one-update nudge (stick 0 70). Recorded calls: update and sound id.
         const std::vector<Scenario> scenarios = {
-            {"walk.csv", spawn + "--script \"0 90 70\"", 99},
-            {"run.csv", spawn + "--script \"0 150 110\"", 3},
-            {"jump.csv", spawn + "--script \"0 0 3;0 0 1 B;0 0 50\"", 99},
-            {"fall_0p5.csv", "--start \"886.7 17.1 1111.2\" --script \"0 70 1;0 0 45\"", 99},
-            {"fall_2.csv", "--start \"886.7 18.6 1111.2\" --script \"0 70 1;0 0 45\"", 99},
-            {"fall_12p5.csv", "--start \"886.7 29.1 1111.2\" --script \"0 70 1;0 0 80\"", 99},
-            {"fall_5.csv", "--start \"886.7 21.6 1111.2\" --script \"0 70 1;0 0 55\"", 99},
+            {"walk", spawn + "--script \"0 90 70\"", 99, {{7, 178}, {20, 178}, {32, 178}, {44, 178}, {56, 178}, {68, 178}}},
+            {"run", spawn + "--script \"0 150 110\"", 3,
+             {{11, 178}, {23, 178}, {37, 178}, {47, 178}, {58, 178}, {68, 178}, {78, 178}, {88, 178}, {98, 178}, {108, 178}}},
+            {"jump", spawn + "--script \"0 0 3;0 0 1 B;0 0 50\"", 99, {{3, 288}, {25, 178}}},
+            {"fall_0p5", "--start \"886.7 17.1 1111.2\" --script \"0 70 1;0 0 45\"", 99, {{3, 178}}},
+            {"fall_2", "--start \"886.7 18.6 1111.2\" --script \"0 70 1;0 0 45\"", 99, {{8, 410}, {8, 178}}},
+            {"fall_12p5", "--start \"886.7 29.1 1111.2\" --script \"0 70 1;0 0 80\"", 99, {{23, 285}, {23, 410}}},
+            {"fall_5", "--start \"886.7 21.6 1111.2\" --script \"0 70 1;0 0 55\"", 99, {{13, 410}, {13, 178}}},
         };
         std::size_t replayed = 0, compared = 0;
         for (const Scenario& scenario : scenarios) {
-            const fs::path path = fs::path(traceDir) / scenario.trace;
-            if (!fs::exists(path)) continue;
-            const std::vector<Call> recorded = readTrace(path);
             const std::vector<Call> mine = runGame(game, config, fibPath, namesPath, scenario.arguments);
-            compare(scenario.trace, recorded, mine, scenario.exactCalls);
+            compare(scenario.trace, scenario.recorded, mine, scenario.exactCalls);
             ++replayed;
-            compared += recorded.size();
+            compared += scenario.recorded.size();
         }
         {
-            // The stud pickup: the same sound id at the stud's centre. The update of the pickup is not compared (the skip counter of
-            // the recorded far stud is a stand-in, docs/re/studs.md).
-            const fs::path path = fs::path(traceDir) / "stud.csv";
-            if (fs::exists(path)) {
-                const std::vector<Call> recorded = readTrace(path);
-                require(recorded.size() == 1 && recorded[0].hasPosition, "stud trace");
-                const std::vector<Call> mine = runGame(game, config, fibPath, namesPath, "--start \"862.5931 16.1988 1060.5875\" --script \"0 0 30\"");
-                bool found = false;
-                for (const Call& call : mine) found = found || call.id == recorded[0].id;
-                require(found, "stud pickup plays sound " + std::to_string(recorded[0].id) + ", replayed" + describe(mine));
-                ++replayed;
-                ++compared;
-            }
+            // The stud pickup recorded at update 8: sound id 64 at the stud's centre (861.1362, 17.3518, 1060.5312). The update of the
+            // pickup is not compared (the skip counter of the recorded far stud is a stand-in, docs/re/studs.md).
+            const unsigned recordedId = 64;
+            const std::vector<Call> mine = runGame(game, config, fibPath, namesPath, "--start \"862.5931 16.1988 1060.5875\" --script \"0 0 30\"");
+            bool found = false;
+            for (const Call& call : mine) found = found || call.id == recordedId;
+            require(found, "stud pickup plays sound " + std::to_string(recordedId) + ", replayed" + describe(mine));
+            ++replayed;
+            ++compared;
         }
         require(replayed > 0, "no sound trace was replayed");
         std::cout << "audio-real-test passed: " << replayed << " scenarios, " << compared << " recorded calls\n";

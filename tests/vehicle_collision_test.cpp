@@ -1,5 +1,5 @@
 // Tests of the vehicle body's floor collision (src/runtime/vehicle_collision.*, docs/re/vehicles-physics.md). Pinned values: Azahar GDB reads
-// and memory traces of 2026-10-15 (agent VEH40, artifacts/oracle/agentVEH40-out, not committed): the probe points body+0xdc of the trooper
+// and memory traces of 2026-10-15 (agent VEH40, not committed): the probe points body+0xdc of the trooper
 // (state drv-police-car-seated, body 0x08e16100) and of the donut van (m11-5-in-donut-van, body 0x08e12880); drop3.mem: the parked trooper
 // with rigid +0x38 and +0x78 poked to 25.0 and mode +0xd8 to 1, fixed dt 0.033, rigid body 0x1d8 bytes per update; in update 20 the body
 // lands (ctrace: 48 calls of 0x15c4a4, 6 of 0x19c0a8, one of 0x1b79ac). The real part replays update 20 on lvl_01. Exits with 77 without data.

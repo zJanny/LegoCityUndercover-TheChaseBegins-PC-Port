@@ -66,7 +66,7 @@ void texts(Resources& resources) {
     }
 }
 
-// Provenance: line breaks of the intro cues in oracle pictures artifacts/review/front-end/oracle/intro/intro00.png (Excellent...),
+// Provenance: line breaks of the intro cues in oracle pictures intro00 (Excellent...),
 // intro03/04 (I'm sure...), intro06 (We're out of doughnuts...) and intro09 (Part two...); box heights 48 (one line) and 72 (two lines).
 void subtitleBreaks(Resources& resources) {
     const BitmapFont& font = resources.font("frontendfont");

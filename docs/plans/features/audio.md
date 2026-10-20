@@ -60,4 +60,4 @@ IN_PROGRESS, updated 2026-10-15T17:28:13+02:00. The ten sound natives of batch 8
 ## 7. Code and tests
 
 - `src/audio/` (`chase_audio`: mixer, soundplayer, effectvoices, musicplayer, spatial), `src/runtime/music.*`, `src/runtime/music_block.*`, `src/game_audio.hpp`, `chase-soundtest` (`--id`).
-- `src/runtime/natives_sound.*` (the ten sound natives). CTest: `natives-sound`, `music-block`, `natives-music`, `audio-mixer`, `audio-core`, `audio-real-data`, `soundtest-real-smoke`, `soundtest-id-smoke`. Trace dir `CHASE_AUDIO_TRACE_DIR`. Scenarios `tools/oracle/audio-events*.txt`; `tools/export_sound_trace.py`.
+- `src/runtime/natives_sound.*` (the ten sound natives). CTest: `natives-sound`, `music-block`, `natives-music`, `audio-mixer`, `audio-core`, `audio-real-data`, `soundtest-real-smoke`, `soundtest-id-smoke`. The recorded sound calls are pinned in `tests/audio_real_test.cpp`. Scenarios `tools/oracle/audio-events*.txt`; `tools/export_sound_trace.py`.

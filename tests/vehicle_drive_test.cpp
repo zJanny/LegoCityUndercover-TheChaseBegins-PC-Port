@@ -78,7 +78,7 @@ const Vector3 kStreetStart = {887.377625f, 17.3f, 1117.31873f};
 const float kStreetHeading = std::atan2(-0.704645872f, -0.709558249f);
 
 // The physics body (vehicle_wheels.*, vehicle_drivetrain.*) of the police trooper against the free-run oracle samples of the runs in
-// artifacts/oracle/agentDRV-out. The samples are node movement per update, so the tolerances are those the kinematic stand-in had.
+// (agent DRV output). The samples are node movement per update, so the tolerances are those the kinematic stand-in had.
 struct Car {
     VehicleRecord record = trooper::record();
     VehicleRigidBody body;
@@ -164,7 +164,7 @@ void report(double got, double want, double tolerance, const char* what) {
     near(got, want, tolerance, what);
 }
 
-// Free-run RPC samples of 2026-10-15 (artifacts/oracle/agentVEH32-out free3.csv, free4.csv; state drv-police-car-seated, --rpc-input, no
+// Free-run RPC samples of 2026-10-15 (agent VEH32, free3.csv and free4.csv; state drv-police-car-seated, --rpc-input, no
 // breakpoints): one world step per 100 clock ticks. Every pinned row was checked for continuity: its start speed (body+0xc0) equals the end
 // speed |v| of the row before, so it is the next step; where they differ a step was missed and the count skips one (free3 step 2). The older
 // brake samples of agentDRV-out (pcB, brk, both, forced) counted polled rows as updates while polling misses steps, so they are not used
@@ -200,7 +200,7 @@ void brakingAgainstOracle() {
 }
 
 void fixedDtTraces() {
-    // Fixed-dt oracle traces (memtrace at dt 0.033, artifacts/oracle/agentVEH32-out): tB = B after 20 updates of coasting at 18.57 m/s: 15.36,
+    // Fixed-dt oracle traces (memtrace at dt 0.033, agent VEH32): tB = B after 20 updates of coasting at 18.57 m/s: 15.36,
     // 13.26, 11.19, 9.31 after 1 to 4 updates; fS = record +0x310 poked to 1 at 15.98 m/s with A held (forced stop, brake and hand brake):
     // 13.23, 11.58, 8.96, 5.30, 1.68, 0.06 after 1, 2, 4, 6, 8, 10 updates. The tB car had coasted longer than the test car.
     struct Sample {

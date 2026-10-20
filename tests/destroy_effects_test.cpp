@@ -1,7 +1,7 @@
 // Which routine of message 1 makes the visible effects of a destroyed entity per kind (src/runtime/destroy_message.*, src/runtime/prop_destroy.*,
 // VehiclePropSmasher::destroyData), docs/re/script-natives-world.md entry 2026-10-19T10:02:26. Read in llvm-objdump of artifacts/game/game.arm.elf:
 // the hit machine case 1 at 0x239f8c, the pushable 0x1a958c, the default handler 0x221760 -> 0x163f00. Real-data values: a throwaway C++ census over the
-// 30 level files (DestroyProp / KillObject targets with the class parameters, 2026-10-19, artifacts/scratch/r28-C/census.cpp). Exits with 77 without data.
+// 30 level files (DestroyProp / KillObject targets with the class parameters, 2026-10-19, round 28 agent C). Exits with 77 without data.
 #include "assets/assets.hpp"
 #include "assets/object_collision.hpp"
 #include "runtime/destroy_message.hpp"

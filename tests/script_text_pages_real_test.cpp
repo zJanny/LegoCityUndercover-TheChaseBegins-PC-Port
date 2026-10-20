@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
     drawTipPage(tip, resources, "Press <L> or <R> to rotate the camera.", 1.0f);
     const Extent tipRow = rowExtent(tip, 120, 200);
     const Extent tipColumn = columnExtent(tip, 160, 200);
-    // Oracle screenshot of the tip "Press <L> or <R> to rotate the camera." (artifacts/oracle/agentX-out/compare/tip_oracle_left_port_right.png,
+    // Oracle screenshot of the tip "Press <L> or <R> to rotate the camera." (comparison picture tip_oracle_left_port_right of agent X,
     // border columns 20..299 and rows 72..167 of the 320x240 bottom screen); layout code 0x15b518 / 0x23c780 / 0x229128, docs/re/script-text.md.
     require(tipRow.first == 20 && tipRow.last == 299, "tip box columns 20..299");
     require(tipColumn.first == 72 && tipColumn.last == 167, "tip box rows 72..167");

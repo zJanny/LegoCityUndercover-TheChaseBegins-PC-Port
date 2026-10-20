@@ -3,7 +3,7 @@
 // the hit machine 0x2398d8 case 0 (0x239958, jump table 0x23998c), the create 0x15a4b4 (`Destructable`) and 0x16a268 (`Health` for the modes
 // 1, 3, 4, 7, 11; `ProjectileType`). The vehicle message is 0x275e74 (damage r11 = 100, byte +0x14 r9 = 11). Real-data values: the level data
 // of lvl_01 through the loaders of this port (this test, 2026-10-20); the oracle grid census of veh-smash-prop (servant answer r41-A-2,
-// artifacts/oracle/r41-servant-out/a2_load1.txt: record +0xcc / +0xd4 = 1 / 1 for five kind 67 entries, 11 / 3 for two).
+// servant load a2_load1 of round 41: record +0xcc / +0xd4 = 1 / 1 for five kind 67 entries, 11 / 3 for two).
 #include "assets/assets.hpp"
 #include "assets/object_classes.hpp"
 #include "assets/object_collision.hpp"

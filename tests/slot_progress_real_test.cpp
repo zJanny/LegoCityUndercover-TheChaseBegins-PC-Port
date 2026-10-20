@@ -1,6 +1,6 @@
-// The progress that a real save holds (a copy of the user's savegame.dat, never committed) and what it does to the
-// start of lvl_01. Usage: slot-progress-real-test <lego_city3ds.fib> <lego_city3ds.csv> <savegame.dat>; exits 77 (skip)
-// when a file is missing or the save is not the one whose values are pinned below.
+// The progress of the user's save (built from the named values of save_fixture.hpp) and what it does to the start of lvl_01.
+// Usage: slot-progress-real-test <lego_city3ds.fib> <lego_city3ds.csv>; exits 77 (skip) when a file is missing.
+#include "save_fixture.hpp"
 #include "runtime/level_start.hpp"
 #include "save/completion_tables.hpp"
 #include "save/continue_start.hpp"
@@ -17,8 +17,6 @@ using namespace chase;
 namespace {
 constexpr const char* kContinueLevelFile = "levels/levels/lvl_00_policestation/lvl_00_policestation_main.blvl";
 constexpr const char* kLevelFile = "levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl";
-// Stored CRC (file +0) of the copy of the user's save that the values below were read from.
-constexpr std::uint32_t kPinnedCrc = 0x937dacf8;
 constexpr std::size_t kBoundPoliceStationLower = 87;
 
 void require(bool condition, const std::string& message) {
@@ -27,22 +25,16 @@ void require(bool condition, const std::string& message) {
 }
 
 int main(int argc, char** argv) {
-    if (argc != 4 || !std::ifstream(argv[1]) || !std::ifstream(argv[2]) || !std::ifstream(argv[3])) {
+    if (argc != 3 || !std::ifstream(argv[1]) || !std::ifstream(argv[2])) {
         std::cout << "slot-progress-real-test: data not available, skipped\n";
         return 77;
     }
     try {
-        std::ifstream file(argv[3], std::ios::binary);
-        const save::Bytes bytes((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-        const std::optional<save::SaveImage> image = save::SaveImage::fromBytes(bytes);
-        require(image && image->validate() == save::Status::Ok, "the save is not a valid image");
-        if (image->storedChecksum() != kPinnedCrc) {
-            std::cout << "slot-progress-real-test: this is not the pinned save, skipped\n";
-            return 77;
-        }
-
         assets::FuseArchive archive(argv[1]);
         archive.loadNames(argv[2]);
+        const std::optional<save::SaveImage> image = testing::userSaveImage(archive);
+        require(image && image->validate() == save::Status::Ok, "the save is not a valid image");
+
         const assets::FuseEntry* entry = archive.find(kLevelFile);
         require(entry != nullptr, std::string("not in archive: ") + kLevelFile);
         const assets::Level level = assets::parseLevel(archive.read(*entry));
@@ -76,7 +68,7 @@ int main(int argc, char** argv) {
         try { save::continueStart(changed.slotView(0), levels); } catch (const std::runtime_error&) { level9Rejected = true; }
         require(level9Rejected, "level 9 has no scene");
 
-        // Provenance (all values below): the pinned save, slot 0, read with the offsets of docs/re/save-format.md
+        // Provenance (all values below): the user's save as read on 2026-10-20 (save_fixture.hpp), slot 0, read with the offsets of docs/re/save-format.md
         // (2026-10-14, level state block); StoryProgress, 1-1_IntroPlayed, Entered_Police_Station and Enter_Police_Car
         // were also read through a scratch decoder of the same layout. Mission 1-1 is done (StoryProgress 2).
         const save::SlotView slot = image->slotView(0);
@@ -110,7 +102,7 @@ int main(int argc, char** argv) {
         }
         require(oneByte == 6 && fourByte == 42 && nonZero == 0, "object record sizes and payloads");
         require(objects->endBitSetBytes == 34 && objects->endBitSetZero, "end bit set padding");
-        // Provenance: slot byte +6 of the pinned save (hexdump of file offset 0x234 + 6): 1, the police station.
+        // Provenance: slot byte +6 of the user's save (kUserCurrentLevel): 1, the police station.
         require(start.currentLevel == 1u, "slot current level");
         require(saved("TASKS_COMPLETE") == 0.0f, "TASKS_COMPLETE");
 
@@ -132,7 +124,7 @@ int main(int argc, char** argv) {
         require(continued.variable("StoryProgress") == 2.0f, "StoryProgress after startup");
         // Provenance: oracle state street-after-1-1 (the user's quick save after mission 1-1), memory read of the 482 bound
         // records (0x28 bytes from 0x08e02284, enable byte +0xa) with `read`; indices of the bounds that read 0
-        // (artifacts/oracle/agentJ-out/compare/bounds-street-after-1-1-vs-save-route.txt, docs/re/save-format.md).
+        // (docs/re/save-format.md, bounds comparison of agent J).
         const std::vector<int> oracleBoundsOff = {
             2, 3, 5, 6, 7, 8, 9, 10, 17, 18, 19, 20, 21, 22, 23, 24, 25, 29, 30, 36, 38, 42, 44, 45, 46, 47, 48, 51, 52, 53, 54, 55, 67, 68, 70,
             79, 80, 81, 82, 91, 92, 94, 95, 96, 99, 100, 101, 111, 118, 119, 120, 121, 122, 123, 126, 127, 129, 138, 139, 140, 141, 142, 143,

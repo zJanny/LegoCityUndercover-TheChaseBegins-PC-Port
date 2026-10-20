@@ -1,10 +1,10 @@
 // Acrobat pole states of mission 1-2 (src/runtime/acrobat_pole.cpp, docs/re/player-traversal-rails.md §2026-10-19T07:53:17) replayed against the
-// oracle traces of r24-C (New 3DS, OpenGL, RPC, port 24743, home artifacts/oracle/r24C-home, `dt 0.033333335 0.033333335`, B held from the
-// first update; raw output artifacts/oracle/r24C-out, not kept in git):
+// oracle traces of r24-C (New 3DS, OpenGL, RPC, port 24743, `dt 0.033333335 0.033333335`, B held from the
+// first update; raw output not kept in git):
 // - t1: user state m12-trampoline-pole (Chase idles on 1-2_FlagPole_01 facing +z), `trace 160 t1 mem`: 93 -> 95 -> 96 -> 95 -> 98 -> 5;
 // - t2: m12-trampoline-built, `teleport 720.20 32.618 637.47`, bounce and grab of 01 facing -z, `trace 340 t2 mem`: 93 -> 97 -> 5.
-// The flip traces of r26-A (own emulator without RPC, port 24761, home artifacts/oracle/r26A-home, OpenGL, the same dt; raw output
-// artifacts/oracle/r26A-out, not kept in git): user state m12-trampoline-pole, `stick 120 0` + `trace 60 f1 mem` (flip to -z), `stick -120 0` +
+// The flip traces of r26-A (own emulator without RPC, port 24761, OpenGL, the same dt; raw output
+// not kept in git): user state m12-trampoline-pole, `stick 120 0` + `trace 60 f1 mem` (flip to -z), `stick -120 0` +
 // `trace 50 f2 mem` (flip back), `stick 0 0`, `hold B`, `trace 70 f3 mem` (Flip Done jumps at once: 95, 96, 95).
 // Rows: trace frame, ctrl+0x6c, position, facing, ctrl+0xc, ctrl+6 and the camera yaw *0x376894 (NAME.csv and NAME.mem). Needs the extracted RomFS; exits
 // with 77 without it.
