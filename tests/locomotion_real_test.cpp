@@ -1,17 +1,14 @@
-// Differential test of the player locomotion step against traces recorded in the original game
-// (Azahar oracle, tools/oracle/loco-*.txt; docs/re/player.md 2026-10-13T13:42:20). Needs the local
-// trace directory and the extracted RomFS; exits with 77 (skipped) when either is missing.
+// Differential test of the player locomotion step against rows recorded in the original game
+// (Azahar oracle, tools/oracle/loco-*.txt; docs/re/player-locomotion.md; provenance in data/locomotion_traces.inc).
+// Needs the extracted RomFS; exits with 77 (skipped) when it is missing.
 #include "assets/assets.hpp"
 #include "runtime/pad.hpp"
 #include "runtime/player_locomotion.hpp"
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
-#include <cstring>
 #include <filesystem>
-#include <fstream>
 #include <iostream>
-#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -32,49 +29,19 @@ struct Row {
     float runTimer = -1.0f;  // -1: the trace has no run timer
 };
 
-template <typename T> T read(const std::vector<char>& data, std::size_t offset) {
-    T value;
-    std::memcpy(&value, data.data() + offset, sizeof value);
-    return value;
-}
-
-std::vector<Row> loadTrace(const fs::path& directory, const std::string& name) {
-    std::ifstream csv(directory / (name + ".csv"));
-    std::ifstream mem(directory / (name + ".mem"), std::ios::binary);
-    if (!csv || !mem) throw std::runtime_error("cannot open trace " + name);
-    std::vector<char> data((std::istreambuf_iterator<char>(mem)), std::istreambuf_iterator<char>());
-    std::string line;
-    std::getline(csv, line);
-    std::vector<std::vector<std::string>> cells;
-    while (std::getline(csv, line)) {
-        std::vector<std::string> fields;
-        std::stringstream stream(line);
-        std::string field;
-        while (std::getline(stream, field, ',')) fields.push_back(field);
-        cells.push_back(fields);
-    }
-    if (cells.empty() || data.size() % cells.size() != 0) throw std::runtime_error("trace size mismatch: " + name);
-    const std::size_t record = data.size() / cells.size();
-    const std::size_t controllerSize = record - 4 - 0x100 - 0xb0;
+struct RecordedTrace {
+    const char* name;
     std::vector<Row> rows;
-    for (std::size_t i = 0; i < cells.size(); ++i) {
-        const std::size_t controller = i * record + 4 + 0x100, node = controller + controllerSize;
-        Row row;
-        row.dt = std::stof(cells[i][1]);
-        row.stickX = std::stoi(cells[i][3]);
-        row.stickY = std::stoi(cells[i][4]);
-        row.cameraYaw = std::stof(cells[i][13]);
-        row.x = read<float>(data, node + 0x8c);
-        row.z = read<float>(data, node + 0x94);
-        row.intent = read<std::int16_t>(data, controller + 6);
-        row.facing = read<std::int16_t>(data, controller + 8);
-        row.lastIntent = read<std::int16_t>(data, controller + 0xa);
-        row.flags = read<std::uint16_t>(data, controller + 0xc);
-        row.animationScale = read<float>(data, controller + 0x94);
-        if (controllerSize > 0x24c + 4) row.runTimer = read<float>(data, controller + 0x24c);
-        rows.push_back(row);
-    }
-    return rows;
+};
+
+const std::vector<RecordedTrace> kTraces = {
+#include "data/locomotion_traces.inc"
+};
+
+const std::vector<Row>& loadTrace(const std::string& name) {
+    for (const RecordedTrace& trace : kTraces)
+        if (name == trace.name) return trace.rows;
+    throw std::runtime_error("no recorded trace " + name);
 }
 
 LocomotionState initialState(const Row& row) {
@@ -127,8 +94,8 @@ void require(bool condition, const std::string& message) {
     if (!condition) throw std::runtime_error(message);
 }
 
-void checkTrace(const fs::path& directory, const std::string& name, Totals& totals) {
-    const std::vector<Row> rows = loadTrace(directory, name);
+void checkTrace(const std::string& name, Totals& totals) {
+    const std::vector<Row>& rows = loadTrace(name);
     LocomotionState state = initialState(rows[0]);
     float startX = rows[0].x, startZ = rows[0].z;
     LocomotionState driftState = state;
@@ -229,31 +196,23 @@ void checkRootMotionData(const std::string& fibPath, const std::string& namesPat
 }
 
 int main(int argc, char** argv) {
-    if (argc < 4) {
-        std::cerr << "usage: locomotion-real-test FIB NAMES.csv LOCO_OUT_DIR\n";
+    if (argc != 3) {
+        std::cerr << "usage: locomotion-real-test FIB NAMES.csv\n";
         return 2;
     }
     const std::string fib = argv[1], names = argv[2];
-    const fs::path directory = argv[3];
-    if (!fs::exists(fib) || !fs::exists(names) || !fs::exists(directory / "mag156_push.csv")) {
-        std::cout << "skipped: traces or RomFS not found\n";
+    if (!fs::exists(fib) || !fs::exists(names)) {
+        std::cout << "skipped: RomFS not found\n";
         return 77;
     }
     try {
-        const std::vector<std::string> traces = {
-            "mag60_push", "mag70_push", "mag110_push", "mag130_push", "mag156_push", "mag156_release", "mag60_release",
-            "restartA_1", "restartA_2", "restartA_3", "restartB_1", "restartB_3", "restartC_1", "restartC_2",
-            "restartD_1", "restartD_2", "restartD_3",
-            "turn_rest_r90", "turn_rest_r90_rel", "turn_rest_l90", "turn_rest_l90_rel", "turn_rest_180", "turn_rest_180_rel",
-            "turn_run_r90", "turn_run_r90_rel", "turn_run_180", "turn_run_180_rel", "turn_walk_r90", "turn_walk_r90_rel",
-            "turndt_r90_0p066", "turndt_run_0p066", "turndt_run_0p0165", "turndt_180_0p066"};
         Totals totals;
-        for (const std::string& name : traces) checkTrace(directory, name, totals);
+        for (const RecordedTrace& trace : kTraces) checkTrace(trace.name, totals);
 
         float maxHeadingError = 0, maxPreviousYawError = 0;
         std::size_t headingRows = 0;
-        for (const char* name : {"turn_rest_r90", "turn_rest_l90", "turn_rest_180", "turn_run_r90", "turn_run_180", "turn_walk_r90", "mag156_push"}) {
-            const std::vector<Row> rows = loadTrace(directory, name);
+        for (const std::string name : {"turn_rest_r90", "turn_rest_l90", "turn_rest_180", "turn_run_r90", "turn_run_180", "turn_walk_r90", "mag156_push"}) {
+            const std::vector<Row>& rows = loadTrace(name);
             for (std::size_t i = 1; i < rows.size(); ++i) {
                 if (!(rows[i].flags & kHeldMove)) continue;
                 maxHeadingError = std::max(maxHeadingError, headingError(rows[i], rows[i].cameraYaw));
@@ -261,7 +220,7 @@ int main(int argc, char** argv) {
                 ++headingRows;
             }
         }
-        std::cout << totals.updates << " updates over " << traces.size() << " traces: max movement error per update "
+        std::cout << totals.updates << " updates over " << kTraces.size() << " traces: max movement error per update "
                   << totals.maxDeltaError << " u, max accumulated drift " << totals.maxDrift << " u, max run timer error "
                   << totals.maxTimerError << ", facing resyncs " << totals.facingResyncs << ", slope rows skipped " << totals.slopeRows << "; stick-to-heading over "
                   << headingRows << " rows: max error " << maxPreviousYawError << " units (with the yaw of the row itself: " << maxHeadingError << ")\n";

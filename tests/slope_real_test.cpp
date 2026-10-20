@@ -1,35 +1,32 @@
-// Differential test of the slope slow-down of the run state update 0x1abe60 (docs/re/player.md, slope entry) against runs
-// recorded in the original game (Azahar oracle, tools/oracle/slope-run.txt): ctrl+0x94 of every run row equals the
-// slope factor of the row's facing and ground normal times 1.5 once the sprint timer passed 1 s, and the next update moves
-// by run speed * dt * that scale. Exits with 77 (skipped) when the trace directory is missing.
+// Differential test of the slope slow-down of the run state update 0x1abe60 (docs/re/player-falling-jumping.md, slope entry) against
+// runs recorded in the original game (Azahar oracle, tools/oracle/slope-run.txt; rows and provenance in data/slope_traces.inc):
+// ctrl+0x94 of every run row equals the slope factor of the row's facing and ground normal times 1.5 once the sprint timer passed 1 s,
+// and the next update moves by run speed * dt * that scale.
 #include "memtrace.hpp"
 #include "runtime/player_locomotion.hpp"
 #include <algorithm>
 #include <cmath>
-#include <filesystem>
 #include <iostream>
+#include <set>
 #include <stdexcept>
+#include <string>
 
 using namespace chase::runtime;
-namespace fs = std::filesystem;
 
-int main(int argc, char** argv) {
-    if (argc != 2) {
-        std::cerr << "usage: slope-real-test SLOPE_TRACE_DIR\n";
-        return 2;
-    }
-    const fs::path directory = argv[1];
-    if (!fs::exists(directory)) {
-        std::cout << "slope-real-test: data not available, skipped\n";
-        return 77;
-    }
+namespace {
+const std::vector<memtrace::NamedTrace> kSegments = {
+#include "data/slope_traces.inc"
+};
+}
+
+int main() {
     try {
-        std::size_t traces = 0, runRows = 0, slopeRows = 0, speedRows = 0, wrong = 0;
+        std::set<std::string> recordings;
+        std::size_t runRows = 0, slopeRows = 0, speedRows = 0, wrong = 0;
         float worstScale = 0, worstSpeed = 0;
-        for (const auto& item : fs::directory_iterator(directory)) {
-            if (item.path().extension() != ".mem") continue;
-            const std::vector<memtrace::Row> rows = memtrace::load(item.path());
-            ++traces;
+        for (const memtrace::NamedTrace& segment : kSegments) {
+            const std::vector<memtrace::Row>& rows = segment.rows;
+            recordings.insert(segment.name.substr(0, segment.name.find('@')));
             for (std::size_t i = 0; i < rows.size(); ++i) {
                 const memtrace::Row& row = rows[i];
                 if (row.state != 2) continue;
@@ -51,13 +48,13 @@ int main(int argc, char** argv) {
                 }
                 if (bad) {
                     ++wrong;
-                    std::cerr << item.path().filename().string() << " row " << i << ": scale " << expected << ", recorded " << row.scale << '\n';
+                    std::cerr << segment.name << " row " << i << ": scale " << expected << ", recorded " << row.scale << '\n';
                 }
             }
         }
-        std::cout << "slopes: " << traces << " traces, " << runRows << " run rows (" << slopeRows << " on a slope), " << speedRows
+        std::cout << "slopes: " << recordings.size() << " traces, " << runRows << " run rows (" << slopeRows << " on a slope), " << speedRows
                   << " movements, " << wrong << " wrong, worst scale error " << worstScale << ", worst movement error " << worstSpeed << '\n';
-        if (traces < 4 || slopeRows < 4) throw std::runtime_error("too little recorded slope data");
+        if (recordings.size() < 4 || slopeRows < 4) throw std::runtime_error("too little recorded slope data");
         if (wrong != 0) throw std::runtime_error("slope factor differs from the recorded traces");
     } catch (const std::exception& error) {
         std::cerr << "slope-real-test: " << error.what() << '\n';

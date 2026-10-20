@@ -47,4 +47,4 @@ IN_PROGRESS, updated 2026-10-13T21:29:01+0200. Level collision and placed object
 - `src/runtime/collision.*`, `src/assets/object_collision.*`, `CollisionWorld::addObject`, `objectCollisions` (chase_assets).
 - `src/runtime/collision_enable.*` (owner flags per update), `objectCollisionCandidates`.
 - CTest: `collision-enable`, `collision-real-data`, `level-start-real-data`.
-- Trace dirs: `CHASE_COLLISION_TRACE_DIR`, `CHASE_OBJECT_COLLISION_TRACE_DIR`. Scenarios: `tools/oracle/coll-wall*.txt`, `objcoll-walk.txt`, `objcoll-door.txt`, `objcoll-barrier.txt`.
+- Recorded rows: `tests/data/collision_ground_samples.inc`, `tests/data/collision_wall_samples.inc` (provenance in their headers). Scenarios: `tools/oracle/coll-wall*.txt`, `objcoll-walk.txt`, `objcoll-door.txt`, `objcoll-barrier.txt`.

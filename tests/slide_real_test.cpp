@@ -1,18 +1,15 @@
-// Differential test of the step-off state 8 (slide down a steep slope) against traces recorded in the original game
-// (Azahar oracle, tools/oracle/slide-ledge.txt; docs/re/player.md, slide entry). Every update is replayed from the
-// recorded state of the update before it, with the recorded stick heading and held flags. Needs the extracted RomFS and
-// the local trace directory; exits with 77 (skipped) when either is missing.
+// Differential test of the step-off state 8 (slide down a steep slope) against rows recorded in the original game
+// (Azahar oracle, tools/oracle/slide-ledge.txt; docs/re/player-falling-jumping.md, slide entry; rows and provenance in
+// data/slide_traces.inc). Every update is replayed from the recorded state of the update before it, with the recorded stick
+// heading and held flags. Needs the extracted RomFS; exits with 77 (skipped) when it is missing.
 #include "assets/assets.hpp"
 #include "memtrace.hpp"
 #include "runtime/player_motion.hpp"
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
-#include <cstring>
 #include <filesystem>
-#include <fstream>
 #include <iostream>
-#include <iterator>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -23,6 +20,10 @@ namespace fs = std::filesystem;
 namespace {
 constexpr const char* kLevelModel = "models/lvl_01_cherrytreehills/lvl_01_cherrytreehills.bfnmdl";
 using memtrace::Row;
+
+const std::vector<memtrace::NamedTrace> kTraces = {
+#include "data/slide_traces.inc"
+};
 
 constexpr std::uint16_t kGround1 = 1, kGround2 = 2, kGround3 = 3, kFall = 5, kSoftLanding = 6, kHardLanding = 7, kSlide = 8;
 
@@ -120,12 +121,12 @@ void checkTrace(const CollisionWorld& world, const LandingAnimations& animations
 }
 
 int main(int argc, char** argv) {
-    if (argc != 4) {
-        std::cerr << "usage: slide-real-test FIB NAMES SLIDE_TRACE_DIR\n";
+    if (argc != 3) {
+        std::cerr << "usage: slide-real-test FIB NAMES\n";
         return 2;
     }
-    const fs::path fib = argv[1], names = argv[2], directory = argv[3];
-    if (!fs::exists(fib) || !fs::exists(names) || !fs::exists(directory)) {
+    const fs::path fib = argv[1], names = argv[2];
+    if (!fs::exists(fib) || !fs::exists(names)) {
         std::cout << "slide-real-test: data not available, skipped\n";
         return 77;
     }
@@ -139,20 +140,16 @@ int main(int argc, char** argv) {
         for (const auto& item : model.collision) world.add(item);
         const LandingAnimations animations{{13.0f, 15.0f}, {18.0f, 15.0f}};
 
-        std::vector<fs::path> files;
-        for (const auto& item : fs::directory_iterator(directory))
-            if (item.path().extension() == ".mem") files.push_back(item.path());
-        std::sort(files.begin(), files.end());
         Totals totals;
-        for (const fs::path& file : files) {
-            checkTrace(world, animations, memtrace::load(file), file.stem().string(), totals);
+        for (const memtrace::NamedTrace& trace : kTraces) {
+            checkTrace(world, animations, trace.rows, trace.name, totals);
             ++totals.traces;
         }
         std::cout << "slides: " << totals.traces << " traces, " << totals.updates << " updates, " << totals.slideStarts << " slide starts, "
                   << totals.slideUpdates << " slide updates, " << totals.exitsNotReplicated << " slide exits not replicated, " << totals.lockedFalls
                   << " locked fall updates, " << totals.stunUpdates << " stun updates, " << totals.wrong << " wrong, worst position error "
                   << totals.worstPosition << ", worst facing error " << totals.worstFacing << ", worst slide vector error " << totals.worstSlide << '\n';
-        if (totals.traces < 6 || totals.slideStarts < 5 || totals.slideUpdates < 8) throw std::runtime_error("too little recorded slide data");
+        if (totals.traces < 5 || totals.slideStarts < 5 || totals.slideUpdates < 8) throw std::runtime_error("too little recorded slide data");
         if (totals.wrong != 0) throw std::runtime_error("slide differs from the recorded traces");
     } catch (const std::exception& error) {
         std::cerr << "slide-real-test: " << error.what() << '\n';

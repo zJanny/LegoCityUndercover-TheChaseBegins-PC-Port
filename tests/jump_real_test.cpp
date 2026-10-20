@@ -1,6 +1,6 @@
 // Differential test of the jump (root-motion height profile, ground probe on the way down, landing and stun)
-// against traces recorded in the original game (Azahar oracle, tools/oracle/jump-*.txt; docs/re/player.md jump
-// entry). Needs the extracted RomFS and the local trace directory; exits with 77 (skipped) when either is missing.
+// against rows recorded in the original game (Azahar oracle, tools/oracle/jump-*.txt; docs/re/player-falling-jumping.md jump
+// entry; rows and provenance in data/jump_traces.inc). Needs the extracted RomFS; exits with 77 (skipped) when it is missing.
 #include "assets/assets.hpp"
 #include "player_trace.hpp"
 #include "runtime/player_vertical.hpp"
@@ -17,6 +17,10 @@ using player_trace::require;
 namespace fs = std::filesystem;
 
 namespace {
+const std::vector<player_trace::NamedTrace> kTraces = {
+#include "data/jump_traces.inc"
+};
+
 constexpr const char* kLevelModel = "models/lvl_01_cherrytreehills/lvl_01_cherrytreehills.bfnmdl";
 constexpr const char* kAnimationDirectory = "models/char_minifig/class_police/";
 // The landing height is the bisected floor under the box (resolution 0.005, docs/re/collision.md); the box of a jump
@@ -139,12 +143,12 @@ void checkJump(const CollisionWorld& world, const JumpProfile& standing, const J
 }
 
 int main(int argc, char** argv) {
-    if (argc != 4) {
-        std::cerr << "usage: jump-real-test FIB NAMES JUMP_TRACE_DIR\n";
+    if (argc != 3) {
+        std::cerr << "usage: jump-real-test FIB NAMES\n";
         return 2;
     }
-    const fs::path fib = argv[1], names = argv[2], directory = argv[3];
-    if (!fs::exists(fib) || !fs::exists(names) || !fs::exists(directory)) {
+    const fs::path fib = argv[1], names = argv[2];
+    if (!fs::exists(fib) || !fs::exists(names)) {
         std::cout << "jump-real-test: data not available, skipped\n";
         return 77;
     }
@@ -167,7 +171,7 @@ int main(int argc, char** argv) {
                 "jump height scales derived from the animation data match the oracle");
 
         Totals totals;
-        for (const player_trace::NamedTrace& trace : player_trace::loadDirectory(directory)) {
+        for (const player_trace::NamedTrace& trace : kTraces) {
             checkJump(world, standing, moving, animations, trace.rows, trace.name, totals);
             ++totals.traces;
         }

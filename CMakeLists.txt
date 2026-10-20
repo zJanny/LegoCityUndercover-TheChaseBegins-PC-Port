@@ -132,20 +132,6 @@ if(EPOXY_FOUND)
 endif()
 set(CHASE_ROMFS_DIR "${CMAKE_SOURCE_DIR}/artifacts/romfs/romfs" CACHE PATH
     "Extracted RomFS directory for the opt-in real-data asset test")
-set(CHASE_LOCO_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/loco-out" CACHE PATH
-    "Recorded original-game locomotion traces for the opt-in differential test")
-set(CHASE_COLLISION_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/coll-out" CACHE PATH
-    "Recorded original-game collision traces for the opt-in differential test")
-set(CHASE_OBJECT_COLLISION_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/objcoll-out" CACHE PATH
-    "Recorded original-game traces of the player against placed objects for the opt-in differential test")
-set(CHASE_FALL_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/fall-out" CACHE PATH
-    "Recorded original-game fall and landing traces for the opt-in differential test")
-set(CHASE_JUMP_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/jump-traces" CACHE PATH
-    "Recorded original-game jump traces for the opt-in differential test")
-set(CHASE_SLIDE_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/slide-traces" CACHE PATH
-    "Recorded original-game slide (state 8) traces for the opt-in differential test")
-set(CHASE_SLOPE_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/slope-traces" CACHE PATH
-    "Recorded original-game run-on-slope traces for the opt-in differential test")
 set(CHASE_CAMERA_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/cam-out" CACHE PATH
     "Recorded original-game camera traces for the opt-in differential test")
 set(CHASE_CAMERA_BLEND_TRACE_DIR "${CMAKE_SOURCE_DIR}/artifacts/oracle/camera-blend-traces" CACHE PATH
@@ -822,7 +808,7 @@ if(BUILD_TESTING)
   target_link_libraries(locomotion-real-test PRIVATE chase_runtime chase_assets)
   target_compile_options(locomotion-real-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME locomotion-real-data COMMAND locomotion-real-test
-    "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv" "${CHASE_LOCO_TRACE_DIR}")
+    "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
   set_tests_properties(locomotion-real-data PROPERTIES SKIP_RETURN_CODE 77)
   add_executable(streaming-real-test tests/streaming_real_test.cpp)
   target_link_libraries(streaming-real-test PRIVATE chase_assets)
@@ -838,8 +824,7 @@ if(BUILD_TESTING)
   target_link_libraries(collision-real-test PRIVATE chase_runtime chase_assets)
   target_compile_options(collision-real-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME collision-real-data COMMAND collision-real-test
-    "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv" "${CHASE_LOCO_TRACE_DIR}" "${CHASE_COLLISION_TRACE_DIR}"
-    "${CHASE_OBJECT_COLLISION_TRACE_DIR}")
+    "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
   set_tests_properties(collision-real-data PROPERTIES SKIP_RETURN_CODE 77)
   add_executable(clip-planes-test tests/clip_planes_test.cpp)
   target_link_libraries(clip-planes-test PRIVATE chase_runtime chase_assets)
@@ -957,25 +942,24 @@ if(BUILD_TESTING)
   target_link_libraries(fall-real-test PRIVATE chase_runtime chase_assets)
   target_compile_options(fall-real-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME fall-real-data COMMAND fall-real-test
-    "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv" "${CHASE_FALL_TRACE_DIR}")
+    "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
   set_tests_properties(fall-real-data PROPERTIES SKIP_RETURN_CODE 77)
   add_executable(jump-real-test tests/jump_real_test.cpp)
   target_link_libraries(jump-real-test PRIVATE chase_runtime chase_assets)
   target_compile_options(jump-real-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME jump-real-data COMMAND jump-real-test
-    "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv" "${CHASE_JUMP_TRACE_DIR}")
+    "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
   set_tests_properties(jump-real-data PROPERTIES SKIP_RETURN_CODE 77)
   add_executable(slide-real-test tests/slide_real_test.cpp)
   target_link_libraries(slide-real-test PRIVATE chase_runtime chase_assets)
   target_compile_options(slide-real-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME slide-real-data COMMAND slide-real-test
-    "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv" "${CHASE_SLIDE_TRACE_DIR}")
+    "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
   set_tests_properties(slide-real-data PROPERTIES SKIP_RETURN_CODE 77)
   add_executable(slope-real-test tests/slope_real_test.cpp)
   target_link_libraries(slope-real-test PRIVATE chase_runtime)
   target_compile_options(slope-real-test PRIVATE -Wall -Wextra -Wpedantic)
-  add_test(NAME slope-real-data COMMAND slope-real-test "${CHASE_SLOPE_TRACE_DIR}")
-  set_tests_properties(slope-real-data PROPERTIES SKIP_RETURN_CODE 77)
+  add_test(NAME slope-real-data COMMAND slope-real-test)
   add_executable(camera-real-test tests/camera_real_test.cpp)
   target_link_libraries(camera-real-test PRIVATE chase_runtime chase_assets)
   target_compile_options(camera-real-test PRIVATE -Wall -Wextra -Wpedantic)

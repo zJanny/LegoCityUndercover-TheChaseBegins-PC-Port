@@ -16,7 +16,7 @@ constexpr float kHeadIconNearDistance = 6.0f;  // 0x374704: invisible below, fad
 constexpr float kHeadIconFarDistance = 10.0f;  // 0x374708
 constexpr float kHeadIconLift = 1.0f;          // s17 of 0x1a0954
 constexpr float kHeadIconScaleFactor = 2.0f;   // literal 0x1a0be4: lift = 1 + 2 * (entity +0x70)
-// entity +0x70 of the player: 0.85 in every oracle trace of the player entity (artifacts/oracle/fall-out/*.mem); its writer is not read.
+// entity +0x70 of the player: 0.85 in all 990 updates of the 18 fall recordings of the player entity (Azahar oracle, state gameplay-start, 2026-10-13, tools/oracle/fall-*.txt); its writer is not read.
 // STAND-IN HUD-S51.
 constexpr float kPlayerEntityScaleMeasured = 0.85f;
 constexpr float kHeadIconQuadSize = 1.0f;

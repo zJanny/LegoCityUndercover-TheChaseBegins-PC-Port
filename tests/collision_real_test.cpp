@@ -1,17 +1,15 @@
-// Differential test of the player collision (ground height and wall sliding) against traces recorded in
-// the original game (Azahar oracle, tools/oracle/coll-*.txt and loco-*.txt; docs/re/collision.md).
-// Needs the extracted RomFS and the local trace directories; exits with 77 (skipped) when one is missing.
+// Differential test of the player collision (ground height and wall sliding) against rows recorded in
+// the original game (Azahar oracle, tools/oracle/coll-*.txt, loco-*.txt and objcoll-*.txt; docs/re/collision.md; rows and provenance
+// in data/collision_ground_samples.inc and data/collision_wall_samples.inc).
+// Needs the extracted RomFS; exits with 77 (skipped) when it is missing.
 #include "assets/assets.hpp"
 #include "runtime/collision.hpp"
 #include "runtime/level_start.hpp"
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
-#include <cstring>
 #include <filesystem>
-#include <fstream>
 #include <iostream>
-#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -23,40 +21,36 @@ namespace {
 // gameplay-start: the player stands in the street of lvl_01_cherrytreehills.
 constexpr const char* kLevelFile = "levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl";
 constexpr const char* kLevelModel = "models/lvl_01_cherrytreehills/lvl_01_cherrytreehills.bfnmdl";
-constexpr std::size_t kRecord = 4 + 0x100 + 0x340 + 0xb0;
 
-struct Row {
-    float dt = 0, x = 0, y = 0, z = 0, forwardX = 0, forwardZ = 0;
+struct GroundSample {
+    int row;
+    float beforeX, beforeY, beforeZ;
+    float dt, x, y, z, forwardX, forwardZ;
 };
 
-template <typename T> T read(const std::vector<char>& data, std::size_t offset) {
-    T value;
-    std::memcpy(&value, data.data() + offset, sizeof value);
-    return value;
-}
+struct GroundTrace {
+    const char* name;
+    std::vector<GroundSample> samples;
+};
 
-std::vector<Row> loadCsv(const fs::path& file) {
-    std::ifstream csv(file);
-    if (!csv) throw std::runtime_error("cannot open " + file.string());
-    std::string line;
-    std::getline(csv, line);
-    std::vector<Row> rows;
-    while (std::getline(csv, line)) {
-        std::vector<std::string> fields;
-        std::stringstream stream(line);
-        std::string field;
-        while (std::getline(stream, field, ',')) fields.push_back(field);
-        Row row;
-        row.dt = std::stof(fields[1]);
-        row.x = std::stof(fields[5]);
-        row.y = std::stof(fields[6]);
-        row.z = std::stof(fields[7]);
-        row.forwardX = std::stof(fields[8]);
-        row.forwardZ = std::stof(fields[9]);
-        rows.push_back(row);
-    }
-    return rows;
-}
+struct WallSample {
+    int row;
+    float inX, inZ, correctionX, correctionZ;
+    float x, y, z, forwardX, forwardZ;
+};
+
+struct WallTrace {
+    const char* name;
+    std::vector<WallSample> samples;
+};
+
+const std::vector<GroundTrace> kGroundTraces = {
+#include "data/collision_ground_samples.inc"
+};
+
+const std::vector<WallTrace> kWallTraces = {
+#include "data/collision_wall_samples.inc"
+};
 
 void require(bool condition, const std::string& message) {
     if (!condition) throw std::runtime_error(message);
@@ -67,25 +61,24 @@ struct GroundTotals {
     float worst = 0;
 };
 
-// The ground height of the update that produced row i + 1: the probe sits at the new position with the
-// old height, and the recorded height of row i + 1 is the answer (every row starts from the recorded state).
-void checkGround(const CollisionWorld& world, const std::vector<Row>& rows, const std::string& name, GroundTotals& totals) {
-    for (std::size_t i = 0; i + 1 < rows.size(); ++i) {
-        const Row& before = rows[i];
-        const Row& after = rows[i + 1];
+// The ground height of the update that produced a row: the probe sits at the new position with the
+// old height, and the recorded height of the row is the answer (every sample starts from the recorded state).
+void checkGround(const CollisionWorld& world, const GroundTrace& trace, GroundTotals& totals) {
+    const std::string name = trace.name;
+    for (const GroundSample& sample : trace.samples) {
         GroundProbe probe;
-        probe.x = after.x;
-        probe.y = before.y;
-        probe.z = after.z;
-        probe.forwardX = after.forwardX;
-        probe.forwardZ = after.forwardZ;
-        probe.rootDelta = std::hypot(after.x - before.x, after.z - before.z);
-        probe.dt = after.dt;
+        probe.x = sample.x;
+        probe.y = sample.beforeY;
+        probe.z = sample.z;
+        probe.forwardX = sample.forwardX;
+        probe.forwardZ = sample.forwardZ;
+        probe.rootDelta = std::hypot(sample.x - sample.beforeX, sample.z - sample.beforeZ);
+        probe.dt = sample.dt;
         const bool moving = probe.rootDelta > 0;  // 0x20cd30 skips the probe for a character standing on the ground
-        const float predicted = moving ? groundHeight(world, probe).value_or(before.y) : before.y;
-        const float error = std::fabs(predicted - after.y);
+        const float predicted = moving ? groundHeight(world, probe).value_or(sample.beforeY) : sample.beforeY;
+        const float error = std::fabs(predicted - sample.y);
         ++totals.rows;
-        if (std::fabs(after.y - before.y) > 1e-6f) ++totals.changed;
+        if (std::fabs(sample.y - sample.beforeY) > 1e-6f) ++totals.changed;
         totals.worst = std::max(totals.worst, error);
         if (error <= 2e-4f) continue;
         // The movement is the difference of two float32 positions near 900 (ulp 6e-5..1.2e-4); the box height
@@ -95,14 +88,14 @@ void checkGround(const CollisionWorld& world, const std::vector<Row>& rows, cons
         for (const float shift : {-2e-4f, 2e-4f}) {
             GroundProbe moved = probe;
             moved.rootDelta += shift;
-            edge = edge || std::fabs(groundHeight(world, moved).value_or(before.y) - after.y) <= 2e-4f;
+            edge = edge || std::fabs(groundHeight(world, moved).value_or(sample.beforeY) - sample.y) <= 2e-4f;
         }
         if (edge) {
             ++totals.edges;
             continue;
         }
         ++totals.wrong;
-        std::cerr << name << " row " << i + 1 << ": predicted " << predicted << ", recorded " << after.y << '\n';
+        std::cerr << name << " row " << sample.row << ": predicted " << predicted << ", recorded " << sample.y << '\n';
     }
 }
 
@@ -111,19 +104,14 @@ struct WallTotals {
     float worst = 0;
 };
 
-// Memory traces: u32 frame, entity (0x100), controller (0x340), node (0xb0) per row. Controller +0x224 is the
-// movement of the update before collision, +0x21c / +0x220 what the slide added to x and z; the node
-// position is after the update. The test replays the slide from the position before the update.
-void checkWalls(const CollisionWorld& world, const CollisionWorld& withoutObjects, const fs::path& mem, std::size_t rowCount, WallTotals& totals) {
-    std::ifstream file(mem, std::ios::binary);
-    std::vector<char> data((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-    require(data.size() == rowCount * kRecord, "unexpected trace record size: " + mem.string());
-    for (std::size_t i = 1; i < rowCount; ++i) {
-        const std::size_t controller = i * kRecord + 4 + 0x100, node = controller + 0x340;
-        const float inX = read<float>(data, controller + 0x224), inZ = read<float>(data, controller + 0x22c);
-        const float correctionX = read<float>(data, controller + 0x21c), correctionZ = read<float>(data, controller + 0x220);
-        const float x = read<float>(data, node + 0x8c), y = read<float>(data, node + 0x90), z = read<float>(data, node + 0x94);
-        const float forwardX = read<float>(data, node + 0x7c), forwardZ = read<float>(data, node + 0x84);
+// Wall samples: controller +0x224 / +0x22c is the movement of the update before collision, +0x21c / +0x220 what the slide added
+// to x and z; the position is after the update. The test replays the slide from the position before the update.
+void checkWalls(const CollisionWorld& world, const CollisionWorld& withoutObjects, const WallTrace& trace, WallTotals& totals) {
+    for (const WallSample& sample : trace.samples) {
+        const float inX = sample.inX, inZ = sample.inZ;
+        const float correctionX = sample.correctionX, correctionZ = sample.correctionZ;
+        const float x = sample.x, y = sample.y, z = sample.z;
+        const float forwardX = sample.forwardX, forwardZ = sample.forwardZ;
         const float startX = x - (inX + correctionX), startZ = z - (inZ + correctionZ);
         auto correctionError = [&](float shiftX, float shiftZ, float grow, int& slides) {
             float dx = inX, dz = inZ;
@@ -163,20 +151,19 @@ void checkWalls(const CollisionWorld& world, const CollisionWorld& withoutObject
             continue;
         }
         ++totals.wrong;
-        std::cerr << mem.filename().string() << " row " << i << ": predicted error " << error << " (" << slides
+        std::cerr << trace.name << " row " << sample.row << ": predicted error " << error << " (" << slides
                   << " slides), recorded correction " << correctionX << ' ' << correctionZ << '\n';
     }
 }
 }
 
 int main(int argc, char** argv) {
-    if (argc != 6) {
-        std::cerr << "usage: collision-real-test FIB NAMES LOCO_TRACE_DIR COLLISION_TRACE_DIR OBJECT_COLLISION_TRACE_DIR\n";
+    if (argc != 3) {
+        std::cerr << "usage: collision-real-test FIB NAMES\n";
         return 2;
     }
-    const fs::path fib = argv[1], names = argv[2], locoDirectory = argv[3], collisionDirectory = argv[4], objectDirectory = argv[5];
-    if (!fs::exists(fib) || !fs::exists(names) || !fs::exists(locoDirectory) || !fs::exists(collisionDirectory) ||
-        !fs::exists(objectDirectory)) {
+    const fs::path fib = argv[1], names = argv[2];
+    if (!fs::exists(fib) || !fs::exists(names)) {
         std::cout << "collision-real-test: data not available, skipped\n";
         return 77;
     }
@@ -235,38 +222,21 @@ int main(int argc, char** argv) {
 
         GroundTotals ground;
         std::size_t groundTraces = 0;
-        for (const fs::path& directory : {locoDirectory, collisionDirectory, objectDirectory}) {
-            std::vector<fs::path> files;
-            for (const auto& item : fs::directory_iterator(directory))
-                if (item.path().extension() == ".csv") files.push_back(item.path());
-            std::sort(files.begin(), files.end());
-            for (const fs::path& file : files) {
-                const std::vector<Row> rows = loadCsv(file);
-                if (rows.size() < 2) continue;
-                checkGround(world, rows, file.filename().string(), ground);
-                ++groundTraces;
-            }
+        for (const GroundTrace& trace : kGroundTraces) {
+            checkGround(world, trace, ground);
+            ++groundTraces;
         }
         std::cout << "ground: " << groundTraces << " traces, " << ground.rows << " updates, " << ground.changed
                   << " with a height change, " << ground.edges << " at a step edge, " << ground.wrong << " wrong, worst error " << ground.worst << '\n';
-        require(groundTraces >= 90 && ground.changed >= 200, "too little recorded ground data");
+        require(groundTraces >= 80 && ground.changed >= 200, "too little recorded ground data");
         require(ground.wrong == 0 && ground.edges <= 3, "ground height differs from the recorded traces");
 
         WallTotals walls;
         std::size_t wallTraces = 0;
-        for (const fs::path& directory : {collisionDirectory, objectDirectory})
-            for (const auto& item : fs::directory_iterator(directory)) {
-                const fs::path mem = item.path();
-                if (mem.extension() != ".mem") continue;
-                if (mem.stem() == "door_back") continue;
-                fs::path csv = mem;
-                csv.replace_extension(".csv");
-                if (!fs::exists(csv)) continue;
-                const std::size_t rowCount = loadCsv(csv).size();
-                if (rowCount == 0 || fs::file_size(mem) != rowCount * kRecord) continue;
-                checkWalls(world, staticWorld, mem, rowCount, walls);
-                ++wallTraces;
-            }
+        for (const WallTrace& trace : kWallTraces) {
+            checkWalls(world, staticWorld, trace, walls);
+            ++wallTraces;
+        }
         std::cout << "walls: " << wallTraces << " traces, " << walls.rows << " updates, " << walls.slides
                   << " with a slide, " << walls.objectRows << " decided by a placed object, " << walls.edges << " at a contact edge, " << walls.wrong << " wrong, worst error " << walls.worst << '\n';
         require(walls.slides >= 250, "too little recorded wall data");

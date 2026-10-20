@@ -1,17 +1,14 @@
-// Differential test of falling and landing against traces recorded in the original game (Azahar oracle,
-// tools/oracle/fall-*.txt; docs/re/player.md falling entry). Needs the extracted RomFS and the local trace
-// directory; exits with 77 (skipped) when either is missing.
+// Differential test of falling and landing against rows recorded in the original game (Azahar oracle,
+// tools/oracle/fall-*.txt; docs/re/player-falling-jumping.md falling entry; rows and provenance in data/fall_traces.inc).
+// Needs the extracted RomFS; exits with 77 (skipped) when it is missing.
 #include "assets/assets.hpp"
 #include "player_trace.hpp"
 #include "runtime/player_vertical.hpp"
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
-#include <cstring>
 #include <filesystem>
-#include <fstream>
 #include <iostream>
-#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -22,6 +19,10 @@ using player_trace::require;
 namespace fs = std::filesystem;
 
 namespace {
+const std::vector<player_trace::NamedTrace> kTraces = {
+#include "data/fall_traces.inc"
+};
+
 constexpr const char* kLevelModel = "models/lvl_01_cherrytreehills/lvl_01_cherrytreehills.bfnmdl";
 constexpr std::uint16_t kStateIdle = 1, kStateRun = 2, kStateWalk = 3, kStateFall = 5, kStateSoftLanding = 6, kStateHardLanding = 7,
                         kStateStepOff = 8;
@@ -124,12 +125,12 @@ void checkStun(const std::vector<Row>& rows, const std::string& name, const Land
 }
 
 int main(int argc, char** argv) {
-    if (argc != 4) {
-        std::cerr << "usage: fall-real-test FIB NAMES FALL_TRACE_DIR\n";
+    if (argc != 3) {
+        std::cerr << "usage: fall-real-test FIB NAMES\n";
         return 2;
     }
-    const fs::path fib = argv[1], names = argv[2], directory = argv[3];
-    if (!fs::exists(fib) || !fs::exists(names) || !fs::exists(directory)) {
+    const fs::path fib = argv[1], names = argv[2];
+    if (!fs::exists(fib) || !fs::exists(names)) {
         std::cout << "fall-real-test: data not available, skipped\n";
         return 77;
     }
@@ -155,7 +156,7 @@ int main(int argc, char** argv) {
                 "landing animations: last frames 13 and 18 at 15 frames per second");
 
         Totals totals;
-        for (const player_trace::NamedTrace& trace : player_trace::loadDirectory(directory)) {
+        for (const player_trace::NamedTrace& trace : kTraces) {
             checkUpdates(world, trace.rows, trace.name, totals);
             checkStun(trace.rows, trace.name, animations, totals);
             ++totals.traces;
