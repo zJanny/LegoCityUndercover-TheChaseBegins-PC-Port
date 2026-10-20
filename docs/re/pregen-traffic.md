@@ -10,7 +10,8 @@ Format and loaders of `Pregen/Traffic/<level>_Traffic.bin` and `Pregen/Pedestria
 - All 14 shipped files (7 levels each) decode exactly; every point's path exists in its level, and each position equals the path sample at the parameter (inference: the spawn points are the editor's samples along the paths). [§2026-10-20T11:16:20](#ts-20261020-111620)
 - Port: `src/assets/pregen_traffic.*` (`parsePregenSpawns`, `findPregenSpawnCell`), tests `pregen-traffic`, `pregen-traffic-real-data`. Not wired into the game.
 - The derived fields are ported as `deriveSpawnFields` (`src/runtime/pregen_derive.*`) for both kinds: path record, tangent, room. The 72 closed-path pedestrian points off the path sample deviate on one axis of the stored position; the sampler matches all other points exactly. [§2026-10-20T12:11:03](#ts-20261020-121103)
-- Open: how the managers choose a point from a cell list, the radius the cell lists were built with, the traffic floor cell (+40), the loaded-level order and current room at manager init, the path node.
+- No path gets a node (path +0x18) at run time: only the natives EffectAttachParticlesToPath and EffectLinkPathToObject set it, and no script calls them. So the samplers never transform the position or the tangent. [pedestrians.md §2026-10-20T13:09:29](pedestrians.md#ts-20261020-130929)
+- Open: how the managers choose a point from a cell list, the radius the cell lists were built with, the traffic floor cell (+40), the loaded-level order and current room at manager init.
 
 <a id="ts-20261020-111620"></a>
 

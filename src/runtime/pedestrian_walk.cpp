@@ -5,6 +5,9 @@
 
 #include <cmath>
 #include <cstring>
+#include <limits>
+#include <stdexcept>
+#include <string>
 
 namespace chase::runtime {
 
@@ -21,7 +24,18 @@ constexpr float kHeadingUnitsPerRadian = 10430.378f;
 constexpr float kRadiansPerHeadingUnit = 9.58738e-05f;
 constexpr int kModeOnce = 0;
 constexpr int kModeLoop = 1;
+constexpr std::uint32_t kNodeTypeMask = 0x1f;
+constexpr std::uint8_t kPathTypeSpline = 0;
+constexpr std::uint8_t kPathTypeLinear = 1;
 const PedestrianVec3 kUp{0.0f, 1.0f, 0.0f};
+const PedestrianVec3 kZeroVector{0.0f, 0.0f, 0.0f};  // 0x56d400, (0, 0, 0) in the oracle (docs/re/debris.md)
+
+std::int32_t armFloatToInt(float value) {
+    if (std::isnan(value)) return 0;
+    if (value >= 2147483648.0f) return std::numeric_limits<std::int32_t>::max();
+    if (value < -2147483648.0f) return std::numeric_limits<std::int32_t>::min();
+    return std::int32_t(value);
+}
 
 std::int32_t floatBits(float value) {
     std::int32_t bits = 0;
@@ -115,6 +129,13 @@ void sidestep(PedestrianBody& body, float side) {
     body.avoidDelay = kPedestrianAvoidUpdates;
 }
 
+bool playerPushes(const PedestrianWalkWorld& world) { return world.playerState == 3 || world.playerState == 2; }
+
+void probeGround(PedestrianBody& body, const PedestrianWalkWorld& world, PedestrianWalkUpdate& out) {
+    out.groundProbed = true;
+    if (world.groundProbe) world.groundProbe(body.node[3]);
+}
+
 bool tilted(const Node& node) {
     float angle = std::fabs(pedestrianTiltAngle(node));
     if (floatBits(angle) > floatBits(kHalfPi)) angle = std::fabs(angle - kPi);
@@ -161,11 +182,98 @@ PedestrianPath pedestrianLevelPath(const assets::LevelPath& path) {
     PedestrianPath result;
     result.pointCount = std::uint16_t(path.points.size());
     const assets::LevelPath* source = &path;
-    result.sample = [source](float parameter, PedestrianVec3& position, PedestrianVec3& tangent) {
-        sampleDirectorPath(*source, parameter, position.data());
-        detectivePathTangent(*source, parameter, tangent.data());
-    };
+    if (path.type == kPathTypeSpline) {
+        result.sample = [source](float parameter, PedestrianVec3& position, PedestrianVec3& tangent) {
+            sampleDirectorPath(*source, parameter, position.data());
+            detectivePathTangent(*source, parameter, tangent.data());
+        };
+    } else if (path.type == kPathTypeLinear) {
+        result.sample = [source](float parameter, PedestrianVec3& position, PedestrianVec3& tangent) {
+            pedestrianLinearPathSample(*source, parameter, position, tangent);
+        };
+    } else {
+        throw std::invalid_argument("pedestrian path type " + std::to_string(int(path.type)) + " has no sampler");
+    }
     return result;
+}
+
+void pedestrianLinearPathSample(const assets::LevelPath& path, float parameter, PedestrianVec3& position, PedestrianVec3& tangent) {
+    const std::int32_t count = std::int32_t(path.points.size());
+    if (count == 0) throw std::invalid_argument("pedestrian path without points");
+    float p = parameter;
+    if (!path.closed) {
+        if (p < 0.0f) p = 0.0f;
+        const float last = float(count - 1);
+        if (last < p) p = last;
+    }
+    std::int32_t index = armFloatToInt(std::floor(p));
+    std::int32_t next = index + 1;
+    const float fraction = p - float(index);
+    if (path.closed) {
+        index = index % count;
+        if (index < 0) index = index + count;
+        next = next % count;
+        if (next < 0) next = count + next;
+    }
+    const float at = float(index) + fraction;
+    const PedestrianVec3& from = path.points[std::size_t(index)];
+    PedestrianVec3 d{0.0f, 0.0f, 0.0f};
+    if (next < count) d = subtract(path.points[std::size_t(next)], from);
+    const float scale = at - float(index);
+    for (float& value : d) value = value * scale;
+    tangent = unit(d);
+    for (int a = 0; a < 3; ++a) position[a] = d[a] + from[a];
+}
+
+PedestrianEntityBox pedestrianEntityBox(const PedestrianVec3& boundsCentre, const PedestrianVec3& boundsHalf) {
+    PedestrianEntityBox box;
+    for (int a = 0; a < 3; ++a) {
+        const float minimum = boundsCentre[a] - boundsHalf[a];
+        const float maximum = boundsCentre[a] + boundsHalf[a];
+        box.centre[a] = (minimum + maximum) * kPedestrianBoxScale;
+        box.half[a] = (maximum - minimum) * kPedestrianBoxScale;
+    }
+    box.radius = length(box.half);
+    return box;
+}
+
+void pedestrianGroundProbe(PedestrianVec3& position,
+                           const std::function<std::optional<float>(const PedestrianVec3& from, const PedestrianVec3& to)>& ray) {
+    if (!ray) return;
+    const PedestrianVec3 from{position[0], position[1] + kPedestrianProbeAbove, position[2]};
+    const PedestrianVec3 to{position[0], position[1] - kPedestrianProbeBelow, position[2]};
+    if (const std::optional<float> height = ray(from, to)) position[1] = *height;
+}
+
+float pedestrianDistanceSquared(const PedestrianVec3& a, const PedestrianVec3& b) {
+    const float dx = a[0] - b[0];
+    const float dy = a[1] - b[1];
+    const float dz = a[2] - b[2];
+    float squared = dx * dx;
+    squared = squared + dy * dy;
+    squared = squared + dz * dz;
+    return squared;
+}
+
+bool pedestrianNodeDrawn(const PedestrianNode& node, std::uint32_t meshNodeType, const DistanceFadeTable& fade, float distanceSquared) {
+    if ((node.word & kNodeTypeMask) != meshNodeType) return true;
+    const int tier = pedestrianFadeTier(node, fade);
+    if (tier < 0) return true;
+    const float reach = fade.fadeIn[std::size_t(tier)];
+    const float reachSquared = reach * reach;
+    return reachSquared > distanceSquared;
+}
+
+bool pedestrianUnderVehicle(const PedestrianVehicleBox& vehicle, const PedestrianVec3& position) {
+    const PedestrianVec3 d = subtract(position, vehicle.node[3]);
+    auto along = [&](int row) {
+        float sum = d[0] * vehicle.node[std::size_t(row)][0];
+        sum = sum + d[1] * vehicle.node[std::size_t(row)][1];
+        sum = sum + d[2] * vehicle.node[std::size_t(row)][2];
+        return sum;
+    };
+    if (!(vehicle.halfX > std::fabs(along(0)))) return false;
+    return std::fabs(along(2)) < vehicle.halfZ;
 }
 
 void pedestrianLookAt(std::array<PedestrianVec3, 4>& node, const PedestrianVec3& from, const PedestrianVec3& to) {
@@ -207,6 +315,57 @@ int PedestrianWalk::avoidance(const PedestrianBody& body, const PedestrianWalkWo
     return 0;
 }
 
+void PedestrianWalk::wallTest(PedestrianBody& body, const PedestrianWalkWorld& world, PedestrianVec3& move) {
+    const float nearRadius = world.arrivalRadius * kPedestrianWallNearScale;
+    PedestrianVec3 slid{move[0], 0.0f, move[2]};
+    if (world.wallSlide) slid = world.wallSlide(body.node[3], slid, nearRadius);
+    body.node[3][0] = body.node[3][0] + slid[0];
+    body.node[3][2] = body.node[3][2] + slid[2];
+    move[0] = slid[0];
+    move[1] = move[1] + slid[1];
+    move[2] = slid[2];
+}
+
+bool PedestrianWalk::contact(PedestrianBody& body, const PedestrianWalkWorld& world, PedestrianVec3& velocity, bool wall, bool probe,
+                             PedestrianWalkUpdate& out) {
+    if (world.playerInVehicle && !probe) return false;
+    bool touching = false;
+    const float squared = horizontalDistanceSquared(body.node[3], world.playerPosition);
+    if (floatBits(squared) < floatBits(kPedestrianTouchDistanceSquared)) {
+        touching = true;
+        if (playerPushes(world)) {
+            const PedestrianVec3 away = unit(subtract(body.node[3], world.playerPosition));
+            velocity[0] = velocity[0] + away[0] * kPedestrianPushStep;
+            velocity[2] = velocity[2] + away[2] * kPedestrianPushStep;
+        }
+        if (wall) wallTest(body, world, velocity);
+    }
+    if (probe) probeGround(body, world, out);
+    return touching;
+}
+
+void PedestrianWalk::rootMotion(PedestrianBody& body, const PedestrianWalkWorld& world, PedestrianWalkUpdate& out) {
+    if (!world.rootTranslation) return;
+    const PedestrianVec3& root = *world.rootTranslation;
+    const Node& node = body.node;
+    PedestrianVec3 move = kZeroVector;
+    for (int c = 0; c < 3; ++c) {
+        float moved = root[0] * node[0][c];
+        moved = moved + root[1] * node[1][c];
+        moved = moved + root[2] * node[2][c];
+        moved = moved + node[3][c];
+        move[c] = move[c] + (-node[3][c] + moved);
+    }
+    wallTest(body, world, move);
+    probeGround(body, world, out);
+}
+
+void PedestrianWalk::bumped(PedestrianBody& body, const PedestrianWalkWorld& world, PedestrianWalkUpdate& out) {
+    PedestrianVec3 push = kZeroVector;
+    if (!contact(body, world, push, true, true, out)) return;
+    for (int a = 0; a < 3; ++a) body.node[3][a] = body.node[3][a] + push[a];
+}
+
 void PedestrianWalk::walk(PedestrianBody& body, const PedestrianWalkWorld& world, PedestrianWalkUpdate& out) {
     out.walked = true;
     Node& node = body.node;
@@ -231,24 +390,8 @@ void PedestrianWalk::walk(PedestrianBody& body, const PedestrianWalkWorld& world
         probe = true;
     }
 
-    const bool pushing = world.playerState == 3 || world.playerState == 2;
-    bool touching = false;
-    if (!world.playerInVehicle || probe) {
-        const float squared = horizontalDistanceSquared(node[3], world.playerPosition);
-        if (floatBits(squared) < floatBits(kPedestrianTouchDistanceSquared)) {
-            touching = true;
-            if (pushing) {
-                const PedestrianVec3 away = unit(subtract(node[3], world.playerPosition));
-                velocity[0] = velocity[0] + away[0] * kPedestrianPushStep;
-                velocity[2] = velocity[2] + away[2] * kPedestrianPushStep;
-            }
-        }
-        if (probe) {
-            out.groundProbed = true;
-            if (world.groundProbe) world.groundProbe(node[3]);
-        }
-    }
-    if (touching && pushing) {
+    const bool touching = contact(body, world, velocity, false, probe, out);
+    if (touching && playerPushes(world)) {
         body.requested = 5;
         if (world.groundRay) {
             const PedestrianVec3 to{node[3][0], kPedestrianBumpRayEndY, node[3][2]};
@@ -329,7 +472,8 @@ void PedestrianWalk::step(PedestrianBody& body, const PedestrianWalkWorld& world
         if (clipFinished(world, bumpClip(body.bumpClip))) body.requested = 1;
         break;
     case 6:
-        if (world.splatRefresh) body.splatTimer = kPedestrianSplatSeconds;
+        if (world.playerVehicleBox ? pedestrianUnderVehicle(*world.playerVehicleBox, body.node[3]) : world.splatRefresh)
+            body.splatTimer = kPedestrianSplatSeconds;
         if (body.splatTimer > 0.0f) {
             body.splatTimer = body.splatTimer - world.dt;
             if (body.splatTimer <= 0.0f) body.requested = 7;
@@ -341,7 +485,14 @@ void PedestrianWalk::step(PedestrianBody& body, const PedestrianWalkWorld& world
     default:
         break;
     }
-    const bool keep = world.visible && !world.hidden && (body.requested != 0 || body.state != 0);
+    bool visible = world.visible;
+    bool hidden = world.hidden;
+    if (world.drawTest) {
+        const PedestrianDrawTest& test = *world.drawTest;
+        visible = pedestrianNodeDrawn(test.node, test.meshNodeType, test.fade, pedestrianDistanceSquared(body.node[3], test.fadePoint));
+        hidden = pedestrianNodeHidden(test.node);
+    }
+    const bool keep = visible && !hidden && (body.requested != 0 || body.state != 0);
     if (keep) {
         if (body.hold <= kPedestrianHoldVisible) body.hold = kPedestrianHoldVisible;
     } else if (body.hold != 0) {
@@ -352,7 +503,16 @@ void PedestrianWalk::step(PedestrianBody& body, const PedestrianWalkWorld& world
 
 PedestrianWalkUpdate PedestrianWalk::update(PedestrianBody& body, const PedestrianWalkWorld& world, GameRandom& random) {
     PedestrianWalkUpdate out;
-    if (body.state == body.requested && body.state == 2) walk(body, world, out);
+    if (body.state == body.requested) {
+        switch (body.state) {
+        case 2: walk(body, world, out); break;
+        case 3:
+        case 4:
+        case 7: rootMotion(body, world, out); break;
+        case 5: bumped(body, world, out); break;
+        default: break;
+        }
+    }
     if (body.state != body.requested) enter(body, world, random, out);
     step(body, world);
     return out;

@@ -8,7 +8,7 @@ The spawn data of the pedestrian manager 0x51b33c and the traffic manager 0x5274
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-20T12:11:03+02:00. Both spawn files decode in `chase_assets` (all 14 shipped files, census pinned) together with the cell lookup 0x1eb490. Nothing is wired into `chase-game`: no manager uses the data yet. `deriveSpawnFields` computes the fields the loaders derive (path record, tangent, room) for both kinds; the traffic floor cell is not computed.
+IN_PROGRESS, updated 2026-10-20T13:11:53+02:00. Both spawn files decode in `chase_assets` (all 14 shipped files, census pinned) together with the cell lookup 0x1eb490. Nothing is wired into `chase-game`: no manager uses the data yet. `deriveSpawnFields` computes the fields the loaders derive (path record, tangent, room) for both kinds; the traffic floor cell is not computed.
 
 ## 3. Verified behaviour
 
@@ -20,20 +20,19 @@ IN_PROGRESS, updated 2026-10-20T12:11:03+02:00. Both spawn files decode in `chas
 ## 4. Stand-ins
 
 - PREGEN-S2 The loaders walk the loaded levels in the order of the list 0x589a18 and try the current room first; the port takes the level list and the current room (default none) from the caller. needs: PREGEN-4. evidence: [pregen-traffic.md §2026-10-20T12:11:03](../../re/pregen-traffic.md#ts-20261020-121103)
-- PREGEN-S3 The path sampler's node transform (path +0x18) is taken as unset, so the tangent is the plain spline derivative. needs: PREGEN-5. evidence: [pregen-traffic.md §2026-10-20T12:11:03](../../re/pregen-traffic.md#ts-20261020-121103)
 - PREGEN-S1 The decoder rejects input the original reads without checks: list indices beyond the points, lists longer than the reader's stack buffer (200 traffic, 256 pedestrians), trees deeper than 16 levels and bytes after the tree. No shipped file has any of them. evidence: [pregen-traffic.md §2026-10-20T11:16:20](../../re/pregen-traffic.md#ts-20261020-111620)
 
 ## 5. Open items
 
 - [ ] PREGEN-3 — The traffic floor cell (0x1edaac(x, y, z, 0.0), point +40) is not ported. blocks: TRAFFIC-1, VEH-12. evidence: [pregen-traffic.md §2026-10-20T11:16:20](../../re/pregen-traffic.md#ts-20261020-111620)
 - [ ] PREGEN-4 — The loaded-level order (list 0x589a18) and the current room (0x376c78) at the time the managers initialise are not known; `deriveSpawnFields` takes both from its caller. blocks: PED-1, PREGEN-S2. evidence: [pregen-traffic.md §2026-10-20T12:11:03](../../re/pregen-traffic.md#ts-20261020-121103)
-- [ ] PREGEN-5 — Whether a pedestrian or traffic path ever has its node set (setter 0x1c1b48, callers 0x2a83b4 and 0x2bac44 not read), which makes the sampler transform the tangent. blocks: PREGEN-S3. evidence: [pregen-traffic.md §2026-10-20T12:11:03](../../re/pregen-traffic.md#ts-20261020-121103)
 
 ## 6. Findings summary
 
 - Spawn files, loaders, quadtree, census; which manager loads which file: [pregen-traffic.md §2026-10-20T11:16:20](../../re/pregen-traffic.md#ts-20261020-111620).
 - The derived fields and the one-axis deviation of 72 stored positions: [pregen-traffic.md §2026-10-20T12:11:03](../../re/pregen-traffic.md#ts-20261020-121103).
 - Manager flags and EnableTrafficAndPedestrians: [script-natives-audio.md §2026-10-15T15:10:38](../../re/script-natives-audio.md#ts-20261015-151038) (its manager names are swapped: [pedestrians.md §2026-10-20T11:17:42](../../re/pedestrians.md#ts-20261020-111742)).
+- No path gets a node at run time, so the samplers never transform: [pedestrians.md §2026-10-20T13:09:29](../../re/pedestrians.md#ts-20261020-130929).
 
 ## 7. Code and tests
 

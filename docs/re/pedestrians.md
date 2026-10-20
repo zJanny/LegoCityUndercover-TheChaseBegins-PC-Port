@@ -13,8 +13,9 @@ The manager that spawns and removes the `chars/pedestrian` characters of a level
 - The fade tier, the hidden test, the room and layer test and the fade-node test are read. The blocked test 0x26cd38 loops over a vehicle list with 0x1ffcd4, which is not read in full. [§2026-10-20T12:27:05](#ts-20261020-122705)
 - Port: `src/runtime/pedestrian_manager.*` (tests `pedestrian-manager`, `pedestrian-limit-real-data`), not wired into the game. [§2026-10-20T12:27:05](#ts-20261020-122705)
 - The pedestrian (kind 197): its update runs the walk 0x2b9138 in state 2 and then the state step 0x1d7e88 (entries of states 1 and 3 .. 7, the hold counter +0x10). The walk turns toward the target at dt x 5, moves along row 2 at speed x dt, advances the path parameter by 0.3 near the target, turns back by 0.75, and sidesteps by 1.3 for the avoidance 0x2edf08 (player or pedestrian within 2.0 and 1.0 to the side). The walk clip starts in mode 1. [§2026-10-20T12:20:49](#ts-20261020-122049)
-- Port: `src/runtime/pedestrian_walk.*` (test `pedestrian-walk`), not wired. [§2026-10-20T12:20:49](#ts-20261020-122049)
-- Open: 0x1ffcd4 (the blocked test), the message slot 0x19efbc (who requests the dodge and splat states), the root motion step of states 3, 4 and 7, the layer table contents, the class byte +0x18, which room node +0x7c is, and the second caller 0x164240. [§2026-10-20T12:20:49](#ts-20261020-122049), [§2026-10-20T12:27:05](#ts-20261020-122705)
+- The steady updates (0x277c24): states 3, 4 and 7 move the node by the clip's root translation through its rows (0x277afc), then the wall test 0x2059ec and the ground probe 0x2058cc (0.25 up and down). State 5 runs the contact 0x1fd8c8 with wall test and probe, and moves the node by the push once more on a touch. The draw test 0x2930e0 of the hold uses the fade-in distance of the node's tier from the fade point 0x52a1b4; state 6 refreshes its timer while the pedestrian is inside the player vehicle's box in x and z (0x278b04). Type 1 paths are linear (0x1b33fc), and no path gets a node at run time. [§2026-10-20T13:09:29](#ts-20261020-130929)
+- Port: `src/runtime/pedestrian_walk.*` (test `pedestrian-walk`), not wired. [§2026-10-20T12:20:49](#ts-20261020-122049), [§2026-10-20T13:09:29](#ts-20261020-130929)
+- Open: 0x1ffcd4 (the blocked test), the message slot 0x19efbc (who requests the dodge and splat states), the writer of the fade point 0x52a1b4, the layer table contents, the class byte +0x18, which room node +0x7c is, and the second caller 0x164240. [§2026-10-20T12:20:49](#ts-20261020-122049), [§2026-10-20T12:27:05](#ts-20261020-122705), [§2026-10-20T13:09:29](#ts-20261020-130929)
 
 <a id="ts-20261020-111742"></a>
 
@@ -92,6 +93,7 @@ Unknowns:
 <a id="ts-20261020-122049"></a>
 
 ## 2026-10-20T12:20:49+02:00 — The pedestrian character (kind 197): create, state step, walk and avoidance (llvm-objdump only, no REA session, no emulator)
+Corrected by [pedestrians.md §2026-10-20T13:09:29](#ts-20261020-130929): the result of 0x24ef70 in the state step is the distance the draw test 0x2930e0 reads, not unused.
 
 [Corrects §2026-10-20T11:17:42](#ts-20261020-111742) in two points. 0x1918e0 is not the pedestrian's message handler: it reads component +0x176 / +0x178, and the pedestrian's component has 100 bytes. The registration of kind 197 at 0x1786dc puts 0x19efbc in slot 0x14, the message slot. And the walk clip is started in mode 1 (loop). Mode 6 is what the stop 0x172754 of the manager's removal sets, which fits the mode 6 of the 14 lvl_01 pedestrians in [npc-animation.md](npc-animation.md) (not checked in that state).
 
@@ -207,3 +209,47 @@ Unknowns:
 - The contents of the layer table (callers of 0x2405a0), the class byte +0x18 of a pedestrian, which room node +0x7c is, and the run-time values of *0x37674c and the record 0x376794.
 - Who calls 0x164240 through the record 0x376d18, and which scene's level load sets the slots and the limit when a level loads several scenes.
 - The start values of the level root's slots (+0x2c / +0x30), for a Pedestrians_Max stored as a slot.
+
+<a id="ts-20261020-130929"></a>
+
+## 2026-10-20T13:09:29+02:00 — The pedestrian's steady updates of states 3, 4, 5 and 7 and the walk inputs (llvm-objdump only, no REA session, no emulator)
+
+[Corrects §2026-10-20T12:20:49](#ts-20261020-122049): the result of 0x24ef70(position, 0x52a1b4) in the state step is used. It is the squared distance that the draw test 0x2930e0 gets in s0.
+
+Method: `llvm-objdump -d --triple=armv6k-none-eabi --mattr=+vfp2` on `artifacts/game/game.arm.elf`, data words of the ELF image, scans of `bl` targets and literal pools. Port: `src/runtime/pedestrian_walk.*`, test `pedestrian-walk`.
+
+**Steady callback 0x277c24.** Jump table on state - 2 (0x277c4c): 2 the walk 0x2b9138; 3, 4, 7 0x277afc(entity, a zero vector); 5 0x277c94; 6 and other states nothing.
+
+**Root motion 0x277afc (states 3, 4, 7).**
+1. slot = 0x233900(entity +0x40), the current slot. 0x2327b4(entity +0x44, out) gives the root delta (translation, yaw at +0xc); a 0 return ends the update: no wall test, no probe.
+2. N = a copy of the node's world matrix (0x2429d0).
+3. With bit 0 of the slot clip's word +8, or the slot's hword +4 bit 0x1000 with byte +0x28 set: R = identity turned by the yaw (0x24d434, 0x237bc4) with the delta translation (0x2554c0); R = R x N (0x258a10). R's rotation goes only into the copy (0x232788), which is never stored. move = -N.t + R.t, i.e. ((t.x N0 + t.y N1) + t.z N2) + N3 - N3 per column.
+4. Otherwise the translation is turned by the heading atan2(N2.x, N2.z) (0x24765c, 0x17e3c0) and its x negated.
+5. vector += move, then the wall test 0x2059ec(entity, vector) and the probe 0x2058cc(entity, 0).
+
+The create sets bits 0xf on the four dodge clips and splat_up ([§2026-10-20T12:20:49](#ts-20261020-122049)), the clips the entries of 3, 4 and 7 start. So step 3 always runs and the node is not turned (inference: the current slot is the clip the entry started with blend 0.0).
+
+**Contact 0x1fd8c8(entity, position, velocity, wall, probe).** 0 at once when the player has a vehicle (0x24255c) and `probe` is 0. Touch: xz distance squared to the player (0x20af40) below 1.5. On a touch, player state 2 or 3 adds unit(position - player) x 0.1 to the velocity's x and z, then `wall` runs 0x2059ec(entity, velocity). `probe` runs 0x2058cc whether touching or not (its second argument is not read). Returns the touch. The walk passes `wall` 0 (0x2b924c).
+
+**State 5, 0x277c94.** v = the vector 0x56d400 (BSS, (0, 0, 0) in the oracle, [debris.md](debris.md)). On a touch from 0x1fd8c8(entity, node position, v, 1, 1) the node position += v once more (0x23d39c) after the wall test moved it, so a push moves the node twice in x and z, and by the slide's y once, after the probe. The node is stored (0x24c118).
+
+**Wall test 0x2059ec(entity, move).** 0x23d4c0 gives the entities within entity +0x5c x 1.5 (0x205b54); one is kept when its hword +0x10 has bit 9 or its +0x78 is set, and (both +0x5c) x 1.5 exceeds the distance 0x2507dc to its box centre (+0x60 through its node, 0x250da8). 0x21a73c(entity, (move x, 0, move z) (0x249030), kept list, count, 0, 0x80000, 0, 0) slides it. Node x and z += slid x and z; move = (slid x, move y + slid y, slid z).
+
+**Ground probe 0x2058cc.** Ray 0x21ab20 from (x, y + *0x374494, z) to (x, y - *0x374498, z), filter record 0x362298, mask 16. A hit sets node y to the hit's y; with a surface, 0x221064 / 0x23e110 set the room. The static initialiser 0x347904 stores 0.25, 0.25 and 5.0 at 0x374494, 0x374498 and 0x37449c. The only other literal reader is the blocked test 0x1ffcd4; no other writer was found.
+
+**Entity box 0x242df4(entity, +0x60, +0x6c), create 0x191464.** With node word bit 9 clear the node bounds are built first (0x242eb0, `assets::modelBounds`). min = node +0xa0 - +0xac, max = +0xa0 + +0xac; +0x60 = (min + max) x 0.5, +0x6c = (max - min) x 0.5. The create stores the length of +0x6c (0x2536a8) in +0x5c.
+
+**Draw test 0x2930e0(node, s0), state step 0x1d8210.** s0 = 0x24ef70(node position, 0x52a1b4), the squared distance: the call the earlier entry called unused feeds it. Result 1 unless the node type (word bits 0 .. 4) is *0x37674c with word bit 9 and +0xde bit 4 set; then the tier of 0x28781c ([§2026-10-20T12:27:05](#ts-20261020-122705)), a larger radius gives 1. Result 0 when (fade-in word 0x529e30 +0x3ac + 4 tier) squared <= s0. 0x52a1b4 = 0x529e30 +0x384 is the distance fade's point: 0x1077dc copies it to +0x390 and the model fade 0x10ec20 reads it. Its writer was not found.
+
+**Vehicle test 0x278b04(vehicle, entity), state 6.** 0 without a vehicle. d = 0x2536c0(entity position, vehicle node matrix) = (p - t) dotted with rows 0 .. 2. 1 when vehicle +0x6c > |d.x| and |d.z| < vehicle +0x74 (entity box half extents).
+
+**Type 1 path 0x1b33fc(record +8, position, tangent, transform, p).** Open (byte +1 clear): p clamped to 0 .. count - 1. i = int(floor p) (0x252c14), j = i + 1, f = p - i; closed: i and j wrap by the signed remainder 0x24e500. d = (point j - point i) x ((i + f) - i); tangent = unit(d) (0x23b998, (0, 0, 1) at a whole parameter); position = d + point i. With the transform argument and the node +0x10 set, 0x254250 / 0x249ee8 apply the node. Open at p = count - 1 reads the point after the block, times 0.
+
+**Path node +0x18.** The setter 0x1c1b48 is called only from 0x2a8388 (via 0x2ca9cc) and 0x2bac30, the handlers of `EffectAttachParticlesToPath` and `EffectLinkPathToObject` (native table 0x359250). No level or class script calls either ([script-natives.md](script-natives.md), class D). So no path gets a node at run time; this answers PREGEN-5.
+
+Port: `PedestrianWalk::rootMotion` (step 3 only), `bumped`, `contact` (shared with the walk), `wallTest`; `pedestrianGroundProbe`, `pedestrianEntityBox`, `pedestrianNodeDrawn`, `pedestrianDistanceSquared`, `pedestrianUnderVehicle`, `pedestrianLinearPathSample`; `pedestrianLevelPath` picks the sampler by type. The caller gives `rootTranslation` (0x2327b4), `wallSlide` (0x21a73c with its near list), `drawTest` and `playerVehicleBox`; the last two replace `visible`, `hidden` and `splatRefresh`.
+
+Unknowns:
+- The writer and run-time value of the fade point 0x52a1b4.
+- The level file word at path record +0x18 was not read; it is taken as 0.
+- Step 4 of 0x277afc is not ported: no clip of states 3, 4 and 7 lacks bit 0.

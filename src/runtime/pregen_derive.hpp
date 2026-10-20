@@ -28,7 +28,8 @@ struct PregenDerivedFields {
 
 // The fields the loaders 0x2e02d4 / 0x2ee868 derive per point: the path record (first loaded level whose path section holds the
 // hash, 0x1b3d04), the unit tangent the path sampler 0x1c17c0 stores at the stored parameter, and the room 0x239838.
-// STAND-IN PREGEN-S3: the sampler's node transform (path +0x18, stored by 0x1c1b48 whose callers are 0x2a83b4 and 0x2bac44) is taken as unset.
+// The sampler's node transform does not apply: path +0x18 is set (0x1c1b48) only by the natives EffectAttachParticlesToPath and
+// EffectLinkPathToObject, which no script calls.
 // A point whose path is not found keeps a zero tangent (the original leaves the stale file word) and still gets a room.
 // Throws for a path of a type other than 0 (the other sampler table entries are not ported).
 std::vector<PregenDerivedFields> deriveSpawnFields(const assets::PregenSpawns& spawns,

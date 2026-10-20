@@ -10,6 +10,12 @@
 // with up (0, 1, 0) (0x56d424), path step 0.3 (0x2b96b8), turn back 0.75 (0x2b96a8), sidestep 1.3 (0x2b96b0) with
 // +0x5d = 30, face the player for requests 3 / 4. Avoidance 0x2edf08: xz length below 2.0 (0x2ee05c), side |dot| below
 // 1.0 (0x2ee064), 2 for a positive side, else 1.
+// Steady updates 0x277c24: states 3, 4, 7 the root motion 0x277afc (translation through the node rows 0x258a10, minus the
+// position; wall test 0x2059ec with (x, 0, z) and the near radius +0x5c x 1.5 (0x205b54), probe 0x2058cc); state 5 0x277c94
+// (0x1fd8c8 with wall and probe set on the zero vector 0x56d400, the node moved by it again on a touch). Probe 0x2058cc: the
+// floats 0.25 / 0.25 of the static initialiser 0x347904. Entity box 0x242df4 (scale 0.5 at 0x242eac), radius 0x2536a8. Draw
+// test 0x2930e0 (type *0x37674c, fade-in words 0x529e30 +0x3ac, distance 0x24ef70); vehicle box 0x278b04 (0x2536c0, +0x6c,
+// +0x74). Type 1 path 0x1b33fc (floor 0x252c14, signed remainder 0x24e500, unit 0x23b998).
 #include "assets/assets.hpp"
 #include "runtime/game_random.hpp"
 #include "runtime/pedestrian_walk.hpp"
@@ -340,6 +346,190 @@ void testLevelPath() {
     path.sample(1.5f, position, tangent);
     require(path.pointCount == 4, "point count");
     require(nearVec(position, {0, 0, 15}) && nearVec(tangent, {0, 0, 1}), "type 0 sample");
+
+    level.type = 1;
+    level.points = {{0, 0, 0}, {10, 0, 0}, {10, 0, 10}};
+    const PedestrianPath linear = pedestrianLevelPath(level);
+    linear.sample(0.5f, position, tangent);
+    require(nearVec(position, {5, 0, 0}) && nearVec(tangent, {1, 0, 0}), "type 1 sample");
+    linear.sample(1.25f, position, tangent);
+    require(nearVec(position, {10, 0, 2.5f}) && nearVec(tangent, {0, 0, 1}), "type 1 second segment");
+    linear.sample(-1.0f, position, tangent);
+    require(nearVec(position, {0, 0, 0}) && nearVec(tangent, {0, 0, 1}), "open path clamps at 0, fraction 0 gives (0, 0, 1)");
+    linear.sample(5.0f, position, tangent);
+    require(nearVec(position, {10, 0, 10}) && nearVec(tangent, {0, 0, 1}), "open path clamps at count - 1");
+    level.closed = true;
+    const float half = std::sqrt(0.5f);
+    pedestrianLinearPathSample(level, 2.5f, position, tangent);
+    require(nearVec(position, {5, 0, 5}) && nearVec(tangent, {-half, 0, -half}), "closed path wraps the next point");
+    pedestrianLinearPathSample(level, -0.5f, position, tangent);
+    require(nearVec(position, {5, 0, 5}), "closed path wraps a negative parameter");
+
+    level.type = 2;
+    bool rejected = false;
+    try {
+        pedestrianLevelPath(level);
+    } catch (const std::invalid_argument&) {
+        rejected = true;
+    }
+    require(rejected, "a path type without a sampler is rejected");
+}
+
+Node quarterTurnAt(const PedestrianVec3& position) {
+    return {PedestrianVec3{0, 0, -1}, PedestrianVec3{0, 1, 0}, PedestrianVec3{1, 0, 0}, position};
+}
+
+void testRootMotion() {
+    for (std::uint16_t state : {3, 4, 7}) {
+        Scene scene;
+        GameRandom random(1);
+        PedestrianBody body = pedestrianCreate(true, quarterTurnAt({10, 0, 5}));
+        body.state = body.requested = state;
+        int probes = 0;
+        scene.world.groundProbe = [&](PedestrianVec3& position) {
+            ++probes;
+            position[1] = 1.0f;
+        };
+        PedestrianWalk::update(body, scene.world, random);
+        require(nearVec(body.node[3], {10, 0, 5}) && probes == 0, "no root delta: no move and no probe");
+
+        scene.world.rootTranslation = PedestrianVec3{0.0f, 0.2f, 0.5f};
+        PedestrianVec3 slidFrom{}, slidMove{};
+        float slidRadius = 0;
+        scene.world.wallSlide = [&](const PedestrianVec3& position, const PedestrianVec3& move, float nearRadius) {
+            slidFrom = position;
+            slidMove = move;
+            slidRadius = nearRadius;
+            return PedestrianVec3{0.25f, 0.1f, -0.1f};
+        };
+        const PedestrianWalkUpdate out = PedestrianWalk::update(body, scene.world, random);
+        require(nearVec(slidFrom, {10, 0, 5}) && nearVec(slidMove, {0.5f, 0.0f, 0.0f}), "root translation through the node rows, y dropped");
+        require(near(slidRadius, 0.75f), "near radius entity +0x5c x 1.5");
+        require(nearVec(body.node[3], {10.25f, 1.0f, 4.9f}) && probes == 1 && out.groundProbed, "slid x and z, then the probe");
+        require(body.state == state && body.requested == state, "state kept while the clip plays");
+
+        scene.world.wallSlide = nullptr;
+        PedestrianWalk::update(body, scene.world, random);
+        require(nearVec(body.node[3], {10.75f, 1.0f, 4.9f}), "no walls: the move in x and z");
+    }
+}
+
+void testBumpSteady() {
+    Scene scene;
+    GameRandom random(1);
+    scene.world.playerPosition = {1.0f, 0.0f, 0.0f};
+    scene.world.playerState = 2;
+    scene.world.playerInVehicle = true;
+    int slides = 0;
+    scene.world.wallSlide = [&](const PedestrianVec3&, const PedestrianVec3& move, float) {
+        ++slides;
+        return PedestrianVec3{move[0], 0.3f, move[2]};
+    };
+    int probes = 0;
+    scene.world.groundProbe = [&](PedestrianVec3& position) {
+        ++probes;
+        position[1] = 0.0f;
+    };
+    PedestrianBody body = pedestrianCreate(true, identityAt({0, 0, 0}));
+    body.state = body.requested = 5;
+    PedestrianWalk::update(body, scene.world, random);
+    require(slides == 1 && probes == 1, "wall test and probe on a touch, also from a vehicle");
+    require(nearVec(body.node[3], {-0.2f, 0.3f, 0.0f}), "push applied by the wall test and again after the probe");
+
+    scene.world.playerState = 0;
+    PedestrianBody still = pedestrianCreate(true, identityAt({0, 0, 0}));
+    still.state = still.requested = 5;
+    PedestrianWalk::update(still, scene.world, random);
+    require(slides == 2 && probes == 2 && nearVec(still.node[3], {0.0f, 0.3f, 0.0f}), "touch without a push moves by the slide only");
+
+    scene.world.playerPosition = {5.0f, 0.0f, 0.0f};
+    PedestrianBody apart = pedestrianCreate(true, identityAt({0, 0, 0}));
+    apart.state = apart.requested = 5;
+    PedestrianWalk::update(apart, scene.world, random);
+    require(slides == 2 && probes == 3 && nearVec(apart.node[3], {0, 0, 0}), "no touch: only the probe");
+}
+
+void testEntityBox() {
+    const PedestrianEntityBox box = pedestrianEntityBox({0.0f, 0.8f, 0.0f}, {0.5f, 0.8f, 0.3f});
+    require(nearVec(box.centre, {0.0f, 0.8f, 0.0f}) && nearVec(box.half, {0.5f, 0.8f, 0.3f}), "box from the node bounds");
+    require(near(box.radius, std::sqrt(0.98f)), "radius = length of the half extents");
+}
+
+void testGroundProbe() {
+    PedestrianVec3 from{}, to{};
+    std::optional<float> hit = 1.9f;
+    auto ray = [&](const PedestrianVec3& a, const PedestrianVec3& b) {
+        from = a;
+        to = b;
+        return hit;
+    };
+    PedestrianVec3 position{1, 2, 3};
+    pedestrianGroundProbe(position, ray);
+    require(nearVec(from, {1, 2.25f, 3}) && nearVec(to, {1, 1.75f, 3}), "probe 0.25 up and 0.25 down");
+    require(nearVec(position, {1, 1.9f, 3}), "hit height");
+    hit.reset();
+    pedestrianGroundProbe(position, ray);
+    require(nearVec(position, {1, 1.9f, 3}), "no hit keeps the height");
+}
+
+void testDrawTest() {
+    PedestrianNode node;
+    node.word = 5 | 0x200;
+    node.fadeFlags = 0x10;
+    node.radius = 2.0f;
+    const DistanceFadeTable fade;
+    require(pedestrianNodeDrawn(node, 5, fade, 35.9f * 35.9f), "inside the tier 0 fade-in distance");
+    require(!pedestrianNodeDrawn(node, 5, fade, 36.0f * 36.0f), "at the fade-in distance");
+    require(pedestrianNodeDrawn(node, 4, fade, 1e6f), "another node type");
+    node.radius = 4.0f;
+    require(pedestrianNodeDrawn(node, 5, fade, 71.0f * 71.0f) && !pedestrianNodeDrawn(node, 5, fade, 73.0f * 73.0f), "tier 1");
+    node.word = 5;
+    require(pedestrianNodeDrawn(node, 5, fade, 1e6f), "no distance fade bit");
+    require(near(pedestrianDistanceSquared({1, 2, 3}, {4, 6, 3}), 25.0f), "squared distance");
+
+    Scene scene;
+    GameRandom random(1);
+    PedestrianDrawTest test;
+    test.node.word = 5 | 0x200;
+    test.node.fadeFlags = 0x10;
+    test.node.radius = 2.0f;
+    test.meshNodeType = 5;
+    test.fadePoint = {0.0f, 0.0f, 100.0f};
+    scene.world.drawTest = test;
+    PedestrianBody body = walking({0, 0, 0}, {0, 0, 20});
+    body.hold = 3;
+    PedestrianWalk::update(body, scene.world, random);
+    require(body.hold == 2, "beyond the fade-in distance counts down although `visible` is set");
+    scene.world.drawTest->fadePoint = {0.0f, 0.0f, 10.0f};
+    PedestrianWalk::update(body, scene.world, random);
+    require(body.hold == 10, "drawn keeps at least 10");
+    scene.world.drawTest->node.word |= 1u << 18;
+    PedestrianWalk::update(body, scene.world, random);
+    require(body.hold == 9, "a hidden node counts down");
+}
+
+void testUnderVehicle() {
+    PedestrianVehicleBox vehicle;
+    vehicle.node = quarterTurnAt({10, 0, 10});
+    vehicle.halfX = 1.0f;
+    vehicle.halfZ = 2.5f;
+    require(pedestrianUnderVehicle(vehicle, {12.0f, 3.0f, 10.5f}), "inside the box in x and z of the vehicle frame");
+    require(!pedestrianUnderVehicle(vehicle, {12.6f, 0.0f, 10.0f}), "beyond the half z");
+    require(!pedestrianUnderVehicle(vehicle, {10.0f, 0.0f, 11.0f}), "at the half x");
+
+    Scene scene;
+    scene.world.dt = 1.0f;
+    GameRandom random(1);
+    PedestrianBody body = pedestrianCreate(true, identityAt({12.0f, 0.0f, 10.5f}));
+    body.requested = 6;
+    PedestrianWalk::update(body, scene.world, random);
+    scene.world.splatRefresh = true;
+    scene.world.playerVehicleBox = vehicle;
+    PedestrianWalk::update(body, scene.world, random);
+    require(near(body.splatTimer, 2.0f), "under the vehicle sets 3.0 again");
+    body.node[3] = {20.0f, 0.0f, 10.0f};
+    PedestrianWalk::update(body, scene.world, random);
+    require(near(body.splatTimer, 1.0f), "the vehicle box replaces splatRefresh");
 }
 
 }
@@ -360,6 +550,12 @@ int main() {
         testTilt();
         testLookAt();
         testLevelPath();
+        testRootMotion();
+        testBumpSteady();
+        testEntityBox();
+        testGroundProbe();
+        testDrawTest();
+        testUnderVehicle();
     } catch (const std::exception& error) {
         std::cerr << "pedestrian-walk: " << error.what() << "\n";
         return 1;
