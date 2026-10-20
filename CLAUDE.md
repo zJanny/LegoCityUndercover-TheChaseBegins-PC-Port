@@ -82,6 +82,7 @@ Four places, never copied between them, only linked: **findings** about the orig
 
 - Never modify the `.cci`. Never stage or commit it or anything game-derived (`*.cci`, `*.3ds`, `artifacts/`, `build/` are gitignored), and no original game assets or screenshots. Inspect staged changes before every commit.
 - If such content is already in history, report it and propose a remediation; never rewrite shared history or delete user data without authorization.
+- **Data from another machine:** docs, logs and tests may cite local data recorded on another PC (save states, traces, `artifacts/` paths, the image, emulator homes) that does not exist here. When it is missing, stop and tell the user what is missing and where it was cited, and suggest how to get it (copy it over, record it again, or name the replacement); never recreate, fake or work around it yourself.
 
 ## Graphify
 
