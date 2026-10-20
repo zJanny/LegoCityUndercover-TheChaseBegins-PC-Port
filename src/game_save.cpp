@@ -123,6 +123,11 @@ void refreshLevelState(Bytes& slot, const chase::assets::Level& level, unsigned 
         std::cout << "save: the level state of level " << levelId << " does not fit into its block\n";
 }
 
+void playTick(chase::runtime::ProgressNativeState& natives) {
+    Bytes& slot = natives.slotImage();
+    if (slot.size() == kSlotSize) addPlayTick(slot.data());
+}
+
 void update(Progress& progress, chase::runtime::ProgressNativeState& natives, unsigned& seenRequests, std::uint64_t studs,
             std::uint32_t superBricks, const std::function<void(Bytes&)>& refreshLevelState) {
     Bytes& slot = natives.slotImage();

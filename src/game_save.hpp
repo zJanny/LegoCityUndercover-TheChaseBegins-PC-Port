@@ -55,6 +55,9 @@ chase::save::LevelStateInput levelStateInput(const chase::save::SlotStart& start
 void refreshLevelState(chase::save::Bytes& slot, const chase::assets::Level& level, unsigned levelId,
                        const chase::save::LevelStateInput& input);
 
+// The pause mode's update 0x300378 adds 1 to the play time at slot +0 (0x300444) once per update, as the level update does.
+void playTick(chase::runtime::ProgressNativeState& natives);
+
 // One update: the play-time tick of the update loops (STAND-IN SAVE-S11: every update of a level session ticks) and,
 // when the progress natives made new save requests since `seenRequests`, one request 0x21cf38(0): the level state
 // (`refreshLevelState` on the live slot) and the summary with the live counters, then the commit.

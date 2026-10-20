@@ -32,11 +32,15 @@ bool LevelSession::holdForPause(float dt, const runtime::PadState& padInput) {
         input.b = pad.slot(kSlotCancelButton).press > 0;
         input.touch = {padInput.touch, float(padInput.touchX), float(padInput.touchY)};
         pauseMenu->update(dt, input);
+        game_save::playTick(levelScripts.progressNatives());
         for (const int id : pauseMenu->takeSounds())
             if (shared.audio) shared.audio->playUi(unsigned(id));
         for (const fe::PauseEntry entry : pauseMenu->takeUnported())
             std::cout << "pause menu: " << kEntryNames[int(entry)] << " is not ported (does nothing) at update " << updates << '\n';
-        if (pauseMenu->finished()) std::cout << "pause menu closed at update " << updates << '\n';
+        if (pauseMenu->finished()) {
+            const chase::save::Bytes& slot = levelScripts.progressNatives().slotImage();
+            std::cout << "pause menu closed at update " << updates << ", play ticks " << chase::save::playTicks({slot.data(), slot.size()}) << '\n';
+        }
     } else if (pauseRequested) {
         pauseRequested = false;
         if (!pauseMenu) pauseMenu.emplace(fe::pauseMenuSetup(hudResources, kGameText, kSystemText));

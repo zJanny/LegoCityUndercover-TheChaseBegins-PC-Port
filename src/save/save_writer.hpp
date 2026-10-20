@@ -32,8 +32,7 @@ struct SlotSummaryInput {
 bool writeSlotSummary(std::uint8_t* slot, std::size_t size, const SlotSummaryInput& input, std::uint16_t permille);
 
 // Bits 2..4 of slot +0x520b. 0x22ddf4 writes them from the stud type of the HUD counter (byte 0x519760 + 0x40) each time a
-// stud is banked; type 4 leaves the type unchanged. STAND-IN SAVE-S9: the port takes the HUD's type from these bits, also
-// before the first stud of a run (what the HUD byte holds after a load, 0x2cf080, was not read).
+// stud is banked and at each level load (0x2e5fd8, which reads them back into the byte); type 4 leaves the type unchanged.
 std::uint8_t slotStudType(SlotView slot);
 void setSlotStudType(std::uint8_t* slot, unsigned type);
 

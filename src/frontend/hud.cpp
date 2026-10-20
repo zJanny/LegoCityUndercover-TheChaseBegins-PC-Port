@@ -153,7 +153,7 @@ float Hud::pageOffsetY() const {
 }
 
 float Hud::bounce() const {
-    if (updates_ - kStudBounceUpdates >= changeUpdate_ || updates_ < kStudBounceUpdates) return 0;
+    if (updates_ - kStudBounceUpdates >= changeUpdate_) return 0;
     return 8.0f * std::sin(float(updates_ - changeUpdate_) * 0.2f * kPi);
 }
 

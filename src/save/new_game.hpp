@@ -62,7 +62,7 @@ constexpr std::array<std::array<std::uint8_t, kCustomisationParts>, kCustomisati
 }};
 
 // 0x228274(1, slotIndex): the zero-filled slot after the callback 0x1a25cc and with the used bit +7 bit 2. The cheat
-// flags 0x375961 bit 7 and 0x375962 bits 3 and 4 count as clear (STAND-IN SAVE-S7).
+// flags 0x375961 bit 7 and 0x375962 bits 3 and 4 are clear: no code of the executable sets them (docs/re/save-format-state.md).
 Bytes newGameSlot(const NewGameTables& tables);
 // The option bytes 0x1a25cc writes for the slot index (0..2): sound volume +4+slot = 10, music volume +6+slot = 8 and
 // byte +0x1ec + slot * 0x18 = 0.

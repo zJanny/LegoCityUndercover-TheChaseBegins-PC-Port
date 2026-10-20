@@ -10,6 +10,7 @@
 #include "runtime/follow_camera.hpp"
 #include "runtime/nav_load.hpp"
 #include "runtime/object_visibility.hpp"
+#include "runtime/save_hud_counter.hpp"
 #include "runtime/sky.hpp"
 #include <SDL.h>
 #include <algorithm>
@@ -353,6 +354,10 @@ LevelSession::LevelSession(const Shared& sharedState)
         const std::size_t nameStart = characterFile.find("char_") + 5;
         hudConfig.portrait = characterFile.substr(nameStart, characterFile.find(".blvl") - nameStart);
         hud.emplace(hudResources, hudConfig);
+        std::vector<std::uint8_t>& liveSlot = levelScripts.progressNatives().slotImage();
+        const runtime::HudStudCounter loadedStuds = runtime::hudStudCounterAtLoad(chase::save::slotStudType({liveSlot.data(), liveSlot.size()}), studs.counter());
+        chase::save::setSlotStudType(liveSlot.data(), loadedStuds.type);
+        hud->studsBanked(loadedStuds.type, loadedStuds.total);
     }
     overlay.emplace(fe::kTopWidth, fe::kBottomWidth, fe::kScreenHeight);
     startRoomStreaming();

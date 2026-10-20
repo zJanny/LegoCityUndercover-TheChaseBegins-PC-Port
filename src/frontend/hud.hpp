@@ -19,6 +19,8 @@ constexpr const char* kStudSheet = "sprites/commonlego/pickups_commonstud.btga";
 constexpr const char* kCameraLockedSprite = "sprites/ui_hud/ui_cameralocked.btga";
 constexpr int kHudHeartSlots = 6;
 constexpr float kStudBarHoldSeconds = 2.0f;   // argument of 0x240fc0 in 0x22ddf4
+// 0x241098 is the global update count, far above 5 when a level load calls 0x22ddf4 (the same origin as the super brick display).
+constexpr unsigned kHudUpdateOrigin = 1000;
 constexpr unsigned kStudBounceUpdates = 5;    // 0x166e08 tests `update count - 5 < change`
 constexpr float kStudSinkDepth = 5.5f;        // third argument of 0x23ca00 (sink 0)
 
@@ -92,7 +94,7 @@ private:
     HudConfig config_;
     float seconds_ = 0;
     float cameraLockAlpha_ = 0;
-    unsigned updates_ = 0;
+    unsigned updates_ = kHudUpdateOrigin;
     unsigned hearts_ = kHudHeartSlots;
     bool vehicleHearts_ = false;
     std::string vehiclePortrait_;

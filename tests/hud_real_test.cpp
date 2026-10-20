@@ -68,6 +68,13 @@ void sinkAndBounce(Resources& resources) {
     // 0x58ef4c at the gameplay start (oracle): x = 0x434b0000 = 203.0, y = 0xc1680000 = -14.5 (the centre of Studs_Count)
     require(hud.studSink().x == 203.0f && hud.studSink().y == -14.5f, "initial counter sink");
     require(hud.studIconSize() == 22.0f, "icon size without bounce");
+    {
+        Hud loaded(resources, {});
+        loaded.studsBanked(2, 1130);
+        require(std::fabs(loaded.studIconSize() - 22.0f) < 1e-3f, "0x22ddf4 at a level load stamps the update count: no growth at n = 0");
+        loaded.update(1.0f / 30);
+        require(std::fabs(loaded.studIconSize() - (22.0f + 4.7022f)) < 1e-3f, "the icon bounces after a level load as after a banked stud");
+    }
     for (int update = 0; update < 10; ++update) hud.update(1.0f / 30);
     hud.studsBanked(1, 110);
     // 0x166e08: the icon grows by 8 * sin(0.2 pi n) for the five updates n = 0..4 after the change, then returns to 22.
