@@ -4,8 +4,6 @@ Ranges of item IDs held by parallel agents; the lead reserves them with `tools/c
 
 | Prefix | First | Last | Holder | Date |
 |---|---|---|---|---|
-| PREGEN | 1 | 3 | r43-A | 2026-10-20T11:04:01+02:00 |
-| PREGEN-S | 1 | 2 | r43-A | 2026-10-20T11:04:01+02:00 |
 | PED | 1 | 3 | r43-B | 2026-10-20T11:04:01+02:00 |
 | PED-S | 1 | 2 | r43-B | 2026-10-20T11:04:01+02:00 |
 | TRAFFIC | 1 | 3 | r43-C | 2026-10-20T11:04:01+02:00 |
