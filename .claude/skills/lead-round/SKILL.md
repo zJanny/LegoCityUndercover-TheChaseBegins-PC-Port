@@ -108,15 +108,25 @@ python3 tools/merge_agent.py prepare <branch> 2>&1 | tail -25
 
 A `windows-port` branch that touches shared code also needs `Linux green (WSL)` from the check in `docs/rules/windows.md` ("Linux stays green") before `finish`. When WSL is missing or wrong, warn the user with the command and its output and wait; never merge around it.
 
-Then:
+Then, as **two separate Bash calls**:
 
 ```sh
 python3 tools/merge_agent.py finish <branch> -m <message file> 2>&1 | tail -15
+```
+
+```sh
 python3 tools/check_doc_links.py --release rN-X
-git add docs/plans/features/id-reservations.md && git commit -m "Release the round N ID ranges of rN-X" -m "Co-Authored-By: <your model line>"
+git commit -m "Release the round N ID ranges of rN-X" -m "Co-Authored-By: <your model line>" -- docs/plans/features/id-reservations.md
+git show --stat --format=%s HEAD | tail -3
 git push 2>&1 | tail -2
 graphify update . 2>&1 | tail -3
 ```
+
+**The finish gate.** `prepare` leaves the whole squash staged, and a piped `tail` hides a failed exit status, so a commit chained after a failed `finish` takes the squash under the wrong subject. This has happened more than once. Therefore:
+
+- Run `finish` alone, never chained with `&&` or `;` to anything after it.
+- Start the second call only when `finish` printed `merged;` as its last line. Otherwise nothing else is committed: a failed test is run alone (`ctest --test-dir build -R '^<name>$'`); when it passes, run `python3 tools/merge_agent.py check`, then `finish` again. A test that fails twice is reported to the user.
+- The release commit names its file after `--`, so it commits only `id-reservations.md` even if something is still staged. Before the push, `git show --stat` must list only that one file; if it lists more, stop and tell the user, never push.
 
 ## Round end
 
