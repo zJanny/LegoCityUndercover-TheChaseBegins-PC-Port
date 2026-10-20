@@ -37,7 +37,7 @@ All commands go into a terminal. Run them one after the other.
 **1. Get the code.**
 
 ```sh
-git clone ssh://git@forgejo.zjanny.org:222/zJanny/LegoCityUndercover-TheChaseBegins-PC-Port.git
+git clone https://github.com/zJanny/LegoCityUndercover-TheChaseBegins-PC-Port.git
 cd LegoCityUndercover-TheChaseBegins-PC-Port
 ```
 
