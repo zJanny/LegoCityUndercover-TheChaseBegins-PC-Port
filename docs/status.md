@@ -17,8 +17,8 @@
   - Studs spin, can be picked up and fly to the stud counter. The display of the original game is shown: the character's picture, the hearts, the stud counter and the map on the bottom screen (the map is a stand-in fitted to the original). Start opens the pause menu, but Options, Credits and Exit do nothing yet.
   - The character's footsteps, jump and landing sounds and the coin sound play, with distance and left/right position as in the original.
   - You can walk out of the police station into the street and back in (the loading page is a stand-in).
-  - Parts of missions 1-1 to 1-3 run: their scripts, the waypoints, the build-it, carrying the donut box, the super build-it and fast travel pad of the helipad, the sound scanner, the dog cage and the detective spots. Chase can punch smashable props, ride ziplines, use trampolines, climb bricks, flag poles, rails and ladders.
-  - He can get into and drive a car. The car drives like the original and smashes breakable props into bricks, but its sounds and horn are missing.
+  - Parts of missions 1-1 to 1-3 run: their scripts, the waypoints, the build-it, carrying the donut box, the super build-it and fast travel pad of the helipad, the sound scanner, the dog cage and the detective spots (with their marker on the ground). Chase can punch smashable props, ride ziplines, use trampolines, climb bricks, flag poles, rails and ladders.
+  - He can get into and drive a car. The car drives like the original and smashes breakable props into bricks and super bricks. While he sits in the car, the super bricks fly to him and are counted. The car's sounds and horn are missing.
   - In the first level up to five passers-by appear in front of the camera, fade in and walk along the city's paths. Some of their inputs are stand-ins. The level's other people stand in place.
   - Nothing else of the game works.
 - Showing the start screens of the original game in the [development runtime](game-runtime.md): loading page, logos, TT Games movie, language list, StreetPass and HOME pages, autosave notice, slot list, saving page, loading screen, intro movie with subtitles and the title card. Some parts are stand-ins. The slots of a save file are shown only with `--front-save`, and the delete page is missing.
@@ -30,7 +30,7 @@
 - Gameplay and menus. The level scripts run and some of them start when the character walks into marked places, but most script commands and many ways to start a script are not worked out yet.
 - Reflections, shadows and draw sorting. Lighting and materials follow the game; which lights apply in each room is approximated.
 - Blending between different animations, and the real animation speed.
-- Collision with people, most objects that break or move (props break only when punched or hit by a vehicle), the camera being placed again when it is stuck, and fighting enemies. Vehicles are only partly done.
+- The pickup of the super bricks of broken props apart from the pull of a car (the pull runs whenever the player sits in a vehicle, which only approximates the original's conditions; walking over a brick is not checked), collision with people, most objects that break or move (props break only when punched or hit by a vehicle), the camera being placed again when it is stuck, and fighting enemies. Vehicles are only partly done.
 - Most music, and the sounds of other people, animals, vehicles and objects. For the character and the coins the sound for each event is known.
 - Several smaller file types.
 - Most of what a save game contains. The save file can be checked, read and written safely. Only the completion totals, the last level, the missions done, unlocks, level variables, studs, super bricks and the play time are understood. `chase-game` writes the save at the original's save requests and `chase-game --save` starts from a slot; collected items and object states are not saved or loaded yet.

@@ -8,13 +8,13 @@ cd build && ./chase-input-lab
 
 - Press Escape to quit.
 - `--config PATH` loads a different controls file.
-- Run it from the `build` folder, because it looks for `config/controls.cfg` there.
+- It reads `config/controls.cfg` in the current folder. CMake copies the file into `build/config/`, so run it from the `build` folder.
 
 The [model viewer](model-viewer.md) and the [development runtime](commands.md#development-runtime) read the same controls file.
 
 ## Change the controls
 
-Edit `config/controls.cfg`. Each line looks like this:
+Edit `config/controls.cfg` in the project folder. `chase-game` and `chase-viewer`, started from the project folder, read it directly. The input laboratory, started in `build`, reads the copy that CMake makes in `build/config/` when you build. Each line looks like this:
 
 ```
 Action key|mouse Code hold|toggle

@@ -34,12 +34,12 @@ The panel shows one line each:
 | `FRAME MS LAST` | The last frame | milliseconds | Time between the start of the previous and the start of this pass of the main loop. With the window's vertical sync this includes the wait for the display. |
 | `AVG` | Average frame time | milliseconds | Mean of the frame times in the same 1.0 s window. |
 | `MIN`, `MAX` | Shortest and longest frame time | milliseconds | Smallest and largest frame time in the same window. |
-| `MEM MB` | Resident memory of the process now | mebibytes (1024 x 1024 bytes) | `VmRSS` in `/proc/self/status`, read once per second. |
+| `MEM MB` | Resident memory of the process now | mebibytes (1024 x 1024 bytes) | `VmRSS` in `/proc/self/status`, read once per second. Shows `MEM MB N/A` when the file cannot be read. |
 | `PEAK` | Highest resident memory since the process started | mebibytes | `VmHWM` in `/proc/self/status`, read once per second. |
 | `CPU` | CPU use of the process | percent | CPU time (user plus system, from `getrusage`) divided by wall time, over about one second. **100 % is one full core.** All threads of the process count, so the value can exceed 100 %, for example with audio or driver threads or a software renderer. Shows `...` for the first second after the overlay appears. |
 | `GPU MS` | GPU time of the level draw | milliseconds | An OpenGL timer query (`GL_TIME_ELAPSED`) around drawing the level (scene, studs, HUD). The driver finishes it a frame or two later, so the value is for an earlier frame. `N/A` until the first result, and when the driver gives none. The overlay's own drawing is not included. |
 | `DRAWS` | Draw calls of the level draw | count | Every draw call of the level scene, the studs and the HUD in one frame (the overlay's own is not counted). Only in levels. |
-| `UPDATES/S` | Game updates in the last full second | updates per second | The count of game logic updates (the fixed update rate of the recovered scheduler), the same number the program prints once a second. `0` for the first second. |
+| `UPDATES/S` | Game updates in the last full second | updates per second | The count of game logic updates (the fixed update rate of the recovered scheduler), the same number as the `updates/s` line the program prints once a second (that line is not printed in `--script` runs). `0` for the first second. |
 | `LEVEL` | Level folder name | text | The loaded level, for example `lvl_01_cherrytreehills`. |
 | `POS` | Player position | game units, X Y Z | The player's current position. `NO PLAYER` if the level has no player start. |
 | `HEADING` | Player heading | degrees | The player's facing angle, converted from the game's 16-bit heading. |
