@@ -6,5 +6,3 @@ Ranges of item IDs held by parallel agents; the lead reserves them with `tools/c
 |---|---|---|---|---|
 | PED | 18 | 20 | r46-A | 2026-10-20T13:56:02+02:00 |
 | PED-S | 9 | 10 | r46-A | 2026-10-20T13:56:02+02:00 |
-| PED | 21 | 23 | r46-B | 2026-10-20T13:56:02+02:00 |
-| PED-S | 11 | 12 | r46-B | 2026-10-20T13:56:02+02:00 |
