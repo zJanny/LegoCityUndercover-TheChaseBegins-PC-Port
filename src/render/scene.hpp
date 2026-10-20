@@ -103,6 +103,9 @@ public:
     bool instanceVisible(std::size_t instance) const;
     // HUD-S70: the node alpha and colour of a node tween (0x21b7cc with flags 3, value 0..1) multiply the instance's colour and alpha.
     void setInstanceFade(std::size_t instance, float fade);
+    // STAND-IN PED-S12: while set, an instance with a fade below 1 draws its opaque parts in the blended pass with the premultiplied
+    // blend (1, 1 - source alpha), as the node draw 0x10bcc8 takes pass 2 for an alpha byte below 255 (not read; docs/re/pedestrians-fade.md).
+    void setInstanceTranslucentFade(std::size_t instance, bool translucent);
     // STAND-IN VEH-S100: the node colour of 0x23e110 (mesh node key 1, node +0x118) multiplies the fragment colour; where the original's draw
     // applies it is not read.
     void setInstanceTint(std::size_t instance, const std::array<float, 3>& tint);

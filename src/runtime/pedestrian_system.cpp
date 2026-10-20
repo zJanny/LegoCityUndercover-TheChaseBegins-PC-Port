@@ -212,6 +212,7 @@ std::vector<PedestrianCharacterUpdate> PedestrianSystem::updateCharacters(const 
         world.groundProbeTaken = manager_.walkToken();
         world.visible = step.visible && step.visible(slot);
         world.hidden = step.hidden && step.hidden(slot);
+        if (step.drawTest) world.drawTest = step.drawTest(slot);
         if (step.blocked)
             world.blocked = [&step, slot](const PedestrianVec3& position, const PedestrianVec3& velocity, float dt) {
                 return step.blocked(slot, position, velocity, dt);

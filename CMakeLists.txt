@@ -54,6 +54,7 @@ target_sources(chase_runtime PRIVATE src/runtime/prop_wobbly_destructible.cpp sr
 target_sources(chase_runtime PRIVATE src/runtime/pedestrian_manager.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/pedestrian_blocked.cpp src/runtime/room_layers.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/pedestrian_system.cpp)
+target_sources(chase_runtime PRIVATE src/runtime/node_fade.cpp src/runtime/pedestrian_fade.cpp)
 # Front end (boot to the slot list): CPU-drawn screens, no SDL dependency.
 add_library(chase_frontend src/frontend/script.cpp src/frontend/frontend.cpp src/frontend/pages.cpp src/frontend/canvas.cpp src/frontend/resources.cpp src/frontend/layout.cpp src/frontend/flow.cpp src/frontend/hud.cpp src/frontend/super_brick_display.cpp src/frontend/script_text_pages.cpp src/frontend/minimap.cpp src/frontend/map_marker.cpp src/frontend/slot_summaries.cpp src/frontend/super_build_prompt.cpp src/frontend/round_menu.cpp src/frontend/pause_menu.cpp)
 target_sources(chase_frontend PRIVATE src/frontend/scanner_overlay.cpp)
@@ -118,7 +119,7 @@ if(EPOXY_FOUND)
   target_link_libraries(chase-viewer PRIVATE chase_render chase_audio chase_input)
   target_compile_options(chase-viewer PRIVATE -Wall -Wextra -Wpedantic)
   if(FFMPEG_FOUND)
-    add_executable(chase-game src/game.cpp src/game_options.cpp src/game_player.cpp src/game_carry.cpp src/game_scanner.cpp src/game_doors.cpp src/game_prop_parts.cpp src/game_level.cpp src/game_pause_menu.cpp src/game_level_update.cpp src/game_vehicle.cpp src/game_vehicle_break.cpp src/game_vehicle_place.cpp src/game_vehicle_camera.cpp src/game_level_rooms.cpp src/game_cutscene.cpp src/game_level_cutscene.cpp src/game_characters.cpp src/game_pedestrians.cpp src/game_pedestrian_rooms.cpp src/game_particles.cpp src/game_level_natives.cpp src/game_detective.cpp src/game_use_spot.cpp src/game_objective_markers.cpp src/game_hand_items.cpp src/game_effects.cpp src/game_vehicle_effects.cpp src/game_zipline.cpp src/game_brick_grab.cpp src/game_climb_bar.cpp src/game_acrobat_pole.cpp src/game_pole.cpp src/game_ladder.cpp src/game_animals.cpp src/game_object_visibility.cpp src/game_nested_props.cpp src/game_super_buildit.cpp src/game_fast_travel.cpp)
+    add_executable(chase-game src/game.cpp src/game_options.cpp src/game_player.cpp src/game_carry.cpp src/game_scanner.cpp src/game_doors.cpp src/game_prop_parts.cpp src/game_level.cpp src/game_pause_menu.cpp src/game_level_update.cpp src/game_vehicle.cpp src/game_vehicle_break.cpp src/game_vehicle_place.cpp src/game_vehicle_camera.cpp src/game_level_rooms.cpp src/game_cutscene.cpp src/game_level_cutscene.cpp src/game_characters.cpp src/game_pedestrians.cpp src/game_pedestrian_fade.cpp src/game_pedestrian_rooms.cpp src/game_particles.cpp src/game_level_natives.cpp src/game_detective.cpp src/game_use_spot.cpp src/game_objective_markers.cpp src/game_hand_items.cpp src/game_effects.cpp src/game_vehicle_effects.cpp src/game_zipline.cpp src/game_brick_grab.cpp src/game_climb_bar.cpp src/game_acrobat_pole.cpp src/game_pole.cpp src/game_ladder.cpp src/game_animals.cpp src/game_object_visibility.cpp src/game_nested_props.cpp src/game_super_buildit.cpp src/game_fast_travel.cpp)
     target_sources(chase-game PRIVATE src/game_props_destructible.cpp src/game_prop_destroy.cpp src/game_character_death.cpp src/game_fall_apart.cpp src/game_stud_drops.cpp src/game_super_bricks.cpp)
     target_sources(chase-game PRIVATE src/game_attack.cpp src/game_screen_fade.cpp src/game_screen_shake.cpp src/game_save.cpp)
     target_link_libraries(chase-game PRIVATE chase_render chase_runtime chase_input chase_audio chase_frontend_movie chase_save_progress chase_save_tables)
@@ -238,6 +239,12 @@ if(BUILD_TESTING)
   target_link_libraries(pedestrian-blocked-test PRIVATE chase_runtime)
   target_compile_options(pedestrian-blocked-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME pedestrian-blocked COMMAND pedestrian-blocked-test)
+  add_executable(pedestrian-fade-test tests/pedestrian_fade_test.cpp)
+  target_link_libraries(pedestrian-fade-test PRIVATE chase_runtime chase_assets)
+  target_compile_options(pedestrian-fade-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME pedestrian-fade COMMAND pedestrian-fade-test)
+  add_test(NAME pedestrian-fade-real-data COMMAND pedestrian-fade-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
+  set_tests_properties(pedestrian-fade-real-data PROPERTIES SKIP_RETURN_CODE 77)
   add_executable(room-layers-test tests/room_layers_test.cpp)
   target_link_libraries(room-layers-test PRIVATE chase_runtime)
   target_compile_options(room-layers-test PRIVATE -Wall -Wextra -Wpedantic)
@@ -1413,15 +1420,15 @@ if(BUILD_TESTING)
       --script "0 0 1500;0 0 3 X;0 0 330;at 895.82 31.49 958.11 -162.4;0 0 5;0 0 60 A")
     set_tests_properties(game-vehicle-room PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
       PASS_REGULAR_EXPRESSION "vehicle 1-1_Police_Car: room 8 -> 15 at update 1833.*vehicle 1-1_Police_Car: room 15 -> 21 at update 1879\nroom 15 -> 21 at update 1879")
-    # PED-11: a walking pedestrian changes room by the object rule of 0x2e6ce4; in the port's run from the level start slot 9 leaves Room8 for
-    # Room9 at update 236 (`chase-game ... --no-start-cutscenes --script "0 0 300"`).
+    # PED-11: a walking pedestrian changes room by the object rule of 0x2e6ce4; in the port's run from the level start (with the mesh node tier 0 spawn window) slot 5 leaves Room8 for
+    # Room7 at update 281 (`chase-game ... --no-start-cutscenes --script "0 0 300"`).
     add_test(NAME game-pedestrian-rooms COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
       --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes
       --script "0 0 300")
     set_tests_properties(game-pedestrian-rooms PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
-      PASS_REGULAR_EXPRESSION "pedestrian slot 9: room 8 -> 9 at update 236")
+      PASS_REGULAR_EXPRESSION "pedestrian slot 5: room 8 -> 7 at update 281")
     add_test(NAME game-vehicle-hit COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg"

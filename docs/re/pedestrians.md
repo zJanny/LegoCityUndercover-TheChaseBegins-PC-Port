@@ -2,7 +2,7 @@
 
 The manager that spawns and removes the `chars/pedestrian` characters of a level, the `props/pedestriansystem` object (kind 198) and the spawn data of `Pregen/Pedestrians/<level>_Pedestrians.bin`. Script native: EnableTrafficAndPedestrians ([script-natives-audio.md](script-natives-audio.md)). Traffic has its own manager (0x527410).
 
-Subtopics: [pedestrians-character.md](pedestrians-character.md), [pedestrians-inputs.md](pedestrians-inputs.md)
+Subtopics: [pedestrians-character.md](pedestrians-character.md), [pedestrians-inputs.md](pedestrians-inputs.md), [pedestrians-fade.md](pedestrians-fade.md)
 
 Items: [pedestrians-traffic-pedestrians.md](../plans/features/pedestrians-traffic-pedestrians.md).
 
@@ -19,8 +19,9 @@ Items: [pedestrians-traffic-pedestrians.md](../plans/features/pedestrians-traffi
 - Port: `src/runtime/pedestrian_manager.*` (tests `pedestrian-manager`, `pedestrian-limit-real-data`). [§2026-10-20T12:27:05](#ts-20261020-122705)
 - 0x2edc94 counts the level paths named PedestrianPath001 .. 128 (0x22a3b0 searches the path section) and loads nothing without one. The spawn hangs the pedestrian on room +0x14 of the point's room. [§2026-10-20T13:13:47](#ts-20261020-131347)
 - Wired in `chase-game` as `PedestrianSystem` (`src/runtime/pedestrian_system.*`): the manager in a system phase before the runner, the characters in the object phase; the level load disables the slots, a spawn enables one, a removal disables it and stops its clip. [§2026-10-20T13:13:47](#ts-20261020-131347)
+- The spawn fade-in 0x275434, the node alpha step 0x10eb70 and the value of *0x37674c (2) are in [pedestrians-fade.md](pedestrians-fade.md).
 - The pedestrian character (kind 197): its create, state step, walk, avoidance and steady updates are in [pedestrians-character.md](pedestrians-character.md).
-- Open: the spawn fade-in. [§2026-10-20T12:27:05](#ts-20261020-122705), [§2026-10-20T13:13:47](#ts-20261020-131347). The room move, the priority 128 and the vehicle speed are in [pedestrians-inputs.md](pedestrians-inputs.md).
+- Open: none for the fade-in ([pedestrians-fade.md](pedestrians-fade.md)). [§2026-10-20T12:27:05](#ts-20261020-122705), [§2026-10-20T13:13:47](#ts-20261020-131347). The room move, the priority 128 and the vehicle speed are in [pedestrians-inputs.md](pedestrians-inputs.md).
 
 <a id="ts-20261020-111742"></a>
 

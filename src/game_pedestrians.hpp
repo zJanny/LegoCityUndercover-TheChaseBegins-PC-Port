@@ -4,6 +4,7 @@
 #include "assets/assets.hpp"
 #include "assets/object_collision.hpp"
 #include "game_characters.hpp"
+#include "game_pedestrian_fade.hpp"
 #include "render/character.hpp"
 #include "render/scene.hpp"
 #include "runtime/animation_slots.hpp"
@@ -39,6 +40,7 @@ struct CharacterInputs {
     bool playerInVehicle = false;
     std::uint16_t playerState = 0;
     const runtime::CollisionWorld* collision = nullptr;
+    runtime::PedestrianVec3 fadePoint{};  // STAND-IN PED-S11: the camera eye
 };
 
 class LevelPedestrians {
@@ -76,6 +78,7 @@ private:
 
     assets::FuseArchive* archive_ = nullptr;
     runtime::PedestrianSystem system_;
+    game_pedestrian_fade::SlotFades fades_;
     std::vector<Slot> slots_;
     std::map<std::string, render::CharacterRig> rigs_;
     std::vector<Clip> clips_;

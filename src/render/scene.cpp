@@ -215,6 +215,7 @@ public:
     Mat4 instanceTransform(std::size_t instance) const { return instances_.at(instance).transform; }
     void setInstanceFade(std::size_t instance, float fade) { instances_.at(instance).fade = fade; }
     void setInstanceTint(std::size_t instance, const std::array<float, 3>& tint) { instances_.at(instance).tint = tint; }
+    void setInstanceTranslucentFade(std::size_t instance, bool translucent) { instances_.at(instance).translucentFade = translucent; }
     void setInstanceWhiteMaterials(std::size_t instance, bool white) { instances_.at(instance).whiteMaterials = white; }
     void setMaterialOverride(const std::optional<MaterialOverride>& override) { override_ = override; }
     std::size_t missingTextures() const { return missing_; }
@@ -262,6 +263,7 @@ private:
         bool visible = true;
         bool sky = false;
         float fade = 1.0f;
+        bool translucentFade = false;
         std::array<float, 3> tint{1, 1, 1};
         bool whiteMaterials = false;
         std::map<int, Mat4> nodeMatrix = {};
@@ -560,11 +562,17 @@ void SceneImpl::drawInstances(const Mat4& viewProjection, bool skyPass) const {
             glUniform3fv(tintLocation, 1, instance.tint.data());
             bool partMatrices = false;
             for (const auto& part : instance.model->parts) {
-                const bool blended = part.hasMaterial && (part.material.blendSource != 1 || part.material.blendDestination != 0);
+                const bool materialBlended = part.hasMaterial && (part.material.blendSource != 1 || part.material.blendDestination != 0);
+                const bool fadeBlended = !materialBlended && instance.translucentFade && instance.fade < 1.0f;
+                const bool blended = materialBlended || fadeBlended;
                 if (blended != (pass == 1)) continue;
                 const bool overridden = override_ && part.hasMaterial;
                 if (overridden && (override_->flags & 0x40) && part.material.additive) continue;
-                if (blended) {
+                if (fadeBlended) {
+                    glEnable(GL_BLEND);
+                    glBlendEquation(GL_FUNC_ADD);
+                    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+                } else if (blended) {
                     glEnable(GL_BLEND);
                     glBlendEquation(equations[std::min(part.material.blendEquation, 4u)]);
                     glBlendFunc(factors[std::min(part.material.blendSource, 9u)], factors[std::min(part.material.blendDestination, 9u)]);
@@ -736,6 +744,8 @@ Mat4 Scene::instanceTransform(std::size_t instance) const { return impl_->instan
 void Scene::setInstanceFade(std::size_t instance, float fade) { impl_->setInstanceFade(instance, fade); }
 
 void Scene::setInstanceTint(std::size_t instance, const std::array<float, 3>& tint) { impl_->setInstanceTint(instance, tint); }
+
+void Scene::setInstanceTranslucentFade(std::size_t instance, bool translucent) { impl_->setInstanceTranslucentFade(instance, translucent); }
 
 void Scene::setInstanceWhiteMaterials(std::size_t instance, bool white) { impl_->setInstanceWhiteMaterials(instance, white); }
 

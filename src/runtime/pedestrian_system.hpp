@@ -70,6 +70,7 @@ struct PedestrianCharacterStep {
     std::uint16_t playerState = 0;
     std::function<bool(std::size_t slot)> visible;
     std::function<bool(std::size_t slot)> hidden;
+    std::function<std::optional<PedestrianDrawTest>(std::size_t slot)> drawTest;
     std::function<int(std::size_t slot, const PedestrianVec3& position, const PedestrianVec3& velocity, float dt)> blocked;
     std::function<void(std::size_t slot, PedestrianVec3& position)> groundProbe;
     std::function<std::optional<float>(const PedestrianVec3& from, const PedestrianVec3& to)> groundRay;
@@ -103,6 +104,7 @@ public:
 
     const std::vector<PedestrianSlotInfo>& slots() const { return slots_; }
     const PedestrianManager& manager() const { return manager_; }
+    PedestrianManager& manager() { return manager_; }
     const PedestrianBody& body(std::size_t slot) const { return bodies_[slot]; }
     int room(std::size_t slot) const { return rooms_[slot]; }
     void setRoom(std::size_t slot, int room) { rooms_[slot] = room; }

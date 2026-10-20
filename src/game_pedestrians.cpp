@@ -59,6 +59,7 @@ void LevelPedestrians::load(assets::FuseArchive& archive, const assets::Level& l
         return found == characterOf.end() ? 0.0f : arrivalRadiusOf(archive, characters[found->second]);
     });
     slots_.clear();
+    std::vector<runtime::PedestrianNodeBounds> nodeBounds;
     for (const runtime::PedestrianSlotInfo& info : slots) {
         state.disabled.insert(lower(info.instance));
         Slot slot;
@@ -72,9 +73,13 @@ void LevelPedestrians::load(assets::FuseArchive& archive, const assets::Level& l
             auto rig = rigs_.find(bodyPath);
             if (rig == rigs_.end()) rig = rigs_.emplace(bodyPath, render::loadCharacterRig(archive, bodyPath)).first;
             slot.rig = &rig->second;
+            nodeBounds.push_back(game_pedestrian_fade::nodeBoundsOf(archive, bodyPath));
+        } else {
+            nodeBounds.emplace_back();
         }
         slots_.push_back(std::move(slot));
     }
+    fades_.load(system_, nodeBounds);
 }
 
 void LevelPedestrians::enterScene(assets::FuseArchive& archive, const assets::Level& level, const std::string& levelName,
@@ -102,8 +107,12 @@ void LevelPedestrians::updateSystem(const SystemInputs& inputs, assets::PlacedOb
     // STAND-IN PED-S2: every class and room type counts as active in the layer table *0x376ad4, and no vehicle blocks a spawn point.
     step.layers.fill(2);
     step.spawnBlocked = [](std::size_t, const runtime::PedestrianVec3&) { return false; };
+    step.meshNodeType = runtime::kMeshNodeType;
     const runtime::PedestrianUpdate update = system_.update(step, random_);
-    if (update.spawned) state.disabled.erase(lower(system_.slots()[*update.spawned].instance));
+    if (update.spawned) {
+        state.disabled.erase(lower(system_.slots()[*update.spawned].instance));
+        fades_.spawned(system_, *update.spawned);
+    }
     for (const runtime::PedestrianRemoval& removal : update.removed) {
         if (removal.stopAnimations) slots_[removal.slot].animation.stop(clock_);
         state.disabled.insert(lower(system_.slots()[removal.slot].instance));
@@ -153,15 +162,19 @@ void LevelPedestrians::updateCharacters(render::Scene& scene, const CharacterInp
             if (const std::optional<float> height = runtime::groundHeight(*inputs.collision, probe)) position[1] = *height;
         };
     step.clipFinished = [this](std::size_t slot, runtime::PedestrianClip clip) { return clipFinished(slot, clip); };
+    step.drawTest = [&](std::size_t slot) { return fades_.drawTest(system_, slot, inputs.fadePoint); };
     for (const runtime::PedestrianCharacterUpdate& update : system_.updateCharacters(step, random_)) {
         Slot& slot = slots_[update.slot];
         for (const runtime::PedestrianAnimationRequest& request : update.walk.animations)
             if (const std::optional<std::uint32_t> clip = clipOf(slot.animationClass, request.clip))
                 slot.animation.start(clips_[*clip].info, unsigned(request.mode), request.first, request.end, request.speed, request.blend, clock_);
     }
+    std::vector<bool> live(slots_.size());
+    for (std::size_t i = 0; i < slots_.size(); ++i) live[i] = !state.isDisabled(system_.slots()[i].instance);
+    fades_.step(system_, live, inputs.fadePoint);
     for (std::size_t i = 0; i < slots_.size(); ++i) {
         const Slot& slot = slots_[i];
-        if (!slot.rig || state.isDisabled(system_.slots()[i].instance)) continue;
+        if (!slot.rig || !live[i]) continue;
         const runtime::AnimationSlot* current = slot.animation.current();
         if (!current) continue;
         const assets::Animation& animation = clips_[current->clip].animation;
@@ -169,6 +182,7 @@ void LevelPedestrians::updateCharacters(render::Scene& scene, const CharacterInp
         const double shown = std::clamp(double(frame), 0.0, double(animation.frames > 0 ? animation.frames - 1 : 0));
         const render::Mat4 world = nodeMatrix(system_.body(i).node);
         render::placeCharacter(scene, *slot.rig, slot.instance, render::poseBody(scene, *slot.rig, slot.instance, animation, shown), world);
+        game_pedestrian_fade::applyOpacity(scene, slot.instance, runtime::nodeFadeOpacity(fades_.fades().fade(i)));
     }
 }
 
@@ -199,6 +213,7 @@ void LevelSession::updatePedestrianCharacters(float dt) {
     inputs.playerInVehicle = boarding && boarding->seatedVehicle();
     inputs.playerState = chase::runtime::playerControllerState(player->vertical, player->animation);
     inputs.collision = &collision;
+    if (follow) inputs.fadePoint = {follow->eye()[0], follow->eye()[1], follow->eye()[2]};
     pedestrians.updateCharacters(scene, inputs, objectState);
 }
 
