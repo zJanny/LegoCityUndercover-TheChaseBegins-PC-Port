@@ -311,6 +311,7 @@ void DetectiveSet::load(const assets::Level& level, const assets::ClassLookup& c
             spot.instance = lower(object.instance);
             spot.objectIndex = index;
             std::copy_n(placed->position, 3, spot.position);
+            spot.matrix = assets::placementMatrix(*placed);
             spot.useZone = classBox(*cls, "UseBound");
             spot.questionZone = classBox(*cls, "QuestionBound");
             spot.revealSwitch = referenceName(object, *cls, "RevealSwitch", names);

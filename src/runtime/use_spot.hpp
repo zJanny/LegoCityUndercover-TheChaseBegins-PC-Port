@@ -11,6 +11,7 @@
 namespace chase::runtime {
 
 constexpr const char* kUseSpotClass = "props/prop_simpleuse";
+constexpr unsigned kUseSpotKind = 165;  // entity kind of the class (list 0x374640)
 
 // The zone is the class bound "UseBound" of the class file (0x23e130 looks it up with 0x23e798; without it the zone would come from the node
 // bounds, which the class does not need: props/prop_simpleuse has the bound). A class without the bound makes no spot.

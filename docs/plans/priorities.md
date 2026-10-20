@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 878 open items and stand-ins, 159 linked to game usage, 719 with unknown reach.
+Items: 884 open items and stand-ins, 159 linked to game usage, 725 with unknown reach.
 
 ## Top 50 overall
 
@@ -37,14 +37,14 @@ Items: 878 open items and stand-ins, 159 linked to game usage, 719 with unknown 
 | 1 | [VEH-S2](features/vehicles.md?display=source#L21) | 7016 | 0 | 8 | 0 | 1 implemented | `enableobject` | Owner flags (0x1340 parked, 0x1300 traffic, bit 0 disabled) are not modelled: a vehicle collides while its ... |
 | 2 | [SCRIPT-52](features/script-system.md?display=source#L41) | 3101 | 0 | 8 | 1 | 2 implemented | `enablebound`, `enabletrigger` | Class owners: an empty object name as the owner itself, the variable `TaskComplete.TASK_COMPLETE` (saved per ... |
 | 3 | [PLAYER-S9](features/player-movement.md?display=source#L29) | 0 | 2513 | 8 | 0 | - | `leprops/leprop_wobblydestructible` | `attackTargetObjects` — only `leprop_wobblydestructible` props are attack targets, and the glue allows the ... |
-| 4 | [SCRIPT-285](features/script-system-missions.md?display=source#L36) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Nothing known fires the ObjectTriggered of `1-2_Door_Lock_Hint_Script`: no name source besides its own ... |
+| 4 | [SCRIPT-285](features/script-system-missions.md?display=source#L33) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Nothing known fires the ObjectTriggered of `1-2_Door_Lock_Hint_Script`: no name source besides its own ... |
 | 5 | [SCRIPT-4](features/script-system.md?display=source#L38) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The code that hides the revealer targets; the role of the other type-4 parameters (Destination, ObjectTo ... |
 | 6 | [SCRIPT-S220](features/script-system-missions.md?display=source#L19) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The reference-trigger join (reference_trigger.cpp) knows only the `TriggerObject` references of build-its ... |
 | 7 | [TRAV-21](features/player-traversal.md?display=source#L39) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Brick use handler 0x1b53a8 (messages 3 / 4 into state 145): sender unknown; `TriggerObject` switching ... |
 | 8 | [SCRIPT-273](features/script-system-natives-animation.md?display=source#L32) | 881 | 0 | 8 | 1 | 2 stand-in | `playanimation`, `playcharanim` | PlayCharAnim's state request 81 (the cutscene call, state 0x51 has the same functions) and its cape animation ... |
 | 9 | [SCRIPT-345](features/script-system-natives-animation.md?display=source#L35) | 859 | 0 | 8 | 0 | 2 stand-in | `loadanimation`, `playcharanim` | The port starts `1-2_Cage_Key_Target_Script` in the update of the press (as the original) but calls ... |
-| 10 | [SCRIPT-190](features/script-system-missions.md?display=source#L32) | 0 | 736 | 8 | 2 | - | `scriptobject` | Carry gaps: the instigator argument of 0x244f40 is not modelled; the handler 0x1bc4d4 forwards message 0xff ... |
-| 11 | [SCRIPT-201](features/script-system-missions.md?display=source#L41) | 671 | 0 | 8 | 0 | 4 stand-in, 1 implemented | `automaticmusic`, `camerafollow`, `enabletrafficandpedestrians`, `overridemusic` +1 | Mission 1-1 has a handler (stand-in) for every native it calls: EnableTrafficAndPedestrians (SCRIPT-S230) ... |
+| 10 | [SCRIPT-190](features/script-system-missions.md?display=source#L29) | 0 | 736 | 8 | 2 | - | `scriptobject` | Carry gaps: the instigator argument of 0x244f40 is not modelled; the handler 0x1bc4d4 forwards message 0xff ... |
+| 11 | [SCRIPT-201](features/script-system-missions.md?display=source#L38) | 671 | 0 | 8 | 0 | 4 stand-in, 1 implemented | `automaticmusic`, `camerafollow`, `enabletrafficandpedestrians`, `overridemusic` +1 | Mission 1-1 has a handler (stand-in) for every native it calls: EnableTrafficAndPedestrians (SCRIPT-S230) ... |
 | 12 | [ANIM-S12](features/animation-characters.md?display=source#L24) | 623 | 0 | 8 | 0 | 1 stand-in | `playcharanim` | The "already loaded" test of PlayCharAnim (0x21e8b4) knows a character's idle clips and its current script ... |
 | 13 | [ANIM-S13](features/animation-characters.md?display=source#L25) | 623 | 0 | 8 | 0 | 1 stand-in | `playcharanim` | The player's script clip (PlayCharAnim on Player1) is shown at full weight from the native's update instead ... |
 | 14 | [SCRIPT-S269](features/script-system-hud-natives.md?display=source#L18) | 538 | 0 | 7 | 0 | 1 stand-in | `setactivewaypoint` | SetActiveWayPoint: the vehicle waypoint global (`WaypointSet::vehicleWaypoint`) is kept but its reader, which ... |
@@ -137,18 +137,18 @@ Items: 878 open items and stand-ins, 159 linked to game usage, 719 with unknown 
 
 ## Scripts and missions
 
-96 of 192 items linked.
+96 of 198 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
 | 1 | [SCRIPT-52](features/script-system.md?display=source#L41) | 3101 | 0 | 8 | 1 | 2 implemented | `enablebound`, `enabletrigger` | Class owners: an empty object name as the owner itself, the variable `TaskComplete.TASK_COMPLETE` (saved per ... |
-| 2 | [SCRIPT-285](features/script-system-missions.md?display=source#L36) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Nothing known fires the ObjectTriggered of `1-2_Door_Lock_Hint_Script`: no name source besides its own ... |
+| 2 | [SCRIPT-285](features/script-system-missions.md?display=source#L33) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Nothing known fires the ObjectTriggered of `1-2_Door_Lock_Hint_Script`: no name source besides its own ... |
 | 3 | [SCRIPT-4](features/script-system.md?display=source#L38) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The code that hides the revealer targets; the role of the other type-4 parameters (Destination, ObjectTo ... |
 | 4 | [SCRIPT-S220](features/script-system-missions.md?display=source#L19) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The reference-trigger join (reference_trigger.cpp) knows only the `TriggerObject` references of build-its ... |
 | 5 | [SCRIPT-273](features/script-system-natives-animation.md?display=source#L32) | 881 | 0 | 8 | 1 | 2 stand-in | `playanimation`, `playcharanim` | PlayCharAnim's state request 81 (the cutscene call, state 0x51 has the same functions) and its cape animation ... |
 | 6 | [SCRIPT-345](features/script-system-natives-animation.md?display=source#L35) | 859 | 0 | 8 | 0 | 2 stand-in | `loadanimation`, `playcharanim` | The port starts `1-2_Cage_Key_Target_Script` in the update of the press (as the original) but calls ... |
-| 7 | [SCRIPT-190](features/script-system-missions.md?display=source#L32) | 0 | 736 | 8 | 2 | - | `scriptobject` | Carry gaps: the instigator argument of 0x244f40 is not modelled; the handler 0x1bc4d4 forwards message 0xff ... |
-| 8 | [SCRIPT-201](features/script-system-missions.md?display=source#L41) | 671 | 0 | 8 | 0 | 4 stand-in, 1 implemented | `automaticmusic`, `camerafollow`, `enabletrafficandpedestrians`, `overridemusic` +1 | Mission 1-1 has a handler (stand-in) for every native it calls: EnableTrafficAndPedestrians (SCRIPT-S230) ... |
+| 7 | [SCRIPT-190](features/script-system-missions.md?display=source#L29) | 0 | 736 | 8 | 2 | - | `scriptobject` | Carry gaps: the instigator argument of 0x244f40 is not modelled; the handler 0x1bc4d4 forwards message 0xff ... |
+| 8 | [SCRIPT-201](features/script-system-missions.md?display=source#L38) | 671 | 0 | 8 | 0 | 4 stand-in, 1 implemented | `automaticmusic`, `camerafollow`, `enabletrafficandpedestrians`, `overridemusic` +1 | Mission 1-1 has a handler (stand-in) for every native it calls: EnableTrafficAndPedestrians (SCRIPT-S230) ... |
 | 9 | [SCRIPT-S269](features/script-system-hud-natives.md?display=source#L18) | 538 | 0 | 7 | 0 | 1 stand-in | `setactivewaypoint` | SetActiveWayPoint: the vehicle waypoint global (`WaypointSet::vehicleWaypoint`) is kept but its reader, which ... |
 | 10 | [SCRIPT-S274](features/script-system-natives-state.md?display=source#L22) | 537 | 0 | 8 | 0 | 1 stand-in, 1 implemented | `positionobject`, `positionplayer` | Message 8 of PositionObject / PositionPlayer to the player shows the player's scene instance ... |
 
@@ -242,13 +242,14 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [script-system-ai-navigation.md](features/script-system-ai-navigation.md): SCRIPT-92 (+30), SCRIPT-94 (+17), SCRIPT-101 (+15), SCRIPT-95 (+15), SCRIPT-100 (+14), SCRIPT-79 (+13), SCRIPT-S100, SCRIPT-S101, SCRIPT-S102, SCRIPT-S104, SCRIPT-S31, SCRIPT-S93, SCRIPT-S94, SCRIPT-S95
 - [script-system-dcam.md](features/script-system-dcam.md): SCRIPT-40 (+15), SCRIPT-182 (+1), SCRIPT-48 (+1), SCRIPT-181, SCRIPT-332, SCRIPT-49, SCRIPT-50, SCRIPT-S142
 - [script-system-hud-natives.md](features/script-system-hud-natives.md): SCRIPT-350 (+2), SCRIPT-329 (+1), SCRIPT-330 (+1), SCRIPT-354 (+1), SCRIPT-331, SCRIPT-68, SCRIPT-69, SCRIPT-70, SCRIPT-S270, SCRIPT-S282, SCRIPT-S283, SCRIPT-S285
-- [script-system-missions.md](features/script-system-missions.md): SCRIPT-220 (+1), SCRIPT-230 (+1), SCRIPT-284 (+1), SCRIPT-115, SCRIPT-142, SCRIPT-221, SCRIPT-S141, SCRIPT-S236, SCRIPT-S237, SCRIPT-S243, SCRIPT-S247, SCRIPT-S248, SCRIPT-S249, SCRIPT-S255
+- [script-system-missions.md](features/script-system-missions.md): SCRIPT-220 (+1), SCRIPT-230 (+1), SCRIPT-284 (+1), SCRIPT-115, SCRIPT-142, SCRIPT-221, SCRIPT-S141, SCRIPT-S236, SCRIPT-S237, SCRIPT-S243, SCRIPT-S255
 - [script-system-natives-animation.md](features/script-system-natives-animation.md): SCRIPT-324 (+3), SCRIPT-352 (+2), SCRIPT-272 (+1), SCRIPT-325 (+1), SCRIPT-334 (+1), SCRIPT-S284 (+1), SCRIPT-344, SCRIPT-353, SCRIPT-S110, SCRIPT-S262, SCRIPT-S266, SCRIPT-S267
 - [script-system-natives-party.md](features/script-system-natives-party.md): SCRIPT-338 (+2), SCRIPT-340 (+1)
 - [script-system-natives-state.md](features/script-system-natives-state.md): SCRIPT-335 (+1), SCRIPT-56 (+1), SCRIPT-S97
 - [script-system-natives-world.md](features/script-system-natives-world.md): SCRIPT-279 (+1)
 - [script-system-natives.md](features/script-system-natives.md): SCRIPT-43 (+18), SCRIPT-44 (+16), SCRIPT-45 (+14), SCRIPT-7 (+12), SCRIPT-13 (+1), SCRIPT-150 (+1)
 - [script-system-triggers.md](features/script-system-triggers.md): SCRIPT-76 (+11), SCRIPT-51 (+3), SCRIPT-77 (+1), SCRIPT-78 (+1), SCRIPT-S15, SCRIPT-S28, SCRIPT-S30, SCRIPT-S8
+- [script-system-use-markers.md](features/script-system-use-markers.md): SCRIPT-356 (+2), SCRIPT-357 (+1), SCRIPT-355, SCRIPT-S247, SCRIPT-S248, SCRIPT-S249, SCRIPT-S286, SCRIPT-S287, SCRIPT-S288
 - [script-system.md](features/script-system.md): SCRIPT-1 (+10), SCRIPT-53 (+2), SCRIPT-2, SCRIPT-3, SCRIPT-5, SCRIPT-54, SCRIPT-55, SCRIPT-9, SCRIPT-S1, SCRIPT-S14, SCRIPT-S16, SCRIPT-S275, SCRIPT-S3, SCRIPT-S5, SCRIPT-S6, SCRIPT-S7
 - [studs.md](features/studs.md): STUD-22 (+2), STUD-1 (+1), STUD-13 (+1), STUD-16 (+1), STUD-23 (+1), STUD-24 (+1), STUD-26 (+1), STUD-25, STUD-27, STUD-3, STUD-5, STUD-6, STUD-8, STUD-S1, STUD-S12, STUD-S13, STUD-S14, STUD-S15, STUD-S3, STUD-S5, STUD-S6, STUD-S7, STUD-S8, STUD-S9
 - [ui-menus.md](features/ui-menus.md): UI-2 (+2), UI-1 (+1), UI-19 (+1), UI-3 (+1), UI-4 (+1), UI-5 (+1), UI-7 (+1), UI-9 (+1), UI-10, UI-11, UI-12, UI-13, UI-14, UI-15, UI-16, UI-18, UI-6, UI-8, UI-S1, UI-S2, UI-S3, UI-S4, UI-S5, UI-S6, UI-S7

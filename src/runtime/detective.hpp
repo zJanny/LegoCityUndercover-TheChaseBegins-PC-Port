@@ -104,6 +104,7 @@ struct DetectiveSpot {
     std::string instance;  // lower case
     std::size_t objectIndex = 0;
     float position[3] = {0, 0, 0};
+    std::array<float, 16> matrix{};  // node rows right, up, forward, translation (assets::placementMatrix)
     DetectiveBox useZone;       // class bound UseBound (0x23e130)
     DetectiveBox questionZone;  // class bound QuestionBound (record +0x20)
     std::string revealSwitch;   // RevealSwitch (+0xc)
@@ -115,6 +116,10 @@ struct DetectiveSpot {
     bool questionShown = false; // QuestionParticles enabled
     bool usable = true;         // use registry flag (0x236624)
 };
+
+// Message 3 of the detective spot (0x190488) with no player and the action flag clear, as the marker update 0x172254 sends it: non-zero (1, or 0xff
+// without ability 25) only in state 0; the marker shows then and fades once the spot is in detective mode or done.
+inline bool detectiveSpotAnswersUseQuery(const DetectiveSpot& spot) { return spot.state == 0; }
 
 struct RevealSpot {
     std::string instance;

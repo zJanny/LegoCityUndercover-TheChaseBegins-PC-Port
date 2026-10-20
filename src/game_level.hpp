@@ -66,6 +66,7 @@
 #include "runtime/collision.hpp"
 #include "runtime/debug_metrics.hpp"
 #include "runtime/detective.hpp"
+#include "runtime/ability_table.hpp"
 #include "runtime/use_marker.hpp"
 #include "runtime/cat_rescue.hpp"
 #include "runtime/use_spot.hpp"
@@ -170,6 +171,7 @@ private:
     void updateCarry(const float playerPosition[3]);
     void loadDetective(chase::assets::FuseArchive& archive);
     void updateUseSpots(bool actionFree);
+    void loadUseMarkers(chase::assets::FuseArchive& archive);
     void updateUseMarkers(float dt);
     void drawUseMarkers(const chase::render::Mat4& viewProjection);
     void updateDetective(float dt, bool actionFree, const std::function<void(const chase::runtime::SoundCall&)>& emit);
@@ -344,6 +346,7 @@ private:
     chase::runtime::DetectiveSet detective;
     chase::runtime::UseSpotSet useSpots;
     chase::runtime::UseMarkers useMarkers;
+    chase::runtime::AbilityTable abilityTable;
     std::map<std::string, float> objectiveBoxTops;
     std::optional<chase::render::ParticleRenderer> objectiveArrowRenderer;
     float objectiveArrowClock = 0;

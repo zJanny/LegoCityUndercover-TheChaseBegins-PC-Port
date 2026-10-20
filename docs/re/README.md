@@ -88,6 +88,7 @@ Read this index, then open only the file you need.
 | [oracle-setup.md](oracle-setup.md) | Oracle launch: Xvfb, render-window crash and launch retry, visible desktop mode |
 | [oracle-rpc.md](oracle-rpc.md) | Oracle RPC channel: UDP memory access, screenshots, pad input without breakpoints, timings |
 | [oracle-states.md](oracle-states.md) | Oracle save states and checkpoints: game progress of each, how each was made, New 3DS flag, poked states |
+| [oracle-states-m12.md](oracle-states-m12.md) | Oracle save states of mission 1-2 (`m12-*`) and the vehicle, pole and trampoline states of the same session (the vehicle ones saved with missions 1-1 and 1-2 finished) |
 | [oracle-routes.md](oracle-routes.md) | Oracle route scripts to gameplay and scenario pitfalls (`teleport`, input that survives a load) |
 | [oracle-measuring.md](oracle-measuring.md) | Oracle measuring methods: watchpoints, execution traps, fixed dt, memory traces, `poke` |
 | [camera.md](camera.md) | Gameplay camera: pointers to the three files below |

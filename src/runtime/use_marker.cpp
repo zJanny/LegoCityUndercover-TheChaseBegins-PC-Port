@@ -13,6 +13,46 @@ float distance(const float a[3], const float b[3]) {
 
 }
 
+bool useMarkerKindListed(unsigned kind) { return std::find(kUseMarkerKinds.begin(), kUseMarkerKinds.end(), kind) != kUseMarkerKinds.end(); }
+
+int useMarkerKindAbility(unsigned kind) {
+    switch (kind) {
+    case 144: case 145: case 146: return 2;
+    case 127: return 21;
+    case 182: case 195: return 25;
+    case 130: case 150: case 200: return 28;
+    case 209: return 29;
+    case 124: case 233: return 30;
+    case 133: return 31;
+    case 210: return 35;
+    case 190: return 38;
+    case 191: return 55;
+    case 186: return 56;
+    default: return kUseMarkerNoAbility;
+    }
+}
+
+int useMarkerAbilityTexture(int ability) {
+    switch (ability) {
+    case 2: case 25: return 1;
+    case 26: case 55: case 56: return 2;
+    case 27: case 38: return 3;
+    case 28: return 4;
+    case 29: case 58: return 5;
+    case 21: return 6;
+    case 35: return 7;
+    case 30: case 60: return 8;
+    case 31: case 57: return 9;
+    default: return kUseMarkerGenericTexture;
+    }
+}
+
+int useMarkerTexture(int ability, bool lockedInSave, bool someoneHasIt) {
+    if (ability == kUseMarkerNoAbility) return kUseMarkerGenericTexture;
+    if (lockedInSave || !someoneHasIt) return kUseMarkerLockedTexture;
+    return useMarkerAbilityTexture(ability);
+}
+
 float UseMarkers::Slot::value() const {
     switch (state) {
     case FadeState::Hidden: return 0.0f;
@@ -61,6 +101,9 @@ void UseMarkers::update(const std::vector<UseMarkerCandidate>& candidates, const
     clock_ += dt * kUseMarkerClockUnitsPerSecondStandIn;
     for (Slot& slot : slots_)
         if (slot.used) step(slot, dt);
+    for (const UseMarkerCandidate& candidate : candidates)
+        for (Slot& slot : slots_)
+            if (slot.used && slot.marker.instance == candidate.instance) slot.marker.texture = candidate.texture;
     for (const UseMarkerCandidate& candidate : candidates) {
         if (!candidate.usable) continue;
         const float position[3] = {candidate.matrix[12], candidate.matrix[13], candidate.matrix[14]};
@@ -68,8 +111,8 @@ void UseMarkers::update(const std::vector<UseMarkerCandidate>& candidates, const
         auto slot = std::find_if(slots_.begin(), slots_.end(), [&](const Slot& s) { return s.used && s.marker.instance == candidate.instance; });
         if (slot == slots_.end()) slot = std::find_if(slots_.begin(), slots_.end(), [](const Slot& s) { return !s.used; });
         if (slot == slots_.end()) continue;
+        if (!slot->used) slot->marker = candidate;
         slot->used = true;
-        slot->marker = candidate;
         show(*slot);
     }
 }

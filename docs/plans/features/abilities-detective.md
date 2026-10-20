@@ -14,6 +14,7 @@ IN_PROGRESS, updated 2026-10-19T17:50:50+02:00. Detective spot (type 182), revea
 - Intervals of the oracle traces: spot state 1 one update after the A press, detect_out 37, X ahead → state 2 and detect_in (19) in one update, use-state event 43 and end 116, X spot state 2 after 32 more, reveal prop launch after 30 and trigger after 18.
 - Detective walk step x 1.4, no jump, `detect_*` role clips; the X spots start hidden (RevealSwitch link).
 - The dog footprints in detective mode look as in the original (user's visual check, 2026-10-19).
+- The detective spot shows its use marker (police disc on the ground at the spot) in state 0 and not in detective mode or once done; the oracle state `footprint-scanner-trigger` and the port show the same disc ([script-system-use-markers.md](script-system-use-markers.md)).
 - The glass (`Ability_MagnifyingGlass` on `weaponRight`) first shows 14 updates after the A press, as in the oracle; detective mode changes neither camera nor screen tint.
 
 ## 4. Stand-ins
@@ -44,9 +45,9 @@ IN_PROGRESS, updated 2026-10-19T17:50:50+02:00. Detective spot (type 182), revea
 
 ## 6. Findings summary
 
-- Footprint pool, turn and ground: [abilities-detective.md §2026-10-19T09:11:04](../../re/abilities-detective.md#ts-20261019-091104); glass and look of detective mode: [abilities-detective.md §2026-10-18T19:30:00](../../re/abilities-detective.md#ts-20261018-193000); classes, footprints, player states and oracle timing: [abilities-detective.md §2026-10-18T11:26:21](../../re/abilities-detective.md#ts-20261018-112621); mission 1-2 gap list: [scripts-missions.md §2026-10-14T21:39](../../re/scripts-missions.md#ts-20261014-213921); oracle states: [oracle-states.md §2026-10-18T10:13:06](../../re/oracle-states.md#ts-20261018-101306).
+- Use marker of the detective spot: [use-spot.md §2026-10-20T21:58:32](../../re/use-spot.md#ts-20261020-215832); footprint pool, turn and ground: [abilities-detective.md §2026-10-19T09:11:04](../../re/abilities-detective.md#ts-20261019-091104); glass and look of detective mode: [abilities-detective.md §2026-10-18T19:30:00](../../re/abilities-detective.md#ts-20261018-193000); classes, footprints, player states and oracle timing: [abilities-detective.md §2026-10-18T11:26:21](../../re/abilities-detective.md#ts-20261018-112621); mission 1-2 gap list: [scripts-missions.md §2026-10-14T21:39](../../re/scripts-missions.md#ts-20261014-213921); oracle states: [oracle-states-m12.md §2026-10-18T10:13:06](../../re/oracle-states-m12.md#ts-20261018-101306).
 
 ## 7. Code and tests
 
 - `src/runtime/detective.{hpp,cpp}` (classes, footprints with orientation and ground, player states), `src/game_detective.cpp` (LevelSession glue, footprint drawing), `src/game_hand_items.{hpp,cpp}` (the glass and the scanner device), `src/runtime/hand_item.{hpp,cpp}` (hand item track, `Animation::subAnimationTargets`), RevealSwitch link in `src/runtime/level_start.cpp`, detective walk in `player_locomotion`.
-- Tests `hand-item`, `hand-item-real-data`, `detective`, `detective-real-data`, `game-detective-1-2`, `game-doorlock-detective-1-2` (slow), `level-start-real-data`; the idle fix is in `src/runtime/npc_idle.*` (`npc-idle`).
+- Tests `hand-item`, `hand-item-real-data`, `detective`, `detective-real-data`, `game-detective-1-2`, `game-doorlock-detective-1-2` (slow), `game-use-marker-detective-1-2`, `level-start-real-data`; the idle fix is in `src/runtime/npc_idle.*` (`npc-idle`).

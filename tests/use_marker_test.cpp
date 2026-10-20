@@ -75,6 +75,44 @@ void quadOnTheGroundSpins() {
     const auto& turned = quads[0].vertices;
     require(near(turned[0].position[0], 9) && near(turned[0].position[2], 21), "a quarter turn moves corner 0 from (-1, -1) to (-1, 1)");
 }
+
+void textureOfKindAndAbility() {
+    using namespace chase::runtime;
+    // Provenance: llvm-objdump of 0x292388 on artifacts/game/game.arm.elf (first switch: entity kind to ability, second switch: ability to texture index).
+    struct Row { unsigned kind; int ability; };
+    const Row kinds[] = {{144, 2}, {145, 2}, {146, 2}, {127, 21}, {182, 25}, {195, 25}, {130, 28}, {150, 28}, {200, 28}, {209, 29}, {124, 30},
+                         {233, 30}, {133, 31}, {210, 35}, {190, 38}, {191, 55}, {186, 56}};
+    for (const Row& row : kinds) require(useMarkerKindAbility(row.kind) == row.ability, "ability of kind " + std::to_string(row.kind));
+    for (unsigned kind : {13u, 36u, 73u, 77u, 110u, 15u, 153u, 165u, 94u, 169u, 171u, 173u, 181u, 231u, 232u, 227u, 58u, 185u, 201u})
+        require(useMarkerKindAbility(kind) == kUseMarkerNoAbility, "kind " + std::to_string(kind) + " asks for no ability");
+    require(kUseMarkerKinds.size() == 36 && useMarkerKindListed(182) && useMarkerKindListed(165) && !useMarkerKindListed(238) && !useMarkerKindListed(74),
+            "the list 0x374640 holds 36 kinds with the detective spot and the use spot, not the reveal spot or the reveal prop");
+    const struct { int ability, texture; } textures[] = {{2, 1}, {25, 1}, {26, 2}, {55, 2}, {56, 2}, {27, 3}, {38, 3}, {28, 4}, {29, 5}, {58, 5},
+                                                          {21, 6}, {35, 7}, {30, 8}, {60, 8}, {31, 9}, {57, 9}, {3, 0}};
+    for (const auto& row : textures) require(useMarkerAbilityTexture(row.ability) == row.texture, "texture of ability " + std::to_string(row.ability));
+    require(useMarkerTexture(25, false, true) == 1 && std::string(kUseMarkerTextures[1]) == "usepolice", "the detective spot shows the police disc");
+    require(useMarkerTexture(25, true, true) == kUseMarkerLockedTexture && useMarkerTexture(25, false, false) == kUseMarkerLockedTexture,
+            "locked in the save or nobody with the ability: the locked disc");
+    require(useMarkerTexture(kUseMarkerNoAbility, true, false) == kUseMarkerGenericTexture, "a kind without an ability skips the lock test");
+}
+
+void slotKeepsGroundAndFollowsTexture() {
+    UseMarkers markers;
+    const float camera[3] = {10, 8, 30};
+    UseMarkerCandidate first = spot(true);
+    first.texture = 1;
+    markers.update({first}, camera, camera, 0.05f);
+    UseMarkerCandidate later = spot(true);
+    later.ground = {50, 50, 50};
+    later.texture = 10;
+    markers.update({later}, camera, camera, 0.05f);
+    const auto quads = markers.quads();
+    require(quads.size() == 1 && quads[0].texture == 10, "the texture is read again every update (0x292388 runs in the draw)");
+    require(near(quads[0].vertices[0].position[1], 2.1f), "the placement is made once, when the slot is taken (0x172254 marks the entry new)");
+    later.usable = false;
+    markers.update({later}, camera, camera, 0.01f);
+    require(markers.quads()[0].texture == 10, "a fading marker keeps being drawn");
+}
 }
 
 int main() {
@@ -82,6 +120,8 @@ int main() {
         fadesInWhileUsableAndOutAfterTheHold();
         rangeOfCameraOrPlayer();
         quadOnTheGroundSpins();
+        textureOfKindAndAbility();
+        slotKeepsGroundAndFollowsTexture();
     } catch (const std::exception& error) {
         std::cerr << "use-marker-test: " << error.what() << '\n';
         return 1;

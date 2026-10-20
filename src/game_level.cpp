@@ -307,6 +307,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     loadDetective(archive);
     handItems.load(archive, scene);
     useSpots.load(level, classOf);
+    loadUseMarkers(archive);
     scanner.load(archive, level, classOf);
     std::cout << "scanner zones: " << scanner.zones().size() << ", scannable objects: " << scanner.objects().size() << '\n';
     ziplines = runtime::loadZiplineAnchors(level, classOf);

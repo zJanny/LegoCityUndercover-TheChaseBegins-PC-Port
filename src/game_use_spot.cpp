@@ -1,28 +1,43 @@
 #include "game_level.hpp"
+#include "runtime/use_marker_ground.hpp"
+
 #include <cmath>
 #include <iostream>
+#include <string>
 
 namespace game_level {
 namespace runtime = chase::runtime;
 namespace render = chase::render;
 
-// STAND-IN SCRIPT-S249: the marker stands at the zone centre in the spot's frame; the ground search of 0x1db800 (a ray 5 m
-// down with a 0.5 m step up past objects) is not ported. It is drawn like a particle quad (alpha blend, depth test
-// less-or-equal, no depth write); the render state bytes that 0x1b29f0 hands to 0x25511c are not decoded.
+void LevelSession::loadUseMarkers(chase::assets::FuseArchive& archive) {
+    if (const chase::assets::FuseEntry* entry = archive.find("tables/tablescharacters.bxls")) abilityTable.load(chase::assets::parseTable(archive.read(*entry)));
+}
+
+// STAND-IN SCRIPT-S249: the marker position is the nearest hit of a segment 5 m down from the zone centre (runtime::useMarkerGround), not the ray
+// of 0x1db800 with its object list and step-up; it is drawn like a particle quad (alpha blend, depth test less-or-equal, no depth write); the
+// render state bytes that 0x1b29f0 hands to 0x25511c are not decoded.
+// STAND-IN SCRIPT-S286: the party list 0x51b248 is not ported; the marker asks only the player character (kPlayerCharacterId) for the ability, and
+// the case of 0x292388 where the player entity has kind 159 (character 141) is not modelled.
+// STAND-IN SCRIPT-S287: only use spots (165) and detective spots (182) feed the markers; the message 3 answer of the other 34 kinds is not read.
 void LevelSession::updateUseMarkers(float dt) {
     if (!player || !follow) return;
     const bool driving = boarding && boarding->seatedVehicle();
     std::vector<runtime::UseMarkerCandidate> candidates;
-    for (const runtime::UseSpot& spot : useSpots.spots()) {
+    const auto add = [&](const std::string& instance, const std::array<float, 16>& matrix, const float zoneCentre[3], bool usable, unsigned kind) {
         runtime::UseMarkerCandidate candidate;
-        candidate.instance = spot.instance;
-        candidate.matrix = spot.matrix;
-        for (int a = 0; a < 3; ++a)
-            candidate.ground[std::size_t(a)] = spot.matrix[std::size_t(12 + a)] + spot.zoneCentre[0] * spot.matrix[std::size_t(a)] +
-                                               spot.zoneCentre[1] * spot.matrix[std::size_t(4 + a)] + spot.zoneCentre[2] * spot.matrix[std::size_t(8 + a)];
-        candidate.usable = !driving && spot.active && !spot.triggerObject.empty() && !objectState.isDisabled(spot.instance);
+        candidate.instance = instance;
+        candidate.matrix = matrix;
+        candidate.usable = !driving && usable && !objectState.isDisabled(instance);
+        if (candidate.usable && !useMarkers.slotted(instance)) candidate.ground = runtime::useMarkerGround(collision, matrix, zoneCentre);
+        const int ability = runtime::useMarkerKindAbility(kind);
+        const bool lockedInSave = abilityTable.startsLocked(ability) && !levelScripts.progressNatives().bit(runtime::kAbilityOffset, std::uint32_t(ability));
+        candidate.texture = runtime::useMarkerTexture(ability, lockedInSave, abilityTable.characterHas(game_player::kPlayerCharacterId, ability));
         candidates.push_back(std::move(candidate));
-    }
+    };
+    for (const runtime::UseSpot& spot : useSpots.spots())
+        add(spot.instance, spot.matrix, spot.zoneCentre, spot.active && !spot.triggerObject.empty(), runtime::kUseSpotKind);
+    for (const runtime::DetectiveSpot& spot : detective.spots())
+        add(spot.instance, spot.matrix, spot.useZone.centre, spot.usable && runtime::detectiveSpotAnswersUseQuery(spot), runtime::kDetectiveSpotType);
     const float playerPosition[3] = {player->motion.x, player->vertical.y, player->motion.z};
     const float eye[3] = {follow->eye()[0], follow->eye()[1], follow->eye()[2]};
     std::vector<bool> before;
@@ -30,7 +45,8 @@ void LevelSession::updateUseMarkers(float dt) {
     useMarkers.update(candidates, eye, playerPosition, dt);
     for (std::size_t i = 0; i < candidates.size(); ++i)
         if (before[i] != useMarkers.slotted(candidates[i].instance))
-            std::cout << "use marker: " << candidates[i].instance << (before[i] ? " gone" : " shown") << " at update " << updates << '\n';
+            std::cout << "use marker: " << candidates[i].instance << (before[i] ? " gone" : " shown") << " at update " << updates
+                      << (before[i] ? std::string() : std::string(" (") + runtime::kUseMarkerTextures[std::size_t(candidates[i].texture)] + ")") << '\n';
 }
 
 void LevelSession::drawUseMarkers(const render::Mat4& viewProjection) {

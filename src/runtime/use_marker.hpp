@@ -22,11 +22,27 @@ constexpr int kUseMarkerReleaseAlpha = 4;          // 0x17218c frees the slot be
 // multiplier (*(mode + 0xc) + 0xc) was not read.
 constexpr float kUseMarkerClockUnitsPerSecondStandIn = 60.0f;
 
-// Index into the table 0x5295ec (the order of the loads at 0x162b54..0x162c24); 0x292388 picks it from the entity kind and
-// gives 0 (useGeneric) to the kinds it does not list, such as props/prop_simpleuse (165).
+// Index into the table 0x5295ec (the order of the loads at 0x162b54..0x162c24).
 constexpr const char* kUseMarkerTextureDirectory = "sprites/game/usemarkers/";
 constexpr std::array<const char*, 11> kUseMarkerTextures = {"usegeneric", "usepolice", "userobber", "useminer", "useastronaut", "usefarmer",
                                                             "usechicken", "usepig", "usefireman", "useconstruction", "uselocked"};
+constexpr int kUseMarkerGenericTexture = 0;
+constexpr int kUseMarkerLockedTexture = 10;
+constexpr int kUseMarkerNoAbility = -1;
+
+// The entity kinds whose zones get a marker: the zero-ended list 0x374640 (bitmap 0x5289cc).
+constexpr std::array<unsigned, 36> kUseMarkerKinds = {13,  36,  58,  73,  77,  110, 15,  144, 146, 145, 130, 153, 165, 94,  169, 171, 173, 181,
+                                                      182, 185, 186, 190, 191, 195, 201, 209, 210, 231, 233, 150, 127, 200, 133, 124, 232, 227};
+bool useMarkerKindListed(unsigned kind);
+
+// The ability a kind's marker asks for (0x292388, first switch); kUseMarkerNoAbility keeps the generic disc and skips the lock test. Kinds 58 and
+// 185 read it from their record (+0x60, +0x50) and kind 201 from 0x1fa330 == 3 (28): the caller passes it, here they give kUseMarkerNoAbility.
+int useMarkerKindAbility(unsigned kind);
+// Second switch of 0x292388: the texture index of an ability; 0 for abilities it does not list.
+int useMarkerAbilityTexture(int ability);
+// 0x292388 as a whole: the locked disc when the ability is locked in the save (0x1be6c0) or no character of the party has it (0x206888 sets via
+// 0x23a87c), else the texture of the ability; the generic disc without an ability.
+int useMarkerTexture(int ability, bool lockedInSave, bool someoneHasIt);
 
 struct UseMarkerCandidate {
     std::string instance;
