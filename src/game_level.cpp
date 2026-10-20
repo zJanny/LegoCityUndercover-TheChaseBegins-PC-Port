@@ -550,8 +550,9 @@ void LevelSession::reportScripted() const {
 }
 
 void LevelSession::reportRate() {
-    std::cout << "updates/s " << updatesThisSecond << ", dt " << scheduler->lastDt() << " s, stick "
-              << pad.slot(kSlotStickX).value << ' ' << pad.slot(kSlotStickY).value << '\n';
+    if (!scripted())
+        std::cout << "updates/s " << updatesThisSecond << ", dt " << scheduler->lastDt() << " s, stick "
+                  << pad.slot(kSlotStickX).value << ' ' << pad.slot(kSlotStickY).value << '\n';
     updatesLastSecond = updatesThisSecond;
     updatesThisSecond = 0;
 }
