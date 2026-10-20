@@ -6,6 +6,7 @@ namespace chase::runtime {
 
 const std::array<UpdatePhaseInfo, kUpdatePhaseCount>& updatePhases() {
     static const std::array<UpdatePhaseInfo, kUpdatePhaseCount> phases = {{
+        {UpdatePhase::Systems, "system list slot +0x48 (0x169374)", 0x2e5488, false},
         {UpdatePhase::Runner, "script runner", 0x2e54b4, false},
         {UpdatePhase::Objects, "entity pass, classes below priority 254", 0x2e5530, false},
         {UpdatePhase::Characters, "entity pass, characters (priority 254)", 0x2e5530, false},

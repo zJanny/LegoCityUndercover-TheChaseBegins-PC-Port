@@ -11,6 +11,7 @@
 #include "frontend/resources.hpp"
 #include "game_audio.hpp"
 #include "game_characters.hpp"
+#include "game_pedestrians.hpp"
 #include "game_cutscene.hpp"
 #include "game_hand_items.hpp"
 #include "game_doors.hpp"
@@ -194,6 +195,9 @@ private:
     bool scannerView(float eye[3], float& yaw, float& pitch, float& fieldOfView) const;
     bool drawScannerOverlay(chase::frontend::Canvas& top);
     void updateLevelCharacters(float dt);
+    void updatePedestrianSystem();
+    void updatePedestrianCharacters(float dt);
+    void enterPedestrianScene();
     void updatePropAnimations(float dt);
     void updateSuperBricks(float dt);
     void applySuperBricks();
@@ -435,6 +439,7 @@ private:
     std::vector<std::optional<chase::render::CharacterInstance>> placedCharacters;
     game_object_visibility::CharacterVisibility characterVisibility;
     std::optional<game_characters::LevelCharacters> levelCharacters;
+    game_pedestrians::LevelPedestrians pedestrians;
     chase::runtime::PropAnimations propAnimations;
     chase::runtime::PlayerScriptAnimation playerScriptAnimation;
     chase::runtime::CatRescueSet catRescue;

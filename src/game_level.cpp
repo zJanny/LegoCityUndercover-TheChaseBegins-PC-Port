@@ -172,6 +172,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     placedCharacters = placeLevelCharacters(scene, archive, drawable.characters);
     const std::size_t characters = std::size_t(std::count_if(placedCharacters.begin(), placedCharacters.end(), [](const auto& placed) { return placed.has_value(); }));
     levelCharacters.emplace(archive, drawable.characters, placedCharacters);
+    pedestrians.load(archive, level, classOf, drawable.characters, placedCharacters, objectState);
     propAnimations = runtime::PropAnimations(archive, animatedProps);
     animationDrivers.add(&*levelCharacters);
     animationDrivers.add(&propAnimations);
@@ -361,6 +362,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     }
     overlay.emplace(fe::kTopWidth, fe::kBottomWidth, fe::kScreenHeight);
     startRoomStreaming();
+    enterPedestrianScene();
 
     counterFrequency = SDL_GetPerformanceFrequency();
     counterOrigin = SDL_GetPerformanceCounter();

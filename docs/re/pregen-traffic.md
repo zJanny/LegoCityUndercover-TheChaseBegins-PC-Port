@@ -8,10 +8,11 @@ Format and loaders of `Pregen/Traffic/<level>_Traffic.bin` and `Pregen/Pedestria
 - Both files share one layout: a u32 point count, 24-byte points (position, a stale pointer, a level path name hash, a path parameter), then a quadtree of 20-byte cells (half size, centre x and z) whose leaves list point indices. [§2026-10-20T11:16:20](#ts-20261020-111620)
 - The loaders resolve each point's path in the loaded levels, store the unit tangent of the path at the parameter, the room and (traffic only) the floor cell; the lookup 0x1eb490 descends to the leaf of a point. [§2026-10-20T11:16:20](#ts-20261020-111620)
 - All 14 shipped files (7 levels each) decode exactly; every point's path exists in its level, and each position equals the path sample at the parameter (inference: the spawn points are the editor's samples along the paths). [§2026-10-20T11:16:20](#ts-20261020-111620)
-- Port: `src/assets/pregen_traffic.*` (`parsePregenSpawns`, `findPregenSpawnCell`), tests `pregen-traffic`, `pregen-traffic-real-data`. Not wired into the game.
+- Port: `src/assets/pregen_traffic.*` (`parsePregenSpawns`, `findPregenSpawnCell`), tests `pregen-traffic`, `pregen-traffic-real-data`. The pedestrian file is used by `PedestrianSystem` in `chase-game`; the traffic file is not wired. [pedestrians.md §2026-10-20T13:13:47](pedestrians.md#ts-20261020-131347)
 - The derived fields are ported as `deriveSpawnFields` (`src/runtime/pregen_derive.*`) for both kinds: path record, tangent, room. The 72 closed-path pedestrian points off the path sample deviate on one axis of the stored position; the sampler matches all other points exactly. [§2026-10-20T12:11:03](#ts-20261020-121103)
-- No path gets a node (path +0x18) at run time: only the natives EffectAttachParticlesToPath and EffectLinkPathToObject set it, and no script calls them. So the samplers never transform the position or the tangent. [pedestrians.md §2026-10-20T13:09:29](pedestrians.md#ts-20261020-130929)
-- Open: how the managers choose a point from a cell list, the radius the cell lists were built with, the traffic floor cell (+40), the loaded-level order and current room at manager init.
+- The loaders see the list 0x589a18 as 0x1ed57c rebuilds it just before the scene enter (pool order, loaded scenes only), with the current room of `Player1Start` or of the transition's destination. [§2026-10-20T13:13:47](#ts-20261020-131347)
+- No path gets a node (path +0x18) at run time: only the natives EffectAttachParticlesToPath and EffectLinkPathToObject set it, and no script calls them. So the samplers never transform the position or the tangent. [pedestrians-character.md §2026-10-20T13:09:29](pedestrians-character.md#ts-20261020-130929)
+- Open: how the managers choose a point from a cell list, the radius the cell lists were built with, the traffic floor cell (+40), the other scenes loaded with a street level.
 
 <a id="ts-20261020-111620"></a>
 
@@ -65,6 +66,7 @@ Unknowns:
 <a id="ts-20261020-121103"></a>
 
 ## 2026-10-20T12:11:03+02:00 — Pregen derived fields: path record, tangent, room; the closed-path deviation (llvm-objdump of `artifacts/game/game.arm.elf`, no REA session, no emulator)
+Corrected by [§2026-10-20T13:13:47](#ts-20261020-131347): the order of the loaded-level list and the current room at the load are read (PREGEN-4).
 
 [Corrects pregen-traffic.md §2026-10-20T11:16:20](#ts-20261020-111620): the unknown about 47 closed-path points; the loaders' derived fields are now ported.
 
@@ -83,4 +85,23 @@ Unknowns:
 - Whether any pedestrian or traffic path has its node set (PREGEN-5).
 - The traffic floor cell (PREGEN-3).
 - Which axis the 72 deviations are on (not tabulated) and why.
+
+<a id="ts-20261020-131347"></a>
+
+## 2026-10-20T13:13:47+02:00 — The loaded-level list and the current room when the loaders run (llvm-objdump of `artifacts/game/game.arm.elf`, no REA session, no emulator)
+
+[Corrects §2026-10-20T12:11:03](#ts-20261020-121103): the unknown about the list order and the current room at the load (PREGEN-4) is read; the loaders run at the scene enter ([pedestrians.md §2026-10-20T12:27:05](pedestrians.md#ts-20261020-122705)), not at the manager init.
+
+**The list 0x589a18.** Word +0 points at the scene pool (hword count +2, array +4), +4 is the first scene, +8 the count and +0xc the array of the loaded scenes that the loaders and the room lookup 0x239838 walk. 0x1ed57c rebuilds it: count = 0, then for every pool index i in order the scene is *(0x589a18 + 4) for i = 0 and pool[i] otherwise, and it is appended when it is set, passes 0x2284bc (record +4: state byte +8 == 2 and resource +0x14 set) and has bit 0 of +0x14 clear. 0x273058 is the same rebuild after it stores a scene's +0x14 flags. So the order is the pool order with the first scene first, loaded scenes only.
+
+**When it is rebuilt.** At the start of every gameplay step (0x2e525c), just before the level enter (0x2e44e0, then 0x2e6264 at 0x2e44e8), and in the transition 0x303480 at 0x30360c before the scene enter 0x198014 at 0x3036a0. So both loaders see the scenes loaded at that moment.
+
+**The current room 0x376c78 at the scene enter.**
+- Level enter 0x2e6264: 0x23b350(first scene, "Player1Start") and 0x213284 give the start's room, stored at 0x2e6354, then 0x1f4244(room, 1) at 0x2e663c. Slot +0x40 runs later, through 0x198014 at 0x2e6870.
+- Transition 0x303480: 0x213284 of the destination reference stores its room at 0x30362c, then 0x1f4244 at 0x303630, before 0x198014 at 0x3036a0.
+
+**Port.** `chase-game` hands the scene enter its own level as the only loaded level and the room streamer's start room, which is the room of `Player1Start` or of the destination ([streaming-rooms.md](streaming-rooms.md)). A session holds one level, so the list has one entry (PREGEN-S2).
+
+Unknowns:
+- Which other scenes are loaded with a street level (the pool order of a level with several scenes) and whether any of them holds a path hash of the pregen files.
 

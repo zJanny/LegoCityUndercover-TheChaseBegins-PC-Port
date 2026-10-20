@@ -88,6 +88,7 @@ struct PedestrianRoom {
     bool resource = false;                    // word +0x14 of that record is set
     std::uint8_t type = 0;                    // byte +0x3a
     std::uint32_t node = 0;                   // the node at room +0x7c
+    std::uint32_t attachNode = 0;             // the node at room +0x14, the parent of a pedestrian spawned in the room
 };
 
 // The hwords of the layer table *0x376ad4 (+4, 7 classes x 17 room types), set by 0x2405a0; supplied by the caller.

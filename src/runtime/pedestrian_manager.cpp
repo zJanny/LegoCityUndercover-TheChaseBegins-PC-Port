@@ -238,6 +238,8 @@ bool PedestrianManager::spawn(std::size_t slot, const PedestrianWorld& world, Ga
         if (!forward)
             for (float& component : direction) component = component * -1.0f;
         pedestrian.placement = pedestrianPlacement(point.position, direction);
+        pedestrian.room = point.room;
+        pedestrian.node.parent = point.room->attachNode;
         pedestrian.live = true;
         return true;
     }

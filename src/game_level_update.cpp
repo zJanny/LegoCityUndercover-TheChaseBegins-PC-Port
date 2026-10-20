@@ -294,6 +294,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         if (shared.audio) shared.audio->play(call);
     };
     runtime::UpdateSequence order;
+    order.at(runtime::UpdatePhase::Systems, [&] { updatePedestrianSystem(); });
     order.at(runtime::UpdatePhase::Runner, [&] {
         sceneStart.startRequested();
         if (player && !levelScripts.ai().moving("player1")) levelScripts.ai().setPosition("player1", player->position().data());
@@ -368,6 +369,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
             }
     }
     });
+    order.at(runtime::UpdatePhase::Objects, [&] { updatePedestrianCharacters(dt); });
     order.at(runtime::UpdatePhase::Objects, [&] {
         if (!player) return;
         const float playerPosition[3] = {player->motion.x, player->vertical.y, player->motion.z};

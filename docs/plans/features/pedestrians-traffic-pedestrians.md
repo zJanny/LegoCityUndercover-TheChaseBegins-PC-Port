@@ -6,11 +6,11 @@ This file covers the pedestrians of a level: the pedestrian manager 0x51b33c (sl
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-20T13:11:53+02:00.
+IN_PROGRESS, updated 2026-10-20T13:13:47+02:00.
 - The manager's rules are read from the original and ported as `PedestrianManager`. That covers the level load with `Pedestrians_Max`, the scene enter and leave, the enable and spawn-data flags, the countdown, the spawn tests and placement, the one removal per update, and the node and room tests.
-- The update's caller is known: the system list, once per gameplay step. The lead wires it next (PED-1).
+- `chase-game` runs both as `PedestrianSystem`: the manager in a system phase before the runner, the characters in the object phase. The level load disables the slots, a spawn enables one, a removal disables it and stops its clip. The scene enter loads the level's pregen file.
 - The pedestrian character's update is read and ported as `PedestrianWalk`: the state step with the entries of states 1 and 3 .. 7, the walk along the path, the avoidance, the hold counter and the steady updates of states 3, 4, 5 and 7. The draw test, the vehicle test of state 6, the entity box and the type 1 path are ported too; the root delta and the wall slide come from the caller (PED-S8).
-- Nothing is wired into `chase-game` yet. Pedestrians still stand in frame 0 (LEVOBJ-S1), and EnableTrafficAndPedestrians only records its flag.
+- In lvl_01 up to five pedestrians appear in front of the camera and walk their paths with the walk clip; EnableTrafficAndPedestrians sets the manager's enable bit.
 - The fade-in of a spawned node is the manager's (0x2ee068 sets node +0xdd and +0xdc) and the node draw's, not the character's; the character update has no fade code.
 
 ## 3. Verified behaviour
@@ -41,31 +41,36 @@ The pedestrian character, transcribed from the code into the test `pedestrian-wa
 
 ## 4. Stand-ins
 
-- PED-S1 The caller supplies the spawn points of the leaf at the player's position as a plain list. The original reads them from `Pregen/Pedestrians/<level>_Pedestrians.bin` (loader 0x2ee868, tree 0x1eb254 / 0x1eb490); the PREGEN decoder (`parsePregenSpawns`, `findPregenSpawnCell`, [pedestrians-traffic.md](pedestrians-traffic.md)) replaces it once PED-1 feeds its leaf to the manager. needs: PED-1. evidence: [pedestrians.md §2026-10-20T11:17:42](../../re/pedestrians.md#ts-20261020-111742).
-- PED-S2 The caller supplies the blocked test 0x26cd38 and the layer table *0x376ad4. It also supplies each pedestrian's class byte, node and room state and the mesh node type *0x37674c. The distance fade table defaults to the values read in one oracle state, not to its source record 0x376794. needs: PED-7, PED-8. evidence: [pedestrians.md §2026-10-20T12:27:05](../../re/pedestrians.md#ts-20261020-122705).
-- PED-S4 `PedestrianWalk` takes these from the caller: the blocked result of 0x1ffcd4 (PED-7), the ground probe 0x2058cc with its ray and room set, the bump ray 0x21ab20 and the clip finished test. needs: PED-7. evidence: [pedestrians.md §2026-10-20T13:09:29](../../re/pedestrians.md#ts-20261020-130929).
-- PED-S8 The steady updates take from the caller the root translation of 0x2327b4, the wall slide 0x21a73c with its near list, the fade point 0x52a1b4 and the node bounds behind entity +0x5c (`assets::modelBounds`). Without a wall slide the move is not changed. needs: PED-1, PED-13. evidence: [pedestrians.md §2026-10-20T13:09:29](../../re/pedestrians.md#ts-20261020-130929).
+- PED-S2 The caller supplies the blocked test 0x26cd38 and the layer table *0x376ad4. It also supplies each pedestrian's class byte, node and room state and the mesh node type *0x37674c. The distance fade table defaults to the values read in one oracle state, not to its source record 0x376794. `chase-game` supplies every layer active, class byte 0, room type 0, room +0x7c as a node other than the +0x14 a pedestrian hangs on, and no blocking vehicle. needs: PED-7, PED-8. evidence: [pedestrians.md §2026-10-20T12:27:05](../../re/pedestrians.md#ts-20261020-122705).
+- PED-S4 `PedestrianWalk` takes these from the caller: the blocked result of 0x1ffcd4 (PED-7), the ground probe 0x2058cc with its ray and room set, the bump ray 0x21ab20 and the clip finished test. `chase-game` supplies the player's ground probe, the end of the newest clip, false for the draw and hidden tests, no ray and no blocking. needs: PED-7. evidence: [pedestrians-character.md §2026-10-20T13:09:29](../../re/pedestrians-character.md#ts-20261020-130929).
+- PED-S6 `chase-game` takes the speed 0x34163c of the player's vehicle as the length of the driven body's velocity and the player state +0x6c as 0 (no bump), and draws the random words from its own generator with the level characters' fixed seed. needs: PED-10. evidence: [pedestrians.md §2026-10-20T13:13:47](../../re/pedestrians.md#ts-20261020-131347).
+- PED-S7 The pedestrian characters update in the object phase of the entity pass, and a pedestrian keeps the room of its spawn point. needs: PED-11. evidence: [pedestrians.md §2026-10-20T13:13:47](../../re/pedestrians.md#ts-20261020-131347).
+- PED-S8 The steady updates take from the caller the root translation of 0x2327b4, the wall slide 0x21a73c with its near list, the fade point 0x52a1b4 and the node bounds behind entity +0x5c (`assets::modelBounds`). Without a wall slide the move is not changed; `chase-game` supplies the bounds but no root translation and no wall slide. needs: PED-13. evidence: [pedestrians-character.md §2026-10-20T13:09:29](../../re/pedestrians-character.md#ts-20261020-130929).
 - PED-S5 A `Pedestrians_Max` stored as a slot parameter gives its table value; the level root's slot values are not read. No shipped level stores it as a slot. needs: PED-9. evidence: [pedestrians.md §2026-10-20T12:27:05](../../re/pedestrians.md#ts-20261020-122705).
 
 ## 5. Open items
 
-- [ ] PED-1 — Wire the manager and the walk (`PedestrianWalk`) into the game. It runs as slot +0x48 of the system list, once per gameplay step before the script runner. `enterScene` runs on every scene enter, and `loadLevel` for each loaded scene. The spawn data flag and the leaf's spawn points need the decoded pregen file with its derived fields and the pedestriansystem step 0x2edc94. The spawn needs the view rows, the vehicle speed and the EnableTrafficAndPedestrians flag. Removals must disable the entity (0x2428c0) and stop its slots. blocks: SCRIPT-230, PED-S1, PED-S8, LEVOBJ-16, LEVOBJ-S1. evidence: [pedestrians.md §2026-10-20T12:27:05](../../re/pedestrians.md#ts-20261020-122705).
-- [ ] PED-5 — The pedestrian's message slot 0x19efbc is read only at its start: which messages request the dodge (3, 4) and splat (6) states and set +0x5f, and message 50. uses: chars/pedestrian. evidence: [pedestrians.md §2026-10-20T12:20:49](../../re/pedestrians.md#ts-20261020-122049).
-- [ ] PED-13 — The writer and run-time value of the distance fade point 0x52a1b4 (0x529e30 +0x384), which the draw test 0x2930e0 measures from, are not found. blocks: PED-S8. evidence: [pedestrians.md §2026-10-20T13:09:29](../../re/pedestrians.md#ts-20261020-130929).
+- [ ] PED-5 — The pedestrian's message slot 0x19efbc is read only at its start: which messages request the dodge (3, 4) and splat (6) states and set +0x5f, and message 50. uses: chars/pedestrian. evidence: [pedestrians-character.md §2026-10-20T12:20:49](../../re/pedestrians-character.md#ts-20261020-122049).
+- [ ] PED-13 — The writer and run-time value of the distance fade point 0x52a1b4 (0x529e30 +0x384), which the draw test 0x2930e0 measures from, are not found. blocks: PED-S8. evidence: [pedestrians-character.md §2026-10-20T13:09:29](../../re/pedestrians-character.md#ts-20261020-130929).
 - [ ] PED-7 — The blocked test is not ported. 0x26cd38 calls 0x1ffcd4 for each entity of the list 0x5863b4 + 0x305c; 0x1ffcd4 tests the point against the vehicle's box and can write the pedestrian's requested state. blocks: PED-S2, PED-S4. evidence: [pedestrians.md §2026-10-20T12:27:05](../../re/pedestrians.md#ts-20261020-122705).
-- [ ] PED-8 — The sources of the state the caller supplies are not read: the layer table *0x376ad4 (callers of the setter 0x2405a0), the class byte +0x18 of a pedestrian, which room node +0x7c is, and the run-time values of *0x37674c and the fade record 0x376794. blocks: PED-S2. evidence: [pedestrians.md §2026-10-20T12:27:05](../../re/pedestrians.md#ts-20261020-122705).
+- [ ] PED-8 — The sources of the state the caller supplies are not read: the layer table *0x376ad4 (callers of the setter 0x2405a0), the class byte +0x18 of a pedestrian, which room node +0x7c is, and the run-time values of *0x37674c and the fade record 0x376794. blocks: PED-S2, PED-12. evidence: [pedestrians.md §2026-10-20T12:27:05](../../re/pedestrians.md#ts-20261020-122705).
+- [ ] PED-10 — The speed 0x34163c of the player's vehicle body and the player component state +0x6c that the walk's bump reads are not read. blocks: PED-S6. evidence: [pedestrians.md §2026-10-20T13:13:47](../../re/pedestrians.md#ts-20261020-131347).
+- [ ] PED-11 — The priority byte +0x19 of the pedestrian entity (copied from the template by 0x1913f8) and whether the room move 0x2e6ce4 moves a walking pedestrian into another room are not read. blocks: PED-S7. evidence: [pedestrians.md §2026-10-20T13:13:47](../../re/pedestrians.md#ts-20261020-131347).
+- [ ] PED-12 — The fade-in of a spawned pedestrian (node +0xdd / +0xdc and 0x275434 on its children when its node type is *0x37674c) is not drawn: it appears at once. needs: PED-8. evidence: [pedestrians.md §2026-10-20T11:17:42](../../re/pedestrians.md#ts-20261020-111742).
 - [ ] PED-9 — Two callers are not traced: the second update caller 0x164240 (record 0x376d18 +8, no reader found), and which scene's level load sets the slots and the limit when several scenes are loaded. The level root's slot values are not read either. blocks: PED-S5. evidence: [pedestrians.md §2026-10-20T12:27:05](../../re/pedestrians.md#ts-20261020-122705).
 
 ## 6. Findings summary
 
 - The manager, its update, spawn, pedestriansystem and pregen loader, and the correction of the swapped managers: [pedestrians.md §2026-10-20T11:17:42](../../re/pedestrians.md#ts-20261020-111742).
-- The pedestrian character: create, state step, walk and avoidance: [pedestrians.md §2026-10-20T12:20:49](../../re/pedestrians.md#ts-20261020-122049).
-- The steady updates of states 3, 4, 5 and 7, the probe, the wall test, the draw and vehicle tests, the entity box and the type 1 path: [pedestrians.md §2026-10-20T13:09:29](../../re/pedestrians.md#ts-20261020-130929).
+- The pedestrian character: create, state step, walk and avoidance: [pedestrians-character.md §2026-10-20T12:20:49](../../re/pedestrians-character.md#ts-20261020-122049).
+- The steady updates of states 3, 4, 5 and 7, the probe, the wall test, the draw and vehicle tests, the entity box and the type 1 path: [pedestrians-character.md §2026-10-20T13:09:29](../../re/pedestrians-character.md#ts-20261020-130929).
 - The limit source, the system list and the update caller, the scene enter, the node and room tests, the blocked test and the walk helpers: [pedestrians.md §2026-10-20T12:27:05](../../re/pedestrians.md#ts-20261020-122705).
+- The wiring in `chase-game`, step 0x2edc94's path count and the spawn room: [pedestrians.md §2026-10-20T13:13:47](../../re/pedestrians.md#ts-20261020-131347).
 - The distance fade tables that set the spawn window: [script-natives-world.md](../../re/script-natives-world.md).
 
 ## 7. Code and tests
 
 - `src/runtime/pedestrian_manager.*` (`PedestrianManager`, `pedestriansMaxOf`, `pedestrianFadeTier`, `pedestrianNodeHidden`, `pedestrianRoomActive`, `pedestrianSpawnWindow`, `pedestrianPlacement`).
 - `src/runtime/pedestrian_walk.*` (`PedestrianWalk`, `PedestrianBody`, `pedestrianLevelPath`, `pedestrianLinearPathSample`, `pedestrianEntityBox`, `pedestrianGroundProbe`, `pedestrianNodeDrawn`, `pedestrianUnderVehicle`).
-- CTest: `pedestrian-manager`, `pedestrian-limit-real-data`, `pedestrian-walk`.
+- `src/runtime/pedestrian_system.*` (`PedestrianSystem`, `pedestrianPathCount`, `levelHasPedestrianSystem`, `pedestrianRoomObject`); session glue `src/game_pedestrians.*`; the system phase in `src/runtime/update_order.*`.
+- CTest: `pedestrian-manager`, `pedestrian-limit-real-data`, `pedestrian-walk`, `pedestrian-system`, `pedestrian-system-real-data` (skips with 77 without the RomFS), `update-order`.

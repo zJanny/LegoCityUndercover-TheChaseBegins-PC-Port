@@ -8,6 +8,7 @@
 namespace chase::runtime {
 
 enum class UpdatePhase {
+    Systems,
     Runner,
     Objects,
     Characters,
@@ -22,7 +23,7 @@ struct UpdatePhaseInfo {
     bool standIn;
 };
 
-constexpr std::size_t kUpdatePhaseCount = 5;
+constexpr std::size_t kUpdatePhaseCount = 6;
 
 const std::array<UpdatePhaseInfo, kUpdatePhaseCount>& updatePhases();
 
