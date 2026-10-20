@@ -1,8 +1,10 @@
 #include "runtime/pedestrian_manager.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <cstring>
+#include <limits>
 #include <stdexcept>
 
 namespace chase::runtime {
@@ -11,6 +13,18 @@ namespace {
 
 constexpr std::int32_t kNormalizeMinimumBits = 0x34000000;
 constexpr float kPlacementUpLimit = 0.98f;
+constexpr std::uint16_t kParameterSlot = 2;
+constexpr std::uint16_t kParameterInline = 1;
+constexpr std::uint16_t kParameterFloat = 0;
+constexpr std::uint16_t kParameterInteger = 5;
+constexpr std::uint16_t kParameterEnum = 7;
+constexpr std::uint32_t kNodeDistanceFade = 1u << 9;
+constexpr std::uint32_t kNodeHidden = 1u << 18;
+constexpr std::uint32_t kParentHidden = (1u << 17) | (1u << 18);
+constexpr std::uint8_t kFadeOn = 0x10;
+constexpr std::uint8_t kFadeMid = 0x20;
+constexpr std::uint32_t kNodeTypeMask = 31;
+constexpr std::uint16_t kLayerActive = 2;
 
 std::int32_t floatBits(float value) {
     std::int32_t bits = 0;
@@ -49,6 +63,20 @@ float horizontalDistanceSquared(const PedestrianVec3& a, const PedestrianVec3& b
 
 std::uint32_t randomBelow(GameRandom& random, std::uint32_t count) { return random.next() % count; }
 
+std::int32_t truncatedToInteger(float value) {
+    if (std::isnan(value)) return 0;
+    if (value >= 2147483648.0f) return std::numeric_limits<std::int32_t>::max();
+    if (value <= -2147483648.0f) return std::numeric_limits<std::int32_t>::min();
+    return static_cast<std::int32_t>(value);
+}
+
+const assets::LevelParam* levelRootParameter(const assets::Level& level, std::uint32_t hash) {
+    for (const std::vector<assets::LevelParam>* table : {&level.defaults, &level.classParams})
+        for (const assets::LevelParam& param : *table)
+            if (param.hash == hash && (param.flags & (kParameterSlot | kParameterInline)) != 0) return &param;
+    return nullptr;
+}
+
 }
 
 std::string pedestrianSlotName(std::size_t number) {
@@ -64,6 +92,38 @@ float DistanceFadeTable::word(int index) const {
     case 6: case 7: case 8: return fadeOut[static_cast<std::size_t>(index - 6)];
     default: throw std::out_of_range("distance fade table word " + std::to_string(index));
     }
+}
+
+std::int32_t pedestriansMaxOf(const assets::Level& level) {
+    const assets::LevelParam* param = levelRootParameter(level, assets::nameHash("Pedestrians_Max"));
+    if (!param) return kPedestriansMaxDefault;
+    if (param->type == kParameterInteger || param->type == kParameterEnum) return static_cast<std::int32_t>(param->value);
+    if (param->type != kParameterFloat) return kPedestriansMaxDefault;
+    float value = 0;
+    std::memcpy(&value, &param->value, sizeof value);
+    return truncatedToInteger(value);
+}
+
+int pedestrianFadeTier(const PedestrianNode& node, const DistanceFadeTable& table) {
+    if ((node.word & kNodeDistanceFade) == 0 || (node.fadeFlags & kFadeOn) == 0) return -1;
+    if ((node.fadeFlags & kFadeMid) != 0) return 1;
+    if (node.radius < table.radius[0]) return 0;
+    if (node.radius < table.radius[1]) return 1;
+    if (node.radius < table.radius[2]) return 2;
+    return -1;
+}
+
+bool pedestrianNodeHidden(const PedestrianNode& node) {
+    if (!node.present) return true;
+    if (node.parent != 0 && (node.parentWord & kParentHidden) == kParentHidden) return true;
+    return (node.word & kNodeHidden) != 0;
+}
+
+bool pedestrianRoomActive(const std::optional<PedestrianRoom>& room, std::uint8_t layerClass, const PedestrianLayerTable& layers) {
+    if (!room || room->state != kPedestrianRoomLoadedState || !room->resource) return false;
+    if (layerClass >= kPedestrianLayerClasses) return false;
+    const std::size_t type = std::min<std::size_t>(room->type, kPedestrianRoomTypes - 1);
+    return (layers[layerClass * kPedestrianRoomTypes + type] & kLayerActive) != 0;
 }
 
 PedestrianSpawnWindow pedestrianSpawnWindow(const DistanceFadeTable& table, int tier) {
@@ -88,7 +148,7 @@ void PedestrianManager::init() {
     flags_ = static_cast<std::uint8_t>((flags_ & ~3u) | 2u);
 }
 
-std::vector<std::size_t> PedestrianManager::loadLevel(const std::function<bool(const std::string& name)>& exists, std::uint32_t limit) {
+std::vector<std::size_t> PedestrianManager::loadLevel(const std::function<bool(const std::string& name)>& exists, const assets::Level& level) {
     pedestrians_.clear();
     std::vector<std::size_t> numbers;
     for (std::size_t number = 1; number <= kPedestrianSlotCount; ++number) {
@@ -96,12 +156,26 @@ std::vector<std::size_t> PedestrianManager::loadLevel(const std::function<bool(c
         pedestrians_.push_back({});
         numbers.push_back(number);
     }
-    limit_ = limit;
+    limit_ = static_cast<std::uint32_t>(pedestriansMaxOf(level));
     return numbers;
 }
 
 void PedestrianManager::setSpawnDataLoaded(bool loaded) {
     flags_ = static_cast<std::uint8_t>((flags_ & ~1u) | (loaded ? 1u : 0u));
+}
+
+void PedestrianManager::enterScene(std::optional<bool> loaded) {
+    if (loaded) setSpawnDataLoaded(*loaded);
+    countdown_ = 0;
+}
+
+void PedestrianManager::leaveScene() { setSpawnDataLoaded(false); }
+
+std::vector<PedestrianVec3> PedestrianManager::otherLivePositions(std::size_t slot) const {
+    std::vector<PedestrianVec3> positions;
+    for (std::size_t other = 0; other < pedestrians_.size(); ++other)
+        if (other != slot && pedestrians_[other].live) positions.push_back(pedestrians_[other].placement[3]);
+    return positions;
 }
 
 void PedestrianManager::setEnabled(bool enabled) {
@@ -136,8 +210,8 @@ bool PedestrianManager::spawn(std::size_t slot, const PedestrianWorld& world, Ga
         PedestrianVec3 toPoint{point.position[0] - view[0], point.position[1] - view[1], point.position[2] - view[2]};
         const float distance = normalize(toPoint);
         const float facing = dot(toPoint, world.view.row2);
-        const PedestrianSpawnWindow window = pedestrianSpawnWindow(world.fade, world.fadeTier(slot));
-        if (!point.roomActive) continue;
+        if (!pedestrianRoomActive(point.room, pedestrians_[slot].layerClass, world.layers)) continue;
+        const PedestrianSpawnWindow window = pedestrianSpawnWindow(world.fade, pedestrianFadeTier(pedestrians_[slot].node, world.fade));
         if (window.minimum > distance) continue;
         if (distance > window.maximum) continue;
         if (facingBits > floatBits(facing)) continue;
@@ -150,7 +224,7 @@ bool PedestrianManager::spawn(std::size_t slot, const PedestrianWorld& world, Ga
         if (crowded) continue;
 
         Pedestrian& pedestrian = pedestrians_[slot];
-        pedestrian.fadeStarted = world.fadeNode(slot);
+        pedestrian.fadeStarted = (pedestrian.node.word & kNodeTypeMask) == world.meshNodeType;
         pedestrian.requested = 1;
         pedestrian.state = 0;
         pedestrian.path = point.path;
@@ -172,6 +246,7 @@ bool PedestrianManager::spawn(std::size_t slot, const PedestrianWorld& world, Ga
 
 PedestrianUpdate PedestrianManager::update(const PedestrianWorld& world, GameRandom& random) {
     PedestrianUpdate result;
+    walkTokenTaken_ = false;
     if (!enabled()) {
         for (std::size_t slot = 0; slot < pedestrians_.size(); ++slot) {
             if (!pedestrians_[slot].live) continue;
@@ -197,13 +272,14 @@ PedestrianUpdate PedestrianManager::update(const PedestrianWorld& world, GameRan
     for (std::size_t slot = 0; slot < pedestrians_.size(); ++slot) {
         Pedestrian& pedestrian = pedestrians_[slot];
         if (!pedestrian.live || pedestrian.requested == 1 || pedestrian.state == 1) continue;
-        if (world.roomActive(slot)) {
+        if (pedestrianRoomActive(pedestrian.room, pedestrian.layerClass, world.layers)) {
             if (pedestrian.hold != 0) continue;
-            const bool remove = world.onRoomRoot(slot) || world.hidden(slot) || (pedestrian.requested == 0 && pedestrian.state == 0);
+            const bool remove = pedestrian.node.parent == pedestrian.room->node || pedestrianNodeHidden(pedestrian.node) ||
+                                (pedestrian.requested == 0 && pedestrian.state == 0);
             if (!remove) continue;
         }
         pedestrian.live = false;
-        result.removed.push_back({slot, true});
+        result.removed.push_back({slot, pedestrian.animationPlayer});
         lowerCountdown((live - 1) * kPedestrianCountdownPerLive);
         return result;
     }

@@ -4,7 +4,7 @@ Format and loaders of `Pregen/Traffic/<level>_Traffic.bin` and `Pregen/Pedestria
 
 ## Current state
 
-- The traffic manager 0x527410 (init 0x2dfa48) loads the Traffic file with 0x2e02d4; the pedestrian manager 0x51b33c (init 0x2ee4b4) loads the Pedestrians file with 0x2ee868. The path strings start at 0x2e0560 and 0x2eeaa0. [§2026-10-20T11:16:20](#ts-20261020-111620)
+- The traffic manager 0x527410 loads the Traffic file with 0x2e02d4, and the pedestrian manager 0x51b33c loads the Pedestrians file with 0x2ee868. Both run from slot +0x40 of their manager on every scene enter, not from the init. The path strings start at 0x2e0560 and 0x2eeaa0. [§2026-10-20T11:16:20](#ts-20261020-111620), [pedestrians.md §2026-10-20T12:27:05](pedestrians.md#ts-20261020-122705)
 - Both files share one layout: a u32 point count, 24-byte points (position, a stale pointer, a level path name hash, a path parameter), then a quadtree of 20-byte cells (half size, centre x and z) whose leaves list point indices. [§2026-10-20T11:16:20](#ts-20261020-111620)
 - The loaders resolve each point's path in the loaded levels, store the unit tangent of the path at the parameter, the room and (traffic only) the floor cell; the lookup 0x1eb490 descends to the leaf of a point. [§2026-10-20T11:16:20](#ts-20261020-111620)
 - All 14 shipped files (7 levels each) decode exactly; every point's path exists in its level, and each position equals the path sample at the parameter (inference: the spawn points are the editor's samples along the paths). [§2026-10-20T11:16:20](#ts-20261020-111620)
@@ -16,6 +16,7 @@ Format and loaders of `Pregen/Traffic/<level>_Traffic.bin` and `Pregen/Pedestria
 
 ## 2026-10-20T11:16:20+02:00 — Traffic and pedestrian spawn files: loaders, layout, quadtree lookup, census (llvm-objdump only, no REA session, no emulator)
 Corrected by [pregen-traffic.md §2026-10-20T12:11:03](#ts-20261020-121103): the 47 points off the closed-path sample are 72 (threshold 1e-3) and differ on one axis of the stored position, not in the sampler.
+Corrected by [pedestrians.md §2026-10-20T12:27:05](pedestrians.md#ts-20261020-122705): both loaders run from slot +0x40 of their manager (scene enter: 0x2edbf8 -> 0x2edc94, 0x2dedbc -> 0x2df574), not from the init.
 
 Method: `llvm-objdump -d --triple=armv6k-none-eabi --mattr=+vfp2` on `artifacts/game/game.arm.elf` (Europe v1.0); a throwaway Python scan for `bl` targets and literal words; throwaway Python and C++ walks of the shipped files under `artifacts/fib/files/pregen/` and of the level paths (`Level::paths`, sampled with `runtime::sampleDirectorPath`), session 2026-10-20, not kept. [Corrects data-tables-config.md §2026-10-15T12:09:48](data-tables-config.md#ts-20261015-120948): the two path strings start at 0x2e0560 and 0x2eeaa0 (0x2e0567 and 0x2eeaa7 are 7 bytes into them, after `Pregen/`).
 

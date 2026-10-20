@@ -3,3 +3,4 @@
 Done items of [pedestrians-traffic-pedestrians.md](pedestrians-traffic-pedestrians.md), moved here by tools/check_doc_links.py --fix in the order they were closed. IDs are never reused.
 
 - [x] PED-2 — The pedestrian's state step 0x1d7e88, walk 0x2b9138 and avoidance 0x2edf08 are read and ported as `PedestrianWalk` (test `pedestrian-walk`). The walk clip starts in mode 1; mode 6 is the removal's stop. uses: chars/pedestrian. evidence: [pedestrians.md §2026-10-20T12:20:49](../../re/pedestrians.md#ts-20261020-122049).
+- [x] PED-3 — The spawn and removal inputs are read: the limit source, the scene enter countdown, the update caller, the node, room and fade tier tests, 0x375d5c and 0x2edf08. What stays open is in PED-7 .. PED-9. evidence: [pedestrians.md §2026-10-20T12:27:05](../../re/pedestrians.md#ts-20261020-122705).

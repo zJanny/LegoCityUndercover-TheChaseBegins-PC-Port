@@ -8,10 +8,13 @@ The manager that spawns and removes the `chars/pedestrian` characters of a level
 - Update 0x2ee5e8: with bit 1 of +0xa4 clear, every live pedestrian is disabled (0x2428c0, no message). With bit 0 clear (no spawn data), nothing more happens. Otherwise, while live < limit <= slots, a countdown runs. At 0, one random slot is tried, and a spawn sets the countdown to 7 x live. At most one pedestrian is removed per update, which sets the countdown to 7 x (live - 1). [§2026-10-20T11:17:42](#ts-20261020-111742)
 - Spawn 0x2ee068: a random spawn point of the spawn tree leaf at the player's position, in 11 tries. The point must lie in the camera's forward cone (dot >= 0.8) and within the fade distances of the pedestrian's tier (x 0.5 to x 1.5). It must also be at least 8 units (xz) from another pedestrian on the same path. The point's direction is kept or reversed 50/50, the speed is 2.0 + 1.5 x random, and the lateral offset is in [-0.25, 0.25). [§2026-10-20T11:17:42](#ts-20261020-111742)
 - Bit 0 is the result of the pregen file load 0x2ee868, run by 0x2edc94 only when the level has a `props/pedestriansystem` (create 0x260d9c registers it at +0x94) with `PedestrianPath%03u` objects. [§2026-10-20T11:17:42](#ts-20261020-111742)
-- Port: `src/runtime/pedestrian_manager.*` (test `pedestrian-manager`), not wired into the game. [§2026-10-20T11:17:42](#ts-20261020-111742)
+- `Pedestrians_Max` is read from the scene's own level table (0x2451d0 on the level root, default 5): 5 in lvl_01, 10 in lvl_07. The level load runs once per loaded scene. [§2026-10-20T12:27:05](#ts-20261020-122705)
+- The update is slot +0x48 of the system list 0x5899f4 (priority 128), called once per gameplay step at its start (0x169374). Every scene enter (slot +0x40 0x2edbf8) loads the spawn data and sets the countdown to 0. Both pregen loaders run there, not in the init. [§2026-10-20T12:27:05](#ts-20261020-122705)
+- The fade tier, the hidden test, the room and layer test and the fade-node test are read. The blocked test 0x26cd38 loops over a vehicle list with 0x1ffcd4, which is not read in full. [§2026-10-20T12:27:05](#ts-20261020-122705)
+- Port: `src/runtime/pedestrian_manager.*` (tests `pedestrian-manager`, `pedestrian-limit-real-data`), not wired into the game. [§2026-10-20T12:27:05](#ts-20261020-122705)
 - The pedestrian (kind 197): its update runs the walk 0x2b9138 in state 2 and then the state step 0x1d7e88 (entries of states 1 and 3 .. 7, the hold counter +0x10). The walk turns toward the target at dt x 5, moves along row 2 at speed x dt, advances the path parameter by 0.3 near the target, turns back by 0.75, and sidesteps by 1.3 for the avoidance 0x2edf08 (player or pedestrian within 2.0 and 1.0 to the side). The walk clip starts in mode 1. [§2026-10-20T12:20:49](#ts-20261020-122049)
 - Port: `src/runtime/pedestrian_walk.*` (test `pedestrian-walk`), not wired. [§2026-10-20T12:20:49](#ts-20261020-122049)
-- Open: the blocked tests 0x26cd38 and 0x1ffcd4, the message slot 0x19efbc (who requests the dodge and splat states), the root motion step of states 3, 4 and 7, the meaning of the node tests of the removal, the source of `Pedestrians_Max`, and the caller of the update.
+- Open: 0x1ffcd4 (the blocked test), the message slot 0x19efbc (who requests the dodge and splat states), the root motion step of states 3, 4 and 7, the layer table contents, the class byte +0x18, which room node +0x7c is, and the second caller 0x164240. [§2026-10-20T12:20:49](#ts-20261020-122049), [§2026-10-20T12:27:05](#ts-20261020-122705)
 
 <a id="ts-20261020-111742"></a>
 
@@ -154,3 +157,53 @@ Unknowns:
 - 0x242df4 (the bounds behind entity +0x5c), whether any pedestrian path has a node at path +0x18, and type 1 0x1b33fc.
 - The message slot 0x19efbc past its start: who requests states 3, 4 and 6 (vehicle hits, dodges). The root motion step 0x277afc of states 3, 4 and 7.
 - 0x24ef70(position, 0x52a1b4) in the state step, whose result is not used.
+
+<a id="ts-20261020-122705"></a>
+
+## 2026-10-20T12:27:05+02:00 — Pedestrian manager inputs: the limit source, the scene enter, the update caller, the node and room tests, the walk helpers (llvm-objdump only, no REA session, no emulator)
+
+[Corrects pregen-traffic.md §2026-10-20T11:16:20](pregen-traffic.md#ts-20261020-111620): neither pregen loader runs from its manager's init. The pedestrian loader 0x2ee868 (called at 0x2eded4 in 0x2edc94) runs from vtable slot +0x40 0x2edbf8, and the traffic loader 0x2e02d4 (called at 0x2df884 in 0x2df574) from slot +0x40 0x2dedbc, which calls 0x2df574 first. Slot +0x40 runs on every scene enter (see below).
+
+Method: `llvm-objdump -d --triple=armv6k-none-eabi --mattr=+vfp2` on `artifacts/game/game.arm.elf`; the parameter records were found by their name hash in the `.blvl` files. Replica: `src/runtime/pedestrian_manager.*`, tests `pedestrian-manager` and `pedestrian-limit-real-data`.
+
+**The limit.** The level load 0x2ee4c8(manager, scene) ends with +0xa0 = 0x2451d0(0x23c188(scene), "Pedestrians_Max", 5, 0).
+- 0x23c188(scene) returns element 0 of the owner array (scene +0x24, count +0x1c), or 0 without owners. Element 0 is the level root, whose data (+0x24) is the scene's `.blvl` ([scene-start.md](scene-start.md)).
+- 0x2451d0 hashes the name (0x24da28) and calls 0x217080(owner, hash). That searches the table +0x10 of the owner's data (count u16 +2, 12-byte records: hash, flags hword +4, type hword +6, value +8), then the table +0x14 (count u16 +4). On a hash match, flag bit 1 returns the owner's slot (+0x2c for the first table, +0x30 for the second, indexed by the number of earlier slot records). Flag bit 0 returns record +8. A match with neither bit is skipped and the search goes on.
+- 0x2451d0 returns the word for types 5 and 7, the float truncated with vcvt.s32.f32 for type 0, and 5 for any other type or no match.
+- The update compares the limit unsigned (0x2ee658 bls, 0x2ee660 bhi), so a negative value never spawns.
+- Data (record of hash 0x7ecd8507, flags 1, type 0): lvl_01, lvl_03, lvl_05 and lvl_06 have 5.0, lvl_07 and lvl_test_playground_traffic 10.0. lvl_00, lvl_02 and lvl_04 have none, so 5. The C++ level parser puts it in `Level::defaults`.
+- The scene loader calls the level load of every system for each scene it loads (0x1c3b34 -> 0x27ecb8(scene), slot +0x1c). Each run first sets the slot count +0x90 to 0, so the last loaded scene sets the slots and the limit.
+
+**The system list and the update caller.**
+- 0x157a00 (called at 0x2f5d08 during the game set-up) registers system objects with 0x2411ac(system, 128). Among them are *0x375d68 = 0x51b33c and *0x375fd4 = 0x527410. 0x2411ac stores the priority at +0x14 and calls slot +8 (0x2ee5e4, empty here). It then inserts the node at system +8 into the list 0x5899f4, before the first system with a larger priority. So equal priorities keep the order of registration, and the traffic manager (registered at 0x157ac8) comes right before the pedestrian manager (0x157ad8).
+- Calls over the list: slot +0x1c from 0x27ecb8 (scene load); +0x40 from 0x198014 (at 0x2e6870 in the level enter and 0x3036a0 in the transition 0x303480); +0x44 from 0x198058 (0x2e3f14, 0x303570).
+- Slots +0x48 and +0x4c are called from 0x169374, at the start of the gameplay step 0x2e5158 (0x2e5488), before the runner ([scripts-runtime.md §2026-10-20T09:22:38](scripts-runtime.md#ts-20261020-092238)). For each scene of 0x589a18 it walks the list. It calls +0x48(dt) only when the scene is the current one (*(0x589a18 + 4)), and +0x4c(scene, dt) (0x33a004, empty here) for every scene. So the pedestrian update runs once per gameplay step.
+- A second caller, 0x164240(dt), calls slot +0x48 of *0x375d68 directly. It then runs 0x18d398(entity +0x44) and 0x19188c(entity, dt) (slot 0xc of kind 197) for each live entity of kind 197 among the owners of the current room's scene (*0x376c78 +0x28). After that come slot +0x48 of *0x375d14, 0x23878c / 0x238784, slot +0x48 of *0x372d3c, 0x158668(dt) and 0x17b668. 0x196328 (from 0x2f5d44) stores 0x164240 as word +8 of the record 0x376d18. No reader of that word was found.
+
+**Scene enter and leave.**
+- Slot +0x40 0x2edbf8 runs 0x2edc94 and then sets the countdown +0xa8 = 0. So the countdown is 0 after every scene enter, and the port's start value 0 is right.
+- 0x2edc94 returns at once when there is no pedestriansystem (+0x94 null), and bit 0 then keeps its value.
+- Slot +0x44 0x2edc10 runs only with bit 0 set: it frees the spawn tree (children +0x34 through 0x2ee578, records +0x30 when hword +0x26 is set). It then frees the records +0x38, sets +0x38 and +0x94 to 0 and clears bit 0.
+
+**Node and room tests.**
+- Fade tier 0x28781c(node): -1 without bit 9 of the node word or bit 4 of byte +0xde, and 1 with bit 5 of +0xde. Otherwise the node radius +0x9c is compared with the words 0x52a1d0, 0x52a1d4 and 0x52a1d8 (table 0x529e30 +0x3a0 .. +0x3a8, the radius words 3, 6 and 12 of the distance fade). Below the first gives 0, below the second 1, below the third 2, and anything else -1 (NaN too).
+- 0x23de70(entity) is true without a node, when the parent node (node +4) has bits 17 and 18 set, or when the node has bit 18 set.
+- 0x2284bc(room): the record at room +4 has byte +8 == 2 and word +0x14 != 0.
+- 0x1ffbd8(class, type): 0 for class 7 and up. Otherwise it is bit 1 of the hword at *0x376ad4 + 4 + 2 x (class x 17 + min(type, 16)). 0x1dd590 reads bit 0 of the same hword. 0x2405a0(class, first type, bit 0, bit 1) writes both bits for the types from the first one to 16 of a class. Its callers were not read.
+- The removal compares the parent of the pedestrian's node with the node at room +0x7c. A room has the nodes +0x14, +0x18, +0x78 and +0x7c ([streaming-rooms.md §2026-10-14T20:51:26](streaming-rooms.md#ts-20261014-205126)). Which one +0x7c is was not read.
+- The removal stops the animations (0x172754) only when entity +0x44 is set (0x2ee7a8). Otherwise only 0x2428c0 runs.
+- At a spawn the fade starts when node word & 31 equals *0x37674c (0x2ee300 .. 0x2ee320).
+
+**Blocked test 0x26cd38(entity, position, vector, s0).** Its list is at 0x5863b4 + 0x305c, with the count at +0x3058. A listed entity e is skipped when e +0x84 is set and that record's +0x7c has bit 1 at +0xcc. Otherwise 0x1ffcd4(entity, position, vector, e, s0) is called, and the first non-zero result is returned (else 0). 0x1ffcd4 (0x1ffcd4 .. 0x20013c) reads e's half extents +0x6c / +0x74, e's world matrix, the entity's float +0x5c and its component (+0x7c: byte +0x62 bit 0, hword +4, byte +0x5f). It returns 0, 3 or 4. On some paths it writes the requested state hword +4 (6, or a word of the table 0x357e1c) and byte +0x5f (0x235498(2)). So with the spawn's arguments (zero vector, 0.0) the test can change the pedestrian. It was not read in full.
+
+**Walk helpers.** Both belong to the walk 0x2b9138 and are read in [§2026-10-20T12:20:49](#ts-20261020-122049). The manager's part is small:
+- Byte 0x375d5c: the update clears it first (0x2ee5f8). The walk takes it at 0x2b91e0.
+- The avoidance 0x2edf08(manager, entity) is reached through 0x2b3fbc from 0x2b943c. After the player, it walks the manager's slots in order and skips disabled slots and the pedestrian itself (0x2edf94 .. 0x2ee044).
+
+**Port.** `pedestriansMaxOf` and `loadLevel(exists, level)` read the limit. `enterScene` / `leaveScene` are slots +0x40 / +0x44. `pedestrianFadeTier`, `pedestrianNodeHidden` and `pedestrianRoomActive` replace the caller's callbacks, and they read the state the caller keeps in `Pedestrian` (layer class, node, room, animation player). `PedestrianWorld` holds the layer table, *0x37674c and the blocked test. The take of 0x375d5c and the avoidance 0x2edf08 are `PedestrianWalk`'s (`src/runtime/pedestrian_walk.*`). The manager only clears the byte in `update` and hands it out with `walkToken()` (for `groundProbeTaken`), and `otherLivePositions(slot)` gives the other live slots' positions in slot order (for `otherPedestrians`). Stand-in PED-S5: a slot parameter gives its table value. Nothing is wired into `chase-game`.
+
+Unknowns:
+- 0x1ffcd4 in full, so the blocked test.
+- The contents of the layer table (callers of 0x2405a0), the class byte +0x18 of a pedestrian, which room node +0x7c is, and the run-time values of *0x37674c and the record 0x376794.
+- Who calls 0x164240 through the record 0x376d18, and which scene's level load sets the slots and the limit when a level loads several scenes.
+- The start values of the level root's slots (+0x2c / +0x30), for a Pedestrians_Max stored as a slot.
