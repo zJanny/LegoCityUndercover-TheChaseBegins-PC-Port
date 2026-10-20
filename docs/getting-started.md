@@ -11,7 +11,7 @@ The [README](../README.md) has the short path from a fresh checkout to a running
 
 ## What `chase-game` is
 
-`chase-game` is the development runtime. It is not the game. It shows the start screens of the original (logos, language, slot list, intro movie). After them you can walk the player around a street, with parts of mission 1-1 and a car you can get into. See the [development runtime guide](game-runtime.md).
+`chase-game` is the development runtime. It is not the game. It shows the start screens of the original (logos, language, slot list, intro movie). After them you can walk the player around a street of the city and play through parts of the first missions. See the [development runtime guide](game-runtime.md) and [Project status](status.md) for what works.
 
 ## Check your game file
 
@@ -53,7 +53,7 @@ Optional, only for the [emulator comparison tool](commands.md#original-game-in-t
 
 - **`build/chase-game` is missing after the build.** libepoxy or FFmpeg was not found at configure time. Install them, then run the `cmake` configure and build commands again. The configure output says which one was found.
 - **CMake or the compiler is not found.** Install the packages for your system again (README step 2).
-- **`chase-game: cannot open archive`.** The program looks for `artifacts/romfs/romfs/lego_city3ds.fib` relative to the folder you start it from. Start it from the project folder, or pass `--fib` and `--names`.
+- **`chase-game: cannot open archive` or `cannot open controls: config/controls.cfg`.** The program looks for `artifacts/romfs/romfs/lego_city3ds.fib` and `config/controls.cfg` relative to the folder you start it from. Start it from the project folder, or pass `--fib`, `--names` and `--config`.
 - **The extraction stops with "encrypted NCCH".** The image must be decrypted. The tools do not decrypt.
 - **The extraction stops with "output already exists".** Delete the folder or choose another `--output`.
 - **A hash check fails.** The image is damaged or a different build. Check it as described above.

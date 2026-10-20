@@ -6,8 +6,8 @@
 - CMake 3.16 or newer.
 - A C++17 compiler.
 - SDL2, found through pkg-config.
-- libepoxy, which is needed only for the [model viewer](model-viewer.md) and the [development runtime](commands.md#development-runtime). Without it, both are skipped.
-- FFmpeg (libavformat, libavcodec, libswscale, libswresample, libavutil), which is needed for the [video player](fmv-player.md) and for the movies of the [development runtime](game-runtime.md). Without it, both are skipped.
+- libepoxy, which is needed only for the [model viewer](model-viewer.md) and the [development runtime](commands.md#development-runtime). Without it, both are not built.
+- FFmpeg (libavformat, libavcodec, libswscale, libswresample, libavutil), which is needed for the [video player](fmv-player.md), `chase-frontshot` and the [development runtime](game-runtime.md), which plays the movies of the start screens. Without it, these are not built.
 - Optional, only for the [emulator comparison tool](commands.md#original-game-in-the-emulator-oracle): the Azahar 3DS emulator and Xvfb.
 
 ## Build
@@ -34,14 +34,15 @@ cmake --build build -j"$(($(nproc) - 1))"
 ## Check that everything works
 
 ```sh
-ctest --test-dir build -j"$(($(nproc) - 1))" --output-on-failure
+ctest --test-dir build -j"$(($(nproc) - 1))" --output-on-failure            # all tests, about one and a half minutes
+ctest --test-dir build -j"$(($(nproc) - 1))" -LE slow --output-on-failure   # without the slow tests, about half a minute
 python3 -m unittest discover -s tests -p 'test_*.py' -v
 ```
 
-Some tests need your extracted game data in `artifacts/romfs` (see [Extracting game data](extracting-game-data.md)). Without it, they are reported as skipped.
+Some tests need your extracted game data in `artifacts/romfs` (see [Extracting game data](extracting-game-data.md)). Without it, they are reported as skipped or are not added.
 
 - Use `-DCHASE_ROMFS_DIR=...` when you configure, if the data is somewhere else.
-- Use `-DCHASE_LOCO_TRACE_DIR=...` if the recorded movement traces are not in `artifacts/oracle/loco-out`. Without the traces, the movement comparison test is skipped.
-- The viewer, development runtime, sound and video player tests are only added if the data existed when you ran the first `cmake` command. Run that command again after you extract the data.
+- Use `-DCHASE_LOCO_TRACE_DIR=...` if the recorded movement traces are not in `artifacts/oracle/loco-out`. Without the traces, the movement comparison test is skipped. The other recorded traces have a folder option of their own (for example `-DCHASE_CAMERA_TRACE_DIR=...`); the [command reference](commands.md#c-tests) names them for each test.
+- The viewer, development runtime, sound, video player and start-screen tests are only added if the data existed when you ran the first `cmake` command. Run that command again after you extract the data.
 
 For extraction, converter and program commands, see the [command reference](commands.md).

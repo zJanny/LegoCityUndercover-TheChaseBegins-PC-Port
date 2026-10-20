@@ -29,7 +29,7 @@ The picture under the README table shows four of the measures over time: script 
 python3 tools/progress_report.py
 ```
 
-It needs the built library (`cmake --build build`) and the extracted game data (see [Extracting game data](extracting-game-data.md)). It takes a few seconds. Parts that need missing data are skipped and named.
+It needs the built library (`cmake --build build`) and the extracted game data: the RomFS in `artifacts/romfs` and, for the measure of documented game code, the executable wrapper `artifacts/game/game.arm.elf` (see [Extracting game data](extracting-game-data.md)). It takes about a second. Parts that need missing data are skipped and named.
 
 - `--json PATH` writes all numbers, with a breakdown per command, object type, file type and feature, the time and the git commit.
 - `--update-readme README.md` rewrites the text between `<!-- progress:start -->` and `<!-- progress:end -->` in the README.

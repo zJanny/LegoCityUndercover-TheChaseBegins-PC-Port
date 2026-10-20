@@ -20,7 +20,7 @@ The game data is never part of this repository. You need your own copy of the ga
 
 ![Progress trend](docs/progress-trend.svg)
 
-Updated 2026-10-20, commit c30ede0. How the numbers are measured: [docs/progress.md](docs/progress.md).
+Updated 2026-10-20, commit bd10d03. How the numbers are measured: [docs/progress.md](docs/progress.md).
 <!-- progress:end -->
 
 ## What you need
@@ -101,7 +101,8 @@ You should see `save: level entry ..., studs ..., super bricks ...` in the termi
 | Walk slowly | Hold Left Alt |
 | Jump | Q or right mouse button |
 | Punch | R |
-| Use, get in a car | Space or left mouse button |
+| Use (detective spots, build-its and similar) | Space or left mouse button (A) |
+| Get into or out of a car | E (X) |
 | Turn the camera | Z and C |
 | Pause menu (Resume works) | Return; turn with the arrow keys or click on the lower screen |
 | Quit | Escape |

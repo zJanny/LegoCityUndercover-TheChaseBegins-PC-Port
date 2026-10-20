@@ -8,7 +8,7 @@ build/chase-soundtest --id 1 --id 5
 ```
 
 - All listed sounds play at the same time.
-- Looping sounds play for 10 seconds. Use `--seconds N` to change that.
+- The program ends when the longest sound has played. A looping sound counts as 10 seconds. Use `--seconds N` to set the time yourself.
 - `--id N` plays a sound effect by its number in the game's sound table, at the volume the table gives. You can repeat `--id` and mix it with file names.
 - The sound for each event is known only for some events, for example the character and the coins. See [Sound](game-runtime.md#sound).
 
