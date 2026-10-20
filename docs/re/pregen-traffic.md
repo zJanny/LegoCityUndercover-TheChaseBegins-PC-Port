@@ -9,11 +9,13 @@ Format and loaders of `Pregen/Traffic/<level>_Traffic.bin` and `Pregen/Pedestria
 - The loaders resolve each point's path in the loaded levels, store the unit tangent of the path at the parameter, the room and (traffic only) the floor cell; the lookup 0x1eb490 descends to the leaf of a point. [§2026-10-20T11:16:20](#ts-20261020-111620)
 - All 14 shipped files (7 levels each) decode exactly; every point's path exists in its level, and each position equals the path sample at the parameter (inference: the spawn points are the editor's samples along the paths). [§2026-10-20T11:16:20](#ts-20261020-111620)
 - Port: `src/assets/pregen_traffic.*` (`parsePregenSpawns`, `findPregenSpawnCell`), tests `pregen-traffic`, `pregen-traffic-real-data`. Not wired into the game.
-- Open: how the managers choose a point from a cell list, the radius the cell lists were built with, the closed-path sample offsets, and the derived fields in the port.
+- The derived fields are ported as `deriveSpawnFields` (`src/runtime/pregen_derive.*`) for both kinds: path record, tangent, room. The 72 closed-path pedestrian points off the path sample deviate on one axis of the stored position; the sampler matches all other points exactly. [§2026-10-20T12:11:03](#ts-20261020-121103)
+- Open: how the managers choose a point from a cell list, the radius the cell lists were built with, the traffic floor cell (+40), the loaded-level order and current room at manager init, the path node.
 
 <a id="ts-20261020-111620"></a>
 
 ## 2026-10-20T11:16:20+02:00 — Traffic and pedestrian spawn files: loaders, layout, quadtree lookup, census (llvm-objdump only, no REA session, no emulator)
+Corrected by [pregen-traffic.md §2026-10-20T12:11:03](#ts-20261020-121103): the 47 points off the closed-path sample are 72 (threshold 1e-3) and differ on one axis of the stored position, not in the sampler.
 
 Method: `llvm-objdump -d --triple=armv6k-none-eabi --mattr=+vfp2` on `artifacts/game/game.arm.elf` (Europe v1.0); a throwaway Python scan for `bl` targets and literal words; throwaway Python and C++ walks of the shipped files under `artifacts/fib/files/pregen/` and of the level paths (`Level::paths`, sampled with `runtime::sampleDirectorPath`), session 2026-10-20, not kept. [Corrects data-tables-config.md §2026-10-15T12:09:48](data-tables-config.md#ts-20261015-120948): the two path strings start at 0x2e0560 and 0x2eeaa0 (0x2e0567 and 0x2eeaa7 are 7 bytes into them, after `Pregen/`).
 
@@ -57,3 +59,26 @@ Unknowns:
 - 47 pedestrian points on closed paths (42 of the test playground, 5 of lvl_07_downtown) lie up to 0.4 units from the port's sample at their parameter; whether the parameters were rounded or the closed sampler differs is not known.
 - The sampler's fourth argument (1) and its node transform (0x250810, 0x254250); type 1 paths (0x1b33fc) are not used by these files.
 - What the traffic manager does with the floor cell (+40).
+
+<a id="ts-20261020-121103"></a>
+
+## 2026-10-20T12:11:03+02:00 — Pregen derived fields: path record, tangent, room; the closed-path deviation (llvm-objdump of `artifacts/game/game.arm.elf`, no REA session, no emulator)
+
+[Corrects pregen-traffic.md §2026-10-20T11:16:20](#ts-20261020-111620): the unknown about 47 closed-path points; the loaders' derived fields are now ported.
+
+**Read from the original.** Loader 0x2ee868 (the traffic loader 0x2e02d4 is field for field the same), points of 40 bytes (traffic 44): for point k and each loaded level in list order (list 0x589a18, `0x23c188` gives the level data), `0x1b3d04(path section, hash, 0)` returns the path record; the result is stored at point +24 (0 when no level has it). For the first level that has it, the sampler `table[type byte of record +8]` (0x358a14 pedestrians, 0x358d58 traffic; entry 0 = 0x1c17c0) is called with (record + 8, scratch on the stack, point +12, 1, parameter at point +32). Then, for every point whether or not a path was found, `point +36 = 0x239838(point)`.
+- **0x1c17c0 (type 0 sampler).** Open path: the parameter is clamped to 0 .. count - 1; closed path: no clamp. `floor` by 0x252c14, indices base - 1, base, base + 1, base + 2, wrapped by the signed remainder 0x24e500 with count added when negative (closed) or clamped to 0 .. count - 1 (open). The position block (r5 not null) is the Catmull-Rom as `sampleDirectorPath` has it. The tangent block (r6 not null) is the derivative p1 (6t^2 - 6t) + p2 (-6t^2 + 6t) + (p2 - p0)(3t^2 - 4t + 1) / 2 + (p3 - p1)(3t^2 - 2t) / 2 per axis (constants at 0x1c1ae4..0x1c1b04: 0, 2, 3, 1, 0.5, -2, 6, -6, 4), normalised by 0x257ea0; this is `detectivePathTangent`, whose formula I compared with the disassembly term by term. The tail (0x1c1a98): when the fourth argument and the position pointer are set and `[record + 8 + 0x10]` (record +0x18, stored by 0x1c1b48) is not 0, the position is transformed by the node matrix 0x250810 / 0x254250 and the tangent by 0x249ee8; with the node unset nothing more happens. The callers of the setter 0x1c1b48 are 0x2a83b4 and 0x2bac44 (not read), so the node is taken as unset (PREGEN-S3).
+- **Room 0x239838(point).** For every scene of the list 0x589a18 in order it calls `0x22d204(scene, point, first)` (first = 1 for the first scene) and returns the first non-zero result, else 0. The rule of 0x22d204 is the one of [streaming-rooms.md §2026-10-14T20:51:26](streaming-rooms.md#ts-20261014-205126) (position lifted by 0.1; the current room `[0x376c78]` and its list first for the first scene; rooms in array order; smallest vertical gap of the rooms whose x/z range holds the point), applied to the stored position without any box offset. The result stored at +36 is the room object; the port keeps the room number.
+
+**Port.** `deriveSpawnFields(spawns, loadedLevels, context)` returns per point: path found, level and path index, tangent, room (`objectRoomAfterMove` with no own room). Not computed: the traffic floor cell 0x1edaac (+40). The caller supplies the loaded levels in order and the current room (0 = none): stand-in PREGEN-S2.
+
+**Check (shipped data, test `pregen-derive-real-data`).** With the level's `_main.blvl` as the only loaded level, all 6854 points of the 14 files find their path (all type 0; pedestrian paths are all closed, traffic paths all open) and a room (room boxes of `models/<level>`; distinct rooms per file pinned in the test). The tangent of every point is a unit vector and agrees (dot > 0.99) with a central difference of the sampler.
+
+**PREGEN-2.** 72 pedestrian points (6 of lvl_07_downtown, 66 of the test playground; threshold 1e-3, so the earlier 47 used a coarser one) lie off `sampleDirectorPath` at their stored parameter. Every one differs on a single axis only (the other two match to 1e-3), by up to 2.3 units (largest in the playground); the parameters have one decimal. The other 3,900+ closed-path points match exactly, including parameters near the wrap, so the closed branch of 0x1c17c0 is not the cause and rounding of the parameter would move several axes. Inference, not from code: the tool that wrote the files changed one coordinate of these positions (for example snapped a height to the ground). The loader overwrites nothing of the stored position (the sampler's position goes to the scratch), so the stored value is the spawn position as read.
+
+Unknowns:
+- The order of the loaded-level list and the current room when 0x2ee4b4 / 0x2dfa48 run (PREGEN-4); only one level per file was needed here.
+- Whether any pedestrian or traffic path has its node set (PREGEN-5).
+- The traffic floor cell (PREGEN-3).
+- Which axis the 72 deviations are on (not tabulated) and why.
+

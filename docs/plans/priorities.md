@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 859 open items and stand-ins, 161 linked to game usage, 698 with unknown reach.
+Items: 862 open items and stand-ins, 161 linked to game usage, 701 with unknown reach.
 
 ## Top 50 overall
 
@@ -154,7 +154,7 @@ Items: 859 open items and stand-ins, 161 linked to game usage, 698 with unknown 
 
 ## World and levels
 
-7 of 46 items linked.
+7 of 49 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -205,7 +205,7 @@ No linked items.
 
 No script native or object class is linked to these items (`+N` is Unblocks). Add `uses:` to an item when its fix changes the game.
 
-Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?display=source#L33) (+30), [RENDER-35](features/rendering.md?display=source#L48) (+25), [VEH-91](features/vehicles-physics-collision.md?display=source#L39) (+24), [PREGEN-1](features/pedestrians-traffic.md?display=source#L25) (+23), [VEH-6](features/vehicles-physics.md?display=source#L30) (+23), [TRAFFIC-2](features/pedestrians-traffic-cars.md?display=source#L30) (+21), [SCRIPT-43](features/script-system-natives.md?display=source#L30) (+18), [SCRIPT-94](features/script-system-ai-navigation.md?display=source#L34) (+17), [SCRIPT-44](features/script-system-natives.md?display=source#L31) (+16), [SCRIPT-101](features/script-system-ai-navigation.md?display=source#L37) (+15)
+Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?display=source#L33) (+30), [RENDER-35](features/rendering.md?display=source#L48) (+25), [VEH-91](features/vehicles-physics-collision.md?display=source#L39) (+24), [VEH-6](features/vehicles-physics.md?display=source#L30) (+23), [PREGEN-3](features/pedestrians-traffic.md?display=source#L28) (+21), [TRAFFIC-2](features/pedestrians-traffic-cars.md?display=source#L30) (+21), [SCRIPT-43](features/script-system-natives.md?display=source#L30) (+18), [SCRIPT-94](features/script-system-ai-navigation.md?display=source#L34) (+17), [SCRIPT-44](features/script-system-natives.md?display=source#L31) (+16), [SCRIPT-101](features/script-system-ai-navigation.md?display=source#L37) (+15)
 
 - [abilities-detective.md](features/abilities-detective.md): DETECT-8 (+3), DETECT-13 (+2), DETECT-1 (+1), DETECT-15 (+1), DETECT-4 (+1), DETECT-6 (+1), DETECT-S7 (+1), DETECT-S8 (+1), DETECT-S9 (+1), DETECT-10, DETECT-11, DETECT-12, DETECT-3, DETECT-5, DETECT-9, DETECT-S1, DETECT-S2, DETECT-S4, DETECT-S5, DETECT-S6
 - [abilities-scanner.md](features/abilities-scanner.md): SCAN-10 (+1), SCAN-11 (+1), SCAN-16 (+1), SCAN-17 (+1), SCAN-S10 (+1), AUDIO-S33, SCAN-13, SCAN-15, SCAN-3, SCAN-6, SCAN-S1, SCAN-S11, SCAN-S12, SCAN-S2, SCAN-S3, SCAN-S4, SCAN-S5, SCAN-S6, SCAN-S7, SCAN-S8, SCAN-S9
@@ -230,7 +230,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [particles.md](features/particles.md): PART-4 (+1), PART-6 (+1), PART-5, PART-7, PART-S1, PART-S2, PART-S3, PART-S4
 - [pedestrians-traffic-cars.md](features/pedestrians-traffic-cars.md): TRAFFIC-2 (+21), TRAFFIC-3 (+1), TRAFFIC-S1, TRAFFIC-S2
 - [pedestrians-traffic-pedestrians.md](features/pedestrians-traffic-pedestrians.md): PED-3 (+1), PED-S1, PED-S2
-- [pedestrians-traffic.md](features/pedestrians-traffic.md): PREGEN-1 (+23), PREGEN-2, PREGEN-S1
+- [pedestrians-traffic.md](features/pedestrians-traffic.md): PREGEN-3 (+21), PREGEN-4 (+5), PREGEN-5 (+1), PREGEN-S1, PREGEN-S2, PREGEN-S3
 - [player-movement.md](features/player-movement.md): PLAYER-14 (+2), PLAYER-16 (+2), PLAYER-11 (+1), PLAYER-15 (+1), PLAYER-22 (+1), PLAYER-25 (+1), PLAYER-1, PLAYER-10, PLAYER-13, PLAYER-18, PLAYER-2, PLAYER-21, PLAYER-23, PLAYER-24, PLAYER-3, PLAYER-5, PLAYER-6, PLAYER-7, PLAYER-8, PLAYER-S1, PLAYER-S10, PLAYER-S11, PLAYER-S2, PLAYER-S4, PLAYER-S5, PLAYER-S6, PLAYER-S8
 - [player-traversal-ladders.md](features/player-traversal-ladders.md): TRAV-59 (+1), TRAV-58, TRAV-60, TRAV-S34, TRAV-S35
 - [player-traversal-pole.md](features/player-traversal-pole.md): TRAV-S9 (+1), TRAV-11, TRAV-13, TRAV-14, TRAV-15, TRAV-16, TRAV-S5, TRAV-S6, TRAV-S7, TRAV-S8
