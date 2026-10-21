@@ -44,4 +44,15 @@ Some tests need your extracted game data in `artifacts/romfs` (see [Extracting g
 - Use `-DCHASE_ROMFS_DIR=...` when you configure, if the data is somewhere else.
 - The viewer, development runtime, sound, video player and start-screen tests are only added if the data existed when you ran the first `cmake` command. Run that command again after you extract the data.
 
+Tests that need the game data carry the CTest label `needs-game-data`. Exclude them with `-LE needs-game-data`, for example on a machine without the data.
+
+## Continuous integration
+
+The workflow files build the project and run the tests for every push to `main` and every pull request. A second workflow runs every night and by hand, including the slow tests. Neither runs tests that need game data.
+
+- The jobs install `cmake`, `g++`, `pkg-config`, `python3`, `libsdl2-dev`, `libepoxy-dev` and the five FFmpeg development packages (`libavformat-dev`, `libavcodec-dev`, `libswscale-dev`, `libswresample-dev`, `libavutil-dev`) with `apt-get`.
+- The build fails on any compiler warning.
+- The workflow files are `.forgejo/workflows/ci.yml`, `.forgejo/workflows/full.yml`, `.github/workflows/ci.yml` and `.github/workflows/full.yml`.
+- The exact commands to reproduce a run locally are in the [command reference](commands.md#continuous-integration).
+
 For extraction, converter and program commands, see the [command reference](commands.md).

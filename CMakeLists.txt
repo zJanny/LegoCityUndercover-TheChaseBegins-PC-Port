@@ -1900,6 +1900,10 @@ target_link_libraries(traffic-manager-test PRIVATE chase_runtime)
 target_compile_options(traffic-manager-test PRIVATE -Wall -Wextra -Wpedantic)
 add_test(NAME traffic-manager COMMAND traffic-manager-test)
 
+if(BUILD_TESTING)
+  add_test(NAME test-labels COMMAND python3 "${CMAKE_SOURCE_DIR}/tools/check_test_labels.py" "${CMAKE_BINARY_DIR}")
+endif()
+
 get_property(chase_all_tests DIRECTORY PROPERTY TESTS)
 foreach(test_name ${chase_all_tests})
   set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT "XDG_DATA_HOME=${CMAKE_BINARY_DIR}/test-xdg/${test_name}")
@@ -1908,5 +1912,41 @@ endforeach()
 foreach(slow_test game-debris-super-pickup game-cutscene-dog-end game-super-buildit-build game-super-brick-roof game-doorlock-detective-1-2 game-cage-release-1-2 game-mission-1-1 game-mission-1-1-start game-vehicle-drive game-vehicle-room game-pedestrian-rooms game-vehicle-hit game-vehicle-smash game-vehicle-break game-director-hold game-director-release game-van-escort game-pause-menu waypoint-marker-shot audio-real-data)
   if(TEST ${slow_test})
     set_property(TEST ${slow_test} APPEND PROPERTY LABELS slow)
+  endif()
+endforeach()
+
+foreach(game_data_test
+  frontend-real-data script-text-pages-real-data hud-real-data audio-real-data pedestrian-fade-real-data pedestrian-system-real-data cutscene-cast
+  node-draw-matrix-real-data script-text-real-data waypoint-global-real-data waypoints-real-data hand-item-real-data detective-real-data
+  use-spot-real-data use-marker-real-data script-starters-real-data carry-real-data scanner-real-data scanner-overlay-data zipline-real-data
+  nested-props-real-data zipline-pole-real-data zipline-rope-real-data brick-grab-real-data climb-bar-real-data acrobat-pole-real-data pole-real-data
+  ladder-real-data carry-animation-real-data super-buildit-real-data fast-travel-pad-real-data pause-menu-real-data buildit-real-data
+  prop-animation-real-data animal-props-real-data cat-rescue-real-data prop-parts-real-data vehicle-boarding-real-data vehicle-drive-real-data
+  floor-graph-real-data vehicle-collision-real-data vehicle-box-contact-real-data vehicle-sphere-sweep-real-data vehicle-prop-smash-real-data
+  destroy-effects-real-data character-death-real-data player-attack-real-data attack-sounds-real-data vehicle-world-real-data vehicle-rest-real-data
+  vehicle-wheels-real-data vehicle-hud-real-data vehicle-real-data objectives-real-data object-kinds progress-readme priorities-current
+  camera-records-real-data locomotion-real-data streaming-real-data room-streaming-real-data collision-real-data fog-real-data lighting-real-data
+  sky-real-data level-start-real-data dcam-real-data npc-idle-real-data pedestrian-limit-real-data ai-real-data nav-path-real-data
+  script-triggers-real-data script-dialog-real-data natives-world-real-data natives-party-real-data natives-objects-real-data
+  natives-cutscene-real-data natives-animation-real-data natives-progress-real-data script-call-targets-real-data scene-change-real-data
+  same-level-entry-real-data door-real-data fall-real-data jump-real-data slide-real-data camera-real-data camera-blend-real-data
+  camera-vehicle-real-data camera-sweep-real-data save-real-data test-save-build slot-progress-real-data save-writer-real-data
+  new-game-slot-real-data level-state-real-data pregen-derive-real-data pregen-traffic-real-data assets-real-data particles-real-data
+  viewer-real-smoke viewer-cutscene-smoke debug-overlay-off debug-overlay-on debug-overlay-area tip-text-shot tip-text-panel waypoint-marker-shot
+  waypoint-marker-position police-entrance-shot police-entrance-no-disc game-real-smoke game-save-continue game-save-hud-studs
+  game-save-continue-empty-slot front-game-smoke front-overlay-off front-overlay-on front-overlay-area front-game-handoff frontshot-real-smoke
+  game-script-run game-script-walk game-script-camera game-script-ledge game-vehicle-drive game-van-escort game-cutscene-glass-hidden
+  game-cutscene-dog-prop game-super-brick-freeplay game-save-new-game-clean game-save-new-game game-save-reload game-super-brick-roof
+  game-cutscene-dog-end game-vehicle-room game-pedestrian-rooms game-vehicle-hit game-vehicle-break game-vehicle-smash game-debris-super-pickup
+  game-mission-1-1 game-detective-1-2 game-use-spot-1-2 game-use-marker-detective-1-2 game-player-script-animation game-super-buildit-prompt
+  game-super-buildit-build game-cage-release-1-2 game-doorlock-detective-1-2 game-mission-1-2-start-timing game-mission-1-1-start game-script-dialog
+  game-same-level-entry game-scene-change-exit game-scene-change-entry game-director-hold game-director-release game-script-zipline
+  game-script-attack-table game-script-wobbly-table game-script-bounce game-script-bounce-grab game-script-acrobat-poles game-script-zipline-use-a
+  game-script-zipline-use-b game-script-brick-grab game-script-brick-rail game-script-pole game-script-ladder game-script-ladder-walk-in
+  game-script-jump game-pause-menu game-script-hud game-room-streaming game-stream-room-in soundtest-real-smoke soundtest-id-smoke fmv-real-smoke
+  prop-wobbly-real-data stud-callers-real-data stud-drop-classes-real-data prop-hit-sequence-real-data super-brick-real-data
+  super-brick-display-real-data prop-bouncer-real-data prop-wall-side-real-data player-script-animation-real-data)
+  if(TEST ${game_data_test})
+    set_property(TEST ${game_data_test} APPEND PROPERTY LABELS needs-game-data)
   endif()
 endforeach()
