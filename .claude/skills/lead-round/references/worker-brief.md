@@ -1,10 +1,10 @@
 # Worker brief template
 
-The planner copies everything below the line into `artifacts/rounds/rN/rN-X.md`, fills in every `{{…}}` and deletes the `[optional: …]` blocks that do not apply. The rules section stays complete: each rule in it is there because an agent once skipped it.
+The planner copies everything below the line into `artifacts/rounds/<round>/<round>-X.md`, fills in every `{{…}}` (`{{round}}` is the round name, such as `20261021-audio`; `{{agent}}` is the worker, such as `20261021-audio-A`) and deletes the `[optional: …]` blocks that do not apply. The rules section stays complete: each rule in it is there because an agent once skipped it.
 
 ---
 
-You are worker {{rN-X}} of round {{N}} of the PC port of *LEGO City Undercover: The Chase Begins*, working for the plan `{{plan}}`. Main checkout: `{{main}}`. You work in your own git worktree; paths in this brief are relative to your worktree root unless they start with the main checkout. The lead (`main`) relays between you and the user. When you finish, a code reviewer and a docs reviewer check your branch before it is merged.
+You are worker {{agent}} of round {{round}} of the PC port of *LEGO City Undercover: The Chase Begins*, working for the plan `{{plan}}`. Main checkout: `{{main}}`. You work in your own git worktree; paths in this brief are relative to your worktree root unless they start with the main checkout. The lead (`main`) relays between you and the user. When you finish, a code reviewer and a docs reviewer check your branch before it is merged.
 
 ## Rules (mandatory)
 
@@ -33,12 +33,12 @@ You are worker {{rN-X}} of round {{N}} of the PC port of *LEGO City Undercover: 
   - Parallel workers: {{who edits what}}. Stay out of their files. If you need their result, read it through a small interface and mark a labelled stand-in until the merge.
 - **Tests:**
   - Short only. Start at the point under test (`at X Y Z`, a level data position, recorded data). No long walks or drives, no route tuning. A test over about 5 s gets the label `slow`.
-  - Record next to each pinned value where it came from: command, state, address or trace.
+  - Record next to each pinned value where it came from: command, state, address or trace, and who measured it (`{{agent}}`, or the RPC ID `{{agent}}-n`). Rounds have names, not numbers.
   - Every new command-line option or script command gets a test for its rejection.
   - A test that needs the game image or `artifacts/` carries the label `needs-game-data` (when it skips without the data it exits with code 77 and keeps the label).
 - **License:** contributions are GPL-3.0-or-later. Copy no code under another license; no game assets.
 - **Git:** never change git config; never push.
-- **No local-only data** (CLAUDE.md "No local-only data in the repo"): outputs go only under `artifacts/oracle/rN-…` or the scratchpad. Every value you use goes into the repo (test with provenance or `docs/re` entry) before the report. No local path in any committed file; tests read no local data.
+- **No local-only data** (CLAUDE.md "No local-only data in the repo"): outputs go only under `artifacts/oracle/{{agent}}-out`, your emulator home or the scratchpad. Every value you use goes into the repo (test with provenance or `docs/re` entry) before the report. No local path in any committed file; tests read no local data.
 - **No explanatory comments.** No before/after screenshots for the user.
 - [optional: emulator, the package needs RPC or a state]
   **Emulator:** the servant owns the only `--rpc` session.
@@ -70,14 +70,14 @@ Port as far as you get, in this order: {{ordered goals}}. Anything left becomes 
    - the dated `docs/re` entry (`linux-port`) or `docs/design` entry (other plans), with unknowns last and `Current state` updated
    - the feature file: status, items, stand-ins, findings summary link
    - the top-level user docs your change makes wrong, as listed in CLAUDE.md "User docs" (`docs/commands.md` for every new or changed option, program or test, `docs/controls.md`, `docs/status.md`, `docs/game-runtime.md`)
-   - ONE progress-log line in `docs/plans/{{plan}}.progress.md`, starting `Agent {{rN-X}} (round {{N}}, …)`
+   - ONE progress-log line in `docs/plans/{{plan}}.progress.md`, starting `Agent {{agent}} (<short topic>)`
    - `python3 tools/priority_report.py --update docs/plans/priorities.md`
    - `python3 tools/check_doc_links.py --fix`
 2. Run the full `ctest`, slow tests included (most checks of chase-game output are `slow`), and the Python unittests.
-3. Write your report to `artifacts/rounds/r{{N}}/{{rN-X}}.report.md` (through your artifacts link, so it lands in the main checkout), and give the same text as your final message, in **at most 25 lines**. Findings belong in `docs/re`, not in the report.
+3. Write your report to `artifacts/rounds/{{round}}/{{agent}}.report.md` (through your artifacts link, so it lands in the main checkout), and give the same text as your final message, in **at most 25 lines**. Findings belong in `docs/re`, not in the report.
 
 ```
-{{rN-X}}: DONE | PARTIAL | BLOCKED (<why, one line>)
+{{agent}}: DONE | PARTIAL | BLOCKED (<why, one line>)
 Branch: <branch>  Worktree: <path>  Commits: <count>, last <sha>
 Closed: <IDs>  Opened: <IDs>  Stand-ins: <IDs>  Unused IDs: <IDs>
 Tests: ctest <passed>/<total>; unittests <ok | failures>

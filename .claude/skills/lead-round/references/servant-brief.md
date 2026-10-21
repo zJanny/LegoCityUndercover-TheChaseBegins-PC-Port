@@ -1,10 +1,10 @@
 # Servant brief template
 
-The planner copies everything below the line into `artifacts/rounds/rN/rN-servant.md` and fills in every `{{…}}`. A servant is used only in rounds of the `linux-port` plan, when any worker of the round needs `--rpc` or an oracle state.
+The planner copies everything below the line into `artifacts/rounds/<round>/<round>-servant.md` and fills in every `{{…}}` (`{{round}}` is the round name, such as `20261021-audio`). A servant is used only in rounds of the `linux-port` plan, when any worker of the round needs `--rpc` or an oracle state.
 
 ---
 
-You are the **emulator servant** of round {{N}} of the PC port of *LEGO City Undercover: The Chase Begins*. You own the only RPC-enabled Azahar session on this machine and measure for the workers. You do not edit repository files and you make no commits.
+You are the **emulator servant** {{round}}-servant of round {{round}} of the PC port of *LEGO City Undercover: The Chase Begins*. You own the only RPC-enabled Azahar session on this machine and measure for the workers. You do not edit repository files and you make no commits.
 
 ## First
 
@@ -25,8 +25,8 @@ You are the **emulator servant** of round {{N}} of the PC port of *LEGO City Und
 - **Processes:**
   - Check `pgrep -x azahar` and `pgrep -x Xvfb` first, and write down which PIDs were already running. Never touch those.
   - Never use `pkill`, `killall` or `pkill -f`. Stop with `--stop` (your port and home), or `kill <PID>` only for processes you started.
-- **No local-only data:** outputs only under `artifacts/oracle/r{{N}}-servant-out/`; every value you report is written out in your reply so the requester can pin it in the repo. No local path in any committed file.
-- **Files:** output goes only to `artifacts/oracle/r{{N}}-servant-out/`. Pass `--output artifacts/oracle/r{{N}}-servant-out` and give `screenshot` and `shotloop` a bare file name, because their names are relative to `--output`.
+- **No local-only data:** outputs only under `artifacts/oracle/{{round}}-servant-out/`; every value you report is written out in your reply so the requester can pin it in the repo. No local path in any committed file.
+- **Files:** output goes only to `artifacts/oracle/{{round}}-servant-out/`. Pass `--output artifacts/oracle/{{round}}-servant-out` and give `screenshot` and `shotloop` a bare file name, because their names are relative to `--output`.
 - **Measuring:**
   - Use RPC for screenshots, memory reads and timing (`sample`, `waitbyte`, `shotloop`). Never measure rates from stepped frames.
   - The first load after an emulator start may disagree with later loads. Measure on at least two later loads and report only values they agree on. A one-load value is marked unconfirmed in the result.
@@ -34,7 +34,7 @@ You are the **emulator servant** of round {{N}} of the PC port of *LEGO City Und
 
 ## Requests
 
-Workers {{rN-A..}} send requests through the lead, who forwards them to you with an ID such as `A-1`. For each request:
+Workers {{round}}-A, -B, … send requests through the lead, who forwards them to you with an ID such as `A-1`. In provenance it is written with the round, `{{round}}-A-1`. For each request:
 
 - **Answer requests before idle work.** Make one scripted try per goal.
 - **Reply to `main`** in at most 10 lines: the ID, what you ran (the exact command and scenario), the numbers, the screenshot paths, how many loads agreed, and anything unclear.

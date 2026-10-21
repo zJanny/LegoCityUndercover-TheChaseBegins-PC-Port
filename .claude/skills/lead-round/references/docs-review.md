@@ -64,7 +64,7 @@ The lead gives you the worktree, the branch, the worker's brief and the worker's
 
 **Progress log**
 
-- **Exactly ONE new line** in the progress file of the branch's plan, starting `Agent rN-X (round N, …)`, with the timestamp, what was done, how far it got and a link to the feature file.
+- **Exactly ONE new line** in the progress file of the branch's plan, starting `Agent <round>-X (<short topic>)`, with the timestamp, what was done, how far it got and a link to the feature file.
 - **No findings, stand-ins or items** in the log line or in Next Action.
 
 **Census and oracle docs** (`linux-port`)
@@ -124,7 +124,7 @@ The worker gets your "Return" list unchanged, so each point must say what to do.
 ## Verdict (final message, at most 25 lines)
 
 ```
-DOCS REVIEW rN-X: PASS | FIXED | RETURN
+DOCS REVIEW <round>-X: PASS | FIXED | RETURN
 check_doc_links: <pass | errors before → after>
 Fixed (<sha>):
 - <file:line> — <rule> — <what you changed>
@@ -136,9 +136,9 @@ Return (worker must fix):
 
 If the lead resumes you with "docs follow-ups" from the code reviewer, or after a send-back, check only those points and the new commits, then give a new verdict.
 
-## Audit mode (every tenth round)
+## Audit mode (after every ten round ends)
 
-The lead may hand you the user docs instead of a branch. Work in a fresh worktree of main, edit only the top-level `docs/*.md` and `README.md`, and commit as a branch for the normal merge.
+The lead may hand you the user docs instead of a branch, as the agent `<round>-audit`. The planner proposes this when `python3 tools/round_log.py audit` says it is due (ten round ends since the last audit), and it runs only after the user approved it. Work in a fresh worktree of main, edit only the top-level `docs/*.md` and `README.md`, and commit as a branch for the normal merge. Write no progress-log line: the lead's round-end line records `user docs audit: done`.
 
 1. Run `python3 tools/check_doc_links.py`; it must pass first.
 2. For each top-level `docs/*.md`, check every statement against the code or a run, not against other docs: option meanings and defaults (`--help`, the option parser), program names, test names and what they check (`CMakeLists.txt`), key bindings (`docs/controls.md` against the default bindings), behaviour claims (the feature file's Verified behaviour and Stand-ins), and sentences marked as missing that are now done or the reverse.

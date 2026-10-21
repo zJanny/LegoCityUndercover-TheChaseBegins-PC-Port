@@ -581,8 +581,9 @@ def next_ids(root, key, count):
     return [format_id(key, n) for n in free_numbers(root, key, count)]
 
 
-RESERVATION_HEADER = ("# ID reservations\n\nRanges of item IDs held by parallel agents; the lead reserves them with "
-                      "`tools/check_doc_links.py --reserve PREFIX COUNT WHO` and drops them with `--release WHO`. "
+RESERVATION_HEADER = ("# ID reservations\n\nRanges of item IDs held by parallel agents, named like `20261021-audio-A`. The planner "
+                      "reserves them with `tools/check_doc_links.py --reserve PREFIX COUNT WHO`; "
+                      "`tools/merge_agent.py finish --release WHO` drops them in the merge commit. "
                       "`--next` skips reserved ranges.\n\n| Prefix | First | Last | Holder | Date |\n|---|---|---|---|---|\n")
 
 

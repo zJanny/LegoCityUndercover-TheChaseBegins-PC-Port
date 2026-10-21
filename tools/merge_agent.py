@@ -1,9 +1,18 @@
 #!/usr/bin/env python3
 """Squash-merge an agent branch into main with the mechanical checks of CLAUDE.md.
 
-  merge_agent.py prepare BRANCH          squash the branch into the index of main, then run the checks
+  merge_agent.py sync                    fetch, compare main with its upstream, fast-forward when main has no own commits
+  merge_agent.py prepare BRANCH          sync, squash the branch into the index of main, then run the checks
   merge_agent.py check                   run the checks on the staged merge (after resolving conflicts or review edits)
-  merge_agent.py finish BRANCH -m FILE   run the checks, commit with the message in FILE, remove the worktree and branch
+  merge_agent.py finish BRANCH -m FILE [--release WHO]... [--log PLAN LINE_FILE]
+                                         release WHO's ID ranges and append the round-end log line inside the squash,
+                                         run the checks, commit with the message in FILE, remove the worktree and branch
+  merge_agent.py close -m FILE [--release WHO]... [--log PLAN LINE_FILE]
+                                         the same bookkeeping as its own commit, for a round that ends without a merge
+
+sync and prepare compare main with its upstream, or with --upstream REMOTE/BRANCH; prepare --no-sync skips that for a
+session the user runs without a remote. When the upstream moved ahead and main has own commits, they stop: the user
+decides. LINE_FILE holds one line "Lead (<round> end): ..."; its timestamp comes from the clock.
 
 Conflicts inside the README progress section and in docs/progress-trend.svg are regenerated, and a conflict in
 docs/plans/priorities.md takes main's copy (the checks regenerate it); a README conflict outside that
@@ -21,7 +30,11 @@ import os
 import re
 import subprocess
 import sys
+from datetime import datetime
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from round_log import name_error  # noqa: E402
 
 JOBS = max(1, (os.cpu_count() or 2) - 1)
 
@@ -35,6 +48,10 @@ PROGRESS_START = "<!-- progress:start -->"
 PROGRESS_END = "<!-- progress:end -->"
 ARCHIVE_SUFFIX = "-archive.md"
 CONFLICT_MARKER = re.compile(r"^(<<<<<<< |=======$|>>>>>>> )")
+RESERVATIONS = "docs/plans/features/id-reservations.md"
+LOG_HEADING = "## Session Log"
+PLAN_NAME = re.compile(r"[a-z][a-z0-9-]*")
+ROUND_IN_LINE = re.compile(r"Lead \((\S+) end\b")
 
 
 class MergeError(Exception):
@@ -191,11 +208,45 @@ def run_checks(root: Path) -> None:
     print("checks passed")
 
 
-def prepare(root: Path, branch: str) -> None:
+def upstream_of(root: Path, upstream: str | None) -> tuple[str, str]:
+    if upstream is None:
+        result = run(["git", "rev-parse", "--abbrev-ref", "main@{upstream}"], root, check=False, capture=True)
+        if result.returncode != 0:
+            raise MergeError("main has no upstream; pass --upstream REMOTE/BRANCH")
+        upstream = result.stdout.strip()
+    remotes = git(root, "remote").split()
+    remote, _, branch = upstream.partition("/")
+    if not branch or remote not in remotes:
+        raise MergeError(f"--upstream: expected REMOTE/BRANCH with REMOTE one of: {', '.join(remotes) or 'none'}; got {upstream!r}")
+    return remote, branch
+
+
+def sync(root: Path, upstream: str | None) -> None:
+    require_main(root)
+    remote, branch = upstream_of(root, upstream)
+    run(["git", "fetch", "-q", remote], root, capture=True)
+    target = f"{remote}/{branch}"
+    if run(["git", "rev-parse", "--verify", "--quiet", f"refs/remotes/{target}"], root, check=False, capture=True).returncode:
+        raise MergeError(f"--upstream: {target} does not exist after the fetch")
+    ahead, behind = (int(n) for n in git(root, "rev-list", "--left-right", "--count", f"main...{target}").split())
+    if behind == 0:
+        print(f"main is up to date with {target} ({ahead} own commits not pushed)")
+        return
+    if ahead:
+        raise MergeError(f"main and {target} have diverged ({ahead} own, {behind} new upstream commits): stop and ask the user")
+    if git(root, "status", "--porcelain", "--untracked-files=no").strip():
+        raise MergeError(f"{target} is {behind} commits ahead, but main has uncommitted changes: stop and ask the user")
+    run(["git", "merge", "-q", "--ff-only", target], root, capture=True)
+    print(f"fast-forwarded main by {behind} commits to {target}")
+
+
+def prepare(root: Path, branch: str, upstream: str | None = None, no_sync: bool = False) -> None:
     require_main(root)
     require_branch(root, branch)
     if git(root, "status", "--porcelain", "--untracked-files=no").strip():
         raise MergeError("main has uncommitted changes")
+    if not no_sync:
+        sync(root, upstream)
     result = run(["git", "merge", "--squash", branch], root, check=False, capture=True)
     if result.returncode != 0:
         unmerged = git(root, "diff", "--name-only", "--diff-filter=U").split()
@@ -223,14 +274,96 @@ def worktree_of(root: Path, branch: str) -> Path | None:
     return None
 
 
-def finish(root: Path, branch: str, message_file: Path) -> None:
-    require_main(root)
-    require_branch(root, branch)
-    message = message_file.read_text().rstrip()
+def read_message(message_file: Path) -> str:
+    try:
+        message = message_file.read_text().rstrip()
+    except OSError as error:
+        raise MergeError(f"--message: cannot read '{message_file}': {error.strerror}")
     if not message:
         raise MergeError(f"message file '{message_file}' is empty")
     if not re.search(r"^Co-Authored-By: .+ <.+>$", message, re.MULTILINE):
         raise MergeError(f"message file '{message_file}' has no Co-Authored-By line; the merging agent adds its own")
+    return message
+
+
+def head_text(root: Path, path: str) -> str:
+    result = run(["git", "show", f"HEAD:{path}"], root, check=False, capture=True)
+    return result.stdout if result.returncode == 0 else ""
+
+
+def holds(text: str, holder: str) -> bool:
+    for line in text.split("\n"):
+        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+        if len(cells) == 5 and cells[1].isdigit() and cells[2].isdigit() and cells[3] == holder:
+            return True
+    return False
+
+
+def holders_to_release(root: Path, holders: list[str]) -> list[str]:
+    path = root / RESERVATIONS
+    current = path.read_text(encoding="utf-8") if path.is_file() else ""
+    pending = []
+    for holder in holders:
+        if not holder.strip() or "|" in holder or holder != holder.strip():
+            raise MergeError(f"--release: WHO must be a reservation holder without '|' or outer spaces, got {holder!r}")
+        if holds(current, holder):
+            pending.append(holder)
+        elif not holds(head_text(root, RESERVATIONS), holder):
+            raise MergeError(f"--release: no reservation held by {holder!r}")
+    return pending
+
+
+def read_log_line(root: Path, plan: str, line_file: Path) -> tuple[Path, str]:
+    if not PLAN_NAME.fullmatch(plan):
+        raise MergeError(f"--log: PLAN must be a plan name like linux-port, got {plan!r}")
+    progress = root / "docs" / "plans" / f"{plan}.progress.md"
+    if not progress.is_file() or LOG_HEADING not in progress.read_text(encoding="utf-8").split("\n"):
+        raise MergeError(f"--log: plan {plan!r} has no progress file with a '{LOG_HEADING}' section")
+    try:
+        lines = [line for line in line_file.read_text(encoding="utf-8").split("\n") if line.strip()]
+    except OSError as error:
+        raise MergeError(f"--log: cannot read '{line_file}': {error.strerror}")
+    if len(lines) != 1:
+        raise MergeError(f"--log: '{line_file}' must hold exactly one line, got {len(lines)}")
+    text = lines[0].strip()
+    named = ROUND_IN_LINE.match(text)
+    problem = name_error(named.group(1), datetime.now().date()) if named else "no round name"
+    if problem:
+        raise MergeError(f"--log: expected one line 'Lead (<round> end): ...' with a round name like 20261021-audio "
+                         f"({problem}); got {text[:80]!r}")
+    return progress, text
+
+
+def append_log_line(root: Path, progress: Path, text: str) -> None:
+    relative = progress.relative_to(root).as_posix()
+    lines = progress.read_text(encoding="utf-8").split("\n")
+    committed = set(head_text(root, relative).split("\n"))
+    if any(line.endswith(" — " + text) and line not in committed for line in lines):
+        print(f"the round-end line is already in {relative}")
+        return
+    entry = f"- {datetime.now().astimezone().isoformat(timespec='seconds')} — {text}"
+    while lines and not lines[-1].strip():
+        lines.pop()
+    progress.write_text("\n".join(lines + [entry]) + "\n", encoding="utf-8")
+    run(["git", "add", "--", relative], root)
+    print(f"appended the round-end line to {relative}")
+
+
+def bookkeeping(root: Path, holders: list[str], log: list[str] | None) -> None:
+    logged = read_log_line(root, log[0], Path(log[1])) if log else None
+    for holder in holders_to_release(root, holders):
+        run(["python3", "tools/check_doc_links.py", "--root", ".", "--release", holder], root, capture=True)
+        run(["git", "add", "--", RESERVATIONS], root)
+        print(f"released the ID ranges of {holder}")
+    if logged:
+        append_log_line(root, *logged)
+
+
+def finish(root: Path, branch: str, message_file: Path, holders: list[str] | None = None, log: list[str] | None = None) -> None:
+    require_main(root)
+    require_branch(root, branch)
+    message = read_message(message_file)
+    bookkeeping(root, holders or [], log)
     run_checks(root)
     subprocess.run(["git", "commit", "-q", "-F", "-"], cwd=root, input=message + "\n", text=True, check=True)
     worktree = worktree_of(root, branch)
@@ -244,24 +377,57 @@ def finish(root: Path, branch: str, message_file: Path) -> None:
     print("merged; push with `git push` when authorized")
 
 
+def close(root: Path, message_file: Path, holders: list[str], log: list[str] | None) -> None:
+    require_main(root)
+    if not holders and not log:
+        raise MergeError("close: nothing to do; give --release WHO and/or --log PLAN LINE_FILE")
+    message = read_message(message_file)
+    if git(root, "status", "--porcelain", "--untracked-files=no").strip():
+        raise MergeError("main has uncommitted changes")
+    bookkeeping(root, holders, log)
+    fix_docs(root)
+    run(["python3", "tools/check_doc_links.py", "--root", "."], root)
+    run(["python3", "tools/progress_report.py", "--update-readme", "README.md"], root)
+    run(["git", "add", "README.md", "docs/progress-trend.svg"], root)
+    subprocess.run(["git", "commit", "-q", "-F", "-"], cwd=root, input=message + "\n", text=True, check=True)
+    print(git(root, "log", "--oneline", "-1").rstrip())
+    print("committed; push with `git push` when authorized")
+
+
+def add_bookkeeping_options(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("-m", "--message", required=True, type=Path)
+    parser.add_argument("--release", action="append", default=[], metavar="WHO", help="drop the ID ranges WHO holds, in this commit")
+    parser.add_argument("--log", nargs=2, metavar=("PLAN", "LINE_FILE"), help="append the round-end line to the plan's session log")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = parser.add_subparsers(dest="command", required=True)
-    sub.add_parser("prepare").add_argument("branch")
+    sub.add_parser("sync").add_argument("--upstream", metavar="REMOTE/BRANCH")
+    prepare_parser = sub.add_parser("prepare")
+    prepare_parser.add_argument("branch")
+    prepare_choice = prepare_parser.add_mutually_exclusive_group()
+    prepare_choice.add_argument("--upstream", metavar="REMOTE/BRANCH")
+    prepare_choice.add_argument("--no-sync", action="store_true", help="do not compare with a remote (a session without one)")
     sub.add_parser("check")
     finish_parser = sub.add_parser("finish")
     finish_parser.add_argument("branch")
-    finish_parser.add_argument("-m", "--message", required=True, type=Path)
+    add_bookkeeping_options(finish_parser)
+    add_bookkeeping_options(sub.add_parser("close"))
     args = parser.parse_args(argv)
     sys.stdout.reconfigure(line_buffering=True)
     try:
         root = repo_root()
-        if args.command == "prepare":
-            prepare(root, args.branch)
+        if args.command == "sync":
+            sync(root, args.upstream)
+        elif args.command == "prepare":
+            prepare(root, args.branch, args.upstream, args.no_sync)
         elif args.command == "check":
             run_checks(root)
+        elif args.command == "close":
+            close(root, args.message, args.release, args.log)
         else:
-            finish(root, args.branch, args.message)
+            finish(root, args.branch, args.message, args.release, args.log)
     except MergeError as error:
         print(f"merge_agent: {error}", file=sys.stderr)
         return 1

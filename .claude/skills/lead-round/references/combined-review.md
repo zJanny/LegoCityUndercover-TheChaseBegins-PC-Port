@@ -9,7 +9,7 @@ For a small branch, you do the work of both reviewers in one pass. A separate co
    - **Read once:** read `CLAUDE.md`, the plan's rule file, the brief, the report and the diff once (`git -C <worktree> diff main...HEAD`) and use them for both checklists.
    - **Both areas are yours:** you may edit code and docs, so ignore the "edit only" path limits and the `index.lock` notes. A code fix that needs a docs change: make both in one go, with no "Docs follow-ups".
    - **Same quick-fix rule:** about 30 changed lines for code and 40 for docs. Everything else is RETURN, as in each checklist.
-2. **Branch bigger than the lead was told:** if the branch turns out bigger than "small", or it transcribes new handlers or constants that need checking against the disassembly, stop. Reply `COMBINED REVIEW rN-X: SPLIT — <why, one line>`, so the lead launches the two separate reviewers (Opus for the code reviewer when handlers were transcribed).
+2. **Branch bigger than the lead was told:** if the branch turns out bigger than "small", or it transcribes new handlers or constants that need checking against the disassembly, stop. Reply `COMBINED REVIEW <round>-X: SPLIT — <why, one line>`, so the lead launches the two separate reviewers (Opus for the code reviewer when handlers were transcribed).
 3. After your fixes:
    - code: build and run the affected tests, plus `ctest -LE slow` if you changed `src/`; check the game-data label and license points of code-review.md
    - docs: `python3 tools/check_doc_links.py --fix`, then the checker without `--fix`, which must pass
@@ -19,7 +19,7 @@ For a small branch, you do the work of both reviewers in one pass. A separate co
 ## Verdict (final message, at most 25 lines)
 
 ```
-COMBINED REVIEW rN-X: PASS | FIXED | RETURN | SPLIT
+COMBINED REVIEW <round>-X: PASS | FIXED | RETURN | SPLIT
 Graphify: <queries>
 Checked against the disassembly: <addresses> | not verified: <what>
 check_doc_links: <pass | errors before → after>

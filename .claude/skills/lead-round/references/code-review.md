@@ -102,7 +102,7 @@ A code fix that needs a docs change (for example, a new stand-in label) goes und
 ## Verdict (final message, at most 25 lines)
 
 ```
-CODE REVIEW rN-X: PASS | FIXED | RETURN
+CODE REVIEW <round>-X: PASS | FIXED | RETURN
 Graphify: <queries>
 Checked against the disassembly: <addresses> | not verified: <what>
 Fixed (<sha>):

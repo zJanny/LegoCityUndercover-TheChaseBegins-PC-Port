@@ -65,12 +65,26 @@ Run this before you commit any Markdown change. It checks every link between the
 python3 tools/check_doc_links.py          # list broken links and missing anchors
 python3 tools/check_doc_links.py --fix    # repair what can be repaired mechanically
 python3 tools/check_doc_links.py --next VEH 3          # next free item IDs (VEH-S for stand-ins)
-python3 tools/check_doc_links.py --reserve VEH 10 "agent A"   # reserve a range for a parallel agent
-python3 tools/check_doc_links.py --release "agent A"          # drop that agent's reservations
+python3 tools/check_doc_links.py --reserve VEH 10 20261021-audio-A   # reserve a range for a parallel agent
+python3 tools/check_doc_links.py --release 20261021-audio-A          # drop that agent's reservations
 ```
 
 - An unknown prefix (a typo) stops `--next` and `--reserve` with an error; add `--new-prefix` only for a new feature.
 - `--release` with a name that holds no reservation stops with an error.
+- At a merge, `merge_agent.py finish --release` does the release inside the merge commit (see "Merging an agent branch").
+
+## Round names
+
+Rounds of the lead workflow have names, not numbers: the start date and a topic word, such as `20261021-audio`. Agents are `20261021-audio-A`, `20261021-audio-B` and so on.
+
+```sh
+python3 tools/round_log.py name 20261021-audio   # is the name well formed and still free?
+python3 tools/round_log.py audit                 # is the user docs audit due?
+```
+
+- `name` exits with 1 when a progress log, its archive, the ID reservations or a local round folder already uses the name. Add a second topic word then, such as `20261021-audio-sfx`.
+- A badly formed name (not `YYYYMMDD-word`, up to three words, a date in the future, or the words `servant` or `audit`) stops with an error.
+- `audit` counts the round-end lines (`Lead (<round> end)`, and the old `Lead (round N end)`) since the last line that says `docs audit: done` or `docs audit: declined`. The audit is due after ten.
 
 ## Progress report
 
@@ -182,10 +196,20 @@ The table lists some of the tests. `ctest --test-dir build -N` lists all of them
 ## Merging an agent branch
 
 ```sh
-python3 tools/merge_agent.py prepare BRANCH          # squash the branch into main's staging area, then run the checks
+python3 tools/merge_agent.py sync                    # fetch, then compare main with its upstream
+python3 tools/merge_agent.py prepare BRANCH          # sync, squash the branch into main's staging area, then run the checks
 python3 tools/merge_agent.py check                   # run the checks again after fixing conflicts or review edits
 python3 tools/merge_agent.py finish BRANCH -m FILE   # checks, commit with the message in FILE, remove worktree and branch
+python3 tools/merge_agent.py finish BRANCH -m FILE --release 20261021-audio-A --log linux-port LINE_FILE
+python3 tools/merge_agent.py close -m FILE --release 20261021-audio-C --log linux-port LINE_FILE
 ```
+
+- `sync` compares main with its upstream (`--upstream REMOTE/BRANCH` names another one). When the upstream is ahead and main has no own commits, it fast-forwards main. When both moved, or main has uncommitted changes, it stops with an error, and the user decides.
+- `prepare` runs `sync` first and takes the same `--upstream`. `--no-sync` skips it, for a session without a remote.
+- `finish --release WHO` drops the ID ranges WHO holds, inside the merge commit; give it once per holder. A name that holds no reservation stops with an error.
+- `finish --log PLAN LINE_FILE` appends the round-end line to the session log of the plan's progress file (`docs/plans/<plan>.progress.md`) inside the merge commit. LINE_FILE holds exactly one line `Lead (<round> end): ...` without a timestamp; the tool adds the time from the clock. Any other text stops with an error.
+- Both are safe to repeat: after a failed check, run `finish` again with the same options.
+- `close` makes the same release and log line as its own commit, for a round whose last branch was dropped. It needs at least one of the two options.
 
 The checks stop on game files, screenshots or other binary files, broken doc links, build warnings and failing tests. They also refresh the README progress table. Conflicts in the README progress table or the trend graphic are fixed by making them again; conflicts in a session log archive keep the lines of both sides. Other conflicts you fix by hand. The message file must end with the merging agent's own `Co-Authored-By:` line. The script never pushes.
 

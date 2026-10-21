@@ -24,7 +24,7 @@ PLACEHOLDER = r"(?:<[^/>]*>|\{\{[^}/]*\}\}|r(?:N|\{\{N\}\})[^/]*)[\w.-]*"
 TOOL_FOLDERS = r"oracle(?:/(?:out|home|states))?/?"
 RULE_FOLDERS = (
     TOOL_FOLDERS + r"|oracle/states/(?:NAME\.(?:cst|json)|README\.md)|oracle/" + PLACEHOLDER + r"(?:/" + PLACEHOLDER + r")?/?"
-    + r"|rounds/?|rounds/" + PLACEHOLDER + r"(?:/" + PLACEHOLDER + r")?|scratch/?"
+    + r"|rounds/?|rounds/" + PLACEHOLDER + r"(?:/" + PLACEHOLDER + r")?/?|scratch/?"
 )
 
 ARTIFACT_EXEMPTIONS = [
@@ -36,7 +36,9 @@ ARTIFACT_EXEMPTIONS = [
     ("docs/rules/*.md", RULE_FOLDERS, "say where generated material goes (local only)"),
     ("CLAUDE.md", RULE_FOLDERS, "the rule names the local folders"),
     (".claude/skills/lead-round/*", RULE_FOLDERS, "the skill names the local round and oracle folders"),
-    (".claude/skills/lead-round/evals/evals.json", r"rounds/r39/r39-[BC]\.md", "made-up round in an eval prompt"),
+    (".claude/skills/lead-round/evals/evals.json", r"rounds/20261020-buildit/20261020-buildit-[BC]\.md", "made-up round in an eval prompt"),
+    ("tools/round_log.py", r"rounds", "looks whether a local round folder already has the new name"),
+    ("tests/test_round_log.py", r"rounds/20261019-docs", "a round folder the test makes in a temporary directory"),
     ("docs/plans/linux-port.progress.md", r"oracle/states/", "user decision on where states go"),
 ]
 LINE_EXEMPTIONS = [

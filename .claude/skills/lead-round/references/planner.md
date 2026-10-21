@@ -35,12 +35,17 @@ Choosing packages:
 - **Feature files near 16 KB:** say that the worker splits the file first.
 - **Models:** follow `.claude/skills/lead-round/references/models.md`, including the models of the two reviewers.
 
+Naming the round and checking the docs audit:
+
+- **Round name:** `<YYYYMMDD>-<slug>`, from `date +%Y%m%d` and one lowercase word for the round's main topic (letters and digits, starting with a letter), for example `20261021-audio`. Rounds have no numbers. Check it with `python3 tools/round_log.py name <name>`. If it is taken, add a second slug word (`20261021-audio-sfx`) and check again.
+- **Docs audit:** run `python3 tools/round_log.py audit`. When it says `due`, propose the user docs audit as an extra package (a docs reviewer in audit mode, sonnet, `docs-review.md`). It runs only if the user approves.
+
 Before the final message, check that the `RPC:` lines and the `Servant:` line follow the RPC rule.
 
 Final message: the proposal, in **at most 40 lines** and exactly this shape. The lead shows it to the user unchanged.
 
 ```
-Round N proposal (planner, <date -Iseconds>)
+Round <name> proposal (planner, <date -Iseconds>)
 Plan: <the round's plan>
 Basis: <one line: user requests / Next Action item k / priorities.md rank r>
 
@@ -52,6 +57,7 @@ A. <title> — <item IDs> — <model> (<reason, max 8 words>) — ~<minutes> min
 B. ...
 C. ...
 Servant: <none | sonnet, idle jobs: ID, ID>
+Docs audit: <not due (<n> of 10 round ends) | due (<n> round ends): proposed as an extra package>
 User actions needed: <state requests, things to play, or "none">
 Not chosen: <one to three lines: strong candidates left out and why>
 ```
@@ -64,21 +70,22 @@ If the lead's prompt says `new plan: <name>`, follow `.claude/skills/lead-round/
 
 1. Apply the user's changes exactly. Read more only if the changes need it. A conflict the rules already decide (such as the RPC rule) is fixed in the briefs, not handed to the lead. Report only conflicts the rules leave open.
 2. Run `date -Iseconds` and use that time.
-3. **Reserve IDs.** For each package and each prefix it needs, run `python3 tools/check_doc_links.py --reserve PREFIX COUNT rN-X` (stand-ins: `PREFIX-S`; a new prefix needs `--new-prefix`). Two or three per prefix are typical. Main must be clean apart from that file; if it is not, stop and report. Commit only `docs/plans/features/id-reservations.md` with the subject `Reserve the round N ID ranges` and your own `Co-Authored-By:` line. Do not push.
-4. **Emulator ports and homes** (only for packages that use the emulator).
-   - Port: `40000 + N*10 + k`, with k = 1 for A, 2 for B, …, and 9 for the servant. Check it is free with `ss -ltn | grep -c :PORT`.
-   - Home: `artifacts/oracle/rN-X-home`, or `artifacts/oracle/rN-servant-home` for the servant.
-5. **Write the briefs.** Run `mkdir -p artifacts/rounds/rN`. Write one file per worker, `rN-X.md`, from `.claude/skills/lead-round/references/worker-brief.md`, and `rN-servant.md` from `servant-brief.md` if there is a servant.
+3. **Check the name again** with `python3 tools/round_log.py name <name>`: the lead has just pulled what other machines pushed. If it is taken now, add a slug word, use the new name everywhere and say so in the final message.
+4. **Reserve IDs.** For each package and each prefix it needs, run `python3 tools/check_doc_links.py --reserve PREFIX COUNT <round>-X` (stand-ins: `PREFIX-S`; a new prefix needs `--new-prefix`). Two or three per prefix are typical. Main must be clean apart from that file; if it is not, stop and report. Commit only `docs/plans/features/id-reservations.md` with the subject `Reserve the <round> ID ranges` and your own `Co-Authored-By:` line. Do not push; the lead pushes it before the launch. This is the round's only commit before its merges, so reserve everything the round needs in it. No package needs new IDs: no commit.
+5. **Emulator ports and homes** (only for packages that use the emulator).
+   - Port: `40000 + 10*k`, with k = 1 for A, 2 for B, …, and 9 for the servant. Check it is free with `ss -ltn | grep -c :PORT`; if not, add 100 until it is.
+   - Home: `artifacts/oracle/<round>-X-home`, or `artifacts/oracle/<round>-servant-home` for the servant.
+6. **Write the briefs.** Run `mkdir -p artifacts/rounds/<round>`. Write one file per worker, `<round>-X.md`, from `.claude/skills/lead-round/references/worker-brief.md`, and `<round>-servant.md` from `servant-brief.md` if there is a servant.
    - Fill in every `{{…}}`, including `{{plan}}`, `{{rule file}}` and `{{main}}`: the main checkout's path as `git worktree list | head -1` prints it. A worker in a worktree needs that path for the graph and the artifacts link. Putting it into the generated brief is fine; the skill itself stays free of machine paths. Delete the optional blocks that do not apply.
    - A brief gives the worker what you learned: item IDs, feature files and their sizes, evidence links, states, glue files, what the other workers do, and the Graphify queries to start with. That way the worker does not plan again.
    - Link to docs; don't copy their content.
-6. Final message, at most 10 lines:
+7. Final message, at most 10 lines:
 
 ```
-Briefs ready (round N), reservations committed as <sha>
-rN-A  model=<m>  artifacts/rounds/rN/rN-A.md
-rN-B  model=<m>  artifacts/rounds/rN/rN-B.md
-rN-servant  model=sonnet  artifacts/rounds/rN/rN-servant.md   (or: no servant)
+Briefs ready (round <round>), reservations committed as <sha> (or: no IDs reserved, no commit)
+<round>-A  model=<m>  artifacts/rounds/<round>/<round>-A.md
+<round>-B  model=<m>  artifacts/rounds/<round>/<round>-B.md
+<round>-servant  model=sonnet  artifacts/rounds/<round>/<round>-servant.md   (or: no servant)
 ```
 
 After that you are finished. Do not launch agents: the lead does that.

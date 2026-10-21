@@ -42,11 +42,12 @@ class CheckLocalDataTest(unittest.TestCase):
 
     def test_concrete_paths_fail_in_every_exempt_file_class(self) -> None:
         concrete = ["artifacts/oracle/r50-A-out/x.mem", "artifacts/oracle/states/m12-foo.cst", "artifacts/rounds/r47/r47-A.md",
-                    "artifacts/oracle/r47-servant-out/", "artifacts/scratch/out.txt"]
+                    "artifacts/oracle/r47-servant-out/", "artifacts/scratch/out.txt", "artifacts/rounds/20261021-audio/20261021-audio-A.md",
+                    "artifacts/oracle/20261021-audio-servant-out/x.png"]
         for name in ("docs/re/oracle.md", "docs/re/oracle-rpc.md", "docs/rules/port.md", "docs/commands.md", "CLAUDE.md",
                      ".claude/skills/lead-round/SKILL.md", ".claude/skills/lead-round/references/recorder.md",
-                     "tools/azahar_oracle.py", "tools/merge_agent.py", "tests/test_merge_agent.py",
-                     "docs/plans/linux-port.progress.md"):
+                     "tools/azahar_oracle.py", "tools/merge_agent.py", "tests/test_merge_agent.py", "tools/round_log.py",
+                     ".claude/skills/lead-round/evals/evals.json", "docs/plans/linux-port.progress.md"):
             for path in concrete:
                 self.assertEqual(problems(name, "see `%s`." % path), [1], (name, path))
 
@@ -55,6 +56,8 @@ class CheckLocalDataTest(unittest.TestCase):
             "`artifacts/oracle/`", "artifacts/oracle/states/", "artifacts/oracle/states/NAME.cst", "artifacts/oracle/states/README.md",
             "artifacts/oracle/rN-X-home", "artifacts/oracle/rN-\u2026", "artifacts/oracle/r{{N}}-servant-out/", "artifacts/rounds/",
             "artifacts/rounds/rN/rN-X.md", "artifacts/rounds/r{{N}}/{{rN-X}}.report.md", "artifacts/scratch/.",
+            "artifacts/rounds/<round>/", "artifacts/rounds/<round>/<round>-X.md", "artifacts/rounds/{{round}}/{{agent}}.report.md",
+            "artifacts/oracle/<round>-X-home", "artifacts/oracle/{{round}}-servant-out/",
         ])
         for name in ("docs/rules/port.md", "CLAUDE.md", ".claude/skills/lead-round/references/worker-brief.md"):
             self.assertEqual(problems(name, rule_text), [], name)
