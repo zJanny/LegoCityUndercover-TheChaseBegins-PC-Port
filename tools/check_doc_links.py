@@ -12,6 +12,7 @@ after a merge of two branches that both archived it, is dropped instead of copie
 file move to <feature>.closed.md. An item or stand-in ID defined twice in a feature and its closed file is an
 error. Every feature file has exactly one row (at most 300 characters, table preceded by a blank line) in the feature index, which groups its tables under "## <Area>" headings; closed-items files have none. Item lines keep the field order gap text, needs:, blocks:, uses:, evidence:. A timestamp later than the current time is an error; a ":00" second in a line new compared to HEAD is a warning. --next PREFIX [COUNT] prints free item IDs, --reserve PREFIX COUNT WHO reserves a range in docs/plans/features/id-reservations.md, --release WHO drops it (an error when WHO holds none); an unknown PREFIX needs --new-prefix. An entry with a "Superseded by" line under its heading moves with --fix to <topic>.history.md next to it and links follow. A link whose text starts with "Corrects" needs a "Corrected by" line under the corrected entry's heading
 that links back, and every "Corrected by" line needs the matching "Corrects" link.
+In a repository checkout (CMakeLists.txt and src/ present) AGENTS.md must exist, link CLAUDE.md and have at most 15 lines, README.md and CONTRIBUTING.md must contain "not affiliated", LICENSE must start with "GNU GENERAL PUBLIC LICENSE" and REUSE.toml must name GPL-3.0-or-later.
 The user docs (docs/*.md outside the subfolders, README.md) are checked against the code by user_docs.py: every option string of src/ and every chase-* program of CMakeLists.txt is named in them, and an option, chase-* program or tools/src/tests/docs path in their code spans or fences must exist.
 """
 import argparse
@@ -54,6 +55,10 @@ SUBTOPICS = "Subtopics:"
 SUPERSEDED = "Superseded by"
 MAX_LOG_LINES = 20
 MAX_CLAUDE_BYTES = 22528
+MAX_AGENTS_LINES = 15
+NOTICE = "not affiliated"
+LICENSE_START = "GNU GENERAL PUBLIC LICENSE"
+LICENSE_ID = "GPL-3.0-or-later"
 FINDINGS_DIRS = (Path("docs") / "re", Path("docs") / "design")
 
 
@@ -800,9 +805,49 @@ def size_errors(root):
     errors.extend(current_state_errors(root))
     errors.extend(session_log_errors(root))
     errors.extend(user_docs.user_doc_errors(root))
+    errors.extend(project_file_errors(root))
     claude = root / "CLAUDE.md"
     if claude.is_file() and claude.stat().st_size > MAX_CLAUDE_BYTES:
         errors.append(f"CLAUDE.md:1: claude-md-size: {claude.stat().st_size} bytes, limit {MAX_CLAUDE_BYTES}")
+    return errors
+
+
+def is_repository(root):
+    return (root / "CMakeLists.txt").is_file() and (root / "src").is_dir()
+
+
+def read_text_or_none(path):
+    return path.read_text(encoding="utf-8", errors="replace") if path.is_file() else None
+
+
+def project_file_errors(root):
+    if not is_repository(root):
+        return []
+    errors = []
+    agents = read_text_or_none(root / "AGENTS.md")
+    if agents is None:
+        errors.append("AGENTS.md:1: agents-md-missing: AGENTS.md must exist and point at CLAUDE.md")
+    else:
+        if not any(m.group(2).partition("#")[0].endswith("CLAUDE.md") for m in LINK.finditer(agents)):
+            errors.append("AGENTS.md:1: agents-md-no-claude-link: AGENTS.md must link CLAUDE.md")
+        if len(agents.splitlines()) > MAX_AGENTS_LINES:
+            errors.append(f"AGENTS.md:1: agents-md-size: {len(agents.splitlines())} lines, limit {MAX_AGENTS_LINES}; agent rules belong in CLAUDE.md")
+    for name in ("README.md", "CONTRIBUTING.md"):
+        text = read_text_or_none(root / name)
+        if text is None:
+            errors.append(f"{name}:1: notice-file-missing: {name} must exist and contain the \"{NOTICE}\" notice")
+        elif NOTICE not in text.lower():
+            errors.append(f"{name}:1: notice-missing: {name} must contain the \"{NOTICE}\" notice")
+    license_text = read_text_or_none(root / "LICENSE")
+    if license_text is None:
+        errors.append("LICENSE:1: license-missing: LICENSE must exist")
+    elif not license_text.lstrip().startswith(LICENSE_START):
+        errors.append(f"LICENSE:1: license-text: LICENSE must start with \"{LICENSE_START}\"")
+    reuse = read_text_or_none(root / "REUSE.toml")
+    if reuse is None:
+        errors.append("REUSE.toml:1: reuse-missing: REUSE.toml must exist")
+    elif LICENSE_ID not in reuse:
+        errors.append(f"REUSE.toml:1: reuse-license: REUSE.toml must name {LICENSE_ID}")
     return errors
 
 

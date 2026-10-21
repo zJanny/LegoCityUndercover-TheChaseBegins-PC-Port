@@ -58,6 +58,8 @@ CTest also guards `game.cpp` size (`game-cpp-wiring`), GL outside `src/render/` 
 **Tests**
 
 - **No local-only data** (CLAUDE.md "No local-only data in the repo"): a committed path to local-only data, a test or CMake option, default path or environment variable that reads it, a value cited only by file instead of pinned with provenance, a generated file (state, trace, save, screenshot) staged: RETURN.
+- **CI:** `ctest -LE 'slow|needs-game-data'` passes without game data; a new test that reads the game image or `artifacts/` carries the label `needs-game-data` (when it skips without the data it exits with code 77 and keeps the label). Otherwise RETURN.
+- **License:** no code copied in under a license other than GPL-3.0-or-later: RETURN.
 - **Recorded values:** tests pin recorded reference values with their provenance next to them (command, state, address, trace), not a live second implementation.
 - **Short tests:** they start at the point under test. No long walks or drives, no tuned routes. A test that takes longer than about 5 s carries the `slow` label in `CMakeLists.txt`.
 - **No shortcut past the real path** (`linux-port`): a test must not reach the point under test by teleport or `--call-script` when the user plays the real path. If the package fixes a blocker the user hit while playing, run the real path once in `chase-game` from where the user starts (a short run) and report what you saw.

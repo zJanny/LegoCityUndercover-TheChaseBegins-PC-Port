@@ -28,6 +28,11 @@ The original runs in Azahar as a measuring reference. Read `docs/re/oracle.md` b
 - Stop what you start (`--stop`), check `pgrep -x azahar` / `pgrep -x Xvfb`, never kill processes you did not start.
 - **Emulator servant:** whenever any worker needs `--rpc` or an oracle state (no worker holds the slot); requests go through the lead with an ID (worker and number); one scripted try per goal, then a report with what a user state would need; the first load after an emulator start may disagree with later loads (use repeated loads that agree); when its work ends it stops everything it started and reports `pgrep` output.
 
+## Labelling tests for CI
+
+- A test that needs the original image or `artifacts/` (for example `artifacts/romfs`, `artifacts/game`) carries the CTest label `needs-game-data`, set where it is registered in `CMakeLists.txt`; a test that skips without that data exits with code 77 and carries the label too. CI runs `ctest -LE 'slow|needs-game-data'`; the nightly run keeps the `slow` tests.
+- Every other test builds its data in the test (pinned values with provenance) and must pass on a clean clone.
+
 ## Briefs and review
 
 - **Every port brief also names:** the rule "No local-only data in the repo", stand-in labelling (gates and conditions the agent chose are stand-ins too), the emulator `--port` / `--home` and `--renderer opengl` (the software renderer crashes in the sandbox).

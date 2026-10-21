@@ -73,6 +73,11 @@ The lead gives you the worktree, the branch, the worker's brief and the worker's
 - **New save states:** recorded in the local catalogue `artifacts/oracle/states/README.md` (not committed) with their game progress; a finding that relies on one says in words how to reach the equivalent game point.
 - **No local-only data** (CLAUDE.md "No local-only data in the repo"): no path to a state, trace, home, scratch, report or save in a committed file, no value cited only by file, no picture without a description in words, no generated file staged. `no-local-data` checks the paths.
 
+**Project files**
+
+- `CONTRIBUTING.md` (for humans) stays true to setup, commands and CI; `AGENTS.md` stays a pointer to `CLAUDE.md`.
+- The "not affiliated" notice in `README.md` and `CONTRIBUTING.md` is intact and not worded as an endorsement. `doc-links` checks the phrase.
+
 **User docs** (`docs/` outside `re/` and `plans/`, and `README.md`)
 
 - **When user-visible behaviour, options, controls or workflows changed:**

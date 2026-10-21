@@ -433,6 +433,53 @@ class RuleChecksTest(unittest.TestCase):
         index.write_text(index.read_text().replace('| [f closed](f.closed.md) | DONE |\n', ''))
         self.assertEqual(self.errors('index-'), [])
 
+    def make_repository(self):
+        (self.root / 'CMakeLists.txt').write_text('project(x)\n')
+        (self.root / 'src').mkdir()
+        (self.root / 'AGENTS.md').write_text('# Agents\n\nRules: [CLAUDE.md](CLAUDE.md)\n')
+        (self.root / 'CLAUDE.md').write_text('# Rules\n')
+        (self.root / 'README.md').write_text('This project is not affiliated with anyone.\n')
+        (self.root / 'CONTRIBUTING.md').write_text('We are Not Affiliated with Nintendo.\n')
+        (self.root / 'LICENSE').write_text('\n                    GNU GENERAL PUBLIC LICENSE\n')
+        (self.root / 'REUSE.toml').write_text('SPDX-License-Identifier = "GPL-3.0-or-later"\n')
+
+    def test_project_files_are_skipped_outside_a_repository(self):
+        self.assertEqual(self.errors('agents-md'), [])
+        self.assertEqual(self.errors('notice'), [])
+        self.assertEqual(self.errors('license'), [])
+        self.assertEqual(self.errors('reuse'), [])
+
+    def test_project_files_pass_when_complete(self):
+        self.make_repository()
+        self.assertEqual(links.project_file_errors(self.root), [])
+
+    def test_project_files_missing_are_named(self):
+        self.make_repository()
+        for name in ('AGENTS.md', 'README.md', 'CONTRIBUTING.md', 'LICENSE', 'REUSE.toml'):
+            (self.root / name).unlink()
+        found = links.project_file_errors(self.root)
+        self.assertEqual(len(found), 5)
+        for name in ('AGENTS.md', 'README.md', 'CONTRIBUTING.md', 'LICENSE', 'REUSE.toml'):
+            self.assertTrue(any(e.startswith(f'{name}:1:') for e in found), name)
+
+    def test_agents_md_must_link_claude_md_and_stay_short(self):
+        self.make_repository()
+        (self.root / 'AGENTS.md').write_text('# Agents\n\nSee CLAUDE.md\n')
+        self.assertEqual([e.split(':')[2].strip() for e in links.project_file_errors(self.root)], ['agents-md-no-claude-link'])
+        (self.root / 'AGENTS.md').write_text('[CLAUDE.md](CLAUDE.md)\n' * 16)
+        self.assertEqual([e.split(':')[2].strip() for e in links.project_file_errors(self.root)], ['agents-md-size'])
+        (self.root / 'AGENTS.md').write_text('[CLAUDE.md](CLAUDE.md)\n' * 15)
+        self.assertEqual(links.project_file_errors(self.root), [])
+
+    def test_notice_license_and_reuse_content(self):
+        self.make_repository()
+        (self.root / 'README.md').write_text('Unrelated.\n')
+        (self.root / 'LICENSE').write_text('MIT License\n')
+        (self.root / 'REUSE.toml').write_text('SPDX-License-Identifier = "MIT"\n')
+        found = links.project_file_errors(self.root)
+        self.assertEqual(sorted(e.split(':')[2].strip() for e in found), ['license-text', 'notice-missing', 'reuse-license'])
+        self.assertTrue(any(e.startswith('README.md:1:') for e in found))
+
     def test_claude_md_size(self):
         (self.root / 'CLAUDE.md').write_text('x' * 22528)
         self.assertEqual(self.errors('claude-md-size'), [])

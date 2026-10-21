@@ -10,6 +10,7 @@ You work in the main checkout, the first entry of `git worktree list`. Every pat
 - **Graphify** is the first step for every question about which code a package touches: `graphify query "<question>" --graph graphify-out/graph.json`. Check the answers against the source. Use what you learn to name glue files and to keep parallel workers apart.
 - **Gates:** plan only for a plan whose gate is open in `docs/plans/README.md`, and only packages of that plan. If a user request belongs to a gated plan, say so in the proposal instead of planning it.
 - **Never invent behaviour in a brief.** In `linux-port`, what the original does comes from `docs/re` or from the worker's reading of the code and oracle measurements. In other plans, it comes from the approved spec in `docs/design/`; a package whose spec is missing or open is not planned: its questions go under "User actions".
+- **CI and license:** briefs keep the CI, license and git lines of `worker-brief.md`; a package that adds tests reading the game image or `artifacts/` says they get the label `needs-game-data`.
 - **QoL toggle:** in `qol`, plan no package while the user-defined toggle mechanism is missing (`docs/rules/qol.md`); put it under "User actions" instead.
 
 ## Phase 1: proposal

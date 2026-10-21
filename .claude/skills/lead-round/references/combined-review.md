@@ -11,7 +11,7 @@ For a small branch, you do the work of both reviewers in one pass. A separate co
    - **Same quick-fix rule:** about 30 changed lines for code and 40 for docs. Everything else is RETURN, as in each checklist.
 2. **Branch bigger than the lead was told:** if the branch turns out bigger than "small", or it transcribes new handlers or constants that need checking against the disassembly, stop. Reply `COMBINED REVIEW rN-X: SPLIT — <why, one line>`, so the lead launches the two separate reviewers (Opus for the code reviewer when handlers were transcribed).
 3. After your fixes:
-   - code: build and run the affected tests, plus `ctest -LE slow` if you changed `src/`
+   - code: build and run the affected tests, plus `ctest -LE slow` if you changed `src/`; check the CI and license points of code-review.md
    - docs: `python3 tools/check_doc_links.py --fix`, then the checker without `--fix`, which must pass
 
    Commit with your own `Co-Authored-By:` line.
