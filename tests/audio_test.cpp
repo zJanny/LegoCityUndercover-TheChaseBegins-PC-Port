@@ -48,11 +48,11 @@ int main() {
             voices.add(voice, 12, 7);
             require(voices.find(12, 7) == voice && voices.find(12, 8) == -1 && voices.find(13, 7) == -1, "find by sound and owner (0x23fcac)");
             float out[4];
-            require(mixer.setVolume(voice, 0.5f) && mixer.setRate(voice, 16), "volume factor and rate of a running voice");
+            require(mixer.setGains(voice, 0.5f, 0.5f) && mixer.setPitch(voice, 2.0f), "gains and pitch of a running voice");
             mixer.mix(out, 2);
-            require(near(out[0], 0.0f) && near(out[2], 0.5f * 16384.0f / 32768.0f) && near(out[3], out[2]), "half volume, double rate skips every other frame");
+            require(near(out[0], 0.0f) && near(out[2], 0.5f * 16384.0f / 32768.0f) && near(out[3], out[2]), "half gain, double pitch skips every other frame");
             mixer.stop(voice);
-            require(!mixer.setVolume(voice, 1.0f) && !mixer.setRate(voice, 8) && voices.find(12, 7) == -1, "an ended voice takes no change");
+            require(!mixer.setGains(voice, 1.0f, 1.0f) && !mixer.setPitch(voice, 1.0f) && voices.find(12, 7) == -1, "an ended voice takes no change");
         }
         {
             // Stop of effect voices by (sound id, owner), 0x23ae50 -> 0x23f75c -> 0x23fcac: the table fade 0 ends the voice at once

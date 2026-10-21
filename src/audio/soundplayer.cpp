@@ -5,8 +5,10 @@
 namespace chase::audio {
 namespace {
 EmitterShape shapeOf(const assets::SoundEffect& effect) {
-    return {float(effect.volumePercent) * 0.01f, float(effect.paramA), float(effect.paramB)};
+    return {initialVoiceVolume(effect.volumePercent), float(effect.paramA), float(effect.paramB)};
 }
+
+const std::array<float, 3> kStaticEmitterVelocityStandIn = {0, 0, 0};
 } // namespace
 
 SoundPlayer::SoundPlayer(assets::FuseArchive& archive, Mixer& mixer) : archive_(archive), mixer_(mixer), voices_(mixer) {
@@ -27,14 +29,56 @@ std::shared_ptr<const assets::Sound> SoundPlayer::sound(const assets::SoundEffec
     return decoded;
 }
 
+void SoundPlayer::setMasterVolume(float volume) {
+    master_ = volume;
+    prune();
+    for (const Live& voice : live_) applyGains(voice);
+}
+
+SoundPlayer::Live* SoundPlayer::live(int voice) {
+    prune();
+    const auto found = std::find_if(live_.begin(), live_.end(), [&](const Live& v) { return v.voice == voice; });
+    return found == live_.end() ? nullptr : &*found;
+}
+
+void SoundPlayer::prune() {
+    live_.erase(std::remove_if(live_.begin(), live_.end(), [&](const Live& v) { return !mixer_.playing(v.voice); }), live_.end());
+}
+
+StereoGains SoundPlayer::gainsOf(const Live& voice) const {
+    return voice.positional ? positionalGains(voice.shape, listener_, voice.position, master_) : flatGains(voice.shape, master_);
+}
+
+float SoundPlayer::dopplerOf(const Live& voice) const {
+    if (!voice.positional) return 1.0f;
+    const std::array<float, 3> direction = {voice.position[0] - listener_.position[0], voice.position[1] - listener_.position[1],
+                                            voice.position[2] - listener_.position[2]};
+    return dopplerFactor(kStaticEmitterVelocityStandIn, listener_.velocity, direction, kDopplerScale);
+}
+
+void SoundPlayer::applyGains(const Live& voice) {
+    const StereoGains gains = gainsOf(voice);
+    mixer_.setGains(voice.voice, gains.left, gains.right);
+}
+
+void SoundPlayer::applyPitch(const Live& voice, float doppler) {
+    mixer_.setPitch(voice.voice, pitchOfRate(voice.rate, doppler, voice.sourceRate));
+}
+
 int SoundPlayer::play(std::uint32_t id, const std::array<float, 3>* position, std::uint16_t owner) {
     const assets::SoundEffect* effect = assets::findSoundEffect(effects_, id);
     if (!effect || effect->name.empty()) return -1;
     const EmitterShape shape = shapeOf(*effect);
     const StereoGains gains = position ? positionalGains(shape, listener_, *position, master_) : flatGains(shape, master_);
     if (position && !(gains.left > 0 || gains.right > 0)) return -1;
-    const int voice = mixer_.play(sound(*effect), gains.left, gains.right);
-    if (position) positional_.push_back({voice, shape, *position});
+    const std::shared_ptr<const assets::Sound> decoded = sound(*effect);
+    const int voice = mixer_.play(decoded, gains.left, gains.right);
+    prune();
+    const std::uint32_t sourceRate = std::uint32_t(decoded->rate);
+    const bool boost = (effect->column3 & kRateBoostRecordBit) && rateBoostByteStandIn_;
+    live_.push_back({voice, shape, position != nullptr, position ? *position : std::array<float, 3>{0, 0, 0}, sourceRate,
+                     storedRate(std::int32_t(boost ? boostedRate(sourceRate) : sourceRate), sourceRate), boost});
+    applyPitch(live_.back(), dopplerOf(live_.back()));
     voices_.add(voice, id, owner);
     return voice;
 }
@@ -46,25 +90,27 @@ bool SoundPlayer::stop(std::uint32_t id, std::uint16_t owner, float fadeSeconds)
 }
 
 bool SoundPlayer::setVolume(std::uint32_t id, std::uint16_t owner, float volume) {
-    const int voice = voices_.find(id, owner);
-    return voice >= 0 && mixer_.setVolume(voice, volume);
+    Live* voice = live(voices_.find(id, owner));
+    if (!voice) return false;
+    voice->shape.volume = volume;
+    applyGains(*voice);
+    return true;
 }
 
 bool SoundPlayer::scaleFrequency(std::uint32_t id, std::uint16_t owner, float scale) {
-    const int voice = voices_.find(id, owner);
-    const assets::SoundEffect* effect = assets::findSoundEffect(effects_, id);
-    if (voice < 0 || !effect) return false;
-    const double rate = double(scale) * double(sound(*effect)->rate);
-    return mixer_.setRate(voice, rate >= 2147483647.0 ? 2147483647 : rate <= 0.0 ? 0 : int(rate));
+    Live* voice = live(voices_.find(id, owner));
+    if (!voice) return false;
+    voice->rate = storedRate(scaledRate(scale, voice->sourceRate, voice->boost), voice->sourceRate);
+    applyPitch(*voice, dopplerOf(*voice));
+    return true;
 }
 
 void SoundPlayer::update() {
-    positional_.erase(std::remove_if(positional_.begin(), positional_.end(),
-                                     [&](const Positional& p) { return !mixer_.playing(p.voice); }),
-                      positional_.end());
-    for (const Positional& p : positional_) {
-        const StereoGains gains = positionalGains(p.shape, listener_, p.position, master_);
-        mixer_.setGains(p.voice, gains.left, gains.right);
+    prune();
+    for (const Live& voice : live_) {
+        if (!voice.positional) continue;
+        applyGains(voice);
+        applyPitch(voice, dopplerOf(voice));
     }
 }
 

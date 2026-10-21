@@ -114,7 +114,7 @@ This file has no dated entries: the table is edited in place. When a native is r
 | AIResetState | 0x1bf650 | 1 | 24 / 11 / 0 / 0 | 6 | stand-in | 34 | flag or requested state recorded; returns 1: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
 | EffectFadeAlpha | 0x27e7d0 | 4 | 24 / 13 / 0 / 5 | 4 | C | 38 |  |
 | AIFollowSimplePath | 0x285d18 | 5 | 23 / 2 / 0 / 0 | 4 | stand-in | 34 | handled: walks the path points from the start node, forward or reverse: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
-| ScaleSoundFrequency | 0x2a8afc | 3 | 23 / 0 / 0 / 0 | 6 | stand-in | 33 | stand-in (AUDIO-S31) [§2026-10-15T17:27](script-natives-audio.md#ts-20261015-172705) |
+| ScaleSoundFrequency | 0x2a8afc | 3 | 23 / 0 / 0 / 0 | 6 | stand-in | 33 | handled; stand-ins AUDIO-S34, AUDIO-S35 [§2026-10-21T22:19](audio.md#ts-20261021-221939) |
 | AddStuds | 0x18838c | 1 | 22 / 3 / 0 / 0 | 7 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
 | SubObjectiveArrowEnemyEnable | 0x2c87f0 | 2 | 22 / 8 / 0 / 0 | 6 | done | 31 | exact: arrow list 1, drawn (SCRIPT-72 closed; draw stand-in SCRIPT-S270, SCRIPT-329): [objective-hud.md §2026-10-19T15:00](objective-hud.md#ts-20261019-150002) |
 | VehicleJumpIn | 0x1cdec0 | 2 | 22 / 4 / 0 / 0 | 6 | done | 36 | player: [vehicles-waypoints.md §2026-10-15T11:35](vehicles-waypoints.md#ts-20261015-113500) |
@@ -203,7 +203,7 @@ This file has no dated entries: the table is edited in place. When a native is r
 | PlatformSwapPath | 0x26fdc4 | 2 | 3 / 0 / 0 / 0 | 1 | C | 37 |  |
 | RelockChasePlainClothes | 0x2b4bac | 0 | 3 / 3 / 1 / 0 | 1 | stand-in | 35 | party removal and swap record recorded (SCRIPT-S277, SCRIPT-338): [script-natives-party.md §2026-10-19T15:53:02](script-natives-party.md#ts-20261019-155302) |
 | ResetCarriedThing | 0x27bd64 | 2 | 3 / 0 / 0 / 0 | 2 | A | 26 | open: acts on the carried thing of the player, SCRIPT-60 |
-| SetSoundVolume | 0x272dcc | 3 | 3 / 1 / 0 / 0 | 3 | stand-in | 33 | stand-in (AUDIO-S31) [§2026-10-15T17:27](script-natives-audio.md#ts-20261015-172705) |
+| SetSoundVolume | 0x272dcc | 3 | 3 / 1 / 0 / 0 | 3 | stand-in | 33 | handled; stand-in AUDIO-S34 [§2026-10-21T22:19](audio.md#ts-20261021-221939) |
 | StopSoundGO | 0x1d0d28 | 3 | 3 / 1 / 0 / 0 | 2 | stand-in | 33 | stand-in (AUDIO-S30, AUDIO-33) [§2026-10-15T17:27](script-natives-audio.md#ts-20261015-172705) |
 | UnloadAnimation | 0x27e9c4 | 2 | 3 / 3 / 0 / 2 | 1 | stand-in | 32 | stand-in: name removed from the loaded set (SCRIPT-S110, SCRIPT-274): [script-natives-animation.md §2026-10-15T18:33](script-natives-animation.md#ts-20261015-183336) |
 | Walnuts_Hit | 0x1b2828 | 1 | 3 / 0 / 0 / 0 | 1 | stand-in | 35 | boss requested state 5 recorded (SCRIPT-S278, SCRIPT-339): [script-natives-party.md §2026-10-19T15:53:02](script-natives-party.md#ts-20261019-155302) |

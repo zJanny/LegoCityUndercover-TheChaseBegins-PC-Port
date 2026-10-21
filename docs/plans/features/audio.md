@@ -6,13 +6,14 @@ Sound effects and music: the CWAV decode and mixer, sound ids (`tablessoundfx`),
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-15T17:28:13+02:00. The ten sound natives of batch 8 play, stop and set volume and rate of effect voices (`SoundNativeState`, stand-ins AUDIO-S30..S32). `chase_audio` plays the player's and the studs' sounds in `chase-game`; music runs through the original's block (`MusicBlock`: start, queue, ramp, mood route) from the script natives and the level start.
+IN_PROGRESS, updated 2026-10-21T22:19:39+02:00. The ten sound natives of batch 8 play, stop and set volume and rate of effect voices (`SoundNativeState`, stand-ins AUDIO-S30, S32). `chase_audio` plays the player's and the studs' sounds in `chase-game`; music runs through the original's block (`MusicBlock`: start, queue, ramp, mood route) from the script natives and the level start.
 
 ## 3. Verified behaviour
 
 - CWAV DSP-ADPCM decode, mixer with loops (`chase-soundtest`); 757/757 sound effect names resolve to `sounds/<name>.bwav`; music sheet 1 (39 tracks).
 - Jump, footsteps, landings and studs play the original ids with the original's distance and pan rules: `audio-real-data` (8 recorded scenarios). Footstep trigger: track hash 0x68cc6917 sampled as a step function, event 50, slot 5.
 - Effect sounds can be stopped by (sound id, owner): the voice that id started for that owner ends at once when the table row's fade (column 16) is 0, as for every door sound; `audio-core`. Details: [audio.md §2026-10-13T21:51](../../re/audio.md#ts-20261013-215117).
+- Voice volume and rate: SetSoundVolume replaces the table volume (distance factor and master volume multiply it), ScaleSoundFrequency stores (int)(scale * source rate) and the pitch is rate * Doppler / source rate; the rate boost of record bit 3 does not occur in the sound table; formulas pinned in `voice-params` and `voice-params-real-data`. Details: [audio.md §2026-10-21T22:19:39](../../re/audio.md#ts-20261021-221939).
 - Music block 0x376b30: ramp `step * 30 * dt` per update, clamp to the target, stop at 0 and start of the queued track, crossfade queue, mood route; ramp rows replayed from an oracle memtrace: `music-block`. Details: [script-natives-audio.md §2026-10-15T16:33](../../re/script-natives-audio.md#ts-20261015-163319).
 - Level start calls the mood route (fade 1.0, mood 0, loop, crossfade): lvl_01 starts no music (ambient entry 255, nothing playing).
 - Level music rule: lvl_00 starts none; lvl_01 (set 2 = (255, 5)) has ambient none and action `act_fight_music_1`.
@@ -22,7 +23,7 @@ IN_PROGRESS, updated 2026-10-15T17:28:13+02:00. The ten sound natives of batch 8
 - AUDIO-S1 Water and object-11 landing flags are fixed to off.
 - AUDIO-S2 Sprint phase transfer: floor of the proportional frame (9 of 10 recorded run footsteps exact, one off by one update).
 - AUDIO-S3 No blend weights (a new animation slot cannot fire in its first update).
-- AUDIO-S4 Distance volume is linear only as read from code (not measured end to end); Doppler assumed 1.0.
+- AUDIO-S4 Distance volume is linear only as read from code (not measured end to end).
 - AUDIO-S5 The 24-voice limit is not enforced.
 - AUDIO-S6 Mix matrix channel order: left first assumed.
 - AUDIO-S20 The music block assumes: lock hword 0x376b36 = 0 (no writer found), update rate 30 (0x23ca4c's rate object unread), block byte +0 starts 0, the byte +0x185 gate of the level-start call is 0, no duck record, no reopen of a finished looping stream, the loop flag only reaches the stream open (the mixer loops by the file's own loop flag). needs: AUDIO-20. blocks: SCRIPT-33.
@@ -30,7 +31,8 @@ IN_PROGRESS, updated 2026-10-15T17:28:13+02:00. The ten sound natives of batch 8
 - AUDIO-S7 A stop of a sound with a fade time (column 16 above 0, 136 rows, none of them a door sound) fades the voice out linearly over that many seconds; the original's ramp is not read.
 
 - AUDIO-S30 The owner of a sound played for or stopped at a named object is a consecutive id from 0x4000 per object name; the original uses the u16 at entity+0x14 (source unread). needs: AUDIO-30.
-- AUDIO-S31 SetSoundVolume is a factor on the voice's gains and ScaleSoundFrequency sets the voice rate to (int)(scale * source rate); the 1.5 factor (record bit and byte 0x376ce6) and the original's consumers of voice fields +0x50 / +0x58 are not replicated. needs: AUDIO-31.
+- AUDIO-S34 Voice rate and volume assumptions: the byte 0x376ce6 that enables the rate boost of sounds with record bit 3 is off (`SoundPlayer::setRateBoostByte`; no row of tablessoundfx has the bit, the only code found clears the byte); sound object +0xc and +0x10 are both the decoded sound's rate; a positional voice with volume 0 or below plays silence, where the original keeps its pan. needs: AUDIO-36. evidence: [audio.md §2026-10-21T22:19:39](../../re/audio.md#ts-20261021-221939)
+- AUDIO-S35 The Doppler factor of positional voices (formula read) uses emitter and listener velocity zero, so it is 1.0. needs: AUDIO-35. evidence: [audio.md §2026-10-21T22:19:39](../../re/audio.md#ts-20261021-221939)
 - AUDIO-S32 registersound, VehicleEnableDrivingMusic and vehiclestopsounds only record their arguments (no preload, no vehicle music, no vehicle sound ids). needs: AUDIO-32.
 
 ## 5. Open items
@@ -39,7 +41,8 @@ IN_PROGRESS, updated 2026-10-15T17:28:13+02:00. The ten sound natives of batch 8
 - [ ] AUDIO-11 — Action music: the combat scan of 0x204fe0 (table 0x58deb0), OverrideMusicMood, PauseMusic, DuckMusicFor, VehicleEnableDrivingMusic and the level-start mood route are not wired. needs: SCRIPT-42. blocks: AUDIO-S11, AUDIO-20, AUDIO-32. evidence: [script-natives-audio.md §2026-10-15T15:10](../../re/script-natives-audio.md#ts-20261015-151038)
 - [ ] AUDIO-20 — Duck record 0x5862d0 in the updater (flag, countdown, step 0.05), the reopen branch of a finished looping stream, 0x23ca4c's rate object, the lock writers and the block +0 start value are not read. needs: AUDIO-11. blocks: AUDIO-S20. evidence: [script-natives-audio.md §2026-10-15T16:33](../../re/script-natives-audio.md#ts-20261015-163319)
 - [ ] AUDIO-30 — Source of the u16 at entity+0x14 that keys sound owners (script objects, doors). blocks: AUDIO-S30. evidence: [script-natives-audio.md §2026-10-15T17:27](../../re/script-natives-audio.md#ts-20261015-172705)
-- [ ] AUDIO-31 — Readers of the voice fields +0x50 (volume) and +0x58 (rate) around 0x25c540 and the byte 0x376ce6. blocks: AUDIO-S31. evidence: [script-natives-audio.md §2026-10-15T17:27](../../re/script-natives-audio.md#ts-20261015-172705)
+- [ ] AUDIO-35 — Sources of the emitter velocity (emitter slot +0x14) and the listener velocity (0x52ac50) that the Doppler factor of the voice synchroniser reads. blocks: AUDIO-S35. evidence: [audio.md §2026-10-21T22:19:39](../../re/audio.md#ts-20261021-221939)
+- [ ] AUDIO-36 — Unread around voice volume and rate: a code path that sets byte 0x376ce6, whether sound object +0xc and +0x10 (rate fields) ever differ, a positional voice with volume 0 or below (the original keeps its pan, the port is silent), the flat-path branch of 0x23f82c for record bit 1. blocks: AUDIO-S34. evidence: [audio.md §2026-10-21T22:19:39](../../re/audio.md#ts-20261021-221939)
 - [ ] AUDIO-32 — Readers of the registered sound pairs (0x593a60), the vehicle sound ids at component +0x1c.., the callee 0x2b429c and the reader of vehicle byte +0x312 bit 2. needs: AUDIO-11. blocks: AUDIO-S32. evidence: [script-natives-audio.md §2026-10-15T17:27](../../re/script-natives-audio.md#ts-20261015-172705)
 - [ ] AUDIO-33 — StopSoundGO on an object of type 10 calls 0x22c58c (ambient emitter component stop); the port has no ambient emitters. needs: AUDIO-3. evidence: [script-natives-audio.md §2026-10-15T17:27](../../re/script-natives-audio.md#ts-20261015-172705)
 - [ ] AUDIO-34 — The attack's weapon-table sounds are all id 0 (silent); compare an audio recording of a punch in the oracle to confirm that nothing else sounds. blocks: PLAYER-24. evidence: [player-attack.md §2026-10-19T12:54:52](../../re/player-attack.md#ts-20261019-125452).
@@ -55,9 +58,10 @@ IN_PROGRESS, updated 2026-10-15T17:28:13+02:00. The ten sound natives of batch 8
 - Music routing and level music rule: [audio.md §2026-10-13T09:42](../../re/audio.md#ts-20261013-094203), [audio.md §2026-10-13T17:54](../../re/audio.md#ts-20261013-175424).
 - Positional gains (0x107fa0, 0x25c388) and footsteps: [audio.md §2026-10-13T17:54](../../re/audio.md#ts-20261013-175424).
 - The ten sound natives (play, stop, volume, frequency, registry): [script-natives-audio.md §2026-10-15T17:27](../../re/script-natives-audio.md#ts-20261015-172705).
+- Voice volume and rate fields, their synchroniser 0x25c388 and the DSP path, the Doppler formula and the rate boost: [audio.md §2026-10-21T22:19:39](../../re/audio.md#ts-20261021-221939).
 - Stop of effect sounds 0x23ae50 (owner key, fade from the table): [audio.md §2026-10-13T21:51](../../re/audio.md#ts-20261013-215117).
 
 ## 7. Code and tests
 
-- `src/audio/` (`chase_audio`: mixer, soundplayer, effectvoices, musicplayer, spatial), `src/runtime/music.*`, `src/runtime/music_block.*`, `src/game_audio.hpp`, `chase-soundtest` (`--id`).
-- `src/runtime/natives_sound.*` (the ten sound natives). CTest: `natives-sound`, `music-block`, `natives-music`, `audio-mixer`, `audio-core`, `audio-real-data`, `soundtest-real-smoke`, `soundtest-id-smoke`. The recorded sound calls are pinned in `tests/audio_real_test.cpp`. Scenarios `tools/oracle/audio-events*.txt`; `tools/export_sound_trace.py`.
+- `src/audio/` (`chase_audio`: mixer, soundplayer, effectvoices, musicplayer, spatial, voice_params), `src/runtime/music.*`, `src/runtime/music_block.*`, `src/game_audio.hpp`, `chase-soundtest` (`--id`).
+- `src/runtime/natives_sound.*` (the ten sound natives). CTest: `natives-sound`, `music-block`, `natives-music`, `audio-mixer`, `audio-core`, `audio-real-data`, `voice-params`, `voice-params-real-data`, `soundtest-real-smoke`, `soundtest-id-smoke`. The recorded sound calls are pinned in `tests/audio_real_test.cpp`. Scenarios `tools/oracle/audio-events*.txt`; `tools/export_sound_trace.py`.

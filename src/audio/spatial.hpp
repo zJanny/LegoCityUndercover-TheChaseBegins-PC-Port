@@ -5,10 +5,12 @@
 
 namespace chase::audio {
 
-// The listener matrix at 0x52ac10: rows 0..2 are the right, up and forward axes, row 3 the position.
+// The listener matrix at 0x52ac10: rows 0..2 are the right, up and forward axes, row 3 the position; the velocity is the
+// vector at 0x52ac50 that the Doppler factor of 0x25c388 reads (writer unread, AUDIO-S35).
 struct Listener {
     std::array<float, 3> right{1, 0, 0}, up{0, 1, 0}, forward{0, 0, 1};
     std::array<float, 3> position{0, 0, 0};
+    std::array<float, 3> velocity{0, 0, 0};
 };
 
 // Right/up/forward axes of a camera looking along `forward` with row 0 = normalize(fz, 0, -fx) (camera.md, 0x22859c)

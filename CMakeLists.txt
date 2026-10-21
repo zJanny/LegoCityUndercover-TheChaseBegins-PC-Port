@@ -27,7 +27,7 @@ add_library(chase_assets_c SHARED src/assets/c_api.cpp)
 target_link_libraries(chase_assets_c PRIVATE chase_assets chase_runtime)
 target_compile_options(chase_assets_c PRIVATE -Wall -Wextra -Wpedantic)
 # Audio mixer core (plan S4d): no SDL dependency; chase-soundtest is the SDL front end.
-add_library(chase_audio src/audio/mixer.cpp src/audio/spatial.cpp src/audio/soundplayer.cpp src/audio/effectvoices.cpp src/audio/musicplayer.cpp)
+add_library(chase_audio src/audio/mixer.cpp src/audio/spatial.cpp src/audio/soundplayer.cpp src/audio/effectvoices.cpp src/audio/musicplayer.cpp src/audio/voice_params.cpp)
 target_link_libraries(chase_audio PUBLIC chase_assets)
 target_compile_options(chase_audio PRIVATE -Wall -Wextra -Wpedantic)
 # Save image (plan S4f): no SDL dependency.
@@ -178,6 +178,12 @@ if(BUILD_TESTING)
   target_link_libraries(audio-test PRIVATE chase_audio chase_runtime)
   target_compile_options(audio-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME audio-core COMMAND audio-test)
+  add_executable(voice-params-test tests/voice_params_test.cpp)
+  target_link_libraries(voice-params-test PRIVATE chase_audio chase_assets)
+  target_compile_options(voice-params-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME voice-params COMMAND voice-params-test)
+  add_test(NAME voice-params-real-data COMMAND voice-params-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
+  set_tests_properties(voice-params-real-data PROPERTIES SKIP_RETURN_CODE 77)
   if(TARGET chase-game)
     add_executable(audio-real-test tests/audio_real_test.cpp)
     target_link_libraries(audio-real-test PRIVATE chase_audio chase_runtime chase_assets)
@@ -1916,7 +1922,7 @@ foreach(slow_test game-debris-super-pickup game-cutscene-dog-end game-super-buil
 endforeach()
 
 foreach(game_data_test
-  frontend-real-data script-text-pages-real-data hud-real-data audio-real-data pedestrian-fade-real-data pedestrian-system-real-data cutscene-cast
+  frontend-real-data script-text-pages-real-data hud-real-data audio-real-data voice-params-real-data pedestrian-fade-real-data pedestrian-system-real-data cutscene-cast
   node-draw-matrix-real-data script-text-real-data waypoint-global-real-data waypoints-real-data hand-item-real-data detective-real-data
   use-spot-real-data use-marker-real-data script-starters-real-data carry-real-data scanner-real-data scanner-overlay-data zipline-real-data
   nested-props-real-data zipline-pole-real-data zipline-rope-real-data brick-grab-real-data climb-bar-real-data acrobat-pole-real-data pole-real-data

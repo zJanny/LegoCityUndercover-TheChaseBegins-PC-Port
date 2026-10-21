@@ -6,6 +6,7 @@
 #include "audio/effectvoices.hpp"
 #include "audio/mixer.hpp"
 #include "audio/spatial.hpp"
+#include "audio/voice_params.hpp"
 #include <array>
 #include <cstdint>
 #include <map>
@@ -23,7 +24,11 @@ class SoundPlayer {
 public:
     SoundPlayer(assets::FuseArchive& archive, Mixer& mixer);
 
-    void setMasterVolume(float volume) { master_ = volume; }
+    // 0x1dca5c: the master volume reaches every running voice through its dirty bit.
+    void setMasterVolume(float volume);
+    // AUDIO-S34: the byte 0x376ce6 that enables the rate boost of sounds with record bit 3; the only code that writes it
+    // clears it and no sound effect row has the bit, so it is off.
+    void setRateBoostByte(bool on) { rateBoostByteStandIn_ = on; }
     float masterVolume() const { return master_; }
     void setListener(const Listener& listener) { listener_ = listener; }
     const Listener& listener() const { return listener_; }
@@ -40,9 +45,10 @@ public:
     // 0x2247f0: a voice that `id` started for `owner` still runs.
     bool playing(std::uint32_t id, std::uint16_t owner) { return voices_.find(id, owner) >= 0; }
 
-    // SetSoundVolume 0x219178 and ScaleSoundFrequency 0x22f770 on the voice that `id` started for `owner`.
-    // AUDIO-S31: the volume is a factor on the gains and the rate is (int)(scale * source rate); the original's
-    // consumers of the voice fields +0x50 and +0x58 are only partly read.
+    // SetSoundVolume 0x219178 -> 0x227ff4 and ScaleSoundFrequency 0x22f770 -> 0x227f4c on the voice that `id` started for
+    // `owner`. The volume replaces the voice's base volume (table percent / 100); the distance factor and the master volume
+    // multiply it (0x107fa0, 0x25c388). The rate is (int)(scale * source rate), stored as the voice rate; the pitch is
+    // rate * Doppler factor / source rate (docs/re/audio.md).
     bool setVolume(std::uint32_t id, std::uint16_t owner, float volume);
     bool scaleFrequency(std::uint32_t id, std::uint16_t owner, float scale);
 
@@ -53,12 +59,22 @@ public:
     const assets::SoundTables& tables() const { return tables_; }
 
 private:
-    struct Positional {
+    struct Live {
         int voice;
         EmitterShape shape;
+        bool positional;
         std::array<float, 3> position;
+        std::uint32_t sourceRate;
+        std::int32_t rate;
+        bool boost;
     };
     std::shared_ptr<const assets::Sound> sound(const assets::SoundEffect& effect);
+    Live* live(int voice);
+    StereoGains gainsOf(const Live& voice) const;
+    float dopplerOf(const Live& voice) const;
+    void applyGains(const Live& voice);
+    void applyPitch(const Live& voice, float doppler);
+    void prune();
 
     assets::FuseArchive& archive_;
     Mixer& mixer_;
@@ -66,9 +82,10 @@ private:
     std::vector<assets::SoundEffect> effects_;
     assets::SoundTables tables_;
     std::map<std::uint32_t, std::shared_ptr<const assets::Sound>> decoded_;
-    std::vector<Positional> positional_;
+    std::vector<Live> live_;
     Listener listener_;
     float master_ = 1.0f;
+    bool rateBoostByteStandIn_ = false;
 };
 
 } // namespace chase::audio

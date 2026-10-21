@@ -11,7 +11,7 @@ Handlers of OverrideMusic, AutomaticMusic, StopMusic and EnableTrafficAndPedestr
 - EnableTrafficAndPedestrians 0x2c5780 sets bit 1 of the traffic and pedestrian manager bytes; with it clear every live entity is removed and nothing spawns (default on). [§2026-10-15T15:10:38](#ts-20261015-151038); the pedestrian manager is 0x51b33c, its spawn and removal rules: [pedestrians.md §2026-10-20T11:17:42](pedestrians.md#ts-20261020-111742)
 - Camera manager +0x28 is the requested camera: CameraFollow is a camera switch request, not a flag. [§2026-10-15T15:10:38](#ts-20261015-151038)
 - Ten sound natives: handler argument layout is 8 bytes per argument (entity at +8i, value at +8i+4); play family 0x1b4394 / 0x295244 / 0x27bd48, stop family 0x1b43ec / 0x1d0d28, ScaleSoundFrequency 0x2a8afc, SetSoundVolume 0x272dcc. [§2026-10-15T17:27:05](#ts-20261015-172705)
-- Port stand-ins: object sound owner ids from 0x4000 (AUDIO-S30), volume and frequency on the voice (AUDIO-S31), registersound, VehicleEnableDrivingMusic and vehiclestopsounds recorded only (AUDIO-S32). [§2026-10-15T17:27:05](#ts-20261015-172705)
+- Port stand-ins: object sound owner ids from 0x4000 (AUDIO-S30), registersound, VehicleEnableDrivingMusic and vehiclestopsounds recorded only (AUDIO-S32). [§2026-10-15T17:27:05](#ts-20261015-172705)
 - Open: the duck record and DuckMusicFor, who restarted track 16 in the oracle, the u16 at entity+0x14, readers of registered sound pairs, type-10 ambient emitters, spawn rules of traffic.
 
 <a id="ts-20261015-151038"></a>
@@ -67,6 +67,8 @@ Unknowns:
 <a id="ts-20261015-172705"></a>
 
 ## 2026-10-15T17:27:05+02:00 — The ten sound natives of batch 8 (llvm-objdump only, no REA session, no emulator)
+
+Corrected by [audio.md §2026-10-21T22:19:39](audio.md#ts-20261021-221939): the voice fields +0x50 and +0x58 are read; SetSoundVolume replaces the table volume, the rate is `rate * Doppler / source rate`, and no sound row has the boost bit.
 
 Method: `llvm-objdump -d --triple=armv6k-none-eabi --mattr=+vfp2` on `artifacts/game/game.arm.elf`; names and argument lists from `levels/scriptfns.txt` and `levels/gescriptfns.txt`. Extends [the music entry](#ts-20261015-151038). Replica: `src/runtime/natives_sound.*` (`SoundNativeState`), `Mixer::setRate` / `setVolume`, `EffectVoices::find`, `SoundPlayer::stop(id, owner, fade)` / `setVolume` / `scaleFrequency`, `GameAudio::applySound`; tests `natives-sound`, `audio-core`.
 
