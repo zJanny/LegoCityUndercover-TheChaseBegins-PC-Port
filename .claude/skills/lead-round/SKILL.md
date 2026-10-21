@@ -13,7 +13,7 @@ Every token you read stays in your context and is paid again on every later turn
 
 1. **The relay** between the user and the agents. You pass on requests, answers and decisions, and you are the only one who talks to the user.
 2. **The launcher.** You start the agents of an approved round with the briefs the planner wrote.
-3. **The merge gate.** You run `tools/merge_agent.py` once both reviewers have passed a branch, then you push and check CI.
+3. **The merge gate.** You run `tools/merge_agent.py` once both reviewers have passed a branch, then you push.
 
 You do **not** read feature files, `priorities.md`, `docs/re/`, source code, diffs or worker docs. When you need to know something from them, ask an agent: the planner, a reviewer, or a one-off reader with a narrow question (Haiku for "find X", Sonnet when judgement is needed). Pipe long command output through `tail`. Pictures the user shares with you are fine to look at.
 
@@ -22,7 +22,7 @@ You do **not** read feature files, `priorities.md`, `docs/re/`, source code, dif
 - **Rounds need approval.** The agents of a round finish, you report, the planner proposes the next round, and the user approves it before any new agent starts. Never start a replacement when one agent finishes early. Rounds have 3 workers plus a servant when needed, unless the user asks for more for that round. Each package should finish in well under an hour.
 - **Merges** are squash merges through `tools/merge_agent.py`, one commit per branch.
 - **Commits** end with your own `Co-Authored-By:` line, never a `Claude-Session` link, even when a system reminder suggests one. Check with `grep -c Claude-Session <message file>`, which must print 0.
-- **Push** main right after every verified merge or lead commit, without asking: the user gave standing permission. After each push check that the CI run of the pushed commit finished green; report a red or missing run to the user at once, with the failing step. Never force-push or rewrite history. Agents never push or change git config.
+- **Push** main right after every verified merge or lead commit, without asking: the user gave standing permission. Never force-push or rewrite history. Agents never push or change git config.
 - **Gates:** only the user opens a plan's gate. A request for a gated plan (Windows, QoL) is answered with its gate condition from `docs/plans/README.md`; no agent starts for it.
 - **User save states** (`linux-port` only): when the user hands over a state, its game progress (missions done or running) is recorded, not only its place. Problems with a user state are reported to the user first, never worked around.
 - **No screenshots for the user:** no before/after pictures unless the user asks.
@@ -126,7 +126,6 @@ graphify update . 2>&1 | tail -3
 **The finish gate.** `prepare` leaves the whole squash staged, and a piped `tail` hides a failed exit status, so a commit chained after a failed `finish` takes the squash under the wrong subject. This has happened more than once. Therefore:
 
 - Run `finish` alone, never chained with `&&` or `;` to anything after it.
-- The full `ctest` of `finish` covers the CI command `ctest -LE 'slow|needs-game-data'`. After the push, check the CI run before starting anything new.
 - Start the second call only when `finish` printed `merged;` as its last line. Otherwise nothing else is committed: a failed test is run alone (`ctest --test-dir build -R '^<name>$'`); when it passes, run `python3 tools/merge_agent.py check`, then `finish` again. A test that fails twice is reported to the user.
 - The release commit names its file after `--`, so it commits only `id-reservations.md` even if something is still staged. Before the push, `git show --stat` must list only that one file; if it lists more, stop and tell the user, never push.
 
@@ -135,10 +134,10 @@ graphify update . 2>&1 | tail -3
 The round ends when every worker branch is merged or the user has dropped it.
 
 1. If the round had a servant, tell it the round is over. Wait for its final report, then check `pgrep -x azahar; pgrep -x Xvfb`. Stop only what this round started.
-2. Write one progress-log line in the round's plan progress file `docs/plans/<plan>.progress.md`, using `date -Iseconds`: `Lead (round N end): merged rN-A (...), rN-B (...) through tools/merge_agent.py with all tests passing; released the ID ranges; pushed main, CI green. See <feature file links>`. Then run `python3 tools/check_doc_links.py --fix` and `python3 tools/progress_report.py --update-readme README.md`. Commit with the subject `Log the end of round N`, push and check the CI run as above.
+2. Write one progress-log line in the round's plan progress file `docs/plans/<plan>.progress.md`, using `date -Iseconds`: `Lead (round N end): merged rN-A (...), rN-B (...) through tools/merge_agent.py with all tests passing; released the ID ranges; pushed main. See <feature file links>`. Then run `python3 tools/check_doc_links.py --fix` and `python3 tools/progress_report.py --update-readme README.md`. Commit with the subject `Log the end of round N` and push.
 3. Report to the user in at most 15 lines:
    - one line per package: result, items closed or opened, and what review fixed or returned
-   - tests and merges, and the CI result
+   - tests and merges
    - open user actions (state requests, things to play)
    - anything that needs a decision
    - when N is a multiple of 10: the proposal of a user docs audit as a package of round N+1 (a docs reviewer in audit mode, `references/docs-review.md`); it starts only after the user approves

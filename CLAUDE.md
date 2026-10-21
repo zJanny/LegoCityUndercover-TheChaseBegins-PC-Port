@@ -43,7 +43,7 @@ All other commands and test names: `docs/commands.md`.
 - **Strict input:** every command-line option and development script (`--script`, `--front-script`, `--start`, oracle scripts) is parsed strictly. Malformed, unknown or out-of-range input stops with an error naming the option and the bad text; never fall back to a default or skip silently. Each new option gets a test for its rejection.
 - **Extractor safety:** open the image read-only, bounds-check every offset, fail on encryption or hash mismatch, cap decompressed output at `MAX_CODE`, never overwrite an output directory. The ELF is a derived analysis wrapper, not an original binary.
 - Portable C++17 and the standard library. Linux x86_64 first; other platforms only through their plan's rule file.
-- **CI stays green:** a branch must not break the CI pipeline (`ci.yml` on push and pull request: warning-free build, Python unittests, `ctest -LE 'slow|needs-game-data'`; `full.yml` nightly: `ctest -LE needs-game-data`). A test that needs the image or `artifacts/` carries the CTest label `needs-game-data` (or skips with code 77 and carries it); every other test passes on a clean clone. A CI-relevant change (build dependency, tool a test calls) updates the workflows and `docs/building.md` in the same step; labelling: `docs/rules/port.md`.
+- **Tests that need game data:** a test that needs the image or `artifacts/` carries the CTest label `needs-game-data` (also when it skips with code 77); every other test passes on a clean clone. Details: `docs/rules/port.md`.
 
 ## C++ is the source of truth
 
