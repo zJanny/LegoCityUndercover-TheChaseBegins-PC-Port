@@ -517,6 +517,10 @@ struct Animation {
     std::vector<std::array<Bytes, 2>> objectBlocks;  // the two data blocks that follow each name of section +0x0c
     std::vector<AnimTrack> tracks;         // section +0x18 (unused in shipped data)
     std::vector<std::vector<AnimTrack>> subAnimations;
+    // Per sub-animation: the aspect id of its entry in the list after the header (16-byte entries, id at +8; 0x6c22818f sound pulses,
+    // 0xcacfb995 footsteps, 0x3a01a706 idle sounds, 0xb945fcd8 root motion) and the data block after its tracks.
+    std::vector<std::uint32_t> subAspects;
+    std::vector<Bytes> subData;
     // Per sub-animation, the strings its fixup list points the words of its data block at (docs/re/abilities-detective.md): the
     // byte offset of the word in the data block and its text, in fixup order. Hand item tracks keep the object name at 0 and the bone name at 4.
     std::vector<std::vector<AnimationTarget>> subAnimationTargets;

@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 888 open items and stand-ins, 157 linked to game usage, 731 with unknown reach.
+Items: 892 open items and stand-ins, 157 linked to game usage, 735 with unknown reach.
 
 ## Top 50 overall
 
@@ -80,14 +80,14 @@ Items: 888 open items and stand-ins, 157 linked to game usage, 731 with unknown 
 | 44 | [SCRIPT-317](features/script-system-natives-world.md?display=source#L44) | 99 | 0 | 7 | 1 | 2 stand-in | `enableswitch`, `resetobject` | Kind 64 message 8 (0x1a90b8): read the platform record fields R+4, R+0xb4, R+0x7c, R+0x18, R+0x50 and the ... |
 | 45 | [SCRIPT-318](features/script-system-natives-world.md?display=source#L45) | 99 | 0 | 7 | 0 | 2 stand-in | `enableswitch`, `resetobject` | Census of the message 8 handlers of the other kinds (the default handler 0x221800 is reached through 0x221760 ... |
 | 46 | [SCRIPT-282](features/script-system-natives-world.md?display=source#L48) | 92 | 0 | 7 | 16 | 1 stand-in, 1 none | `distancefademid`, `enabledistancefade` | EnableDistanceFade: the node kind gate (global 0x37674c) and the child recursion 0x2b65dc per placed class ... |
-| 47 | [AUDIO-33](features/audio.md?display=source#L48) | 3 | 89 | 8 | 0 | 1 stand-in | `stopsoundgo`, `lesoundobject`, `soundobject` | StopSoundGO on a kind-10 sound object (`lesoundobject`, `soundobject`) stops the object's own sound and sets ... |
+| 47 | [AUDIO-33](features/audio.md?display=source#L49) | 3 | 89 | 8 | 0 | 1 stand-in | `stopsoundgo`, `lesoundobject`, `soundobject` | StopSoundGO on a kind-10 sound object (`lesoundobject`, `soundobject`) stops the object's own sound and sets ... |
 | 48 | [SCRIPT-314](features/script-system-natives-world.md?display=source#L43) | 90 | 0 | 7 | 1 | 1 stand-in | `resetobject` | Apply the restored placement of a reset kind 132 object to its node once something moves such objects (script ... |
 | 49 | [SCRIPT-S257](features/script-system-natives-world.md?display=source#L26) | 90 | 0 | 7 | 0 | 1 stand-in | `resetobject` | The reset of kind 132 records the object's `initialposition` / `initialorientation` and moves no node ... |
 | 50 | [SCRIPT-S261](features/script-system-natives-world.md?display=source#L27) | 90 | 0 | 7 | 0 | 1 stand-in | `resetobject` | The reset of kind 64 enables the entity and keeps the destroyed bit like 0x1a90b8, but does not set the ... |
 
 ## Player and camera
 
-15 of 188 items linked.
+15 of 192 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -171,16 +171,16 @@ Items: 888 open items and stand-ins, 157 linked to game usage, 731 with unknown 
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
-| 1 | [AUDIO-33](features/audio.md?display=source#L48) | 3 | 89 | 8 | 0 | 1 stand-in | `stopsoundgo`, `lesoundobject`, `soundobject` | StopSoundGO on a kind-10 sound object (`lesoundobject`, `soundobject`) stops the object's own sound and sets ... |
-| 2 | [AUDIO-S11](features/audio.md?display=source#L31) | 67 | 0 | 7 | 0 | 1 stand-in | `automaticmusic` | AutomaticMusic clears the override byte 0x376b31 and runs the evaluation 0x204fe0 only as far as the mood-0 ... |
+| 1 | [AUDIO-33](features/audio.md?display=source#L49) | 3 | 89 | 8 | 0 | 1 stand-in | `stopsoundgo`, `lesoundobject`, `soundobject` | StopSoundGO on a kind-10 sound object (`lesoundobject`, `soundobject`) stops the object's own sound and sets ... |
+| 2 | [AUDIO-S11](features/audio.md?display=source#L32) | 67 | 0 | 7 | 0 | 1 stand-in | `automaticmusic` | AutomaticMusic clears the override byte 0x376b31 and runs the evaluation 0x204fe0 only as far as the mood-0 ... |
 | 3 | [MOVIE-38](features/movies-cutscenes.md?display=source#L42) | 56 | 0 | 7 | 0 | 1 stand-in | `dcamcutscenefree` | Whether the script native DCamCutSceneFree 0x196144 (clears the entity layers, no matrix restore) runs on a ... |
 | 4 | [HUD-22](features/hud-ui-text.md?display=source#L29) | 39 | 0 | 6 | 2 | 4 stand-in | `showbosshearts`, `showportraitovervehicle`, `showracestart`, `showtally` | Remaining text screens: ShowTally, ShowBossHearts, ShowRaceStart, ShowPortraitOverVehicle (their layouts and ... |
 | 5 | [HUD-9](features/hud-ui.md?display=source#L39) | 21 | 0 | 6 | 1 | 1 stand-in | `addstuds` | Script path `AddStuds` (0x1584e0): shows the old total, adds 1.75 s later |
 | 6 | [MOVIE-S12](features/movies-cutscenes.md?display=source#L27) | 9 | 0 | 6 | 0 | 1 stand-in | `playcutscene` | A new game from the front end shows `01_GameIntro` in the front end and skips the script's `PlayCutscene` in ... |
 | 7 | [HUD-30](features/hud-ui-text.md?display=source#L34) | 7 | 0 | 6 | 1 | 1 stand-in | `showcharacterintro` | ShowCharacterIntro against the oracle (no state at mission 1-4 yet), an information or warning box with other ... |
 | 8 | [HUD-25](features/hud-ui-text.md?display=source#L30) | 7 | 0 | 6 | 0 | 1 stand-in | `showcharacterintro` | ShowCharacterIntro also sets the HUD's "Portrait" image to the character (0x1cc8a4); the port only shows the ... |
-| 9 | [AUDIO-11](features/audio.md?display=source#L43) | 6 | 0 | 3 | 5 | 1 stand-in | `vehicleenabledrivingmusic` | Action music: the combat scan of 0x204fe0 (table 0x58deb0), OverrideMusicMood, PauseMusic, DuckMusicFor ... |
-| 10 | [AUDIO-S32](features/audio.md?display=source#L38) | 6 | 0 | 3 | 0 | 1 stand-in | `vehicleenabledrivingmusic` | registersound, VehicleEnableDrivingMusic and vehiclestopsounds only record their arguments (no preload, no ... |
+| 9 | [AUDIO-11](features/audio.md?display=source#L44) | 6 | 0 | 3 | 5 | 1 stand-in | `vehicleenabledrivingmusic` | Action music: the combat scan of 0x204fe0 (table 0x58deb0), OverrideMusicMood, PauseMusic, DuckMusicFor ... |
+| 10 | [AUDIO-S32](features/audio.md?display=source#L39) | 6 | 0 | 3 | 0 | 1 stand-in | `vehicleenabledrivingmusic` | registersound, VehicleEnableDrivingMusic and vehiclestopsounds only record their arguments (no preload, no ... |
 
 ## Rendering and assets
 
@@ -233,7 +233,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [pedestrians-traffic-pedestrians.md](features/pedestrians-traffic-pedestrians.md): PED-13 (+2), PED-16 (+1), PED-24 (+1), PED-25 (+1), PED-26 (+1), PED-9 (+1), PED-S13, PED-S14, PED-S2, PED-S4, PED-S5, PED-S6, PED-S7, PED-S8
 - [pedestrians-traffic.md](features/pedestrians-traffic.md): PREGEN-3 (+21), PREGEN-S1, PREGEN-S2
 - [player-movement.md](features/player-movement.md): PLAYER-14 (+2), PLAYER-16 (+2), PLAYER-11 (+1), PLAYER-15 (+1), PLAYER-22 (+1), PLAYER-25 (+1), PLAYER-1, PLAYER-10, PLAYER-13, PLAYER-18, PLAYER-2, PLAYER-21, PLAYER-23, PLAYER-24, PLAYER-3, PLAYER-5, PLAYER-6, PLAYER-7, PLAYER-8, PLAYER-S1, PLAYER-S10, PLAYER-S11, PLAYER-S2, PLAYER-S4, PLAYER-S5, PLAYER-S6, PLAYER-S8
-- [player-traversal-ladders.md](features/player-traversal-ladders.md): TRAV-59 (+1), TRAV-58, TRAV-60, TRAV-S34, TRAV-S35
+- [player-traversal-ladders.md](features/player-traversal-ladders.md): TRAV-61 (+2), TRAV-59 (+1), TRAV-58, TRAV-60, TRAV-62, TRAV-S34, TRAV-S35, TRAV-S36, TRAV-S37
 - [player-traversal-pole.md](features/player-traversal-pole.md): TRAV-S9 (+1), TRAV-11, TRAV-13, TRAV-14, TRAV-15, TRAV-16, TRAV-S5, TRAV-S6, TRAV-S7, TRAV-S8
 - [player-traversal-rails.md](features/player-traversal-rails.md): TRAV-28 (+3), TRAV-38 (+1), TRAV-43 (+1), TRAV-44 (+1), TRAV-45 (+1), TRAV-S16 (+1), TRAV-S18 (+1), TRAV-S19 (+1), TRAV-27, TRAV-29, TRAV-31, TRAV-32, TRAV-33, TRAV-42, TRAV-S15, TRAV-S17, TRAV-S21, TRAV-S23, TRAV-S24, TRAV-S25, TRAV-S26
 - [player-traversal.md](features/player-traversal.md): TRAV-9 (+2), TRAV-2 (+1), TRAV-49 (+1), TRAV-52 (+1), TRAV-S12 (+1), TRAV-10, TRAV-19, TRAV-20, TRAV-22, TRAV-34, TRAV-35, TRAV-5, TRAV-56, TRAV-6, TRAV-8, TRAV-S1, TRAV-S10, TRAV-S11, TRAV-S13, TRAV-S2, TRAV-S20, TRAV-S29, TRAV-S3, TRAV-S30, TRAV-S31, TRAV-S32, TRAV-S4

@@ -6,6 +6,7 @@
 #include "runtime/attack_sounds.hpp"
 #include "runtime/buildit_player.hpp"
 #include "runtime/carry_animation.hpp"
+#include "runtime/ladder_sounds.hpp"
 #include "runtime/scanner.hpp"
 #include "runtime/zipline.hpp"
 #include "runtime/climb_bar.hpp"
@@ -49,9 +50,12 @@ struct PlayerRig {
     double frame = 0;
     float startX = 0, startZ = 0;
     chase::runtime::FootstepDetector footsteps;
+    chase::runtime::ClipSounds clipSounds;
+    chase::runtime::GameRandom clipSoundRandom{chase::runtime::kClipSoundSeedStandIn};
     chase::runtime::CharacterSounds characterSounds;
     chase::runtime::AttackSounds attackSounds;
     std::vector<chase::runtime::SoundCall> sounds;  // the sound calls of the update, filled by updatePlayer and animate
+    std::vector<chase::runtime::SoundStop> soundStops;  // the stops of the update, filled by animate
 
     std::array<float, 3> position() const { return {motion.x, vertical.y, motion.z}; }
     chase::render::Mat4 matrix() const;

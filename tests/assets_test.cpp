@@ -965,7 +965,8 @@ void cutscenes() {
     head[4] = 3;
     head[5] = 0x40;   // cutscene bit 14
     head[0x20] = 1;   // one sub-animation
-    Bytes fixups, count, records(0x18, 0), name, times, values;
+    Bytes fixups, count, records(0x18, 0), name, times, values, aspects;
+    for (std::uint32_t v : {0u, 1u, 0xb945fcd8u, 0u}) put32(aspects, v);
     put32(fixups, 0);
     put32(count, 1);
     records[4] = 2;
@@ -973,13 +974,15 @@ void cutscenes() {
     putF32(times, 0);
     putF32(times, 1);
     for (float v : {0.0f, 0.0f, 10.0f, 1.0f / 3, 20.0f, 1.0f / 3, 30.0f, 40.0f, 0.0f, 0.0f}) putF32(values, v);
-    std::vector<std::pair<std::int32_t, Bytes>> blocks{{-14, head}, {-14, {}}, {-14, fixups}, {-14, count},
+    std::vector<std::pair<std::int32_t, Bytes>> blocks{{-14, head}, {-14, aspects}, {-14, fixups}, {-14, count},
                                                        {-14, records}, {-14, name}, {-14, {}}, {-14, times},
                                                        {-14, values}, {-14, {}}};
     Animation camera = parseAnimation(pooledBlocks(blocks));
     require(camera.frames == 3 && camera.subAnimations.size() == 1 && camera.subAnimations[0].size() == 1 &&
                 camera.subAnimations[0][0].keys.size() == 2 && camera.subAnimations[0][0].keys[1].value == 40,
             "sub-animation track keys");
+    require(camera.subAspects.size() == 1 && camera.subAspects[0] == 0xb945fcd8u && camera.subData.size() == 1 && camera.subData[0].empty(),
+            "sub-animation aspect id and data block");
     CutsceneCamera shot = cutsceneCamera(camera, 0.5f);
     require(near(shot.position[0], 25) && shot.fieldOfView == 35 && near(shot.field11, 0.035f),
             "camera track and handler defaults (0x1c1fbc)");
@@ -988,6 +991,10 @@ void cutscenes() {
     records[4] = 3;
     blocks[4].second = records;
     requireThrows([&] { parseAnimation(pooledBlocks(blocks)); }, "key count larger than the key blocks accepted");
+    records[4] = 2;
+    blocks[4].second = records;
+    blocks[1].second = Bytes(8, 0);
+    requireThrows([&] { parseAnimation(pooledBlocks(blocks)); }, "aspect list shorter than the sub-animations accepted");
 
     ActorPose pose;
     pose.yaw = float(M_PI / 2);

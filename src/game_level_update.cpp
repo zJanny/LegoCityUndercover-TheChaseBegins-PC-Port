@@ -290,6 +290,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
     particles.update(dt);
     stepVehicleFlashes();
     const auto emit = [&](const runtime::SoundCall& call) {
+        if (call.onlyIfIdle && shared.audio && shared.audio->playing(call.id, call.owner)) return;
         soundLog.emplace_back(updates, call.id);
         if (shared.audio) shared.audio->play(call);
     };
@@ -306,6 +307,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
     order.at(runtime::UpdatePhase::Characters, [&] {
     if (player && !cutscenePlaying()) {
         player->sounds.clear();
+        player->soundStops.clear();
         runtime::StickIntentInput stick;
         stick.slot14 = {pad.slot(kSlotStickX).value, pad.slot(kSlotStickX).deadzone};
         stick.slot15 = {pad.slot(kSlotStickY).value, pad.slot(kSlotStickY).deadzone};
@@ -363,6 +365,8 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         for (const runtime::SoundCall& call : updateDebrisPickup(dt, pickupPoint)) player->sounds.push_back(call);
         effects.update(dt, {follow->eye()[0], follow->eye()[1], follow->eye()[2]}, superBricks.tint());
         for (const runtime::SoundCall& call : player->sounds) emit(call);
+        for (const runtime::SoundStop& stop : player->soundStops)
+            if (shared.audio) shared.audio->stop(stop.id, stop.owner);
         if (hud)
             for (const runtime::StudBanked& banked : studs.takeBanked()) {
                 hud->studsBanked(unsigned(banked.kind), banked.total);

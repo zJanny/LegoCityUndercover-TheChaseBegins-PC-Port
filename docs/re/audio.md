@@ -12,6 +12,7 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - Stop 0x23ae50 finds the voice by (id, owner); a negative fade takes sheet 0 column 16, 0.0 ends it at once (all door sounds). [§2026-10-13T21:51](#ts-20261013-215117)
 - The owner u16 at entity +0x14 is the entity's creation index in its scene (object loader 0x1a4130: root 0, each object before the objects of its class file); StopSoundGO on a kind-10 sound object stops the object's own sound (0x22c58c). The oracle's id of 1-8_Zip_Line05 disagrees with the count from the file. [§2026-10-21T22:21:40](#ts-20261021-222140)
 - Music: sheet 1 rows are track ids for `OverrideMusic`, files `music/<name>.bwav`; the level music set (level record byte +0x39, sheet 2) gives no start music in lvl_00 or lvl_01. [§2026-10-13T09:42](#ts-20261013-094203), [§2026-10-13T17:54](#ts-20261013-175424)
+- Animation sound tracks: the sound pulse track 0x0ffe43cf (record: sound id, volume, pitch, chance) and the character sound track 0x13e3511c (record: slot) of the clips are played by `ClipSounds`; the ladder clips play sound 112 and 288. [player-traversal-ladders.md §2026-10-21T22:44:32](player-traversal-ladders.md#ts-20261021-224432)
 - Voice volume (+0x50, replaced by SetSoundVolume, times the distance factor and the master volume) and rate (+0x58, pitch = rate * Doppler / source rate) are read; the rate boost (record bit 3 and byte 0x376ce6) never applies to the sound table; the Doppler formula is read, its velocity sources are not. [§2026-10-21T22:19:39](#ts-20261021-221939)
 - Open: volume ramp and ducking, meaning of sheets 3-5 and the other columns, who fills the music name array, NPC and vehicle sounds, the mode 3 id remap, which objects get no entity (and so shift the ids).
 
@@ -111,6 +112,8 @@ Corrected by [pooled-resources.md §2026-10-12T15:55](pooled-resources.md#ts-202
 <a id="ts-20261013-175424"></a>
 
 ## 2026-10-13T17:54:24+02:00 — Sounds of the player and studs, positional rules, level music (REA-free: llvm-objdump + Azahar traps without RPC, port 24790)
+
+Corrected by [player-traversal-ladders.md §2026-10-21T22:44:32](player-traversal-ladders.md#ts-20261021-224432): the track 0x0ffe43cf is the sound pulse track of every clip with a sound record (the jump clip's record is silent) and the idle track 0x13e3511c plays a character sound slot named by the clip's record.
 
 Replica: `chase_audio` (`spatial.*`, `soundplayer.*`, `musicplayer.*`), `chase_runtime` (`sound_events.*`, `music.*`), `parseSoundTables` / `levelMusicSet` / `characterSoundCategory` in `chase_assets`, wiring in `src/game.cpp` + `src/game_audio.hpp`. Scenarios: `tools/oracle/audio-events{1,2,3}.txt` (execution traps on the call sites of 0x23fa54, on 0x23ae84, 0x23ae50 and 0x227880; fixed dt 0.033; `tools/export_sound_trace.py` writes the CSVs of `CHASE_AUDIO_TRACE_DIR`). Test: `audio-core`, `audio-real-data`.
 

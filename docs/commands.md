@@ -123,6 +123,7 @@ The table lists some of the tests. `ctest --test-dir build -N` lists all of them
 | `police-entrance-shot`, `police-entrance-no-disc` | An offscreen screenshot at the police entrance (script `Police_ExtToInt`) and a check that no pale blue-grey disc lies under the player. Registered only if `artifacts/romfs` existed at configure time |
 | `game-option-debug-overlay-value` | `--debug-overlay` takes no value |
 | `input-sdl-smoke` | Runs with `SDL_VIDEODRIVER=dummy` |
+| `ladder-sounds`, `ladder-sounds-real-data` | The sound tracks of animation clips (ladder climb and clamber sounds): made-up clips, then the shipped ladder, jump, idle and walk clips; the second skips with code 77 without `artifacts/romfs` |
 | `assets-core` | Asset runtime, synthetic fixtures |
 | `assets-real-data` | Needs `artifacts/romfs`; skips with code 77 otherwise |
 | `pregen-traffic` | The traffic and pedestrian spawn files: made-up files, rejected input and the cell lookup. No game data needed |

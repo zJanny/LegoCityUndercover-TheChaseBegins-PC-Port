@@ -241,7 +241,9 @@ Animation parseAnimation(const Bytes& data) {
         for (unsigned i = 0; i < tracks; ++i) anim.tracks.push_back(readTrack(r, records, i));
     }
     if (std::uint32_t subs = readU32(head, 0x20)) {
-        r.skip();
+        const Bytes aspects = r.next();
+        need(aspects, std::size_t(subs) * 16, "sub-animation aspect list");
+        for (std::uint32_t s = 0; s < subs; ++s) anim.subAspects.push_back(readU32(aspects, std::size_t(s) * 16 + 8));
         for (std::uint32_t s = 0; s < subs; ++s) {
             Bytes fixups = r.next();
             Bytes countBlock = r.next();
@@ -251,7 +253,7 @@ Animation parseAnimation(const Bytes& data) {
             std::vector<AnimTrack> tracks;
             for (std::uint32_t i = 0; i < readU32(countBlock, 0); ++i) tracks.push_back(readTrack(r, records, i));
             anim.subAnimations.push_back(std::move(tracks));
-            r.skip();
+            anim.subData.push_back(r.next());
             const std::uint32_t fixupCount = readU32(fixups, 0);
             if (fixups.size() != 4 + std::size_t(fixupCount) * 4) throw std::runtime_error("sub-animation fixup list size mismatch");
             std::vector<AnimationTarget> targets;

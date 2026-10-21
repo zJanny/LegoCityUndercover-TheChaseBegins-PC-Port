@@ -64,9 +64,15 @@ void PlayerRig::animate(Scene& scene, float dt, int role, float scale) {
     const double rate = double(animationFramesPerSecond(current));
     frame = std::fmod(frame + double(dt) * rate * double(scale), double(current.frames));
     pose(scene);
-    const float value = runtime::footstepTrackValue(current, float(frame / double(current.frames)));
-    if (switched) footsteps.restart(value);
-    else if (footsteps.update(value)) sounds.push_back(characterSounds.footstep(position()));
+    const float normalisedTime = float(frame / double(current.frames));
+    const float value = runtime::footstepTrackValue(current, normalisedTime);
+    if (switched) {
+        footsteps.restart(value);
+        clipSounds.restart(current, normalisedTime);
+    } else {
+        if (footsteps.update(value)) sounds.push_back(characterSounds.footstep(position()));
+        clipSounds.update(current, normalisedTime, position(), characterSounds, clipSoundRandom, sounds, soundStops);
+    }
 }
 
 void PlayerRig::pose(Scene& scene) const {
@@ -123,7 +129,11 @@ std::optional<PlayerRig> placePlayer(FuseArchive& archive, Scene& scene, const L
     const FuseEntry* soundTable = archive.find("tables/tablessoundfx.bxls");
     const FuseEntry* characterTable = archive.find("tables/tablescharacters.bxls");
     if (soundTable && characterTable) {
-        const SoundTables sounds = parseSoundTables(parseTable(archive.read(*soundTable)));
+        const Table soundfx = parseTable(archive.read(*soundTable));
+        const SoundTables sounds = parseSoundTables(soundfx);
+        std::vector<bool> looping;
+        for (const SoundEffect& effect : parseSoundEffects(soundfx)) looping.push_back((effect.column3 & runtime::kSoundFlagLoop) != 0);
+        rig.clipSounds = runtime::ClipSounds(std::move(looping));
         const std::uint8_t category = characterSoundCategory(parseTable(archive.read(*characterTable)), character.characterEnum);
         if (category < sounds.characterSounds.size()) rig.characterSounds = runtime::CharacterSounds(sounds.characterSounds[category]);
     }
