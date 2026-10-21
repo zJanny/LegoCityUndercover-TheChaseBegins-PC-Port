@@ -163,6 +163,7 @@ The table lists some of the tests. `ctest --test-dir build -N` lists all of them
 | `voice-params` | Volume and rate arithmetic of sound voices (scale, boost, pitch, Doppler), no game data needed |
 | `voice-params-real-data` | Plays real sound effects and checks SetSoundVolume, ScaleSoundFrequency, master volume and Doppler on the mixer output, needs the RomFS |
 | `audio-real-data` | Checks the sound tables and replays sound calls recorded from the original game (the recorded calls are pinned in the test; made with `tools/export_sound_trace.py`) by running `chase-game --script`; skips with code 77 if `artifacts/romfs` is missing |
+| `natives-sound`, `entity-ids-real-data` | The ten sound natives on made-up scripts, and the owner key of an object's sounds (its entity id); the second checks the object flags of the shipped levels and skips with code 77 if `artifacts/romfs` is missing |
 | `runtime-core` | Game runtime core (frame timing, pad, stick, character movement, floor height and wall sliding), no SDL |
 | `script-dialog-real-data`, `game-script-dialog` | The police station entry script: the question box opens, A and B give their answers, the character is moved to the door. Registered only if `artifacts/romfs` existed at configure time |
 | `same-level-entry-real-data`, `game-same-level-entry` | The lift of the police station between its floors: the player lands on the destination point one update after the request, without a loading page. Registered only if `artifacts/romfs` existed at configure time |

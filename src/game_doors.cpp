@@ -27,7 +27,6 @@ std::vector<DoorObject> loadDoors(FuseArchive& archive, const Level& level, cons
         const Model model = parseModel(archive.read(*modelEntry));
         DoorObject door;
         door.instance = object.instance;
-        door.soundOwner = std::uint16_t(doors.size() + 1);
         door.params = runtime::doorParams(*source, *classOf(source->className), model, object.centre, object.half);
         door.sceneInstance = instance->second.first;
         door.placement = instance->second.second;

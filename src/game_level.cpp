@@ -181,6 +181,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     levelScripts.setAnimationDriver(&animationDrivers);
     levelScripts.loadAnimationOffsets(classOf);
     levelScripts.loadObjectKinds(classOf);
+    levelScripts.soundNatives().setEntityIds(runtime::SceneEntityIds(level, classOf, false));
     installScriptHooks();
     fallApart.load(archive, particles.random(), chase::render::readBaseAppearance(archive));
     studDrops.load(particles.random());
@@ -292,7 +293,10 @@ LevelSession::LevelSession(const Shared& sharedState)
     loadObjectiveBoxes(placedCollisions);
     runtime::applyObjectCollisionState(collision, objectState);
     doors = game_doors::loadDoors(archive, level, classOf, placedCollisions, placedInstances);
-    for (const DoorObject& door : doors) game_doors::poseDoor(scene, door);
+    for (DoorObject& door : doors) {
+        door.soundOwner = levelScripts.soundNatives().ownerOf(game_doors::lowerCase(door.instance));
+        game_doors::poseDoor(scene, door);
+    }
     std::cout << "doors: " << doors.size() << '\n';
     buildits.load(archive, level, classOf);
     std::cout << "build-its: " << buildits.objects().size() << '\n';

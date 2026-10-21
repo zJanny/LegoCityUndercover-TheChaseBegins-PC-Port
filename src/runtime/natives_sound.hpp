@@ -3,6 +3,8 @@
 // StopSoundGO 0x1d0d28, registersound 0x1cdbdc, ScaleSoundFrequency 0x2a8afc, SetSoundVolume 0x272dcc,
 // vehiclestopsounds 0x27c148 and VehicleEnableDrivingMusic 0x2bf2b4 (batch SCRIPT-33, docs/re/script-natives-audio.md).
 // The state records requests for the owner of the audio device. No SDL dependency.
+#include "runtime/entity_ids.hpp"
+
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -25,8 +27,8 @@ std::vector<std::string> soundNativeNames();
 unsigned soundNativeArguments(SoundNativeKind kind);
 int soundNativeObjectArgument(SoundNativeKind kind);
 
-// AUDIO-S30: the owner of a sound played for an object is the u16 at entity+0x14 in the original, whose source is
-// unread; objects get consecutive owners from this base (the doors use 1 and up).
+// STAND-IN AUDIO-S30: a name that is no object of the level file (Player1 of lvl_the_city, entities made at run time) has no
+// entity id in the port; such names get consecutive owners from this base.
 constexpr std::uint16_t kObjectOwnerBase = 0x4000;
 
 struct SoundRequest {
@@ -51,6 +53,8 @@ public:
     void run(SoundNativeKind kind, const std::vector<float>& values, const std::vector<std::string>& objects, const PositionLookup& position);
 
     std::vector<SoundRequest> takeRequests();
+    void setEntityIds(SceneEntityIds ids) { entityIds_ = std::move(ids); }
+    // The u16 at entity +0x14 of the object (SceneEntityIds), the owner key of its sounds.
     std::uint16_t ownerOf(const std::string& object);
 
     const std::vector<std::pair<std::uint16_t, std::uint8_t>>& registered() const { return registered_; }
@@ -60,6 +64,7 @@ public:
 
 private:
     std::vector<SoundRequest> requests_;
+    SceneEntityIds entityIds_;
     std::map<std::string, std::uint16_t> owners_;
     std::vector<std::pair<std::uint16_t, std::uint8_t>> registered_;
     std::map<std::string, bool> drivingMusic_;

@@ -27,7 +27,7 @@ struct DoorObject {
     chase::render::Mat4 rest[2] = {chase::render::identity(), chase::render::identity()};
     float pivot[2][3] = {};
     std::array<float, 3> position{};
-    std::uint16_t soundOwner = 0;
+    std::uint16_t soundOwner = 0;  // the door entity id +0x14 (0x23ae84 / 0x23ae50), from the sound natives owner table
 };
 
 std::vector<DoorObject> loadDoors(chase::assets::FuseArchive& archive, const chase::assets::Level& level,

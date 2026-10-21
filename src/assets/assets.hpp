@@ -273,6 +273,7 @@ struct LevelObject {
     std::string instance;
     std::string room;
     std::vector<LevelParam> params;
+    std::uint8_t createFlags = 0;      // record +0xc: bit 0 never created, bit 1 created only in the scene at 0x589a1c (0x1a4130)
 };
 // Section +0x30: navigation descriptor per room (used by loader 0x1971c4). Cell world
 // position: origin + cellSize * cell; height origin.y + u16 * heightUnit / 256 (data fit).

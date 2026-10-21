@@ -58,6 +58,7 @@ unsigned soundNativeArguments(SoundNativeKind kind) { return entryOf(kind).argum
 int soundNativeObjectArgument(SoundNativeKind kind) { return entryOf(kind).objectArgument; }
 
 std::uint16_t SoundNativeState::ownerOf(const std::string& object) {
+    if (const std::optional<std::uint16_t> id = entityIds_.find(object)) return *id;
     const auto found = owners_.find(object);
     if (found != owners_.end()) return found->second;
     const std::uint16_t owner = std::uint16_t(kObjectOwnerBase + owners_.size());

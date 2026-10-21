@@ -11,8 +11,8 @@ Handlers of OverrideMusic, AutomaticMusic, StopMusic and EnableTrafficAndPedestr
 - EnableTrafficAndPedestrians 0x2c5780 sets bit 1 of the traffic and pedestrian manager bytes; with it clear every live entity is removed and nothing spawns (default on). [§2026-10-15T15:10:38](#ts-20261015-151038); the pedestrian manager is 0x51b33c, its spawn and removal rules: [pedestrians.md §2026-10-20T11:17:42](pedestrians.md#ts-20261020-111742)
 - Camera manager +0x28 is the requested camera: CameraFollow is a camera switch request, not a flag. [§2026-10-15T15:10:38](#ts-20261015-151038)
 - Ten sound natives: handler argument layout is 8 bytes per argument (entity at +8i, value at +8i+4); play family 0x1b4394 / 0x295244 / 0x27bd48, stop family 0x1b43ec / 0x1d0d28, ScaleSoundFrequency 0x2a8afc, SetSoundVolume 0x272dcc. [§2026-10-15T17:27:05](#ts-20261015-172705)
-- Port stand-ins: object sound owner ids from 0x4000 (AUDIO-S30), registersound, VehicleEnableDrivingMusic and vehiclestopsounds recorded only (AUDIO-S32). [§2026-10-15T17:27:05](#ts-20261015-172705)
-- Open: the duck record and DuckMusicFor, who restarted track 16 in the oracle, the u16 at entity+0x14, readers of registered sound pairs, type-10 ambient emitters, spawn rules of traffic.
+- Port stand-ins: object sound owners are the entity ids of [audio.md §2026-10-21T22:21:40](audio.md#ts-20261021-222140) with a consecutive id from 0x4000 for a name without one (AUDIO-S30, AUDIO-S36), registersound, VehicleEnableDrivingMusic and vehiclestopsounds recorded only (AUDIO-S32). [§2026-10-15T17:27:05](#ts-20261015-172705)
+- Open: the duck record and DuckMusicFor, who restarted track 16 in the oracle, readers of registered sound pairs, the update of type-10 sound objects, spawn rules of traffic.
 
 <a id="ts-20261015-151038"></a>
 

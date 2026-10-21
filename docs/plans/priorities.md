@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 886 open items and stand-ins, 157 linked to game usage, 729 with unknown reach.
+Items: 888 open items and stand-ins, 157 linked to game usage, 731 with unknown reach.
 
 ## Top 50 overall
 
@@ -80,10 +80,10 @@ Items: 886 open items and stand-ins, 157 linked to game usage, 729 with unknown 
 | 44 | [SCRIPT-317](features/script-system-natives-world.md?display=source#L44) | 99 | 0 | 7 | 1 | 2 stand-in | `enableswitch`, `resetobject` | Kind 64 message 8 (0x1a90b8): read the platform record fields R+4, R+0xb4, R+0x7c, R+0x18, R+0x50 and the ... |
 | 45 | [SCRIPT-318](features/script-system-natives-world.md?display=source#L45) | 99 | 0 | 7 | 0 | 2 stand-in | `enableswitch`, `resetobject` | Census of the message 8 handlers of the other kinds (the default handler 0x221800 is reached through 0x221760 ... |
 | 46 | [SCRIPT-282](features/script-system-natives-world.md?display=source#L48) | 92 | 0 | 7 | 16 | 1 stand-in, 1 none | `distancefademid`, `enabledistancefade` | EnableDistanceFade: the node kind gate (global 0x37674c) and the child recursion 0x2b65dc per placed class ... |
-| 47 | [SCRIPT-314](features/script-system-natives-world.md?display=source#L43) | 90 | 0 | 7 | 1 | 1 stand-in | `resetobject` | Apply the restored placement of a reset kind 132 object to its node once something moves such objects (script ... |
-| 48 | [SCRIPT-S257](features/script-system-natives-world.md?display=source#L26) | 90 | 0 | 7 | 0 | 1 stand-in | `resetobject` | The reset of kind 132 records the object's `initialposition` / `initialorientation` and moves no node ... |
-| 49 | [SCRIPT-S261](features/script-system-natives-world.md?display=source#L27) | 90 | 0 | 7 | 0 | 1 stand-in | `resetobject` | The reset of kind 64 enables the entity and keeps the destroyed bit like 0x1a90b8, but does not set the ... |
-| 50 | [RENDER-66](features/rendering.md?display=source#L44) | 89 | 0 | 7 | 17 | 1 stand-in | `enabledistancefade` | The distance fade of mesh nodes: every mesh node fades out beyond a distance that depends on its radius ... |
+| 47 | [AUDIO-33](features/audio.md?display=source#L48) | 3 | 89 | 8 | 0 | 1 stand-in | `stopsoundgo`, `lesoundobject`, `soundobject` | StopSoundGO on a kind-10 sound object (`lesoundobject`, `soundobject`) stops the object's own sound and sets ... |
+| 48 | [SCRIPT-314](features/script-system-natives-world.md?display=source#L43) | 90 | 0 | 7 | 1 | 1 stand-in | `resetobject` | Apply the restored placement of a reset kind 132 object to its node once something moves such objects (script ... |
+| 49 | [SCRIPT-S257](features/script-system-natives-world.md?display=source#L26) | 90 | 0 | 7 | 0 | 1 stand-in | `resetobject` | The reset of kind 132 records the object's `initialposition` / `initialorientation` and moves no node ... |
+| 50 | [SCRIPT-S261](features/script-system-natives-world.md?display=source#L27) | 90 | 0 | 7 | 0 | 1 stand-in | `resetobject` | The reset of kind 64 enables the entity and keeps the destroyed bit like 0x1a90b8, but does not set the ... |
 
 ## Player and camera
 
@@ -167,20 +167,20 @@ Items: 886 open items and stand-ins, 157 linked to game usage, 729 with unknown 
 
 ## Front end, HUD, saves
 
-14 of 165 items linked.
+14 of 167 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
-| 1 | [AUDIO-S11](features/audio.md?display=source#L30) | 67 | 0 | 7 | 0 | 1 stand-in | `automaticmusic` | AutomaticMusic clears the override byte 0x376b31 and runs the evaluation 0x204fe0 only as far as the mood-0 ... |
-| 2 | [MOVIE-38](features/movies-cutscenes.md?display=source#L42) | 56 | 0 | 7 | 0 | 1 stand-in | `dcamcutscenefree` | Whether the script native DCamCutSceneFree 0x196144 (clears the entity layers, no matrix restore) runs on a ... |
-| 3 | [HUD-22](features/hud-ui-text.md?display=source#L29) | 39 | 0 | 6 | 2 | 4 stand-in | `showbosshearts`, `showportraitovervehicle`, `showracestart`, `showtally` | Remaining text screens: ShowTally, ShowBossHearts, ShowRaceStart, ShowPortraitOverVehicle (their layouts and ... |
-| 4 | [HUD-9](features/hud-ui.md?display=source#L39) | 21 | 0 | 6 | 1 | 1 stand-in | `addstuds` | Script path `AddStuds` (0x1584e0): shows the old total, adds 1.75 s later |
-| 5 | [MOVIE-S12](features/movies-cutscenes.md?display=source#L27) | 9 | 0 | 6 | 0 | 1 stand-in | `playcutscene` | A new game from the front end shows `01_GameIntro` in the front end and skips the script's `PlayCutscene` in ... |
-| 6 | [HUD-30](features/hud-ui-text.md?display=source#L34) | 7 | 0 | 6 | 1 | 1 stand-in | `showcharacterintro` | ShowCharacterIntro against the oracle (no state at mission 1-4 yet), an information or warning box with other ... |
-| 7 | [HUD-25](features/hud-ui-text.md?display=source#L30) | 7 | 0 | 6 | 0 | 1 stand-in | `showcharacterintro` | ShowCharacterIntro also sets the HUD's "Portrait" image to the character (0x1cc8a4); the port only shows the ... |
-| 8 | [AUDIO-11](features/audio.md?display=source#L41) | 6 | 0 | 3 | 5 | 1 stand-in | `vehicleenabledrivingmusic` | Action music: the combat scan of 0x204fe0 (table 0x58deb0), OverrideMusicMood, PauseMusic, DuckMusicFor ... |
-| 9 | [AUDIO-S32](features/audio.md?display=source#L36) | 6 | 0 | 3 | 0 | 1 stand-in | `vehicleenabledrivingmusic` | registersound, VehicleEnableDrivingMusic and vehiclestopsounds only record their arguments (no preload, no ... |
-| 10 | [AUDIO-33](features/audio.md?display=source#L47) | 3 | 0 | 2 | 0 | 1 stand-in | `stopsoundgo` | StopSoundGO on an object of type 10 calls 0x22c58c (ambient emitter component stop); the port has no ambient ... |
+| 1 | [AUDIO-33](features/audio.md?display=source#L48) | 3 | 89 | 8 | 0 | 1 stand-in | `stopsoundgo`, `lesoundobject`, `soundobject` | StopSoundGO on a kind-10 sound object (`lesoundobject`, `soundobject`) stops the object's own sound and sets ... |
+| 2 | [AUDIO-S11](features/audio.md?display=source#L31) | 67 | 0 | 7 | 0 | 1 stand-in | `automaticmusic` | AutomaticMusic clears the override byte 0x376b31 and runs the evaluation 0x204fe0 only as far as the mood-0 ... |
+| 3 | [MOVIE-38](features/movies-cutscenes.md?display=source#L42) | 56 | 0 | 7 | 0 | 1 stand-in | `dcamcutscenefree` | Whether the script native DCamCutSceneFree 0x196144 (clears the entity layers, no matrix restore) runs on a ... |
+| 4 | [HUD-22](features/hud-ui-text.md?display=source#L29) | 39 | 0 | 6 | 2 | 4 stand-in | `showbosshearts`, `showportraitovervehicle`, `showracestart`, `showtally` | Remaining text screens: ShowTally, ShowBossHearts, ShowRaceStart, ShowPortraitOverVehicle (their layouts and ... |
+| 5 | [HUD-9](features/hud-ui.md?display=source#L39) | 21 | 0 | 6 | 1 | 1 stand-in | `addstuds` | Script path `AddStuds` (0x1584e0): shows the old total, adds 1.75 s later |
+| 6 | [MOVIE-S12](features/movies-cutscenes.md?display=source#L27) | 9 | 0 | 6 | 0 | 1 stand-in | `playcutscene` | A new game from the front end shows `01_GameIntro` in the front end and skips the script's `PlayCutscene` in ... |
+| 7 | [HUD-30](features/hud-ui-text.md?display=source#L34) | 7 | 0 | 6 | 1 | 1 stand-in | `showcharacterintro` | ShowCharacterIntro against the oracle (no state at mission 1-4 yet), an information or warning box with other ... |
+| 8 | [HUD-25](features/hud-ui-text.md?display=source#L30) | 7 | 0 | 6 | 0 | 1 stand-in | `showcharacterintro` | ShowCharacterIntro also sets the HUD's "Portrait" image to the character (0x1cc8a4); the port only shows the ... |
+| 9 | [AUDIO-11](features/audio.md?display=source#L43) | 6 | 0 | 3 | 5 | 1 stand-in | `vehicleenabledrivingmusic` | Action music: the combat scan of 0x204fe0 (table 0x58deb0), OverrideMusicMood, PauseMusic, DuckMusicFor ... |
+| 10 | [AUDIO-S32](features/audio.md?display=source#L38) | 6 | 0 | 3 | 0 | 1 stand-in | `vehicleenabledrivingmusic` | registersound, VehicleEnableDrivingMusic and vehiclestopsounds only record their arguments (no preload, no ... |
 
 ## Rendering and assets
 
@@ -210,7 +210,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [abilities-scanner.md](features/abilities-scanner.md): SCAN-10 (+1), SCAN-11 (+1), SCAN-16 (+1), SCAN-17 (+1), SCAN-S10 (+1), AUDIO-S33, SCAN-13, SCAN-15, SCAN-3, SCAN-6, SCAN-S1, SCAN-S11, SCAN-S12, SCAN-S2, SCAN-S3, SCAN-S4, SCAN-S5, SCAN-S6, SCAN-S7, SCAN-S8, SCAN-S9
 - [animation-characters.md](features/animation-characters.md): ANIM-13 (+4), ANIM-3 (+2), ANIM-10 (+1), ANIM-11 (+1), ANIM-14 (+1), ANIM-1, ANIM-4, ANIM-S10, ANIM-S11, ANIM-S2
 - [assets-formats.md](features/assets-formats.md): ASSET-1, ASSET-2, ASSET-3, ASSET-4, ASSET-8, ASSET-S1, ASSET-S2
-- [audio.md](features/audio.md): AUDIO-3 (+2), AUDIO-30 (+2), AUDIO-20 (+1), AUDIO-32 (+1), AUDIO-34 (+1), AUDIO-35 (+1), AUDIO-36 (+1), AUDIO-1, AUDIO-5, AUDIO-6, AUDIO-7, AUDIO-S1, AUDIO-S2, AUDIO-S20, AUDIO-S3, AUDIO-S30, AUDIO-S34, AUDIO-S35, AUDIO-S4, AUDIO-S5, AUDIO-S6, AUDIO-S7
+- [audio.md](features/audio.md): AUDIO-3 (+2), AUDIO-20 (+1), AUDIO-32 (+1), AUDIO-34 (+1), AUDIO-35 (+1), AUDIO-36 (+1), AUDIO-37 (+1), AUDIO-1, AUDIO-38, AUDIO-5, AUDIO-6, AUDIO-7, AUDIO-S1, AUDIO-S2, AUDIO-S20, AUDIO-S3, AUDIO-S30, AUDIO-S34, AUDIO-S35, AUDIO-S36, AUDIO-S4, AUDIO-S5, AUDIO-S6, AUDIO-S7
 - [camera.md](features/camera.md): CAMERA-54 (+3), CAMERA-11 (+1), CAMERA-53 (+1), CAMERA-1, CAMERA-12, CAMERA-2, CAMERA-3, CAMERA-4, CAMERA-5, CAMERA-51, CAMERA-S1, CAMERA-S31, CAMERA-S4, CAMERA-S5, CAMERA-S50, CAMERA-S52, CAMERA-S6
 - [collision.md](features/collision.md): COLL-21 (+1), COLL-4 (+1), COLL-1, COLL-3, COLL-5, COLL-6, COLL-7, COLL-S1, COLL-S2, COLL-S3, COLL-S4
 - [doors.md](features/doors.md): DOOR-2, DOOR-3, DOOR-4, DOOR-6, DOOR-7, DOOR-S1, DOOR-S2, DOOR-S3, DOOR-S4, DOOR-S5

@@ -176,6 +176,7 @@ Level parseLevel(const Bytes& data) {
         LevelObject& obj = level.objects[i];
         obj.instance = cString(r.next());
         obj.room = cString(r.next());
+        obj.createFlags = s2c[i * 0x18 + 0xc];
         obj.params = readParams(r, r.next(), s2c[i * 0x18 + 0xd]);
         auto second = readParams(r, r.next(), s2c[i * 0x18 + 0xe]);
         obj.params.insert(obj.params.end(), second.begin(), second.end());
