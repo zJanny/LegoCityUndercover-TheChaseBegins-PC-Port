@@ -119,6 +119,16 @@ All keys and how to change them: [Controls](docs/controls.md).
 - **The window does not open or stays black.** Update your graphics driver. The game needs OpenGL 4.6.
 - More help: [Getting started](docs/getting-started.md#problems).
 
+## License
+
+The code and documentation of this project are licensed under the [GNU General Public License, version 3 or later](LICENSE) (GPL-3.0-or-later). This covers only the project's own files.
+
+The game's assets are never part of this repository. You supply your own legally obtained image of the game.
+
+## Not affiliated
+
+This is an unofficial fan project. It is not affiliated with, endorsed by or sponsored by Nintendo or any other right holder of *LEGO City Undercover: The Chase Begins*. All names and trademarks belong to their owners.
+
 ## More documentation
 
 - [Getting started](docs/getting-started.md): requirements, version check, package details, the other programs and more problems.
@@ -130,4 +140,5 @@ All keys and how to change them: [Controls](docs/controls.md).
 - [Command reference](docs/commands.md)
 - [Model viewer](docs/model-viewer.md), [sound test](docs/sound-test.md), [video player](docs/fmv-player.md), [debug overlay](docs/debug-overlay.md)
 - [How progress is measured](docs/progress.md)
+- Want to help? [Contributing](CONTRIBUTING.md).
 - For developers: [`CLAUDE.md`](CLAUDE.md) (rules), [the plans](docs/plans/README.md) (with their work logs), [feature pages](docs/plans/features/README.md), [reverse-engineering notes](docs/re/README.md).
