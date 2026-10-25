@@ -5,11 +5,14 @@ usage: oracle_motion.py serve --port PORT --state FILE
 
 Sends a steady motion signal for pad slot 0 to every client that registered for pad data. The signal comes from
 the JSON file FILE ({"accel": [x, y, z], "gyro": [pitch, yaw, roll]}, accel in g, gyro in degrees per second),
-which is re-read when it changes; the oracle script command 'tilt' writes it. Protocol and axis findings: docs/re/oracle-setup.md.
+which is re-read when it changes; the oracle script commands 'tilt' and 'touch' write it. The optional key "touch"
+([x, y] in bottom-screen pixels, or null) is sent as the first touch point of the pad. Protocol and axis findings:
+docs/re/oracle-setup.md.
 """
 import argparse
 import json
 import os
+import re
 import select
 import socket
 import struct
@@ -36,6 +39,16 @@ LEVEL_GYRO = (0.0, 0.0, 0.0)
 GRAVITY_AXIS = 2
 MAX_ACCEL = 8.0
 MAX_GYRO = 2000.0
+SCREEN_WIDTH = 320
+SCREEN_HEIGHT = 240
+TOUCH_PAD_SCALE = 10
+TOUCH_PAD_WIDTH = SCREEN_WIDTH * TOUCH_PAD_SCALE
+TOUCH_PAD_HEIGHT = SCREEN_HEIGHT * TOUCH_PAD_SCALE
+TOUCH_ID = 1
+MAX_TOUCH_UPDATES = 600
+DEFAULT_TAP_UPDATES = 6
+DEFAULT_DRAG_UPDATES = 10
+MIN_DRAG_UPDATES = 2
 
 
 class MotionError(ValueError):
@@ -71,16 +84,88 @@ def parse_tilt(words):
             'gyro': parse_vector(words[3:], MAX_GYRO, 'gyro') if words[3:] else list(LEVEL_GYRO)}
 
 
+def parse_integer(word, name, low, high):
+    if not re.fullmatch(r'-?[0-9]+', word):
+        raise MotionError('%s: %r is not an integer' % (name, word))
+    value = int(word)
+    if not low <= value <= high:
+        raise MotionError('%s: %r is outside %d..%d' % (name, word, low, high))
+    return value
+
+
+def parse_point(words, name):
+    return (parse_integer(words[0], name + ' x', 0, SCREEN_WIDTH - 1),
+            parse_integer(words[1], name + ' y', 0, SCREEN_HEIGHT - 1))
+
+
+def parse_touch(words):
+    """Script arguments 'X Y [UPDATES]' (a tap) or 'release' to a touch plan: a list of (point or None) per update."""
+    if words[:1] == ['release']:
+        if len(words) != 1:
+            raise MotionError('touch release takes no arguments, got %r' % ' '.join(words[1:]))
+        return []
+    if len(words) not in (2, 3):
+        raise MotionError('touch needs X Y [UPDATES] or release, got %d words' % len(words))
+    point = parse_point(words[:2], 'touch')
+    updates = parse_integer(words[2], 'touch updates', 1, MAX_TOUCH_UPDATES) if words[2:] else DEFAULT_TAP_UPDATES
+    return [point] * updates
+
+
+def parse_drag(words):
+    """Script arguments 'X1 Y1 X2 Y2 [UPDATES]' to a touch plan: the points of the drag, one per update."""
+    if len(words) not in (4, 5):
+        raise MotionError('drag needs X1 Y1 X2 Y2 [UPDATES], got %d words' % len(words))
+    start = parse_point(words[:2], 'drag start')
+    end = parse_point(words[2:4], 'drag end')
+    updates = (parse_integer(words[4], 'drag updates', MIN_DRAG_UPDATES, MAX_TOUCH_UPDATES) if words[4:]
+               else DEFAULT_DRAG_UPDATES)
+    steps = updates - 1
+    return [tuple(a + (2 * (b - a) * index + steps) // (2 * steps) for a, b in zip(start, end))
+            for index in range(updates)]
+
+
+def touch_pad_point(pixel_point):
+    """The pad position that Azahar maps back onto the middle of the bottom-screen pixel."""
+    return tuple(pixel * TOUCH_PAD_SCALE + TOUCH_PAD_SCALE // 2 for pixel in pixel_point)
+
+
 def load_state(text):
     try:
         data = json.loads(text)
         accel = [float(v) for v in data['accel']]
         gyro = [float(v) for v in data['gyro']]
-    except (ValueError, KeyError, TypeError) as error:
+        touch = data.get('touch')
+        if touch is not None:
+            touch = [int(touch[0]), int(touch[1])]
+    except (ValueError, KeyError, TypeError, IndexError, AttributeError) as error:
         raise MotionError('bad motion state: %s' % error) from None
     if len(accel) != 3 or len(gyro) != 3:
         raise MotionError('bad motion state: accel and gyro need 3 numbers each')
-    return {'accel': accel, 'gyro': gyro}
+    if touch is not None and not (0 <= touch[0] < SCREEN_WIDTH and 0 <= touch[1] < SCREEN_HEIGHT):
+        raise MotionError('bad motion state: touch %s is outside the %dx%d screen' % (touch, SCREEN_WIDTH, SCREEN_HEIGHT))
+    state = {'accel': accel, 'gyro': gyro}
+    if touch is not None:
+        state['touch'] = touch
+    return state
+
+
+def write_state(path, state):
+    path = Path(path)
+    temporary = path.with_name(path.name + '.new')
+    temporary.write_text(json.dumps(state))
+    os.replace(temporary, path)
+
+
+def update_state(path, **changes):
+    try:
+        state = load_state(Path(path).read_text())
+    except (OSError, MotionError):
+        state = level_state()
+    state.update(changes)
+    if state.get('touch') is None:
+        state.pop('touch', None)
+    write_state(path, state)
+    return state
 
 
 def finish_packet(magic, body):
@@ -133,7 +218,13 @@ def pad_data_packet(counter, microseconds, state):
     body += bytes(2) + bytes(1) + bytes(1)
     body += bytes([128, 128, 128, 128])
     body += bytes(4) + bytes(8)
-    body += bytes(12)
+    touch = state.get('touch')
+    if touch:
+        x, y = touch_pad_point(touch)
+        body += struct.pack('<BBHH', 1, TOUCH_ID, x, y)
+    else:
+        body += bytes(6)
+    body += bytes(6)
     body += struct.pack('<Q', microseconds)
     body += struct.pack('<3f', *state['accel']) + struct.pack('<3f', *state['gyro'])
     packet = finish_packet(MAGIC_SERVER, body)

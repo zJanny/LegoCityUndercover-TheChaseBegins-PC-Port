@@ -341,3 +341,14 @@ The game reads the 3DS motion sensors (the sound scanner needs them). Every emul
 - `--motion-port PORT` sets its UDP port (1024 to 65535, default: `--port` plus 1000). Give a different one to each emulator that runs at the same time.
 - The script step `tilt AX AY AZ [GP GY GR]` changes what it reports: acceleration in g and, optionally, rotation in degrees per second. The level pose is `tilt 0 0 -1`. Wrong numbers or a wrong count stop the script with an error.
 - Details and axes: `docs/re/oracle-setup.md`.
+
+### Touching the bottom screen
+
+The script steps `touch` and `drag` touch the 3DS bottom screen (the touch screen of the game's menus). The point goes through the same virtual motion source as a touch pad, so it needs no `--rpc`, no mouse events and no change to the game's memory. The game reads it from its normal touch input.
+
+- `touch X Y [UPDATES]` taps the bottom-screen pixel X Y: X is 0 to 319 and Y is 0 to 239 (the 320 by 240 screen; the fast travel exit button is at 159 65). The point is held for UPDATES game updates (1 to 600, default 6; the same updates that `frames` counts) and then released by the step itself. The game then sees a press, the point, and a release at the first update after the step.
+- `touch release` ends a touch at once.
+- `drag X1 Y1 X2 Y2 [UPDATES]` touches X1 Y1, moves in a straight line to X2 Y2 with one position per update (UPDATES 2 to 600, default 10) and releases.
+- The step stops the script with an error that names the line, the step and the bad text for a wrong word count, a number that is not a whole number, a negative number, a point outside the screen, or a count outside its range. It also stops when the emulator was started before this feature existed: stop it with `--stop` and start it again.
+- The touch is a pixel on the bottom screen as the game reads it; menu hit areas are the game's own. Only one finger is supported.
+- Details and the measured mapping: `docs/re/oracle-setup.md`.

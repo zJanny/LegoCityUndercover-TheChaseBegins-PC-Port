@@ -18,6 +18,7 @@ Subtopics:
 - Screenshots need the software renderer and take about 11 s through the stub. [§2026-10-13T11:50:30](#ts-20261013-115030)
 - `--keep` leaves the emulator running, `--attach --port N` reconnects, `--stop` ends it. [§2026-10-13T11:50:30](#ts-20261013-115030)
 - Every session gets a virtual motion source (Cemuhook DSU, level pose); without it the scanner yaw is NaN. Details: [oracle-setup.md §2026-10-18T22:03:32](oracle-setup.md#ts-20261018-220332).
+- The script steps `touch` / `drag` touch the bottom screen through the same DSU server; the game's HID touch entry holds exactly the pixel. Details: [oracle-setup.md §2026-10-25T11:35:28](oracle-setup.md#ts-20261025-113528).
 - Setup (including the console mode of save states), RPC, routes and measuring aids are in the subtopic files listed above; new dated entries go there.
 - Open: whether a state saved during async loading is accepted, the exact boot time of the "pending operations" refusal, and slot names for other titles.
 

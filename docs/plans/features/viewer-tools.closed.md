@@ -12,3 +12,4 @@ Done items of [viewer-tools.md](viewer-tools.md), moved here by tools/check_doc_
 - [x] TOOLS-16 — Item links in `priorities.md` open the source view of the feature file at the item line (`?display=source#L<n>`); `check_doc_links.py` checks the line and `--fix` follows moved lines. evidence: tests/test_check_doc_links.py.
 - [x] TOOLS-17 — closed 2026-10-19: the user keeps the source-view landing of the priorities item links (no per-item anchors for the rendered page). evidence: user, 2026-10-19 (round 29).
 - [x] TOOLS-S2 — closed 2026-10-19 with TOOLS-17: the source-view line link is the accepted form, not a stand-in. evidence: user, 2026-10-19 (round 29).
+- [x] TOOLS-18 — `touch` and `drag` steps of the oracle (tap, release, straight drag, strict parsing; tests `tests/test_azahar_oracle_touch.py`). evidence: [oracle-setup.md §2026-10-25T11:35:28](../../re/oracle-setup.md#ts-20261025-113528).

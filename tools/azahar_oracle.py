@@ -51,6 +51,12 @@ A scenario file drives the run, one command per line ('#' starts a comment):
   tilt AX AY AZ [GP GY GR]
                         set what the virtual motion source reports: accelerometer in g (default level: 0 0 -1), gyroscope in
                         degrees per second (default 0 0 0); the game sees it within a few updates
+  touch X Y [UPDATES]   tap the bottom screen at pixel X Y (X 0..319, Y 0..239) for UPDATES game updates (1..600, default
+                        6), then release; 'touch release' ends a touch at once. The point goes to the game through the
+                        virtual motion source as a Cemuhook touch, so it needs no RPC and no game memory writes
+  drag X1 Y1 X2 Y2 [UPDATES]
+                        touch X1 Y1, move in a straight line to X2 Y2 with one position per update (UPDATES 2..600,
+                        default 10), then release
   poke ADDR HEXBYTES    write the bytes (hex digits, e.g. 0200) at ADDR through the stub (a measuring aid, for example to
                         send an object a request that its script would send; the write clears the instruction cache)
   sample SECONDS INTERVAL NAME
@@ -186,6 +192,8 @@ profiles\\1\\name=Default
 profiles\\1\\name\\default=false
 profiles\\1\\motion_device="engine:cemuhookudp,ip:127.0.0.1,port:{motion_port},pad_index:0"
 profiles\\1\\motion_device\\default=false
+profiles\\1\\touch_device="engine:cemuhookudp,pad_index:0,min_x:0,min_y:0,max_x:{touch_max_x},max_y:{touch_max_y}"
+profiles\\1\\touch_device\\default=false
 profiles\\1\\udp_input_address=127.0.0.1
 profiles\\1\\udp_input_address\\default=false
 profiles\\1\\udp_input_port={motion_port}
@@ -1437,7 +1445,26 @@ def parse_freetrap(number, args):
     return seconds, addresses, args[2]
 
 
-def run_scenario(oracle, lines, motion_file=None):
+TOUCH_SETTLE_SECONDS = 0.15
+
+
+def play_touch(oracle, motion_file, plan):
+    """Hold each point of the plan for one update and always release at the end."""
+    module = load_motion_module()
+    try:
+        previous = None
+        for point in plan:
+            if point != previous:
+                module.update_state(motion_file, touch=list(point))
+                time.sleep(TOUCH_SETTLE_SECONDS)
+                previous = point
+            oracle.advance(1)
+    finally:
+        module.update_state(motion_file, touch=None)
+        time.sleep(TOUCH_SETTLE_SECONDS)
+
+
+def run_scenario(oracle, lines, motion_file=None, touch_device=True):
     for number, line in enumerate(lines, 1):
         words = line.split('#', 1)[0].split()
         if not words:
@@ -1498,7 +1525,18 @@ def run_scenario(oracle, lines, motion_file=None):
                 state = load_motion_module().parse_tilt(args)
             except ValueError as error:
                 raise ValueError('line %d: tilt: %s' % (number, error)) from None
-            motion_file.write_text(json.dumps(state))
+            load_motion_module().update_state(motion_file, **state)
+        elif op in ('touch', 'drag'):
+            if motion_file is None:
+                raise ValueError('line %d: %s needs the virtual motion source of the session' % (number, op))
+            if not touch_device:
+                raise ValueError('line %d: %s needs a session launched with the touch device (restart the emulator)'
+                                 % (number, op))
+            try:
+                plan = (load_motion_module().parse_drag if op == 'drag' else load_motion_module().parse_touch)(args)
+            except ValueError as error:
+                raise ValueError('line %d: %s: %s' % (number, op, error)) from None
+            play_touch(oracle, motion_file, plan)
         elif op == 'report':
             oracle.report()
         elif op == 'poke':
@@ -1577,7 +1615,7 @@ def launch_emulator(args, home, azahar, image, new_3ds):
     session_file(home).write_text(json.dumps({
         'pid': process.pid, 'port': args.port, 'xvfb_pid': xvfb.pid if xvfb else None,
         'display': display, 'rpc': args.rpc, 'renderer': args.renderer, 'new_3ds': new_3ds,
-        'motion_pid': motion.pid, 'motion_port': args.motion_port}))
+        'motion_pid': motion.pid, 'motion_port': args.motion_port, 'touch_device': True}))
     return Launched(process, xvfb, display, keys, visible=args.display == 'desktop', motion=motion)
 
 
@@ -1710,6 +1748,8 @@ def main():
                               .replace('{single_default}', 'false' if args.display in ('xvfb', 'desktop') else 'true')
                               .replace('{shortcuts}', shortcut_lines())
                               .replace('{motion_port}', str(args.motion_port))
+                              .replace('{touch_max_x}', str(load_motion_module().TOUCH_PAD_WIDTH))
+                              .replace('{touch_max_y}', str(load_motion_module().TOUCH_PAD_HEIGHT))
                               .replace('{new_3ds}', 'true' if new_3ds else 'false'))
             if args.state:
                 place_state(saved_states, args.state, emulator_states)
@@ -1717,7 +1757,8 @@ def main():
                                               new_3ds)
             rpc = oracle.rpc
         session = load_session(home) or {}
-        run_scenario(oracle, scenario, motion_state_file(home) if session.get('motion_pid') else None)
+        run_scenario(oracle, scenario, motion_state_file(home) if session.get('motion_pid') else None,
+                     bool(session.get('touch_device')))
     finally:
         if keep and oracle is not None:
             try:

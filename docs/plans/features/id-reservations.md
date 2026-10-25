@@ -8,5 +8,3 @@ Ranges of item IDs held by parallel agents, named like `20261021-audio-A`. The p
 | LEVOBJ-S | 97 | 98 | 20261025-mission13-A | 2026-10-25T10:55:30+01:00 |
 | SCRIPT | 358 | 360 | 20261025-mission13-B | 2026-10-25T10:55:30+01:00 |
 | SCRIPT-S | 289 | 290 | 20261025-mission13-B | 2026-10-25T10:55:30+01:00 |
-| TOOLS | 18 | 19 | 20261025-mission13-D | 2026-10-25T11:15:38+01:00 |
-| TOOLS-S | 3 | 3 | 20261025-mission13-D | 2026-10-25T11:15:38+01:00 |

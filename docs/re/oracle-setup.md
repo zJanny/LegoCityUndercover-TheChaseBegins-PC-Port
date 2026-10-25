@@ -11,6 +11,7 @@ Launching Azahar for the oracle: Xvfb, the render window race, the launch retry,
 - `--display desktop` runs on the current X display for a person to watch; agents keep using `xvfb`, and `--rpc-input` must not be combined with it. [§2026-10-13T22:45](#ts-20261013-224508)
 - Default keys of the generated config: circle pad arrows, A = A, B = S, X = Z, Y = X, L = Q, R = W, D-pad T/F/G/H, Start = M, Select = N, F1 quick save, F12 quick load. [§2026-10-13T22:45](#ts-20261013-224508)
 - The tool runs a Cemuhook DSU motion server for every session (default `--port` + 1000, `--motion-port`) and writes `motion_device` into the isolated config; "level" is DSU accel (0, 0, -1) g, `tilt` changes it. With gravity on DSU y the scanner yaw is NaN, with gravity on z the scanner view runs. [§2026-10-18T22:03:32](#ts-20261018-220332)
+- The script steps `touch X Y [UPDATES]`, `touch release` and `drag X1 Y1 X2 Y2 [UPDATES]` touch the bottom screen through the same DSU server (first touch of the pad data, `touch_device` written next to `motion_device` at launch); the game's HID touch entry holds exactly the pixel (all 320 x values and all 240 y values checked), no RPC, no memory writes. [§2026-10-25T11:35:28](#ts-20261025-113528)
 - Save states: a state made in New 3DS mode must be loaded in New 3DS mode (the user's own states are New 3DS; loading one in Old 3DS mode ended with SIGILL), so `NAME.json` carries `new_3ds`, `savestate` writes it and `loadstate` refuses a mode mismatch; New 3DS runs the CPU faster, so timing is repeated in Old 3DS mode; use `--renderer opengl` for states (the software renderer crashed loading states made in a vehicle). [§2026-10-20T23:27:26](#ts-20261020-232726)
 - Open: crashes on a plain boot, whether an unmapped window changes timing, the cause of one launch that ended after 4 loads, crashes of a visible OpenGL window.
 
@@ -81,3 +82,30 @@ Unknowns:
 Unknowns:
 - The Old 3DS value of the flag written by `savestate` in an Old 3DS session is checked by the unit test only, not by an emulator run.
 - Whether game logic timing differs between the two modes (frame pacing was measured only in Old 3DS mode).
+
+<a id="ts-20261025-113528"></a>
+
+## 2026-10-25T11:35:28+01:00 — Touching the bottom screen through the DSU server (`touch`, `drag`; Azahar 2126.2, state `gameplay-start`, round 20261025-mission13, worker D)
+
+**Why:** bottom-screen menus are the game's main UI and the tool could not touch the screen. Requested by the user (2026-10-25); first user: the fast travel map exit button at pixel (159, 65).
+
+**Route that works (first try, no RPC):**
+- **Build support:** `strings /usr/bin/azahar` shows `InputCommon::CemuhookUDP::UDPTouchFactory` / `UDPTouchDevice` and the config text "UDP touchpad calibration config success: min_x=..., min_y=..., max_x=..., max_y=..." (the calibration keys `min_x`, `min_y`, `max_x`, `max_y`). The `touch_device` parameter names (`engine:cemuhookudp,pad_index:0,min_x,min_y,max_x,max_y`) are from memory of the Citra source, not read from this build; the evidence is the behaviour below.
+- **Config the tool now writes** (profile 1, next to `motion_device`): `touch_device="engine:cemuhookudp,pad_index:0,min_x:0,min_y:0,max_x:3200,max_y:2400"`. The server and address are the existing `udp_input_*` keys.
+- **Server** (`tools/oracle_motion.py`): the optional key `"touch": [x, y]` (bottom-screen pixels) of the state file is sent as the first touch of the 100-byte pad packet: packet offset 56 active u8, 57 id u8 (1), 58 x u16, 60 y u16; the second touch (62..67) stays zero and the motion timestamp stays at 68 (protocol document https://v1993.github.io/cemuhook-protocol/ section "Controller data", read as a specification only). The pad value is `pixel * 10 + 5` in a 3200 x 2400 pad range (10 pad units per pixel, the middle of the pixel), so Azahar's scaling of the range to the 320 x 240 screen cannot round to a neighbour. Without `touch` the bytes are zero; state files written by `tilt` or by older versions stay valid, and `tilt` and `touch` keep each other's values.
+- **Script steps** (`tools/azahar_oracle.py`): `touch X Y [UPDATES]` writes the point, waits 0.15 s real time (the server polls the file every 10 ms and sends a packet every 10 ms; the emulator is halted at the scheduler breakpoint during the wait), advances UPDATES updates like `frames`, then always writes the release (also when the advance fails) and waits again. `drag` does the same with one new point per update and one `advance(1)` each. `touch release` only releases. A session started by an older tool has no `touch_device` in its config (`session.json` has no `touch_device` key): the step stops with an error instead of doing nothing.
+
+**Measured** (state `gameplay-start` of the local catalogue: new game, mission 1-1 not started, the player at the start; Old 3DS mode, OpenGL, `--keep`, no RPC; reads of the HID shared memory object through the GDB stub after each update):
+- HID shared memory is at 0x10002000; the touch block at +0xa8 is: u64 tick, u64 previous tick, u32 index of the newest entry (header 0x20 bytes), then 8 entries of 8 bytes at +0x20: u16 x, u16 y, u32 valid. The servant's XTEST mouse test read the same entry layout (x=159, y=65, valid=1 for a click at the bottom-screen pixel).
+- With a hold, all 8 ring entries read `(x, y, 1)` of the pixel at the end of the first touched update (UPDATES 1, 2 and 12 tried), and `(0, 0, 0)` in all 8 entries after the first update following the release. A touch held outside the script (state file written by hand) stays pressed across `frames` steps.
+- **Mapping: the HID value is exactly the pixel, no offset and no scale.** Points read: (0,0), (319,239), (159,65), (1,1), (318,238), (160,120), (37,211), (255,7), (10,20), (155,110), (300,200). Sweeps with `drag` over every position, 320 updates each: x 0..319 at y 100, y 0..239 at x 100, and the diagonal (0,0) to (319,239); every update's ring held the expected pixel, 0 mismatches in 880 updates.
+- The game's own reader (0x10fca0 / 0x10a44c) was not traced and no menu was seen reacting (no screenshots without RPC); only the HID words the reader consumes were read.
+
+**Pitfalls:**
+- A `read` step after `touch` shows the released state (all entries `(0, 0, 0)` in the run with a 20-update tap), because the step releases before it returns; to see the held touch, read after each update inside the step (done with a throwaway script around `Oracle.advance`) or touch from outside the script by writing the state file. The guest tick of the ring advanced about 0.4 s per stepped update in this setup.
+- `tools/azahar_oracle.py` called by a relative path from `artifacts/oracle/...` resolves through the `artifacts` symlink to the main checkout's tool.
+
+Unknowns:
+- What the game does with a one-update tap in a given menu (the reader and the menu code were not traced); the default of 6 updates is a tool choice, not game behaviour.
+- Whether a second finger could be needed (the game's reader takes one point; only one is supported).
+- Azahar's exact touch parameter names beyond what the working config shows (the scale of the range was confirmed by the exact pixel match).
