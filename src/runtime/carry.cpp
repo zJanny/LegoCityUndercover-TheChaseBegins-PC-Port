@@ -43,12 +43,17 @@ void CarrySet::load(assets::FuseArchive& archive, const assets::Level& level, co
     carried_ = placingTarget_ = pickingUp_ = phaseObject_ = -1;
     std::map<std::uint32_t, std::string> names;
     for (const assets::LevelObject& object : level.objects) names[assets::nameHash(object.instance)] = lower(object.instance);
+    std::map<std::string, std::string> meshes;
+    for (const assets::Placement& placement : assets::objectPlacements(level, classOf)) meshes[lower(placement.instance)] = placement.mesh;
     for (const assets::LevelObject& object : level.objects) {
-        if (object.className.rfind("props/prop_carry", 0) != 0) continue;
         const assets::Level* cls = classOf(object.className);
-        const std::optional<assets::Placement> placed = assets::objectStart(level, object.instance);
-        if (!cls || !placed) continue;
+        if (!cls) continue;
         const int type = objectType(*cls);
+        if (type != kCarryObjectType && type != kCarryTargetType) continue;
+        std::optional<assets::Placement> placed = assets::objectStart(level, object.instance);
+        if (!placed) continue;
+        const auto mesh = meshes.find(lower(object.instance));
+        placed->mesh = mesh == meshes.end() ? std::string() : mesh->second;
         if (type == kCarryObjectType) {
             CarryObject carry;
             carry.instance = lower(object.instance);
@@ -58,6 +63,8 @@ void CarrySet::load(assets::FuseArchive& archive, const assets::Level& level, co
             std::copy_n(placed->position, 3, carry.position);
             carry.small = boolParam(object, *cls, "ATTR_SmallObject", true);
             carry.strengthOnly = boolParam(object, *cls, "ATTR_StrengthOnly", false);
+            carry.freeplay = boolParam(object, *cls, "FreeplayObject", false);
+            carry.usable = boolParam(object, *cls, "UseStartActive", true);
             float seconds = kCarryDefaultResetSeconds;
             if (const assets::LevelParam* param = effectiveParam(object, *cls, assets::nameHash("ResetTime"))) {
                 if (param->type == 0) std::memcpy(&seconds, &param->value, 4);
@@ -79,7 +86,7 @@ void CarrySet::load(assets::FuseArchive& archive, const assets::Level& level, co
             CarryTarget target;
             target.instance = lower(object.instance);
             target.useObject = referenceName(object, *cls, "UseObject", names);
-            target.placeObject = referenceName(object, *cls, "PlaceObject", names);
+            target.placedObject = referenceName(object, *cls, "PlacedObject", names);
             target.triggerObject = referenceName(object, *cls, "TriggerObject", names);
             std::copy_n(placed->position, 3, target.position);
             if (const assets::LevelParam* param = effectiveParam(object, *cls, assets::nameHash("ATTR_SFX_DROP"))) target.sfx = param->value;
@@ -210,36 +217,45 @@ std::vector<CarryAction> CarrySet::update(const assets::PlacedObjectState& state
         return actions;
     }
     if (!input.playerFree || !input.actionPressed) return actions;
+    const std::optional<CarryUse> use = useAt(state, player_);
     if (carried_ >= 0) {
-        const CarryObject& carriedObject = objects_[std::size_t(carried_)];
         phase_ = CarryPhase::Dropping;
-        for (std::size_t i = 0; i < targets_.size(); ++i) {
-            const CarryTarget& target = targets_[i];
-            if (target.used || !target.hasZone || target.useObject != carriedObject.instance) continue;
-            if (!inZone(target.zoneCentre, target.zoneHalf, target.position, player_)) continue;
+        if (use && use->target) {
             phase_ = CarryPhase::Placing;
-            placingTarget_ = int(i);
+            placingTarget_ = int(use->index);
             turn_ = true;
-            std::copy_n(target.position, 3, turnTarget_);
-            break;
+            std::copy_n(targets_[use->index].position, 3, turnTarget_);
         }
         phaseUpdates_ = 0;
         phaseObject_ = carried_;
         return actions;
     }
+    if (!use) return actions;
+    phase_ = CarryPhase::PickingUp;
+    phaseUpdates_ = 0;
+    pickingUp_ = int(use->index);
+    phaseObject_ = int(use->index);
+    turn_ = true;
+    std::copy_n(objects_[use->index].position, 3, turnTarget_);
+    return actions;
+}
+
+std::optional<CarryUse> CarrySet::useAt(const assets::PlacedObjectState& state, const float player[3]) const {
+    if (carried_ >= 0) {
+        const CarryObject& carriedObject = objects_[std::size_t(carried_)];
+        for (std::size_t i = 0; i < targets_.size(); ++i) {
+            const CarryTarget& target = targets_[i];
+            if (target.used || !target.hasZone || target.useObject != carriedObject.instance) continue;
+            if (inZone(target.zoneCentre, target.zoneHalf, target.position, player)) return CarryUse{true, i};
+        }
+        return std::nullopt;
+    }
     for (std::size_t i = 0; i < objects_.size(); ++i) {
         const CarryObject& object = objects_[i];
         if (object.carried || !object.hasZone || object.strengthOnly || state.isDisabled(object.instance)) continue;
-        if (!inZone(object.zoneCentre, object.zoneHalf, object.position, player_)) continue;
-        phase_ = CarryPhase::PickingUp;
-        phaseUpdates_ = 0;
-        pickingUp_ = int(i);
-        phaseObject_ = int(i);
-        turn_ = true;
-        std::copy_n(object.position, 3, turnTarget_);
-        break;
+        if (inZone(object.zoneCentre, object.zoneHalf, object.position, player)) return CarryUse{false, i};
     }
-    return actions;
+    return std::nullopt;
 }
 
 void applyCarryActions(const CarrySet& set, const std::vector<CarryAction>& actions, assets::PlacedObjectState& state, ScriptRunner& scripts) {
@@ -253,7 +269,7 @@ void applyCarryActions(const CarrySet& set, const std::vector<CarryAction>& acti
         } else if (action.kind == CarryActionKind::Used) {
             const CarryTarget& target = set.targets()[action.target];
             if (!target.useObject.empty()) state.disabled.insert(target.useObject);
-            if (!target.placeObject.empty()) state.disabled.erase(target.placeObject);
+            if (!target.placedObject.empty()) state.disabled.erase(target.placedObject);
             if (!target.triggerObject.empty()) scripts.triggerObjectEnabling(target.triggerObject);
         }
     }

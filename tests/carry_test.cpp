@@ -149,11 +149,11 @@ int main() {
             ScriptRunner runner(level, placeState);
             CarrySet set = makeSet();
             CarryTarget placing = set.targets()[0];
-            placing.placeObject = "place_marker";
+            placing.placedObject = "place_marker";
             CarrySet placeSet;
             placeSet.add(placing);
             applyCarryActions(placeSet, {{CarryActionKind::Used, 0, 0}}, placeState, runner);
-            require(!placeState.isDisabled("place_marker"), "using the target enables its PlaceObject (0x25e354 calls 0x242cf0 on +0x1c)");
+            require(!placeState.isDisabled("place_marker"), "using the target enables its PlacedObject (0x25e354 calls 0x242cf0 on +0x1c)");
         }
         {
             CarrySet set = makeSet();

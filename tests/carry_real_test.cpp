@@ -2,9 +2,10 @@
 // box measured in the oracle save state carrying the donut box in mission 1-1 (docs/re/carrying.md), and mission 1-1 steps 9 and 10: after 1-1_Carry_Object_Tutorial
 // the box is picked up (ObjectTriggered of 1-1_SO_Donuts_PickedUp) and placed into the target (1-1_Deliver_Donuts by ObjectBoundEntered,
 // ObjectTriggered of 1-1_SO_MissionEnd). Player positions are those where the oracle runs pressed the action button. Needs the extracted
-// RomFS; exits with 77 without it.
+// Mission 1-3: the key and the keyhole, their zones (oracle) and the carry arrow. Needs the extracted RomFS; exits with 77 without it.
 #include "assets/assets.hpp"
 #include "runtime/carry.hpp"
+#include "runtime/carry_arrows.hpp"
 #include "runtime/level_start.hpp"
 #include <cmath>
 #include <filesystem>
@@ -105,6 +106,42 @@ int main(int argc, char** argv) {
         require(missionEnd, "the target starts 1-1_SO_MissionEnd");
         require(state.isDisabled("1-1_DonutsDEMO"), "the target switches the box off");
         require(set.carryingMode() == 0, "nothing carried afterwards");
+
+        // Mission 1-3, the key (props/prop_carry with the class mesh Prop_Key) and the keyhole (props/prop_keyhole, ObjectType 123). Oracle values of
+        // RPC request 20261025-recorded-C-1 (20261025-recorded-servant, 2026-10-25, recorded from a save state in front of the key and one with the key in hand):
+        // zone record centre (0, 0.3248, 0.0509), half (1.1213, 1.4386, 1.4763); keyhole zone centre (0, 0.5, 1.2), half (1, 1.5, 1); record +0x1c of the
+        // keyhole is the key (PlacedObject), +0x24 dropAnim 710.
+        const runtime::CarryObject* key = set.find("1-3_garage_key");
+        require(key != nullptr && key->hasZone, "1-3_Garage_Key has a use zone from its class mesh");
+        require(key->small && key->usable && !key->freeplay && key->triggerPickup.empty(), "the key is small, usable, not freeplay, without TriggerPickup");
+        const float keyHalf[3] = {1.1213f, 1.4386f, 1.4763f}, keyCentre[3] = {0.0f, 0.3248f, 0.0509f};
+        for (int a = 0; a < 3; ++a)
+            require(near(key->zoneHalf[a], keyHalf[a], 0.001f) && near(key->zoneCentre[a], keyCentre[a], 0.001f), "key zone axis " + std::to_string(a));
+        const runtime::CarryTarget* hole = nullptr;
+        for (const runtime::CarryTarget& candidate : set.targets())
+            if (candidate.instance == "1-3_garage_key_base") hole = &candidate;
+        require(hole != nullptr, "the keyhole is a carry target (ObjectType 123, class props/prop_keyhole)");
+        require(hole->useObject == "1-3_garage_key" && hole->placedObject == "1-3_garage_key" && hole->triggerObject == "1-3_garage_key_base_script",
+                "keyhole references: UseObject and PlacedObject the key, TriggerObject 1-3_Garage_Key_Base_Script");
+        require(hole->hasZone && near(hole->zoneCentre[2], 1.2f, 0.001f) && near(hole->zoneHalf[1], 1.5f, 0.001f), "keyhole UseBound");
+        const float userSpot[3] = {987.808f, 16.644f, 1143.306f}, walked[3] = {986.756f, 16.624f, 1142.715f};
+        require(!runtime::CarrySet::inZone(key->zoneCentre, key->zoneHalf, key->position, userSpot),
+                "the save state in front of the key stands 1.71 from it, outside the zone: A does nothing there in the original either");
+        require(runtime::CarrySet::inZone(key->zoneCentre, key->zoneHalf, key->position, walked), "the oracle's pickup position is inside the zone");
+
+        assets::PlacedObjectState keyState = runtime::levelStartState(level, classOf);
+        require(keyState.isDisabled("1-3_Garage_Key"), "the key is hidden until the dirt mound reveals it");
+        keyState.disabled.erase("1-3_garage_key");
+        require(runtime::carryArrows(set, keyState, userSpot, true).hide.empty(), "no hide outside the zone");
+        const runtime::CarryArrowUpdate free = runtime::carryArrows(set, keyState, walked, true);
+        const auto requested = [](const runtime::CarryArrowUpdate& update, const std::string& name, bool enable) {
+            for (const runtime::CarryArrowRequest& request : update.requests)
+                if (request.instance == name && request.enable == enable) return true;
+            return false;
+        };
+        require(requested(free, "1-3_garage_key", true) && requested(free, "1-3_garage_key_base", false),
+                "before the pickup the carry arrow (list 2) and the carry group are on the key (oracle: list 2 = {key})");
+        require(free.hide == "1-3_garage_key", "inside the zone the use hint hides the key's arrow");
     } catch (const std::exception& error) {
         std::cerr << "carry-real-test: " << error.what() << '\n';
         return 1;

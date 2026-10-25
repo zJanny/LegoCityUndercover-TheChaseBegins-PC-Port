@@ -115,6 +115,8 @@ public:
     void loadCarryItWaypoint(const assets::Level& bits, const assets::ClassLookup& classOf);
     // 0x230ef4 compared with an entity: the carry-it waypoint (full lower-case name) or nothing.
     bool isCarryItWaypoint(const std::string& lowerName) const { return !carryIt_.empty() && lowerName == carryIt_; }
+    // *(0x529c18 + 0x24) itself: the carry-it waypoint's full lower-case name, empty when the level has none.
+    const std::string& carryItWaypoint() const { return carryIt_; }
 
     static bool inBound(const Waypoint& waypoint, const float player[3]);
     // 0x17b21c: the closest point of the vehicle's box to the bound centre, seen from the waypoint, tested against the bound.

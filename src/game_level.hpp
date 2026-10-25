@@ -170,6 +170,7 @@ private:
     std::vector<chase::frontend::MinimapMarker> activeMapMarkers() const;
     bool waypointOnMap(const std::string& instance) const;
     void updateCarry(const float playerPosition[3]);
+    void updateCarryArrows(const std::vector<chase::runtime::CarryAction>& actions, bool hintActive, const float playerPosition[3]);
     void loadDetective(chase::assets::FuseArchive& archive);
     void updateUseSpots(bool actionFree);
     void loadUseMarkers(chase::assets::FuseArchive& archive);

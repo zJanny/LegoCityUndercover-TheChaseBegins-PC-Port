@@ -23,7 +23,7 @@ std::optional<render::Mat4> HeldObjects::world(assets::FuseArchive& archive, con
         const assets::FuseEntry* entry = archive.find(path);
         found = offsets_.emplace(path, entry ? runtime::carryHandOffset(assets::parseModel(archive.read(*entry))) : render::identity()).first;
     }
-    return render::multiply(found->second, *joint);
+    return assets::multiply(found->second, *joint);
 }
 
 std::int16_t headingTowards(const game_player::PlayerRig& player, const float target[3]) {

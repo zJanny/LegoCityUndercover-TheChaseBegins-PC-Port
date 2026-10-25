@@ -260,6 +260,11 @@ std::vector<std::string> ScriptRunner::updateWaypoints(float dt, const float pla
     return update.startScripts;
 }
 
+void ScriptRunner::setCarryGroupTarget(const std::string& lowerTarget, bool enable) {
+    objectives_.setSubObjective(waypoints_.carryItWaypoint(), lowerTarget, 2, enable, !state_.isHidden(lowerTarget));
+    objectives_.setArrow(2, lowerTarget, enable);
+}
+
 void ScriptRunner::updateObjectiveMarkers(float dt, SubObjectiveWorld world) {
     if (!world.hidden) world.hidden = [this](const std::string& name) { return state_.isHidden(name); };
     if (!world.destroyed) world.destroyed = [this](const std::string& name) { return state_.destroyed.count(lower(name)) != 0; };

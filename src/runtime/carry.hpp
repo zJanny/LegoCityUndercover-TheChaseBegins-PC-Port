@@ -7,6 +7,7 @@
 #include "runtime/script_runner.hpp"
 #include "runtime/carry_animation.hpp"
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -40,6 +41,8 @@ struct CarryObject {
     bool hasZone = false;
     bool small = true;         // ATTR_SmallObject, default 1 (record +0x9e bit 3); the carry test 0x225754 gives 2 for a big object
     bool strengthOnly = false;  // ATTR_StrengthOnly (record +0x9e bit 2)
+    bool freeplay = false;      // FreeplayObject (record +0x9e bit 7): the update 0x16d420 puts no arrow over a free freeplay object
+    bool usable = true;         // UseStartActive of the use zone (0x23e130, record +4 bit 4, default 1)
     unsigned resetUpdates = 0;  // ResetTime * 30 (record +0x9a)
     bool carried = false;
     unsigned resetCountdown = 0;  // record +0x98: counts down while the object lies where it was dropped
@@ -50,7 +53,7 @@ struct CarryObject {
 struct CarryTarget {
     std::string instance;       // lower case
     std::string useObject;      // UseObject, lower case: the only carry object this target takes
-    std::string placeObject;    // PlaceObject (record +0x1c), lower case, empty when unset: enabled when the target is used
+    std::string placedObject;   // PlacedObject (record +0x1c, post-link 0x18e0f8 disables it), lower case, empty when unset: enabled when the target is used
     std::string triggerObject;  // TriggerObject, lower case
     float position[3] = {0, 0, 0};
     float zoneCentre[3] = {0, 0, 0};  // UseBound of the class file, relative to the position
@@ -63,11 +66,17 @@ struct CarryTarget {
 
 enum class CarryPhase { Free, PickingUp, Placing, Dropping };
 
+// What the A press would use where the player stands: a carry object to pick up, or, while carrying, the target that takes the carried object.
+struct CarryUse {
+    bool target = false;
+    std::size_t index = 0;
+};
+
 enum class CarryActionKind {
     PickedUp,   // the object attached to the player: TriggerPickup is fired
     Placed,     // the object was released into a target
     Dropped,    // the object was released at the player
-    Used,       // the target changed to state 1: UseObject is disabled, PlaceObject is enabled, TriggerObject is fired, the drop sound plays
+    Used,       // the target changed to state 1: UseObject is disabled, PlacedObject is enabled, TriggerObject is fired, the drop sound plays
     Respawned,  // a dropped object returned to its start position
 };
 
@@ -100,6 +109,9 @@ public:
     void add(const CarryTarget& target) { targets_.push_back(target); }
     // One game update: the pending target effects, the phase of the player (timers of the animation events), then the action button.
     std::vector<CarryAction> update(const assets::PlacedObjectState& state, const CarryInput& input);
+    // The registry choice of the A press (message 3): while carrying the first unused target whose zone holds the player and whose UseObject is the
+    // carried object, else the first free, enabled carry object whose zone holds the player; nothing when no zone answers.
+    std::optional<CarryUse> useAt(const assets::PlacedObjectState& state, const float player[3]) const;
 
     const std::vector<CarryObject>& objects() const { return objects_; }
     const std::vector<CarryTarget>& targets() const { return targets_; }

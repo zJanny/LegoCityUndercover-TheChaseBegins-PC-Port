@@ -232,6 +232,10 @@ public:
     void setLevelHeadingKey(std::uint32_t key) { levelHeadingKey_ = key; }
     // Waypoints and sub-objective groups switched on by the level scripts (objectives.hpp).
     const ObjectiveState& objectives() const { return objectives_; }
+    // 0x22fbe8 then 0x22fb44: the target joins (or leaves) the carry group (type 2) keyed by the carry-it waypoint 0x230ef4 and the carry arrow list 2.
+    void setCarryGroupTarget(const std::string& lowerTarget, bool enable);
+    // 0x2b9c28: the arrows of the target fade out in the next update.
+    void hideObjectiveArrow(const std::string& lowerTarget) { objectives_.requestArrowHide(lowerTarget); }
     // Waypoint class (waypoints.hpp): reaching an active waypoint starts the level script named by its TriggerScript.
     void loadWaypoints(const assets::ClassLookup& classOf) { waypoints_.load(level_, classOf); }
     void loadCarryItWaypoint(const assets::Level& bits, const assets::ClassLookup& classOf) { waypoints_.loadCarryItWaypoint(bits, classOf); }

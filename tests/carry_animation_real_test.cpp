@@ -62,6 +62,13 @@ int main(int argc, char** argv) {
         require(timing.dropRelease == 8, "the drop releases at the event of the put-down clip (oracle r18-A drop1: 0x2256e4 at update 8, dt 0.033), got " +
                                              std::to_string(timing.dropRelease));
 
+        const auto small = runtime::carryTiming(assets::parseAnimation(read("models/char_minifig/class_generic/itemleft_pickup_minifig.bfnanm")),
+                                                assets::parseAnimation(read("models/char_minifig/class_generic/itemleft_putdown_minifig.bfnanm")));
+        require(small.pickupAttach == 14 && small.pickupEnd == 28,
+                "small pickup (the key of mission 1-3): attach at the clip's event, update 14, end 28; the stepped oracle trace of 20261025-recorded-C-1 (recorded "
+                "from a save state, 2026-10-25) saw message 0x11 at update 8 after the press (LEVOBJ-30), got " + std::to_string(small.pickupAttach) + " / " +
+                    std::to_string(small.pickupEnd));
+
         const assets::Model box = assets::parseModel(read("models/prop_box_o_donuts/prop_box_o_donuts_atlas_lvl_01_cherrytreehills_main.bfnmdl"));
         const std::array<float, 16> offset = runtime::carryHandOffset(box);
         require(near(offset[0], 1) && near(offset[5], 1) && near(offset[10], 1) && near(offset[12], 0) && near(offset[13], 0.1f) && near(offset[14], 0),

@@ -175,7 +175,9 @@ void LevelSession::updateCarry(const float playerPosition[3]) {
                     }
                 }
     }
-    runtime::applyCarryActions(carry, carry.update(objectState, input), objectState, levelScripts);
+    const std::vector<runtime::CarryAction> carryActions = carry.update(objectState, input);
+    runtime::applyCarryActions(carry, carryActions, objectState, levelScripts);
+    updateCarryArrows(carryActions, input.playerFree, playerPosition);
     if (float target[3]; carry.turnTarget(target)) player->motion.lastIntent = game_carry::headingTowards(*player, target);
     for (const runtime::CarryObject& object : carry.objects())
         for (std::size_t i = 0; i < placedObjects.size(); ++i) {
