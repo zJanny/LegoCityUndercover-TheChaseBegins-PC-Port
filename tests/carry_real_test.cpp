@@ -1,5 +1,5 @@
 // Carrying in lvl_01_cherrytreehills (src/runtime/carry.cpp): the class values of 1-1_DonutsDEMO and 1-1_DonutTarget_DEMO, the use zone of the
-// box measured in the oracle state m11-8-donuts-in-hand (docs/re/carrying.md), and mission 1-1 steps 9 and 10: after 1-1_Carry_Object_Tutorial
+// box measured in the oracle save state carrying the donut box in mission 1-1 (docs/re/carrying.md), and mission 1-1 steps 9 and 10: after 1-1_Carry_Object_Tutorial
 // the box is picked up (ObjectTriggered of 1-1_SO_Donuts_PickedUp) and placed into the target (1-1_Deliver_Donuts by ObjectBoundEntered,
 // ObjectTriggered of 1-1_SO_MissionEnd). Player positions are those where the oracle runs pressed the action button. Needs the extracted
 // RomFS; exits with 77 without it.
@@ -65,7 +65,7 @@ int main(int argc, char** argv) {
         require(!runtime::CarrySet::inZone(box->zoneCentre, box->zoneHalf, box->position, farPoint), "3.5 m away is outside");
         const float beforeTarget[3] = {881.396f, 16.597f, 1118.883f}, inTarget[3] = {881.897f, 16.597f, 1120.189f};
         require(!runtime::CarrySet::inZone(target->zoneCentre, target->zoneHalf, target->position, beforeTarget),
-                "m11-9-delivery-goal stands outside the use zone (the oracle's A press there dropped the box)");
+                "the save state in front of the donut delivery target of mission 1-1 stands outside the use zone (the oracle's A press there dropped the box)");
         require(runtime::CarrySet::inZone(target->zoneCentre, target->zoneHalf, target->position, inTarget), "the oracle placing position is in the zone");
 
         assets::PlacedObjectState state = runtime::levelStartState(level, classOf);

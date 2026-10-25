@@ -23,7 +23,7 @@ std::string show(const std::set<int>& rooms) {
 }
 
 // Room node positions ([room+0x14]+0xa0) of the 43 rooms of WorldLevel_01_CherryTreeHills, GDB reads of the oracle
-// (state wstream-room8-settled, agent O, no RPC); the same values in every state of the street walk.
+// (save state in the street with room 8 settled, agent O, no RPC); the same values in every state of the street walk.
 const std::map<int, Vec3> kRoomPositions = {
         {1, {1111.51648f, 67.2134628f, 1250.27954f}},
         {2, {849.762451f, 69.2693176f, 1250.27954f}},
@@ -80,19 +80,19 @@ struct Reading {
 // Player position: node (handle of *0x3772b8 +0x3c) +0x5c +0x30; view: object *0x377544 +0x5c +0x20 (third matrix row).
 // Loaded: rooms of scene 2 with state byte 2, settled (no room in state 1). Readings are GDB memory reads of the oracle.
 const Reading kReadings[] = {
-    {"street-at-entrance +1 update (oracle agentO 2026-10-14, pad idle)", 7,
+    {"the save state at the police station entrance after mission 1-1 +1 update (oracle agentO 2026-10-14, pad idle)", 7,
      {903.71875f, 16.573266983f, 1113.3282470703125f}, {0.19336770474910736f, -0.16759523749351501f, 0.9667061567306519f},
      {1, 2, 3, 6, 7, 8, 9, 14, 15}},
-    {"wstream-room8-settled (street-at-entrance, stick 20 150 for 60 updates, 90 updates settle)", 8,
+    {"the save state in the street with room 8 settled (the save state at the police station entrance after mission 1-1, stick 20 150 for 60 updates, 90 updates settle)", 8,
      {887.78595f, 16.6094093f, 1134.23364f}, {-0.57240957f, -0.167595565f, 0.802657485f},
      {1, 2, 3, 4, 7, 8, 9, 10, 14, 15, 16}},
-    {"wstream-walk-b (wstream-room8-settled, stick -150 0 for 100 updates, 90 settle)", 8,
+    {"the save state in the street after a first walk (the save state in the street with room 8 settled, stick -150 0 for 100 updates, 90 settle)", 8,
      {887.7995f, 16.6133823f, 1123.86658f}, {-0.970507741f, -0.167594641f, 0.173282176f},
      {1, 2, 3, 4, 7, 8, 9, 10, 14, 15, 16, 17}},
-    {"wstream-walk-c (wstream-walk-b, stick 0 150 for 120 updates, 90 settle)", 8,
+    {"the save state in the street after a second walk (the save state in the street after a first walk, stick 0 150 for 120 updates, 90 settle)", 8,
      {879.095154f, 20.1091995f, 1130.59094f}, {-0.853561103f, -0.167595208f, 0.493300498f},
      {1, 2, 3, 4, 7, 8, 9, 10, 14, 15, 16}},
-    {"wstream-walk-d (wstream-walk-c, stick -150 -100 for 150 updates, 90 settle)", 7,
+    {"the save state in the street after a third walk (the save state in the street after a second walk, stick -150 -100 for 150 updates, 90 settle)", 7,
      {912.068909f, 16.6570244f, 1087.27771f}, {-0.711438954f, -0.595208645f, -0.373605996f},
      {1, 2, 6, 7, 8, 9, 14, 15, 16, 22}},
 };
@@ -163,9 +163,9 @@ int main(int argc, char** argv) {
             if (update == int(kRoomLoadUpdates)) require(!streamer.loaded(16), "Room16 still loading 9 updates after the request");
             if (update == int(kRoomLoadUpdates) + 1) require(streamer.loaded(16), "Room16 loaded at update request + 9 (28 to 37 in the trace)");
         }
-        require(streamer.loadedRooms() == kReadings[1].loaded, "wstream-room8-settled set " + show(streamer.loadedRooms()));
+        require(streamer.loadedRooms() == kReadings[1].loaded, "the save state in the street with room 8 settled set " + show(streamer.loadedRooms()));
         {
-            // Room change rule (0x2e6ce4 -> 0x237b04 -> 0x22d204), oracle agentRS 2026-10-14: street-at-entrance, 3 updates idle,
+            // Room change rule (0x2e6ce4 -> 0x237b04 -> 0x22d204), oracle agentRS 2026-10-14: the save state at the police station entrance after mission 1-1, 3 updates idle,
             // stick 20 150, memtrace of the current room 0x376c78 and the player node world position each update. The current
             // room is Room7 (0x880cf40) up to the record with x 899.7787 and Room8 (0x880d580) from the record with
             // x 899.3618 (Room7's box starts at x 899.53, its centre 949.76 minus half extent 50.24).

@@ -1,6 +1,6 @@
 // Vehicle records and flag natives (src/runtime/vehicle.cpp, docs/re/vehicles-system.md). The synthetic part pins the parameter reader 0x23ed0c and the
 // five handlers (0x26fe78, 0x29ea7c, 0x2b9df0, 0x27c014, 0x29eaa8) as read from the disassembly. With FIB NAMES the real part checks lvl_01 against
-// the vehicle records read from the original in the oracle state street-after-1-1 (GDB reads of the three parked vehicles, 2026-10-15, no pokes) and
+// the vehicle records read from the original in the oracle save state outside the police station after mission 1-1 (GDB reads of the three parked vehicles, 2026-10-15, no pokes) and
 // the collision the vehicles register. Exits with 77 without data.
 #include "assets/assets.hpp"
 #include "assets/object_classes.hpp"
@@ -135,7 +135,7 @@ void parameterReader() {
     require(both->vehicleType == 1 && both->health == 9 && both->hearts == 9, "HealthOverride above zero replaces both health bytes");
     require(plain->musicEnabled() && !both->musicEnabled(), "NoMusic clears bit 2 of +0x312, no NoMusic sets it");
     require(plain->flags311 == runtime::kVehicleCameraOverride && plain->flags312 == runtime::kVehicleMusicEnabled,
-            "a parked or traffic vehicle reads +0x311 = 1 and +0x312 = 4 (oracle, street-after-1-1)");
+            "a parked or traffic vehicle reads +0x311 = 1 and +0x312 = 4 (oracle, the save state outside the police station after mission 1-1)");
     require(both->flags311 == (runtime::kVehicleCameraOverride | runtime::kVehicleInvulnerable | runtime::kVehicleLocked | runtime::kVehicleRemoteControl | runtime::kVehicleBigHitOnContact),
             "Invulnerable, PlayerDisable (locked), RC_Vehicle and BigHitOnContact set bits 2, 1, 4 and 5");
     require(plain->cameraPosY == 0.5f && plain->cameraPanScale == 1.0f && both->cameraPanScale == 2.0f, "camera floats");
@@ -275,7 +275,7 @@ void real(const char* fib, const char* names) {
     requireNear(police->wheels[0].local.position[2], 1.52f, "Wheel01 z");
     require(police->wheels[0].local.mesh == "Veh_Wheel_20x12", "wheel model");
     require(!police->locked(), "locked comes from the scripts, not from the class");
-    // Oracle (drv-police-car-seated, GDB read of the wheel records body+0x2b8 + n * 0x154 of 1-1_Police_Car, 2026-10-15, agentVPHYS body0.mem):
+    // Oracle (the save state sitting in the police car of mission 1-1, GDB read of the wheel records body+0x2b8 + n * 0x154 of 1-1_Police_Car, 2026-10-15, agentVPHYS trace body0):
     // w+0x50 mount, w+0x44 side offset, w+0x40 radius, w+0xe4 travel, w+0xe8 stiffness, w+0xec / w+0xf0 damping; wheel 0 front left, wheel 2 rear.
     struct WheelExpect { std::size_t index; float mount[3], side, radius, travel, stiffness, extend, compress; };
     const WheelExpect wheelExpect[] = {{0, {-0.85f, 0.0685f, 1.52f}, -0.07825f, 0.48f, 1.0f, 18.2f, 5.2f, 3.9f},
@@ -291,7 +291,7 @@ void real(const char* fib, const char* names) {
         requireNear(suspension.dampingExtend, expected.extend, what + " extend damping");
         requireNear(suspension.dampingCompress, expected.compress, what + " compress damping");
     }
-    // Oracle (m11-5-in-donut-van, the same read of the van the player sits in, agentVPHYS vbody0.mem): CentreOfMass (0, -0.9, 0.2) moves the mounts.
+    // Oracle (the save state inside the repaired donut van of mission 1-1, the same read of the van the player sits in, agentVPHYS trace vbody0): CentreOfMass (0, -0.9, 0.2) moves the mounts.
     const runtime::VehicleRecord* van = set.find("1-1_donutvan");
     require(van != nullptr && van->wheels.size() == 4, "1-1_DonutVan has four wheels");
     const WheelExpect vanExpect[] = {{0, {-1.1f, -0.3564f, 1.32f}, -0.1f, 0.45f, 0.9f, 41.6f, 15.6f, 7.8f},
@@ -313,7 +313,7 @@ void real(const char* fib, const char* names) {
     requireNear(police->mass, 1300.0f, "trooper Mass (rigid inverse mass 1/2600 in the oracle)");
 
     struct Parked { const char* instance; std::uint16_t type; std::uint8_t wheels, health; float camera[4]; };
-    // Oracle (street-after-1-1, GDB reads of the records of the three parked vehicles): +2 = +4 = 4, +0x311 = 1, +0x312 = 4, health bytes 100/4/4,
+    // Oracle (the save state outside the police station after mission 1-1, GDB reads of the records of the three parked vehicles): +2 = +4 = 4, +0x311 = 1, +0x312 = 4, health bytes 100/4/4,
     // +0x2ec type, +0x314 wheels, floats +0x2f0..+0x2fc.
     const Parked parkedVehicles[] = {{"FP_Vehicle_03", 15, 4, 4, {0.1f, 5.75f, 0.1f, 0.0f}},
                                       {"FP_Vehicle_04", 12, 4, 4, {0.2f, 7.5f, -0.6f, 0.0f}},

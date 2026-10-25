@@ -38,7 +38,7 @@ You are worker {{agent}} of round {{round}} of the PC port of *LEGO City Underco
   - A test that needs the game image or `artifacts/` carries the label `needs-game-data` (when it skips without the data it exits with code 77 and keeps the label).
 - **License:** contributions are GPL-3.0-or-later. Copy no code under another license; no game assets.
 - **Git:** never change git config; never push.
-- **No local-only data** (CLAUDE.md "No local-only data in the repo"): outputs go only under `artifacts/oracle/{{agent}}-out`, your emulator home or the scratchpad. Every value you use goes into the repo (test with provenance or `docs/re` entry) before the report. No local path in any committed file; tests read no local data.
+- **No local-only data** (CLAUDE.md "No local-only data in the repo"): outputs go only under `artifacts/oracle/{{agent}}-out`, your emulator home or the scratchpad. Every value you use goes into the repo (test with provenance or `docs/re` entry) before the report. No local path in any committed file; tests read no local data. Provenance in comments, tests and docs names round/agent, date and command or oracle step and says "recorded from a save state"; never an output folder or scratch file name (`agent...-out`, `*.mem`, `*.png`) or the name of a save state, its slot or how it was reached (the game situation is described in game terms; only states a committed script saves itself are named). Docs name no distro, package, user name, machine timing or "this machine". Run `python3 tools/check_local_data.py` and fix what it reports for your files.
 - **No explanatory comments.** No before/after screenshots for the user.
 - [optional: emulator, the package needs RPC or a state]
   **Emulator:** the servant owns the only `--rpc` session.

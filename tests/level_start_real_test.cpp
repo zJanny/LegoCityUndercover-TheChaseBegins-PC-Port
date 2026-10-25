@@ -249,7 +249,7 @@ int main(int argc, char** argv) {
         require((chase::runtime::triggersWithoutObject(level) == std::vector<std::size_t>{79, 80, 81, 82, 141}), "triggers without object");
         require((chase::runtime::cameraBoundsSwitchedOffAtStart(level, classOf) == std::vector<std::size_t>{266, 271, 272}), "camera bounds switched off");
 
-        // Provenance: oracle state police-station (New 3DS), `read` of the runtime trigger records (owner+0x34 = 0x08e65ac0,
+        // Provenance: oracle save state in the police station lobby after mission 1-1 (New 3DS), `read` of the runtime trigger records (owner+0x34 = 0x08e65ac0,
         // 53 x 0x20 bytes) and of the 137 bound records (0x08fa4634, 0x28 each) of the lvl_00 level data 0x08f9cba0: all 53 trigger
         // enable bytes are 1 and bound byte +0xa is 0 for bounds 6, 13 and 14 only
         // (heap read of agent M, parsed with a Python script of the session).

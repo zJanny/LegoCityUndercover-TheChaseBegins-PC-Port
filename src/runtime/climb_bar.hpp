@@ -28,17 +28,17 @@ constexpr float kCornerRailRate = 6.0f;               // 0x29a384: t moves by dt
 constexpr float kCornerRailLength = 3.0f;             // 0x29a384: the corner state runs while 0 <= t < 3
 constexpr int kCornerRailSamplesPerSegment = 10;      // 0x2766bc: argument 10 of the closest-point search 0x21d5b0
 constexpr int kClimbBarGrabJumpCount = 4;             // the grab tests of the jump update run once ctrl+0x2cf > 4 (as the zipline)
-// TRAV-S15: ctrl+0x2e8, the offset of the hanging player from the bar line (bar-local y and z), measured in the oracle state m12-12
+// TRAV-S15: ctrl+0x2e8, the offset of the hanging player from the bar line (bar-local y and z), measured in the oracle save state climbing along the railing of mission 1-2
 // for Chase (0, -1.0606986, 0.3636877); the original samples the hand joint of the ledge clip (0x27086c) and does not store a constant.
 constexpr float kClimbBarHangOffsetY = -1.0606986f;
 constexpr float kClimbBarHangOffsetZ = 0.36368772f;
 // TRAV-S21: ctrl+0x2e8 for an AcrobatPole (flag poles), the hanging player's offset from the bar line (bar-local y and z), measured in the
-// oracle (m12-trampoline-built, grab of 1-2_FlagPole_01 from the bounce): the player ends the arrival at 41.45909 / 637.57922 under the pole
+// oracle (the save state at the built trampoline of mission 1-2, grab of 1-2_FlagPole_01 from the bounce): the player ends the arrival at 41.45909 / 637.57922 under the pole
 // at 723.11157 / 43.46950 / 637.55219 with yaw 180; the original samples the hand joint of the clip 0x2c.
 constexpr float kAcrobatPoleHangOffsetY = -2.0104117f;
 constexpr float kAcrobatPoleHangOffsetZ = -0.027031898f;
 // Player box of the grab test 0x295da0: entity+0x60 (0, 1.15, 0.08) is its centre, entity+0x6c (0.6, 0.85, 0.52) its half extents
-// (read in m12-12) with y scaled by *0x377220 - *0x37721c = 0.7 - 0.2 = 0.5.
+// (read in the save state climbing along the railing of mission 1-2) with y scaled by *0x377220 - *0x37721c = 0.7 - 0.2 = 0.5.
 constexpr float kClimbBarPlayerBoxCentre[3] = {0.0f, 1.15f, 0.08f};
 constexpr float kClimbBarPlayerBoxHalf[3] = {0.6f, 0.85f * 0.5f, 0.52f};
 

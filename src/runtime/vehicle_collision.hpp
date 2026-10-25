@@ -49,7 +49,7 @@ int secondFloorCell(const FloorMesh& mesh, const Vector3& point, int cell);
 // x and z times 0.9. With body flag +0xc4 bit 0 the bottom is at most the mount height of wheels 0 and 2.
 std::array<Vector3, 8> vehicleProbePoints(const Vector3& low, const Vector3& high, const std::vector<VehicleWheel>& wheels);
 // The shape builder 0x2184a4 without a CollisionBound record: the compound's child box is the entity box (0x242df4, entity +0x60 / +0x6c) at its
-// centre minus CentreOfMass. Oracle (compound child offset and half extents of the shapes in the world, drv-police-car-seated): equal for the
+// centre minus CentreOfMass. Oracle (compound child offset and half extents of the shapes in the world, the save state sitting in the police car of mission 1-1): equal for the
 // trooper, the worker, the minibrawn, the foundation, the gotland van, the tigerella and the donut van.
 void vehicleShapeBox(const Vector3& entityCentre, const Vector3& entityHalf, const std::array<float, 3>& centreOfMass, Vector3& low, Vector3& high);
 

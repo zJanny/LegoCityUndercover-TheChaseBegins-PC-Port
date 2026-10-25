@@ -204,12 +204,12 @@ void pairRule() {
 
 void hitFlash() {
     VehicleRecord record = trooper();
-    expect(record.flashCounter == 15 && !record.flashWhite, "the parameter reader sets +0x30f to 15 (0x23edc8; oracle drv-police-car-seated: 0x0f)");
+    expect(record.flashCounter == 15 && !record.flashWhite, "the parameter reader sets +0x30f to 15 (0x23edc8; oracle the save state sitting in the police car of mission 1-1: 0x0f)");
     expect(!stepVehicleFlash(record).colour && record.flashCounter == 15, "an idle counter of 15 is left alone (0x18cca0 returns above 0xe)");
     expect(vehicleFlashColour(1) == 0xffffffffu && vehicleFlashColour(2) == 0xffdfdfffu && vehicleFlashColour(8) == 0xff1f1fffu &&
                vehicleFlashColour(15) == 0xffffffffu,
            "0x18cca0: r 255, g = b = ((|n - 8| << 5) & 0xff) | 0x1f, a 255: n 1 white, 2 0xdf, 8 0x1f, 15 white");
-    // Oracle (round 20, request R20-C-2, state veh-smash-car, fixed dt 0.033, B for 60 updates then A until the van broke at update 203): the
+    // Oracle (round 20, request R20-C-2, save state in a police van in front of moving cars, fixed dt 0.033, B for 60 updates then A until the van broke at update 203): the
     // van node's colour N+0x118 (bytes r, g, b, a) while +0x30f counted 1 to 15 in updates 203..217.
     const std::uint32_t recorded[15] = {0xffffffffu, 0xffdfdfffu, 0xffbfbfffu, 0xff9f9fffu, 0xff7f7fffu, 0xff5f5fffu, 0xff3f3fffu, 0xff1f1fffu,
                                         0xff3f3fffu, 0xff5f5fffu, 0xff7f7fffu, 0xff9f9fffu, 0xffbfbfffu, 0xffdfdfffu, 0xffffffffu};
@@ -229,7 +229,7 @@ void hitFlash() {
     int updates = 2;
     while (stepVehicleFlash(record).colour) ++updates;
     expect(updates == 15 && record.flashCounter == 15,
-           "the counter reaches 15 in 15 updates (oracle drv-police-car-seated, agent A of round 16: +0x30f 1 to 0xf after the hit at row 115)");
+           "the counter reaches 15 in 15 updates (oracle the save state sitting in the police car of mission 1-1, agent A of round 16: +0x30f 1 to 0xf after the hit at row 115)");
 }
 
 void smokePosition() {

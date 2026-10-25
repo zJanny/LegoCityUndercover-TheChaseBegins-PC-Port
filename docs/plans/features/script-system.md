@@ -12,10 +12,10 @@ IN_PROGRESS, updated 2026-10-14T16:48:13+02:00. `ScriptRunner` runs threads ever
 
 - Script data layout and loader 0x1cfc50; function names re-derived by hash (0x208a3c). lvl_01 has 314 scripts.
 - Over the 896 lvl_01 objects that would register collision, the state rule gives 819 enabled in both, 48 flag-0 in both, 4 without entity and disabled by the script, 12 flag-0 only through the revealer links, 8 co-located twins; no object that the rule disables while its entity is enabled. `level-start-real-data` pins this against the oracle grid read.
-- The runner is entered once per update per resident scene from the gameplay update (oracle trap, lr 0x2e54b8), and no thread is alive at gameplay-start or police-station; `level-start-real-data` checks that the lvl_01 startup threads all end.
+- The runner is entered once per update per resident scene from the gameplay update (oracle trap, lr 0x2e54b8), and no thread is alive at gameplay-start or in the police station lobby; `level-start-real-data` checks that the lvl_01 startup threads all end.
 - Executor, Wait, CallScript / SpawnScript and thread creation rules were transcribed from the disassembly; `script-runner` covers them with synthetic scripts.
 - After the startup run, 236 of 241 trigger enable bytes and 479 of 482 bound enable bytes equal the oracle read at gameplay-start, and the bound room rule gives exactly the oracle's 257 active bounds for its 12 loaded rooms; `level-start-real-data` pins all three.
-- After the scene start, all 241 trigger enable bytes and 482 bound enable bytes of lvl_01 equal the oracle read at gameplay-start; for lvl_00 the 53 trigger bytes and 137 bound bytes equal the oracle read at police-station (`OnSceneEnter1` switches bounds 13 and 14). `level-start-real-data`, `scene-start`. [scene-start.md §2026-10-14T14:27](../../re/scene-start.md#ts-20261014-142739).
+- After the scene start, all 241 trigger enable bytes and 482 bound enable bytes of lvl_01 equal the oracle read at gameplay-start; for lvl_00 the 53 trigger bytes and 137 bound bytes equal the oracle read in the police station lobby (`OnSceneEnter1` switches bounds 13 and 14). `level-start-real-data`, `scene-start`. [scene-start.md §2026-10-14T14:27](../../re/scene-start.md#ts-20261014-142739).
 
 ## 4. Stand-ins
 

@@ -64,7 +64,7 @@ int main(int argc, char** argv) {
         require(navFindPath(worlds[0], record, start, goal) == 3 && record.phase == 2, "police entry: a path within the grid");
         require(record.startGrid == 26 && record.goalGrid == 26 && record.startCell == 39 && record.goalCell == 143 && record.exitCell == 143,
                 "grid 26, cells 39 and 143 (hand-computed above)");
-        // Oracle (Azahar, state dcam-police-dialog, A pressed, GDB reads of the path record 0x58e330 and its cell nodes at
+        // Oracle (Azahar, save state at the police station entrance with its question box open, A pressed, GDB reads of the path record 0x58e330 and its cell nodes at
         // update 4 after the finder; docs/re/ai-navigation.md): phase 2, 37 open cells, the chain 39 -> 52 -> 65 -> ... -> 143
         // with costs 24, 21, 18, ..., 0 and mark 143, cell 40 cost 23 parent 52, cell 155 cost 2 parent 143.
         require(record.cellOpen.size() == 37, "37 open cells as in the original");

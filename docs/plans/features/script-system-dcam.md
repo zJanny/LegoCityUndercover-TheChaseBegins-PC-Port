@@ -12,7 +12,7 @@ IN_PROGRESS, updated 2026-10-15T09:38:42+02:00. The director camera runs: StartD
 
 - StartDCam, StartDCamTrack, WaitForDCam and EndDCam follow the oracle timing of the police entry script (`dcam-real-data`): [dcam.md §2026-10-14T14:36](../../re/dcam.md#ts-20261014-143600).
 
-- While the director camera is current the player not under AI control gets no stick and no buttons, and a character under AI control (the player included) runs its AI only with `DCamActive 1`; the hold ends with the camera. Oracle `m11-2-patrol-car`: X was ignored for the 273 updates of `1-1_Release_Car_Script` (`game-director-hold`, `game-director-release`, `director-hold`; hold from the update after StartDCam to the update after the end test, `tools/oracle/dcam-hold-order.txt`): [dcam.md §2026-10-15T09:37](../../re/dcam.md#ts-20261015-093712).
+- While the director camera is current the player not under AI control gets no stick and no buttons, and a character under AI control (the player included) runs its AI only with `DCamActive 1`; the hold ends with the camera. Oracle the save state in front of the police car of mission 1-1: X was ignored for the 273 updates of `1-1_Release_Car_Script` (`game-director-hold`, `game-director-release`, `director-hold`; hold from the update after StartDCam to the update after the end test, `tools/oracle/dcam-hold-order.txt`): [dcam.md §2026-10-15T09:37](../../re/dcam.md#ts-20261015-093712).
 
 ## 4. Stand-ins
 

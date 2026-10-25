@@ -84,7 +84,7 @@ void jumpCounter() {
     ZiplineRider rider;
     require(!ziplineJumpTick(rider, true, true), "the take-off update: ctrl+0x2cf = -1 + 1");
     for (int update = 2; update <= 6; ++update) require(!ziplineJumpTick(rider, false, true), "counter 0..4 before the update: no test");
-    require(ziplineJumpTick(rider, false, true), "update 7 after the press: counter 5 > 4 (m12-9: grab in the 7th jump update)");
+    require(ziplineJumpTick(rider, false, true), "update 7 after the press: counter 5 > 4 (the save state under the zipline of mission 1-2: grab in the 7th jump update)");
     require(!ziplineJumpTick(rider, false, false) && rider.jumpCount == -1, "the counter is gone outside the jump");
 }
 

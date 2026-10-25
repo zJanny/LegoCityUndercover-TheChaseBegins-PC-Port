@@ -38,7 +38,7 @@ constexpr int kTipIconSize = 16;
 constexpr int kCardPadding = 12, kCardHeight = 40;
 constexpr float kCardY = 4;
 constexpr const char* kEastToken = "<EAST>";
-// STAND-INS fitted to the oracle screenshot of the WarningDialogBox (street-after-1-1, docs/re/scripts.md): box 296x92
+// STAND-INS fitted to the oracle screenshot of the WarningDialogBox (the save state outside the police station after mission 1-1, docs/re/scripts.md): box 296x92
 // at (52, 126) on the top screen, orange text (255, 169, 22), button row at y 203.
 constexpr int kWarnX = 52, kWarnY = 126, kWarnWidth = 296, kWarnHeight = 92, kWarnWrapWidth = 280;
 constexpr float kWarnTextCentreX = 200, kWarnFirstLineY = 141, kWarnPitch = 17.5f, kWarnButtonY = 203;

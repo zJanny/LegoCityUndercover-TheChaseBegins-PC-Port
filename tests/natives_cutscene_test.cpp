@@ -60,7 +60,7 @@ void slotsAndBusyTest() {
 // Update 0x2fae68: once the cutscene has ended (0x2d19cc returns 0) it starts the screen fade to black (0x2520e8, 0.5 s, screen
 // byte 1); the mode switch waits until the fade has ended (loop 0x109708) and then two render ticks; the exit 0x2fac7c fades
 // in over 0.5 s (0x252068) unless the cutscene is 7_9_A. Provenance: llvm-objdump of those addresses and the ctrace of
-// state cutscene-1-1-b (round 28 agent E, endtrace): 0x256a14 from lr 0x2faf38 (r1 = 1), 0x2fac7c, 0x256a14
+// save state at the end of the cutscene 1_1_b (round 28 agent E, endtrace): 0x256a14 from lr 0x2faf38 (r1 = 1), 0x2fac7c, 0x256a14
 // from lr 0x2face8 (r1 = 1), nothing else (docs/re/cutscenes.md).
 void endFadesAreReadFromTheCode() {
     using chase::runtime::CutsceneFadeRequest;
@@ -129,7 +129,7 @@ void endSequenceOnTheScreenFade() {
 
 // FadeScreen 0 leaves the screen black; DCamCutScenePlay (handler 0x26fa18, flag a 0) fades to black in 0 s and the
 // cutscene mode enter 0x2fadb8 fades in over 0.5 s (0x252068), so the cutscene is seen (1-2_Cage_Key_Target_Script,
-// gdb trace from m12-13-cage-trigger, docs/re/cutscenes.md).
+// gdb trace from the save state at the dog cage trigger of mission 1-2, docs/re/cutscenes.md).
 void cutsceneModeBringsTheScreenBack() {
     Level level;
     add(level, "c", {{"FadeScreen", {"0"}}, {"DCamCutScenePlay", {"\"short\"", "0", "1", "1", "1"}}, {"DCamCutSceneWait", {"\"short\""}},

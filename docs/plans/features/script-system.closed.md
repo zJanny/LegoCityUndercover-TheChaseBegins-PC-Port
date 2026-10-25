@@ -2,7 +2,7 @@
 
 Done items of [script-system.md](script-system.md), moved here by tools/check_doc_links.py --fix in the order they were closed. IDs are never reused.
 
-- [x] SCRIPT-6 — Closed 2026-10-14: class `startup` scripts (24 objects in lvl_01, last to first before the level `startup`), `OnSceneEnter<room>` (checked at police-station) and the `ScriptCheckExtras` request are in `SceneStart`; no data has `OnSceneExit`. evidence: [scene-start.md §2026-10-14T14:27](../../re/scene-start.md#ts-20261014-142739).
+- [x] SCRIPT-6 — Closed 2026-10-14: class `startup` scripts (24 objects in lvl_01, last to first before the level `startup`), `OnSceneEnter<room>` (checked in the police station lobby) and the `ScriptCheckExtras` request are in `SceneStart`; no data has `OnSceneExit`. evidence: [scene-start.md §2026-10-14T14:27](../../re/scene-start.md#ts-20261014-142739).
 - [x] SCRIPT-8 — Closed 2026-10-14: a live thread (`Police_ExtToInt`) was traced from an unmodified state (creation, first pass, blocking in `WarningDialogBox`, the Wait 3 timer); `ScriptRunner` matches, pinned in `script-runner`. evidence: [scripts-runtime.md §2026-10-14T11:13](../../re/scripts-runtime.md#ts-20261014-111312).
 - [x] SCRIPT-10 — Closed 2026-10-14: triggers 79-82 and 141 (objects missing from the level, SCRIPT-S15) and the bounds 266, 271, 272 (camera bound system 0x2ff35c) now match the oracle. evidence: [scene-start.md §2026-10-14T14:27](../../re/scene-start.md#ts-20261014-142739).
 - [x] SCRIPT-11 — Closed 2026-10-14: every bound trigger type's check is transcribed and runs; BoundLeft and PlayerOnFootBoundEntered verified in the oracle. The rest is SCRIPT-75 to SCRIPT-78. evidence: [script-triggers.md §2026-10-14T15:53](../../re/script-triggers.md#ts-20261014-155345).

@@ -481,9 +481,9 @@ class RuleChecksTest(unittest.TestCase):
         self.assertTrue(any(e.startswith('README.md:1:') for e in found))
 
     def test_claude_md_size(self):
-        (self.root / 'CLAUDE.md').write_text('x' * 22528)
+        (self.root / 'CLAUDE.md').write_text('x' * 23552)
         self.assertEqual(self.errors('claude-md-size'), [])
-        (self.root / 'CLAUDE.md').write_text('x' * 22529)
+        (self.root / 'CLAUDE.md').write_text('x' * 23553)
         self.assertEqual(len(self.errors('claude-md-size')), 1)
 
     def write_pair(self, corrected_by_line, corrects_text='Corrects a.md §2026-01-01T01:00'):

@@ -1,5 +1,5 @@
 // Replay of camera traces recorded in the original game while the player walks across the police station lobby
-// (Azahar oracle, New 3DS, state camera-lobby-walk; tools/oracle/camera-lobby-walk.txt: lobby_north = camera-lobby-north.mem (stick 0 150, 150 updates, one record), lobby_east = camera-lobby-east.mem (stick 150 0, 130 updates, walk west over five records), converted by
+// (Azahar oracle, New 3DS, state camera-lobby-walk; tools/oracle/camera-lobby-walk.txt: lobby_north = trace camera-lobby-north (stick 0 150, 150 updates, one record), lobby_east = trace camera-lobby-east (stick 150 0, 130 updates, walk west over five records), converted by
 // tools/export_camera_blend_trace.py; docs/re/camera.md). The rig gets the recorded player position and dt of every row and
 // must reproduce the recorded eye, look and FOV. The rows of every trace are committed in tests/data/camera/blend (all rows of
 // each trace; recorded 2026-10-14 and 2026-10-15). Needs the extracted RomFS; exits with 77 (skipped) when it is missing.
@@ -96,10 +96,10 @@ int main(int argc, char** argv) {
     try {
         assets::FuseArchive archive(argv[1]);
         archive.loadNames(argv[2]);
-        // Provenance: state camera-lobby-walk (the user's police-station quick save, unmodified): player node
+        // Provenance: state camera-lobby-walk (a copy of a save state in the police station lobby after mission 1-1, unmodified): player node
         // (-1.97040856, 1.43587279, 14.84306526), settled record pose, camera yaw pi. Traces: memtrace of camera C+0x4c / +0x70 /
         // +0x7c per update; lobby_north: stick (0, 150), lobby_east: stick (150, 0) over five records.
-        // State street-after-1-1 (unmodified): player (900.549133, 16.567217, 1110.280029), follow camera, yaw -1.5655, facing -pi/2.
+        // Save state outside the police station after mission 1-1 (unmodified): player (900.549133, 16.567217, 1110.280029), follow camera, yaw -1.5655, facing -pi/2.
         // street_in / street_out: the player node was written to (933, 16.6, 1124) (inside CameraBound_PolicePK_03) and back to
         // (905, 16.6, 1110) with the oracle's teleport command between the traces (tools/oracle/camera-street-teleport.txt).
         const Replay replays[] = {

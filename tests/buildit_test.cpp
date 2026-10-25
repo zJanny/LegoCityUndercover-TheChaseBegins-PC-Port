@@ -1,5 +1,5 @@
 // Build-it state machine (src/runtime/buildit.cpp). The expected rows are the record fields of the object 1-1_BI_DonutVanParts read in
-// the oracle after every update with the action button held from the state m11-4-van-parts (command and result: docs/re/buildit.md,
+// the oracle after every update with the action button held from the save state in front of the donut van parts build-it of mission 1-1 (command and result: docs/re/buildit.md,
 // entry "Build of 1-1_BI_DonutVanParts measured"): row i is the state after i updates, each update being the object update followed
 // by the use message. Six bricks. turnedZone: the use zone is tested in the node's frame (0x221570 turns the player with the node's world matrix,
 // 0x2536c0, before the box test 0x22f650); read from the code, entry "The use zone is turned with the placement" of docs/re/buildit.md.

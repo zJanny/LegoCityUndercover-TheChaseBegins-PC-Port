@@ -68,9 +68,9 @@ Unknowns:
 
 <a id="ts-20261014-200116"></a>
 
-## 2026-10-14T20:01:16+02:00 — Oracle check of the finder on the police entry AIMove (Azahar New 3DS, state dcam-police-dialog, GDB reads and traps, no RPC)
+## 2026-10-14T20:01:16+02:00 — Oracle check of the finder on the police entry AIMove (Azahar New 3DS, save state at the police station entrance with its question box open, GDB reads and traps, no RPC)
 
-Scenario: `loadstate dcam-police-dialog`, `dt 0.033`, `hold A` (the script `Police_ExtToInt` runs AIMove for Player1 at update 3 after A). Trap of 0x204284 and 0x208338: one call each, at update 3; arguments start (904.652, 16.577, 1113.197), goal (910.74, 16.577, 1119.44). `memtrace` of the path record (static slot 0x58e330, reached through entity 0x085526f0 `+0x7c` -> component 0x08552790 `+0xc8`) and its cell nodes (0x08d162c0):
+Scenario: `loading the save state at the police station entrance with its question box open, `dt 0.033`, `hold A` (the script `Police_ExtToInt` runs AIMove for Player1 at update 3 after A). Trap of 0x204284 and 0x208338: one call each, at update 3; arguments start (904.652, 16.577, 1113.197), goal (910.74, 16.577, 1119.44). `memtrace` of the path record (static slot 0x58e330, reached through entity 0x085526f0 `+0x7c` -> component 0x08552790 `+0xc8`) and its cell nodes (0x08d162c0):
 - From update 4 on: `+0x38/+0x3a` = 6/6, `+0x3c/+0x3e` = 26/26, `+0x40/+0x42/+0x44` = 39/143/143, phase `+0x7e` = 2, cell open count `+0x50` = 37, `+0x58` = (910.81, 16.48, 1119.46), `+0x7c` = 0, masks `+0x74` = `+0x78` = 0x0e893eff (bit 0 set; the player has many gate bits), record `+0` = the entity. Unchanged for 40 updates while the player walks.
 - Cell nodes: the chain 39 -> 52 -> 65 -> 78 -> 91 -> 104 -> 117 -> 130 -> 143 (parent of 143 is 143), costs 24, 21, 18, 15, 12, 9, 6, 3, 0, mark 143 on the chain; neighbours such as cell 40 (cost 23, parent 52), 26 (27, parent 39), 155 (2, parent 143), state 3 on the chain and 1 on the 28 other listed cells. The port reproduces all of these (`nav-path-real-data`), the open count 37 and the waypoint too.
 - Corrects the earlier text of the entry above: the lookup tolerance is twice the **entity's** float at `+0x70` (0.85 for the player: the entity word at +0x70 is 0x3f599999), not a class value.

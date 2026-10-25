@@ -1,4 +1,4 @@
-// The idle animations of the level characters on real data. Provenance (oracle state m11-1-donut-shop, GDB reads of the animation slots of
+// The idle animations of the level characters on real data. Provenance (oracle save state before the donut shop waypoint of mission 1-1, GDB reads of the animation slots of
 // 1-1_AI_DonutShopMan, 1-1_AI_DonutShopMan01 and 1-3_Blocker, docs/re/npc-animation.md): all three play models/char_minifig/class_generic/
 // idle_minifig (slot length 0x13 = 19 frames) and idle2_minifig (0x45 = 69 frames) at 15.0 frames per second. Needs the extracted RomFS;
 // exits with 77 (skipped) when it is missing.

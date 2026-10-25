@@ -88,7 +88,7 @@ void directorHoldsWhileActive() {
 
 void runnerHoldsThePlayerAndTheCharactersDuringAScriptedCamera() {
     // Provenance: StartDCam sets the camera slot 0x37689c (0x189548) and the end test 0x196784 switches it back, the character
-    // routine 0x1835d0 reads it; oracle: m11-2-patrol-car, controls zeroed from 3 updates after Drive begins (docs/re/dcam.md).
+    // routine 0x1835d0 reads it; oracle: the save state in front of the police car of mission 1-1, controls zeroed from 3 updates after Drive begins (docs/re/dcam.md).
     chase::assets::Level level;
     level.paths.push_back(path("camera", {{0, 0, 0}, {10, 0, 0}}));
     level.paths.push_back(path("target", {{0, 0, 5}}));

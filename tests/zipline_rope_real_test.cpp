@@ -52,7 +52,7 @@ int main(int argc, char** argv) {
         const float camera[3] = {870.0f, 66.0f, 631.0f}, view[3] = {0, 0, 1};
         const auto all = [](const runtime::ZiplineAnchor&) { return true; };
         const auto draws = runtime::ziplineRopeDraws(anchors, ropes, camera, view, all);
-        require(draws.size() == 24, "12 lines, two draws each (every anchor has RopeTexture and no update handler, gate 0x226644; m12-9 trap T46 showed two 0x1f9590 calls per update for the Line04 / Line05 line): " + std::to_string(draws.size()));
+        require(draws.size() == 24, "12 lines, two draws each (every anchor has RopeTexture and no update handler, gate 0x226644; the save state under the zipline of mission 1-2 trap T46 showed two 0x1f9590 calls per update for the Line04 / Line05 line): " + std::to_string(draws.size()));
         const runtime::RopeDraw* line = nullptr;
         for (const runtime::RopeDraw& draw : draws)
             if (near(draw.strip[0].position[0], 868.09f, 0.05f) && near(draw.strip[0].position[1], 70.0f, 0.1f)) line = &draw;

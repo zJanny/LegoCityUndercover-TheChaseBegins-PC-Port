@@ -22,10 +22,10 @@ The Azahar RPC server (UDP): memory reads and writes, screenshots, pad input wit
 
 ## 2026-10-13T12:02:21+02:00 — RPC channel (non-halting memory access, breakpoint-free pad input)
 
-Azahar 2126.2 has an RPC server (source: `src/core/rpc/` of the Azahar source, `/usr/src/debug/azahar/azahar-unified-source-2126.2/`). The tool uses it as a second channel next to the GDB stub: `--rpc` (reads, screenshots, `sample`, `perf`) and `--rpc-input` (pad buttons without per-frame breakpoints). Tests of the client: `tests/test_azahar_oracle_rpc.py` (fake UDP server).
+Azahar 2126.2 has an RPC server (source: `src/core/rpc/` of the Azahar 2126.2 source). The tool uses it as a second channel next to the GDB stub: `--rpc` (reads, screenshots, `sample`, `perf`) and `--rpc-input` (pad buttons without per-frame breakpoints). Tests of the client: `tests/test_azahar_oracle_rpc.py` (fake UDP server).
 
 **Enabling**
-- Setting `enable_rpc_server`, section `[Debugging]` (`citra_qt/configuration/config.cpp` `ReadDebuggingValues`). The generated config carries `enable_rpc_server=true` and `enable_rpc_server\default=false`. `core/core.cpp` creates the server at the end of `System::Init` only if the setting is on (and `ENABLE_SCRIPTING` was compiled in; the Arch build was).
+- Setting `enable_rpc_server`, section `[Debugging]` (`citra_qt/configuration/config.cpp` `ReadDebuggingValues`). The generated config carries `enable_rpc_server=true` and `enable_rpc_server\default=false`. `core/core.cpp` creates the server at the end of `System::Init` only if the setting is on (and `ENABLE_SCRIPTING` was compiled in; the Azahar 2126.2 build used for the measurements had it).
 - The UDP port is hard-coded: `udp_server.cpp` binds `0.0.0.0:45987` ("TODO: Make configurable"). Not configurable, so two emulators cannot both have RPC. If the bind fails, `Server` catches the exception, logs "Error starting UDP server" and runs without RPC, with no other sign. The tool therefore refuses `--rpc` when UDP 45987 cannot be bound by the tool itself, and `--rpc` is off by default. A running RPC emulator also answers any client on that port: do not attach a second tool instance to the wrong emulator.
 - The log line in `azahar_log.txt` says `Starting RPC server (synchronous)`: the build has `ENABLE_SCRIPTING_SYNC`. Every request except `ReadScreenshot` is queued and executed by the emulation thread (`ProcessCoreRequests`, `core/core.cpp`), so reads are consistent (no torn words) and it works while the GDB stub has the CPU halted (verified).
 
@@ -47,17 +47,17 @@ Azahar 2126.2 has an RPC server (source: `src/core/rpc/` of the Azahar source, `
 - The tool restores the original instruction before leaving a kept emulator (otherwise the last mask would stay pressed for later attaches); `--stop`/kill needs no restore. The patch replaces the held mask entirely, host input is not combined.
 - The circle pad is not covered: the raw words at r4+12/+14 are consumed at 0x10a540 as halfword loads, which cannot load a full word from the cave without a longer stub. `stick` still installs the per-frame breakpoint at 0x10a540 (only then, and the held mask stays breakpoint-free).
 
-**Measurements** (this machine, software renderer unless noted, old 3DS, `--frame-limit 100`, state `fast-lang` at the language screen)
+**Measurements** (reference timings of one machine, expect other values on yours; software renderer unless noted, old 3DS, `--frame-limit 100`, save state at the language list at the language screen)
 | Item | Time or value |
 |---|---|
 | Screenshot via RPC memory reads (software renderer, stepped/halted) | 0.05 s (identical PNGs to the GDB route) |
 | Screenshot via GDB stub (same two screens, `screenshot NAME gdb`) | 10.7 s |
 | Screenshot via RPC `TakeScreenshot` (OpenGL renderer, game runs during capture) | 0.18-0.20 s |
 | RPC read round trip, language screen | about 0.03-0.1 ms per request (5 requests per `sample` row: 0.13-0.55 ms) |
-| RPC read round trip, in-game dialog state (`agent-intro-dialog`) | about 1.7 ms per request (8-26 ms per `sample` row) |
+| RPC read round trip, in-game dialog state (the save state in the opening dialogue of a new game) | about 1.7 ms per request (8-26 ms per `sample` row) |
 | `sample 20 0.1` free run, language screen | 50.14 clock ticks per vblank, 60.2 vblanks/s (both counters 0x593d14/0x593d18 advance together) |
 | Same, OpenGL renderer, `sample 10` | 50.14 ticks per vblank, 60.6 vblanks/s |
-| Same, `agent-intro-dialog` state | 51.13 ticks per vblank |
+| Same, the save state in the opening dialogue of a new game state | 51.13 ticks per vblank |
 | Stepped `frames 300` (breakpoint per frame), language screen | 65.5 ticks per vblank (0x593d14), 68.0 (0x593d18); 107 s wall |
 
 The free-run rate of 50.14 ticks per vblank is the undistorted figure; the earlier 51.3 (see above) probably included the stub stops that bracket a `wait` interval; not isolated. Stepping inflates the clock by about 31 % even when the memory reads go through RPC, because the inflation comes from the halts.
@@ -78,7 +78,7 @@ Unknowns:
 
 <a id="ts-20261014-214240"></a>
 
-## 2026-10-14T21:42:40+02:00 — Breakpoint-free circle pad, wait for a byte, screenshot loop (`tools/azahar_oracle.py`; llvm-objdump on `artifacts/game/game.arm.elf`, oracle run on `street-at-entrance`; REA was not used)
+## 2026-10-14T21:42:40+02:00 — Breakpoint-free circle pad, wait for a byte, screenshot loop (`tools/azahar_oracle.py`; llvm-objdump on `artifacts/game/game.arm.elf`, oracle run on the save state at the police station entrance after mission 1-1; REA was not used)
 
 Resolves the last unknown of [§2026-10-13T12:02:21](#ts-20261013-120221) (circle pad without a breakpoint). The raw words are read at 0x10a540 (`ldrsh r0, [r4, #14]`, y) and 0x10a550 (`ldrsh r3, [r4, #12]`, x). `freestick X Y` (needs `--rpc-input`) replaces 0x10a540 by a branch to a cave at 0x3565a0 (zero padding after the button cave) that stores the two mailbox words 0x3565d0 (y) and 0x3565d4 (x) into `r4+14` and `r4+12`, executes the replaced `ldrsh` and branches back to 0x10a544. The words were checked with `llvm-mc -triple=armv6k` (pinned in `tests/test_azahar_oracle_stick.py`). The game keeps running freely, so a walk takes real guest time; the stepped `stick` (breakpoint per frame) inflates the clock about 30 times per update. The patch is removed when a kept emulator is left and after `loadstate`.
 

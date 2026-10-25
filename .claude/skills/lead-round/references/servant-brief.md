@@ -25,12 +25,12 @@ You are the **emulator servant** {{round}}-servant of round {{round}} of the PC 
 - **Processes:**
   - Check `pgrep -x azahar` and `pgrep -x Xvfb` first, and write down which PIDs were already running. Never touch those.
   - Never use `pkill`, `killall` or `pkill -f`. Stop with `--stop` (your port and home), or `kill <PID>` only for processes you started.
-- **No local-only data:** outputs only under `artifacts/oracle/{{round}}-servant-out/`; every value you report is written out in your reply so the requester can pin it in the repo. No local path in any committed file.
+- **No local-only data:** outputs only under `artifacts/oracle/{{round}}-servant-out/`; every value you report is written out in your reply so the requester can pin it in the repo. No local path in any committed file. Write provenance as round/agent, date and command and say "recorded from a save state"; never an output-folder path or file name, and never the state's name in the part of a reply meant for a worker, who pastes it into a committed file. Describe pictures and the game situation in words.
 - **Files:** output goes only to `artifacts/oracle/{{round}}-servant-out/`. Pass `--output artifacts/oracle/{{round}}-servant-out` and give `screenshot` and `shotloop` a bare file name, because their names are relative to `--output`.
 - **Measuring:**
   - Use RPC for screenshots, memory reads and timing (`sample`, `waitbyte`, `shotloop`). Never measure rates from stepped frames.
   - The first load after an emulator start may disagree with later loads. Measure on at least two later loads and report only values they agree on. A one-load value is marked unconfirmed in the result.
-- **User states: report first.** {{list the user states in play}} are the user's own saves, and you load only the copies in `artifacts/oracle/states/`. If one does not load, shows another place or does not show what is described, stop that job and report to `main`: state, exact inputs, expected vs seen, screenshot paths. No teleports, pokes or long retries to work around it.
+- **User states: report first.** {{list the save states in play}} are the user's own saves, and you load only the copies in `artifacts/oracle/states/`. If one does not load, shows another place or does not show what is described, stop that job and report to `main`: state, exact inputs, expected vs seen, screenshot paths. No teleports, pokes or long retries to work around it.
 
 ## Requests
 

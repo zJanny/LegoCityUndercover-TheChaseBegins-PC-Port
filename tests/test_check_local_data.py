@@ -24,7 +24,7 @@ class CheckLocalDataTest(unittest.TestCase):
 
     def test_emulator_home_is_rejected(self) -> None:
         self.assertEqual(problems("docs/x.md", "~/.local/share/azahar-emu/sdmc/x"), [1])
-        self.assertEqual(problems("docs/x.md", "/home/jan/.local/share/x"), [1])
+        self.assertEqual(problems("docs/x.md", "/home/someone/.local/share/x"), [1])
         self.assertEqual(problems("docs/x.md", "azahar-emu/states/a"), [1])
 
     def test_allowed_paths_pass(self) -> None:
@@ -64,6 +64,84 @@ class CheckLocalDataTest(unittest.TestCase):
         self.assertEqual(problems("tools/azahar_oracle.py", "artifacts/oracle/out"), [])
         self.assertEqual(problems("docs/re/oracle.md", "artifacts/oracle/<home>/ and azahar-emu/states/<TITLEID>.00.cst"), [])
         self.assertEqual(problems("docs/commands.md", "artifacts/rounds/rN/"), [1])
+
+    def test_output_folder_and_trace_names_are_rejected(self) -> None:
+        for text in ("see agentHUD2-out/h2.png", "r40-servant-out/c1_L1", "20261021-audio-servant-out", "run in myfolder-out/x.png", "see myfolder-out/sub/cmp.json",
+                     "replays runA.mem", "hitP4.mem update 26"):
+            for name in ("tests/vehicle_test.cpp", "docs/re/vehicles.md", "docs/plans/features/x.md"):
+                self.assertEqual(problems(name, text), [1], (name, text))
+
+    def test_output_folder_rule_leaves_other_text_alone(self) -> None:
+        self.assertEqual(problems("tests/t.cpp", "graphify-out/graph.json and check-out and time-out"), [])
+        self.assertEqual(problems("docs/re/hud.md", "fade-out/fade-in, zoom-out/zoom-in and time-out/retry"), [])
+        self.assertEqual(problems("docs/rules/port.md", "artifacts/oracle/r{{N}}-servant-out/ and {{round}}-servant-out/"), [])
+        self.assertEqual(problems("src/runtime/x.cpp", "// replays runA.mem"), [])
+        self.assertEqual(problems("tests/test_azahar_oracle_watch.py", "(directory / 'demo.mem').read_bytes()"), [])
+        self.assertEqual(problems("tests/test_merge_agent.py", '"trace.mem", "state.cst"'), [])
+        self.assertEqual(problems("docs/re/oracle-measuring.md", "`trace N NAME mem` also writes `NAME.mem`"), [])
+        self.assertEqual(problems("docs/re/hud.md", "also writes `NAME.mem`"), [1])
+
+    def test_distro_locations_are_rejected_outside_install_sections(self) -> None:
+        for text in ("`/usr/bin/azahar` (Arch package 1:2126.2-1)", "/usr/src/debug/azahar/x", "sudo pacman -S build-essential"):
+            self.assertEqual(problems("docs/re/oracle-setup.md", text), [1], text)
+            self.assertEqual(problems("CLAUDE.md", text), [1], text)
+            self.assertEqual(problems("README.md", text), [], text)
+            self.assertEqual(problems("docs/getting-started.md", text), [], text)
+            self.assertEqual(problems("docs/building.md", text), [], text)
+        self.assertEqual(problems("docs/commands.md", "an Azahar build with the RPC server"), [])
+
+    def test_machine_phrases_and_user_names_only_warn(self) -> None:
+        def warned(name, text):
+            return [number for number, _, _ in check_local_data.warnings(name, text)]
+
+        self.assertEqual(warned("docs/re/oracle.md", "ok\nMeasured (This machine, software)"), [2])
+        self.assertEqual(warned("docs/re/x.md", "the user's own Azahar save"), [1])
+        self.assertEqual(warned("docs/commands.md", "this machine"), [])
+        self.assertEqual(warned("docs/building.md", "ask jan or zJanny"), [1])
+        self.assertEqual(warned("README.md", "clone https://github.com/zJanny/Project.git"), [])
+        self.assertEqual(warned("README.md", "written by zJanny"), [1])
+        self.assertEqual(warned("LICENSE", "jan"), [])
+        self.assertEqual(warned("tools/progress_trend.py", "MONTHS = ('Jan', 'Feb')"), [])
+        self.assertEqual(problems("docs/building.md", "ask jan or zJanny"), [])
+
+    def test_loaded_state_must_be_saved_by_a_committed_script(self) -> None:
+        def hits(name, text, created=frozenset({"gameplay-start"})):
+            return [number for number, _, _ in check_local_data.violations(name, text, created)]
+
+        self.assertEqual(hits("docs/re/x.md", "ok\nloaded with `--state street-after-1-1` here"), [2])
+        self.assertEqual(hits("tests/a_test.cpp", "// loadstate some-state"), [1])
+        self.assertEqual(hits("src/a.cpp", "// --state a-b-c"), [1])
+        self.assertEqual(hits("docs/commands.md", "--state gameplay-start and --state NAME and loadstate the"), [])
+        self.assertEqual(hits("docs/commands.md", "`loadstate` refuses a state; after loadstate the frame counter"), [])
+        self.assertEqual(hits("tools/oracle/a.txt", "loadstate some-state"), [])
+        self.assertEqual(hits("tests/test_azahar_oracle_launch.py", "oracle.loadstate('some-state')"), [])
+
+    def test_created_states_come_from_savestate_lines_of_the_scripts(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+            (root / "tools" / "oracle").mkdir(parents=True)
+            (root / "tools" / "oracle" / "make.txt").write_text("frames 2\nsavestate made-here\n")
+            (root / "docs").mkdir()
+            (root / "docs" / "a.md").write_text("--state made-here\n--state other-state\n")
+            subprocess.run(["git", "add", "tools", "docs"], cwd=root, check=True)
+            errors = check_local_data.check(root)
+            self.assertEqual(len(errors), 1)
+            self.assertTrue(errors[0].startswith("docs/a.md:2: "))
+
+    def test_warnings_do_not_fail_the_run(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+            (root / "docs" / "re").mkdir(parents=True)
+            (root / "docs" / "re" / "x.md").write_text("measured on this machine\n")
+            subprocess.run(["git", "add", "docs"], cwd=root, check=True)
+            self.assertEqual(check_local_data.check(root), [])
+            self.assertEqual(len(check_local_data.check_warnings(root)), 1)
+            result = subprocess.run([sys.executable, str(Path(check_local_data.__file__)), "--root", str(root)],
+                                    capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0)
+            self.assertIn("1 warning(s)", result.stdout)
 
     def test_check_runs_on_tracked_files(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

@@ -2,9 +2,7 @@
 
 Commands for the extraction tools, converters and programs, on Linux. For build and test setup, see [Building](building.md).
 
-Let `CCI` be the image file name in the repository root:
-
-`LEGO City Undercover - The Chase Begins (Europe) (En,Fr,De,Es,It,Nl,Pt,Da,Ru).cci`
+Let `CCI` be the path of your image file, for example `path/to/game.cci`.
 
 ## Extraction and conversion
 
@@ -27,8 +25,8 @@ See [Extracting game data](extracting-game-data.md) for details.
 ```sh
 python3 -m unittest discover -s tests -p 'test_*.py' -v
 python3 -m unittest discover -s tests -p 'test_*.py' -k test_hash_corruption
-ctest --test-dir build -j"$(($(nproc) - 1))" --output-on-failure            # all tests, about one and a half minutes
-ctest --test-dir build -j"$(($(nproc) - 1))" -LE slow --output-on-failure   # without the slow tests, about half a minute
+ctest --test-dir build -j"$(nproc)" --output-on-failure            # all tests, about one and a half minutes on a recent 8-core machine
+ctest --test-dir build -j"$(nproc)" -LE slow --output-on-failure   # without the slow tests, about half a minute on the same machine
 ```
 
 - Tests with the label `slow` run for more than about 5 seconds each. They are listed at the end of `CMakeLists.txt`. Run them before every commit that ends a piece of work.
@@ -150,9 +148,9 @@ The table lists some of the tests. `ctest --test-dir build -N` lists all of them
 | `no-inline-shaders` | Fails when a `.cpp`, `.hpp` or `.h` file under `src/` contains shader code. Shaders live only in `.glsl` files under `src/render/shaders/` (see `CLAUDE.md`) |
 | `gl-only-in-render` | Fails when a `.cpp`, `.hpp` or `.h` file under `src/` outside `src/render/` contains an OpenGL call, `<epoxy/gl.h>`, a GL type or a GL constant. Rendering code goes into `src/render/` behind plain-type headers (see `CLAUDE.md`). `gl-only-in-render-rejects` checks that the guard fails on the bad file in `tests/gl_only_in_render/` |
 | `game-cpp-wiring` | Fails when `src/game.cpp` has more than 400 lines. That file only wires features together. New game logic goes into its own file under `src/runtime/` (see `CLAUDE.md`) |
-| `no-local-data` | Fails when a tracked text file names data that exists on one machine only (`tools/check_local_data.py`): an `artifacts/` folder other than the ones the documented extraction creates, an emulator folder under `azahar-emu`, or a `/home/<name>/` path. Each hit is printed as `file:line` with the fix: write the value into the test or the `docs/re` entry with its provenance. A few files that describe the oracle tool's own output folders are exempt in the tool. Run it alone with `python3 tools/check_local_data.py`. |
+| `no-local-data` | Fails when a tracked text file names data that exists on one machine only (`tools/check_local_data.py`): an `artifacts/` folder other than the ones the documented extraction creates, an emulator folder under `azahar-emu`, a `/home/<name>/` path, the name of an agent's output folder or of a `.mem` trace file, a distro package location outside the install sections, or `--state NAME` / `loadstate NAME` in a doc, test or source file where no committed script saves that state. It only warns (exit code 0) about wording such as "this machine" in `docs/re` and user names. Each hit is printed as `file:line` with the fix: write the value into the test or the `docs/re` entry with its provenance. A few files that describe the oracle tool's own output folders are exempt in the tool. Run it alone with `python3 tools/check_local_data.py`. |
 | `test-labels` | Fails when a test that needs the game data (its command names the RomFS folder, it skips with code 77, or it shares a fixture with such a test) lacks the label `needs-game-data` (`tools/check_test_labels.py`) |
-| `doc-links` | Checks the documentation rules (`tools/check_doc_links.py`). It fails on a broken link or anchor, a dated entry without an anchor, a `docs/re/` or `docs/design/` file over 40 KB, a feature file over 16 KB, a feature index row missing, duplicated, over 300 characters or after a table without a blank line, an item line with fields out of order, a timestamp in the future, an item or stand-in ID defined twice in a feature and its closed file, a feature file without a row in the feature index (or a closed-items file with one), more than 20 entry lines in the session log, `CLAUDE.md` over 22 KiB, or a correction that is not marked at both ends. It also checks the user docs (`docs/*.md` outside the subfolders, and `README.md`) against the code (`tools/user_docs.py`): it fails when a command-line option in `src/` or a `chase-*` program of `CMakeLists.txt` is named in no user doc, when a user doc names an option or `chase-*` program that does not exist, or when a user doc names a `tools/`, `src/`, `tests/` or `docs/` path that does not exist. It warns about a new `:00` timestamp. `--fix` also moves entries with a `Superseded by` line to `docs/re/<topic>.history.md`. Add `--fix` to repair anchors and links, move closed items (`- [x]`) to `<feature>.closed.md` and move session log lines beyond the newest 20 to `docs/plans/<plan>.progress-archive.md`. |
+| `doc-links` | Checks the documentation rules (`tools/check_doc_links.py`). It fails on a broken link or anchor, a dated entry without an anchor, a `docs/re/` or `docs/design/` file over 40 KB, a feature file over 16 KB, a feature index row missing, duplicated, over 300 characters or after a table without a blank line, an item line with fields out of order, a timestamp in the future, an item or stand-in ID defined twice in a feature and its closed file, a feature file without a row in the feature index (or a closed-items file with one), more than 20 entry lines in the session log, `CLAUDE.md` over 23 KiB, or a correction that is not marked at both ends. It also checks the user docs (`docs/*.md` outside the subfolders, and `README.md`) against the code (`tools/user_docs.py`): it fails when a command-line option in `src/` or a `chase-*` program of `CMakeLists.txt` is named in no user doc, when a user doc names an option or `chase-*` program that does not exist, or when a user doc names a `tools/`, `src/`, `tests/` or `docs/` path that does not exist. It warns about a new `:00` timestamp. `--fix` also moves entries with a `Superseded by` line to `docs/re/<topic>.history.md`. Add `--fix` to repair anchors and links, move closed items (`- [x]`) to `<feature>.closed.md` and move session log lines beyond the newest 20 to `docs/plans/<plan>.progress-archive.md`. |
 | `particles-core` | Particle emitters and particles on made-up definitions: start limits, creation with sub-steps, step, bounce, ageing and stop, quad corners, uv and near fade; no game data needed |
 | `debris-core` | Brick debris: bursts, flight, bounce, rest, blink and reuse of the records, the distance fade, the wall plane, the prop burst values, the white flash material, and a replay of eleven oracle bricks of a van contact and a lamp post; no game data needed |
 | `debris-pickup` | Pickup of super debris bricks: the pickup test and skip counter, the magnet and collected states, the add to the super brick count and 10 studs, the oracle's 30 and 31 update cycle, the HUD pending add; no game data needed |
@@ -284,7 +282,17 @@ build/chase-viewer --screenshot out.bmp --cutscene csdata/models/1_1_a --level l
 
 ## Original game in the emulator (oracle)
 
-Needs the Azahar 3DS emulator in `PATH`, and Xvfb for `--display xvfb`. It runs your own game copy without a window, so developers can compare our code with the original game. It uses the only `.cci` file in the repository folder. Pass `--image FILE` if there are several.
+It runs your own game copy without a window, so developers can compare our code with the original game. It uses the only `.cci` file in the repository folder. Pass `--image FILE` if there are several.
+
+Requirements (only for this tool):
+
+- The Azahar 3DS emulator as `azahar` in `PATH`. The tool was written and tested with version 2126.2; other versions are untested.
+- For `--rpc` and `--rpc-input`: an Azahar build with the RPC server compiled in (CMake option `ENABLE_SCRIPTING`). Many packaged builds (AppImage, Flatpak, distribution packages) may not have it. Without it the tool stops after about a minute with a message that names the missing RPC server.
+- A build with Cemuhook UDP support, which the virtual motion and touch input use.
+- Xvfb, for `--display xvfb` (needed for save states).
+- The libraries `libX11.so.6` and `libXtst.so.6`, which the tool uses to press the emulator hotkeys for save states.
+- Working OpenGL (for example Mesa) inside Xvfb, for `--renderer opengl`.
+- Free local UDP ports: `--port` (default 24690), the motion port (`--port` plus 1000) and, for `--rpc`, the fixed port 45987. The tool picks free X displays among `:90` to `:199`.
 
 ```sh
 python3 tools/azahar_oracle.py tools/oracle/boot.txt
@@ -311,6 +319,7 @@ python3 tools/azahar_oracle.py my-test.txt --display xvfb --renderer opengl --st
 ```
 
 - `savestate NAME` and `loadstate NAME` are steps in the script file. States are stored in `artifacts/oracle/states/` and survive `--fresh`.
+- Only `gameplay-start` (made by `tools/oracle/to-gameplay.txt`) and the states that other committed scripts save can be rebuilt by running a script. A script that loads any other state needs a state that you record yourself at the matching point of the game (play there and save with `savestate NAME` or the emulator's quick save).
 - Each saved state remembers whether it was made in New 3DS mode. `loadstate` refuses a state from the other mode and asks you to start a new emulator with `--state NAME`.
 - Loading takes about 15 seconds. Right after a start the emulator may refuse for a few seconds. The tool retries by itself.
 - `--keep` leaves the emulator running after the script. `--attach` connects to it later (no game image needed). `--stop` closes it. Frame numbers start at 0 on every attach.
@@ -334,7 +343,7 @@ python3 tools/azahar_oracle.py measure.txt --display xvfb --state gameplay-start
 - Screenshots take well under a second instead of about 11 seconds.
 - `sample SECONDS INTERVAL NAME` lets the game run freely and writes the game clock, the screen counters and the player position to `NAME.csv` at the given interval.
 - `--rpc-input` presses buttons without stopping the game on every frame. It changes one instruction of the game in memory while the tool runs. The tool restores it before it leaves a kept emulator.
-- Only one emulator at a time can use `--rpc`, because it always uses the UDP port 45987. The tool stops with a message if that port is taken.
+- Only one emulator at a time can use `--rpc`, because it always uses the UDP port 45987. The tool stops with a message if that port is taken. Developers who share one machine cannot use `--rpc` at the same time.
 - Without `--rpc` the tool works as before.
 
 ### Motion input

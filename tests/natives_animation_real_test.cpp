@@ -85,7 +85,7 @@ int main(int argc, char** argv) {
         {
             // 1-1_VanBreakdown ends with PlayCharAnim(1-1_AI_DonutLady, "postboxstuck_idle_minifig", "Class_generic", 1): the driver gets
             // a looping play; the clip has 42 frames and joint table bit 29, the length and end frame of the original's slot
-            // (oracle m11-3-repair-van-marker, slot 0x08a6f460: end 42, mode 1 with bit 13; docs/re/script-natives-animation.md).
+            // (oracle the save state in front of the broken van of mission 1-1, slot 0x08a6f460: end 42, mode 1 with bit 13; docs/re/script-natives-animation.md).
             struct Recorder : runtime::AnimationDriver {
                 std::vector<runtime::AnimationPlay> plays;
                 void play(const runtime::AnimationPlay& play) override { plays.push_back(play); }

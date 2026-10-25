@@ -8,7 +8,7 @@ Chase's punch on foot: the button, the combat action states, the target search, 
 - The ground action handler 0x20b984 ends in 0x1fdbd4, which takes the tap edge (button test 0x210b50 mode 0) and calls 0x214f40. That function requests state 0xa3, or 0xa4 when 0xa3 is already running (`GOCSCombat_CombatActionState` / `...RepeatState`, objects 0x5152c8 / 0x5152dc, vtable 0x363d88: enter 0x307e7c, update 0x3085dc, exit 0x3084f4). Chase also punches without a target. [§2026-10-18T19:59:57](#ts-20261018-195957)
 - Target: 0x219c08 (range ctrl+0x80 = 2.2, angle *0x372e44 = 90 degrees, along the stick heading or the facing) picks the lowest score of 0x21a1d8, len x (1.25 - cos) x 2 x weight, among entities that pass 0x21a2d4. The candidate's half width and depth beyond the player's are added to the range. The running attack (state 2 with the stick) uses 1.5 x the range. [§2026-10-18T19:59:57](#ts-20261018-195957)
 - Clips (0x18d15c): variant 0 plays 0x7a + combo index (combo_1, combo_2, combo_3, row 125 "combo_1"). The index counts up to the record's combo length 4 and is reset when the attack ends. The running variant 3 plays 0x7e. [§2026-10-18T19:59:57](#ts-20261018-195957)
-- Timing (oracle, m12-table-before):
+- Timing (oracle, the save state in front of the table of mission 1-2):
   - combo_1 lasts 14 updates; the facing turns toward the target heading ctrl+0xa with the 0.3 rule of 0x1f3f1c.
   - The root step is 0.07548 per update from the second update on, along ctrl+0xa (track 0xdcd633e2).
   - The hit comes when the clip passes the key of track 0xb684fd50: update 5, 5 and 4 of combo_1, combo_2 and combo_3.
@@ -27,7 +27,7 @@ Chase's punch on foot: the button, the combat action states, the target search, 
 
 <a id="ts-20261018-195957"></a>
 
-## 2026-10-18T19:59:57+02:00 — The attack on foot: Y tap, states 0xa3 / 0xa4, target search, hit test and messages (REA, objdump, Azahar GDB traces of m12-table-before)
+## 2026-10-18T19:59:57+02:00 — The attack on foot: Y tap, states 0xa3 / 0xa4, target search, hit test and messages (REA, objdump, Azahar GDB traces of the save state in front of the table of mission 1-2)
 
 Corrected by [player-attack.md §2026-10-19T08:03:14+02:00](#ts-20261019-080314): the root step of the combo clips comes from the extra joint curve (joint 21), not from the sub-animation track 0xdcd633e2; the values are equal.
 
@@ -37,7 +37,7 @@ Corrected by [player-attack.md §2026-10-19T12:54:52](#ts-20261019-125452): the 
 
 - REA (Ghidra 12.1.2) pseudocode: 0x200354 (labelled FUN_0026be04), 0x1bb690, 0x1fdbd4, 0x210b50 with its table *0x377554 (filled at 0x17560c: mode 0 = 0x25d504 edge test of ctrl+0xe, mode 1 0x25d530, mode 2 0x25d58c), 0x2106d8, 0x21a1d0, 0x2108c0, 0x1b7358, 0x219b80, 0x245b00, 0x21e798, 0x214f40 (objdump), 0x307e7c, 0x3084f4, 0x319ffc, 0x3204dc, 0x18d15c, 0x2a39a8, 0x21a2d4, 0x219990, 0x1e740c, 0x2253a8, 0x205fbc, 0x1fa7e0, 0x219c08, 0x1f7f28, 0x21a1d8, 0x23d4c0, 0x22103c, 0x23de70, 0x2507dc, 0x275c00, 0x244fc8, 0x20cd30, 0x2c9770, 0x2b01e4, 0x1f3f1c, 0x1ff030.
 - llvm-objdump (`--triple=armv6k --mattr=+vfp2`): 0x3085dc (no Ghidra function), 0x214f40, 0x20b984..0x20bca0, 0x2833a0, 0x32b900, the state object init 0x34c7f0..0x34c934 (names `GOCSCombat_AnimationFinished`, `GOCSCombat_AnimationEvent`, `Combat Move Event`, `GOCSCombat_CombatActionState`, `GOCSCombat_CombatActionRepeatState`), 0x257e78, 0x257ea0, 0x257f14, 0x20e968, 0x21a73c.
-- Oracle: the user's state `m12-table-before`. Own emulator: port 24731, own home, OpenGL, no RPC, dt fixed at 1/30. Scenarios (committed):
+- Oracle: the save state in front of the table of mission 1-2. Own emulator: port 24731, own home, OpenGL, no RPC, dt fixed at 1/30. Scenarios (committed):
   - `tools/oracle/attack-tap.txt` (run atap): Y held one update, trace with memory.
   - `attack-tap-ctrace.txt`: ctrace of 0x2414b4 and 0x214f40.
   - `attack-tap-hit.txt` and `attack-combo-hit.txt`: traps of the wobbly handler 0x2a3390.

@@ -40,8 +40,8 @@ int main(int argc, char** argv) {
     const std::vector<BulletBox> boxes = levelVehicleBoxes(model);
     const WheelRay ray = [&world](const Vector3& from, const Vector3& to) { return castWheelRay(world, from, to); };
     // Rigid +0x34 of the sleeping bodies: agent A round 14, Azahar RPC heap reads two seconds after loadstate without input. FP_Vehicle_03, 04 and 05:
-    // state street-after-1-1; the police car: the simulated body (flags 0x102, mode 2) of state m11-2-patrol-car. FP_Vehicle_03 also equals
-    // hitP4.mem update 26 (agent VEH7).
+    // save state outside the police station after mission 1-1; the police car: the simulated body (flags 0x102, mode 2) of save state in front of the police car of mission 1-1. FP_Vehicle_03 also equals
+    // trace hitP4 update 26 (agent VEH7).
     struct Rest {
         const char* record;
         const char* instance;

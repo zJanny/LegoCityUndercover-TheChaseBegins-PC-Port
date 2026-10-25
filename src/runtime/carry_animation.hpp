@@ -23,7 +23,7 @@ constexpr const char* kCarryHandleNode = "carryhandle";
 
 // The track whose value changes send the player message 39 with kind 0 (0x1d5ec0, also for track 0xc3fcea91); the player's handler hands kind 0 to the
 // state hook as event type 0 (0x18f278 -> 0x21e1d4). The pickup hook 0x2ce4a4 attaches at its rise, the drop and put-down hooks release at its first event
-// (oracle m11-8-donuts-in-hand and m11-9-delivery-goal, docs/re/carrying-animation.md).
+// (oracle the save state carrying the donut box in mission 1-1 and the save state in front of the donut delivery target of mission 1-1, docs/re/carrying-animation.md).
 constexpr std::uint32_t kCarryEventTrackHash = 0x98d31b7e;
 
 // The role records of the animation table (tablesanimations sheet 2, 0x219614): one record per role with seven ids [default, v1..v6].

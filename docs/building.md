@@ -8,7 +8,7 @@
 - SDL2, found through pkg-config.
 - libepoxy, which is needed only for the [model viewer](model-viewer.md) and the [development runtime](commands.md#development-runtime). Without it, both are not built.
 - FFmpeg (libavformat, libavcodec, libswscale, libswresample, libavutil), which is needed for the [video player](fmv-player.md), `chase-frontshot` and the [development runtime](game-runtime.md), which plays the movies of the start screens. Without it, these are not built.
-- Optional, only for the [emulator comparison tool](commands.md#original-game-in-the-emulator-oracle): the Azahar 3DS emulator and Xvfb.
+- Optional, only for the [emulator comparison tool](commands.md#original-game-in-the-emulator-oracle): the Azahar 3DS emulator (version 2126.2 tested; `--rpc` needs a build with the RPC server), Xvfb, `libX11` and `libXtst`. The [requirements list](commands.md#original-game-in-the-emulator-oracle) has the details.
 
 ## Build
 
@@ -16,7 +16,7 @@ Run these commands from the repository folder:
 
 ```sh
 cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo
-cmake --build build -j"$(($(nproc) - 1))"
+cmake --build build -j"$(nproc)"
 ```
 
 The programs are written to `build/`. The build also makes `libchase_assets_c.so`, which the unpacking and conversion tools use (see [Extracting game data](extracting-game-data.md)). Build the project before you run them.
@@ -25,7 +25,7 @@ The programs are written to `build/`. The build also makes `libchase_assets_c.so
 
 ```sh
 cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCHASE_BUILD_TESTS=OFF
-cmake --build build -j"$(($(nproc) - 1))"
+cmake --build build -j"$(nproc)"
 ```
 
 - This skips every test program and every CTest test, so the build is shorter.
@@ -34,8 +34,8 @@ cmake --build build -j"$(($(nproc) - 1))"
 ## Check that everything works
 
 ```sh
-ctest --test-dir build -j"$(($(nproc) - 1))" --output-on-failure            # all tests, about one and a half minutes
-ctest --test-dir build -j"$(($(nproc) - 1))" -LE slow --output-on-failure   # without the slow tests, about half a minute
+ctest --test-dir build -j"$(nproc)" --output-on-failure            # all tests, about one and a half minutes on a recent 8-core machine
+ctest --test-dir build -j"$(nproc)" -LE slow --output-on-failure   # without the slow tests, about half a minute on the same machine
 python3 -m unittest discover -s tests -p 'test_*.py' -v
 ```
 

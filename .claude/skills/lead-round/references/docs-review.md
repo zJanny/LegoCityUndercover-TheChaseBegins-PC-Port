@@ -70,8 +70,8 @@ The lead gives you the worktree, the branch, the worker's brief and the worker's
 **Census and oracle docs** (`linux-port`)
 
 - **Natives:** if the branch touched script natives, the census row in `docs/re/script-natives-census.md` was edited in place. The row's note holds its state, item IDs and links, never findings.
-- **New save states:** recorded in the local catalogue `artifacts/oracle/states/README.md` (not committed) with their game progress; a finding that relies on one says in words how to reach the equivalent game point.
-- **No local-only data** (CLAUDE.md "No local-only data in the repo"): no path to a state, trace, home, scratch, report or save in a committed file, no value cited only by file, no picture without a description in words, no generated file staged. `no-local-data` checks the paths.
+- **New save states:** recorded in the local catalogue `artifacts/oracle/states/README.md` (not committed) with their game progress; no committed file names one; a finding says "recorded from a save state" and describes the game situation in game terms.
+- **No local-only data** (CLAUDE.md "No local-only data in the repo"): no path to a state, trace, home, scratch, report or save in a committed file, no value cited only by file, no picture without a description in words, no generated file staged. `no-local-data` checks the paths. Also: no output-folder or scratch file name in provenance (`agent...-out`, `*.mem`, `*.png`); no save state named, with its slot or how it was reached (round/agent, date, command and "recorded from a save state" instead); no distro, package, user name, machine timing or "this machine" wording; user docs list requirements (emulator version and build options, libraries), not what the author installed. Run `python3 tools/check_local_data.py` and report its warnings.
 
 **Project files**
 

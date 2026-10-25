@@ -66,13 +66,13 @@ Unknowns:
 
 <a id="ts-20261019-183011"></a>
 
-## 2026-10-19T18:30:11+02:00 — The dog of `1_2_c` was overwritten by its own clip and the dog truck lacked its node matrix (user playtest; port screenshots, level and model data through the C++ loaders, Azahar OpenGL RPC shots from `m12-13-cage-trigger` port 45683; no code read, REA not used)
+## 2026-10-19T18:30:11+02:00 — The dog of `1_2_c` was overwritten by its own clip and the dog truck lacked its node matrix (user playtest; port screenshots, level and model data through the C++ loaders, Azahar OpenGL RPC shots from the save state at the dog cage trigger of mission 1-2 port 45683; no code read, REA not used)
 
 Corrected by [models.md §2026-10-19T19:24:18](models.md#ts-20261019-192418): the original skins the vertices first and applies the node matrix after (model draw 0x205160, vertex program 0); the port now does so for every model.
 
 Answers [playtests.md §2026-10-19T17:56:41](playtests.md#ts-20261019-175641) (dog invisible, dog truck in the ground).
 
-**Reference (oracle).** From `m12-13-cage-trigger` with A held, `shotloop` took 904 pictures of the release and `1_2_c`: the dog truck stands on the pavement with all four wheels visible, the brown dog jumps out of its rear door and stands beside Chase, then the heart frame closes the scene. (Pictures are not committed.)
+**Reference (oracle).** From the save state at the dog cage trigger of mission 1-2 with A held, `shotloop` took 904 pictures of the release and `1_2_c`: the dog truck stands on the pavement with all four wheels visible, the brown dog jumps out of its rear door and stands beside Chase, then the heart frame closes the scene. (Pictures are not committed.)
 
 **Dog.** The cutscene bound and posed the placed prop `1-2_Dog` correctly (matrix and 19 skin matrices per update), but `LevelSession::updatePropAnimations` runs after `InEngine::update` in the same update and posed the prop's own animation (and its moved node, `1-2_Dog_Position_End` at 730.328 31.599 645.549, 15 m away) over it; at the draw the instance stood at 730.328 31.5987 645.549 for the whole cutscene. The port now skips the pose and node of a prop that a cutscene holds (`src/game_animals.cpp`, log line `prop 1-2_dog: its own animation is not shown while a cutscene holds it`); the clip clock still runs (LEVOBJ-110). The cutscene's own `dog.bfnmdl` is a 49-byte stub without a mesh, so the level prop is the only dog model; its posed bounds (skin of the clip at frames 0, 100, 300) are a normal 1.5 m dog, no NaN.
 

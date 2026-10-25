@@ -1,6 +1,6 @@
 // Hop of the unbuilt bricks (src/runtime/buildit_wobble.cpp). The start values and the expected rows are the brick records (+0 amplitude,
 // +4 speed, +8 phase, +0xc offset) of 1-1_BI_DonutVanParts read in the oracle after every update with the player standing in the use zone, state
-// m11-4-van-parts, 40 updates idle (command `memtrace 40 brick 0x08e114e0:0x558 ...`, docs/re/buildit.md, entry "Hop of the unbuilt bricks").
+// the save state in front of the donut van parts build-it of mission 1-1, 40 updates idle (command `memtrace 40 brick 0x08e114e0:0x558 ...`, docs/re/buildit.md, entry "Hop of the unbuilt bricks").
 #include "runtime/buildit_wobble.hpp"
 #include <cmath>
 #include <cstdlib>

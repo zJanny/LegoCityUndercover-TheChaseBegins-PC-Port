@@ -101,7 +101,7 @@ struct ParticleStandIns {
 class ParticleSystem {
 public:
     // `defs` is copied: the spawner shortens the particle count of a definition it uses. The game's init 0x1ed440 replaces the
-    // file header's emitter limit (10) with 25 (*0x376b84 in the oracle, 12 emitters alive in state in-vehicle).
+    // file header's emitter limit (10) with 25 (*0x376b84 in the oracle, 12 emitters alive in save state driving a traffic van after mission 1-1).
     ParticleSystem(const assets::ParticleDefs& defs, GameRandom& random, unsigned emitterLimit = kParticleEmitterLimit);
 
     ParticleStandIns standIns;

@@ -47,7 +47,7 @@ void pathCensus(const assets::Level& level) {
 }
 
 void policeEntryPoseMatchesTheOracle(const assets::Level& level) {
-    // Provenance: Azahar oracle, New 3DS state dcam-police-dialog, tools/oracle/dcam-police-entry.txt, update 4 of the press trace
+    // Provenance: Azahar oracle, New 3DS save state at the police station entrance with its question box open, tools/oracle/dcam-police-entry.txt, update 4 of the press trace
     // (the update on which Police_ExtToInt starts the director camera): the top camera stack entry's pose, floats exact.
     const assets::LevelPath* eye = runtime::findLevelPath(level, "Dcam_Enter_Station_Ground");
     const assets::LevelPath* look = runtime::findLevelPath(level, "Dcam_Enter_Station_Ground_Target");
@@ -63,7 +63,7 @@ void policeEntryPoseMatchesTheOracle(const assets::Level& level) {
 }
 
 void twoPointPathMatchesTheOracle(const assets::Level& level) {
-    // Provenance: Azahar oracle, state dcam-police-dialog with the script's path names overwritten by Dcam_Police_Door and
+    // Provenance: Azahar oracle, save state at the police station entrance with its question box open with the script's path names overwritten by Dcam_Police_Door and
     // Dcam_Police_Door_Target (tools/oracle/dcam-police-poked.txt, a measuring aid): eye of the stack entry at the updates
     // after the start (update 4 = elapsed 33 ms); 122 updates agree with the replica to 1.6e-4 (the pinned ones are exact floats).
     const assets::LevelPath* eye = runtime::findLevelPath(level, "Dcam_Police_Door");

@@ -1,5 +1,5 @@
 // Ladders of lvl_01_cherrytreehills (src/runtime/ladder.cpp): the kind 56 objects from the level data and replays of the oracle runs of
-// mission 1-3 (docs/re/player-traversal-ladders.md). All runs: New 3DS user state `m13-2-ladder` (Chase in front of 1-4_Ladder01), Azahar
+// mission 1-3 (docs/re/player-traversal-ladders.md). All runs: New 3DS save state in front of the crane ladder of mission 1-3 (Chase in front of 1-4_Ladder01), Azahar
 // without RPC on port 40401, scheduler step fixed to 1/30 (`dt 0.033333335 0.033333335`), rows are `trace N NAME mem` output of
 // round 40 agent A (x, y, z of the player node after each update; the three loads of the state agreed). The clip ladder_dismount
 // comes from the extracted RomFS; exits with 77 without it.

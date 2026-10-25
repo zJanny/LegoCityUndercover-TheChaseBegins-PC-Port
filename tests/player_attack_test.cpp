@@ -1,4 +1,4 @@
-// Tests of Chase's attack on foot (src/runtime/player_attack.*; docs/re/player-attack.md). Recorded values: Azahar oracle, state m12-table-before
+// Tests of Chase's attack on foot (src/runtime/player_attack.*; docs/re/player-attack.md). Recorded values: Azahar oracle, save state in front of the table of mission 1-2
 // (the user's, mission 1-2), own emulator without RPC, fixed dt 1/30, scenarios tools/oracle/attack-tap.txt (run atap), attack-variants.txt (runs
 // ahold3, ahold12, acombo10, acombo3 and the memory reads), attack-record.txt (run aaway), attack-tap-hit.txt and attack-combo-hit.txt (traps of
 // the wobbly handler 0x2a3390); joint channel values of combo_1: decodeChannels over the extracted clip, 2026-10-18 (docs/re/skeleton-animation.md). Rows count updates after the load like the trace files (the Y press is held in row 6). Exits with 77 without data.
@@ -162,7 +162,7 @@ void table(const Session& session) {
             const float expected = k == 1 ? 0.0f : 0.07548f;
             rootOk = rootOk && std::fabs(std::hypot(step.deltaX, step.deltaZ) - expected) < 5e-5f;
         }
-        if (k == 1) expect(attack.target() && *attack.target() == session.table, "the tap from the m12-table-before spot targets DonutTable_14 (ctrl+0x140 = 0x08c99320)");
+        if (k == 1) expect(attack.target() && *attack.target() == session.table, "the tap from the save state in front of the table of mission 1-2 spot targets DonutTable_14 (ctrl+0x140 = 0x08c99320)");
         if (k == 1) expect(motion.lastIntent == 934, "the target heading ctrl+0xa is 934 (atap row 9)", motion.lastIntent);
         motion.x += step.deltaX;
         motion.z += step.deltaZ;

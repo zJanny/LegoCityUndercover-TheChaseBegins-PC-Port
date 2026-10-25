@@ -34,7 +34,7 @@ struct HitMessage {
 };
 
 // The vehicle's message 0 of the smash pass 0x275e74: damage 100, byte +0x14 = 11, the vehicle (kind 183) as sender. 0x245b00 is false for it:
-// kind 183 is neither 27 nor 149 nor in the character-kind table, and its entity word +0xc has no bit 14 (oracle, veh-smash-prop).
+// kind 183 is neither 27 nor 149 nor in the character-kind table, and its entity word +0xc has no bit 14 (oracle, the save state in a police van in front of a lamp post).
 HitMessage vehicleSmashMessage();
 
 enum class HitOutcome {

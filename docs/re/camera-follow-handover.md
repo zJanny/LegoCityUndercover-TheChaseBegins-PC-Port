@@ -14,7 +14,7 @@ How the follow controller (0x2a8bfc, camera system object K at 0x589a70) takes o
 
 <a id="ts-20261015-112028"></a>
 
-## 2026-10-15T11:20:28+02:00 — Follow take-over: seed, near rule, filter ramp (CAMERA-9; llvm-objdump and REA Ghidra 12.1.2 pseudo code, Azahar GDB memtrace and trap on `street-after-1-1`, no pokes, no RPC)
+## 2026-10-15T11:20:28+02:00 — Follow take-over: seed, near rule, filter ramp (CAMERA-9; llvm-objdump and REA Ghidra 12.1.2 pseudo code, Azahar GDB memtrace and trap on the save state outside the police station after mission 1-1, no pokes, no RPC)
 
 Evidence IDs: reset 0x2313c8 ev_a5c17128…, follow update 0x2e0bf0 ev_30040f4a…, pitch clamp 0x2e0a50 ev_ff0bd884…, line test 0x22b108 ev_d373d25b…, strategy update 0x3310d0 ev_7c08f084…. Resolves the unknowns of [camera-records-blending.md §2026-10-14T12:07](camera-records-blending.md#ts-20261014-120746) (seed, reaction to a jump, factor ramp). Scenarios: `tools/oracle/camera-street-seed.txt` and `camera-street-near.txt` (the teleports are measuring aids), converter `tools/export_camera_blend_trace.py --layout seed`; test `camera-blend-real-data` (street_out, street_seed_far, street_near_n / e / ne).
 

@@ -11,11 +11,11 @@ Reverse-engineering findings. Entries are chronological. Addresses are for the E
 
 <a id="ts-20261019-144455"></a>
 
-## 2026-10-19T14:44:55+02:00 — 0x2bf830: downsample, blur tables and the final add (REA, llvm-objdump, oracle m12-8-roof-sound-scanner)
+## 2026-10-19T14:44:55+02:00 — 0x2bf830: downsample, blur tables and the final add (REA, llvm-objdump, oracle the save state on the roof at the sound scanner trigger of mission 1-2)
 
 ### Method
 
-REA (Ghidra 12.1.2) pseudocode of 0x2bf830, 0x23c3f4, 0x128dc8, 0x1f46a0, 0x1f45d0, 0x254350, 0x12d780, 0x1a3888 and 0x303e78; callers by REA and a search of the llvm-objdump listing; the stage-table layout read from 0x128dc8 (modes 9 and above copy `count x 0x18` bytes from `0x5957fc + mode * 0x94`). Oracle: state `m12-8-roof-sound-scanner` entered with A (OpenGL, `--rpc --rpc-input`, port 45652): `read` of the tables below, then screenshots with the glow on, with the literal 0x2e50c8 (p1) poked to 0, and with 0x2e50c4 (p2) poked to 0, 0.7 and 1.4 (p1 = 0.6). Screenshots are in the agent's scratch folder, not committed.
+REA (Ghidra 12.1.2) pseudocode of 0x2bf830, 0x23c3f4, 0x128dc8, 0x1f46a0, 0x1f45d0, 0x254350, 0x12d780, 0x1a3888 and 0x303e78; callers by REA and a search of the llvm-objdump listing; the stage-table layout read from 0x128dc8 (modes 9 and above copy `count x 0x18` bytes from `0x5957fc + mode * 0x94`). Oracle: save state on the roof at the sound scanner trigger of mission 1-2 entered with A (OpenGL, `--rpc --rpc-input`, port 45652): `read` of the tables below, then screenshots with the glow on, with the literal 0x2e50c8 (p1) poked to 0, and with 0x2e50c4 (p2) poked to 0, 0.7 and 1.4 (p1 = 0.6). Screenshots are in the agent's scratch folder, not committed.
 
 ### The passes
 
@@ -28,10 +28,10 @@ REA (Ghidra 12.1.2) pseudocode of 0x2bf830, 0x23c3f4, 0x128dc8, 0x1f46a0, 0x1f45
 - Strength arguments: 0x2e4858 passes the literals 0x2e50c8 = 0.6 (p1) and 0x2e50c4 = 1.4 (p2) in the scanner branch (read from the ELF and in the oracle), and `[0x516410]` and the literal 0x2e50cc = 0.7 otherwise; the blend destination is `[0x516414]` (1). 0x516410 = 0.0 and 0x52ff94 = 0 in the scanner view. Nothing in the listing writes 0x516410 through an absolute reference (the one literal reader is 0x2e4f18); its writer is not found.
 - Second caller: 0x303e78 (a frame function with the same pass switch) calls 0x2bf830(*0x37594c, *0x375950, 1, 0, 0) in its case 5; the globals read 0.0 and 0.6 in the oracle in the scanner view, so the glow is off for that caller there. Which mode it belongs to is not identified.
 
-### Oracle pictures (m12-8, top screen, 400 x 240, overlay included)
+### Oracle pictures (the save state on the roof at the sound scanner trigger of mission 1-2, top screen, 400 x 240, overlay included)
 
 - Glow on against off (poke of 0x2e50c8 to 0): mean per channel 73.5 / 225.8 / 240.7 on and 67.2 / 177.6 / 219.7 off, mean delta (6.28, 48.21, 21.0). Setting p2 to 0, 0.7 or 1.4 with p1 = 0.6 gives means within 1.1 of each other (73.3 / 225.3 / 241.7, 73.4 / 225.6 / 240.9, 73.4 / 225.9 / 240.1): the second strength has no visible effect, so the blurred target's alpha is 0 and the add is `0.604 x T squared` (2 x 77 / 255). The regression of the green delta against the screen blurred with sigma 10 gives a ratio to T squared of 0.52 to 0.60 for T between 0.3 and 0.8.
-- Port (`chase-game` at the m12-8 spot, update 243, the zone forced usable for the picture, window 400 x 480): on (67.0, 224.7, 241.8), off (61.0, 175.1, 218.8), mean delta (5.95, 49.6, 23.0) against the oracle's (6.28, 48.21, 20.98). Sky pixel (20, 50): oracle off (66, 224, 255) and on (71, 255, 255), port off (66, 224, 255) and on (71, 255, 255); before the glow the port gave (64, 218, 255) against (74, 255, 255). The remaining differences of the means come from the picture without the glow (the overlay and the character of the original), not from the pass.
+- Port (`chase-game` at the save state on the roof at the sound scanner trigger of mission 1-2 spot, update 243, the zone forced usable for the picture, window 400 x 480): on (67.0, 224.7, 241.8), off (61.0, 175.1, 218.8), mean delta (5.95, 49.6, 23.0) against the oracle's (6.28, 48.21, 20.98). Sky pixel (20, 50): oracle off (66, 224, 255) and on (71, 255, 255), port off (66, 224, 255) and on (71, 255, 255); before the glow the port gave (64, 218, 255) against (74, 255, 255). The remaining differences of the means come from the picture without the glow (the overlay and the character of the original), not from the pass.
 
 Unknowns:
 - The vertex shader of program 2 (the texture coordinates of units 1 and 2 for modes 0xc / 0xd; the port assumes uv, uv + offset, uv - offset), the texture wrap mode of the blur sources (the port clamps to the edge) and the format of the targets (the port uses RGBA8).

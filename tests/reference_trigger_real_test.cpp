@@ -2,7 +2,7 @@
 // output of the kind table (loader call sites 0x233de8 and 0x23e84c, docs/re/script-triggers.md entry of 20261025-mission13-B) over the level
 // files, run by 20261025-mission13-B with `reference-trigger-real-test`; the AND-joins are the groups of references that share one TriggerObject
 // (all fires of one group, the three engine parts of 7-3). `DonutTable_14` has no entry: the oracle ctrace of the destroy chain (state
-// m12-table-before, five punches) shows 0x23211c(prop, 0, 1) raising no event (docs/re/props-wobbly-bouncer.md). Needs the extracted RomFS;
+// the save state in front of the table of mission 1-2, five punches) shows 0x23211c(prop, 0, 1) raising no event (docs/re/props-wobbly-bouncer.md). Needs the extracted RomFS;
 // exits with 77 without it.
 #include "assets/assets.hpp"
 #include "runtime/buildit_set.hpp"

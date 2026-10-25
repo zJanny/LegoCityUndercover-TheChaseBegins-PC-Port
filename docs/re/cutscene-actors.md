@@ -43,9 +43,9 @@ Unknowns:
 
 <a id="ts-20261015-105031"></a>
 
-## 2026-10-15T10:50:31+02:00 — MOVIE-21 comparison screenshots: cutscene `1_1_b` in the original and the port's `1-1_VanBreakdown` run (oracle `cutscene-1-1-b` with OpenGL and RPC screenshots; port `chase-game`; no code change; REA was not used)
+## 2026-10-15T10:50:31+02:00 — MOVIE-21 comparison screenshots: cutscene `1_1_b` in the original and the port's `1-1_VanBreakdown` run (oracle the save state at the end of the cutscene 1_1_b with OpenGL and RPC screenshots; port `chase-game`; no code change; REA was not used)
 
-- **Original.** `tools/azahar_oracle.py` with a scenario of `screenshot shot-movie21-orig-0`, `wait 2`, `screenshot shot-movie21-orig-2s`, and the options of the COLL-21 entry, with `--state cutscene-1-1-b`. Frames at 0 s and +2 s (400x480, not kept).
+- **Original.** `tools/azahar_oracle.py` with a scenario of `screenshot shot-movie21-orig-0`, `wait 2`, `screenshot shot-movie21-orig-2s`, and the options of the COLL-21 entry, with `loading the save state at the end of the cutscene 1_1_b. Frames at 0 s and +2 s (400x480, not kept).
 - **Port.** `build/chase-game --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes --call-script 1-1_VanBreakdown --frames N --window 400x480 --screenshot <scratch>/port-movie21-N.bmp` with N = 45, 100, 200. The frames are not kept.
 - **Side by side:** original 0 s, original +2 s, port 45, 100, 200 updates (not kept).
 - **Matches.** The same subtitle box and dialogue style; the 400x480 layout; the donut shop and the police garage appear as the level's own rooms.
@@ -59,9 +59,9 @@ Unknowns:
 
 <a id="ts-20261016-094039"></a>
 
-## 2026-10-16T09:40:39+02:00 — MOVIE-31: Chase drawn twice in the cutscene after the van drive was a port bug (port run of `game-van-escort`, oracle shots `m11-6b` of agent A, round 15; no new code read)
+## 2026-10-16T09:40:39+02:00 — MOVIE-31: Chase drawn twice in the cutscene after the van drive was a port bug (port run of `game-van-escort`, oracle shots of agent A, round 15; no new code read)
 
-- **Original.** The oracle shots of `m11-6-van-to-shop` (hold A, then the cutscene to its end, `r15-b/oracle/m11-6b_NNN.png`) show Chase once: standing right of the parked van, seen from behind; the donut seller runs in with the red box. This matches [the actor entry](#ts-20261015-075438): the actor is the player's own figure.
+- **Original.** The oracle shots of the save state driving the donut van to the shop in mission 1-1 (hold A, then the cutscene to its end) show Chase once: standing right of the parked van, seen from behind; the donut seller runs in with the red box. This matches [the actor entry](#ts-20261015-075438): the actor is the player's own figure.
 - **Port before the fix.** `chase-game --call-script 1-1_SO_VanFixed --start "866.0 52.0 691.0"` with the script of CTest `game-van-escort` (jump into the van, short drive, `at 820.0 18.5 1047.0`, the waypoint) showed two Chases for the whole cutscene 1_1_d. Cause: `1-1_VanEscorted` calls `VehicleJumpOut` and `PositionObject`; the placement runs `LevelSession::cancelBoardingByPlacement`, which showed the player figure again after the cutscene host had hidden it (MOVIE-S30), so the hidden original and the cast copy were both drawn.
 - **Fix.** `cancelBoardingByPlacement` leaves the figure hidden while a cutscene plays; the host shows it again when the cutscene ends. The cutscene host logs `cutscene NAME: N level figures drawn beside their cast copies` ten updates into every cutscene; `game-van-escort` expects 0 for 1_1_d. Port picture after the fix: one Chase beside the van and the seller's box (scratch only).
 
@@ -94,7 +94,7 @@ Unknowns:
 
 <a id="ts-20261016-143948"></a>
 
-## 2026-10-16T14:39:48+02:00 — Cutscene props: object tracks place the model nodes on the actor node (Azahar oracle, New 3DS, OpenGL, `--rpc`, state `leadcut-1_1_d-early` from `m11-6-van-to-shop`; RPC reads and `shotloop`; REA with Ghidra on 0x287ca4, 0x245b40, 0x250810)
+## 2026-10-16T14:39:48+02:00 — Cutscene props: object tracks place the model nodes on the actor node (Azahar oracle, New 3DS, OpenGL, `--rpc`, save state just before the cutscene 1_1_d from the save state driving the donut van to the shop in mission 1-1; RPC reads and `shotloop`; REA with Ghidra on 0x287ca4, 0x245b40, 0x250810)
 
 [Corrects §2026-10-16T14:05:18](#ts-20261016-140518) (the van of `1_1_d` was taken as posed 5.8 below the street with the rule unknown, and a model of its own was assumed to keep the identity transform before its first clip).
 

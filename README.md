@@ -20,7 +20,7 @@ The game data is never part of this repository. You need your own copy of the ga
 
 ![Progress trend](docs/progress-trend.svg)
 
-Updated 2026-10-25, commit f7a79f9f. How the numbers are measured: [docs/progress.md](docs/progress.md).
+Updated 2026-10-25, commit 81990c37. How the numbers are measured: [docs/progress.md](docs/progress.md).
 <!-- progress:end -->
 
 ## What you need
@@ -62,7 +62,7 @@ This installs the compiler, the build tool, Python and the libraries the game ne
 
 ```sh
 cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCHASE_BUILD_TESTS=OFF
-cmake --build build -j"$(($(nproc) - 1))"
+cmake --build build -j"$(nproc)"
 ```
 
 This compiles the program into the folder `build`. It takes a few minutes. At the end you should see `[100%] Built target chase-game`.
@@ -83,7 +83,7 @@ build/chase-game
 
 A window opens. It shows the start screens of the original game: logos, language list, slot list and the intro movie. After the title card the level starts, and you can move the main character. Press Escape to quit.
 
-The game saves at the same moments as the original (for example when the story saves or you collect a super brick). The file is `~/.local/share/chase/savegame.dat`; the terminal prints `save: request N written to ...` each time. To continue later, start from that file:
+The game saves at the same moments as the original (for example when the story saves or you collect a super brick). The file is `~/.local/share/chase/savegame.dat` (under `$XDG_DATA_HOME` if you set it); the terminal prints `save: request N written to ...` each time. To continue later, start from that file:
 
 ```sh
 build/chase-game --save ~/.local/share/chase/savegame.dat --slot 0

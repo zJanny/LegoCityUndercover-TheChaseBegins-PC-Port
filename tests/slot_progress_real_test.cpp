@@ -48,7 +48,7 @@ int main(int argc, char** argv) {
         require(save::levelIdForScene(levels, "LVL_01_CherryTreeHills") == 2u, "lvl_01 level id");
         require(!save::levelIdForScene(levels, "lvl_the_city") && !save::levelIdForScene(levels, "lvl_customisation"), "rows outside 1..8");
 
-        // Provenance: oracle state savecont-slotlist-user (docs/re/save-format.md, Continue entry): Continue on this save's
+        // Provenance: oracle save state at the slot list with a used slot (docs/re/save-format.md, Continue entry): Continue on this save's
         // slot 0 loaded level 1 and put the player at Player1Start of lvl_00_policestation (-2.171, 1.432, 17.282).
         const save::ContinueStart continueSlot = save::continueStart(image->slotView(0), levels);
         require(continueSlot.level == 1u && continueSlot.scene == "lvl_00_policestation", "Continue level of the pinned save");
@@ -87,7 +87,7 @@ int main(int argc, char** argv) {
 
         // Provenance: the records of the level 2 state data were listed with a scratch parser of the layout in
         // docs/re/save-format.md; 6 one-byte and 42 four-byte records, all payloads zero. Their hashes were matched to the
-        // live scene objects at street-after-1-1 (oracle `read` of the 3333 object headers of the scene at 0x085abd20):
+        // live scene objects at the save state outside the police station after mission 1-1 (oracle `read` of the 3333 object headers of the scene at 0x085abd20):
         // the four-byte ones are object type 0xfc, the one-byte ones type 0x62. The padding after the end marker is
         // 34 zero bytes (272 scene entries; mode word 0x376aac is 2, so the bit set is never filled).
         const std::optional<save::LevelStateView> state2 = save::levelState(slot, 2);
@@ -122,7 +122,7 @@ int main(int argc, char** argv) {
         runtime::runLevelStartup(continued, runtime::kStartupStepDt, runtime::kStartupMaxUpdates);
         require(continued.boundsEnabled()[kBoundPoliceStationLower] == 1, "saved game: Police_Station_Transition_Lower is on");
         require(continued.variable("StoryProgress") == 2.0f, "StoryProgress after startup");
-        // Provenance: oracle state street-after-1-1 (the user's quick save after mission 1-1), memory read of the 482 bound
+        // Provenance: oracle save state outside the police station after mission 1-1 (the user's quick save after mission 1-1), memory read of the 482 bound
         // records (0x28 bytes from 0x08e02284, enable byte +0xa) with `read`; indices of the bounds that read 0
         // (docs/re/save-format.md, bounds comparison of agent J).
         const std::vector<int> oracleBoundsOff = {
@@ -139,7 +139,7 @@ int main(int argc, char** argv) {
         for (std::size_t i = 0; i < level.bounds.size(); ++i) {
             const bool off = std::find(oracleBoundsOff.begin(), oracleBoundsOff.end(), int(i)) != oracleBoundsOff.end();
             const bool known = std::find(knownBoundDifferences.begin(), knownBoundDifferences.end(), int(i)) != knownBoundDifferences.end();
-            require((bool(continued.boundsEnabled()[i]) == !off) != known, "bound enable byte differs from street-after-1-1: " + level.bounds[i].name);
+            require((bool(continued.boundsEnabled()[i]) == !off) != known, "bound enable byte differs from the save state outside the police station after mission 1-1: " + level.bounds[i].name);
         }
         require(newGameState.disabled != savedState.disabled, "the save changes the placed objects");
     } catch (const std::exception& error) {

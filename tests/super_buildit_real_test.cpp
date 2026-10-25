@@ -2,8 +2,8 @@
 // (props/prop_sbhelipad_cherrytree, kind 253) nests SBPlate (props/prop_superbuildit). Provenance of the recorded values: the RPC reads of the user's
 // oracle states (docs/re/super-buildit.md): class data of the plate entity 0x08af7b30 (+0x7c -> 0x08af8250: value +0x80 = 300, type +0x8c = 1),
 // its use zone record 0x08e226e0 (centre 0 0.1055 0, half 6.596 0.3055 6.596), the TextPopup key 0x3f9b3c28 at the call 0x213e28 (ctrace) and the
-// player positions of m13-3-helipad-needs-bricks (901.454 30.903 1139.463), m13-4-helipad-300-bricks (901.203 30.899 1141.268) and
-// m13-5-helipad-built-menu (906.561 31.445 1138.943, on the fast travel pad). The build fires 1-3_Helipad_Built (level trigger ObjectTriggered).
+// player positions of the save state on the helipad that needs 300 super bricks (901.454 30.903 1139.463), the save state on the helipad with enough super bricks (901.203 30.899 1141.268) and
+// the save state on the fast travel pad of the built helipad (906.561 31.445 1138.943, on the fast travel pad). The build fires 1-3_Helipad_Built (level trigger ObjectTriggered).
 // Needs the extracted RomFS; exits with 77 without it.
 #include "assets/assets.hpp"
 #include "frontend/super_build_prompt.hpp"
@@ -66,9 +66,9 @@ int main(int argc, char** argv) {
         }
         require(near(plate->world[12], 902.318f, 0.01f) && near(plate->world[13], 30.6955f, 0.01f) && near(plate->world[14], 1143.185f, 0.01f), "plate at the holder");
         const float needsBricks[3] = {901.454f, 30.903f, 1139.463f}, enoughBricks[3] = {901.203f, 30.899f, 1141.268f}, fastTravel[3] = {906.561f, 31.445f, 1138.943f};
-        require(runtime::SuperBuilditSet::inZone(*plate, needsBricks), "m13-3 stands in the zone");
-        require(runtime::SuperBuilditSet::inZone(*plate, enoughBricks), "m13-4 stands in the zone");
-        require(!runtime::SuperBuilditSet::inZone(*plate, fastTravel), "m13-5 (on the fast travel pad, 0.75 higher) is outside");
+        require(runtime::SuperBuilditSet::inZone(*plate, needsBricks), "the save state on the helipad that needs 300 super bricks stands in the zone");
+        require(runtime::SuperBuilditSet::inZone(*plate, enoughBricks), "the save state on the helipad with enough super bricks stands in the zone");
+        require(!runtime::SuperBuilditSet::inZone(*plate, fastTravel), "the save state on the fast travel pad of the built helipad (on the fast travel pad, 0.75 higher) is outside");
 
         assets::PlacedObjectState state;
         runtime::ScriptRunner runner(level, state);
@@ -114,7 +114,7 @@ int main(int argc, char** argv) {
         require(scene.hidden.count("brickPlaceholder1") && scene.hidden.count("brickPlaceholder2") && !scene.hidden.count("buyButton"), "A icon shown, placeholders hidden");
         const float buttonX = scene.positions.at("buyButton")[0];
         std::cout << "buyButton x " << buttonX << '\n';
-        // Oracle picture m13-4-a: the A icon's image starts at screen x 188 (menu x 54, so 134 = 150 - 30 / 2 for the 30 pixel wide "Build"); the
+        // Oracle picture on the helipad with enough super bricks: the A icon's image starts at screen x 188 (menu x 54, so 134 = 150 - 30 / 2 for the 30 pixel wide "Build"); the
         // port's frontendfont measures "Build" 24 wide (HUD-S73), which puts the icon at 138.
         require(near(buttonX, 134.0f, 5.0f), "A icon left of the prompt: " + std::to_string(buttonX));
         view.enough = false;

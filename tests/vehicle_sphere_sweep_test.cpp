@@ -1,8 +1,8 @@
 // Tests of the sphere sweep of the vehicle body's floor pass (src/runtime/vehicle_sphere_sweep.*; 0x33a4fc, 0x1b6ef8, 0x16788c with 0x1dabac,
 // 0x204ac4, 0x1be3f0, 0x20f6ec, 0x1946a4). Recorded values: the sphere count of the trooper (13) and the donut van (7) is the word at body+0x17c in
-// agentVPHYS-out/body0.mem and vbody0.mem (file offset 0x184; Azahar GDB memtrace of 2026-10-15, bodies 0x08e16100 and 0x08e12880). The synthetic cases
-// are worked by hand from the assembly of 2026-10-16 (llvm-objdump of artifacts/game/game.arm.elf). The real part replays runA.mem (agentVEH40-out,
-// A held from drv-police-car-seated, rigid body per update) from update 43 to 64 on lvl_01: the trooper passes 3 to 8 wall cells of the floor graph
+// traces body0 and vbody0 of agent VPHYS (file offset 0x184; Azahar GDB memtrace of 2026-10-15, bodies 0x08e16100 and 0x08e12880). The synthetic cases
+// are worked by hand from the assembly of 2026-10-16 (llvm-objdump of artifacts/game/game.arm.elf). The real part replays trace runA (agent VEH40,
+// A held from the save state sitting in the police car of mission 1-1, rigid body per update) from update 43 to 64 on lvl_01: the trooper passes 3 to 8 wall cells of the floor graph
 // within the sweep's reach and, as in the oracle, takes no contact from them. Exits with 77 without data.
 #include "assets/assets.hpp"
 #include "runtime/vehicle_box_contact.hpp"
@@ -165,7 +165,7 @@ std::array<float, 4> orientationFromBasis(const std::array<Vector3, 3>& m) {
     return {(m[0][2] + m[2][0]) / s, (m[1][2] + m[2][1]) / s, 0.25f * s, (m[1][0] - m[0][1]) / s};
 }
 
-// runA.mem update 43 (rigid +0x04, +0x14, +0x24, +0x34, +0x13c, +0x14c) and the positions of updates 55, 60 and 64.
+// trace runA update 43 (rigid +0x04, +0x14, +0x24, +0x34, +0x13c, +0x14c) and the positions of updates 55, 60 and 64.
 const std::array<Vector3, 3> kRun43Basis = {Vector3{-0x1.6b1d18p-1f, 0x1.20fcf4p-7f, -0x1.68eeaap-1f}, Vector3{0x1.067ca8p-10f, 0x1.fff744p-1f, 0x1.78e83ep-7f},
                                             Vector3{0x1.68f5cep-1f, 0x1.e859a4p-8f, -0x1.6b180cp-1f}};
 const Vector3 kRun43Origin = {0x1.b973b8p+9f, 0x1.10d99cp+4f, 0x1.163412p+10f};

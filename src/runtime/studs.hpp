@@ -18,7 +18,7 @@ constexpr float kStudCollectSeconds = 1.0f;     // record timer +0x3c set by 0x2
 constexpr float kStudCentreHeight = 0.56f;      // constructor 0x17f8e0 adds it to initialposition y
 constexpr float kStudHalfSize = 0.19f;          // quad half size of 0x17fc38, times *0x37728c (1.0)
 constexpr float kStudSkipUnit = 0.23f;          // *0x37753c: distance covered per update that the skip counter assumes
-constexpr int kStudSkipLimit = 30;   // FUN_0023ca4c (0x23ca4c) = 30; the pool in the oracle resets to 30 (hud-traces/skip1.mem)
+constexpr int kStudSkipLimit = 30;   // FUN_0023ca4c (0x23ca4c) = 30; the pool in the oracle resets to 30 (trace skip1 of tools/oracle/hud-skip.txt)
 constexpr std::uint64_t kStudCounterLimit = 4200000000ull;  // 0x28a128 clamps the stud counter here
 constexpr float kMeasuredPlayerPickupPoint[3] = {0.0f, 1.153f, 0.08f};  // player entity +0x60, in the node's frame
 // FUN_0023ca4c (0x23ca4c) returns 30 when the thread frame-rate object is absent; read at the gameplay start

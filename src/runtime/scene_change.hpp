@@ -14,7 +14,7 @@ namespace chase::runtime {
 constexpr const char* kMasterLevelFile = "levels/levels/lvl_the_city.blvl";
 
 // Updates between the A press on the loading page and the execution 0x303480 (trap run of the oracle, state
-// station-exit-loadingpage: the manager's execution follows 4 updates after the press).
+// the save state at the loading page of the police station exit: the manager's execution follows 4 updates after the press).
 constexpr unsigned kSceneChangeSwitchDelayUpdates = 4;
 
 struct WorldLevelEntry {

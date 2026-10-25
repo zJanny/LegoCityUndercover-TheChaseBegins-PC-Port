@@ -1,5 +1,5 @@
 // Tests of the driving rules (src/runtime/vehicle_drive.*) and of the physics body driving on a flat street. The speed and turn numbers are
-// oracle measurements of the police trooper made on 2026-10-15 with Azahar (state drv-police-car-seated, RPC samples of the vehicle node, 30
+// oracle measurements of the police trooper made on 2026-10-15 with Azahar (save state sitting in the police car of mission 1-1, RPC samples of the vehicle node, 30
 // updates per second); each block names its source run. Evidence: docs/re/vehicles-driving.md, docs/re/vehicles-physics.md.
 #include "assets/assets.hpp"
 #include "runtime/vehicle_drive.hpp"
@@ -65,7 +65,7 @@ void stateRules() {
     expect(inputs.steer == 0.5f && inputs.accelerate == 0.0f && inputs.brake == 1.0f && inputs.handBrake == 1.0f, "0x23019c copies 1 or 0 to the body");
 }
 
-// With FIB NAMES the cars drive on the street of lvl_01 where the oracle trooper of drv-police-car-seated stands (rigid body at (887.378,
+// With FIB NAMES the cars drive on the street of lvl_01 where the oracle trooper of the save state sitting in the police car of mission 1-1 stands (rigid body at (887.378,
 // 17.07, 1117.319), forward (-0.7046, -0.0010, -0.7096); the runs below started there), with the level's wheel rays and the floor collision
 // pass; without data on a flat plane without collision.
 struct Street {
@@ -164,10 +164,10 @@ void report(double got, double want, double tolerance, const char* what) {
     near(got, want, tolerance, what);
 }
 
-// Free-run RPC samples of 2026-10-15 (agent VEH32, free3.csv and free4.csv; state drv-police-car-seated, --rpc-input, no
+// Free-run RPC samples of 2026-10-15 (agent VEH32, free3.csv and free4.csv; save state sitting in the police car of mission 1-1, --rpc-input, no
 // breakpoints): one world step per 100 clock ticks. Every pinned row was checked for continuity: its start speed (body+0xc0) equals the end
 // speed |v| of the row before, so it is the next step; where they differ a step was missed and the count skips one (free3 step 2). The older
-// brake samples of agentDRV-out (pcB, brk, both, forced) counted polled rows as updates while polling misses steps, so they are not used
+// brake samples of agent DRV (pcB, brk, both, forced) counted polled rows as updates while polling misses steps, so they are not used
 // (VEH-52 closed; docs/re/vehicles-driving.md is marked corrected). The limits are 0.4 m/s on the plane and on the street of lvl_01.
 void brakingAgainstOracle() {
     // free3: B pressed at 27.30 m/s (A before): 24.14, 19.72, 13.96, 7.01, 2.54 m/s after 1, 3, 6, 10, 14 steps (the row of step 2 was missed).
@@ -192,7 +192,7 @@ void brakingAgainstOracle() {
         car.run(forced, sample.steps);
         report(car.speed(), sample.speed, 0.4, "free4: forced stop at 24.7 m/s");
     }
-    // Run rev (agentDRV-out, free run): B at standstill reverses, -4.2 m/s after 30 updates (a slow change, so missed rows matter little).
+    // Run rev (agent DRV, free run): B at standstill reverses, -4.2 m/s after 30 updates (a slow change, so missed rows matter little).
     Car reverse;
     reverse.run(kBrake, 30);
     report(reverse.speed(), -4.2, 0.8, "rev: speed 30 updates after B at standstill");
@@ -226,7 +226,7 @@ void fixedDtTraces() {
 }
 
 void coastingAgainstOracle() {
-    // Free-run oracle run coast (agentDRV-out): A released at 20.0 m/s: 19.19 after 2 updates, 17.87 after 6, 16.19 after 10, 12.77 after 20, 9.33
+    // Free-run oracle run coast (agent DRV): A released at 20.0 m/s: 19.19 after 2 updates, 17.87 after 6, 16.19 after 10, 12.77 after 20, 9.33
     // after 30, 5.98 after 40; at rest after 50. Without a driver 0x33b364 brakes with 0.7 (STAND-IN VEH-S41 for the driver flag): after the jump
     // out the car stops (run exitmv: 4.91 m/s 6 rows and 0.12 m/s 14 rows after the jump out at 16 m/s). The 6-row value is not reproduced (port
     // 9.0 m/s; the run counted rows as updates and was not measured again): its limit 4.4 m/s marks the gap VEH-54, not a match; the old check

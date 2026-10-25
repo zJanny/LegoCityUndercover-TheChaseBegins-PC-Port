@@ -69,7 +69,7 @@ Unknowns:
 
 <a id="ts-20261015-183336"></a>
 
-## 2026-10-15T18:33:36+02:00 — Batch 32 played through the slot player: PlayCharAnim 0x295a8c, PlayAnimation, the waits, the attach direction, the van driver in the mailbox (REA/Ghidra pseudo-code and llvm-objdump of `game.arm.elf`; oracle `m11-3-repair-van-marker` memory reads; `chase-game` offscreen run)
+## 2026-10-15T18:33:36+02:00 — Batch 32 played through the slot player: PlayCharAnim 0x295a8c, PlayAnimation, the waits, the attach direction, the van driver in the mailbox (REA/Ghidra pseudo-code and llvm-objdump of `game.arm.elf`; oracle the save state in front of the broken van of mission 1-1 memory reads; `chase-game` offscreen run)
 
 [Corrects §2026-10-14T21:36](#ts-20261014-213649): 0x1b71e8 does not return the played animation, it plays the cape animation; AttachObject, AttachToBone and AttachToBoneRot attach the second object to the first, not the first to the second.
 
@@ -186,7 +186,7 @@ Unknowns:
 
 <a id="ts-20261019-232426"></a>
 
-## 2026-10-19T23:24:26+02:00 — PlayCharAnim on Player1: request timing, first pose and hand-back measured (Azahar oracle `m12-13-cage-trigger` with RPC, `ctrace` and `trap`; llvm-objdump of `game.arm.elf`)
+## 2026-10-19T23:24:26+02:00 — PlayCharAnim on Player1: request timing, first pose and hand-back measured (Azahar oracle the save state at the dog cage trigger of mission 1-2 with RPC, `ctrace` and `trap`; llvm-objdump of `game.arm.elf`)
 
 [Corrects §2026-10-19T15:29:35](#ts-20261019-152935): the update that applies PlayCharAnim's request runs no state update. The order of the runner and the player's update and the skip rule of 0x26a19c are in [scripts-runtime.md §2026-10-19T23:24:26](scripts-runtime.md#ts-20261019-232426).
 

@@ -1,7 +1,7 @@
 // Super build-it rules on a made-up plate (src/runtime/super_buildit.cpp). Provenance: the update 0x1af3d0, the use query (message 3) of the
 // handler 0x1bbec4, the state change 0x26d550 and the prompt owner 0x1cc994 / 0x1cc4d4, read with REA (Ghidra) and llvm-objdump of
 // artifacts/game/game.arm.elf (docs/re/super-buildit.md). The counts 296 and 302 and the count 2 after the build are the RPC reads of 0x593430 in the
-// user's oracle states m13-3-helipad-needs-bricks and m13-4-helipad-300-bricks (value 300, class data +0x80 read at 0x08af82d0).
+// oracle save state on the helipad that needs 300 super bricks and the save state on the helipad with enough super bricks (value 300, class data +0x80 read at 0x08af82d0).
 #include "runtime/super_buildit.hpp"
 #include <algorithm>
 #include <iostream>
@@ -97,7 +97,7 @@ int main() {
             actions = set.update(state, at(101, 10.2f, 199, 302, false));
             const auto builtAction = std::find_if(actions.begin(), actions.end(), [](const SuperBuilditAction& a) { return a.kind == SuperBuilditActionKind::Built; });
             require(count(actions, SuperBuilditActionKind::Built) == 1 && builtAction->countsBricks, "the next update builds it");
-            require(actions.size() == 1 && !set.objects()[0].promptShown, "no prompt after the OK (stand-in gate LEVOBJ-S94; oracle m13-4 after the movie)");
+            require(actions.size() == 1 && !set.objects()[0].promptShown, "no prompt after the OK (stand-in gate LEVOBJ-S94; oracle the save state on the helipad with enough super bricks after the movie)");
             actions = {*builtAction};
             require(set.objects()[0].state == 3, "state 3 (oracle after the movie: +2 = 3, +4 = 3)");
 

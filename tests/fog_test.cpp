@@ -17,7 +17,7 @@ void require(bool condition, const std::string& message) {
     if (!condition) throw std::runtime_error(message);
 }
 
-// Oracle capture at breakpoint 0x24ed98 (street-after-1-1, floats 0x376160/0x376164 set to 20 and 120, cache 0x37616c cleared; r8 -> 128 words).
+// Oracle capture at breakpoint 0x24ed98 (the save state outside the police station after mission 1-1, floats 0x376160/0x376164 set to 20 and 120, cache 0x37616c cleared; r8 -> 128 words).
 const FogLut kRecordedB = {{
     0xffe000, 0xffe000, 0xffe000, 0xffe000, 0xffe000, 0xffe000, 0xffe000, 0xffe000,
     0xffe000, 0xffe000, 0xffe000, 0xffe000, 0xffe000, 0xffe000, 0xffe000, 0xffe000,
@@ -37,7 +37,7 @@ const FogLut kRecordedB = {{
     0xffe000, 0xffe000, 0xffffba, 0xf75f95, 0xea1f58, 0xd51ed2, 0xaf5d3d, 0x571d47,
 }};
 
-// Oracle capture at breakpoint 0x24ed98 (street-after-1-1, floats 0x376160/0x376164 set to 60 and 200, cache 0x37616c cleared; r8 -> 128 words).
+// Oracle capture at breakpoint 0x24ed98 (the save state outside the police station after mission 1-1, floats 0x376160/0x376164 set to 60 and 200, cache 0x37616c cleared; r8 -> 128 words).
 const FogLut kRecordedC = {{
     0xffe000, 0xffe000, 0xffe000, 0xffe000, 0xffe000, 0xffe000, 0xffe000, 0xffe000,
     0xffe000, 0xffe000, 0xffe000, 0xffe000, 0xffe000, 0xffe000, 0xffe000, 0xffe000,
@@ -57,7 +57,7 @@ const FogLut kRecordedC = {{
     0xffe000, 0xffe000, 0xffe000, 0xffe000, 0xffe000, 0xffe000, 0xfffe83, 0xd0797c,
 }};
 
-// Oracle capture at 0x24ed98 at street-after-1-1 (start 220, end 260 as the level sets them): entries 0..126 are 1.0, entry 127 falls to 0.
+// Oracle capture at 0x24ed98 at the save state outside the police station after mission 1-1 (start 220, end 260 as the level sets them): entries 0..126 are 1.0, entry 127 falls to 0.
 FogLut recordedStreet() {
     FogLut lut;
     lut.fill(0xffe000);
@@ -113,7 +113,7 @@ void levelChecks(const char* fib, const char* names) {
     const auto backgroundOfLevel = [&](const std::string& name) { return backgroundOf(("levels/levels/" + name + "/" + name + "_main.blvl").c_str()); };
     const std::array<std::uint8_t, 3> fogColour = {183, 199, 221};
     for (const char* name : {"lvl_01_cherrytreehills", "lvl_02_albatrossisland", "lvl_03_auburn", "lvl_04_fortmeadows", "lvl_05_bluebellwood", "lvl_06_apolloisland", "lvl_07_downtown"})
-        require(backgroundOfLevel(name) == fogColour, std::string(name) + " BackgroundColour (183, 199, 221); lvl_01 = bytes b7 c7 dd at 0x589890 and fill value 0xb7c7dd00 in the GX memory fill at 0x100009a0 (oracle, street-after-1-1); the others from level data only");
+        require(backgroundOfLevel(name) == fogColour, std::string(name) + " BackgroundColour (183, 199, 221); lvl_01 = bytes b7 c7 dd at 0x589890 and fill value 0xb7c7dd00 in the GX memory fill at 0x100009a0 (oracle, the save state outside the police station after mission 1-1); the others from level data only");
     require(backgroundOfLevel("lvl_00_policestation") == std::array<std::uint8_t, 3>{0, 0, 0}, "lvl_00 BackgroundColour black (level data only, not measured in the oracle)");
     const FogSetting setting = levelFog(street, 7);
     require(setting.enabled && setting.start == 220.0f, "street fog applies in Room7");

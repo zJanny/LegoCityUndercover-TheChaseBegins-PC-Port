@@ -1,8 +1,8 @@
 // Tests of the vehicle world step with several bodies (src/runtime/vehicle_world.*, the two-body solve and the vehicle pair contacts of
 // src/runtime/vehicle_box_contact.*; docs/re/vehicles-physics-collision.md). Pinned values: Azahar GDB reads and memory traces of 2026-10-15
-// (agent VEH7, not committed). State veh7-poked-trooper-behind-parked (drv-police-car-seated with the trooper
+// (agent VEH7, not committed). Save state with the police car placed behind a parked car (the save state sitting in the police car of mission 1-1 with the trooper
 // moved 10 m behind the parked FP_Vehicle_03 and turned to its heading by GDB writes of the rigid transform, a measuring aid), fixed dt 0.033,
-// A held: hitP4.mem, per update the trooper's rigid body 0x08e16f40 and the worker's 0x08e90b50 (0x240 bytes each), the dispatcher and the
+// A held: trace hitP4, per update the trooper's rigid body 0x08e16f40 and the worker's 0x08e90b50 (0x240 bytes each), the dispatcher and the
 // pair manifold 0x08472cb0. The trooper hits the parked worker in update 27. world.txt: the shapes and the vehicle bodies (+0x84, +0xb0, +0xc8).
 // Exits with 77 without data.
 #include "assets/assets.hpp"
@@ -91,7 +91,7 @@ struct Pose {
     std::array<Vector3, 3> basis;
     Vector3 origin, velocity, angularVelocity;
 };
-// hitP4.mem update 26 (rigid +0x04 basis rows, +0x34, +0x13c, +0x14c): the trooper one update before the hit and the sleeping worker.
+// trace hitP4 update 26 (rigid +0x04 basis rows, +0x34, +0x13c, +0x14c): the trooper one update before the hit and the sleeping worker.
 const Pose kTrooper26 = {{Vector3{-0x1.682cf8p-1f, -0x1.7c5586p-10f, 0x1.6be436p-1f}, Vector3{0x1.dbe318p-9f, 0x1.fffd0ep-1f, 0x1.714b68p-8f},
                           Vector3{-0x1.6be332p-1f, 0x1.ace64p-8f, -0x1.682a34p-1f}},
                          {0x1.d5909p+9f, 0x1.14150ep+4f, 0x1.184f1ap+10f},
@@ -117,7 +117,7 @@ const Sample kSamples[] = {
     {40, {941.0385f, 17.2532f, 1119.3604f}, {3.1469f, -0.0697f, -3.0228f}, {945.0061f, 17.3825f, 1115.4290f}, {4.6637f, 0.0472f, -4.6747f}},
 };
 
-// hitP4.mem update 27, the hit: both rigid bodies (+0x04, +0x34, +0x13c, +0x14c and the solver deltas +0x20c, +0x21c) and the pair manifold
+// trace hitP4 update 27, the hit: both rigid bodies (+0x04, +0x34, +0x13c, +0x14c and the solver deltas +0x20c, +0x21c) and the pair manifold
 // 0x08472cb0 (body 0 the worker 0x08e90b50, body 1 the trooper 0x08e16f40; per point +0x20 world B, +0x30 world A, +0x40 normal, +0x50
 // distance, +0x70 impulse; friction 0.25, life time 1).
 struct SolvedBody {
@@ -169,7 +169,7 @@ VehicleRigidBody solvedBody(const SolvedBody& solved, float inverseMass, const V
     return body;
 }
 
-// The rigid +0x190 of the trooper (scale 2) in drv-police-car-seated.
+// The rigid +0x190 of the trooper (scale 2) in the save state sitting in the police car of mission 1-1.
 const Vector3 kTrooperInverseInertia = {0x1.22c1d8p-13f, 0x1.c33c44p-15f, 0x1.74dd5p-12f};
 
 // The two-body solve of update 27 from the traced manifold and the velocities before the solver.

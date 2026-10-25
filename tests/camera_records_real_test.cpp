@@ -42,7 +42,7 @@ int main(int argc, char** argv) {
         assets::FuseArchive archive(argv[1]);
         archive.loadNames(argv[2]);
 
-        // Provenance: oracle state police-station (Azahar New 3DS), player node (-1.97040855884552, 1.4358727931976318,
+        // Provenance: oracle save state in the police station lobby after mission 1-1 (Azahar New 3DS), player node (-1.97040855884552, 1.4358727931976318,
         // 14.84306526184082): command tag 0x298cd8, one record (Camerabound_01), camera eye (-1.9704089, 6.9915738,
         // 23.1577549), look (-1.9704088, 3.4358723, 14.8430634), FOV 43, yaw pi (RPC read of C+0x4c, evidence in camera.md).
         assets::Level station;
@@ -58,7 +58,7 @@ int main(int argc, char** argv) {
         require(near(pose.look[0], -1.9704088f) && near(pose.look[1], 3.4358723f) && near(pose.look[2], 14.843063f), "pose look");
         require(near(pose.fovDegrees, 43.0f) && near(poseYaw(pose), 3.1415927f), "pose FOV and yaw");
 
-        // Provenance: oracle states gameplay-start and street-after-1-1: command tag 0x2a8bfc with the level's Room record.
+        // Provenance: oracle states gameplay-start and the save state outside the police station after mission 1-1: command tag 0x2a8bfc with the level's Room record.
         assets::Level street;
         const CameraRecords streetRecords = load(archive, "levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl", street);
         const float outside[3] = {900.5491333007812f, 16.567216873168945f, 1110.280029296875f};

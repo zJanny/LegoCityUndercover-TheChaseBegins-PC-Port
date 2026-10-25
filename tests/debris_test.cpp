@@ -213,8 +213,8 @@ void whiteMaterial() {
 }
 
 // Oracle (round 20, emulator servant for r20-C, request R20-C-1): Azahar New 3DS, OpenGL, RPC, fixed dt 0.033, nothing poked; pickup records
-// 20..43 read after every update from A = [Q + 8] (Q = [[[0x376c78]+0x28]+0x10] + [[0x377288]+0x1c]). Run 1: state veh-smash-car, A held, the
-// van hits the car ahead; the burst at update 17 (record +0x308 = 1.0). Run 2: state veh-smash-prop, the lamp post 0x08de6690 destroyed at update
+// 20..43 read after every update from A = [Q + 8] (Q = [[[0x376c78]+0x28]+0x10] + [[0x377288]+0x1c]). Run 1: save state in a police van in front of moving cars, A held, the
+// van hits the car ahead; the burst at update 17 (record +0x308 = 1.0). Run 2: save state in a police van in front of a lamp post, the lamp post 0x08de6690 destroyed at update
 // 18 (0x23cd80 in frame 17). The start rows are the records as read after the burst update (they have moved once already: the record update runs
 // after the burst in the same update); rest is the first update read in state 1, free the first in state 0.
 struct Recorded {
@@ -341,7 +341,7 @@ void superBricks() {
         expect(r.superObject == i && field.superObjects()[i].enabled && !field.objects()[i].enabled, "the slot holds SBDebris0N, Debris0N stays off");
         expect(field.objectOf(r) == &field.superObjects()[i], "objectOf gives the SBDebris object");
     }
-    expect(supers == 3, "three super bricks of nine (oracle veh-smash-prop, debris.md §2026-10-18T14:46:04)");
+    expect(supers == 3, "three super bricks of nine (oracle the save state in a police van in front of a lamp post, debris.md §2026-10-18T14:46:04)");
 
     for (int u = 0; u < 120 && field.records()[0].state != DebrisState::Resting; ++u) field.update(1.0f / 30.0f, {100, 100, 100});
     DebrisRecord& rest = field.records()[0];
@@ -386,7 +386,7 @@ void superBricks() {
            "SpawnDir 90 with cone 0: (sin, 0.5, cos) x 0.1 of the 64-step angle; y 0.5");
 }
 
-// Oracle A-1 of round 47 (servant, veh-smash-prop, two stepped loads, dt 0.033, A held; traces x1 and x2): the traffic
+// Oracle A-1 of round 47 (servant, the save state in a police van in front of a lamp post, two stepped loads, dt 0.033, A held; traces x1 and x2): the traffic
 // light bursts at update 18 (pool records 20..28), Generic_Tree_13 at update 49 (29..37), the van's contact at update 57 (38..43). Super bricks: records
 // 20..22 in slots 0..2 with SBDebris 0..2; 29..34 in slots 9..14 with SBDebris 3..8; 38 in slot 18 with SBDebris 9; record 39 takes slot 19 and 40..43 get
 // none. The tree's super bricks fly along SpawnDir 337: y velocity 0.45 after the burst update, x in -0.0916..-0.0073, z in 0.0477..0.1358, life 7.967.
@@ -445,8 +445,8 @@ void superBricksOracle() {
 }
 
 void oracleTraces() {
-    replay(kCarRun, 17, "veh-smash-car");
-    replay(kPropRun, 18, "veh-smash-prop");
+    replay(kCarRun, 17, "the save state in a police van in front of moving cars");
+    replay(kPropRun, 18, "the save state in a police van in front of a lamp post");
 }
 
 }  // namespace

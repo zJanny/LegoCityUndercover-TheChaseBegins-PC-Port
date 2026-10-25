@@ -112,11 +112,11 @@ Read this index, then open only the file you need.
 | [player-falling-jumping.md](player-falling-jumping.md) | Falling, landing stun, jumping, step-off slide, slope slow-down, state table |
 | [player-attack.md](player-attack.md) | Attack on foot: Y tap, combat action states 0xa3 / 0xa4, combo, target search, hit test, messages 62 and 0 to the target |
 | [player-traversal.md](player-traversal.md) | Zipline (type 101: grab test, states 42..44, slide, dismount, oracle ride), survey of the climbing moves |
-| [player-traversal-pole.md](player-traversal-pole.md) | Pole and drain pipe (type 187): walk-in and A-press mount, climb, exits, dismount (m12-10) |
-| [player-traversal-bricks.md](player-traversal-bricks.md) | Climbing bricks (type 20, states 141..152), the climb wall entry (type 30) (m12-11) |
-| [player-traversal-rails.md](player-traversal-rails.md) | Rails, climb bars (type 29) and the corner rail (type 218), ledge states 23 / 24 (m12-12) |
-| [player-traversal-ladders.md](player-traversal-ladders.md) | Ladders (kind 56): use zone, mount, climb, clamber state 23, exits (m13-2-ladder) |
-| [props-wobbly-bouncer.md](props-wobbly-bouncer.md) | The wobbly destructible props (hit message 0, health, ObjectHit, destroy chain, TriggerObject of the table to the trampoline build-it) and the bouncer class (message 15, take-off speed rules, the bounce flight), oracle traces of m12-table-before and m12-trampoline-built |
+| [player-traversal-pole.md](player-traversal-pole.md) | Pole and drain pipe (type 187): walk-in and A-press mount, climb, exits, dismount (the save state climbing the drain pipe of mission 1-2) |
+| [player-traversal-bricks.md](player-traversal-bricks.md) | Climbing bricks (type 20, states 141..152), the climb wall entry (type 30) (the save state climbing the bricks of mission 1-2) |
+| [player-traversal-rails.md](player-traversal-rails.md) | Rails, climb bars (type 29) and the corner rail (type 218), ledge states 23 / 24 (the save state climbing along the railing of mission 1-2) |
+| [player-traversal-ladders.md](player-traversal-ladders.md) | Ladders (kind 56): use zone, mount, climb, clamber state 23, exits (the save state in front of the crane ladder of mission 1-3) |
+| [props-wobbly-bouncer.md](props-wobbly-bouncer.md) | The wobbly destructible props (hit message 0, health, ObjectHit, destroy chain, TriggerObject of the table to the trampoline build-it) and the bouncer class (message 15, take-off speed rules, the bounce flight), oracle traces of the save state in front of the table of mission 1-2 and the save state at the built trampoline of mission 1-2 |
 | [front-end.md](front-end.md) | Boot sequencer 0x302080, screen order and triggers from power-on to the first level, prompt state machine 0x313368, save indicator, language, savegameflow pages, loading screen, intro movie bubble and title card |
 | [collision.md](collision.md) | Level collision data (model+0x1c section), ground probe by box bisection, wall slide, placed objects (world grid, registration, shapes, query layers), differential test against traces |
 | [dcam.md](dcam.md) | Director camera: level paths, StartDCam commands, phase machine, busy test and end of WaitForDCam, hand-back, oracle timing |

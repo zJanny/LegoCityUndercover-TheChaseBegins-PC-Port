@@ -57,7 +57,7 @@ CTest also guards `game.cpp` size (`game-cpp-wiring`), GL outside `src/render/` 
 
 **Tests**
 
-- **No local-only data** (CLAUDE.md "No local-only data in the repo"): a committed path to local-only data, a test or CMake option, default path or environment variable that reads it, a value cited only by file instead of pinned with provenance, a generated file (state, trace, save, screenshot) staged: RETURN.
+- **No local-only data** (CLAUDE.md "No local-only data in the repo"): a committed path to local-only data, a test or CMake option, default path or environment variable that reads it, a value cited only by file instead of pinned with provenance, a generated file (state, trace, save, screenshot) staged: RETURN. Also RETURN for an output-folder or scratch file name in a comment or doc (`agent...-out`, `*.mem`, `*.png`), the name or slot of a save state (a script-created state like `gameplay-start` excepted) or how it was reached, and distro, user-name or "this machine" wording. Run `python3 tools/check_local_data.py` and report its warnings.
 - **Game-data label:** a new test that reads the game image or `artifacts/` carries the label `needs-game-data` (when it skips without the data it exits with code 77 and keeps the label). Otherwise RETURN.
 - **License:** no code copied in under a license other than GPL-3.0-or-later: RETURN.
 - **Recorded values:** tests pin recorded reference values with their provenance next to them (command, state, address, trace), not a live second implementation.

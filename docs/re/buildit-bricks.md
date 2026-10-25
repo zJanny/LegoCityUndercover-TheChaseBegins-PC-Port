@@ -42,7 +42,7 @@ Unknowns:
 
 [Corrects §2026-10-15T18:31](#ts-20261015-183145) on the wobble: the sound is made for the first three crossings of an update, not four, and the start values and the condition are now known.
 
-Source: llvm-objdump of `artifacts/game/game.arm.elf`; Azahar oracle, GDB only (no RPC), state `m11-4-van-parts` (player in the use zone, brick array 0x08e114e0 of that state): `memtrace 40 brick 0x08e114e0:0x558 0x08a75580:0xa0` idle; the same with `poke` of 12 zero bytes into each brick (+0..+0xb) and with `teleport 900 52.4 650` away from the zone and back. The user state was not modified.
+Source: llvm-objdump of `artifacts/game/game.arm.elf`; Azahar oracle, GDB only (no RPC), save state in front of the donut van parts build-it of mission 1-1 (player in the use zone, brick array 0x08e114e0 of that state): `memtrace 40 brick 0x08e114e0:0x558 0x08a75580:0xa0` idle; the same with `poke` of 12 zero bytes into each brick (+0..+0xb) and with `teleport 900 52.4 650` away from the zone and back. The save state was not modified.
 
 **Brick record.** +0 amplitude, +4 speed (degrees per update), +8 phase (degrees), +0xc offset (the last sin(phase) x amplitude), +0x24 progress, +0x28 start position, +0xe2 active byte; 228 bytes per brick, zero-filled at allocation (0x25c030 with the clear flag, 0x24d234).
 
@@ -68,7 +68,7 @@ Unknowns:
 
 [Corrects §2026-10-15T18:31](#ts-20261015-183145) on the built pose: it is not the identity of the animation's last frame.
 
-Source: Azahar oracle, New 3DS, OpenGL, state `m11-4-van-parts` (user save, read-only), `hold A` and `trap 0x22b5a0 110` (registers, 32 stack words and 16 words at r2 per stop; the call at 0x19cb58 passes r2 = sp+8, the node matrix, row-vector 3x4 with the translation at +0x30); llvm-objdump of 0x21e96c, 0x2318c8, 0x258bc4; free-run RPC screenshots of the same build (about 25 per second). The trace has 222 stops: 156 from the hop (0x20706c), 54 from the flight (0x19cb5c, 9 per brick), 6 from the change to state 9 (0x1aaf54) and 6 from the change to state 11 (0x1ab13c).
+Source: Azahar oracle, New 3DS, OpenGL, save state in front of the donut van parts build-it of mission 1-1 (user save, read-only), `hold A` and `trap 0x22b5a0 110` (registers, 32 stack words and 16 words at r2 per stop; the call at 0x19cb58 passes r2 = sp+8, the node matrix, row-vector 3x4 with the translation at +0x30); llvm-objdump of 0x21e96c, 0x2318c8, 0x258bc4; free-run RPC screenshots of the same build (about 25 per second). The trace has 222 stops: 156 from the hop (0x20706c), 54 from the flight (0x19cb5c, 9 per brick), 6 from the change to state 9 (0x1aaf54) and 6 from the change to state 11 (0x1ab13c).
 
 **Order and timing (update after the first press).** Brick k flies in updates 3+12k .. 11+12k (9 stops), its end pose is set in update 12+12k (0x1aaf54); updates 3..72 for six bricks. At update 85 (state 11) the six bricks are put back to their start pose (0x1ab13c) in one update. Bricks and nodes pair by index: brick 0 starts at Bit1's frame-0 pose (-0.5106, 1.045, -1.54), brick 5 at Bit6's (-1.3425, 3.1688, -5.1344), the others as the animation's frame 0.
 

@@ -2,13 +2,13 @@
 // request 0x16c188, the states 0x180 (enter 0x32c2ec, update 0x32c420 with the approach 0x2cd91c) and 0x181 (enter 0x32ea10, update 0x32ea20) and
 // the query 0x28b930, read with REA (Ghidra) and llvm-objdump of artifacts/game/game.arm.elf (docs/re/fast-travel.md). Clip lengths: land 42
 // frames, idle 12, takeoff 48, all 15 frames per second (models/veh_police_chopper/*.bfnanm, assets::animationLength). The update counts follow
-// from the rule at dt 1/30; the oracle (RPC request r40-B-1, m13-5-helipad-built-menu) saw state 0x180 for 39 to 45 vblanks (about 20 to 22
+// from the rule at dt 1/30; the oracle (RPC request r40-B-1, the save state on the fast travel pad of the built helipad) saw state 0x180 for 39 to 45 vblanks (about 20 to 22
 // updates) and the idle start 124 to 126 vblanks after 0x181.
 // Exit and arrival (20261025-mission13-A, docs/re/fast-travel.md): the map's update 0x2d9f84 calls 0x1ee5f8 for the exit button, which returns at
 // once while 0x28b930 answers 0 and otherwise ends with 0x26aa60 (Helicopter shown, "takeoff" once, player state 1 requested); the arrival
 // enter 0x334388 and update 0x3344f8 (idle loops, takeoff once when the state's float timer is greater than 1.0, state 1 and the Helicopter
 // hidden when takeoff ended); clip 678 "wave" from tablesanimations. Update counts follow from the rules at dt 1/30 (float timer sum: the 30th
-// addition of 1/30 is 1.0000004). Oracle (RPC request 20261025-mission13-A-1, state m13-5-helipad-built-menu, four loads): after the touch the player
+// addition of 1/30 is 1.0000004). Oracle (RPC request 20261025-mission13-A-1, save state on the fast travel pad of the built helipad, four loads): after the touch the player
 // state goes from 0x181 straight to 1 with `takeoff` already running in the first row with state 1, and the Helicopter's disabled flag is set 191
 // vblanks (about 96 updates) later; the clip's end minus start is 9600 ticks = 48 frames at 15 per second.
 #include "runtime/fast_travel_pad.hpp"

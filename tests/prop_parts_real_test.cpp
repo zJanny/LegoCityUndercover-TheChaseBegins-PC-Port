@@ -59,7 +59,7 @@ int main(int argc, char** argv) {
         const runtime::NodeMatrix scattered = bricks.matrix(0, 0.0f);
         require(near(scattered[12], first.position[0], 1e-5f) && near(scattered[1], -1.0f, 2e-3f) && near(scattered[4], 1.0f, 2e-3f), "t = 0 is the scattered pose of Bit1 (a quarter turn about z)");
 
-        // Oracle trace (state m11-4-van-parts, hold A, trap of 0x22b5a0 over 110 updates; docs/re/buildit.md): every brick ends at the pose below, the final
+        // Oracle trace (save state in front of the donut van parts build-it of mission 1-1, hold A, trap of 0x22b5a0 over 110 updates; docs/re/buildit.md): every brick ends at the pose below, the final
         // prop's world matrix times the inverse of the parts' own (0x2318c8 with 0x258bc4), and brick 0 at progress 0.1 (update 4 of the build) is at the
         // second row.
         {

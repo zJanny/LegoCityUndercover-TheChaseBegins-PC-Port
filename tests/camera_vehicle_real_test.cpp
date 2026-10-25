@@ -1,5 +1,5 @@
 // Replay of the follow camera while the player drives the police car of 1-1_Police_Car (Azahar oracle, New 3DS, state
-// drv-police-car-seated; tools/oracle/camera-vehicle-drive.txt, converted by tools/export_camera_vehicle_trace.py; docs/re/camera-vehicle.md).
+// the save state sitting in the police car of mission 1-1; tools/oracle/camera-vehicle-drive.txt, converted by tools/export_camera_vehicle_trace.py; docs/re/camera-vehicle.md).
 // The camera starts from the recorded state of the first row and gets the recorded vehicle position and heading and the pad of every
 // update: idle (A not held), A held, circle pad x 120, released. The eye tracker (K+0x34) and the look point (K+0x94 + K+0xf4) must
 // equal the recorded ones. The rows of every trace are committed in tests/data/camera/vehicle (all rows of each trace; recorded

@@ -1,10 +1,10 @@
 // Build-its of lvl_01_cherrytreehills (src/runtime/buildit_set.cpp): the class parameters of 1-1_BI_DonutVanParts, its use zone and the
 // run of mission 1-1 step 6: after 1-1_Found_Van enables it, holding the action button in the zone builds it and the finished build fires
 // ObjectTriggered of 1-1_SO_VanFixed, which switches the broken van off and the driveable van on. Zone values were read from the record
-// +0x28 of the object in the oracle state m11-4-van-parts (docs/re/buildit.md). Trampoline_03_Buildits (orientation 0, 160.692, 0): the zone box is
+// +0x28 of the object in the oracle save state in front of the donut van parts build-it of mission 1-1 (docs/re/buildit.md). Trampoline_03_Buildits (orientation 0, 160.692, 0): the zone box is
 // the model bounds in the node frame and is turned with the placement (0x221570 -> 0x2536c0; docs/re/buildit.md "The use zone is turned with the
 // placement"); the values are those of BuilditSet::load from the level data (position and orientation: the level file, bounds: modelBounds, which
-// reproduces the oracle zone of the van), the three positions are those of the level file (DonutTable_14) and of the user's state m12-table-broken. Needs the extracted RomFS; exits with 77 without it.
+// reproduces the oracle zone of the van), the three positions are those of the level file (DonutTable_14) and of the save state in front of the broken table of mission 1-2. Needs the extracted RomFS; exits with 77 without it.
 #include "assets/assets.hpp"
 #include "runtime/buildit_player.hpp"
 #include "runtime/buildit_set.hpp"
@@ -60,7 +60,7 @@ int main(int argc, char** argv) {
             require(near(parts->zoneHalf[a], half[a], 0.01f), "zone half " + std::to_string(a) + ": " + std::to_string(parts->zoneHalf[a]));
         }
         const float standing[3] = {876.914f, 52.435f, 700.427f}, far[3] = {876.914f, 52.435f, 712.0f};
-        require(runtime::BuilditSet::inZone(*parts, standing), "the oracle position m11-4-van-parts is in the zone");
+        require(runtime::BuilditSet::inZone(*parts, standing), "the oracle position the save state in front of the donut van parts build-it of mission 1-1 is in the zone");
         require(!runtime::BuilditSet::inZone(*parts, far), "12 m away is outside");
 
         const runtime::BuilditObject* trampoline = set.find("trampoline_03_buildits");
@@ -79,7 +79,7 @@ int main(int argc, char** argv) {
             const float tableStood[3] = {715.628f, 32.5276f, 643.666f}, tableBroken[3] = {715.726f, 32.668f, 640.255f}, eastOfTable[3] = {718.5f, 32.7f, 641.5f},
                         unturnedCentre[3] = {720.64f, 32.88f, 642.81f};
             require(runtime::BuilditSet::inZone(*trampoline, tableStood), "DonutTable_14 stood inside the zone");
-            require(runtime::BuilditSet::inZone(*trampoline, tableBroken), "the m12-table-broken position is inside the zone");
+            require(runtime::BuilditSet::inZone(*trampoline, tableBroken), "the save state in front of the broken table of mission 1-2 position is inside the zone");
             require(runtime::BuilditSet::inZone(*trampoline, eastOfTable), "the earlier east spot of the unturned zone is still inside");
             require(!runtime::BuilditSet::inZone(*trampoline, unturnedCentre), "the centre of the unturned zone is outside the turned one");
         }

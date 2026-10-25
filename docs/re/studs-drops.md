@@ -11,7 +11,7 @@ Continues [studs.md](studs.md): the stud bursts 0x21e2e4 (modes 0..2), their spa
 
 <a id="ts-20261018-195726"></a>
 
-## 2026-10-18T19:57:26+02:00 — Dropped studs: no stud is released when a car destroys a traffic light or a wobbly prop; the callers of the stud spawners (llvm-objdump and REA of artifacts/game/game.arm.elf; own Azahar GDB runs, no RPC, port 24732, state `veh-smash-prop`, fixed dt 0.033)
+## 2026-10-18T19:57:26+02:00 — Dropped studs: no stud is released when a car destroys a traffic light or a wobbly prop; the callers of the stud spawners (llvm-objdump and REA of artifacts/game/game.arm.elf; own Azahar GDB runs, no RPC, port 24732, save state in a police van in front of a lamp post, fixed dt 0.033)
 
 Corrected by [studs.md §2026-10-19T14:36:25](#ts-20261019-143625): 0x1aad90 is the build-it state change, not a car break; the car break calls no stud function.
 Corrected by [debris.md §2026-10-20T22:07:51](debris.md#ts-20261020-220751): the tree's nine bricks hold six super bricks (oracle A-1), the traffic light's three.

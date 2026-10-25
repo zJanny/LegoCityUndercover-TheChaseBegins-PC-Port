@@ -1333,9 +1333,9 @@ if(BUILD_TESTING)
     set_tests_properties(game-vehicle-drive PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
       PASS_REGULAR_EXPRESSION "entered at update 1523.*exiting at update 1893.*left at update 1916.*player moved 24\\.[0-9]+ units")
     # Mission 1-1 steps 7 and 8 (docs/re/vehicles-waypoints.md): 1-1_SO_VanFixed makes the van drivable; X at update 60 starts the jump in, the oracle (Azahar GDB,
-    # state m11-4-van-parts, X at update 179) enters 23 updates later (202) and 1-1_Van_Waypoint_Enter starts its script 33 updates after the X (212): 83 and 93 here.
+    # save state in front of the donut van parts build-it of mission 1-1, X at update 179) enters 23 updates later (202) and 1-1_Van_Waypoint_Enter starts its script 33 updates after the X (212): 83 and 93 here.
     # A short drive (60 updates of A), then the dev step "at" moves the seated van next to 1-1_Waypoint_05 (820, 18.5, 1047: in front of the waypoint, near the
-    # oracle state m11-6-van-to-shop at 813.9 17.5 1046.8) instead of the 360 unit drive; the van reaches the waypoint at update 304 and 1-1_VanEscorted calls
+    # oracle save state driving the donut van to the shop in mission 1-1 at 813.9 17.5 1046.8) instead of the 360 unit drive; the van reaches the waypoint at update 304 and 1-1_VanEscorted calls
     # VehicleJumpOut and PositionObject in one update, as the oracle's update 53 after the hit does (state 0x11b, then state 1). Update numbers are the port's.
     # The cutscene after the drive (1_1_d) shows only its cast copy of Chase: the placement after the jump out must not draw the hidden player figure again (MOVIE-31).
     add_test(NAME game-van-escort COMMAND chase-game
@@ -1393,7 +1393,7 @@ if(BUILD_TESTING)
       FIXTURES_REQUIRED save_new_game
       PASS_REGULAR_EXPRESSION "save: loaded in slot 0[^\n]*\nsave: level entry 2, studs [0-9]+, super bricks 1500\nsave: slot 0, level 2, saved state of the level \\(StoryProgress 1, [0-9]+ variables\\), unlocked levels 0x4,.*super bricks: total 1500,")
     # The roof brick of mission 1-3: 1-3_Rainbow_02 (904.929 30.697 1133.099, level data) is hidden until 1-3_ArrivedAtStation has shown it (update
-    # 1073 of the port's run). The player stands 2.53 from it on the roof (the position of the user's state m13-1-roof-superbrick) and is moved
+    # 1073 of the port's run). The player stands 2.53 from it on the roof (the position of the save state on the roof in front of the super brick of mission 1-3) and is moved
     # to 1.05 from it at update 1100; the brick adds 200. About 10 s (slow).
     add_test(NAME game-super-brick-roof COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
@@ -1414,7 +1414,7 @@ if(BUILD_TESTING)
     set_tests_properties(game-cutscene-dog-end PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
       PASS_REGULAR_EXPRESSION "cutscene 1_2_c ended: level prop at 730.328 31.5987 645.549")
     # The police car hits the parked FP_Vehicle_03 (docs/re/vehicles-physics-collision.md, the vehicle pair contacts): the dev step "at" turns the seated
-    # car to the worker's heading 10 m behind it, where the oracle state veh7-poked-trooper-behind-parked starts; A held from update 1833, the car
+    # car to the worker's heading 10 m behind it, where the oracle save state with the police car placed behind a parked car starts; A held from update 1833, the car
     # hits the worker and wakes it in update 1857 (the oracle's trooper hits it 26 updates after A from rest). Update numbers are the port's.
     # VEH-56: the seated police car is moved to the user's place (F3 overlay, 2026-10-16) and driven forward; it changes rooms with the player
     # (0x2e6ce4, docs/re/streaming-rooms.md) and so stays drawn when Room8, its placement room, is unloaded at the switch to Room21.
@@ -1470,7 +1470,7 @@ if(BUILD_TESTING)
       PASS_REGULAR_EXPRESSION "vehicle 1-1_Police_Car: 1 super bricks in the brick burst\n.*prop Bus_Shelter_01: smashed by 1-1_police_car at update 1886\nprop Bus_Shelter_01: explosion particle 10, 9 bricks, 6 super bricks of value 6")
     # The super bricks of the contact and of the smashed Bus_Shelter_01 come to rest, the magnet of the seated player (type row 6 +0x64 = 0) pulls each for
     # its life 1.0 (30 updates at dt 0.033), the collected record flies to the HUD for 1.0 (31 updates), then 0x29c090 adds its value 1 to the count and
-    # 0x28a128 10 studs: the cycle of the oracle request B-1 (veh-smash-prop, stepped: state 1 -> 3 one update after the landing, 30 updates in state 3,
+    # 0x28a128 10 studs: the cycle of the oracle request B-1 (the save state in a police van in front of a lamp post, stepped: state 1 -> 3 one update after the landing, 30 updates in state 3,
     # 31 in state 4, +1 and +10 studs in the update of the free; docs/re/super-bricks.md, entry of the debris pickup). Update numbers are the port's.
     add_test(NAME game-debris-super-pickup COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
@@ -1493,9 +1493,9 @@ if(BUILD_TESTING)
     set_tests_properties(game-mission-1-1 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 900
       PASS_REGULAR_EXPRESSION "script 1-1_VanBreakdown started at update [0-9]+.*cutscene 1_1_b started at update [0-9]+.*cutscene 1_1_b ended at update [0-9]+.*script 1-1_Get_Car started at update [0-9]+.*police_car: entered at update [0-9]+.*script 1-1_Release_Car_Script ended at update [0-9]+.*script 1-1_Found_Van started at update [0-9]+.*script 1-1_SO_VanFixed started at update [0-9]+.*donutvan: entered at update [0-9]+.*1-1_Van_Waypoint_Enter_Script started at update [0-9]+.*script 1-1_VanEscorted started at update [0-9]+.*cutscene 1_1_d started at update [0-9]+.*cutscene 1_1_d ended at update [0-9]+.*script 1-1_Carry_Object_Tutorial started at update [0-9]+.*script 1-1_SO_Donuts_PickedUp started at update [0-9]+.*script 1-1_Deliver_Donuts started at update [0-9]+.*script 1-1_SO_MissionEnd started at update [0-9]+.*cutscene 1_1_e started at update [0-9]+.*cutscene 1_1_e ended at update [0-9]+.*script 1-1_MissionEnd started at update [0-9]+.*script 1-1_MissionEnd ended at update [0-9]+.*StoryProgress 2")
     # Mission 1-2 from the second detective point (docs/re/abilities-detective.md): 1-2_SO_IntroCamOff enables 1-2_Dtv_DogSpot_02, A on the point
-    # (oracle state m12-7-detective-waypoint-2) enters detective mode, the X spot 1-2_Dtv_DogPath_XSpot01 ahead within 2.5 ends it, A on the X starts
+    # (oracle save state on the second detective waypoint of mission 1-2) enters detective mode, the X spot 1-2_Dtv_DogPath_XSpot01 ahead within 2.5 ends it, A on the X starts
     # the use state; its event (43 updates), the reveal time (32), RevealDelay (30) and the flight (18) lead to 1-2_SO_Dspot_02_X, the oracle's
-    # intervals of states m12-4..m12-6. Teleports stand in for the walks.
+    # intervals of the detective save states of mission 1-2. Teleports stand in for the walks.
     add_test(NAME game-detective-1-2 COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
@@ -1505,7 +1505,7 @@ if(BUILD_TESTING)
     set_tests_properties(game-detective-1-2 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
       PASS_REGULAR_EXPRESSION "detective: player state 1 at update 160.*1-2_dtv_dogspot_02 state 1 at update 161.*player state 0 at update 197.*1-2_dtv_dogspot_02 state 2 at update 202.*player state 2 at update 202.*player state 3 at update 226.*1-2_dtv_dogpath_xspot01 state 1 at update 270.*1-2_dtv_dogpath_xspot01 state 2 at update 302.*1-2_trapdoor_03 state 2 at update 333.*script 1-2_SO_Dspot_02_X started at update 351")
     # Mission 1-2, the dog cage (SCRIPT-111): 1-2_Pringles_Cage_Locked enables the use spot 1-2_Dog_Cage_Use_Spot, A on the user's trigger position
-    # (oracle state m12-13-cage-trigger) fires 1-2_Cage_Key_Target_Script through the spot's TriggerObject. The use marker (SCRIPT-292) is shown
+    # (oracle save state at the dog cage trigger of mission 1-2) fires 1-2_Cage_Key_Target_Script through the spot's TriggerObject. The use marker (SCRIPT-292) is shown
     # while the spot is usable (seen on the ground in the oracle in that state) and goes after the use, when 0x236624 switched the zone off.
     add_test(NAME game-use-spot-1-2 COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
@@ -1516,7 +1516,7 @@ if(BUILD_TESTING)
     set_tests_properties(game-use-spot-1-2 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
       PASS_REGULAR_EXPRESSION "use marker: 1-2_dog_cage_use_spot shown at update 0.*use spot: 1-2_dog_cage_use_spot triggers 1-2_cage_key_target_script at update [0-9]+.*script 1-2_Cage_Key_Target_Script started at update [0-9]+.*use marker: 1-2_dog_cage_use_spot gone at update [0-9]+")
     # The use marker of the detective spot 1-2_Dtv_DogSpot_02 (SCRIPT-299, kind 182): the police disc once the intro script enabled the spot, from the
-    # position of the user's state footprint-scanner-trigger (719.896 37.033 656.910, facing 198.4); the A press on the spot (position of
+    # position of the save state in front of a dog detective spot of mission 1-2 (719.896 37.033 656.910, facing 198.4); the A press on the spot (position of
     # game-detective-1-2) at update 140 puts the spot in detective mode (state 1, message 3 answers 0) and the marker goes.
     add_test(NAME game-use-marker-detective-1-2 COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
@@ -1528,7 +1528,7 @@ if(BUILD_TESTING)
       PASS_REGULAR_EXPRESSION "use marker: 1-2_dtv_dogspot_02 shown at update [0-9]+ \\(usepolice\\).*detective: 1-2_dtv_dogspot_02 state 1 at update [0-9]+.*use marker: 1-2_dtv_dogspot_02 gone at update [0-9]+")
     # PlayCharAnim(Player1, dog_cage_open_minifig) of 1-2_Cage_Key_Target_Script: the runner runs before the player's update, so state 0x50 is
     # entered in the update of the native, the first run of the thread after its start; the hand-back to state 1 follows 89 updates later at
-    # dt 0.033 (oracle m12-13-cage-trigger: PlayCharAnim and the enter 0x25fbec in update 9, the enter 0x1abbb0 in update 98,
+    # dt 0.033 (oracle the save state at the dog cage trigger of mission 1-2: PlayCharAnim and the enter 0x25fbec in update 9, the enter 0x1abbb0 in update 98,
     # tools/oracle/script-anim-order-ctrace.txt). The update numbers are the port's.
     add_test(NAME game-player-script-animation COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
@@ -1538,7 +1538,7 @@ if(BUILD_TESTING)
       --script "0 0 5;0 0 1 A;0 0 100")
     set_tests_properties(game-player-script-animation PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
       PASS_REGULAR_EXPRESSION "script 1-2_Cage_Key_Target_Script started at update 5\nplayer state 80 entered at update 6\n.*player state 1 entered at update 95\n")
-    # Mission 1-3, the helipad (LEVOBJ-117): the user's state m13-3-helipad-needs-bricks stands at 901.454 30.903 1139.463 on 1-3_Helipad, which
+    # Mission 1-3, the helipad (LEVOBJ-117): the save state on the helipad that needs 300 super bricks stands at 901.454 30.903 1139.463 on 1-3_Helipad, which
     # 1-3_Fade_Blockers enables; the plate's prompt asks for 300 super bricks (RPC reads of the plate's class data, docs/re/super-buildit.md). Without
     # super bricks the A press opens no dialog. The update numbers are the port's.
     add_test(NAME game-super-buildit-prompt COMMAND chase-game
@@ -1551,9 +1551,9 @@ if(BUILD_TESTING)
       PASS_REGULAR_EXPRESSION "super build-it 1-3_helipad.sbplate: prompt shown at update [0-9]+ \\(needs 300, has 0\\).*\nhud super bricks: shown count 0, number shown\n"
       FAIL_REGULAR_EXPRESSION "super build-it [^\n]*dialog opened")
     # Mission 1-3, the helipad built: FP_Superbrick_01 (+1500, as game-super-brick-freeplay) is picked up, then the player stands where the user's
-    # state m13-4-helipad-300-bricks stands; A opens "Are you sure?", A (OK) plays superbuildit_helipad and the update after the movie builds:
+    # save state on the helipad with enough super bricks stands; A opens "Are you sure?", A (OK) plays superbuildit_helipad and the update after the movie builds:
     # 1500 - 300 = 1200 (the oracle went from 302 to 2), and the holder's TriggerObject starts 1-3_Helipad_Built. Then the fast travel pad of the
-    # built helipad (LEVOBJ-118): A where the user's state m13-5-helipad-built-menu stands (906.561 31.445 1138.943, the pad). The oracle (RPC request
+    # built helipad (LEVOBJ-118): A where the save state on the fast travel pad of the built helipad stands (906.561 31.445 1138.943, the pad). The oracle (RPC request
     # r40-B-1) held state 0x180 for 39 to 45 vblanks (about 22 updates) and started the Helicopter's idle 124 to 126 vblanks after 0x181 (about 63
     # updates). The update numbers are the port's.
     add_test(NAME game-super-buildit-build COMMAND chase-game
@@ -1575,8 +1575,8 @@ if(BUILD_TESTING)
       PASS_REGULAR_EXPRESSION "map ready at update 473 .*\n.*fast travel: exit touched at update 483\n.*helicopter takeoff at update 483\n.*player state 1 entered at update 483\n.*helicopter hidden at update 580\n")
     # Mission 1-2, the dog released (SCRIPT-293): 1-2_Cage_Key_Target_Script fades the screen to black (FadeScreen 0), the
     # cutscene mode of 1_2_c fades it in again (DCamCutScenePlay handler 0x26fa18, mode enter 0x2fadb8; gdb trace from the user's
-    # state m12-13-cage-trigger, docs/re/cutscenes.md), and after the cutscene 1-2_MissionEnd follows with the game picture.
-    # The player starts on the use spot (oracle position of m12-13-cage-trigger); the update numbers are the port's.
+    # save state at the dog cage trigger of mission 1-2, docs/re/cutscenes.md), and after the cutscene 1-2_MissionEnd follows with the game picture.
+    # The player starts on the use spot (oracle position of the save state at the dog cage trigger of mission 1-2); the update numbers are the port's.
     add_test(NAME game-cage-release-1-2 COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
@@ -1587,7 +1587,7 @@ if(BUILD_TESTING)
       PASS_REGULAR_EXPRESSION "cutscene 1_2_c started at update [0-9]+.*cutscene 1_2_c ended at update [0-9]+.*script 1-2_MissionEnd started at update [0-9]+.*screen brightness 1\n")
     # Mission 1-2, the alley (DETECT-2): the Doorlock script 1-2_Spawn_Doorlock (the waypoint's TriggerScript) passes WaitForCurrentCharAnim on
     # 1-2_Doorlock_Holmes because PlayCharAnim leaves the idle state (state 0x50, docs/re/abilities-detective.md), ends, and then A on the first
-    # detective point (oracle state m12-4-detective-point, the teleport stands in for the walk) switches the detective tool on and enables
+    # detective point (oracle save state on the detective point of mission 1-2, the teleport stands in for the walk) switches the detective tool on and enables
     # 1-2_Dtv_DogSpot_01; the script's PositionObject moves Holmes to 1-2_Doorlock_Teleport (SCRIPT-287). The update numbers are the port's, not oracle values.
     add_test(NAME game-doorlock-detective-1-2 COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
@@ -1598,7 +1598,7 @@ if(BUILD_TESTING)
     set_tests_properties(game-doorlock-detective-1-2 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
       PASS_REGULAR_EXPRESSION "PositionObject: 1-2_doorlock_holmes to 1-2_doorlock_teleport at update [0-9]+.*script 1-2_Spawn_Doorlock ended at update [0-9]+.*detective: player state 1 at update [0-9]+.*1-2_dtv_dogspot_01 state 1 at update [0-9]+")
     # 1-2_MissionStart from its first call (update 0): the police car appears with the DestroyProp burst at update 153 and PlayCharAnim ends the
-    # script at update 305. Original: first call at update 26, burst at 179, PlayCharAnim at 331 (docs/re/scripts-missions.md 2026-10-14T21:39:21, ctrace of 0x2342b4 from mission-1-2-start).
+    # script at update 305. Original: first call at update 26, burst at 179, PlayCharAnim at 331 (docs/re/scripts-missions.md 2026-10-14T21:39:21, ctrace of 0x2342b4 from the save state in front of the mission 1-2 start trigger).
     add_test(NAME game-mission-1-2-start-timing COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
@@ -1672,7 +1672,7 @@ if(BUILD_TESTING)
     set_tests_properties(game-director-release PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
       PASS_REGULAR_EXPRESSION "entered at update 745.*exiting at update 1023.*left at update 1046"
       FAIL_REGULAR_EXPRESSION "exiting at update [0-9]{1,3}[^0-9]|exiting at update 10[01][0-9][^0-9]|exiting at update 102[0-2][^0-9]")
-    # Zipline of mission 1-2: the player stands where the oracle state m12-9-zipline has him, jumps (B) and grabs 1-8_Zip_Line05 in the
+    # Zipline of mission 1-2: the player stands where the oracle save state under the zipline of mission 1-2 has him, jumps (B) and grabs 1-8_Zip_Line05 in the
     # 7th jump update (update 8, as the recorded ride, docs/re/player-traversal.md); the loop sound 107 starts with the grab. The ride lasts
     # 2 updates longer than the recorded one because the script step is 0.033 s (the rate of 0x275000 scales with dt squared): the dismount
     # starts at update 110 and state 5 at update 140.
@@ -1684,7 +1684,7 @@ if(BUILD_TESTING)
     set_tests_properties(game-script-zipline PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
       PASS_REGULAR_EXPRESSION "zipline: grab 1-8_zip_line05 at update 8.*zipline: fall at update 140.*sounds: 2:288 8:107")
     # The use press at the high anchor is the A press (0x2011b0 -> 0x1fef10 with pressed 1; 0x1b6664 needs it, TRAV-12): standing 0.19 before
-    # Mission 1-2: Chase where the user's state m12-table-before has him (oracle position and facing ctrl+8 = -936), 2.06 m south of
+    # Mission 1-2: Chase where the save state in front of the table of mission 1-2 has him (oracle position and facing ctrl+8 = -936), 2.06 m south of
     # DonutTable_14. A Y tap (held one update) enters the attack state 0xa3 on release, message 62 goes to the table at once, the hit
     # (message 0, damage 1) in the 5th update of the state and the state ends after 14 updates (oracle runs atap / ataphit,
     # docs/re/player-attack.md).
@@ -1705,7 +1705,7 @@ if(BUILD_TESTING)
     set_tests_properties(game-script-wobbly-table PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
       PASS_REGULAR_EXPRESSION "health 4 at update 7.*donuttable_14: stud drop mode 0 count 2.*health 3 at update 23.*health 2 at update 39.*health 1 at update 55.*donuttable_14: destroyed at update 71.*script DonutTable_14_Script started at update 71")
     # B on the built trampoline (--call-script runs the script of the finished build): the landing launches at the lowest take-off speed 0.3 every 13
-    # updates (oracle state m12-trampoline-built: take-offs 13 updates apart, speed 0.3 without B held).
+    # updates (oracle save state at the built trampoline of mission 1-2: take-offs 13 updates apart, speed 0.3 without B held).
     add_test(NAME game-script-bounce COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
@@ -1714,7 +1714,7 @@ if(BUILD_TESTING)
     set_tests_properties(game-script-bounce PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
       PASS_REGULAR_EXPRESSION "bounce: trampoline_03 launches at 0.3 at update 22.*at update 35.*at update 48.*at update 61")
     # B held on the built trampoline: the speed grows by 0.1 per bounce, the take-off at 0.9 (update 143) is the one whose fall update grabs
-    # 1-2_FlagPole_01 20 updates later (oracle state m12-trampoline-built, trace t2: take-off at 0.9 in row 139, state 88 in row 159; TRAV-36).
+    # 1-2_FlagPole_01 20 updates later (oracle save state at the built trampoline of mission 1-2, trace t2: take-off at 0.9 in row 139, state 88 in row 159; TRAV-36).
     add_test(NAME game-script-bounce-grab COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
@@ -1748,7 +1748,7 @@ if(BUILD_TESTING)
       --start "867.9 69.95 630.98" --facing 90 --script "0 0 2;0 0 1 B;0 0 20")
     set_tests_properties(game-script-zipline-use-b PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
       PASS_REGULAR_EXPRESSION "player ended at" FAIL_REGULAR_EXPRESSION "zipline: use")
-    # Climbing bricks of mission 1-2: the player stands under 1-2_Brick_Grab_08 where the oracle run `drop` from m12-11-brick-climb landed,
+    # Climbing bricks of mission 1-2: the player stands under 1-2_Brick_Grab_08 where the oracle run `drop` from the save state climbing the bricks of mission 1-2 landed,
     # jumps (B) and grabs 08 in the 7th jump update (state 141, as the zipline grab), hangs (145 after the 22 updates of brickgrab_grab),
     # reaches up with the stick (146), jumps up to 07 with B (149, 16 updates), grabs it (142, 14 updates), and B on 07, which has no
     # adjacent brick, starts the jump state 4 (docs/re/player-traversal.md).
@@ -1760,7 +1760,7 @@ if(BUILD_TESTING)
     set_tests_properties(game-script-brick-grab PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
       PASS_REGULAR_EXPRESSION "state 141 1-2_brick_grab_08 at update 8\n.*state 145 1-2_brick_grab_08 at update 30\n.*state 146 1-2_brick_grab_08 at update 43\n.*state 149 1-2_brick_grab_07 at update 45\n.*state 142 1-2_brick_grab_07 at update 61\n.*state 145 1-2_brick_grab_07 at update 75\n.*jump at update 81")
     # Mission 1-2, the jump off the last climbing brick onto the rail (TRAV-30): B on 1-2_Brick_Grab_07 (no neighbour) starts the
-    # normal jump and the rail 1-2_ClimbBar_02 is grabbed 7 updates later, as in the oracle (m12-11: B in update 37, state 88 in 44).
+    # normal jump and the rail 1-2_ClimbBar_02 is grabbed 7 updates later, as in the oracle (the save state climbing the bricks of mission 1-2: B in update 37, state 88 in 44).
     add_test(NAME game-script-brick-rail COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
@@ -1768,7 +1768,7 @@ if(BUILD_TESTING)
       --start "908.8964 64.4281 673.1982" --facing 121.998 --script "0 0 2;0 0 1 B;0 0 40;0 120 2;0 120 1 B;0 120 35;0 120 1 B;0 120 10")
     set_tests_properties(game-script-brick-rail PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
       PASS_REGULAR_EXPRESSION "brick grab: jump at update 81\n.*climb bar: grab 1-2_climbbar_02 at update 88")
-    # Drain pipe of mission 1-2: the player stands where the oracle state m12-10a-pole-foot has him (0.77 m from 1-5_Drain_Pipe05, facing
+    # Drain pipe of mission 1-2: the player stands where the oracle save state at the foot of the drain pipe of mission 1-2 has him (0.77 m from 1-5_Drain_Pipe05, facing
     # away), the stick points at the pipe (the stick value stands for the camera yaw of this runtime) and he mounts it by walking into it in
     # update 5 as in the recorded walk (mount in the 3rd walking update); the A press in update 15 drops him (state 5).
     add_test(NAME game-script-pole COMMAND chase-game
@@ -1779,7 +1779,7 @@ if(BUILD_TESTING)
     set_tests_properties(game-script-pole PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
       PASS_REGULAR_EXPRESSION "pole: walk-in 1-5_drain_pipe05 at update 5.*pole: fall at update 15"
       FAIL_REGULAR_EXPRESSION "pole: fall at update 1[0-4][^0-9]")
-    # Crane ladder of mission 1-3: the player stands where the oracle state m13-2-ladder has him (in the use zone of 1-4_Ladder01, facing
+    # Crane ladder of mission 1-3: the player stands where the oracle save state in front of the crane ladder of mission 1-3 has him (in the use zone of 1-4_Ladder01, facing
     # 54.5 degrees), A mounts in the press update as in the oracle run lad-up, the stick up climbs 0.05 x 30 x dt per update (dt 0.033 here)
     # to the top and the clamber (ladder_dismount, 32 updates at dt 0.033) puts him on the roof at y 30.7.
     add_test(NAME game-script-ladder COMMAND chase-game
@@ -1828,10 +1828,10 @@ if(BUILD_TESTING)
       --start "862.5931 16.1988 1060.5875" --window 400x480 --script "0 0 70" --screenshot game-script-hud.bmp)
     set_tests_properties(game-script-hud PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen"
       PASS_REGULAR_EXPRESSION "studs: counter 10, 0 collecting, 1 collected.*hud: 4 hearts, stud display 10, bar state 2.*saved game-script-hud.bmp")
-    # Room streaming in the level: starting in Room7 (position and view of the oracle state street-at-entrance +1 update, 9 rooms
+    # Room streaming in the level: starting in Room7 (position and view of the oracle save state at the police station entrance after mission 1-1 +1 update, 9 rooms
     # loaded), walking east to west enters Room8, Room6 unloads in that update and Room16 finishes loading 9 updates later
     # (the update numbers are the port's own walk, the rule is pinned by room-streaming-real-data). Room16 finishes loading with its
-    # nearest box point 120.0 from the camera (oracle street-at-entrance, same walk: 120.3, docs/re/rendering-fog.md RENDER-31).
+    # nearest box point 120.0 from the camera (oracle the save state at the police station entrance after mission 1-1, same walk: 120.3, docs/re/rendering-fog.md RENDER-31).
     add_test(NAME game-room-streaming COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg"

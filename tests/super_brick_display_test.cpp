@@ -2,7 +2,7 @@
 // (src/runtime/super_brick.*), docs/re/super-bricks.md.
 // Read with REA (Ghidra 12.1.2) and llvm-objdump of artifacts/game/game.arm.elf: the HUD draw callback 0x193604 (its part from 0x2a5f80), the fader draw
 // 0x27b3e4, the fader state machine 0x23cc00 / 0x2459d8 / 0x235e2c, the creator 0x290b1c, the sink table 0x2cee00, the brick update 0x1acc10 (flight 0x1acfc0..0x1ad0b4)
-// and the tint writer 0x2600dc. Oracle (Azahar OpenGL, user state m13-1-roof-superbrick, New 3DS, RPC screenshots 400x480 of the walk to the brick,
+// and the tint writer 0x2600dc. Oracle (Azahar OpenGL, save state on the roof in front of the super brick of mission 1-3, New 3DS, RPC screenshots 400x480 of the walk to the brick,
 // 2026-10-19): the display appeared about 3 vblanks after the pickup, the number read 96 and became 296 at the destroy, the display ended about 160 vblanks
 // (80 updates) after it appeared; the digits "96" cover the pixels x 203..216, y 16..26 (top row at y 16); the icon lay in x 175..196, y 11..33.
 // Optional arguments 1 and 2: fib and names for the drawing check.
@@ -72,7 +72,7 @@ void bank() {
 }
 
 // The helipad build lowers the shown count +0x2a8 together with the counter 0x593430 (0x26d778..0x26d780 by llvm-objdump, 20261025-mission13-C).
-// Oracle: the user state m13-4-helipad-300-bricks read 302 in both words and 10 s after the build 2 in both (docs/re/super-buildit.md, entry
+// Oracle: the save state on the helipad with enough super bricks read 302 in both words and 10 s after the build 2 in both (docs/re/super-buildit.md, entry
 // 2026-10-19T19:23:11, RPC reads of the round that wrote it). The build does not show the display and does not bounce the number.
 void spend() {
     SuperBrickDisplay display;

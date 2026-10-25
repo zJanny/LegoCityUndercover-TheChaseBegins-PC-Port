@@ -483,7 +483,7 @@ int main(int argc, char** argv) {
         if (cutsceneClips != 330 || laterClips != 61 || donutboxStart != 100)
             throw std::runtime_error("cutscene clip start totals differ from the recorded reference");
         {
-            // Oracle (state leadcut-1_1_d-early, made from m11-6-van-to-shop; RPC reads of the actor nodes, world translation at node +0x8c,
+            // Oracle (save state just before the cutscene 1_1_d, made from the save state driving the donut van to the shop in mission 1-1; RPC reads of the actor nodes, world translation at node +0x8c,
             // 2026-10-16): the root tracks place each actor node, the clip's object tracks place the model nodes on it. Van and wheels at
             // camera frame 0, the box (start 100) at frames 0 (resting at its first frame), 101.97 and 180.19 (held end).
             const CutsceneContent cutscene = loadCutscene(archive, "1_1_d");

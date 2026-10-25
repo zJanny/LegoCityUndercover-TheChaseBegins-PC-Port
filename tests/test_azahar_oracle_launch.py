@@ -106,19 +106,19 @@ class StateModeTest(unittest.TestCase):
 
     def test_loadstate_refuses_a_new_3ds_state_in_old_3ds_mode(self):
         saved_states = Path(tempfile.mkdtemp())
-        (saved_states / 'police-station.json').write_text(json.dumps({'file': 'x.cst', 'frame': 0, 'new_3ds': True}))
+        (saved_states / 'some-state.json').write_text(json.dumps({'file': 'x.cst', 'frame': 0, 'new_3ds': True}))
         instance = self.oracle_in(saved_states, False)
-        with self.assertRaisesRegex(RuntimeError, 'police-station was saved in New 3DS mode'):
-            instance.loadstate('police-station')
+        with self.assertRaisesRegex(RuntimeError, 'some-state was saved in New 3DS mode'):
+            instance.loadstate('some-state')
 
 
 class PlaceStateTest(unittest.TestCase):
     def test_place_state_refuses_a_slot_the_quick_load_does_not_read(self):
         saved_states = Path(tempfile.mkdtemp())
-        (saved_states / 'm13-2-ladder.json').write_text(json.dumps({'file': '00040000000AD600.02.cst', 'new_3ds': True}))
-        (saved_states / 'm13-2-ladder.cst').write_bytes(b'state')
-        with self.assertRaisesRegex(SystemExit, 'state m13-2-ladder: "file" is \'00040000000AD600.02.cst\', but the quick load'):
-            oracle.place_state(saved_states, 'm13-2-ladder', saved_states / 'emulator')
+        (saved_states / 'other-state.json').write_text(json.dumps({'file': '00040000000AD600.02.cst', 'new_3ds': True}))
+        (saved_states / 'other-state.cst').write_bytes(b'state')
+        with self.assertRaisesRegex(SystemExit, 'state other-state: "file" is \'00040000000AD600.02.cst\', but the quick load'):
+            oracle.place_state(saved_states, 'other-state', saved_states / 'emulator')
         self.assertFalse((saved_states / 'emulator').exists())
 
     def test_place_state_copies_a_slot_00_state(self):
@@ -162,6 +162,36 @@ class CrashDescriptionTest(unittest.TestCase):
         text = oracle.crash_description(self.home_with_log('nothing'), 3)
         self.assertIn('status 3', text)
         self.assertIn('no SoftwareRenderWidget::Present', text)
+
+
+class RpcFailureMessageTest(unittest.TestCase):
+    def home_with_log(self, text):
+        home = Path(tempfile.mkdtemp())
+        if text is not None:
+            log = home / 'data/azahar-emu/log/azahar_log.txt'
+            log.parent.mkdir(parents=True)
+            log.write_text(text)
+        return home
+
+    def test_log_without_rpc_line_names_the_missing_build_option(self):
+        error = oracle.RpcError('no RPC reply on UDP port 45987')
+        for text in ('Core: started', None):
+            message = oracle.rpc_failure_message(self.home_with_log(text), error)
+            self.assertIn('ENABLE_SCRIPTING', message)
+            self.assertIn('docs/commands.md', message)
+
+    def test_log_with_rpc_line_blames_the_connection(self):
+        message = oracle.rpc_failure_message(self.home_with_log('Starting RPC server (synchronous)'),
+                                             oracle.RpcError('no RPC reply on UDP port 45987'))
+        self.assertNotIn('ENABLE_SCRIPTING', message)
+        self.assertIn('does not answer', message)
+
+    def test_connect_failure_stops_with_the_explanation(self):
+        launched = types.SimpleNamespace(check=lambda: None)
+        with mock.patch.object(oracle, 'connect_rpc', side_effect=oracle.RpcError('no reply')):
+            with self.assertRaises(SystemExit) as caught:
+                oracle.connect_rpc_or_explain(self.home_with_log('x'), launched)
+        self.assertIn('ENABLE_SCRIPTING', str(caught.exception))
 
 
 if __name__ == '__main__':

@@ -10,7 +10,7 @@ IN_PROGRESS, updated 2026-10-20T00:19:21+02:00. The audio zone (type 201, Scanne
 
 ## 3. Verified behaviour
 
-- Class values of `1-2_ScannerZoneAudio` and `1-2_Dog_Prop` from the level data; settings block and audio mode values read in the oracle (m12-8).
+- Class values of `1-2_ScannerZoneAudio` and `1-2_Dog_Prop` from the level data; settings block and audio mode values read in the oracle (the save state on the roof at the sound scanner trigger of mission 1-2).
 - Real-time timing (oracle B-1): state 0x157 49 updates after the press, `EnterScanTriggerObject` 20 later, toggle and camera 56 after the entry, lock 20, scan 39, script exit 57 updates; `ZoomedInTriggerObject` every update at full zoom.
 
 ## 4. Stand-ins
@@ -54,7 +54,7 @@ IN_PROGRESS, updated 2026-10-20T00:19:21+02:00. The audio zone (type 201, Scanne
 - Overlay leftovers (unused storyboards, info boxes, frame tint, sonar formula): [abilities-scanner-overlay.md §2026-10-19T14:13:26](../../re/abilities-scanner-overlay.md#ts-20261019-141326).
 - Cyan wash (material override 0x530834, no fog, glow arguments), no green dog: [abilities-scanner.md §2026-10-19T14:06:22](../../re/abilities-scanner.md#ts-20261019-140622).
 - Sound markers, map-screen buttons, exit by B: [abilities-scanner-overlay.md §2026-10-19T10:01:16](../../re/abilities-scanner-overlay.md#ts-20261019-100116).
-- Overlay layouts and storyboard rules: [abilities-scanner-overlay.md §2026-10-19T08:53:30](../../re/abilities-scanner-overlay.md#ts-20261019-085330). Real-time timing: [abilities-scanner.md §2026-10-19T08:43:45](../../re/abilities-scanner.md#ts-20261019-084345). Scanner classes, states, view and triggers: [abilities-scanner.md §2026-10-18T11:27:21](../../re/abilities-scanner.md#ts-20261018-112721). Mission 1-2 gap list: [scripts-missions.md §2026-10-14T21:39](../../re/scripts-missions.md#ts-20261014-213921); oracle state `m12-8-roof-sound-scanner` (user state: mission 1-2 in progress, standing on the roof sound scanner trigger at 869.659 65.997 645.594).
+- Overlay layouts and storyboard rules: [abilities-scanner-overlay.md §2026-10-19T08:53:30](../../re/abilities-scanner-overlay.md#ts-20261019-085330). Real-time timing: [abilities-scanner.md §2026-10-19T08:43:45](../../re/abilities-scanner.md#ts-20261019-084345). Scanner classes, states, view and triggers: [abilities-scanner.md §2026-10-18T11:27:21](../../re/abilities-scanner.md#ts-20261018-112721). Mission 1-2 gap list: [scripts-missions.md §2026-10-14T21:39](../../re/scripts-missions.md#ts-20261014-213921); oracle save state on the roof at the sound scanner trigger of mission 1-2.
 
 ## 7. Code and tests
 
@@ -62,4 +62,4 @@ IN_PROGRESS, updated 2026-10-20T00:19:21+02:00. The audio zone (type 201, Scanne
 - `src/runtime/scanner_info.{hpp,cpp}` (info box state machine and box choice), CTest `scanner-info`; drawing in `src/frontend/scanner_overlay.cpp`, `Resources::tableText`.
 - `src/runtime/scanner_render.{hpp,cpp}` (override values of the audio mode), `assets::materialState(part, MaterialOverride)`, `render::Scene::setMaterialOverride`, glue in `LevelSession::draw`; CTest `scanner-render`.
 - `src/runtime/scanner.{hpp,cpp}` (zone and scannable load, state machine, view, lock, scan, events), `src/game_scanner.cpp` (LevelSession glue: pad, EnableScanner, triggers, sounds, player pose, view override), `SoundPlayer::playing` / `GameAudio::playing`.
-- CTest `scanner` (made-up zone: timings, lock 20 updates, scan, zoom, exit, pitch limits) `scanner-reticle`, `scanner-overlay-data` (layout values and drawing), `scanner-markers` (fade, distance fade, pulse restart; `src/runtime/scanner_markers.*`), `hud-real-data` (scanner buttons on the map screen), and `scanner-real-data` (lvl_01 from the m12-8 position: Enter, Zoomed, Locked, Scanned_Pringles, EnableScanner 0 exit).
+- CTest `scanner` (made-up zone: timings, lock 20 updates, scan, zoom, exit, pitch limits) `scanner-reticle`, `scanner-overlay-data` (layout values and drawing), `scanner-markers` (fade, distance fade, pulse restart; `src/runtime/scanner_markers.*`), `hud-real-data` (scanner buttons on the map screen), and `scanner-real-data` (lvl_01 from the save state on the roof at the sound scanner trigger of mission 1-2 position: Enter, Zoomed, Locked, Scanned_Pringles, EnableScanner 0 exit).

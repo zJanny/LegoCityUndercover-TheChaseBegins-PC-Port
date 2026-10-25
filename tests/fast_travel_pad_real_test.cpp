@@ -1,6 +1,6 @@
 // The fast travel pad of the helipad of lvl_01_cherrytreehills (src/runtime/fast_travel_pad.cpp): 1-3_Helipad (props/prop_sbhelipad_cherrytree)
 // nests SBFastTravel (props/prop_fasttravelzone, kind 227) and the Helicopter (Veh_Police_Chopper). Provenance of the recorded values: the RPC
-// reads of request r40-B-1 from the user's state m13-5-helipad-built-menu (docs/re/fast-travel.md): the player stands on the pad at 906.5608 31.4455
+// reads of request r40-B-1 from the save state on the fast travel pad of the built helipad (docs/re/fast-travel.md): the player stands on the pad at 906.5608 31.4455
 // 1138.9427 with ctrl+0x8 = ctrl+0xa = 24576, and the approach of state 0x180 moves and turns him by nothing. Zone: the class bound UseBound of
 // levels/props/prop_fasttravelzone.blvl (centre 0 1 0.0253, half 1 1.5 1; C++ loader). Clip lengths: models/veh_police_chopper/*.bfnanm.
 // Needs the extracted RomFS; exits with 77 without it.
@@ -53,14 +53,14 @@ int main(int argc, char** argv) {
         const runtime::FastTravelPad& pad = pads.pads()[index];
         require(pad.holder == "1-3_helipad", "holder " + pad.holder);
         require(near(pad.world[12], 906.5608f, 0.01f) && near(pad.world[13], 31.4455f, 0.01f) && near(pad.world[14], 1138.9427f, 0.01f),
-                "the pad stands where the oracle's player stands in m13-5");
+                "the pad stands where the oracle's player stands in the save state on the fast travel pad of the built helipad");
         require(runtime::FastTravelPads::heading(pad.world) == 24576, "pad heading " + std::to_string(runtime::FastTravelPads::heading(pad.world)) +
                                                                             ", the oracle's ctrl+0x8 and ctrl+0xa are 24576");
         require(pad.hasZone && near(pad.zoneCentre[1], 1.0f, 1e-4f) && near(pad.zoneCentre[2], 0.0253f, 1e-4f) && near(pad.zoneHalf[0], 1.0f, 1e-4f) &&
                     near(pad.zoneHalf[1], 1.5f, 1e-4f) && near(pad.zoneHalf[2], 1.0f, 1e-4f),
                 "UseBound of the class file");
         const float player[3] = {906.5608f, 31.4455f, 1138.9427f};
-        require(runtime::FastTravelPads::inZone(pad, player), "the m13-5 position is inside the zone");
+        require(runtime::FastTravelPads::inZone(pad, player), "the save state on the fast travel pad of the built helipad position is inside the zone");
         require(pad.helicopter == "1-3_helipad.helicopter" && pad.helicopterMesh == "Veh_Police_Chopper", "Helicopter " + pad.helicopter);
         require(near(pad.helicopterWorld[12], 902.318f, 0.01f) && near(pad.helicopterWorld[13], 30.6955f + 0.6592f, 0.01f) &&
                     near(pad.helicopterWorld[14], 1143.185f, 0.01f),

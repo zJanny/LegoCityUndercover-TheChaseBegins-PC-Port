@@ -1,7 +1,7 @@
 // Tests of the placed super build bricks (src/runtime/super_brick.*), docs/re/super-bricks.md.
 // Read in llvm-objdump of artifacts/game/game.arm.elf: the update 0x1acc10 (pickup test at 0x1acdd0..0x1acde8, collect 0x1acdf0..0x1ace44, spin
 // 0x1aced0..0x1acf44, countdown 0x1acf80), the destroy 0x1d737c (type 103 at 0x1d7550) and 0x2144f8 / 0x262778.
-// Oracle (Azahar, user state m13-1-roof-superbrick, New 3DS, port 45692, dt fixed 0.033, 2026-10-19): the player walked with stick (-82, 88) to the
+// Oracle (Azahar, save state on the roof in front of the super brick of mission 1-3, New 3DS, port 45692, dt fixed 0.033, 2026-10-19): the player walked with stick (-82, 88) to the
 // brick 1-3_Rainbow_02 at (904.9294, 30.6969, 1133.0990); `ctrace 0x1acdf8,0x1d7560` stopped at the collect in frame 6 and at the destroy in frame 37
 // (r4 = 0xc8 = 200); the u32 at 0x593430 went from 96 to 296 (memory diff of the states and a watchpoint, write at 0x262774 called from 0x1d7560).
 // The player rows of the same run (`trace`, frames 5 and 6) are below. Real data: the levels of the FIB, counted with the loaders of this port.

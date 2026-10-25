@@ -1,8 +1,8 @@
 # The camera while the player gets into the police car of 1-1_Police_Car and out again (docs/re/camera-vehicle.md): the follow camera object K
 # (0x589a70, 0x200 bytes), the camera object C with its stack, the vehicle node (0x08a88840), the player node (0x08568bb0) and the player
-# controller (0x08552790, locomotion state +0x6c). Run with --state m11-2-patrol-car (the user's state, mission 1-1 step 2) on a New 3DS emulator.
+# controller (0x08552790, locomotion state +0x6c). Run with --state m11-2-patrol-car on a New 3DS emulator.
 # Measuring aids, as for drv-police-car-seated: the locked bit (+0x311 bit 1) of the car's record 0x08a884e0 is cleared and the player is
-# teleported 1.9 m beside the car (car position plus its right axis). Nothing of the user's save is written.
+# teleported 1.9 m beside the car (car position plus its right axis). Nothing is written to the save.
 loadstate m11-2-patrol-car
 frames 2
 dt 0.033 0.033

@@ -31,7 +31,7 @@ constexpr std::uint32_t kAttackHitKind = 1;           // 0x319ffc +0x14: 1 for t
 constexpr float kRunningAttackRangeScale = 1.5f;      // 0x2108c0
 constexpr float kAttackSearchMaxRange = 5.0f;         // *0x372e5c: a longer range searches every room (not modelled; the player's range is 2.2)
 
-// STAND-IN PLAYER-S5: values read from the heap in the oracle (m12-table-before, docs/re/player-attack.md); their writers are not read.
+// STAND-IN PLAYER-S5: values read from the heap in the oracle (the save state in front of the table of mission 1-2, docs/re/player-attack.md); their writers are not read.
 constexpr float kPlayerMeleeRangeStandIn = 2.2f;      // ctrl+0x80 of the player (0x21a1d0)
 constexpr float kPlayerAttackAngleStandIn = 90.0f;    // *0x372e44, degrees, the player's search and hit angle
 constexpr unsigned kPlayerComboLengthStandIn = 4;     // high nibble of the combat record byte +0xf

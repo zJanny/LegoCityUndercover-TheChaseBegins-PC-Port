@@ -1,6 +1,6 @@
 // Poles and drain pipes of lvl_01_cherrytreehills (src/runtime/pole.cpp): the pole objects from the level data and replays of the
 // oracle runs of mission 1-2 (docs/re/player-traversal.md, entry of 2026-10-18 on the pole). All runs: New 3DS states
-// `m12-10-pole-climb` (on the pipe 1-5_Drain_Pipe05) and `m12-10a-pole-foot` (standing 0.77 m from it), scheduler step fixed to 1/30
+// the save state climbing the drain pipe of mission 1-2 (on the pipe 1-5_Drain_Pipe05) and the save state at the foot of the drain pipe of mission 1-2 (standing 0.77 m from it), scheduler step fixed to 1/30
 // (`dt 0.033333335 0.033333335`), stick (0, 120) = up, rows are `trace N NAME mem` output of round 21 agent A (x, y, z of the
 // player node after each update). The clips vpole_up / vpole_down / vpole_dismount come from the extracted RomFS; exits with 77 without it.
 #include "assets/assets.hpp"
@@ -21,7 +21,7 @@ using runtime::PolePhase;
 constexpr const char* kLevelFile = "levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl";
 constexpr const char* kClipDirectory = "models/char_minifig/class_generic/vpole_";
 constexpr float kDt = 0.033333335f;
-constexpr float kCameraYaw = -0.048126574605703354f;  // *0x376894 = 0xbd45205f, read in m12-10
+constexpr float kCameraYaw = -0.048126574605703354f;  // *0x376894 = 0xbd45205f, read in the save state climbing the drain pipe of mission 1-2
 
 void require(bool condition, const std::string& message) {
     if (!condition) throw std::runtime_error(message);
@@ -30,7 +30,7 @@ bool near(float a, float b, float tolerance) { return std::fabs(a - b) <= tolera
 
 struct Row { int frame; float x, y, z; };
 
-// pole-up.csv rows 96..129 (oracle run `stick 0 120`, `trace 200 pole-up mem` from m12-10-pole-climb): the dismount from the pipe top.
+// pole-up.csv rows 96..129 (oracle run `stick 0 120`, `trace 200 pole-up mem` from the save state climbing the drain pipe of mission 1-2): the dismount from the pipe top.
 const Row kDismount[] = {
     {96, 940.54224f, 65.32635f, 683.41003f},
     {97, 940.54224f, 65.34510f, 683.41003f},
@@ -116,7 +116,7 @@ const Row kDown[] = {
     {70, 940.54224f, 58.46129f, 683.41003f},
     {71, 941.11188f, 58.46129f, 683.05731f}
 };
-// foot-walk.csv rows 3..10 (m12-10a-pole-foot, stick (-100, 60) held, no button): the walk-in and the mount.
+// foot-walk.csv rows 3..10 (the save state at the foot of the drain pipe of mission 1-2, stick (-100, 60) held, no button): the walk-in and the mount.
 const Row kFoot[] = {
     {3, 941.10773f, 58.33629f, 683.05060f},
     {4, 941.10321f, 58.33629f, 683.04327f},
@@ -168,7 +168,7 @@ int main(int argc, char** argv) {
             if (poles[i].instance == "1-5_drain_pipe05") index = int(i);
         require(index >= 0, "1-5_Drain_Pipe05 is a pole");
         const runtime::PoleObject& pole = poles[std::size_t(index)];
-        // Oracle read of the object at 0x08b9a720 in m12-10: +0x64 = +0x70 = 0x412e6666 (10.9), snap offset 0.1 (class param 0x730232e3),
+        // Oracle read of the object at 0x08b9a720 in the save state climbing the drain pipe of mission 1-2: +0x64 = +0x70 = 0x412e6666 (10.9), snap offset 0.1 (class param 0x730232e3),
         // position (940.457, 45.3713, 683.463) from the level start data, orientation 121.766 degrees.
         require(near(pole.collisionCentre[1], 10.9f, 1e-5f) && near(pole.collisionHalf[1], 10.9f, 1e-5f), "pole bounds +0x64 / +0x70");
         require(near(pole.bottom(), 0.0f, 1e-5f) && near(pole.top(), 21.8f, 1e-5f), "pole bottom and top");

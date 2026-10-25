@@ -80,7 +80,7 @@ std::uint32_t bitsOf(float value) {
 }
 
 void policeLightFlare(const assets::ParticleDefs& shipped) {
-    // Oracle (Azahar, state in-vehicle, New 3DS, read through the GDB stub): the emitter at 0x08d94b20 uses record 242
+    // Oracle (Azahar, save state driving a traffic van after mission 1-1, New 3DS, read through the GDB stub): the emitter at 0x08d94b20 uses record 242
     // (fx_p_lensflare, the siren light: 3 particles, spiral 60 degrees, random size +0.1 x 0.05, flip mode 22, life 100) and
     // holds three particles with these words. The emitter's LCG before its initialisations, 0x69e4f907, was found by searching
     // the recorded angle and size draws (raw 65381 / 15494 for the first particle); the angles, sizes and uv words below are the

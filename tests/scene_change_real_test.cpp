@@ -73,7 +73,7 @@ int main(int argc, char** argv) {
         require(runtime::worldLevelOfFile(master, streetFile).instance == "WorldLevel_01_CherryTreeHills", "street instance name");
         require(runtime::worldLevelOfFile(master, stationFile).instance == "WorldLevel_00_PoliceStation", "station instance name");
 
-        // Exit: oracle state station-at-exit / station-exit-loadingpage (agent H, 2026-10-14): walking into the bound
+        // Exit: oracle save state in the police station lobby in front of the exit / the save state at the loading page of the police station exit (agent H, 2026-10-14): walking into the bound
         // Lobby_to_CherryTree fired SceneChange_LobbyToCherryTree; after the A press on the loading page the player
         // stood at (902.00848, 16.57730, 1111.12634) (trace sw_walk frame 13), forward (-0.935, 0, -0.354) = yaw 249.25.
         const runtime::SceneChangeObject* exit = runtime::findSceneChange(objects, "WorldLevel_00_PoliceStation", "Lobby_to_CherryTree");
@@ -86,7 +86,7 @@ int main(int argc, char** argv) {
                 "street landing position");
         require(near(exitPoint->orientation[1], 249.2519f, 0.001f), "street landing yaw");
 
-        // Entry: oracle state street-at-entrance (trace ent_d frame 139, first update after the switch): the player
+        // Entry: oracle save state at the police station entrance after mission 1-1 (trace ent_d frame 139, first update after the switch): the player
         // stood at (-1.11520, 2.09010, 15.70230) and then fell to y 1.43053; forward (0.465, 0, -0.886) = yaw 152.32.
         const runtime::SceneChangeObject* entry = runtime::findSceneChange(objects, "WorldLevel_01_CherryTreeHills", "Police_ExtToInt");
         require(entry && entry->instance == "SceneChange_Police_ExtToInt" && entry->destination, "entry object");
@@ -97,7 +97,7 @@ int main(int argc, char** argv) {
                 "lobby landing position");
         require(near(entryPoint->orientation[1], 152.3217f, 0.001f), "lobby landing yaw");
 
-        // Walk-in: trace exit_walk of state police-station with the stick held: x -1.97041, y 1.42379; the update-12 row
+        // Walk-in: trace exit_walk of save state in the police station lobby after mission 1-1 with the stick held: x -1.97041, y 1.42379; the update-12 row
         // z 19.67306 is outside the bound (z 20.1114 to 23.3938), the update-13 row z 20.15606 is inside and the request
         // fired in that update (trap run exit_trap1: 0x3037e8 at frame 13). The start position is outside.
         const assets::Level station = load(archive, stationFile);

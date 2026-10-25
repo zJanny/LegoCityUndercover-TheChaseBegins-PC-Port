@@ -1,5 +1,5 @@
 // The sound scanner (src/runtime/scanner.cpp) on a made-up zone and target, no game data needed. Values and their sources: the settings block
-// 0x1e06ac (read at 0x522440 in the oracle state m12-8), the audio sub-mode values of 0x2ef814 (read at 0x5216ac+0x34 / +0xcd0..+0xcf0), the
+// 0x1e06ac (read at 0x522440 in the oracle save state on the roof at the sound scanner trigger of mission 1-2), the audio sub-mode values of 0x2ef814 (read at 0x5216ac+0x34 / +0xcd0..+0xcf0), the
 // state timing of the oracle runs s1/s3/s4 in docs/re/abilities-scanner.md (scanner_out ends the state 0x156, EnterScan 3 updates after the
 // entry of state 0x157, toggle 4 updates after it, camera 6 updates after it).
 #include "runtime/scanner.hpp"

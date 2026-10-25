@@ -1,6 +1,6 @@
 // Tests of the vehicle body's floor collision (src/runtime/vehicle_collision.*, docs/re/vehicles-physics.md). Pinned values: Azahar GDB reads
 // and memory traces of 2026-10-15 (agent VEH40, not committed): the probe points body+0xdc of the trooper
-// (state drv-police-car-seated, body 0x08e16100) and of the donut van (m11-5-in-donut-van, body 0x08e12880); drop3.mem: the parked trooper
+// (save state sitting in the police car of mission 1-1, body 0x08e16100) and of the donut van (the save state inside the repaired donut van of mission 1-1, body 0x08e12880); trace drop3: the parked trooper
 // with rigid +0x38 and +0x78 poked to 25.0 and mode +0xd8 to 1, fixed dt 0.033, rigid body 0x1d8 bytes per update; in update 20 the body
 // lands (ctrace: 48 calls of 0x15c4a4, 6 of 0x19c0a8, one of 0x1b79ac). The real part replays update 20 on lvl_01. Exits with 77 without data.
 #include "assets/assets.hpp"
@@ -45,8 +45,8 @@ void probePoints() {
     expect(shape.points[5][1] == 0x1.a7f832p+0f, "trooper probe point 5 y (box top)");
     Vector3 low, high;
     vehicleShapeBox({0.0f, 1.4032f, 0.0f}, {1.14375f, 2.54695f, 2.66857f}, {0.0f, -0.9f, 0.2f}, low, high);
-    near(low[1], -0.24375, 1e-5, "van child box low y (oracle m11-5-in-donut-van, rigid 0x08e136c0 compound child)");
-    near(high[1], 4.85015, 1e-5, "van child box high y (oracle m11-5-in-donut-van)");
+    near(low[1], -0.24375, 1e-5, "van child box low y (oracle the save state inside the repaired donut van of mission 1-1, rigid 0x08e136c0 compound child)");
+    near(high[1], 4.85015, 1e-5, "van child box high y (oracle the save state inside the repaired donut van of mission 1-1)");
     const std::array<Vector3, 8> van = vehicleProbePoints(low, high, {});
     near(van[6][2], -2.8685700 * 0.9, 1e-5, "van probe point 6 z (oracle child z -2.86857, times 0.9)");
     near(van[4][1] - 1.0f, 4.85015 - 1.0, 1e-5, "a body without wheels keeps the top");
@@ -60,7 +60,7 @@ void probePoints() {
     expect(floorContactFlags(flags, 0xf, steep) == 0, "0x181e68: a normal flatter than 45 degrees keeps it");
 }
 
-// drop.mem (the same poke with 19.0): from update 1 the trooper falls 1.9 m onto its wheels, settles and sleeps in update 40 (rigid +0xdc
+// trace drop (the same poke with 19.0): from update 1 the trooper falls 1.9 m onto its wheels, settles and sleeps in update 40 (rigid +0xdc
 // 0.7333 in update 39, 0.7667 and mode 2 in update 40); heights of update 12 (16.85740, lowest), 39 (17.0696068) and 40 (17.0701981).
 void overheadLayerAtTeleport(const assets::CollisionItem* floorItem, const WheelRay& ray, const VehicleRecord& record);
 void settleAndSleep(const assets::CollisionItem* floorItem, const WheelRay& ray, const VehicleRecord& record) {
@@ -89,7 +89,7 @@ void settleAndSleep(const assets::CollisionItem* floorItem, const WheelRay& ray,
     expect(body.velocity == Vector3{0, 0, 0} && body.angularVelocity == Vector3{0, 0, 0}, "a sleeping body loses its velocities");
 }
 
-// Oracle, 2026-10-16 (agent r14-a, state drv-police-car-seated, A held, rigid +0x34 of the seated trooper poked to (949, 17.8, 1122.7) and its
+// Oracle, 2026-10-16 (agent r14-a, save state sitting in the police car of mission 1-1, A held, rigid +0x34 of the seated trooper poked to (949, 17.8, 1122.7) and its
 // body+0x8c set to -1): the tracker 0x1edaac finds cell 12167, which lies about 69 above the street (an overhead layer of the floor graph), and
 // the trooper settles to 17.2..17.8 within 4 s instead of being pushed up: 0x1c54f8 drops the push-out of a point far below a cell with flag bit 0
 // when 0x164328 finds no wall cell.
@@ -136,7 +136,7 @@ int real(const char* fib, const char* names) {
     const VehicleRecord record = trooper::record();
     VehicleFloor floor{FloorMesh(*floorItem), FloorTracker{}, trooper::collisionBody(record)};
 
-    // drop3.mem update 19: the trooper falls at 24.63 m/s, 0.53 below its rest height; the oracle tracker cell is 22421 throughout.
+    // trace drop3 update 19: the trooper falls at 24.63 m/s, 0.53 below its rest height; the oracle tracker cell is 22421 throughout.
     VehicleRigidBody body;
     body.orientation = orientationFromAxes({-0.709558964f, 0.000611679628f, 0.704645634f}, {-0.000296625658f, 0.999999285f, -0.00116676034f},
                                            {-0.704645872f, -0.00103690138f, -0.709558249f});

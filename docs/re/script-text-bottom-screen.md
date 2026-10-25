@@ -11,13 +11,13 @@ Subtopic of [script-text.md](script-text.md): what the bottom screen shows while
 
 <a id="ts-20261014-214151"></a>
 
-## 2026-10-14T21:41:51+02:00 — HUD-31: why the port's picture of the InformationBox shows no HUD and a dialogue background (port runs and the oracle picture `ib3.png`; no new disassembly, REA was not used)
+## 2026-10-14T21:41:51+02:00 — HUD-31: why the port's picture of the InformationBox shows no HUD and a dialogue background (port runs and the oracle picture of the barrier info box; no new disassembly, REA was not used)
 
 Evidence: `chase-game ... --window 400x480` runs, the oracle picture (box open, not kept) of [script-text.md §2026-10-14T20:46](script-text.md#ts-20261014-204600), the port's draw and update code (`src/game_level.cpp`, `src/game_level_update.cpp`, `src/frontend/hud.cpp`). Own pictures (not kept): `--call-script No_Entry_Auburn_On_Foot` after 20 updates, no script, and walking into the barrier.
 
 **Cause: two artefacts of the port's test set-up, not a difference in what the barrier script switches.**
-- Top screen: the HUD layout is drawn from the storyboard `TransitionOn` at the HUD's own time, and that time only advances in `LevelSession::simulate` after the dialog check; while a script dialog is open the update returns before `hud->update(dt)`. `--call-script` opens the box in update 0, so the HUD stays at time 0 of its fade-in (nothing drawn) while the box is open. Without `--call-script` the HUD is drawn at update 20 (`port_p0.png`).
-- Bottom screen: the start of `lvl_01` with the start progress runs the mission 1-1 start script (heading and first tip with `ShowDialogBG`); background and tip stay until the player moves on. The oracle state is past that (mission 1-1 finished, no tip), so it shows the map. The barrier script does not call `ShowDialogBG`, a HUD native or the map: with the player walked into the barrier (`--start "755.09 26.5 598" --facing 180 --script "0 100 150"`, the box opens at update 104) the port's top screen shows portrait and hearts as in `ib3.png`, and the bottom screen shows the pending mission 1-1 tip.
+- Top screen: the HUD layout is drawn from the storyboard `TransitionOn` at the HUD's own time, and that time only advances in `LevelSession::simulate` after the dialog check; while a script dialog is open the update returns before `hud->update(dt)`. `--call-script` opens the box in update 0, so the HUD stays at time 0 of its fade-in (nothing drawn) while the box is open. Without `--call-script` the HUD is drawn at update 20 (port picture at update 20).
+- Bottom screen: the start of `lvl_01` with the start progress runs the mission 1-1 start script (heading and first tip with `ShowDialogBG`); background and tip stay until the player moves on. The oracle state is past that (mission 1-1 finished, no tip), so it shows the map. The barrier script does not call `ShowDialogBG`, a HUD native or the map: with the player walked into the barrier (`--start "755.09 26.5 598" --facing 180 --script "0 100 150"`, the box opens at update 104) the port's top screen shows portrait and hearts as in that oracle picture, and the bottom screen shows the pending mission 1-1 tip.
 
 **Result.** The port matches the oracle picture once the set-up matches (HUD above the box, map below when no tip or background is active). Nothing was changed in the HUD or map code.
 

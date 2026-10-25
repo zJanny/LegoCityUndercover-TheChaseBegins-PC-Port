@@ -1,5 +1,5 @@
 // Real-data test of the floor graph of a collision item (assets::FloorGraph, loader 0x11fd20; docs/re/vehicles-physics.md). Pinned values: Azahar
-// GDB reads of 2026-10-15 (agent VEH40, state drv-police-car-seated, lvl_01): 0x376c60 = 0x5ca1 cells, the cells at *0x376c68 (cell 0: index 0,
+// GDB reads of 2026-10-15 (agent VEH40, save state sitting in the police car of mission 1-1, lvl_01): 0x376c60 = 0x5ca1 cells, the cells at *0x376c68 (cell 0: index 0,
 // neighbours 0x45, 0x7f, 1; cell 2: 3, 0xa3, 0x51; cell 3 flags 0x6000; cell 0x52fd under the trooper: neighbours 0x5322, 0x5795, 0x52fc,
 // flags 0x2000) and the first extra triangle at *0x376c64 (normal 0x3e252a9b 0x3f7c919a 0x3cca7131, d 0x4343f57c). Exits with 77 without data.
 #include "assets/assets.hpp"
@@ -36,7 +36,7 @@ void cell(const assets::FloorGraph& graph, std::uint32_t index, std::uint16_t ru
     expect(entry.index == index && flags == runtimeFlags && entry.neighbour[0] == a && entry.neighbour[1] == b && entry.neighbour[2] == c, what);
 }
 
-// Oracle trap of 0x23b5e8 and its return sites in 0x1c54f8 (agent VEH40 walk.txt, drv-police-car-seated, A held 5 updates): the eight body
+// Oracle trap of 0x23b5e8 and its return sites in 0x1c54f8 (agent VEH40 walk.txt, the save state sitting in the police car of mission 1-1, A held 5 updates): the eight body
 // points of the collision pass from the centre of mass (Clip, return 0x1c5700 and 0x1c5e28) and the half-step query (Stay, return 0x1c5818).
 struct Walk {
     int cell;

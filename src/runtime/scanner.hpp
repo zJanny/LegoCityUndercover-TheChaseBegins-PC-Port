@@ -19,7 +19,7 @@ constexpr int kScannerZoneObjectType = 201;
 // ScannerMode of the audio zones; the photo (0), physical, satellite and cannon zones share type 201 but use other mode values (SCAN-2).
 constexpr int kScannerAudioMode = 1;
 
-// Settings block of the scanner camera (initialiser 0x1e06ac, registered as "Game.Scanner.Audio"; read at 0x522440 in m12-8).
+// Settings block of the scanner camera (initialiser 0x1e06ac, registered as "Game.Scanner.Audio"; read at 0x522440 in the save state on the roof at the sound scanner trigger of mission 1-2).
 struct ScannerSettings {
     float yawLimitDegrees = 0.0f;  // [0]: 0 leaves the yaw free
     float pitchMinDegrees = -25.0f;
@@ -33,7 +33,7 @@ struct ScannerSettings {
     float zoomDegreesPerSecond = 35.0f;  // [9]
 };
 
-// Values the audio sub-mode (byte +0xd58 = 1) writes into the mode object 0x5216ac every update (0x2ef814, branch 0x2ef88c; read in m12-8).
+// Values the audio sub-mode (byte +0xd58 = 1) writes into the mode object 0x5216ac every update (0x2ef814, branch 0x2ef88c; read in the save state on the roof at the sound scanner trigger of mission 1-2).
 struct ScannerModeParams {
     float scanRate = 0.75f;           // +0x34: scan progress per second
     float scanDecay = 4.0f;           // +0x38: progress lost per second after a cancel
@@ -53,7 +53,7 @@ constexpr int kScannerAlignTurnStep = 0x800;
 // 0x1ebe88: the view sits at the player position plus 1.7 times the player height (+0x70) plus the zone's CameraYOffset.
 constexpr float kScannerEyeHeightFactor = 1.7f;
 // Real-time counts of the scanner transitions, in updates (the game clock advances 100 of 3000 ticks per second per update, so one update is
-// 1/30 s). Measured in the oracle with the motion source (state m12-8-roof-sound-scanner, request B-1, docs/re/abilities-scanner.md): the
+// 1/30 s). Measured in the oracle with the motion source (save state on the roof at the sound scanner trigger of mission 1-2, request B-1, docs/re/abilities-scanner.md): the
 // press clears the toggle byte 0x375eb6 in its own update, state 0x157 is entered 49 updates later, the enter callback 0x2bee98 (mode index set,
 // EnterScanTriggerObject) comes 20 updates after that, and the end callback 0x1a27e0 (toggle byte back to 1) together with the first camera update
 // 0x26f0b4 (camera yaw valid) 56 updates after the entry. SCAN-S1: the counts are measured, the animation clocks behind them are not read.

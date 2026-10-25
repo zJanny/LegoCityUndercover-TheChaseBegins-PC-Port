@@ -89,7 +89,7 @@ int main(int argc, char** argv) {
                 iconBottom = std::max(iconBottom, y);
             }
         }
-    // Oracle screenshot agentHUD2-out/h2.png (bottom screen = image columns 40..359, rows 240..479; second tip of mission 1-1): pixels with
+    // Oracle screenshot (agent HUD2, 2026-10-14; bottom screen = image columns 40..359, rows 240..479; second tip of mission 1-1): pixels with
     // blue > 200, 130 < green < 200, 40 < red < 120 are 521 with bounding box x 31..289, y 117..128; pixels above 225 in all channels for
     // x 100..199 (the button icons' white borders) are 72 with bounding box x 116..131, y 116..129. Layout code 0x21bc2c (line height 23 - 6),
     // 0x195408 (line top = centre - lines * pitch / 2), 0x2544e0 (icon at line top + (23 - 16) / 2), icons dsbuttonl / dsbuttonr 16x16.
@@ -101,7 +101,7 @@ int main(int argc, char** argv) {
     drawDialogueBox(dialogue, resources, 0, "This police force doesn't run on hopes and dreams alone!", 1.0f);
     const Extent dialogueRow = rowExtent(dialogue, 186, 200);
     const Extent dialogueColumn = columnExtent(dialogue, 210, 200);
-    // Oracle screenshot of the dialogue box (agentX-out/compare/dialogue_oracle_left_port_right.png: border x 45..375, y 155..217, to one pixel);
+    // Oracle screenshot of the dialogue box (oracle picture of the dialogue box beside the port picture, 2026-10-14: border x 45..375, y 155..217, to one pixel);
     // layout code 0x1cc550 / 0x23c780.
     require(dialogueRow.first == 44 && dialogueRow.last == 375, "dialogue box columns 44..375");
     require(dialogueColumn.first == 154 && dialogueColumn.last == 217, "dialogue box rows 154..217");
@@ -122,7 +122,7 @@ int main(int argc, char** argv) {
             if (frameTop < 0) frameTop = y;
             frameBottom = y;
         }
-    // Oracle (state agent-intro-dialog, line "This police force doesn't run on hopes and dreams alone!", agentHUD2-out/i12.png, pixels over
+    // Oracle (save state in the opening dialogue of a new game, line "This police force doesn't run on hopes and dreams alone!", agent HUD2, 2026-10-14, pixels over
     // black with brightness > 150 and red > blue): hexagon frame heartsbg_generic left tip at row 185 is x 8, column 20 spans y 163..206.
     // Formula from the draw code 0x1cc550: centre x = 200 - half text width - 24 - 7 (measure call without the +10 offset), centre y = line box centre - 1.
     require(frameLeft == 8, "portrait frame left tip x 8");
@@ -141,8 +141,8 @@ int main(int argc, char** argv) {
             textTop = std::min(textTop, y);
             textBottom = std::max(textBottom, y);
         }
-    // Oracle (state agent-doughnut-title, first tip of mission 1-1, agentHUD2-out/h2.png bottom screen): text pixels above 200 in all channels span
-    // x 103..216, y 24..36; the box spans y 6..53 and x 92..227 (border columns 92 and 93, 226 and 227: the oracle pixel columns 132/133 and 266/267 of h2.png equal the port's, difference to the earlier measure was the alpha). Box centre (160, 30),
+    // Oracle (save state at the first tip of a new game, first tip of mission 1-1, agent HUD2, 2026-10-14, bottom screen): text pixels above 200 in all channels span
+    // x 103..216, y 24..36; the box spans y 6..53 and x 92..227 (border columns 92 and 93, 226 and 227: the oracle pixel columns 132/133 and 266/267 of the same picture equal the port's, difference to the earlier measure was the alpha). Box centre (160, 30),
     // half height 12 and half width min(text width / 2, 145): draw code 0x193f00.
     require(textLeft == 103 && textRight == 216 && textTop == 24 && textBottom == 36, "heading text pixels x 103..216, y 24..36");
     int borderTop = 999, borderBottom = -1;
@@ -153,7 +153,7 @@ int main(int argc, char** argv) {
         borderBottom = std::max(borderBottom, y);
     }
     require(borderTop == 6 && borderBottom == 53, "heading box border rows 6..53 at column 160");
-    // Oracle h2.png pixel (132, 270) = (141, 202, 233) over the scene background (2, 18, 54): the box alpha is the square of 240 / 255 (0x229128
+    // Oracle pixel (132, 270) of the second-tip picture = (141, 202, 233) over the scene background (2, 18, 54): the box alpha is the square of 240 / 255 (0x229128
     // writes the alpha into the vertex colour and into the material), over black the red channel is 141 on columns 92 and 93.
     require(heading.pixel(92, 30)[0] == 141 && heading.pixel(93, 30)[0] == 141 && heading.pixel(91, 30)[0] < 20, "heading box border at columns 92, 93 with squared alpha");
     require(levelHeadingKey(resources, "lvl_01_cherrytreehills") == 2004168849u && levelHeadingKey(resources, "lvl_missing") == 0,
@@ -165,7 +165,7 @@ int main(int argc, char** argv) {
     drawInformationBox(information, resources, "You need to complete more missions before you can enter this area of LEGO City.", "OK");
     const Extent informationRow = rowExtent(information, 170, 200);
     const Extent informationColumn = columnExtent(information, 200, 200);
-    // Oracle (state info-barrier, walked into No_Entry_Auburn_OnFoot, agentOC-out/ib3.png top screen): border light blue (159, 224, 255) at columns
+    // Oracle (save state in front of the Auburn barrier bound, walked into No_Entry_Auburn_OnFoot, agent OC, 2026-10-14, top screen): border light blue (159, 224, 255) at columns
     // 56..57 and 342..343 of row 170, rows 126..127 and 216..217 of column 200 (box x 56..343, y 126..217); the draw call 0x193c4c gives centre
     // (200, 172) and half size (135.5, 34) (three lines plus the empty line of the two newlines appended before the buttons).
     require(informationRow.first == 56 && informationRow.last == 343, "information box columns 56..343");
@@ -183,7 +183,7 @@ int main(int argc, char** argv) {
             okTop = std::min(okTop, y);
             okBottom = std::max(okBottom, y);
         }
-    // Oracle ib3.png: orange pixels (red > 200, 120 < green < 210, blue < 90) of the "OK" row span x 298..310, y 198..208 at rows 190..215; the
+    // Oracle picture of the barrier info box: orange pixels (red > 200, 120 < green < 210, blue < 90) of the "OK" row span x 298..310, y 198..208 at rows 190..215; the
     // oracle's glyph rows sit about 0.2 pixel lower, so the port's last row 209 carries two pixels the oracle does not.
     require(okLeft == 298 && okRight == 310 && okTop == 198 && okBottom <= 209 && okBottom >= 208, "information box OK text pixels x 298..310, y 198..208");
     return failures ? EXIT_FAILURE : EXIT_SUCCESS;

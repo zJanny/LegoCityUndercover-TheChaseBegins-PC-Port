@@ -15,7 +15,7 @@ Subtopics:
 - Run the emulator only through `tools/azahar_oracle.py` (Azahar 2126.2, GDB stub, isolated XDG home under `artifacts/oracle/<home>/`, one port per emulator); Old 3DS mode is the default. [§2026-10-13T11:50:30](#ts-20261013-115030)
 - Start from save states (`--display xvfb`, `--state NAME`, `savestate NAME`, `loadstate NAME`): quick save is F1 and quick load F12, files in `artifacts/oracle/states/`; a state saved or loaded in the first 15 s after boot is refused. [§2026-10-13T11:50:30](#ts-20261013-115030)
 - Per-frame stepping (`frames`, `trace`) inflates the game clock by about 30 percent; measure rates in free-run intervals (`wait`) and use `--rpc` for timing. `--frame-limit 0` is for navigation only. [§2026-10-13T11:50:30](#ts-20261013-115030)
-- Screenshots need the software renderer and take about 11 s through the stub. [§2026-10-13T11:50:30](#ts-20261013-115030)
+- Screenshots through the GDB stub take about 11 s and need the software renderer (with OpenGL the emulated VRAM is stale). With `--rpc --renderer opengl` a screenshot takes about 0.2 s and the timing stays faithful; the software renderer crashes in gameplay areas, so gameplay work uses that route. [§2026-10-13T11:50:30](#ts-20261013-115030), [oracle-routes.md §2026-10-13T12:43:33](oracle-routes.md#ts-20261013-124333), [oracle-rpc.md §2026-10-13T12:02:21](oracle-rpc.md#ts-20261013-120221)
 - `--keep` leaves the emulator running, `--attach --port N` reconnects, `--stop` ends it. [§2026-10-13T11:50:30](#ts-20261013-115030)
 - Every session gets a virtual motion source (Cemuhook DSU, level pose); without it the scanner yaw is NaN. Details: [oracle-setup.md §2026-10-18T22:03:32](oracle-setup.md#ts-20261018-220332).
 - The script steps `touch` / `drag` touch the bottom screen through the same DSU server; the game's HID touch entry holds exactly the pixel. Details: [oracle-setup.md §2026-10-25T11:35:28](oracle-setup.md#ts-20261025-113528).
@@ -27,7 +27,7 @@ Subtopics:
 ## 2026-10-13T11:50:30+02:00 — Setup, fidelity rules and the fast workflow
 
 **Setup**
-- `azahar` in `PATH`. Azahar is started as `azahar -g PORT <image>` with an isolated XDG home under `artifacts/oracle/<home>/`. The tool writes `config/azahar-emu/qt-config.ini` itself; the user's own config is never read or changed.
+- `azahar` in `PATH`. Azahar is started as `azahar -g PORT <image>` with an isolated XDG home under `artifacts/oracle/<home>/`. The tool writes `config/azahar-emu/qt-config.ini` itself; no config of yours is read or changed.
 - Platform: `QT_QPA_PLATFORM=offscreen` by default. `--display xvfb` starts a private `Xvfb` and runs Azahar on the xcb platform (needed for save states, see below).
 - With `-g` the emulator halts at entry 0x100000 until a gdb client connects. The client breaks on the scheduler 0x100f44 (one stop per game update) and on the pad reader (input injection).
 - Ports used by agents: one port and one home per concurrent emulator. `--home` and `--port` select them.
@@ -36,7 +36,7 @@ Subtopics:
 - Azahar ignores a config value whose `\default` flag is `true`. Every generated key therefore carries `key\default=false`. (A first run was accidentally in New 3DS mode because of this.)
 - Old 3DS mode (`is_new_3ds=false`) is the oracle default.
 - Per-frame breakpoint stops (`frames`, `trace`) inflate the game clock about 30 % against vblanks (free run 51.3 ticks per vblank, stepped 65.9). Measure rates in free-run intervals (`wait`).
-- Screenshots need the software renderer (it writes frames to emulated VRAM). With the OpenGL renderer VRAM is stale. The software renderer delivers vblanks late.
+- Screenshots through the stub (no `--rpc`) need the software renderer (it writes frames to emulated VRAM). With the OpenGL renderer VRAM is stale. The software renderer delivers vblanks late.
 - `frame_limit=0` (`--frame-limit 0`) makes the game clock run about 2000 per vblank instead of 50. Use it for navigation only, never for timing measurements.
 - A screenshot reads about 576 KB through the stub (2 KB per packet) and takes about 11 s.
 
@@ -55,7 +55,7 @@ Subtopics:
 - The gdb client is detached while the key is pressed and reconnected afterwards. After a load the breakpoints work again, `report` shows the saved scheduler and clock values (language screen: C=0x514378, vtable 0x363cd0, clock 703618 right after the load), and the software-renderer screenshot shows the restored screen.
 - Pitfall found on the way: a late free-running boot reaches the language screen by itself, so a "loaded" check must compare against the state's own values, not just the screen.
 
-**Measured wall times** (this machine, software renderer, Old 3DS)
+**Measured wall times** (reference timings of one machine, expect other values on yours; software renderer, Old 3DS)
 | Step | Time |
 |---|---|
 | Cold boot, `frames 600` to the language screen (plus savestate and screenshot) | 229 s |

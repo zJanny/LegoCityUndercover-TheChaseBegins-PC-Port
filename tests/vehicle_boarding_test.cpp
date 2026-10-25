@@ -183,7 +183,7 @@ void seatedAndLeave() {
     require(!boarding.massScaledVehicle(), "Jump Out begins with the vehicle's mass scale 1 (0x3222f4 calls 0x213dc8)");
 }
 
-// van_dulmen as the user's state in-vehicle had it: node (613.369, 17.972, 1062.516), forward (-0.1995, 0, 0.9795), DriverPosition (0, -0.2, 0). X pressed
+// van_dulmen as the save state driving a traffic van after mission 1-1 had it: node (613.369, 17.972, 1062.516), forward (-0.1995, 0, 0.9795), DriverPosition (0, -0.2, 0). X pressed
 // at 0.3 s; the player started at the seat (613.369, 17.772, 1062.516) and landed at (615.329, 16.604, 1062.915) 22 updates later.
 const Sample kVanJumpOut[21] = {
     {613.458f, 18.015f, 1062.534f, 0}, {613.552f, 18.269f, 1062.553f, 0}, {613.637f, 18.485f, 1062.570f, 0}, {613.726f, 18.695f, 1062.589f, 0},
@@ -232,7 +232,7 @@ void jumpOut() {
     require(!boarding.update(vehicles, input).takesControl, "after the landing the player moves on his own");
 }
 
-// Oracle (Azahar GDB ctrace, state m11-6-van-to-shop, A held, dt 0.033, docs/re/vehicles-waypoints.md): in update 53 the thread of 1-1_VanEscorted calls
+// Oracle (Azahar GDB ctrace, save state driving the donut van to the shop in mission 1-1, A held, dt 0.033, docs/re/vehicles-waypoints.md): in update 53 the thread of 1-1_VanEscorted calls
 // VehicleJumpOut (0x1da8d8), which posts event 200 (0x21e1d4); the controller pushes state 0x11b (0x2414b4 from 0x322b24) inside that call; the next native,
 // PositionObject, pushes state 1 (message 8, 0x2414b4 from 0x18edb0) in the same update.
 void scriptedBoarding() {
@@ -320,7 +320,7 @@ void real(const char* fib, const char* names) {
         float mass[3];
         float driver[3];
     };
-    // Entity box (+0x60 / +0x6c) read in the oracle: police car 0x08a88440 in m11-2-patrol-car; FP_Vehicle_03 from docs/re/vehicles-boarding.md (street-after-1-1).
+    // Entity box (+0x60 / +0x6c) read in the oracle: police car 0x08a88440 in the save state in front of the police car of mission 1-1; FP_Vehicle_03 from docs/re/vehicles-boarding.md (the save state outside the police station after mission 1-1).
     // The body offset is where the hidden player stood while driving: police (887.378, 17.074, 1117.315) at node (887.377, 17.824, 1117.312);
     // worker 0.2 ahead and 1.15 below; donut van 0.22 ahead and 0.897 below; van_dulmen 0.9 below.
     const Expected expected[] = {

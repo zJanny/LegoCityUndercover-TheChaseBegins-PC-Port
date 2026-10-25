@@ -1,5 +1,5 @@
 // Reference-trigger step 0x23211c (src/runtime/reference_trigger.*, reference_trigger_apply.*). Values: docs/re/buildit.md (oracle ctrace of
-// 0x23cee8 over the build of 1-1_BI_DonutVanParts, state m11-4-van-parts: the call 0x2321dc with the build-it as object and instigator, then the
+// 0x23cee8 over the build of 1-1_BI_DonutVanParts, save state in front of the donut van parts build-it of mission 1-1: the call 0x2321dc with the build-it as object and instigator, then the
 // call 0x23243c with the target as object and the build-it as instigator) and the disassembly of 0x23211c, 0x244fc8, 0x242cf0 and the event
 // registration 0x16bac4 (llvm-objdump, 20261025-mission13-B; docs/re/script-triggers.md entry of that round). The deactivate mode, message 10,
 // message 0xff to the owners and the nav node call are read from the disassembly only.

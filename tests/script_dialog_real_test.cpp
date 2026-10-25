@@ -37,7 +37,7 @@ int main(int argc, char** argv) {
         const assets::Level level = assets::parseLevel(archive.read(*entry));
         const assets::ClassLookup classOf = assets::archiveClassLookup(archive);
 
-        // Provenance of the texts: oracle state street-after-1-1 (screenshot of the dialog, 2026-10-14) and the key
+        // Provenance of the texts: oracle save state outside the police station after mission 1-1 (screenshot of the dialog, 2026-10-14) and the key
         // lookup with frontend::Resources: gametext fd849176, systemtext d12f028b (OK) and 994b0cc9 (Cancel).
         frontend::Resources resources(archive);
         const runtime::ScriptDialog keys;
@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
 
             const auto placements = runner.takePlacements();
             if (answer == runtime::kDialogConfirm) {
-                // Oracle (street-after-1-1, A pressed): the frame after the answer the player node was at
+                // Oracle (the save state outside the police station after mission 1-1, A pressed): the frame after the answer the player node was at
                 // (904.652, 16.577, 1113.197); the placement of the target is (904.652, 16.5773, 1113.2), yaw 45.4542.
                 require(runner.variable("Entered_Police_Station") == 1, "Entered_Police_Station");
                 require(placements.size() == 1 && placements[0].object == "player1" &&

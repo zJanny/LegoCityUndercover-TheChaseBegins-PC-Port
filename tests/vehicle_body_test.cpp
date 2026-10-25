@@ -1,5 +1,5 @@
 // Tests of the rigid body of the vehicle physics body (src/runtime/vehicle_body.*). Pinned values: oracle runs of 2026-10-15 (Azahar GDB memory
-// traces at fixed dt 0.033, state drv-police-car-seated, rigid body at entity body+0x7c; docs/re/vehicles-physics.md): the damping coefficient
+// traces at fixed dt 0.033, save state sitting in the police car of mission 1-1, rigid body at entity body+0x7c; docs/re/vehicles-physics.md): the damping coefficient
 // (+0x1c0) of an update is DampingLinear * (0.04 * |velocity of the update before|)^2 with DampingLinear 0.02 (body+0xd58); the rest from the
 // code of 0x1f2eb4, 0x1f2c20, 0x1f2a50, 0x2d40f0 and 0x341694 (REA pseudo code, llvm-objdump).
 #include "runtime/vehicle_body.hpp"

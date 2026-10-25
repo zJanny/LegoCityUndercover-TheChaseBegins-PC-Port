@@ -47,7 +47,7 @@ float vehicleMassScale(bool playerVehicle);
 // kinematic for owner flag 0x4 or 0x400 (0x2432d8) and removes it again (0x243300 with 0). The vehicle handler adds it again on message
 // 0x80000004 (0x17a618, sent when the entity joins the active list in 0x173534) unless the entity word +0x10 has bit 0, and removes it on
 // message 0x80000003 (0x17a648, sent by the removal at 0x22d4a4); what activates a given vehicle is not read. Oracle
-// (drv-police-car-seated): the dynamic bodies are the trooper and the parked FP_Vehicle_03, 04 and 05; the traffic vehicles are kinematic and
+// (the save state sitting in the police car of mission 1-1): the dynamic bodies are the trooper and the parked FP_Vehicle_03, 04 and 05; the traffic vehicles are kinematic and
 // out of the world (collision flags 0x182, no broadphase handle). The port takes an enabled vehicle that is parked (state 4, or 10 for
 // SpawnUnshovable) or already has a body.
 bool vehicleHasDynamicBody(const VehicleRecord& record, bool hasBody, bool disabled);

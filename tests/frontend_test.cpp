@@ -250,7 +250,7 @@ void continueUsedSlot() {
     step(flow, kButtonA);
     stepsUntilScreen(flow, Screen::Loading, 100);
     requireEqual(flow.handoff().slot, 0u, "chosen used slot");
-    requireEqual(flow.handoff().newGame ? 1 : 0, 0, "a used slot continues (oracle state savecont-slotlist-user: no saving page, loading screen at once)");
+    requireEqual(flow.handoff().newGame ? 1 : 0, 0, "a used slot continues (oracle save state at the slot list with a used slot: no saving page, loading screen at once)");
     stepsUntilScreen(flow, Screen::Done, 1000);
     bool introOpened = false;
     for (const std::string& name : movies.opened) introOpened = introOpened || name == "01_gameintro:uk";

@@ -31,7 +31,7 @@ Delete or fix the wrong text in place. No correction entry (the user's rule).
 2. Record the state in the local catalogue `artifacts/oracle/states/README.md` (not committed; never in `docs/re`), with:
    - where the player stands and faces
    - **its game progress:** missions done, running or not started
-3. A finding that relies on the state says in words how to reach the equivalent game point (missions done, place), never the state's file.
+3. A finding that relies on the state says "recorded from a save state" and describes the game situation in game terms; never the state's name, slot, file or how the user reached it. Provenance is round/agent, date and command, never an output folder or a file name from a scratch folder.
 4. If the game progress is unclear, ask the lead to ask the user instead of guessing.
 
 **A decision of the user about the work** (a new goal, an order of work)

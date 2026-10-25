@@ -18,13 +18,13 @@ Subtopics: [abilities-scanner-overlay.md](abilities-scanner-overlay.md)
 
 <a id="ts-20261018-112721"></a>
 
-## 2026-10-18T11:27:21+02:00 — The sound scanner: classes, player states, view, triggers (REA, objdump, Azahar GDB traces of m12-8)
+## 2026-10-18T11:27:21+02:00 — The sound scanner: classes, player states, view, triggers (REA, objdump, Azahar GDB traces of the save state on the roof at the sound scanner trigger of mission 1-2)
 
 Corrected by [abilities-scanner.md §2026-10-19T08:43:45](#ts-20261019-084345): the enter / exit counts 3 / 4 / 6 are stepped-frame counts; real time is 49 / 20 / 56 / 57 updates, and the exit does not hang with the motion source.
 
 ### Method
 
-REA (Ghidra 12.1.2) pseudocode of 0x192008, 0x19f6d0, 0x1aea24, 0x2249e0, 0x1bf2d0, 0x2bee98, 0x2befc0, 0x1a2824, 0x2cb03c, 0x2248c4, 0x187f78, 0x26f0b4, 0x1b7540, 0x26eee0, 0x20f410, 0x1ec470, 0x285c8c, 0x29125c, 0x2ef100, 0x2ef310, 0x2ef4c8, 0x2ef144, 0x2ef664, 0x2ef694, 0x1ebe18, 0x1ebe88, 0x1eb0e0, 0x2d2c78, 0x1cd9dc, 0x322ba8; llvm-objdump (`--mattr=+vfp2`) of 0x1863c8, 0x1e06ac, 0x2ef814, 0x322b7c, 0x325248, 0x1bf478, the state records near 0x34e7dc and the vtable 0x362968. Note: for 0x2d2ab8 and 0x2d2cf8 REA returned the bodies of 0x2ef310 and 0x2ef4c8 (the audio overrides; the vtable 0x362968 +0x34 = 0x2ef100 calls both). Oracle: state `m12-8-roof-sound-scanner`, New 3DS, OpenGL, no RPC, port 24713, runs s1..s5 (`ctrace`, `memtrace`, `read`; stepped frames have dt 0.07, so frame counts of dt-driven steps differ from the 1/30 port).
+REA (Ghidra 12.1.2) pseudocode of 0x192008, 0x19f6d0, 0x1aea24, 0x2249e0, 0x1bf2d0, 0x2bee98, 0x2befc0, 0x1a2824, 0x2cb03c, 0x2248c4, 0x187f78, 0x26f0b4, 0x1b7540, 0x26eee0, 0x20f410, 0x1ec470, 0x285c8c, 0x29125c, 0x2ef100, 0x2ef310, 0x2ef4c8, 0x2ef144, 0x2ef664, 0x2ef694, 0x1ebe18, 0x1ebe88, 0x1eb0e0, 0x2d2c78, 0x1cd9dc, 0x322ba8; llvm-objdump (`--mattr=+vfp2`) of 0x1863c8, 0x1e06ac, 0x2ef814, 0x322b7c, 0x325248, 0x1bf478, the state records near 0x34e7dc and the vtable 0x362968. Note: for 0x2d2ab8 and 0x2d2cf8 REA returned the bodies of 0x2ef310 and 0x2ef4c8 (the audio overrides; the vtable 0x362968 +0x34 = 0x2ef100 calls both). Oracle: save state on the roof at the sound scanner trigger of mission 1-2, New 3DS, OpenGL, no RPC, port 24713, runs s1..s5 (`ctrace`, `memtrace`, `read`; stepped frames have dt 0.07, so frame counts of dt-driven steps differ from the 1/30 port).
 
 ### Classes and objects of lvl_01
 
@@ -48,7 +48,7 @@ REA (Ghidra 12.1.2) pseudocode of 0x192008, 0x19f6d0, 0x1aea24, 0x2249e0, 0x1bf2
 
 - Mode table 0x526ad8 (read): modes 0 and 1 share the object 0x5216ac (vtable 0x362968; +0xd58 = 1 for audio), settings pointer +0x14 = 0x522440 with the values of 0x1e06ac: yaw limit 0, pitch -25 / 40, smoothing 0.1, zoom turn scale 0.66, zoom start 43, min 20, max 43, turn 60 per second, zoom 35 per second, threshold 1e-5. 0x2ef814 writes for audio: +0x34 = 0.75, +0x38 = 4.0, +0xcd0 = +0xcd4 = 80, +0xcd8 = 50, +0xcdc..+0xce4 = 30, +0xcf0 = 1.5 (read the same in memory).
 - 0x26f0b4: zoom += 35 (L - R) dt clamped to 20..43 (zoom loop sounds 0x2e then 0x2d); full zoom fires `ZoomedInTriggerObject` (r1 = 0) in every update (oracle s3: R held from frame 40, sounds at 40 and 45, trigger from frame 49 in every frame). Aim: pitch += -stickY 60 dt, yaw += stickX 60 dt (degrees, D-pad override), times 1 - 0.66 (1 - zoom fraction); the yaw accumulator 0x375ee0 grew 0.0257 rad in a 0.033 update with raw stick 120 (s2).
-- 0x1ec470 (+0x20): angle limit +0xce8 = 50 - 20 (1 - zoom fraction), range +0xcec = 30 (100 for an object with a shown model, 0x29125c), screen records (0x28 bytes from +0x4c, 14 in m12-8), target search 0x285c8c: smallest squared screen distance with (radius + 80)^2 >= it.
+- 0x1ec470 (+0x20): angle limit +0xce8 = 50 - 20 (1 - zoom fraction), range +0xcec = 30 (100 for an object with a shown model, 0x29125c), screen records (0x28 bytes from +0x4c, 14 in the save state on the roof at the sound scanner trigger of mission 1-2), target search 0x285c8c: smallest squared screen distance with (radius + 80)^2 >= it.
 - Lock 0x2ef4c8 (state byte +0x3c): 0 -> 1 on a target, progress +0x28 += 1.5 dt, at 1 state 2, `LockedOnTriggerObject` (zone type 201) and sound 0x2b; losing the target gives 3 / 4 (sound 0x2c) and then 0.
 - Scan 0x2ef310: A (slot 6) held on the locked target gives state 5; progress +0x30 += 0.75 dt, above 1 sounds 0xee stop / 0xef, state 6, the target's `TriggerScanned` (component +8) fired once with the target as instigator (flag bit 1). Y (slot 9) or losing the target cancels (0x1eb0e0: state 7 / 8, decay 4.0 per second, 0x2d2c78 back to 0).
 
@@ -68,7 +68,7 @@ Unknowns:
 
 <a id="ts-20261019-084345"></a>
 
-## 2026-10-19T08:43:45+02:00 — Scanner timing in real time with the motion source (oracle run B-1, state m12-8-roof-sound-scanner)
+## 2026-10-19T08:43:45+02:00 — Scanner timing in real time with the motion source (oracle run B-1, save state on the roof at the sound scanner trigger of mission 1-2)
 
 ### Method
 
@@ -92,11 +92,11 @@ Unknowns:
 
 <a id="ts-20261019-140622"></a>
 
-## 2026-10-19T14:06:22+02:00 — The cyan wash: the material override 0x530834 of the audio mode (REA, llvm-objdump, oracle m12-8)
+## 2026-10-19T14:06:22+02:00 — The cyan wash: the material override 0x530834 of the audio mode (REA, llvm-objdump, oracle the save state on the roof at the sound scanner trigger of mission 1-2)
 
 ### Method
 
-REA (Ghidra 12.1.2) pseudocode of 0x2bee98, 0x2ef664, 0x2ef694, 0x2befc0, 0x285c68, 0x29123c, 0x1ee98c, 0x2e4858, 0x128dc8, 0x12e460, 0x1292fc, 0x12df94, 0x180fac, 0x2128c8, 0x228d20, 0x17fc38, 0x2bf830, 0x2b9cf8; llvm-objdump (`--mattr=+vfp2`) of 0x129560 (reads of 0x530834), 0x188778 (draw list item) and the vtable 0x362968. Oracle: state `m12-8-roof-sound-scanner`, OpenGL, `--rpc --rpc-input`, port 45645: `read` of the bytes below before the A press, in the view (A, 5 s later) and after the exit by B; screenshots in the agent's scratch folder (not committed).
+REA (Ghidra 12.1.2) pseudocode of 0x2bee98, 0x2ef664, 0x2ef694, 0x2befc0, 0x285c68, 0x29123c, 0x1ee98c, 0x2e4858, 0x128dc8, 0x12e460, 0x1292fc, 0x12df94, 0x180fac, 0x2128c8, 0x228d20, 0x17fc38, 0x2bf830, 0x2b9cf8; llvm-objdump (`--mattr=+vfp2`) of 0x129560 (reads of 0x530834), 0x188778 (draw list item) and the vtable 0x362968. Oracle: save state on the roof at the sound scanner trigger of mission 1-2, OpenGL, `--rpc --rpc-input`, port 45645: `read` of the bytes below before the A press, in the view (A, 5 s later) and after the exit by B; screenshots in the agent's scratch folder (not committed).
 
 ### Mechanism
 
@@ -107,7 +107,7 @@ REA (Ghidra 12.1.2) pseudocode of 0x2bee98, 0x2ef664, 0x2ef694, 0x2befc0, 0x285c
 - 0x180fac (the sky) saves 0x530834 and clears it while 0x3772cd is set; the audio mode clears 0x3772cd, so the sky is washed too. Another mode's enter (0x304698, 0x285c68(0)) sets 0x3772cd = 1 and keeps the normal sky.
 - The glow post-process 0x2bf830: copies the screen into a 256 x 128 target (0x52a6b8), blurs it three times between 0x52a6d8 and 0x52a6f8 with the table modes 0xc / 0xd, and adds it to the screen with the table mode 0x12 (read: stage 0 multiply-add of vertex alpha x texture alpha + vertex colour, stages 1 and 2 modulate by the texture, so 2 x (a + c) x T^2 with the x2 flag set when the two arguments add up to more than 1), vertex colour (0.3, 0.3, 0.3, 0.7), blend factors one / one (destination index 0x516414 = 1). In normal play of lvl_01 the first argument 0x516410 is 0, so the glow is off; in the scanner it is on. This explains why the oracle colours are more saturated than the plain formula (red about 0.24 of green instead of 0.295).
 
-### Oracle (m12-8, port 45645)
+### Oracle (the save state on the roof at the sound scanner trigger of mission 1-2, port 45645)
 
 - In the view: 0x51641e = 1, 0x3760fc / 0x3760fd = 1 / 1, 0x52a1cd = 1, 0x3772cd = 0, 0x530834 = 0 (reset between the passes), 0x530835 = 3, 0x53083c = 0xffab8126, 0x530840 = 0, 0x375ee8..ea = 1, 0, 1. 0x516410 = 0.0, 0x516414 = 1. The table entry of mode 0x12 at 0x596260 holds three stages (source 0x30, operand 0x22, combiner 8; source 0x000f003f, combiner 1; the same again).
 - After the exit by B the mode exit had run (0x51641e = 0, 0x3760fd = 0, 0x52a1cd = 0) while 0x375ee8 and +1 were still 1 and the screen showed the full-screen hexagon panel of the transition; 5 s later the scanner was idle and the street view normal.
@@ -118,7 +118,7 @@ REA (Ghidra 12.1.2) pseudocode of 0x2bee98, 0x2ef664, 0x2ef694, 0x2befc0, 0x285c
 
 ### Port
 
-`assets::MaterialOverride` and `materialState(part, override)` (src/assets/material.cpp), `runtime::scannerRender` (src/runtime/scanner_render.*, values above), `Scene::setMaterialOverride` (src/render/scene.cpp: the overridden stages run through the existing texenv shader `scene.frag.glsl`; flag 6 skips additive draws; the texture units follow the overridden state), glue in `LevelSession::draw`: no fog, the world override for the sky, the draw-list override for the rest while the scanner view is shown. Test `scanner-render`. A `chase-game` picture at the m12-8 spot (the zone forced usable for the picture) shows the same hue as the oracle, darker and less saturated because the glow pass is missing (RENDER-68).
+`assets::MaterialOverride` and `materialState(part, override)` (src/assets/material.cpp), `runtime::scannerRender` (src/runtime/scanner_render.*, values above), `Scene::setMaterialOverride` (src/render/scene.cpp: the overridden stages run through the existing texenv shader `scene.frag.glsl`; flag 6 skips additive draws; the texture units follow the overridden state), glue in `LevelSession::draw`: no fog, the world override for the sky, the draw-list override for the rest while the scanner view is shown. Test `scanner-render`. A `chase-game` picture at the save state on the roof at the sound scanner trigger of mission 1-2 spot (the zone forced usable for the picture) shows the same hue as the oracle, darker and less saturated because the glow pass is missing (RENDER-68).
 
 Unknowns:
 - Which port draws belong to pass 3 (0x17fc38, 0x95, additive kept) and which to the draw list of pass 4 (0xd5, additive skipped): the port applies the draw-list rule to every non-sky draw (SCAN-S9).

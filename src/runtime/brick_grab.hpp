@@ -46,7 +46,7 @@ constexpr std::array<int, 12> kBrickGrabAnimations = {kAnimationBrickIdle,     k
                                                       kAnimationBrickGrabLeft, kAnimationBrickGrabRight, kAnimationBrickGrabUp,
                                                       kAnimationBrickReachLeft, kAnimationBrickReachRight, kAnimationBrickReachUp};
 
-// TRAV-S10 stand-in: the player's shape for the grab test, entity+0x60 (offset) and entity+0x6c (half extents) read in m12-11; their
+// TRAV-S10 stand-in: the player's shape for the grab test, entity+0x60 (offset) and entity+0x6c (half extents) read in the save state climbing the bricks of mission 1-2; their
 // source in the character data is not traced.
 constexpr float kStandInPlayerGrabOffset[3] = {0.0f, 1.15f, 0.08f};
 constexpr float kStandInPlayerGrabHalf[3] = {0.6f, 0.85f, 0.52f};

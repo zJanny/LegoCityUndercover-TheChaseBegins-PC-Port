@@ -32,9 +32,9 @@ The build needs:
 - libepoxy, for `chase-game` and the model viewer. Without it they are not built.
 - FFmpeg (libavformat, libavcodec, libswscale, libswresample, libavutil), for the movies in `chase-game` and the video player. Without it they are not built.
 
-The commands in the README install these on Debian-based, Fedora and Arch-based systems. The build and start were checked on an Arch-based system that already had these libraries. The install lines themselves have not been run on a clean system, and the Debian and Fedora package names are not checked. Other systems need the same libraries under their own package names, with the development files.
+The commands in the README install these on Debian-based, Fedora and Arch-based systems. The build and start were checked on one Linux system (Arch-based) that already had these libraries. The install lines themselves have not been run on a clean system, and the Debian and Fedora package names are not checked. Other systems need the same libraries under their own package names, with the development files.
 
-Optional, only for the [emulator comparison tool](commands.md#original-game-in-the-emulator-oracle): the Azahar 3DS emulator and Xvfb.
+Optional, only for the [emulator comparison tool](commands.md#original-game-in-the-emulator-oracle): the Azahar 3DS emulator (version 2126.2 tested; `--rpc` needs a build with the RPC server), Xvfb, `libX11` and `libXtst`. The [requirements list](commands.md#original-game-in-the-emulator-oracle) has the details.
 
 ## What the steps do
 

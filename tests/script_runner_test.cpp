@@ -1,7 +1,7 @@
 // Synthetic edge cases of the script runner (src/runtime/script_runner.cpp). The rules come from the disassembly of the
 // executor 0x234204, Wait 0x174604, CallScript / SpawnScript 0x1c3730, thread creation 0x22ce9c (head insertion) and
 // the runner 0x169254 (docs/re/scripts.md, 2026-10-14 entry); the scripts here are made up. waitThreeMatchesTheOracleTrace pins
-// the Wait timer recorded in the oracle from the unmodified state street-at-entrance (docs/re/scripts.md, script thread entry).
+// the Wait timer recorded in the oracle from the unmodified save state at the police station entrance after mission 1-1 (docs/re/scripts.md, script thread entry).
 #include "runtime/script_placement.hpp"
 #include "runtime/script_runner.hpp"
 #include "runtime/script_thread_log.hpp"
@@ -383,7 +383,7 @@ void positionPlayerIsRecordedLikePositionObject() {
 
 void placementControllerCondition() {
     const std::vector<std::uint8_t>& list = chase::runtime::measuredControllerKindList();
-    // Oracle, state street-after-1-1: player entity 0x085526f0 kind byte (+0x12) 0x1b, flags (+0xc) 0x200; list count byte
+    // Oracle, save state outside the police station after mission 1-1: player entity 0x085526f0 kind byte (+0x12) 0x1b, flags (+0xc) 0x200; list count byte
     // at 0x3743ec = 1, kind at 0x515a94 = 0x9f (read 2026-10-14, docs/re/script-natives-flags.md).
     require(chase::runtime::entityHasController(0x1b, 0x200, list), "the player entity (kind 27) gets the controller reset");
     require(chase::runtime::entityHasController(149, 0, {}), "kind 149");
@@ -429,7 +429,7 @@ void placementProbeSegment() {
             "character kinds of the gather");
 }
 
-// Oracle trace street-at-entrance (docs/re/streaming.md 2026-10-14T11:13): SceneChange does not block the thread (it ended in the update that ran the call).
+// Oracle trace the save state at the police station entrance after mission 1-1 (docs/re/streaming.md 2026-10-14T11:13): SceneChange does not block the thread (it ended in the update that ran the call).
 void sceneChangeIsRecorded() {
     Level level;
     add(level, "p", {{"SceneChange", {"Police_ExtToInt"}}, {"=", {"After", "1"}}});

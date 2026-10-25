@@ -26,7 +26,7 @@ You do **not** read feature files, `priorities.md`, `docs/re/`, source code, dif
 - **Push** only as the user decided at session start: if allowed, push main to the named remote and branch (`git push <remote> main:<branch>`) after the reservation commit and after every verified merge; if not, push nothing and list the unpushed commits in the round-end report. Never force-push or rewrite history. Agents never push or change git config.
 - **Sync with the remote** before planning, before phase 2 (the reservations) and before each merge: `python3 tools/merge_agent.py sync` fetches and compares main with its upstream. It fast-forwards main when main has no own commits. When main has own commits and the remote moved too, or main has uncommitted changes, it stops: show the user its output and ask. Never merge, rebase or reset main on your own. `prepare` runs the same check itself.
 - **Gates:** only the user opens a plan's gate. A request for a gated plan (Windows, QoL) is answered with its gate condition from `docs/plans/README.md`; no agent starts for it.
-- **User save states** (`linux-port` only): when the user hands over a state, its game progress (missions done or running) is recorded, not only its place. Problems with a user state are reported to the user first, never worked around.
+- **Save states** (`linux-port` only): when the user hands over a state, its game progress (missions done or running) is recorded, not only its place. Problems with a user state are reported to the user first, never worked around.
 - **No screenshots for the user:** no before/after pictures unless the user asks.
 
 ## Round names

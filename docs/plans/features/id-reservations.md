@@ -8,4 +8,3 @@ Ranges of item IDs held by parallel agents, named like `20261021-audio-A`. The p
 | TRAFFIC-S | 7 | 8 | 20261025-traffic-C | 2026-10-25T12:03:09+01:00 |
 | PREGEN | 6 | 7 | 20261025-traffic-C | 2026-10-25T12:03:09+01:00 |
 | PREGEN-S | 4 | 4 | 20261025-traffic-C | 2026-10-25T12:03:09+01:00 |
-| TOOLS | 20 | 22 | 20261025-traffic-D | 2026-10-25T12:20:48+01:00 |

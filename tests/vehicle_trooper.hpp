@@ -1,5 +1,5 @@
 #pragma once
-// The police trooper's vehicle record as the oracle holds it (Azahar, state drv-police-car-seated, body 0x08e16100 and rigid body 0x08e16f40,
+// The police trooper's vehicle record as the oracle holds it (Azahar, save state sitting in the police car of mission 1-1, body 0x08e16100 and rigid body 0x08e16f40,
 // memtrace of 2026-10-15 in agent VEH32 trace tA frame 7 and agent VPHYS trace body0): class values after the loaders
 // 0x243f90, 0x243e9c, 0x243c50, 0x243628 and 0x2435d0. Shared by the vehicle tests.
 #include "runtime/vehicle.hpp"
@@ -35,7 +35,7 @@ inline chase::runtime::VehicleWheel wheel(std::size_t index) {
     return wheel;
 }
 
-// Oracle words of the trooper's probe points (state drv-police-car-seated, body+0xdc..+0x158): the box equals its entity box minus CentreOfMass.
+// Oracle words of the trooper's probe points (save state sitting in the police car of mission 1-1, body+0xdc..+0x158): the box equals its entity box minus CentreOfMass.
 inline void box(chase::runtime::Vector3& low, chase::runtime::Vector3& high) {
     low = {-0x1.f06dd8p-1f, 0x1.0a46p-8f, -0x1.6e0004p+1f};
     high = {0x1.f06dd8p-1f, 0x1.a7f832p+0f, 0x1.55999cp+1f};

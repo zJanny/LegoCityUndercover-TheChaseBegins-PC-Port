@@ -16,7 +16,7 @@ How a level character (`char_ai_actor` and similar) animates while it stands: th
 
 <a id="ts-20261015-092900"></a>
 
-## 2026-10-15T09:29:00+02:00 — Idle state 0x1d5070, animation slots, RNG 0x25b2b8 (REA/Ghidra pseudo-code and llvm-objdump of `game.arm.elf`; oracle `m11-1-donut-shop` (user state, New 3DS) through GDB memory reads and execution traps, no RPC)
+## 2026-10-15T09:29:00+02:00 — Idle state 0x1d5070, animation slots, RNG 0x25b2b8 (REA/Ghidra pseudo-code and llvm-objdump of `game.arm.elf`; oracle the save state before the donut shop waypoint of mission 1-1 through GDB memory reads and execution traps, no RPC)
 
 **Entities and animation players (oracle).** Scene array 0x589a18 -> list {cap, count, array +4} (see [streaming.md](streaming.md)); the level is scene 2 (0x85abd20 in this state: count at +0x1c = 2573, entity pointer array at +0x24). Entity: +0x08 = CRC32 of the lower-case instance name (`1-1_AI_DonutShopMan` = 0xf373e1bf), class pointer at +0x1c (class name string at class+0x20), node +0x3c, animation component inline at +0x40 whose word +0x44 points to the player struct (0x233900 returns slots for it only when byte 0 & 0x20). Player struct: byte 0 flag 0x20 (has animations), byte 1 slot capacity (4), byte 2 slot count, +0x2c slot array.
 - Of 110 level characters only 20 have an animation player in this state: the 14 pedestrians (walk, mode 6), `char_freeplay_crimerobber` / `crimevictim`, one pig, and three `char_ai_actor`: `1-1_AI_DonutShopMan`, `1-1_AI_DonutShopMan01`, `1-3_Blocker`. The characters the level start script disables (`1-1_AI_DonutCop`, the `1-3_*` cast, ...) and those of rooms that are not loaded have no player: no animation exists before the entity is enabled.
@@ -45,9 +45,9 @@ Unknowns:
 
 <a id="ts-20261015-105038"></a>
 
-## 2026-10-15T10:50:38+02:00 — ANIM-6 comparison screenshots: donut shop idle view, original `m11-1-donut-shop` and the port at the same place (oracle with OpenGL and RPC screenshots; port `chase-game`; no code change; REA was not used)
+## 2026-10-15T10:50:38+02:00 — ANIM-6 comparison screenshots: donut shop idle view, original the save state before the donut shop waypoint of mission 1-1 and the port at the same place (oracle with OpenGL and RPC screenshots; port `chase-game`; no code change; REA was not used)
 
-- **Original.** `tools/azahar_oracle.py` with a scenario of `wait 3` and `screenshot shot-anim6-orig-donut`, `--state m11-1-donut-shop`, the options of the COLL-21 entry. Frame: not kept (400x480, RPC `TakeScreenshot`, the game was running).
+- **Original.** `tools/azahar_oracle.py` with a scenario of `wait 3` and `screenshot shot-anim6-orig-donut`, `loading the save state before the donut shop waypoint of mission 1-1, the options of the COLL-21 entry. Frame: not kept (400x480, RPC `TakeScreenshot`, the game was running).
 - **Port.** `build/chase-game --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes --start "819.58 23.92 1074.0" --facing -155 --frames 60 --window 400x480 --screenshot <scratch>/port-anim6-60.bmp`. The frame is not kept. The player position is the oracle's (player at 819.58 23.92 1074.0 in the state). The facing of `-155` is a conversion of the direction to `1-1_AI_DonutShopMan` (813.3, 1070.1), not checked against the port's angle convention.
 - **Side by side:** left original, right port (not kept).
 - **Matches.** The same donut shop: the wooden floor, the pastry shelves on the right, the counter and the two figures behind it; Chase is seen from behind in both; the waypoint marker is in the same place.
@@ -59,7 +59,7 @@ Unknowns:
 
 <a id="ts-20261015-183306"></a>
 
-## 2026-10-15T18:33:06+02:00 — The general animation slot player: start 0x245b40, position 0x24cbd4, kind, stop, offset, the type callbacks (REA/Ghidra pseudo-code and llvm-objdump of `game.arm.elf`; oracle `m11-3-repair-van-marker` (user state) with OpenGL, GDB `read` and `ctrace`, no RPC)
+## 2026-10-15T18:33:06+02:00 — The general animation slot player: start 0x245b40, position 0x24cbd4, kind, stop, offset, the type callbacks (REA/Ghidra pseudo-code and llvm-objdump of `game.arm.elf`; oracle the save state in front of the broken van of mission 1-1 with OpenGL, GDB `read` and `ctrace`, no RPC)
 
 **Type callbacks.** The player calls per-type functions from a table of 0x24-byte records at 0x52ce8c (filled at run time; index = low 4 bits of the animation's type byte). Read in the oracle: type 0 = {+0xc 0x1081ec, +0x10 0x108190, +0x14 0x107990, +0x18 0x107d0c, ...}. 0x1081ec (**length**): the header u16 +4 & 0x3fff, minus 1 unless joint table bit 29 is set (0xffff without data). 0x108190 (**rate**): the known rate table 0x376764. 0x107990 (**loop bit**): joint table bit 29. In the port `assets::animationLength`, `animationLoops`. `idle`, `idle2`, `walk`, `postboxstuck_idle` (class_generic) all have bit 29, so length = frames (19, 69, 12, 42).
 
@@ -69,7 +69,7 @@ Unknowns:
 
 **Kind 0x22f560**: no slot or no animation -> 6; modes 0 and 2 -> 6 when the position is finished, else the mode; any other mode is returned as is. **Stop 0x225c5c**: pause 0x24f8fc(slot, 1) (stop clock = now when it is -1) and mode 6; the pose stays at the stop clock. 0x24f8fc(slot, 0) resumes: start += now - stop, stop = -1. **Offset 0x22c2fc(frame, slot)**: modes 0, 1, 3 distance = frame - first; modes 2, 5 distance = span (+1 with bit 13) - (frame - first); start = now - int(ticks x distance x rate / (rate x rate x speed)); in mode 6 the stop clock = start + that time. **Current slot**: 0x233900 returns the slot 0x252878 picks; the port uses slot 0 (the newest).
 
-**Oracle check** (`m11-3-repair-van-marker`, `ctrace 0x24cbd4 1`: 145 calls in one update, 32 slot pointers in arrays of 4; `read` of each array): 1-1_AI_DonutLady (entity 0x08a6d6b0, +8 = 0x9b8fc0c1 = CRC32 of `1-1_ai_donutlady`) has slot 0x08a6f460: +4 = 0x2401 (mode 1, bit 13, 0x400), start id 1, rate 15, first 0, end 42, rate x speed 15.0, +0x34 = 0x21873, +0x38 = -1, +0x3c = 0x1e841 (the start was moved by a pause of 12338 ticks). The pedestrians' slots are mode 1 or 6 with end 12 (walk), the idle characters mode 0 (0x2400) with end 19 or 69. The donut lady's node is at her placement (871.821, 51.838, 700.958, rotation -37.08 about Y): the stuck pose is the animation alone.
+**Oracle check** (the save state in front of the broken van of mission 1-1, `ctrace 0x24cbd4 1`: 145 calls in one update, 32 slot pointers in arrays of 4; `read` of each array): 1-1_AI_DonutLady (entity 0x08a6d6b0, +8 = 0x9b8fc0c1 = CRC32 of `1-1_ai_donutlady`) has slot 0x08a6f460: +4 = 0x2401 (mode 1, bit 13, 0x400), start id 1, rate 15, first 0, end 42, rate x speed 15.0, +0x34 = 0x21873, +0x38 = -1, +0x3c = 0x1e841 (the start was moved by a pause of 12338 ticks). The pedestrians' slots are mode 1 or 6 with end 12 (walk), the idle characters mode 0 (0x2400) with end 19 or 69. The donut lady's node is at her placement (871.821, 51.838, 700.958, rotation -37.08 about Y): the stuck pose is the animation alone.
 
 **Port.** `src/runtime/animation_slots.*` (start, position, kind, stop, mode change, offset, the WaitForCurrent test, clock 3000 ticks per second), the idle state `runtime::NpcIdle` now starts its clips in the slot player when the kind is 6, `game_characters::LevelCharacters` keeps one player per level character, advances one clock by the update's dt (100 ticks per 1/30 s update) and poses slot 0. Tests `animation-slots` (the rules above and the recorded slot) and `npc-idle`.
 

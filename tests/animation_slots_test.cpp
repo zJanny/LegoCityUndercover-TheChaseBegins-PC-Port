@@ -1,6 +1,6 @@
 // The animation player of an entity (docs/re/npc-animation.md): slots, modes, offsets, stop and the WaitForCurrent test.
 // Provenance: the rules are transcribed from 0x245b40, 0x24cbd4, 0x22f560, 0x225c5c / 0x24f8fc, 0x22c2fc and 0x2a06a8
-// (REA/Ghidra pseudo-code, llvm-objdump). The recorded slot is 1-1_AI_DonutLady's in oracle state m11-3-repair-van-marker
+// (REA/Ghidra pseudo-code, llvm-objdump). The recorded slot is 1-1_AI_DonutLady's in oracle save state in front of the broken van of mission 1-1
 // (`ctrace 0x24cbd4 1` for the slot pointers, `read` of slot 0x08a6f460): +4 = 0x2401 (mode 1, bit 13), first 0, end 42,
 // rate 15, rate x speed 15.0, for postboxstuck_idle_minifig (42 frames, joint table bit 29 set).
 #include "runtime/animation_slots.hpp"

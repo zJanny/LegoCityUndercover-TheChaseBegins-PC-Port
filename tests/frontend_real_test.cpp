@@ -46,7 +46,7 @@ void texts(Resources& resources) {
     // Strings read on the oracle screens (docs/re/front-end.md) and from the decompiled page builders.
     const std::string game = "localisation/gametext_uk.loc", system = "localisation/systemtext_uk.loc";
     requireEqual(resources.textForKey(game, 0x4617a2ca), std::string("Activate StreetPass for\nLEGO\xC2\xAE City Undercover: The Chase Begins?"),
-                 "StreetPass question (oracle screenshot front-streetpass)");
+                 "StreetPass question (oracle screenshot the save state at the StreetPass question)");
     requireEqual(resources.textForKey(game, 0x65213108), std::string("Pressing the HOME Button will allow you to return to the HOME Menu."), "HOME notice");
     requireEqual(resources.textForKey(system, 0xe2117397), std::string("Select Slot"), "slot header");
     requireEqual(resources.textForKey(system, 0xcbafe6a8), std::string("Saving Game..."), "saving header");
@@ -56,7 +56,7 @@ void texts(Resources& resources) {
 
     const BitmapFont& font = resources.font("frontendfont");
     const auto& extended = resources.extendedCharacters();
-    // The autosave notice wraps into three lines on the oracle screen (front-autosave) at the 296 px limit.
+    // The autosave notice wraps into three lines on the oracle screen (the save state at the autosave notice) at the 296 px limit.
     const std::vector<std::string> lines = wrapText(font, extended, resources.textForKey(game, 0xa5e2f63f), 296, 0);
     requireEqual(lines.size(), std::size_t(3), "autosave notice lines");
     if (lines.size() == 3) {

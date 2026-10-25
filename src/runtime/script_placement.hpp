@@ -8,7 +8,7 @@
 namespace chase::runtime {
 
 // Entity kind byte (entity+0x12) of the player entity and of the second built-in controller kind of 0x21aae0.
-// Oracle: state street-after-1-1, byte at 0x085526f2 (entity 0x085526f0, [0x3772b8]) = 0x1b.
+// Oracle: save state outside the police station after mission 1-1, byte at 0x085526f2 (entity 0x085526f0, [0x3772b8]) = 0x1b.
 constexpr std::uint8_t kPlayerEntityKind = 27;
 constexpr std::uint8_t kSecondControllerEntityKind = 149;
 constexpr std::uint16_t kEntityFlagController = 0x4000;
@@ -32,7 +32,7 @@ void resetControllerAfterPlacement(VerticalState& state, bool inVehicle = false)
 // PositionPlayer 0x1da0dc ground probe: a gather 0x237f30 around the target (query mask 4, the character kinds 179, 183 and
 // 243) must find a character before the probe segment of length 5.0 along the global float3 at 0x56d424 runs.
 constexpr float kPlacementProbeLength = 5.0f;
-// Oracle: state street-after-1-1, 0x56d424 = (0, 1, 0).
+// Oracle: save state outside the police station after mission 1-1, 0x56d424 = (0, 1, 0).
 constexpr float kPlacementProbeDirection[3] = {0.0f, 1.0f, 0.0f};
 bool isProbeCharacterKind(std::uint8_t kind);
 

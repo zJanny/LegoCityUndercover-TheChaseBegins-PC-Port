@@ -22,7 +22,7 @@ void require(bool condition, const std::string& message) {
     if (!condition) throw std::runtime_error(message);
 }
 
-// Provenance: oracle state m12-4-detective-point, memtrace of the footprint array (record +0x3c of 1-2_Dtv_DogSpot_01, 0x08e191e0, 33 entries of
+// Provenance: oracle save state on the detective point of mission 1-2, memtrace of the footprint array (record +0x3c of 1-2_Dtv_DogSpot_01, 0x08e191e0, 33 entries of
 // 16 bytes, shorts at +4/+6/+8), scenario b2 of docs/re/abilities-detective.md.
 const std::array<std::array<std::int16_t, 3>, 33> kOracleFootprints = {{
     {0, 0, 1},     {-1, 0, -1},   {-4, 0, 1},    {-7, 0, -1},   {-10, 0, 2},   {-13, 0, -1},  {-15, 0, 2},   {-18, 0, 0},   {-21, 0, 2},
@@ -53,14 +53,14 @@ bool activates(const std::vector<runtime::DetectiveAction>& actions, const std::
     return false;
 }
 
-// Provenance: oracle trap E-1 (state m12-5-detective-active, circle pad forward for 220 updates, breakpoint 0x26049c in the footprint placing function
+// Provenance: oracle trap E-1 (save state with the detective tool active in mission 1-2, circle pad forward for 220 updates, breakpoint 0x26049c in the footprint placing function
 // 0x26024c, trap output E-1 of round 27 agent E; docs/re/abilities-detective.md): the matrix at r1 of every hit. Rotation rows are the identity for all of them;
 // the translation is the point the ray hit. The x / z are the matrix's own; the last two are on the dog house stairs.
 const float kOracleHits[13][3] = {{718.1799f, 29.7764f, 631.0478f}, {717.9299f, 29.7738f, 630.5478f}, {716.9299f, 29.7790f, 631.5478f},
                                   {716.9299f, 29.7763f, 631.0478f}, {716.6799f, 29.7842f, 632.5478f}, {715.9299f, 29.7817f, 632.0478f},
                                   {716.4299f, 29.9572f, 633.7978f}, {715.6799f, 29.7890f, 633.2978f}, {715.6799f, 30.4681f, 634.5478f},
                                   {716.4299f, 30.7363f, 635.0478f},
-                                  // Provenance: oracle trap E-2 (state m12-7-detective-waypoint-2, A press, then forward), the second spot: identity rows too.
+                                  // Provenance: oracle trap E-2 (save state on the second detective waypoint of mission 1-2, A press, then forward), the second spot: identity rows too.
                                   {719.1412f, 37.0395f, 656.7838f}, {718.1412f, 37.0395f, 656.0338f}, {719.1412f, 37.0395f, 658.0338f}};
 
 void footprintGround(assets::FuseArchive& archive) {
@@ -122,13 +122,13 @@ void objects(const runtime::DetectiveSet& set) {
     require(first.revealSwitch == "1-2_dtv_dogpath_xspot", "RevealSwitch " + first.revealSwitch);
     require(first.triggerObject == "1-2_dtv_dogspot_01_script", "TriggerObject " + first.triggerObject);
     require(first.footprintType == 1, "FootprintType 1");
-    // Provenance: oracle m12-4, record +0x40 = 0x21 footprints and the array above.
+    // Provenance: oracle the save state on the detective point of mission 1-2, record +0x40 = 0x21 footprints and the array above.
     require(first.footprints.size() == kOracleFootprints.size(), "footprint count " + std::to_string(first.footprints.size()));
     for (std::size_t i = 0; i < kOracleFootprints.size(); ++i)
         for (std::size_t a = 0; a < 3; ++a)
             require(first.footprints[i].offset[a] == kOracleFootprints[i][a],
                     "footprint " + std::to_string(i) + " axis " + std::to_string(a) + ": " + std::to_string(first.footprints[i].offset[a]));
-    // Provenance: oracle m12-4, use zone record of the spot (0x086e87b8): centre (0, 1, 0), half (1.5, 1.5, 1.5), shape 3; class file UseBound.
+    // Provenance: oracle the save state on the detective point of mission 1-2, use zone record of the spot (0x086e87b8): centre (0, 1, 0), half (1.5, 1.5, 1.5), shape 3; class file UseBound.
     require(first.useZone.present && first.useZone.centre[1] == 1.0f && first.useZone.half[0] == 1.5f && first.useZone.half[2] == 1.5f, "UseBound");
     require(first.questionZone.present && first.questionZone.half[0] == 30.0f, "QuestionBound");
     const runtime::DetectiveSpot& second = spotNamed(set, "1-2_dtv_dogspot_02");
@@ -140,7 +140,7 @@ void objects(const runtime::DetectiveSet& set) {
     const runtime::RevealSpot& x01 = revealSpotNamed(set, "1-2_dtv_dogpath_xspot01");
     require(x01.revealObject == "1-2_trapdoor_03" && x01.triggerObject.empty(), "1-2_Dtv_DogPath_XSpot01 parameters");
 
-    // Provenance: oracle d1 (m12-6): launch 30 updates after the change to state 1 (RevealDelay 1.2 read as 1, times 30) and the trigger 18
+    // Provenance: oracle d1 (the save state on the dog house X of mission 1-2): launch 30 updates after the change to state 1 (RevealDelay 1.2 read as 1, times 30) and the trigger 18
     // updates after the launch (class RevealTime 0.6 times 30); spawn sound 0xa5 (ATTR_SFXObjectSpawn), done sound 0.
     const runtime::RevealProp& mound = revealPropNamed(set, "1-2_trapdoor_01");
     require(mound.revealObject == "1-2_dog_bone" && mound.triggerObject == "1-2_so_introcamoff", "1-2_TrapDoor_01 references");
@@ -162,7 +162,7 @@ void run(const assets::Level& level, const assets::ClassLookup& classOf) {
             if (action.kind == runtime::DetectiveActionKind::Hide) state.disabled.insert(action.instance);
         }
     };
-    // Provenance: oracle states m12-4-detective-point (player 723.675 29.768 630.775) and m12-5-detective-active (forward -0.926 0 0.378);
+    // Provenance: oracle save state on the detective point of mission 1-2 (player 723.675 29.768 630.775) and the save state with the detective tool active in mission 1-2 (forward -0.926 0 0.378);
     // teleport 711.99 32.6 637.44 of scenario c1.
     runtime::DetectiveInput input;
     input.dt = 0.033f;
@@ -189,7 +189,7 @@ void run(const assets::Level& level, const assets::ClassLookup& classOf) {
     for (unsigned i = 0; i < 19; ++i) apply(set.update(state, input));
     require(set.playerState() == runtime::DetectivePlayerState::Normal, "detect_in ends after 19 updates (oracle c1: 4 -> 23)");
 
-    // Provenance: oracle d1 (m12-6-doghouse-x, update numbers relative to the press in frame 3): request 0x1a2 at 0, animation event 43, the
+    // Provenance: oracle d1 (the save state on the dog house X of mission 1-2, update numbers relative to the press in frame 3): request 0x1a2 at 0, animation event 43, the
     // X spot's state 2 with both activations at 76, launch of the bone at 107, the trigger of 1-2_SO_IntroCamOff from the reveal prop at 125.
     input.player[0] = 710.082f, input.player[1] = 32.677f, input.player[2] = 638.595f;
     input.actionPressed = true;

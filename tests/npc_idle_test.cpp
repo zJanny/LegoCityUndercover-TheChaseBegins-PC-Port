@@ -1,8 +1,8 @@
 // The game's random generator 0x25b2b8 and the idle state of level characters (docs/re/npc-animation.md).
-// Provenance of the recorded values: oracle state m11-1-donut-shop, `ctrace 0x25b304 30 rng2` (the word returned by every call of
+// Provenance of the recorded values: oracle save state before the donut shop waypoint of mission 1-1, `ctrace 0x25b304 30 rng2` (the word returned by every call of
 // 0x25b2b8 in 30 stepped updates, 134 calls; the first 22 are pinned); the clip lengths and rates are the slot fields of the idle
 // animations of 1-1_AI_DonutShopMan read in the same state (frames 0x13 and 0x45, rate 15.0); the 42 frames of the looping
-// animation are the end frame of 1-1_AI_DonutLady's slot in m11-3-repair-van-marker (docs/re/npc-animation.md).
+// animation are the end frame of 1-1_AI_DonutLady's slot in the save state in front of the broken van of mission 1-1 (docs/re/npc-animation.md).
 #include "runtime/game_random.hpp"
 #include "runtime/npc_idle.hpp"
 

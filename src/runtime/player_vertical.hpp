@@ -15,7 +15,7 @@ constexpr float kGravityRate = 30.0f;             // literal at 0x18f5a0
 constexpr float kTerminalFallSpeed = 0.8f;        // *0x3771b0 through 0x2b75d0, per update
 constexpr float kHardLandingDistance = 12.0f;     // *0x374360, compared with ctrl+0x2b4
 // States 25 and 26 (bounce take-off and rise): every update the node rises by the speed and the speed grows by this step, not scaled by dt (oracle, state
-// m12-trampoline-built, dt 0.033 and 0.07, docs/re/props-wobbly-bouncer.md); the first update with a positive speed is an ordinary falling update and the next one does not move the node.
+// the save state at the built trampoline of mission 1-2, dt 0.033 and 0.07, docs/re/props-wobbly-bouncer.md); the first update with a positive speed is an ordinary falling update and the next one does not move the node.
 constexpr float kBounceRiseStep = 0.05f;
 
 // States 6 (soft landing) and 7 (hard landing) end when the animation they started has played to its last frame: the

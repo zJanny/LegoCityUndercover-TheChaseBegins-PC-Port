@@ -23,7 +23,7 @@ constexpr float kLadderMountStep = 0.25f;         // 0x325380: ctrl+0x24c += dt 
 constexpr float kLadderClimbStep = 0.05f;         // TRAV-S34: runtime global *0x377274 read as 0x3d4ccccd (writer not read): 0x1e43c0 steps 0.05 x sign x 30 x dt when the clip has no root track
 constexpr float kLadderSnapOffsetDefault = 0.3f;  // 0x17f3c0: ATTR_CharacterSnapToOffset default 0x3e99999a
 constexpr float kLadderHeadingScale = 10430.378f;
-// TRAV-S34: entity+0x70 of the player (0x3f59999a, read in m13-2-ladder, writer not read): the climb down ends below the ladder base by this much (0x32f83c).
+// TRAV-S34: entity+0x70 of the player (0x3f59999a, read in the save state in front of the crane ladder of mission 1-3, writer not read): the climb down ends below the ladder base by this much (0x32f83c).
 constexpr float kLadderPlayerHalfHeight = 0.85f;
 
 struct LadderObject {

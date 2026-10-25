@@ -25,9 +25,9 @@ constexpr float kZiplineHeadingScale = 10430.378f;  // 0x275138
 constexpr int kAnimationZiplineSlide = 21;
 constexpr int kAnimationZiplineGrab = 22;
 constexpr int kAnimationZiplineDismount = 23;
-// *(0x377470 + 0x20), read in m12-9: 107, tablessoundfx row 107 "abilities/zipline_loop"; 0x28aca0 plays it, 0x28acc8 stops it.
+// *(0x377470 + 0x20), read in the save state under the zipline of mission 1-2: 107, tablessoundfx row 107 "abilities/zipline_loop"; 0x28aca0 plays it, 0x28acc8 stops it.
 constexpr std::uint16_t kZiplineLoopSound = 107;
-// TRAV-S1: the grab point is the player position moved 0.08 along the facing (entity+0x60 = (0, 1.15, 0.08) read in m12-9 and
+// TRAV-S1: the grab point is the player position moved 0.08 along the facing (entity+0x60 = (0, 1.15, 0.08) read in the save state under the zipline of mission 1-2 and
 // turned by the node in 0x2a9d94, y replaced by the node y). Its source in the character data is not traced.
 constexpr float kZiplineGrabForwardOffset = 0.08f;
 
@@ -55,7 +55,7 @@ void linkZiplineAnchors(std::vector<ZiplineAnchor>& anchors);
 // The type 101 objects of a level whose class gives GrappleLineType 1, with their targets resolved and linked.
 std::vector<ZiplineAnchor> loadZiplineAnchors(const assets::Level& level, const assets::ClassLookup& classOf);
 
-// 0x2a9d94 with the height of the character's attachment set 18 taken as 0 (the list is empty for the player, m12-9): the first
+// 0x2a9d94 with the height of the character's attachment set 18 taken as 0 (the list is empty for the player, the save state under the zipline of mission 1-2): the first
 // listed anchor whose WalkBound, with the height measured from the line, contains the point; -1 when none. `enabled` tells
 // whether an anchor object and its target are not disabled.
 int ziplineGrabTest(const std::vector<ZiplineAnchor>& anchors, const float point[3], const std::function<bool(const ZiplineAnchor&)>& enabled);
@@ -115,7 +115,7 @@ struct ZiplineStep {
 ZiplineStep ziplineEnter(ZiplineRider& rider, const std::vector<ZiplineAnchor>& anchors, int listed, const ZiplineInput& input);
 
 // One update while riding: the dismount request of the last update, the B press, the Get On -> Slide switch, the slide 0x2c4114, the
-// dismount root motion and its end (state 5). TRAV-S3: during the dismount the fall distance (ctrl+0x2b4) follows the m12-9 trace (the
+// dismount root motion and its end (state 5). TRAV-S3: during the dismount the fall distance (ctrl+0x2b4) follows the save state under the zipline of mission 1-2 trace (the
 // height lost over the current key interval of the root track while descending, the last update's change otherwise); the rule of
 // 0x215804 is not read.
 ZiplineStep ziplineUpdate(ZiplineRider& rider, const std::vector<ZiplineAnchor>& anchors, const ZiplineInput& input);

@@ -1,6 +1,6 @@
 // Test of the break of a vehicle and its wreck (src/runtime/vehicle_break.*, docs/re/vehicles-damage.md). Values from llvm-objdump / REA of
 // artifacts/game/game.arm.elf (0x33b264..0x33b378, 0x2301b0..0x230230, 0x16cccc, 0x1765cc, 0x1d27f4, 0x22b224, 0x1aff24, 0x24257c, 0x307cac)
-// and from the oracle trace of agent r18-B (state drv-police-car-seated, fixed dt 0.033, hearts poked to 1, A held, stick (100, 0) for 24
+// and from the oracle trace of agent r18-B (save state sitting in the police car of mission 1-1, fixed dt 0.033, hearts poked to 1, A held, stick (100, 0) for 24
 // updates, memtrace of record 0x08a884e0 +0x2..+0x4, +0x298, +0x30c..+0x313, +0x38..+0x77, +0x278, +0x320..+0x34f per update, rows 25..284).
 #include "runtime/vehicle_break.hpp"
 #include "runtime/vehicle_drive.hpp"

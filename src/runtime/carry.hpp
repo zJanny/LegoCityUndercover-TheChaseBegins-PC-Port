@@ -16,7 +16,7 @@ constexpr int kCarryObjectType = 122;
 constexpr int kCarryTargetType = 123;
 
 // The use zone of a carry object (0x23e130 without a class "UseBound"): the box of the model bounds relative to the node, widened by
-// (1, 1.2, 1) (the vector *0x56d40c = (1, 1, 1) plus 0.2 on the second component). Measured in m11-8-donuts-in-hand: half extents
+// (1, 1.2, 1) (the vector *0x56d40c = (1, 1, 1) plus 0.2 on the second component). Measured in the save state carrying the donut box in mission 1-1: half extents
 // (1.7607, 1.6064, 1.3828) for the donut box, whose model half extents are (0.762, 0.4035, 0.3813).
 constexpr float kCarryZoneMargin[3] = {1.0f, 1.2f, 1.0f};
 

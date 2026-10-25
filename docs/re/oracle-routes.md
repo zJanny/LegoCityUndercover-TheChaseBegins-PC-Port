@@ -37,5 +37,5 @@ Unknowns: the meaning of controller state 255; whether the cutscene timing (free
 
 ## 2026-10-15T16:07:34+02:00 — Steering a vehicle in a stepped scenario (VEH-32 traces)
 
-- In the state `drv-police-car-seated`, `stick 156 0` with `hold A` and `memtrace` did not reach the vehicle: the body's steer input (body+0x1bc) stayed 0 for 30 updates. `hold A+RIGHT` and `hold A+LEFT` (the D-pad channels 15 and 14 of 0x29cd9c) steered as expected (steer ±1). Use the D-pad for vehicle steering in stepped scenarios; why the raw circle-pad words written at 0x10a540 do not reach channel 0 of the vehicle input was not looked into.
+- In the save state sitting in the police car of mission 1-1, `stick 156 0` with `hold A` and `memtrace` did not reach the vehicle: the body's steer input (body+0x1bc) stayed 0 for 30 updates. `hold A+RIGHT` and `hold A+LEFT` (the D-pad channels 15 and 14 of 0x29cd9c) steered as expected (steer ±1). Use the D-pad for vehicle steering in stepped scenarios; why the raw circle-pad words written at 0x10a540 do not reach channel 0 of the vehicle input was not looked into.
 - Findings: [vehicles-physics.md §2026-10-15T15:58:54](vehicles-physics.md#ts-20261015-155854).

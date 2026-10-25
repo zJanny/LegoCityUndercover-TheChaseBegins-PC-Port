@@ -1,5 +1,5 @@
 // The climbing bricks of mission 1-2 in lvl_01_cherrytreehills (src/runtime/brick_grab.cpp): the bricks 1-2_Brick_Grab_08 and _07 from
-// the level data, then a replay of the climb recorded in the oracle from the user state m12-11-brick-climb (docs/re/player-traversal.md,
+// the level data, then a replay of the climb recorded in the oracle from the save state climbing the bricks of mission 1-2 (docs/re/player-traversal.md,
 // entry of 2026-10-18 on the climbing bricks): scheduler step fixed to 1/30 (`dt 0.033333335 0.033333335`), the player hanging on 08 in
 // state 145; run `up`: stick (0, 120) from update 4 (state 146 in that update), B in update 16 (state 149 to 07), `trace` rows below; run
 // `drop`: A in update 3 (state 5), landing at y 64.4281, B in update 49, state 141 on 08 in update 55. Needs the extracted RomFS; exits
@@ -49,7 +49,7 @@ int main(int argc, char** argv) {
         const assets::FuseEntry* entry = archive.find(kLevelFile);
         require(entry != nullptr, std::string("not in archive: ") + kLevelFile);
         std::vector<runtime::GrabBrick> bricks = runtime::loadGrabBricks(assets::parseLevel(archive.read(*entry)), assets::archiveClassLookup(archive));
-        // Oracle read in m12-11: the brick list 0x37718c holds 35 entries.
+        // Oracle read in the save state climbing the bricks of mission 1-2: the brick list 0x37718c holds 35 entries.
         require(bricks.size() == 35, "bricks: " + std::to_string(bricks.size()));
         const int low = find(bricks, "1-2_brick_grab_08"), high = find(bricks, "1-2_brick_grab_07");
         require(low >= 0 && high >= 0, "1-2_Brick_Grab_07 and 08 are bricks");

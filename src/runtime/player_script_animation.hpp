@@ -45,7 +45,7 @@ public:
 
     // One player update, after the script runner and before the locomotion: runs the current state's update unless a request is pending (state
     // 0x50: the kind test), applies the request (its enter function runs at the end of the update, the new state's update starts in the next one),
-    // then advances the clock, so the state step sees the clock of the runner and the pose the advanced one (oracle m12-13-cage-trigger).
+    // then advances the clock, so the state step sees the clock of the runner and the pose the advanced one (oracle the save state at the dog cage trigger of mission 1-2).
     PlayerStateStep update(float dt);
 
     // The state whose enter function ran at the end of the last update(), if a request was applied.

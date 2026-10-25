@@ -1,12 +1,12 @@
 // Acrobat pole states of mission 1-2 (src/runtime/acrobat_pole.cpp, docs/re/player-traversal-rails.md §2026-10-19T07:53:17) replayed against the
 // oracle traces of r24-C (New 3DS, OpenGL, RPC, port 24743, `dt 0.033333335 0.033333335`, B held from the
 // first update; raw output not kept in git):
-// - t1: user state m12-trampoline-pole (Chase idles on 1-2_FlagPole_01 facing +z), `trace 160 t1 mem`: 93 -> 95 -> 96 -> 95 -> 98 -> 5;
-// - t2: m12-trampoline-built, `teleport 720.20 32.618 637.47`, bounce and grab of 01 facing -z, `trace 340 t2 mem`: 93 -> 97 -> 5.
+// - t1: save state above the trampoline of mission 1-2 (Chase idles on 1-2_FlagPole_01 facing +z), `trace 160 t1 mem`: 93 -> 95 -> 96 -> 95 -> 98 -> 5;
+// - t2: the save state at the built trampoline of mission 1-2, `teleport 720.20 32.618 637.47`, bounce and grab of 01 facing -z, `trace 340 t2 mem`: 93 -> 97 -> 5.
 // The flip traces of r26-A (own emulator without RPC, port 24761, OpenGL, the same dt; raw output
-// not kept in git): user state m12-trampoline-pole, `stick 120 0` + `trace 60 f1 mem` (flip to -z), `stick -120 0` +
+// not kept in git): save state above the trampoline of mission 1-2, `stick 120 0` + `trace 60 f1 mem` (flip to -z), `stick -120 0` +
 // `trace 50 f2 mem` (flip back), `stick 0 0`, `hold B`, `trace 70 f3 mem` (Flip Done jumps at once: 95, 96, 95).
-// Rows: trace frame, ctrl+0x6c, position, facing, ctrl+0xc, ctrl+6 and the camera yaw *0x376894 (NAME.csv and NAME.mem). Needs the extracted RomFS; exits
+// Rows: trace frame, ctrl+0x6c, position, facing, ctrl+0xc, ctrl+6 and the camera yaw *0x376894 (the csv and the memory trace of the scenario). Needs the extracted RomFS; exits
 // with 77 without it.
 #include "assets/assets.hpp"
 #include "runtime/acrobat_pole.hpp"
@@ -484,7 +484,7 @@ int main(int argc, char** argv) {
         require(set.bars[std::size_t(find(set, "1-2_flagpole_04"))].links[0].objectType == runtime::kPointObjectType, "the landing point is a point");
 
         // t1 from row 2: idle on 01 (state 93). Clip time 20 frames at the update of row 3: chosen so that the idle end (clip time 32) falls in row 15, where t1
-        // requests 95; the user state's clip time is not recorded. ctrl+0x2e4 after the enters: 4.90156 (0x409cd98a, row 40) and -15.6937 (0xc17b1943, row 88); the
+        // requests 95; the save state's clip time is not recorded. ctrl+0x2e4 after the enters: 4.90156 (0x409cd98a, row 40) and -15.6937 (0xc17b1943, row 88); the
         // floor at the landing 37.03597 (rows 109..113).
         {
             runtime::AcrobatPoleRider rider;

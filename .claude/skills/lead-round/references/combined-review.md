@@ -5,7 +5,7 @@ For a small branch, you do the work of both reviewers in one pass. A separate co
 ## How
 
 1. Read `.claude/skills/lead-round/references/code-review.md` and `docs-review.md`. Follow both, with these changes:
-   - **No local-only data:** apply the check of both lists once (code-review.md "No local-only data", docs-review.md "No local-only data").
+   - **No local-only data:** apply the check of both lists once (code-review.md "No local-only data", docs-review.md "No local-only data"), including scratch names, save state names and machine wording; run `python3 tools/check_local_data.py` and report its warnings.
    - **Read once:** read `CLAUDE.md`, the plan's rule file, the brief, the report and the diff once (`git -C <worktree> diff main...HEAD`) and use them for both checklists.
    - **Both areas are yours:** you may edit code and docs, so ignore the "edit only" path limits and the `index.lock` notes. A code fix that needs a docs change: make both in one go, with no "Docs follow-ups".
    - **Same quick-fix rule:** about 30 changed lines for code and 40 for docs. Everything else is RETURN, as in each checklist.

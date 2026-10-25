@@ -1,6 +1,6 @@
 // The use spot 1-2_Dog_Cage_Use_Spot of lvl_01_cherrytreehills (src/runtime/use_spot.cpp, docs/re/use-spot.md). Needs the extracted RomFS; exits with
 // 77 without it. Provenance: the object and its TriggerObject reference are level data (tools/convert_levels.py); the player position is the user's
-// oracle state m12-13-cage-trigger ("standing on the trigger in front of the dog cage", mission 1-2 in progress, position 916.702 64.431 663.724); the one-shot rule is the handler 0x1922e8
+// oracle save state at the dog cage trigger of mission 1-2 ("standing on the trigger in front of the dog cage", mission 1-2 in progress, position 916.702 64.431 663.724); the one-shot rule is the handler 0x1922e8
 // with 0x236624.
 #include "assets/assets.hpp"
 #include "runtime/use_spot.hpp"

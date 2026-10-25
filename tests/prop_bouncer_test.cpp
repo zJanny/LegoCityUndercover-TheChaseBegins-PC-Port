@@ -1,5 +1,5 @@
 // The class leprops/leprop_bouncer (src/runtime/prop_bouncer.*; message handler 0x1988f4, take-off enter 0x2f4e10) and the bounce flight of the player
-// (src/runtime/player_vertical.cpp). Recorded values: Azahar oracle, user state m12-trampoline-built (New 3DS), the player placed on Trampoline_03 with
+// (src/runtime/player_vertical.cpp). Recorded values: Azahar oracle, save state at the built trampoline of mission 1-2 (New 3DS), the player placed on Trampoline_03 with
 // `teleport 720.20 32.618 637.47`, B pressed, fixed dt 0.033 (`dt 0.033 0.033`) and `trace N NAME mem` (scratch tr8: B released after the first press,
 // tr9: B held; agent r23-D): per update the node height (CSV) and ctrl+0x2b8 / +0x2b4 (the .mem controller dump). The take-off speed ctrl+0x2dc reads
 // 0.3 for every bounce without B and 0.4, 0.5, 0.6, 0.7 for the bounces with B held. Exits with 77 without data in the real-data part.

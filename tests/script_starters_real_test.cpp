@@ -1,7 +1,7 @@
 // Mission 1-2 scripts without a starter in lvl_01_cherrytreehills (docs/re/scripts-missions.md, SCRIPT-113 / SCRIPT-285). Needs the extracted RomFS;
 // exits with 77 without it. Provenance: every original thread start goes through a script record found by the lowercased CRC-32 of a name string (REA on
 // game.arm.elf: 0x22ce9c, 0x2238d0, 0x197c3c and their callers); the level data names neither script 0x921a9a63 nor 0x94b63474 (assets::parseLevel), and the
-// Azahar traps of 0x22ce9c / 0x2238d0 / 0x2388e4 from the user's states m12-2, m12-3, m12-7, m12-13 and m12-table-before started neither. The port starts
+// Azahar traps of 0x22ce9c / 0x2238d0 / 0x2388e4 from the save state at the first trigger of mission 1-2, the save state at the alley trigger of mission 1-2, the save state on the second detective waypoint of mission 1-2, the save state at the dog cage trigger of mission 1-2 and the save state in front of the table of mission 1-2 started neither. The port starts
 // scripts only by those names (triggers, waypoint TriggerScript, CallScript / SpawnScript), so neither may be reachable from the level data, and the dumpster
 // peek must run as part of 1-2_HouseArrival, which carries its calls.
 #include "assets/assets.hpp"

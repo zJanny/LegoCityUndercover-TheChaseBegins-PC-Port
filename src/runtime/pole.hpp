@@ -23,11 +23,11 @@ constexpr int kAnimationPoleDismount = 222;
 constexpr float kPoleMountRate = 6.6666665f;     // 0x28d908: ctrl+0x24c += dt x this, up to 1
 constexpr int kPoleTurnStep = 0x1900;            // 0x23df04 limit of the facing turn in the mount update
 constexpr float kPoleMountPointDepth = -0.5f;    // 0x28d908: the pole's bound centre moved 0.5 along its -z before the facing target is taken
-constexpr float kPoleClimbStepDefault = 0.05f;   // *0x374524 = 0x3d4ccccd (read in m12-10): the step of 0x1d579c / 0x283f18 for a clip without root track
+constexpr float kPoleClimbStepDefault = 0.05f;   // *0x374524 = 0x3d4ccccd (read in the save state climbing the drain pipe of mission 1-2): the step of 0x1d579c / 0x283f18 for a clip without root track
 constexpr float kPoleFallHeight = 5.0f;          // 0x1d579c: an A press above this height over the pole base (bits compared with 0x40a00001) drops the player
 constexpr int kPoleStickCone = 0x4000;           // 0x206510: the stick may differ from the direction to the pole by at most this
 constexpr float kPoleHeadingScale = 10430.378f;
-// ctrl+0x250, read in m12-10 (0x3fea8f5c): the reach the player's head adds to the climb height when it is compared with the pole top.
+// ctrl+0x250, read in the save state climbing the drain pipe of mission 1-2 (0x3fea8f5c): the reach the player's head adds to the climb height when it is compared with the pole top.
 // TRAV-S5: its source in the character data is not traced; it is taken as given for the player character.
 constexpr float kPoleReach = 1.8325f;
 // TRAV-S6: the distance from the pole axis at which the player stands after leaving the pole in the first update (A, B, bottom exit): the

@@ -1,6 +1,6 @@
 // The audio scanner's render state (src/runtime/scanner_render.cpp) and the material override 0x530834 in assets::materialState.
 // Values: 0x2e4858 case 3 / 4 and 0x2ef664 (REA), the bytes 0x530835 = 3, 0x53083c = 0xffab8126, 0x530840 = 0, 0x51641e = 1,
-// 0x3760fd = 1 and 0x3772cd = 0 read in the oracle in the view of m12-8-roof-sound-scanner (docs/re/abilities-scanner.md §2026-10-19T14:06:22).
+// 0x3760fd = 1 and 0x3772cd = 0 read in the oracle in the view of the save state on the roof at the sound scanner trigger of mission 1-2 (docs/re/abilities-scanner.md §2026-10-19T14:06:22).
 #include "assets/assets.hpp"
 #include "runtime/scanner_render.hpp"
 #include <cmath>

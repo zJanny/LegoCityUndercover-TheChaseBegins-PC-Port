@@ -37,7 +37,7 @@ Unknowns:
 
 ## 2026-10-19T18:02:53+02:00 — Mission 1-3: the ladder to the roof (user report)
 
-While making the mission 1-3 save states (user quick saves of 2026-10-19, missions 1-1 and 1-2 done, 1-3 in progress) the user noted that the ladder that is climbed to reach the roof is not fully visible in the port. The state `m13-2-ladder` stands in front of it in the original.
+While making the mission 1-3 save states the user noted that the ladder that is climbed to reach the roof is not fully visible in the port. The save state in front of the crane ladder of mission 1-3 stands in front of it in the original.
 
 Unknowns:
 - Which object the ladder is and which part of it is missing in the port.
@@ -55,7 +55,7 @@ Unknowns:
 
 ## 2026-10-19T20:23:38+02:00 — Mission 1-3: the ladder draws but cannot be climbed (user report)
 
-After the merge of round 37 the user reported that the ladder to the roof of mission 1-3 (`1-4_Ladder01`, `props/prop_crane_ladderlarge`, its upper half drawn since [object-kinds.md §2026-10-19T19:25:32](object-kinds.md#ts-20261019-192532)) is now fully drawn, but Chase cannot climb it in `chase-game`. Climbing a ladder is not in the port; the ladders are object kind 56 ([object-kinds.md](object-kinds.md)). The user state `m13-2-ladder` stands in front of the ladder in the original.
+After the merge of round 37 the user reported that the ladder to the roof of mission 1-3 (`1-4_Ladder01`, `props/prop_crane_ladderlarge`, its upper half drawn since [object-kinds.md §2026-10-19T19:25:32](object-kinds.md#ts-20261019-192532)) is now fully drawn, but Chase cannot climb it in `chase-game`. Climbing a ladder is not in the port; the ladders are object kind 56 ([object-kinds.md](object-kinds.md)). The save state in front of the crane ladder of mission 1-3 stands in front of the ladder in the original.
 
 Unknowns:
 - The ladder's use, mount, climb and dismount code and clips are not read.

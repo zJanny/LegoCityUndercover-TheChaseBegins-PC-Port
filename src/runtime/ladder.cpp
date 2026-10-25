@@ -119,7 +119,7 @@ std::uint32_t stickQuadrant(const LadderInput& input) {
 
 // 0x1e43c0: the stick picks the state (quadrant 0 up, 2 down, the blocked idle stays blocked going up); no stick goes idle. Returns the
 // step of the state's update: the root motion of the clip, or 0.05 x sign x 30 x dt for a clip without root track (the ladder clips),
-// times ctrl+0x29c + 1 (0 in m13-2-ladder).
+// times ctrl+0x29c + 1 (0 in the save state in front of the crane ladder of mission 1-3).
 float ladderInputStep(LadderClimber& climber, const LadderInput& input, float sign) {
     if (!input.stickActive) {
         climber.phase = climber.phase == LadderPhase::Blocked ? LadderPhase::Blocked : LadderPhase::Idle;
@@ -256,7 +256,7 @@ LadderStep ladderUpdate(LadderClimber& climber, const std::vector<LadderObject>&
 
     if (climber.phase == LadderPhase::Clamber) {
         // 0x302dcc / 0x302e94: the first update of state 23 does not move; the update n >= 2 moves by the root motion between frames
-        // (n - 2) and (n - 1) of the update, and the clip end (Default Anim Done Event) gives state 1 (m13-2-ladder run lad-up).
+        // (n - 2) and (n - 1) of the update, and the clip end (Default Anim Done Event) gives state 1 (the save state in front of the crane ladder of mission 1-3 run lad-up).
         const unsigned update = ++climber.phaseUpdates;
         const float fps = input.clamberFramesPerSecond;
         if (update >= 2 && input.clamber && !input.clamber->translation.empty()) {

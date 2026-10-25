@@ -1,5 +1,5 @@
 // Tests of the wheels and suspension of the vehicle physics body (src/runtime/vehicle_wheels.*, docs/re/vehicles-physics.md). Pinned values:
-// Azahar GDB memory traces of 2026-10-15 at fixed dt 0.033 (agentVPHYS pdrive.mem: state drv-police-car-seated, A held; wheel records
+// Azahar GDB memory traces of 2026-10-15 at fixed dt 0.033 (agentVPHYS trace pdrive: save state sitting in the police car of mission 1-1, A held; wheel records
 // body+0x2b8 + n * 0x154 and the rigid body). Each force row is w+0xb4 of the trace with the distance w+0xe0 and the hit point's velocity along
 // the normal w+0xc8 (rigid velocity and angular velocity of the update before). With FIB NAMES the real part puts 1-1_Police_Car on the level
 // collision where the oracle trooper came to rest and compares the rest height and wheel distances. Exits with 77 without data.
@@ -102,7 +102,7 @@ void synthetic() {
         total += state.force;
     }
     near(total, 2600.0 * 39.0, 50.0, "at rest the four springs carry the weight (mass 2600, gravity 39)");
-    // The equilibrium distance of the formula is 0.5291; the oracle body asleep after the coast (pcoast.mem frames 111..191, a street that
+    // The equilibrium distance of the formula is 0.5291; the oracle body asleep after the coast (trace pcoast frames 111..191, a street that
     // tilts by about 0.2 degrees) rests at 0.5288 front and 0.5263 rear.
     near(states[0].distance, 0.5288, 0.003, "front wheel distance at rest (oracle 0.5288)");
     near(states[2].distance, 0.5263, 0.004, "rear wheel distance at rest (oracle 0.5263)");
@@ -135,7 +135,7 @@ int real(const char* fib, const char* names) {
     CollisionWorld world;
     for (const auto& item : model.collision) world.add(item);
     const WheelRay ray = [&world](const Vector3& from, const Vector3& to) { return castWheelRay(world, from, to); };
-    // Oracle pcoast.mem frame 120 (drv-police-car-seated, A held 45 updates, then released): the trooper has come to rest and sleeps (mode 2)
+    // Oracle trace pcoast frame 120 (the save state sitting in the police car of mission 1-1, A held 45 updates, then released): the trooper has come to rest and sleeps (mode 2)
     // with the rigid body at (867.893, 17.0445, 1097.718), forward (-0.70526, 0.00166, -0.70895), wheel distances 0.5288 front and 0.5263 rear.
     const float heading = std::atan2(-0.705261f, -0.708946f);
     VehicleRigidBody body = trooperBody({867.893f, 17.3f, 1097.718f}, heading);

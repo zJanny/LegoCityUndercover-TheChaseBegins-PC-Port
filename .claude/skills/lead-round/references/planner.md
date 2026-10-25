@@ -22,7 +22,7 @@ Read only this, in this order. Stop reading when you have enough:
 3. In `docs/plans/features/README.md`: only the sections of the areas you consider.
 4. `linux-port` only: in `docs/plans/priorities.md`, only the `## Top 50 overall` table. In other plans: the `Current state` of the `docs/design/` topics the candidates use.
 5. For each candidate: the item lines in its feature file (`grep -n 'ID-' file.md`), and the linked `docs/re` entry only if you need it to size the package.
-6. `linux-port` only, for packages that need the emulator: the local catalogue `artifacts/oracle/states/README.md` (not committed), to find existing save states and their game progress. A brief whose package depends on a local state also names the game point in words (missions done, place), so another developer can record the equivalent.
+6. `linux-port` only, for packages that need the emulator: the local catalogue `artifacts/oracle/states/README.md` (not committed), to find existing save states and their game progress. A brief whose package depends on a local state also names the game point in words (missions done, place); the worker writes it in game terms and never names the state in a committed file.
 
 Choosing packages:
 

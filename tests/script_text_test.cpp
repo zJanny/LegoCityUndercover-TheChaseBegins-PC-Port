@@ -2,7 +2,7 @@
 // game.arm.elf; docs/re/script-text.md): ShowTipTextOnce 0x263850 (duration 5.0 from the literal at 0x2638e0),
 // ShowTipTextTimed 0x26ffec, ShowDialogueText 0x26ff84 (4.0 from 0x26ffe4), ShowDialogueTextTimed 0x2a6d90, ShowDialogBG
 // 0x1bfb64, SetMissionTitle 0x263788, SetMissionSummary 0x27be98, 0x235f30 (duration 0 becomes 4.0). The oracle (agent X,
-// state agent-doughnut-title, RPC poll of the object at 0x517ef8) showed durations 3, 3, 4 and 5 s for the four tips of
+// save state at the first tip of a new game, RPC poll of the object at 0x517ef8) showed durations 3, 3, 4 and 5 s for the four tips of
 // 1-1_OnScreenText_Script and an alpha of 0.2 per update in and out. With no argument the real-data part runs on the
 // extracted RomFS (FIB NAMES) and exits with 77 when it is missing.
 #include "assets/assets.hpp"
@@ -164,7 +164,7 @@ void realData(const char* fib, const char* names) {
     ScriptRunner runner(level, state);
     require(runner.start("1-1_OnScreenText_Script"), "script");
     const runtime::ScriptTextState& text = runner.text();
-    // Oracle (state agent-doughnut-title, poll of 0x517ef8): the tips follow at 3 s, 6 s and 10 s, text keys from the level file.
+    // Oracle (save state at the first tip of a new game, poll of 0x517ef8): the tips follow at 3 s, 6 s and 10 s, text keys from the level file.
     const std::uint32_t keys[4] = {4094041050u, 4094041051u, 148829677u, 4094041053u};
     int changeAt[4] = {0, 0, 0, 0};
     int seen = 1;

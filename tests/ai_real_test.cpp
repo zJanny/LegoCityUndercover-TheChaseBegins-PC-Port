@@ -1,5 +1,5 @@
 // AIMove on real data: the police station entry script Police_ExtToInt of lvl_01_cherrytreehills walks Player1 to
-// Enter_Police_Station_Position_End with AIMove, waits and changes the scene. Provenance: oracle state street-after-1-1
+// Enter_Police_Station_Position_End with AIMove, waits and changes the scene. Provenance: oracle save state outside the police station after mission 1-1
 // (docs/re/scripts.md): after A the player node stands at (904.652, 16.577, 1113.197) and then moves 0.11 per update
 // towards Enter_Police_Station_Position_End. The nav grids of the level are given to the AI (path finder and in-grid follower); the walk speed is the
 // stand-in SCRIPT-S31. Needs the extracted RomFS; exits with 77 (skipped) when it is missing.

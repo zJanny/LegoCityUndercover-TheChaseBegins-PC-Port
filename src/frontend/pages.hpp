@@ -61,7 +61,7 @@ void drawLoadingTop(Canvas& top, Resources& resources);
 void drawLoadingBottom(Canvas& bottom, Resources& resources, const std::string& tip);
 // Bottom screen of the level switch loading page (manager mode 6, vtable 0x361fb4): a black page with a blue line, the
 // badge on its left and `continueText` with the A icon bottom right. STAND-IN TRANS-S3: sizes and colours are fitted to
-// the oracle screenshot of state station-exit-loadingpage; the drawing code was not read. The top screen is drawLoadingTop.
+// the oracle screenshot of save state at the loading page of the police station exit; the drawing code was not read. The top screen is drawLoadingTop.
 void drawSceneChangeBottom(Canvas& bottom, Resources& resources, const std::string& continueText);
 // WarningDialogBox (script native 0x2700d4): a box on the top screen over the level with the body text and the two
 // buttons (B cancel left, A confirm right). Drawn by game code that the port has not read: positions are STAND-INS.

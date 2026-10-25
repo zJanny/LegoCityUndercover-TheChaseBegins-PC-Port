@@ -1,5 +1,5 @@
 // The zipline of mission 1-2 in lvl_01_cherrytreehills (src/runtime/zipline.cpp): the anchors 1-8_Zip_Line05 and 1-8_Zip_Line04 from the
-// level data, then a replay of the ride recorded in the oracle from the state m12-9-zipline (docs/re/player-traversal.md, entry of
+// level data, then a replay of the ride recorded in the oracle from the save state under the zipline of mission 1-2 (docs/re/player-traversal.md, entry of
 // 2026-10-18 on the zipline): scheduler step fixed to 1/30 (`dt 0.033333335 0.033333335`), B held for 3 updates, then `trace 200 zip-ride mem`
 // (round 20 agent A, zip-ride, rows below are those frames). The grab happened in the 7th jump update (trap at 0x2a9f04:
 // node position (870.22626, 67.5988, 630.96051) after the jump step, grab point (870.3043, 67.5988, 630.9428)). Needs the extracted RomFS;
@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
         require(anchors[std::size_t(high)].target == low && anchors[std::size_t(low)].target == high, "TargetTightropeAnchor pairs 04 and 05");
         // Oracle read: the line list 0x592490 (14 entries) holds 0x08c02a30 (1-8_Zip_Line05, name hash 0x753115c0 at +8), not its target.
         require(anchors[std::size_t(high)].listed && !anchors[std::size_t(low)].listed, "05 is listed, 04 is not");
-        require(near(anchors[std::size_t(high)].speed, 7.0f, 0.0f), "ZipLineSpeed 7 (class default; read at +0x154 in m12-9)");
+        require(near(anchors[std::size_t(high)].speed, 7.0f, 0.0f), "ZipLineSpeed 7 (class default; read at +0x154 in the save state under the zipline of mission 1-2)");
         require(near(anchors[std::size_t(fast)].speed, 30.0f, 0.0f), "1-8_Zip_Line08 sets ZipLineSpeed 30");
 
         const assets::FuseEntry* clipEntry = archive.find(kDismountClip);

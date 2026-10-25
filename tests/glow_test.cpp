@@ -1,6 +1,6 @@
 // The glow post-process 0x2bf830 (src/runtime/glow.cpp) and its scanner call. Values: REA pseudocode of 0x2bf830 and the frame function
 // 0x2e4858 (call at 0x2e4f28 with the literals 0x2e50c8 = 0.6 and 0x2e50c4 = 1.4), the texture headers 0x52a698 / 0x52a6b8 / 0x52a6d8 and
-// the stage tables of modes 0xc, 0xd and 0x12 (0x5957f8 + mode * 0x94) read in the oracle in the view of m12-8-roof-sound-scanner
+// the stage tables of modes 0xc, 0xd and 0x12 (0x5957f8 + mode * 0x94) read in the oracle in the view of the save state on the roof at the sound scanner trigger of mission 1-2
 // (docs/re/abilities-scanner.md, glow entry).
 #include "runtime/glow.hpp"
 #include "runtime/scanner_render.hpp"

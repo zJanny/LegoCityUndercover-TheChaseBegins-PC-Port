@@ -147,7 +147,7 @@ struct DebrisBurst {
     std::optional<DebrisSuperBlock> super;         // colour block +0x14; 0x2c8278 is asked for every brick that found a debris slot
 };
 
-// STAND-IN VEH-S104: 0x3772a8 and 0x3772ac as the oracle held them (5.0 and 10.0 in the states veh-smash-car and veh-smash-prop; 0 in the data
+// STAND-IN VEH-S104: 0x3772a8 and 0x3772ac as the oracle held them (5.0 and 10.0 in the save state in a police van in front of moving cars and the save state in a police van in front of a lamp post; 0 in the data
 // image, the writer is not read).
 inline constexpr float kDebrisFadeNearMeasured = 5.0f;
 inline constexpr float kDebrisFadeFarMeasured = 10.0f;

@@ -1,6 +1,6 @@
 // Tests of the engine, gears, steering and tyres (src/runtime/vehicle_drivetrain.*) and of the vehicle step that uses them. Every pinned number
-// is an Azahar oracle value of the police trooper (state drv-police-car-seated, GDB memtrace at fixed dt 0.033 of the body 0x08e16100 and the
-// rigid body 0x08e16f40, 2026-10-15, agent VEH32: tA.mem = A held, sAR.mem = A and D-pad right). A replay case starts from
+// is an Azahar oracle value of the police trooper (save state sitting in the police car of mission 1-1, GDB memtrace at fixed dt 0.033 of the body 0x08e16100 and the
+// rigid body 0x08e16f40, 2026-10-15, agent VEH32: trace tA = A held, trace sAR = A and D-pad right). A replay case starts from
 // one traced update and compares the port's next world step (1/30 s) with the next traced update; the ground is the plane of each wheel's traced hit.
 // Evidence: docs/re/vehicles-physics.md.
 #include "runtime/vehicle_drivetrain.hpp"
@@ -98,7 +98,7 @@ void replay(const Snapshot& s, const Expected& e, double velocityTolerance, doub
 }
 
 void worldSteps() {
-    // ctrace of 0x33aea8 (agentVEH32-out sub033, sub066, sub020): one vehicle update per game update at dt 0.033, two at 0.066, one or none
+    // ctrace of 0x33aea8 (agent VEH32 sub033, sub066, sub020): one vehicle update per game update at dt 0.033, two at 0.066, one or none
     // at 0.02; tA skips the step of update 42 (the dump repeats update 41).
     float leftover = 0.0f;
     int steps = 0;

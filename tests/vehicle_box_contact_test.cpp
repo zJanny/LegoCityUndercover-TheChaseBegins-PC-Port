@@ -1,8 +1,8 @@
 // Tests of the vehicle body's Bullet contacts with the static boxes (src/runtime/vehicle_box_contact.*, docs/re/vehicles-physics-collision.md).
-// Pinned values: Azahar GDB reads and memory traces of 2026-10-15 (agent BULLET, not committed). hitA.mem:
-// state bullet-trooper-at-obstacle (the trooper of drv-police-car-seated after the A run, resting against the obstacle), fixed dt 0.033, A
+// Pinned values: Azahar GDB reads and memory traces of 2026-10-15 (agent BULLET, not committed). trace hitA:
+// save state with the police car resting against an obstacle (the trooper of the save state sitting in the police car of mission 1-1 after the A run, resting against the obstacle), fixed dt 0.033, A
 // held; per update the rigid body 0x08e16f40 (0x240 bytes), the dispatcher 0x084aaf00 and its only manifold 0x08472cb0 (trooper against the
-// static box 0x08f49810, shape 0x08f49770). runA.mem (agentVEH40-out): the A run from drv-police-car-seated, rigid body per update. The real
+// static box 0x08f49810, shape 0x08f49770). trace runA (agent VEH40): the A run from the save state sitting in the police car of mission 1-1, rigid body per update. The real
 // part loads lvl_01 and drives the trooper from runA update 105 into the obstacle. Exits with 77 without data.
 #include "assets/assets.hpp"
 #include "runtime/vehicle_box_contact.hpp"
@@ -40,7 +40,7 @@ struct OracleFrame {
     std::array<OraclePoint, 4> points;
 };
 
-// hitA.mem updates 107 and 108 (rigid +0x04 basis rows, +0x34, +0x13c, +0x14c, the solver deltas +0x20c and +0x21c, manifold points
+// trace hitA updates 107 and 108 (rigid +0x04 basis rows, +0x34, +0x13c, +0x14c, the solver deltas +0x20c and +0x21c, manifold points
 // +0x00 local A, +0x10 local B, +0x20 world B, +0x30 world A, +0x40 normal, +0x50 distance, +0x70 impulse, +0x90 life time).
 const OracleFrame k107 = {{Vector3{-0x1.4c673cp-1f, 0x1.132a5ep-6f, -0x1.855492p-1f}, Vector3{0x1.706eb4p-9f, 0x1.ffe618p-1f, 0x1.4278fap-6f}, Vector3{0x1.856c32p-1f, 0x1.5cacb4p-7f, -0x1.4c5c9cp-1f}}, {0x1.a7e72cp+9f, 0x1.13fd0cp+4f, 0x1.0d496ap+10f}, {0x1.9bae2ap-2f, 0x1.d1743ep-8f, 0x1.5b505cp-2f}, {-0x1.c6bf1p-10f, 0x1.afe2e2p-13f, 0x1.021ab8p-9f}, {0x1.44dfbap-2f, 0x1.0752d8p-7f, 0x1.15e96p-2f}, {0x1.58465p-7f, 0x1.fe15c2p-15f, -0x1.95fd1cp-7f}, {{
     {{-0x1.f07226p-1f, 0x1.0a453p-8f, 0x1.5599cap+1f}, {-0x1.24495p+1f, 0x1.36df82p+2f, 0x1.e554ap+2f}, {0x1.a73c86p+9f, 0x1.14d9aap+4f, 0x1.0caefap+10f}, {0x1.a734p+9f, 0x1.14d9acp+4f, 0x1.0cab58p+10f}, {0x1.8573ap-1f, -0x1.99c45p-17f, 0x1.4c5f56p-1f}, -0x1.6665c4p-4f, 0x1.0fb712p+9f, 129},
@@ -208,7 +208,7 @@ void solver() {
     for (std::size_t i = 0; i < 4; ++i) near(manifolds[0].points[i].appliedImpulse, k108.points[i].impulse, 0.5, "normal impulse kept in the point");
 }
 
-// runA.mem updates 105, 111 and 112 (rigid +0x04, +0x34, +0x13c, +0x14c): the trooper at 27.6 m/s 4.6 m before the obstacle, the update before
+// trace runA updates 105, 111 and 112 (rigid +0x04, +0x34, +0x13c, +0x14c): the trooper at 27.6 m/s 4.6 m before the obstacle, the update before
 // the hit and the hit (velocity reversed to (3.22, 0.07, 1.95) by the box contacts).
 struct RunState {
     std::array<Vector3, 3> basis;

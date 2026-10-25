@@ -1,5 +1,5 @@
 // Rails of mission 1-2 in lvl_01_cherrytreehills (src/runtime/climb_bar.cpp): the bars 1-2_ClimbBar_02 / 03 and the corner rail 1-2_ClimbBar_04 from
-// the level data, then replays of runs recorded in the oracle from the user state m12-12-railing (docs/re/player-traversal.md): New 3DS, OpenGL,
+// the level data, then replays of runs recorded in the oracle from the save state climbing along the railing of mission 1-2 (docs/re/player-traversal.md): New 3DS, OpenGL,
 // no RPC, port 24731, scheduler step fixed with `dt 0.033333335 0.033333335`, `trace N NAME mem` after `stick X 0`
 // (railR: stick +120, railL: stick -120), `hold B` / `hold A` for 3 updates (barB1/barB2, barA1/barA2). Rows below are the frames of those traces
 // (scratch output of tools/azahar_oracle.py, not kept): update index, ctrl+6 (stick heading), position, facing. Needs the extracted RomFS; exits with 77 without it.
@@ -171,7 +171,7 @@ int main(int argc, char** argv) {
         const runtime::ClimbBarSet set = runtime::loadClimbBars(level, assets::archiveClassLookup(archive));
         const int bar02 = find(set, "1-2_climbbar_02"), bar03 = find(set, "1-2_climbbar_03");
         require(set.corners.size() >= 1 && set.corners[0].path.size() == 3, "corner rail path");
-        // dump of the oracle (m12-12): GrabBound centre (0.00228, 0.12063, 0.08835), half (2.77179, 0.2, 0.3), flags byte 0x04 (FaceJumpDir only).
+        // dump of the oracle (the save state climbing along the railing of mission 1-2): GrabBound centre (0.00228, 0.12063, 0.08835), half (2.77179, 0.2, 0.3), flags byte 0x04 (FaceJumpDir only).
         const runtime::ClimbBar& bar = set.bars[std::size_t(bar03)];
         require(near(bar.grabHalf[0], 2.77179f, 1e-4f) && near(bar.grabCentre[1], 0.12063f, 1e-4f), "grab bound");
         require(bar.faceJumpDir && !bar.narrowBar && !bar.acrobatPole && !bar.ledge && !bar.immediateJump, "bar flags");
@@ -266,8 +266,8 @@ int main(int argc, char** argv) {
         }
 
 
-        // Grab of 1-2_FlagPole_01 from the bounce of the built trampoline (docs/re/player-traversal-rails.md, TRAV-36). Oracle: user state
-        // m12-trampoline-built, `teleport 720.20 32.618 637.47`, B held, `dt 0.033333335`, `trace 340 t2 mem` (scratch output, not kept):
+        // Grab of 1-2_FlagPole_01 from the bounce of the built trampoline (docs/re/player-traversal-rails.md, TRAV-36). Oracle: save state
+        // the save state at the built trampoline of mission 1-2, `teleport 720.20 32.618 637.47`, B held, `dt 0.033333335`, `trace 340 t2 mem` (scratch output, not kept):
         // after the take-off at speed 0.9 the node rises to 42.21911 (state 26), the fall update (state 5, y 42.06911) grabs the pole and the
         // arrival runs in the same update: rows (x, y, z) 720.26990 41.81580 637.51532; 720.33978 41.56249 637.56067; 720.36835 41.45909
         // 637.57922 with the request for state 93 (acrobat pole); the first update of state 93: 721.36157 41.45909 637.57922, facing (0, -1).
@@ -309,7 +309,7 @@ int main(int argc, char** argv) {
         }
 
         // Acrobat pole jumps (0x211b88, docs/re/player-traversal-rails.md §2026-10-18T21:33:08). Oracle traces of r24-C (scratch output, not
-        // kept): t1 from the user state m12-trampoline-pole (hanging on 01 facing (0, 1), no stick, B held, `trace 160 t1 mem`): states
+        // kept): t1 from the save state above the trampoline of mission 1-2 (hanging on 01 facing (0, 1), no stick, B held, `trace 160 t1 mem`): states
         // 93 -> 95 (ctrl+0x140 = 1-2_FlagPole_02) -> 96 (03) -> 95 (04) -> 98 -> 5 -> 1; t2 (bounce grab of 01, facing (0, -1) after the
         // arrival, B held, `trace 340 t2 mem`): 93 -> 97 (ctrl+0x140 = 0) -> 5 -> 6 -> 1.
         {

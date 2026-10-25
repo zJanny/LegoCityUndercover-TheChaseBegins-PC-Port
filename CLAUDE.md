@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Guidance for Claude Code (claude.ai/code) in this repository. Keep this file to rules every agent needs, whatever plan it works for (at most 22 KiB, checked by `doc-links`); the rules of one plan go into its rule file under `docs/rules/`, details of one subsystem into its feature file, `docs/re/` or `docs/design/`.
+Guidance for Claude Code (claude.ai/code) in this repository. Keep this file to rules every agent needs, whatever plan it works for (at most 23 KiB, checked by `doc-links`); the rules of one plan go into its rule file under `docs/rules/`, details of one subsystem into its feature file, `docs/re/` or `docs/design/`.
 
 ## Project
 
@@ -86,10 +86,11 @@ Four places, never copied between them, only linked: **findings** about the orig
 - Never modify the `.cci`. Never stage or commit it or anything game-derived (`*.cci`, `*.3ds`, `artifacts/`, `build/` are gitignored), and no original game assets or screenshots. Inspect staged changes before every commit.
 - If such content is already in history, report it and propose a remediation; never rewrite shared history or delete user data without authorization.
 - **No local-only data in the repo:** nothing committed (code, tests, CMake, tools, docs, skills, brief templates) may need a file that exists on one machine only. Allowed are the outputs of the documented commands (`artifacts/<dir>` of `extract_game.py`, `artifacts/romfs`, `artifacts/fib`, `artifacts/textures`, `artifacts/audio`, `artifacts/progress.json`) and output folders a committed tool creates itself.
-  - Every value a test or finding uses is written into the repo: pinned in the test with provenance, or in the `docs/re` entry. Provenance names round/agent, state name, date and command, never a local path. A picture's content is described in words.
+  - Every value a test or finding uses is written into the repo: pinned in the test with provenance, or in the `docs/re` entry. Provenance names round/agent, date, command or oracle step and says "recorded from a save state"; never a local path, an output folder or scratch file name (`agent...-out`, `*.mem`, `*.png`) or a save state's name. Describe the game situation in game terms ("on a street with traffic after mission 1-1"). Only states that a committed script saves itself (`gameplay-start`) are named. A picture's content is described in words.
+  - Anything about one user's machine or setup (their save states and how they were reached, emulator, controller, distro, package, user name, timings) lives only in the gitignored `artifacts/oracle/states/README.md`. User docs list requirements (emulator version and build options, libraries), not what the author installed.
   - Generated material stays local and untracked, and is never committed or copied: save states and their catalogue in `artifacts/oracle/states/`, emulator homes and outputs in `artifacts/oracle/`, agent scratch in the scratchpad or `artifacts/scratch/`, round briefs and reports in `artifacts/rounds/`. No tool default, script or agent writes such material into a tracked path. Recorded data reaches the repo only as values in committed test tables (`.csv` / `.inc` under `tests/data/`, or constants in the test) with provenance; a test that needs a file (a save) builds it from those values at test time. No binary data files are committed: no saves, emulator save states, raw traces or memory dumps, nor bytes of the user's original save.
   - Tests never read local-only data: no CMake option, default path or environment variable pointing at it; a test that needs recorded data pins the decisive values in the repo.
-  - A committed file that still needs local data is a defect: report it to the user and write the value in if the data is here; never fake or work around missing data. CTest `no-local-data` (`tools/check_local_data.py`) fails on such paths.
+  - A committed file that still needs local data is a defect: report it to the user and write the value in if the data is here; never fake or work around missing data. CTest `no-local-data` (`tools/check_local_data.py`) fails on such paths, scratch names, distro paths and loaded state names that no script saves.
 
 ## Graphify
 

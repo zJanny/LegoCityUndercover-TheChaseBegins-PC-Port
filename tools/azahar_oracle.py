@@ -691,6 +691,17 @@ def crash_description(home, code):
     return 'Azahar exited with %s; no %s frames in its logs' % (describe_exit(code), ' / '.join(CRASH_SIGNATURE))
 
 
+def rpc_failure_message(home, error):
+    try:
+        log = (home / 'data/azahar-emu/log/azahar_log.txt').read_text(errors='replace')
+    except OSError:
+        log = ''
+    if 'Starting RPC server' not in log:
+        return ('Azahar did not start its RPC server (%s): this build probably lacks it. --rpc needs an Azahar build '
+                'compiled with the RPC server (ENABLE_SCRIPTING); see "Requirements" in docs/commands.md' % error)
+    return 'Azahar started its RPC server but it does not answer: %s' % error
+
+
 def save_crash_logs(home, attempt):
     for path in (home / 'data/azahar-emu/log/azahar_log.txt', home / 'azahar-stdout.log'):
         if path.exists():
@@ -1619,6 +1630,13 @@ def launch_emulator(args, home, azahar, image, new_3ds):
     return Launched(process, xvfb, display, keys, visible=args.display == 'desktop', motion=motion)
 
 
+def connect_rpc_or_explain(home, launched):
+    try:
+        return connect_rpc(alive=launched.check)
+    except RpcError as error:
+        raise SystemExit(rpc_failure_message(home, error)) from error
+
+
 def start_emulator(args, home, azahar, image, output, emulator_states, saved_states, new_3ds):
     """Launch Azahar and bring it to the point where the scenario can start (gdb stub, RPC and the optional state
     load). Azahar 2126.2 sometimes crashes in this phase; the attempt is then cleaned up and repeated. Nothing
@@ -1629,7 +1647,7 @@ def start_emulator(args, home, azahar, image, output, emulator_states, saved_sta
             if launched.keys:
                 launched.silence_render_window()
             remote = GdbRemote(args.port, alive=launched.check)
-            rpc = connect_rpc(alive=launched.check) if args.rpc else None
+            rpc = connect_rpc_or_explain(home, launched) if args.rpc else None
             oracle = Oracle(remote, output, launched.keys, emulator_states, saved_states, rpc, args.renderer,
                             args.rpc_input, alive=launched.check, new_3ds=new_3ds)
             if args.state:

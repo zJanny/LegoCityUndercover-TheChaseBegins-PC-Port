@@ -1,5 +1,5 @@
 // The models of objects nested in class files (runtime::nestedProps, stand-in LEVOBJ-S93) on lvl_01_cherrytreehills: the crane ladder's upper
-// half `ladder_part_02` at (0, 6.088, 0) above `1-4_Ladder01`, so the ladder reaches y 30.70 (the roof where the oracle state m13-2-ladder
+// half `ladder_part_02` at (0, 6.088, 0) above `1-4_Ladder01`, so the ladder reaches y 30.70 (the roof where the oracle save state in front of the crane ladder of mission 1-3
 // shows the ladder above Chase at y 23.6). Reference values: class files through the C++ loaders (round 37 scratch census: 5 nested models drawn
 // in lvl_01). Needs the extracted RomFS; exits 77 without it.
 #include "assets/assets.hpp"

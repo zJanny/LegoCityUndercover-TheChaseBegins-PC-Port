@@ -1,5 +1,5 @@
 // The side test of the wall candidate filter 0x209a98 (flag 0x20, entries of placed objects): a wall triangle of a placed object only blocks while the
-// player box centre at the start of the update lies on the front side of its plane. Recorded values: Azahar oracle, user state m12-trampoline-built,
+// player box centre at the start of the update lies on the front side of its plane. Recorded values: Azahar oracle, save state at the built trampoline of mission 1-2,
 // RPC `sample 3.5 0.004` of a full-speed run (`freestick 75 -93`) at the built Trampoline_03 (origin 720.20 637.47), scratch r26B_run.csv (agent r26-B):
 // from (718.843, 641.299), 4.06 m out, one update steps 0.23 m; the run stops on the circle of 2.448 m around the origin in the seventh update and
 // then only slides. The earlier walk over the pad (round 23) started 1.83 m from the origin, inside the frame, and crossed it.

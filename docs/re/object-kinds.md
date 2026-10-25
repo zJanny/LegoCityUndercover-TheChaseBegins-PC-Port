@@ -207,11 +207,11 @@ Unknowns:
 
 <a id="ts-20261019-192532"></a>
 
-## 2026-10-19T19:25:32+02:00 — The mission 1-3 ladder's upper half is a nested object of `props/prop_crane_ladderlarge` (Azahar `m13-2-ladder`, OpenGL, no RPC, port 45691; class files through the C++ loaders; `chase-game` screenshot)
+## 2026-10-19T19:25:32+02:00 — The mission 1-3 ladder's upper half is a nested object of `props/prop_crane_ladderlarge` (Azahar the save state in front of the crane ladder of mission 1-3, OpenGL, no RPC, port 45691; class files through the C++ loaders; `chase-game` screenshot)
 
 Answers [playtests.md §2026-10-19T18:02:53](playtests.md#ts-20261019-180253).
 
-**Where Chase stands (oracle).** The user state `m13-2-ladder` (scenario `wait 3; player`, loaded after the m13 state fix of the lead): player world (894.080, 23.623, 1134.047), forward (0.814, 0, 0.581), state 1.
+**Where Chase stands (oracle).** The save state in front of the crane ladder of mission 1-3 (scenario `wait 3; player`, loaded after the m13 state fix of the lead): player world (894.080, 23.623, 1134.047), forward (0.814, 0, 0.581), state 1.
 
 **The ladder.** The nearest ladder object is `1-4_Ladder01`, class `props/prop_crane_ladderlarge`, model `Prop_Ladder_Large` (one node, identity matrix, mesh y 0 .. 6.096), at (894.707, 18.516, 1135.146), yaw 225. Its class file nests one object, `ladder_part_02` of class `props/prop_ladderlarge` (same model) at (0, 6.088, 0) relative to it, so the ladder runs from y 18.5 to 30.70, the roof of the helipad building (the mission blockers stand at y 30.8). Chase stands at y 23.6 in front of the upper half. `1-4_Ladder02` (912.951, 18.544, 1142.513) is the same class; `1-4_Ladder03` is a plain `prop_ladderlarge`.
 

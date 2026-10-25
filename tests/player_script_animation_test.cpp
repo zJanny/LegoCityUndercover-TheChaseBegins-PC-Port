@@ -3,12 +3,12 @@
 //  - state table words at 0x3577f4 (read from code.bin, llvm-objdump of game.arm.elf): state 0x50 = {update 0x2a47b0, enter 0x25fbec}; PlayCharAnim 0x29e5f0
 //    requests 0x50 (0x51 for PlayCutscene) after the play 0x295a8c; the update 0x2a47b0 requests state 1 when the slot kind (0x22f560) is 6;
 //    StopCharAnim 0x1bfb84 stops the entity's slot (0x225c5c: mode 6).
-//  - order (oracle m12-13-cage-trigger, tools/oracle/script-anim-order-ctrace.txt and script-anim-blend-trap.txt, dt 0.033): the runner (0x169254)
+//  - order (oracle the save state at the dog cage trigger of mission 1-2, tools/oracle/script-anim-order-ctrace.txt and script-anim-blend-trap.txt, dt 0.033): the runner (0x169254)
 //    runs before the player's update; PlayCharAnim(Player1, dog_cage_open_minifig) in update 9 is followed in the same update by the enter 0x25fbec
 //    without the IDLE update 0x1d5070 (0x26a19c skips the state update while ctrl+0x6c != ctrl+0x6e); 0x2a47b0 runs from update 10, sees kind 6 in
 //    update 98 and the enter 0x1abbb0 follows in 98; the pose of update 9 already gives the new slot weight 0.33 (99 ticks elapsed).
 //    dog_cage_open_minifig: 44 frames, 15 fps, loop bit (archive).
-//  - the clip is models/char_minifig/class_generic/idle_minifig.bfnanm: 19 frames at 15 fps with the loop bit (oracle m11-1-donut-shop, docs/re/npc-animation.md).
+//  - the clip is models/char_minifig/class_generic/idle_minifig.bfnanm: 19 frames at 15 fps with the loop bit (oracle the save state before the donut shop waypoint of mission 1-1, docs/re/npc-animation.md).
 // With FIB and NAMES arguments the same sequence runs on the real clip; exits with 77 (skipped) when the data is missing.
 #include "assets/assets.hpp"
 #include "runtime/player_script_animation.hpp"

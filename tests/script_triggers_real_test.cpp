@@ -1,5 +1,5 @@
 // Trigger pass of lvl_01_cherrytreehills on real data: the police entrance walk. Provenance: Azahar oracle, state
-// street-at-entrance (New 3DS, docs/re/script-triggers.md): the PlayerOnFootBoundEntered trigger 204 (bound
+// the save state at the police station entrance after mission 1-1 (New 3DS, docs/re/script-triggers.md): the PlayerOnFootBoundEntered trigger 204 (bound
 // Police_Station_Transition_Lower) stored "inside" at the check of the update the player entered, the dialog opened, and the
 // BoundLeft trigger 203 (same bound, script Police_ExtToInt_SwitchOn) fired at the check after the answer moved the player out.
 // Needs the extracted RomFS; exits with 77 (skipped) when it is missing.
@@ -59,7 +59,7 @@ int main(int argc, char** argv) {
         runner.setTriggerEnabled(kLeftTrigger, true);
         runner.setBoundEnabled(kLowerBound, true);
 
-        // Provenance: street-at-entrance (after mission 1-1): bound 87 and trigger 203 are enabled (oracle traps tt1a..tt1f).
+        // Provenance: the save state at the police station entrance after mission 1-1 (after mission 1-1): bound 87 and trigger 203 are enabled (oracle traps tt1a..tt1f).
         // Bound 87: cylinder centre (907.242, 18.2292, 1115.83), radius 2.0466, half height 2 (level section +0x24).
         // The path x = 906.0 enters the cylinder where dz < sqrt(2.0466^2 - 1.242^2) = 1.627, z > 1114.203: step 9 of 0.25 from 1112.
         int enteredAt = -1;

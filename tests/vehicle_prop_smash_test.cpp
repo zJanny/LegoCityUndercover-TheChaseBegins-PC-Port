@@ -1,6 +1,6 @@
 // Tests of the smash of destructible props by a moving vehicle (src/runtime/vehicle_prop_smash.*; the vehicle pass 0x16ce9c, the query 0x275c00 with the
 // grid gather 0x237f30, the filter 0x2c02c8, the box helpers 0x22ec3c, 0x2335e4, 0x237eb4 and the wobbly handler 0x2a3390). Recorded values: Azahar
-// oracle, state drv-police-car-seated, fixed dt 0.033, the trooper poked to (854.43, 17.07, 1087.36) with body+0x8c = -1 and driven with A (scenario p1,
+// oracle, save state sitting in the police car of mission 1-1, fixed dt 0.033, the trooper poked to (854.43, 17.07, 1087.36) with body+0x8c = -1 and driven with A (scenario p1,
 // agent A of round 16, `memtrace 40 p1 0x8a8889c:0x40 0x8e1707c:12 0x8db1dd0:8 0x8db26d0:0x20`): the trooper's node matrix (0x08a8889c), its rigid
 // velocity (0x08e1707c), the phone box's entity word +0x10 (0x08db1dd0: 0x0740, bit 0 set from trace row 19 on) and its record +0x10 (health 4, then
 // -96 = 0xffa0 from row 19). The first row that shows the smash is row 19. Exits with 77 without data.
@@ -78,7 +78,7 @@ const Recorded kRows[] = {
 
 constexpr int kFirstRowWithSmash = 19;
 
-// Node matrices of the police van in the user state veh-smash-prop, own Azahar (New 3DS, OpenGL, no RPC, port 24732), fixed dt 0.033, A held, circle pad
+// Node matrices of the police van in the save state in a police van in front of a lamp post, Azahar (New 3DS, OpenGL, no RPC), fixed dt 0.033, A held, circle pad
 // x = -156 for the first 20 updates then 0; `memtrace 20 lampA` and `memtrace 40 lampB` of the node matrix (vehicle entity 0x08a9e580, node 0x08a9e980, matrix at
 // node+0x5c). `frame` is the scheduler call counter of the trace. The oracle's 0x23cd80 for Lampost_05 (wobbly entity 0x08d89760, handler 0x2a3390)
 // ran in frame 45 (`ctrace 0x23cd80`, same scenario, lampcB); its entity word +0x10 shows bit 0 in the same frame's memtrace row.

@@ -1,5 +1,5 @@
 // The class leprops/leprop_wobblydestructible (src/runtime/prop_wobbly_destructible.*; handler 0x2a3390, destroy 0x23cd80, base handler 0x1f8948).
-// Recorded values: Azahar oracle, user state m12-table-before (New 3DS), the table DonutTable_14 punched with Y (button held 3 updates, then 26 updates
+// Recorded values: Azahar oracle, save state in front of the table of mission 1-2 (New 3DS), the table DonutTable_14 punched with Y (button held 3 updates, then 26 updates
 // of waiting, five times; scratch scenario h1..h8 of agent r23-D, `ctrace 0x31a38c,0x23cd80,0x16b958,0x244f40,0x23211c,0x23cee8` and `read` of the
 // record +0x10 at 0x08c9adf0): the health halfword reads 4, 3, 2, 1, 0 after the five punches (WobbleHealth 5, damage 1); the first four punches
 // call the spring 0x16b958 and the event 0x23cee8 (*0x3775e0 = ObjectHit), the fifth calls 0x23cee8, 0x23cd80, 0x23cee8 (*0x3775c0 = Dead) and then 0x244f40

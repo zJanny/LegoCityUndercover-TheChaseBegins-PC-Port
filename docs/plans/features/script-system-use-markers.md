@@ -10,7 +10,7 @@ IN_PROGRESS, updated 2026-10-20T21:59:12+02:00. Use spots (165) and detective sp
 
 ## 3. Verified behaviour
 
-- The detective spot of mission 1-2 shows the police disc with the blue ring at the spot base; the width in the port picture (about 52 px) matches the oracle picture of `footprint-scanner-trigger` (55 px) by eye; the marker goes when the spot enters detective mode (test `game-use-marker-detective-1-2`).
+- The detective spot of mission 1-2 shows the police disc with the blue ring at the spot base; the width in the port picture (about 52 px) matches the oracle picture of the save state in front of a dog detective spot of mission 1-2 (55 px) by eye; the marker goes when the spot enters detective mode (test `game-use-marker-detective-1-2`).
 - Kind to ability to texture, the lock rule and the ability tables are pinned by tests `use-marker` and `use-marker-real-data`.
 
 ## 4. Stand-ins
@@ -32,7 +32,7 @@ IN_PROGRESS, updated 2026-10-20T21:59:12+02:00. Use spots (165) and detective sp
 ## 6. Findings summary
 
 - Textures, list, update, fader, placement, draw and the oracle run for use spots: [use-spot.md §2026-10-19T09:25:34](../../re/use-spot.md#ts-20261019-092534).
-- Texture function 0x292388, ability tables, the detective spot's answer and the oracle state: [use-spot.md §2026-10-20T21:58:32](../../re/use-spot.md#ts-20261020-215832); state: the user's `footprint-scanner-trigger` (mission 1-2 active, Chase 2.43 m from the second dog detective spot).
+- Texture function 0x292388, ability tables, the detective spot's answer and the oracle state: [use-spot.md §2026-10-20T21:58:32](../../re/use-spot.md#ts-20261020-215832); state: the save state in front of a dog detective spot of mission 1-2 (mission 1-2 active, Chase 2.43 m from the second dog detective spot).
 
 ## 7. Code and tests
 
