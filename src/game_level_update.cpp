@@ -440,10 +440,9 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
     for (const runtime::ScriptPlacement& request : levelScripts.takePlacements()) applyPlacement(request);
     for (const runtime::ScriptObjectMessage& sent : levelScripts.takeObjectMessages()) {
         if (sent.message == runtime::kMessageTrigger) detective.triggerMessage(sent.instance);
-        for (DoorObject& door : doors)
-            if (game_doors::lowerCase(door.instance) == sent.instance)
-                runtime::doorMessage(door.state, door.params,
-                                     sent.message == runtime::kMessageTrigger ? runtime::DoorMessage::Open : runtime::DoorMessage::Close);
+        if (const std::optional<runtime::DoorMessage> doorMessage = runtime::doorMessageFor(sent.message))
+            for (DoorObject& door : doors)
+                if (game_doors::lowerCase(door.instance) == sent.instance) runtime::doorMessage(door.state, door.params, *doorMessage);
     }
     provisionalStudClockSeconds += double(dt);
     updateLevelCharacters(dt);

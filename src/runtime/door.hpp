@@ -5,6 +5,7 @@
 #include "assets/assets.hpp"
 #include <array>
 #include <cstdint>
+#include <optional>
 #include <vector>
 
 namespace chase::runtime {
@@ -64,6 +65,9 @@ bool doorZoneContains(const float worldMatrix[16], const float player[3], const 
 void doorUpdate(DoorState& door, const DoorParams& params, bool playerInZone, std::vector<DoorSoundEvent>& sounds);
 
 // A request to the door (handler 0x1749b8). `value` is used by SetOpening (message 0x29).
+// The handler 0x1749b8 answers 0xff (open), 0xfe (close), 8 (reset) and 0x36 (open at once); 0xfc only hands the four sound ids to a callback (0x174bf4);
+// every other message, 10 of the reference-trigger step included, goes to 0x174c4c and returns 0. Message 0x29 (opening fraction) carries a value the script queue does not hold and is not mapped.
+std::optional<DoorMessage> doorMessageFor(std::uint8_t message);
 void doorMessage(DoorState& door, const DoorParams& params, DoorMessage message, float value = 0);
 
 // Pose matrices (16 floats, row vectors, translation last) the door gives its first and second node (0x26905c, through 0x22cbbc).

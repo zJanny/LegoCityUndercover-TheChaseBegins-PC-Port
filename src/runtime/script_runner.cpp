@@ -852,10 +852,14 @@ void ScriptRunner::checkTriggers(const float player[3], bool playerInVehicle) {
 void ScriptRunner::fireObjectTriggered(const std::string& lowerInstance) { fireObjectEvent("objecttriggered", lowerInstance); }
 
 void ScriptRunner::triggerObjectEnabling(const std::string& lowerInstance) {
-    state_.disabled.erase(lowerInstance);
-    messages_.push_back({lowerInstance, kMessageTrigger});
+    enableObject(lowerInstance);
+    sendObjectMessage(lowerInstance, kMessageTrigger);
     fireObjectTriggered(lowerInstance);
 }
+
+void ScriptRunner::enableObject(const std::string& lowerInstance) { state_.disabled.erase(lowerInstance); }
+
+void ScriptRunner::sendObjectMessage(const std::string& lowerInstance, std::uint8_t message) { messages_.push_back({lowerInstance, message}); }
 
 void ScriptRunner::fireObjectEvent(const std::string& lowerEvent, const std::string& lowerInstance) {
     for (std::size_t i = 0; i < level_.triggers.size(); ++i)

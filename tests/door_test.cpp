@@ -99,6 +99,14 @@ int main() {
             require(door.state == 1 && door.target == 1, "reset");
         }
         {
+            require(doorMessageFor(0xff) == DoorMessage::Open && doorMessageFor(0xfe) == DoorMessage::Close, "0x1749b8: 0xff opens, 0xfe closes");
+            require(doorMessageFor(8) == DoorMessage::Reset && doorMessageFor(0x36) == DoorMessage::OpenAtOnce, "0x1749b8: 8 resets, 0x36 opens at once");
+            for (int other : {0, 1, 10, 0x80})
+                require(!doorMessageFor(std::uint8_t(other)), "any other message goes to 0x174c4c and does nothing (10 of the reference-trigger step)");
+            require(!doorMessageFor(0xfc), "0xfc changes no door state (0x174bf4 only reports the sound ids)");
+            require(!doorMessageFor(0x29), "0x29 (0x174ad4) needs a value the script message queue does not carry");
+        }
+        {
             // Sound events of a full open and close cycle: 0x1a6b6c plays SFXOpening (record +0x2c) in state 2 when the timer equals the open delay
             // (+0x10), at target 3 stops +0x2c and plays SFXOpen (+0x32), at target 4 plays SFXClosing (+0x2e), at target 1 stops +0x2e and plays
             // SFXShut (+0x30); the message handler 0x1749b8 and the update 0x1d16b8 make no sound call (docs/re/doors.md).

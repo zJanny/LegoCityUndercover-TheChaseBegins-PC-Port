@@ -30,6 +30,7 @@ struct BuilditObject {
     std::string instance;       // lower case
     std::string finalProp;      // BuilditFinalProp, lower case, empty when the reference is unset
     std::string triggerObject;  // TriggerObject, lower case, empty when the reference is unset
+    std::optional<std::size_t> reference;  // its entry in BuilditSet::references(), none when the object loader does not create it
     float studValue = kBuilditDefaultStudValue;
     StudSpawnSource studSpawn;       // SpawnCone, SpawnLocal, SpawnDir of the build-it
     std::array<float, 16> finalPropNode{};  // the final prop at its placement (0x2429d0 of its node)
@@ -89,7 +90,7 @@ private:
     void updateWobble(BuilditObject& object, const float player[3]);
     std::vector<BuilditObject> objects_;
     BuilditUse lastUse_;
-    ReferenceTriggers references_;  // one per object, same index (TriggerObject)
+    ReferenceTriggers references_;  // every reference record of the level (reference_trigger_level.hpp)
     GameRandom random_{kBuilditWobbleStandInSeed};
 };
 

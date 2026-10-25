@@ -141,6 +141,16 @@ void doorUpdate(DoorState& door, const DoorParams& params, bool playerInZone, st
     if (door.state == Opening && door.timer == params.soundOpenDelay) sounds.push_back({DoorSoundEvent::Action::Play, params.sounds.opening});
 }
 
+std::optional<DoorMessage> doorMessageFor(std::uint8_t message) {
+    switch (message) {
+    case 0xff: return DoorMessage::Open;
+    case 0xfe: return DoorMessage::Close;
+    case 8: return DoorMessage::Reset;
+    case 0x36: return DoorMessage::OpenAtOnce;
+    default: return std::nullopt;
+    }
+}
+
 void doorMessage(DoorState& door, const DoorParams& params, DoorMessage message, float value) {
     switch (message) {
     case DoorMessage::Reset:

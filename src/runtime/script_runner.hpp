@@ -159,6 +159,9 @@ public:
     // 0x244f40(object, instigator), called by class code such as the carry object and the carry target (not by the script native TriggerObject, 0x1cddf8): enables
     // the object (0x242cf0, clears the disabled bit), sends it message 0xff and fires its ObjectTriggered event.
     void triggerObjectEnabling(const std::string& lowerInstance);
+    // Two parts of the reference-trigger step 0x23211c (reference_trigger_apply.hpp): 0x242cf0 clears the disabled bit, 0x244fc8 queues the message.
+    void enableObject(const std::string& lowerInstance);
+    void sendObjectMessage(const std::string& lowerInstance, std::uint8_t message);
     // The same for the other events the vehicle and character code raises by name (PlayerVehicleEntered, PlayerVehicleExiting): the first enabled
     // trigger of that event whose owner object is `lowerInstance`.
     void fireObjectEvent(const std::string& lowerEvent, const std::string& lowerInstance);

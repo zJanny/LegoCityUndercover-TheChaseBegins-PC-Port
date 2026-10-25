@@ -8,7 +8,7 @@ Subtopics: [buildit-bricks.md](buildit-bricks.md)
 
 - Class: object type 0x15, descriptor built at 0x15d274, update 0x16cc78, message handler 0x176160, record of 0x98 bytes at entity+0x7c; parameters and use zone (box from node bounds when `UseBound`/`UseRadius` are absent) in [§2026-10-14T23:55](#ts-20261014-235539).
 - State machine: update 0x16cc78 runs 0x2424d0 with post check 0x1d428c, then the state change 0x1aad90; the idle record is state 2, target 2 (measured on `m11-4-van-parts`); the build runs while A is held in the use zone [§2026-10-14T23:59](#ts-20261014-235937).
-- `TriggerObject` is fired by the state change through the reference-trigger step 0x23211c (an AND-join over all references to one target), not by the class code directly [§2026-10-15T13:07](#ts-20261015-130720), which corrects [§2026-10-15T11:12](#ts-20261015-111211).
+- `TriggerObject` is fired by the state change through the reference-trigger step 0x23211c (an AND-join over all references to one target), not by the class code directly [§2026-10-15T13:07](#ts-20261015-130720), which corrects [§2026-10-15T11:12](#ts-20261015-111211). The whole step, its lists and callers: [script-triggers.md §2026-10-25T11:21:25](script-triggers.md#ts-20261025-112125).
 - Bricks (flight, built pose, hop of unbuilt bricks, rise of the final prop): [buildit-bricks.md](buildit-bricks.md).
 - The player enters state 9 "BUILD IT" (enter 0x1d4b14, update 0x276254, exit 0x1c72f0); the use query's `2414b4(..., 9, 0)` is a state request, not a clip id; sounds and unported effects are listed there [§2026-10-16T10:17](#ts-20261016-101726).
 - The player's state 9 lasts from the press update to the update the build-it reaches state 10 (updates 0..72 of the six-brick van build, the object updates first); clip 183 loops (slot mode 1) [§2026-10-18T10:08](#ts-20261018-100804).
@@ -84,6 +84,8 @@ Unknowns:
 <a id="ts-20261015-130720"></a>
 
 ## 2026-10-15T13:07:20+02:00 — The build-it fires TriggerObject through the reference-trigger step 0x23211c (oracle ctrace, llvm-objdump)
+
+Corrected by [script-triggers.md §2026-10-25T11:21:25](script-triggers.md#ts-20261025-112125): byte 1 of the reference record is the `NavNode` value (not a sound id) and `0x22c470` sets a nav node flag; the full step, the event names (`*0x3775d8` is ObjectSwitched, `*0x3775dc` ObjectUnswitched) and the registering classes are there.
 
 [Corrects §2026-10-15T11:12](#ts-20261015-111211) and [Corrects carrying.md §2026-10-15T11:11](carrying.md#ts-20261015-111115): the type 21 class does fire the event, through a wrapper the earlier static search did not follow.
 
