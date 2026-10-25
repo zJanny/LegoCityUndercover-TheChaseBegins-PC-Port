@@ -13,6 +13,7 @@ Launching Azahar for the oracle: Xvfb, the render window race, the launch retry,
 - The tool runs a Cemuhook DSU motion server for every session (default `--port` + 1000, `--motion-port`) and writes `motion_device` into the isolated config; "level" is DSU accel (0, 0, -1) g, `tilt` changes it. With gravity on DSU y the scanner yaw is NaN, with gravity on z the scanner view runs. [§2026-10-18T22:03:32](#ts-20261018-220332)
 - The script steps `touch X Y [UPDATES]`, `touch release` and `drag X1 Y1 X2 Y2 [UPDATES]` touch the bottom screen through the same DSU server (first touch of the pad data, `touch_device` written next to `motion_device` at launch); the game's HID touch entry holds exactly the pixel (all 320 x values and all 240 y values checked), no RPC, no memory writes. [§2026-10-25T11:35:28](#ts-20261025-113528)
 - Save states: a state made in New 3DS mode must be loaded in New 3DS mode (loading one in Old 3DS mode ended with SIGILL), so `NAME.json` carries `new_3ds`, `savestate` writes it and `loadstate` refuses a mode mismatch; New 3DS runs the CPU faster, so timing is repeated in Old 3DS mode; use `--renderer opengl` for states (the software renderer crashed loading states made in a vehicle). [§2026-10-20T23:27:26](#ts-20261020-232726)
+- Committed oracle scripts that `loadstate` a user save state by name cannot be run without that name: the tool has no state parameter, only `--state NAME` (one load after boot). Open as TOOLS-20. [§2026-10-25T13:17:58](#ts-20261025-131758)
 - Open: crashes on a plain boot, whether an unmapped window changes timing, the cause of one launch that ended after 4 loads, crashes of a visible OpenGL window.
 
 <a id="ts-20261013-124127"></a>
@@ -109,3 +110,13 @@ Unknowns:
 - What the game does with a one-update tap in a given menu (the reader and the menu code were not traced); the default of 6 updates is a tool choice, not game behaviour.
 - Whether a second finger could be needed (the game's reader takes one point; only one is supported).
 - Azahar's exact touch parameter names beyond what the working config shows (the scale of the range was confirmed by the exact pixel match).
+
+<a id="ts-20261025-131758"></a>
+
+## 2026-10-25T13:17:58+01:00 — Oracle scripts name a user save state; the tool has no state parameter (round 20261025-traffic, recorder)
+
+Decision of the user (words unchanged): "For the decision, create a new open item a new round will fix. Apply your recommendations".
+
+Gap: after the round removed user save-state names from committed files, the committed scripts in `tools/oracle/` still `loadstate` a user save state by name. `tools/azahar_oracle.py` has no state parameter or placeholder in the script language; the only way to pass a state is `--state NAME` on the command line, which loads once after the boot, while these scripts reload the state in the middle of the run. The scripts are `attack-record`, `attack-variants`, `cage-load-animation-ctrace`, `cage-thread-start-ctrace`, `camera-lobby-walk`, `camera-street-near`, `camera-street-seed`, `camera-street-teleport`, `camera-vehicle-drive`, `camera-vehicle-enter`, `camera-vehicle-handback`, `camera-vehicle-handback-near`, `dcam-hold-car`, `dcam-hold-order`, `dcam-police-entry`, `dcam-police-order`, `dcam-police-poked`, `dcam-police-shot`, `script-anim-blend-trap`, `script-anim-order-ctrace`, `step-order-ctrace` and `front-screens`.
+
+Applied recommendation (not done yet): add a state parameter (a placeholder) to the script language and `tools/azahar_oracle.py`, so these scripts load whatever state the developer passes; remove the state names from the scripts; extend `tools/check_local_data.py` to cover `tools/oracle`. The names of the four states that committed scripts create themselves with `savestate` stay (`gameplay-start`, `barrier-settled`, `camwall-east` and `camera-lobby-walk`); `camera-lobby-walk` first copies a user state, which the parameter also resolves.

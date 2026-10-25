@@ -15,7 +15,7 @@ The pinned values of `pedestrian-fade` (0x275434 stores alpha 1 and step -1; 0x1
 
 ## 4. Stand-ins
 
-- PED-S11 The pedestrian's mesh node is built from the model: its bounds centre and union box from `assets::modelBounds`, its radius +0x9c as the length of the half extents, and the fade point 0x52a1b4 of the draw test and the fade step as the camera eye. The matrix argument of 0x10eb70 is taken as the node's world matrix. needs: PED-13, PED-22. evidence: [pedestrians-fade.md §2026-10-20T14:12:57](../../re/pedestrians-fade.md#ts-20261020-141257).
+- PED-S11 The pedestrian's mesh node is built from the model: its bounds centre and union box from `assets::modelBounds`, its radius +0x9c as the length of the half extents, and the fade point 0x52a1b4 of the draw test and the fade step as the camera eye (measured: the camera look point, PED-13). The matrix argument of 0x10eb70 is taken as the node's world matrix. needs: PED-13, PED-22. evidence: [pedestrians-fade.md §2026-10-20T14:12:57](../../re/pedestrians-fade.md#ts-20261020-141257).
 - PED-S12 An instance with an alpha below 255 draws its opaque parts in the blended pass with the premultiplied blend (1, 1 - alpha); the node draw 0x10bcc8's pass 2 is not read. needs: PED-23. evidence: [pedestrians-fade.md §2026-10-20T14:12:57](../../re/pedestrians-fade.md#ts-20261020-141257).
 
 ## 5. Open items
@@ -26,6 +26,7 @@ The pinned values of `pedestrian-fade` (0x275434 stores alpha 1 and step -1; 0x1
 
 ## 6. Findings summary
 
+- The fade point 0x52a1b4 is the camera look point, and a live pedestrian's class byte is 0 and room byte 128: [pedestrians-fade.md §2026-10-25T13:18:33](../../re/pedestrians-fade.md#ts-20261025-131833).
 - The spawn fade-in 0x275434, the node step 0x10eb70, the node set-up and *0x37674c = 2: [pedestrians-fade.md §2026-10-20T14:12:57](../../re/pedestrians-fade.md#ts-20261020-141257).
 
 ## 7. Code and tests

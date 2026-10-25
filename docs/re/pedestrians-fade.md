@@ -7,7 +7,8 @@ Subtopic of [pedestrians.md](pedestrians.md): the start 0x275434 that a pedestri
 - A spawn on a node whose type is the mesh node type stores alpha +0xdd = 1 and step +0xdc = 0xff (a signed step of -1) on the node and its children (0x275434). The per-frame step 0x10eb70 then turns the step to +16 when the node is within the fade-in distance of its tier, and adds the step to the alpha each frame. A pedestrian spawned beyond the fade-in distance but inside the spawn window (tier 0: 36 .. 57 m) keeps the step -1 and drops to alpha 0. [§2026-10-20T14:12:57](#ts-20261020-141257)
 - The mesh node type *0x37674c is 2, not 1: slot 0 of the node type table is reserved by 0x10332c before the first registration. Read from the code, not measured. [§2026-10-20T14:12:57](#ts-20261020-141257)
 - Port: `src/runtime/node_fade.*` (0x275434, 0x10eb70) and `src/runtime/pedestrian_fade.*` (the mesh node of a pedestrian, its bounds and fades), glue `src/game_pedestrian_fade.*`; the instances are drawn with the node alpha. Tests `pedestrian-fade`, `pedestrian-fade-real-data`. [§2026-10-20T14:12:57](#ts-20261020-141257)
-- Open: the park of an alpha 0 node under room +0x7c (room pass 0x2e6ce4), the source of the node radius +0x9c, the draw 0x10bcc8, the class byte +0x18 and room byte +0x3a at run time. [§2026-10-20T14:12:57](#ts-20261020-141257)
+- Measured at run time: the fade point 0x52a1b4 is the camera look point, which is the player position plus (0, 2.2, 0) with the follow camera on a street; a live pedestrian has class byte +0x18 = 0 and room byte +0x3a = 128 (0x80), as the traffic cars do. [§2026-10-25T13:18:33](#ts-20261025-131833)
+- Open: the park of an alpha 0 node under room +0x7c (room pass 0x2e6ce4), the source of the node radius +0x9c, the draw 0x10bcc8, the code that writes the fade point and the fade point in other camera modes, and the room byte in other rooms and levels. [§2026-10-20T14:12:57](#ts-20261020-141257)
 
 <a id="ts-20261020-141257"></a>
 
@@ -42,3 +43,15 @@ Unknowns:
 - The node draw 0x10bcc8: the pass taken for alpha below 255 and its blend (PED-S12).
 - The room pass 0x2e6ce4's park of an alpha 0 node and its return (PED-21), which decides the removal of a faded-out pedestrian.
 - The writers of a pedestrian's class byte +0x18 and of the room byte +0x3a; the third table push 0x17e544; whether anything calls 0x258eb0 before 0x102174.
+
+<a id="ts-20261025-131833"></a>
+
+## 2026-10-25T13:18:33+01:00 — The fade point 0x52a1b4 and the live pedestrians' class and room bytes at run time (emulator, RPC reads only)
+
+Provenance: 20261025-traffic-servant, idle jobs PED-13 / PED-16, recorded from a save state on a street with traffic after mission 1-1, 2026-10-25, RPC reads. The fade point was read after 3 loads of the state and 8 s of running, the pedestrian manager after 2 loads and 8 s; the loads agree.
+
+**Fade point 0x52a1b4 (PED-13).** Read: floats (900.5492, 18.7672, 1110.2799) (raw little-endian words 0x44612326, 0x41962344, 0x448ac8f5 as read); the copy at 0x52a1c0 is identical. The player's world position is (900.549, 16.567, 1110.280), so the fade point is the player plus (0, 2.2, 0). The follow camera (K + 0x34 at 0x589aa4 is the pose at C + 0x24, with C = *0x376884) has its eye at (910.5491, 20.4672, 1110.2267) and its look point (C + 0x10) at (900.5492, 18.7672, 1110.2799), which equals the fade point exactly (the tracker at K + 0x94 plus K + 0xf4 gives the same look point). So whatever writes 0x52a1b4 copies the camera look point, not the eye. This differs from the stand-in that takes the camera eye as fade point ([pedestrians-traffic-pedestrians-fade.md](../plans/features/pedestrians-traffic-pedestrians-fade.md), PED-S11).
+
+**Pedestrian manager 0x51b33c (PED-16).** Slot count +0x90 = 14, slot pointers from +0x40, limit +0xa0 = 5, flags +0xa4 = 3, countdown +0xa8 = 35 (changes). All 14 slot entities have type byte +0x12 = 197. On all 14 the class byte +0x18 is 0 and the room byte +0x3a is 128 (0x80), for the live ones and the disabled ones alike. The five live entities (the limit) have owner flags +0x10 = 0x0000 and node flags 0x84202 or 0xc4202; the disabled ones have owner flags 0x0001 (one 0x0041) and node flags 0xc4262 (one 0x84262). Live node positions (node +0x8c): (877.47, 16.60, 1101.68), (874.01, 16.81, 1129.77), (865.66, 16.80, 1118.41), (882.65, 16.74, 1096.36), (868.65, 16.80, 1106.34), all on the street in front of the player. The traffic cars have room byte 128 there too.
+
+Unknown: the code that writes 0x52a1b4 and its value in other camera modes (a vehicle, a cutscene, the scanner); the room byte in other rooms and levels (only this state was measured); the third table push 0x17e544; *0x37674c was not read.

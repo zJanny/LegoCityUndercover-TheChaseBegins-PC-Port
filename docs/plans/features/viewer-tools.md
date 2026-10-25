@@ -32,11 +32,13 @@ IN_PROGRESS, updated 2026-10-25T11:36:10+01:00. All tools run; the oracle suppor
 
 - [ ] TOOLS-3 — The function total of the progress report is an estimate (7575 call and pointer targets against 8086 procedures in REA); an exact list needs a stored REA procedure list. evidence: [arm-executable.md §2026-10-13T22:17](../../re/arm-executable.md#ts-20261013-221729).
 - [ ] TOOLS-4 — "Object types with behaviour" is decided per class from the class file (props with a `CollisionBound`, the prop family, doors, studs); it does not check that an instance produced a shape, and characters and vehicles count as none until they get rules (COLL-2).
+- [ ] TOOLS-20 — Committed oracle scripts in `tools/oracle/` (listed in the entry) `loadstate` a user save state by name; `tools/azahar_oracle.py` has no state parameter in the script language (only `--state NAME`, one load after boot). Add the parameter, remove the names from the scripts, and extend `tools/check_local_data.py` to `tools/oracle`. evidence: [oracle-setup.md §2026-10-25T13:17:58](../../re/oracle-setup.md#ts-20261025-131758).
 - [ ] TOOLS-19 — A menu reacting to a `touch` was not observed (no screenshots without RPC) and the game's touch reader 0x10fca0 was not traced; the default tap of 6 updates is a tool choice; no second finger. evidence: [oracle-setup.md §2026-10-25T11:35:28](../../re/oracle-setup.md#ts-20261025-113528).
 - [ ] TOOLS-15 — The gyroscope axis mapping of the virtual motion source, and the code that turns the accelerometer into the NaN camera yaw when gravity lies on the HID y axis. evidence: [oracle-setup.md §2026-10-18T22:03:32](../../re/oracle-setup.md#ts-20261018-220332).
 
 ## 6. Findings summary
 
+- Committed oracle scripts that name a user save state, no state parameter: [oracle-setup.md §2026-10-25T13:17:58](../../re/oracle-setup.md#ts-20261025-131758).
 - Oracle touch through the DSU server, measured pixel mapping: [oracle-setup.md §2026-10-25T11:35:28](../../re/oracle-setup.md#ts-20261025-113528).
 - Virtual motion source (DSU), axes, scanner result: [oracle-setup.md §2026-10-18T22:03:32](../../re/oracle-setup.md#ts-20261018-220332).
 - Setup, fidelity rules, fast workflow: [oracle.md §2026-10-13T11:50](../../re/oracle.md#ts-20261013-115030); RPC channel: [oracle-rpc.md §2026-10-13T12:02](../../re/oracle-rpc.md#ts-20261013-120221); route to gameplay: [oracle-routes.md §2026-10-13T12:43](../../re/oracle-routes.md#ts-20261013-124333).
