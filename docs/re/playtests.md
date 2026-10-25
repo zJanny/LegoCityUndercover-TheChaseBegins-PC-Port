@@ -9,6 +9,7 @@ What the user saw when playing `chase-game` against their knowledge of the origi
 - Mission 1-3: the ladder now draws but cannot be climbed. [§2026-10-19T20:23:38](#ts-20261019-202338)
 - The zipline poles can be walked through in the port. [§2026-10-19T20:15:35](#ts-20261019-201535)
 - The handcuffs Chase hangs from on the zipline are not drawn (user report; cause: [player-traversal.md §2026-10-19T20:23:05](player-traversal.md#ts-20261019-202305)).
+- Mission 1-3: the key to pick up cannot be picked up in the port, so the mission stops at its first step. [§2026-10-25T13:56:15](#ts-20261025-135615)
 
 <a id="ts-20261019-175641"></a>
 
@@ -59,3 +60,23 @@ After the merge of round 37 the user reported that the ladder to the roof of mis
 
 Unknowns:
 - The ladder's use, mount, climb and dismount code and clips are not read.
+
+<a id="ts-20261025-135615"></a>
+
+## 2026-10-25T13:56:15+01:00 — Mission 1-3: the key cannot be picked up (user report)
+
+The user reported, in their words: "where i am blocked on mission 1-3. Standing infront of the key you have to pickup, which you cannot do in the port, the key also has a arrow pointing to it floating above".
+
+In the original the mission goes on in this order (the user's description):
+- A floating arrow points at the key; Chase picks it up.
+- The key is used at a place in front of Chase.
+- Chase stands on the trigger of a garage door.
+- A parts crate stands in front of Chase; it is carried to a drop-off spot that has a green arrow pointing down.
+- Chase builds a generator from the parts and stands on the generator's trigger spot.
+- The mission ends.
+
+In the port the key cannot be picked up, so none of the later steps can be reached by playing. The later steps were seen in the original only and were not checked in the port.
+
+Unknowns:
+- Which object the key is and why the pickup does nothing (the arrow above it was not checked in the port either).
+- What the key opens and which objects take part in each later step.

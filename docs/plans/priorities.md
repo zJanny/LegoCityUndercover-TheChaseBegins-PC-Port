@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 918 open items and stand-ins, 161 linked to game usage, 757 with unknown reach.
+Items: 919 open items and stand-ins, 161 linked to game usage, 758 with unknown reach.
 
 ## Top 50 overall
 
@@ -45,7 +45,7 @@ Items: 918 open items and stand-ins, 161 linked to game usage, 757 with unknown 
 | 9 | [SCRIPT-273](features/script-system-natives-animation.md?display=source#L32) | 881 | 0 | 8 | 1 | 2 stand-in | `playanimation`, `playcharanim` | PlayCharAnim's state request 81 (the cutscene call, state 0x51 has the same functions) and its cape animation ... |
 | 10 | [SCRIPT-345](features/script-system-natives-animation.md?display=source#L35) | 859 | 0 | 8 | 0 | 2 stand-in | `loadanimation`, `playcharanim` | The port starts `1-2_Cage_Key_Target_Script` in the update of the press (as the original) but calls ... |
 | 11 | [SCRIPT-190](features/script-system-missions.md?display=source#L31) | 0 | 736 | 8 | 2 | - | `scriptobject` | Carry gaps: the instigator argument of 0x244f40 is not modelled; the handler 0x1bc4d4 forwards message 0xff ... |
-| 12 | [SCRIPT-201](features/script-system-missions.md?display=source#L42) | 671 | 0 | 8 | 0 | 4 stand-in, 1 implemented | `automaticmusic`, `camerafollow`, `enabletrafficandpedestrians`, `overridemusic` +1 | Mission 1-1 has a handler (stand-in) for every native it calls: EnableTrafficAndPedestrians (SCRIPT-S230) ... |
+| 12 | [SCRIPT-201](features/script-system-missions.md?display=source#L43) | 671 | 0 | 8 | 0 | 4 stand-in, 1 implemented | `automaticmusic`, `camerafollow`, `enabletrafficandpedestrians`, `overridemusic` +1 | Mission 1-1 has a handler (stand-in) for every native it calls: EnableTrafficAndPedestrians (SCRIPT-S230) ... |
 | 13 | [ANIM-S12](features/animation-characters.md?display=source#L24) | 623 | 0 | 8 | 0 | 1 stand-in | `playcharanim` | The "already loaded" test of PlayCharAnim (0x21e8b4) knows a character's idle clips and its current script ... |
 | 14 | [ANIM-S13](features/animation-characters.md?display=source#L25) | 623 | 0 | 8 | 0 | 1 stand-in | `playcharanim` | The player's script clip (PlayCharAnim on Player1) is shown at full weight from the native's update instead ... |
 | 15 | [SCRIPT-S269](features/script-system-hud-natives.md?display=source#L18) | 538 | 0 | 7 | 0 | 1 stand-in | `setactivewaypoint` | SetActiveWayPoint: the vehicle waypoint global (`WaypointSet::vehicleWaypoint`) is kept but its reader, which ... |
@@ -53,11 +53,11 @@ Items: 918 open items and stand-ins, 161 linked to game usage, 757 with unknown 
 | 17 | [SCRIPT-274](features/script-system-natives-animation.md?display=source#L41) | 497 | 0 | 8 | 2 | 3 stand-in | `loadanimation`, `playanimation`, `unloadanimation` | LoadAnimation and UnloadAnimation keep a name list only (0x23e6e4 / 0x23e518 load and release are not ported) ... |
 | 18 | [SCRIPT-S4](features/script-system.md?display=source#L25) | 484 | 0 | 8 | 0 | 1 stand-in, 1 implemented | `dcamcutscenewait`, `waitfordcam` | A function without a handler does nothing and continues at once; `chase-game` prints its name the first time ... |
 | 19 | [SCRIPT-346](features/script-system-hud-natives.md?display=source#L38) | 442 | 0 | 7 | 0 | 1 stand-in | `showdialogbg` | The ShowDialogBG byte and the byte +0x485 make 0x2d9d0c hide the timed object 0x5190bc that it otherwise ... |
-| 20 | [SCRIPT-38](features/script-system-natives.md?display=source#L27) | 435 | 0 | 7 | 14 | 2 stand-in, 4 none, 1 implemented | `addtosemitranslist`, `addtosemitransnearcameralist`, `effectfadeobject`, `playparticlesgo` +3 | Batch 13 (C, 20): EffectFadeObject, AddToSemiTransNearCameraList and StreamRoomIn run ... |
+| 20 | [SCRIPT-38](features/script-system-natives.md?display=source#L27) | 435 | 0 | 7 | 15 | 2 stand-in, 4 none, 1 implemented | `addtosemitranslist`, `addtosemitransnearcameralist`, `effectfadeobject`, `playparticlesgo` +3 | Batch 13 (C, 20): EffectFadeObject, AddToSemiTransNearCameraList and StreamRoomIn run ... |
 | 21 | [VEH-132](features/vehicles-prop-smash.md?display=source#L33) | 0 | 406 | 8 | 0 | - | `leprops/leprop_simpleindestructible` | Measure in the oracle that a leprop_simpleindestructible or a door in the car's way does not stop it (by code ... |
-| 22 | [SCRIPT-57](features/script-system-natives-state.md?display=source#L29) | 362 | 0 | 7 | 14 | 3 stand-in, 1 none | `distancefademid`, `enableshadow`, `enableswitch`, `toggleuseable` | Kind-gated natives: the kind of every class is read (`objectKind`); ToggleUseable, EnableSwitch (use-zone ... |
+| 22 | [SCRIPT-57](features/script-system-natives-state.md?display=source#L29) | 362 | 0 | 7 | 15 | 3 stand-in, 1 none | `distancefademid`, `enableshadow`, `enableswitch`, `toggleuseable` | Kind-gated natives: the kind of every class is read (`objectKind`); ToggleUseable, EnableSwitch (use-zone ... |
 | 23 | [SCRIPT-S239](features/script-system-natives-world.md?display=source#L34) | 351 | 0 | 7 | 0 | 2 stand-in | `enableswitch`, `toggleuseable` | ToggleUseable and EnableSwitch write the use flag only for instances whose kind registers a use zone ... |
-| 24 | [SCRIPT-36](features/script-system-natives.md?display=source#L25) | 347 | 0 | 7 | 13 | 9 implemented | `setforcedstoponmyvehicle`, `stopplayervehicle`, `vehicleallowjumpout`, `vehiclejumpin` +5 | Batch 11 (C, 10 left): VehicleSetLocked, VehicleSetForcedStop, SetForcedStopOnMyVehicle, VehicleAllowJumpOut ... |
+| 24 | [SCRIPT-36](features/script-system-natives.md?display=source#L25) | 347 | 0 | 7 | 14 | 9 implemented | `setforcedstoponmyvehicle`, `stopplayervehicle`, `vehicleallowjumpout`, `vehiclejumpin` +5 | Batch 11 (C, 10 left): VehicleSetLocked, VehicleSetForcedStop, SetForcedStopOnMyVehicle, VehicleAllowJumpOut ... |
 | 25 | [SCRIPT-294](features/script-system-natives-world.md?display=source#L50) | 342 | 0 | 7 | 1 | 1 stand-in | `toggleuseable` | The hint registry 0x2219bc searches (records at `*(0x58e9a4 + 0x24)`, singleton "LEGOHintBounds"): who adds ... |
 | 26 | [SCRIPT-296](features/script-system-natives-world.md?display=source#L52) | 342 | 0 | 7 | 1 | 1 stand-in | `toggleuseable` | The registration conditions of the use zone: what sets halfword `[entity + 0x10]` bit 7 (post-link of kinds ... |
 | 27 | [PART-3](features/particles.md?display=source#L28) | 0 | 281 | 8 | 0 | - | `particles` | The level object class `particles` (constructor 0x1a7f30, handlers 0x1a8394 and 0x1a7d30: `ParticleDef` ... |
@@ -80,7 +80,7 @@ Items: 918 open items and stand-ins, 161 linked to game usage, 757 with unknown 
 | 44 | [SCRIPT-S277](features/script-system-natives-party.md?display=source#L18) | 106 | 0 | 6 | 0 | 6 stand-in | `charsetallowvehicleentry`, `charsetskydivemode`, `relockchaseplainclothes`, `setweaponenabled` +2 | SwapAllegiance (toggle count only; the initial bit 2 of the object flags, the lists 0x58deb0 / 0x58dec8 and ... |
 | 45 | [SCRIPT-317](features/script-system-natives-world.md?display=source#L44) | 99 | 0 | 7 | 1 | 2 stand-in | `enableswitch`, `resetobject` | Kind 64 message 8 (0x1a90b8): read the platform record fields R+4, R+0xb4, R+0x7c, R+0x18, R+0x50 and the ... |
 | 46 | [SCRIPT-318](features/script-system-natives-world.md?display=source#L45) | 99 | 0 | 7 | 0 | 2 stand-in | `enableswitch`, `resetobject` | Census of the message 8 handlers of the other kinds (the default handler 0x221800 is reached through 0x221760 ... |
-| 47 | [SCRIPT-282](features/script-system-natives-world.md?display=source#L48) | 92 | 0 | 7 | 16 | 1 stand-in, 1 none | `distancefademid`, `enabledistancefade` | EnableDistanceFade: the node kind gate (global 0x37674c) and the child recursion 0x2b65dc per placed class ... |
+| 47 | [SCRIPT-282](features/script-system-natives-world.md?display=source#L48) | 92 | 0 | 7 | 17 | 1 stand-in, 1 none | `distancefademid`, `enabledistancefade` | EnableDistanceFade: the node kind gate (global 0x37674c) and the child recursion 0x2b65dc per placed class ... |
 | 48 | [AUDIO-33](features/audio.md?display=source#L49) | 3 | 89 | 8 | 0 | 1 stand-in | `stopsoundgo`, `lesoundobject`, `soundobject` | StopSoundGO on a kind-10 sound object (`lesoundobject`, `soundobject`) stops the object's own sound and sets ... |
 | 49 | [SCRIPT-314](features/script-system-natives-world.md?display=source#L43) | 90 | 0 | 7 | 1 | 1 stand-in | `resetobject` | Apply the restored placement of a reset kind 132 object to its node once something moves such objects (script ... |
 | 50 | [SCRIPT-S257](features/script-system-natives-world.md?display=source#L26) | 90 | 0 | 7 | 0 | 1 stand-in | `resetobject` | The reset of kind 132 records the object's `initialposition` / `initialorientation` and moves no node ... |
@@ -129,15 +129,15 @@ Items: 918 open items and stand-ins, 161 linked to game usage, 757 with unknown 
 | 2 | [VEH-132](features/vehicles-prop-smash.md?display=source#L33) | 0 | 406 | 8 | 0 | - | `leprops/leprop_simpleindestructible` | Measure in the oracle that a leprop_simpleindestructible or a door in the car's way does not stop it (by code ... |
 | 3 | [VEH-133](features/vehicles-prop-smash.md?display=source#L32) | 64 | 0 | 7 | 1 | 1 stand-in | `destroyprop` | A vehicle that DestroyProp destroyed counts as disabled in the port (no boarding, no dynamic body); the ... |
 | 4 | [VEH-S106](features/vehicles-prop-smash.md?display=source#L20) | 64 | 0 | 7 | 0 | 1 stand-in | `destroyprop` | A scripted DestroyProp of a vehicle sets the destroyed state that every `isDisabled` consumer treats as ... |
-| 5 | [VEH-22](features/vehicles.md?display=source#L34) | 56 | 0 | 7 | 14 | 1 stand-in, 1 implemented | `positionplayer`, `vehiclesettopspeed` | Script jump in / out for characters other than the player (state 0x17f with vehicle type 0xe9 gets state ... |
+| 5 | [VEH-22](features/vehicles.md?display=source#L34) | 56 | 0 | 7 | 15 | 1 stand-in, 1 implemented | `positionplayer`, `vehiclesettopspeed` | Script jump in / out for characters other than the player (state 0x17f with vehicle type 0xe9 gets state ... |
 | 6 | [VEH-10](features/vehicles.md?display=source#L33) | 6 | 0 | 3 | 0 | 1 stand-in | `vehicleenabledrivingmusic` | Sounds and music: engine start / rev loop / stop, horn (table row +0x12), skid, impact, siren, `MusicTrack` ... |
 | 7 | [VEH-14](features/vehicles.md?display=source#L38) | 0 | 5 | 5 | 1 | - | `vehicles/vehicle_aircraft_ufo` | Vehicle class 243 (0xf3, `vehicle_aircraft_ufo`, accepted by the vehicle search) and type 0xb3 have no record ... |
 | 8 | [VEH-S22](features/vehicles.md?display=source#L19) | 0 | 5 | 5 | 0 | - | `vehicles/vehicle_aircraft_ufo` | Every boardable vehicle gets the camera of type 183 (record overrides, no stick turn); class 243 ... |
-| 9 | [VEH-12](features/vehicles.md?display=source#L36) | 2 | 0 | 1 | 18 | 1 stand-in | `settrafficmaxvehicles` | Traffic and AI drivers (AI driver input 0x26d934, `settrafficmaxvehicles`, pursuit); not needed for mission ... |
+| 9 | [VEH-12](features/vehicles.md?display=source#L36) | 2 | 0 | 1 | 19 | 1 stand-in | `settrafficmaxvehicles` | Traffic and AI drivers (AI driver input 0x26d934, `settrafficmaxvehicles`, pursuit); not needed for mission ... |
 
 ## Scripts and missions
 
-98 of 202 items linked.
+98 of 203 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -149,7 +149,7 @@ Items: 918 open items and stand-ins, 161 linked to game usage, 757 with unknown 
 | 6 | [SCRIPT-273](features/script-system-natives-animation.md?display=source#L32) | 881 | 0 | 8 | 1 | 2 stand-in | `playanimation`, `playcharanim` | PlayCharAnim's state request 81 (the cutscene call, state 0x51 has the same functions) and its cape animation ... |
 | 7 | [SCRIPT-345](features/script-system-natives-animation.md?display=source#L35) | 859 | 0 | 8 | 0 | 2 stand-in | `loadanimation`, `playcharanim` | The port starts `1-2_Cage_Key_Target_Script` in the update of the press (as the original) but calls ... |
 | 8 | [SCRIPT-190](features/script-system-missions.md?display=source#L31) | 0 | 736 | 8 | 2 | - | `scriptobject` | Carry gaps: the instigator argument of 0x244f40 is not modelled; the handler 0x1bc4d4 forwards message 0xff ... |
-| 9 | [SCRIPT-201](features/script-system-missions.md?display=source#L42) | 671 | 0 | 8 | 0 | 4 stand-in, 1 implemented | `automaticmusic`, `camerafollow`, `enabletrafficandpedestrians`, `overridemusic` +1 | Mission 1-1 has a handler (stand-in) for every native it calls: EnableTrafficAndPedestrians (SCRIPT-S230) ... |
+| 9 | [SCRIPT-201](features/script-system-missions.md?display=source#L43) | 671 | 0 | 8 | 0 | 4 stand-in, 1 implemented | `automaticmusic`, `camerafollow`, `enabletrafficandpedestrians`, `overridemusic` +1 | Mission 1-1 has a handler (stand-in) for every native it calls: EnableTrafficAndPedestrians (SCRIPT-S230) ... |
 | 10 | [SCRIPT-S269](features/script-system-hud-natives.md?display=source#L18) | 538 | 0 | 7 | 0 | 1 stand-in | `setactivewaypoint` | SetActiveWayPoint: the vehicle waypoint global (`WaypointSet::vehicleWaypoint`) is kept but its reader, which ... |
 
 ## World and levels
@@ -163,7 +163,7 @@ Items: 918 open items and stand-ins, 161 linked to game usage, 757 with unknown 
 | 3 | [PED-5](features/pedestrians-traffic-pedestrians.md?display=source#L56) | 0 | 58 | 6 | 0 | - | `chars/pedestrian` | The pedestrian's message slot 0x19efbc is read only at its start: which messages request the dodge (3, 4) and ... |
 | 4 | [TRANS-S2](features/level-transitions.md?display=source#L24) | 25 | 25 | 7 | 0 | 1 implemented | `scenechange`, `scenechange` | `SceneChange <bound>` is qualified with the calling level's world level instance name (data fit, every ... |
 | 5 | [TRAFFIC-4](features/pedestrians-traffic-cars.md?display=source#L53) | 0 | 47 | 6 | 1 | - | `props/traffic_junction` | The junction class `props/traffic_junction` (set-up 0x1ca5a4, update 0x1d8924): its lanes, conflict pairs ... |
-| 6 | [TRAFFIC-5](features/pedestrians-traffic-cars.md?display=source#L54) | 40 | 0 | 2 | 25 | 1 none | `enabletrafficpath` | Wire `traffic_route.*`: the junctions of the level, the manager's route bits taken from `TrafficRouteTable` ... |
+| 6 | [TRAFFIC-5](features/pedestrians-traffic-cars.md?display=source#L54) | 40 | 0 | 2 | 26 | 1 none | `enabletrafficpath` | Wire `traffic_route.*`: the junctions of the level, the manager's route bits taken from `TrafficRouteTable` ... |
 | 7 | [WSTREAM-33](features/world-streaming.md?display=source#L39) | 40 | 0 | 6 | 1 | 1 implemented | `streamroomin` | When the scripted request list 0x375d70 is cleared (the table slots 0x363eb8 and 0x363ee0 call 0x309534 and ... |
 
 ## Front end, HUD, saves
@@ -190,8 +190,8 @@ Items: 918 open items and stand-ins, 161 linked to game usage, 757 with unknown 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
 | 1 | [RENDER-62](features/rendering.md?display=source#L54) | 0 | 137 | 8 | 0 | - | `point` | Point lights (type 2) against the oracle: lvl_00 `Point`/`Point01` (Intensity 2, MaxRange 1) on baked surfaces |
-| 2 | [RENDER-66](features/rendering.md?display=source#L44) | 89 | 0 | 7 | 17 | 1 stand-in | `enabledistancefade` | The distance fade of mesh nodes: every mesh node fades out beyond a distance that depends on its radius ... |
-| 3 | [RENDER-67](features/rendering.md?display=source#L45) | 41 | 0 | 7 | 17 | 1 stand-in | `addtosemitransnearcameralist` | The semi-transparent near-camera lists of the rooms (entries of 0x1f40d8 filled by ... |
+| 2 | [RENDER-66](features/rendering.md?display=source#L44) | 89 | 0 | 7 | 18 | 1 stand-in | `enabledistancefade` | The distance fade of mesh nodes: every mesh node fades out beyond a distance that depends on its radius ... |
+| 3 | [RENDER-67](features/rendering.md?display=source#L45) | 41 | 0 | 7 | 18 | 1 stand-in | `addtosemitransnearcameralist` | The semi-transparent near-camera lists of the rooms (entries of 0x1f40d8 filled by ... |
 | 4 | [RENDER-38](features/rendering.md?display=source#L50) | 5 | 0 | 1 | 0 | 1 none | `setbackgroundcolour` | Clear colour: apply the script native `SetBackgroundColour` (0x291624, 5 call sites in the level scripts) and ... |
 | 5 | [RENDER-65](features/rendering.md?display=source#L46) | 2 | 0 | 1 | 1 | 1 none | `addtosemitranslist` | Where the particle pass sits among the other blended draws: the draw item order of 0x2722cc's callers, the ... |
 
@@ -205,7 +205,7 @@ No linked items.
 
 No script native or object class is linked to these items (`+N` is Unblocks). Add `uses:` to an item when its fix changes the game.
 
-Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?display=source#L33) (+30), [RENDER-35](features/rendering.md?display=source#L48) (+25), [TRAFFIC-7](features/pedestrians-traffic-cars.md?display=source#L56) (+23), [TRAFFIC-8](features/pedestrians-traffic-cars.md?display=source#L57) (+23), [TRAFFIC-9](features/pedestrians-traffic-cars.md?display=source#L58) (+23), [VEH-6](features/vehicles-physics.md?display=source#L30) (+23), [TRAFFIC-2](features/pedestrians-traffic-cars.md?display=source#L51) (+22), [SCRIPT-43](features/script-system-natives.md?display=source#L30) (+18), [SCRIPT-94](features/script-system-ai-navigation.md?display=source#L34) (+17), [SCRIPT-44](features/script-system-natives.md?display=source#L31) (+16)
+Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?display=source#L33) (+31), [RENDER-35](features/rendering.md?display=source#L48) (+26), [TRAFFIC-7](features/pedestrians-traffic-cars.md?display=source#L56) (+24), [TRAFFIC-8](features/pedestrians-traffic-cars.md?display=source#L57) (+24), [TRAFFIC-9](features/pedestrians-traffic-cars.md?display=source#L58) (+24), [VEH-6](features/vehicles-physics.md?display=source#L30) (+24), [TRAFFIC-2](features/pedestrians-traffic-cars.md?display=source#L51) (+23), [SCRIPT-43](features/script-system-natives.md?display=source#L30) (+19), [SCRIPT-94](features/script-system-ai-navigation.md?display=source#L34) (+18), [SCRIPT-44](features/script-system-natives.md?display=source#L31) (+17)
 
 - [abilities-detective.md](features/abilities-detective.md): DETECT-8 (+3), DETECT-13 (+2), DETECT-1 (+1), DETECT-15 (+1), DETECT-4 (+1), DETECT-6 (+1), DETECT-S7 (+1), DETECT-S8 (+1), DETECT-S9 (+1), DETECT-10, DETECT-11, DETECT-12, DETECT-3, DETECT-5, DETECT-9, DETECT-S1, DETECT-S2, DETECT-S4, DETECT-S5, DETECT-S6
 - [abilities-scanner.md](features/abilities-scanner.md): SCAN-10 (+1), SCAN-11 (+1), SCAN-16 (+1), SCAN-17 (+1), SCAN-S10 (+1), AUDIO-S33, SCAN-13, SCAN-15, SCAN-3, SCAN-6, SCAN-S1, SCAN-S11, SCAN-S12, SCAN-S2, SCAN-S3, SCAN-S4, SCAN-S5, SCAN-S6, SCAN-S7, SCAN-S8, SCAN-S9
@@ -229,7 +229,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [level-transitions.md](features/level-transitions.md): TRANS-3 (+4), TRANS-13 (+2), TRANS-15 (+2), TRANS-8 (+2), TRANS-10 (+1), TRANS-12 (+1), TRANS-14 (+1), TRANS-16 (+1), TRANS-S1, TRANS-S3, TRANS-S4, TRANS-S5, TRANS-S6
 - [movies-cutscenes.md](features/movies-cutscenes.md): MOVIE-22 (+1), MOVIE-24 (+1), MOVIE-36 (+1), MOVIE-37 (+1), MOVIE-S33 (+1), MOVIE-1, MOVIE-12, MOVIE-20, MOVIE-21, MOVIE-3, MOVIE-33, MOVIE-35, MOVIE-4, MOVIE-40, MOVIE-S1, MOVIE-S10, MOVIE-S11, MOVIE-S2, MOVIE-S21, MOVIE-S3, MOVIE-S30, MOVIE-S31, MOVIE-S32, MOVIE-S34
 - [particles.md](features/particles.md): PART-4 (+1), PART-6 (+1), PART-5, PART-7, PART-S1, PART-S2, PART-S3, PART-S4
-- [pedestrians-traffic-cars.md](features/pedestrians-traffic-cars.md): TRAFFIC-7 (+23), TRAFFIC-8 (+23), TRAFFIC-9 (+23), TRAFFIC-2 (+22), TRAFFIC-12 (+2), TRAFFIC-10 (+1), TRAFFIC-11 (+1), TRAFFIC-3 (+1), TRAFFIC-6, TRAFFIC-S1, TRAFFIC-S2, TRAFFIC-S3, TRAFFIC-S4, TRAFFIC-S5, TRAFFIC-S7, TRAFFIC-S8
+- [pedestrians-traffic-cars.md](features/pedestrians-traffic-cars.md): TRAFFIC-7 (+24), TRAFFIC-8 (+24), TRAFFIC-9 (+24), TRAFFIC-2 (+23), TRAFFIC-12 (+2), TRAFFIC-10 (+1), TRAFFIC-11 (+1), TRAFFIC-3 (+1), TRAFFIC-6, TRAFFIC-S1, TRAFFIC-S2, TRAFFIC-S3, TRAFFIC-S4, TRAFFIC-S5, TRAFFIC-S7, TRAFFIC-S8
 - [pedestrians-traffic-pedestrians-fade.md](features/pedestrians-traffic-pedestrians-fade.md): PED-22 (+1), PED-23 (+1), PED-21, PED-S11, PED-S12
 - [pedestrians-traffic-pedestrians-vehicles.md](features/pedestrians-traffic-pedestrians-vehicles.md): PED-18 (+1), PED-19 (+1), PED-S10, PED-S9
 - [pedestrians-traffic-pedestrians.md](features/pedestrians-traffic-pedestrians.md): PED-13 (+2), PED-16 (+1), PED-24 (+1), PED-25 (+1), PED-26 (+1), PED-9 (+1), PED-S13, PED-S14, PED-S2, PED-S4, PED-S5, PED-S6, PED-S7, PED-S8
@@ -239,27 +239,27 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [player-traversal-pole.md](features/player-traversal-pole.md): TRAV-S9 (+1), TRAV-11, TRAV-13, TRAV-14, TRAV-15, TRAV-16, TRAV-S5, TRAV-S6, TRAV-S7, TRAV-S8
 - [player-traversal-rails.md](features/player-traversal-rails.md): TRAV-28 (+3), TRAV-38 (+1), TRAV-43 (+1), TRAV-44 (+1), TRAV-45 (+1), TRAV-S16 (+1), TRAV-S18 (+1), TRAV-S19 (+1), TRAV-27, TRAV-29, TRAV-31, TRAV-32, TRAV-33, TRAV-42, TRAV-S15, TRAV-S17, TRAV-S21, TRAV-S23, TRAV-S24, TRAV-S25, TRAV-S26
 - [player-traversal.md](features/player-traversal.md): TRAV-9 (+2), TRAV-2 (+1), TRAV-49 (+1), TRAV-52 (+1), TRAV-S12 (+1), TRAV-10, TRAV-19, TRAV-20, TRAV-22, TRAV-34, TRAV-35, TRAV-5, TRAV-56, TRAV-6, TRAV-8, TRAV-S1, TRAV-S10, TRAV-S11, TRAV-S13, TRAV-S2, TRAV-S20, TRAV-S29, TRAV-S3, TRAV-S30, TRAV-S31, TRAV-S32, TRAV-S4
-- [rendering.md](features/rendering.md): RENDER-35 (+25), RENDER-50 (+2), RENDER-69 (+2), RENDER-33 (+1), RENDER-39 (+1), RENDER-60 (+1), RENDER-63 (+1), RENDER-64 (+1), ASSET-S1, RENDER-2, RENDER-30, RENDER-34, RENDER-42, RENDER-6, RENDER-61, RENDER-70, RENDER-9, RENDER-S2, RENDER-S3, RENDER-S4, RENDER-S50, RENDER-S51, RENDER-S6, RENDER-S60, RENDER-S61, RENDER-S62, RENDER-S63, RENDER-S64, RENDER-S65, RENDER-S66, RENDER-S7
+- [rendering.md](features/rendering.md): RENDER-35 (+26), RENDER-50 (+2), RENDER-69 (+2), RENDER-33 (+1), RENDER-39 (+1), RENDER-60 (+1), RENDER-63 (+1), RENDER-64 (+1), ASSET-S1, RENDER-2, RENDER-30, RENDER-34, RENDER-42, RENDER-6, RENDER-61, RENDER-70, RENDER-9, RENDER-S2, RENDER-S3, RENDER-S4, RENDER-S50, RENDER-S51, RENDER-S6, RENDER-S60, RENDER-S61, RENDER-S62, RENDER-S63, RENDER-S64, RENDER-S65, RENDER-S66, RENDER-S7
 - [saves-options.md](features/saves-options.md): SAVE-8 (+4), SAVE-13 (+1), SAVE-14 (+1), SAVE-16 (+1), SAVE-2 (+1), SAVE-20 (+1), SAVE-22 (+1), SAVE-21, SAVE-3, SAVE-4, SAVE-5, SAVE-S1, SAVE-S10, SAVE-S11, SAVE-S2, SAVE-S3, SAVE-S4, SAVE-S5, SAVE-S6, SAVE-S8
-- [script-system-ai-navigation.md](features/script-system-ai-navigation.md): SCRIPT-92 (+30), SCRIPT-94 (+17), SCRIPT-101 (+15), SCRIPT-95 (+15), SCRIPT-100 (+14), SCRIPT-79 (+13), SCRIPT-S100, SCRIPT-S101, SCRIPT-S102, SCRIPT-S104, SCRIPT-S31, SCRIPT-S93, SCRIPT-S94, SCRIPT-S95
-- [script-system-dcam.md](features/script-system-dcam.md): SCRIPT-40 (+15), SCRIPT-182 (+1), SCRIPT-48 (+1), SCRIPT-181, SCRIPT-332, SCRIPT-49, SCRIPT-50, SCRIPT-S142
+- [script-system-ai-navigation.md](features/script-system-ai-navigation.md): SCRIPT-92 (+31), SCRIPT-94 (+18), SCRIPT-101 (+16), SCRIPT-95 (+16), SCRIPT-100 (+15), SCRIPT-79 (+14), SCRIPT-S100, SCRIPT-S101, SCRIPT-S102, SCRIPT-S104, SCRIPT-S31, SCRIPT-S93, SCRIPT-S94, SCRIPT-S95
+- [script-system-dcam.md](features/script-system-dcam.md): SCRIPT-40 (+16), SCRIPT-182 (+1), SCRIPT-48 (+1), SCRIPT-181, SCRIPT-332, SCRIPT-49, SCRIPT-50, SCRIPT-S142
 - [script-system-hud-natives.md](features/script-system-hud-natives.md): SCRIPT-350 (+2), SCRIPT-329 (+1), SCRIPT-330 (+1), SCRIPT-354 (+1), SCRIPT-331, SCRIPT-68, SCRIPT-69, SCRIPT-70, SCRIPT-S270, SCRIPT-S282, SCRIPT-S283, SCRIPT-S285
-- [script-system-missions.md](features/script-system-missions.md): SCRIPT-360 (+2), SCRIPT-284 (+1), SCRIPT-359 (+1), SCRIPT-115, SCRIPT-142, SCRIPT-221, SCRIPT-S141, SCRIPT-S236, SCRIPT-S237, SCRIPT-S243, SCRIPT-S255, SCRIPT-S289
+- [script-system-missions.md](features/script-system-missions.md): SCRIPT-360 (+2), SCRIPT-284 (+1), SCRIPT-359 (+1), SCRIPT-115, SCRIPT-142, SCRIPT-221, SCRIPT-361, SCRIPT-S141, SCRIPT-S236, SCRIPT-S237, SCRIPT-S243, SCRIPT-S255, SCRIPT-S289
 - [script-system-natives-animation.md](features/script-system-natives-animation.md): SCRIPT-324 (+3), SCRIPT-352 (+2), SCRIPT-272 (+1), SCRIPT-325 (+1), SCRIPT-334 (+1), SCRIPT-S284 (+1), SCRIPT-344, SCRIPT-353, SCRIPT-S110, SCRIPT-S262, SCRIPT-S266, SCRIPT-S267
 - [script-system-natives-party.md](features/script-system-natives-party.md): SCRIPT-338 (+2), SCRIPT-340 (+1)
 - [script-system-natives-state.md](features/script-system-natives-state.md): SCRIPT-335 (+1), SCRIPT-56 (+1), SCRIPT-64 (+1), SCRIPT-S97
 - [script-system-natives-world.md](features/script-system-natives-world.md): SCRIPT-279 (+1)
-- [script-system-natives.md](features/script-system-natives.md): SCRIPT-43 (+18), SCRIPT-44 (+16), SCRIPT-45 (+14), SCRIPT-7 (+12), SCRIPT-13 (+1), SCRIPT-150 (+1)
-- [script-system-triggers.md](features/script-system-triggers.md): SCRIPT-76 (+11), SCRIPT-51 (+3), SCRIPT-77 (+1), SCRIPT-78 (+1), SCRIPT-S15, SCRIPT-S28, SCRIPT-S30, SCRIPT-S8
+- [script-system-natives.md](features/script-system-natives.md): SCRIPT-43 (+19), SCRIPT-44 (+17), SCRIPT-45 (+15), SCRIPT-7 (+13), SCRIPT-13 (+1), SCRIPT-150 (+1)
+- [script-system-triggers.md](features/script-system-triggers.md): SCRIPT-76 (+12), SCRIPT-51 (+3), SCRIPT-77 (+1), SCRIPT-78 (+1), SCRIPT-S15, SCRIPT-S28, SCRIPT-S30, SCRIPT-S8
 - [script-system-use-markers.md](features/script-system-use-markers.md): SCRIPT-356 (+2), SCRIPT-357 (+1), SCRIPT-355, SCRIPT-S247, SCRIPT-S248, SCRIPT-S249, SCRIPT-S286, SCRIPT-S287, SCRIPT-S288
-- [script-system.md](features/script-system.md): SCRIPT-1 (+10), SCRIPT-53 (+2), SCRIPT-2, SCRIPT-3, SCRIPT-5, SCRIPT-54, SCRIPT-55, SCRIPT-9, SCRIPT-S1, SCRIPT-S14, SCRIPT-S16, SCRIPT-S275, SCRIPT-S3, SCRIPT-S5, SCRIPT-S6, SCRIPT-S7
+- [script-system.md](features/script-system.md): SCRIPT-1 (+11), SCRIPT-53 (+2), SCRIPT-2, SCRIPT-3, SCRIPT-5, SCRIPT-54, SCRIPT-55, SCRIPT-9, SCRIPT-S1, SCRIPT-S14, SCRIPT-S16, SCRIPT-S275, SCRIPT-S3, SCRIPT-S5, SCRIPT-S6, SCRIPT-S7
 - [studs-super-bricks.md](features/studs-super-bricks.md): STUD-28 (+2), STUD-16 (+1), STUD-24 (+1), STUD-S12, STUD-S13, STUD-S8, STUD-S9
 - [studs.md](features/studs.md): STUD-1 (+1), STUD-13 (+1), STUD-26 (+1), STUD-5 (+1), STUD-25, STUD-27, STUD-3, STUD-6, STUD-8, STUD-S1, STUD-S14, STUD-S15, STUD-S3, STUD-S5, STUD-S6, STUD-S7
 - [ui-menus.md](features/ui-menus.md): UI-1 (+3), UI-2 (+2), UI-19 (+1), UI-3 (+1), UI-4 (+1), UI-5 (+1), UI-7 (+1), UI-9 (+1), UI-10, UI-11, UI-12, UI-13, UI-14, UI-15, UI-16, UI-18, UI-6, UI-8, UI-S1, UI-S2, UI-S3, UI-S4, UI-S5, UI-S6, UI-S7
 - [vehicles-boarding.md](features/vehicles-boarding.md): VEH-19 (+5), VEH-80 (+2), HUD-50 (+1), HUD-S50, HUD-S51, VEH-20, VEH-S10, VEH-S70, VEH-S8, VEH-S9
 - [vehicles-damage.md](features/vehicles-damage.md): VEH-120 (+3), VEH-125 (+3), VEH-113 (+2), VEH-115 (+2), VEH-124 (+2), VEH-121 (+1), VEH-140 (+1), VEH-122, VEH-128, VEH-S100, VEH-S101, VEH-S104, VEH-S109, VEH-S112, VEH-S90, VEH-S93, VEH-S96, VEH-S97, VEH-S98, VEH-S99
 - [vehicles-physics-collision.md](features/vehicles-physics-collision.md): VEH-91 (+6), VEH-70 (+2), VEH-100 (+1), VEH-101 (+1), VEH-102 (+1), VEH-S52, VEH-S60, VEH-S62, VEH-S81, VEH-S82, VEH-S86, VEH-S87
-- [vehicles-physics.md](features/vehicles-physics.md): VEH-6 (+23), VEH-51 (+3), VEH-42 (+2), VEH-41 (+1), VEH-50 (+1), VEH-81 (+1), VEH-54, VEH-55, VEH-S30, VEH-S31, VEH-S32, VEH-S40, VEH-S41, VEH-S43, VEH-S7
+- [vehicles-physics.md](features/vehicles-physics.md): VEH-6 (+24), VEH-51 (+3), VEH-42 (+2), VEH-41 (+1), VEH-50 (+1), VEH-81 (+1), VEH-54, VEH-55, VEH-S30, VEH-S31, VEH-S32, VEH-S40, VEH-S41, VEH-S43, VEH-S7
 - [vehicles-prop-smash.md](features/vehicles-prop-smash.md): VEH-126 (+1), VEH-127 (+1), VEH-130 (+1), VEH-136 (+1), VEH-106, VEH-131, VEH-134, VEH-135, VEH-S102, VEH-S105, VEH-S107, VEH-S108, VEH-S89
 - [vehicles.md](features/vehicles.md): VEH-16 (+2), VEH-13 (+1), VEH-21 (+1), VEH-99 (+1), VEH-15, VEH-23, VEH-7, VEH-S11, VEH-S4, VEH-S5
 - [viewer-tools.md](features/viewer-tools.md): TOOLS-1, TOOLS-15, TOOLS-19, TOOLS-2, TOOLS-20, TOOLS-3, TOOLS-4, TOOLS-S1
