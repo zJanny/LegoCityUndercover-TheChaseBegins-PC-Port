@@ -24,6 +24,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 |---|---|---|
 | [level-objects](level-objects.md) | IN_PROGRESS | LEVOBJ-3 objects frozen (needs SCRIPT-1); LEVOBJ-16 other NPC states |
 | [level-objects-buildit](level-objects-buildit.md) | IN_PROGRESS | LEVOBJ-76 studs of the build; LEVOBJ-77 two-target camera; LEVOBJ-43 built state not saved (needs SAVE-8) |
+| [level-objects-fast-travel](level-objects-fast-travel.md) | IN_PROGRESS | LEVOBJ-120 level icons and trip of the map (needs UI-1); LEVOBJ-121 pad camera and particles; LEVOBJ-123 arrival untestable before the trip |
 | [level-objects-carry](level-objects-carry.md) | IN_PROGRESS | LEVOBJ-75 release of the box; LEVOBJ-30 attach update; LEVOBJ-31 locomotion while carrying; LEVOBJ-32 sounds and effects |
 | [level-objects-wobbly](level-objects-wobbly.md) | IN_PROGRESS | LEVOBJ-87 wobble of a hit; LEVOBJ-89 bounce states beyond the motion; LEVOBJ-90 the bouncer object |
 | [doors](doors.md) | IN_PROGRESS | DOOR-1 script-requested doors stay closed (needs SCRIPT-7); DOOR-3 open-door box |

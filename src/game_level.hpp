@@ -269,7 +269,7 @@ private:
     bool drawPause(int width, int height);
     void updateSuperBuildits(const float playerPosition[3], float dt);
     void loadFastTravel();
-    void updateFastTravel(float dt);
+    void updateFastTravel(float dt, const chase::runtime::PadState& padInput);
     void drawSuperBuildit(chase::frontend::Canvas& top);
     void drawSuperBuilditPrompt(chase::frontend::Canvas& top, const chase::runtime::SuperBuilditPrompt& prompt);
     bool cutscenePlaying() const { return levelScripts.cutscenes().playing() != nullptr; }

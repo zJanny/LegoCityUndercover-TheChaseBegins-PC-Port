@@ -619,6 +619,7 @@ void advanceToDestination(FuseArchive& archive, game_options::Options& options, 
     options.start = std::array<float, 3>{destinationPoint->position[0], destinationPoint->position[1], destinationPoint->position[2]};
     options.facing = destinationPoint->orientation[1];
     options.startRoom = destinationPoint->room;
+    options.fastTravelArrival = destination.fastTravelHolderHash;
 }
 
 }

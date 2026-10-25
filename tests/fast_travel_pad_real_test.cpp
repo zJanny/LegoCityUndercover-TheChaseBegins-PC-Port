@@ -7,6 +7,7 @@
 #include "assets/assets.hpp"
 #include "runtime/fast_travel_pad.hpp"
 #include "runtime/level_start.hpp"
+#include "runtime/scene_change.hpp"
 #include "runtime/super_buildit.hpp"
 #include <algorithm>
 #include <cmath>
@@ -95,6 +96,33 @@ int main(int argc, char** argv) {
         require(step.facing == 24576 && near(step.position[0], player[0], 1e-3f) && near(step.position[2], player[2], 1e-3f),
                 "the approach leaves the player where he stands, as in the oracle");
         require(!runtime::fastTravelHelicopterPose(*model, pads.helicopter(index), pads.clock()).empty(), "the landing Helicopter has a pose");
+
+        runtime::FastTravelPads travel;
+        travel.load(level, classOf);
+        travel.setHelicopterClips(index, model->clips);
+        const assets::FuseEntry* masterEntry = archive.find(runtime::kMasterLevelFile);
+        require(masterEntry != nullptr, "lvl_the_city is in the archive");
+        const std::vector<runtime::SceneChangeObject> sceneChanges = runtime::sceneChangeObjects(assets::parseLevel(archive.read(*masterEntry)));
+        const auto cherry = std::find_if(sceneChanges.begin(), sceneChanges.end(), [](const runtime::SceneChangeObject& o) { return o.instance == "FastTravel_01_CherryTreeHills"; });
+        require(cherry != sceneChanges.end() && cherry->destination.has_value(), "FastTravel_01_CherryTreeHills is a scenechange with a destination");
+        require(cherry->destination->fastTravelHolderHash == assets::nameHash("1-3_Helipad"),
+                "its FastTravel reference (hash d25a2180, 8fd8cec1 74993e3b read with the C++ loader) names 1-3_Helipad, whose crc32 is 0x3b3e9974");
+        require(travel.arrive(cherry->destination->fastTravelHolderHash), "the reference finds the helipad's pad with its Helicopter");
+        runtime::FastTravelPlayer arrival;
+        input.actionPressed = false;
+        travel.update(state, input, arrival);
+        require(travel.playerState() == runtime::kPlayerStateFastTravelArrive && travel.currentClip(index) == runtime::FastTravelClip::Idle, "0x183 with idle looping");
+        unsigned updates = 1;
+        while (travel.currentClip(index) == runtime::FastTravelClip::Idle) {
+            travel.update(state, input, arrival);
+            require(++updates < 100, "takeoff starts");
+        }
+        require(updates == 30, "takeoff starts on the 30th update (timer > 1.0): " + std::to_string(updates));
+        while (travel.playerState() == runtime::kPlayerStateFastTravelArrive) {
+            travel.update(state, input, arrival);
+            require(++updates < 300, "takeoff ends");
+        }
+        require(updates == 127, "the real takeoff clip (48 frames at 15 per second) ends 96 updates after it started: " + std::to_string(updates));
         std::cout << "fast-travel-pad-real-test: ok\n";
         return 0;
     } catch (const std::exception& error) {

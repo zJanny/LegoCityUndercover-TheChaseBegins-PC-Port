@@ -1557,6 +1557,16 @@ if(BUILD_TESTING)
       --script "at 948.327 95.031 1124.175 0;0 0 40;at 901.203 30.899 1141.268 50;0 0 5;0 0 1 A;0 0 5;0 0 1 A;0 0 330;at 906.561 31.445 1138.943 135;0 0 5;0 0 1 A;0 0 90")
     set_tests_properties(game-super-buildit-build PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
       PASS_REGULAR_EXPRESSION "prompt shown at update [0-9]+ \\(needs 300, has 1500\\).*dialog opened.*movie superbuildit_helipad at update [0-9]+.*built at update [0-9]+, super bricks 1200, shown count 1200.*script 1-3_Helipad_Built started.*fast travel 1-3_helipad.sbfasttravel: state 0x180 entered at update 388\nfast travel 1-3_helipad.sbfasttravel: state 0x181 entered at update 410\n.*helicopter landed, map ready at update 473 .*\nhud super bricks: shown count 1200, number hidden\n")
+    # The map's exit (LEVOBJ-120), same route as game-super-buildit-build, then a touch at the exit button's centre (159, 65; stand-in LEVOBJ-S97)
+    # once the map is ready (update 473): takeoff and player state 1 in the touch's update, the Helicopter hidden 97 updates later (oracle
+    # request 20261025-mission13-A-1: state 1 and takeoff in the same row, 191 vblanks to the vanishing). The update numbers are the port's.
+    add_test(NAME game-fast-travel-exit COMMAND chase-game
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
+      --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes --call-script 1-3_Fade_Blockers
+      --script "at 948.327 95.031 1124.175 0;0 0 40;at 901.203 30.899 1141.268 50;0 0 5;0 0 1 A;0 0 5;0 0 1 A;0 0 330;at 906.561 31.445 1138.943 135;0 0 5;0 0 1 A;0 0 95;touch 159 65 3;0 0 130")
+    set_tests_properties(game-fast-travel-exit PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
+      PASS_REGULAR_EXPRESSION "map ready at update 473 .*\n.*fast travel: exit touched at update 483\n.*helicopter takeoff at update 483\n.*player state 1 entered at update 483\n.*helicopter hidden at update 580\n")
     # Mission 1-2, the dog released (SCRIPT-293): 1-2_Cage_Key_Target_Script fades the screen to black (FadeScreen 0), the
     # cutscene mode of 1_2_c fades it in again (DCamCutScenePlay handler 0x26fa18, mode enter 0x2fadb8; gdb trace from the user's
     # state m12-13-cage-trigger, docs/re/cutscenes.md), and after the cutscene 1-2_MissionEnd follows with the game picture.
@@ -1932,7 +1942,7 @@ foreach(test_name ${chase_all_tests})
   set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT "XDG_DATA_HOME=${CMAKE_BINARY_DIR}/test-xdg/${test_name}")
 endforeach()
 
-foreach(slow_test game-debris-super-pickup game-cutscene-dog-end game-super-buildit-build game-super-brick-roof game-doorlock-detective-1-2 game-cage-release-1-2 game-mission-1-1 game-mission-1-1-start game-vehicle-drive game-vehicle-room game-pedestrian-rooms game-vehicle-hit game-vehicle-smash game-vehicle-break game-director-hold game-director-release game-van-escort game-pause-menu waypoint-marker-shot audio-real-data)
+foreach(slow_test game-debris-super-pickup game-cutscene-dog-end game-super-buildit-build game-fast-travel-exit game-super-brick-roof game-doorlock-detective-1-2 game-cage-release-1-2 game-mission-1-1 game-mission-1-1-start game-vehicle-drive game-vehicle-room game-pedestrian-rooms game-vehicle-hit game-vehicle-smash game-vehicle-break game-director-hold game-director-release game-van-escort game-pause-menu waypoint-marker-shot audio-real-data)
   if(TEST ${slow_test})
     set_property(TEST ${slow_test} APPEND PROPERTY LABELS slow)
   endif()
@@ -1962,7 +1972,7 @@ foreach(game_data_test
   game-cutscene-dog-prop game-super-brick-freeplay game-save-new-game-clean game-save-new-game game-save-reload game-super-brick-roof
   game-cutscene-dog-end game-vehicle-room game-pedestrian-rooms game-vehicle-hit game-vehicle-break game-vehicle-smash game-debris-super-pickup
   game-mission-1-1 game-detective-1-2 game-use-spot-1-2 game-use-marker-detective-1-2 game-player-script-animation game-super-buildit-prompt
-  game-super-buildit-build game-cage-release-1-2 game-doorlock-detective-1-2 game-mission-1-2-start-timing game-mission-1-1-start game-script-dialog
+  game-super-buildit-build game-fast-travel-exit game-cage-release-1-2 game-doorlock-detective-1-2 game-mission-1-2-start-timing game-mission-1-1-start game-script-dialog
   game-same-level-entry game-scene-change-exit game-scene-change-entry game-director-hold game-director-release game-script-zipline
   game-script-attack-table game-script-wobbly-table game-script-bounce game-script-bounce-grab game-script-acrobat-poles game-script-zipline-use-a
   game-script-zipline-use-b game-script-brick-grab game-script-brick-rail game-script-pole game-script-ladder game-script-ladder-walk-in

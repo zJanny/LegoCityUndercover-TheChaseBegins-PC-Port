@@ -22,9 +22,11 @@ void LevelSession::loadFastTravel() {
         fastTravelState.helicopters.push_back(std::move(helicopter));
     }
     std::cout << "fast travel pads: " << fastTravel.pads().size() << '\n';
+    if (shared.options.fastTravelArrival && !fastTravel.arrive(shared.options.fastTravelArrival))
+        std::cout << "fast travel arrival: no pad with a Helicopter for the scene change's FastTravel reference\n";
 }
 
-void LevelSession::updateFastTravel(float dt) {
+void LevelSession::updateFastTravel(float dt, const runtime::PadState& padInput) {
     runtime::FastTravelInput input;
     input.dt = dt;
     input.player[0] = player->motion.x;
@@ -34,6 +36,9 @@ void LevelSession::updateFastTravel(float dt) {
     input.playerFree = carry.carryingMode() == 0 && !carry.busy() && !levelScripts.playerControlTaken() && !cutscenePlaying() &&
                        !builditPlayer.active() && player->vertical.posture == runtime::Posture::Ground && !(boarding && boarding->seatedVehicle());
     input.actionPressed = pad.slot(kSlotConfirmButton).press > 0;
+    if (runtime::fastTravelExitTapped(padInput.touch, fastTravelState.touching, float(padInput.touchX), float(padInput.touchY)) && fastTravel.requestExit(false))
+        std::cout << "fast travel: exit touched at update " << updates << '\n';
+    fastTravelState.touching = padInput.touch;
     runtime::FastTravelPlayer step;
     for (const runtime::FastTravelEvent& event : fastTravel.update(objectState, input, step)) {
         const std::string& name = fastTravel.pads()[event.pad].instance;
@@ -49,6 +54,15 @@ void LevelSession::updateFastTravel(float dt) {
             break;
         case runtime::FastTravelEventKind::HelicopterHidden:
             std::cout << "fast travel " << name << ": helicopter hidden at update " << updates << '\n';
+            break;
+        case runtime::FastTravelEventKind::TakeoffStarted:
+            std::cout << "fast travel " << name << ": helicopter takeoff at update " << updates << '\n';
+            break;
+        case runtime::FastTravelEventKind::Arrived:
+            std::cout << "fast travel " << name << ": state 0x183 entered at update " << updates << '\n';
+            break;
+        case runtime::FastTravelEventKind::Released:
+            std::cout << "fast travel " << name << ": player state 1 entered at update " << updates << '\n';
             break;
         }
     }

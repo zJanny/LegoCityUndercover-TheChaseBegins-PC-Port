@@ -1,7 +1,8 @@
 #pragma once
-// The fast travel pad (class props/prop_fasttravelzone, kind 227) and the player's fast travel states 0x180 "Fast Travel Enter" and 0x181 "Fast
-// Travel Active": A in the pad's use zone lands the holder's Helicopter child and moves the player onto the pad. Rules and evidence:
-// docs/re/fast-travel.md. No SDL dependency.
+// The fast travel pad (class props/prop_fasttravelzone, kind 227) and the player's fast travel states 0x180 "Fast Travel Enter", 0x181 "Fast
+// Travel Active" and 0x183 "Fast Travel Scene Change": A in the pad's use zone lands the holder's Helicopter child and moves the player onto the
+// pad; the map's exit (0x1ee5f8 -> 0x26aa60) lets the Helicopter take off and returns the player to state 1; the arrival after a scene change
+// idles the Helicopter, takes off and returns the player to state 1. Rules and evidence: docs/re/fast-travel.md. No SDL dependency.
 #include "assets/assets.hpp"
 #include "assets/object_collision.hpp"
 #include "runtime/animation_slots.hpp"
@@ -20,14 +21,29 @@ constexpr const char* kFastTravelHelicopterChild = "Helicopter";  // post-link 0
 
 constexpr std::uint16_t kPlayerStateFastTravelEnter = 0x180;
 constexpr std::uint16_t kPlayerStateFastTravelActive = 0x181;
+constexpr std::uint16_t kPlayerStateFastTravelArrive = 0x183;
+constexpr std::uint16_t kPlayerStateNormal = 1;
 
 // 0x32c2ec asks 0x21941c for animation 582 (tablesanimations sheet 1, "typing_stood"), blend 0.1, speed 1.0.
 constexpr int kAnimationTypingStood = 582;
+// 0x334388 asks 0x21941c for animation 678 (tablesanimations sheet 1, "wave"), blend 0.1, speed 1.0.
+constexpr int kAnimationWave = 678;
+// 0x3344f8: the arrival state's timer (state object +0x14, += dt per update) must be greater than 1.0 before "takeoff" starts.
+constexpr float kFastTravelArriveWait = 1.0f;
 
 // 0x2cd91c: the approach factor ctrl+0x24c grows by dt x 1.5 and the facing turns by at most 0x800 per update.
 constexpr float kFastTravelApproachRate = 1.5f;
 constexpr int kFastTravelTurnStep = 0x800;
 constexpr float kFastTravelHeadingScale = 10430.378f;
+
+// STAND-IN LEVOBJ-S97: the click area of the map's exit button `area_exit` (a 128 x 128 portrait reference at 95, 1 in
+// sprites/blend/mapbuttons/mapbuttons.bxaml; touch radius field 64 at 0x2dcfec, halved by 0x1ee520) is the layout rectangle's centre and that radius;
+// the original's resolved position (node +240, the reference's origin vector 32, 32 at 0x358870) was not compared with a picture.
+constexpr float kFastTravelExitCentreX = 159.0f;
+constexpr float kFastTravelExitCentreY = 65.0f;
+constexpr float kFastTravelExitRadius = 32.0f;
+// The exit fires on the first update of a touch (the button's touch timer +0x460 is 0, 0x2d9f84) that lies inside the circle.
+bool fastTravelExitTapped(bool touching, bool wasTouching, float x, float y);
 
 enum class FastTravelClip { None, Land, Idle, Takeoff };
 
@@ -76,6 +92,9 @@ enum class FastTravelEventKind {
     Active,          // state 0x181 entered
     HelicopterIdle,  // the landing ended: "idle" loops, 0x28b930 answers 1 (the map buttons may open the fast travel map)
     HelicopterHidden,
+    TakeoffStarted,  // "takeoff" started on the Helicopter (the map's exit 0x26aa60, or the arrival state 0x3344f8)
+    Arrived,         // state 0x183 entered: "idle" loops on the Helicopter, clip wave on the player
+    Released,        // player state 1 entered after the exit or the arrival
 };
 
 struct FastTravelEvent {
@@ -106,9 +125,18 @@ public:
     // it), the current state's update, then the use query (message 3, 0x1d79a8) of the pad whose zone holds the player.
     std::vector<FastTravelEvent> update(const assets::PlacedObjectState& state, const FastTravelInput& input, FastTravelPlayer& player);
 
+    // The map's exit button (0x2d9f84 -> 0x1ee5f8 -> 0x26aa60). Without `forced` the exit waits for 0x28b930 to answer ready (0x1ee5f8 returns at
+    // once while it answers 0); the dialog's Yes passes forced. Applied at the next update. False when no fast travel map is open.
+    bool requestExit(bool forced);
+    // Arrival after a scene change whose scenechange object has a `FastTravel` reference to `holder` (0x2f6be4 requests 0x183). False when no
+    // pad of that holder has a Helicopter.
+    bool arrive(std::uint32_t holderHash);
+
     std::uint16_t playerState() const { return state_; }
     bool takesPlayerControl() const { return state_ != 0; }
-    int playerClip() const { return state_ != 0 ? kAnimationTypingStood : 0; }
+    int playerClip() const { return state_ == kPlayerStateFastTravelArrive ? kAnimationWave : state_ != 0 ? kAnimationTypingStood : 0; }
+    // The map buttons screen shows the fast travel map from the A press (0x16c188 -> 0x1ccf60) until the exit.
+    bool mapOpen() const { return state_ == kPlayerStateFastTravelEnter || state_ == kPlayerStateFastTravelActive; }
     // 0x28b930: 0 in state 0x180, the Active flag (+0x14 of the state object 0x5157e4) in 0x181, 1 otherwise.
     bool mapReady() const;
 
@@ -137,6 +165,8 @@ private:
     float approach_ = 0;              // ctrl+0x24c
     std::int16_t target_ = 0;         // ctrl+0xa
     bool idleStarted_ = false;        // Active +0x14
+    bool exitPending_ = false;
+    float arriveTimer_ = 0;           // Scene Change +0x14
 };
 
 }

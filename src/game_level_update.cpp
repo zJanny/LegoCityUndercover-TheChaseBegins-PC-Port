@@ -59,6 +59,9 @@ runtime::PadState LevelSession::scriptedPad(unsigned index) const {
             scripted.stickX = std::int16_t(step.stickX);
             scripted.stickY = std::int16_t(step.stickY);
             scripted.held = step.buttons;
+            scripted.touch = step.touch;
+            scripted.touchX = std::int16_t(step.touchX);
+            scripted.touchY = std::int16_t(step.touchY);
             break;
         }
         index -= step.updates;
@@ -385,7 +388,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         const float playerPosition[3] = {player->motion.x, player->vertical.y, player->motion.z};
         for (const runtime::SoundCall& call : updateBuildits(playerPosition)) emit(call);
         updateSuperBuildits(playerPosition, dt);
-        updateFastTravel(dt);
+        updateFastTravel(dt, padInput);
         updateCarry(playerPosition);
         updateDetective(dt, carry.carryingMode() == 0 && !carry.busy() && !builditPlayer.active() && !buildits.lastUse().inZone, emit);
     });

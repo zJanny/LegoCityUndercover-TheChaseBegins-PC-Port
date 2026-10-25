@@ -24,9 +24,12 @@ struct WorldLevelEntry {
 
 // Where a request leads: the world level and the `point` object named by the SceneChangeTo parameter (hash d2fb9421,
 // data +0x14 of the object; a 20-byte reference {world level hash, object hash, ...}).
+// `fastTravelHolderHash` is the object half of the object's `FastTravel` reference (hash d25a2180, {world level hash, object hash}; the
+// holder of the destination's Helicopter), 0 without one: the new level's player starts in state 0x183 (0x2f6be4).
 struct SceneChangeDestination {
     WorldLevelEntry worldLevel;
     std::uint32_t pointHash = 0;
+    std::uint32_t fastTravelHolderHash = 0;
 };
 
 // One `scenechange` object of the master level. SceneChangeBound (hash f5b7ba6c) is "<WorldLevel instance>.<bound>".

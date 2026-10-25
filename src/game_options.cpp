@@ -1,4 +1,5 @@
 #include "game_options.hpp"
+#include "frontend/canvas.hpp"
 #include "frontend/script.hpp"
 #include "runtime/pad.hpp"
 #include "strict_parse.hpp"
@@ -23,7 +24,7 @@ constexpr double kAnyRealLow = std::numeric_limits<double>::lowest(), kAnyRealHi
 
 const char* const kUsage = "usage: chase-game [--fib F] [--names CSV] [--config CFG] [--gameplay] "
                            "[--level levels/levels/<name>/<name>_main.blvl] [--screenshot OUT.bmp] [--frames N] "
-                           "[--script \"X Y COUNT [BUTTONS];at X Y Z [FACING];...\"] [--save savegame.dat] [--save-out FILE] [--front-save savegame.dat] [--slot 0|1] [--start \"X Y Z\"] [--particle \"DEFINITION X Y Z\"] [--facing DEGREES] [--hide-room N] [--no-camera-collision] [--no-start-cutscenes] [--set-variable NAME=VALUE] [--debug-overlay] [--sound-volume 0-10] [--music-volume 0-10] "
+                           "[--script \"X Y COUNT [BUTTONS];at X Y Z [FACING];touch X Y COUNT;...\"] [--save savegame.dat] [--save-out FILE] [--front-save savegame.dat] [--slot 0|1] [--start \"X Y Z\"] [--particle \"DEFINITION X Y Z\"] [--facing DEGREES] [--hide-room N] [--no-camera-collision] [--no-start-cutscenes] [--set-variable NAME=VALUE] [--debug-overlay] [--sound-volume 0-10] [--music-volume 0-10] "
                            "[--front-script \"run 5; press A; until slot; ...\"] [--language 1-9] [--returning] [--window WIDTHxHEIGHT]";
 
 std::uint32_t buttonOf(char letter) {
@@ -44,9 +45,20 @@ ScriptStep parseTeleport(const std::vector<std::string>& fields, const std::stri
     return step;
 }
 
+ScriptStep parseTouch(const std::vector<std::string>& fields, const std::string& text) {
+    if (fields.size() != 4) strict::reject("expected touch X Y COUNT", text);
+    ScriptStep step;
+    step.touch = true;
+    step.touchX = int(strict::integer(fields[1], 0, chase::frontend::kBottomWidth - 1));
+    step.touchY = int(strict::integer(fields[2], 0, chase::frontend::kScreenHeight - 1));
+    step.updates = unsigned(strict::integer(fields[3], 0, kMaxCount));
+    return step;
+}
+
 ScriptStep parseStep(const std::string& text) {
     const std::vector<std::string> fields = strict::words(text);
     if (!fields.empty() && fields[0] == "at") return parseTeleport(fields, text);
+    if (!fields.empty() && fields[0] == "touch") return parseTouch(fields, text);
     if (fields.size() < 3 || fields.size() > 4) strict::reject("expected X Y COUNT [BUTTONS]", text);
     ScriptStep step;
     step.stickX = int(strict::integer(fields[0], -kCirclePadLimit, kCirclePadLimit));

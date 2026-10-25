@@ -18,6 +18,7 @@ struct Helicopter {
 
 struct State {
     std::vector<Helicopter> helicopters;
+    bool touching = false;
 };
 
 }

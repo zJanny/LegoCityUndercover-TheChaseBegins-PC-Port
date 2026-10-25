@@ -33,6 +33,7 @@ struct Options {
     bool debugOverlay = false;
     std::optional<std::array<float, 3>> start;
     std::optional<float> facing;
+    std::uint32_t fastTravelArrival = 0;
     std::vector<ParticleRequest> particles;
     std::optional<int> hideRoom;
     std::string startRoom;
@@ -59,6 +60,8 @@ struct ScriptStep {
     unsigned updates = 0;
     std::uint32_t buttons = 0;
     bool teleport = false;
+    bool touch = false;
+    int touchX = 0, touchY = 0;
     std::array<float, 3> position{};
     std::optional<float> facingDegrees;
 };

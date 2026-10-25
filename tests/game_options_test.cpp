@@ -81,6 +81,10 @@ void testValidValues() {
 
     const game_options::Options script = parseArgs({"--script", "0 150 40;0 0 1 AB;-156 0 0"});
     requireEqual(script.script, "0 150 40;0 0 1 AB;-156 0 0", "valid --script text");
+    requireEqual(parseArgs({"--script", "0 0 5;touch 159 65 3"}).script, "0 0 5;touch 159 65 3", "valid touch step");
+    const std::vector<game_options::ScriptStep> touchSteps = game_options::parseScript("touch 159 65 3");
+    requireEqual(std::to_string(touchSteps.size()), "1", "one touch step");
+    requireEqual(std::to_string(touchSteps[0].touch) + " " + std::to_string(touchSteps[0].touchX) + " " + std::to_string(touchSteps[0].touchY) + " " + std::to_string(touchSteps[0].updates), "1 159 65 3", "touch fields");
     const std::vector<game_options::ScriptStep> steps = game_options::parseScript("0 150 40;0 0 1 AB;-156 0 0");
     if (steps.size() != 3 || steps[0].stickY != 150 || steps[0].updates != 40 || steps[1].buttons == 0 || steps[2].stickX != -156)
         fail("parseScript steps changed");
@@ -149,6 +153,11 @@ void testRejections() {
     expectRejected({"--script", "at 1 2 3 4 5"}, "--script: expected at X Y Z [FACING]: 'at 1 2 3 4 5'");
     expectRejected({"--script", "at 1 two 3"}, "--script: not a number: 'two'");
     expectRejected({"--script", "0 150 40 AB C"}, "--script: expected X Y COUNT [BUTTONS]: '0 150 40 AB C'");
+    expectRejected({"--script", "touch 159 65"}, "--script: expected touch X Y COUNT: 'touch 159 65'");
+    expectRejected({"--script", "touch 159 65 3 A"}, "--script: expected touch X Y COUNT: 'touch 159 65 3 A'");
+    expectRejected({"--script", "touch 320 65 3"}, "--script: out of range, allowed 0 to 319: '320'");
+    expectRejected({"--script", "touch 159 -1 3"}, "--script: out of range, allowed 0 to 239: '-1'");
+    expectRejected({"--script", "touch 159 65 x"}, "--script: not a whole number: 'x'");
 
     expectRejected({"--front-script", "run 1;;press A"}, "--front-script: empty command: ''");
     expectRejected({"--front-script", "press Q"}, "--front-script: unknown button: 'Q'");

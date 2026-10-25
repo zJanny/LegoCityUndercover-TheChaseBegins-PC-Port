@@ -4,6 +4,13 @@
 // frames, idle 12, takeoff 48, all 15 frames per second (models/veh_police_chopper/*.bfnanm, assets::animationLength). The update counts follow
 // from the rule at dt 1/30; the oracle (RPC request r40-B-1, m13-5-helipad-built-menu) saw state 0x180 for 39 to 45 vblanks (about 20 to 22
 // updates) and the idle start 124 to 126 vblanks after 0x181.
+// Exit and arrival (20261025-mission13-A, docs/re/fast-travel.md): the map's update 0x2d9f84 calls 0x1ee5f8 for the exit button, which returns at
+// once while 0x28b930 answers 0 and otherwise ends with 0x26aa60 (Helicopter shown, "takeoff" once, player state 1 requested); the arrival
+// enter 0x334388 and update 0x3344f8 (idle loops, takeoff once when the state's float timer is greater than 1.0, state 1 and the Helicopter
+// hidden when takeoff ended); clip 678 "wave" from tablesanimations. Update counts follow from the rules at dt 1/30 (float timer sum: the 30th
+// addition of 1/30 is 1.0000004). Oracle (RPC request 20261025-mission13-A-1, state m13-5-helipad-built-menu, four loads): after the touch the player
+// state goes from 0x181 straight to 1 with `takeoff` already running in the first row with state 1, and the Helicopter's disabled flag is set 191
+// vblanks (about 96 updates) later; the clip's end minus start is 9600 ticks = 48 frames at 15 per second.
 #include "runtime/fast_travel_pad.hpp"
 #include <algorithm>
 #include <cmath>
@@ -105,7 +112,81 @@ int main() {
             require(set.playerState() == kPlayerStateFastTravelActive, "no new request while a fast travel state runs (gate LEVOBJ-S96)");
             for (int i = 0; i < 120; ++i) set.update(state, at(position[0], position[1], position[2], facing, false), player);
             require(set.playerState() == kPlayerStateFastTravelActive && set.currentClip(0) == FastTravelClip::Idle && set.mapReady(),
-                    "0x181 holds with idle looping until the map's exit (not ported, LEVOBJ-120)");
+                    "0x181 holds with idle looping until the map's exit");
+        }
+        {
+            FastTravelPads set = pads();
+            FastTravelPlayer player;
+            float position[3] = {10.5f, 2.0f, 20.5f};
+            std::int16_t facing = 0;
+            const auto run = [&](bool press) {
+                std::vector<FastTravelEvent> events = set.update(state, at(position[0], position[1], position[2], facing, press), player);
+                if (player.moved) std::copy_n(player.position, 3, position);
+                if (player.turned) facing = player.facing;
+                return events;
+            };
+            require(!set.requestExit(true), "no map is open outside the fast travel states");
+            run(true);
+            run(false);
+            while (set.playerState() != kPlayerStateFastTravelActive) run(false);
+            require(set.mapOpen() && !set.mapReady() && !set.requestExit(false), "0x1ee5f8 returns at once while 0x28b930 answers 0 (0x181 before idle)");
+            while (!set.mapReady()) run(false);
+            require(set.requestExit(false), "ready: the exit button is taken");
+            std::vector<FastTravelEvent> events = run(false);
+            require(has(events, FastTravelEventKind::TakeoffStarted) && set.currentClip(0) == FastTravelClip::Takeoff && set.helicopter(0).shown,
+                    "0x26aa60 starts takeoff once on the shown Helicopter");
+            require(has(events, FastTravelEventKind::Released) && set.playerState() == 0 && !set.takesPlayerControl() && set.playerClip() == 0,
+                    "player state 1 in the same update as the takeoff (oracle 20261025-mission13-A-1: the first row with state 1 shows takeoff)");
+            events = run(false);
+            require(set.pads()[0].busy, "the pad is busy while takeoff plays (+0x64)");
+            run(true);
+            run(false);
+            require(set.playerState() == 0, "no new request while takeoff plays (0x1d79a8 checks +0x64)");
+            unsigned takeoffUpdates = 4;
+            bool hidden = false;
+            while (!hidden && takeoffUpdates < 300) {
+                events = run(false);
+                hidden = has(events, FastTravelEventKind::HelicopterHidden);
+                ++takeoffUpdates;
+            }
+            require(hidden && !set.helicopter(0).shown, "the Helicopter is disabled when takeoff ended (0x1c8244)");
+            require(takeoffUpdates == 97, "takeoff is 48 frames at 15 per second, 96 updates after the update of the exit (oracle: 191 vblanks after the first state 1 row): " + std::to_string(takeoffUpdates));
+            run(false);
+            require(!set.pads()[0].busy, "busy cleared");
+            run(true);
+            run(false);
+            require(set.playerState() == kPlayerStateFastTravelEnter, "the pad can be used again after takeoff");
+        }
+        {
+            FastTravelPads set = pads();
+            FastTravelPlayer player;
+            require(!set.arrive(chase::assets::nameHash("nobody")), "no pad of that holder");
+            require(set.arrive(chase::assets::nameHash("HOLDER")), "the holder is found by its name hash");
+            std::vector<FastTravelEvent> events = set.update(state, at(10, 2, 20, 16384, false), player);
+            require(has(events, FastTravelEventKind::Arrived) && set.playerState() == kPlayerStateFastTravelArrive, "0x183 entered");
+            require(set.takesPlayerControl() && set.playerClip() == kAnimationWave && set.mapReady(), "wave clip, 0x28b930 answers 1");
+            require(set.helicopter(0).shown && set.currentClip(0) == FastTravelClip::Idle, "idle loops on the shown Helicopter");
+            unsigned updates = 1;
+            while (set.currentClip(0) == FastTravelClip::Idle) {
+                events = set.update(state, at(10, 2, 20, 16384, false), player);
+                ++updates;
+                require(updates < 100, "takeoff starts");
+            }
+            require(updates == 30 && has(events, FastTravelEventKind::TakeoffStarted), "timer > 1.0 on the 30th update: " + std::to_string(updates));
+            while (set.playerState() == kPlayerStateFastTravelArrive) {
+                events = set.update(state, at(10, 2, 20, 16384, false), player);
+                ++updates;
+                require(updates < 300, "takeoff ends");
+            }
+            require(set.playerState() == 0 && has(events, FastTravelEventKind::Released) && !set.helicopter(0).shown, "state 1, Helicopter disabled");
+            require(updates == 127, "takeoff from the 30th update, 96 updates, ended on the 126th, state 1 entered on the 127th: " + std::to_string(updates));
+        }
+        {
+            require(fastTravelExitTapped(true, false, 159, 65), "the centre of the exit button");
+            require(fastTravelExitTapped(true, false, 159 + 32, 65), "radius 32");
+            require(!fastTravelExitTapped(true, false, 159 + 33, 65), "outside the circle");
+            require(!fastTravelExitTapped(true, true, 159, 65), "a held touch is not a new tap (touch timer > 0)");
+            require(!fastTravelExitTapped(false, false, 159, 65), "no touch");
         }
         {
             FastTravelPads set = pads();

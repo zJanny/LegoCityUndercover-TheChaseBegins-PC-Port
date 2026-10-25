@@ -7,6 +7,7 @@ namespace chase::runtime {
 namespace {
 constexpr std::uint32_t kSceneChangeBoundHash = 0xf5b7ba6c;
 constexpr std::uint32_t kSceneChangeToHash = 0xd2fb9421;
+constexpr std::uint32_t kSceneChangeFastTravelHash = 0xd25a2180;
 constexpr const char* kSceneChangeClass = "scenechange";
 constexpr const char* kWorldLevelPrefix = "WorldLevel_";
 
@@ -59,8 +60,11 @@ std::vector<SceneChangeObject> sceneChangeObjects(const assets::Level& master) {
             std::memcpy(&worldLevelHash, to->blocks[0].data(), 4);
             std::memcpy(&pointHash, to->blocks[0].data() + 4, 4);
             for (const WorldLevelEntry& level : levels)
-                if (assets::nameHash(level.instance) == worldLevelHash) entry.destination = SceneChangeDestination{level, pointHash};
+                if (assets::nameHash(level.instance) == worldLevelHash) entry.destination = SceneChangeDestination{level, pointHash, 0};
         }
+        if (const assets::LevelParam* travel = param(object, kSceneChangeFastTravelHash);
+            travel && entry.destination && travel->type == 4 && travel->blocks.size() == 1 && travel->blocks[0].size() >= 8)
+            std::memcpy(&entry.destination->fastTravelHolderHash, travel->blocks[0].data() + 4, 4);
         objects.push_back(entry);
     }
     return objects;

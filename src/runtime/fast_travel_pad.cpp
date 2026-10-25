@@ -70,6 +70,10 @@ std::vector<assets::Matrix> fastTravelHelicopterPose(const FastTravelHelicopterM
     return assets::skinMatrices(model.skeleton, animation, frame);
 }
 
+bool fastTravelExitTapped(bool touching, bool wasTouching, float x, float y) {
+    return touching && !wasTouching && std::hypot(x - kFastTravelExitCentreX, y - kFastTravelExitCentreY) <= kFastTravelExitRadius;
+}
+
 std::int16_t FastTravelPads::heading(const assets::Matrix& node) {
     return std::int16_t(std::int32_t(std::atan2(node[8], node[10]) * kFastTravelHeadingScale));
 }
@@ -161,8 +165,24 @@ bool FastTravelPads::mapReady() const {
     return true;
 }
 
+bool FastTravelPads::requestExit(bool forced) {
+    if (!mapOpen() || (!forced && !mapReady())) return false;
+    exitPending_ = true;
+    return true;
+}
+
+bool FastTravelPads::arrive(std::uint32_t holderHash) {
+    for (std::size_t i = 0; i < pads_.size(); ++i)
+        if (!pads_[i].holder.empty() && assets::nameHash(pads_[i].holder) == holderHash && !pads_[i].helicopter.empty()) {
+            pad_ = i;
+            requested_ = kPlayerStateFastTravelArrive;
+            return true;
+        }
+    return false;
+}
+
 void FastTravelPads::enter(std::uint16_t next, FastTravelPlayer& player, std::vector<FastTravelEvent>& events) {
-    state_ = next;
+    state_ = next == kPlayerStateNormal ? 0 : next;
     const std::size_t index = *pad_;
     if (next == kPlayerStateFastTravelEnter) {
         approaching_ = true;
@@ -175,9 +195,17 @@ void FastTravelPads::enter(std::uint16_t next, FastTravelPlayer& player, std::ve
             helicopters_[index].shown = true;
         }
         events.push_back({FastTravelEventKind::Entered, index});
-    } else {
+    } else if (next == kPlayerStateFastTravelActive) {
         idleStarted_ = false;
         events.push_back({FastTravelEventKind::Active, index});
+    } else if (next == kPlayerStateFastTravelArrive) {
+        arriveTimer_ = 0;
+        play(index, FastTravelClip::Idle, kAnimationLoop);
+        helicopters_[index].shown = true;
+        events.push_back({FastTravelEventKind::Arrived, index});
+    } else {
+        approaching_ = false;
+        events.push_back({FastTravelEventKind::Released, index});
     }
 }
 
@@ -193,6 +221,17 @@ std::vector<FastTravelEvent> FastTravelPads::update(const assets::PlacedObjectSt
             helicopters_[i].shown = false;
             events.push_back({FastTravelEventKind::HelicopterHidden, i});
         }
+    }
+
+    if (exitPending_) {
+        exitPending_ = false;
+        const std::size_t index = *pad_;
+        if (!pads_[index].helicopter.empty()) {
+            helicopters_[index].shown = true;
+            play(index, FastTravelClip::Takeoff, kAnimationOnce);
+            events.push_back({FastTravelEventKind::TakeoffStarted, index});
+        }
+        requested_ = kPlayerStateNormal;
     }
 
     if (requested_ != 0 && requested_ != state_) enter(requested_, player, events);
@@ -222,6 +261,21 @@ std::vector<FastTravelEvent> FastTravelPads::update(const assets::PlacedObjectSt
             play(index, FastTravelClip::Idle, kAnimationLoop);
             idleStarted_ = true;
             events.push_back({FastTravelEventKind::HelicopterIdle, index});
+        }
+    } else if (state_ == kPlayerStateFastTravelArrive) {
+        const std::size_t index = *pad_;
+        arriveTimer_ += input.dt;
+        const bool takeoffEnded = current(index, FastTravelClip::Takeoff, true);
+        if (currentClip(index) == FastTravelClip::Idle && arriveTimer_ > kFastTravelArriveWait) {
+            play(index, FastTravelClip::Takeoff, kAnimationOnce);
+            events.push_back({FastTravelEventKind::TakeoffStarted, index});
+        }
+        if (takeoffEnded) {
+            requested_ = kPlayerStateNormal;
+            if (helicopters_[index].shown) {
+                helicopters_[index].shown = false;
+                events.push_back({FastTravelEventKind::HelicopterHidden, index});
+            }
         }
     }
 

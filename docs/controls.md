@@ -39,6 +39,12 @@ For example, `A key Space hold` makes Space press the A button.
 - The menus and buttons on the lower screen (map buttons, menus) are used by clicking them. There are no extra keys for them.
 - In the [development runtime](commands.md#development-runtime) a left click that starts on the lower screen is a touch, not A. A left click on the upper screen is still A.
 
+## Fast travel pad
+
+In the [development runtime](commands.md#development-runtime), after you pressed A on the built helipad pad and the helicopter idles:
+
+- Click the exit button on the lower screen (the hexagon with an arrow at the top centre of the lower screen) to leave the console. The map's other buttons are not there yet.
+
 ## Pause menu
 
 In the [development runtime](commands.md#development-runtime), while you play:
