@@ -11,3 +11,5 @@ Ranges of item IDs held by parallel agents, named like `20261021-audio-A`. The p
 | HUD | 84 | 86 | 20261025-mission13-C | 2026-10-25T10:55:30+01:00 |
 | HUD-S | 78 | 78 | 20261025-mission13-C | 2026-10-25T10:55:30+01:00 |
 | STUD | 28 | 28 | 20261025-mission13-C | 2026-10-25T10:55:30+01:00 |
+| TOOLS | 18 | 19 | 20261025-mission13-D | 2026-10-25T11:15:38+01:00 |
+| TOOLS-S | 3 | 3 | 20261025-mission13-D | 2026-10-25T11:15:38+01:00 |
