@@ -1,4 +1,4 @@
-loadstate m12-13-cage-trigger
+loadstate @CAGE_USE_SPOT
 frames 3
 stick 0 0
 hold -

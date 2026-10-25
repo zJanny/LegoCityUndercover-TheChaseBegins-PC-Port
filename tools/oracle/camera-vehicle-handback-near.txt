@@ -1,9 +1,9 @@
 # The near plane test after the release director camera of mission 1-1 (docs/re/camera-vehicle.md): the camera system K with both sweep shapes
 # (0x3a00 bytes) and the render camera *0x377544 (projection scales +0xbc / +0xc0, near and far plane +0xc4 / +0xc8) for the 26 updates around
-# the hand-over (frames 490 to 515; the hand-over is frame 503). Run with --state m11-2-patrol-car on a New 3DS emulator. Measuring aids as in
+# the hand-over (frames 490 to 515; the hand-over is frame 503). Run with --state @PATROL_CAR on a New 3DS emulator. Measuring aids as in
 # camera-vehicle-handback.txt. The writer of K+0x178 at the director start (frame 228): replace the last two lines with
 # "watch 0x589be8 2 40 k178-watch 2" or "ctrace 0x195038,0x1da878,0x286200,0x2ada8c,0x31bf58,0x2313c8 40 k178-ctrace".
-loadstate m11-2-patrol-car
+loadstate @PATROL_CAR
 frames 2
 dt 0.033 0.033
 poke 0x08a887f1 01

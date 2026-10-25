@@ -1,7 +1,7 @@
 # Picture of the director camera of Police_ExtToInt for the comparison with chase-game (docs/re/dcam.md). Needs the New 3DS
-# state dcam-police-dialog and --rpc --rpc-input with --display xvfb --renderer opengl. The camera does not move during the
+# state @POLICE_DIALOG and --rpc --rpc-input with --display xvfb --renderer opengl. The camera does not move during the
 # 4 s (one path point), so the picture does not depend on the moment.
-loadstate dcam-police-dialog
+loadstate @POLICE_DIALOG
 hold A
 frames 3
 hold -

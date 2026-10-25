@@ -1,8 +1,8 @@
 # InVehicle camera while driving the police car (docs/re/camera-vehicle.md): the follow camera object K (0x589a70, 0x200 bytes), the
 # working copy of the InVehicle preset (0x514170, 0x70), its target entity (the vehicle, K+0), the vehicle record of
-# 1-1_Police_Car (0x08a884e0, camera floats at +0x2f0), the camera object with its stack, the vehicle node (0x08a88840, matrix at +0x60, translation +0x8c, model half height +0xb0). Run with --state drv-police-car-seated
+# 1-1_Police_Car (0x08a884e0, camera floats at +0x2f0), the camera object with its stack, the vehicle node (0x08a88840, matrix at +0x60, translation +0x8c, model half height +0xb0). Run with --state @CAR_SEATED
 # on a New 3DS emulator. The pad plan is part of the scenario.
-loadstate drv-police-car-seated
+loadstate @CAR_SEATED
 frames 2
 dt 0.033 0.033
 memtrace 30 camera-veh-idle 0x589a70:0x200 0x514170:0x70 *0x589a70+0:0x100 0x08a884e0:0x340 *0x376884+0:0x100 *0x376884+0x100:0x300 0x8a88840:0x100

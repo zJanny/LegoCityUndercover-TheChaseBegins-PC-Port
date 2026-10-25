@@ -1,9 +1,9 @@
-# Order of PlayCharAnim on Player1 against the player's state machine: from m12-13-cage-trigger, A for 3 updates fires the use spot, which starts
+# Order of PlayCharAnim on Player1 against the player's state machine: from @CAGE_USE_SPOT, A for 3 updates fires the use spot, which starts
 # 1-2_Cage_Key_Target_Script (PlayCharAnim(Player1, "dog_cage_open_minifig", ...)). ctrace of the script runner per scene (0x169254), the
 # PlayCharAnim handler (0x1bf9cc), the slot start (0x23afc0), the role start (0x21941c), the slot stop (0x225c5c), the state updates of IDLE 1
 # (0x1d5070), RUN 2 (0x1c7458), WALK 3 (0x1d6f04) and the user-animation state 0x50 (0x2a47b0), and the enters of 0x50 (0x25fbec) and 1 (0x1abbb0).
 # Fixed dt 0.033.
-loadstate m12-13-cage-trigger
+loadstate @CAGE_USE_SPOT
 frames 3
 stick 0 0
 hold -

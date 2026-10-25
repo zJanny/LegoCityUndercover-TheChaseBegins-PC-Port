@@ -1,9 +1,9 @@
-# Controls during the director cameras of 1-1_Release_Car_Script (docs/re/dcam.md). Needs the New 3DS state m11-2-patrol-car (the
-# user's slot: mission 1-1 in progress, in front of 1-1_Waypoint_02). Walks to the waypoint (unlocks the police car), presses X to
+# Controls during the director cameras of 1-1_Release_Car_Script (docs/re/dcam.md). Needs the New 3DS state @PATROL_CAR
+# (mission 1-1 in progress, in front of 1-1_Waypoint_02). Walks to the waypoint (unlocks the police car), presses X to
 # get in (jump in 22 updates, Drive at frame 99, the director camera starts at frame 102), then presses X for 2 updates every
 # 8 updates and records per frame: the camera pointers 0x376898 / 0x37689c / 0x3768a0 / 0x3768a4, the player controller bytes
 # +0 .. +0xf (held +0xc, press +0xe), the player state (+0x6c) and the director flags *(0x3768c0)+0x24. Fixed dt 0.033; no RPC. The controller address 0x08552790 (player entity 0x085526f0 + 0x7c) is that of this state.
-loadstate m11-2-patrol-car
+loadstate @PATROL_CAR
 frames 2
 dt 0.033 0.033
 stick -92 118

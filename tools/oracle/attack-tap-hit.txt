@@ -1,5 +1,5 @@
 # The hit of the attack: the wobbly prop handler 0x2a3390 (message, payload) over the attack after a Y tap in
-# m12-table-before, then the player record after the attack.
+# @TABLE_BEFORE, then the player record after the attack.
 frames 3
 stick 0 0
 hold -

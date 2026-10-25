@@ -1,4 +1,4 @@
-# Who requests the attack state: call trace of the attack request 0x214f40 (first run: 0x2414b4 and the state functions 0x307e7c, 0x3085dc, 0x3084f4) around a Y tap in m12-table-before.
+# Who requests the attack state: call trace of the attack request 0x214f40 (first run: 0x2414b4 and the state functions 0x307e7c, 0x3085dc, 0x3084f4) around a Y tap in @TABLE_BEFORE.
 frames 3
 stick 0 0
 hold -

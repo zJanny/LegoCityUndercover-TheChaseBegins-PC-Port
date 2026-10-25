@@ -1,4 +1,4 @@
-# Attack on foot in m12-table-before: globals and records the attack reads, a Y hold of 3 and of 12 updates, and
+# Attack on foot in @TABLE_BEFORE: globals and records the attack reads, a Y hold of 3 and of 12 updates, and
 # second taps at state update 10 (inside the combo window) and 3 (before it). Fixed dt 1/30.
 frames 3
 stick 0 0
@@ -14,7 +14,7 @@ hold Y
 trace 3 ahold3-1 mem
 hold -
 trace 20 ahold3-2 mem
-loadstate m12-table-before
+loadstate @TABLE_BEFORE
 frames 3
 stick 0 0
 hold -
@@ -24,7 +24,7 @@ hold Y
 trace 12 ahold12-1 mem
 hold -
 trace 20 ahold12-2 mem
-loadstate m12-table-before
+loadstate @TABLE_BEFORE
 frames 3
 stick 0 0
 hold -
@@ -42,7 +42,7 @@ hold Y
 trace 1 acombo10-5 mem
 hold -
 trace 50 acombo10-6 mem
-loadstate m12-table-before
+loadstate @TABLE_BEFORE
 frames 3
 stick 0 0
 hold -

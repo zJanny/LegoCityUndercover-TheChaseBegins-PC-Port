@@ -1,7 +1,7 @@
 # Seed of the follow controller at a record pose to follow hand-over (docs/re/camera-follow-handover.md): the follow camera object K at
-# 0x589a70 (0x200 bytes), the camera object C with its command stack and the player node per update. Run with --state street-after-1-1 on
+# 0x589a70 (0x200 bytes), the camera object C with its command stack and the player node per update. Run with --state @STREET_AFTER_1_1 on
 # a New 3DS emulator. The teleports are measuring aids; the traces are one continuous run.
-loadstate street-after-1-1
+loadstate @STREET_AFTER_1_1
 frames 2
 dt 0.033 0.033
 teleport 933 16.6 1124

@@ -67,6 +67,10 @@ A scenario file drives the run, one command per line ('#' starts a comment):
                         console mode ("new_3ds") of the running emulator
   loadstate NAME        restore the state NAME (needs --display xvfb); refused when it was saved in the other console
                         mode (New 3DS or Old 3DS) than the running emulator
+  loadstate @ROLE       restore the state that --state-param ROLE=NAME names (ROLE is capital letters, digits and '_',
+                        starting with a letter). Committed scripts use roles for every state that a developer records
+                        themselves; a role without a --state-param, a malformed role, a missing state file or a wrong word
+                        count stops the tool before the emulator starts. 'savestate' takes plain names only.
 
 Input is injected inside the game's pad reader 0x10a4dc: the held mask in r0 at 0x10a57c
 and the raw circle-pad words at r4+12/+14 before 0x10a540. It is therefore exact per game
@@ -79,7 +83,10 @@ Fast iteration (a cold boot to the language screen takes about 4 minutes):
                         loadstate and --state.
   --display desktop     run Azahar visibly on the current X display (DISPLAY) with the same isolated home and hotkeys as
                         xvfb, for a person to watch and play; the render window is not hidden.
-  --state NAME          load the saved state NAME right after boot instead of playing through the menus.
+  --state NAME          load the saved state NAME right after boot instead of playing through the menus ('--state @ROLE'
+                        resolves a role like loadstate does).
+  --state-param ROLE=NAME
+                        name the saved state NAME for the role ROLE of a script (may be repeated, one NAME per ROLE).
   --keep                leave the emulator running after the scenario (the GDB client detaches); the PID and port
                         are printed and recorded in <home>/session.json.
   --attach              connect to the emulator kept on --port instead of launching one (no image needed). The
@@ -109,6 +116,7 @@ import csv
 import ctypes
 import json
 import os
+import re
 import shutil
 import signal
 import socket
@@ -785,6 +793,79 @@ def free_display(root=Path('/tmp')):
             (root / '.X11-unix' / ('X%d' % number)).unlink(missing_ok=True)
             return ':%d' % number
     raise SystemExit('no free X display number')
+
+
+STATE_ROLE = re.compile(r'@([A-Z][A-Z0-9_]*)')
+STATE_NAME = re.compile(r'[A-Za-z0-9][A-Za-z0-9_.-]*')
+
+
+def parse_state_params(items):
+    """The --state-param ROLE=NAME items as a dict; raises ValueError('<reason>: <text>') on a bad item."""
+    params = {}
+    for item in items or []:
+        role, separator, name = item.partition('=')
+        if not separator or not re.fullmatch(r'[A-Z][A-Z0-9_]*', role):
+            raise ValueError("expected ROLE=NAME with ROLE in capital letters, digits and '_': '%s'" % item)
+        if not STATE_NAME.fullmatch(name):
+            raise ValueError("the state name must start with a letter or digit and use only letters, digits, '_', "
+                             "'-' and '.': '%s'" % item)
+        if role in params:
+            raise ValueError("role given twice: '%s'" % item)
+        params[role] = name
+    return params
+
+
+def resolve_state(text, params):
+    """A plain state name stays as it is; '@ROLE' becomes the name given for ROLE. Raises ValueError."""
+    if not text.startswith('@'):
+        return text
+    match = STATE_ROLE.fullmatch(text)
+    if not match:
+        raise ValueError("malformed state role (use @ followed by capital letters, digits and '_'): '%s'" % text)
+    if match.group(1) not in params:
+        raise ValueError("no --state-param %s=NAME was given for the role: '%s'" % (match.group(1), text))
+    return params[match.group(1)]
+
+
+def scenario_state_error(lines, params):
+    """The first problem in the state steps of a scenario as 'scenario line N: ...', or None."""
+    for number, line in enumerate(lines, 1):
+        words = line.split('#', 1)[0].split()
+        if not words or words[0] not in ('loadstate', 'savestate'):
+            continue
+        where = 'scenario line %d: %s' % (number, words[0])
+        if len(words) != 2:
+            return "%s: expected one state name, got %d word(s): '%s'" % (where, len(words) - 1, ' '.join(words))
+        if words[0] == 'savestate' and not STATE_NAME.fullmatch(words[1]):
+            return "%s: not a plain state name (a role is only for loadstate): '%s'" % (where, words[1])
+        try:
+            resolve_state(words[1], params)
+        except ValueError as error:
+            return '%s: %s' % (where, error)
+    return None
+
+
+def state_files_error(saved_states, names):
+    for name in names:
+        for suffix in ('.json', '.cst'):
+            if not (saved_states / (name + suffix)).is_file():
+                return "no saved state in %s (missing %s%s): '%s'" % (saved_states, name, suffix, name)
+    return None
+
+
+def scenario_param_states(lines, params):
+    """Names that --state-param supplies to loadstate steps and that no earlier savestate step of the scenario makes."""
+    saved = set()
+    names = []
+    for line in lines:
+        words = line.split('#', 1)[0].split()
+        if len(words) == 2 and words[0] == 'savestate':
+            saved.add(words[1])
+        elif len(words) == 2 and words[0] == 'loadstate' and words[1].startswith('@'):
+            name = resolve_state(words[1], params)
+            if name not in saved and name not in names:
+                names.append(name)
+    return names
 
 
 def state_needs_new_3ds(saved_states, name):
@@ -1475,7 +1556,7 @@ def play_touch(oracle, motion_file, plan):
         time.sleep(TOUCH_SETTLE_SECONDS)
 
 
-def run_scenario(oracle, lines, motion_file=None, touch_device=True):
+def run_scenario(oracle, lines, motion_file=None, touch_device=True, state_params=None):
     for number, line in enumerate(lines, 1):
         words = line.split('#', 1)[0].split()
         if not words:
@@ -1506,7 +1587,7 @@ def run_scenario(oracle, lines, motion_file=None, touch_device=True):
         elif op == 'savestate':
             oracle.savestate(args[0])
         elif op == 'loadstate':
-            oracle.loadstate(args[0])
+            oracle.loadstate(resolve_state(args[0], state_params or {}))
         elif op == 'wait':
             oracle.wait(float(args[0]))
         elif op == 'channels':
@@ -1694,7 +1775,10 @@ def main():
                              'hotkeys; desktop does the same on the current X display, visibly')
     parser.add_argument('--frame-limit', type=int, default=100,
                         help='Azahar speed limit in percent; 0 is unthrottled and distorts the game clock')
-    parser.add_argument('--state', help='load this saved state right after boot (needs --display xvfb)')
+    parser.add_argument('--state', help='load this saved state right after boot (needs --display xvfb); @ROLE uses '
+                                        'the name given with --state-param')
+    parser.add_argument('--state-param', action='append', default=[], metavar='ROLE=NAME',
+                        help='the saved state NAME for the role @ROLE of loadstate steps and --state (repeatable)')
     parser.add_argument('--rpc', action='store_true',
                         help="enable Azahar's RPC server (UDP port 45987, one emulator at a time) and use it for memory "
                              'reads, screenshots and the sample command')
@@ -1720,9 +1804,28 @@ def main():
     if args.scenario is None and not args.keep:
         parser.error('a scenario file is required')
     scenario = args.scenario.read_text().splitlines() if args.scenario else []
+    try:
+        state_params = parse_state_params(args.state_param)
+    except ValueError as error:
+        parser.error('--state-param: %s' % error)
+    state_from_role = bool(args.state and args.state.startswith('@'))
+    if args.state:
+        try:
+            args.state = resolve_state(args.state, state_params)
+        except ValueError as error:
+            parser.error('--state: %s' % error)
+    problem = scenario_state_error(scenario, state_params)
+    if problem:
+        parser.error(problem)
     args.output.mkdir(parents=True, exist_ok=True)
     emulator_states = home / 'data/azahar-emu/states'
     saved_states = args.states.resolve()
+    required_states = scenario_param_states(scenario, state_params)
+    if state_from_role and args.state not in required_states:
+        required_states.insert(0, args.state)
+    problem = state_files_error(saved_states, required_states)
+    if problem:
+        parser.error('--state-param: %s' % problem)
     started = time.monotonic()
 
     launched = keys = rpc = oracle = None
@@ -1776,7 +1879,7 @@ def main():
             rpc = oracle.rpc
         session = load_session(home) or {}
         run_scenario(oracle, scenario, motion_state_file(home) if session.get('motion_pid') else None,
-                     bool(session.get('touch_device')))
+                     bool(session.get('touch_device')), state_params)
     finally:
         if keep and oracle is not None:
             try:

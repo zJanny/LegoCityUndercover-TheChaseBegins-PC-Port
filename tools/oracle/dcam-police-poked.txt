@@ -1,8 +1,8 @@
 # Measuring aid (docs/re/dcam.md): the script Police_ExtToInt runs its StartDCam with the two-point camera path
 # Dcam_Police_Door instead of Dcam_Enter_Station_Ground. The poke overwrites the script's argument strings in the level data
-# (0x08ddd340 and 0x08ddd35c at the state dcam-police-dialog, found by an RPC scan); the snap argument 3 and the time 4 stay.
-# Needs the New 3DS state dcam-police-dialog.
-loadstate dcam-police-dialog
+# (0x08ddd340 and 0x08ddd35c at the state @POLICE_DIALOG, found by an RPC scan); the snap argument 3 and the time 4 stay.
+# Needs the New 3DS state @POLICE_DIALOG.
+loadstate @POLICE_DIALOG
 read 0x08ddd340 0x40
 poke 0x08ddd340 4463616d5f506f6c6963655f446f6f7200
 poke 0x08ddd35c 4463616d5f506f6c6963655f446f6f725f54617267657400

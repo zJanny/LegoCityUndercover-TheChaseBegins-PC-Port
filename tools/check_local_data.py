@@ -22,7 +22,9 @@ DISTRO_LOCATION = re.compile(r"/usr/bin/azahar|/usr/src/debug/|Arch package|\bpa
 MACHINE_PHRASE = re.compile(r"this machine|my machine|the user's own (?:Azahar|config|save)", re.IGNORECASE)
 USER_NAME = re.compile(r"\bjan\b|(?i:zjanny)")
 STATE_LOAD = re.compile(r"(?:--state|\bloadstate)\s+`?([a-z0-9]+(?:-[a-z0-9_]+)+)")
-STATE_SCOPES = ("docs/*", "tests/*", "src/*")
+STATE_SCOPES = ("docs/*", "tests/*", "src/*", "tools/oracle/*")
+ORACLE_SCRIPTS = "tools/oracle/*.txt"
+STATE_NOT_SAVED = "a save state that no committed script saves (say \"recorded from a save state\" and describe the game situation)"
 SAVESTATE_LINE = re.compile(r"^\s*savestate\s+([\w-]+)", re.MULTILINE)
 HOW_TO_FIX = (
     "write the value into the test or the docs/re entry with its provenance (round, agent, state name, date, command) "
@@ -132,9 +134,13 @@ def state_load_hits(name, line, created):
         return None
     if name in ("tools/check_local_data.py", "tests/test_check_local_data.py") or name.endswith(".py"):
         return None
+    if fnmatch.fnmatch(name, ORACLE_SCRIPTS):
+        words = line.split("#", 1)[0].split()
+        if len(words) >= 2 and words[0] == "loadstate" and not words[1].startswith("@") and words[1] not in created:
+            return STATE_NOT_SAVED + "; use @ROLE and --state-param"
     for match in STATE_LOAD.finditer(line):
         if match.group(1) not in created:
-            return "a save state that no committed script saves (say \"recorded from a save state\" and describe the game situation)"
+            return STATE_NOT_SAVED
     return None
 
 

@@ -1,4 +1,4 @@
-# Attack on foot in m12-table-before: the combat record *(*(ctrl+0xe0)) before and after a Y tap, and a Y tap with
+# Attack on foot in @TABLE_BEFORE: the combat record *(*(ctrl+0xe0)) before and after a Y tap, and a Y tap with
 # the player turned away from the table (no target), then 300 updates without input. Fixed dt 1/30.
 frames 3
 stick 0 0
@@ -13,7 +13,7 @@ frames 2
 read 0x085698b0 0x40
 frames 30
 read 0x085698b0 0x40
-loadstate m12-table-before
+loadstate @TABLE_BEFORE
 frames 3
 stick 0 0
 hold -

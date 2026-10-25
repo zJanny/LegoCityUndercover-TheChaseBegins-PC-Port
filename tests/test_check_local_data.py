@@ -113,8 +113,19 @@ class CheckLocalDataTest(unittest.TestCase):
         self.assertEqual(hits("src/a.cpp", "// --state a-b-c"), [1])
         self.assertEqual(hits("docs/commands.md", "--state gameplay-start and --state NAME and loadstate the"), [])
         self.assertEqual(hits("docs/commands.md", "`loadstate` refuses a state; after loadstate the frame counter"), [])
-        self.assertEqual(hits("tools/oracle/a.txt", "loadstate some-state"), [])
+        self.assertEqual(hits("tools/oracle/a.txt", "loadstate some-state"), [1])
         self.assertEqual(hits("tests/test_azahar_oracle_launch.py", "oracle.loadstate('some-state')"), [])
+
+    def test_oracle_scripts_may_load_only_roles_and_states_they_save(self) -> None:
+        def hits(text, created=frozenset({"made-here"})):
+            return [number for number, _, _ in check_local_data.violations("tools/oracle/a.txt", text, created)]
+
+        self.assertEqual(hits("loadstate @PATROL_CAR\nloadstate made-here\nloadstate other\nloadstate x-y"), [3, 4])
+        self.assertEqual(hits("# Run with --state @PATROL_CAR on a New 3DS emulator.\n# Run with --state a-b-c here"), [2])
+        self.assertEqual(hits("loadstate m1-state  # comment\nstick 0 0  # input survives loadstate. Next"), [1])
+        self.assertEqual(hits("  loadstate\tsome-state"), [1])
+        self.assertEqual(hits("# input survives loadstate. then frames\n# after loadstate the frame counter"), [])
+        self.assertEqual(hits("savestate some-state\nscreenshot some-state"), [])
 
     def test_created_states_come_from_savestate_lines_of_the_scripts(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -122,12 +133,15 @@ class CheckLocalDataTest(unittest.TestCase):
             subprocess.run(["git", "init", "-q"], cwd=root, check=True)
             (root / "tools" / "oracle").mkdir(parents=True)
             (root / "tools" / "oracle" / "make.txt").write_text("frames 2\nsavestate made-here\n")
+            (root / "tools" / "oracle" / "use.txt").write_text("loadstate made-here\nloadstate @ROLE\nloadstate user-state\n")
             (root / "docs").mkdir()
             (root / "docs" / "a.md").write_text("--state made-here\n--state other-state\n")
             subprocess.run(["git", "add", "tools", "docs"], cwd=root, check=True)
             errors = check_local_data.check(root)
-            self.assertEqual(len(errors), 1)
+            self.assertEqual(len(errors), 2)
             self.assertTrue(errors[0].startswith("docs/a.md:2: "))
+            self.assertTrue(errors[1].startswith("tools/oracle/use.txt:3: "))
+            self.assertIn("use @ROLE and --state-param", errors[1])
 
     def test_warnings_do_not_fail_the_run(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

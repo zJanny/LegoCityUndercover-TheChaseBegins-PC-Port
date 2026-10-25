@@ -13,7 +13,7 @@ Launching Azahar for the oracle: Xvfb, the render window race, the launch retry,
 - The tool runs a Cemuhook DSU motion server for every session (default `--port` + 1000, `--motion-port`) and writes `motion_device` into the isolated config; "level" is DSU accel (0, 0, -1) g, `tilt` changes it. With gravity on DSU y the scanner yaw is NaN, with gravity on z the scanner view runs. [§2026-10-18T22:03:32](#ts-20261018-220332)
 - The script steps `touch X Y [UPDATES]`, `touch release` and `drag X1 Y1 X2 Y2 [UPDATES]` touch the bottom screen through the same DSU server (first touch of the pad data, `touch_device` written next to `motion_device` at launch); the game's HID touch entry holds exactly the pixel (all 320 x values and all 240 y values checked), no RPC, no memory writes. [§2026-10-25T11:35:28](#ts-20261025-113528)
 - Save states: a state made in New 3DS mode must be loaded in New 3DS mode (loading one in Old 3DS mode ended with SIGILL), so `NAME.json` carries `new_3ds`, `savestate` writes it and `loadstate` refuses a mode mismatch; New 3DS runs the CPU faster, so timing is repeated in Old 3DS mode; use `--renderer opengl` for states (the software renderer crashed loading states made in a vehicle). [§2026-10-20T23:27:26](#ts-20261020-232726)
-- Committed oracle scripts that `loadstate` a user save state by name cannot be run without that name: the tool has no state parameter, only `--state NAME` (one load after boot). Open as TOOLS-20. [§2026-10-25T13:17:58](#ts-20261025-131758)
+- Committed oracle scripts load the states a developer records by a role: `loadstate @ROLE` and `--state @ROLE` with `--state-param ROLE=NAME`; everything is checked before the emulator starts, and `tools/check_local_data.py` reads `tools/oracle/*.txt`. The converted scripts are verified by parser tests only; none was run in the emulator yet (TOOLS-21). [§2026-10-25T14:14:55](#ts-20261025-141455)
 - Open: crashes on a plain boot, whether an unmapped window changes timing, the cause of one launch that ended after 4 loads, crashes of a visible OpenGL window.
 
 <a id="ts-20261013-124127"></a>
@@ -120,3 +120,35 @@ Decision of the user (words unchanged): "For the decision, create a new open ite
 Gap: after the round removed user save-state names from committed files, the committed scripts in `tools/oracle/` still `loadstate` a user save state by name. `tools/azahar_oracle.py` has no state parameter or placeholder in the script language; the only way to pass a state is `--state NAME` on the command line, which loads once after the boot, while these scripts reload the state in the middle of the run. The scripts are `attack-record`, `attack-variants`, `cage-load-animation-ctrace`, `cage-thread-start-ctrace`, `camera-lobby-walk`, `camera-street-near`, `camera-street-seed`, `camera-street-teleport`, `camera-vehicle-drive`, `camera-vehicle-enter`, `camera-vehicle-handback`, `camera-vehicle-handback-near`, `dcam-hold-car`, `dcam-hold-order`, `dcam-police-entry`, `dcam-police-order`, `dcam-police-poked`, `dcam-police-shot`, `script-anim-blend-trap`, `script-anim-order-ctrace`, `step-order-ctrace` and `front-screens`.
 
 Applied recommendation (not done yet): add a state parameter (a placeholder) to the script language and `tools/azahar_oracle.py`, so these scripts load whatever state the developer passes; remove the state names from the scripts; extend `tools/check_local_data.py` to cover `tools/oracle`. The names of the four states that committed scripts create themselves with `savestate` stay (`gameplay-start`, `barrier-settled`, `camwall-east` and `camera-lobby-walk`); `camera-lobby-walk` first copies a user state, which the parameter also resolves.
+
+<a id="ts-20261025-141455"></a>
+
+## 2026-10-25T14:14:55+01:00 — State roles for oracle scripts: `loadstate @ROLE` and `--state-param` (20261025-recorded-A)
+
+Closes TOOLS-20 ([§2026-10-25T13:17:58](#ts-20261025-131758)). Tool design, not game behaviour; nothing here comes from the original, so it is no stand-in.
+
+**Design (the smallest parameter that fits the script language):**
+- A state name in `loadstate` and in `--state` may be a role: `@` followed by capital letters, digits and `_`, starting with a letter (`loadstate @PATROL_CAR`). Plain names keep working, so the scripts that load states they save themselves (`gameplay-start`, `barrier-settled`, `camwall-east`, `camera-lobby-walk`) are unchanged.
+- The developer names the state of a role with `--state-param ROLE=NAME` (repeatable, one NAME per ROLE; NAME starts with a letter or digit and has only letters, digits, `_`, `-`, `.`). A script run with `--state @ROLE --state-param ROLE=NAME` starts in the state and reloads it in the middle of the run as before.
+- Everything is checked before the emulator starts (`scenario_state_error`, `parse_state_params`, `resolve_state`, `state_files_error` in `tools/azahar_oracle.py`): a role without a parameter, a malformed role or parameter, a role given twice, a missing `NAME.cst` / `NAME.json` for a role (names the scenario saves itself are skipped), a `loadstate` or `savestate` with other than one word, and `savestate @ROLE` stop with exit code 2 and a message that names the option or the script line and the bad text. A role in a comment is not read.
+- `tools/check_local_data.py` now reads `tools/oracle/*.txt`: a `loadstate` there may name only a role or a state that a committed script saves with `savestate`; `--state NAME` in a comment of a script is checked as in docs and tests. With the extended check the unconverted scripts gave 38 hits; the converted ones give none.
+- Tests: `tests/test_azahar_oracle_state_param.py` (parser, resolver, scenario check, command-line rejections through the tool, and all committed scripts valid with every role given and invalid without), `tests/test_check_local_data.py`.
+
+**Scripts converted (the 22 of the entry plus 4 that only named a state in a comment; the other scripts with `loadstate` load `gameplay-start` or a state they save):** the role, its situation in game terms and the scripts that use it. The situations come from the script headers; they are what the script needs, not a description of anyone's state.
+
+| Role | Situation the script needs | Scripts |
+|---|---|---|
+| `CAGE_USE_SPOT` | Mission 1-2, the player at the use spot of the cage key (A for 3 updates starts `1-2_Cage_Key_Target_Script`) | `cage-load-animation-ctrace`, `cage-thread-start-ctrace`, `script-anim-blend-trap`, `script-anim-order-ctrace`, `step-order-ctrace` |
+| `PATROL_CAR` | New 3DS; mission 1-1 in progress, in front of `1-1_Waypoint_02`, before the patrol car is unlocked | `camera-vehicle-enter`, `camera-vehicle-handback`, `camera-vehicle-handback-near`, `dcam-hold-car`, `dcam-hold-order` |
+| `CAR_SEATED` | New 3DS; the player seated in `1-1_Police_Car` | `camera-vehicle-drive` (`camera-vehicle-enter` names it in a comment) |
+| `TABLE_BEFORE` | On foot, 2.06 m south of `DonutTable_14`, facing it | `attack-record`, `attack-variants`; comment only: `attack-tap`, `attack-tap-hit`, `attack-tap-ctrace`, `attack-combo-hit` |
+| `POLICE_DIALOG` | New 3DS; the street at the police station entrance, the question box of `Police_ExtToInt` open | `dcam-police-entry`, `dcam-police-order`, `dcam-police-poked`, `dcam-police-shot` |
+| `STREET_AFTER_1_1` | New 3DS; on the street after mission 1-1 | `camera-street-near`, `camera-street-seed`, `camera-street-teleport` |
+| `POLICE_LOBBY` | New 3DS; in the police station lobby after mission 1-1 | `camera-lobby-walk` (it saves `camera-lobby-walk` itself from it) |
+| `FRONT_LANGUAGE`, `FRONT_STREETPASS`, `FRONT_HOME_NOTICE`, `FRONT_AUTOSAVE`, `FRONT_SELECT_SLOT`, `AGENT_INTRO_DIALOG`, `AGENT_DOUGHNUT_TITLE` | The front-end screen of that name (language choice, StreetPass page, HOME notice, auto-save notice, slot choice, the agent intro dialog, the doughnut title) | `front-screens` |
+
+`front-screens` also named its screenshots after the states; they are now `streetpass`, `homenotice`, `autosave`, `selectslot` and `doughnut-title`.
+
+Unknowns:
+- The converted scripts were not run in the emulator in this round (none was started); the new syntax is covered by the tests above and by the check that every committed script parses with all roles given. The first real run is TOOLS-21.
+- The situations of the front-end roles are inferred from the screen names in the script; the game progress of each is not recorded in the repository.
