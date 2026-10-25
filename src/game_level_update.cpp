@@ -299,6 +299,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
     };
     runtime::UpdateSequence order;
     order.at(runtime::UpdatePhase::Systems, [&] { updatePedestrianSystem(); });
+    order.at(runtime::UpdatePhase::Systems, [&] { updateTrafficSystem(); });
     order.at(runtime::UpdatePhase::Runner, [&] {
         sceneStart.startRequested();
         if (player && !levelScripts.ai().moving("player1")) levelScripts.ai().setPosition("player1", player->position().data());

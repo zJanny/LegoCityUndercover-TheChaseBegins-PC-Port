@@ -60,6 +60,7 @@ void readParameters(const ParamReader& reader, const std::vector<VehicleTableRow
         }
     if (const assets::LevelParam* centre = reader.get("CentreOfMass"))
         if (centre->type == 2 && !centre->blocks.empty() && centre->blocks[0].size() >= 12) std::memcpy(record.centreOfMass.data(), centre->blocks[0].data(), 12);
+    record.trafficHeightOffRoad = floatOf(reader.get("TrafficHeightOffRoad"), 1.0f);
     const std::int32_t tableHealth = record.vehicleType < table.size() ? table[record.vehicleType].health : 0;
     record.health = std::uint8_t(tableHealth);
     record.hearts = record.health;

@@ -122,7 +122,7 @@ if(EPOXY_FOUND)
   target_compile_options(chase-viewer PRIVATE -Wall -Wextra -Wpedantic)
   if(FFMPEG_FOUND)
     add_executable(chase-game src/game.cpp src/game_options.cpp src/game_player.cpp src/game_carry.cpp src/game_scanner.cpp src/game_doors.cpp src/game_prop_parts.cpp src/game_level.cpp src/game_pause_menu.cpp src/game_level_update.cpp src/game_vehicle.cpp src/game_vehicle_break.cpp src/game_vehicle_place.cpp src/game_vehicle_camera.cpp src/game_level_rooms.cpp src/game_cutscene.cpp src/game_level_cutscene.cpp src/game_characters.cpp src/game_pedestrians.cpp src/game_pedestrian_fade.cpp src/game_pedestrian_rooms.cpp src/game_particles.cpp src/game_level_natives.cpp src/game_detective.cpp src/game_use_spot.cpp src/game_objective_markers.cpp src/game_hand_items.cpp src/game_effects.cpp src/game_vehicle_effects.cpp src/game_zipline.cpp src/game_brick_grab.cpp src/game_climb_bar.cpp src/game_acrobat_pole.cpp src/game_pole.cpp src/game_ladder.cpp src/game_animals.cpp src/game_object_visibility.cpp src/game_nested_props.cpp src/game_super_buildit.cpp src/game_fast_travel.cpp)
-    target_sources(chase-game PRIVATE src/game_pedestrian_blocking.cpp)
+    target_sources(chase-game PRIVATE src/game_pedestrian_blocking.cpp src/game_traffic.cpp)
     target_sources(chase-game PRIVATE src/game_props_destructible.cpp src/game_prop_destroy.cpp src/game_character_death.cpp src/game_fall_apart.cpp src/game_stud_drops.cpp src/game_super_bricks.cpp)
     target_sources(chase-game PRIVATE src/game_debris_pickup.cpp)
     target_sources(chase-game PRIVATE src/game_debris_super.cpp)
@@ -1562,7 +1562,7 @@ if(BUILD_TESTING)
       --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes --call-script 1-3_Fade_Blockers
       --script "at 948.327 95.031 1124.175 0;0 0 40;at 901.203 30.899 1141.268 50;0 0 5;0 0 1 A;0 0 5;0 0 1 A;0 0 330;at 906.561 31.445 1138.943 135;0 0 5;0 0 1 A;0 0 90")
     set_tests_properties(game-super-buildit-build PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
-      PASS_REGULAR_EXPRESSION "prompt shown at update [0-9]+ \\(needs 300, has 1500\\).*dialog opened.*movie superbuildit_helipad at update [0-9]+.*built at update [0-9]+, super bricks 1200, shown count 1200.*script 1-3_Helipad_Built started.*fast travel 1-3_helipad.sbfasttravel: state 0x180 entered at update 388\nfast travel 1-3_helipad.sbfasttravel: state 0x181 entered at update 410\n.*helicopter landed, map ready at update 473 .*\nhud super bricks: shown count 1200, number hidden\n")
+      PASS_REGULAR_EXPRESSION "prompt shown at update [0-9]+ \\(needs 300, has 1500\\).*dialog opened.*movie superbuildit_helipad at update [0-9]+.*built at update [0-9]+, super bricks 1200, shown count 1200.*script 1-3_Helipad_Built started.*fast travel 1-3_helipad.sbfasttravel: state 0x180 entered at update 388\n.*fast travel 1-3_helipad.sbfasttravel: state 0x181 entered at update 410\n.*helicopter landed, map ready at update 473 .*\n.*hud super bricks: shown count 1200, number hidden\n")
     # The map's exit (LEVOBJ-120), same route as game-super-buildit-build, then a touch at the exit button's centre (159, 65; stand-in LEVOBJ-S97)
     # once the map is ready (update 473): takeoff and player state 1 in the touch's update, the Helicopter hidden 97 updates later (oracle
     # request 20261025-mission13-A-1: state 1 and takeoff in the same row, 191 vblanks to the vanishing). The update numbers are the port's.
@@ -1938,6 +1938,35 @@ add_executable(traffic-manager-test tests/traffic_manager_test.cpp)
 target_link_libraries(traffic-manager-test PRIVATE chase_runtime)
 target_compile_options(traffic-manager-test PRIVATE -Wall -Wextra -Wpedantic)
 add_test(NAME traffic-manager COMMAND traffic-manager-test)
+target_sources(chase_runtime PRIVATE src/runtime/traffic_system.cpp)
+add_executable(traffic-system-test tests/traffic_system_test.cpp)
+target_link_libraries(traffic-system-test PRIVATE chase_runtime chase_assets)
+target_compile_options(traffic-system-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME traffic-system COMMAND traffic-system-test)
+add_test(NAME traffic-system-real-data COMMAND traffic-system-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
+set_tests_properties(traffic-system-real-data PROPERTIES SKIP_RETURN_CODE 77)
+set_property(TEST traffic-system-real-data APPEND PROPERTY LABELS needs-game-data)
+if(TARGET chase-game)
+  # TRAFFIC-1: the traffic manager in the port's run from the level start (`chase-game ... --no-start-cutscenes --script "0 0 300"`): the room set-up
+  # spawns cars at pregen points around the player (prefill band 0 .. 76), the cars stand still, and one leaves per update after its grace counter ran
+  # out beyond the removal radius 50. The update numbers and points are the port's own run (stand-in rules TRAFFIC-S1, TRAFFIC-S7).
+  add_test(NAME game-traffic COMMAND chase-game
+    --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+    --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
+    --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes
+    --script "0 0 300")
+  set_tests_properties(game-traffic PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
+    PASS_REGULAR_EXPRESSION "traffic: 10 cars, limit 10, 649 spawn points, 57 routes, 648 floor cells, spawn data loaded\n.*traffic car Traffic05: spawned at point 419 \\(902.337 18.5559 1061.92\\), fade 255 at update 0\n.*traffic car Traffic09: removed at update 67")
+  # SCRIPT-230: 1-4_RobberCaught calls EnableTrafficAndPedestrians(0) at its start (every live car leaves in one update) and SetTrafficMaxVehicles(10) later.
+  add_test(NAME game-traffic-natives COMMAND chase-game
+    --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+    --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
+    --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes
+    --call-script 1-4_RobberCaught --script "0 0 420")
+  set_tests_properties(game-traffic-natives PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
+    PASS_REGULAR_EXPRESSION "traffic car Traffic01: removed at update 99\n.*traffic car Traffic08: removed at update 99\n.*traffic: limit 10 at update 402")
+  set_property(TEST game-traffic game-traffic-natives APPEND PROPERTY LABELS needs-game-data slow)
+endif()
 
 target_sources(chase_runtime PRIVATE src/runtime/ai_driver_input.cpp)
 add_executable(ai-driver-input-test tests/ai_driver_input_test.cpp)

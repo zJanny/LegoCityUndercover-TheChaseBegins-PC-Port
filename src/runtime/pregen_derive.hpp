@@ -1,6 +1,7 @@
 #pragma once
 #include "assets/assets.hpp"
 #include "assets/pregen_traffic.hpp"
+#include "runtime/floor_walk.hpp"
 #include "runtime/room_locator.hpp"
 
 #include <array>
@@ -35,5 +36,18 @@ struct PregenDerivedFields {
 std::vector<PregenDerivedFields> deriveSpawnFields(const assets::PregenSpawns& spawns,
                                                    const std::vector<const assets::Level*>& loadedLevels,
                                                    const PregenRoomContext& context);
+
+// 0x15f82c: whether the point lies inside the cell's triangle in the xz plane (three edge tests against the corners, each side negative).
+bool floorCellContains(const FloorMesh& mesh, int cell, const FloorPoint& point);
+
+// 0x1edaac(point, 0.0), the traffic floor cell the loader 0x2e02d4 stores at point +40, over the "collision_floor" cells (0x376c60 count,
+// 0x376c68 cells): a bisection on the 3D distance from the point to the first corner of the cells at the two ends, then the cells outward
+// from both ends, one up and one down per step, until one contains the point. Cell 0 is never tested (the downward scan stops at it
+// without testing). -1 when no cell contains it. The original loops forever when the bisection leaves the high end on cell 0 (a single
+// cell, or two cells with the first closer); this throws instead.
+int findTrafficFloorCell(const FloorMesh& mesh, const FloorPoint& point);
+
+// The floor cell of every point of a traffic file; all -1 when the level has no "collision_floor" item (mesh null or without a floor graph).
+std::vector<int> deriveTrafficFloorCells(const assets::PregenSpawns& spawns, const FloorMesh* mesh);
 
 }

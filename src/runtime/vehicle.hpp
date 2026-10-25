@@ -91,6 +91,7 @@ struct VehicleRecord {
     std::array<float, 3> driverPosition = {0, 0, 0};  // +0x27c
     bool hasDriverPosition = false;
     std::array<float, 3> centreOfMass = {0, 0, 0};  // class value CentreOfMass: the origin of the physics body relative to the node
+    float trafficHeightOffRoad = 1.0f;  // class value TrafficHeightOffRoad (default 1): driver record +0x74, stored by 0x1796e8
     float cameraPosY = 0, cameraPosZ = 0, cameraLookY = 0, cameraLookZ = 0, cameraPanScale = 1.0f;  // +0x2f0..+0x300
     float topSpeed = 0;                // class value TopSpeed, the limit of the stand-in body
     float dampingLinear = 0;           // class value DampingLinear (body+0xd58)

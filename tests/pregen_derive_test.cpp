@@ -9,6 +9,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <utility>
 
 using namespace chase::assets;
 using namespace chase::runtime;
@@ -81,6 +82,56 @@ void synthetic() {
     require(deriveSpawnFields(inRooms, {}, context)[0].room == 2, "the current room is tried first");
 }
 
+CollisionItem floorStrip(std::size_t count) {
+    CollisionItem item;
+    item.name = "collision_floor";
+    item.floor.emplace();
+    for (std::size_t k = 0; k < count; ++k) {
+        const float x = 10.0f * float(k);
+        for (const float v : {x, 0.0f, 0.0f, x, 0.0f, 1.0f, x + 1.0f, 0.0f, 0.0f}) item.vertices.push_back(v);
+        CollisionTriangle triangle;
+        triangle.vertex[0] = std::uint32_t(3 * k);
+        triangle.vertex[1] = std::uint32_t(3 * k + 1);
+        triangle.vertex[2] = std::uint32_t(3 * k + 2);
+        item.triangles.push_back(triangle);
+        FloorCell cell;
+        cell.itemTriangle = true;
+        cell.triangle = std::uint32_t(k);
+        item.floor->cells.push_back(cell);
+    }
+    return item;
+}
+
+bool findThrows(std::size_t cells, const FloorPoint& point) {
+    const CollisionItem strip = floorStrip(cells);
+    try {
+        findTrafficFloorCell(FloorMesh(strip), point);
+    } catch (const std::runtime_error&) {
+        return true;
+    }
+    return false;
+}
+
+void trafficFloorCell() {
+    const CollisionItem strip = floorStrip(8);
+    const FloorMesh mesh(strip);
+    require(floorCellContains(mesh, 5, {50.25f, 3.0f, 0.5f}) && !floorCellContains(mesh, 5, {50.75f, 3.0f, 0.5f}), "inside the triangle in xz, any height");
+    require(!floorCellContains(mesh, 5, {49.0f, 0.0f, 0.5f}), "left of the first edge");
+    require(findTrafficFloorCell(mesh, {50.2f, 3.0f, 0.3f}) == 5, "the bisection ends next to the cell");
+    require(findTrafficFloorCell(mesh, {70.2f, 3.0f, 0.3f}) == 7, "the upward scan covers the last cell");
+    require(findTrafficFloorCell(mesh, {20.2f, 0.0f, 0.3f}) == 2, "the downward scan finds a cell below the bisection");
+    require(findTrafficFloorCell(mesh, {35.0f, 0.0f, 0.3f}) == -1, "a point between two triangles");
+    require(findTrafficFloorCell(mesh, {0.2f, 0.0f, 0.3f}) == -1, "cell 0 is never tested");
+    require(findThrows(1, {0.2f, 0.0f, 0.3f}), "one cell: the original's bisection never ends");
+    require(findThrows(2, {0.2f, 0.0f, 0.3f}), "two cells with the first closer: the original's bisection never ends");
+    require(findTrafficFloorCell(FloorMesh(floorStrip(2)), {10.2f, 0.0f, 0.3f}) == 1, "two cells with the second closer");
+    const CollisionItem none;
+    require(findTrafficFloorCell(FloorMesh(none), {0, 0, 0}) == -1, "an item without a floor graph");
+    const PregenSpawns points = spawns({pointOn("x", 0, {50.2f, 3.0f, 0.3f}), pointOn("x", 0, {35.0f, 0.0f, 0.3f})});
+    require(deriveTrafficFloorCells(points, &mesh) == std::vector<int>({5, -1}), "one floor cell per point");
+    require(deriveTrafficFloorCells(points, nullptr) == std::vector<int>({-1, -1}), "no floor graph, no cells");
+}
+
 struct Shipped {
     const char* level;
     const char* blvl;
@@ -93,6 +144,20 @@ std::size_t differingAxes(const float sample[3], const std::array<float, 3>& sto
     std::size_t axes = 0;
     for (int axis = 0; axis < 3; ++axis) axes += std::fabs(sample[axis] - stored[std::size_t(axis)]) > 1e-3f;
     return axes;
+}
+
+// Reference values (floor cells of the level's collision_floor item, points of the traffic file whose 0x1edaac lookup finds a cell): this
+// port's findTrafficFloorCell run once over the shipped files, 2026-10-25, 20261025-traffic-C, command `build/pregen-derive-test <fib> <csv>`
+// with a printed line per level. Not a recorded value of the original; the lookup is transcribed from 0x1edaac / 0x15f82c, and finding a cell for
+// 2418 of 2421 points is the sanity check.
+std::pair<std::size_t, std::size_t> floorCellCounts(const std::string& level) {
+    if (level == "lvl_01_cherrytreehills") return {23713, 648};
+    if (level == "lvl_03_auburn") return {27562, 469};
+    if (level == "lvl_04_fortmeadows") return {34732, 229};
+    if (level == "lvl_05_bluebellwood") return {34438, 187};
+    if (level == "lvl_06_apolloisland") return {28425, 158};
+    if (level == "lvl_07_downtown") return {15186, 727};
+    throw std::runtime_error("no floor cell reference for " + level);
 }
 
 int shipped(const char* fib, const char* csv) {
@@ -167,6 +232,26 @@ int shipped(const char* fib, const char* csv) {
         }
         require(distinct.size() == want.rooms && off == want.off,
                 name + ": rooms " + std::to_string(distinct.size()) + " off " + std::to_string(off));
+        if (want.kind == T) {
+            const std::string level = want.level;
+            const FuseEntry* modelEntry = archive.find("models/" + level + "/" + level + ".bfnmdl");
+            if (!modelEntry) {
+                require(level == "lvl_test_playground_traffic", name + ": master model not found");
+                continue;
+            }
+            const Model model = parseModel(archive.read(*modelEntry));
+            const CollisionItem* floorItem = nullptr;
+            for (const CollisionItem& item : model.collision)
+                if (item.floor && !floorItem) floorItem = &item;
+            if (!floorItem) continue;
+            const FloorMesh mesh(*floorItem);
+            const std::vector<int> cells = deriveTrafficFloorCells(file, &mesh);
+            std::size_t found = 0;
+            for (const int cell : cells) found += cell >= 0;
+            const std::pair<std::size_t, std::size_t> want_cells = floorCellCounts(level);
+            require(std::size_t(mesh.cellCount()) == want_cells.first && found == want_cells.second,
+                    name + ": floor cells " + std::to_string(mesh.cellCount()) + " found " + std::to_string(found));
+        }
     }
     return 0;
 }
@@ -175,6 +260,7 @@ int shipped(const char* fib, const char* csv) {
 int main(int argc, char** argv) {
     try {
         synthetic();
+        trafficFloorCell();
         if (argc == 3) return shipped(argv[1], argv[2]);
         if (argc != 1) throw std::runtime_error("usage: pregen-derive-test [<fib> <csv>]");
     } catch (const std::exception& error) {

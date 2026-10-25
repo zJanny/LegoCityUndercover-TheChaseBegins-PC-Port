@@ -12,6 +12,7 @@
 #include "game_audio.hpp"
 #include "game_characters.hpp"
 #include "game_pedestrians.hpp"
+#include "game_traffic.hpp"
 #include "game_cutscene.hpp"
 #include "game_hand_items.hpp"
 #include "game_doors.hpp"
@@ -202,6 +203,12 @@ private:
     void enterPedestrianScene();
     game_pedestrian_blocking::Blocking pedestrianBlocking() const;
     void movePedestrianRooms();
+    void loadTraffic();
+    void enterTrafficScene();
+    void updateTrafficSystem();
+    void applyTrafficFades();
+    game_traffic::SystemInputs trafficInputs();
+    bool placeTrafficCar(const chase::runtime::TrafficCarPlacement& placement);
     void updatePropAnimations(float dt);
     void updateSuperBricks(float dt);
     void applySuperBricks();
@@ -249,6 +256,7 @@ private:
     void enterVehicleHud(const chase::runtime::VehicleRecord& record);
     void leaveVehicleHud();
     bool placeVehicle(const std::string& instance, const chase::assets::Placement& target);
+    void placeVehicleAt(std::size_t index, const chase::render::Mat4& matrix);
     bool placeProp(const std::string& instance, const chase::assets::Placement& target);
     bool placeSeatedVehicle(const float position[3], std::optional<float> facingDegrees);
     std::optional<chase::runtime::WaypointVehicle> waypointVehicle() const;
@@ -448,6 +456,9 @@ private:
     game_object_visibility::CharacterVisibility characterVisibility;
     std::optional<game_characters::LevelCharacters> levelCharacters;
     game_pedestrians::LevelPedestrians pedestrians;
+    game_traffic::LevelTraffic traffic;
+    std::vector<std::optional<std::size_t>> trafficBoarding;
+    std::vector<int> trafficFadeShown;
     chase::runtime::PropAnimations propAnimations;
     chase::runtime::PlayerScriptAnimation playerScriptAnimation;
     chase::runtime::CatRescueSet catRescue;

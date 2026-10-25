@@ -45,6 +45,8 @@ std::string pedestrianSlotName(std::size_t number);
 // give the stored word, type 0 the float truncated (vcvt.s32.f32), any other type and a missing parameter 5.
 // STAND-IN PED-S5: a slot parameter (flag bit 1) gives its table value; the root's slot values (+0x2c / +0x30) are not read.
 std::int32_t pedestriansMaxOf(const assets::Level& level);
+// The same lookup for any attribute name and default (the traffic manager's "Traffic_MaxVehicles" at 0x2dfb24 uses it with default 5).
+std::int32_t levelRootIntegerAttribute(const assets::Level& level, const std::string& name, std::int32_t fallback);
 
 // Words 0x52a1d0 .. 0x52a1f0 written by 0x1077dc: the three radius tiers, the fade-in and the fade-out distances of the
 // distance fade (docs/re/script-natives-world.md). Defaults are the values read in the oracle.

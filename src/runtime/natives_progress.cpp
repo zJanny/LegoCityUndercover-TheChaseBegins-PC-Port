@@ -37,6 +37,7 @@ constexpr Entry kEntries[] = {
     {"isredbrickbought", ProgressNativeKind::IsRedbrickBought, {1, false, true}, false},
     {"unlockscanner", ProgressNativeKind::UnlockScanner, {0, false, false}, true},
     {"enabletrafficandpedestrians", ProgressNativeKind::EnableTrafficAndPedestrians, {1, false, false}, true},
+    {"settrafficmaxvehicles", ProgressNativeKind::SetTrafficMaxVehicles, {1, false, false}, true},
 };
 
 constexpr const char* kLanguageNames[] = {"English", "French", "Italian", "German", "Spanish", "Dutch",
@@ -214,6 +215,7 @@ ProgressNativeResult ProgressNativeState::run(ProgressNativeKind kind, const std
     case ProgressNativeKind::SetParachuteDeployHeight: parachuteHeight_ = first; break;
     case ProgressNativeKind::EnableSuperBricks: superBricks_ = number != 0; break;
     case ProgressNativeKind::EnableTrafficAndPedestrians: trafficAndPedestrians_ = number != 0; break;
+    case ProgressNativeKind::SetTrafficMaxVehicles: trafficMaxVehicles_.push_back(first); break;
     case ProgressNativeKind::GetCharacterUnlocked: result.output = characterUnlocked(number) ? 1.0f : 0.0f; break;
     case ProgressNativeKind::GetLanguage:
         if (const char* name = languageParameterName(language_)) result.languageParameter = std::string("Language_") + name;

@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace chase::runtime {
@@ -33,6 +34,7 @@ enum class ProgressNativeKind {
     IsRedbrickBought,
     UnlockScanner,
     EnableTrafficAndPedestrians,
+    SetTrafficMaxVehicles,
 };
 
 // Argument shape: `values` leading arguments are read as numbers (object first for DisableSuperBuiltItSave), a getter
@@ -109,9 +111,11 @@ public:
     std::optional<float> parachuteDeployHeight() const { return parachuteHeight_; }
     bool scannerUnlocked() const { return scannerUnlocked_; }
     // EnableTrafficAndPedestrians 0x2c5780 writes bit 1 of the traffic manager (0x5277a0) and of the pedestrian manager
-    // (0x51b3e0); their update spawns while it is set and removes every entity while it is clear. No traffic exists yet
-    // (SCRIPT-230), so the flag is only recorded.
+    // (0x51b3e0); their update spawns while it is set and removes every entity while it is clear. chase-game applies
+    // the last value to both managers before their next update.
     std::optional<bool> trafficAndPedestriansEnabled() const { return trafficAndPedestrians_; }
+    // SetTrafficMaxVehicles 0x2a6d70: the argument of each call, in call order, until the traffic system takes them.
+    std::vector<float> takeTrafficMaxVehicles() { return std::exchange(trafficMaxVehicles_, {}); }
     const std::vector<ObjectSuperBuiltItSave>& superBuiltItSaves() const { return superBuiltItSaves_; }
     unsigned outOfRangeAccesses() const { return outOfRange_; }
 
@@ -134,6 +138,7 @@ private:
     std::optional<float> parachuteHeight_;
     bool scannerUnlocked_ = false;
     std::optional<bool> trafficAndPedestrians_;
+    std::vector<float> trafficMaxVehicles_;
     std::vector<ObjectSuperBuiltItSave> superBuiltItSaves_;
 };
 

@@ -20,6 +20,7 @@
   - Parts of missions 1-1 to 1-3 run: their scripts, the waypoints, the build-it, carrying the donut box, the super build-it and fast travel pad of the helipad, the sound scanner, the dog cage and the detective spots (with their marker on the ground). Chase can punch smashable props, ride ziplines, use trampolines, climb bricks, flag poles, rails and ladders.
   - He can get into and drive a car. The car drives like the original and smashes breakable props into bricks and super bricks. While he sits in the car, the super bricks fly to him and are counted. The car's sounds and horn are missing.
   - In the first level up to five passers-by appear in front of the camera, fade in and walk along the city's paths. Some of their inputs are stand-ins. The level's other people stand in place.
+  - In the first level cars appear on the city's roads around the player and disappear again, at most as many as the level allows. They stand still: they do not drive yet, and the cars of the original that drive along the roads have no driver in the program.
   - Nothing else of the game works.
 - Showing the start screens of the original game in the [development runtime](game-runtime.md): loading page, logos, TT Games movie, language list, StreetPass and HOME pages, autosave notice, slot list, saving page, loading screen, intro movie with subtitles and the title card. Some parts are stand-ins. The slots of a save file are shown only with `--front-save`, and the delete page is missing.
 - Testing keyboard and mouse controls in the [input laboratory](controls.md).

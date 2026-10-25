@@ -94,15 +94,17 @@ float DistanceFadeTable::word(int index) const {
     }
 }
 
-std::int32_t pedestriansMaxOf(const assets::Level& level) {
-    const assets::LevelParam* param = levelRootParameter(level, assets::nameHash("Pedestrians_Max"));
-    if (!param) return kPedestriansMaxDefault;
+std::int32_t levelRootIntegerAttribute(const assets::Level& level, const std::string& name, std::int32_t fallback) {
+    const assets::LevelParam* param = levelRootParameter(level, assets::nameHash(name));
+    if (!param) return fallback;
     if (param->type == kParameterInteger || param->type == kParameterEnum) return static_cast<std::int32_t>(param->value);
-    if (param->type != kParameterFloat) return kPedestriansMaxDefault;
+    if (param->type != kParameterFloat) return fallback;
     float value = 0;
     std::memcpy(&value, &param->value, sizeof value);
     return truncatedToInteger(value);
 }
+
+std::int32_t pedestriansMaxOf(const assets::Level& level) { return levelRootIntegerAttribute(level, "Pedestrians_Max", kPedestriansMaxDefault); }
 
 int pedestrianFadeTier(const PedestrianNode& node, const DistanceFadeTable& table) {
     if ((node.word & kNodeDistanceFade) == 0 || (node.fadeFlags & kFadeOn) == 0) return -1;

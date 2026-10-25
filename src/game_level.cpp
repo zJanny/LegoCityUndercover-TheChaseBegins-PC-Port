@@ -212,6 +212,7 @@ LevelSession::LevelSession(const Shared& sharedState)
         }
     }
     loadBoardingVehicles(placedInstances);
+    loadTraffic();
     levelName = lower(options.level).substr(0, lower(options.level).find_last_of('/'));
     levelName = levelName.substr(levelName.find_last_of('/') + 1);
     levelScripts.setLevelHeadingKey(fe::levelHeadingKey(hudResources, levelName));
@@ -371,6 +372,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     overlay.emplace(fe::kTopWidth, fe::kBottomWidth, fe::kScreenHeight);
     startRoomStreaming();
     enterPedestrianScene();
+    enterTrafficScene();
 
     counterFrequency = SDL_GetPerformanceFrequency();
     counterOrigin = SDL_GetPerformanceCounter();
@@ -435,6 +437,7 @@ void LevelSession::draw(int width, int height) {
     std::vector<bool> drawn = runtime::drawnPlacements(placedObjects, objectState);
     for (std::size_t i = 0; i < drawn.size(); ++i) drawn[i] = runtime::drawnWhileHeld(drawn[i], cutsceneHost->holdsObject(placedObjects[i].objectIndex));
     applyObjectFades(drawn);
+    applyTrafficFades();
     applySuperBricks();
     characterVisibility.apply(scene, drawable.characters, placedCharacters, objectState,
                               [this](std::size_t objectIndex) { return cutsceneHost->holdsObject(objectIndex); });

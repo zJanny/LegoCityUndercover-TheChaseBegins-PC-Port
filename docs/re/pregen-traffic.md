@@ -8,11 +8,12 @@ Format and loaders of `Pregen/Traffic/<level>_Traffic.bin` and `Pregen/Pedestria
 - Both files share one layout: a u32 point count, 24-byte points (position, a stale pointer, a level path name hash, a path parameter), then a quadtree of 20-byte cells (half size, centre x and z) whose leaves list point indices. [§2026-10-20T11:16:20](#ts-20261020-111620)
 - The loaders resolve each point's path in the loaded levels, store the unit tangent of the path at the parameter, the room and (traffic only) the floor cell; the lookup 0x1eb490 descends to the leaf of a point. [§2026-10-20T11:16:20](#ts-20261020-111620)
 - All 14 shipped files (7 levels each) decode exactly; every point's path exists in its level, and each position equals the path sample at the parameter (inference: the spawn points are the editor's samples along the paths). [§2026-10-20T11:16:20](#ts-20261020-111620)
-- Port: `src/assets/pregen_traffic.*` (`parsePregenSpawns`, `findPregenSpawnCell`), tests `pregen-traffic`, `pregen-traffic-real-data`. The pedestrian file is used by `PedestrianSystem` in `chase-game`; the traffic file is not wired. [pedestrians.md §2026-10-20T13:13:47](pedestrians.md#ts-20261020-131347)
+- Port: `src/assets/pregen_traffic.*` (`parsePregenSpawns`, `findPregenSpawnCell`), tests `pregen-traffic`, `pregen-traffic-real-data`. The pedestrian file is used by `PedestrianSystem` in `chase-game`, the traffic file by `TrafficSystem` ([traffic.md §2026-10-25T12:35:43](traffic.md#ts-20261025-123543)). [pedestrians.md §2026-10-20T13:13:47](pedestrians.md#ts-20261020-131347)
 - The derived fields are ported as `deriveSpawnFields` (`src/runtime/pregen_derive.*`) for both kinds: path record, tangent, room. The 72 closed-path pedestrian points off the path sample deviate on one axis of the stored position; the sampler matches all other points exactly. [§2026-10-20T12:11:03](#ts-20261020-121103)
 - The loaders see the list 0x589a18 as 0x1ed57c rebuilds it just before the scene enter (pool order, loaded scenes only), with the current room of `Player1Start` or of the transition's destination. [§2026-10-20T13:13:47](#ts-20261020-131347)
 - No path gets a node (path +0x18) at run time: only the natives EffectAttachParticlesToPath and EffectLinkPathToObject set it, and no script calls them. So the samplers never transform the position or the tangent. [pedestrians-character.md §2026-10-20T13:09:29](pedestrians-character.md#ts-20261020-130929)
-- Open: how the managers choose a point from a cell list, the radius the cell lists were built with, the traffic floor cell (+40), the other scenes loaded with a street level.
+- The traffic floor cell (point +0x28 of the loaded record, "+40") is the cell of the level's `collision_floor` graph that contains the point in the xz plane, found by 0x1edaac: a bisection on the distance to the first corners, then an outward scan. It is ported as `findTrafficFloorCell`; 2418 of the 2421 points of the six levels with a master model find a cell. [§2026-10-25T12:36:20](#ts-20261025-123620)
+- Open: the radius the cell lists were built with, the points without a floor cell and the reader of the cell in the vehicle body, the other scenes loaded with a street level.
 
 <a id="ts-20261020-111620"></a>
 
@@ -105,3 +106,27 @@ Unknowns:
 Unknowns:
 - Which other scenes are loaded with a street level (the pool order of a level with several scenes) and whether any of them holds a path hash of the pregen files.
 
+
+<a id="ts-20261025-123620"></a>
+
+## 2026-10-25T12:36:20+01:00 — The traffic floor cell of a spawn point: 0x1edaac over the collision_floor graph (llvm-objdump only, no REA session, no emulator)
+
+Method: `llvm-objdump -d --triple=armv6k-none-eabi --mattr=+vfp2` on `artifacts/game/game.arm.elf`. Port: `findTrafficFloorCell`, `floorCellContains`, `deriveTrafficFloorCells` (`src/runtime/pregen_derive.*`), tests `pregen-derive`, `pregen-derive-real-data`.
+
+**Where it is called.** The traffic loader 0x2e02d4 calls 0x1edaac at 0x2e0504 for each point with a copy of the point's position and a fourth word 0.0, and stores the result as the word at point +0x28 (the 44-byte record of [traffic.md §2026-10-25T12:35:43](traffic.md#ts-20261025-123543)). The traffic spawn 0x2def8c copies it into the vehicle body +0x8c (0x2df3c4); what reads it there is not read.
+
+**The cells.** 0x1edaac searches the floor graph of the level's `collision_floor` item: the level-wide globals 0x376c60 (cell count), 0x376c68 (the 16-byte cells), 0x376c64 and 0x376c6c are stored by the collision loader 0x28b070 (0x28b178..0x28b190) from the item record +0x28 (+0 count, +4 cells, +0xc extra triangles, +0x14 extra vertices). In the port that is `FloorGraph` of the item with `floor` set ([collision.md](collision.md), [vehicles-physics.md](vehicles-physics.md)).
+
+**The lookup 0x1edaac(point).** With the cell pointer 0 it returns −1. Otherwise low = 0, high = count − 1, and then, at least once (a do-while):
+- d(i) = the 3D distance (x², then y², then z² added, square root) from the point to the first corner of cell i (the vertex pointer at triangle +0x10);
+- if d(low) < d(high) then high = low + ((high − low) >> 1), else low = low + ((high − low) >> 1);
+- the loop repeats while low < high − 1 (unsigned).
+Then the cells are tried outwards, one step of each per round: while not (count <= high and low = 0): when high < count, cell `high` is tested and returned if it contains the point, else high + 1; then, when low is not 0, cell `low` is tested and returned if it contains the point, else low − 1. Cell 0 is never tested (the downward scan skips it) and −1 is returned when nothing contains the point.
+- Containment 0x15f82c(point, cell) tests in the xz plane with the corners a, b, c: (b.x − a.x)(p.z − a.z) − (b.z − a.z)(p.x − a.x) < 0, (a.x − c.x)(p.z − a.z) − (a.z − c.z)(p.x − a.x) < 0 and (c.x − b.x)(p.z − b.z) − (c.z − b.z)(p.x − b.x) < 0 (each product rounded before the subtraction; an unordered compare passes the first two tests and fails the last).
+- With one cell, or with two cells when the first is closer, the high end falls to cell 0 and the loop never ends in the original (it would hang the level load). Neither happens in a shipped level; the port throws.
+
+**Result on the shipped files.** The lookup finds a cell for 648 of 649 points of lvl_01, 469 of 469 (lvl_03), 229 of 231 (lvl_04), 187 of 187 (lvl_05), 158 of 158 (lvl_06) and 727 of 727 (lvl_07), over floor graphs of 23713, 27562, 34732, 34438, 28425 and 15186 cells (the port's run of `pregen-derive-real-data`, 2026-10-25; not a value recorded in the original). The playground level has no master model under the name the loader uses, so it was not run.
+
+Unknowns:
+- What the original does with a point without a cell (−1 as the body word +0x8c): the 3 points of lvl_01 and lvl_04 have not been looked at (PREGEN-6).
+- What reads the floor cell of the vehicle body +0x8c (PREGEN-7).
