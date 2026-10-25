@@ -320,7 +320,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         const runtime::PlayerStateStep scriptStep = playerScriptAnimation.update(dt);
         const bool scriptClip = scriptStep != runtime::PlayerStateStep::Locomotion;
         const bool controlTaken = scriptClip || levelScripts.playerControlTaken() || carry.busy() || builditPlayer.active() || detective.controlTaken() || scanner.takesPlayerControl() ||
-                                  fastTravel.takesPlayerControl();
+                                  fastTravel.takesPlayerControl() || switches.playerUsing();
         if (controlTaken) stick.slot14.value = stick.slot15.value = 0.0f;
         stick.entityType = game_player::kPlayerEntityType;
         stick.cameraYaw = follow->yaw();
@@ -385,6 +385,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         if (!player) return;
         const float playerPosition[3] = {player->motion.x, player->vertical.y, player->motion.z};
         updateDoors(playerPosition, emit);
+        updateSwitches(dt, emit);
     });
     order.at(runtime::UpdatePhase::AfterCharactersStandIn, [&] {
         if (!player) return;
@@ -398,6 +399,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
     order.at(runtime::UpdatePhase::UseSpots, [&] {
         if (!player) return;
         updateUseSpots(carry.carryingMode() == 0 && !carry.busy() && !builditPlayer.active() && !buildits.lastUse().inZone);
+        useSwitches(carry.carryingMode() == 0 && !carry.busy() && !builditPlayer.active() && !buildits.lastUse().inZone);
         updateUseMarkers(dt);
         updateScanner();
         updateSuperBricks(dt);
@@ -443,6 +445,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
     for (const runtime::ScriptPlacement& request : levelScripts.takePlacements()) applyPlacement(request);
     for (const runtime::ScriptObjectMessage& sent : levelScripts.takeObjectMessages()) {
         if (sent.message == runtime::kMessageTrigger) detective.triggerMessage(sent.instance);
+        deliverSwitchMessage(sent);
         if (const std::optional<runtime::DoorMessage> doorMessage = runtime::doorMessageFor(sent.message))
             for (DoorObject& door : doors)
                 if (game_doors::lowerCase(door.instance) == sent.instance) runtime::doorMessage(door.state, door.params, *doorMessage);

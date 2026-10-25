@@ -47,6 +47,7 @@
 #include "game_carry.hpp"
 #include "runtime/carry.hpp"
 #include "runtime/scanner.hpp"
+#include "runtime/switch_set.hpp"
 #include "runtime/scanner_info.hpp"
 #include "runtime/scanner_markers.hpp"
 #include "runtime/scanner_reticle.hpp"
@@ -173,6 +174,10 @@ private:
     void updateCarryArrows(const std::vector<chase::runtime::CarryAction>& actions, bool hintActive, const float playerPosition[3]);
     void loadDetective(chase::assets::FuseArchive& archive);
     void updateUseSpots(bool actionFree);
+    void loadSwitches(chase::assets::FuseArchive& archive);
+    void useSwitches(bool actionFree);
+    void deliverSwitchMessage(const chase::runtime::ScriptObjectMessage& sent);
+    void updateSwitches(float dt, const std::function<void(const chase::runtime::SoundCall&)>& emit);
     void loadUseMarkers(chase::assets::FuseArchive& archive);
     void updateUseMarkers(float dt);
     void drawUseMarkers(const chase::render::Mat4& viewProjection);
@@ -357,6 +362,8 @@ private:
     game_carry::HeldObjects heldObjects;
     chase::runtime::DetectiveSet detective;
     chase::runtime::UseSpotSet useSpots;
+    chase::runtime::SwitchSet switches;
+    std::vector<chase::runtime::SwitchEvent> pendingSwitchEvents;
     chase::runtime::UseMarkers useMarkers;
     chase::runtime::AbilityTable abilityTable;
     std::map<std::string, float> objectiveBoxTops;

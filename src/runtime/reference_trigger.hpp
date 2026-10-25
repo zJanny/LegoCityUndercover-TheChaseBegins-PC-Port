@@ -66,6 +66,8 @@ public:
     ReferenceActivation activateOwner(const std::string& lowerOwner);
     ReferenceActivation deactivateOwner(const std::string& lowerOwner);
     ReferenceKind kind(std::size_t id) const { return entries_[id].kind; }
+    // A class writing the kind bits of its record directly (the switch post-link 0x242494 and message 54 of 0x23aac0 make it Registered).
+    void setKind(std::size_t id, ReferenceKind kind) { entries_[id].kind = kind; }
     const std::string& owner(std::size_t id) const { return entries_[id].owner; }
     const std::string& target(std::size_t id) const { return entries_[id].target; }
     std::uint8_t navNode(std::size_t id) const { return entries_[id].navNode; }
