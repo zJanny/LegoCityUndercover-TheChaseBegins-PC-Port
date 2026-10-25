@@ -3,7 +3,9 @@
 // calls it as: every class (0, 1, 1) and (16, 1, 0); then class 0 (0, 1, 1) (16, 0, 0); class 1 (0, 1, 1) (16, 0, 1); class 2
 // (0, 0, 1) (16, 0, 0); class 3 (0, 0, 0); class 4 (0, 1, 0) (16, 0, 0); class 5 (0, 1, 1). The pickup system's slot +8 0x2ed0b4
 // (registered later by 0x157a00 at 0x2f5d08) sets class 6 (0, 1, 1) (16, 0, 0). The cutscene start 0x16c060 copies the table
-// and sets class 6 (0, 0, 0).
+// and sets class 6 (0, 0, 0). Measured (20261025-recorded-B-3, 20261025-recorded-servant, 2026-10-25, RPC reads of the table at
+// *0x376ad4 +4, recorded from a save state on a street with the player in a van): class 0 row 0x3 for types 0 .. 15 and 0x0 for 16,
+// class 1 row 0x3 and 0x2, class 2 row 0x2 and 0x0, as asserted below.
 #include "runtime/pedestrian_manager.hpp"
 #include "runtime/room_layers.hpp"
 

@@ -28,6 +28,10 @@ struct PedestrianNodeBounds {
 // The world position of the local bounds centre through the node rows (row vectors, translation in row 3).
 PedestrianVec3 pedestrianNodeCentre(const PedestrianNodeBounds& bounds, const std::array<PedestrianVec3, 4>& rows);
 
+// 0x2ae1ac, called by the camera manager update 0x23f174 (0x23f2b0): the fade point 0x52a1b4 is the look point of the camera pose
+// C+0x4c, or its eye (C+0x70) when the pose flag 0x40000000 (C+0x5c) is set.
+PedestrianVec3 pedestrianFadePoint(const PedestrianVec3& look, const PedestrianVec3& eye, bool poseNoRotation);
+
 // The inputs of the draw test 0x2930e0 in the state step.
 PedestrianDrawTest pedestrianDrawTest(const PedestrianNode& node, const PedestrianVec3& fadePoint, const DistanceFadeTable& table);
 

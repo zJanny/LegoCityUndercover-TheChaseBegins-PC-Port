@@ -10,6 +10,10 @@ PedestrianNode pedestrianMeshNode(float radius) {
     return node;
 }
 
+PedestrianVec3 pedestrianFadePoint(const PedestrianVec3& look, const PedestrianVec3& eye, bool poseNoRotation) {
+    return poseNoRotation ? eye : look;
+}
+
 PedestrianVec3 pedestrianNodeCentre(const PedestrianNodeBounds& bounds, const std::array<PedestrianVec3, 4>& rows) {
     PedestrianVec3 world{};
     for (std::size_t axis = 0; axis < 3; ++axis) {

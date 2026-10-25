@@ -6,7 +6,7 @@ The alpha fade of a spawned pedestrian's mesh node (start 0x275434, per-frame st
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-20T14:13:30+02:00.
+IN_PROGRESS, updated 2026-10-25T14:20:18+01:00.
 - The fade-in of a spawned node is ported as `nodeFadeStart` / `nodeFadeStep` (0x275434, 0x10eb70) in `PedestrianFades`; `chase-game` hangs each slot on a mesh node, starts the fade after a spawn, steps it every update and draws the instances with the node alpha. A spawn beyond 36 m drops to alpha 0 and stays until it walks inside; the original parks it under room +0x7c and removes it (PED-21). The draw test 0x2930e0 now runs from the node (PED-S11).
 
 ## 3. Verified behaviour
@@ -15,7 +15,7 @@ The pinned values of `pedestrian-fade` (0x275434 stores alpha 1 and step -1; 0x1
 
 ## 4. Stand-ins
 
-- PED-S11 The pedestrian's mesh node is built from the model: its bounds centre and union box from `assets::modelBounds`, its radius +0x9c as the length of the half extents, and the fade point 0x52a1b4 of the draw test and the fade step as the camera eye (measured: the camera look point, PED-13). The matrix argument of 0x10eb70 is taken as the node's world matrix. needs: PED-13, PED-22. evidence: [pedestrians-fade.md §2026-10-20T14:12:57](../../re/pedestrians-fade.md#ts-20261020-141257).
+- PED-S11 The pedestrian's mesh node is built from the model: its bounds centre and union box from `assets::modelBounds`, its radius +0x9c as the length of the half extents. The fade point 0x52a1b4 of the draw test and the fade step is the camera look point as the original's writer 0x2ae1ac takes it (PED-S15 for the pose flag, PED-S16 for the jump inputs); measured with the follow camera on foot and the vehicle camera (cutscene and scanner cameras not). The matrix argument of 0x10eb70 is taken as the node's world matrix. needs: PED-22. evidence: [pedestrians-fade.md §2026-10-25T14:19:23](../../re/pedestrians-fade.md#ts-20261025-141923).
 - PED-S12 An instance with an alpha below 255 draws its opaque parts in the blended pass with the premultiplied blend (1, 1 - alpha); the node draw 0x10bcc8's pass 2 is not read. needs: PED-23. evidence: [pedestrians-fade.md §2026-10-20T14:12:57](../../re/pedestrians-fade.md#ts-20261020-141257).
 
 ## 5. Open items
@@ -26,10 +26,12 @@ The pinned values of `pedestrian-fade` (0x275434 stores alpha 1 and step -1; 0x1
 
 ## 6. Findings summary
 
+- The fade point equals C+0x4c in a vehicle camera and on foot: [pedestrians-fade.md §2026-10-25T14:35:54](../../re/pedestrians-fade.md#ts-20261025-143554).
+- The fade point 0x52a1b4 is written by 0x2ae1ac from the camera manager update: [pedestrians-fade.md §2026-10-25T14:19:23](../../re/pedestrians-fade.md#ts-20261025-141923).
 - The fade point 0x52a1b4 is the camera look point, and a live pedestrian's class byte is 0 and room byte 128: [pedestrians-fade.md §2026-10-25T13:18:33](../../re/pedestrians-fade.md#ts-20261025-131833).
 - The spawn fade-in 0x275434, the node step 0x10eb70, the node set-up and *0x37674c = 2: [pedestrians-fade.md §2026-10-20T14:12:57](../../re/pedestrians-fade.md#ts-20261020-141257).
 
 ## 7. Code and tests
 
-- `src/runtime/node_fade.*` (`nodeFadeStart`, `nodeFadeStep`), `src/runtime/pedestrian_fade.*` (`PedestrianFades`, `pedestrianMeshNode`, `kMeshNodeType`), glue `src/game_pedestrian_fade.*`, `Scene::setInstanceTranslucentFade`.
-- CTest: `pedestrian-fade`, `pedestrian-fade-real-data`.
+- `src/runtime/node_fade.*` (`nodeFadeStart`, `nodeFadeStep`), `src/runtime/pedestrian_fade.*` (`PedestrianFades`, `pedestrianMeshNode`, `pedestrianFadePoint`, `kMeshNodeType`), glue `src/game_pedestrian_fade.*`, `Scene::setInstanceTranslucentFade`.
+- CTest: `pedestrian-fade` (pins the fade point), `pedestrian-fade-real-data`.

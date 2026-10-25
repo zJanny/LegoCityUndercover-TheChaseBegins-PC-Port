@@ -5,6 +5,12 @@
 // (fade-out distance)^2 <= that; the alpha adds the signed step and clamps to 0 .. 255, or jumps to 255 / 0 when byte 0x52a1cc is
 // set, and byte 0x52a1cd forces the step to 16. *0x37674c = 2: the table 0x5303c4 gets slot 0 from 0x10332c (call 0x102174), then
 // 0x105b78 (call 0x102180) takes 1 and 0x103290 (call 0x10218c) takes 2. Expected numbers are worked by hand from these rules.
+// Fade point (20261025-recorded-B, 2026-10-25): llvm-objdump of the camera manager update 0x23f174 (call 0x2ae1ac at 0x23f2b0 stores C+0x4c,
+// or C+0x70 under the pose flag 0x40000000 at C+0x5c, into 0x52a1b4). The follow-camera values are the reading of 20261025-traffic-servant of
+// the same date, recorded from a save state on a street with traffic after mission 1-1: look (900.5492, 18.7672, 1110.2799), eye
+// (910.5491, 20.4672, 1110.2267), player (900.549, 16.567, 1110.280); 0x52a1b4 equals the look point. Vehicle camera (20261025-recorded-B-1,
+// 20261025-recorded-servant, same date, recorded from a save state of a van drive): 0x52a1b4 = C+0x4c = (613.3692, 20.2841, 1062.5164),
+// eye C+0x70 (616.0266, 22.7841, 1047.9569), player (613.3702, 17.0719, 1062.5145), pose flag word C+0x5c = 0.
 #include "assets/assets.hpp"
 #include "assets/pregen_traffic.hpp"
 #include "runtime/detective.hpp"
@@ -146,6 +152,26 @@ void pedestrianNodes() {
     require(fades.fade(1).step == -1 && fades.fade(1).alpha == 0, "50 m: 2500 is beyond 36^2, the alpha 1 falls to 0");
 }
 
+void fadePointIsTheCameraLookPoint() {
+    const PedestrianVec3 player{900.549f, 16.567f, 1110.280f};
+    const PedestrianVec3 look{900.5492f, 18.7672f, 1110.2799f};
+    const PedestrianVec3 eye{910.5491f, 20.4672f, 1110.2267f};
+    const PedestrianVec3 point = pedestrianFadePoint(look, eye, false);
+    require(point == look, "0x2ae1ac stores the pose look point C+0x4c");
+    for (std::size_t axis = 0; axis < 3; ++axis) {
+        const float lift = axis == 1 ? 2.2f : 0.0f;
+        require(std::fabs(point[axis] - (player[axis] + lift)) < 2e-3f, "measured: the fade point is the player plus (0, 2.2, 0)");
+        require(point[axis] != eye[axis], "not the camera eye");
+    }
+    const PedestrianVec3 vanPlayer{613.3702f, 17.0719f, 1062.5145f};
+    const PedestrianVec3 vanLook{613.3692f, 20.2841f, 1062.5164f};
+    const PedestrianVec3 vanEye{616.0266f, 22.7841f, 1047.9569f};
+    const PedestrianVec3 vanPoint = pedestrianFadePoint(vanLook, vanEye, false);
+    require(vanPoint == vanLook && vanPoint != vanEye, "vehicle camera: the look point as well");
+    require(std::fabs(vanPoint[1] - (vanPlayer[1] + 3.2122f)) < 2e-3f, "measured: the van lift over the player is 3.2122");
+    require(pedestrianFadePoint(look, eye, true) == eye, "0x2ae1ac takes C+0x70, the pose eye, when the pose flag 0x40000000 is set");
+}
+
 void drawTestFollowsTheFadeInDistance() {
     const DistanceFadeTable table;
     const PedestrianNode node = pedestrianMeshNode(1.0f);
@@ -239,6 +265,7 @@ int main(int argc, char** argv) {
         fadesOutAtTheFadeOutDistance();
         tiersAndGates();
         pedestrianNodes();
+        fadePointIsTheCameraLookPoint();
         drawTestFollowsTheFadeInDistance();
         if (argc == 3) return shipped(argv[1], argv[2]);
         if (argc != 1) throw std::runtime_error("usage: pedestrian-fade-test [<fib> <csv>]");

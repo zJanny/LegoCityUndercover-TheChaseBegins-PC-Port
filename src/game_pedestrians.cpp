@@ -216,7 +216,11 @@ void LevelSession::updatePedestrianCharacters(float dt) {
     inputs.collision = &collision;
     const game_pedestrian_blocking::Blocking blocking = pedestrianBlocking();
     inputs.blocking = &blocking;
-    if (follow) inputs.fadePoint = {follow->eye()[0], follow->eye()[1], follow->eye()[2]};
+    if (follow) {
+        const float* look = follow->lookAt();
+        const float* eye = follow->eye();
+        inputs.fadePoint = chase::runtime::pedestrianFadePoint({look[0], look[1], look[2]}, {eye[0], eye[1], eye[2]}, false /* STAND-IN PED-S15: pose flag 0x40000000 not modelled */);
+    }
     pedestrians.updateCharacters(scene, inputs, objectState);
 }
 

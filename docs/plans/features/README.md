@@ -67,7 +67,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 |---|---|---|
 | [world-streaming](world-streaming.md) | IN_PROGRESS | `chase-game` streams rooms (street level); WSTREAM-12 room position code; WSTREAM-30 loader cost; WSTREAM-4 visibility inside rooms |
 | [pedestrians-traffic](pedestrians-traffic.md) | IN_PROGRESS | PREGEN-3 traffic floor cell; derived path, tangent and room ported; pedestrian file used in chase-game |
-| [pedestrians-traffic-pedestrians](pedestrians-traffic-pedestrians.md) | IN_PROGRESS | run in chase-game with room moves; PED-5 message slot; PED-13 fade point |
+| [pedestrians-traffic-pedestrians](pedestrians-traffic-pedestrians.md) | IN_PROGRESS | run in chase-game with room moves; PED-5 message slot; PED-27 fade point cameras |
 | [pedestrians-traffic-pedestrians-fade](pedestrians-traffic-pedestrians-fade.md) | IN_PROGRESS | PED-21 faded-out pedestrians not removed; PED-22 node radius source; PED-23 node draw pass |
 | [pedestrians-traffic-pedestrians-vehicles](pedestrians-traffic-pedestrians-vehicles.md) | IN_PROGRESS | vehicle test and set-up layer table run in chase-game; PED-18 cutscene layer table; PED-19 vehicle list filter |
 | [pedestrians-traffic-cars](pedestrians-traffic-cars.md) | IN_PROGRESS | cars spawn and leave in chase-game, standing still; TRAFFIC-2 connect the AI driver; TRAFFIC-7 route mover; TRAFFIC-10 route numbers; TRAFFIC-12 other levels |

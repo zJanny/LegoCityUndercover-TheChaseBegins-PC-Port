@@ -19,7 +19,7 @@ namespace render = chase::render;
 namespace runtime = chase::runtime;
 
 // STAND-IN PED-S11: the node bounds are the model's mesh box union (assets::modelBounds) and the node radius +0x9c is the length of its
-// half extents (the source of the loader's 40-byte record word is not read), and the fade point 0x52a1b4 is the camera eye.
+// half extents (the source of the loader's 40-byte record word is not read).
 runtime::PedestrianNodeBounds nodeBoundsOf(assets::FuseArchive& archive, const std::string& bodyModelPath);
 
 class SlotFades {

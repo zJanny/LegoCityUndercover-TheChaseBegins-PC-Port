@@ -43,7 +43,7 @@ struct CharacterInputs {
     std::uint16_t playerState = 0;
     const runtime::CollisionWorld* collision = nullptr;
     const game_pedestrian_blocking::Blocking* blocking = nullptr;
-    runtime::PedestrianVec3 fadePoint{};  // STAND-IN PED-S11: the camera eye
+    runtime::PedestrianVec3 fadePoint{};  // 0x52a1b4: the camera look point (pedestrianFadePoint)
 };
 
 class LevelPedestrians {

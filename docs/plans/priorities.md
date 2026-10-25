@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 919 open items and stand-ins, 161 linked to game usage, 758 with unknown reach.
+Items: 923 open items and stand-ins, 161 linked to game usage, 762 with unknown reach.
 
 ## Top 50 overall
 
@@ -154,13 +154,13 @@ Items: 919 open items and stand-ins, 161 linked to game usage, 758 with unknown 
 
 ## World and levels
 
-7 of 80 items linked.
+7 of 84 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
 | 1 | [TRANS-5](features/level-transitions.md?display=source#L33) | 127 | 25 | 7 | 0 | 5 stand-in, 4 none, 1 implemented | `charsetallowvehicleentry`, `playcredits`, `playscriptonstartup`, `positionplayer` +7 | The 31 scripts of the shipped levels that call SceneChange, CharSetAllowVehicleEntry or ... |
 | 2 | [WSTREAM-6](features/world-streaming.md?display=source#L36) | 49 | 15 | 6 | 0 | 1 none, 1 implemented | `roomstreamingwait`, `streamroomin`, `roomstreamingcontrol` | The `RoomStreamingControl/Destination` classes and the `RoomStreamingWait` native as scripted preloads ... |
-| 3 | [PED-5](features/pedestrians-traffic-pedestrians.md?display=source#L56) | 0 | 58 | 6 | 0 | - | `chars/pedestrian` | The pedestrian's message slot 0x19efbc is read only at its start: which messages request the dodge (3, 4) and ... |
+| 3 | [PED-5](features/pedestrians-traffic-pedestrians.md?display=source#L58) | 0 | 58 | 6 | 0 | - | `chars/pedestrian` | The pedestrian's message slot 0x19efbc is read only at its start: which messages request the dodge (3, 4) and ... |
 | 4 | [TRANS-S2](features/level-transitions.md?display=source#L24) | 25 | 25 | 7 | 0 | 1 implemented | `scenechange`, `scenechange` | `SceneChange <bound>` is qualified with the calling level's world level instance name (data fit, every ... |
 | 5 | [TRAFFIC-4](features/pedestrians-traffic-cars.md?display=source#L53) | 0 | 47 | 6 | 1 | - | `props/traffic_junction` | The junction class `props/traffic_junction` (set-up 0x1ca5a4, update 0x1d8924): its lanes, conflict pairs ... |
 | 6 | [TRAFFIC-5](features/pedestrians-traffic-cars.md?display=source#L54) | 40 | 0 | 2 | 26 | 1 none | `enabletrafficpath` | Wire `traffic_route.*`: the junctions of the level, the manager's route bits taken from `TrafficRouteTable` ... |
@@ -232,7 +232,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [pedestrians-traffic-cars.md](features/pedestrians-traffic-cars.md): TRAFFIC-7 (+24), TRAFFIC-8 (+24), TRAFFIC-9 (+24), TRAFFIC-2 (+23), TRAFFIC-12 (+2), TRAFFIC-10 (+1), TRAFFIC-11 (+1), TRAFFIC-3 (+1), TRAFFIC-6, TRAFFIC-S1, TRAFFIC-S2, TRAFFIC-S3, TRAFFIC-S4, TRAFFIC-S5, TRAFFIC-S7, TRAFFIC-S8
 - [pedestrians-traffic-pedestrians-fade.md](features/pedestrians-traffic-pedestrians-fade.md): PED-22 (+1), PED-23 (+1), PED-21, PED-S11, PED-S12
 - [pedestrians-traffic-pedestrians-vehicles.md](features/pedestrians-traffic-pedestrians-vehicles.md): PED-18 (+1), PED-19 (+1), PED-S10, PED-S9
-- [pedestrians-traffic-pedestrians.md](features/pedestrians-traffic-pedestrians.md): PED-13 (+2), PED-16 (+1), PED-24 (+1), PED-25 (+1), PED-26 (+1), PED-9 (+1), PED-S13, PED-S14, PED-S2, PED-S4, PED-S5, PED-S6, PED-S7, PED-S8
+- [pedestrians-traffic-pedestrians.md](features/pedestrians-traffic-pedestrians.md): PED-27 (+2), PED-16 (+1), PED-24 (+1), PED-25 (+1), PED-26 (+1), PED-28 (+1), PED-9 (+1), PED-29, PED-S13, PED-S14, PED-S15, PED-S16, PED-S2, PED-S4, PED-S5, PED-S6, PED-S7, PED-S8
 - [pedestrians-traffic.md](features/pedestrians-traffic.md): PREGEN-7 (+3), PREGEN-6, PREGEN-S1, PREGEN-S2, PREGEN-S4
 - [player-movement.md](features/player-movement.md): PLAYER-14 (+2), PLAYER-16 (+2), PLAYER-11 (+1), PLAYER-15 (+1), PLAYER-22 (+1), PLAYER-25 (+1), PLAYER-1, PLAYER-10, PLAYER-13, PLAYER-18, PLAYER-2, PLAYER-21, PLAYER-23, PLAYER-24, PLAYER-3, PLAYER-5, PLAYER-6, PLAYER-7, PLAYER-8, PLAYER-S1, PLAYER-S10, PLAYER-S11, PLAYER-S2, PLAYER-S4, PLAYER-S5, PLAYER-S6, PLAYER-S8
 - [player-traversal-ladders.md](features/player-traversal-ladders.md): TRAV-61 (+2), TRAV-59 (+1), TRAV-58, TRAV-60, TRAV-62, TRAV-S34, TRAV-S35, TRAV-S36, TRAV-S37
