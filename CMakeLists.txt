@@ -1520,6 +1520,18 @@ if(BUILD_TESTING)
       --script "0 0 1200;at 946.408 16.8 1145.364 0;0 0 1 A;0 0 60;at 987.88 16.56 1143.4 90;0 0 25;at 989.28 16.56 1143.4 90;0 0 1 A;0 0 200;at 987.808 16.644 1143.306 246.7;0 0 5;0 0 1 A;0 0 40;at 986.756 16.624 1142.715 246.7;0 0 5;0 0 1 A;0 0 30")
     set_tests_properties(game-key-pickup-1-3 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
       PASS_REGULAR_EXPRESSION "carry arrow over 1-3_garage_key added at update [0-9]+\n.*script 1-3_TrapDoor_02_Script started at update [0-9]+.*script teleport to 987.808[^\n]*\n.*script teleport to 986.756[^\n]*\n.*carry 1-3_garage_key: picked up at update [0-9]+\ncarry arrow over 1-3_garage_key_base added at update [0-9]+\ncarry arrow over 1-3_garage_key removed at update [0-9]+\n")
+    # Mission 1-3 parts crate (SCRIPT-363, 20261025-garage-B): two hits (Y) break 1-3_Lift_Crate_01, its TriggerObject starts 1-3_Got_parts, which enables the
+    # carry object 1-3_Generator_Parts_Carry; A picks it up, A inside the use zone of 1-3_BasePlate (teleport next to it) places it, the target's TriggerObject
+    # starts 1-3_Hidden_Exhaust_Carry_Target_Script and enables the PlacedObject build-it 1-3_Pull_Switch_Bits, which holding A builds (its brick sounds, then
+    # SFX_Generator). Positions are level data (crate and base plate placements); the port's own timings (recorded 20261025-garage-B).
+    add_test(NAME game-parts-crate-1-3 COMMAND chase-game
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
+      --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes
+      --start "993.9 16.56 1135.5" --facing 180
+      --script "0 0 5;0 0 1 Y;0 0 15;0 0 1 Y;0 0 60;0 0 1 A;0 0 60;at 952.6 16.77 1132.6 90;0 0 5;0 0 1 A;0 0 80;0 0 150 A;0 0 60")
+    set_tests_properties(game-parts-crate-1-3 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
+      PASS_REGULAR_EXPRESSION "1-3_lift_crate_01: destroyed at update [0-9]+\n.*script 1-3_Got_parts started at update [0-9]+.*carry arrow over 1-3_generator_parts_carry added at update [0-9]+.*carry 1-3_generator_parts_carry: picked up at update [0-9]+\ncarry arrow over 1-3_baseplate added at update [0-9]+.*carry 1-3_generator_parts_carry: placed into 1-3_baseplate at update [0-9]+.*script 1-3_Hidden_Exhaust_Carry_Target_Script started at update [0-9]+.*buildit 1-3_pull_switch_bits: stud drop mode.*script SFX_Generator started at update [0-9]+")
     # Mission 1-2, the dog cage (SCRIPT-111): 1-2_Pringles_Cage_Locked enables the use spot 1-2_Dog_Cage_Use_Spot, A on the user's trigger position
     # (oracle save state at the dog cage trigger of mission 1-2) fires 1-2_Cage_Key_Target_Script through the spot's TriggerObject. The use marker (SCRIPT-292) is shown
     # while the spot is usable (seen on the ground in the oracle in that state) and goes after the use, when 0x236624 switched the zone off.
@@ -1999,7 +2011,7 @@ foreach(test_name ${chase_all_tests})
   set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT "XDG_DATA_HOME=${CMAKE_BINARY_DIR}/test-xdg/${test_name}")
 endforeach()
 
-foreach(slow_test game-key-pickup-1-3 game-debris-super-pickup game-cutscene-dog-end game-super-buildit-build game-fast-travel-exit game-super-brick-roof game-doorlock-detective-1-2 game-cage-release-1-2 game-mission-1-1 game-mission-1-1-start game-vehicle-drive game-vehicle-room game-pedestrian-rooms game-vehicle-hit game-vehicle-smash game-vehicle-break game-director-hold game-director-release game-van-escort game-pause-menu waypoint-marker-shot audio-real-data)
+foreach(slow_test game-key-pickup-1-3 game-parts-crate-1-3 game-debris-super-pickup game-cutscene-dog-end game-super-buildit-build game-fast-travel-exit game-super-brick-roof game-doorlock-detective-1-2 game-cage-release-1-2 game-mission-1-1 game-mission-1-1-start game-vehicle-drive game-vehicle-room game-pedestrian-rooms game-vehicle-hit game-vehicle-smash game-vehicle-break game-director-hold game-director-release game-van-escort game-pause-menu waypoint-marker-shot audio-real-data)
   if(TEST ${slow_test})
     set_property(TEST ${slow_test} APPEND PROPERTY LABELS slow)
   endif()
@@ -2028,7 +2040,7 @@ foreach(game_data_test
   game-script-run game-script-walk game-script-camera game-script-ledge game-vehicle-drive game-van-escort game-cutscene-glass-hidden
   game-cutscene-dog-prop game-super-brick-freeplay game-save-new-game-clean game-save-new-game game-save-reload game-super-brick-roof
   game-cutscene-dog-end game-vehicle-room game-pedestrian-rooms game-vehicle-hit game-vehicle-break game-vehicle-smash game-debris-super-pickup
-  game-mission-1-1 game-detective-1-2 game-key-pickup-1-3 game-use-spot-1-2 game-use-marker-detective-1-2 game-player-script-animation game-super-buildit-prompt
+  game-mission-1-1 game-detective-1-2 game-key-pickup-1-3 game-parts-crate-1-3 game-use-spot-1-2 game-use-marker-detective-1-2 game-player-script-animation game-super-buildit-prompt
   game-super-buildit-build game-fast-travel-exit game-cage-release-1-2 game-doorlock-detective-1-2 game-mission-1-2-start-timing game-mission-1-1-start game-script-dialog
   game-same-level-entry game-scene-change-exit game-scene-change-entry game-director-hold game-director-release game-script-zipline
   game-script-attack-table game-script-wobbly-table game-script-bounce game-script-bounce-grab game-script-acrobat-poles game-script-zipline-use-a

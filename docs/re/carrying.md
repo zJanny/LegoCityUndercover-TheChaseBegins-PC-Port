@@ -13,6 +13,7 @@ Subtopics: [carrying-animation.md](carrying-animation.md)
 - A player holding a big object never jumps: the B branch of 0x20b984 skips the jump request (state 4) while ctrl+0x13c is set and the carry test is not 1. Ported. [§2026-10-16T14:53:22](#ts-20261016-145322)
 - A carrying player never sprints: 0x1abe60 runs the run timer and the sprint only for the run roles 2, 0x6f and 0x83, and the carried run roles are 552 (big) and 151 (small). Ported. [§2026-10-16T14:13:15](#ts-20261016-141315)
 - Every free, usable, non-freeplay carry object has a carry arrow (list 2) and joins the carry group (type 2); a carry target has them while the player carries its UseObject. Ported; the oracle shows them on the key and then the keyhole of mission 1-3. [§2026-10-25T14:37:21](#ts-20261025-143721)
+- A carry target hides its `PlacedObject` while the level loads (post-link 0x18e0f8 calls 0x2428c0 on it), so the build-it behind the base plate of mission 1-3 is hidden until the placing. Ported; the chain from the parts crate to the base plate and the build runs in `chase-game`. [§2026-10-25T16:20:07](#ts-20261025-162007)
 - The carry animations, the release, the end of the carry states and the track events are in [carrying-animation.md](carrying-animation.md).
 - Open: sender of message 0x80000003, 0x2256e4 and the reader 0x20bb7c of the carry test, where released boxes land beyond the ray, other carry classes and `TargetObject01..04`.
 
@@ -155,3 +156,22 @@ Unknowns:
 - The free-run update of the small pickup's attachment (stepped trace: 8; clip event: 14).
 - The other callers of 0x22fb44 and 0x22fbe8 (0x1ab414 in the target's message handler, 0x231c78 / 0x231c84, 0x277558, 0x284200, 0x28eec4) and the role 710 (`dropAnim` of the keyhole) are not read.
 - In the port `1-3_TrapDoor_02_Script` starts twice (updates 1441 and 1456), from the end of the reveal prop's flight and from its bounce; not compared with the original.
+
+<a id="ts-20261025-162007"></a>
+
+## 2026-10-25T16:20:07+01:00 — Mission 1-3 parts crate to the base plate: the carry target hides its PlacedObject at the level start (llvm-objdump of game.arm.elf, level dump through chase_assets, chase-game runs of 20261025-garage-B)
+
+Source: `llvm-objdump -d --triple=armv6k --mattr=+vfp2` of `artifacts/game/game.arm.elf` (agent 20261025-garage-B, no REA session, no emulator run); a scratch dump of the lvl_01 scripts and objects through `chase_assets`; `chase-game` runs started at the crate.
+
+**The chain in the level data.** `1-3_Lift_Crate_01` (`leprops/leprop_wobblydestructible`, `WobbleHealth` 2) fires `1-3_Got_parts` (`ObjectTriggered`) when destroyed; that script calls `SubObjectiveGoToEnable 1-3_Waypoint_03 1-3_Garage_Dummy 0` and `EnableObject 1-3_Generator_Parts_Carry 1`. The carry object (`props/prop_carry`, `ATTR_SmallObject` 0, so a big object, mesh `Prop_CarryCrate_SwitchPull`) stands where the crate stands. `1-3_BasePlate` (`props/prop_carrytarget`, class `UseBound` as in mission 1-1) has `UseObject` the carry object, `TriggerObject` `1-3_Hidden_Exhaust_Carry_Target_Script` (`SubObjectiveGoToEnable 1-3_Waypoint_01 1-3_Generator_Parts_Carry 0`, `SubObjectiveGoToEnable 1-3_Waypoint_03 1-3_Generator_Pull_Switch 1`) and `PlacedObject` the build-it `1-3_Pull_Switch_Bits` (final prop `1-3_Generator_Pull_Switch`).
+
+**What stopped in the port.** Nothing in the crate, the name chain, the pickup or the placing: two hits break the crate (health 2, destroyed by the second hit), `1-3_Got_parts` runs, the carry arrow appears, A picks the box up (big clips), A inside the target's zone places it, the target fires its script and the build-it builds while A is held. One deviation: `1-3_Pull_Switch_Bits` was drawn and buildable from the level start, because the port hid only the links `BuilditFinalProp`, `PropToReveal`, `RevealObject` and `RevealSwitch` and not the target's `PlacedObject`.
+
+**The post-link 0x18e0f8 of the carry target class (type 123).** It reads `UseObject` into the record +0x18, `PlacedObject` into +0x1c and `TriggerObject` into +0x20 (each through 0x241624 and 0x238354) and, when +0x1c is set, tail-calls 0x2428c0 on it: the disable of EnableObject 0, the function the target's state change 0x25e354 calls on `UseObject`. So every carry target hides its `PlacedObject` while the level loads, and 0x242cf0 enables it on use. The port does the same in `levelInitialState` for every object whose class has ObjectType 123 (`src/runtime/level_start.cpp`); the enable on use was ported before.
+
+**Port.** CTests `level-start-real-data` (the build-it is disabled at the start; 253 disabled instances, 134 hidden drawable objects) and `game-parts-crate-1-3` (slow; start at the crate, two Y hits, A, a teleport next to the base plate, A, hold A to build; log order: crate destroyed, `1-3_Got_parts`, arrow, pick up, place, `1-3_Hidden_Exhaust_Carry_Target_Script`, build, `SFX_Generator`). Feature file: [script-system-missions-1-3.md](../plans/features/script-system-missions-1-3.md).
+
+Unknowns:
+- The oracle was not asked: the entity flag of `1-3_Pull_Switch_Bits` before and after the placing and the timings of the crate hits, the pickup and the placing are not measured (SCRIPT-368).
+- The base plate's use zone is the class `UseBound`; an instance override of the zone and the target's `dropAnim` are not read (SCRIPT-S291, LEVOBJ-33).
+- Effects of the placing (`SpawnDebris`, `DropParticle01` 95, `FadeAfterUse`, the drop sound, `DebrisColour`) are not played (LEVOBJ-32).

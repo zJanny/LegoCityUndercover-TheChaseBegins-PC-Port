@@ -86,6 +86,10 @@ int main(int argc, char** argv) {
         for (const auto& name : kTwinDisabled) require(state.isDisabled(name), "twin not disabled: " + name);
         for (const auto& name : kTwinEnabled) require(!state.isDisabled(name), "twin disabled: " + name);
         require(state.isDisabled("FP_SuperBuildit_Statue"), "super build-it target not hidden");
+        // Provenance: 20261025-garage-B, llvm-objdump of artifacts/game/game.arm.elf: the post-link 0x18e0f8 of the carry target class (type 123) reads
+        // PlacedObject into the record +0x1c and tail-calls 0x2428c0 (the disable of EnableObject 0) on it, so 1-3_Pull_Switch_Bits, the PlacedObject
+        // of 1-3_BasePlate, is hidden until the target is used (docs/re/carrying.md, entry of 20261025-garage-B).
+        require(state.isDisabled("1-3_Pull_Switch_Bits"), "the PlacedObject of a carry target is not hidden");
         for (const char* enabled : {"Police_Door_02", "Prop_Lampost_01", "1-1_Mail_Box"})
             require(!state.isDisabled(enabled), std::string("disabled: ") + enabled);
 
@@ -96,7 +100,7 @@ int main(int argc, char** argv) {
         // Provenance: an exploration script (Python, same control words) disabled 226 names through the startup script alone;
         // the total of the script and the revealer links is the value this test recorded from the C++ implementation (249, plus the three
         // X spots the RevealSwitch link hides: 1-2_Dtv_DogPath_XSpot, 1-2_Dtv_DogPath_XSpot01, 1-3_Dtv_BrickSpot_XSpot_02).
-        require(state.disabled.size() == 252, "disabled instance count: " + std::to_string(state.disabled.size()));
+        require(state.disabled.size() == 253, "disabled instance count: " + std::to_string(state.disabled.size()));
 
         // Provenance: LEVOBJ-11. The pale disc at the police entrance was the placement Police_Plaque_Floor
         // (props/prop_respawnabledestructible, the Prop_PolicePlaque model lying on the ground); the original hides it at
@@ -121,8 +125,9 @@ int main(int argc, char** argv) {
             require(floorFound && grappleFound && wallDrawn, "Police plaque placements changed");
             std::cout << "level-start: " << hidden << " of " << drawn.size() << " drawable objects hidden at the start\n";
             // The count is the value recorded from the C++ implementation (the disabled set is pinned against the oracle above); 127 plus the
-            // three hidden X spots and the three animal props that 1-2_MissionHide and 1-3_MissionHide disable (the two dogs, the crow).
-            require(hidden == 133, "hidden drawable object count: " + std::to_string(hidden));
+            // three hidden X spots, the three animal props that 1-2_MissionHide and 1-3_MissionHide disable (the two dogs, the crow) and the PlacedObject
+            // 1-3_Pull_Switch_Bits of the carry target 1-3_BasePlate (20261025-garage-B).
+            require(hidden == 134, "hidden drawable object count: " + std::to_string(hidden));
         }
 
         // Provenance: LEVOBJ-12 / LEVOBJ-13. 0x2428c0 (EnableObject 0) hides the entity's node and, through 0x1dd4f8, the nodes of every nested

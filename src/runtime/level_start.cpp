@@ -1,4 +1,5 @@
 #include "runtime/level_start.hpp"
+#include "runtime/carry.hpp"
 #include "runtime/scene_start.hpp"
 #include <algorithm>
 #include <cctype>
@@ -21,9 +22,17 @@ const LevelParam* findParam(const std::vector<LevelParam>& params, std::uint32_t
     return nullptr;
 }
 
+bool isCarryTarget(const Level& cls) {
+    const std::uint32_t hash = assets::nameHash("ObjectType");
+    for (const LevelParam& param : cls.classParams)
+        if (param.hash == hash) return int(param.value) == kCarryTargetType;
+    return false;
+}
+
 void hideRevealedObjects(const Level& level, const assets::ClassLookup& classOf, assets::PlacedObjectState& state) {
     const std::uint32_t links[] = {assets::nameHash("BuilditFinalProp"), assets::nameHash("PropToReveal"), assets::nameHash("RevealObject"),
                                    assets::nameHash("RevealSwitch")};
+    const std::uint32_t placedObjectHash = assets::nameHash("PlacedObject");
     std::map<std::uint32_t, std::string> instanceByHash;
     for (const LevelObject& object : level.objects) instanceByHash[assets::nameHash(object.instance)] = lower(object.instance);
     for (const LevelObject& object : level.objects) {
@@ -35,6 +44,11 @@ void hideRevealedObjects(const Level& level, const assets::ClassLookup& classOf,
             const auto target = instanceByHash.find(assets::objectReferenceHash(*param));
             if (target != instanceByHash.end()) state.disabled.insert(target->second);
         }
+        if (isCarryTarget(*cls))
+            if (const LevelParam* param = effectiveParam(object, *cls, placedObjectHash)) {
+                const auto target = instanceByHash.find(assets::objectReferenceHash(*param));
+                if (target != instanceByHash.end()) state.disabled.insert(target->second);
+            }
     }
 }
 }
