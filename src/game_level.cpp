@@ -364,7 +364,10 @@ LevelSession::LevelSession(const Shared& sharedState)
         const runtime::HudStudCounter loadedStuds = runtime::hudStudCounterAtLoad(chase::save::slotStudType({liveSlot.data(), liveSlot.size()}), studs.counter());
         chase::save::setSlotStudType(liveSlot.data(), loadedStuds.type);
         hud->studsBanked(loadedStuds.type, loadedStuds.total);
+        hud->setSuperBrickCount(superBricks.total());
+        hud->setSuperBrickSpin(shared.progress.superBrickGlobals.spin);
     }
+    superBricks.setTintPhase(shared.progress.superBrickGlobals.tintPhase);
     overlay.emplace(fe::kTopWidth, fe::kBottomWidth, fe::kScreenHeight);
     startRoomStreaming();
     enterPedestrianScene();
@@ -550,6 +553,8 @@ void LevelSession::reportScripted() const {
     std::cout << superBricks.report() << '\n';
     if (hud) std::cout << "hud: " << hud->hearts() << " hearts, stud display " << hud->studDisplay() << ", bar state "
                        << int(hud->studBarState()) << '\n';
+    if (hud) std::cout << "hud super bricks: shown count " << hud->superBrickDisplay().count() << ", number "
+                       << (hud->superBrickDisplay().view().textVisible ? "shown" : "hidden") << '\n';
     std::cout << "doors:";
     for (const DoorObject& door : doors)
         if (door.state.state != 1) std::cout << ' ' << door.instance << '=' << door.state.state << '/' << int(door.state.timer);
@@ -589,6 +594,7 @@ void LevelSession::handOverProgress() {
     shared.progress.slot = levelScripts.progressNatives().slotImage();
     shared.progress.studs = studs.counter();
     shared.progress.superBricks = superBricks.total();
+    shared.progress.superBrickGlobals = {hud ? hud->superBrickDisplay().spin() : shared.progress.superBrickGlobals.spin, superBricks.tint().phase()};
 }
 
 void LevelSession::releaseOverlays() {

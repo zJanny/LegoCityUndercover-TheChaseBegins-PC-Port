@@ -44,6 +44,7 @@ void LevelSession::loadSuperBuildits() {
     std::cout << "super build-its: " << superBuildits.objects().size() << '\n';
 }
 
+// STAND-IN HUD-S78: no HUD update runs while the dialog or the movie holds the game, so the count display's update count and spin stand still.
 bool LevelSession::holdForSuperBuildit(float dt) {
     if (superBuildits.confirmOpen()) {
         if (pad.slot(kSlotConfirmButton).press > 0) superBuildits.answer(runtime::kSuperBuilditDialogConfirm);
@@ -71,6 +72,7 @@ void LevelSession::updateSuperBuildits(const float playerPosition[3], float dt) 
     const std::vector<runtime::SuperBuilditAction> actions = superBuildits.update(objectState, input);
     const runtime::SuperBuilditSpend spend = runtime::applySuperBuilditActions(superBuildits, actions, objectState, levelScripts);
     superBricks.spend(spend.bricks);
+    if (hud) hud->superBrickSpent(spend.bricks);
     for (unsigned i = 0; i < spend.saveRequests; ++i) levelScripts.progressNatives().requestSave(superBricks.total());
     superBuild.promptTime += dt;
     for (const runtime::SuperBuilditAction& action : actions) {
@@ -96,10 +98,12 @@ void LevelSession::updateSuperBuildits(const float playerPosition[3], float dt) 
                       << '\n';
             break;
         case runtime::SuperBuilditActionKind::Built:
-            std::cout << "super build-it " << object.instance << ": built at update " << updates << ", super bricks " << superBricks.total() << '\n';
+            std::cout << "super build-it " << object.instance << ": built at update " << updates << ", super bricks " << superBricks.total() << ", shown count "
+                      << (hud ? hud->superBrickDisplay().count() : 0) << '\n';
             break;
         }
     }
+    if (hud && superBuild.promptOn) hud->superBrickPickedUp();
     for (const game_super_buildit::Model& model : superBuild.models)
         scene.setInstanceVisible(model.sceneIndex, !objectState.isDisabled(model.instance) && !objectState.isDisabled(model.parent));
 }

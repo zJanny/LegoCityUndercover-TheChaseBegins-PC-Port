@@ -35,8 +35,10 @@ constexpr std::array<std::array<std::uint8_t, 3>, kSuperBrickTintEntries> kSuper
 
 class SuperBrickTint {
 public:
-    // STAND-IN STUD-S8: the phase starts at 0 when the level starts (the origin of *0x3743f4 was not traced).
+    // 0x2600dc, called once per update at the end of the pickup update 0x180168 (the hook [0x58ef04 + 0x10]). The phase *0x3743f4 is static data that
+    // starts at 0 and no level load resets; the run carries it (`setPhase`).
     void update(float dt);
+    void setPhase(float phase) { phase_ = phase; }
     // The bytes of *0x3743f8 (R, G, B) as of the last update.
     const std::array<std::uint8_t, 3>& bytes() const { return bytes_; }
     std::array<float, 3> colour() const { return {float(bytes_[0]) / 255.0f, float(bytes_[1]) / 255.0f, float(bytes_[2]) / 255.0f}; }
@@ -85,7 +87,7 @@ public:
     void add(const std::string& instance, const std::array<float, 3>& position, std::uint16_t value);
     // One update. `enabled(i)` is false for a disabled entity (its update does not run). `playerPosition` is the translation of the player's node;
     // `blocked` is bit 4 of the player's entity word +0xc (the pickup test is skipped while it is set). `flightTarget` is the world point 6.0 in
-    // front of the camera (0x1acfc0..0x1ad02c); a collected brick moves towards it by 0x1ad04c..0x1ad07c, (target - position) / (kStudFlightRate x timer) like a stud. STAND-IN STUD-S8: the camera shift
+    // front of the camera (0x1acfc0..0x1ad02c); a collected brick moves towards it by 0x1ad04c..0x1ad07c, (target - position) / (kStudFlightRate x timer) like a stud. STAND-IN STUD-S12: the camera shift
     // *0x58ef40 that the original adds to the position before the step (0x1ad028..0x1ad03c) is left out.
     template <typename Enabled>
     SuperBrickStep update(float dt, const std::array<float, 3>& playerPosition, bool blocked, Enabled enabled,

@@ -39,14 +39,26 @@ struct SuperBrickDisplayView {
     std::uint32_t count = 0;
 };
 
+// Globals that no level load resets (static data in code.bin, initial value 0): the spin angle 0x375890, written only by the draw callback 0x2a5f80, and
+// the rainbow tint phase 0x3743f4, written only by the tint writer 0x2600dc. A level session starts from the values the run carries.
+struct SuperBrickGlobals {
+    float spin = 0;
+    float tintPhase = 0;
+};
+
 class SuperBrickDisplay {
 public:
-    // The count the display shows before any pickup (the u32 at 0x51920c + 0x2a8, which the port takes from the super brick count).
+    // The shown count +0x2a8 (0x51920c + 0x2a8 = 0x5194b4): the HUD setup 0x17bda4 and the level load 0x26e9ac store the super brick count there.
     void setCount(std::uint32_t count) { count_ = count; }
-    // 0x2144f8: stamp +0x2a0 = the update count, the fader is shown with hold -1 (0x23cc00).
+    // 0x2144f8: stamp +0x2a0 = the update count, the fader is shown with hold -1 (0x23cc00). Called by a pickup and, every update, by the draw callback
+    // while a super build-it owns the prompt page (flag 0x37588c).
     void show();
     // 0x262778 at the destroy: +0x2a8 = the new count, +0x2a4 = the update count (the bounce).
     void banked(std::uint32_t total);
+    // 0x26d550 at a finished super build-it (0x26d778..0x26d780): +0x2a8 -= the value; no bounce.
+    void spend(std::uint32_t value) { count_ -= value; }
+    float spin() const { return spin_; }
+    void setSpin(float spin) { spin_ = spin; }
     // One game update (the draw callback runs once per update): spin, expiry, fader.
     void update(float dt);
     SuperBrickDisplayView view() const;
@@ -57,7 +69,8 @@ private:
     // The fader 0x5198b0: the state machine of 0x23cb90 / 0x23cc00 / 0x2459d8 / 0x235e2c shared with the camera lock icon and the head icon.
     CameraLockIcon fader_{kSuperBrickFadeIn, kSuperBrickFadeOut, -1.0f};
 
-    unsigned updates_ = 1000;  // 0x241098 is far above 0 in play; a stamp of 0 means no display
+    // STAND-IN HUD-S76: the update count starts at 1000 and advances with the HUD update; 0x241098 is clock-derived. A stamp of 0 means no display.
+    unsigned updates_ = 1000;
     unsigned stamp_ = 0, bounceStamp_ = 0;
     std::uint32_t count_ = 0;
     float spin_ = 0;

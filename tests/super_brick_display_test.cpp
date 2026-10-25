@@ -71,6 +71,66 @@ void bank() {
     require(near(display.view().textScale, 1.0f), "the bounce lasts 5 updates");
 }
 
+// The helipad build lowers the shown count +0x2a8 together with the counter 0x593430 (0x26d778..0x26d780 by llvm-objdump, 20261025-mission13-C).
+// Oracle: the user state m13-4-helipad-300-bricks read 302 in both words and 10 s after the build 2 in both (docs/re/super-buildit.md, entry
+// 2026-10-19T19:23:11, RPC reads of the round that wrote it). The build does not show the display and does not bounce the number.
+void spend() {
+    SuperBrickDisplay display;
+    display.setCount(302);
+    display.spend(300);
+    require(display.count() == 2, "the build lowers the shown count by the value (302 -> 2 in the oracle)");
+    require(!display.view().textVisible && !display.view().iconVisible, "the build alone shows nothing");
+    display.show();
+    for (int i = 0; i < 10; ++i) display.update(kDt);
+    require(display.view().count == 2 && near(display.view().textScale, 1.0f), "the number reads the lowered count without a bounce");
+}
+
+// While a super build-it owns the prompt page (word 0x37588c, written by 0x1cc994 and 0x1cc4d4) the draw callback 0x2a5f80 calls 0x2144f8 in every
+// update (0x2a5fa0..0x2a5fa8): the stamp keeps moving, so the display stays. After the last call it lasts the usual 80 updates
+// (20261025-mission13-C, llvm-objdump of artifacts/game/game.arm.elf).
+void heldByPrompt() {
+    SuperBrickDisplay display;
+    display.setCount(296);
+    for (int i = 0; i < 300; ++i) {
+        display.show();
+        display.update(kDt);
+        require(display.view().textVisible && display.view().iconVisible, "the display stays while the prompt page is owned");
+    }
+    require(near(display.view().iconAlpha, 1.0f) && display.view().count == 296, "the held display is fully in and shows the count");
+    unsigned updates = 1;
+    while (display.view().textVisible && updates < 200) {
+        display.update(kDt);
+        ++updates;
+    }
+    require(updates == 80, "the number lasts 80 updates after the last call, got " + std::to_string(updates));
+}
+
+// The spin angle 0x375890 and the tint phase 0x3743f4 are static data with the initial value 0 (bytes 00 00 00 00 in artifacts/game/code.bin at
+// both addresses) and no level load resets them: a run that continues in a new level session with the carried values equals an unbroken run.
+void globalsCarry() {
+    const SuperBrickGlobals initial;
+    require(initial.spin == 0.0f && initial.tintPhase == 0.0f, "both globals start at 0");
+    SuperBrickDisplay whole, first, second;
+    SuperBrickTint tintWhole, tintFirst, tintSecond;
+    for (int i = 0; i < 45; ++i) {
+        whole.update(kDt);
+        first.update(kDt);
+        tintWhole.update(kDt);
+        tintFirst.update(kDt);
+    }
+    const SuperBrickGlobals carried = {first.spin(), tintFirst.phase()};
+    second.setSpin(carried.spin);
+    tintSecond.setPhase(carried.tintPhase);
+    for (int i = 0; i < 40; ++i) {
+        whole.update(kDt);
+        second.update(kDt);
+        tintWhole.update(kDt);
+        tintSecond.update(kDt);
+    }
+    require(near(whole.spin(), second.spin()) && whole.spin() > 0.0f, "the spin continues across the level load");
+    require(near(tintWhole.phase(), tintSecond.phase()) && tintWhole.bytes() == tintSecond.bytes(), "the tint phase continues across the level load");
+}
+
 void flight() {
     SuperBrickField field;
     field.add("b", {0, 0, 0}, 200);
@@ -143,6 +203,9 @@ int main(int argc, char** argv) {
         if (argc >= 3 && !std::filesystem::exists(argv[1])) return 77;
         displayTiming();
         bank();
+        spend();
+        heldByPrompt();
+        globalsCarry();
         flight();
         tint();
         if (argc >= 3) drawing(argv[1], argv[2]);

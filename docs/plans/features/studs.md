@@ -1,5 +1,7 @@
 # Studs (collectible coins)
 
+Subtopics: [studs-super-bricks.md](studs-super-bricks.md)
+
 ## 1. Scope
 
 Studs as the original handles them: pickup-system sprites (object type 0x3d, pickuptype 0..3: silver, gold, blue, purple), drawing and spin, pickup radius and skip counter, collect timer, counter values and limits. The on-screen counter belongs to [hud-ui.md](hud-ui.md); the collect sound to [audio.md](audio.md).
@@ -16,7 +18,6 @@ IN_PROGRESS, updated 2026-10-20T10:31:21+02:00. Which classes drop studs is sett
 - Dropped studs: the record choice, the count split into blue / gold / silver, mode 1 (a heart one time in three), the ten-record limit, the start velocity, the flight, bounce, landing sound and its wait, rest, life, blink, the pickup with the skip counter 30 and the collect timer of a dropped record, and the request of 0x2149ac are pinned by `stud-drop`. evidence: [studs-drops.md §2026-10-19T14:02:59](../../re/studs-drops.md#ts-20261019-140259).
 - Callers: the request of the wobble hit (two studs, mode 0, the node's `SpawnDir`/row 2), of a finished build-it (`StudValue`, mode 1, at the final prop), the stud values of the shipped props and build-its, and the absence of `SpawnLoc`, `ForceStudValue` and vehicle `StudValue` are pinned by `stud-callers`, `stud-callers-real-data` and `game-script-wobbly-table`. evidence: [studs-drops.md §2026-10-19T14:36:25](../../re/studs-drops.md#ts-20261019-143625).
 - Which classes drop, and the requests of the player's hurt (30 studs, mode 0), the player's death (a tenth of the counter, at most 110, digit sum at most 10), the hit-sequence slots and the ability reward sites, are pinned by `stud-drop-classes` and `stud-drop-classes-real-data`. evidence: [studs-drops.md §2026-10-20T10:29:01](../../re/studs-drops.md#ts-20261020-102901).
-- Super bricks: the pickup test is a distance below 1.5 between the brick node and the player node (not the stud pickup point); the destroy 31 updates after the pickup adds the amount and plays UI sound 14 (amount 10 or more) or 2. `super-brick` replays the oracle's rows (pickup in frame 6, destroy in frame 37, 96 + 200 = 296); `super-brick-real-data`: lvl_01 has 8 placed bricks (200 / 500 / 1500). evidence: [super-bricks.md §2026-10-19T19:20:44](../../re/super-bricks.md#ts-20261019-192044).
 - Level census: lvl_00 97 studs (silver 48, gold 46, blue 3), lvl_01 1040 (silver 495, gold 468, blue 73, purple 4).
 
 ## 4. Stand-ins
@@ -24,15 +25,11 @@ IN_PROGRESS, updated 2026-10-20T10:31:21+02:00. Which classes drop studs is sett
 - STUD-S1 Pickup radius 1.5 and player pickup point (0, 1.153, 0.08) are oracle readings, not derived from their writers (0x2744d0, entity +0x60).
 - STUD-S3 The sprite clock phase is `chase-game`'s own.
 - STUD-S5 Sprites are alpha-tested without the original's blend state.
-- STUD-S6 Dropped studs in the port: bytes 0x377278 (+0x49 bit 0) and 0x377280 (collect on landing) and the hook 0x377278 + 0x28 of 0x2149ac count as clear; the collect flight leaves out the camera shift 0x58ef40; the volume 0.7 and the landing frequency scale are not applied; a dropped heart is neither drawn nor picked up; the line tests are VEH-S104's. needs: STUD-13. evidence: [studs-drops.md §2026-10-19T14:02:59](../../re/studs-drops.md#ts-20261019-140259).
+- STUD-S6 Dropped studs in the port: bytes 0x377278 (+0x49 bit 0) and 0x377280 (collect on landing) and the hook 0x377278 + 0x28 of 0x2149ac count as clear; the collect flight leaves out the camera shift 0x58ef40; the volume 0.7 and the landing frequency scale are not applied; a dropped heart is neither drawn nor picked up; the line tests are VEH-S104's. needs: STUD-13, STUD-28. evidence: [studs-drops.md §2026-10-19T14:02:59](../../re/studs-drops.md#ts-20261019-140259).
 
 - STUD-S7 The studs of a wobbling hit leave from the prop's node at its placement (the spring motion of 0x16b958 is not ported, LEVOBJ-112), a `SpawnLoc` target is taken at its placement (no level object has one), the entity word +0xc bit 22 (record flag +0x49 bit 1) counts as clear. needs: LEVOBJ-112. evidence: [studs-drops.md §2026-10-19T14:36:25](../../re/studs-drops.md#ts-20261019-143625).
 - STUD-S14 A negative `StudValue` drops nothing in the port; the original passes the count on to 0x2149ac (only a non-zero test). No placed object has one. evidence: [studs-drops.md §2026-10-20T10:29:01](../../re/studs-drops.md#ts-20261020-102901).
 - STUD-S15 The player's death drop sets the byte 0x377278 (no multiplier) for its call, which the drop records of the port do not carry (STUD-S6), and the notification 0x22ddf4(0x519760, 4, 1) after a non-zero loss is not ported. needs: STUD-26. evidence: [studs-drops.md §2026-10-20T10:29:01](../../re/studs-drops.md#ts-20261020-102901).
-- STUD-S8 Super bricks: the idle spin takes the port's sprite clock (STUD-S3), the rainbow tint phase 0x3743f4 starts at 0 with the level, the UI sound index of the destroy is played as a global sound id without a position (the bank `*0x3757a8` is taken as the global table). needs: STUD-17, STUD-23. evidence: [super-bricks.md §2026-10-19T20:35:01+02:00](../../re/super-bricks.md#ts-20261019-203501).
-- STUD-S9 Super bricks: the player's entity word +0xc bit 4 (the pickup block) counts as clear, an entity has no `TaskComplete` parameter, and a brick is updated after the player's update of the same frame. needs: STUD-16. evidence: [super-bricks.md §2026-10-19T19:20:44](../../re/super-bricks.md#ts-20261019-192044).
-- STUD-S12 The brick flight leaves out the camera shift `p - *0x58ef40 + eye` that the original applies before each step (the writer of *0x58ef40 is not found); it only matters while the camera moves. needs: STUD-22. evidence: [super-bricks.md §2026-10-19T20:35:01+02:00](../../re/super-bricks.md#ts-20261019-203501).
-- STUD-S13 The flight target is 6.0 straight ahead of the camera because cam +0xcc / +0xd0 were read as 0 (gameplay-start, no brick; the original computes y from them). needs: STUD-24. evidence: [super-bricks.md §2026-10-19T20:35:01+02:00](../../re/super-bricks.md#ts-20261019-203501).
 
 ## 5. Open items
 
@@ -49,10 +46,6 @@ IN_PROGRESS, updated 2026-10-20T10:31:21+02:00. Which classes drop studs is sett
 - [ ] STUD-5 — Where the per-frame clock origin of 0x5165c8 comes from and whether the game restarts it at level start. evidence: [studs.md §2026-10-13T17:09](../../re/studs.md#ts-20261013-170941).
 - [ ] STUD-6 — The per-level stud total; whether the radius 1.5 holds for all characters and abilities (setter 0x2744d0). evidence: [studs.md §2026-10-13T17:09](../../re/studs.md#ts-20261013-170941).
 - [ ] STUD-8 — Whether other stud types use other HUD sinks (the type table +0x5c byte is 0 for all four), the flying sprite's blend state, magnet studs. needs: STUD-1. evidence: [hud.md](../../re/hud.md).
-- [ ] STUD-16 — Placed super bricks, not ported: the `CollectedTriggerObject` message, `ATTR_SFX` / `ATTR_SFX_APPEAR`, the `TaskComplete` record (0x210260, a collected brick stays gone after a reload, restore 0x225cfc), the `IsSpawnDebris` bricks and the children of the super build-its (`pickup_sbbrick1x1`, `pickup_sbplate1x1`); debris super bricks are VEH-123. blocks: STUD-S9. evidence: [super-bricks.md §2026-10-19T19:20:44](../../re/super-bricks.md#ts-20261019-192044)
-- [ ] STUD-22 — The writer of the camera shift *0x58ef40 (read by the flight 0x1ad028 and the stud update 0x180c90). blocks: STUD-S12, STUD-S6. evidence: [super-bricks.md §2026-10-19T20:35:01+02:00](../../re/super-bricks.md#ts-20261019-203501)
-- [ ] STUD-23 — The origins of the tint phase *0x3743f4 and the spin angle, and the caller of the tint writer 0x2600dc. blocks: STUD-S8. evidence: [super-bricks.md §2026-10-19T20:35:01+02:00](../../re/super-bricks.md#ts-20261019-203501)
-- [ ] STUD-24 — cam +0xcc / +0xd0 in a state with a brick (the flight target's y). blocks: STUD-S13. evidence: [super-bricks.md §2026-10-19T20:35:01+02:00](../../re/super-bricks.md#ts-20261019-203501)
 
 ## 6. Findings summary
 
@@ -61,7 +54,6 @@ IN_PROGRESS, updated 2026-10-20T10:31:21+02:00. Which classes drop studs is sett
 - Dropped studs (0x21e2e4 modes 0..2, 0x19913c, their update and draw rule, 0x2149ac): [studs-drops.md §2026-10-19T14:02:59](../../re/studs-drops.md#ts-20261019-140259).
 - The first callers (wobble hit, finished build-it; no stud from a car break): [studs-drops.md §2026-10-19T14:36:25](../../re/studs-drops.md#ts-20261019-143625).
 - Which classes drop studs and the player's hurt and death drops: [studs-drops.md §2026-10-20T10:29:01](../../re/studs-drops.md#ts-20261020-102901).
-- Placed super build bricks, the count 0x593430 (slot +0x5190), the roof brick of mission 1-3: [super-bricks.md §2026-10-19T19:20:44](../../re/super-bricks.md#ts-20261019-192044); the display, flight and tint: [super-bricks.md §2026-10-19T20:35:01+02:00](../../re/super-bricks.md#ts-20261019-203501).
 - The load of the stud counter and the super brick count from the slot (0x20a4d4): [save-format-state.md §2026-10-19T20:24:11](../../re/save-format-state.md#ts-20261019-202411).
 - Pickup pool, drawing, pickup rule and counter (object type 0x3d registered at 0x2ed0b4, constructor 0x17f8e0): [studs.md §2026-10-13T17:09](../../re/studs.md#ts-20261013-170941).
 
@@ -69,5 +61,4 @@ IN_PROGRESS, updated 2026-10-20T10:31:21+02:00. Which classes drop studs is sett
 
 - `StudField` (`src/runtime/studs.*`, flight target, `bank` and banked totals), `StudDropField`, `studSpawnRequest` (`src/runtime/stud_drop.*`), the callers `src/runtime/stud_callers.*`, glue `game_stud_drops::LevelStudDrops`, `unprojectTopScreen`, `StudSprites` (`src/render/studs.*`), `DrawableObjects::studs`; counter printed by `--script`.
 - `src/runtime/stud_drop_classes.*`: `kGenericStudStateKinds`, `studValueParameter`, `genericStateStudRequest`, `kStudRewardSites`, `playerHurtStudRequest`, `playerDeathStudLoss`, `hitSequenceStudRequest`; no game glue yet.
-- Super bricks: `SuperBrickField` (`src/runtime/super_brick.*`, `setTotal`), `SuperBrickObject` (`src/assets/level.cpp`), `SuperBrickTint` and the flight in `SuperBrickField::update`, the display `src/runtime/super_brick_display.*`, glue `src/game_super_bricks.*`, `ProgressNativeState::requestSave`; the counters from the slot: `chase::save::enterLevel`, `StudField::setCounter`, glue `src/game_save.*` (tests `new-game-slot-real-data`, `game-save-reload`).
-- CTest: `studs-core`, `studs-real-data`, `stud-drop`, `stud-callers`, `stud-callers-real-data`, `stud-drop-classes`, `stud-drop-classes-real-data`, `super-brick`, `super-brick-real-data`, `game-super-brick-freeplay`, `game-super-brick-roof` (slow), `super-brick-display`. Traces: `tests/data/studs/pickups.csv`. Scenarios: `tools/oracle/studs-pickup.txt`, `studs-shot.txt`, `hud-bar.txt`, `hud-skip.txt`, `hud-camera.txt`.
+- CTest: `studs-core`, `studs-real-data`, `stud-drop`, `stud-callers`, `stud-callers-real-data`, `stud-drop-classes`, `stud-drop-classes-real-data`. Super brick tests: [studs-super-bricks.md](studs-super-bricks.md). Traces: `tests/data/studs/pickups.csv`. Scenarios: `tools/oracle/studs-pickup.txt`, `studs-shot.txt`, `hud-bar.txt`, `hud-skip.txt`, `hud-camera.txt`.

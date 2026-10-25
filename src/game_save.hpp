@@ -4,6 +4,7 @@
 #include "assets/assets.hpp"
 #include "runtime/natives_progress.hpp"
 #include "runtime/script_runner.hpp"
+#include "runtime/super_brick_display.hpp"
 #include "game_options.hpp"
 #include "save/level_state.hpp"
 #include "save/new_game.hpp"
@@ -24,6 +25,7 @@ struct Progress {
     chase::save::Bytes slot;
     std::uint64_t studs = 0;
     std::uint32_t superBricks = 0;
+    chase::runtime::SuperBrickGlobals superBrickGlobals;
     chase::save::SaveRequestWriter writer;
 };
 

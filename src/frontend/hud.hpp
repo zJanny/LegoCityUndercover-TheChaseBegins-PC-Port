@@ -55,7 +55,9 @@ public:
     // The super brick count display (runtime/super_brick_display.hpp): 0x2144f8 at a pickup, 0x262778 at the destroy with the new count.
     void superBrickPickedUp() { superBrick_.show(); }
     void superBrickBanked(std::uint32_t total) { superBrick_.banked(total); }
+    void superBrickSpent(std::uint32_t value) { superBrick_.spend(value); }
     void setSuperBrickCount(std::uint32_t total) { superBrick_.setCount(total); }
+    void setSuperBrickSpin(float spin) { superBrick_.setSpin(spin); }
     const runtime::SuperBrickDisplay& superBrickDisplay() const { return superBrick_; }
     // STAND-IN: `spinSeconds`, the clock of the icon animation (15 frames per second), has the same unrecovered origin as
     // the studs in the world.

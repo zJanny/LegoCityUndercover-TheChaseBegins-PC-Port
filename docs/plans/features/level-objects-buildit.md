@@ -46,7 +46,6 @@ IN_PROGRESS, updated 2026-10-20T00:31:50+02:00. Super build-its: on `1-3_Helipad
 - [ ] LEVOBJ-120 — The fast travel map: the map buttons page switch when the pad answers ready, the level icons, the exit (state 0x182) with the Helicopter's takeoff and the arrival (state 0x183); until then the player stays in state 0x181. needs: UI-1. evidence: [fast-travel.md §2026-10-20T00:22:29](../../re/fast-travel.md#ts-20261020-002229).
 - [ ] LEVOBJ-121 — The rest of the pad: message 0xff to the child `pfx` (particles, needs PART-3), the camera of the fast travel states, the pad list of the map, `LinkedObject`, `VisibleBound` and the second slot set of the state objects. evidence: [fast-travel.md §2026-10-20T00:22:29](../../re/fast-travel.md#ts-20261020-002229).
 - [ ] LEVOBJ-122 — The gate of the use registry walk and the update in which a requested player state is entered are not read. blocks: LEVOBJ-S96. evidence: [fast-travel.md §2026-10-20T00:22:29](../../re/fast-travel.md#ts-20261020-002229).
-- [ ] LEVOBJ-119 — The build lowers only the count 0x593430; its HUD copy 0x5194b4 is not modelled (no HUD counter for super bricks yet). evidence: [super-buildit.md §2026-10-19T19:23:11](../../re/super-buildit.md#ts-20261019-192311).
 
 ## 6. Findings summary
 

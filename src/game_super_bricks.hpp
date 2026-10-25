@@ -29,8 +29,8 @@ public:
     // STAND-IN STUD-S9: the player's entity word +0xc bit 4 (the pickup block) counts as clear.
     Result update(float dt, const std::array<float, 3>& playerPosition, const std::function<bool(const std::string& instance)>& disabled,
                   const std::optional<std::array<float, 3>>& flightTarget);
-    // STAND-IN STUD-S8: the idle spin takes the clock from `clockTicks` (the port's own sprite clock, STUD-S3), the rainbow tint phase *0x3743f4
-    // starts at 0 with the level, and the flight leaves out the camera shift *0x58ef40.
+    // STAND-IN STUD-S8: the idle spin takes the clock from `clockTicks` (the port's own sprite clock, STUD-S3). STAND-IN STUD-S12: the flight leaves
+    // out the camera shift *0x58ef40.
     void apply(chase::render::Scene& scene, const std::vector<std::size_t>& placedSceneIndex, const std::function<bool(const std::string&)>& disabled,
                std::uint32_t clockTicks);
     std::uint32_t total() const { return field_.total(); }
@@ -38,6 +38,7 @@ public:
     void spend(std::uint32_t value) { field_.spend(value); }
     const chase::runtime::SuperBrickField& field() const { return field_; }
     const chase::runtime::SuperBrickTint& tint() const { return tint_; }
+    void setTintPhase(float phase) { tint_.setPhase(phase); }
     std::string report() const;
 
 private:

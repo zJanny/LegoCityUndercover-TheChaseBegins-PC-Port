@@ -69,7 +69,6 @@ namespace runtime = chase::runtime;
 
 void LevelSession::updateSuperBricks(float dt) {
     const std::array<float, 3> playerPosition = {player->motion.x, player->vertical.y, player->motion.z};
-    if (hud) hud->setSuperBrickCount(superBricks.total());
     const std::optional<std::array<float, 3>> flightTarget = runtime::unprojectTopScreen(
         200.0f, 120.0f, runtime::kSuperBrickFlightDepth, follow->eye(), follow->yaw(), follow->pitch(), follow->verticalFieldOfView());
     const game_super_bricks::Result result = superBricks.update(

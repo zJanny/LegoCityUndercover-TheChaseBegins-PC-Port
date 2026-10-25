@@ -1542,7 +1542,7 @@ if(BUILD_TESTING)
       --start "901.454 30.903 1139.463" --facing 27 --call-script 1-3_Fade_Blockers
       --script "0 0 5;0 0 1 A;0 0 5")
     set_tests_properties(game-super-buildit-prompt PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
-      PASS_REGULAR_EXPRESSION "super build-it 1-3_helipad.sbplate: prompt shown at update [0-9]+ \\(needs 300, has 0\\)"
+      PASS_REGULAR_EXPRESSION "super build-it 1-3_helipad.sbplate: prompt shown at update [0-9]+ \\(needs 300, has 0\\).*\nhud super bricks: shown count 0, number shown\n"
       FAIL_REGULAR_EXPRESSION "super build-it [^\n]*dialog opened")
     # Mission 1-3, the helipad built: FP_Superbrick_01 (+1500, as game-super-brick-freeplay) is picked up, then the player stands where the user's
     # state m13-4-helipad-300-bricks stands; A opens "Are you sure?", A (OK) plays superbuildit_helipad and the update after the movie builds:
@@ -1556,7 +1556,7 @@ if(BUILD_TESTING)
       --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes --call-script 1-3_Fade_Blockers
       --script "at 948.327 95.031 1124.175 0;0 0 40;at 901.203 30.899 1141.268 50;0 0 5;0 0 1 A;0 0 5;0 0 1 A;0 0 330;at 906.561 31.445 1138.943 135;0 0 5;0 0 1 A;0 0 90")
     set_tests_properties(game-super-buildit-build PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
-      PASS_REGULAR_EXPRESSION "prompt shown at update [0-9]+ \\(needs 300, has 1500\\).*dialog opened.*movie superbuildit_helipad at update [0-9]+.*built at update [0-9]+, super bricks 1200.*script 1-3_Helipad_Built started.*fast travel 1-3_helipad.sbfasttravel: state 0x180 entered at update 388\nfast travel 1-3_helipad.sbfasttravel: state 0x181 entered at update 410\n.*helicopter landed, map ready at update 473 ")
+      PASS_REGULAR_EXPRESSION "prompt shown at update [0-9]+ \\(needs 300, has 1500\\).*dialog opened.*movie superbuildit_helipad at update [0-9]+.*built at update [0-9]+, super bricks 1200, shown count 1200.*script 1-3_Helipad_Built started.*fast travel 1-3_helipad.sbfasttravel: state 0x180 entered at update 388\nfast travel 1-3_helipad.sbfasttravel: state 0x181 entered at update 410\n.*helicopter landed, map ready at update 473 .*\nhud super bricks: shown count 1200, number hidden\n")
     # Mission 1-2, the dog released (SCRIPT-293): 1-2_Cage_Key_Target_Script fades the screen to black (FadeScreen 0), the
     # cutscene mode of 1_2_c fades it in again (DCamCutScenePlay handler 0x26fa18, mode enter 0x2fadb8; gdb trace from the user's
     # state m12-13-cage-trigger, docs/re/cutscenes.md), and after the cutscene 1-2_MissionEnd follows with the game picture.

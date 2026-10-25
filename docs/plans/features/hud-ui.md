@@ -45,7 +45,7 @@ IN_PROGRESS, updated 2026-10-19T15:05:12+02:00. The map also shows the sub-objec
 - [ ] HUD-70 — How the node alpha and colour of a tween enter the draw (0x23f708, 0x23f6d0 and their readers), the `UseMarker` classes (other `props/map_*`) and the sound 0x35 of state 0. blocks: HUD-S70, SCRIPT-S232. evidence: [objective-hud-waypoints.md §2026-10-15T19:58](../../re/objective-hud-waypoints.md#ts-20261015-195841).
 - [ ] HUD-18 — The top-screen waypoint arrow or indicator (none was seen at the mission start); compare when the player is far from the waypoint. evidence: [objective-hud.md §2026-10-14T15:59](../../re/objective-hud.md#ts-20261014-155919).
 - [ ] HUD-12 — chase-game always uses the two-screen layout, also for levels without a player (placeholder camera).
-- [ ] HUD-74 — The brick models of the super build-it prompt are not drawn. evidence: [super-buildit.md §2026-10-19T19:23:11](../../re/super-buildit.md#ts-20261019-192311).
+- [ ] HUD-74 — The brick models of the super build-it prompt are not drawn. blocks: HUD-85. evidence: [super-buildit.md §2026-10-19T19:23:11](../../re/super-buildit.md#ts-20261019-192311).
 - [ ] HUD-75 — Layout text ignores `fontSize` (table 0x52ebf8). blocks: HUD-S73. evidence: [super-buildit.md §2026-10-19T19:23:11](../../re/super-buildit.md#ts-20261019-192311).
 
 ## 6. Findings summary
