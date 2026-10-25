@@ -334,14 +334,18 @@ void AiCore::advanceSuperJump(const std::string& name, AiCharacter& target, floa
         return;
     }
     target.heading = heading;
-    const float dx = jump.target[0] - position[0], dz = jump.target[2] - position[2];
-    const float distance = std::sqrt(dx * dx + dz * dz);
-    const float step = std::min(distance, jump.plan.horizontalPerFrame * kAiUpdatesPerSecond * dt);
-    if (distance > 0.0f) {
-        position[0] += dx / distance * step;
-        position[2] += dz / distance * step;
+    SuperJumpStep step = stepSuperJumpHorizontal(jump.plan, heading, dt);
+    const float length = std::sqrt(step.x * step.x + step.z * step.z);
+    const float remaining = std::sqrt((jump.target[0] - position[0]) * (jump.target[0] - position[0]) + (jump.target[2] - position[2]) * (jump.target[2] - position[2]));
+    // STAND-IN SCRIPT-S103: the original ends the flight by its landing (0x28e4cc); without that model a step longer than the distance left is
+    // cut at the target, so state 11 arrives in the next update instead of passing the target again and again.
+    if (length > remaining && length > 0.0f) {
+        step.x *= remaining / length;
+        step.z *= remaining / length;
     }
-    jump.traveled += step;
+    position[0] += step.x;
+    position[2] += step.z;
+    jump.traveled += std::min(length, remaining);
     const float progress = jump.horizontalDistance > 0.0f ? std::min(1.0f, jump.traveled / jump.horizontalDistance) : 1.0f;
     const float rise = jump.target[1] - jump.start[1];
     const float climb = jump.plan.climb;

@@ -216,6 +216,7 @@ private:
     game_traffic::SystemInputs trafficInputs();
     bool placeTrafficCar(const chase::runtime::TrafficCarPlacement& placement);
     void updatePropAnimations(float dt);
+    void updatePropRocking();
     void updateSuperBricks(float dt);
     void applySuperBricks();
     std::vector<chase::runtime::SoundCall> updateDebrisPickup(float dt, const std::array<float, 3>& pickupPoint);
@@ -344,6 +345,8 @@ private:
     chase::runtime::SameLevelEntryFlow sameLevelFlow;
     unsigned updatesForLog = 0;
     std::set<std::string> heldPropsLogged;
+    std::map<std::string, bool> propRockingLogged;
+    std::map<std::string, std::optional<std::size_t>> propRockingScene;
     std::size_t reportedUnhandled = 0, reportedEvents = 0;
     chase::runtime::CollisionWorld collision;
     std::vector<chase::runtime::BulletBox> vehicleBoxes;

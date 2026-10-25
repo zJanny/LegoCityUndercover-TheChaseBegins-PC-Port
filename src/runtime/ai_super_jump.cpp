@@ -1,5 +1,7 @@
 #include "runtime/ai_super_jump.hpp"
 
+#include "runtime/player_intent.hpp"
+
 #include <cmath>
 #include <cstring>
 
@@ -31,6 +33,12 @@ SuperJumpPlan planSuperJump(const std::array<float, 3>& position, const std::arr
     plan.horizontalPerFrame = distance / static_cast<float>(plan.frames);
     plan.climb = (dy > 0.0f ? dy : 0.0f) + height;
     return plan;
+}
+
+SuperJumpStep stepSuperJumpHorizontal(const SuperJumpPlan& plan, std::uint16_t facing, float dt) {
+    const float angle = static_cast<float>(facing) * kHeadingUnitRadians;
+    const float speed = plan.horizontalPerFrame * kSuperJumpStepRate;
+    return {speed * (dt * gameSin(angle)), speed * (dt * gameCos(angle))};
 }
 
 }

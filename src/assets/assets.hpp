@@ -475,6 +475,8 @@ std::string meshModelPath(const std::string& mesh);
 // Row-major 4x4 for row vectors (translation in the last row), as stored by the game.
 using Matrix = std::array<float, 16>;
 Matrix multiply(const Matrix& a, const Matrix& b);
+// 0x247660: the Euler angles of the 3x3 rotation of a node matrix; of the two equivalent triples the one with the smaller length.
+std::array<float, 3> matrixEulerAngles(const Matrix& matrix);
 
 // .bfnskl skeleton (loader 0x10f26c). Parents precede children.
 struct Joint {

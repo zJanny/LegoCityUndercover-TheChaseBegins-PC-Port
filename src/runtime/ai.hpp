@@ -93,9 +93,10 @@ struct AiPursuit {
     bool takedown = false;
 };
 
-// AISuperJump: the setup of 0x213300 (plan) and the flight. STAND-IN SCRIPT-S103: the flight itself is locomotion state 72
-// (not recovered); the character covers `plan.horizontalPerFrame` per 1/30 s toward the target and its height follows a
-// parabola from the start through the apex `plan.climb` above the start to the target height.
+// AISuperJump: the setup of 0x213300 (plan) and the flight of locomotion states 72 / 73. The horizontal step is the code's
+// (stepSuperJumpHorizontal). STAND-IN SCRIPT-S103: the height follows a parabola from the start through the apex `plan.climb`
+// above the start to the target height; the original plays the jump-run animation with its root motion scaled to the climb
+// (0x200cc4) and ends the state after 28 counts of ctrl+0x2cf or on landing (0x28e4cc).
 struct AiSuperJump {
     std::array<float, 3> target{};
     float height = 0;

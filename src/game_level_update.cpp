@@ -198,6 +198,7 @@ void LevelSession::updateLevelCharacters(float dt) {
         return !objectState.isDisabled(character.placement.instance) && roomShown(runtime::roomNumber(character.placement.room));
     });
     updatePropAnimations(dt);
+    updatePropRocking();
 }
 
 std::vector<runtime::SoundCall> LevelSession::updateBuildits(const float playerPosition[3]) {

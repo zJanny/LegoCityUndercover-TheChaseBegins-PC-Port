@@ -15,6 +15,8 @@
 #include "runtime/natives_sound.hpp"
 #include "runtime/natives_progress.hpp"
 #include "runtime/natives_party.hpp"
+#include "runtime/platform_wait.hpp"
+#include "runtime/prop_rocking.hpp"
 #include "runtime/objectives.hpp"
 #include "runtime/sub_objectives.hpp"
 #include "runtime/vehicle.hpp"
@@ -241,7 +243,15 @@ public:
     void loadCarryItWaypoint(const assets::Level& bits, const assets::ClassLookup& classOf) { waypoints_.loadCarryItWaypoint(bits, classOf); }
     // The AnimationOffset parameter of every placed object whose class lists it (PlayAnimation 0x268240).
     void loadAnimationOffsets(const assets::ClassLookup& classOf);
-    void loadObjectKinds(const assets::ClassLookup& classOf) { objectNatives_.loadKinds(level_, classOf); }
+    void loadObjectKinds(const assets::ClassLookup& classOf) {
+        objectNatives_.loadKinds(level_, classOf);
+        loadGeneratorNatives(classOf);
+    }
+    // The rocking props (SetPropRocking) and the platform records (WaitForPlatform) of the level (game_generator_natives_glue.cpp).
+    void loadGeneratorNatives(const assets::ClassLookup& classOf);
+    const PropRockingSet& propRocking() const { return propRocking_; }
+    PlatformSet& platforms() { return platforms_; }
+    const PlatformSet& platforms() const { return platforms_; }
     // Who plays the animation natives' requests; null records them only.
     void setAnimationDriver(AnimationDriver* driver) { animationDriver_ = driver; }
     std::vector<std::string> updateWaypoints(float dt, const float player[3], const WaypointVehicle* vehicle);
@@ -286,6 +296,9 @@ private:
     void effectNative(const assets::ScriptCall& call);
     Result worldNative(const assets::ScriptCall& call);
     void partyNative(const assets::ScriptCall& call);
+    void setPropRockingNative(const assets::ScriptCall& call);
+    Result waitForPlatformNative(const assets::ScriptCall& call);
+    void platformMessage(const std::string& lowerInstance, std::uint8_t message);
     void destroyNative(const std::string& lowerInstance);
     void fireAiMoveEvents();
     float read(const std::string& token) const;
@@ -342,6 +355,8 @@ private:
     AnimationNativeState animation_;
     AnimationDriver* animationDriver_ = nullptr;
     CutsceneNativeState cutscenes_;
+    PropRockingSet propRocking_;
+    PlatformSet platforms_;
     ScreenFade screenFade_;
     DirectorCamera director_;
 };

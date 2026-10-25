@@ -165,6 +165,12 @@ void decomposeMatrix(const float* matrix, float* values) {
 }
 }
 
+std::array<float, 3> matrixEulerAngles(const Matrix& matrix) {
+    std::array<float, 3> angles{};
+    matrixToEuler(matrix.data(), angles.data());
+    return angles;
+}
+
 Matrix multiply(const Matrix& a, const Matrix& b) {
     Matrix out{};
     for (std::size_t i = 0; i < 4; ++i)

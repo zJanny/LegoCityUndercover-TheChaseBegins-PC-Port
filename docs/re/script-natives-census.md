@@ -104,7 +104,7 @@ This file has no dated entries: the table is edited in place. When a native is r
 | SnapCamera | 0x1a30fc | 0 | 39 / 15 / 2 / 0 | 7 | stand-in | 28 | follow reset through FollowCamera::reset |
 | SetWeaponEnabled | 0x26fea4 | 2 | 36 / 4 / 0 / 0 | 5 | stand-in | 35 | hand choice and player bytes recorded (SCRIPT-S277, SCRIPT-338): [script-natives-party.md §2026-10-19T15:53:02](script-natives-party.md#ts-20261019-155302) |
 | UnlockCharacter | 0x263918 | 1 | 34 / 1 / 0 / 0 | 8 | A | 27 | handled as stand-in, partial (SCRIPT-S21, SCRIPT-61) |
-| AISuperJump | 0x1b2344 | 3 | 31 / 9 / 0 / 0 | 7 | stand-in | 34 | set-up 0x213300 and state 11 ported; the flight is a stand-in (SCRIPT-103); returns 1 ([ai-states.md §2026-10-14T21:21](ai-states.md#ts-20261014-212158)): [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
+| AISuperJump | 0x1b2344 | 3 | 31 / 9 / 0 / 0 | 7 | stand-in | 34 | set-up 0x213300, state 11 and the horizontal step ported; the height of the flight is a stand-in (SCRIPT-103, SCRIPT-S103); returns 1 ([ai-states.md §2026-10-25T16:37:12](ai-states.md#ts-20261025-163712)): [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
 | KillScript | 0x1c3834 | 1 | 30 / 5 / 1 / 0 | 7 | A | 26 | handled: threads of the script except the caller end |
 | BulletTime | 0x1a2df0 | 3 | 28 / 6 / 0 / 0 | 9 | C | 29 |  |
 | SetPartyCharacter | 0x27beb4 | 3 | 28 / 10 / 3 / 0 | 8 | stand-in | 35 | stand-in: a swap to another character is not ported (SCRIPT-S234, SCRIPT-279): [script-natives-world.md §2026-10-18T11:01:40](script-natives-world.md#ts-20261018-110140) |
@@ -133,7 +133,7 @@ This file has no dated entries: the table is edited in place. When a native is r
 | RideableClearPath | 0x27bdcc | 1 | 14 / 0 / 0 / 0 | 1 | C | 37 |  |
 | VehicleSetTopSpeed | 0x2860d4 | 2 | 14 / 2 / 0 / 0 | 6 | done | 36 | [vehicles-waypoints.md §2026-10-15T11:35](vehicles-waypoints.md#ts-20261015-113500) |
 | SetDCamEndWait | 0x1da690 | 1 | 13 / 0 / 0 / 0 | 3 | done | 28 | handled |
-| WaitForPlatform | 0x263b84 | 1 | 13 / 3 / 0 / 0 | 5 | B | 37 | returns 1 when the platform value is 1.0 or its state is 5 |
+| WaitForPlatform | 0x263b84 | 1 | 13 / 3 / 0 / 0 | 5 | stand-in | 37 | handled; the platform record is a stand-in (SCRIPT-S296, SCRIPT-44): [props-rocking.md §2026-10-25T16:29:44](props-rocking.md#ts-20261025-162944) |
 | AttachToBone | 0x1ddb90 | 4 | 12 / 1 / 1 / 1 | 6 | stand-in | 32 | stand-in: parent, its bone and the child bone recorded (SCRIPT-S110, SCRIPT-272): [script-natives-animation.md §2026-10-15T18:33](script-natives-animation.md#ts-20261015-183336) |
 | EnableScanner | 0x1cd9dc | 1 | 12 / 1 / 0 / 0 | 7 | stand-in | 31 | records its call (SCRIPT-S27): [objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919) |
 | setplatformorigin | 0x27bfbc | 2 | 12 / 2 / 0 / 0 | 3 | C | 37 |  |
@@ -244,7 +244,7 @@ This file has no dated entries: the table is edited in place. When a native is r
 | RedBrickShop | 0x1bfafc | 1 | 1 / 0 / 0 / 0 | 1 | C | 39 |  |
 | Rex_AxeSmash_Done | 0x27bdb8 | 1 | 1 / 0 / 0 / 0 | 1 | stand-in | 35 | boss requested state 6 recorded (SCRIPT-S278, SCRIPT-339): [script-natives-party.md §2026-10-19T15:53:02](script-natives-party.md#ts-20261019-155302) |
 | Rex_GrapplePull_Done | 0x29ea28 | 1 | 1 / 0 / 0 / 0 | 1 | stand-in | 35 | boss requested state 8 recorded (SCRIPT-S278, SCRIPT-339): [script-natives-party.md §2026-10-19T15:53:02](script-natives-party.md#ts-20261019-155302) |
-| SetPropRocking | 0x1da6a8 | 2 | 1 / 1 / 0 / 0 | 1 | C | 38 |  |
+| SetPropRocking | 0x1da6a8 | 2 | 1 / 1 / 0 / 0 | 1 | done | 38 | handled, with the rocking 0x28a758 (clock SCRIPT-S297): [props-rocking.md §2026-10-25T16:29:44](props-rocking.md#ts-20261025-162944) |
 | showinfopointer | 0x263848 | 2 | 1 / 0 / 0 / 0 | 1 | stand-in | 30 | call recorded only: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
 | StudMagnetScene | 0x2638e8 | 1 | 1 / 0 / 0 / 0 | 1 | C | 39 |  |
 | UnlockScanner | 0x1cdeb0 | 0 | 1 / 1 / 1 / 0 | 1 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |

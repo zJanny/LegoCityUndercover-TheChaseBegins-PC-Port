@@ -272,6 +272,12 @@ void superJumpPlanAndFlight() {
     require(up.heading == 0 && up.frames == 22 && near(up.horizontalPerFrame, 4.0f / 22.0f, 1e-6f) && up.climb == 5.0f,
             "a target 3 above: frames = int((pi - asin(3 / 5)) * 8.912677) = 22 (hand evaluation, python), climb = 3 + 2");
 
+    const chase::runtime::SuperJumpStep step = chase::runtime::stepSuperJumpHorizontal(level, 6711, 1.0f / 30.0f);
+    require(near(step.x, 0.6f * 5.0f / 28.0f, 2e-5f) && near(step.z, 0.8f * 5.0f / 28.0f, 2e-5f),
+            "0x203d18 state 73: +0x308 * 30 * dt along the facing 6711 (sin 0.6, cos 0.8; hand evaluation, 20261025-garage-C)");
+    const chase::runtime::SuperJumpStep slow = chase::runtime::stepSuperJumpHorizontal(level, 16384, 1.0f / 15.0f);
+    require(near(slow.x, 2.0f * 5.0f / 28.0f, 2e-5f) && near(slow.z, 0.0f, 1e-6f), "the step scales with dt (0x23602c); facing 16384 is +x");
+
     AiCore core = withPositions();
     core.run(AiNativeKind::AISuperJump, {"npc", "target"}, {2.0f});
     const AiCharacter* npc = core.character("npc");
@@ -287,6 +293,59 @@ void superJumpPlanAndFlight() {
     require(landed->state == AiState::Idle && ticks >= 25 && ticks <= 28 && rest < kAiGoToMinDistance, "state 11 ends when ATTR_RunSpeed (0.23) exceeds the horizontal distance (0x2c3c20)");
     const std::vector<AiMoveEnd> ended = core.takeMovesEnded();
     require(ended.size() == 1 && ended[0].character == "npc" && ended[0].argument == 0, "arrival raises the AIMove event (0x2c3c68)");
+}
+
+// RPC 20261025-garage-C-1 (20261025-garage-servant, 2026-10-25, recorded from a save state on the generator trigger spot of mission 1-3, stepped,
+// the game's dt 0.033): AISuperJump(1-3_AI_Girder_Guy, 1-3_girder_Jump_2, 2) at u193 with the guy at (947.881, 17.617, 1142.456) gave
+// ctrl+0x308 0.2415, ctrl+0x30c 2.0; from u194 ctrl+6 = ctrl+0xa = 44393 and the guy moved (x, z) per update as below; at u209 the script's
+// AIFaceTarget (state 10) stopped the horizontal move at (944.661, 1140.876).
+void superJumpTraceReplay() {
+    AiCore core;
+    core.setPositionLookup([](const std::string& name, float out[3]) {
+        if (name == "guy") { out[0] = 947.881f; out[1] = 17.617f; out[2] = 1142.456f; return true; }
+        if (name == "jump") { out[0] = 941.8098f; out[1] = 17.3054f; out[2] = 1139.4764f; return true; }
+        if (name == "player1") { out[0] = 945.0f; out[1] = 17.0f; out[2] = 1150.0f; return true; }
+        return false;
+    });
+    core.run(AiNativeKind::AISuperJump, {"guy", "jump"}, {2.0f});
+    const AiCharacter* guy = core.character("guy");
+    require(near(guy->superJump->plan.horizontalPerFrame, 0.2415f, 1e-4f) && guy->superJump->plan.climb == 2.0f && guy->superJump->plan.frames == 28,
+            "the plan of 0x213300 equals ctrl+0x308 / +0x30c of the trace");
+    const float trace[15][2] = {{947.666f, 1142.351f}, {947.452f, 1142.246f}, {947.237f, 1142.140f}, {947.022f, 1142.035f}, {946.808f, 1141.930f},
+                                {946.593f, 1141.824f}, {946.378f, 1141.719f}, {946.164f, 1141.614f}, {945.949f, 1141.508f}, {945.734f, 1141.403f},
+                                {945.520f, 1141.297f}, {945.305f, 1141.192f}, {945.090f, 1141.087f}, {944.876f, 1140.981f}, {944.661f, 1140.876f}};
+    for (int u = 0; u < 15; ++u) {
+        core.update(0.033f);
+        const std::array<float, 3>& at = *core.character("guy")->position;
+        require(near(at[0], trace[u][0], 2e-3f) && near(at[2], trace[u][1], 2e-3f), "flight update u" + std::to_string(194 + u) + " matches the trace");
+        require(std::abs(int(*core.character("guy")->heading) - 44393) <= 1, "the heading of state 11 (and the facing ctrl+0xa) stays 44393 within one unit (the trace positions are rounded to 1e-3)");
+    }
+    core.run(AiNativeKind::AIFaceTarget, {"guy", "player1"}, {});
+    core.update(0.033f);
+    const std::array<float, 3>& held = *core.character("guy")->position;
+    require(near(held[0], 944.661f, 2e-3f) && near(held[2], 1140.876f, 2e-3f), "u209: state 10 holds x and z where the jump was");
+}
+
+// STAND-IN SCRIPT-S103: a jump whose step is longer than the 0.23 arrival window (40 units in 28 frames, 1.43 per frame) is cut at the target and ends.
+void longSuperJumpEnds() {
+    for (const float dt : {0.033f, 0.0367f}) {
+        AiCore core;
+        core.setPositionLookup([](const std::string& name, float out[3]) {
+            if (name == "npc") { out[0] = 0; out[1] = 0; out[2] = 0; return true; }
+            if (name == "far") { out[0] = 0; out[1] = 0; out[2] = 40; return true; }
+            return false;
+        });
+        core.run(AiNativeKind::AISuperJump, {"npc", "far"}, {2.0f});
+        int updates = 0;
+        while (core.character("npc")->superJump && updates < 300) {
+            core.update(dt);
+            ++updates;
+        }
+        const std::vector<AiMoveEnd> ended = core.takeMovesEnded();
+        require(!core.character("npc")->superJump && core.character("npc")->state == AiState::Idle && updates <= 30, "a 40-unit jump ends");
+        require(ended.size() == 1 && ended[0].character == "npc", "and raises the AIMove event");
+        require(near((*core.character("npc")->position)[2], 40.0f, 1e-3f), "on the target");
+    }
 }
 
 void faceTargetState() {
@@ -453,6 +512,8 @@ int main() {
         aiMoveInTheSameCellEndsAtOnce();
         goToTargetState();
         superJumpPlanAndFlight();
+        superJumpTraceReplay();
+        longSuperJumpEnds();
         faceTargetState();
     } catch (const std::exception& error) {
         std::cerr << "ai-test: " << error.what() << '\n';

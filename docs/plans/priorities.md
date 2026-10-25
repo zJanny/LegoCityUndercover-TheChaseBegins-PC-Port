@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 932 open items and stand-ins, 162 linked to game usage, 770 with unknown reach.
+Items: 934 open items and stand-ins, 164 linked to game usage, 770 with unknown reach.
 
 ## Top 50 overall
 
@@ -37,7 +37,7 @@ Items: 932 open items and stand-ins, 162 linked to game usage, 770 with unknown 
 | 1 | [VEH-S2](features/vehicles.md?display=source#L21) | 7016 | 0 | 8 | 0 | 1 implemented | `enableobject` | Owner flags (0x1340 parked, 0x1300 traffic, bit 0 disabled) are not modelled: a vehicle collides while its ... |
 | 2 | [SCRIPT-52](features/script-system.md?display=source#L41) | 3101 | 0 | 8 | 1 | 2 implemented | `enablebound`, `enabletrigger` | Class owners: an empty object name as the owner itself, the variable `TaskComplete.TASK_COMPLETE` (saved per ... |
 | 3 | [PLAYER-S9](features/player-movement.md?display=source#L29) | 0 | 2513 | 8 | 0 | - | `leprops/leprop_wobblydestructible` | `attackTargetObjects` — only `leprop_wobblydestructible` props are attack targets, and the glue allows the ... |
-| 4 | [SCRIPT-364](features/script-system-missions-1-3.md?display=source#L24) | 1063 | 31 | 8 | 0 | 1 stand-in, 2 none, 1 implemented | `aisuperjump`, `setproprocking`, `triggerobject`, `waitforplatform` +1 | Generator and mission end: the build of `1-3_Pull_Switch_Bits`, the pull switch `1-3_Generator_Pull_Switch` ... |
+| 4 | [SCRIPT-364](features/script-system-missions-1-3.md?display=source#L26) | 1063 | 31 | 8 | 0 | 2 stand-in, 2 implemented | `aisuperjump`, `setproprocking`, `triggerobject`, `waitforplatform` +1 | Generator and mission end: the build of `1-3_Pull_Switch_Bits`, the pull switch `1-3_Generator_Pull_Switch` ... |
 | 5 | [SCRIPT-285](features/script-system-missions.md?display=source#L32) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Nothing known fires the ObjectTriggered of `1-2_Door_Lock_Hint_Script`: no name source besides its own ... |
 | 6 | [SCRIPT-365](features/script-system-missions-reference.md?display=source#L28) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The other switch kinds (100 energy switches, 125, 138 fires, 139 switchfloor, 141, 185 ability props and ... |
 | 7 | [SCRIPT-4](features/script-system.md?display=source#L38) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The code that hides the revealer targets; the role of the other type-4 parameters (Destination, ObjectTo ... |
@@ -137,12 +137,12 @@ Items: 932 open items and stand-ins, 162 linked to game usage, 770 with unknown 
 
 ## Scripts and missions
 
-99 of 209 items linked.
+101 of 211 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
 | 1 | [SCRIPT-52](features/script-system.md?display=source#L41) | 3101 | 0 | 8 | 1 | 2 implemented | `enablebound`, `enabletrigger` | Class owners: an empty object name as the owner itself, the variable `TaskComplete.TASK_COMPLETE` (saved per ... |
-| 2 | [SCRIPT-364](features/script-system-missions-1-3.md?display=source#L24) | 1063 | 31 | 8 | 0 | 1 stand-in, 2 none, 1 implemented | `aisuperjump`, `setproprocking`, `triggerobject`, `waitforplatform` +1 | Generator and mission end: the build of `1-3_Pull_Switch_Bits`, the pull switch `1-3_Generator_Pull_Switch` ... |
+| 2 | [SCRIPT-364](features/script-system-missions-1-3.md?display=source#L26) | 1063 | 31 | 8 | 0 | 2 stand-in, 2 implemented | `aisuperjump`, `setproprocking`, `triggerobject`, `waitforplatform` +1 | Generator and mission end: the build of `1-3_Pull_Switch_Bits`, the pull switch `1-3_Generator_Pull_Switch` ... |
 | 3 | [SCRIPT-285](features/script-system-missions.md?display=source#L32) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Nothing known fires the ObjectTriggered of `1-2_Door_Lock_Hint_Script`: no name source besides its own ... |
 | 4 | [SCRIPT-365](features/script-system-missions-reference.md?display=source#L28) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The other switch kinds (100 energy switches, 125, 138 fires, 139 switchfloor, 141, 185 ability props and ... |
 | 5 | [SCRIPT-4](features/script-system.md?display=source#L38) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The code that hides the revealer targets; the role of the other type-4 parameters (Destination, ObjectTo ... |
@@ -205,7 +205,7 @@ No linked items.
 
 No script native or object class is linked to these items (`+N` is Unblocks). Add `uses:` to an item when its fix changes the game.
 
-Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?display=source#L33) (+30), [RENDER-35](features/rendering.md?display=source#L48) (+25), [TRAFFIC-7](features/pedestrians-traffic-cars.md?display=source#L56) (+23), [TRAFFIC-8](features/pedestrians-traffic-cars.md?display=source#L57) (+23), [TRAFFIC-9](features/pedestrians-traffic-cars.md?display=source#L58) (+23), [VEH-6](features/vehicles-physics.md?display=source#L30) (+23), [TRAFFIC-2](features/pedestrians-traffic-cars.md?display=source#L51) (+22), [SCRIPT-43](features/script-system-natives.md?display=source#L30) (+18), [SCRIPT-94](features/script-system-ai-navigation.md?display=source#L34) (+17), [SCRIPT-44](features/script-system-natives.md?display=source#L31) (+16)
+Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?display=source#L33) (+30), [RENDER-35](features/rendering.md?display=source#L48) (+25), [TRAFFIC-7](features/pedestrians-traffic-cars.md?display=source#L56) (+23), [TRAFFIC-8](features/pedestrians-traffic-cars.md?display=source#L57) (+23), [TRAFFIC-9](features/pedestrians-traffic-cars.md?display=source#L58) (+23), [VEH-6](features/vehicles-physics.md?display=source#L30) (+23), [TRAFFIC-2](features/pedestrians-traffic-cars.md?display=source#L51) (+22), [SCRIPT-43](features/script-system-natives.md?display=source#L30) (+18), [SCRIPT-44](features/script-system-natives.md?display=source#L31) (+17), [SCRIPT-94](features/script-system-ai-navigation.md?display=source#L34) (+17)
 
 - [abilities-detective.md](features/abilities-detective.md): DETECT-8 (+3), DETECT-13 (+2), DETECT-1 (+1), DETECT-15 (+1), DETECT-4 (+1), DETECT-6 (+1), DETECT-S7 (+1), DETECT-S8 (+1), DETECT-S9 (+1), DETECT-10, DETECT-11, DETECT-12, DETECT-3, DETECT-5, DETECT-9, DETECT-S1, DETECT-S2, DETECT-S4, DETECT-S5, DETECT-S6
 - [abilities-scanner.md](features/abilities-scanner.md): SCAN-10 (+1), SCAN-11 (+1), SCAN-16 (+1), SCAN-17 (+1), SCAN-S10 (+1), AUDIO-S33, SCAN-13, SCAN-15, SCAN-3, SCAN-6, SCAN-S1, SCAN-S11, SCAN-S12, SCAN-S2, SCAN-S3, SCAN-S4, SCAN-S5, SCAN-S6, SCAN-S7, SCAN-S8, SCAN-S9
@@ -251,7 +251,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [script-system-natives-party.md](features/script-system-natives-party.md): SCRIPT-338 (+2), SCRIPT-340 (+1)
 - [script-system-natives-state.md](features/script-system-natives-state.md): SCRIPT-335 (+1), SCRIPT-56 (+1), SCRIPT-64 (+1), SCRIPT-S97
 - [script-system-natives-world.md](features/script-system-natives-world.md): SCRIPT-279 (+1)
-- [script-system-natives.md](features/script-system-natives.md): SCRIPT-43 (+18), SCRIPT-44 (+16), SCRIPT-45 (+14), SCRIPT-7 (+12), SCRIPT-13 (+1), SCRIPT-150 (+1)
+- [script-system-natives.md](features/script-system-natives.md): SCRIPT-43 (+18), SCRIPT-44 (+17), SCRIPT-45 (+14), SCRIPT-7 (+12), SCRIPT-13 (+1), SCRIPT-150 (+1)
 - [script-system-triggers.md](features/script-system-triggers.md): SCRIPT-76 (+11), SCRIPT-51 (+3), SCRIPT-77 (+1), SCRIPT-78 (+1), SCRIPT-S15, SCRIPT-S28, SCRIPT-S30, SCRIPT-S8
 - [script-system-use-markers.md](features/script-system-use-markers.md): SCRIPT-356 (+2), SCRIPT-357 (+1), SCRIPT-355, SCRIPT-S247, SCRIPT-S248, SCRIPT-S249, SCRIPT-S286, SCRIPT-S287, SCRIPT-S288
 - [script-system.md](features/script-system.md): SCRIPT-1 (+10), SCRIPT-53 (+2), SCRIPT-2, SCRIPT-3, SCRIPT-5, SCRIPT-54, SCRIPT-55, SCRIPT-9, SCRIPT-S1, SCRIPT-S14, SCRIPT-S16, SCRIPT-S275, SCRIPT-S3, SCRIPT-S5, SCRIPT-S6, SCRIPT-S7

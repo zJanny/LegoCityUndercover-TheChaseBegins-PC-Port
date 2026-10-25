@@ -27,7 +27,7 @@ enum class Word {
     EnableObject, EnableCollision, TriggerObject, EnableTrigger, EnableBound, GetGameComplete, IsLevelUnlocked, IsRedBrickExtraActive,
     WarningDialogBox, InformationBox, FadeScreen, PositionObject, PositionPlayer, SceneChange,
     KillScript, ObjectNative, VehicleNative, ProgressNative, MusicNative, SoundNative, TextNative, ObjectiveNative, AiNative, AnimationNative, CutsceneNative, EffectNative, WorldNative, PartyNative,
-    StartDCam, StartDCamTrack, DCamActive, WaitForDCam, EndDCam, SnapCamera, ShakeScreen, Set3DFocusObject, SetDCamStartWait, SetDCamEndWait, CameraFollow
+    SetPropRocking, WaitForPlatform, StartDCam, StartDCamTrack, DCamActive, WaitForDCam, EndDCam, SnapCamera, ShakeScreen, Set3DFocusObject, SetDCamStartWait, SetDCamEndWait, CameraFollow
 };
 
 struct ScriptFunction {
@@ -61,6 +61,8 @@ constexpr ScriptFunction kScriptFunctions[] = {
     {"positionplayer", Word::PositionPlayer, true},
     {"scenechange", Word::SceneChange, false},
     {"killscript", Word::KillScript, false},
+    {"setproprocking", Word::SetPropRocking, false},
+    {"waitforplatform", Word::WaitForPlatform, true},
     {"startdcam", Word::StartDCam, false},
     {"startdcamtrack", Word::StartDCamTrack, true},
     {"dcamactive", Word::DCamActive, true},
@@ -243,6 +245,7 @@ void ScriptRunner::update(float dt) {
         execute(*it);
         it = next;
     }
+    platforms_.update(dt);
 }
 
 std::vector<std::string> ScriptRunner::updateWaypoints(float dt, const float player[3], const WaypointVehicle* vehicle) {
@@ -416,6 +419,7 @@ ScriptRunner::Result ScriptRunner::native(ScriptThread& thread, const ScriptCall
         if (args.size() >= 2) {
             const bool trigger = read(args[1]) != 0.0f;
             messages_.push_back({lower(args[0]), trigger ? kMessageTrigger : kMessageUntrigger});
+            platformMessage(lower(args[0]), messages_.back().message);
             const std::string event = trigger ? "objecttriggered" : "objectuntriggered";
             for (std::size_t i = 0; i < level_.triggers.size(); ++i)
                 if (triggers_[i].enabled && lower(level_.triggers[i].event) == event && lower(level_.triggers[i].objectName) == lower(args[0])) {
@@ -461,6 +465,8 @@ ScriptRunner::Result ScriptRunner::native(ScriptThread& thread, const ScriptCall
     case Word::KillScript:
         if (!args.empty()) killScript(thread, args[0]);
         break;
+    case Word::SetPropRocking: setPropRockingNative(call); break;
+    case Word::WaitForPlatform: return waitForPlatformNative(call);
     case Word::ObjectNative:
         if (const auto kind = objectNativeKind(lower(call.function)); kind && !args.empty()) {
             if (*kind == ObjectNativeKind::DestroyProp || *kind == ObjectNativeKind::KillObject) {
@@ -864,7 +870,10 @@ void ScriptRunner::triggerObjectEnabling(const std::string& lowerInstance) {
 
 void ScriptRunner::enableObject(const std::string& lowerInstance) { state_.disabled.erase(lowerInstance); }
 
-void ScriptRunner::sendObjectMessage(const std::string& lowerInstance, std::uint8_t message) { messages_.push_back({lowerInstance, message}); }
+void ScriptRunner::sendObjectMessage(const std::string& lowerInstance, std::uint8_t message) {
+    messages_.push_back({lowerInstance, message});
+    platformMessage(lowerInstance, message);
+}
 
 void ScriptRunner::fireObjectEvent(const std::string& lowerEvent, const std::string& lowerInstance) {
     for (std::size_t i = 0; i < level_.triggers.size(); ++i)
