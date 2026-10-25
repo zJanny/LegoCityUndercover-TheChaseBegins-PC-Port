@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 907 open items and stand-ins, 161 linked to game usage, 746 with unknown reach.
+Items: 911 open items and stand-ins, 161 linked to game usage, 750 with unknown reach.
 
 ## Top 50 overall
 
@@ -154,7 +154,7 @@ Items: 907 open items and stand-ins, 161 linked to game usage, 746 with unknown 
 
 ## World and levels
 
-8 of 70 items linked.
+8 of 74 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -162,9 +162,9 @@ Items: 907 open items and stand-ins, 161 linked to game usage, 746 with unknown 
 | 2 | [WSTREAM-6](features/world-streaming.md?display=source#L36) | 49 | 15 | 6 | 0 | 1 none, 1 implemented | `roomstreamingwait`, `streamroomin`, `roomstreamingcontrol` | The `RoomStreamingControl/Destination` classes and the `RoomStreamingWait` native as scripted preloads ... |
 | 3 | [PED-5](features/pedestrians-traffic-pedestrians.md?display=source#L56) | 0 | 58 | 6 | 0 | - | `chars/pedestrian` | The pedestrian's message slot 0x19efbc is read only at its start: which messages request the dodge (3, 4) and ... |
 | 4 | [TRANS-S2](features/level-transitions.md?display=source#L24) | 25 | 25 | 7 | 0 | 1 implemented | `scenechange`, `scenechange` | `SceneChange <bound>` is qualified with the calling level's world level instance name (data fit, every ... |
-| 5 | [TRAFFIC-4](features/pedestrians-traffic-cars.md?display=source#L40) | 0 | 47 | 6 | 1 | - | `props/traffic_junction` | The junction class `props/traffic_junction` (set-up 0x1ca5a4, update 0x1d8924): its lanes, conflict pairs ... |
-| 6 | [TRAFFIC-1](features/pedestrians-traffic-cars.md?display=source#L37) | 44 | 0 | 6 | 3 | 1 stand-in, 1 none | `enabletrafficandpedestrians`, `settrafficmaxvehicles` | Wire the manager into `chase-game`: the pregen traffic data (quadtree leaf, routes), the route set-up ... |
-| 7 | [TRAFFIC-5](features/pedestrians-traffic-cars.md?display=source#L41) | 40 | 0 | 2 | 4 | 1 none | `enabletrafficpath` | Wire `traffic_route.*`: the junctions of the level, the manager's route bits taken from `TrafficRouteTable` ... |
+| 5 | [TRAFFIC-4](features/pedestrians-traffic-cars.md?display=source#L47) | 0 | 47 | 6 | 1 | - | `props/traffic_junction` | The junction class `props/traffic_junction` (set-up 0x1ca5a4, update 0x1d8924): its lanes, conflict pairs ... |
+| 6 | [TRAFFIC-1](features/pedestrians-traffic-cars.md?display=source#L44) | 44 | 0 | 6 | 3 | 1 stand-in, 1 none | `enabletrafficandpedestrians`, `settrafficmaxvehicles` | Wire the manager into `chase-game`: the pregen traffic data (quadtree leaf, routes), the route set-up ... |
+| 7 | [TRAFFIC-5](features/pedestrians-traffic-cars.md?display=source#L48) | 40 | 0 | 2 | 23 | 1 none | `enabletrafficpath` | Wire `traffic_route.*`: the junctions of the level, the manager's route bits taken from `TrafficRouteTable` ... |
 | 8 | [WSTREAM-33](features/world-streaming.md?display=source#L39) | 40 | 0 | 6 | 1 | 1 implemented | `streamroomin` | When the scripted request list 0x375d70 is cleared (the table slots 0x363eb8 and 0x363ee0 call 0x309534 and ... |
 
 ## Front end, HUD, saves
@@ -206,7 +206,7 @@ No linked items.
 
 No script native or object class is linked to these items (`+N` is Unblocks). Add `uses:` to an item when its fix changes the game.
 
-Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?display=source#L33) (+30), [VEH-91](features/vehicles-physics-collision.md?display=source#L39) (+26), [RENDER-35](features/rendering.md?display=source#L48) (+25), [VEH-6](features/vehicles-physics.md?display=source#L30) (+23), [PREGEN-3](features/pedestrians-traffic.md?display=source#L27) (+21), [TRAFFIC-2](features/pedestrians-traffic-cars.md?display=source#L38) (+21), [SCRIPT-43](features/script-system-natives.md?display=source#L30) (+18), [SCRIPT-94](features/script-system-ai-navigation.md?display=source#L34) (+17), [SCRIPT-44](features/script-system-natives.md?display=source#L31) (+16), [SCRIPT-101](features/script-system-ai-navigation.md?display=source#L37) (+15)
+Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?display=source#L33) (+30), [RENDER-35](features/rendering.md?display=source#L48) (+25), [TRAFFIC-7](features/pedestrians-traffic-cars.md?display=source#L50) (+23), [TRAFFIC-8](features/pedestrians-traffic-cars.md?display=source#L51) (+23), [TRAFFIC-9](features/pedestrians-traffic-cars.md?display=source#L52) (+23), [VEH-6](features/vehicles-physics.md?display=source#L30) (+23), [TRAFFIC-2](features/pedestrians-traffic-cars.md?display=source#L45) (+22), [PREGEN-3](features/pedestrians-traffic.md?display=source#L27) (+21), [SCRIPT-43](features/script-system-natives.md?display=source#L30) (+18), [SCRIPT-94](features/script-system-ai-navigation.md?display=source#L34) (+17)
 
 - [abilities-detective.md](features/abilities-detective.md): DETECT-8 (+3), DETECT-13 (+2), DETECT-1 (+1), DETECT-15 (+1), DETECT-4 (+1), DETECT-6 (+1), DETECT-S7 (+1), DETECT-S8 (+1), DETECT-S9 (+1), DETECT-10, DETECT-11, DETECT-12, DETECT-3, DETECT-5, DETECT-9, DETECT-S1, DETECT-S2, DETECT-S4, DETECT-S5, DETECT-S6
 - [abilities-scanner.md](features/abilities-scanner.md): SCAN-10 (+1), SCAN-11 (+1), SCAN-16 (+1), SCAN-17 (+1), SCAN-S10 (+1), AUDIO-S33, SCAN-13, SCAN-15, SCAN-3, SCAN-6, SCAN-S1, SCAN-S11, SCAN-S12, SCAN-S2, SCAN-S3, SCAN-S4, SCAN-S5, SCAN-S6, SCAN-S7, SCAN-S8, SCAN-S9
@@ -230,7 +230,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [level-transitions.md](features/level-transitions.md): TRANS-3 (+4), TRANS-13 (+2), TRANS-15 (+2), TRANS-8 (+2), TRANS-10 (+1), TRANS-12 (+1), TRANS-14 (+1), TRANS-16 (+1), TRANS-S1, TRANS-S3, TRANS-S4, TRANS-S5, TRANS-S6
 - [movies-cutscenes.md](features/movies-cutscenes.md): MOVIE-22 (+1), MOVIE-24 (+1), MOVIE-36 (+1), MOVIE-37 (+1), MOVIE-S33 (+1), MOVIE-1, MOVIE-12, MOVIE-20, MOVIE-21, MOVIE-3, MOVIE-33, MOVIE-35, MOVIE-4, MOVIE-40, MOVIE-S1, MOVIE-S10, MOVIE-S11, MOVIE-S2, MOVIE-S21, MOVIE-S3, MOVIE-S30, MOVIE-S31, MOVIE-S32, MOVIE-S34
 - [particles.md](features/particles.md): PART-4 (+1), PART-6 (+1), PART-5, PART-7, PART-S1, PART-S2, PART-S3, PART-S4
-- [pedestrians-traffic-cars.md](features/pedestrians-traffic-cars.md): TRAFFIC-2 (+21), TRAFFIC-3 (+1), TRAFFIC-6, TRAFFIC-S1, TRAFFIC-S2, TRAFFIC-S3, TRAFFIC-S4
+- [pedestrians-traffic-cars.md](features/pedestrians-traffic-cars.md): TRAFFIC-7 (+23), TRAFFIC-8 (+23), TRAFFIC-9 (+23), TRAFFIC-2 (+22), TRAFFIC-3 (+1), TRAFFIC-6, TRAFFIC-S1, TRAFFIC-S2, TRAFFIC-S3, TRAFFIC-S4, TRAFFIC-S5
 - [pedestrians-traffic-pedestrians-fade.md](features/pedestrians-traffic-pedestrians-fade.md): PED-22 (+1), PED-23 (+1), PED-21, PED-S11, PED-S12
 - [pedestrians-traffic-pedestrians-vehicles.md](features/pedestrians-traffic-pedestrians-vehicles.md): PED-18 (+1), PED-19 (+1), PED-S10, PED-S9
 - [pedestrians-traffic-pedestrians.md](features/pedestrians-traffic-pedestrians.md): PED-13 (+2), PED-16 (+1), PED-24 (+1), PED-25 (+1), PED-26 (+1), PED-9 (+1), PED-S13, PED-S14, PED-S2, PED-S4, PED-S5, PED-S6, PED-S7, PED-S8
@@ -259,7 +259,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [ui-menus.md](features/ui-menus.md): UI-1 (+3), UI-2 (+2), UI-19 (+1), UI-3 (+1), UI-4 (+1), UI-5 (+1), UI-7 (+1), UI-9 (+1), UI-10, UI-11, UI-12, UI-13, UI-14, UI-15, UI-16, UI-18, UI-6, UI-8, UI-S1, UI-S2, UI-S3, UI-S4, UI-S5, UI-S6, UI-S7
 - [vehicles-boarding.md](features/vehicles-boarding.md): VEH-19 (+5), VEH-80 (+2), HUD-50 (+1), HUD-S50, HUD-S51, VEH-20, VEH-S10, VEH-S70, VEH-S8, VEH-S9
 - [vehicles-damage.md](features/vehicles-damage.md): VEH-120 (+3), VEH-125 (+3), VEH-113 (+2), VEH-115 (+2), VEH-124 (+2), VEH-121 (+1), VEH-140 (+1), VEH-122, VEH-128, VEH-S100, VEH-S101, VEH-S104, VEH-S109, VEH-S112, VEH-S90, VEH-S93, VEH-S96, VEH-S97, VEH-S98, VEH-S99
-- [vehicles-physics-collision.md](features/vehicles-physics-collision.md): VEH-91 (+26), VEH-70 (+2), VEH-100 (+1), VEH-101 (+1), VEH-102 (+1), VEH-S52, VEH-S60, VEH-S62, VEH-S81, VEH-S82, VEH-S86, VEH-S87
+- [vehicles-physics-collision.md](features/vehicles-physics-collision.md): VEH-91 (+4), VEH-70 (+2), VEH-100 (+1), VEH-101 (+1), VEH-102 (+1), VEH-S52, VEH-S60, VEH-S62, VEH-S81, VEH-S82, VEH-S86, VEH-S87
 - [vehicles-physics.md](features/vehicles-physics.md): VEH-6 (+23), VEH-51 (+3), VEH-42 (+2), VEH-41 (+1), VEH-50 (+1), VEH-81 (+1), VEH-54, VEH-55, VEH-S30, VEH-S31, VEH-S32, VEH-S40, VEH-S41, VEH-S43, VEH-S7
 - [vehicles-prop-smash.md](features/vehicles-prop-smash.md): VEH-126 (+1), VEH-127 (+1), VEH-130 (+1), VEH-136 (+1), VEH-106, VEH-131, VEH-134, VEH-135, VEH-S102, VEH-S105, VEH-S107, VEH-S108, VEH-S89
 - [vehicles.md](features/vehicles.md): VEH-16 (+2), VEH-13 (+1), VEH-21 (+1), VEH-99 (+1), VEH-15, VEH-23, VEH-7, VEH-S11, VEH-S4, VEH-S5

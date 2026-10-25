@@ -1939,6 +1939,12 @@ target_link_libraries(traffic-manager-test PRIVATE chase_runtime)
 target_compile_options(traffic-manager-test PRIVATE -Wall -Wextra -Wpedantic)
 add_test(NAME traffic-manager COMMAND traffic-manager-test)
 
+target_sources(chase_runtime PRIVATE src/runtime/ai_driver_input.cpp)
+add_executable(ai-driver-input-test tests/ai_driver_input_test.cpp)
+target_link_libraries(ai-driver-input-test PRIVATE chase_runtime)
+target_compile_options(ai-driver-input-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME ai-driver-input COMMAND ai-driver-input-test)
+
 if(BUILD_TESTING)
   add_test(NAME test-labels COMMAND python3 "${CMAKE_SOURCE_DIR}/tools/check_test_labels.py" "${CMAKE_BINARY_DIR}")
 endif()

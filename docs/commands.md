@@ -128,6 +128,7 @@ The table lists some of the tests. `ctest --test-dir build -N` lists all of them
 | `assets-real-data` | Needs `artifacts/romfs`; skips with code 77 otherwise |
 | `pregen-traffic` | The traffic and pedestrian spawn files: made-up files, rejected input and the cell lookup. No game data needed |
 | `pregen-traffic-real-data` | Decodes the 14 shipped spawn files and checks counts and checksums; skips with code 77 without `artifacts/romfs` |
+| `ai-driver-input` | The AI driver of the traffic cars: its states, the state changes after a spawn and the stop rule, on made-up cars and routes. No game data needed |
 | `traffic-route`, `traffic-route-real-data` | The routes of the traffic cars (route list, EnableTrafficPath, path follower, junction test) on made-up data, then the junctions and routes of the 7 shipped traffic levels; the second skips with code 77 without `artifacts/romfs` |
 | `viewer-real-smoke`, `viewer-cutscene-smoke` | Render one model and one cutscene frame offscreen. Registered only if `artifacts/romfs` existed at configure time |
 | `game-real-smoke` | Registered only if `artifacts/romfs` existed at configure time; needs libepoxy |
