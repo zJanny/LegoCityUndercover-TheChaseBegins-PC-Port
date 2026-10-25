@@ -6,7 +6,7 @@ The traffic manager 0x527410 and the AI driver input of the spawned cars. The ma
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-20T11:20+02:00. The rules of the manager are read: level load, room set-up and prefill, update, spawn, fade, SetTrafficMaxVehicles. They are ported as `TrafficManager`, which is not yet wired into `chase-game` (TRAFFIC-1). How the vehicle update picks its input provider is read. The AI driver 0x26d934 is read only in part (TRAFFIC-2).
+IN_PROGRESS, updated 2026-10-25T12:19:38+01:00. The rules of the manager are read: level load, room set-up and prefill, update, spawn, fade, SetTrafficMaxVehicles. They are ported as `TrafficManager`, which is not yet wired into `chase-game` (TRAFFIC-1). How the vehicle update picks its input provider is read. The AI driver 0x26d934 is read only in part (TRAFFIC-2). The routes (junction paths, EnableTrafficPath, the path follower, the route type function, the junction pairs and test) are ported as `traffic_route.*`, not wired (TRAFFIC-5).
 
 ## 3. Verified behaviour
 
@@ -17,23 +17,35 @@ IN_PROGRESS, updated 2026-10-20T11:20+02:00. The rules of the manager are read: 
   - the spawn: 10 tries in the leaf, the route bit, the room test, the LOD distance band (0.7 x near to 1.75 x far, 0 to far in the prefill), 16 m route spacing in x and z;
   - the 64 prefill updates of the room set-up;
   - the fade inside a `Traffic_FadeBound` box.
+- Read from the code (tests `traffic-route`, `traffic-route-real-data`), all from [traffic.md §2026-10-25T12:19:38](../../re/traffic.md#ts-20261025-121938):
+  - the route list: input then output paths of the junctions within 9000 of the origin (at most 32), each new one with its bit set; EnableTrafficPath and its pending list, replayed by the room set-up;
+  - the route → junction pairs 0x2dfc84 and the driver's junction 0x20ff40;
+  - the path follower 0x2bf2ec (nearest enabled point of the cell, below 9999, dot above 0.5 by its float bits) and the route type function (table 0x3581d4: type 0 0x1c17c0, type 1 0x1b33fc);
+  - the junction test 0x2cdde4;
+  - shipped levels: every traffic point lies on an open type 0 junction path; junction, route and path counts pinned.
 - Read from the code, not ported: the vehicle update uses 0x26d934 for a car whose driver record has +0xaf bit 0, 0x29cd9c for the player's car and nothing for the others (0x1d8df0 is empty).
 
 ## 4. Stand-ins
 
 - TRAFFIC-S1 The spawn cell, the route count, the LOD bands and the per-car facts (room tests, driver bytes, despawn radius, LOD class) are supplied by the caller of `TrafficManager`. The pregen decoder now exists (`src/assets/pregen_traffic.*`: `parsePregenSpawns`, `findPregenSpawnCell`, [pregen-traffic.md](../../re/pregen-traffic.md)), but the manager is not fed from it yet; the LOD table 0x529e30 and the radius table `*0x375f40` are not read. needs: TRAFFIC-1. evidence: [traffic.md §2026-10-20T11:18:14](../../re/traffic.md#ts-20261020-111814)
 - TRAFFIC-S2 Two cases the original leaves unread are refused by the port's own choice: an empty leaf makes the spawn fail (the original would compute random % 0), and a LOD class outside 0..2 throws (the original's -1 indexes the table one entry low). needs: TRAFFIC-3. evidence: [traffic.md §2026-10-20T11:18:14](../../re/traffic.md#ts-20261020-111814)
+- TRAFFIC-S3 A route missing from the route list counts as disabled in the follower; the original tests the stored +0x24 word of the path record. Every shipped traffic point lies on a junction path (`traffic-route-real-data`). evidence: [traffic.md §2026-10-25T12:19:38](../../re/traffic.md#ts-20261025-121938)
+- TRAFFIC-S4 The route list +0xc4, the pending route list and the two route → junction lists refuse a 129th entry, and a route type above 1 throws; the original writes past the lists and reads words after its table. needs: TRAFFIC-4. evidence: [traffic.md §2026-10-25T12:19:38](../../re/traffic.md#ts-20261025-121938)
 
 ## 5. Open items
 
-- [ ] TRAFFIC-1 — Wire the manager into `chase-game`: the pregen traffic data (quadtree leaf, routes), the route set-up 0x2df574 / 0x2dfc84, the values of the LOD table 0x529e30 and of the radius table `*0x375f40` (an oracle read), the car messages 0x80000005 / 6 / 7, and the natives SetTrafficMaxVehicles and EnableTrafficAndPedestrians routed to the manager. needs: TRAFFIC-2, PREGEN-1. blocks: SCRIPT-230, TRAFFIC-S1. evidence: [traffic.md §2026-10-20T11:18:14](../../re/traffic.md#ts-20261020-111814)
-- [ ] TRAFFIC-2 — The AI driver 0x26d934 and its record (vehicle record +0x2a4). Open: who moves driver +0x78 from 0 to 2 or 3 after a spawn, states 5 and 6, the path follower 0x2bf2ec, the route type functions (table 0x3581d4), and how a spawned car becomes kinematic. needs: VEH-91. blocks: TRAFFIC-1, VEH-12. evidence: [traffic.md §2026-10-20T11:18:14](../../re/traffic.md#ts-20261020-111814)
-- [ ] TRAFFIC-3 — Read the rest of the manager: the writer of the pending route list +0xb9c / +0xd9c, the signal objects of 0x2dfc84 and their test 0x2cdde4, the layer table of 0x1ffbd8, the LOD class -1 of 0x28781c, and a leaf without points. blocks: TRAFFIC-S2. evidence: [traffic.md §2026-10-20T11:18:14](../../re/traffic.md#ts-20261020-111814)
+- [ ] TRAFFIC-1 — Wire the manager into `chase-game`: the pregen traffic data (quadtree leaf, routes), the route set-up 0x2df574 / 0x2dfc84, the values of the LOD table 0x529e30 and of the radius table `*0x375f40` (an oracle read), the car messages 0x80000005 / 6 / 7, and the natives SetTrafficMaxVehicles and EnableTrafficAndPedestrians routed to the manager. needs: TRAFFIC-2, TRAFFIC-5, PREGEN-1. blocks: SCRIPT-230, TRAFFIC-S1. evidence: [traffic.md §2026-10-20T11:18:14](../../re/traffic.md#ts-20261020-111814)
+- [ ] TRAFFIC-2 — The AI driver 0x26d934 and its record (vehicle record +0x2a4). Open: who moves driver +0x78 from 0 to 2 or 3 after a spawn, states 5 and 6, and how a spawned car becomes kinematic. needs: VEH-91. blocks: TRAFFIC-1, VEH-12. evidence: [traffic.md §2026-10-20T11:18:14](../../re/traffic.md#ts-20261020-111814)
+- [ ] TRAFFIC-3 — Read the rest of the manager: the layer table of 0x1ffbd8, the LOD class -1 of 0x28781c, and a leaf without points. blocks: TRAFFIC-S2. evidence: [traffic.md §2026-10-20T11:18:14](../../re/traffic.md#ts-20261020-111814)
+- [ ] TRAFFIC-4 — The junction class `props/traffic_junction` (set-up 0x1ca5a4, update 0x1d8924): its lanes, conflict pairs, the lane list +0x284 that 0x2cdde4 reads, the traffic lights, and who moves a car's route onto a lane and on. blocks: TRAFFIC-S4. evidence: [traffic.md §2026-10-25T12:19:38](../../re/traffic.md#ts-20261025-121938)
+- [ ] TRAFFIC-5 — Wire `traffic_route.*`: the junctions of the level, the manager's route bits taken from `TrafficRouteTable`, the native EnableTrafficPath (40 calls, 2 levels) routed to `enableTrafficPath`, the follower and the junction test called by the AI driver. blocks: TRAFFIC-1. uses: EnableTrafficPath. evidence: [traffic.md §2026-10-25T12:19:38](../../re/traffic.md#ts-20261025-121938)
+- [ ] TRAFFIC-6 — `TrafficSpawnPoint::speed` and `TrafficCar::cruiseSpeed` hold the path parameter (point +0x20, driver +0x64), not a speed; rename them. evidence: [traffic.md §2026-10-25T12:19:38](../../re/traffic.md#ts-20261025-121938)
 
 ## 6. Findings summary
 
-[traffic.md §2026-10-20T11:18:14](../../re/traffic.md#ts-20261020-111814): which object is the traffic manager (0x527410, not 0x51b33c), its layout, level load, room set-up and prefill, the update with its spawn and removal rules, the spawn 0x2def8c, the fade 0x2df8b8, SetTrafficMaxVehicles, the choice of input provider in 0x1571dc, and the states of the AI driver 0x26d934 read so far.
+- [traffic.md §2026-10-20T11:18:14](../../re/traffic.md#ts-20261020-111814): which object is the traffic manager (0x527410, not 0x51b33c), its layout, level load, room set-up and prefill, the update with its spawn and removal rules, the spawn 0x2def8c, the fade 0x2df8b8, SetTrafficMaxVehicles, the choice of input provider in 0x1571dc, and the states of the AI driver 0x26d934 read so far.
+- [traffic.md §2026-10-25T12:19:38](../../re/traffic.md#ts-20261025-121938): the junctions as owners of the routes, the route list, EnableTrafficPath and the pending list, the route → junction pairs, the path follower 0x2bf2ec, the route type function and the junction test 0x2cdde4.
 
 ## 7. Code and tests
 
-`src/runtime/traffic_manager.{hpp,cpp}` (`TrafficManager`, `runSetTrafficMaxVehicles`, no SDL); CTest `traffic-manager` (`tests/traffic_manager_test.cpp`). There is no glue in `game.cpp`.
+`src/runtime/traffic_manager.{hpp,cpp}` (`TrafficManager`, `runSetTrafficMaxVehicles`, no SDL); CTest `traffic-manager` (`tests/traffic_manager_test.cpp`). `src/runtime/traffic_route.{hpp,cpp}` (route list, `enableTrafficPath`, `findTrafficRoutePoint`, `sampleTrafficRoute`, `trafficJunctionAllowsCar`, no SDL); CTest `traffic-route`, `traffic-route-real-data` (`tests/traffic_route_test.cpp`, the second skips with 77 without the RomFS). There is no glue in `game.cpp`.

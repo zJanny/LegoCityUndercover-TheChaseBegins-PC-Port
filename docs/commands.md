@@ -128,6 +128,7 @@ The table lists some of the tests. `ctest --test-dir build -N` lists all of them
 | `assets-real-data` | Needs `artifacts/romfs`; skips with code 77 otherwise |
 | `pregen-traffic` | The traffic and pedestrian spawn files: made-up files, rejected input and the cell lookup. No game data needed |
 | `pregen-traffic-real-data` | Decodes the 14 shipped spawn files and checks counts and checksums; skips with code 77 without `artifacts/romfs` |
+| `traffic-route`, `traffic-route-real-data` | The routes of the traffic cars (route list, EnableTrafficPath, path follower, junction test) on made-up data, then the junctions and routes of the 7 shipped traffic levels; the second skips with code 77 without `artifacts/romfs` |
 | `viewer-real-smoke`, `viewer-cutscene-smoke` | Render one model and one cutscene frame offscreen. Registered only if `artifacts/romfs` existed at configure time |
 | `game-real-smoke` | Registered only if `artifacts/romfs` existed at configure time; needs libepoxy |
 | `game-mission-1-1`, `game-mission-1-1-start` | Mission 1-1 from the first waypoint to its end in one run (under a minute), with `at X Y Z` teleports between the stops; it checks the order of the scripts and cutscenes, not their update numbers, and the level start (intro movie, cutscene `1_1_a`). Registered only if `artifacts/romfs` existed at configure time |

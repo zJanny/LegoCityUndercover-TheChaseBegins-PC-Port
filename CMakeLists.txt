@@ -1995,3 +1995,12 @@ foreach(reference_trigger_data_test reference-trigger-real-data)
     set_property(TEST ${reference_trigger_data_test} APPEND PROPERTY LABELS needs-game-data)
   endif()
 endforeach()
+
+target_sources(chase_runtime PRIVATE src/runtime/traffic_route.cpp)
+add_executable(traffic-route-test tests/traffic_route_test.cpp)
+target_link_libraries(traffic-route-test PRIVATE chase_runtime chase_assets)
+target_compile_options(traffic-route-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME traffic-route COMMAND traffic-route-test)
+add_test(NAME traffic-route-real-data COMMAND traffic-route-test
+  "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
+set_tests_properties(traffic-route-real-data PROPERTIES SKIP_RETURN_CODE 77 LABELS needs-game-data)
