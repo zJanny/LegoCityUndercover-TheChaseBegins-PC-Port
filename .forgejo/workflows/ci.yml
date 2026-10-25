@@ -28,29 +28,11 @@ jobs:
             libsdl2-dev libepoxy-dev \
             libavformat-dev libavcodec-dev libswscale-dev libswresample-dev libavutil-dev
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       - name: Configure
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_COMPILE_WARNING_AS_ERROR=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_COMPILE_WARNING_AS_ERROR=ON
       - name: Build
         run: cmake --build build -j"$(nproc)"
       - name: Python tests
         run: python3 -m unittest discover -s tests -p 'test_*.py'
       - name: CTest without slow and game-data tests
         run: ctest --test-dir build -j"$(nproc)" -LE 'slow|needs-game-data' --output-on-failure
-      - name: clang-tidy report
-        if: github.event_name == 'push'
-        run: |
-          SUDO=""
-          if [ "$(id -u)" != "0" ]; then SUDO="sudo"; fi
-          $SUDO apt-get install -y --no-install-recommends clang-tidy
-          run-clang-tidy -p build -j"$(nproc)" -quiet \
-            -checks='-*,clang-analyzer-*,bugprone-*,-bugprone-easily-swappable-parameters,-bugprone-signed-bitwise,performance-*,-performance-enum-size,portability-*,-portability-avoid-pragma-once' \
-            -header-filter='.*/src/.*' -extra-arg=-Wno-unknown-warning-option \
-            '/(src|tests)/' > build/clang-tidy.txt || true
-      - name: SonarQube analysis
-        if: github.event_name == 'push'
-        uses: https://github.com/SonarSource/sonarqube-scan-action@v8
-        env:
-          SONAR_TOKEN: ${{ secrets.SONARQUBE }}
-          SONAR_HOST_URL: https://sonarqube.zjanny.org

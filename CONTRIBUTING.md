@@ -39,7 +39,6 @@ The workflows `.forgejo/workflows/ci.yml` and `.github/workflows/ci.yml` run on 
 - They run the Python unit tests.
 - They run the CTest tests without the labels `slow` and `needs-game-data`.
 - Tests that need the game image are left out, because CI has no game data. Run them on your own machine.
-- On Forgejo, every push to `main` also sends a SonarQube analysis. See [docs/commands.md](docs/commands.md#continuous-integration).
 
 ## The port must be faithful
 

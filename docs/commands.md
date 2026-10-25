@@ -39,8 +39,6 @@ ctest --test-dir build -j"$(($(nproc) - 1))" -LE slow --output-on-failure   # wi
 
 The workflow files in `.forgejo/workflows/` and `.github/workflows/` define the same two workflows. CI has no game data, so it never runs the tests labelled `needs-game-data`.
 
-On Forgejo, `ci.yml` also runs a SonarQube analysis after the tests on every push to `main` (not on pull requests). It sends the analysis to `https://sonarqube.zjanny.org` and needs the secret `SONARQUBE` (a SonarQube token). The project settings are in `sonar-project.properties`. C++ is analysed by the community plugin sonar-cxx on the server, with the warnings of a `clang-tidy` run that the step does first (`build/clang-tidy.txt`). The list of checks is in `ci.yml`.
-
 | Workflow | When | What it runs |
 |---|---|---|
 | `ci.yml` | every push to `main` and every pull request | Build with warnings as errors, the Python tests, then `ctest -LE 'slow\|needs-game-data'` |
