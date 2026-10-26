@@ -178,6 +178,9 @@ private:
     void useSwitches(bool actionFree);
     void deliverSwitchMessage(const chase::runtime::ScriptObjectMessage& sent);
     void updateSwitches(float dt, const std::function<void(const chase::runtime::SoundCall&)>& emit);
+    void loadSwitchUse(chase::assets::FuseArchive& archive);
+    void syncSwitchZones();
+    void stepSwitchUse(unsigned stateBefore);
     void loadUseMarkers(chase::assets::FuseArchive& archive);
     void updateUseMarkers(float dt);
     void drawUseMarkers(const chase::render::Mat4& viewProjection);
@@ -367,6 +370,7 @@ private:
     chase::runtime::UseSpotSet useSpots;
     chase::runtime::SwitchSet switches;
     std::vector<chase::runtime::SwitchEvent> pendingSwitchEvents;
+    std::map<std::string, bool> switchZoneUsable;
     chase::runtime::UseMarkers useMarkers;
     chase::runtime::AbilityTable abilityTable;
     std::map<std::string, float> objectiveBoxTops;

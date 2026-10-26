@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 938 open items and stand-ins, 168 linked to game usage, 770 with unknown reach.
+Items: 940 open items and stand-ins, 168 linked to game usage, 772 with unknown reach.
 
 ## Top 50 overall
 
@@ -38,7 +38,7 @@ Items: 938 open items and stand-ins, 168 linked to game usage, 770 with unknown 
 | 2 | [SCRIPT-52](features/script-system.md?display=source#L41) | 3101 | 0 | 8 | 1 | 2 implemented | `enablebound`, `enabletrigger` | Class owners: an empty object name as the owner itself, the variable `TaskComplete.TASK_COMPLETE` (saved per ... |
 | 3 | [PLAYER-S9](features/player-movement.md?display=source#L29) | 0 | 2513 | 8 | 0 | - | `leprops/leprop_wobblydestructible` | `attackTargetObjects` — only `leprop_wobblydestructible` props are attack targets, and the glue allows the ... |
 | 4 | [SCRIPT-285](features/script-system-missions.md?display=source#L32) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Nothing known fires the ObjectTriggered of `1-2_Door_Lock_Hint_Script`: no name source besides its own ... |
-| 5 | [SCRIPT-365](features/script-system-missions-reference.md?display=source#L28) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The other switch kinds (100 energy switches, 125, 138 fires, 139 switchfloor, 141, 185 ability props and ... |
+| 5 | [SCRIPT-365](features/script-system-missions-reference.md?display=source#L30) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The other switch kinds (100 energy switches, 125, 138 fires, 139 switchfloor, 141, 185 ability props and ... |
 | 6 | [SCRIPT-4](features/script-system.md?display=source#L38) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The code that hides the revealer targets; the role of the other type-4 parameters (Destination, ObjectTo ... |
 | 7 | [SCRIPT-S220](features/script-system-missions-reference.md?display=source#L18) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Closed 2026-10-25: the reference list holds the records of every registering kind ... |
 | 8 | [TRAV-21](features/player-traversal.md?display=source#L39) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Brick use handler 0x1b53a8 (messages 3 / 4 into state 145): sender unknown; `TriggerObject` switching ... |
@@ -137,13 +137,13 @@ Items: 938 open items and stand-ins, 168 linked to game usage, 770 with unknown 
 
 ## Scripts and missions
 
-105 of 215 items linked.
+105 of 217 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
 | 1 | [SCRIPT-52](features/script-system.md?display=source#L41) | 3101 | 0 | 8 | 1 | 2 implemented | `enablebound`, `enabletrigger` | Class owners: an empty object name as the owner itself, the variable `TaskComplete.TASK_COMPLETE` (saved per ... |
 | 2 | [SCRIPT-285](features/script-system-missions.md?display=source#L32) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Nothing known fires the ObjectTriggered of `1-2_Door_Lock_Hint_Script`: no name source besides its own ... |
-| 3 | [SCRIPT-365](features/script-system-missions-reference.md?display=source#L28) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The other switch kinds (100 energy switches, 125, 138 fires, 139 switchfloor, 141, 185 ability props and ... |
+| 3 | [SCRIPT-365](features/script-system-missions-reference.md?display=source#L30) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The other switch kinds (100 energy switches, 125, 138 fires, 139 switchfloor, 141, 185 ability props and ... |
 | 4 | [SCRIPT-4](features/script-system.md?display=source#L38) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The code that hides the revealer targets; the role of the other type-4 parameters (Destination, ObjectTo ... |
 | 5 | [SCRIPT-S220](features/script-system-missions-reference.md?display=source#L18) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Closed 2026-10-25: the reference list holds the records of every registering kind ... |
 | 6 | [SCRIPT-273](features/script-system-natives-animation.md?display=source#L32) | 881 | 0 | 8 | 1 | 2 stand-in | `playanimation`, `playcharanim` | PlayCharAnim's state request 81 (the cutscene call, state 0x51 has the same functions) and its cape animation ... |
@@ -244,8 +244,8 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [script-system-ai-navigation.md](features/script-system-ai-navigation.md): SCRIPT-92 (+30), SCRIPT-94 (+17), SCRIPT-101 (+15), SCRIPT-95 (+15), SCRIPT-100 (+14), SCRIPT-79 (+13), SCRIPT-S100, SCRIPT-S101, SCRIPT-S102, SCRIPT-S104, SCRIPT-S31, SCRIPT-S93, SCRIPT-S94, SCRIPT-S95
 - [script-system-dcam.md](features/script-system-dcam.md): SCRIPT-40 (+15), SCRIPT-182 (+1), SCRIPT-48 (+1), SCRIPT-181, SCRIPT-332, SCRIPT-49, SCRIPT-50, SCRIPT-S142
 - [script-system-hud-natives.md](features/script-system-hud-natives.md): SCRIPT-350 (+2), SCRIPT-329 (+1), SCRIPT-330 (+1), SCRIPT-354 (+1), SCRIPT-331, SCRIPT-68, SCRIPT-69, SCRIPT-70, SCRIPT-S270, SCRIPT-S282, SCRIPT-S283, SCRIPT-S285
-- [script-system-missions-1-3.md](features/script-system-missions-1-3.md): SCRIPT-367 (+1), SCRIPT-368 (+1), SCRIPT-S291
-- [script-system-missions-reference.md](features/script-system-missions-reference.md): SCRIPT-366 (+2), SCRIPT-359 (+1), SCRIPT-360 (+1), SCRIPT-S289, SCRIPT-S292, SCRIPT-S293
+- [script-system-missions-1-3.md](features/script-system-missions-1-3.md): SCRIPT-369 (+3), SCRIPT-368 (+1), SCRIPT-S291, SCRIPT-S298
+- [script-system-missions-reference.md](features/script-system-missions-reference.md): SCRIPT-359 (+1), SCRIPT-360 (+1), SCRIPT-370 (+1), SCRIPT-S289, SCRIPT-S292, SCRIPT-S293, SCRIPT-S299
 - [script-system-missions.md](features/script-system-missions.md): SCRIPT-284 (+1), SCRIPT-115, SCRIPT-142, SCRIPT-221, SCRIPT-S141, SCRIPT-S236, SCRIPT-S237, SCRIPT-S243, SCRIPT-S255
 - [script-system-natives-animation.md](features/script-system-natives-animation.md): SCRIPT-324 (+3), SCRIPT-352 (+2), SCRIPT-272 (+1), SCRIPT-325 (+1), SCRIPT-334 (+1), SCRIPT-S284 (+1), SCRIPT-344, SCRIPT-353, SCRIPT-S110, SCRIPT-S262, SCRIPT-S266, SCRIPT-S267
 - [script-system-natives-party.md](features/script-system-natives-party.md): SCRIPT-338 (+2), SCRIPT-340 (+1)

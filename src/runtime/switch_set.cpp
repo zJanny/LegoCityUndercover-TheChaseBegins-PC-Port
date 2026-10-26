@@ -25,6 +25,7 @@ LeverPart readLever(const assets::LevelObject& object, const assets::Level& cls)
     lever.leverAbility = switchIntParam(object, cls, "LeverAbility", 0);
     lever.holdMe = switchIntParam(object, cls, "HoldMe", 0) != 0;
     lever.usable = switchIntParam(object, cls, "UseStartActive", 1) != 0;
+    lever.use.clipId = leverSwitchClip(lever.leverType, switchIntParam(object, cls, "CharacterSwitchAnim", kLeverClipTypeDefault));
     const auto bound = std::find_if(cls.bounds.begin(), cls.bounds.end(), [](const assets::LevelBound& b) { return lower(b.name) == "usebound"; });
     if (bound != cls.bounds.end()) {
         lever.hasZone = true;
@@ -63,7 +64,11 @@ void SwitchSet::load(const assets::Level& level, const assets::ClassLookup& clas
         }
         sw.params = readSwitchParams(object, *cls);
         sw.params.hasUseAnim = hasUseAnimation && hasUseAnimation(object, *cls);
-        if (kind == kSwitchKindLever) sw.lever = readLever(object, *cls);
+        if (kind == kSwitchKindLever) {
+            sw.lever = readLever(object, *cls);
+            sw.lever->use.numberOfTurns = sw.params.numberOfTurns;
+            sw.lever->use.holdMe = sw.lever->holdMe;
+        }
         sw.studValue = studValueParameter(object, *cls, 0);
         sw.studSpawn = studSpawnSource(level, object, *cls);
         objects_.push_back(std::move(sw));
@@ -138,7 +143,10 @@ std::uint32_t SwitchSet::handle(std::size_t index, std::uint8_t message, bool fr
     const std::uint8_t referenceKind = sw.reference ? std::uint8_t(references.kind(*sw.reference)) : 0;
     SwitchMessageResult result = switchBaseMessage(sw.record, sw.params, message, fromPlayer, argument, referenceKind);
     if (result.setRegistered && sw.reference) references.setKind(*sw.reference, ReferenceKind::Registered);
-    for (const SwitchEffect& effect : result.effects) events.push_back({index, effect});
+    for (const SwitchEffect& effect : result.effects) {
+        playUseAnimation(sw, effect.kind, sw.record.state);
+        events.push_back({index, effect});
+    }
     (void)scripts;
     return result.returned;
 }
@@ -151,8 +159,52 @@ bool SwitchSet::message(const std::string& lowerInstance, std::uint8_t message, 
     return true;
 }
 
+void SwitchSet::setLeverUse(std::size_t index, const LeverClipTiming& clip, const std::optional<UseLerpTarget>& target) {
+    if (index >= objects_.size() || !objects_[index].lever) return;
+    objects_[index].lever->use.clip = clip;
+    objects_[index].lever->use.target = target;
+}
+
+void SwitchSet::setUseAnimation(std::size_t index, const AnimationClipInfo& clip) {
+    if (index < objects_.size()) objects_[index].useClip = clip;
+}
+
+void SwitchSet::setZoneUsable(std::size_t index, bool usable) {
+    if (index >= objects_.size() || !objects_[index].lever) return;
+    objects_[index].lever->usable = usable;
+    objects_[index].lever->zoneBit6 = !usable;
+}
+
+void SwitchSet::playUseAnimation(SwitchObject& sw, SwitchEffectKind kind, SwitchState stateBefore) {
+    if (!sw.params.hasUseAnim) return;
+    const AnimationClipInfo& clip = sw.useClip;
+    const AnimationSlot* current = sw.useAnimation.current();
+    switch (kind) {
+    case SwitchEffectKind::UseAnimForward: sw.useAnimation.start(clip, kAnimationOnce, 0, kAnimationFrameDefault, 1.0f, 0.0f, clock_); break;
+    case SwitchEffectKind::UseAnimBackward: {
+        const std::uint16_t from = stateBefore == SwitchState::Used && current
+                                       ? std::uint16_t(AnimationSlots::position(*current, clock_).frame)
+                                       : clip.length;
+        sw.useAnimation.start(clip, kAnimationReverse, 0, from, 1.0f, 0.0f, clock_);
+        break;
+    }
+    case SwitchEffectKind::UseAnimToStart: sw.useAnimation.start(clip, kAnimationOnce, 0, 0, 1.0f, 0.0f, clock_); break;
+    case SwitchEffectKind::UseAnimAtEnd: sw.useAnimation.start(clip, kAnimationOnce, clip.length, clip.length, 1.0f, 0.0f, clock_); break;
+    default: break;
+    }
+}
+
+bool SwitchSet::markerShown(std::size_t index, const ReferenceTriggers& references) const {
+    const SwitchObject& sw = objects_[index];
+    if (!sw.lever || !sw.lever->hasZone || sw.lever->leverType == kLeverTypeWithoutMarker || !sw.lever->usable) return false;
+    if (sw.reference && references.kind(*sw.reference) == ReferenceKind::Registered) return false;
+    if (playerUse_.active() && playerUse_.lever() == index && playerUse_.state() != kPlayerStateUseLerp) return false;
+    return sw.record.state == SwitchState::Off;
+}
+
 std::optional<SwitchUse> SwitchSet::use(const assets::PlacedObjectState& state, const SwitchUseInput& input, const ReferenceTriggers& references) {
-    if (!input.actionPressed || !input.playerFree || playerUse_) return std::nullopt;
+    actionHeld_ = input.actionHeld;
+    if (!input.actionPressed || !input.playerFree || playerUse_.active()) return std::nullopt;
     for (std::size_t i = 0; i < objects_.size(); ++i) {
         SwitchObject& sw = objects_[i];
         if (!sw.lever || state.isDisabled(sw.instance) || !inZone(sw, input.player)) continue;
@@ -163,7 +215,7 @@ std::optional<SwitchUse> SwitchSet::use(const assets::PlacedObjectState& state, 
         const std::vector<int> abilities = leverAbilities(lever);
         const bool able = std::all_of(abilities.begin(), abilities.end(), [&](int ability) { return input.playerHasAbility && input.playerHasAbility(ability); });
         if (!able) return SwitchUse{i, 0xff};
-        playerUse_ = PlayerUse{i, 0};
+        playerUse_.start(i, input.player, input.facing, lever.use, lastDt_);
         return SwitchUse{i, 1};
     }
     return std::nullopt;
@@ -171,16 +223,27 @@ std::optional<SwitchUse> SwitchSet::use(const assets::PlacedObjectState& state, 
 
 std::vector<SwitchEvent> SwitchSet::update(const assets::PlacedObjectState& state, float dt, ReferenceTriggers& references, ScriptRunner& scripts) {
     std::vector<SwitchEvent> events;
+    lastDt_ = dt;
+    // STAND-IN SCRIPT-S299: the switches' animation clock advances before their update, an order the port chose.
+    clock_ += std::llround(double(dt) * double(kAnimationClockTicksPerSecond));
     for (std::size_t i = 0; i < objects_.size(); ++i) {
         if (state.isDisabled(objects_[i].instance)) continue;
         std::vector<SwitchEffect> effects;
-        if (objects_[i].record.state == objects_[i].record.target) switchStableUpdate(objects_[i].record, objects_[i].params, true, effects);
-        switchStateChange(objects_[i].record, objects_[i].params, dt, [&](bool activate) {
-            for (const SwitchEffect& effect : effects) events.push_back({i, effect});
+        const SwitchState before = objects_[i].record.state;
+        const auto flush = [&] {
+            for (const SwitchEffect& effect : effects) {
+                playUseAnimation(objects_[i], effect.kind, before);
+                events.push_back({i, effect});
+            }
             effects.clear();
+        };
+        if (objects_[i].record.state == objects_[i].record.target)
+            switchStableUpdate(objects_[i].record, objects_[i].params, objects_[i].useAnimation.kind(clock_) == kAnimationStopped, effects);
+        switchStateChange(objects_[i].record, objects_[i].params, dt, [&](bool activate) {
+            flush();
             runReference(i, activate, references, scripts, events);
         }, effects);
-        for (const SwitchEffect& effect : effects) events.push_back({i, effect});
+        flush();
         SwitchObject& sw = objects_[i];
         if (!sw.lever) continue;
         LeverPart& lever = *sw.lever;
@@ -195,10 +258,22 @@ std::vector<SwitchEvent> SwitchSet::update(const assets::PlacedObjectState& stat
         default: break;
         }
     }
-    if (playerUse_) {
-        ++playerUse_->updates;
-        if (playerUse_->updates == kLeverUseRequestUpdate) objects_[playerUse_->index].record.useRequested = true;
-        if (playerUse_->updates >= kLeverUseEndUpdate) playerUse_.reset();
+    if (playerUse_.active()) {
+        const std::size_t index = playerUse_.lever();
+        SwitchObject& sw = objects_[index];
+        const LeverUseStep step = playerUse_.update(dt, actionHeld_, sw.record.state == SwitchState::Used);
+        if (step.useBit) sw.record.useRequested = true;
+        if (step.leverAnim == LeverAnim::Forward) {
+            playUseAnimation(sw, SwitchEffectKind::UseAnimForward, sw.record.state);
+            events.push_back({index, {SwitchEffectKind::UseAnimForward, 0}});
+            if (sw.params.sfxUse != 0) events.push_back({index, {SwitchEffectKind::UseSound, sw.params.sfxUse}});
+        } else if (step.leverAnim == LeverAnim::Backward && sw.params.hasUseAnim) {
+            const AnimationSlot* current = sw.useAnimation.current();
+            const std::uint16_t from = current ? std::uint16_t(AnimationSlots::position(*current, clock_).frame) : sw.useClip.length;
+            sw.useAnimation.start(sw.useClip, kAnimationReverse, 0, from, kLeverCancelAnimSpeed, 0.0f, clock_);
+            events.push_back({index, {SwitchEffectKind::UseAnimBackward, 0}});
+        }
+        if (step.ended && sw.params.sfxUse != 0) events.push_back({index, {SwitchEffectKind::StopUseSound, sw.params.sfxUse}});
     }
     return events;
 }

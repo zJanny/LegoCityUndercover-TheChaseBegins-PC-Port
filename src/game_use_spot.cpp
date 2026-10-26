@@ -18,18 +18,20 @@ void LevelSession::loadUseMarkers(chase::assets::FuseArchive& archive) {
 // render state bytes that 0x1b29f0 hands to 0x25511c are not decoded.
 // STAND-IN SCRIPT-S286: the party list 0x51b248 is not ported; the marker asks only the player character (kPlayerCharacterId) for the ability, and
 // the case of 0x292388 where the player entity has kind 159 (character 141) is not modelled.
-// STAND-IN SCRIPT-S287: only use spots (165) and detective spots (182) feed the markers; the message 3 answer of the other 34 kinds is not read.
+// STAND-IN SCRIPT-S287: only use spots (165), detective spots (182) and levers (58) feed the markers; the message 3 answer of the other 33 kinds is not
+// read.
 void LevelSession::updateUseMarkers(float dt) {
     if (!player || !follow) return;
     const bool driving = boarding && boarding->seatedVehicle();
     std::vector<runtime::UseMarkerCandidate> candidates;
-    const auto add = [&](const std::string& instance, const std::array<float, 16>& matrix, const float zoneCentre[3], bool usable, unsigned kind) {
+    const auto add = [&](const std::string& instance, const std::array<float, 16>& matrix, const float zoneCentre[3], bool usable, unsigned kind,
+                         std::optional<int> recordAbility = std::nullopt) {
         runtime::UseMarkerCandidate candidate;
         candidate.instance = instance;
         candidate.matrix = matrix;
         candidate.usable = !driving && usable && !objectState.isDisabled(instance);
         if (candidate.usable && !useMarkers.slotted(instance)) candidate.ground = runtime::useMarkerGround(collision, matrix, zoneCentre);
-        const int ability = runtime::useMarkerKindAbility(kind);
+        const int ability = recordAbility ? *recordAbility : runtime::useMarkerKindAbility(kind);
         const bool lockedInSave = abilityTable.startsLocked(ability) && !levelScripts.progressNatives().bit(runtime::kAbilityOffset, std::uint32_t(ability));
         candidate.texture = runtime::useMarkerTexture(ability, lockedInSave, abilityTable.characterHas(game_player::kPlayerCharacterId, ability));
         candidates.push_back(std::move(candidate));
@@ -38,6 +40,9 @@ void LevelSession::updateUseMarkers(float dt) {
         add(spot.instance, spot.matrix, spot.zoneCentre, spot.active && !spot.triggerObject.empty(), runtime::kUseSpotKind);
     for (const runtime::DetectiveSpot& spot : detective.spots())
         add(spot.instance, spot.matrix, spot.useZone.centre, spot.usable && runtime::detectiveSpotAnswersUseQuery(spot), runtime::kDetectiveSpotType);
+    for (std::size_t i = 0; i < switches.objects().size(); ++i)
+        if (const runtime::SwitchObject& sw = switches.objects()[i]; sw.lever && sw.lever->hasZone)
+            add(sw.instance, sw.matrix, sw.lever->zoneCentre, switches.markerShown(i, buildits.references()), runtime::kSwitchKindLever, sw.lever->leverAbility);
     const float playerPosition[3] = {player->motion.x, player->vertical.y, player->motion.z};
     const float eye[3] = {follow->eye()[0], follow->eye()[1], follow->eye()[2]};
     std::vector<bool> before;

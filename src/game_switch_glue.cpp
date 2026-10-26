@@ -15,6 +15,7 @@ void LevelSession::loadSwitches(chase::assets::FuseArchive& archive) {
         return mesh != meshes.end() && !mesh->second.empty() && archive.find(runtime::PropAnimations::animationPath(mesh->second, "use")) != nullptr;
     });
     pendingSwitchEvents = switches.link(buildits.references());
+    loadSwitchUse(archive);
     std::cout << "switches: " << switches.objects().size() << '\n';
 }
 
@@ -23,13 +24,17 @@ void LevelSession::useSwitches(bool actionFree) {
     input.player[0] = player->motion.x;
     input.player[1] = player->vertical.y;
     input.player[2] = player->motion.z;
+    input.facing = player->motion.facing;
     input.actionPressed = pad.slot(kSlotConfirmButton).press > 0;
+    input.actionHeld = pad.slot(kSlotConfirmButton).value > 0.0f;
     input.playerFree = actionFree && !levelScripts.playerControlTaken() && !cutscenePlaying() && !detective.controlTaken() &&
                        player->vertical.posture == runtime::Posture::Ground;
     input.playerHasAbility = [this](int ability) { return abilityTable.characterHas(game_player::kPlayerCharacterId, ability); };
-    if (const auto used = switches.use(objectState, input, buildits.references()))
+    if (const auto used = switches.use(objectState, input, buildits.references())) {
         std::cout << "switch " << switches.objects()[used->index].instance << (used->answer == 1 ? ": used" : ": refused for the abilities") << " at update "
                   << updates << '\n';
+        if (used->answer == 1) stepSwitchUse(0);
+    }
 }
 
 void LevelSession::deliverSwitchMessage(const runtime::ScriptObjectMessage& sent) {
@@ -41,7 +46,10 @@ void LevelSession::updateSwitches(float dt, const std::function<void(const runti
     for (const runtime::SwitchObject& object : switches.objects()) before.push_back(object.record.state);
     std::vector<runtime::SwitchEvent> events = std::move(pendingSwitchEvents);
     pendingSwitchEvents.clear();
+    syncSwitchZones();
+    const unsigned useStateBefore = switches.playerUse().state();
     for (runtime::SwitchEvent& event : switches.update(objectState, dt, buildits.references(), levelScripts)) events.push_back(event);
+    stepSwitchUse(useStateBefore);
     for (std::size_t i = 0; i < switches.objects().size(); ++i)
         if (switches.objects()[i].record.state != before[i])
             std::cout << "switch " << switches.objects()[i].instance << ": state " << unsigned(switches.objects()[i].record.state) << " at update " << updates << '\n';

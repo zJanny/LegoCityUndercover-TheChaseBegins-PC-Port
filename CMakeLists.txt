@@ -48,7 +48,7 @@ target_compile_options(chase_runtime PRIVATE -Wall -Wextra -Wpedantic -ffp-contr
 set_target_properties(chase_runtime PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_sources(chase_runtime PRIVATE src/runtime/pregen_derive.cpp src/runtime/studs.cpp src/runtime/sound_events.cpp src/runtime/music.cpp src/runtime/level_start.cpp src/runtime/script_runner.cpp src/runtime/natives_objects.cpp src/runtime/natives_effects.cpp src/runtime/natives_world.cpp src/runtime/natives_party.cpp src/runtime/script_runner_natives.cpp src/runtime/natives_animation.cpp src/runtime/natives_cutscene.cpp src/runtime/screen_fade.cpp src/runtime/dialog_bg_fade.cpp src/runtime/natives_progress.cpp src/runtime/natives_music.cpp src/runtime/natives_sound.cpp src/runtime/entity_ids.cpp src/runtime/music_block.cpp src/runtime/door.cpp src/runtime/scene_change.cpp src/runtime/same_level_entry.cpp src/runtime/room_streaming.cpp src/runtime/room_streamer.cpp src/runtime/scene_start.cpp src/runtime/dcam.cpp src/runtime/debug_metrics.cpp src/runtime/object_visibility.cpp src/runtime/script_text.cpp src/runtime/script_triggers.cpp src/runtime/objectives.cpp src/runtime/sub_objectives.cpp src/runtime/ai.cpp src/runtime/ai_simple_path.cpp src/runtime/fog.cpp src/runtime/lighting.cpp src/runtime/sky.cpp src/runtime/script_placement.cpp src/runtime/ai_go_to_target.cpp src/runtime/nav_grid.cpp src/runtime/nav_path.cpp src/runtime/nav_follow.cpp src/runtime/nav_load.cpp src/runtime/room_locator.cpp src/runtime/object_rooms.cpp src/runtime/pedestrian_rooms.cpp src/runtime/player_controller_state.cpp src/runtime/ai_super_jump.cpp src/runtime/ai_face_target.cpp src/runtime/waypoints.cpp src/runtime/waypoint_global.cpp src/runtime/buildit.cpp src/runtime/buildit_set.cpp src/runtime/buildit_wobble.cpp src/runtime/prop_animation.cpp src/runtime/prop_root_motion.cpp src/runtime/prop_nodes.cpp src/runtime/buildit_bricks.cpp src/runtime/mesh_bouncer.cpp src/runtime/reference_trigger.cpp src/runtime/vehicle.cpp src/runtime/vehicle_boarding.cpp src/runtime/vehicle_drive.cpp src/runtime/vehicle_body.cpp src/runtime/vehicle_wheels.cpp src/runtime/vehicle_drivetrain.cpp src/runtime/vehicle_wheel_pose.cpp src/runtime/vehicle_hud.cpp src/runtime/vehicle_damage.cpp src/runtime/vehicle_break.cpp src/runtime/head_icon.cpp src/runtime/floor_walk.cpp src/runtime/vehicle_collision.cpp src/runtime/vehicle_box_contact.cpp src/runtime/carry.cpp src/runtime/carry_arrows.cpp src/runtime/carry_animation.cpp src/runtime/scanner.cpp src/runtime/cutscene_cast.cpp src/runtime/cutscene_hold.cpp src/runtime/collision_enable.cpp src/runtime/game_random.cpp src/runtime/npc_idle.cpp src/runtime/animation_slots.cpp src/runtime/player_script_animation.cpp src/runtime/director_hold.cpp src/runtime/script_thread_log.cpp src/runtime/vehicle_world.cpp src/runtime/vehicle_sphere_sweep.cpp src/runtime/buildit_player.cpp src/runtime/vehicle_prop_smash.cpp src/runtime/detective.cpp src/runtime/hand_item.cpp src/runtime/use_spot.cpp src/runtime/use_marker.cpp src/runtime/use_marker_ground.cpp src/runtime/ability_table.cpp src/runtime/zipline.cpp src/runtime/zipline_rope.cpp src/runtime/zipline_pole.cpp src/runtime/nested_props.cpp src/runtime/brick_grab.cpp src/runtime/climb_bar.cpp src/runtime/acrobat_pole.cpp src/runtime/pole.cpp src/runtime/ladder.cpp src/runtime/ladder_sounds.cpp src/runtime/cat_rescue.cpp src/runtime/screen_shake.cpp src/runtime/placement_message.cpp src/runtime/super_buildit.cpp src/runtime/super_brick_display.cpp src/runtime/fast_travel_pad.cpp src/runtime/update_order.cpp src/runtime/save_hud_counter.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/reference_trigger_level.cpp src/runtime/reference_trigger_apply.cpp)
-target_sources(chase_runtime PRIVATE src/runtime/switch_base.cpp src/runtime/switch_set.cpp)
+target_sources(chase_runtime PRIVATE src/runtime/switch_base.cpp src/runtime/switch_set.cpp src/runtime/lever_use.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/player_attack.cpp src/runtime/attack_sounds.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/pedestrian_walk.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/vehicle_camera.cpp src/runtime/particles.cpp src/runtime/debris.cpp src/runtime/prop_destroy.cpp src/runtime/destroy_message.cpp src/runtime/character_death.cpp src/runtime/fall_apart.cpp src/runtime/stud_drop.cpp src/runtime/character_respawn.cpp)
@@ -128,7 +128,7 @@ if(EPOXY_FOUND)
     target_sources(chase-game PRIVATE src/game_pedestrian_blocking.cpp src/game_traffic.cpp)
     target_sources(chase-game PRIVATE src/game_props_destructible.cpp src/game_prop_destroy.cpp src/game_character_death.cpp src/game_fall_apart.cpp src/game_stud_drops.cpp src/game_super_bricks.cpp)
     target_sources(chase-game PRIVATE src/game_debris_pickup.cpp)
-    target_sources(chase-game PRIVATE src/game_switch_glue.cpp)
+    target_sources(chase-game PRIVATE src/game_switch_glue.cpp src/game_switch_use_glue.cpp)
     target_sources(chase-game PRIVATE src/game_debris_super.cpp)
     target_sources(chase-game PRIVATE src/game_attack.cpp src/game_screen_fade.cpp src/game_screen_shake.cpp src/game_save.cpp)
     target_sources(chase-game PRIVATE src/game_prop_rocking.cpp)
@@ -427,6 +427,10 @@ if(BUILD_TESTING)
   target_link_libraries(switch-test PRIVATE chase_runtime chase_assets)
   target_compile_options(switch-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME switch COMMAND switch-test)
+  add_executable(lever-use-test tests/lever_use_test.cpp)
+  target_link_libraries(lever-use-test PRIVATE chase_runtime chase_assets)
+  target_compile_options(lever-use-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME lever-use COMMAND lever-use-test)
   add_executable(collision-enable-test tests/collision_enable_test.cpp)
   target_link_libraries(collision-enable-test PRIVATE chase_runtime chase_assets)
   target_compile_options(collision-enable-test PRIVATE -Wall -Wextra -Wpedantic)
@@ -579,6 +583,11 @@ if(BUILD_TESTING)
   target_compile_options(carry-animation-real-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME carry-animation-real-data COMMAND carry-animation-real-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
   set_tests_properties(carry-animation-real-data PROPERTIES SKIP_RETURN_CODE 77)
+  add_executable(lever-use-real-test tests/lever_use_real_test.cpp)
+  target_link_libraries(lever-use-real-test PRIVATE chase_runtime chase_assets)
+  target_compile_options(lever-use-real-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME lever-use-real-data COMMAND lever-use-real-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
+  set_tests_properties(lever-use-real-data PROPERTIES SKIP_RETURN_CODE 77)
   add_executable(super-buildit-real-test tests/super_buildit_real_test.cpp)
   target_link_libraries(super-buildit-real-test PRIVATE chase_runtime chase_frontend chase_assets)
   target_compile_options(super-buildit-real-test PRIVATE -Wall -Wextra -Wpedantic)
@@ -1533,7 +1542,9 @@ if(BUILD_TESTING)
     # and enables 1-3_Garage_Key_Switch (props/prop_switchkey_vertical, kind 58). A in its UseBound (0x17f6f4 message 3) starts the use; the switch base
     # (0x21435c, 0x22c6d0) goes to state 1, then with TriggerBeforeAnim to 2, fires 1-3_Garage_Key_used through the reference step and stays in state 3.
     # The script's WaitForCurrentAnim ends only once the garage door's "open" clip has played. A at update 5; the switch record reaches state 1 at u32 and
-    # 3 at u33 after the press, as recorded from a save state by RPC 20261025-garage-A-1 (2026-10-25, stepped); the player's use state is STAND-IN SCRIPT-S292.
+    # 3 at u33 after the press, as recorded from a save state by RPC 20261025-garage-A-1 (2026-10-25, stepped); the player is in state 20 (USE LERP) from
+    # the press, in state 76 from u8 and in state 1 from u81, as there. The end position is the use point of the node char_minifig_use (0x207be4) of
+    # prop_keyinhole, read by 20261026-mission13-A (2026-10-26); the scripted runs step at dt 0.033.
     add_test(NAME game-garage-key-1-3 COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
@@ -1541,7 +1552,7 @@ if(BUILD_TESTING)
       --start "986.45 16.57 1141.8" --facing 180 --call-script 1-3_Garage_Key_Base_Script
       --script "0 0 5;0 0 1 A;0 0 170")
     set_tests_properties(game-garage-key-1-3 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
-      PASS_REGULAR_EXPRESSION "switch 1-3_garage_key_switch: used at update 5\n.*switch 1-3_garage_key_switch: state 1 at update 37\n.*switch 1-3_garage_key_switch: state 3 at update 38\n.*script 1-3_Garage_Key_used started at update [0-9]+\n.*script 1-3_Garage_Key_used ended at update [0-9]+")
+      PASS_REGULAR_EXPRESSION "use marker: 1-3_garage_key_switch shown at update [0-9]+ \\(usegeneric\\)\n.*switch 1-3_garage_key_switch: used at update 5\n.*switch 1-3_garage_key_switch: player state 20 at update 5\n.*switch 1-3_garage_key_switch: player state 76 at update 13\n.*switch 1-3_garage_key_switch: state 1 at update 37\n.*switch 1-3_garage_key_switch: state 3 at update 38\n.*script 1-3_Garage_Key_used started at update [0-9]+\n.*switch 1-3_garage_key_switch: player state 1 at update 86\n.*script 1-3_Garage_Key_used ended at update [0-9]+\n.*player ended at 985.39 16.57 1141.25")
     # The same on the real path of game-key-pickup-1-3: after the pickup, A inside the keyhole's UseBound places the key (its TriggerObject starts
     # 1-3_Garage_Key_Base_Script), A again uses the key switch at the same spot and 1-3_Garage_Key_used opens the garage door.
     add_test(NAME game-key-use-1-3 COMMAND chase-game
@@ -1569,12 +1580,13 @@ if(BUILD_TESTING)
     # (949.252, 16.772, 1129.45), level data) uses it, its TriggerObject starts 1-3_Generator_Script, which triggers the crane platform, waits for it,
     # stops the girder's rocking, starts particle definition 264 at 1-3_Crane_Girder (PlayParticlesGO), makes the girder guy jump down and ends with
     # QuickSave. The port's own update numbers (recorded 20261026-mission13-B); the platform wait of 103 updates is pinned in prop-rocking-real-data.
+    # The pull takes the player's USE LERP and state 76 and the switch's 1.6 s use animation (20261026-mission13-A), so the run is 60 updates longer.
     add_test(NAME game-generator-1-3 COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
       --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes --save-out "${CMAKE_BINARY_DIR}/game-generator-1-3.dat"
       --start "993.9 16.56 1135.5" --facing 180
-      --script "0 0 5;0 0 1 Y;0 0 15;0 0 1 Y;0 0 60;0 0 1 A;0 0 60;at 952.6 16.77 1132.6 90;0 0 5;0 0 1 A;0 0 80;0 0 150 A;0 0 60;at 949.3 16.77 1130.9 270;0 0 5;0 0 1 A;0 0 700")
+      --script "0 0 5;0 0 1 Y;0 0 15;0 0 1 Y;0 0 60;0 0 1 A;0 0 60;at 952.6 16.77 1132.6 90;0 0 5;0 0 1 A;0 0 80;0 0 150 A;0 0 60;at 949.3 16.77 1130.9 270;0 0 5;0 0 1 A;0 0 760")
     set_tests_properties(game-generator-1-3 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
       PASS_REGULAR_EXPRESSION "carry 1-3_generator_parts_carry: placed into 1-3_baseplate at update [0-9]+.*buildit 1-3_pull_switch_bits: stud drop mode.*switch 1-3_generator_pull_switch: used at update [0-9]+\n.*switch 1-3_generator_pull_switch: state 3 at update [0-9]+\n.*script 1-3_Generator_Script started at update [0-9]+\n.*script 1-3_Crow_out started at update [0-9]+\n.*particles 264 at 1-3_crane_girder started at update [0-9]+\n.*prop 1-3_crane_girder: rocking off at update [0-9]+\n.*save: request [0-9]+ written.*\n.*script 1-3_Generator_Script ended at update [0-9]+")
     # Mission 1-2, the dog cage (SCRIPT-111): 1-2_Pringles_Cage_Locked enables the use spot 1-2_Dog_Cage_Use_Spot, A on the user's trigger position
@@ -2067,7 +2079,7 @@ foreach(game_data_test
   node-draw-matrix-real-data script-text-real-data waypoint-global-real-data waypoints-real-data hand-item-real-data detective-real-data
   use-spot-real-data use-marker-real-data script-starters-real-data carry-real-data scanner-real-data scanner-overlay-data zipline-real-data
   nested-props-real-data entity-ids-real-data zipline-pole-real-data zipline-rope-real-data brick-grab-real-data climb-bar-real-data acrobat-pole-real-data pole-real-data
-  ladder-real-data carry-animation-real-data super-buildit-real-data fast-travel-pad-real-data pause-menu-real-data buildit-real-data
+  ladder-real-data carry-animation-real-data lever-use-real-data super-buildit-real-data fast-travel-pad-real-data pause-menu-real-data buildit-real-data
   prop-animation-real-data animal-props-real-data cat-rescue-real-data prop-parts-real-data vehicle-boarding-real-data vehicle-drive-real-data
   floor-graph-real-data vehicle-collision-real-data vehicle-box-contact-real-data vehicle-sphere-sweep-real-data vehicle-prop-smash-real-data
   destroy-effects-real-data character-death-real-data player-attack-real-data attack-sounds-real-data vehicle-world-real-data vehicle-rest-real-data

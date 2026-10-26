@@ -361,7 +361,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
             runtime::applyScriptStateEnter(*entered, player->vertical);
             std::cout << "player state " << *entered << " entered at update " << updates << '\n';
         }
-        player->animate(scene, dt, detectiveClip(player->carriedRole(shown.role, carry.carryingMode(), carry.phaseClip() ? carry.phaseClip() : builditPlayer.clip() ? builditPlayer.clip() : fastTravel.playerClip() ? fastTravel.playerClip() : scanner.playerClip())), shown.scale);
+        player->animate(scene, dt, detectiveClip(player->carriedRole(shown.role, carry.carryingMode(), carry.phaseClip() ? carry.phaseClip() : builditPlayer.clip() ? builditPlayer.clip() : fastTravel.playerClip() ? fastTravel.playerClip() : switches.playerUse().clip() ? switches.playerUse().clip() : scanner.playerClip())), shown.scale);
         if (const auto* clip = playerScriptAnimation.posesScriptClip() ? playerScriptAnimation.animation() : nullptr) player->poseClip(scene, *clip, playerScriptAnimation.frame());
         handItems.update(*player);
         if (!script.empty()) scriptedHeights.push_back(player->vertical.y);

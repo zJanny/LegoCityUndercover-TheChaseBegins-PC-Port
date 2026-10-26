@@ -114,13 +114,24 @@ World makeWorld() {
     addObject(world.level, "test/lever", "Started", 40, "Bell", {wordParam("StartOn", 1)});
     addObject(world.level, "test/lever", "Strongbox", 50, "Vault", {wordParam("Strong", 1)});
     addObject(world.level, "test/light", "Light", 60, "Lamp2");
-    for (const char* name : {"Door", "Gate", "Lamp", "Bell", "Vault", "Lamp2"}) addObject(world.level, "test/target", name, 100, "");
+    addObject(world.level, "test/lever", "Pull", 70, "Pump", {wordParam("TriggerBeforeAnim", 0), floatParam("ResetTime", -1.0f)});
+    for (const char* name : {"Door", "Gate", "Lamp", "Bell", "Vault", "Lamp2", "Pump"}) addObject(world.level, "test/target", name, 100, "");
     addTrigger(world.level, "ObjectTriggered", "Door", "door_script", "DoorOpen");
     addTrigger(world.level, "ObjectTriggered", "Gate", "gate_script", "GateOpen");
     addTrigger(world.level, "ObjectSwitched", "JoinA", "joina_script", "JoinASwitched");
     addTrigger(world.level, "ObjectUnswitched", "JoinA", "joina_off_script", "JoinAUnswitched");
     return world;
 }
+
+// key_interact (clip 185, models/char_minifig/class_generic): 72 frames at 30 per second, event track 0x98d31b7e up at 0.3195 of the clip; read by
+// 20261026-mission13-A on 2026-10-26 through chase_assets (CTest lever-use-real-data pins the same values).
+const LeverClipTiming kKeyInteractClip{2.4f, 0.319495f * 2.4f};
+// RPC 20261025-garage-A-1 (recorded from a save state, 2026-10-25, stepped): the key switch's use bit is set after update 31 and the player's state
+// 76 ends at update 81, counted from the update that sees the A press. Its step of 0.033 is inferred from these counts, not recorded (SCRIPT-369).
+constexpr unsigned kOracleUseBitUpdate = 31;
+// models/prop_switchpull/use.bfnanm: 24 frames at 15 per second (read by 20261026-mission13-A, 2026-10-26; CTest lever-use-real-data).
+const chase::runtime::AnimationClipInfo kPullUseAnimation{0, 24, 15, false};
+constexpr float kOracleDt = 0.033f;
 
 struct Run {
     World world = makeWorld();
@@ -150,14 +161,16 @@ struct Run {
             for (char& c : owner) c = char(std::tolower(static_cast<unsigned char>(c)));
             references.add(owner, target);
         }
-        switches.load(world.level, classOf, {});
+        switches.load(world.level, classOf, [](const LevelObject& object, const Level&) { return object.instance == "Pull"; });
         switches.link(references);
+        switches.setUseAnimation(*switches.find("pull"), kPullUseAnimation);
+        for (std::size_t i = 0; i < switches.objects().size(); ++i) switches.setLeverUse(i, kKeyInteractClip, std::nullopt);
     }
     std::vector<SwitchEvent> step() {
-        std::vector<SwitchEvent> events = switches.update(state, 1.0f / 30.0f, references, runner);
+        std::vector<SwitchEvent> events = switches.update(state, kOracleDt, references, runner);
         const float far[3] = {1000, 1000, 1000};
         runner.checkTriggers(far);
-        runner.update(1.0f / 30.0f);
+        runner.update(kOracleDt);
         return events;
     }
     SwitchState stateOf(const std::string& name) const { return switches.objects()[*switches.find(name)].record.state; }
@@ -180,10 +193,16 @@ bool has(const std::vector<SwitchEvent>& events, SwitchEffectKind kind) {
 
 void singleReferenceStaysOn() {
     Run run;
-    require(run.switches.objects().size() == 7, "six levers and one light are loaded");
+    require(run.switches.objects().size() == 8, "seven levers and one light are loaded");
+    const std::size_t key = *run.switches.find("key");
+    require(run.switches.markerShown(key, run.references), "a usable lever in state 0 answers the marker's query (0x172254)");
     require(run.use(0.5f), "A in the zone of a lever in state 0 takes the press (message 3 returns 1)");
     require(run.switches.playerUsing(), "the player is busy with the switch");
-    for (unsigned i = 1; i < kLeverUseRequestUpdate; ++i) run.step();
+    require(run.switches.markerShown(key, run.references), "during USE LERP the lever is not yet the entity the player uses");
+    for (unsigned i = 1; i < kOracleUseBitUpdate; ++i) {
+        run.step();
+        if (i == 8) require(!run.switches.markerShown(key, run.references), "from state 76 the marker skips the lever the player uses (ctrl+0x130)");
+    }
     require(!run.switches.objects()[*run.switches.find("key")].record.useRequested, "no use bit before update 31 (RPC 20261025-garage-A-1)");
     run.step();
     require(run.stateOf("key") == SwitchState::Off && run.switches.objects()[*run.switches.find("key")].record.useRequested,
@@ -258,6 +277,31 @@ void alwaysResetIsTimed() {
     require(run.stateOf("timed") == SwitchState::SwitchingOff || run.stateOf("timed") == SwitchState::Off, "state 4 ends with the timer");
 }
 
+void useAnimationTimesStateOne() {
+    Run run;
+    trigger(run, "pull");
+    run.step();
+    require(run.stateOf("pull") == SwitchState::Used, "message 0xff in state 0: state 1 and the use animation starts (0x22c6d0, NumberOfTurns 1)");
+    unsigned updates = 0;
+    while (run.stateOf("pull") == SwitchState::Used && updates < 100) {
+        run.step();
+        ++updates;
+    }
+    require(updates == 49, "without TriggerBeforeAnim state 1 waits for 0x245f84 == 6: 24 frames at 15 per second, 49 steps of 0.033 on the switches' "
+                           "clock, got " + std::to_string(updates));
+    require(run.stateOf("pull") == SwitchState::Held, "ResetTime -1: state 3");
+}
+
+void toggleUseableWritesTheZone() {
+    Run run;
+    const std::size_t key = *run.switches.find("key");
+    run.switches.setZoneUsable(key, false);
+    require(!run.use(0.5f) && !run.switches.markerShown(key, run.references), "0x236624(lever, 0): zone bit 4 cleared, message 3 answers 0");
+    require(run.switches.objects()[key].lever->zoneBit6, "and bit 6 set: switching off (state 5) leaves the zone unusable");
+    run.switches.setZoneUsable(key, true);
+    require(run.use(0.5f), "0x236624(lever, 1) makes it usable again");
+}
+
 void startOnRefusesTheUse() {
     Run run;
     require(run.references.kind(*run.references.findOwner("started")) == ReferenceKind::Registered, "StartOn: 0x242494 makes the record Registered");
@@ -300,6 +344,8 @@ int main() {
         joinWaitsAndResets();
         joinFiresWhenBothAreOn();
         alwaysResetIsTimed();
+        useAnimationTimesStateOne();
+        toggleUseableWritesTheZone();
         startOnRefusesTheUse();
         strongNeedsAbilitySeven();
         messagesOfTheBaseHandler();
