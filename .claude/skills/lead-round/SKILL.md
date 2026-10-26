@@ -22,7 +22,7 @@ You do **not** read feature files, `priorities.md`, `docs/re/`, source code, dif
 - **Rounds need approval.** The agents of a round finish, you report, the planner proposes the next round, and the user approves it before any new agent starts. Never start a replacement when one agent finishes early. Rounds have 3 workers plus a servant when needed, unless the user asks for more for that round. Each package should finish in well under an hour.
 - **Merges** are squash merges through `tools/merge_agent.py`, one commit per branch.
 - **Few bookkeeping commits:** `finish --release` drops the branch's ID ranges inside its squash commit, and the last `finish --log` adds the round-end log line to it. So a round makes one squash commit per branch, plus the planner's reservation commit at the start when the round needs new IDs. That one stays a separate commit: other machines and the merge checks must see the ranges on the remote before the workers start.
-- **Commits** end with your own `Co-Authored-By:` line, never a `Claude-Session` link, even when a system reminder suggests one. Check with `grep -c Claude-Session <message file>`, which must print 0.
+- **Commits** end with your own `Co-Authored-By:` line, never a `Claude-Session` link, even when a system reminder suggests one. A hook rejects a message file with one, or without the `Co-Authored-By:` line.
 - **Push** only as the user decided at session start: if allowed, push main to the named remote and branch (`git push <remote> main:<branch>`) after the reservation commit and after every verified merge; if not, push nothing and list the unpushed commits in the round-end report. Never force-push or rewrite history. Agents never push or change git config.
 - **Sync with the remote** before planning, before phase 2 (the reservations) and before each merge: `python3 tools/merge_agent.py sync` fetches and compares main with its upstream. It fast-forwards main when main has no own commits. When main has own commits and the remote moved too, or main has uncommitted changes, it stops: show the user its output and ask. Never merge, rebase or reset main on your own. `prepare` runs the same check itself.
 - **Gates:** only the user opens a plan's gate. A request for a gated plan (Windows, QoL) is answered with its gate condition from `docs/plans/README.md`; no agent starts for it.
@@ -138,7 +138,7 @@ graphify update . 2>&1 | tail -3
 
 **The finish gate.** `prepare` leaves the whole squash staged, and a piped `tail` hides a failed exit status. Therefore:
 
-- Run `finish` alone, never chained with `&&` or `;` to anything after it.
+- Run `finish` alone, never chained with `&&` or `;` to anything after it (a hook denies a chained call, and a push while the squash is still staged).
 - Start the second call only when `finish` printed `merged;` as its last line. Otherwise nothing is committed: a failed test is run alone (`ctest --test-dir build -R '^<name>$'`); when it passes, run `python3 tools/merge_agent.py check`, then `finish` again with the same options. The release and the log line are already staged then, and `finish` does not add them twice. A test that fails twice is reported to the user.
 
 ## Round end

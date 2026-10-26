@@ -66,3 +66,11 @@ The workflows `.forgejo/workflows/ci.yml` and `.github/workflows/ci.yml` run on 
 ## AI coding agents
 
 Instructions for AI coding agents are in [CLAUDE.md](CLAUDE.md).
+
+Claude Code loads the hooks in `.claude/settings.json`; they run `tools/claude_hooks.py` and do the mechanical rule checks for every agent:
+
+- Before a commit: check the commit message, then run `check_doc_links.py --fix` and regenerate a stale README progress section or `docs/plans/priorities.md`, and stage what they changed. Then stop the commit when the docs checks, `check_local_data.py` or staged game-derived or binary files fail.
+- After an edit: report the docs and local-data findings of the edited file.
+- Always: no push or `git config` change from an agent, `merge_agent.py finish` runs alone, a worker starts only from its brief, and a worktree gets its `artifacts` link.
+
+Their tests are in `tests/test_claude_hooks.py`. Contributors without Claude Code are not affected.

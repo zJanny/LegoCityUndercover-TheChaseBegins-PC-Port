@@ -27,7 +27,7 @@ IN_PROGRESS, updated 2026-10-19T23:24:26+02:00. Player and level characters are 
 ## 5. Open items
 
 - [ ] ANIM-1 — Cutscene actors play on the camera's clock; whether an actor's own stored rate applies is not recovered, and whether any shipped animation stores rate 0 is not checked. evidence: [skeleton-animation.md §2026-10-14T13:39](../../re/skeleton-animation.md#ts-20261014-133953).
-- [ ] ANIM-3 — Blending between different animations is not implemented. evidence: [skeleton-animation.md §2026-10-12T22:10](../../re/skeleton-animation.md#ts-20261012-2210).
+- [ ] ANIM-3 — Blending between different animations is not implemented. blocks: ANIM-14, ANIM-S13. evidence: [skeleton-animation.md §2026-10-12T22:10](../../re/skeleton-animation.md#ts-20261012-2210).
 - [ ] ANIM-4 — The shared character rig code for animals and custom characters is missing (rigs of `char_pig`, `char_cat`, `char_dog`, `char_shark`, `char_Crow`). see LEVOBJ-4.
 - [ ] ANIM-10 — Slot bookkeeping of the player: who pauses and resumes slots (0x24f8fc), the current slot choice 0x252878, the release 0x24cf70, the blend start 0x1ce608 and the zero blend of a first slot. blocks: ANIM-S10. evidence: [npc-animation.md §2026-10-15T18:33](../../re/npc-animation.md#ts-20261015-183306).
 - [ ] ANIM-11 — Model folder of script animations: 0x22716c and 0x2270f8 for level characters (small and tall figures, the entity +0x40 folder). blocks: ANIM-S11. evidence: [script-natives-animation.md §2026-10-15T18:33](../../re/script-natives-animation.md#ts-20261015-183336).

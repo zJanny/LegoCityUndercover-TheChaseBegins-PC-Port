@@ -10,7 +10,9 @@ Size and shape rules (CLAUDE.md "Documentation rules"): a docs/re or docs/design
 20 entry lines. With --fix, older log lines move to the progress archive (a line the archive already holds, as
 after a merge of two branches that both archived it, is dropped instead of copied again) and closed items ("- [x] ID") of a feature
 file move to <feature>.closed.md. An item or stand-in ID defined twice in a feature and its closed file is an
-error. Every feature file has exactly one row (at most 300 characters, table preceded by a blank line) in the feature index, which groups its tables under "## <Area>" headings; closed-items files have none. Item lines keep the field order gap text, needs:, blocks:, uses:, evidence:. A timestamp later than the current time is an error; a ":00" second in a line new compared to HEAD is a warning. --next PREFIX [COUNT] prints free item IDs, --reserve PREFIX COUNT WHO reserves a range in docs/plans/features/id-reservations.md, --release WHO drops it (an error when WHO holds none); an unknown PREFIX needs --new-prefix. An entry with a "Superseded by" line under its heading moves with --fix to <topic>.history.md next to it and links follow. A link whose text starts with "Corrects" needs a "Corrected by" line under the corrected entry's heading
+error. Every feature file has exactly one row (at most 300 characters, table preceded by a blank line) in the feature index, which groups its tables under "## <Area>" headings; closed-items files have none. Item lines keep the field order gap text, needs:, blocks:, uses:, evidence:. needs: and blocks: between open items are written on both sides (--fix adds a missing side; two items that say the same
+field of each other are an error). On a line new compared to HEAD, an open item names no hex address its HEAD version did not, and a session
+log line names no item ID or address. A timestamp later than the current time is an error; a ":00" second in a line new compared to HEAD is a warning. --next PREFIX [COUNT] prints free item IDs, --reserve PREFIX COUNT WHO reserves a range in docs/plans/features/id-reservations.md, --release WHO drops it (an error when WHO holds none); an unknown PREFIX needs --new-prefix. An entry with a "Superseded by" line under its heading moves with --fix to <topic>.history.md next to it and links follow. A link whose text starts with "Corrects" needs a "Corrected by" line under the corrected entry's heading
 that links back, and every "Corrected by" line needs the matching "Corrects" link.
 In a repository checkout (CMakeLists.txt and src/ present) AGENTS.md must exist, link CLAUDE.md and have at most 15 lines, README.md and CONTRIBUTING.md must contain "not affiliated", LICENSE must start with "GNU GENERAL PUBLIC LICENSE" and REUSE.toml must name GPL-3.0-or-later.
 The user docs (docs/*.md outside the subfolders, README.md) are checked against the code by user_docs.py: every option string of src/ and every chase-* program of CMakeLists.txt is named in them, and an option, chase-* program or tools/src/tests/docs path in their code spans or fences must exist.
@@ -47,6 +49,11 @@ RESERVATIONS = "id-reservations.md"
 HISTORY_SUFFIX = ".history.md"
 FIELD_ORDER = {"needs": 0, "blocks": 1, "uses": 2, "evidence": 3}
 FIELD = re.compile(r"(?<![\w-])(needs|blocks|uses|evidence):")
+FIELD_START = re.compile(r"(?<![\w-])(?:needs|blocks|uses|evidence):")
+COUNTERPART = {"needs": "blocks", "blocks": "needs"}
+ANY_ID = re.compile(r"\b[A-Z][A-Z0-9]*-S?\d+\b")
+ID_LIST = re.compile(r"\s*[A-Z][A-Z0-9]*-S?\d+\b(?:\s*,\s*[A-Z][A-Z0-9]*-S?\d+\b)*")
+ADDRESS = re.compile(r"\b0x[0-9a-fA-F]{4,}\b")
 TIMESTAMP = re.compile(r"\b(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)([+-]\d\d:\d\d|Z)")
 IDENTIFIER = re.compile(r"^([A-Z][A-Z0-9]*)-(S?)(\d+)")
 PREFIX = re.compile(r"^[A-Z][A-Z0-9]*(-S)?$")
@@ -366,6 +373,144 @@ def item_format_errors(root):
                 ranks = [FIELD_ORDER[m.group(1)] for m in FIELD.finditer(line)]
                 if ranks != sorted(set(ranks)):
                     errors.append(f"{member.relative_to(root)}:{number + 1}: item-field-order: fields must follow gap text, needs:, blocks:, uses:, evidence: (each at most once, evidence last)")
+    return errors
+
+
+def open_item_lines(root):
+    found = {}
+    for path in feature_files(root):
+        for number, line in enumerate(path.read_text(encoding="utf-8").split("\n")):
+            match = ITEM_ID.match(line)
+            if match and not line.startswith("- [x]"):
+                found.setdefault(match.group(1), (path, number))
+    return found
+
+
+def field_span(line, name):
+    matches = list(FIELD.finditer(line))
+    for index, match in enumerate(matches):
+        if match.group(1) == name:
+            end = matches[index + 1].start() if index + 1 < len(matches) else len(line)
+            return match.end(), end
+    return None
+
+
+def field_ids(line, name):
+    span = field_span(line, name)
+    return ANY_ID.findall(line[span[0]:span[1]]) if span else []
+
+
+def with_field_id(line, name, item):
+    span = field_span(line, name)
+    if span:
+        listed = ID_LIST.match(line, span[0])
+        if listed:
+            return line[:listed.end()] + f", {item}" + line[listed.end():]
+        return line[:span[0]] + f" {item}," + line[span[0]:]
+    later = [m.start() for m in FIELD.finditer(line) if FIELD_ORDER[m.group(1)] > FIELD_ORDER[name]]
+    if later:
+        return line[:later[0]] + f"{name}: {item}. " + line[later[0]:]
+    return line.rstrip() + f" {name}: {item}."
+
+
+def missing_counterparts(root):
+    items = open_item_lines(root)
+    texts = {}
+
+    def line_of(item):
+        path, number = items[item]
+        if path not in texts:
+            texts[path] = path.read_text(encoding="utf-8").split("\n")
+        return texts[path][number]
+
+    missing = []
+    conflicts = []
+    for item in items:
+        for name, other in COUNTERPART.items():
+            for target in field_ids(line_of(item), name):
+                if target not in items or target == item:
+                    continue
+                if item in field_ids(line_of(target), name):
+                    conflicts.append((item, name, target))
+                elif item not in field_ids(line_of(target), other):
+                    missing.append((target, other, item))
+    return items, sorted(set(missing)), conflicts
+
+
+def dependency_errors(root):
+    items, missing, conflicts = missing_counterparts(root)
+    errors = []
+    for item, name, target in conflicts:
+        path, number = items[item]
+        errors.append(f"{path.relative_to(root)}:{number + 1}: dependency-conflict: {item} and {target} both say '{name}:' of each other; "
+                      "decide which one waits for the other")
+    for target, other, item in missing:
+        path, number = items[target]
+        name = "needs" if other == "blocks" else "blocks"
+        errors.append(f"{path.relative_to(root)}:{number + 1}: dependency-pair: {item} has '{name}: {target}' but {target} has no '{other}: {item}'; "
+                      "needs: and blocks: are written on both sides (--fix adds the missing one)")
+    return errors
+
+
+def add_dependency_counterparts(root):
+    items, missing, _ = missing_counterparts(root)
+    texts = {}
+    for target, other, item in missing:
+        path, number = items[target]
+        lines = texts.setdefault(path, path.read_text(encoding="utf-8").split("\n"))
+        lines[number] = with_field_id(lines[number], other, item)
+    for path, lines in texts.items():
+        path.write_text("\n".join(lines), encoding="utf-8")
+    return len(missing)
+
+
+def head_item_addresses(root):
+    result = subprocess.run(["git", "-C", str(root), "grep", "-h", "-E", r"^- (\[[ x]\] )?[A-Z]", "HEAD", "--", str(feature_dir(root).relative_to(root))],
+                            capture_output=True, text=True)
+    addresses = {}
+    for line in result.stdout.split("\n"):
+        line = line.split(":", 1)[1] if line.startswith("HEAD:") else line
+        match = ITEM_ID.match(line)
+        if match:
+            addresses.setdefault(match.group(1), set()).update(ADDRESS.findall(line))
+    return addresses
+
+
+def new_line_errors(root):
+    added = added_lines(root)
+    if not added:
+        return []
+    errors = []
+    features = feature_dir(root)
+    prefixes = known_prefixes(root)
+    item_ref = re.compile(r"\b(?:" + "|".join(prefixes) + r")-S?\d+\b") if prefixes else None
+    head_addresses = None
+    for name, lines in added.items():
+        path = root / name
+        if path.parent == features and path.name not in ("README.md", RESERVATIONS) and not path.name.endswith(CLOSED_SUFFIX):
+            for number, text in lines:
+                match = ITEM_ID.match(text)
+                if not match or text.startswith("- [x]"):
+                    continue
+                if head_addresses is None:
+                    head_addresses = head_item_addresses(root)
+                gap = LINK.sub("", FIELD_START.split(text, 1)[0])
+                new = [a for a in ADDRESS.findall(gap) if a not in head_addresses.get(match.group(1), set())]
+                if new:
+                    errors.append(f"{name}:{number}: item-address: {match.group(1)} names {', '.join(new)}; "
+                                  "addresses go into the linked docs/re or docs/design entry, the item states the gap")
+        elif path in progress_files(root):
+            span = log_span(path.read_text(encoding="utf-8").split("\n"))
+            if not span:
+                continue
+            log_numbers = {i + 1 for i in span[1]}
+            for number, text in lines:
+                if number not in log_numbers:
+                    continue
+                found = ADDRESS.findall(text) + (item_ref.findall(LINK.sub("", text)) if item_ref else [])
+                if found:
+                    errors.append(f"{name}:{number}: log-line-detail: the log line names {', '.join(found)}; "
+                                  "a log line says what was done and how far and links the feature file, items and findings stay there")
     return errors
 
 
@@ -802,6 +947,8 @@ def size_errors(root):
     errors.extend(duplicate_id_errors(root))
     errors.extend(index_errors(root))
     errors.extend(item_format_errors(root))
+    errors.extend(dependency_errors(root))
+    errors.extend(new_line_errors(root))
     errors.extend(timestamp_errors(root))
     errors.extend(current_state_errors(root))
     errors.extend(session_log_errors(root))
@@ -856,7 +1003,8 @@ def process(root, fix, messages=None):
     docs = {}
     if fix:
         for what, count in (("duplicate archive log lines removed", remove_duplicate_archive_lines(root)),
-                            ("log lines archived", rotate_session_logs(root)), ("superseded entries moved", move_superseded(root)), ("closed items moved", move_closed_items(root))):
+                            ("log lines archived", rotate_session_logs(root)), ("superseded entries moved", move_superseded(root)), ("closed items moved", move_closed_items(root)),
+                            ("dependency counterparts added", add_dependency_counterparts(root))):
             if count and messages is not None:
                 messages.append(f"{count} {what}")
 

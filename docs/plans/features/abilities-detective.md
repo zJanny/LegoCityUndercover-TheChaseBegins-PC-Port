@@ -19,14 +19,14 @@ IN_PROGRESS, updated 2026-10-19T17:50:50+02:00. Detective spot (type 182), revea
 
 ## 4. Stand-ins
 
-- DETECT-S1 — The X-spot use state's event (43) and end (116) are measured numbers, not derived from its approach phase and the clip's event table. evidence: [abilities-detective.md §2026-10-18T11:26:21](../../re/abilities-detective.md#ts-20261018-112621).
-- DETECT-S2 — Fades (FadeObject, RevealObject, the X spot's own fade-out) are a show or hide at the fade's start. evidence: [abilities-detective.md §2026-10-18T11:26:21](../../re/abilities-detective.md#ts-20261018-112621).
-- DETECT-S9 — Footprint ground: the ray test uses the camera's query (surface mask 0x01000010), not the footprint's own query words; it matches the 13 oracle hit points. blocks: DETECT-15. evidence: [abilities-detective.md §2026-10-19T09:11:04](../../re/abilities-detective.md#ts-20261019-091104).
+- DETECT-S1 — The X-spot use state's event (43) and end (116) are measured numbers, not derived from its approach phase and the clip's event table. needs: DETECT-1. evidence: [abilities-detective.md §2026-10-18T11:26:21](../../re/abilities-detective.md#ts-20261018-112621).
+- DETECT-S2 — Fades (FadeObject, RevealObject, the X spot's own fade-out) are a show or hide at the fade's start. needs: DETECT-4. evidence: [abilities-detective.md §2026-10-18T11:26:21](../../re/abilities-detective.md#ts-20261018-112621).
+- DETECT-S9 — Footprint ground: the ray test uses the camera's query (surface mask 0x01000010), not the footprint's own query words; it matches the 13 oracle hit points. needs: DETECT-15. evidence: [abilities-detective.md §2026-10-19T09:11:04](../../re/abilities-detective.md#ts-20261019-091104).
 - DETECT-S4 — One sound owner key for all detective objects. evidence: [abilities-detective.md §2026-10-18T11:26:21](../../re/abilities-detective.md#ts-20261018-112621).
 - DETECT-S5 — Bounce phases of the reveal prop count down one per update (0x2077a8 not read), which places its second trigger. evidence: [abilities-detective.md §2026-10-18T11:26:21](../../re/abilities-detective.md#ts-20261018-112621).
-- DETECT-S6 — Registry order: detective objects get the A press only when no carry object, build-it zone or build is active; the revealed prop appears at its placement without the flight path. evidence: [abilities-detective.md §2026-10-18T11:26:21](../../re/abilities-detective.md#ts-20261018-112621).
-- DETECT-S7 — Hand item track: sampled as a step function, the first sample of a clip fires no event, and the rise and fall are not weighted. blocks: DETECT-12. evidence: [abilities-detective.md §2026-10-18T19:30:00](../../re/abilities-detective.md#ts-20261018-193000).
-- DETECT-S8 — The glass sits on the bone with the bone's whole bind matrix times the skin matrix (orientation inferred from 0x2ca88c, the per-frame update 0x242814 not read). blocks: DETECT-12. evidence: [abilities-detective.md §2026-10-18T19:30:00](../../re/abilities-detective.md#ts-20261018-193000).
+- DETECT-S6 — Registry order: detective objects get the A press only when no carry object, build-it zone or build is active; the revealed prop appears at its placement without the flight path. needs: DETECT-6. evidence: [abilities-detective.md §2026-10-18T11:26:21](../../re/abilities-detective.md#ts-20261018-112621).
+- DETECT-S7 — Hand item track: sampled as a step function, the first sample of a clip fires no event, and the rise and fall are not weighted. needs: DETECT-8. blocks: DETECT-12. evidence: [abilities-detective.md §2026-10-18T19:30:00](../../re/abilities-detective.md#ts-20261018-193000).
+- DETECT-S8 — The glass sits on the bone with the bone's whole bind matrix times the skin matrix (orientation inferred from 0x2ca88c, the per-frame update 0x242814 not read). needs: DETECT-13. blocks: DETECT-12. evidence: [abilities-detective.md §2026-10-18T19:30:00](../../re/abilities-detective.md#ts-20261018-193000).
 
 ## 5. Open items
 

@@ -22,7 +22,7 @@ IN_PROGRESS, updated 2026-10-19T19:29:47+02:00. Skinned meshes get their node ma
 - MOVIE-S2 The 30 frames per second cutscene rate is inferred from the soundtrack lengths, not from the timer code.
 - MOVIE-S3 The camera matrix flip for GL is inferred; its consumer 0x241540 was not traced.
 
-- MOVIE-S10 The length of a cutscene is max(camera frames / 30, soundtrack length), as in the viewer; the original's end is not recovered. evidence: [cutscenes.md §2026-10-14T22:49](../../re/cutscenes.md#ts-20261014-224929).
+- MOVIE-S10 The length of a cutscene is max(camera frames / 30, soundtrack length), as in the viewer; the original's end is not recovered. needs: MOVIE-36. evidence: [cutscenes.md §2026-10-14T22:49](../../re/cutscenes.md#ts-20261014-224929).
 - MOVIE-S11 During a cutscene the HUD is hidden and the player and doors are held (oracle: HUD hidden on the top screen); what else stops is not known.
 - MOVIE-S12 A new game from the front end shows `01_GameIntro` in the front end and skips the script's `PlayCutscene` in the level (a plain `--level` start plays it in the level); the original shows it during the load.
 - MOVIE-S31 Before its start a driven level figure stays visible instead of its copy, and the object tracks of a model of its own are taken at frame 0 like its root (only the root was read; the model is hidden before its start, MOVIE-S33). evidence: [cutscene-actors.md §2026-10-16T14:39:48](../../re/cutscene-actors.md#ts-20261016-143948).

@@ -103,6 +103,7 @@ Four places, never copied between them, only linked: **findings** about the orig
 
 **Git**
 - Commit small, focused, verified units; review the diff first. Each agent ends its own commit messages with its own `Co-Authored-By:` line; no session links.
+- **Claude Code hooks** (`.claude/settings.json`, `tools/claude_hooks.py`) check the commit, push, git config, merge and docs rules and fix and stage generated files at each commit. A denial names the rule: fix the cause, never work around a hook.
 - Merge agent branches into main only with `tools/merge_agent.py` (`prepare`, `check`, `finish`): it squashes, refuses game-derived and binary files, regenerates the README section, builds warning-free and runs all tests. Reviewers check the diff in between; the script never pushes. Before planning and each merge, `merge_agent.py sync` fast-forwards main to the remote or stops for the user.
 - **Rounds have names, not numbers:** `<YYYYMMDD>-<slug>` (`tools/round_log.py name`), agents `<round>-A`. A branch's squash commit carries its ID release and, for the last, the round-end log line; no separate bookkeeping commits ([lead-round](.claude/skills/lead-round/SKILL.md)).
 - Never push without explicit user authorization. The lead asks at the start of each session whether pushing is allowed and to which remote and branch; the answer holds for that session only. Only the lead pushes.

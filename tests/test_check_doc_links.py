@@ -301,6 +301,66 @@ class RuleChecksTest(unittest.TestCase):
         (design / 'big.md').write_text('## Current state\n\n' + 'x' * links.MAX_RE_BYTES)
         self.assertEqual(len(self.errors('re-file-size')), 1)
 
+    def test_dependency_pair_fails_and_fix_adds_the_other_side(self):
+        (self.features / 'f.md').write_text(
+            '- [ ] F-1 — gap. blocks: F-2, F-S1. evidence: [x](x.md).\n'
+            '- [ ] F-2 — gap. evidence: [x](x.md).\n'
+            '- F-S1 — stand-in. needs: F-3. uses: A.\n'
+            '- [ ] F-3 — gap.\n'
+            '- [ ] F-4 — gap. needs: F-9.\n'
+        )
+        (self.features / 'f.closed.md').write_text('- [x] F-9 — done.\n')
+        found = self.errors('dependency-pair')
+        self.assertEqual(sorted(e.split(': ')[0] for e in found), ['docs/plans/features/f.md:2', 'docs/plans/features/f.md:3', 'docs/plans/features/f.md:4'])
+        messages = []
+        links.process(self.root, True, messages)
+        self.assertIn('3 dependency counterparts added', messages)
+        self.assertEqual((self.features / 'f.md').read_text().split('\n')[:4], [
+            '- [ ] F-1 — gap. blocks: F-2, F-S1. evidence: [x](x.md).',
+            '- [ ] F-2 — gap. needs: F-1. evidence: [x](x.md).',
+            '- F-S1 — stand-in. needs: F-3, F-1. uses: A.',
+            '- [ ] F-3 — gap. blocks: F-S1.',
+        ])
+        self.assertEqual(self.errors('dependency-'), [])
+        self.assertEqual(self.errors('item-field-order'), [])
+
+    def test_dependency_conflict_is_not_fixed(self):
+        (self.features / 'f.md').write_text('- [ ] F-1 — gap. blocks: F-2.\n- [ ] F-2 — gap. blocks: F-1.\n')
+        self.assertEqual(len(self.errors('dependency-conflict')), 2)
+        links.process(self.root, True)
+        self.assertNotIn('needs', (self.features / 'f.md').read_text())
+
+    def commit_all(self):
+        import subprocess
+        if not (self.root / '.git').exists():
+            subprocess.run(['git', 'init', '-q', str(self.root)], check=True)
+        subprocess.run(['git', '-C', str(self.root), 'add', '.'], check=True)
+        subprocess.run(['git', '-C', str(self.root), '-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qm', 'x'], check=True)
+
+    def test_new_address_in_an_item_fails_old_ones_stay(self):
+        feature = self.features / 'f.md'
+        feature.write_text('- [ ] F-1 — gap at 0x1234ab. evidence: [x](x.md).\n- [ ] F-2 — gap.\n')
+        self.commit_all()
+        self.assertEqual(self.errors('item-address'), [])
+        feature.write_text('- [ ] F-1 — gap at 0x1234ab, changed. evidence: [x](x.md).\n'
+                           '- [ ] F-2 — gap in 0x2000 and `0x30ab`. evidence: [0x4000](x.md).\n'
+                           '- [x] F-3 — closed at 0x5000.\n')
+        found = self.errors('item-address')
+        self.assertEqual(len(found), 1)
+        self.assertTrue(found[0].startswith('docs/plans/features/f.md:2: item-address: F-2 names 0x2000, 0x30ab;'))
+
+    def test_new_log_line_with_ids_or_addresses_fails(self):
+        (self.features / 'f.md').write_text('- [ ] F-1 — gap.\n')
+        lines = self.write_log(2)
+        self.commit_all()
+        log = self.root / 'docs' / 'plans' / 'x.progress.md'
+        log.write_text(log.read_text().replace('line 1', 'line 1 closed F-1') + '- 2026-02-01T00:00:00+01:00 — Agent 20261025-garage-A: read 0x1f00 for F-S2; see [f.md](features/f.md)\n')
+        found = self.errors('log-line-detail')
+        self.assertEqual(len(found), 2)
+        self.assertIn('names F-1', found[0])
+        self.assertIn('names 0x1f00, F-S2;', found[1])
+        self.assertTrue(lines)
+
     def test_long_item_lines_are_not_limited(self):
         (self.features / 'f.md').write_text('- [ ] FOO-1 ' + 'y' * 900 + '\n')
         self.assertEqual(links.process(self.root, False)[0], [])

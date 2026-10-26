@@ -48,6 +48,7 @@ ARTIFACT_EXEMPTIONS = [
     ("CLAUDE.md", RULE_FOLDERS, "the rule names the local folders"),
     (".claude/skills/lead-round/*", RULE_FOLDERS, "the skill names the local round and oracle folders"),
     (".claude/skills/lead-round/evals/evals.json", r"rounds/20261020-buildit/20261020-buildit-[BC]\.md", "made-up round in an eval prompt"),
+    ("tests/test_claude_hooks.py", r"rounds/20261026-hooks/20261026-hooks-A\.md", "made-up round brief in a hook test"),
     ("tools/round_log.py", r"rounds", "looks whether a local round folder already has the new name"),
     ("tests/test_round_log.py", r"rounds/20261019-docs", "a round folder the test makes in a temporary directory"),
     ("docs/plans/linux-port.progress.md", r"oracle/states/", "user decision on where states go"),
@@ -58,6 +59,7 @@ LINE_EXEMPTIONS = [
     ("tools/azahar_oracle.py", r"azahar-emu", "the emulator folders it creates inside its home"),
     ("tests/test_azahar_oracle*.py", r"azahar-emu", "tests of the oracle tool's folders"),
     ("docs/re/oracle*.md", r"azahar-emu", "describe the folders the emulator creates"),
+    ("tests/test_claude_hooks.py", r"/home/someone/", "made-up home path that the hook test expects to be reported"),
     ("tests/save_test.cpp", r"/home/u/", "test strings for the XDG path logic"),
 ]
 

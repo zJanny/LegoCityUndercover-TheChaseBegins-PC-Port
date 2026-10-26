@@ -25,7 +25,7 @@ IN_PROGRESS, updated 2026-10-20T10:24:28+02:00. SetActiveWayPoint, SubObjectiveG
 
 ## 5. Open items
 
-- [ ] SCRIPT-66 — ShowTally, ShowBossHearts, ShowRaceStart, ShowPortraitOverVehicle and showinfopointer only count their calls; their screens are not drawn (ShowLevelText, ShowIntroText, ShowCharacterIntro and InformationBox are drawn since 2026-10-14). needs: HUD-22. evidence: [script-text.md §2026-10-14T15:25](../../re/script-text.md#ts-20261014-152500).
+- [ ] SCRIPT-66 — ShowTally, ShowBossHearts, ShowRaceStart, ShowPortraitOverVehicle and showinfopointer only count their calls; their screens are not drawn (ShowLevelText, ShowIntroText, ShowCharacterIntro and InformationBox are drawn since 2026-10-14). needs: HUD-22. blocks: SCRIPT-S23. evidence: [script-text.md §2026-10-14T15:25](../../re/script-text.md#ts-20261014-152500).
 - [ ] SCRIPT-350 — Compare the pause ticker with an oracle picture of a set mission title: font, line top, spacing, language table, scroll timing. blocks: SCRIPT-S282, SCRIPT-S283. evidence: [script-text.md §2026-10-20T00:18:56](../../re/script-text.md#ts-20261020-001856).
 - [ ] SCRIPT-68 — The skip byte 0x37751c of both tip natives (1 = no tip) is not modelled (treated as 0, the value in the oracle). evidence: [script-text.md §2026-10-14T15:25](../../re/script-text.md#ts-20261014-152500).
 - [ ] SCRIPT-69 — The speaker object of the dialogue natives (0x17cc58) and the follow-up call 0x1ffaac (player row == id) are not modelled; the speaker is only stored. evidence: [script-text.md §2026-10-14T15:25](../../re/script-text.md#ts-20261014-152500).

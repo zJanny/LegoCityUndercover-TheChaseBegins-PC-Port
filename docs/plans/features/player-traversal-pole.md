@@ -18,7 +18,7 @@ IN_PROGRESS, updated 2026-10-18T16:15:36+02:00. Ported in `chase-game`: walk-in 
 - TRAV-S6 `kPoleExitMargin` — after any exit the player stands at CollisionBound half depth + 0.6 + 0.02038 from the pole axis (0.77038 measured for 1-5_Drain_Pipe05); the original's collision push-out is not ported. evidence: [player-traversal-pole.md §2026-10-18T16:08:28](../../re/player-traversal-pole.md#ts-20261018-160828)
 - TRAV-S7 `poleTouched` — the walk-in touch is an overlap of the player box with the pole's CollisionBound box; the original uses the object gather of 0x21a73c. evidence: [player-traversal-pole.md §2026-10-18T16:08:28](../../re/player-traversal-pole.md#ts-20261018-160828)
 - TRAV-S8 `PoleInput::floorBelow` / `floorHeight` — the bottom ray 0x22f134 is a ground probe of the step length, and the dismount's ground contact (raise to the floor, snap down within 0.1 while descending) stands in for 0x20cd30; rows 96 and 97 of the recording rise gradually, the port at once. evidence: [player-traversal-pole.md §2026-10-18T16:08:28](../../re/player-traversal-pole.md#ts-20261018-160828)
-- TRAV-S9 pole inputs assumed — ability 32 is taken as present for the player, the node rows come from the yaw only, and the idle -> up test uses a step of 0 for the idle clip. evidence: [player-traversal-pole.md §2026-10-18T16:08:28](../../re/player-traversal-pole.md#ts-20261018-160828)
+- TRAV-S9 pole inputs assumed — ability 32 is taken as present for the player, the node rows come from the yaw only, and the idle -> up test uses a step of 0 for the idle clip. blocks: TRAV-15. evidence: [player-traversal-pole.md §2026-10-18T16:08:28](../../re/player-traversal-pole.md#ts-20261018-160828)
 
 ## 5. Open items
 
