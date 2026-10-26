@@ -54,6 +54,7 @@ target_sources(chase_runtime PRIVATE src/runtime/pedestrian_walk.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/vehicle_camera.cpp src/runtime/particles.cpp src/runtime/debris.cpp src/runtime/prop_destroy.cpp src/runtime/destroy_message.cpp src/runtime/character_death.cpp src/runtime/fall_apart.cpp src/runtime/stud_drop.cpp src/runtime/character_respawn.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/prop_wobbly_destructible.cpp src/runtime/prop_bouncer.cpp src/runtime/stud_callers.cpp src/runtime/stud_drop_classes.cpp src/runtime/super_brick.cpp src/runtime/prop_hit_sequence.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/prop_rocking.cpp src/runtime/platform_wait.cpp src/runtime/game_generator_natives_glue.cpp)
+target_sources(chase_runtime PRIVATE src/runtime/node_attach.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/script_particles.cpp src/runtime/game_mission_end_1_3_glue.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/pedestrian_manager.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/pedestrian_blocked.cpp src/runtime/room_layers.cpp)
@@ -131,7 +132,7 @@ if(EPOXY_FOUND)
     target_sources(chase-game PRIVATE src/game_switch_glue.cpp src/game_switch_use_glue.cpp)
     target_sources(chase-game PRIVATE src/game_debris_super.cpp)
     target_sources(chase-game PRIVATE src/game_attack.cpp src/game_screen_fade.cpp src/game_screen_shake.cpp src/game_save.cpp)
-    target_sources(chase-game PRIVATE src/game_prop_rocking.cpp)
+    target_sources(chase-game PRIVATE src/game_prop_rocking.cpp src/runtime/game_rocking_follow_glue.cpp)
     target_link_libraries(chase-game PRIVATE chase_render chase_runtime chase_input chase_audio chase_frontend_movie chase_save_progress chase_save_tables)
     target_compile_options(chase-game PRIVATE -Wall -Wextra -Wpedantic)
   endif()
@@ -1583,6 +1584,7 @@ if(BUILD_TESTING)
     # QuickSave. The port's own update numbers (recorded 20261026-mission13-B); the platform wait of 103 updates is pinned in prop-rocking-real-data.
     # The pull takes the player's USE LERP and state 76 and the switch's 1.6 s use animation (20261026-mission13-A), so the run is 60 updates longer; the
     # order of the pull's lines (state 76, switch state 1, player state 1, switch state 3) is the oracle's, its counts are pinned in the switch test.
+    # The level's startup script attaches the girder guy to the girder (AttachObject 0x1bf68c), so he sways and descends with its node.
     add_test(NAME game-generator-1-3 COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
@@ -1590,7 +1592,7 @@ if(BUILD_TESTING)
       --start "993.9 16.56 1135.5" --facing 180
       --script "0 0 5;0 0 1 Y;0 0 15;0 0 1 Y;0 0 60;0 0 1 A;0 0 60;at 952.6 16.77 1132.6 90;0 0 5;0 0 1 A;0 0 80;0 0 150 A;0 0 60;at 949.3 16.77 1130.9 270;0 0 5;0 0 1 A;0 0 760")
     set_tests_properties(game-generator-1-3 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
-      PASS_REGULAR_EXPRESSION "carry 1-3_generator_parts_carry: placed into 1-3_baseplate at update [0-9]+.*buildit 1-3_pull_switch_bits: stud drop mode.*switch 1-3_generator_pull_switch: used at update [0-9]+\n.*switch 1-3_generator_pull_switch: player state 76 at update [0-9]+\n.*switch 1-3_generator_pull_switch: state 1 at update [0-9]+\n.*switch 1-3_generator_pull_switch: player state 1 at update [0-9]+\n.*switch 1-3_generator_pull_switch: state 3 at update [0-9]+\n.*script 1-3_Generator_Script started at update [0-9]+\n.*script 1-3_Crow_out started at update [0-9]+\n.*particles 264 at 1-3_crane_girder started at update [0-9]+\n.*prop 1-3_crane_girder: rocking off at update [0-9]+\n.*save: request [0-9]+ written.*\n.*script 1-3_Generator_Script ended at update [0-9]+")
+      PASS_REGULAR_EXPRESSION "character 1-3_ai_girder_guy: attached to 1-3_crane_girder at update 0\n.*carry 1-3_generator_parts_carry: placed into 1-3_baseplate at update [0-9]+.*buildit 1-3_pull_switch_bits: stud drop mode.*switch 1-3_generator_pull_switch: used at update [0-9]+\n.*switch 1-3_generator_pull_switch: player state 76 at update [0-9]+\n.*switch 1-3_generator_pull_switch: state 1 at update [0-9]+\n.*switch 1-3_generator_pull_switch: player state 1 at update [0-9]+\n.*switch 1-3_generator_pull_switch: state 3 at update [0-9]+\n.*script 1-3_Generator_Script started at update [0-9]+\n.*script 1-3_Crow_out started at update [0-9]+\n.*particles 264 at 1-3_crane_girder started at update [0-9]+\n.*prop 1-3_crane_girder: rocking off at update [0-9]+\n.*save: request [0-9]+ written.*\n.*script 1-3_Generator_Script ended at update [0-9]+")
     # Mission 1-2, the dog cage (SCRIPT-111): 1-2_Pringles_Cage_Locked enables the use spot 1-2_Dog_Cage_Use_Spot, A on the user's trigger position
     # (oracle save state at the dog cage trigger of mission 1-2) fires 1-2_Cage_Key_Target_Script through the spot's TriggerObject. The use marker (SCRIPT-292) is shown
     # while the spot is usable (seen on the ground in the oracle in that state) and goes after the use, when 0x236624 switched the zone off.
@@ -2131,6 +2133,10 @@ add_executable(prop-rocking-test tests/prop_rocking_test.cpp)
 target_link_libraries(prop-rocking-test PRIVATE chase_runtime)
 target_compile_options(prop-rocking-test PRIVATE -Wall -Wextra -Wpedantic)
 add_test(NAME prop-rocking COMMAND prop-rocking-test)
+add_executable(node-attach-test tests/node_attach_test.cpp)
+target_link_libraries(node-attach-test PRIVATE chase_runtime)
+target_compile_options(node-attach-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME node-attach COMMAND node-attach-test)
 add_executable(prop-rocking-real-test tests/prop_rocking_real_test.cpp)
 target_link_libraries(prop-rocking-real-test PRIVATE chase_runtime chase_assets)
 target_compile_options(prop-rocking-real-test PRIVATE -Wall -Wextra -Wpedantic)

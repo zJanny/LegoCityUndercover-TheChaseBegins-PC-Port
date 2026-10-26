@@ -54,6 +54,10 @@ public:
     // A character the AI moved in its last update (AIMove, AISuperJump; runtime/ai.hpp) stands at its AI position, turned to its AI heading when one is
     // set, as the player follows it in game_player::applyAiPosition.
     void followAi(const runtime::AiCore& ai);
+    // The character's node matrix (what place() wrote, or its AI position).
+    std::optional<assets::Matrix> world(const std::string& lowerCaseInstance) const;
+    // The lower-case instance names with their level data.
+    std::vector<std::pair<std::string, const assets::CharacterObject*>> characters() const;
 
     std::size_t animated() const { return entries_.size(); }
     std::size_t started() const;

@@ -107,6 +107,18 @@ void LevelCharacters::followAi(const runtime::AiCore& ai) {
     }
 }
 
+std::optional<Matrix> LevelCharacters::world(const std::string& instance) const {
+    const Entry* entry = find(instance);
+    if (!entry) return std::nullopt;
+    return entry->world;
+}
+
+std::vector<std::pair<std::string, const CharacterObject*>> LevelCharacters::characters() const {
+    std::vector<std::pair<std::string, const CharacterObject*>> out;
+    for (const auto& [instance, index] : byInstance_) out.emplace_back(instance, &characters_[entries_[index].character]);
+    return out;
+}
+
 void LevelCharacters::stop(const std::string& instance) {
     if (Entry* entry = find(instance)) entry->slots.stop(clock_);
 }

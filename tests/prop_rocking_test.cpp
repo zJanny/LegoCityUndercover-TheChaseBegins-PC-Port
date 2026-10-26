@@ -6,6 +6,7 @@
 #include "runtime/script_runner.hpp"
 
 #include <cmath>
+#include <cstring>
 #include <iostream>
 #include <limits>
 #include <map>
@@ -74,8 +75,61 @@ void recordFieldsComeFromTheCreate() {
             "+0xb4 = WaveBob1 * 30, +0xb8 = WaveBob2 * 30, +0xbc = WaveBobOffset (0x16a860..0x16a8c8, 0x23ca4c = 30)");
     require(chase::runtime::propRockingOf(placed("Plain", "p"), plain, prop) && prop.period1 == 60 && prop.period2 == 90 && prop.phase == 0,
             "defaults 2, 3 and 0 (the r2 of the three 0x2451d0 calls)");
-    require(!chase::runtime::propRockingOf(placed("Even", "e"), even, prop), "bit 6 takes bit 0 of Rocking (`and r0, r1, r2, lsl #6` at 0x16a528)");
+    require(chase::runtime::propRockingOf(placed("Even", "e"), even, prop) && !prop.rocking,
+            "Rocking 2 keeps a record (the float test 0x16a3dc) and bit 6 takes bit 0 of the int (`and r0, r1, r2, lsl #6` at 0x16a528)");
     require(!chase::runtime::propRockingOf(placed("Lift", "l"), platform, prop), "only the kind 67 create 0x16a268 reads Rocking");
+}
+
+LevelParam floatParam(const char* name, float value) {
+    LevelParam param;
+    param.hash = chase::assets::nameHash(name);
+    param.flags = 5;
+    param.type = 0;
+    std::memcpy(&param.value, &value, 4);
+    return param;
+}
+
+LevelParam referenceParam(const char* name, const std::string& target) {
+    LevelParam param;
+    param.hash = chase::assets::nameHash(name);
+    param.flags = 5;
+    param.type = 4;
+    chase::assets::Bytes block(8, 0);
+    const std::uint32_t hash = target.empty() ? 0u : chase::assets::nameHash(target);
+    std::memcpy(block.data() + 4, &hash, 4);
+    param.blocks.push_back(block);
+    return param;
+}
+
+void recordRuleOfTheCreate() {
+    using chase::runtime::kindPropHasRecord;
+    const auto has = [](std::vector<LevelParam> defaults) {
+        Level cls;
+        defaults.insert(defaults.begin(), intParam("ObjectType", 67));
+        cls.defaults = std::move(defaults);
+        return kindPropHasRecord(placed("Prop", "p"), cls);
+    };
+    require(!has({}) && !has({intParam("Rocking", 0), floatParam("Rotating", 0.0f)}), "mode 0 without the listed parameters: no record (0x16a40c)");
+    require(has({intParam("Destructable", 1)}) && has({intParam("Destructable", 6)}), "a mode other than 0 keeps a record (0x16a334..0x16a35c)");
+    require(has({referenceParam("ControlObject", "Lift")}) && has({referenceParam("TriggerObject", "Door")}), "ControlObject or TriggerObject naming an object");
+    require(!has({referenceParam("TriggerObject", "")}), "an unset reference (STAND-IN SCRIPT-S297: name hash 0)");
+    require(has({intParam("Navnode", 0)}), "Navnode listed by the class (the pointer test at 0x16a39c)");
+    require(has({intParam("ATTR_SFX", 3)}) && has({intParam("ATTR_SFX_DESTROYED", 4)}), "the ints ATTR_SFX and ATTR_SFX_DESTROYED (0x16a3a0, 0x16a3a4)");
+    require(has({floatParam("Rotating", 0.5f)}) && has({floatParam("Rocking", 0.5f)}) && has({floatParam("FaceTargetSpeed", 2.0f)}),
+            "the floats Rotating, Rocking and FaceTargetSpeed compared with 0.0 (0x16a3c0, 0x16a3e0, 0x16a400)");
+    Level rotating;
+    rotating.defaults = {intParam("ObjectType", 67), floatParam("Rotating", 1.0f)};
+    Classes classes;
+    classes.files["props/prop_prop"] = rotating;
+    Level level;
+    level.objects = {placed("Spinner", "props/prop_prop")};
+    add(level, "start", {{"SetPropRocking", {"Spinner", "1"}}});
+    chase::assets::PlacedObjectState state;
+    ScriptRunner runner(level, state);
+    runner.loadObjectKinds(classes.lookup());
+    require(runner.propRocking().find("spinner") && !runner.propRocking().find("spinner")->rocking, "a record without the Rocking bit");
+    runner.start("start");
+    require(runner.propRocking().find("spinner")->rocking, "SetPropRocking(x, 1) sets the bit of any kind 67 record");
 }
 
 void rotationFollowsTheTwoWaves() {
@@ -177,6 +231,7 @@ void waitForPlatformBlocksTheThread() {
 int main() {
     try {
         recordFieldsComeFromTheCreate();
+        recordRuleOfTheCreate();
         rotationFollowsTheTwoWaves();
         setPropRockingWritesTheBit();
         waitForPlatformComparesValueBitsAndState();

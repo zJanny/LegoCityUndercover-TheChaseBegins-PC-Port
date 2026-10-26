@@ -195,11 +195,14 @@ void LevelSession::updateCarry(const float playerPosition[3]) {
 
 void LevelSession::updateLevelCharacters(float dt) {
     levelCharacters->followAi(levelScripts.ai());
+    snapAiMovedCharacters(dt);
+    attachLevelCharacters();
+    updatePropAnimations(dt);
+    updatePropRocking();
+    followAttachedCharacters();
     levelCharacters->update(scene, dt, [this](const chase::assets::CharacterObject& character) {
         return !objectState.isDisabled(character.placement.instance) && roomShown(runtime::roomNumber(character.placement.room));
     });
-    updatePropAnimations(dt);
-    updatePropRocking();
 }
 
 std::vector<runtime::SoundCall> LevelSession::updateBuildits(const float playerPosition[3]) {

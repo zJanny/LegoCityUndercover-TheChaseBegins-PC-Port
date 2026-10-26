@@ -19,7 +19,11 @@ void LevelSession::updatePropRocking() {
                 if (game_doors::lowerCase(placedObjects[i].instance) == prop.instance) found = placedSceneIndex[i];
             scene = propRockingScene.emplace(prop.instance, found).first;
         }
-        if (scene->second) this->scene.setTransform(*scene->second, runtime::rockingMatrix(prop, updates * runtime::kRockingClockUnitsPerUpdateStandIn));
+        if (!scene->second) continue;
+        std::array<float, 16> node = runtime::rockingMatrix(prop, updates * runtime::kRockingClockUnitsPerUpdateStandIn);
+        if (const std::optional<std::array<float, 3>> translation = objectNodeTranslation(prop.instance)) std::copy(translation->begin(), translation->end(), node.begin() + 12);
+        this->scene.setTransform(*scene->second, node);
+        collision.moveObject(prop.instance, node);
     }
 }
 

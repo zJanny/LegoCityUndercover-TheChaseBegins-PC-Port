@@ -29,6 +29,22 @@ std::int32_t intParam(const assets::LevelObject& object, const assets::Level& cl
     return std::int32_t(param->value);
 }
 
+float floatParam(const assets::LevelObject& object, const assets::Level& cls, const char* name) {
+    const assets::LevelParam* param = effectiveParam(object, cls, assets::nameHash(name));
+    if (!param) return 0.0f;
+    if (param->type == 0) {
+        float value = 0;
+        std::memcpy(&value, &param->value, 4);
+        return value;
+    }
+    return float(std::int32_t(param->value));
+}
+
+bool namesObject(const assets::LevelObject& object, const assets::Level& cls, const char* name) {
+    const assets::LevelParam* param = effectiveParam(object, cls, assets::nameHash(name));
+    return param && assets::objectReferenceHash(*param) != 0;
+}
+
 float waveFraction(std::uint32_t clock, std::uint32_t phase, std::uint32_t period) {
     if (period == 0) return 0.0f;
     return float((clock + phase) % period) / float(period);
@@ -36,11 +52,19 @@ float waveFraction(std::uint32_t clock, std::uint32_t phase, std::uint32_t perio
 
 }
 
-bool propRockingOf(const assets::LevelObject& object, const assets::Level& cls, PropRocking& out) {
+bool kindPropHasRecord(const assets::LevelObject& object, const assets::Level& cls) {
     if (assets::objectKind(object, cls) != kRockingPropKind) return false;
-    if ((intParam(object, cls, "Rocking", 0) & 1) == 0) return false;
+    if (intParam(object, cls, "Destructable", 0) != 0) return true;
+    if (namesObject(object, cls, "ControlObject") || namesObject(object, cls, "TriggerObject")) return true;
+    if (effectiveParam(object, cls, assets::nameHash("Navnode"))) return true;
+    if (intParam(object, cls, "ATTR_SFX", 0) != 0 || intParam(object, cls, "ATTR_SFX_DESTROYED", 0) != 0) return true;
+    return floatParam(object, cls, "Rotating") != 0.0f || floatParam(object, cls, "Rocking") != 0.0f || floatParam(object, cls, "FaceTargetSpeed") != 0.0f;
+}
+
+bool propRockingOf(const assets::LevelObject& object, const assets::Level& cls, PropRocking& out) {
+    if (!kindPropHasRecord(object, cls)) return false;
     out.instance = lower(object.instance);
-    out.rocking = true;
+    out.rocking = (intParam(object, cls, "Rocking", 0) & 1) != 0;
     out.period1 = std::uint32_t(intParam(object, cls, "WaveBob1", kWaveBob1Default)) * kRockingRate;
     out.period2 = std::uint32_t(intParam(object, cls, "WaveBob2", kWaveBob2Default)) * kRockingRate;
     out.phase = std::uint32_t(intParam(object, cls, "WaveBobOffset", kWaveBobOffsetDefault));

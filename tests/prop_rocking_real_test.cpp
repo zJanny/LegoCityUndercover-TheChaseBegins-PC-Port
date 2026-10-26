@@ -2,6 +2,7 @@
 // the targets of every SetPropRocking and WaitForPlatform call of the level files. Needs the extracted RomFS; exits with 77 (skipped) when
 // it is missing. Values from the level data, printed with the C++ level loader by 20261025-garage-C on 2026-10-25.
 #include "assets/object_classes.hpp"
+#include "runtime/node_attach.hpp"
 #include "runtime/level_start.hpp"
 #include "runtime/script_runner.hpp"
 
@@ -14,6 +15,7 @@
 #include <string>
 
 namespace {
+constexpr std::size_t kKindPropRecords = 23;
 constexpr const char* kLevelFile = "levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl";
 
 void require(bool condition, const std::string& message) {
@@ -83,7 +85,41 @@ int main(int argc, char** argv) {
         // 1-3_Crane_Girder (leprops/leprop_prop, room7): Rocking 1, no WaveBob parameter (defaults 2, 3, 0), initialorientation (179.3434, 0.1555, 179.9896).
         const runtime::PropRocking* girder = runner.propRocking().find("1-3_crane_girder");
         require(girder && girder->rocking && girder->period1 == 60 && girder->period2 == 90 && girder->phase == 0, "the girder rocks with the default waves");
-        require(runner.propRocking().props().size() == 1, "the girder is the only rocking prop of lvl_01");
+        const std::vector<runtime::PropRocking>& records = runner.propRocking().props();
+        const auto rockingProps = std::count_if(records.begin(), records.end(), [](const runtime::PropRocking& prop) { return prop.rocking; });
+        // The kind 67 records of lvl_01 by the rule 0x16a334..0x16a40c, counted with the C++ level loader by 20261026-crane-C on 2026-10-26.
+        require(rockingProps == 1 && records.size() == kKindPropRecords,
+                "the girder is the only rocking prop of lvl_01 among " + std::to_string(records.size()) + " kind 67 records");
+
+        // The level's startup script attaches the girder guy to the girder (AttachObject 0x1bf68c, pc34 of "startup") and the girder to the
+        // crane platform (pc169).
+        assets::PlacedObjectState startState = runtime::levelInitialState(level, classOf);
+        runtime::ScriptRunner startup(level, startState);
+        startup.loadObjectKinds(classOf);
+        runtime::runLevelStartup(startup, runtime::kStartupStepDt, runtime::kStartupMaxUpdates);
+        const runtime::Attachment* onGirder = startup.animation().attachment("1-3_ai_girder_guy");
+        require(onGirder && onGirder->kind == runtime::AttachKind::Object && onGirder->parent == "1-3_crane_girder", "AttachObject(1-3_Crane_Girder, 1-3_AI_Girder_Guy)");
+        const runtime::Attachment* onPlatform = startup.animation().attachment("1-3_crane_girder");
+        require(onPlatform && onPlatform->parent == "1-3_crane_platform_dummy", "AttachObject(1-3_Crane_Platform_Dummy, 1-3_Crane_Girder)");
+        const std::optional<assets::Placement> guyStart = assets::objectStart(level, "1-3_AI_Girder_Guy");
+        require(guyStart.has_value(), "1-3_AI_Girder_Guy is placed");
+        runtime::NodeAttachments links;
+        links.attach("1-3_ai_girder_guy", "1-3_crane_girder", assets::placementMatrix(*guyStart), girder->placement);
+        const assets::Matrix rocked = runtime::childWorld(links.find("1-3_ai_girder_guy")->local, runtime::rockingMatrix(*girder, 0));
+        const float offset[3] = {rocked[12] - girder->placement[12], rocked[13] - girder->placement[13], rocked[14] - girder->placement[14]};
+        const float placedOffset[3] = {guyStart->position[0] - girder->placement[12], guyStart->position[1] - girder->placement[13], guyStart->position[2] - girder->placement[14]};
+        require(near(std::sqrt(offset[0] * offset[0] + offset[1] * offset[1] + offset[2] * offset[2]),
+                     std::sqrt(placedOffset[0] * placedOffset[0] + placedOffset[1] * placedOffset[1] + placedOffset[2] * placedOffset[2]), 1e-4f) &&
+                    !near(offset[2], placedOffset[2], 0.02f),
+                "the rocked girder swings the guy on its arc: the roll of 2.5 degrees at clock 0 moves him about 0.034 sideways");
+        // RPC 20261025-garage-C-1 (recorded from a save state on the generator trigger spot of mission 1-3, the game's dt 0.033): the girder's
+        // node goes from y 27.481 (u0) to 16.852 (from u192) with the platform, x and z unchanged, and the guy stands at (947.881, 17.617, 1142.456)
+        // at u193. The girder is taken at its placed rotation here (the phase of the rocking when it stopped is not known).
+        assets::Matrix lowered = girder->placement;
+        lowered[13] = 16.852f;
+        const assets::Matrix carried = runtime::childWorld(links.find("1-3_ai_girder_guy")->local, lowered);
+        require(near(carried[12], 947.881f, 0.02f) && near(carried[13], 17.617f, 0.02f) && near(carried[14], 1142.456f, 0.02f),
+                "the guy goes down with the girder to the oracle's position at u193, got y " + std::to_string(carried[13]));
         const std::array<float, 9> still = runtime::rockingRotation(*girder, 0);
         // Hand evaluation (Python, 20261025-garage-C): rows of 0x237c48(0.0436332, 0, 0) times the rows of the orientation in radians.
         const std::array<float, 9> expected = {-0.999996f, -0.000213f, -0.002712f, -0.000063f, 0.998483f, -0.055066f, 0.002719f, -0.055065f, -0.998479f};

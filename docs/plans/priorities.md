@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 941 open items and stand-ins, 168 linked to game usage, 773 with unknown reach.
+Items: 944 open items and stand-ins, 170 linked to game usage, 774 with unknown reach.
 
 ## Top 50 overall
 
@@ -46,7 +46,7 @@ Items: 941 open items and stand-ins, 168 linked to game usage, 773 with unknown 
 | 10 | [SCRIPT-345](features/script-system-natives-animation.md?display=source#L35) | 859 | 0 | 8 | 0 | 2 stand-in | `loadanimation`, `playcharanim` | The port starts `1-2_Cage_Key_Target_Script` in the update of the press (as the original) but calls ... |
 | 11 | [SCRIPT-190](features/script-system-missions.md?display=source#L28) | 0 | 736 | 8 | 2 | - | `scriptobject` | Carry gaps: the instigator argument of 0x244f40 is not modelled; the handler 0x1bc4d4 forwards message 0xff ... |
 | 12 | [SCRIPT-201](features/script-system-missions.md?display=source#L36) | 671 | 0 | 8 | 0 | 4 stand-in, 1 implemented | `automaticmusic`, `camerafollow`, `enabletrafficandpedestrians`, `overridemusic` +1 | Mission 1-1 has a handler (stand-in) for every native it calls: EnableTrafficAndPedestrians (SCRIPT-S230) ... |
-| 13 | [SCRIPT-375](features/script-system-missions-1-3.md?display=source#L32) | 658 | 0 | 8 | 0 | 1 implemented | `startdcam` | The camera shots (StartDCam positions and durations) and the dialogue texts of `1-3_Generator_Script` against ... |
+| 13 | [SCRIPT-375](features/script-system-missions-1-3.md?display=source#L34) | 658 | 0 | 8 | 0 | 1 implemented | `startdcam` | The camera shots (StartDCam positions and durations) and the dialogue texts of `1-3_Generator_Script` against ... |
 | 14 | [ANIM-S12](features/animation-characters.md?display=source#L24) | 623 | 0 | 8 | 0 | 1 stand-in | `playcharanim` | The "already loaded" test of PlayCharAnim (0x21e8b4) knows a character's idle clips and its current script ... |
 | 15 | [ANIM-S13](features/animation-characters.md?display=source#L25) | 623 | 0 | 8 | 0 | 1 stand-in | `playcharanim` | The player's script clip (PlayCharAnim on Player1) is shown at full weight from the native's update instead ... |
 | 16 | [SCRIPT-S269](features/script-system-hud-natives.md?display=source#L18) | 538 | 0 | 7 | 0 | 1 stand-in | `setactivewaypoint` | SetActiveWayPoint: the vehicle waypoint global (`WaypointSet::vehicleWaypoint`) is kept but its reader, which ... |
@@ -79,11 +79,11 @@ Items: 941 open items and stand-ins, 168 linked to game usage, 773 with unknown 
 | 43 | [SCRIPT-66](features/script-system-hud-natives.md?display=source#L28) | 113 | 0 | 7 | 1 | 8 stand-in | `informationbox`, `showbosshearts`, `showcharacterintro`, `showintrotext` +4 | ShowTally, ShowBossHearts, ShowRaceStart, ShowPortraitOverVehicle and showinfopointer only count their calls ... |
 | 44 | [STUD-4](features/studs.md?display=source#L38) | 109 | 0 | 7 | 0 | 1 stand-in, 1 none | `enablestudsbygroup`, `spawnstuds` | How a group is enabled (0x28a2cc sequencer, `EnableStudsByGroup` and `SpawnStuds` script functions ... |
 | 45 | [SCRIPT-S277](features/script-system-natives-party.md?display=source#L18) | 106 | 0 | 6 | 0 | 6 stand-in | `charsetallowvehicleentry`, `charsetskydivemode`, `relockchaseplainclothes`, `setweaponenabled` +2 | SwapAllegiance (toggle count only; the initial bit 2 of the object flags, the lists 0x58deb0 / 0x58dec8 and ... |
-| 46 | [SCRIPT-317](features/script-system-natives-world.md?display=source#L44) | 99 | 0 | 7 | 1 | 2 stand-in | `enableswitch`, `resetobject` | Kind 64 message 8 (0x1a90b8): read the platform record fields R+4, R+0xb4, R+0x7c, R+0x18, R+0x50 and the ... |
-| 47 | [SCRIPT-318](features/script-system-natives-world.md?display=source#L45) | 99 | 0 | 7 | 0 | 2 stand-in | `enableswitch`, `resetobject` | Census of the message 8 handlers of the other kinds (the default handler 0x221800 is reached through 0x221760 ... |
-| 48 | [SCRIPT-282](features/script-system-natives-world.md?display=source#L48) | 92 | 0 | 7 | 16 | 1 stand-in, 1 none | `distancefademid`, `enabledistancefade` | EnableDistanceFade: the node kind gate (global 0x37674c) and the child recursion 0x2b65dc per placed class ... |
-| 49 | [AUDIO-33](features/audio.md?display=source#L49) | 3 | 89 | 8 | 0 | 1 stand-in | `stopsoundgo`, `lesoundobject`, `soundobject` | StopSoundGO on a kind-10 sound object (`lesoundobject`, `soundobject`) stops the object's own sound and sets ... |
-| 50 | [SCRIPT-314](features/script-system-natives-world.md?display=source#L43) | 90 | 0 | 7 | 1 | 1 stand-in | `resetobject` | Apply the restored placement of a reset kind 132 object to its node once something moves such objects (script ... |
+| 46 | [SCRIPT-383](features/script-system-missions-1-3.md?display=source#L36) | 100 | 0 | 8 | 0 | 1 stand-in | `attachobject` | Attached children other than level characters (the crow, `Rope_01` under the girder) do not follow their ... |
+| 47 | [SCRIPT-317](features/script-system-natives-world.md?display=source#L44) | 99 | 0 | 7 | 1 | 2 stand-in | `enableswitch`, `resetobject` | Kind 64 message 8 (0x1a90b8): read the platform record fields R+4, R+0xb4, R+0x7c, R+0x18, R+0x50 and the ... |
+| 48 | [SCRIPT-318](features/script-system-natives-world.md?display=source#L45) | 99 | 0 | 7 | 0 | 2 stand-in | `enableswitch`, `resetobject` | Census of the message 8 handlers of the other kinds (the default handler 0x221800 is reached through 0x221760 ... |
+| 49 | [SCRIPT-S306](features/script-system-missions-1-3.md?display=source#L23) | 98 | 0 | 8 | 0 | 1 stand-in | `aimove` | A level character the AI moved (not in AISuperJump) takes the height of the player's ground probe under it ... |
+| 50 | [SCRIPT-282](features/script-system-natives-world.md?display=source#L48) | 92 | 0 | 7 | 16 | 1 stand-in, 1 none | `distancefademid`, `enabledistancefade` | EnableDistanceFade: the node kind gate (global 0x37674c) and the child recursion 0x2b65dc per placed class ... |
 
 ## Player and camera
 
@@ -137,7 +137,7 @@ Items: 941 open items and stand-ins, 168 linked to game usage, 773 with unknown 
 
 ## Scripts and missions
 
-105 of 218 items linked.
+107 of 221 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -150,7 +150,7 @@ Items: 941 open items and stand-ins, 168 linked to game usage, 773 with unknown 
 | 7 | [SCRIPT-345](features/script-system-natives-animation.md?display=source#L35) | 859 | 0 | 8 | 0 | 2 stand-in | `loadanimation`, `playcharanim` | The port starts `1-2_Cage_Key_Target_Script` in the update of the press (as the original) but calls ... |
 | 8 | [SCRIPT-190](features/script-system-missions.md?display=source#L28) | 0 | 736 | 8 | 2 | - | `scriptobject` | Carry gaps: the instigator argument of 0x244f40 is not modelled; the handler 0x1bc4d4 forwards message 0xff ... |
 | 9 | [SCRIPT-201](features/script-system-missions.md?display=source#L36) | 671 | 0 | 8 | 0 | 4 stand-in, 1 implemented | `automaticmusic`, `camerafollow`, `enabletrafficandpedestrians`, `overridemusic` +1 | Mission 1-1 has a handler (stand-in) for every native it calls: EnableTrafficAndPedestrians (SCRIPT-S230) ... |
-| 10 | [SCRIPT-375](features/script-system-missions-1-3.md?display=source#L32) | 658 | 0 | 8 | 0 | 1 implemented | `startdcam` | The camera shots (StartDCam positions and durations) and the dialogue texts of `1-3_Generator_Script` against ... |
+| 10 | [SCRIPT-375](features/script-system-missions-1-3.md?display=source#L34) | 658 | 0 | 8 | 0 | 1 implemented | `startdcam` | The camera shots (StartDCam positions and durations) and the dialogue texts of `1-3_Generator_Script` against ... |
 
 ## World and levels
 
@@ -205,7 +205,7 @@ No linked items.
 
 No script native or object class is linked to these items (`+N` is Unblocks). Add `uses:` to an item when its fix changes the game.
 
-Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?display=source#L33) (+30), [RENDER-35](features/rendering.md?display=source#L48) (+25), [TRAFFIC-7](features/pedestrians-traffic-cars.md?display=source#L56) (+23), [TRAFFIC-8](features/pedestrians-traffic-cars.md?display=source#L57) (+23), [TRAFFIC-9](features/pedestrians-traffic-cars.md?display=source#L58) (+23), [VEH-6](features/vehicles-physics.md?display=source#L30) (+23), [TRAFFIC-2](features/pedestrians-traffic-cars.md?display=source#L51) (+22), [SCRIPT-44](features/script-system-natives.md?display=source#L31) (+19), [SCRIPT-43](features/script-system-natives.md?display=source#L30) (+18), [SCRIPT-94](features/script-system-ai-navigation.md?display=source#L34) (+17)
+Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?display=source#L33) (+30), [RENDER-35](features/rendering.md?display=source#L48) (+25), [TRAFFIC-7](features/pedestrians-traffic-cars.md?display=source#L56) (+23), [TRAFFIC-8](features/pedestrians-traffic-cars.md?display=source#L57) (+23), [TRAFFIC-9](features/pedestrians-traffic-cars.md?display=source#L58) (+23), [VEH-6](features/vehicles-physics.md?display=source#L30) (+23), [TRAFFIC-2](features/pedestrians-traffic-cars.md?display=source#L51) (+22), [SCRIPT-44](features/script-system-natives.md?display=source#L31) (+20), [SCRIPT-43](features/script-system-natives.md?display=source#L30) (+18), [SCRIPT-94](features/script-system-ai-navigation.md?display=source#L34) (+17)
 
 - [abilities-detective.md](features/abilities-detective.md): DETECT-8 (+3), DETECT-13 (+2), DETECT-1 (+1), DETECT-15 (+1), DETECT-4 (+1), DETECT-6 (+1), DETECT-S7 (+1), DETECT-S8 (+1), DETECT-10, DETECT-11, DETECT-12, DETECT-3, DETECT-5, DETECT-9, DETECT-S1, DETECT-S2, DETECT-S4, DETECT-S5, DETECT-S6, DETECT-S9
 - [abilities-scanner.md](features/abilities-scanner.md): SCAN-10 (+1), SCAN-11 (+1), SCAN-16 (+1), SCAN-17 (+1), SCAN-S10 (+1), AUDIO-S33, SCAN-13, SCAN-15, SCAN-3, SCAN-6, SCAN-S1, SCAN-S11, SCAN-S12, SCAN-S2, SCAN-S3, SCAN-S4, SCAN-S5, SCAN-S6, SCAN-S7, SCAN-S8, SCAN-S9
@@ -244,14 +244,14 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [script-system-ai-navigation.md](features/script-system-ai-navigation.md): SCRIPT-92 (+30), SCRIPT-94 (+17), SCRIPT-101 (+15), SCRIPT-95 (+15), SCRIPT-100 (+14), SCRIPT-79 (+13), SCRIPT-S100, SCRIPT-S101, SCRIPT-S102, SCRIPT-S104, SCRIPT-S31, SCRIPT-S93, SCRIPT-S94, SCRIPT-S95
 - [script-system-dcam.md](features/script-system-dcam.md): SCRIPT-40 (+15), SCRIPT-182 (+1), SCRIPT-48 (+1), SCRIPT-181, SCRIPT-332, SCRIPT-49, SCRIPT-50, SCRIPT-S142
 - [script-system-hud-natives.md](features/script-system-hud-natives.md): SCRIPT-350 (+2), SCRIPT-329 (+1), SCRIPT-330 (+1), SCRIPT-354 (+1), SCRIPT-331, SCRIPT-68, SCRIPT-69, SCRIPT-70, SCRIPT-S270, SCRIPT-S282, SCRIPT-S283, SCRIPT-S285
-- [script-system-missions-1-3.md](features/script-system-missions-1-3.md): SCRIPT-368 (+3), SCRIPT-364 (+1), SCRIPT-376, SCRIPT-S291, SCRIPT-S298
+- [script-system-missions-1-3.md](features/script-system-missions-1-3.md): SCRIPT-368 (+3), SCRIPT-364 (+1), SCRIPT-376, SCRIPT-S291, SCRIPT-S298, SCRIPT-S305
 - [script-system-missions-reference.md](features/script-system-missions-reference.md): SCRIPT-359 (+1), SCRIPT-360 (+1), SCRIPT-370 (+1), SCRIPT-S289, SCRIPT-S292, SCRIPT-S293, SCRIPT-S299
 - [script-system-missions.md](features/script-system-missions.md): SCRIPT-284 (+1), SCRIPT-115, SCRIPT-142, SCRIPT-221, SCRIPT-S141, SCRIPT-S236, SCRIPT-S237, SCRIPT-S243, SCRIPT-S255
 - [script-system-natives-animation.md](features/script-system-natives-animation.md): SCRIPT-324 (+3), SCRIPT-352 (+2), SCRIPT-272 (+1), SCRIPT-325 (+1), SCRIPT-334 (+1), SCRIPT-S284 (+1), SCRIPT-344, SCRIPT-353, SCRIPT-S110, SCRIPT-S262, SCRIPT-S266, SCRIPT-S267
 - [script-system-natives-party.md](features/script-system-natives-party.md): SCRIPT-338 (+2), SCRIPT-340 (+1)
 - [script-system-natives-state.md](features/script-system-natives-state.md): SCRIPT-335 (+1), SCRIPT-56 (+1), SCRIPT-64 (+1), SCRIPT-S97
 - [script-system-natives-world.md](features/script-system-natives-world.md): SCRIPT-279 (+1)
-- [script-system-natives.md](features/script-system-natives.md): SCRIPT-44 (+19), SCRIPT-43 (+18), SCRIPT-45 (+14), SCRIPT-7 (+12), SCRIPT-13 (+1), SCRIPT-150 (+1)
+- [script-system-natives.md](features/script-system-natives.md): SCRIPT-44 (+20), SCRIPT-43 (+18), SCRIPT-45 (+14), SCRIPT-7 (+12), SCRIPT-13 (+1), SCRIPT-150 (+1)
 - [script-system-triggers.md](features/script-system-triggers.md): SCRIPT-76 (+11), SCRIPT-51 (+3), SCRIPT-77 (+1), SCRIPT-78 (+1), SCRIPT-S15, SCRIPT-S28, SCRIPT-S30, SCRIPT-S8
 - [script-system-use-markers.md](features/script-system-use-markers.md): SCRIPT-356 (+2), SCRIPT-357 (+1), SCRIPT-355, SCRIPT-S247, SCRIPT-S248, SCRIPT-S249, SCRIPT-S286, SCRIPT-S287, SCRIPT-S288
 - [script-system.md](features/script-system.md): SCRIPT-1 (+10), SCRIPT-53 (+2), SCRIPT-2, SCRIPT-3, SCRIPT-5, SCRIPT-54, SCRIPT-55, SCRIPT-9, SCRIPT-S1, SCRIPT-S14, SCRIPT-S16, SCRIPT-S275, SCRIPT-S3, SCRIPT-S5, SCRIPT-S6, SCRIPT-S7

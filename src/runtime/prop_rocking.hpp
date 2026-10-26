@@ -19,8 +19,9 @@ constexpr std::int32_t kWaveBob2Default = 3;               // 0x16a888
 constexpr std::int32_t kWaveBobOffsetDefault = 0;          // 0x16a8b0
 constexpr float kRockingPitch = 0.03490658849477768f;      // literal 0x3d0efa36 at 0x28a874 (2 degrees)
 constexpr float kRockingRoll = 0.04363323375582695f;       // literal 0x3d32b8c3 at 0x28a878 (2.5 degrees)
-// STAND-IN SCRIPT-S297: the clock 0x241098 the rocking reads advances 60 units per second here (2 per update at 30 updates per second, as
-// measured for the use markers, SCRIPT-S247); its multiplier and its value at the level start are not read.
+// STAND-IN SCRIPT-S297: the clock 0x241098 is the timer of the running process (+0x40, 0x256af4) times the rate [[process + 0xc] + 0xc] divided
+// by the timer's unit (+0xc); here it advances 60 units per second (2 per update at 30 updates per second, as measured for the use markers,
+// SCRIPT-S247) and starts at 0 with the level, as the rate and the timer's start are runtime values not read.
 constexpr std::uint32_t kRockingClockUnitsPerUpdateStandIn = 2;
 
 struct PropRocking {
@@ -33,9 +34,12 @@ struct PropRocking {
     std::array<float, 16> placement{};     // the node matrix at the level start
 };
 
-// The record fields of 0x16a268 for a kind 67 object whose `Rocking` parameter has bit 0 set; nothing for the others. STAND-IN SCRIPT-S297:
-// the create keeps a record (and reads the WaveBob fields) for more kind 67 objects than these (rule 0x16a334..0x16a3a0, not read), so a
-// SetPropRocking(x, 1) on a kind 67 prop with `Rocking` 0 does nothing here.
+// 0x16a334..0x16a40c: the create keeps a record for `Destructable` (the mode, 0x15a4b4) other than 0 and, for mode 0, when `ControlObject` or
+// `TriggerObject` names an object, the class lists `Navnode` (0x241624 not null), the ints `ATTR_SFX` or `ATTR_SFX_DESTROYED` (0x2451d0) or the
+// floats `Rotating`, `Rocking` or `FaceTargetSpeed` (0x241280) are not 0. STAND-IN SCRIPT-S297: a reference counts as naming an object when
+// its name hash is not 0; the word 0x16a36c / 0x16a37c test was not matched to the reference's layout.
+bool kindPropHasRecord(const assets::LevelObject& object, const assets::Level& cls);
+// The record fields of 0x16a268 for a kind 67 object with a record (kindPropHasRecord); the bit is bit 0 of the int `Rocking`.
 bool propRockingOf(const assets::LevelObject& object, const assets::Level& cls, PropRocking& out);
 // 0x28a758: the node's 3x3 rotation rows, Rx..z(roll, 0, pitch) (0x237c48) times the rotation of the base angles (0x25898c), with
 // pitch = 2 degrees * sin(2 pi ((clock + phase) mod period1) / period1) and roll = 2.5 degrees * cos(2 pi ((clock + phase) mod period2) / period2).

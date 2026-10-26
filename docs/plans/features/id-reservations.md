@@ -8,5 +8,3 @@ Ranges of item IDs held by parallel agents, named like `20261021-audio-A`. The p
 | SCRIPT-S | 301 | 302 | 20261026-crane-A | 2026-10-26T22:22:26+01:00 |
 | SCRIPT | 380 | 382 | 20261026-crane-B | 2026-10-26T22:22:26+01:00 |
 | SCRIPT-S | 303 | 304 | 20261026-crane-B | 2026-10-26T22:22:26+01:00 |
-| SCRIPT | 383 | 384 | 20261026-crane-C | 2026-10-26T22:22:26+01:00 |
-| SCRIPT-S | 305 | 306 | 20261026-crane-C | 2026-10-26T22:22:26+01:00 |
