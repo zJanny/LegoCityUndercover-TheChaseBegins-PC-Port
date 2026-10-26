@@ -9,6 +9,7 @@ The player's carry states (pickup 0xa7, drop 0xa8, place 0xd6): their clips, the
 - Release (message 0x12) puts the object upright on the floor under the hand (ray 3.0 up and down) and starts the reset countdown `ResetTime` x 30. [§2026-10-16T10:18](#ts-20261016-101840)
 - Every carry state ends when its clip has played once (0x22f560 kind 6): pickup 24 frames (slot replaced in update 49 at dt 0.033), place and drop 13 frames (state 1 in update 27). [§2026-10-16T10:42](#ts-20261016-104210), [§2026-10-18T10:02](#ts-20261018-100221)
 - The attach, the place release and the drop release come from the track 0x98d31b7e of the clip: a change of its value sends the player message 39 kind 0, which reaches the state hook as event type 0 (release in update 8 for place and drop). [§2026-10-18T10:02](#ts-20261018-100221)
+- The placing of the parts crate in the oracle (release u9, target change u10, `1-3_Pull_Switch_Bits` flag 193 to 192, script at u11): [§2026-10-26T16:01:48+01:00](#ts-20261026-160148).
 - Open: the slot clock behind the one-update offset of the release, the other track hashes of 0x1d5adc and the other state event types, the fixed matrix of 0x2ce4a4 for objects without `carryhandle`.
 
 <a id="ts-20261016-094004"></a>
@@ -85,3 +86,22 @@ Source: Azahar New 3DS, OpenGL, `--rpc --rpc-input`, port 24701, own home, fixed
 Unknowns:
 - Which of the 13 frames the slot reports finished in: at dt 0.033 the end (27) is the first update with 27 x 0.033 at or past 0.867 s, but the release (8) comes one update before 9 x 0.033 passes the key time 0.267 s; the slot clock (start +0x34) and the weighting at 0x1d5f08 (value x +0xcc minus previous x +0xd0) were not read.
 - The other branches of 0x1d5adc (the hashes 0x6ef490be, 0x500e9353, 0x449c1bf1, 0xd946cb35, 0x25b61e86, 0x910b6f42, 0x497b02b0, 0x6b5550bc, 0x4693ec3e, 0x36689946, 0x68cc6917 and the track 0x13e3511c at 0x1d65a0) and what the event types 3, 4, 5, 7, 12, 15 and 19 mean.
+
+<a id="ts-20261026-160148"></a>
+
+## 2026-10-26T16:01:48+01:00 — The parts crate placing in mission 1-3 in the oracle: release, target state change, the build-it's flag and the script (RPC 20261026-mission13-C-2)
+
+Method: servant request 20261026-mission13-C-2, recorded from two save states of mission 1-3 (beside the crate that is already the big carry object; and carrying the crate on the drop-off spot with the base plate under it), New 3DS, OpenGL, fixed dt 0.0333333, u0 = the update the A button is set. Traps on 0x25e354, 0x2768bc, 0x1ab3d4, 0x2256e4, 0x2428c0 / 0x242cf0 (byte at r0+0x10 before and after) and 0x244f40, plus the executor call site 0x2342bc (columns as in [props-rocking.md §2026-10-26T15:16:58](props-rocking.md#ts-20261026-151658)). The object names are resolved from the u32 name hash at entity+8 with the level loader (nameHash of the instance name): 0x9566e7f7 `1-3_Generator_Parts_Carry` (props/prop_carry), 0xf64325f8 `1-3_BasePlate` (props/prop_carrytarget), 0x19a1f6ba `1-3_Pull_Switch_Bits` (props/prop_buildit), 0x3497b2fb `1-3_Hidden_Exhaust_Carry_Target_Script` (scriptobject).
+
+**Placing (two loads agree).** Player state 1 at u0, 0xd6 from u2 to u28, 1 again from u29. u1: state enter 0x2768bc and the target message 3 (0x1ab3d4); u9: release 0x2256e4 (8 updates after the enter, as in [carrying.md §2026-10-15T00:17:29](carrying.md#ts-20261015-001729)); u10: the target's state change 0x25e354 (requested state 0), in it 0x2428c0 on the carry object (flag byte 64 to 65: disabled), 0x242cf0 on `1-3_Pull_Switch_Bits` (193 to 192: bit 0 cleared, the build-it is enabled; the other bits unchanged), 0x244f40 with r0 the script object `1-3_Hidden_Exhaust_Carry_Target_Script` and r1 the base plate, 0x242cf0 on that script object and on the base plate (64 to 64, no change) and message 0xfb to the base plate; six further objects go from flag 1 to 0 in the same update and are re-enabled at u76..u97 (ambient streaming groups of the area, not part of the chain; names not resolved). u11: 0x2428c0 on the base plate (64 to 65: the target disables itself) and the script `1-3_Hidden_Exhaust_Carry_Target_Script` runs pc0 and pc1 (both SubObjectiveGoToEnable, handler 0x2adaac) and ends. No other script call in 121 updates. So the flag of `1-3_Pull_Switch_Bits` is 193 before the placing and 192 after it (the port's hide at the level start, [§2026-10-25T16:20:07](carrying.md#ts-20261025-162007), agrees), and the script runs one update after the state change, two after the release.
+
+**Pickup (one load, unconfirmed).** Beside the carry object: player state 0xa7 from u1 to u47, 1 from u48; 0x29b170 ran at u0 only; no stop on 0x28db30 or 0x244f40 in 110 updates (the attach is not reached through these addresses there; the object is in the hand after the state, by screenshot).
+
+**Crate hits (negative).** In the first state the crate is already the carry object, so the Y presses hit nothing (no message, no call in 156 updates). The hits and the break of `1-3_Lift_Crate_01` need a state taken before the crate is destroyed (SCRIPT-368).
+
+**Port (the CTest `game-generator-1-3` command, run by 20261026-mission13-C).** The port releases the object at the 8th update of the state and runs `1-3_Hidden_Exhaust_Carry_Target_Script` one update later (updates 156 and 157); the oracle runs it two updates after the release (u9 and u11). The state returns to 1 26 updates after the enter, the oracle 27 or 28 after the enter (u1 or u2 to u29). Not changed here (SCRIPT-376).
+
+Unknowns:
+- The attach update of the pickup (no stop on 0x28db30 / 0x244f40) and a second load to confirm it.
+- The crate hits and the break (needs an intact crate state).
+- The target's self-disable at u11 (not ported) and the names of the six streaming objects.
