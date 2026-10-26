@@ -225,6 +225,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     if (!shared.progress.started) game_save::start(shared.progress, options, archive, options.level);
     else game_save::sceneEntered(shared.progress, archive, options.level);
     studs.setCounter(shared.progress.studs);
+    if (options.superBricks && !shared.afterSwitch) shared.progress.superBricks = *options.superBricks;
     superBricks.setTotal(shared.progress.superBricks);
     const chase::save::SlotStart saved = game_save::slotStartFor(shared.progress, archive, level, options.level);
     game_save::apply(saved, levelScripts);

@@ -98,6 +98,11 @@ void testValidValues() {
     if (variables.variables.size() != 2 || variables.variables[0].first != "Lobby_Dcam_Intro" || variables.variables[0].second != 1.0f || variables.variables[1].second != -2.5f)
         fail("valid --set-variable changed");
 
+    if (parseArgs({}).superBricks) fail("--super-bricks set by default");
+    requireEqual(std::to_string(*parseArgs({"--super-bricks", "250"}).superBricks), "250", "valid --super-bricks");
+    requireEqual(std::to_string(*parseArgs({"--super-bricks", "0"}).superBricks), "0", "--super-bricks 0");
+    requireEqual(std::to_string(*parseArgs({"--super-bricks", "4294967295"}).superBricks), "4294967295", "--super-bricks maximum");
+
     const game_options::Options front = parseArgs({"--front-script", "until language 60; run 0.5; press A; shot x"});
     requireEqual(front.frontScript, "until language 60; run 0.5; press A; shot x", "valid --front-script text");
 }
@@ -128,6 +133,11 @@ void testRejections() {
     expectRejected({"--set-variable", "Lobby_Dcam_Intro=on"}, "--set-variable: not a number: 'on'");
     expectRejected({"--set-variable", "Lobby_Dcam_Intro="}, "--set-variable: not a number: ''");
     expectRejected({"--set-variable"}, "--set-variable: missing value: ''");
+    expectRejected({"--super-bricks"}, "--super-bricks: missing value: ''");
+    expectRejected({"--super-bricks", "many"}, "--super-bricks: not a whole number: 'many'");
+    expectRejected({"--super-bricks", "-1"}, "--super-bricks: out of range, allowed 0 to 4294967295: '-1'");
+    expectRejected({"--super-bricks", "4294967296"}, "--super-bricks: out of range, allowed 0 to 4294967295: '4294967296'");
+    expectRejected({"--super-bricks", "2.5"}, "--super-bricks: not a whole number: '2.5'");
 
     expectRejected({"--window", "400"}, "--window: expected WIDTHxHEIGHT: '400'");
     expectRejected({"--window", "400x480 "}, "--window: not a whole number: '480 '");

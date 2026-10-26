@@ -35,4 +35,5 @@ IN_PROGRESS, split from studs.md 2026-10-25, updated 2026-10-25T11:13:08+01:00 (
 ## 7. Code and tests
 
 - `SuperBrickField` (`src/runtime/super_brick.*`, `setTotal`), `SuperBrickObject` (`src/assets/level.cpp`), `SuperBrickTint` (`setPhase`; the phase is carried by `game_save::Progress::superBrickGlobals`) and the flight in `SuperBrickField::update`, the display `src/runtime/super_brick_display.*`, glue `src/game_super_bricks.*`, `ProgressNativeState::requestSave`; the counters from the slot: `chase::save::enterLevel`, `StudField::setCounter`, glue `src/game_save.*` (tests `new-game-slot-real-data`, `game-save-reload`).
+- Development option `--super-bricks N` (`src/game_options.cpp`, applied once in `src/game_level.cpp` before `superBricks.setTotal`; the bound is the u32 counter 0x593430 and slot field +0x5190, the HUD number has no digit limit in the port); test `game-options-core`.
 - CTest: `super-brick`, `super-brick-real-data`, `game-super-brick-freeplay`, `game-super-brick-roof` (slow), `super-brick-display`.

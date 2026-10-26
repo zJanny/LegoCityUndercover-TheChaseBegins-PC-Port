@@ -24,6 +24,7 @@ struct Options {
     std::string script;
     std::vector<std::string> callScripts;
     std::vector<std::pair<std::string, float>> variables;
+    std::optional<std::uint32_t> superBricks;
     std::string saveFile;
     std::string saveOut;
     std::string frontSave;
