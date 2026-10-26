@@ -82,7 +82,7 @@ void realData(const char* fib, const char* names) {
         for (const assets::LevelObject& object : level.objects) {
             const assets::Level* cls = classOf(object.className);
             if (!cls) continue;
-            if ((object.className == kWobblyClass || object.className == kBuilditClass) && effectiveParam(object, *cls, assets::nameHash("SpawnLoc"))) ++spawnLocs;
+            if ((object.className == kWobblyClass || assets::objectKind(object, *cls) == kBuilditKind) && effectiveParam(object, *cls, assets::nameHash("SpawnLoc"))) ++spawnLocs;
             const assets::LevelParam* forced = effectiveParam(object, *cls, assets::nameHash("ForceStudValue"));
             if (forced) {
                 float f = 0;
@@ -132,7 +132,7 @@ void realData(const char* fib, const char* names) {
 
     BuilditSet set;
     set.load(archive, level, classOf);
-    require(set.objects().size() == 15, "15 build-its in lvl_01");
+    require(set.objects().size() == 18, "18 build-its (kind 21: 15 props/prop_buildit, 3 leprops/leprop_buildit) in lvl_01");
     const BuilditObject* parts = set.find("1-1_bi_donutvanparts");
     require(parts != nullptr, "1-1_BI_DonutVanParts");
     const std::optional<StudDropRequest> finish = builditFinishStuds(*parts);

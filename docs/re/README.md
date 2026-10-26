@@ -23,7 +23,7 @@ Read this index, then open only the file you need.
 | [level-transitions.md](level-transitions.md) | Details moved out of the level-transition feature items (natives without handler, loading page code) |
 | [objects.md](objects.md) | Level objects: classes, class files (+0x10/+0x14), parameter slots, how the model is found, drawn classes |
 | [object-kinds.md](object-kinds.md) | Kind byte of a placed entity (entity +0x12 = ObjectType): where it is set, the kind of every class of the main levels, what it gates (ToggleUseable group, EnableShadow, EnableSwitch) |
-| [buildit.md](buildit.md) | Build-its (`props/prop_buildit`): class record, use zone, state machine and timing, completion and the event it fires |
+| [buildit.md](buildit.md) | Build-its (`props/prop_buildit`, `leprops/leprop_buildit`): class record, use zone, state machine and timing, completion and the event it fires |
 | [buildit-bricks.md](buildit-bricks.md) | Build-it bricks: scatter, flight, built pose, hop of unbuilt bricks, rise of the final prop |
 | [super-buildit.md](super-buildit.md) | Super build-its (`props/prop_superbuildit`) and their holders: the helipad of mission 1-3, the "needs N super bricks" prompt page, the confirmation, the movie, the build and the super brick count |
 | [fast-travel.md](fast-travel.md) | Fast travel pad (`props/prop_fasttravelzone`, kind 227): use query, the player's states 0x180..0x183, the Helicopter's landing, what opens the fast travel map |
@@ -120,6 +120,7 @@ Read this index, then open only the file you need.
 | [player-traversal-ladders.md](player-traversal-ladders.md) | Ladders (kind 56): use zone, mount, climb, clamber state 23, exits (the save state in front of the crane ladder of mission 1-3) |
 | [props-wobbly-bouncer.md](props-wobbly-bouncer.md) | The wobbly destructible props (hit message 0, health, ObjectHit, destroy chain, TriggerObject of the table to the trampoline build-it) and the bouncer class (message 15, take-off speed rules, the bounce flight), oracle traces of the save state in front of the table of mission 1-2 and the save state at the built trampoline of mission 1-2 |
 | [props-rocking.md](props-rocking.md) | The rocking of the kind 67 props (`Rocking`, `WaveBob1/2`, 0x28a758), SetPropRocking 0x1da6a8, WaitForPlatform 0x263b84 and the order of `1-3_Generator_Script` |
+| [pushables.md](pushables.md) | Pushables (kind 71, `leprops/leprop_pushable`) and their handles (kind 72), the player's handle states 84 to 86, and the push cart of mission 1-3 |
 | [front-end.md](front-end.md) | Boot sequencer 0x302080, screen order and triggers from power-on to the first level, prompt state machine 0x313368, save indicator, language, savegameflow pages, loading screen, intro movie bubble and title card |
 | [collision.md](collision.md) | Level collision data (model+0x1c section), ground probe by box bisection, wall slide, placed objects (world grid, registration, shapes, query layers), differential test against traces |
 | [dcam.md](dcam.md) | Director camera: level paths, StartDCam commands, phase machine, busy test and end of WaitForDCam, hand-back, oracle timing |

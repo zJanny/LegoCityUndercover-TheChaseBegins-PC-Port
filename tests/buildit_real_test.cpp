@@ -59,6 +59,15 @@ int main(int argc, char** argv) {
             require(near(parts->zoneCentre[a], centre[a], 0.01f), "zone centre " + std::to_string(a) + ": " + std::to_string(parts->zoneCentre[a]));
             require(near(parts->zoneHalf[a], half[a], 0.01f), "zone half " + std::to_string(a) + ": " + std::to_string(parts->zoneHalf[a]));
         }
+        // Kind 21 covers leprops/leprop_buildit too (descriptor 0x15d2d4 for both classes, docs/re/object-kinds.md); 18 build-its in lvl_01
+        // (count of the level data, 20261026-crane-B), among them the two of the end of mission 1-3.
+        require(set.objects().size() == 18, "build-its of lvl_01: " + std::to_string(set.objects().size()));
+        const runtime::BuilditObject* crane = set.find("1-3_crane_bits");
+        require(crane != nullptr && crane->finalProp == "1-3_crane_built" && crane->triggerObject == "1-3_crane_build_it_done" && crane->hasZone,
+                "1-3_Crane_bits (leprops/leprop_buildit) is a build-it with its final prop, trigger and zone");
+        const runtime::BuilditObject* cart = set.find("1-3_push_cart_bits");
+        require(cart != nullptr && cart->finalProp == "1-3_push_cart" && cart->triggerObject == "1-3_displaypushhint",
+                "1-3_Push_Cart_bits builds the push cart and fires 1-3_DisplayPushHint");
         const float standing[3] = {876.914f, 52.435f, 700.427f}, far[3] = {876.914f, 52.435f, 712.0f};
         require(runtime::BuilditSet::inZone(*parts, standing), "the oracle position the save state in front of the donut van parts build-it of mission 1-1 is in the zone");
         require(!runtime::BuilditSet::inZone(*parts, far), "12 m away is outside");

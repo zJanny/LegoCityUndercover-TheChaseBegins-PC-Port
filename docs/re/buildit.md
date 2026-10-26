@@ -13,6 +13,7 @@ Subtopics: [buildit-bricks.md](buildit-bricks.md)
 - The player enters state 9 "BUILD IT" (enter 0x1d4b14, update 0x276254, exit 0x1c72f0); the use query's `2414b4(..., 9, 0)` is a state request, not a clip id; sounds and unported effects are listed there [§2026-10-16T10:17](#ts-20261016-101726).
 - The player's state 9 lasts from the press update to the update the build-it reaches state 10 (updates 0..72 of the six-brick van build, the object updates first); clip 183 loops (slot mode 1) [§2026-10-18T10:08](#ts-20261018-100804).
 - The use zone is the model bounds in the node frame and the query turns the player into that frame with the node's world matrix, so the box follows the placement's orientation (the port ignored it until LEVOBJ-93; the trampoline build-it of mission 1-2 stands at yaw 160.7) [§2026-10-18T20:59](#ts-20261018-205928), which corrects the wording of [§2026-10-14T23:55](#ts-20261014-235539); found by [§2026-10-18T20:40:17](#ts-20261018-204017).
+- Build-its are the objects of kind 21: `props/prop_buildit` and `leprops/leprop_buildit` (the same descriptor); the port selected the first class only, so `1-3_Crane_bits` and `1-3_Push_Cart_bits` of mission 1-3 did not build [§2026-10-26T23:06:15](#ts-20261026-230615).
 - Open: seed of the original random source; what fills the list of 0x1a0f6c; player's turn and camera during the build, 0x22c500; per-update timing of the van switch; builds without a final prop.
 
 <a id="ts-20261014-235539"></a>
@@ -174,3 +175,16 @@ Unknowns:
 - The node `+0xa0` / `+0xac` of a turned build-it were not read in the oracle (a gdb read of the node in the save state in front of the broken table of mission 1-2 would pin the box; only the code was read).
 - Whether the matrix scale matters: the placement has no scale parameter, so the port uses the rotation only.
 - Why the carry measurement of 0x221570 gave a translation-only result; the 0x23e130 call sites of the other classes were not checked for their last argument (56 call sites).
+
+<a id="ts-20261026-230615"></a>
+
+## 2026-10-26T23:06:15+01:00 — Build-its of class leprops/leprop_buildit (kind 21)
+
+Source: the kind census of [object-kinds.md §2026-10-18T21:36:13](object-kinds.md#ts-20261018-213613) (kind 21 registered at 0x15d2d4 holds `leprops/leprop_buildit` 27 and `props/prop_buildit` 79 instances of the main levels), and the class files printed with a throwaway program over `parseLevel` (20261026-crane-B, no emulator run).
+
+**Finding.** The object loader 0x1a4130 creates every object through the descriptor of its kind byte, so the 27 `leprops/leprop_buildit` objects run the same build-it code as the `props/prop_buildit` ones. `leprops/leprop_buildit.blvl` carries the same parameters (`BuilditFinalProp`, `TriggerObject`, `ATTR_SFXBitDone` 0x243, `ATTR_SFXBuilt` 0x244, `StudValue` 25, `UseBound`, `UseExcludeBound`, `ObjectType` 21) with the default mesh `Prop_Mech_BuilditDefault_B` and `Hint_CanUse` 0 instead of 5. `BuilditSet::load` selected the class name `props/prop_buildit`, so the three `leprops/leprop_buildit` objects of lvl_01 were never loaded: `1-3_Crane_bits` (final prop `1-3_crane_built`, trigger `1-3_Crane_Build_it_done`), `1-3_Push_Cart_bits` (final prop `1-3_Push_cart`, trigger `1-3_DisplayPushHint`) and a third. That is why holding A next to the crane bits built nothing ([props-rocking.md §2026-10-26T13:39:27](props-rocking.md#ts-20261026-133927)).
+
+**Port.** `BuilditSet::load` takes the objects whose `objectKind` is 21 (`kBuilditKind`); lvl_01 has 18 build-its (15 + 3). CTests `buildit-real-data`, `stud-callers-real-data`, `game-crane-1-3`.
+
+Unknowns:
+- `Hint_CanUse` and the class flags `UseBound` / `UseExcludeBound` of `1-3_Push_Cart_bits` (`1-3_Exclude_bound_01`) are not used by the port (LEVOBJ-42).

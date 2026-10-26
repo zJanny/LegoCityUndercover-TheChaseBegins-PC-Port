@@ -302,6 +302,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     buildits.load(archive, level, classOf);
     std::cout << "build-its: " << buildits.objects().size() << '\n';
     propParts.loadBuildits(scene, archive, buildits, placedObjects, placedSceneIndex);
+    loadPushables(archive);
     loadSuperBuildits();
     loadFastTravel();
     effects.load(scene, archive, classOf, particles.random(), studDrops.planes());

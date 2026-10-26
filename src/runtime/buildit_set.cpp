@@ -46,10 +46,10 @@ void BuilditSet::load(assets::FuseArchive& archive, const assets::Level& level, 
     const std::uint32_t finalProp = assets::nameHash("BuilditFinalProp"), triggerObject = assets::nameHash("TriggerObject"),
                         studValue = assets::nameHash("StudValue");
     for (const assets::LevelObject& object : level.objects) {
-        if (object.className != kBuilditClass) continue;
         const assets::Level* cls = classOf(object.className);
+        if (!cls || assets::objectKind(object, *cls) != kBuilditKind) continue;
         const std::optional<assets::Placement> placed = assets::objectStart(level, object.instance);
-        if (!cls || !placed) continue;
+        if (!placed) continue;
         BuilditObject build;
         build.instance = lower(object.instance);
         build.finalProp = referenceName(object, *cls, finalProp, names);

@@ -1,7 +1,8 @@
 #pragma once
-// The build-its of a level (class props/prop_buildit): their use zone, parameters and state, and what a finished build does to the
+// The build-its of a level (object kind 21: classes props/prop_buildit and leprops/leprop_buildit): their use zone, parameters and state, and what a finished build does to the
 // other objects. Rules and measurements: docs/re/buildit.md. No SDL dependency.
 #include "assets/assets.hpp"
+#include "assets/object_classes.hpp"
 #include "assets/object_collision.hpp"
 #include "runtime/buildit.hpp"
 #include "runtime/buildit_wobble.hpp"
@@ -19,7 +20,7 @@ namespace chase::runtime {
 // STAND-IN LEVOBJ-S74: the sound stop key of a build-it (the u16 at entity +0x14 of the original) is this plus the object index.
 constexpr std::uint16_t kBuilditSoundOwnerBase = 0x4000;
 
-constexpr const char* kBuilditClass = "props/prop_buildit";
+constexpr std::uint8_t kBuilditKind = 21;
 
 // Use zone (record +0x28): the box of the object's node bounds in the node's own frame, every half extent widened by 1.0 (*0x56d40c).
 // The query (0x221570 -> 0x22f650) turns the player into that frame with the node's world matrix (0x2536c0, flag bit 5 clear), so the box is

@@ -56,6 +56,7 @@ target_sources(chase_runtime PRIVATE src/runtime/prop_wobbly_destructible.cpp sr
 target_sources(chase_runtime PRIVATE src/runtime/prop_rocking.cpp src/runtime/platform_wait.cpp src/runtime/game_generator_natives_glue.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/node_attach.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/script_particles.cpp src/runtime/game_mission_end_1_3_glue.cpp)
+target_sources(chase_runtime PRIVATE src/runtime/pushable.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/pedestrian_manager.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/pedestrian_blocked.cpp src/runtime/room_layers.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/pedestrian_system.cpp)
@@ -133,6 +134,7 @@ if(EPOXY_FOUND)
     target_sources(chase-game PRIVATE src/game_debris_super.cpp)
     target_sources(chase-game PRIVATE src/game_attack.cpp src/game_screen_fade.cpp src/game_screen_shake.cpp src/game_save.cpp)
     target_sources(chase-game PRIVATE src/game_prop_rocking.cpp src/runtime/game_rocking_follow_glue.cpp)
+    target_sources(chase-game PRIVATE src/runtime/game_push_cart_glue.cpp)
     target_link_libraries(chase-game PRIVATE chase_render chase_runtime chase_input chase_audio chase_frontend_movie chase_save_progress chase_save_tables)
     target_compile_options(chase-game PRIVATE -Wall -Wextra -Wpedantic)
   endif()
@@ -1593,6 +1595,31 @@ if(BUILD_TESTING)
       --script "0 0 5;0 0 1 Y;0 0 15;0 0 1 Y;0 0 60;0 0 1 A;0 0 60;at 952.6 16.77 1132.6 90;0 0 5;0 0 1 A;0 0 80;0 0 150 A;0 0 60;at 949.3 16.77 1130.9 270;0 0 5;0 0 1 A;0 0 760")
     set_tests_properties(game-generator-1-3 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
       PASS_REGULAR_EXPRESSION "character 1-3_ai_girder_guy: attached to 1-3_crane_girder at update 0\n.*carry 1-3_generator_parts_carry: placed into 1-3_baseplate at update [0-9]+.*buildit 1-3_pull_switch_bits: stud drop mode.*switch 1-3_generator_pull_switch: used at update [0-9]+\n.*switch 1-3_generator_pull_switch: player state 76 at update [0-9]+\n.*switch 1-3_generator_pull_switch: state 1 at update [0-9]+\n.*switch 1-3_generator_pull_switch: player state 1 at update [0-9]+\n.*switch 1-3_generator_pull_switch: state 3 at update [0-9]+\n.*script 1-3_Generator_Script started at update [0-9]+\n.*script 1-3_Crow_out started at update [0-9]+\n.*particles 264 at 1-3_crane_girder started at update [0-9]+\n.*prop 1-3_crane_girder: rocking off at update [0-9]+\n.*save: request [0-9]+ written.*\n.*script 1-3_Generator_Script ended at update [0-9]+")
+    # Mission 1-3 push cart (SCRIPT-381, 20261026-crane-B): from the start of 1-3_Start_MowerMan_rescue, which enables 1-3_Cart_crate, five hits
+    # break the crate, its TriggerObject enables 1-3_Push_Cart_bits (leprops/leprop_buildit, kind 21), A builds it into the push cart 1-3_Push_cart
+    # (kind 71), whose back handle (handle02) takes the player walking into the cart on the track behind it (0x2aff3c, states 84 and 85);
+    # the push moves the cart to 1-3_Push_cart_to and its TriggerObject starts 1-3_Push_Done. The stick 112 -100 points along the cart's z
+    # axis with the camera yaw the rescue scene leaves (the port's own run, 20261026-crane-B); the update numbers are the port's own.
+    add_test(NAME game-push-cart-1-3 COMMAND chase-game
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
+      --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes --save-out "${CMAKE_BINARY_DIR}/game-push-cart-1-3.dat"
+      --start "1022.0 32.5 1026.4" --facing -20 --call-script 1-3_Start_MowerMan_rescue
+      --script "0 0 700;at 1024.5 32.3 1026.6 50;0 0 5;0 0 1 Y;0 0 15;0 0 1 Y;0 0 15;0 0 1 Y;0 0 15;0 0 1 Y;0 0 15;0 0 1 Y;0 0 15;0 0 1 Y;0 0 60;0 0 200 A;0 0 30;at 1022.28 33.6 1026.6 -20;0 0 5;112 -100 110;0 0 10")
+    set_tests_properties(game-push-cart-1-3 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
+      PASS_REGULAR_EXPRESSION "prop 1-3_cart_crate: destroyed at update [0-9]+\n.*buildit 1-3_push_cart_bits: stud drop mode.*script 1-3_DisplayPushHint started at update [0-9]+\n.*pushable 1-3_push_cart: grabbed at 1-3_push_cart.handle02, player state 84 at update [0-9]+\n.*pushable 1-3_push_cart: player state 85 at update [0-9]+\n.*pushable 1-3_push_cart: state 1 at update [0-9]+\n.*pushable 1-3_push_cart: state 2 at update [0-9]+\n.*script 1-3_Push_Done started at update [0-9]+")
+    # Mission 1-3 end (SCRIPT-380, 20261026-crane-B): 1-3_Push_Done (called: the push itself is game-push-cart-1-3) enables 1-3_Crane_bits
+    # (leprops/leprop_buildit), A in its zone builds it, 1-3_Crane_Build_it_done switches the crane switch on, A on 1-3_Crane_switch (inside the
+    # port's translation-only lever zone, centre (0, 1, 1.4) from the switch at (1003.68, 30.783, 1082.09), level data) fires
+    # 1-3_Start_Rescue_Lawnmower_man, which ends the mission and spawns 1-4_MissionStart.
+    add_test(NAME game-crane-1-3 COMMAND chase-game
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
+      --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes --save-out "${CMAKE_BINARY_DIR}/game-crane-1-3.dat"
+      --start "1002.55 30.8 1079.5" --facing 180 --call-script 1-3_Push_Done
+      --script "0 0 130;0 0 120 A;0 0 100;at 1003.68 30.8 1083.4 180;0 0 5;0 0 1 A;0 0 850")
+    set_tests_properties(game-crane-1-3 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
+      PASS_REGULAR_EXPRESSION "script 1-3_Push_Done ended at update [0-9]+\n.*buildit 1-3_crane_bits: stud drop mode.*script 1-3_Crane_Build_it_done started at update [0-9]+\n.*switch 1-3_crane_switch: used at update [0-9]+\n.*switch 1-3_crane_switch: state 3 at update [0-9]+\n.*script 1-3_Start_Rescue_Lawnmower_man started at update [0-9]+\n.*script 1-4_MissionStart started at update [0-9]+")
     # Mission 1-2, the dog cage (SCRIPT-111): 1-2_Pringles_Cage_Locked enables the use spot 1-2_Dog_Cage_Use_Spot, A on the user's trigger position
     # (oracle save state at the dog cage trigger of mission 1-2) fires 1-2_Cage_Key_Target_Script through the spot's TriggerObject. The use marker (SCRIPT-292) is shown
     # while the spot is usable (seen on the ground in the oracle in that state) and goes after the use, when 0x236624 switched the zone off.
@@ -2072,7 +2099,7 @@ foreach(test_name ${chase_all_tests})
   set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT "XDG_DATA_HOME=${CMAKE_BINARY_DIR}/test-xdg/${test_name}")
 endforeach()
 
-foreach(slow_test game-key-pickup-1-3 game-parts-crate-1-3 game-generator-1-3 game-key-use-1-3 game-debris-super-pickup game-cutscene-dog-end game-super-buildit-build game-fast-travel-exit game-super-brick-roof game-doorlock-detective-1-2 game-cage-release-1-2 game-mission-1-1 game-mission-1-1-start game-vehicle-drive game-vehicle-room game-pedestrian-rooms game-vehicle-hit game-vehicle-smash game-vehicle-break game-director-hold game-director-release game-van-escort game-pause-menu waypoint-marker-shot audio-real-data)
+foreach(slow_test game-key-pickup-1-3 game-parts-crate-1-3 game-generator-1-3 game-push-cart-1-3 game-crane-1-3 game-key-use-1-3 game-debris-super-pickup game-cutscene-dog-end game-super-buildit-build game-fast-travel-exit game-super-brick-roof game-doorlock-detective-1-2 game-cage-release-1-2 game-mission-1-1 game-mission-1-1-start game-vehicle-drive game-vehicle-room game-pedestrian-rooms game-vehicle-hit game-vehicle-smash game-vehicle-break game-director-hold game-director-release game-van-escort game-pause-menu waypoint-marker-shot audio-real-data)
   if(TEST ${slow_test})
     set_property(TEST ${slow_test} APPEND PROPERTY LABELS slow)
   endif()
@@ -2101,7 +2128,7 @@ foreach(game_data_test
   game-script-run game-script-walk game-script-camera game-script-ledge game-vehicle-drive game-van-escort game-cutscene-glass-hidden
   game-cutscene-dog-prop game-super-brick-freeplay game-save-new-game-clean game-save-new-game game-save-reload game-super-brick-roof
   game-cutscene-dog-end game-vehicle-room game-pedestrian-rooms game-vehicle-hit game-vehicle-break game-vehicle-smash game-debris-super-pickup
-  game-mission-1-1 game-detective-1-2 game-key-pickup-1-3 game-parts-crate-1-3 game-generator-1-3 game-garage-key-1-3 game-key-use-1-3 game-use-spot-1-2 game-use-marker-detective-1-2 game-player-script-animation game-super-buildit-prompt
+  game-mission-1-1 game-detective-1-2 game-key-pickup-1-3 game-parts-crate-1-3 game-generator-1-3 game-push-cart-1-3 game-crane-1-3 game-garage-key-1-3 game-key-use-1-3 game-use-spot-1-2 game-use-marker-detective-1-2 game-player-script-animation game-super-buildit-prompt
   game-super-buildit-build game-fast-travel-exit game-cage-release-1-2 game-doorlock-detective-1-2 game-mission-1-2-start-timing game-mission-1-1-start game-script-dialog
   game-same-level-entry game-scene-change-exit game-scene-change-entry game-director-hold game-director-release game-script-zipline
   game-script-attack-table game-script-wobbly-table game-script-bounce game-script-bounce-grab game-script-acrobat-poles game-script-zipline-use-a
@@ -2147,3 +2174,13 @@ add_executable(script-particles-test tests/script_particles_test.cpp)
 target_link_libraries(script-particles-test PRIVATE chase_runtime)
 target_compile_options(script-particles-test PRIVATE -Wall -Wextra -Wpedantic)
 add_test(NAME script-particles COMMAND script-particles-test)
+
+add_executable(pushable-test tests/pushable_test.cpp)
+target_link_libraries(pushable-test PRIVATE chase_runtime)
+target_compile_options(pushable-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME pushable COMMAND pushable-test)
+add_executable(pushable-real-test tests/pushable_real_test.cpp)
+target_link_libraries(pushable-real-test PRIVATE chase_runtime chase_assets)
+target_compile_options(pushable-real-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME pushable-real-data COMMAND pushable-real-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
+set_tests_properties(pushable-real-data PROPERTIES SKIP_RETURN_CODE 77 LABELS needs-game-data)

@@ -343,6 +343,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         if (detective.modeActive() && detectiveRoles) player->motion.runRole = detectiveRoles->clip(runtime::kAnimationRun);
         pole.cameraYaw = follow->yaw();
         pole.usePressed = !controlTaken && pad.slot(kSlotConfirmButton).press > 0;
+        pushActionHeld = !controlTaken && pad.slot(kSlotConfirmButton).value > 0.0f;
         const runtime::BoardingStep boardingStep = stepBoarding(dt);
         const runtime::Posture postureBeforeStep = player->vertical.posture;
         const float fallSpeedBeforeStep = player->vertical.fallSpeed;
@@ -391,6 +392,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         const float playerPosition[3] = {player->motion.x, player->vertical.y, player->motion.z};
         updateDoors(playerPosition, emit);
         updateSwitches(dt, emit);
+        updatePushables(emit);
     });
     order.at(runtime::UpdatePhase::AfterCharactersStandIn, [&] {
         if (!player) return;

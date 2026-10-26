@@ -55,6 +55,7 @@
 #include "runtime/zipline.hpp"
 #include "runtime/brick_grab.hpp"
 #include "runtime/pole.hpp"
+#include "runtime/pushable.hpp"
 #include "runtime/ladder.hpp"
 #include "runtime/acrobat_pole.hpp"
 #include "runtime/prop_bouncer.hpp"
@@ -202,6 +203,9 @@ private:
     game_player::PlayerAnimation acrobatPoleMovePlayer(const chase::runtime::StickIntent& intent, float dt);
     game_player::PlayerAnimation movePlayerWithPole(const chase::runtime::StickIntent& intent, bool jumpPressed, float dt);
     game_player::PlayerAnimation movePlayerWithLadder(const chase::runtime::StickIntent& intent, bool jumpPressed, float dt);
+    game_player::PlayerAnimation movePlayerWithPush(const chase::runtime::StickIntent& intent, bool jumpPressed, float dt);
+    void loadPushables(chase::assets::FuseArchive& archive);
+    void updatePushables(const std::function<void(const chase::runtime::SoundCall&)>& emit);
     void loadAttack(chase::assets::FuseArchive& archive, const std::vector<chase::assets::ObjectCollision>& placed);
     game_player::PlayerAnimation attackMovePlayer(const chase::runtime::StickIntent& intent, bool jumpPressed, bool usePressed, bool attackHeld,
                                                   bool attackAllowed, float dt);
@@ -363,6 +367,10 @@ private:
     std::vector<chase::runtime::BulletBox> vehicleBoxes;
     std::vector<game_doors::DoorObject> doors;
     chase::runtime::BuilditSet buildits;
+    chase::runtime::PushableSet pushables;
+    chase::runtime::PushGrip pushGrip;
+    bool pushActionHeld = false;
+    std::vector<std::optional<std::size_t>> pushableScene;
     chase::runtime::BuilditPlayer builditPlayer;
     chase::runtime::SuperBuilditSet superBuildits;
     game_super_buildit::State superBuild;

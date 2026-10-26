@@ -1,5 +1,5 @@
 #pragma once
-// Build-its (object type 0x15, class props/prop_buildit): the state machine of the class record at entity+0x7c. Update 0x16cc78 runs the
+// Build-its (object type 0x15, classes props/prop_buildit and leprops/leprop_buildit): the state machine of the class record at entity+0x7c. Update 0x16cc78 runs the
 // check 0x1d428c while the state equals the target (0x2424d0) and then the state change 0x1aad90; the message 3 of the use zone is
 // handled in 0x176160. Rules and measurements: docs/re/buildit.md. No SDL dependency.
 #include <cstddef>
