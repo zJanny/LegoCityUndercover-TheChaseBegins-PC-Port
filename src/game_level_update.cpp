@@ -194,6 +194,7 @@ void LevelSession::updateCarry(const float playerPosition[3]) {
 }
 
 void LevelSession::updateLevelCharacters(float dt) {
+    levelCharacters->followAi(levelScripts.ai());
     levelCharacters->update(scene, dt, [this](const chase::assets::CharacterObject& character) {
         return !objectState.isDisabled(character.placement.instance) && roomShown(runtime::roomNumber(character.placement.room));
     });

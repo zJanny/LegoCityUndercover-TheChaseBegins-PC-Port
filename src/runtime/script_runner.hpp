@@ -17,6 +17,7 @@
 #include "runtime/natives_party.hpp"
 #include "runtime/platform_wait.hpp"
 #include "runtime/prop_rocking.hpp"
+#include "runtime/script_particles.hpp"
 #include "runtime/objectives.hpp"
 #include "runtime/sub_objectives.hpp"
 #include "runtime/vehicle.hpp"
@@ -252,6 +253,8 @@ public:
     const PropRockingSet& propRocking() const { return propRocking_; }
     PlatformSet& platforms() { return platforms_; }
     const PlatformSet& platforms() const { return platforms_; }
+    // PlayParticlesGO starts since the last call, in order (script_particles.hpp, game_mission_end_1_3_glue.cpp); the host starts the emitters.
+    std::vector<ScriptParticleRequest> takeParticleRequests();
     // Who plays the animation natives' requests; null records them only.
     void setAnimationDriver(AnimationDriver* driver) { animationDriver_ = driver; }
     std::vector<std::string> updateWaypoints(float dt, const float player[3], const WaypointVehicle* vehicle);
@@ -299,6 +302,7 @@ private:
     void setPropRockingNative(const assets::ScriptCall& call);
     Result waitForPlatformNative(const assets::ScriptCall& call);
     void platformMessage(const std::string& lowerInstance, std::uint8_t message);
+    void playParticlesGoNative(const assets::ScriptCall& call);
     void destroyNative(const std::string& lowerInstance);
     void fireAiMoveEvents();
     float read(const std::string& token) const;
@@ -339,6 +343,7 @@ private:
     ObjectNativeState::ClassMessage classMessage_;
     EffectNativeState effectNatives_;
     std::vector<PartyRequest> partyRequests_;
+    std::vector<ScriptParticleRequest> particleRequests_;
     std::vector<std::string> roomRequests_;
     std::set<std::string> knownRooms_;
     std::optional<std::set<std::string>> sceneRooms_;

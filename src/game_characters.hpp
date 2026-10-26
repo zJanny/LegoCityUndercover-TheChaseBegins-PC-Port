@@ -5,6 +5,7 @@
 #include "assets/assets.hpp"
 #include "render/character.hpp"
 #include "render/scene.hpp"
+#include "runtime/ai.hpp"
 #include "runtime/animation_slots.hpp"
 #include "runtime/game_random.hpp"
 #include "runtime/natives_animation.hpp"
@@ -50,6 +51,9 @@ public:
     // STAND-IN SCRIPT-S237: the controller part of 0x1d9e6c (heading ctrl+8/+10, fall reset when 0x21aae0 is true) is not applied; the kind
     // byte of level characters was not read and nothing in the port reads a character's heading.
     bool place(const std::string& lowerCaseInstance, const assets::Matrix& world);
+    // A character the AI moved in its last update (AIMove, AISuperJump; runtime/ai.hpp) stands at its AI position, turned to its AI heading when one is
+    // set, as the player follows it in game_player::applyAiPosition.
+    void followAi(const runtime::AiCore& ai);
 
     std::size_t animated() const { return entries_.size(); }
     std::size_t started() const;

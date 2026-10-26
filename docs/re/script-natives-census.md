@@ -129,7 +129,7 @@ This file has no dated entries: the table is edited in place. When a native is r
 | ?! | 0x18a7e4 | 3 | 16 / 7 / 0 / 0 | 7 | done |  |  |
 | WarningDialogBox | 0x2700d4 | 1 | 16 / 7 / 0 / 0 | 7 | done |  |  |
 | KillObject | 0x1a2fe4 | 1 | 15 / 0 / 0 / 0 | 2 | stand-in | 26 | stand-in: same handler as DestroyProp (SCRIPT-S245, SCRIPT-S246, SCRIPT-S264, SCRIPT-S265, SCRIPT-306, SCRIPT-321..323): [script-natives-world.md §2026-10-19T10:02:26](script-natives-world.md#ts-20261019-100226), [script-natives-world-death.md §2026-10-19T13:21:05](script-natives-world-death.md#ts-20261019-132105) |
-| PlayParticlesGO | 0x27e8b4 | 6 | 15 / 2 / 0 / 4 | 2 | C | 38 |  |
+| PlayParticlesGO | 0x27e8b4 | 6 | 15 / 2 / 0 / 4 | 2 | stand-in | 38 | handled; node position from the object position source (SCRIPT-S300): [props-rocking.md §2026-10-26T13:39:27](props-rocking.md#ts-20261026-133927) |
 | RideableClearPath | 0x27bdcc | 1 | 14 / 0 / 0 / 0 | 1 | C | 37 |  |
 | VehicleSetTopSpeed | 0x2860d4 | 2 | 14 / 2 / 0 / 0 | 6 | done | 36 | [vehicles-waypoints.md §2026-10-15T11:35](vehicles-waypoints.md#ts-20261015-113500) |
 | SetDCamEndWait | 0x1da690 | 1 | 13 / 0 / 0 / 0 | 3 | done | 28 | handled |

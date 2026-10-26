@@ -95,6 +95,18 @@ bool LevelCharacters::place(const std::string& instance, const Matrix& world) {
     return true;
 }
 
+void LevelCharacters::followAi(const runtime::AiCore& ai) {
+    for (const auto& [instance, index] : byInstance_) {
+        if (!ai.movedLastUpdate(instance)) continue;
+        const runtime::AiCharacter* character = ai.character(instance);
+        if (!character || !character->position) continue;
+        assets::Placement moved = characters_[entries_[index].character].placement;
+        std::copy_n(character->position->data(), 3, moved.position);
+        if (character->heading) moved.orientation[0] = moved.orientation[2] = 0, moved.orientation[1] = float(*character->heading) * 360.0f / 65536.0f;
+        entries_[index].world = assets::placementMatrix(moved);
+    }
+}
+
 void LevelCharacters::stop(const std::string& instance) {
     if (Entry* entry = find(instance)) entry->slots.stop(clock_);
 }

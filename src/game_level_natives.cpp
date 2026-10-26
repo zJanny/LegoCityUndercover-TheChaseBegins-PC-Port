@@ -24,6 +24,10 @@ void LevelSession::applyScriptNatives() {
         if (runtime::partyOutcome(game_player::kPlayerCharacterId, request) == runtime::PartyOutcome::NotPorted)
             std::cout << "party character " << request.character << " for Player" << request.slot + 1 << " at update " << updatesForLog
                       << ": swap not ported (stand-in SCRIPT-S234)\n";
+    for (const runtime::ScriptParticleRequest& request : levelScripts.takeParticleRequests()) {
+        const bool started = request.definition >= 0 && particles.system().start(unsigned(request.definition), {request.position, std::nullopt, 0}) != 0;
+        std::cout << "particles " << request.definition << " at " << request.object << (started ? " started" : " refused") << " at update " << updatesForLog << '\n';
+    }
     scriptedRooms.clear();
     for (const std::string& room : levelScripts.takeRoomRequests()) scriptedRooms.insert(runtime::roomNumber(room));
     for (const std::size_t vehicle : pendingVehicleBreaks)

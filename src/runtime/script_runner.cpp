@@ -27,7 +27,7 @@ enum class Word {
     EnableObject, EnableCollision, TriggerObject, EnableTrigger, EnableBound, GetGameComplete, IsLevelUnlocked, IsRedBrickExtraActive,
     WarningDialogBox, InformationBox, FadeScreen, PositionObject, PositionPlayer, SceneChange,
     KillScript, ObjectNative, VehicleNative, ProgressNative, MusicNative, SoundNative, TextNative, ObjectiveNative, AiNative, AnimationNative, CutsceneNative, EffectNative, WorldNative, PartyNative,
-    SetPropRocking, WaitForPlatform, StartDCam, StartDCamTrack, DCamActive, WaitForDCam, EndDCam, SnapCamera, ShakeScreen, Set3DFocusObject, SetDCamStartWait, SetDCamEndWait, CameraFollow
+    SetPropRocking, WaitForPlatform, PlayParticlesGO, StartDCam, StartDCamTrack, DCamActive, WaitForDCam, EndDCam, SnapCamera, ShakeScreen, Set3DFocusObject, SetDCamStartWait, SetDCamEndWait, CameraFollow
 };
 
 struct ScriptFunction {
@@ -63,6 +63,7 @@ constexpr ScriptFunction kScriptFunctions[] = {
     {"killscript", Word::KillScript, false},
     {"setproprocking", Word::SetPropRocking, false},
     {"waitforplatform", Word::WaitForPlatform, true},
+    {"playparticlesgo", Word::PlayParticlesGO, true},
     {"startdcam", Word::StartDCam, false},
     {"startdcamtrack", Word::StartDCamTrack, true},
     {"dcamactive", Word::DCamActive, true},
@@ -467,6 +468,7 @@ ScriptRunner::Result ScriptRunner::native(ScriptThread& thread, const ScriptCall
         break;
     case Word::SetPropRocking: setPropRockingNative(call); break;
     case Word::WaitForPlatform: return waitForPlatformNative(call);
+    case Word::PlayParticlesGO: playParticlesGoNative(call); break;
     case Word::ObjectNative:
         if (const auto kind = objectNativeKind(lower(call.function)); kind && !args.empty()) {
             if (*kind == ObjectNativeKind::DestroyProp || *kind == ObjectNativeKind::KillObject) {

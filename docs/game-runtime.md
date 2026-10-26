@@ -121,6 +121,8 @@ What is not like the original yet:
 - Other characters do not block the character. Parked vehicles do: the character stops at them.
 - The dog of mission 1-2, the cats on the roofs and the crow of mission 1-3 are shown standing still where the level puts them. When you free the dog, it jumps out of its cage to Chase as in the original. The pigs, the sharks and the eight line-up characters of the police station are not shown yet.
 - Props that the level marks as rocking sway gently, as in the original: the crane girder of mission 1-3 tilts by up to 2 degrees one way and 2.5 degrees the other. How fast it sways is a guess for now. A script command stops or starts it; the program prints `prop NAME: rocking off at update N` (or `on`). Moving platforms are not shown moving yet, but a script that waits for one waits as long as the platform would travel at its speed (the crane platform of the generator scene, about 3.4 seconds, as in the original).
+- Level scripts can start particle effects at an object (the smoke when the crane girder of mission 1-3 drops); the program prints `particles N at NAME started at update U` (or `refused` when the effect cannot start). The effect starts where the level placed the object, also when that object should have moved.
+- Characters of the level that a script makes walk or jump move on screen, for example the girder worker of mission 1-3, who jumps down after the crane scene.
 - Walking slowly off a ledge looks different from the original, which first plays a short step.
 - Jumping onto something higher, or under a ceiling, may not match the original.
 - The animations do not blend. Their speed is an estimate.
