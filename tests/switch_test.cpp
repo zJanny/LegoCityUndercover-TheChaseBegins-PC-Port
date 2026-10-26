@@ -126,8 +126,9 @@ World makeWorld() {
 // key_interact (clip 185, models/char_minifig/class_generic): 72 frames at 30 per second, event track 0x98d31b7e up at 0.3195 of the clip; read by
 // 20261026-mission13-A on 2026-10-26 through chase_assets (CTest lever-use-real-data pins the same values).
 const LeverClipTiming kKeyInteractClip{2.4f, 0.319495f * 2.4f};
-// RPC 20261025-garage-A-1 (recorded from a save state, 2026-10-25, stepped): the key switch's use bit is set after update 31 and the player's state
-// 76 ends at update 81, counted from the update that sees the A press. Its step of 0.033 is inferred from these counts, not recorded (SCRIPT-369).
+// RPC 20261026-mission13-A-1 (recorded from save states at the key switch of mission 1-3 after placing the key and at the generator pull switch, New 3DS,
+// OpenGL, dt 0.033 0.033, by the emulator servant on 2026-10-26; RPC 20261025-garage-A-1 gave the same counts at dt 0.0333333): the key switch's use bit
+// (record +0x24 bit 0, hook 0x2ccc74) is set in update 31 and the player's state 76 ends in update 81, counted from the update of the A press (u0).
 constexpr unsigned kOracleUseBitUpdate = 31;
 // models/prop_switchpull/use.bfnanm: 24 frames at 15 per second (read by 20261026-mission13-A, 2026-10-26; CTest lever-use-real-data).
 const chase::runtime::AnimationClipInfo kPullUseAnimation{0, 24, 15, false};
@@ -292,6 +293,24 @@ void useAnimationTimesStateOne() {
     require(run.stateOf("pull") == SwitchState::Held, "ResetTime -1: state 3");
 }
 
+void pullSwitchAgainstOracle() {
+    Run run;
+    const std::size_t pull = *run.switches.find("pull");
+    run.switches.setLeverUse(pull, LeverClipTiming{24.0f / 15.0f, 0.00284608f * 23.0f / 15.0f}, std::nullopt);
+    require(run.use(70.5f), "A at the pull switch takes the press");
+    for (unsigned u = 1; u <= 58; ++u) {
+        run.step();
+        const SwitchObject& sw = run.switches.objects()[pull];
+        if (u < 8) require(!sw.record.useRequested, "no use bit before update 8");
+        if (u == 8) require(sw.record.useRequested && sw.record.state == SwitchState::Off, "the hook sets the use bit in update 8 (A-1: trap 0x2ccc74 +0x10 = 1.0, record +0x24 = 5 read before 9)");
+        if (u == 9) require(sw.record.state == SwitchState::Used, "state 1 in update 9 (A-1: record +2 / +4 = 1 read before update 10)");
+        if (u == 56) require(run.switches.playerUsing(), "the player is in state 76 until update 56");
+        if (u == 57) require(!run.switches.playerUsing(), "state 1 of the player is entered in update 57 (A-1: trap 0x21941c r1 0x118, state read as 1 before 58)");
+        if (u == 57) require(sw.record.state == SwitchState::Used, "the switch is still in state 1 in update 57");
+        if (u == 58) require(sw.record.state == SwitchState::Held, "state 3 in update 58, 49 updates after state 1 (A-1: record +2 / +4 = 3 read before update 59)");
+    }
+}
+
 void toggleUseableWritesTheZone() {
     Run run;
     const std::size_t key = *run.switches.find("key");
@@ -345,6 +364,7 @@ int main() {
         joinFiresWhenBothAreOn();
         alwaysResetIsTimed();
         useAnimationTimesStateOne();
+        pullSwitchAgainstOracle();
         toggleUseableWritesTheZone();
         startOnRefusesTheUse();
         strongNeedsAbilitySeven();

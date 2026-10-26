@@ -1541,10 +1541,11 @@ if(BUILD_TESTING)
     # Mission 1-3, the key switch (SCRIPT-362, 20261025-garage-A): 1-3_Garage_Key_Base_Script (what placing the key fires) disables the key and the keyhole
     # and enables 1-3_Garage_Key_Switch (props/prop_switchkey_vertical, kind 58). A in its UseBound (0x17f6f4 message 3) starts the use; the switch base
     # (0x21435c, 0x22c6d0) goes to state 1, then with TriggerBeforeAnim to 2, fires 1-3_Garage_Key_used through the reference step and stays in state 3.
-    # The script's WaitForCurrentAnim ends only once the garage door's "open" clip has played. A at update 5; the switch record reaches state 1 at u32 and
-    # 3 at u33 after the press, as recorded from a save state by RPC 20261025-garage-A-1 (2026-10-25, stepped); the player is in state 20 (USE LERP) from
-    # the press, in state 76 from u8 and in state 1 from u81, as there. The end position is the use point of the node char_minifig_use (0x207be4) of
-    # prop_keyinhole, read by 20261026-mission13-A (2026-10-26); the scripted runs step at dt 0.033.
+    # The script's WaitForCurrentAnim ends only once the garage door's "open" clip has played. A at update 5 (u0); the switch record reaches state 1 at u32 and
+    # 3 at u33, the player enters state 20 at u0, state 76 at u8 and state 1 at u81, as recorded from save states at the key switch of mission 1-3 after
+    # placing the key by RPC 20261026-mission13-A-1 (2026-10-26, New 3DS, OpenGL, dt 0.033 0.033; the traps of 0x26b800, 0x2ccc74 and 0x1abbb0, the
+    # state reads show the same one update later) and, with the same counts, RPC 20261025-garage-A-1 (dt 0.0333333). The end position is the use point
+    # (985.39, 1141.25) of the node char_minifig_use (0x207be4) of prop_keyinhole, the lerp target of A-1; the scripted runs step at dt 0.033.
     add_test(NAME game-garage-key-1-3 COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
@@ -1580,7 +1581,8 @@ if(BUILD_TESTING)
     # (949.252, 16.772, 1129.45), level data) uses it, its TriggerObject starts 1-3_Generator_Script, which triggers the crane platform, waits for it,
     # stops the girder's rocking, starts particle definition 264 at 1-3_Crane_Girder (PlayParticlesGO), makes the girder guy jump down and ends with
     # QuickSave. The port's own update numbers (recorded 20261026-mission13-B); the platform wait of 103 updates is pinned in prop-rocking-real-data.
-    # The pull takes the player's USE LERP and state 76 and the switch's 1.6 s use animation (20261026-mission13-A), so the run is 60 updates longer.
+    # The pull takes the player's USE LERP and state 76 and the switch's 1.6 s use animation (20261026-mission13-A), so the run is 60 updates longer; the
+    # order of the pull's lines (state 76, switch state 1, player state 1, switch state 3) is the oracle's, its counts are pinned in the switch test.
     add_test(NAME game-generator-1-3 COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
@@ -1588,7 +1590,7 @@ if(BUILD_TESTING)
       --start "993.9 16.56 1135.5" --facing 180
       --script "0 0 5;0 0 1 Y;0 0 15;0 0 1 Y;0 0 60;0 0 1 A;0 0 60;at 952.6 16.77 1132.6 90;0 0 5;0 0 1 A;0 0 80;0 0 150 A;0 0 60;at 949.3 16.77 1130.9 270;0 0 5;0 0 1 A;0 0 760")
     set_tests_properties(game-generator-1-3 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
-      PASS_REGULAR_EXPRESSION "carry 1-3_generator_parts_carry: placed into 1-3_baseplate at update [0-9]+.*buildit 1-3_pull_switch_bits: stud drop mode.*switch 1-3_generator_pull_switch: used at update [0-9]+\n.*switch 1-3_generator_pull_switch: state 3 at update [0-9]+\n.*script 1-3_Generator_Script started at update [0-9]+\n.*script 1-3_Crow_out started at update [0-9]+\n.*particles 264 at 1-3_crane_girder started at update [0-9]+\n.*prop 1-3_crane_girder: rocking off at update [0-9]+\n.*save: request [0-9]+ written.*\n.*script 1-3_Generator_Script ended at update [0-9]+")
+      PASS_REGULAR_EXPRESSION "carry 1-3_generator_parts_carry: placed into 1-3_baseplate at update [0-9]+.*buildit 1-3_pull_switch_bits: stud drop mode.*switch 1-3_generator_pull_switch: used at update [0-9]+\n.*switch 1-3_generator_pull_switch: player state 76 at update [0-9]+\n.*switch 1-3_generator_pull_switch: state 1 at update [0-9]+\n.*switch 1-3_generator_pull_switch: player state 1 at update [0-9]+\n.*switch 1-3_generator_pull_switch: state 3 at update [0-9]+\n.*script 1-3_Generator_Script started at update [0-9]+\n.*script 1-3_Crow_out started at update [0-9]+\n.*particles 264 at 1-3_crane_girder started at update [0-9]+\n.*prop 1-3_crane_girder: rocking off at update [0-9]+\n.*save: request [0-9]+ written.*\n.*script 1-3_Generator_Script ended at update [0-9]+")
     # Mission 1-2, the dog cage (SCRIPT-111): 1-2_Pringles_Cage_Locked enables the use spot 1-2_Dog_Cage_Use_Spot, A on the user's trigger position
     # (oracle save state at the dog cage trigger of mission 1-2) fires 1-2_Cage_Key_Target_Script through the spot's TriggerObject. The use marker (SCRIPT-292) is shown
     # while the spot is usable (seen on the ground in the oracle in that state) and goes after the use, when 0x236624 switched the zone off.

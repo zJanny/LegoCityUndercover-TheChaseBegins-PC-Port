@@ -2,6 +2,9 @@
 // (llvm-objdump of game.arm.elf): 0x200f90 (clip of LeverType), 0x2366bc (request of state 76 behind USE LERP, lerp time 0.2), 0x27fecc (USE LERP:
 // turn 3200 per update, lerp, done the update after t reaches 1.0), 0x26b800 / 0x28dc48 / 0x2ccc74 (state 76: turns, the clip end, the hook that
 // sets the use bit), 0x207be4 (the node char_minifig_use) and 0x23df04 (turn). docs/re/switches.md.
+// Pinned oracle values (RPC 20261026-mission13-A-1, recorded from save states at the key switch of mission 1-3 after placing the key and at the generator
+// pull switch, New 3DS, OpenGL, dt 0.033 0.033, by the emulator servant on 2026-10-26; the same counts as RPC 20261025-garage-A-1 at dt 0.0333333):
+// update u0 is the update of the press, a trap row of update u is an event in that update, a memory read labelled u is taken before that update.
 #include "runtime/lever_use.hpp"
 
 #include <cmath>
@@ -29,13 +32,13 @@ struct Timeline {
     std::vector<LeverAnim> anims;
 };
 
-Timeline run(const LeverUseSetup& setup, unsigned updates, bool held = false, unsigned releaseAt = 0) {
+Timeline run(const LeverUseSetup& setup, unsigned updates, bool held = false, unsigned releaseAt = 0, float dt = kDt) {
     PlayerLeverUse use;
     const float position[3] = {0, 0, 0};
-    use.start(0, position, 0, setup, kDt);
+    use.start(0, position, 0, setup, dt);
     Timeline timeline;
     for (unsigned u = 1; u <= updates && use.active(); ++u) {
-        const LeverUseStep step = use.update(kDt, held && (releaseAt == 0 || u < releaseAt), false);
+        const LeverUseStep step = use.update(dt, held && (releaseAt == 0 || u < releaseAt), false);
         if (step.entered == kPlayerStatePullLeverUse) timeline.use76 = u;
         if (step.entered == kPlayerStatePullLeverHold) timeline.entered77 = u;
         if (step.useBit) {
@@ -100,19 +103,45 @@ void keySwitch() {
     LeverUseSetup setup;
     setup.clip = {2.4f, 0.319495f * 2.4f};
     setup.clipId = 185;
-    const Timeline t = run(setup, 200);
-    require(t.use76 == 8, "state 76 at update 8 (RPC 20261025-garage-A-1), got " + std::to_string(t.use76));
-    require(t.useBit == 31 && t.useBits == 1, "the hook sets the use bit in update 31 (RPC 20261025-garage-A-1), got " + std::to_string(t.useBit));
-    require(t.end == 81, "state 1 at update 81 (RPC 20261025-garage-A-1), got " + std::to_string(t.end));
-    require(t.anims.empty(), "one turn: the lever's animation is the switch's own (state change to 1)");
+    for (const float dt : {0.033f, 0.0333333f}) {
+        const Timeline t = run(setup, 200, false, 0, dt);
+        const std::string at = " at dt " + std::to_string(dt);
+        require(t.use76 == 8, "state 76 entered in update 8 (trap 0x26b800, RPC 20261026-mission13-A-1)" + at + ", got " + std::to_string(t.use76));
+        require(t.useBit == 31 && t.useBits == 1, "the hook sets the use bit in update 31 (trap 0x2ccc74, A-1)" + at + ", got " + std::to_string(t.useBit));
+        require(t.end == 81, "state 1 entered in update 81 (trap 0x21941c from 0x1abbb0, A-1; the read shows it at 82)" + at + ", got " + std::to_string(t.end));
+        require(t.anims.empty(), "one turn: the lever's animation is the switch's own (state change to 1)");
+    }
 }
 
 void pullSwitch() {
     LeverUseSetup setup;
     setup.clip = {24.0f / 15.0f, 0.00284608f * 23.0f / 15.0f};
-    const Timeline t = run(setup, 200);
-    require(t.use76 == 8 && t.useBit == 8, "the pull clip's event is at its start: the use bit in the first update of state 76");
-    require(t.end == 57, "24 frames at 15 per second: state 1 at update 57, got " + std::to_string(t.end));
+    for (const float dt : {0.033f, 0.0333333f}) {
+        const Timeline t = run(setup, 200, false, 0, dt);
+        require(t.use76 == 8 && t.useBit == 8, "pull switch: state 76 and the hook (event +0x10 = 1.0) in update 8 (A-1)");
+        require(t.end == 57, "24 frames at 15 per second: state 1 entered in update 57 (trap 0x21941c r1 0x118, A-1; the read shows it at 58), got " +
+                                 std::to_string(t.end));
+    }
+}
+
+void pullSwitchWay() {
+    LeverUseSetup setup;
+    setup.target = UseLerpTarget{{948.27405f, 16.78432f, 1129.65576f}, 19078};
+    setup.clip = {24.0f / 15.0f, 0.00284608f * 23.0f / 15.0f};
+    const float start[3] = {947.95551f, 16.78951f, 1129.20642f};
+    PlayerLeverUse use;
+    use.start(0, start, 24852, setup, kDt);
+    const float lerpT[] = {0.165f, 0.33f, 0.495f, 0.66f, 0.825f, 0.99f, 1.0f};
+    const float expectedX[] = {948.008f, 948.060f, 948.113f, 948.165f, 948.217f, 948.270f, 948.274f};
+    for (unsigned n = 0; n < 7; ++n) {
+        const float t = (use.position()[0] - start[0]) / (948.27405f - start[0]);
+        require(std::fabs(t - lerpT[n]) < 1e-3f && std::fabs(use.position()[0] - expectedX[n]) < 0.003f,
+                "lerp t of the pull switch: " + std::to_string(lerpT[n]) + " (R+0x28c, A-1 reads at u" + std::to_string(n + 1) + ")");
+        if (n == 0) require(std::fabs(use.position()[2] - 1129.281f) < 0.002f && use.facing() == 21652, "u1: (948.008, 1129.281), turned by 3200 from 24852 to 21652 (R+8)");
+        if (n == 1) require(use.facing() == 19078, "u2: R+8 reaches the heading 19078");
+        use.update(kDt, false, false);
+    }
+    require(std::fabs(use.position()[0] - 948.27405f) < 0.002f && std::fabs(use.position()[2] - 1129.65576f) < 0.002f, "after the lerp the player stands on the use point (u7)");
 }
 
 void usedLeverGetsNoBit() {
@@ -158,6 +187,7 @@ int main() {
         lerp();
         keySwitch();
         pullSwitch();
+        pullSwitchWay();
         usedLeverGetsNoBit();
         multiTurn();
         holdMe();

@@ -6,7 +6,7 @@ The reference-trigger step 0x23211c that the build-it, the switches and other cl
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-26T14:00:04+01:00. The step is ported (all registering kinds in one list, activate and deactivate, owner events, messages 10 / 0xff / 0xfe, nav node requests) and the build-it runs on it. The switch base (loader, stable update, state change, base handler) runs for kinds 38 and 58 with the lever's use zone and handler, the use animation's timing, the zone bits of ToggleUseable and the player's use state; the mission 1-3 key switch opens the garage door. The other switch kinds and the other callers are open (SCRIPT-365, SCRIPT-359).
+IN_PROGRESS, updated 2026-10-26T16:14:15+01:00. The step is ported (all registering kinds in one list, activate and deactivate, owner events, messages 10 / 0xff / 0xfe, nav node requests) and the build-it runs on it. The switch base (loader, stable update, state change, base handler) runs for kinds 38 and 58 with the lever's use zone and handler, the use animation's timing, the zone bits of ToggleUseable and the player's use state; the mission 1-3 key switch opens the garage door. The other switch kinds and the other callers are open (SCRIPT-365, SCRIPT-359).
 
 ## 3. Verified behaviour
 
@@ -21,7 +21,7 @@ IN_PROGRESS, updated 2026-10-26T14:00:04+01:00. The step is ported (all register
 - SCRIPT-S292 The A press on a lever counts only under the gate the detective and use-spot glue use (on the ground, not carrying, not in a build-it zone, no script or detective control, no cutscene), a gate chosen by the port instead of the press path 0x1fee94. evidence: [switches.md §2026-10-25T16:34:17](../../re/switches.md#ts-20261025-163417).
 - SCRIPT-S293 The switch's own use animation (+0x18) is timed but not drawn; the `light_on` / `light_off` nodes, the sound pitch from `FrequencyRange`, the fade of `DisableAfterUse` (no shipped switch sets it), the `Icon` child and `levertwitch` are not applied; disabled switches get no update and a lever without a class `UseBound` gets no zone (0x23e130 builds one from the node bounds; gates chosen by the port). needs: SCRIPT-370. evidence: [switches.md §2026-10-25T16:34:17](../../re/switches.md#ts-20261025-163417).
 
-- SCRIPT-S299 `SwitchSet::update`: the switches' animation clock advances at the start of their update, an order the port chose; with it a 24-frame use animation at 15 per second ends state 1 after 49 updates of 0.033 (48 with the clock after the update). needs: SCRIPT-369. evidence: [switches.md §2026-10-26T13:57:52](../../re/switches.md#ts-20261026-135752).
+- SCRIPT-S299 Closed 2026-10-26: `SwitchSet::update` advances the switches' animation clock before their update; with it a 24-frame use animation at 15 per second ends state 1 after 49 updates of 0.033, as the oracle's pull switch (state 1 in update 9, state 3 in update 58; the other order gives 48). evidence: [switches.md §2026-10-26T16:12:38](../../re/switches.md#ts-20261026-161238).
 
 ## 5. Open items
 

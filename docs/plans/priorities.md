@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 942 open items and stand-ins, 168 linked to game usage, 774 with unknown reach.
+Items: 941 open items and stand-ins, 168 linked to game usage, 773 with unknown reach.
 
 ## Top 50 overall
 
@@ -46,7 +46,7 @@ Items: 942 open items and stand-ins, 168 linked to game usage, 774 with unknown 
 | 10 | [SCRIPT-345](features/script-system-natives-animation.md?display=source#L35) | 859 | 0 | 8 | 0 | 2 stand-in | `loadanimation`, `playcharanim` | The port starts `1-2_Cage_Key_Target_Script` in the update of the press (as the original) but calls ... |
 | 11 | [SCRIPT-190](features/script-system-missions.md?display=source#L28) | 0 | 736 | 8 | 2 | - | `scriptobject` | Carry gaps: the instigator argument of 0x244f40 is not modelled; the handler 0x1bc4d4 forwards message 0xff ... |
 | 12 | [SCRIPT-201](features/script-system-missions.md?display=source#L36) | 671 | 0 | 8 | 0 | 4 stand-in, 1 implemented | `automaticmusic`, `camerafollow`, `enabletrafficandpedestrians`, `overridemusic` +1 | Mission 1-1 has a handler (stand-in) for every native it calls: EnableTrafficAndPedestrians (SCRIPT-S230) ... |
-| 13 | [SCRIPT-375](features/script-system-missions-1-3.md?display=source#L33) | 658 | 0 | 8 | 0 | 1 implemented | `startdcam` | The camera shots (StartDCam positions and durations) and the dialogue texts of `1-3_Generator_Script` against ... |
+| 13 | [SCRIPT-375](features/script-system-missions-1-3.md?display=source#L32) | 658 | 0 | 8 | 0 | 1 implemented | `startdcam` | The camera shots (StartDCam positions and durations) and the dialogue texts of `1-3_Generator_Script` against ... |
 | 14 | [ANIM-S12](features/animation-characters.md?display=source#L24) | 623 | 0 | 8 | 0 | 1 stand-in | `playcharanim` | The "already loaded" test of PlayCharAnim (0x21e8b4) knows a character's idle clips and its current script ... |
 | 15 | [ANIM-S13](features/animation-characters.md?display=source#L25) | 623 | 0 | 8 | 0 | 1 stand-in | `playcharanim` | The player's script clip (PlayCharAnim on Player1) is shown at full weight from the native's update instead ... |
 | 16 | [SCRIPT-S269](features/script-system-hud-natives.md?display=source#L18) | 538 | 0 | 7 | 0 | 1 stand-in | `setactivewaypoint` | SetActiveWayPoint: the vehicle waypoint global (`WaypointSet::vehicleWaypoint`) is kept but its reader, which ... |
@@ -137,7 +137,7 @@ Items: 942 open items and stand-ins, 168 linked to game usage, 774 with unknown 
 
 ## Scripts and missions
 
-105 of 219 items linked.
+105 of 218 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -150,7 +150,7 @@ Items: 942 open items and stand-ins, 168 linked to game usage, 774 with unknown 
 | 7 | [SCRIPT-345](features/script-system-natives-animation.md?display=source#L35) | 859 | 0 | 8 | 0 | 2 stand-in | `loadanimation`, `playcharanim` | The port starts `1-2_Cage_Key_Target_Script` in the update of the press (as the original) but calls ... |
 | 8 | [SCRIPT-190](features/script-system-missions.md?display=source#L28) | 0 | 736 | 8 | 2 | - | `scriptobject` | Carry gaps: the instigator argument of 0x244f40 is not modelled; the handler 0x1bc4d4 forwards message 0xff ... |
 | 9 | [SCRIPT-201](features/script-system-missions.md?display=source#L36) | 671 | 0 | 8 | 0 | 4 stand-in, 1 implemented | `automaticmusic`, `camerafollow`, `enabletrafficandpedestrians`, `overridemusic` +1 | Mission 1-1 has a handler (stand-in) for every native it calls: EnableTrafficAndPedestrians (SCRIPT-S230) ... |
-| 10 | [SCRIPT-375](features/script-system-missions-1-3.md?display=source#L33) | 658 | 0 | 8 | 0 | 1 implemented | `startdcam` | The camera shots (StartDCam positions and durations) and the dialogue texts of `1-3_Generator_Script` against ... |
+| 10 | [SCRIPT-375](features/script-system-missions-1-3.md?display=source#L32) | 658 | 0 | 8 | 0 | 1 implemented | `startdcam` | The camera shots (StartDCam positions and durations) and the dialogue texts of `1-3_Generator_Script` against ... |
 
 ## World and levels
 
@@ -244,7 +244,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [script-system-ai-navigation.md](features/script-system-ai-navigation.md): SCRIPT-92 (+30), SCRIPT-94 (+17), SCRIPT-101 (+15), SCRIPT-95 (+15), SCRIPT-100 (+14), SCRIPT-79 (+13), SCRIPT-S100, SCRIPT-S101, SCRIPT-S102, SCRIPT-S104, SCRIPT-S31, SCRIPT-S93, SCRIPT-S94, SCRIPT-S95
 - [script-system-dcam.md](features/script-system-dcam.md): SCRIPT-40 (+15), SCRIPT-182 (+1), SCRIPT-48 (+1), SCRIPT-181, SCRIPT-332, SCRIPT-49, SCRIPT-50, SCRIPT-S142
 - [script-system-hud-natives.md](features/script-system-hud-natives.md): SCRIPT-350 (+2), SCRIPT-329 (+1), SCRIPT-330 (+1), SCRIPT-354 (+1), SCRIPT-331, SCRIPT-68, SCRIPT-69, SCRIPT-70, SCRIPT-S270, SCRIPT-S282, SCRIPT-S283, SCRIPT-S285
-- [script-system-missions-1-3.md](features/script-system-missions-1-3.md): SCRIPT-368 (+3), SCRIPT-369 (+2), SCRIPT-364 (+1), SCRIPT-376, SCRIPT-S291, SCRIPT-S298
+- [script-system-missions-1-3.md](features/script-system-missions-1-3.md): SCRIPT-368 (+3), SCRIPT-364 (+1), SCRIPT-376, SCRIPT-S291, SCRIPT-S298
 - [script-system-missions-reference.md](features/script-system-missions-reference.md): SCRIPT-359 (+1), SCRIPT-360 (+1), SCRIPT-370 (+1), SCRIPT-S289, SCRIPT-S292, SCRIPT-S293, SCRIPT-S299
 - [script-system-missions.md](features/script-system-missions.md): SCRIPT-284 (+1), SCRIPT-115, SCRIPT-142, SCRIPT-221, SCRIPT-S141, SCRIPT-S236, SCRIPT-S237, SCRIPT-S243, SCRIPT-S255
 - [script-system-natives-animation.md](features/script-system-natives-animation.md): SCRIPT-324 (+3), SCRIPT-352 (+2), SCRIPT-272 (+1), SCRIPT-325 (+1), SCRIPT-334 (+1), SCRIPT-S284 (+1), SCRIPT-344, SCRIPT-353, SCRIPT-S110, SCRIPT-S262, SCRIPT-S266, SCRIPT-S267

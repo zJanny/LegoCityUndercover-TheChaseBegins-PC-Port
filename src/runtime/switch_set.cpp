@@ -224,7 +224,6 @@ std::optional<SwitchUse> SwitchSet::use(const assets::PlacedObjectState& state, 
 std::vector<SwitchEvent> SwitchSet::update(const assets::PlacedObjectState& state, float dt, ReferenceTriggers& references, ScriptRunner& scripts) {
     std::vector<SwitchEvent> events;
     lastDt_ = dt;
-    // STAND-IN SCRIPT-S299: the switches' animation clock advances before their update, an order the port chose.
     clock_ += std::llround(double(dt) * double(kAnimationClockTicksPerSecond));
     for (std::size_t i = 0; i < objects_.size(); ++i) {
         if (state.isDisabled(objects_[i].instance)) continue;
