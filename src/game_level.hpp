@@ -225,11 +225,15 @@ private:
     bool placeTrafficCar(const chase::runtime::TrafficCarPlacement& placement);
     void updatePropAnimations(float dt);
     void updatePropRocking();
+    // The placed props the moving platform nodes carry, after the rocking (game_platform_nodes.cpp); attached level characters follow their
+    // parent's node in game_rocking_follow_glue.cpp.
+    void carryPlatformProps();
+    bool objectNodePosition(const std::string& instance, float out[3]) const;
     void attachLevelCharacters();
     void followAttachedCharacters();
     void snapAiMovedCharacters(float dt);
     std::optional<chase::assets::Matrix> placedNodeWorld(const std::string& lowerInstance);
-    std::optional<std::array<float, 3>> objectNodeTranslation(const std::string& lowerInstance) const;
+    std::optional<std::array<float, 3>> objectNodeTranslation(const std::string& instance) const;
     void updateSuperBricks(float dt);
     void applySuperBricks();
     std::vector<chase::runtime::SoundCall> updateDebrisPickup(float dt, const std::array<float, 3>& pickupPoint);
@@ -360,6 +364,7 @@ private:
     std::set<std::string> heldPropsLogged;
     std::map<std::string, bool> propRockingLogged;
     std::map<std::string, std::optional<std::size_t>> propRockingScene;
+    std::set<std::string> platformCarried;
     chase::runtime::NodeAttachments characterAttachments;
     std::map<std::string, std::optional<std::size_t>> placedSceneByInstance;
     std::size_t reportedUnhandled = 0, reportedEvents = 0;

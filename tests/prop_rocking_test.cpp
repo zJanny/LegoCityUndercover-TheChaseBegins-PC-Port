@@ -187,7 +187,7 @@ void waitForPlatformComparesValueBitsAndState() {
 
 void waitForPlatformBlocksTheThread() {
     Classes classes;
-    classes.files["props/prop_platform"].defaults = {intParam("ObjectType", 64)};
+    classes.files["props/prop_platform"].defaults = {intParam("ObjectType", 64), intParam("type", 1)};
     Level level;
     level.objects = {placed("Crane_Platform_Dummy", "props/prop_platform")};
     add(level, "wait", {{"WaitForPlatform", {"Crane_Platform_Dummy"}}, {"SetPropRocking", {"Girder", "0"}}});
@@ -216,7 +216,7 @@ void waitForPlatformBlocksTheThread() {
     while (standIn.threadCount() > 0 && updates < 400) {
         standIn.update(kTraceDt);
         ++updates;
-        if (updates == 1) require(crane->state == 2 && crane->value == 0.0f, "u90: the trigger requests state 2, no step yet (STAND-IN SCRIPT-S296)");
+        if (updates == 1) require(crane->state == 2 && crane->value == 0.0f, "u90: the trigger requests state 2 (0x2150bc), no step yet");
         if (updates == 61) require(std::fabs(crane->value - 0.594f) < 1e-4f, "u150: 60 steps of dt * 30 * speed (0x280980, speed 0.01)");
         if (updates == 102) require(std::fabs(crane->value - 0.9999f) < 1e-4f && crane->state == 2, "u191: 0.9999, still moving");
         if (updates == 103) require(crane->value == 1.0f && crane->state == 5, "u192: 1.0 and state 5");

@@ -30,8 +30,4 @@ ScriptRunner::Result ScriptRunner::waitForPlatformNative(const assets::ScriptCal
     return platformReached(*record) ? Result::Continue : Result::Block;
 }
 
-void ScriptRunner::platformMessage(const std::string& lowerInstance, std::uint8_t message) {
-    if (message == kMessageTrigger) platforms_.triggerStandIn(lowerInstance);
-}
-
 }

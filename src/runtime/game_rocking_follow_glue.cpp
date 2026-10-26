@@ -7,9 +7,6 @@ namespace game_level {
 namespace runtime = chase::runtime;
 
 namespace {
-// STAND-IN SCRIPT-S305: how far the platforms the object is attached to have moved its node; (0, 0, 0) until the platform node move of
-// 20261026-crane-A (PlatformSet::carriedOffset) is merged.
-std::array<float, 3> platformCarriedOffsetStandIn(const runtime::PlatformSet&, const std::string&) { return {0.0f, 0.0f, 0.0f}; }
 constexpr float kAttachedPositionEpsilon = 1e-5f;
 }
 
@@ -18,7 +15,7 @@ std::optional<std::array<float, 3>> LevelSession::objectNodeTranslation(const st
     if (carry.position(instance, carried)) return std::array<float, 3>{carried[0], carried[1], carried[2]};
     const std::optional<chase::assets::Placement> start = chase::assets::objectStart(level, instance);
     if (!start) return std::nullopt;
-    const std::array<float, 3> offset = platformCarriedOffsetStandIn(levelScripts.platforms(), instance);
+    const std::array<float, 3> offset = levelScripts.platforms().carriedOffset(game_doors::lowerCase(instance));
     return std::array<float, 3>{start->position[0] + offset[0], start->position[1] + offset[1], start->position[2] + offset[2]};
 }
 

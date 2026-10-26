@@ -218,9 +218,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     levelScripts.setLevelHeadingKey(fe::levelHeadingKey(hudResources, levelName));
     levelScripts.setObjectPositionSource([this](const std::string& instance, float out[3]) {
         if (carry.position(instance, out)) return true;
-        const std::optional<Placement> placement = objectStart(level, instance);
-        if (placement) std::copy(placement->position, placement->position + 3, out);
-        return placement.has_value();
+        return objectNodePosition(instance, out);
     });
     std::vector<runtime::NavWorld> navWorlds = runtime::loadNavWorlds(archive, options.level, level);
     if (!navWorlds.empty()) levelScripts.ai().setNavigation(std::move(navWorlds));

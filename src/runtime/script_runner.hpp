@@ -302,6 +302,7 @@ private:
     void setPropRockingNative(const assets::ScriptCall& call);
     Result waitForPlatformNative(const assets::ScriptCall& call);
     void platformMessage(const std::string& lowerInstance, std::uint8_t message);
+    void platformAttachment(AnimationNativeKind kind, const std::vector<std::string>& args);
     void playParticlesGoNative(const assets::ScriptCall& call);
     void destroyNative(const std::string& lowerInstance);
     void fireAiMoveEvents();

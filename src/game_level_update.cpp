@@ -239,10 +239,7 @@ void LevelSession::updateFollowCamera(float dt) {
             out[2] = player->motion.z;
             return true;
         }
-        const std::optional<Placement> placed = objectStart(level, object);
-        if (placed)
-            for (int a = 0; a < 3; ++a) out[a] = placed->position[a];
-        return placed.has_value();
+        return objectNodePosition(object, out);
     });
     follow->setBoundsEnabled(levelScripts.boundsEnabled());
     follow->setDirector(director.pose(), director.takeRequests());
@@ -459,6 +456,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
     }
     provisionalStudClockSeconds += double(dt);
     updateLevelCharacters(dt);
+    carryPlatformProps();
     fallApart.update(debrisLineStandIn(), updates);
     if (follow) updateFollowCamera(dt);
     else camera.update(dt, pad);

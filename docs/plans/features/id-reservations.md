@@ -4,5 +4,3 @@ Ranges of item IDs held by parallel agents, named like `20261021-audio-A`. The p
 
 | Prefix | First | Last | Holder | Date |
 |---|---|---|---|---|
-| SCRIPT | 377 | 379 | 20261026-crane-A | 2026-10-26T22:22:26+01:00 |
-| SCRIPT-S | 301 | 302 | 20261026-crane-A | 2026-10-26T22:22:26+01:00 |

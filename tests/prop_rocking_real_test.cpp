@@ -143,7 +143,7 @@ int main(int argc, char** argv) {
             if (rockingStopped) stoppedAt = i;
         }
         require(rockingStopped && triggeredAt >= 0 && stoppedAt - triggeredAt == 103,
-                "SetPropRocking(1-3_Crane_Girder, 0) runs 103 updates after TriggerObject(1-3_Crane_Platform_Dummy, 1) (speed 0.01; stand-in SCRIPT-S296), got " +
+                "SetPropRocking(1-3_Crane_Girder, 0) runs 103 updates after TriggerObject(1-3_Crane_Platform_Dummy, 1) (speed 0.01, 0x2807c8), got " +
                     std::to_string(stoppedAt - triggeredAt));
         require(crane->value == 1.0f && crane->state == runtime::kPlatformArrivedState, "the platform reached 1.0 and state 5");
         runner.update(kTraceDt);

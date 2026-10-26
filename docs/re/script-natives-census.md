@@ -57,7 +57,7 @@ This file has no dated entries: the table is edited in place. When a native is r
 | ResetObject | 0x1b25f8 | 1 | 107 / 5 / 0 / 0 | 11 | A | 26 | handled: class message 8 queued; kind 132 restores placement, enables, clears destroyed bit; kind 64 enables only (SCRIPT-307, SCRIPT-313; rest SCRIPT-317, SCRIPT-318): [script-natives-world-reset.md §2026-10-19T11:06:52](script-natives-world-reset.md#ts-20261019-110652) |
 | VehicleSetLocked | 0x26fe78 | 2 | 102 / 13 / 3 / 0 | 8 | done | 36 | record +0x311 bit 1; src/runtime/vehicle.cpp: [vehicles-system.md §2026-10-14T23:59:31](vehicles-system.md#ts-20261014-235931) |
 | AIActive | 0x1881a4 | 1 | 101 / 16 / 0 / 0 | 6 | stand-in | 34 | flag or requested state recorded; returns 1: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
-| AttachObject | 0x1bf68c | 2 | 100 / 15 / 13 / 0 | 8 | stand-in | 32 | stand-in: parent of the second object recorded (SCRIPT-S110, SCRIPT-272): [script-natives-animation.md §2026-10-15T18:33](script-natives-animation.md#ts-20261015-183336) |
+| AttachObject | 0x1bf68c | 2 | 100 / 15 / 13 / 0 | 8 | stand-in | 32 | stand-in: parent of the second object recorded (SCRIPT-S110, SCRIPT-272); moving platforms carry the attached nodes (SCRIPT-S302): [script-natives-animation.md §2026-10-15T18:33](script-natives-animation.md#ts-20261015-183336), [props-rocking-platforms.md §2026-10-26T22:54:42](props-rocking-platforms.md#ts-20261026-225442) |
 | VehicleSetForcedStop | 0x29ea7c | 2 | 99 / 13 / 1 / 0 | 6 | done | 36 | record +0x310: [vehicles-system.md §2026-10-14T23:59:31](vehicles-system.md#ts-20261014-235931) |
 | AIMove | 0x171f7c | 3 | 98 / 19 / 0 / 0 | 8 | stand-in | 34 | handled: starts a straight walk to the target object (path finder not ported) and ends with the AIMove trigger event; returns 1: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
 | EnableTargetable | 0x26fb2c | 2 | 97 / 6 / 0 / 0 | 7 | A | 26 | handled, flag recorded (SCRIPT-S18) |
@@ -133,7 +133,7 @@ This file has no dated entries: the table is edited in place. When a native is r
 | RideableClearPath | 0x27bdcc | 1 | 14 / 0 / 0 / 0 | 1 | C | 37 |  |
 | VehicleSetTopSpeed | 0x2860d4 | 2 | 14 / 2 / 0 / 0 | 6 | done | 36 | [vehicles-waypoints.md §2026-10-15T11:35](vehicles-waypoints.md#ts-20261015-113500) |
 | SetDCamEndWait | 0x1da690 | 1 | 13 / 0 / 0 / 0 | 3 | done | 28 | handled |
-| WaitForPlatform | 0x263b84 | 1 | 13 / 3 / 0 / 0 | 5 | stand-in | 37 | handled; the platform record is a stand-in (SCRIPT-S296, SCRIPT-44): [props-rocking.md §2026-10-25T16:29:44](props-rocking.md#ts-20261025-162944) |
+| WaitForPlatform | 0x263b84 | 1 | 13 / 3 / 0 / 0 | 5 | stand-in | 37 | handled; the platform record is ported without paths and rotations (SCRIPT-S301, SCRIPT-377): [props-rocking.md §2026-10-25T16:29:44](props-rocking.md#ts-20261025-162944), [props-rocking-platforms.md §2026-10-26T22:54:42](props-rocking-platforms.md#ts-20261026-225442) |
 | AttachToBone | 0x1ddb90 | 4 | 12 / 1 / 1 / 1 | 6 | stand-in | 32 | stand-in: parent, its bone and the child bone recorded (SCRIPT-S110, SCRIPT-272): [script-natives-animation.md §2026-10-15T18:33](script-natives-animation.md#ts-20261015-183336) |
 | EnableScanner | 0x1cd9dc | 1 | 12 / 1 / 0 / 0 | 7 | stand-in | 31 | records its call (SCRIPT-S27): [objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919) |
 | setplatformorigin | 0x27bfbc | 2 | 12 / 2 / 0 / 0 | 3 | C | 37 |  |

@@ -2,8 +2,11 @@
 
 The rocking of the ObjectType 67 props (`leprops/leprop_prop`, `props/prop_prop` and the other classes of that kind), the script native SetPropRocking that switches it, and the script native WaitForPlatform that waits for a platform (ObjectType 64). Both natives are called by the generator scene of mission 1-3 (`1-3_Generator_Script`). The AISuperJump of the same scene is in [ai-states.md](ai-states.md). The hit machine of kind 67 is in [vehicles-prop-smash.md](vehicles-prop-smash.md).
 
+Subtopics: [props-rocking-platforms.md](props-rocking-platforms.md)
+
 ## Current state
 
+- The platform class, its travel and node move and the carrying of attached nodes: [props-rocking-platforms.md](props-rocking-platforms.md).
 - `1-3_Generator_Script` (the `TriggerObject` of the pull switch `1-3_Generator_Pull_Switch`) triggers the crane platform, waits for it with WaitForPlatform, stops the girder's rocking with SetPropRocking(1-3_Crane_Girder, 0) and then makes the girder guy jump down with AISuperJump. [§2026-10-25T16:29:44](#ts-20261025-162944)
 - SetPropRocking 0x1da6a8 sets bit 6 of record byte +0xde for int(value) == 1 and clears it otherwise; an entity without a record (+0x7c null) is left alone; it returns 1. [§2026-10-25T16:29:44](#ts-20261025-162944)
 - The kind 67 create 0x16a268 stores bit 0 of `Rocking` in that bit and the waves `WaveBob1` x 30, `WaveBob2` x 30, `WaveBobOffset` (defaults 2, 3, 0); the post-link keeps the node's Euler angles; while the bit is set the entity update rocks the node by 2 degrees (sine) and 2.5 degrees (cosine) on the clock 0x241098. Ported in `prop_rocking.*`. [§2026-10-25T16:29:44](#ts-20261025-162944)
@@ -12,15 +15,15 @@ The rocking of the ObjectType 67 props (`leprops/leprop_prop`, `props/prop_prop`
 - The level's `startup` attaches the girder guy, the crow and the rope to the girder and the girder to the crane platform (AttachObject); 0x24c118 keeps a child's world relative to its parent, so the guy sways with the girder and goes down with it. Ported for level characters under placed objects (`node_attach.*`). [§2026-10-26T22:49:07](#ts-20261026-224907)
 - The ground follow 0x2b01e4 of a character standing on a moving object and its contact rule 0x20b78c are read, not ported (SCRIPT-383); AI-moved level characters take the ground height of the player's probe (stand-in SCRIPT-S306). [§2026-10-26T22:49:07](#ts-20261026-224907)
 - WaitForPlatform 0x263b84 returns 1 when the platform record's value R+0x7c is 1.0 or above (signed compare of the bits) or its state R+2 is 5, else 0 (the script waits). Ported in `platform_wait.*`. [§2026-10-25T16:29:44](#ts-20261025-162944)
-- The platform record moves in state 2 by dt x 30 x `speed` per update (0x280980; `speed` default 0.01 from the create); the crane platform of the generator scene takes 103 updates from the trigger to the end of the wait in the oracle, and the port reproduces it with a stand-in trigger and arrival rule. [§2026-10-25T16:46:40](#ts-20261025-164640)
 - PlayParticlesGO 0x27e8b4 starts the definition int(argument 0) with 0x23de24 at the object's node translation plus the offset (arguments 2..4), or, with argument 5 above 0.0, with the node as parent; all 19 shipped calls pass 0. Ported in `script_particles.*` with the object's position source as the node (stand-in SCRIPT-S300). [§2026-10-26T13:39:27](#ts-20261026-133927)
-- In `chase-game` the generator scene runs on the real path from the pull switch to the end of `1-3_Generator_Script` (QuickSave); the crane platform and the girder do not descend (SCRIPT-373, SCRIPT-S305). The script does not end mission 1-3: the end is `1-3_Start_Rescue_Lawnmower_man`, behind the ledge platform (SCRIPT-372), the push cart and the crane build-it [§2026-10-26T13:39:27](#ts-20261026-133927); the push cart and the crane build-it now work in the port ([pushables.md §2026-10-26T23:04:40](pushables.md#ts-20261026-230440), [buildit.md §2026-10-26T23:06:15](buildit.md#ts-20261026-230615)).
+- In `chase-game` the generator scene runs on the real path from the pull switch to the end of `1-3_Generator_Script` (QuickSave); the crane platform and the girder descend ([props-rocking-platforms.md](props-rocking-platforms.md)). The script does not end mission 1-3: the end is `1-3_Start_Rescue_Lawnmower_man`, behind the ledge platform (SCRIPT-372), the push cart and the crane build-it [§2026-10-26T13:39:27](#ts-20261026-133927); the push cart and the crane build-it now work in the port ([pushables.md §2026-10-26T23:04:40](pushables.md#ts-20261026-230440), [buildit.md §2026-10-26T23:06:15](buildit.md#ts-20261026-230615)).
 - The oracle's call-by-call trace of the whole generator script (the script runs 658 updates from its start, 59 after the press; control returns at u413 of the press; the port agrees within one update): [§2026-10-26T15:16:58](#ts-20261026-151658).
-- Open: the rest of the platform class (create 0x199adc, update 0x2807c8 after 0x280984, state change 0x19a590, handler 0x1a8d74), the rate and start value of the clock 0x241098 (SCRIPT-384), placed objects as attached children (SCRIPT-383).
+- Open: the parts of the platform class listed in [props-rocking-platforms.md](props-rocking-platforms.md), the rate and start value of the clock 0x241098 (SCRIPT-384), placed objects as attached children of a rocking prop (SCRIPT-383).
 
 <a id="ts-20261025-162944"></a>
 
 ## 2026-10-25T16:29:44+01:00 — SetPropRocking 0x1da6a8, the rocking 0x28a758, WaitForPlatform 0x263b84 and the order of the generator script
+Corrected by [props-rocking-platforms.md §2026-10-26T22:54:42](props-rocking-platforms.md#ts-20261026-225442): `ObjectTo` of `1-3_Crane_Platform_Dummy` is set (`1-3_Crane_Platform_Target`).
 
 Method: llvm-objdump (`--triple=armv6k --mattr=+vfp2`) of `artifacts/game/game.arm.elf` and words of `code.bin`, read instruction by instruction (20261025-garage-C): 0x1da6a8, 0x263b84, 0x1de878, 0x16a268..0x16a8c8, 0x16aeb4 (0x16af98..0x16afb8), 0x16b06c..0x16b160, 0x28a758..0x28a87c, 0x24d434, 0x232788, 0x25898c, 0x2b0328..0x2b039c, the kind 64 descriptor at 0x180c98..0x180cf0 and the head of its handler 0x1a8d74 and of 0x2150bc. The script and the objects were printed with the C++ level loader (a throwaway program over `parseLevel`, and `tools/convert_levels.py`).
 
@@ -46,6 +49,7 @@ Unknowns:
 <a id="ts-20261025-164640"></a>
 
 ## 2026-10-25T16:46:40+01:00 — The generator scene in the oracle: platform travel, girder record, rocking stop
+Corrected by [props-rocking-platforms.md §2026-10-26T22:54:42](props-rocking-platforms.md#ts-20261026-225442): the trigger, the end of the travel and the node move are read from the code; the stand-in rule SCRIPT-S296 is gone.
 
 Method: servant request RPC 20261025-garage-C-1 (agent 20261025-garage-servant, 2026-10-25; New 3DS, OpenGL, RPC; recorded from a save state on the generator trigger spot of mission 1-3 after the generator was built): A pressed at update u0, the scheduler stepped with `dt 0.0333333`, 520 updates traced twice (memory trace and code traps; both loads agree). The game's own dt (0x23602c) was 0.033 in these steps. Code: llvm-objdump of the platform update 0x2807c8..0x280988 and of the create at 0x199b5c..0x199b74 (20261025-garage-C).
 

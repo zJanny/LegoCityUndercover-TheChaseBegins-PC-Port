@@ -1,7 +1,6 @@
 #include "runtime/platform_wait.hpp"
 
 #include "assets/object_classes.hpp"
-#include "runtime/level_start.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -17,6 +16,10 @@ std::string lower(std::string text) {
     return text;
 }
 
+bool travelling(std::uint16_t state) {
+    return state == kPlatformMovingState || state == kPlatformReturningState || state == kPlatformControlledState;
+}
+
 }
 
 bool platformReached(const PlatformRecord& record) {
@@ -27,14 +30,16 @@ bool platformReached(const PlatformRecord& record) {
 }
 
 void PlatformSet::load(const assets::Level& level, const assets::ClassLookup& classOf) {
+    order_.clear();
     records_.clear();
+    movedUpdates_.clear();
+    arrivals_.clear();
+    carry_.clear();
     for (const assets::LevelObject& object : level.objects) {
         const assets::Level* cls = classOf(object.className);
         if (!cls || assets::objectKind(object, *cls) != kPlatformKind) continue;
-        PlatformRecord record;
-        if (const assets::LevelParam* speed = effectiveParam(object, *cls, assets::nameHash("speed")); speed && speed->type == 0)
-            std::memcpy(&record.speed, &speed->value, sizeof record.speed);
-        records_[lower(object.instance)] = record;
+        const std::string name = lower(object.instance);
+        if (records_.emplace(name, platformRecordOf(object, *cls, level)).second) order_.push_back(name);
     }
 }
 
@@ -48,21 +53,43 @@ const PlatformRecord* PlatformSet::find(const std::string& lowerInstance) const 
     return found == records_.end() ? nullptr : &found->second;
 }
 
-void PlatformSet::triggerStandIn(const std::string& lowerInstance) {
-    if (PlatformRecord* record = find(lowerInstance)) record->requested = kPlatformMovingState;
+void PlatformSet::message(const std::string& lowerInstance, std::uint8_t message) {
+    if (PlatformRecord* record = find(lowerInstance)) platformMessage(*record, message);
 }
 
 void PlatformSet::update(float dt) {
-    for (auto& [name, record] : records_) {
-        if (record.state == kPlatformMovingState) {
-            record.value = record.value + dt * kPlatformStepRate * record.speed;
-            if (record.value >= 1.0f) {
-                record.value = 1.0f;
-                record.requested = kPlatformArrivedState;
-            }
+    for (const std::string& name : order_) {
+        PlatformRecord& record = records_.at(name);
+        const bool wasTravelling = travelling(record.state);
+        if (const std::optional<PlatformVector> node = platformUpdate(record, dt)) {
+            const PlatformVector carried = carry_.offset(name);
+            PlatformVector delta{};
+            for (int axis = 0; axis < 3; ++axis) delta[axis] = (*node)[axis] - (record.motion.placement[axis] + carried[axis]);
+            carry_.move(name, delta);
+            ++movedUpdates_[name];
         }
-        record.state = record.requested;
+        if (wasTravelling && !travelling(record.state)) {
+            PlatformArrival arrival;
+            arrival.instance = name;
+            const PlatformVector carried = carry_.offset(name);
+            for (int axis = 0; axis < 3; ++axis) arrival.node[axis] = record.motion.placement[axis] + carried[axis];
+            arrival.state = record.state;
+            arrival.movedUpdates = movedUpdates_[name];
+            movedUpdates_[name] = 0;
+            arrivals_.push_back(arrival);
+        }
     }
+}
+
+void PlatformSet::attachObject(const std::string& lowerParent, const std::string& lowerChild) {
+    carry_.setParent(lowerChild, lowerParent);
+    if (find(lowerParent)) carry_.attach(lowerParent, lowerChild);
+}
+
+std::vector<PlatformArrival> PlatformSet::takeArrivals() {
+    std::vector<PlatformArrival> arrivals;
+    arrivals.swap(arrivals_);
+    return arrivals;
 }
 
 }

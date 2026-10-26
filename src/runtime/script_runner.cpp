@@ -724,7 +724,9 @@ bool ScriptRunner::animationNative(const ScriptCall& call) {
         args.push_back(unquoted(token));
         numbers.push_back(read(token));
     }
-    return animation_.apply(*kind, args, numbers, animationDriver_);
+    const bool done = animation_.apply(*kind, args, numbers, animationDriver_);
+    platformAttachment(*kind, args);
+    return done;
 }
 
 ScriptRunner::Result ScriptRunner::cutsceneNative(ScriptThread& thread, const ScriptCall& call) {
