@@ -9,7 +9,7 @@ The player's carry states (pickup 0xa7, drop 0xa8, place 0xd6): their clips, the
 - Release (message 0x12) puts the object upright on the floor under the hand (ray 3.0 up and down) and starts the reset countdown `ResetTime` x 30. [§2026-10-16T10:18](#ts-20261016-101840)
 - Every carry state ends when its clip has played once (0x22f560 kind 6): pickup 24 frames (slot replaced in update 49 at dt 0.033), place and drop 13 frames (state 1 in update 27). [§2026-10-16T10:42](#ts-20261016-104210), [§2026-10-18T10:02](#ts-20261018-100221)
 - The attach, the place release and the drop release come from the track 0x98d31b7e of the clip: a change of its value sends the player message 39 kind 0, which reaches the state hook as event type 0 (release in update 8 for place and drop). [§2026-10-18T10:02](#ts-20261018-100221)
-- The placing of the parts crate in the oracle (release u9, target change u10, `1-3_Pull_Switch_Bits` flag 193 to 192, script at u11): [§2026-10-26T16:01:48+01:00](#ts-20261026-160148).
+- The placing of the parts crate in the oracle: press, enter and target message in the same update u0, release u8, state change u9, script u10, state 1 from u27; the port equals it. [§2026-10-28T00:41:16+01:00](#ts-20261028-004116) ([corrects](#ts-20261026-160148))
 - Open: the slot clock behind the one-update offset of the release, the other track hashes of 0x1d5adc and the other state event types, the fixed matrix of 0x2ce4a4 for objects without `carryhandle`.
 
 <a id="ts-20261016-094004"></a>
@@ -91,6 +91,8 @@ Unknowns:
 
 ## 2026-10-26T16:01:48+01:00 — The parts crate placing in mission 1-3 in the oracle: release, target state change, the build-it's flag and the script (RPC 20261026-mission13-C-2)
 
+Corrected by [carrying-animation.md §2026-10-28T00:41:16+01:00](#ts-20261028-004116): the update numbers are one too high (u0 lay one update before the press); release u8, state change u9, script u10, state 1 from u27, the same as the port.
+
 Method: servant request 20261026-mission13-C-2, recorded from two save states of mission 1-3 (beside the crate that is already the big carry object; and carrying the crate on the drop-off spot with the base plate under it), New 3DS, OpenGL, fixed dt 0.0333333, u0 = the update the A button is set. Traps on 0x25e354, 0x2768bc, 0x1ab3d4, 0x2256e4, 0x2428c0 / 0x242cf0 (byte at r0+0x10 before and after) and 0x244f40, plus the executor call site 0x2342bc (columns as in [props-rocking.md §2026-10-26T15:16:58](props-rocking.md#ts-20261026-151658)). The object names are resolved from the u32 name hash at entity+8 with the level loader (nameHash of the instance name): 0x9566e7f7 `1-3_Generator_Parts_Carry` (props/prop_carry), 0xf64325f8 `1-3_BasePlate` (props/prop_carrytarget), 0x19a1f6ba `1-3_Pull_Switch_Bits` (props/prop_buildit), 0x3497b2fb `1-3_Hidden_Exhaust_Carry_Target_Script` (scriptobject).
 
 **Placing (two loads agree).** Player state 1 at u0, 0xd6 from u2 to u28, 1 again from u29. u1: state enter 0x2768bc and the target message 3 (0x1ab3d4); u9: release 0x2256e4 (8 updates after the enter, as in [carrying.md §2026-10-15T00:17:29](carrying.md#ts-20261015-001729)); u10: the target's state change 0x25e354 (requested state 0), in it 0x2428c0 on the carry object (flag byte 64 to 65: disabled), 0x242cf0 on `1-3_Pull_Switch_Bits` (193 to 192: bit 0 cleared, the build-it is enabled; the other bits unchanged), 0x244f40 with r0 the script object `1-3_Hidden_Exhaust_Carry_Target_Script` and r1 the base plate, 0x242cf0 on that script object and on the base plate (64 to 64, no change) and message 0xfb to the base plate; six further objects go from flag 1 to 0 in the same update and are re-enabled at u76..u97 (ambient streaming groups of the area, not part of the chain; names not resolved). u11: 0x2428c0 on the base plate (64 to 65: the target disables itself) and the script `1-3_Hidden_Exhaust_Carry_Target_Script` runs pc0 and pc1 (both SubObjectiveGoToEnable, handler 0x2adaac) and ends. No other script call in 121 updates. So the flag of `1-3_Pull_Switch_Bits` is 193 before the placing and 192 after it (the port's hide at the level start, [§2026-10-25T16:20:07](carrying.md#ts-20261025-162007), agrees), and the script runs one update after the state change, two after the release.
@@ -105,3 +107,21 @@ Unknowns:
 - The attach update of the pickup (no stop on 0x28db30 / 0x244f40) and a second load to confirm it.
 - The crate hits and the break (needs an intact crate state).
 - The target's self-disable at u11 (not ported) and the names of the six streaming objects.
+
+<a id="ts-20261028-004116"></a>
+
+## 2026-10-28T00:41:16+01:00 — The parts crate placing in the oracle, update numbers corrected (RPC 20261027-mission13-D-1)
+
+[Corrects carrying-animation.md §2026-10-26T16:01:48+01:00](#ts-20261026-160148): its update numbers were one too high.
+
+Method: servant request 20261027-mission13-D-1, recorded from two save states of mission 1-3 (carrying the generator crate on the base-plate drop-off spot; beside the crate), New 3DS, OpenGL, fixed dt 0.0333333, two loads agree, u0 = the first row, A set at u0 for one update. Code traps as in the earlier entry plus the player's locomotion state, the u16 at ctrl+0x6c (not ctrl+0x14).
+
+**Placing.** The A bit (ctrl+0xe = 4) is seen at u0 only. At u0 the target message 0x1ab3d4 (r1 = 3), the target state change 0x25e354 and the player enter 0x2768bc are hit, so the press is processed in the update the input is set. Release 0x2256e4 at u8, the script executor 0x2342bc at u10 (two calls). Player state 214 (0xd6) from u0 to u26, 1 from u27. The registry walk 0x1fee94 was never hit.
+
+**Pickup.** Trap 0x29b170 at u0; the crate object update 0x1767c8 runs every update u0 to u55; 0x1fee94, 0x28db30 and 0x2256e4 never hit. Player state 167 (0xa7) from u0 to u48, 1 from u49.
+
+**Port.** With the A press at update P the port releases at P+8, uses the target at P+9, creates the target script at P+9 (its thread log prints "started" at creation) and first runs it at P+10, leaves the place phase at P+26 with state 1 at P+27 (CTest `game-generator-1-3`: press 148, placed 156, script created 157, first run 158; `carry-animation-real-data` pins 8, 26 and 48). It equals the rows above, so SCRIPT-376 was a numbering error, not a port difference ([script-system-missions-1-3-generator.md](../plans/features/script-system-missions-1-3-generator.md)).
+
+Unknowns:
+- The drop was not measured in this recording (the earlier release u8 for a drop is from [§2026-10-18T10:02:21](#ts-20261018-100221)).
+- Why the first recording's u0 lay one update before the press.
