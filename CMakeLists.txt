@@ -55,7 +55,7 @@ target_sources(chase_runtime PRIVATE src/runtime/pedestrian_walk.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/vehicle_camera.cpp src/runtime/particles.cpp src/runtime/debris.cpp src/runtime/prop_destroy.cpp src/runtime/destroy_message.cpp src/runtime/character_death.cpp src/runtime/fall_apart.cpp src/runtime/stud_drop.cpp src/runtime/character_respawn.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/prop_wobbly_destructible.cpp src/runtime/prop_bouncer.cpp src/runtime/stud_callers.cpp src/runtime/stud_drop_classes.cpp src/runtime/super_brick.cpp src/runtime/prop_hit_sequence.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/prop_rocking.cpp src/runtime/platform_wait.cpp src/runtime/game_generator_natives_glue.cpp
-  src/runtime/platform_node_move.cpp src/runtime/game_platform_glue.cpp)
+  src/runtime/platform_node_move.cpp src/runtime/platform_path.cpp src/runtime/game_platform_glue.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/node_attach.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/script_particles.cpp src/runtime/game_mission_end_1_3_glue.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/pushable.cpp)
@@ -1642,6 +1642,9 @@ if(BUILD_TESTING)
     # The pull takes the player's USE LERP and state 76 and the switch's 1.6 s use animation (20261026-mission13-A), so the run is 60 updates longer; the
     # order of the pull's lines (state 76, switch state 1, player state 1, switch state 3) is the oracle's, its counts are pinned in the switch test.
     # The level's startup script attaches the girder guy to the girder (AttachObject 0x1bf68c), so he sways and descends with its node.
+    # The script triggers the lawn mower 1-3_Lawnmower_01 (a Looped type 3 path platform, ConstantSpeed, speed 0.007): it goes round
+    # 1-3_Lawnmower_Path_01 and its first lap ends next to the path's first point (958.46, 16.80, 1061.82) after 145 node moves (the port's own
+    # count with its dt, 20261027-mission13-A; the path pose is pinned in platform-path and platform-node-move-real-data).
     add_test(NAME game-generator-1-3 COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
@@ -1649,7 +1652,7 @@ if(BUILD_TESTING)
       --start "993.9 16.56 1135.5" --facing 180
       --script "0 0 5;0 0 1 Y;0 0 15;0 0 1 Y;0 0 60;0 0 1 A;0 0 60;at 952.6 16.77 1132.6 90;0 0 5;0 0 1 A;0 0 80;0 0 150 A;0 0 60;at 949.3 16.77 1130.9 270;0 0 5;0 0 1 A;0 0 760")
     set_tests_properties(game-generator-1-3 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
-      PASS_REGULAR_EXPRESSION "character 1-3_ai_girder_guy: attached to 1-3_crane_girder at update 0\n.*carry 1-3_generator_parts_carry: placed into 1-3_baseplate at update [0-9]+.*buildit 1-3_pull_switch_bits: stud drop mode.*switch 1-3_generator_pull_switch: used at update [0-9]+\n.*switch 1-3_generator_pull_switch: player state 76 at update [0-9]+\n.*switch 1-3_generator_pull_switch: state 1 at update [0-9]+\n.*switch 1-3_generator_pull_switch: player state 1 at update [0-9]+\n.*switch 1-3_generator_pull_switch: state 3 at update [0-9]+\n.*script 1-3_Generator_Script started at update [0-9]+\n.*script 1-3_Crow_out started at update [0-9]+\n.*platform 1-3_crane_platform_dummy: travel ended in state 5 at 948.259 5.9968 1147.01 after 102 node moves at update [0-9]+\n.*particles 264 at 1-3_crane_girder started at update [0-9]+\n.*prop 1-3_crane_girder: rocking off at update [0-9]+\n.*save: request [0-9]+ written.*\n.*script 1-3_Generator_Script ended at update [0-9]+")
+      PASS_REGULAR_EXPRESSION "character 1-3_ai_girder_guy: attached to 1-3_crane_girder at update 0\n.*carry 1-3_generator_parts_carry: placed into 1-3_baseplate at update [0-9]+.*buildit 1-3_pull_switch_bits: stud drop mode.*switch 1-3_generator_pull_switch: used at update [0-9]+\n.*switch 1-3_generator_pull_switch: player state 76 at update [0-9]+\n.*switch 1-3_generator_pull_switch: state 1 at update [0-9]+\n.*switch 1-3_generator_pull_switch: player state 1 at update [0-9]+\n.*switch 1-3_generator_pull_switch: state 3 at update [0-9]+\n.*script 1-3_Generator_Script started at update [0-9]+\n.*script 1-3_Crow_out started at update [0-9]+\n.*platform 1-3_crane_platform_dummy: travel ended in state 5 at 948.259 5.9968 1147.01 after 102 node moves at update [0-9]+\n.*particles 264 at 1-3_crane_girder started at update [0-9]+\n.*prop 1-3_crane_girder: rocking off at update [0-9]+\n.*platform 1-3_lawnmower_01: lap ended at 958\\.[0-9]+ 16\\.8037 1061\\.[0-9]+ after 145 node moves at update [0-9]+\n.*save: request [0-9]+ written.*\n.*script 1-3_Generator_Script ended at update [0-9]+")
     # Mission 1-3 push cart (SCRIPT-381, 20261026-crane-B): from the start of 1-3_Start_MowerMan_rescue, which enables 1-3_Cart_crate, five hits
     # break the crate, its TriggerObject enables 1-3_Push_Cart_bits (leprops/leprop_buildit, kind 21), A builds it into the push cart 1-3_Push_cart
     # (kind 71), whose back handle (handle02) takes the player walking into the cart on the track behind it (0x2aff3c, states 84 and 85);
@@ -2249,6 +2252,10 @@ add_executable(platform-node-move-test tests/platform_node_move_test.cpp)
 target_link_libraries(platform-node-move-test PRIVATE chase_runtime)
 target_compile_options(platform-node-move-test PRIVATE -Wall -Wextra -Wpedantic)
 add_test(NAME platform-node-move COMMAND platform-node-move-test)
+add_executable(platform-path-test tests/platform_path_test.cpp)
+target_link_libraries(platform-path-test PRIVATE chase_runtime)
+target_compile_options(platform-path-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME platform-path COMMAND platform-path-test)
 add_executable(platform-node-move-real-test tests/platform_node_move_real_test.cpp)
 target_link_libraries(platform-node-move-real-test PRIVATE chase_runtime chase_assets)
 target_compile_options(platform-node-move-real-test PRIVATE -Wall -Wextra -Wpedantic)

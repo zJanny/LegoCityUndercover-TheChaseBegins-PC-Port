@@ -11,6 +11,7 @@ What the user saw when playing `chase-game` against their knowledge of the origi
 - The handcuffs Chase hangs from on the zipline were not drawn (user report; cause: [player-traversal.md §2026-10-19T20:23:05](player-traversal.md#ts-20261019-202305)); they are drawn now ([hand-items.md §2026-10-27T18:27:37](hand-items.md#ts-20261027-182737)), not yet re-checked by the user.
 - Mission 1-3: the key to pick up could not be picked up in the port, so the mission stopped at its first step. [§2026-10-25T13:56:15](#ts-20261025-135615) The port now picks it up; where the user's save state stands (1.71 from the key) A does nothing in the original either, the key's zone ends about 0.6 closer. [carrying.md §2026-10-25T14:37:21](carrying.md#ts-20261025-143721)
 - Mission 1-3, the lawnmower rescue: the lawn mower does not move correctly in the port (path platforms, SCRIPT-377); original situations along the rescue (lift, fence, push cart, crane, mission end) were recorded for later oracle checks. [§2026-10-27T23:14:14](#ts-20261027-231414)
+- Mission 1-3: the rescue's lawn mower "just stood there still and not moving" (user's words); path platforms now move and turn in the port, not yet re-checked by the user. [§2026-10-28T00:06:31](#ts-20261028-000631)
 
 <a id="ts-20261019-175641"></a>
 
@@ -92,3 +93,11 @@ Save states exist (recorded from save states, 2026-10-27) for these situations o
 
 Unknowns:
 - How the lawn mower moves wrong in the port (path, speed or not at all) was not described.
+
+<a id="ts-20261028-000631"></a>
+
+## 2026-10-28T00:06:31+01:00 — Mission 1-3: how the lawn mower moved wrong (user description)
+
+Answers the unknown of [§2026-10-27T23:14:14](#ts-20261027-231414). The user described the lawn mower bug (2026-10-27, their words): "The bug with the mower was, that it just stood there still and not moving".
+
+Cause: the mower `1-3_Lawnmower_02` of the rescue is a platform on a path (`Platform_Path` `1-3_Lawnmower_Path_02`); the port stepped its travel value but never moved its node, so it stayed at its placement. The port now moves and turns path platforms ([props-rocking-platforms.md §2026-10-28T00:06:31](props-rocking-platforms.md#ts-20261028-000631), SCRIPT-377 in [script-system-platforms.md](../plans/features/script-system-platforms.md)); not yet re-checked by the user.

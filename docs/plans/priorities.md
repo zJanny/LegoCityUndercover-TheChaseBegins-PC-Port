@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 962 open items and stand-ins, 169 linked to game usage, 793 with unknown reach.
+Items: 964 open items and stand-ins, 169 linked to game usage, 795 with unknown reach.
 
 ## Top 50 overall
 
@@ -68,7 +68,7 @@ Items: 962 open items and stand-ins, 169 linked to game usage, 793 with unknown 
 | 32 | [SCRIPT-S11](features/script-system-dcam.md?display=source#L19) | 256 | 0 | 8 | 0 | 1 stand-in | `startdcamtrack` | `StartDCamTrack` looks at the placement position of the object (the live position for the player), not at its ... |
 | 33 | [SCRIPT-S20](features/script-system-natives-state.md?display=source#L19) | 248 | 0 | 7 | 0 | 10 stand-in | `addstuds`, `disablesuperbuiltitsave`, `enablestudsbygroup`, `enablesuperbricks` +6 | Nine batch 27 natives (UnlockAbility, LockAbility, UnlockScanner, SetParachuteDeployHeight ... |
 | 34 | [SCRIPT-351](features/script-system-natives-animation.md?display=source#L36) | 236 | 0 | 8 | 1 | 1 stand-in | `loadanimation` | What decides the load time of LoadAnimation (0x23e6e4 request, load record state byte +8 = 2 in 0x17e588) ... |
-| 35 | [SCRIPT-377](features/script-system-platforms.md?display=source#L22) | 0 | 183 | 8 | 2 | - | `leprops/leprop_platform`, `props/prop_platform` | The rest of the platform class: path platforms (the spline of `Platform_Path`, the lawnmowers of mission 1-3 ... |
+| 35 | [SCRIPT-377](features/script-system-platforms.md?display=source#L24) | 0 | 183 | 8 | 2 | - | `leprops/leprop_platform`, `props/prop_platform` | The rest of the platform class: `orient` and type 7 rotations of platforms without a path, the shape curves ... |
 | 36 | [SCRIPT-S18](features/script-system-natives-state.md?display=source#L18) | 175 | 0 | 7 | 0 | 2 stand-in | `resetobject`, `skiptofinalstate` | The six flag natives and ResetObject / SkipToFinalState store their value or message by instance name without ... |
 | 37 | [TRANS-5](features/level-transitions.md?display=source#L33) | 127 | 25 | 7 | 0 | 5 stand-in, 4 none, 1 implemented | `charsetallowvehicleentry`, `playcredits`, `playscriptonstartup`, `positionplayer` +7 | The 31 scripts of the shipped levels that call SceneChange, CharSetAllowVehicleEntry or ... |
 | 38 | [SCRIPT-73](features/script-system-hud-natives.md?display=source#L33) | 148 | 0 | 6 | 1 | 5 stand-in | `disableicon`, `enableminimapwipe`, `enablescanner`, `overridescannable` +1 | Map and scanner natives (EnableMinimapWipe 0x187f28, EnableScanner, OverrideScannable, PanMapToObject, map ... |
@@ -137,7 +137,7 @@ Items: 962 open items and stand-ins, 169 linked to game usage, 793 with unknown 
 
 ## Scripts and missions
 
-106 of 225 items linked.
+106 of 227 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -255,7 +255,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [script-system-natives-state.md](features/script-system-natives-state.md): SCRIPT-335 (+1), SCRIPT-56 (+1), SCRIPT-64 (+1), SCRIPT-S97
 - [script-system-natives-world.md](features/script-system-natives-world.md): SCRIPT-279 (+1)
 - [script-system-natives.md](features/script-system-natives.md): SCRIPT-43 (+18), SCRIPT-44 (+17), SCRIPT-45 (+14), SCRIPT-7 (+12), SCRIPT-13 (+1), SCRIPT-150 (+1)
-- [script-system-platforms.md](features/script-system-platforms.md): SCRIPT-378 (+1), SCRIPT-S301, SCRIPT-S302
+- [script-system-platforms.md](features/script-system-platforms.md): SCRIPT-378 (+1), SCRIPT-385, SCRIPT-S301, SCRIPT-S302, SCRIPT-S307
 - [script-system-triggers.md](features/script-system-triggers.md): SCRIPT-76 (+11), SCRIPT-51 (+3), SCRIPT-77 (+1), SCRIPT-78 (+1), SCRIPT-S15, SCRIPT-S28, SCRIPT-S30, SCRIPT-S8
 - [script-system-use-markers.md](features/script-system-use-markers.md): SCRIPT-356 (+2), SCRIPT-357 (+1), SCRIPT-355, SCRIPT-S247, SCRIPT-S248, SCRIPT-S249, SCRIPT-S286, SCRIPT-S287, SCRIPT-S288
 - [script-system.md](features/script-system.md): SCRIPT-1 (+10), SCRIPT-53 (+2), SCRIPT-2, SCRIPT-3, SCRIPT-5, SCRIPT-54, SCRIPT-55, SCRIPT-9, SCRIPT-S1, SCRIPT-S14, SCRIPT-S16, SCRIPT-S275, SCRIPT-S3, SCRIPT-S5, SCRIPT-S6, SCRIPT-S7

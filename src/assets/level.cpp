@@ -137,13 +137,15 @@ Level parseLevel(const Bytes& data) {
         for (std::size_t k = 0; k < count; ++k)
             for (std::size_t a = 0; a < 3; ++a) path.points[k][a] = readF32(points, k * 12 + a * 4);
         if (readU32(s20, i * 0x28 + 0x10)) {
-            const Bytes quaternions = r.next();
-            for (std::size_t offset = 0x40; offset + 16 <= quaternions.size(); offset += 16) {
-                std::array<float, 4> q{};
-                for (std::size_t a = 0; a < 4; ++a) q[a] = readF32(quaternions, offset + a * 4);
-                path.orientations.push_back(q);
-            }
-            r.skip();
+            const auto readQuaternions = [](const Bytes& block, std::vector<std::array<float, 4>>& out) {
+                for (std::size_t offset = 0x40; offset + 16 <= block.size(); offset += 16) {
+                    std::array<float, 4> q{};
+                    for (std::size_t a = 0; a < 4; ++a) q[a] = readF32(block, offset + a * 4);
+                    out.push_back(q);
+                }
+            };
+            readQuaternions(r.next(), path.orientations);
+            readQuaternions(r.next(), path.orientationControls);
         }
     }
     Bytes s24 = r.next();

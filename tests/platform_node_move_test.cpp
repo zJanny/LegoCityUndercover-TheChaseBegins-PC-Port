@@ -133,11 +133,6 @@ void travelEndsByType() {
     controlled.value = 0.5f;
     node = platformUpdate(controlled, 1.0f / 30.0f);
     require(controlled.value == 0.5f && node && near((*node)[1], 2.0f, 1e-6f), "state 4: no step, the node follows the value (0x280c4c)");
-
-    PlatformRecord path = travel(1);
-    path.motion.path = true;
-    path.state = path.requested = kPlatformMovingState;
-    require(!platformUpdate(path, 1.0f / 30.0f) && near(path.value, 0.25f, 1e-6f), "STAND-IN SCRIPT-S301: a path platform steps but its node does not move");
 }
 
 void attachedNodesFollow() {

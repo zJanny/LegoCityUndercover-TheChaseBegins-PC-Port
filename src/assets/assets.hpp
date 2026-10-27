@@ -350,6 +350,8 @@ struct LevelPath {
     std::vector<std::array<float, 3>> points;
     // Block at record +0x10 (runtime path +8): 0x40 bytes of head, then one quaternion (x, y, z, w) per 16 bytes, read by 0x270b70.
     std::vector<std::array<float, 4>> orientations;
+    // The block after it (runtime path +0xc), the same layout: the inner quaternions of the squad 0x270c60.
+    std::vector<std::array<float, 4>> orientationControls;
 };
 struct Level {
     std::vector<LevelPath> paths;

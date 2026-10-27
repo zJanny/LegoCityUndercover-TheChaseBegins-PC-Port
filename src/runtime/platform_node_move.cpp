@@ -123,6 +123,7 @@ PlatformRecord platformRecordOf(const assets::LevelObject& object, const assets:
     motion.lerpShape = shape >= 0 && shape < kLerpShapeCount ? std::uint16_t(shape) : std::uint16_t(0);
     motion.lerpSameBackwards = (intParam(object, cls, "LerpSameBackwards", 1) & 1) != 0;
     motion.resetProgressOnTrigger = (intParam(object, cls, "ResetProgressOnTrigger", 1) & 1) != 0;
+    motion.constantSpeed = (intParam(object, cls, "ConstantSpeed", 0) & 1) != 0;
     if (motion.type == kContinuousType) {
         const std::uint32_t frames = std::uint32_t(std::int32_t(floatParam(object, cls, "continuuswaittime", 0.0f) * kPlatformStepRate));
         motion.continuousWait = frames >= kPlatformWaitLimit ? kPlatformWaitLimit : std::uint16_t(std::max<std::uint32_t>(frames, 1));
@@ -130,13 +131,23 @@ PlatformRecord platformRecordOf(const assets::LevelObject& object, const assets:
     }
     if (intParam(object, cls, "Controlled", 0) != 0) record.state = record.requested = kPlatformControlledState;
 
-    if (const std::optional<assets::Placement> start = assets::objectStart(level, object.instance))
+    if (const std::optional<assets::Placement> start = assets::objectStart(level, object.instance)) {
         std::copy_n(start->position, 3, motion.placement.begin());
+        const assets::Matrix matrix = assets::placementMatrix(*start);
+        for (std::size_t row = 0; row < 3; ++row)
+            for (std::size_t column = 0; column < 3; ++column) motion.placementRotation[row * 3 + column] = matrix[row * 4 + column];
+    }
     motion.origin = motion.target = motion.placement;
     const std::string pathName = textParam(object, cls, "Platform_Path");
     if (!pathName.empty()) {
         const std::uint32_t hash = assets::nameHash(lower(pathName));
-        motion.path = std::any_of(level.paths.begin(), level.paths.end(), [&](const assets::LevelPath& path) { return path.nameHash == hash; });
+        const auto found = std::find_if(level.paths.begin(), level.paths.end(), [&](const assets::LevelPath& path) { return path.nameHash == hash; });
+        if (found != level.paths.end() && !found->points.empty()) {
+            motion.path = true;
+            motion.track = platformPathOf(*found, motion.constantSpeed);
+            std::copy(found->points.front().begin(), found->points.front().end(), motion.origin.begin());
+            std::copy(found->points.back().begin(), found->points.back().end(), motion.target.begin());
+        }
     }
     if (const assets::LevelParam* to = param(object, cls, "ObjectTo"); to && to->type == 4 && !motion.path) {
         const std::uint32_t hash = assets::objectReferenceHash(*to);
@@ -205,6 +216,7 @@ std::optional<PlatformVector> platformUpdate(PlatformRecord& record, float dt) {
     const float step = dt * kPlatformStepRate * record.speed;
     bool backwards = false;
     std::optional<PlatformVector> node;
+    record.rotation.reset();
     if (movingState(record.state)) {
         if (record.state == kPlatformMovingState) record.value = record.value + step;
         if (record.state == kPlatformReturningState) {
@@ -220,7 +232,11 @@ std::optional<PlatformVector> platformUpdate(PlatformRecord& record, float dt) {
         }
         const float shaped = record.requested == kPlatformStoppedState ? record.value : platformShape(record, record.value, backwards);
         const PlatformMotion& motion = record.motion;
-        if (!motion.path && !motion.rotateOnly) {
+        if (motion.path && motion.track) {
+            const PlatformPathPose pose = platformPathPose(*motion.track, shaped, motion.constantSpeed, motion.orient);
+            node = pose.position;
+            if (pose.rotation) record.rotation = normalisedPathRotation(*pose.rotation);
+        } else if (!motion.path && !motion.rotateOnly) {
             PlatformVector position{};
             for (int axis = 0; axis < 3; ++axis) position[axis] = motion.origin[axis] + (motion.target[axis] - motion.origin[axis]) * shaped;
             node = position;
@@ -235,9 +251,13 @@ void NodeCarry::clear() {
     parents_.clear();
     children_.clear();
     attached_.clear();
-    offsets_.clear();
+    carried_.clear();
+    relative_.clear();
+    placements_.clear();
     moved_.clear();
 }
+
+void NodeCarry::setPlacement(const std::string& name, const PlatformVector& position) { placements_[name] = position; }
 
 void NodeCarry::setParent(const std::string& child, const std::string& parent) {
     const auto old = parents_.find(child);
@@ -246,9 +266,26 @@ void NodeCarry::setParent(const std::string& child, const std::string& parent) {
         siblings.erase(std::remove(siblings.begin(), siblings.end(), child), siblings.end());
         parents_.erase(old);
     }
+    relative_.erase(child);
     if (parent.empty() || parent == child) return;
     parents_[child] = parent;
     children_[parent].push_back(child);
+    relate(child);
+}
+
+void NodeCarry::relate(const std::string& child) {
+    const auto parent = parents_.find(child);
+    if (parent == parents_.end()) return;
+    const Carried above = carriedOf(parent->second), own = carriedOf(child);
+    const PathRotation back = transposedPathRotation(above.rotation);
+    PlatformVector apart{};
+    for (std::size_t axis = 0; axis < 3; ++axis) apart[axis] = own.translation[axis] - above.translation[axis];
+    relative_[child] = {multiplyPathRotation(own.rotation, back), rotatePathPoint(apart, back)};
+}
+
+NodeCarry::Carried NodeCarry::carriedOf(const std::string& name) const {
+    const auto found = carried_.find(name);
+    return found == carried_.end() ? Carried{} : found->second;
 }
 
 void NodeCarry::attach(const std::string& platform, const std::string& child) {
@@ -257,8 +294,7 @@ void NodeCarry::attach(const std::string& platform, const std::string& child) {
     list.push_back(child);
 }
 
-void NodeCarry::move(const std::string& name, const PlatformVector& delta) {
-    if (delta[0] == 0.0f && delta[1] == 0.0f && delta[2] == 0.0f) return;
+std::vector<std::string> NodeCarry::markSubtreeMoved(const std::string& name) {
     std::vector<std::string> pending{name};
     std::vector<std::string> seen;
     while (!pending.empty()) {
@@ -266,17 +302,50 @@ void NodeCarry::move(const std::string& name, const PlatformVector& delta) {
         pending.pop_back();
         if (std::find(seen.begin(), seen.end(), current) != seen.end()) continue;
         seen.push_back(current);
-        PlatformVector& offset = offsets_[current];
-        for (int axis = 0; axis < 3; ++axis) offset[axis] += delta[axis];
         if (std::find(moved_.begin(), moved_.end(), current) == moved_.end()) moved_.push_back(current);
         const auto children = children_.find(current);
         if (children != children_.end()) pending.insert(pending.end(), children->second.rbegin(), children->second.rend());
     }
+    return seen;
+}
+
+void NodeCarry::move(const std::string& name, const PlatformVector& delta) {
+    if (delta[0] == 0.0f && delta[1] == 0.0f && delta[2] == 0.0f) return;
+    Carried carried = carriedOf(name);
+    for (std::size_t axis = 0; axis < 3; ++axis) carried.translation[axis] += delta[axis];
+    place(name, carried.rotation, carried.translation);
+}
+
+void NodeCarry::place(const std::string& name, const PathRotation& rotation, const PlatformVector& translation) {
+    carried_[name] = {rotation, translation};
+    relate(name);
+    for (const std::string& current : markSubtreeMoved(name)) {
+        if (current == name) continue;
+        const Carried above = carriedOf(parents_.at(current));
+        const Carried& relative = relative_[current];
+        Carried& carried = carried_[current];
+        carried.rotation = multiplyPathRotation(relative.rotation, above.rotation);
+        const PlatformVector turned = rotatePathPoint(relative.translation, above.rotation);
+        for (std::size_t axis = 0; axis < 3; ++axis) carried.translation[axis] = turned[axis] + above.translation[axis];
+    }
 }
 
 PlatformVector NodeCarry::offset(const std::string& name) const {
-    const auto found = offsets_.find(name);
-    return found == offsets_.end() ? PlatformVector{} : found->second;
+    const auto found = carried_.find(name);
+    if (found == carried_.end()) return {};
+    const Carried& carried = found->second;
+    if (carried.rotation == kIdentityPathRotation) return carried.translation;
+    const auto placed = placements_.find(name);
+    const PlatformVector placement = placed == placements_.end() ? PlatformVector{} : placed->second;
+    const PlatformVector turned = rotatePathPoint(placement, carried.rotation);
+    PlatformVector offset{};
+    for (std::size_t axis = 0; axis < 3; ++axis) offset[axis] = turned[axis] + carried.translation[axis] - placement[axis];
+    return offset;
+}
+
+PathRotation NodeCarry::rotation(const std::string& name) const {
+    const auto found = carried_.find(name);
+    return found == carried_.end() ? kIdentityPathRotation : found->second.rotation;
 }
 
 const std::vector<std::string>& NodeCarry::attached(const std::string& platform) const {

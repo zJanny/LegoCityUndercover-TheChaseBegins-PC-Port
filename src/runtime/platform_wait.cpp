@@ -34,8 +34,11 @@ void PlatformSet::load(const assets::Level& level, const assets::ClassLookup& cl
     records_.clear();
     movedUpdates_.clear();
     arrivals_.clear();
+    laps_.clear();
     carry_.clear();
     for (const assets::LevelObject& object : level.objects) {
+        if (const std::optional<assets::Placement> start = assets::objectStart(level, object.instance))
+            carry_.setPlacement(lower(object.instance), {start->position[0], start->position[1], start->position[2]});
         const assets::Level* cls = classOf(object.className);
         if (!cls || assets::objectKind(object, *cls) != kPlatformKind) continue;
         const std::string name = lower(object.instance);
@@ -61,24 +64,49 @@ void PlatformSet::update(float dt) {
     for (const std::string& name : order_) {
         PlatformRecord& record = records_.at(name);
         const bool wasTravelling = travelling(record.state);
+        const std::uint16_t stateBefore = record.state;
+        const float valueBefore = record.value;
         if (const std::optional<PlatformVector> node = platformUpdate(record, dt)) {
-            const PlatformVector carried = carry_.offset(name);
-            PlatformVector delta{};
-            for (int axis = 0; axis < 3; ++axis) delta[axis] = (*node)[axis] - (record.motion.placement[axis] + carried[axis]);
-            carry_.move(name, delta);
+            if (record.rotation) turnNode(name, record, *node);
+            else {
+                const PlatformVector carried = carry_.offset(name);
+                PlatformVector delta{};
+                for (int axis = 0; axis < 3; ++axis) delta[axis] = (*node)[axis] - (record.motion.placement[axis] + carried[axis]);
+                carry_.move(name, delta);
+            }
             ++movedUpdates_[name];
         }
-        if (wasTravelling && !travelling(record.state)) {
-            PlatformArrival arrival;
-            arrival.instance = name;
-            const PlatformVector carried = carry_.offset(name);
-            for (int axis = 0; axis < 3; ++axis) arrival.node[axis] = record.motion.placement[axis] + carried[axis];
-            arrival.state = record.state;
-            arrival.movedUpdates = movedUpdates_[name];
-            movedUpdates_[name] = 0;
-            arrivals_.push_back(arrival);
-        }
+        const bool wrapped = record.motion.path && record.motion.looped && record.state == stateBefore &&
+                             ((stateBefore == kPlatformMovingState && record.value < valueBefore) ||
+                              (stateBefore == kPlatformReturningState && record.value > valueBefore));
+        if (wasTravelling && !travelling(record.state)) arrivals_.push_back(report(name, record));
+        else if (wrapped) laps_.push_back(report(name, record));
     }
+}
+
+PlatformArrival PlatformSet::report(const std::string& name, const PlatformRecord& record) {
+    PlatformArrival arrival;
+    arrival.instance = name;
+    const PlatformVector carried = carry_.offset(name);
+    for (int axis = 0; axis < 3; ++axis) arrival.node[axis] = record.motion.placement[axis] + carried[axis];
+    arrival.state = record.state;
+    arrival.movedUpdates = movedUpdates_[name];
+    movedUpdates_[name] = 0;
+    return arrival;
+}
+
+std::vector<PlatformArrival> PlatformSet::takeLaps() {
+    std::vector<PlatformArrival> laps;
+    laps.swap(laps_);
+    return laps;
+}
+
+void PlatformSet::turnNode(const std::string& name, const PlatformRecord& record, const PlatformVector& node) {
+    const PathRotation now = multiplyPathRotation(record.motion.placementRotation, *record.rotation, true);
+    const PlatformVector placed = rotatePathPoint(record.motion.placement, now);
+    PlatformVector translation{};
+    for (std::size_t axis = 0; axis < 3; ++axis) translation[axis] = node[axis] - placed[axis];
+    carry_.place(name, now, translation);
 }
 
 void PlatformSet::attachObject(const std::string& lowerParent, const std::string& lowerChild) {

@@ -17,7 +17,7 @@ constexpr std::uint8_t kPlatformKind = 64;
 // 0x263b84: the bit pattern of the value equal to 1.0, or not below it as a signed integer (a float at or above 1.0), or the state 5.
 bool platformReached(const PlatformRecord& record);
 
-// A travel that ended in the last update: the state left 2, 3 or 4.
+// A travel that ended in the last update (the state left 2, 3 or 4), or a lap of a `Looped` path platform (its value went round past 1.0 or 0.0).
 struct PlatformArrival {
     std::string instance;
     PlatformVector node{};
@@ -41,18 +41,25 @@ public:
     void setNodeParent(const std::string& lowerChild, const std::string& lowerParent) { carry_.setParent(lowerChild, lowerParent); }
     // How far the moving platform nodes above an object (or the object's own node, for a platform) have moved it from its placement.
     PlatformVector carriedOffset(const std::string& lowerInstance) const { return carry_.offset(lowerInstance); }
+    // The turn of the moving platform nodes above an object (or of a platform's own node): the rows R of its carry p -> p R + T.
+    PathRotation carriedRotation(const std::string& lowerInstance) const { return carry_.rotation(lowerInstance); }
     // The list R+0x60 of a platform: the objects AttachObject attached to it, in order (empty for other objects).
     const std::vector<std::string>& attachedTo(const std::string& lowerPlatform) const { return carry_.attached(lowerPlatform); }
     const std::string* nodeParent(const std::string& lowerChild) const { return carry_.parent(lowerChild); }
     // The objects whose carried offset changed since the last call, and the travels that ended.
     std::vector<std::string> takeMoved() { return carry_.takeMoved(); }
     std::vector<PlatformArrival> takeArrivals();
+    std::vector<PlatformArrival> takeLaps();
 
 private:
+    // A node move that also turns the node: the carry that takes the platform from its placement to `node` with the rows the update wrote.
+    void turnNode(const std::string& lowerInstance, const PlatformRecord& record, const PlatformVector& node);
+    PlatformArrival report(const std::string& lowerInstance, const PlatformRecord& record);
     std::vector<std::string> order_;
     std::map<std::string, PlatformRecord> records_;
     std::map<std::string, std::uint32_t> movedUpdates_;
     std::vector<PlatformArrival> arrivals_;
+    std::vector<PlatformArrival> laps_;
     NodeCarry carry_;
 };
 
