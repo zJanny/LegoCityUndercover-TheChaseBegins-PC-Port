@@ -2,6 +2,8 @@
 
 Findings about the static collision of a level and how the player uses it. The player's other relations (objects, vehicles, falling) are listed as unknowns at the end.
 
+Subtopics: [collision-nested.md](collision-nested.md)
+
 ## Current state
 
 - Collision section of a model (loader 0x114640): items of 0x2c bytes, nodes 0x1c bytes (box centre + half extents, info word), triangles 0x20 bytes (normal, plane offset, 3 vertex indices, surface byte); the level master model holds the static world in world coordinates. [§2026-10-13T14:45](#ts-20261013-144500)
@@ -14,6 +16,7 @@ Findings about the static collision of a level and how the player uses it. The p
 - A wall triangle of a placed object (every pooled entry) counts only while the player's box centre, before the movement, is in front of its plane; a walk that starts inside a prop crosses it. [§2026-10-19T07:58:53](#ts-20261019-075853)
 - Replay tests (`collision-real-data`) match recorded ground and wall traces; the car comparison screenshot is not valid yet (COLL-22). [§2026-10-15T10:50](#ts-20261015-105024)
 - Kind 67 (props/prop_prop, leprops/leprop_prop and the other classes of that kind) registers by its post-link 0x16aeb4: 0x23aff8 without margin, then the `HasCollisionMesh` item with its root node as box or the model's box record; checked on the 22 entries of lvl_01. [vehicles-prop-smash.md §2026-10-20T09:30:16](vehicles-prop-smash.md#ts-20261020-093016)
+- Registration of the super build-it plate (kind 98), of the objects class files nest and the helipad of mission 1-3: [collision-nested.md](collision-nested.md).
 - Open: falling path, the owner-flag-0 setter, 147+7 static entries against 153 items, other constructors (vehicles, characters), box-top standing, door_back contact.
 
 <a id="ts-20261013-144500"></a>

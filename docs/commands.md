@@ -149,6 +149,8 @@ The table lists some of the tests. `ctest --test-dir build -N` lists all of them
 | `slide-real-data` | Compares the slide down a steep slope (step-off state 8) with rows recorded from the original game (kept in `tests/data/slide_traces.inc`); skips with code 77 if `artifacts/romfs` is missing |
 | `slope-real-data` | Compares the run slow-down on slopes with run rows recorded from the original game (kept in `tests/data/slope_traces.inc`); needs no game data |
 | `collision-real-data` | Compares the character's floor height and wall sliding, also against lamp posts and barriers, with samples recorded from the original game (kept in `tests/data/collision_ground_samples.inc` and `tests/data/collision_wall_samples.inc`); skips with code 77 if `artifacts/romfs` is missing |
+| `nested-object-collision-real-data` | Checks the collision of the super build-it plate and the built prop of the helipad of mission 1-3 (shapes from the original's collision grid, enabled before and after the build) and the objects that class files nest; skips with code 77 if `artifacts/romfs` is missing |
+| `game-helipad-collision` | Builds the helipad of mission 1-3 in `chase-game` and pushes the character into its edge: he must stop at it (slow test, needs game data) |
 | `soundtest-real-smoke`, `soundtest-id-smoke` | Play one sound by file name and one by number on the dummy audio driver. Same conditions |
 | `progress-tables` | The tables behind the progress report: which script commands, object types and file types the port handles. No game data needed |
 | `progress-readme` | Fails when the progress table in `README.md` is out of date (`tools/progress_report.py --check`); skips with code 77 if `artifacts/romfs` or the built library is missing |

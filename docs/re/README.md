@@ -128,6 +128,7 @@ Read this index, then open only the file you need.
 | [pushables.md](pushables.md) | Pushables (kind 71, `leprops/leprop_pushable`) and their handles (kind 72), the player's handle states 84 to 86, and the push cart of mission 1-3 |
 | [front-end.md](front-end.md) | Boot sequencer 0x302080, screen order and triggers from power-on to the first level, prompt state machine 0x313368, save indicator, language, savegameflow pages, loading screen, intro movie bubble and title card |
 | [collision.md](collision.md) | Level collision data (model+0x1c section), ground probe by box bisection, wall slide, placed objects (world grid, registration, shapes, query layers), differential test against traces |
+| [collision-nested.md](collision-nested.md) | Collision of the objects class files nest, of the super build-it plate (kind 98) and of the mission 1-3 helipad |
 | [dcam.md](dcam.md) | Director camera: level paths, StartDCam commands, phase machine, busy test and end of WaitForDCam, hand-back, oracle timing |
 
 Python tools that were later removed from the repository (convert_models, convert_anims, convert_nav, tt_resource, preview_model, the census modes of convert_levels, and the Python decoders behind convert_textures, convert_audio, convert_loc, convert_font and extract_fib) last existed at commit `9d04c91`. Older entries that name them stay as written.

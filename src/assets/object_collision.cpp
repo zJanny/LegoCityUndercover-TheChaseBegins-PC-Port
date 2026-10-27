@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cstring>
+#include <functional>
 #include <iterator>
 #include <map>
 
@@ -147,7 +148,19 @@ bool PlacedObjectState::collisionEnabled(const std::string& instance, bool initi
 }
 
 namespace {
-std::vector<ObjectCollision> collectObjectCollisions(FuseArchive& archive, const Level& level, const PlacedObjectState& state, bool keepInactive) {
+constexpr std::uint8_t kNeverCreated = 1;      // createFlags bit 0 (0x1a4130)
+constexpr std::uint8_t kDefaultSceneOnly = 2;  // createFlags bit 1: created only in the scene at 0x589a1c, not in the game scene
+constexpr int kMaxNesting = 8;  // STAND-IN COLL-S7: a guard of the port's recursion, the original's nesting bound was not read
+constexpr std::uint8_t kPlayerObjectKind = 65;  // class "players": its children are the hand items, which hang on the bones and are hidden (docs/re/hand-items.md)
+
+bool hasStartupScript(const Level& classFile) {
+    const std::uint32_t hash = nameHash("startup");
+    return std::any_of(classFile.scripts.begin(), classFile.scripts.end(), [hash](const LevelScript& script) { return script.nameHash == hash; });
+}
+
+enum class Scope { Placed, Nested };
+
+std::vector<ObjectCollision> collectObjectCollisions(FuseArchive& archive, const Level& level, const PlacedObjectState& state, bool keepInactive, Scope scope) {
     const ClassLookup classLookup = archiveClassLookup(archive);
     const auto classOf = [&](const std::string& name) -> const Level& { return *classLookup(name); };
     std::map<std::string, ModelData> models;
@@ -163,19 +176,21 @@ std::vector<ObjectCollision> collectObjectCollisions(FuseArchive& archive, const
                         hashNoBoundCollisions = nameHash("NoBoundCollisions");
 
     std::vector<ObjectCollision> out;
-    for (const LevelObject& object : level.objects) {
+    const auto consider = [&](const LevelObject& object, const std::string& instance, const Matrix* parent) {
         const bool prop = isPropClass(object.className);
         const bool door = isDoorClass(object.className);
         const bool dummyCollision = isDummyCollisionClass(object.className);
         const Level& cls = classOf(object.className);
         const bool vehicle = isVehicleClassFile(cls);
-        const bool propKind = objectKind(object, cls) == kPropObjectKind;
-        const bool propFamily = isPropFamilyClass(object.className) || vehicle || propKind;
-        if (!prop && !dummyCollision && !vehicle && !propKind) continue;
-        if (!keepInactive && state.isDisabled(object.instance)) continue;
+        const std::uint8_t kind = objectKind(object, cls);
+        const bool propKind = kind == kPropObjectKind;
+        const bool superBuildit = kind == kSuperBuilditObjectKind;
+        const bool propFamily = isPropFamilyClass(object.className) || vehicle || propKind || superBuildit;
+        if (!prop && !dummyCollision && !vehicle && !propKind) return;
+        if (!keepInactive && state.isDisabled(instance)) return;
 
         Placement placement;
-        if (!float3Of(effectiveParam(object, cls, hashPosition), placement.position)) continue;
+        if (!float3Of(effectiveParam(object, cls, hashPosition), placement.position) && !parent) return;
         float3Of(effectiveParam(object, cls, hashOrientation), placement.orientation);
 
         bool box = false;
@@ -184,7 +199,7 @@ std::vector<ObjectCollision> collectObjectCollisions(FuseArchive& archive, const
         std::string modelPath;
 
         if (dummyCollision) {
-            if (!float3Of(findParam(object.params, hashCollisionBound), half)) continue;
+            if (!float3Of(findParam(object.params, hashCollisionBound), half)) return;
             box = true;
         }
         const auto bound = std::find_if(cls.bounds.begin(), cls.bounds.end(), [](const LevelBound& b) { return lower(b.name) == "collisionbound"; });
@@ -201,6 +216,17 @@ std::vector<ObjectCollision> collectObjectCollisions(FuseArchive& archive, const
             if (!meshName.empty()) modelPath = meshModelPath(meshName);
             const ModelData* model = meshName.empty() ? nullptr : &modelAt(modelPath);
             if (model && model->present) {
+                const auto takeModelCollision = [&] {
+                    if (model->firstItem && !model->firstItem->nodes.empty()) {
+                        mesh = model->firstItem;
+                        std::memcpy(centre, mesh->nodes.front().centre, sizeof centre);
+                        std::memcpy(half, mesh->nodes.front().half, sizeof half);
+                    } else if (!model->boxes.empty()) {
+                        const CollisionBox& record = model->boxes.front();
+                        transformPoint(record.matrix, record.position, centre);
+                        std::memcpy(half, record.half, sizeof half);
+                    }
+                };
                 if (!box && model->hasBounds) {
                     std::memcpy(centre, model->boundsCentre, sizeof centre);
                     std::memcpy(half, model->boundsHalf, sizeof half);
@@ -216,17 +242,8 @@ std::vector<ObjectCollision> collectObjectCollisions(FuseArchive& archive, const
                         std::memcpy(half, record.half, sizeof half);
                     }
                 }
-                if (propKind && !mesh && intOf(effectiveParam(object, cls, hashHasCollisionMesh)) != 0) {
-                    if (model->firstItem && !model->firstItem->nodes.empty()) {
-                        mesh = model->firstItem;
-                        std::memcpy(centre, mesh->nodes.front().centre, sizeof centre);
-                        std::memcpy(half, mesh->nodes.front().half, sizeof half);
-                    } else if (!model->boxes.empty()) {
-                        const CollisionBox& record = model->boxes.front();
-                        transformPoint(record.matrix, record.position, centre);
-                        std::memcpy(half, record.half, sizeof half);
-                    }
-                }
+                if (superBuildit) takeModelCollision();
+                else if (propKind && !mesh && intOf(effectiveParam(object, cls, hashHasCollisionMesh)) != 0) takeModelCollision();
             }
         }
         const LevelParam* boundCollision = effectiveParam(object, cls, hashBoundCollision);
@@ -234,32 +251,66 @@ std::vector<ObjectCollision> collectObjectCollisions(FuseArchive& archive, const
         if (propKind) {
             if (intOf(effectiveParam(object, cls, hashDestructable)) == kNoBoundsHitMode || intOf(effectiveParam(object, cls, hashNoBoundCollisions)) != 0)
                 collisionDefault = false;
-            if (!collisionDefault && !mesh) continue;
         }
-        if (!keepInactive && !state.collisionEnabled(object.instance, collisionDefault)) continue;
-        if (!box && !mesh) continue;
+        if ((propKind || superBuildit) && !collisionDefault && !mesh) return;
+        if (!keepInactive && !state.collisionEnabled(instance, collisionDefault)) return;
+        if (!box && !mesh) return;
 
         ObjectCollision entry;
-        entry.instance = object.instance;
+        entry.instance = instance;
         entry.className = object.className;
         entry.collisionDefault = collisionDefault;
         entry.model = modelPath;
-        entry.matrix = placementMatrix(placement);
+        entry.matrix = parent ? multiply(placementMatrix(placement), *parent) : placementMatrix(placement);
         entry.mesh = mesh;
         std::memcpy(entry.centre, centre, sizeof centre);
         std::memcpy(entry.half, half, sizeof half);
         out.push_back(std::move(entry));
+    };
+
+    std::function<void(const LevelObject&, const std::string&, const Matrix&, int)> descend = [&](const LevelObject& parent, const std::string& name,
+                                                                                               const Matrix& parentMatrix, int depth) {
+        const Level& parentClass = classOf(parent.className);
+        if (hasStartupScript(parentClass) || objectKind(parent, parentClass) == kPlayerObjectKind) return;
+        for (const LevelObject& child : parentClass.objects) {
+            if ((child.createFlags & kNeverCreated) || (child.createFlags & kDefaultSceneOnly)) continue;
+            const std::string childName = name + "." + child.instance;
+            const Level& childClass = classOf(child.className);
+            Placement local;
+            float3Of(effectiveParam(child, childClass, hashPosition), local.position);
+            float3Of(effectiveParam(child, childClass, hashOrientation), local.orientation);
+            const Matrix matrix = multiply(placementMatrix(local), parentMatrix);
+            consider(child, childName, &matrix);
+            if (depth < kMaxNesting) descend(child, childName, matrix, depth + 1);
+        }
+    };
+
+    for (const LevelObject& object : level.objects) {
+        if (scope == Scope::Placed) {
+            consider(object, object.instance, nullptr);
+            continue;
+        }
+        if (object.createFlags & kNeverCreated) continue;
+        Placement placed;
+        const Level& cls = classOf(object.className);
+        if (!float3Of(effectiveParam(object, cls, hashPosition), placed.position)) continue;
+        float3Of(effectiveParam(object, cls, hashOrientation), placed.orientation);
+        descend(object, object.instance, placementMatrix(placed), 0);
     }
     return out;
 }
 }
 
 std::vector<ObjectCollision> objectCollisions(FuseArchive& archive, const Level& level, const PlacedObjectState& state) {
-    return collectObjectCollisions(archive, level, state, false);
+    return collectObjectCollisions(archive, level, state, false, Scope::Placed);
 }
 
 std::vector<ObjectCollision> objectCollisionCandidates(FuseArchive& archive, const Level& level) {
-    return collectObjectCollisions(archive, level, PlacedObjectState{}, true);
+    return collectObjectCollisions(archive, level, PlacedObjectState{}, true, Scope::Placed);
+}
+
+std::vector<ObjectCollision> nestedObjectCollisionCandidates(FuseArchive& archive, const Level& level) {
+    return collectObjectCollisions(archive, level, PlacedObjectState{}, true, Scope::Nested);
 }
 
 }

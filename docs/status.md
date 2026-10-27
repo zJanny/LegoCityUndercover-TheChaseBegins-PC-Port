@@ -12,7 +12,7 @@
 - Playing sounds in the [sound test](sound-test.md).
 - Playing the cutscene videos with subtitles in the [video player](fmv-player.md).
 - Running a level in the [development runtime](game-runtime.md). It is a test program, not gameplay. Today it does this:
-  - The main character walks, runs, sprints, jumps and falls with the speeds measured in the original game. The level's floor and walls, and many objects (lamp posts, crates, barriers, doors), stop him. Walking slowly off a ledge differs from the original.
+  - The main character walks, runs, sprints, jumps and falls with the speeds measured in the original game. The level's floor and walls, and many objects (lamp posts, crates, barriers, doors, the helipad of mission 1-3 before and after its build), stop him. Walking slowly off a ledge differs from the original.
   - The camera follows him like the original and keeps out of walls. In places with a fixed camera it stays fixed and shows the crossed-out camera picture (the smooth change between fixed cameras is missing).
   - Studs spin, can be picked up and fly to the stud counter. The display of the original game is shown: the character's picture, the hearts, the stud counter and the map on the bottom screen (the map is a stand-in fitted to the original). Start opens the pause menu, but Options, Credits and Exit do nothing yet.
   - The character's footsteps, jump and landing sounds and the coin sound play, with distance and left/right position as in the original. The sounds of his climbs on ladders play too, from the sound tracks of his animations; they are not yet compared with the original.

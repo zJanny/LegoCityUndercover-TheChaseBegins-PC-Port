@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 953 open items and stand-ins, 168 linked to game usage, 785 with unknown reach.
+Items: 959 open items and stand-ins, 168 linked to game usage, 791 with unknown reach.
 
 ## Top 50 overall
 
@@ -69,25 +69,25 @@ Items: 953 open items and stand-ins, 168 linked to game usage, 785 with unknown 
 | 33 | [SCRIPT-S20](features/script-system-natives-state.md?display=source#L19) | 248 | 0 | 7 | 0 | 10 stand-in | `addstuds`, `disablesuperbuiltitsave`, `enablestudsbygroup`, `enablesuperbricks` +6 | Nine batch 27 natives (UnlockAbility, LockAbility, UnlockScanner, SetParachuteDeployHeight ... |
 | 34 | [SCRIPT-351](features/script-system-natives-animation.md?display=source#L36) | 236 | 0 | 8 | 1 | 1 stand-in | `loadanimation` | What decides the load time of LoadAnimation (0x23e6e4 request, load record state byte +8 = 2 in 0x17e588) ... |
 | 35 | [SCRIPT-377](features/script-system-platforms.md?display=source#L22) | 0 | 183 | 8 | 2 | - | `leprops/leprop_platform`, `props/prop_platform` | The rest of the platform class: path platforms (the spline of `Platform_Path`, the lawnmowers of mission ... |
-| 36 | [COLL-2](features/collision.md?display=source#L29) | 0 | 183 | 7 | 1 | - | `props/parkour_skydive`, `props/prop_prop` | Only the classes with a recovered constructor rule register (props, doors, dummycollision, vehicles) ... |
-| 37 | [SCRIPT-S18](features/script-system-natives-state.md?display=source#L18) | 175 | 0 | 7 | 0 | 2 stand-in | `resetobject`, `skiptofinalstate` | The six flag natives and ResetObject / SkipToFinalState store their value or message by instance name without ... |
-| 38 | [TRANS-5](features/level-transitions.md?display=source#L33) | 127 | 25 | 7 | 0 | 5 stand-in, 4 none, 1 implemented | `charsetallowvehicleentry`, `playcredits`, `playscriptonstartup`, `positionplayer` +7 | The 31 scripts of the shipped levels that call SceneChange, CharSetAllowVehicleEntry or ... |
-| 39 | [SCRIPT-73](features/script-system-hud-natives.md?display=source#L33) | 148 | 0 | 6 | 1 | 5 stand-in | `disableicon`, `enableminimapwipe`, `enablescanner`, `overridescannable` +1 | Map and scanner natives (EnableMinimapWipe 0x187f28, EnableScanner, OverrideScannable, PanMapToObject, map ... |
-| 40 | [CAMERA-S51](features/camera.md?display=source#L26) | 145 | 0 | 7 | 0 | 1 stand-in | `shakescreen` | The ShakeScreen shake moves only the eye of the gameplay camera (`CameraRig::setEyeShake`); the cutscene ... |
-| 41 | [SCRIPT-S271](features/script-system-dcam.md?display=source#L21) | 145 | 0 | 7 | 0 | 1 stand-in | `shakescreen` | `ShakeScreen` draws its random numbers from `breakRandomStandIn`, the port's stand-in stream; the seed and ... |
-| 42 | [RENDER-62](features/rendering.md?display=source#L45) | 0 | 137 | 8 | 0 | - | `point` | Point lights (type 2) against the oracle: lvl_00 `Point`/`Point01` (Intensity 2, MaxRange 1) on baked surfaces |
-| 43 | [LEVOBJ-S1](features/level-objects.md?display=source#L21) | 0 | 120 | 8 | 0 | - | `chars/char_ai_actor` | Characters other than pedestrians run the idle state of `char_ai_actor` (verified for `char_ai_actor` ... |
-| 44 | [SCRIPT-66](features/script-system-hud-natives.md?display=source#L28) | 113 | 0 | 7 | 1 | 8 stand-in | `informationbox`, `showbosshearts`, `showcharacterintro`, `showintrotext` +4 | ShowTally, ShowBossHearts, ShowRaceStart, ShowPortraitOverVehicle and showinfopointer only count their calls ... |
-| 45 | [STUD-4](features/studs.md?display=source#L38) | 109 | 0 | 7 | 0 | 1 stand-in, 1 none | `enablestudsbygroup`, `spawnstuds` | How a group is enabled (0x28a2cc sequencer, `EnableStudsByGroup` and `SpawnStuds` script functions ... |
-| 46 | [SCRIPT-S277](features/script-system-natives-party.md?display=source#L18) | 106 | 0 | 6 | 0 | 6 stand-in | `charsetallowvehicleentry`, `charsetskydivemode`, `relockchaseplainclothes`, `setweaponenabled` +2 | SwapAllegiance (toggle count only; the initial bit 2 of the object flags, the lists 0x58deb0 / 0x58dec8 and ... |
-| 47 | [SCRIPT-383](features/script-system-missions-1-3.md?display=source#L32) | 100 | 0 | 8 | 0 | 1 stand-in | `attachobject` | Attached children other than level characters (the crow, `Rope_01` under the girder) take only the ... |
-| 48 | [SCRIPT-317](features/script-system-natives-world.md?display=source#L44) | 99 | 0 | 7 | 1 | 2 stand-in | `enableswitch`, `resetobject` | Kind 64 message 8 (0x1a90b8): read the platform record fields R+4, R+0xb4, R+0x7c, R+0x18, R+0x50 and the ... |
-| 49 | [SCRIPT-318](features/script-system-natives-world.md?display=source#L45) | 99 | 0 | 7 | 0 | 2 stand-in | `enableswitch`, `resetobject` | Census of the message 8 handlers of the other kinds (the default handler 0x221800 is reached through 0x221760 ... |
-| 50 | [SCRIPT-S306](features/script-system-missions-1-3.md?display=source#L21) | 98 | 0 | 8 | 0 | 1 stand-in | `aimove` | A level character the AI moved (not in AISuperJump) takes the height of the player's ground probe under it ... |
+| 36 | [SCRIPT-S18](features/script-system-natives-state.md?display=source#L18) | 175 | 0 | 7 | 0 | 2 stand-in | `resetobject`, `skiptofinalstate` | The six flag natives and ResetObject / SkipToFinalState store their value or message by instance name without ... |
+| 37 | [TRANS-5](features/level-transitions.md?display=source#L33) | 127 | 25 | 7 | 0 | 5 stand-in, 4 none, 1 implemented | `charsetallowvehicleentry`, `playcredits`, `playscriptonstartup`, `positionplayer` +7 | The 31 scripts of the shipped levels that call SceneChange, CharSetAllowVehicleEntry or ... |
+| 38 | [SCRIPT-73](features/script-system-hud-natives.md?display=source#L33) | 148 | 0 | 6 | 1 | 5 stand-in | `disableicon`, `enableminimapwipe`, `enablescanner`, `overridescannable` +1 | Map and scanner natives (EnableMinimapWipe 0x187f28, EnableScanner, OverrideScannable, PanMapToObject, map ... |
+| 39 | [CAMERA-S51](features/camera.md?display=source#L26) | 145 | 0 | 7 | 0 | 1 stand-in | `shakescreen` | The ShakeScreen shake moves only the eye of the gameplay camera (`CameraRig::setEyeShake`); the cutscene ... |
+| 40 | [SCRIPT-S271](features/script-system-dcam.md?display=source#L21) | 145 | 0 | 7 | 0 | 1 stand-in | `shakescreen` | `ShakeScreen` draws its random numbers from `breakRandomStandIn`, the port's stand-in stream; the seed and ... |
+| 41 | [RENDER-62](features/rendering.md?display=source#L45) | 0 | 137 | 8 | 0 | - | `point` | Point lights (type 2) against the oracle: lvl_00 `Point`/`Point01` (Intensity 2, MaxRange 1) on baked surfaces |
+| 42 | [LEVOBJ-S1](features/level-objects.md?display=source#L21) | 0 | 120 | 8 | 0 | - | `chars/char_ai_actor` | Characters other than pedestrians run the idle state of `char_ai_actor` (verified for `char_ai_actor` ... |
+| 43 | [SCRIPT-66](features/script-system-hud-natives.md?display=source#L28) | 113 | 0 | 7 | 1 | 8 stand-in | `informationbox`, `showbosshearts`, `showcharacterintro`, `showintrotext` +4 | ShowTally, ShowBossHearts, ShowRaceStart, ShowPortraitOverVehicle and showinfopointer only count their calls ... |
+| 44 | [STUD-4](features/studs.md?display=source#L38) | 109 | 0 | 7 | 0 | 1 stand-in, 1 none | `enablestudsbygroup`, `spawnstuds` | How a group is enabled (0x28a2cc sequencer, `EnableStudsByGroup` and `SpawnStuds` script functions ... |
+| 45 | [SCRIPT-S277](features/script-system-natives-party.md?display=source#L18) | 106 | 0 | 6 | 0 | 6 stand-in | `charsetallowvehicleentry`, `charsetskydivemode`, `relockchaseplainclothes`, `setweaponenabled` +2 | SwapAllegiance (toggle count only; the initial bit 2 of the object flags, the lists 0x58deb0 / 0x58dec8 and ... |
+| 46 | [SCRIPT-383](features/script-system-missions-1-3.md?display=source#L32) | 100 | 0 | 8 | 0 | 1 stand-in | `attachobject` | Attached children other than level characters (the crow, `Rope_01` under the girder) take only the ... |
+| 47 | [SCRIPT-317](features/script-system-natives-world.md?display=source#L44) | 99 | 0 | 7 | 1 | 2 stand-in | `enableswitch`, `resetobject` | Kind 64 message 8 (0x1a90b8): read the platform record fields R+4, R+0xb4, R+0x7c, R+0x18, R+0x50 and the ... |
+| 48 | [SCRIPT-318](features/script-system-natives-world.md?display=source#L45) | 99 | 0 | 7 | 0 | 2 stand-in | `enableswitch`, `resetobject` | Census of the message 8 handlers of the other kinds (the default handler 0x221800 is reached through 0x221760 ... |
+| 49 | [SCRIPT-S306](features/script-system-missions-1-3.md?display=source#L21) | 98 | 0 | 8 | 0 | 1 stand-in | `aimove` | A level character the AI moved (not in AISuperJump) takes the height of the player's ground probe under it ... |
+| 50 | [SCRIPT-282](features/script-system-natives-world.md?display=source#L48) | 92 | 0 | 7 | 16 | 1 stand-in, 1 none | `distancefademid`, `enabledistancefade` | EnableDistanceFade: the node kind gate (global 0x37674c) and the child recursion 0x2b65dc per placed class ... |
 
 ## Player and camera
 
-16 of 194 items linked.
+16 of 200 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -96,11 +96,11 @@ Items: 953 open items and stand-ins, 168 linked to game usage, 785 with unknown 
 | 3 | [ANIM-S12](features/animation-characters.md?display=source#L24) | 623 | 0 | 8 | 0 | 1 stand-in | `playcharanim` | The "already loaded" test of PlayCharAnim (0x21e8b4) knows a character's idle clips and its current script ... |
 | 4 | [ANIM-S13](features/animation-characters.md?display=source#L25) | 623 | 0 | 8 | 0 | 1 stand-in | `playcharanim` | The player's script clip (PlayCharAnim on Player1) is shown at full weight from the native's update instead ... |
 | 5 | [CAMERA-55](features/camera.md?display=source#L46) | 495 | 0 | 8 | 0 | 1 implemented | `positionobject` | After PositionObject of `1-1_Release_Car_Script` the port's police car stays on its locator while the ... |
-| 6 | [COLL-2](features/collision.md?display=source#L29) | 0 | 183 | 7 | 1 | - | `props/parkour_skydive`, `props/prop_prop` | Only the classes with a recovered constructor rule register (props, doors, dummycollision, vehicles) ... |
-| 7 | [CAMERA-S51](features/camera.md?display=source#L26) | 145 | 0 | 7 | 0 | 1 stand-in | `shakescreen` | The ShakeScreen shake moves only the eye of the gameplay camera (`CameraRig::setEyeShake`); the cutscene ... |
-| 8 | [TRAV-55](features/player-traversal.md?display=source#L52) | 0 | 66 | 7 | 0 | - | `props/parkour_zipline` | The zipline poles (`props/parkour_zipline` anchors) can be walked through in `chase-game` (user report); in ... |
-| 9 | [TRAV-48](features/player-traversal.md?display=source#L47) | 0 | 22 | 5 | 1 | - | `props/parkour_tightrope` | The ropes of the tightrope anchors (`GrappleLineType` 0) use the same draw 0x1a9dc4 and are not loaded, so ... |
-| 10 | [TRAV-54](features/player-traversal.md?display=source#L51) | 0 | 22 | 5 | 0 | - | `props/parkour_tightrope` | The poles of the tightrope anchors (`props/parkour_tightrope`, 4 in lvl_01) are drawn at ... |
+| 6 | [CAMERA-S51](features/camera.md?display=source#L26) | 145 | 0 | 7 | 0 | 1 stand-in | `shakescreen` | The ShakeScreen shake moves only the eye of the gameplay camera (`CameraRig::setEyeShake`); the cutscene ... |
+| 7 | [TRAV-55](features/player-traversal.md?display=source#L52) | 0 | 66 | 7 | 0 | - | `props/parkour_zipline` | The zipline poles (`props/parkour_zipline` anchors) can be walked through in `chase-game` (user report); in ... |
+| 8 | [TRAV-48](features/player-traversal.md?display=source#L47) | 0 | 22 | 5 | 1 | - | `props/parkour_tightrope` | The ropes of the tightrope anchors (`GrappleLineType` 0) use the same draw 0x1a9dc4 and are not loaded, so ... |
+| 9 | [TRAV-54](features/player-traversal.md?display=source#L51) | 0 | 22 | 5 | 0 | - | `props/parkour_tightrope` | The poles of the tightrope anchors (`props/parkour_tightrope`, 4 in lvl_01) are drawn at ... |
+| 10 | [SCAN-2](features/abilities-scanner.md?display=source#L37) | 7 | 0 | 3 | 0 | 1 stand-in | `enablescanner` | Other type 201 zones: photo (ScannerMode 4 in the class, sub-mode 0 values of 0x2ef814), physical (kind 2) ... |
 
 ## Level objects
 
@@ -211,7 +211,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [assets-formats.md](features/assets-formats.md): ASSET-1, ASSET-2, ASSET-3, ASSET-4, ASSET-8, ASSET-S1, ASSET-S2
 - [audio.md](features/audio.md): AUDIO-3 (+2), AUDIO-20 (+1), AUDIO-32 (+1), AUDIO-34 (+1), AUDIO-35 (+1), AUDIO-36 (+1), AUDIO-37 (+1), AUDIO-1, AUDIO-38, AUDIO-5, AUDIO-6, AUDIO-7, AUDIO-S1, AUDIO-S2, AUDIO-S20, AUDIO-S3, AUDIO-S30, AUDIO-S34, AUDIO-S35, AUDIO-S36, AUDIO-S4, AUDIO-S5, AUDIO-S6, AUDIO-S7
 - [camera.md](features/camera.md): CAMERA-54 (+3), CAMERA-11 (+1), CAMERA-53 (+1), CAMERA-1, CAMERA-12, CAMERA-2, CAMERA-3, CAMERA-4, CAMERA-5, CAMERA-S1, CAMERA-S31, CAMERA-S4, CAMERA-S50, CAMERA-S52, CAMERA-S53, CAMERA-S6
-- [collision.md](features/collision.md): COLL-21 (+1), COLL-4 (+1), COLL-1, COLL-3, COLL-5, COLL-6, COLL-7, COLL-S1, COLL-S2, COLL-S3, COLL-S4
+- [collision.md](features/collision.md): COLL-24 (+2), COLL-21 (+1), COLL-3 (+1), COLL-4 (+1), COLL-1, COLL-23, COLL-25, COLL-5, COLL-6, COLL-7, COLL-S1, COLL-S2, COLL-S3, COLL-S4, COLL-S5, COLL-S6, COLL-S7
 - [doors.md](features/doors.md): DOOR-2, DOOR-3, DOOR-4, DOOR-6, DOOR-7, DOOR-S1, DOOR-S2, DOOR-S3, DOOR-S4, DOOR-S5
 - [executable-platform.md](features/executable-platform.md): EXEC-1 (+2), EXEC-10 (+1), EXEC-2, EXEC-3, EXEC-4, EXEC-S1, EXEC-S10
 - [front-end.md](features/front-end.md): FE-3 (+10), FE-30 (+1), FE-40 (+1), FE-1, FE-2, FE-4, FE-5, FE-6, FE-7, FE-8, FE-9, FE-S1, FE-S2, FE-S3, FE-S31, FE-S32, FE-S33, FE-S4, FE-S40, FE-S41, FE-S5, FE-S6
@@ -223,7 +223,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [level-objects-carry.md](features/level-objects-carry.md): LEVOBJ-127 (+1), LEVOBJ-75 (+1), LEVOBJ-128, LEVOBJ-30, LEVOBJ-31, LEVOBJ-34, LEVOBJ-S31, LEVOBJ-S33, LEVOBJ-S34, LEVOBJ-S73, LEVOBJ-S75, LEVOBJ-S99
 - [level-objects-fast-travel.md](features/level-objects-fast-travel.md): LEVOBJ-122 (+2), LEVOBJ-120 (+1), LEVOBJ-121, LEVOBJ-123, LEVOBJ-124, LEVOBJ-125, LEVOBJ-126, LEVOBJ-S96, LEVOBJ-S97, LEVOBJ-S98
 - [level-objects-wobbly.md](features/level-objects-wobbly.md): LEVOBJ-87 (+3), LEVOBJ-112 (+1), LEVOBJ-89 (+1), LEVOBJ-90 (+1), LEVOBJ-92 (+1), LEVOBJ-96 (+1), LEVOBJ-91, LEVOBJ-97, LEVOBJ-S77, LEVOBJ-S79, LEVOBJ-S80, LEVOBJ-S81
-- [level-objects.md](features/level-objects.md): LEVOBJ-8 (+3), LEVOBJ-101 (+1), LEVOBJ-106 (+1), LEVOBJ-108 (+1), LEVOBJ-110 (+1), LEVOBJ-111 (+1), LEVOBJ-102, LEVOBJ-104, LEVOBJ-109, LEVOBJ-114, LEVOBJ-3, LEVOBJ-5, LEVOBJ-6, LEVOBJ-S2, LEVOBJ-S3, LEVOBJ-S4, LEVOBJ-S82, LEVOBJ-S83, LEVOBJ-S84, LEVOBJ-S86, LEVOBJ-S88, LEVOBJ-S89, LEVOBJ-S90, LEVOBJ-S91, LEVOBJ-S92, LEVOBJ-S93
+- [level-objects.md](features/level-objects.md): LEVOBJ-8 (+4), LEVOBJ-101 (+1), LEVOBJ-106 (+1), LEVOBJ-108 (+1), LEVOBJ-110 (+1), LEVOBJ-111 (+1), LEVOBJ-102, LEVOBJ-104, LEVOBJ-109, LEVOBJ-114, LEVOBJ-3, LEVOBJ-5, LEVOBJ-6, LEVOBJ-S2, LEVOBJ-S3, LEVOBJ-S4, LEVOBJ-S82, LEVOBJ-S83, LEVOBJ-S84, LEVOBJ-S86, LEVOBJ-S88, LEVOBJ-S89, LEVOBJ-S90, LEVOBJ-S91, LEVOBJ-S92, LEVOBJ-S93
 - [level-transitions.md](features/level-transitions.md): TRANS-3 (+4), TRANS-13 (+2), TRANS-15 (+2), TRANS-8 (+2), TRANS-10 (+1), TRANS-12 (+1), TRANS-14 (+1), TRANS-16 (+1), TRANS-S1, TRANS-S3, TRANS-S4, TRANS-S5, TRANS-S6
 - [movies-cutscenes.md](features/movies-cutscenes.md): MOVIE-22 (+1), MOVIE-24 (+1), MOVIE-36 (+1), MOVIE-37 (+1), MOVIE-S33 (+1), MOVIE-1, MOVIE-12, MOVIE-20, MOVIE-21, MOVIE-3, MOVIE-35, MOVIE-4, MOVIE-40, MOVIE-41, MOVIE-S10, MOVIE-S11, MOVIE-S2, MOVIE-S21, MOVIE-S3, MOVIE-S30, MOVIE-S31, MOVIE-S32, MOVIE-S34, MOVIE-S36
 - [particles.md](features/particles.md): PART-4 (+1), PART-6 (+1), PART-5, PART-7, PART-S1, PART-S2, PART-S3, PART-S4

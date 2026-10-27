@@ -659,6 +659,11 @@ if(BUILD_TESTING)
   target_compile_options(animal-props-real-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME animal-props-real-data COMMAND animal-props-real-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
   set_tests_properties(animal-props-real-data PROPERTIES SKIP_RETURN_CODE 77)
+  add_executable(nested-object-collision-test tests/nested_object_collision_test.cpp)
+  target_link_libraries(nested-object-collision-test PRIVATE chase_runtime chase_assets)
+  target_compile_options(nested-object-collision-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME nested-object-collision-real-data COMMAND nested-object-collision-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
+  set_tests_properties(nested-object-collision-real-data PROPERTIES SKIP_RETURN_CODE 77)
 
   add_executable(cat-rescue-real-test tests/cat_rescue_real_test.cpp)
   target_link_libraries(cat-rescue-real-test PRIVATE chase_runtime chase_assets)
@@ -1735,6 +1740,17 @@ if(BUILD_TESTING)
       --script "at 948.327 95.031 1124.175 0;0 0 40;at 901.203 30.899 1141.268 50;0 0 5;0 0 1 A;0 0 5;0 0 1 A;0 0 330;at 906.561 31.445 1138.943 135;0 0 5;0 0 1 A;0 0 95;touch 159 65 3;0 0 130")
     set_tests_properties(game-fast-travel-exit PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
       PASS_REGULAR_EXPRESSION "map ready at update 473 .*\n.*fast travel: exit touched at update 483\n.*helicopter takeoff at update 483\n.*player state 1 entered at update 483\n.*helicopter hidden at update 580\n")
+    # The built helipad stops the player (COLL-2): the route of game-super-buildit-build, then the player stands on the street 1.38 units outside the
+    # built prop's edge (local x 9 of the holder 1-3_Helipad, yaw 45, prop half extent 7.622 from the oracle grid read of 20261027-graphics-G-1) and
+    # pushes into it with the stick to the right (the camera turned by the route). Without the prop's collision the player walks on to
+    # (904.99, 1142.22), 6.4 units further (the build before 20261027-graphics-G); with it he stops at local x 8.34 (replica output).
+    add_test(NAME game-helipad-collision COMMAND chase-game
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
+      --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes --call-script 1-3_Fade_Blockers
+      --script "at 948.327 95.031 1124.175 0;0 0 40;at 901.203 30.899 1141.268 50;0 0 5;0 0 1 A;0 0 5;0 0 1 A;0 0 330;at 908.682 31.0 1136.821 0;0 0 30;150 0 30")
+    set_tests_properties(game-helipad-collision PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
+      PASS_REGULAR_EXPRESSION "built at update [0-9]+, super bricks 1200.*player ended at 908\\.68[0-9]* 30\\.69[0-9]* 1137\\.7[0-9]*\n")
     # Mission 1-2, the dog released (SCRIPT-293): 1-2_Cage_Key_Target_Script fades the screen to black (FadeScreen 0), the
     # cutscene mode of 1_2_c fades it in again (DCamCutScenePlay handler 0x26fa18, mode enter 0x2fadb8; gdb trace from the user's
     # save state at the dog cage trigger of mission 1-2, docs/re/cutscenes.md), and after the cutscene 1-2_MissionEnd follows with the game picture.
@@ -2155,7 +2171,7 @@ foreach(test_name ${chase_all_tests})
   set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT "XDG_DATA_HOME=${CMAKE_BINARY_DIR}/test-xdg/${test_name}")
 endforeach()
 
-foreach(slow_test game-key-pickup-1-3 game-parts-crate-1-3 game-generator-1-3 game-push-cart-1-3 game-crane-1-3 game-key-use-1-3 game-debris-super-pickup game-cutscene-dog-end game-super-buildit-build game-fast-travel-exit game-super-brick-roof game-doorlock-detective-1-2 game-cage-release-1-2 game-mission-1-1 game-mission-1-1-start game-vehicle-drive game-vehicle-room game-pedestrian-rooms game-vehicle-hit game-vehicle-smash game-vehicle-break game-director-hold game-director-release game-van-escort game-pause-menu waypoint-marker-shot audio-real-data reflection-real-data)
+foreach(slow_test game-key-pickup-1-3 game-parts-crate-1-3 game-generator-1-3 game-push-cart-1-3 game-crane-1-3 game-key-use-1-3 game-debris-super-pickup game-cutscene-dog-end game-super-buildit-build game-helipad-collision game-fast-travel-exit game-super-brick-roof game-doorlock-detective-1-2 game-cage-release-1-2 game-mission-1-1 game-mission-1-1-start game-vehicle-drive game-vehicle-room game-pedestrian-rooms game-vehicle-hit game-vehicle-smash game-vehicle-break game-director-hold game-director-release game-van-escort game-pause-menu waypoint-marker-shot audio-real-data reflection-real-data)
   if(TEST ${slow_test})
     set_property(TEST ${slow_test} APPEND PROPERTY LABELS slow)
   endif()
@@ -2166,7 +2182,7 @@ foreach(game_data_test
   node-draw-matrix-real-data script-text-real-data waypoint-global-real-data waypoints-real-data hand-item-real-data detective-real-data
   use-spot-real-data use-marker-real-data script-starters-real-data carry-real-data scanner-real-data scanner-overlay-data zipline-real-data
   nested-props-real-data entity-ids-real-data zipline-pole-real-data zipline-rope-real-data brick-grab-real-data climb-bar-real-data acrobat-pole-real-data pole-real-data
-  ladder-real-data carry-animation-real-data lever-use-real-data super-buildit-real-data fast-travel-pad-real-data pause-menu-real-data buildit-real-data
+  ladder-real-data carry-animation-real-data lever-use-real-data nested-object-collision-real-data super-buildit-real-data fast-travel-pad-real-data pause-menu-real-data buildit-real-data
   prop-animation-real-data animal-props-real-data cat-rescue-real-data prop-parts-real-data vehicle-boarding-real-data vehicle-drive-real-data
   floor-graph-real-data vehicle-collision-real-data vehicle-box-contact-real-data vehicle-sphere-sweep-real-data vehicle-prop-smash-real-data
   destroy-effects-real-data character-death-real-data player-attack-real-data attack-sounds-real-data vehicle-world-real-data vehicle-rest-real-data
@@ -2185,7 +2201,7 @@ foreach(game_data_test
   game-cutscene-dog-prop game-super-brick-freeplay game-save-new-game-clean game-save-new-game game-save-reload game-super-brick-roof
   game-cutscene-dog-end game-vehicle-room game-pedestrian-rooms game-vehicle-hit game-vehicle-break game-vehicle-smash game-debris-super-pickup
   game-mission-1-1 game-detective-1-2 game-key-pickup-1-3 game-parts-crate-1-3 game-generator-1-3 game-push-cart-1-3 game-crane-1-3 game-garage-key-1-3 game-key-use-1-3 game-use-spot-1-2 game-use-marker-detective-1-2 game-player-script-animation game-super-buildit-prompt
-  game-super-buildit-build game-fast-travel-exit game-cage-release-1-2 game-doorlock-detective-1-2 game-mission-1-2-start-timing game-mission-1-1-start game-script-dialog
+  game-super-buildit-build game-helipad-collision game-fast-travel-exit game-cage-release-1-2 game-doorlock-detective-1-2 game-mission-1-2-start-timing game-mission-1-1-start game-script-dialog
   game-same-level-entry game-scene-change-exit game-scene-change-entry game-director-hold game-director-release game-script-zipline game-script-zipline-handcuffs
   game-script-attack-table game-script-wobbly-table game-script-bounce game-script-bounce-grab game-script-acrobat-poles game-script-zipline-use-a
   game-script-zipline-use-b game-script-brick-grab game-script-brick-rail game-script-pole game-script-ladder game-script-ladder-walk-in

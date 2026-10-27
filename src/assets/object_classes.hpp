@@ -17,6 +17,10 @@ bool isDummyCollisionClass(const std::string& className);
 // registers collision with 0x23aff8 (automatic box, no margin) and `HasCollisionMesh` (0x2337e0), whatever the class folder (docs/re/vehicles-prop-smash.md).
 constexpr std::uint8_t kPropObjectKind = 67;
 
+// The super build-it plate (props/prop_superbuildit, create 0x1af05c, link 0x1af224): its link registers collision with 0x23aff8 (automatic box, no
+// margin) and then takes the model's first collision item or box record unconditionally (0x2337e0), docs/re/collision.md.
+constexpr std::uint8_t kSuperBuilditObjectKind = 98;
+
 // Class files of the vehicle object type (ObjectType 183, class descriptor 0x155b5c; section +0x14 of levels/vehicles/vehicle_*).
 constexpr std::uint32_t kVehicleObjectType = 183;
 bool isVehicleClassFile(const Level& classFile);

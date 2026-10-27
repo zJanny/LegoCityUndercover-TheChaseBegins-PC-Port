@@ -67,7 +67,7 @@ std::vector<runtime::StudSpawn> studSpawns(const DrawableObjects& drawable) {
 // The level's collision: the items of the level's master model (models/<level>/<level>.bfnmdl) and the placed objects; the master model's
 // static Bullet boxes for the vehicles.
 runtime::CollisionWorld loadCollision(FuseArchive& archive, const std::string& levelPath, const std::vector<ObjectCollision>& objects,
-                                      std::vector<runtime::BulletBox>& vehicleBoxes) {
+                                      const std::vector<ObjectCollision>& nestedObjects, std::vector<runtime::BulletBox>& vehicleBoxes) {
     runtime::CollisionWorld world;
     const std::string path = lower(levelPath);
     const std::string folder = path.substr(0, path.find_last_of('/'));
@@ -78,6 +78,7 @@ runtime::CollisionWorld loadCollision(FuseArchive& archive, const std::string& l
     for (const CollisionItem& item : model.collision) world.add(item);
     vehicleBoxes = runtime::levelVehicleBoxes(model);
     for (const ObjectCollision& object : objects) world.addObject(object);
+    for (const ObjectCollision& object : nestedObjects) world.addObject(object);
     return world;
 }
 }
@@ -289,7 +290,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     levelScripts.takeThreadEvents();
     std::cout << "scripts: startup ended after " << startupUpdates << " updates, " << levelScripts.threadCount() << " threads running\n";
     const std::vector<ObjectCollision> placedCollisions = objectCollisionCandidates(archive, level);
-    collision = loadCollision(archive, options.level, placedCollisions, vehicleBoxes);
+    collision = loadCollision(archive, options.level, placedCollisions, nestedObjectCollisionCandidates(archive, level), vehicleBoxes);
     propSmasher.load(level, classOf, placedCollisions);
     loadScriptDestroyProps(archive);
     loadDestructibleProps(archive);

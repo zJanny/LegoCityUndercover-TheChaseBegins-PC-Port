@@ -54,6 +54,8 @@ struct ObjectCollision {
 //  - the objects of kind 67 (kPropObjectKind) in any class folder: the rule above without margin, then, when "HasCollisionMesh" is set and no
 //    item was taken, the model's first item with its root node as the box, or else the model's box record (0x16aeb4 -> 0x2337e0); `Destructable`
 //    6 or "NoBoundCollisions" clears 0x200, and such an object without an item is not registered (0x30e0d8 needs 0x200 or an item);
+//  - the objects of kind 98 (kSuperBuilditObjectKind, the super build-it plate): the rule above without margin, then the model's first item or
+//    box record whatever "HasCollisionMesh" says (link 0x1af224: 0x23aff8, then 0x2337e0);
 //  - "dummy/dummycollision": a box with the half extents of the instance's "CollisionBound" parameter.
 // Characters, vehicles and classes with other constructors are not included. A "BoundCollision" parameter of 0
 // clears the collision flag 0x200 of the object unless `state` sets it again; disabled objects are left out.
@@ -63,5 +65,12 @@ std::vector<ObjectCollision> objectCollisions(FuseArchive& archive, const Level&
 // returns when it is already listed) and the query layers test the owner's flags (bit 0 disabled, 0x200 collision) when they
 // run, so EnableObject and EnableCollision during play only change those flags (docs/re/collision.md).
 std::vector<ObjectCollision> objectCollisionCandidates(FuseArchive& archive, const Level& level);
+
+// The same rules for the objects the class files of the placed objects nest (the loader 0x1a4130 creates them after their parent through the
+// same create and link functions, docs/re/object-kinds.md): `instance` is "parent.child" (deeper levels chained), the matrix is the child's
+// placement in the parent's node. STAND-IN COLL-S5: the children of a class with a "startup" script are left out (the port does not run the
+// EnableObject calls of such scripts on their children, as for the drawn nested props, LEVOBJ-S93), and so are the hand items nested in the player
+// (kind 65; whether the original registers them hidden was not read).
+std::vector<ObjectCollision> nestedObjectCollisionCandidates(FuseArchive& archive, const Level& level);
 
 }
