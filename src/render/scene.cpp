@@ -229,6 +229,11 @@ public:
     void setMaterialOverride(const std::optional<MaterialOverride>& override) { override_ = override; }
     std::size_t missingTextures() const { return missing_; }
     std::size_t instances() const { return instances_.size(); }
+    void setInstanceShadow(std::size_t instance, bool caster, bool receiver) {
+        instances_.at(instance).shadowCaster = caster;
+        instances_.at(instance).shadowReceiver = receiver;
+    }
+    std::vector<Scene::ShadowPart> shadowParts(bool casters) const;
 
 private:
     struct DrawPart {
@@ -278,6 +283,7 @@ private:
         bool whiteMaterials = false;
         std::map<int, Mat4> nodeMatrix = {};
         std::string path = {};
+        bool shadowCaster = false, shadowReceiver = false;
     };
     struct Queued {
         const Instance* instance;
@@ -675,6 +681,20 @@ void SceneImpl::drawInstances(const Mat4& viewProjection, bool skyPass) const {
     }
 }
 
+std::vector<Scene::ShadowPart> SceneImpl::shadowParts(bool casters) const {
+    std::vector<Scene::ShadowPart> out;
+    for (const auto& instance : instances_) {
+        if (!instance.visible || instance.sky || !(casters ? instance.shadowCaster : instance.shadowReceiver)) continue;
+        const std::uint8_t nodeAlpha = nodeAlphaByte(instance.fade);
+        for (const auto& part : instance.model->parts) {
+            const bool blended = part.hasMaterial && blendedPass(part.colour[3], part.destinationIndex, nodeAlpha);
+            if (!casters && (!part.hasMaterial || blended || part.material.reflection || part.material.stages.size() > 4)) continue;
+            out.push_back({part.vao, int(part.count), partWorld(instance, part)});
+        }
+    }
+    return out;
+}
+
 std::size_t SceneImpl::triangles() const {
     std::size_t n = 0;
     for (const auto& instance : instances_)
@@ -820,5 +840,9 @@ void Scene::setMaterialOverride(const std::optional<MaterialOverride>& override)
 std::size_t Scene::missingTextures() const { return impl_->missingTextures(); }
 
 std::size_t Scene::instances() const { return impl_->instances(); }
+
+void Scene::setInstanceShadow(std::size_t instance, bool caster, bool receiver) { impl_->setInstanceShadow(instance, caster, receiver); }
+
+std::vector<Scene::ShadowPart> Scene::shadowParts(bool casters) const { return impl_->shadowParts(casters); }
 
 }

@@ -48,4 +48,9 @@ GLuint glowProgram() {
     return program;
 }
 
+GLuint shadowProgram() {
+    static const GLuint program = link(shaders::shadowVertex, shaders::shadowFragment);
+    return program;
+}
+
 }

@@ -123,6 +123,7 @@ The table lists some of the tests. `ctest --test-dir build -N` lists all of them
 | `input-sdl-smoke` | Runs with `SDL_VIDEODRIVER=dummy` |
 | `ladder-sounds`, `ladder-sounds-real-data` | The sound tracks of animation clips (ladder climb and clamber sounds): made-up clips, then the shipped ladder, jump, idle and walk clips; the second skips with code 77 without `artifacts/romfs` |
 | `assets-core` | Asset runtime, synthetic fixtures |
+| `shadow-core`, `shadow-real-data` | The shadow constant, focus and shadow camera against values read in the original, the shadow light and the caster and receiver flags; the second checks the shadow light of lvl_01 and the flags of shipped classes and skips with code 77 without `artifacts/romfs` |
 | `assets-real-data` | Needs `artifacts/romfs`; skips with code 77 otherwise |
 | `reflection-core`, `reflection-real-data` | Reflection cube maps: which texture unit samples the cube map, the texture coordinates of the other units and the order of the six faces; the second checks every shipped reflection material (each has a cube map on its first unit) and skips with code 77 without `artifacts/romfs` (slow) |
 | `pregen-traffic` | The traffic and pedestrian spawn files: made-up files, rejected input and the cell lookup. No game data needed |

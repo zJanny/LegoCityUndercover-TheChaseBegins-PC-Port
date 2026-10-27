@@ -95,9 +95,10 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | Feature | Status | Top open items |
 |---|---|---|
 | [assets-formats](assets-formats.md) | IN_PROGRESS | ASSET-2 streaming |
-| [rendering](rendering.md) | IN_PROGRESS | RENDER-33 shadows; RENDER-68 glow post-process; RENDER-30 fog oracle comparison |
+| [rendering](rendering.md) | IN_PROGRESS | RENDER-68 glow post-process; RENDER-30 fog oracle comparison |
 | [rendering-draw-order](rendering-draw-order.md) | IN_PROGRESS | RENDER-66 distance fade; RENDER-65 particles in the sorted list; RENDER-78 second draw of +0xde bit 2; RENDER-79 other cameras of the near-camera rule |
 | [rendering-reflections](rendering-reflections.md) | IN_PROGRESS | RENDER-75 oracle comparison of the cube maps (blocks RENDER-S69) |
+| [rendering-shadows](rendering-shadows.md) | IN_PROGRESS | RENDER-72 soft edges of the shadow pass; RENDER-73 street people and traffic cast none; RENDER-74 focus camera inputs |
 
 ## Platform and tools
 

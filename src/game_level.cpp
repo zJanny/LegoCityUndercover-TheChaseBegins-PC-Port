@@ -134,6 +134,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     catRescue.load(level, classOf);
     for (const std::string& cat : catRescue.cats()) animationTargets.insert(cat);
     std::vector<runtime::AnimatedProp> animatedProps;
+    const std::size_t roomModelInstances = scene.instances();
     if (const auto sea = chase::assets::objectStart(level, "Sea")) seaHeight = sea->position[1];
     for (const auto& placement : drawable.objects) {
         const std::size_t instanceIndex = scene.instances();
@@ -189,6 +190,9 @@ LevelSession::LevelSession(const Shared& sharedState)
     studSprites.emplace(archive);
     glowPass.emplace();
     player = game_player::placePlayer(archive, scene, level);
+    shadows.load(lightObjects, chase::assets::levelShadowRadius(level));
+    shadows.markLevel(scene, roomModelInstances, level, classOf, placedSceneIndex, placedObjects, drawable.characters, placedCharacters,
+                      player ? &player->instance : nullptr, game_player::kPlayerClass);
     levelScripts.setAllRoomsLoaded();
     levelScripts.loadWaypoints(classOf);
     if (const chase::assets::FuseEntry* bits = archive.find("levels/charbits.blvl")) levelScripts.loadCarryItWaypoint(chase::assets::parseLevel(archive.read(*bits)), classOf);
@@ -468,6 +472,7 @@ void LevelSession::draw(int width, int height) {
     nearCameraFades.apply(scene);
     drawFootprints();
     if (player) handItems.draw(scene, *player);
+    shadows.render(scene, viewToWorld, player ? std::optional<float>(player->vertical.y) : std::nullopt, !scannerLook.active);
     if (skyInstance) {
         const float lift = player && seaHeight ? runtime::skyLift(player->vertical.y, *seaHeight) : 0.0f;
         const Mat4 cameraToWorld = chase::render::rigidInverse(viewMatrix);
@@ -482,6 +487,7 @@ void LevelSession::draw(int width, int height) {
     if (scannerLook.active) scene.setMaterialOverride(scannerLook.drawList);
     scene.setDepthRange(nearPlane, farPlane);
     scene.draw(mvp);
+    shadows.apply(scene, mvp);
     scene.setMaterialOverride(std::nullopt);
     std::vector<StudSprite> sprites;
     for (const runtime::Stud& stud : studs.studs())

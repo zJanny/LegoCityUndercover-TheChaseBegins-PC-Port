@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 950 open items and stand-ins, 168 linked to game usage, 782 with unknown reach.
+Items: 953 open items and stand-ins, 168 linked to game usage, 785 with unknown reach.
 
 ## Top 50 overall
 
@@ -75,7 +75,7 @@ Items: 950 open items and stand-ins, 168 linked to game usage, 782 with unknown 
 | 39 | [SCRIPT-73](features/script-system-hud-natives.md?display=source#L33) | 148 | 0 | 6 | 1 | 5 stand-in | `disableicon`, `enableminimapwipe`, `enablescanner`, `overridescannable` +1 | Map and scanner natives (EnableMinimapWipe 0x187f28, EnableScanner, OverrideScannable, PanMapToObject, map ... |
 | 40 | [CAMERA-S51](features/camera.md?display=source#L26) | 145 | 0 | 7 | 0 | 1 stand-in | `shakescreen` | The ShakeScreen shake moves only the eye of the gameplay camera (`CameraRig::setEyeShake`); the cutscene ... |
 | 41 | [SCRIPT-S271](features/script-system-dcam.md?display=source#L21) | 145 | 0 | 7 | 0 | 1 stand-in | `shakescreen` | `ShakeScreen` draws its random numbers from `breakRandomStandIn`, the port's stand-in stream; the seed and ... |
-| 42 | [RENDER-62](features/rendering.md?display=source#L46) | 0 | 137 | 8 | 0 | - | `point` | Point lights (type 2) against the oracle: lvl_00 `Point`/`Point01` (Intensity 2, MaxRange 1) on baked surfaces |
+| 42 | [RENDER-62](features/rendering.md?display=source#L45) | 0 | 137 | 8 | 0 | - | `point` | Point lights (type 2) against the oracle: lvl_00 `Point`/`Point01` (Intensity 2, MaxRange 1) on baked surfaces |
 | 43 | [LEVOBJ-S1](features/level-objects.md?display=source#L21) | 0 | 120 | 8 | 0 | - | `chars/char_ai_actor` | Characters other than pedestrians run the idle state of `char_ai_actor` (verified for `char_ai_actor` ... |
 | 44 | [SCRIPT-66](features/script-system-hud-natives.md?display=source#L28) | 113 | 0 | 7 | 1 | 8 stand-in | `informationbox`, `showbosshearts`, `showcharacterintro`, `showintrotext` +4 | ShowTally, ShowBossHearts, ShowRaceStart, ShowPortraitOverVehicle and showinfopointer only count their calls ... |
 | 45 | [STUD-4](features/studs.md?display=source#L38) | 109 | 0 | 7 | 0 | 1 stand-in, 1 none | `enablestudsbygroup`, `spawnstuds` | How a group is enabled (0x28a2cc sequencer, `EnableStudsByGroup` and `SpawnStuds` script functions ... |
@@ -185,13 +185,13 @@ Items: 950 open items and stand-ins, 168 linked to game usage, 782 with unknown 
 
 ## Rendering and assets
 
-3 of 44 items linked.
+3 of 47 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
-| 1 | [RENDER-62](features/rendering.md?display=source#L46) | 0 | 137 | 8 | 0 | - | `point` | Point lights (type 2) against the oracle: lvl_00 `Point`/`Point01` (Intensity 2, MaxRange 1) on baked surfaces |
+| 1 | [RENDER-62](features/rendering.md?display=source#L45) | 0 | 137 | 8 | 0 | - | `point` | Point lights (type 2) against the oracle: lvl_00 `Point`/`Point01` (Intensity 2, MaxRange 1) on baked surfaces |
 | 2 | [RENDER-66](features/rendering-draw-order.md?display=source#L26) | 89 | 0 | 7 | 17 | 1 stand-in | `enabledistancefade` | The distance fade of mesh nodes: every mesh node fades out beyond a distance that depends on its radius ... |
-| 3 | [RENDER-38](features/rendering.md?display=source#L42) | 5 | 0 | 1 | 0 | 1 none | `setbackgroundcolour` | Clear colour: apply the script native `SetBackgroundColour` (0x291624, 5 call sites in the level scripts) and ... |
+| 3 | [RENDER-38](features/rendering.md?display=source#L41) | 5 | 0 | 1 | 0 | 1 none | `setbackgroundcolour` | Clear colour: apply the script native `SetBackgroundColour` (0x291624, 5 call sites in the level scripts) and ... |
 
 ## Platform and tools
 
@@ -239,7 +239,8 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [player-traversal.md](features/player-traversal.md): TRAV-9 (+2), TRAV-2 (+1), TRAV-49 (+1), TRAV-52 (+1), TRAV-S12 (+1), TRAV-10, TRAV-19, TRAV-20, TRAV-22, TRAV-34, TRAV-35, TRAV-5, TRAV-6, TRAV-63, TRAV-8, TRAV-S1, TRAV-S10, TRAV-S11, TRAV-S13, TRAV-S2, TRAV-S20, TRAV-S29, TRAV-S3, TRAV-S30, TRAV-S31, TRAV-S32, TRAV-S4
 - [rendering-draw-order.md](features/rendering-draw-order.md): RENDER-65 (+1), RENDER-78 (+1), RENDER-79 (+1), RENDER-S64, RENDER-S71, RENDER-S72
 - [rendering-reflections.md](features/rendering-reflections.md): RENDER-75 (+1), RENDER-S69
-- [rendering.md](features/rendering.md): RENDER-50 (+2), RENDER-69 (+2), RENDER-33 (+1), RENDER-39 (+1), RENDER-60 (+1), RENDER-63 (+1), RENDER-64 (+1), ASSET-S1, RENDER-30, RENDER-34, RENDER-42, RENDER-6, RENDER-61, RENDER-70, RENDER-9, RENDER-S4, RENDER-S50, RENDER-S51, RENDER-S6, RENDER-S60, RENDER-S61, RENDER-S62, RENDER-S63, RENDER-S65, RENDER-S66, RENDER-S7
+- [rendering-shadows.md](features/rendering-shadows.md): RENDER-72 (+1), RENDER-73 (+1), RENDER-74 (+1), RENDER-S67, RENDER-S68
+- [rendering.md](features/rendering.md): RENDER-50 (+2), RENDER-69 (+2), RENDER-39 (+1), RENDER-60 (+1), RENDER-63 (+1), RENDER-64 (+1), ASSET-S1, RENDER-30, RENDER-34, RENDER-42, RENDER-6, RENDER-61, RENDER-70, RENDER-S4, RENDER-S50, RENDER-S51, RENDER-S6, RENDER-S60, RENDER-S61, RENDER-S62, RENDER-S63, RENDER-S65, RENDER-S66, RENDER-S7
 - [saves-options.md](features/saves-options.md): SAVE-8 (+4), SAVE-13 (+1), SAVE-14 (+1), SAVE-16 (+1), SAVE-2 (+1), SAVE-20 (+1), SAVE-22 (+1), SAVE-21, SAVE-3, SAVE-4, SAVE-5, SAVE-S1, SAVE-S10, SAVE-S11, SAVE-S2, SAVE-S3, SAVE-S4, SAVE-S5, SAVE-S6, SAVE-S8
 - [script-system-ai-navigation.md](features/script-system-ai-navigation.md): SCRIPT-92 (+30), SCRIPT-94 (+17), SCRIPT-101 (+15), SCRIPT-95 (+15), SCRIPT-100 (+14), SCRIPT-79 (+13), SCRIPT-S100, SCRIPT-S101, SCRIPT-S102, SCRIPT-S104, SCRIPT-S31, SCRIPT-S93, SCRIPT-S94, SCRIPT-S95
 - [script-system-dcam.md](features/script-system-dcam.md): SCRIPT-40 (+15), SCRIPT-182 (+1), SCRIPT-48 (+1), SCRIPT-181, SCRIPT-332, SCRIPT-49, SCRIPT-50, SCRIPT-S142

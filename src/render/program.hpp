@@ -7,5 +7,6 @@ namespace chase::render {
 GLuint sceneProgram();
 GLuint particleProgram();
 GLuint glowProgram();
+GLuint shadowProgram();
 
 }

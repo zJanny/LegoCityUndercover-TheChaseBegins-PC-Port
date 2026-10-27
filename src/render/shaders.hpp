@@ -9,4 +9,6 @@ extern const char* const particleVertex;
 extern const char* const particleFragment;
 extern const char* const glowVertex;
 extern const char* const glowFragment;
+extern const char* const shadowVertex;
+extern const char* const shadowFragment;
 }

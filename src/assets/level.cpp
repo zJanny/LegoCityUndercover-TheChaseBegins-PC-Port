@@ -392,9 +392,25 @@ std::vector<LightObject> lightObjects(const Level& level, const ClassLookup& cla
         light.placement.className = obj.className;
         float3Of(effectiveParam(obj, *cls, initialPosition), light.placement.position);
         float3Of(effectiveParam(obj, *cls, initialOrientation), light.placement.orientation);
+        const LevelParam* cast = effectiveParam(obj, *cls, nameHash("CastShadows"));
+        light.castShadows = light.type == 5 || ((light.type == 1 || light.type == 4) && cast && cast->value != 0);
+        if (effectiveParam(obj, *cls, nameHash("ShadowOpacity"))) light.shadowOpacity = effectiveFloat(obj, *cls, "ShadowOpacity");
+        if (effectiveParam(obj, *cls, nameHash("ShadowRadius"))) light.shadowRadius = effectiveFloat(obj, *cls, "ShadowRadius");
+        std::array<float, 3> shadowColour{};
+        if (float3Of(effectiveParam(obj, *cls, nameHash("ShadowColour")), shadowColour.data())) light.shadowColour = shadowColour;
         out.push_back(std::move(light));
     }
     return out;
+}
+
+std::optional<float> levelShadowRadius(const Level& level) {
+    const std::uint32_t hash = nameHash("ShadowRadius");
+    const LevelParam* param = findParam(level.defaults, hash);
+    if (!param) param = findParam(level.classParams, hash);
+    if (!param || param->type != 0) return std::nullopt;
+    float value;
+    std::memcpy(&value, &param->value, 4);
+    return value;
 }
 
 std::array<std::uint8_t, 3> levelBackgroundColour(const Level& level) {

@@ -406,11 +406,16 @@ struct LightObject {
     std::array<float, 3> specular = {0, 0, 0};
     float intensity = 1, maxRange = 10;
     Placement placement;
+    bool castShadows = false;  // CastShadows, read for types 1 and 4 only; type 5 always casts (0x23aa24)
+    std::optional<float> shadowOpacity, shadowRadius;
+    std::optional<std::array<float, 3>> shadowColour;
 };
 std::vector<LightObject> lightObjects(const Level& level, const ClassLookup& classOf);
 // BackgroundColour of the level's own parameter tables (read by 0x1bcf94 from the first scene's table, +0x10 then +0x14; bytes by
 // float to int as the game does). Without the parameter the game uses black (0x1bd0a0).
 std::array<std::uint8_t, 3> levelBackgroundColour(const Level& level);
+// ShadowRadius of the level's own parameter tables, read like BackgroundColour by 0x2e6264; none when unset.
+std::optional<float> levelShadowRadius(const Level& level);
 // Appearance defaults of a character class (levels/chars/char_<name>.blvl). The textures named
 // "*_TEST.tga" on the shared body/head models are the ones these names replace.
 struct CharacterAppearance {

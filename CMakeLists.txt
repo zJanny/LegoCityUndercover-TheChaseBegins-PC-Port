@@ -47,6 +47,7 @@ target_include_directories(chase_runtime PUBLIC src)
 target_compile_options(chase_runtime PRIVATE -Wall -Wextra -Wpedantic -ffp-contract=off)
 set_target_properties(chase_runtime PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_sources(chase_runtime PRIVATE src/runtime/pregen_derive.cpp src/runtime/studs.cpp src/runtime/sound_events.cpp src/runtime/music.cpp src/runtime/level_start.cpp src/runtime/script_runner.cpp src/runtime/natives_objects.cpp src/runtime/natives_effects.cpp src/runtime/natives_world.cpp src/runtime/natives_party.cpp src/runtime/script_runner_natives.cpp src/runtime/natives_animation.cpp src/runtime/natives_cutscene.cpp src/runtime/screen_fade.cpp src/runtime/dialog_bg_fade.cpp src/runtime/natives_progress.cpp src/runtime/natives_music.cpp src/runtime/natives_sound.cpp src/runtime/entity_ids.cpp src/runtime/music_block.cpp src/runtime/door.cpp src/runtime/scene_change.cpp src/runtime/same_level_entry.cpp src/runtime/room_streaming.cpp src/runtime/room_streamer.cpp src/runtime/scene_start.cpp src/runtime/dcam.cpp src/runtime/debug_metrics.cpp src/runtime/object_visibility.cpp src/runtime/script_text.cpp src/runtime/script_triggers.cpp src/runtime/objectives.cpp src/runtime/sub_objectives.cpp src/runtime/ai.cpp src/runtime/ai_simple_path.cpp src/runtime/fog.cpp src/runtime/lighting.cpp src/runtime/sky.cpp src/runtime/script_placement.cpp src/runtime/ai_go_to_target.cpp src/runtime/nav_grid.cpp src/runtime/nav_path.cpp src/runtime/nav_follow.cpp src/runtime/nav_load.cpp src/runtime/room_locator.cpp src/runtime/object_rooms.cpp src/runtime/pedestrian_rooms.cpp src/runtime/player_controller_state.cpp src/runtime/ai_super_jump.cpp src/runtime/ai_face_target.cpp src/runtime/waypoints.cpp src/runtime/waypoint_global.cpp src/runtime/buildit.cpp src/runtime/buildit_set.cpp src/runtime/buildit_wobble.cpp src/runtime/prop_animation.cpp src/runtime/prop_root_motion.cpp src/runtime/prop_nodes.cpp src/runtime/buildit_bricks.cpp src/runtime/mesh_bouncer.cpp src/runtime/reference_trigger.cpp src/runtime/vehicle.cpp src/runtime/vehicle_boarding.cpp src/runtime/vehicle_drive.cpp src/runtime/vehicle_body.cpp src/runtime/vehicle_wheels.cpp src/runtime/vehicle_drivetrain.cpp src/runtime/vehicle_wheel_pose.cpp src/runtime/vehicle_hud.cpp src/runtime/vehicle_damage.cpp src/runtime/vehicle_break.cpp src/runtime/head_icon.cpp src/runtime/floor_walk.cpp src/runtime/vehicle_collision.cpp src/runtime/vehicle_box_contact.cpp src/runtime/carry.cpp src/runtime/carry_arrows.cpp src/runtime/carry_animation.cpp src/runtime/scanner.cpp src/runtime/cutscene_cast.cpp src/runtime/cutscene_hold.cpp src/runtime/collision_enable.cpp src/runtime/game_random.cpp src/runtime/npc_idle.cpp src/runtime/animation_slots.cpp src/runtime/player_script_animation.cpp src/runtime/director_hold.cpp src/runtime/script_thread_log.cpp src/runtime/vehicle_world.cpp src/runtime/vehicle_sphere_sweep.cpp src/runtime/buildit_player.cpp src/runtime/vehicle_prop_smash.cpp src/runtime/detective.cpp src/runtime/hand_item.cpp src/runtime/hand_item_set.cpp src/runtime/use_spot.cpp src/runtime/use_marker.cpp src/runtime/use_marker_ground.cpp src/runtime/ability_table.cpp src/runtime/zipline.cpp src/runtime/zipline_rope.cpp src/runtime/zipline_pole.cpp src/runtime/nested_props.cpp src/runtime/brick_grab.cpp src/runtime/climb_bar.cpp src/runtime/acrobat_pole.cpp src/runtime/pole.cpp src/runtime/ladder.cpp src/runtime/ladder_sounds.cpp src/runtime/cat_rescue.cpp src/runtime/screen_shake.cpp src/runtime/placement_message.cpp src/runtime/super_buildit.cpp src/runtime/super_brick_display.cpp src/runtime/fast_travel_pad.cpp src/runtime/update_order.cpp src/runtime/save_hud_counter.cpp)
+target_sources(chase_runtime PRIVATE src/runtime/shadow.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/reference_trigger_level.cpp src/runtime/reference_trigger_apply.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/switch_base.cpp src/runtime/switch_set.cpp src/runtime/lever_use.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/player_attack.cpp src/runtime/attack_sounds.cpp)
@@ -111,13 +112,14 @@ endif()
 pkg_check_modules(EPOXY IMPORTED_TARGET epoxy)
 if(EPOXY_FOUND)
   set(CHASE_SHADER_DIR ${CMAKE_SOURCE_DIR}/src/render/shaders)
-  set(CHASE_SHADER_SOURCES sceneVertex:scene.vert.glsl sceneFragment:scene.frag.glsl hudVertex:hud.vert.glsl hudFragment:hud.frag.glsl particleVertex:particle.vert.glsl particleFragment:particle.frag.glsl glowVertex:glow.vert.glsl glowFragment:glow.frag.glsl)
+  set(CHASE_SHADER_SOURCES sceneVertex:scene.vert.glsl sceneFragment:scene.frag.glsl hudVertex:hud.vert.glsl hudFragment:hud.frag.glsl particleVertex:particle.vert.glsl particleFragment:particle.frag.glsl glowVertex:glow.vert.glsl glowFragment:glow.frag.glsl shadowVertex:shadow.vert.glsl shadowFragment:shadow.frag.glsl)
   set(CHASE_SHADERS_CPP ${CMAKE_BINARY_DIR}/generated/shaders.cpp)
   add_custom_command(OUTPUT ${CHASE_SHADERS_CPP}
     COMMAND ${CMAKE_COMMAND} "-DSHADERS=${CHASE_SHADER_SOURCES}" -DSHADER_DIR=${CHASE_SHADER_DIR} -DOUTPUT=${CHASE_SHADERS_CPP}
       -P ${CMAKE_SOURCE_DIR}/tools/embed_shaders.cmake
     DEPENDS ${CHASE_SHADER_DIR}/scene.vert.glsl ${CHASE_SHADER_DIR}/scene.frag.glsl ${CHASE_SHADER_DIR}/hud.vert.glsl ${CHASE_SHADER_DIR}/hud.frag.glsl
       ${CHASE_SHADER_DIR}/particle.vert.glsl ${CHASE_SHADER_DIR}/particle.frag.glsl ${CHASE_SHADER_DIR}/glow.vert.glsl ${CHASE_SHADER_DIR}/glow.frag.glsl
+      ${CHASE_SHADER_DIR}/shadow.vert.glsl ${CHASE_SHADER_DIR}/shadow.frag.glsl
       ${CMAKE_SOURCE_DIR}/tools/embed_shaders.cmake
     VERBATIM)
   add_library(chase_render src/render/scene.cpp src/render/character.cpp ${CHASE_SHADERS_CPP})
@@ -126,11 +128,12 @@ if(EPOXY_FOUND)
   target_compile_options(chase_render PRIVATE -Wall -Wextra -Wpedantic)
   target_sources(chase_render PRIVATE src/render/studs.cpp src/render/debug_text.cpp src/render/debug_overlay.cpp
     src/render/program.cpp src/render/particles.cpp src/render/rope.cpp src/render/window.cpp src/render/hud_overlay.cpp src/render/front_presenter.cpp src/render/frame_stats.cpp src/render/glow.cpp src/render/reflection.cpp)
+  target_sources(chase_render PRIVATE src/render/shadow.cpp)
   add_executable(chase-viewer src/viewer.cpp)
   target_link_libraries(chase-viewer PRIVATE chase_render chase_audio chase_input)
   target_compile_options(chase-viewer PRIVATE -Wall -Wextra -Wpedantic)
   if(FFMPEG_FOUND)
-    add_executable(chase-game src/game.cpp src/game_options.cpp src/game_player.cpp src/game_carry.cpp src/game_scanner.cpp src/game_doors.cpp src/game_prop_parts.cpp src/game_level.cpp src/game_pause_menu.cpp src/game_level_update.cpp src/game_vehicle.cpp src/game_vehicle_break.cpp src/game_vehicle_place.cpp src/game_vehicle_camera.cpp src/game_level_rooms.cpp src/game_cutscene.cpp src/game_level_cutscene.cpp src/game_characters.cpp src/game_pedestrians.cpp src/game_pedestrian_fade.cpp src/game_semi_trans.cpp src/game_pedestrian_rooms.cpp src/game_particles.cpp src/game_level_natives.cpp src/game_detective.cpp src/game_use_spot.cpp src/game_objective_markers.cpp src/game_hand_items.cpp src/game_effects.cpp src/game_vehicle_effects.cpp src/game_zipline.cpp src/game_brick_grab.cpp src/game_climb_bar.cpp src/game_acrobat_pole.cpp src/game_pole.cpp src/game_ladder.cpp src/game_animals.cpp src/game_object_visibility.cpp src/game_nested_props.cpp src/game_super_buildit.cpp src/game_fast_travel.cpp src/game_key_pickup.cpp)
+    add_executable(chase-game src/game.cpp src/game_options.cpp src/game_player.cpp src/game_carry.cpp src/game_scanner.cpp src/game_doors.cpp src/game_prop_parts.cpp src/game_level.cpp src/game_pause_menu.cpp src/game_level_update.cpp src/game_vehicle.cpp src/game_vehicle_break.cpp src/game_vehicle_place.cpp src/game_vehicle_camera.cpp src/game_level_rooms.cpp src/game_cutscene.cpp src/game_level_cutscene.cpp src/game_characters.cpp src/game_pedestrians.cpp src/game_pedestrian_fade.cpp src/game_semi_trans.cpp src/game_pedestrian_rooms.cpp src/game_particles.cpp src/game_level_natives.cpp src/game_detective.cpp src/game_use_spot.cpp src/game_objective_markers.cpp src/game_hand_items.cpp src/game_effects.cpp src/game_shadows.cpp src/game_vehicle_effects.cpp src/game_zipline.cpp src/game_brick_grab.cpp src/game_climb_bar.cpp src/game_acrobat_pole.cpp src/game_pole.cpp src/game_ladder.cpp src/game_animals.cpp src/game_object_visibility.cpp src/game_nested_props.cpp src/game_super_buildit.cpp src/game_fast_travel.cpp src/game_key_pickup.cpp)
     target_sources(chase-game PRIVATE src/game_pedestrian_blocking.cpp src/game_traffic.cpp)
     target_sources(chase-game PRIVATE src/game_props_destructible.cpp src/game_prop_destroy.cpp src/game_character_death.cpp src/game_fall_apart.cpp src/game_stud_drops.cpp src/game_super_bricks.cpp)
     target_sources(chase-game PRIVATE src/game_debris_pickup.cpp)
@@ -922,6 +925,12 @@ if(BUILD_TESTING)
   add_test(NAME sky-core COMMAND sky-test)
   add_test(NAME sky-real-data COMMAND sky-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
   set_tests_properties(sky-real-data PROPERTIES SKIP_RETURN_CODE 77)
+  add_executable(shadow-test tests/shadow_test.cpp)
+  target_link_libraries(shadow-test PRIVATE chase_runtime chase_assets)
+  target_compile_options(shadow-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME shadow-core COMMAND shadow-test)
+  add_test(NAME shadow-real-data COMMAND shadow-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
+  set_tests_properties(shadow-real-data PROPERTIES SKIP_RETURN_CODE 77)
   add_executable(level-start-real-test tests/level_start_real_test.cpp)
   target_link_libraries(level-start-real-test PRIVATE chase_runtime chase_assets)
   target_compile_options(level-start-real-test PRIVATE -Wall -Wextra -Wpedantic)
@@ -2163,7 +2172,7 @@ foreach(game_data_test
   destroy-effects-real-data character-death-real-data player-attack-real-data attack-sounds-real-data vehicle-world-real-data vehicle-rest-real-data
   vehicle-wheels-real-data vehicle-hud-real-data vehicle-real-data objectives-real-data object-kinds progress-readme priorities-current
   camera-records-real-data locomotion-real-data streaming-real-data room-streaming-real-data collision-real-data fog-real-data lighting-real-data reflection-real-data
-  sky-real-data level-start-real-data dcam-real-data npc-idle-real-data pedestrian-limit-real-data ai-real-data nav-path-real-data
+  sky-real-data shadow-real-data level-start-real-data dcam-real-data npc-idle-real-data pedestrian-limit-real-data ai-real-data nav-path-real-data
   script-triggers-real-data script-dialog-real-data natives-world-real-data natives-party-real-data natives-objects-real-data
   natives-cutscene-real-data natives-animation-real-data natives-progress-real-data script-call-targets-real-data scene-change-real-data
   same-level-entry-real-data door-real-data fall-real-data jump-real-data slide-real-data camera-real-data camera-blend-real-data

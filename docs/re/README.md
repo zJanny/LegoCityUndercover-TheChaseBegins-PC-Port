@@ -21,6 +21,7 @@ Read this index, then open only the file you need.
 | [rendering-glow.md](rendering-glow.md) | The glow post-process 0x2bf830: copies, blur tables of modes 0xc / 0xd, the add with mode 0x12, callers and strengths |
 | [rendering-draw-order.md](rendering-draw-order.md) | The draw lists 0x530634: material key 0x115128, depth key 0x25688c, the library sort, which parts are blended, particles in the list, and the near-camera semi-transparent lists (0x1ddde4) |
 | [rendering-reflections.md](rendering-reflections.md) | Reflection cube maps: the reflection flag 0x37796d, the cube subroutine of the vertex programs, `TexTrans`, face registers, census |
+| [rendering-shadows.md](rendering-shadows.md) | Shadows: the shadow light, focus and orthographic shadow camera, Shadow_Caster / Shadow_Receiver, the two receiving stages, oracle comparison |
 | [levels.md](levels.md) | `.blvl`, placements, Euler order, nav grids (`.bfnnav`) |
 | [level-transitions.md](level-transitions.md) | Details moved out of the level-transition feature items (natives without handler, loading page code) |
 | [objects.md](objects.md) | Level objects: classes, class files (+0x10/+0x14), parameter slots, how the model is found, drawn classes |

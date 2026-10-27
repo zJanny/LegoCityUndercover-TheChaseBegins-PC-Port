@@ -17,6 +17,7 @@
 #include "game_hand_items.hpp"
 #include "game_doors.hpp"
 #include "game_effects.hpp"
+#include "game_shadows.hpp"
 #include "game_stud_drops.hpp"
 #include "game_super_bricks.hpp"
 #include "game_fall_apart.hpp"
@@ -330,6 +331,7 @@ private:
     game_stud_drops::LevelStudDrops studDrops;
     game_super_bricks::LevelSuperBricks superBricks;
     game_effects::LevelEffects effects;
+    game_shadows::LevelShadows shadows;
     game_fall_apart::LevelFallApart fallApart;
     game_semi_trans::NearCameraFades nearCameraFades;
     double provisionalStudClockSeconds = 0;

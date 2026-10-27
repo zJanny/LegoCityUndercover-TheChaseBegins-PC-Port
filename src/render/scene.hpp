@@ -123,6 +123,16 @@ public:
     void setMaterialOverride(const std::optional<assets::MaterialOverride>& override);
     std::size_t missingTextures() const;
     std::size_t instances() const;
+    // Shadow_Caster / Shadow_Receiver of the instance's mesh nodes (+0xde bits 0 and 1, docs/re/rendering-shadows.md).
+    void setInstanceShadow(std::size_t instance, bool caster, bool receiver);
+    struct ShadowPart {
+        unsigned vertexArray = 0;
+        int indexCount = 0;
+        Mat4 world{};
+    };
+    // The parts of the visible caster instances, or the receiving parts of the visible receiver instances: opaque, not a reflection
+    // material and at most four stages, as 0x12ecd4 appends the shadow stages only then.
+    std::vector<ShadowPart> shadowParts(bool casters) const;
 
 private:
     std::unique_ptr<SceneImpl> impl_;
