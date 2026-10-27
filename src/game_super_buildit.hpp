@@ -19,6 +19,7 @@ struct State {
     float promptTime = 1.0e9f;
     std::vector<std::string> pictures;  // tables/tablessuperbuildit sheet 0 column 1
     std::vector<Model> models;
+    std::size_t savesApplied = 0;  // entries of the DisableSuperBuiltItSave record already applied
 };
 
 }

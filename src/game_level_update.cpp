@@ -451,6 +451,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
     for (const runtime::ScriptObjectMessage& sent : levelScripts.takeObjectMessages()) {
         if (sent.message == runtime::kMessageTrigger) detective.triggerMessage(sent.instance);
         deliverSwitchMessage(sent);
+        deliverSuperBuilditMessage(sent.instance, sent.message);
         if (const std::optional<runtime::DoorMessage> doorMessage = runtime::doorMessageFor(sent.message))
             for (DoorObject& door : doors)
                 if (game_doors::lowerCase(door.instance) == sent.instance) runtime::doorMessage(door.state, door.params, *doorMessage);

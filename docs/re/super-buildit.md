@@ -8,6 +8,7 @@ Super build-its (`props/prop_superbuildit`, kind 98) and their holder classes (`
 - The helipad of mission 1-3 is `1-3_Helipad` (`props/prop_sbhelipad_cherrytree`) with the nested plate `1-3_Helipad.SBPlate`; the link gives the plate the holder's `SuperBuildValue` 300 (the plate's own is 100). TextPopup 0x3f9b3c28 is "Helipad" (hinttext; gametext is tried first). [§2026-10-19T19:23:11](#ts-20261019-192311)
 - Prompt: the update shows the page while the player stands in the zone (node bounds + 0.5, 0.2, 0.5); the text is "Not enough Super Bricks!" in grey or "Build" with the A icon. A with enough bricks opens "Are you sure?" (OK / Cancel); OK plays `superbuildit_helipad`, and the update after the movie builds: the count drops by the value (302 -> 2 in the oracle), the plate goes, `SBHelipadProp` and the fast travel pad `SBFastTravel` come, and the holder's TriggerObject starts `1-3_Helipad_Built`. [§2026-10-19T19:23:11](#ts-20261019-192311)
 - The super brick count is the word 0x593430 ([super-bricks.md](super-bricks.md)); the build lowers it and its copy 0x5194b4 and makes the save request 0x21cf38(0). [§2026-10-19T19:23:11](#ts-20261019-192311)
+- Messages and save of the class: 8 reset, 0xfe close, 6 (story fix of the helipad), 0xfc (sound id to a callback); save byte `!(bit 3) & (bit 1)` (bit 3 set by `DisableSuperBuiltItSave` through 0x26d530), restore builds the plate again. [§2026-10-27T23:40:31+01:00](#ts-20261027-234031)
 - The built helipad's pad (`props/prop_fasttravelzone`, kind 227) lands the Helicopter and opens the fast travel map: [fast-travel.md §2026-10-20T00:22:29](fast-travel.md#ts-20261020-002229).
 
 <a id="ts-20261019-192311"></a>
@@ -47,3 +48,29 @@ Unknowns:
 - Whether disabling a plate while its prompt is shown releases the page (the update stops, so the owner stays).
 - The text colour on screen: name and cost are white in the pictures although 0x1cc994 sets 0xffffad4a on their elements; the font of `fontSize` 17 (the port's frontendfont is narrower: "Build" 24 pixels instead of 30).
 - The movie's end and the first update after it were not measured update for update.
+
+<a id="ts-20261027-234031"></a>
+
+## 2026-10-27T23:40:31+01:00 — Super build-it messages, save record and restore (llvm-objdump of `artifacts/game/game.arm.elf`, agent 20261027-mission13-F; no oracle)
+
+Read with llvm-objdump (armv6k, vfp2); string literals read from the image.
+
+**Handler 0x1bbec4** (class pointer in r4 = entity +0x7c). Dispatch: 3 (use query, see above), 6, 8, 0xfc (252), 0xfe (254); 0x45 and 0x46 branch to the common return 0.
+- 8: enable the entity (0x242cf0), disable `PropToReveal` (+0x1c, 0x2428c0), zone record on (0x236624(this, 1)), the reference step 0x23211c(this, +0xc, 0) when the kind byte `+0xc & 31` is 1 or 2, then `+2 = 1` and `+4 = 2`. The built bit +0x92 bit 1 is not touched. Sent by the native `ResetObject` (0x1b25f8; [script-natives-flags.md](script-natives-flags.md)).
+- 0xfe: `+4 = 1` when `+2 == 2`. Sent by `TriggerObject <obj> 0` (0x244f88 untrigger).
+- 0xfc: calls the function in the message record (`[r2]`, argument `[r2+4]`) with `ATTR_SFXBuilt` (+0x90) and the entity: the object hands its sound id to the sound-list collector at level load, as the door does ([door.hpp](../../src/runtime/door.hpp)). The port loads no banks by object.
+- 6: the name hash of `1-3_Helipad.SBPlate` (strings at 0x1bc190 `1-3_Helipad.SBPlate`, 0x1bc1a4 `StoryProgress`, 0x1bc1b4 `1-3_HelipadBuilt`, 0x1bc1c8 `1-3_Rainbow_02`) must equal entity +8; then 0x2451d0 on the level object (0x23c188 of the entity's +0x20: the level data) reads `StoryProgress` (must be 3) and `1-3_HelipadBuilt` (must be non-zero); the plate's `+0x80` (value) is set to 0, the object `1-3_Rainbow_02` is found (0x2450f0), its class record halfword `+0x16` (the brick's value, [super-bricks.md](super-bricks.md)) is set to 0 and 0x19fc7c sets its parameter `TaskComplete` to 1.0 through 0x236968, which the brick update turns into "collected before" (disable, no pickup). It repairs a game where the helipad was built before the roof brick was taken.
+
+**Save callback 0x192608**: one byte, `(bit 3 of +0x92) ? 0 : (bit 1 >> 1)`, so the built bit unless `DisableSuperBuiltItSave` set bit 3 (0x2b4b78 -> 0x26d530: `+0x92 = (+0x92 & ~8) | (arg & 1) << 3`). Mission 1-3 calls `DisableSuperBuiltItSave 1-3_Helipad.SBPlate 1` at its start ([§2026-10-19T19:23:11](#ts-20261019-192311)). The record is written for the objects with `+0x82` bit 0 (class parameter `SaveState`, default 1); the hash is entity +8.
+
+**Restore callback 0x192548** (only called when the saved byte has bit 0 and the object has `+0x82` bit 0): `+0x92` bit 1 = saved bit 0 (bit 1 cleared first); disable the entity; disable `HideObject` (+0x24); enable `PropToReveal` (+0x1c); activate `BuildCompleteTriggerObject` (+0x28, 0x244f40(obj, this)); enable `UseObject` (+0x2c); then, unless the level byte 0x51640e is 1, the map icon 0x2258bc(this, 6, 0) for `SuperBuildType` 1 and (this, 8, 0) for 2. `+2` and `+4` stay at 2.
+
+**State change 0x26d550**, new reads: state 3 order is `ATTR_SFXBuilt` (0x23ae84(sound, this)), then the reference steps 0x23211c(this, +0xc, 0) (when the kind byte is 1 or 2) and (this, +0xc, 1), the disables and enables listed above, the trigger of the holder, and for a state change not from 0: the counter 0x1ffc14(index, 1) (index 9 for type 1, 10 for 2, 11 for 4, else 8; 0x1ffc14 adds to a halfword of the array from 0x2a68bc, capped by a byte of the level table), for type 1 the bit `level - 2` of the byte 0x5208ae, the subtraction of the value from 0x593430 and from the HUD word +0x2a8, `0x21cf38(0)`, and the map icon (6 for type 1, 8 for type 2) unless 0x51640e is 1.
+
+**Port.** `src/runtime/superbuildit_messages.*`: messages 8, 0xfe, 6, 0xfc on `SuperBuilditObject`; records and restore; `ScriptRunner::takeObjectClassMessagesIf` hands the `ResetObject` messages of the class's objects to the glue (other classes' messages stay queued); the zone switch of the answer OK is now `zoneActive` (it replaces the built bit in the prompt test; the use query keeps the built bit). `ATTR_SFXBuilt` plays at the build. CTest `superbuildit-messages`.
+
+Unknowns:
+- Who sends message 6 and message 0xfc: no call of 0x244fc8 with an immediate 6 reaches the class (one sends a record whose byte +0x17 is 6, not the message), so the sender is another path (LEVOBJ-129).
+- The reference record at +0xc and the step 0x23211c at the reset and the build, the counters and the bit in 0x5208ae, the map icon, `NewPlayerLocation`, `PlayerFaceObject`, `TempVehicle` (LEVOBJ-117).
+- The order of the object records of a saved state (the port appends a new record after the kept ones, LEVOBJ-S100).
+- The records were not compared with the original's save of a built helipad.

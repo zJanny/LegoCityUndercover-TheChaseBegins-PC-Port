@@ -118,6 +118,8 @@ public:
     const ObjectNativeFlags* flags(const std::string& lowerCaseInstance) const;
     bool entityUpdateSkipped(const std::string& lowerCaseInstance) const;
     std::vector<ObjectClassMessage> takeMessages();
+    // Takes only the messages `wanted` accepts; the others stay queued for their class.
+    std::vector<ObjectClassMessage> takeMessagesIf(const std::function<bool(const ObjectClassMessage&)>& wanted);
 
 private:
     void setUsable(const std::string& instance, bool value);

@@ -2,7 +2,7 @@
 
 ## 1. Scope
 
-Build-its (`props/prop_buildit` and `leprops/leprop_buildit`, object type 0x15): the use zone, the build with the action button, the final prop and the event that tells the story script the build is done. Mission 1-1 step 6 (`1-1_BI_DonutVanParts`) is the first user. Super build-its (`props/prop_superbuildit`, kind 98, with their holders of kind 253) are covered from the helipad of mission 1-3 on, with its fast travel pad (kind 227, [level-objects-fast-travel.md](level-objects-fast-travel.md)); the bricks of other classes are not covered. General object items are in [level-objects.md](level-objects.md).
+Build-its (`props/prop_buildit` and `leprops/leprop_buildit`, object type 0x15): the use zone, the build with the action button, the final prop and the event that tells the story script the build is done. Mission 1-1 step 6 (`1-1_BI_DonutVanParts`) is the first user. Super build-its (`props/prop_superbuildit`, kind 98, with their holders of kind 253) are covered in [level-objects-buildit-super.md](level-objects-buildit-super.md), with the fast travel pad (kind 227, [level-objects-fast-travel.md](level-objects-fast-travel.md)); the bricks of other classes are not covered. General object items are in [level-objects.md](level-objects.md).
 
 ## 2. Status
 
@@ -16,7 +16,6 @@ IN_PROGRESS, updated 2026-10-26T23:06:15+01:00. Build-its are loaded by kind 21,
 - State machine and timing: brick start one update after the press, nine progress updates of 0.1, 0.106, ... per brick, 12 updates per brick, final prop shown at update 73 and built at update 85 after the first press; CTest `buildit` (rows read in the oracle every update, [buildit.md](../../re/buildit.md#ts-20261014-235539)).
 - Player and sounds: the state 9 "BUILD IT" with clip 183 `buildit`, entered on the press and left on reply 2 or release; `ATTR_SFXBitDone` 0x243 at updates 12 + 12 k and `ATTR_SFXBuilt` 0x244 at update 85 (CTest `buildit-player`, `buildit-real-data`; from the code, [buildit.md §2026-10-16T10:17](../../re/buildit.md#ts-20261016-101726)).
 - Completion: parts hidden, final prop shown, `ObjectTriggered` of the script object queued; `1-1_SO_VanFixed` then switches the broken van off and the driveable van on; CTest `buildit-real-data`.
-- Super build-it `1-3_Helipad.SBPlate`: value 300 from the holder (the plate's own 100), type 1, zone centre 0 0.1055 0, half 6.596 0.3055 6.596, the positions of the save state on the helipad that needs 300 super bricks and the save state on the helipad with enough super bricks inside, the save state on the fast travel pad of the built helipad outside; build: 302 -> 2 bricks, states 2/4 during the dialog, 2/3 during the movie, 3/3 after (RPC reads; CTests `super-buildit`, `super-buildit-real-data`, `game-super-buildit-prompt`, `game-super-buildit-build`): [super-buildit.md §2026-10-19T19:23:11](../../re/super-buildit.md#ts-20261019-192311).
 
 - Kind 21 holds both build-it classes; lvl_01 has 18 build-its, `1-3_Crane_bits` and `1-3_Push_Cart_bits` among them; CTests `buildit-real-data`, `stud-callers-real-data`. evidence: [buildit.md §2026-10-26T23:06:15](../../re/buildit.md#ts-20261026-230615).
 
@@ -26,8 +25,6 @@ IN_PROGRESS, updated 2026-10-26T23:06:15+01:00. Build-its are loaded by kind 21,
 - LEVOBJ-S71 The hop runs while the player stands in the use zone; the original also asks the class (0x244fc8) and a list at `*0x519114` (0x1a0f6c), and has flag bits 2 and 3 in the state-2 check. needs: LEVOBJ-71. evidence: [buildit.md §2026-10-15T19:52](../../re/buildit-bricks.md#ts-20261015-195230).
 - LEVOBJ-S74 The sound stop key of a build-it (the u16 at entity +0x14) is `kBuilditSoundOwnerBase` + the object index. evidence: [buildit.md §2026-10-16T10:17](../../re/buildit.md#ts-20261016-101726).
 - LEVOBJ-S76 The player's state 9 ends on any use reply other than 1; 0x276254 keeps it on reply 0 while the build-it's halfword +0x10 bit 0 is clear. needs: LEVOBJ-79. evidence: [buildit.md §2026-10-18T10:08:04](../../re/buildit.md#ts-20261018-100804).
-- LEVOBJ-S94 The super build-it prompt gate is the port's "player free" flag, closed from the OK answer on by the built bit; the original's globals, player states (0x24255c) and the characters that block the zone are not tested. needs: LEVOBJ-117. evidence: [super-buildit.md §2026-10-19T19:23:11](../../re/super-buildit.md#ts-20261019-192311).
-- LEVOBJ-S95 Closed 2026-10-19: the build reads and lowers the super brick count of the pickups (`LevelSuperBricks::spend`). evidence: [super-buildit.md §2026-10-19T19:23:11](../../re/super-buildit.md#ts-20261019-192311).
 - LEVOBJ-S41 The action button is read as A (confirm slot); the original's reader of the action flag in the use query was not located.
 
 ## 5. Open items
@@ -42,7 +39,6 @@ IN_PROGRESS, updated 2026-10-26T23:06:15+01:00. Build-its are loaded by kind 21,
 - [ ] LEVOBJ-79 — The rest of state 9: the turn of 0x1ff030 when the intent heading differs from the facing, 0x22c500(4, 4, 4, 0) at the change to state 11, the float 0x51a224 + 0x140 set to 1.0 on leaving, and the reply-0 rule of 0x276254. blocks: LEVOBJ-S76. evidence: [buildit.md §2026-10-18T10:08:04](../../re/buildit.md#ts-20261018-100804).
 - [ ] LEVOBJ-42 — The other 15 build-its of lvl_01 and the parameters this one does not set (`UseBound` (only `4-5_PigPen_Sat_Static_Buildit_Bits` of lvl_04 sets it, none sets `UseRadius`), `UseExcludeBound`, `DontUseRadius`, `Icon`, `BuildType`, percent triggers, messages 0x14, 0xfe, 0xff) are transcribed from the code only for the default path; none was measured. evidence: [buildit.md §2026-10-14T23:55](../../re/buildit.md#ts-20261014-235539).
 - [ ] LEVOBJ-43 — The built state is not saved or restored (save record type 0x15, one byte, [save-format-state.md](../../re/save-format-state.md#ts-20261014-134146)); a loaded game shows the build-it unbuilt. needs: SAVE-8. blocks: LEVOBJ-125.
-- [ ] LEVOBJ-117 — The rest of the super build-it class: message 6 of the helipad (StoryProgress 3 and `1-3_HelipadBuilt`), messages 8, 0xfe, 0xfc, save and restore, the map icon, progress counters, `NewPlayerLocation`, `PlayerFaceObject`, `TempVehicle`, `HideObject` use, the reference step on +0xc, `ATTR_SFXBuilt`, the player state after OK, the characters that block the zone, and the other super build-its (none compared with the oracle). blocks: LEVOBJ-S94. evidence: [super-buildit.md §2026-10-19T19:23:11](../../re/super-buildit.md#ts-20261019-192311).
 
 ## 6. Findings summary
 
@@ -51,12 +47,10 @@ IN_PROGRESS, updated 2026-10-26T23:06:15+01:00. Build-its are loaded by kind 21,
 - The turned use zone (0x242df4, 0x242eb0, 0x221570, 0x2536c0): [buildit.md §2026-10-18T20:59](../../re/buildit.md#ts-20261018-205928).
 - Class record, messages, use zone and state machine from the code: [buildit.md §2026-10-14T23:55](../../re/buildit.md#ts-20261014-235539).
 - Brick data, flight and rise from the code: [buildit.md §2026-10-15T18:31](../../re/buildit-bricks.md#ts-20261015-183145); built pose and oracle trace of the node matrices: [buildit.md §2026-10-16T09:35](../../re/buildit-bricks.md#ts-20261016-093536).
-- Super build-its (helipad of mission 1-3): class, prompt page, use query, state change, oracle reads: [super-buildit.md §2026-10-19T19:23:11](../../re/super-buildit.md#ts-20261019-192311).
 - Hop of the unbuilt bricks (start values, condition, oracle rows): [buildit.md §2026-10-15T19:52](../../re/buildit-bricks.md#ts-20261015-195230).
 
 ## 7. Code and tests
 
 - `src/runtime/buildit.*` (state machine), `src/runtime/buildit_wobble.*` (hop of the unbuilt bricks), `src/runtime/buildit_set.*` (level objects, zone, actions), `src/runtime/reference_trigger.*` (step 0x23211c), `ScriptRunner::triggerObjectEnabling`, `assets::modelBounds`; glue `updateBuildits` in `src/game_level_update.cpp`.
 - Per-node transforms of placed props (the API other features use, e.g. `Attach*`): `Scene::addModelNodes(path, placement)` in `src/render/scene.hpp` returns one scene instance per node with a mesh (-1 for none; GPU data shared by key `path#mesh`) and `Scene::setTransform(instance, matrix)` moves it, each update, to `local * placement` (row-vector `Mat4`, the game's layout). Logic without GL: `src/runtime/prop_nodes.*` (`PropNodes::of(model)` node matrices and `world()`, `nodePoseOf`/`nodeMatrixOf` quaternion conversion, `nodeSlerp`, `nodeFlight`), `src/runtime/buildit_player.*` (`BuilditPlayer`, clip), `builditSounds`, `src/runtime/buildit_bricks.*` (bricks of a parts model from its `_buildit` animation, `assets::objectAnimationMatrix`), `src/runtime/mesh_bouncer.*` (class `dummymeshbouncer`, `propChildren` for objects embedded in class files); glue `src/game_prop_parts.*` (`PropParts`: build-it bricks, `BuilditBricks::buildAt`, final prop rise, waypoint Badge children), `BuilditState::flight` and `propRise`.
-- Super build-its: `src/runtime/super_buildit.*` (`SuperBuilditSet`), `src/frontend/super_build_prompt.*`, glue `src/game_super_buildit.*`; CTest `super-buildit`, `super-buildit-real-data`, `game-super-buildit-prompt`, `game-super-buildit-build` (slow).
 - CTest: `buildit`, `buildit-player`, `buildit-wobble`, `buildit-real-data`, `reference-trigger`, `prop-parts`, `prop-parts-real-data`.

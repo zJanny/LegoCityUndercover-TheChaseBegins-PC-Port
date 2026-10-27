@@ -243,6 +243,13 @@ bool ObjectNativeState::entityUpdateSkipped(const std::string& instance) const {
     return found && found->updateFlagBit.value_or(false);
 }
 
+std::vector<ObjectClassMessage> ObjectNativeState::takeMessagesIf(const std::function<bool(const ObjectClassMessage&)>& wanted) {
+    std::vector<ObjectClassMessage> taken, kept;
+    for (ObjectClassMessage& message : messages_) (wanted(message) ? taken : kept).push_back(std::move(message));
+    messages_ = std::move(kept);
+    return taken;
+}
+
 std::vector<ObjectClassMessage> ObjectNativeState::takeMessages() {
     std::vector<ObjectClassMessage> taken;
     taken.swap(messages_);

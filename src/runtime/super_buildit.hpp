@@ -57,6 +57,9 @@ struct SuperBuilditObject {
     std::uint16_t state = std::uint16_t(SuperBuilditPhase::Created);
     std::uint16_t requested = std::uint16_t(SuperBuilditPhase::Waiting);  // create 0x1af05c
     bool built = false;        // +0x92 bit 1
+    bool saveDisabled = false; // +0x92 bit 3: DisableSuperBuiltItSave (0x26d530)
+    bool saveState = true;     // entity +0x82 bit 0: the class writes a save record and has a restore callback (SaveState)
+    bool zoneActive = true;    // the use zone record (0x236624): switched off by the answer OK, on again by the reset
     bool promptShown = false;  // +0x92 bit 2
     std::uint32_t countSeen = 0xffffffffu;  // +0x84: the count read by the last accepted use query
 };
@@ -109,6 +112,7 @@ public:
     const std::optional<SuperBuilditPrompt>& prompt() const { return prompt_; }
     const std::vector<SuperBuilditObject>& objects() const { return objects_; }
     const SuperBuilditObject* find(const std::string& lowerInstance) const;
+    SuperBuilditObject* findMutable(const std::string& lowerInstance);
     static bool inZone(const SuperBuilditObject& object, const float player[3]);
 
 private:

@@ -1,6 +1,7 @@
 #include "frontend/pages.hpp"
 #include "frontend/super_build_prompt.hpp"
 #include "game_level.hpp"
+#include "runtime/superbuildit_messages.hpp"
 #include <algorithm>
 #include <iostream>
 
@@ -19,6 +20,13 @@ constexpr const char* kMissingString = "MISSING STRING";  // 0x235fb4
 void LevelSession::loadSuperBuildits() {
     superBuildits.load(shared.archive, level, classOf);
     runtime::applySuperBuilditLink(superBuildits, objectState);
+    std::vector<runtime::SuperBuilditRecord> saved;
+    for (const chase::save::ObjectRecord& record : saveLevelState.keptRecords)
+        if (record.payload.size() == 1) saved.push_back({record.hash, record.payload[0]});
+    const std::size_t restored = runtime::restoreSuperBuildits(superBuildits, saved, objectState, levelScripts);
+    if (restored) std::cout << "super build-its restored from the saved state: " << restored << '\n';
+    saveLevelState.liveRecords.clear();
+    for (const runtime::SuperBuilditRecord& record : runtime::superBuilditRecords(superBuildits)) saveLevelState.liveRecords.push_back({record.hash, {record.payload}});
     if (const chase::assets::FuseEntry* entry = shared.archive.find(kSuperBuilditTable)) {
         const chase::assets::Table table = chase::assets::parseTable(shared.archive.read(*entry));
         if (!table.sheets.empty())
@@ -61,7 +69,29 @@ bool LevelSession::holdForSuperBuildit(float dt) {
     return true;
 }
 
+void LevelSession::deliverSuperBuilditMessage(const std::string& instance, std::uint8_t message) {
+    runtime::SuperBuilditObject* object = superBuildits.findMutable(instance);
+    if (!object) return;
+    const runtime::SuperBuilditMessageResult result = runtime::superBuilditMessage(
+        *object, message, objectState, [this](const std::string& name) { return levelScripts.variable(chase::assets::nameHash(name)); });
+    if (result.handled) std::cout << "super build-it " << instance << ": message " << unsigned(message) << " at update " << updates << '\n';
+}
+
+void LevelSession::updateSuperBuilditSaves() {
+    const std::vector<chase::runtime::ObjectSuperBuiltItSave>& saves = levelScripts.progressNatives().superBuiltItSaves();
+    for (; superBuild.savesApplied < saves.size(); ++superBuild.savesApplied) {
+        const chase::runtime::ObjectSuperBuiltItSave& save = saves[superBuild.savesApplied];
+        if (runtime::SuperBuilditObject* object = superBuildits.findMutable(save.instance)) runtime::disableSuperBuilditSave(*object, save.disabled);
+    }
+    for (const runtime::ObjectClassMessage& sent : levelScripts.takeObjectClassMessagesIf(
+             [this](const runtime::ObjectClassMessage& message) { return message.message == runtime::kMessageReset && superBuildits.find(message.instance); }))
+        deliverSuperBuilditMessage(sent.instance, sent.message);
+    saveLevelState.liveRecords.clear();
+    for (const runtime::SuperBuilditRecord& record : runtime::superBuilditRecords(superBuildits)) saveLevelState.liveRecords.push_back({record.hash, {record.payload}});
+}
+
 void LevelSession::updateSuperBuildits(const float playerPosition[3], float dt) {
+    updateSuperBuilditSaves();
     runtime::SuperBuilditInput input;
     std::copy_n(playerPosition, 3, input.player);
     input.playerCarrying = carry.carryingMode() != 0 || carry.busy();
@@ -98,6 +128,8 @@ void LevelSession::updateSuperBuildits(const float playerPosition[3], float dt) 
                       << '\n';
             break;
         case runtime::SuperBuilditActionKind::Built:
+            if (object.soundBuilt && player)
+                player->sounds.push_back({object.soundBuilt, {object.world[12], object.world[13], object.world[14]}, levelScripts.soundNatives().ownerOf(object.instance)});
             std::cout << "super build-it " << object.instance << ": built at update " << updates << ", super bricks " << superBricks.total() << ", shown count "
                       << (hud ? hud->superBrickDisplay().count() : 0) << '\n';
             break;

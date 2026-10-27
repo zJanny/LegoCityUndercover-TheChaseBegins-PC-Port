@@ -298,6 +298,8 @@ private:
     game_player::PlayerAnimation applyBoarding(const chase::runtime::BoardingStep& step);
     bool holdForMovie(float dt);
     void loadSuperBuildits();
+    void deliverSuperBuilditMessage(const std::string& instance, std::uint8_t message);
+    void updateSuperBuilditSaves();
     bool holdForSuperBuildit(float dt);
     bool holdForPause(float dt, const chase::runtime::PadState& padInput);
     bool drawPause(int width, int height);

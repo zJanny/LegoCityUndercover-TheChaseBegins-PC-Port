@@ -19,6 +19,9 @@ struct LevelStateInput {
     // written back in their order (a 4-byte record with the live TASKS_COMPLETE); the end bit set keeps the length of
     // that state and is empty for a level without one (the count at scene + 0x12f4 is not read).
     std::vector<ObjectRecord> keptRecords;
+    // The records of live objects whose class has a save callback (the super build-its, 0x192608): the payload replaces that of a kept record with the same
+    // hash. STAND-IN LEVOBJ-S100: a record without a kept one is appended after the kept records; the original writes them in the scene's object order.
+    std::vector<ObjectRecord> liveRecords;
     std::size_t endBitSetBytes = 0;
 };
 

@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 959 open items and stand-ins, 168 linked to game usage, 791 with unknown reach.
+Items: 962 open items and stand-ins, 169 linked to game usage, 793 with unknown reach.
 
 ## Top 50 overall
 
@@ -104,20 +104,20 @@ Items: 959 open items and stand-ins, 168 linked to game usage, 791 with unknown 
 
 ## Level objects
 
-13 of 132 items linked.
+14 of 135 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
 | 1 | [PART-3](features/particles.md?display=source#L28) | 0 | 281 | 8 | 0 | - | `particles` | The level object class `particles` (constructor 0x1a7f30, handlers 0x1a8394 and 0x1a7d30: `ParticleDef` ... |
 | 2 | [LEVOBJ-S1](features/level-objects.md?display=source#L21) | 0 | 120 | 8 | 0 | - | `chars/char_ai_actor` | Characters other than pedestrians run the idle state of `char_ai_actor` (verified for `char_ai_actor` ... |
 | 3 | [STUD-4](features/studs.md?display=source#L38) | 109 | 0 | 7 | 0 | 1 stand-in, 1 none | `enablestudsbygroup`, `spawnstuds` | How a group is enabled (0x28a2cc sequencer, `EnableStudsByGroup` and `SpawnStuds` script functions ... |
-| 4 | [STUD-9](features/studs.md?display=source#L39) | 73 | 0 | 7 | 2 | 1 stand-in | `enablestudsbygroup` | `EnableStudsByGroup(group, value)` only records the request (the sequencer entry 0x58f710 and its per-frame ... |
-| 5 | [LEVOBJ-32](features/level-objects-carry.md?display=source#L37) | 57 | 0 | 3 | 0 | 1 none | `spawndebris` | Effects of the carry system not played: sounds (`carryit_pickup_big_01`, `carryit_putdown_big_01` ... |
-| 6 | [LEVOBJ-7](features/level-objects.md?display=source#L43) | 0 | 51 | 7 | 0 | - | `chars/ride_pig`, `props/prop_sharkattack` | Classes without a recovered create are not created (shared with COLL-2): among the animals `chars/ride_pig` ... |
-| 7 | [LEVOBJ-4](features/level-objects.md?display=source#L40) | 0 | 37 | 7 | 0 | - | `chars/ride_pig` | The 8 custom lineup characters (`CharacterEnum` 1..8 through 0x2372e0) and the ride_pig and shark rigs ... |
-| 8 | [STUD-15](features/studs.md?display=source#L41) | 36 | 0 | 4 | 0 | 1 none | `spawnstuds` | The `SpawnStuds` native 0x1a3130: 0x23a6b0(entity of argument 2, int(argument 1), 1, 1, 1), mode 0, forward ... |
-| 9 | [STUD-10](features/studs.md?display=source#L40) | 21 | 0 | 6 | 0 | 1 stand-in | `addstuds` | `AddStuds` adds to the counter (`StudField::addToCounter`) but not the timestamp +0x44 and the HUD hook ... |
-| 10 | [DOOR-1](features/doors.md?display=source#L28) | 16 | 0 | 7 | 0 | 1 implemented | `warningdialogbox` | Some doors in lvl_01 open only when a game script asks; `Police_ExtToInt` stops at `WarningDialogBox`, which ... |
+| 4 | [LEVOBJ-S94](features/level-objects-buildit-super.md?display=source#L18) | 90 | 0 | 7 | 0 | 1 stand-in | `resetobject` | The super build-it prompt gate is the port's "player free" flag, closed from the OK answer on by the zone ... |
+| 5 | [STUD-9](features/studs.md?display=source#L39) | 73 | 0 | 7 | 2 | 1 stand-in | `enablestudsbygroup` | `EnableStudsByGroup(group, value)` only records the request (the sequencer entry 0x58f710 and its per-frame ... |
+| 6 | [LEVOBJ-32](features/level-objects-carry.md?display=source#L37) | 57 | 0 | 3 | 0 | 1 none | `spawndebris` | Effects of the carry system not played: sounds (`carryit_pickup_big_01`, `carryit_putdown_big_01` ... |
+| 7 | [LEVOBJ-7](features/level-objects.md?display=source#L43) | 0 | 51 | 7 | 0 | - | `chars/ride_pig`, `props/prop_sharkattack` | Classes without a recovered create are not created (shared with COLL-2): among the animals `chars/ride_pig` ... |
+| 8 | [LEVOBJ-4](features/level-objects.md?display=source#L40) | 0 | 37 | 7 | 0 | - | `chars/ride_pig` | The 8 custom lineup characters (`CharacterEnum` 1..8 through 0x2372e0) and the ride_pig and shark rigs ... |
+| 9 | [STUD-15](features/studs.md?display=source#L41) | 36 | 0 | 4 | 0 | 1 none | `spawnstuds` | The `SpawnStuds` native 0x1a3130: 0x23a6b0(entity of argument 2, int(argument 1), 1, 1, 1), mode 0, forward ... |
+| 10 | [STUD-10](features/studs.md?display=source#L40) | 21 | 0 | 6 | 0 | 1 stand-in | `addstuds` | `AddStuds` adds to the counter (`StudField::addToCounter`) but not the timestamp +0x44 and the HUD hook ... |
 
 ## Vehicles
 
@@ -219,7 +219,8 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [hud-ui-text.md](features/hud-ui-text.md): HUD-15, HUD-27, HUD-28, HUD-29, HUD-32, HUD-33, HUD-S15
 - [hud-ui.md](features/hud-ui.md): HUD-70 (+4), HUD-71 (+3), HUD-11 (+2), HUD-60 (+1), HUD-61 (+1), HUD-74 (+1), HUD-75 (+1), HUD-10, HUD-12, HUD-18, HUD-3, HUD-6, HUD-7, HUD-8, HUD-S1, HUD-S2, HUD-S3, HUD-S4, HUD-S6, HUD-S60, HUD-S7, HUD-S70, HUD-S71, HUD-S73
 - [input.md](features/input.md): INPUT-1, INPUT-2, INPUT-3, INPUT-S1
-- [level-objects-buildit.md](features/level-objects-buildit.md): LEVOBJ-117 (+1), LEVOBJ-43 (+1), LEVOBJ-71 (+1), LEVOBJ-79 (+1), LEVOBJ-42, LEVOBJ-61, LEVOBJ-70, LEVOBJ-76, LEVOBJ-77, LEVOBJ-85, LEVOBJ-94, LEVOBJ-S41, LEVOBJ-S70, LEVOBJ-S71, LEVOBJ-S74, LEVOBJ-S76, LEVOBJ-S94, LEVOBJ-S95
+- [level-objects-buildit-super.md](features/level-objects-buildit-super.md): LEVOBJ-117 (+1), LEVOBJ-129 (+1), LEVOBJ-S100, LEVOBJ-S101, LEVOBJ-S95
+- [level-objects-buildit.md](features/level-objects-buildit.md): LEVOBJ-43 (+1), LEVOBJ-71 (+1), LEVOBJ-79 (+1), LEVOBJ-42, LEVOBJ-61, LEVOBJ-70, LEVOBJ-76, LEVOBJ-77, LEVOBJ-85, LEVOBJ-94, LEVOBJ-S41, LEVOBJ-S70, LEVOBJ-S71, LEVOBJ-S74, LEVOBJ-S76
 - [level-objects-carry.md](features/level-objects-carry.md): LEVOBJ-127 (+1), LEVOBJ-75 (+1), LEVOBJ-128, LEVOBJ-30, LEVOBJ-31, LEVOBJ-34, LEVOBJ-S31, LEVOBJ-S33, LEVOBJ-S34, LEVOBJ-S73, LEVOBJ-S75, LEVOBJ-S99
 - [level-objects-fast-travel.md](features/level-objects-fast-travel.md): LEVOBJ-122 (+2), LEVOBJ-120 (+1), LEVOBJ-121, LEVOBJ-123, LEVOBJ-124, LEVOBJ-125, LEVOBJ-126, LEVOBJ-S96, LEVOBJ-S97, LEVOBJ-S98
 - [level-objects-wobbly.md](features/level-objects-wobbly.md): LEVOBJ-87 (+3), LEVOBJ-112 (+1), LEVOBJ-89 (+1), LEVOBJ-90 (+1), LEVOBJ-92 (+1), LEVOBJ-96 (+1), LEVOBJ-91, LEVOBJ-97, LEVOBJ-S77, LEVOBJ-S79, LEVOBJ-S80, LEVOBJ-S81

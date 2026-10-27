@@ -88,6 +88,7 @@ void SuperBuilditSet::load(assets::FuseArchive& archive, const assets::Level& le
         out.fmv = stringParam(object, *superClass, "FMVToPlay");
         out.soundBuilt = std::uint16_t(intParam(object, *superClass, "ATTR_SFXBuilt", 0));
         out.playerFaceObject = intParam(object, *superClass, "PlayerFaceObject", 0) & 1;
+        out.saveState = intParam(object, *superClass, "SaveState", 1) & 1;
         out.propToReveal = referenceName(object, *superClass, "PropToReveal", siblings, levelNames);
         out.useObject = referenceName(object, *superClass, "UseObject", siblings, levelNames);
         out.hideObject = referenceName(object, *superClass, "HideObject", siblings, levelNames);
@@ -146,6 +147,12 @@ const SuperBuilditObject* SuperBuilditSet::find(const std::string& lowerInstance
     return nullptr;
 }
 
+SuperBuilditObject* SuperBuilditSet::findMutable(const std::string& lowerInstance) {
+    for (SuperBuilditObject& object : objects_)
+        if (object.instance == lowerInstance) return &object;
+    return nullptr;
+}
+
 bool SuperBuilditSet::inZone(const SuperBuilditObject& object, const float player[3]) {
     if (!object.hasZone) return false;
     float offset[3];
@@ -176,6 +183,7 @@ void SuperBuilditSet::stepState(std::size_t index, std::vector<SuperBuilditActio
         } else if (dialogResult_ == kSuperBuilditDialogConfirm) {
             actions.push_back({SuperBuilditActionKind::MovieStarted, index, false});
             object.built = true;
+            object.zoneActive = false;
             object.requested = std::uint16_t(SuperBuilditPhase::Built);
             return;
         }
@@ -199,7 +207,7 @@ std::vector<SuperBuilditAction> SuperBuilditSet::update(const assets::PlacedObje
         SuperBuilditObject& object = objects_[i];
         if (state.isDisabled(object.instance) || (!object.parent.empty() && state.isDisabled(object.parent))) continue;
         bool inside = false;
-        if (input.playerFree && !object.built && object.state == std::uint16_t(SuperBuilditPhase::Waiting) &&
+        if (input.playerFree && object.zoneActive && object.state == std::uint16_t(SuperBuilditPhase::Waiting) &&
             object.requested != std::uint16_t(SuperBuilditPhase::Confirm)) {
             inside = inZone(object, input.player);
             if (inside) {

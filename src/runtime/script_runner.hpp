@@ -203,6 +203,7 @@ public:
     // Flags and class messages written by the object natives (natives_objects.hpp).
     const ObjectNativeState& objectNatives() const { return objectNatives_; }
     std::vector<ObjectClassMessage> takeObjectClassMessages() { return objectNatives_.takeMessages(); }
+    std::vector<ObjectClassMessage> takeObjectClassMessagesIf(const std::function<bool(const ObjectClassMessage&)>& wanted) { return objectNatives_.takeMessagesIf(wanted); }
     // The host's effect of message 1 that DestroyProp / KillObject send to a class (0x244fc8): the vehicle break, the prop's explosion and bricks.
     // Whether the entity is hidden and destroyed afterwards follows destroyReaction (destroy_message.hpp).
     // 0x23cd80 for an entity that a damage handler destroys (a prop hit on foot or by a car) or that DestroyProp / KillObject name: the Dead event,

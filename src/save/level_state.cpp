@@ -71,7 +71,16 @@ std::optional<std::vector<std::uint8_t>> levelStateData(const assets::Level& lev
     std::vector<std::uint8_t> data;
     if (!payload.empty()) appendRecord(data, 0, payload);
     const float tasksComplete = input.variable ? input.variable(assets::nameHash("TASKS_COMPLETE")).value_or(0.0f) : 0.0f;
+    std::vector<bool> liveWritten(input.liveRecords.size(), false);
     for (const ObjectRecord& record : input.keptRecords) {
+        bool live = false;
+        for (std::size_t i = 0; i < input.liveRecords.size() && !live; ++i) {
+            if (input.liveRecords[i].hash != record.hash) continue;
+            appendRecord(data, record.hash, input.liveRecords[i].payload);
+            liveWritten[i] = true;
+            live = true;
+        }
+        if (live) continue;
         if (record.payload.size() != kTasksCompleteBytes) {
             appendRecord(data, record.hash, record.payload);
             continue;
@@ -80,6 +89,8 @@ std::optional<std::vector<std::uint8_t>> levelStateData(const assets::Level& lev
         appendU32(value, bitsOf(tasksComplete));
         appendRecord(data, record.hash, value);
     }
+    for (std::size_t i = 0; i < input.liveRecords.size(); ++i)
+        if (!liveWritten[i]) appendRecord(data, input.liveRecords[i].hash, input.liveRecords[i].payload);
     appendU32(data, kEndMarker);
     data.insert(data.end(), input.endBitSetBytes, 0);
     if (data.size() > kLevelStateCapacity) return std::nullopt;
