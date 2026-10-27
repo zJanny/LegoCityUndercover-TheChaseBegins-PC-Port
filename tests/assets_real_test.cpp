@@ -558,13 +558,34 @@ int main(int argc, char** argv) {
                 named != 757 || resolved != 757)
                 throw std::runtime_error("sound effect table differs from the recorded reference");
         }
+        {
+            // Oracle (20261027-graphics-servant for 20261027-graphics-F, RPC F-1, 2026-10-27, recorded from save states just after the
+            // cutscene 1_1_d loaded and late in the cutscene 1_1_b): camera eye C+0x70 and the view row 2 of the camera node matrix N+0x5c
+            // at camera frames read at O+8; the tracks evaluated with 0x252a7c give the same camera.
+            struct Shot { const char* id; double frame; float eye[3]; float forward[3]; };
+            const Shot shots[] = {{"1_1_d", 22.09, {826.3765f, 19.5209f, 1042.9618f}, {-0.4775f, -0.1098f, 0.8718f}},
+                                  {"1_1_d", 137.09, {827.3733f, 20.3415f, 1043.3774f}, {-0.5608f, -0.1798f, 0.8082f}},
+                                  {"1_1_d", 180.09, {827.5709f, 20.5042f, 1043.4600f}, {-0.5761f, -0.1936f, 0.7941f}},
+                                  {"1_1_b", 298, {862.842f, 29.976f, 1082.018f}, {0, 0, 0}},
+                                  {"1_1_b", 391, {864.297f, 29.348f, 1083.876f}, {0, 0, 0}}};
+            for (const Shot& shot : shots) {
+                const CutsceneContent cutscene = loadCutscene(archive, shot.id);
+                const Matrix m = cameraMatrix(cutsceneCamera(cutscene.camera, float(cutsceneNormalised(cutscene.camera, shot.frame))));
+                bool same = true;
+                for (int i = 0; i < 3; ++i) {
+                    same = same && std::fabs(m[12 + i] - shot.eye[i]) < 2e-3f;
+                    if (shot.forward[0] != 0) same = same && std::fabs(m[8 + i] - shot.forward[i]) < 2e-4f;
+                }
+                if (!same) throw std::runtime_error(std::string("cutscene camera of ") + shot.id + " differs from the oracle");
+            }
+        }
         // Reference: recorded from this C++ parser (2026-10-13); camera x is near the actors (x ~ -815 raw).
         {
             const FuseEntry* shot = archive.find("csdata/models/1_1_a/cscamera/cscamera_0000.bfnanm");
             if (!shot) throw std::runtime_error("1_1_a camera not found");
             CutsceneCamera camera = cutsceneCamera(parseAnimation(archive.read(*shot)), 0.5f);
             if (std::fabs(camera.position[0] + 880.099f) > 1e-2f || std::fabs(camera.position[2] - 1109.11f) > 1e-2f ||
-                camera.fieldOfView != 43)
+                camera.focalLength != 43)
                 throw std::runtime_error("1_1_a camera differs from the recorded reference");
         }
         // Reference: python3 tools/convert_loc.py --census artifacts/fib/files/localisation

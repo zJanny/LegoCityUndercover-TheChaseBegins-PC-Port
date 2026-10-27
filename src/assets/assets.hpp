@@ -491,8 +491,7 @@ struct Skeleton {
 };
 Skeleton parseSkeleton(const Bytes& data);
 
-// Keyframe of a named track: cubic Bezier with handles (time +/- delta, handle value).
-// The deltas are 1/3 of the neighbouring key interval in 76% of shipped intervals.
+// Keyframe of a named track (5 floats per key, loader 0x253764): handle deltas in normalised time and handle values.
 struct CurveKey {
     float time = 0;                        // 0..1 over the animation
     float inDelta = 0, inValue = 0, value = 0, outDelta = 0, outValue = 0;
@@ -527,7 +526,10 @@ struct Animation {
     // byte offset of the word in the data block and its text, in fixup order. Hand item tracks keep the object name at 0 and the bone name at 4.
     std::vector<std::vector<AnimationTarget>> subAnimationTargets;
 };
-// Value of a track at normalised time 0..1 (Bezier solved for time by bisection).
+// Value of a track at normalised time 0..1, as the key evaluator 0x252a7c computes it inside the keys (sampler 0x257458): with
+// u = (t - tA) / (tB - tA), A (1-u)^3 + wA A.out (1-u)^2 u + wB B.in (1-u) u^2 + B u^3, the weights the interval divided by the
+// handle delta clamped to [0.01, 100]; a key with out delta 0 and out value equal to its value holds until the next key.
+// Outside the keys the first or last value (the sampler's extrapolation mode 0; the other modes are not ported).
 float evaluateTrack(const AnimTrack& track, float time);
 Animation parseAnimation(const Bytes& data);
 
@@ -657,13 +659,17 @@ struct CutsceneActor {
     std::vector<std::string> animations;
 };
 std::vector<CutsceneActor> cutsceneActors(const std::vector<std::string>& manifest, const std::string& folder);
-// Camera tracks of a cutscene "ExportCam" animation, as handler 0x1c1fbc stores them.
-// Defaults are the handler's; fields 7-11 are kept but their meaning is unknown.
+// Camera tracks of a cutscene "ExportCam" animation, as handler 0x1c1fbc stores them in the camera entity's record (+0x7c);
+// defaults are the handler's. The pose FOV getter 0x2cd650 reads the focal length and the horizontal aperture.
 struct CutsceneCamera {
-    float position[3] = {0, 0, 0};
-    float rotation[3] = {0, 0, 0};         // radians, see cameraMatrix
-    float fieldOfView = 35.0f;             // default 35; degrees, axis not recovered
-    float field7 = 1.41732f, field8 = 0.945f, field9 = 0, field10 = 8.0f, field11 = 0.035f;
+    float position[3] = {0, 0, 0};           // record +0x00
+    float rotation[3] = {0, 0, 0};           // record +0x0c, radians, see cameraMatrix
+    float focalLength = 35.0f;               // record +0x18, millimetres
+    float horizontalAperture = 1.41732f;     // record +0x1c, inches (36 mm)
+    float verticalAperture = 0.945f;         // record +0x20, inches (24 mm); no reader found
+    float field9 = 0;                        // record +0x24, no default and no reader found
+    float poseWord38 = 8.0f;                 // record +0x28, copied to pose +0x38 by 0x2a04fc
+    float poseWord34 = 0.035f;               // record +0x2c, copied to pose +0x34 by 0x2c8b7c
 };
 CutsceneCamera cutsceneCamera(const Animation& animation, float time);
 // Actor transform tracks with the signs of the accumulating branch of event 0xb945fcd8 in

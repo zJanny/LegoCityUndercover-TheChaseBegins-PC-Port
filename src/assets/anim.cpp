@@ -1,6 +1,7 @@
 #include "block_reader.hpp"
 #include <algorithm>
 #include <cmath>
+#include <cstring>
 #include <stdexcept>
 
 namespace chase::assets {
@@ -456,26 +457,37 @@ Matrix objectAnimationMatrix(const Animation& animation, std::size_t object, uns
     return localMatrix(decodeChannels(animation.objectBlocks.at(object)[0], frame, animation.frames));
 }
 
+namespace {
+float handleWeight(float weight) {
+    std::int32_t bits;
+    std::memcpy(&bits, &weight, sizeof bits);
+    constexpr std::int32_t maximumBits = 0x42c80000, minimumBits = 0x3c23d70a;
+    if (bits >= maximumBits) return 100.0f;
+    if (bits <= minimumBits) return 0.01f;
+    return weight;
+}
+}
+
 float evaluateTrack(const AnimTrack& track, float time) {
     const auto& keys = track.keys;
     if (keys.empty()) return 0;
-    if (time <= keys.front().time) return keys.front().value;
-    if (time >= keys.back().time) return keys.back().value;
-    std::size_t i = 1;
-    while (keys[i].time < time) ++i;
-    const CurveKey& a = keys[i - 1];
-    const CurveKey& b = keys[i];
-    double x0 = a.time, x1 = a.time + a.outDelta, x2 = b.time - b.inDelta, x3 = b.time;
-    auto bezier = [](double p0, double p1, double p2, double p3, double s) {
-        double u = 1 - s;
-        return u * u * u * p0 + 3 * u * u * s * p1 + 3 * u * s * s * p2 + s * s * s * p3;
-    };
-    double lo = 0, hi = 1, s = 0.5;
-    for (int step = 0; step < 40; ++step) {
-        s = (lo + hi) / 2;
-        if (bezier(x0, x1, x2, x3, s) < time) lo = s; else hi = s;
-    }
-    return float(bezier(a.value, a.outValue, b.inValue, b.value, s));
+    if (keys.size() == 1 || time < keys.front().time) return keys.front().value;
+    if (!(keys.back().time > time)) return keys.back().value;
+    std::size_t next = 1;
+    while (!(keys[next].time > time)) ++next;
+    const CurveKey& a = keys[next - 1];
+    const CurveKey& b = keys[next];
+    if (a.outDelta == 0 && a.outValue == a.value) return a.value;
+    if (a.time == time) return a.value;
+    const float span = b.time - a.time;
+    const float outWeight = handleWeight(span / a.outDelta), u = (time - a.time) / span, v = 1 - u;
+    const float inWeight = handleWeight(span / b.inDelta);
+    const float vv = v * v, uu = u * u;
+    float value = a.value * (v * vv);
+    value += outWeight * a.outValue * vv * u;
+    value += inWeight * b.inValue * v * uu;
+    value += b.value * (uu * u);
+    return value;
 }
 
 JointPose orientedPose(const JointChannels& channels, const Joint& joint) {

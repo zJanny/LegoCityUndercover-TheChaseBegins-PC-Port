@@ -959,7 +959,10 @@ void cutscenes() {
             "Bezier with one-third handles is linear");
     require(evaluateTrack(linear, -1) == 0 && evaluateTrack(linear, 2) == 3, "track clamps outside its keys");
     AnimTrack eased{0, {{0, 0, 0, 0, 0.5f, 0}, {1, 0.5f, 1, 1, 0, 0}}};
-    require(near(evaluateTrack(eased, 0.5f), 0.5f) && evaluateTrack(eased, 0.1f) < 0.1f, "eased track");
+    require(near(evaluateTrack(eased, 0.5f), 0.375f) && near(evaluateTrack(eased, 0.1f), 0.019f),
+            "half-length handles weigh the handle values twice (0x252a7c)");
+    AnimTrack held{0, {{0, 0, 5, 5, 0, 5}, {0.5f, 0.1f, 9, 9, 0.1f, 9}, {1, 0, 1, 1, 0, 1}}};
+    require(evaluateTrack(held, 0.499f) == 5 && evaluateTrack(held, 0.5f) == 9, "a key with out delta 0 and its own value holds (0x252a7c)");
 
     Bytes head(0x28, 0);
     head[4] = 3;
@@ -984,7 +987,7 @@ void cutscenes() {
     require(camera.subAspects.size() == 1 && camera.subAspects[0] == 0xb945fcd8u && camera.subData.size() == 1 && camera.subData[0].empty(),
             "sub-animation aspect id and data block");
     CutsceneCamera shot = cutsceneCamera(camera, 0.5f);
-    require(near(shot.position[0], 25) && shot.fieldOfView == 35 && near(shot.field11, 0.035f),
+    require(near(shot.position[0], 25) && shot.focalLength == 35 && near(shot.horizontalAperture, 1.41732f) && near(shot.poseWord34, 0.035f),
             "camera track and handler defaults (0x1c1fbc)");
     Matrix view = cameraMatrix(shot);
     require(view[0] == -1 && view[5] == 1 && view[10] == -1 && near(view[12], -25), "camera matrix (0x20e850)");

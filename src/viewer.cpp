@@ -8,6 +8,7 @@
 #include "render/character.hpp"
 #include "render/scene.hpp"
 #include "render/window.hpp"
+#include "runtime/cutscene_camera.hpp"
 #include "strict_parse.hpp"
 #include <SDL.h>
 #include <algorithm>
@@ -384,7 +385,7 @@ int run(const Options& options) {
             }
             CutsceneCamera camera = cutsceneCamera(cameraAnimation, float(normalised(cameraAnimation, frame)));
             eyeView = chase::render::cutsceneView(camera);
-            fovY = camera.fieldOfView * float(M_PI) / 180;
+            fovY = chase::runtime::cutsceneVerticalFieldOfView(camera);
             nearZ = 0.1f;
             farZ = 4000;
         }

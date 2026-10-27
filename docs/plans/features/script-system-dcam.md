@@ -6,7 +6,7 @@ The director camera natives (StartDCam, StartDCamTrack, WaitForDCam, EndDCam and
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-15T09:38:42+02:00. The director camera runs: StartDCam, StartDCamTrack, WaitForDCam and EndDCam follow the oracle timing of the police entry script, and an active director camera holds the player and the characters like the original.
+IN_PROGRESS, updated 2026-10-27T18:38:05+01:00. The entity camera command 0x2663c4 (cutscenes) is read. The director camera runs: StartDCam, StartDCamTrack, WaitForDCam and EndDCam follow the oracle timing of the police entry script, and an active director camera holds the player and the characters like the original.
 
 ## 3. Verified behaviour
 
@@ -25,7 +25,7 @@ IN_PROGRESS, updated 2026-10-15T09:38:42+02:00. The director camera runs: StartD
 ## 5. Open items
 
 - [ ] SCRIPT-40 — Director camera: path and track playback, the busy test, the end and the hand-back run (see SCRIPT-28); open are the cutscene load / play / free natives of SCRIPT-29 (the cutscene part of the busy test 0x2297b0) and the items SCRIPT-46 and SCRIPT-48 to SCRIPT-50, SCRIPT-181 and SCRIPT-182. needs: SCRIPT-46. blocks: SCRIPT-29. evidence: [dcam.md §2026-10-14T14:36](../../re/dcam.md#ts-20261014-143600)
-- [ ] SCRIPT-46 — Director camera commands not recovered: look path alone 0x270ff4, entity alone 0x2879b0, the entity camera 0x2663c4, StartDCamTrackAuto / Dual / NodelessDCamTrack, TiltDCam, SetDCamEase, type 1 paths, CameraFollow, CameraRotFixedSet, VehicleSetDCamPathFollow. blocks: SCRIPT-40, SCRIPT-7. evidence: [dcam.md §2026-10-14T14:36](../../re/dcam.md#ts-20261014-143600)
+- [ ] SCRIPT-46 — Director camera commands not recovered: look path alone 0x270ff4, entity alone 0x2879b0, StartDCamTrackAuto / Dual / NodelessDCamTrack, TiltDCam, SetDCamEase, type 1 paths, CameraFollow, CameraRotFixedSet, VehicleSetDCamPathFollow. (The entity camera 0x2663c4 that cutscenes push is read: [cutscenes.md §2026-10-27T18:38:05](../../re/cutscenes.md#ts-20261027-183805).) blocks: SCRIPT-40, SCRIPT-7. evidence: [dcam.md §2026-10-14T14:36](../../re/dcam.md#ts-20261014-143600)
 - [ ] SCRIPT-181 — The stopwatch `*(D+0x1c)` (0x5165f0) that the director camera pauses at the start and resumes at the end (0x244970), the callbacks 0x3768c8 / 0x3768cc and the FOV hook 0x3768dc: which timers use that clock and who sets the callbacks. evidence: [dcam.md §2026-10-15T09:37](../../re/dcam.md#ts-20261015-093712)
 - [ ] SCRIPT-182 — Other effects of the busy test and the camera pointers: the HUD update 0x2d9f84, the predicates 0x20ac88 / 0x235358, 0x27c298, 0x245258, the character routines 0x26d934 / 0x29cd9c, the byte 0x246128 and the words around 0x56d550. blocks: SCRIPT-S142. evidence: [dcam.md §2026-10-15T09:37](../../re/dcam.md#ts-20261015-093712)
 - [ ] SCRIPT-48 — The look offset at entity +0x60 and the node matrix of a Track look object; needs a Track DCam in the oracle (lobby scripts such as the chief or red brick cop). blocks: SCRIPT-S11. evidence: [dcam.md §2026-10-14T14:36](../../re/dcam.md#ts-20261014-143600)
@@ -36,6 +36,7 @@ IN_PROGRESS, updated 2026-10-15T09:38:42+02:00. The director camera runs: StartD
 
 ## 6. Findings summary
 
+- The entity camera command 0x2663c4 of cutscenes: eye and axes from the camera entity's node, FOV from its lens (0x2cd650): [cutscenes.md §2026-10-27T18:38:05](../../re/cutscenes.md#ts-20261027-183805).
 - ShakeScreen: arguments, start 0x22c500, application in the camera manager update 0x23f174: [dcam.md §2026-10-19T15:09:12](../../re/dcam.md#ts-20261019-150912).
 - Hold of the player and the characters during a director camera, the paused stopwatch, the other readers of the camera pointers: [dcam.md §2026-10-15T09:37](../../re/dcam.md#ts-20261015-093712).
 - Director camera: level paths (section +0x20), StartDCam and the command routine, phase machine, busy test, end test and hand-back, oracle timing: [dcam.md §2026-10-14T14:36](../../re/dcam.md#ts-20261014-143600).

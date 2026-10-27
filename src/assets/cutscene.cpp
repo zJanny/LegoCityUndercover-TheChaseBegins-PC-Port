@@ -69,12 +69,12 @@ CutsceneCamera cutsceneCamera(const Animation& animation, float time) {
             std::uint32_t h = track.hash;
             if (h >= positionX && h < positionX + 3) camera.position[h - positionX] = value;
             else if (h >= rotationX && h < rotationX + 3) camera.rotation[h - rotationX] = value;
-            else if (h == 0xc251f0c2) camera.fieldOfView = value;
-            else if (h == 0x45218801) camera.field7 = value;
-            else if (h == 0x00b68d33) camera.field8 = value;
+            else if (h == 0xc251f0c2) camera.focalLength = value;
+            else if (h == 0x45218801) camera.horizontalAperture = value;
+            else if (h == 0x00b68d33) camera.verticalAperture = value;
             else if (h == 0x89afeba4) camera.field9 = value;
-            else if (h == 0x041a48a8) camera.field10 = value;
-            else if (h == 0x7d690130) camera.field11 = value;
+            else if (h == 0x041a48a8) camera.poseWord38 = value;
+            else if (h == 0x7d690130) camera.poseWord34 = value;
         }
     return camera;
 }

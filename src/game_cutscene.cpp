@@ -2,6 +2,7 @@
 #include "frontend/flow.hpp"
 #include "frontend/pages.hpp"
 #include "game_doors.hpp"
+#include "runtime/cutscene_camera.hpp"
 #include "runtime/cutscene_cast.hpp"
 #include <algorithm>
 #include <iostream>
@@ -184,7 +185,7 @@ std::size_t InEngine::drivenProps(const std::string& name) const {
 }
 
 void InEngine::pose(const Loaded& cutscene, double seconds) {
-    const double frame = std::min(seconds * cutscene.rate, double(cutscene.content.camera.frames - 1));
+    const double frame = runtime::cutsceneCameraFrame(cutscene.content.camera, seconds);
     for (std::size_t i = 0; i < cutscene.content.actors.size(); ++i) {
         const CutsceneCast& actor = cutscene.content.actors[i];
         const std::optional<CutsceneClipFrame> clip = cutsceneClipAt(actor, frame);
@@ -250,9 +251,9 @@ std::optional<CameraView> InEngine::camera(const runtime::CutsceneNativeState& s
     const auto found = loaded_.find(playing->name);
     if (found == loaded_.end()) return std::nullopt;
     const Loaded& cutscene = found->second;
-    const double frame = std::min(playing->elapsed * cutscene.rate, double(cutscene.content.camera.frames - 1));
+    const double frame = runtime::cutsceneCameraFrame(cutscene.content.camera, playing->elapsed);
     const CutsceneCamera camera = cutsceneCamera(cutscene.content.camera, float(cutsceneNormalised(cutscene.content.camera, frame)));
-    return CameraView{render::cutsceneView(camera), camera.fieldOfView * float(M_PI) / 180};
+    return CameraView{render::cutsceneView(camera), runtime::cutsceneVerticalFieldOfView(camera)};
 }
 
 Movies::Movies(FuseArchive& archive, fe::Resources& resources, const std::string& directory, int language)

@@ -4,20 +4,22 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 
 ## Current state
 
-- Track records are 0x18 bytes (u16 key count at +4); keys are cubic Bezier curves in normalised time; 1954 animations, 62293 keys decode. [§2026-10-13T02:30](#ts-20261013-0230)
-- Cutscene folders `csdata/models/<id>` (69) list their cast in `manifest.bstxt`; the camera handler 0x1c1fbc reads position, rotation and fov (default 35). [§2026-10-13T02:30](#ts-20261013-0230)
+- Track records are 0x18 bytes (u16 key count at +4); 1954 animations, 62293 keys decode. [§2026-10-13T02:30](#ts-20261013-0230) Keys are evaluated by 0x252a7c: u linear in time, the handle values weighted by interval / handle delta (clamped 0.01 to 100), a key with out delta 0 and its own out value holds until the next (hard cuts). [§2026-10-27T18:38:05](#ts-20261027-183805)
+- Cutscene folders `csdata/models/<id>` (69) list their cast in `manifest.bstxt`; the camera handler 0x1c1fbc reads position, rotation and the lens: focal length (mm, default 35) and horizontal aperture (inches, default 1.41732) give the pose FOV 2 atan(aperture · 12.7 / focal) · 4 / (3 · screen aspect) (0x2cd650), projected by 0x23458c; this was the cause of the wide shots in `1_1_d` (MOVIE-33). [§2026-10-27T18:38:05](#ts-20261027-183805) The oracle confirms the pose FOV, the projection and the eye of `1_1_d` and `1_1_b` (screen aspect 5/3). [§2026-10-27T18:50:42](#ts-20261027-185042)
 - The camera matrix (0x20e850) negates x; the world is left-handed, so the row flip alone mirrors the signs. [Corrected by levels.md §2026-10-13T12:49](levels.md#ts-20261013-1249)
 - Joint orientation: after sampling, the skeleton record's +0x88 quaternion is multiplied in (Hamilton product, 0x2485d8). [§2026-10-13T02:30](#ts-20261013-0230)
 - Cutscenes play at 30 frames per second (data evidence); soundtrack `music/csaudio/<id>.bwav` exists for 57 of 69. [§2026-10-13T03:20](#ts-20261013-0320)
 - Natives work on 8 slots of 0x24 bytes at 0x58976c: Load takes a free slot and builds the object, Play starts the cutscene mode without blocking, Wait returns `!busy(name)`, Free clears the object. [§2026-10-14T22:49](#ts-20261014-224929)
 - One screen fade (block 0x529e30) serves FadeScreen and the cutscene mode; the DCamCutScenePlay handler 0x26fa18 fades to black (0.5 s with flag a, else at once), the mode enter 0x2fadb8 fades in 0.5 s, its update 0x2fae68 fades out 0.5 s at the end and the exit 0x2fac7c fades in 0.5 s (not after `7_9_A`). [§2026-10-19T09:12:06](#ts-20261019-091206) The draw 0x24bda4 paints a black quad of opacity |1 - value| (blend source alpha / one minus source alpha, [script-text-bottom-screen.md §2026-10-19T23:15:01](script-text-bottom-screen.md#ts-20261019-231501)); the screen byte of the start (cutscene fades: 1 = top screen only; FadeScreen: the ShowDialogBG byte) is gated by 0x1087ec; the mode switch waits for the running fade and two render ticks before the exit. [§2026-10-19T10:04:29](#ts-20261019-100429)
 - The level start plays `01_GameIntro` and then `1_1_a` through the `startup` script. [§2026-10-14T23:52](#ts-20261014-235214)
-- Open: Load's retry field `args[0]+0x44`, flags b, c, d, the push path of the mode switch, 113 actor animations with a frame count differing from the camera, camera fields 7-11.
+- The cutscene object update 0x2d19cc reports the end when the camera clip's slot state is 6. [§2026-10-27T18:38:05](#ts-20261027-183805)
+- Open: Load's retry field `args[0]+0x44`, flags b, c, d, the push path of the mode switch, 113 actor animations with a frame count differing from the camera, the source of the screen size at 0x529dc8 that the pose FOV divides (measured 5/3), the readers of pose +0x34 / +0x38.
 
 <a id="ts-20261013-0230"></a>
 
 ## 2026-10-13T02:30+02:00 — Cutscene tracks, cameras and joint orientations (REA, Ghidra 12.1.2)
 
+Corrected by [cutscenes.md §2026-10-27T18:38:05](#ts-20261027-183805): keys are evaluated by 0x252a7c (linear time, weighted handles, step keys), not a Bezier solved for time; 0xc251f0c2 is the focal length and the fields 7 to 11 are lens apertures and pose words
 Corrected by [levels.md §2026-10-13T12:49](levels.md#ts-20261013-1249): the row flip alone leaves the POLICE signs mirrored; the world is left-handed
 
 - Track records (0x18, loader 0x253764, ev_8cc8ebc4…997f): u16 +4 key count, u16 +6 extra entry blocks. Blocks: name hash, pointer array, entry blocks, key times (f32), key values (5 × f32: in-delta, in-value, value, out-delta, out-value). The earlier draft read +4 as u32, which overlaps +6; fixed.
@@ -131,3 +133,43 @@ Unknowns:
 - What the byte +0x10 of the mode object (0x2369c4, tested by 0x26fa18) holds in each situation, and the frames between a mode push and its enter (the pop path was read, the push path shares the wait loop but was not traced).
 - Why the oracle measured a fade in of about 43 vblanks (§2026-10-14T23:52:14) while the code fades in over 0.5 s (30 vblanks): the game clock may be capped (dt maximum 0.07 s) while the shots slowed the guest; not isolated.
 - What 0x2d19cc tests for the end of a cutscene object (the port still ends at max(camera frames / 30, soundtrack)).
+
+<a id="ts-20261027-183805"></a>
+
+## 2026-10-27T18:38:05+01:00 — The key evaluator 0x252a7c and the lens of the cutscene camera (llvm-objdump `--triple=armv6k-none-eabi --mattr=+vfp2` on `artifacts/game/game.arm.elf`; data probes with `chase_assets`; agent 20261027-graphics-F; REA was not used)
+
+[Corrects §2026-10-13T02:30](#ts-20261013-0230) (the curve shape was a data fit solved for time by bisection, and the camera field 0xc251f0c2 was taken as a field of view in degrees with fields 7 to 11 unknown).
+
+**Track sampler 0x257458(track, t).** One key: its value. Before the first key time or from the last key time on, the extrapolation mode of the track's byte 0 (bits 0-2 before, bits 3-5 after; mode 0 is the first or last value; the other modes repeat or mirror the keys and are not ported, cutscene times stay inside 0..1). Inside the keys it calls the evaluator 0x252a7c. The camera handler's event data is filled by 0x259774: per track the sampled value at +0xc and the track's name word at +0x8c, which is what 0x1c1fbc reads.
+
+**Key evaluator 0x252a7c(track, t).** B is the first key with a time greater than t, A the one before. When A's out delta is 0 and A's out value equals A's value, A's value holds until B (a hard cut: the camera of `1_1_b` holds and then jumps at camera frames 117, 175 and 268 this way). A key time equal to t gives that key's value. Otherwise u = (t - tA) / (tB - tA), linear in time, and the value is A (1-u)^3 + wA · A.out · (1-u)^2 u + wB · B.in · (1-u) u^2 + B u^3, with wA = (tB - tA) / A's out delta and wB = (tB - tA) / B's in delta, each clamped to 100 above and 0.01 below (a compare of the float bits, so a negative or zero delta gives 0.01 or 100). With one-third handles (wA = wB = 3) this is the plain cubic Bezier the port had; it differs for other handles. The port solved the curve for time and interpolated the cut keys; over all 69 cutscenes 916 of 3405 tracks (405 camera tracks) differ by more than 0.001 somewhere.
+
+**The camera record.** 0x1c1fbc stores the tracks into the camera entity's record (entity +0x7c): position +0x00, rotation +0x0c, 0xc251f0c2 +0x18 (default 35), 0x45218801 +0x1c (1.41732), 0x00b68d33 +0x20 (0.945), 0x89afeba4 +0x24 (no default), 0x041a48a8 +0x28 (8.0), 0x7d690130 +0x2c (0.035), sets byte +0x30 = 1 and builds the node matrix (0x20e850, 0x241540).
+
+**Who uses it.** The cutscene start 0x2d1800 starts the camera clip on the camera entity through 0x2a79d4, which pushes a director camera command with the routine 0x2663c4 (context +0x24 the entity, +0x1c the clip, +0x5c its handle, clip speed 1.0). 0x2663c4 sets pose flag 0x40000000, takes eye and axes from the entity's node matrix (0x1dd308, 0x248618), and writes pose +0x30 = 0x2cd650(entity) × [[0x3768c0] + 0x1c] (the factor the director camera applies to its 43 too; the port's director camera takes it as 1), pose +0x38 = record +0x28 (0x2a04fc) and pose +0x34 = record +0x2c (0x2c8b7c); before the entity is read, the FOV is 43 or the hook at 0x3768dc. It returns done when the clip slot state (0x245f84) is 6.
+
+**The pose FOV 0x2cd650.** With byte +0x30 set: 2 · atan(record +0x1c · 25.4 · 0.5 / record +0x18) · 180 / π, times 4 / (3 · w / h), where w and h are the u32 at 0x529dc8 +4 and +8 converted to float. So +0x18 is the focal length in millimetres and +0x1c the horizontal film aperture in inches (1.41732 in = 36 mm; +0x20, 0.945 in = 24 mm, is the vertical aperture, read by nothing found). The camera manager 0x23f174 projects pose +0x30 like every pose (0x23458c: y scale cot(FOV / 2) · 4/3, x scale / (5/3)).
+
+**MOVIE-33.** The lens tracks of `1_1_d` (focal length 55.0210 and aperture 1.6630, each two keys of the same value with zero handle values and deltas 0 / 1 / -1) evaluate to (1-u)^3 + u^3 of their value, but their ratio and so the FOV stay the same: 42.0 degrees across, 33.60 degrees of pose FOV, a vertical field of 25.52 degrees over the whole cutscene. The port took the focal length as a vertical field in degrees and its bisection gave 55.0 at the ends, 13.9 at frame 30, 33.7 at frame 120 and about 38 at frame 137: so at frames 120 and 137 it showed a wider shot than the original, as reported. The frame count was not the cause (the camera clip runs at its header rate, 30 per second). The port now evaluates every track with 0x252a7c and gives the cutscene camera the pose FOV of 0x2cd650 through the projection 0x23458c (`runtime::cutsceneVerticalFieldOfView`); `chase-viewer --cutscene` at frame 120 shows the close shot of the van front.
+
+**Named FOV curve.** The cutscene object update 0x2d19cc also asks the camera clip for a named per-frame curve `yFieldOfView` (0x26557c: the entries at clip +0x18, 24 bytes, name at +0xc, value of key int(frame) by 0x1886cc) and, when it is greater than 0, sets the camera node's projection with 0x1ce568 (y scale cot(value), x scale divided by the screen w / h of 0x529dc8). No cutscene camera clip has such an entry (their only object is `ExportCam`), so this path does nothing in the shipped data. 0x2d19cc returns 0 when the camera clip slot state (0x245f84) is 6, else 1: that is what ends the cutscene object (MOVIE-36); state 6 itself was not read.
+
+Unknowns:
+- The value of w / h at 0x529dc8 +4 / +8 (the port takes 400 / 240, stand-in MOVIE-S36) and of the factor at [[0x3768c0] + 0x1c] during a cutscene.
+- What reads pose +0x34 and +0x38 (record +0x2c and +0x28; the director camera writes 0.035 and 8.0 there), what record +0x24 is, and when clip state 6 is reached.
+
+<a id="ts-20261027-185042"></a>
+
+## 2026-10-27T18:50:42+01:00 — Oracle check of the cutscene camera (Azahar OpenGL, RPC request F-1 run by agent 20261027-graphics-servant for 20261027-graphics-F; recorded from a save state just after the cutscene 1_1_d loaded, New 3DS, and from a save state late in the cutscene 1_1_b, Old 3DS)
+
+Checks [§2026-10-27T18:38:05](#ts-20261027-183805).
+
+- `1_1_d`, stepped memtrace with dt 1/30 from camera frame 22.09 to the end (update 175, camera frame about 197; the frame at O+8 advances by 1.00 per update): pose FOV C+0x7c = 33.5993 in every update, the camera node's projection scales N+0xbc / +0xc0 = 2.64979 / 4.41631 (ratio 5/3), C+0x80 = 0.035 and C+0x84 = 13.32 (the record's +0x2c and +0x28 of `1_1_d`), current camera 0x3768e8 throughout (words 0x17e544, 0x17e478, 0x196784). The port's rule gives 33.5993 and the y scale cot(16.80 degrees) · 4/3 = 4.4163, so the screen size of 0x2cd650 gives the aspect 5/3 and the director camera's factor is 1.
+- Eye C+0x70 and the node's world matrix row 2 (N+0x5c) at camera frames 22.09, 30.09, 100.09, 120.09, 137.09, 180.09 and 196.09 equal the port's cameraMatrix of the tracks evaluated with 0x252a7c to 4 decimals (for example frame 137.09: eye (827.3733, 20.3415, 1043.3774), row 2 (-0.5608, -0.1798, 0.8082)). C+0x4c holds a small vector (frame 22: (-0.0533, 0.2475, -0.0136)), not a look point, as the pose flag 0x40000000 of 0x2663c4 leads one to expect.
+- `1_1_b` from camera frame 298 to its end at about 391 (94 updates): pose FOV 29.499 and scales 3.0387 / 5.0645 constant (lens 60 mm, 1.575 in: the rule gives 29.4994); eye (862.842, 29.976, 1082.018) at frame 298 and (864.297, 29.348, 1083.876) at the end, as the port evaluates.
+- Pictures of `1_1_d` from a free run at camera frames 0, about 28, 99, 120, 137 and 179 (not kept): the close shot of the van front stays from 99 to 179.
+- After the cutscene the follow camera is back: pose FOV 40.0, scales 2.198 / 3.663.
+- Pinned in `cutscene-camera` (FOV and y scale of both cutscenes) and `assets-real-data` (eye and row 2).
+
+Unknowns:
+- The source of the 5/3 aspect (the words at 0x529dc8 +4 / +8 were not read) and of the factor 1, so MOVIE-S36 stays a measured stand-in; frames 0 to 297 of `1_1_b` and its cuts at 117, 175 and 268 were not reached (no save state at its start).

@@ -87,7 +87,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | [ui-menus](ui-menus.md) | IN_PROGRESS | UI-1 map buttons; UI-2 pause fades and gates; UI-3 pause Exit; UI-4 options pages (pause screen ported) |
 | [hud-ui-super-bricks](hud-ui-super-bricks.md) | IN_PROGRESS | HUD-79 icon through the HUD camera; HUD-80 number font; HUD-85 build-menu placeholders; HUD-84 update count origin |
 | [audio](audio.md) | IN_PROGRESS | AUDIO-20 duck record; AUDIO-11 action music; AUDIO-3 world sounds |
-| [movies-cutscenes](movies-cutscenes.md) | IN_PROGRESS | MOVIE-33 camera of 1_1_d; MOVIE-3 short actor clips; MOVIE-1 layout values |
+| [movies-cutscenes](movies-cutscenes.md) | IN_PROGRESS | MOVIE-36 end from the camera clip; MOVIE-3 short actor clips; MOVIE-41 pose words; MOVIE-1 layout values |
 | [saves-options](saves-options.md) | IN_PROGRESS | SAVE-14 level state refresh of a save request, SAVE-18 HUD studs after a load, SAVE-13 Continue at level 2 and later, SAVE-2 slot display (blocks FE-1) |
 
 ## Rendering and assets
