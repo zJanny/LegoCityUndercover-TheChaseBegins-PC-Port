@@ -1,6 +1,8 @@
 #include "render/scene.hpp"
 #include "render/frame_stats.hpp"
 #include "render/program.hpp"
+#include "render/reflection.hpp"
+#include "runtime/reflection.hpp"
 #include <SDL.h>
 #include <epoxy/gl.h>
 #include <algorithm>
@@ -136,6 +138,7 @@ void beginFrame(float brightness) {
     glUniform1i(glGetUniformLocation(program, "clampHighlights"), (runtime::kLightingConfig0 >> 27) & 1);
     glUniform1i(glGetUniformLocation(program, "lightingOn"), 0);
     glUniform1i(glGetUniformLocation(program, "stageCount"), 0);
+    glUniform1i(glGetUniformLocation(program, "cubeOn"), 0);
     glUniform1f(glGetUniformLocation(program, "alphaReference"), -1.0f);
     glUniform1i(glGetUniformLocation(program, "fogOn"), 0);
     fogActive = false;
@@ -234,8 +237,7 @@ private:
         mutable assets::MaterialState overridden;
         mutable std::uint64_t overriddenKey = ~std::uint64_t(0);
         std::vector<GLuint> slotTexture;
-        std::vector<std::array<float, 4>> slotFlat;
-        std::vector<bool> slotIsFlat;
+        std::vector<bool> slotCube;
         std::uint8_t colour[4] = {255, 255, 255, 255}, specular[4] = {255, 255, 255, 255};
         bool doubled = false;
         int node = -1;
@@ -245,7 +247,6 @@ private:
     struct TextureInfo {
         GLuint id = 0;
         bool cube = false;
-        float average[4] = {1, 1, 1, 1};
     };
     struct SkinnedPart {
         std::size_t part;
@@ -328,20 +329,15 @@ bool SceneImpl::addModel(const std::string& path, const Mat4& transform,
                 d.placed = nodeMatrix != identity();
                 const std::size_t slots = d.hasMaterial ? part.textures.size() : 0;
                 d.slotTexture.assign(slots, 0);
-                d.slotFlat.assign(slots, {1, 1, 1, 1});
-                d.slotIsFlat.assign(slots, false);
+                d.slotCube.assign(slots, false);
                 for (std::size_t slot = 0; slot < slots; ++slot) {
                     if (!slotUsed(d.material, part, int(slot))) continue;
                     std::string name = part.textures[slot];
                     const auto replacement = textureOverrides.find(stem(name));
                     if (replacement != textureOverrides.end()) name = replacement->second;
                     const TextureInfo& info = texture(name, dir);
-                    if (info.cube) {
-                        d.slotIsFlat[slot] = true;
-                        std::copy_n(info.average, 4, d.slotFlat[slot].begin());
-                    } else {
-                        d.slotTexture[slot] = info.id;
-                    }
+                    d.slotTexture[slot] = info.id;
+                    d.slotCube[slot] = info.cube;
                 }
                 if (part.flags & AttrSkin) out.skinned.push_back({out.parts.size(), part.vertices, part.flags});
                 out.parts.push_back(d);
@@ -437,7 +433,6 @@ const MaterialState& SceneImpl::overriddenState(const DrawPart& part) const {
 void SceneImpl::drawPart(GLuint program, const DrawPart& part, const MaterialState& m, bool culling, bool skyPass, bool white) const {
     glUniform1i(glGetUniformLocation(program, "stageCount"), part.hasMaterial ? GLint(m.stages.size()) : 0);
     glUniform1i(glGetUniformLocation(program, "hasNormal"), part.hasNormal);
-    glUniform1i(glGetUniformLocation(program, "hasSecondUv"), part.secondUv);
     setPartLighting(program, part, m, white);
     glUniform1f(glGetUniformLocation(program, "alphaReference"), m.alphaTest ? float(m.alphaReference) / 255.0f : -1.0f);
     glUniform1i(glGetUniformLocation(program, "fogOn"), fogActive && part.hasMaterial && m.fogged);
@@ -455,18 +450,23 @@ void SceneImpl::drawPart(GLuint program, const DrawPart& part, const MaterialSta
         glUniform4iv(glGetUniformLocation(program, "stageWords"), 6, words);
         glUniform4fv(glGetUniformLocation(program, "stageConstant"), 6, constants);
         glUniform1i(glGetUniformLocation(program, "bufferBits"), GLint(m.bufferUpdate));
-        GLint modes[3] = {0, 0, 0};
-        GLfloat flat[12] = {};
-        GLuint unitTexture[3] = {0, 0, 0};
+        GLint modes[3] = {0, 0, 0}, uvSets[3] = {0, 0, 0};
+        GLuint unitTexture[3] = {0, 0, 0}, cube = 0;
         for (int unit = 0; unit < 3; ++unit) {
+            uvSets[unit] = runtime::unitUvSet(unit, m.reflection, part.secondUv);
             const int slot = m.unitSlot[unit];
             if (slot < 0 || std::size_t(slot) >= part.slotTexture.size()) continue;
-            unitTexture[unit] = part.slotTexture[std::size_t(slot)];
-            modes[unit] = part.slotIsFlat[std::size_t(slot)] ? 2 : unitTexture[unit] != 0 ? 1 : 0;
-            std::copy_n(part.slotFlat[std::size_t(slot)].begin(), 4, flat + unit * 4);
+            const GLuint texture = part.slotTexture[std::size_t(slot)];
+            const runtime::UnitSampling sampling = runtime::unitSampling(unit, m.reflection, texture != 0, part.slotCube[std::size_t(slot)]);
+            modes[unit] = int(sampling);
+            if (sampling == runtime::UnitSampling::Texture) unitTexture[unit] = texture;
+            if (sampling == runtime::UnitSampling::Cube) cube = texture;
         }
         glUniform1iv(glGetUniformLocation(program, "unitMode"), 3, modes);
-        glUniform4fv(glGetUniformLocation(program, "unitFlat"), 3, flat);
+        glUniform1iv(glGetUniformLocation(program, "unitUv"), 3, uvSets);
+        glUniform1i(glGetUniformLocation(program, "cubeOn"), m.reflection);
+        glUniform3fv(glGetUniformLocation(program, "eyePosition"), 1, eye_);
+        bindCubeTexture(program, cube);
         for (int unit = 2; unit >= 0; --unit) {
             glActiveTexture(GLenum(GL_TEXTURE0 + unit));
             glBindTexture(GL_TEXTURE_2D, unitTexture[unit]);
@@ -492,6 +492,7 @@ void SceneImpl::drawPart(GLuint program, const DrawPart& part, const MaterialSta
         glBindTexture(GL_TEXTURE_2D, 0);
         GLint modes[3] = {0, 0, 0};
         glUniform1iv(glGetUniformLocation(program, "unitMode"), 3, modes);
+        glUniform1i(glGetUniformLocation(program, "cubeOn"), 0);
     }
     glBindVertexArray(part.vao);
     countDrawCall();
@@ -629,11 +630,7 @@ const SceneImpl::TextureInfo& SceneImpl::texture(const std::string& name, const 
         Image image = decodeTexture(archive_.read(*archive_.find(chosen)));
         if (image.faces == 6) {
             info.cube = true;
-            double sum[4] = {};
-            for (std::size_t i = 0; i + 3 < image.rgba.size(); i += 4)
-                for (std::size_t c = 0; c < 4; ++c) sum[c] += image.rgba[i + c];
-            const double pixels = double(image.rgba.size() / 4);
-            for (std::size_t c = 0; c < 4; ++c) info.average[c] = pixels > 0 ? float(sum[c] / pixels / 255.0) : 1.0f;
+            info.id = uploadCubeTexture(image);
         } else {
             glGenTextures(1, &info.id);
             glBindTexture(GL_TEXTURE_2D, info.id);

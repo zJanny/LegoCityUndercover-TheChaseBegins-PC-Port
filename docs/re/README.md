@@ -19,6 +19,7 @@ Read this index, then open only the file you need.
 | [rendering-lighting.md](rendering-lighting.md) | Fragment lighting: light objects and classes, the light list 0x5943b0, per-draw registers of 0x12d884, lighting init and lookup tables |
 | [rendering-sky.md](rendering-sky.md) | Sky models: the sky pass 0x180fac (camera orientation, eye at (0, lift, 0)), draw order, depth, the Sea lift |
 | [rendering-glow.md](rendering-glow.md) | The glow post-process 0x2bf830: copies, blur tables of modes 0xc / 0xd, the add with mode 0x12, callers and strengths |
+| [rendering-reflections.md](rendering-reflections.md) | Reflection cube maps: the reflection flag 0x37796d, the cube subroutine of the vertex programs, `TexTrans`, face registers, census |
 | [levels.md](levels.md) | `.blvl`, placements, Euler order, nav grids (`.bfnnav`) |
 | [level-transitions.md](level-transitions.md) | Details moved out of the level-transition feature items (natives without handler, loading page code) |
 | [objects.md](objects.md) | Level objects: classes, class files (+0x10/+0x14), parameter slots, how the model is found, drawn classes |

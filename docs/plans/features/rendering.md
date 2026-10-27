@@ -21,7 +21,6 @@ IN_PROGRESS, updated 2026-10-19T14:45:21+02:00. The glow post-process 0x2bf830 r
 - RENDER-S60 The lights that apply are those without a room or in the current room (the fog rule); the original's registration 0x2523cc was not read. needs: RENDER-60. evidence: [rendering-lighting.md §2026-10-15T17:47](../../re/rendering-lighting.md#ts-20261015-174725).
 - RENDER-S61 Normals are interpolated (the PICA interpolates quaternions), light vectors are not rounded to float16, LUT scale 0x1d2 is assumed 0 and the LUT entries decode as value / 4096 plus difference / 2048 (PICA documentation, not measured). evidence: [rendering-lighting.md §2026-10-15T17:47](../../re/rendering-lighting.md#ts-20261015-174725).
 - RENDER-S62 The specular exponent of LUT D0 is 20, the value of the variable 0x37798c read in the oracle at gameplay-start; its writer is not read. needs: RENDER-63. evidence: [rendering-lighting.md §2026-10-15T17:47](../../re/rendering-lighting.md#ts-20261015-174725)
-- RENDER-S2 Reflection cube textures are replaced by their average colour.
 - RENDER-S3 Blended parts are drawn after opaque parts in instance order (the game sorts by 0x115128). needs: RENDER-35.
 - RENDER-S4 A missing vertex colour attribute is white; the texture unit to UV set mapping and wrap modes are assumed.
 - RENDER-S6 Fog object choice: an object applies without a room or in the current room, accepted when start >= 0 and start < end, last wins; the original also runs a second loop over the loaded rooms (first accepted wins and replaces) and checks an enable byte, neither is replicated. needs: RENDER-39. evidence: [rendering-fog.md §2026-10-14T18:59](../../re/rendering-fog.md#ts-20261014-185910).
@@ -36,7 +35,6 @@ IN_PROGRESS, updated 2026-10-19T14:45:21+02:00. The glow post-process 0x2bf830 r
 
 ## 5. Open items
 
-- [ ] RENDER-2 Reflections (cube sampling, vertex shader program with `Cubemap`). Removes RENDER-S2.
 - [ ] RENDER-30 Fog fade at pixel level: the oracle and the port at the same pose (the save state outside the police station after mission 1-1) agree within about 12 per channel at depth 197 to 360, but windows of identical content were rare; needs one material seen over depth 86 to 260 in both pictures. evidence: [rendering-fog.md §2026-10-14T21:42](../../re/rendering-fog.md#ts-20261014-214220).
 - [ ] RENDER-42 The port's near ground (fog 0, depth 17 to 33) is lighter than the oracle by about (+11, +10, +13) at the save state outside the police station after mission 1-1 pose; lighting or texture filtering of level surfaces. RENDER-1 is done; re-measure. evidence: [rendering-fog.md §2026-10-14T21:42](../../re/rendering-fog.md#ts-20261014-214220).
 - [ ] RENDER-33 Shadows (0x37796c). blocks: RENDER-9.

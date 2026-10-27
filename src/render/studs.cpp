@@ -101,7 +101,6 @@ void StudSpritesImpl::draw(const Mat4& view, const Mat4& viewProjection, const s
     glUniform1i(glGetUniformLocation(program, "stageCount"), 0);
     glUniform1i(glGetUniformLocation(program, "fogOn"), 0);
     glUniform1i(glGetUniformLocation(program, "hasNormal"), 0);
-    glUniform1i(glGetUniformLocation(program, "hasSecondUv"), 0);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture_);
     GLboolean culling = glIsEnabled(GL_CULL_FACE);

@@ -29,7 +29,7 @@
 ## Not recovered yet
 
 - Gameplay and menus. The level scripts run and some of them start when the character walks into marked places, but most script commands and many ways to start a script are not worked out yet.
-- Reflections, shadows and draw sorting. Lighting and materials follow the game; which lights apply in each room is approximated.
+- Shadows and draw sorting. Lighting, materials and the reflections of shiny surfaces such as car windows follow the game; which lights apply in each room is approximated, and the reflections are not yet compared with the original.
 - Blending between different animations, and the real animation speed.
 - The pickup of the super bricks of broken props apart from the pull of a car (the pull runs whenever the player sits in a vehicle, which only approximates the original's conditions; walking over a brick is not checked), collision with people, most objects that break or move (props break only when punched or hit by a vehicle), the camera being placed again when it is stuck, and fighting enemies. Vehicles are only partly done.
 - Most music, and the sounds of other people, animals, vehicles and objects. For the character and the coins the sound for each event is known.

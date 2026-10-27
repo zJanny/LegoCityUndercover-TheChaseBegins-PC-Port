@@ -8,7 +8,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - UV v = 0 is the top row of the decoded top-down image; the viewer uploads rows unflipped. [§2026-10-12T22:40](#ts-20261012-2240)
 - The game links Nintendo DMPGL (dmp_* uniform table at 0x35b288); no static TEV command headers exist in code.bin. [§2026-10-12T22:40](#ts-20261012-2240)
 - `convert_textures.py` decodes through the C++ `decodeTexture`; the output of all 3991 textures equals the old Python decoder and the FNV-1a pins stay valid. [§2026-10-13T15:08](#ts-20261013-150853)
-- Open: cubemap face order, tracing the combiner setup through the uniform-location use.
+- The six faces of a cube texture go in stored order to the PICA face address registers 0x85..0x8a: [rendering-reflections.md §2026-10-27T18:36:08](rendering-reflections.md#ts-20261027-183608).
+- Open: which direction each face register stands for on the console (taken from the emulator's convention), tracing the combiner setup through the uniform-location use.
 
 <a id="ts-20261012-1540"></a>
 

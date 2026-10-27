@@ -1,9 +1,9 @@
 #version 460 core
-in vec2 vUv; in vec2 vUv1; in vec3 vNormal; in vec4 vColour; in float vViewDepth; in vec3 vWorldNormal; in vec3 vWorldPosition;
-uniform sampler2D unit0; uniform sampler2D unit1; uniform sampler2D unit2;
+in vec2 vUv; in vec2 vUv1; in vec3 vNormal; in vec4 vColour; in float vViewDepth; in vec3 vWorldNormal; in vec3 vWorldPosition; in vec3 vCube;
+uniform sampler2D unit0; uniform sampler2D unit1; uniform sampler2D unit2; uniform samplerCube cube0;
 uniform int stageCount; uniform ivec4 stageWords[6]; uniform vec4 stageConstant[6];
-uniform int bufferBits; uniform int unitMode[3]; uniform vec4 unitFlat[3];
-uniform bool hasNormal; uniform bool hasSecondUv; uniform float alphaReference; uniform float brightness;
+uniform int bufferBits; uniform int unitMode[3]; uniform int unitUv[3];
+uniform bool hasNormal; uniform float alphaReference; uniform float brightness;
 uniform bool lightingOn; uniform vec3 globalAmbient; uniform int lightCount; uniform vec3 eyePosition; uniform bool clampHighlights;
 uniform vec3 lightDiffuse[8]; uniform vec3 lightAmbient[8]; uniform vec3 lightSpecular[8]; uniform vec3 lightVector[8];
 uniform int lightFlags[8]; uniform float lightDistanceScale[8];
@@ -69,9 +69,10 @@ void fragmentLighting(out vec4 primary, out vec4 secondary) {
 }
 
 vec4 unitColour(int unit) {
-    if (unitMode[unit] == 2) return unitFlat[unit];
     if (unitMode[unit] == 0) return vec4(1.0);
-    vec2 uv = (unit == 0 || !hasSecondUv) ? vUv : vUv1;
+    if (unitMode[unit] == 2) return texture(cube0, vCube);
+    if (unitMode[unit] == 3) return vec4(0.0);
+    vec2 uv = unitUv[unit] == 1 ? vUv1 : vUv;
     if (unit == 0) return texture(unit0, uv);
     if (unit == 1) return texture(unit1, uv);
     return texture(unit2, uv);

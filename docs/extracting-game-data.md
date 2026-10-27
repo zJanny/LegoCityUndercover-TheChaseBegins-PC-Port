@@ -51,7 +51,7 @@ python3 tools/convert_textures.py artifacts/fib/files --output artifacts/texture
 
 - Add `--census` to only check the files without writing images.
 - Only the largest size of each texture is written.
-- Cubemaps become a vertical strip of six faces. Which face is which is not confirmed yet.
+- Cubemaps become a vertical strip of six faces, in the order +X, -X, +Y, -Y, +Z, -Z (the order the game hands them to the graphics chip; which direction each one is was taken from the emulator, not checked on a console).
 
 ## 5. Convert sounds to WAV
 
