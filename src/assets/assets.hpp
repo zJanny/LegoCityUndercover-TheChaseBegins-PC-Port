@@ -105,6 +105,10 @@ struct ModelPart {
     std::vector<std::uint8_t> material;      // raw 0x60-byte material record (0x114860)
     std::vector<std::uint8_t> materialExtra; // block after the material record
     std::vector<std::uint8_t> textureSlots;  // 8-byte slot records, one per texture (byte 7 is the role)
+    // Part record +0 / +0xc: the box of the part's vertices the draw 0x10bbe8 sorts by; parseModel adds the mesh centre of a relative mesh
+    // as it does to the vertices (all 16122 shipped parts equal their vertex box).
+    float centre[3] = {0, 0, 0};
+    float half[3] = {0, 0, 0};
     // Skinned parts: consecutive triangle runs with up to 26 joints each (the "Bones"
     // uniform), each drawing only vertices firstVertex .. firstVertex + vertices - 1.
     struct BoneBatch {
@@ -122,6 +126,7 @@ struct ModelMesh {
     float centre[3] = {0, 0, 0};
     float half[3] = {0, 0, 0};   // float3 at mesh+0x14: half extents of the bounding box (0x242eb0)
     bool relative = false;
+    std::uint16_t flags = 0;     // mesh+0: bit 0 relative, bit 8 sorts its blended parts first (0x10bbe8)
     std::vector<ModelPart> parts;
 };
 // Collision mesh of a model (section at model+0x1c, loader 0x114640; docs/re/collision.md). Vertices are in

@@ -16,13 +16,12 @@ The pinned values of `pedestrian-fade` (0x275434 stores alpha 1 and step -1; 0x1
 ## 4. Stand-ins
 
 - PED-S11 The pedestrian's mesh node is built from the model: its bounds centre and union box from `assets::modelBounds`, its radius +0x9c as the length of the half extents. The fade point 0x52a1b4 of the draw test and the fade step is the camera look point as the original's writer 0x2ae1ac takes it (PED-S15 for the pose flag, PED-S16 for the jump inputs); measured with the follow camera on foot and the vehicle camera (cutscene and scanner cameras not). The matrix argument of 0x10eb70 is taken as the node's world matrix. needs: PED-22. evidence: [pedestrians-fade.md §2026-10-25T14:19:23](../../re/pedestrians-fade.md#ts-20261025-141923).
-- PED-S12 An instance with an alpha below 255 draws its opaque parts in the blended pass with the premultiplied blend (1, 1 - alpha); the node draw 0x10bcc8's pass 2 is not read. needs: PED-23. evidence: [pedestrians-fade.md §2026-10-20T14:12:57](../../re/pedestrians-fade.md#ts-20261020-141257).
+- PED-S12 An instance with an alpha below 255 is drawn in the blended list as the original does, but blends with (1, 1 - source alpha) because the shader already multiplies colour and alpha by the alpha, where the original blends with (source alpha, 1 - source alpha) on the material colour times the alpha. needs: HUD-70. evidence: [rendering-draw-order.md §2026-10-27T18:49:04](../../re/rendering-draw-order.md#ts-20261027-184904).
 
 ## 5. Open items
 
 - [ ] PED-21 — A faded-out pedestrian (node alpha 0) is not parked under room +0x7c by the room pass 0x2e6ce4 and removed by the manager, and a parked node does not return when the draw test passes; one spawned beyond 36 m stays invisible and keeps its slot until it walks inside. needs: PED-11. evidence: [pedestrians-fade.md §2026-10-20T14:12:57](../../re/pedestrians-fade.md#ts-20261020-141257).
 - [ ] PED-22 — The source of the mesh node's radius +0x9c and bounds +0xa0 (the 40-byte record of 0x10d2d4) is not read. blocks: PED-S11. evidence: [pedestrians-fade.md §2026-10-20T14:12:57](../../re/pedestrians-fade.md#ts-20261020-141257).
-- [ ] PED-23 — The node draw 0x10bcc8 and its pass for an alpha byte below 255 (blend, depth) are not read. blocks: PED-S12. evidence: [pedestrians-fade.md §2026-10-20T14:12:57](../../re/pedestrians-fade.md#ts-20261020-141257).
 
 ## 6. Findings summary
 

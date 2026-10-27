@@ -461,6 +461,11 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
     fallApart.update(debrisLineStandIn(), updates);
     if (follow) updateFollowCamera(dt);
     else camera.update(dt, pad);
+    if (follow && player) {
+        const float playerPosition[3] = {player->motion.x, player->vertical.y, player->motion.z};
+        nearCameraFades.update(shared.archive, scene, levelName, levelScripts.effects().semiTransNearCamera(),
+                               game_semi_trans::followView(follow->eye(), follow->yaw(), follow->pitch(), playerPosition));
+    }
     updateRoomStreaming();
     logCutsceneChange();
     for (const std::string& line : threadLog->lines(levelScripts.takeThreadEvents(), updates)) std::cout << line << '\n';

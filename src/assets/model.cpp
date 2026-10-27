@@ -288,7 +288,8 @@ Model parseModel(const Bytes& data) {
     }
     Bytes meshBlock = r.next();                          // +0x10
     requireSize(meshBlock, meshes * 0x24, "meshes");
-    for (std::size_t i = 0; i < meshes; ++i) r.skip(); // parts arrays
+    std::vector<Bytes> partBlocks;
+    for (std::size_t i = 0; i < meshes; ++i) partBlocks.push_back(r.next());
     model.nodeExtra = r.next();                          // +0x14
     if (readU32(header, 0x20)) {
         const Bytes matrices = r.next();
@@ -325,19 +326,27 @@ Model parseModel(const Bytes& data) {
         for (int i = 0; i < 3; ++i) mesh.centre[i] = readF32(meshBlock, m * 0x24 + 8 + 4 * std::size_t(i));
         for (int i = 0; i < 3; ++i) mesh.half[i] = readF32(meshBlock, m * 0x24 + 0x14 + 4 * std::size_t(i));
         mesh.relative = meshBlock[m * 0x24] & 1;
+        mesh.flags = readU16(meshBlock, m * 0x24);
         std::size_t parts = meshBlock[m * 0x24 + 2];
+        requireSize(partBlocks[m], parts * 0x24, "parts");
         std::vector<Bytes> materials(parts);
         mesh.parts.resize(parts);
         for (std::size_t p = 0; p < parts; ++p) {
+            for (int i = 0; i < 3; ++i) {
+                mesh.parts[p].centre[i] = readF32(partBlocks[m], p * 0x24 + 4 * std::size_t(i));
+                mesh.parts[p].half[i] = readF32(partBlocks[m], p * 0x24 + 0xc + 4 * std::size_t(i));
+            }
             mesh.parts[p].textures = readMaterial(r, materials[p], mesh.parts[p].materialExtra, mesh.parts[p].textureSlots);
             mesh.parts[p].material = materials[p];
         }
         r.cursor.push(Pool::M14);
         for (std::size_t p = 0; p < parts; ++p) {
             readVertexBuffer(r, materials[p], mesh.parts[p]);
-            if (mesh.relative)
+            if (mesh.relative) {
                 for (auto& v : mesh.parts[p].vertices)
                     for (int i = 0; i < 3; ++i) v.position[i] += mesh.centre[i];
+                for (int i = 0; i < 3; ++i) mesh.parts[p].centre[i] += mesh.centre[i];
+            }
         }
         r.cursor.pop();
         model.meshes.push_back(std::move(mesh));

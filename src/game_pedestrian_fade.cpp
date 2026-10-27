@@ -41,10 +41,7 @@ std::optional<runtime::PedestrianDrawTest> SlotFades::drawTest(const runtime::Pe
 }
 
 void applyOpacity(render::Scene& scene, const render::CharacterInstance& instance, float opacity) {
-    const auto apply = [&](std::size_t index) {
-        scene.setInstanceTranslucentFade(index, true);
-        scene.setInstanceFade(index, opacity);
-    };
+    const auto apply = [&](std::size_t index) { scene.setInstanceFade(index, opacity); };
     apply(instance.bodyInstance);
     apply(instance.headInstance);
     if (instance.hatInstance) apply(*instance.hatInstance);

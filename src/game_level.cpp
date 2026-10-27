@@ -465,6 +465,7 @@ void LevelSession::draw(int width, int height) {
     propParts.apply(scene, buildits, placedObjects, placedSceneIndex, shownPlaced, shownWaypoints, badgeFades);
     effects.apply(scene);
     fallApart.apply(scene);
+    nearCameraFades.apply(scene);
     drawFootprints();
     if (player) handItems.draw(scene, *player);
     if (skyInstance) {
@@ -479,6 +480,7 @@ void LevelSession::draw(int width, int height) {
         scene.drawSky(mvp);
     }
     if (scannerLook.active) scene.setMaterialOverride(scannerLook.drawList);
+    scene.setDepthRange(nearPlane, farPlane);
     scene.draw(mvp);
     scene.setMaterialOverride(std::nullopt);
     std::vector<StudSprite> sprites;

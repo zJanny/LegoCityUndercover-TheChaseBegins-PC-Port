@@ -1,4 +1,5 @@
 #include "render/scene.hpp"
+#include "render/draw_order.hpp"
 #include "render/frame_stats.hpp"
 #include "render/program.hpp"
 #include "render/reflection.hpp"
@@ -218,7 +219,12 @@ public:
     Mat4 instanceTransform(std::size_t instance) const { return instances_.at(instance).transform; }
     void setInstanceFade(std::size_t instance, float fade) { instances_.at(instance).fade = fade; }
     void setInstanceTint(std::size_t instance, const std::array<float, 3>& tint) { instances_.at(instance).tint = tint; }
-    void setInstanceTranslucentFade(std::size_t instance, bool translucent) { instances_.at(instance).translucentFade = translucent; }
+    float instanceFade(std::size_t instance) const { return instances_.at(instance).fade; }
+    const std::string& instanceModel(std::size_t instance) const { return instances_.at(instance).path; }
+    void setDepthRange(float nearZ, float farZ) {
+        depthNear_ = nearZ;
+        depthFar_ = farZ;
+    }
     void setInstanceWhiteMaterials(std::size_t instance, bool white) { instances_.at(instance).whiteMaterials = white; }
     void setMaterialOverride(const std::optional<MaterialOverride>& override) { override_ = override; }
     std::size_t missingTextures() const { return missing_; }
@@ -243,6 +249,10 @@ private:
         int node = -1;
         Mat4 nodeMatrix = identity();
         bool placed = false;
+        float sortCentre[3] = {0, 0, 0};
+        bool sortsFirst = false;
+        std::uint64_t materialKey = 0;
+        std::uint8_t sourceIndex = 1, destinationIndex = 0;
     };
     struct TextureInfo {
         GLuint id = 0;
@@ -264,12 +274,19 @@ private:
         bool visible = true;
         bool sky = false;
         float fade = 1.0f;
-        bool translucentFade = false;
         std::array<float, 3> tint{1, 1, 1};
         bool whiteMaterials = false;
         std::map<int, Mat4> nodeMatrix = {};
+        std::string path = {};
+    };
+    struct Queued {
+        const Instance* instance;
+        const DrawPart* part;
     };
     void drawInstances(const Mat4& viewProjection, bool skyPass) const;
+    void drawQueued(GLuint program, const Mat4& viewProjection, const Queued& item, bool culling, bool skyPass) const;
+    static Mat4 partWorld(const Instance& instance, const DrawPart& part);
+    std::uint64_t partSortKey(const ModelPart& part);
     const TextureInfo& texture(const std::string& name, const std::string& modelDir);
     DrawPart upload(const ModelPart& part, LoadedModel& model, const Mat4& nodeMatrix = identity());
     void drawPart(GLuint program, const DrawPart& part, const MaterialState& m, bool culling, bool skyPass, bool white) const;
@@ -287,6 +304,8 @@ private:
     runtime::LightSet lights_;
     float eye_[3] = {0, 0, 0};
     std::optional<MaterialOverride> override_;
+    std::map<std::string, std::uint32_t> textureOrder_;
+    float depthNear_ = 1.0f, depthFar_ = 500.0f;
 };
 
 SceneImpl::SceneImpl(FuseArchive& archive, std::vector<std::string> exclude) : archive_(archive), exclude_(std::move(exclude)) {
@@ -300,7 +319,9 @@ SceneImpl::SceneImpl(FuseArchive& archive, std::vector<std::string> exclude) : a
 void SceneImpl::addGeometry(const std::string& key, const ModelPart& part) {
     LoadedModel out;
     out.parts.push_back(upload(part, out));
-    instances_.push_back({&models_.emplace(key, std::move(out)).first->second, identity(), true});
+    Instance instance{&models_.emplace(key, std::move(out)).first->second, identity()};
+    instance.path = key;
+    instances_.push_back(std::move(instance));
 }
 
 bool SceneImpl::addModel(const std::string& path, const Mat4& transform,
@@ -324,6 +345,9 @@ bool SceneImpl::addModel(const std::string& path, const Mat4& transform,
                 for (const auto& word : exclude_) skip |= lower(texName).find(word) != std::string::npos;
                 if (skip || part.indices.empty()) continue;
                 DrawPart d = upload(part, out, nodeMatrix);
+                std::copy_n(part.centre, 3, d.sortCentre);
+                d.sortsFirst = model.meshes[std::size_t(meshIndex)].flags & 0x100;
+                if (d.hasMaterial) d.materialKey = partSortKey(part);
                 d.node = int(node);
                 d.nodeMatrix = nodeMatrix;
                 d.placed = nodeMatrix != identity();
@@ -345,7 +369,9 @@ bool SceneImpl::addModel(const std::string& path, const Mat4& transform,
         }
         loaded = models_.emplace(cacheKey, std::move(out)).first;
     }
-    instances_.push_back({&loaded->second, transform, true});
+    Instance instance{&loaded->second, transform};
+    instance.path = path;
+    instances_.push_back(std::move(instance));
     return true;
 }
 
@@ -353,6 +379,7 @@ bool SceneImpl::setInstanceMesh(std::size_t instance, const std::string& path, i
     const Mat4 transform = instances_.at(instance).transform;
     if (!addModel(path, transform, {}, path + "#" + std::to_string(mesh), mesh)) return false;
     instances_.at(instance).model = instances_.back().model;
+    instances_.at(instance).path = path;
     instances_.pop_back();
     return true;
 }
@@ -416,6 +443,14 @@ void SceneImpl::bounds(float centre[3], float& radius) const {
         centre[i] = lo[i] > hi[i] ? 0 : (lo[i] + hi[i]) / 2;
         radius = std::max(radius, (hi[i] - lo[i]) / 2);
     }
+}
+
+std::uint64_t SceneImpl::partSortKey(const ModelPart& part) {
+    const std::size_t slots = std::size_t((part.material[10] & 0x3f) >> 3);
+    std::vector<std::uint32_t> words(slots, 0);
+    for (std::size_t slot = 0; slot < slots && slot < part.textures.size(); ++slot)
+        words[slot] = textureOrder_.emplace(lower(part.textures[slot]), std::uint32_t(textureOrder_.size() + 1)).first->second;
+    return materialSortKey(part.material.data(), words);
 }
 
 const MaterialState& SceneImpl::overriddenState(const DrawPart& part) const {
@@ -537,68 +572,98 @@ void SceneImpl::draw(const Mat4& viewProjection) const { drawInstances(viewProje
 
 void SceneImpl::drawSky(const Mat4& viewProjection) const { drawInstances(viewProjection, true); }
 
-void SceneImpl::drawInstances(const Mat4& viewProjection, bool skyPass) const {
-    const GLuint program = sceneProgram();
-    static const GLenum factors[10] = {GL_ZERO, GL_ONE, GL_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR, GL_DST_COLOR,
-                                       GL_ONE_MINUS_DST_COLOR, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_DST_ALPHA,
+namespace {
+
+std::uint8_t nodeAlphaByte(float fade) { return std::uint8_t(std::clamp(int(fade * 255.0f + 0.5f), 0, 255)); }
+
+float clipDepth(const Mat4& clip, const float point[3]) { return clip[3] * point[0] + clip[7] * point[1] + clip[11] * point[2] + clip[15]; }
+
+}
+
+Mat4 SceneImpl::partWorld(const Instance& instance, const DrawPart& part) {
+    const auto replaced = instance.nodeMatrix.find(part.node);
+    if (replaced != instance.nodeMatrix.end()) return multiply(instance.transform, replaced->second);
+    return part.placed ? multiply(instance.transform, part.nodeMatrix) : instance.transform;
+}
+
+void SceneImpl::drawQueued(GLuint program, const Mat4& viewProjection, const Queued& item, bool culling, bool skyPass) const {
+    static const GLenum factors[10] = {GL_ZERO, GL_ONE, GL_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR, GL_SRC_ALPHA,
+                                       GL_ONE_MINUS_SRC_ALPHA, GL_DST_COLOR, GL_ONE_MINUS_DST_COLOR, GL_DST_ALPHA,
                                        GL_ONE_MINUS_DST_ALPHA};
     static const GLenum equations[5] = {GL_FUNC_ADD, GL_FUNC_SUBTRACT, GL_FUNC_REVERSE_SUBTRACT, GL_MIN, GL_MAX};
-    GLint mvp = glGetUniformLocation(program, "mvp");
-    GLint model = glGetUniformLocation(program, "model");
-    const GLint fadeLocation = glGetUniformLocation(program, "instanceFade");
-    const GLint tintLocation = glGetUniformLocation(program, "instanceTint");
+    const Instance& instance = *item.instance;
+    const DrawPart& part = *item.part;
+    const Mat4 world = partWorld(instance, part);
+    const Mat4 clip = multiply(viewProjection, world);
+    glUniformMatrix4fv(glGetUniformLocation(program, "mvp"), 1, GL_FALSE, clip.data());
+    glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, GL_FALSE, world.data());
+    glUniform1f(glGetUniformLocation(program, "instanceFade"), instance.fade);
+    glUniform3fv(glGetUniformLocation(program, "instanceTint"), 1, instance.tint.data());
+    const std::uint8_t nodeAlpha = nodeAlphaByte(instance.fade);
+    const std::array<std::uint8_t, 2> indices = drawBlendIndices(part.sourceIndex, part.destinationIndex, drawAlpha(part.colour[3], nodeAlpha));
+    if (!part.hasMaterial) {
+        glDisable(GL_BLEND);
+    } else if (nodeAlpha < 255) {
+        // STAND-IN PED-S12: the shader already multiplies colour and alpha by the node alpha (HUD-S70), so the source factor is one.
+        glEnable(GL_BLEND);
+        glBlendEquation(GL_FUNC_ADD);
+        glBlendFunc(GL_ONE, indices[1] == 1 ? GL_ONE : GL_ONE_MINUS_SRC_ALPHA);
+    } else if (indices[0] == part.sourceIndex && indices[1] == part.destinationIndex) {
+        if (part.material.blendSource == 1 && part.material.blendDestination == 0 && part.material.blendEquation == 0) {
+            glDisable(GL_BLEND);
+        } else {
+            static const GLenum picaFactors[10] = {GL_ZERO, GL_ONE, GL_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR, GL_DST_COLOR,
+                                                   GL_ONE_MINUS_DST_COLOR, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_DST_ALPHA,
+                                                   GL_ONE_MINUS_DST_ALPHA};
+            glEnable(GL_BLEND);
+            glBlendEquation(equations[std::min(part.material.blendEquation, 4u)]);
+            glBlendFunc(picaFactors[std::min(part.material.blendSource, 9u)], picaFactors[std::min(part.material.blendDestination, 9u)]);
+        }
+    } else {
+        glEnable(GL_BLEND);
+        glBlendEquation(equations[std::min(part.material.blendEquation, 4u)]);
+        glBlendFunc(factors[std::min<unsigned>(indices[0], 9u)], factors[std::min<unsigned>(indices[1], 9u)]);
+    }
+    const bool overridden = override_ && part.hasMaterial;
+    const bool white = instance.whiteMaterials && part.hasMaterial && part.whiteMaterial.supported;
+    const MaterialState* state = white ? &part.whiteMaterial : &part.material;
+    if (overridden && !white && overriddenState(part).supported) state = &overriddenState(part);
+    drawPart(program, part, *state, culling, skyPass, white);
+}
+
+void SceneImpl::drawInstances(const Mat4& viewProjection, bool skyPass) const {
+    const GLuint program = sceneProgram();
     const bool culling = glIsEnabled(GL_CULL_FACE);
-    for (int pass = 0; pass < 2; ++pass) {
-        for (const auto& instance : instances_) {
-            if (!instance.visible || instance.sky != skyPass) continue;
-            const Mat4 m = multiply(viewProjection, instance.transform);
-            const auto setMatrices = [&](const Mat4& world) {
-                const Mat4 clip = multiply(viewProjection, world);
-                glUniformMatrix4fv(mvp, 1, GL_FALSE, clip.data());
-                glUniformMatrix4fv(model, 1, GL_FALSE, world.data());
-            };
-            glUniformMatrix4fv(mvp, 1, GL_FALSE, m.data());
-            glUniformMatrix4fv(model, 1, GL_FALSE, instance.transform.data());
-            glUniform1f(fadeLocation, instance.fade);
-            glUniform3fv(tintLocation, 1, instance.tint.data());
-            bool partMatrices = false;
-            for (const auto& part : instance.model->parts) {
-                const bool materialBlended = part.hasMaterial && (part.material.blendSource != 1 || part.material.blendDestination != 0);
-                const bool fadeBlended = !materialBlended && instance.translucentFade && instance.fade < 1.0f;
-                const bool blended = materialBlended || fadeBlended;
-                if (blended != (pass == 1)) continue;
-                const bool overridden = override_ && part.hasMaterial;
-                if (overridden && (override_->flags & 0x40) && part.material.additive) continue;
-                if (fadeBlended) {
-                    glEnable(GL_BLEND);
-                    glBlendEquation(GL_FUNC_ADD);
-                    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-                } else if (blended) {
-                    glEnable(GL_BLEND);
-                    glBlendEquation(equations[std::min(part.material.blendEquation, 4u)]);
-                    glBlendFunc(factors[std::min(part.material.blendSource, 9u)], factors[std::min(part.material.blendDestination, 9u)]);
-                } else {
-                    glDisable(GL_BLEND);
-                }
-                const auto replaced = instance.nodeMatrix.find(part.node);
-                if (replaced != instance.nodeMatrix.end() || part.placed) {
-                    setMatrices(multiply(instance.transform, replaced != instance.nodeMatrix.end() ? replaced->second : part.nodeMatrix));
-                    partMatrices = true;
-                } else if (partMatrices) {
-                    setMatrices(instance.transform);
-                    partMatrices = false;
-                }
-                const bool white = instance.whiteMaterials && part.hasMaterial && part.whiteMaterial.supported;
-                const MaterialState* state = white ? &part.whiteMaterial : &part.material;
-                if (overridden && !white && overriddenState(part).supported) state = &overriddenState(part);
-                drawPart(program, part, *state, culling, skyPass, white);
+    std::vector<Queued> queued, skyOpaque, skyBlended;
+    DrawList list;
+    for (const auto& instance : instances_) {
+        if (!instance.visible || instance.sky != skyPass) continue;
+        const std::uint8_t nodeAlpha = nodeAlphaByte(instance.fade);
+        for (const auto& part : instance.model->parts) {
+            if (override_ && part.hasMaterial && (override_->flags & 0x40) && part.material.additive) continue;
+            const bool blended = part.hasMaterial && blendedPass(part.colour[3], part.destinationIndex, nodeAlpha);
+            if (skyPass) {
+                (blended ? skyBlended : skyOpaque).push_back({&instance, &part});
+                continue;
             }
+            std::uint32_t depth = depthSortKey(clipDepth(multiply(viewProjection, partWorld(instance, part)), part.sortCentre), depthNear_, depthFar_);
+            if (blended && part.sortsFirst) depth = 0;
+            if (blended) {
+                list.addBlended(blendedItemKey(part.materialKey, depth), queued.size());
+            } else {
+                list.addOpaque(opaqueItemKey(part.materialKey, depth), queued.size());
+            }
+            queued.push_back({&instance, &part});
         }
     }
+    for (const Queued& item : skyOpaque) drawQueued(program, viewProjection, item, culling, skyPass);
+    for (const Queued& item : skyBlended) drawQueued(program, viewProjection, item, culling, skyPass);
+    for (const DrawItem& item : list.sortedOpaque()) drawQueued(program, viewProjection, queued[item.ref], culling, skyPass);
+    for (const DrawItem& item : list.sortedBlended()) drawQueued(program, viewProjection, queued[item.ref], culling, skyPass);
     glDisable(GL_BLEND);
-    glUniform1f(fadeLocation, 1.0f);
+    glUniform1f(glGetUniformLocation(program, "instanceFade"), 1.0f);
     const float noTint[3] = {1, 1, 1};
-    glUniform3fv(tintLocation, 1, noTint);
+    glUniform3fv(glGetUniformLocation(program, "instanceTint"), 1, noTint);
     glDepthMask(GL_TRUE);
     glDepthFunc(GL_LEQUAL);
     glUniform1i(glGetUniformLocation(program, "stageCount"), 0);
@@ -672,6 +737,8 @@ SceneImpl::DrawPart SceneImpl::upload(const ModelPart& part, LoadedModel& model,
         std::copy_n(part.material.begin() + 0x10, 4, d.colour);
         std::copy_n(part.material.begin() + 0x14, 4, d.specular);
         d.doubled = (part.material[0xb] >> 5) & 1;
+        d.sourceIndex = part.material[8];
+        d.destinationIndex = part.material[9];
     }
     glGenVertexArrays(1, &d.vao);
     glBindVertexArray(d.vao);
@@ -742,7 +809,9 @@ void Scene::setInstanceFade(std::size_t instance, float fade) { impl_->setInstan
 
 void Scene::setInstanceTint(std::size_t instance, const std::array<float, 3>& tint) { impl_->setInstanceTint(instance, tint); }
 
-void Scene::setInstanceTranslucentFade(std::size_t instance, bool translucent) { impl_->setInstanceTranslucentFade(instance, translucent); }
+float Scene::instanceFade(std::size_t instance) const { return impl_->instanceFade(instance); }
+const std::string& Scene::instanceModel(std::size_t instance) const { return impl_->instanceModel(instance); }
+void Scene::setDepthRange(float nearZ, float farZ) { impl_->setDepthRange(nearZ, farZ); }
 
 void Scene::setInstanceWhiteMaterials(std::size_t instance, bool white) { impl_->setInstanceWhiteMaterials(instance, white); }
 

@@ -90,7 +90,12 @@ public:
     void pose(const std::string& key, const std::vector<assets::Matrix>& skin);
     std::size_t skinnedParts(const std::string& path) const;
     void bounds(float centre[3], float& radius) const;
+    // The draw list of 0x10bbe8 (render/draw_order.hpp): opaque parts sorted by material and front to back, then blended parts (an alpha
+    // below 255, a material colour alpha below 255 or a blend destination other than zero) back to front by the view depth of each part's box
+    // centre. STAND-IN RENDER-S71: the texture bits of the material key and the order the parts enter the list are the port's.
     void draw(const Mat4& viewProjection) const;
+    // The camera's near and far plane (camera +0xc4 / +0xc8) the depth key 0x25688c scales by; 1 and 500 until set, as 0x25688c without camera.
+    void setDepthRange(float nearZ, float farZ);
     // Lights of the following draws and the camera position the view vector of the specular term uses (world space).
     void setLighting(const runtime::LightSet& lights, const float eye[3]);
     // STAND-IN RENDER-S50: sky instances are drawn by drawSky() only, without depth test or depth write (docs/re/rendering-sky.md).
@@ -101,11 +106,13 @@ public:
     void setInstanceVisible(std::size_t instance, bool visible);
     Mat4 instanceTransform(std::size_t instance) const;
     bool instanceVisible(std::size_t instance) const;
-    // HUD-S70: the node alpha and colour of a node tween (0x21b7cc with flags 3, value 0..1) multiply the instance's colour and alpha.
+    // HUD-S70: the node alpha and colour of a node tween (0x21b7cc with flags 3, value 0..1) multiply the instance's colour and alpha. An alpha
+    // below 1 puts every part into the blended list (0x10bbe8). STAND-IN PED-S12: such a part blends with (1, 1 - source alpha), or (1, 1) for a
+    // destination of one, where 0x188778 uses source alpha.
     void setInstanceFade(std::size_t instance, float fade);
-    // STAND-IN PED-S12: while set, an instance with a fade below 1 draws its opaque parts in the blended pass with the premultiplied
-    // blend (1, 1 - source alpha), as the node draw 0x10bcc8 takes pass 2 for an alpha byte below 255 (not read; docs/re/pedestrians-fade.md).
-    void setInstanceTranslucentFade(std::size_t instance, bool translucent);
+    float instanceFade(std::size_t instance) const;
+    // The archive path of the model the instance draws.
+    const std::string& instanceModel(std::size_t instance) const;
     // STAND-IN VEH-S100: the node colour of 0x23e110 (mesh node key 1, node +0x118) multiplies the fragment colour; where the original's draw
     // applies it is not read.
     void setInstanceTint(std::size_t instance, const std::array<float, 3>& tint);

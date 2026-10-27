@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 950 open items and stand-ins, 170 linked to game usage, 780 with unknown reach.
+Items: 950 open items and stand-ins, 168 linked to game usage, 782 with unknown reach.
 
 ## Top 50 overall
 
@@ -75,15 +75,15 @@ Items: 950 open items and stand-ins, 170 linked to game usage, 780 with unknown 
 | 39 | [SCRIPT-73](features/script-system-hud-natives.md?display=source#L33) | 148 | 0 | 6 | 1 | 5 stand-in | `disableicon`, `enableminimapwipe`, `enablescanner`, `overridescannable` +1 | Map and scanner natives (EnableMinimapWipe 0x187f28, EnableScanner, OverrideScannable, PanMapToObject, map ... |
 | 40 | [CAMERA-S51](features/camera.md?display=source#L26) | 145 | 0 | 7 | 0 | 1 stand-in | `shakescreen` | The ShakeScreen shake moves only the eye of the gameplay camera (`CameraRig::setEyeShake`); the cutscene ... |
 | 41 | [SCRIPT-S271](features/script-system-dcam.md?display=source#L21) | 145 | 0 | 7 | 0 | 1 stand-in | `shakescreen` | `ShakeScreen` draws its random numbers from `breakRandomStandIn`, the port's stand-in stream; the seed and ... |
-| 42 | [RENDER-62](features/rendering.md?display=source#L52) | 0 | 137 | 8 | 0 | - | `point` | Point lights (type 2) against the oracle: lvl_00 `Point`/`Point01` (Intensity 2, MaxRange 1) on baked surfaces |
-| 43 | [SCRIPT-S233](features/script-system-natives-world.md?display=source#L31) | 130 | 0 | 7 | 0 | 2 stand-in | `addtosemitransnearcameralist`, `enabledistancefade` | EnableDistanceFade and AddToSemiTransNearCameraList only record their arguments; every mesh stays opaque at ... |
-| 44 | [LEVOBJ-S1](features/level-objects.md?display=source#L21) | 0 | 120 | 8 | 0 | - | `chars/char_ai_actor` | Characters other than pedestrians run the idle state of `char_ai_actor` (verified for `char_ai_actor` ... |
-| 45 | [SCRIPT-66](features/script-system-hud-natives.md?display=source#L28) | 113 | 0 | 7 | 1 | 8 stand-in | `informationbox`, `showbosshearts`, `showcharacterintro`, `showintrotext` +4 | ShowTally, ShowBossHearts, ShowRaceStart, ShowPortraitOverVehicle and showinfopointer only count their calls ... |
-| 46 | [STUD-4](features/studs.md?display=source#L38) | 109 | 0 | 7 | 0 | 1 stand-in, 1 none | `enablestudsbygroup`, `spawnstuds` | How a group is enabled (0x28a2cc sequencer, `EnableStudsByGroup` and `SpawnStuds` script functions ... |
-| 47 | [SCRIPT-S277](features/script-system-natives-party.md?display=source#L18) | 106 | 0 | 6 | 0 | 6 stand-in | `charsetallowvehicleentry`, `charsetskydivemode`, `relockchaseplainclothes`, `setweaponenabled` +2 | SwapAllegiance (toggle count only; the initial bit 2 of the object flags, the lists 0x58deb0 / 0x58dec8 and ... |
-| 48 | [SCRIPT-383](features/script-system-missions-1-3.md?display=source#L32) | 100 | 0 | 8 | 0 | 1 stand-in | `attachobject` | Attached children other than level characters (the crow, `Rope_01` under the girder) take only the ... |
-| 49 | [SCRIPT-317](features/script-system-natives-world.md?display=source#L44) | 99 | 0 | 7 | 1 | 2 stand-in | `enableswitch`, `resetobject` | Kind 64 message 8 (0x1a90b8): read the platform record fields R+4, R+0xb4, R+0x7c, R+0x18, R+0x50 and the ... |
-| 50 | [SCRIPT-318](features/script-system-natives-world.md?display=source#L45) | 99 | 0 | 7 | 0 | 2 stand-in | `enableswitch`, `resetobject` | Census of the message 8 handlers of the other kinds (the default handler 0x221800 is reached through 0x221760 ... |
+| 42 | [RENDER-62](features/rendering.md?display=source#L46) | 0 | 137 | 8 | 0 | - | `point` | Point lights (type 2) against the oracle: lvl_00 `Point`/`Point01` (Intensity 2, MaxRange 1) on baked surfaces |
+| 43 | [LEVOBJ-S1](features/level-objects.md?display=source#L21) | 0 | 120 | 8 | 0 | - | `chars/char_ai_actor` | Characters other than pedestrians run the idle state of `char_ai_actor` (verified for `char_ai_actor` ... |
+| 44 | [SCRIPT-66](features/script-system-hud-natives.md?display=source#L28) | 113 | 0 | 7 | 1 | 8 stand-in | `informationbox`, `showbosshearts`, `showcharacterintro`, `showintrotext` +4 | ShowTally, ShowBossHearts, ShowRaceStart, ShowPortraitOverVehicle and showinfopointer only count their calls ... |
+| 45 | [STUD-4](features/studs.md?display=source#L38) | 109 | 0 | 7 | 0 | 1 stand-in, 1 none | `enablestudsbygroup`, `spawnstuds` | How a group is enabled (0x28a2cc sequencer, `EnableStudsByGroup` and `SpawnStuds` script functions ... |
+| 46 | [SCRIPT-S277](features/script-system-natives-party.md?display=source#L18) | 106 | 0 | 6 | 0 | 6 stand-in | `charsetallowvehicleentry`, `charsetskydivemode`, `relockchaseplainclothes`, `setweaponenabled` +2 | SwapAllegiance (toggle count only; the initial bit 2 of the object flags, the lists 0x58deb0 / 0x58dec8 and ... |
+| 47 | [SCRIPT-383](features/script-system-missions-1-3.md?display=source#L32) | 100 | 0 | 8 | 0 | 1 stand-in | `attachobject` | Attached children other than level characters (the crow, `Rope_01` under the girder) take only the ... |
+| 48 | [SCRIPT-317](features/script-system-natives-world.md?display=source#L44) | 99 | 0 | 7 | 1 | 2 stand-in | `enableswitch`, `resetobject` | Kind 64 message 8 (0x1a90b8): read the platform record fields R+4, R+0xb4, R+0x7c, R+0x18, R+0x50 and the ... |
+| 49 | [SCRIPT-318](features/script-system-natives-world.md?display=source#L45) | 99 | 0 | 7 | 0 | 2 stand-in | `enableswitch`, `resetobject` | Census of the message 8 handlers of the other kinds (the default handler 0x221800 is reached through 0x221760 ... |
+| 50 | [SCRIPT-S306](features/script-system-missions-1-3.md?display=source#L21) | 98 | 0 | 8 | 0 | 1 stand-in | `aimove` | A level character the AI moved (not in AISuperJump) takes the height of the player's ground probe under it ... |
 
 ## Player and camera
 
@@ -154,7 +154,7 @@ Items: 950 open items and stand-ins, 170 linked to game usage, 780 with unknown 
 
 ## World and levels
 
-7 of 84 items linked.
+7 of 83 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -185,15 +185,13 @@ Items: 950 open items and stand-ins, 170 linked to game usage, 780 with unknown 
 
 ## Rendering and assets
 
-5 of 43 items linked.
+3 of 44 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
-| 1 | [RENDER-62](features/rendering.md?display=source#L52) | 0 | 137 | 8 | 0 | - | `point` | Point lights (type 2) against the oracle: lvl_00 `Point`/`Point01` (Intensity 2, MaxRange 1) on baked surfaces |
-| 2 | [RENDER-66](features/rendering.md?display=source#L42) | 89 | 0 | 7 | 17 | 1 stand-in | `enabledistancefade` | The distance fade of mesh nodes: every mesh node fades out beyond a distance that depends on its radius ... |
-| 3 | [RENDER-67](features/rendering.md?display=source#L43) | 41 | 0 | 7 | 17 | 1 stand-in | `addtosemitransnearcameralist` | The semi-transparent near-camera lists of the rooms (entries of 0x1f40d8 filled by ... |
-| 4 | [RENDER-38](features/rendering.md?display=source#L48) | 5 | 0 | 1 | 0 | 1 none | `setbackgroundcolour` | Clear colour: apply the script native `SetBackgroundColour` (0x291624, 5 call sites in the level scripts) and ... |
-| 5 | [RENDER-65](features/rendering.md?display=source#L44) | 2 | 0 | 1 | 1 | 1 none | `addtosemitranslist` | Where the particle pass sits among the other blended draws: the draw item order of 0x2722cc's callers, the ... |
+| 1 | [RENDER-62](features/rendering.md?display=source#L46) | 0 | 137 | 8 | 0 | - | `point` | Point lights (type 2) against the oracle: lvl_00 `Point`/`Point01` (Intensity 2, MaxRange 1) on baked surfaces |
+| 2 | [RENDER-66](features/rendering-draw-order.md?display=source#L26) | 89 | 0 | 7 | 17 | 1 stand-in | `enabledistancefade` | The distance fade of mesh nodes: every mesh node fades out beyond a distance that depends on its radius ... |
+| 3 | [RENDER-38](features/rendering.md?display=source#L42) | 5 | 0 | 1 | 0 | 1 none | `setbackgroundcolour` | Clear colour: apply the script native `SetBackgroundColour` (0x291624, 5 call sites in the level scripts) and ... |
 
 ## Platform and tools
 
@@ -205,7 +203,7 @@ No linked items.
 
 No script native or object class is linked to these items (`+N` is Unblocks). Add `uses:` to an item when its fix changes the game.
 
-Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?display=source#L33) (+30), [RENDER-35](features/rendering.md?display=source#L46) (+25), [VEH-6](features/vehicles-physics.md?display=source#L30) (+24), [TRAFFIC-7](features/pedestrians-traffic-cars.md?display=source#L56) (+23), [TRAFFIC-8](features/pedestrians-traffic-cars.md?display=source#L57) (+23), [TRAFFIC-9](features/pedestrians-traffic-cars.md?display=source#L58) (+23), [TRAFFIC-2](features/pedestrians-traffic-cars.md?display=source#L51) (+22), [SCRIPT-43](features/script-system-natives.md?display=source#L30) (+18), [SCRIPT-44](features/script-system-natives.md?display=source#L31) (+17), [SCRIPT-94](features/script-system-ai-navigation.md?display=source#L34) (+17)
+Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?display=source#L33) (+30), [VEH-6](features/vehicles-physics.md?display=source#L30) (+24), [TRAFFIC-7](features/pedestrians-traffic-cars.md?display=source#L56) (+23), [TRAFFIC-8](features/pedestrians-traffic-cars.md?display=source#L57) (+23), [TRAFFIC-9](features/pedestrians-traffic-cars.md?display=source#L58) (+23), [TRAFFIC-2](features/pedestrians-traffic-cars.md?display=source#L51) (+22), [SCRIPT-43](features/script-system-natives.md?display=source#L30) (+18), [SCRIPT-44](features/script-system-natives.md?display=source#L31) (+17), [SCRIPT-94](features/script-system-ai-navigation.md?display=source#L34) (+17), [SCRIPT-101](features/script-system-ai-navigation.md?display=source#L37) (+15)
 
 - [abilities-detective.md](features/abilities-detective.md): DETECT-19 (+3), DETECT-13 (+2), DETECT-1 (+1), DETECT-15 (+1), DETECT-4 (+1), DETECT-6 (+1), DETECT-S11 (+1), DETECT-S7 (+1), DETECT-S8 (+1), DETECT-10, DETECT-11, DETECT-12, DETECT-18, DETECT-3, DETECT-5, DETECT-9, DETECT-S1, DETECT-S2, DETECT-S4, DETECT-S5, DETECT-S6, DETECT-S9
 - [abilities-scanner.md](features/abilities-scanner.md): SCAN-10 (+1), SCAN-11 (+1), SCAN-16 (+1), SCAN-17 (+1), SCAN-S10 (+1), AUDIO-S33, SCAN-13, SCAN-15, SCAN-3, SCAN-6, SCAN-S1, SCAN-S11, SCAN-S12, SCAN-S2, SCAN-S3, SCAN-S4, SCAN-S5, SCAN-S6, SCAN-S7, SCAN-S8, SCAN-S9
@@ -219,7 +217,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [front-end.md](features/front-end.md): FE-3 (+10), FE-30 (+1), FE-40 (+1), FE-1, FE-2, FE-4, FE-5, FE-6, FE-7, FE-8, FE-9, FE-S1, FE-S2, FE-S3, FE-S31, FE-S32, FE-S33, FE-S4, FE-S40, FE-S41, FE-S5, FE-S6
 - [hud-ui-super-bricks.md](features/hud-ui-super-bricks.md): HUD-84 (+2), HUD-79 (+1), HUD-80 (+1), HUD-85, HUD-S74, HUD-S75, HUD-S76, HUD-S78
 - [hud-ui-text.md](features/hud-ui-text.md): HUD-15, HUD-27, HUD-28, HUD-29, HUD-32, HUD-33, HUD-S15
-- [hud-ui.md](features/hud-ui.md): HUD-70 (+3), HUD-71 (+3), HUD-11 (+2), HUD-60 (+1), HUD-61 (+1), HUD-74 (+1), HUD-75 (+1), HUD-10, HUD-12, HUD-18, HUD-3, HUD-6, HUD-7, HUD-8, HUD-S1, HUD-S2, HUD-S3, HUD-S4, HUD-S6, HUD-S60, HUD-S7, HUD-S70, HUD-S71, HUD-S73
+- [hud-ui.md](features/hud-ui.md): HUD-70 (+4), HUD-71 (+3), HUD-11 (+2), HUD-60 (+1), HUD-61 (+1), HUD-74 (+1), HUD-75 (+1), HUD-10, HUD-12, HUD-18, HUD-3, HUD-6, HUD-7, HUD-8, HUD-S1, HUD-S2, HUD-S3, HUD-S4, HUD-S6, HUD-S60, HUD-S7, HUD-S70, HUD-S71, HUD-S73
 - [input.md](features/input.md): INPUT-1, INPUT-2, INPUT-3, INPUT-S1
 - [level-objects-buildit.md](features/level-objects-buildit.md): LEVOBJ-117 (+1), LEVOBJ-43 (+1), LEVOBJ-71 (+1), LEVOBJ-79 (+1), LEVOBJ-42, LEVOBJ-61, LEVOBJ-70, LEVOBJ-76, LEVOBJ-77, LEVOBJ-85, LEVOBJ-94, LEVOBJ-S41, LEVOBJ-S70, LEVOBJ-S71, LEVOBJ-S74, LEVOBJ-S76, LEVOBJ-S94, LEVOBJ-S95
 - [level-objects-carry.md](features/level-objects-carry.md): LEVOBJ-127 (+1), LEVOBJ-75 (+1), LEVOBJ-128, LEVOBJ-30, LEVOBJ-31, LEVOBJ-34, LEVOBJ-S31, LEVOBJ-S33, LEVOBJ-S34, LEVOBJ-S73, LEVOBJ-S75, LEVOBJ-S99
@@ -230,7 +228,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [movies-cutscenes.md](features/movies-cutscenes.md): MOVIE-22 (+1), MOVIE-24 (+1), MOVIE-36 (+1), MOVIE-37 (+1), MOVIE-S33 (+1), MOVIE-1, MOVIE-12, MOVIE-20, MOVIE-21, MOVIE-3, MOVIE-35, MOVIE-4, MOVIE-40, MOVIE-41, MOVIE-S10, MOVIE-S11, MOVIE-S2, MOVIE-S21, MOVIE-S3, MOVIE-S30, MOVIE-S31, MOVIE-S32, MOVIE-S34, MOVIE-S36
 - [particles.md](features/particles.md): PART-4 (+1), PART-6 (+1), PART-5, PART-7, PART-S1, PART-S2, PART-S3, PART-S4
 - [pedestrians-traffic-cars.md](features/pedestrians-traffic-cars.md): TRAFFIC-7 (+23), TRAFFIC-8 (+23), TRAFFIC-9 (+23), TRAFFIC-2 (+22), TRAFFIC-12 (+2), TRAFFIC-10 (+1), TRAFFIC-11 (+1), TRAFFIC-3 (+1), TRAFFIC-6, TRAFFIC-S1, TRAFFIC-S2, TRAFFIC-S3, TRAFFIC-S4, TRAFFIC-S5, TRAFFIC-S7, TRAFFIC-S8
-- [pedestrians-traffic-pedestrians-fade.md](features/pedestrians-traffic-pedestrians-fade.md): PED-22 (+1), PED-23 (+1), PED-21, PED-S11, PED-S12
+- [pedestrians-traffic-pedestrians-fade.md](features/pedestrians-traffic-pedestrians-fade.md): PED-22 (+1), PED-21, PED-S11, PED-S12
 - [pedestrians-traffic-pedestrians-vehicles.md](features/pedestrians-traffic-pedestrians-vehicles.md): PED-18 (+1), PED-19 (+1), PED-S10, PED-S9
 - [pedestrians-traffic-pedestrians.md](features/pedestrians-traffic-pedestrians.md): PED-27 (+2), PED-16 (+1), PED-24 (+1), PED-25 (+1), PED-26 (+1), PED-28 (+1), PED-9 (+1), PED-29, PED-S13, PED-S14, PED-S15, PED-S16, PED-S2, PED-S4, PED-S5, PED-S6, PED-S7, PED-S8
 - [pedestrians-traffic.md](features/pedestrians-traffic.md): PREGEN-7 (+3), PREGEN-6, PREGEN-S1, PREGEN-S2, PREGEN-S4
@@ -239,8 +237,9 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [player-traversal-pole.md](features/player-traversal-pole.md): TRAV-S9 (+1), TRAV-11, TRAV-13, TRAV-14, TRAV-15, TRAV-16, TRAV-S5, TRAV-S6, TRAV-S7, TRAV-S8
 - [player-traversal-rails.md](features/player-traversal-rails.md): TRAV-28 (+3), TRAV-38 (+1), TRAV-43 (+1), TRAV-44 (+1), TRAV-45 (+1), TRAV-S16 (+1), TRAV-S18 (+1), TRAV-S19 (+1), TRAV-27, TRAV-29, TRAV-31, TRAV-32, TRAV-33, TRAV-42, TRAV-S15, TRAV-S17, TRAV-S21, TRAV-S23, TRAV-S24, TRAV-S25, TRAV-S26
 - [player-traversal.md](features/player-traversal.md): TRAV-9 (+2), TRAV-2 (+1), TRAV-49 (+1), TRAV-52 (+1), TRAV-S12 (+1), TRAV-10, TRAV-19, TRAV-20, TRAV-22, TRAV-34, TRAV-35, TRAV-5, TRAV-6, TRAV-63, TRAV-8, TRAV-S1, TRAV-S10, TRAV-S11, TRAV-S13, TRAV-S2, TRAV-S20, TRAV-S29, TRAV-S3, TRAV-S30, TRAV-S31, TRAV-S32, TRAV-S4
+- [rendering-draw-order.md](features/rendering-draw-order.md): RENDER-65 (+1), RENDER-78 (+1), RENDER-79 (+1), RENDER-S64, RENDER-S71, RENDER-S72
 - [rendering-reflections.md](features/rendering-reflections.md): RENDER-75 (+1), RENDER-S69
-- [rendering.md](features/rendering.md): RENDER-35 (+25), RENDER-50 (+2), RENDER-69 (+2), RENDER-33 (+1), RENDER-39 (+1), RENDER-60 (+1), RENDER-63 (+1), RENDER-64 (+1), ASSET-S1, RENDER-30, RENDER-34, RENDER-42, RENDER-6, RENDER-61, RENDER-70, RENDER-9, RENDER-S3, RENDER-S4, RENDER-S50, RENDER-S51, RENDER-S6, RENDER-S60, RENDER-S61, RENDER-S62, RENDER-S63, RENDER-S64, RENDER-S65, RENDER-S66, RENDER-S7
+- [rendering.md](features/rendering.md): RENDER-50 (+2), RENDER-69 (+2), RENDER-33 (+1), RENDER-39 (+1), RENDER-60 (+1), RENDER-63 (+1), RENDER-64 (+1), ASSET-S1, RENDER-30, RENDER-34, RENDER-42, RENDER-6, RENDER-61, RENDER-70, RENDER-9, RENDER-S4, RENDER-S50, RENDER-S51, RENDER-S6, RENDER-S60, RENDER-S61, RENDER-S62, RENDER-S63, RENDER-S65, RENDER-S66, RENDER-S7
 - [saves-options.md](features/saves-options.md): SAVE-8 (+4), SAVE-13 (+1), SAVE-14 (+1), SAVE-16 (+1), SAVE-2 (+1), SAVE-20 (+1), SAVE-22 (+1), SAVE-21, SAVE-3, SAVE-4, SAVE-5, SAVE-S1, SAVE-S10, SAVE-S11, SAVE-S2, SAVE-S3, SAVE-S4, SAVE-S5, SAVE-S6, SAVE-S8
 - [script-system-ai-navigation.md](features/script-system-ai-navigation.md): SCRIPT-92 (+30), SCRIPT-94 (+17), SCRIPT-101 (+15), SCRIPT-95 (+15), SCRIPT-100 (+14), SCRIPT-79 (+13), SCRIPT-S100, SCRIPT-S101, SCRIPT-S102, SCRIPT-S104, SCRIPT-S31, SCRIPT-S93, SCRIPT-S94, SCRIPT-S95
 - [script-system-dcam.md](features/script-system-dcam.md): SCRIPT-40 (+15), SCRIPT-182 (+1), SCRIPT-48 (+1), SCRIPT-181, SCRIPT-332, SCRIPT-49, SCRIPT-50, SCRIPT-S142

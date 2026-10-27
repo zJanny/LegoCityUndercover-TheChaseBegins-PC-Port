@@ -12,7 +12,7 @@ Reverse-engineering findings for `particles/particledefs.bprt`. Entries are chro
 - Start entry 0x23de24 (spawner 0x216244), stop 0x23ddb4, update 0x1ece0c (2 sub-steps in the game loops), init 0x222550 (LCG at E+0x134), step 0x221e9c, quad builders 0x2b5970 / 0x2b5f54 of the draw 0x2722cc, the emitter and particle layouts and the draw state (blend by +0x177, depth less or equal, no depth write) are read; the init matches an oracle emitter bit for bit. [§2026-10-18T09:40](#ts-20261018-094004)
 - Callers: about 70 sites of 0x23de24; the level object class `particles` (constructor 0x1a7f30, handlers 0x1a8394 and 0x1a7d30) and the vehicle smoke 0x22a124 are identified, none is ported. [§2026-10-18T09:40](#ts-20261018-094004)
 - The decoder is `parseParticleDefs` and `pjwHash` in `src/assets/particles.cpp`; the runtime is `src/runtime/particles.*`, the drawing `src/render/particles.*`.
-- Open: the room and parent node rules of the spawner, the bounds and culling, E+0x148 / +0x160 / +0x164, the combiner of the draw, the draw order and the world matrix of the view depth, flags 0x800 and 0x20000, the update and step against a recorded young emitter.
+- Open: the room and parent node rules of the spawner, the bounds and culling, E+0x148 / +0x160 / +0x164, the combiner of the draw, the world matrix of the view depth (the draw order among the blended parts: [rendering-draw-order.md §2026-10-27T18:49:04](rendering-draw-order.md#ts-20261027-184904)), flags 0x800 and 0x20000, the update and step against a recorded young emitter.
 
 <a id="ts-20261013-0900"></a>
 

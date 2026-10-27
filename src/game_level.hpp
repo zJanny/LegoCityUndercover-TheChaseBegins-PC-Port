@@ -27,6 +27,7 @@
 #include "game_hud.hpp"
 #include "game_options.hpp"
 #include "game_save.hpp"
+#include "game_semi_trans.hpp"
 #include "game_particles.hpp"
 #include "render/rope.hpp"
 #include "runtime/same_level_entry.hpp"
@@ -330,6 +331,7 @@ private:
     game_super_bricks::LevelSuperBricks superBricks;
     game_effects::LevelEffects effects;
     game_fall_apart::LevelFallApart fallApart;
+    game_semi_trans::NearCameraFades nearCameraFades;
     double provisionalStudClockSeconds = 0;
     std::optional<game_player::PlayerRig> player;
     chase::assets::ClassLookup classOf;
