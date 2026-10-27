@@ -7,6 +7,8 @@
   merge_agent.py finish BRANCH -m FILE [--release WHO]... [--log PLAN LINE_FILE]
                                          release WHO's ID ranges and append the round-end log line inside the squash,
                                          run the checks, commit with the message in FILE, remove the worktree and branch
+                                         (the lock of a Claude agent is lifted first; a worktree with any other lock stays,
+                                         with a warning and the commands to remove it later)
   merge_agent.py close -m FILE [--release WHO]... [--log PLAN LINE_FILE]
                                          the same bookkeeping as its own commit, for a round that ends without a merge
 
@@ -51,6 +53,7 @@ CONFLICT_MARKER = re.compile(r"^(<<<<<<< |=======$|>>>>>>> )")
 RESERVATIONS = "docs/plans/features/id-reservations.md"
 LOG_HEADING = "## Session Log"
 PLAN_NAME = re.compile(r"[a-z][a-z0-9-]*")
+AGENT_LOCK = "claude agent "
 ROUND_IN_LINE = re.compile(r"Lead \((\S+) end\b")
 
 
@@ -274,6 +277,38 @@ def worktree_of(root: Path, branch: str) -> Path | None:
     return None
 
 
+def worktree_lock(root: Path, worktree: Path) -> str | None:
+    path = None
+    for line in git(root, "worktree", "list", "--porcelain").splitlines():
+        if line.startswith("worktree "):
+            path = Path(line[len("worktree "):])
+        elif path == worktree and (line == "locked" or line.startswith("locked ")):
+            return line[len("locked "):]
+    return None
+
+
+def remove_worktree(root: Path, worktree: Path) -> bool:
+    reason = worktree_lock(root, worktree)
+    if reason is not None and not reason.startswith(AGENT_LOCK):
+        print(f"warning: worktree {worktree} is locked ({reason or 'no reason given'}); it is not removed", file=sys.stderr)
+        return False
+    link = worktree / "artifacts"
+    if link.is_symlink():
+        link.unlink()
+    if reason is not None:
+        run(["git", "worktree", "unlock", str(worktree)], root)
+    run(["git", "worktree", "remove", "--force", str(worktree)], root)
+    return True
+
+
+def remove_worktree_and_branch(root: Path, branch: str) -> None:
+    worktree = worktree_of(root, branch)
+    if worktree is not None and not remove_worktree(root, worktree):
+        print(f"leftover, once nobody uses it: git worktree remove --force {worktree} && git branch -D {branch}", file=sys.stderr)
+        return
+    run(["git", "branch", "-D", branch], root)
+
+
 def read_message(message_file: Path) -> str:
     try:
         message = message_file.read_text().rstrip()
@@ -366,13 +401,7 @@ def finish(root: Path, branch: str, message_file: Path, holders: list[str] | Non
     bookkeeping(root, holders or [], log)
     run_checks(root)
     subprocess.run(["git", "commit", "-q", "-F", "-"], cwd=root, input=message + "\n", text=True, check=True)
-    worktree = worktree_of(root, branch)
-    if worktree is not None:
-        link = worktree / "artifacts"
-        if link.is_symlink():
-            link.unlink()
-        run(["git", "worktree", "remove", "--force", str(worktree)], root)
-    run(["git", "branch", "-D", branch], root)
+    remove_worktree_and_branch(root, branch)
     print(git(root, "log", "--oneline", "-1").rstrip())
     print("merged; push with `git push` when authorized")
 

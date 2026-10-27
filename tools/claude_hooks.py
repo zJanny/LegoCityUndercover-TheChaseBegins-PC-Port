@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """Claude Code hooks of this repository (.claude/settings.json): the mechanical part of the CLAUDE.md and lead-round rules.
 
-    python3 tools/claude_hooks.py pre-bash    # PreToolUse Bash: worktree set-up, push, git config, merge finish and commit rules
+    python3 tools/claude_hooks.py pre-bash    # PreToolUse Bash: worktree set-up, artifacts link and deletions, push, git config, merge finish and commit rules
     python3 tools/claude_hooks.py pre-agent   # PreToolUse Agent: a worker starts only from its brief file
     python3 tools/claude_hooks.py pre-tool    # PreToolUse file tools: worktree set-up
     python3 tools/claude_hooks.py post-edit   # PostToolUse Edit/Write: doc rules and local-only data of the edited file
+    python3 tools/claude_hooks.py subagent-stop   # SubagentStop: a round worker stops only after its report file exists
 
-Claude Code writes the hook input as JSON to stdin. A denied call is answered with a JSON permission decision on stdout;
+Claude Code writes the hook input as JSON to stdin. A denied call is answered with a JSON permission decision on stdout, a blocked
+stop with a JSON block decision;
 findings after an edit go to stderr with exit code 2, which Claude Code shows to the agent. Only checkouts of this
 repository are checked; other repositories pass untouched.
 """
@@ -34,6 +36,21 @@ MESSAGE_GIVEN = re.compile(r"(?:^|\s)(?:-[a-zA-Z]*[mF]|--message|--file)(?=[\s=]
 CONFIG_VALUE_OPTIONS = {"--file", "-f", "--blob", "--type", "--default", "--comment"}
 CONFIG_WRITE = {"--unset", "--unset-all", "--add", "--replace-all", "--edit", "-e", "--rename-section", "--remove-section"}
 BRIEF = re.compile(r"\bRead your brief (\S+?)\.?\s+and follow")
+REPORT_PATH = re.compile(r"artifacts/rounds/[\w.-]+/[\w.-]+\.report\.md")
+REDIRECT_WORD = re.compile(r"\d*[<>]")
+COMMIT_SHORT_VALUES = "mFCct"
+COMMIT_LONG_VALUES = {"--message", "--file", "--author", "--date", "--template", "--cleanup", "--trailer", "--reuse-message", "--reedit-message",
+                      "--fixup", "--squash", "--pathspec-from-file"}
+SEPARATORS = {";", "&&", "||", "|", "|&", "&", "(", ")"}
+WRAPPERS = {"sudo", "command", "env", "time", "nohup", "exec", "nice", "xargs"}
+SHELLS = {"bash", "sh", "zsh", "dash"}
+DELETERS = {"rm", "unlink", "rmdir"}
+FIND_ACTIONS = {"-exec", "-execdir", "-ok", "-okdir"}
+AGENT_DELETABLE = re.compile(r"scratch(/.*)?|oracle/[^/]+-out[^/]*(/.*)?")
+ASSIGNMENT = re.compile(r"\w+=")
+CODE_SUFFIXES = {".cpp", ".cc", ".cxx", ".hpp", ".h"}
+WRITE_REDIRECTS = {">", ">>", ">|", "&>", "&>>"}
+FILE_WRITERS = {"tee", "cp", "mv", "install"}
 CLAUDE_SESSION = "Claude-Session"
 CO_AUTHOR = "Co-Authored-By:"
 MAX_FINDINGS = 25
@@ -82,6 +99,161 @@ def base_dir(command, cwd):
     if not match:
         return Path(cwd)
     return (Path(cwd) / os.path.expanduser(unquote(match.group(1)))).resolve()
+
+
+def statements(command):
+    text = HEREDOC.sub("", command).replace("\\\n", " ")
+    found = []
+    for line in text.split("\n"):
+        try:
+            lexer = shlex.shlex(line, posix=True, punctuation_chars=True)
+            lexer.whitespace_split = True
+            tokens = list(lexer)
+        except ValueError:
+            tokens = line.split()
+        joiner, words, writes, skip = "", [], [], None
+        for token in tokens:
+            if skip is not None:
+                if skip in WRITE_REDIRECTS:
+                    writes.append(token)
+                skip = None
+            elif token in SEPARATORS:
+                if words:
+                    found.append((joiner, words, writes))
+                joiner, words, writes = token, [], []
+            elif token[0] in "<>&" and set(token) <= set("<>&|"):
+                skip = token
+                if words and words[-1].isdigit():
+                    words.pop()
+            else:
+                words.append(token)
+        if words:
+            found.append((joiner, words, writes))
+    return found
+
+
+def command_words(words):
+    words = list(words)
+    while words and (ASSIGNMENT.match(words[0]) or Path(words[0]).name in WRAPPERS):
+        wrapper = Path(words.pop(0)).name
+        while wrapper in WRAPPERS and words and words[0].startswith("-"):
+            words.pop(0)
+    return words
+
+
+def positional(words):
+    found, only = [], False
+    for word in words:
+        if only or not word.startswith("-") or word == "-":
+            found.append(word)
+        elif word == "--":
+            only = True
+    return found
+
+
+def lexical_path(base, text):
+    path = Path(os.path.expandvars(os.path.expanduser(text)))
+    if "$" in str(path):
+        return None
+    path = Path(base) / path
+    return path.parent.resolve() / path.name if path.name not in ("", ".", "..") else path.resolve()
+
+
+def deleted_paths(words):
+    name = Path(words[0]).name
+    rest = words[1:]
+    if name in DELETERS:
+        return [(word, False) for word in positional(rest)]
+    if name == "mv":
+        if any(word in ("-t", "--target-directory") or word.startswith("--target-directory=") for word in rest):
+            return [(word, False) for word in positional(rest[:-1] if rest[-2:-1] == ["-t"] else rest)]
+        return [(word, False) for word in positional(rest)[:-1]]
+    if name == "find":
+        roots = []
+        for word in rest:
+            if word.startswith(("-", "(", "!")):
+                break
+            roots.append(word)
+        acts = any(word == "-delete" for word in rest) or any(
+            word in FIND_ACTIONS and Path(following).name in DELETERS | {"mv"} for word, following in zip(rest, rest[1:]))
+        return [(word, word.endswith("/")) for word in roots] if acts else []
+    return []
+
+
+def main_artifacts_part(path):
+    for ancestor in (path, *path.parents):
+        parent = ancestor.parent
+        if (ancestor.name == "artifacts" and WORKTREES not in str(ancestor) and (parent / "CLAUDE.md").is_file()
+                and (parent / "tools" / "claude_hooks.py").is_file()):
+            return path.relative_to(ancestor).as_posix()
+    return None
+
+
+def artifacts_deletion(command, cwd):
+    current = Path(cwd)
+    for _, words, _ in statements(command):
+        words = command_words(words)
+        if not words:
+            continue
+        name = Path(words[0]).name
+        if name == "cd" and len(words) > 1:
+            current = (current / os.path.expanduser(words[1])).resolve()
+        elif name in SHELLS and "-c" in words and words.index("-c") + 1 < len(words):
+            found = artifacts_deletion(words[words.index("-c") + 1], current)
+            if found:
+                return found
+        for text, follow in deleted_paths(words):
+            path = lexical_path(current, text)
+            if path is not None and follow:
+                path = path.resolve()
+            part = main_artifacts_part(path) if path is not None else None
+            if part is not None and not AGENT_DELETABLE.fullmatch(part):
+                return text
+    return None
+
+
+def written_paths(words, writes):
+    name = Path(words[0]).name
+    targets = positional(words[1:])
+    if name == "tee":
+        return writes + targets
+    if name in ("cp", "mv", "install") and targets:
+        return writes + targets[-1:]
+    return writes
+
+
+def is_scratch_code_in_artifacts(path):
+    return path is not None and path.suffix.lower() in CODE_SUFFIXES and "artifacts" in path.parts
+
+
+def artifacts_code_writes(command, cwd):
+    current = Path(cwd)
+    for _, words, writes in statements(command):
+        words = command_words(words)
+        if words and Path(words[0]).name == "cd" and len(words) > 1:
+            current = (current / os.path.expanduser(words[1])).resolve()
+        for text in written_paths(words, writes) if words else writes:
+            if is_scratch_code_in_artifacts(lexical_path(current, text)):
+                return text
+    return None
+
+
+def artifacts_link_requests(command, cwd):
+    current = Path(cwd)
+    found, guard = [], False
+    for joiner, words, _ in statements(command):
+        words = command_words(words)
+        name = Path(words[0]).name if words else ""
+        if name == "cd" and len(words) > 1:
+            current = (current / os.path.expanduser(words[1])).resolve()
+        elif name == "ln":
+            flags = "".join(word[1:] for word in words[1:] if word.startswith("-") and not word.startswith("--"))
+            replaces = "T" in flags or "n" in flags or "--no-target-directory" in words
+            targets = positional(words[1:])
+            if "s" in flags and len(targets) > 1 and Path(targets[-1]).name == "artifacts" and not replaces:
+                found.append((lexical_path(current, targets[-1]), joiner == "||" and guard))
+        guard = name in ("[", "test") and "-e" in words
+    return found
 
 
 def bare(command):
@@ -137,6 +309,41 @@ def trailer_problem(command, base, arguments):
     return None
 
 
+def commit_form(arguments):
+    words = [word for word in arguments.split() if not REDIRECT_WORD.match(word)]
+    take_all = False
+    paths = []
+    index = 0
+    while index < len(words):
+        word = words[index]
+        if word == "--":
+            paths += words[index + 1:]
+            break
+        if word.startswith("--"):
+            take_all |= word == "--all"
+            index += word in COMMIT_LONG_VALUES
+        elif word.startswith("-") and len(word) > 1:
+            for position, letter in enumerate(word[1:], 1):
+                take_all |= letter == "a"
+                if letter in COMMIT_SHORT_VALUES:
+                    index += position == len(word) - 1
+                    break
+        elif word != "''":
+            paths.append(word)
+        index += 1
+    return take_all, paths
+
+
+def left_out_by_paths(root, base, paths):
+    covered = [(base / os.path.expanduser(path)).resolve() for path in paths]
+    left = []
+    for name in git(root, "diff", "--cached", "--name-only").stdout.split("\n"):
+        target = (root / name).resolve()
+        if name and not any(target == path or path in target.parents for path in covered):
+            left.append(name)
+    return left
+
+
 def file_hashes(root):
     listed = git(root, "ls-files", "--cached", "--others", "--exclude-standard", "-z", "--", "docs", "README.md").stdout
     hashes = {}
@@ -175,22 +382,21 @@ def problem_lines(output, limit=MAX_FINDINGS):
     return "\n".join(lines[:limit]) + (f"\n... {len(lines) - limit} more" if len(lines) > limit else "")
 
 
-def prepare_commit(root):
+def prepare_commit(root, take_all=False):
     env = assets_env(root)
-    unstaged = set(git(root, "diff", "--name-only").stdout.split())
-    untracked = set(git(root, "ls-files", "--others", "--exclude-standard").stdout.split())
     before = file_hashes(root)
     refresh(root, env, "priority_report.py", "--check", "--update", "docs/plans/priorities.md")
     run_tool(root, env, "check_doc_links.py", "--root", ".", "--fix")
     refresh(root, env, "priority_report.py", "--check", "--update", "docs/plans/priorities.md")
     refresh(root, env, "progress_report.py", "--check", "--update-readme", "README.md")
     after = file_hashes(root)
-    changed = [name for name in after if name not in before or (before[name] != after[name] and name not in unstaged | untracked)]
+    changed = [name for name in after if before.get(name) != after[name]]
+    changed += [name for name in before if name not in after]
     trend = "docs/progress-trend.svg"
     if (root / trend).is_file() and git(root, "diff", "--quiet", "--", trend).returncode:
         changed.append(trend)
     if changed:
-        git(root, "add", "--", *sorted(set(changed)))
+        git(root, "add", "-A", "--", *sorted(set(changed)))
     problems = []
     checked = run_tool(root, env, "check_doc_links.py", "--root", ".")
     if checked and checked.returncode:
@@ -200,21 +406,24 @@ def prepare_commit(root):
     if local and local.returncode:
         found = [line for line in local.stdout.split("\n") if line and not line.startswith("warning")]
         problems.append("tools/check_local_data.py fails (CLAUDE.md \"No local-only data in the repo\"):\n" + problem_lines("\n".join(found)))
-    staged = forbidden_staged(root)
+    staged = forbidden_staged(root, take_all)
     if staged:
         problems.append("game-derived, build or binary files are staged: " + ", ".join(staged))
     return problems
 
 
-def forbidden_staged(root):
+def forbidden_staged(root, take_all=False):
     merge_agent = load_tool(root, "merge_agent")
     pattern = getattr(merge_agent, "FORBIDDEN", None)
-    names = git(root, "diff", "--cached", "--name-only").stdout.split("\n")
-    bad = [name for name in names if name and pattern and pattern.search(name)]
-    for line in git(root, "diff", "--cached", "--numstat").stdout.split("\n"):
-        parts = line.split("\t", 2)
-        if len(parts) == 3 and parts[0] == "-" and parts[1] == "-" and parts[2] not in bad:
-            bad.append(parts[2])
+    views = [["--cached"], []] if take_all else [["--cached"]]
+    bad = []
+    for view in views:
+        names = git(root, "diff", *view, "--name-only").stdout.split("\n")
+        bad += [name for name in names if name and pattern and pattern.search(name) and name not in bad]
+        for line in git(root, "diff", *view, "--numstat").stdout.split("\n"):
+            parts = line.split("\t", 2)
+            if len(parts) == 3 and parts[0] == "-" and parts[1] == "-" and parts[2] not in bad:
+                bad.append(parts[2])
     return bad
 
 
@@ -236,9 +445,24 @@ def pre_bash(data):
     command = data.get("tool_input", {}).get("command", "")
     cwd = data.get("cwd") or os.getcwd()
     base = base_dir(command, cwd)
-    for place in (cwd, base):
-        ensure_artifacts_link(place)
     in_agent = bool(data.get("agent_id")) or WORKTREES in str(base) or WORKTREES in cwd
+    unguarded = [link for link, guarded in artifacts_link_requests(command, cwd) if not guarded and link is not None]
+    if any(link.is_dir() for link in unguarded):
+        return deny("`artifacts` already exists here, so `ln -s ... artifacts` would create a link inside the folder it points to, in the "
+                    "user's artifacts/. The link is in place: skip this step. Use the guarded form `[ -e artifacts ] || ln -s <main checkout>/artifacts "
+                    "artifacts` if you must repeat it (lead-round skill, worker brief)")
+    if not unguarded:
+        for place in (cwd, base):
+            ensure_artifacts_link(place)
+    code = artifacts_code_writes(command, cwd)
+    if code:
+        return deny(scratch_code_reason(code))
+    if in_agent:
+        victim = artifacts_deletion(command, cwd)
+        if victim:
+            return deny(f"agents never delete, move or unlink anything in the main checkout's artifacts/ ('{victim}'): it holds the user's "
+                        "save states and rounds. Ask `main` with SendMessage instead. The only paths an agent may delete there are its own "
+                        "scratch, artifacts/oracle/<agent>-out folders and artifacts/scratch/ (CLAUDE.md \"No local-only data in the repo\")")
     if finish_chained(command) and checkout_of(base):
         return deny("merge_agent.py finish runs alone: no &&, ; or || after it, only '2>&1 | tail -N'. Start the next command only after "
                     "finish printed 'merged;' (lead-round skill \"The finish gate\")")
@@ -263,7 +487,12 @@ def pre_bash(data):
             problem = trailer_problem(command, base, arguments)
             if problem:
                 return deny(problem)
-            problems = prepare_commit(root)
+            take_all, paths = commit_form(arguments)
+            problems = prepare_commit(root, take_all)
+            left = left_out_by_paths(root, target, paths) if paths else []
+            if left:
+                problems.append("git commit with paths ignores the index, so these staged files would be left out of the commit: " + ", ".join(left)
+                                + "\nStage what belongs in the commit with git add and run git commit without paths")
             if problems:
                 return deny("Fix these before committing (the generated README section, priorities.md and the doc fixes are already "
                             "updated and staged):\n\n" + "\n\n".join(problems))
@@ -282,12 +511,72 @@ def pre_agent(data):
     return 0
 
 
+def scratch_code_reason(path):
+    return (f"'{path}' is C++ source inside an artifacts/ folder, which is shared with the user and the lead (a worktree's artifacts is a link "
+            "to the main one), and its compiler errors flood their context. Write throwaway probes into the scratchpad directory named in your "
+            "system prompt instead; code that belongs to the work goes under src/, tests/ or tools/")
+
+
 def pre_tool(data):
-    ensure_artifacts_link(data.get("cwd") or os.getcwd())
+    cwd = data.get("cwd") or os.getcwd()
+    ensure_artifacts_link(cwd)
     tool_input = data.get("tool_input", {})
+    if data.get("tool_name") in ("Write", "Edit") and tool_input.get("file_path"):
+        if is_scratch_code_in_artifacts(lexical_path(cwd, tool_input["file_path"])):
+            return deny(scratch_code_reason(tool_input["file_path"]))
     for key in ("file_path", "path"):
         if tool_input.get(key):
             ensure_artifacts_link(tool_input[key])
+    return 0
+
+
+def first_prompt(transcript):
+    try:
+        with open(transcript, encoding="utf-8") as lines:
+            for line in lines:
+                record = json.loads(line)
+                if record.get("type") != "user":
+                    continue
+                content = record.get("message", {}).get("content")
+                if isinstance(content, list):
+                    content = " ".join(block.get("text", "") for block in content if isinstance(block, dict))
+                return (content, record.get("cwd")) if isinstance(content, str) else (None, None)
+    except (OSError, ValueError, AttributeError):
+        return None, None
+    return None, None
+
+
+def worker_report(data):
+    cwd = data.get("cwd")
+    transcript = data.get("agent_transcript_path")
+    if not isinstance(cwd, str) or not isinstance(transcript, str):
+        return None
+    prompt, started_in = first_prompt(transcript)
+    if WORKTREES not in cwd and isinstance(started_in, str):
+        cwd = started_in
+    at = cwd.find(WORKTREES)
+    match = BRIEF.search(prompt or "")
+    if at < 0 or not match:
+        return None
+    brief = Path(cwd) / os.path.expanduser(match.group(1))
+    try:
+        named = REPORT_PATH.findall(brief.read_text(encoding="utf-8"))
+    except OSError:
+        return None
+    return Path(cwd[:at]) / named[-1] if named else None
+
+
+def subagent_stop(data):
+    report = worker_report(data)
+    if report is None or (report.is_file() and report.stat().st_size > 0):
+        return 0
+    if data.get("stop_hook_active"):
+        print(f"claude_hooks.py subagent-stop: the report {report.name} is still missing, but this stop was blocked once already; "
+              "letting the worker stop", file=sys.stderr)
+        return 0
+    print(json.dumps({"decision": "block", "reason": f"your report file {report} does not exist yet. Write it "
+                      "now, as your brief's \"End of session\" step 3 says, then finish with the same text as your final message "
+                      "(lead-round skill, worker brief)"}))
     return 0
 
 
@@ -320,7 +609,7 @@ def post_edit(data):
     return 2
 
 
-HOOKS = {"pre-bash": pre_bash, "pre-agent": pre_agent, "pre-tool": pre_tool, "post-edit": post_edit}
+HOOKS = {"pre-bash": pre_bash, "pre-agent": pre_agent, "pre-tool": pre_tool, "post-edit": post_edit, "subagent-stop": subagent_stop}
 
 
 def main(argv=None):

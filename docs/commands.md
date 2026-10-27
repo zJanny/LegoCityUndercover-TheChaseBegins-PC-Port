@@ -232,6 +232,7 @@ python3 tools/merge_agent.py close -m FILE --release 20261021-audio-C --log linu
 - `prepare` runs `sync` first and takes the same `--upstream`. `--no-sync` skips it, for a session without a remote.
 - `finish --release WHO` drops the ID ranges WHO holds, inside the merge commit; give it once per holder. A name that holds no reservation stops with an error.
 - `finish --log PLAN LINE_FILE` appends the round-end line to the session log of the plan's progress file (`docs/plans/<plan>.progress.md`) inside the merge commit. LINE_FILE holds exactly one line `Lead (<round> end): ...` without a timestamp; the tool adds the time from the clock. Any other text stops with an error.
+- `finish` removes the worktree of a Claude agent even while the agent's lock is still set. A worktree with any other lock stays: `finish` warns and prints the `git worktree remove` and `git branch -D` commands, and still reports the commit.
 - Both are safe to repeat: after a failed check, run `finish` again with the same options.
 - `close` makes the same release and log line as its own commit, for a round whose last branch was dropped. It needs at least one of the two options.
 

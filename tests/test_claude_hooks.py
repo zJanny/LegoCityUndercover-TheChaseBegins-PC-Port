@@ -8,6 +8,7 @@ import unittest
 from pathlib import Path
 
 TOOLS = Path(__file__).resolve().parent.parent / "tools"
+A = "artifacts"
 CO_AUTHOR = "Co-Authored-By: Test <test@example.invalid>"
 
 
@@ -132,6 +133,62 @@ class HookTest(unittest.TestCase):
         (features / "f.md").write_text("# F\n\n- [ ] F-1 — gap. blocks: F-2.\n- [ ] F-2 — gap. blocks: F-1.\n")
         self.assertDenied(self.bash(commit), "dependency-conflict")
 
+    def docs_repo(self):
+        self.copy_tools("check_doc_links.py", "user_docs.py")
+        features = self.repo / "docs" / "plans" / "features"
+        features.mkdir(parents=True)
+        (features / "README.md").write_text("# Features\n\n| File | Status |\n|---|---|\n| [f](f.md) | open |\n")
+        (features / "f.md").write_text("# F\n\n- [ ] F-1 — gap.\n")
+        (self.repo / "docs" / "notes.md").write_text("notes\n")
+        git(self.repo, "add", ".")
+        git(self.repo, "commit", "-q", "-m", "docs")
+        return features
+
+    def staged(self):
+        return git(self.repo, "diff", "--cached", "--name-only").split()
+
+    def unstaged(self):
+        return git(self.repo, "diff", "--name-only").split()
+
+    def test_commit_stages_a_file_its_own_fix_changed_even_when_the_edit_was_unstaged(self):
+        features = self.docs_repo()
+        (features / "f.md").write_text("# F\n\n- [ ] F-1 — gap.\n- [ ] F-3 — gap.\n- [x] F-2 — done.\n")
+        (self.repo / "docs" / "notes.md").write_text("notes, edited on purpose\n")
+        self.assertAllowed(self.bash(f'git commit -m "Add x" -m "{CO_AUTHOR}"'))
+        self.assertEqual(self.staged(), ["docs/plans/features/f.closed.md", "docs/plans/features/f.md"])
+        self.assertEqual(self.unstaged(), ["docs/notes.md"])
+        self.assertNotIn("F-2", (features / "f.md").read_text())
+
+    def test_commit_with_all_flag_takes_the_fixed_files(self):
+        features = self.docs_repo()
+        (features / "f.md").write_text("# F\n\n- [ ] F-1 — gap.\n- [ ] F-3 — gap.\n- [x] F-2 — done.\n")
+        self.assertAllowed(self.bash(f'git commit -am "Add x" -m "{CO_AUTHOR}"'))
+        self.assertEqual(self.staged(), ["docs/plans/features/f.closed.md", "docs/plans/features/f.md"])
+
+    def test_commit_with_all_flag_rejects_a_modified_binary_file(self):
+        (self.repo / "dump.raw").write_bytes(b"\0\1\2")
+        git(self.repo, "add", "dump.raw")
+        git(self.repo, "commit", "-q", "-m", "raw")
+        (self.repo / "dump.raw").write_bytes(b"\0\1\3")
+        self.assertDenied(self.bash(f'git commit -am "Add x" -m "{CO_AUTHOR}"'), "dump.raw")
+
+    def test_commit_with_paths_must_cover_what_the_hook_staged(self):
+        features = self.docs_repo()
+        (features / "f.md").write_text("# F\n\n- [ ] F-1 — gap.\n- [ ] F-3 — gap.\n- [x] F-2 — done.\n")
+        commit = f'git commit docs/plans/features/f.md -m "Add x" -m "{CO_AUTHOR}"'
+        self.assertDenied(self.bash(commit), "git commit with paths ignores the index")
+        self.assertDenied(self.bash(f'git commit -q -m "Add x" -m "{CO_AUTHOR}" -- docs/plans/features/f.md 2>&1 | tail -3'), "ignores the index")
+        self.assertDenied(self.bash(f'git commit -q -m "Add x\n\n{CO_AUTHOR}" docs/plans/features/f.md'), "ignores the index")
+        self.assertDenied(self.bash(f'git commit -qam "Add x\n\n{CO_AUTHOR}" docs/plans/features/f.md'), "ignores the index")
+        both = f'git commit docs/plans/features/f.md docs/plans/features/f.closed.md -m "Add x" -m "{CO_AUTHOR}"'
+        self.assertAllowed(self.bash(both))
+
+    def test_commit_with_paths_is_allowed_when_nothing_else_is_staged(self):
+        self.docs_repo()
+        (self.repo / "docs" / "notes.md").write_text("changed\n")
+        self.assertAllowed(self.bash(f'git commit docs/notes.md -m "Add x" -m "{CO_AUTHOR}"'))
+        self.assertEqual(self.staged(), [])
+
     def test_commit_rejects_staged_binary_files(self):
         (self.repo / "dump.raw").write_bytes(b"\0\1\2")
         git(self.repo, "add", "dump.raw")
@@ -155,6 +212,130 @@ class HookTest(unittest.TestCase):
         self.assertAllowed(self.hook("pre-tool", {"cwd": str(self.repo), "tool_input": {"file_path": str(tree / "src" / "a.cpp")}}))
         self.assertEqual(os.readlink(tree / "artifacts"), str(self.repo / "artifacts"))
         self.assertAllowed(self.hook("pre-tool", {"cwd": str(tree), "tool_input": {}}))
+
+    def worktree(self):
+        (self.repo / "artifacts" / "oracle" / "states").mkdir(parents=True)
+        (self.repo / "artifacts" / "oracle" / "states" / "a.cst").write_text("state\n")
+        tree = self.repo / ".claude" / "worktrees" / "w"
+        (tree / "src").mkdir(parents=True)
+        (tree / "CLAUDE.md").write_text("# Rules\n")
+        return tree
+
+    def agent_bash(self, command, tree=None, **extra):
+        return self.hook("pre-bash", {"cwd": str(tree or self.repo), "tool_input": {"command": command}, "agent_id": "a1", **extra})
+
+    def test_artifacts_link_is_made_once(self):
+        tree = self.worktree()
+        make = f"ln -s {self.repo}/artifacts artifacts"
+        self.assertAllowed(self.agent_bash(make, tree))
+        self.assertFalse(os.path.lexists(tree / "artifacts"))
+        os.symlink(self.repo / "artifacts", tree / "artifacts")
+        for again in (make, f"cd {tree} && {make}", f"ln -sf {self.repo}/artifacts {tree}/artifacts", f"echo a; ln -s ../x artifacts"):
+            self.assertDenied(self.agent_bash(again, tree), "already exists here")
+        for allowed in (f"[ -e artifacts ] || {make}", f"test -e artifacts || {make}", f"ln -sfn {self.repo}/artifacts artifacts",
+                        f"ln -s {self.repo}/artifacts other", f"ln -s {self.repo}/artifacts", "grep ln artifacts"):
+            self.assertAllowed(self.agent_bash(allowed, tree))
+        self.assertFalse(os.path.lexists(self.repo / "artifacts" / "artifacts"))
+
+    def test_agents_never_delete_from_the_main_artifacts(self):
+        tree = self.worktree()
+        os.symlink(self.repo / "artifacts", tree / "artifacts")
+        denied = [f"rm {A}/oracle/states/a.cst", f"rm -rf {A}/artifacts", f"unlink {A}/artifacts", f"rmdir {A}/oracle",
+                  f"mv {A}/oracle/states/a.cst /tmp/x", f"mv -t /tmp {A}/oracle/states/a.cst", f"find {A}/ -name '*.cst' -delete",
+                  f"find {A}/oracle -exec rm {{}} +", "cd artifacts && rm -f x", f"rm {self.repo}/{A}/oracle/states/a.cst",
+                  f"rm -rf {self.repo}/{A}", f"ls && rm -r {A}/oracle/states", f"bash -c 'rm {A}/rounds/x'",
+                  f"rm -r {A}/oracle/outsider", f"rm {A}/*", f"sudo rm {A}/x"]
+        for command in denied:
+            self.assertDenied(self.agent_bash(command, tree), f"main checkout's {A}/")
+        self.assertDenied(self.agent_bash(f"rm -r {self.repo}/{A}/oracle/states"), "scratch")
+        allowed = [f"rm -rf {A}/oracle/20261027-x-A-out*", f"rm -r {A}/oracle/a-out/shots", f"rm -rf {A}/scratch", f"rm {A}/scratch/a.cpp",
+                   "rm artifacts", "unlink artifacts", "rm src/a.cpp", "rm -rf build", "mv src/a.cpp src/b.cpp", f"mv /tmp/x {A}/rounds/y",
+                   "find src -name '*.o' -delete", f"find {A}/oracle -name '*.png'", "rm -f /tmp/x 2>&1 | tail -2", f"echo rm {A}/x"]
+        for command in allowed:
+            self.assertAllowed(self.agent_bash(command, tree))
+        (self.repo / "tools" / "x").write_text("x\n")
+        self.assertAllowed(self.agent_bash("rm tools/x"))
+        self.assertAllowed(self.bash(f"rm -rf {A}/oracle/states"))
+
+    def test_scratch_code_is_not_written_into_artifacts(self):
+        tree = self.worktree()
+        os.symlink(self.repo / "artifacts", tree / "artifacts")
+        for tool in ("Write", "Edit"):
+            for path in (tree / "artifacts" / "probe.cpp", self.repo / "artifacts" / "scratch" / "p.hpp", tree / "artifacts" / "x" / "p.cc",
+                         tree / "artifacts" / "p.CXX", tree / "artifacts" / "p.h"):
+                self.assertDenied(self.hook("pre-tool", {"cwd": str(tree), "tool_name": tool, "tool_input": {"file_path": str(path)}}),
+                                  "scratchpad")
+        for tool, path in (("Write", tree / "src" / "a.cpp"), ("Edit", tree / "tests" / "a_test.cpp"), ("Write", tree / "tools" / "p.hpp"),
+                           ("Write", tree / "artifacts" / "rounds" / "r.report.md"), ("Write", Path(self.tmp.name) / "scratch" / "p.cpp"),
+                           ("Read", tree / "artifacts" / "probe.cpp"), ("Grep", tree / "artifacts" / "probe.cpp")):
+            self.assertAllowed(self.hook("pre-tool", {"cwd": str(tree), "tool_name": tool, "tool_input": {"file_path": str(path)}}))
+
+    def test_scratch_code_is_not_written_into_artifacts_from_bash(self):
+        tree = self.worktree()
+        os.symlink(self.repo / "artifacts", tree / "artifacts")
+        for command in (f"cat > {A}/probe.cpp <<'EOF'\nint main() {{}}\nEOF", f"echo x >> {A}/scratch/p.hpp", f"printf x | tee {A}/p.cc",
+                        f"cp src/a.cpp {A}/b.cpp", f"cd {A} && echo x > p.h", f"g++ a.cpp 2>&1 > {self.repo}/{A}/out.cxx"):
+            self.assertDenied(self.agent_bash(command, tree), "scratchpad")
+        for command in (f"cat > {A}/notes.md <<'EOF'\nx\nEOF", f"echo x > src/a.cpp", f"g++ -o {A}/probe /tmp/p.cpp 2>&1 | tail -3",
+                        f"cat {A}/probe.cpp", f"cp {A}/probe.cpp /tmp/p.cpp", "echo x > /tmp/p.cpp"):
+            self.assertAllowed(self.agent_bash(command, tree))
+
+    def stop_fixture(self, prompt_for_agent="r-A", content_blocks=False):
+        tree = self.worktree()
+        rounds = self.repo / "artifacts" / "rounds" / "r"
+        rounds.mkdir(parents=True)
+        (rounds / "r-A.md").write_text(f"Brief\n\n3. Write your report to `{A}/rounds/r/r-A.report.md` and give the same text.\n")
+        prompt = f"You are worker {prompt_for_agent} of round r. Read your brief {rounds / 'r-A.md'} and follow it completely."
+        content = [{"type": "text", "text": prompt}] if content_blocks else prompt
+        transcript = Path(self.tmp.name) / "agent.jsonl"
+        transcript.write_text(json.dumps({"type": "user", "message": {"role": "user", "content": content}}) + "\n"
+                              + json.dumps({"type": "assistant", "message": {"role": "assistant", "content": "ok"}}) + "\n")
+        return tree, transcript, rounds / "r-A.report.md"
+
+    def stop(self, tree, transcript, **extra):
+        data = {"cwd": str(tree), "hook_event_name": "SubagentStop", "agent_id": "a1", "stop_hook_active": False, **extra}
+        if transcript:
+            data["agent_transcript_path"] = str(transcript)
+        return self.hook("subagent-stop", data)
+
+    def test_worker_stops_only_after_its_report_exists(self):
+        for blocks in (False, True):
+            tree, transcript, report = self.stop_fixture(content_blocks=blocks)
+            result = self.stop(tree, transcript)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            decision = json.loads(result.stdout)
+            self.assertEqual(decision["decision"], "block")
+            self.assertIn("r-A.report.md", decision["reason"])
+            report.write_text("")
+            self.assertEqual(json.loads(self.stop(tree, transcript).stdout)["decision"], "block")
+            report.write_text("r-A: DONE\n")
+            self.assertAllowed(self.stop(tree, transcript))
+            report.unlink()
+            shutil.rmtree(self.repo / "artifacts")
+            shutil.rmtree(self.repo / ".claude")
+
+    def test_a_second_stop_is_let_through(self):
+        tree, transcript, _ = self.stop_fixture()
+        result = self.stop(tree, transcript, stop_hook_active=True)
+        self.assertEqual((result.returncode, result.stdout), (0, ""))
+        self.assertIn("blocked once already", result.stderr)
+
+    def test_unidentifiable_agents_are_never_blocked(self):
+        tree, transcript, _ = self.stop_fixture()
+        self.assertAllowed(self.stop(self.repo, transcript))
+        self.assertAllowed(self.stop(tree, None))
+        self.assertAllowed(self.stop(tree, Path(self.tmp.name) / "missing.jsonl"))
+        planner = Path(self.tmp.name) / "planner.jsonl"
+        planner.write_text(json.dumps({"type": "user", "message": {"role": "user", "content": "Find the callers of X."}}) + "\n")
+        self.assertAllowed(self.stop(tree, planner))
+        broken = Path(self.tmp.name) / "broken.jsonl"
+        broken.write_text("not json\n")
+        self.assertAllowed(self.stop(tree, broken))
+        (self.repo / "artifacts" / "rounds" / "r" / "r-A.md").write_text("Brief without a report line\n")
+        self.assertAllowed(self.stop(tree, transcript))
+        (self.repo / "artifacts" / "rounds" / "r" / "r-A.md").unlink()
+        self.assertAllowed(self.stop(tree, transcript))
+        self.assertAllowed(self.hook("subagent-stop", {"cwd": 5, "agent_transcript_path": 7}))
 
     def post_edit(self, path):
         return self.hook("post-edit", {"cwd": str(self.repo), "tool_input": {"file_path": str(path)}})

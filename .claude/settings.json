@@ -14,6 +14,11 @@
         "hooks": [{"type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/claude_hooks.py\" pre-tool", "timeout": 10}]
       }
     ],
+    "SubagentStop": [
+      {
+        "hooks": [{"type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/claude_hooks.py\" subagent-stop", "timeout": 10}]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Edit|Write",

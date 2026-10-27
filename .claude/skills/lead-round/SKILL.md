@@ -107,6 +107,7 @@ The worker's report is short. Its details are in `artifacts/rounds/<round>/<roun
    **A combined reviewer answers `SPLIT`** when the branch is bigger than it looked. Then launch the two separate reviewers. If its reason is new reverse engineering, the code reviewer runs on Opus.
 3. Each verdict is `PASS`, `FIXED` or `RETURN`, in at most 25 lines.
    - **`RETURN`:** send the worker the reviewer's "Return" list unchanged with `SendMessage`, plus any "Docs follow-ups" from the code reviewer. The worker knows best how its own fix changes the docs. When the worker replies, resume the reviewer that returned, and the docs reviewer as well if the worker changed docs. Each one checks only the returned points and the new commits in its own area.
+   - **One agent commits to a branch at a time:** resume a worker with `SendMessage` only after every reviewer of its branch has reported. Reviewers commit quick fixes to the same worktree, and two agents committing there lose each other's staged files.
    - **Second `RETURN` for the same branch:** stop and ask the user. Show them both lists.
    - **"Docs follow-ups" with a `PASS` or `FIXED` code verdict:** pass them to the docs reviewer. Resume it if it has already finished.
 4. When every reviewer of the branch reports `PASS` or `FIXED`, merge.

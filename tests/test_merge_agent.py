@@ -1,3 +1,5 @@
+import contextlib
+import io
 import re
 import subprocess
 import sys
@@ -14,6 +16,10 @@ def run_script(cwd: Path, *args: str) -> subprocess.CompletedProcess:
 
 def git(cwd: Path, *args: str) -> None:
     subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True)
+
+
+def output(cwd: Path, *args: str) -> str:
+    return subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True, text=True).stdout
 
 
 class MergeAgentTest(unittest.TestCase):
@@ -98,6 +104,48 @@ class MergeAgentTest(unittest.TestCase):
         self.assertIn("docs/plans/features/f.closed.md", staged)
         self.assertEqual((features / "f.md").read_text(), "- [ ] F-1 open\n")
 
+    def add_worktree(self, name: str, reason: str | None) -> Path:
+        scratch = tempfile.TemporaryDirectory()
+        self.addCleanup(scratch.cleanup)
+        tree = Path(scratch.name) / name
+        git(self.repo, "worktree", "add", "-q", "-b", name, str(tree))
+        (tree / "artifacts").symlink_to(self.repo)
+        if reason is not None:
+            git(self.repo, "worktree", "lock", "--reason", reason, str(tree))
+        return tree
+
+    def test_agent_locked_worktree_is_unlocked_and_removed_with_its_branch(self) -> None:
+        sys.path.insert(0, str(SCRIPT.parent))
+        import merge_agent
+
+        tree = self.add_worktree("tree-a", "claude agent agent-x (pid 1 start 2)")
+        merge_agent.remove_worktree_and_branch(self.repo, "tree-a")
+        self.assertFalse(tree.exists())
+        self.assertNotIn("tree-a", output(self.repo, "branch", "--list"))
+        self.assertTrue((self.repo / "a.txt").is_file())
+
+    def test_unlocked_worktree_is_removed(self) -> None:
+        sys.path.insert(0, str(SCRIPT.parent))
+        import merge_agent
+
+        tree = self.add_worktree("tree-b", None)
+        merge_agent.remove_worktree_and_branch(self.repo, "tree-b")
+        self.assertFalse(tree.exists())
+        self.assertNotIn("tree-b", output(self.repo, "branch", "--list"))
+
+    def test_foreign_lock_keeps_worktree_and_branch_with_leftover_commands(self) -> None:
+        sys.path.insert(0, str(SCRIPT.parent))
+        import merge_agent
+
+        tree = self.add_worktree("tree-c", "on a usb stick")
+        captured = io.StringIO()
+        with contextlib.redirect_stderr(captured):
+            merge_agent.remove_worktree_and_branch(self.repo, "tree-c")
+        self.assertTrue(tree.is_dir())
+        self.assertIn("tree-c", output(self.repo, "branch", "--list"))
+        self.assertIn(f"warning: worktree {tree} is locked (on a usb stick)", captured.getvalue())
+        self.assertIn(f"git worktree remove --force {tree} && git branch -D tree-c", captured.getvalue())
+
     def test_forbidden_matches_build_directories_only(self) -> None:
         sys.path.insert(0, str(SCRIPT.parent))
         import merge_agent
@@ -165,10 +213,6 @@ class MergeAgentTest(unittest.TestCase):
         self.assertEqual(target.read_text(), "from main\n")
         left = subprocess.run(["git", "diff", "--name-only", "--diff-filter=U"], cwd=self.repo, text=True, capture_output=True).stdout
         self.assertEqual(left, "")
-
-
-def output(cwd: Path, *args: str) -> str:
-    return subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True, text=True).stdout
 
 
 class SyncTest(unittest.TestCase):

@@ -48,6 +48,7 @@ ARTIFACT_EXEMPTIONS = [
     ("CLAUDE.md", RULE_FOLDERS, "the rule names the local folders"),
     (".claude/skills/lead-round/*", RULE_FOLDERS, "the skill names the local round and oracle folders"),
     (".claude/skills/lead-round/evals/evals.json", r"rounds/20261020-buildit/20261020-buildit-[BC]\.md", "made-up round in an eval prompt"),
+    ("tools/claude_hooks.py", RULE_FOLDERS + r"|rounds/\[\\w\.-\]\+/\[\\w\.-\]\+\\\.report\\\.md", "names the local folders its deletion rule protects and the report files it waits for"),
     ("tests/test_claude_hooks.py", r"rounds/20261026-hooks/20261026-hooks-A\.md", "made-up round brief in a hook test"),
     ("tools/round_log.py", r"rounds", "looks whether a local round folder already has the new name"),
     ("tests/test_round_log.py", r"rounds/20261019-docs", "a round folder the test makes in a temporary directory"),

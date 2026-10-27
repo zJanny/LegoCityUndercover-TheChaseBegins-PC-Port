@@ -14,7 +14,8 @@ You are worker {{agent}} of round {{round}} of the PC port of *LEGO City Underco
   - the feature files you touch: {{feature files, with sizes; say which are near 16 KB and must be split first}}
   - [optional: linux-port] `docs/re/oracle.md` before any emulator use
   - [optional: other plans] the spec entries this package implements: {{docs/design links}}
-- **First command, in your worktree root:** `ln -s {{main}}/artifacts artifacts`
+- **First command, in your worktree root:** `[ -e artifacts ] || ln -s {{main}}/artifacts artifacts` (the guard matters: a pre-tool hook may have made the link already, and a second `ln -s` would create a stray link inside the user's `artifacts/`)
+- **Scratch code goes to the scratchpad directory of your system prompt, never to `artifacts/`** (it is shared with the user and the lead; a hook denies `.cpp`/`.hpp` writes there). Never delete anything in the main checkout's `artifacts/` except your own `artifacts/oracle/{{agent}}-out` folders and `artifacts/scratch/`; for anything else ask `main` with `SendMessage`.
 - **Graphify is your first action after reading.** The graph is only in the main checkout. Start with these queries, list every query you ran in your report, and check each answer against the source:
   {{2 to 4 lines: `graphify query "<q>" --graph {{main}}/graphify-out/graph.json`}}
 - [optional: linux-port] **Faithfulness:**
@@ -74,7 +75,7 @@ Port as far as you get, in this order: {{ordered goals}}. Anything left becomes 
    - `python3 tools/priority_report.py --update docs/plans/priorities.md`
    - `python3 tools/check_doc_links.py --fix`
 2. Run the full `ctest`, slow tests included (most checks of chase-game output are `slow`), and the Python unittests.
-3. Write your report to `artifacts/rounds/{{round}}/{{agent}}.report.md` (through your artifacts link, so it lands in the main checkout), and give the same text as your final message, in **at most 25 lines**. Findings belong in `docs/re`, not in the report.
+3. Write your report to `artifacts/rounds/{{round}}/{{agent}}.report.md` (through your artifacts link, so it lands in the main checkout; a hook keeps you from stopping before it exists), and give the same text as your final message, in **at most 25 lines**. Findings belong in `docs/re`, not in the report.
 
 ```
 {{agent}}: DONE | PARTIAL | BLOCKED (<why, one line>)
