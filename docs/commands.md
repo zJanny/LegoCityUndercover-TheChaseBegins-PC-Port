@@ -140,6 +140,7 @@ The table lists some of the tests. `ctest --test-dir build -N` lists all of them
 | `camera-real-data` | Compares the follow camera with traces recorded from the original game (committed in `tests/data/camera/follow` for open ground and `tests/data/camera/wall` near walls); the wall traces need the RomFS and are skipped without it |
 | `camera-sweep-real-data` | Checks the camera's wall test against the sweeps recorded from the original game (committed in `tests/data/camera/sweep.csv`); needs the RomFS and is skipped without it |
 | `camera-sweep` | Checks the camera wall test on small made-up walls and boxes (no game data needed) |
+| `camera-blocker` | Checks that the camera stays where it was while the character is inside a camera blocker area, with made-up areas (no game data needed) |
 | `locomotion-real-data` | Compares the character's movement, run timer and stick-to-heading with rows recorded from the original game (kept in `tests/data/locomotion_traces.inc`); skips with code 77 if `artifacts/romfs` is missing |
 | `jump-real-data` | Compares the jump (height curve, forward speed, landing and the stand-still after it) with rows recorded from the original game (kept in `tests/data/jump_traces.inc`); skips with code 77 if `artifacts/romfs` is missing |
 | `fall-real-data` | Compares falling, landing, the ground normals and the stand-still after a landing with rows recorded from the original game (kept in `tests/data/fall_traces.inc`); skips with code 77 if `artifacts/romfs` is missing |

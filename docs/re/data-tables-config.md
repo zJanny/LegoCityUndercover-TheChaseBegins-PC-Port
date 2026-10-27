@@ -109,6 +109,7 @@ Corrected by [data-tables-config.md §2026-10-13T14:41](#ts-20261013-144113): in
 
 Corrected by [camera-follow.md §2026-10-13T14:39](camera-follow.md#ts-20261013-143958): type bit 0x100 has a reader (0x2821f8)
 Corrected by [data-tables-config.md §2026-10-13T14:41](#ts-20261013-144113): type bit 0x100 has a reader (0x2821f8)
+Corrected by [camera-records-blending.md §2026-10-27T18:35:18](camera-records-blending.md#ts-20261027-183518): a null first record takes the normal path; the Blocker pose block 0x58d42c is the camera pose of the previous update, not a fixed pose
 
 - Evidence IDs: record picker 0x1d34ac ev_a69314f3…; volume filter 0x20bf6c ev_4b20c0b7…; overlap dedupe 0x1aa734 ev_8bf13740…; 0x23f50c ev_a62a1112…; pose blend 0x298cd8 ev_02030dc2…; blend set-up 0x19b8c8 ev_578623fa…; XZ distance 0x22b62c ev_2829763a….
 - **Selection (0x1d34ac(point, out_records, out_weights, max))**:

@@ -17,7 +17,7 @@ IN_PROGRESS, updated 2026-10-15T09:38:42+02:00. The director camera runs: StartD
 ## 4. Stand-ins
 
 - SCRIPT-S11 `StartDCamTrack` looks at the placement position of the object (the live position for the player), not at its node matrix times the offset at entity +0x60 (0x221a1c, 0x250da8). needs: SCRIPT-48. evidence: [dcam.md §2026-10-14T14:36](../../re/dcam.md#ts-20261014-143600)
-- SCRIPT-S12 `SnapCamera` runs the reset 0x2313c8 with argument 0 through `FollowCamera::snap` (ray branch, CAMERA-10). The camera-bound pose of CAMERA-S5 is not applied.
+- SCRIPT-S12 `SnapCamera` runs the reset 0x2313c8 with argument 0 through `FollowCamera::snap` (ray branch, CAMERA-10).
 - SCRIPT-S271 `ShakeScreen` draws its random numbers from `breakRandomStandIn`, the port's stand-in stream; the seed and the other users of the original's one generator are not known. evidence: [dcam.md §2026-10-19T15:09:12](../../re/dcam.md#ts-20261019-150912)
 - SCRIPT-S13 `Set3DFocusObject` does nothing (stereoscopic focus, no mono effect expected). evidence: [dcam.md §2026-10-14T14:36](../../re/dcam.md#ts-20261014-143600)
 - SCRIPT-S142 A held character only loses its AI move (its other updates, the animation included, still run); the original's control routine 0x29bf30 zeroes held / press / heading and runs nothing else of the controller. needs: SCRIPT-182. evidence: [dcam.md §2026-10-15T09:37](../../re/dcam.md#ts-20261015-093712)

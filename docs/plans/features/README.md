@@ -11,7 +11,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | [player-traversal-pole](player-traversal-pole.md) | IN_PROGRESS | TRAV-11 entry from the air; TRAV-13 walk-in touch; TRAV-15 sounds (pole ported) |
 | [player-traversal-rails](player-traversal-rails.md) | IN_PROGRESS | TRAV-27 bar variants; TRAV-28 hang offset; TRAV-31 other corner direction; TRAV-42..45 acrobat pole leftovers (rails and flag poles ported) |
 | [player-traversal-ladders](player-traversal-ladders.md) | IN_PROGRESS | TRAV-58 entry from the air, furled ladders; TRAV-59 exit collision; TRAV-60 clip restart, hidden weapons, camera; TRAV-61 oracle check of the sounds (ladders ported) |
-| [camera](camera.md) | IN_PROGRESS | CAMERA-51 parked car after the hand-back; CAMERA-3 multi-record weights, Blocker pose; CAMERA-2 characters and vehicles not registered |
+| [camera](camera.md) | IN_PROGRESS | CAMERA-55 police car after PositionObject at the hand-back; CAMERA-3 multi-record weights; CAMERA-2 characters and vehicles not registered |
 | [collision](collision.md) | IN_PROGRESS | COLL-1 broad phase stand-in; COLL-2 constructors missing (vehicles, characters) |
 | [animation-characters](animation-characters.md) | IN_PROGRESS | ANIM-3 blending; ANIM-10 slot bookkeeping; ANIM-11 model folders |
 | [input](input.md) | DONE (lab, mapping) | INPUT-2 readers of input slots 16/17 |

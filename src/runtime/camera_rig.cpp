@@ -46,7 +46,8 @@ float fadeCurve(float progress) { return progress * progress * (3.0f - 2.0f * pr
 CameraRig::CameraRig(const assets::Level& level, const std::string& camText) : records_(level, camText), selector_(records_) {}
 
 RecordPose CameraRig::entryPose(const Entry& entry, const float target[3]) const {
-    if (entry.kind == Entry::Kind::Record) return evaluateRecordPose(records_, entry.set, target);
+    if (entry.kind == Entry::Kind::Record)
+        return blocksCamera(records_, entry.set) ? blocker_.pose() : evaluateRecordPose(records_, entry.set, target);
     if (entry.kind == Entry::Kind::Director) return directorPose_;
     RecordPose pose;
     for (int a = 0; a < 3; ++a) {
@@ -116,6 +117,7 @@ void CameraRig::reset(const float target[3], float yaw, float facing) {
     entry.pose = entryPose(entry, target);
     stack_.push_back(entry);
     output_ = entry.pose;
+    blocker_.capture(output_);
 }
 
 void CameraRig::setDirector(const RecordPose& pose, std::vector<DirectorRequest> requests) {
@@ -215,6 +217,7 @@ void CameraRig::update(const FollowCameraInput& input) {
     }
     output_.fovDegrees = combined.fovDegrees;
     output_.offset3d = lerp(output_.offset3d, combined.offset3d, eyeFilter_.current);
+    blocker_.capture(output_);
 }
 
 float CameraRig::verticalFieldOfView() const { return FollowCamera::verticalFieldOfView(output_.fovDegrees); }

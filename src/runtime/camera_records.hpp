@@ -8,9 +8,10 @@
 // level's Room record is the only record and the follow controller 0x2a8bfc runs; in every other case the camera is the
 // record pose 0x298cd8 and the shoulder buttons do not turn it.
 //
+// The pose of a Blocker record is the last camera pose (camera_blocker.hpp).
+//
 // Not recovered: the order in which the spatial structure at 0x598300 returns the records (level order is used), the
-// fixed pose of a Blocker record (0x58d42c), the shake
-// (0x1c607c), the second follow target, the byte 0x3770c8 and the counter 0x3770e0 (both read as 0) and movement of the
+// shake (0x1c607c), the second follow target, the byte 0x3770c8 and the counter 0x3770e0 (both read as 0) and movement of the
 // matrices that carry bounds (stand-in CAMERA-S4: static).
 #include "assets/assets.hpp"
 #include <array>

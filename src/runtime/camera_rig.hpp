@@ -6,6 +6,7 @@
 // record's Filters bytes, 0x19b8c8 / 0x21a538). While the record pose is the top command the follow controller does
 // not take the shoulder buttons, so they do not turn the camera (0x217b14 returns 0 and the HUD shows UI_CameraLocked
 // on a press). No SDL dependency.
+#include "runtime/camera_blocker.hpp"
 #include "runtime/camera_records.hpp"
 #include "runtime/dcam.hpp"
 #include "runtime/follow_camera.hpp"
@@ -88,6 +89,7 @@ private:
     CameraRecordSelector selector_;
     std::vector<Entry> stack_;  // front = newest command
     RecordPose output_;
+    CameraBlockerPose blocker_;
     float eyeShake_[3] = {0, 0, 0};
     mutable float shakenEye_[3] = {0, 0, 0};
     RecordPose directorPose_;

@@ -12,7 +12,8 @@ Camera records, the record pose blend, the camera lock and the command stack wit
 - Lock scope is tied to the camera bounds, not to rooms: the police station is locked in about 99 percent of its walkable cells; census table per level in the entry. [§2026-10-14T10:44:00](#ts-20261014-104400)
 - Command stack (capacity 4): pushing fades the weights by curve 5 (smoothstep) over the mean record BlendTime (record path) or 0.5 s (follow path); the oldest two entries are merged when full (0x2c584c). [§2026-10-14T12:07:46](#ts-20261014-120746)
 - Pose filter 0x2a00dc: `out += (new - out) * factor` per update; record bytes +0x4c / +0x4d give factors (1 - 0.02 byte)^2, byte 0 gives 0.3. `CameraRig` replays the lobby walk to about 6e-6. [§2026-10-14T12:07:46](#ts-20261014-120746)
-- Open: multi-record poses against the oracle (CAMERA-3), the follow controller's seed and jump reaction after a hand-over (CAMERA-9), Blocker pose, shake, writer of byte 0x3770c8, query order of the spatial structure.
+- Blocker records (first record of the set with byte +0x4b) take the camera's filtered pose of the previous update, which 0x181fe0 copies to 0x58d42c after every camera update; the camera stays still inside the volume. Two shipped records: lvl_04 `CameraBound_Blocker`, lvl_07 `CameraBound_7-9_Blocker`. [§2026-10-27T18:35:18](#ts-20261027-183518)
+- Open: multi-record poses against the oracle (CAMERA-3), the follow controller's seed and jump reaction after a hand-over (CAMERA-9), shake, writer of byte 0x3770c8, query order of the spatial structure.
 
 <a id="ts-20261013-231343"></a>
 
@@ -136,3 +137,23 @@ Moved from the feature files so that the items stay short (CLAUDE.md, "Documenta
 
 - **CAMERA-3** (camera.md): Record selection, record pose, fade and pose filter are in; open: the multi-record weights and pose against the oracle (the lobby has no overlapping records; needs a place with two overlapping records and a free player), Blocker pose, shake, query order, pitch clamp and other presets. evidence: [camera.md §2026-10-14T10:44](#ts-20261014-104400), [camera-follow.md §2026-10-13T14:39](camera-follow.md#ts-20261013-143958).
 - **CAMERA-9** (camera.md): The follow controller in a fade: its seed when it takes over from a record pose (original about 4.6 m behind the player, y player + 2.0), its reaction to a large jump of the player and the factor ramp 0.1 of 0x1b4864 are not reproduced, so the poses of the street hand-over replay only match late (CAMERA-S5). Needs the follow controller with collision in the test and a walked (not teleported) hand-over. evidence: [camera.md §2026-10-14T12:07](#ts-20261014-120746).
+
+<a id="ts-20261027-183518"></a>
+
+## 2026-10-27T18:35:18+01:00 — Blocker records keep the last camera pose: 0x298cd8 head and the snapshot 0x181fe0 (CAMERA-3, CAMERA-S5; llvm-objdump of `game.arm.elf`, level data census, no emulator; 20261027-graphics-E)
+
+[Corrects data-tables-config.md §2026-10-13T09:32](data-tables-config.md#ts-20261013-0932): a null first record does not take the fixed pose, and the pose block is not fixed but the last camera pose.
+
+**Head of 0x298cd8.** `ldr r0, [r1, #0x10]` (first record of the blend block), `ldrbne r0, [r0, #0x4b]` (Blocker byte), and only when both are non-zero (0x298cf0..0x298d00) the routine copies the 0x3c-byte block at 0x58d42c (base 0x58d408 + 0x24, literal 0x2990dc) into the command's pose: eight words to out+0x00..0x1c, four to out+0x20..0x2c, the pair 0x58d45c / 0x58d460 to out+0x30 / 0x34 (`ldrd` / `strd`) and 0x58d464 to out+0x38; it returns 0 without reading the target. A null first record takes the normal path.
+
+**Writer of 0x58d42c.** 0x181fe0 is slot +0x10 of the gameplay camera object 0x377110 (data image: +0x00 0x1984e8, +0x04 0x1984e4, +0x08 0x1b4a30, +0x0c 0x217b04, +0x10 0x181fe0), which the manager update 0x23f174 calls at 0x23f288 after the stack update 0x1cf0b8, so once per camera update after the pose filter. It takes the camera object C from 0x226a40 (`*(0x376870 + 0x14)`), runs 0x2821f8(first record of 0x58d880, C+0x10, C+0x4c, `*(0x58d468 + 0x244)`) unless the record count byte 0x3770cb is 1 and that record is a Room record (+0x4e), and then copies C+0x4c..0x6b (eight floats) to 0x58d42c and C+0x6c..0x87 (seven floats) to 0x58d44c. No other code writes the block (literal 0x58d408 at 0x18205c, 0x2990dc and the static initialiser 0x34b3cc only). So a Blocker record's command pose is the camera's filtered pose of the previous update: the camera stops where it was when the Blocker volume took over, and stays there while the player is inside (the snapshot of the unchanged output is the same pose again). The fade (BlendTime) and filter bytes of the Blocker record still apply as for any record pose.
+
+**0x2821f8 with shipped data.** It moves the shift 0x377100 / 0x377104 towards a target only for record Type bits 0x100 or 0x200 (and a non-null `*(0x58d468 + 0x244)`), otherwise it lerps the shift towards 0 by 0.06 and adds it to eye and look x / z. The census of all `.cam` blocks of lvl_00..lvl_07 finds Type 256 only in the Room blocks room34, room42 and room49 of lvl_07 and no 0x200; a Room record reaches 0x2821f8 never (it is the only record whenever it is chosen), so the shift stays 0 in every shipped level and the port does not model it.
+
+**Blocker records in the level data** (census of the `Camera*` bounds through `CameraRecords`, all eight main levels): lvl_04 `CameraBound_Blocker` (box on a node, translation (1110.94, 81.2953, -1387.39), half extents (13.939, 6.4024, 21.0218), `.cam` block Type 0, BlendTime 0.85, Filters 32 28) and lvl_07 `CameraBound_7-9_Blocker` (box at (-1079.04, -174.126, 844.562), half extents (29.2873, 6.1711, 18.2339), no `.cam` block). No other level has one; 88 bounds are Focus records.
+
+**Port.** `src/runtime/camera_blocker.*` (`blocksCamera`, `CameraBlockerPose`): `CameraRig` returns the stored pose for a record command whose first record is a Blocker and stores its output pose at the end of every update. Two port choices, not read from the original (CAMERA-S53): `CameraRig::reset` also stores the output pose, and a rig that has not run yet holds the zero pose (the original's static block 0x58d42c, initialised by 0x34b3cc, is presumably zero too; not verified). Tests `camera-blocker` (made-up bounds: the camera keeps its pose exactly while the target moves through the Blocker volume, and moves again in an ordinary record) and `camera-records-real-data` (both shipped Blocker records win alone at their volume centre).
+
+Unknowns:
+- The Blocker pose was not compared with the oracle (no save state near either Blocker volume).
+- The pose words out+0x0c..0x20 and +0x34 that the copy also carries are not modelled by the port's pose.

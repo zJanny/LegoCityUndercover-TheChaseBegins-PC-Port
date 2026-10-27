@@ -1,6 +1,7 @@
 // Camera record selection and record pose on real level data against what the original game showed in the Azahar oracle
 // (docs/re/camera.md). Needs the extracted RomFS; exits with 77 (skipped) when it is missing.
 #include "assets/assets.hpp"
+#include "runtime/camera_blocker.hpp"
 #include "runtime/camera_records.hpp"
 #include <cmath>
 #include <filesystem>
@@ -64,6 +65,25 @@ int main(int argc, char** argv) {
         const float outside[3] = {900.5491333007812f, 16.567216873168945f, 1110.280029296875f};
         CameraRecordSelector streetSelector(streetRecords);
         require(streetSelector.update(outside) == CameraCommand::Follow, "the street selects the follow controller");
+
+        // Provenance: the two bounds named "*Blocker*" of the shipped levels (level data, census of 20261027-graphics-E,
+        // 2026-10-27); the point is the volume centre (lvl_04: node translation, lvl_07: bound centre).
+        const struct {
+            const char* level;
+            const char* record;
+            float point[3];
+        } blockers[] = {
+            {"levels/levels/lvl_04_fortmeadows/lvl_04_fortmeadows_main.blvl", "CameraBound_Blocker", {1110.94f, 81.2953f, -1387.39f}},
+            {"levels/levels/lvl_07_downtown/lvl_07_downtown_main.blvl", "CameraBound_7-9_Blocker", {-1079.04f, -174.126f, 844.562f}},
+        };
+        for (const auto& blocker : blockers) {
+            assets::Level level;
+            const CameraRecords records = load(archive, blocker.level, level);
+            const CameraRecordSet set = queryCameraRecords(records, blocker.point);
+            require(set.records.size() == 1 && set.records[0] != kRoomRecord && records.records()[std::size_t(set.records[0])].name == blocker.record,
+                    std::string("the Blocker record wins alone: ") + blocker.record);
+            require(blocksCamera(records, set), std::string("the Blocker pose applies: ") + blocker.record);
+        }
     } catch (const std::exception& error) {
         std::cerr << error.what() << '\n';
         return 1;
