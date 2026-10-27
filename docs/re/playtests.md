@@ -8,7 +8,7 @@ What the user saw when playing `chase-game` against their knowledge of the origi
 - Mission 1-3: the ladder to the roof is not fully visible in the port. [§2026-10-19T18:02:53](#ts-20261019-180253)
 - Mission 1-3: the ladder now draws but cannot be climbed. [§2026-10-19T20:23:38](#ts-20261019-202338)
 - The zipline poles can be walked through in the port. [§2026-10-19T20:15:35](#ts-20261019-201535)
-- The handcuffs Chase hangs from on the zipline are not drawn (user report; cause: [player-traversal.md §2026-10-19T20:23:05](player-traversal.md#ts-20261019-202305)).
+- The handcuffs Chase hangs from on the zipline were not drawn (user report; cause: [player-traversal.md §2026-10-19T20:23:05](player-traversal.md#ts-20261019-202305)); they are drawn now ([hand-items.md §2026-10-27T18:27:37](hand-items.md#ts-20261027-182737)), not yet re-checked by the user.
 - Mission 1-3: the key to pick up could not be picked up in the port, so the mission stopped at its first step. [§2026-10-25T13:56:15](#ts-20261025-135615) The port now picks it up; where the user's save state stands (1.71 from the key) A does nothing in the original either, the key's zone ends about 0.6 closer. [carrying.md §2026-10-25T14:37:21](carrying.md#ts-20261025-143721)
 
 <a id="ts-20261019-175641"></a>

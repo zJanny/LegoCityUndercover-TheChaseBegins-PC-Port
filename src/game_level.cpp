@@ -310,7 +310,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     if (player) game_carry::applyClipTimings(carry, *player);
     std::cout << "carry objects: " << carry.objects().size() << ", carry targets: " << carry.targets().size() << '\n';
     loadDetective(archive);
-    handItems.load(archive, scene);
+    handItems.load(archive);
     useSpots.load(level, classOf);
     loadUseMarkers(archive);
     loadSwitches(archive);

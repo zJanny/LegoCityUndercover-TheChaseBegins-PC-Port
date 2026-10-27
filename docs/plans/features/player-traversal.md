@@ -6,7 +6,7 @@ The climbing and sliding moves of the player: zipline and tightrope (object type
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-18T16:38:10+02:00. Ported in `chase-game` from the original, with values pinned against the user's mission 1-2 states: the zipline (grab from a jump, use press at the high anchor, Get On, Slide, Dismount, fall), the pole and drain pipe (walk-in and A-press mount, climb up and down, A / B / bottom exits, dismount at the top), the climbing bricks (grab, hang, reach, jump to the adjacent brick, drop, jump off) and the rails (grab, arrival, hang, shuffle, the corner rail onto the next rail, A drop, B jump off). The player step chains them: rails around bricks around the pole around the usual step, so the jump off the last brick grabs the rail as in the original. The free climb wall (not on the mission route) is not ported.
+IN_PROGRESS, updated 2026-10-27T18:29:07+01:00 (the zipline's handcuffs are drawn, TRAV-56 closed). Ported in `chase-game` from the original, with values pinned against the user's mission 1-2 states: the zipline (grab from a jump, use press at the high anchor, Get On, Slide, Dismount, fall), the pole and drain pipe (walk-in and A-press mount, climb up and down, A / B / bottom exits, dismount at the top), the climbing bricks (grab, hang, reach, jump to the adjacent brick, drop, jump off) and the rails (grab, arrival, hang, shuffle, the corner rail onto the next rail, A drop, B jump off). The player step chains them: rails around bricks around the pole around the usual step, so the jump off the last brick grabs the rail as in the original. The free climb wall (not on the mission route) is not ported.
 
 ## 3. Verified behaviour
 
@@ -50,11 +50,12 @@ IN_PROGRESS, updated 2026-10-18T16:38:10+02:00. Ported in `chase-game` from the 
 - [ ] TRAV-10 — The hanging pose on the line (clip root against the line point) is not compared with the original's picture. evidence: [player-traversal.md §2026-10-18T14:52:30](../../re/player-traversal.md#ts-20261018-145230)
 - [ ] TRAV-54 — The poles of the tightrope anchors (`props/parkour_tightrope`, 4 in lvl_01) are drawn at `initialorientation`; the link 0x19b074 would turn them towards their target. needs: TRAV-48. uses: parkour_tightrope. evidence: [player-traversal.md §2026-10-19T18:16:50](../../re/player-traversal.md#ts-20261019-181650)
 - [ ] TRAV-55 — The zipline poles (`props/parkour_zipline` anchors) can be walked through in `chase-game` (user report); in the original they are solid. Where their collision comes from is not read. uses: parkour_zipline. evidence: [playtests.md §2026-10-19T20:15:35](../../re/playtests.md#ts-20261019-201535)
-- [ ] TRAV-56 — The handcuffs Chase hangs from on the zipline (`Ability_Handcuffs`, `weap_hancuffs`, bone `weaponRight`, hand item track of the grab, slide and dismount clips) are not drawn (user report); `HandItems` loads only the glass and the scanner. Fix it generically if possible: load every object a clip's hand item track names (the original finds the object by name under the character at the event, 0x2450f0) instead of adding items to a fixed list one by one. needs: DETECT-8. evidence: [player-traversal.md §2026-10-19T20:23:05](../../re/player-traversal.md#ts-20261019-202305)
+- [ ] TRAV-63 — The handcuffs on the rope: whether they stay in the hand through the `zipline_left*` / `zipline_right*` clips (no track, the port keeps the last state) and how they sit on the line is not compared with the oracle. needs: DETECT-19. evidence: [hand-items.md §2026-10-27T18:27:37](../../re/hand-items.md#ts-20261027-182737)
 
 ## 6. Findings summary
 
 - Subtopic files: [player-traversal-pole.md](player-traversal-pole.md) (pole and drain pipe), [player-traversal-rails.md](player-traversal-rails.md) (rails, climb bars, corner rail), [player-traversal-ladders.md](player-traversal-ladders.md) (ladders).
+- The handcuffs on the zipline and every other hand item: [hand-items.md §2026-10-27T18:27:37](../../re/hand-items.md#ts-20261027-182737).
 - Zipline class, grab test, states 42..44, oracle ride and the survey of the other moves: [player-traversal.md §2026-10-18T14:52:30](../../re/player-traversal.md#ts-20261018-145230).
 - Zipline rope: [player-traversal.md §2026-10-19T08:51:31](../../re/player-traversal.md#ts-20261019-085131); fog on the rope: [player-traversal.md §2026-10-19T10:38:41+02:00](../../re/player-traversal.md#ts-20261019-103841).
 - Zipline use press is A: [player-traversal.md §2026-10-18T16:37:26](../../re/player-traversal.md#ts-20261018-163726).

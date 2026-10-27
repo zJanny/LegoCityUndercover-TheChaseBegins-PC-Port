@@ -15,42 +15,38 @@ std::string lowerCase(std::string text) {
 }
 }
 
-void HandItems::load(assets::FuseArchive& archive, render::Scene& scene) {
+void HandItems::load(assets::FuseArchive& archive) {
     const assets::FuseEntry* entry = archive.find(kPlayersLevel);
     if (!entry) return;
-    const std::vector<assets::Placement> placements = assets::placements(assets::parseLevel(archive.read(*entry)));
-    for (const char* object : {runtime::kMagnifyingGlassObject, runtime::kScannerObject}) {
-        for (const assets::Placement& placement : placements) {
-            if (lowerCase(placement.instance) != lowerCase(object)) continue;
-            const std::size_t instance = scene.instances();
-            if (!scene.addModel(assets::meshModelPath(placement.mesh))) break;
-            scene.setInstanceVisible(instance, false);
-            Item item;
-            item.object = lowerCase(object);
-            item.instance = instance;
-            items_.push_back(std::move(item));
-            break;
-        }
-    }
+    for (const assets::Placement& placement : assets::placements(assets::parseLevel(archive.read(*entry))))
+        meshes_.emplace(runtime::handItemKey(placement.instance), placement.mesh);
 }
 
 bool HandItems::shown(const std::string& object) const {
-    for (const Item& item : items_)
-        if (item.object == lowerCase(object)) return item.shown;
-    return false;
+    const runtime::HandItemState* state = set_.find(object);
+    return state && state->shown;
 }
 
-void HandItems::update(const game_player::PlayerRig& player) {
+void HandItems::ensureInstance(render::Scene& scene, const std::string& object) {
+    const std::string key = runtime::handItemKey(object);
+    if (instances_.count(key)) return;
+    const auto mesh = meshes_.find(key);
+    if (mesh == meshes_.end()) return;
+    const std::size_t instance = scene.instances();
+    if (!scene.addModel(assets::meshModelPath(mesh->second))) return;
+    scene.setInstanceVisible(instance, false);
+    instances_[key] = instance;
+}
+
+std::optional<runtime::HandItemEvent> HandItems::update(render::Scene& scene, const game_player::PlayerRig& player) {
     const assets::Animation& animation = player.animations.at(player.animation);
     const bool restarted = player.animation != previousAnimation_;
     previousAnimation_ = player.animation;
     const std::optional<runtime::HandItemEvent> event = track_.update(animation, float(player.frame / double(animation.frames)), restarted);
-    if (!event) return;
-    for (Item& item : items_) {
-        if (item.object != lowerCase(event->item.object)) continue;
-        item.shown = event->show;
-        if (event->show) item.bone = lowerCase(event->item.bone);
-    }
+    if (!event) return std::nullopt;
+    set_.apply(*event);
+    if (event->show) ensureInstance(scene, event->item.object);
+    return event;
 }
 
 // STAND-IN DETECT-S8: the item's local matrix is the bone's whole bind matrix (0x2ca88c with matrix 0 copies 0x227788's record, rotation included),
@@ -66,11 +62,13 @@ std::optional<render::Mat4> HandItems::boneWorld(const game_player::PlayerRig& p
 }
 
 void HandItems::draw(render::Scene& scene, const game_player::PlayerRig& player) const {
-    for (const Item& item : items_) {
+    for (const runtime::HandItemState& item : set_.items()) {
+        const auto instance = instances_.find(item.object);
+        if (instance == instances_.end()) continue;
         const std::optional<render::Mat4> joint = item.bone.empty() ? std::nullopt : boneWorld(player, item.bone);
         const bool visible = item.shown && joint && scene.instanceVisible(player.instance.bodyInstance);
-        scene.setInstanceVisible(item.instance, visible);
-        if (visible) scene.setTransform(item.instance, *joint);
+        scene.setInstanceVisible(instance->second, visible);
+        if (visible) scene.setTransform(instance->second, *joint);
     }
 }
 
