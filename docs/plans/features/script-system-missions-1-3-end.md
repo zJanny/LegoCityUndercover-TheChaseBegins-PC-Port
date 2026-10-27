@@ -20,8 +20,8 @@ IN_PROGRESS, updated 2026-10-26T23:04:40+01:00. From the start of `1-3_Start_Mow
 
 ## 5. Open items
 
-- [ ] SCRIPT-372 — The ledge platform `1-3_Ledge_Platform` (kind 64) cannot lift the player to the cart deck: its node rises when triggered, but SetPlatformSpeed / SetPlatformOrigin / SetPlatformTarget are not handled and the player does not ride on it; the CTest places the player on the track behind the cart instead. needs: SCRIPT-37, SCRIPT-378. uses: SetPlatformSpeed, SetPlatformTarget. evidence: [props-rocking.md §2026-10-26T13:39:27](../../re/props-rocking.md#ts-20261026-133927).
-- [ ] SCRIPT-382 — Oracle check of the push cart (the grab, the 6 blend updates, the moves and the update of `1-3_Push_Done`) and of the end sequence of `1-3_Start_Rescue_Lawnmower_man` (the crane animation, the player's bridge jump, the camera shots); needs a save state in front of the built push cart. evidence: [pushables.md §2026-10-26T23:04:40](../../re/pushables.md#ts-20261026-230440).
+- [ ] SCRIPT-372 — The ledge platform `1-3_Ledge_Platform` (kind 64) cannot lift the player to the cart deck: its node rises when triggered, but SetPlatformSpeed / SetPlatformOrigin / SetPlatformTarget are not handled and the player does not ride on it; the CTest places the player on the track behind the cart instead; save states on the lift trigger and near its top exist. needs: SCRIPT-37, SCRIPT-378. uses: SetPlatformSpeed, SetPlatformTarget. evidence: [props-rocking.md §2026-10-26T13:39:27](../../re/props-rocking.md#ts-20261026-133927).
+- [ ] SCRIPT-382 — Oracle check of the push cart (the grab, the 6 blend updates, the moves and the update of `1-3_Push_Done`) and of the end sequence of `1-3_Start_Rescue_Lawnmower_man` (the crane animation, the player's bridge jump, the camera shots); a save state in front of the built push cart, one with the cart crashed into the box and one at the crane trigger now exist. evidence: [pushables.md §2026-10-26T23:04:40](../../re/pushables.md#ts-20261026-230440).
 
 ## 6. Findings summary
 

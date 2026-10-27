@@ -19,7 +19,7 @@ IN_PROGRESS, updated 2026-10-26T22:58:23+01:00. The create, the post-link (`Obje
 
 ## 5. Open items
 
-- [ ] SCRIPT-377 — The rest of the platform class: path platforms (the spline of `Platform_Path`, the lawnmowers of mission 1-3), `orient` and type 7 rotations, the shape curves, the lift timers and state 1, the speed counters, sounds and messages 41. blocks: SCRIPT-S301, SCRIPT-S302. uses: props/prop_platform, leprops/leprop_platform. evidence: [props-rocking-platforms.md §2026-10-26T22:54:42](../../re/props-rocking-platforms.md#ts-20261026-225442).
+- [ ] SCRIPT-377 — The rest of the platform class: path platforms (the spline of `Platform_Path`, the lawnmowers of mission 1-3, which the user saw move wrong in the port), `orient` and type 7 rotations, the shape curves, the lift timers and state 1, the speed counters, sounds and messages 41. blocks: SCRIPT-S301, SCRIPT-S302. uses: props/prop_platform, leprops/leprop_platform. evidence: [props-rocking-platforms.md §2026-10-26T22:54:42](../../re/props-rocking-platforms.md#ts-20261026-225442).
 - [ ] SCRIPT-378 — Nothing rides on a moving platform: the entity move's sweep (push, squash, HardTarget) and the character's ground entity are not read, so the player stays behind when `1-3_Ledge_Platform` rises and a platform's collision moves through characters. blocks: SCRIPT-372. evidence: [props-rocking-platforms.md §2026-10-26T22:54:42](../../re/props-rocking-platforms.md#ts-20261026-225442).
 
 ## 6. Findings summary
