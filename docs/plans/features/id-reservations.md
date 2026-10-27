@@ -8,3 +8,4 @@ Ranges of item IDs held by parallel agents, named like `20261021-audio-A`. The p
 | RENDER-S | 67 | 68 | 20261027-graphics-B | 2026-10-27T18:14:32+01:00 |
 | COLL | 23 | 25 | 20261027-graphics-G | 2026-10-27T18:45:43+01:00 |
 | COLL-S | 5 | 6 | 20261027-graphics-G | 2026-10-27T18:45:43+01:00 |
+| COLL-S | 7 | 7 | 20261027-graphics-G | 2026-10-27T19:35:23+01:00 |
