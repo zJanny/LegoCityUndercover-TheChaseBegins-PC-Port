@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 1010 open items and stand-ins, 176 linked to game usage, 834 with unknown reach.
+Items: 1011 open items and stand-ins, 176 linked to game usage, 835 with unknown reach.
 
 ## Top 50 overall
 
@@ -168,7 +168,7 @@ Items: 1010 open items and stand-ins, 176 linked to game usage, 834 with unknown
 
 ## Front end, HUD, saves
 
-14 of 180 items linked.
+14 of 181 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -221,7 +221,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [doors.md](features/doors.md): DOOR-2, DOOR-3, DOOR-4, DOOR-6, DOOR-7, DOOR-S1, DOOR-S2, DOOR-S3, DOOR-S4, DOOR-S5
 - [executable-platform.md](features/executable-platform.md): EXEC-1 (+2), EXEC-10 (+1), EXEC-2, EXEC-3, EXEC-4, EXEC-S1, EXEC-S10
 - [front-end.md](features/front-end.md): FE-3 (+10), FE-30 (+1), FE-40 (+1), FE-1, FE-2, FE-4, FE-5, FE-6, FE-7, FE-8, FE-9, FE-S1, FE-S2, FE-S3, FE-S31, FE-S32, FE-S33, FE-S4, FE-S40, FE-S41, FE-S5, FE-S6
-- [hud-ui-super-bricks.md](features/hud-ui-super-bricks.md): HUD-84 (+2), HUD-79 (+1), HUD-80 (+1), HUD-85 (+1), HUD-S74, HUD-S75, HUD-S76, HUD-S78
+- [hud-ui-super-bricks.md](features/hud-ui-super-bricks.md): HUD-84 (+2), HUD-86 (+2), HUD-79 (+1), HUD-80 (+1), HUD-85 (+1), HUD-S74, HUD-S75, HUD-S76, HUD-S78
 - [hud-ui-text.md](features/hud-ui-text.md): HUD-15, HUD-27, HUD-28, HUD-29, HUD-32, HUD-33, HUD-S15
 - [hud-ui.md](features/hud-ui.md): HUD-70 (+4), HUD-71 (+3), HUD-11 (+2), HUD-74 (+2), HUD-60 (+1), HUD-61 (+1), HUD-75 (+1), HUD-10, HUD-12, HUD-18, HUD-3, HUD-6, HUD-7, HUD-8, HUD-S1, HUD-S2, HUD-S3, HUD-S4, HUD-S6, HUD-S60, HUD-S7, HUD-S70, HUD-S71, HUD-S73
 - [input.md](features/input.md): INPUT-1, INPUT-2, INPUT-3, INPUT-S1

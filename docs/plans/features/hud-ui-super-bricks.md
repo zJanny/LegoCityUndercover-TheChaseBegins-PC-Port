@@ -28,7 +28,9 @@ IN_PROGRESS, updated 2026-10-25T11:13:08+01:00. `chase-game` shows the display a
 - [ ] HUD-79 — The icon through the HUD camera, lights and material of 0x27b3e4 (scale, light, texture slots) instead of the fit. blocks: HUD-S74. evidence: [super-bricks.md §2026-10-19T20:35:01+02:00](../../re/super-bricks.md#ts-20261019-203501)
 - [ ] HUD-80 — The font 0x3757a0, the effect of 0x235cb0 / 0x235c9c and the bounce scale of the number. blocks: HUD-S75. evidence: [super-bricks.md §2026-10-19T20:35:01+02:00](../../re/super-bricks.md#ts-20261019-203501)
 - [ ] HUD-84 — The origin of the clock-derived update count 0x241098 and whether it runs on while the game is paused or held. blocks: HUD-S76, HUD-S78. evidence: [super-bricks.md §2026-10-25T11:12:12+01:00](../../re/super-bricks.md#ts-20261025-111212)
-- [ ] HUD-85 — The two placeholders of the super build-it prompt are not drawn (sprite, model icon or both; an oracle picture must tell). needs: HUD-74. blocks: QOLBOT-8. evidence: [super-bricks.md §2026-10-25T11:12:12+01:00](../../re/super-bricks.md#ts-20261025-111212)
+- [ ] HUD-85 — The two placeholders of the super build-it prompt are not drawn. needs: HUD-74, HUD-86. blocks: QOLBOT-8. evidence: [super-bricks.md §2026-10-25T11:12:12+01:00](../../re/super-bricks.md#ts-20261025-111212)
+
+- [ ] HUD-86 — Whether the prompt's two placeholders are the sprite, the model icon or both: the oracle pictures show two turning blue bricks and do not separate them. blocks: HUD-85. evidence: [super-bricks-prompt.md §2026-10-28T23:57:17+01:00](../../re/super-bricks-prompt.md#ts-20261028-235717)
 
 ## 6. Findings summary
 
