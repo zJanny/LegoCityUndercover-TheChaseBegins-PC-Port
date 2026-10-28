@@ -56,3 +56,4 @@ One line per session, newest last; `--fix` keeps the newest 20 and moves older o
 - 2026-10-28T09:50:53+01:00 — Planner: recorded minimap and bottom-screen decisions; one new open question. See [qol-minimap](features/qol-minimap.md).
 - 2026-10-28T09:53:50+01:00 — Planner: recorded that the master state is stored; no open user decision left. See [qol-settings-menu](features/qol-settings-menu.md).
 - 2026-10-28T21:33:48+01:00 — Agent 20261028-qol-A (toggle store): built library chase_qol with the master state, feature table and strict qol.cfg, test qol-settings. See [qol-settings-menu](features/qol-settings-menu.md).
+- 2026-10-28T21:34:16+01:00 — Agent 20261028-qol-B (qol-separation guard): added the qol-separation guard test with accepting and rejecting fixtures. See [qol-settings-menu](features/qol-settings-menu.md).

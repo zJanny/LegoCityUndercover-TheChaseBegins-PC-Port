@@ -862,6 +862,23 @@ if(BUILD_TESTING)
   add_test(NAME gl-only-in-render COMMAND ${CMAKE_COMMAND} -DSRC_DIR=${CMAKE_SOURCE_DIR}/src -P ${CMAKE_SOURCE_DIR}/tools/check_gl_only_in_render.cmake)
   add_test(NAME gl-only-in-render-rejects COMMAND ${CMAKE_COMMAND} -DSRC_DIR=${CMAKE_SOURCE_DIR}/tests/gl_only_in_render/src -P ${CMAKE_SOURCE_DIR}/tools/check_gl_only_in_render.cmake)
   set_tests_properties(gl-only-in-render-rejects PROPERTIES WILL_FAIL TRUE)
+  add_test(NAME qol-separation COMMAND ${CMAKE_COMMAND} -DROOT_DIR=${CMAKE_SOURCE_DIR} -P ${CMAKE_SOURCE_DIR}/tests/qol_separation.cmake)
+  set(qolSeparationFixtures ${CMAKE_SOURCE_DIR}/tests/qol_separation_fixtures)
+  add_test(NAME qol-separation-accepts COMMAND ${CMAKE_COMMAND} -DROOT_DIR=${qolSeparationFixtures}/ok -P ${CMAKE_SOURCE_DIR}/tests/qol_separation.cmake)
+  foreach(rejection IN ITEMS
+      leak_identifier|src/runtime/leak.cpp
+      leak_chase_qol|src/runtime/leak.cpp
+      include_without_hook|src/runtime/inc.cpp
+      unlisted_hook|src/runtime/door.cpp
+      listed_without_code|src/runtime/door.cpp
+      malformed_entry|qol-settings-menu.md
+      copied_port_file|src/qol/other.cpp
+      test_leak|tests/door_test.cpp)
+    string(REPLACE "|" ";" rejectionParts "${rejection}")
+    list(GET rejectionParts 0 fixture)
+    list(GET rejectionParts 1 expected)
+    add_test(NAME qol-separation-rejects-${fixture} COMMAND ${CMAKE_COMMAND} -DROOT_DIR=${qolSeparationFixtures}/${fixture} -DGUARD=${CMAKE_SOURCE_DIR}/tests/qol_separation.cmake -DEXPECT=${expected} -P ${CMAKE_SOURCE_DIR}/tests/qol_separation_rejects.cmake)
+  endforeach()
   add_test(NAME game-cpp-wiring COMMAND ${CMAKE_COMMAND} -DGAME_CPP=${CMAKE_SOURCE_DIR}/src/game.cpp -P ${CMAKE_SOURCE_DIR}/tools/check_game_cpp_wiring.cmake)
   add_test(NAME doc-links COMMAND python3 "${CMAKE_SOURCE_DIR}/tools/check_doc_links.py" --root "${CMAKE_SOURCE_DIR}")
   add_test(NAME no-local-data COMMAND python3 "${CMAKE_SOURCE_DIR}/tools/check_local_data.py" --root "${CMAKE_SOURCE_DIR}")

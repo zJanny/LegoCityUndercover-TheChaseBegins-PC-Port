@@ -32,7 +32,7 @@ The user's third rule: "Source Code for These Features is separated from other C
 - **What a port file may contain, and nothing more:** (1) the CMake line that links `chase_qol`; (2) an `#include` of a hook header of `src/qol/`; (3) a hook point: one call (or one `if (qol::enabled(qol::Feature::X)) qol::hookName(...)` line) to a function that `src/qol/` declares, with plain-type arguments and no QoL decision, math or state in the port file. With the toggle off the hook changes nothing. Every hook point is named in the list "Hook points" of [qol-settings-menu.md](../plans/features/qol-settings-menu.md) (file, function, hook, toggle) in the same branch that adds it; a hook not on the list is a defect.
 - **A QoL feature never edits port runtime files** beyond these hook points: no changed constants, no moved code, no new branches, no refactoring of port files. A feature that needs more asks the lead; if a port library lacks a generic capability (for example an extra viewport or draw call in `chase_render`, where all OpenGL stays), the capability is added as a port item that changes no default behaviour, never as QoL logic inside the port.
 - **The port never depends on QoL for its own tests:** the port's tests and the library build without `chase_qol` being consulted except through the hook calls, which compile to no effect in original mode.
-- **Guard.** A CTest `qol-separation` is planned (QOLSET-7); until it exists, the reviewers check these rules by hand on every branch.
+- **Guard.** The CTest `qol-separation` (`tests/qol_separation.cmake`) checks the identifier, hook-count and no-copy rules; reviewers still check by hand that a hook holds no QoL decision, math or state.
 
 ## The toggle mechanism
 
