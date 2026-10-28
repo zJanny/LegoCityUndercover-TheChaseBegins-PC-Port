@@ -39,11 +39,13 @@ void LevelSession::attachLevelCharacters() {
             if (link) characterAttachments.detach(instance);
             continue;
         }
-        if (link && link->parent == attachment->parent) continue;
+        std::uint32_t& taken = characterAttachCalls[instance];
+        if (link && link->parent == attachment->parent && taken == attachment->sequence) continue;
         const std::optional<chase::assets::Matrix> world = levelCharacters->world(instance);
         const std::optional<chase::assets::Matrix> parentWorld = placedNodeWorld(attachment->parent);
         if (!world || !parentWorld) continue;
         characterAttachments.attach(instance, attachment->parent, *world, *parentWorld);
+        taken = attachment->sequence;
         std::cout << "character " << instance << ": attached to " << attachment->parent << " at update " << updates << '\n';
     }
 }

@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 966 open items and stand-ins, 172 linked to game usage, 794 with unknown reach.
+Items: 970 open items and stand-ins, 173 linked to game usage, 797 with unknown reach.
 
 ## Top 50 overall
 
@@ -47,7 +47,7 @@ Items: 966 open items and stand-ins, 172 linked to game usage, 794 with unknown 
 | 11 | [SCRIPT-345](features/script-system-natives-animation.md?display=source#L35) | 859 | 0 | 8 | 0 | 2 stand-in | `loadanimation`, `playcharanim` | The port starts `1-2_Cage_Key_Target_Script` in the update of the press (as the original) but calls ... |
 | 12 | [SCRIPT-190](features/script-system-missions.md?display=source#L28) | 0 | 736 | 8 | 2 | - | `scriptobject` | Carry gaps: the instigator argument of 0x244f40 is not modelled; the handler 0x1bc4d4 forwards message 0xff ... |
 | 13 | [SCRIPT-201](features/script-system-missions.md?display=source#L36) | 671 | 0 | 8 | 1 | 4 stand-in, 1 implemented | `automaticmusic`, `camerafollow`, `enabletrafficandpedestrians`, `overridemusic` +1 | Mission 1-1 has a handler (stand-in) for every native it calls: EnableTrafficAndPedestrians (SCRIPT-S230) ... |
-| 14 | [SCRIPT-375](features/script-system-missions-1-3.md?display=source#L29) | 658 | 0 | 8 | 0 | 1 implemented | `startdcam` | The camera shots (StartDCam positions and durations) and the dialogue texts of `1-3_Generator_Script` against ... |
+| 14 | [SCRIPT-375](features/script-system-missions-1-3.md?display=source#L31) | 658 | 0 | 8 | 0 | 1 implemented | `startdcam` | The generator scene's FOV, the text keys and the camera names behind the StartDCam hashes are not resolved ... |
 | 15 | [ANIM-S12](features/animation-characters.md?display=source#L24) | 623 | 0 | 8 | 0 | 1 stand-in | `playcharanim` | The "already loaded" test of PlayCharAnim (0x21e8b4) knows a character's idle clips and its current script ... |
 | 16 | [ANIM-S13](features/animation-characters.md?display=source#L25) | 623 | 0 | 8 | 0 | 1 stand-in | `playcharanim` | The player's script clip (PlayCharAnim on Player1) is shown at full weight from the native's update instead ... |
 | 17 | [SCRIPT-S269](features/script-system-hud-natives.md?display=source#L18) | 538 | 0 | 7 | 0 | 1 stand-in | `setactivewaypoint` | SetActiveWayPoint: the vehicle waypoint global (`WaypointSet::vehicleWaypoint`) is kept but its reader, which ... |
@@ -81,9 +81,9 @@ Items: 966 open items and stand-ins, 172 linked to game usage, 794 with unknown 
 | 45 | [SCRIPT-66](features/script-system-hud-natives.md?display=source#L28) | 113 | 0 | 7 | 1 | 8 stand-in | `informationbox`, `showbosshearts`, `showcharacterintro`, `showintrotext` +4 | ShowTally, ShowBossHearts, ShowRaceStart, ShowPortraitOverVehicle and showinfopointer only count their calls ... |
 | 46 | [STUD-4](features/studs.md?display=source#L38) | 109 | 0 | 7 | 0 | 1 stand-in, 1 none | `enablestudsbygroup`, `spawnstuds` | How a group is enabled (0x28a2cc sequencer, `EnableStudsByGroup` and `SpawnStuds` script functions ... |
 | 47 | [SCRIPT-S277](features/script-system-natives-party.md?display=source#L18) | 106 | 0 | 6 | 0 | 6 stand-in | `charsetallowvehicleentry`, `charsetskydivemode`, `relockchaseplainclothes`, `setweaponenabled` +2 | SwapAllegiance (toggle count only; the initial bit 2 of the object flags, the lists 0x58deb0 / 0x58dec8 and ... |
-| 48 | [SCRIPT-383](features/script-system-missions-1-3.md?display=source#L30) | 100 | 0 | 8 | 0 | 1 stand-in | `attachobject` | Attached children other than level characters (the crow, `Rope_01` under the girder) take only the ... |
-| 49 | [SCRIPT-317](features/script-system-natives-world.md?display=source#L44) | 99 | 0 | 7 | 1 | 2 stand-in | `enableswitch`, `resetobject` | Kind 64 message 8 (0x1a90b8): read the platform record fields R+4, R+0xb4, R+0x7c, R+0x18, R+0x50 and the ... |
-| 50 | [SCRIPT-318](features/script-system-natives-world.md?display=source#L45) | 99 | 0 | 7 | 0 | 2 stand-in | `enableswitch`, `resetobject` | Census of the message 8 handlers of the other kinds (the default handler 0x221800 is reached through 0x221760 ... |
+| 48 | [SCRIPT-397](features/script-system-missions-1-3.md?display=source#L33) | 100 | 0 | 8 | 0 | 1 stand-in | `attachobject` | `Rope_01` under the girder, the lawnmower and minecart particle emitters and other attached objects without a ... |
+| 49 | [SCRIPT-398](features/script-system-missions-1-3.md?display=source#L34) | 100 | 0 | 8 | 0 | 1 stand-in | `attachobject` | The ground follow of characters standing on moving objects is not ported |
+| 50 | [SCRIPT-317](features/script-system-natives-world.md?display=source#L44) | 99 | 0 | 7 | 1 | 2 stand-in | `enableswitch`, `resetobject` | Kind 64 message 8 (0x1a90b8): read the platform record fields R+4, R+0xb4, R+0x7c, R+0x18, R+0x50 and the ... |
 
 ## Player and camera
 
@@ -137,7 +137,7 @@ Items: 966 open items and stand-ins, 172 linked to game usage, 794 with unknown 
 
 ## Scripts and missions
 
-109 of 229 items linked.
+110 of 233 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -248,7 +248,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [script-system-hud-natives.md](features/script-system-hud-natives.md): SCRIPT-350 (+2), SCRIPT-329 (+1), SCRIPT-330 (+1), SCRIPT-354 (+1), SCRIPT-331, SCRIPT-68, SCRIPT-69, SCRIPT-70, SCRIPT-S270, SCRIPT-S282, SCRIPT-S283, SCRIPT-S285
 - [script-system-missions-1-3-end.md](features/script-system-missions-1-3-end.md): SCRIPT-382, SCRIPT-S303, SCRIPT-S304
 - [script-system-missions-1-3-generator.md](features/script-system-missions-1-3-generator.md): SCRIPT-364 (+1)
-- [script-system-missions-1-3.md](features/script-system-missions-1-3.md): SCRIPT-368 (+2), SCRIPT-S291, SCRIPT-S298
+- [script-system-missions-1-3.md](features/script-system-missions-1-3.md): SCRIPT-368 (+2), SCRIPT-399, SCRIPT-S291, SCRIPT-S298, SCRIPT-S315, SCRIPT-S316
 - [script-system-missions-reference.md](features/script-system-missions-reference.md): SCRIPT-359 (+1), SCRIPT-360 (+1), SCRIPT-370 (+1), SCRIPT-S289, SCRIPT-S292, SCRIPT-S293, SCRIPT-S299
 - [script-system-missions.md](features/script-system-missions.md): SCRIPT-284 (+1), SCRIPT-115, SCRIPT-142, SCRIPT-221, SCRIPT-S141, SCRIPT-S236, SCRIPT-S237, SCRIPT-S243, SCRIPT-S255
 - [script-system-natives-animation.md](features/script-system-natives-animation.md): SCRIPT-324 (+3), SCRIPT-352 (+2), SCRIPT-272 (+1), SCRIPT-325 (+1), SCRIPT-334 (+1), SCRIPT-S284 (+1), SCRIPT-344, SCRIPT-353, SCRIPT-S110, SCRIPT-S262, SCRIPT-S266, SCRIPT-S267

@@ -57,7 +57,7 @@ target_sources(chase_runtime PRIVATE src/runtime/prop_wobbly_destructible.cpp sr
 target_sources(chase_runtime PRIVATE src/runtime/prop_rocking.cpp src/runtime/platform_wait.cpp src/runtime/game_generator_natives_glue.cpp
   src/runtime/platform_node_move.cpp src/runtime/platform_path.cpp src/runtime/game_platform_glue.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/platform_riding.cpp)
-target_sources(chase_runtime PRIVATE src/runtime/node_attach.cpp)
+target_sources(chase_runtime PRIVATE src/runtime/node_attach.cpp src/runtime/attach_children.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/script_particles.cpp src/runtime/game_mission_end_1_3_glue.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/pushable.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/pedestrian_manager.cpp)
@@ -141,7 +141,7 @@ if(EPOXY_FOUND)
     target_sources(chase-game PRIVATE src/game_switch_glue.cpp src/game_switch_use_glue.cpp)
     target_sources(chase-game PRIVATE src/game_debris_super.cpp)
     target_sources(chase-game PRIVATE src/game_attack.cpp src/game_screen_fade.cpp src/game_screen_shake.cpp src/game_save.cpp)
-    target_sources(chase-game PRIVATE src/game_prop_rocking.cpp src/runtime/game_rocking_follow_glue.cpp src/game_platform_nodes.cpp)
+    target_sources(chase-game PRIVATE src/game_prop_rocking.cpp src/runtime/game_rocking_follow_glue.cpp src/runtime/game_attach_children_glue.cpp src/game_platform_nodes.cpp)
     target_sources(chase-game PRIVATE src/runtime/game_push_cart_glue.cpp)
     target_sources(chase-game PRIVATE src/runtime/game_platform_riding_glue.cpp)
     target_link_libraries(chase-game PRIVATE chase_render chase_runtime chase_input chase_audio chase_frontend_movie chase_save_progress chase_save_tables)
@@ -1655,7 +1655,7 @@ if(BUILD_TESTING)
       --start "993.9 16.56 1135.5" --facing 180
       --script "0 0 5;0 0 1 Y;0 0 15;0 0 1 Y;0 0 60;0 0 1 A;0 0 60;at 952.6 16.77 1132.6 90;0 0 5;0 0 1 A;0 0 80;0 0 150 A;0 0 60;at 947.956 16.79 1129.206 136.5;0 0 5;0 0 1 A;0 0 760")
     set_tests_properties(game-generator-1-3 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
-      PASS_REGULAR_EXPRESSION "character 1-3_ai_girder_guy: attached to 1-3_crane_girder at update 0\n.*carry 1-3_generator_parts_carry: placed into 1-3_baseplate at update [0-9]+.*buildit 1-3_pull_switch_bits: stud drop mode.*switch 1-3_generator_pull_switch: used at update [0-9]+\n.*switch 1-3_generator_pull_switch: player state 76 at update [0-9]+\n.*switch 1-3_generator_pull_switch: state 1 at update [0-9]+\n.*switch 1-3_generator_pull_switch: player state 1 at update [0-9]+\n.*switch 1-3_generator_pull_switch: state 3 at update [0-9]+\n.*script 1-3_Generator_Script started at update [0-9]+\n.*script 1-3_Crow_out started at update [0-9]+\n.*platform 1-3_crane_platform_dummy: travel ended in state 5 at 948.259 5.9968 1147.01 after 102 node moves at update [0-9]+\n.*particles 264 at 1-3_crane_girder started at update [0-9]+\n.*prop 1-3_crane_girder: rocking off at update [0-9]+\n.*platform 1-3_lawnmower_01: lap ended at 958\\.[0-9]+ 16\\.8037 1061\\.[0-9]+ after 145 node moves at update [0-9]+\n.*save: request [0-9]+ written.*\n.*script 1-3_Generator_Script ended at update [0-9]+")
+      PASS_REGULAR_EXPRESSION "character 1-3_ai_girder_guy: attached to 1-3_crane_girder at update 0\n.*prop 1-3_crane_girder: attached to 1-3_crane_platform_dummy at update 0\n.*prop 1-3_crow: attached to 1-3_crane_girder at update 0\n.*carry 1-3_generator_parts_carry: placed into 1-3_baseplate at update [0-9]+.*buildit 1-3_pull_switch_bits: stud drop mode.*switch 1-3_generator_pull_switch: used at update [0-9]+\n.*switch 1-3_generator_pull_switch: player state 76 at update [0-9]+\n.*switch 1-3_generator_pull_switch: state 1 at update [0-9]+\n.*switch 1-3_generator_pull_switch: player state 1 at update [0-9]+\n.*switch 1-3_generator_pull_switch: state 3 at update [0-9]+\n.*script 1-3_Generator_Script started at update [0-9]+\n.*script 1-3_Crow_out started at update [0-9]+\n.*platform 1-3_crane_platform_dummy: travel ended in state 5 at 948.259 5.9968 1147.01 after 102 node moves at update [0-9]+\n.*particles 264 at 1-3_crane_girder started at update [0-9]+\n.*prop 1-3_crane_girder: rocking off at update [0-9]+\n.*platform 1-3_lawnmower_01: lap ended at 958\\.[0-9]+ 16\\.8037 1061\\.[0-9]+ after 145 node moves at update [0-9]+\n.*save: request [0-9]+ written.*\n.*script 1-3_Generator_Script ended at update [0-9]+")
     # Mission 1-3 push cart (SCRIPT-381, 20261026-crane-B): from the start of 1-3_Start_MowerMan_rescue, which enables 1-3_Cart_crate, five hits
     # break the crate, its TriggerObject enables 1-3_Push_Cart_bits (leprops/leprop_buildit, kind 21), A builds it into the push cart 1-3_Push_cart
     # (kind 71), whose back handle (handle02) takes the player walking into the cart on the track behind it (0x2aff3c, states 84 and 85);
@@ -2262,6 +2262,10 @@ add_executable(node-attach-test tests/node_attach_test.cpp)
 target_link_libraries(node-attach-test PRIVATE chase_runtime)
 target_compile_options(node-attach-test PRIVATE -Wall -Wextra -Wpedantic)
 add_test(NAME node-attach COMMAND node-attach-test)
+add_executable(attach-children-test tests/attach_children_test.cpp)
+target_link_libraries(attach-children-test PRIVATE chase_runtime)
+target_compile_options(attach-children-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME attach-children COMMAND attach-children-test)
 add_executable(prop-rocking-real-test tests/prop_rocking_real_test.cpp)
 target_link_libraries(prop-rocking-real-test PRIVATE chase_runtime chase_assets)
 target_compile_options(prop-rocking-real-test PRIVATE -Wall -Wextra -Wpedantic)

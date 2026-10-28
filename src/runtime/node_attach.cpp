@@ -41,6 +41,14 @@ std::optional<assets::Matrix> NodeAttachments::follow(const std::string& child, 
     return link.world;
 }
 
+bool NodeAttachments::translate(const std::string& child, const float delta[3], const assets::Matrix& parentWorld) {
+    const auto found = links_.find(child);
+    if (found == links_.end()) return false;
+    for (int column = 0; column < 3; ++column)
+        for (int row = 0; row < 3; ++row) found->second.local[12 + column] += delta[row] * parentWorld[column * 4 + row];
+    return true;
+}
+
 const NodeAttachments::Link* NodeAttachments::find(const std::string& child) const {
     const auto found = links_.find(child);
     return found == links_.end() ? nullptr : &found->second;

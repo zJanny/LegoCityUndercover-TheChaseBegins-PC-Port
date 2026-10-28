@@ -71,6 +71,7 @@
 #include "runtime/clip_planes.hpp"
 #include "runtime/collision.hpp"
 #include "runtime/node_attach.hpp"
+#include "runtime/attach_children.hpp"
 #include "runtime/debug_metrics.hpp"
 #include "runtime/detective.hpp"
 #include "runtime/ability_table.hpp"
@@ -232,6 +233,8 @@ private:
     // (game_platform_nodes.cpp); attached level characters follow their
     // parent's node in game_rocking_follow_glue.cpp.
     void carryPlatformProps();
+    void attachPlacedChildren();
+    void followPlacedChildren();
     // The player's ground entity (game_platform_riding_glue.cpp): its move goes into the next movement, and the movement's ground contact sets it.
     void rideGroundEntity();
     void linkGroundEntity();
@@ -378,6 +381,9 @@ private:
     std::set<std::string> platformCarried;
     chase::runtime::GroundEntityLink playerGround;
     chase::runtime::NodeAttachments characterAttachments;
+    std::map<std::string, std::uint32_t> characterAttachCalls;
+    chase::runtime::AttachedChildren propAttachments;
+    std::map<std::string, chase::runtime::PlatformVector> propOwnOffsets;
     std::map<std::string, std::optional<std::size_t>> placedSceneByInstance;
     std::size_t reportedUnhandled = 0, reportedEvents = 0;
     chase::runtime::CollisionWorld collision;

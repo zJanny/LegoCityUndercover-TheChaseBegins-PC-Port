@@ -30,7 +30,7 @@ void LevelSession::carryPlatformProps() {
     }
     for (std::size_t i = 0; i < placedObjects.size(); ++i) {
         const std::string name = game_doors::lowerCase(placedObjects[i].instance);
-        if (!platformCarried.count(name)) continue;
+        if (!platformCarried.count(name) || propAttachments.has(name)) continue;
         chase::assets::Matrix transform = scene.instanceTransform(placedSceneIndex[i]);
         const runtime::PlatformVector offset = platforms.carriedOffset(name);
         const runtime::PathRotation turn = platforms.carriedRotation(name);

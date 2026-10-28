@@ -85,6 +85,7 @@ struct Attachment {
     std::string childBone;
     std::string parentBone;
     float rotationDegrees[3] = {0, 0, 0};
+    std::uint32_t sequence = 0;
 };
 
 class AnimationNativeState {
@@ -98,6 +99,7 @@ public:
     const AnimationRequest* current(const std::string& lowerCaseInstance) const;
     bool loaded(const std::string& lowerCaseInstance, const std::string& lowerCaseName) const;
     const Attachment* attachment(const std::string& lowerCaseInstance) const;
+    const std::map<std::string, Attachment>& attachments() const { return attachments_; }
     std::uint32_t stopRequests(const std::string& lowerCaseInstance) const;
     std::uint32_t waitCalls() const { return waitCalls_; }
 
@@ -108,6 +110,7 @@ private:
     std::map<std::string, Attachment> attachments_;
     std::map<std::string, std::uint32_t> stops_;
     std::uint32_t waitCalls_ = 0;
+    std::uint32_t attachCalls_ = 0;
 };
 
 }

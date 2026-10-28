@@ -32,6 +32,8 @@ public:
     // something else (the character move, PositionObject) and is kept relative to the parent first, as 0x24c118 does. Nothing for a child
     // without a parent.
     std::optional<assets::Matrix> follow(const std::string& lowerChild, const assets::Matrix& current, const assets::Matrix& parentWorld);
+    // Moves the child by `delta` in world space (a platform node move that writes the child's own node): the local translation changes by delta turned into the parent's frame.
+    bool translate(const std::string& lowerChild, const float delta[3], const assets::Matrix& parentWorld);
     const Link* find(const std::string& lowerChild) const;
     const std::map<std::string, Link>& links() const { return links_; }
 

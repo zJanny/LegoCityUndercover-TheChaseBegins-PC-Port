@@ -140,6 +140,7 @@ bool AnimationNativeState::apply(AnimationNativeKind kind, const std::vector<std
         attachment = Attachment{};
         attachment.kind = AttachKind::Object;
         attachment.parent = instance;
+        attachment.sequence = ++attachCalls_;
         break;
     }
     case AnimationNativeKind::AttachToBone: {

@@ -2,10 +2,11 @@
 
 The rocking of the ObjectType 67 props (`leprops/leprop_prop`, `props/prop_prop` and the other classes of that kind), the script native SetPropRocking that switches it, and the script native WaitForPlatform that waits for a platform (ObjectType 64). Both natives are called by the generator scene of mission 1-3 (`1-3_Generator_Script`). The AISuperJump of the same scene is in [ai-states.md](ai-states.md). The hit machine of kind 67 is in [vehicles-prop-smash.md](vehicles-prop-smash.md).
 
-Subtopics: [props-rocking-platforms.md](props-rocking-platforms.md)
+Subtopics: [props-rocking-platforms.md](props-rocking-platforms.md), [props-rocking-attach.md](props-rocking-attach.md)
 
 ## Current state
 
+- Attached placed objects follow the parent's whole world; the rocking clock's rate 30 and divisor 3000; the generator scene's camera calls: [props-rocking-attach.md](props-rocking-attach.md).
 - The platform class, its travel and node move and the carrying of attached nodes: [props-rocking-platforms.md](props-rocking-platforms.md).
 - `1-3_Generator_Script` (the `TriggerObject` of the pull switch `1-3_Generator_Pull_Switch`) triggers the crane platform, waits for it with WaitForPlatform, stops the girder's rocking with SetPropRocking(1-3_Crane_Girder, 0) and then makes the girder guy jump down with AISuperJump. [§2026-10-25T16:29:44](#ts-20261025-162944)
 - SetPropRocking 0x1da6a8 sets bit 6 of record byte +0xde for int(value) == 1 and clears it otherwise; an entity without a record (+0x7c null) is left alone; it returns 1. [§2026-10-25T16:29:44](#ts-20261025-162944)
