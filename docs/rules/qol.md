@@ -15,6 +15,7 @@ What follows applies these rules.
 
 ## Faithful first
 
+- **The one approved exception.** The pause menu has an always shown "PC Settings" entry, visible even with every QoL feature off. The user decided this explicitly ("Title + PC Settings entry", 2026-10-28, [qol-settings.md §2026-10-28T09:32:07](../design/qol-settings.md#ts-20261028-093207)). The entry only opens the PC settings menu and changes no game behaviour; the original Options page stays unchanged. Reviewers do not flag it; any other visible or behavioural difference with QoL off is a defect.
 - **Off by default.** With every QoL feature off (master state Original), the game behaves exactly as without the `qol` plan: the port's tests stay unchanged and pass, and no QoL code runs on the default path except the check of its own toggle. A change of this plan never edits a test of the port to make it pass.
 - **Original mode first, then the feature.** Every QoL feature is built and tested in this order: (1) the whole test suite passes with all QoL off, before and after the change; (2) the feature's tests with its toggle on. A branch that reports only the second is not finished.
 - **The port has priority.** A QoL feature never stands in for unrecovered original behaviour: gaps of the port stay port items. QoL work never blocks, delays or reorders a `linux-port` item; when both want the same code, the port's item goes first.
@@ -35,15 +36,15 @@ The user's third rule: "Source Code for These Features is separated from other C
 
 Design: [docs/design/qol-settings.md](../design/qol-settings.md); features: [qol-settings-menu](../plans/features/qol-settings-menu.md).
 
-- **Settings menu.** A normal PC settings menu, opened from the Options entry of the pause menu and from the title screen; no extra key. It holds the master toggle, one toggle per QoL feature, window mode and resolution, and key bindings. Volumes were not selected by the user: do not add them.
+- **Settings menu.** A normal PC settings menu with the tabs Game (the original options SFX volume, Music volume, Invert camera and Language, mirrored: same values, same save, in sync with the original Options page), Display (window mode, resolution), Controls (key bindings) and Quality of life (master toggle and one toggle per QoL feature). Mouse, keyboard and gamepad all work. It is reached from the title screen and from the "PC Settings" entry of the pause menu; no extra key. Do not add entries the user did not choose.
 - **Master toggle with three states:** Original (all features off), Custom (any mix) and Improved (all on), derived from the per-feature switches; choosing Original or Improved sets every switch.
-- **Storage.** `config/qol.cfg`, parsed strictly (CLAUDE.md "Strict input"), never the game save. Default: all off.
+- **Storage.** `config/qol.cfg` in the line format of `config/controls.cfg` (one "name value" per line), parsed strictly (CLAUDE.md "Strict input": unknown or malformed lines stop with an error), never the game save. Default: all off.
 - **A new feature adds its toggle in the same branch** as the feature, in the settings menu, with a test that drives the toggle. A feature whose toggle is missing is not mergeable.
 - **S1 comes first.** Until the toggle store and the settings menu exist ([qol.md](../plans/qol.md) S1), the planner plans no other QoL package, and a worker that finds the mechanism missing does no QoL work and tells the user through the lead (`SendMessage` to `main`).
 
 ## Behaviour
 
-- What a QoL feature does comes only from a spec the user approved, recorded in `docs/design/`. What the spec does not decide is asked of the user and recorded as an open item, never chosen. Open items asked of the user so far: QOLSET-5, QOLSET-6, QOLMAP-2, QOLBOT-6.
+- What a QoL feature does comes only from a spec the user approved, recorded in `docs/design/`. What the spec does not decide is asked of the user and recorded as an open item, never chosen. Points still open are open items in the feature files, marked as questions for the user.
 - The bottom screen is hidden only when its features are on; with all QoL off the window is today's top over bottom.
 - New controls follow the input rules of CLAUDE.md; bottom-screen UI that stays is used by mouse clicks; a bottom-screen content moved to a full-window panel is clicked with the mouse as well.
 - Shared code stays generic (CLAUDE.md "Generic over hardcoded"): one rule for all users, not per-object special cases. `src/game.cpp` gets only hook lines (see "Separate source code"); all QoL logic is in `src/qol/`, and OpenGL calls stay in `src/render/` behind plain-type interfaces.

@@ -18,8 +18,7 @@ None.
 
 ## 5. Open items
 
-- [ ] QOLMAP-1 — The corner minimap, drawn from the same map data as the original bottom-screen map, with its own toggle. needs: QOLSET-1, QOLFS-1. blocks: QOLMAP-2. evidence: [qol-screen-layout.md §2026-10-28T09:21:33](../../design/qol-screen-layout.md#ts-20261028-092133).
-- [ ] QOLMAP-2 — Open question for the user: minimap position, size, shape, zoom and whether it turns with the camera. needs: QOLMAP-1. evidence: [qol-screen-layout.md §2026-10-28T09:21:33](../../design/qol-screen-layout.md#ts-20261028-092133).
+- [ ] QOLMAP-1 — The minimap, drawn from the same map data as the original bottom-screen map: round, top-right corner, about one fifth of the screen height, rotating with the camera, zoom like the original map; own toggle. needs: QOLSET-1, QOLFS-1. evidence: [qol-screen-layout.md §2026-10-28T09:31:02](../../design/qol-screen-layout.md#ts-20261028-093102).
 
 ## 6. Findings summary
 

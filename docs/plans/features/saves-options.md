@@ -37,7 +37,7 @@ IN_PROGRESS, updated 2026-10-20T10:30:30+02:00. A `chase-game` run keeps the liv
 
 - [ ] SAVE-2 — Data side done (`slotRow`, `formatPlayTime`, `formatPercent`, `locationTextHash`); the slot list page with the rows, Continue and delete is FE-11. blocks: FE-1. evidence: [save-format-state.md §2026-10-14T16:34](../../re/save-format-state.md#ts-20261014-163403).
 - [ ] SAVE-3 — Compare `chase-savecheck` with the percentage the game shows (possible now with the oracle).
-- [ ] SAVE-4 — Options +0 nibbles and +3 bits 2..5 are not understood; the options volume source in a loaded save. evidence: [save-format.md §2026-10-13T08:53](../../re/save-format.md#ts-20261013-0853).
+- [ ] SAVE-4 — Options +0 nibbles and +3 bits 2..5 are not understood; the options volume source in a loaded save. blocks: QOLSET-9. evidence: [save-format.md §2026-10-13T08:53](../../re/save-format.md#ts-20261013-0853).
 - [ ] SAVE-8 — Names and creator of the type 0xfc and 0x62 objects behind the record hashes, and the effect of type 0x15 / 0x43 / 0x62 records with bit 0 set (needs a save with built build-its). blocks: SAVE-S3, LEVOBJ-43, LEVOBJ-34. evidence: [save-format-state.md §2026-10-14T13:41](../../re/save-format-state.md#ts-20261014-134146)
 - [ ] SAVE-12 — Where the language byte 0x376adc comes from (options field) and its wiring into GetLanguage. blocks: SCRIPT-65, SCRIPT-S280. evidence: [script-natives-progress.md §2026-10-14T14:41](../../re/script-natives-progress.md#ts-20261014-144155).
 - [ ] SAVE-13 — Continue at level 2 or later is not measured (heading, position, level scripts moving the player); needs a user save or state with slot byte +6 above 1. blocks: SAVE-S4. evidence: [save-format-state.md §2026-10-14T15:19](../../re/save-format-state.md#ts-20261014-151903).
