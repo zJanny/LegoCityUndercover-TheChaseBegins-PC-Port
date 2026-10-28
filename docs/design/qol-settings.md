@@ -5,7 +5,7 @@ The user's approved design of how quality-of-life features are switched on and o
 ## Current state
 
 - Every QoL feature is switched in the settings menu, and the faithful version is priority one; the user's two rules: [§2026-10-28T09:21:31+01:00](#ts-20261028-092131).
-- QoL is off by default; the master toggle has three states (Original, Custom, Improved) derived from the per-feature switches; choices live in `config/qol.cfg`, never in the game save: [§2026-10-28T09:21:31+01:00](#ts-20261028-092131).
+- QoL is off by default; the master toggle has three states (Original, Custom, Improved), stored in `config/qol.cfg` (corrected by [§2026-10-28T09:53:33](#ts-20261028-095333), first answer: derived from the per-feature switches); choices live in `config/qol.cfg`, never in the game save: [§2026-10-28T09:21:31+01:00](#ts-20261028-092131).
 - Corrected in part by [§2026-10-28T09:32:07](#ts-20261028-093207): the pause menu gets its own "PC Settings" entry instead of reusing Options, and the original option entries are mirrored in the Game tab. The first answer: the settings menu opens from the title screen and the pause menu, with no extra key; it holds the master toggle, one toggle per feature, window mode and resolution, and key bindings: [§2026-10-28T09:21:31+01:00](#ts-20261028-092131).
 - QoL source code is separate from the port's code: `src/qol/`, port files get only listed hook points: [§2026-10-28T09:24:08](#ts-20261028-092408).
 - The settings menu is reachable from the title screen and through an always shown "PC Settings" entry in the pause menu (the one approved exception to the faithful default; the original Options page stays unchanged); it has the tabs Game, Display, Controls and Quality of life; mouse, keyboard and gamepad all work: [§2026-10-28T09:32:07](#ts-20261028-093207).
@@ -17,11 +17,13 @@ The user's approved design of how quality-of-life features are switched on and o
 - Custom restores the last own mix kept in `config/qol.cfg` and is skipped while no mix has been set: [§2026-10-28T09:40:40](#ts-20261028-094040).
 - The bottom screen and its panels have no toggle of their own; only the master button switches them: [qol-screen-layout.md §2026-10-28T09:48:15](qol-screen-layout.md#ts-20261028-094815).
 - The minimap and the hiding of the bottom screen follow the master button only (Improved): [qol-screen-layout.md §2026-10-28T09:50:34](qol-screen-layout.md#ts-20261028-095034).
-- Open: the points listed last in [§2026-10-28T09:32:07](#ts-20261028-093207).
+- The master state is stored in `config/qol.cfg`: Original = all QoL off, Improved = all on (including the minimap and the hidden bottom screen); the per-feature switches (so far only the widened view with the corner HUD) apply only in Custom: [§2026-10-28T09:53:33](#ts-20261028-095333).
+- Open: none that needs a user decision; implementation details (menu look, `qol.cfg` keys) follow the recorded decisions.
 
 <a id="ts-20261028-092131"></a>
 
 ## 2026-10-28T09:21:31+01:00 — Settings menu, master toggle and rules
+Corrected by [qol-settings.md §2026-10-28T09:53:33](#ts-20261028-095333): the master state is stored in `config/qol.cfg`, not derived from the per-feature switches.
 Corrected by [qol-settings.md §2026-10-28T09:32:07](#ts-20261028-093207): how the menu is reached, the original Options entries, the layout, the `qol.cfg` format and the separation details are decided.
 
 Asked of the user by the lead on 2026-10-28 (planner questions 1 to 4 and 8); answers quoted as selected.
@@ -81,5 +83,15 @@ Open (not decided by the user): what Custom restores when the master button cycl
 Asked of the user by the lead on 2026-10-28; the quoted label is the user's selection. Decides QOLSET-14.
 
 - Custom (QOLSET-14): "Last own mix (Rec.)": when the master button cycles to Custom it restores the last Custom mix, kept in `config/qol.cfg`; Custom is skipped while no mix has been set.
+
+Open: none from this answer.
+
+<a id="ts-20261028-095333"></a>
+
+## 2026-10-28T09:53:33+01:00 — The master state is stored
+
+Asked of the user by the lead on 2026-10-28; the quoted label is the user's selection. Decides QOLSET-15. [Corrects §2026-10-28T09:21:31](#ts-20261028-092131): that entry said the master state is derived from the per-feature switches.
+
+- Master state (QOLSET-15): "Stored value (Rec.)": "Master state stored in config/qol.cfg. Original = all QoL off, Improved = all on (incl. minimap + hidden bottom); per-feature switches (so far only widened view + corner HUD) apply only in Custom."
 
 Open: none from this answer.

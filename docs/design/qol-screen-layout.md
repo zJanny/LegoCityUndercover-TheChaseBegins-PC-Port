@@ -15,7 +15,7 @@ The user's approved design of the first QoL features: the top screen as true ful
 - Hiding the bottom screen requires the minimap on (corrected in part by [§2026-10-28T09:48:15](#ts-20261028-094815): no per-panel toggles); the PC pause menu holds Resume, Options (original page), Credits, Exit and PC Settings; all panels use the original game's art and fonts: [§2026-10-28T09:37:31](#ts-20261028-093731).
 - There are no per-panel toggles and no own toggle for the bottom screen: the master button hides it (Improved) or shows it (Original); the panels show when it is hidden: [§2026-10-28T09:48:15](#ts-20261028-094815).
 - The minimap has no toggle of its own and shows only in Improved; the bottom screen is hidden exactly when the minimap is on: [§2026-10-28T09:50:34](#ts-20261028-095034).
-- Open: how the master state is stored and derived (QOLSET-15).
+- The master state is stored in `config/qol.cfg`; Improved turns on the minimap and the hidden bottom screen, the per-feature switches apply only in Custom: [qol-settings.md §2026-10-28T09:53:33](qol-settings.md#ts-20261028-095333).
 
 <a id="ts-20261028-092133"></a>
 
