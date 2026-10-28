@@ -59,7 +59,12 @@ public:
     SaveRequestWriter() = default;
     SaveRequestWriter(std::string path, SaveImage base, unsigned slot, std::optional<CompletionTotals> totals);
     bool enabled() const { return !path_.empty(); }
-    bool request(Bytes& liveSlot, const SlotSummaryInput& input);
+    // With `liveOptions` (kOptionsSize bytes, the live block 0x51b490) the task first stores the slot index at live options +2 (0x22801c)
+    // and copies the live options over the image's (0x1d0b80).
+    bool request(Bytes& liveSlot, const SlotSummaryInput& input, std::uint8_t* liveOptions = nullptr);
+    // The options save of the pause Options page (request 0x2400a0(0x1c34a4, ...)): the live options over the image's, then stored.
+    // STAND-IN UI-S10: the task's file reload, compare (0x2c32bc, 0x1c36ac), question and I/O time are not modelled.
+    bool storeOptions(const std::uint8_t* liveOptions);
     unsigned written() const { return written_; }
     const std::string& path() const { return path_; }
     const SaveImage& image() const { return image_; }

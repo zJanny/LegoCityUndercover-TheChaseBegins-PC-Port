@@ -130,6 +130,17 @@ void testRequestWriter() {
     input.superBricks = 302;
     require(writer.request(live, input) && writer.written() == 2, "second request");
     require(load(path).image->slot(1)[10] == 1 && load(path).image->slot(1)[kSlotSuperBrickCountOffset] == 0x2e, "second write stored");
+
+    Bytes options(kOptionsSize, 0);
+    options[2] = 0xff;
+    options[5] = 6;
+    require(writer.request(live, input, options.data()) && options[2] == 1, "the request stores the slot index at live options +2");
+    require(load(path).image->options()[5] == 6 && load(path).image->lastSlot() == std::size_t(1), "and copies the live options into the file");
+    options[7] = 3;
+    live[10] = 2;
+    require(writer.storeOptions(options.data()) && writer.written() == 4, "the options save stores the file");
+    require(load(path).image->options()[7] == 3 && load(path).image->slot(1)[10] == 1, "with the live options and the slots as last committed");
+    require(!off.storeOptions(options.data()), "a disabled writer stores no options");
     std::filesystem::remove_all(dir);
 }
 }

@@ -137,6 +137,12 @@ void RoundMenu::close(bool transitionOff) {
     state_ = RoundMenuState::Closing;
 }
 
+void RoundMenu::setItemText(int item, const std::string& text) {
+    if (item < 0 || item >= int(items_.size())) return;
+    items_[std::size_t(item)].text = text;
+    if (item == selected_) refreshTexts();
+}
+
 void RoundMenu::refreshTexts() {
     iconOutText_ = iconText_;
     iconText_ = items_.empty() ? std::string() : items_[std::size_t(selected_)].text;

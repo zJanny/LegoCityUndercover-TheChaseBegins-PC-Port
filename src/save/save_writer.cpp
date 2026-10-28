@@ -64,7 +64,18 @@ bool commitSlot(SaveImage& image, int activeSlot, const Bytes& liveSlot) {
 SaveRequestWriter::SaveRequestWriter(std::string path, SaveImage base, unsigned slot, std::optional<CompletionTotals> totals)
     : path_(std::move(path)), image_(std::move(base)), slot_(slot), totals_(std::move(totals)) {}
 
-bool SaveRequestWriter::request(Bytes& liveSlot, const SlotSummaryInput& input) {
+bool SaveRequestWriter::storeOptions(const std::uint8_t* liveOptions) {
+    if (path_.empty()) return false;
+    SaveImage next = image_;
+    std::copy(liveOptions, liveOptions + kOptionsSize, next.options());
+    next.seal();
+    store(path_, next);
+    image_ = std::move(next);
+    ++written_;
+    return true;
+}
+
+bool SaveRequestWriter::request(Bytes& liveSlot, const SlotSummaryInput& input, std::uint8_t* liveOptions) {
     if (liveSlot.size() != kSlotSize) return false;
     const std::uint16_t permille = std::uint16_t(liveSlot[kSlotPermilleOffset] | liveSlot[kSlotPermilleOffset + 1] << 8);
     writeSlotSummary(liveSlot.data(), liveSlot.size(), input, permille);
@@ -74,6 +85,10 @@ bool SaveRequestWriter::request(Bytes& liveSlot, const SlotSummaryInput& input) 
     }
     if (path_.empty()) return false;
     SaveImage next = image_;
+    if (liveOptions && slot_ < kSlotCount) {
+        liveOptions[2] = std::uint8_t(slot_);
+        std::copy(liveOptions, liveOptions + kOptionsSize, next.options());
+    }
     if (!commitSlot(next, int(slot_), liveSlot)) return false;
     store(path_, next);
     image_ = std::move(next);

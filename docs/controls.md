@@ -53,7 +53,8 @@ In the [development runtime](commands.md#development-runtime), while you play:
 - The lower screen shows Resume, Options, Credits and Exit on a wheel. Turn it with **left and right** (A and D, or the arrow keys), or click the button left or right of the middle one, or swipe sideways with the mouse.
 - **A** (Space), or a click on the middle button, chooses the entry in the middle. Resume goes back to the game.
 - **B** (Q or right mouse) or **Start** go back to the game.
-- Options, Credits and Exit do nothing yet. The numbers on the upper screen are not shown yet.
+- Options opens the options wheel: SFX, Music, Invert Camera and Language. Turn it like the pause wheel. On SFX and Music, **up and down** (W and S, or the arrow keys) change the volume from 0 to 10. On Invert Camera, up, down or **A** switch it on or off. **B** goes back to the pause wheel; after a change it first saves the options.
+- Language, Credits and Exit do nothing yet. The numbers on the upper screen are not shown yet.
 
 ## Attacking
 

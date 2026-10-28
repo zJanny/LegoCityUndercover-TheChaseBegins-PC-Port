@@ -229,7 +229,8 @@ void LevelSession::updateFollowCamera(float dt) {
     input.target[2] = player->motion.z;
     input.targetFacing = runtime::headingRadians(player->motion.facing);
     input.stickTurn = runtime::stickTurnInput(pad.slot(kSlotStickX).value, game_player::kPlayerEntityType);
-    input.shoulderTurn = runtime::shoulderTurnInput(pad.slot(kSlotLeftShoulder).value, pad.slot(kSlotRightShoulder).value, false);
+    input.shoulderTurn = runtime::shoulderTurnInput(pad.slot(kSlotLeftShoulder).value, pad.slot(kSlotRightShoulder).value,
+                                                   shared.progress.options.size() > 3 && (shared.progress.options[3] & runtime::kInvertCameraBit));
     selectCameraSubject(input);
     runtime::DirectorCamera& director = levelScripts.director();
     director.update(dt, [this](const std::string& object, float out[3]) {

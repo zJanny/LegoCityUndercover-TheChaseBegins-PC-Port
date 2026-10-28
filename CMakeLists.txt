@@ -63,6 +63,7 @@ target_sources(chase_runtime PRIVATE src/runtime/pushable.cpp src/runtime/missio
 target_sources(chase_runtime PRIVATE src/runtime/pedestrian_manager.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/pedestrian_blocked.cpp src/runtime/room_layers.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/pedestrian_system.cpp)
+target_sources(chase_runtime PRIVATE src/runtime/options_page.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/debris_pickup.cpp src/runtime/hud_pending_add.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/node_fade.cpp src/runtime/pedestrian_fade.cpp src/runtime/semi_trans_near_camera.cpp)
 add_library(chase_draw_order src/render/draw_order.cpp)
@@ -403,6 +404,10 @@ if(BUILD_TESTING)
   target_link_libraries(pause-menu-test PRIVATE chase_frontend chase_runtime chase_assets)
   target_compile_options(pause-menu-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME pause-menu COMMAND pause-menu-test)
+  add_executable(options-page-test tests/options_page_test.cpp)
+  target_link_libraries(options-page-test PRIVATE chase_runtime)
+  target_compile_options(options-page-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME options-page COMMAND options-page-test)
   add_executable(buildit-player-test tests/buildit_player_test.cpp)
   target_link_libraries(buildit-player-test PRIVATE chase_runtime chase_assets)
   target_compile_options(buildit-player-test PRIVATE -Wall -Wextra -Wpedantic)
@@ -1490,7 +1495,7 @@ if(BUILD_TESTING)
       --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes --script "0 0 2")
     set_tests_properties(game-save-reload PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
       FIXTURES_REQUIRED save_new_game
-      PASS_REGULAR_EXPRESSION "save: loaded in slot 0[^\n]*\nsave: level entry 2, studs [0-9]+, super bricks 1500\nsave: slot 0, level 2, saved state of the level \\(StoryProgress 1, [0-9]+ variables\\), unlocked levels 0x4,.*super bricks: total 1500,")
+      PASS_REGULAR_EXPRESSION "save: loaded in slot 0[^\n]*\nsave: level entry 2, studs [0-9]+, super bricks 1500\n.*save: slot 0, level 2, saved state of the level \\(StoryProgress 1, [0-9]+ variables\\), unlocked levels 0x4,.*super bricks: total 1500,")
     # The roof brick of mission 1-3: 1-3_Rainbow_02 (904.929 30.697 1133.099, level data) is hidden until 1-3_ArrivedAtStation has shown it (update
     # 1073 of the port's run). The player stands 2.53 from it on the roof (the position of the save state on the roof in front of the super brick of mission 1-3) and is moved
     # to 1.05 from it at update 1100; the brick adds 200. About 10 s (slow).
@@ -2047,15 +2052,28 @@ if(BUILD_TESTING)
     # The display during play: the player stands on a silver stud (tools/oracle/hud-bar.txt); after 70 updates the stud has flown to
     # the counter, the total is 10 and the HUD shows it (four hearts: the class attribute Health defaults to 4).
     # Pause screen on the real path: Start in gameplay opens it in the next update, a stick push right turns the round menu to Options (the
-    # stick feeds the D-pad, 0x2289b8), A on Options does nothing yet (UI-S4), Start closes it after TransitionOff_Round (16 updates of 0.033 s).
+    # stick feeds the D-pad, 0x2289b8), A on Options opens the Options page (UI-4), the stick turns it to Music and a push down lowers the
+    # music volume of the new game's slot from 8 to 7 (0x31af84); B then saves the options (UI-S10) and page 0 comes back; Start closes the
+    # screen after TransitionOff_Round (16 updates of 0.033 s).
     # Every pause update adds one play tick as the pause mode's update 0x300378 does (0x300444, SAVE-19).
+    # game-options-reload continues from that file: the loading screen (0x303a40) takes the volumes of the slot at options +2.
+    add_test(NAME game-pause-menu-clean COMMAND ${CMAKE_COMMAND} -E remove_directory "${CMAKE_BINARY_DIR}/test-xdg/game-pause-menu")
+    set_tests_properties(game-pause-menu-clean PROPERTIES FIXTURES_SETUP pause_menu_clean)
     add_test(NAME game-pause-menu COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
       --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes
-      --start "862.5931 16.1988 1060.5875" --script "0 0 5;0 0 1 S;0 0 40;145 0 1;0 0 20;0 0 1 A;0 0 30;0 0 1 S;0 0 20")
+      --start "862.5931 16.1988 1060.5875" --script "0 0 5;0 0 1 S;0 0 40;145 0 1;0 0 20;0 0 1 A;0 0 50;145 0 1;0 0 20;0 -145 1;0 0 5;0 0 1 B;0 0 40;0 0 1 S;0 0 20")
     set_tests_properties(game-pause-menu PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
-      PASS_REGULAR_EXPRESSION "pause menu opened at update 6.*pause menu: Options is not ported \\(does nothing\\) at update 67.*pause menu closed at update 114, play ticks 114")
+      FIXTURES_REQUIRED pause_menu_clean FIXTURES_SETUP pause_menu_options
+      PASS_REGULAR_EXPRESSION "pause menu opened at update 6.*pause menu: options saved to [^\n]*, slot 0 sound volume 10, music volume 7, invert camera off at update 145.*pause menu closed at update 202, play ticks 202")
+    add_test(NAME game-options-reload COMMAND chase-game
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --save "${CMAKE_BINARY_DIR}/test-xdg/game-pause-menu/chase/savegame.dat" --slot 0
+      --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes --script "0 0 2")
+    set_tests_properties(game-options-reload PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
+      FIXTURES_REQUIRED pause_menu_options
+      PASS_REGULAR_EXPRESSION "save: loaded in slot 0[^\n]*\n.*loading screen: sound volume 10, music volume 7\n")
     add_test(NAME game-script-hud COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
@@ -2252,7 +2270,7 @@ foreach(game_data_test
   game-same-level-entry game-scene-change-exit game-scene-change-entry game-director-hold game-director-release game-script-zipline game-script-zipline-handcuffs
   game-script-attack-table game-script-wobbly-table game-script-bounce game-script-bounce-grab game-script-acrobat-poles game-script-zipline-use-a
   game-script-zipline-use-b game-script-brick-grab game-script-brick-rail game-script-pole game-script-ladder game-script-ladder-walk-in
-  game-script-jump game-pause-menu game-script-hud game-room-streaming game-stream-room-in soundtest-real-smoke soundtest-id-smoke fmv-real-smoke
+  game-script-jump game-pause-menu-clean game-pause-menu game-options-reload game-script-hud game-room-streaming game-stream-room-in soundtest-real-smoke soundtest-id-smoke fmv-real-smoke
   prop-wobbly-real-data stud-callers-real-data stud-drop-classes-real-data prop-hit-sequence-real-data super-brick-real-data
   super-brick-display-real-data prop-bouncer-real-data prop-wall-side-real-data player-script-animation-real-data)
   if(TEST ${game_data_test})

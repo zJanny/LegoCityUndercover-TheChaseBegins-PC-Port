@@ -3,6 +3,7 @@
 // the stud and super brick counters, the play-time tick and the save requests written to the port's save file.
 #include "assets/assets.hpp"
 #include "runtime/natives_progress.hpp"
+#include "runtime/options_page.hpp"
 #include "runtime/script_runner.hpp"
 #include "runtime/super_brick_display.hpp"
 #include "game_options.hpp"
@@ -27,7 +28,13 @@ struct Progress {
     std::uint32_t superBricks = 0;
     chase::runtime::SuperBrickGlobals superBrickGlobals;
     chase::save::SaveRequestWriter writer;
+    // The live options block 0x51b490 and the live volume bytes 0x37751d / 0x37751e.
+    chase::save::Bytes options;
+    chase::runtime::OptionVolumes volumes;
 };
+
+// The loading-screen enter 0x303a40 of each level load: the volume bytes of the slot at options +2.
+void loadingScreen(Progress& progress);
 
 std::string sceneNameOf(const std::string& levelPath);
 

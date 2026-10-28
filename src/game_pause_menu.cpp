@@ -17,8 +17,8 @@ namespace {
 constexpr const char* kGameText = "localisation/gametext_uk.loc";
 constexpr const char* kHintText = "localisation/hinttext_uk.loc";
 constexpr const char* kSystemText = "localisation/systemtext_uk.loc";
-constexpr std::size_t kSlotStart = 10, kSlotDpadLeft = 2, kSlotDpadRight = 3;
-const char* const kEntryNames[fe::kPauseEntryCount] = {"Resume", "Options", "Credits", "Exit"};
+constexpr std::size_t kSlotStart = 10, kSlotDpadUp = 0, kSlotDpadDown = 1, kSlotDpadLeft = 2, kSlotDpadRight = 3;
+const char* const kEntryNames[] = {"Resume", "Options", "Credits", "Exit", "Languages page"};
 }
 
 bool LevelSession::holdForPause(float dt, const runtime::PadState& padInput) {
@@ -28,6 +28,8 @@ bool LevelSession::holdForPause(float dt, const runtime::PadState& padInput) {
         input.start = pad.slot(kSlotStart).press > 0;
         input.left = pad.slot(kSlotDpadLeft).press > 0;
         input.right = pad.slot(kSlotDpadRight).press > 0;
+        input.up = pad.slot(kSlotDpadUp).press > 0;
+        input.down = pad.slot(kSlotDpadDown).press > 0;
         input.a = pad.slot(kSlotConfirmButton).press > 0;
         input.b = pad.slot(kSlotCancelButton).press > 0;
         input.touch = {padInput.touch, float(padInput.touchX), float(padInput.touchY)};
@@ -37,6 +39,17 @@ bool LevelSession::holdForPause(float dt, const runtime::PadState& padInput) {
             if (shared.audio) shared.audio->playUi(unsigned(id));
         for (const fe::PauseEntry entry : pauseMenu->takeUnported())
             std::cout << "pause menu: " << kEntryNames[int(entry)] << " is not ported (does nothing) at update " << updates << '\n';
+        const fe::PauseGains gains = pauseMenu->takeGains();
+        if (shared.audio && (gains.sound || gains.music)) shared.audio->setOptionGains(gains.sound, gains.music);
+        if (pauseMenu->takeSaveRequest()) {
+            const std::uint8_t* block = pauseMenu->options();
+            const std::size_t slot = runtime::optionsSlot(block).value_or(0);
+            const bool stored = shared.progress.writer.storeOptions(block);
+            std::cout << "pause menu: options saved" << (stored ? " to " + shared.progress.writer.path() : std::string(" (writing disabled)"))
+                      << ", slot " << slot << " sound volume " << unsigned(block[4 + slot]) << ", music volume " << unsigned(block[6 + slot])
+                      << ", invert camera " << ((block[3] & runtime::kInvertCameraBit) ? "on" : "off") << " at update " << updates << '\n';
+            pauseMenu->saveDone();
+        }
         if (pauseMenu->finished()) {
             const chase::save::Bytes& slot = levelScripts.progressNatives().slotImage();
             std::cout << "pause menu closed at update " << updates << ", play ticks " << chase::save::playTicks({slot.data(), slot.size()}) << '\n';
@@ -44,6 +57,8 @@ bool LevelSession::holdForPause(float dt, const runtime::PadState& padInput) {
     } else if (pauseRequested) {
         pauseRequested = false;
         if (!pauseMenu) pauseMenu.emplace(fe::pauseMenuSetup(hudResources, kGameText, kSystemText));
+        if (shared.progress.options.size() == chase::save::kOptionsSize)
+            pauseMenu->bindOptions(shared.progress.options.data(), &shared.progress.volumes, int(shared.options.language));
         pauseMenu->open();
         const runtime::ScriptTextState& missionText = levelScripts.text();
         pauseMenu->setTickerText(runtime::pauseTickerText(hudResources.textForKey(kGameText, fe::levelHeadingKey(hudResources, levelName)),

@@ -108,16 +108,16 @@ void stickToDpad() {
 
 void touch() {
     PauseMenu menu = opened();
-    tap(menu, 264, 119, 3);
-    require(menu.round().selected() == 1, "a tap on the right button turns the menu");
+    tap(menu, 54, 119, 3);
+    require(menu.round().selected() == 3, "a tap on the left button turns the menu");
     run(menu, 16);
     tap(menu, 159 + 31, 119, 2);
-    require(menu.takeUnported() == std::vector<PauseEntry>{PauseEntry::Options}, "a tap on the centre button selects it");
+    require(menu.takeUnported() == std::vector<PauseEntry>{PauseEntry::Exit}, "a tap on the centre button selects it");
     require(menu.takeSounds() == std::vector<int>{kRoundMenuSoundMove, kPauseSoundSelect}, "move then select sound");
     tap(menu, 159, 119, int(kRoundMenuTapUpdates));
     require(menu.takeUnported().empty(), "a touch of 10 updates is not a tap");
     tap(menu, 54, 119 - 33, 2);
-    require(menu.round().selected() == 1, "outside the 32 pixel radius nothing happens");
+    require(menu.round().selected() == 3, "outside the 32 pixel radius nothing happens");
     PauseInput swipe;
     swipe.touch.down = true;
     for (int i = 0; i < 6; ++i) {
@@ -125,7 +125,7 @@ void touch() {
         swipe.touch.y = 120;
         menu.update(kDt, swipe);
     }
-    require(menu.round().selected() == 2, "a swipe to the left turns the menu to the next entry");
+    require(menu.round().selected() == 0, "a swipe to the left turns the menu to the next entry");
     run(menu, 1);
 }
 
@@ -160,13 +160,85 @@ void resume() {
 
 void unported() {
     PauseMenu menu = opened();
-    for (int entry = 1; entry < kPauseEntryCount; ++entry) {
+    menu.update(kDt, press(&PauseInput::right));
+    run(menu, 16);
+    for (int entry = 2; entry < kPauseEntryCount; ++entry) {
         menu.update(kDt, press(&PauseInput::right));
         run(menu, 16);
         menu.update(kDt, press(&PauseInput::a));
-        require(!menu.closing(), "Options, Credits and Exit leave the screen open (UI-S4)");
+        require(!menu.closing() && menu.page() == PausePage::Status, "Credits and Exit leave the screen open (UI-S4)");
     }
-    require((menu.takeUnported() == std::vector<PauseEntry>{PauseEntry::Options, PauseEntry::Credits, PauseEntry::Exit}), "the three entries are recorded");
+    require((menu.takeUnported() == std::vector<PauseEntry>{PauseEntry::Credits, PauseEntry::Exit}), "the two entries are recorded");
+}
+
+PauseMenuSetup optionsSetup() {
+    PauseMenuSetup s = setup();
+    s.texts.optionsSubtitle = "Options";
+    s.texts.options.sound = "SFX";
+    s.texts.options.music = "Music";
+    s.texts.options.invertCamera = "Invert Camera";
+    s.texts.options.yes = "Yes";
+    s.texts.options.no = "No";
+    s.texts.options.language = "Language";
+    return s;
+}
+
+// The block and live bytes the emulator servant 20261028-uiport-servant read on 2026-10-28, recorded from a save state (paused on the
+// Options page after mission 1-3, slot 1: sound effects 5, music 5, Invert camera on); see tests/options_page_test.cpp.
+void optionsPage() {
+    std::array<std::uint8_t, chase::save::kOptionsSize> options{};
+    const std::uint8_t recorded[8] = {0x8a, 0x01, 0x01, 0x23, 0x0a, 0x05, 0x08, 0x05};
+    std::copy(recorded, recorded + 8, options.begin());
+    chase::runtime::OptionVolumes live{5, 5};
+    PauseMenu menu(optionsSetup());
+    menu.bindOptions(options.data(), &live, 1);
+    menu.open();
+    run(menu, 25);
+    menu.update(kDt, press(&PauseInput::right));
+    run(menu, 16);
+    menu.takeSounds();
+    menu.takeGains();
+    menu.update(kDt, press(&PauseInput::a));
+    require(menu.page() == PausePage::Status && menu.round().state() == RoundMenuState::Closing, "A on Options closes page 0's round menu first");
+    require(menu.takeSounds() == std::vector<int>{kPauseSoundSelect, kRoundMenuSoundClose}, "select sound and close sound");
+    run(menu, 16);
+    require(menu.page() == PausePage::Options, "then the page manager enters the Options page");
+    require(menu.round().items().size() == 4 && menu.round().selected() == 0, "four rows, SFX selected first");
+    require(menu.round().items()[0].text == "SFX: 5" && menu.round().items()[1].text == "Music: 5" &&
+                menu.round().items()[2].text == "Invert Camera: Yes" && menu.round().items()[3].text == "Language",
+            "the row texts of the recorded state");
+    require(menu.backShown() && !menu.selectShown(), "Back on, no Select on a volume row");
+    run(menu, 20);
+    menu.takeSounds();
+
+    menu.update(kDt, press(&PauseInput::right));
+    run(menu, 16);
+    PauseInput down;
+    down.down = true;
+    menu.takeGains();
+    menu.update(kDt, down);
+    require(live.music == 4 && options[7] == 4 && live.sound == 4, "Down on Music: music 4, the SFX byte previews it");
+    require(menu.round().items()[1].text == "Music: 4", "the row text follows");
+    const PauseGains gains = menu.takeGains();
+    require(gains.music == 0.4f && gains.sound == 0.4f, "both gains are set");
+    menu.update(kDt, press(&PauseInput::left));
+    require(live.sound == 5 && menu.takeGains().sound == 0.5f, "Left restores the SFX byte of the slot before the turn");
+    run(menu, 16);
+    menu.update(kDt, press(&PauseInput::left));
+    run(menu, 16);
+    require(menu.round().selected() == 3 && menu.selectShown(), "Language row, Select shown");
+    menu.takeSounds();
+    menu.update(kDt, press(&PauseInput::a));
+    require(menu.takeUnported() == std::vector<PauseEntry>{PauseEntry::Languages} && menu.page() == PausePage::Options,
+            "A on Language stays on the page (UI-S11)");
+
+    menu.update(kDt, press(&PauseInput::b));
+    require(menu.takeSaveRequest() && menu.round().state() == RoundMenuState::Closing, "B after a change asks for the save");
+    require(!menu.takeSaveRequest(), "once");
+    menu.saveDone();
+    run(menu, 16);
+    require(menu.page() == PausePage::Status && menu.round().selected() == 1, "after the save page 0 again, on Options");
+    require(!menu.optionsPage().changed() && menu.optionsPage().savedSelection() == 0, "the change is cleared, the selection reset");
 }
 }
 
@@ -178,6 +250,7 @@ int main() {
         touch();
         resume();
         unported();
+        optionsPage();
     } catch (const std::exception& error) {
         std::cerr << "pause-menu-test: " << error.what() << '\n';
         return 1;

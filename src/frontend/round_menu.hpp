@@ -64,6 +64,8 @@ public:
     // 0x1f08d4: 1 = select, -1 = back, 0 = nothing.
     int update(float dt, const RoundMenuInput& input);
 
+    // 0x1ec9e8: the item's text; for the selected item the name texts are refreshed (0x213080).
+    void setItemText(int item, const std::string& text);
     void setTitle(const std::string& text) { title_ = text; }
     void setSubtitle(const std::string& text) { subtitle_ = text; }
     RoundMenuState state() const { return state_; }

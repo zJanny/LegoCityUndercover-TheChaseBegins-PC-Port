@@ -6,11 +6,12 @@
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-20T10:30:30+02:00. A `chase-game` run keeps the live slot, the stud counter and the super brick count across its level sessions. A new game starts from the original's default slot (0x228274, 0x1a25cc), `--save FILE --slot N` from that slot; both go through the level entry 0x20a4d4 (studs and super bricks from the slot). Every update (also of the open pause menu) ticks the play time; a level load shows the loaded studs on the HUD; each save request writes the summary with the live counters into the slot and stores `savegame.dat` at `--save-out OUT` or the default XDG path; such a file starts again with `--save`. A save request also writes the level state block with the level variables and StoryProgress; object records come only from an earlier saved state (SAVE-14). Earlier: `chase_save` reads, validates and writes safely, `chase-savecheck` reports completion, `--save` starts the level of slot byte +6 at its Player1Start, the slot row fields decode.
+IN_PROGRESS, updated 2026-10-28T22:52:58+01:00. A run keeps the live options block and volume bytes: each level load takes the volumes of the slot at options +2, the pause Options page changes them and saves the options, a save request copies the live options into the file, and the follow camera reads the Invert camera bit. A `chase-game` run keeps the live slot, the stud counter and the super brick count across its level sessions. A new game starts from the original's default slot (0x228274, 0x1a25cc), `--save FILE --slot N` from that slot; both go through the level entry 0x20a4d4 (studs and super bricks from the slot). Every update (also of the open pause menu) ticks the play time; a level load shows the loaded studs on the HUD; each save request writes the summary with the live counters into the slot and stores `savegame.dat` at `--save-out OUT` or the default XDG path; such a file starts again with `--save`. A save request also writes the level state block with the level variables and StoryProgress; object records come only from an earlier saved state (SAVE-14). Earlier: `chase_save` reads, validates and writes safely, `chase-savecheck` reports completion, `--save` starts the level of slot byte +6 at its Player1Start, the slot row fields decode.
 
 ## 3. Verified behaviour
 
 - Header size and version sources, CRC, option defaults (0x2081cc), option fields (sound/music volume, invert camera, subtitles), language order and gift list recovered.
+- The loading-screen enter 0x303a40 sets the live volumes from the slot at options +2; on the oracle's state (slot 1: sound effects 5, music 5) the live bytes and gains are 5 and 0.5 (`options-page`, `game-options-reload`); options +0 and +3 bits 2..5 have no reader: [save-format.md §2026-10-28T22:51:25](../../re/save-format.md#ts-20261028-225125).
 - Slot progress layout (character bits, level blocks), completion formula (divide 0x25c1b8 is unsigned), totals source `TablesSuperCounters` (0x2f63dc) matching the 13 x 7 totals layout, offline completion total 711 (`save-real-data`, `save-core`). No cheat flags in the completion.
 
 - The save request chain 0x21cf38 and the commit of the live slot into the file image are transcribed; committing the user's slot 0 bytes reproduces the file byte for byte; the slot row fields (ticks at +0, per mille at +4, level byte +6) and their texts follow 0x2cc298 (`save-writer`, `save-writer-real-data`).
@@ -37,7 +38,7 @@ IN_PROGRESS, updated 2026-10-20T10:30:30+02:00. A `chase-game` run keeps the liv
 
 - [ ] SAVE-2 — Data side done (`slotRow`, `formatPlayTime`, `formatPercent`, `locationTextHash`); the slot list page with the rows, Continue and delete is FE-11. blocks: FE-1. evidence: [save-format-state.md §2026-10-14T16:34](../../re/save-format-state.md#ts-20261014-163403).
 - [ ] SAVE-3 — Compare `chase-savecheck` with the percentage the game shows (possible now with the oracle).
-- [ ] SAVE-4 — Options +0 nibbles and +3 bits 2..5 are not understood; the options volume source in a loaded save. blocks: QOLSET-9. evidence: [save-format.md §2026-10-13T08:53](../../re/save-format.md#ts-20261013-0853).
+- [ ] SAVE-23 — Options +0x20b bit 5 and +3 bit 0 written by a second options screen of the code (rows 4 and 6): which screen it is and what +0x20b bit 5 does. evidence: [save-format.md §2026-10-28T22:51:25](../../re/save-format.md#ts-20261028-225125).
 - [ ] SAVE-8 — Names and creator of the type 0xfc and 0x62 objects behind the record hashes, and the effect of type 0x15 / 0x43 / 0x62 records with bit 0 set (needs a save with built build-its). blocks: SAVE-S3, LEVOBJ-43, LEVOBJ-34. evidence: [save-format-state.md §2026-10-14T13:41](../../re/save-format-state.md#ts-20261014-134146)
 - [ ] SAVE-12 — Where the language byte 0x376adc comes from (options field) and its wiring into GetLanguage. blocks: SCRIPT-65, SCRIPT-S280. evidence: [script-natives-progress.md §2026-10-14T14:41](../../re/script-natives-progress.md#ts-20261014-144155).
 - [ ] SAVE-13 — Continue at level 2 or later is not measured (heading, position, level scripts moving the player); needs a user save or state with slot byte +6 above 1. blocks: SAVE-S4. evidence: [save-format-state.md §2026-10-14T15:19](../../re/save-format-state.md#ts-20261014-151903).
@@ -52,6 +53,7 @@ IN_PROGRESS, updated 2026-10-20T10:30:30+02:00. A `chase-game` run keeps the liv
 
 - Layout, CRC, save thread: [save-format.md §2026-10-13T10:30](../../re/save-format.md#ts-20261013-1030).
 - Options and defaults: [save-format.md §2026-10-13T12:30](../../re/save-format.md#ts-20261013-1230), [save-format.md §2026-10-13T08:53](../../re/save-format.md#ts-20261013-0853), [save-format.md §2026-10-13T08:56](../../re/save-format.md#ts-20261013-0856).
+- Live volumes, loading-screen volume source, unread option bits, movie volume: [save-format.md §2026-10-28T22:51:25](../../re/save-format.md#ts-20261028-225125).
 - Level state blocks, unlock bits, the progress natives and the user's save: [save-format-state.md §2026-10-14T11:53](../../re/save-format-state.md#ts-20261014-115300).
 - Object records, end bit set, current level, second unlock bit: [save-format-state.md §2026-10-14T13:41](../../re/save-format-state.md#ts-20261014-134146).
 - Slot bytes the progress natives write (abilities +0x51ee, races +0x5200, racing car +0x520c, red bricks +0x51b8, character group +0x51bb): [script-natives-progress.md §2026-10-14T14:41](../../re/script-natives-progress.md#ts-20261014-144155).
@@ -64,8 +66,9 @@ IN_PROGRESS, updated 2026-10-20T10:30:30+02:00. A `chase-game` run keeps the liv
 ## 7. Code and tests
 
 - `src/save/` (`chase_save`, `chase_save_tables`), `chase-savecheck`, `chase-tabledump`.
-- `src/save/save_writer.*` (`commitSlot`, `writeSlotSummary`, `SaveRequestWriter::request`, `setSlotStudType`, `slotRow`, `formatPlayTime`, `formatPercent`, `locationTextHash`), `--save-out`.
+- `src/save/save_writer.*` (`commitSlot`, `writeSlotSummary`, `SaveRequestWriter::request` with the live options, `SaveRequestWriter::storeOptions`, `setSlotStudType`, `slotRow`, `formatPlayTime`, `formatPercent`, `locationTextHash`), `--save-out`.
 - `src/save/new_game.*` (`newGameTables`, `newGameSlot`, `unlockCharacterChain`, `resetSlotOptions`, `enterLevel`); `src/save/level_state.*` (`levelStateData`, `writeLevelState`, `storyProgressOf`), `game_save::refreshLevelState`.
+- `src/runtime/options_page.*` (`loadingScreenVolumes`, `restoreSoundVolume`), `game_save::loadingScreen`, `Progress::options` / `volumes`; CTest `options-page`, `game-options-reload`.
 - `src/runtime/save_hud_counter.*` (`hudStudCounterAtLoad`), `game_save::playTick`; CTest `save-hud-counter`, `game-save-hud-studs` (use the fixture save of `test-save-build`).
 - `src/save/continue_start.*` (`continueStart`), `game_save::chooseContinueLevel`, `GameOptions::levelGiven`.
 - `src/save/slot_progress.*` (`chase_save_progress`), glue `src/game_save.*` (`Progress` of a run, `start`, `sceneEntered`, `slotStartFor`, `apply`, `update`), `LevelSession::handOverProgress`, `ScriptRunner::setProgress` / `setVariable`, `ProgressNativeState::slotImage`.

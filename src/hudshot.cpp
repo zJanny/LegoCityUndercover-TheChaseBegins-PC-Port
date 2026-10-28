@@ -1,6 +1,6 @@
 // chase-hudshot: draws the in-game HUD offscreen for a scripted sequence and saves the transparent top-screen canvas as a
 // BMP over black plus an alpha mask BMP. Script: "run N; hearts N; studs TYPE TOTAL; brickcount TOTAL; brick; brickbank TOTAL; shot NAME; marker X Z; ring SECONDS; map LEVEL X Z CAMERAYAW PLAYERYAW NAME;
-// pause; press START|A|B|LEFT|RIGHT; touch X Y N" (updates are 1/30 s). After `pause` the pause screen runs and `shot` saves both screens (400x480).
+// pause; press START|A|B|LEFT|RIGHT|UP|DOWN; touch X Y N" (updates are 1/30 s). After `pause` the pause screen runs and `shot` saves both screens (400x480).
 #include "frontend/hud.hpp"
 #include "frontend/pause_menu.hpp"
 #include "frontend/minimap.hpp"
@@ -88,9 +88,9 @@ Command parseCommand(const std::string& text) {
         requireFields(fields, 1, "pause", text);
         command.kind = Command::Kind::Pause;
     } else if (verb == "press") {
-        requireFields(fields, 2, "press START|A|B|LEFT|RIGHT", text);
+        requireFields(fields, 2, "press START|A|B|LEFT|RIGHT|UP|DOWN", text);
         command.kind = Command::Kind::Press;
-        const std::string buttons[] = {"START", "A", "B", "LEFT", "RIGHT"};
+        const std::string buttons[] = {"START", "A", "B", "LEFT", "RIGHT", "UP", "DOWN"};
         const auto found = std::find(std::begin(buttons), std::end(buttons), fields[1]);
         if (found == std::end(buttons)) strict::reject("unknown button", fields[1]);
         command.name = fields[1];
@@ -162,6 +162,10 @@ int run(const Options& options) {
         pause->update(1.0f / 30, input);
         for (const int id : pause->takeSounds()) std::cout << "pause sound " << id << '\n';
         for (const PauseEntry entry : pause->takeUnported()) std::cout << "pause entry " << int(entry) << " not ported\n";
+        if (pause->takeSaveRequest()) {
+            std::cout << "pause options save\n";
+            pause->saveDone();
+        }
     };
     for (const Command& command : parseScript(options.script)) {
         if (command.kind == Command::Kind::Run) {
@@ -182,6 +186,8 @@ int run(const Options& options) {
                 input.b = command.name == "B";
                 input.left = command.name == "LEFT";
                 input.right = command.name == "RIGHT";
+                input.up = command.name == "UP";
+                input.down = command.name == "DOWN";
                 pauseStep(input);
             } else {
                 input.touch = {true, command.x, command.z};
@@ -217,7 +223,9 @@ int run(const Options& options) {
             pause->drawBottom(pauseBottom, resources);
             composeScreens(pauseTop, pauseBottom).writeBmp(options.output + "/" + command.name + ".bmp");
             std::cout << command.name << ": pause selected " << pause->round().selected() << ", menu state " << int(pause->round().state())
-                      << (pause->finished() ? ", closed" : "") << '\n';
+                      << (pause->finished() ? ", closed" : "")
+                      << (pause->round().items().empty() ? std::string() : ", text " + pause->round().items()[std::size_t(pause->round().selected())].text)
+                      << '\n';
         } else {
             top.clearTransparent();
             hud.draw(top, spin);

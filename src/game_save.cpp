@@ -76,14 +76,31 @@ void start(Progress& progress, const game_options::Options& options, chase::asse
     progress.studs = entry.studs;
     progress.superBricks = entry.superBricks;
     progress.started = true;
-    if (const std::optional<std::string> target = targetOrNothing(options)) {
-        SaveImage base = baseImage(*target, options);
-        if (newGame) resetSlotOptions(base, options.saveSlot);
+    progress.volumes = {std::uint8_t(options.soundVolume), std::uint8_t(options.musicVolume)};
+    const std::optional<std::string> target = targetOrNothing(options);
+    SaveImage live = newGame ? baseImage(target.value_or(std::string()), options) : loadedImage(options.saveFile);
+    if (newGame) {
+        // STAND-IN UI-S10: the save of a new game's start (front-end saving screen) is not ported; its task would store +2.
+        // The slot volumes are --sound-volume / --music-volume, by default the 10 and 8 of the slot callback 0x1a25cc.
+        resetSlotOptions(live, options.saveSlot);
+        live.options()[2] = std::uint8_t(options.saveSlot);
+        live.setSoundVolume(options.saveSlot, std::uint8_t(options.soundVolume));
+        live.setMusicVolume(options.saveSlot, std::uint8_t(options.musicVolume));
+    }
+    progress.options.assign(live.options(), live.options() + kOptionsSize);
+    if (target) {
+        SaveImage base = newGame ? live : baseImage(*target, options);
         progress.writer = SaveRequestWriter(*target, base, options.saveSlot, completionTotals(archive));
         std::cout << "save: " << (newGame ? "new game" : "loaded") << " in slot " << options.saveSlot << ", save requests write "
                   << *target << '\n';
     }
     std::cout << "save: level entry " << entry.level << ", studs " << entry.studs << ", super bricks " << entry.superBricks << '\n';
+}
+
+void loadingScreen(Progress& progress) {
+    if (progress.options.size() == kOptionsSize) chase::runtime::loadingScreenVolumes(progress.options.data(), progress.volumes);
+    std::cout << "loading screen: sound volume " << unsigned(progress.volumes.sound) << ", music volume " << unsigned(progress.volumes.music)
+              << '\n';
 }
 
 void sceneEntered(Progress& progress, chase::assets::FuseArchive& archive, const std::string& levelPath) {
@@ -140,7 +157,7 @@ void update(Progress& progress, chase::runtime::ProgressNativeState& natives, un
     input.studs = studs;
     input.superBricks = superBricks;
     input.studType = slotStudType(SlotView{slot.data(), slot.size()});
-    if (progress.writer.request(slot, input))
+    if (progress.writer.request(slot, input, progress.options.size() == kOptionsSize ? progress.options.data() : nullptr))
         std::cout << "save: request " << progress.writer.written() << " written to " << progress.writer.path() << '\n';
 }
 

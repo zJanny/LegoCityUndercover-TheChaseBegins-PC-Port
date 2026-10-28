@@ -97,7 +97,7 @@ What is not like the original yet:
 
 - The program plays the sounds of the character and the studs through your normal audio output. If no audio device can be opened, it prints a note and runs without sound.
 - A sound is louder when it is close and silent when it is far away. It is panned left or right depending on where it is as seen from the camera.
-- The volume options are `--sound-volume 0-10` (default 10) and `--music-volume 0-10` (default 8). They are the game's option values, which the game divides by 10.
+- The volume options are `--sound-volume 0-10` (default 10) and `--music-volume 0-10` (default 8). They are the game's option values, which the game divides by 10. Like the original, each level load then uses the volumes the save file holds for the slot that was saved last, so a run with `--save`, or with a save file that already has a saved slot, uses the saved volumes instead. A new game keeps the two options as the volumes of its slot.
 - There is no music at the start of the police station or the street. The original starts none there either. Music that mission scripts start (the story script commands that choose a music track, or stop it) is played. Music that the original starts in fights or in vehicles is not played, because those parts are not worked out yet.
 - Not played yet: the sounds of other people, animals, vehicles and objects of the level, the idle sounds of the character, and water or sand landing sounds.
 
@@ -148,7 +148,7 @@ The path is the level's place inside the game archive, as in the example. Each l
 A new game in Cherry Tree Hills starts as in the original:
 
 - The intro movie plays (once), then the first cutscene of mission 1-1 with the donut shop, then the first tip.
-- Start opens the pause menu of the original: the upper screen shows the collectibles panel (without its numbers yet), the lower screen the wheel with Resume, Options, Credits and Exit, Back and Select. The wheel turns and chooses as in the original, also by clicking or swiping on the lower screen ([controls](controls.md#pause-menu)). Resume, B and Start go back to the game. Options, Credits and Exit do nothing yet, and the short black screen of the original before the menu appears is not there.
+- Start opens the pause menu of the original: the upper screen shows the collectibles panel (without its numbers yet), the lower screen the wheel with Resume, Options, Credits and Exit, Back and Select. The wheel turns and chooses as in the original, also by clicking or swiping on the lower screen ([controls](controls.md#pause-menu)). Resume, B and Start go back to the game. Options opens the options wheel of the original: the sound effects and music volume, Invert camera (it turns the camera the other way with L and R) and Language. A change of a volume is heard at once; B after a change saves the options into the save file (without the original's "Checking save data" check) and goes back to the pause wheel. The language page, Credits and Exit do nothing yet, and the short black screen of the original before the menu appears is not there.
 - Cutscenes fade the top screen to black before they start (when the script asks for it) and at their end, then fade the game picture back in. The fades come from the original's code: 0.5 s each, black quad over the top screen only. The short black pause before the picture returns is a stand-in measured in the original.
 - The player is held during the cutscene. Add `--no-start-cutscenes` to skip the movie and the first cutscene while testing.
 

@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 994 open items and stand-ins, 175 linked to game usage, 819 with unknown reach.
+Items: 998 open items and stand-ins, 175 linked to game usage, 823 with unknown reach.
 
 ## Top 50 overall
 
@@ -168,7 +168,7 @@ Items: 994 open items and stand-ins, 175 linked to game usage, 819 with unknown 
 
 ## Front end, HUD, saves
 
-14 of 168 items linked.
+14 of 172 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -252,7 +252,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [rendering-reflections.md](features/rendering-reflections.md): RENDER-75 (+1), RENDER-S69
 - [rendering-shadows.md](features/rendering-shadows.md): RENDER-72 (+1), RENDER-73 (+1), RENDER-74 (+1), RENDER-S67, RENDER-S68
 - [rendering.md](features/rendering.md): RENDER-50 (+2), RENDER-69 (+2), RENDER-39 (+1), RENDER-60 (+1), RENDER-63 (+1), RENDER-64 (+1), ASSET-S1, RENDER-30, RENDER-34, RENDER-42, RENDER-6, RENDER-61, RENDER-70, RENDER-S4, RENDER-S50, RENDER-S51, RENDER-S6, RENDER-S60, RENDER-S61, RENDER-S62, RENDER-S63, RENDER-S65, RENDER-S66, RENDER-S7
-- [saves-options.md](features/saves-options.md): SAVE-8 (+4), SAVE-13 (+1), SAVE-14 (+1), SAVE-16 (+1), SAVE-2 (+1), SAVE-20 (+1), SAVE-22 (+1), SAVE-4 (+1), SAVE-21, SAVE-3, SAVE-5, SAVE-S1, SAVE-S10, SAVE-S11, SAVE-S2, SAVE-S3, SAVE-S4, SAVE-S5, SAVE-S6, SAVE-S8
+- [saves-options.md](features/saves-options.md): SAVE-8 (+4), SAVE-13 (+1), SAVE-14 (+1), SAVE-16 (+1), SAVE-2 (+1), SAVE-20 (+1), SAVE-22 (+1), SAVE-21, SAVE-23, SAVE-3, SAVE-5, SAVE-S1, SAVE-S10, SAVE-S11, SAVE-S2, SAVE-S3, SAVE-S4, SAVE-S5, SAVE-S6, SAVE-S8
 - [script-system-ai-navigation.md](features/script-system-ai-navigation.md): SCRIPT-92 (+30), SCRIPT-94 (+17), SCRIPT-101 (+15), SCRIPT-95 (+15), SCRIPT-100 (+14), SCRIPT-79 (+13), SCRIPT-S100, SCRIPT-S101, SCRIPT-S102, SCRIPT-S104, SCRIPT-S31, SCRIPT-S93, SCRIPT-S94, SCRIPT-S95
 - [script-system-dcam.md](features/script-system-dcam.md): SCRIPT-40 (+15), SCRIPT-182 (+1), SCRIPT-48 (+1), SCRIPT-181, SCRIPT-332, SCRIPT-49, SCRIPT-50, SCRIPT-S142
 - [script-system-hud-natives.md](features/script-system-hud-natives.md): SCRIPT-350 (+2), SCRIPT-329 (+1), SCRIPT-330 (+1), SCRIPT-354 (+1), SCRIPT-331, SCRIPT-68, SCRIPT-69, SCRIPT-70, SCRIPT-S270, SCRIPT-S282, SCRIPT-S283, SCRIPT-S285
@@ -272,7 +272,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [script-system.md](features/script-system.md): SCRIPT-1 (+10), SCRIPT-53 (+2), SCRIPT-2, SCRIPT-3, SCRIPT-5, SCRIPT-54, SCRIPT-55, SCRIPT-9, SCRIPT-S1, SCRIPT-S14, SCRIPT-S16, SCRIPT-S275, SCRIPT-S3, SCRIPT-S5, SCRIPT-S6, SCRIPT-S7
 - [studs-super-bricks.md](features/studs-super-bricks.md): STUD-28 (+2), STUD-16 (+1), STUD-24 (+1), STUD-S12, STUD-S13, STUD-S8, STUD-S9
 - [studs.md](features/studs.md): STUD-1 (+1), STUD-13 (+1), STUD-26 (+1), STUD-5 (+1), STUD-25, STUD-27, STUD-3, STUD-6, STUD-8, STUD-S1, STUD-S14, STUD-S15, STUD-S3, STUD-S5, STUD-S6, STUD-S7
-- [ui-menus.md](features/ui-menus.md): UI-1 (+5), UI-2 (+2), UI-4 (+2), UI-12 (+1), UI-19 (+1), UI-3 (+1), UI-5 (+1), UI-7 (+1), UI-9 (+1), UI-10, UI-11, UI-13, UI-14, UI-15, UI-16, UI-18, UI-6, UI-8, UI-S1, UI-S2, UI-S3, UI-S4, UI-S5, UI-S6, UI-S7
+- [ui-menus.md](features/ui-menus.md): UI-1 (+5), UI-2 (+2), UI-12 (+1), UI-19 (+1), UI-23 (+1), UI-25 (+1), UI-3 (+1), UI-5 (+1), UI-7 (+1), UI-9 (+1), UI-10, UI-11, UI-13, UI-14, UI-15, UI-16, UI-18, UI-24, UI-6, UI-8, UI-S1, UI-S10, UI-S11, UI-S2, UI-S3, UI-S4, UI-S5, UI-S6, UI-S7
 - [vehicles-boarding.md](features/vehicles-boarding.md): VEH-19 (+5), VEH-80 (+2), HUD-50 (+1), HUD-S50, HUD-S51, VEH-20, VEH-S10, VEH-S70, VEH-S8, VEH-S9
 - [vehicles-damage.md](features/vehicles-damage.md): VEH-120 (+3), VEH-125 (+3), VEH-113 (+2), VEH-115 (+2), VEH-124 (+2), VEH-121 (+1), VEH-140 (+1), VEH-122, VEH-128, VEH-S100, VEH-S101, VEH-S104, VEH-S109, VEH-S112, VEH-S90, VEH-S93, VEH-S96, VEH-S97, VEH-S98, VEH-S99
 - [vehicles-physics-collision.md](features/vehicles-physics-collision.md): VEH-91 (+6), VEH-70 (+2), VEH-100 (+1), VEH-101 (+1), VEH-102 (+1), VEH-S52, VEH-S60, VEH-S62, VEH-S81, VEH-S82, VEH-S86, VEH-S87

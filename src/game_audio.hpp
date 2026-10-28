@@ -97,6 +97,12 @@ public:
         std::lock_guard<std::mutex> guard(lock_);
         return sounds_->playing(id, owner);
     }
+    // The option gains: sound effects 0x1f4408 -> 0x1dca5c, music 0x1f36ec.
+    void setOptionGains(std::optional<float> sound, std::optional<float> music) {
+        std::lock_guard<std::mutex> guard(lock_);
+        if (sound) sounds_->setMasterVolume(*sound);
+        if (music) music_->setMasterVolume(*music);
+    }
     void playUi(unsigned id) {
         if (!device_) return;
         std::lock_guard<std::mutex> guard(lock_);

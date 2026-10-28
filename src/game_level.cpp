@@ -229,6 +229,8 @@ LevelSession::LevelSession(const Shared& sharedState)
     if (!navWorlds.empty()) levelScripts.ai().setNavigation(std::move(navWorlds));
     if (!shared.progress.started) game_save::start(shared.progress, options, archive, options.level);
     else game_save::sceneEntered(shared.progress, archive, options.level);
+    game_save::loadingScreen(shared.progress);
+    if (shared.audio) shared.audio->setOptionGains(runtime::gainOf(shared.progress.volumes.sound), runtime::gainOf(shared.progress.volumes.music));
     studs.setCounter(shared.progress.studs);
     if (options.superBricks && !shared.afterSwitch) shared.progress.superBricks = *options.superBricks;
     superBricks.setTotal(shared.progress.superBricks);

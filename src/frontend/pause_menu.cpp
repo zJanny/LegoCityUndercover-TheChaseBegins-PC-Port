@@ -44,10 +44,32 @@ PauseMenuSetup pauseMenuSetup(Resources& resources, const std::string& gameTextF
     setup.texts.subtitle = resources.textForKey(gameTextFile, kPauseSubtitleKey);
     setup.texts.select = resources.textForKey(gameTextFile, kShortcutSelectKey);
     setup.texts.back = resources.textForKey(systemTextFile, kShortcutBackKey);
+    setup.texts.optionsSubtitle = resources.textForKey(gameTextFile, runtime::kOptionsSubtitleKey);
+    runtime::OptionsTexts& options = setup.texts.options;
+    options.sound = resources.textForKey(gameTextFile, runtime::kOptionsSoundKey);
+    options.music = resources.textForKey(gameTextFile, runtime::kOptionsMusicKey);
+    options.invertCamera = resources.textForKey(gameTextFile, runtime::kOptionsInvertKey);
+    options.yes = resources.textForKey(gameTextFile, runtime::kOptionsYesKey);
+    options.no = resources.textForKey(gameTextFile, runtime::kOptionsNoKey);
+    options.language = resources.textForKey(gameTextFile, runtime::kOptionsLanguageKey);
     return setup;
 }
 
-PauseMenu::PauseMenu(const PauseMenuSetup& setup) : setup_(setup), round_(setup.round, setup.centres) {}
+PauseMenu::PauseMenu(const PauseMenuSetup& setup) : setup_(setup), round_(setup.round, setup.centres) {
+    save::SaveImage defaults;
+    defaults.resetOptions(std::uint8_t(language_));
+    std::copy(defaults.options(), defaults.options() + save::kOptionsSize, ownOptions_.begin());
+}
+
+void PauseMenu::bindOptions(std::uint8_t* options, runtime::OptionVolumes* volumes, int language) {
+    boundOptions_ = options;
+    boundVolumes_ = volumes;
+    language_ = language;
+}
+
+std::uint8_t* PauseMenu::liveOptions() { return boundOptions_ ? boundOptions_ : ownOptions_.data(); }
+
+runtime::OptionVolumes& PauseMenu::volumes() { return boundVolumes_ ? *boundVolumes_ : ownVolumes_; }
 
 void PauseMenu::open() {
     opened_ = true;
@@ -58,37 +80,78 @@ void PauseMenu::open() {
     round_ = RoundMenu(setup_.round, setup_.centres);
     round_.create();
     round_.setTitle(setup_.texts.title);
-    pageRequested_ = true;
-    page_ = justSwitched_ = false;
+    pageRequested_ = PausePage::Status;
+    page_ = PausePage::None;
+    justSwitched_ = false;
+    saveRequested_ = false;
     back_ = select_ = {};
 }
 
+void PauseMenu::setShortcut(ShortcutState& shortcut, bool shown) {
+    if (shortcut.shown != shown) shortcut = {shown, 0};
+}
+
+void PauseMenu::writeOptionTexts() {
+    for (int row = 0; row < runtime::kOptionsRowCount; ++row)
+        round_.setItemText(row, runtime::optionsRowText(row, setup_.texts.options, liveOptions(), volumes(), language_));
+}
+
+void PauseMenu::apply(const runtime::OptionsPageActions& actions) {
+    for (const int id : actions.sounds) sounds_.push_back(id);
+    if (actions.soundGain) gains_.sound = actions.soundGain;
+    if (actions.musicGain) gains_.music = actions.musicGain;
+    if (actions.backShortcut) setShortcut(back_, *actions.backShortcut);
+    if (actions.selectShortcut) setShortcut(select_, *actions.selectShortcut);
+    if (actions.closeRoundMenu) round_.close(false);
+    if (actions.saveRequest) saveRequested_ = true;
+    if (actions.textsChanged) writeOptionTexts();
+    if (actions.page == runtime::OptionsPageRequest::Page0) requestPage(PausePage::Status);
+    if (actions.page == runtime::OptionsPageRequest::Languages) unported_.push_back(PauseEntry::Languages);
+    for (const int id : round_.takeSounds()) sounds_.push_back(id);
+}
+
 void PauseMenu::enterPage() {
+    if (pageRequested_ == PausePage::Options) {
+        std::vector<RoundMenuItem> items;
+        for (const char* image : runtime::kOptionsItemImages) items.push_back({std::string(), image});
+        round_.open(runtime::kOptionsItemFolder, items, options_.savedSelection());
+        round_.setSubtitle(setup_.texts.optionsSubtitle);
+        apply(options_.enter());
+        apply(options_.selectionChanged(round_.selected()));
+        return;
+    }
     std::vector<RoundMenuItem> items;
     for (int i = 0; i < kPauseEntryCount; ++i) items.push_back({setup_.texts.items[i], kItemImages[i]});
     round_.open(kPauseItemFolder, items, savedSelection_);
     round_.setSubtitle(setup_.texts.subtitle);
-    back_ = {true, 0};
-    select_ = {true, 0};
+    setShortcut(back_, true);
+    setShortcut(select_, true);
+}
+
+void PauseMenu::requestPage(PausePage page) {
+    pageRequested_ = page;
+    if (page_ == PausePage::Options) {
+        apply(options_.leaveRequest(liveOptions(), volumes()));
+    } else if (page_ == PausePage::Status) {
+        round_.close(closing_);
+        setShortcut(back_, false);
+        setShortcut(select_, false);
+    }
 }
 
 void PauseMenu::requestClose() {
     closing_ = true;
     topTime_ = 0;
-    pageRequested_ = false;
-    if (page_) {
-        round_.close(true);
-        back_ = {false, 0};
-        select_ = {false, 0};
-    }
+    requestPage(PausePage::None);
 }
 
 void PauseMenu::pageSelect() {
     sounds_.push_back(kPauseSoundSelect);
     const PauseEntry entry = PauseEntry(round_.selected());
-    if (entry == PauseEntry::Resume) requestClose();
-    else unported_.push_back(entry);
     savedSelection_ = round_.selected();
+    if (entry == PauseEntry::Resume) requestClose();
+    else if (entry == PauseEntry::Options) requestPage(PausePage::Options);
+    else unported_.push_back(entry);
 }
 
 void PauseMenu::update(float dt, const PauseInput& input) {
@@ -98,6 +161,10 @@ void PauseMenu::update(float dt, const PauseInput& input) {
     topOnTime_ += dt;
     back_.time += dt;
     select_.time += dt;
+    if (input.left || input.right) {
+        runtime::restoreSoundVolume(liveOptions(), volumes());
+        gains_.sound = runtime::gainOf(volumes().sound);
+    }
     RoundMenuInput menuInput;
     menuInput.left = input.left;
     menuInput.right = input.right;
@@ -111,15 +178,21 @@ void PauseMenu::update(float dt, const PauseInput& input) {
         if (justSwitched_) {
             justSwitched_ = false;
         } else if (page_ == pageRequested_) {
-            if (page_ && result == 1) {
+            if (page_ == PausePage::Options) {
+                apply(options_.selectionChanged(round_.selected()));
+                apply(options_.update(round_.selected(), input.up, input.down, liveOptions(), volumes()));
+                if (result == 1) apply(options_.a(round_.selected(), liveOptions()));
+                else if (result == -1) apply(options_.b());
+            } else if (page_ == PausePage::Status && result == 1) {
                 pageSelect();
-            } else if (page_ && result == -1) {
+            } else if (page_ == PausePage::Status && result == -1) {
                 sounds_.push_back(kPauseSoundBack);
                 requestClose();
             }
         } else if (round_.state() == RoundMenuState::Idle) {
-            if (pageRequested_) enterPage();
-            page_ = pageRequested_;
+            const PausePage entering = pageRequested_;
+            if (entering != PausePage::None) enterPage();
+            page_ = entering;
             justSwitched_ = true;
         }
     }
@@ -133,6 +206,20 @@ void PauseMenu::update(float dt, const PauseInput& input) {
         for (const int id : round_.takeSounds()) sounds_.push_back(id);
     }
 }
+
+PauseGains PauseMenu::takeGains() {
+    PauseGains out = gains_;
+    gains_ = {};
+    return out;
+}
+
+bool PauseMenu::takeSaveRequest() {
+    const bool requested = saveRequested_;
+    saveRequested_ = false;
+    return requested;
+}
+
+void PauseMenu::saveDone() { apply(options_.saveDone()); }
 
 std::vector<PauseEntry> PauseMenu::takeUnported() {
     std::vector<PauseEntry> out;
@@ -197,7 +284,7 @@ void PauseMenu::drawBottom(Canvas& bottom, Resources& resources) const {
     back.label = setup_.texts.back;
     back.storyboard = back_.shown ? "TransitionOn" : "TransitionOff";
     back.time = back_.time;
-    back.drawn = page_ || closing_;
+    back.drawn = page_ != PausePage::None || closing_;
     select.label = setup_.texts.select;
     select.storyboard = select_.shown ? "TransitionOn" : "TransitionOff";
     select.time = select_.time;
