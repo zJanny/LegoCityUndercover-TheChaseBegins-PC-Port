@@ -18,7 +18,8 @@ None.
 
 ## 5. Open items
 
-- [ ] QOLMAP-1 — The minimap, drawn from the same map data as the original bottom-screen map: round, top-right corner, about one fifth of the screen height, rotating with the camera, zoom like the original map; own toggle. needs: QOLSET-1, QOLFS-1. evidence: [qol-screen-layout.md §2026-10-28T09:31:02](../../design/qol-screen-layout.md#ts-20261028-093102).
+- [ ] QOLMAP-1 — The minimap, drawn from the same map data as the original bottom-screen map: round, top-right corner, about one fifth of the screen height, rotating with the camera, zoom like the original map; own toggle. needs: QOLSET-1, QOLFS-1. blocks: QOLMAP-3. evidence: [qol-screen-layout.md §2026-10-28T09:31:02](../../design/qol-screen-layout.md#ts-20261028-093102).
+- [ ] QOLMAP-3 — Open question for the user: what the minimap shows and when (the original map icons and objective markers only, hidden in cutscenes and the fast-travel panel) and whether the player can zoom it. needs: QOLMAP-1. evidence: [qol-screen-layout.md §2026-10-28T09:31:02](../../design/qol-screen-layout.md#ts-20261028-093102).
 
 ## 6. Findings summary
 
