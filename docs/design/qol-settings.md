@@ -19,7 +19,8 @@ The user's approved design of how quality-of-life features are switched on and o
 - The minimap and the hiding of the bottom screen follow the master button only (Improved): [qol-screen-layout.md §2026-10-28T09:50:34](qol-screen-layout.md#ts-20261028-095034).
 - The master state is stored in `config/qol.cfg`: Original = all QoL off, Improved = all on (including the minimap and the hidden bottom screen); the per-feature switches (so far only the widened view with the corner HUD) apply only in Custom: [§2026-10-28T09:53:33](#ts-20261028-095333).
 - The key names of `config/qol.cfg` are approved: master key `master` with the values `Original`, `Improved`, `Custom` (case-sensitive); feature keys in snake_case with `on` or `off` (so far `widened_view`); `#` starts a comment: [§2026-10-28T21:43:23](#ts-20261028-214323).
-- Open: none that needs a user decision; implementation details (menu look) follow the recorded decisions.
+- Window mode and resolution are stored in `config/qol.cfg` under the keys `window_mode` and `resolution`; their value formats are open: [§2026-10-28T22:20:41](#ts-20261028-222041).
+- Open: the value formats of `window_mode` and `resolution`, and whether they are written only in Custom; implementation details (menu look) follow the recorded decisions.
 
 <a id="ts-20261028-092131"></a>
 
@@ -110,3 +111,13 @@ Asked of the user by the lead on 2026-10-28, with the names chosen by the worker
 - Parsing stays strict: an unknown key or a malformed line stops with an error naming the line (CLAUDE.md "Strict input").
 
 Open: none from this answer.
+
+<a id="ts-20261028-222041"></a>
+
+## 2026-10-28T22:20:41+01:00 — Where the Display tab stores window mode and resolution
+
+Asked of the user by the lead on 2026-10-28: "Where should the Display tab store the window mode and the resolution?"; the quoted label is the user's selection. Decides the storage for QOLSET-3 and the saving part of QOLSET-4. Adds to the key names of [§2026-10-28T21:43:23](#ts-20261028-214323).
+
+- Storage: "qol.cfg: window_mode, resolution": two new keys in `config/qol.cfg`, next to `master` and `widened_view`. The planner then puts QOLSET-3 into a later round.
+
+Open (not decided by the user): the value formats of `window_mode` (for example the spelling of windowed and borderless) and of `resolution` (for example a width and height pair or a named size), and whether they are written only in Custom like the feature lines or always.
