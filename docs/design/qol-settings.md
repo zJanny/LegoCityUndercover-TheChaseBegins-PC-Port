@@ -12,7 +12,9 @@ The user's approved design of how quality-of-life features are switched on and o
 - The Game tab mirrors the original Options entries (SFX volume, Music volume, Invert camera, Language), kept in sync with the original Options page, same values, same save: [§2026-10-28T09:32:07](#ts-20261028-093207).
 - `config/qol.cfg` has the line format of `config/controls.cfg`, parsed strictly: [§2026-10-28T09:32:07](#ts-20261028-093207).
 - The separation rule (`src/qol/`, library `chase_qol`, `tests/qol/` with `qol-*` tests, only the link line, a hook header include and listed hook calls in port files, CTest `qol-separation` in the first round) is confirmed: [§2026-10-28T09:32:07](#ts-20261028-093207).
-- Open: the points listed last in [§2026-10-28T09:32:07](#ts-20261028-093207).
+- Master button, window modes, tabs, files and the pause entry position: the master button cycles Original, Improved, Custom; the Display tab has windowed and borderless full screen plus an F11 shortcut; the Game, Display and Controls tabs are always active, bindings stay in `config/controls.cfg` and the rest is in `config/qol.cfg`; "PC Settings" is the last entry of the round pause menu, chosen by mouse, D-pad or keyboard: [§2026-10-28T09:37:29](#ts-20261028-093729).
+- All panels, the settings menu included, use the original game's art and fonts: [§2026-10-28T09:37:31](qol-screen-layout.md#ts-20261028-093731).
+- Open: what the master button restores when cycled to Custom (QOLSET-14); the points listed last in [§2026-10-28T09:32:07](#ts-20261028-093207).
 
 <a id="ts-20261028-092131"></a>
 
@@ -55,3 +57,16 @@ Asked of the user by the lead on 2026-10-28; the quoted labels are the user's se
 - Separation (6): "Confirm as proposed": `src/qol/` as library `chase_qol`, tests in `tests/qol/` named `qol-*`, port files contain only the link line, a QoL hook header include and listed hook calls, the CTest `qol-separation` guard in the first round.
 
 Open (not decided by the user): see the list in the report of the planner, recorded in the feature files as open items.
+
+<a id="ts-20261028-093729"></a>
+
+## 2026-10-28T09:37:29+01:00 — Master button, window modes, tabs, files and the pause entry
+
+Asked of the user by the lead on 2026-10-28; the quoted labels are the user's selections. Decides QOLSET-10 to QOLSET-13.
+
+- Master button (QOLSET-10): "Cycle all three": the master button runs through Original, Improved, Custom. This was not the recommended option (the recommendation was a click from Custom going to Improved).
+- Window modes (QOLSET-11): "Win + borderless + F11 (Rec.)": windowed and borderless full screen, plus an F11 shortcut.
+- Tabs and files (QOLSET-12): "Always, split files (Rec.)": the Game, Display and Controls tabs are always active; key bindings stay in `config/controls.cfg`, everything else in `config/qol.cfg`.
+- "PC Settings" entry (QOLSET-13): "Last entry, mouse+keys (Rec.)": the last entry of the round pause menu, chosen by mouse click, D-pad or keyboard like the other entries.
+
+Open (not decided by the user): what Custom restores when the master button cycles to it (QOLSET-14): the last Custom mix, a defined default mix, or skipping Custom while no mix exists.

@@ -4,7 +4,7 @@
 
 - Overall: IN_PROGRESS
 - Current Step: S1
-- Last Updated: 2026-10-28T09:33:52+01:00
+- Last Updated: 2026-10-28T09:38:37+01:00
 - Plan: docs/plans/qol.md
 
 ## Decisions
@@ -21,6 +21,9 @@ The user's third rule: QoL code is separate from the port's code. See [qol-setti
 ### Decision: Reaching the menu, minimap, aspect, other pages (2026-10-28T09:32:53+01:00)
 Title plus always shown "PC Settings" pause entry (approved exception); original options mirrored; round top-right rotating minimap; widening up to 16:9; scanner, build-it, shop and award viewer panels; separation rule confirmed. See [qol-settings.md §2026-10-28T09:32:07](../design/qol-settings.md#ts-20261028-093207) and [qol-screen-layout.md §2026-10-28T09:31:02](../design/qol-screen-layout.md#ts-20261028-093102).
 
+### Decision: Master button, files, HUD corners, toggles, panels (2026-10-28T09:38:37+01:00)
+Master button cycles all three states; windowed, borderless and F11; bindings in `controls.cfg`, the rest in `qol.cfg`; "PC Settings" last pause entry; 5:3 bars in narrow windows; standard HUD corners; one toggle for view and HUD; original minimap content at fixed zoom; one toggle per panel; original art for all panels. See [qol-settings.md §2026-10-28T09:37:29](../design/qol-settings.md#ts-20261028-093729) and [qol-screen-layout.md §2026-10-28T09:37:31](../design/qol-screen-layout.md#ts-20261028-093731).
+
 ## Blockers
 
 None.
@@ -35,3 +38,4 @@ One line per session, newest last; `--fix` keeps the newest 20 and moves older o
 
 - 2026-10-28T09:21:35+01:00 — Planner: opened the qol plan. See [qol-settings-menu](features/qol-settings-menu.md).
 - 2026-10-28T09:32:53+01:00 — Planner: recorded the user's answers on menu access, content, layout, minimap, aspect and separation. See [qol-settings-menu](features/qol-settings-menu.md).
+- 2026-10-28T09:38:37+01:00 — Planner: recorded the user's answers on the master button, window modes, files, HUD corners, toggles and panel look. See [qol-settings-menu](features/qol-settings-menu.md).

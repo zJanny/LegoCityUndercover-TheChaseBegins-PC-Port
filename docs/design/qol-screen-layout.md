@@ -10,7 +10,10 @@ The user's approved design of the first QoL features: the top screen as true ful
 - Minimap: round, top-right corner, about one fifth of the screen height, rotates with the camera, zoom like the original bottom-screen map: [§2026-10-28T09:31:02](#ts-20261028-093102).
 - The view widens up to 16:9 only; wider windows get black side bars: [§2026-10-28T09:31:02](#ts-20261028-093102).
 - Scanner, Build-it, Shop and Award viewer get a PC version (full-window panel clicked with the mouse) when their QoL feature is on: [§2026-10-28T09:31:02](#ts-20261028-093102).
-- Open: the look and exact content of every panel and the pause screen as PC menu: the list in the planner's report, recorded as open items.
+- Windows narrower than 5:3 keep the original 5:3 view with bars above and below; hearts and character picture top-left, studs and counters top-right, ability bottom-left, scaled to the window height; the widened view and the corner HUD are one toggle, the minimap its own: [§2026-10-28T09:37:31](#ts-20261028-093731).
+- The minimap shows the same icons and objective markers as the original map at a fixed zoom, hidden in cutscenes and panels: [§2026-10-28T09:37:31](#ts-20261028-093731).
+- One toggle per panel; hiding the bottom screen requires the minimap on; the PC pause menu holds Resume, Options (original page), Credits, Exit and PC Settings; all panels use the original game's art and fonts: [§2026-10-28T09:37:31](#ts-20261028-093731).
+- Open: what a page does when the bottom screen is hidden but its panel toggle is off (QOLBOT-14).
 
 <a id="ts-20261028-092133"></a>
 
@@ -36,3 +39,19 @@ Asked of the user by the lead on 2026-10-28; the quoted labels are the user's se
 - Widest aspect (5c): "16:9": the view widens up to 16:9 only; wider screens get black side bars.
 
 Open (not decided by the user): see the list in the report of the planner, recorded in the feature files as open items.
+
+<a id="ts-20261028-093731"></a>
+
+## 2026-10-28T09:37:31+01:00 — Narrow windows, HUD corners, toggles, minimap content, pause menu and panel look
+
+Asked of the user by the lead on 2026-10-28; the quoted labels are the user's selections. Decides QOLFS-4 to QOLFS-6, QOLMAP-3 and QOLBOT-11 to QOLBOT-13.
+
+- Narrow windows (QOLFS-4): "5:3 with bars (Rec.)": windows narrower than 5:3 keep the original 5:3 view with bars above and below.
+- HUD corners (QOLFS-5): "Standard corners (Rec.)": hearts and character picture top-left, studs and counters top-right, ability bottom-left; scaled to the window height.
+- Toggles of the view (QOLFS-6): "One toggle": the widened view and the corner HUD are one QoL toggle; the minimap stays separate.
+- Minimap content (QOLMAP-3): "Original content, fixed (Rec.)": the same icons and objective markers as the original map, hidden in cutscenes and panels, fixed zoom.
+- Bottom-screen toggles (QOLBOT-11): "Per panel, needs minimap (Rec.)": one toggle per panel; hiding the bottom screen requires the minimap on.
+- PC pause menu (QOLBOT-12): "Mirror + PC Settings (Rec.)": Resume, Options (the original page), Credits, Exit and PC Settings.
+- Look (QOLBOT-13): "Original art (Rec.)": the original game's art and fonts for all full-window panels, settings included.
+
+Open (not decided by the user): what a bottom-screen page does when the bottom screen is hidden but that page's panel toggle is off (QOLBOT-14).
