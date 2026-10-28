@@ -19,8 +19,9 @@ The user's approved design of how quality-of-life features are switched on and o
 - The minimap and the hiding of the bottom screen follow the master button only (Improved): [qol-screen-layout.md §2026-10-28T09:50:34](qol-screen-layout.md#ts-20261028-095034).
 - The master state is stored in `config/qol.cfg`: Original = all QoL off, Improved = all on (including the minimap and the hidden bottom screen); the per-feature switches (so far only the widened view with the corner HUD) apply only in Custom: [§2026-10-28T09:53:33](#ts-20261028-095333).
 - The key names of `config/qol.cfg` are approved: master key `master` with the values `Original`, `Improved`, `Custom` (case-sensitive); feature keys in snake_case with `on` or `off` (so far `widened_view`); `#` starts a comment: [§2026-10-28T21:43:23](#ts-20261028-214323).
-- Window mode and resolution are stored in `config/qol.cfg` under the keys `window_mode` and `resolution`; their value formats are open: [§2026-10-28T22:20:41](#ts-20261028-222041).
-- Open: the value formats of `window_mode` and `resolution`, and whether they are written only in Custom; implementation details (menu look) follow the recorded decisions.
+- Window mode and resolution are stored in `config/qol.cfg` under the keys `window_mode` and `resolution`; their values are `windowed` or `fullscreen` and `WIDTHxHEIGHT`, both written in every mode ([§2026-10-28T22:38:57](#ts-20261028-223857)): [§2026-10-28T22:20:41](#ts-20261028-222041).
+- Feature rows outside Custom copy the mode's switches into an own mix, apply the click and switch to Custom; menu rows and tabs wrap; Left and Right stay ignored: [§2026-10-28T22:38:57](#ts-20261028-223857), [§2026-10-28T23:13:22](#ts-20261028-231322).
+- Open: none that needs a user decision; implementation details (menu look) follow the recorded decisions.
 
 <a id="ts-20261028-092131"></a>
 
@@ -121,3 +122,23 @@ Asked of the user by the lead on 2026-10-28: "Where should the Display tab store
 - Storage: "qol.cfg: window_mode, resolution": two new keys in `config/qol.cfg`, next to `master` and `widened_view`. The planner then puts QOLSET-3 into a later round.
 
 Open (not decided by the user): the value formats of `window_mode` (for example the spelling of windowed and borderless) and of `resolution` (for example a width and height pair or a named size), and whether they are written only in Custom like the feature lines or always.
+
+<a id="ts-20261028-223857"></a>
+
+## 2026-10-28T22:38:57+01:00 — Feature rows outside Custom, row wrap, window mode and resolution values
+
+Asked of the user by the lead on 2026-10-28; the quoted labels are the user's selections. Decides QOLSET-16 and QOLSET-17 and the open part of [§2026-10-28T22:20:41](#ts-20261028-222041).
+
+- Feature row while the master is Original or Improved (QOLSET-16): "Switch to Custom": "Copy the current mode's switches into an own mix, apply the click, and set the master to Custom."
+- Moving past the first or last row (QOLSET-17): "Wrap around": "From the last row to the first and back; the other keys as A built them." So PageUp/PageDown and pad L/R switch tabs, Enter or pad A activates, Escape or pad B goes back, hover selects, click selects and activates, and Left/Right stay ignored.
+- Values in `config/qol.cfg`: "windowed|fullscreen, WxH, always": `window_mode` is `windowed` or `fullscreen`; `resolution` is `WIDTHxHEIGHT`, for example `1280x720`; both are written in every mode.
+
+Open: none from this answer.
+
+<a id="ts-20261028-231322"></a>
+
+## 2026-10-28T23:13:22+01:00 — Tabs wrap
+
+Asked of the user by the lead on 2026-10-28: "Should the tabs (PageUp/PageDown, pad L/R) also wrap from the last tab to the first and back? Right now they stop at the first and last tab." The user's answer, "Tabs wrap too": "From the last tab to the first and back, like the rows." Extends the row wrap of the entry before it.
+
+Open: none from this answer.
