@@ -18,7 +18,8 @@ The user's approved design of how quality-of-life features are switched on and o
 - The bottom screen and its panels have no toggle of their own; only the master button switches them: [qol-screen-layout.md §2026-10-28T09:48:15](qol-screen-layout.md#ts-20261028-094815).
 - The minimap and the hiding of the bottom screen follow the master button only (Improved): [qol-screen-layout.md §2026-10-28T09:50:34](qol-screen-layout.md#ts-20261028-095034).
 - The master state is stored in `config/qol.cfg`: Original = all QoL off, Improved = all on (including the minimap and the hidden bottom screen); the per-feature switches (so far only the widened view with the corner HUD) apply only in Custom: [§2026-10-28T09:53:33](#ts-20261028-095333).
-- Open: none that needs a user decision; implementation details (menu look, `qol.cfg` keys) follow the recorded decisions.
+- The key names of `config/qol.cfg` are approved: master key `master` with the values `Original`, `Improved`, `Custom` (case-sensitive); feature keys in snake_case with `on` or `off` (so far `widened_view`); `#` starts a comment: [§2026-10-28T21:43:23](#ts-20261028-214323).
+- Open: none that needs a user decision; implementation details (menu look) follow the recorded decisions.
 
 <a id="ts-20261028-092131"></a>
 
@@ -93,5 +94,19 @@ Open: none from this answer.
 Asked of the user by the lead on 2026-10-28; the quoted label is the user's selection. Decides QOLSET-15. [Corrects §2026-10-28T09:21:31](#ts-20261028-092131): that entry said the master state is derived from the per-feature switches.
 
 - Master state (QOLSET-15): "Stored value (Rec.)": "Master state stored in config/qol.cfg. Original = all QoL off, Improved = all on (incl. minimap + hidden bottom); per-feature switches (so far only widened view + corner HUD) apply only in Custom."
+
+Open: none from this answer.
+
+<a id="ts-20261028-214323"></a>
+
+## 2026-10-28T21:43:23+01:00 — Key names of config/qol.cfg
+
+Asked of the user by the lead on 2026-10-28, with the names chosen by the worker of round 20261028-qol (agent A) for `config/qol.cfg`; the user's answer, as given: "Keep these names". Refines the line format of [§2026-10-28T09:32:07](#ts-20261028-093207) ("name value" per line, like `config/controls.cfg`): this entry sets the key names and values.
+
+- Master key: `master`, with the values `Original`, `Improved`, `Custom`. The values are case-sensitive.
+- Feature keys: snake_case, with the values `on` or `off`. So far `widened_view`; later features (fullscreen, minimap) add their keys in the same style.
+- `#` starts a comment line or a comment at the end of a line.
+- Feature lines are written only once the user has set an own mix (Custom, see [§2026-10-28T09:40:40](#ts-20261028-094040)).
+- Parsing stays strict: an unknown key or a malformed line stops with an error naming the line (CLAUDE.md "Strict input").
 
 Open: none from this answer.
