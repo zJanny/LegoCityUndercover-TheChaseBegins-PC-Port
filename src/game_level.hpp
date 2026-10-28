@@ -53,6 +53,7 @@
 #include "runtime/scanner.hpp"
 #include "runtime/switch_set.hpp"
 #include "runtime/scanner_info.hpp"
+#include "runtime/scanner_bottom.hpp"
 #include "runtime/scanner_markers.hpp"
 #include "runtime/scanner_reticle.hpp"
 #include "runtime/scanner_render.hpp"
@@ -201,7 +202,7 @@ private:
     void showNestedProps(const std::vector<bool>& drawn);
     void drawZiplineRopes(const chase::render::Mat4& view, const chase::render::Mat4& viewProjection);
     void logDetectiveStates();
-    void updateScanner();
+    void updateScanner(const chase::runtime::PadState& padInput);
     game_player::PlayerAnimation movePlayer(const chase::runtime::StickIntent& intent, bool jumpPressed, float dt);
     game_player::PlayerAnimation moveClimbingPlayer(const chase::runtime::StickIntent& intent, bool jumpPressed, bool usePressed, float dt);
     game_player::PlayerAnimation climbBarMovePlayer(const chase::runtime::StickIntent& intent, bool jumpPressed, bool usePressed, float dt);
@@ -433,6 +434,7 @@ private:
     chase::runtime::ScannerReticle scannerReticle;
     chase::runtime::ScannerMarkers scannerMarkers;
     chase::runtime::ScannerInfo scannerInfo;
+    chase::runtime::ScannerBottom scannerBottom;
     std::vector<chase::runtime::ZiplineAnchor> ziplines;
     chase::runtime::ZiplineRider ziplineRider;
     std::vector<chase::runtime::ZiplineRope> ziplineRopes;

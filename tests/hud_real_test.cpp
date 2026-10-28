@@ -160,13 +160,29 @@ void minimap(Resources& resources) {
     require(bottom.pixel(10, 200)[0] == 0 && bottom.pixel(10, 200)[1] == 0, "a level without a map shows no map");
     // Provenance: oracle B-1 pictures 04_full_zoom (round 27): during the scanner view the headphone button stands at (0, 116) and the
     // exit button at (0, 176) of the bottom screen (mapbuttons.bxaml buttonAudio / buttonExit) and the characters button is gone.
+    // The slides (round 20261028-uiport-D, 0x262d94 / 0x26307c): ExitOnDelay holds the button at x - 70 for 0.267 s and ends at 0.533 s,
+    // AudioOnDelay grows the audio button from scale 0 after 0.267 s, CharsOff moves the characters button to x - 70 in 0.267 s.
+    const auto lit = [&](int x, int y) { return bottom.pixel(x, y)[0] + bottom.pixel(x, y)[1] + bottom.pixel(x, y)[2] > 0; };
+    runtime::ScannerBottom buttons;
+    buttons.follow(runtime::ScannerPhase::TakingOut, runtime::ScannerPhase::Entering, 1.0f / 30.0f);
     MinimapView scanning = view;
-    scanning.scanner = true;
+    scanning.scannerButtons = buttons.pose();
     drawMinimap(bottom, resources, "lvl_missing", scanning);
-    require(bottom.pixel(32, 208)[0] + bottom.pixel(32, 208)[1] + bottom.pixel(32, 208)[2] > 0, "the exit button is drawn in the scanner view");
-    require(bottom.pixel(32, 148)[0] + bottom.pixel(32, 148)[1] + bottom.pixel(32, 148)[2] > 0, "the audio button is drawn in the scanner view");
+    require(!lit(32, 208) && !lit(32, 148), "the exit and audio buttons are not on the screen when the slide starts");
+    require(lit(32, 32), "the characters button is still there when the slide starts");
+    for (int i = 0; i < 16; ++i) buttons.follow(runtime::ScannerPhase::Entering, runtime::ScannerPhase::Entering, 1.0f / 30.0f);
+    scanning.scannerButtons = buttons.pose();
+    drawMinimap(bottom, resources, "lvl_missing", scanning);
+    require(lit(32, 208), "the exit button is drawn in the scanner view");
+    require(lit(32, 148), "the audio button is drawn in the scanner view");
+    require(!lit(32, 32), "the characters button has left the screen");
+    buttons.follow(runtime::ScannerPhase::Active, runtime::ScannerPhase::Exiting, 1.0f / 30.0f);
+    for (int i = 0; i < 16; ++i) buttons.follow(runtime::ScannerPhase::Exiting, runtime::ScannerPhase::Exiting, 1.0f / 30.0f);
+    scanning.scannerButtons = buttons.pose();
+    drawMinimap(bottom, resources, "lvl_missing", scanning);
+    require(!lit(32, 208) && !lit(32, 148) && lit(32, 32), "after the exit the buttons are back as on the map screen");
     drawMinimap(bottom, resources, "lvl_missing", view);
-    require(bottom.pixel(32, 208)[0] + bottom.pixel(32, 208)[1] + bottom.pixel(32, 208)[2] == 0, "no exit button outside the scanner view");
+    require(!lit(32, 208), "no exit button outside the scanner view");
 }
 }
 

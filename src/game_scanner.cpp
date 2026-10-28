@@ -20,7 +20,7 @@ const char* phaseName(runtime::ScannerPhase phase) {
 }
 }
 
-void LevelSession::updateScanner() {
+void LevelSession::updateScanner(const runtime::PadState& padInput) {
     const unsigned calls = levelScripts.objectives().recordedCalls(runtime::ObjectiveNativeKind::EnableScanner);
     if (calls != scannerCallsSeen) {
         scannerCallsSeen = calls;
@@ -42,6 +42,10 @@ void LevelSession::updateScanner() {
         input.usable = !flags || !flags->usable || *flags->usable;
     }
     input.exitPressed = pad.slot(kSlotJumpButton).press > 0;
+    if (scannerBottom.touch({padInput.touch, float(padInput.touchX), float(padInput.touchY), scanner.active(), scanner.canToggle()})) {
+        std::cout << "scanner: back button touched at update " << updates << '\n';
+        input.exitPressed = true;
+    }
     input.scanHeld = pad.slot(6).value;
     input.cancelPressed = pad.slot(kSlotButtonY).press > 0;
     input.stickX = pad.channel(0).value;
@@ -75,6 +79,11 @@ void LevelSession::updateScanner() {
         }
     }
     if (scanner.phase() != before) std::cout << "scanner " << phaseName(scanner.phase()) << " at update " << updates << '\n';
+    scannerBottom.follow(before, scanner.phase(), input.dt);
+    for (const int sound : scannerBottom.takeSounds()) {
+        soundLog.emplace_back(updates, std::uint16_t(sound));
+        if (shared.audio) shared.audio->playUi(unsigned(sound));
+    }
 }
 
 bool LevelSession::scannerView(float eye[3], float& yaw, float& pitch, float& fieldOfView) const {

@@ -4,7 +4,5 @@ Ranges of item IDs held by parallel agents, named like `20261021-audio-A`. The p
 
 | Prefix | First | Last | Holder | Date |
 |---|---|---|---|---|
-| SCAN | 18 | 20 | 20261028-uiport-D | 2026-10-28T22:23:21+01:00 |
-| SCAN-S | 13 | 14 | 20261028-uiport-D | 2026-10-28T22:23:21+01:00 |
 | HUD | 86 | 88 | 20261028-uiport-E | 2026-10-28T22:23:21+01:00 |
 | HUD-S | 79 | 80 | 20261028-uiport-E | 2026-10-28T22:23:22+01:00 |

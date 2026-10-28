@@ -520,10 +520,10 @@ void LevelSession::draw(int width, int height) {
         mapView.cameraYaw = follow->yaw();
         mapView.playerYaw = runtime::headingRadians(player->motion.facing);
         mapView.markers = activeMapMarkers();
-        mapView.scanner = scanner.viewShown();
+        mapView.scannerButtons = scannerBottom.pose();
         mapView.markerField = &mapMarkerField;
         const fe::LayoutScene buttons = fastTravelState.mapButtons ? fe::mapButtonsScene(*fastTravelState.mapButtons) : fe::LayoutScene{};
-        if (fastTravelState.mapButtons && !mapView.scanner) mapView.buttons = &buttons;
+        if (fastTravelState.mapButtons && mapView.scannerButtons.stage == runtime::ScannerBottomStage::Map) mapView.buttons = &buttons;
         addObjectiveMapIcons(mapView);
         fe::drawMinimap(mapCanvas, hudResources, levelName, mapView);
     } else {

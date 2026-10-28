@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 1009 open items and stand-ins, 176 linked to game usage, 833 with unknown reach.
+Items: 1010 open items and stand-ins, 176 linked to game usage, 834 with unknown reach.
 
 ## Top 50 overall
 
@@ -87,7 +87,7 @@ Items: 1009 open items and stand-ins, 176 linked to game usage, 833 with unknown
 
 ## Player and camera
 
-16 of 200 items linked.
+16 of 201 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -100,7 +100,7 @@ Items: 1009 open items and stand-ins, 176 linked to game usage, 833 with unknown
 | 7 | [TRAV-55](features/player-traversal.md?display=source#L52) | 0 | 66 | 7 | 0 | - | `props/parkour_zipline` | The zipline poles (`props/parkour_zipline` anchors) can be walked through in `chase-game` (user report); in ... |
 | 8 | [TRAV-48](features/player-traversal.md?display=source#L47) | 0 | 22 | 5 | 1 | - | `props/parkour_tightrope` | The ropes of the tightrope anchors (`GrappleLineType` 0) use the same draw 0x1a9dc4 and are not loaded, so ... |
 | 9 | [TRAV-54](features/player-traversal.md?display=source#L51) | 0 | 22 | 5 | 0 | - | `props/parkour_tightrope` | The poles of the tightrope anchors (`props/parkour_tightrope`, 4 in lvl_01) are drawn at ... |
-| 10 | [SCAN-2](features/abilities-scanner.md?display=source#L37) | 7 | 0 | 3 | 0 | 1 stand-in | `enablescanner` | Other type 201 zones: photo (ScannerMode 4 in the class, sub-mode 0 values of 0x2ef814), physical (kind 2) ... |
+| 10 | [SCAN-2](features/abilities-scanner.md?display=source#L38) | 7 | 0 | 3 | 0 | 1 stand-in | `enablescanner` | Other type 201 zones: photo (ScannerMode 4 in the class, sub-mode 0 values of 0x2ef814), physical (kind 2) ... |
 
 ## Level objects
 
@@ -212,7 +212,7 @@ No script native or object class is linked to these items (`+N` is Unblocks). Ad
 Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?display=source#L33) (+30), [VEH-6](features/vehicles-physics.md?display=source#L30) (+24), [TRAFFIC-7](features/pedestrians-traffic-cars.md?display=source#L56) (+23), [TRAFFIC-8](features/pedestrians-traffic-cars.md?display=source#L57) (+23), [TRAFFIC-9](features/pedestrians-traffic-cars.md?display=source#L58) (+23), [TRAFFIC-2](features/pedestrians-traffic-cars.md?display=source#L51) (+22), [SCRIPT-43](features/script-system-natives.md?display=source#L30) (+18), [SCRIPT-94](features/script-system-ai-navigation.md?display=source#L34) (+17), [SCRIPT-44](features/script-system-natives.md?display=source#L31) (+16), [SCRIPT-101](features/script-system-ai-navigation.md?display=source#L37) (+15)
 
 - [abilities-detective.md](features/abilities-detective.md): DETECT-19 (+3), DETECT-13 (+2), DETECT-1 (+1), DETECT-15 (+1), DETECT-4 (+1), DETECT-6 (+1), DETECT-S11 (+1), DETECT-S7 (+1), DETECT-S8 (+1), DETECT-10, DETECT-11, DETECT-12, DETECT-18, DETECT-3, DETECT-5, DETECT-9, DETECT-S1, DETECT-S2, DETECT-S4, DETECT-S5, DETECT-S6, DETECT-S9
-- [abilities-scanner.md](features/abilities-scanner.md): SCAN-11 (+2), SCAN-10 (+1), SCAN-16 (+1), SCAN-17 (+1), SCAN-S10 (+1), AUDIO-S33, SCAN-13, SCAN-15, SCAN-3, SCAN-6, SCAN-S1, SCAN-S11, SCAN-S12, SCAN-S2, SCAN-S3, SCAN-S4, SCAN-S5, SCAN-S6, SCAN-S7, SCAN-S8, SCAN-S9
+- [abilities-scanner.md](features/abilities-scanner.md): SCAN-10 (+1), SCAN-16 (+1), SCAN-17 (+1), SCAN-S10 (+1), AUDIO-S33, SCAN-13, SCAN-15, SCAN-19, SCAN-3, SCAN-6, SCAN-S1, SCAN-S11, SCAN-S12, SCAN-S13, SCAN-S14, SCAN-S2, SCAN-S3, SCAN-S4, SCAN-S5, SCAN-S6, SCAN-S7, SCAN-S9
 - [animation-characters.md](features/animation-characters.md): ANIM-13 (+4), ANIM-3 (+2), ANIM-10 (+1), ANIM-11 (+1), ANIM-14 (+1), ANIM-1, ANIM-4, ANIM-S10, ANIM-S11, ANIM-S2
 - [assets-formats.md](features/assets-formats.md): ASSET-1, ASSET-2, ASSET-3, ASSET-4, ASSET-8, ASSET-S1, ASSET-S2
 - [audio.md](features/audio.md): AUDIO-3 (+2), AUDIO-20 (+1), AUDIO-32 (+1), AUDIO-34 (+1), AUDIO-35 (+1), AUDIO-36 (+1), AUDIO-37 (+1), AUDIO-1, AUDIO-38, AUDIO-5, AUDIO-6, AUDIO-7, AUDIO-S1, AUDIO-S2, AUDIO-S20, AUDIO-S3, AUDIO-S30, AUDIO-S34, AUDIO-S35, AUDIO-S36, AUDIO-S4, AUDIO-S5, AUDIO-S6, AUDIO-S7

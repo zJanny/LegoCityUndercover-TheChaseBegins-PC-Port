@@ -411,7 +411,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         updateUseSpots(carry.carryingMode() == 0 && !carry.busy() && !builditPlayer.active() && !buildits.lastUse().inZone);
         useSwitches(carry.carryingMode() == 0 && !carry.busy() && !builditPlayer.active() && !buildits.lastUse().inZone);
         updateUseMarkers(dt);
-        updateScanner();
+        updateScanner(padInput);
         updateSuperBricks(dt);
     });
     order.run();

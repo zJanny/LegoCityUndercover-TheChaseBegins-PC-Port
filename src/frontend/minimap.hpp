@@ -7,6 +7,7 @@
 #include "frontend/layout.hpp"
 #include "frontend/map_marker.hpp"
 #include "frontend/resources.hpp"
+#include "runtime/scanner_bottom.hpp"
 #include <array>
 #include <string>
 #include <vector>
@@ -41,11 +42,11 @@ struct MinimapView {
     const MapMarkerField* markerField = nullptr;
     std::vector<MinimapGroupTargets> groupTargets;
     std::vector<MinimapGroupSlot> groupSlots;
-    // The scanner view (docs/re/abilities-scanner.md): the characters button gives way to the audio (greyed) and exit buttons.
-    // STAND-IN (SCAN-S8): the buttons stand at their final place without the slide-in storyboards, the audio button uses the
-    // "disabled" look read from the oracle picture, and the player arrow and the map circle of the scanner screen are not drawn.
-    bool scanner = false;
-    // The map buttons (runtime/map_buttons.hpp) as frontend/map_buttons_view.hpp lays them out; without it the characters button alone.
+    // The scanner view (docs/re/abilities-scanner-overlay.md): the characters button slides out, the audio (disabled) and exit buttons
+    // slide in, and back after the exit (runtime/scanner_bottom.hpp).
+    runtime::ScannerBottomPose scannerButtons;
+    // The map buttons (runtime/map_buttons.hpp) as frontend/map_buttons_view.hpp lays them out, outside the scanner's stages; without it
+    // the characters button alone.
     const LayoutScene* buttons = nullptr;
 };
 

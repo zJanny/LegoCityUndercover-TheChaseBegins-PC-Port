@@ -7,6 +7,7 @@ The top-screen overlay of the audio scanner view (layouts of `sprites/blend/DRC_
 - Overlay: layouts of `sprites/blend/DRC_Scanner` at half scale centred on the screen, zoom meter time = zoom progress x 3.0 s, reticle storyboards `Ret_Focus` / `Ret_LockingOn` by lock state, scan meter by scan progress; the reticle position follows 0x2ef4c8. [§20261019-085330](#ts-20261019-085330)
 - Markers: every scannable on screen gets a `SoundCentre` pip and one of 15 `SoundPulse` ring triplets (the large green rings); the map screen shows the audio and exit buttons; the exit by B ends 57 updates after the press. [§2026-10-19T10:01:16](#ts-20261019-100116)
 - Info boxes: state machine 0x2d2e14, top / bottom choice 0x1f3494 (reticle y against 105 with a hysteresis of 20), icon table = sheet 0 of `tables/tablespoi.bxls` by the class value `InfoIcon`; ported. [§2026-10-20T00:18:54+02:00](#ts-20261020-001854)
+- Bottom screen: the scanner enter 0x262d94 slides the characters button out and the exit and audio (disabled) buttons in, the exit 0x26307c slides them back; the back button (centre 32, 208, radius 32) sends the same toggle as B on the first update of a touch; ported. [§2026-10-28T22:47:05](#ts-20261028-224705)
 - Overlay leftovers: `TargetAquired_On`, `ScanButtonPrompt_*` and `WAV*` are never started; the info boxes follow the state machine 0x2d2e14 on scan state 6; the frame tint depends on ability bit 28; the sonar formula of 0x2e9030 is transcribed. [§2026-10-19T14:13:26](#ts-20261019-141326)
 
 <a id="ts-20261019-085330"></a>
@@ -42,6 +43,7 @@ Unknowns:
 ## 2026-10-19T10:01:16+02:00 — Scanner sound markers, map-screen buttons, exit by B, where the wash is not (REA, oracle B-1 and B-2 of round 28)
 
 Corrected by [abilities-scanner.md §2026-10-19T14:06:22](abilities-scanner.md#ts-20261019-140622): the wash is the material override 0x530834 of the audio mode, and there is no green dog (the green shape is the 2D spinner).
+Corrected by [abilities-scanner-overlay.md §2026-10-28T22:47:05](#ts-20261028-224705): the button records are 0x2c bytes apart from 0x519e4c (0x519e24 is the map screen object).
 
 ### Method
 
@@ -140,3 +142,59 @@ llvm-objdump (`--mattr=+vfp2,+vfp3`) of `artifacts/game/game.arm.elf`: 0x2d2e14 
 
 Unknowns:
 - The units of the record's +0x14 / +0x18 (the port uses pixels from the screen centre, measured), the writer of byte +0x24 and its link to `InfoIcon`, the name of ability bit 28, the tail 0x2d3020 (0x2c5774 object), whether 0x5268fc is `info_top` by code, and the fade-out in the oracle.
+
+<a id="ts-20261028-224705"></a>
+
+## 2026-10-28T22:47:05+01:00 — Scanner bottom screen: map buttons at the scanner enter and exit, the back button (REA, llvm-objdump; round 20261028-uiport-D)
+
+[Corrects §2026-10-19T10:01:16 (the button records)](#ts-20261019-100116): the button records are 0x2c bytes apart from 0x519e4c, and 0x519e24 is the map screen object that holds them.
+
+### Method
+
+REA (Ghidra 12.1.2) pseudocode of 0x1bf2d0 (with the body part 0x262d94), 0x2dc83c (map buttons setup), 0x2d9f84 (map buttons update), 0x2134c8, 0x217d0c, 0x217bec, 0x24d08c, 0x1ede80, 0x1ee520, 0x1ee4f0, 0x20a410, 0x25255c, 0x235684; llvm-objdump (armv6k) of 0x1bf2d0 .. 0x1bf528 and 0x262d94 .. 0x2631c4 (the two tail calls and the literal pools); layouts `mapbuttons.bxaml` and `button.bxaml` with `chase-layoutdump --tracks`; the hint texts with `tools/convert_loc.py`.
+
+### Button records (setup 0x2dc83c)
+
+- The map screen object is 0x519e24. Its button records (0x1ede80: the `button.bxaml` layout +0, the reference +4, the root +8, the looks `default` +0xc, `pressed` +0x10, `toggleon` +0x14, `toggleoff` +0x18, `disabled` +0x1c, `attention` +0x20, touch radius +0x24 = 0, flags +0x28) sit at +0x28 `buttonScan`, +0x54 `buttonExit`, +0x80 `buttonChars`, +0xac `buttonAudio`, +0xd8 `buttonRedBricks`, +0x104 `buttonFreeplay`, +0x130 `buttonHint`. The slide storyboards of `mapbuttons.bxaml` are kept at 0x51a1f8.. (`charsOpen`, `charsClose`, `fastTravelOn`/`Off`, `ScanOnDelay`/`ScanOff`, `CharsOnDelay`/`CharsOff`, `RedBricksOnDelay`/`Off`, `AudioOnDelay`/`AudioOff`, `ExitOnDelay`/`ExitOff`, `FreeplayOnDelay`/`Off`, `HintOff`); setup runs every `...Off` and `charsClose` to its end (0x245b40 with 0xffff as fifth argument), which keeps those buttons off the screen.
+- 0x2134c8(button, n) plays `disabled` (n = 1) or `default` (n = 0) and stores n in flag bit 0; 0x217d0c(button, n) plays `pressed`, then `toggleon` with UI sound 0x14 (n = 1) or `toggleoff` with UI sound 0x11 (n = 0) through 0x235684(*0x375f44, id), and stores n in flag bit 1. 0x217bec(map, n) starts `CharsOnDelay` (unless +0x472), `ScanOnDelay` (if +0x476), `RedBricksOnDelay` (if +0x477) and `FreeplayOnDelay` (if +0x478) with the fifth argument 0 for n = 1 and 8 for n = 0. Read as a start frame of 1/30 s (0xffff = the end, 8 = past the 0.267 s hold of the `...OnDelay` boards); inferred, the evaluator 0x245b40 was not read.
+- Slides from the layout data: `ExitOnDelay` holds `buttonExit` at x - 70 for 0.267 s and moves it to 0 at 0.533 s; `ExitOff` moves it to -70 in 0.267 s; `AudioOnDelay` keeps `buttonAudio` at scale 0 and opacity 0 for 0.267 s, then scale 1.2 at 0.433 s and 1 at 0.5 s; `AudioOff` shrinks it to 0 in 0.233 s; `CharsOff` moves `buttonChars` to -70 in 0.267 s, `CharsOnDelay` holds it at -70 for 0.267 s and moves it back by 0.533 s.
+
+### Scanner enter (state 0x157, 0x1bf2d0 tail-calls 0x262d94)
+
+- Arguments: r0 = 0 when the kind 0x375eb5 is 2, else 1; r1 = 3 for kind 2, else 2 when the zone's type byte +0x12 is 201, else 1, or 0 when 0x375eb8 and 0x375eb7 are both set. For the audio zone of mission 1-2 (kind 1, type 201) r0 = 1 and r1 = 2.
+- Order: +0x473 = 1, +0x474 = r1; with r0 and the scan toggle bit clear, 0x217d0c(scan, 1); 0x2134c8(scan, 1); 0x217d0c(exit, 0); 0x2134c8(exit, 0); 0x2134c8(audio, 0); characters, red bricks and freeplay disabled; hint disabled when the zone's type is not 0xd1. Then by r1: 0 audio enabled and toggled on, 1 audio enabled and toggled off, 2 audio disabled, 3 audio disabled; 0x24d08c(audio root, 1) for 0 to 2 and 0 for 3 (flag bit 0 of node +0x144, meaning not read). With the characters page open (0x51a296) the characters button is toggled off, `charsClose` starts and 0x217bec(map, 0). `ScanOff`, `RedBricksOff`, `FreeplayOff` start when those buttons are unlocked (0x51a29a, 0x51a29b, 0x51a29c); `CharsOff`, `AudioOnDelay` and `ExitOnDelay` always start from their beginning; last, 0x2247ac(0x19).
+- So in mission 1-2 the scanner enter plays the sounds 0x14 (scan toggled on) and 0x11 (exit toggled off), slides the characters button out and the exit and audio buttons in, and the audio button shows the `disabled` look of the oracle picture.
+
+### Scanner exit (state 0x158, 0x1bf478 tail-calls 0x26307c)
+
+- +0x473 = 1; 0x217d0c(scan, 0) (sound 0x11); 0x217d0c(exit, 1) only when the exit toggle bit is clear (sound 0x14); scan, characters, red bricks and freeplay enabled, audio disabled, hint enabled when the zone's type is not 0xd1; 0x2459d8(0x5190bc); `AudioOff` and `ExitOff` from their start; 0x217bec(map, 1) (`CharsOnDelay` from its start); 0x224cdc(0x27), 0x2247ac(0x1a), 0x224cdc(0x2d).
+
+### Back button (map buttons update 0x2d9f84)
+
+- Hit test 0x1ee520: no hit when the button is disabled (flag bit 0); centre = the reference's position (0x23ca28) plus half its width and height, radius = half the width (+0x24 is 0); hit when the touch record (0x25255c, 0x52a4d8) is in phase 2 or 1 and the distance (0x228aac) is at most the radius. The buttons are tested in the order scan (only when unlocked, +0x476), exit, characters, audio, red bricks, freeplay, hint, then the map page buttons; the first hit counts.
+- The touch timer +0x460 is cleared in every update without a hit and grows by the frame time while a touch is held, so a button acts only on the first update of a fresh touch on it (a touch slid onto it does not act).
+- Exit: with the scanner on (0x246128), the hit button the exit record and the timer 0, and 0x1ee4f0 true (0x375eb6 set and 0x236104 false): 0x217d0c(exit, 1) (look `toggleon`, sound 0x14) and 0x2249e0(1, 0), the same toggle message as B; state 0x158 follows. The button `buttonExit` is at 0, 176, 64 x 64 in `mapbuttons.bxaml`, so the circle is centre (32, 208), radius 32 once `ExitOnDelay` has ended. While the view is entering 0x375eb6 is 0 and the touch does nothing, like B.
+- Also in 0x2d9f84: with the scanner on and 0x236104 true, 0x2249e0(1, 0) is sent every update (a forced exit; 0x236104 not identified).
+
+### Tutorial box text
+
+- The box seen after the exit in oracle B-1 is the hint text 0x37f27add "Press <l> or <r> to zoom in and out." (`localisation/hinttext_uk.loc`); 0x37f27adc "Use <stick> to look around." and 0x37f27adb "Hold <east> to lock on to the audio source." are its neighbours. None of the three keys is a literal in the code or in the files of `lvl_01_cherrytreehills`, nor a value of `tables/tableshintgroups.bxls`; who shows them was not found.
+
+### Oracle (request 20261028-uiport-D-1, emulator servant, recorded from a save state on the roof at the sound scanner trigger of mission 1-2, two loads; pictures described here, not kept)
+
+- Before A: the map with the characters button at the top left and the hint button (magnifier) at the right; the player icon is the normal blue arrow in a circle. About 45 updates after A the characters and hint buttons are gone and the greyed headphone button (0, 116) and the back-arrow button (0, 176) stand at their places, as the scanner enter predicts.
+- The white circle around the player icon grows and repeats; it also shows on the map after the exit, so it is not part of the scanner screen (it matches the map marker ring of a waypoint at the player). The "arrow icon" is the player icon itself, turned to the scanner's view direction. Neither needs scanner code.
+- From about 49 updates after A a tip page fades in over the whole lower screen (blue background, a box with a green "!" and a police badge): "Use (circle pad) to look around."; about 120 updates after A the same page shows "Press L or R to zoom in and out."; in between the map is back. This is the hint box and the tutorial box: tip pages during the view, not a scanner layout.
+- A touch at (32, 208) in the full view: in the first picture the back-arrow button is highlighted (the `toggleOn` look) and already moving left, the audio button still standing; a few pictures later both are gone and the characters button slides in from the left; later the hint button comes back at the right; the map screen is normal again. A touch at (66, 208), 34 pixels from the centre, leaves the scanner open (radius 32 confirmed).
+
+- Bytes of the servant's written answer (stepped updates, one scheduler call per update, counted from the update the A press starts, A held 2 updates; two loads agree unless noted; B = 0x375eb4..0x375eb9, E = 0x375ee8 / 0x375ee9, F = 0x51a297 / 0x51a298 = map screen +0x473 / +0x474): before A B 00 00 01 00 00 00, E 00 00, F 00 00; updates 0 to 10 B 00 01 00 00 00 00 (kind 0x375eb5 = 1); the scanner enter at update 15 (one load) or 20 (the other): E 01 01 and F 01 02, so +0x474 = 2 as read above for a type 201 zone; from update 25 on B 00 01 01 00 00 01, E 01 00, F 00 02 (+0x473 is cleared again a few updates after the enter, by a setter like 0x1cd330 / 0x1cd34c; who calls it was not read).
+- Back button (touch at 32, 208 held 2 updates at update 135): right after the touch B 00 01 00 00 00 01, E 01 01, F 01 02 (0x375eb6 cleared, the exit transition running, +0x473 set by 0x26307c), so the exit starts within the touch's updates, as the port does; between 4 and 8 updates after the touch B 00 00 01 00 00 01, E 00 00, F 00 02 (the scanner off, 0x375eb9 stays 1). A touch at (66, 208) changed none of the bytes in 60 updates.
+- The servant's text says no "Press L or R" box appeared; the pictures say otherwise: re-checked by 20261028-uiport-D on 2026-10-28, both loads show "Press L or R to zoom in and out." at the mark 120 updates after A, and one load shows "Hold A to lock on to the audio source." 60 updates after the touch exit (the other load shows the blue tip background fading in there). So the three hint texts 0x37f27adc, 0x37f27add and 0x37f27adb appear in that order as tip pages, the last one after the exit.
+
+### Port
+
+`src/runtime/scanner_bottom.{hpp,cpp}` (stage, slide clocks, button looks, sounds 0x14 / 0x11 through `GameAudio::playUi`, the back button tap that sets the scanner's exit input like B), `MinimapView::scannerButtons` drawn by `drawMinimap` (`mapbuttons.bxaml` with the slide storyboards and `button.bxaml` looks), glue in `LevelSession::updateScanner` (the touch of the pad state), log line `scanner: back button touched at update N`. The port draws the scanner's buttons separately from the map buttons (in the original both are the one map screen object 0x519e24). Outside the scanner's stages the map buttons of `src/runtime/map_buttons.hpp` draw the lower screen; they take over again 0.533 s (the length of `CharsOnDelay`) after the scanner exit starts. Tests `scanner-bottom` and `hud-real-data`. Stand-ins SCAN-S13 (clock, look order, sound bank, gates of 0x2d9f84 not checked, two separate button sets) and SCAN-S14 (the touch circle from the layout rectangle).
+
+Unknowns:
+- The evaluator 0x245b40 (the fifth argument as a start frame is inferred), the meaning of node +0x144 bit 0 (0x24d08c), the bank *0x375f44 against the sound ids of `playUi`, the gates 0x1ee790, 0x21d744, 0x236008, 0x236104 and 0x375fc4 + 0x24 at the start of 0x2d9f84 and the gate that keeps a hit while the storyboard state at +0x3d4 (0x245f84) is 6 (not checked), and the forced exit while 0x236104 holds.
+- Who shows the tip pages 0x37f27adc / 0x37f27add (and probably 0x37f27adb) during the view, and when; the hint button's return after the exit; the exit length in stepped updates (4 to 8 updates after the touch, against 57 updates of the free-run measurement of B; the stepped game clock may differ) and the slide speed (the back-arrow button stood at its place about 5 to 10 stepped updates after the enter, where `ExitOnDelay` needs 16 updates of 1/30 s); both need a free-run (`--rpc` sample) measurement before SCAN-S13 changes; the update spacing of the pictures (the characters button seemed to slide in before the 0.267 s hold of `CharsOnDelay` ended, which would contradict the start frame 0 read above; not measured).

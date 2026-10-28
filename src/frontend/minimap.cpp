@@ -2,6 +2,7 @@
 #include "frontend/layout.hpp"
 #include <algorithm>
 #include <cmath>
+#include <utility>
 
 namespace chase::frontend {
 
@@ -139,14 +140,18 @@ void drawMinimap(Canvas& bottom, Resources& resources, const std::string& levelN
                     "portrait_0", "portrait_1", "portrait_2", "portrait_3", "portrait_4", "portrait_5", "portrait_6", "portrait_7",
                     "area_0", "area_1", "area_2", "area_3", "area_4", "area_5", "area_exit", "textWindow"};
     scene.referenceStoryboards["buttonChars"] = "default";
-    if (view.scanner) {
+    if (view.scannerButtons.stage != runtime::ScannerBottomStage::Map) {
         scene.hidden.erase("buttonExit");
         scene.hidden.erase("buttonAudio");
-        scene.hidden.insert("buttonChars");
         scene.images["buttonAudio/icon"] = "sprites/blend/mapbuttons/images/buttonicon_audio.bpng";
         scene.images["buttonExit/icon"] = "sprites/blend/mapbuttons/images/buttonicon_exit.bpng";
-        scene.referenceStoryboards["buttonAudio"] = "disabled";
-        scene.referenceStoryboards["buttonExit"] = "default";
+        const std::pair<const char*, const runtime::ScannerBottomButton*> buttons[] = {
+            {"buttonChars", &view.scannerButtons.chars}, {"buttonExit", &view.scannerButtons.exit}, {"buttonAudio", &view.scannerButtons.audio}};
+        for (const auto& [name, button] : buttons) {
+            scene.referenceStoryboards[name] = button->look;
+            scene.referenceTimes[name] = button->lookTime;
+            if (button->slide) scene.laterStoryboards.push_back({button->slide, button->slideTime});
+        }
     }
     drawLayout(bottom, resources, kButtonsLayout, scene, 0, 0);
 }

@@ -168,6 +168,7 @@ public:
 
     ScannerPhase phase() const { return phase_; }
     bool active() const { return activeFlag_; }  // 0x375ee8
+    bool canToggle() const { return canToggle_; }  // 0x375eb6
     bool takesPlayerControl() const { return phase_ != ScannerPhase::Idle; }
     bool viewShown() const { return phase_ == ScannerPhase::Active; }
     ScannerView view() const;

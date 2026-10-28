@@ -53,6 +53,13 @@ In the development runtime, on the lower screen during play:
 - Hold the left mouse button on the characters button for more than half a second: the characters panel opens (dark, without the portraits yet). Click the characters button again to close it.
 - The scan button (bottom left) is shown from mission 1-3 on; clicking it does nothing yet.
 
+## Sound scanner
+
+In the [development runtime](commands.md#development-runtime), while the scanner view is open:
+
+- Click the back-arrow button at the lower left of the lower screen to leave the scanner. It works once the view has fully opened, like **B** (Q or right mouse). A press that starts elsewhere and slides onto it does nothing.
+- The headphone button above it is greyed and does nothing.
+
 ## Pause menu
 
 In the [development runtime](commands.md#development-runtime), while you play:
