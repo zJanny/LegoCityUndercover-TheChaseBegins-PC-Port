@@ -130,7 +130,8 @@ private:
             scaleY = pose.hasScaleY ? pose.scaleY : e.scale[1];
             rotation = pose.hasRotation ? pose.rotation : e.rotation;
         }
-        const auto placed = scene_.positions.find(e.name);
+        auto placed = instance_.empty() ? scene_.positions.end() : scene_.positions.find(instance_ + "/" + e.name);
+        if (placed == scene_.positions.end()) placed = scene_.positions.find(e.name);
         const float baseX = placed != scene_.positions.end() ? placed->second[0] : e.position[0];
         const float baseY = placed != scene_.positions.end() ? placed->second[1] : e.position[1];
         const float localX = baseX + pose.translateX, localY = baseY + pose.translateY;
@@ -219,6 +220,20 @@ std::string layoutTexturePath(const std::string& layoutPath, const std::string& 
     if (ends(".png")) name.replace(name.size() - 4, 4, ".bpng");
     else if (ends(".tga")) name.replace(name.size() - 4, 4, ".btga");
     return layoutFolder(layoutPath) + name;
+}
+
+std::optional<std::array<float, 4>> layoutChildBox(const assets::UiLayout& layout, const std::vector<PlayingStoryboard>& storyboards,
+                                                   const std::string& name) {
+    for (const assets::UiElement& e : layout.root.children) {
+        if (e.name != name) continue;
+        const Pose pose = poseOf(&layout, std::string(), 0, name, storyboards);
+        const float width = e.size[0], height = e.size[1];
+        const float scaleX = e.scale[0] * pose.scaleX, scaleY = e.scale[1] * pose.scaleY;
+        const float x = layout.root.position[0] + e.position[0] + pose.translateX + e.origin[0] * width * (1 - scaleX);
+        const float y = layout.root.position[1] + e.position[1] + pose.translateY + e.origin[1] * height * (1 - scaleY);
+        return std::array<float, 4>{x, y, width, height};
+    }
+    return std::nullopt;
 }
 
 float evaluateTrack(const assets::UiTrack& track, float time) {

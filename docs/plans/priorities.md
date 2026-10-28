@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 998 open items and stand-ins, 175 linked to game usage, 823 with unknown reach.
+Items: 1005 open items and stand-ins, 176 linked to game usage, 829 with unknown reach.
 
 ## Top 50 overall
 
@@ -104,7 +104,7 @@ Items: 998 open items and stand-ins, 175 linked to game usage, 823 with unknown 
 
 ## Level objects
 
-14 of 135 items linked.
+15 of 138 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -115,9 +115,9 @@ Items: 998 open items and stand-ins, 175 linked to game usage, 823 with unknown 
 | 5 | [STUD-9](features/studs.md?display=source#L39) | 73 | 0 | 7 | 2 | 1 stand-in | `enablestudsbygroup` | `EnableStudsByGroup(group, value)` only records the request (the sequencer entry 0x58f710 and its per-frame ... |
 | 6 | [LEVOBJ-32](features/level-objects-carry.md?display=source#L37) | 57 | 0 | 3 | 0 | 1 none | `spawndebris` | Effects of the carry system not played: sounds (`carryit_pickup_big_01`, `carryit_putdown_big_01` ... |
 | 7 | [LEVOBJ-7](features/level-objects.md?display=source#L43) | 0 | 51 | 7 | 0 | - | `chars/ride_pig`, `props/prop_sharkattack` | Classes without a recovered create are not created (shared with COLL-2): among the animals `chars/ride_pig` ... |
-| 8 | [LEVOBJ-4](features/level-objects.md?display=source#L40) | 0 | 37 | 7 | 0 | - | `chars/ride_pig` | The 8 custom lineup characters (`CharacterEnum` 1..8 through 0x2372e0) and the ride_pig and shark rigs ... |
-| 9 | [STUD-15](features/studs.md?display=source#L41) | 36 | 0 | 4 | 0 | 1 none | `spawnstuds` | The `SpawnStuds` native 0x1a3130: 0x23a6b0(entity of argument 2, int(argument 1), 1, 1, 1), mode 0, forward ... |
-| 10 | [STUD-10](features/studs.md?display=source#L40) | 21 | 0 | 6 | 0 | 1 stand-in | `addstuds` | `AddStuds` adds to the counter (`StudField::addToCounter`) but not the timestamp +0x44 and the HUD hook ... |
+| 8 | [LEVOBJ-120](features/level-objects-fast-travel.md?display=source#L26) | 25 | 25 | 7 | 2 | 1 implemented | `scenechange`, `scenechange` | The question of a slot (its texts, fade and result) and the Yes path, the message to the `FastTravel_0n_*` ... |
+| 9 | [LEVOBJ-4](features/level-objects.md?display=source#L40) | 0 | 37 | 7 | 0 | - | `chars/ride_pig` | The 8 custom lineup characters (`CharacterEnum` 1..8 through 0x2372e0) and the ride_pig and shark rigs ... |
+| 10 | [STUD-15](features/studs.md?display=source#L41) | 36 | 0 | 4 | 0 | 1 none | `spawnstuds` | The `SpawnStuds` native 0x1a3130: 0x23a6b0(entity of argument 2, int(argument 1), 1, 1, 1), mode 0, forward ... |
 
 ## Vehicles
 
@@ -168,7 +168,7 @@ Items: 998 open items and stand-ins, 175 linked to game usage, 823 with unknown 
 
 ## Front end, HUD, saves
 
-14 of 172 items linked.
+14 of 176 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -228,7 +228,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [level-objects-buildit-super.md](features/level-objects-buildit-super.md): LEVOBJ-117 (+1), LEVOBJ-129 (+1), LEVOBJ-S100, LEVOBJ-S101, LEVOBJ-S95
 - [level-objects-buildit.md](features/level-objects-buildit.md): LEVOBJ-43 (+1), LEVOBJ-71 (+1), LEVOBJ-79 (+1), LEVOBJ-42, LEVOBJ-61, LEVOBJ-70, LEVOBJ-76, LEVOBJ-77, LEVOBJ-85, LEVOBJ-94, LEVOBJ-S41, LEVOBJ-S70, LEVOBJ-S71, LEVOBJ-S74, LEVOBJ-S76
 - [level-objects-carry.md](features/level-objects-carry.md): LEVOBJ-127 (+1), LEVOBJ-75 (+1), LEVOBJ-128, LEVOBJ-30, LEVOBJ-31, LEVOBJ-34, LEVOBJ-S31, LEVOBJ-S33, LEVOBJ-S34, LEVOBJ-S73, LEVOBJ-S75, LEVOBJ-S99
-- [level-objects-fast-travel.md](features/level-objects-fast-travel.md): LEVOBJ-120 (+2), LEVOBJ-122 (+2), LEVOBJ-121, LEVOBJ-123, LEVOBJ-124, LEVOBJ-125, LEVOBJ-126, LEVOBJ-S96, LEVOBJ-S97, LEVOBJ-S98
+- [level-objects-fast-travel.md](features/level-objects-fast-travel.md): LEVOBJ-122 (+2), LEVOBJ-130 (+2), LEVOBJ-131 (+1), LEVOBJ-121, LEVOBJ-123, LEVOBJ-124, LEVOBJ-125, LEVOBJ-126, LEVOBJ-S102, LEVOBJ-S103, LEVOBJ-S96, LEVOBJ-S98
 - [level-objects-wobbly.md](features/level-objects-wobbly.md): LEVOBJ-87 (+3), LEVOBJ-112 (+1), LEVOBJ-89 (+1), LEVOBJ-90 (+1), LEVOBJ-92 (+1), LEVOBJ-96 (+1), LEVOBJ-91, LEVOBJ-97, LEVOBJ-S77, LEVOBJ-S79, LEVOBJ-S80, LEVOBJ-S81
 - [level-objects.md](features/level-objects.md): LEVOBJ-8 (+4), LEVOBJ-101 (+1), LEVOBJ-106 (+1), LEVOBJ-108 (+1), LEVOBJ-110 (+1), LEVOBJ-111 (+1), LEVOBJ-102, LEVOBJ-104, LEVOBJ-109, LEVOBJ-114, LEVOBJ-3, LEVOBJ-5, LEVOBJ-6, LEVOBJ-S2, LEVOBJ-S3, LEVOBJ-S4, LEVOBJ-S82, LEVOBJ-S83, LEVOBJ-S84, LEVOBJ-S86, LEVOBJ-S88, LEVOBJ-S89, LEVOBJ-S90, LEVOBJ-S91, LEVOBJ-S92, LEVOBJ-S93
 - [level-transitions.md](features/level-transitions.md): TRANS-3 (+4), TRANS-13 (+2), TRANS-15 (+2), TRANS-8 (+2), TRANS-10 (+1), TRANS-12 (+1), TRANS-14 (+1), TRANS-16 (+1), TRANS-S1, TRANS-S3, TRANS-S4, TRANS-S5, TRANS-S6
@@ -272,7 +272,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [script-system.md](features/script-system.md): SCRIPT-1 (+10), SCRIPT-53 (+2), SCRIPT-2, SCRIPT-3, SCRIPT-5, SCRIPT-54, SCRIPT-55, SCRIPT-9, SCRIPT-S1, SCRIPT-S14, SCRIPT-S16, SCRIPT-S275, SCRIPT-S3, SCRIPT-S5, SCRIPT-S6, SCRIPT-S7
 - [studs-super-bricks.md](features/studs-super-bricks.md): STUD-28 (+2), STUD-16 (+1), STUD-24 (+1), STUD-S12, STUD-S13, STUD-S8, STUD-S9
 - [studs.md](features/studs.md): STUD-1 (+1), STUD-13 (+1), STUD-26 (+1), STUD-5 (+1), STUD-25, STUD-27, STUD-3, STUD-6, STUD-8, STUD-S1, STUD-S14, STUD-S15, STUD-S3, STUD-S5, STUD-S6, STUD-S7
-- [ui-menus.md](features/ui-menus.md): UI-1 (+5), UI-2 (+2), UI-12 (+1), UI-19 (+1), UI-23 (+1), UI-25 (+1), UI-3 (+1), UI-5 (+1), UI-7 (+1), UI-9 (+1), UI-10, UI-11, UI-13, UI-14, UI-15, UI-16, UI-18, UI-24, UI-6, UI-8, UI-S1, UI-S10, UI-S11, UI-S2, UI-S3, UI-S4, UI-S5, UI-S6, UI-S7
+- [ui-menus.md](features/ui-menus.md): UI-2 (+2), UI-12 (+1), UI-19 (+1), UI-20 (+1), UI-22 (+1), UI-23 (+1), UI-25 (+1), UI-3 (+1), UI-5 (+1), UI-7 (+1), UI-9 (+1), UI-10, UI-11, UI-13, UI-14, UI-15, UI-16, UI-18, UI-21, UI-24, UI-6, UI-8, UI-S1, UI-S10, UI-S11, UI-S2, UI-S3, UI-S4, UI-S5, UI-S6, UI-S7, UI-S8, UI-S9
 - [vehicles-boarding.md](features/vehicles-boarding.md): VEH-19 (+5), VEH-80 (+2), HUD-50 (+1), HUD-S50, HUD-S51, VEH-20, VEH-S10, VEH-S70, VEH-S8, VEH-S9
 - [vehicles-damage.md](features/vehicles-damage.md): VEH-120 (+3), VEH-125 (+3), VEH-113 (+2), VEH-115 (+2), VEH-124 (+2), VEH-121 (+1), VEH-140 (+1), VEH-122, VEH-128, VEH-S100, VEH-S101, VEH-S104, VEH-S109, VEH-S112, VEH-S90, VEH-S93, VEH-S96, VEH-S97, VEH-S98, VEH-S99
 - [vehicles-physics-collision.md](features/vehicles-physics-collision.md): VEH-91 (+6), VEH-70 (+2), VEH-100 (+1), VEH-101 (+1), VEH-102 (+1), VEH-S52, VEH-S60, VEH-S62, VEH-S81, VEH-S82, VEH-S86, VEH-S87

@@ -315,6 +315,7 @@ private:
     void updateSuperBuildits(const float playerPosition[3], float dt);
     void loadFastTravel();
     void updateFastTravel(float dt, const chase::runtime::PadState& padInput);
+    void updateMapButtons(float dt, const chase::runtime::PadState& padInput, bool playerFree);
     void drawSuperBuildit(chase::frontend::Canvas& top);
     void drawSuperBuilditPrompt(chase::frontend::Canvas& top, const chase::runtime::SuperBuilditPrompt& prompt);
     bool cutscenePlaying() const { return levelScripts.cutscenes().playing() != nullptr; }

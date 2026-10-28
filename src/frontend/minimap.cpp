@@ -130,6 +130,10 @@ void drawMinimap(Canvas& bottom, Resources& resources, const std::string& levelN
     drawGroupTargets(bottom, resources, view);
     drawMarkers(bottom, resources, view);
     drawGroupSlots(bottom, resources, view);
+    if (view.buttons) {
+        drawLayout(bottom, resources, kButtonsLayout, *view.buttons, 0, 0);
+        return;
+    }
     LayoutScene scene;
     scene.hidden = {"blackBG", "buttonScan", "buttonExit", "buttonAudio", "buttonRedBricks", "buttonHint", "buttonFreeplay",
                     "portrait_0", "portrait_1", "portrait_2", "portrait_3", "portrait_4", "portrait_5", "portrait_6", "portrait_7",

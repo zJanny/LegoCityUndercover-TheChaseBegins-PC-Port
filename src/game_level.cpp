@@ -1,4 +1,5 @@
 #include "game_level.hpp"
+#include "frontend/map_buttons_view.hpp"
 #include "runtime/collision_enable.hpp"
 #include "frontend/script_text_pages.hpp"
 #include "frontend/minimap.hpp"
@@ -237,6 +238,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     const chase::save::SlotStart saved = game_save::slotStartFor(shared.progress, archive, level, options.level);
     game_save::apply(saved, levelScripts);
     saveLevelId = saved.level;
+    fastTravelState.storyProgress = saved.storyProgress;
     saveLevelState = game_save::levelStateInput(saved, levelScripts);
     std::cout << "save: slot " << options.saveSlot << ", level " << saved.level << ", "
               << (saved.stateSaved ? "saved state of the level (StoryProgress " + std::to_string(saved.storyProgress) + ", " + std::to_string(saved.variables.size()) + " variables)" : std::string("no saved state of the level"))
@@ -519,6 +521,8 @@ void LevelSession::draw(int width, int height) {
         mapView.markers = activeMapMarkers();
         mapView.scanner = scanner.viewShown();
         mapView.markerField = &mapMarkerField;
+        const fe::LayoutScene buttons = fastTravelState.mapButtons ? fe::mapButtonsScene(*fastTravelState.mapButtons) : fe::LayoutScene{};
+        if (fastTravelState.mapButtons && !mapView.scanner) mapView.buttons = &buttons;
         addObjectiveMapIcons(mapView);
         fe::drawMinimap(mapCanvas, hudResources, levelName, mapView);
     } else {

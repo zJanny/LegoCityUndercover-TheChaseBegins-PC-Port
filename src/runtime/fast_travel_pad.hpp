@@ -36,15 +36,6 @@ constexpr float kFastTravelApproachRate = 1.5f;
 constexpr int kFastTravelTurnStep = 0x800;
 constexpr float kFastTravelHeadingScale = 10430.378f;
 
-// STAND-IN LEVOBJ-S97: the click area of the map's exit button `area_exit` (a 128 x 128 portrait reference at 95, 1 in
-// sprites/blend/mapbuttons/mapbuttons.bxaml; touch radius field 64 at 0x2dcfec, halved by 0x1ee520) is the layout rectangle's centre and that radius;
-// the original's resolved position (node +240, the reference's origin vector 32, 32 at 0x358870) was not compared with a picture.
-constexpr float kFastTravelExitCentreX = 159.0f;
-constexpr float kFastTravelExitCentreY = 65.0f;
-constexpr float kFastTravelExitRadius = 32.0f;
-// The exit fires on the first update of a touch (the button's touch timer +0x460 is 0, 0x2d9f84) that lies inside the circle.
-bool fastTravelExitTapped(bool touching, bool wasTouching, float x, float y);
-
 enum class FastTravelClip { None, Land, Idle, Takeoff };
 
 struct FastTravelPad {

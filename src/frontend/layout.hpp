@@ -6,6 +6,7 @@
 #include "frontend/resources.hpp"
 #include <array>
 #include <map>
+#include <optional>
 #include <set>
 #include <string>
 #include <vector>
@@ -58,6 +59,11 @@ void drawLayout(Canvas& canvas, Resources& resources, const std::string& layoutP
                 float y, float scale = 1.0f);
 
 float evaluateTrack(const assets::UiTrack& track, float time);
+
+// A child of the layout's root after the storyboards played in order: the position the node holds (+0xf0: the layout position, the translate
+// and the shift of a scale around its origin) and its layout size (+0x54, +0x58, not scaled). Empty without such a child.
+std::optional<std::array<float, 4>> layoutChildBox(const assets::UiLayout& layout, const std::vector<PlayingStoryboard>& storyboards,
+                                                   const std::string& name);
 std::vector<std::string> wrapText(const BitmapFont& font, const std::vector<std::string>& extended,
                                   const std::string& text, int width, int spacing);
 

@@ -25,7 +25,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | [level-objects](level-objects.md) | IN_PROGRESS | LEVOBJ-3 objects frozen (needs SCRIPT-1); LEVOBJ-16 other NPC states |
 | [level-objects-buildit](level-objects-buildit.md) | IN_PROGRESS | LEVOBJ-76 studs of the build; LEVOBJ-77 two-target camera; LEVOBJ-43 built state not saved (needs SAVE-8) |
 | [level-objects-buildit-super](level-objects-buildit-super.md) | IN_PROGRESS | LEVOBJ-117 reference step, map icon, progress counters, NewPlayerLocation; LEVOBJ-129 sender of message 6 |
-| [level-objects-fast-travel](level-objects-fast-travel.md) | IN_PROGRESS | LEVOBJ-120 level icons and trip of the map (needs UI-1); LEVOBJ-121 pad camera and particles; LEVOBJ-123 arrival untestable before the trip |
+| [level-objects-fast-travel](level-objects-fast-travel.md) | IN_PROGRESS | LEVOBJ-120 the question and trip of the map; LEVOBJ-130 map page drawing; LEVOBJ-121 pad camera and particles; LEVOBJ-123 arrival untestable before the trip |
 | [level-objects-carry](level-objects-carry.md) | IN_PROGRESS | LEVOBJ-75 release of the box; LEVOBJ-30 attach update; LEVOBJ-31 locomotion while carrying; LEVOBJ-32 sounds and effects |
 | [level-objects-wobbly](level-objects-wobbly.md) | IN_PROGRESS | LEVOBJ-87 wobble of a hit; LEVOBJ-89 bounce states beyond the motion; LEVOBJ-90 the bouncer object |
 | [doors](doors.md) | IN_PROGRESS | DOOR-1 script-requested doors stay closed (needs SCRIPT-7); DOOR-3 open-door box |
@@ -86,7 +86,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | [front-end](front-end.md) | IN_PROGRESS | FE-1 existing slots and Continue (needs SAVE-2); FE-30 delete confirmation; FE-3 loading screen 3D badge |
 | [hud-ui](hud-ui.md) | IN_PROGRESS | HUD-6 hearts never change; HUD-11 map levels and mission icons, HUD-60 other map icon types; HUD-8 other counters |
 | [hud-ui-text](hud-ui-text.md) | IN_PROGRESS | HUD-22 remaining text screens; HUD-30 character intro and box line counts; HUD-33 tip after the release camera |
-| [ui-menus](ui-menus.md) | IN_PROGRESS | UI-1 map buttons; UI-2 pause fades and gates; UI-3 pause Exit; UI-23 Languages page; UI-24 red brick extras page; UI-25 options save task (pause Options page ported) |
+| [ui-menus](ui-menus.md) | IN_PROGRESS | UI-20 characters panel; UI-21 map button actions; UI-2 pause fades and gates; UI-3 pause Exit; UI-23 Languages page; UI-24 red brick extras page; UI-25 options save task (pause screen, its Options page and map buttons ported) |
 | [hud-ui-super-bricks](hud-ui-super-bricks.md) | IN_PROGRESS | HUD-79 icon through the HUD camera; HUD-80 number font; HUD-85 build-menu placeholders; HUD-84 update count origin |
 | [audio](audio.md) | IN_PROGRESS | AUDIO-20 duck record; AUDIO-11 action music; AUDIO-3 world sounds |
 | [movies-cutscenes](movies-cutscenes.md) | IN_PROGRESS | MOVIE-36 end from the camera clip; MOVIE-3 short actor clips; MOVIE-41 pose words; MOVIE-1 layout values |

@@ -4,6 +4,7 @@
 // STAND-IN (HUD-S60): the map matrix is the memory value of lvl_01 (the .txt next to the map texture is not read), and
 // only waypoint and sub-objective icons are drawn. No SDL dependency.
 #include "frontend/canvas.hpp"
+#include "frontend/layout.hpp"
 #include "frontend/map_marker.hpp"
 #include "frontend/resources.hpp"
 #include <array>
@@ -44,6 +45,8 @@ struct MinimapView {
     // STAND-IN (SCAN-S8): the buttons stand at their final place without the slide-in storyboards, the audio button uses the
     // "disabled" look read from the oracle picture, and the player arrow and the map circle of the scanner screen are not drawn.
     bool scanner = false;
+    // The map buttons (runtime/map_buttons.hpp) as frontend/map_buttons_view.hpp lays them out; without it the characters button alone.
+    const LayoutScene* buttons = nullptr;
 };
 
 void drawMinimap(Canvas& bottom, Resources& resources, const std::string& levelName, const MinimapView& view);

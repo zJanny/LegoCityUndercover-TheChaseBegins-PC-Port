@@ -70,10 +70,6 @@ std::vector<assets::Matrix> fastTravelHelicopterPose(const FastTravelHelicopterM
     return assets::skinMatrices(model.skeleton, animation, frame);
 }
 
-bool fastTravelExitTapped(bool touching, bool wasTouching, float x, float y) {
-    return touching && !wasTouching && std::hypot(x - kFastTravelExitCentreX, y - kFastTravelExitCentreY) <= kFastTravelExitRadius;
-}
-
 std::int16_t FastTravelPads::heading(const assets::Matrix& node) {
     return std::int16_t(std::int32_t(std::atan2(node[8], node[10]) * kFastTravelHeadingScale));
 }

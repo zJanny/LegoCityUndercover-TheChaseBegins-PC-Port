@@ -182,13 +182,6 @@ int main() {
             require(updates == 127, "takeoff from the 30th update, 96 updates, ended on the 126th, state 1 entered on the 127th: " + std::to_string(updates));
         }
         {
-            require(fastTravelExitTapped(true, false, 159, 65), "the centre of the exit button");
-            require(fastTravelExitTapped(true, false, 159 + 32, 65), "radius 32");
-            require(!fastTravelExitTapped(true, false, 159 + 33, 65), "outside the circle");
-            require(!fastTravelExitTapped(true, true, 159, 65), "a held touch is not a new tap (touch timer > 0)");
-            require(!fastTravelExitTapped(false, false, 159, 65), "no touch");
-        }
-        {
             FastTravelPads set = pads();
             FastTravelPlayer player;
             state.disabled.insert("holder.sbfasttravel");

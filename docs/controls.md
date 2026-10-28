@@ -43,7 +43,15 @@ For example, `A key Space hold` makes Space press the A button.
 
 In the [development runtime](commands.md#development-runtime), after you pressed A on the built helipad pad and the helicopter idles:
 
-- Click the exit button on the lower screen (the hexagon with an arrow at the top centre of the lower screen) to leave the console. The map's other buttons are not there yet.
+- Click the exit button on the lower screen (the hexagon with an arrow at the top centre of the lower screen) to leave the console. The six level buttons are locked.
+
+## Map buttons
+
+In the development runtime, on the lower screen during play:
+
+- Click the characters button (top left) briefly: nothing happens yet.
+- Hold the left mouse button on the characters button for more than half a second: the characters panel opens (dark, without the portraits yet). Click the characters button again to close it.
+- The scan button (bottom left) is shown from mission 1-3 on; clicking it does nothing yet.
 
 ## Pause menu
 

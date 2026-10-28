@@ -11,6 +11,7 @@ The fast travel pad (`props/prop_fasttravelzone`, kind 227) of the helipads, the
 - State 0x182 "Fast Travel Exit" is empty and not used by the exit; only the event "Fast Travel Active Exit Event" (type 201, registered on state 0x181) requests it, and who raises type 201 was not found. [§2026-10-25T11:21:51](#ts-20261025-112151)
 - The arrival: a scene change whose `scenechange` object has a `FastTravel` reference (the seven `FastTravel_0n_*` objects of lvl_the_city, reference {world level, helipad holder}) starts the new level's player in state 0x183 (0x2f6be4): the holder's Helicopter loops `idle`, the player loops `wave` (678), `takeoff` starts when a float timer is greater than 1.0, and when it ends the Helicopter is disabled and the player goes to state 1. [§2026-10-25T11:21:51](#ts-20261025-112151)
 - In the port the pad answers A only long after cutscene `1_3_a` ended, and the exit click has no cutscene gate. [§2026-10-25T11:37:18](#ts-20261025-113718)
+- The map buttons object, the hit boxes of `area_exit` and the six slots, the page flow and the question are in [ui-screens.md §2026-10-28T22:53](ui-screens.md#ts-20261028-225333); the box of `area_exit` there replaces the circle guessed above.
 
 <a id="ts-20261020-002229"></a>
 
