@@ -113,6 +113,7 @@ The table lists some of the tests. `ctest --test-dir build -N` lists all of them
 |---|---|
 | `input-core` | Input core, no SDL, including the `DebugOverlay` binding |
 | `qol-settings` | Quality-of-life toggle store, no SDL: master state Original/Improved/Custom, per-feature switches, strict `config/qol.cfg` read and write (`tests/qol/`) |
+| `qol-view-layout` | Quality-of-life geometry, no SDL: view rectangle, black bars and aspect for a window size (5:3 to 16:9), corner anchors of the HUD, rejection of windows below 400x240 (`tests/qol/`) |
 | `debug-metrics-core` | [Debug overlay](debug-overlay.md) values on synthetic input: frame-time window, `/proc/self/status` fixture, CPU percent, overlay lines |
 | `debug-text-core` | Debug overlay font and panel raster |
 | `debug-overlay-off`, `debug-overlay-on`, `debug-overlay-area` | Two offscreen screenshots without and with `--debug-overlay`; the third checks that they differ only in the top-left panel area. Registered only if `artifacts/romfs` existed at configure time |

@@ -5,7 +5,6 @@ Ranges of item IDs held by parallel agents, named like `20261021-audio-A`. The p
 | Prefix | First | Last | Holder | Date |
 |---|---|---|---|---|
 | QOLSET | 16 | 18 | 20261028-qolmenu-A | 2026-10-28T22:11:57+01:00 |
-| QOLFS | 7 | 9 | 20261028-qolmenu-B | 2026-10-28T22:11:58+01:00 |
 | UI | 20 | 22 | 20261028-uiport-A | 2026-10-28T22:23:21+01:00 |
 | LEVOBJ | 130 | 132 | 20261028-uiport-A | 2026-10-28T22:23:21+01:00 |
 | UI-S | 8 | 9 | 20261028-uiport-A | 2026-10-28T22:23:21+01:00 |

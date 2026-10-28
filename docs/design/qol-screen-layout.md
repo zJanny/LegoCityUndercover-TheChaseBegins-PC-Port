@@ -16,6 +16,9 @@ The user's approved design of the first QoL features: the top screen as true ful
 - There are no per-panel toggles and no own toggle for the bottom screen: the master button hides it (Improved) or shows it (Original); the panels show when it is hidden: [§2026-10-28T09:48:15](#ts-20261028-094815).
 - The minimap has no toggle of its own and shows only in Improved; the bottom screen is hidden exactly when the minimap is on: [§2026-10-28T09:50:34](#ts-20261028-095034).
 - The master state is stored in `config/qol.cfg`; Improved turns on the minimap and the hidden bottom screen, the per-feature switches apply only in Custom: [qol-settings.md §2026-10-28T09:53:33](qol-settings.md#ts-20261028-095333).
+- Geometry of the widened view and the corner HUD as pure functions, with the points the spec leaves open: [§2026-10-28T22:21:19+01:00](#ts-20261028-222119).
+- The user accepted the geometry choices and set the smallest window to 400x240: [§2026-10-28T22:25:37+01:00](#ts-20261028-222537).
+- The window has a minimum size of 400x240; the geometry's rejection of smaller sizes is only a safeguard: [§2026-10-28T22:39:39+01:00](#ts-20261028-223939).
 
 <a id="ts-20261028-092133"></a>
 
@@ -99,3 +102,33 @@ Asked of the user by the lead on 2026-10-28; the quoted labels are the user's se
 Reading of the lead (not a decision of the user): together these mean the minimap is never on in Custom, so the bottom screen is always shown in Custom; the minimap and the hiding of the bottom screen are Improved only. In Custom only the remaining per-feature switches (so far the widened view with the corner HUD) can differ from Original.
 
 Open (not decided by the user): how the master state is stored and derived now that most features follow the master only (QOLSET-15).
+
+<a id="ts-20261028-222119"></a>
+
+## 2026-10-28T22:21:19+01:00 — Geometry of the widened view and the corner HUD
+
+Implemented by 20261028-qolmenu-B in `src/qol/view_layout.*` from [§2026-10-28T09:21:33](#ts-20261028-092133), [§2026-10-28T09:31:02](#ts-20261028-093102) and [§2026-10-28T09:37:31](#ts-20261028-093731); no new user decision.
+
+- The view takes the window aspect, limited to 5:3 at the narrow end and 16:9 at the wide end, centred in the window. Wider windows get a bar left and right, narrower windows a bar above and below; the aspect to render at is the view rectangle's.
+- The HUD anchors are the view's top-left, top-right and bottom-left corners; the scale is the view height divided by 240, the original top-screen height; an element keeps its original offset from its corner, scaled.
+- Window sizes of zero or less, and windows whose view would be under one pixel, are errors.
+
+Unknown, for the user (QOLFS-9): the rounding of view and bar sizes (implemented: floor, the odd pixel to the right or bottom bar); the smallest window size; whether the HUD scale in a window narrower than 5:3 follows the window height (as the spec words it) or the 5:3 view height (implemented, so the HUD stays inside the view); whether HUD elements keep their original offset from the corner.
+
+<a id="ts-20261028-222537"></a>
+
+## 2026-10-28T22:25:37+01:00 — Geometry choices accepted, smallest window 400x240
+Asked of the user by the lead on 2026-10-28; the quoted label is the user's selection. Decides QOLFS-9, the open points of [§2026-10-28T22:21:19](#ts-20261028-222119).
+
+- "Accept; min 400x240": "Keep B's three choices; the smallest window is 400x240, the 3DS top screen size." The choices: sizes round down with the odd pixel in the right or bottom bar; in windows narrower than 5:3 the HUD scales by the view height; HUD elements keep their scaled corner offset.
+
+Reading of the agent (not a decision of the user): a window below 400x240 in either dimension is rejected with an error like any unusable size.
+
+Open (not decided by the user): what the game does for a window below the minimum (reject, or grow the window).
+
+<a id="ts-20261028-223939"></a>
+
+## 2026-10-28T22:39:39+01:00 — The window cannot shrink below 400x240
+Asked of the user by the lead on 2026-10-28; the quoted label is the user's selection. Resolves the open point of the entry on the 400x240 minimum (what happens when the window is made smaller).
+
+- "Window can't shrink below": "The window has a minimum size of 400x240, so a smaller size can't happen. The geometry rejecting it stays only as a safeguard."
