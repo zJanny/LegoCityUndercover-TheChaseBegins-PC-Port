@@ -18,7 +18,8 @@ None.
 
 ## 5. Open items
 
-- [ ] QOLMAP-1 — The minimap, drawn from the same map data as the original bottom-screen map: round, top-right corner, about one fifth of the screen height, rotating with the camera, fixed zoom like the original map, the same icons and objective markers as the original map, hidden in cutscenes and panels; own toggle. needs: QOLSET-1, QOLFS-1. evidence: [qol-screen-layout.md §2026-10-28T09:31:02](../../design/qol-screen-layout.md#ts-20261028-093102).
+- [ ] QOLMAP-1 — The minimap, drawn from the same map data as the original bottom-screen map: round, top-right corner, about one fifth of the screen height, rotating with the camera, fixed zoom like the original map, the same icons and objective markers as the original map, hidden in cutscenes and panels; own toggle. needs: QOLSET-1, QOLFS-1. blocks: QOLMAP-4. evidence: [qol-screen-layout.md §2026-10-28T09:31:02](../../design/qol-screen-layout.md#ts-20261028-093102).
+- [ ] QOLMAP-4 — Open question for the user: whether the minimap stays its own toggle in the Quality of life tab, or follows the master button only like the bottom screen (and so shows only in Improved). needs: QOLMAP-1. evidence: [qol-screen-layout.md §2026-10-28T09:48:15](../../design/qol-screen-layout.md#ts-20261028-094815).
 
 ## 6. Findings summary
 

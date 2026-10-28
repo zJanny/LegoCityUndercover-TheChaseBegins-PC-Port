@@ -4,7 +4,7 @@
 
 - Overall: IN_PROGRESS
 - Current Step: S1
-- Last Updated: 2026-10-28T09:41:06+01:00
+- Last Updated: 2026-10-28T09:49:01+01:00
 - Plan: docs/plans/qol.md
 
 ## Decisions
@@ -27,6 +27,9 @@ Master button cycles all three states; windowed, borderless and F11; bindings in
 ### Decision: Custom and hiding the bottom screen (2026-10-28T09:41:06+01:00)
 Custom restores the last own mix; hiding the bottom screen turns every panel toggle on (QOLBOT-11 corrected in part). See [qol-settings.md §2026-10-28T09:40:40](../design/qol-settings.md#ts-20261028-094040) and [qol-screen-layout.md §2026-10-28T09:40:42](../design/qol-screen-layout.md#ts-20261028-094042).
 
+### Decision: No per-panel toggles (2026-10-28T09:49:01+01:00)
+The master button alone switches the bottom screen and its panels (Improved hides it, Original shows it); QOLBOT-11 and the "hiding forces panels on" decision are superseded. See [qol-screen-layout.md §2026-10-28T09:48:15](../design/qol-screen-layout.md#ts-20261028-094815).
+
 ## Blockers
 
 None.
@@ -43,3 +46,4 @@ One line per session, newest last; `--fix` keeps the newest 20 and moves older o
 - 2026-10-28T09:32:53+01:00 — Planner: recorded the user's answers on menu access, content, layout, minimap, aspect and separation. See [qol-settings-menu](features/qol-settings-menu.md).
 - 2026-10-28T09:38:37+01:00 — Planner: recorded the user's answers on the master button, window modes, files, HUD corners, toggles and panel look. See [qol-settings-menu](features/qol-settings-menu.md).
 - 2026-10-28T09:41:06+01:00 — Planner: recorded Custom and hiding decisions, three new open questions. See [qol-bottom-screen](features/qol-bottom-screen.md).
+- 2026-10-28T09:49:01+01:00 — Planner: recorded that the master button alone switches the bottom screen; two new open questions. See [qol-bottom-screen](features/qol-bottom-screen.md).

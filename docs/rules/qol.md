@@ -15,6 +15,8 @@ What follows applies these rules.
 
 ## Faithful first
 
+- **The bottom screen has no toggle of its own.** By the user's decision (2026-10-28, [qol-screen-layout.md §2026-10-28T09:48:15](../design/qol-screen-layout.md#ts-20261028-094815)) the bottom screen and its panels are switched only by the master button: Improved hides the bottom screen and shows the panels, Original shows it. There are no per-panel toggles. This is the one place where "each feature by itself" does not apply.
+
 - **The one approved exception.** The pause menu has an always shown "PC Settings" entry, visible even with every QoL feature off. The user decided this explicitly ("Title + PC Settings entry", 2026-10-28, [qol-settings.md §2026-10-28T09:32:07](../design/qol-settings.md#ts-20261028-093207)); it is the last entry of the round pause menu. The entry only opens the PC settings menu and changes no game behaviour; the original Options page stays unchanged. Reviewers do not flag it; any other visible or behavioural difference with QoL off is a defect.
 - **Off by default.** With every QoL feature off (master state Original), the game behaves exactly as without the `qol` plan: the port's tests stay unchanged and pass, and no QoL code runs on the default path except the check of its own toggle. A change of this plan never edits a test of the port to make it pass.
 - **Original mode first, then the feature.** Every QoL feature is built and tested in this order: (1) the whole test suite passes with all QoL off, before and after the change; (2) the feature's tests with its toggle on. A branch that reports only the second is not finished.
@@ -45,7 +47,7 @@ Design: [docs/design/qol-settings.md](../design/qol-settings.md); features: [qol
 ## Behaviour
 
 - What a QoL feature does comes only from a spec the user approved, recorded in `docs/design/`. What the spec does not decide is asked of the user and recorded as an open item, never chosen. Points still open are open items in the feature files, marked as questions for the user.
-- The bottom screen is hidden only when its features are on (one toggle per panel; hiding it requires the minimap on and turns every panel toggle on; what a single panel toggle does around that is open, QOLBOT-15 to QOLBOT-17); the widened view and the corner HUD are one toggle, the minimap its own; every panel uses the original game's art and fonts; with all QoL off the window is today's top over bottom.
+- The bottom screen is hidden only when its features are on (hiding it requires the minimap on; what it does in Custom is open, QOLBOT-18); the widened view and the corner HUD are one toggle; whether the minimap is its own toggle is open, QOLMAP-4; every panel uses the original game's art and fonts; with all QoL off the window is today's top over bottom.
 - New controls follow the input rules of CLAUDE.md; bottom-screen UI that stays is used by mouse clicks; a bottom-screen content moved to a full-window panel is clicked with the mouse as well.
 - Shared code stays generic (CLAUDE.md "Generic over hardcoded"): one rule for all users, not per-object special cases. `src/game.cpp` gets only hook lines (see "Separate source code"); all QoL logic is in `src/qol/`, and OpenGL calls stay in `src/render/` behind plain-type interfaces.
 

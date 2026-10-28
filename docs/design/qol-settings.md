@@ -15,6 +15,7 @@ The user's approved design of how quality-of-life features are switched on and o
 - Master button, window modes, tabs, files and the pause entry position: the master button cycles Original, Improved, Custom; the Display tab has windowed and borderless full screen plus an F11 shortcut; the Game, Display and Controls tabs are always active, bindings stay in `config/controls.cfg` and the rest is in `config/qol.cfg`; "PC Settings" is the last entry of the round pause menu, chosen by mouse, D-pad or keyboard: [§2026-10-28T09:37:29](#ts-20261028-093729).
 - All panels, the settings menu included, use the original game's art and fonts: [§2026-10-28T09:37:31](qol-screen-layout.md#ts-20261028-093731).
 - Custom restores the last own mix kept in `config/qol.cfg` and is skipped while no mix has been set: [§2026-10-28T09:40:40](#ts-20261028-094040).
+- The bottom screen and its panels have no toggle of their own; only the master button switches them: [qol-screen-layout.md §2026-10-28T09:48:15](qol-screen-layout.md#ts-20261028-094815).
 - Open: the points listed last in [§2026-10-28T09:32:07](#ts-20261028-093207).
 
 <a id="ts-20261028-092131"></a>

@@ -12,9 +12,9 @@ The user's approved design of the first QoL features: the top screen as true ful
 - Scanner, Build-it, Shop and Award viewer get a PC version (full-window panel clicked with the mouse) when their QoL feature is on: [§2026-10-28T09:31:02](#ts-20261028-093102).
 - Windows narrower than 5:3 keep the original 5:3 view with bars above and below; hearts and character picture top-left, studs and counters top-right, ability bottom-left, scaled to the window height; the widened view and the corner HUD are one toggle, the minimap its own: [§2026-10-28T09:37:31](#ts-20261028-093731).
 - The minimap shows the same icons and objective markers as the original map at a fixed zoom, hidden in cutscenes and panels: [§2026-10-28T09:37:31](#ts-20261028-093731).
-- One toggle per panel; hiding the bottom screen requires the minimap on and turns every panel toggle on too (corrected in part by [§2026-10-28T09:40:42](#ts-20261028-094042)); the PC pause menu holds Resume, Options (original page), Credits, Exit and PC Settings; all panels use the original game's art and fonts: [§2026-10-28T09:37:31](#ts-20261028-093731).
-- Hiding the bottom screen turns every panel toggle on too: [§2026-10-28T09:40:42](#ts-20261028-094042).
-- Open: what turning one panel off does after hiding (QOLBOT-15), what a panel toggle does while the bottom screen is visible (QOLBOT-16), and whether hiding is its own toggle (QOLBOT-17).
+- Hiding the bottom screen requires the minimap on (corrected in part by [§2026-10-28T09:48:15](#ts-20261028-094815): no per-panel toggles); the PC pause menu holds Resume, Options (original page), Credits, Exit and PC Settings; all panels use the original game's art and fonts: [§2026-10-28T09:37:31](#ts-20261028-093731).
+- There are no per-panel toggles and no own toggle for the bottom screen: the master button hides it (Improved) or shows it (Original); the panels show when it is hidden: [§2026-10-28T09:48:15](#ts-20261028-094815).
+- Open: what the bottom screen and the panels do in Custom (QOLBOT-18); whether the minimap is its own toggle (QOLMAP-4).
 
 <a id="ts-20261028-092133"></a>
 
@@ -44,6 +44,7 @@ Open (not decided by the user): see the list in the report of the planner, recor
 <a id="ts-20261028-093731"></a>
 
 ## 2026-10-28T09:37:31+01:00 — Narrow windows, HUD corners, toggles, minimap content, pause menu and panel look
+Corrected by [qol-screen-layout.md §2026-10-28T09:48:15](#ts-20261028-094815): there are no per-panel toggles and the bottom screen is switched by the master button only.
 Corrected by [qol-screen-layout.md §2026-10-28T09:40:42](#ts-20261028-094042): the toggle decision for the bottom-screen panels (QOLBOT-11) is partly superseded; hiding the bottom screen turns every panel toggle on too.
 
 Asked of the user by the lead on 2026-10-28; the quoted labels are the user's selections. Decides QOLFS-4 to QOLFS-6, QOLMAP-3 and QOLBOT-11 to QOLBOT-13.
@@ -61,6 +62,7 @@ Open (not decided by the user): what a bottom-screen page does when the bottom s
 <a id="ts-20261028-094042"></a>
 
 ## 2026-10-28T09:40:42+01:00 — Hiding the bottom screen forces the panels on
+Corrected by [qol-screen-layout.md §2026-10-28T09:48:15](#ts-20261028-094815): there are no per-panel toggles and the bottom screen is switched by the master button only.
 
 Asked of the user by the lead on 2026-10-28; the quoted label is the user's selection. Decides QOLBOT-14. [Corrects §2026-10-28T09:37:31 in part](#ts-20261028-093731): QOLBOT-11 said "one toggle per panel; hiding the bottom screen requires the minimap on".
 
@@ -68,3 +70,18 @@ Asked of the user by the lead on 2026-10-28; the quoted label is the user's sele
 - What stands: one toggle per panel, and hiding requires the minimap on (QOLBOT-11). What changes: with the bottom screen hidden, every panel is on.
 
 Open (not decided by the user): after the bottom screen is hidden, what turning one panel off does (QOLBOT-15); what a panel toggle does while the bottom screen is visible (QOLBOT-16); whether "hide the bottom screen" is its own toggle (QOLBOT-17).
+
+<a id="ts-20261028-094815"></a>
+
+## 2026-10-28T09:48:15+01:00 — No per-panel toggles: the master button switches the bottom screen
+
+Asked of the user by the lead on 2026-10-28; the quoted labels are the user's selections. Decides QOLBOT-15 to QOLBOT-17. [Corrects §2026-10-28T09:37:31](#ts-20261028-093731) (QOLBOT-11, one toggle per panel) and [Corrects §2026-10-28T09:40:42](#ts-20261028-094042) (hiding turns every panel toggle on).
+
+- Own toggle for hiding (QOLBOT-17): "Only via master": "No separate switch; hiding happens only when the master button is on Improved."
+- Panel toggle while the bottom screen is shown (QOLBOT-16): the user typed their own answer: "No toggle for seperate Screens. Either bottom is on or off".
+- Turning one panel off after hiding (QOLBOT-15): "Locked on (Rec.)". Without per-panel toggles this has no effect.
+- The lead's clarifying question, because the answers above were ambiguous together: "So how is the bottom screen switched?" The user chose "Master only": "No toggle at all: Improved hides it, Original shows it, and in Custom it stays as it was in the last mix's source (needs recording)."
+
+What stands: hiding the bottom screen requires the minimap on (QOLBOT-11); the panels use the original art and fonts; the pause menu content. What no longer holds: one toggle per panel; hiding turns every panel toggle on.
+
+Open (not decided by the user): what the bottom screen and the panels do in Custom, since the option text "stays as it was in the last mix's source" is unclear (QOLBOT-18); whether the minimap stays its own toggle or follows the master button only (QOLMAP-4).
