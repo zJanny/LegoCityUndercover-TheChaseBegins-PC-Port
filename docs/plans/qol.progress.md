@@ -15,13 +15,16 @@ Off by default; master toggle with three states in `config/qol.cfg`; menu from t
 ### Decision: Full screen and bottom-screen content (2026-10-28T09:21:35+01:00)
 Widened view with the same vertical field of view, corner HUD, minimap and mouse-clicked panels, bottom screen hidden when its features are on. See [qol-screen-layout.md §2026-10-28T09:21:33](../design/qol-screen-layout.md#ts-20261028-092133).
 
+### Decision: Separate source code (2026-10-28T09:24:08+01:00)
+The user's third rule: QoL code is separate from the port's code. See [qol-settings.md §2026-10-28T09:24:08](../design/qol-settings.md#ts-20261028-092408).
+
 ## Blockers
 
 None.
 
 ## Next Action
 
-S1: the toggle store and the settings menu ([qol-settings-menu](features/qol-settings-menu.md)); nothing else of the plan starts before it. Questions for the user are listed as open items QOLSET-5, QOLSET-6, QOLMAP-2 and QOLBOT-6 and must be answered before the work on them starts.
+S1: the toggle store and the settings menu ([qol-settings-menu](features/qol-settings-menu.md)); nothing else of the plan starts before it. Propose the `qol-separation` guard (QOLSET-7) in the first round. Questions for the user are listed as open items QOLSET-5, QOLSET-6, QOLMAP-2 and QOLBOT-6 and must be answered before the work on them starts.
 
 ## Session Log
 

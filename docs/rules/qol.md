@@ -4,12 +4,14 @@ Every agent that works for the `qol` plan (quality-of-life features) reads this 
 
 **Gate: open.** The user opened it on 2026-10-28 with the words "I am opening the QOL of Life Gate.", earlier than the old condition "after the game is finished for PC". Only the user opens a gate; the faithful `linux-port` plan keeps going in parallel and has priority (below).
 
-## The user's two rules
+## The user's three rules
 
 1. **Every QoL feature is switched in the menu.** Every QoL feature has a toggle in the normal settings menu of the game, and that is the only player-facing switch. No feature without a toggle, no command-line-only, file-only or key-only switch, no feature that runs unconditionally. (The user: "Every QOL of Live Feature is switched in the Menu".)
 2. **The faithful version stays number one priority.** Everything is tested first in the original port without QoL, and then with the features enabled. (The user: "The faithful Version Stays no 1 Priority, everything is Tested First on the original Port without QOL and then with the Features enabled.")
 
-What follows applies these two rules.
+3. **QoL source code is separate** from the port's code, no mixing (see "Separate source code").
+
+What follows applies these rules.
 
 ## Faithful first
 
@@ -18,6 +20,16 @@ What follows applies these two rules.
 - **The port has priority.** A QoL feature never stands in for unrecovered original behaviour: gaps of the port stay port items. QoL work never blocks, delays or reorders a `linux-port` item; when both want the same code, the port's item goes first.
 - **Saves stay faithful.** QoL settings are never written into the game save, and a save made with QoL on loads and plays in original mode.
 - **Fix the port, not the toggle.** A bug found in original mode while testing a QoL feature is a port item (feature file of `linux-port`), reported through the lead.
+
+## Separate source code
+
+The user's third rule: "Source Code for These Features is separated from other Code! No mixing". Design: [qol-settings.md §2026-10-28T09:24:08](../design/qol-settings.md#ts-20261028-092408).
+
+- **Where QoL code lives.** Only in `src/qol/`, built as its own CMake library `chase_qol`, with its tests in `tests/qol/` (CTest names start with `qol-`). Menu pages, layouts, panel and minimap logic, the toggle store and the feature code are all there. No QoL logic in `src/game*.cpp`, `src/runtime/`, `src/render/`, `src/frontend/`, `src/assets/` or any other file of the port. QoL code may call the port's public interfaces; it never copies port code.
+- **What a port file may contain, and nothing more:** (1) the CMake line that links `chase_qol`; (2) an `#include` of a hook header of `src/qol/`; (3) a hook point: one call (or one `if (qol::enabled(qol::Feature::X)) qol::hookName(...)` line) to a function that `src/qol/` declares, with plain-type arguments and no QoL decision, math or state in the port file. With the toggle off the hook changes nothing. Every hook point is named in the list "Hook points" of [qol-settings-menu.md](../plans/features/qol-settings-menu.md) (file, function, hook, toggle) in the same branch that adds it; a hook not on the list is a defect.
+- **A QoL feature never edits port runtime files** beyond these hook points: no changed constants, no moved code, no new branches, no refactoring of port files. A feature that needs more asks the lead; if a port library lacks a generic capability (for example an extra viewport or draw call in `chase_render`, where all OpenGL stays), the capability is added as a port item that changes no default behaviour, never as QoL logic inside the port.
+- **The port never depends on QoL for its own tests:** the port's tests and the library build without `chase_qol` being consulted except through the hook calls, which compile to no effect in original mode.
+- **Guard.** A CTest `qol-separation` is planned (QOLSET-7); until it exists, the reviewers check these rules by hand on every branch.
 
 ## The toggle mechanism
 
@@ -34,7 +46,7 @@ Design: [docs/design/qol-settings.md](../design/qol-settings.md); features: [qol
 - What a QoL feature does comes only from a spec the user approved, recorded in `docs/design/`. What the spec does not decide is asked of the user and recorded as an open item, never chosen. Open items asked of the user so far: QOLSET-5, QOLSET-6, QOLMAP-2, QOLBOT-6.
 - The bottom screen is hidden only when its features are on; with all QoL off the window is today's top over bottom.
 - New controls follow the input rules of CLAUDE.md; bottom-screen UI that stays is used by mouse clicks; a bottom-screen content moved to a full-window panel is clicked with the mouse as well.
-- Shared code stays generic (CLAUDE.md "Generic over hardcoded"): one rule for all users, not per-object special cases. `src/game.cpp` gets at most glue lines; QoL logic goes into its own files under `src/runtime/`, `src/render/` (OpenGL stays there) or a QoL library with its own tests.
+- Shared code stays generic (CLAUDE.md "Generic over hardcoded"): one rule for all users, not per-object special cases. `src/game.cpp` gets only hook lines (see "Separate source code"); all QoL logic is in `src/qol/`, and OpenGL calls stay in `src/render/` behind plain-type interfaces.
 
 ## Tests
 
@@ -44,5 +56,5 @@ Design: [docs/design/qol-settings.md](../design/qol-settings.md); features: [qol
 
 ## Briefs and review
 
-- **Every QoL brief also names:** this rule file, the spec entries in `docs/design/`, the toggle that switches the feature, that original mode is tested first, and the stop rule above.
-- **Review checks beyond the tests:** the feature is off by default; the default path is unchanged and the port's tests are unchanged; the toggle is in the settings menu and is the user's mechanism; every behaviour is backed by a spec entry; the tests cover original mode first and then on; nothing was done for a plan whose gate is closed (Windows) and no `linux-port` item was delayed.
+- **Every QoL brief also names:** this rule file, the spec entries in `docs/design/`, the toggle that switches the feature, the separation rule and the hook points the feature may add, that original mode is tested first, and the stop rule above.
+- **Review checks beyond the tests:** the feature is off by default; the default path is unchanged and the port's tests are unchanged; the toggle is in the settings menu and is the user's mechanism; the diff touches port files only at listed hook points and QoL code is only in `src/qol/` and `tests/qol/`; every behaviour is backed by a spec entry; the tests cover original mode first and then on; nothing was done for a plan whose gate is closed (Windows) and no `linux-port` item was delayed.
