@@ -2,7 +2,9 @@
 // (src/runtime/pushable.cpp, docs/re/pushables.md): its parameters (instance values over the class defaults of leprop_pushable.blvl), its four
 // nested handles of which only the back one is active, and the push from its placement along its own z axis to 1-3_Push_cart_to, which it
 // reaches within TriggerDistance and then fires 1-3_Push_Done. Values from the level data with the C++ loader (20261026-crane-B, 2026-10-26);
-// the number of moves is the port's own count, not an oracle measurement. Needs the extracted RomFS; exits with 77 (skipped) without it.
+// the 90 moves from the placement are the port's own count. The second run starts at the cart position measured in the original (recorded from
+// a save state in front of the push cart of mission 1-3, RPC 20261027-mission13-C-2, servant, 2026-10-28, New 3DS, OpenGL, fixed dt 0.033, trace of the cart node at
+// node+0x8c per update; first move in update 11, state 1 in update 82, state 2 in update 83): 72 moves of 0.06, state 1 in the update of the 72nd move, rest position (1019.4844, 33.4108, 1034.3561). Needs the extracted RomFS; exits with 77 (skipped) without it.
 #include "assets/assets.hpp"
 #include "runtime/pushable.hpp"
 
@@ -83,6 +85,26 @@ int main(int argc, char** argv) {
         }
         require(done, "pushed along its z axis the cart reaches 1-3_Push_cart_to within 0.1 and reaches state 2");
         require(moves == 90, "90 moves of 0.06 (the tilted z axis also lowers it by 0.17), got " + std::to_string(moves));
+
+        runtime::PushableSet measured;
+        measured.add(cart);
+        measured.objects()[0].node[12] = 1020.9684f;
+        measured.objects()[0].node[13] = 33.5452f;
+        measured.objects()[0].node[14] = 1030.2870f;
+        int measuredMoves = 0;
+        int arrivedAt = 0, doneAt = 0;
+        for (int update = 1; update <= 200 && !doneAt; ++update) {
+            if (measured.objects()[0].state == 0) measured.push(0, direction);
+            for (const runtime::PushableEvent& event : measured.update(noneDisabled, destination)) {
+                if (event.kind == runtime::PushableEventKind::Moved) ++measuredMoves;
+                if (event.kind == runtime::PushableEventKind::Arrived) arrivedAt = measuredMoves;
+                if (event.kind == runtime::PushableEventKind::Done) doneAt = update;
+            }
+        }
+        require(measuredMoves == 72 && arrivedAt == 72, "from the measured start the cart arrives after 72 moves, got " + std::to_string(measuredMoves));
+        const float* rest = measured.objects()[0].node.data() + 12;
+        require(near(rest[0], 1019.4844f, 0.003f) && near(rest[1], 33.4108f, 0.003f) && near(rest[2], 1034.3561f, 0.003f),
+                "rest position of the oracle (state 2): " + std::to_string(rest[0]) + " " + std::to_string(rest[1]) + " " + std::to_string(rest[2]));
     } catch (const std::exception& error) {
         std::cerr << "pushable-real-test: " << error.what() << '\n';
         return 1;

@@ -59,7 +59,7 @@ target_sources(chase_runtime PRIVATE src/runtime/prop_rocking.cpp src/runtime/pl
 target_sources(chase_runtime PRIVATE src/runtime/platform_riding.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/node_attach.cpp src/runtime/attach_children.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/script_particles.cpp src/runtime/game_mission_end_1_3_glue.cpp)
-target_sources(chase_runtime PRIVATE src/runtime/pushable.cpp)
+target_sources(chase_runtime PRIVATE src/runtime/pushable.cpp src/runtime/mission13_end.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/pedestrian_manager.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/pedestrian_blocked.cpp src/runtime/room_layers.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/pedestrian_system.cpp)
@@ -1688,7 +1688,9 @@ if(BUILD_TESTING)
     # (leprops/leprop_buildit), A in its zone builds it, 1-3_Crane_Build_it_done switches the crane switch on, A on 1-3_Crane_switch (at the user's position
     # on the crane trigger, 1004.431 30.709 1080.533 facing 352.6, recorded from a save state on the crane trigger of mission 1-3 by the lead's reader on
     # 2026-10-27; inside the UseBound centre (0, 1, 1.4) turned by the switch's yaw 157.466 from (1003.68, 30.783, 1082.09), level data) fires
-    # 1-3_Start_Rescue_Lawnmower_man, which ends the mission and spawns 1-4_MissionStart.
+    # 1-3_Start_Rescue_Lawnmower_man, which ends the mission and spawns 1-4_MissionStart. The bridge jump (AISuperJump to 1-3_ChaseBridgeLand) ends at
+    # x 987.288 z 1077.79 and the player lands at y 16.80: recorded from a save state on the crane trigger (20261027-mission13-C-2, servant, 2026-10-28,
+    # trace with the fixed step: flight ends at (987.288, 25.711, 1077.788), landing at y 16.808).
     add_test(NAME game-crane-1-3 COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
@@ -1696,7 +1698,7 @@ if(BUILD_TESTING)
       --start "1002.55 30.8 1079.5" --facing 180 --call-script 1-3_Push_Done
       --script "0 0 130;0 0 120 A;0 0 100;at 1004.431 30.709 1080.533 352.6;0 0 5;0 0 1 A;0 0 850")
     set_tests_properties(game-crane-1-3 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
-      PASS_REGULAR_EXPRESSION "script 1-3_Push_Done ended at update [0-9]+\n.*buildit 1-3_crane_bits: stud drop mode.*script 1-3_Crane_Build_it_done started at update [0-9]+\n.*switch 1-3_crane_switch: used at update [0-9]+\n.*switch 1-3_crane_switch: state 3 at update [0-9]+\n.*script 1-3_Start_Rescue_Lawnmower_man started at update [0-9]+\n.*script 1-4_MissionStart started at update [0-9]+")
+      PASS_REGULAR_EXPRESSION "script 1-3_Push_Done ended at update [0-9]+\n.*buildit 1-3_crane_bits: stud drop mode.*script 1-3_Crane_Build_it_done started at update [0-9]+\n.*switch 1-3_crane_switch: used at update [0-9]+\n.*switch 1-3_crane_switch: state 3 at update [0-9]+\n.*script 1-3_Start_Rescue_Lawnmower_man started at update [0-9]+\n.*player AI move: started at update [0-9]+ from [0-9. ]+\n.*player AI move: ended at update [0-9]+ at 987.288 [0-9.]+ 1077.79, [0-9]+ updates\n.*player AI move: 60 updates after the end the player is at 987.288 16.80[0-9]* 1077.79\n.*script 1-4_MissionStart started at update [0-9]+")
     # Mission 1-2, the dog cage (SCRIPT-111): 1-2_Pringles_Cage_Locked enables the use spot 1-2_Dog_Cage_Use_Spot, A on the user's trigger position
     # (oracle save state at the dog cage trigger of mission 1-2) fires 1-2_Cage_Key_Target_Script through the spot's TriggerObject. The use marker (SCRIPT-292) is shown
     # while the spot is usable (seen on the ground in the oracle in that state) and goes after the use, when 0x236624 switched the zone off.
@@ -2303,6 +2305,10 @@ add_executable(pushable-test tests/pushable_test.cpp)
 target_link_libraries(pushable-test PRIVATE chase_runtime)
 target_compile_options(pushable-test PRIVATE -Wall -Wextra -Wpedantic)
 add_test(NAME pushable COMMAND pushable-test)
+add_executable(mission13-end-test tests/mission13_end_test.cpp)
+target_link_libraries(mission13-end-test PRIVATE chase_runtime)
+target_compile_options(mission13-end-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME mission13-end COMMAND mission13-end-test)
 add_executable(pushable-real-test tests/pushable_real_test.cpp)
 target_link_libraries(pushable-real-test PRIVATE chase_runtime chase_assets)
 target_compile_options(pushable-real-test PRIVATE -Wall -Wextra -Wpedantic)

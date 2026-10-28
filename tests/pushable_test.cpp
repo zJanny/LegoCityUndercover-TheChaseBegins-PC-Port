@@ -115,10 +115,38 @@ void pushToDestination() {
     require(firstState && *firstState == kPlayerStateHandlePush, "the first state entered is 85 HANDLE PUSH");
     require(arrived && done && soundStarted, "the pushable arrives, starts its push sound and reaches state 2");
     require(moves == 32, "32 moves of 0.06 bring it from z 20 to within 0.1 of z 22, got " + std::to_string(moves));
-    require(updates == 6 + 32 + 1, "6 blend updates, 32 moves, then state 1 -> 2 in the next update, got " + std::to_string(updates));
+    // One update between message 9 and the first move: pusher set in the update after the blend reached 1.0, first move in the next (recorded from a save state in front of the push cart, 20261027-mission13-servant for 20261027-mission13-C-1, 2026-10-27, trace per update).
+    require(updates == 6 + 1 + 32 + 1, "6 blend updates, one update for message 9, 32 moves, then state 1 -> 2 in the next update, got " + std::to_string(updates));
     require(!set.objects()[0].handles[1].usable, "state 2 makes the handles unusable");
     require(!pushHandleZoneHolds(set.objects()[0], set.objects()[0].handles[1], input.position, input.facing), "so the zone no longer holds");
     require(near(input.position[2], 21.92f - 2.0f - 0.75f, 0.01f), "the player stays at the moving handle's use point");
+}
+
+void firstMoveTiming() {
+    PushableSet set;
+    set.add(cart());
+    PushGrip grip;
+    const float start[3] = {10.0f, 2.0f, 17.5f};
+    pushGripStart(grip, 0, 1, start);
+    PushGripInput input;
+    std::copy_n(start, 3, input.position);
+    input.stickActive = true;
+    input.dt = 0.033f;
+    const auto noneDisabled = [](const std::string&) { return false; };
+    const auto destination = [](const std::string&, float[3]) { return false; };
+    int firstMove = -1, firstState = -1;
+    for (int update = 0; update < 20 && firstMove < 0; ++update) {
+        const PushGripStep step = pushGripUpdate(grip, set, input);
+        input.position[0] = step.position[0];
+        input.position[2] = step.position[2];
+        input.facing = step.facing;
+        if (step.enteredState && firstState < 0) firstState = update;
+        for (const PushableEvent& event : set.update(noneDisabled, destination))
+            if (event.kind == PushableEventKind::Moved) firstMove = update;
+    }
+    // Recorded from a save state in front of the push cart (20261027-mission13-servant for 20261027-mission13-C-2, 2026-10-28, dt 0.033 in the trace,
+    // per-update rows): state 85 at row 3, the pusher set in row 10, the first move in row 11, so the first move is 8 updates after the update entering state 85.
+    require(firstState == 0 && firstMove == 8, "the first move is 8 updates after entering state 85, got " + std::to_string(firstMove - firstState));
 }
 
 void stickReleased() {
@@ -145,6 +173,7 @@ int main() {
         handleFrames();
         zoneAndGrab();
         pushToDestination();
+        firstMoveTiming();
         stickReleased();
     } catch (const std::exception& error) {
         std::cerr << "pushable-test: " << error.what() << '\n';

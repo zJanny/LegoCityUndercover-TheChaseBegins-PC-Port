@@ -147,7 +147,7 @@ void PushableSet::load(assets::FuseArchive& archive, const assets::Level& level,
 void PushableSet::push(std::size_t index, const float direction[3]) {
     PushableObject& object = objects_[index];
     std::copy_n(direction, 3, object.direction);
-    object.pushed = true;
+    object.pushPending = true;
 }
 
 std::vector<PushableEvent> PushableSet::update(const std::function<bool(const std::string&)>& disabled,
@@ -200,6 +200,10 @@ std::vector<PushableEvent> PushableSet::update(const std::function<bool(const st
         if (object.state != 2) continue;
         for (PushHandle& handle : object.handles) handle.usable = false;
         events.push_back({PushableEventKind::Done, i});
+    }
+    for (PushableObject& object : objects_) {
+        object.pushed = object.pushPending;
+        object.pushPending = false;
     }
     return events;
 }

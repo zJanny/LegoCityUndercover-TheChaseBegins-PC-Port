@@ -418,6 +418,10 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
     updateObjectiveMarkers(dt);
     cutsceneHost->update(levelScripts.cutscenes());
     if (player && levelScripts.ai().movedLastUpdate("player1")) game_player::applyAiPosition(*player, *levelScripts.ai().character("player1"));
+    if (player)
+        aiSuperJumpVertical.update(levelScripts.ai().character("player1"), levelScripts.ai().movedLastUpdate("player1"), player->animations.at(runtime::kAnimationJumpRun), player->vertical);
+    if (player)
+        if (const auto line = aiMoveWatch.observe(levelScripts.ai().movedLastUpdate("player1"), player->position().data(), updates)) std::cout << *line << '\n';
     studs.addToCounter(levelScripts.progressNatives().takeStudsAdded());
     for (const runtime::MusicRequest& request : levelScripts.musicNatives().takeRequests())
         if (shared.audio) shared.audio->applyMusic(request);

@@ -59,6 +59,7 @@
 #include "runtime/brick_grab.hpp"
 #include "runtime/pole.hpp"
 #include "runtime/pushable.hpp"
+#include "runtime/mission13_end.hpp"
 #include "runtime/ladder.hpp"
 #include "runtime/acrobat_pole.hpp"
 #include "runtime/prop_bouncer.hpp"
@@ -392,6 +393,8 @@ private:
     chase::runtime::BuilditSet buildits;
     chase::runtime::PushableSet pushables;
     chase::runtime::PushGrip pushGrip;
+    chase::runtime::AiMoveWatch aiMoveWatch;
+    chase::runtime::AiSuperJumpVertical aiSuperJumpVertical;
     bool pushActionHeld = false;
     std::vector<std::optional<std::size_t>> pushableScene;
     chase::runtime::BuilditPlayer builditPlayer;

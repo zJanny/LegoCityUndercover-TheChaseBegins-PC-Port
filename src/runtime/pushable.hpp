@@ -52,7 +52,8 @@ struct PushableObject {
     float boundsCentre[3] = {0, 0, 0}, boundsHalf[3] = {0, 0, 0};  // the model's node bounds (node +0xa0, +0xac)
     std::uint16_t state = 0, target = 0;  // record +2, +4
     std::uint8_t sinkUpdates = 0;         // record +0x2b
-    bool pushed = false;                  // record +0x60: message 9 arrived since the last move
+    bool pushed = false;                  // record +0x60: message 9 arrived before this update's move
+    bool pushPending = false;             // message 9 of this update; the pushable acts on it in the next update (oracle: pusher set in one update, first move in the next)
     float direction[3] = {0, 0, 0};       // record +0x44
     bool pushSound = false;               // record +0x2c bit 5
     std::vector<PushHandle> handles;
