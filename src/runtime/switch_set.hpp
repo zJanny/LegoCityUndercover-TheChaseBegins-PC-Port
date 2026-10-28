@@ -48,7 +48,8 @@ struct SwitchObject {
     std::uint8_t kind = 0;
     std::size_t objectIndex = 0;
     float position[3] = {0, 0, 0};
-    std::array<float, 16> matrix{};
+    std::array<float, 16> matrix{1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
+    float carried[3] = {0, 0, 0};  // how far moving platform nodes above the switch have moved its node from the placement
     SwitchParams params;
     SwitchRecord record;
     std::optional<std::size_t> reference;  // the record +0xc in the reference list
@@ -103,7 +104,10 @@ public:
                  std::vector<SwitchEvent>& events, bool fromPlayer = false, float argument = 1.0f);
     const std::vector<SwitchObject>& objects() const { return objects_; }
     std::optional<std::size_t> find(const std::string& lowerInstance) const;
+    // The use zone registered by the create 0x17510c (0x23e130 with last argument 0): the player is turned into the node's frame (0x221570 -> 0x2536c0) and
+    // tested against the class UseBound box.
     static bool inZone(const SwitchObject& object, const float player[3]);
+    void setCarriedOffset(std::size_t index, const float offset[3]);
     // The use marker's query (0x172254: message 3 with no player, action flag 0, character 167 with every ability): a lever answers it while its zone
     // is usable, its record is not Registered and it is in state 0; 0x172254 skips levers of LeverType 5 before asking, and the entity the player
     // uses (ctrl+0x130, set when USE LERP is done, 0x2feadc).

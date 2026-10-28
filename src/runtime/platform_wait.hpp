@@ -7,7 +7,9 @@
 
 #include <cstdint>
 #include <map>
+#include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace chase::runtime {
@@ -34,6 +36,12 @@ public:
     void message(const std::string& lowerInstance, std::uint8_t message);
     // The entity updates after the script pass, in the order of the level's objects (0x2807c8): travel, node move and the carried nodes.
     void update(float dt);
+    // Message 8 (ResetObject, platform_riding.hpp): the record's reset, and its node and the nodes below it go back to the origin.
+    void reset(const std::string& lowerInstance);
+    // The translation of a platform's node: its placement plus what moved it; nothing for an object that is no platform.
+    std::optional<PlatformVector> nodeTranslation(const std::string& lowerInstance) const;
+    // The world rotation rows (the placement's rows times the carried turn) and translation of a platform's node; nothing for an object that is no platform.
+    std::optional<std::pair<PathRotation, PlatformVector>> nodeFrame(const std::string& lowerInstance) const;
 
     // AttachObject 0x1bf68c: the child's node goes under the parent's (0x245008), and a platform parent gets message 43 (its list R+0x60).
     void attachObject(const std::string& lowerParent, const std::string& lowerChild);

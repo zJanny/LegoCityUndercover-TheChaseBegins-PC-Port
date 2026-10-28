@@ -2,7 +2,8 @@
 // One player update of the position and posture: locomotion, wall slide (0x21a73c), then the vertical step (jump,
 // ground probe, fall, landing, the state-8 slide). A landing stun suppresses locomotion; in the air the stick keeps its
 // walk or run speed (times 0.8 after a jump); during the first 0.5 s of the fall that follows a slide the stick is
-// ignored. No SDL dependency.
+// ignored. The move of the ground entity (VerticalState::groundEntityMove, 0x2b01e4) is added to the movement before the slide, and an upward one
+// raises the node without the downward probe (0x20cd30). No SDL dependency.
 #include "runtime/player_vertical.hpp"
 
 namespace chase::runtime {

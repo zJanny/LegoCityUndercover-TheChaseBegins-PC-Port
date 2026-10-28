@@ -27,7 +27,7 @@ enum class Word {
     EnableObject, EnableCollision, TriggerObject, EnableTrigger, EnableBound, GetGameComplete, IsLevelUnlocked, IsRedBrickExtraActive,
     WarningDialogBox, InformationBox, FadeScreen, PositionObject, PositionPlayer, SceneChange,
     KillScript, ObjectNative, VehicleNative, ProgressNative, MusicNative, SoundNative, TextNative, ObjectiveNative, AiNative, AnimationNative, CutsceneNative, EffectNative, WorldNative, PartyNative,
-    SetPropRocking, WaitForPlatform, PlayParticlesGO, StartDCam, StartDCamTrack, DCamActive, WaitForDCam, EndDCam, SnapCamera, ShakeScreen, Set3DFocusObject, SetDCamStartWait, SetDCamEndWait, CameraFollow
+    SetPropRocking, WaitForPlatform, PlatformNative, PlayParticlesGO, StartDCam, StartDCamTrack, DCamActive, WaitForDCam, EndDCam, SnapCamera, ShakeScreen, Set3DFocusObject, SetDCamStartWait, SetDCamEndWait, CameraFollow
 };
 
 struct ScriptFunction {
@@ -63,6 +63,10 @@ constexpr ScriptFunction kScriptFunctions[] = {
     {"killscript", Word::KillScript, false},
     {"setproprocking", Word::SetPropRocking, false},
     {"waitforplatform", Word::WaitForPlatform, true},
+    {"setplatformspeed", Word::PlatformNative, false},
+    {"setplatformorigin", Word::PlatformNative, true},
+    {"setplatformtarget", Word::PlatformNative, true},
+    {"moveplatform", Word::PlatformNative, false},
     {"playparticlesgo", Word::PlayParticlesGO, true},
     {"startdcam", Word::StartDCam, false},
     {"startdcamtrack", Word::StartDCamTrack, true},
@@ -468,6 +472,7 @@ ScriptRunner::Result ScriptRunner::native(ScriptThread& thread, const ScriptCall
         break;
     case Word::SetPropRocking: setPropRockingNative(call); break;
     case Word::WaitForPlatform: return waitForPlatformNative(call);
+    case Word::PlatformNative: platformNative(call); break;
     case Word::PlayParticlesGO: playParticlesGoNative(call); break;
     case Word::ObjectNative:
         if (const auto kind = objectNativeKind(lower(call.function)); kind && !args.empty()) {
@@ -487,6 +492,7 @@ ScriptRunner::Result ScriptRunner::native(ScriptThread& thread, const ScriptCall
             const float value = needsValue ? read(args[1]) : 0.0f;
             objectNatives_.apply(*kind, lower(args[0]), value);
             if (*kind == ObjectNativeKind::ResetObject || (*kind == ObjectNativeKind::EnableSwitch && value > 0.0f)) resetEntity(lower(args[0]));
+            if (*kind == ObjectNativeKind::ResetObject) platforms_.reset(lower(args[0]));
         }
         break;
     case Word::VehicleNative:

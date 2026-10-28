@@ -56,6 +56,7 @@ target_sources(chase_runtime PRIVATE src/runtime/vehicle_camera.cpp src/runtime/
 target_sources(chase_runtime PRIVATE src/runtime/prop_wobbly_destructible.cpp src/runtime/prop_bouncer.cpp src/runtime/stud_callers.cpp src/runtime/stud_drop_classes.cpp src/runtime/super_brick.cpp src/runtime/prop_hit_sequence.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/prop_rocking.cpp src/runtime/platform_wait.cpp src/runtime/game_generator_natives_glue.cpp
   src/runtime/platform_node_move.cpp src/runtime/platform_path.cpp src/runtime/game_platform_glue.cpp)
+target_sources(chase_runtime PRIVATE src/runtime/platform_riding.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/node_attach.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/script_particles.cpp src/runtime/game_mission_end_1_3_glue.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/pushable.cpp)
@@ -142,6 +143,7 @@ if(EPOXY_FOUND)
     target_sources(chase-game PRIVATE src/game_attack.cpp src/game_screen_fade.cpp src/game_screen_shake.cpp src/game_save.cpp)
     target_sources(chase-game PRIVATE src/game_prop_rocking.cpp src/runtime/game_rocking_follow_glue.cpp src/game_platform_nodes.cpp)
     target_sources(chase-game PRIVATE src/runtime/game_push_cart_glue.cpp)
+    target_sources(chase-game PRIVATE src/runtime/game_platform_riding_glue.cpp)
     target_link_libraries(chase-game PRIVATE chase_render chase_runtime chase_input chase_audio chase_frontend_movie chase_save_progress chase_save_tables)
     target_compile_options(chase-game PRIVATE -Wall -Wextra -Wpedantic)
   endif()
@@ -1601,12 +1603,13 @@ if(BUILD_TESTING)
     # 3 at u33, the player enters state 20 at u0, state 76 at u8 and state 1 at u81, as recorded from save states at the key switch of mission 1-3 after
     # placing the key by RPC 20261026-mission13-A-1 (2026-10-26, New 3DS, OpenGL, dt 0.033 0.033; the traps of 0x26b800, 0x2ccc74 and 0x1abbb0, the
     # state reads show the same one update later) and, with the same counts, RPC 20261025-garage-A-1 (dt 0.0333333). The end position is the use point
-    # (985.39, 1141.25) of the node char_minifig_use (0x207be4) of prop_keyinhole, the lerp target of A-1; the scripted runs step at dt 0.033.
+    # (985.39, 1141.25) of the node char_minifig_use (0x207be4) of prop_keyinhole, the lerp target of A-1; the scripted runs step at dt 0.033. The start (chosen
+    # by the port) lies in the UseBound turned by the switch's yaw -45.45 (world centre 985.31 1141.33; 20261027-mission13-B, the lever zone test 0x221570).
     add_test(NAME game-garage-key-1-3 COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
       --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes --save-out "${CMAKE_BINARY_DIR}/game-garage-key-1-3.dat"
-      --start "986.45 16.57 1141.8" --facing 180 --call-script 1-3_Garage_Key_Base_Script
+      --start "985.6 16.57 1141.5" --facing 180 --call-script 1-3_Garage_Key_Base_Script
       --script "0 0 5;0 0 1 A;0 0 170")
     set_tests_properties(game-garage-key-1-3 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
       PASS_REGULAR_EXPRESSION "use marker: 1-3_garage_key_switch shown at update [0-9]+ \\(usegeneric\\)\n.*switch 1-3_garage_key_switch: used at update 5\n.*switch 1-3_garage_key_switch: player state 20 at update 5\n.*switch 1-3_garage_key_switch: player state 76 at update 13\n.*switch 1-3_garage_key_switch: state 1 at update 37\n.*switch 1-3_garage_key_switch: state 3 at update 38\n.*script 1-3_Garage_Key_used started at update [0-9]+\n.*switch 1-3_garage_key_switch: player state 1 at update 86\n.*script 1-3_Garage_Key_used ended at update [0-9]+\n.*player ended at 985.39 16.57 1141.25")
@@ -1633,8 +1636,8 @@ if(BUILD_TESTING)
     set_tests_properties(game-parts-crate-1-3 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
       PASS_REGULAR_EXPRESSION "1-3_lift_crate_01: destroyed at update [0-9]+\n.*script 1-3_Got_parts started at update [0-9]+.*carry arrow over 1-3_generator_parts_carry added at update [0-9]+.*carry 1-3_generator_parts_carry: picked up at update [0-9]+\ncarry arrow over 1-3_baseplate added at update [0-9]+.*carry 1-3_generator_parts_carry: placed into 1-3_baseplate at update [0-9]+.*script 1-3_Hidden_Exhaust_Carry_Target_Script started at update [0-9]+.*buildit 1-3_pull_switch_bits: stud drop mode.*script SFX_Generator started at update [0-9]+")
     # Mission 1-3 generator scene (SCRIPT-364, 20261026-mission13-B): the real path of game-parts-crate-1-3 up to the build of 1-3_Pull_Switch_Bits, whose
-    # final prop is the pull switch 1-3_Generator_Pull_Switch; A inside its class UseBound (centre (0, 1, 1.4), half (1, 1.5, 1) from the switch at
-    # (949.252, 16.772, 1129.45), level data) uses it, its TriggerObject starts 1-3_Generator_Script, which triggers the crane platform, waits for it,
+    # final prop is the pull switch 1-3_Generator_Pull_Switch; A inside its class UseBound (centre (0, 1, 1.4), half (1, 1.5, 1) turned by the yaw -75.2 of
+    # the switch at (949.252, 16.772, 1129.45), level data), at the oracle's press position 947.956 16.79 1129.206 heading 136.5 (RPC 20261026-mission13-A-1), uses it, its TriggerObject starts 1-3_Generator_Script, which triggers the crane platform, waits for it,
     # stops the girder's rocking, starts particle definition 264 at 1-3_Crane_Girder (PlayParticlesGO), makes the girder guy jump down and ends with
     # QuickSave. The port's own update numbers (recorded 20261026-mission13-B); the platform wait of 103 updates is pinned in prop-rocking-real-data.
     # The crane platform's node goes down to 1-3_Crane_Platform_Target in 102 node moves and ends in state 5 (oracle RPC 20261025-garage-C-1: y 16.6251
@@ -1650,7 +1653,7 @@ if(BUILD_TESTING)
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
       --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes --save-out "${CMAKE_BINARY_DIR}/game-generator-1-3.dat"
       --start "993.9 16.56 1135.5" --facing 180
-      --script "0 0 5;0 0 1 Y;0 0 15;0 0 1 Y;0 0 60;0 0 1 A;0 0 60;at 952.6 16.77 1132.6 90;0 0 5;0 0 1 A;0 0 80;0 0 150 A;0 0 60;at 949.3 16.77 1130.9 270;0 0 5;0 0 1 A;0 0 760")
+      --script "0 0 5;0 0 1 Y;0 0 15;0 0 1 Y;0 0 60;0 0 1 A;0 0 60;at 952.6 16.77 1132.6 90;0 0 5;0 0 1 A;0 0 80;0 0 150 A;0 0 60;at 947.956 16.79 1129.206 136.5;0 0 5;0 0 1 A;0 0 760")
     set_tests_properties(game-generator-1-3 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
       PASS_REGULAR_EXPRESSION "character 1-3_ai_girder_guy: attached to 1-3_crane_girder at update 0\n.*carry 1-3_generator_parts_carry: placed into 1-3_baseplate at update [0-9]+.*buildit 1-3_pull_switch_bits: stud drop mode.*switch 1-3_generator_pull_switch: used at update [0-9]+\n.*switch 1-3_generator_pull_switch: player state 76 at update [0-9]+\n.*switch 1-3_generator_pull_switch: state 1 at update [0-9]+\n.*switch 1-3_generator_pull_switch: player state 1 at update [0-9]+\n.*switch 1-3_generator_pull_switch: state 3 at update [0-9]+\n.*script 1-3_Generator_Script started at update [0-9]+\n.*script 1-3_Crow_out started at update [0-9]+\n.*platform 1-3_crane_platform_dummy: travel ended in state 5 at 948.259 5.9968 1147.01 after 102 node moves at update [0-9]+\n.*particles 264 at 1-3_crane_girder started at update [0-9]+\n.*prop 1-3_crane_girder: rocking off at update [0-9]+\n.*platform 1-3_lawnmower_01: lap ended at 958\\.[0-9]+ 16\\.8037 1061\\.[0-9]+ after 145 node moves at update [0-9]+\n.*save: request [0-9]+ written.*\n.*script 1-3_Generator_Script ended at update [0-9]+")
     # Mission 1-3 push cart (SCRIPT-381, 20261026-crane-B): from the start of 1-3_Start_MowerMan_rescue, which enables 1-3_Cart_crate, five hits
@@ -1666,16 +1669,32 @@ if(BUILD_TESTING)
       --script "0 0 700;at 1024.5 32.3 1026.6 50;0 0 5;0 0 1 Y;0 0 15;0 0 1 Y;0 0 15;0 0 1 Y;0 0 15;0 0 1 Y;0 0 15;0 0 1 Y;0 0 15;0 0 1 Y;0 0 60;0 0 200 A;0 0 30;at 1022.28 33.6 1026.6 -20;0 0 5;112 -100 110;0 0 10")
     set_tests_properties(game-push-cart-1-3 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
       PASS_REGULAR_EXPRESSION "prop 1-3_cart_crate: destroyed at update [0-9]+\n.*buildit 1-3_push_cart_bits: stud drop mode.*script 1-3_DisplayPushHint started at update [0-9]+\n.*pushable 1-3_push_cart: grabbed at 1-3_push_cart.handle02, player state 84 at update [0-9]+\n.*pushable 1-3_push_cart: player state 85 at update [0-9]+\n.*pushable 1-3_push_cart: state 1 at update [0-9]+\n.*pushable 1-3_push_cart: state 2 at update [0-9]+\n.*script 1-3_Push_Done started at update [0-9]+")
+    # Mission 1-3 ledge lift (SCRIPT-372, SCRIPT-378, 20261027-mission13-B): from the plate of 1-3_Ledge_Platform where the user's save state stands (966.185 17.463
+    # 1010.260, facing x; recorded from a save state on the lift trigger of mission 1-3), with 1-3_Ledge_Platform_Switch_Bits_Script called for the built switch, a
+    # short step makes the platform the player's ground entity, A uses the pull switch inside its turned UseBound, 1-3_Ledge_Platform_Switch_Bottom_Script raises the
+    # platform with SetPlatformSpeed 0.013 to 1-3_Ledge_Platform_Top_Target and the player rides to y 30.318. RPC 20261027-mission13-B-1 (20261027-mission13-servant,
+    # 2026-10-28, New 3DS, OpenGL, recorded from a save state on the lift trigger of mission 1-3): from the A press (u0) the node moves in u59..u136 (78 moves) and the
+    # player rises with it in the same update, 0.2394 above the node, to 30.3185. The port presses at update 32 and moves in 92..169: one update later from the
+    # script's start (SCRIPT-389); its player stands 0.2389 above the node (the start height 17.463 of the save state's read, rounded).
+    add_test(NAME game-ledge-lift-1-3 COMMAND chase-game
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
+      --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes --save-out "${CMAKE_BINARY_DIR}/game-ledge-lift-1-3.dat"
+      --start "966.185 17.463 1010.260" --facing 90 --call-script 1-3_Ledge_Platform_Switch_Bits_Script
+      --script "0 0 25;0 60 2;0 0 5;0 0 1 A;0 0 160")
+    set_tests_properties(game-ledge-lift-1-3 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
+      PASS_REGULAR_EXPRESSION "player: ground entity 1-3_ledge_platform at update [0-9]+\n.*switch 1-3_ledge_platform_switch: used at update 32\n.*script 1-3_Ledge_Platform_Switch_Bottom_Script started at update [0-9]+\n.*script 1-3_Lift_Up_Attribute started at update [0-9]+\n.*platform 1-3_ledge_platform: travel ended in state 5 at 966.705 30.0791 1010.82 after 78 node moves at update 169\n.*height 30.318\n.*heights:.* 17.463 17.6284 17.7939 17.9593 ")
     # Mission 1-3 end (SCRIPT-380, 20261026-crane-B): 1-3_Push_Done (called: the push itself is game-push-cart-1-3) enables 1-3_Crane_bits
-    # (leprops/leprop_buildit), A in its zone builds it, 1-3_Crane_Build_it_done switches the crane switch on, A on 1-3_Crane_switch (inside the
-    # port's translation-only lever zone, centre (0, 1, 1.4) from the switch at (1003.68, 30.783, 1082.09), level data) fires
+    # (leprops/leprop_buildit), A in its zone builds it, 1-3_Crane_Build_it_done switches the crane switch on, A on 1-3_Crane_switch (at the user's position
+    # on the crane trigger, 1004.431 30.709 1080.533 facing 352.6, recorded from a save state on the crane trigger of mission 1-3 by the lead's reader on
+    # 2026-10-27; inside the UseBound centre (0, 1, 1.4) turned by the switch's yaw 157.466 from (1003.68, 30.783, 1082.09), level data) fires
     # 1-3_Start_Rescue_Lawnmower_man, which ends the mission and spawns 1-4_MissionStart.
     add_test(NAME game-crane-1-3 COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
       --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes --save-out "${CMAKE_BINARY_DIR}/game-crane-1-3.dat"
       --start "1002.55 30.8 1079.5" --facing 180 --call-script 1-3_Push_Done
-      --script "0 0 130;0 0 120 A;0 0 100;at 1003.68 30.8 1083.4 180;0 0 5;0 0 1 A;0 0 850")
+      --script "0 0 130;0 0 120 A;0 0 100;at 1004.431 30.709 1080.533 352.6;0 0 5;0 0 1 A;0 0 850")
     set_tests_properties(game-crane-1-3 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
       PASS_REGULAR_EXPRESSION "script 1-3_Push_Done ended at update [0-9]+\n.*buildit 1-3_crane_bits: stud drop mode.*script 1-3_Crane_Build_it_done started at update [0-9]+\n.*switch 1-3_crane_switch: used at update [0-9]+\n.*switch 1-3_crane_switch: state 3 at update [0-9]+\n.*script 1-3_Start_Rescue_Lawnmower_man started at update [0-9]+\n.*script 1-4_MissionStart started at update [0-9]+")
     # Mission 1-2, the dog cage (SCRIPT-111): 1-2_Pringles_Cage_Locked enables the use spot 1-2_Dog_Cage_Use_Spot, A on the user's trigger position
@@ -2178,7 +2197,7 @@ foreach(test_name ${chase_all_tests})
   set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT "XDG_DATA_HOME=${CMAKE_BINARY_DIR}/test-xdg/${test_name}")
 endforeach()
 
-foreach(slow_test game-key-pickup-1-3 game-parts-crate-1-3 game-generator-1-3 game-push-cart-1-3 game-crane-1-3 game-key-use-1-3 game-debris-super-pickup game-cutscene-dog-end game-super-buildit-build game-helipad-collision game-fast-travel-exit game-super-brick-roof game-doorlock-detective-1-2 game-cage-release-1-2 game-mission-1-1 game-mission-1-1-start game-vehicle-drive game-vehicle-room game-pedestrian-rooms game-vehicle-hit game-vehicle-smash game-vehicle-break game-director-hold game-director-release game-van-escort game-pause-menu waypoint-marker-shot audio-real-data reflection-real-data)
+foreach(slow_test game-key-pickup-1-3 game-parts-crate-1-3 game-generator-1-3 game-ledge-lift-1-3 game-push-cart-1-3 game-crane-1-3 game-key-use-1-3 game-debris-super-pickup game-cutscene-dog-end game-super-buildit-build game-helipad-collision game-fast-travel-exit game-super-brick-roof game-doorlock-detective-1-2 game-cage-release-1-2 game-mission-1-1 game-mission-1-1-start game-vehicle-drive game-vehicle-room game-pedestrian-rooms game-vehicle-hit game-vehicle-smash game-vehicle-break game-director-hold game-director-release game-van-escort game-pause-menu waypoint-marker-shot audio-real-data reflection-real-data)
   if(TEST ${slow_test})
     set_property(TEST ${slow_test} APPEND PROPERTY LABELS slow)
   endif()
@@ -2207,7 +2226,7 @@ foreach(game_data_test
   game-script-run game-script-walk game-script-camera game-script-ledge game-vehicle-drive game-van-escort game-cutscene-glass-hidden
   game-cutscene-dog-prop game-super-brick-freeplay game-save-new-game-clean game-save-new-game game-save-reload game-super-brick-roof
   game-cutscene-dog-end game-vehicle-room game-pedestrian-rooms game-vehicle-hit game-vehicle-break game-vehicle-smash game-debris-super-pickup
-  game-mission-1-1 game-detective-1-2 game-key-pickup-1-3 game-parts-crate-1-3 game-generator-1-3 game-push-cart-1-3 game-crane-1-3 game-garage-key-1-3 game-key-use-1-3 game-use-spot-1-2 game-use-marker-detective-1-2 game-player-script-animation game-super-buildit-prompt
+  game-mission-1-1 game-detective-1-2 game-key-pickup-1-3 game-parts-crate-1-3 game-generator-1-3 game-ledge-lift-1-3 game-push-cart-1-3 game-crane-1-3 game-garage-key-1-3 game-key-use-1-3 game-use-spot-1-2 game-use-marker-detective-1-2 game-player-script-animation game-super-buildit-prompt
   game-super-buildit-build game-helipad-collision game-fast-travel-exit game-cage-release-1-2 game-doorlock-detective-1-2 game-mission-1-2-start-timing game-mission-1-1-start game-script-dialog
   game-same-level-entry game-scene-change-exit game-scene-change-entry game-director-hold game-director-release game-script-zipline game-script-zipline-handcuffs
   game-script-attack-table game-script-wobbly-table game-script-bounce game-script-bounce-grab game-script-acrobat-poles game-script-zipline-use-a
@@ -2252,6 +2271,15 @@ add_executable(platform-node-move-test tests/platform_node_move_test.cpp)
 target_link_libraries(platform-node-move-test PRIVATE chase_runtime)
 target_compile_options(platform-node-move-test PRIVATE -Wall -Wextra -Wpedantic)
 add_test(NAME platform-node-move COMMAND platform-node-move-test)
+add_executable(platform-riding-test tests/platform_riding_test.cpp)
+target_link_libraries(platform-riding-test PRIVATE chase_runtime)
+target_compile_options(platform-riding-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME platform-riding COMMAND platform-riding-test)
+add_executable(platform-riding-real-test tests/platform_riding_real_test.cpp)
+target_link_libraries(platform-riding-real-test PRIVATE chase_runtime chase_assets)
+target_compile_options(platform-riding-real-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME platform-riding-real-data COMMAND platform-riding-real-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
+set_tests_properties(platform-riding-real-data PROPERTIES SKIP_RETURN_CODE 77 LABELS needs-game-data)
 add_executable(platform-path-test tests/platform_path_test.cpp)
 target_link_libraries(platform-path-test PRIVATE chase_runtime)
 target_compile_options(platform-path-test PRIVATE -Wall -Wextra -Wpedantic)

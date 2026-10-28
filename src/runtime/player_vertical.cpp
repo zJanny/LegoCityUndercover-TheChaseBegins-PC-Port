@@ -28,6 +28,8 @@ GroundProbe probeFor(const VerticalState& state, const VerticalInput& input) {
 
 std::optional<GroundContact> probeGround(VerticalState& state, const CollisionWorld& world, const GroundProbe& probe) {
     const std::optional<GroundContact> contact = groundContact(world, probe);
+    state.groundProbed = true;
+    state.groundFound = contact.has_value();
     if (!contact) return std::nullopt;
     std::copy(contact->normal, contact->normal + 3, state.groundNormal);
     state.groundSurface = contact->surface;
@@ -237,6 +239,18 @@ VerticalStep verticalUpdateStep(VerticalState& state, const CollisionWorld& worl
         step.jumpStarted = true;
         return step;
     }
+    // STAND-IN SCRIPT-S310: the rise has no ceiling test, and a raised probe that finds nothing keeps the posture.
+    if (state.posture == Posture::Ground && input.rise > 0) {
+        state.y += input.rise;
+        if (!input.horizontalMove) {
+            state.groundKept = true;
+            return step;
+        }
+        const std::optional<GroundContact> raised = world.empty() ? std::nullopt : probeGround(state, world, probeFor(state, input));
+        if (raised && steepNormal(state.groundNormal)) startSlide(state, step);
+        else if (raised) state.y = raised->height;
+        return step;
+    }
     if (state.posture == Posture::Ground && input.rootDelta <= 0) return step;
     const std::optional<GroundContact> ground = world.empty() ? std::nullopt : probeGround(state, world, probeFor(state, input));
     if (ground && steepNormal(state.groundNormal)) {
@@ -254,6 +268,7 @@ VerticalStep verticalUpdateStep(VerticalState& state, const CollisionWorld& worl
 }
 
 VerticalStep verticalUpdate(VerticalState& state, const CollisionWorld& world, const VerticalInput& input) {
+    state.groundProbed = state.groundFound = state.groundKept = false;
     VerticalStep step = verticalUpdateStep(state, world, input);
     if (state.posture == Posture::Falling && state.slideFall) state.slideFallTicks += input.ticks;
     locomotionStepEnded(state.placement);

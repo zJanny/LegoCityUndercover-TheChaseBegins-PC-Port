@@ -100,9 +100,18 @@ std::optional<std::size_t> SwitchSet::find(const std::string& lowerInstance) con
 
 bool SwitchSet::inZone(const SwitchObject& object, const float player[3]) {
     if (!object.lever || !object.lever->hasZone) return false;
-    for (int a = 0; a < 3; ++a)
-        if (!(std::fabs(player[a] - object.position[a] - object.lever->zoneCentre[a]) < object.lever->zoneHalf[a])) return false;
+    float offset[3];
+    for (int a = 0; a < 3; ++a) offset[a] = player[a] - (object.position[a] + object.carried[a]);
+    for (int a = 0; a < 3; ++a) {
+        const float* axis = object.matrix.data() + 4 * a;
+        const float local = offset[0] * axis[0] + offset[1] * axis[1] + offset[2] * axis[2];
+        if (!(std::fabs(local - object.lever->zoneCentre[a]) < object.lever->zoneHalf[a])) return false;
+    }
     return true;
+}
+
+void SwitchSet::setCarriedOffset(std::size_t index, const float offset[3]) {
+    if (index < objects_.size()) std::copy_n(offset, 3, objects_[index].carried);
 }
 
 void SwitchSet::runReference(std::size_t index, bool activate, ReferenceTriggers& references, ScriptRunner& scripts, std::vector<SwitchEvent>& events) {

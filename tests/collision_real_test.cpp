@@ -219,7 +219,9 @@ int main(int argc, char** argv) {
             // 1-4_Window, 1-6_Roof_Door, two rock smashes); the enabled kind 67 set equals the entities without flag bit 0 of the oracle grid census r41-A-3.
             // + 1: the enabled super build-it plate FP_SuperBuildit_Statue_BP (kind 98, link 0x1af224, box 4.95357 x 0.0757853 x 3.42814 by the model bounds;
             // 20261027-graphics-G, 2026-10-27, C++ loaders).
-            require(objects.size() == 850 && meshes == 437 && lamps == 58 && barriers == 33, "placed object totals changed: " + std::to_string(objects.size()) + " " + std::to_string(meshes) + " " + std::to_string(lamps) + " " + std::to_string(barriers));
+            // + 9 (3 meshes): the enabled platforms of kind 64, whose link 0x19a3e4 registers collision like kind 67 (20261027-mission13-B, 2026-10-28, REA and
+            // the C++ loaders; not checked against the oracle grid census).
+            require(objects.size() == 859 && meshes == 440 && lamps == 58 && barriers == 33, "placed object totals changed: " + std::to_string(objects.size()) + " " + std::to_string(meshes) + " " + std::to_string(lamps) + " " + std::to_string(barriers));
         }
 
         GroundTotals ground;

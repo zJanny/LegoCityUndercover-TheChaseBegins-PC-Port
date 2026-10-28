@@ -183,7 +183,8 @@ std::vector<ObjectCollision> collectObjectCollisions(FuseArchive& archive, const
         const Level& cls = classOf(object.className);
         const bool vehicle = isVehicleClassFile(cls);
         const std::uint8_t kind = objectKind(object, cls);
-        const bool propKind = kind == kPropObjectKind;
+        const bool platformKind = kind == kPlatformObjectKind;
+        const bool propKind = kind == kPropObjectKind || platformKind;
         const bool superBuildit = kind == kSuperBuilditObjectKind;
         const bool propFamily = isPropFamilyClass(object.className) || vehicle || propKind || superBuildit;
         if (!prop && !dummyCollision && !vehicle && !propKind) return;
@@ -249,7 +250,8 @@ std::vector<ObjectCollision> collectObjectCollisions(FuseArchive& archive, const
         const LevelParam* boundCollision = effectiveParam(object, cls, hashBoundCollision);
         bool collisionDefault = !boundCollision || boundCollision->value != 0;
         if (propKind) {
-            if (intOf(effectiveParam(object, cls, hashDestructable)) == kNoBoundsHitMode || intOf(effectiveParam(object, cls, hashNoBoundCollisions)) != 0)
+            if ((!platformKind && intOf(effectiveParam(object, cls, hashDestructable)) == kNoBoundsHitMode) ||
+                intOf(effectiveParam(object, cls, hashNoBoundCollisions)) != 0)
                 collisionDefault = false;
         }
         if ((propKind || superBuildit) && !collisionDefault && !mesh) return;

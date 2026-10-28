@@ -1,7 +1,19 @@
 #include "runtime/player_motion.hpp"
+#include <array>
 #include <cmath>
 
 namespace chase::runtime {
+namespace {
+std::array<float, 3> takeGroundEntityMove(VerticalState& vertical) {
+    const std::array<float, 3> move{vertical.groundEntityMove[0], vertical.groundEntityMove[1], vertical.groundEntityMove[2]};
+    vertical.groundEntityMove[0] = vertical.groundEntityMove[1] = vertical.groundEntityMove[2] = 0;
+    return move;
+}
+
+bool riding(const std::array<float, 3>& move) { return move[0] != 0 || move[1] != 0 || move[2] != 0; }
+
+float movementLength(float dx, float dy, float dz, bool withRide) { return withRide ? std::sqrt(dx * dx + dy * dy + dz * dz) : std::hypot(dx, dz); }
+}
 
 PlayerMotionStep playerRootStepUpdate(LocomotionState& motion, VerticalState& vertical, const CollisionWorld& world, float deltaX, float deltaZ, float dt, float deltaY) {
     PlayerMotionStep result;
@@ -11,16 +23,19 @@ PlayerMotionStep playerRootStepUpdate(LocomotionState& motion, VerticalState& ve
     const float heading = headingRadians(motion.facing);
     input.forwardX = std::sin(heading);
     input.forwardZ = std::cos(heading);
-    float dx = deltaX, dz = deltaZ;
-    const float rootDelta = std::hypot(dx, dz);
-    if (rootDelta > 0 && !world.empty())
-        slideAlongWalls(world, motion.x, vertical.y, motion.z, input.forwardX, input.forwardZ, dx, dz, PlayerBox(), kPlayerExcludedSurfaces, 0.0f);
+    const std::array<float, 3> ride = takeGroundEntityMove(vertical);
+    float dx = deltaX + ride[0], dz = deltaZ + ride[2];
+    const float rootDelta = movementLength(dx, ride[1], dz, riding(ride));
+    if (std::hypot(dx, dz) > 0 && !world.empty())
+        slideAlongWalls(world, motion.x, vertical.y, motion.z, input.forwardX, input.forwardZ, dx, dz, PlayerBox(), kPlayerExcludedSurfaces, ride[1]);
     motion.x += dx;
     motion.z += dz;
     vertical.y += deltaY;
     input.x = motion.x;
     input.z = motion.z;
     input.rootDelta = rootDelta;
+    input.rise = ride[1] > 0 ? ride[1] : 0.0f;
+    input.horizontalMove = dx != 0 || dz != 0;
     result.locomotion.deltaX = dx;
     result.locomotion.deltaZ = dz;
     result.vertical = verticalUpdate(vertical, world, input);
@@ -36,7 +51,12 @@ PlayerMotionStep playerMotionUpdate(LocomotionState& motion, VerticalState& vert
     input.dt = dt;
     input.ticks = stepTicks(dt);
     input.moveRequested = intent.active;
+    const std::array<float, 3> ride = vertical.posture == Posture::Jumping ? std::array<float, 3>{} : takeGroundEntityMove(vertical);
     if (vertical.posture == Posture::Landing) {
+        // STAND-IN SCRIPT-S310: the landing stun takes the ground entity's move without the wall slide and the probe.
+        motion.x += ride[0];
+        vertical.y += ride[1];
+        motion.z += ride[2];
         result.vertical = verticalUpdate(vertical, world, input);
         result.stunned = true;
         return result;
@@ -62,20 +82,22 @@ PlayerMotionStep playerMotionUpdate(LocomotionState& motion, VerticalState& vert
         motion.sprinting = before.sprinting;
         step.animationScale = before.sprinting ? kCharacterSpeeds.sprintScale : 1.0f;
     }
-    float dx = step.deltaX, dz = step.deltaZ;
-    const float rootDelta = std::hypot(dx, dz);
+    float dx = step.deltaX + ride[0], dz = step.deltaZ + ride[2];
+    const float rootDelta = movementLength(dx, ride[1], dz, riding(ride));
     const float heading = headingRadians(motion.facing);
     input.forwardX = std::sin(heading);
     input.forwardZ = std::cos(heading);
     const bool dropping = vertical.posture == Posture::Falling || vertical.posture == Posture::Sliding;
-    if (rootDelta > 0 && !world.empty())
+    if (std::hypot(dx, dz) > 0 && !world.empty())
         slideAlongWalls(world, before.x, vertical.y, before.z, input.forwardX, input.forwardZ, dx, dz, PlayerBox(), kPlayerExcludedSurfaces,
-                        dropping ? -vertical.fallSpeed : 0.0f);
+                        (dropping ? -vertical.fallSpeed : 0.0f) + ride[1]);
     motion.x = before.x + dx;
     motion.z = before.z + dz;
     input.x = motion.x;
     input.z = motion.z;
     input.rootDelta = rootDelta;
+    input.rise = ride[1] > 0 ? ride[1] : 0.0f;
+    input.horizontalMove = dx != 0 || dz != 0;
     if (jumpPressed && vertical.posture == Posture::Ground) {
         result.jumpMoving = intent.active;
         input.startJump = intent.active ? jumps.moving : jumps.standing;

@@ -97,6 +97,10 @@ struct VerticalState {
     bool slideFall = false;             // state 5 entered from state 8
     std::uint32_t slideFallTicks = 0;   // clock ticks since that state 5 began
     PlacementEffects placement;         // what the last PositionPlayer / PositionObject left on the player (placement_message.hpp)
+    float groundEntityMove[3] = {0, 0, 0};  // 0x2b01e4: the move of the ground entity since its last contact, added to the next movement (platform_riding.hpp)
+    bool groundProbed = false;          // the last update ran the ground probe, so `groundFound` and `groundRecord` tell its contact
+    bool groundFound = false;
+    bool groundKept = false;            // the last update rose with the ground entity without a probe (0x20cd30 resends the contact event 0x24)
     bool steeringLocked() const { return posture == Posture::Falling && slideFall && slideFallTicks <= kSlideFallLockTicks; }
 };
 
@@ -108,6 +112,8 @@ struct VerticalInput {
     std::uint32_t ticks = 0;            // clock ticks of this update, dt in units of 1/3000 s
     bool moveRequested = false;         // ctrl+0xc bit 0
     const JumpProfile* startJump = nullptr;  // set in the update of a jump button press while grounded
+    float rise = 0;                     // the upward part of the ground entity's move: 0x20cd30 raises the node by it without the downward probe
+    bool horizontalMove = false;        // the update's movement has an x or z part (with a rise, 0x23d218 probes from the raised node)
 };
 
 struct VerticalStep {

@@ -308,6 +308,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         sceneStart.startRequested();
         if (player && !levelScripts.ai().moving("player1")) levelScripts.ai().setPosition("player1", player->position().data());
         levelScripts.update(dt);
+        carryPlatformProps();
         applyScriptNatives();
         runtime::applyObjectCollisionState(collision, objectState);
         suppressDrivenVehicleCollision();
@@ -346,12 +347,14 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         const float fallSpeedBeforeStep = player->vertical.fallSpeed;
         const std::optional<runtime::ScriptRootStep> scriptRoot = scriptStep == runtime::PlayerStateStep::UserAnimation ? playerScriptAnimation.rootMotion(player->motion.facing) : std::nullopt;
         if (scriptRoot) runtime::applyScriptRootStep(*scriptRoot, player->motion, player->vertical, collision, dt);
+        rideGroundEntity();
         game_player::PlayerAnimation shown =
             boardingStep.takesControl ? applyBoarding(boardingStep)
             : scriptClip              ? game_player::PlayerAnimation{}
                                       : attackMovePlayer(runtime::stickIntent(stick), !controlTaken && carry.allowsJump() && !detective.modeActive() && pad.slot(kSlotJumpButton).press > 0,
                                                          !controlTaken && pad.slot(kSlotConfirmButton).press > 0, pad.slot(kSlotButtonY).value > 0.0f,
                                                          !controlTaken && carry.carryingMode() == 0 && !detective.modeActive(), dt);
+        linkGroundEntity();
         deliverAttackHits();
         bounceOnLanding(postureBeforeStep, fallSpeedBeforeStep);
         if (const runtime::AiCharacter* driven = levelScripts.ai().moving("player1") ? levelScripts.ai().character("player1") : nullptr) {
@@ -458,7 +461,6 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
     }
     provisionalStudClockSeconds += double(dt);
     updateLevelCharacters(dt);
-    carryPlatformProps();
     fallApart.update(debrisLineStandIn(), updates);
     if (follow) updateFollowCamera(dt);
     else camera.update(dt, pad);

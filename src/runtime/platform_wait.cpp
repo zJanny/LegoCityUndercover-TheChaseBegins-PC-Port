@@ -1,6 +1,7 @@
 #include "runtime/platform_wait.hpp"
 
 #include "assets/object_classes.hpp"
+#include "runtime/platform_riding.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -82,6 +83,27 @@ void PlatformSet::update(float dt) {
         if (wasTravelling && !travelling(record.state)) arrivals_.push_back(report(name, record));
         else if (wrapped) laps_.push_back(report(name, record));
     }
+}
+
+void PlatformSet::reset(const std::string& lowerInstance) {
+    PlatformRecord* record = find(lowerInstance);
+    if (!record) return;
+    const PlatformVector origin = platformReset(*record);
+    const PlatformVector now = *nodeTranslation(lowerInstance);
+    carry_.move(lowerInstance, {origin[0] - now[0], origin[1] - now[1], origin[2] - now[2]});
+}
+
+std::optional<PlatformVector> PlatformSet::nodeTranslation(const std::string& lowerInstance) const {
+    const PlatformRecord* record = find(lowerInstance);
+    if (!record) return std::nullopt;
+    const PlatformVector carried = carry_.offset(lowerInstance);
+    return PlatformVector{record->motion.placement[0] + carried[0], record->motion.placement[1] + carried[1], record->motion.placement[2] + carried[2]};
+}
+
+std::optional<std::pair<PathRotation, PlatformVector>> PlatformSet::nodeFrame(const std::string& lowerInstance) const {
+    const PlatformRecord* record = find(lowerInstance);
+    if (!record) return std::nullopt;
+    return std::make_pair(multiplyPathRotation(record->motion.placementRotation, carry_.rotation(lowerInstance)), *nodeTranslation(lowerInstance));
 }
 
 PlatformArrival PlatformSet::report(const std::string& name, const PlatformRecord& record) {

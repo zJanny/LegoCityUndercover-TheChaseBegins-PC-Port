@@ -16,6 +16,10 @@ void LevelSession::carryPlatformProps() {
     for (const runtime::PlatformArrival& arrival : platforms.takeArrivals())
         std::cout << "platform " << arrival.instance << ": travel ended in state " << arrival.state << " at " << arrival.node[0] << ' ' << arrival.node[1]
                   << ' ' << arrival.node[2] << " after " << arrival.movedUpdates << " node moves at update " << updates << '\n';
+    for (std::size_t i = 0; i < switches.objects().size(); ++i) {
+        const runtime::PlatformVector offset = platforms.carriedOffset(switches.objects()[i].instance);
+        switches.setCarriedOffset(i, offset.data());
+    }
     for (const runtime::PlatformArrival& lap : platforms.takeLaps())
         std::cout << "platform " << lap.instance << ": lap ended at " << lap.node[0] << ' ' << lap.node[1] << ' ' << lap.node[2] << " after "
                   << lap.movedUpdates << " node moves at update " << updates << '\n';

@@ -31,6 +31,7 @@
 #include "game_semi_trans.hpp"
 #include "game_particles.hpp"
 #include "render/rope.hpp"
+#include "runtime/platform_riding.hpp"
 #include "runtime/same_level_entry.hpp"
 #include "runtime/zipline_pole.hpp"
 #include "runtime/zipline_rope.hpp"
@@ -227,9 +228,13 @@ private:
     bool placeTrafficCar(const chase::runtime::TrafficCarPlacement& placement);
     void updatePropAnimations(float dt);
     void updatePropRocking();
-    // The placed props the moving platform nodes carry, after the rocking (game_platform_nodes.cpp); attached level characters follow their
+    // The placed props and lever zones the moving platform nodes carry, right after the scripts so the characters meet the moved collision
+    // (game_platform_nodes.cpp); attached level characters follow their
     // parent's node in game_rocking_follow_glue.cpp.
     void carryPlatformProps();
+    // The player's ground entity (game_platform_riding_glue.cpp): its move goes into the next movement, and the movement's ground contact sets it.
+    void rideGroundEntity();
+    void linkGroundEntity();
     bool objectNodePosition(const std::string& instance, float out[3]) const;
     void attachLevelCharacters();
     void followAttachedCharacters();
@@ -371,6 +376,7 @@ private:
     std::map<std::string, bool> propRockingLogged;
     std::map<std::string, std::optional<std::size_t>> propRockingScene;
     std::set<std::string> platformCarried;
+    chase::runtime::GroundEntityLink playerGround;
     chase::runtime::NodeAttachments characterAttachments;
     std::map<std::string, std::optional<std::size_t>> placedSceneByInstance;
     std::size_t reportedUnhandled = 0, reportedEvents = 0;
