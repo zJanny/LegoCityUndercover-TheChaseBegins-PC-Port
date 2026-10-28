@@ -4,7 +4,7 @@
 
 - Overall: IN_PROGRESS
 - Current Step: S1
-- Last Updated: 2026-10-28T09:49:01+01:00
+- Last Updated: 2026-10-28T09:50:53+01:00
 - Plan: docs/plans/qol.md
 
 ## Decisions
@@ -30,6 +30,9 @@ Custom restores the last own mix; hiding the bottom screen turns every panel tog
 ### Decision: No per-panel toggles (2026-10-28T09:49:01+01:00)
 The master button alone switches the bottom screen and its panels (Improved hides it, Original shows it); QOLBOT-11 and the "hiding forces panels on" decision are superseded. See [qol-screen-layout.md §2026-10-28T09:48:15](../design/qol-screen-layout.md#ts-20261028-094815).
 
+### Decision: Minimap and bottom screen follow the master (2026-10-28T09:50:53+01:00)
+The minimap has no toggle of its own and shows only in Improved; the bottom screen is hidden exactly when the minimap is on, so Custom always shows it. See [qol-screen-layout.md §2026-10-28T09:50:34](../design/qol-screen-layout.md#ts-20261028-095034).
+
 ## Blockers
 
 None.
@@ -47,3 +50,4 @@ One line per session, newest last; `--fix` keeps the newest 20 and moves older o
 - 2026-10-28T09:38:37+01:00 — Planner: recorded the user's answers on the master button, window modes, files, HUD corners, toggles and panel look. See [qol-settings-menu](features/qol-settings-menu.md).
 - 2026-10-28T09:41:06+01:00 — Planner: recorded Custom and hiding decisions, three new open questions. See [qol-bottom-screen](features/qol-bottom-screen.md).
 - 2026-10-28T09:49:01+01:00 — Planner: recorded that the master button alone switches the bottom screen; two new open questions. See [qol-bottom-screen](features/qol-bottom-screen.md).
+- 2026-10-28T09:50:53+01:00 — Planner: recorded minimap and bottom-screen decisions; one new open question. See [qol-minimap](features/qol-minimap.md).

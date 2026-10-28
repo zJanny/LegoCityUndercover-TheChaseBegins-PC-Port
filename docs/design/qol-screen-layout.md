@@ -14,7 +14,8 @@ The user's approved design of the first QoL features: the top screen as true ful
 - The minimap shows the same icons and objective markers as the original map at a fixed zoom, hidden in cutscenes and panels: [§2026-10-28T09:37:31](#ts-20261028-093731).
 - Hiding the bottom screen requires the minimap on (corrected in part by [§2026-10-28T09:48:15](#ts-20261028-094815): no per-panel toggles); the PC pause menu holds Resume, Options (original page), Credits, Exit and PC Settings; all panels use the original game's art and fonts: [§2026-10-28T09:37:31](#ts-20261028-093731).
 - There are no per-panel toggles and no own toggle for the bottom screen: the master button hides it (Improved) or shows it (Original); the panels show when it is hidden: [§2026-10-28T09:48:15](#ts-20261028-094815).
-- Open: what the bottom screen and the panels do in Custom (QOLBOT-18); whether the minimap is its own toggle (QOLMAP-4).
+- The minimap has no toggle of its own and shows only in Improved; the bottom screen is hidden exactly when the minimap is on: [§2026-10-28T09:50:34](#ts-20261028-095034).
+- Open: how the master state is stored and derived (QOLSET-15).
 
 <a id="ts-20261028-092133"></a>
 
@@ -85,3 +86,16 @@ Asked of the user by the lead on 2026-10-28; the quoted labels are the user's se
 What stands: hiding the bottom screen requires the minimap on (QOLBOT-11); the panels use the original art and fonts; the pause menu content. What no longer holds: one toggle per panel; hiding turns every panel toggle on.
 
 Open (not decided by the user): what the bottom screen and the panels do in Custom, since the option text "stays as it was in the last mix's source" is unclear (QOLBOT-18); whether the minimap stays its own toggle or follows the master button only (QOLMAP-4).
+
+<a id="ts-20261028-095034"></a>
+
+## 2026-10-28T09:50:34+01:00 — The minimap follows the master button; the bottom screen follows the minimap
+
+Asked of the user by the lead on 2026-10-28; the quoted labels are the user's selections. Decides QOLMAP-4 and QOLBOT-18, the open points of [§2026-10-28T09:48:15](#ts-20261028-094815).
+
+- Minimap toggle (QOLMAP-4): "Master only": "Minimap shows only in Improved, together with the hidden bottom screen." This was not the recommended option (the recommendation was a toggle of its own).
+- Bottom screen in Custom (QOLBOT-18): "Hidden iff minimap on (Rec.)": "Hidden exactly when the minimap is on, so the map is never lost; your mix controls it through the minimap."
+
+Reading of the lead (not a decision of the user): together these mean the minimap is never on in Custom, so the bottom screen is always shown in Custom; the minimap and the hiding of the bottom screen are Improved only. In Custom only the remaining per-feature switches (so far the widened view with the corner HUD) can differ from Original.
+
+Open (not decided by the user): how the master state is stored and derived now that most features follow the master only (QOLSET-15).

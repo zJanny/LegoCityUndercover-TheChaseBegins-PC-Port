@@ -113,7 +113,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 
 | Feature | Status | Top open items |
 |---|---|---|
-| [qol-settings-menu](qol-settings-menu.md) | NOT_STARTED | QOLSET-1 toggle store and master toggle (first, blocks all QoL); QOLSET-2 settings menu with tabs; QOLSET-7 `qol-separation` guard; QOLSET-8 "PC Settings" pause entry; QOLSET-9 mirrored options |
+| [qol-settings-menu](qol-settings-menu.md) | NOT_STARTED | QOLSET-1 toggle store and master (first); QOLSET-2 menu with tabs; QOLSET-7 `qol-separation` guard; QOLSET-8 PC Settings entry; QOLSET-15 master state (question); QOLSET-9 mirrored options |
 | [qol-fullscreen](qol-fullscreen.md) | NOT_STARTED | QOLFS-1 widened full-window view; QOLFS-2 corner-anchored HUD; QOLFS-3 pop-in at the edges |
-| [qol-minimap](qol-minimap.md) | NOT_STARTED | QOLMAP-1 round top-right minimap; QOLMAP-4 own toggle or master only (question) |
-| [qol-bottom-screen](qol-bottom-screen.md) | NOT_STARTED | QOLBOT-1 hide the bottom screen; QOLBOT-2..4 panels; QOLBOT-5 pause PC menu; QOLBOT-7..10 scanner, build-it, shop, award viewer; QOLBOT-18 bottom screen in Custom (question) |
+| [qol-minimap](qol-minimap.md) | NOT_STARTED | QOLMAP-1 round top-right minimap |
+| [qol-bottom-screen](qol-bottom-screen.md) | NOT_STARTED | QOLBOT-1 hide the bottom screen; QOLBOT-2..4 panels; QOLBOT-5 pause PC menu; QOLBOT-7..10 scanner, build-it, shop, award viewer |
