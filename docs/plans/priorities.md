@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 974 open items and stand-ins, 175 linked to game usage, 799 with unknown reach.
+Items: 994 open items and stand-ins, 175 linked to game usage, 819 with unknown reach.
 
 ## Top 50 overall
 
@@ -199,14 +199,20 @@ Items: 974 open items and stand-ins, 175 linked to game usage, 799 with unknown 
 
 No linked items.
 
+## Quality of life (`qol` plan)
+
+0 of 20 items linked.
+
+No linked items.
+
 ## Reach unknown
 
 No script native or object class is linked to these items (`+N` is Unblocks). Add `uses:` to an item when its fix changes the game.
 
-Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?display=source#L33) (+30), [VEH-6](features/vehicles-physics.md?display=source#L30) (+24), [TRAFFIC-7](features/pedestrians-traffic-cars.md?display=source#L56) (+23), [TRAFFIC-8](features/pedestrians-traffic-cars.md?display=source#L57) (+23), [TRAFFIC-9](features/pedestrians-traffic-cars.md?display=source#L58) (+23), [TRAFFIC-2](features/pedestrians-traffic-cars.md?display=source#L51) (+22), [SCRIPT-43](features/script-system-natives.md?display=source#L30) (+18), [SCRIPT-94](features/script-system-ai-navigation.md?display=source#L34) (+17), [SCRIPT-44](features/script-system-natives.md?display=source#L31) (+16), [SCRIPT-101](features/script-system-ai-navigation.md?display=source#L37) (+15)
+Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?display=source#L33) (+30), [VEH-6](features/vehicles-physics.md?display=source#L30) (+24), [TRAFFIC-7](features/pedestrians-traffic-cars.md?display=source#L56) (+23), [TRAFFIC-8](features/pedestrians-traffic-cars.md?display=source#L57) (+23), [TRAFFIC-9](features/pedestrians-traffic-cars.md?display=source#L58) (+23), [TRAFFIC-2](features/pedestrians-traffic-cars.md?display=source#L51) (+22), [QOLSET-1](features/qol-settings-menu.md?display=source#L21) (+19), [SCRIPT-43](features/script-system-natives.md?display=source#L30) (+18), [SCRIPT-94](features/script-system-ai-navigation.md?display=source#L34) (+17), [SCRIPT-44](features/script-system-natives.md?display=source#L31) (+16)
 
 - [abilities-detective.md](features/abilities-detective.md): DETECT-19 (+3), DETECT-13 (+2), DETECT-1 (+1), DETECT-15 (+1), DETECT-4 (+1), DETECT-6 (+1), DETECT-S11 (+1), DETECT-S7 (+1), DETECT-S8 (+1), DETECT-10, DETECT-11, DETECT-12, DETECT-18, DETECT-3, DETECT-5, DETECT-9, DETECT-S1, DETECT-S2, DETECT-S4, DETECT-S5, DETECT-S6, DETECT-S9
-- [abilities-scanner.md](features/abilities-scanner.md): SCAN-10 (+1), SCAN-11 (+1), SCAN-16 (+1), SCAN-17 (+1), SCAN-S10 (+1), AUDIO-S33, SCAN-13, SCAN-15, SCAN-3, SCAN-6, SCAN-S1, SCAN-S11, SCAN-S12, SCAN-S2, SCAN-S3, SCAN-S4, SCAN-S5, SCAN-S6, SCAN-S7, SCAN-S8, SCAN-S9
+- [abilities-scanner.md](features/abilities-scanner.md): SCAN-11 (+2), SCAN-10 (+1), SCAN-16 (+1), SCAN-17 (+1), SCAN-S10 (+1), AUDIO-S33, SCAN-13, SCAN-15, SCAN-3, SCAN-6, SCAN-S1, SCAN-S11, SCAN-S12, SCAN-S2, SCAN-S3, SCAN-S4, SCAN-S5, SCAN-S6, SCAN-S7, SCAN-S8, SCAN-S9
 - [animation-characters.md](features/animation-characters.md): ANIM-13 (+4), ANIM-3 (+2), ANIM-10 (+1), ANIM-11 (+1), ANIM-14 (+1), ANIM-1, ANIM-4, ANIM-S10, ANIM-S11, ANIM-S2
 - [assets-formats.md](features/assets-formats.md): ASSET-1, ASSET-2, ASSET-3, ASSET-4, ASSET-8, ASSET-S1, ASSET-S2
 - [audio.md](features/audio.md): AUDIO-3 (+2), AUDIO-20 (+1), AUDIO-32 (+1), AUDIO-34 (+1), AUDIO-35 (+1), AUDIO-36 (+1), AUDIO-37 (+1), AUDIO-1, AUDIO-38, AUDIO-5, AUDIO-6, AUDIO-7, AUDIO-S1, AUDIO-S2, AUDIO-S20, AUDIO-S3, AUDIO-S30, AUDIO-S34, AUDIO-S35, AUDIO-S36, AUDIO-S4, AUDIO-S5, AUDIO-S6, AUDIO-S7
@@ -215,14 +221,14 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [doors.md](features/doors.md): DOOR-2, DOOR-3, DOOR-4, DOOR-6, DOOR-7, DOOR-S1, DOOR-S2, DOOR-S3, DOOR-S4, DOOR-S5
 - [executable-platform.md](features/executable-platform.md): EXEC-1 (+2), EXEC-10 (+1), EXEC-2, EXEC-3, EXEC-4, EXEC-S1, EXEC-S10
 - [front-end.md](features/front-end.md): FE-3 (+10), FE-30 (+1), FE-40 (+1), FE-1, FE-2, FE-4, FE-5, FE-6, FE-7, FE-8, FE-9, FE-S1, FE-S2, FE-S3, FE-S31, FE-S32, FE-S33, FE-S4, FE-S40, FE-S41, FE-S5, FE-S6
-- [hud-ui-super-bricks.md](features/hud-ui-super-bricks.md): HUD-84 (+2), HUD-79 (+1), HUD-80 (+1), HUD-85, HUD-S74, HUD-S75, HUD-S76, HUD-S78
+- [hud-ui-super-bricks.md](features/hud-ui-super-bricks.md): HUD-84 (+2), HUD-79 (+1), HUD-80 (+1), HUD-85 (+1), HUD-S74, HUD-S75, HUD-S76, HUD-S78
 - [hud-ui-text.md](features/hud-ui-text.md): HUD-15, HUD-27, HUD-28, HUD-29, HUD-32, HUD-33, HUD-S15
-- [hud-ui.md](features/hud-ui.md): HUD-70 (+4), HUD-71 (+3), HUD-11 (+2), HUD-60 (+1), HUD-61 (+1), HUD-74 (+1), HUD-75 (+1), HUD-10, HUD-12, HUD-18, HUD-3, HUD-6, HUD-7, HUD-8, HUD-S1, HUD-S2, HUD-S3, HUD-S4, HUD-S6, HUD-S60, HUD-S7, HUD-S70, HUD-S71, HUD-S73
+- [hud-ui.md](features/hud-ui.md): HUD-70 (+4), HUD-71 (+3), HUD-11 (+2), HUD-74 (+2), HUD-60 (+1), HUD-61 (+1), HUD-75 (+1), HUD-10, HUD-12, HUD-18, HUD-3, HUD-6, HUD-7, HUD-8, HUD-S1, HUD-S2, HUD-S3, HUD-S4, HUD-S6, HUD-S60, HUD-S7, HUD-S70, HUD-S71, HUD-S73
 - [input.md](features/input.md): INPUT-1, INPUT-2, INPUT-3, INPUT-S1
 - [level-objects-buildit-super.md](features/level-objects-buildit-super.md): LEVOBJ-117 (+1), LEVOBJ-129 (+1), LEVOBJ-S100, LEVOBJ-S101, LEVOBJ-S95
 - [level-objects-buildit.md](features/level-objects-buildit.md): LEVOBJ-43 (+1), LEVOBJ-71 (+1), LEVOBJ-79 (+1), LEVOBJ-42, LEVOBJ-61, LEVOBJ-70, LEVOBJ-76, LEVOBJ-77, LEVOBJ-85, LEVOBJ-94, LEVOBJ-S41, LEVOBJ-S70, LEVOBJ-S71, LEVOBJ-S74, LEVOBJ-S76
 - [level-objects-carry.md](features/level-objects-carry.md): LEVOBJ-127 (+1), LEVOBJ-75 (+1), LEVOBJ-128, LEVOBJ-30, LEVOBJ-31, LEVOBJ-34, LEVOBJ-S31, LEVOBJ-S33, LEVOBJ-S34, LEVOBJ-S73, LEVOBJ-S75, LEVOBJ-S99
-- [level-objects-fast-travel.md](features/level-objects-fast-travel.md): LEVOBJ-122 (+2), LEVOBJ-120 (+1), LEVOBJ-121, LEVOBJ-123, LEVOBJ-124, LEVOBJ-125, LEVOBJ-126, LEVOBJ-S96, LEVOBJ-S97, LEVOBJ-S98
+- [level-objects-fast-travel.md](features/level-objects-fast-travel.md): LEVOBJ-120 (+2), LEVOBJ-122 (+2), LEVOBJ-121, LEVOBJ-123, LEVOBJ-124, LEVOBJ-125, LEVOBJ-126, LEVOBJ-S96, LEVOBJ-S97, LEVOBJ-S98
 - [level-objects-wobbly.md](features/level-objects-wobbly.md): LEVOBJ-87 (+3), LEVOBJ-112 (+1), LEVOBJ-89 (+1), LEVOBJ-90 (+1), LEVOBJ-92 (+1), LEVOBJ-96 (+1), LEVOBJ-91, LEVOBJ-97, LEVOBJ-S77, LEVOBJ-S79, LEVOBJ-S80, LEVOBJ-S81
 - [level-objects.md](features/level-objects.md): LEVOBJ-8 (+4), LEVOBJ-101 (+1), LEVOBJ-106 (+1), LEVOBJ-108 (+1), LEVOBJ-110 (+1), LEVOBJ-111 (+1), LEVOBJ-102, LEVOBJ-104, LEVOBJ-109, LEVOBJ-114, LEVOBJ-3, LEVOBJ-5, LEVOBJ-6, LEVOBJ-S2, LEVOBJ-S3, LEVOBJ-S4, LEVOBJ-S82, LEVOBJ-S83, LEVOBJ-S84, LEVOBJ-S86, LEVOBJ-S88, LEVOBJ-S89, LEVOBJ-S90, LEVOBJ-S91, LEVOBJ-S92, LEVOBJ-S93
 - [level-transitions.md](features/level-transitions.md): TRANS-3 (+4), TRANS-13 (+2), TRANS-15 (+2), TRANS-8 (+2), TRANS-10 (+1), TRANS-12 (+1), TRANS-14 (+1), TRANS-16 (+1), TRANS-S1, TRANS-S3, TRANS-S4, TRANS-S5, TRANS-S6
@@ -238,11 +244,15 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [player-traversal-pole.md](features/player-traversal-pole.md): TRAV-S9 (+1), TRAV-11, TRAV-13, TRAV-14, TRAV-15, TRAV-16, TRAV-S5, TRAV-S6, TRAV-S7, TRAV-S8
 - [player-traversal-rails.md](features/player-traversal-rails.md): TRAV-28 (+3), TRAV-38 (+1), TRAV-43 (+1), TRAV-44 (+1), TRAV-45 (+1), TRAV-S16 (+1), TRAV-S18 (+1), TRAV-S19 (+1), TRAV-27, TRAV-29, TRAV-31, TRAV-32, TRAV-33, TRAV-42, TRAV-S15, TRAV-S17, TRAV-S21, TRAV-S23, TRAV-S24, TRAV-S25, TRAV-S26
 - [player-traversal.md](features/player-traversal.md): TRAV-9 (+2), TRAV-2 (+1), TRAV-49 (+1), TRAV-52 (+1), TRAV-S12 (+1), TRAV-10, TRAV-19, TRAV-20, TRAV-22, TRAV-34, TRAV-35, TRAV-5, TRAV-6, TRAV-63, TRAV-8, TRAV-S1, TRAV-S10, TRAV-S11, TRAV-S13, TRAV-S2, TRAV-S20, TRAV-S29, TRAV-S3, TRAV-S30, TRAV-S31, TRAV-S32, TRAV-S4
+- [qol-bottom-screen.md](features/qol-bottom-screen.md): QOLBOT-1 (+8), QOLBOT-10, QOLBOT-2, QOLBOT-3, QOLBOT-4, QOLBOT-5, QOLBOT-7, QOLBOT-8, QOLBOT-9
+- [qol-fullscreen.md](features/qol-fullscreen.md): QOLFS-1 (+12), QOLFS-2, QOLFS-3
+- [qol-minimap.md](features/qol-minimap.md): QOLMAP-1
+- [qol-settings-menu.md](features/qol-settings-menu.md): QOLSET-1 (+19), QOLSET-2 (+5), QOLSET-7 (+1), QOLSET-3, QOLSET-4, QOLSET-8, QOLSET-9
 - [rendering-draw-order.md](features/rendering-draw-order.md): RENDER-65 (+1), RENDER-78 (+1), RENDER-79 (+1), RENDER-S64, RENDER-S71, RENDER-S72
 - [rendering-reflections.md](features/rendering-reflections.md): RENDER-75 (+1), RENDER-S69
 - [rendering-shadows.md](features/rendering-shadows.md): RENDER-72 (+1), RENDER-73 (+1), RENDER-74 (+1), RENDER-S67, RENDER-S68
 - [rendering.md](features/rendering.md): RENDER-50 (+2), RENDER-69 (+2), RENDER-39 (+1), RENDER-60 (+1), RENDER-63 (+1), RENDER-64 (+1), ASSET-S1, RENDER-30, RENDER-34, RENDER-42, RENDER-6, RENDER-61, RENDER-70, RENDER-S4, RENDER-S50, RENDER-S51, RENDER-S6, RENDER-S60, RENDER-S61, RENDER-S62, RENDER-S63, RENDER-S65, RENDER-S66, RENDER-S7
-- [saves-options.md](features/saves-options.md): SAVE-8 (+4), SAVE-13 (+1), SAVE-14 (+1), SAVE-16 (+1), SAVE-2 (+1), SAVE-20 (+1), SAVE-22 (+1), SAVE-21, SAVE-3, SAVE-4, SAVE-5, SAVE-S1, SAVE-S10, SAVE-S11, SAVE-S2, SAVE-S3, SAVE-S4, SAVE-S5, SAVE-S6, SAVE-S8
+- [saves-options.md](features/saves-options.md): SAVE-8 (+4), SAVE-13 (+1), SAVE-14 (+1), SAVE-16 (+1), SAVE-2 (+1), SAVE-20 (+1), SAVE-22 (+1), SAVE-4 (+1), SAVE-21, SAVE-3, SAVE-5, SAVE-S1, SAVE-S10, SAVE-S11, SAVE-S2, SAVE-S3, SAVE-S4, SAVE-S5, SAVE-S6, SAVE-S8
 - [script-system-ai-navigation.md](features/script-system-ai-navigation.md): SCRIPT-92 (+30), SCRIPT-94 (+17), SCRIPT-101 (+15), SCRIPT-95 (+15), SCRIPT-100 (+14), SCRIPT-79 (+13), SCRIPT-S100, SCRIPT-S101, SCRIPT-S102, SCRIPT-S104, SCRIPT-S31, SCRIPT-S93, SCRIPT-S94, SCRIPT-S95
 - [script-system-dcam.md](features/script-system-dcam.md): SCRIPT-40 (+15), SCRIPT-182 (+1), SCRIPT-48 (+1), SCRIPT-181, SCRIPT-332, SCRIPT-49, SCRIPT-50, SCRIPT-S142
 - [script-system-hud-natives.md](features/script-system-hud-natives.md): SCRIPT-350 (+2), SCRIPT-329 (+1), SCRIPT-330 (+1), SCRIPT-354 (+1), SCRIPT-331, SCRIPT-68, SCRIPT-69, SCRIPT-70, SCRIPT-S270, SCRIPT-S282, SCRIPT-S283, SCRIPT-S285
@@ -262,7 +272,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [script-system.md](features/script-system.md): SCRIPT-1 (+10), SCRIPT-53 (+2), SCRIPT-2, SCRIPT-3, SCRIPT-5, SCRIPT-54, SCRIPT-55, SCRIPT-9, SCRIPT-S1, SCRIPT-S14, SCRIPT-S16, SCRIPT-S275, SCRIPT-S3, SCRIPT-S5, SCRIPT-S6, SCRIPT-S7
 - [studs-super-bricks.md](features/studs-super-bricks.md): STUD-28 (+2), STUD-16 (+1), STUD-24 (+1), STUD-S12, STUD-S13, STUD-S8, STUD-S9
 - [studs.md](features/studs.md): STUD-1 (+1), STUD-13 (+1), STUD-26 (+1), STUD-5 (+1), STUD-25, STUD-27, STUD-3, STUD-6, STUD-8, STUD-S1, STUD-S14, STUD-S15, STUD-S3, STUD-S5, STUD-S6, STUD-S7
-- [ui-menus.md](features/ui-menus.md): UI-1 (+3), UI-2 (+2), UI-19 (+1), UI-3 (+1), UI-4 (+1), UI-5 (+1), UI-7 (+1), UI-9 (+1), UI-10, UI-11, UI-12, UI-13, UI-14, UI-15, UI-16, UI-18, UI-6, UI-8, UI-S1, UI-S2, UI-S3, UI-S4, UI-S5, UI-S6, UI-S7
+- [ui-menus.md](features/ui-menus.md): UI-1 (+5), UI-2 (+2), UI-4 (+2), UI-12 (+1), UI-19 (+1), UI-3 (+1), UI-5 (+1), UI-7 (+1), UI-9 (+1), UI-10, UI-11, UI-13, UI-14, UI-15, UI-16, UI-18, UI-6, UI-8, UI-S1, UI-S2, UI-S3, UI-S4, UI-S5, UI-S6, UI-S7
 - [vehicles-boarding.md](features/vehicles-boarding.md): VEH-19 (+5), VEH-80 (+2), HUD-50 (+1), HUD-S50, HUD-S51, VEH-20, VEH-S10, VEH-S70, VEH-S8, VEH-S9
 - [vehicles-damage.md](features/vehicles-damage.md): VEH-120 (+3), VEH-125 (+3), VEH-113 (+2), VEH-115 (+2), VEH-124 (+2), VEH-121 (+1), VEH-140 (+1), VEH-122, VEH-128, VEH-S100, VEH-S101, VEH-S104, VEH-S109, VEH-S112, VEH-S90, VEH-S93, VEH-S96, VEH-S97, VEH-S98, VEH-S99
 - [vehicles-physics-collision.md](features/vehicles-physics-collision.md): VEH-91 (+6), VEH-70 (+2), VEH-100 (+1), VEH-101 (+1), VEH-102 (+1), VEH-S52, VEH-S60, VEH-S62, VEH-S81, VEH-S82, VEH-S86, VEH-S87
