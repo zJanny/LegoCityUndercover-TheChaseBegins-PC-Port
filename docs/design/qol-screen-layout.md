@@ -12,8 +12,9 @@ The user's approved design of the first QoL features: the top screen as true ful
 - Scanner, Build-it, Shop and Award viewer get a PC version (full-window panel clicked with the mouse) when their QoL feature is on: [§2026-10-28T09:31:02](#ts-20261028-093102).
 - Windows narrower than 5:3 keep the original 5:3 view with bars above and below; hearts and character picture top-left, studs and counters top-right, ability bottom-left, scaled to the window height; the widened view and the corner HUD are one toggle, the minimap its own: [§2026-10-28T09:37:31](#ts-20261028-093731).
 - The minimap shows the same icons and objective markers as the original map at a fixed zoom, hidden in cutscenes and panels: [§2026-10-28T09:37:31](#ts-20261028-093731).
-- One toggle per panel; hiding the bottom screen requires the minimap on; the PC pause menu holds Resume, Options (original page), Credits, Exit and PC Settings; all panels use the original game's art and fonts: [§2026-10-28T09:37:31](#ts-20261028-093731).
-- Open: what a page does when the bottom screen is hidden but its panel toggle is off (QOLBOT-14).
+- One toggle per panel; hiding the bottom screen requires the minimap on and turns every panel toggle on too (corrected in part by [§2026-10-28T09:40:42](#ts-20261028-094042)); the PC pause menu holds Resume, Options (original page), Credits, Exit and PC Settings; all panels use the original game's art and fonts: [§2026-10-28T09:37:31](#ts-20261028-093731).
+- Hiding the bottom screen turns every panel toggle on too: [§2026-10-28T09:40:42](#ts-20261028-094042).
+- Open: what turning one panel off does after hiding (QOLBOT-15), what a panel toggle does while the bottom screen is visible (QOLBOT-16), and whether hiding is its own toggle (QOLBOT-17).
 
 <a id="ts-20261028-092133"></a>
 
@@ -43,6 +44,7 @@ Open (not decided by the user): see the list in the report of the planner, recor
 <a id="ts-20261028-093731"></a>
 
 ## 2026-10-28T09:37:31+01:00 — Narrow windows, HUD corners, toggles, minimap content, pause menu and panel look
+Corrected by [qol-screen-layout.md §2026-10-28T09:40:42](#ts-20261028-094042): the toggle decision for the bottom-screen panels (QOLBOT-11) is partly superseded; hiding the bottom screen turns every panel toggle on too.
 
 Asked of the user by the lead on 2026-10-28; the quoted labels are the user's selections. Decides QOLFS-4 to QOLFS-6, QOLMAP-3 and QOLBOT-11 to QOLBOT-13.
 
@@ -55,3 +57,14 @@ Asked of the user by the lead on 2026-10-28; the quoted labels are the user's se
 - Look (QOLBOT-13): "Original art (Rec.)": the original game's art and fonts for all full-window panels, settings included.
 
 Open (not decided by the user): what a bottom-screen page does when the bottom screen is hidden but that page's panel toggle is off (QOLBOT-14).
+
+<a id="ts-20261028-094042"></a>
+
+## 2026-10-28T09:40:42+01:00 — Hiding the bottom screen forces the panels on
+
+Asked of the user by the lead on 2026-10-28; the quoted label is the user's selection. Decides QOLBOT-14. [Corrects §2026-10-28T09:37:31 in part](#ts-20261028-093731): QOLBOT-11 said "one toggle per panel; hiding the bottom screen requires the minimap on".
+
+- Hidden page with its panel toggle off (QOLBOT-14): "Hiding forces panels on" (not the recommended option, which was to show the bottom screen for that page only): hiding the bottom screen turns every panel toggle on too. The option text the user saw said the per-panel choice becomes meaningless.
+- What stands: one toggle per panel, and hiding requires the minimap on (QOLBOT-11). What changes: with the bottom screen hidden, every panel is on.
+
+Open (not decided by the user): after the bottom screen is hidden, what turning one panel off does (QOLBOT-15); what a panel toggle does while the bottom screen is visible (QOLBOT-16); whether "hide the bottom screen" is its own toggle (QOLBOT-17).

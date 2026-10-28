@@ -14,7 +14,8 @@ The user's approved design of how quality-of-life features are switched on and o
 - The separation rule (`src/qol/`, library `chase_qol`, `tests/qol/` with `qol-*` tests, only the link line, a hook header include and listed hook calls in port files, CTest `qol-separation` in the first round) is confirmed: [§2026-10-28T09:32:07](#ts-20261028-093207).
 - Master button, window modes, tabs, files and the pause entry position: the master button cycles Original, Improved, Custom; the Display tab has windowed and borderless full screen plus an F11 shortcut; the Game, Display and Controls tabs are always active, bindings stay in `config/controls.cfg` and the rest is in `config/qol.cfg`; "PC Settings" is the last entry of the round pause menu, chosen by mouse, D-pad or keyboard: [§2026-10-28T09:37:29](#ts-20261028-093729).
 - All panels, the settings menu included, use the original game's art and fonts: [§2026-10-28T09:37:31](qol-screen-layout.md#ts-20261028-093731).
-- Open: what the master button restores when cycled to Custom (QOLSET-14); the points listed last in [§2026-10-28T09:32:07](#ts-20261028-093207).
+- Custom restores the last own mix kept in `config/qol.cfg` and is skipped while no mix has been set: [§2026-10-28T09:40:40](#ts-20261028-094040).
+- Open: the points listed last in [§2026-10-28T09:32:07](#ts-20261028-093207).
 
 <a id="ts-20261028-092131"></a>
 
@@ -70,3 +71,13 @@ Asked of the user by the lead on 2026-10-28; the quoted labels are the user's se
 - "PC Settings" entry (QOLSET-13): "Last entry, mouse+keys (Rec.)": the last entry of the round pause menu, chosen by mouse click, D-pad or keyboard like the other entries.
 
 Open (not decided by the user): what Custom restores when the master button cycles to it (QOLSET-14): the last Custom mix, a defined default mix, or skipping Custom while no mix exists.
+
+<a id="ts-20261028-094040"></a>
+
+## 2026-10-28T09:40:40+01:00 — What Custom restores
+
+Asked of the user by the lead on 2026-10-28; the quoted label is the user's selection. Decides QOLSET-14.
+
+- Custom (QOLSET-14): "Last own mix (Rec.)": when the master button cycles to Custom it restores the last Custom mix, kept in `config/qol.cfg`; Custom is skipped while no mix has been set.
+
+Open: none from this answer.
