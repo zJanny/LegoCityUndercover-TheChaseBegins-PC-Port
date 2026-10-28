@@ -2,11 +2,11 @@
 
 ## 1. Executive Summary
 
-Build a faithful PC port of The Chase Begins from the supplied decrypted 3DS image: everything works and behaves exactly like the original, playable from start to finish, on Linux x86_64 first. Windows follows only after the Linux version is finished and the user says so; quality-of-life features follow only after the game is finished for PC. Until then no Windows work and no deviations from the original. Delivered so far: an auditable extraction pipeline, an accessible native input laboratory, asset decoders and a development runtime; gameplay reconstruction remains required work.
+Build a faithful PC port of The Chase Begins from the supplied decrypted 3DS image: everything works and behaves exactly like the original, playable from start to finish, on Linux x86_64 first. Windows follows only after the Linux version is finished and the user says so; quality-of-life features live in the separate `qol` plan, off by default, whose gate the user opened on 2026-10-28; the faithful port keeps priority. Until then no Windows work and no deviations from the original. Delivered so far: an auditable extraction pipeline, an accessible native input laboratory, asset decoders and a development runtime; gameplay reconstruction remains required work.
 
 ## 2. Confirmed Requirements
 
-R1: reverse engineer supplied game; accept verified executable extraction and mapped analysis, S1/S3. R2: build native Linux x86_64 foundation; accept native build and smoke test, S2. R3: keyboard/mouse device support; accept configurable hold/toggle input, focus reset, touch mapping, S2. R4: playable port that behaves exactly like the original, start to finish, on Linux x86_64; accept original gameplay, assets, sound and saves on PC, S4; not yet executable-ready. R5 (deferred, only on the user's explicit instruction): Windows port, after R4 is complete. R6 (deferred): quality-of-life features, after the game is finished for PC. No work on R5 or R6 until then.
+R1: reverse engineer supplied game; accept verified executable extraction and mapped analysis, S1/S3. R2: build native Linux x86_64 foundation; accept native build and smoke test, S2. R3: keyboard/mouse device support; accept configurable hold/toggle input, focus reset, touch mapping, S2. R4: playable port that behaves exactly like the original, start to finish, on Linux x86_64; accept original gameplay, assets, sound and saves on PC, S4; not yet executable-ready. R5 (deferred, only on the user's explicit instruction): Windows port, after R4 is complete. R6: quality-of-life features, now the separate `qol` plan (gate opened by the user on 2026-10-28; docs/plans/qol.md); they never change the default game. No work on R5 until the user says so.
 
 ## 3. Assumptions
 

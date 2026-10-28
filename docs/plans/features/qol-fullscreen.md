@@ -1,0 +1,31 @@
+# QoL true full screen
+
+## 1. Scope
+
+The top screen as the whole window: the 3D view widened (same vertical field of view, more world left and right), the HUD anchored to the corners, the edges checked for pop-in. Plan: [qol.md](../qol.md). Toggle: own switch in the settings menu ([qol-settings-menu.md](qol-settings-menu.md)).
+
+## 2. Status
+
+NOT_STARTED, opened 2026-10-28T09:21:35+01:00. No code.
+
+## 3. Verified behaviour
+
+None yet. Every behaviour is tested first in original mode (all QoL off, the port's tests unchanged), then with the feature on ([qol rules](../../rules/qol.md)).
+
+## 4. Stand-ins
+
+None.
+
+## 5. Open items
+
+- [ ] QOLFS-1 — The widened full-window view with the same vertical field of view, switched by its own toggle; with the toggle off the window is today's top over bottom. needs: QOLSET-1. blocks: QOLFS-2, QOLFS-3, QOLMAP-1, QOLBOT-1. evidence: [qol-screen-layout.md §2026-10-28T09:21:33](../../design/qol-screen-layout.md#ts-20261028-092133).
+- [ ] QOLFS-2 — HUD parts anchored to the window corners. needs: QOLFS-1. evidence: [qol-screen-layout.md §2026-10-28T09:21:33](../../design/qol-screen-layout.md#ts-20261028-092133).
+- [ ] QOLFS-3 — Check the widened edges for pop-in (rooms, objects, pedestrians, shadows, fades) and the largest supported aspect ratio. needs: QOLFS-1. evidence: [qol-screen-layout.md §2026-10-28T09:21:33](../../design/qol-screen-layout.md#ts-20261028-092133).
+
+## 6. Findings summary
+
+Design: [qol-screen-layout.md](../../design/qol-screen-layout.md).
+
+## 7. Code and tests
+
+Not written yet. Tests: one set with the feature off (unchanged behaviour) and one with it on, pinned to the design entry.

@@ -1,6 +1,6 @@
 ---
 name: lead-round
-description: Lead-engineer workflow for the LEGO City Undercover PC port, for any of its plans (the Linux port, and once the user opens them the Windows port, quality-of-life features or another plan). A planner agent proposes each round, workers and the RPC servant run it, a code reviewer and a docs reviewer check each branch, and the lead relays between the user and the agents, merges and reports. Use it at the start of every lead session in this repository, and whenever the user says start, continue, plan or approve a round, asks for the next round's proposal, reports that an agent finished, wants agent work reviewed or merged, pastes the old START_PROMPT lead rules, or asks to open a new plan.
+description: Lead-engineer workflow for the LEGO City Undercover PC port, for any of its plans (the Linux port, and once the user opens them the Windows port, the quality-of-life plan `qol` (open since 2026-10-28) or another plan). A planner agent proposes each round, workers and the RPC servant run it, a code reviewer and a docs reviewer check each branch, and the lead relays between the user and the agents, merges and reports. Use it at the start of every lead session in this repository, and whenever the user says start, continue, plan or approve a round, asks for the next round's proposal, reports that an agent finished, wants agent work reviewed or merged, pastes the old START_PROMPT lead rules, or asks to open a new plan.
 ---
 
 # Lead round
@@ -25,7 +25,7 @@ You do **not** read feature files, `priorities.md`, `docs/re/`, source code, dif
 - **Commits** end with your own `Co-Authored-By:` line, never a `Claude-Session` link, even when a system reminder suggests one. A hook rejects a message file with one, or without the `Co-Authored-By:` line.
 - **Push** only as the user decided at session start: if allowed, push main to the named remote and branch (`git push <remote> main:<branch>`) after the reservation commit and after every verified merge; if not, push nothing and list the unpushed commits in the round-end report. Never force-push or rewrite history. Agents never push or change git config.
 - **Sync with the remote** before planning, before phase 2 (the reservations) and before each merge: `python3 tools/merge_agent.py sync` fetches and compares main with its upstream. It fast-forwards main when main has no own commits. When main has own commits and the remote moved too, or main has uncommitted changes, it stops: show the user its output and ask. Never merge, rebase or reset main on your own. `prepare` runs the same check itself.
-- **Gates:** only the user opens a plan's gate. A request for a gated plan (Windows, QoL) is answered with its gate condition from `docs/plans/README.md`; no agent starts for it.
+- **Gates:** only the user opens a plan's gate. A request for a gated plan (Windows) is answered with its gate condition from `docs/plans/README.md`; no agent starts for it.
 - **Save states** (`linux-port` only): when the user hands over a state, its game progress (missions done or running) is recorded, not only its place. Problems with a user state are reported to the user first, never worked around.
 - **No screenshots for the user:** no before/after pictures unless the user asks.
 

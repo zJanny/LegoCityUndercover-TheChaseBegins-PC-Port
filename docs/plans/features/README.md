@@ -108,3 +108,12 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 |---|---|---|
 | [executable-platform](executable-platform.md) | IN_PROGRESS | EXEC-3 update rate 30/60 undecided; EXEC-4 game frame function |
 | [viewer-tools](viewer-tools.md) | IN_PROGRESS | TOOLS-1 oracle controller state 255 |
+
+## Quality of life (`qol` plan)
+
+| Feature | Status | Top open items |
+|---|---|---|
+| [qol-settings-menu](qol-settings-menu.md) | NOT_STARTED | QOLSET-1 toggle store and master toggle (first, blocks all QoL); QOLSET-2 settings menu; QOLSET-5 how it is reached with QoL off (question for the user) |
+| [qol-fullscreen](qol-fullscreen.md) | NOT_STARTED | QOLFS-1 widened full-window view; QOLFS-2 corner-anchored HUD; QOLFS-3 pop-in at the edges |
+| [qol-minimap](qol-minimap.md) | NOT_STARTED | QOLMAP-1 corner minimap; QOLMAP-2 position, size, shape (question for the user) |
+| [qol-bottom-screen](qol-bottom-screen.md) | NOT_STARTED | QOLBOT-1 hide the bottom screen; QOLBOT-2..5 panels and PC menus |

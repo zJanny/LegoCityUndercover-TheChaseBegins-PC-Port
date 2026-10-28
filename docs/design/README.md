@@ -4,5 +4,7 @@ Specs the user approved for the plans that have no original to check against (Wi
 
 | File | Contents |
 |---|---|
+| [qol-settings.md](qol-settings.md) | `qol`: settings menu, master toggle (Original / Custom / Improved), per-feature toggles, `config/qol.cfg`, the user's two rules |
+| [qol-screen-layout.md](qol-screen-layout.md) | `qol`: true full-screen view, corner-anchored HUD, minimap and panels for the bottom screen |
 
-No topics yet: the `windows-port` and `qol` plans are gated ([plans/README.md](../plans/README.md)).
+No topics yet for the `windows-port` plan: it is gated ([plans/README.md](../plans/README.md)).
