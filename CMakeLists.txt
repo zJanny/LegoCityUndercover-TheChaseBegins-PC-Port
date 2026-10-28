@@ -48,6 +48,7 @@ target_compile_options(chase_runtime PRIVATE -Wall -Wextra -Wpedantic -ffp-contr
 set_target_properties(chase_runtime PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_sources(chase_runtime PRIVATE src/runtime/pregen_derive.cpp src/runtime/studs.cpp src/runtime/sound_events.cpp src/runtime/music.cpp src/runtime/level_start.cpp src/runtime/script_runner.cpp src/runtime/natives_objects.cpp src/runtime/natives_effects.cpp src/runtime/natives_world.cpp src/runtime/natives_party.cpp src/runtime/script_runner_natives.cpp src/runtime/natives_animation.cpp src/runtime/natives_cutscene.cpp src/runtime/screen_fade.cpp src/runtime/dialog_bg_fade.cpp src/runtime/natives_progress.cpp src/runtime/natives_music.cpp src/runtime/natives_sound.cpp src/runtime/entity_ids.cpp src/runtime/music_block.cpp src/runtime/door.cpp src/runtime/scene_change.cpp src/runtime/same_level_entry.cpp src/runtime/room_streaming.cpp src/runtime/room_streamer.cpp src/runtime/scene_start.cpp src/runtime/dcam.cpp src/runtime/debug_metrics.cpp src/runtime/object_visibility.cpp src/runtime/script_text.cpp src/runtime/script_triggers.cpp src/runtime/objectives.cpp src/runtime/sub_objectives.cpp src/runtime/ai.cpp src/runtime/ai_simple_path.cpp src/runtime/fog.cpp src/runtime/lighting.cpp src/runtime/sky.cpp src/runtime/script_placement.cpp src/runtime/ai_go_to_target.cpp src/runtime/nav_grid.cpp src/runtime/nav_path.cpp src/runtime/nav_follow.cpp src/runtime/nav_load.cpp src/runtime/room_locator.cpp src/runtime/object_rooms.cpp src/runtime/pedestrian_rooms.cpp src/runtime/player_controller_state.cpp src/runtime/ai_super_jump.cpp src/runtime/ai_face_target.cpp src/runtime/waypoints.cpp src/runtime/waypoint_global.cpp src/runtime/buildit.cpp src/runtime/buildit_set.cpp src/runtime/buildit_wobble.cpp src/runtime/prop_animation.cpp src/runtime/prop_root_motion.cpp src/runtime/prop_nodes.cpp src/runtime/buildit_bricks.cpp src/runtime/mesh_bouncer.cpp src/runtime/reference_trigger.cpp src/runtime/vehicle.cpp src/runtime/vehicle_boarding.cpp src/runtime/vehicle_drive.cpp src/runtime/vehicle_body.cpp src/runtime/vehicle_wheels.cpp src/runtime/vehicle_drivetrain.cpp src/runtime/vehicle_wheel_pose.cpp src/runtime/vehicle_hud.cpp src/runtime/vehicle_damage.cpp src/runtime/vehicle_break.cpp src/runtime/head_icon.cpp src/runtime/floor_walk.cpp src/runtime/vehicle_collision.cpp src/runtime/vehicle_box_contact.cpp src/runtime/carry.cpp src/runtime/carry_arrows.cpp src/runtime/carry_animation.cpp src/runtime/scanner.cpp src/runtime/cutscene_cast.cpp src/runtime/cutscene_hold.cpp src/runtime/collision_enable.cpp src/runtime/game_random.cpp src/runtime/npc_idle.cpp src/runtime/animation_slots.cpp src/runtime/player_script_animation.cpp src/runtime/director_hold.cpp src/runtime/script_thread_log.cpp src/runtime/vehicle_world.cpp src/runtime/vehicle_sphere_sweep.cpp src/runtime/buildit_player.cpp src/runtime/vehicle_prop_smash.cpp src/runtime/detective.cpp src/runtime/hand_item.cpp src/runtime/hand_item_set.cpp src/runtime/use_spot.cpp src/runtime/use_marker.cpp src/runtime/use_marker_ground.cpp src/runtime/ability_table.cpp src/runtime/zipline.cpp src/runtime/zipline_rope.cpp src/runtime/zipline_pole.cpp src/runtime/nested_props.cpp src/runtime/brick_grab.cpp src/runtime/climb_bar.cpp src/runtime/acrobat_pole.cpp src/runtime/pole.cpp src/runtime/ladder.cpp src/runtime/ladder_sounds.cpp src/runtime/cat_rescue.cpp src/runtime/screen_shake.cpp src/runtime/placement_message.cpp src/runtime/super_buildit.cpp src/runtime/superbuildit_messages.cpp src/runtime/super_brick_display.cpp src/runtime/fast_travel_pad.cpp src/runtime/map_buttons.cpp src/runtime/update_order.cpp src/runtime/save_hud_counter.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/shadow.cpp)
+target_sources(chase_runtime PRIVATE src/runtime/award_viewer.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/reference_trigger_level.cpp src/runtime/reference_trigger_apply.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/switch_base.cpp src/runtime/switch_set.cpp src/runtime/lever_use.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/player_attack.cpp src/runtime/attack_sounds.cpp)
@@ -70,7 +71,7 @@ add_library(chase_draw_order src/render/draw_order.cpp)
 target_include_directories(chase_draw_order PUBLIC src)
 target_compile_options(chase_draw_order PRIVATE -Wall -Wextra -Wpedantic -ffp-contract=off)
 # Front end (boot to the slot list): CPU-drawn screens, no SDL dependency.
-add_library(chase_frontend src/frontend/script.cpp src/frontend/frontend.cpp src/frontend/pages.cpp src/frontend/canvas.cpp src/frontend/resources.cpp src/frontend/layout.cpp src/frontend/flow.cpp src/frontend/hud.cpp src/frontend/super_brick_display.cpp src/frontend/script_text_pages.cpp src/frontend/minimap.cpp src/frontend/map_buttons_view.cpp src/frontend/map_marker.cpp src/frontend/slot_summaries.cpp src/frontend/super_build_prompt.cpp src/frontend/round_menu.cpp src/frontend/pause_menu.cpp)
+add_library(chase_frontend src/frontend/script.cpp src/frontend/frontend.cpp src/frontend/pages.cpp src/frontend/canvas.cpp src/frontend/resources.cpp src/frontend/layout.cpp src/frontend/flow.cpp src/frontend/hud.cpp src/frontend/super_brick_display.cpp src/frontend/script_text_pages.cpp src/frontend/minimap.cpp src/frontend/map_buttons_view.cpp src/frontend/map_marker.cpp src/frontend/slot_summaries.cpp src/frontend/super_build_prompt.cpp src/frontend/round_menu.cpp src/frontend/pause_menu.cpp src/frontend/award_viewer.cpp)
 target_sources(chase_frontend PRIVATE src/frontend/scanner_overlay.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/scanner_reticle.cpp src/runtime/scanner_markers.cpp src/runtime/scanner_info.cpp src/runtime/scanner_render.cpp src/runtime/glow.cpp src/runtime/reflection.cpp)
 target_link_libraries(chase_frontend PUBLIC chase_assets chase_runtime chase_save_progress)
@@ -135,7 +136,7 @@ if(EPOXY_FOUND)
   target_link_libraries(chase-viewer PRIVATE chase_render chase_audio chase_input)
   target_compile_options(chase-viewer PRIVATE -Wall -Wextra -Wpedantic)
   if(FFMPEG_FOUND)
-    add_executable(chase-game src/game.cpp src/game_options.cpp src/game_player.cpp src/game_carry.cpp src/game_scanner.cpp src/game_doors.cpp src/game_prop_parts.cpp src/game_level.cpp src/game_pause_menu.cpp src/game_level_update.cpp src/game_vehicle.cpp src/game_vehicle_break.cpp src/game_vehicle_place.cpp src/game_vehicle_camera.cpp src/game_level_rooms.cpp src/game_cutscene.cpp src/game_level_cutscene.cpp src/game_characters.cpp src/game_pedestrians.cpp src/game_pedestrian_fade.cpp src/game_semi_trans.cpp src/game_pedestrian_rooms.cpp src/game_particles.cpp src/game_level_natives.cpp src/game_detective.cpp src/game_use_spot.cpp src/game_objective_markers.cpp src/game_hand_items.cpp src/game_effects.cpp src/game_shadows.cpp src/game_vehicle_effects.cpp src/game_zipline.cpp src/game_brick_grab.cpp src/game_climb_bar.cpp src/game_acrobat_pole.cpp src/game_pole.cpp src/game_ladder.cpp src/game_animals.cpp src/game_object_visibility.cpp src/game_nested_props.cpp src/game_super_buildit.cpp src/game_fast_travel.cpp src/game_key_pickup.cpp)
+    add_executable(chase-game src/game.cpp src/game_options.cpp src/game_player.cpp src/game_carry.cpp src/game_scanner.cpp src/game_doors.cpp src/game_prop_parts.cpp src/game_level.cpp src/game_pause_menu.cpp src/game_award_viewer.cpp src/game_level_update.cpp src/game_vehicle.cpp src/game_vehicle_break.cpp src/game_vehicle_place.cpp src/game_vehicle_camera.cpp src/game_level_rooms.cpp src/game_cutscene.cpp src/game_level_cutscene.cpp src/game_characters.cpp src/game_pedestrians.cpp src/game_pedestrian_fade.cpp src/game_semi_trans.cpp src/game_pedestrian_rooms.cpp src/game_particles.cpp src/game_level_natives.cpp src/game_detective.cpp src/game_use_spot.cpp src/game_objective_markers.cpp src/game_hand_items.cpp src/game_effects.cpp src/game_shadows.cpp src/game_vehicle_effects.cpp src/game_zipline.cpp src/game_brick_grab.cpp src/game_climb_bar.cpp src/game_acrobat_pole.cpp src/game_pole.cpp src/game_ladder.cpp src/game_animals.cpp src/game_object_visibility.cpp src/game_nested_props.cpp src/game_super_buildit.cpp src/game_fast_travel.cpp src/game_key_pickup.cpp)
     target_sources(chase-game PRIVATE src/game_pedestrian_blocking.cpp src/game_traffic.cpp)
     target_sources(chase-game PRIVATE src/game_props_destructible.cpp src/game_prop_destroy.cpp src/game_character_death.cpp src/game_fall_apart.cpp src/game_stud_drops.cpp src/game_super_bricks.cpp)
     target_sources(chase-game PRIVATE src/game_debris_pickup.cpp)
@@ -412,6 +413,10 @@ if(BUILD_TESTING)
   target_link_libraries(options-page-test PRIVATE chase_runtime)
   target_compile_options(options-page-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME options-page COMMAND options-page-test)
+  add_executable(award-viewer-test tests/award_viewer_test.cpp)
+  target_link_libraries(award-viewer-test PRIVATE chase_frontend chase_runtime chase_assets)
+  target_compile_options(award-viewer-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME award-viewer COMMAND award-viewer-test)
   add_executable(buildit-player-test tests/buildit_player_test.cpp)
   target_link_libraries(buildit-player-test PRIVATE chase_runtime chase_assets)
   target_compile_options(buildit-player-test PRIVATE -Wall -Wextra -Wpedantic)
@@ -662,6 +667,11 @@ if(BUILD_TESTING)
   target_compile_options(pause-menu-real-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME pause-menu-real-data COMMAND pause-menu-real-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
   set_tests_properties(pause-menu-real-data PROPERTIES SKIP_RETURN_CODE 77)
+  add_executable(award-viewer-real-test tests/award_viewer_real_test.cpp)
+  target_link_libraries(award-viewer-real-test PRIVATE chase_frontend chase_save_tables chase_assets)
+  target_compile_options(award-viewer-real-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME award-viewer-real-data COMMAND award-viewer-real-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
+  set_tests_properties(award-viewer-real-data PROPERTIES SKIP_RETURN_CODE 77 LABELS needs-game-data)
   add_executable(buildit-real-test tests/buildit_real_test.cpp)
   target_link_libraries(buildit-real-test PRIVATE chase_runtime chase_assets)
   target_compile_options(buildit-real-test PRIVATE -Wall -Wextra -Wpedantic)
@@ -2083,6 +2093,18 @@ if(BUILD_TESTING)
     set_tests_properties(game-options-reload PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
       FIXTURES_REQUIRED pause_menu_options
       PASS_REGULAR_EXPRESSION "save: loaded in slot 0[^\n]*\n.*loading screen: sound volume 10, music volume 7\n")
+    # The award viewer of the police station (UI-12): A on the use spot Use_AwardViewer (its position in the level data, room3) starts
+    # Use_AwardViewerScript, whose AwardViewer native opens the viewer in the next update with the new-game counts (sums of TablesSuperCounters and
+    # TablesLevels); Start does nothing while it is open (its mode's update 0x2f26c8 has no Start test, so no pause screen opens), Right turns to the
+    # first level, B closes it after TransitionOff_Round (0.5 s, update 78 to 94).
+    add_test(NAME game-award-viewer COMMAND chase-game
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --save-out "${CMAKE_BINARY_DIR}/game-award-viewer-save.dat"
+      --level levels/levels/lvl_00_policestation/lvl_00_policestation_main.blvl --no-start-cutscenes --set-variable Lobby_Dcam_Intro=1
+      --start "-291.73 11.1294 -16.5349" --script "0 0 5;0 0 1 A;0 0 40;0 0 1 S;0 0 10;145 0 1;0 0 20;0 0 1 B;0 0 30")
+    set_tests_properties(game-award-viewer PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" LABELS "needs-game-data;slow"
+      PASS_REGULAR_EXPRESSION "use spot: use_awardviewer triggers use_awardviewerscript at update 5.*script Use_AwardViewerScript started at update 5.*award viewer opened at update 7, bronze 0/260, silver 0/46, gold 0/7.*award viewer closed at update 94"
+      FAIL_REGULAR_EXPRESSION "pause menu opened")
     add_test(NAME game-script-hud COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg"

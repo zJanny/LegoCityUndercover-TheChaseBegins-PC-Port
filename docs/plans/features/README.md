@@ -87,6 +87,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | [hud-ui](hud-ui.md) | IN_PROGRESS | HUD-6 hearts never change; HUD-11 map levels and mission icons, HUD-60 other map icon types; HUD-8 other counters |
 | [hud-ui-text](hud-ui-text.md) | IN_PROGRESS | HUD-22 remaining text screens; HUD-30 character intro and box line counts; HUD-33 tip after the release camera |
 | [ui-menus](ui-menus.md) | IN_PROGRESS | UI-20 characters panel; UI-21 map button actions; UI-2 pause fades and gates; UI-3 pause Exit; UI-23 Languages page; UI-24 red brick extras page; UI-25 options save task (pause screen, its Options page and map buttons ported) |
+| [ui-menus-award-viewer](ui-menus-award-viewer.md) | IN_PROGRESS | UI-26 award models; UI-27 award mode fades and gates; UI-28 oracle picture (award viewer ported) |
 | [hud-ui-super-bricks](hud-ui-super-bricks.md) | IN_PROGRESS | HUD-79 icon through the HUD camera; HUD-80 number font; HUD-85 build-menu placeholders; HUD-84 update count origin |
 | [audio](audio.md) | IN_PROGRESS | AUDIO-20 duck record; AUDIO-11 action music; AUDIO-3 world sounds |
 | [movies-cutscenes](movies-cutscenes.md) | IN_PROGRESS | MOVIE-36 end from the camera clip; MOVIE-3 short actor clips; MOVIE-41 pose words; MOVIE-1 layout values |

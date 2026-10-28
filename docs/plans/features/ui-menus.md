@@ -6,7 +6,7 @@ Every UI screen of the game that is not the HUD, the script text screens or the 
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-28T23:28:25+01:00. Start during gameplay opens the pause screen of the original in `chase-game`: PauseTop on the top screen and the round menu (Resume, Options, Credits, Exit) with the Back and Select shortcuts on the bottom screen, drawn from their layouts with the original's storyboards. The D-pad (or the circle pad through 0x2289b8), taps and swipes with the mouse on the bottom screen turn and select; Resume, B and Start close it and the game goes on. Options opens the Options page: Up / Down change the sound effects and music volume, Invert camera toggles, B saves a change and goes back; the Languages page, Credits and Exit do nothing yet; the top screen's counts are not drawn. Every other menu is not ported. The map buttons of the bottom screen run in `chase-game`: the characters and scan buttons slide in as in the original, a click acts on the first update of a touch inside the original's click areas, a short click on the characters button is a tap (not ported further) and a hold of more than 0.5 s opens the dark characters panel without its portraits; the fast travel pad opens the fast travel page (exit button, six slots) and its exit button closes it. The other buttons' actions are logged as not ported.
+IN_PROGRESS, updated 2026-10-28T23:28:25+01:00. Start during gameplay opens the pause screen of the original in `chase-game`: PauseTop on the top screen and the round menu (Resume, Options, Credits, Exit) with the Back and Select shortcuts on the bottom screen, drawn from their layouts with the original's storyboards. The D-pad (or the circle pad through 0x2289b8), taps and swipes with the mouse on the bottom screen turn and select; Resume, B and Start close it and the game goes on. Options opens the Options page: Up / Down change the sound effects and music volume, Invert camera toggles, B saves a change and goes back; the Languages page, Credits and Exit do nothing yet; the top screen's counts are not drawn. The award viewer is in [ui-menus-award-viewer.md](ui-menus-award-viewer.md). Every other menu is not ported. The map buttons of the bottom screen run in `chase-game`: the characters and scan buttons slide in as in the original, a click acts on the first update of a touch inside the original's click areas, a short click on the characters button is a tap (not ported further) and a hold of more than 0.5 s opens the dark characters panel without its portraits; the fast travel pad opens the fast travel page (exit button, six slots) and its exit button closes it. The other buttons' actions are logged as not ported.
 
 ## 3. Verified behaviour
 
@@ -30,6 +30,7 @@ IN_PROGRESS, updated 2026-10-28T23:28:25+01:00. Start during gameplay opens the 
 - UI-S11 A on the Language row plays the select sound and stays on the Options page (logged as not ported). needs: UI-23. evidence: [ui-screens.md §2026-10-28T22:51:42](../../re/ui-screens.md#ts-20261028-225142).
 - UI-S7 The Start gates (fade test, 0x374730, 0x3741a4, game state 3, gm+0x234) are "no cutscene and no other hold"; the black interval of the mode push and pop, the paused sounds and animation slots are not reproduced. needs: UI-2. evidence: [ui-screens.md §2026-10-19T20:34](../../re/ui-screens.md#ts-20261019-203404).
 
+
 ## 5. Open items
 
 Ranked by how soon the play path needs them.
@@ -49,7 +50,6 @@ Ranked by how soon the play path needs them.
 - [ ] UI-9 — Credits (0x213184(0x51456c, 1), credits_*.loc). blocks: UI-S4. evidence: [ui-screens.md §2026-10-19T20:34](../../re/ui-screens.md#ts-20261019-203404).
 - [ ] UI-10 — Character change screen (ui_characterselect/main, 0x168110 from 0x286304). evidence: [ui-screens.md §2026-10-19T20:33](../../re/ui-screens.md#ts-20261019-203310).
 - [ ] UI-11 — Shop (0x1a0bf4: codes with codebutton, gifts, postcards, story clips, red bricks, character classes) and the item grid pages (itemsmall, 0x202d54). evidence: [ui-screens.md §2026-10-19T20:33](../../re/ui-screens.md#ts-20261019-203310).
-- [ ] UI-12 — Award viewer (0x1d2db4) and the unloaded awardviewertop/menutop. blocks: QOLBOT-10. evidence: [ui-screens.md §2026-10-19T20:33](../../re/ui-screens.md#ts-20261019-203310).
 - [ ] UI-13 — Front-end main menu of a returning player (0x1f2460: Continue, Options, fe_attract). evidence: [ui-screens.md §2026-10-19T20:33](../../re/ui-screens.md#ts-20261019-203310).
 - [ ] UI-14 — Round menu modes not used by the pause screen (list mode +0xdd = 0 with Menu_Bar_1..5 and Up / Down, TransitionOn_Menu, blank, codes). evidence: [ui-screens.md §2026-10-19T20:34](../../re/ui-screens.md#ts-20261019-203404).
 - [ ] UI-15 — Photo mode (blend/photomode, photo_meter, 0x2ea1c0 from the scanner). evidence: [ui-screens.md §2026-10-19T20:33](../../re/ui-screens.md#ts-20261019-203310).

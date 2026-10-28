@@ -64,6 +64,15 @@ In the [development runtime](commands.md#development-runtime), while you play:
 - Options opens the options wheel: SFX, Music, Invert Camera and Language. Turn it like the pause wheel. On SFX and Music, **up and down** (W and S, or the arrow keys) change the volume from 0 to 10. On Invert Camera, up, down or **A** switch it on or off. **B** goes back to the pause wheel; after a change it first saves the options.
 - Language, Credits and Exit do nothing yet. The numbers on the upper screen are not shown yet.
 
+## Award viewer
+
+In the [development runtime](commands.md#development-runtime), in the police station:
+
+- Stand on the award viewer's use marker and press **A** (Space). The awards screen opens and the game stops.
+- The lower screen shows Overview and the seven areas on a wheel. Turn it like the pause menu: **left and right** (A and D, or the arrow keys), a click on the button left or right of the middle one, or a swipe sideways with the mouse.
+- The upper screen shows how many bronze, silver and gold awards you have of the area in the middle.
+- **B** (Q or right mouse) goes back to the game. Start does nothing here. Clicking the Back button on the lower screen does not work yet.
+
 ## Attacking
 
 In the [development runtime](commands.md#development-runtime), on foot:

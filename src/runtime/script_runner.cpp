@@ -27,7 +27,7 @@ enum class Word {
     EnableObject, EnableCollision, TriggerObject, EnableTrigger, EnableBound, GetGameComplete, IsLevelUnlocked, IsRedBrickExtraActive,
     WarningDialogBox, InformationBox, FadeScreen, PositionObject, PositionPlayer, SceneChange,
     KillScript, ObjectNative, VehicleNative, ProgressNative, MusicNative, SoundNative, TextNative, ObjectiveNative, AiNative, AnimationNative, CutsceneNative, EffectNative, WorldNative, PartyNative,
-    SetPropRocking, WaitForPlatform, PlatformNative, PlayParticlesGO, StartDCam, StartDCamTrack, DCamActive, WaitForDCam, EndDCam, SnapCamera, ShakeScreen, Set3DFocusObject, SetDCamStartWait, SetDCamEndWait, CameraFollow
+    SetPropRocking, WaitForPlatform, PlatformNative, PlayParticlesGO, StartDCam, StartDCamTrack, DCamActive, WaitForDCam, EndDCam, SnapCamera, ShakeScreen, Set3DFocusObject, SetDCamStartWait, SetDCamEndWait, CameraFollow, AwardViewer
 };
 
 struct ScriptFunction {
@@ -79,6 +79,7 @@ constexpr ScriptFunction kScriptFunctions[] = {
     {"setdcamstartwait", Word::SetDCamStartWait, false},
     {"setdcamendwait", Word::SetDCamEndWait, false},
     {"camerafollow", Word::CameraFollow, true},
+    {"awardviewer", Word::AwardViewer, false},
 };
 
 Word wordOf(const std::string& function) {
@@ -474,6 +475,7 @@ ScriptRunner::Result ScriptRunner::native(ScriptThread& thread, const ScriptCall
     case Word::WaitForPlatform: return waitForPlatformNative(call);
     case Word::PlatformNative: platformNative(call); break;
     case Word::PlayParticlesGO: playParticlesGoNative(call); break;
+    case Word::AwardViewer: awardViewerNative(); break;
     case Word::ObjectNative:
         if (const auto kind = objectNativeKind(lower(call.function)); kind && !args.empty()) {
             if (*kind == ObjectNativeKind::DestroyProp || *kind == ObjectNativeKind::KillObject) {

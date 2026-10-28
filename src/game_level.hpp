@@ -7,6 +7,7 @@
 #include "frontend/canvas.hpp"
 #include "frontend/hud.hpp"
 #include "frontend/minimap.hpp"
+#include "frontend/award_viewer.hpp"
 #include "frontend/pause_menu.hpp"
 #include "frontend/resources.hpp"
 #include "game_audio.hpp"
@@ -312,6 +313,8 @@ private:
     bool holdForSuperBuildit(float dt);
     bool holdForPause(float dt, const chase::runtime::PadState& padInput);
     bool drawPause(int width, int height);
+    bool holdForAwardViewer(float dt, const chase::runtime::PadState& padInput);
+    bool drawAwardViewer(int width, int height);
     void updateSuperBuildits(const float playerPosition[3], float dt);
     void loadFastTravel();
     void updateFastTravel(float dt, const chase::runtime::PadState& padInput);
@@ -405,6 +408,7 @@ private:
     game_fast_travel::State fastTravelState;
     std::optional<chase::frontend::PauseMenu> pauseMenu;
     bool pauseRequested = false;
+    std::optional<chase::frontend::AwardViewer> awardViewer;
     std::size_t pauseStickDirection = chase::runtime::kNoStickDirection;
     game_prop_parts::PropParts propParts;
     chase::runtime::CarrySet carry;

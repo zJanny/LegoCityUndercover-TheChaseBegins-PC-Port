@@ -294,6 +294,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         return;
     }
     if (holdForSuperBuildit(dt)) return;
+    if (holdForAwardViewer(dt, padInput)) return;
     if (holdForPause(dt, padInput)) return;
     particles.update(dt);
     stepVehicleFlashes();

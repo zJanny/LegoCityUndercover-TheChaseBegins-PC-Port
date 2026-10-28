@@ -256,6 +256,8 @@ public:
     const PlatformSet& platforms() const { return platforms_; }
     // PlayParticlesGO starts since the last call, in order (script_particles.hpp, game_mission_end_1_3_glue.cpp); the host starts the emitters.
     std::vector<ScriptParticleRequest> takeParticleRequests();
+    // AwardViewer 0x1b23e4 since the last call: the host opens the award viewer (award_viewer.cpp).
+    bool takeAwardViewerRequest();
     // Who plays the animation natives' requests; null records them only.
     void setAnimationDriver(AnimationDriver* driver) { animationDriver_ = driver; }
     std::vector<std::string> updateWaypoints(float dt, const float player[3], const WaypointVehicle* vehicle);
@@ -307,6 +309,7 @@ private:
     void platformNative(const assets::ScriptCall& call);
     void platformAttachment(AnimationNativeKind kind, const std::vector<std::string>& args);
     void playParticlesGoNative(const assets::ScriptCall& call);
+    void awardViewerNative();
     void destroyNative(const std::string& lowerInstance);
     void fireAiMoveEvents();
     float read(const std::string& token) const;
@@ -348,6 +351,7 @@ private:
     EffectNativeState effectNatives_;
     std::vector<PartyRequest> partyRequests_;
     std::vector<ScriptParticleRequest> particleRequests_;
+    bool awardViewerRequested_ = false;
     std::vector<std::string> roomRequests_;
     std::set<std::string> knownRooms_;
     std::optional<std::set<std::string>> sceneRooms_;

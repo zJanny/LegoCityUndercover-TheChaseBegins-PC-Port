@@ -223,7 +223,7 @@ This file has no dated entries: the table is edited in place. When a native is r
 | ShowPortraitOverVehicle | 0x2b4c1c | 2 | 2 / 0 / 0 / 0 | 1 | stand-in | 30 | call recorded only: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
 | 1-8_runfromarrest | 0x27bb4c | 1 | 1 / 1 / 0 / 0 | 1 | stand-in | 35 | boss requested state 2 recorded (SCRIPT-S278, SCRIPT-339): [script-natives-party.md §2026-10-19T15:53:02](script-natives-party.md#ts-20261019-155302) |
 | AIRunAway | 0x17cc30 | 1 | 1 / 0 / 0 / 0 | 1 | stand-in | 34 | state 25 recorded; update 0x28b7a0 not ported (SCRIPT-104); returns 1 ([ai-states.md §2026-10-14T21:21](ai-states.md#ts-20261014-212158)): [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
-| AwardViewer | 0x1b23e4 | 0 | 1 / 0 / 0 / 0 | 1 | C | 39 |  |
+| AwardViewer | 0x1b23e4 | 0 | 1 / 0 / 0 / 0 | 1 | done | 39 | handled: opens the award viewer (UI-12; stand-ins UI-S12, UI-S13): [ui-screens.md §2026-10-28T22:55](ui-screens.md#ts-20261028-225513) |
 | CameraRotFixedSet | 0x27bb9c | 4 | 1 / 0 / 0 / 0 | 1 | B? | 28 | read, not handled: [dcam.md §2026-10-14T14:36](dcam.md#ts-20261014-143600) |
 | CharacterShop | 0x1cd8e4 | 1 | 1 / 0 / 0 / 0 | 1 | C | 39 |  |
 | CharSetSkydiveMode | 0x1da6e4 | 2 | 1 / 0 / 0 / 0 | 1 | stand-in | 35 | state 129 / 1 and 0x376910 value recorded (SCRIPT-S277, SCRIPT-338): [script-natives-party.md §2026-10-19T15:53:02](script-natives-party.md#ts-20261019-155302) |
