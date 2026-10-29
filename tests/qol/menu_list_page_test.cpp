@@ -113,6 +113,10 @@ void questionForm() {
                 scene.images.at("ButtonIcon2") == "sprites/buttons/dsbuttonb.btga",
         "Yes on A, No on B");
     require(!hidden(scene, "Option1") && !hidden(scene, "Option2"), "both buttons shown");
+    const auto words = qol::questionScene(f.menu, "Ja", "Nein");
+    require(textOf(words, "Text_Option1") == "Ja" && textOf(words, "Text_Option2") == "Nein" &&
+                textOf(words, "Text_Info_NoHeader") == qol::resetAllQuestion,
+        "the question takes the Yes and No words given (gametext, QOLSET-44)");
     const auto areas = qol::listHitAreas(f.menu);
     require(areas.size() == 2 && areas[0].click->kind == EventKind::Activate && areas[1].click->kind == EventKind::Back,
         "Yes activates, No goes back");

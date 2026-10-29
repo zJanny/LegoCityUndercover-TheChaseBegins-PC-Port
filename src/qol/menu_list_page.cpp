@@ -69,7 +69,8 @@ std::string waitingText(const MenuModel& model) {
     return "Press a key or button for " + action;
 }
 
-LayoutScene alertScene(const std::string& body, bool header, bool question) {
+LayoutScene alertScene(const std::string& body, bool header, bool question, const std::string& yes = yesLabel,
+    const std::string& no = noLabel) {
     LayoutScene scene;
     scene.storyboard = question ? "TransitionOn2" : "TransitionOn";
     scene.time = noticeTransitionEnd;
@@ -81,8 +82,8 @@ LayoutScene alertScene(const std::string& body, bool header, bool question) {
     text.pitch = int(noticeLinePitch);
     scene.text[header ? "Text_Info" : "Text_Info_NoHeader"] = text;
     if (question) {
-        scene.text["Text_Option1"] = slotOf(yesLabel, Align::Right);
-        scene.text["Text_Option2"] = slotOf(noLabel, Align::Left);
+        scene.text["Text_Option1"] = slotOf(yes, Align::Right);
+        scene.text["Text_Option2"] = slotOf(no, Align::Left);
         scene.images["ButtonIcon1"] = buttonA;
         scene.images["ButtonIcon2"] = buttonB;
     } else {
@@ -162,6 +163,10 @@ LayoutScene noticeScene(const MenuModel& model) {
 
 LayoutScene questionScene(const MenuModel&) {
     return alertScene(resetAllQuestion, false, true);
+}
+
+LayoutScene questionScene(const MenuModel&, const std::string& yes, const std::string& no) {
+    return alertScene(resetAllQuestion, false, true, yes, no);
 }
 
 std::vector<HitArea> listHitAreas(const MenuModel& model) {

@@ -7,12 +7,16 @@
 #include "qol/menu_page.hpp"
 
 #include "frontend/pages.hpp"
+#include "qol/controls_port.hpp"
+#include "qol/menu_list_page.hpp"
 
 #include <cmath>
 #include <filesystem>
 #include <iostream>
 #include <stdexcept>
+#include <optional>
 #include <string>
+#include <vector>
 
 namespace {
 namespace fe = chase::frontend;
@@ -72,7 +76,7 @@ int litPixels(const fe::Canvas& canvas, int x0, int y0, int x1, int y1) {
 void drawn(fe::Resources& resources, const qol::MenuModel& model, const qol::MenuPageSetup& setup, int width, int height) {
     const std::string size = std::to_string(width) + "x" + std::to_string(height);
     fe::Canvas window(width, height);
-    qol::drawMenuPage(window, resources, model, setup, qol::standInListForm(setup));
+    qol::drawMenuPage(window, resources, model, setup, qol::controlsListForm(setup));
     const qol::PageRect page = qol::menuPageRect(width, height);
     const int left = int(std::lround(page.x)), right = int(std::lround(page.x + page.width));
     if (left > 0) require(litPixels(window, 0, 0, left, height) == 0, size + ": the left bar is black");
@@ -139,9 +143,39 @@ int main(int argc, char** argv) {
         namesExist(resources, quality, "Quality of life tab");
 
         model.handle({qol::EventKind::TabPrevious});
-        const fe::LayoutScene controls = qol::pageScene(model, setup, qol::standInListForm(setup));
-        require(textOf(controls, "PageNumber") == "3/4" && controls.hidden.count("Menu") == 1, "Controls stand-in shows the frame only");
-        namesExist(resources, controls, "Controls stand-in");
+        std::vector<std::string> actions{"Up", "Down", "Walk"};
+        std::vector<qol::BindingEntry> defaults{{"Up", "key", "W", "hold"}, {"Down", "key", "S", "hold"}};
+        qol::ControlsTab controlsTab(actions, defaults, defaults, [](const std::string&) { return true; });
+        qol::ControlsTabPort controlsPort(controlsTab);
+        model.setControls(&controlsPort);
+        const qol::ListForm form = qol::controlsListForm(setup);
+        const fe::LayoutScene controls = qol::pageScene(model, setup, form);
+        require(textOf(controls, "PageNumber") == "3/4" && controls.hidden.count("Menu") == 1, "Controls tab uses the list form");
+        require(textOf(controls, "TEXT_Subtitle") == "Controls", "Controls subtitle");
+        require(!form.overlay(model).has_value(), "no overlay while the list shows");
+        require(!qol::pageHitAreas(model, setup, form).empty(), "the list has hit areas");
+        namesExist(resources, controls, "Controls list");
+        require(setup.yes == "Yes" && setup.no == "No", "gametext Yes and No");
+
+        model.handle({qol::EventKind::Activate});
+        const std::optional<fe::LayoutScene> notice = form.overlay(model);
+        require(notice.has_value() && textOf(*notice, "Text_Info_NoHeader") == "Press a key or button for Up", "waiting overlay");
+        if (notice) namesExist(resources, *notice, "waiting notice", qol::noticePageLayout);
+        model.assignInput("key", "X");
+        model.handle({qol::EventKind::Activate});
+        model.assignInput("key", "Y");
+        for (int i = 0; i < 3; ++i) model.handle({qol::EventKind::Down});
+        model.handle({qol::EventKind::Activate});
+        const std::optional<fe::LayoutScene> question = form.overlay(model);
+        require(question.has_value() && textOf(*question, "Text_Option1") == setup.yes && textOf(*question, "Text_Option2") == setup.no,
+            "question overlay with the gametext words");
+        require(qol::pageHitAreas(model, setup, form).size() == 2, "the question has its two buttons");
+        fe::Canvas questionWindow(640, 480), listWindow(640, 480);
+        qol::drawMenuPage(questionWindow, resources, model, setup, form);
+        model.handle({qol::EventKind::Back});
+        require(!form.overlay(model).has_value(), "Back closes the question");
+        qol::drawMenuPage(listWindow, resources, model, setup, form);
+        require(listWindow.rgba() != questionWindow.rgba(), "the question is drawn over the page");
         namesExist(resources, qol::menuShortcutsScene(setup), "shortcuts", fe::kShortcutsLayout);
 
         model.handle({qol::EventKind::TabPrevious});

@@ -2,6 +2,7 @@
 
 #include "frontend/pages.hpp"
 #include "frontend/pause_menu.hpp"
+#include "qol/menu_list_page.hpp"
 #include "runtime/options_page.hpp"
 
 #include <cmath>
@@ -63,6 +64,8 @@ MenuPageSetup menuPageSetup(fe::Resources& resources, const std::string& gameTex
     setup.shortcutOn = pause.shortcutOn;
     setup.back = pause.texts.back;
     setup.select = pause.texts.select;
+    setup.yes = pause.texts.options.yes;
+    setup.no = pause.texts.options.no;
     const chase::runtime::OptionsTexts& options = pause.texts.options;
     setup.gameLabels = {options.sound, options.music, options.invertCamera, options.language};
     setup.on = resources.text(gameTextFile, "ON");
@@ -133,11 +136,14 @@ fe::LayoutScene menuShortcutsScene(const MenuPageSetup& setup) {
     return fe::backSelectShortcutsScene(back, select);
 }
 
-// STAND-IN QOLSET-S1: the Controls tab draws the page frame without rows and takes only the frame's hit areas until the list form
-// builders listPageScene and listHitAreas of src/qol/menu_list_page.hpp are joined here.
-ListForm standInListForm(const MenuPageSetup& setup) {
-    return {[setup](const MenuModel& model) { return menuFrameScene(model, setup); },
-            [setup](const MenuModel& model) { return frameHitAreas(model, setup.geometry); }};
+ListForm controlsListForm(const MenuPageSetup& setup) {
+    return {[](const MenuModel& model) { return listPageScene(model); },
+            [](const MenuModel& model) { return listHitAreas(model); },
+            [setup](const MenuModel& model) -> std::optional<fe::LayoutScene> {
+                if (controlsQuestionShown(model)) return questionScene(model, setup.yes, setup.no);
+                if (controlsNoticeShown(model)) return noticeScene(model);
+                return std::nullopt;
+            }};
 }
 
 bool usesListForm(Tab tab) {
@@ -168,6 +174,12 @@ void drawMenuPage(fe::Canvas& window, fe::Resources& resources, const MenuModel&
     fe::LayoutScene shortcuts = menuShortcutsScene(setup);
     shortcuts.scaleText = true;
     fe::drawLayout(page, resources, fe::kShortcutsLayout, shortcuts, fe::kShortcutsX * rect.scale, fe::kShortcutsY * rect.scale, rect.scale);
+    if (usesListForm(model.tab()) && list.overlay) {
+        if (std::optional<fe::LayoutScene> overlay = list.overlay(model)) {
+            overlay->scaleText = true;
+            fe::drawLayout(page, resources, noticePageLayout, *overlay, 0, 0, rect.scale);
+        }
+    }
     window.blit(page, int(std::lround(rect.x)), int(std::lround(rect.y)));
 }
 

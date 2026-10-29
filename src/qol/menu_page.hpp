@@ -11,6 +11,7 @@
 #include <array>
 #include <cstddef>
 #include <functional>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -23,7 +24,7 @@ struct MenuPageSetup {
     chase::frontend::RoundMenuTimings round;
     std::array<std::array<float, 2>, 3> centres{};
     float shortcutOn = 0;
-    std::string on, off, back, select;
+    std::string on, off, back, select, yes, no;
     std::array<std::string, gameRowCount> gameLabels;
     MenuGeometry geometry;
 };
@@ -42,9 +43,10 @@ chase::frontend::LayoutScene menuShortcutsScene(const MenuPageSetup& setup);
 struct ListForm {
     std::function<chase::frontend::LayoutScene(const MenuModel&)> scene;
     std::function<std::vector<HitArea>(const MenuModel&)> hits;
+    std::function<std::optional<chase::frontend::LayoutScene>(const MenuModel&)> overlay;
 };
 
-ListForm standInListForm(const MenuPageSetup& setup);
+ListForm controlsListForm(const MenuPageSetup& setup);
 bool usesListForm(Tab tab);
 
 chase::frontend::LayoutScene pageScene(const MenuModel& model, const MenuPageSetup& setup, const ListForm& list,

@@ -4,6 +4,7 @@
 #include "qol/menu_hit.hpp"
 #include "qol/menu_model.hpp"
 
+#include <string>
 #include <vector>
 
 namespace qol {
@@ -19,6 +20,7 @@ bool controlsQuestionShown(const MenuModel& model);
 chase::frontend::LayoutScene listPageScene(const MenuModel& model);
 chase::frontend::LayoutScene noticeScene(const MenuModel& model);
 chase::frontend::LayoutScene questionScene(const MenuModel& model);
+chase::frontend::LayoutScene questionScene(const MenuModel& model, const std::string& yes, const std::string& no);
 std::vector<HitArea> listHitAreas(const MenuModel& model);
 
 }
