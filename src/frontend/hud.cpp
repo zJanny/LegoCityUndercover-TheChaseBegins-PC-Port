@@ -188,10 +188,11 @@ void Hud::drawStudBar(Canvas& top, double spinSeconds) {
                    bar.iconSize, colour);
 }
 
-void Hud::draw(Canvas& top, double spinSeconds) {
+void Hud::draw(Canvas& top, double spinSeconds, HudPartSet parts) {
     LayoutScene scene;
     scene.storyboard = "TransitionOn";
-    scene.hidden = {"userControl", "UI_Strike", "Struggle_Button"};
+    scene.hidden = hudHiddenLayoutElements(parts);
+    scene.hidden.insert({"userControl", "UI_Strike", "Struggle_Button"});
     scene.time = seconds_;
     const bool inVehicle = !vehiclePortrait_.empty();
     scene.images["UI_HUD_Image_3DS"] = "sprites/ui_hud/blend/images/heartsbg_" + (inVehicle ? std::string("generic") : config_.heartsBackground) + ".bpng";
@@ -222,9 +223,9 @@ void Hud::draw(Canvas& top, double spinSeconds) {
                                       : barState_ == StudBarState::Shown ? onLength_
                                                                           : seconds_ - barStart_});
     drawLayout(top, resources_, kHudLayout, scene, 0, 0);
-    drawStudBar(top, spinSeconds);
-    superBrickDraw_.draw(top, superBrick_.view());
-    if (cameraLockAlpha_ > 0.0f) {
+    if (parts.contains(HudPart::Studs)) drawStudBar(top, spinSeconds);
+    if (parts.contains(HudPart::SuperBricks)) superBrickDraw_.draw(top, superBrick_.view());
+    if (parts.contains(HudPart::CameraLock) && cameraLockAlpha_ > 0.0f) {
         const assets::Image& icon = resources_.image(kCameraLockedSprite);
         top.drawScaled(icon, {0, 0, icon.width, icon.height}, 10.0f, float(kScreenHeight) - 10.0f - float(icon.height), float(icon.width),
                        float(icon.height), {1, 1, 1, float(int(cameraLockAlpha_ * 255.0f) & 0xff) / 255.0f});

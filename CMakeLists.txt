@@ -74,7 +74,7 @@ add_library(chase_draw_order src/render/draw_order.cpp)
 target_include_directories(chase_draw_order PUBLIC src)
 target_compile_options(chase_draw_order PRIVATE -Wall -Wextra -Wpedantic -ffp-contract=off)
 # Front end (boot to the slot list): CPU-drawn screens, no SDL dependency.
-add_library(chase_frontend src/frontend/script.cpp src/frontend/frontend.cpp src/frontend/pages.cpp src/frontend/canvas.cpp src/frontend/resources.cpp src/frontend/layout.cpp src/frontend/flow.cpp src/frontend/hud.cpp src/frontend/super_brick_display.cpp src/frontend/script_text_pages.cpp src/frontend/minimap.cpp src/frontend/map_buttons_view.cpp src/frontend/map_marker.cpp src/frontend/map_file.cpp src/frontend/map_hub.cpp src/frontend/slot_summaries.cpp src/frontend/super_build_prompt.cpp src/frontend/round_menu.cpp src/frontend/pause_menu.cpp src/frontend/award_viewer.cpp)
+add_library(chase_frontend src/frontend/script.cpp src/frontend/frontend.cpp src/frontend/pages.cpp src/frontend/canvas.cpp src/frontend/resources.cpp src/frontend/layout.cpp src/frontend/flow.cpp src/frontend/hud.cpp src/frontend/hud_parts.cpp src/frontend/super_brick_display.cpp src/frontend/script_text_pages.cpp src/frontend/minimap.cpp src/frontend/map_buttons_view.cpp src/frontend/map_marker.cpp src/frontend/map_file.cpp src/frontend/map_hub.cpp src/frontend/slot_summaries.cpp src/frontend/super_build_prompt.cpp src/frontend/round_menu.cpp src/frontend/pause_menu.cpp src/frontend/award_viewer.cpp)
 target_sources(chase_frontend PRIVATE src/frontend/scanner_overlay.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/scanner_reticle.cpp src/runtime/scanner_markers.cpp src/runtime/scanner_info.cpp src/runtime/scanner_bottom.cpp src/runtime/scanner_render.cpp src/runtime/glow.cpp src/runtime/reflection.cpp)
 target_link_libraries(chase_frontend PUBLIC chase_assets chase_runtime chase_save_progress)
@@ -133,12 +133,16 @@ if(EPOXY_FOUND)
   target_link_libraries(chase_render PUBLIC chase_assets chase_runtime chase_draw_order PkgConfig::SDL2 PkgConfig::EPOXY)
   target_compile_options(chase_render PRIVATE -Wall -Wextra -Wpedantic)
   target_sources(chase_render PRIVATE src/render/studs.cpp src/render/debug_text.cpp src/render/debug_overlay.cpp
-    src/render/program.cpp src/render/particles.cpp src/render/rope.cpp src/render/window.cpp src/render/hud_overlay.cpp src/render/front_presenter.cpp src/render/frame_stats.cpp src/render/glow.cpp src/render/reflection.cpp src/render/view_region.cpp)
+    src/render/program.cpp src/render/particles.cpp src/render/rope.cpp src/render/window.cpp src/render/hud_overlay.cpp src/render/overlay_quad.cpp src/render/front_presenter.cpp src/render/frame_stats.cpp src/render/glow.cpp src/render/reflection.cpp src/render/view_region.cpp)
   target_sources(chase_render PRIVATE src/render/shadow.cpp)
   add_executable(render-viewport-rect-test tests/render_viewport_rect_test.cpp)
   target_link_libraries(render-viewport-rect-test PRIVATE chase_render)
   target_compile_options(render-viewport-rect-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME render-viewport-rect COMMAND render-viewport-rect-test)
+  add_executable(render-overlay-quad-test tests/render_overlay_quad_test.cpp)
+  target_link_libraries(render-overlay-quad-test PRIVATE chase_render)
+  target_compile_options(render-overlay-quad-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME render-overlay-quad COMMAND render-overlay-quad-test)
   add_executable(chase-viewer src/viewer.cpp)
   target_link_libraries(chase-viewer PRIVATE chase_render chase_audio chase_input)
   target_compile_options(chase-viewer PRIVATE -Wall -Wextra -Wpedantic)
@@ -180,6 +184,10 @@ if(BUILD_TESTING)
   target_link_libraries(frontend-test PRIVATE chase_frontend)
   target_compile_options(frontend-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME frontend-flow COMMAND frontend-test)
+  add_executable(hud-parts-test tests/hud_parts_test.cpp)
+  target_link_libraries(hud-parts-test PRIVATE chase_frontend)
+  target_compile_options(hud-parts-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME hud-parts COMMAND hud-parts-test)
   if(TARGET chase_frontend_movie)
     add_executable(frontend-real-test tests/frontend_real_test.cpp)
     target_link_libraries(frontend-real-test PRIVATE chase_frontend_movie)
@@ -199,6 +207,12 @@ if(BUILD_TESTING)
     add_test(NAME hud-real-data COMMAND hud-real-test
       "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
     set_tests_properties(hud-real-data PROPERTIES SKIP_RETURN_CODE 77)
+    add_executable(hud-parts-real-test tests/hud_parts_real_test.cpp)
+    target_link_libraries(hud-parts-real-test PRIVATE chase_frontend)
+    target_compile_options(hud-parts-real-test PRIVATE -Wall -Wextra -Wpedantic)
+    add_test(NAME hud-parts-real-data COMMAND hud-parts-real-test
+      "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
+    set_tests_properties(hud-parts-real-data PROPERTIES SKIP_RETURN_CODE 77)
   endif()
   add_executable(mixer-test tests/mixer_test.cpp)
   target_link_libraries(mixer-test PRIVATE chase_audio)
@@ -2296,7 +2310,7 @@ foreach(slow_test game-key-pickup-1-3 game-parts-crate-1-3 game-generator-1-3 ga
 endforeach()
 
 foreach(game_data_test
-  frontend-real-data draw-order-real-data script-text-pages-real-data hud-real-data audio-real-data voice-params-real-data pedestrian-fade-real-data pedestrian-system-real-data cutscene-cast
+  frontend-real-data draw-order-real-data script-text-pages-real-data hud-real-data hud-parts-real-data audio-real-data voice-params-real-data pedestrian-fade-real-data pedestrian-system-real-data cutscene-cast
   node-draw-matrix-real-data script-text-real-data waypoint-global-real-data waypoints-real-data hand-item-real-data detective-real-data
   use-spot-real-data use-marker-real-data script-starters-real-data carry-real-data scanner-real-data scanner-overlay-data zipline-real-data
   nested-props-real-data entity-ids-real-data zipline-pole-real-data zipline-rope-real-data brick-grab-real-data climb-bar-real-data acrobat-pole-real-data pole-real-data

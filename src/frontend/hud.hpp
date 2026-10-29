@@ -5,6 +5,7 @@
 #include "frontend/canvas.hpp"
 #include "frontend/super_brick_display.hpp"
 #include "runtime/super_brick_display.hpp"
+#include "frontend/hud_parts.hpp"
 #include "frontend/layout.hpp"
 #include "frontend/resources.hpp"
 #include <array>
@@ -63,7 +64,7 @@ public:
     // the studs in the world.
     // STAND-IN: the page's TransitionOn storyboard starts when the Hud is created (the original starts it when 0x17c0f4
     // shows the HUD, the trigger is not traced).
-    void draw(Canvas& top, double spinSeconds);
+    void draw(Canvas& top, double spinSeconds, HudPartSet parts = HudPartSet::all());
 
     // Sink 0 of 0x23ca00: the centre of Studs_Count until the bar is drawn, then the centre of the icon.
     StudSink studSink() const { return sink_; }

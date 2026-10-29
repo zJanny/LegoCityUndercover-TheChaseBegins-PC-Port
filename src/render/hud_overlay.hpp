@@ -15,6 +15,7 @@ public:
     HudOverlay& operator=(const HudOverlay&) = delete;
 
     void draw(const Pixels& top, const Pixels& bottom, const PixelRect& topRect, const PixelRect& bottomRect, int windowWidth, int windowHeight);
+    void drawTop(const Pixels& top, const PixelRect& rect, int windowWidth, int windowHeight);
 
 private:
     std::unique_ptr<HudOverlayImpl> impl_;

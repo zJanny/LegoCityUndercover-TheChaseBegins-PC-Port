@@ -10,6 +10,7 @@ IN_PROGRESS, updated 2026-10-29T12:01:44+01:00. The map picture and placement co
 
 ## 3. Verified behaviour
 
+- Drawing the HUD part by part: each of the five parts alone leaves opaque pixels that no other part leaves, and together they equal the full draw byte for byte (`hud-parts-real-data`); the full draw is what `hud-real-data` pins.
 - Portrait (heartsBG_cop plus `sprites/portraits/police`), four hearts (class attribute "Health", default 4), the last heart pulses (`Loop_Heart`), `Gain_Heart` / `Lose_Heart` follow `SetHearts` (0x2316b4): [hud.md](../../re/hud.md). HUD pixels against the oracle: portrait 6.7, hearts 2.5, stud number 5.8 mean abs over the opaque pixels.
 - Stud counter: shows the new total at once (no roll-up for pickups), icon bounce for 5 updates, ON 0.5 s / hold 2.0 s / OFF 0.5 s, state sequence equal to a recorded pickup (`hud-real-data`).
 - Crossed-out camera icon (`UI_CameraLocked`): bottom left of the top screen at (10, 240 - 10 - height), fade 0.3 s, hold 0.5 s after the last L/R press while the record pose camera is active, fade out 0.3 s; timing read from the original's object (`camera-records`): [camera-records-blending.md §2026-10-14T10:44](../../re/camera-records-blending.md#ts-20261014-104400). Not replicated: the conditions 0x21d744 / 0x236008 (CAMERA-S4).
@@ -32,6 +33,7 @@ IN_PROGRESS, updated 2026-10-29T12:01:44+01:00. The map picture and placement co
 - HUD-S80 A level without a TablesLevels record or map file shows no map picture and no icons and nothing counts as on the map; the original keeps the map struct of the previous level. evidence: [objective-hud-map.md §2026-10-29T12:01](../../re/objective-hud-map.md#ts-20261029-120144).
 - HUD-S71 Group slots are drawn after all waypoint markers instead of in the original's shared slot order (16 slots, 0x2db0dc), and the map alpha (+0x4a0) is 1. needs: HUD-71. evidence: [objective-hud.md §2026-10-19T15:00](../../re/objective-hud.md#ts-20261019-150002).
 - HUD-S70 The waypoint column and badge fade as the original's tweens (linear, class times), but the node alpha and colour are applied as a multiplier of the finished fragment's colour and alpha (`Scene::setInstanceFade`); the original's draw path was not read. needs: HUD-70. evidence: [objective-hud-waypoints.md §2026-10-15T19:58](../../re/objective-hud-waypoints.md#ts-20261015-195841).
+- HUD-S82 The HUD parts (portrait, hearts, studs, super bricks, camera lock) follow the split of the port's draw code and the page layout's children, not a split read from the original. needs: HUD-94. evidence: [hud.md §2026-10-29T15:00:22](../../re/hud.md#ts-20261029-150022).
 - HUD-S73 Super build-it prompt: name and cost white (oracle), frontendfont. needs: HUD-75. evidence: [super-buildit.md §2026-10-19T19:23:11](../../re/super-buildit.md#ts-20261019-192311).
 
 ## 5. Open items
@@ -52,12 +54,13 @@ IN_PROGRESS, updated 2026-10-29T12:01:44+01:00. The map picture and placement co
 - [ ] HUD-18 — The top-screen waypoint arrow or indicator (none was seen at the mission start); compare when the player is far from the waypoint. evidence: [objective-hud.md §2026-10-14T15:59](../../re/objective-hud.md#ts-20261014-155919).
 - [ ] HUD-12 — chase-game always uses the two-screen layout, also for levels without a player (placeholder camera).
 - [ ] HUD-74 — The brick models of the super build-it prompt are not drawn. blocks: HUD-85. evidence: [super-buildit.md §2026-10-19T19:23:11](../../re/super-buildit.md#ts-20261019-192311).
+- [ ] HUD-94 — The original's split of the HUD draw into parts: whether the HUD draw callback, the stud bar object, the super brick display and the camera lock icon draw separately as the port's five parts do, and what the original calls the ability part (bottom-left) that `qol::HudPart` names. blocks: HUD-S82. evidence: [hud.md §2026-10-29T15:00:22](../../re/hud.md#ts-20261029-150022).
 - [ ] HUD-75 — Layout text ignores `fontSize` (table 0x52ebf8). blocks: HUD-S73, QOLSET-33, QOLSET-35. The size rule is not found yet. evidence: [ui-layouts.md §2026-10-29T13:58](../../re/ui-layouts.md#ts-20261029-135814).
 
 ## 6. Findings summary
 
 - `.bxaml` layout format and storyboards: [ui-layouts.md §2026-10-13T11:00](../../re/ui-layouts.md#ts-20261013-1100), runtime layout [ui-layouts.md §2026-10-13T09:12](../../re/ui-layouts.md#ts-20261013-0912).
-- HUD page, hearts, stud bar, flight, map screen and the fit: [hud.md](../../re/hud.md).
+- HUD page, hearts, stud bar, flight, map screen and the fit: [hud.md](../../re/hud.md); the page layout's children and the draw parts: [hud.md §2026-10-29T15:00:22](../../re/hud.md#ts-20261029-150022).
 - Super brick display: [hud-ui-super-bricks.md](hud-ui-super-bricks.md).
 - Level map files, the hub rule and the unused `_2` pictures: [objective-hud-map.md §2026-10-29T12:01](../../re/objective-hud-map.md#ts-20261029-120144); the hub's fixed centre and angle: [objective-hud-map.md §2026-10-29T12:32](../../re/objective-hud-map.md#ts-20261029-123225).
 - Sub-objective group icons and slots on the map: [objective-hud.md §2026-10-19T15:00](../../re/objective-hud.md#ts-20261019-150002).
@@ -66,4 +69,5 @@ IN_PROGRESS, updated 2026-10-29T12:01:44+01:00. The map picture and placement co
 ## 7. Code and tests
 
 - `src/frontend/super_build_prompt.*`, `src/frontend/hud.*` (`Hud`, `setCameraLockAlpha`), `src/runtime/camera_lock_icon.*`, `src/frontend/minimap.*`, `src/frontend/map_file.*` (level map files), `src/frontend/map_hub.*` (hub centre and angle), `src/game_hud.hpp` (two-screen presentation), `chase-hudshot`, `LayoutScene` in `src/frontend/layout.*`; `Canvas::clearTransparent`.
+- `src/frontend/hud_parts.*` (`HudPart`, `HudPartSet`, the layout elements of each part; `Hud::draw` takes a part set, default all), `src/render/overlay_quad.*` (`overlayQuad`) and `HudOverlay::drawTop` (one top canvas on a window rectangle). CTest `hud-parts`, `hud-parts-real-data` (parts alone are disjoint and together equal the full draw), `render-overlay-quad`.
 - CTest: `map-hub`, `map-file`, `map-file-real-data`, `map-marker`, `hud-real-data` (the recorded bar states are pinned in the test), `studs-core`, `frontend-real-data`. Scenarios: `tools/oracle/hud-*.txt`.

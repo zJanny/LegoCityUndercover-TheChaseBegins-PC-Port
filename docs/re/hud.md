@@ -6,6 +6,7 @@ Findings from REA (Ghidra 12.1.2 pseudo-code of `artifacts/game/game.arm.elf`, e
 
 - Layouts: `sprites/ui_hud/blend/main.bxaml` (400x240) with `UI_HUD`, `Stud_Count`, `UI_Hearts` (six hearts) and the boss and strike references; page init 0x2cedb8, hearts 0x17bb14. [§2026-10-13T21:31:01](#ts-20261013-213101)
 - Portrait: draw callback 0x193604 picks `heartsBG_<class>` by character flag tests 0x19 to 0x1f and the portrait from `sprites/portraits/<name>.png` (player 1 row 9, "police"). The class 0x1f background is builder and the fallback is generic. [§2026-10-13T21:31:01](#ts-20261013-213101), [vehicles-boarding.md §2026-10-15T18:35:55](vehicles-boarding.md#ts-20261015-183555)
+- Page layout: every element is a child of `UI_HUD`; the port draws portrait, hearts, studs, super bricks and the camera lock icon as separate parts. [§2026-10-29T15:00:22](#ts-20261029-150022)
 - Hearts: `SetHearts` 0x2316b4 stores up to 6; the default "Health" is 4 (no class file sets it); only the last heart pulses. [§2026-10-13T21:31:01](#ts-20261013-213101)
 - Stud bar (0x519760): states hidden, on 0.5 s, shown with hold 2.0 s, off 0.5 s; the number is printed with `%llu`, the icon bounces by `8 * sin(0.2 pi n)`; pickups show the new total at once, only `AddStuds` (0x1584e0) is delayed (not replicated). [§2026-10-13T21:31:01](#ts-20261013-213101)
 - Flying studs (0x180168 state 4) move `(target - position) / (30 * timer)` to the unprojected sink (0x24c1d0); sink 0 is (203, -14.5, 5.5); replay matches to 2e-3. [§2026-10-13T21:31:01](#ts-20261013-213101)
@@ -69,3 +70,15 @@ Unknowns
 - The combat stud counter (`CombatStuds`, `_Tally` storyboard, red brick and character token counters), the boss hearts page, the struggle bar, the vehicle heart variant, the +1 heart of unlock 17.
 - The map screen's real drawing code, `maps/<level>.txt`, the mission and collectible icons, the `_2` map pieces, the button flash and the characters button's behaviour.
 - `AddStuds` through 0x1584e0 (the pending path above) and `SpawnStuds` / `EnableStudsByGroup`.
+
+<a id="ts-20261029-150022"></a>
+
+## 2026-10-29T15:00:22+01:00 — Children of the HUD page layout and the parts the port draws
+
+Read by 20261029-qolmenu-G from the decoded `sprites/ui_hud/blend/main.bxaml` (`parseLayout` through `chase_frontend`); no code of the original was read for this entry.
+
+- The root holds one container `UI_HUD` at (3, 0); everything else is its child: `UI_HUD_3DS` at (-3, -3) with the two 64x64 images `UI_HUD_Image_3DS` and `UI_portrait`; `Stud_Count` (72, -21) and `CombatStud_Count` (72, -21), each with a `_DS`, `_3DS` and `_PSP` container and the text element `Studs_Count` / `CombatStuds_Count` in the `_3DS` one; `UI_Hearts` (75, 33) with `UI_Hearts_1_3DS` to `_6_3DS`; the container `UI_Stud` (52, 11) without images; the references `userControl` and `UI_Strike`; `Struggle_Button`; the empty container `UI_Trophy` (313, 16).
+- The port draws the HUD as five parts: portrait (`UI_HUD_3DS`), hearts (`UI_Hearts`), studs (`Stud_Count`, `CombatStud_Count`, `UI_Stud` and the number and icon of the stud bar, 0x22ddf4), super bricks (the count display, 0x2144f8) and the camera lock icon (0x1b1150). Which of these the original draws in separate calls was not read ([hud-ui.md](../plans/features/hud-ui.md) HUD-94).
+
+Unknowns
+- Whether the original's draw callback 0x193604 and the objects of the super brick display and the camera lock icon draw their parts in the order and the grouping the port uses.
