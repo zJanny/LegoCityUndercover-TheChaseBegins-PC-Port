@@ -21,7 +21,8 @@ Conflicts inside the README progress section and in docs/progress-trend.svg are 
 docs/plans/priorities.md takes main's copy (the checks regenerate it); a README conflict outside that
 section stops the merge like any other. Conflicts in a session log archive keep the lines of both sides (check_doc_links.py
 --fix then drops duplicates). Append-style conflicts of docs files (session logs, feature index, id-reservations,
-docs/re and docs/design entries) keep both sides (tools/merge_conflicts.py). Other conflicts stop the merge.
+docs/re entries) keep both sides (tools/merge_conflicts.py). Other conflicts stop the merge, docs/design ones included:
+its decisions are edited in place, so both sides of a conflict there need a manual resolution.
 
 Checks: no game-derived or binary files staged, warning-free build, docs/plans/priorities.md regenerated (its item links are checked by the doc fixes),
 doc fixes (check_doc_links.py --fix, restaged), doc links, README progress section and priorities regenerated,

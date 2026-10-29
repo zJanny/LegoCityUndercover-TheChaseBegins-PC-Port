@@ -10,6 +10,8 @@ import merge_conflicts  # noqa: E402
 SCRIPT = Path(merge_conflicts.__file__)
 LOG = "docs/plans/linux-port.progress.md"
 RE = "docs/re/topic.md"
+DESIGN = "docs/design/topic.md"
+DECISION = "# Topic\n\n## 2026-01-01T01:01:01+01:00 — Decision\n\n- answer\n"
 OTHER = "docs/notes.md"
 
 
@@ -27,6 +29,7 @@ class MergeConflictsTest(unittest.TestCase):
         self.write(LOG, "# Log\n\n- first\n")
         self.write(RE, "# Topic\n\n## Current state\n\nx\n")
         self.write(OTHER, "notes\n")
+        self.write(DESIGN, DECISION)
         git(self.repo, "add", ".")
         git(self.repo, "commit", "-q", "-m", "init")
         git(self.repo, "checkout", "-q", "-b", "branch")
@@ -85,6 +88,15 @@ class MergeConflictsTest(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("resolved: " + LOG, result.stdout)
         self.assertEqual(git(self.repo, "diff", "--name-only", "--diff-filter=U").stdout.split(), [OTHER])
+
+    def test_design_conflicts_stay_for_a_manual_resolution(self):
+        self.conflicted_merge({DESIGN: DECISION + "- main\n", RE: "# Topic\n\n## Current state\n\nx\n\n## main entry\n"},
+                              {DESIGN: DECISION + "- branch\n", RE: "# Topic\n\n## Current state\n\nx\n\n## branch entry\n"})
+        result = self.run_script()
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("resolved: " + RE, result.stdout)
+        self.assertEqual(git(self.repo, "diff", "--name-only", "--diff-filter=U").stdout.split(), [DESIGN])
+        self.assertIn("<<<<<<<", (self.repo / DESIGN).read_text())
 
     def test_unknown_option_is_rejected(self):
         result = subprocess.run([sys.executable, str(SCRIPT), "--bogus"], capture_output=True, text=True)

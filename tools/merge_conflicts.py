@@ -4,9 +4,10 @@
     python3 tools/merge_conflicts.py [--root DIR]
 
 For each unmerged file of the allowed docs kinds (session logs, the feature index, id-reservations, dated entries of
-docs/re and docs/design) where every conflicting hunk is an insertion on both sides (the common ancestor is empty
-there), the lines of main and of the branch are both kept, main's first. The result is staged. Every other unmerged
-file, and any hunk that changes existing lines, stays conflicted and is listed for a human or a cheap agent (exit 1).
+docs/re) where every conflicting hunk is an insertion on both sides (the common ancestor is empty there), the lines of
+main and of the branch are both kept, main's first. The result is staged. Every other unmerged file, and any hunk that
+changes existing lines, stays conflicted and is listed for a human or a cheap agent (exit 1). docs/design is not
+append-only (its decisions are edited in place), so any conflict there stays for a manual resolution.
 """
 from __future__ import annotations
 
@@ -22,7 +23,6 @@ APPEND_FILES = [
     re.compile(r"^docs/plans/features/README\.md$"),
     re.compile(r"^docs/plans/features/id-reservations\.md$"),
     re.compile(r"^docs/re/[^/]+\.md$"),
-    re.compile(r"^docs/design/[^/]+\.md$"),
 ]
 
 

@@ -20,7 +20,7 @@ Read only this, in this order. Stop reading when you have enough:
 1. In the plan's progress file `docs/plans/<plan>.progress.md`: the `## Next Action` section and the last 8 lines of the session log. Use `sed -n '/^## Next Action/,/^## /p'`, and `tail` for the log. Next Action states the user's current goal, the critical path and the mix of work per round. Follow it.
 2. `git log --oneline -15`.
 3. In `docs/plans/features/README.md`: only the sections of the areas you consider.
-4. `linux-port` only: in `docs/plans/priorities.md` (regenerated at merges only, so it may lag), only the `## Top 50 overall` table. In other plans: the `Current state` of the `docs/design/` topics the candidates use.
+4. `linux-port` only: in `docs/plans/priorities.md` (regenerated at merges only, so it may lag), only the `## Top 50 overall` table. In other plans: the `docs/design/` entries the candidates link.
 5. For each candidate: the item lines in its feature file (`grep -n 'ID-' file.md`), and the linked `docs/re` entry only if you need it to size the package.
 6. `linux-port` only, for packages that need the emulator: the local catalogue `artifacts/oracle/states/README.md` (not committed), to find existing save states and their game progress. A brief whose package depends on a local state also names the game point in words (missions done, place); the worker writes it in game terms and never names the state in a committed file.
 

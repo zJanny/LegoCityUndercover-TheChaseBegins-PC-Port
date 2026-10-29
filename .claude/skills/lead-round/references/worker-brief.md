@@ -68,7 +68,7 @@ Port as far as you get, in this order: {{ordered goals}}. Anything left becomes 
 ## End of session
 
 1. Do the CLAUDE.md session end:
-   - the dated `docs/re` entry (`linux-port`) or `docs/design` entry (other plans), with unknowns last and `Current state` updated
+   - `linux-port`: the dated `docs/re` entry, with unknowns last and `Current state` updated; other plans: the `docs/design` entry, a changed decision edited in place with the old version deleted
    - the feature file: status, items, stand-ins, findings summary link
    - the top-level user docs your change makes wrong, as listed in CLAUDE.md "User docs" (`docs/commands.md` for every new or changed option, program or test, `docs/controls.md`, `docs/status.md`, `docs/game-runtime.md`)
    - ONE progress-log line in `docs/plans/{{plan}}.progress.md`, starting `Agent {{agent}} (<short topic>)`

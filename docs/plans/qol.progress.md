@@ -25,13 +25,13 @@ Title plus always shown "PC Settings" pause entry (approved exception); original
 Master button cycles all three states; windowed, borderless and F11; bindings in `controls.cfg`, the rest in `qol.cfg`; "PC Settings" last pause entry; 5:3 bars in narrow windows; standard HUD corners; one toggle for view and HUD; original minimap content at fixed zoom; one toggle per panel; original art for all panels. See [qol-settings.md §2026-10-28T09:37:29](../design/qol-settings.md#ts-20261028-093729) and [qol-screen-layout.md §2026-10-28T09:37:31](../design/qol-screen-layout.md#ts-20261028-093731).
 
 ### Decision: Custom and hiding the bottom screen (2026-10-28T09:41:06+01:00)
-Custom restores the last own mix; hiding the bottom screen turns every panel toggle on (QOLBOT-11 corrected in part). See [qol-settings.md §2026-10-28T09:40:40](../design/qol-settings.md#ts-20261028-094040) and [qol-screen-layout.md §2026-10-28T09:40:42](../design/qol-screen-layout.md#ts-20261028-094042).
+Custom restores the last own mix; hiding the bottom screen turns every panel toggle on (QOLBOT-11 corrected in part). See [qol-settings.md §2026-10-28T09:40:40](../design/qol-settings.md#ts-20261028-094040) and [qol-screen-layout.md §2026-10-28T09:48:15](../design/qol-screen-layout.md#ts-20261028-094815).
 
 ### Decision: No per-panel toggles (2026-10-28T09:49:01+01:00)
 The master button alone switches the bottom screen and its panels (Improved hides it, Original shows it); QOLBOT-11 and the "hiding forces panels on" decision are superseded. See [qol-screen-layout.md §2026-10-28T09:48:15](../design/qol-screen-layout.md#ts-20261028-094815).
 
 ### Decision: Minimap and bottom screen follow the master (2026-10-28T09:50:53+01:00)
-The minimap has no toggle of its own and shows only in Improved; the bottom screen is hidden exactly when the minimap is on, so Custom always shows it. See [qol-screen-layout.md §2026-10-28T09:50:34](../design/qol-screen-layout.md#ts-20261028-095034).
+The minimap has no toggle of its own and shows only in Improved; the bottom screen is hidden exactly when the minimap is on, so Custom always shows it. See [qol-screen-layout.md §2026-10-28T09:48:15](../design/qol-screen-layout.md#ts-20261028-094815).
 
 ### Decision: The master state is stored (2026-10-28T09:53:50+01:00)
 Original = all off, Improved = all on, per-feature switches only in Custom. See [qol-settings.md §2026-10-28T09:53:33](../design/qol-settings.md#ts-20261028-095333).
@@ -48,7 +48,6 @@ S1: the toggle store and the settings menu ([qol-settings-menu](features/qol-set
 
 One line per session, newest last; `--fix` keeps the newest 20 and moves older ones to `qol.progress-archive.md`.
 
-- 2026-10-28T22:20:41+01:00 — Lead (recorded): the user chose to store window mode and resolution in `config/qol.cfg` as `window_mode` and `resolution`; value formats open. See [qol-settings-menu](features/qol-settings-menu.md).
 - 2026-10-28T22:21:14+01:00 — Agent 20261028-qolmenu-B (view geometry): added pure window-to-view and corner-HUD geometry in src/qol with test qol-view-layout, enforcing the 400x240 minimum window the user chose; wiring left. See [qol-fullscreen](features/qol-fullscreen.md).
 - 2026-10-28T22:38:57+01:00 — Agent 20261028-qolmenu-A (settings menu model): added the drawing-free menu model and test qol-menu-model, then applied the user's answers (feature rows, wrap); drawing and hooks remain. See [qol-settings-menu](features/qol-settings-menu.md).
 - 2026-10-28T23:13:22+01:00 — Agent 20261028-qolmenu-A (settings menu model): tabs of the menu model now wrap like the rows, per the user's answer. See [qol-settings-menu](features/qol-settings-menu.md).
@@ -68,3 +67,4 @@ One line per session, newest last; `--fix` keeps the newest 20 and moves older o
 - 2026-10-29T12:12:54+01:00 — Agent 20261029-qolview-D (menu drawing answers): recorded the user's answers to the drawing questions and the Reset all source; the drawing spec is decided and the drawing waits for the port's layout text size fix. See [qol-settings-menu](features/qol-settings-menu.md).
 - 2026-10-29T12:25:27+01:00 — Agent 20261029-qolview-B2 (config to active store): the window glue hands the loaded qol.cfg and each F11 write to the active QoL store, so the widened view switches on from the file; test in qol-window-apply. See [qol-fullscreen](features/qol-fullscreen.md).
 - 2026-10-29T12:33:28+01:00 — Lead (20261029-qolview end): merged 20261029-qolview-A (widened view hook and settings store), -B (window mode, size and F11 at startup), -B2 follow-up (qol.cfg loaded into the active store), -C (controls file writer and rebind flow), -D (settings menu drawing spec, decided by the user) through tools/merge_agent.py with all tests passing; ID ranges released in the merge commits; pushed main to origin/main after each merge. Next by user request: design docs keep only the current version. See docs/plans/features/qol-fullscreen.md, docs/plans/features/qol-settings-menu.md
+- 2026-10-29T12:56:11+01:00 — Agent 20261029-designdocs (design docs current only): by the user's request, docs/design now holds only the current version of each decision (rule, checker, merge tools, skills); the three qol design files are rewritten to their current decisions with every decision kept and the links into them fixed. See [qol-settings-menu](features/qol-settings-menu.md) and [docs/design](../design/README.md).

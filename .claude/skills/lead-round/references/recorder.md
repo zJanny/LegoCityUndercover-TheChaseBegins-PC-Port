@@ -13,7 +13,7 @@ You write what the user reported into the project docs, so that the lead does no
 
 **A bug or observation from playing the port** (playtest)
 
-1. Write a dated entry in `docs/re/playtests.md` (`linux-port`) or `docs/design/playtests-<plan>.md` (other plans) with the user's observation, in their words, and what was played. Update the file's `Current state`.
+1. Write a dated entry in `docs/re/playtests.md` (`linux-port`) or `docs/design/playtests-<plan>.md` (other plans) with the user's observation, in their words, and what was played. In `docs/re`, update the file's `Current state`.
 2. For each bug, add an open item to the matching feature file, with:
    - an ID from `python3 tools/check_doc_links.py --next PREFIX`, never a reserved one
    - the gap
@@ -38,7 +38,7 @@ Delete or fix the wrong text in place. No correction entry (the user's rule).
 
 1. Update Next Action in the plan's progress file `docs/plans/<plan>.progress.md`, with no findings and no items in it.
 2. If it is a decision of lasting weight, add a `### Decision:` entry there.
-3. A decision about what a feature of another plan does (a spec) also gets a dated entry in its `docs/design/` topic, in the user's words.
+3. A decision about what a feature of another plan does (a spec) also gets a dated entry in its `docs/design/` topic, in the user's words. A changed decision is edited in place there, and the old version is deleted (CLAUDE.md "Documentation rules").
 4. Opening a plan's gate is not yours: tell the lead, which follows `new-plan.md`.
 
 ## End

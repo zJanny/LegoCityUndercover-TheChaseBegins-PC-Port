@@ -13,9 +13,9 @@ The lead gives you the worktree, the branch, the worker's brief and the worker's
 - future timestamps, and `:00` seconds
 - the feature-file size limit and the index rows
 - ID field order and duplicate IDs
-- the `Current state` section exists
+- the `Current state` section exists in `docs/re`, and `docs/design` has none, no `Corrected by` / `Superseded by` lines, no `Corrects` links and no history files
 - the user docs against the code (`tools/user_docs.py`): options, `chase-*` programs and paths
-- `Superseded by` moves
+- `Superseded by` moves (`docs/re`)
 - 20 log lines
 
 `merge_agent.py` regenerates `priorities.md`, `progress-trend.svg` and the README progress section at the merge; a branch that contains changes to them is a finding (RETURN). Run the checker; spend your judgement on what it cannot see.
@@ -38,13 +38,20 @@ The lead gives you the worktree, the branch, the worker's brief and the worker's
 - A design entry records what the user approved, never a choice the worker made alone; such a choice is RETURN.
 - None of them copies another. A finding inside a feature item or the log line is moved to the `docs/re` entry, and the item links to it.
 
-**`docs/re` or `docs/design` entry**
+**`docs/re` entry**
 
 - **New dated entry:** the anchor sits directly above the heading. The timestamp is real: compare it with the branch's commit times, `git log --format='%h %aI' main..HEAD`.
 - **Inside the entry:** unknowns come last, and it does not rewrite old entries.
 - **`Current state`** of the topic is updated in place and links the new entry.
 - **Corrections:** marked at both ends (`Corrects` link text and a `Corrected by` line). A fully invalid entry gets `Superseded by`.
 - **The user's exception:** a mistake that this same branch made and corrected is simply deleted in place. It gets no correction entry.
+- **Size:** a topic file over 40 KB is split by subtopic, as CLAUDE.md says.
+
+**`docs/design` entry**
+
+- **Only the current version:** a decision the user changed is edited in place, and the old text is gone (git keeps it). No correction trail, no `Current state`, no history file. Answered open points are deleted; still-open ones stay last.
+- **Nothing lost:** every decision of the user stays, with their words and date; the diff changes no decision beyond what the user's new answer says. A heading timestamp is not rewritten; the links of a deleted entry point at the entry that now holds the decision.
+- **New dated entry:** the anchor sits directly above the heading, and the timestamp is real (as for `docs/re`).
 - **Size:** a topic file over 40 KB is split by subtopic, as CLAUDE.md says.
 
 **Feature file**

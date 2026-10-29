@@ -12,8 +12,9 @@ after a merge of two branches that both archived it, is dropped instead of copie
 file move to <feature>.closed.md. An item or stand-in ID defined twice in a feature and its closed file is an
 error. Every feature file has exactly one row (at most 300 characters, table preceded by a blank line) in the feature index, which groups its tables under "## <Area>" headings; closed-items files have none. Item lines keep the field order gap text, needs:, blocks:, uses:, evidence:. needs: and blocks: between open items are written on both sides (--fix adds a missing side; two items that say the same
 field of each other are an error). On a line new compared to HEAD, an open item names no hex address its HEAD version did not, and a session
-log line names no item ID or address. A timestamp later than the current time is an error; a ":00" second in a line new compared to HEAD is a warning. --next PREFIX [COUNT] prints free item IDs, --reserve PREFIX COUNT WHO reserves a range in docs/plans/features/id-reservations.md, --release WHO drops it (an error when WHO holds none); an unknown PREFIX needs --new-prefix. An entry with a "Superseded by" line under its heading moves with --fix to <topic>.history.md next to it and links follow. A link whose text starts with "Corrects" needs a "Corrected by" line under the corrected entry's heading
-that links back, and every "Corrected by" line needs the matching "Corrects" link.
+log line names no item ID or address. A timestamp later than the current time is an error; a ":00" second in a line new compared to HEAD is a warning. --next PREFIX [COUNT] prints free item IDs, --reserve PREFIX COUNT WHO reserves a range in docs/plans/features/id-reservations.md, --release WHO drops it (an error when WHO holds none); an unknown PREFIX needs --new-prefix. In docs/re an entry with a "Superseded by" line under its heading moves with --fix to <topic>.history.md next to it and links follow; a link whose text starts with "Corrects" needs a "Corrected by" line under the corrected entry's heading
+that links back, every "Corrected by" line needs the matching "Corrects" link, and every topic file has a "## Current state" section before its first entry.
+docs/design holds only the current version of each decision, edited in place: there a "Corrected by" or "Superseded by" line, a "Corrects" link to or from it, a "## Current state" section or a history file is an error.
 In a repository checkout (CMakeLists.txt and src/ present) AGENTS.md must exist, link CLAUDE.md and have at most 15 lines, README.md and CONTRIBUTING.md must contain "not affiliated", LICENSE must start with "GNU GENERAL PUBLIC LICENSE" and REUSE.toml must name GPL-3.0-or-later.
 The user docs (docs/*.md outside the subfolders, README.md) are checked against the code by user_docs.py: every option string of src/ and every chase-* program of CMakeLists.txt is named in them, and an option, chase-* program or tools/src/tests/docs path in their code spans or fences must exist.
 """
@@ -66,15 +67,25 @@ MAX_AGENTS_LINES = 15
 NOTICE = "not affiliated"
 LICENSE_START = "GNU GENERAL PUBLIC LICENSE"
 LICENSE_ID = "GPL-3.0-or-later"
-FINDINGS_DIRS = (Path("docs") / "re", Path("docs") / "design")
+RE_DIR = Path("docs") / "re"
+DESIGN_DIR = Path("docs") / "design"
+FINDINGS_DIRS = (RE_DIR, DESIGN_DIR)
 
 
 def in_findings(root, path):
     return any(path.is_relative_to(root / d) for d in FINDINGS_DIRS)
 
 
+def in_design(root, path):
+    return path.is_relative_to(root / DESIGN_DIR)
+
+
 def findings_files(root):
     return [p for d in FINDINGS_DIRS if (root / d).is_dir() for p in sorted((root / d).glob("*.md"))]
+
+
+def re_files(root):
+    return [p for p in findings_files(root) if not in_design(root, p)]
 
 
 GENERATED_PRIORITIES = "docs/plans/priorities.md"
@@ -243,21 +254,28 @@ def correction_errors(root, files, load):
         doc = load(path)
         rel = path.relative_to(root)
         in_re = in_findings(root, path)
+        source_in_design = in_design(root, path)
         for number, line in enumerate(doc.lines):
             if doc.in_code[number]:
                 continue
             masked = INLINE_CODE.sub(lambda m: "\0" * len(m.group(0)), line)
             is_corrected_by = line.startswith("Corrected by")
             source = entry_anchor_at(doc, number) if in_re else None
+            if source_in_design and (is_corrected_by or line.startswith(SUPERSEDED)):
+                errors.append(f"{rel}:{number + 1}: design-in-place: '{line.split(' [')[0]}' in docs/design; edit the decision in place and delete the old version")
+                continue
             for text, dest, fragment in link_targets(path, line, masked):
                 if dest.suffix != ".md" or not dest.is_file() or fragment not in load(dest).entry_anchors():
+                    continue
+                if text.startswith("Corrects") and (source_in_design or in_design(root, dest)):
+                    errors.append(f"{rel}:{number + 1}: design-in-place: a 'Corrects' link to or from docs/design; edit the decision in place and delete the old version")
                     continue
                 if text.startswith("Corrects"):
                     corrects[(path.resolve(), source, dest, fragment)] = f"{rel}:{number + 1}"
                 if is_corrected_by:
                     corrected_by.append((path, number, dest, fragment))
     for path in files:
-        if not in_findings(root, path):
+        if not in_findings(root, path) or in_design(root, path):
             continue
         doc = load(path)
         entries = list(doc.entries())
@@ -576,9 +594,26 @@ def timestamp_errors(root):
     return errors
 
 
-def current_state_errors(root):
+def design_errors(root):
     errors = []
     for path in findings_files(root):
+        if not in_design(root, path):
+            continue
+        rel = path.relative_to(root)
+        if path.name.endswith(HISTORY_SUFFIX):
+            errors.append(f"{rel}:1: design-history: docs/design keeps no history files; delete it (git keeps the old versions)")
+            continue
+        lines = path.read_text(encoding="utf-8").split("\n")
+        flags = code_line_flags(lines)
+        for number, line in enumerate(lines):
+            if not flags[number] and line.strip() == CURRENT_STATE:
+                errors.append(f"{rel}:{number + 1}: design-current-state: a docs/design file is its own current state; state each decision once, in its entry")
+    return errors
+
+
+def current_state_errors(root):
+    errors = []
+    for path in re_files(root):
         if path.name.endswith(HISTORY_SUFFIX) or path.name == "README.md":
             continue
         lines = path.read_text(encoding="utf-8").split("\n")
@@ -594,7 +629,7 @@ def current_state_errors(root):
 def split_leftover_warnings(root):
     warnings = []
     changed = {root / name for name in added_lines(root)}
-    for path in findings_files(root):
+    for path in re_files(root):
         if path.name.endswith(HISTORY_SUFFIX) or path.name == "README.md" or path not in changed:
             continue
         lines = path.read_text(encoding="utf-8").split("\n")
@@ -662,7 +697,7 @@ def timestamp_warnings(root):
                 for match in TIMESTAMP.finditer(text):
                     if match.group(6) == "00":
                         warnings.append(f"{name}:{number}: warning: round-seconds-timestamp: {match.group(0)} ends in :00; take times from date -Iseconds")
-        if in_findings(root, path) and not name.endswith(HISTORY_SUFFIX):
+        if in_findings(root, path) and not in_design(root, path) and not name.endswith(HISTORY_SUFFIX):
             stale = stale_current_state(path, lines)
             if stale:
                 warnings.append(f"{name}:{stale}: warning: current-state-stale: new dated entries but '{CURRENT_STATE}' unchanged")
@@ -809,7 +844,7 @@ def retarget_links(line, path, topic, history, moved, leaving):
 
 def move_superseded(root):
     total = 0
-    for topic in findings_files(root):
+    for topic in re_files(root):
         if topic.name.endswith(HISTORY_SUFFIX) or topic.name == "README.md":
             continue
         doc = Doc(topic)
@@ -959,6 +994,7 @@ def size_errors(root):
     errors.extend(new_line_errors(root))
     errors.extend(timestamp_errors(root))
     errors.extend(current_state_errors(root))
+    errors.extend(design_errors(root))
     errors.extend(session_log_errors(root))
     errors.extend(user_docs.user_doc_errors(root))
     errors.extend(project_file_errors(root))

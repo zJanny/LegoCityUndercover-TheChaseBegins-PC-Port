@@ -287,20 +287,61 @@ class RuleChecksTest(unittest.TestCase):
         (self.re_dir / 'a.md').write_text('<a id="ts-20260101-010101"></a>\n\n## 2026-01-01T01:01:01+01:00 — E\n\n## Current state\n')
         self.assertEqual(len(self.errors('current-state-position')), 1)
 
-    def test_design_files_follow_the_findings_rules(self):
+    def test_design_files_keep_anchors_and_size_without_current_state(self):
         design = self.root / 'docs' / 'design'
         design.mkdir()
-        (design / 'd.md').write_text('# D\n\n## 2026-01-01T01:01:01+01:00 — Old\n\nSuperseded by [d.md §2026-01-02T02:02:02](#ts-20260102-020202): wrong.\n\n'
-                                     '## 2026-01-02T02:02:02+01:00 — New\n\nBody.\n')
+        (design / 'd.md').write_text('# D\n\n## 2026-01-01T01:01:01+01:00 — Decision\n\nBody.\n')
         errors = links.process(self.root, False)[0]
         self.assertTrue(any('docs/design/d.md' in e and 'entry has no anchor ts-20260101-010101' in e for e in errors))
-        self.assertEqual(len(self.errors('current-state-missing')), 1)
-        (design / 'd.md').write_text('# D\n\n## Current state\n\n- New.\n\n' + (design / 'd.md').read_text().split('\n\n', 1)[1])
+        self.assertEqual(self.errors('current-state-missing'), [])
         self.assertEqual(links.process(self.root, True)[0], [])
-        self.assertIn('## 2026-01-01T01:01:01+01:00 — Old', (design / 'd.history.md').read_text())
-        self.assertNotIn('Old', (design / 'd.md').read_text())
-        (design / 'big.md').write_text('## Current state\n\n' + 'x' * links.MAX_RE_BYTES)
+        self.assertIn('<a id="ts-20260101-010101"></a>\n\n## 2026-01-01T01:01:01+01:00 — Decision', (design / 'd.md').read_text())
+        (self.features / 'f.md').write_text('See [d.md §2026-01-01T01:01](../../design/d.md).\n')
+        self.assertEqual(links.process(self.root, True)[0], [])
+        self.assertIn('(../../design/d.md#ts-20260101-010101)', (self.features / 'f.md').read_text())
+        (design / 'big.md').write_text('x' * (links.MAX_RE_BYTES + 1))
         self.assertEqual(len(self.errors('re-file-size')), 1)
+
+    def test_design_files_are_edited_in_place(self):
+        design = self.root / 'docs' / 'design'
+        design.mkdir()
+        (design / 'd.md').write_text(
+            '# D\n\n## Current state\n\n- New.\n\n'
+            '<a id="ts-20260101-010101"></a>\n\n## 2026-01-01T01:01:01+01:00 — Old\n'
+            'Superseded by [d.md §2026-01-02T02:02:02](#ts-20260102-020202): wrong.\n'
+            'Corrected by [d.md §2026-01-02T02:02:02](#ts-20260102-020202): changed.\n\n'
+            '<a id="ts-20260102-020202"></a>\n\n## 2026-01-02T02:02:02+01:00 — New\n\n'
+            '[Corrects §2026-01-01T01:01:01](#ts-20260101-010101).\n'
+        )
+        (design / 'd.history.md').write_text('# History of d\n')
+        (self.re_dir / 'a.md').write_text('# A\n\n## Current state\n\n- S.\n\n[Corrects d.md §2026-01-02T02:02:02](../design/d.md#ts-20260102-020202)\n')
+        found = self.errors('design-in-place')
+        self.assertEqual([e.split(': ')[0] for e in found],
+                         ['docs/design/d.md:10', 'docs/design/d.md:11', 'docs/design/d.md:17', 'docs/re/a.md:7'])
+        self.assertEqual([e.split(': ')[0] for e in self.errors('design-current-state')], ['docs/design/d.md:3'])
+        self.assertEqual([e.split(': ')[0] for e in self.errors('design-history')], ['docs/design/d.history.md:1'])
+        self.assertEqual(self.errors('correction-pairing'), [])
+        messages = []
+        links.process(self.root, True, messages)
+        self.assertEqual(messages, [])
+        self.assertIn('— Old', (design / 'd.md').read_text())
+        self.assertEqual((design / 'd.history.md').read_text(), '# History of d\n')
+
+    def test_design_entries_do_not_need_a_current_state_update(self):
+        import subprocess
+        design = self.root / 'docs' / 'design'
+        design.mkdir()
+        subprocess.run(['git', 'init', '-q', str(self.root)], check=True)
+        (design / 'd.md').write_text('# D\n')
+        old = '# A\n\n## Current state\n\n- S.\n\n<a id="ts-20260101-010101"></a>\n\n## 2026-01-01T01:01:01+01:00 — Old\n'
+        (self.re_dir / 'a.md').write_text(old)
+        subprocess.run(['git', '-C', str(self.root), 'add', '.'], check=True)
+        subprocess.run(['git', '-C', str(self.root), '-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qm', 'x'], check=True)
+        entry = '\n<a id="ts-20260102-020201"></a>\n\n## 2026-01-02T02:02:01+01:00 — New\n'
+        (design / 'd.md').write_text('# D\n' + entry)
+        (self.re_dir / 'a.md').write_text(old + entry)
+        stale = [w for w in links.timestamp_warnings(self.root) if 'current-state-stale' in w]
+        self.assertEqual([w.split(':')[0] for w in stale], ['docs/re/a.md'])
 
     def test_dependency_pair_fails_and_fix_adds_the_other_side(self):
         (self.features / 'f.md').write_text(
