@@ -19,7 +19,6 @@ None yet. Every behaviour is tested first in original mode (all QoL off, the por
 ## 5. Open items
 
 - [ ] QOLBOT-19 — The front end screens (title, menus) draw their own two-screen layout and still show the bottom screen with Improved; decide with the user whether they follow the hiding. needs: QOLBOT-1. evidence: `src/game_front.hpp` `presenter.present`.
-- [ ] QOLBOT-20 — The widened view fills the whole window including the rows above and below the 5:3 picture in tall windows (the hook hands `qol::hiddenTopArea` to QOLFS-1; today `topViewRegion` widens only the width at the rows of the fitted picture). needs: QOLBOT-1. blocks: QOLFS-1. evidence: [qol-screen-layout.md §2026-10-29T11:42:22](../../design/qol-screen-layout.md#ts-20261029-114222).
 - [ ] QOLBOT-2 — The characters button as a full-window panel clicked with the mouse (the original button is UI-1). needs: QOLBOT-1, UI-1. evidence: [qol-screen-layout.md §2026-10-28T09:21:33](../../design/qol-screen-layout.md#ts-20261028-092133).
 - [ ] QOLBOT-3 — Character swap as a full-window panel (original screen not ported yet). needs: QOLBOT-1. evidence: [qol-screen-layout.md §2026-10-28T09:21:33](../../design/qol-screen-layout.md#ts-20261028-092133).
 - [ ] QOLBOT-4 — The fast-travel map as a full-window panel (original LEVOBJ-120). needs: QOLBOT-1, LEVOBJ-120. evidence: [qol-screen-layout.md §2026-10-28T09:21:33](../../design/qol-screen-layout.md#ts-20261028-092133).

@@ -1,7 +1,8 @@
 // Spec: docs/design/qol-screen-layout.md §2026-10-28T09:21:33, §2026-10-28T09:31:02, §2026-10-28T09:37:31 (widening between 5:3
 // and 16:9, same vertical field of view) and the user's answers of 2026-10-29 recorded there ("Above bottom screen", "Top screen's
 // rows"): the widened view fills the full window width at the rows of today's top screen.
-// Pinned regions computed by hand from game_hud::screensFor and those rules by 20261029-qolview-A on 2026-10-29
+// Pinned regions computed by hand from game_hud::screensFor and those rules by 20261029-qolview-A on 2026-10-29; the Improved
+// regions over the whole window (QOLBOT-20) by 20261029-qolhook-C on 2026-10-29 from "Top screen's rows" + hidden bottom screen
 // (floor rounding, odd pixel in the right bar: user answer to QOLFS-9). GL rectangles count y from the window bottom.
 #include "game_hud.hpp"
 #include "qol/active_settings.hpp"
@@ -28,7 +29,7 @@ bool same(const chase::render::ViewRegion& a, const chase::render::ViewRegion& b
 }
 
 void expectRegion(int width, int height, chase::render::PixelRect rect, int aspectWidth, int aspectHeight, const std::string& name) {
-    const chase::render::ViewRegion region = qol::topViewRegion(width, game_hud::screensFor(width, height).top);
+    const chase::render::ViewRegion region = qol::topViewRegion(width, height, game_hud::screensFor(width, height).top);
     require(same(region, {rect, aspectWidth, aspectHeight}), name);
 }
 
@@ -37,7 +38,7 @@ void originalModeFirst() {
     for (int width = 400; width <= 2600; width += 37)
         for (int height = 240; height <= 1500; height += 29) {
             const chase::render::PixelRect top = game_hud::screensFor(width, height).top;
-            if (!same(qol::topViewRegion(width, top), chase::render::originalViewRegion(top)))
+            if (!same(qol::topViewRegion(width, height, top), chase::render::originalViewRegion(top)))
                 require(false, "off: region equals the original at " + std::to_string(width) + "x" + std::to_string(height));
         }
 }
@@ -60,12 +61,12 @@ void widenedOn() {
 
     bool rejected = false;
     try {
-        qol::widenedViewRegion(800, {0, 0, 800, 0});
+        qol::widenedViewRegion({0, 0, 800, 0});
     } catch (const std::invalid_argument& error) {
         rejected = std::string(error.what()).find("view layout") != std::string::npos;
     }
     require(rejected, "empty top rectangle is rejected");
-    require(same(qol::topViewRegion(0, {0, 0, 0, 0}), chase::render::originalViewRegion({0, 0, 0, 0})),
+    require(same(qol::topViewRegion(0, 0, {0, 0, 0, 0}), chase::render::originalViewRegion({0, 0, 0, 0})),
             "empty drawable while on: the original region, no exception from the draw path");
 
     menu.handle({qol::EventKind::Activate});
@@ -82,6 +83,10 @@ void widenedOn() {
     improved.setMaster(qol::Master::Improved);
     qol::setActiveSettings(improved);
     expectRegion(1920, 1080, {0, 0, 1920, 1080}, 1920, 1080, "Improved: bottom screen hidden, widened over the whole window");
+    expectRegion(3000, 1000, {611, 0, 1777, 1000}, 1777, 1000, "Improved 3000x1000: 16:9 in the whole window, bars at the sides");
+    expectRegion(800, 1200, {0, 360, 800, 480}, 800, 480, "Improved 800x1200 tall: 5:3 centred, bars above and below");
+    expectRegion(801, 1201, {0, 361, 801, 480}, 801, 480, "Improved 801x1201: floor rounding of the whole-window area");
+    expectRegion(400, 240, {0, 0, 400, 240}, 400, 240, "Improved 400x240 minimum: the whole window");
 }
 
 }
