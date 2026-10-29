@@ -19,7 +19,7 @@ public:
     virtual void setSfxVolume(int volume) = 0;
     virtual void setMusicVolume(int volume) = 0;
     virtual void setInvertCamera(bool invert) = 0;
-    virtual void setLanguage(int language) = 0;
+    virtual void openLanguages() = 0;
 };
 
 enum class GameRow { SfxVolume, MusicVolume, InvertCamera, Language };
@@ -28,7 +28,7 @@ inline constexpr std::size_t gameRowCount = 4;
 
 const char* gameRowLabel(GameRow row);
 
-enum class GameResult { Ignored, Changed, Rejected };
+enum class GameResult { Ignored, Changed, Rejected, OpenedLanguages };
 
 class GameTab {
 public:

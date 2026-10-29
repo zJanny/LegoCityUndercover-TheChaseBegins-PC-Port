@@ -40,9 +40,7 @@ GameResult GameTab::setValue(GameRow row, int value) {
         options_.setInvertCamera(value == 1);
         return GameResult::Changed;
     case GameRow::Language:
-        if (value < firstLanguage || value > lastLanguage) return GameResult::Rejected;
-        options_.setLanguage(value);
-        return GameResult::Changed;
+        return GameResult::Rejected;
     }
     return GameResult::Rejected;
 }
@@ -56,6 +54,10 @@ GameResult GameTab::step(GameRow row, int direction) {
 }
 
 GameResult GameTab::activate(GameRow row) {
+    if (row == GameRow::Language) {
+        options_.openLanguages();
+        return GameResult::OpenedLanguages;
+    }
     if (row != GameRow::InvertCamera) return GameResult::Ignored;
     return setValue(row, value(row) ? 0 : 1);
 }

@@ -3,6 +3,7 @@
 // Ranges and steps from the port's Options page (src/runtime/options_page.hpp): volumes 0..10 in steps of 1
 // (kOptionsMaxVolume = 10, OptionsPage::step), invert camera a yes/no toggle, languages 1..9 (src/save/save.hpp Language).
 // Defaults sound 10, music 8 (kDefaultSoundVolume, kDefaultMusicVolume). Cases written by 20261029-qolset-C, 2026-10-29.
+// The language row opens the Languages page and never cycles: the user's decision of 2026-10-29, relayed in the brief of 20261029-qolwire-B.
 #include "qol/game_tab.hpp"
 
 #include <iostream>
@@ -21,7 +22,7 @@ void require(bool ok, const std::string& what) {
 struct Fake : qol::GameOptions {
     int sfx = 10, music = 8, lang = 1;
     bool invert = false;
-    int writes = 0;
+    int writes = 0, languagePages = 0;
     int sfxVolume() const override { return sfx; }
     int musicVolume() const override { return music; }
     bool invertCamera() const override { return invert; }
@@ -29,7 +30,7 @@ struct Fake : qol::GameOptions {
     void setSfxVolume(int v) override { sfx = v; ++writes; }
     void setMusicVolume(int v) override { music = v; ++writes; }
     void setInvertCamera(bool v) override { invert = v; ++writes; }
-    void setLanguage(int v) override { lang = v; ++writes; }
+    void openLanguages() override { ++languagePages; }
 };
 
 using qol::GameResult;
@@ -54,7 +55,7 @@ void changesReachTheOptions() {
     require(tab.step(GameRow::MusicVolume, 1) == GameResult::Changed && fake.music == 9, "music up");
     require(tab.activate(GameRow::InvertCamera) == GameResult::Changed && fake.invert, "invert on");
     require(tab.activate(GameRow::InvertCamera) == GameResult::Changed && !fake.invert, "invert off");
-    require(tab.setValue(GameRow::Language, 5) == GameResult::Changed && fake.lang == 5, "language set");
+    require(tab.activate(GameRow::Language) == GameResult::OpenedLanguages && fake.languagePages == 1 && fake.lang == 1, "language row opens the Languages page and does not cycle");
     require(tab.setValue(GameRow::SfxVolume, 0) == GameResult::Changed && fake.sfx == 0, "sfx to 0");
 }
 
@@ -72,8 +73,7 @@ void rangesAndRejections() {
     require(tab.setValue(GameRow::SfxVolume, 11) == GameResult::Rejected, "volume 11 rejected");
     require(tab.setValue(GameRow::MusicVolume, -1) == GameResult::Rejected, "volume -1 rejected");
     require(tab.setValue(GameRow::InvertCamera, 2) == GameResult::Rejected, "invert 2 rejected");
-    require(tab.setValue(GameRow::Language, 0) == GameResult::Rejected, "language 0 rejected");
-    require(tab.setValue(GameRow::Language, 10) == GameResult::Rejected, "language 10 rejected");
+    require(tab.setValue(GameRow::Language, 5) == GameResult::Rejected, "the language row is read only");
     require(fake.writes == 0, "rejections and ignored events write nothing");
 }
 

@@ -65,7 +65,7 @@ target_sources(chase_runtime PRIVATE src/runtime/pushable.cpp src/runtime/missio
 target_sources(chase_runtime PRIVATE src/runtime/pedestrian_manager.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/pedestrian_blocked.cpp src/runtime/room_layers.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/pedestrian_system.cpp)
-target_sources(chase_runtime PRIVATE src/runtime/options_page.cpp)
+target_sources(chase_runtime PRIVATE src/runtime/options_page.cpp src/runtime/qol_game_options.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/debris_pickup.cpp src/runtime/hud_pending_add.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/node_fade.cpp src/runtime/pedestrian_fade.cpp src/runtime/semi_trans_near_camera.cpp)
 add_library(chase_draw_order src/render/draw_order.cpp)
