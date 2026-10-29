@@ -173,8 +173,17 @@ Asked of the user by the lead on 2026-10-29 for 20261029-qolhook-B (QOLSET-41), 
 - While the menu is open: "Front end stops": nothing behind the menu updates; movies and sounds hold.
 - Size: "Whole window": the menu covers the whole window ([qol-settings-drawing.md §2026-10-29T12:11:55](qol-settings-drawing.md#ts-20261029-121155) section 2).
 - The button (answered 2026-10-29, after the code review found that the bottom-left shortcut place holds the page's Delete shortcut on a used slot): "Third list bar": the unused third list bar (`ListItem3` of the slot page layout) under the two slots, showing "PC Settings"; the Delete shortcut stays untouched.
-- Place of the bar (answered 2026-10-29; the layout's own place of `ListItem3` is below the screen, and a full-size bar fits nowhere without covering the subtitle bar or the Delete shortcut): "Half size under slot 2": the third bar at half size (about 111x23, smaller text), centred under slot 2 in the free row, covering nothing.
+- Place of the bar: see the playtest decision [§2026-10-29T19:34:22](#ts-20261029-193422) (full-size bar with a hint).
 - Slide-in (answered 2026-10-29): "Yes, slot 2's timing": the bar slides in with the slots, like `ListItem2`.
 - With every QoL option at its default (2026-10-29): "Allow, update rule": the button is shown with QoL off, a second approved exception next to the pause entry ([docs/rules/qol.md](../rules/qol.md)). A left click inside the button's area opens the menu instead of acting as A: "Yes, acceptable", part of that exception.
 - Choices of 20261029-qolhook-B that the user accepted as they are (2026-10-29): the button shows and takes clicks only until a slot is chosen; its click area follows the button; the menu keys are fixed (Return, Escape, PageUp/PageDown and the arrows; pad a, b, the D-pad and the shoulders); key repeats are swallowed while releases, quitting and focus events pass on to the front end.
 
+<a id="ts-20261029-193422"></a>
+
+## 2026-10-29T19:34:22+01:00 — After the playtest of the menu: button, sharpness, motion
+
+Asked of the user by the lead on 2026-10-29 after the user's playtest ([playtests-qol.md §2026-10-29T19:31:01](playtests-qol.md#ts-20261029-193101)); the quoted labels are the user's selections.
+
+- Opening the menu from the save slot page (QOLSET-53), "How should the PC settings menu be opened from the save slot page?": "Full-size bar + hint": "A full-size, clearly labelled bar (moving the slots is not allowed with QoL off, so it covers part of the page)." Open: where exactly the full-size bar sits, what it covers and what the hint says; to be proposed to the user before implementation.
+- Sharpness and size (QOLSET-54), "How sharp and how big should the menu be?": "Crisp PC text and UI": "Draw text (and maybe the frames) at native window resolution instead of enlarged 3DS art and font." Not chosen: using the full wide window; the 4:3 page stays. Open: whether the frames are also drawn at native resolution.
+- Motion (QOLSET-52), "What motion do you want in the menu?": "Original UI animations": "Play the original UI storyboards (slide-ins, highlight transitions) as the game does."
