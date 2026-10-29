@@ -10,6 +10,7 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - The meaning of element floats and track property ids (opacity, rotation, scale, position, translate) is a data fit only; the evaluator was not found. [§2026-10-13T09:12](#ts-20261013-0912)
 - The round menu layout (320x240) holds, beside the round, a list form of five bars with a highlight, a framed strip and a page indicator whose use is not read; the Options, pause and language pictures are hexagonal badges: [§2026-10-29T11:50:58](#ts-20261029-115058).
 - Layout text fonts: table 0x52ebf8 maps fontSize to three identical frontendfont instances that differ only in minimum spacing [§2026-10-29T13:58](#ts-20261029-135814). Layout text is drawn by 0x2b4dc4 at glyph scale 1 and spacing 0 (node byte +0x141, always 0, clamped by the font minimum) through the node matrix; the fit loop 0x1ce8d4 lowers the spacing towards the minimum only when a text is wider than its box. [§2026-10-29T15:06:01](#ts-20261029-150601)
+- The list form drawn with no storyboard: bars at fixed positions (bar 5 under the subtitle), an opaque `Menu_Bar_HI` over the bar texts, `PageNumber` over the bars; `page_alerttext` button boxes [§2026-10-29T15:54:31](#ts-20261029-155431).
 - Open: the minimum spacing of the global frontendfont, which screen uses the list form and the page indicator, element +0x14, other flag bits, track +0x1c and keyframe +0x1c, and the property evaluator.
 
 <a id="ts-20261013-1100"></a>
@@ -121,3 +122,15 @@ Read with llvm-objdump (armv6k, vfp2). This entry builds on [§2026-10-29T13:58]
 - **Port:** the layout text default spacing is 0 (`LayoutScene::textSpacing`; it was -2), checked by CTest `layout-text-real-data`. Every layout text changes with it: the round menu texts (pause menu, Options page and the award viewer, which uses the round menu too) and the Build-it prompt; "Build" now sits on the original's columns 222..249.
 
 Unknown: the minimum spacing of the global frontendfont object (0x3757a0), which only matters when a text is wider than its box. The fit loop is not ported (HUD-91). The per-screen spacings the port still sets by hand (the shortcut bars +1, the slot page header -1) contradict spacing 0 and were not checked against the original (HUD-92).
+
+<a id="ts-20261029-155431"></a>
+
+## 2026-10-29T15:54:31+01:00 — List form and notice page of the round menu layout (chase-layoutdump and drawn scenes; 20261029-qolmenu2-B)
+
+Data only (no code read, no emulator). `sprites/ui_roundaboutmenu/main.bxaml` drawn with no storyboard and the round pieces hidden shows the list form:
+- `Menu_Bars` at (32, 58); the bars `Menu_Bar_1`..`_5` sit at y 32, -6, 70, 110, -47, so on screen top to bottom 5, 2, 1, 3, 4; each bar's art (about 180x37) is centred in its 256x64 box, and bar 5 lies under the subtitle bar. The two text boxes of each bar (`TEXT_Menu_n_3DS`, `_DS`) are the same 168x16 box at (44, 23).
+- `Menu_Bar_HI` is drawn after the bars and its glow is opaque: a bar text under it is not visible. `Menu_List` (`TEXT_Icon`) is drawn after it.
+- `PageNumber` (font 16) lies at the centre, on top of the bars; `Left_Arrow` at (2, 95) and `Right_Arrow` at (298, 95), 16x32.
+- `page_alerttext.bxaml`: `Option1` (A icon, text right aligned) at (166, 208) and `Option2` (B icon) at (6, 208), both 148x26; `Text_Info_NoHeader` 300x110 at (11, 72); the storyboards `TransitionOn` and `TransitionOn2` last 0.7 s.
+
+Unknown: how the original places the list (this is the layout's static pose).

@@ -47,8 +47,8 @@ int main() {
     require(has(texts, "Display tab", "Window mode: fullscreen", qol::namePlateWidth), "window mode row");
     require(has(texts, "Display tab", "Resolution: 1280x720", qol::namePlateWidth), "resolution row");
     require(has(texts, "Display tab", "Resolution: desktop", qol::namePlateWidth), "resolution before a size is picked");
-    require(has(texts, "Quality of life tab", "Master: Custom", qol::namePlateWidth), "master row");
-    require(has(texts, "Quality of life tab", "widened_view: Off", qol::namePlateWidth), "feature row");
+    require(has(texts, "Quality of life tab", "Quality of life: Custom", qol::namePlateWidth), "master row");
+    require(has(texts, "Quality of life tab", "Widened view: Off", qol::namePlateWidth), "feature row");
     require(has(texts, "Controls key", "Left Shift", qol::listBarWidth), "key name on a list bar");
     require(has(texts, "Controls mouse button", "X2", qol::listBarWidth), "mouse name on a list bar");
     require(has(texts, "Controls pad input", "leftshoulder", qol::listBarWidth), "pad name on a list bar");

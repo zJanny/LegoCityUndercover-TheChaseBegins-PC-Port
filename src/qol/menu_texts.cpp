@@ -72,10 +72,8 @@ std::vector<MenuText> menuTexts(const MenuTextInputs& inputs) {
 
     std::vector<std::string> masters;
     for (Master master : {Master::Original, Master::Improved, Master::Custom}) masters.push_back(masterName(master));
-    for (const Row& row : rowsOf(Tab::QualityOfLife)) {
-        if (row.kind == RowKind::Master) addRows(out, "Quality of life tab", row.label, masters);
-        else addRows(out, "Quality of life tab", row.label, onOff);
-    }
+    addRows(out, "Quality of life tab", tabName(Tab::QualityOfLife), masters);
+    for (const FeatureInfo& feature : featureTable) addRows(out, "Quality of life tab", feature.label, onOff);
 
     addBars(out, "Controls action", actionNames());
     addBars(out, "Controls key", inputs.keyNames);

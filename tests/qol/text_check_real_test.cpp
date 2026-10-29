@@ -68,11 +68,11 @@ int main(int argc, char** argv) {
     for (const qol::TextIssue& issue : issues) require(false, "text does not fit: " + issue.item.text + " " + issue.detail);
 
     // Widths at the atlas size with the layout text spacing 0 (0x2b4dc4, HUD-75), recorded 2026-10-29 by 20261029-qolmenu2-C with
-    // qol-text-check-real-test over fonts/frontendfont.tnf of the extracted archive (the three front-end fonts are identical).
+    // qol-text-check-real-test over fonts/frontendfont.tnf of the extracted archive (the three front-end fonts are identical); "Quality of life: Improved" re-measured 2026-10-29 by 20261029-qolmenu2-B the same way.
     const std::map<std::string, int> widths{
         {"PC Settings", 79}, {"Quality of life", 93}, {"Window mode: windowed", 169},
         {"Window mode: fullscreen", 171}, {"Language: Nederlands", 149}, {"Resolution: 7680x4320", 153},
-        {"Master: Improved", 123}, {"DebugOverlay", 92}, {"Keypad MemSubtract", 145}, {"righttrigger", 86}};
+        {"Quality of life: Improved", 166}, {"DebugOverlay", 92}, {"Keypad MemSubtract", 145}, {"righttrigger", 86}};
     for (const auto& [text, width] : widths) {
         require(qol::textWidth(glyphWidth, text) == width, "width of " + text);
     }

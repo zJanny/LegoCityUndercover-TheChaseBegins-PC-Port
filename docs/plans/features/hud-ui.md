@@ -56,6 +56,7 @@ IN_PROGRESS, updated 2026-10-29T15:06:01+01:00. Layout text is drawn at the orig
 - [ ] HUD-91 — The original's fit loop (spacing, then line gap, lowered to the font minimum while the text is wider or taller than its box) is not ported, so a text wider than its box now overflows (the former -2 default squeezed it); the minimum of the global frontendfont is unknown. evidence: [ui-layouts.md §2026-10-29T15:06:01](../../re/ui-layouts.md#ts-20261029-150601).
 - [ ] HUD-92 — Hand-set layout text spacings of the port (shortcut bars +1, slot page header -1 in `src/frontend/pages.cpp`) contradict spacing 0; compare with the original. evidence: [ui-layouts.md §2026-10-29T15:06:01](../../re/ui-layouts.md#ts-20261029-150601).
 - [ ] HUD-94 — The original's split of the HUD draw into parts: whether the HUD draw callback, the stud bar object, the super brick display and the camera lock icon draw separately as the port's five parts do, and what the original calls the ability part (bottom-left) that `qol::HudPart` names. blocks: HUD-S82. evidence: [hud.md §2026-10-29T15:00:22](../../re/hud.md#ts-20261029-150022).
+- [ ] HUD-96 — The port draws layout text at one size only; a layout text cannot be drawn at a smaller size (the settings menu of the `qol` plan asks for smaller second lines on its Controls bars). blocks: QOLSET-43. evidence: [qol-settings-drawing.md §2026-10-29T12:11:55](../../design/qol-settings-drawing.md#ts-20261029-121155).
 
 ## 6. Findings summary
 
