@@ -119,7 +119,8 @@ python3 tools/merge_agent.py prepare <branch> 2>&1 | tail -25
 ```
 
 - **`prepare` syncs first.** When it stops because main diverged from the remote, show the user its output and ask. In a session without any remote, the user's answer at session start allows `--no-sync`.
-- **Conflict that the tool does not resolve itself:** resume the worker to merge main into its branch, resolve the conflict and run the tests again. Then run `prepare` again.
+- **Conflict that the tool does not resolve itself:** `prepare` merges append-only docs conflicts itself (`tools/merge_conflicts.py`). For the rest it prints the list of files it could not resolve; send that list to the worker (or a cheap agent) to merge main into its branch, resolve them and run the tests again, never resolve them yourself. Then run `prepare` again.
+- **Generated files:** only `merge_agent.py` regenerates the README progress section, `docs/plans/priorities.md` and `docs/progress-trend.svg`; tell no one to regenerate them. A branch that contains any of the three is a `RETURN` finding.
 - **Merge message:** write it to a file in your scratchpad. The subject follows the CLAUDE.md commit rules and describes the main change. Add a short body only if it adds context. End with your own `Co-Authored-By:` line, never a session link.
 - **ID ranges:** add `--release <round>-X` to `finish` when `grep -c '| <round>-X |' docs/plans/features/id-reservations.md` is not 0. Add one more `--release` for each agent of the round the user dropped since the last merge.
 - **The last merge of the round** also carries the round-end line (see "Round end"): add `--log <plan> <line file>`.
@@ -140,7 +141,7 @@ graphify update . 2>&1 | tail -3
 **The finish gate.** `prepare` leaves the whole squash staged, and a piped `tail` hides a failed exit status. Therefore:
 
 - Run `finish` alone, never chained with `&&` or `;` to anything after it (a hook denies a chained call, and a push while the squash is still staged).
-- Start the second call only when `finish` printed `merged;` as its last line. Otherwise nothing is committed: a failed test is run alone (`ctest --test-dir build -R '^<name>$'`); when it passes, run `python3 tools/merge_agent.py check`, then `finish` again with the same options. The release and the log line are already staged then, and `finish` does not add them twice. A test that fails twice is reported to the user.
+- Start the second call only when `finish` printed `merged;` as its last line. Otherwise nothing is committed: a failed test is run alone (`ctest --test-dir build -R '^<name>$'`); when it passes, run `python3 tools/merge_agent.py check`, then `finish` again with the same options. `check` records the staged tree and main's HEAD in the git dir only after build, ctest and Python tests passed; `finish` then skips those three and prints `skipped` (it still redoes the cheap doc and README checks). A failed check removes the record, and any other tree runs everything, so never skip them by hand. The release and the log line are already staged then, and `finish` does not add them twice. A test that fails twice is reported to the user.
 
 ## Round end
 

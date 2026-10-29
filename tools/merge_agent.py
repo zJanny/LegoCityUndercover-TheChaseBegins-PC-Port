@@ -6,7 +6,8 @@
   merge_agent.py check                   run the checks on the staged merge (after resolving conflicts or review edits)
   merge_agent.py finish BRANCH -m FILE [--release WHO]... [--log PLAN LINE_FILE]
                                          release WHO's ID ranges and append the round-end log line inside the squash,
-                                         run the checks, commit with the message in FILE, remove the worktree and branch
+                                         run the checks (build, ctest and Python tests are skipped when the staged tree and
+                                         main's HEAD equal what the last prepare/check verified), commit with the message in FILE, remove the worktree and branch
                                          (the lock of a Claude agent is lifted first; a worktree with any other lock stays,
                                          with a warning and the commands to remove it later)
   merge_agent.py close -m FILE [--release WHO]... [--log PLAN LINE_FILE]
@@ -189,10 +190,30 @@ def update_priorities(root: Path) -> None:
     run(["git", "add", PRIORITIES], root)
 
 
-def run_checks(root: Path) -> None:
+VERIFIED_RECORD = "merge-agent-verified"
+
+
+def verified_path(root: Path) -> Path:
+    return (root / git(root, "rev-parse", "--git-dir").strip()).resolve() / VERIFIED_RECORD
+
+
+def fingerprint(root: Path) -> str:
+    return git(root, "write-tree").strip() + " " + git(root, "rev-parse", "HEAD").strip()
+
+
+def recorded_fingerprint(root: Path) -> str | None:
+    path = verified_path(root)
+    return path.read_text().strip() if path.exists() else None
+
+
+def run_checks(root: Path, skip_heavy: bool = False) -> None:
     check_staged_content(root)
-    print("== build")
-    build_warning_free(root)
+    verified_path(root).unlink(missing_ok=True)
+    if skip_heavy:
+        print("== build, ctest and python tests skipped: the staged tree is the one the last check verified")
+    else:
+        print("== build")
+        build_warning_free(root)
     print("== priorities (before the doc fixes, which check its item links)")
     update_priorities(root)
     print("== doc fixes (session log rotation, closed items, anchors)")
@@ -204,10 +225,12 @@ def run_checks(root: Path) -> None:
     run(["git", "add", "README.md", "docs/progress-trend.svg"], root)
     print("== priorities")
     update_priorities(root)
-    print("== ctest")
-    run(["ctest", "--test-dir", "build", "--output-on-failure", "-j", str(JOBS)], root)
-    print("== python tests")
-    run(["python3", "-m", "unittest", "discover", "-s", "tests", "-p", "test_*.py"], root)
+    if not skip_heavy:
+        print("== ctest")
+        run(["ctest", "--test-dir", "build", "--output-on-failure", "-j", str(JOBS)], root)
+        print("== python tests")
+        run(["python3", "-m", "unittest", "discover", "-s", "tests", "-p", "test_*.py"], root)
+        verified_path(root).write_text(fingerprint(root) + "\n")
     print("== staged")
     print(git(root, "diff", "--cached", "--stat").rstrip())
     print("checks passed")
@@ -401,8 +424,9 @@ def finish(root: Path, branch: str, message_file: Path, holders: list[str] | Non
     require_main(root)
     require_branch(root, branch)
     message = read_message(message_file)
+    verified = recorded_fingerprint(root) == fingerprint(root)
     bookkeeping(root, holders or [], log)
-    run_checks(root)
+    run_checks(root, skip_heavy=verified)
     subprocess.run(["git", "commit", "-q", "-F", "-"], cwd=root, input=message + "\n", text=True, check=True)
     remove_worktree_and_branch(root, branch)
     print(git(root, "log", "--oneline", "-1").rstrip())

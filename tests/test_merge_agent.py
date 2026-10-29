@@ -413,5 +413,84 @@ class BookkeepingTest(unittest.TestCase):
         self.assertEqual(output(self.repo, "log", "--oneline").count("\n"), 1)
 
 
+
+class VerifiedFingerprintTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.repo = Path(self.tmp.name)
+        git(self.repo, "init", "-q", "-b", "main")
+        git(self.repo, "config", "user.email", "test@example.invalid")
+        git(self.repo, "config", "user.name", "Test")
+        (self.repo / "a.txt").write_text("a\n")
+        (self.repo / "README.md").write_text("r\n")
+        (self.repo / "docs").mkdir()
+        (self.repo / "docs" / "progress-trend.svg").write_text("<svg/>\n")
+        git(self.repo, "add", "-A")
+        git(self.repo, "commit", "-q", "-m", "init")
+        sys.path.insert(0, str(SCRIPT.parent))
+        import merge_agent
+        self.merge_agent = merge_agent
+        self.calls: list[str] = []
+        self.failing = False
+        self.saved = (merge_agent.run, merge_agent.build_warning_free, merge_agent.update_priorities, merge_agent.fix_docs)
+        merge_agent.build_warning_free = lambda root: self.calls.append("build")
+        merge_agent.update_priorities = lambda root: None
+        merge_agent.fix_docs = lambda root: None
+        merge_agent.run = self.fake_run
+
+    def tearDown(self) -> None:
+        (self.merge_agent.run, self.merge_agent.build_warning_free, self.merge_agent.update_priorities, self.merge_agent.fix_docs) = self.saved
+        self.tmp.cleanup()
+
+    def fake_run(self, cmd, cwd, check=True, capture=False):
+        name = cmd[0] if cmd[0] in ("ctest",) else "unittest" if "unittest" in cmd else None
+        if name:
+            self.calls.append(name)
+            if self.failing and name == "ctest":
+                raise self.merge_agent.MergeError("ctest failed")
+            return subprocess.CompletedProcess(cmd, 0, "", "")
+        if cmd[0] == "git":
+            return self.saved[0](cmd, cwd, check, capture)
+        return subprocess.CompletedProcess(cmd, 0, "", "")
+
+    def stage_change(self, text: str) -> None:
+        (self.repo / "a.txt").write_text(text)
+        git(self.repo, "add", "a.txt")
+
+    def test_matching_record_skips_the_heavy_checks(self) -> None:
+        self.stage_change("b\n")
+        self.merge_agent.run_checks(self.repo)
+        self.assertEqual(self.calls, ["build", "ctest", "unittest"])
+        self.calls.clear()
+        verified = self.merge_agent.recorded_fingerprint(self.repo) == self.merge_agent.fingerprint(self.repo)
+        self.assertTrue(verified)
+        self.merge_agent.run_checks(self.repo, skip_heavy=verified)
+        self.assertEqual(self.calls, [])
+
+    def test_changed_tree_does_not_match(self) -> None:
+        self.stage_change("b\n")
+        self.merge_agent.run_checks(self.repo)
+        self.stage_change("c\n")
+        self.assertNotEqual(self.merge_agent.recorded_fingerprint(self.repo), self.merge_agent.fingerprint(self.repo))
+
+    def test_changed_head_does_not_match(self) -> None:
+        self.stage_change("b\n")
+        self.merge_agent.run_checks(self.repo)
+        git(self.repo, "commit", "-q", "--allow-empty", "-m", "more")
+        self.assertNotEqual(self.merge_agent.recorded_fingerprint(self.repo), self.merge_agent.fingerprint(self.repo))
+
+    def test_missing_record_does_not_match(self) -> None:
+        self.assertIsNone(self.merge_agent.recorded_fingerprint(self.repo))
+
+    def test_failed_check_records_nothing_and_clears_the_old_record(self) -> None:
+        self.stage_change("b\n")
+        self.merge_agent.run_checks(self.repo)
+        self.assertIsNotNone(self.merge_agent.recorded_fingerprint(self.repo))
+        self.failing = True
+        with self.assertRaises(self.merge_agent.MergeError):
+            self.merge_agent.run_checks(self.repo)
+        self.assertIsNone(self.merge_agent.recorded_fingerprint(self.repo))
+
+
 if __name__ == "__main__":
     unittest.main()
