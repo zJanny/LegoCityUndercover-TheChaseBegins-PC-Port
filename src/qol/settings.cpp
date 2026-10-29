@@ -18,6 +18,28 @@ std::size_t indexOf(Feature feature) {
     return static_cast<std::size_t>(feature);
 }
 
+bool parseSide(const std::string& text, int& side) {
+    if (text.empty() || text.size() > 5 || text[0] == '0') return false;
+    int value = 0;
+    for (char c : text) {
+        if (c < '0' || c > '9') return false;
+        value = value * 10 + (c - '0');
+    }
+    side = value;
+    return true;
+}
+
+bool parseResolution(const std::string& text, Resolution& resolution) {
+    const std::size_t split = text.find('x');
+    if (split == std::string::npos) return false;
+    Resolution parsed{};
+    if (!parseSide(text.substr(0, split), parsed.width) ||
+        !parseSide(text.substr(split + 1), parsed.height)) return false;
+    if (!resolutionValid(parsed)) return false;
+    resolution = parsed;
+    return true;
+}
+
 }
 
 const char* masterName(Master master) {
@@ -27,6 +49,30 @@ const char* masterName(Master master) {
     case Master::Custom: return "Custom";
     }
     return "Original";
+}
+
+const char* windowModeName(WindowMode mode) {
+    return mode == WindowMode::Fullscreen ? "fullscreen" : "windowed";
+}
+
+bool resolutionValid(const Resolution& resolution) {
+    return resolution.width >= minimumResolution.width &&
+        resolution.height >= minimumResolution.height;
+}
+
+std::string resolutionText(const Resolution& resolution) {
+    return std::to_string(resolution.width) + "x" + std::to_string(resolution.height);
+}
+
+bool Settings::setResolution(const Resolution& resolution) {
+    if (!resolutionValid(resolution)) return false;
+    resolution_ = resolution;
+    return true;
+}
+
+bool Settings::resolveDesktop(const Resolution& desktop) {
+    if (resolution_) return true;
+    return setResolution(desktop);
 }
 
 bool Settings::customSwitch(Feature feature) const {
@@ -72,6 +118,8 @@ Settings readSettings(std::istream& stream) {
     Settings settings;
     std::array<bool, featureCount> seen{};
     bool masterSeen = false;
+    bool windowModeSeen = false;
+    bool resolutionSeen = false;
     bool wantCustom = false;
     std::string line;
     std::size_t lineNumber = 0;
@@ -88,6 +136,22 @@ Settings readSettings(std::istream& stream) {
             else if (value == "Improved") settings.setMaster(Master::Improved);
             else if (value == "Custom") wantCustom = true;
             else reject(lineNumber, line);
+            continue;
+        }
+        if (name == "window_mode") {
+            if (windowModeSeen) reject(lineNumber, line);
+            windowModeSeen = true;
+            if (value == "windowed") settings.setWindowMode(WindowMode::Windowed);
+            else if (value == "fullscreen") settings.setWindowMode(WindowMode::Fullscreen);
+            else reject(lineNumber, line);
+            continue;
+        }
+        if (name == "resolution") {
+            if (resolutionSeen) reject(lineNumber, line);
+            resolutionSeen = true;
+            Resolution parsed{};
+            if (!parseResolution(value, parsed)) reject(lineNumber, line);
+            settings.setResolution(parsed);
             continue;
         }
         bool found = false;
@@ -108,6 +172,9 @@ Settings readSettings(std::istream& stream) {
 
 void writeSettings(std::ostream& stream, const Settings& settings) {
     stream << "master " << masterName(settings.master()) << '\n';
+    stream << "window_mode " << windowModeName(settings.windowMode()) << '\n';
+    if (settings.resolution())
+        stream << "resolution " << resolutionText(*settings.resolution()) << '\n';
     if (!settings.mixSet()) return;
     for (const FeatureInfo& info : featureTable)
         stream << info.name << ' ' << (settings.customSwitch(info.feature) ? "on" : "off") << '\n';

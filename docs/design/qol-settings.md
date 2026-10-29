@@ -20,6 +20,7 @@ The user's approved design of how quality-of-life features are switched on and o
 - The master state is stored in `config/qol.cfg`: Original = all QoL off, Improved = all on (including the minimap and the hidden bottom screen); the per-feature switches (so far only the widened view with the corner HUD) apply only in Custom: [§2026-10-28T09:53:33](#ts-20261028-095333).
 - The key names of `config/qol.cfg` are approved: master key `master` with the values `Original`, `Improved`, `Custom` (case-sensitive); feature keys in snake_case with `on` or `off` (so far `widened_view`); `#` starts a comment: [§2026-10-28T21:43:23](#ts-20261028-214323).
 - Window mode and resolution are stored in `config/qol.cfg` under the keys `window_mode` and `resolution`; their values are `windowed` or `fullscreen` and `WIDTHxHEIGHT`, both written in every mode ([§2026-10-28T22:38:57](#ts-20261028-223857)): [§2026-10-28T22:20:41](#ts-20261028-222041).
+- Display defaults and list: absent `window_mode` and `resolution` default to fullscreen at the desktop size; old files stay valid; the resolution row offers the monitor's display modes of at least 400x240; a stored size outside the list is kept and shown as custom: [§2026-10-29T09:23:03](#ts-20261029-092303).
 - Feature rows outside Custom copy the mode's switches into an own mix, apply the click and switch to Custom; menu rows and tabs wrap; Left and Right stay ignored: [§2026-10-28T22:38:57](#ts-20261028-223857), [§2026-10-28T23:13:22](#ts-20261028-231322).
 - Open: none that needs a user decision; implementation details (menu look) follow the recorded decisions.
 
@@ -142,3 +143,16 @@ Open: none from this answer.
 Asked of the user by the lead on 2026-10-28: "Should the tabs (PageUp/PageDown, pad L/R) also wrap from the last tab to the first and back? Right now they stop at the first and last tab." The user's answer, "Tabs wrap too": "From the last tab to the first and back, like the rows." Extends the row wrap of the entry before it.
 
 Open: none from this answer.
+
+<a id="ts-20261029-092303"></a>
+
+## 2026-10-29T09:23:03+01:00 — Display defaults, old files and the resolution list
+
+Asked of the user by the lead on 2026-10-29 (QOLSET-18); the quoted labels are the user's selections. Answers the open part of [§2026-10-28T22:38:57](#ts-20261028-223857).
+
+- Defaults when the keys are absent: "Fullscreen, desktop size": fullscreen at the monitor's current resolution.
+- Old `config/qol.cfg` files without the two keys: "Still valid, use defaults": a missing key takes its default; the next write adds both keys.
+- Resolutions the Display row offers: "Display modes from SDL": the modes the monitor reports that are at least 400x240.
+- A stored resolution that is not in the list, for example a hand-edited 1000x600: "Keep it, show as custom": the value is used and shown as an extra entry until the user picks another.
+
+Open (not decided by the user): an upper bound for a stored resolution (the reader limits the digits to five per side as a parse safety, not an approved limit); how the file is written while the desktop size is still unresolved (the store holds "desktop" as no value and writes no `resolution` line until the window code calls the resolve step with the real size; the spelling for "desktop" in the file, if any, is not decided).

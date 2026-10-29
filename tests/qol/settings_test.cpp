@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
+#include <optional>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -94,14 +95,14 @@ void cycleWithMix() {
 
 void roundTrip() {
     qol::Settings fresh;
-    require(written(fresh) == "master Original\n", "fresh settings written");
+    require(written(fresh) == "master Original\nwindow_mode fullscreen\n", "fresh settings written without a resolved desktop size");
     require(parse(written(fresh)).master() == qol::Master::Original, "fresh round trip");
 
     qol::Settings custom;
     custom.setSwitch(qol::Feature::WidenedView, true);
     custom.setMaster(qol::Master::Custom);
     const std::string text = written(custom);
-    require(text == "master Custom\nwidened_view on\n", "custom settings written");
+    require(text == "master Custom\nwindow_mode fullscreen\nwidened_view on\n", "custom settings written");
     qol::Settings back = parse(text);
     require(back.master() == qol::Master::Custom && back.mixSet() &&
         back.enabled(qol::Feature::WidenedView), "custom round trip");
@@ -127,6 +128,59 @@ void roundTrip() {
         "comments are ignored");
 }
 
+void displayKeys() {
+    // Spec: qol-settings.md 2026-10-28T22:38:57 (values), qol-screen-layout.md
+    // 2026-10-28T22:39:39 (minimum 400x240). Cases by 20261029-qolset-A, 2026-10-29.
+    qol::Settings settings = parse("window_mode fullscreen\nresolution 1920x1080\n");
+    require(settings.windowMode() == qol::WindowMode::Fullscreen, "fullscreen read");
+    require(settings.resolution() == std::optional<qol::Resolution>{{1920, 1080}}, "resolution read");
+    require(settings.master() == qol::Master::Original, "display keys leave the master");
+    require(written(settings) ==
+        "master Original\nwindow_mode fullscreen\nresolution 1920x1080\n",
+        "display keys written in Original");
+
+    settings.setSwitch(qol::Feature::WidenedView, true);
+    for (qol::Master master : {qol::Master::Improved, qol::Master::Custom, qol::Master::Original}) {
+        settings.setMaster(master);
+        const std::string text = written(settings);
+        require(text.find("window_mode fullscreen\n") != std::string::npos &&
+            text.find("resolution 1920x1080\n") != std::string::npos,
+            std::string("display keys written in ") + qol::masterName(master));
+        qol::Settings back = parse(text);
+        require(back.windowMode() == qol::WindowMode::Fullscreen &&
+            back.resolution() == std::optional<qol::Resolution>{{1920, 1080}} && back.master() == master,
+            std::string("display round trip in ") + qol::masterName(master));
+    }
+
+    require(parse("resolution 400x240\n").resolution() == std::optional<qol::Resolution>{{400, 240}},
+        "minimum accepted");
+    require(parse("resolution 16385x20000\n").resolution() ==
+        std::optional<qol::Resolution>{{16385, 20000}}, "no upper bound below five digits");
+    require(parse("# x\nwindow_mode windowed # c\n").windowMode() == qol::WindowMode::Windowed,
+        "window mode with comment");
+
+    qol::Settings direct;
+    require(direct.windowMode() == qol::WindowMode::Fullscreen && !direct.resolution(),
+        "defaults: fullscreen and desktop size (user, 2026-10-29)");
+    require(!direct.setResolution({399, 240}) && !direct.resolution(),
+        "setResolution refuses below the minimum");
+    require(direct.resolveDesktop({1920, 1080}) &&
+        direct.resolution() == std::optional<qol::Resolution>{{1920, 1080}},
+        "resolveDesktop fixes the unset resolution");
+    require(direct.resolveDesktop({1280, 720}) &&
+        direct.resolution() == std::optional<qol::Resolution>{{1920, 1080}},
+        "resolveDesktop keeps a stored resolution");
+    require(written(direct) == "master Original\nwindow_mode fullscreen\nresolution 1920x1080\n",
+        "next write adds both keys");
+    qol::Settings small;
+    require(!small.resolveDesktop({300, 200}) && !small.resolution(), "tiny desktop refused");
+    require(parse("master Original\n").windowMode() == qol::WindowMode::Fullscreen &&
+        !parse("master Original\n").resolution(), "old file without the keys uses the defaults");
+    require(direct.setResolution({800, 600}) &&
+        direct.resolution() == std::optional<qol::Resolution>{{800, 600}},
+        "setResolution accepts a valid size");
+}
+
 void rejections() {
     const struct { const char* text; const char* expect; } cases[] = {
         {"colour red\n", "line 1: colour red"},
@@ -140,6 +194,24 @@ void rejections() {
         {"widened_view\n", "line 1: widened_view"},
         {"widened_view on on\n", "line 1: widened_view on on"},
         {"master Original\nbogus on\n", "line 2: bogus on"},
+        {"window_mode borderless\n", "line 1: window_mode borderless"},
+        {"window_mode Windowed\n", "line 1: window_mode Windowed"},
+        {"window_mode\n", "line 1: window_mode"},
+        {"window_mode windowed windowed\n", "line 1: window_mode windowed windowed"},
+        {"window_mode windowed\nwindow_mode fullscreen\n", "line 2: window_mode fullscreen"},
+        {"resolution 1280\n", "line 1: resolution 1280"},
+        {"resolution 1280X720\n", "line 1: resolution 1280X720"},
+        {"resolution 1280x\n", "line 1: resolution 1280x"},
+        {"resolution x720\n", "line 1: resolution x720"},
+        {"resolution 1280x720x1\n", "line 1: resolution 1280x720x1"},
+        {"resolution -1280x720\n", "line 1: resolution -1280x720"},
+        {"resolution 01280x720\n", "line 1: resolution 01280x720"},
+        {"resolution 1280 x 720\n", "line 1: resolution 1280 x 720"},
+        {"resolution 399x240\n", "line 1: resolution 399x240"},
+        {"resolution 400x239\n", "line 1: resolution 400x239"},
+        {"resolution 123456x720\n", "line 1: resolution 123456x720"},
+        {"resolution 0x0\n", "line 1: resolution 0x0"},
+        {"resolution 1280x720\nresolution 1920x1080\n", "line 2: resolution 1920x1080"},
     };
     for (const auto& item : cases) {
         const std::string message = rejection(item.text);
@@ -157,6 +229,7 @@ int main() {
     customUnavailableWithoutMix();
     cycleWithMix();
     roundTrip();
+    displayKeys();
     rejections();
     if (failures) return EXIT_FAILURE;
     std::cout << "qol-settings: ok\n";
