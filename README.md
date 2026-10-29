@@ -16,11 +16,11 @@ The game data is never part of this repository. You need your own copy of the ga
 | Game files read | 99.8% of files, 100.0% of data | Files in the game archive (12836) that the port can decode, by count and by size. |
 | Open work | 596 open items, 464 stand-ins | Known gaps and temporary guesses in 32 feature areas. It has no total to reach; watch the trend. |
 | Checked against the original | 429 tests, 232 recorded traces | Automatic tests, and recordings of the original game that the tests compare with. |
-| Game code documented | 2858 of about 7575 (37.7%) | Functions of the game program that the notes or the source point to. The total is an estimate. |
+| Game code documented | 2861 of about 7575 (37.8%) | Functions of the game program that the notes or the source point to. The total is an estimate. |
 
 ![Progress trend](docs/progress-trend.svg)
 
-Updated 2026-10-29, commit be2ac801. How the numbers are measured: [docs/progress.md](docs/progress.md).
+Updated 2026-10-29, commit 69e377cd. How the numbers are measured: [docs/progress.md](docs/progress.md).
 <!-- progress:end -->
 
 ## What you need

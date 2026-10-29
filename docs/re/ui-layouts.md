@@ -9,6 +9,7 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - All 55 real layouts consume every block: 383 containers, 614 images, 110 references, 161 storyboards, 1888 tracks, 6740 keyframes; the decoder is `src/assets/xaml.cpp`. [§2026-10-13T11:00](#ts-20261013-1100)
 - The meaning of element floats and track property ids (opacity, rotation, scale, position, translate) is a data fit only; the evaluator was not found. [§2026-10-13T09:12](#ts-20261013-0912)
 - The round menu layout (320x240) holds, beside the round, a list form of five bars with a highlight, a framed strip and a page indicator whose use is not read; the Options, pause and language pictures are hexagonal badges: [§2026-10-29T11:50:58](#ts-20261029-115058).
+- Layout text fonts: table 0x52ebf8 maps fontSize to three identical frontendfont instances that differ only in minimum spacing; the width rule behind HUD-75 is open. [§2026-10-29T13:58](#ts-20261029-135814)
 - Open: which screen uses the list form and the page indicator, element +0x14, other flag bits, track +0x1c and keyframe +0x1c, and the property evaluator.
 
 <a id="ts-20261013-1100"></a>
@@ -65,3 +66,19 @@ By 20261029-qolview-D, data only (no code read, no emulator): `chase-layoutdump`
 - The notice and question page `page_alerttext` is described in [front-end.md](front-end.md) (layout pages).
 
 Unknown: which screen shows the list form, the menu strip and the page indicator (the round menu create 0x2206f0 resolves `Menu_Bar_1`..`_5`, [ui-screens.md §2026-10-19T20:34](ui-screens.md#ts-20261019-203404), but their use is not read); which font size the values 12, 15, 16 and 18 select (HUD-75).
+
+<a id="ts-20261029-135814"></a>
+
+## 2026-10-29T13:58:14+01:00 — Layout text font table 0x52ebf8 and the font object (llvm-objdump of `artifacts/game/game.arm.elf`, agent 20261029-qolmenu-A; no emulator)
+
+Read with llvm-objdump (armv6k, vfp2); table bytes read from the code image.
+
+- **Table 0x52ebf8** (3 entries of 33 bytes: byte 0 largest size, name string from byte 1) is filled once by 0x2706c4, called from the start-up function at 0x1a2018 with the stack entries (12, "\x02"), (14, "\x03"), (16, "\x04"). The node builder 0x1b2ec0 (loop at 0x1b32ec) takes the first entry whose largest size is at least the node's fontSize (node +0x7c, record +0x46) and whose font is loaded through the callback 0x2d0fb0; sizes 0 and above 16 match no entry and leave node +0x78 at 0. Cache: 0x52ebe0, 8 bytes per entry (font handle, use count).
+- **Callback 0x2d0fb0** treats the name byte as an index into the 8-byte table 0x374214 (string pointer, two signed bytes): ids 2, 3, 4 all name `Fonts/frontendfont` (the three font files are identical) with minimum spacing -1, -2, -2 and minimum line gap -5, stored at font +0xae / +0xaf (default -30), then glyph range 32..160 (0x1f3744).
+- **Font object** (0xb8 bytes, constructor 0x1f394c): +0xac / +0xad are the current spacing and line gap (default 0), clamped from below by +0xae / +0xaf (0x235cb0, 0x235c9c); +0x88 / +0x8c are the scale set by 0x235d14 (only the stud bar, HUD and cutscene text callers found). The fitting loop at 0x1ce904 lowers the spacing one step at a time until the text fits.
+- **Setting a node's text** (0x20a828: node, font, text, colour): stores font to +0x78, colour +0x80, a copy of the text +0x88; a zero font becomes the first cache slot. The Build-it prompt (0x213df4) passes the global `frontendfont` object (pointer in 0x3757a0), not the table font, for name, cost and prompt, so fontSize 17 selects nothing there.
+- **Measured port widths** of "Build" (frontendfont, glyph rectangles): 24 / 28 / 32 / 36 at spacing -2 / -1 / 0 / 1; the original shows 30, which no integer spacing gives (scale 1.25 at spacing -2 would, but the measured scale is 1.0, see below). The writer of the spacing at draw time was not found.
+
+- **Oracle read 20261029-qolmenu-A-2** (recorded from save states, 2026-10-29, two loads each, all agreeing): the pointer at 0x3757a0 is 0x084eba30 in the Build-it prompt state and on the options page. In the 0xb8 bytes it points to the floats at +0x88, +0x8c and +0x98 are 1.0 in both states, so no glyph scale explains the width. The two -30 bytes sit at +0xac / +0xad there (the constructor puts them at +0xae / +0xaf), so this block is not laid out like the font object read from 0x1f394c and its spacing bytes were not obtained. Measured widths: "Build" 30 (fontSize 17), "Music: 5" 53, "Paused" 44, "Options" 47 pixels (fontSize of the last three unknown).
+
+Unknown: the code that draws a layout text node (every call of the text printer 0x235cc4 and the layout 0x21bc2c was checked; none reads node +0x78), the state of the global font (+0x88, +0xac) while the prompt is drawn, and what the sizes 12 to 16 change beyond the minimum spacing.
