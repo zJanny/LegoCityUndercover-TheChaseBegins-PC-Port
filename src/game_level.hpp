@@ -39,6 +39,7 @@
 #include "game_player.hpp"
 #include "render/hud_overlay.hpp"
 #include "render/scene.hpp"
+#include "render/view_region.hpp"
 #include "render/glow.hpp"
 #include "render/studs.hpp"
 #include "runtime/animation_driver_chain.hpp"

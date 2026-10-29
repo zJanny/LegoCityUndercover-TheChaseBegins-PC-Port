@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 1011 open items and stand-ins, 176 linked to game usage, 835 with unknown reach.
+Items: 1010 open items and stand-ins, 176 linked to game usage, 834 with unknown reach.
 
 ## Top 50 overall
 
@@ -201,7 +201,7 @@ No linked items.
 
 ## Quality of life (`qol` plan)
 
-0 of 20 items linked.
+0 of 19 items linked.
 
 No linked items.
 
@@ -245,7 +245,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [player-traversal-rails.md](features/player-traversal-rails.md): TRAV-28 (+3), TRAV-38 (+1), TRAV-43 (+1), TRAV-44 (+1), TRAV-45 (+1), TRAV-S16 (+1), TRAV-S18 (+1), TRAV-S19 (+1), TRAV-27, TRAV-29, TRAV-31, TRAV-32, TRAV-33, TRAV-42, TRAV-S15, TRAV-S17, TRAV-S21, TRAV-S23, TRAV-S24, TRAV-S25, TRAV-S26
 - [player-traversal.md](features/player-traversal.md): TRAV-9 (+2), TRAV-2 (+1), TRAV-49 (+1), TRAV-52 (+1), TRAV-S12 (+1), TRAV-10, TRAV-19, TRAV-20, TRAV-22, TRAV-34, TRAV-35, TRAV-5, TRAV-6, TRAV-63, TRAV-8, TRAV-S1, TRAV-S10, TRAV-S11, TRAV-S13, TRAV-S2, TRAV-S20, TRAV-S29, TRAV-S3, TRAV-S30, TRAV-S31, TRAV-S32, TRAV-S4
 - [qol-bottom-screen.md](features/qol-bottom-screen.md): QOLBOT-1 (+8), QOLBOT-10, QOLBOT-2, QOLBOT-3, QOLBOT-4, QOLBOT-5, QOLBOT-7, QOLBOT-8, QOLBOT-9
-- [qol-fullscreen.md](features/qol-fullscreen.md): QOLFS-7 (+14), QOLFS-8 (+13), QOLFS-1 (+12), QOLFS-2, QOLFS-3
+- [qol-fullscreen.md](features/qol-fullscreen.md): QOLFS-8 (+13), QOLFS-1 (+12), QOLFS-2, QOLFS-3
 - [qol-minimap.md](features/qol-minimap.md): QOLMAP-1
 - [qol-settings-menu.md](features/qol-settings-menu.md): QOLSET-2 (+5), QOLSET-3, QOLSET-4, QOLSET-8, QOLSET-9
 - [rendering-draw-order.md](features/rendering-draw-order.md): RENDER-65 (+1), RENDER-78 (+1), RENDER-79 (+1), RENDER-S64, RENDER-S71, RENDER-S72

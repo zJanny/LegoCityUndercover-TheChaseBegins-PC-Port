@@ -413,13 +413,9 @@ void LevelSession::draw(int width, int height) {
     if (drawPause(width, height)) return;
     if (drawAwardViewer(width, height)) return;
     const game_hud::Screens screens = game_hud::screensFor(width, height);
-    setScissorTest(false);
-    setViewport({0, 0, width, height});
-    clearWindow({0, 0, 0, 1}, true);
-    setScissorTest(true);
-    setScissorBox(screens.top);
-    setViewport(screens.top);
-    clearWindow({backgroundColour[0] / 255.0f, backgroundColour[1] / 255.0f, backgroundColour[2] / 255.0f, 1}, true);
+    const chase::render::ViewRegion topView = chase::render::originalViewRegion(screens.top);
+    chase::render::beginViewRegion(width, height, topView,
+                                   {backgroundColour[0] / 255.0f, backgroundColour[1] / 255.0f, backgroundColour[2] / 255.0f, 1});
     beginFrame(1.0f);
     const runtime::ClipPlanes followPlanes = runtime::followClipPlanes(follow ? follow->follow().nearPlane() : runtime::kCameraNearLimit);
     const runtime::ScannerRender scannerLook = runtime::scannerRender(scanner.viewShown());
@@ -442,7 +438,7 @@ void LevelSession::draw(int width, int height) {
         farPlane = game_cutscene::kFarPlane;
     }
     Mat4 mvp = chase::render::multiply(
-        perspective(shownFieldOfView, float(fe::kTopWidth) / float(fe::kScreenHeight), nearPlane, farPlane), viewMatrix);
+        perspective(shownFieldOfView, chase::render::viewAspect(topView), nearPlane, farPlane), viewMatrix);
     const Mat4 viewToWorld = chase::render::rigidInverse(viewMatrix);
     scene.setLighting(runtime::levelLights(lightObjects, roomStreamer ? roomStreamer->currentRoom() : 0), &viewToWorld[12]);
     std::vector<bool> drawn = runtime::drawnPlacements(placedObjects, objectState);
