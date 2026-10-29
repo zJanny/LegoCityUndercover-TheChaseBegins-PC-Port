@@ -9,3 +9,4 @@ Session log lines that left [qol.progress.md](qol.progress.md), oldest first, un
 - 2026-10-28T09:49:01+01:00 — Planner: recorded that the master button alone switches the bottom screen; two new open questions. See [qol-bottom-screen](features/qol-bottom-screen.md).
 - 2026-10-28T09:50:53+01:00 — Planner: recorded minimap and bottom-screen decisions; one new open question. See [qol-minimap](features/qol-minimap.md).
 - 2026-10-28T09:53:50+01:00 — Planner: recorded that the master state is stored; no open user decision left. See [qol-settings-menu](features/qol-settings-menu.md).
+- 2026-10-28T21:33:48+01:00 — Agent 20261028-qol-A (toggle store): built library chase_qol with the master state, feature table and strict qol.cfg, test qol-settings. See [qol-settings-menu](features/qol-settings-menu.md).

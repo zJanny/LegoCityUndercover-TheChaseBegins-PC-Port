@@ -1,5 +1,7 @@
 #include "qol/window_apply.hpp"
 
+#include "qol/active_settings.hpp"
+
 #include <algorithm>
 #include <stdexcept>
 
@@ -52,13 +54,16 @@ std::pair<int, int> WindowController::minimumSize() {
 }
 
 std::unique_ptr<WindowController> makeWindowController(const std::string& path) {
-    return std::make_unique<WindowController>(loadSettings(path), path);
+    auto controller = std::make_unique<WindowController>(loadSettings(path), path);
+    setActiveSettings(controller->settings());
+    return controller;
 }
 
 WindowPlan WindowController::toggle() {
     settings_.setWindowMode(settings_.windowMode() == WindowMode::Windowed
         ? WindowMode::Fullscreen : WindowMode::Windowed);
     saveSettings(path_, settings_);
+    setActiveSettings(settings_);
     return plan();
 }
 

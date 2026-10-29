@@ -3,6 +3,7 @@
 // no resolution line while the desktop size is used); F11 binding: 2026-10-28T09:37:29.
 // Cases written by 20261029-qolview-B on 2026-10-29. Display mode lists and sizes are test fixtures.
 #include "input.hpp"
+#include "qol/active_settings.hpp"
 #include "qol/window_apply.hpp"
 
 #include <cstdlib>
@@ -165,7 +166,40 @@ void fullscreenBindingParsesStrictly() {
 
 }
 
+void loadedConfigReachesTheActiveStore() {
+    const auto dir = std::filesystem::temp_directory_path() / "qol-window-apply-store";
+    std::filesystem::create_directories(dir);
+    const auto path = dir / "qol.cfg";
+    std::filesystem::remove(path);
+
+    qol::setActiveSettings(qol::Settings{});
+    qol::makeWindowController(path.string());
+    require(!qol::enabled(qol::Feature::WidenedView), "a missing qol.cfg keeps Original");
+    require(qol::activeSettings().master() == qol::Master::Original, "a missing qol.cfg keeps the Original master");
+
+    qol::Settings improved;
+    improved.setMaster(qol::Master::Improved);
+    qol::saveSettings(path.string(), improved);
+    qol::makeWindowController(path.string());
+    require(qol::enabled(qol::Feature::WidenedView), "a qol.cfg with the widened view on enables it");
+
+    qol::Settings custom;
+    custom.setSwitch(qol::Feature::WidenedView, true);
+    custom.setMaster(qol::Master::Custom);
+    qol::saveSettings(path.string(), custom);
+    auto controller = qol::makeWindowController(path.string());
+    require(qol::enabled(qol::Feature::WidenedView), "Custom with the switch on enables the widened view");
+    controller->start(reported, desktop);
+    qol::setActiveSettings(qol::Settings{});
+    controller->toggle();
+    require(qol::enabled(qol::Feature::WidenedView), "a saved change reaches the active store");
+
+    std::filesystem::remove_all(dir);
+    qol::setActiveSettings(qol::Settings{});
+}
+
 int main() {
+    loadedConfigReachesTheActiveStore();
     modesAreFilteredSortedAndUnique();
     defaultsAreFullscreenAtTheDesktopSize();
     storedValuesAreUsedAndClamped();

@@ -93,6 +93,7 @@ What is not like the original yet:
 - `resolution WIDTHxHEIGHT` in `config/qol.cfg` sets the size of the window (not used in full screen). Without the line the window has the desktop size. A size larger than the largest display mode of the monitor is limited to it; another size that is not a display mode is used as written. A malformed line stops the program with an error.
 - The window cannot be made smaller than 400x240.
 - There is no settings menu yet, so the file is edited by hand.
+- `config/qol.cfg` is read at startup. With `master Improved` (or `widened_view on` under `master Custom`) the 3D view is widened above the bottom screen; the HUD stays on the usual top-screen rectangle. A missing file keeps the original view.
 
 ## The display during play
 

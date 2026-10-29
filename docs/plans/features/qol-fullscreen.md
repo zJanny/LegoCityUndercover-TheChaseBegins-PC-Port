@@ -6,7 +6,7 @@ The top screen as the whole window: the 3D view widened up to 16:9 (same vertica
 
 ## 2. Status
 
-IN_PROGRESS, opened 2026-10-28T09:21:35+01:00. The geometry, the render capability (QOLFS-7) and the hook (QOLFS-8) exist: with the toggle on, the 3D view and the glow pass use the widened region above the bottom screen; the HUD canvas stays on today's top rectangle until QOLFS-2. Nothing loads `config/qol.cfg` into the active store yet (QOLFS-11).
+IN_PROGRESS, opened 2026-10-28T09:21:35+01:00. The geometry, the render capability (QOLFS-7) and the hook (QOLFS-8) exist: with the toggle on, the 3D view and the glow pass use the widened region above the bottom screen; the HUD canvas stays on today's top rectangle until QOLFS-2. The config load hands the settings to the active store at startup and after F11 (QOLFS-11).
 
 ## 3. Verified behaviour
 
@@ -18,11 +18,10 @@ None.
 
 ## 5. Open items
 
-- [ ] QOLFS-1 — The widened full-window view up to 16:9, black side bars beyond, with the same vertical field of view; windows narrower than 5:3 keep the original 5:3 view with bars above and below; one toggle for the view and the corner HUD. Wired above the bottom screen (`qol::topViewRegion`); the whole window waits for QOLBOT-1, the config load for QOLFS-11. needs: QOLSET-1, QOLFS-7, QOLFS-11. blocks: QOLFS-2, QOLFS-3, QOLMAP-1, QOLBOT-1, QOLFS-9. evidence: [qol-screen-layout.md §2026-10-28T09:21:33](../../design/qol-screen-layout.md#ts-20261028-092133).
+- [ ] QOLFS-1 — The widened full-window view up to 16:9, black side bars beyond, with the same vertical field of view; windows narrower than 5:3 keep the original 5:3 view with bars above and below; one toggle for the view and the corner HUD. Wired above the bottom screen (`qol::topViewRegion`); the whole window waits for QOLBOT-1. needs: QOLSET-1, QOLFS-7. blocks: QOLFS-2, QOLFS-3, QOLMAP-1, QOLBOT-1, QOLFS-9. evidence: [qol-screen-layout.md §2026-10-28T09:21:33](../../design/qol-screen-layout.md#ts-20261028-092133).
 - [ ] QOLFS-2 — HUD parts anchored to the corners of the 16:9 area inside the bars: hearts and character picture top-left, studs and counters top-right, ability bottom-left, scaled to the window height; same toggle as QOLFS-1. The anchor math is done (`hudAnchor`, `hudPosition`); drawing the HUD at the anchors is left. needs: QOLFS-1. evidence: [qol-screen-layout.md §2026-10-29T11:42:22](../../design/qol-screen-layout.md#ts-20261029-114222).
 - [ ] QOLFS-3 — Check the widened edges for pop-in (rooms, objects, pedestrians, shadows, fades) at the widest supported aspect, 16:9. needs: QOLFS-1. evidence: [qol-screen-layout.md §2026-10-28T09:21:33](../../design/qol-screen-layout.md#ts-20261028-092133).
 - [ ] QOLFS-10 — The window has a minimum size of 400x240, set at window creation by the window glue (owned there, not by the view hook). needs: QOLSET-19. evidence: [qol-screen-layout.md §2026-10-28T22:39:39+01:00](../../design/qol-screen-layout.md#ts-20261028-223939).
-- [ ] QOLFS-11 — Load `config/qol.cfg` into the active store at startup (`qol::setActiveSettings` after the config load of the window glue), so the menu's toggle reaches the hook; until then the store stays Original. needs: QOLSET-19. blocks: QOLFS-1. evidence: [qol-screen-layout.md §2026-10-29T11:42:22](../../design/qol-screen-layout.md#ts-20261029-114222).
 
 ## 6. Findings summary
 
