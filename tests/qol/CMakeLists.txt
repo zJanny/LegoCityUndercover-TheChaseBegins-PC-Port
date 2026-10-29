@@ -12,3 +12,8 @@ add_executable(qol-view-layout-test view_layout_test.cpp)
 target_link_libraries(qol-view-layout-test PRIVATE chase_qol)
 target_compile_options(qol-view-layout-test PRIVATE -Wall -Wextra -Wpedantic)
 add_test(NAME qol-view-layout COMMAND qol-view-layout-test)
+
+add_executable(qol-game-tab-test game_tab_test.cpp)
+target_link_libraries(qol-game-tab-test PRIVATE chase_qol)
+target_compile_options(qol-game-tab-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME qol-game-tab COMMAND qol-game-tab-test)

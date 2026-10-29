@@ -114,6 +114,7 @@ The table lists some of the tests. `ctest --test-dir build -N` lists all of them
 | `input-core` | Input core, no SDL, including the `DebugOverlay` binding |
 | `qol-settings` | Quality-of-life toggle store, no SDL: master state Original/Improved/Custom, per-feature switches, strict `config/qol.cfg` read and write (`tests/qol/`) |
 | `qol-menu-model` | Drawing-free model of the PC settings menu, no SDL: tabs, rows from the feature table, key and pointer events, master button cycling, toggle rows, rejections (`tests/qol/`) |
+| `qol-game-tab` | Model of the Game tab, no SDL: SFX and Music volume 0 to 10, Invert camera, Language 1 to 9 over a fake options interface, in-sync reads, ranges and rejections (`tests/qol/`) |
 | `qol-view-layout` | Quality-of-life geometry, no SDL: view rectangle, black bars and aspect for a window size (5:3 to 16:9), corner anchors of the HUD, rejection of windows below 400x240 (`tests/qol/`) |
 | `render-viewport-rect` | View region of the top screen, no OpenGL context: default 400:240, the 16:9 projection scale, rejection of non-positive rectangles and aspects (`tests/render_viewport_rect_test.cpp`) |
 | `debug-metrics-core` | [Debug overlay](debug-overlay.md) values on synthetic input: frame-time window, `/proc/self/status` fixture, CPU percent, overlay lines |
