@@ -148,11 +148,17 @@ Implemented by 20261029-qolview-C (`src/qol/controls_tab.*`, `src/qol/controls_f
 Gamepad buttons (QOLSET-30), answered 2026-10-29: "New `pad` source": `config/controls.cfg` gets a `pad` source next to `key` and `mouse`, with SDL game-controller button names such as `a`, `b`, `x`, `y`, `leftshoulder`, `dpup`.
 - Implemented by 20261029-qolmenu-C: a line is `Action pad <name> hold|toggle`. The names are SDL's lower-case names (`a b x y back guide start leftstick rightstick leftshoulder rightshoulder dpup dpdown dpleft dpright misc1 paddle1 paddle2 paddle3 paddle4 touchpad`), codes are the SDL button numbers (`a` is 0, `touchpad` is 20), `Source::Pad` in `src/input.hpp`. `readBindings` rejects any other name (strict); a file with no `pad` line behaves as before. The reader, the tab validator `fileInputValidator` and the writer accept the same names.
 
+Controls tab keyboard and wording, answered 2026-10-29 (QOLSET-40, QOLSET-41):
+- Slots on the keyboard: "Left/Right pick slot": Left and Right move between slot 1 and slot 2 on a Controls action row (this changes the line of [qol-settings-drawing.md](qol-settings-drawing.md) that ignored Left and Right on Controls rows); Activate then waits for the picked slot. Switching a slot between hold and toggle and clearing a slot stay mouse-only.
+- Reset all question: "Reset all controls?", whose description shown to the user was: "Reset all controls to their defaults?" with Yes / No. The question text is therefore "Reset all controls to their defaults?" with Yes / No.
+- Ends of the slot pick: "Stop at the ends": Left on slot 1 and Right on slot 2 do nothing, no wrap.
+- Waiting and the question are modal: "Yes, modal": while the menu waits for a new input or shows the Reset all question, every other input is ignored and only Activate (confirm the question) and Back (cancel) act.
+- Refuse message: "Keep placeholder": the text "key W is already used by Up" (source, code, "is already used by", action) is the final wording.
+
 Comments (QOLSET-31), answered 2026-10-29: "Drop the comments": the writer writes the file fresh and the player's comments are lost. A key named `#` cannot be written (the reader treats `#` as a comment).
 
 Shipped bindings for Reset all (QOLSET-38), answered 2026-10-29: "config/controls.default.cfg", a shipped file next to `controls.cfg`, never written by the menu.
 
 Window-mode label wider than the name plate (QOLSET-35), answered 2026-10-29: "Wait for HUD-75": re-measure once the real font size is known, then decide.
 
-Open (not decided by the user):
-- The wording of the refuse message ("key W is already used by Up" is a placeholder for the drawing).
+Open (not decided by the user): none for the Controls tab flow.

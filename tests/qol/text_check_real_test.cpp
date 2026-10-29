@@ -63,7 +63,7 @@ int main(int argc, char** argv) {
     }
 
     const auto texts = qol::menuTexts(inputs);
-    require(texts.size() == 335, "number of checked texts");
+    require(texts.size() == 337, "number of checked texts");
     const auto issues = qol::checkTexts(texts, glyphWidth);
     for (const qol::TextIssue& issue : issues) {
         require(issue.problem == qol::TextProblem::TooWide, "no missing glyph: " + issue.item.text);

@@ -1,8 +1,12 @@
 #include "qol/menu_model.hpp"
 
+#include "qol/controls_file.hpp"
+
 #include <utility>
 
 namespace qol {
+
+const char* const resetAllQuestion = "Reset all controls to their defaults?";
 
 const char* tabName(Tab tab) {
     switch (tab) {
@@ -28,7 +32,12 @@ std::vector<Row> rowsOf(Tab tab) {
         return rows;
     }
     case Tab::Controls:
-        return {placeholder("Key bindings")};
+    {
+        std::vector<Row> rows;
+        for (const std::string& action : controlActions()) rows.push_back(Row{RowKind::Control, action});
+        rows.push_back(Row{RowKind::ResetAll, "Reset all"});
+        return rows;
+    }
     case Tab::QualityOfLife: {
         std::vector<Row> rows{Row{RowKind::Master, "Master"}};
         for (const FeatureInfo& info : featureTable)
@@ -55,6 +64,9 @@ Event eventForKey(Key key) {
 
 Event rowMove(std::size_t row) { return {EventKind::RowMove, row}; }
 Event rowClick(std::size_t row) { return {EventKind::RowClick, row}; }
+Event slotClick(std::size_t row, std::size_t slot) { return {EventKind::SlotClick, row, slot}; }
+Event modeClick(std::size_t row, std::size_t slot) { return {EventKind::ModeClick, row, slot}; }
+Event clearClick(std::size_t row, std::size_t slot) { return {EventKind::ClearClick, row, slot}; }
 Event tabMove(std::size_t tab) { return {EventKind::TabMove, tab}; }
 Event tabClick(std::size_t tab) { return {EventKind::TabClick, tab}; }
 
@@ -69,18 +81,88 @@ std::vector<DisplayRow> MenuModel::displayRows() const {
     return qol::displayRows(settings_, modes_);
 }
 
+std::vector<Row> MenuModel::rows() const {
+    if (tab_ != Tab::Controls || !controls_) return rowsOf(tab_);
+    std::vector<Row> out;
+    const ControlsTab& tab = controls_->tab();
+    for (std::size_t i = 0; i < tab.rowCount(); ++i) out.push_back(Row{RowKind::Control, tab.rowAction(i)});
+    out.push_back(Row{RowKind::ResetAll, "Reset all"});
+    return out;
+}
+
+void MenuModel::setControls(ControlsPort* controls) {
+    controls_ = controls;
+    slot_ = 0;
+}
+
+std::vector<ControlsRowText> MenuModel::controlsRows() const {
+    std::vector<ControlsRowText> out;
+    if (!controls_) return out;
+    const ControlsTab& tab = controls_->tab();
+    for (std::size_t row = 0; row < tab.rowCount(); ++row) {
+        ControlsRowText text{tab.rowAction(row), {}};
+        std::size_t slot = 0;
+        for (const BindingEntry& entry : tab.bindings()) {
+            if (entry.action != text.action || slot >= slotsPerAction) continue;
+            text.slots[slot++] = {true, entry.source, entry.code, entry.mode, entry.source + " " + entry.code};
+        }
+        out.push_back(std::move(text));
+    }
+    return out;
+}
+
+std::optional<WaitingSlot> MenuModel::controlsWaiting() const {
+    if (!controls_ || !controls_->tab().waiting()) return std::nullopt;
+    return WaitingSlot{controls_->tab().waitingRow(), controls_->tab().waitingSlot()};
+}
+
+std::string MenuModel::controlsMessage() const {
+    return controls_ ? controls_->tab().message() : std::string();
+}
+
+std::string MenuModel::controlsConflictAction() const {
+    return controls_ ? controls_->tab().conflictAction() : std::string();
+}
+
+bool MenuModel::controlsConfirming() const {
+    return controls_ && controls_->tab().confirming();
+}
+
+Result MenuModel::fromControls(ControlsResult result) {
+    switch (result) {
+    case ControlsResult::Waiting: return Result::ControlsWaiting;
+    case ControlsResult::Changed: return Result::ControlsChanged;
+    case ControlsResult::Conflict: return Result::ControlsConflict;
+    case ControlsResult::Cancelled: return Result::ControlsCancelled;
+    case ControlsResult::Confirming: return Result::ControlsConfirming;
+    case ControlsResult::Rejected: return Result::Rejected;
+    case ControlsResult::Ignored: return Result::Ignored;
+    }
+    return Result::Ignored;
+}
+
+Result MenuModel::assignInput(const std::string& source, const std::string& code) {
+    if (!open_ || !controls_) return Result::Ignored;
+    return fromControls(controls_->assignInput(source, code));
+}
+
 void MenuModel::open() {
     open_ = true;
 }
 
 Result MenuModel::handle(const Event& event) {
     if (!open_) return Result::Ignored;
+    if (controls_ && tab_ == Tab::Controls && (controls_->tab().waiting() || controls_->tab().confirming())) {
+        if (event.kind == EventKind::Back) return fromControls(controls_->cancel());
+        if (event.kind == EventKind::Activate && controls_->tab().confirming())
+            return fromControls(controls_->confirmReset());
+        return Result::Ignored;
+    }
     switch (event.kind) {
     case EventKind::Up: return moveRow(-1);
     case EventKind::Down: return moveRow(1);
-    case EventKind::Left:
-    case EventKind::Right:
-        return Result::Ignored;
+    case EventKind::Left: return moveSlot(-1);
+    case EventKind::Right: return moveSlot(1);
     case EventKind::Activate: return activateRow();
     case EventKind::Back:
         open_ = false;
@@ -94,6 +176,23 @@ Result MenuModel::handle(const Event& event) {
         Result activated = activateRow();
         return activated == Result::Ignored ? selected : activated;
     }
+    case EventKind::SlotClick: {
+        Result selected = selectRow(event.index);
+        if (selected == Result::Rejected) return selected;
+        if (event.slot >= slotsPerAction) return Result::Rejected;
+        slot_ = event.slot;
+        Result activated = activateRow();
+        slot_ = 0;
+        return activated == Result::Ignored ? selected : activated;
+    }
+    case EventKind::ModeClick:
+    case EventKind::ClearClick: {
+        if (event.index >= rows().size()) return Result::Rejected;
+        if (!controls_ || rows()[event.index].kind != RowKind::Control) return Result::Ignored;
+        ControlsResult result = event.kind == EventKind::ModeClick ? controls_->toggleMode(event.index, event.slot)
+                                                                  : controls_->clearSlot(event.index, event.slot);
+        return fromControls(result);
+    }
     case EventKind::TabMove:
         return event.index >= tabCount ? Result::Rejected : Result::Ignored;
     case EventKind::TabClick: {
@@ -101,6 +200,7 @@ Result MenuModel::handle(const Event& event) {
         Tab target = static_cast<Tab>(event.index);
         if (target == tab_) return Result::Ignored;
         tab_ = target;
+        slot_ = 0;
         return Result::TabChanged;
     }
     }
@@ -108,30 +208,40 @@ Result MenuModel::handle(const Event& event) {
 }
 
 Result MenuModel::moveRow(std::ptrdiff_t delta) {
-    std::size_t count = rowsOf(tab_).size();
+    std::size_t count = rows().size();
     if (count < 2) return Result::Ignored;
     std::size_t current = row();
     std::size_t target = delta < 0 ? (current + count - 1) % count : (current + 1) % count;
     rows_[static_cast<std::size_t>(tab_)] = target;
+    slot_ = 0;
     return Result::RowChanged;
+}
+
+Result MenuModel::moveSlot(std::ptrdiff_t delta) {
+    if (tab_ != Tab::Controls || !controls_ || rows()[row()].kind != RowKind::Control) return Result::Ignored;
+    if (delta < 0 ? slot_ == 0 : slot_ + 1 >= slotsPerAction) return Result::Ignored;
+    slot_ = delta < 0 ? slot_ - 1 : slot_ + 1;
+    return Result::SlotChanged;
 }
 
 Result MenuModel::moveTab(std::ptrdiff_t delta) {
     std::size_t count = tabCount;
     std::size_t current = static_cast<std::size_t>(tab_);
+    slot_ = 0;
     tab_ = static_cast<Tab>(delta < 0 ? (current + count - 1) % count : (current + 1) % count);
     return Result::TabChanged;
 }
 
 Result MenuModel::selectRow(std::size_t row) {
-    if (row >= rowsOf(tab_).size()) return Result::Rejected;
+    if (row >= rows().size()) return Result::Rejected;
     if (row == this->row()) return Result::Ignored;
     rows_[static_cast<std::size_t>(tab_)] = row;
+    slot_ = 0;
     return Result::RowChanged;
 }
 
 Result MenuModel::activateRow() {
-    const Row selected = rowsOf(tab_)[row()];
+    const Row selected = rows()[row()];
     switch (selected.kind) {
     case RowKind::Master:
         settings_.cycleMaster();
@@ -154,6 +264,12 @@ Result MenuModel::activateRow() {
         case DisplayResult::ResolutionChanged: return Result::DisplayChanged;
         }
         return Result::Ignored;
+    case RowKind::Control:
+        if (!controls_) return Result::Ignored;
+        return fromControls(controls_->activate(row(), slot_));
+    case RowKind::ResetAll:
+        if (!controls_) return Result::Ignored;
+        return fromControls(controls_->requestReset());
     case RowKind::Placeholder:
         return Result::Ignored;
     }

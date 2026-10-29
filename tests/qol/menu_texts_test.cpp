@@ -54,6 +54,7 @@ int main() {
     require(has(texts, "Controls mouse button", "X2", qol::listBarWidth), "mouse name on a list bar");
     require(has(texts, "Controls pad input", "leftshoulder", qol::listBarWidth), "pad name on a list bar");
     require(has(texts, "Controls action", "DebugOverlay", qol::listBarWidth), "action name on a list bar");
-    require(texts.size() == 95, "number of texts");
+    require(has(texts, "Controls Reset all question", "Reset all controls to their defaults?", 0), "Reset all question text");
+    require(texts.size() == 97, "number of texts");
     return failures == 0 ? 0 : 1;
 }

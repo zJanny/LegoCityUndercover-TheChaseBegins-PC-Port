@@ -84,6 +84,8 @@ std::vector<MenuText> menuTexts(const MenuTextInputs& inputs) {
     addBars(out, "Controls mouse button", mouseButtonNames());
     addBars(out, "Controls pad input", padInputNames());
     addBars(out, "Controls binding mode", {"hold", "toggle"});
+    out.push_back({"Controls Reset all row", "Reset all", listBarWidth});
+    out.push_back({"Controls Reset all question", resetAllQuestion, 0});
     return out;
 }
 

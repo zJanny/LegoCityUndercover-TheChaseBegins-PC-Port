@@ -4,6 +4,7 @@
 // Cases written by 20261028-qolmenu-A on 2026-10-28.
 // Answers of the user, 2026-10-28 (docs/design/qol-settings.md, QOLSET-16 and QOLSET-17): feature rows
 // outside Custom copy the mode's switches into an own mix and switch to Custom; rows wrap; Left/Right ignored.
+#include "qol/controls_file.hpp"
 #include "qol/menu_model.hpp"
 
 #include <iostream>
@@ -59,6 +60,8 @@ void originalModeFirst() {
     menu.handle(qol::rowClick(1));
     menu.handle(qol::tabClick(2));
     menu.handle(qol::rowClick(0));
+    menu.handle(qol::slotClick(1, 1));
+    require(menu.controlsRows().empty() && !menu.controlsWaiting(), "Controls rows without bindings do nothing");
     require(written(settings) == before, "the placeholder tabs change no setting");
 }
 
@@ -81,11 +84,13 @@ void structure() {
     require(display.size() == 2 && display[0].label == "Window mode" && display[1].label == "Resolution" &&
                 display[0].kind == qol::RowKind::Display && display[1].kind == qol::RowKind::Display,
             "Display rows");
-    require(qol::rowsOf(Tab::Controls).size() == 1 && qol::rowsOf(Tab::Controls)[0].label == "Key bindings",
-            "Controls rows");
-    for (Tab tab : {Tab::Game, Tab::Controls})
-        for (const qol::Row& row : qol::rowsOf(tab))
-            require(row.kind == qol::RowKind::Placeholder, "placeholder rows");
+    auto controls = qol::rowsOf(Tab::Controls);
+    require(controls.size() == qol::controlActions().size() + 1, "Controls rows: one per action and Reset all");
+    for (std::size_t i = 0; i < qol::controlActions().size(); ++i)
+        require(controls[i].kind == qol::RowKind::Control && controls[i].label == qol::controlActions()[i], "action row");
+    require(controls.back().kind == qol::RowKind::ResetAll && controls.back().label == "Reset all", "Reset all row last");
+    for (const qol::Row& row : qol::rowsOf(Tab::Game))
+        require(row.kind == qol::RowKind::Placeholder, "placeholder rows");
 
     auto quality = qol::rowsOf(Tab::QualityOfLife);
     require(quality.size() == 1 + qol::featureCount, "master plus one row per feature");
@@ -306,6 +311,86 @@ void rejections() {
     require(written(settings) == before, "rejections change no setting");
 }
 
+void controlsTab() {
+    using qol::BindingEntry;
+    const std::vector<std::string> actions{"Up", "A", "Walk"};
+    const std::vector<BindingEntry> defaults{{"Up", "key", "W", "hold"}, {"Up", "key", "Up", "hold"},
+        {"A", "key", "Space", "hold"}, {"A", "mouse", "Left", "hold"}, {"Walk", "key", "Left_Alt", "hold"}};
+    auto validKey = [](const std::string& name) {
+        return name == "W" || name == "Up" || name == "Space" || name == "Left Alt" || name == "E";
+    };
+    qol::ControlsTab tab(actions, defaults, defaults, validKey);
+    qol::ControlsTabPort port(tab);
+    qol::Settings settings;
+    const std::string before = written(settings);
+    qol::MenuModel menu(settings);
+    menu.setControls(&port);
+    menu.open();
+    menu.handle(qol::tabClick(static_cast<std::size_t>(Tab::Controls)));
+    require(menu.rows().size() == 4 && menu.rows()[3].kind == qol::RowKind::ResetAll, "rows: actions plus Reset all");
+
+    auto rows = menu.controlsRows();
+    require(rows.size() == 3 && rows[0].action == "Up" && rows[0].slots[0].text == "key W" && rows[0].slots[1].text == "key Up",
+        "row with two slot texts");
+    require(rows[1].slots[1].source == "mouse" && rows[1].slots[1].code == "Left" && rows[1].slots[1].mode == "hold", "slot parts");
+    require(rows[2].slots[0].bound && !rows[2].slots[1].bound && rows[2].slots[1].text.empty(), "empty second slot");
+
+    require(menu.handle({EventKind::Up}) == Result::RowChanged && menu.row() == 3, "rows wrap up to Reset all");
+    require(menu.handle({EventKind::Down}) == Result::RowChanged && menu.row() == 0, "rows wrap down");
+    require(menu.controlsSlot() == 0 && menu.handle({EventKind::Left}) == Result::Ignored && menu.controlsSlot() == 0,
+        "left stops at the first slot");
+    require(menu.handle({EventKind::Right}) == Result::SlotChanged && menu.controlsSlot() == 1, "right picks the second slot");
+    require(menu.handle({EventKind::Right}) == Result::Ignored && menu.controlsSlot() == 1, "right stops at the last slot");
+    require(menu.handle({EventKind::Down}) == Result::RowChanged && menu.controlsSlot() == 0, "a new row starts at the first slot");
+    menu.handle({EventKind::Up});
+    menu.handle({EventKind::Right});
+    require(menu.handle(qol::eventForKey(qol::Key::Enter)) == Result::ControlsWaiting, "Activate waits for the selected slot");
+    require(menu.controlsWaiting() && menu.controlsWaiting()->row == 0 && menu.controlsWaiting()->slot == 1, "waiting slot is the picked one");
+    menu.handle(qol::eventForKey(qol::Key::Escape));
+    menu.handle({EventKind::Left});
+    menu.handle(qol::eventForKey(qol::Key::Enter));
+    require(menu.controlsWaiting() && menu.controlsWaiting()->slot == 0, "left picks the first slot again");
+    require(menu.handle({EventKind::Down}) == Result::Ignored && menu.row() == 0, "keys go to the tab while waiting");
+    require(menu.handle(qol::tabClick(0)) == Result::Ignored && menu.tab() == Tab::Controls, "no tab change while waiting");
+    require(menu.assignInput("key", "Space") == Result::ControlsConflict && menu.controlsWaiting(), "taken input refused, still waiting");
+    require(menu.controlsMessage() == "key Space is already used by A" && menu.controlsConflictAction() == "A", "refuse message");
+    require(menu.assignInput("key", "Nonsense") == Result::Rejected, "invalid input rejected");
+    require(menu.handle(qol::eventForKey(qol::Key::Escape)) == Result::ControlsCancelled && menu.isOpen() &&
+                !menu.controlsWaiting() && menu.controlsMessage().empty(),
+        "Escape cancels the wait and keeps the menu open");
+    require(menu.assignInput("key", "E") == Result::Ignored, "input without waiting ignored");
+
+    require(menu.handle(qol::slotClick(0, 1)) == Result::ControlsWaiting && menu.controlsWaiting()->slot == 1, "slot click waits for that slot");
+    require(menu.assignInput("key", "E") == Result::ControlsChanged && menu.controlsRows()[0].slots[1].text == "key E", "rebound slot");
+    require(menu.handle(qol::rowClick(2)) == Result::ControlsWaiting && menu.controlsWaiting()->row == 2 && menu.controlsWaiting()->slot == 0,
+        "row click waits for the first slot");
+    menu.handle(qol::eventForKey(qol::Key::PadB));
+    require(menu.handle(qol::slotClick(2, 2)) == Result::Rejected, "slot past the last slot rejected");
+    require(menu.handle(qol::slotClick(9, 0)) == Result::Rejected, "row past the last row rejected");
+
+    require(menu.handle(qol::rowClick(3)) == Result::ControlsConfirming && menu.controlsConfirming(), "Reset all asks first");
+    require(std::string(qol::resetAllQuestion) == "Reset all controls to their defaults?", "question text");
+    require(menu.handle(qol::eventForKey(qol::Key::Escape)) == Result::ControlsCancelled && !menu.controlsConfirming() &&
+                tab.bindings() != defaults,
+        "Escape declines the question and keeps the bindings");
+    menu.handle(qol::rowClick(3));
+    require(menu.handle({EventKind::Down}) == Result::Ignored && menu.controlsConfirming(), "the question is modal");
+    require(menu.handle(qol::eventForKey(qol::Key::Enter)) == Result::ControlsChanged && !menu.controlsConfirming() &&
+                tab.bindings() == defaults,
+        "confirming restores the defaults");
+    require(menu.handle(qol::rowClick(3)) == Result::Ignored && !menu.controlsConfirming(),
+        "Reset all with nothing to reset asks nothing");
+    require(menu.handle(qol::modeClick(0, 0)) == Result::ControlsChanged && menu.controlsRows()[0].slots[0].mode == "toggle",
+        "mode click switches the slot to toggle");
+    require(menu.handle(qol::clearClick(0, 1)) == Result::ControlsChanged && !menu.controlsRows()[0].slots[1].bound,
+        "clear click empties the slot");
+    require(menu.handle(qol::modeClick(0, 1)) == Result::Rejected, "mode click on an empty slot rejected");
+    require(menu.handle(qol::clearClick(9, 0)) == Result::Rejected, "clear click past the last row rejected");
+    require(menu.handle(qol::modeClick(3, 0)) == Result::Ignored, "mode click on Reset all ignored");
+    require(menu.handle({EventKind::Down}) == Result::RowChanged && menu.row() == 0, "keys work again");
+    require(written(settings) == before, "the Controls tab changes no QoL setting");
+}
+
 }
 
 int main() {
@@ -316,6 +401,7 @@ int main() {
     masterCycling();
     toggles();
     displayTab();
+    controlsTab();
     rejections();
     if (failures) {
         std::cerr << failures << " failure(s)\n";
