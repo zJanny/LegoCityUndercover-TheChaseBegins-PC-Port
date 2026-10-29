@@ -388,14 +388,23 @@ MAIN_BRANCHES = ("main", "master")
 
 def on_branch(root):
     name = git(root, "symbolic-ref", "--short", "-q", "HEAD").stdout.strip()
-    return name not in MAIN_BRANCHES
+    return bool(name) and name not in MAIN_BRANCHES
+
+
+def merge_head(root):
+    path = git(root, "rev-parse", "--git-path", "MERGE_HEAD").stdout.strip()
+    if not path:
+        return []
+    full = Path(path) if Path(path).is_absolute() else Path(root) / path
+    return ["MERGE_HEAD"] if full.exists() else []
 
 
 def staged_generated(root, take_all=False):
     views = [["--cached"], []] if take_all else [["--cached"]]
+    base = merge_head(root)
     found = []
     for view in views:
-        names = git(root, "diff", *view, "--name-only", "--", *GENERATED_FILES).stdout.split("\n")
+        names = git(root, "diff", *view, *base, "--name-only", "--", *GENERATED_FILES).stdout.split("\n")
         found += [name for name in names if name and name not in found]
     return found
 

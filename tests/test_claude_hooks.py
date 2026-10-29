@@ -214,6 +214,42 @@ class HookTest(unittest.TestCase):
         git(self.repo, "add", "docs/notes.md")
         self.assertAllowed(self.bash(commit))
 
+    GENERATED = ("README.md", "docs/plans/priorities.md", "docs/progress-trend.svg")
+
+    def start_merge_of_main(self):
+        for name in self.GENERATED:
+            path = self.repo / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("old\n")
+        git(self.repo, "add", ".")
+        git(self.repo, "commit", "-q", "-m", "generated")
+        git(self.repo, "checkout", "-q", "-b", "feature")
+        (self.repo / "docs" / "notes.md").write_text("x\n")
+        git(self.repo, "add", "docs/notes.md")
+        git(self.repo, "commit", "-q", "-m", "notes")
+        git(self.repo, "checkout", "-q", "main")
+        for name in self.GENERATED:
+            (self.repo / name).write_text("main\n")
+        git(self.repo, "commit", "-qam", "main moved")
+        git(self.repo, "checkout", "-q", "feature")
+        git(self.repo, "merge", "-q", "--no-commit", "--no-ff", "main")
+
+    def test_merge_commit_accepts_generated_files_of_main(self):
+        self.start_merge_of_main()
+        self.assertAllowed(self.bash(f'git commit -m "Merge main" -m "{CO_AUTHOR}"'))
+
+    def test_merge_commit_denies_edited_generated_file(self):
+        self.start_merge_of_main()
+        (self.repo / "docs" / "progress-trend.svg").write_text("hand made\n")
+        git(self.repo, "add", "docs/progress-trend.svg")
+        self.assertDenied(self.bash(f'git commit -m "Merge main" -m "{CO_AUTHOR}"'), "docs/progress-trend.svg")
+
+    def test_detached_head_counts_as_main(self):
+        (self.repo / "README.md").write_text("new\n")
+        git(self.repo, "add", "README.md")
+        git(self.repo, "checkout", "-q", "--detach")
+        self.assertAllowed(self.bash(f'git commit -m "Add x" -m "{CO_AUTHOR}"'))
+
     def test_commit_rejects_staged_binary_files(self):
         (self.repo / "dump.raw").write_bytes(b"\0\1\2")
         git(self.repo, "add", "dump.raw")
