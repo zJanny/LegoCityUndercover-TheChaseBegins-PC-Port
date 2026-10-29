@@ -8,6 +8,7 @@
 #include "game_hud.hpp"
 #include "game_movie_sound.hpp"
 #include "input.hpp"
+#include "qol/menu_window_sdl.hpp"
 #include "render/debug_overlay.hpp"
 #include "render/front_presenter.hpp"
 #include "render/scene.hpp"
@@ -101,6 +102,7 @@ inline Result run(SDL_Window* window, chase::InputState& input, chase::assets::F
         return result;
     }
 
+    qol::FrontMenu qolMenu(resources);
     chase::runtime::Scheduler scheduler({}, clockNow());
     bool wasUp = false, wasDown = false, wasA = false, wasB = false, wasX = false, wasY = false, wasStart = false;
     bool running = true;
@@ -108,6 +110,7 @@ inline Result run(SDL_Window* window, chase::InputState& input, chase::assets::F
         debugOverlay.frame();
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
+            if (qol::frontMenuConsumes(qolMenu, event, window, front.flow())) continue;
             switch (event.type) {
             case SDL_QUIT: running = false; break;
             case SDL_KEYDOWN: case SDL_KEYUP:
@@ -124,6 +127,7 @@ inline Result run(SDL_Window* window, chase::InputState& input, chase::assets::F
             }
         }
         if (options.frame) options.frame();
+        if (qol::frontMenuPresented(qolMenu, window)) { SDL_GL_SwapWindow(window); continue; }
         scheduler.advance(clockNow(), [&](float dt) {
             using chase::Action;
             const bool up = input.vertical() < 0, down = input.vertical() > 0;
@@ -145,6 +149,7 @@ inline Result run(SDL_Window* window, chase::InputState& input, chase::assets::F
         });
         if (audio) audio->update();
         front.draw(top, bottom);
+        qol::drawFrontMenuButton(qolMenu, bottom, front.flow());
         SDL_GL_GetDrawableSize(window, &width, &height);
         presenter.present(game_hud::pixelsOf(top), game_hud::pixelsOf(bottom), width, height);
         debugOverlay.draw(input, front, width, height);

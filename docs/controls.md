@@ -72,6 +72,19 @@ In the [development runtime](commands.md#development-runtime), while you play:
 - Options opens the options wheel: SFX, Music, Invert Camera and Language. Turn it like the pause wheel. On SFX and Music, **up and down** (W and S, or the arrow keys) change the volume from 0 to 10. On Invert Camera, up, down or **A** switch it on or off. **B** goes back to the pause wheel; after a change it first saves the options.
 - Language, Credits and Exit do nothing yet. The numbers on the upper screen are not shown yet.
 
+## PC settings menu
+
+In the [development runtime](commands.md#development-runtime), on the slot list of the start screens:
+
+- Click the small **PC Settings** bar under the two slots with the left mouse button. It slides in with the slots. No key or gamepad button opens it.
+- The menu covers the whole window. The start screens stop behind it.
+- **Up and down** (arrow keys, the mouse wheel or the gamepad's D-pad) move between the rows. **Left and right** step a value.
+- **Return** or gamepad **a**, or a click on Select, chooses the row in the middle. A click on a row selects and chooses it. Moving the mouse onto a row selects it.
+- **Page Up / Page Down**, gamepad **leftshoulder / rightshoulder**, or a click on the arrows beside the tab name change the tab.
+- **Escape**, gamepad **b**, or a click on Back closes the menu.
+- These keys are fixed. They do not follow `config/controls.cfg`.
+- The menu does not store or apply its changes yet. Its Game rows show no values, and its Controls rows cannot be rebound yet.
+
 ## Award viewer
 
 In the [development runtime](commands.md#development-runtime), in the police station:

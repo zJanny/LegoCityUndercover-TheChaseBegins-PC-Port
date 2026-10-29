@@ -14,6 +14,8 @@ using KeyNamer = std::function<std::string(int)>;
 
 std::vector<std::string> controlActions();
 
+std::string mouseButtonName(int code);
+
 InputValidator fileInputValidator(KeyResolver resolveKey);
 
 std::vector<BindingEntry> readBindingEntries(std::istream& stream, const KeyResolver& resolveKey, const KeyNamer& nameKey);

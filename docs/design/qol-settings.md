@@ -35,7 +35,7 @@ The agent proposed: QoL code in `src/qol/` as its own CMake library `chase_qol`,
 Asked of the user by the lead on 2026-10-28; the quoted labels are the user's selections.
 
 - Reaching the menu with QoL off (QOLSET-5): "Title + PC Settings entry": reachable from the title screen, plus an extra "PC Settings" entry clicked with the mouse in the pause menu, always shown. The original Options page stays unchanged.
-- Approved exception to the faithful default: the "PC Settings" entry of the pause menu is visible with every QoL feature off. This is the user's explicit decision. The entry opens the PC settings menu only and changes no game behaviour; it is the one such exception.
+- Approved exception to the faithful default: the "PC Settings" entry of the pause menu is visible with every QoL feature off. This is the user's explicit decision. The entry opens the PC settings menu only and changes no game behaviour. The only other such exception is the "PC Settings" button of the save slot page ([§2026-10-29T18:06:35](#ts-20261029-180635)).
 - Original Options entries (QOLSET-6): "Yes, mirrored": SFX volume, Music volume, Invert camera and Language are shown in the PC settings menu and kept in sync with the original Options page; same values, same save.
 - Language row of the Game tab (QOLSET-21, 2026-10-29): "Opens Languages page": activating the row opens the port's own Languages page, as the original does. Until that page is ported the row stays read-only (QOLSET-25, the user's decision of 2026-10-29, the current plan).
 - Layout (question 5a): "Tabs, mouse+keys+pad": tabs Game (the original options), Display (window mode, resolution), Controls (key bindings) and Quality of life (master toggle and per-feature toggles); mouse, keyboard and gamepad all work.
@@ -163,3 +163,18 @@ Shipped bindings for Reset all (QOLSET-38), answered 2026-10-29: "config/control
 Window-mode label wider than the name plate (QOLSET-35), answered 2026-10-29: "Wait for HUD-75": re-measure once the real font size is known, then decide.
 
 Open (not decided by the user): none for the Controls tab flow.
+<a id="ts-20261029-180635"></a>
+
+## 2026-10-29T18:06:35+01:00 — Opening the menu from the front end
+
+Asked of the user by the lead on 2026-10-29 for 20261029-qolhook-B (QOLSET-41), because the port's front end has no title screen with entries; the quoted labels are the user's selections. They make "from the title screen" of [§2026-10-28T09:21:31](#ts-20261028-092131) concrete.
+- Where: "SlotSelect page only": the settings menu opens from the save slot page of the front end, not from the other front-end screens.
+- Trigger: "Bottom-screen button": a "PC Settings" button drawn on the bottom screen of that page, clicked with the mouse only; there is no pad or keyboard way to it.
+- While the menu is open: "Front end stops": nothing behind the menu updates; movies and sounds hold.
+- Size: "Whole window": the menu covers the whole window ([qol-settings-drawing.md §2026-10-29T12:11:55](qol-settings-drawing.md#ts-20261029-121155) section 2).
+- The button (answered 2026-10-29, after the code review found that the bottom-left shortcut place holds the page's Delete shortcut on a used slot): "Third list bar": the unused third list bar (`ListItem3` of the slot page layout) under the two slots, showing "PC Settings"; the Delete shortcut stays untouched.
+- Place of the bar (answered 2026-10-29; the layout's own place of `ListItem3` is below the screen, and a full-size bar fits nowhere without covering the subtitle bar or the Delete shortcut): "Half size under slot 2": the third bar at half size (about 111x23, smaller text), centred under slot 2 in the free row, covering nothing.
+- Slide-in (answered 2026-10-29): "Yes, slot 2's timing": the bar slides in with the slots, like `ListItem2`.
+- With every QoL option at its default (2026-10-29): "Allow, update rule": the button is shown with QoL off, a second approved exception next to the pause entry ([docs/rules/qol.md](../rules/qol.md)). A left click inside the button's area opens the menu instead of acting as A: "Yes, acceptable", part of that exception.
+- Choices of 20261029-qolhook-B that the user accepted as they are (2026-10-29): the button shows and takes clicks only until a slot is chosen; its click area follows the button; the menu keys are fixed (Return, Escape, PageUp/PageDown and the arrows; pad a, b, the D-pad and the shoulders); key repeats are swallowed while releases, quitting and focus events pass on to the front end.
+

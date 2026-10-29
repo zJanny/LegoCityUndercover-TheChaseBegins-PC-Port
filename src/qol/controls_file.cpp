@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cstdio>
 #include <fstream>
+#include <iterator>
 #include <sstream>
 #include <stdexcept>
 #include <utility>
@@ -16,8 +17,9 @@ namespace {
 const char* const mouseNames[] = {"Left", "Middle", "Right", "X1", "X2"};
 
 std::string mouseName(int code) {
-    if (code < 1 || code > 5) throw std::runtime_error("Unknown mouse button code: " + std::to_string(code));
-    return mouseNames[code - 1];
+    std::string name = mouseButtonName(code);
+    if (name.empty()) throw std::runtime_error("Unknown mouse button code: " + std::to_string(code));
+    return name;
 }
 
 bool validMouse(const std::string& code) {
@@ -45,6 +47,11 @@ std::string spaced(std::string code) {
     return code;
 }
 
+}
+
+std::string mouseButtonName(int code) {
+    if (code < 1 || code > int(std::size(mouseNames))) return std::string();
+    return mouseNames[code - 1];
 }
 
 std::vector<std::string> controlActions() {
