@@ -52,7 +52,7 @@ IN_PROGRESS, updated 2026-10-29T12:01:44+01:00. The map picture and placement co
 - [ ] HUD-18 — The top-screen waypoint arrow or indicator (none was seen at the mission start); compare when the player is far from the waypoint. evidence: [objective-hud.md §2026-10-14T15:59](../../re/objective-hud.md#ts-20261014-155919).
 - [ ] HUD-12 — chase-game always uses the two-screen layout, also for levels without a player (placeholder camera).
 - [ ] HUD-74 — The brick models of the super build-it prompt are not drawn. blocks: HUD-85. evidence: [super-buildit.md §2026-10-19T19:23:11](../../re/super-buildit.md#ts-20261019-192311).
-- [ ] HUD-75 — Layout text ignores `fontSize` (table 0x52ebf8). blocks: HUD-S73, QOLSET-33. evidence: [super-buildit.md §2026-10-19T19:23:11](../../re/super-buildit.md#ts-20261019-192311).
+- [ ] HUD-75 — Layout text ignores `fontSize` (table 0x52ebf8). blocks: HUD-S73, QOLSET-33, QOLSET-35. evidence: [super-buildit.md §2026-10-19T19:23:11](../../re/super-buildit.md#ts-20261019-192311).
 
 ## 6. Findings summary
 

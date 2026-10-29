@@ -53,3 +53,20 @@ if(TARGET chase_qol_view)
   target_compile_options(qol-view-hook-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME qol-view-hook COMMAND qol-view-hook-test)
 endif()
+
+add_executable(qol-text-check-test text_check_test.cpp)
+target_link_libraries(qol-text-check-test PRIVATE chase_qol)
+target_compile_options(qol-text-check-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME qol-text-check COMMAND qol-text-check-test)
+
+add_executable(qol-menu-texts-test menu_texts_test.cpp)
+target_link_libraries(qol-menu-texts-test PRIVATE chase_qol)
+target_compile_options(qol-menu-texts-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME qol-menu-texts COMMAND qol-menu-texts-test)
+
+add_executable(qol-text-check-real-test text_check_real_test.cpp)
+target_link_libraries(qol-text-check-real-test PRIVATE chase_qol)
+target_compile_options(qol-text-check-real-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME qol-text-check-real-data COMMAND qol-text-check-real-test
+  "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
+set_tests_properties(qol-text-check-real-data PROPERTIES SKIP_RETURN_CODE 77 LABELS needs-game-data)

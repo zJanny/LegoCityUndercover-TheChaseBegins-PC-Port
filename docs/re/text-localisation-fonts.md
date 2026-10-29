@@ -11,6 +11,7 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - `.tnf` fonts: u16 end code, u8 first code (0x20), u8 line height, then (end - first) records of (u16 width, height, x, y) into `<name>.btga`; 6 fonts, 1521 glyphs. [§2026-10-13T01:05](#ts-20261013-0105)
 - Codes at or above 0x100 are the extended characters in file order; the escape probably means code `('2' - 0x31) * 0x100 + (c - 0x30)`. [§2026-10-13T01:05](#ts-20261013-0105)
 - The three front-end font files (`frontendfont`, `-small`, `-large`) are byte-identical: one glyph set, line height 23, glyphs for ASCII, the Latin-1 letters and the 84 extended characters; `gametext` has On, Off, Yes, No and eight language names in their own spelling. [§2026-10-29T11:50](#ts-20261029-115026)
+- Settings menu texts: all 335 have glyphs; all fit the name plate (182) and list bar (168) except "Window mode: windowed" (189) and "Window mode: fullscreen" (193), at the atlas size. [§2026-10-29T13:52](#ts-20261029-135202)
 - Open: whether the layout font size changes the drawn glyph size (HUD-75), the byte 0xac for the trademark sign, the meaning of the '2' byte and other escape first bytes, and whether "ź" and "ż" are swapped in the atlas.
 
 <a id="ts-20261013-0025"></a>
@@ -66,3 +67,18 @@ By 20261029-qolview-D, data only (no code read, no emulator): the `.tnf` headers
 - `gametext_uk` has `ON` "On", `OFF` "Off", `YES` "Yes", `NO` "No", `OPTIONS` "Options", `LANGUAGE` "Language", `SELECT` "Select", `PAUSEMENU` "Pause Menu", and language names in their own spelling under keys whose names are not known: 0x04723177 "Deutsch", 0x04ee198b "Français", 0x363c0017 "Nederlands", 0x4f11523f "English", 0x952b154f "Italiano", 0xeecdb206 "Português", 0xf63a151e "Dansk", 0xf7468743 "Español".
 
 Unknown: whether the three entries of the layout font table 0x52ebf8 ([ui-layouts.md §2026-10-13T11:00](ui-layouts.md#ts-20261013-1100)) are these three files, and whether the font size field of a layout text changes the drawn glyph size (HUD-75); the Polish and Russian language names (not found under the names tried); where the Languages page takes its names from (UI-23).
+
+<a id="ts-20261029-135202"></a>
+
+## 2026-10-29T13:52:02+01:00 — Settings menu texts against the front-end font (20261029-qolmenu-B)
+
+By 20261029-qolmenu-B with CTest `qol-text-check-real-data` (`chase_qol` text checker over `fonts/frontendfont.tnf` and `localisation/extended_chars_utf8.txt` of the extracted archive; width = glyph widths plus one pixel between glyphs, at the atlas size, as `layoutText` places them). No code of the original read, no emulator.
+
+- 335 texts the settings menu can show were checked: title, tab names and places, every row of the Game, Display and Quality of life tabs with its values, and the Controls names (15 actions, 227 SDL key names, 5 mouse buttons, 27 SDL game-controller names, the two binding modes).
+- Every character of all of them has a glyph (width above 0), the space included. The ten language names (the eight of `gametext_uk` and the spec's "Polski" and "Русский") are drawable.
+- Boxes: name plate 182 pixels for "Label: value" rows, list bar 168 pixels for Controls names. Widest per group: "Language: Nederlands" 168, "Resolution: 7680x4320" 173, "Master: Improved" 138, "DebugOverlay" 103, key name "Keypad MemSubtract" 162, pad name "righttrigger" 97; all fit.
+- Two do not fit: "Window mode: windowed" 189 and "Window mode: fullscreen" 193 (the model's lower-case words).
+- The widths hold only if the layout font size does not shrink the glyphs (HUD-75); if it does, every width is smaller by size/23 and the check must be re-run.
+- The key names are the SDL 2.32 names of every keycode SDL maps from a scancode; pad names are `SDL_GameControllerGetStringForButton` and `ForAxis`.
+
+Unknown: the Polish and Russian language names of `gametext` (only the spec's spellings were checked); the real width of the notice page, the subtitle bar and the Controls row with two slots (no box was judged for them).
