@@ -9,8 +9,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - All 55 real layouts consume every block: 383 containers, 614 images, 110 references, 161 storyboards, 1888 tracks, 6740 keyframes; the decoder is `src/assets/xaml.cpp`. [§2026-10-13T11:00](#ts-20261013-1100)
 - The meaning of element floats and track property ids (opacity, rotation, scale, position, translate) is a data fit only; the evaluator was not found. [§2026-10-13T09:12](#ts-20261013-0912)
 - The round menu layout (320x240) holds, beside the round, a list form of five bars with a highlight, a framed strip and a page indicator whose use is not read; the Options, pause and language pictures are hexagonal badges: [§2026-10-29T11:50:58](#ts-20261029-115058).
-- Layout text fonts: table 0x52ebf8 maps fontSize to three identical frontendfont instances that differ only in minimum spacing; the width rule behind HUD-75 is open. [§2026-10-29T13:58](#ts-20261029-135814)
-- Open: which screen uses the list form and the page indicator, element +0x14, other flag bits, track +0x1c and keyframe +0x1c, and the property evaluator.
+- Layout text fonts: table 0x52ebf8 maps fontSize to three identical frontendfont instances that differ only in minimum spacing [§2026-10-29T13:58](#ts-20261029-135814). Layout text is drawn by 0x2b4dc4 at glyph scale 1 and spacing 0 (node byte +0x141, always 0, clamped by the font minimum) through the node matrix; the fit loop 0x1ce8d4 lowers the spacing towards the minimum only when a text is wider than its box. [§2026-10-29T15:06:01](#ts-20261029-150601)
+- Open: the minimum spacing of the global frontendfont, which screen uses the list form and the page indicator, element +0x14, other flag bits, track +0x1c and keyframe +0x1c, and the property evaluator.
 
 <a id="ts-20261013-1100"></a>
 
@@ -82,3 +82,42 @@ Read with llvm-objdump (armv6k, vfp2); table bytes read from the code image.
 - **Oracle read 20261029-qolmenu-A-2** (recorded from save states, 2026-10-29, two loads each, all agreeing): the pointer at 0x3757a0 is 0x084eba30 in the Build-it prompt state and on the options page. In the 0xb8 bytes it points to the floats at +0x88, +0x8c and +0x98 are 1.0 in both states, so no glyph scale explains the width. The two -30 bytes sit at +0xac / +0xad there (the constructor puts them at +0xae / +0xaf), so this block is not laid out like the font object read from 0x1f394c and its spacing bytes were not obtained. Measured widths: "Build" 30 (fontSize 17), "Music: 5" 53, "Paused" 44, "Options" 47 pixels (fontSize of the last three unknown).
 
 Unknown: the code that draws a layout text node (every call of the text printer 0x235cc4 and the layout 0x21bc2c was checked; none reads node +0x78), the state of the global font (+0x88, +0xac) while the prompt is drawn, and what the sizes 12 to 16 change beyond the minimum spacing.
+
+<a id="ts-20261029-150601"></a>
+
+## 2026-10-29T15:06:01+01:00 — Layout text draw 0x2b4dc4: scale 1, spacing 0, fit loop (llvm-objdump of `artifacts/game/game.arm.elf`, agent 20261029-qolmenu-E; no emulator)
+
+Read with llvm-objdump (armv6k, vfp2). This entry builds on [§2026-10-29T13:58](#ts-20261029-135814) and answers its first unknown.
+
+- **Who draws layout text.** The node draw walker 0x21766c calls 0x2b4dc4(node) when the node's text +0x88 is set (at 0x21772c for non-container nodes, at 0x21783c after the children for containers). Node +0x78 is read there, at 0x2b4e94.
+- **0x2b4dc4 step by step:**
+  - It saves the text clip box (0x223d94, 6 floats at 0x52ecac).
+  - It sets the current text matrix to the node matrix +0xc0 (0x223d2c, context 0x3766a8 +0x1c), so the text is placed in node-local units.
+  - Font: node +0x78. When that is 0, it takes the first table 0x52ebf8 entry whose size is at least 12 and whose cache slot 0x52ebe0 is loaded. It makes that font current (0x255244, context +0x14).
+  - The clip box is the node box: origin 0, size node +0x54 / +0x58 (0x223cf8).
+  - Font state: colour from node +0x80 (0x2551c4), node +0x84 (0x10d85c), alpha from the colour bytes times node +0x50, alignment from node +0x140 bits 1-2 and 3-4, wrap flag 1 (0x2551f8).
+  - Spacing: `max(font +0xae, node +0x141)` (0x235cb0). Line gap: `max(font +0xaf, node +0x142)` (0x235c9c).
+  - It prints through the fit printer 0x1ce8d4 with the box `int(node +0x54)` x `int(node +0x58)`, then sets the spacing and the line gap back to 0.
+- **Node +0x141 is 0 for every layout node.** No store to node +0x141 was found. The only setter of +0x142 (0x224610) is called with 0 (0x1885d4, 0x228c4c, 0x2349b0, 0x27025c). The font minimums are at most 0 (-1 / -2 / -2 for the table fonts; constructor default -30). So layout text is drawn at spacing 0.
+- **Glyph scale.** The line layout 0x21bc2c places the glyphs as follows:
+  - glyph width: font table +4 entry width × font +0x88;
+  - advance: (width, or the fixed width +0xa9, plus the spacing +0xac) × +0x88;
+  - start: −spacing × +0x88;
+  - the line width is therefore `+0x88 × (sum of widths + (n − 1) × spacing)`. The glyph quads (0x2544e0) add no other scale before the node matrix.
+  - fontSize enters nowhere but the font choice. The three table fonts are one file, so their glyphs are equal, and only their minimum spacing differs.
+- **Fit printer 0x1ce8d4** (box width W, height H):
+  - The wrap flag (font +0xb0 bit 0) is cleared when H ≤ font byte +3.
+  - While the widest line (0x235538, max over the lines of 0x21bc2c) is wider than W, the spacing is lowered one step, down to font +0xae.
+  - When wrapping and H > font +3, the line gap is lowered the same way while the text height (0x20f9e4) is above H, down to +0xaf.
+  - The y cursor moves by the line gap. Then 0x195408 prints, and the entry spacing and gap are restored.
+- **Build-it prompt colours.** 0x213df4 passes the global frontendfont (pointer 0x3757a0) and the colour 0xffffffff for the name (0x213ef4) and the cost (0x213fb8): white comes from the code.
+- **Check against the original's pictures** (screenshots of RPC 20261029-qolmenu-A-2, recorded from save states, read by 20261029-qolmenu-E):
+  - "Build" on the top screen: glyph runs start at columns 221, 229, 237, 241, 245.
+  - "Paused" on the bottom screen: runs at 45, 53, 61, 69, 77, 85.
+  - "Options" and "Music: 5" step the same way.
+  - Each step is the glyph width + 0, the advance at spacing 0 and scale 1.
+  - Lit extents, counting columns whose smallest channel is at least 200: "Build" 28 (222..249), "Paused" 44, "Options" 47, "Music: 5" 53. These are the widths of the earlier entry, except that "Build" is 30 at threshold 120 (221..250).
+  - The glyphs' first column is a faint shadow (alpha 28) and the last a dark outline, so the lit extent is 2 less than the glyph rectangle width (32 for "Build").
+- **Port:** the layout text default spacing is 0 (`LayoutScene::textSpacing`; it was -2), checked by CTest `layout-text-real-data`. Every layout text changes with it: the round menu texts (pause menu, Options page and the award viewer, which uses the round menu too) and the Build-it prompt; "Build" now sits on the original's columns 222..249.
+
+Unknown: the minimum spacing of the global frontendfont object (0x3757a0), which only matters when a text is wider than its box. The fit loop is not ported (HUD-91). The per-screen spacings the port still sets by hand (the shortcut bars +1, the slot page header -1) contradict spacing 0 and were not checked against the original (HUD-92).

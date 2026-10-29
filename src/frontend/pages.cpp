@@ -65,7 +65,6 @@ void drawAlertPage(Canvas& bottom, Resources& resources, const AlertPage& page) 
     LayoutScene scene;
     scene.storyboard = page.secondTransition ? "TransitionOn2" : "TransitionOn";
     scene.time = page.seconds;
-    scene.textSpacing = 0;
     scene.hidden = {"FontPlaceholder", "FontPlaceholder_Small"};
     const bool hasHeader = !page.header.empty();
     scene.hidden.insert(hasHeader ? "Text_Info_NoHeader" : "Text_Info");
@@ -162,7 +161,6 @@ void drawSlotPage(Canvas& bottom, Resources& resources, const std::string& heade
     scene.storyboard = confirmSeconds >= 0 ? (selected == 0 ? "Select_Slot1" : "Select_Slot2") : "TransitionOn";
     scene.time = confirmSeconds >= 0 ? confirmSeconds : seconds;
     const bool cleared = confirmSeconds >= kSlotConfirmedSeconds;
-    scene.textSpacing = 0;
     scene.hidden = {"Text_Header", "Text_SubInfo", "Text_Confirm", "Text_Infoold", "NoticePanelBg", "ListItem3"};
     TextSlot headerSlot;
     headerSlot.text = header;

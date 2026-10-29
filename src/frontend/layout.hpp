@@ -46,7 +46,8 @@ struct LayoutScene {
     // Element positions set by code (the layout node's x and y replaced, as 0x20354c does for one axis); storyboard offsets still apply.
     std::map<std::string, std::array<float, 2>> positions;
     float opacity = 1;
-    int textSpacing = -2;
+    // 0x2b4dc4 sets the font spacing to the node byte +0x141 (0 for every layout node) clamped by the font minimum.
+    int textSpacing = 0;
     // STAND-IN (SCAN-S5): the scanner overlay draws rotation (element rotation field and track property 5) and lets scale tracks
     // replace the element scale; the original's property evaluator is not recovered. Off for every other layout.
     bool rotations = false;

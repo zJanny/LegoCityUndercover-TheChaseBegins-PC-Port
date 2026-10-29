@@ -678,6 +678,11 @@ if(BUILD_TESTING)
   target_compile_options(super-buildit-real-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME super-buildit-real-data COMMAND super-buildit-real-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
   set_tests_properties(super-buildit-real-data PROPERTIES SKIP_RETURN_CODE 77)
+  add_executable(layout-text-real-test tests/layout_text_real_test.cpp)
+  target_link_libraries(layout-text-real-test PRIVATE chase_frontend chase_assets)
+  target_compile_options(layout-text-real-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME layout-text-real-data COMMAND layout-text-real-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
+  set_tests_properties(layout-text-real-data PROPERTIES SKIP_RETURN_CODE 77)
   add_executable(fast-travel-pad-real-test tests/fast_travel_pad_real_test.cpp)
   target_link_libraries(fast-travel-pad-real-test PRIVATE chase_runtime chase_assets)
   target_compile_options(fast-travel-pad-real-test PRIVATE -Wall -Wextra -Wpedantic)
@@ -2314,7 +2319,7 @@ foreach(game_data_test
   node-draw-matrix-real-data script-text-real-data waypoint-global-real-data waypoints-real-data hand-item-real-data detective-real-data
   use-spot-real-data use-marker-real-data script-starters-real-data carry-real-data scanner-real-data scanner-overlay-data zipline-real-data
   nested-props-real-data entity-ids-real-data zipline-pole-real-data zipline-rope-real-data brick-grab-real-data climb-bar-real-data acrobat-pole-real-data pole-real-data
-  ladder-real-data carry-animation-real-data lever-use-real-data nested-object-collision-real-data super-buildit-real-data fast-travel-pad-real-data map-buttons-real-data pause-menu-real-data buildit-real-data
+  ladder-real-data carry-animation-real-data lever-use-real-data nested-object-collision-real-data super-buildit-real-data layout-text-real-data fast-travel-pad-real-data map-buttons-real-data pause-menu-real-data buildit-real-data
   prop-animation-real-data animal-props-real-data cat-rescue-real-data prop-parts-real-data vehicle-boarding-real-data vehicle-drive-real-data
   floor-graph-real-data vehicle-collision-real-data vehicle-box-contact-real-data vehicle-sphere-sweep-real-data vehicle-prop-smash-real-data
   destroy-effects-real-data character-death-real-data player-attack-real-data attack-sounds-real-data vehicle-world-real-data vehicle-rest-real-data

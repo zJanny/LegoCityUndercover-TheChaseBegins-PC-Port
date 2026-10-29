@@ -56,7 +56,7 @@ Ranked by how soon the play path needs them.
 - [ ] UI-17 — DRC wipe layouts (drc_wipe 0x2dc590, mainwindow 0x194834, EnableMinimapWipe). evidence: [ui-screens.md §2026-10-19T20:33](../../re/ui-screens.md#ts-20261019-203310).
 - [ ] UI-18 — Screens drawn by code: help, safe crack, wiretap, rocket bar, crosshair, button prompts, customisation, level select. evidence: [ui-screens.md §2026-10-19T20:33](../../re/ui-screens.md#ts-20261019-203310).
 - [ ] UI-19 — Unidentified owners: pages 0x364268, 0x364398, 0x3643c8, 0x364740, 0x364ef8, the callers 0x1e5658, 0x1a31c4, 0x217d0c, and the ten layouts without a loader. blocks: UI-S3. evidence: [ui-screens.md §2026-10-19T20:33](../../re/ui-screens.md#ts-20261019-203310).
-- [ ] UI-16 — Layout texts of the pause screen sit 2 to 5 pixels off the oracle's (font size field, see HUD-75). evidence: [ui-screens.md §2026-10-19T20:34](../../re/ui-screens.md#ts-20261019-203404).
+- [ ] UI-16 — Layout texts of the pause screen sit 2 to 5 pixels off the oracle's (HUD-75 is closed: layout text now has spacing 0; re-compare with the oracle). evidence: [ui-screens.md §2026-10-19T20:34](../../re/ui-screens.md#ts-20261019-203404).
 
 ## 6. Findings summary
 

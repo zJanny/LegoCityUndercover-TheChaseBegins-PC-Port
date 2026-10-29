@@ -114,9 +114,9 @@ int main(int argc, char** argv) {
         require(scene.hidden.count("brickPlaceholder1") && scene.hidden.count("brickPlaceholder2") && !scene.hidden.count("buyButton"), "A icon shown, placeholders hidden");
         const float buttonX = scene.positions.at("buyButton")[0];
         std::cout << "buyButton x " << buttonX << '\n';
-        // Oracle picture on the helipad with enough super bricks: the A icon's image starts at screen x 188 (menu x 54, so 134 = 150 - 30 / 2 for the 30 pixel wide "Build"); the
-        // port's frontendfont measures "Build" 24 wide (HUD-S73), which puts the icon at 138.
-        require(near(buttonX, 134.0f, 5.0f), "A icon left of the prompt: " + std::to_string(buttonX));
+        // Oracle picture on the helipad with enough super bricks: the A icon's image starts at screen x 188 (menu x 54, so 134 = 150 - 32 / 2 for "Build", whose glyphs span
+        // 32 pixels at the layout text spacing 0 of 0x2b4dc4, 30 of them lit).
+        require(near(buttonX, 134.0f, 0.01f), "A icon left of the prompt: " + std::to_string(buttonX));
         view.enough = false;
         require(frontend::superBuildPromptScene(resources, view).hidden.count("buyButton"), "no A icon without enough bricks");
     } catch (const std::exception& error) {
