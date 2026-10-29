@@ -48,6 +48,7 @@ Port files that call into `src/qol/` (rule file "Separate source code"). One bul
 - src/runtime/qol_window.cpp, QolWindow constructor, qol::makeWindowController loads config/qol.cfg and plans the window mode and size at startup, none (the Display tab is not a QoL feature)
 - src/runtime/qol_window.hpp, QolWindow, holds the plain qol::WindowController that applies F11 and the 400x240 minimum, none (the Display tab is not a QoL feature)
 - src/game_level.cpp, LevelSession::draw, qol::topViewRegion returns the region of the 3D view and the glow pass (originalViewRegion of the top screen while off), qol::Feature::WidenedView
+- src/game_hud.hpp, screensFor, qol::hiddenScreens returns the fitted top rectangle and an empty bottom rectangle while the bottom screen is hidden (this also ends its touch as the touch tracker reads the same rectangle), qol::Master::Improved (the master button; there is no toggle of its own)
 - src/runtime/qol_controls_bindings.hpp, QolControlsBindings, aliases the plain qol::ControlsTab types for the join of the Controls tab with the controls file, none (the Controls tab is not a QoL feature)
 - src/runtime/qol_controls_bindings.hpp, QolControlsBindings, implements the plain qol::ControlsPort interface that the menu model reads, none (the Controls tab is not a QoL feature)
 - src/runtime/qol_controls_bindings.cpp, QolControlsBindings, calls the qol:: file reader and writer with the SDL key resolver and namer, none (the Controls tab is not a QoL feature)

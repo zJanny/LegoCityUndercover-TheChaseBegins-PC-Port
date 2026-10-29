@@ -24,7 +24,7 @@
   - In the police station the award viewer shows how many bronze, silver and gold awards the save slot has; the award trophies of its upper screen are not drawn yet.
   - Nothing else of the game works.
 - Showing the start screens of the original game in the [development runtime](game-runtime.md): loading page, logos, TT Games movie, language list, StreetPass and HOME pages, autosave notice, slot list, saving page, loading screen, intro movie with subtitles and the title card. Some parts are stand-ins. The slots of a save file are shown only with `--front-save`, and the delete page is missing.
-- Window mode in the [development runtime](game-runtime.md#window-mode-and-size): borderless full screen by default, windowed from `config/qol.cfg`, F11 switches. With `master Improved` in that file the 3D view is widened above the bottom screen; the HUD stays on its usual rectangle. There is no settings menu yet.
+- Window mode in the [development runtime](game-runtime.md#window-mode-and-size): borderless full screen by default, windowed from `config/qol.cfg`, F11 switches. With `master Improved` in that file the 3D view is widened above the bottom screen; the HUD stays on its usual rectangle. With `master Improved` the bottom screen is hidden and the top picture is centred in the whole window; the pause menu, map, scanner, build-it and award viewer pages live on the bottom screen and cannot be used then (the panels are not built yet). There is no settings menu yet.
 - Testing keyboard and mouse controls in the [input laboratory](controls.md).
 - Showing how complete a save file is, with `chase-savecheck`. See the [command reference](commands.md#programs).
 

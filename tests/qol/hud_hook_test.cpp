@@ -48,7 +48,8 @@ void originalModeFirst() {
 
 void widenedOn() {
     qol::Settings settings;
-    settings.setMaster(qol::Master::Improved);
+    settings.setSwitch(qol::Feature::WidenedView, true);
+    settings.setMaster(qol::Master::Custom);
     qol::setActiveSettings(settings);
 
     for (qol::HudPart part : {qol::HudPart::Hearts, qol::HudPart::Portrait, qol::HudPart::Ability})

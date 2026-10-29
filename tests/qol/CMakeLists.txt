@@ -82,3 +82,10 @@ target_compile_options(qol-text-check-real-test PRIVATE -Wall -Wextra -Wpedantic
 add_test(NAME qol-text-check-real-data COMMAND qol-text-check-real-test
   "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
 set_tests_properties(qol-text-check-real-data PROPERTIES SKIP_RETURN_CODE 77 LABELS needs-game-data)
+
+if(TARGET chase_qol_view)
+  add_executable(qol-bottom-hook-test bottom_hook_test.cpp)
+  target_link_libraries(qol-bottom-hook-test PRIVATE chase_qol_view PkgConfig::SDL2)
+  target_compile_options(qol-bottom-hook-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME qol-bottom-hook COMMAND qol-bottom-hook-test)
+endif()

@@ -73,7 +73,7 @@ The user's answers on 2026-10-28; the quoted labels are the user's selections:
 Asked of the user by the lead on 2026-10-29; the quoted labels are the user's selections.
 
 - HUD corners (question 4): "16:9 area corners": the corner HUD anchors to the corners of the 16:9 area inside the bars, not to the window corners. When the area is narrower than 16:9 (between 5:3 and 16:9), the area is the whole widened view. `hudAnchor` anchors to the view's corners ([§2026-10-28T22:21:19](#ts-20261028-222119)), and `qol-view-layout` pins the anchors inside the bars of a 21:9 window.
-- Where the widened view goes while the bottom screen shows: "Above bottom screen". While the widened view is on, the picture fills only the area above the bottom screen, where the 5:3 top screen is today. The whole window comes only once QOLBOT-1 hides the bottom screen.
+- Where the widened view goes while the bottom screen shows: "Above bottom screen". While the widened view is on, the picture fills only the area above the bottom screen, where the 5:3 top screen is today. The whole window comes through QOLBOT-1, which is built first. The user's answer of 2026-10-29: "QOLBOT-1 first". QOLBOT-1 no longer waits on QOLFS-1 or the minimap; QOLFS-1 waits on QOLBOT-1.
 - Tall windows: "Top screen's rows". The area is the full window width at the rows of today's top screen. Height and position stay the same, and only the width grows.
 - HUD canvas until the corner HUD is drawn (QOLFS-2): "Today's rectangle". The 400x240 top HUD canvas stays on today's top rectangle, together with the fades, dialogue and movies drawn on it.
 
@@ -82,4 +82,5 @@ Implemented by 20261029-qolview-A:
 - The glow pass gets the region's rectangle.
 - `layoutInArea` applies the rule to an area of any positive size: the area above the bottom screen of a 400x240 window is only 400x120. The 400x240 minimum check stays in `computeViewLayout`, for the window.
 - `qol::hudPartRect` (`src/qol/hud_hook.*`, 20261029-qolmenu-D) gives the window rectangle of a 400x240 canvas holding one HUD part, at the part's corner and the scale of the view height; the port cannot yet draw parts separately (QOLFS-12).
+- Implemented by 20261029-qolmenu-F (QOLBOT-1): with `master Improved` `game_hud::screensFor` returns (hook `qol::hiddenScreens`) the 400x240 top picture fitted to the window and centred (the user's answer "5:3 centred", 2026-10-29) and an empty bottom rectangle, so the bottom screen is not drawn and the touch tracker takes no click; Original and Custom are unchanged. The user's answer "Hide anyway" (2026-10-29): the pages of the bottom screen have no input until the panels exist (stand-in QOLBOT-S1).
 - The process-wide store is `qol::activeSettings`, `setActiveSettings` and `enabled`, default Original.

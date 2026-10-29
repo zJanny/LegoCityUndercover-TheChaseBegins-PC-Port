@@ -6,7 +6,7 @@ The rest of the bottom screen as PC forms: the characters button, character swap
 
 ## 2. Status
 
-NOT_STARTED, opened 2026-10-28T09:21:35+01:00. No code.
+IN_PROGRESS, opened 2026-10-28T09:21:35+01:00. QOLBOT-1 is built: `qol::hiddenScreens` (`src/qol/bottom_hook.*`) hides the bottom screen with `master Improved` (user: "QOLBOT-1 first", "Hide anyway", "5:3 centred", 2026-10-29); the panels do not exist yet.
 
 ## 3. Verified behaviour
 
@@ -14,11 +14,12 @@ None yet. Every behaviour is tested first in original mode (all QoL off, the por
 
 ## 4. Stand-ins
 
-None.
+- QOLBOT-S1 — With Improved the bottom screen is hidden while its pages (pause menu, characters button, map, scanner, build-it, award viewer) still live only on the bottom canvas, so they have no input or picture until the panels QOLBOT-2 to QOLBOT-10 exist. Approved by the user on 2026-10-29 ("Hide anyway"). Replaced by: QOLBOT-2 to QOLBOT-10. evidence: [qol-screen-layout.md §2026-10-29T11:42:22](../../design/qol-screen-layout.md#ts-20261029-114222).
 
 ## 5. Open items
 
-- [ ] QOLBOT-1 — Hide the bottom screen only through the master button (Improved hides it, Original and Custom show it), with no toggle of its own and no per-panel toggles; the panels (QOLBOT-2 to QOLBOT-10) show when it is hidden; hiding happens exactly when the minimap is on, and the minimap shows only in Improved (QOLMAP-1); with Original the layout is unchanged; all panels use the original game's art and fonts. needs: QOLSET-1, QOLFS-1. blocks: QOLBOT-2, QOLBOT-3, QOLBOT-4, QOLBOT-5, QOLBOT-6, QOLBOT-7, QOLBOT-8, QOLBOT-9, QOLBOT-10. evidence: [qol-screen-layout.md §2026-10-28T09:21:33](../../design/qol-screen-layout.md#ts-20261028-092133).
+- [ ] QOLBOT-19 — The front end screens (title, menus) draw their own two-screen layout and still show the bottom screen with Improved; decide with the user whether they follow the hiding. needs: QOLBOT-1. evidence: `src/game_front.hpp` `presenter.present`.
+- [ ] QOLBOT-20 — The widened view fills the whole window including the rows above and below the 5:3 picture in tall windows (the hook hands `qol::hiddenTopArea` to QOLFS-1; today `topViewRegion` widens only the width at the rows of the fitted picture). needs: QOLBOT-1. blocks: QOLFS-1. evidence: [qol-screen-layout.md §2026-10-29T11:42:22](../../design/qol-screen-layout.md#ts-20261029-114222).
 - [ ] QOLBOT-2 — The characters button as a full-window panel clicked with the mouse (the original button is UI-1). needs: QOLBOT-1, UI-1. evidence: [qol-screen-layout.md §2026-10-28T09:21:33](../../design/qol-screen-layout.md#ts-20261028-092133).
 - [ ] QOLBOT-3 — Character swap as a full-window panel (original screen not ported yet). needs: QOLBOT-1. evidence: [qol-screen-layout.md §2026-10-28T09:21:33](../../design/qol-screen-layout.md#ts-20261028-092133).
 - [ ] QOLBOT-4 — The fast-travel map as a full-window panel (original LEVOBJ-120). needs: QOLBOT-1, LEVOBJ-120. evidence: [qol-screen-layout.md §2026-10-28T09:21:33](../../design/qol-screen-layout.md#ts-20261028-092133).
@@ -34,4 +35,4 @@ Design: [qol-screen-layout.md](../../design/qol-screen-layout.md).
 
 ## 7. Code and tests
 
-Not written yet. Tests: one set with the feature off (unchanged behaviour) and one with it on, pinned to the design entry.
+`src/qol/bottom_hook.hpp`, `src/qol/bottom_hook.cpp` (in `chase_qol`): `bottomScreenHidden`, `minimapOn`, `hiddenScreens`, `hiddenScreensFor`, `hiddenTopArea`; hook `game_hud::screensFor` (the touch tracker reads the same rectangle). Test `qol-bottom-hook` (`tests/qol/bottom_hook_test.cpp`). Panels: not written yet. Tests: one set with the feature off (unchanged behaviour) and one with it on, pinned to the design entry.

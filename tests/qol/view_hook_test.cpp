@@ -74,9 +74,14 @@ void widenedOn() {
     expectRegion(1920, 1080, {510, 540, 900, 540}, 400, 240, "off again: today's top screen");
 
     qol::Settings improved;
+    improved.setSwitch(qol::Feature::WidenedView, true);
+    improved.setMaster(qol::Master::Custom);
+    qol::setActiveSettings(improved);
+    expectRegion(1920, 1080, {480, 540, 960, 540}, 960, 540, "Custom with the view on: widened above the bottom screen");
+
     improved.setMaster(qol::Master::Improved);
     qol::setActiveSettings(improved);
-    expectRegion(1920, 1080, {480, 540, 960, 540}, 960, 540, "Improved: widened");
+    expectRegion(1920, 1080, {0, 0, 1920, 1080}, 1920, 1080, "Improved: bottom screen hidden, widened over the whole window");
 }
 
 }

@@ -1,5 +1,6 @@
 #pragma once
 #include "frontend/canvas.hpp"
+#include "qol/bottom_hook.hpp"
 #include "render/window.hpp"
 #include <algorithm>
 #include <cmath>
@@ -15,6 +16,7 @@ struct Screens {
 };
 
 inline Screens screensFor(int width, int height) {
+    if (const auto hidden = qol::hiddenScreens(width, height, fe::kTopWidth, fe::kScreenHeight)) return {hidden->top, hidden->bottom};
     const float scale = std::min(float(width) / fe::kTopWidth, float(height) / (2 * fe::kScreenHeight));
     const float originX = (float(width) - scale * fe::kTopWidth) / 2, originY = (float(height) - scale * 2 * fe::kScreenHeight) / 2;
     auto rect = [&](float x, float yFromTop, float w, float h) {
