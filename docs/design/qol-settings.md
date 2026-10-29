@@ -143,7 +143,16 @@ Implemented by 20261029-qolview-C (`src/qol/controls_tab.*`, `src/qol/controls_f
 - Model: a taken input (same source and code, also on the same action) is refused with a message and the tab keeps waiting; "Reset all" asks for confirmation (`requestReset`, `confirmReset`, cancel declines); Escape cancels waiting and cannot be bound; keys and mouse buttons; at most two slots per action, a hold or toggle mode per slot (a new slot is `hold`, rebinding keeps the mode), clearing a slot.
 - Adapter: `readBindingEntries` runs `chase::readBindings` (strict, no second parser) and names the codes back through a key-namer callback; `controlActions` lists all 14 actions in enum order, `Walk` and `DebugOverlay` last.
 - Writer: `formatBindingEntries` / `writeBindingFile` validate every entry, write one `Action source Code mode` line each (spaces as `_`), check that `readBindings` accepts the text, and replace the file through a temporary file.
+- Join (20261029-qolmenu-C, `src/runtime/qol_controls_bindings.*`, test `qol-controls-bindings`): `QolControlsBindings` loads the controls file and the shipped file through `readBindingEntries` with the SDL key resolver (`SDL_GetKeyFromName`) and namer (`SDL_GetKeyName`), owns the `ControlsTab` and writes the file after each change and after a confirmed reset; a failed write throws.
+
+Gamepad buttons (QOLSET-30), answered 2026-10-29: "New `pad` source": `config/controls.cfg` gets a `pad` source next to `key` and `mouse`, with SDL game-controller button names such as `a`, `b`, `x`, `y`, `leftshoulder`, `dpup`.
+- Implemented by 20261029-qolmenu-C: a line is `Action pad <name> hold|toggle`. The names are SDL's lower-case names (`a b x y back guide start leftstick rightstick leftshoulder rightshoulder dpup dpdown dpleft dpright misc1 paddle1 paddle2 paddle3 paddle4 touchpad`), codes are the SDL button numbers (`a` is 0, `touchpad` is 20), `Source::Pad` in `src/input.hpp`. `readBindings` rejects any other name (strict); a file with no `pad` line behaves as before. The reader, the tab validator `fileInputValidator` and the writer accept the same names.
+
+Comments (QOLSET-31), answered 2026-10-29: "Drop the comments": the writer writes the file fresh and the player's comments are lost. A key named `#` cannot be written (the reader treats `#` as a comment).
+
+Shipped bindings for Reset all (QOLSET-38), answered 2026-10-29: "config/controls.default.cfg", a shipped file next to `controls.cfg`, never written by the menu.
+
+Window-mode label wider than the name plate (QOLSET-35), answered 2026-10-29: "Wait for HUD-75": re-measure once the real font size is known, then decide.
 
 Open (not decided by the user):
-- Gamepad buttons (QOLSET-30): `config/controls.cfg` has only the sources `key` and `mouse`; a `pad` source and the button names need a format decision. Until then the tab accepts `pad` only through a caller's validator and the writer rejects it.
-- Comments and the wording of the refuse message (QOLSET-31): the writer writes the file fresh, so the comment lines of the shipped file are not kept; a key named `#` cannot be written (the reader treats `#` as a comment). Whether comments are preserved or regenerated is not decided. The message text ("key W is already used by Up") is a placeholder for the drawing.
+- The wording of the refuse message ("key W is already used by Up" is a placeholder for the drawing).

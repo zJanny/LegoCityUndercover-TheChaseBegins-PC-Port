@@ -106,6 +106,30 @@ void tabChangesReachTheFile() {
         "rebind, mode, clearing and a mouse slot appear in the file");
 }
 
+// Names and numbers: SDL_GameControllerButton in SDL 2 (SDL_gamecontroller.h), recorded 20261029-qolmenu-C.
+void padSourceRoundTrips() {
+    const std::string text = "A pad a hold\nB pad leftshoulder toggle\nUp pad dpup hold\nL pad touchpad hold\n";
+    auto entries = parse(text);
+    require(entries.size() == 4 && entries[1] == BindingEntry{"B", "pad", "leftshoulder", "toggle"}, "pad entries read");
+    require(qol::formatBindingEntries(entries, resolve) == text, "pad entries written as read");
+    std::istringstream stream(text);
+    auto bindings = chase::readBindings(stream, resolve);
+    require(bindings[0].source == chase::Source::Pad && bindings[0].code == 0 && bindings[1].code == 9 && bindings[2].code == 11 &&
+            bindings[3].code == 20, "SDL button numbers: a 0, leftshoulder 9, dpup 11, touchpad 20");
+    chase::InputState state(bindings);
+    state.event(chase::Source::Pad, 0, true);
+    require(state.active(chase::Action::A), "a pad event drives its action");
+    state.event(chase::Source::Key, 0, true);
+    state.event(chase::Source::Pad, 0, false);
+    require(!state.active(chase::Action::A), "release clears it");
+    qol::ControlsTab tab(qol::AnyInput{}, qol::controlActions(), sampleEntries(), sampleEntries(), qol::fileInputValidator(resolve));
+    tab.activate(*tab.rowOf("A"), 1);
+    require(tab.assignInput("pad", "rightshoulder") == qol::ControlsResult::Changed, "a pad button can be bound in a slot");
+    require(parse(qol::formatBindingEntries(tab.bindings(), resolve)) == tab.bindings(), "the tab's pad slot reaches the file");
+    require(qol::fileInputValidator(resolve)("pad", "dpleft") && !qol::fileInputValidator(resolve)("pad", "South") &&
+            !qol::fileInputValidator(resolve)("pad", "A") && !qol::fileInputValidator(resolve)("pad", ""), "pad names are SDL's lower-case names");
+}
+
 void validatorFollowsTheFileFormat() {
     auto valid = qol::fileInputValidator(resolve);
     require(valid("key", "Left Alt") && valid("mouse", "X2"), "key and mouse accepted");
@@ -119,7 +143,12 @@ void readerRejections() {
     require(throws([] { parse("Up key Nonsense hold\n"); }), "unknown key");
     require(throws([] { parse("Up key W sometimes\n"); }), "unknown mode");
     require(throws([] { parse("Up key W hold extra\n"); }), "extra token");
-    require(throws([] { parse("Up pad South hold\n"); }), "pad source has no file format");
+    require(throws([] { parse("Up pad South hold\n"); }), "unknown pad button");
+    require(throws([] { parse("Up pad A hold\n"); }), "pad names are lower case");
+    require(throws([] { parse("Up pad hold\n"); }), "pad line without a button");
+    require(throws([] { parse("Up pad dpup hold extra\n"); }), "pad line with an extra token");
+    require(throws([] { parse("Up pad dpup sometimes\n"); }), "pad line with an unknown mode");
+    require(throws([] { parse("Up joystick a hold\n"); }), "unknown source");
     require(throws([] { parse("Up mouse Wheel hold\n"); }), "unknown mouse button");
     require(throws([] { parse("# only a comment\n"); }), "no bindings");
     std::istringstream stream("Up key W hold\n");
@@ -133,7 +162,9 @@ void writerRejections() {
     require(throws([&] { qol::formatBindingEntries({}, resolve); }), "empty list");
     require(throws([&] { qol::formatBindingEntries(with({"Jump", "key", "W", "hold"}), resolve); }), "unknown action");
     require(throws([&] { qol::formatBindingEntries(with({"Up", "key", "W", "sometimes"}), resolve); }), "unknown mode");
-    require(throws([&] { qol::formatBindingEntries(with({"Up", "pad", "South", "hold"}), resolve); }), "pad source");
+    require(throws([&] { qol::formatBindingEntries(with({"Up", "pad", "South", "hold"}), resolve); }), "unknown pad button");
+    require(throws([&] { qol::formatBindingEntries(with({"Up", "pad", "leftshoulder ", "hold"}), resolve); }), "pad button with whitespace");
+    require(throws([&] { qol::formatBindingEntries(with({"Up", "joystick", "a", "hold"}), resolve); }), "unknown source");
     require(throws([&] { qol::formatBindingEntries(with({"Up", "key", "Nonsense", "hold"}), resolve); }), "unknown key");
     require(throws([&] { qol::formatBindingEntries(with({"Up", "key", "#", "hold"}), resolve); }), "a key the reader cannot see");
     require(throws([&] { qol::formatBindingEntries(with({"Up", "key", "Left  Alt", "hold"}), resolve); }), "double space");
@@ -169,6 +200,7 @@ int main() {
     readsEntriesFromTheFile();
     writerOutputRoundTrips();
     tabChangesReachTheFile();
+    padSourceRoundTrips();
     validatorFollowsTheFileFormat();
     readerRejections();
     writerRejections();

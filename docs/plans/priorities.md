@@ -223,7 +223,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [front-end.md](features/front-end.md): FE-3 (+10), FE-30 (+1), FE-40 (+1), FE-1, FE-2, FE-4, FE-5, FE-6, FE-7, FE-8, FE-9, FE-S1, FE-S2, FE-S3, FE-S31, FE-S32, FE-S33, FE-S4, FE-S40, FE-S41, FE-S5, FE-S6
 - [hud-ui-super-bricks.md](features/hud-ui-super-bricks.md): HUD-84 (+2), HUD-86 (+2), HUD-79 (+1), HUD-80 (+1), HUD-85 (+1), HUD-S74, HUD-S75, HUD-S76, HUD-S78
 - [hud-ui-text.md](features/hud-ui-text.md): HUD-15, HUD-27, HUD-28, HUD-29, HUD-32, HUD-33, HUD-S15
-- [hud-ui.md](features/hud-ui.md): HUD-75 (+13), HUD-70 (+4), HUD-71 (+3), HUD-11 (+2), HUD-74 (+2), HUD-60 (+1), HUD-61 (+1), HUD-90 (+1), HUD-10, HUD-12, HUD-18, HUD-3, HUD-6, HUD-7, HUD-8, HUD-88, HUD-S1, HUD-S2, HUD-S3, HUD-S4, HUD-S6, HUD-S60, HUD-S7, HUD-S70, HUD-S71, HUD-S73, HUD-S79, HUD-S80, HUD-S81
+- [hud-ui.md](features/hud-ui.md): HUD-75 (+14), HUD-70 (+4), HUD-71 (+3), HUD-11 (+2), HUD-74 (+2), HUD-60 (+1), HUD-61 (+1), HUD-90 (+1), HUD-10, HUD-12, HUD-18, HUD-3, HUD-6, HUD-7, HUD-8, HUD-88, HUD-S1, HUD-S2, HUD-S3, HUD-S4, HUD-S6, HUD-S60, HUD-S7, HUD-S70, HUD-S71, HUD-S73, HUD-S79, HUD-S80, HUD-S81
 - [input.md](features/input.md): INPUT-1, INPUT-2, INPUT-3, INPUT-S1
 - [level-objects-buildit-super.md](features/level-objects-buildit-super.md): LEVOBJ-117 (+1), LEVOBJ-129 (+1), LEVOBJ-S100, LEVOBJ-S101, LEVOBJ-S95
 - [level-objects-buildit.md](features/level-objects-buildit.md): LEVOBJ-43 (+1), LEVOBJ-71 (+1), LEVOBJ-79 (+1), LEVOBJ-42, LEVOBJ-61, LEVOBJ-70, LEVOBJ-76, LEVOBJ-77, LEVOBJ-85, LEVOBJ-94, LEVOBJ-S41, LEVOBJ-S70, LEVOBJ-S71, LEVOBJ-S74, LEVOBJ-S76
@@ -247,7 +247,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [qol-bottom-screen.md](features/qol-bottom-screen.md): QOLBOT-1 (+8), QOLBOT-10, QOLBOT-2, QOLBOT-3, QOLBOT-4, QOLBOT-5, QOLBOT-7, QOLBOT-8, QOLBOT-9
 - [qol-fullscreen.md](features/qol-fullscreen.md): QOLFS-1 (+12), QOLFS-12 (+2), QOLFS-13 (+1), QOLFS-10, QOLFS-2, QOLFS-3
 - [qol-minimap.md](features/qol-minimap.md): QOLMAP-1
-- [qol-settings-menu.md](features/qol-settings-menu.md): QOLSET-35 (+11), QOLSET-33 (+10), QOLSET-2 (+9), QOLSET-25 (+2), QOLSET-30 (+2), QOLSET-19 (+1), QOLSET-24 (+1), QOLSET-4 (+1), QOLSET-3, QOLSET-31, QOLSET-36, QOLSET-8, QOLSET-9
+- [qol-settings-menu.md](features/qol-settings-menu.md): QOLSET-35 (+12), QOLSET-2 (+11), QOLSET-33 (+11), QOLSET-39 (+11), QOLSET-25 (+2), QOLSET-19 (+1), QOLSET-24 (+1), QOLSET-4 (+1), QOLSET-3, QOLSET-36, QOLSET-37, QOLSET-8, QOLSET-9
 - [rendering-draw-order.md](features/rendering-draw-order.md): RENDER-65 (+1), RENDER-78 (+1), RENDER-79 (+1), RENDER-S64, RENDER-S71, RENDER-S72
 - [rendering-reflections.md](features/rendering-reflections.md): RENDER-75 (+1), RENDER-S69
 - [rendering-shadows.md](features/rendering-shadows.md): RENDER-72 (+1), RENDER-73 (+1), RENDER-74 (+1), RENDER-S67, RENDER-S68

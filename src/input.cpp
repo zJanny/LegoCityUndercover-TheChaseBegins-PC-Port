@@ -9,6 +9,17 @@ namespace {
 constexpr std::array<const char*, actionCount> names{
     "Up", "Down", "Left", "Right", "A", "B", "X", "Y", "L", "R", "Start", "Select", "Walk", "DebugOverlay", "Fullscreen"
 };
+constexpr std::array<const char*, 21> padNames{
+    "a", "b", "x", "y", "back", "guide", "start", "leftstick", "rightstick", "leftshoulder", "rightshoulder",
+    "dpup", "dpdown", "dpleft", "dpright", "misc1", "paddle1", "paddle2", "paddle3", "paddle4", "touchpad"
+};
+}
+int padButtonCode(const std::string& name) {
+    auto found = std::find_if(padNames.begin(), padNames.end(), [&](const char* entry) { return name == entry; });
+    return found == padNames.end() ? -1 : int(found - padNames.begin());
+}
+const char* padButtonName(int code) {
+    return code >= 0 && std::size_t(code) < padNames.size() ? padNames[std::size_t(code)] : nullptr;
 }
 const char* actionName(Action action) {
     auto index = static_cast<std::size_t>(action);
@@ -74,6 +85,10 @@ std::vector<Binding> readBindings(std::istream& stream,
             else if (code == "X1") value = 4;
             else if (code == "X2") value = 5;
             else fail();
+        } else if (source == "pad") {
+            kind = Source::Pad;
+            value = padButtonCode(code);
+            if (value < 0) fail();
         } else fail();
         result.push_back({static_cast<Action>(found - names.begin()), kind, value,
             mode == "hold" ? Mode::Hold : Mode::Toggle});

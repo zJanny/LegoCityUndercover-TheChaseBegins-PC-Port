@@ -93,6 +93,23 @@ int main() {
         try { readBindings(invalid, [](const std::string&) { return 0; }); }
         catch (const std::runtime_error&) { rejected = true; }
         require(rejected, "Unknown key was accepted");
+        std::istringstream pad("A pad a hold\nB pad leftshoulder toggle\n");
+        auto padBindings = readBindings(pad, [](const std::string&) { return 0; });
+        require(padBindings.size() == 2 && padBindings[0].source == Source::Pad && padBindings[0].code == 0 &&
+            padBindings[1].code == 9 && padBindings[1].mode == Mode::Toggle, "Pad configuration parsing");
+        InputState padState(padBindings);
+        padState.event(Source::Pad, 0, true);
+        padState.event(Source::Key, 0, true);
+        require(padState.active(Action::A) && !padState.active(Action::B), "Pad event reaches only its own source");
+        require(padButtonCode("touchpad") == 20 && padButtonCode("South") == -1 && padButtonCode("A") == -1 &&
+            std::string(padButtonName(11)) == "dpup" && padButtonName(21) == nullptr && padButtonName(-1) == nullptr, "Pad names");
+        for (const char* line : {"A pad South hold\n", "A pad A hold\n", "A pad hold\n", "A pad a sometimes\n", "A pad a hold extra\n"}) {
+            std::istringstream bad(line);
+            bool badRejected = false;
+            try { readBindings(bad, [](const std::string&) { return 1; }); }
+            catch (const std::runtime_error&) { badRejected = true; }
+            require(badRejected, "Malformed pad line was accepted");
+        }
         std::cout << "Input core tests passed\n";
         return 0;
     } catch (const std::exception& error) {

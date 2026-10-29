@@ -14,10 +14,10 @@ The [model viewer](model-viewer.md) and the [development runtime](commands.md#de
 
 ## Change the controls
 
-Edit `config/controls.cfg` in the project folder. `chase-game` and `chase-viewer`, started from the project folder, read it directly. The input laboratory, started in `build`, reads the copy that CMake makes in `build/config/` when you build. Each line looks like this:
+Edit `config/controls.cfg` in the project folder. `chase-game` and `chase-viewer`, started from the project folder, read it directly. The input laboratory, started in `build`, reads the copy that CMake makes in `build/config/` when you build. `config/controls.default.cfg` next to it is the shipped copy; the settings menu reads it for "Reset all" and never writes it. Each line looks like this:
 
 ```
-Action key|mouse Code hold|toggle
+Action key|mouse|pad Code hold|toggle
 ```
 
 For example, `A key Space hold` makes Space press the A button.
@@ -26,6 +26,7 @@ For example, `A key Space hold` makes Space press the A button.
 - **Walk** is not a 3DS button. The [development runtime](commands.md#development-runtime) uses it to tilt the stick halfway, because a keyboard cannot. **DebugOverlay** is also not a 3DS button: it shows or hides the [debug overlay](debug-overlay.md) of the development runtime. **Fullscreen** is also not a 3DS button: F11 (`Fullscreen key F11 hold`) switches `chase-game` between windowed and borderless full screen (see [Window mode](game-runtime.md#window-mode-and-size)). Keep it on `hold`. The other actions are 3DS buttons.
 - **Key names:** SDL key names, with `_` instead of spaces, for example `Left_Shift`.
 - **Mouse buttons:** `Left`, `Middle`, `Right`, `X1`, `X2`.
+- **Gamepad buttons (`pad`):** SDL's game-controller button names in lower case: `a`, `b`, `x`, `y`, `back`, `guide`, `start`, `leftstick`, `rightstick`, `leftshoulder`, `rightshoulder`, `dpup`, `dpdown`, `dpleft`, `dpright`, `misc1`, `paddle1` to `paddle4`, `touchpad`. For example `A pad leftshoulder hold`. Any other name stops the program with an error. The default file has no `pad` line, and the programs do not read gamepad buttons yet, so a `pad` line has no effect so far.
 - Lines starting with `#` are comments.
 
 ## How the controls behave

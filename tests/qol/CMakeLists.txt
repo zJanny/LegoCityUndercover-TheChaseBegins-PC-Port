@@ -42,6 +42,12 @@ target_link_libraries(qol-controls-file-test PRIVATE chase_qol)
 target_compile_options(qol-controls-file-test PRIVATE -Wall -Wextra -Wpedantic)
 add_test(NAME qol-controls-file COMMAND qol-controls-file-test)
 
+add_executable(qol-controls-bindings-test controls_bindings_test.cpp ${CMAKE_SOURCE_DIR}/src/runtime/qol_controls_bindings.cpp)
+target_link_libraries(qol-controls-bindings-test PRIVATE chase_qol chase_input PkgConfig::SDL2)
+target_compile_options(qol-controls-bindings-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME qol-controls-bindings COMMAND qol-controls-bindings-test)
+add_test(NAME qol-controls-default-copy COMMAND ${CMAKE_COMMAND} -E compare_files ${CMAKE_SOURCE_DIR}/config/controls.cfg ${CMAKE_SOURCE_DIR}/config/controls.default.cfg)
+
 add_executable(qol-active-settings-test active_settings_test.cpp)
 target_link_libraries(qol-active-settings-test PRIVATE chase_qol)
 target_compile_options(qol-active-settings-test PRIVATE -Wall -Wextra -Wpedantic)

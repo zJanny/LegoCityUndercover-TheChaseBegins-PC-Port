@@ -31,6 +31,10 @@ bool validKeyName(const std::string& spaced, const KeyResolver& resolveKey) {
     return resolveKey(spaced) != 0;
 }
 
+bool validPad(const std::string& code) {
+    return chase::padButtonCode(code) >= 0;
+}
+
 std::string underscored(std::string code) {
     std::replace(code.begin(), code.end(), ' ', '_');
     return code;
@@ -54,6 +58,7 @@ InputValidator fileInputValidator(KeyResolver resolveKey) {
     if (!resolveKey) throw std::invalid_argument("Controls file needs a key resolver");
     return [resolveKey = std::move(resolveKey)](const std::string& source, const std::string& code) {
         if (source == "key") return validKeyName(code, resolveKey);
+        if (source == "pad") return validPad(code);
         return source == "mouse" && validMouse(code);
     };
 }
@@ -69,6 +74,9 @@ std::vector<BindingEntry> readBindingEntries(std::istream& stream, const KeyReso
         if (binding.source == chase::Source::Mouse) {
             entry.source = "mouse";
             entry.code = mouseName(binding.code);
+        } else if (binding.source == chase::Source::Pad) {
+            entry.source = "pad";
+            entry.code = chase::padButtonName(binding.code);
         } else {
             entry.source = "key";
             auto name = nameKey(binding.code);
@@ -98,6 +106,8 @@ std::string formatBindingEntries(const std::vector<BindingEntry>& entries, const
             if (!validKeyName(spaced(entry.code), resolveKey)) fail("unknown or unwritable key name");
         } else if (entry.source == "mouse") {
             if (!validMouse(entry.code)) fail("unknown mouse button");
+        } else if (entry.source == "pad") {
+            if (!validPad(entry.code)) fail("unknown pad button");
         } else fail("the file format has no source " + entry.source);
         if (entry.code.find_first_of(" \t\r\n") != std::string::npos) fail("code contains whitespace");
         out << entry.action << ' ' << entry.source << ' ' << entry.code << ' ' << entry.mode << '\n';

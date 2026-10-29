@@ -117,6 +117,9 @@ The table lists some of the tests. `ctest --test-dir build -N` lists all of them
 | `qol-game-tab` | Model of the Game tab, no SDL: SFX and Music volume 0 to 10, Invert camera, a read-only language value and a Language row that requests the Languages page, over a fake options interface, in-sync reads, ranges and rejections (`tests/qol/`) |
 | `qol-game-options` | Port side of the Game tab over the Options page state, fake state without game data: edits seen by the original Options page and the reverse, gains, Languages page request, out-of-range rejection (`tests/qol/`) |
 | `qol-controls-tab` | Model of the Controls tab, no SDL: waiting for a key, assign or cancel, conflicts reported without change, reset, rejections (`tests/qol/`) |
+| `qol-controls-file` | Reads and writes `config/controls.cfg` entries for the Controls tab, including the `pad` source; rejections (`tests/qol/`) |
+| `qol-controls-bindings` | The Controls tab joined to the SDL key names and the controls file: the file is written after each change and confirmed reset, the shipped copy is found next to it and never written (`tests/qol/`) |
+| `qol-controls-default-copy` | `config/controls.default.cfg` (the shipped bindings for Reset all) is identical to `config/controls.cfg` (`tests/qol/`) |
 | `qol-window-apply` | Window mode and size at startup and F11, no SDL: usable display modes, fullscreen at the desktop size by default, stored size kept or clamped, explicit size, toggle written to `config/qol.cfg`, `Fullscreen` binding rejections (`tests/qol/`) |
 | `qol-view-layout` | Quality-of-life geometry, no SDL: view rectangle, black bars and aspect for a window size or an area (5:3 to 16:9), corner anchors of the HUD, rejection of windows below 400x240 and of empty areas (`tests/qol/`) |
 | `qol-active-settings` | The process-wide QoL settings store, no SDL: default Original with every feature off, Improved, Custom with the switch on and off (`tests/qol/`) |
