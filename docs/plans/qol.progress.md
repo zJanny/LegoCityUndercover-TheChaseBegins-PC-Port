@@ -48,7 +48,6 @@ S1: the toggle store and the settings menu ([qol-settings-menu](features/qol-set
 
 One line per session, newest last; `--fix` keeps the newest 20 and moves older ones to `qol.progress-archive.md`.
 
-- 2026-10-28T09:32:53+01:00 — Planner: recorded the user's answers on menu access, content, layout, minimap, aspect and separation. See [qol-settings-menu](features/qol-settings-menu.md).
 - 2026-10-28T09:38:37+01:00 — Planner: recorded the user's answers on the master button, window modes, files, HUD corners, toggles and panel look. See [qol-settings-menu](features/qol-settings-menu.md).
 - 2026-10-28T09:41:06+01:00 — Planner: recorded Custom and hiding decisions, three new open questions. See [qol-bottom-screen](features/qol-bottom-screen.md).
 - 2026-10-28T09:49:01+01:00 — Planner: recorded that the master button alone switches the bottom screen; two new open questions. See [qol-bottom-screen](features/qol-bottom-screen.md).
@@ -68,3 +67,4 @@ One line per session, newest last; `--fix` keeps the newest 20 and moves older o
 - 2026-10-29T09:14:39+01:00 — Agent 20261029-qolset-A (display tab store): added `window_mode` and `resolution` to the strict qol.cfg store and a pure Display row model with test qol-display-tab; defaults (fullscreen, desktop size), old files and the SDL mode list per the user, wiring and F11 remain. See [qol-settings-menu](features/qol-settings-menu.md).
 - 2026-10-29T09:32:19+01:00 — Lead (20261029-qolset end): merged 20261029-qolset-A (Display tab store and rows), 20261029-qolset-B (view region capability), 20261029-qolset-C (Game tab model) through tools/merge_agent.py with all tests passing; ID ranges released in the merge commits; pushed main to origin/main after each merge. See [qol-settings-menu.md](features/qol-settings-menu.md), [qol-fullscreen.md](features/qol-fullscreen.md)
 - 2026-10-29T10:34:11+01:00 — Agent 20261029-qolwire-B (game options): added QolGameOptions over the Options page state, language row now requests the Languages page, test qol-game-options. See [qol-settings-menu](features/qol-settings-menu.md).
+- 2026-10-29T10:29:11+01:00 — Agent 20261029-qolwire-C (controls tab): added the pure Controls tab model (waiting for key, assign, cancel, conflict report, reset) with test qol-controls-tab; open flow questions recorded; wiring and file writer remain. See [qol-settings-menu](features/qol-settings-menu.md).

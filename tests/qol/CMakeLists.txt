@@ -26,3 +26,8 @@ add_executable(qol-game-options-test game_options_test.cpp)
 target_link_libraries(qol-game-options-test PRIVATE chase_qol chase_runtime)
 target_compile_options(qol-game-options-test PRIVATE -Wall -Wextra -Wpedantic)
 add_test(NAME qol-game-options COMMAND qol-game-options-test)
+
+add_executable(qol-controls-tab-test controls_tab_test.cpp)
+target_link_libraries(qol-controls-tab-test PRIVATE chase_qol)
+target_compile_options(qol-controls-tab-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME qol-controls-tab COMMAND qol-controls-tab-test)
