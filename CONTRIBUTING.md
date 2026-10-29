@@ -17,7 +17,7 @@ This is an unofficial fan project. It is not affiliated with, endorsed by or spo
 ## Set up
 
 - [Getting started](docs/getting-started.md): requirements and the first run.
-- [Building the tools](docs/building.md): packages, build options and tests.
+- [Building the tools](docs/building.md): packages, build options and tests. If you install `ccache`, CMake uses it automatically for faster rebuilds.
 - [Extracting game data](docs/extracting-game-data.md): you need your own decrypted image of the game. Some tests skip without the extracted data.
 - [Command reference](docs/commands.md): all programs, options and test names.
 

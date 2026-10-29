@@ -31,6 +31,13 @@ cmake --build build -j"$(nproc)"
 - This skips every test program and every CTest test, so the build is shorter.
 - `ctest` then finds no tests. To get them back, configure again with `-DCHASE_BUILD_TESTS=ON` (the default).
 
+### Faster rebuilds with ccache (optional)
+
+- If `ccache` is installed, CMake uses it automatically as the compiler launcher. Repeated builds, for example in a new worktree, then reuse compiled files.
+- Nothing changes when `ccache` is missing. You install it yourself with your package manager.
+- To switch it off, configure with `-DCHASE_USE_CCACHE=OFF`.
+- A launcher you set yourself (`CMAKE_CXX_COMPILER_LAUNCHER`) is kept.
+
 ## Check that everything works
 
 ```sh
