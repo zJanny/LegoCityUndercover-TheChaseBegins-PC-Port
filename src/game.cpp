@@ -18,6 +18,7 @@
 #include "runtime/debug_metrics.hpp"
 #include "runtime/level_start.hpp"
 #include "runtime/pad.hpp"
+#include "runtime/qol_window.hpp"
 #include "runtime/scene_change.hpp"
 #include <SDL.h>
 #include <algorithm>
@@ -95,6 +96,11 @@ void shutDown(SDL_GLContext context, SDL_Window* window) {
     SDL_Quit();
 }
 
+std::string configDirectory(const std::string& file) {
+    const std::size_t slash = file.find_last_of('/');
+    return slash == std::string::npos ? std::string(".") : file.substr(0, slash);
+}
+
 int run(const Options& given) {
     Options options = given;
     std::ifstream config(options.config);
@@ -108,10 +114,13 @@ int run(const Options& given) {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-    int width = options.windowWidth, height = options.windowHeight;
+    runtime::QolWindow qolWindow(configDirectory(options.config) + "/qol.cfg",
+        options.windowGiven ? std::optional<std::pair<int, int>>({options.windowWidth, options.windowHeight}) : std::nullopt);
+    int width = qolWindow.width(), height = qolWindow.height();
     SDL_Window* window = SDL_CreateWindow("The Chase Begins - development runtime (not the playable game)",
-        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | qolWindow.flags());
     if (!window) throw std::runtime_error(SDL_GetError());
+    qolWindow.attach(window);
     SDL_GLContext context = SDL_GL_CreateContext(window);
     if (!context) throw std::runtime_error(SDL_GetError());
     SDL_GL_SetSwapInterval(1);
@@ -133,6 +142,7 @@ int run(const Options& given) {
         front.screenshot = options.screenshot;
         front.saveFile = options.frontSave;
         front.debugOverlay = options.debugOverlay;
+        front.frame = [&]() { qolWindow.poll(input); };
         const game_front::Result result =
             game_front::run(window, input, archive, audio ? &*audio : nullptr, front,
                             [&]() { return game_level::clockTicks(SDL_GetPerformanceCounter() - frontOrigin, frontFrequency); });
@@ -167,6 +177,7 @@ int run(const Options& given) {
         Uint32 secondStart = SDL_GetTicks();
         while (running) {
             pollEvents(input, running, touch, window);
+            qolWindow.poll(input);
             if (!session.frameDue()) {
                 SDL_Delay(1);
                 continue;

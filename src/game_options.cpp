@@ -75,6 +75,7 @@ void parseWindow(Options& o, const std::string& text) {
     if (separator == std::string::npos) strict::reject("expected WIDTHxHEIGHT", text);
     o.windowWidth = int(strict::integer(text.substr(0, separator), kMinWindowWidth, kMaxWindowSize));
     o.windowHeight = int(strict::integer(text.substr(separator + 1), kMinWindowHeight, kMaxWindowSize));
+    o.windowGiven = true;
 }
 
 void parseStart(Options& o, const std::string& text) {

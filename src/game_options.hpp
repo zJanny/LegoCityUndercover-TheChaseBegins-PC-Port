@@ -49,6 +49,7 @@ struct Options {
     bool returningPlayer = false;
     bool introMovieShown = false;
     int windowWidth = 960, windowHeight = 600;
+    bool windowGiven = false;
 };
 
 // A new game starts in Cherry Tree Hills at the position of the player entity in the oracle at gameplay-start

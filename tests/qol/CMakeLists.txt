@@ -31,3 +31,8 @@ add_executable(qol-controls-tab-test controls_tab_test.cpp)
 target_link_libraries(qol-controls-tab-test PRIVATE chase_qol)
 target_compile_options(qol-controls-tab-test PRIVATE -Wall -Wextra -Wpedantic)
 add_test(NAME qol-controls-tab COMMAND qol-controls-tab-test)
+
+add_executable(qol-window-apply-test window_apply_test.cpp)
+target_link_libraries(qol-window-apply-test PRIVATE chase_qol chase_input)
+target_compile_options(qol-window-apply-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME qol-window-apply COMMAND qol-window-apply-test)

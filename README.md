@@ -20,7 +20,7 @@ The game data is never part of this repository. You need your own copy of the ga
 
 ![Progress trend](docs/progress-trend.svg)
 
-Updated 2026-10-29, commit e0eb03ba. How the numbers are measured: [docs/progress.md](docs/progress.md).
+Updated 2026-10-29, commit c09342b4. How the numbers are measured: [docs/progress.md](docs/progress.md).
 <!-- progress:end -->
 
 ## What you need
@@ -81,7 +81,7 @@ This copies the game files out of your image into the folder `artifacts/romfs`. 
 build/chase-game
 ```
 
-A window opens. It shows the start screens of the original game: logos, language list, slot list and the intro movie. After the title card the level starts, and you can move the main character. Press Escape to quit.
+A window opens. It shows the start screens of the original game: logos, language list, slot list and the intro movie. After the title card the level starts, and you can move the main character. Press Escape to quit. The window is borderless full screen; F11 switches to a window and back.
 
 The game saves at the same moments as the original (for example when the story saves or you collect a super brick). The file is `~/.local/share/chase/savegame.dat` (under `$XDG_DATA_HOME` if you set it); the terminal prints `save: request N written to ...` each time. To continue later, start from that file:
 

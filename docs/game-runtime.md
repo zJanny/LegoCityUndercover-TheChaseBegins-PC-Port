@@ -86,6 +86,14 @@ What is not like the original yet:
 - Most script commands are not worked out yet. The first time a script uses one of them, the program prints `script function without handler` and the command's name, and the script goes on as if the command had finished.
 - The coins (studs) of the level spin where the level puts them. Walk close to one and it is picked up. It flies up to the stud counter. After one second the counter goes up (silver 10, gold 100, blue 1000, purple 10000), shows the new total for a few seconds and slides away again. The program also prints the counter at the end of a `--script` run.
 
+## Window mode and size
+
+- `chase-game` starts in borderless full screen at the desktop size. With `--window WIDTHxHEIGHT` it starts in a window of that size instead, whatever the stored mode.
+- **F11** switches between borderless full screen and a window. The choice is stored as `window_mode` (`windowed` or `fullscreen`) in `config/qol.cfg`, next to the controls file (`--config`). The file need not exist.
+- `resolution WIDTHxHEIGHT` in `config/qol.cfg` sets the size of the window (not used in full screen). Without the line the window has the desktop size. A size larger than the largest display mode of the monitor is limited to it; another size that is not a display mode is used as written. A malformed line stops the program with an error.
+- The window cannot be made smaller than 400x240.
+- There is no settings menu yet, so the file is edited by hand.
+
 ## The display during play
 
 - Top left of the top screen: the picture of the main character in its hexagon, and next to it four hearts. The heart at the end of the row beats slowly.

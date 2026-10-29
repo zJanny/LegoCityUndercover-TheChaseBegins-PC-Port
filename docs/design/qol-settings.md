@@ -4,6 +4,7 @@ The user's approved design of how quality-of-life features are switched on and o
 
 ## Current state
 
+- Window mode, size and F11 in `chase-game` (implemented; answered in [§2026-10-29T11:53:10](#ts-20261029-115310)): [§2026-10-29T11:45:52](#ts-20261029-114552).
 - Every QoL feature is switched in the settings menu, and the faithful version is priority one; the user's two rules: [§2026-10-28T09:21:31+01:00](#ts-20261028-092131).
 - QoL is off by default; the master toggle has three states (Original, Custom, Improved), stored in `config/qol.cfg` (corrected by [§2026-10-28T09:53:33](#ts-20261028-095333), first answer: derived from the per-feature switches); choices live in `config/qol.cfg`, never in the game save: [§2026-10-28T09:21:31+01:00](#ts-20261028-092131).
 - Corrected in part by [§2026-10-28T09:32:07](#ts-20261028-093207): the pause menu gets its own "PC Settings" entry instead of reusing Options, and the original option entries are mirrored in the Game tab. The first answer: the settings menu opens from the title screen and the pause menu, with no extra key; it holds the master toggle, one toggle per feature, window mode and resolution, and key bindings: [§2026-10-28T09:21:31+01:00](#ts-20261028-092131).
@@ -194,3 +195,28 @@ Display (QOLSET-19):
 - "Larger than the largest display mode": "Either side larger": a stored size is above the limit when its width or its height is above the largest mode's width or height. Settles the open point of [§2026-10-29T10:31:01](#ts-20261029-103101).
 
 Open (not decided by the user): how the largest mode itself is picked (the model uses the most pixels). The model changes for these answers (refuse message, Reset all row with confirmation, Escape cancel, mouse and pad binding, two slots with a mode each, clearing) are not written yet.
+
+<a id="ts-20261029-114552"></a>
+
+## 2026-10-29T11:45:52+01:00 — Window mode, size and F11 at startup (implementation record)
+
+Recorded by 20261029-qolview-B; no new user decision. Applies [§2026-10-29T09:23:03](#ts-20261029-092303) and [§2026-10-29T10:31:01](#ts-20261029-103101) in `chase-game` (QOLSET-19).
+
+- At startup `config/qol.cfg` (next to the controls file) is read strictly, the stored size is clamped to the largest SDL display mode of display 0, and the window is created in `SDL_WINDOW_FULLSCREEN_DESKTOP` (borderless) or windowed at the effective size (stored size or desktop size). Display modes below 400x240 and duplicates are dropped.
+- The F11 binding is the action `Fullscreen` in `config/controls.cfg` (`Fullscreen key F11 hold`). Each new press switches the mode and writes `window_mode` through the settings store; `resolution` stays unwritten while the desktop size is in use. The window has a 400x240 minimum size.
+- What changes at defaults: `chase-game` without `config/qol.cfg` starts in borderless full screen at the desktop size instead of a 960x600 window. The test build writes `build/config/qol.cfg` with `window_mode windowed` and `resolution 960x600` so that the screenshot tests keep their size.
+- Decided by the implementation, not the user: `--window WIDTHxHEIGHT` starts windowed at that size and wins over the file (QOLSET-29).
+
+Open (not decided by the user): QOLSET-28 whether the resolution applies in borderless full screen (implemented: the window covers the desktop and the resolution is used for the windowed size only); QOLSET-29 the rule that `--window` wins over `window_mode` and `resolution`.
+
+<a id="ts-20261029-115310"></a>
+
+## 2026-10-29T11:53:10+01:00 — Answers on the window defaults, resolution in full screen and --window
+
+Asked of the user by the lead on 2026-10-29; the quoted labels are the user's selections. Answers the open points of [§2026-10-29T11:45:52](#ts-20261029-114552).
+
+- Default with no `config/qol.cfg` at all (QOLSET-19): "Fullscreen default": borderless full screen at the desktop size, also when the file is missing.
+- Resolution in full screen (QOLSET-28): "Windowed only": the resolution sets only the windowed size; borderless full screen always uses the desktop size.
+- `--window WIDTHxHEIGHT` (QOLSET-29): "Yes, option wins": the option overrides `config/qol.cfg` for that run.
+
+Open (not decided by the user): nothing for these points.

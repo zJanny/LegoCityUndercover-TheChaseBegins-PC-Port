@@ -35,6 +35,7 @@ struct Options {
     std::string screenshot;
     std::string saveFile;
     bool debugOverlay = false;
+    std::function<void()> frame;
 };
 
 inline std::string directoryOf(const std::string& path) {
@@ -122,6 +123,7 @@ inline Result run(SDL_Window* window, chase::InputState& input, chase::assets::F
             default: break;
             }
         }
+        if (options.frame) options.frame();
         scheduler.advance(clockNow(), [&](float dt) {
             using chase::Action;
             const bool up = input.vertical() < 0, down = input.vertical() > 0;

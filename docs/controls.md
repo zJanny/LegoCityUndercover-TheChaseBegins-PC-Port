@@ -22,8 +22,8 @@ Action key|mouse Code hold|toggle
 
 For example, `A key Space hold` makes Space press the A button.
 
-- **Actions:** Up, Down, Left, Right, A, B, X, Y, L, R, Start, Select, Walk, DebugOverlay.
-- **Walk** is not a 3DS button. The [development runtime](commands.md#development-runtime) uses it to tilt the stick halfway, because a keyboard cannot. **DebugOverlay** is also not a 3DS button: it shows or hides the [debug overlay](debug-overlay.md) of the development runtime. The other actions are 3DS buttons.
+- **Actions:** Up, Down, Left, Right, A, B, X, Y, L, R, Start, Select, Walk, DebugOverlay, Fullscreen.
+- **Walk** is not a 3DS button. The [development runtime](commands.md#development-runtime) uses it to tilt the stick halfway, because a keyboard cannot. **DebugOverlay** is also not a 3DS button: it shows or hides the [debug overlay](debug-overlay.md) of the development runtime. **Fullscreen** is also not a 3DS button: F11 (`Fullscreen key F11 hold`) switches `chase-game` between windowed and borderless full screen (see [Window mode](game-runtime.md#window-mode-and-size)). Keep it on `hold`. The other actions are 3DS buttons.
 - **Key names:** SDL key names, with `_` instead of spaces, for example `Left_Shift`.
 - **Mouse buttons:** `Left`, `Middle`, `Right`, `X1`, `X2`.
 - Lines starting with `#` are comments.
