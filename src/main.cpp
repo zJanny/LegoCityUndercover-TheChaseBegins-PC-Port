@@ -1,4 +1,5 @@
 #include "input.hpp"
+#include "pad_sdl.hpp"
 #include "strict_parse.hpp"
 #include <SDL.h>
 #include <algorithm>
@@ -16,6 +17,7 @@ struct Lab {
     chase::TouchPoint touch{};
     bool touching = false;
     bool running = true;
+    PadDevice pad;
     explicit Lab(std::vector<chase::Binding> bindings) : input(std::move(bindings)) {}
     void resize(int width, int height) {
         viewport = chase::fitViewport(20, height / 2, width - 40, height / 2 - 20);
@@ -50,7 +52,7 @@ struct Lab {
             } else if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
                 resize(event.window.data1, event.window.data2);
             break;
-        default: break;
+        default: pad.handle(event, input); break;
         }
     }
 };

@@ -91,6 +91,7 @@ Asked of the user by the lead on 2026-10-28 and 2026-10-29; the quoted labels ar
 Storage:
 - Where (2026-10-28, "Where should the Display tab store the window mode and the resolution?"): "qol.cfg: window_mode, resolution": two keys in `config/qol.cfg`, next to `master` and `widened_view`.
 - Values (2026-10-28): "windowed|fullscreen, WxH, always": `window_mode` is `windowed` or `fullscreen`; `resolution` is `WIDTHxHEIGHT`, for example `1280x720`; both are written in every master mode.
+- Row labels (QOLSET-35, 2026-10-29): "Keep as they are": the Display rows read "Window mode: windowed" and "Window mode: fullscreen"; they fit the name plate (169 and 171 pixels of 182).
 - Desktop size (QOLSET-19, 2026-10-29): "Omit the line": `config/qol.cfg` has no `resolution` line while the resolution is the desktop size, until the player picks a size; `window_mode` is still written in every mode.
 
 Defaults (QOLSET-18 and QOLSET-19, 2026-10-29):

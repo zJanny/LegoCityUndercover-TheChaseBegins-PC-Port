@@ -11,6 +11,7 @@ namespace qol {
 
 inline constexpr int namePlateWidth = 182;
 inline constexpr int listBarWidth = 168;
+inline constexpr int layoutTextSpacing = 0;
 
 struct MenuText {
     std::string source;
@@ -31,7 +32,7 @@ using GlyphWidth = std::function<std::optional<int>(const std::string& character
 
 std::vector<std::string> splitCharacters(const std::string& utf8);
 GlyphWidth glyphWidthOf(const chase::assets::Font& font, const std::vector<std::string>& extended);
-int textWidth(const GlyphWidth& glyphWidth, const std::string& utf8);
+int textWidth(const GlyphWidth& glyphWidth, const std::string& utf8, int spacing = layoutTextSpacing);
 std::vector<TextIssue> checkTexts(const std::vector<MenuText>& texts, const GlyphWidth& glyphWidth);
 
 }

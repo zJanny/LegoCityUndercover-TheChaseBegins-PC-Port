@@ -40,11 +40,11 @@ void readsThroughTheInterface() {
     Fake fake;
     qol::GameTab tab(fake);
     require(tab.value(GameRow::SfxVolume) == 10 && tab.value(GameRow::MusicVolume) == 8, "default volumes");
-    require(tab.value(GameRow::InvertCamera) == 0 && tab.valueText(GameRow::InvertCamera) == "No", "invert off");
+    require(tab.value(GameRow::InvertCamera) == 0 && tab.valueText(GameRow::InvertCamera) == "Off", "invert off");
     require(tab.value(GameRow::Language) == 1, "language");
     fake.sfx = 3; fake.music = 0; fake.invert = true; fake.lang = 9;
     require(tab.value(GameRow::SfxVolume) == 3 && tab.value(GameRow::MusicVolume) == 0, "original page change seen by the tab");
-    require(tab.valueText(GameRow::InvertCamera) == "Yes" && tab.value(GameRow::Language) == 9, "invert and language seen by the tab");
+    require(tab.valueText(GameRow::InvertCamera) == "On" && tab.value(GameRow::Language) == 9, "invert and language seen by the tab");
     require(tab.valueText(GameRow::SfxVolume) == "3", "volume text");
 }
 

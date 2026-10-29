@@ -23,7 +23,7 @@ int GameTab::value(GameRow row) const {
 }
 
 std::string GameTab::valueText(GameRow row) const {
-    if (row == GameRow::InvertCamera) return value(row) ? "Yes" : "No";
+    if (row == GameRow::InvertCamera) return value(row) ? "On" : "Off";
     return std::to_string(value(row));
 }
 

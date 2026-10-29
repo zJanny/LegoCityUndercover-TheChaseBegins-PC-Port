@@ -26,7 +26,7 @@ GlyphWidth glyphWidthOf(const chase::assets::Font& font, const std::vector<std::
     };
 }
 
-int textWidth(const GlyphWidth& glyphWidth, const std::string& utf8) {
+int textWidth(const GlyphWidth& glyphWidth, const std::string& utf8, int spacing) {
     int width = 0;
     int count = 0;
     for (const std::string& character : splitCharacters(utf8)) {
@@ -35,7 +35,7 @@ int textWidth(const GlyphWidth& glyphWidth, const std::string& utf8) {
         width += *advance;
         ++count;
     }
-    return count > 0 ? width + count - 1 : 0;
+    return count > 0 ? width + (count - 1) * spacing : 0;
 }
 
 std::vector<TextIssue> checkTexts(const std::vector<MenuText>& texts, const GlyphWidth& glyphWidth) {

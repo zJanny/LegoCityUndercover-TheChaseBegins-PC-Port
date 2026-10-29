@@ -11,7 +11,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - `.tnf` fonts: u16 end code, u8 first code (0x20), u8 line height, then (end - first) records of (u16 width, height, x, y) into `<name>.btga`; 6 fonts, 1521 glyphs. [§2026-10-13T01:05](#ts-20261013-0105)
 - Codes at or above 0x100 are the extended characters in file order; the escape probably means code `('2' - 0x31) * 0x100 + (c - 0x30)`. [§2026-10-13T01:05](#ts-20261013-0105)
 - The three front-end font files (`frontendfont`, `-small`, `-large`) are byte-identical: one glyph set, line height 23, glyphs for ASCII, the Latin-1 letters and the 84 extended characters; `gametext` has On, Off, Yes, No and eight language names in their own spelling. [§2026-10-29T11:50](#ts-20261029-115026)
-- Settings menu texts: all 335 have glyphs; all fit the name plate (182) and list bar (168) except "Window mode: windowed" (189) and "Window mode: fullscreen" (193), at the atlas size. [§2026-10-29T13:52](#ts-20261029-135202)
+- Settings menu texts: all 335 have glyphs; widths with one pixel between glyphs, since corrected to spacing 0. [§2026-10-29T13:52](#ts-20261029-135202)
+- Settings menu texts re-measured at layout spacing 0: none exceeds the name plate (182) or list bar (168); widest "Window mode: fullscreen" 171. [§2026-10-29T15:53](#ts-20261029-155341)
 - Open: whether the layout font size changes the drawn glyph size (HUD-75), the byte 0xac for the trademark sign, the meaning of the '2' byte and other escape first bytes, and whether "ź" and "ż" are swapped in the atlas.
 
 <a id="ts-20261013-0025"></a>
@@ -72,6 +73,8 @@ Unknown: whether the three entries of the layout font table 0x52ebf8 ([ui-layout
 
 ## 2026-10-29T13:52:02+01:00 — Settings menu texts against the front-end font (20261029-qolmenu-B)
 
+Corrected by [text-localisation-fonts.md §2026-10-29T15:53:41](#ts-20261029-155341): widths were taken with one pixel between glyphs; layout text uses spacing 0, so no text exceeds the name plate or list bar.
+
 By 20261029-qolmenu-B with CTest `qol-text-check-real-data` (`chase_qol` text checker over `fonts/frontendfont.tnf` and `localisation/extended_chars_utf8.txt` of the extracted archive; width = glyph widths plus one pixel between glyphs, at the atlas size, as `layoutText` places them). No code of the original read, no emulator.
 
 - 335 texts the settings menu can show were checked: title, tab names and places, every row of the Game, Display and Quality of life tabs with its values, and the Controls names (15 actions, 227 SDL key names, 5 mouse buttons, 27 SDL game-controller names, the two binding modes).
@@ -82,3 +85,16 @@ By 20261029-qolmenu-B with CTest `qol-text-check-real-data` (`chase_qol` text ch
 - The key names are the SDL 2.32 names of every keycode SDL maps from a scancode; pad names are `SDL_GameControllerGetStringForButton` and `ForAxis`.
 
 Unknown: the Polish and Russian language names of `gametext` (only the spec's spellings were checked); the real width of the notice page, the subtitle bar and the Controls row with two slots (no box was judged for them).
+
+<a id="ts-20261029-155341"></a>
+
+## 2026-10-29T15:53:41+01:00 — Settings menu texts re-measured at layout spacing 0 (20261029-qolmenu2-C)
+
+By 20261029-qolmenu2-C with CTest `qol-text-check-real-data`, after HUD-75 closed ([ui-layouts.md §2026-10-29T15:06:01](ui-layouts.md#ts-20261029-150601)): layout text is drawn at glyph scale 1 and spacing 0, so width = sum of glyph widths with no pixel between glyphs. The earlier entry ([Corrects text-localisation-fonts.md §2026-10-29T13:52:02](#ts-20261029-135202)) added one pixel between glyphs; every width there is larger by (characters - 1). No code of the original read, no emulator.
+
+- 335 texts checked (the model's Invert camera words are now "On" and "Off", so the two "Yes"/"No" texts of the earlier list are gone). Every character has a glyph.
+- No text exceeds the name plate (182) or the list bar (168). The widest: "Window mode: fullscreen" 171, "Window mode: windowed" 169, "Resolution: 7680x4320" 153, "Language: Nederlands" 149, key name "Keypad MemSubtract" 145 (the widest SDL key name), "Master: Improved" 123, "Language: Русский" 131, "Quality of life" 93, "DebugOverlay" 92, "righttrigger" 86, "PC Settings" 79.
+- The two window mode texts therefore fit the name plate with 11 and 13 pixels to spare; shortening them is no longer needed to fit.
+- Outside any box: the Controls question "Reset all controls to their defaults?" is 254 pixels wide; its place (a notice page, no box judged) is still unmeasured.
+
+Unknown: the real width of the notice page, the subtitle bar and the Controls row with two slots.

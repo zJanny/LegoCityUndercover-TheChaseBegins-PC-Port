@@ -63,29 +63,24 @@ int main(int argc, char** argv) {
     }
 
     const auto texts = qol::menuTexts(inputs);
-    require(texts.size() == 337, "number of checked texts");
+    require(texts.size() == 335, "number of checked texts");
     const auto issues = qol::checkTexts(texts, glyphWidth);
-    for (const qol::TextIssue& issue : issues) {
-        require(issue.problem == qol::TextProblem::TooWide, "no missing glyph: " + issue.item.text);
-        require(issue.item.text == "Window mode: windowed" || issue.item.text == "Window mode: fullscreen",
-            "unexpected issue: " + issue.item.text);
-    }
-    require(issues.size() == 2, "exactly the two window mode texts are too wide");
+    for (const qol::TextIssue& issue : issues) require(false, "text does not fit: " + issue.item.text + " " + issue.detail);
 
-    // Widths at the atlas size with one pixel between glyphs, recorded 2026-10-29 by 20261029-qolmenu-B with
+    // Widths at the atlas size with the layout text spacing 0 (0x2b4dc4, HUD-75), recorded 2026-10-29 by 20261029-qolmenu2-C with
     // qol-text-check-real-test over fonts/frontendfont.tnf of the extracted archive (the three front-end fonts are identical).
     const std::map<std::string, int> widths{
-        {"PC Settings", 89}, {"Quality of life", 107}, {"Window mode: windowed", 189},
-        {"Window mode: fullscreen", 193}, {"Language: Nederlands", 168}, {"Resolution: 7680x4320", 173},
-        {"Master: Improved", 138}, {"DebugOverlay", 103}, {"Keypad MemSubtract", 162}, {"righttrigger", 97}};
+        {"PC Settings", 79}, {"Quality of life", 93}, {"Window mode: windowed", 169},
+        {"Window mode: fullscreen", 171}, {"Language: Nederlands", 149}, {"Resolution: 7680x4320", 153},
+        {"Master: Improved", 123}, {"DebugOverlay", 92}, {"Keypad MemSubtract", 145}, {"righttrigger", 86}};
     for (const auto& [text, width] : widths) {
         require(qol::textWidth(glyphWidth, text) == width, "width of " + text);
     }
-    require(qol::textWidth(glyphWidth, "Language: \xd0\xa0\xd1\x83\xd1\x81\xd1\x81\xd0\xba\xd0\xb8\xd0\xb9") == 147,
+    require(qol::textWidth(glyphWidth, "Language: \xd0\xa0\xd1\x83\xd1\x81\xd1\x81\xd0\xba\xd0\xb8\xd0\xb9") == 131,
         "width of Language: Russian name");
 
     int widestKey = 0;
     for (const char* name : sdlKeyNames) widestKey = std::max(widestKey, qol::textWidth(glyphWidth, name));
-    require(widestKey == 162, "widest SDL key name");
+    require(widestKey == 145, "widest SDL key name");
     return failures == 0 ? 0 : 1;
 }

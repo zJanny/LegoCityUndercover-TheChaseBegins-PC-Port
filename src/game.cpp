@@ -12,6 +12,7 @@
 #include "game_save.hpp"
 #include "game_touch.hpp"
 #include "input.hpp"
+#include "pad_sdl.hpp"
 #include "render/debug_overlay.hpp"
 #include "render/scene.hpp"
 #include "render/window.hpp"
@@ -69,7 +70,7 @@ runtime::PadState padState(const chase::InputState& input) {
     return state;
 }
 
-void pollEvents(chase::InputState& input, bool& running, game_touch::Tracker& touch, SDL_Window* window) {
+void pollEvents(chase::InputState& input, PadDevice& pad, bool& running, game_touch::Tracker& touch, SDL_Window* window) {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
         if (touch.consume(event, window)) continue;
@@ -85,7 +86,7 @@ void pollEvents(chase::InputState& input, bool& running, game_touch::Tracker& to
         case SDL_WINDOWEVENT:
             if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) input.reset();
             break;
-        default: break;
+        default: pad.handle(event, input); break;
         }
     }
 }
@@ -110,6 +111,7 @@ int run(const Options& given) {
     archive.loadNames(options.names);
 
     if (SDL_Init(SDL_INIT_VIDEO) != 0) throw std::runtime_error(SDL_GetError());
+    PadDevice pad;
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
@@ -176,7 +178,7 @@ int run(const Options& given) {
         game_touch::Tracker touch;
         Uint32 secondStart = SDL_GetTicks();
         while (running) {
-            pollEvents(input, running, touch, window);
+            pollEvents(input, pad, running, touch, window);
             qolWindow.poll(input);
             if (!session.frameDue()) {
                 SDL_Delay(1);

@@ -41,23 +41,24 @@ int main() {
 
     require(qol::textWidth(glyphWidth, "") == 0, "empty text has no width");
     require(qol::textWidth(glyphWidth, "a") == 8, "one glyph is its width");
-    require(qol::textWidth(glyphWidth, "ai") == 8 + 1 + 4, "glyphs are one pixel apart");
-    require(qol::textWidth(glyphWidth, "a!a") == 8 + 1 + 8, "a character without a glyph adds nothing");
+    require(qol::textWidth(glyphWidth, "ai") == 8 + 4, "glyphs follow each other at the layout spacing 0");
+    require(qol::textWidth(glyphWidth, "ai", 1) == 8 + 1 + 4, "an explicit spacing is added between glyphs");
+    require(qol::textWidth(glyphWidth, "a!a") == 8 + 8, "a character without a glyph adds nothing");
     require(qol::textWidth(glyphWidth, "\xd0\xaf") == 9, "an extended character uses its atlas glyph");
 
     const std::vector<qol::MenuText> texts{
-        {"fits", "aaaa", 35},
-        {"exact", "aaaa", 35},
-        {"too wide", "aaaaa", 35},
+        {"fits", "aaaa", 32},
+        {"exact", "aaaa", 32},
+        {"too wide", "aaaaa", 32},
         {"no box", "aaaaaaaaaaaa", 0},
         {"missing", "a!b!", 0},
         {"unknown", "\xc2\xa3", 0},
-        {"both", "aaaaa!", 35},
+        {"both", "aaaaa!", 32},
     };
     const auto issues = qol::checkTexts(texts, glyphWidth);
     require(issues.size() == 5, "five problems found");
     require(issues[0].item.source == "too wide" && issues[0].problem == qol::TextProblem::TooWide &&
-            issues[0].width == 44 && issues[0].detail == "44 > 35", "too wide text reports width and box");
+            issues[0].width == 40 && issues[0].detail == "40 > 32", "too wide text reports width and box");
     require(issues[1].item.source == "missing" && issues[1].problem == qol::TextProblem::MissingGlyph &&
             issues[1].detail == "!", "missing glyph is named once");
     require(issues[2].item.source == "unknown" && issues[2].detail == "\xc2\xa3", "a sign outside the font is missing");

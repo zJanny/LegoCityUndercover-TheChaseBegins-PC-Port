@@ -48,7 +48,6 @@ void addBars(std::vector<MenuText>& out, const std::string& source, const std::v
 std::vector<MenuText> menuTexts(const MenuTextInputs& inputs) {
     std::vector<MenuText> out;
     const std::vector<std::string> onOff{"On", "Off"};
-    const std::vector<std::string> yesNo{"Yes", "No"};
     std::vector<std::string> volumes;
     for (int volume = 0; volume <= maxVolume; ++volume) volumes.push_back(std::to_string(volume));
 
@@ -61,7 +60,6 @@ std::vector<MenuText> menuTexts(const MenuTextInputs& inputs) {
     addRows(out, "Game tab", gameRowLabel(GameRow::SfxVolume), volumes);
     addRows(out, "Game tab", gameRowLabel(GameRow::MusicVolume), volumes);
     addRows(out, "Game tab", gameRowLabel(GameRow::InvertCamera), onOff);
-    addRows(out, "Game tab", gameRowLabel(GameRow::InvertCamera), yesNo);
     addRows(out, "Game tab", gameRowLabel(GameRow::Language), inputs.languageNames);
 
     std::vector<std::string> windowModes;

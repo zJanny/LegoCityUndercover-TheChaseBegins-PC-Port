@@ -5,6 +5,7 @@
 #include "assets/assets.hpp"
 #include "audio/mixer.hpp"
 #include "input.hpp"
+#include "pad_sdl.hpp"
 #include "render/character.hpp"
 #include "render/scene.hpp"
 #include "render/window.hpp"
@@ -184,6 +185,7 @@ int run(const Options& options) {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+    PadDevice pad;
     int width = 960, height = 600;
     SDL_Window* window = SDL_CreateWindow("The Chase Begins - development model viewer (not gameplay)",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
@@ -333,7 +335,7 @@ int run(const Options& options) {
             case SDL_WINDOWEVENT:
                 if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) { input.reset(); dragging = false; }
                 break;
-            default: break;
+            default: pad.handle(event, input); break;
             }
         }
         Uint32 now = SDL_GetTicks();

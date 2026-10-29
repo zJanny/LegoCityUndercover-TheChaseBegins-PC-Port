@@ -43,7 +43,6 @@ int main() {
     require(has(texts, "tab place", "3/4", 0), "tab place of the Controls tab");
     require(has(texts, "Game tab", "SFX volume: 10", qol::namePlateWidth), "volume row");
     require(has(texts, "Game tab", "Invert camera: On", qol::namePlateWidth), "invert camera as On/Off");
-    require(has(texts, "Game tab", "Invert camera: Yes", qol::namePlateWidth), "invert camera as the model words it");
     require(has(texts, "Game tab", "Language: English", qol::namePlateWidth), "language row");
     require(has(texts, "Display tab", "Window mode: fullscreen", qol::namePlateWidth), "window mode row");
     require(has(texts, "Display tab", "Resolution: 1280x720", qol::namePlateWidth), "resolution row");
@@ -55,6 +54,6 @@ int main() {
     require(has(texts, "Controls pad input", "leftshoulder", qol::listBarWidth), "pad name on a list bar");
     require(has(texts, "Controls action", "DebugOverlay", qol::listBarWidth), "action name on a list bar");
     require(has(texts, "Controls Reset all question", "Reset all controls to their defaults?", 0), "Reset all question text");
-    require(texts.size() == 97, "number of texts");
+    require(texts.size() == 95, "number of texts");
     return failures == 0 ? 0 : 1;
 }
