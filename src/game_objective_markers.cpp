@@ -62,7 +62,9 @@ void LevelSession::updateObjectiveMarkers(float dt) {
     runtime::SubObjectiveWorld world;
     world.player = {player->motion.x, player->vertical.y, player->motion.z};
     const float playerX = player->motion.x, playerZ = player->motion.z, yaw = follow->yaw();
-    world.onMap = [playerX, playerZ, yaw](const float position[3]) { return fe::mapPositionOnMap(playerX, playerZ, yaw, position[0], position[2]); };
+    world.onMap = [this, playerX, playerZ, yaw](const float position[3]) {
+        return mapProjection && fe::mapPositionOnMap(*mapProjection, playerX, playerZ, yaw, position[0], position[2]);
+    };
     world.position = [this](const std::string& instance, float out[3]) { return objectiveTargetPosition(instance, out); };
     world.useMarker = [this](const std::string& instance, float out[3], float& alpha) { return objectiveUseMarker(instance, out, alpha); };
     world.keyIsManagerEntity = [this](const std::string& key) { return levelScripts.waypoints().isCarryItWaypoint(game_doors::lowerCase(key)); };

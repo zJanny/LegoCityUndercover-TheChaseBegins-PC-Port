@@ -26,9 +26,11 @@ public:
     std::string text(const std::string& file, const std::string& identifier);
     std::string textForKey(const std::string& file, std::uint32_t key);
     std::string tableText(const std::string& path, std::size_t sheet, std::size_t row, std::size_t column);
+    std::size_t tableRows(const std::string& path, std::size_t sheet);
 
 private:
     const std::map<std::uint32_t, std::string>& table(const std::string& file);
+    const assets::TableSheet& dataSheet(const std::string& path, std::size_t sheet);
     assets::FuseArchive& archive_;
     std::map<std::string, assets::Image> images_;
     std::map<std::string, BitmapFont> fonts_;

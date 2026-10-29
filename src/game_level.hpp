@@ -499,6 +499,7 @@ private:
     chase::runtime::ScreenShake screenShake;
     chase::frontend::Resources hudResources;
     chase::frontend::MapMarkerField mapMarkerField;
+    std::optional<chase::frontend::MapProjection> mapProjection;
     std::optional<chase::frontend::Hud> hud;
     chase::frontend::Canvas hudCanvas, mapCanvas;
     std::optional<chase::render::HudOverlay> overlay;

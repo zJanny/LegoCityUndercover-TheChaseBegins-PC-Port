@@ -7,6 +7,7 @@ Subtopic of [objective-hud.md](objective-hud.md): how the map screen places and 
 - The map marker is the sprite `WayPoint.tga` plus two line circles, not `mapiconmission`; the scale is 0.94977 pixels per world unit with the map matrix at struct + 0x308 and zoom 1.55. [§2026-10-15T19:56](#ts-20261015-195600)
 - Off-screen icons sit on the ellipse (A 104.8, B 100.8) with an arrow; the pulse rings use a 3.0 s clock (active 2.0 s) with radii 200 and 20 shrinking to 2. [§2026-10-15T19:56](#ts-20261015-195600)
 - Group markers of the sub-objective records and their slots: [objective-hud.md §2026-10-19T15:00](objective-hud.md#ts-20261019-150002).
+- Each level's map comes from `maps/<name>.txt` (84 bytes: matrix, three unread floats, two sizes) next to its picture; record 1 (the police station hub) uses the files of lvl_01; the `_2` pictures and lvl_08's files are never loaded. [§2026-10-29T12:01](#ts-20261029-120144)
 
 <a id="ts-20261015-195600"></a>
 
@@ -38,3 +39,25 @@ Unknowns:
 - The colour of the ring lines (0x204b68 not read) and whether the line width 2 is the GPU line width.
 - What sets the zoom level index (struct + 0x368) and the zoom buttons; the port keeps 1.55.
 - Arrow and icon positions of types other than 0 were not compared with the oracle.
+
+<a id="ts-20261029-120144"></a>
+
+## 2026-10-29T12:01:44+01:00 — Level map files: loader 0x1ee2d0, the 84-byte layout, the hub rule, unused `_2` pictures (llvm-objdump)
+
+Round 20261029-hudmap-A, `llvm-objdump -d --triple=armv6k-none-eabi --mattr=+vfp2` of the analysis ELF, no REA session, no emulator.
+
+**Loader 0x1ee2d0 (this = map screen object, r1 = level record index).** Called by the map setup 0x2dc590 and 0x1ee72c with the current record (signed byte 0x5163e8 + 0x26) and by 0x2dc184 with the byte this + 0x49d (a map switch while this + 0x49b is 3, copied to this + 0x49c). For record 1 it copies the literal `sprites/UI_Bottomscreen/Maps/lvl_01_cherrytreehills.tga` (0x1ee4ac); for every other record it formats `sprites/UI_Bottomscreen/Maps/%s.tga` (0x1ee488) with the name at +0x30 of the 84-byte record of the level table *0x375914 (TablesLevels sheet 0 column 21). It frees the old picture at struct + 4 and loads the new one (0x250244), replaces the text after the last `.` with `.txt` (0x1ee4e4; appended when there is no dot) and, if the file opens, reads 64 bytes to struct + 0x308 and 4 bytes each to + 0x348, + 0x34c, + 0x350, + 0x354, + 0x358. Afterwards + 0x354 and + 0x358 are multiplied by 0.5 (literal 0x1ee4ec). TablesLevels records: 0 lvl_the_city, 1 lvl_00_policestation, 2 lvl_01_cherrytreehills, 3 lvl_02_albatrossisland, 4 lvl_03_auburn, 5 lvl_04_fortmeadows, 6 lvl_06_apolloisland, 7 lvl_05_bluebellwood, 8 lvl_07_downtown, 9 lvl_customisation, 10 and later test levels. So the police station hub shows the map of lvl_01.
+
+**File layout (84 bytes, little-endian floats, despite the `.txt` name).** Floats 0..15: the 4x4 map matrix, row-major; 0x1ee7a8 multiplies the row vector (x, y, z, 1) by it and divides x and y by w. Floats 16..18: copied to + 0x348..0x350; no reader was found near the map code. Floats 19, 20: picture size (1024, 1024 in all seven level files), halved to the half sizes + 0x354 / + 0x358 that 0x1ee7a8 multiplies with the zoom. The seven files lvl_01 .. lvl_07 all have the same form: diagonal scale 1.6007755, row 1 (0, -7.0e-8, a per-level negative value such as -0.134 in lvl_01 and -0.047 in lvl_02, 0) (a turned y axis), row 3 (translation x, translation y, z, w) with w equal to float 18; the per-level words are pinned in `tests/map_file_test.cpp`. lvl_08_paradisesands.txt is different (a camera-like matrix with w column zero, sizes 1400 x 844), but no TablesLevels record names lvl_08, so neither its picture nor its file is loaded.
+
+**Picture quad (0x2de450).** Only for records up to 9 (0x2de468). The hexagon background (texture struct + 8) and then the map picture (struct + 4) are each one quad with corners (+-512, +-512) times the zoom (literals 0xc4000000 / 0x44000000, not the file's sizes) around the player's map position, turned by the map angle (0x1fc1fc), texture coordinates 0..1 (0x519cd8). With the file's half size 512 this is the texel formula of [§2026-10-15T19:56](#ts-20261015-195600).
+
+**Record 1 (hub).** 0x2de450 uses the fixed position x 902.41, z 1117.0 (literals 0x2de82c, 0x2de830) instead of the player's position as the map centre, and the angle 0x1ee848 returns the literal -0.80285 (0x1ee91c) instead of the camera angle; the player arrow draw 0x2d9658 also branches on record 1 (0x2d96f4). Not ported in this round.
+
+**`_2` pictures.** `lvl_01_cherrytreehills_2`, `lvl_03_auburn_2`, `lvl_05_bluebellwood_2` and `lvl_07_downtown_2` are in the archive, but no string of the executable contains `_2` for them, no format string can produce the name (the only other strings with the map folder are `PlayerIcon.tga` and the bare folder prefix 0x2dc90c next to the icon setup 0x2dc590), their name CRCs (0xae7358af, 0x3721ece5, 0xef5d22fa, 0x9fc2e319) do not occur as words in the executable, and no other game file names them. The original does not draw them.
+
+Unknowns:
+- Readers of the floats at + 0x348..0x350 (1.6007755, 1.6007755, w in the level files).
+- When the map switch (this + 0x49b states 3 and 4, record this + 0x49d) runs and who sets the record.
+- The y row of the matrix (-7.0e-8) is not applied by the port (heights are not passed); for heights within +-1000 its effect is below 1e-6 pixels.
+

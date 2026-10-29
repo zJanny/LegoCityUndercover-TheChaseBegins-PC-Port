@@ -13,10 +13,17 @@ float ringFade(float clock) { return 1.0f - clock / kRingActiveSeconds; }
 
 int roundedCoordinate(float value) { return int(value + 0.5f); }
 
-MapMarkerPlacement placeMapMarker(float playerX, float playerZ, float cameraYaw, float markerX, float markerZ) {
+std::array<float, 2> mapScreenOffset(const MapProjection& map, float playerX, float playerZ, float x, float z) {
+    const std::array<float, 2> player = mapNormalised(map.file, playerX, 0.0f, playerZ), target = mapNormalised(map.file, x, 0.0f, z);
+    const float scaleX = map.file.halfWidth * map.zoom, scaleY = map.file.halfHeight * map.zoom;
+    return {scaleX * target[0] - scaleX * player[0], scaleY * target[1] - scaleY * player[1]};
+}
+
+MapMarkerPlacement placeMapMarker(const MapProjection& map, float playerX, float playerZ, float cameraYaw, float markerX, float markerZ) {
     MapMarkerPlacement placement;
     const float c = std::cos(cameraYaw), s = std::sin(cameraYaw);
-    const float dx = (markerX - playerX) * kMapPixelsPerUnit, dz = (markerZ - playerZ) * kMapPixelsPerUnit;
+    const std::array<float, 2> offset = mapScreenOffset(map, playerX, playerZ, markerX, markerZ);
+    const float dx = offset[0], dz = offset[1];
     placement.x = kMapCentreX + (c * dx - s * dz);
     placement.y = kMapCentreY + (-s * dx - c * dz);
     placement.onScreen = placement.x > 0.0f && placement.y > 0.0f && !(kMapScreenWidth <= placement.x) && !(kMapScreenHeight <= placement.y);
@@ -30,8 +37,8 @@ MapMarkerPlacement placeMapMarker(float playerX, float playerZ, float cameraYaw,
     return placement;
 }
 
-bool mapPositionOnMap(float playerX, float playerZ, float cameraYaw, float x, float z) {
-    const MapMarkerPlacement placement = placeMapMarker(playerX, playerZ, cameraYaw, x, z);
+bool mapPositionOnMap(const MapProjection& map, float playerX, float playerZ, float cameraYaw, float x, float z) {
+    const MapMarkerPlacement placement = placeMapMarker(map, playerX, playerZ, cameraYaw, x, z);
     const float ex = placement.x - kMapCentreX, ey = placement.y - kMapCentreY;
     return ex * ex / (kOnMapHalfWidth * kOnMapHalfWidth) + ey * ey / (kOnMapHalfHeight * kOnMapHalfHeight) <= 1.0f;
 }
@@ -58,7 +65,7 @@ const char* mapOffscreenArrowTexture(int iconType) {
 
 float arrowRotation(const MapMarkerPlacement& placement) { return kPi - std::atan2(placement.directionX, placement.directionY); }
 
-void MapMarkerField::advance(float dt, float playerX, float playerZ, float cameraYaw, const std::vector<MapMarkerSource>& markers) {
+void MapMarkerField::advance(float dt, const MapProjection& map, float playerX, float playerZ, float cameraYaw, const std::vector<MapMarkerSource>& markers) {
     ringClock_ += dt;
     if (ringClock_ > kRingCycleSeconds) ringClock_ = 0.0f;
     std::map<int, MapMarkerAnimation> next;
@@ -66,7 +73,7 @@ void MapMarkerField::advance(float dt, float playerX, float playerZ, float camer
         MapMarkerAnimation animation;
         const auto known = animations_.find(marker.id);
         if (known != animations_.end()) animation = known->second;
-        const MapMarkerPlacement placement = placeMapMarker(playerX, playerZ, cameraYaw, marker.x, marker.z);
+        const MapMarkerPlacement placement = placeMapMarker(map, playerX, playerZ, cameraYaw, marker.x, marker.z);
         animation.scale += placement.onScreen ? -kScaleRate * dt : kScaleRate * dt;
         if (animation.scale >= 1.0f) animation.scale = 1.0f;
         else if (animation.scale <= 0.5f) animation.scale = 0.5f;

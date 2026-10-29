@@ -212,7 +212,9 @@ int run(const Options& options) {
             Canvas bottom(kBottomWidth, kScreenHeight);
             MinimapView view = command.view;
             view.markers = pendingMarkers;
-            for (int update = 0; update < kMapSettleUpdates; ++update) markerField.advance(1.0f / 30, view.x, view.z, view.cameraYaw, view.markers);
+            const std::optional<MapProjection> projection = minimapProjection(resources, command.level);
+            for (int update = 0; projection && update < kMapSettleUpdates; ++update)
+                markerField.advance(1.0f / 30, *projection, view.x, view.z, view.cameraYaw, view.markers);
             markerField.setRingClock(ringSeconds);
             view.markerField = &markerField;
             drawMinimap(bottom, resources, command.level, view);

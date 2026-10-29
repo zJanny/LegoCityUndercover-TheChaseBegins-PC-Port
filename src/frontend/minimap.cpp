@@ -37,27 +37,27 @@ void drawRing(Canvas& bottom, float centreX, float centreY, const MapRing& ring)
     }
 }
 
-void drawGroupTargets(Canvas& bottom, Resources& resources, const MinimapView& view) {
+void drawGroupTargets(Canvas& bottom, Resources& resources, const MapProjection& map, const MinimapView& view) {
     for (const MinimapGroupTargets& group : view.groupTargets) {
         const char* texture = mapIconTexture(group.iconType);
         if (!texture || !(0.0f < group.alpha)) continue;
         const assets::Image& icon = resources.image(texture);
         const float alpha = float(int(group.alpha * 255.0f)) / 255.0f;
         for (const std::array<float, 2>& target : group.targets) {
-            const MapMarkerPlacement placement = placeMapMarker(view.x, view.z, view.cameraYaw, target[0], target[1]);
+            const MapMarkerPlacement placement = placeMapMarker(map, view.x, view.z, view.cameraYaw, target[0], target[1]);
             bottom.drawScaled(icon, {0, 0, icon.width, icon.height}, placement.x - kGroupTargetHalfSize, placement.y - kGroupTargetHalfSize,
                               kGroupTargetHalfSize * 2, kGroupTargetHalfSize * 2, {1, 1, 1, alpha});
         }
     }
 }
 
-void drawGroupSlots(Canvas& bottom, Resources& resources, const MinimapView& view) {
+void drawGroupSlots(Canvas& bottom, Resources& resources, const MapProjection& map, const MinimapView& view) {
     for (const MinimapGroupSlot& slot : view.groupSlots) {
         const char* texture = mapIconTexture(slot.iconType);
         if (!texture) continue;
         const assets::Image& icon = resources.image(texture);
         const float alpha = float(int(slot.alpha * 255.0f) & 0xff) / 255.0f;
-        const MapMarkerPlacement placement = placeMapMarker(view.x, view.z, view.cameraYaw, slot.x, slot.z);
+        const MapMarkerPlacement placement = placeMapMarker(map, view.x, view.z, view.cameraYaw, slot.x, slot.z);
         float shownX = float(roundedCoordinate(placement.x)), shownY = float(roundedCoordinate(placement.y));
         if (placement.outsideEllipse) {
             const assets::Image& arrow = resources.image(mapOffscreenArrowTexture(slot.iconType));
@@ -72,14 +72,14 @@ void drawGroupSlots(Canvas& bottom, Resources& resources, const MinimapView& vie
     }
 }
 
-void drawMarkers(Canvas& bottom, Resources& resources, const MinimapView& view) {
+void drawMarkers(Canvas& bottom, Resources& resources, const MapProjection& map, const MinimapView& view) {
     if (view.markers.empty() || !view.markerField) return;
     const assets::Image& icon = resources.image("sprites/ui_bottomscreen/maps/waypoint.btga");
     const assets::Image& arrow = resources.image("sprites/ui_bottomscreen/maps/waypointoffscreen.btga");
     const MapMarkerField& field = *view.markerField;
     const float half = float(icon.width) * 0.5f;
     for (const MinimapMarker& marker : view.markers) {
-        const MapMarkerPlacement placement = placeMapMarker(view.x, view.z, view.cameraYaw, marker.x, marker.z);
+        const MapMarkerPlacement placement = placeMapMarker(map, view.x, view.z, view.cameraYaw, marker.x, marker.z);
         const MapMarkerAnimation& animation = field.animation(marker.id);
         float shownX = float(roundedCoordinate(placement.x)), shownY = float(roundedCoordinate(placement.y));
         const float haloHalf = half * (1.0f - (animation.scale - 0.5f));
@@ -101,36 +101,51 @@ void drawMarkers(Canvas& bottom, Resources& resources, const MinimapView& view) 
     }
 }
 
+void drawPicture(Canvas& bottom, const assets::Image& picture, const MapProjection& map, const MinimapView& view) {
+    const float c = std::cos(view.cameraYaw), s = std::sin(view.cameraYaw);
+    const std::array<float, 2> player = mapNormalised(map.file, view.x, 0.0f, view.z);
+    const float playerU = player[0] * map.file.halfWidth / kMapQuadHalfSize, playerV = player[1] * map.file.halfHeight / kMapQuadHalfSize;
+    const float perPixel = 1.0f / (kMapQuadHalfSize * map.zoom);
+    for (int y = 0; y < bottom.height(); ++y) {
+        for (int x = 0; x < bottom.width(); ++x) {
+            const float sx = float(x) + 0.5f - kMapPlayerScreenX, sy = float(y) + 0.5f - kMapPlayerScreenY;
+            const float dx = c * sx - s * sy, dz = -s * sx - c * sy;
+            const float u = 0.5f + 0.5f * (playerU + dx * perPixel), v = 0.5f - 0.5f * (playerV + dz * perPixel);
+            if (u < 0 || v < 0 || u >= 1.0f || v >= 1.0f) continue;
+            float texel[4];
+            sampleBilinear(picture, u * float(picture.width), v * float(picture.height), texel);
+            std::uint8_t* out = bottom.pixel(x, y);
+            out[0] = std::uint8_t(std::lround(texel[0]));
+            out[1] = std::uint8_t(std::lround(texel[1]));
+            out[2] = std::uint8_t(std::lround(texel[2]));
+        }
+    }
+}
+
+}
+
+std::optional<MapProjection> minimapProjection(Resources& resources, const std::string& levelName) {
+    const std::optional<LevelMap> map = loadLevelMap(resources, levelName);
+    if (!map) return std::nullopt;
+    return MapProjection{map->file, kMapZoomStandIn};
 }
 
 void drawMinimap(Canvas& bottom, Resources& resources, const std::string& levelName, const MinimapView& view) {
     bottom.clear(0, 0, 0);
-    const std::string mapPath = "sprites/ui_bottomscreen/maps/" + levelName + ".btga";
-    if (resources.has(mapPath)) {
-        const assets::Image& map = resources.image(mapPath);
-        const float c = std::cos(view.cameraYaw), s = std::sin(view.cameraYaw);
-        const float playerU = kMapOriginU + kMapTexelsPerUnit * view.x, playerV = kMapOriginV - kMapTexelsPerUnit * view.z;
-        for (int y = 0; y < bottom.height(); ++y) {
-            for (int x = 0; x < bottom.width(); ++x) {
-                const float sx = float(x) + 0.5f - kMapPlayerScreenX, sy = float(y) + 0.5f - kMapPlayerScreenY;
-                const float dx = c * sx - s * sy, dz = -s * sx - c * sy;
-                const float u = playerU + kMapTexelsPerUnit * dx / kMapPixelsPerUnit, v = playerV - kMapTexelsPerUnit * dz / kMapPixelsPerUnit;
-                if (u < 0 || v < 0 || u >= float(map.width) || v >= float(map.height)) continue;
-                float texel[4];
-                sampleBilinear(map, u * float(map.width) / 1024.0f, v * float(map.height) / 1024.0f, texel);
-                std::uint8_t* out = bottom.pixel(x, y);
-                out[0] = std::uint8_t(std::lround(texel[0]));
-                out[1] = std::uint8_t(std::lround(texel[1]));
-                out[2] = std::uint8_t(std::lround(texel[2]));
-            }
-        }
+    const std::optional<LevelMap> map = loadLevelMap(resources, levelName);
+    if (map) {
+        const MapProjection projection{map->file, kMapZoomStandIn};
+        if (resources.has(map->picture)) drawPicture(bottom, resources.image(map->picture), projection, view);
     }
     const assets::Image& arrow = resources.image("sprites/ui_bottomscreen/maps/playericon.btga");
     bottom.drawRotated(arrow, {0, 0, arrow.width, arrow.height}, kMapPlayerScreenX, kMapPlayerScreenY, float(arrow.width),
                        float(arrow.height), view.playerYaw - view.cameraYaw);
-    drawGroupTargets(bottom, resources, view);
-    drawMarkers(bottom, resources, view);
-    drawGroupSlots(bottom, resources, view);
+    if (map) {
+        const MapProjection projection{map->file, kMapZoomStandIn};
+        drawGroupTargets(bottom, resources, projection, view);
+        drawMarkers(bottom, resources, projection, view);
+        drawGroupSlots(bottom, resources, projection, view);
+    }
     if (view.buttons) {
         drawLayout(bottom, resources, kButtonsLayout, *view.buttons, 0, 0);
         return;

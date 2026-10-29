@@ -416,7 +416,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
     });
     order.run();
     propParts.step(dt);
-    if (player && follow) mapMarkerField.advance(dt, player->motion.x, player->motion.z, follow->yaw(), activeMapMarkers());
+    if (player && follow && mapProjection) mapMarkerField.advance(dt, *mapProjection, player->motion.x, player->motion.z, follow->yaw(), activeMapMarkers());
     updateObjectiveMarkers(dt);
     cutsceneHost->update(levelScripts.cutscenes());
     if (player && levelScripts.ai().movedLastUpdate("player1")) game_player::applyAiPosition(*player, *levelScripts.ai().character("player1"));

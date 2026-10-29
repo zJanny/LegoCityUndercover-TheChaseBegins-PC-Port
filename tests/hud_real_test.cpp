@@ -138,7 +138,9 @@ void minimap(Resources& resources) {
     edge.playerYaw = -2.4152f;
     edge.markers = {{0, 817.35f, 1071.20f}};
     MapMarkerField field;
-    for (int update = 0; update < 45; ++update) field.advance(1.0f / 30, edge.x, edge.z, edge.cameraYaw, edge.markers);
+    const std::optional<MapProjection> projection = minimapProjection(resources, "lvl_01_cherrytreehills");
+    require(projection.has_value(), "lvl_01 has a map file");
+    for (int update = 0; projection && update < 45; ++update) field.advance(1.0f / 30, *projection, edge.x, edge.z, edge.cameraYaw, edge.markers);
     field.setRingClock(2.5f);
     edge.markerField = &field;
     drawMinimap(bottom, resources, "lvl_01_cherrytreehills", edge);

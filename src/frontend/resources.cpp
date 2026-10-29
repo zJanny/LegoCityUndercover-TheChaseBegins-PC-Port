@@ -37,14 +37,20 @@ const assets::UiLayout& Resources::layout(const std::string& path) {
     return found->second;
 }
 
-std::string Resources::tableText(const std::string& path, std::size_t sheet, std::size_t row, std::size_t column) {
+const assets::TableSheet& Resources::dataSheet(const std::string& path, std::size_t sheet) {
     auto found = dataTables_.find(path);
     if (found == dataTables_.end()) found = dataTables_.emplace(path, assets::parseTable(bytes(path))).first;
     if (sheet >= found->second.sheets.size()) throw std::runtime_error("table sheet out of range: " + path);
-    const assets::TableSheet& data = found->second.sheets[sheet];
+    return found->second.sheets[sheet];
+}
+
+std::string Resources::tableText(const std::string& path, std::size_t sheet, std::size_t row, std::size_t column) {
+    const assets::TableSheet& data = dataSheet(path, sheet);
     if (row >= data.rows) throw std::runtime_error("table row out of range: " + path);
     return assets::tableValue(data, row, column).text;
 }
+
+std::size_t Resources::tableRows(const std::string& path, std::size_t sheet) { return dataSheet(path, sheet).rows; }
 
 const std::vector<std::string>& Resources::extendedCharacters() {
     if (!extendedLoaded_) {

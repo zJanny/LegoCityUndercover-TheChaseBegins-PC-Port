@@ -223,6 +223,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     levelName = lower(options.level).substr(0, lower(options.level).find_last_of('/'));
     levelName = levelName.substr(levelName.find_last_of('/') + 1);
     levelScripts.setLevelHeadingKey(fe::levelHeadingKey(hudResources, levelName));
+    mapProjection = fe::minimapProjection(hudResources, levelName);
     levelScripts.setObjectPositionSource([this](const std::string& instance, float out[3]) {
         if (carry.position(instance, out)) return true;
         return objectNodePosition(instance, out);
