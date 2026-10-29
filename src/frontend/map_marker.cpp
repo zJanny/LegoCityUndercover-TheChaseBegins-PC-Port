@@ -1,4 +1,5 @@
 #include "frontend/map_marker.hpp"
+#include "frontend/map_hub.hpp"
 #include <algorithm>
 #include <cmath>
 
@@ -21,7 +22,8 @@ std::array<float, 2> mapScreenOffset(const MapProjection& map, float playerX, fl
 
 MapMarkerPlacement placeMapMarker(const MapProjection& map, float playerX, float playerZ, float cameraYaw, float markerX, float markerZ) {
     MapMarkerPlacement placement;
-    const float c = std::cos(cameraYaw), s = std::sin(cameraYaw);
+    const float mapTurn = mapAngle(map.levelRecord, cameraYaw);
+    const float c = std::cos(mapTurn), s = std::sin(mapTurn);
     const std::array<float, 2> offset = mapScreenOffset(map, playerX, playerZ, markerX, markerZ);
     const float dx = offset[0], dz = offset[1];
     placement.x = kMapCentreX + (c * dx - s * dz);

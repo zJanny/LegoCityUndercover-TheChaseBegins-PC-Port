@@ -1,5 +1,6 @@
 #include "frontend/minimap.hpp"
 #include "frontend/layout.hpp"
+#include "frontend/map_hub.hpp"
 #include <algorithm>
 #include <cmath>
 #include <utility>
@@ -102,8 +103,9 @@ void drawMarkers(Canvas& bottom, Resources& resources, const MapProjection& map,
 }
 
 void drawPicture(Canvas& bottom, const assets::Image& picture, const MapProjection& map, const MinimapView& view) {
-    const float c = std::cos(view.cameraYaw), s = std::sin(view.cameraYaw);
-    const std::array<float, 2> player = mapNormalised(map.file, view.x, 0.0f, view.z);
+    const MapFrame frame = mapFrame(map.levelRecord, view.x, view.z, view.cameraYaw);
+    const float c = std::cos(frame.yaw), s = std::sin(frame.yaw);
+    const std::array<float, 2> player = mapNormalised(map.file, frame.x, 0.0f, frame.z);
     const float playerU = player[0] * map.file.halfWidth / kMapQuadHalfSize, playerV = player[1] * map.file.halfHeight / kMapQuadHalfSize;
     const float perPixel = 1.0f / (kMapQuadHalfSize * map.zoom);
     for (int y = 0; y < bottom.height(); ++y) {
@@ -127,21 +129,21 @@ void drawPicture(Canvas& bottom, const assets::Image& picture, const MapProjecti
 std::optional<MapProjection> minimapProjection(Resources& resources, const std::string& levelName) {
     const std::optional<LevelMap> map = loadLevelMap(resources, levelName);
     if (!map) return std::nullopt;
-    return MapProjection{map->file, kMapZoomStandIn};
+    return MapProjection{map->file, kMapZoomStandIn, map->levelRecord};
 }
 
 void drawMinimap(Canvas& bottom, Resources& resources, const std::string& levelName, const MinimapView& view) {
     bottom.clear(0, 0, 0);
     const std::optional<LevelMap> map = loadLevelMap(resources, levelName);
     if (map) {
-        const MapProjection projection{map->file, kMapZoomStandIn};
+        const MapProjection projection{map->file, kMapZoomStandIn, map->levelRecord};
         if (resources.has(map->picture)) drawPicture(bottom, resources.image(map->picture), projection, view);
     }
     const assets::Image& arrow = resources.image("sprites/ui_bottomscreen/maps/playericon.btga");
     bottom.drawRotated(arrow, {0, 0, arrow.width, arrow.height}, kMapPlayerScreenX, kMapPlayerScreenY, float(arrow.width),
                        float(arrow.height), view.playerYaw - view.cameraYaw);
     if (map) {
-        const MapProjection projection{map->file, kMapZoomStandIn};
+        const MapProjection projection{map->file, kMapZoomStandIn, map->levelRecord};
         drawGroupTargets(bottom, resources, projection, view);
         drawMarkers(bottom, resources, projection, view);
         drawGroupSlots(bottom, resources, projection, view);

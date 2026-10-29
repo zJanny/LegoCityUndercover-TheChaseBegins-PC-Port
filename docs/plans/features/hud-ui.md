@@ -6,7 +6,7 @@ The in-game HUD (portrait, hearts, stud counter, studs flying to the counter, th
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-29T12:01:44+01:00. The map picture and placement come from each level's map file (the hub shows lvl_01's map). The map also shows the sub-objective group icons and their fading group slot with its edge arrow. Script text screens: [hud-ui-text.md](hud-ui-text.md). `chase-game` shows the original's top-screen HUD over a 5:3 3D view and the map on the bottom screen. Hearts, counter, bounce, timing and the flight are recovered; damage, other counters and the real map code are not.
+IN_PROGRESS, updated 2026-10-29T12:01:44+01:00. The map picture and placement come from each level's map file (the hub shows lvl_01's map around its fixed centre and angle). The map also shows the sub-objective group icons and their fading group slot with its edge arrow. Script text screens: [hud-ui-text.md](hud-ui-text.md). `chase-game` shows the original's top-screen HUD over a 5:3 3D view and the map on the bottom screen. Hearts, counter, bounce, timing and the flight are recovered; damage, other counters and the real map code are not.
 
 ## 3. Verified behaviour
 
@@ -28,6 +28,7 @@ IN_PROGRESS, updated 2026-10-29T12:01:44+01:00. The map picture and placement co
 - HUD-S7 The stud icon (HUD and flying) is drawn alpha-tested/blended normally, not with the original's blend state (see STUD-S5).
 - HUD-S60 The ring lines are white (colour register of the line draw not read), the zoom is fixed at 1.55 and the edge factors 0.44 and 0.57 and ring constants are values read from memory. needs: HUD-60, HUD-61. evidence: [objective-hud-map.md §2026-10-15T19:56](../../re/objective-hud-map.md#ts-20261015-195600).
 - HUD-S79 The map placement gets no world heights (y = 0); the matrix's y term is below 1e-6 pixels. evidence: [objective-hud-map.md §2026-10-29T12:01](../../re/objective-hud-map.md#ts-20261029-120144).
+- HUD-S81 The player arrow in the hub turns by player yaw minus camera yaw like the other levels, not by the original's hub branch. needs: HUD-90. evidence: [objective-hud-map.md §2026-10-29T12:32](../../re/objective-hud-map.md#ts-20261029-123225).
 - HUD-S80 A level without a TablesLevels record or map file shows no map picture and no icons and nothing counts as on the map; the original keeps the map struct of the previous level. evidence: [objective-hud-map.md §2026-10-29T12:01](../../re/objective-hud-map.md#ts-20261029-120144).
 - HUD-S71 Group slots are drawn after all waypoint markers instead of in the original's shared slot order (16 slots, 0x2db0dc), and the map alpha (+0x4a0) is 1. needs: HUD-71. evidence: [objective-hud.md §2026-10-19T15:00](../../re/objective-hud.md#ts-20261019-150002).
 - HUD-S70 The waypoint column and badge fade as the original's tweens (linear, class times), but the node alpha and colour are applied as a multiplier of the finished fragment's colour and alpha (`Scene::setInstanceFade`); the original's draw path was not read. needs: HUD-70. evidence: [objective-hud-waypoints.md §2026-10-15T19:58](../../re/objective-hud-waypoints.md#ts-20261015-195841).
@@ -42,7 +43,7 @@ IN_PROGRESS, updated 2026-10-29T12:01:44+01:00. The map picture and placement co
 - [ ] HUD-9 — Script path `AddStuds` (0x1584e0): shows the old total, adds 1.75 s later. needs: SCRIPT-1. blocks: STUD-4.
 - [ ] HUD-10 — Who calls 0x17c0f4 (HUD on), `TransitionOff`, and the generic overlay tick that moves bar states 1..3 (measured only through the stepped oracle clock).
 - [ ] HUD-11 — Bottom screen: mission and collectible icons (needs SCRIPT-1 for missions), the characters button's behaviour. blocks: SCRIPT-73.
-- [ ] HUD-87 — Hub map (record 1): the fixed map centre and angle and the player arrow branch of the original are not ported; the port centres lvl_01's map on the player and turns it with the camera, a stand-in labelled in code under HUD-87 (no stand-in ID was left). evidence: [objective-hud-map.md §2026-10-29T12:01](../../re/objective-hud-map.md#ts-20261029-120144).
+- [ ] HUD-90 — The player arrow of the hub: the original has a hub branch in the arrow draw that skips an angle adjustment; what it draws is not read. blocks: HUD-S81. evidence: [objective-hud-map.md §2026-10-29T12:32](../../re/objective-hud-map.md#ts-20261029-123225).
 - [ ] HUD-88 — The map switch to another record's map (map object states 3 and 4) is not ported; what starts it is unknown. evidence: [objective-hud-map.md §2026-10-29T12:01](../../re/objective-hud-map.md#ts-20261029-120144).
 - [ ] HUD-60 — Map icons of the other types: enemy, point of interest and collectibles (code read, nothing drawn; needs the objects that add slots, callers of 0x2258bc). The group markers (0x2dbb04, slots of types 14/13/15 with their arrows) are drawn since 2026-10-19 ([objective-hud.md §2026-10-19T15:00](../../re/objective-hud.md#ts-20261019-150002)). blocks: HUD-S60. evidence: [objective-hud-map.md §2026-10-15T19:56](../../re/objective-hud-map.md#ts-20261015-195600).
 - [ ] HUD-61 — Map zoom levels (3.8, 2.5, 1.55 by struct + 0x368, 0.6 factor, the zoom buttons) and what changes the level. blocks: HUD-S60. evidence: [objective-hud-map.md §2026-10-15T19:56](../../re/objective-hud-map.md#ts-20261015-195600).
@@ -58,11 +59,11 @@ IN_PROGRESS, updated 2026-10-29T12:01:44+01:00. The map picture and placement co
 - `.bxaml` layout format and storyboards: [ui-layouts.md §2026-10-13T11:00](../../re/ui-layouts.md#ts-20261013-1100), runtime layout [ui-layouts.md §2026-10-13T09:12](../../re/ui-layouts.md#ts-20261013-0912).
 - HUD page, hearts, stud bar, flight, map screen and the fit: [hud.md](../../re/hud.md).
 - Super brick display: [hud-ui-super-bricks.md](hud-ui-super-bricks.md).
-- Level map files, the hub rule and the unused `_2` pictures: [objective-hud-map.md §2026-10-29T12:01](../../re/objective-hud-map.md#ts-20261029-120144).
+- Level map files, the hub rule and the unused `_2` pictures: [objective-hud-map.md §2026-10-29T12:01](../../re/objective-hud-map.md#ts-20261029-120144); the hub's fixed centre and angle: [objective-hud-map.md §2026-10-29T12:32](../../re/objective-hud-map.md#ts-20261029-123225).
 - Sub-objective group icons and slots on the map: [objective-hud.md §2026-10-19T15:00](../../re/objective-hud.md#ts-20261019-150002).
 - Camera lock icon object, states and drawing 0x1b1150: [camera-records-blending.md §2026-10-14T10:44](../../re/camera-records-blending.md#ts-20261014-104400).
 
 ## 7. Code and tests
 
-- `src/frontend/super_build_prompt.*`, `src/frontend/hud.*` (`Hud`, `setCameraLockAlpha`), `src/runtime/camera_lock_icon.*`, `src/frontend/minimap.*`, `src/frontend/map_file.*` (level map files), `src/game_hud.hpp` (two-screen presentation), `chase-hudshot`, `LayoutScene` in `src/frontend/layout.*`; `Canvas::clearTransparent`.
-- CTest: `map-file`, `map-file-real-data`, `map-marker`, `hud-real-data` (the recorded bar states are pinned in the test), `studs-core`, `frontend-real-data`. Scenarios: `tools/oracle/hud-*.txt`.
+- `src/frontend/super_build_prompt.*`, `src/frontend/hud.*` (`Hud`, `setCameraLockAlpha`), `src/runtime/camera_lock_icon.*`, `src/frontend/minimap.*`, `src/frontend/map_file.*` (level map files), `src/frontend/map_hub.*` (hub centre and angle), `src/game_hud.hpp` (two-screen presentation), `chase-hudshot`, `LayoutScene` in `src/frontend/layout.*`; `Canvas::clearTransparent`.
+- CTest: `map-hub`, `map-file`, `map-file-real-data`, `map-marker`, `hud-real-data` (the recorded bar states are pinned in the test), `studs-core`, `frontend-real-data`. Scenarios: `tools/oracle/hud-*.txt`.

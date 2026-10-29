@@ -188,6 +188,43 @@ void minimap(Resources& resources) {
 }
 }
 
+void hubMinimap(Resources& resources) {
+    Canvas first(kBottomWidth, kScreenHeight), second(kBottomWidth, kScreenHeight);
+    MinimapView a, b;
+    a.x = 886.764f;
+    a.z = 1111.166f;
+    a.cameraYaw = -2.3501f;
+    b.x = 700.0f;
+    b.z = 900.0f;
+    b.cameraYaw = 0.9f;
+    drawMinimap(first, resources, "lvl_00_policestation", a);
+    drawMinimap(second, resources, "lvl_00_policestation", b);
+    int different = 0;
+    for (int y = 0; y < kScreenHeight; ++y)
+        for (int x = 0; x < kBottomWidth; ++x) {
+            if (std::hypot(float(x) - 160.0f, float(y) - 120.0f) < 40.0f) continue;
+            for (int c = 0; c < 3; ++c) different += first.pixel(x, y)[c] != second.pixel(x, y)[c];
+        }
+    require(different == 0, "the hub picture neither moves nor turns with the player or the camera");
+
+    // Provenance: 20261029-hudmap-servant HUD-11, 2026-10-29, recorded from a save state in the police station lobby after mission 1-1:
+    // the lvl_01 picture's centre texel is (604.4, 257.0) of 1024 at screen (160, 120), 0.645 texel per screen pixel, rotation 0.805 rad.
+    const assets::Image& picture = resources.image("sprites/ui_bottomscreen/maps/lvl_01_cherrytreehills.btga");
+    const float c = std::cos(0.805f), s = std::sin(0.805f);
+    long total = 0, count = 0;
+    for (int y = 40; y < 200; y += 2)
+        for (int x = 60; x < 260; x += 2) {
+            if (std::hypot(float(x) - 160.0f, float(y) - 120.0f) < 40.0f) continue;
+            const float sx = float(x) + 0.5f - 160.0f, sy = float(y) + 0.5f - 120.0f;
+            const int u = int(604.4f + 0.645f * (c * sx - s * sy)), v = int(257.0f - 0.645f * (-s * sx - c * sy));
+            if (u < 0 || v < 0 || u >= picture.width || v >= picture.height) continue;
+            const std::uint8_t* texel = &picture.rgba[(std::size_t(v) * picture.width + u) * 4];
+            for (int k = 0; k < 3; ++k) total += std::abs(int(first.pixel(x, y)[k]) - int(texel[k]));
+            count += 3;
+        }
+    require(count > 0 && total < count * 12, "the hub picture matches the lobby measurement: mean difference " + std::to_string(count ? total / count : -1));
+}
+
 int main(int argc, char** argv) {
     if (argc < 3) {
         std::cerr << "usage: hud-real-test FIB CSV\n";
@@ -206,6 +243,7 @@ int main(int argc, char** argv) {
         hearts(resources);
         renders(resources);
         minimap(resources);
+        hubMinimap(resources);
     } catch (const std::exception& error) {
         std::cerr << "hud-real-test: " << error.what() << '\n';
         return 1;

@@ -4,6 +4,7 @@ Subtopic of [objective-hud.md](objective-hud.md): how the map screen places and 
 
 ## Current state
 
+- The hub (level record 1) draws the lvl_01 picture around the fixed centre (902.41, 1117.0) turned by the fixed angle (literal -0.80285, port yaw +0.80285); all other records use the player position and the camera angle. [§2026-10-29T12:32](#ts-20261029-123225)
 - The map marker is the sprite `WayPoint.tga` plus two line circles, not `mapiconmission`; the scale is 0.94977 pixels per world unit with the map matrix at struct + 0x308 and zoom 1.55. [§2026-10-15T19:56](#ts-20261015-195600)
 - Off-screen icons sit on the ellipse (A 104.8, B 100.8) with an arrow; the pulse rings use a 3.0 s clock (active 2.0 s) with radii 200 and 20 shrinking to 2. [§2026-10-15T19:56](#ts-20261015-195600)
 - Group markers of the sub-objective records and their slots: [objective-hud.md §2026-10-19T15:00](objective-hud.md#ts-20261019-150002).
@@ -61,3 +62,14 @@ Unknowns:
 - When the map switch (this + 0x49b states 3 and 4, record this + 0x49d) runs and who sets the record.
 - The y row of the matrix (-7.0e-8) is not applied by the port (heights are not passed); for heights within +-1000 its effect is below 1e-6 pixels.
 
+<a id="ts-20261029-123225"></a>
+
+## 2026-10-29T12:32:25+01:00 — Hub map: fixed centre and angle ported (llvm-objdump 0x2de450, 0x1ee848, 0x1ee7a8, servant HUD-11)
+
+Round 20261029-hudmap-B read the words again: the picture quad 0x2de450 compares the record byte (0x5163e8 + 0x26) with 1 at 0x2de50c and then loads x = 0x44619a3d = 902.40997 and z = 0x448ba000 = 1117.0 (literal pool 0x2de82c / 0x2de830) instead of the player position before it calls 0x1ee7a8. 0x1ee848 (map angle) branches on the same byte at 0x1ee860 and otherwise returns the camera-derived angle; for record 1 it returns the word 0xbf4d87ac = -0.80285 (0x1ee91c). Every icon draw (0x2db0dc, 0x2dbb04, 0x2dc284, 0x2d9658) calls 0x1ee848 for its rotation, so the hub turns icons by the same fixed angle; none of them contains the centre literals, so icons keep the player-relative offset of 0x1ee7a8 and only the picture is centred on the fixed point.
+
+Servant measurement (20261029-hudmap-servant HUD-11, 2026-10-29, recorded from a save state in the police station lobby after mission 1-1): the lvl_01 picture fills the bottom screen, the centre texel is (604.4, 257.0) of 1024, the scale is 0.645 texel per pixel, the rotation is about 0.805 rad (fit 0.7995 to 0.8063, opposite sign to the literal), and the picture neither moves nor turns while the player walks or the camera turns. The matrix of lvl_01 gives texel (604.54, 256.88) at the literal centre, inside the fit noise. The port's camera yaw has the opposite sign to the original's angle, so the port uses +0.80285; `map-hub` (tests/map_hub_test.cpp) pins the literals and these values.
+
+Port: `mapFrame` / `mapAngle` in src/frontend/map_hub.* take the level record (generic, as the original branches on the record, not on a level name); `MapProjection::levelRecord` carries it to the picture draw and to `placeMapMarker`.
+
+Unknowns: the hub branch of the player arrow draw (0x2d96f4 skips the block 0x2d96f8..0x2d9754 that adjusts the arrow's angle); the port keeps the formula of the other levels (HUD-S81).

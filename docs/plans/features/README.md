@@ -84,7 +84,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | Feature | Status | Top open items |
 |---|---|---|
 | [front-end](front-end.md) | IN_PROGRESS | FE-1 existing slots and Continue (needs SAVE-2); FE-30 delete confirmation; FE-3 loading screen 3D badge |
-| [hud-ui](hud-ui.md) | IN_PROGRESS | HUD-6 hearts never change; HUD-11 map mission icons, HUD-87 hub map centre, HUD-60 other map icon types; HUD-8 other counters |
+| [hud-ui](hud-ui.md) | IN_PROGRESS | HUD-6 hearts never change; HUD-11 map mission icons, HUD-90 hub player arrow, HUD-60 other map icon types; HUD-8 other counters |
 | [hud-ui-text](hud-ui-text.md) | IN_PROGRESS | HUD-22 remaining text screens; HUD-30 character intro and box line counts; HUD-33 tip after the release camera |
 | [ui-menus](ui-menus.md) | IN_PROGRESS | UI-20 characters panel; UI-21 map button actions; UI-2 pause fades and gates; UI-3 pause Exit; UI-23 Languages page; UI-24 red brick extras page; UI-25 options save task (pause screen, its Options page and map buttons ported) |
 | [ui-menus-award-viewer](ui-menus-award-viewer.md) | IN_PROGRESS | UI-26 award models; UI-27 award mode fades and gates; UI-28 oracle picture (award viewer ported) |

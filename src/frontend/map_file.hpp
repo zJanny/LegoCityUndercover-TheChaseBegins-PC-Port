@@ -33,11 +33,13 @@ std::string mapName(int levelRecord, const std::string& recordName);
 struct MapProjection {
     MapFile file;
     float zoom = 0;
+    int levelRecord = -1;
 };
 
 struct LevelMap {
     std::string picture;
     MapFile file;
+    int levelRecord = -1;
 };
 
 int levelRecord(Resources& resources, const std::string& levelName);

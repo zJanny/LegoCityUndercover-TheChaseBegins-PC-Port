@@ -61,7 +61,7 @@ std::optional<LevelMap> loadLevelMap(Resources& resources, const std::string& le
     const std::string name = mapName(record, levelName);
     const std::string file = kMapFolder + name + ".txt";
     if (!resources.has(file)) return std::nullopt;
-    return LevelMap{kMapFolder + name + ".btga", parseMapFile(resources.bytes(file))};
+    return LevelMap{kMapFolder + name + ".btga", parseMapFile(resources.bytes(file)), record};
 }
 
 }

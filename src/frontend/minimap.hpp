@@ -2,8 +2,9 @@
 // The bottom screen during gameplay (docs/re/hud.md): the level map turned so that the camera looks up the screen,
 // the player's arrow in the middle and the characters button of sprites/blend/mapbuttons at the top left.
 // The picture and the placement come from the level's map file (frontend/map_file.hpp). STAND-IN (HUD-S80): a level without one
-// shows no picture and no icons. STAND-IN (HUD-87): the hub (record 1) is centred on the player and turned with the camera instead
-// of the fixed centre and angle of 0x2de450 / 0x1ee848. Only waypoint and sub-objective icons are drawn (HUD-60). No SDL dependency.
+// shows no picture and no icons. The hub (record 1) uses the fixed centre and angle of 0x2de450 / 0x1ee848
+// (frontend/map_hub.hpp). STAND-IN (HUD-S81): the player arrow keeps the formula of the other levels; the original's hub branch 0x2d96f4 is
+// not read. Only waypoint and sub-objective icons are drawn (HUD-60). No SDL dependency.
 #include "frontend/canvas.hpp"
 #include "frontend/layout.hpp"
 #include "frontend/map_marker.hpp"
