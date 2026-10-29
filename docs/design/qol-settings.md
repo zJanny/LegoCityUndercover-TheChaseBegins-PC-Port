@@ -2,6 +2,8 @@
 
 The user's approved design of how quality-of-life features are switched on and off: the settings menu, the master toggle, the per-feature toggles and where the choices are saved. Plan: [qol.md](../plans/qol.md); rules: [qol.md](../rules/qol.md); feature file: [qol-settings-menu.md](../plans/features/qol-settings-menu.md).
 
+Subtopics: [qol-settings-drawing.md](qol-settings-drawing.md)
+
 ## Current state
 
 - Window mode, size and F11 in `chase-game` (implemented; answered in [§2026-10-29T11:53:10](#ts-20261029-115310)): [§2026-10-29T11:45:52](#ts-20261029-114552).
@@ -22,11 +24,12 @@ The user's approved design of how quality-of-life features are switched on and o
 - The key names of `config/qol.cfg` are approved: master key `master` with the values `Original`, `Improved`, `Custom` (case-sensitive); feature keys in snake_case with `on` or `off` (so far `widened_view`); `#` starts a comment: [§2026-10-28T21:43:23](#ts-20261028-214323).
 - Window mode and resolution are stored in `config/qol.cfg` under the keys `window_mode` and `resolution`; their values are `windowed` or `fullscreen` and `WIDTHxHEIGHT`, both written in every mode ([§2026-10-28T22:38:57](#ts-20261028-223857)): [§2026-10-28T22:20:41](#ts-20261028-222041).
 - Display defaults and list: absent `window_mode` and `resolution` default to fullscreen at the desktop size; old files stay valid; the resolution row offers the monitor's display modes of at least 400x240; a stored size outside the list is kept and shown as custom: [§2026-10-29T09:23:03](#ts-20261029-092303) (the desktop-size spelling and the upper bound: [§2026-10-29T10:31:01](#ts-20261029-103101)).
-- Feature rows outside Custom copy the mode's switches into an own mix, apply the click and switch to Custom; menu rows and tabs wrap; Left and Right stay ignored: [§2026-10-28T22:38:57](#ts-20261028-223857), [§2026-10-28T23:13:22](#ts-20261028-231322).
+- Feature rows outside Custom copy the mode's switches into an own mix, apply the click and switch to Custom; menu rows and tabs wrap; Left and Right are ignored except on value rows, which they step (see [qol-settings-drawing.md](qol-settings-drawing.md)): [§2026-10-28T22:38:57](#ts-20261028-223857), [§2026-10-28T23:13:22](#ts-20261028-231322).
 - Answered 2026-10-29: the Game tab language row opens the port's Languages page; the file has no `resolution` line while the desktop size is in use; a stored resolution above the largest display mode is limited to it at startup: [§2026-10-29T10:31:01](#ts-20261029-103101).
 - Rebind flow and scope: a taken key is refused with a message, one confirmed "Reset all" row, Escape cancels waiting; keys, mouse buttons and gamepad buttons can be rebound, `Walk` and `DebugOverlay` are listed with the 3DS actions, two slots per action with hold or toggle mode per slot and clearing; a stored resolution is above the limit when either side is larger than the largest mode's: [§2026-10-29T11:06:51](#ts-20261029-110651).
-- Settings menu art and fonts: "Options-page art", the original Options-page art and font as the 3DS draws them, scaled up; which assets remain for a spec round. The Game tab's Language row stays read-only until the Languages page is ported. Controls tab model, adapter and writer implemented; open: pad format, comments, defaults and saving: [§2026-10-29T11:46:20](#ts-20261029-114620).
-- Open: which exact assets the menu drawing uses (QOLSET-22, spec round); the rest follows the recorded decisions.
+- Settings menu art and fonts: "Options-page art", the original Options-page art and font as the 3DS draws them, scaled up (the assets are decided, see the menu drawing bullet below). The Game tab's Language row stays read-only until the Languages page is ported. Controls tab model, adapter and writer implemented; open: pad format and comments (defaults and saving answered below): [§2026-10-29T11:46:20](#ts-20261029-114620).
+- Menu drawing (art, scaling, fonts, navigation) and the Reset all source: [qol-settings-drawing.md](qol-settings-drawing.md).
+- Open: none; the rest follows the recorded decisions.
 
 <a id="ts-20261028-092131"></a>
 
@@ -131,6 +134,7 @@ Open (not decided by the user): the value formats of `window_mode` (for example 
 <a id="ts-20261028-223857"></a>
 
 ## 2026-10-28T22:38:57+01:00 — Feature rows outside Custom, row wrap, window mode and resolution values
+Corrected by [qol-settings-drawing.md §2026-10-29T12:11:55](qol-settings-drawing.md#ts-20261029-121155): Left and Right step value rows (they stay ignored on the other rows).
 
 Asked of the user by the lead on 2026-10-28; the quoted labels are the user's selections. Decides QOLSET-16 and QOLSET-17 and the open part of [§2026-10-28T22:20:41](#ts-20261028-222041).
 
@@ -226,6 +230,7 @@ Open (not decided by the user): nothing for these points.
 <a id="ts-20261029-114620"></a>
 
 ## 2026-10-29T11:46:20+01:00 — Settings menu art, Language row, Controls tab implementation
+Corrected by [qol-settings-drawing.md §2026-10-29T12:11:55](qol-settings-drawing.md#ts-20261029-121155): the open point on Reset all defaults and saving (QOLSET-32) is answered.
 
 Two user decisions of 2026-10-29 (quoted labels are the user's selections), then what the Controls tab work (20261029-qolview-C) implemented.
 

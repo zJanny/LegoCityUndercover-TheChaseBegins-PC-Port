@@ -8,7 +8,8 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - Storyboards: 0x10 record per storyboard, 0x20 per track, 0x20 per keyframe; the runtime builder 0x1dbb80 skips tracks without a resolved target and sets the storyboard length to the longest track (duration times repeat). [§2026-10-13T09:12](#ts-20261013-0912)
 - All 55 real layouts consume every block: 383 containers, 614 images, 110 references, 161 storyboards, 1888 tracks, 6740 keyframes; the decoder is `src/assets/xaml.cpp`. [§2026-10-13T11:00](#ts-20261013-1100)
 - The meaning of element floats and track property ids (opacity, rotation, scale, position, translate) is a data fit only; the evaluator was not found. [§2026-10-13T09:12](#ts-20261013-0912)
-- Open: element +0x14, other flag bits, track +0x1c and keyframe +0x1c, and the property evaluator.
+- The round menu layout (320x240) holds, beside the round, a list form of five bars with a highlight, a framed strip and a page indicator whose use is not read; the Options, pause and language pictures are hexagonal badges: [§2026-10-29T11:50:58](#ts-20261029-115058).
+- Open: which screen uses the list form and the page indicator, element +0x14, other flag bits, track +0x1c and keyframe +0x1c, and the property evaluator.
 
 <a id="ts-20261013-1100"></a>
 
@@ -50,3 +51,17 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - Searched without finding the property evaluator: byte +4 reads followed by a 6/7-entry jump table (0x2215bc is a collision direction filter), multiply-by-28 indexing (0x1fac18, 0x273e84: unrelated), and users of *0x376488/*0x376490 (0x103538, 0x223b5c: unrelated). The property ids stay data-fit only.
 
 
+
+<a id="ts-20261029-115058"></a>
+
+## 2026-10-29T11:50:58+01:00 — Round menu layout pieces and the status-screen pictures (chase-layoutdump; 20261029-qolview-D)
+
+By 20261029-qolview-D, data only (no code read, no emulator): `chase-layoutdump` on the layouts named below, the picture folders listed and viewed. Pictures are described in words.
+
+- `sprites/ui_roundaboutmenu/main.bxaml`, the layout of the round menu and of the pause Options page ([ui-screens.md §2026-10-28T22:51:42](ui-screens.md#ts-20261028-225142)): `LayoutRoot` 320x240 (the bottom screen). Background `BG_FlipA` (`UI_LOTR_BG`, 512x256 at (0, 0), a blue honeycomb pattern over a pale city skyline; 320x240 of it is on the screen). The round: five 128x128 boxes `Button_1`..`_5` in `Menu` (opacity 0.75, 0.5, 1, 1, 0.75 in the file). The name plate `Item_Name` (256x32 `UI_itemNameBG`, a light blue outlined plate) with `TEXT_ItemName` (182x70, font 18); `TEXT_Icon`, `TEXT_Icon_In`, `TEXT_Icon_Out` (256x32, font 12, centred). The top bar `Top_Bar` (320x32 of `UI_Barstrip_Tile` and `UI_Barstrip`) with `TEXT_Title` (font 15); the subtitle bar `Subtitle` (256x32 `UI_subtitleBar`, a blue bar with a slanted end) with `TEXT_Subtitle` (font 15); the corner plates `Bottom_Left_BTN`, `Bottom_Right_BTN` (64x32 `UI_buttonBG`, one mirrored) under the references `backButton` and `selectButton`.
+- The same layout also holds a list form: `Menu_Bars` with five 256x64 bars `Menu_Bar_1`..`_5` (two mirrored halves of `UI_LSHFrontendMenuBar`, a dark red bar in a steel frame) with text boxes `TEXT_Menu_n_3DS` (168x16), the highlight bars `Menu_Bar_HI` and `Menu_Bar_HI_Down` (256x32, two halves of `UI_LSHFrontendMenuBarHI`, a pale glow); `Menu_Strip` (two mirrored `UI_LSHFrontendMenuFlip`, a dark panel in an ornate frame) with `TEXT_Bio` (200x120); and a page indicator `Pageslots` with `Left_Arrow` and `Right_Arrow` (16x32 `UI_FEArrow`, a light blue chevron, the right one mirrored) and `PageNumber` (font 16). The picture folder also has `UI_PageSlot` (8x8 blue dot) and `UI_PageSlotCurrent` (16x16 blue ring), which no element of this layout uses.
+- `sprites/ui_roundaboutmenu/menu_bar.bxaml` (no loader found, [ui-screens.md §2026-10-19T20:33](ui-screens.md#ts-20261019-203310)): one 256x32 bar of the same art with the text `TEST` (font 12, centred).
+- `sprites/ui_statusscreen/options/`: the four 128x128 row pictures `UI_Options_SFX`, `_Music`, `_InvertCamera`, `_Language`, hexagonal blue badges in a steel frame showing one note, two notes, a camera on a stick, a globe with a speech bubble. `sprites/ui_statusscreen/`: the pause pictures `UI_StatusScreen_Resume`, `_Options` (a wrench and a nut), `_Credits`, `_Exit`, `_Extras` (a yellow brick), same badge style. `sprites/ui_statusscreen/languages/`: eleven 64x64 hexagonal flag badges `UI_Language_Danish`, `_Dutch`, `_English` (a United States flag), `_French`, `_German`, `_Italian`, `_Polish`, `_Portuguese`, `_Russian`, `_Spanish`, `_UK`.
+- The notice and question page `page_alerttext` is described in [front-end.md](front-end.md) (layout pages).
+
+Unknown: which screen shows the list form, the menu strip and the page indicator (the round menu create 0x2206f0 resolves `Menu_Bar_1`..`_5`, [ui-screens.md §2026-10-19T20:34](ui-screens.md#ts-20261019-203404), but their use is not read); which font size the values 12, 15, 16 and 18 select (HUD-75).
