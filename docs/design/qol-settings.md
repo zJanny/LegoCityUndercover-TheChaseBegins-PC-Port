@@ -20,9 +20,11 @@ The user's approved design of how quality-of-life features are switched on and o
 - The master state is stored in `config/qol.cfg`: Original = all QoL off, Improved = all on (including the minimap and the hidden bottom screen); the per-feature switches (so far only the widened view with the corner HUD) apply only in Custom: [§2026-10-28T09:53:33](#ts-20261028-095333).
 - The key names of `config/qol.cfg` are approved: master key `master` with the values `Original`, `Improved`, `Custom` (case-sensitive); feature keys in snake_case with `on` or `off` (so far `widened_view`); `#` starts a comment: [§2026-10-28T21:43:23](#ts-20261028-214323).
 - Window mode and resolution are stored in `config/qol.cfg` under the keys `window_mode` and `resolution`; their values are `windowed` or `fullscreen` and `WIDTHxHEIGHT`, both written in every mode ([§2026-10-28T22:38:57](#ts-20261028-223857)): [§2026-10-28T22:20:41](#ts-20261028-222041).
-- Display defaults and list: absent `window_mode` and `resolution` default to fullscreen at the desktop size; old files stay valid; the resolution row offers the monitor's display modes of at least 400x240; a stored size outside the list is kept and shown as custom: [§2026-10-29T09:23:03](#ts-20261029-092303).
+- Display defaults and list: absent `window_mode` and `resolution` default to fullscreen at the desktop size; old files stay valid; the resolution row offers the monitor's display modes of at least 400x240; a stored size outside the list is kept and shown as custom: [§2026-10-29T09:23:03](#ts-20261029-092303) (the desktop-size spelling and the upper bound: [§2026-10-29T10:31:01](#ts-20261029-103101)).
 - Feature rows outside Custom copy the mode's switches into an own mix, apply the click and switch to Custom; menu rows and tabs wrap; Left and Right stay ignored: [§2026-10-28T22:38:57](#ts-20261028-223857), [§2026-10-28T23:13:22](#ts-20261028-231322).
-- Open: none that needs a user decision; implementation details (menu look) follow the recorded decisions.
+- Answered 2026-10-29: the Game tab language row opens the port's Languages page; the file has no `resolution` line while the desktop size is in use; a stored resolution above the largest display mode is limited to it at startup: [§2026-10-29T10:31:01](#ts-20261029-103101).
+- Rebind flow and scope: a taken key is refused with a message, one confirmed "Reset all" row, Escape cancels waiting; keys, mouse buttons and gamepad buttons can be rebound, `Walk` and `DebugOverlay` are listed with the 3DS actions, two slots per action with hold or toggle mode per slot and clearing; a stored resolution is above the limit when either side is larger than the largest mode's: [§2026-10-29T11:06:51](#ts-20261029-110651).
+- Open: which original art and fonts the menu drawing uses (QOLSET-2, spec round next round); the rest follows the recorded decisions.
 
 <a id="ts-20261028-092131"></a>
 
@@ -147,6 +149,7 @@ Open: none from this answer.
 <a id="ts-20261029-092303"></a>
 
 ## 2026-10-29T09:23:03+01:00 — Display defaults, old files and the resolution list
+Corrected by [qol-settings.md §2026-10-29T10:31:01](#ts-20261029-103101): the open points (file spelling of the desktop size, upper bound) are answered; no `resolution` line is written while the desktop size is in use.
 
 Asked of the user by the lead on 2026-10-29 (QOLSET-18); the quoted labels are the user's selections. Answers the open part of [§2026-10-28T22:38:57](#ts-20261028-223857).
 
@@ -156,3 +159,38 @@ Asked of the user by the lead on 2026-10-29 (QOLSET-18); the quoted labels are t
 - A stored resolution that is not in the list, for example a hand-edited 1000x600: "Keep it, show as custom": the value is used and shown as an extra entry until the user picks another.
 
 Open (not decided by the user): an upper bound for a stored resolution (the reader limits the digits to five per side as a parse safety, not an approved limit); how the file is written while the desktop size is still unresolved (the store holds "desktop" as no value and writes no `resolution` line until the window code calls the resolve step with the real size; the spelling for "desktop" in the file, if any, is not decided).
+
+<a id="ts-20261029-103101"></a>
+
+## 2026-10-29T10:31:01+01:00 — Languages page, desktop spelling, upper bound and the menu drawing spec round
+Corrected by [qol-settings.md §2026-10-29T11:06:51](#ts-20261029-110651): a size is above the limit when either side is larger than the largest mode's side.
+
+Asked of the user by the lead on 2026-10-29; the quoted labels are the user's selections. [Corrects §2026-10-29T09:23:03 in part](#ts-20261029-092303) (open points answered, the old-files write rule changed for `resolution`) and answers the language question of [§2026-10-28T09:32:07](#ts-20261028-093207).
+
+- Game tab language row (QOLSET-21): "Opens Languages page": activating the row opens the port's own Languages page, as the original does.
+- File spelling while the resolution is still the desktop size (QOLSET-19): "Omit the line": `config/qol.cfg` has no `resolution` line until the player picks a size. This replaces "the next write adds both keys" of the old-files answer in [§2026-10-29T09:23:03](#ts-20261029-092303) for `resolution`; `window_mode` is still written in every mode.
+- Upper bound for a stored resolution (QOLSET-19): "Largest display mode": a stored resolution above the monitor's largest mode is limited by it. Chosen behaviour: "Clamp to largest mode": at startup the largest mode is used instead and the file is corrected on the next write (no error).
+- Next round (QOLSET-19 follow-up), the user chose "Yes, next round": a spec round for the menu drawing (QOLSET-2: which original art and fonts the menu reuses) happens in the next round.
+
+Open (not decided by the user): which original art and fonts the settings menu uses (QOLSET-2, spec round next round). The meaning of "above the largest mode" for a size with one side above and one below is not stated; the model treats a size as above when either side exceeds the largest mode (largest = most pixels) and limits it to that mode.
+
+<a id="ts-20261029-110651"></a>
+
+## 2026-10-29T11:06:51+01:00 — Rebind flow, rebind scope and the meaning of "larger than the largest mode"
+
+Asked of the user by the lead in question prompts on 2026-10-29; the quoted labels are the user's selections. Answers QOLSET-26 and QOLSET-27 and the "either side" point; [Corrects §2026-10-29T10:31:01 in part](#ts-20261029-103101).
+
+Rebind flow (QOLSET-26):
+- A key already bound to another action: "Refuse": nothing changes; a message says the key is taken; the tab keeps waiting for a key.
+- Reset to defaults: "All, with confirm": one "Reset all" row that asks for confirmation.
+- Cancel waiting for a key: "Escape": Escape cancels, so Escape itself cannot be bound from the tab.
+
+Rebind scope (QOLSET-27):
+- Inputs that can be rebound: "Keys + mouse + pad": keyboard keys, mouse buttons and gamepad buttons.
+- Stand-in actions `Walk` and `DebugOverlay`: "Listed with the rest": in the same list as the 3DS actions.
+- Several bindings per action and their hold or toggle mode: "Two slots, mode per slot": a primary and a secondary slot per action; each slot can switch between hold and toggle; a slot can be cleared.
+
+Display (QOLSET-19):
+- "Larger than the largest display mode": "Either side larger": a stored size is above the limit when its width or its height is above the largest mode's width or height. Settles the open point of [§2026-10-29T10:31:01](#ts-20261029-103101).
+
+Open (not decided by the user): how the largest mode itself is picked (the model uses the most pixels). The model changes for these answers (refuse message, Reset all row with confirmation, Escape cancel, mouse and pad binding, two slots with a mode each, clearing) are not written yet.

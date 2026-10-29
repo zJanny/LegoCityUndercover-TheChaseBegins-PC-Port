@@ -37,7 +37,7 @@ public:
     bool enabled(Feature feature) const;
     WindowMode windowMode() const { return windowMode_; }
     const std::optional<Resolution>& resolution() const { return resolution_; }
-    bool resolveDesktop(const Resolution& desktop);
+    std::optional<Resolution> effectiveResolution(const Resolution& desktop) const;
 
     bool setMaster(Master master);
     Master cycleMaster();

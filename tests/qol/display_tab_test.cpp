@@ -77,6 +77,47 @@ void resolutionCycles() {
         settings.resolution() == std::optional<qol::Resolution>{{800, 600}}, "empty list ignored");
 }
 
+void clampToLargestMode() {
+    const qol::ResolutionChoices unordered{{1280, 720}, {1920, 1080}, {800, 600}};
+    require(qol::largestMode(unordered) == std::optional<qol::Resolution>{{1920, 1080}}, "largest mode");
+    require(!qol::largestMode({}), "no largest mode of an empty list");
+    require(qol::clampToLargest({3840, 2160}, unordered) == qol::Resolution{1920, 1080},
+        "above the largest mode is limited to it (user, 2026-10-29: Largest display mode)");
+    require(qol::clampToLargest({1920, 1200}, unordered) == qol::Resolution{1920, 1080}, "one side above");
+    require(qol::clampToLargest({1920, 1080}, unordered) == qol::Resolution{1920, 1080}, "equal unchanged");
+    require(qol::clampToLargest({1000, 600}, unordered) == qol::Resolution{1000, 600}, "below unchanged");
+    require(qol::clampToLargest({3840, 2160}, {}) == qol::Resolution{3840, 2160}, "empty list never clamps");
+
+    qol::Settings settings;
+    require(!qol::clampStoredResolution(settings, unordered) && !settings.resolution(),
+        "unresolved resolution is not clamped");
+    settings.setResolution({3840, 2160});
+    require(qol::clampStoredResolution(settings, unordered) &&
+        settings.resolution() == std::optional<qol::Resolution>{{1920, 1080}},
+        "stored size above the largest mode is replaced at startup (user, 2026-10-29: Clamp to largest mode)");
+    require(!qol::clampStoredResolution(settings, unordered), "second clamp changes nothing");
+    settings.setResolution({1000, 600});
+    require(!qol::clampStoredResolution(settings, unordered) &&
+        qol::displayRows(settings, unordered)[1].custom, "a custom size within the limit stays custom");
+    settings.setResolution({3840, 2160});
+    require(!qol::clampStoredResolution(settings, {{399, 240}}) &&
+        settings.resolution() == std::optional<qol::Resolution>{{3840, 2160}}, "invalid list refused");
+    settings.setResolution({3840, 2160});
+    qol::clampStoredResolution(settings, unordered);
+    require(!qol::displayRows(settings, unordered)[1].custom, "the clamped value shows as a normal entry");
+}
+
+void desktopReference() {
+    qol::Settings settings;
+    qol::activateDisplayRow(settings, 1, fixture, qol::Resolution{1280, 720});
+    require(settings.resolution() == std::optional<qol::Resolution>{{1920, 1080}},
+        "unresolved steps on from the desktop mode");
+    qol::Settings other;
+    qol::activateDisplayRow(other, 1, fixture, qol::Resolution{1000, 500});
+    require(other.resolution() == std::optional<qol::Resolution>{{800, 600}},
+        "a desktop size outside the list starts at the first entry");
+}
+
 void rejections() {
     qol::Settings settings;
     require(qol::activateDisplayRow(settings, 2, fixture) == qol::DisplayResult::Rejected,
@@ -97,6 +138,8 @@ int main() {
     originalModeUnaffected();
     windowModeToggles();
     resolutionCycles();
+    clampToLargestMode();
+    desktopReference();
     rejections();
     if (failures) return EXIT_FAILURE;
     std::cout << "qol-display-tab: ok\n";

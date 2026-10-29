@@ -7,6 +7,7 @@
 #include "qol/menu_model.hpp"
 
 #include <iostream>
+#include <optional>
 #include <sstream>
 #include <string>
 
@@ -56,8 +57,6 @@ void originalModeFirst() {
                          qol::Key::PageUp, qol::Key::Up, qol::Key::Enter})
         menu.handle(qol::eventForKey(key));
     menu.handle(qol::rowClick(1));
-    menu.handle(qol::tabClick(1));
-    menu.handle(qol::rowClick(0));
     menu.handle(qol::tabClick(2));
     menu.handle(qol::rowClick(0));
     require(written(settings) == before, "the placeholder tabs change no setting");
@@ -78,11 +77,13 @@ void structure() {
     require(game.size() == 4 && game[0].label == "SFX volume" && game[1].label == "Music volume" &&
                 game[2].label == "Invert camera" && game[3].label == "Language",
             "Game rows");
-    require(qol::rowsOf(Tab::Display).size() == 1 && qol::rowsOf(Tab::Display)[0].label == "Window mode",
+    auto display = qol::rowsOf(Tab::Display);
+    require(display.size() == 2 && display[0].label == "Window mode" && display[1].label == "Resolution" &&
+                display[0].kind == qol::RowKind::Display && display[1].kind == qol::RowKind::Display,
             "Display rows");
     require(qol::rowsOf(Tab::Controls).size() == 1 && qol::rowsOf(Tab::Controls)[0].label == "Key bindings",
             "Controls rows");
-    for (Tab tab : {Tab::Game, Tab::Display, Tab::Controls})
+    for (Tab tab : {Tab::Game, Tab::Controls})
         for (const qol::Row& row : qol::rowsOf(tab))
             require(row.kind == qol::RowKind::Placeholder, "placeholder rows");
 
@@ -242,6 +243,43 @@ void toggles() {
             "an old mix is replaced by the current mode's switches, then the click applies");
 }
 
+void displayTab() {
+    qol::Settings settings;
+    const std::string before = written(settings);
+    qol::MenuModel menu(settings);
+    menu.open();
+    menu.handle(qol::tabClick(static_cast<std::size_t>(Tab::Display)));
+    require(menu.tab() == Tab::Display && menu.row() == 0, "display tab selected");
+    require(settings.master() == qol::Master::Original, "original mode while using the display tab");
+    require(menu.handle({EventKind::Up}) == Result::RowChanged && menu.row() == 1, "display rows wrap up");
+    require(menu.handle({EventKind::Down}) == Result::RowChanged && menu.row() == 0, "display rows wrap down");
+    require(menu.handle({EventKind::Left}) == Result::Ignored && menu.handle({EventKind::Right}) == Result::Ignored,
+            "left and right ignored on display rows");
+    require(menu.handle(qol::rowMove(2)) == Result::Rejected, "hover past the last display row");
+    require(menu.handle(qol::rowClick(2)) == Result::Rejected, "click past the last display row");
+    require(written(settings) == before, "navigation changes no setting");
+
+    require(menu.handle(qol::eventForKey(qol::Key::Enter)) == Result::DisplayChanged &&
+                settings.windowMode() == qol::WindowMode::Windowed,
+            "Enter toggles the window mode");
+    require(menu.displayRows()[0].value == "windowed", "row value follows");
+    require(menu.handle(qol::rowClick(1)) == Result::RowChanged && !settings.resolution(),
+            "resolution row without modes is ignored");
+
+    const qol::ResolutionChoices modes{{800, 600}, {1280, 720}, {1920, 1080}};
+    require(!menu.setDisplayModes({{399, 240}}, {1920, 1080}), "mode below the minimum rejected");
+    require(!menu.setDisplayModes(modes, {300, 200}), "tiny desktop rejected");
+    require(menu.setDisplayModes(modes, {1280, 720}), "modes accepted");
+    require(menu.handle(qol::rowClick(1)) == Result::DisplayChanged &&
+                settings.resolution() == std::optional<qol::Resolution>{{1920, 1080}},
+            "the unresolved resolution steps on from the desktop size");
+    require(menu.handle(qol::rowClick(1)) == Result::DisplayChanged &&
+                settings.resolution() == std::optional<qol::Resolution>{{800, 600}},
+            "click steps and wraps");
+    require(menu.displayRows()[1].value == "800x600" && !menu.displayRows()[1].custom, "listed value");
+    require(settings.master() == qol::Master::Original && !settings.mixSet(), "display leaves master and mix alone");
+}
+
 void rejections() {
     qol::Settings settings;
     qol::MenuModel menu(settings);
@@ -277,6 +315,7 @@ int main() {
     navigation();
     masterCycling();
     toggles();
+    displayTab();
     rejections();
     if (failures) {
         std::cerr << failures << " failure(s)\n";

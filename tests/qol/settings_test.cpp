@@ -164,16 +164,16 @@ void displayKeys() {
         "defaults: fullscreen and desktop size (user, 2026-10-29)");
     require(!direct.setResolution({399, 240}) && !direct.resolution(),
         "setResolution refuses below the minimum");
-    require(direct.resolveDesktop({1920, 1080}) &&
-        direct.resolution() == std::optional<qol::Resolution>{{1920, 1080}},
-        "resolveDesktop fixes the unset resolution");
-    require(direct.resolveDesktop({1280, 720}) &&
-        direct.resolution() == std::optional<qol::Resolution>{{1920, 1080}},
-        "resolveDesktop keeps a stored resolution");
+    require(direct.effectiveResolution({1920, 1080}) == std::optional<qol::Resolution>{{1920, 1080}} &&
+        !direct.resolution(), "the unresolved resolution is the desktop size and is not stored");
+    require(written(direct) == "master Original\nwindow_mode fullscreen\n",
+        "no resolution line while the desktop size is in use (user, 2026-10-29: Omit the line)");
+    require(!direct.effectiveResolution({300, 200}), "tiny desktop refused");
+    direct.setResolution({1920, 1080});
+    require(direct.effectiveResolution({1280, 720}) == std::optional<qol::Resolution>{{1920, 1080}},
+        "a stored resolution wins over the desktop size");
     require(written(direct) == "master Original\nwindow_mode fullscreen\nresolution 1920x1080\n",
-        "next write adds both keys");
-    qol::Settings small;
-    require(!small.resolveDesktop({300, 200}) && !small.resolution(), "tiny desktop refused");
+        "a picked size is written");
     require(parse("master Original\n").windowMode() == qol::WindowMode::Fullscreen &&
         !parse("master Original\n").resolution(), "old file without the keys uses the defaults");
     require(direct.setResolution({800, 600}) &&

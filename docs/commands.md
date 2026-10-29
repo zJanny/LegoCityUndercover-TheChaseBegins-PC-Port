@@ -113,13 +113,13 @@ The table lists some of the tests. `ctest --test-dir build -N` lists all of them
 |---|---|
 | `input-core` | Input core, no SDL, including the `DebugOverlay` binding |
 | `qol-settings` | Quality-of-life toggle store, no SDL: master state Original/Improved/Custom, per-feature switches, strict `config/qol.cfg` read and write including `window_mode` and `resolution` (`tests/qol/`) |
-| `qol-menu-model` | Drawing-free model of the PC settings menu, no SDL: tabs, rows from the feature table, key and pointer events, master button cycling, toggle rows, rejections (`tests/qol/`) |
+| `qol-menu-model` | Drawing-free model of the PC settings menu, no SDL: tabs, rows from the feature table, key and pointer events, master button cycling, toggle rows, the Display tab over the display modes, rejections (`tests/qol/`) |
 | `qol-game-tab` | Model of the Game tab, no SDL: SFX and Music volume 0 to 10, Invert camera, a read-only language value and a Language row that requests the Languages page, over a fake options interface, in-sync reads, ranges and rejections (`tests/qol/`) |
 | `qol-game-options` | Port side of the Game tab over the Options page state, fake state without game data: edits seen by the original Options page and the reverse, gains, Languages page request, out-of-range rejection (`tests/qol/`) |
 | `qol-controls-tab` | Model of the Controls tab, no SDL: waiting for a key, assign or cancel, conflicts reported without change, reset, rejections (`tests/qol/`) |
 | `qol-view-layout` | Quality-of-life geometry, no SDL: view rectangle, black bars and aspect for a window size (5:3 to 16:9), corner anchors of the HUD, rejection of windows below 400x240 (`tests/qol/`) |
 | `render-viewport-rect` | View region of the top screen, no OpenGL context: default 400:240, the 16:9 projection scale, rejection of non-positive rectangles and aspects (`tests/render_viewport_rect_test.cpp`) |
-| `qol-display-tab` | Display tab store and rows, no SDL: `window_mode` and `resolution` keys of `config/qol.cfg` with the desktop-size default, window mode and resolution rows, custom size, list cycling, rejections (`tests/qol/`) |
+| `qol-display-tab` | Display tab store and rows, no SDL: `window_mode` and `resolution` keys of `config/qol.cfg` with the desktop-size default, window mode and resolution rows, custom size, list cycling, clamp to the largest display mode, no `resolution` line while the desktop size is in use, rejections (`tests/qol/`) |
 | `debug-metrics-core` | [Debug overlay](debug-overlay.md) values on synthetic input: frame-time window, `/proc/self/status` fixture, CPU percent, overlay lines |
 | `debug-text-core` | Debug overlay font and panel raster |
 | `debug-overlay-off`, `debug-overlay-on`, `debug-overlay-area` | Two offscreen screenshots without and with `--debug-overlay`; the third checks that they differ only in the top-left panel area. Registered only if `artifacts/romfs` existed at configure time |

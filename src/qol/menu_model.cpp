@@ -1,5 +1,7 @@
 #include "qol/menu_model.hpp"
 
+#include <utility>
+
 namespace qol {
 
 const char* tabName(Tab tab) {
@@ -19,7 +21,12 @@ std::vector<Row> rowsOf(Tab tab) {
         return {placeholder("SFX volume"), placeholder("Music volume"),
                 placeholder("Invert camera"), placeholder("Language")};
     case Tab::Display:
-        return {placeholder("Window mode")};
+    {
+        std::vector<Row> rows;
+        for (const DisplayRow& row : qol::displayRows(Settings{}, {}))
+            rows.push_back(Row{RowKind::Display, row.label});
+        return rows;
+    }
     case Tab::Controls:
         return {placeholder("Key bindings")};
     case Tab::QualityOfLife: {
@@ -50,6 +57,17 @@ Event rowMove(std::size_t row) { return {EventKind::RowMove, row}; }
 Event rowClick(std::size_t row) { return {EventKind::RowClick, row}; }
 Event tabMove(std::size_t tab) { return {EventKind::TabMove, tab}; }
 Event tabClick(std::size_t tab) { return {EventKind::TabClick, tab}; }
+
+bool MenuModel::setDisplayModes(ResolutionChoices modes, const Resolution& desktop) {
+    if (!choicesValid(modes) || !resolutionValid(desktop)) return false;
+    modes_ = std::move(modes);
+    desktop_ = desktop;
+    return true;
+}
+
+std::vector<DisplayRow> MenuModel::displayRows() const {
+    return qol::displayRows(settings_, modes_);
+}
 
 void MenuModel::open() {
     open_ = true;
@@ -128,6 +146,14 @@ Result MenuModel::activateRow() {
         }
         settings_.setSwitch(selected.feature, !settings_.customSwitch(selected.feature));
         return Result::FeatureToggled;
+    case RowKind::Display:
+        switch (activateDisplayRow(settings_, row(), modes_, desktop_)) {
+        case DisplayResult::Ignored: return Result::Ignored;
+        case DisplayResult::Rejected: return Result::Rejected;
+        case DisplayResult::WindowModeChanged:
+        case DisplayResult::ResolutionChanged: return Result::DisplayChanged;
+        }
+        return Result::Ignored;
     case RowKind::Placeholder:
         return Result::Ignored;
     }

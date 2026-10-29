@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 1015 open items and stand-ins, 176 linked to game usage, 839 with unknown reach.
+Items: 1014 open items and stand-ins, 176 linked to game usage, 838 with unknown reach.
 
 ## Top 50 overall
 
@@ -201,7 +201,7 @@ No linked items.
 
 ## Quality of life (`qol` plan)
 
-0 of 24 items linked.
+0 of 23 items linked.
 
 No linked items.
 
@@ -247,7 +247,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [qol-bottom-screen.md](features/qol-bottom-screen.md): QOLBOT-1 (+8), QOLBOT-10, QOLBOT-2, QOLBOT-3, QOLBOT-4, QOLBOT-5, QOLBOT-7, QOLBOT-8, QOLBOT-9
 - [qol-fullscreen.md](features/qol-fullscreen.md): QOLFS-8 (+13), QOLFS-1 (+12), QOLFS-2, QOLFS-3
 - [qol-minimap.md](features/qol-minimap.md): QOLMAP-1
-- [qol-settings-menu.md](features/qol-settings-menu.md): QOLSET-2 (+9), QOLSET-25 (+2), QOLSET-4 (+2), QOLSET-24 (+1), QOLSET-19, QOLSET-26, QOLSET-27, QOLSET-3, QOLSET-8, QOLSET-9
+- [qol-settings-menu.md](features/qol-settings-menu.md): QOLSET-22 (+8), QOLSET-2 (+7), QOLSET-25 (+2), QOLSET-24 (+1), QOLSET-19, QOLSET-3, QOLSET-4, QOLSET-8, QOLSET-9
 - [rendering-draw-order.md](features/rendering-draw-order.md): RENDER-65 (+1), RENDER-78 (+1), RENDER-79 (+1), RENDER-S64, RENDER-S71, RENDER-S72
 - [rendering-reflections.md](features/rendering-reflections.md): RENDER-75 (+1), RENDER-S69
 - [rendering-shadows.md](features/rendering-shadows.md): RENDER-72 (+1), RENDER-73 (+1), RENDER-74 (+1), RENDER-S67, RENDER-S68

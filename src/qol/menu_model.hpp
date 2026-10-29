@@ -1,10 +1,12 @@
 #pragma once
 
+#include "qol/display_tab.hpp"
 #include "qol/features.hpp"
 #include "qol/settings.hpp"
 
 #include <array>
 #include <cstddef>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -16,7 +18,7 @@ inline constexpr std::size_t tabCount = 4;
 
 const char* tabName(Tab tab);
 
-enum class RowKind { Master, Feature, Placeholder };
+enum class RowKind { Master, Feature, Display, Placeholder };
 
 struct Row {
     RowKind kind;
@@ -55,7 +57,8 @@ enum class Result {
     RowChanged,
     MasterCycled,
     FeatureToggled,
-    SwitchedToCustom
+    SwitchedToCustom,
+    DisplayChanged
 };
 
 class MenuModel {
@@ -68,6 +71,9 @@ public:
     std::vector<Row> rows() const { return rowsOf(tab_); }
     bool tabActive(Tab) const { return true; }
 
+    bool setDisplayModes(ResolutionChoices modes, const Resolution& desktop);
+    std::vector<DisplayRow> displayRows() const;
+
     void open();
     Result handle(const Event& event);
 
@@ -78,6 +84,8 @@ private:
     Result activateRow();
 
     Settings& settings_;
+    ResolutionChoices modes_;
+    std::optional<Resolution> desktop_;
     bool open_ = false;
     Tab tab_ = Tab::Game;
     std::array<std::size_t, tabCount> rows_{};

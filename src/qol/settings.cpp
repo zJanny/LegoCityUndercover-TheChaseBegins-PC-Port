@@ -70,9 +70,10 @@ bool Settings::setResolution(const Resolution& resolution) {
     return true;
 }
 
-bool Settings::resolveDesktop(const Resolution& desktop) {
-    if (resolution_) return true;
-    return setResolution(desktop);
+std::optional<Resolution> Settings::effectiveResolution(const Resolution& desktop) const {
+    if (resolution_) return resolution_;
+    if (!resolutionValid(desktop)) return std::nullopt;
+    return desktop;
 }
 
 bool Settings::customSwitch(Feature feature) const {
