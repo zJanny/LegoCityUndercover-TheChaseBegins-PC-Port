@@ -101,4 +101,21 @@ void drawText(Canvas& canvas, const BitmapFont& font, const std::vector<std::str
     }
 }
 
+void drawTextScaled(Canvas& canvas, const BitmapFont& font, const std::vector<std::string>& extended, const std::string& utf8, float x,
+                    float y, Align align, const Colour& colour, int spacing, float scaleX, float scaleY) {
+    const auto placed = assets::layoutText(font.font, utf8, extended);
+    if (placed.empty()) return;
+    const float width = float(textWidth(font, extended, utf8, spacing)) * scaleX;
+    float left = x;
+    if (align == Align::Centre) left = x - width / 2.0f;
+    else if (align == Align::Right) left = x - width;
+    int index = 0;
+    for (const auto& glyph : placed) {
+        const IntRect source{glyph.glyph.x, glyph.glyph.y, glyph.glyph.width, glyph.glyph.height};
+        canvas.drawScaled(font.atlas, source, left + float(glyph.x + index * (spacing - 1)) * scaleX, y, float(glyph.glyph.width) * scaleX,
+                          float(glyph.glyph.height) * scaleY, colour);
+        ++index;
+    }
+}
+
 }

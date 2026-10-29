@@ -83,6 +83,18 @@ add_test(NAME qol-text-check-real-data COMMAND qol-text-check-real-test
   "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
 set_tests_properties(qol-text-check-real-data PROPERTIES SKIP_RETURN_CODE 77 LABELS needs-game-data)
 
+add_executable(qol-menu-hit-test menu_hit_test.cpp)
+target_link_libraries(qol-menu-hit-test PRIVATE chase_qol)
+target_compile_options(qol-menu-hit-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME qol-menu-hit COMMAND qol-menu-hit-test)
+
+add_executable(qol-menu-page-real-test menu_page_real_test.cpp)
+target_link_libraries(qol-menu-page-real-test PRIVATE chase_qol_menu)
+target_compile_options(qol-menu-page-real-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME qol-menu-page-real-data COMMAND qol-menu-page-real-test
+  "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
+set_tests_properties(qol-menu-page-real-data PROPERTIES SKIP_RETURN_CODE 77 LABELS needs-game-data)
+
 if(TARGET chase_qol_view)
   add_executable(qol-bottom-hook-test bottom_hook_test.cpp)
   target_link_libraries(qol-bottom-hook-test PRIVATE chase_qol_view PkgConfig::SDL2)

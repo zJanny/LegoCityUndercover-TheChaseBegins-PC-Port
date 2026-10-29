@@ -19,8 +19,6 @@ constexpr int kTitleX = -56, kTitleY = -8;
 // STAND-IN FE-S32: the Delete label is orange in the oracle (sl0.png brightest texel 255, 200, 100); the code that tints it is not read.
 constexpr float kDeleteTintGreen = 200.0f / 255.0f, kDeleteTintBlue = 100.0f / 255.0f;
 constexpr const char* kExtraButtonImage = "sprites/blend/ui_frontend/images/screen_extrabutton.bpng";
-constexpr const char* kShortcutsLayout = "sprites/blend/ui_frontend/shortcuts.bxaml";
-constexpr float kShortcutsX = -80, kShortcutsY = -16;
 constexpr const char* kDialogBoxTexture = "sprites/ui_dialog/ui_dialog_box.btga";
 // STAND-INS fitted to oracle screenshots of the movie bubble, loading tip and mission card.
 constexpr int kBoxEdge = 16;
@@ -131,7 +129,7 @@ void drawSelectShortcut(Canvas& bottom, Resources& resources, const std::string&
     drawLayout(bottom, resources, kShortcutsLayout, shortcuts, kShortcutsX, kShortcutsY);
 }
 
-void drawBackSelectShortcuts(Canvas& bottom, Resources& resources, const ShortcutView& back, const ShortcutView& select) {
+LayoutScene backSelectShortcutsScene(const ShortcutView& back, const ShortcutView& select) {
     LayoutScene shortcuts;
     shortcuts.hidden = {"BackButton_DS", "SelectButton_DS", "ExtraButton_DS", "ExtraButton_3DS"};
     shortcuts.textSpacing = 1;
@@ -149,7 +147,11 @@ void drawBackSelectShortcuts(Canvas& bottom, Resources& resources, const Shortcu
     };
     place(back, "BackButton_3DS", Align::Left);
     place(select, "SelectButton_3DS", Align::Right);
-    drawLayout(bottom, resources, kShortcutsLayout, shortcuts, kShortcutsX, kShortcutsY);
+    return shortcuts;
+}
+
+void drawBackSelectShortcuts(Canvas& bottom, Resources& resources, const ShortcutView& back, const ShortcutView& select) {
+    drawLayout(bottom, resources, kShortcutsLayout, backSelectShortcutsScene(back, select), kShortcutsX, kShortcutsY);
 }
 
 void drawSlotPage(Canvas& bottom, Resources& resources, const std::string& header, const std::string& selectLabel,

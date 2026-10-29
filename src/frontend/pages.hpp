@@ -39,6 +39,10 @@ struct ShortcutView {
     bool drawn = false;
 };
 void drawBackSelectShortcuts(Canvas& bottom, Resources& resources, const ShortcutView& back, const ShortcutView& select);
+// The layout, its top left on the bottom screen and the scene that drawBackSelectShortcuts draws.
+constexpr const char* kShortcutsLayout = "sprites/blend/ui_frontend/shortcuts.bxaml";
+constexpr float kShortcutsX = -80, kShortcutsY = -16;
+LayoutScene backSelectShortcutsScene(const ShortcutView& back, const ShortcutView& select);
 
 struct SlotRow {
     int number = 1;

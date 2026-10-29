@@ -142,7 +142,10 @@ private:
         frame.scaleY = parent.scaleY * scaleY;
         frame.x = parent.x + parent.scaleX * boxX;
         frame.y = parent.y + parent.scaleY * boxY;
-        frame.opacity = parent.opacity * (pose.hasOpacity ? pose.opacity : e.opacity);
+        auto opacitySet = instance_.empty() ? scene_.opacities.end() : scene_.opacities.find(instance_ + "/" + e.name);
+        if (opacitySet == scene_.opacities.end()) opacitySet = scene_.opacities.find(e.name);
+        const float ownOpacity = opacitySet != scene_.opacities.end() ? opacitySet->second : pose.hasOpacity ? pose.opacity : e.opacity;
+        frame.opacity = parent.opacity * ownOpacity;
         if (image) {
             const Colour tint{1, 1, 1, frame.opacity};
             if (rotation != 0)
@@ -181,6 +184,10 @@ private:
                                                          : wrapText(font, extended, slot.text, 1 << 20, spacing);
         const int pitch = slot.pitch > 0 ? slot.pitch : int(font.font.lineHeight);
         const float boxWidth = width * frame.scaleX, boxHeight = height * frame.scaleY;
+        if (scene_.scaleText) {
+            scaledText(slot, e, frame, lines, pitch, spacing, boxWidth, boxHeight);
+            return;
+        }
         float anchor = frame.x + boxWidth / 2 + float(slot.offsetX);
         if (slot.align == Align::Left) anchor = frame.x + float(slot.offsetX);
         else if (slot.align == Align::Right) anchor = frame.x + boxWidth + float(slot.offsetX);
@@ -192,6 +199,24 @@ private:
             drawText(canvas_, font, extended, line, anchor, top + float(pitch - int(font.font.lineHeight)), slot.align, colour,
                      spacing, false);
             top += float(pitch);
+        }
+    }
+
+    void scaledText(const TextSlot& slot, const assets::UiElement& e, const Frame& frame, const std::vector<std::string>& lines, int pitch,
+                    int spacing, float boxWidth, float boxHeight) {
+        const BitmapFont& font = resources_.font("frontendfont");
+        const float scaleX = std::fabs(frame.scaleX), scaleY = std::fabs(frame.scaleY);
+        float anchor = frame.x + boxWidth / 2 + float(slot.offsetX) * scaleX;
+        if (slot.align == Align::Left) anchor = frame.x + float(slot.offsetX) * scaleX;
+        else if (slot.align == Align::Right) anchor = frame.x + boxWidth + float(slot.offsetX) * scaleX;
+        const float linePitch = float(pitch) * scaleY;
+        float top = frame.y + (boxHeight - linePitch * float(lines.size())) / 2 + float(slot.offsetY) * scaleY;
+        Colour colour{e.colour[0] / 255.0f, e.colour[1] / 255.0f, e.colour[2] / 255.0f, e.colour[3] / 255.0f * frame.opacity};
+        if (slot.tinted) colour = Colour{slot.tint[0], slot.tint[1], slot.tint[2], colour.a};
+        for (const auto& line : lines) {
+            drawTextScaled(canvas_, font, resources_.extendedCharacters(), line, anchor, top + float(pitch - int(font.font.lineHeight)) * scaleY,
+                           slot.align, colour, spacing, scaleX, scaleY);
+            top += linePitch;
         }
     }
 
@@ -234,6 +259,35 @@ std::optional<std::array<float, 4>> layoutChildBox(const assets::UiLayout& layou
         return std::array<float, 4>{x, y, width, height};
     }
     return std::nullopt;
+}
+
+namespace {
+
+bool elementBox(Resources& resources, const std::string& layoutPath, const assets::UiElement& element, const std::string& path, float x,
+                float y, std::array<float, 4>& out) {
+    const float ownX = x + element.position[0], ownY = y + element.position[1];
+    const std::size_t slash = path.find('/');
+    const std::string head = path.substr(0, slash);
+    if (element.name == head) {
+        if (slash == std::string::npos) {
+            out = {ownX, ownY, element.size[0], element.size[1]};
+            return true;
+        }
+        if (element.type != assets::UiElementType::Reference) return false;
+        const std::string referenced = layoutFolder(layoutPath) + lowerCase(element.source) + ".bxaml";
+        return elementBox(resources, referenced, resources.layout(referenced).root, path.substr(slash + 1), ownX, ownY, out);
+    }
+    for (const assets::UiElement& child : element.children)
+        if (elementBox(resources, layoutPath, child, path, ownX, ownY, out)) return true;
+    return false;
+}
+
+}
+
+std::optional<std::array<float, 4>> layoutElementBox(Resources& resources, const std::string& layoutPath, const std::string& path) {
+    std::array<float, 4> box{};
+    if (!elementBox(resources, layoutPath, resources.layout(layoutPath).root, path, 0, 0, box)) return std::nullopt;
+    return box;
 }
 
 float evaluateTrack(const assets::UiTrack& track, float time) {

@@ -97,6 +97,7 @@ public:
     explicit MenuModel(Settings& settings) : settings_(settings) {}
 
     bool isOpen() const { return open_; }
+    const Settings& settings() const { return settings_; }
     Tab tab() const { return tab_; }
     std::size_t row() const { return rows_[static_cast<std::size_t>(tab_)]; }
     std::vector<Row> rows() const;

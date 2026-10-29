@@ -53,8 +53,12 @@ The user's decisions of 2026-10-29, asked by the lead; the quoted labels are the
 - Enter, pad A, click on the Select icon: `Activate`: the master row cycles (`MasterCycled`), a feature row toggles (`FeatureToggled`, or `SwitchedToCustom` outside Custom), a Display row cycles window mode or resolution (`DisplayChanged`); in the model of 2026-10-29 the Game and Controls rows are placeholders (`Ignored`).
 - Escape, pad B, click on the Back icon: `Back`, the menu closes.
 - PageUp / PageDown, pad L / R, click on the `Pageslots` arrows: `TabPrevious` / `TabNext`, with wrap; hover over a header: `tabMove(i)` (ignored).
-- Mouse over a drawn row: `rowMove(i)`; click on a row: `rowClick(i)` (select, then activate). In the round form a click on a neighbour slot thus selects and activates it, where the original only turns the round.
+- Mouse over a drawn row: `rowMove(i)`; click on a row: `rowClick(i)` (select, then activate). In the round form a click on a neighbour slot thus selects and activates it, where the original only turns the round. Asked 2026-10-29: "Only on entering a slot": `rowMove` is sent only when the pointer enters a different slot, so a pointer resting on a slot does not spin the round. The area of a round slot (asked 2026-10-29): "Original tap circle": the original's touch rule, a circle of radius 32 pixels around the centre of each of the three visible slots.
 - Left / Right, pad Left / Right: `Left` / `Right`, stepping the rows that Q8 names.
 - While the Controls tab waits for a key, the keys go to it; Escape cancels ([qol-settings.md §2026-10-29T11:06:51](qol-settings.md#ts-20261029-110651)).
+
+**5. Name plate texts** (asked 2026-10-29 by 20261029-qolmenu2-A):
+- Game tab labels: "Original gametext labels": the labels of the original Options page from the game text, not the model's English labels.
+- Quality of life tab: "Readable names", offered as, for example, "Quality of life: Original" for the master row and "Widened view: Off" for the feature row; neither the config key nor "Master" is shown.
 
 Open (not decided by the user): whether every text fits its box (name plate 182 pixels, list bar 168 pixels) at the font size HUD-75 brings (QOLSET-34).

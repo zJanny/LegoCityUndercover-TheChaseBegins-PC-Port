@@ -46,5 +46,8 @@ enum class Align { Left, Centre, Right };
 int textWidth(const BitmapFont& font, const std::vector<std::string>& extended, const std::string& utf8, int spacing = 1);
 void drawText(Canvas& canvas, const BitmapFont& font, const std::vector<std::string>& extended, const std::string& utf8,
               float x, float y, Align align, const Colour& colour, int spacing = 1, bool middle = false);
+// drawText with every glyph and advance scaled by scaleX, scaleY and sampled linearly; x and y are not rounded.
+void drawTextScaled(Canvas& canvas, const BitmapFont& font, const std::vector<std::string>& extended, const std::string& utf8, float x,
+                    float y, Align align, const Colour& colour, int spacing, float scaleX, float scaleY);
 
 }
