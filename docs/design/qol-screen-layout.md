@@ -81,4 +81,5 @@ Implemented by 20261029-qolview-A:
 - The hook `qol::topViewRegion` (`src/qol/view_hook.*`) is called in `LevelSession::draw`. With the toggle off it returns `originalViewRegion` of today's top rectangle. With it on, it applies the 5:3 to 16:9 rule to the area above the bottom screen.
 - The glow pass gets the region's rectangle.
 - `layoutInArea` applies the rule to an area of any positive size: the area above the bottom screen of a 400x240 window is only 400x120. The 400x240 minimum check stays in `computeViewLayout`, for the window.
+- `qol::hudPartRect` (`src/qol/hud_hook.*`, 20261029-qolmenu-D) gives the window rectangle of a 400x240 canvas holding one HUD part, at the part's corner and the scale of the view height; the port cannot yet draw parts separately (QOLFS-12).
 - The process-wide store is `qol::activeSettings`, `setActiveSettings` and `enabled`, default Original.
