@@ -1,6 +1,7 @@
 // Spec: docs/design/qol-screen-layout.md entries 2026-10-28T09:21:33, 09:31:02, 09:37:31.
 // Pinned values computed by hand from the spec rules by 20261028-qolmenu-B on 2026-10-28.
 // Minimum window 400x240 and the three choices of this file: user answer to QOLFS-9, 2026-10-28 (docs/design/qol-screen-layout.md).
+// layoutInArea cases (the area above the bottom screen, user answer "Above bottom screen", 2026-10-29): 20261029-qolview-A.
 // Integer rounding is floor and the odd bar pixel goes to the right or bottom bar (accepted by the user, QOLFS-9).
 #include "qol/view_layout.hpp"
 
@@ -38,6 +39,15 @@ bool rejects(int w, int h) {
     return false;
 }
 
+bool rejectsArea(int w, int h) {
+    try {
+        qol::layoutInArea(w, h);
+    } catch (const std::invalid_argument& error) {
+        return std::string(error.what()).find("view layout") != std::string::npos;
+    }
+    return false;
+}
+
 bool near(double a, double b) { return a - b < 1e-9 && b - a < 1e-9; }
 
 }
@@ -63,6 +73,18 @@ int main() {
     require(rejects(3, 1), "3x1");
     require(rejects(399, 240), "one pixel narrower than the minimum");
     require(rejects(400, 239), "one pixel lower than the minimum");
+
+    {
+        const qol::ViewLayout area = qol::layoutInArea(400, 120);
+        require(area.view == qol::Rect{93, 0, 213, 120} && area.barCount == 2, "400x120 area below the window minimum: 16:9");
+        require(area.bars[0] == qol::Rect{0, 0, 93, 120} && area.bars[1] == qol::Rect{306, 0, 94, 120}, "400x120 area bars");
+        const qol::ViewLayout full = qol::layoutInArea(1920, 1080);
+        require(full.view == qol::computeViewLayout(1920, 1080).view, "area and window agree at 1920x1080");
+    }
+    require(rejectsArea(0, 120), "area zero width");
+    require(rejectsArea(400, 0), "area zero height");
+    require(rejectsArea(-4, 120), "area negative width");
+    require(rejectsArea(1, 1), "area 1x1 leaves no view");
 
     {
         const qol::ViewLayout layout = qol::computeViewLayout(400, 240);

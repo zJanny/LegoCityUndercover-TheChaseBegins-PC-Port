@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 1017 open items and stand-ins, 176 linked to game usage, 841 with unknown reach.
+Items: 1018 open items and stand-ins, 176 linked to game usage, 842 with unknown reach.
 
 ## Top 50 overall
 
@@ -201,7 +201,7 @@ No linked items.
 
 ## Quality of life (`qol` plan)
 
-0 of 26 items linked.
+0 of 27 items linked.
 
 No linked items.
 
@@ -209,7 +209,7 @@ No linked items.
 
 No script native or object class is linked to these items (`+N` is Unblocks). Add `uses:` to an item when its fix changes the game.
 
-Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?display=source#L33) (+30), [VEH-6](features/vehicles-physics.md?display=source#L30) (+24), [TRAFFIC-7](features/pedestrians-traffic-cars.md?display=source#L56) (+23), [TRAFFIC-8](features/pedestrians-traffic-cars.md?display=source#L57) (+23), [TRAFFIC-9](features/pedestrians-traffic-cars.md?display=source#L58) (+23), [TRAFFIC-2](features/pedestrians-traffic-cars.md?display=source#L51) (+22), [SCRIPT-43](features/script-system-natives.md?display=source#L30) (+18), [SCRIPT-94](features/script-system-ai-navigation.md?display=source#L34) (+17), [SCRIPT-44](features/script-system-natives.md?display=source#L31) (+16), [SCRIPT-101](features/script-system-ai-navigation.md?display=source#L37) (+15)
+Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?display=source#L33) (+30), [VEH-6](features/vehicles-physics.md?display=source#L30) (+24), [QOLSET-22](features/qol-settings-menu.md?display=source#L29) (+23), [TRAFFIC-7](features/pedestrians-traffic-cars.md?display=source#L56) (+23), [TRAFFIC-8](features/pedestrians-traffic-cars.md?display=source#L57) (+23), [TRAFFIC-9](features/pedestrians-traffic-cars.md?display=source#L58) (+23), [QOLSET-2](features/qol-settings-menu.md?display=source#L21) (+22), [TRAFFIC-2](features/pedestrians-traffic-cars.md?display=source#L51) (+22), [SCRIPT-43](features/script-system-natives.md?display=source#L30) (+18), [SCRIPT-94](features/script-system-ai-navigation.md?display=source#L34) (+17)
 
 - [abilities-detective.md](features/abilities-detective.md): DETECT-19 (+3), DETECT-13 (+2), DETECT-1 (+1), DETECT-15 (+1), DETECT-4 (+1), DETECT-6 (+1), DETECT-S11 (+1), DETECT-S7 (+1), DETECT-S8 (+1), DETECT-10, DETECT-11, DETECT-12, DETECT-18, DETECT-3, DETECT-5, DETECT-9, DETECT-S1, DETECT-S2, DETECT-S4, DETECT-S5, DETECT-S6, DETECT-S9
 - [abilities-scanner.md](features/abilities-scanner.md): SCAN-10 (+1), SCAN-16 (+1), SCAN-17 (+1), SCAN-S10 (+1), AUDIO-S33, SCAN-13, SCAN-15, SCAN-19, SCAN-3, SCAN-6, SCAN-S1, SCAN-S11, SCAN-S12, SCAN-S13, SCAN-S14, SCAN-S2, SCAN-S3, SCAN-S4, SCAN-S5, SCAN-S6, SCAN-S7, SCAN-S9
@@ -245,9 +245,9 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [player-traversal-rails.md](features/player-traversal-rails.md): TRAV-28 (+3), TRAV-38 (+1), TRAV-43 (+1), TRAV-44 (+1), TRAV-45 (+1), TRAV-S16 (+1), TRAV-S18 (+1), TRAV-S19 (+1), TRAV-27, TRAV-29, TRAV-31, TRAV-32, TRAV-33, TRAV-42, TRAV-S15, TRAV-S17, TRAV-S21, TRAV-S23, TRAV-S24, TRAV-S25, TRAV-S26
 - [player-traversal.md](features/player-traversal.md): TRAV-9 (+2), TRAV-2 (+1), TRAV-49 (+1), TRAV-52 (+1), TRAV-S12 (+1), TRAV-10, TRAV-19, TRAV-20, TRAV-22, TRAV-34, TRAV-35, TRAV-5, TRAV-6, TRAV-63, TRAV-8, TRAV-S1, TRAV-S10, TRAV-S11, TRAV-S13, TRAV-S2, TRAV-S20, TRAV-S29, TRAV-S3, TRAV-S30, TRAV-S31, TRAV-S32, TRAV-S4
 - [qol-bottom-screen.md](features/qol-bottom-screen.md): QOLBOT-1 (+8), QOLBOT-10, QOLBOT-2, QOLBOT-3, QOLBOT-4, QOLBOT-5, QOLBOT-7, QOLBOT-8, QOLBOT-9
-- [qol-fullscreen.md](features/qol-fullscreen.md): QOLFS-8 (+13), QOLFS-1 (+12), QOLFS-2, QOLFS-3
+- [qol-fullscreen.md](features/qol-fullscreen.md): QOLFS-11 (+13), QOLFS-1 (+12), QOLFS-10, QOLFS-2, QOLFS-3
 - [qol-minimap.md](features/qol-minimap.md): QOLMAP-1
-- [qol-settings-menu.md](features/qol-settings-menu.md): QOLSET-22 (+9), QOLSET-2 (+8), QOLSET-25 (+2), QOLSET-30 (+2), QOLSET-32 (+2), QOLSET-24 (+1), QOLSET-4 (+1), QOLSET-19, QOLSET-3, QOLSET-31, QOLSET-8, QOLSET-9
+- [qol-settings-menu.md](features/qol-settings-menu.md): QOLSET-22 (+23), QOLSET-2 (+22), QOLSET-19 (+15), QOLSET-25 (+2), QOLSET-30 (+2), QOLSET-32 (+2), QOLSET-24 (+1), QOLSET-4 (+1), QOLSET-3, QOLSET-31, QOLSET-8, QOLSET-9
 - [rendering-draw-order.md](features/rendering-draw-order.md): RENDER-65 (+1), RENDER-78 (+1), RENDER-79 (+1), RENDER-S64, RENDER-S71, RENDER-S72
 - [rendering-reflections.md](features/rendering-reflections.md): RENDER-75 (+1), RENDER-S69
 - [rendering-shadows.md](features/rendering-shadows.md): RENDER-72 (+1), RENDER-73 (+1), RENDER-74 (+1), RENDER-S67, RENDER-S68

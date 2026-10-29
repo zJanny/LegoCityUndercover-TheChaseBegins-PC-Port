@@ -47,6 +47,8 @@ struct HudPoint {
 
 ViewLayout computeViewLayout(int windowWidth, int windowHeight);
 
+ViewLayout layoutInArea(int areaWidth, int areaHeight);
+
 HudAnchor hudAnchor(const ViewLayout& layout, Corner corner);
 
 HudPoint hudPosition(const HudAnchor& anchor, double originalX, double originalY);

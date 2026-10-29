@@ -4,7 +4,7 @@ The user's approved design of the first QoL features: the top screen as true ful
 
 ## Current state
 
-- True full screen: the view that is the top screen today fills the whole window, widened (same vertical field of view, more world left and right), HUD anchored to the corners, edges checked so that no pop-in shows: [§2026-10-28T09:21:33+01:00](#ts-20261028-092133).
+- True full screen: the view that is the top screen today fills the whole window, widened (same vertical field of view, more world left and right), HUD anchored to the corners (of the 16:9 area, [§2026-10-29T11:42:22](#ts-20261029-114222)), edges checked so that no pop-in shows: [§2026-10-28T09:21:33+01:00](#ts-20261028-092133).
 - The bottom screen is hidden when its features are on; with all QoL off the layout is exactly today's top over bottom: [§2026-10-28T09:21:33+01:00](#ts-20261028-092133).
 - Bottom-screen content: the map becomes a corner minimap; the characters button, character swap and fast-travel map become full-window panels clicked with the mouse; pause and Options become PC menus: [§2026-10-28T09:21:33+01:00](#ts-20261028-092133).
 - Minimap: round, top-right corner, about one fifth of the screen height, rotates with the camera, zoom like the original bottom-screen map: [§2026-10-28T09:31:02](#ts-20261028-093102).
@@ -19,10 +19,12 @@ The user's approved design of the first QoL features: the top screen as true ful
 - Geometry of the widened view and the corner HUD as pure functions, with the points the spec leaves open: [§2026-10-28T22:21:19+01:00](#ts-20261028-222119).
 - The user accepted the geometry choices and set the smallest window to 400x240: [§2026-10-28T22:25:37+01:00](#ts-20261028-222537).
 - The window has a minimum size of 400x240; the geometry's rejection of smaller sizes is only a safeguard: [§2026-10-28T22:39:39+01:00](#ts-20261028-223939).
+- The corner HUD anchors to the corners of the 16:9 area inside the bars, not to the window corners. While the bottom screen shows, the widened view fills the full window width at the rows of today's top screen. Until the corner HUD is drawn, the HUD canvas stays on today's top rectangle: [§2026-10-29T11:42:22](#ts-20261029-114222).
 
 <a id="ts-20261028-092133"></a>
 
 ## 2026-10-28T09:21:33+01:00 — Full screen, HUD and bottom-screen content
+Corrected by [qol-screen-layout.md §2026-10-29T11:42:22](#ts-20261029-114222): the HUD anchors to the corners of the 16:9 area inside the bars, not to the window corners; while the bottom screen shows, the widened view fills only the area above it.
 
 Asked of the user by the lead on 2026-10-28 (planner questions 5 to 8); answers quoted as selected. The user's request: "True Full Screen, what is currently the top screen should be entirely Full screen. Everything in the bottom should either move into a minimap (for the map) or Like the Settings menus into a normal Settings Menu Like all PC Games".
 
@@ -48,6 +50,7 @@ Open (not decided by the user): see the list in the report of the planner, recor
 <a id="ts-20261028-093731"></a>
 
 ## 2026-10-28T09:37:31+01:00 — Narrow windows, HUD corners, toggles, minimap content, pause menu and panel look
+Corrected by [qol-screen-layout.md §2026-10-29T11:42:22](#ts-20261029-114222): the standard corners are the corners of the 16:9 area inside the bars, not the window corners.
 Corrected by [qol-screen-layout.md §2026-10-28T09:48:15](#ts-20261028-094815): there are no per-panel toggles and the bottom screen is switched by the master button only.
 Corrected by [qol-screen-layout.md §2026-10-28T09:40:42](#ts-20261028-094042): the toggle decision for the bottom-screen panels (QOLBOT-11) is partly superseded; hiding the bottom screen turns every panel toggle on too.
 
@@ -132,3 +135,22 @@ Open (not decided by the user): what the game does for a window below the minimu
 Asked of the user by the lead on 2026-10-28; the quoted label is the user's selection. Resolves the open point of the entry on the 400x240 minimum (what happens when the window is made smaller).
 
 - "Window can't shrink below": "The window has a minimum size of 400x240, so a smaller size can't happen. The geometry rejecting it stays only as a safeguard."
+
+<a id="ts-20261029-114222"></a>
+
+## 2026-10-29T11:42:22+01:00 — Widened view above the bottom screen; corner HUD at the 16:9 area
+
+Asked of the user by the lead on 2026-10-29; the quoted labels are the user's selections. [Corrects §2026-10-28T09:21:33](#ts-20261028-092133) (HUD parts "move to the corners of the window") and [Corrects §2026-10-28T09:37:31](#ts-20261028-093731) (the standard corners read as window corners).
+
+- HUD corners (question 4): "16:9 area corners": the corner HUD anchors to the corners of the 16:9 area inside the bars, not to the window corners. When the area is narrower than 16:9 (between 5:3 and 16:9), the area is the whole widened view. `hudAnchor` already anchors to the view's corners ([§2026-10-28T22:21:19](#ts-20261028-222119)), and `qol-view-layout` pins the anchors inside the bars of a 21:9 window, so no code change was needed.
+- Where the widened view goes while the bottom screen shows: "Above bottom screen". While the widened view is on, the picture fills only the area above the bottom screen, where the 5:3 top screen is today. The whole window comes only once QOLBOT-1 hides the bottom screen.
+- Tall windows: "Top screen's rows". The area is the full window width at the rows of today's top screen. Height and position stay the same, and only the width grows.
+- HUD canvas until the corner HUD is drawn (QOLFS-2): "Today's rectangle". The 400x240 top HUD canvas stays on today's top rectangle, together with the fades, dialogue and movies drawn on it.
+
+Implemented by 20261029-qolview-A:
+- The hook `qol::topViewRegion` (`src/qol/view_hook.*`) is called in `LevelSession::draw`. With the toggle off it returns `originalViewRegion` of today's top rectangle. With it on, it applies the 5:3 to 16:9 rule to the area above the bottom screen.
+- The glow pass gets the region's rectangle.
+- `layoutInArea` applies the rule to an area of any positive size: the area above the bottom screen of a 400x240 window is only 400x120. The 400x240 minimum check stays in `computeViewLayout`, for the window.
+- The process-wide store is `qol::activeSettings`, `setActiveSettings` and `enabled`, default Original.
+
+Open: nothing loads `config/qol.cfg` into the active store yet (QOLFS-11). The window minimum is set by the window glue (QOLFS-10). Drawing the HUD at the corner anchors (QOLFS-2) and pop-in at the edges (QOLFS-3) are still open.

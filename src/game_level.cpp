@@ -6,6 +6,7 @@
 #include "frontend/pages.hpp"
 #include "game_save.hpp"
 #include "game_screen_fade.hpp"
+#include "qol/view_hook.hpp"
 #include "runtime/fog.hpp"
 #include "runtime/glow.hpp"
 #include "runtime/follow_camera.hpp"
@@ -413,7 +414,7 @@ void LevelSession::draw(int width, int height) {
     if (drawPause(width, height)) return;
     if (drawAwardViewer(width, height)) return;
     const game_hud::Screens screens = game_hud::screensFor(width, height);
-    const chase::render::ViewRegion topView = chase::render::originalViewRegion(screens.top);
+    const chase::render::ViewRegion topView = qol::topViewRegion(width, screens.top);
     chase::render::beginViewRegion(width, height, topView,
                                    {backgroundColour[0] / 255.0f, backgroundColour[1] / 255.0f, backgroundColour[2] / 255.0f, 1});
     beginFrame(1.0f);
@@ -502,7 +503,7 @@ void LevelSession::draw(int width, int height) {
     drawObjectiveArrows(mvp, viewToWorld);
     particles.draw(viewMatrix, mvp);
     drawZiplineRopes(viewMatrix, mvp);
-    if (runtime::glowRuns(scannerLook.glowStrength, false)) glowPass->apply(screens.top, runtime::glowComposite(scannerLook.glowStrength, scannerLook.glowSecond));
+    if (runtime::glowRuns(scannerLook.glowStrength, false)) glowPass->apply(topView.rect, runtime::glowComposite(scannerLook.glowStrength, scannerLook.glowSecond));
     setScissorTest(false);
     if (hud && !cutscenePlaying()) {
         hudCanvas.clearTransparent();

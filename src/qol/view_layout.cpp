@@ -15,28 +15,40 @@ ViewLayout computeViewLayout(int windowWidth, int windowHeight) {
                                     " is smaller than the minimum " + std::to_string(originalViewWidth) + "x" +
                                     std::to_string(originalViewHeight));
     }
-    const long long w = windowWidth;
-    const long long h = windowHeight;
+    return layoutInArea(windowWidth, windowHeight);
+}
+
+ViewLayout layoutInArea(int areaWidth, int areaHeight) {
+    if (areaWidth <= 0 || areaHeight <= 0) {
+        throw std::invalid_argument("view layout: area size must be positive, got " + std::to_string(areaWidth) + "x" +
+                                    std::to_string(areaHeight));
+    }
+    const long long w = areaWidth;
+    const long long h = areaHeight;
     ViewLayout layout;
-    int viewWidth = windowWidth;
-    int viewHeight = windowHeight;
+    int viewWidth = areaWidth;
+    int viewHeight = areaHeight;
     if (w * narrowestAspectHeight < h * narrowestAspectWidth) {
         viewHeight = static_cast<int>(w * narrowestAspectHeight / narrowestAspectWidth);
     } else if (w * widestAspectHeight > h * widestAspectWidth) {
         viewWidth = static_cast<int>(h * widestAspectWidth / widestAspectHeight);
     }
-    const int barX = (windowWidth - viewWidth) / 2;
-    const int barY = (windowHeight - viewHeight) / 2;
+    if (viewWidth <= 0 || viewHeight <= 0) {
+        throw std::invalid_argument("view layout: area " + std::to_string(areaWidth) + "x" + std::to_string(areaHeight) +
+                                    " leaves no view");
+    }
+    const int barX = (areaWidth - viewWidth) / 2;
+    const int barY = (areaHeight - viewHeight) / 2;
     layout.view = {barX, barY, viewWidth, viewHeight};
     layout.aspectWidth = viewWidth;
     layout.aspectHeight = viewHeight;
-    if (windowWidth > viewWidth) {
-        layout.bars[0] = {0, 0, barX, windowHeight};
-        layout.bars[1] = {barX + viewWidth, 0, windowWidth - barX - viewWidth, windowHeight};
+    if (areaWidth > viewWidth) {
+        layout.bars[0] = {0, 0, barX, areaHeight};
+        layout.bars[1] = {barX + viewWidth, 0, areaWidth - barX - viewWidth, areaHeight};
         layout.barCount = 2;
-    } else if (windowHeight > viewHeight) {
-        layout.bars[0] = {0, 0, windowWidth, barY};
-        layout.bars[1] = {0, barY + viewHeight, windowWidth, windowHeight - barY - viewHeight};
+    } else if (areaHeight > viewHeight) {
+        layout.bars[0] = {0, 0, areaWidth, barY};
+        layout.bars[1] = {0, barY + viewHeight, areaWidth, areaHeight - barY - viewHeight};
         layout.barCount = 2;
     }
     return layout;
