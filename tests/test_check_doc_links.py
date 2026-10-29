@@ -1,5 +1,6 @@
 import contextlib
 import io
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -436,6 +437,21 @@ class RuleChecksTest(unittest.TestCase):
         self.assertEqual(links.process(self.root, False)[0], [])
         self.write_priorities(5, 'F-9')
         self.assertEqual(links.process(self.root, False)[0], ['docs/plans/priorities.md:3: no item F-9 in features/f.md'])
+
+    def test_stale_priorities_fail_on_main_and_are_left_alone_on_a_branch(self):
+        (self.features / 'f.md').write_text('# F\n\n- [ ] F-1 open\n- F-S1 stand-in\n- [ ] F-3 third\n')
+        self.write_priorities(3)
+        priorities = self.root / 'docs' / 'plans' / 'priorities.md'
+        stale = priorities.read_text()
+        subprocess.run(['git', 'init', '-q', '-b', 'main', str(self.root)], check=True)
+        self.assertEqual(len(links.process(self.root, False)[0]), 1)
+        subprocess.run(['git', '-C', str(self.root), 'checkout', '-q', '-b', 'agent-branch'], check=True)
+        self.assertEqual(links.process(self.root, False)[0], [])
+        links.process(self.root, True)
+        self.assertEqual(priorities.read_text(), stale)
+        subprocess.run(['git', '-C', str(self.root), 'symbolic-ref', 'HEAD', 'refs/heads/main'], check=True)
+        links.process(self.root, True)
+        self.assertIn('#L5', priorities.read_text())
 
     def test_item_source_line_link_follows_a_move_and_fails_for_a_closed_item(self):
         feature = self.features / 'f.md'

@@ -77,6 +77,14 @@ def findings_files(root):
     return [p for d in FINDINGS_DIRS if (root / d).is_dir() for p in sorted((root / d).glob("*.md"))]
 
 
+GENERATED_PRIORITIES = "docs/plans/priorities.md"
+
+
+def off_main(root):
+    result = subprocess.run(["git", "-C", str(root), "symbolic-ref", "--short", "-q", "HEAD"], capture_output=True, text=True)
+    return result.returncode == 0 and result.stdout.strip() not in ("", "main", "master")
+
+
 def markdown_files(root):
     if (root / ".git").exists():
         out = subprocess.run(
@@ -1039,9 +1047,12 @@ def process(root, fix, messages=None):
                     if match.group(1) in seen:
                         errors.append(f"{path.relative_to(root)}:{number + 1}: duplicate anchor {match.group(1)}")
                     seen.add(match.group(1))
+    skip_generated = off_main(root)
     for path in files:
         doc = load(path)
         rel = path.relative_to(root)
+        if skip_generated and rel.as_posix() == GENERATED_PRIORITIES:
+            continue
         changed = False
         for number, line in enumerate(doc.lines):
             if doc.in_code[number]:
@@ -1108,7 +1119,7 @@ def process(root, fix, messages=None):
                 if new_line != line:
                     doc.lines[number] = new_line
                     changed = True
-        if changed:
+        if changed and fix:
             doc.save()
     errors.extend(size_errors(root))
     errors.extend(correction_errors(root, files, load))

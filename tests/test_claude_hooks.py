@@ -214,6 +214,19 @@ class HookTest(unittest.TestCase):
         git(self.repo, "add", "docs/notes.md")
         self.assertAllowed(self.bash(commit))
 
+    def test_branch_commit_of_a_moved_feature_line_leaves_priorities_alone(self):
+        features = self.docs_repo()
+        self.copy_tools("priority_report.py", "progress_report.py")
+        priorities = self.repo / "docs" / "plans" / "priorities.md"
+        priorities.write_text("# P\n\n[F-1](features/f.md?display=source#L3)\n")
+        git(self.repo, "add", ".")
+        git(self.repo, "commit", "-q", "-m", "priorities")
+        git(self.repo, "checkout", "-q", "-b", "feature")
+        (features / "f.md").write_text("# F\n\nProse.\n\n- [ ] F-1 — gap.\n")
+        self.assertAllowed(self.bash(f'git commit -am "Move x" -m "{CO_AUTHOR}"'))
+        self.assertEqual(priorities.read_text(), "# P\n\n[F-1](features/f.md?display=source#L3)\n")
+        self.assertNotIn("docs/plans/priorities.md", self.staged())
+
     GENERATED = ("README.md", "docs/plans/priorities.md", "docs/progress-trend.svg")
 
     def start_merge_of_main(self):
