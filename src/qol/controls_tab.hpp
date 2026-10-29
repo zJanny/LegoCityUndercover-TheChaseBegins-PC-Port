@@ -19,14 +19,21 @@ struct BindingEntry {
     }
 };
 
-enum class ControlsResult { Ignored, Waiting, Changed, Conflict, Rejected, Cancelled };
+enum class ControlsResult { Ignored, Waiting, Changed, Conflict, Rejected, Cancelled, Confirming };
 
 using KeyValidator = std::function<bool(const std::string&)>;
+using InputValidator = std::function<bool(const std::string& source, const std::string& code)>;
+
+constexpr std::size_t slotsPerAction = 2;
+
+struct AnyInput {};
 
 class ControlsTab {
 public:
     ControlsTab(std::vector<std::string> actions, std::vector<BindingEntry> bindings,
         std::vector<BindingEntry> defaults, KeyValidator validKey);
+    ControlsTab(AnyInput, std::vector<std::string> actions, std::vector<BindingEntry> bindings,
+        std::vector<BindingEntry> defaults, InputValidator validInput);
 
     std::size_t rowCount() const { return actions_.size(); }
     const std::string& rowAction(std::size_t row) const;
@@ -37,10 +44,17 @@ public:
     std::size_t waitingRow() const { return waitingRow_; }
     std::size_t waitingSlot() const { return waitingSlot_; }
     const std::string& conflictAction() const { return conflictAction_; }
+    const std::string& message() const { return message_; }
+    bool confirming() const { return confirming_; }
 
     ControlsResult activate(std::size_t row, std::size_t slot);
     ControlsResult assignKey(const std::string& keyName);
+    ControlsResult assignInput(const std::string& source, const std::string& code);
+    ControlsResult toggleMode(std::size_t row, std::size_t slot);
+    ControlsResult clearSlot(std::size_t row, std::size_t slot);
     ControlsResult cancel();
+    ControlsResult requestReset();
+    ControlsResult confirmReset();
     ControlsResult reset();
 
     bool changed() const { return changed_; }
@@ -48,16 +62,19 @@ public:
 
 private:
     std::vector<std::size_t> slotsOf(std::size_t row) const;
+    void refreshChanged();
 
     std::vector<std::string> actions_;
     std::vector<BindingEntry> bindings_;
     std::vector<BindingEntry> original_;
     std::vector<BindingEntry> defaults_;
-    KeyValidator validKey_;
+    InputValidator validInput_;
     bool waiting_ = false;
     std::size_t waitingRow_ = 0;
     std::size_t waitingSlot_ = 0;
     std::string conflictAction_;
+    std::string message_;
+    bool confirming_ = false;
     bool changed_ = false;
 };
 

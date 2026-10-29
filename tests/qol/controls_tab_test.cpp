@@ -1,5 +1,6 @@
 // Spec: docs/design/qol-settings.md entry 2026-10-28T09:32:07 (the Controls tab edits the key bindings of config/controls.cfg).
 // Binding fields and action names from docs/controls.md and src/input.cpp (Up, A, Walk ...; source key or mouse; hold or toggle).
+// Rebind flow and scope: docs/design/qol-settings.md entry 2026-10-29T11:06:51 (taken key refused with a message, Reset all with confirmation, Escape cancels, keys and mouse buttons, two slots with a mode each, clearing); worker 20261029-qolview-C.
 // Nothing else is specified; conflict, reset and cancel behaviour are the neutral choices of 20261029-qolwire-C, 2026-10-29 (open items QOLSET-26, QOLSET-27).
 #include "qol/controls_tab.hpp"
 
@@ -124,6 +125,94 @@ void rejections() {
     require(threw, "missing validator rejected");
 }
 
+void mouseButtonsCanBeBound() {
+    auto tab = make();
+    tab.activate(0, 1);
+    require(tab.assignInput("mouse", "Right") == ControlsResult::Changed, "mouse button assigned");
+    require(tab.bindings()[1] == BindingEntry{"Up", "mouse", "Right", "hold"}, "slot now holds the mouse button");
+    tab.activate(2, 1);
+    require(tab.assignInput("mouse", "Left") == ControlsResult::Conflict && tab.conflictAction() == "A", "taken mouse button refused");
+    require(tab.assignInput("mouse", "Wheel") == ControlsResult::Rejected, "unknown mouse button rejected");
+    require(tab.assignInput("pad", "A") == ControlsResult::Rejected, "pad rejected by the default validator");
+}
+
+void padInputsGoThroughTheValidator() {
+    qol::ControlsTab tab(qol::AnyInput{}, actions, defaults(), defaults(), [](const std::string& source, const std::string& code) {
+        return (source == "pad" && code == "South") || (source == "key" && code == "E");
+    });
+    tab.activate(2, 1);
+    require(tab.assignInput("pad", "South") == ControlsResult::Changed, "pad button assigned through the validator");
+    tab.activate(0, 0);
+    require(tab.assignInput("pad", "South") == ControlsResult::Conflict && tab.conflictAction() == "Walk", "taken pad button refused");
+    require(tab.assignInput("pad", "North") == ControlsResult::Rejected, "unknown pad button rejected");
+}
+
+void conflictCarriesAMessage() {
+    auto tab = make();
+    tab.activate(1, 0);
+    tab.assignKey("W");
+    require(tab.message() == "key W is already used by Up", "message names the input and the action");
+    tab.assignKey("E");
+    require(tab.message().empty() && !tab.waiting(), "message cleared after success");
+}
+
+void escapeCancelsAndCannotBeBound() {
+    auto tab = make();
+    tab.activate(0, 0);
+    require(tab.assignKey("Escape") == ControlsResult::Cancelled && !tab.waiting(), "Escape cancels waiting");
+    require(tab.bindings() == defaults(), "Escape is not bound");
+}
+
+void twoSlotsOnly() {
+    auto tab = make();
+    require(tab.activate(0, 2) == ControlsResult::Rejected, "a third slot is refused");
+    require(tab.activate(2, 1) == ControlsResult::Waiting, "the secondary slot of a one-binding action is open");
+    require(tab.activate(2, 2) == ControlsResult::Rejected, "no slot beyond the secondary");
+}
+
+void modePerSlot() {
+    auto tab = make();
+    require(tab.toggleMode(0, 1) == ControlsResult::Changed, "mode switched");
+    require(tab.bindings()[1].mode == "toggle" && tab.bindings()[0].mode == "hold", "only that slot changed");
+    require(tab.changed(), "mode change counts as changed");
+    require(tab.toggleMode(0, 1) == ControlsResult::Changed && tab.bindings() == defaults() && !tab.changed(), "switching back restores the list");
+    tab.toggleMode(0, 1);
+    tab.activate(0, 1);
+    tab.assignKey("E");
+    require(tab.bindings()[1].mode == "toggle" && tab.bindings()[1].code == "E", "rebinding keeps the slot's mode");
+    require(tab.toggleMode(0, 2) == ControlsResult::Rejected, "empty slot has no mode");
+    require(tab.toggleMode(5, 0) == ControlsResult::Rejected, "row out of range");
+}
+
+void clearingRemovesASlot() {
+    auto tab = make();
+    require(tab.clearSlot(0, 0) == ControlsResult::Changed && tab.changed(), "slot cleared");
+    auto keys = tab.rowKeys(0);
+    require(keys.size() == 1 && keys[0] == "key Up", "the other slot stays");
+    require(tab.clearSlot(0, 1) == ControlsResult::Rejected, "nothing left to clear");
+    require(tab.clearSlot(7, 0) == ControlsResult::Rejected, "row out of range");
+    tab.activate(0, 0);
+    tab.clearSlot(2, 0);
+    require(!tab.waiting() && tab.rowKeys(2).empty(), "clearing ends waiting and may empty a row");
+    require(tab.reset() == ControlsResult::Changed && tab.bindings() == defaults(), "reset restores cleared slots");
+}
+
+void resetNeedsConfirmation() {
+    auto tab = make();
+    require(tab.requestReset() == ControlsResult::Ignored && !tab.confirming(), "nothing to reset at defaults");
+    tab.activate(0, 0);
+    tab.assignKey("E");
+    require(tab.requestReset() == ControlsResult::Confirming && tab.confirming(), "request asks for confirmation");
+    require(tab.bindings() != defaults(), "nothing reset before the confirmation");
+    require(tab.cancel() == ControlsResult::Cancelled && !tab.confirming() && tab.bindings() != defaults(), "cancel declines the reset");
+    tab.requestReset();
+    require(tab.activate(1, 0) == ControlsResult::Waiting && !tab.confirming(), "starting a rebind drops the confirmation");
+    tab.cancel();
+    require(tab.confirmReset() == ControlsResult::Ignored, "confirm without request ignored");
+    tab.requestReset();
+    require(tab.confirmReset() == ControlsResult::Changed && tab.bindings() == defaults() && !tab.confirming() && !tab.changed(), "confirm resets all");
+}
+
 }
 
 int main() {
@@ -135,6 +224,14 @@ int main() {
     conflictIsReportedNotApplied();
     resetRestoresDefaults();
     rejections();
+    mouseButtonsCanBeBound();
+    padInputsGoThroughTheValidator();
+    conflictCarriesAMessage();
+    escapeCancelsAndCannotBeBound();
+    twoSlotsOnly();
+    modePerSlot();
+    clearingRemovesASlot();
+    resetNeedsConfirmation();
     if (failures == 0) std::cout << "qol-controls-tab: all checks passed\n";
     return failures == 0 ? 0 : 1;
 }

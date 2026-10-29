@@ -48,7 +48,6 @@ S1: the toggle store and the settings menu ([qol-settings-menu](features/qol-set
 
 One line per session, newest last; `--fix` keeps the newest 20 and moves older ones to `qol.progress-archive.md`.
 
-- 2026-10-28T09:50:53+01:00 — Planner: recorded minimap and bottom-screen decisions; one new open question. See [qol-minimap](features/qol-minimap.md).
 - 2026-10-28T09:53:50+01:00 — Planner: recorded that the master state is stored; no open user decision left. See [qol-settings-menu](features/qol-settings-menu.md).
 - 2026-10-28T21:33:48+01:00 — Agent 20261028-qol-A (toggle store): built library chase_qol with the master state, feature table and strict qol.cfg, test qol-settings. See [qol-settings-menu](features/qol-settings-menu.md).
 - 2026-10-28T21:34:16+01:00 — Agent 20261028-qol-B (qol-separation guard): added the qol-separation guard test with accepting and rejecting fixtures. See [qol-settings-menu](features/qol-settings-menu.md).
@@ -68,3 +67,4 @@ One line per session, newest last; `--fix` keeps the newest 20 and moves older o
 - 2026-10-29T10:29:11+01:00 — Agent 20261029-qolwire-C (controls tab): added the pure Controls tab model (waiting for key, assign, cancel, conflict report, reset) with test qol-controls-tab; open flow questions recorded; wiring and file writer remain. See [qol-settings-menu](features/qol-settings-menu.md).
 - 2026-10-29T11:11:07+01:00 — Lead (20261029-qolwire end): merged 20261029-qolwire-A (Display tab in the menu model, user answers recorded), 20261029-qolwire-B (Game tab port side), 20261029-qolwire-C (Controls tab model) through tools/merge_agent.py with all tests passing; ID ranges released in the merge commits; pushed main to origin/main after each merge. See [qol-settings-menu](features/qol-settings-menu.md)
 - 2026-10-29T11:45:52+01:00 — Agent 20261029-qolview-B (window mode and F11): startup clamp, effective size, borderless fullscreen or windowed, `Fullscreen` F11 binding and the 400x240 minimum in chase-game, test qol-window-apply; the user answered the open questions. See [qol-settings-menu](features/qol-settings-menu.md).
+- 2026-10-29T11:47:10+01:00 — Agent 20261029-qolview-C (controls tab): rebind flow in the Controls tab model (refuse, confirmed Reset all, Escape, mouse, two slots with modes, clearing), adapter over readBindings and atomic strict writer with round-trip tests; recorded the art and Language decisions; pad format, comments and defaults open. See [qol-settings-menu](features/qol-settings-menu.md).

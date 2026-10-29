@@ -18,13 +18,29 @@ void requireKnown(const std::vector<std::string>& actions, const std::vector<Bin
             throw std::invalid_argument(std::string("Unknown action in ") + what + ": " + entry.action);
 }
 
+bool mouseButton(const std::string& code) {
+    return code == "Left" || code == "Middle" || code == "Right" || code == "X1" || code == "X2";
+}
+
+InputValidator keyAndMouse(KeyValidator validKey) {
+    if (!validKey) throw std::invalid_argument("Controls tab needs a key validator");
+    return [validKey = std::move(validKey)](const std::string& source, const std::string& code) {
+        if (source == "key") return validKey(code);
+        return source == "mouse" && mouseButton(code);
+    };
+}
+
 }
 
 ControlsTab::ControlsTab(std::vector<std::string> actions, std::vector<BindingEntry> bindings,
     std::vector<BindingEntry> defaults, KeyValidator validKey)
+    : ControlsTab(AnyInput{}, std::move(actions), std::move(bindings), std::move(defaults), keyAndMouse(std::move(validKey))) {}
+
+ControlsTab::ControlsTab(AnyInput, std::vector<std::string> actions, std::vector<BindingEntry> bindings,
+    std::vector<BindingEntry> defaults, InputValidator validInput)
     : actions_(std::move(actions)), bindings_(std::move(bindings)), original_(bindings_),
-      defaults_(std::move(defaults)), validKey_(std::move(validKey)) {
-    if (!validKey_) throw std::invalid_argument("Controls tab needs a key validator");
+      defaults_(std::move(defaults)), validInput_(std::move(validInput)) {
+    if (!validInput_) throw std::invalid_argument("Controls tab needs an input validator");
     requireKnown(actions_, bindings_, "bindings");
     requireKnown(actions_, defaults_, "defaults");
 }
@@ -47,6 +63,10 @@ std::vector<std::size_t> ControlsTab::slotsOf(std::size_t row) const {
     return slots;
 }
 
+void ControlsTab::refreshChanged() {
+    changed_ = bindings_ != original_;
+}
+
 std::vector<std::string> ControlsTab::rowKeys(std::size_t row) const {
     if (row >= actions_.size()) throw std::out_of_range("Controls tab row out of range: " + std::to_string(row));
     std::vector<std::string> keys;
@@ -55,46 +75,103 @@ std::vector<std::string> ControlsTab::rowKeys(std::size_t row) const {
 }
 
 ControlsResult ControlsTab::activate(std::size_t row, std::size_t slot) {
-    if (row >= actions_.size() || slot > slotsOf(row).size()) return ControlsResult::Rejected;
+    confirming_ = false;
+    if (row >= actions_.size()) return ControlsResult::Rejected;
+    auto count = slotsOf(row).size();
+    if (slot > count || slot >= std::max(slotsPerAction, count)) return ControlsResult::Rejected;
     waiting_ = true;
     waitingRow_ = row;
     waitingSlot_ = slot;
     conflictAction_.clear();
+    message_.clear();
     return ControlsResult::Waiting;
 }
 
 ControlsResult ControlsTab::assignKey(const std::string& keyName) {
+    return assignInput("key", keyName);
+}
+
+ControlsResult ControlsTab::assignInput(const std::string& source, const std::string& code) {
     if (!waiting_) return ControlsResult::Ignored;
-    std::string spaced = keyName;
-    std::replace(spaced.begin(), spaced.end(), '_', ' ');
-    if (keyName.empty() || !validKey_(spaced)) return ControlsResult::Rejected;
+    if (source == "key" && code == "Escape") return cancel();
+    std::string checked = code;
+    if (source == "key") std::replace(checked.begin(), checked.end(), '_', ' ');
+    if (code.empty() || !validInput_(source, checked)) return ControlsResult::Rejected;
     conflictAction_.clear();
+    message_.clear();
     for (const auto& entry : bindings_)
-        if (entry.source == "key" && entry.code == keyName) {
+        if (entry.source == source && entry.code == code) {
             conflictAction_ = entry.action;
+            message_ = source + " " + code + " is already used by " + entry.action;
             return ControlsResult::Conflict;
         }
     auto slots = slotsOf(waitingRow_);
-    if (waitingSlot_ < slots.size()) bindings_[slots[waitingSlot_]].code = keyName;
-    else bindings_.push_back({actions_[waitingRow_], "key", keyName, "hold"});
+    if (waitingSlot_ < slots.size()) {
+        bindings_[slots[waitingSlot_]].source = source;
+        bindings_[slots[waitingSlot_]].code = code;
+    } else bindings_.push_back({actions_[waitingRow_], source, code, "hold"});
     waiting_ = false;
-    changed_ = bindings_ != original_;
+    refreshChanged();
+    return ControlsResult::Changed;
+}
+
+ControlsResult ControlsTab::toggleMode(std::size_t row, std::size_t slot) {
+    if (row >= actions_.size()) return ControlsResult::Rejected;
+    auto slots = slotsOf(row);
+    if (slot >= slots.size()) return ControlsResult::Rejected;
+    waiting_ = false;
+    confirming_ = false;
+    auto& mode = bindings_[slots[slot]].mode;
+    mode = mode == "hold" ? "toggle" : "hold";
+    refreshChanged();
+    return ControlsResult::Changed;
+}
+
+ControlsResult ControlsTab::clearSlot(std::size_t row, std::size_t slot) {
+    if (row >= actions_.size()) return ControlsResult::Rejected;
+    auto slots = slotsOf(row);
+    if (slot >= slots.size()) return ControlsResult::Rejected;
+    waiting_ = false;
+    confirming_ = false;
+    bindings_.erase(bindings_.begin() + static_cast<std::ptrdiff_t>(slots[slot]));
+    refreshChanged();
     return ControlsResult::Changed;
 }
 
 ControlsResult ControlsTab::cancel() {
-    if (!waiting_) return ControlsResult::Ignored;
+    if (!waiting_ && !confirming_) return ControlsResult::Ignored;
+    waiting_ = false;
+    confirming_ = false;
+    conflictAction_.clear();
+    message_.clear();
+    return ControlsResult::Cancelled;
+}
+
+ControlsResult ControlsTab::requestReset() {
     waiting_ = false;
     conflictAction_.clear();
-    return ControlsResult::Cancelled;
+    message_.clear();
+    if (bindings_ == defaults_) {
+        confirming_ = false;
+        return ControlsResult::Ignored;
+    }
+    confirming_ = true;
+    return ControlsResult::Confirming;
+}
+
+ControlsResult ControlsTab::confirmReset() {
+    if (!confirming_) return ControlsResult::Ignored;
+    return reset();
 }
 
 ControlsResult ControlsTab::reset() {
     waiting_ = false;
+    confirming_ = false;
     conflictAction_.clear();
+    message_.clear();
     if (bindings_ == defaults_) return ControlsResult::Ignored;
     bindings_ = defaults_;
-    changed_ = bindings_ != original_;
+    refreshChanged();
     return ControlsResult::Changed;
 }
 

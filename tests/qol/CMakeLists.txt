@@ -36,3 +36,8 @@ add_executable(qol-window-apply-test window_apply_test.cpp)
 target_link_libraries(qol-window-apply-test PRIVATE chase_qol chase_input)
 target_compile_options(qol-window-apply-test PRIVATE -Wall -Wextra -Wpedantic)
 add_test(NAME qol-window-apply COMMAND qol-window-apply-test)
+
+add_executable(qol-controls-file-test controls_file_test.cpp)
+target_link_libraries(qol-controls-file-test PRIVATE chase_qol)
+target_compile_options(qol-controls-file-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME qol-controls-file COMMAND qol-controls-file-test)

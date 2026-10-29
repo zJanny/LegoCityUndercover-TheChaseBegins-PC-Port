@@ -25,7 +25,8 @@ The user's approved design of how quality-of-life features are switched on and o
 - Feature rows outside Custom copy the mode's switches into an own mix, apply the click and switch to Custom; menu rows and tabs wrap; Left and Right stay ignored: [§2026-10-28T22:38:57](#ts-20261028-223857), [§2026-10-28T23:13:22](#ts-20261028-231322).
 - Answered 2026-10-29: the Game tab language row opens the port's Languages page; the file has no `resolution` line while the desktop size is in use; a stored resolution above the largest display mode is limited to it at startup: [§2026-10-29T10:31:01](#ts-20261029-103101).
 - Rebind flow and scope: a taken key is refused with a message, one confirmed "Reset all" row, Escape cancels waiting; keys, mouse buttons and gamepad buttons can be rebound, `Walk` and `DebugOverlay` are listed with the 3DS actions, two slots per action with hold or toggle mode per slot and clearing; a stored resolution is above the limit when either side is larger than the largest mode's: [§2026-10-29T11:06:51](#ts-20261029-110651).
-- Open: which original art and fonts the menu drawing uses (QOLSET-2, spec round next round); the rest follows the recorded decisions.
+- Settings menu art and fonts: "Options-page art", the original Options-page art and font as the 3DS draws them, scaled up; which assets remain for a spec round. The Game tab's Language row stays read-only until the Languages page is ported. Controls tab model, adapter and writer implemented; open: pad format, comments, defaults and saving: [§2026-10-29T11:46:20](#ts-20261029-114620).
+- Open: which exact assets the menu drawing uses (QOLSET-22, spec round); the rest follows the recorded decisions.
 
 <a id="ts-20261028-092131"></a>
 
@@ -165,6 +166,7 @@ Open (not decided by the user): an upper bound for a stored resolution (the read
 
 ## 2026-10-29T10:31:01+01:00 — Languages page, desktop spelling, upper bound and the menu drawing spec round
 Corrected by [qol-settings.md §2026-10-29T11:06:51](#ts-20261029-110651): a size is above the limit when either side is larger than the largest mode's side.
+Corrected by [qol-settings.md §2026-10-29T11:46:20](#ts-20261029-114620): the Language row stays read-only until the Languages page is ported, instead of opening it.
 
 Asked of the user by the lead on 2026-10-29; the quoted labels are the user's selections. [Corrects §2026-10-29T09:23:03 in part](#ts-20261029-092303) (open points answered, the old-files write rule changed for `resolution`) and answers the language question of [§2026-10-28T09:32:07](#ts-20261028-093207).
 
@@ -220,3 +222,22 @@ Asked of the user by the lead on 2026-10-29; the quoted labels are the user's se
 - `--window WIDTHxHEIGHT` (QOLSET-29): "Yes, option wins": the option overrides `config/qol.cfg` for that run.
 
 Open (not decided by the user): nothing for these points.
+
+<a id="ts-20261029-114620"></a>
+
+## 2026-10-29T11:46:20+01:00 — Settings menu art, Language row, Controls tab implementation
+
+Two user decisions of 2026-10-29 (quoted labels are the user's selections), then what the Controls tab work (20261029-qolview-C) implemented.
+
+- Art and fonts of the settings menu drawing (QOLSET-22): "Options-page art": the menu uses the original Options-page art and font exactly as the 3DS draws them, scaled up. Which assets (tabs, rows, master button, window) remain for a spec round; the menu drawing stays open until then.
+- Language row of the Game tab (QOLSET-25, UI-23): the row stays read-only until the Languages page is ported (the current plan). [Corrects §2026-10-29T10:31:01 in part](#ts-20261029-103101): the row opens no page for now.
+
+Implemented for [§2026-10-29T11:06:51](#ts-20261029-110651) (`src/qol/controls_tab.*`, `src/qol/controls_file.*`, tests `qol-controls-tab`, `qol-controls-file`):
+- Model: a taken input (same source and code, also on the same action) is refused with a message and the tab keeps waiting; "Reset all" asks for confirmation (`requestReset`, `confirmReset`, cancel declines); Escape cancels waiting and cannot be bound; keys and mouse buttons; at most two slots per action, a hold or toggle mode per slot (a new slot is `hold`, rebinding keeps the mode), clearing a slot.
+- Adapter: `readBindingEntries` runs `chase::readBindings` (strict, no second parser) and names the codes back through a key-namer callback; `controlActions` lists all 14 actions in enum order, `Walk` and `DebugOverlay` last.
+- Writer: `formatBindingEntries` / `writeBindingFile` validate every entry, write one `Action source Code mode` line each (spaces as `_`), check that `readBindings` accepts the text, and replace the file through a temporary file.
+
+Open (not decided by the user):
+- Gamepad buttons (QOLSET-30): `config/controls.cfg` has only the sources `key` and `mouse`; a `pad` source and the button names need a format decision. Until then the tab accepts `pad` only through a caller's validator and the writer rejects it.
+- Comments and the wording of the refuse message (QOLSET-31): the writer writes the file fresh, so the comment lines of the shipped file are not kept; a key named `#` cannot be written (the reader treats `#` as a comment). Whether comments are preserved or regenerated is not decided. The message text ("key W is already used by Up") is a placeholder for the drawing.
+- Defaults and saving (QOLSET-32): where "Reset all" takes its defaults from (the shipped file) and when the file is written (on leaving the tab, or at once) are not decided.
