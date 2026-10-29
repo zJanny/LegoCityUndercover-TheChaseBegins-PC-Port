@@ -19,7 +19,8 @@ decides. LINE_FILE holds one line "Lead (<round> end): ..."; its timestamp comes
 Conflicts inside the README progress section and in docs/progress-trend.svg are regenerated, and a conflict in
 docs/plans/priorities.md takes main's copy (the checks regenerate it); a README conflict outside that
 section stops the merge like any other. Conflicts in a session log archive keep the lines of both sides (check_doc_links.py
---fix then drops duplicates). Other conflicts stop the merge.
+--fix then drops duplicates). Append-style conflicts of docs files (session logs, feature index, id-reservations,
+docs/re and docs/design entries) keep both sides (tools/merge_conflicts.py). Other conflicts stop the merge.
 
 Checks: no game-derived or binary files staged, warning-free build, docs/plans/priorities.md regenerated (its item links are checked by the doc fixes),
 doc fixes (check_doc_links.py --fix, restaged), doc links, README progress section and priorities regenerated,
@@ -36,6 +37,7 @@ from datetime import datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from merge_conflicts import resolve_append_only  # noqa: E402
 from round_log import name_error  # noqa: E402
 
 JOBS = max(1, (os.cpu_count() or 2) - 1)
@@ -259,6 +261,7 @@ def prepare(root: Path, branch: str, upstream: str | None = None, no_sync: bool 
             keep_both_sides(root / path)
             run(["git", "add", path], root)
             unmerged.remove(path)
+        unmerged = resolve_append_only(root, unmerged)
     if result.returncode != 0 and unmerged:
         raise MergeError(
             "conflicts in: " + ", ".join(unmerged) + "\nresolve them (regenerate the README section), stage, then run: "

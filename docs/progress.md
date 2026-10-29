@@ -35,7 +35,7 @@ It needs the built library (`cmake --build build`) and the extracted game data: 
 - `--update-readme README.md` rewrites the text between `<!-- progress:start -->` and `<!-- progress:end -->` in the README.
 - `--check README.md` fails if the README table no longer matches the project. The test `progress-readme` runs it.
 
-After a change that moves a number, run `--update-readme` and commit the README with the change.
+Only `tools/merge_agent.py` runs `--update-readme`, at the merge. A branch does not commit the README section.
 
 ## Priority ranking
 

@@ -104,11 +104,11 @@ Four places, never copied between them, only linked: **findings** about the orig
 
 **Git**
 - Commit small, focused, verified units; review the diff first. Each agent ends its own commit messages with its own `Co-Authored-By:` line; no session links.
-- **Claude Code hooks** (`.claude/settings.json`, `tools/claude_hooks.py`) check the commit, push, git config, merge and docs rules and fix and stage generated files at each commit. A denial names the rule: fix the cause, never work around a hook.
-- Merge agent branches into main only with `tools/merge_agent.py` (`prepare`, `check`, `finish`): it squashes, refuses game-derived and binary files, regenerates the README section, builds warning-free and runs all tests. Reviewers check the diff in between; the script never pushes. Before planning and each merge, `merge_agent.py sync` fast-forwards main to the remote or stops for the user.
+- **Claude Code hooks** (`.claude/settings.json`, `tools/claude_hooks.py`) check the commit, push, git config, merge and docs rules and fix and stage doc fixes at each commit. A denial names the rule: fix the cause, never work around a hook.
+- Merge agent branches into main only with `tools/merge_agent.py` (`prepare`, `check`, `finish`): it squashes, merges append-only docs conflicts, refuses game-derived and binary files, regenerates generated files, builds warning-free and runs all tests. The script never pushes. Before planning and each merge, `merge_agent.py sync` fast-forwards main to the remote or stops for the user.
 - **Rounds have names, not numbers:** `<YYYYMMDD>-<slug>` (`tools/round_log.py name`), agents `<round>-A`. A branch's squash commit carries its ID release and, for the last, the round-end log line; no separate bookkeeping commits ([lead-round](.claude/skills/lead-round/SKILL.md)).
 - Never push without explicit user authorization. The lead asks at the start of each session whether pushing is allowed and to which remote and branch; the answer holds for that session only. Only the lead pushes.
-- Run `python3 tools/progress_report.py --update-readme README.md` before the final commit of a branch and after every merge (CTest `progress-readme`); on a conflict in that section regenerate it. Measures: `docs/progress.md`.
+- **Generated files** (README progress section, `docs/plans/priorities.md`, `docs/progress-trend.svg`): only `merge_agent.py` produces them, at the merge; a branch never commits them (the hook refuses) and CTest `progress-readme`, `priorities-current` skip off main.
 - Keep `.gitignore` current; never ignore files to hide unintended changes.
 - Write concise, human-readable commit subjects describing the primary change, not a list of findings, addresses, IDs, implementation details or a session summary. Imperative mood, present tense, sentence case, no trailing period; aim for 50 characters or fewer, 72 as a soft maximum, never a reason to be vague. A body only when it adds context the subject cannot convey (what changed, why, key reverse-engineering evidence); exhaustive findings, addresses, feature IDs and status go to their documentation. Each commit covers one coherent change (split unrelated changes); read the subject alone before committing.
 - The commit identity is set repo-locally; agents never change git config.
@@ -116,7 +116,7 @@ Four places, never copied between them, only linked: **findings** about the orig
 **Code and files**
 - **Generic over hardcoded:** where possible, implement one general rule for all its users (as the original's shared draw, table or name lookup does), not fixed lists, names or per-object special cases; a special case needs evidence from the original or the approved spec.
 - No explanatory comments; clear names and simple control flow. Keep license notices, tool directives and comments on non-obvious correctness or unavoidable constraints.
-- Prefer the native Read/Edit/Write tools; scripts only for bulk or structured edits. Review the diff afterwards.
+- Prefer the native Read/Edit/Write tools; scripts only for bulk edits. Review diffs.
 - **Short tests:** no test or development script walks or drives long distances or runs for minutes, and nobody tunes routes. Start close to the point under test (`at X Y Z`, a level data position, a replay of recorded data). A test above about 5 seconds gets the label `slow` (list at the end of `CMakeLists.txt`).
 - **Log lines and output checks:** chase-game prints a line per event a test or developer checks, never per entity or per update for routine work. A `PASS_REGULAR_EXPRESSION` pins the order of lines, not their adjacency: join them with `\n.*`; a bare `\n` only where the same code prints both lines together. Most output checks are `slow`, so a worker runs the full `ctest` before its report.
 

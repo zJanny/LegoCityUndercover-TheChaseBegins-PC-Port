@@ -382,22 +382,50 @@ def problem_lines(output, limit=MAX_FINDINGS):
     return "\n".join(lines[:limit]) + (f"\n... {len(lines) - limit} more" if len(lines) > limit else "")
 
 
+GENERATED_FILES = ("README.md", "docs/plans/priorities.md", "docs/progress-trend.svg")
+MAIN_BRANCHES = ("main", "master")
+
+
+def on_branch(root):
+    name = git(root, "symbolic-ref", "--short", "-q", "HEAD").stdout.strip()
+    return name not in MAIN_BRANCHES
+
+
+def staged_generated(root, take_all=False):
+    views = [["--cached"], []] if take_all else [["--cached"]]
+    found = []
+    for view in views:
+        names = git(root, "diff", *view, "--name-only", "--", *GENERATED_FILES).stdout.split("\n")
+        found += [name for name in names if name and name not in found]
+    return found
+
+
 def prepare_commit(root, take_all=False):
     env = assets_env(root)
+    branch = on_branch(root)
     before = file_hashes(root)
-    refresh(root, env, "priority_report.py", "--check", "--update", "docs/plans/priorities.md")
+    if not branch:
+        refresh(root, env, "priority_report.py", "--check", "--update", "docs/plans/priorities.md")
     run_tool(root, env, "check_doc_links.py", "--root", ".", "--fix")
-    refresh(root, env, "priority_report.py", "--check", "--update", "docs/plans/priorities.md")
-    refresh(root, env, "progress_report.py", "--check", "--update-readme", "README.md")
+    if not branch:
+        refresh(root, env, "priority_report.py", "--check", "--update", "docs/plans/priorities.md")
+        refresh(root, env, "progress_report.py", "--check", "--update-readme", "README.md")
     after = file_hashes(root)
     changed = [name for name in after if before.get(name) != after[name]]
     changed += [name for name in before if name not in after]
     trend = "docs/progress-trend.svg"
-    if (root / trend).is_file() and git(root, "diff", "--quiet", "--", trend).returncode:
+    if not branch and (root / trend).is_file() and git(root, "diff", "--quiet", "--", trend).returncode:
         changed.append(trend)
+    if branch:
+        changed = [name for name in changed if name not in GENERATED_FILES]
     if changed:
         git(root, "add", "-A", "--", *sorted(set(changed)))
     problems = []
+    generated = staged_generated(root, take_all) if branch else []
+    if generated:
+        problems.append("generated files are staged in a branch: " + ", ".join(generated)
+                        + "\nOnly tools/merge_agent.py produces them, at the merge (CLAUDE.md \"Git\"). Unstage them with git restore --staged "
+                        "and drop the working changes with git checkout -- <file>")
     checked = run_tool(root, env, "check_doc_links.py", "--root", ".")
     if checked and checked.returncode:
         found = [line for line in checked.stdout.split("\n") if line and ": warning: " not in line]
@@ -494,8 +522,8 @@ def pre_bash(data):
                 problems.append("git commit with paths ignores the index, so these staged files would be left out of the commit: " + ", ".join(left)
                                 + "\nStage what belongs in the commit with git add and run git commit without paths")
             if problems:
-                return deny("Fix these before committing (the generated README section, priorities.md and the doc fixes are already "
-                            "updated and staged):\n\n" + "\n\n".join(problems))
+                return deny("Fix these before committing (the doc fixes are already applied and staged; on main also the "
+                            "generated README section and priorities.md):\n\n" + "\n\n".join(problems))
     return 0
 
 

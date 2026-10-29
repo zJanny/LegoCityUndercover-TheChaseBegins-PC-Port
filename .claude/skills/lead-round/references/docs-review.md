@@ -18,7 +18,7 @@ The lead gives you the worktree, the branch, the worker's brief and the worker's
 - `Superseded by` moves
 - 20 log lines
 
-`merge_agent.py` regenerates `priorities.md` and the README progress section. Run the checker; spend your judgement on what it cannot see.
+`merge_agent.py` regenerates `priorities.md`, `progress-trend.svg` and the README progress section at the merge; a branch that contains changes to them is a finding (RETURN). Run the checker; spend your judgement on what it cannot see.
 
 ## Steps
 

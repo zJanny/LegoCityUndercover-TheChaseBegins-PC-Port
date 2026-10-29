@@ -69,7 +69,7 @@ Instructions for AI coding agents are in [CLAUDE.md](CLAUDE.md).
 
 Claude Code loads the hooks in `.claude/settings.json`; they run `tools/claude_hooks.py` and do the mechanical rule checks for every agent:
 
-- Before a commit: check the commit message, then run `check_doc_links.py --fix` and regenerate a stale README progress section or `docs/plans/priorities.md`, and stage what they changed. Then stop the commit when the docs checks, `check_local_data.py` or staged game-derived or binary files fail. A commit with explicit paths is refused when the index holds other staged files, because git would leave them out.
+- Before a commit: check the commit message, then run `check_doc_links.py --fix` and stage what it changed. On main the hook also regenerates a stale README progress section or `docs/plans/priorities.md`; in a branch it refuses them, because only `merge_agent.py` produces the generated files. Then stop the commit when the docs checks, `check_local_data.py` or staged game-derived or binary files fail. A commit with explicit paths is refused when the index holds other staged files, because git would leave them out.
 - After an edit: report the docs and local-data findings of the edited file.
 - Always: no push or `git config` change from an agent, `merge_agent.py finish` runs alone, a worker starts only from its brief, and a worktree gets its `artifacts` link.
 - Shared `artifacts/` folder: no second `ln -s` that would put a stray link into it, no C++ source files written into it (scratch code goes to the scratchpad), and no deletes, moves or `find -delete` there by an agent except its own scratch folders.

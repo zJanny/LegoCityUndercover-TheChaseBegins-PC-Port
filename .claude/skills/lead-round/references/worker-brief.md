@@ -53,7 +53,7 @@ You are worker {{agent}} of round {{round}} of the PC port of *LEGO City Underco
   - Commit small, verified units in your worktree. Subjects follow the CLAUDE.md commit rules.
   - End every message with `Co-Authored-By: {{your model line, e.g. Claude Sonnet 5.5 <noreply@anthropic.com>}}`, never a session link.
   - Never push. Never commit game-derived files or screenshots.
-  - Before your final commit, merge main into your branch and run `python3 tools/progress_report.py --update-readme README.md`.
+  - Before your final commit, merge main into your branch. Never commit the README progress section, `docs/plans/priorities.md` or `docs/progress-trend.svg`: the merge script regenerates them and the hook refuses them.
 
 ## Task: {{title}}
 
@@ -72,7 +72,6 @@ Port as far as you get, in this order: {{ordered goals}}. Anything left becomes 
    - the feature file: status, items, stand-ins, findings summary link
    - the top-level user docs your change makes wrong, as listed in CLAUDE.md "User docs" (`docs/commands.md` for every new or changed option, program or test, `docs/controls.md`, `docs/status.md`, `docs/game-runtime.md`)
    - ONE progress-log line in `docs/plans/{{plan}}.progress.md`, starting `Agent {{agent}} (<short topic>)`
-   - `python3 tools/priority_report.py --update docs/plans/priorities.md`
    - `python3 tools/check_doc_links.py --fix`
 2. Run the full `ctest`, slow tests included (most checks of chase-game output are `slow`), and the Python unittests.
 3. Write your report to `artifacts/rounds/{{round}}/{{agent}}.report.md` (through your artifacts link, so it lands in the main checkout; a hook keeps you from stopping before it exists), and give the same text as your final message, in **at most 25 lines**. Findings belong in `docs/re`, not in the report.

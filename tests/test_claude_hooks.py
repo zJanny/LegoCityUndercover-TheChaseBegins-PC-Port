@@ -189,6 +189,31 @@ class HookTest(unittest.TestCase):
         self.assertAllowed(self.bash(f'git commit docs/notes.md -m "Add x" -m "{CO_AUTHOR}"'))
         self.assertEqual(self.staged(), [])
 
+    def test_branch_commit_denies_staged_generated_files(self):
+        for name in ("README.md", "docs/plans/priorities.md", "docs/progress-trend.svg"):
+            path = self.repo / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("old\n")
+        git(self.repo, "add", ".")
+        git(self.repo, "commit", "-q", "-m", "generated")
+        commit = f'git commit -m "Add x" -m "{CO_AUTHOR}"'
+        for name in ("README.md", "docs/plans/priorities.md", "docs/progress-trend.svg"):
+            (self.repo / name).write_text("new\n")
+            git(self.repo, "add", name)
+            self.assertAllowed(self.bash(commit))
+            git(self.repo, "reset", "-q", "--hard")
+        git(self.repo, "checkout", "-q", "-b", "feature")
+        for name in ("README.md", "docs/plans/priorities.md", "docs/progress-trend.svg"):
+            (self.repo / name).write_text("new\n")
+            git(self.repo, "add", name)
+            self.assertDenied(self.bash(commit), name)
+            self.assertDenied(self.bash(f'git commit -am "Add x" -m "{CO_AUTHOR}"'), name)
+            git(self.repo, "reset", "-q", "--hard")
+        (self.repo / "docs").mkdir(exist_ok=True)
+        (self.repo / "docs" / "notes.md").write_text("x\n")
+        git(self.repo, "add", "docs/notes.md")
+        self.assertAllowed(self.bash(commit))
+
     def test_commit_rejects_staged_binary_files(self):
         (self.repo / "dump.raw").write_bytes(b"\0\1\2")
         git(self.repo, "add", "dump.raw")
