@@ -180,6 +180,8 @@ PauseMenuSetup optionsSetup() {
     s.texts.options.yes = "Yes";
     s.texts.options.no = "No";
     s.texts.options.language = "Language";
+    const char* const names[] = {"English", "French", "Italian", "German", "Spanish", "Dutch", "Danish", "Portuguese", "Russian"};
+    for (int i = 0; i < chase::runtime::kLanguageCount; ++i) s.texts.languageNames[std::size_t(i)] = names[i];
     return s;
 }
 
@@ -228,9 +230,6 @@ void optionsPage() {
     run(menu, 16);
     require(menu.round().selected() == 3 && menu.selectShown(), "Language row, Select shown");
     menu.takeSounds();
-    menu.update(kDt, press(&PauseInput::a));
-    require(menu.takeUnported() == std::vector<PauseEntry>{PauseEntry::Languages} && menu.page() == PausePage::Options,
-            "A on Language stays on the page (UI-S11)");
 
     menu.update(kDt, press(&PauseInput::b));
     require(menu.takeSaveRequest() && menu.round().state() == RoundMenuState::Closing, "B after a change asks for the save");
@@ -239,6 +238,61 @@ void optionsPage() {
     run(menu, 16);
     require(menu.page() == PausePage::Status && menu.round().selected() == 1, "after the save page 0 again, on Options");
     require(!menu.optionsPage().changed() && menu.optionsPage().savedSelection() == 0, "the change is cleared, the selection reset");
+
+    run(menu, 20);
+    menu.update(kDt, press(&PauseInput::a));
+    run(menu, 16);
+    require(menu.page() == PausePage::Options && menu.round().selected() == 0, "Options again, on the first row");
+    menu.update(kDt, press(&PauseInput::left));
+    run(menu, 16);
+    menu.update(kDt, press(&PauseInput::left));
+    run(menu, 16);
+    require(menu.round().selected() == 3, "Language row");
+    menu.takeSounds();
+    menu.update(kDt, press(&PauseInput::a));
+    require(menu.takeSounds() == std::vector<int>{chase::runtime::kOptionsSoundSelect, kRoundMenuSoundClose} && menu.round().state() == RoundMenuState::Closing,
+            "A on Language plays the select sound and closes the Options rows");
+    run(menu, 16);
+    require(menu.page() == PausePage::Languages, "then the page manager enters the Languages page");
+    require(menu.round().items().size() == 9 && menu.round().items()[0].text == "English" && menu.round().items()[5].text == "Danish" &&
+                menu.round().items()[6].text == "Dutch" && menu.round().items()[8].text == "Portuguese",
+            "nine rows in the order of table 0x3759b0");
+    require(menu.round().items()[4].image == "UI_Language_Spanish.png" && menu.round().items()[8].image == "UI_Language_Portuguese.png", "the flag pictures");
+    require(menu.backShown() && menu.selectShown(), "Back and Select shown (UI-S14: a row is selected at once)");
+    run(menu, 20);
+    menu.takeSounds();
+
+    menu.update(kDt, press(&PauseInput::b));
+    require(menu.takeSounds() == std::vector<int>{chase::runtime::kLanguagesSoundBack, kRoundMenuSoundClose} && !menu.backShown() && !menu.selectShown(),
+            "B plays the back sound and the list closes with both shortcuts off");
+    run(menu, 16);
+    require(menu.page() == PausePage::Options && menu.round().selected() == 3 && !menu.takeSaveRequest(), "back on the Options page, Language row, no save");
+    require(menu.language() == 1 && !menu.takeLanguageChange() && options[1] == 0x01, "no language changed");
+
+    run(menu, 25);
+    menu.update(kDt, press(&PauseInput::a));
+    run(menu, 56);
+    menu.update(kDt, press(&PauseInput::right));
+    run(menu, 16);
+    menu.update(kDt, press(&PauseInput::right));
+    run(menu, 16);
+    require(menu.round().selected() == 2, "third row: Italian");
+    menu.takeSounds();
+    menu.update(kDt, press(&PauseInput::a));
+    require(menu.languagesPage().pending() == 3 && !menu.backShown() && !menu.selectShown() && menu.round().state() == RoundMenuState::Closing,
+            "A makes the language pending and closes the list");
+    require(!menu.takeSaveRequest() && options[1] == 0x01, "nothing changes while the list closes");
+    run(menu, 16);
+    require(menu.takeLanguageChange() == 3 && options[1] == 3 && menu.language() == 3, "after the close options +1 takes the language");
+    require(menu.takeSaveRequest() && !menu.takeSaveRequest(), "and the options are saved once");
+    require(menu.page() == PausePage::Languages, "the page waits for the save");
+    menu.saveDone();
+    run(menu, 16);
+    require(menu.page() == PausePage::Options && menu.round().selected() == 3 && !menu.optionsPage().changed(), "the save callback returns to the Options page");
+    require(menu.round().items()[3].text == "Language", "row texts are written again");
+    menu.update(kDt, press(&PauseInput::b));
+    run(menu, 16);
+    require(menu.page() == PausePage::Status && !menu.takeSaveRequest(), "B without a change goes to page 0 without a save");
 }
 }
 

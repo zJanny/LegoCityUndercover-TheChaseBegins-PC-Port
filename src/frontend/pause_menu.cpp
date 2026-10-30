@@ -52,6 +52,7 @@ PauseMenuSetup pauseMenuSetup(Resources& resources, const std::string& gameTextF
     options.yes = resources.textForKey(gameTextFile, runtime::kOptionsYesKey);
     options.no = resources.textForKey(gameTextFile, runtime::kOptionsNoKey);
     options.language = resources.textForKey(gameTextFile, runtime::kOptionsLanguageKey);
+    for (int i = 0; i < runtime::kLanguageCount; ++i) setup.texts.languageNames[std::size_t(i)] = resources.textForKey(gameTextFile, runtime::kLanguageNameKeys[std::size_t(i)]);
     return setup;
 }
 
@@ -64,7 +65,7 @@ PauseMenu::PauseMenu(const PauseMenuSetup& setup) : setup_(setup), round_(setup.
 void PauseMenu::bindOptions(std::uint8_t* options, runtime::OptionVolumes* volumes, int language) {
     boundOptions_ = options;
     boundVolumes_ = volumes;
-    language_ = language;
+    if (!languageChosen_) language_ = language;
 }
 
 std::uint8_t* PauseMenu::liveOptions() { return boundOptions_ ? boundOptions_ : ownOptions_.data(); }
@@ -83,7 +84,8 @@ void PauseMenu::open() {
     pageRequested_ = PausePage::Status;
     page_ = PausePage::None;
     justSwitched_ = false;
-    saveRequested_ = false;
+    saveRequested_ = languagesSave_ = false;
+    languageChange_.reset();
     back_ = select_ = {};
 }
 
@@ -106,11 +108,37 @@ void PauseMenu::apply(const runtime::OptionsPageActions& actions) {
     if (actions.saveRequest) saveRequested_ = true;
     if (actions.textsChanged) writeOptionTexts();
     if (actions.page == runtime::OptionsPageRequest::Page0) requestPage(PausePage::Status);
-    if (actions.page == runtime::OptionsPageRequest::Languages) unported_.push_back(PauseEntry::Languages);
+    if (actions.page == runtime::OptionsPageRequest::Languages) requestPage(PausePage::Languages);
+    if (actions.page == runtime::OptionsPageRequest::Options) requestPage(PausePage::Options);
+    for (const int id : round_.takeSounds()) sounds_.push_back(id);
+}
+
+void PauseMenu::apply(const runtime::LanguagesPageActions& actions) {
+    for (const int id : actions.sounds) sounds_.push_back(id);
+    if (actions.backShortcut) setShortcut(back_, *actions.backShortcut);
+    if (actions.selectShortcut) setShortcut(select_, *actions.selectShortcut);
+    if (actions.closeList && (round_.state() == RoundMenuState::Active || round_.state() == RoundMenuState::Opening)) round_.close(false);
+    if (actions.languageChanged) {
+        language_ = *actions.languageChanged;
+        languageChosen_ = true;
+        languageChange_ = language_;
+    }
+    if (actions.saveRequest) saveRequested_ = languagesSave_ = true;
+    if (actions.optionsPage) requestPage(PausePage::Options);
     for (const int id : round_.takeSounds()) sounds_.push_back(id);
 }
 
 void PauseMenu::enterPage() {
+    if (pageRequested_ == PausePage::Languages) {
+        std::vector<RoundMenuItem> items;
+        for (const std::uint8_t language : runtime::kLanguageTable)
+            items.push_back({setup_.texts.languageNames[std::size_t(language - 1)], runtime::kLanguageImages[std::size_t(language - 1)]});
+        round_.open(runtime::kLanguageImageFolder, items, 0);
+        round_.setSubtitle(setup_.texts.options.language);
+        apply(languages_.enter());
+        apply(languages_.selectionChanged(round_.selected()));
+        return;
+    }
     if (pageRequested_ == PausePage::Options) {
         std::vector<RoundMenuItem> items;
         for (const char* image : runtime::kOptionsItemImages) items.push_back({std::string(), image});
@@ -132,6 +160,8 @@ void PauseMenu::requestPage(PausePage page) {
     pageRequested_ = page;
     if (page_ == PausePage::Options) {
         apply(options_.leaveRequest(liveOptions(), volumes()));
+    } else if (page_ == PausePage::Languages) {
+        apply(languages_.leaveRequest());
     } else if (page_ == PausePage::Status) {
         round_.close(closing_);
         setShortcut(back_, false);
@@ -183,6 +213,11 @@ void PauseMenu::update(float dt, const PauseInput& input) {
                 apply(options_.update(round_.selected(), input.up, input.down, liveOptions(), volumes()));
                 if (result == 1) apply(options_.a(round_.selected(), liveOptions()));
                 else if (result == -1) apply(options_.b());
+            } else if (page_ == PausePage::Languages) {
+                apply(languages_.selectionChanged(round_.selected()));
+                apply(languages_.update(round_.state() == RoundMenuState::Opening || round_.state() == RoundMenuState::Closing, liveOptions()));
+                if (result == 1) apply(languages_.a(round_.selected()));
+                else if (result == -1) apply(languages_.b());
             } else if (page_ == PausePage::Status && result == 1) {
                 pageSelect();
             } else if (page_ == PausePage::Status && result == -1) {
@@ -219,7 +254,20 @@ bool PauseMenu::takeSaveRequest() {
     return requested;
 }
 
-void PauseMenu::saveDone() { apply(options_.saveDone()); }
+void PauseMenu::saveDone() {
+    if (languagesSave_) {
+        languagesSave_ = false;
+        apply(options_.languagesSaved());
+    } else {
+        apply(options_.saveDone());
+    }
+}
+
+std::optional<int> PauseMenu::takeLanguageChange() {
+    const std::optional<int> change = languageChange_;
+    languageChange_.reset();
+    return change;
+}
 
 std::vector<PauseEntry> PauseMenu::takeUnported() {
     std::vector<PauseEntry> out;

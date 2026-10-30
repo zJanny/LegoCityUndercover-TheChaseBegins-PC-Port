@@ -109,6 +109,11 @@ void buttons() {
     const OptionsPageActions done = page.saveDone();
     require(done.page == OptionsPageRequest::Page0 && !page.changed(), "the save callback goes to page 0 and clears the change");
 
+    page.update(int(OptionsRow::InvertCamera), true, false, options.data(), live);
+    require(page.changed(), "a toggle by Up marks the page changed");
+    const OptionsPageActions languagesDone = page.languagesSaved();
+    require(languagesDone.page == OptionsPageRequest::Options && !page.changed(), "the save callback of the Languages page goes back to the Options page (0x2b4c44)");
+
     const OptionsPageActions leave = page.leaveRequest(options.data(), live);
     require(live.sound == 5 && leave.soundGain == 0.5f && leave.closeRoundMenu, "the leave request reloads the SFX byte and sets its gain");
 }

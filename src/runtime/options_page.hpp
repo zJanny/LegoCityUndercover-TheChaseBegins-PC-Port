@@ -53,7 +53,7 @@ struct OptionsTexts {
 };
 std::string optionsRowText(int row, const OptionsTexts& texts, const std::uint8_t* options, const OptionVolumes& live, int language);
 
-enum class OptionsPageRequest { None, Page0, Languages };
+enum class OptionsPageRequest { None, Page0, Languages, Options };
 
 // What a page callback asks of the pause screen.
 struct OptionsPageActions {
@@ -81,6 +81,8 @@ public:
     OptionsPageActions b();
     // Callback 0x26435c of the save request.
     OptionsPageActions saveDone();
+    // Callback 0x2b4c44 of the save request of the Languages page: the Options page is requested again and the changed flag cleared.
+    OptionsPageActions languagesSaved();
     // Leave request 0x31ae48: the sound effects byte reloaded from the slot's option byte, the round menu closed, both shortcuts off.
     OptionsPageActions leaveRequest(const std::uint8_t* options, OptionVolumes& live);
     // Update 0x31af84: D-pad Down (slot 1) steps the volume of row 0 or 1 down to 0, Up (slot 0) up to 10, or toggles row 2. A volume step

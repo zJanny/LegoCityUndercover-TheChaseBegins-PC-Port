@@ -6,7 +6,7 @@ How the settings menu is drawn: which original art and font it reuses, how it sc
 
 ## 2026-10-29T12:11:55+01:00 — Settings menu drawing
 
-The user's decisions of 2026-10-29, asked by the lead; the quoted labels are the user's selections. They settle QOLSET-22. The questions came from a spec round (20261029-qolview-D, docs only, no code, no emulator) that the user had chosen for the menu drawing: "Yes, next round". Findings behind it: the Options page [ui-screens.md §2026-10-28T22:51:42](../re/ui-screens.md#ts-20261028-225142), the layout pieces [ui-layouts.md §2026-10-29T11:50:58](../re/ui-layouts.md#ts-20261029-115058), the font [text-localisation-fonts.md §2026-10-29T11:50:26](../re/text-localisation-fonts.md#ts-20261029-115026).
+The user's decisions of 2026-10-29, asked by the lead; the quoted labels are the user's selections. They settle QOLSET-22. The questions came from a spec round (20261029-qolview-D, docs only, no code, no emulator) that the user had chosen for the menu drawing: "Yes, next round". Findings behind it: the Options page [ui-screens-pause.md §2026-10-28T22:51:42](../re/ui-screens-pause.md#ts-20261028-225142), the layout pieces [ui-layouts.md §2026-10-29T11:50:58](../re/ui-layouts.md#ts-20261029-115058), the font [text-localisation-fonts.md §2026-10-29T11:50:26](../re/text-localisation-fonts.md#ts-20261029-115026).
 
 **Basis** (QOLSET-22): "Options-page art": the settings menu is drawn with the original Options-page art and font exactly as the 3DS draws them, scaled up.
 

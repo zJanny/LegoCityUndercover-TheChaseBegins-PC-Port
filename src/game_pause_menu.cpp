@@ -18,7 +18,7 @@ constexpr const char* kGameText = "localisation/gametext_uk.loc";
 constexpr const char* kHintText = "localisation/hinttext_uk.loc";
 constexpr const char* kSystemText = "localisation/systemtext_uk.loc";
 constexpr std::size_t kSlotStart = 10, kSlotDpadUp = 0, kSlotDpadDown = 1, kSlotDpadLeft = 2, kSlotDpadRight = 3;
-const char* const kEntryNames[] = {"Resume", "Options", "Credits", "Exit", "Languages page"};
+const char* const kEntryNames[] = {"Resume", "Options", "Credits", "Exit"};
 }
 
 bool LevelSession::holdForPause(float dt, const runtime::PadState& padInput) {
@@ -41,6 +41,9 @@ bool LevelSession::holdForPause(float dt, const runtime::PadState& padInput) {
             std::cout << "pause menu: " << kEntryNames[int(entry)] << " is not ported (does nothing) at update " << updates << '\n';
         const fe::PauseGains gains = pauseMenu->takeGains();
         if (shared.audio && (gains.sound || gains.music)) shared.audio->setOptionGains(gains.sound, gains.music);
+        if (const std::optional<int> language = pauseMenu->takeLanguageChange()) {
+            std::cout << "pause menu: language " << *language << " chosen (the texts and pictures of the other languages are not loaded) at update " << updates << '\n';
+        }
         if (pauseMenu->takeSaveRequest()) {
             const std::uint8_t* block = pauseMenu->options();
             const std::size_t slot = runtime::optionsSlot(block).value_or(0);

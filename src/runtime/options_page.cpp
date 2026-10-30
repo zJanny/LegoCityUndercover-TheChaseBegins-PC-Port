@@ -90,6 +90,13 @@ OptionsPageActions OptionsPage::saveDone() {
     return actions;
 }
 
+OptionsPageActions OptionsPage::languagesSaved() {
+    OptionsPageActions actions;
+    actions.page = OptionsPageRequest::Options;
+    changed_ = false;
+    return actions;
+}
+
 OptionsPageActions OptionsPage::leaveRequest(const std::uint8_t* options, OptionVolumes& live) {
     OptionsPageActions actions;
     restoreSoundVolume(options, live);

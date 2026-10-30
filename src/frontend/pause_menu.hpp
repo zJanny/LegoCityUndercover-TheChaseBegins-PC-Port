@@ -6,14 +6,16 @@
 // STAND-INS (listed in docs/plans/features/ui-menus.md):
 // - UI-S4 Credits and Exit play the select sound and do nothing else (page 0x51456c and the quit question are not ported).
 // - UI-S10 The save request of the Options page (task 0x1c34a4) is done by the caller at once (takeSaveRequest, then saveDone).
-// - UI-S11 A on the Language row of the Options page plays the select sound and stays on the page (the Languages page 0x364a68 is not
-//   ported).
+// - UI-S14 The Languages page (runtime/languages_page.hpp) is drawn and moved as the round menu in round mode (the original uses the item
+//   grid 0x37600c of itemSmall tiles, UI-29) opened on the first row; the original has no row selected at first, so Select is shown at once.
+//   The language change loads no other texts and pictures (the port reads only the UK text files, UI-30).
 // - UI-S5 The six collectible counts, the ability count and the ticker text of the top screen are not drawn (save progress 0x20a630 / 0x20a7fc,
 //   0x239184 are not ported; the ticker font, line top and spacing are stand-ins, see runtime/pause_ticker.hpp); the ability icon is the one of case 0 (UI_Scanner_DistressedCitizen) and the
 //   portrait border is portrait_border_cop (the class tables 0x51b24c, 0x519454 and 0x519474 are not read).
 // - UI-S6 The page manager 0x376d6c is busy only while the screen closes; its other busy tests (0x25207c, 0x1ff080, 0x1fbedc, 0x272fcc,
 //   0x214bf8) are not modelled.
 #include "frontend/round_menu.hpp"
+#include "runtime/languages_page.hpp"
 #include "runtime/options_page.hpp"
 #include "runtime/pause_ticker.hpp"
 #include "save/save.hpp"
@@ -36,15 +38,16 @@ constexpr std::uint32_t kShortcutBackKey = 0x08be4916;    // systemtext
 constexpr int kPauseSoundSelect = 0x14, kPauseSoundBack = 0x11;
 constexpr int kPauseEntryCount = 4;
 
-enum class PauseEntry { Resume = 0, Options = 1, Credits = 2, Exit = 3, Languages = 4 };
-// Pages of the pause object (+0x340 page 0, +0x348 Options); None while the screen closes.
-enum class PausePage { None, Status, Options };
+enum class PauseEntry { Resume = 0, Options = 1, Credits = 2, Exit = 3 };
+// Pages of the pause object (+0x340 page 0, +0x348 Options, +0x34c Languages); None while the screen closes.
+enum class PausePage { None, Status, Options, Languages };
 
 struct PauseTexts {
     std::string items[kPauseEntryCount];
     std::string title, subtitle, select, back;
     std::string optionsSubtitle;
     runtime::OptionsTexts options;
+    std::array<std::string, runtime::kLanguageCount> languageNames;
 };
 
 struct PauseMenuSetup {
@@ -90,12 +93,16 @@ public:
     bool backShown() const { return back_.shown; }
     bool selectShown() const { return select_.shown; }
     const runtime::OptionsPage& optionsPage() const { return options_; }
+    const runtime::LanguagesPage& languagesPage() const { return languages_; }
+    int language() const { return language_; }
     const std::uint8_t* options() const { return boundOptions_ ? boundOptions_ : ownOptions_.data(); }
     const runtime::OptionVolumes& optionVolumes() const { return boundVolumes_ ? *boundVolumes_ : ownVolumes_; }
     PauseGains takeGains();
     // The Options page asked for its save (B after a change); the caller stores the options and calls saveDone (callback 0x26435c).
     bool takeSaveRequest();
     void saveDone();
+    // The language the Languages page changed to since the previous take (0x1f440c).
+    std::optional<int> takeLanguageChange();
     const RoundMenu& round() const { return round_; }
     // Entries chosen whose effect is not ported (UI-S4), in order.
     std::vector<PauseEntry> takeUnported();
@@ -113,6 +120,7 @@ private:
     void requestClose();
     void pageSelect();
     void apply(const runtime::OptionsPageActions& actions);
+    void apply(const runtime::LanguagesPageActions& actions);
     void writeOptionTexts();
     void setShortcut(ShortcutState& shortcut, bool shown);
     std::uint8_t* liveOptions();
@@ -125,13 +133,15 @@ private:
     bool justSwitched_ = false;
     int savedSelection_ = 0;
     runtime::OptionsPage options_;
+    runtime::LanguagesPage languages_;
     std::array<std::uint8_t, save::kOptionsSize> ownOptions_{};
     runtime::OptionVolumes ownVolumes_;
     std::uint8_t* boundOptions_ = nullptr;
     runtime::OptionVolumes* boundVolumes_ = nullptr;
     int language_ = 1;
     PauseGains gains_;
-    bool saveRequested_ = false;
+    bool saveRequested_ = false, languagesSave_ = false, languageChosen_ = false;
+    std::optional<int> languageChange_;
     std::string tickerText_;
     mutable runtime::PauseTicker ticker_;
     mutable float tickerSeconds_ = 0;
