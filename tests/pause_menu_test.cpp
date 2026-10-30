@@ -2,6 +2,7 @@
 // lengths of the shipped layouts (main.bxaml: TransitionOn 0.5, TransitionOn_Round 0.5, TransitionOff_Round 0.5, Left_Move / Right_Move 0.5,
 // Loop 0.2; pausetop.bxaml: TransitionOn 0.4, TransitionOff 0; ui_frontend/backbutton: TransitionOn 1.1, TransitionOff 0.4; chase-layoutdump)
 // and the button centres the oracle read from the round menu object (request r38-B-1: +0xf4 = 54, 119; +0xfc = 159, 119; +0x104 = 264, 119).
+// The item grid's storyboard lengths and click areas are the layout values of tests/item_grid_test.cpp (chase-layoutdump, 20261030-qolpanels2-D).
 #include "frontend/pause_menu.hpp"
 #include "runtime/pad.hpp"
 #include <algorithm>
@@ -26,6 +27,16 @@ PauseMenuSetup setup() {
     s.round.leftMove = s.round.rightMove = 0.5f;
     s.round.loop = 0.2f;
     s.centres = {{{54, 119}, {159, 119}, {264, 119}}};
+    s.grid.blockbusterOn = 0.4f;
+    s.grid.transitionOn = 0.5f;
+    s.grid.leftMove = s.grid.rightMove = 0.4f;
+    s.grid.show = 0.24f;
+    s.grid.hide = 0.2f;
+    s.grid.pressed = 0.5f;
+    const float tiles[chase::runtime::kItemGridTiles][2] = {{57, 53}, {57, 111}, {107, 81}, {107, 140}, {157, 52}, {157, 110}, {208, 81}, {208, 139}, {258, 52}, {258, 110}};
+    for (int i = 0; i < chase::runtime::kItemGridTiles; ++i) s.gridGeometry.tiles[std::size_t(i)] = {tiles[i][0], tiles[i][1], 32};
+    s.gridGeometry.leftArrow = {10, 111, 16};
+    s.gridGeometry.rightArrow = {306, 111, 16};
     s.topTransitionOn = 0.4f;
     s.topTransitionOff = 0.0f;
     s.shortcutOn = 1.1f;
@@ -253,18 +264,23 @@ void optionsPage() {
     require(menu.takeSounds() == std::vector<int>{chase::runtime::kOptionsSoundSelect, kRoundMenuSoundClose} && menu.round().state() == RoundMenuState::Closing,
             "A on Language plays the select sound and closes the Options rows");
     run(menu, 16);
-    require(menu.page() == PausePage::Languages, "then the page manager enters the Languages page");
-    require(menu.round().items().size() == 9 && menu.round().items()[0].text == "English" && menu.round().items()[5].text == "Danish" &&
-                menu.round().items()[6].text == "Dutch" && menu.round().items()[8].text == "Portuguese",
+    require(menu.page() == PausePage::Languages && menu.grid().state() == chase::runtime::ItemGridState::Opening,
+            "then the page manager enters the Languages page and opens the item grid");
+    require(menu.grid().count() == 9 && menu.grid().row(0).text == "English" && menu.grid().row(5).text == "Danish" &&
+                menu.grid().row(6).text == "Dutch" && menu.grid().row(8).text == "Portuguese",
             "nine rows in the order of table 0x3759b0");
-    require(menu.round().items()[4].image == "UI_Language_Spanish.png" && menu.round().items()[8].image == "UI_Language_Portuguese.png", "the flag pictures");
-    require(menu.backShown() && menu.selectShown(), "Back and Select shown (UI-S14: a row is selected at once)");
+    require(menu.grid().row(4).picture == "Sprites/UI_StatusScreen/Languages/UI_Language_Spanish.png" &&
+                menu.grid().tile(8).picture == "Sprites/UI_StatusScreen/Languages/UI_Language_Portuguese.png",
+            "the flag pictures");
+    require(menu.backShown() && !menu.selectShown() && menu.grid().selected() == -1, "Back shown; no row selected, so no Select");
     run(menu, 20);
     menu.takeSounds();
 
     menu.update(kDt, press(&PauseInput::b));
-    require(menu.takeSounds() == std::vector<int>{chase::runtime::kLanguagesSoundBack, kRoundMenuSoundClose} && !menu.backShown() && !menu.selectShown(),
-            "B plays the back sound and the list closes with both shortcuts off");
+    require(menu.takeSounds() == std::vector<int>{chase::runtime::kLanguagesSoundBack} && !menu.backShown() && !menu.selectShown() &&
+                menu.grid().state() == chase::runtime::ItemGridState::Closing,
+            "B plays the back sound and the grid closes with both shortcuts off");
+    require(menu.page() == PausePage::Languages, "the page manager waits while the grid closes");
     run(menu, 16);
     require(menu.page() == PausePage::Options && menu.round().selected() == 3 && !menu.takeSaveRequest(), "back on the Options page, Language row, no save");
     require(menu.language() == 1 && !menu.takeLanguageChange() && options[1] == 0x01, "no language changed");
@@ -272,16 +288,18 @@ void optionsPage() {
     run(menu, 25);
     menu.update(kDt, press(&PauseInput::a));
     run(menu, 56);
-    menu.update(kDt, press(&PauseInput::right));
-    run(menu, 16);
-    menu.update(kDt, press(&PauseInput::right));
-    run(menu, 16);
-    require(menu.round().selected() == 2, "third row: Italian");
+    require(menu.grid().state() == chase::runtime::ItemGridState::Open, "the grid is open");
     menu.takeSounds();
     menu.update(kDt, press(&PauseInput::a));
-    require(menu.languagesPage().pending() == 3 && !menu.backShown() && !menu.selectShown() && menu.round().state() == RoundMenuState::Closing,
-            "A makes the language pending and closes the list");
-    require(!menu.takeSaveRequest() && options[1] == 0x01, "nothing changes while the list closes");
+    require(menu.languagesPage().pending() == 0 && menu.takeSounds().empty(), "A without a selected row does nothing (UI-S15)");
+    tap(menu, 107, 81, 1);
+    require(menu.grid().selected() == 2 && menu.selectShown(), "a tap on the third tile selects Italian and shows Select");
+    require(menu.takeSounds() == std::vector<int>{chase::runtime::kItemGridSoundMove}, "with the move sound");
+    run(menu, 5);
+    menu.update(kDt, press(&PauseInput::a));
+    require(menu.languagesPage().pending() == 3 && !menu.backShown() && !menu.selectShown() && menu.grid().state() == chase::runtime::ItemGridState::Closing,
+            "A makes the language pending and closes the grid");
+    require(!menu.takeSaveRequest() && options[1] == 0x01, "nothing changes while the grid closes");
     run(menu, 16);
     require(menu.takeLanguageChange() == 3 && options[1] == 3 && menu.language() == 3, "after the close options +1 takes the language");
     require(menu.takeSaveRequest() && !menu.takeSaveRequest(), "and the options are saved once");

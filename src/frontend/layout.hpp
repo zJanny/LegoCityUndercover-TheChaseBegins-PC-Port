@@ -39,6 +39,8 @@ struct LayoutScene {
     std::map<std::string, std::string> images;
     std::map<std::string, std::string> referenceStoryboards;
     std::map<std::string, float> referenceTimes;
+    // Storyboards started on a reference after its referenceStoryboards one, in the order they were started (UI-S1 layering).
+    std::map<std::string, std::vector<PlayingStoryboard>> referenceLaterStoryboards;
     std::string storyboard;
     float time = 0;
     std::vector<PlayingStoryboard> laterStoryboards;

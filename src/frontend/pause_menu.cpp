@@ -32,6 +32,8 @@ PauseMenuSetup pauseMenuSetup(Resources& resources, const std::string& gameTextF
     const assets::UiLayout& round = resources.layout(kRoundMenuLayout);
     setup.round = roundMenuTimings(round);
     setup.centres = roundMenuButtonCentres(round);
+    setup.grid = itemGridTimings(round, resources.layout(kItemSmallLayout));
+    setup.gridGeometry = itemGridGeometry(resources);
     const assets::UiLayout& top = resources.layout(kPauseTopLayout);
     setup.topTransitionOn = storyboardLength(top, "TransitionOn");
     setup.topTransitionOff = storyboardLength(top, "TransitionOff");
@@ -56,7 +58,8 @@ PauseMenuSetup pauseMenuSetup(Resources& resources, const std::string& gameTextF
     return setup;
 }
 
-PauseMenu::PauseMenu(const PauseMenuSetup& setup) : setup_(setup), round_(setup.round, setup.centres) {
+PauseMenu::PauseMenu(const PauseMenuSetup& setup)
+    : setup_(setup), round_(setup.round, setup.centres), grid_(setup.grid, setup.gridGeometry) {
     save::SaveImage defaults;
     defaults.resetOptions(std::uint8_t(language_));
     std::copy(defaults.options(), defaults.options() + save::kOptionsSize, ownOptions_.begin());
@@ -79,6 +82,8 @@ void PauseMenu::open() {
     ticker_.reset();
     tickerSeconds_ = 0;
     round_ = RoundMenu(setup_.round, setup_.centres);
+    grid_ = runtime::ItemGrid(setup_.grid, setup_.gridGeometry);
+    touchPhase_ = runtime::TouchPhase::None;
     round_.create();
     round_.setTitle(setup_.texts.title);
     pageRequested_ = PausePage::Status;
@@ -117,7 +122,10 @@ void PauseMenu::apply(const runtime::LanguagesPageActions& actions) {
     for (const int id : actions.sounds) sounds_.push_back(id);
     if (actions.backShortcut) setShortcut(back_, *actions.backShortcut);
     if (actions.selectShortcut) setShortcut(select_, *actions.selectShortcut);
-    if (actions.closeList && (round_.state() == RoundMenuState::Active || round_.state() == RoundMenuState::Opening)) round_.close(false);
+    if (actions.closeList) {
+        RoundMenuGridLayout layout(round_);
+        grid_.close(layout, true, false);
+    }
     if (actions.languageChanged) {
         language_ = *actions.languageChanged;
         languageChosen_ = true;
@@ -130,13 +138,16 @@ void PauseMenu::apply(const runtime::LanguagesPageActions& actions) {
 
 void PauseMenu::enterPage() {
     if (pageRequested_ == PausePage::Languages) {
-        std::vector<RoundMenuItem> items;
-        for (const std::uint8_t language : runtime::kLanguageTable)
-            items.push_back({setup_.texts.languageNames[std::size_t(language - 1)], runtime::kLanguageImages[std::size_t(language - 1)]});
-        round_.open(runtime::kLanguageImageFolder, items, 0);
         round_.setSubtitle(setup_.texts.options.language);
+        RoundMenuGridLayout layout(round_);
+        grid_.open(layout, runtime::kLanguageCount, nullptr, -1);
+        for (int row = 0; row < runtime::kLanguageCount; ++row) {
+            const std::size_t language = std::size_t(runtime::kLanguageTable[std::size_t(row)] - 1);
+            grid_.setText(row, setup_.texts.languageNames[language]);
+            grid_.setPicture(row, std::string(runtime::kLanguageImageFolder) + "/" + runtime::kLanguageImages[language]);
+        }
         apply(languages_.enter());
-        apply(languages_.selectionChanged(round_.selected()));
+        apply(languages_.selectionChanged(grid_.selected()));
         return;
     }
     if (pageRequested_ == PausePage::Options) {
@@ -206,8 +217,21 @@ void PauseMenu::update(float dt, const PauseInput& input) {
     menuInput.a = input.a;
     menuInput.b = input.b;
     menuInput.touch = input.touch;
-    const int result = round_.update(dt, menuInput);
+    const int roundResult = round_.update(dt, menuInput);
     for (const int id : round_.takeSounds()) sounds_.push_back(id);
+    touchPhase_ = runtime::nextTouchPhase(touchPhase_, input.touch.down);
+    runtime::ItemGridInput gridInput;
+    gridInput.a = input.a;
+    gridInput.b = input.b;
+    gridInput.left = input.left;
+    gridInput.right = input.right;
+    gridInput.touch = touchPhase_;
+    gridInput.x = input.touch.x;
+    gridInput.y = input.touch.y;
+    RoundMenuGridLayout gridLayout(round_);
+    const int gridResult = grid_.update(dt, gridLayout, gridInput);
+    for (const int id : grid_.takeSounds()) sounds_.push_back(id);
+    const int result = grid_.active() ? gridResult : roundResult;
     const bool busy = closing_;
     if (!busy) {
         if (justSwitched_) {
@@ -219,9 +243,9 @@ void PauseMenu::update(float dt, const PauseInput& input) {
                 if (result == 1) apply(options_.a(round_.selected(), liveOptions()));
                 else if (result == -1) apply(options_.b());
             } else if (page_ == PausePage::Languages) {
-                apply(languages_.selectionChanged(round_.selected()));
-                apply(languages_.update(round_.state() == RoundMenuState::Opening || round_.state() == RoundMenuState::Closing, liveOptions()));
-                if (result == 1) apply(languages_.a(round_.selected()));
+                apply(languages_.selectionChanged(grid_.selected()));
+                apply(languages_.update(grid_.busy(), liveOptions()));
+                if (result == 1 && grid_.selected() >= 0) apply(languages_.a(grid_.selected()));
                 else if (result == -1) apply(languages_.b());
             } else if (page_ == PausePage::Status && result == 1) {
                 pageSelect();
@@ -229,7 +253,7 @@ void PauseMenu::update(float dt, const PauseInput& input) {
                 sounds_.push_back(kPauseSoundBack);
                 requestClose();
             }
-        } else if (round_.state() == RoundMenuState::Idle) {
+        } else if (round_.state() == RoundMenuState::Idle && !grid_.busy()) {
             const PausePage entering = pageRequested_;
             if (entering != PausePage::None) enterPage();
             page_ = entering;
@@ -338,7 +362,9 @@ void PauseMenu::drawTicker(Canvas& top, Resources& resources) const {
 
 void PauseMenu::drawBottom(Canvas& bottom, Resources& resources) const {
     bottom.clear(0, 0, 0);
-    drawLayout(bottom, resources, kRoundMenuLayout, round_.scene(), 0, 0);
+    LayoutScene scene = round_.scene();
+    addItemGridScene(scene, grid_);
+    drawLayout(bottom, resources, kRoundMenuLayout, scene, 0, 0);
     ShortcutView back, select;
     back.label = setup_.texts.back;
     back.storyboard = back_.shown ? "TransitionOn" : "TransitionOff";

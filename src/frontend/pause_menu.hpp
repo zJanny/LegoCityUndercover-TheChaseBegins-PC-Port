@@ -3,17 +3,17 @@
 // leave 0x2fff00), set up by 0x263bd0, with page 0 of the status screen (vtable 0x363f34: enter 0x309a5c, leave request 0x309a18,
 // A 0x309868, B 0x3097e8, update 0x309b74) and the Options page (vtable 0x364888, runtime/options_page.hpp). Top screen: sprites/Blend/PauseTop/PauseTop; bottom screen: the round menu (round_menu.hpp)
 // with the Back and Select shortcuts (0x2203ac). No SDL dependency.
-// STAND-INS (listed in docs/plans/features/ui-menus.md):
+// STAND-INS (listed in docs/plans/features/ui-menus-pause.md):
 // - UI-S4 Credits and Exit play the select sound and do nothing else (page 0x51456c and the quit question are not ported).
 // - UI-S10 The save request of the Options page (task 0x1c34a4) is done by the caller at once (takeSaveRequest, then saveDone).
-// - UI-S14 The Languages page (runtime/languages_page.hpp) is drawn and moved as the round menu in round mode (the original uses the item
-//   grid 0x37600c of itemSmall tiles, UI-29) opened on the first row; the original has no row selected at first, so Select is shown at once.
-//   The language change loads no other texts and pictures (the port reads only the UK text files, UI-30).
+// - UI-30 The language change of the Languages page (runtime/languages_page.hpp, shown in the item grid runtime/item_grid.hpp) loads no
+//   other texts and pictures (the port reads only the UK text files).
 // - UI-S5 The six collectible counts, the ability count and the ticker text of the top screen are not drawn (save progress 0x20a630 / 0x20a7fc,
 //   0x239184 are not ported; the ticker font, line top and spacing are stand-ins, see runtime/pause_ticker.hpp); the ability icon is the one of case 0 (UI_Scanner_DistressedCitizen) and the
 //   portrait border is portrait_border_cop (the class tables 0x51b24c, 0x519454 and 0x519474 are not read).
-// - UI-S6 The page manager 0x376d6c is busy only while the screen closes; its other busy tests (0x25207c, 0x1ff080, 0x1fbedc, 0x272fcc,
-//   0x214bf8) are not modelled.
+// - UI-S6 The page manager 0x376d6c is busy only while the screen closes or the item grid opens or closes (0x1fbedc); its other busy tests
+//   (0x25207c, 0x1ff080, 0x272fcc, 0x214bf8) are not modelled.
+#include "frontend/item_grid_view.hpp"
 #include "frontend/round_menu.hpp"
 #include "runtime/languages_page.hpp"
 #include "runtime/options_page.hpp"
@@ -57,6 +57,8 @@ struct PauseTexts {
 struct PauseMenuSetup {
     RoundMenuTimings round;
     std::array<std::array<float, 2>, 3> centres{};
+    runtime::ItemGridTimings grid;
+    runtime::ItemGridGeometry gridGeometry;
     float topTransitionOn = 0, topTransitionOff = 0;
     float shortcutOn = 0, shortcutOff = 0;
     PauseTexts texts;
@@ -109,6 +111,7 @@ public:
     // The language the Languages page changed to since the previous take (0x1f440c).
     std::optional<int> takeLanguageChange();
     const RoundMenu& round() const { return round_; }
+    const runtime::ItemGrid& grid() const { return grid_; }
     // Entries chosen whose effect is not ported (UI-S4), in order.
     std::vector<PauseEntry> takeUnported();
     // Indices into the setup's extra entries chosen since the previous take, in order.
@@ -135,6 +138,8 @@ private:
 
     PauseMenuSetup setup_;
     RoundMenu round_;
+    runtime::ItemGrid grid_;
+    runtime::TouchPhase touchPhase_ = runtime::TouchPhase::None;
     bool opened_ = false, finished_ = false, closing_ = false;
     PausePage pageRequested_ = PausePage::None, page_ = PausePage::None;
     bool justSwitched_ = false;

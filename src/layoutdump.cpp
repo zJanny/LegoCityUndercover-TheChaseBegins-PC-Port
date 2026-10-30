@@ -25,6 +25,7 @@ void printElement(const UiElement& e, int depth) {
     std::cout << " pos " << e.position[0] << ',' << e.position[1] << " size " << e.size[0] << ',' << e.size[1];
     if (e.opacity != 1) std::cout << " opacity " << e.opacity;
     if (e.scale[0] != 1 || e.scale[1] != 1) std::cout << " scale " << e.scale[0] << ',' << e.scale[1];
+    if (e.origin[0] != 0 || e.origin[1] != 0) std::cout << " origin " << e.origin[0] << ',' << e.origin[1];
     if (e.flags) std::cout << " flags 0x" << std::hex << e.flags << std::dec;
     if (e.fontSize) std::cout << " font " << unsigned(e.fontSize);
     if (e.alignment) std::cout << " align " << unsigned(e.alignment);

@@ -47,7 +47,7 @@ Screen: T top, B bottom. State: ported, partial, none. Owner: the feature file t
 
 | Screen drawn by code | Code | Opened by | Screen | State, owner |
 |---|---|---|---|---|
-| Status pages: Options (Sprites/UI_StatusScreen/Options), Languages, red brick extras | page vtables 0x364888, 0x364a68, 0x3645fc (pause pages +0x348, +0x34c, +0x344) | pause Options | B | partial (Options and Languages ported), UI-24, UI-29 |
+| Status pages: Options (Sprites/UI_StatusScreen/Options), Languages, red brick extras | page vtables 0x364888, 0x364a68, 0x3645fc (pause pages +0x348, +0x34c, +0x344) | pause Options | B | partial (Options and Languages ported), UI-24 |
 | Pages 0x364268, 0x364398, 0x3643c8, 0x364740, 0x364ef8 | enters 0x30f7e4, 0x312edc, 0x31315c, 0x319ad8, 0x322e94 | not identified | B | UI-19 |
 | Shop (UI_Shop: codes, gifts, postcards, story clips, red bricks, character classes) | 0x1a0bf4 | not traced | T+B | none, UI-11 |
 | Award viewer (Prop_Award models) | mode 0x514030, setup 0x1d2db4 | native AwardViewer (use spot of the police station) | T+B | partial, [ui-menus-award-viewer](../plans/features/ui-menus-award-viewer.md) |

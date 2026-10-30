@@ -18,7 +18,7 @@ None against the original (the menu is not part of it). In `chase-game` the slot
 
 - QOLSET-S4 — While the menu is open over the front end, UI sounds that were already playing finish: the audio device is not paused, only the front end's update and new sounds stop ("movies and sounds hold"). evidence: [qol-settings.md §2026-10-29T18:06:35](../../design/qol-settings.md#ts-20261029-180635).
 
-- QOLSET-S6 — The Language row of the open menu requests the Languages page and the port side prints one line: the page is not shown and the language does not change (the menu has no screen for the pause screen's round-menu page). needs: QOLSET-25. evidence: [ui-screens-pause.md §2026-10-30T14:16:01](../../re/ui-screens-pause.md#ts-20261030-141601).
+- QOLSET-S6 — The Language row of the open menu requests the Languages page and the port side prints one line: the page is not shown and the language does not change (the menu has no screen for the Languages page, which only the pause screen's item grid shows). needs: QOLSET-25. evidence: [ui-screens-pause.md §2026-10-30T14:16:01](../../re/ui-screens-pause.md#ts-20261030-141601).
 
 ## 5. Open items
 

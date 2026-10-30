@@ -87,7 +87,8 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | [front-end](front-end.md) | IN_PROGRESS | FE-1 existing slots and Continue (needs SAVE-2); FE-30 delete confirmation; FE-3 loading screen 3D badge |
 | [hud-ui](hud-ui.md) | IN_PROGRESS | HUD-6 hearts never change; HUD-11 map mission icons, HUD-90 hub player arrow, HUD-60 other map icon types; HUD-8 other counters |
 | [hud-ui-text](hud-ui-text.md) | IN_PROGRESS | HUD-22 remaining text screens; HUD-30 character intro and box line counts; HUD-33 tip after the release camera |
-| [ui-menus](ui-menus.md) | IN_PROGRESS | UI-20 characters panel; UI-21 map button actions; UI-2 pause fades and gates; UI-3 pause Exit; UI-29 item grid; UI-30 language change loads; UI-24 red brick extras page; UI-25 options save task (pause screen, its Options page and map buttons ported) |
+| [ui-menus](ui-menus.md) | IN_PROGRESS | UI-20 characters panel; UI-21 map button actions; UI-22 map button gates; UI-11 shop and item grid pages (map buttons ported) |
+| [ui-menus-pause](ui-menus-pause.md) | IN_PROGRESS | UI-2 pause fades and gates; UI-3 pause Exit; UI-31 item grid oracle check; UI-30 language change loads; UI-25 options save task (pause screen, Options and Languages pages ported) |
 | [ui-menus-award-viewer](ui-menus-award-viewer.md) | IN_PROGRESS | UI-26 award models; UI-27 award mode fades and gates; UI-28 oracle picture (award viewer ported) |
 | [hud-ui-super-bricks](hud-ui-super-bricks.md) | IN_PROGRESS | HUD-79 icon through the HUD camera; HUD-80 number font; HUD-85 build-menu placeholders; HUD-84 update count origin |
 | [audio](audio.md) | IN_PROGRESS | AUDIO-20 duck record; AUDIO-11 action music; AUDIO-3 world sounds |

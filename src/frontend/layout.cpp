@@ -162,10 +162,13 @@ private:
             const auto attached = scene_.attachedLayouts.find(e.name);
             const auto board = scene_.referenceStoryboards.find(e.name);
             const auto referenceTime = scene_.referenceTimes.find(e.name);
+            const auto laterBoards = scene_.referenceLaterStoryboards.find(e.name);
+            static const std::vector<PlayingStoryboard> none;
             layout(attached != scene_.attachedLayouts.end() ? attached->second
                                                             : layoutFolder(currentPath_) + lowerCase(e.source) + ".bxaml",
                    frame, board == scene_.referenceStoryboards.end() ? std::string() : board->second, e.name,
-                   referenceTime == scene_.referenceTimes.end() ? scene_.time : referenceTime->second);
+                   referenceTime == scene_.referenceTimes.end() ? scene_.time : referenceTime->second,
+                   laterBoards == scene_.referenceLaterStoryboards.end() ? none : laterBoards->second);
         }
         const TextSlot* slot = nullptr;
         if (!instance_.empty()) {

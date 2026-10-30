@@ -71,7 +71,8 @@ In the [development runtime](commands.md#development-runtime), while you play:
 - **B** (Q or right mouse) or **Start** go back to the game.
 - Options opens the options wheel: SFX, Music, Invert Camera and Language. Turn it like the pause wheel. On SFX and Music, **up and down** (W and S, or the arrow keys) change the volume from 0 to 10. On Invert Camera, up, down or **A** switch it on or off. **B** goes back to the pause wheel; after a change it first saves the options.
 - PC Settings is the last entry (it shows the picture of Options). Turn the wheel left from Resume to reach it, then choose it with **A** or a click on the middle button. It opens the [PC settings menu](#pc-settings-menu) over the whole window; the game and the pause menu wait behind it. **Escape** (or the other ways to close it) returns to the pause menu.
-- Language, Credits and Exit do nothing yet. The numbers on the upper screen are not shown yet.
+- Language on the options wheel opens the language grid: nine flag tiles, none chosen at first. **Click** a flag to choose it, then click it again or press **A** to switch to that language; it is stored in the save file and you are back on the options wheel. **B** goes back without a change. The texts and pictures stay English.
+- Credits and Exit do nothing yet. The numbers on the upper screen are not shown yet.
 
 ## PC settings menu
 

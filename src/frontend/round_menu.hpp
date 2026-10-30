@@ -66,6 +66,9 @@ public:
 
     // 0x1ec9e8: the item's text; for the selected item the name texts are refreshed (0x213080).
     void setItemText(int item, const std::string& text);
+    // A storyboard of the layout started from its first frame by another control of the same layout (the item grid 0x37600c).
+    void startStoryboard(const std::string& name, float length) { start(name, length); }
+    bool storyboardFinished(const std::string& name) const { return finished(name); }
     void setTitle(const std::string& text) { title_ = text; }
     void setSubtitle(const std::string& text) { subtitle_ = text; }
     RoundMenuState state() const { return state_; }
