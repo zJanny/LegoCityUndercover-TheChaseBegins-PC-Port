@@ -18,6 +18,7 @@ Read this index, then open only the file you need.
 | [rendering-fog.md](rendering-fog.md) | Fog: level parameters (`FogStart`, `FogEnd`, `FogColour`), the per-draw rule, the 128-entry PICA fog table and how it is built, room pop-in |
 | [rendering-lighting.md](rendering-lighting.md) | Fragment lighting: light objects and classes, the light list 0x5943b0, per-draw registers of 0x12d884, lighting init and lookup tables |
 | [rendering-sky.md](rendering-sky.md) | Sky models: the sky pass 0x180fac (camera orientation, eye at (0, lift, 0)), draw order, depth, the Sea lift |
+| [view-edges.md](view-edges.md) | Which draw, spawn, fade, shadow and room decisions depend on the view's width (the widened 16:9 view of the `qol` plan) |
 | [rendering-glow.md](rendering-glow.md) | The glow post-process 0x2bf830: copies, blur tables of modes 0xc / 0xd, the add with mode 0x12, callers and strengths |
 | [rendering-draw-order.md](rendering-draw-order.md) | The draw lists 0x530634: material key 0x115128, depth key 0x25688c, the library sort, which parts are blended, particles in the list, and the near-camera semi-transparent lists (0x1ddde4) |
 | [rendering-reflections.md](rendering-reflections.md) | Reflection cube maps: the reflection flag 0x37796d, the cube subroutine of the vertex programs, `TexTrans`, face registers, census |
