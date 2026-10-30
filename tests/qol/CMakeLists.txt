@@ -200,3 +200,8 @@ add_executable(qol-ui-layout-test ui_layout_test.cpp)
 target_link_libraries(qol-ui-layout-test PRIVATE chase_qol)
 target_compile_options(qol-ui-layout-test PRIVATE -Wall -Wextra -Wpedantic)
 add_test(NAME qol-ui-layout COMMAND qol-ui-layout-test)
+
+add_executable(qol-ui-nav-test ui_nav_test.cpp)
+target_link_libraries(qol-ui-nav-test PRIVATE chase_qol)
+target_compile_options(qol-ui-nav-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME qol-ui-nav COMMAND qol-ui-nav-test)

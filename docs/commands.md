@@ -114,6 +114,7 @@ The table lists some of the tests. `ctest --test-dir build -N` lists all of them
 |---|---|
 | `input-core` | Input core, no SDL, including the `DebugOverlay` binding |
 | `qol-settings` | Quality-of-life toggle store, no SDL: master state Original/Improved/Custom, per-feature switches, strict `config/qol.cfg` read and write including `window_mode` and `resolution` (`tests/qol/`) |
+| `qol-ui-nav` | Navigation and focus model of the new settings menu, no SDL and no GL: shared mouse and keyboard focus, rows, tab bar reach and wrap, Esc and right-click layering over prompt, dialog and dropdown, slider drag, wheel scroll, pad buttons, as plain-type actions (`tests/qol/`) |
 | `qol-menu-model` | Drawing-free model of the PC settings menu, no SDL: tabs, rows from the feature table, key and pointer events, master button cycling, toggle rows, the Display tab over the display modes, rejections (`tests/qol/`) |
 | `qol-game-tab` | Model of the Game tab, no SDL: SFX and Music volume 0 to 10, Invert camera, a read-only language value and a Language row that requests the Languages page, over a fake options interface, in-sync reads, ranges and rejections (`tests/qol/`) |
 | `qol-game-options` | Port side of the Game tab over the Options page state, fake state without game data: edits seen by the original Options page and the reverse, gains, Languages page request, out-of-range rejection (`tests/qol/`) |

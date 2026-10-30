@@ -47,4 +47,9 @@ Answers of the user to the lead's questions (2026-10-30; the quoted labels are t
 
 10. Proportions (the user, 2026-10-30T22:32:10+01:00, "Approve these values"): body text 2.5 percent and rows 5.5 percent of the window height; the row column 1.3 times the window height wide, at most 90 percent of the window width; controls 45 percent of the column; tab bar, help line and hint bar one row high.
 
+11. Enter on an arrow selector row such as Window mode or Language (the user, 2026-10-30, "Do nothing"): Enter does nothing there; Left and Right and clicks change the value.
+12. Right-click while the "Press a key..." prompt is open (the user, 2026-10-30, "Bind right button"): the right mouse button becomes the binding; only Esc cancels the prompt.
+13. Enter in the "key already bound, Swap / Cancel" dialog (the user, 2026-10-30, "Enter = Cancel"): Enter cancels, Swap needs a click or moving the focus to it first; Esc, pad B and right-click also cancel. The "Keep these settings?" dialog keeps Enter = confirm.
+14. Greyed-out rows such as Resolution in full screen (the user, 2026-10-30, "Skipped"): Up and Down, on keyboard and pad, jump over disabled rows; the note is seen only when the mouse hovers the row.
+
 Open: none.

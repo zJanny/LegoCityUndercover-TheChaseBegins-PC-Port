@@ -251,7 +251,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [qol-settings-drawing.md](features/qol-settings-drawing.md): QOLSET-53, QOLSET-S2, QOLSET-S4, QOLSET-S6
 - [qol-settings-menu.md](features/qol-settings-menu.md): QOLSET-2 (+3), QOLSET-25 (+2), QOLSET-36, QOLSET-59, QOLSET-61
 - [qol-settings-tabs.md](features/qol-settings-tabs.md): QOLSET-3, QOLSET-4
-- [qol-settings-ui.md](features/qol-settings-ui.md): QOLSET-72 (+10), QOLSET-73 (+6), QOLSET-75 (+6), QOLSET-74 (+5), QOLSET-76 (+5), QOLSET-77 (+5), QOLSET-78 (+5), QOLSET-79 (+4)
+- [qol-settings-ui.md](features/qol-settings-ui.md): QOLSET-86 (+7), QOLSET-73 (+6), QOLSET-75 (+6), QOLSET-74 (+5), QOLSET-76 (+5), QOLSET-77 (+5), QOLSET-78 (+5), QOLSET-79 (+4)
 - [rendering-draw-order.md](features/rendering-draw-order.md): RENDER-65 (+1), RENDER-78 (+1), RENDER-79 (+1), RENDER-S64, RENDER-S71, RENDER-S72
 - [rendering-reflections.md](features/rendering-reflections.md): RENDER-75 (+1), RENDER-S69
 - [rendering-shadows.md](features/rendering-shadows.md): RENDER-72 (+1), RENDER-73 (+1), RENDER-74 (+1), RENDER-S67, RENDER-S68
