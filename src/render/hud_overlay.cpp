@@ -25,12 +25,12 @@ public:
     HudOverlayImpl(int topWidth, int bottomWidth, int screenHeight);
     ~HudOverlayImpl();
     void draw(const Pixels& top, const Pixels& bottom, const PixelRect& topRect, const PixelRect& bottomRect, int windowWidth, int windowHeight);
-    void drawTop(const Pixels& top, const PixelRect& rect, int windowWidth, int windowHeight);
+    void drawTop(const Pixels& top, const PixelRect& rect, int windowWidth, int windowHeight, bool upload);
 
 private:
     void begin(int windowWidth, int windowHeight);
     void end();
-    void quad(int index, const Pixels& image, const PixelRect& rect, int windowWidth, int windowHeight);
+    void quad(int index, const Pixels& image, const PixelRect& rect, int windowWidth, int windowHeight, bool upload = true);
 
     GLuint program_ = 0, array_ = 0, buffer_ = 0;
     GLuint textures_[2] = {0, 0};
@@ -102,16 +102,18 @@ void HudOverlayImpl::draw(const Pixels& top, const Pixels& bottom, const PixelRe
     end();
 }
 
-void HudOverlayImpl::drawTop(const Pixels& top, const PixelRect& rect, int windowWidth, int windowHeight) {
+void HudOverlayImpl::drawTop(const Pixels& top, const PixelRect& rect, int windowWidth, int windowHeight, bool upload) {
     begin(windowWidth, windowHeight);
-    quad(0, top, rect, windowWidth, windowHeight);
+    quad(0, top, rect, windowWidth, windowHeight, upload);
     end();
 }
 
-void HudOverlayImpl::quad(int index, const Pixels& image, const PixelRect& rect, int windowWidth, int windowHeight) {
+void HudOverlayImpl::quad(int index, const Pixels& image, const PixelRect& rect, int windowWidth, int windowHeight, bool upload) {
     glBindTexture(GL_TEXTURE_2D, textures_[index]);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image.width, image.height, GL_RGBA, GL_UNSIGNED_BYTE, image.rgba);
+    if (upload) {
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image.width, image.height, GL_RGBA, GL_UNSIGNED_BYTE, image.rgba);
+    }
     const OverlayQuad placed = overlayQuad(rect, windowWidth, windowHeight);
     glBindBuffer(GL_ARRAY_BUFFER, buffer_);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(placed.vertices), placed.vertices);
@@ -129,8 +131,8 @@ void HudOverlay::draw(const Pixels& top, const Pixels& bottom, const PixelRect& 
     impl_->draw(top, bottom, topRect, bottomRect, windowWidth, windowHeight);
 }
 
-void HudOverlay::drawTop(const Pixels& top, const PixelRect& rect, int windowWidth, int windowHeight) {
-    impl_->drawTop(top, rect, windowWidth, windowHeight);
+void HudOverlay::drawTop(const Pixels& top, const PixelRect& rect, int windowWidth, int windowHeight, bool upload) {
+    impl_->drawTop(top, rect, windowWidth, windowHeight, upload);
 }
 
 }

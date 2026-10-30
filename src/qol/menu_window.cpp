@@ -113,4 +113,8 @@ void MenuWindow::draw(chase::frontend::Canvas& window, chase::frontend::Resource
     drawMenuPage(window, resources, model_, setup_, list_, game_);
 }
 
+RedrawnPage MenuWindow::page(int windowWidth, int windowHeight, chase::frontend::Resources& resources) {
+    return redraw_.draw(windowWidth, windowHeight, resources, model_, setup_, list_, game_);
+}
+
 }

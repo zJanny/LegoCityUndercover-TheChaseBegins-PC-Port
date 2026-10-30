@@ -106,9 +106,9 @@ struct FrontMenu::State {
     MenuStores stores;
     MenuModel model;
     MenuWindow window;
-    std::optional<fe::Canvas> canvas;
     std::optional<chase::render::HudOverlay> overlay;
-    bool dirty = true;
+    int overlayWidth = 0, overlayHeight = 0;
+    std::uint64_t uploaded = 0;
 };
 
 FrontMenu::FrontMenu(fe::Resources& resources, StoresPorts ports) : resources_(resources), ports_(std::move(ports)) {}
@@ -151,7 +151,6 @@ bool FrontMenu::route(const SDL_Event& event, int width, int height) {
         return false;
     }
     s.stores.commit(result);
-    if (result != Result::Ignored) s.dirty = true;
     return true;
 }
 
@@ -168,7 +167,6 @@ bool FrontMenu::consume(const SDL_Event& event, int width, int height, const fe:
     State& s = state();
     s.stores.open(s.model);
     s.window.open();
-    s.dirty = true;
     return true;
 }
 
@@ -179,19 +177,19 @@ bool FrontMenu::present(SDL_Window* window) {
     int width = 0, height = 0;
     SDL_GL_GetDrawableSize(window, &width, &height);
     if (width <= 0 || height <= 0) return true;
-    if (!s.canvas || s.canvas->width() != width || s.canvas->height() != height) {
-        s.canvas.emplace(width, height);
+    if (!s.overlay || s.overlayWidth != width || s.overlayHeight != height) {
         s.overlay.reset();
         s.overlay.emplace(width, 1, height);
-        s.dirty = true;
+        s.overlayWidth = width;
+        s.overlayHeight = height;
+        s.uploaded = 0;
     }
-    if (s.dirty) {
-        s.window.draw(*s.canvas, resources_);
-        s.dirty = false;
-    }
+    const RedrawnPage page = s.window.page(width, height, resources_);
+    const bool upload = page.id != s.uploaded;
+    s.uploaded = page.id;
     chase::render::setViewport({0, 0, width, height});
     chase::render::clearWindow({0, 0, 0, 1}, false);
-    s.overlay->drawTop({width, height, s.canvas->rgba().data()}, {0, 0, width, height}, width, height);
+    s.overlay->drawTop({width, height, page.pixels->rgba().data()}, {0, 0, width, height}, width, height, upload);
     return true;
 }
 

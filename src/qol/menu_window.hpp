@@ -6,6 +6,7 @@
 #include "qol/menu_hit.hpp"
 #include "qol/menu_model.hpp"
 #include "qol/menu_page.hpp"
+#include "qol/menu_redraw.hpp"
 
 #include <optional>
 #include <string>
@@ -33,6 +34,8 @@ public:
     Result wheel(int steps);
 
     void draw(chase::frontend::Canvas& window, chase::frontend::Resources& resources) const;
+    RedrawnPage page(int windowWidth, int windowHeight, chase::frontend::Resources& resources);
+    const MenuRedraw& redraw() const { return redraw_; }
 
 private:
     bool assigning() const;
@@ -44,6 +47,7 @@ private:
     ListForm list_;
     const GameOptions* game_ = nullptr;
     MenuPointer pointer_;
+    MenuRedraw redraw_;
 };
 
 }
