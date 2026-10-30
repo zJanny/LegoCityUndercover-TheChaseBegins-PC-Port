@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 1042 open items and stand-ins, 177 linked to game usage, 865 with unknown reach.
+Items: 1045 open items and stand-ins, 177 linked to game usage, 868 with unknown reach.
 
 ## Top 50 overall
 
@@ -137,7 +137,7 @@ Items: 1042 open items and stand-ins, 177 linked to game usage, 865 with unknown
 
 ## Scripts and missions
 
-112 of 237 items linked.
+112 of 240 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -260,7 +260,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [script-system-ai-navigation.md](features/script-system-ai-navigation.md): SCRIPT-92 (+30), SCRIPT-94 (+17), SCRIPT-101 (+15), SCRIPT-95 (+15), SCRIPT-100 (+14), SCRIPT-79 (+13), SCRIPT-S100, SCRIPT-S101, SCRIPT-S102, SCRIPT-S104, SCRIPT-S31, SCRIPT-S93, SCRIPT-S94, SCRIPT-S95
 - [script-system-dcam.md](features/script-system-dcam.md): SCRIPT-40 (+15), SCRIPT-182 (+1), SCRIPT-48 (+1), SCRIPT-181, SCRIPT-332, SCRIPT-49, SCRIPT-50, SCRIPT-S142
 - [script-system-hud-natives.md](features/script-system-hud-natives.md): SCRIPT-350 (+2), SCRIPT-329 (+1), SCRIPT-330 (+1), SCRIPT-354 (+1), SCRIPT-331, SCRIPT-68, SCRIPT-69, SCRIPT-70, SCRIPT-S270, SCRIPT-S282, SCRIPT-S283, SCRIPT-S285
-- [script-system-missions-1-3-end.md](features/script-system-missions-1-3-end.md): SCRIPT-391, SCRIPT-393, SCRIPT-S303, SCRIPT-S304, SCRIPT-S311
+- [script-system-missions-1-3-end.md](features/script-system-missions-1-3-end.md): SCRIPT-391, SCRIPT-393, SCRIPT-400, SCRIPT-401, SCRIPT-402, SCRIPT-S303, SCRIPT-S304, SCRIPT-S311
 - [script-system-missions-1-3-generator.md](features/script-system-missions-1-3-generator.md): SCRIPT-364 (+1)
 - [script-system-missions-1-3.md](features/script-system-missions-1-3.md): SCRIPT-368 (+2), SCRIPT-399, SCRIPT-S291, SCRIPT-S298, SCRIPT-S315, SCRIPT-S316
 - [script-system-missions-reference.md](features/script-system-missions-reference.md): SCRIPT-359 (+1), SCRIPT-360 (+1), SCRIPT-370 (+1), SCRIPT-S289, SCRIPT-S292, SCRIPT-S293, SCRIPT-S299

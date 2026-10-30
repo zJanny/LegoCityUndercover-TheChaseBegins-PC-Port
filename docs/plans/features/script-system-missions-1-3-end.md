@@ -27,6 +27,9 @@ IN_PROGRESS, updated 2026-10-28T01:21:46+01:00. From the start of `1-3_Start_Mow
 - [ ] SCRIPT-391 — The original's height curve of locomotion state 73 (the oracle rows are in the entry) and the fall after 28 counts; the landing clip's move of (-0.879, -0.526) after the hard landing is not applied. needs: SCRIPT-S312. evidence: [pushables.md §2026-10-28T01:21:46](../../re/pushables.md#ts-20261028-012146).
 - [ ] SCRIPT-392 — The camera shots of the end (`StartDCam` 1-3_Crane_Cam_01/02, the zoom cam) are not compared with the three measured shots (eye and look at vblank 0, 258, 448). evidence: [pushables.md §2026-10-28T01:21:46](../../re/pushables.md#ts-20261028-012146).
 - [ ] SCRIPT-393 — The state in front of the cart has the cart 18 moves ahead of its level placement; whether the build-it places it there or a push came first is not known. evidence: [pushables.md §2026-10-28T01:21:46](../../re/pushables.md#ts-20261028-012146).
+- [ ] SCRIPT-400 — After the crane rescue the rescued man stays stuck in the air (user playtest 2026-10-30; cause not investigated). evidence: [playtests.md §2026-10-30T22:15:38](../../re/playtests.md#ts-20261030-221538).
+- [ ] SCRIPT-401 — The gardener on the rescue's lawn mower is not seated on it: he stays in the air while the mower moves (user playtest 2026-10-30; attach and seat pose not investigated). evidence: [playtests.md §2026-10-30T22:15:38](../../re/playtests.md#ts-20261030-221538).
+- [ ] SCRIPT-402 — The push cart is invisible while it is pushed and shows only when the small cutscene starts (user playtest 2026-10-30; cause not investigated). evidence: [playtests.md §2026-10-30T22:15:38](../../re/playtests.md#ts-20261030-221538).
 
 ## 6. Findings summary
 

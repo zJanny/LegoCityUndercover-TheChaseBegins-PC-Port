@@ -12,6 +12,7 @@ What the user saw when playing `chase-game` against their knowledge of the origi
 - Mission 1-3: the key to pick up could not be picked up in the port, so the mission stopped at its first step. [§2026-10-25T13:56:15](#ts-20261025-135615) The port now picks it up; where the user's save state stands (1.71 from the key) A does nothing in the original either, the key's zone ends about 0.6 closer. [carrying.md §2026-10-25T14:37:21](carrying.md#ts-20261025-143721)
 - Mission 1-3, the lawnmower rescue: the lawn mower does not move correctly in the port (path platforms, SCRIPT-377); original situations along the rescue (lift, fence, push cart, crane, mission end) were recorded for later oracle checks. [§2026-10-27T23:14:14](#ts-20261027-231414)
 - Mission 1-3: the rescue's lawn mower "just stood there still and not moving" (user's words); path platforms now move and turn in the port, not yet re-checked by the user. [§2026-10-28T00:06:31](#ts-20261028-000631)
+- Mission 1-3: four more bugs (TV crew's cameras and microphone, the rescued man stuck in the air after the crane, the mower's rider still in the air, the push cart invisible until its cutscene). [§2026-10-30T22:15:38](#ts-20261030-221538)
 
 <a id="ts-20261019-175641"></a>
 
@@ -101,3 +102,16 @@ Unknowns:
 Answers the unknown of [§2026-10-27T23:14:14](#ts-20261027-231414). The user described the lawn mower bug (2026-10-27, their words): "The bug with the mower was, that it just stood there still and not moving".
 
 Cause: the mower `1-3_Lawnmower_02` of the rescue is a platform on a path (`Platform_Path` `1-3_Lawnmower_Path_02`); the port stepped its travel value but never moved its node, so it stayed at its placement. The port now moves and turns path platforms ([props-rocking-platforms.md §2026-10-28T00:06:31](props-rocking-platforms.md#ts-20261028-000631), SCRIPT-377 in [script-system-platforms.md](../plans/features/script-system-platforms.md)); not yet re-checked by the user.
+
+<a id="ts-20261030-221538"></a>
+
+## 2026-10-30T22:15:38+01:00 — Mission 1-3: TV crew, crane rescue, mower rider and push cart (user report)
+
+The user played mission 1-3 in `chase-game` (2026-10-30) and reported four bugs (their words):
+
+- "In mission 1-3, the TV crew does not correctly hold their cameras and microphone."
+- "After rescuing the guy from the crane, he is stuck in the air."
+- "The guy on the lawnmower is not actually on the lawnmower, he is still in the air and the lawnmower is moving"
+- "When pushing the car, it is invisible until the small cutscene starts." (the push cart of the rescue)
+
+Already known: the TV crew's attached cameras and booms are the Attach natives' node changes that are not applied (SCRIPT-272 in [script-system-natives-animation.md](../plans/features/script-system-natives-animation.md)). New items: the rescued man (SCRIPT-400), the mower's rider (SCRIPT-401; the gardener's local matrix under the mower is kept since [props-rocking-attach.md §2026-10-28T00:02:10](props-rocking-attach.md#ts-20261028-000210), so the seat pose is the open part), the invisible push cart (SCRIPT-402). Causes are not investigated.
