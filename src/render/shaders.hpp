@@ -11,4 +11,6 @@ extern const char* const glowVertex;
 extern const char* const glowFragment;
 extern const char* const shadowVertex;
 extern const char* const shadowFragment;
+extern const char* const uiDrawVertex;
+extern const char* const uiDrawFragment;
 }

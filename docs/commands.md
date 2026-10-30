@@ -150,6 +150,7 @@ The table lists some of the tests. `ctest --test-dir build -N` lists all of them
 | `render-viewport-rect` | View region of the top screen, no OpenGL context: default 400:240, the 16:9 projection scale, rejection of non-positive rectangles and aspects (`tests/render_viewport_rect_test.cpp`) |
 | `canvas-clip` | `Canvas::drawScaled` with a destination inside, partly outside, covering and wholly outside the canvas (also flipped) equals the same draw on a larger canvas, and only canvas pixels are visited (`tests/canvas_clip_test.cpp`). |
 | `render-overlay-quad` | Placement of an overlay canvas on a window rectangle, no OpenGL context: clip-space corners and texture coordinates against hand-computed values (`tests/render_overlay_quad_test.cpp`). |
+| `render-ui-batch` | Batching of the UI draw list, no OpenGL context: vertex counts, areas of plain and rounded fills, borders and lines, scissor runs, nested clips and recorded text commands against hand-computed values (`tests/render_ui_batch_test.cpp`). |
 | `qol-display-tab` | Display tab store and rows, no SDL: `window_mode` and `resolution` keys of `config/qol.cfg` with the desktop-size default, window mode and resolution rows, custom size, list cycling, clamp to the largest display mode, no `resolution` line while the desktop size is in use, rejections (`tests/qol/`) |
 | `debug-metrics-core` | [Debug overlay](debug-overlay.md) values on synthetic input: frame-time window, `/proc/self/status` fixture, CPU percent, overlay lines |
 | `debug-text-core` | Debug overlay font and panel raster |

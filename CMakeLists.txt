@@ -124,7 +124,7 @@ endif()
 pkg_check_modules(EPOXY IMPORTED_TARGET epoxy)
 if(EPOXY_FOUND)
   set(CHASE_SHADER_DIR ${CMAKE_SOURCE_DIR}/src/render/shaders)
-  set(CHASE_SHADER_SOURCES sceneVertex:scene.vert.glsl sceneFragment:scene.frag.glsl hudVertex:hud.vert.glsl hudFragment:hud.frag.glsl particleVertex:particle.vert.glsl particleFragment:particle.frag.glsl glowVertex:glow.vert.glsl glowFragment:glow.frag.glsl shadowVertex:shadow.vert.glsl shadowFragment:shadow.frag.glsl)
+  set(CHASE_SHADER_SOURCES sceneVertex:scene.vert.glsl sceneFragment:scene.frag.glsl hudVertex:hud.vert.glsl hudFragment:hud.frag.glsl particleVertex:particle.vert.glsl particleFragment:particle.frag.glsl glowVertex:glow.vert.glsl glowFragment:glow.frag.glsl shadowVertex:shadow.vert.glsl shadowFragment:shadow.frag.glsl uiDrawVertex:ui_draw.vert.glsl uiDrawFragment:ui_draw.frag.glsl)
   set(CHASE_SHADERS_CPP ${CMAKE_BINARY_DIR}/generated/shaders.cpp)
   add_custom_command(OUTPUT ${CHASE_SHADERS_CPP}
     COMMAND ${CMAKE_COMMAND} "-DSHADERS=${CHASE_SHADER_SOURCES}" -DSHADER_DIR=${CHASE_SHADER_DIR} -DOUTPUT=${CHASE_SHADERS_CPP}
@@ -132,6 +132,7 @@ if(EPOXY_FOUND)
     DEPENDS ${CHASE_SHADER_DIR}/scene.vert.glsl ${CHASE_SHADER_DIR}/scene.frag.glsl ${CHASE_SHADER_DIR}/hud.vert.glsl ${CHASE_SHADER_DIR}/hud.frag.glsl
       ${CHASE_SHADER_DIR}/particle.vert.glsl ${CHASE_SHADER_DIR}/particle.frag.glsl ${CHASE_SHADER_DIR}/glow.vert.glsl ${CHASE_SHADER_DIR}/glow.frag.glsl
       ${CHASE_SHADER_DIR}/shadow.vert.glsl ${CHASE_SHADER_DIR}/shadow.frag.glsl
+      ${CHASE_SHADER_DIR}/ui_draw.vert.glsl ${CHASE_SHADER_DIR}/ui_draw.frag.glsl
       ${CMAKE_SOURCE_DIR}/tools/embed_shaders.cmake
     VERBATIM)
   add_library(chase_render src/render/scene.cpp src/render/character.cpp ${CHASE_SHADERS_CPP})
@@ -141,6 +142,7 @@ if(EPOXY_FOUND)
   target_sources(chase_render PRIVATE src/render/studs.cpp src/render/debug_text.cpp src/render/debug_overlay.cpp
     src/render/program.cpp src/render/particles.cpp src/render/rope.cpp src/render/window.cpp src/render/hud_overlay.cpp src/render/overlay_quad.cpp src/render/front_presenter.cpp src/render/frame_stats.cpp src/render/glow.cpp src/render/reflection.cpp src/render/view_region.cpp)
   target_sources(chase_render PRIVATE src/render/shadow.cpp)
+  target_sources(chase_render PRIVATE src/render/ui_batch.cpp src/render/ui_draw.cpp)
   add_executable(render-viewport-rect-test tests/render_viewport_rect_test.cpp)
   target_link_libraries(render-viewport-rect-test PRIVATE chase_render)
   target_compile_options(render-viewport-rect-test PRIVATE -Wall -Wextra -Wpedantic)
@@ -149,6 +151,10 @@ if(EPOXY_FOUND)
   target_link_libraries(render-overlay-quad-test PRIVATE chase_render)
   target_compile_options(render-overlay-quad-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME render-overlay-quad COMMAND render-overlay-quad-test)
+  add_executable(render-ui-batch-test tests/render_ui_batch_test.cpp)
+  target_link_libraries(render-ui-batch-test PRIVATE chase_render)
+  target_compile_options(render-ui-batch-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME render-ui-batch COMMAND render-ui-batch-test)
   add_executable(chase-viewer src/viewer.cpp)
   target_link_libraries(chase-viewer PRIVATE chase_render chase_audio chase_input chase_pad_events)
   target_compile_options(chase-viewer PRIVATE -Wall -Wextra -Wpedantic)

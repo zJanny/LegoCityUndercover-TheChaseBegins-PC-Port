@@ -1,0 +1,100 @@
+#include "render/ui_draw.hpp"
+#include "render/frame_stats.hpp"
+#include "render/shaders.hpp"
+#include "render/window.hpp"
+#include <epoxy/gl.h>
+#include <stdexcept>
+
+namespace chase::render {
+namespace {
+
+GLuint compile(GLenum type, const char* source) {
+    const GLuint shader = glCreateShader(type);
+    glShaderSource(shader, 1, &source, nullptr);
+    glCompileShader(shader);
+    GLint ok = 0;
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &ok);
+    if (!ok) throw std::runtime_error("ui draw shader failed to compile");
+    return shader;
+}
+
+}
+
+class UiDrawImpl {
+public:
+    UiDrawImpl();
+    ~UiDrawImpl();
+    void draw(const UiBatch& batch, int windowWidth, int windowHeight);
+
+private:
+    GLuint program_ = 0, array_ = 0, buffer_ = 0;
+    GLint sizeUniform_ = -1;
+    std::size_t capacity_ = 0;
+};
+
+UiDrawImpl::UiDrawImpl() {
+    program_ = glCreateProgram();
+    const GLuint vertex = compile(GL_VERTEX_SHADER, shaders::uiDrawVertex), fragment = compile(GL_FRAGMENT_SHADER, shaders::uiDrawFragment);
+    glAttachShader(program_, vertex);
+    glAttachShader(program_, fragment);
+    glLinkProgram(program_);
+    GLint linked = 0;
+    glGetProgramiv(program_, GL_LINK_STATUS, &linked);
+    if (!linked) throw std::runtime_error("ui draw shader failed to link");
+    glDeleteShader(vertex);
+    glDeleteShader(fragment);
+    sizeUniform_ = glGetUniformLocation(program_, "windowSize");
+    glGenVertexArrays(1, &array_);
+    glGenBuffers(1, &buffer_);
+    glBindVertexArray(array_);
+    glBindBuffer(GL_ARRAY_BUFFER, buffer_);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(UiVertex), nullptr);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(UiVertex), reinterpret_cast<void*>(2 * sizeof(float)));
+}
+
+UiDrawImpl::~UiDrawImpl() {
+    glDeleteBuffers(1, &buffer_);
+    glDeleteVertexArrays(1, &array_);
+    glDeleteProgram(program_);
+}
+
+void UiDrawImpl::draw(const UiBatch& batch, int windowWidth, int windowHeight) {
+    if (batch.vertices.empty()) return;
+    setDepthTest(false);
+    setCullFace(false);
+    setViewport({0, 0, windowWidth, windowHeight});
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    glUseProgram(program_);
+    glUniform2f(sizeUniform_, float(windowWidth), float(windowHeight));
+    glBindVertexArray(array_);
+    glBindBuffer(GL_ARRAY_BUFFER, buffer_);
+    const std::size_t bytes = batch.vertices.size() * sizeof(UiVertex);
+    if (bytes > capacity_) {
+        glBufferData(GL_ARRAY_BUFFER, GLsizeiptr(bytes), batch.vertices.data(), GL_DYNAMIC_DRAW);
+        capacity_ = bytes;
+    } else {
+        glBufferSubData(GL_ARRAY_BUFFER, 0, GLsizeiptr(bytes), batch.vertices.data());
+    }
+    for (const UiRun& run : batch.runs) {
+        setScissorTest(run.clipped);
+        if (run.clipped) setScissorBox({run.clip.x, windowHeight - run.clip.y - run.clip.height, run.clip.width, run.clip.height});
+        countDrawCall();
+        glDrawArrays(GL_TRIANGLES, GLint(run.first), GLsizei(run.count));
+    }
+    setScissorTest(false);
+    glDisable(GL_BLEND);
+    setDepthTest(true);
+    setCullFace(true);
+}
+
+UiDraw::UiDraw() : impl_(std::make_unique<UiDrawImpl>()) {}
+
+UiDraw::~UiDraw() = default;
+
+void UiDraw::draw(const UiBatch& batch, int windowWidth, int windowHeight) { impl_->draw(batch, windowWidth, windowHeight); }
+
+}
