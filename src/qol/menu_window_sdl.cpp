@@ -1,6 +1,7 @@
 #include "qol/menu_window_sdl.hpp"
 
 #include "input.hpp"
+#include "qol/front_panel.hpp"
 #include "qol/menu_window.hpp"
 #include "render/hud_overlay.hpp"
 #include "render/window.hpp"
@@ -35,6 +36,7 @@ int wheelSteps(const SDL_MouseWheelEvent& wheel) {
 }
 
 PageRect frontBottomScreen(int windowWidth, int windowHeight) {
+    if (const auto panels = frontPanels(windowWidth, windowHeight, fe::kTopWidth, fe::kScreenHeight)) return panels->panel;
     const float scale = std::min(float(windowWidth) / fe::kTopWidth, float(windowHeight) / (2 * fe::kScreenHeight));
     const float originX = (float(windowWidth) - scale * fe::kTopWidth) / 2;
     const float originY = (float(windowHeight) - scale * 2 * fe::kScreenHeight) / 2;

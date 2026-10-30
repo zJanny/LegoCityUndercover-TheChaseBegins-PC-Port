@@ -8,6 +8,10 @@ namespace chase::render {
 
 class FrontPresenterImpl;
 
+struct FrontBox {
+    float x, y, width, height;
+};
+
 class FrontPresenter {
 public:
     FrontPresenter(int topWidth, int bottomWidth, int screenHeight);
@@ -16,6 +20,7 @@ public:
     FrontPresenter& operator=(const FrontPresenter&) = delete;
 
     void present(const Pixels& top, const Pixels& bottom, int width, int height);
+    void presentBoxes(const Pixels& top, const Pixels& bottom, int width, int height, const FrontBox& topBox, const FrontBox& bottomBox);
 
 private:
     std::unique_ptr<FrontPresenterImpl> impl_;

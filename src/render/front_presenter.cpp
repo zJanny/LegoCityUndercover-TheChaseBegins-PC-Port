@@ -10,6 +10,7 @@ public:
     FrontPresenterImpl(int topWidth, int bottomWidth, int screenHeight);
     ~FrontPresenterImpl();
     void present(const Pixels& top, const Pixels& bottom, int width, int height);
+    void presentBoxes(const Pixels& top, const Pixels& bottom, int width, int height, const FrontBox& topBox, const FrontBox& bottomBox);
 
 private:
     void upload(int index, const Pixels& image);
@@ -56,6 +57,20 @@ void FrontPresenterImpl::present(const Pixels& top, const Pixels& bottom, int wi
     glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 }
 
+void FrontPresenterImpl::presentBoxes(const Pixels& top, const Pixels& bottom, int width, int height, const FrontBox& topBox,
+                                      const FrontBox& bottomBox) {
+    upload(0, top);
+    upload(1, bottom);
+    setDepthTest(false);
+    setCullFace(false);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    setViewport({0, 0, width, height});
+    clearWindow({0, 0, 0, 1}, false);
+    blit(0, topBox.x, topBox.y, topBox.width, topBox.height, topWidth_, height);
+    blit(1, bottomBox.x, bottomBox.y, bottomBox.width, bottomBox.height, bottomWidth_, height);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+}
+
 void FrontPresenterImpl::upload(int index, const Pixels& image) {
     glBindTexture(GL_TEXTURE_2D, textures_[index]);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -76,6 +91,11 @@ FrontPresenter::~FrontPresenter() = default;
 
 void FrontPresenter::present(const Pixels& top, const Pixels& bottom, int width, int height) {
     impl_->present(top, bottom, width, height);
+}
+
+void FrontPresenter::presentBoxes(const Pixels& top, const Pixels& bottom, int width, int height, const FrontBox& topBox,
+                                  const FrontBox& bottomBox) {
+    impl_->presentBoxes(top, bottom, width, height, topBox, bottomBox);
 }
 
 }

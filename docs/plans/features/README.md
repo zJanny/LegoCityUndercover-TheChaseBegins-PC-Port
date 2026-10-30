@@ -116,6 +116,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | Feature | Status | Top open items |
 |---|---|---|
 | [qol-settings-menu](qol-settings-menu.md) | NOT_STARTED | QOLSET-1 toggle store and master (first); QOLSET-2 menu with tabs; QOLSET-7 `qol-separation` guard; QOLSET-8 PC Settings entry; QOLSET-9 mirrored options |
+| [qol-settings-tabs](qol-settings-tabs.md) | IN_PROGRESS | QOLSET-3 Display tab; QOLSET-4 Controls tab |
 | [qol-settings-drawing](qol-settings-drawing.md) | IN_PROGRESS | QOLSET-40 list form and notices; QOLSET-49 stores behind the open menu; QOLSET-33 drawing |
 | [qol-fullscreen](qol-fullscreen.md) | IN_PROGRESS | QOLFS-11 load qol.cfg into the active store; QOLFS-1 widened view (wired above the bottom screen); QOLFS-2 corner-anchored HUD; QOLFS-3 pop-in at the edges |
 | [qol-minimap](qol-minimap.md) | IN_PROGRESS | QOLMAP-5 minimap and HUD overlap (question); QOLMAP-6 hide in more panels |
