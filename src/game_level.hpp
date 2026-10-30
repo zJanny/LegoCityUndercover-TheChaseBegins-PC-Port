@@ -9,6 +9,7 @@
 #include "frontend/minimap.hpp"
 #include "frontend/award_viewer.hpp"
 #include "frontend/pause_menu.hpp"
+#include "qol/pause_entry.hpp"
 #include "frontend/resources.hpp"
 #include "game_audio.hpp"
 #include "game_characters.hpp"
@@ -143,6 +144,7 @@ struct Shared {
     unsigned scriptOffset;
     bool afterSwitch;
     game_save::Progress& progress;
+    qol::StoresPorts qolStores;
 };
 
 // One level of a run: its scene, the player, the level scripts, the doors, the studs, the camera and the HUD.
@@ -163,6 +165,7 @@ public:
     // The live slot and the counters go back to the run's progress before the next level session (scene change).
     void handOverProgress();
     unsigned updateCount() const { return updates; }
+    bool pauseSettingsConsume(const SDL_Event& event, SDL_Window* window);
     bool frameDue() const { return !script.empty() || pacer.due(now()); }
     std::optional<chase::runtime::SceneChangeDestination> switchTo;
 
@@ -412,6 +415,7 @@ private:
     chase::runtime::FastTravelPads fastTravel;
     game_fast_travel::State fastTravelState;
     std::optional<chase::frontend::PauseMenu> pauseMenu;
+    qol::PauseSettings pauseSettings;
     bool pauseRequested = false;
     std::optional<chase::frontend::AwardViewer> awardViewer;
     std::size_t pauseStickDirection = chase::runtime::kNoStickDirection;

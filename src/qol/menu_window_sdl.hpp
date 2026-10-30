@@ -41,6 +41,9 @@ public:
     const MenuModel* model() const;
     bool consume(const SDL_Event& event, int windowWidth, int windowHeight, const chase::frontend::Flow& flow);
     bool present(SDL_Window* window);
+    bool present(int width, int height);
+    void open();
+    bool consumeOpen(const SDL_Event& event, int windowWidth, int windowHeight);
     void drawButton(chase::frontend::Canvas& bottom, const chase::frontend::Flow& flow);
 
 private:

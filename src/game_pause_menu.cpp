@@ -7,6 +7,7 @@
 #include "game_hud.hpp"
 #include "game_level.hpp"
 #include "frontend/script_text_pages.hpp"
+#include "qol/pause_entry.hpp"
 #include <iostream>
 
 namespace game_level {
@@ -23,6 +24,7 @@ const char* const kEntryNames[] = {"Resume", "Options", "Credits", "Exit"};
 
 bool LevelSession::holdForPause(float dt, const runtime::PadState& padInput) {
     if (pauseMenu && pauseMenu->isOpen()) {
+        if (qol::pauseEntryHolds(pauseSettings, *pauseMenu)) return true;
         runtime::stickToDpad(pad, pauseStickDirection);
         fe::PauseInput input;
         input.start = pad.slot(kSlotStart).press > 0;
@@ -59,7 +61,7 @@ bool LevelSession::holdForPause(float dt, const runtime::PadState& padInput) {
         }
     } else if (pauseRequested) {
         pauseRequested = false;
-        if (!pauseMenu) pauseMenu.emplace(fe::pauseMenuSetup(hudResources, kGameText, kSystemText));
+        if (!pauseMenu) pauseMenu.emplace(qol::withPauseEntry(fe::pauseMenuSetup(hudResources, kGameText, kSystemText), pauseSettings, hudResources, shared.qolStores));
         if (shared.progress.options.size() == chase::save::kOptionsSize)
             pauseMenu->bindOptions(shared.progress.options.data(), &shared.progress.volumes, int(shared.options.language));
         pauseMenu->open();
@@ -77,8 +79,13 @@ bool LevelSession::holdForPause(float dt, const runtime::PadState& padInput) {
     return true;
 }
 
+bool LevelSession::pauseSettingsConsume(const SDL_Event& event, SDL_Window* window) {
+    return qol::pauseEntryConsumes(pauseSettings, event, window);
+}
+
 bool LevelSession::drawPause(int width, int height) {
     if (!pauseMenu || !pauseMenu->isOpen()) return false;
+    if (qol::pauseEntryPresented(pauseSettings, width, height)) return true;
     const game_hud::Screens screens = game_hud::screensFor(width, height);
     chase::render::setScissorTest(false);
     chase::render::setViewport({0, 0, width, height});

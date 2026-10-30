@@ -42,6 +42,10 @@ enum class PauseEntry { Resume = 0, Options = 1, Credits = 2, Exit = 3 };
 // Pages of the pause object (+0x340 page 0, +0x348 Options, +0x34c Languages); None while the screen closes.
 enum class PausePage { None, Status, Options, Languages };
 
+struct PauseExtraEntry {
+    std::string text, image;
+};
+
 struct PauseTexts {
     std::string items[kPauseEntryCount];
     std::string title, subtitle, select, back;
@@ -56,6 +60,7 @@ struct PauseMenuSetup {
     float topTransitionOn = 0, topTransitionOff = 0;
     float shortcutOn = 0, shortcutOff = 0;
     PauseTexts texts;
+    std::vector<PauseExtraEntry> extraEntries;
 };
 PauseMenuSetup pauseMenuSetup(Resources& resources, const std::string& gameTextFile, const std::string& systemTextFile);
 
@@ -106,6 +111,8 @@ public:
     const RoundMenu& round() const { return round_; }
     // Entries chosen whose effect is not ported (UI-S4), in order.
     std::vector<PauseEntry> takeUnported();
+    // Indices into the setup's extra entries chosen since the previous take, in order.
+    std::vector<std::size_t> takeExtraChosen();
     std::vector<int> takeSounds();
     // The ticker text of draw 0x29ec00; empty while no mission title is set.
     void setTickerText(const std::string& text) { tickerText_ = text; }
@@ -148,6 +155,7 @@ private:
     float topTime_ = 0, topOnTime_ = 0;  // since the last top-screen storyboard started, since TransitionOn started
     ShortcutState back_, select_;
     std::vector<PauseEntry> unported_;
+    std::vector<std::size_t> extraChosen_;
     std::vector<int> sounds_;
 };
 

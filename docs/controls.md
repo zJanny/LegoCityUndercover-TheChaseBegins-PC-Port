@@ -66,17 +66,18 @@ In the [development runtime](commands.md#development-runtime), while the scanner
 In the [development runtime](commands.md#development-runtime), while you play:
 
 - **Start** (Return) opens the pause menu. The game stops.
-- The lower screen shows Resume, Options, Credits and Exit on a wheel. Turn it with **left and right** (A and D, or the arrow keys), or click the button left or right of the middle one, or swipe sideways with the mouse.
+- The lower screen shows Resume, Options, Credits, Exit and PC Settings on a wheel. Turn it with **left and right** (A and D, or the arrow keys), or click the button left or right of the middle one, or swipe sideways with the mouse.
 - **A** (Space), or a click on the middle button, chooses the entry in the middle. Resume goes back to the game.
 - **B** (Q or right mouse) or **Start** go back to the game.
 - Options opens the options wheel: SFX, Music, Invert Camera and Language. Turn it like the pause wheel. On SFX and Music, **up and down** (W and S, or the arrow keys) change the volume from 0 to 10. On Invert Camera, up, down or **A** switch it on or off. **B** goes back to the pause wheel; after a change it first saves the options.
+- PC Settings is the last entry (it shows the picture of Options). Turn the wheel left from Resume to reach it, then choose it with **A** or a click on the middle button. It opens the [PC settings menu](#pc-settings-menu) over the whole window; the game and the pause menu wait behind it. **Escape** (or the other ways to close it) returns to the pause menu.
 - Language, Credits and Exit do nothing yet. The numbers on the upper screen are not shown yet.
 
 ## PC settings menu
 
 In the [development runtime](commands.md#development-runtime), on the slot list of the start screens:
 
-- Click the small **PC Settings** bar under the two slots with the left mouse button. It slides in with the slots. No key or gamepad button opens it.
+- Click the small **PC Settings** bar under the two slots with the left mouse button. It slides in with the slots. No key or gamepad button opens it. During play the [pause menu](#pause-menu) has a PC Settings entry that opens the same menu.
 - The menu covers the whole window. The start screens stop behind it.
 - **Up and down** (arrow keys, the mouse wheel or the gamepad's D-pad) move between the rows. **Left and right** step a value.
 - **Return** or gamepad **a**, or a click on Select, chooses the row in the middle. A click on a row selects and chooses it. Moving the mouse onto a row selects it.

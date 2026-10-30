@@ -164,18 +164,31 @@ bool FrontMenu::consume(const SDL_Event& event, int width, int height, const fe:
     if (!contains(HitArea{{button_->x + slide, button_->y, button_->width, button_->height}, false, std::nullopt, std::nullopt}, (*point)[0],
             (*point)[1]))
         return false;
+    open();
+    return true;
+}
+
+void FrontMenu::open() {
     State& s = state();
     s.stores.open(s.model);
     s.window.open();
-    return true;
+}
+
+bool FrontMenu::consumeOpen(const SDL_Event& event, int width, int height) {
+    return isOpen() && route(event, width, height);
 }
 
 // STAND-IN QOLSET-S4: while the menu is open the front end draws and updates nothing, but sounds already playing in the mixer finish.
 bool FrontMenu::present(SDL_Window* window) {
     if (!isOpen()) return false;
-    State& s = *state_;
     int width = 0, height = 0;
     SDL_GL_GetDrawableSize(window, &width, &height);
+    return present(width, height);
+}
+
+bool FrontMenu::present(int width, int height) {
+    if (!isOpen()) return false;
+    State& s = *state_;
     if (width <= 0 || height <= 0) return true;
     if (!s.overlay || s.overlayWidth != width || s.overlayHeight != height) {
         s.overlay.reset();

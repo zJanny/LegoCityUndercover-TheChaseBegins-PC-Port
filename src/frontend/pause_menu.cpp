@@ -150,6 +150,7 @@ void PauseMenu::enterPage() {
     }
     std::vector<RoundMenuItem> items;
     for (int i = 0; i < kPauseEntryCount; ++i) items.push_back({setup_.texts.items[i], kItemImages[i]});
+    for (const PauseExtraEntry& extra : setup_.extraEntries) items.push_back({extra.text, extra.image});
     round_.open(kPauseItemFolder, items, savedSelection_);
     round_.setSubtitle(setup_.texts.subtitle);
     setShortcut(back_, true);
@@ -177,8 +178,12 @@ void PauseMenu::requestClose() {
 
 void PauseMenu::pageSelect() {
     sounds_.push_back(kPauseSoundSelect);
-    const PauseEntry entry = PauseEntry(round_.selected());
     savedSelection_ = round_.selected();
+    if (savedSelection_ >= kPauseEntryCount) {
+        extraChosen_.push_back(std::size_t(savedSelection_ - kPauseEntryCount));
+        return;
+    }
+    const PauseEntry entry = PauseEntry(savedSelection_);
     if (entry == PauseEntry::Resume) requestClose();
     else if (entry == PauseEntry::Options) requestPage(PausePage::Options);
     else unported_.push_back(entry);
@@ -272,6 +277,12 @@ std::optional<int> PauseMenu::takeLanguageChange() {
 std::vector<PauseEntry> PauseMenu::takeUnported() {
     std::vector<PauseEntry> out;
     out.swap(unported_);
+    return out;
+}
+
+std::vector<std::size_t> PauseMenu::takeExtraChosen() {
+    std::vector<std::size_t> out;
+    out.swap(extraChosen_);
     return out;
 }
 

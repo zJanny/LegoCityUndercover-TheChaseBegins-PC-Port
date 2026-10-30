@@ -70,9 +70,11 @@ runtime::PadState padState(const chase::InputState& input) {
     return state;
 }
 
-void pollEvents(chase::InputState& input, PadDevice& pad, bool& running, game_touch::Tracker& touch, SDL_Window* window) {
+void pollEvents(chase::InputState& input, PadDevice& pad, bool& running, game_touch::Tracker& touch, SDL_Window* window,
+                game_level::LevelSession& session) {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
+        if (session.pauseSettingsConsume(event, window)) continue;
         if (touch.consume(event, window)) continue;
         switch (event.type) {
         case SDL_QUIT: running = false; break;
@@ -174,12 +176,12 @@ int run(const Options& given) {
     bool afterSwitch = false;
     game_save::Progress progress;
     for (;;) {
-        game_level::LevelSession session({archive, options, audio, master, sceneChanges, scriptOffset, afterSwitch, progress});
+        game_level::LevelSession session({archive, options, audio, master, sceneChanges, scriptOffset, afterSwitch, progress, qolWindow.menuStores(options.config, input)});
         bool running = true;
         game_touch::Tracker touch;
         Uint32 secondStart = SDL_GetTicks();
         while (running) {
-            pollEvents(input, pad, running, touch, window);
+            pollEvents(input, pad, running, touch, window, session);
             qolWindow.poll(input);
             if (!session.frameDue()) {
                 SDL_Delay(1);
