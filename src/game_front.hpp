@@ -37,6 +37,7 @@ struct Options {
     std::string saveFile;
     bool debugOverlay = false;
     std::function<void()> frame;
+    qol::StoresPorts qolStores;
 };
 
 inline std::string directoryOf(const std::string& path) {
@@ -102,7 +103,7 @@ inline Result run(SDL_Window* window, chase::InputState& input, chase::assets::F
         return result;
     }
 
-    qol::FrontMenu qolMenu(resources);
+    qol::FrontMenu qolMenu(resources, options.qolStores);
     chase::runtime::Scheduler scheduler({}, clockNow());
     bool wasUp = false, wasDown = false, wasA = false, wasB = false, wasX = false, wasY = false, wasStart = false;
     bool running = true;

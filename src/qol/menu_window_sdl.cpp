@@ -1,7 +1,6 @@
 #include "qol/menu_window_sdl.hpp"
 
 #include "input.hpp"
-#include "qol/active_settings.hpp"
 #include "qol/menu_window.hpp"
 #include "render/hud_overlay.hpp"
 #include "render/window.hpp"
@@ -12,6 +11,7 @@
 #include <cmath>
 #include <stdexcept>
 #include <string>
+#include <utility>
 
 namespace qol {
 
@@ -98,12 +98,12 @@ bool opensMenu(const fe::Flow& flow) {
 }
 
 struct FrontMenu::State {
-    explicit State(fe::Resources& resources)
-        : setup(menuPageSetup(resources, gameText, systemText)), settings(activeSettings()), model(settings),
+    State(fe::Resources& resources, StoresPorts ports)
+        : setup(menuPageSetup(resources, gameText, systemText)), stores(std::move(ports)), model(stores.settings()),
           window(model, setup, controlsListForm(setup)) {}
 
     MenuPageSetup setup;
-    Settings settings;
+    MenuStores stores;
     MenuModel model;
     MenuWindow window;
     std::optional<fe::Canvas> canvas;
@@ -111,12 +111,12 @@ struct FrontMenu::State {
     bool dirty = true;
 };
 
-FrontMenu::FrontMenu(fe::Resources& resources) : resources_(resources) {}
+FrontMenu::FrontMenu(fe::Resources& resources, StoresPorts ports) : resources_(resources), ports_(std::move(ports)) {}
 
 FrontMenu::~FrontMenu() = default;
 
 FrontMenu::State& FrontMenu::state() {
-    if (!state_) state_ = std::make_unique<State>(resources_);
+    if (!state_) state_ = std::make_unique<State>(resources_, std::move(ports_));
     return *state_;
 }
 
@@ -150,6 +150,7 @@ bool FrontMenu::route(const SDL_Event& event, int width, int height) {
     default:
         return false;
     }
+    s.stores.commit(result);
     if (result != Result::Ignored) s.dirty = true;
     return true;
 }
@@ -165,7 +166,7 @@ bool FrontMenu::consume(const SDL_Event& event, int width, int height, const fe:
             (*point)[1]))
         return false;
     State& s = state();
-    s.settings = activeSettings();
+    s.stores.open(s.model);
     s.window.open();
     s.dirty = true;
     return true;

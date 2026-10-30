@@ -94,6 +94,8 @@ Storage:
 - Row labels (QOLSET-35, 2026-10-29): "Keep as they are": the Display rows read "Window mode: windowed" and "Window mode: fullscreen"; they fit the name plate (169 and 171 pixels of 182).
 - Desktop size (QOLSET-19, 2026-10-29): "Omit the line": `config/qol.cfg` has no `resolution` line while the resolution is the desktop size, until the player picks a size; `window_mode` is still written in every mode.
 
+- `--window` and the menu (QOLSET-56, 2026-10-30, "With --window <size>, when the resolution row in the menu changes, what should the window do?"): "Menu wins": the window takes the size chosen in the menu, which is also saved.
+
 Defaults (QOLSET-18 and QOLSET-19, 2026-10-29):
 - Keys absent: "Fullscreen, desktop size": borderless full screen at the monitor's current resolution.
 - No `config/qol.cfg` at all: "Fullscreen default": the same, also when the file is missing.
@@ -134,6 +136,8 @@ Rebind flow (QOLSET-26):
 - Reset to defaults: "All, with confirm": one "Reset all" row that asks for confirmation.
 - Reset all source and saving (QOLSET-32, asked later the same day): "Shipped file, save now": Reset all restores the bindings of the shipped `config/controls.cfg`, and the file is written right after each change or reset.
 - Cancel waiting for a key: "Escape": Escape cancels, so Escape itself cannot be bound from the tab.
+
+Applying a rebind (QOLSET-55, 2026-10-30, "Controls tab: should a rebind also take effect in the running game at once?"): "Apply at once": a rebind takes effect in the running game as soon as it is written.
 
 Rebind scope (QOLSET-27):
 - Inputs that can be rebound: "Keys + mouse + pad": keyboard keys, mouse buttons and gamepad buttons.

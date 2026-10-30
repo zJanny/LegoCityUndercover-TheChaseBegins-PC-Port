@@ -67,6 +67,12 @@ WindowPlan WindowController::toggle() {
     return plan();
 }
 
+WindowPlan WindowController::adopt(const Settings& settings) {
+    if (!(settings.resolution() == settings_.resolution())) forced_.reset();
+    settings_ = settings;
+    return plan();
+}
+
 bool WindowController::pressed(bool keyActive) {
     const bool edge = keyActive && !keyWasActive_;
     keyWasActive_ = keyActive;

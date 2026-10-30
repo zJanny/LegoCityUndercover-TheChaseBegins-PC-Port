@@ -6,6 +6,7 @@
 #include "frontend/resources.hpp"
 #include "qol/menu_hit.hpp"
 #include "qol/menu_model.hpp"
+#include "qol/menu_stores.hpp"
 
 #include <SDL.h>
 #include <array>
@@ -31,7 +32,7 @@ float frontButtonSlide(chase::frontend::Resources& resources, float seconds);
 
 class FrontMenu {
 public:
-    explicit FrontMenu(chase::frontend::Resources& resources);
+    explicit FrontMenu(chase::frontend::Resources& resources, StoresPorts ports = {});
     ~FrontMenu();
     FrontMenu(const FrontMenu&) = delete;
     FrontMenu& operator=(const FrontMenu&) = delete;
@@ -48,6 +49,7 @@ private:
     bool route(const SDL_Event& event, int windowWidth, int windowHeight);
 
     chase::frontend::Resources& resources_;
+    StoresPorts ports_;
     std::optional<Box> button_;
     std::unique_ptr<State> state_;
 };

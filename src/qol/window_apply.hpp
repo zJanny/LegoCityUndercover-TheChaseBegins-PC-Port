@@ -34,6 +34,7 @@ public:
         std::optional<std::pair<int, int>> forcedWindow);
     static std::pair<int, int> minimumSize();
     WindowPlan toggle();
+    WindowPlan adopt(const Settings& settings);
     bool pressed(bool keyActive);
     const Settings& settings() const { return settings_; }
 

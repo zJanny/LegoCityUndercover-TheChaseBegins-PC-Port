@@ -80,6 +80,15 @@ void forcedSizeWinsAndIsWindowed() {
     const qol::WindowPlan plan = controller.start(reported, desktop, qol::Resolution{960, 600});
     require(plan.mode == qol::WindowMode::Windowed && plan.size == qol::Resolution{960, 600},
         "an explicit size starts windowed at that size");
+    qol::Settings modeOnly = controller.settings();
+    modeOnly.setWindowMode(qol::WindowMode::Windowed);
+    require(controller.adopt(modeOnly).size == qol::Resolution{960, 600}, "a window mode change keeps the explicit size");
+    qol::Settings picked = modeOnly;
+    picked.setResolution({1280, 720});
+    const qol::WindowPlan chosen = controller.adopt(picked);
+    require(chosen.mode == qol::WindowMode::Windowed && chosen.size == qol::Resolution{1280, 720},
+        "the resolution chosen in the menu wins over the explicit size (user, 2026-10-30, QOLSET-56)");
+    require(controller.adopt(picked).size == qol::Resolution{1280, 720}, "and it stays");
 }
 
 void toggleSwitchesAndWritesOnlyTheModeOnce() {

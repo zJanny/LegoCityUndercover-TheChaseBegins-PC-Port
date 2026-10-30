@@ -83,7 +83,8 @@ In the [development runtime](commands.md#development-runtime), on the slot list 
 - **Page Up / Page Down**, gamepad **leftshoulder / rightshoulder**, or a click on the arrows beside the tab name change the tab.
 - **Escape**, gamepad **b**, or a click on Back closes the menu.
 - These keys are fixed. They do not follow `config/controls.cfg`.
-- The menu does not store or apply its changes yet. Its Game rows show no values, and its Controls rows cannot be rebound yet.
+- The Display and Quality of life tabs change the window and the quality-of-life settings at once and store them in `config/qol.cfg` (see [window mode and size](game-runtime.md#window-mode-and-size)). The Controls tab rebinds keys, mouse buttons and gamepad buttons, writes `config/controls.cfg` after each change and applies the bindings to the running game at once.
+- The Game rows are not live yet: they show no values and change nothing in the game.
 
 ## Award viewer
 

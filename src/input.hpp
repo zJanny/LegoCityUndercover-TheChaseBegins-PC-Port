@@ -25,6 +25,7 @@ public:
     explicit InputState(std::vector<Binding> bindings);
     void event(Source source, int code, bool down, bool repeat = false);
     void reset();
+    void rebind(std::vector<Binding> bindings);
     bool active(Action action) const;
     int horizontal() const;
     int vertical() const;

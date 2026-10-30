@@ -145,6 +145,7 @@ int run(const Options& given) {
         front.saveFile = options.frontSave;
         front.debugOverlay = options.debugOverlay;
         front.frame = [&]() { qolWindow.poll(input); };
+        front.qolStores = qolWindow.menuStores(options.config, input);
         const game_front::Result result =
             game_front::run(window, input, archive, audio ? &*audio : nullptr, front,
                             [&]() { return game_level::clockTicks(SDL_GetPerformanceCounter() - frontOrigin, frontFrequency); });

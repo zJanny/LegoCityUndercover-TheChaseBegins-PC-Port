@@ -41,6 +41,7 @@ void InputState::reset() {
         binding.toggled = false;
     }
 }
+void InputState::rebind(std::vector<Binding> bindings) { bindings_ = std::move(bindings); }
 bool InputState::active(Action action) const {
     for (const auto& binding : bindings_)
         if (binding.action == action &&

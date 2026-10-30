@@ -133,3 +133,8 @@ if(TARGET chase_qol_window)
     "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
   set_tests_properties(qol-front-menu-real-data PROPERTIES SKIP_RETURN_CODE 77 LABELS needs-game-data)
 endif()
+
+add_executable(qol-menu-stores-test menu_stores_test.cpp ${CMAKE_SOURCE_DIR}/src/runtime/qol_controls_bindings.cpp)
+target_link_libraries(qol-menu-stores-test PRIVATE chase_qol chase_input PkgConfig::SDL2)
+target_compile_options(qol-menu-stores-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME qol-menu-stores COMMAND qol-menu-stores-test)
