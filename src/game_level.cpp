@@ -530,7 +530,8 @@ void LevelSession::draw(int width, int height) {
         if (fastTravelState.mapButtons && mapView.scannerButtons.stage == runtime::ScannerBottomStage::Map) mapView.buttons = &buttons;
         addObjectiveMapIcons(mapView);
         fe::drawMinimap(mapCanvas, hudResources, levelName, mapView);
-        qol::drawRoundMinimap(mapCanvas, *overlay, scannerOpen, width, height);
+        const bool fastTravelMapOpen = fastTravelState.mapButtons && fastTravelState.mapButtons->button(runtime::MapButton::Exit).disabled;
+        qol::drawRoundMinimap(mapCanvas, *overlay, {scannerOpen, levelScripts.dialogOpen(), levelScripts.text().dialogue().active, sceneChangeFlow.pageOpen(), fastTravelMapOpen}, width, height);
     } else {
         hudCanvas.clearTransparent();
         mapCanvas.clear(0, 0, 0);

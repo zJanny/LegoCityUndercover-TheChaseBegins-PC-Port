@@ -19,7 +19,7 @@ Asked of the user by the lead on 2026-10-28 (planner questions 5 to 8); answers 
 
 Asked of the user by the lead on 2026-10-28; the quoted labels are the user's selections.
 
-- Minimap (QOLMAP-2): "Top-right, round, rotates": a round minimap in the top-right corner, about 1/5 of the screen height, rotating with the camera, zoom like the original bottom-screen map. Placement (answered 2026-10-30, "Below the counters (Recommended)"): still top-right, moved down so it starts under the studs and counters, with a small margin (not chosen: "Bottom-right corner", "Agent proposes mock-up", "Keep top-right, add margin"); at 16:9 the flush top-right circle overlapped the corner HUD.
+- Minimap (QOLMAP-2): "Top-right, round, rotates": a round minimap in the top-right corner, about 1/5 of the screen height, rotating with the camera, zoom like the original bottom-screen map. Placement (answered 2026-10-30, "Below the counters (Recommended)"): still top-right, moved down so it starts under the studs and counters, with a small margin (not chosen: "Bottom-right corner", "Agent proposes mock-up", "Keep top-right, add margin"); at 16:9 the flush top-right circle overlapped the corner HUD. Speech (answered 2026-10-30T17:33:45+01:00, "Yes, hide it too"): any dialogue on screen, including a character's speech box, hides the minimap.
 - Other bottom pages (QOLBOT-6): "Scanner, Build-it, Shop, Award viewer" (all four) get a PC version, a full-window panel clicked with the mouse, when their QoL feature is on.
 - Widest aspect (5c): "16:9": the view widens up to 16:9 only; wider screens get black side bars.
 

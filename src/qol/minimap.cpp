@@ -1,5 +1,7 @@
 #include "qol/minimap.hpp"
 
+#include "qol/view_layout.hpp"
+
 #include <algorithm>
 #include <cmath>
 
@@ -19,7 +21,10 @@ std::optional<MinimapPlacement> minimapPlacement(int windowWidth, int windowHeig
     const int canvasWidth = chase::frontend::kTopWidth;
     const int width = int(std::lround(canvasWidth * scale));
     const int rightOfCircle = int(std::lround((canvasWidth / 2 + roundRadius) * scale));
-    return MinimapPlacement{diameter, {windowWidth - rightOfCircle, windowHeight - diameter, width, diameter}};
+    const HudAnchor anchor = hudAnchor(layoutInArea(windowWidth, windowHeight), Corner::TopRight);
+    const double belowCounters = hudPosition(anchor, 0, countersBottomOriginal + minimapMarginOriginal).y;
+    const int top = std::clamp(int(std::lround(belowCounters)), 0, std::max(0, windowHeight - diameter));
+    return MinimapPlacement{diameter, {windowWidth - rightOfCircle, windowHeight - top - diameter, width, diameter}};
 }
 
 void roundMinimapCanvas(const chase::frontend::Canvas& map, chase::frontend::Canvas& round) {
@@ -42,9 +47,9 @@ void roundMinimapCanvas(const chase::frontend::Canvas& map, chase::frontend::Can
         }
 }
 
-bool drawRoundMinimap(const chase::frontend::Canvas& map, chase::render::HudOverlay& overlay, bool panelOpen, int windowWidth, int windowHeight) {
+bool drawRoundMinimap(const chase::frontend::Canvas& map, chase::render::HudOverlay& overlay, const MinimapPanels& panels, int windowWidth, int windowHeight) {
     static chase::frontend::Canvas round(chase::frontend::kTopWidth, chase::frontend::kScreenHeight);
-    return drawRoundMinimapWith(activeSettings(), map, round, panelOpen, windowWidth, windowHeight,
+    return drawRoundMinimapWith(activeSettings(), map, round, panels, windowWidth, windowHeight,
                                 [&](const chase::frontend::Canvas& drawn, const chase::render::PixelRect& rect) {
                                     overlay.drawTop({drawn.width(), drawn.height(), drawn.rgba().data()}, rect, windowWidth, windowHeight);
                                 });

@@ -10,6 +10,17 @@
 namespace qol {
 
 constexpr int minimapHeightDivisor = 5;
+constexpr int countersBottomOriginal = 62;
+constexpr int minimapMarginOriginal = 4;
+
+struct MinimapPanels {
+    bool scanner = false;
+    bool dialogBox = false;
+    bool speechBox = false;
+    bool sceneChange = false;
+    bool fastTravelMap = false;
+    bool any() const { return scanner || dialogBox || speechBox || sceneChange || fastTravelMap; }
+};
 
 struct MinimapPlacement {
     int diameter = 0;
@@ -21,9 +32,9 @@ std::optional<MinimapPlacement> minimapPlacement(int windowWidth, int windowHeig
 void roundMinimapCanvas(const chase::frontend::Canvas& map, chase::frontend::Canvas& round);
 
 template <class SinkT>
-bool drawRoundMinimapWith(const Settings& settings, const chase::frontend::Canvas& map, chase::frontend::Canvas& round, bool panelOpen,
+bool drawRoundMinimapWith(const Settings& settings, const chase::frontend::Canvas& map, chase::frontend::Canvas& round, const MinimapPanels& panels,
                           int windowWidth, int windowHeight, SinkT&& sink) {
-    if (!minimapOn(settings) || panelOpen) return false;
+    if (!minimapOn(settings) || panels.any()) return false;
     const std::optional<MinimapPlacement> placement = minimapPlacement(windowWidth, windowHeight);
     if (!placement) return false;
     roundMinimapCanvas(map, round);
@@ -31,6 +42,6 @@ bool drawRoundMinimapWith(const Settings& settings, const chase::frontend::Canva
     return true;
 }
 
-bool drawRoundMinimap(const chase::frontend::Canvas& map, chase::render::HudOverlay& overlay, bool panelOpen, int windowWidth, int windowHeight);
+bool drawRoundMinimap(const chase::frontend::Canvas& map, chase::render::HudOverlay& overlay, const MinimapPanels& panels, int windowWidth, int windowHeight);
 
 }
