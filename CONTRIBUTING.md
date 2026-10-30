@@ -12,6 +12,7 @@ This is an unofficial fan project. It is not affiliated with, endorsed by or spo
 - Your contribution is licensed under the same terms.
 - Never submit game assets, screenshots, saves, traces or memory dumps from the original game.
 - Never submit code copied from another project with an incompatible license.
+- Third-party files live under `third_party/` with their licence text next to them and an entry in `REUSE.toml` (source and commit). Only GPL-compatible licences are accepted.
 - Do not commit your game image or anything derived from it. The folders `artifacts/` and `build/` are ignored by git for this reason.
 
 ## Set up

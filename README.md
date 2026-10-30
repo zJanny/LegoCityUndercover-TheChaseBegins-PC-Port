@@ -14,13 +14,13 @@ The game data is never part of this repository. You need your own copy of the ga
 | Script commands | 54 of 239 (22.6%) | Different commands the level scripts call that the port runs. They cover 68.4% of all calls. 138 more run with a stand-in result. |
 | Object types | 169 of 506 (33.4%) | Different object types in the levels that the port treats with recovered rules (collision, doors, studs). They cover 56.6% of all placed objects. |
 | Game files read | 99.8% of files, 100.0% of data | Files in the game archive (12836) that the port can decode, by count and by size. |
-| Open work | 611 open items, 472 stand-ins | Known gaps and temporary guesses in 35 feature areas. It has no total to reach; watch the trend. |
-| Checked against the original | 443 tests, 232 recorded traces | Automatic tests, and recordings of the original game that the tests compare with. |
-| Game code documented | 2907 of about 7575 (38.4%) | Functions of the game program that the notes or the source point to. The total is an estimate. |
+| Open work | 609 open items, 472 stand-ins | Known gaps and temporary guesses in 35 feature areas. It has no total to reach; watch the trend. |
+| Checked against the original | 445 tests, 232 recorded traces | Automatic tests, and recordings of the original game that the tests compare with. |
+| Game code documented | 2908 of about 7575 (38.4%) | Functions of the game program that the notes or the source point to. The total is an estimate. |
 
 ![Progress trend](docs/progress-trend.svg)
 
-Updated 2026-10-30, commit d9c3a9fe. How the numbers are measured: [docs/progress.md](docs/progress.md).
+Updated 2026-10-30, commit 4e974877. How the numbers are measured: [docs/progress.md](docs/progress.md).
 <!-- progress:end -->
 
 ## What you need
@@ -122,6 +122,8 @@ All keys and how to change them: [Controls](docs/controls.md).
 ## License
 
 The code and documentation of this project are licensed under the [GNU General Public License, version 3 or later](LICENSE) (GPL-3.0-or-later). This covers only the project's own files.
+
+Third-party files under `third_party/` keep their own licences: the Noto Sans font (SIL Open Font License 1.1, text in `third_party/fonts/OFL.txt`) and `stb_truetype.h` (MIT or public domain, text at the end of the file). The font is built into the program, so keep `OFL.txt` with any copy you distribute. `REUSE.toml` lists the sources.
 
 The game's assets are never part of this repository. You supply your own legally obtained image of the game.
 

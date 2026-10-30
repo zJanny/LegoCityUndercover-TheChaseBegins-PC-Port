@@ -78,6 +78,19 @@ target_sources(chase_runtime PRIVATE src/runtime/node_fade.cpp src/runtime/pedes
 add_library(chase_draw_order src/render/draw_order.cpp)
 target_include_directories(chase_draw_order PUBLIC src)
 target_compile_options(chase_draw_order PRIVATE -Wall -Wextra -Wpedantic -ffp-contract=off)
+set(CHASE_UI_FONT_DATA_CPP ${CMAKE_BINARY_DIR}/generated/ui_font_data.cpp)
+add_custom_command(OUTPUT ${CHASE_UI_FONT_DATA_CPP}
+  COMMAND ${CMAKE_COMMAND} -DFONT=${CMAKE_SOURCE_DIR}/third_party/fonts/NotoSans-Regular.ttf -DOUTPUT=${CHASE_UI_FONT_DATA_CPP} -P ${CMAKE_SOURCE_DIR}/tools/embed_font.cmake
+  DEPENDS ${CMAKE_SOURCE_DIR}/third_party/fonts/NotoSans-Regular.ttf ${CMAKE_SOURCE_DIR}/tools/embed_font.cmake
+  VERBATIM)
+add_library(chase_ui_font src/render/ui_font.cpp src/render/ui_text_layout.cpp ${CHASE_UI_FONT_DATA_CPP})
+target_include_directories(chase_ui_font PUBLIC src)
+target_include_directories(chase_ui_font SYSTEM PRIVATE third_party/stb)
+target_compile_options(chase_ui_font PRIVATE -Wall -Wextra -Wpedantic)
+add_library(chase_ui_font_stb OBJECT src/render/ui_font_stb.cpp)
+target_include_directories(chase_ui_font_stb SYSTEM PRIVATE third_party/stb)
+target_compile_options(chase_ui_font_stb PRIVATE -w)
+target_link_libraries(chase_ui_font PRIVATE chase_ui_font_stb)
 # Front end (boot to the slot list): CPU-drawn screens, no SDL dependency.
 add_library(chase_frontend src/frontend/script.cpp src/frontend/frontend.cpp src/frontend/pages.cpp src/frontend/canvas.cpp src/frontend/resources.cpp src/frontend/layout.cpp src/frontend/flow.cpp src/frontend/hud.cpp src/frontend/hud_parts.cpp src/frontend/super_brick_display.cpp src/frontend/script_text_pages.cpp src/frontend/minimap.cpp src/frontend/map_buttons_view.cpp src/frontend/map_marker.cpp src/frontend/map_file.cpp src/frontend/map_hub.cpp src/frontend/slot_summaries.cpp src/frontend/super_build_prompt.cpp src/frontend/round_menu.cpp src/frontend/pause_menu.cpp src/frontend/award_viewer.cpp)
 target_sources(chase_frontend PRIVATE src/frontend/scanner_overlay.cpp)
@@ -125,6 +138,7 @@ pkg_check_modules(EPOXY IMPORTED_TARGET epoxy)
 if(EPOXY_FOUND)
   set(CHASE_SHADER_DIR ${CMAKE_SOURCE_DIR}/src/render/shaders)
   set(CHASE_SHADER_SOURCES sceneVertex:scene.vert.glsl sceneFragment:scene.frag.glsl hudVertex:hud.vert.glsl hudFragment:hud.frag.glsl particleVertex:particle.vert.glsl particleFragment:particle.frag.glsl glowVertex:glow.vert.glsl glowFragment:glow.frag.glsl shadowVertex:shadow.vert.glsl shadowFragment:shadow.frag.glsl uiDrawVertex:ui_draw.vert.glsl uiDrawFragment:ui_draw.frag.glsl)
+  list(APPEND CHASE_SHADER_SOURCES uiTextVertex:ui_text.vert.glsl uiTextFragment:ui_text.frag.glsl)
   set(CHASE_SHADERS_CPP ${CMAKE_BINARY_DIR}/generated/shaders.cpp)
   add_custom_command(OUTPUT ${CHASE_SHADERS_CPP}
     COMMAND ${CMAKE_COMMAND} "-DSHADERS=${CHASE_SHADER_SOURCES}" -DSHADER_DIR=${CHASE_SHADER_DIR} -DOUTPUT=${CHASE_SHADERS_CPP}
@@ -134,14 +148,16 @@ if(EPOXY_FOUND)
       ${CHASE_SHADER_DIR}/shadow.vert.glsl ${CHASE_SHADER_DIR}/shadow.frag.glsl
       ${CHASE_SHADER_DIR}/ui_draw.vert.glsl ${CHASE_SHADER_DIR}/ui_draw.frag.glsl
       ${CMAKE_SOURCE_DIR}/tools/embed_shaders.cmake
+      ${CHASE_SHADER_DIR}/ui_text.vert.glsl ${CHASE_SHADER_DIR}/ui_text.frag.glsl
     VERBATIM)
   add_library(chase_render src/render/scene.cpp src/render/character.cpp ${CHASE_SHADERS_CPP})
   target_include_directories(chase_render PUBLIC ${CMAKE_SOURCE_DIR}/src)
-  target_link_libraries(chase_render PUBLIC chase_assets chase_runtime chase_draw_order PkgConfig::SDL2 PkgConfig::EPOXY)
+  target_link_libraries(chase_render PUBLIC chase_assets chase_runtime chase_draw_order PkgConfig::SDL2 PkgConfig::EPOXY chase_ui_font)
   target_compile_options(chase_render PRIVATE -Wall -Wextra -Wpedantic)
   target_sources(chase_render PRIVATE src/render/studs.cpp src/render/debug_text.cpp src/render/debug_overlay.cpp
     src/render/program.cpp src/render/particles.cpp src/render/rope.cpp src/render/window.cpp src/render/hud_overlay.cpp src/render/overlay_quad.cpp src/render/front_presenter.cpp src/render/frame_stats.cpp src/render/glow.cpp src/render/reflection.cpp src/render/view_region.cpp)
   target_sources(chase_render PRIVATE src/render/shadow.cpp)
+  target_sources(chase_render PRIVATE src/render/ui_text.cpp)
   target_sources(chase_render PRIVATE src/render/ui_batch.cpp src/render/ui_draw.cpp)
   add_executable(render-viewport-rect-test tests/render_viewport_rect_test.cpp)
   target_link_libraries(render-viewport-rect-test PRIVATE chase_render)
@@ -990,6 +1006,11 @@ if(BUILD_TESTING)
   add_test(NAME game-cpp-wiring COMMAND ${CMAKE_COMMAND} -DGAME_CPP=${CMAKE_SOURCE_DIR}/src/game.cpp -P ${CMAKE_SOURCE_DIR}/tools/check_game_cpp_wiring.cmake)
   add_test(NAME doc-links COMMAND python3 "${CMAKE_SOURCE_DIR}/tools/check_doc_links.py" --root "${CMAKE_SOURCE_DIR}")
   add_test(NAME no-local-data COMMAND python3 "${CMAKE_SOURCE_DIR}/tools/check_local_data.py" --root "${CMAKE_SOURCE_DIR}")
+  add_executable(ui-text-test tests/ui_text_test.cpp)
+  target_link_libraries(ui-text-test PRIVATE chase_ui_font)
+  target_compile_options(ui-text-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME ui-text-core COMMAND ui-text-test)
+  add_test(NAME qol-bundled-font COMMAND ${CMAKE_COMMAND} -DROOT_DIR=${CMAKE_SOURCE_DIR} -P ${CMAKE_SOURCE_DIR}/tests/qol/bundled_font.cmake)
   add_executable(door-test tests/door_test.cpp)
   target_link_libraries(door-test PRIVATE chase_runtime)
   target_compile_options(door-test PRIVATE -Wall -Wextra -Wpedantic)

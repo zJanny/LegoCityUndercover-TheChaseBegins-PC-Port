@@ -4,4 +4,3 @@ Ranges of item IDs held by parallel agents, named like `20261021-audio-A`. The p
 
 | Prefix | First | Last | Holder | Date |
 |---|---|---|---|---|
-| QOLSET | 81 | 82 | 20261030-qolui-A | 2026-10-30T22:08:38+01:00 |

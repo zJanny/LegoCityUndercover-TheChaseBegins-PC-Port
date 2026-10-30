@@ -5,3 +5,24 @@ path = "**"
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2026 zJanny and contributors"
 SPDX-License-Identifier = "GPL-3.0-or-later"
+
+# Source: notofonts.github.io repository, fonts/NotoSans/hinted/ttf, commit 28b15b4b43b7bed62b5cf6e6b0b5ff5846270535.
+[[annotations]]
+path = "third_party/fonts/NotoSans-Regular.ttf"
+precedence = "override"
+SPDX-FileCopyrightText = "2022 The Noto Project Authors (https://github.com/notofonts/latin-greek-cyrillic)"
+SPDX-License-Identifier = "OFL-1.1"
+
+# Source: notofonts/latin-greek-cyrillic repository, OFL.txt, commit 4bc63d7ebca1faed49c6c685f380ba0abc2c1941.
+[[annotations]]
+path = "third_party/fonts/OFL.txt"
+precedence = "override"
+SPDX-FileCopyrightText = "2022 The Noto Project Authors (https://github.com/notofonts/latin-greek-cyrillic)"
+SPDX-License-Identifier = "OFL-1.1"
+
+# Source: nothings/stb repository, stb_truetype.h, commit 6e9f34d5429cf16790ec43c9bac3f1ee4ad1f760 (dual licensed, MIT or public domain).
+[[annotations]]
+path = "third_party/stb/stb_truetype.h"
+precedence = "override"
+SPDX-FileCopyrightText = "Sean Barrett and contributors"
+SPDX-License-Identifier = "MIT OR Unlicense"

@@ -155,6 +155,8 @@ The table lists some of the tests. `ctest --test-dir build -N` lists all of them
 | `qol-display-tab` | Display tab store and rows, no SDL: `window_mode` and `resolution` keys of `config/qol.cfg` with the desktop-size default, window mode and resolution rows, custom size, list cycling, clamp to the largest display mode, no `resolution` line while the desktop size is in use, rejections (`tests/qol/`) |
 | `debug-metrics-core` | [Debug overlay](debug-overlay.md) values on synthetic input: frame-time window, `/proc/self/status` fixture, CPU percent, overlay lines |
 | `debug-text-core` | Debug overlay font and panel raster |
+| `ui-text-core` | Bundled UI font: UTF-8 decoding, glyph coverage of Latin-1, Cyrillic and the ten language names, widths and kerning, glyph atlas, text layout and clipping (no OpenGL) |
+| `qol-bundled-font` | Bundled font, its OFL text and stb_truetype exist, their SHA-256 are pinned and `REUSE.toml` records their sources |
 | `debug-overlay-off`, `debug-overlay-on`, `debug-overlay-area` | Two offscreen screenshots without and with `--debug-overlay`; the third checks that they differ only in the top-left panel area. Registered only if `artifacts/romfs` existed at configure time |
 | `front-overlay-off`, `front-overlay-on`, `front-overlay-area` | The same three checks on the front-end language screen (`--front-script "until language 60; run 1"`). Registered only if `artifacts/romfs` existed at configure time |
 | `script-text`, `script-text-real-data` | Script text natives (tip text, dialogue lines, mission title) on synthetic scripts and on `1-1_OnScreenText_Script` of the real level; the second skips with code 77 without `artifacts/romfs` |

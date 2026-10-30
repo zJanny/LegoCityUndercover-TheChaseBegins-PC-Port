@@ -1,0 +1,6 @@
+file(READ "${FONT}" hex HEX)
+string(LENGTH "${hex}" hexLength)
+math(EXPR size "${hexLength} / 2")
+string(REGEX REPLACE "([0-9a-f][0-9a-f])" "0x\\1," bytes "${hex}")
+file(WRITE "${OUTPUT}.tmp" "namespace chase::render {\nextern const unsigned char kUiFontData[];\nextern const unsigned long kUiFontSize;\nconst unsigned char kUiFontData[] = {${bytes}};\nconst unsigned long kUiFontSize = ${size};\n}\n")
+execute_process(COMMAND ${CMAKE_COMMAND} -E copy_if_different "${OUTPUT}.tmp" "${OUTPUT}")
