@@ -166,7 +166,7 @@ int main(int argc, char** argv) {
         model.assignInput("key", "X");
         model.handle({qol::EventKind::Activate});
         model.assignInput("key", "Y");
-        for (int i = 0; i < 3; ++i) model.handle({qol::EventKind::Down});
+        for (int i = 0; i < 3; ++i) model.handle({qol::EventKind::Right});
         model.handle({qol::EventKind::Activate});
         const std::optional<fe::LayoutScene> question = form.overlay(model);
         require(question.has_value() && textOf(*question, "Text_Option1") == setup.yes && textOf(*question, "Text_Option2") == setup.no,

@@ -53,8 +53,8 @@ void pauseWithEntry(fe::Resources& resources) {
         "it opens on the Game tab like from the slot page");
     require(qol::pauseEntryHolds(settings, menu), "the pause screen waits while the menu is open");
 
-    require(settings.menu()->consumeOpen(key(SDL_KEYDOWN, SDLK_DOWN), 960, 600) && settings.menu()->model()->row() == 1, "keys go to the menu");
-    require(!settings.menu()->consumeOpen(key(SDL_KEYUP, SDLK_DOWN), 960, 600), "key releases pass on");
+    require(settings.menu()->consumeOpen(key(SDL_KEYDOWN, SDLK_RIGHT), 960, 600) && settings.menu()->model()->row() == 1, "keys go to the menu");
+    require(!settings.menu()->consumeOpen(key(SDL_KEYUP, SDLK_RIGHT), 960, 600), "key releases pass on");
     require(settings.menu()->consumeOpen(key(SDL_KEYDOWN, SDLK_ESCAPE), 960, 600) && !settings.menu()->isOpen(), "Escape closes the menu");
     require(!qol::pauseEntryHolds(settings, menu), "the pause screen goes on");
     require(menu.isOpen() && !menu.closing() && menu.page() == fe::PausePage::Status && menu.round().selected() == 4,

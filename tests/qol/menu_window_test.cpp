@@ -73,12 +73,12 @@ void keys() {
     qol::MenuWindow window(model, setup(), qol::controlsListForm(setup()));
     window.open();
     require(window.isOpen(), "open opens the model");
-    require(window.keyDown("Down") == Result::RowChanged && model.row() == 1, "Down moves to the next row");
+    require(window.keyDown("Right") == Result::RowChanged && model.row() == 1, "Right moves to the next row");
     require(window.keyDown("W") == Result::Ignored && model.row() == 1, "a key without a menu meaning is ignored");
     require(window.keyDown("PageUp") == Result::TabChanged && model.tab() == qol::Tab::QualityOfLife, "PageUp goes to the previous tab");
     require(window.keyDown("Return") == Result::MasterCycled && settings.master() == qol::Master::Improved, "Enter cycles the master row");
     require(window.padDown("rightshoulder") == Result::TabChanged && model.tab() == qol::Tab::Game, "pad R goes to the next tab");
-    require(window.padDown("dpdown") == Result::RowChanged && model.row() == 2, "pad Down moves rows");
+    require(window.padDown("dpright") == Result::RowChanged && model.row() == 2, "pad Right moves rows");
     require(window.padDown("x") == Result::Ignored, "pad X is ignored");
     require(window.padDown("b") == Result::Closed && !window.isOpen(), "pad B closes the menu");
     window.open();

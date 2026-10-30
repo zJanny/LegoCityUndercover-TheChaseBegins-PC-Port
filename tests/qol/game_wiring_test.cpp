@@ -86,14 +86,14 @@ void editsReachMixerAndSave() {
     qol::MenuModel menu(stores.settings());
     stores.open(menu);
     menu.open();
-    require(step(stores, menu, Key::Right) == Result::GameChanged && stores.game()->sfxVolume() == 6, "SFX volume 6");
+    require(step(stores, menu, Key::Up) == Result::GameChanged && stores.game()->sfxVolume() == 6, "SFX volume 6");
     require(!f.gains.calls.empty() && f.gains.calls.back().first && *f.gains.calls.back().first == 0.6f, "the sound effects gain is 0.6");
-    step(stores, menu, Key::Down);
-    for (int i = 0; i < 5; ++i) step(stores, menu, Key::Left);
+    step(stores, menu, Key::Right);
+    for (int i = 0; i < 5; ++i) step(stores, menu, Key::Down);
     require(stores.game()->musicVolume() == 0, "music volume 0");
     require(f.gains.calls.back().second && *f.gains.calls.back().second == 0.0f, "the music gain is 0");
-    step(stores, menu, Key::Down);
     step(stores, menu, Key::Right);
+    step(stores, menu, Key::Up);
     require(!stores.game()->invertCamera(), "Invert camera flips off");
     require(!std::filesystem::exists(f.saveFile), "nothing is saved while the menu is open");
     step(stores, menu, Key::Escape);
@@ -111,7 +111,7 @@ void leavingWithoutChangeSavesNothing() {
     qol::MenuModel menu(stores.settings());
     stores.open(menu);
     menu.open();
-    step(stores, menu, Key::Down);
+    step(stores, menu, Key::Right);
     step(stores, menu, Key::Escape);
     require(!std::filesystem::exists(f.saveFile) && f.gains.calls.empty(), "no change, no save and no gain");
 }
@@ -122,7 +122,7 @@ void languageRowRequestsThePage() {
     qol::MenuModel menu(stores.settings());
     stores.open(menu);
     menu.open();
-    for (int i = 0; i < 3; ++i) step(stores, menu, Key::Down);
+    for (int i = 0; i < 3; ++i) step(stores, menu, Key::Right);
     require(step(stores, menu, Key::Enter) == Result::LanguagesRequested, "Enter on the Language row requests the Languages page");
     require(stores.game()->language() == 1 && f.gains.calls.empty(), "the language and the gains stay");
 }

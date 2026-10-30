@@ -80,13 +80,13 @@ In the [development runtime](commands.md#development-runtime), on the slot list 
 
 - Click the small **PC Settings** bar under the two slots with the left mouse button. It slides in with the slots. No key or gamepad button opens it. During play the [pause menu](#pause-menu) has a PC Settings entry that opens the same menu.
 - The menu covers the whole window. The start screens stop behind it.
-- **Up and down** (arrow keys, the mouse wheel or the gamepad's D-pad) move between the rows. **Left and right** step a value.
+- **Left and right** (arrow keys, the mouse wheel or the gamepad's D-pad) turn from row to row. **Up and down** change the row's value: up raises or steps to the next choice, down lowers or steps back, stopping at the ends. On a Controls row up picks binding slot 2 and down picks slot 1.
 - **Return** or gamepad **a**, or a click on Select, chooses the row in the middle. A click on a row selects and chooses it. Moving the mouse onto a row selects it.
 - **Page Up / Page Down**, gamepad **leftshoulder / rightshoulder**, or a click on the arrows beside the tab name change the tab.
 - **Escape**, gamepad **b**, or a click on Back closes the menu.
 - These keys are fixed. They do not follow `config/controls.cfg`.
 - The Display and Quality of life tabs change the window and the quality-of-life settings at once and store them in `config/qol.cfg` (see [window mode and size](game-runtime.md#window-mode-and-size)). The Controls tab rebinds keys, mouse buttons and gamepad buttons, writes `config/controls.cfg` after each change and applies the bindings to the running game at once.
-- The Game rows show the options of your save (SFX volume and Music volume 0 to 10, Invert camera On or Off, Language). **Left and right** step a volume or flip Invert camera, and the sound changes at once. The options are stored in the save file when you close the menu, if you changed one. The Language row does nothing visible yet: choosing it prints a line in the terminal, and the Languages page is not shown in the menu. Click the left half of the name plate under the wheel ("Music: 5") to lower a volume one step, the right half to raise it.
+- The Game rows show the options of your save (SFX volume and Music volume 0 to 10, Invert camera On or Off, Language). **Up and down** step a volume or flip Invert camera, and the sound changes at once. The options are stored in the save file when you close the menu, if you changed one. The Language row does nothing visible yet: choosing it prints a line in the terminal, and the Languages page is not shown in the menu. Click the left half of the name plate under the wheel ("Music: 5") to lower a volume one step, the right half to raise it.
 
 ## Award viewer
 

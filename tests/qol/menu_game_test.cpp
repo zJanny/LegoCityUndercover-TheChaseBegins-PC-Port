@@ -44,16 +44,16 @@ using qol::Result;
 Result press(qol::MenuModel& menu, Key key) { return menu.handle(qol::eventForKey(key)); }
 
 void goToRow(qol::MenuModel& menu, std::size_t row) {
-    while (menu.row() != row) press(menu, Key::Down);
+    while (menu.row() != row) press(menu, Key::Right);
 }
 
 void originalModeFirst() {
     qol::Settings settings;
     qol::MenuModel menu(settings);
     menu.open();
-    for (Key key : {Key::Right, Key::Left, Key::Enter}) require(press(menu, key) == Result::Ignored, "Game rows do nothing without a GameOptions");
+    for (Key key : {Key::Up, Key::Down, Key::Enter}) require(press(menu, key) == Result::Ignored, "Game rows do nothing without a GameOptions");
     goToRow(menu, 2);
-    require(press(menu, Key::Right) == Result::Ignored && press(menu, Key::Enter) == Result::Ignored, "Invert camera does nothing without a GameOptions");
+    require(press(menu, Key::Up) == Result::Ignored && press(menu, Key::Enter) == Result::Ignored, "Invert camera does nothing without a GameOptions");
 }
 
 void gameTabEdits() {
@@ -62,21 +62,21 @@ void gameTabEdits() {
     Fake fake;
     menu.setGame(&fake);
     menu.open();
-    require(press(menu, Key::Left) == Result::GameChanged && fake.sfx == 9, "Left lowers the SFX volume");
-    require(press(menu, Key::Right) == Result::GameChanged && fake.sfx == 10, "Right raises it");
-    require(press(menu, Key::Right) == Result::Ignored && fake.sfx == 10, "stops at 10");
-    for (int i = 0; i < 10; ++i) press(menu, Key::Left);
-    require(fake.sfx == 0 && press(menu, Key::Left) == Result::Ignored && fake.sfx == 0, "stops at 0");
+    require(press(menu, Key::Down) == Result::GameChanged && fake.sfx == 9, "Down lowers the SFX volume");
+    require(press(menu, Key::Up) == Result::GameChanged && fake.sfx == 10, "Up raises it");
+    require(press(menu, Key::Up) == Result::Ignored && fake.sfx == 10, "stops at 10");
+    for (int i = 0; i < 10; ++i) press(menu, Key::Down);
+    require(fake.sfx == 0 && press(menu, Key::Down) == Result::Ignored && fake.sfx == 0, "stops at 0");
     require(press(menu, Key::Enter) == Result::Ignored, "Enter does nothing on a volume row");
-    press(menu, Key::Down);
-    require(press(menu, Key::PadRight) == Result::GameChanged && fake.music == 9, "pad Right steps the music volume");
-    press(menu, Key::Down);
-    require(press(menu, Key::Right) == Result::GameChanged && fake.invert, "Right flips Invert camera on");
-    require(press(menu, Key::Left) == Result::GameChanged && !fake.invert, "Left flips it off");
+    press(menu, Key::Right);
+    require(press(menu, Key::PadUp) == Result::GameChanged && fake.music == 9, "pad Up raises the music volume");
+    press(menu, Key::Right);
+    require(press(menu, Key::Up) == Result::GameChanged && fake.invert, "Up flips Invert camera on");
+    require(press(menu, Key::Down) == Result::GameChanged && !fake.invert, "Down flips it off");
     require(press(menu, Key::Enter) == Result::GameChanged && fake.invert, "Enter flips it too");
     require(menu.handle(qol::rowClick(2)) == Result::GameChanged && !fake.invert, "a click on the row flips it");
-    press(menu, Key::Down);
-    require(press(menu, Key::Right) == Result::Ignored && press(menu, Key::Left) == Result::Ignored && fake.lang == 1, "the Language row ignores Left and Right");
+    press(menu, Key::Right);
+    require(press(menu, Key::Up) == Result::Ignored && press(menu, Key::Down) == Result::Ignored && fake.lang == 1, "the Language row ignores Up and Down");
     require(press(menu, Key::Enter) == Result::LanguagesRequested && fake.languagePages == 1 && fake.lang == 1, "Enter on Language requests the Languages page");
     require(menu.handle(qol::rowClick(3)) == Result::LanguagesRequested && fake.languagePages == 2, "a click on Language requests it too");
 }
@@ -119,8 +119,8 @@ void otherTabsKeepTheirKeys() {
     menu.open();
     press(menu, Key::PageDown);
     require(menu.tab() == qol::Tab::Display, "Display tab");
-    press(menu, Key::Right);
-    require(fake.sfx == 10 && fake.music == 8 && !fake.invert, "Left and Right on another tab leave the Game values");
+    press(menu, Key::Up);
+    require(fake.sfx == 10 && fake.music == 8 && !fake.invert, "Up on another tab leave the Game values");
 }
 
 struct Ports {
@@ -152,11 +152,11 @@ void storesApplyAndLeave() {
     stores.open(menu);
     menu.open();
     require(f.fake && stores.game() == f.fake, "the stores own the port");
-    stores.commit(press(menu, Key::Left));
+    stores.commit(press(menu, Key::Down));
     require(f.fake->sfx == 9 && f.fake->appliedCalls == 1, "a change reaches the port and is applied");
-    stores.commit(press(menu, Key::Down));
-    stores.commit(press(menu, Key::Down));
-    stores.commit(press(menu, Key::Down));
+    stores.commit(press(menu, Key::Right));
+    stores.commit(press(menu, Key::Right));
+    stores.commit(press(menu, Key::Right));
     stores.commit(press(menu, Key::Enter));
     require(f.fake->languagePages == 1 && f.fake->appliedCalls == 2, "the Language request is applied");
     stores.commit(press(menu, Key::Escape));
@@ -173,7 +173,7 @@ void storesWithoutPort() {
     stores.open(menu);
     menu.open();
     require(stores.game() == nullptr, "no port, no Game tab");
-    require(press(menu, Key::Right) == Result::Ignored, "the Game rows stay inert");
+    require(press(menu, Key::Up) == Result::Ignored, "the Game rows stay inert");
     stores.commit(press(menu, Key::Escape));
 }
 

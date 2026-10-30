@@ -134,8 +134,8 @@ void hoverOnEnter() {
 }
 
 void keysAndWheel() {
-    require(same(qol::eventForWheel(1), qol::EventKind::Up) && same(qol::eventForWheel(3), qol::EventKind::Up), "wheel up moves up");
-    require(same(qol::eventForWheel(-1), qol::EventKind::Down), "wheel down moves down");
+    require(same(qol::eventForWheel(1), qol::EventKind::Left) && same(qol::eventForWheel(3), qol::EventKind::Left), "wheel up turns to the previous row");
+    require(same(qol::eventForWheel(-1), qol::EventKind::Right), "wheel down turns to the next row");
     require(!qol::eventForWheel(0), "no wheel step, no event");
     const std::pair<qol::Key, qol::EventKind> keys[] = {
         {qol::Key::Up, qol::EventKind::Up}, {qol::Key::PadUp, qol::EventKind::Up},

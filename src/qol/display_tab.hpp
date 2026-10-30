@@ -32,4 +32,7 @@ std::vector<DisplayRow> displayRows(const Settings& settings,
 DisplayResult activateDisplayRow(Settings& settings, std::size_t row,
     const ResolutionChoices& choices, const std::optional<Resolution>& desktop = std::nullopt);
 
+DisplayResult stepDisplayRow(Settings& settings, std::size_t row, int direction,
+    const ResolutionChoices& choices, const std::optional<Resolution>& desktop = std::nullopt);
+
 }

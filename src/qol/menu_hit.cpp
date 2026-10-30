@@ -82,8 +82,8 @@ std::optional<Event> MenuPointer::click(const std::vector<HitArea>& areas, float
 }
 
 std::optional<Event> eventForWheel(int steps) {
-    if (steps > 0) return Event{EventKind::Up};
-    if (steps < 0) return Event{EventKind::Down};
+    if (steps > 0) return Event{EventKind::Left};
+    if (steps < 0) return Event{EventKind::Right};
     return std::nullopt;
 }
 

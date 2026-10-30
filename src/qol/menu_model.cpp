@@ -170,10 +170,10 @@ Result MenuModel::handle(const Event& event) {
         return Result::Ignored;
     }
     switch (event.kind) {
-    case EventKind::Up: return moveRow(-1);
-    case EventKind::Down: return moveRow(1);
-    case EventKind::Left: return moveSlot(-1);
-    case EventKind::Right: return moveSlot(1);
+    case EventKind::Up: return stepValue(upStep);
+    case EventKind::Down: return stepValue(-upStep);
+    case EventKind::Left: return moveRow(-1);
+    case EventKind::Right: return moveRow(1);
     case EventKind::Activate: return activateRow();
     case EventKind::Back:
         open_ = false;
@@ -257,12 +257,56 @@ Result MenuModel::stepGame(std::ptrdiff_t delta) {
     return fromGame(game_->step(static_cast<GameRow>(row()), delta < 0 ? -1 : 1));
 }
 
-Result MenuModel::moveSlot(std::ptrdiff_t delta) {
-    if (tab_ == Tab::Game) return stepGame(delta);
-    if (tab_ != Tab::Controls || !controls_ || rows()[row()].kind != RowKind::Control) return Result::Ignored;
+Result MenuModel::stepControlSlot(std::ptrdiff_t delta) {
+    if (!controls_ || rows()[row()].kind != RowKind::Control) return Result::Ignored;
     if (delta < 0 ? slot_ == 0 : slot_ + 1 >= slotsPerAction) return Result::Ignored;
     slot_ = delta < 0 ? slot_ - 1 : slot_ + 1;
     return Result::SlotChanged;
+}
+
+Result MenuModel::stepMaster(std::ptrdiff_t delta) {
+    constexpr Master order[] = {Master::Original, Master::Improved, Master::Custom};
+    std::ptrdiff_t index = 0;
+    while (order[index] != settings_.master()) ++index;
+    const std::ptrdiff_t target = index + delta;
+    if (target < 0 || target > 2) return Result::Ignored;
+    if (order[target] == Master::Custom && !settings_.mixSet()) return Result::Ignored;
+    settings_.setMaster(order[target]);
+    return Result::MasterCycled;
+}
+
+Result MenuModel::setFeature(Feature feature, bool on) {
+    if (settings_.master() != Master::Custom) {
+        for (const FeatureInfo& info : featureTable)
+            settings_.setSwitch(info.feature, settings_.enabled(info.feature));
+        settings_.setSwitch(feature, on);
+        settings_.setMaster(Master::Custom);
+        return Result::SwitchedToCustom;
+    }
+    settings_.setSwitch(feature, on);
+    return Result::FeatureToggled;
+}
+
+Result MenuModel::stepValue(std::ptrdiff_t delta) {
+    const Row selected = rows()[row()];
+    switch (selected.kind) {
+    case RowKind::Master: return stepMaster(delta);
+    case RowKind::Feature:
+        if (settings_.enabled(selected.feature) == (delta > 0)) return Result::Ignored;
+        return setFeature(selected.feature, delta > 0);
+    case RowKind::Display:
+        switch (stepDisplayRow(settings_, row(), delta < 0 ? -1 : 1, modes_, desktop_)) {
+        case DisplayResult::Ignored: return Result::Ignored;
+        case DisplayResult::Rejected: return Result::Rejected;
+        case DisplayResult::WindowModeChanged:
+        case DisplayResult::ResolutionChanged: return Result::DisplayChanged;
+        }
+        return Result::Ignored;
+    case RowKind::Control: return stepControlSlot(delta);
+    case RowKind::Placeholder: return tab_ == Tab::Game ? stepGame(delta) : Result::Ignored;
+    case RowKind::ResetAll: return Result::Ignored;
+    }
+    return Result::Ignored;
 }
 
 Result MenuModel::moveTab(std::ptrdiff_t delta) {
@@ -288,15 +332,8 @@ Result MenuModel::activateRow() {
         settings_.cycleMaster();
         return Result::MasterCycled;
     case RowKind::Feature:
-        if (settings_.master() != Master::Custom) {
-            for (const FeatureInfo& info : featureTable)
-                settings_.setSwitch(info.feature, settings_.enabled(info.feature));
-            settings_.setSwitch(selected.feature, !settings_.customSwitch(selected.feature));
-            settings_.setMaster(Master::Custom);
-            return Result::SwitchedToCustom;
-        }
-        settings_.setSwitch(selected.feature, !settings_.customSwitch(selected.feature));
-        return Result::FeatureToggled;
+        return setFeature(selected.feature, settings_.master() != Master::Custom
+            ? !settings_.enabled(selected.feature) : !settings_.customSwitch(selected.feature));
     case RowKind::Display:
         switch (activateDisplayRow(settings_, row(), modes_, desktop_)) {
         case DisplayResult::Ignored: return Result::Ignored;

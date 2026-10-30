@@ -49,7 +49,7 @@ void widenedOn() {
     qol::MenuModel menu(settings);
     menu.open();
     menu.handle(qol::tabClick(static_cast<std::size_t>(qol::Tab::QualityOfLife)));
-    menu.handle({qol::EventKind::Down});
+    menu.handle({qol::EventKind::Right});
     require(menu.handle({qol::EventKind::Activate}) == qol::Result::SwitchedToCustom, "menu turns the widened view on");
     qol::setActiveSettings(settings);
     require(qol::enabled(qol::Feature::WidenedView), "store reads the menu's switch");

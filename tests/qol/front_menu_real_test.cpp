@@ -169,9 +169,9 @@ void slotPage(fe::Resources& resources) {
     require(menu.model() && menu.model()->tab() == qol::Tab::Game && menu.model()->row() == 0, "the menu opens on the Game tab");
     require(!menu.consume(mouse(SDL_MOUSEBUTTONUP, SDL_BUTTON_LEFT, cx, cy), width, height, flow), "button releases pass on");
 
-    require(menu.consume(key(SDL_KEYDOWN, SDLK_DOWN), width, height, flow) && menu.model()->row() == 1, "keys go to the menu");
-    require(!menu.consume(key(SDL_KEYUP, SDLK_DOWN), width, height, flow), "key releases pass on");
-    SDL_Event repeat = key(SDL_KEYDOWN, SDLK_DOWN);
+    require(menu.consume(key(SDL_KEYDOWN, SDLK_RIGHT), width, height, flow) && menu.model()->row() == 1, "keys go to the menu");
+    require(!menu.consume(key(SDL_KEYUP, SDLK_RIGHT), width, height, flow), "key releases pass on");
+    SDL_Event repeat = key(SDL_KEYDOWN, SDLK_RIGHT);
     repeat.key.repeat = 1;
     require(menu.consume(repeat, width, height, flow) && menu.model()->row() == 1, "key repeats are swallowed and do nothing");
     SDL_Event wheel{};
@@ -189,7 +189,7 @@ void slotPage(fe::Resources& resources) {
     language.start(fe::Screen::Language);
     require(menu.consume(key(SDL_KEYDOWN, SDLK_ESCAPE), width, height, language) && !menu.isOpen(),
         "Escape closes the menu and does not reach the front end");
-    require(!menu.consume(key(SDL_KEYDOWN, SDLK_DOWN), width, height, flow), "after closing, keys go to the front end again");
+    require(!menu.consume(key(SDL_KEYDOWN, SDLK_RIGHT), width, height, flow), "after closing, keys go to the front end again");
     require(menu.consume(mouse(SDL_MOUSEBUTTONDOWN, SDL_BUTTON_LEFT, cx, cy), width, height, flow) && menu.isOpen() &&
             menu.model()->tab() == qol::Tab::Display,
         "reopening keeps the tab");

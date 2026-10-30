@@ -94,7 +94,7 @@ void originalModeFirst() {
     qol::MenuModel menu(stores.settings());
     stores.open(menu);
     menu.open();
-    for (qol::Key key : {qol::Key::Down, qol::Key::Right, qol::Key::PageDown, qol::Key::Down, qol::Key::PageUp, qol::Key::Up})
+    for (qol::Key key : {qol::Key::Right, qol::Key::Down, qol::Key::PageDown, qol::Key::Right, qol::Key::PageUp, qol::Key::Left})
         commit(stores, menu.handle(qol::eventForKey(key)));
     commit(stores, menu.handle(qol::eventForKey(qol::Key::Escape)));
     require(!menu.isOpen(), "closed");

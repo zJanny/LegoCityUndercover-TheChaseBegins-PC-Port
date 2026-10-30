@@ -49,7 +49,7 @@ void run(Resources& resources) {
 
     const LayoutScene listScene = qol::listPageScene(menu);
     const Canvas list = draw(resources, qol::listPageLayout, listScene);
-    menu.handle({qol::EventKind::Down});
+    menu.handle({qol::EventKind::Right});
     const Canvas moved = draw(resources, qol::listPageLayout, qol::listPageScene(menu));
     require(!same(list, moved), "moving the selection changes the picture");
 
@@ -93,7 +93,7 @@ void run(Resources& resources) {
     menu2.assignInput("key", "W");
     menu2.handle({qol::EventKind::Activate});
     menu2.assignInput("key", "A");
-    for (int i = 0; i < 7; ++i) menu2.handle({qol::EventKind::Down});
+    for (int i = 0; i < 7; ++i) menu2.handle({qol::EventKind::Right});
     menu2.handle({qol::EventKind::Activate});
     require(qol::controlsQuestionShown(menu2), "Reset all asks after a change");
     for (const qol::HitArea& area : qol::listHitAreas(menu2)) {

@@ -70,4 +70,35 @@ DisplayResult activateDisplayRow(Settings& settings, std::size_t row,
     return DisplayResult::Rejected;
 }
 
+DisplayResult stepDisplayRow(Settings& settings, std::size_t row, int direction,
+    const ResolutionChoices& choices, const std::optional<Resolution>& desktop) {
+    const std::vector<DisplayRow> rows = displayRows(settings, choices);
+    if (row >= rows.size() || !choicesValid(choices) || (direction != -1 && direction != 1))
+        return DisplayResult::Rejected;
+    switch (rows[row].kind) {
+    case DisplayRowKind::WindowMode: {
+        const WindowMode target = direction < 0 ? WindowMode::Windowed : WindowMode::Fullscreen;
+        if (settings.windowMode() == target) return DisplayResult::Ignored;
+        settings.setWindowMode(target);
+        return DisplayResult::WindowModeChanged;
+    }
+    case DisplayRowKind::Resolution: {
+        if (choices.empty()) return DisplayResult::Ignored;
+        const std::optional<Resolution> reference =
+            settings.resolution() ? settings.resolution() : desktop;
+        const auto current = reference
+            ? std::find(choices.begin(), choices.end(), *reference) : choices.end();
+        if (current == choices.end()) {
+            settings.setResolution(direction < 0 ? choices.back() : choices.front());
+            return DisplayResult::ResolutionChanged;
+        }
+        if (direction < 0 ? current == choices.begin() : current + 1 == choices.end())
+            return DisplayResult::Ignored;
+        settings.setResolution(*(current + direction));
+        return DisplayResult::ResolutionChanged;
+    }
+    }
+    return DisplayResult::Rejected;
+}
+
 }

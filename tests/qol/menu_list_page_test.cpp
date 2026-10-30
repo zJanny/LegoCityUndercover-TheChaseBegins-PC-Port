@@ -77,11 +77,11 @@ void listForm() {
                 scene.scales.count("Menu_BarA3") == 1 && scene.scales.count("Menu_BarA4") == 0,
         "the four bar arts are stretched to hold two lines, the mirrored half keeps its flip");
 
-    f.menu.handle({EventKind::Right});
+    f.menu.handle({EventKind::Up});
     scene = qol::listPageScene(f.menu);
-    require(textOf(scene, "TEXT_Icon_Out") == "key W | [key Up]", "Right marks slot 2");
+    require(textOf(scene, "TEXT_Icon_Out") == "key W | [key Up]", "Up marks slot 2");
 
-    for (int i = 0; i < 4; ++i) f.menu.handle({EventKind::Down});
+    for (int i = 0; i < 4; ++i) f.menu.handle({EventKind::Right});
     require(f.menu.row() == 4, "selected fifth row");
     scene = qol::listPageScene(f.menu);
     require(textOf(scene, "TEXT_Menu_1_3DS") == "Left" && textOf(scene, "TEXT_Menu_4_3DS") == "B", "selection kept in view");
@@ -91,7 +91,7 @@ void listForm() {
         "selected row slots");
     require(textOf(scene, "TEXT_Menu_4_DS") == "- | -" && textOf(scene, "TEXT_Menu_1_DS") == "- | -", "unselected rows mark no slot");
 
-    for (int i = 0; i < 3; ++i) f.menu.handle({EventKind::Down});
+    for (int i = 0; i < 3; ++i) f.menu.handle({EventKind::Right});
     require(f.menu.row() == 7, "selected Reset all");
     scene = qol::listPageScene(f.menu);
     require(textOf(scene, "TEXT_Icon") == "Reset all" && scene.text.count("TEXT_Icon_Out") == 0, "Reset all row has one line");
@@ -123,7 +123,7 @@ void questionForm() {
     Fixture f;
     f.menu.handle(qol::eventForKey(qol::Key::Enter));
     f.menu.assignInput("key", "E");
-    for (int i = 0; i < 7; ++i) f.menu.handle({EventKind::Down});
+    for (int i = 0; i < 7; ++i) f.menu.handle({EventKind::Right});
     f.menu.handle(qol::eventForKey(qol::Key::Enter));
     require(f.menu.controlsConfirming() && qol::controlsQuestionShown(f.menu) && !qol::controlsListShown(f.menu),
         "Reset all asks the question");
@@ -162,7 +162,7 @@ void hitAreas() {
                 areas[1].box.height == areas[0].box.height && areas[3].box.y == areas[0].box.y + 2 * areas[0].box.height,
         "the slots sit directly under the action line, the next bar directly under the slots");
     require(areas[areas.size() - 2].click->kind == EventKind::TabPrevious && areas.back().click->kind == EventKind::TabNext, "arrows");
-    for (int i = 0; i < 7; ++i) f.menu.handle({EventKind::Down});
+    for (int i = 0; i < 7; ++i) f.menu.handle({EventKind::Right});
     const auto last = qol::listHitAreas(f.menu);
     require(last.size() == 3 * 3 + 1 + 2 && last[0].click->index == 4 && last[last.size() - 3].click->kind == EventKind::RowClick &&
                 last[last.size() - 3].click->index == 7 && last[last.size() - 3].box.width == 180 &&

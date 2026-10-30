@@ -127,7 +127,10 @@ public:
 
 private:
     Result moveRow(std::ptrdiff_t delta);
-    Result moveSlot(std::ptrdiff_t delta);
+    static constexpr std::ptrdiff_t upStep = 1;
+    Result stepValue(std::ptrdiff_t delta);
+    Result stepMaster(std::ptrdiff_t delta);
+    Result setFeature(Feature feature, bool on);
     Result moveTab(std::ptrdiff_t delta);
     Result selectRow(std::size_t row);
     Result activateRow();
@@ -136,6 +139,7 @@ private:
     Result fromGame(GameResult result);
     Result activateGame();
     Result stepGame(std::ptrdiff_t delta);
+    Result stepControlSlot(std::ptrdiff_t delta);
 
     Settings& settings_;
     ControlsPort* controls_ = nullptr;

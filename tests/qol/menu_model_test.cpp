@@ -126,15 +126,15 @@ void navigation() {
     qol::Settings settings;
     qol::MenuModel menu(settings);
     menu.open();
-    require(menu.handle({EventKind::Up}) == Result::RowChanged && menu.row() == 3, "wraps from the first to the last");
-    require(menu.handle({EventKind::Down}) == Result::RowChanged && menu.row() == 0, "wraps from the last to the first");
-    require(menu.handle({EventKind::Down}) == Result::RowChanged && menu.row() == 1, "down");
-    menu.handle({EventKind::Down});
-    menu.handle({EventKind::Down});
+    require(menu.handle({EventKind::Left}) == Result::RowChanged && menu.row() == 3, "wraps from the first to the last");
+    require(menu.handle({EventKind::Right}) == Result::RowChanged && menu.row() == 0, "wraps from the last to the first");
+    require(menu.handle({EventKind::Right}) == Result::RowChanged && menu.row() == 1, "right");
+    menu.handle({EventKind::Right});
+    menu.handle({EventKind::Right});
     require(menu.row() == 3, "reaches the last Game row");
-    require(menu.handle({EventKind::Down}) == Result::RowChanged && menu.row() == 0, "wraps at the bottom");
-    menu.handle({EventKind::Up});
-    require(menu.handle({EventKind::Up}) == Result::RowChanged && menu.row() == 2, "up");
+    require(menu.handle({EventKind::Right}) == Result::RowChanged && menu.row() == 0, "wraps at the last row");
+    menu.handle({EventKind::Left});
+    require(menu.handle({EventKind::Left}) == Result::RowChanged && menu.row() == 2, "left");
 
     require(menu.handle({EventKind::TabNext}) == Result::TabChanged && menu.tab() == Tab::Display, "tab next");
     require(menu.row() == 0, "other tab has its own row");
@@ -157,8 +157,6 @@ void navigation() {
     require(menu.tab() == Tab::Game, "four tab steps back return to the start");
     for (int i = 0; i < 3; ++i) menu.handle({EventKind::TabNext});
 
-    require(menu.handle({EventKind::Left}) == Result::Ignored, "left is ignored");
-    require(menu.handle({EventKind::Right}) == Result::Ignored, "right is ignored");
 
     require(menu.handle(qol::tabClick(0)) == Result::TabChanged && menu.tab() == Tab::Game, "tab click");
     require(menu.handle(qol::tabClick(0)) == Result::Ignored, "click on the current tab");
@@ -215,7 +213,7 @@ void toggles() {
     qol::MenuModel menu(settings);
     menu.open();
     goToQualityTab(menu);
-    menu.handle({EventKind::Down});
+    menu.handle({EventKind::Right});
     require(menu.rows()[menu.row()].kind == qol::RowKind::Feature, "feature row selected");
 
     require(menu.handle({EventKind::Activate}) == Result::SwitchedToCustom, "Original: switches to Custom");
@@ -248,6 +246,53 @@ void toggles() {
             "an old mix is replaced by the current mode's switches, then the click applies");
 }
 
+void valueStepping() {
+    qol::Settings settings;
+    qol::MenuModel menu(settings);
+    menu.open();
+    goToQualityTab(menu);
+    require(menu.handle({EventKind::Up}) == Result::MasterCycled && settings.master() == qol::Master::Improved, "Up steps the master forward");
+    require(menu.handle({EventKind::Up}) == Result::Ignored && settings.master() == qol::Master::Improved, "Up stops without a custom mix");
+    require(menu.handle({EventKind::Down}) == Result::MasterCycled && settings.master() == qol::Master::Original, "Down steps it back");
+    require(menu.handle({EventKind::Down}) == Result::Ignored && settings.master() == qol::Master::Original, "Down stops at Original");
+    settings.setSwitch(qol::Feature::WidenedView, true);
+    menu.handle({EventKind::Up});
+    require(menu.handle({EventKind::Up}) == Result::MasterCycled && settings.master() == qol::Master::Custom, "Up reaches Custom once a mix is set");
+    require(menu.handle({EventKind::Up}) == Result::Ignored, "Up stops at Custom");
+    menu.handle({EventKind::Right});
+    require(menu.handle({EventKind::Up}) == Result::Ignored && settings.customSwitch(qol::Feature::WidenedView), "Up on an On toggle stays");
+    require(menu.handle({EventKind::Down}) == Result::FeatureToggled && !settings.customSwitch(qol::Feature::WidenedView), "Down turns a toggle off");
+    require(menu.handle({EventKind::Down}) == Result::Ignored, "Down on an Off toggle stays");
+    require(menu.handle({EventKind::Up}) == Result::FeatureToggled && settings.customSwitch(qol::Feature::WidenedView), "Up turns it on");
+
+    qol::Settings fresh;
+    qol::MenuModel second(fresh);
+    second.open();
+    goToQualityTab(second);
+    second.handle({EventKind::Right});
+    require(second.handle({EventKind::Up}) == Result::SwitchedToCustom && fresh.master() == qol::Master::Custom &&
+                fresh.customSwitch(qol::Feature::WidenedView), "Up on a toggle outside Custom switches to Custom with it on");
+
+    qol::Settings display;
+    qol::MenuModel third(display);
+    third.setDisplayModes({{800, 600}, {1280, 720}, {1920, 1080}}, {1920, 1080});
+    third.open();
+    third.handle(qol::tabClick(static_cast<std::size_t>(Tab::Display)));
+    require(display.windowMode() == qol::WindowMode::Fullscreen, "default window mode");
+    require(third.handle({EventKind::Up}) == Result::Ignored, "Up on Fullscreen stays");
+    require(third.handle({EventKind::Down}) == Result::DisplayChanged && display.windowMode() == qol::WindowMode::Windowed, "Down selects windowed");
+    require(third.handle({EventKind::Down}) == Result::Ignored, "Down on windowed stays");
+    require(third.handle({EventKind::Up}) == Result::DisplayChanged && display.windowMode() == qol::WindowMode::Fullscreen, "Up selects full screen");
+    third.handle({EventKind::Right});
+    require(third.handle({EventKind::Down}) == Result::DisplayChanged && display.resolution() && *display.resolution() == qol::Resolution{1280, 720},
+            "Down from the desktop size steps to the previous mode");
+    require(third.handle({EventKind::Down}) == Result::DisplayChanged && *display.resolution() == qol::Resolution{800, 600}, "Down again");
+    require(third.handle({EventKind::Down}) == Result::Ignored && *display.resolution() == qol::Resolution{800, 600}, "Down stops at the first mode");
+    third.handle({EventKind::Up});
+    require(third.handle({EventKind::Up}) == Result::DisplayChanged && *display.resolution() == qol::Resolution{1920, 1080}, "Up steps to the last");
+    require(third.handle({EventKind::Up}) == Result::Ignored, "Up stops at the last mode");
+}
+
 void displayTab() {
     qol::Settings settings;
     const std::string before = written(settings);
@@ -256,10 +301,8 @@ void displayTab() {
     menu.handle(qol::tabClick(static_cast<std::size_t>(Tab::Display)));
     require(menu.tab() == Tab::Display && menu.row() == 0, "display tab selected");
     require(settings.master() == qol::Master::Original, "original mode while using the display tab");
-    require(menu.handle({EventKind::Up}) == Result::RowChanged && menu.row() == 1, "display rows wrap up");
-    require(menu.handle({EventKind::Down}) == Result::RowChanged && menu.row() == 0, "display rows wrap down");
-    require(menu.handle({EventKind::Left}) == Result::Ignored && menu.handle({EventKind::Right}) == Result::Ignored,
-            "left and right ignored on display rows");
+    require(menu.handle({EventKind::Left}) == Result::RowChanged && menu.row() == 1, "display rows wrap left");
+    require(menu.handle({EventKind::Right}) == Result::RowChanged && menu.row() == 0, "display rows wrap right");
     require(menu.handle(qol::rowMove(2)) == Result::Rejected, "hover past the last display row");
     require(menu.handle(qol::rowClick(2)) == Result::Rejected, "click past the last display row");
     require(written(settings) == before, "navigation changes no setting");
@@ -335,22 +378,23 @@ void controlsTab() {
     require(rows[1].slots[1].source == "mouse" && rows[1].slots[1].code == "Left" && rows[1].slots[1].mode == "hold", "slot parts");
     require(rows[2].slots[0].bound && !rows[2].slots[1].bound && rows[2].slots[1].text.empty(), "empty second slot");
 
-    require(menu.handle({EventKind::Up}) == Result::RowChanged && menu.row() == 3, "rows wrap up to Reset all");
-    require(menu.handle({EventKind::Down}) == Result::RowChanged && menu.row() == 0, "rows wrap down");
-    require(menu.controlsSlot() == 0 && menu.handle({EventKind::Left}) == Result::Ignored && menu.controlsSlot() == 0,
-        "left stops at the first slot");
-    require(menu.handle({EventKind::Right}) == Result::SlotChanged && menu.controlsSlot() == 1, "right picks the second slot");
-    require(menu.handle({EventKind::Right}) == Result::Ignored && menu.controlsSlot() == 1, "right stops at the last slot");
-    require(menu.handle({EventKind::Down}) == Result::RowChanged && menu.controlsSlot() == 0, "a new row starts at the first slot");
+    require(menu.handle({EventKind::Left}) == Result::RowChanged && menu.row() == 3, "rows wrap left to Reset all");
+    require(menu.handle({EventKind::Up}) == Result::Ignored && menu.controlsSlot() == 0, "no slot on Reset all");
+    require(menu.handle({EventKind::Right}) == Result::RowChanged && menu.row() == 0, "rows wrap right");
+    require(menu.controlsSlot() == 0 && menu.handle({EventKind::Down}) == Result::Ignored && menu.controlsSlot() == 0,
+        "down stops at the first slot");
+    require(menu.handle({EventKind::Up}) == Result::SlotChanged && menu.controlsSlot() == 1, "up picks the second slot");
+    require(menu.handle({EventKind::Up}) == Result::Ignored && menu.controlsSlot() == 1, "up stops at the last slot");
+    require(menu.handle({EventKind::Right}) == Result::RowChanged && menu.controlsSlot() == 0, "a new row starts at the first slot");
+    menu.handle({EventKind::Left});
     menu.handle({EventKind::Up});
-    menu.handle({EventKind::Right});
     require(menu.handle(qol::eventForKey(qol::Key::Enter)) == Result::ControlsWaiting, "Activate waits for the selected slot");
     require(menu.controlsWaiting() && menu.controlsWaiting()->row == 0 && menu.controlsWaiting()->slot == 1, "waiting slot is the picked one");
     menu.handle(qol::eventForKey(qol::Key::Escape));
-    menu.handle({EventKind::Left});
+    menu.handle({EventKind::Down});
     menu.handle(qol::eventForKey(qol::Key::Enter));
-    require(menu.controlsWaiting() && menu.controlsWaiting()->slot == 0, "left picks the first slot again");
-    require(menu.handle({EventKind::Down}) == Result::Ignored && menu.row() == 0, "keys go to the tab while waiting");
+    require(menu.controlsWaiting() && menu.controlsWaiting()->slot == 0, "down picks the first slot again");
+    require(menu.handle({EventKind::Right}) == Result::Ignored && menu.row() == 0, "keys go to the tab while waiting");
     require(menu.handle(qol::tabClick(0)) == Result::Ignored && menu.tab() == Tab::Controls, "no tab change while waiting");
     require(menu.assignInput("key", "Space") == Result::ControlsConflict && menu.controlsWaiting(), "taken input refused, still waiting");
     require(menu.controlsMessage() == "key Space is already used by A" && menu.controlsConflictAction() == "A", "refuse message");
@@ -374,7 +418,7 @@ void controlsTab() {
                 tab.bindings() != defaults,
         "Escape declines the question and keeps the bindings");
     menu.handle(qol::rowClick(3));
-    require(menu.handle({EventKind::Down}) == Result::Ignored && menu.controlsConfirming(), "the question is modal");
+    require(menu.handle({EventKind::Right}) == Result::Ignored && menu.controlsConfirming(), "the question is modal");
     require(menu.handle(qol::eventForKey(qol::Key::Enter)) == Result::ControlsChanged && !menu.controlsConfirming() &&
                 tab.bindings() == defaults,
         "confirming restores the defaults");
@@ -387,7 +431,7 @@ void controlsTab() {
     require(menu.handle(qol::modeClick(0, 1)) == Result::Rejected, "mode click on an empty slot rejected");
     require(menu.handle(qol::clearClick(9, 0)) == Result::Rejected, "clear click past the last row rejected");
     require(menu.handle(qol::modeClick(3, 0)) == Result::Ignored, "mode click on Reset all ignored");
-    require(menu.handle({EventKind::Down}) == Result::RowChanged && menu.row() == 0, "keys work again");
+    require(menu.handle({EventKind::Right}) == Result::RowChanged && menu.row() == 0, "keys work again");
     require(written(settings) == before, "the Controls tab changes no QoL setting");
 }
 
@@ -398,6 +442,7 @@ int main() {
     structure();
     eventMapping();
     navigation();
+    valueStepping();
     masterCycling();
     toggles();
     displayTab();
