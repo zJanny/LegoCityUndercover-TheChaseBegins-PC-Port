@@ -2,7 +2,7 @@
 
 The climbing and sliding moves of the player that mission 1-2 needs on the way to the dog cage: the zipline (`props/parkour_zipline`, object type 101), the pole and drain pipe (`props/prop_poleclimb`, `props/parkour_drainpipe`, type 187), the climbing bricks (`props/parkour_brickgrab_new`, type 20) and free climb wall (`props/parkour_wallclimb`, type 30), the rail and climb bar (`props/parkour_railgrab`, `props/prop_climbbar`, `props/parkour_flagpole`, type 29; corner `props/parkour_cornerrail`, type 218) and the ledge states. Port: `src/runtime/zipline.{hpp,cpp}`, glue `src/game_zipline.cpp`; `src/runtime/climb_bar.{hpp,cpp}`, glue `src/game_climb_bar.cpp`. Gaps: [player-traversal.md](../plans/features/player-traversal.md).
 
-Subtopics: [player-traversal-pole.md](player-traversal-pole.md), [player-traversal-bricks.md](player-traversal-bricks.md), [player-traversal-rails.md](player-traversal-rails.md)
+Subtopics: [player-traversal-pole.md](player-traversal-pole.md), [player-traversal-bricks.md](player-traversal-bricks.md), [player-traversal-rails.md](player-traversal-rails.md), [player-traversal-fence-vault.md](player-traversal-fence-vault.md)
 
 ## Current state
 
@@ -13,6 +13,7 @@ Subtopics: [player-traversal-pole.md](player-traversal-pole.md), [player-travers
 - Pole and drain pipe (type 187), ported: [player-traversal-pole.md](player-traversal-pole.md).
 - Climbing bricks (type 20), ported, and the climb wall entry: [player-traversal-bricks.md](player-traversal-bricks.md).
 - Rails, climb bars and the corner rail (types 29, 218), ported: [player-traversal-rails.md](player-traversal-rails.md).
+- Fence vault (kind 189, the B press gate and state 326): [player-traversal-fence-vault.md](player-traversal-fence-vault.md).
 - The A presses at the zipline anchor and at the pole are not measurable from the save state under the zipline of mission 1-2, the save state at the foot of the drain pipe of mission 1-2 or the save state beside the drain pipe of mission 1-2; the states they need are listed in [§2026-10-18T20:38:04](#ts-20261018-203804).
 - The rope is ported: a straight textured ribbon (`RopeTexture`, `RenderWidth` 0.03) between the anchor nodes, drawn from both anchors (two strips per line), faded out by the camera's distance from the line only with `FadeNearCamera`; the ribbon's facing, render states and the tightrope ropes are open. [§2026-10-19T08:51:31](#ts-20261019-085131)
 - The rope's facing and render state: the row at 0x529fec is the camera's view direction (measured, the save state under the zipline of mission 1-2), the render state is the record of 0x252254 with the mode bytes of 0x297b7c, which the port's reading of the record turns into the states the port already used; the texture sampler is open; the original drew two strips per line. [§2026-10-19T10:00:18](#ts-20261019-100018)

@@ -64,6 +64,7 @@
 #include "runtime/pushable.hpp"
 #include "runtime/mission13_end.hpp"
 #include "runtime/ladder.hpp"
+#include "runtime/fence_vault.hpp"
 #include "runtime/acrobat_pole.hpp"
 #include "runtime/prop_bouncer.hpp"
 #include "runtime/prop_wobbly_destructible.hpp"
@@ -212,6 +213,8 @@ private:
     game_player::PlayerAnimation movePlayerWithPole(const chase::runtime::StickIntent& intent, bool jumpPressed, float dt);
     game_player::PlayerAnimation movePlayerWithLadder(const chase::runtime::StickIntent& intent, bool jumpPressed, float dt);
     game_player::PlayerAnimation movePlayerWithPush(const chase::runtime::StickIntent& intent, bool jumpPressed, float dt);
+    game_player::PlayerAnimation movePlayerWithVault(const chase::runtime::StickIntent& intent, bool jumpPressed, float dt);
+    game_player::PlayerAnimation fenceVaultMovePlayer(float dt);
     void loadPushables(chase::assets::FuseArchive& archive);
     void updatePushables(const std::function<void(const chase::runtime::SoundCall&)>& emit);
     void loadAttack(chase::assets::FuseArchive& archive, const std::vector<chase::assets::ObjectCollision>& placed);
@@ -451,6 +454,9 @@ private:
     std::optional<chase::runtime::AcrobatPoleClips> acrobatPoleClips;
     chase::runtime::PoleSession pole;
     chase::runtime::LadderSession ladder;
+    std::vector<chase::runtime::FenceVaultObject> fenceVaults;
+    chase::runtime::FenceVaulter fenceVaulter;
+    std::map<int, chase::assets::RootMotion> vaultMotions;
     std::optional<chase::runtime::VehicleBoarding> boarding;
     std::vector<chase::runtime::BoardingVehicle> boardingVehicles;
     std::vector<std::size_t> boardingRecords;

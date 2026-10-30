@@ -7,7 +7,8 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | Feature | Status | Top open items |
 |---|---|---|
 | [player-movement](player-movement.md) | IN_PROGRESS | PLAYER-1 slide landing stun rule; PLAYER-2 slide exit; PLAYER-14 attack targets beyond props (attack on foot ported) |
-| [player-traversal](player-traversal.md) | IN_PROGRESS | TRAV-34 pole A mount; TRAV-19 brick side jumps; TRAV-7 zipline rope; TRAV-2 climb wall (zipline and bricks ported) |
+| [player-traversal](player-traversal.md) | IN_PROGRESS | TRAV-66 other users of the B press list; TRAV-34 pole A mount; TRAV-19 brick side jumps; TRAV-2 climb wall (bricks and fence vault ported) |
+| [player-traversal-zipline](player-traversal-zipline.md) | IN_PROGRESS | TRAV-9 tightrope; TRAV-55 solid poles; TRAV-8 use press measured; TRAV-63 handcuffs on the rope (zipline ported) |
 | [player-traversal-pole](player-traversal-pole.md) | IN_PROGRESS | TRAV-11 entry from the air; TRAV-13 walk-in touch; TRAV-15 sounds (pole ported) |
 | [player-traversal-rails](player-traversal-rails.md) | IN_PROGRESS | TRAV-27 bar variants; TRAV-28 hang offset; TRAV-31 other corner direction; TRAV-42..45 acrobat pole leftovers (rails and flag poles ported) |
 | [player-traversal-ladders](player-traversal-ladders.md) | IN_PROGRESS | TRAV-58 entry from the air, furled ladders; TRAV-59 exit collision; TRAV-60 clip restart, hidden weapons, camera; TRAV-61 oracle check of the sounds (ladders ported) |

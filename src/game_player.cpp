@@ -3,6 +3,7 @@
 #include "runtime/brick_grab.hpp"
 #include "runtime/fast_travel_pad.hpp"
 #include "runtime/ladder.hpp"
+#include "runtime/fence_vault.hpp"
 #include "runtime/pushable.hpp"
 #include "runtime/player_motion.hpp"
 #include <cmath>
@@ -151,7 +152,7 @@ std::optional<PlayerRig> placePlayer(FuseArchive& archive, Scene& scene, const L
                              runtime::kAnimationPoleMount, runtime::kAnimationPoleIdle, runtime::kAnimationPoleUp, runtime::kAnimationPoleDown,
                              runtime::kAnimationPoleDismount, runtime::kAnimationLadderIdle, runtime::kAnimationLadderUp,
                              runtime::kAnimationLadderDown, runtime::kAnimationLadderDismount, runtime::kAnimationPushPull, runtime::kAnimationPushIdle,
-                             runtime::kAnimationPush})
+                             runtime::kAnimationPush, runtime::kAnimationVault, runtime::kAnimationVaultFence})
             clips.push_back(id);
         clips.insert(clips.end(), runtime::kBrickGrabAnimations.begin(), runtime::kBrickGrabAnimations.end());
         for (const int id : clips) {

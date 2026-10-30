@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 1033 open items and stand-ins, 176 linked to game usage, 857 with unknown reach.
+Items: 1035 open items and stand-ins, 177 linked to game usage, 858 with unknown reach.
 
 ## Top 50 overall
 
@@ -42,7 +42,7 @@ Items: 1033 open items and stand-ins, 176 linked to game usage, 857 with unknown
 | 6 | [SCRIPT-389](features/script-system-platforms.md?display=source#L31) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The ledge lift starts one update later than in the oracle (the update between the switch's state 3 and the ... |
 | 7 | [SCRIPT-4](features/script-system.md?display=source#L38) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The code that hides the revealer targets; the role of the other type-4 parameters (Destination, ObjectTo ... |
 | 8 | [SCRIPT-S220](features/script-system-missions-reference.md?display=source#L18) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Closed 2026-10-25: the reference list holds the records of every registering kind ... |
-| 9 | [TRAV-21](features/player-traversal.md?display=source#L39) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Brick use handler 0x1b53a8 (messages 3 / 4 into state 145): sender unknown; `TriggerObject` switching ... |
+| 9 | [TRAV-21](features/player-traversal.md?display=source#L30) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Brick use handler 0x1b53a8 (messages 3 / 4 into state 145): sender unknown; `TriggerObject` switching ... |
 | 10 | [SCRIPT-273](features/script-system-natives-animation.md?display=source#L32) | 881 | 0 | 8 | 1 | 2 stand-in | `playanimation`, `playcharanim` | PlayCharAnim's state request 81 (the cutscene call, state 0x51 has the same functions) and its cape animation ... |
 | 11 | [SCRIPT-345](features/script-system-natives-animation.md?display=source#L35) | 859 | 0 | 8 | 0 | 2 stand-in | `loadanimation`, `playcharanim` | The port starts `1-2_Cage_Key_Target_Script` in the update of the press (as the original) but calls ... |
 | 12 | [SCRIPT-190](features/script-system-missions.md?display=source#L28) | 0 | 736 | 8 | 2 | - | `scriptobject` | Carry gaps: the instigator argument of 0x244f40 is not modelled; the handler 0x1bc4d4 forwards message 0xff ... |
@@ -87,20 +87,20 @@ Items: 1033 open items and stand-ins, 176 linked to game usage, 857 with unknown
 
 ## Player and camera
 
-16 of 201 items linked.
+17 of 203 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
 | 1 | [PLAYER-S9](features/player-movement.md?display=source#L29) | 0 | 2513 | 8 | 0 | - | `leprops/leprop_wobblydestructible` | `attackTargetObjects` — only `leprop_wobblydestructible` props are attack targets, and the glue allows the ... |
-| 2 | [TRAV-21](features/player-traversal.md?display=source#L39) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Brick use handler 0x1b53a8 (messages 3 / 4 into state 145): sender unknown; `TriggerObject` switching ... |
+| 2 | [TRAV-21](features/player-traversal.md?display=source#L30) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Brick use handler 0x1b53a8 (messages 3 / 4 into state 145): sender unknown; `TriggerObject` switching ... |
 | 3 | [ANIM-S12](features/animation-characters.md?display=source#L24) | 623 | 0 | 8 | 0 | 1 stand-in | `playcharanim` | The "already loaded" test of PlayCharAnim (0x21e8b4) knows a character's idle clips and its current script ... |
 | 4 | [ANIM-S13](features/animation-characters.md?display=source#L25) | 623 | 0 | 8 | 0 | 1 stand-in | `playcharanim` | The player's script clip (PlayCharAnim on Player1) is shown at full weight from the native's update instead ... |
 | 5 | [CAMERA-55](features/camera.md?display=source#L46) | 495 | 0 | 8 | 0 | 1 implemented | `positionobject` | After PositionObject of `1-1_Release_Car_Script` the port's police car stays on its locator while the ... |
 | 6 | [CAMERA-S51](features/camera.md?display=source#L26) | 145 | 0 | 7 | 0 | 1 stand-in | `shakescreen` | The ShakeScreen shake moves only the eye of the gameplay camera (`CameraRig::setEyeShake`); the cutscene ... |
-| 7 | [TRAV-55](features/player-traversal.md?display=source#L52) | 0 | 66 | 7 | 0 | - | `props/parkour_zipline` | The zipline poles (`props/parkour_zipline` anchors) can be walked through in `chase-game` (user report); in ... |
-| 8 | [TRAV-48](features/player-traversal.md?display=source#L47) | 0 | 22 | 5 | 1 | - | `props/parkour_tightrope` | The ropes of the tightrope anchors (`GrappleLineType` 0) use the same draw 0x1a9dc4 and are not loaded, so ... |
-| 9 | [TRAV-54](features/player-traversal.md?display=source#L51) | 0 | 22 | 5 | 0 | - | `props/parkour_tightrope` | The poles of the tightrope anchors (`props/parkour_tightrope`, 4 in lvl_01) are drawn at ... |
-| 10 | [SCAN-2](features/abilities-scanner.md?display=source#L38) | 7 | 0 | 3 | 0 | 1 stand-in | `enablescanner` | Other type 201 zones: photo (ScannerMode 4 in the class, sub-mode 0 values of 0x2ef814), physical (kind 2) ... |
+| 7 | [TRAV-55](features/player-traversal-zipline.md?display=source#L40) | 0 | 66 | 7 | 0 | - | `props/parkour_zipline` | The zipline poles (`props/parkour_zipline` anchors) can be walked through in `chase-game` (user report); in ... |
+| 8 | [TRAV-66](features/player-traversal.md?display=source#L26) | 0 | 39 | 4 | 0 | - | `props/parkour_fencevault` | The other kinds that share the fence's B press list are not identified or ported (their order decides who ... |
+| 9 | [TRAV-48](features/player-traversal-zipline.md?display=source#L35) | 0 | 22 | 5 | 1 | - | `props/parkour_tightrope` | The ropes of the tightrope anchors (`GrappleLineType` 0) use the same draw 0x1a9dc4 and are not loaded, so ... |
+| 10 | [TRAV-54](features/player-traversal-zipline.md?display=source#L39) | 0 | 22 | 5 | 0 | - | `props/parkour_tightrope` | The poles of the tightrope anchors (`props/parkour_tightrope`, 4 in lvl_01) are drawn at ... |
 
 ## Level objects
 
@@ -243,7 +243,8 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [player-traversal-ladders.md](features/player-traversal-ladders.md): TRAV-61 (+2), TRAV-59 (+1), TRAV-58, TRAV-60, TRAV-62, TRAV-S34, TRAV-S35, TRAV-S36, TRAV-S37
 - [player-traversal-pole.md](features/player-traversal-pole.md): TRAV-S9 (+1), TRAV-11, TRAV-13, TRAV-14, TRAV-15, TRAV-16, TRAV-S5, TRAV-S6, TRAV-S7, TRAV-S8
 - [player-traversal-rails.md](features/player-traversal-rails.md): TRAV-28 (+3), TRAV-38 (+1), TRAV-43 (+1), TRAV-44 (+1), TRAV-45 (+1), TRAV-S16 (+1), TRAV-S18 (+1), TRAV-S19 (+1), TRAV-27, TRAV-29, TRAV-31, TRAV-32, TRAV-33, TRAV-42, TRAV-S15, TRAV-S17, TRAV-S21, TRAV-S23, TRAV-S24, TRAV-S25, TRAV-S26
-- [player-traversal.md](features/player-traversal.md): TRAV-9 (+2), TRAV-2 (+1), TRAV-49 (+1), TRAV-52 (+1), TRAV-S12 (+1), TRAV-10, TRAV-19, TRAV-20, TRAV-22, TRAV-34, TRAV-35, TRAV-5, TRAV-6, TRAV-63, TRAV-8, TRAV-S1, TRAV-S10, TRAV-S11, TRAV-S13, TRAV-S2, TRAV-S20, TRAV-S29, TRAV-S3, TRAV-S30, TRAV-S31, TRAV-S32, TRAV-S4
+- [player-traversal-zipline.md](features/player-traversal-zipline.md): TRAV-9 (+2), TRAV-49 (+1), TRAV-52 (+1), TRAV-10, TRAV-35, TRAV-6, TRAV-63, TRAV-8, TRAV-S1, TRAV-S2, TRAV-S20, TRAV-S29, TRAV-S3, TRAV-S30, TRAV-S31, TRAV-S32, TRAV-S4
+- [player-traversal.md](features/player-traversal.md): TRAV-2 (+1), TRAV-S12 (+1), TRAV-19, TRAV-20, TRAV-22, TRAV-34, TRAV-5, TRAV-S10, TRAV-S11, TRAV-S13, TRAV-S38
 - [qol-bottom-screen.md](features/qol-bottom-screen.md): QOLBOT-10, QOLBOT-19, QOLBOT-2, QOLBOT-3, QOLBOT-4, QOLBOT-5, QOLBOT-7, QOLBOT-8, QOLBOT-9, QOLBOT-S1
 - [qol-fullscreen.md](features/qol-fullscreen.md): QOLFS-1 (+4), QOLFS-10, QOLFS-16, QOLFS-17, QOLFS-18
 - [qol-minimap.md](features/qol-minimap.md): QOLMAP-1

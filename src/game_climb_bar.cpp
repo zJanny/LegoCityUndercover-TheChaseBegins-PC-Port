@@ -18,6 +18,7 @@ bool hasLedgeClips(const game_player::PlayerRig& player) {
 // replaces the locomotion; otherwise the climbing-brick step runs and the bar grab test of the jump update follows it.
 game_player::PlayerAnimation LevelSession::climbBarMovePlayer(const runtime::StickIntent& intent, bool jumpPressed, bool usePressed, float dt) {
     if (acrobatPoleRider.active()) return acrobatPoleMovePlayer(intent, dt);
+    if (fenceVaulter.active()) return fenceVaultMovePlayer(dt);
     if (climbBars.bars.empty() || !hasLedgeClips(*player) || ziplineRider.active()) return moveClimbingPlayer(intent, jumpPressed, usePressed, dt);
     runtime::ClimbBarInput input;
     input.dt = dt;

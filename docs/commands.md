@@ -151,6 +151,7 @@ The table lists some of the tests. `ctest --test-dir build -N` lists all of them
 | `game-option-debug-overlay-value` | `--debug-overlay` takes no value |
 | `input-sdl-smoke` | Runs with `SDL_VIDEODRIVER=dummy` |
 | `map-buttons`, `map-buttons-real-data` | The map buttons of the lower screen: click areas, touch phases, the characters tap and hold, the fast travel page and its exit on made-up boxes, then the shipped layout's button boxes in play, with the fast travel page open and after its exit against the original's; the second skips with code 77 without `artifacts/romfs` |
+| `fence-vault`, `fence-vault-real-data`, `game-fence-vault-1-3` | The fence vault (the B press near a fence): zone, use point, rise of the clip and the sequence with a made-up fence, then the fences of the first level and the clip `vault_fence` (needs the extracted RomFS), then `chase-game` vaulting over the fence of mission 1-3 (needs the extracted RomFS) |
 | `ladder-sounds`, `ladder-sounds-real-data` | The sound tracks of animation clips (ladder climb and clamber sounds): made-up clips, then the shipped ladder, jump, idle and walk clips; the second skips with code 77 without `artifacts/romfs` |
 | `assets-core` | Asset runtime, synthetic fixtures |
 | `shadow-core`, `shadow-real-data` | The shadow constant, focus and shadow camera against values read in the original, the shadow light and the caster and receiver flags; the second checks the shadow light of lvl_01 and the flags of shipped classes and skips with code 77 without `artifacts/romfs` |

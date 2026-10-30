@@ -15,7 +15,7 @@ bool hasPoleClips(const game_player::PlayerRig& player) {
 // The pole states around the player step: the A press and the walk-in (docs/re/player-traversal.md) start the mount, the pole states own
 // the player while they run.
 game_player::PlayerAnimation LevelSession::movePlayerWithPole(const runtime::StickIntent& intent, bool jumpPressed, float dt) {
-    if (pole.poles.empty() || !hasPoleClips(*player) || ziplineRider.active()) return movePlayerWithPush(intent, jumpPressed, dt);
+    if (pole.poles.empty() || !hasPoleClips(*player) || ziplineRider.active()) return movePlayerWithVault(intent, jumpPressed, dt);
     const auto clipOf = [&](int role) { return assets::rootMotion(player->animations.at(role)); };
     if (!pole.up) pole.up = clipOf(runtime::kAnimationPoleUp);
     if (!pole.down) pole.down = clipOf(runtime::kAnimationPoleDown);
@@ -100,7 +100,7 @@ game_player::PlayerAnimation LevelSession::movePlayerWithPole(const runtime::Sti
             return apply(runtime::poleMount(pole.climber, pole.poles, used, input, true));
         }
     }
-    const game_player::PlayerAnimation shown = movePlayerWithPush(intent, jumpPressed, dt);
+    const game_player::PlayerAnimation shown = movePlayerWithVault(intent, jumpPressed, dt);
     if (player->vertical.posture != runtime::Posture::Ground || ziplineRider.active()) return shown;
     readPlayer();
     const int touched = runtime::poleWalkInTest(pole.poles, input.position, input.facing, intent.active, intent.heading, disabled);
