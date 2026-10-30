@@ -48,6 +48,9 @@ struct LayoutScene {
     // Element opacities set by code: replace the file value and every storyboard track of that element. Empty for every port screen.
     std::map<std::string, float> opacities;
     float opacity = 1;
+    // Element scales set by code (the node scale x and y replaced, as the setters 0x24d0f0 and 0x24d0d8 do); a text element drawn with
+    // scaleText gets its glyphs smaller or larger through it. Storyboard scale tracks still multiply. Empty for every port screen.
+    std::map<std::string, std::array<float, 2>> scales;
     // 0x2b4dc4 sets the font spacing to the node byte +0x141 (0 for every layout node) clamped by the font minimum.
     int textSpacing = 0;
     // STAND-IN (SCAN-S5): the scanner overlay draws rotation (element rotation field and track property 5) and lets scale tracks

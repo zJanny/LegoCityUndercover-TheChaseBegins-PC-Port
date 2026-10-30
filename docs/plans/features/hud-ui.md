@@ -6,7 +6,7 @@ The in-game HUD (portrait, hearts, stud counter, studs flying to the counter, th
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-29T15:06:01+01:00. Layout text is drawn at the original's scale 1 and spacing 0. The map picture and placement come from each level's map file (the hub shows lvl_01's map around its fixed centre and angle). The map also shows the sub-objective group icons and their fading group slot with its edge arrow. Script text screens: [hud-ui-text.md](hud-ui-text.md). `chase-game` shows the original's top-screen HUD over a 5:3 3D view and the map on the bottom screen. Hearts, counter, bounce, timing and the flight are recovered; damage, other counters and the real map code are not.
+IN_PROGRESS, updated 2026-10-30T16:00:18+01:00. Layout text is drawn at the original's scale 1 and spacing 0; a text can be drawn smaller through its element's scale, set by code (off by default). The map picture and placement come from each level's map file (the hub shows lvl_01's map around its fixed centre and angle). The map also shows the sub-objective group icons and their fading group slot with its edge arrow. Script text screens: [hud-ui-text.md](hud-ui-text.md). `chase-game` shows the original's top-screen HUD over a 5:3 3D view and the map on the bottom screen. Hearts, counter, bounce, timing and the flight are recovered; damage, other counters and the real map code are not.
 
 ## 3. Verified behaviour
 
@@ -56,7 +56,6 @@ IN_PROGRESS, updated 2026-10-29T15:06:01+01:00. Layout text is drawn at the orig
 - [ ] HUD-91 — The original's fit loop (spacing, then line gap, lowered to the font minimum while the text is wider or taller than its box) is not ported, so a text wider than its box now overflows (the former -2 default squeezed it); the minimum of the global frontendfont is unknown. evidence: [ui-layouts.md §2026-10-29T15:06:01](../../re/ui-layouts.md#ts-20261029-150601).
 - [ ] HUD-92 — Hand-set layout text spacings of the port (shortcut bars +1, slot page header -1 in `src/frontend/pages.cpp`) contradict spacing 0; compare with the original. evidence: [ui-layouts.md §2026-10-29T15:06:01](../../re/ui-layouts.md#ts-20261029-150601).
 - [ ] HUD-94 — The original's split of the HUD draw into parts: whether the HUD draw callback, the stud bar object, the super brick display and the camera lock icon draw separately as the port's five parts do, and what the original calls the ability part (bottom-left) that `qol::HudPart` names. blocks: HUD-S82. evidence: [hud.md §2026-10-29T15:00:22](../../re/hud.md#ts-20261029-150022).
-- [ ] HUD-96 — The port draws layout text at one size only; a layout text cannot be drawn at a smaller size (the settings menu of the `qol` plan asks for smaller second lines on its Controls bars). blocks: QOLSET-43. evidence: [qol-settings-drawing.md §2026-10-29T12:11:55](../../design/qol-settings-drawing.md#ts-20261029-121155).
 
 ## 6. Findings summary
 
@@ -65,11 +64,11 @@ IN_PROGRESS, updated 2026-10-29T15:06:01+01:00. Layout text is drawn at the orig
 - Super brick display: [hud-ui-super-bricks.md](hud-ui-super-bricks.md).
 - Level map files, the hub rule and the unused `_2` pictures: [objective-hud-map.md §2026-10-29T12:01](../../re/objective-hud-map.md#ts-20261029-120144); the hub's fixed centre and angle: [objective-hud-map.md §2026-10-29T12:32](../../re/objective-hud-map.md#ts-20261029-123225).
 - Sub-objective group icons and slots on the map: [objective-hud.md §2026-10-19T15:00](../../re/objective-hud.md#ts-20261019-150002).
-- Layout text draw 0x2b4dc4, spacing 0 and the fit loop: [ui-layouts.md §2026-10-29T15:06:01](../../re/ui-layouts.md#ts-20261029-150601).
+- Layout text draw 0x2b4dc4, spacing 0 and the fit loop: [ui-layouts.md §2026-10-29T15:06:01](../../re/ui-layouts.md#ts-20261029-150601); smaller text through the node scale: [ui-layouts.md §2026-10-30T15:39:04](../../re/ui-layouts.md#ts-20261030-153904).
 - Camera lock icon object, states and drawing 0x1b1150: [camera-records-blending.md §2026-10-14T10:44](../../re/camera-records-blending.md#ts-20261014-104400).
 
 ## 7. Code and tests
 
 - `src/frontend/super_build_prompt.*`, `src/frontend/hud.*` (`Hud`, `setCameraLockAlpha`), `src/runtime/camera_lock_icon.*`, `src/frontend/minimap.*`, `src/frontend/map_file.*` (level map files), `src/frontend/map_hub.*` (hub centre and angle), `src/game_hud.hpp` (two-screen presentation), `chase-hudshot`, `LayoutScene` in `src/frontend/layout.*`; `Canvas::clearTransparent`.
 - `src/frontend/hud_parts.*` (`HudPart`, `HudPartSet`, the layout elements of each part; `Hud::draw` takes a part set, default all), `src/render/overlay_quad.*` (`overlayQuad`) and `HudOverlay::drawTop` (one top canvas on a window rectangle). CTest `hud-parts`, `hud-parts-real-data` (parts alone are disjoint and together equal the full draw), `render-overlay-quad`.
-- CTest: `layout-text-real-data`, `map-hub`, `map-file`, `map-file-real-data`, `map-marker`, `hud-real-data` (the recorded bar states are pinned in the test), `studs-core`, `frontend-real-data`. Scenarios: `tools/oracle/hud-*.txt`.
+- CTest: `layout-text-real-data`, `layout-scale-real-data`, `map-hub`, `map-file`, `map-file-real-data`, `map-marker`, `hud-real-data` (the recorded bar states are pinned in the test), `studs-core`, `frontend-real-data`. Scenarios: `tools/oracle/hud-*.txt`.

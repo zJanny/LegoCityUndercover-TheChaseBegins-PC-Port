@@ -123,11 +123,15 @@ private:
             if (width <= 1e-6f) width = float(image->width);
             if (height <= 1e-6f) height = float(image->height);
         }
-        float scaleX = e.scale[0] * pose.scaleX, scaleY = e.scale[1] * pose.scaleY;
+        auto scaled = instance_.empty() ? scene_.scales.end() : scene_.scales.find(instance_ + "/" + e.name);
+        if (scaled == scene_.scales.end()) scaled = scene_.scales.find(e.name);
+        const float baseScaleX = scaled != scene_.scales.end() ? scaled->second[0] : e.scale[0];
+        const float baseScaleY = scaled != scene_.scales.end() ? scaled->second[1] : e.scale[1];
+        float scaleX = baseScaleX * pose.scaleX, scaleY = baseScaleY * pose.scaleY;
         float rotation = 0;
         if (scene_.rotations) {
-            scaleX = pose.hasScaleX ? pose.scaleX : e.scale[0];
-            scaleY = pose.hasScaleY ? pose.scaleY : e.scale[1];
+            scaleX = pose.hasScaleX ? pose.scaleX : baseScaleX;
+            scaleY = pose.hasScaleY ? pose.scaleY : baseScaleY;
             rotation = pose.hasRotation ? pose.rotation : e.rotation;
         }
         auto placed = instance_.empty() ? scene_.positions.end() : scene_.positions.find(instance_ + "/" + e.name);

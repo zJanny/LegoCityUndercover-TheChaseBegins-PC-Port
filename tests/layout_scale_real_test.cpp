@@ -1,4 +1,4 @@
-// Layout drawing at a scale (HUD-95): element opacities set by code, text drawn through the node scale, element boxes inside references and
+// Layout drawing at a scale (HUD-95) and the element scale set by code (HUD-96: 0.5 halves the 47 pixel title; recorded by 20261030-qolpanels-D, 2026-10-30, from this test's own run): element opacities set by code, text drawn through the node scale, element boxes inside references and
 // the shortcut bar scene, each left unchanged while unused. Provenance of the pinned boxes: 20261029-qolmenu2-A, 2026-10-29, chase-layoutdump
 // of sprites/ui_roundaboutmenu/main.bxaml (Pageslots at 59,163 holds Left_Arrow at -57,-68 and Right_Arrow at 239,-68, 16x32) and of
 // sprites/blend/ui_frontend/shortcuts.bxaml (BackButton_3DS at 85,233 references backbutton.bxaml, whose Button is at 6,-8, 32x32). Needs
@@ -39,7 +39,7 @@ int litWidth(const Canvas& canvas) {
     return first < 0 ? 0 : last - first + 1;
 }
 
-Canvas drawTitle(Resources& resources, float scale, bool scaleText) {
+Canvas drawTitle(Resources& resources, float scale, bool scaleText, float elementScale = 1) {
     LayoutScene scene;
     scene.hidden = {"Backgrounds", "Menu", "Item_Name", "Menu_Strip", "Menu_Bars", "Menu_List", "Subtitle", "Bottom_Left_BTN",
                     "Bottom_Right_BTN", "backButton", "selectButton", "itemSmallGroup", "codegrp", "Pageslots", "Particles", "Fade",
@@ -49,6 +49,7 @@ Canvas drawTitle(Resources& resources, float scale, bool scaleText) {
     title.align = Align::Left;
     scene.text["TEXT_Title"] = title;
     scene.scaleText = scaleText;
+    if (elementScale != 1) scene.scales["TEXT_Title"] = {elementScale, elementScale};
     Canvas canvas(int(320 * scale), int(40 * scale));
     canvas.clear(0, 0, 0);
     drawLayout(canvas, resources, kRoundMenuLayout, scene, 0, 0, scale);
@@ -109,6 +110,14 @@ int main(int argc, char** argv) {
         require(plainAtTwo == unscaled, "without scaleText the text keeps glyph scale 1");
         require(scaledAtOne == unscaled, "scaleText at scale 1 draws the same width");
         require(scaledAtTwo >= 2 * unscaled - 2 && scaledAtTwo <= 2 * unscaled + 2, "scaleText at scale 2 doubles the width");
+
+        const int halfSized = litWidth(drawTitle(resources, 1, true, 0.5f));
+        const int halfPlain = litWidth(drawTitle(resources, 1, false, 0.5f));
+        const int unitScaled = litWidth(drawTitle(resources, 1, true, 1.0f));
+        std::cout << "element scale widths " << halfSized << " " << halfPlain << " " << unitScaled << '\n';
+        require(halfSized >= unscaled / 2 - 2 && halfSized <= unscaled / 2 + 2, "an element scale of 0.5 halves the text width with scaleText");
+        require(halfPlain == unscaled, "an element scale leaves the text at glyph scale 1 without scaleText");
+        require(unitScaled == unscaled, "an element scale of 1 changes nothing");
 
         ShortcutView back{"Back", "TransitionOn", 1.1f, true}, select{"Select", "TransitionOn", 1.1f, true};
         Canvas direct(320, 240), fromScene(320, 240);

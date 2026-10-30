@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 1038 open items and stand-ins, 177 linked to game usage, 861 with unknown reach.
+Items: 1037 open items and stand-ins, 177 linked to game usage, 860 with unknown reach.
 
 ## Top 50 overall
 
@@ -168,7 +168,7 @@ Items: 1038 open items and stand-ins, 177 linked to game usage, 861 with unknown
 
 ## Front end, HUD, saves
 
-14 of 190 items linked.
+14 of 189 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -223,7 +223,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [front-end.md](features/front-end.md): FE-3 (+10), FE-30 (+1), FE-40 (+1), FE-1, FE-2, FE-4, FE-5, FE-6, FE-7, FE-8, FE-9, FE-S1, FE-S2, FE-S3, FE-S31, FE-S32, FE-S33, FE-S4, FE-S40, FE-S41, FE-S5, FE-S6
 - [hud-ui-super-bricks.md](features/hud-ui-super-bricks.md): HUD-84 (+2), HUD-86 (+2), HUD-79 (+1), HUD-80 (+1), HUD-85 (+1), HUD-S74, HUD-S75, HUD-S76, HUD-S78
 - [hud-ui-text.md](features/hud-ui-text.md): HUD-15, HUD-27, HUD-28, HUD-29, HUD-32, HUD-33, HUD-S15
-- [hud-ui.md](features/hud-ui.md): HUD-70 (+4), HUD-71 (+3), HUD-11 (+2), HUD-74 (+2), HUD-60 (+1), HUD-61 (+1), HUD-90 (+1), HUD-94 (+1), HUD-96 (+1), HUD-10, HUD-12, HUD-18, HUD-3, HUD-6, HUD-7, HUD-8, HUD-88, HUD-91, HUD-92, HUD-S1, HUD-S2, HUD-S3, HUD-S4, HUD-S6, HUD-S60, HUD-S7, HUD-S70, HUD-S71, HUD-S79, HUD-S80, HUD-S81, HUD-S82
+- [hud-ui.md](features/hud-ui.md): HUD-70 (+4), HUD-71 (+3), HUD-11 (+2), HUD-74 (+2), HUD-60 (+1), HUD-61 (+1), HUD-90 (+1), HUD-94 (+1), HUD-10, HUD-12, HUD-18, HUD-3, HUD-6, HUD-7, HUD-8, HUD-88, HUD-91, HUD-92, HUD-S1, HUD-S2, HUD-S3, HUD-S4, HUD-S6, HUD-S60, HUD-S7, HUD-S70, HUD-S71, HUD-S79, HUD-S80, HUD-S81, HUD-S82
 - [input.md](features/input.md): INPUT-1, INPUT-2, INPUT-3, INPUT-S1
 - [level-objects-buildit-super.md](features/level-objects-buildit-super.md): LEVOBJ-117 (+1), LEVOBJ-129 (+1), LEVOBJ-S100, LEVOBJ-S101, LEVOBJ-S95
 - [level-objects-buildit.md](features/level-objects-buildit.md): LEVOBJ-43 (+1), LEVOBJ-71 (+1), LEVOBJ-79 (+1), LEVOBJ-42, LEVOBJ-61, LEVOBJ-70, LEVOBJ-76, LEVOBJ-77, LEVOBJ-85, LEVOBJ-94, LEVOBJ-S41, LEVOBJ-S70, LEVOBJ-S71, LEVOBJ-S74, LEVOBJ-S76

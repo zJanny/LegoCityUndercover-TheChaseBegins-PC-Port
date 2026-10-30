@@ -11,6 +11,7 @@ Reverse-engineering findings, moved verbatim from the progress log. Entries are 
 - The round menu layout (320x240) holds, beside the round, a list form of five bars with a highlight, a framed strip and a page indicator whose use is not read; the Options, pause and language pictures are hexagonal badges: [§2026-10-29T11:50:58](#ts-20261029-115058).
 - Layout text fonts: table 0x52ebf8 maps fontSize to three identical frontendfont instances that differ only in minimum spacing [§2026-10-29T13:58](#ts-20261029-135814). Layout text is drawn by 0x2b4dc4 at glyph scale 1 and spacing 0 (node byte +0x141, always 0, clamped by the font minimum) through the node matrix; the fit loop 0x1ce8d4 lowers the spacing towards the minimum only when a text is wider than its box. [§2026-10-29T15:06:01](#ts-20261029-150601)
 - The list form drawn with no storyboard: bars at fixed positions (bar 5 under the subtitle), an opaque `Menu_Bar_HI` over the bar texts, `PageNumber` over the bars; `page_alerttext` button boxes [§2026-10-29T15:54:31](#ts-20261029-155431).
+- Smaller layout text: the original has no text size; text only gets smaller through the node scale, which animation tracks (property ids 3 / 4) and code set through the node setters 0x24d0f0 / 0x24d0d8. The port's `LayoutScene::scales` does this for one element. [§2026-10-30T15:39:04](#ts-20261030-153904)
 - Open: the minimum spacing of the global frontendfont, which screen uses the list form and the page indicator, element +0x14, other flag bits, track +0x1c and keyframe +0x1c, and the property evaluator.
 
 <a id="ts-20261013-1100"></a>
@@ -134,3 +135,15 @@ Data only (no code read, no emulator). `sprites/ui_roundaboutmenu/main.bxaml` dr
 - `page_alerttext.bxaml`: `Option1` (A icon, text right aligned) at (166, 208) and `Option2` (B icon) at (6, 208), both 148x26; `Text_Info_NoHeader` 300x110 at (11, 72); the storyboards `TransitionOn` and `TransitionOn2` last 0.7 s.
 
 Unknown: how the original places the list (this is the layout's static pose).
+
+<a id="ts-20261030-153904"></a>
+
+## 2026-10-30T15:39:04+01:00 — Smaller layout text is the node scale (llvm-objdump of `artifacts/game/game.arm.elf`, agent 20261030-qolpanels-D; no emulator)
+
+Read with llvm-objdump (armv6k, vfp2); builds on [§2026-10-29T15:06:01](#ts-20261029-150601), which found layout text drawn at glyph scale 1 with `fontSize` only choosing one of three identical fonts. Question of HUD-96: how does the original draw a layout text at a smaller size?
+
+- **No text-size field.** `fontSize` (node +0x7c) only picks a table font; all three are one font file, so no layout text size changes glyphs. The only scale a layout text gets is the node matrix it is drawn through (0x2b4dc4 sets the text matrix to node +0xc0).
+- **Node scale setters.** Three node property setters each set a float and mark the node dirty (bit 2 of the halfword at node +0x144): 0x24d108 (node +0x34), 0x24d0f0 (+0x28), 0x24d0d8 (+0x2c). The animation property switch at 0x11542c jumps to them for track property types 2, 3 and 4, so types 3 and 4 (scale x and y in the data fit of [§2026-10-13T09:12](#ts-20261013-0912)) reach 0x24d0f0 and 0x24d0d8. Game code calls the same two setters directly (0x187d78, 0x187d90 with a computed factor; 0x29dc34, 0x29dc40), so code sets a node's scale at run time as the port's `LayoutScene::positions` does for position.
+- **Port:** `LayoutScene::scales` (element name or `Instance/name` to scale x and y) replaces the element's file scale; storyboard scale tracks still multiply; empty by default. With `LayoutScene::scaleText` the element's text is drawn through it (glyphs, pitch and offsets), so a scale of 0.5 halves the text width. CTest `layout-scale-real-data` pins: the title "Options" is 47 lit pixels at scale 1 (as [§2026-10-29T15:06:01](#ts-20261029-150601)), within 2 pixels of half of it at element scale 0.5 (recorded by 20261030-qolpanels-D, 2026-10-30, from the test run), unchanged at element scale 1, and unchanged without `scaleText`.
+
+Unknown: that node +0x28 / +0x2c are the scale terms of the node matrix +0xc0 was not traced through the matrix builder; the track-id order and the setters' use by the animation switch support it. Scale tracks and code calls reach the same setters (0x24d0f0 / 0x24d0d8, node +0x28 / +0x2c), so the last write probably wins; the port instead multiplies a playing scale track onto a code-set scale, following its file-scale times track model. Which one is right depends on the property evaluator (open, SCAN-S5). A scaled text keeps its box scaled around its origin, so a text that must stay on a bar needs the caller to place its element (`positions`); the fit loop is HUD-91.
