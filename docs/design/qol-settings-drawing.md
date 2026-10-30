@@ -61,6 +61,6 @@ The user's decisions of 2026-10-29, asked by the lead; the quoted labels are the
 - Game tab labels: "Original gametext labels": the labels of the original Options page from the game text, not the model's English labels.
 - Quality of life tab: "Readable names", offered as, for example, "Quality of life: Original" for the master row and "Widened view: Off" for the feature row; neither the config key nor "Master" is shown.
 
-- Controls bar form (asked 2026-10-29): "Two lines per bar": each Controls bar shows the action name on top and its two slots smaller underneath; fewer rows fit on the page.
+- Controls bar form (asked 2026-10-29): "Two lines per bar": each Controls bar shows the action name on top and its two slots smaller underneath; fewer rows fit on the page. Answer 2026-10-30, "How should this go ahead while the port cannot draw smaller layout text (HUD-96)?": "Wait for HUD-96": build smaller text in the port first, then the two-line bars as decided.
 
 Open (not decided by the user): whether every text fits its box (name plate 182 pixels, list bar 168 pixels) at the font size HUD-75 brings (QOLSET-34).

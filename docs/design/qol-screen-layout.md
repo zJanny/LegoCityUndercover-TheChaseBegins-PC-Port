@@ -85,3 +85,11 @@ Implemented by 20261029-qolview-A:
 - Implemented by 20261029-qolmenu-F (QOLBOT-1): with `master Improved` `game_hud::screensFor` returns (hook `qol::hiddenScreens`) the 400x240 top picture fitted to the window and centred (the user's answer "5:3 centred", 2026-10-29) and an empty bottom rectangle, so the bottom screen is not drawn and the touch tracker takes no click; Original and Custom are unchanged. The user's answer "Hide anyway" (2026-10-29): the pages of the bottom screen have no input until the panels exist (stand-in QOLBOT-S1).
 - Implemented by 20261029-qolhook-C (QOLBOT-20): with the bottom screen hidden, `qol::topViewRegion(width, height, top)` applies the same rule to the whole window (`qol::hiddenTopArea`), so tall windows get the 5:3 view centred with bars above and below, and wide ones the 16:9 view with side bars.
 - The process-wide store is `qol::activeSettings`, `setActiveSettings` and `enabled`, default Original.
+
+<a id="ts-20261030-140744"></a>
+
+## 2026-10-30T14:07:44+01:00 — Front end screens follow the hiding
+
+Asked of the user by the lead on 2026-10-30 (round 20261030-qolstores); the quoted label is the user's selection. Decides QOLBOT-19.
+
+- Title screen and front-end menus with the bottom screen hidden (QOLBOT-19), "When the Improved option hides the bottom screen during play, what should the title screen and front-end menus do?": "Hide like in play": the front end hides it too and the top screen fills the window. Not chosen: "Keep both screens", "Hide, menus full-window". Open: its menus need clicks on the top-screen layout or a PC panel; how they are reached is to be proposed to the user.
