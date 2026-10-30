@@ -6,6 +6,7 @@
 #include "frontend/pages.hpp"
 #include "game_save.hpp"
 #include "game_screen_fade.hpp"
+#include "qol/hud_parts_hook.hpp"
 #include "qol/view_hook.hpp"
 #include "runtime/fog.hpp"
 #include "runtime/glow.hpp"
@@ -509,7 +510,8 @@ void LevelSession::draw(int width, int height) {
     if (hud && !cutscenePlaying()) {
         hudCanvas.clearTransparent();
         if (!drawScannerOverlay(hudCanvas)) {
-            hud->draw(hudCanvas, provisionalStudClockSeconds);
+            if (!qol::drawHudParts(*hud, hudCanvas, *overlay, provisionalStudClockSeconds, width, height, screens.top))
+                hud->draw(hudCanvas, provisionalStudClockSeconds);
             drawHeadIcon(hudCanvas);
         }
         fe::MinimapView mapView;
