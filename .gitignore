@@ -16,3 +16,6 @@ __pycache__/
 # Local Claude Code settings and agent worktrees
 /.claude/settings.local.json
 /.claude/worktrees/
+
+# Per-user settings written by chase-game
+/config/qol.cfg
