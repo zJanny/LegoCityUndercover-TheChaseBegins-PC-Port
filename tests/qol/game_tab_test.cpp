@@ -65,7 +65,9 @@ void rangesAndRejections() {
     require(tab.step(GameRow::SfxVolume, 1) == GameResult::Ignored && fake.sfx == 10, "no step above 10");
     fake.music = 0;
     require(tab.step(GameRow::MusicVolume, -1) == GameResult::Ignored && fake.music == 0, "no step below 0");
-    require(tab.step(GameRow::InvertCamera, 1) == GameResult::Ignored, "invert has no step");
+    require(tab.step(GameRow::InvertCamera, 1) == GameResult::Changed && fake.invert && fake.writes == 1, "invert flips on Right");
+    require(tab.step(GameRow::InvertCamera, -1) == GameResult::Changed && !fake.invert && fake.writes == 2, "invert flips on Left");
+    fake.writes = 0;
     require(tab.step(GameRow::Language, 1) == GameResult::Ignored, "language has no step");
     require(tab.activate(GameRow::SfxVolume) == GameResult::Ignored, "volume has no activate");
     require(tab.step(GameRow::SfxVolume, 0) == GameResult::Rejected, "step 0 rejected");

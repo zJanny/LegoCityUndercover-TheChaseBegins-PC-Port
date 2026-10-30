@@ -90,6 +90,11 @@ std::vector<Row> MenuModel::rows() const {
     return out;
 }
 
+void MenuModel::setGame(GameOptions* game) {
+    if (game) game_.emplace(*game);
+    else game_.reset();
+}
+
 void MenuModel::setControls(ControlsPort* controls) {
     controls_ = controls;
     slot_ = 0;
@@ -217,7 +222,28 @@ Result MenuModel::moveRow(std::ptrdiff_t delta) {
     return Result::RowChanged;
 }
 
+Result MenuModel::fromGame(GameResult result) {
+    switch (result) {
+    case GameResult::Changed: return Result::GameChanged;
+    case GameResult::OpenedLanguages: return Result::LanguagesRequested;
+    case GameResult::Rejected: return Result::Rejected;
+    case GameResult::Ignored: return Result::Ignored;
+    }
+    return Result::Ignored;
+}
+
+Result MenuModel::activateGame() {
+    if (!game_ || row() >= gameRowCount) return Result::Ignored;
+    return fromGame(game_->activate(static_cast<GameRow>(row())));
+}
+
+Result MenuModel::stepGame(std::ptrdiff_t delta) {
+    if (!game_ || row() >= gameRowCount) return Result::Ignored;
+    return fromGame(game_->step(static_cast<GameRow>(row()), delta < 0 ? -1 : 1));
+}
+
 Result MenuModel::moveSlot(std::ptrdiff_t delta) {
+    if (tab_ == Tab::Game) return stepGame(delta);
     if (tab_ != Tab::Controls || !controls_ || rows()[row()].kind != RowKind::Control) return Result::Ignored;
     if (delta < 0 ? slot_ == 0 : slot_ + 1 >= slotsPerAction) return Result::Ignored;
     slot_ = delta < 0 ? slot_ - 1 : slot_ + 1;
@@ -271,7 +297,7 @@ Result MenuModel::activateRow() {
         if (!controls_) return Result::Ignored;
         return fromControls(controls_->requestReset());
     case RowKind::Placeholder:
-        return Result::Ignored;
+        return tab_ == Tab::Game ? activateGame() : Result::Ignored;
     }
     return Result::Ignored;
 }

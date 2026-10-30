@@ -20,6 +20,7 @@
 #include "runtime/level_start.hpp"
 #include "runtime/pad.hpp"
 #include "runtime/qol_window.hpp"
+#include "runtime/qol_game_wiring.hpp"
 #include "runtime/scene_change.hpp"
 #include <SDL.h>
 #include <algorithm>
@@ -148,6 +149,10 @@ int run(const Options& given) {
         front.debugOverlay = options.debugOverlay;
         front.frame = [&]() { qolWindow.poll(input); };
         front.qolStores = qolWindow.menuStores(options.config, input);
+        front.qolStores.makeGame = runtime::qolGamePortFactory({options.frontSave, options.saveOut, int(options.language),
+            options.soundVolume, options.musicVolume, [&audio](std::optional<float> sound, std::optional<float> music) {
+                if (audio) audio->setOptionGains(sound, music);
+            }});
         const game_front::Result result =
             game_front::run(window, input, archive, audio ? &*audio : nullptr, front,
                             [&]() { return game_level::clockTicks(SDL_GetPerformanceCounter() - frontOrigin, frontFrequency); });

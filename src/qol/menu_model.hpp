@@ -3,6 +3,7 @@
 #include "qol/controls_port.hpp"
 #include "qol/display_tab.hpp"
 #include "qol/features.hpp"
+#include "qol/game_tab.hpp"
 #include "qol/settings.hpp"
 
 #include <array>
@@ -69,7 +70,9 @@ enum class Result {
     ControlsChanged,
     ControlsConflict,
     ControlsCancelled,
-    ControlsConfirming
+    ControlsConfirming,
+    GameChanged,
+    LanguagesRequested
 };
 
 struct ControlsSlotText {
@@ -106,6 +109,7 @@ public:
     bool setDisplayModes(ResolutionChoices modes, const Resolution& desktop);
     std::vector<DisplayRow> displayRows() const;
 
+    void setGame(GameOptions* game);
     void setControls(ControlsPort* controls);
     std::vector<ControlsRowText> controlsRows() const;
     std::size_t controlsSlot() const { return slot_; }
@@ -126,9 +130,13 @@ private:
     Result activateRow();
     Result activateControl(std::size_t row, std::size_t slot);
     Result fromControls(ControlsResult result);
+    Result fromGame(GameResult result);
+    Result activateGame();
+    Result stepGame(std::ptrdiff_t delta);
 
     Settings& settings_;
     ControlsPort* controls_ = nullptr;
+    std::optional<GameTab> game_;
     std::size_t slot_ = 0;
     ResolutionChoices modes_;
     std::optional<Resolution> desktop_;

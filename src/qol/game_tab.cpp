@@ -47,7 +47,8 @@ GameResult GameTab::setValue(GameRow row, int value) {
 
 GameResult GameTab::step(GameRow row, int direction) {
     if (direction != -1 && direction != 1) return GameResult::Rejected;
-    if (row == GameRow::InvertCamera || row == GameRow::Language) return GameResult::Ignored;
+    if (row == GameRow::InvertCamera) return setValue(row, value(row) ? 0 : 1);
+    if (row == GameRow::Language) return GameResult::Ignored;
     const int next = value(row) + direction;
     if (next < 0 || next > maxVolume) return GameResult::Ignored;
     return setValue(row, next);

@@ -46,7 +46,9 @@ void QolGameOptions::setVolume(OptionsRow row, int volume) {
     const auto current = [&] { return row == OptionsRow::SoundVolume ? sfxVolume() : musicVolume(); };
     while (current() != volume) {
         const bool up = current() < volume;
+        const int before = current();
         collect(page_.update(int(row), up, !up, options_, live_));
+        if (current() == before) throw std::logic_error("volume does not move: live byte and slot byte differ");
     }
 }
 

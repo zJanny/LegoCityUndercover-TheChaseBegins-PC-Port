@@ -29,6 +29,10 @@ void MenuStores::open(MenuModel& model) {
         if (!controls_) controls_ = ports_.makeControls();
         model.setControls(controls_.get());
     }
+    if (ports_.makeGame) {
+        if (!game_) game_ = ports_.makeGame();
+        model.setGame(game_.get());
+    }
 }
 
 void MenuStores::commit(Result result) {
@@ -39,6 +43,9 @@ void MenuStores::commit(Result result) {
         if (result == Result::DisplayChanged && ports_.applyWindow) ports_.applyWindow(settings_);
     }
     if (result == Result::ControlsChanged && ports_.controlsChanged) ports_.controlsChanged();
+    if (!game_) return;
+    if (result == Result::GameChanged || result == Result::LanguagesRequested) game_->applied();
+    if (result == Result::Closed) game_->left();
 }
 
 }

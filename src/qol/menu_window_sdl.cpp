@@ -171,6 +171,7 @@ bool FrontMenu::consume(const SDL_Event& event, int width, int height, const fe:
 void FrontMenu::open() {
     State& s = state();
     s.stores.open(s.model);
+    s.window.setGameOptions(s.stores.game());
     s.window.open();
 }
 

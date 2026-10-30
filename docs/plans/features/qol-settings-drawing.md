@@ -6,7 +6,7 @@ Drawing of the PC settings menu ([qol-settings-menu](qol-settings-menu.md)) with
 
 ## 2. Status
 
-IN_PROGRESS, opened 2026-10-29T16:00:26+01:00 (split from qol-settings-menu). The round form of the Game, Display and Quality of life tabs, the scale rule, the hit areas, the pointer and wheel mapping and a real-data draw test exist (QOLSET-33 part 1); the list form, the notices and the question of the Controls tab are joined into `ListForm` (`controlsListForm`, QOLSET-40); the window hook of the front end with the input wiring exists (QOLSET-41: "PC Settings" button on the slot list, front end stopped, menu over the whole window); the stores behind the open menu exist (QOLSET-49: `config/qol.cfg`, the active store, the window, `config/controls.cfg` and the running input); the Game tab stays on its copy (QOLSET-S5) and the pause entry (QOLSET-8) does not exist.
+IN_PROGRESS, opened 2026-10-29T16:00:26+01:00 (split from qol-settings-menu). The round form of the Game, Display and Quality of life tabs, the scale rule, the hit areas, the pointer and wheel mapping and a real-data draw test exist (QOLSET-33 part 1); the list form, the notices and the question of the Controls tab are joined into `ListForm` (`controlsListForm`, QOLSET-40); the window hook of the front end with the input wiring exists (QOLSET-41: "PC Settings" button on the slot list, front end stopped, menu over the whole window); the stores behind the open menu exist (QOLSET-49: `config/qol.cfg`, the active store, the window, `config/controls.cfg` and the running input); the Game tab runs over the live options, the mixer and the save (QOLSET-24; the Languages page is not shown, QOLSET-S6) and the pause entry (QOLSET-8) does not exist.
 
 ## 3. Verified behaviour
 
@@ -18,7 +18,7 @@ None against the original (the menu is not part of it). In `chase-game` the slot
 
 - QOLSET-S4 — While the menu is open over the front end, UI sounds that were already playing finish: the audio device is not paused, only the front end's update and new sounds stop ("movies and sounds hold"). evidence: [qol-settings.md §2026-10-29T18:06:35](../../design/qol-settings.md#ts-20261029-180635).
 
-- QOLSET-S5 — The Game tab of the open menu works on its copy and has no live `OptionsPage`, options block or mixer: `QolGameOptions` is not wired in (`menu_stores.cpp` hands over Display and Controls only). needs: QOLSET-24. evidence: [qol-settings.md §2026-10-28T09:32:07](../../design/qol-settings.md#ts-20261028-093207).
+- QOLSET-S6 — The Language row of the open menu requests the Languages page and the port side prints one line: the page is not shown and the language does not change (the menu has no screen for the pause screen's round-menu page). needs: QOLSET-25. evidence: [ui-screens-pause.md §2026-10-30T14:16:01](../../re/ui-screens-pause.md#ts-20261030-141601).
 
 ## 5. Open items
 

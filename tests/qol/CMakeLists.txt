@@ -150,6 +150,15 @@ target_link_libraries(qol-menu-stores-test PRIVATE chase_qol chase_input PkgConf
 target_compile_options(qol-menu-stores-test PRIVATE -Wall -Wextra -Wpedantic)
 add_test(NAME qol-menu-stores COMMAND qol-menu-stores-test)
 
+add_executable(qol-menu-game-test menu_game_test.cpp)
+target_link_libraries(qol-menu-game-test PRIVATE chase_qol)
+target_compile_options(qol-menu-game-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME qol-menu-game COMMAND qol-menu-game-test)
+
+add_executable(qol-game-wiring-test game_wiring_test.cpp ${CMAKE_SOURCE_DIR}/src/runtime/qol_game_wiring.cpp)
+target_link_libraries(qol-game-wiring-test PRIVATE chase_qol chase_runtime chase_save_progress)
+target_compile_options(qol-game-wiring-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME qol-game-wiring COMMAND qol-game-wiring-test)
 if(TARGET chase_qol_window)
   add_executable(qol-pause-entry-test pause_entry_test.cpp)
   target_link_libraries(qol-pause-entry-test PRIVATE chase_qol_window)
