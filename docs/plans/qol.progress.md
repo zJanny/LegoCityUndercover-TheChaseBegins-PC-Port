@@ -42,7 +42,7 @@ None.
 
 ## Next Action
 
-S1: the toggle store and the settings menu ([qol-settings-menu](features/qol-settings-menu.md)); nothing else of the plan starts before it. Propose the `qol-separation` guard (QOLSET-7) in the first round. Open questions for the user are marked as such in the feature files and must be answered before the work on them starts.
+The toggle store, the settings menu (S1), the master button, the widened view with the corner HUD, the round minimap and the front end panel exist. Round 20261030-qolmenu finishes decided menu and view items: arrow keys by axis (QOLSET-64), two-line Controls bars (QOLSET-43), corner HUD at the picture corners in 5:3 views (QOLFS-19). Next, in this order: the slot page "PC Settings" bar (QOLSET-53, measure the art first), front end row and button clicks (QOLBOT-22, needs row geometry from the port), redraw speed (QOLSET-58) and the menu storyboards (QOLSET-52). Panels of the scanner, build-it, shop, award viewer, characters and fast-travel map (QOLBOT-2..10) wait for the original screens. Open questions for the user are marked as such in the feature files and must be answered before the work on them starts. The port keeps priority over every QoL item.
 
 ## Session Log
 
