@@ -6,19 +6,21 @@ The map of the bottom screen as a minimap in a corner of the full-screen view. P
 
 ## 2. Status
 
-NOT_STARTED, opened 2026-10-28T09:21:35+01:00. No code.
+IN_PROGRESS. The round minimap is drawn from the original map canvas (20261030-qolpanels-B, 2026-10-30T15:39:42+01:00); panels other than the scanner, margin and overlap with the top-right HUD remain.
 
 ## 3. Verified behaviour
 
-None yet. Every behaviour is tested first in original mode (all QoL off, the port's tests unchanged), then with the feature on ([qol rules](../../rules/qol.md)).
+`qol-minimap` pins the geometry (diameter one fifth of the window height, flush top-right), the round mask and that Original and Custom draw nothing. Every behaviour is tested first in original mode (all QoL off, the port's tests unchanged), then with the feature on ([qol rules](../../rules/qol.md)).
 
 ## 4. Stand-ins
 
-None.
+- QOLMAP-S1 — The circle touches the window's top and right edges with no margin, and shows the 240 px disc around the player of the original 320x240 map canvas (the original zoom, the characters button lies outside the disc). The spec gives no margin or disc size. evidence: [qol-screen-layout.md §2026-10-28T09:31:02](../../design/qol-screen-layout.md#ts-20261028-093102).
 
 ## 5. Open items
 
-- [ ] QOLMAP-1 — The minimap, drawn from the same map data as the original bottom-screen map: round, top-right corner, about one fifth of the screen height, rotating with the camera, fixed zoom like the original map, the same icons and objective markers as the original map, hidden in cutscenes and panels; no toggle of its own: it shows only when the master button is on Improved, together with the hidden bottom screen. needs: QOLSET-1, QOLFS-1.  evidence: [qol-screen-layout.md §2026-10-28T09:31:02](../../design/qol-screen-layout.md#ts-20261028-093102).
+- [ ] QOLMAP-5 — Question for the user: at 16:9 the circle covers the top-right corner where the corner HUD puts the studs and counters; where should the minimap sit (margin, below the counters, or the counters moved)? needs: QOLMAP-1.  evidence: [qol-screen-layout.md §2026-10-28T09:37:31](../../design/qol-screen-layout.md#ts-20261028-093731).
+- [ ] QOLMAP-6 — Hide the minimap in the other panels (dialog boxes, scene change page, fast-travel map, pause menu); only the scanner overlay and cutscenes hide it now. needs: QOLMAP-1.  evidence: [qol-screen-layout.md §2026-10-28T09:37:31](../../design/qol-screen-layout.md#ts-20261028-093731).
+- [ ] QOLMAP-7 — Compare the round minimap with a gameplay picture (rotation, icons and objective markers inside the disc) on real data. needs: QOLMAP-1.  evidence: [qol-screen-layout.md §2026-10-28T09:31:02](../../design/qol-screen-layout.md#ts-20261028-093102).
 
 ## 6. Findings summary
 
@@ -26,4 +28,4 @@ Design: [qol-screen-layout.md](../../design/qol-screen-layout.md).
 
 ## 7. Code and tests
 
-Not written yet. Tests: one set with the feature off (unchanged behaviour) and one with it on, pinned to the design entry.
+`src/qol/minimap.*` (library `chase_qol_minimap`): `qol::drawRoundMinimap` crops the disc out of the canvas that the port's `drawMinimap` filled (map, rotation, icons and objective markers are the original's) and draws it through `HudOverlay::drawTop`; hook in `LevelSession::draw`. Test `qol-minimap` (`tests/qol/minimap_test.cpp`).

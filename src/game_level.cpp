@@ -7,6 +7,7 @@
 #include "game_save.hpp"
 #include "game_screen_fade.hpp"
 #include "qol/hud_parts_hook.hpp"
+#include "qol/minimap.hpp"
 #include "qol/view_hook.hpp"
 #include "runtime/fog.hpp"
 #include "runtime/glow.hpp"
@@ -511,7 +512,8 @@ void LevelSession::draw(int width, int height) {
     setScissorTest(false);
     if (hud && !cutscenePlaying()) {
         hudCanvas.clearTransparent();
-        if (!drawScannerOverlay(hudCanvas)) {
+        const bool scannerOpen = drawScannerOverlay(hudCanvas);
+        if (!scannerOpen) {
             if (!qol::drawHudParts(*hud, hudCanvas, *overlay, provisionalStudClockSeconds, width, height, screens.top))
                 hud->draw(hudCanvas, provisionalStudClockSeconds);
             drawHeadIcon(hudCanvas);
@@ -528,6 +530,7 @@ void LevelSession::draw(int width, int height) {
         if (fastTravelState.mapButtons && mapView.scannerButtons.stage == runtime::ScannerBottomStage::Map) mapView.buttons = &buttons;
         addObjectiveMapIcons(mapView);
         fe::drawMinimap(mapCanvas, hudResources, levelName, mapView);
+        qol::drawRoundMinimap(mapCanvas, *overlay, scannerOpen, width, height);
     } else {
         hudCanvas.clearTransparent();
         mapCanvas.clear(0, 0, 0);
