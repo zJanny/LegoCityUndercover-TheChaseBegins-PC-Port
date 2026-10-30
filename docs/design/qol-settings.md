@@ -154,9 +154,9 @@ Gamepad buttons (QOLSET-30), answered 2026-10-29: "New `pad` source": `config/co
 - Implemented by 20261029-qolmenu-C: a line is `Action pad <name> hold|toggle`. The names are SDL's lower-case names (`a b x y back guide start leftstick rightstick leftshoulder rightshoulder dpup dpdown dpleft dpright misc1 paddle1 paddle2 paddle3 paddle4 touchpad`), codes are the SDL button numbers (`a` is 0, `touchpad` is 20), `Source::Pad` in `src/input.hpp`. `readBindings` rejects any other name (strict); a file with no `pad` line behaves as before. The reader, the tab validator `fileInputValidator` and the writer accept the same names.
 
 Controls tab keyboard and wording, answered 2026-10-29:
-- Slots on the keyboard: "Left/Right pick slot": Left and Right move between slot 1 and slot 2 on a Controls action row (this changes the line of [qol-settings-drawing.md](qol-settings-drawing.md) that ignored Left and Right on Controls rows); Activate then waits for the picked slot. Switching a slot between hold and toggle and clearing a slot stay mouse-only.
+- Slots on the keyboard: "Up/Down pick slot" (changed 2026-10-30 from "Left/Right pick slot", see [§2026-10-30T17:03:17](#ts-20261030-170317)): the slot counts as the row's value, so Up and Down move between slot 1 and slot 2 on a Controls action row and Left and Right turn to the next row; Activate then waits for the picked slot. Switching a slot between hold and toggle and clearing a slot stay mouse-only.
 - Reset all question: "Reset all controls?", whose description shown to the user was: "Reset all controls to their defaults?" with Yes / No. The question text is therefore "Reset all controls to their defaults?" with Yes / No.
-- Ends of the slot pick: "Stop at the ends": Left on slot 1 and Right on slot 2 do nothing, no wrap.
+- Ends of the slot pick: "Stop at the ends": Up on slot 1 and Down on slot 2 do nothing, no wrap.
 - Waiting and the question are modal: "Yes, modal": while the menu waits for a new input or shows the Reset all question, every other input is ignored and only Activate (confirm the question) and Back (cancel) act.
 - Refuse message: "Keep placeholder": the text "key W is already used by Up" (source, code, "is already used by", action) is the final wording.
 
@@ -196,3 +196,18 @@ Asked of the user by the lead on 2026-10-29 after the user's playtest ([playtest
   - "Is covering the top ~6 px of the two corner button arts OK?": "OK, keep 32 px bar (Recommended)": same height as a slot bar, only decoration is covered (not chosen: "Shorten the bar", about 26 px). No open points left.
 - Sharpness and size (QOLSET-54), "How sharp and how big should the menu be?": "Crisp PC text and UI": "Draw text (and maybe the frames) at native window resolution instead of enlarged 3DS art and font." Not chosen: using the full wide window; the 4:3 page stays. Answer 2026-10-30, "What happens to the frames and bars around the sharp text?": "Text and frames sharp": frames and bars are also redrawn at full window resolution (crisper, needs new drawing of the shapes, drifts from the original art).
 - Motion (QOLSET-52), "What motion do you want in the menu?": "Original UI animations": "Play the original UI storyboards (slide-ins, highlight transitions) as the game does."
+
+<a id="ts-20261030-170317"></a>
+
+## 2026-10-30T17:03:17+01:00 — Arrow keys mean what they say in the settings menu
+
+The user's words (2026-10-30, after using the PC Settings menu): "In the PC Settings, you Go Left and Right to Select the categories with down/up. Please make that a consistent Design Choice: Left Right is Left and Right on the arrow keys. Up/down is up/down on the Arrow keys".
+
+- Answers (2026-10-30T17:07:50+01:00, asked by the lead; quoted labels are the user's):
+  - Layout: "Left/Right switch categories".
+  - Changing a value with the keyboard, in the user's words: "Up/Down changes the Value".
+  - Rows within a category: "Like the original Options": each row is its own category; Left and Right turn from row to row like the original Options wheel, Up and Down change that row's value. Tabs switch with PageUp/PageDown, the shoulder buttons or a click (unchanged). (Not chosen: "Enter opens a row", "Mouse/Tab key only".)
+  - Gamepad: "Yes, same rule": the D-pad follows the arrow rule; shoulder buttons and PageUp/PageDown still switch the tabs.
+  - Scope: "All menus": the same rule everywhere. The faithful menus (pause menu, Options page, other wheels) already turn with Left/Right, so nothing changes in them and the faithful game stays the default; the change is in the PC Settings menu.
+- Today (code reading, `src/qol/menu_model.cpp`, [qol-settings-drawing.md §2026-10-29T12:11:55](qol-settings-drawing.md#ts-20261029-121155) point 4): the tab pages use Up and Down for the rows and Left and Right for stepping a value; this is swapped by the decision (QOLSET-64).
+- Controls slot pick (2026-10-30T17:10:06+01:00): "On the PC Settings Controls page, each action row has two binding slots. Under the new rule Left/Right move between rows. How should the slot be picked?": "Up/Down pick slot (Recommended)": the slot counts as the row's value; Up and Down switch between slot 1 and 2, stopping at the ends; Enter rebinds the picked slot. The 2026-10-29 slot-pick lines above are changed accordingly.
