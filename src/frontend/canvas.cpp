@@ -88,8 +88,11 @@ void Canvas::drawScaledFlipped(const assets::Image& image, const IntRect& source
                                              std::clamp(sx, 0, image.width - 1)) * 4];
         for (int i = 0; i < 4; ++i) out[i] = t[i];
     };
-    for (int py = y0; py < y1; ++py) {
-        for (int px = x0; px < x1; ++px) {
+    const int firstX = std::max(x0, 0), lastX = std::min(x1, width_);
+    const int firstY = std::max(y0, 0), lastY = std::min(y1, height_);
+    for (int py = firstY; py < lastY; ++py) {
+        for (int px = firstX; px < lastX; ++px) {
+            ++scaledPixelsVisited_;
             const float fu = (px + 0.5f - x) / width, fv = (py + 0.5f - y) / height;
             const float u = (flipX ? 1 - fu : fu) * source.width - 0.5f + source.x;
             const float v = (flipY ? 1 - fv : fv) * source.height - 0.5f + source.y;

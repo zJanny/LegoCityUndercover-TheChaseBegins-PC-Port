@@ -40,6 +40,7 @@ public:
     void drawRotated(const assets::Image& image, const IntRect& source, float cx, float cy, float width, float height,
                      float radians, const Colour& tint = {});
     void drawLine(float x0, float y0, float x1, float y1, float width, const Colour& tint = {});
+    std::uint64_t scaledPixelsVisited() const { return scaledPixelsVisited_; }
     void dim(float factor);
     void blit(const Canvas& other, int x, int y);
     void writeBmp(const std::string& path) const;
@@ -51,6 +52,7 @@ private:
     void drawScaledFlipped(const assets::Image& image, const IntRect& source, float x, float y, float width, float height,
                            const Colour& tint, bool flipX, bool flipY);
     int width_, height_;
+    std::uint64_t scaledPixelsVisited_ = 0;
     std::vector<std::uint8_t> pixels_;
 };
 
