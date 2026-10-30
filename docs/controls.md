@@ -86,7 +86,7 @@ In the [development runtime](commands.md#development-runtime), on the slot list 
 - **Escape**, gamepad **b**, or a click on Back closes the menu.
 - These keys are fixed. They do not follow `config/controls.cfg`.
 - The Display and Quality of life tabs change the window and the quality-of-life settings at once and store them in `config/qol.cfg` (see [window mode and size](game-runtime.md#window-mode-and-size)). The Controls tab rebinds keys, mouse buttons and gamepad buttons, writes `config/controls.cfg` after each change and applies the bindings to the running game at once.
-- The Game rows show the options of your save (SFX volume and Music volume 0 to 10, Invert camera On or Off, Language). **Left and right** step a volume or flip Invert camera, and the sound changes at once. The options are stored in the save file when you close the menu, if you changed one. The Language row does nothing visible yet: choosing it prints a line in the terminal, and the Languages page is not shown in the menu. A click on a volume row selects it but does not change it.
+- The Game rows show the options of your save (SFX volume and Music volume 0 to 10, Invert camera On or Off, Language). **Left and right** step a volume or flip Invert camera, and the sound changes at once. The options are stored in the save file when you close the menu, if you changed one. The Language row does nothing visible yet: choosing it prints a line in the terminal, and the Languages page is not shown in the menu. Click the left half of the name plate under the wheel ("Music: 5") to lower a volume one step, the right half to raise it.
 
 ## Award viewer
 

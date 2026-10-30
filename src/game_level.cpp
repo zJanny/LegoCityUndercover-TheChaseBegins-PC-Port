@@ -419,7 +419,7 @@ void LevelSession::draw(int width, int height) {
     if (drawPause(width, height)) return;
     if (drawAwardViewer(width, height)) return;
     const game_hud::Screens screens = game_hud::screensFor(width, height);
-    const chase::render::ViewRegion topView = qol::topViewRegion(width, height, screens.top);
+    const chase::render::ViewRegion topView = qol::topViewRegion(width, height, screens.top, qol::cameraKindFor(cutsceneHost->camera(levelScripts.cutscenes()).has_value(), levelScripts.director().busy(), scanner.viewShown()));
     chase::render::beginViewRegion(width, height, topView,
                                    {backgroundColour[0] / 255.0f, backgroundColour[1] / 255.0f, backgroundColour[2] / 255.0f, 1});
     beginFrame(1.0f);

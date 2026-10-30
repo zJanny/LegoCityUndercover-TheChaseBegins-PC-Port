@@ -13,8 +13,14 @@ chase::render::ViewRegion widenedViewRegion(const chase::render::PixelRect& area
     return chase::render::makeViewRegion(rect, layout.aspectWidth, layout.aspectHeight);
 }
 
-chase::render::ViewRegion topViewRegion(int windowWidth, int windowHeight, const chase::render::PixelRect& topRect) {
-    if (!enabled(Feature::WidenedView) || topRect.width <= 0 || topRect.height <= 0) return chase::render::originalViewRegion(topRect);
+CameraKind cameraKindFor(bool cutsceneCamera, bool directorCamera, bool scannerCamera) {
+    if (cutsceneCamera) return CameraKind::Cutscene;
+    if (scannerCamera) return CameraKind::Scanner;
+    return directorCamera ? CameraKind::Director : CameraKind::Gameplay;
+}
+
+chase::render::ViewRegion topViewRegion(int windowWidth, int windowHeight, const chase::render::PixelRect& topRect, CameraKind camera) {
+    if (!enabled(Feature::WidenedView) || camera != CameraKind::Gameplay || topRect.width <= 0 || topRect.height <= 0) return chase::render::originalViewRegion(topRect);
     if (bottomScreenHidden(activeSettings())) return widenedViewRegion(hiddenTopArea(windowWidth, windowHeight));
     return widenedViewRegion({0, topRect.y, windowWidth, topRect.height});
 }

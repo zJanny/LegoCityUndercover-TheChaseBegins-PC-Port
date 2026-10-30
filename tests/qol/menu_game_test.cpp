@@ -81,6 +81,36 @@ void gameTabEdits() {
     require(menu.handle(qol::rowClick(3)) == Result::LanguagesRequested && fake.languagePages == 2, "a click on Language requests it too");
 }
 
+void valueClicks() {
+    qol::Settings settings;
+    qol::MenuModel menu(settings);
+    Fake fake;
+    menu.setGame(&fake);
+    menu.open();
+    require(menu.handle(qol::valueLower(0)) == Result::GameChanged && fake.sfx == 9, "a click on the left half lowers the SFX volume one step");
+    require(menu.handle(qol::valueRaise(0)) == Result::GameChanged && fake.sfx == 10, "a click on the right half raises it one step");
+    require(menu.handle(qol::valueRaise(0)) == Result::Ignored && fake.sfx == 10, "the right half stops at 10");
+    fake.sfx = 0;
+    require(menu.handle(qol::valueLower(0)) == Result::Ignored && fake.sfx == 0, "the left half stops at 0");
+    require(menu.handle(qol::valueLower(1)) == Result::GameChanged && fake.music == 7 && menu.row() == 1, "the music volume steps and the row is selected");
+    require(menu.handle(qol::valueRaise(1)) == Result::GameChanged && fake.music == 8, "music raised");
+    fake.invert = false;
+    require(menu.handle(qol::valueRaise(2)) == Result::Ignored && !fake.invert && menu.row() == 1, "a non-volume Game row ignores the value halves");
+    require(menu.handle(qol::valueLower(3)) == Result::Ignored && fake.lang == 1 && fake.languagePages == 0, "the Language row ignores them");
+    require(menu.handle(qol::valueLower(4)) == Result::Rejected, "a row past the last is rejected");
+    require(menu.handle(qol::valueRaise(static_cast<std::size_t>(-1))) == Result::Rejected, "a negative row is rejected");
+    press(menu, Key::PageDown);
+    require(menu.handle(qol::valueRaise(0)) == Result::Ignored && fake.sfx == 0, "on another tab the value halves do nothing");
+}
+
+void valueClicksWithoutGame() {
+    qol::Settings settings;
+    qol::MenuModel menu(settings);
+    menu.open();
+    require(menu.handle(qol::valueLower(0)) == Result::Ignored && menu.handle(qol::valueRaise(1)) != Result::GameChanged,
+            "without a GameOptions the value halves do nothing");
+}
+
 void otherTabsKeepTheirKeys() {
     qol::Settings settings;
     qol::MenuModel menu(settings);
@@ -152,6 +182,8 @@ void storesWithoutPort() {
 int main() {
     originalModeFirst();
     gameTabEdits();
+    valueClicks();
+    valueClicksWithoutGame();
     otherTabsKeepTheirKeys();
     storesApplyAndLeave();
     storesWithoutPort();

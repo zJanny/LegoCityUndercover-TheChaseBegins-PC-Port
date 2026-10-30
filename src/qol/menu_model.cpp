@@ -69,6 +69,12 @@ Event modeClick(std::size_t row, std::size_t slot) { return {EventKind::ModeClic
 Event clearClick(std::size_t row, std::size_t slot) { return {EventKind::ClearClick, row, slot}; }
 Event tabMove(std::size_t tab) { return {EventKind::TabMove, tab}; }
 Event tabClick(std::size_t tab) { return {EventKind::TabClick, tab}; }
+Event valueLower(std::size_t row) { return {EventKind::ValueLower, row}; }
+Event valueRaise(std::size_t row) { return {EventKind::ValueRaise, row}; }
+
+bool isVolumeRow(Tab tab, std::size_t row) {
+    return tab == Tab::Game && (row == static_cast<std::size_t>(GameRow::SfxVolume) || row == static_cast<std::size_t>(GameRow::MusicVolume));
+}
 
 bool MenuModel::setDisplayModes(ResolutionChoices modes, const Resolution& desktop) {
     if (!choicesValid(modes) || !resolutionValid(desktop)) return false;
@@ -197,6 +203,15 @@ Result MenuModel::handle(const Event& event) {
         ControlsResult result = event.kind == EventKind::ModeClick ? controls_->toggleMode(event.index, event.slot)
                                                                   : controls_->clearSlot(event.index, event.slot);
         return fromControls(result);
+    }
+    case EventKind::ValueLower:
+    case EventKind::ValueRaise: {
+        if (event.index >= rows().size()) return Result::Rejected;
+        if (!isVolumeRow(tab_, event.index)) return Result::Ignored;
+        Result selected = selectRow(event.index);
+        if (selected == Result::Rejected) return selected;
+        Result stepped = stepGame(event.kind == EventKind::ValueLower ? -1 : 1);
+        return stepped == Result::Ignored ? selected : stepped;
     }
     case EventKind::TabMove:
         return event.index >= tabCount ? Result::Rejected : Result::Ignored;

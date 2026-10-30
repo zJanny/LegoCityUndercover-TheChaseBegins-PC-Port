@@ -28,8 +28,9 @@ bool same(const chase::render::ViewRegion& a, const chase::render::ViewRegion& b
            a.aspectWidth == b.aspectWidth && a.aspectHeight == b.aspectHeight;
 }
 
-void expectRegion(int width, int height, chase::render::PixelRect rect, int aspectWidth, int aspectHeight, const std::string& name) {
-    const chase::render::ViewRegion region = qol::topViewRegion(width, height, game_hud::screensFor(width, height).top);
+void expectRegion(int width, int height, chase::render::PixelRect rect, int aspectWidth, int aspectHeight, const std::string& name,
+                  qol::CameraKind camera = qol::CameraKind::Gameplay) {
+    const chase::render::ViewRegion region = qol::topViewRegion(width, height, game_hud::screensFor(width, height).top, camera);
     require(same(region, {rect, aspectWidth, aspectHeight}), name);
 }
 
@@ -38,7 +39,7 @@ void originalModeFirst() {
     for (int width = 400; width <= 2600; width += 37)
         for (int height = 240; height <= 1500; height += 29) {
             const chase::render::PixelRect top = game_hud::screensFor(width, height).top;
-            if (!same(qol::topViewRegion(width, height, top), chase::render::originalViewRegion(top)))
+            if (!same(qol::topViewRegion(width, height, top, qol::CameraKind::Gameplay), chase::render::originalViewRegion(top)))
                 require(false, "off: region equals the original at " + std::to_string(width) + "x" + std::to_string(height));
         }
 }
@@ -66,7 +67,7 @@ void widenedOn() {
         rejected = std::string(error.what()).find("view layout") != std::string::npos;
     }
     require(rejected, "empty top rectangle is rejected");
-    require(same(qol::topViewRegion(0, 0, {0, 0, 0, 0}), chase::render::originalViewRegion({0, 0, 0, 0})),
+    require(same(qol::topViewRegion(0, 0, {0, 0, 0, 0}, qol::CameraKind::Gameplay), chase::render::originalViewRegion({0, 0, 0, 0})),
             "empty drawable while on: the original region, no exception from the draw path");
 
     menu.handle({qol::EventKind::Activate});
@@ -89,11 +90,46 @@ void widenedOn() {
     expectRegion(400, 240, {0, 0, 400, 240}, 400, 240, "Improved 400x240 minimum: the whole window");
 }
 
+void otherCamerasKeepFiveByThree() {
+    const qol::CameraKind others[] = {qol::CameraKind::Cutscene, qol::CameraKind::Director, qol::CameraKind::Scanner};
+    for (const qol::CameraKind camera : others) {
+        qol::Settings settings;
+        qol::setActiveSettings(settings);
+        for (int width = 400; width <= 2600; width += 211)
+            for (int height = 240; height <= 1500; height += 173) {
+                const chase::render::PixelRect top = game_hud::screensFor(width, height).top;
+                require(same(qol::topViewRegion(width, height, top, camera), chase::render::originalViewRegion(top)),
+                        "off: non-gameplay camera region equals the original at " + std::to_string(width) + "x" + std::to_string(height));
+            }
+
+        settings.setSwitch(qol::Feature::WidenedView, true);
+        settings.setMaster(qol::Master::Custom);
+        qol::setActiveSettings(settings);
+        expectRegion(1920, 1080, {510, 540, 900, 540}, 400, 240, "Custom 1920x1080: 5:3 top screen, bars at the sides", camera);
+        expectRegion(3000, 1000, {1083, 500, 834, 500}, 400, 240, "Custom 3000x1000: today's top screen rectangle", camera);
+
+        settings.setMaster(qol::Master::Improved);
+        qol::setActiveSettings(settings);
+        expectRegion(1920, 1080, {60, 0, 1800, 1080}, 400, 240, "Improved 1920x1080: the 5:3 picture centred, bars at the sides", camera);
+    }
+}
+
+void cameraKindOrder() {
+    require(qol::cameraKindFor(false, false, false) == qol::CameraKind::Gameplay, "no special camera is the gameplay camera");
+    require(qol::cameraKindFor(true, false, false) == qol::CameraKind::Cutscene, "cutscene camera");
+    require(qol::cameraKindFor(false, true, false) == qol::CameraKind::Director, "director camera");
+    require(qol::cameraKindFor(false, false, true) == qol::CameraKind::Scanner, "scanner camera");
+    require(qol::cameraKindFor(true, true, true) == qol::CameraKind::Cutscene, "cutscene wins over director and scanner, as in the draw");
+    require(qol::cameraKindFor(false, true, true) == qol::CameraKind::Scanner, "scanner wins over director, as in the draw");
+}
+
 }
 
 int main() {
     originalModeFirst();
     widenedOn();
+    otherCamerasKeepFiveByThree();
+    cameraKindOrder();
     if (failures) return 1;
     std::cout << "qol view hook: ok\n";
     return 0;

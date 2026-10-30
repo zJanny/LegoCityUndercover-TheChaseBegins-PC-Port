@@ -35,6 +35,7 @@ qol::MenuGeometry geometry() {
     g.previousTab = {2, 95, 16, 32};
     g.nextTab = {298, 95, 16, 32};
     g.header = {-70, 31.667f, 256, 32};
+    g.value = {32, 173, 256, 32};
     return g;
 }
 
@@ -62,7 +63,7 @@ void roundAreas() {
     qol::MenuModel model(settings);
     model.open();
     const std::vector<qol::HitArea> areas = qol::roundHitAreas(model, geometry());
-    require(areas.size() == 8, "three slots and five frame areas");
+    require(areas.size() == 10, "two value halves of the volume row, three slots and five frame areas");
 
     require(same(qol::MenuPointer{}.click(areas, 159, 119), qol::EventKind::RowClick, 0), "the centre slot clicks the selected row");
     require(same(qol::MenuPointer{}.click(areas, 54, 119), qol::EventKind::RowClick, 3), "the left slot shows the previous row with wrap");
@@ -88,6 +89,30 @@ void roundAreas() {
         "with two rows both neighbours show the other row");
     qol::MenuPointer header;
     require(same(header.move(display, 100, 40), qol::EventKind::TabMove, 1), "hover over the header sends tabMove of the shown tab");
+}
+
+void valueAreas() {
+    qol::Settings settings;
+    qol::MenuModel model(settings);
+    model.open();
+    const qol::MenuGeometry g = geometry();
+    const std::vector<qol::HitArea> areas = qol::roundHitAreas(model, g);
+    const float x = g.value.x, y = g.value.y, w = g.value.width, h = g.value.height;
+    require(same(qol::MenuPointer{}.click(areas, x, y), qol::EventKind::ValueLower, 0), "the top left corner of the value is the left half");
+    require(same(qol::MenuPointer{}.click(areas, x + w / 2 - 0.01f, y + h / 2), qol::EventKind::ValueLower, 0), "just left of the middle lowers");
+    require(same(qol::MenuPointer{}.click(areas, x + w / 2, y + h / 2), qol::EventKind::ValueRaise, 0), "the middle line belongs to the right half");
+    require(same(qol::MenuPointer{}.click(areas, x + w - 0.01f, y + h - 0.01f), qol::EventKind::ValueRaise, 0), "the last pixel raises");
+    require(!qol::MenuPointer{}.click(areas, x - 0.01f, y + h / 2), "left of the value is outside");
+    require(!qol::MenuPointer{}.click(areas, x + w, y + h / 2), "right of the value is outside");
+    require(!qol::MenuPointer{}.click(areas, x + w / 4, y + h), "below the value is outside");
+    require(!qol::MenuPointer{}.move(areas, x + 10, y + 5), "the halves have no hover event");
+    model.handle(qol::rowMove(1));
+    require(same(qol::MenuPointer{}.click(qol::roundHitAreas(model, g), x + 10, y + 5), qol::EventKind::ValueLower, 1), "the music row has the halves too");
+    model.handle(qol::rowMove(2));
+    const std::vector<qol::HitArea> invert = qol::roundHitAreas(model, g);
+    require(invert.size() == 8 && !qol::MenuPointer{}.click(invert, x + 10, y + 5), "a non-volume row has no value halves");
+    model.handle({qol::EventKind::TabNext});
+    require(qol::roundHitAreas(model, g).size() == 8, "another tab has no value halves");
 }
 
 void hoverOnEnter() {
@@ -136,6 +161,7 @@ void slotRows() {
 int main() {
     scaleRule();
     roundAreas();
+    valueAreas();
     hoverOnEnter();
     keysAndWheel();
     slotRows();

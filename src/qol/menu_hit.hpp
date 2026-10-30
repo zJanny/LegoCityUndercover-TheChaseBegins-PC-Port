@@ -36,7 +36,7 @@ std::optional<std::size_t> areaAt(const std::vector<HitArea>& areas, float x, fl
 struct MenuGeometry {
     std::array<std::array<float, 2>, 3> slotCentres{};
     float slotRadius = 0;
-    Box back{}, select{}, previousTab{}, nextTab{}, header{};
+    Box back{}, select{}, previousTab{}, nextTab{}, header{}, value{};
 };
 
 inline constexpr std::size_t roundVisibleSlots = 3;

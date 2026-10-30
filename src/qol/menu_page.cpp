@@ -77,6 +77,7 @@ MenuPageSetup menuPageSetup(fe::Resources& resources, const std::string& gameTex
     setup.geometry.previousTab = elementBox(resources, fe::kRoundMenuLayout, "Left_Arrow");
     setup.geometry.nextTab = elementBox(resources, fe::kRoundMenuLayout, "Right_Arrow");
     setup.geometry.header = elementBox(resources, fe::kRoundMenuLayout, "Subtitle");
+    setup.geometry.value = elementBox(resources, fe::kRoundMenuLayout, "Item_Name");
     return setup;
 }
 

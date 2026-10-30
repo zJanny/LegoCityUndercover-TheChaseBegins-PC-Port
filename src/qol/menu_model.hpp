@@ -37,7 +37,7 @@ enum class Key {
 
 enum class EventKind {
     Up, Down, Left, Right, Activate, Back, TabNext, TabPrevious,
-    RowMove, RowClick, SlotClick, ModeClick, ClearClick, TabMove, TabClick
+    RowMove, RowClick, SlotClick, ModeClick, ClearClick, TabMove, TabClick, ValueLower, ValueRaise
 };
 
 struct Event {
@@ -54,6 +54,9 @@ Event modeClick(std::size_t row, std::size_t slot);
 Event clearClick(std::size_t row, std::size_t slot);
 Event tabMove(std::size_t tab);
 Event tabClick(std::size_t tab);
+Event valueLower(std::size_t row);
+Event valueRaise(std::size_t row);
+bool isVolumeRow(Tab tab, std::size_t row);
 
 enum class Result {
     Ignored,

@@ -58,6 +58,12 @@ std::vector<HitArea> roundHitAreas(const MenuModel& model, const MenuGeometry& g
         }
     }
     for (const HitArea& area : frameHitAreas(model, geometry)) areas.push_back(area);
+    if (isVolumeRow(model.tab(), model.row())) {
+        const Box& value = geometry.value;
+        const float half = value.width / 2;
+        areas.push_back({Box{value.x, value.y, half, value.height}, false, valueLower(model.row()), std::nullopt});
+        areas.push_back({Box{value.x + half, value.y, value.width - half, value.height}, false, valueRaise(model.row()), std::nullopt});
+    }
     return areas;
 }
 

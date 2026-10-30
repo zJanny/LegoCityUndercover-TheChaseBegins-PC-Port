@@ -113,6 +113,8 @@ int main(int argc, char** argv) {
         require(boxIs(setup.geometry.select, 276, 209, 32, 32), "Select icon box");
         require(boxIs(setup.geometry.previousTab, 2, 95, 16, 32) && boxIs(setup.geometry.nextTab, 298, 95, 16, 32), "arrow boxes");
         require(boxIs(setup.geometry.header, -70, 31.667f, 256, 32), "subtitle bar box");
+        require(boxIs(setup.geometry.value, 32, 173, 256, 32),
+            "name plate box Item_Name (recorded by 20261030-qolpanels2-C on 2026-10-30, ctest -R qol-menu-page-real-data)");
         require(setup.geometry.slotRadius == fe::kRoundMenuTouchRadius && setup.geometry.slotCentres[1] == std::array<float, 2>{159, 119},
             "tap circles of the round");
 
