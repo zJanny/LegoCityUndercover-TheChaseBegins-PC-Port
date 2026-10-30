@@ -63,6 +63,14 @@ void run(Resources& resources) {
         require(pixelDiffers(moved, background, x, y), "bar hit area " + std::to_string(area.click->index) + " lies on its bar");
     }
 
+    for (const qol::HitArea& area : qol::listHitAreas(menu)) {
+        if (area.click->kind != qol::EventKind::SlotClick) continue;
+        const int x = int(area.box.x + area.box.width / 2), y = int(area.box.y + area.box.height / 2);
+        require(pixelDiffers(moved, background, x, y),
+            "slot hit area " + std::to_string(area.click->index) + "/" + std::to_string(area.click->slot) + " lies on its bar");
+        require(area.box.y + area.box.height <= kScreenHeight, "slot hit area lies inside the page");
+    }
+
     const Canvas fresh = draw(resources, qol::listPageLayout, qol::listPageScene(menu));
     require(same(moved, fresh), "the scene draws the same twice");
 

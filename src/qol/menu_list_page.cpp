@@ -11,11 +11,14 @@ using chase::frontend::Align;
 using chase::frontend::LayoutScene;
 using chase::frontend::TextSlot;
 
+constexpr std::size_t layoutBarCount = 5;
 constexpr float menuBarsY = 58;
-constexpr float barTops[listBarCount] = {-9, 25, 59, 93, 127};
+constexpr float firstBarCentreY = 85, barPitch = 43;
 constexpr float highlightOffsetY = 16;
-constexpr float barArtLeft = 70, barArtWidth = 180, barArtHeight = 37, barArtCentreY = 32;
-constexpr float actionRight = 160, slotSplit = 205;
+constexpr float barArtLeft = 70, barArtWidth = 180, barArtCentreY = 32, barArtVisibleHeight = 37;
+constexpr float barStretchY = barPitch / barArtVisibleHeight, highlightStretchY = 1.35f;
+constexpr float barTextX = 44, barTextY = 23, lineOffsetY = 9, slotTextScale = 0.7f;
+constexpr float slotSplit = 160;
 constexpr float arrowLeftX = 2, arrowRightX = 298, arrowY = 95, arrowWidth = 16, arrowHeight = 32;
 constexpr float menuListX = 32, menuListOffsetY = -6;
 constexpr float pageNumberX = 211, pageNumberY = -128;
@@ -41,7 +44,19 @@ TextSlot slotOf(const std::string& text, Align align, bool highlighted = false) 
     return slot;
 }
 
+float barTop(std::size_t slot) { return firstBarCentreY - menuBarsY - barArtCentreY + barPitch * float(slot); }
+
 std::string barName(std::size_t index) { return "Menu_Bar_" + std::to_string(index + 1); }
+std::string barArt(std::size_t index, char side) {
+    return std::string("Menu_Bar") + side + (index ? std::to_string(index) : std::string());
+}
+
+void stretch(LayoutScene& scene, const std::string& name, float x, float y) { scene.scales[name] = {x, y}; }
+
+void placeText(LayoutScene& scene, const std::string& name, float x, float y, float scale = 1) {
+    scene.positions[name] = {x, y};
+    if (scale != 1) stretch(scene, name, scale, scale);
+}
 std::string barText(std::size_t index, const char* kind) { return "TEXT_Menu_" + std::to_string(index + 1) + "_" + kind; }
 
 std::size_t firstVisible(std::size_t selected, std::size_t count) {
@@ -93,9 +108,12 @@ LayoutScene alertScene(const std::string& body, bool header, bool question, cons
     return scene;
 }
 
-Box barBox(std::size_t slot, float left, float right) {
-    const float centre = menuBarsY + barTops[slot] + barArtCentreY;
-    return {left, centre - barArtHeight / 2, right - left, barArtHeight};
+enum class BarPart { Whole, Upper, Lower };
+
+Box barBox(std::size_t slot, float left, float right, BarPart part) {
+    const float top = menuBarsY + barTop(slot) + barArtCentreY - barPitch / 2;
+    if (part == BarPart::Whole) return {left, top, right - left, barPitch};
+    return {left, part == BarPart::Upper ? top : top + barPitch / 2, right - left, barPitch / 2};
 }
 
 }
@@ -115,8 +133,10 @@ bool controlsListShown(const MenuModel& model) {
 
 LayoutScene listPageScene(const MenuModel& model) {
     LayoutScene scene;
+    scene.scaleText = true;
     scene.hidden = {"Particles", "Fade", "Menu", "Item_Name", "Menu_Strip", "Title", "codegrp", "itemSmallGroup",
                     "backButton", "selectButton", "Menu_Bar_HI_Down"};
+    for (std::size_t index = listBarCount; index < layoutBarCount; ++index) scene.hidden.insert(barName(index));
     scene.text["TEXT_Title"] = slotOf(pageTitle, Align::Left);
     scene.text["TEXT_Subtitle"] = slotOf(tabName(model.tab()), Align::Left);
     scene.text["PageNumber"] =
@@ -130,28 +150,38 @@ LayoutScene listPageScene(const MenuModel& model) {
     bool highlighted = false;
     for (std::size_t slot = 0; slot < listBarCount; ++slot) {
         const std::size_t row = first + slot;
-        scene.positions[barName(slot)] = {0, barTops[slot]};
+        scene.positions[barName(slot)] = {0, barTop(slot)};
+        stretch(scene, barArt(slot, 'A'), 1, barStretchY);
+        stretch(scene, barArt(slot, 'B'), -1, barStretchY);
         if (row >= rows.size()) {
             scene.hidden.insert(barName(slot));
             continue;
         }
+        const bool twoLines = rows[row].kind == RowKind::Control && row < texts.size();
         if (row == selected) {
-            std::string line = rows[row].label;
-            if (rows[row].kind == RowKind::Control && row < texts.size())
-                line += "  " + slotsText(texts[row], true, model.controlsSlot());
-            scene.text["TEXT_Icon"] = slotOf(line, Align::Centre, true);
-            scene.positions["Menu_Bar_HI"] = {0, barTops[slot] + highlightOffsetY};
-            scene.positions["Menu_List"] = {menuListX, menuBarsY + barTops[slot] + highlightOffsetY + menuListOffsetY};
+            scene.text["TEXT_Icon"] = slotOf(rows[row].label, Align::Centre, true);
+            placeText(scene, "TEXT_Icon", 0, twoLines ? -lineOffsetY : 0);
+            if (twoLines) {
+                scene.text["TEXT_Icon_Out"] = slotOf(slotsText(texts[row], true, model.controlsSlot()), Align::Centre, true);
+                placeText(scene, "TEXT_Icon_Out", 0, lineOffsetY, slotTextScale);
+            }
+            scene.positions["Menu_Bar_HI"] = {0, barTop(slot) + highlightOffsetY};
+            scene.positions["Menu_List"] = {menuListX, menuBarsY + barTop(slot) + barArtCentreY - 16};
             highlighted = true;
             continue;
         }
-        scene.text[barText(slot, "3DS")] = slotOf(rows[row].label, Align::Left);
-        if (rows[row].kind == RowKind::Control && row < texts.size())
-            scene.text[barText(slot, "DS")] = slotOf(slotsText(texts[row], false, model.controlsSlot()), Align::Right);
+        scene.text[barText(slot, "3DS")] = slotOf(rows[row].label, Align::Centre);
+        placeText(scene, barText(slot, "3DS"), barTextX, barTextY - (twoLines ? lineOffsetY : 0));
+        if (!twoLines) continue;
+        scene.text[barText(slot, "DS")] = slotOf(slotsText(texts[row], false, model.controlsSlot()), Align::Centre);
+        placeText(scene, barText(slot, "DS"), barTextX, barTextY + lineOffsetY, slotTextScale);
     }
     if (!highlighted) {
         scene.hidden.insert("Menu_Bar_HI");
         scene.hidden.insert("Menu_List");
+    } else {
+        stretch(scene, "Menu_BarHI", 1, highlightStretchY);
+        stretch(scene, "Menu_BarHIB", -1, highlightStretchY);
     }
     return scene;
 }
@@ -181,11 +211,12 @@ std::vector<HitArea> listHitAreas(const MenuModel& model) {
     const std::size_t first = firstVisible(model.row(), rows.size());
     for (std::size_t slot = 0; slot < listBarCount && first + slot < rows.size(); ++slot) {
         const std::size_t row = first + slot;
-        areas.push_back({barBox(slot, barArtLeft, rows[row].kind == RowKind::Control ? actionRight : barArtLeft + barArtWidth), false,
+        const bool control = rows[row].kind == RowKind::Control;
+        areas.push_back({barBox(slot, barArtLeft, barArtLeft + barArtWidth, control ? BarPart::Upper : BarPart::Whole), false,
                          rowClick(row), rowMove(row)});
-        if (rows[row].kind != RowKind::Control) continue;
-        areas.push_back({barBox(slot, actionRight, slotSplit), false, slotClick(row, 0), rowMove(row)});
-        areas.push_back({barBox(slot, slotSplit, barArtLeft + barArtWidth), false, slotClick(row, 1), rowMove(row)});
+        if (!control) continue;
+        areas.push_back({barBox(slot, barArtLeft, slotSplit, BarPart::Lower), false, slotClick(row, 0), rowMove(row)});
+        areas.push_back({barBox(slot, slotSplit, barArtLeft + barArtWidth, BarPart::Lower), false, slotClick(row, 1), rowMove(row)});
     }
     areas.push_back({{arrowLeftX, arrowY, arrowWidth, arrowHeight}, false, Event{EventKind::TabPrevious}, std::nullopt});
     areas.push_back({{arrowRightX, arrowY, arrowWidth, arrowHeight}, false, Event{EventKind::TabNext}, std::nullopt});

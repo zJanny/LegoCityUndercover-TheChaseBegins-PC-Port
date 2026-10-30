@@ -137,6 +137,11 @@ if(TARGET chase_frontend)
   set_tests_properties(qol-menu-list-page-real-data PROPERTIES SKIP_RETURN_CODE 77 LABELS needs-game-data)
 endif()
 
+add_executable(qol-menu-redraw-test menu_redraw_test.cpp)
+target_link_libraries(qol-menu-redraw-test PRIVATE chase_qol_menu)
+target_compile_options(qol-menu-redraw-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME qol-menu-redraw COMMAND qol-menu-redraw-test)
+
 add_executable(qol-menu-window-test menu_window_test.cpp)
 target_link_libraries(qol-menu-window-test PRIVATE chase_qol_menu)
 target_compile_options(qol-menu-window-test PRIVATE -Wall -Wextra -Wpedantic)

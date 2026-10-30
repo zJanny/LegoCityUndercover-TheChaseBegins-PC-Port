@@ -47,38 +47,59 @@ bool hidden(const chase::frontend::LayoutScene& scene, const std::string& name) 
 void listForm() {
     Fixture f;
     require(f.menu.rows().size() == 8, "seven actions and Reset all");
+    require(qol::listBarCount == 4, "four bars per page with two lines each");
     require(qol::controlsListShown(f.menu), "list form shown by default");
     auto scene = qol::listPageScene(f.menu);
     require(textOf(scene, "TEXT_Subtitle") == "Controls", "subtitle bar shows the tab name");
     require(textOf(scene, "PageNumber") == "3/4", "page number is the tab place");
     require(textOf(scene, "TEXT_Title") == "PC Settings", "title");
-    require(textOf(scene, "TEXT_Menu_2_3DS") == "Down" && textOf(scene, "TEXT_Menu_3_3DS") == "Left", "first five rows in the five bars");
-    require(textOf(scene, "TEXT_Icon") == "Up  [key W] | key Up", "selected row marks slot 1 on the highlight");
+    require(textOf(scene, "TEXT_Menu_2_3DS") == "Down" && textOf(scene, "TEXT_Menu_3_3DS") == "Left" &&
+                textOf(scene, "TEXT_Menu_4_3DS") == "Right",
+        "first four rows in the four bars");
+    require(hidden(scene, "Menu_Bar_5") && !hidden(scene, "Menu_Bar_4"), "the fifth bar of the layout is hidden");
+    require(textOf(scene, "TEXT_Icon") == "Up" && textOf(scene, "TEXT_Icon_Out") == "[key W] | key Up",
+        "selected row: action on the highlight, slot 1 marked underneath");
     require(textOf(scene, "TEXT_Menu_1_3DS") == "<none>" && !hidden(scene, "Menu_List"), "selected text sits on the highlight only");
     require(textOf(scene, "TEXT_Menu_3_DS") == "- | -" && textOf(scene, "TEXT_Menu_4_DS") == "- | -", "unbound slots show a dash");
-    require(textOf(scene, "TEXT_Menu_5_DS") == "key Space | mouse Left", "unselected row marks no slot");
     require(scene.positions.at("Menu_Bar_HI")[1] == scene.positions.at("Menu_Bar_1")[1] + 16, "highlight sits on the first bar");
     require(!hidden(scene, "Menu_Bar_HI") && hidden(scene, "Menu") && hidden(scene, "Menu_Strip") && hidden(scene, "Item_Name"),
         "highlight shown, round and strip hidden");
 
+    require(scene.scaleText, "the scene draws its text through the node scale");
+    const float slotScale = scene.scales.at("TEXT_Menu_2_DS")[0];
+    require(slotScale > 0.5f && slotScale < 1 && scene.scales.at("TEXT_Menu_2_DS")[1] == slotScale && scene.scales.at("TEXT_Icon_Out")[0] == slotScale,
+        "the slot lines are smaller than the action lines, which keep full size");
+    require(scene.scales.count("TEXT_Menu_2_3DS") == 0 && scene.scales.count("TEXT_Icon") == 0, "action lines are not scaled");
+    require(scene.positions.at("TEXT_Menu_2_3DS")[1] < scene.positions.at("TEXT_Menu_2_DS")[1] &&
+                scene.positions.at("TEXT_Icon")[1] < scene.positions.at("TEXT_Icon_Out")[1],
+        "action line above the slot line");
+    require(scene.scales.at("Menu_BarA")[1] > 1 && scene.scales.at("Menu_BarB")[0] == -1 && scene.scales.at("Menu_BarB")[1] == scene.scales.at("Menu_BarA")[1] &&
+                scene.scales.count("Menu_BarA3") == 1 && scene.scales.count("Menu_BarA4") == 0,
+        "the four bar arts are stretched to hold two lines, the mirrored half keeps its flip");
+
     f.menu.handle({EventKind::Right});
     scene = qol::listPageScene(f.menu);
-    require(textOf(scene, "TEXT_Icon") == "Up  key W | [key Up]", "Right marks slot 2");
+    require(textOf(scene, "TEXT_Icon_Out") == "key W | [key Up]", "Right marks slot 2");
 
     for (int i = 0; i < 4; ++i) f.menu.handle({EventKind::Down});
     require(f.menu.row() == 4, "selected fifth row");
     scene = qol::listPageScene(f.menu);
-    require(textOf(scene, "TEXT_Menu_1_3DS") == "Left" && textOf(scene, "TEXT_Menu_5_3DS") == "Walk", "selection kept in view");
-    require(textOf(scene, "TEXT_Icon").rfind("A  ", 0) == 0, "selected row in the middle bar");
+    require(textOf(scene, "TEXT_Menu_1_3DS") == "Left" && textOf(scene, "TEXT_Menu_4_3DS") == "B", "selection kept in view");
+    require(textOf(scene, "TEXT_Icon") == "A", "selected row in the third bar");
     require(scene.positions.at("Menu_Bar_HI")[1] == scene.positions.at("Menu_Bar_3")[1] + 16, "highlight follows the selected bar");
-    require(textOf(scene, "TEXT_Icon") == "A  [key Space] | mouse Left", "selected row texts");
+    require(textOf(scene, "TEXT_Icon_Out") == "[key Space] | mouse Left" || textOf(scene, "TEXT_Icon_Out") == "key Space | [mouse Left]",
+        "selected row slots");
+    require(textOf(scene, "TEXT_Menu_4_DS") == "- | -" && textOf(scene, "TEXT_Menu_1_DS") == "- | -", "unselected rows mark no slot");
 
     for (int i = 0; i < 3; ++i) f.menu.handle({EventKind::Down});
     require(f.menu.row() == 7, "selected Reset all");
     scene = qol::listPageScene(f.menu);
-    require(textOf(scene, "TEXT_Icon") == "Reset all", "Reset all row has no slot text");
-    require(textOf(scene, "TEXT_Menu_1_3DS") == "Right" && scene.positions.at("Menu_Bar_HI")[1] == scene.positions.at("Menu_Bar_5")[1] + 16,
+    require(textOf(scene, "TEXT_Icon") == "Reset all" && scene.text.count("TEXT_Icon_Out") == 0, "Reset all row has one line");
+    require(scene.positions.at("TEXT_Icon")[1] == 0, "the one line sits in the middle of the highlight");
+    require(textOf(scene, "TEXT_Menu_1_3DS") == "A" && scene.positions.at("Menu_Bar_HI")[1] == scene.positions.at("Menu_Bar_4")[1] + 16,
         "window stops at the end and the highlight reaches the last bar");
+    require(textOf(scene, "TEXT_Menu_2_DS") == "- | -" && textOf(scene, "TEXT_Menu_3_DS") == "key Left_Alt | -",
+        "other rows keep their slot line");
 }
 
 void noticeForm() {
@@ -126,7 +147,7 @@ void questionForm() {
 void hitAreas() {
     Fixture f;
     const auto areas = qol::listHitAreas(f.menu);
-    require(areas.size() == 5 * 3 + 2, "action and two slots per bar, plus two arrows");
+    require(areas.size() == 4 * 3 + 2, "action and two slots per bar, plus two arrows");
     require(areas[0].click->kind == EventKind::RowClick && areas[0].click->index == 0 && areas[0].hover &&
                 areas[0].hover->kind == EventKind::RowMove,
         "action part clicks the row");
@@ -135,11 +156,17 @@ void hitAreas() {
         "slot parts click the slots");
     require(areas[3].click->index == 1, "second bar is the second row");
     require(areas[0].box.y < areas[3].box.y && areas[0].box.x == 70 && areas[2].box.x + areas[2].box.width == 250, "bars stack top down");
+    require(areas[0].box.width == 180 && areas[1].box.width + areas[2].box.width == 180 && areas[1].box.width == areas[2].box.width,
+        "the action line spans the bar, the slots split it in halves");
+    require(areas[0].box.y == areas[1].box.y - areas[0].box.height && areas[1].box.y == areas[2].box.y &&
+                areas[1].box.height == areas[0].box.height && areas[3].box.y == areas[0].box.y + 2 * areas[0].box.height,
+        "the slots sit directly under the action line, the next bar directly under the slots");
     require(areas[areas.size() - 2].click->kind == EventKind::TabPrevious && areas.back().click->kind == EventKind::TabNext, "arrows");
     for (int i = 0; i < 7; ++i) f.menu.handle({EventKind::Down});
     const auto last = qol::listHitAreas(f.menu);
-    require(last.size() == 4 * 3 + 1 + 2 && last[0].click->index == 3 && last[last.size() - 3].click->kind == EventKind::RowClick &&
-                last[last.size() - 3].click->index == 7 && last[last.size() - 3].box.width == 180,
+    require(last.size() == 3 * 3 + 1 + 2 && last[0].click->index == 4 && last[last.size() - 3].click->kind == EventKind::RowClick &&
+                last[last.size() - 3].click->index == 7 && last[last.size() - 3].box.width == 180 &&
+                last[last.size() - 3].box.height == 2 * areas[0].box.height,
         "Reset all bar spans the whole bar and has no slot areas");
 }
 

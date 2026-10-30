@@ -31,6 +31,8 @@ std::string sceneFingerprint(const fe::LayoutScene& scene) {
     for (const auto& entry : scene.attachedLayouts) out << '|' << entry.first << '=' << entry.second;
     out << "\np" << scene.positions.size();
     for (const auto& entry : scene.positions) out << '|' << entry.first << '=' << entry.second[0] << ',' << entry.second[1];
+    out << "\nc" << scene.scales.size();
+    for (const auto& entry : scene.scales) out << '|' << entry.first << '=' << entry.second[0] << ',' << entry.second[1];
     out << "\no" << scene.opacities.size();
     for (const auto& entry : scene.opacities) out << '|' << entry.first << '=' << entry.second;
     out << "\nf" << scene.opacity << ',' << scene.textSpacing << ',' << scene.rotations << ',' << scene.scaleText;

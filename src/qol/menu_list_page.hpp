@@ -11,7 +11,7 @@ namespace qol {
 
 inline constexpr const char* listPageLayout = "sprites/ui_roundaboutmenu/main.bxaml";
 inline constexpr const char* noticePageLayout = "sprites/blend/savegameflow/page_alerttext.bxaml";
-inline constexpr std::size_t listBarCount = 5;
+inline constexpr std::size_t listBarCount = 4;
 
 bool controlsListShown(const MenuModel& model);
 bool controlsNoticeShown(const MenuModel& model);

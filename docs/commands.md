@@ -118,7 +118,7 @@ The table lists some of the tests. `ctest --test-dir build -N` lists all of them
 | `qol-game-options` | Port side of the Game tab over the Options page state, fake state without game data: edits seen by the original Options page and the reverse, gains, Languages page request, out-of-range rejection (`tests/qol/`) |
 | `qol-menu-game` | Game tab of the open settings menu, no SDL: Left, Right and Enter edit the volumes and Invert camera, the Language row ignores Left and Right and requests the Languages page, inert without a game port, and the stores applying changes and telling the port when the menu closes. |
 | `qol-game-wiring` | Game tab over the real Options page, options block and save file (fake mixer): edits give the gains, leaving stores the options of slot 1, no change stores nothing, a missing or invalid `--front-save` file stops. |
-| `qol-menu-list-page` | Controls list form of the PC settings menu, no SDL: bar and highlight scene, notice and Reset all question scenes, hit areas (`tests/qol/`) |
+| `qol-menu-list-page` | Controls list form of the PC settings menu, no SDL: four two-line bars per page, bar and highlight scene, notice and Reset all question scenes, hit areas (`tests/qol/`) |
 | `qol-menu-list-page-real-data` | The same scenes drawn with the real layouts: moving the selection, hit areas on the bars and buttons (`tests/qol/`, needs game data) |
 | `qol-controls-tab` | Model of the Controls tab, no SDL: waiting for a key, assign or cancel, conflicts reported without change, reset, rejections (`tests/qol/`) |
 | `pad-events` | Feeds game-controller button numbers into the input state as `pad` presses and rejects unknown numbers; no SDL |
@@ -133,6 +133,7 @@ The table lists some of the tests. `ctest --test-dir build -N` lists all of them
 | `qol-text-check-real-data` | Every settings menu text against the real front-end font: glyphs and fit of the name plate and list bar; skips without the extracted RomFS (`tests/qol/`) |
 | `qol-menu-hit` | Settings page scale rule (page centred at min(w/320, h/240)), hit areas of the round and frame, hover on entering, key and wheel mapping (`tests/qol/`) |
 | `qol-menu-page-real-data` | Settings page drawn from the round menu layout: setup values, scenes of each tab, element names, black bars at three window sizes; skips without the extracted RomFS (`tests/qol/`) |
+| `qol-menu-redraw` | The page cache key of the settings menu includes element scales (`tests/qol/`) |
 | `qol-menu-redraw-real-data` | Redraw cache of the settings menu: every cached page equals a full redraw, a page seen before is reused, timing budgets at 960x600 and 1920x1080; skips without the extracted RomFS (`tests/qol/`) |
 | `qol-menu-window` | Input routing of the settings menu window, no game data: SDL key and pad names, clicks and hover through the page scale, the wheel, inputs bound while the Controls tab waits (`tests/qol/`) |
 | `qol-menu-stores` | The stores behind the open settings menu: Original mode writes nothing, master and feature changes reach `config/qol.cfg` and the active store, Display changes reach the window plan, Controls changes reach `config/controls.cfg` and the running input; rejects bad display modes, a missing or malformed controls file and an unwritable `config/qol.cfg` (`tests/qol/`) |
