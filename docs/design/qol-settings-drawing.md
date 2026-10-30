@@ -1,67 +1,48 @@
-# QoL: settings menu drawing
+# QoL: settings menu look and behaviour
 
-How the settings menu is drawn: which original art and font it reuses, how it scales into the window, its text and the navigation onto the menu model's events. Subtopic of [qol-settings.md](qol-settings.md); feature file: [qol-settings-menu.md](../plans/features/qol-settings-menu.md).
+How the PC settings menu looks and works: a crisp, modern full-window settings screen without game assets. Subtopic of [qol-settings.md](qol-settings.md); feature files: [qol-settings-ui](../plans/features/qol-settings-ui.md), [qol-settings-menu](../plans/features/qol-settings-menu.md).
 
-<a id="ts-20261029-121155"></a>
+<a id="ts-20261030-215604"></a>
 
-## 2026-10-29T12:11:55+01:00 — Settings menu drawing
+## 2026-10-30T21:56:04+01:00 — Settings menu redesigned as a modern PC menu
 
-The user's decisions of 2026-10-29, asked by the lead; the quoted labels are the user's selections. They settle QOLSET-22. The questions came from a spec round (20261029-qolview-D, docs only, no code, no emulator) that the user had chosen for the menu drawing: "Yes, next round". Findings behind it: the Options page [ui-screens-pause.md §2026-10-28T22:51:42](../re/ui-screens-pause.md#ts-20261028-225142), the layout pieces [ui-layouts.md §2026-10-29T11:50:58](../re/ui-layouts.md#ts-20261029-115058), the font [text-localisation-fonts.md §2026-10-29T11:50:26](../re/text-localisation-fonts.md#ts-20261029-115026).
+The user redesigned the whole PC settings menu on 2026-10-30. This replaces the earlier drawing with the original Options-page art, the bars and `Menu_List`, the round of pictures, the two-line Controls bars, the 4:3 page scaled into the window and the original UI animations. It also replaces the key layout that Left and Right turn from row to row and Up and Down change values. The game's art and font are no longer used inside the menu.
 
-**Basis** (QOLSET-22): "Options-page art": the settings menu is drawn with the original Options-page art and font exactly as the 3DS draws them, scaled up.
+The user's words, after hearing how the menu worked: "Okay, this is REALLY unintuitive to navigate. Re design the entire PC settings to just NOT have game assets, to look really crisp on a large screen. Then the entire settings menu should just function like any other modern PC game"
 
-**The Options page as the 3DS draws it:** a bottom-screen page (320x240) of the round menu layout `sprites/ui_roundaboutmenu/main`: the background, the top bar with the title, the subtitle bar ("Options"), the round of five hexagon pictures with the selected one in the centre, the name plate with "Label: value" ("Music: 5", "Invert Camera: Yes"), and the Back (B) and Select (A) shortcuts in the bottom corners. Left and Right turn the round, Up and Down change a value, A toggles Invert Camera or opens the Languages page, B leaves.
+Answers of the user to the lead's questions (2026-10-30; the quoted labels are the user's selections):
+- Keys, in the user's words: "Which modern game uses UP Down to change tabs? Any modern game, has a row of categories you can select by mouse or by navigating to them with the arrow keys, these navigation row is on the left for example, then on the right the screen is filled with the actual options the inside the category."
+- When settings take effect: "Instant + display confirm": volumes, toggles and controls apply at once; a window mode or resolution change asks "Keep these settings?" and reverts after 15 seconds without an answer.
+- Layout: "Full-window overlay, top tabs": covers the whole window over a dimmed game picture; tabs in a bar across the top, rows in a centred column with labels left and values right, key hints along the bottom. Asked to confirm a left category column or top tabs: "Top tabs".
+- Font: "Bundle an open font": one freely licensed font (for example Noto Sans or Inter under the SIL Open Font License), rendered sharp at the window's real resolution.
+- Navigation model, asked: "Look up how the settings menus of modern PC games look, then report back with your suggestion". The lead reported the suggestion below (sources: [Xbox Accessibility Guidelines 107](https://learn.microsoft.com/en-us/gaming/accessibility/xbox-accessibility-guidelines/107) and [102](https://learn.microsoft.com/en-us/gaming/accessibility/xbox-accessibility-guidelines/102); per-game conventions mostly from general knowledge). The user answered its four open points, then approved it explicitly (2026-10-30), asked "Do you approve it explicitly as written?" (text and row sizes, 4.5:1 contrast, Q/E or PageUp/PageDown, right-click as Back, LB/RB/A/B, 15-second countdown, Back button bottom-left, help line, hint bar): "Yes, approved as written".
 
-**Decisions** (question numbers of the spec round):
-- Q1 placement and scale: "Whole window, free (Rec.)": the menu page covers the whole window at the scale min(width / 320, height / 240), not rounded to an integer, drawn at window resolution with linear filtering; the rest of the window is black.
-- Q2 tab headers: "Subtitle bar + arrows (Rec.)": the subtitle bar shows the current tab name between the `Pageslots` arrows, and `PageNumber` shows the tab's place ("1/4"). On the Controls tab too (asked 2026-10-29): "Tab place \"3/4\"": the tab's place like on the other tabs, not the list position.
-- Q3 row form: "Round + list (Rec.)": the round for Game, Display and Quality of life; the list bars for Controls, whose 14 actions with two slots each do not fit one name plate.
-- Q4 pictures of rows without their own: "Options picture (Rec.)": `UI_StatusScreen_Options`.
-- Q5 toggle words: "On/Off": toggle rows show "On" or "Off" (gametext `ON`, `OFF`). This was not the recommended option ("Yes" / "No", the page's own words). The mirrored Invert camera row too (asked 2026-10-29): "On/Off", the same as the other toggle rows.
-- Q6 "waiting for key" and "key taken": "Alert notice (Rec.)": the notice form of `page_alerttext`.
-- Q7 new texts without an original translation: "English everywhere (Rec.)": English in every language.
-- Q8 changing a value: "Left/Right (Rec.)", changed 2026-10-30 to Up and Down (see [qol-settings.md §2026-10-30T17:03:17](qol-settings.md#ts-20261030-170317); Left and Right now turn from row to row): Up and Down step value rows. The rows, asked next: "Display rows, Master row, Toggle rows" (all three selected), so Up and Down step the volume rows, the Display rows, the master row and the feature toggle rows. The direction on the cycling rows (the master states, the window mode, the resolution list): "Left back, Right fwd, stop", now Up forward and Down back (answered 2026-10-30 "Up raises / next"): Up raises a volume and steps to the next choice, Down lowers and steps back; they stop at the first and the last value, with no wrap. The other Game rows: "Invert only": Invert camera flips like a toggle row; the Language row (read-only) ignores them; on the Controls rows Up and Down pick the slot (slot 1 or 2), answered 2026-10-29 and changed 2026-10-30 in [qol-settings.md §2026-10-29T11:06:51](qol-settings.md#ts-20261029-110651).
-- Mouse on a volume row (QOLSET-60), answered 2026-10-30, "Click left/right half (Recommended)": a click on the left half of the value lowers it one step, on the right half raises it, no new art; the value is the round menu's name plate `Item_Name` (the user's answer of 2026-10-30T20:13:28+01:00, round 20261030-qolpanels2: "Yes, the name plate": left half lowers, right half raises) (not chosen: "Drag the bar", "Mouse wheel", "Agent proposes mock-up").
-- Q9 mouse wheel: "Moves rows (Rec.)": the wheel moves rows like the row-turning keys (Left and Right since 2026-10-30).
-- Q10 text size, the user's words: "Wait, and make HUD-75 the Next a Action": no menu drawing before the port's HUD-75 (layout text font size) is fixed; HUD-75 is to be the next action of the `linux-port` plan (recorded there by the lead).
-- Q11 picture of the "PC Settings" pause entry: "Options picture (Rec.)": `UI_StatusScreen_Options`, the wrench of Options, so the round shows it twice.
+**Approved suggestion**
+- Layout: a full-window overlay over the dimmed game; tabs across the top: Game, Display, Controls, Quality of life; below, one row per setting with the label left and its control right, the value always visible; one help line for the focused row with its default (for example "Default: On"); a key-hint bar at the bottom; a Back button bottom-left. Everything is sized relative to the window height: body text about 2.2 to 2.8 percent of it, rows about 5 to 6 percent, hit areas at least about 40 px at 1080p; crisp at 1080p and 4K; contrast at least 4.5:1; focus is not shown by colour alone (a filled bar plus a border or marker, the selected tab underlined). Long tabs scroll with the focus; the tab bar and the hint bar stay fixed.
+- Keyboard: Up and Down move between rows, Left and Right change the value; Q and E or PageUp and PageDown switch tabs; Enter activates a toggle or button; Esc closes the menu, or first cancels an open prompt, dropdown or dialog.
+- Arrow keys reach the tabs ("Yes, arrows reach tabs"): Up on the first row moves the focus onto the tab bar, Left and Right switch tabs there, Down returns to the rows; Q and E stay as the fast way.
+- Mouse: hovering a row focuses it (mouse and keyboard share one focus); a click on a tab switches; sliders can be dragged or clicked; short choices are `< Fullscreen >` with clickable arrows and a click on the value also cycles it; the wheel scrolls; right-click works as Back.
+- Controller: LB and RB switch tabs, the D-pad moves, A selects, B goes back.
+- Row types: volumes are a slider with a number 0 to 100; on/off settings `< On >` and `< Off >`; Window mode and Language are arrow selectors; the resolution is a dropdown list ("Dropdown list": click or Enter opens the list of detected resolutions); each tab ends with a "Reset to defaults" button that asks first.
+- Controls tab: columns Action, Slot 1, Slot 2; choosing a slot shows "Press a key… (Esc cancel, Del clear)"; Esc and the menu keys themselves cannot be rebound. A key already bound to another action ("Ask: Swap / Cancel"): a small dialog names the other action and offers to swap the two bindings or cancel.
+- Display changes: a window mode or resolution change asks "Keep these settings?" with a 15-second countdown, reverts on Esc or at the timeout, Enter confirms.
+- Master preset ("Switch to Custom, keep it"): changing a feature toggle by hand switches the preset to Custom at once; the custom set is remembered, so picking Original or Improved and later Custom restores it.
 
-**1. Parts and the art they reuse.** "Exists" means an original piece does this job; "composed" means original pieces put to a new job; no new art.
+**What stays**
+- The entry points: the "PC Settings" bar of the save slot page ([qol-settings.md §2026-10-29T18:06:35](qol-settings.md#ts-20261029-180635)) and the "PC Settings" entry of the pause wheel ([qol-settings.md §2026-10-28T09:37:29](qol-settings.md#ts-20261028-093729)); the user did not change them. Both are drawn by the original pages; whether they keep game art is open.
+- The stores, values and files (`config/qol.cfg`, `config/controls.cfg`, Custom restore, Display storage), the faithful game at the defaults, English texts for every language of the menu's own texts, the code rules (OpenGL only in `src/render/`, shaders only in `.glsl` files, QoL code in `src/qol/`).
+- A bundled font needs its licence recorded in `REUSE.toml` and must be GPL-compatible (the OFL is).
 
-| Part | Original piece | State |
-|---|---|---|
-| Window and background | the whole round menu layout page: `BG_FlipA`, `Top_Bar`, `Subtitle`, corner plates | exists |
-| Title | `TEXT_Title` with "PC Settings" | exists, new text |
-| Tab headers (Game, Display, Controls, Quality of life) | the subtitle bar with the current tab name between the `Pageslots` arrows, `PageNumber` "1/4" | composed (Q2) |
-| Rows: label and value | the name plate text "Label: value", the Options page's pattern | exists |
-| Row pictures | `UI_Options_SFX`, `_Music`, `_InvertCamera`, `_Language` for the Game tab; `UI_StatusScreen_Options` for the rows of the other round tabs | Game tab exists; others composed (Q4) |
-| Value stepper (volumes, resolution) | none drawn: the value is part of the text and changes in place, stepped by Up and Down | exists as a pattern (Q8) |
-| Toggle on/off | the Invert Camera pattern "Label: value" with "On" / "Off" (gametext `ON`, `OFF`) | exists (Q5) |
-| Master button, three states | a value row "Quality of life: Original / Improved / Custom" in the toggle pattern | composed |
-| Selection highlight | round form: the centre slot (neighbours drawn at the layout's lower opacity); list form: `Menu_Bar_HI` | exists |
-| Scroll for long lists (Controls) | list form: five bars with the selection kept in view; `PageNumber` keeps the tab's place ("3/4") | composed (Q2, Q3) |
-| "Waiting for key" and "key taken" messages | the notice form of `page_alerttext` (as "Checking save data") | composed (Q6) |
-| Confirm question of Reset all | the question form of `page_alerttext` with Yes (A) and No (B), as the quit question | exists |
-| Back and Select icons | the shortcut bar of the Options page | exists |
-| Picture of the "PC Settings" pause entry (QOLSET-8) | `UI_StatusScreen_Options` | composed (Q11) |
+**Answers to the open points** (the user, 2026-10-30; the quoted labels are the user's selections):
+1. Font: "Noto Sans" (SIL OFL; its coverage of Latin-1 and Cyrillic is needed for the language names).
+2. UI scale option: "No, scale with window": everything is sized from the window height; a scale option can come later if missed.
+3. Volume sliders (the original has 11 steps, 0 to 10): "0–100 in steps of 10": each step is exactly one original step.
+4. Language row: "Selector, applies on close": `< English >` cycles the game's languages; the language takes effect when the menu closes.
+5. The two entry points (slot-screen PC Settings bar, pause-wheel entry): "Keep game art": only the menu that opens is in the new style.
+6. Ends of lists: "Tabs wrap, rows don't": E on the last tab goes to the first; Down on the last row stays; Up on the first row goes to the tab bar.
+7. Hold or toggle on the Controls tab: "Mode column per action": columns Action, Slot 1, Slot 2, Mode, with `< Hold >` or `< Toggle >` for the actions that have it; both slots follow it.
+7b. Pad binding: "Yes, same two slots": while a pad is connected the "Press a key…" prompt also accepts pad buttons; a slot holds a key, a mouse button or a pad button.
+8. Scope of "Reset to defaults": "Everything on that tab": Game: both volumes, invert camera, language; Display: window mode and resolution, with the keep-settings countdown; Controls: all bindings and modes; Quality of life: the preset back to Original; it always asks first.
+9. Resolution row in full screen: "Greyed out with a note": it stays in place, cannot be changed and shows "Desktop resolution".
 
-**2. Scaling into the window** (Q1). The menu is one 320x240 page. Scale s = min(window width / 320, window height / 240), not rounded to an integer; the page is centred and covers the whole window; the rest of the window is black, as the port's bottom-screen bars are today. The page is drawn at window resolution (every element box, picture and glyph scaled by s, sampled with linear filtering as the port's screen presenter does), not as a 320x240 picture enlarged. Examples: 400x240 gives s = 1 with 40-pixel bars left and right; 1920x1080 gives s = 4.5, a 1440x1080 page and 240-pixel bars; 3440x1440 gives s = 6, a 1920x1440 page.
-
-**3. Text sizes and glyphs.** The three front-end font files are one glyph set, line height 23, glyphs up to 22 pixels high. The layout texts ask for sizes 12 (round texts), 15 (title, subtitle), 16 (page number), 18 (name plate), 14 and 10 (notice page); whether the size changes the drawn glyphs is not known, and the port draws every layout text at the atlas size (HUD-75, UI-16), so nothing is drawn before HUD-75 is fixed (Q10). If the sizes do shrink the glyphs, the atlas holds 23/size times the 3DS resolution, so text stays sharp up to about s = 1.3 (size 18) to s = 1.9 (size 12) and is enlarged above that. Coverage: all of ASCII, the Latin-1 letters and × have glyphs, so SDL key, mouse and pad names, resolutions such as `1280x720`, English labels and the language names Deutsch, Français, Nederlands, English, Italiano, Português, Dansk, Español, Polski and Русский can all be drawn. Missing: control codes, ¢ £ ¤ ¥ § ± ² ³ µ ¼ ½ ¾ and similar signs, and Cyrillic letters the game's texts do not use. The new texts ("PC Settings", the tab names, "Window mode", "Resolution", "Original", "Improved", "Custom", the action names, "Reset all", the messages) are English in every language (Q7).
-
-**4. Navigation onto the model's events** (`src/qol/menu_model.hpp`):
-- Up / Down, pad Up / Down, the mouse wheel (Q9): `Up` / `Down`, previous or next row with wrap.
-- Enter, pad A, click on the Select icon: `Activate`: the master row cycles (`MasterCycled`), a feature row toggles (`FeatureToggled`, or `SwitchedToCustom` outside Custom), a Display row cycles window mode or resolution (`DisplayChanged`); in the model of 2026-10-29 the Game and Controls rows are placeholders (`Ignored`).
-- Escape, pad B, click on the Back icon: `Back`, the menu closes.
-- PageUp / PageDown, pad L / R, click on the `Pageslots` arrows: `TabPrevious` / `TabNext`, with wrap; hover over a header: `tabMove(i)` (ignored).
-- Mouse over a drawn row: `rowMove(i)`; click on a row: `rowClick(i)` (select, then activate). In the round form a click on a neighbour slot thus selects and activates it, where the original only turns the round. Asked 2026-10-29: "Only on entering a slot": `rowMove` is sent only when the pointer enters a different slot, so a pointer resting on a slot does not spin the round. The area of a round slot (asked 2026-10-29): "Original tap circle": the original's touch rule, a circle of radius 32 pixels around the centre of each of the three visible slots.
-- Left / Right, pad Left / Right: `Left` / `Right`, stepping the rows that Q8 names.
-- While the Controls tab waits for a key, the keys go to it; Escape cancels ([qol-settings.md §2026-10-29T11:06:51](qol-settings.md#ts-20261029-110651)).
-
-**5. Name plate texts** (asked 2026-10-29 by 20261029-qolmenu2-A):
-- Game tab labels: "Original gametext labels": the labels of the original Options page from the game text, not the model's English labels.
-- Quality of life tab: "Readable names", offered as, for example, "Quality of life: Original" for the master row and "Widened view: Off" for the feature row; neither the config key nor "Master" is shown.
-
-- Controls bar form (asked 2026-10-29): "Two lines per bar": each Controls bar shows the action name on top and its two slots smaller underneath; fewer rows fit on the page. Answer 2026-10-30, "How should this go ahead while the port cannot draw smaller layout text (HUD-96)?": "Wait for HUD-96": build smaller text in the port first, then the two-line bars as decided.
-
-Open (not decided by the user): whether every text fits its box (name plate 182 pixels, list bar 168 pixels) at the font size HUD-75 brings (QOLSET-34).
+Open: none.

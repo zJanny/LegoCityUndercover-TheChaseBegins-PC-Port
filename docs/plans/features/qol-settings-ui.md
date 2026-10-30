@@ -1,0 +1,40 @@
+# QoL settings menu: modern PC menu
+
+## 1. Scope
+
+The redesigned PC settings menu: a full-window overlay with top tabs, bundled font, crisp text and widgets at the window's real resolution, shared mouse and keyboard focus, and its dialogs (reset, binding conflict, keep settings). It replaces the drawing of [qol-settings-drawing](qol-settings-drawing.md); the models and stores of [qol-settings-menu](qol-settings-menu.md) and [qol-settings-tabs](qol-settings-tabs.md) stay. Plan: [qol.md](../qol.md).
+
+## 2. Status
+
+NOT_STARTED, opened 2026-10-30. Decided by the user on 2026-10-30, all open points answered (QOLSET-80). Suggested build order: QOLSET-68, QOLSET-69, QOLSET-70 (render), QOLSET-71, QOLSET-72 (model), the tabs QOLSET-73 to QOLSET-75, the dialogs QOLSET-76 and QOLSET-77, QOLSET-78, last QOLSET-79 (wiring); each is well under an hour for one worker.
+
+## 3. Verified behaviour
+
+None yet (the menu is not part of the original).
+
+## 4. Stand-ins
+
+None.
+
+## 5. Open items
+
+- [ ] QOLSET-68 — Bundle one open font (Noto Sans, SIL OFL) under the repo: font file, its licence text and an entry in `REUSE.toml`, a test that the file and licence are present and the font file hash is pinned; GPL-compatible. blocks: QOLSET-69. evidence: [qol-settings-drawing.md §2026-10-30T21:56:04](../../design/qol-settings-drawing.md#ts-20261030-215604).
+- [ ] QOLSET-69 — `chase_render` text: rasterise the bundled font at the window's real pixel size into a glyph atlas, measure and draw text through a plain-type interface (string, pixel size, position, colour, clip), kerning, the glyphs of the ten language names (Latin-1 and Cyrillic); GL only in `src/render/`, shaders in `.glsl`. needs: QOLSET-68. blocks: QOLSET-70, QOLSET-79. evidence: [qol-settings-drawing.md §2026-10-30T21:56:04](../../design/qol-settings-drawing.md#ts-20261030-215604).
+- [ ] QOLSET-70 — `chase_render` UI primitives: filled and rounded rectangles, borders, lines, scissor, alpha-dimmed overlay over the game picture, drawn at window resolution from a plain-type draw list; GL only in `src/render/`, shaders in `.glsl`; the menu stops using the CPU canvas. needs: QOLSET-69. blocks: QOLSET-79. evidence: [qol-settings-drawing.md §2026-10-30T21:56:04](../../design/qol-settings-drawing.md#ts-20261030-215604).
+- [ ] QOLSET-71 — Widget and layout model in `src/qol/` (pure, plain types, text width by callback): UI scale from the window height (text about 2.2 to 2.8 percent, rows 5 to 6 percent, hit areas at least 40 px at 1080p), the top tab bar, the centred row column with label left and control right, the scrolling of long tabs with fixed bars, rectangles and hit areas of slider, `< value >` selector, toggle, button and dropdown, contrast and focus drawing rules (bar plus border, underlined tab). blocks: QOLSET-72, QOLSET-73, QOLSET-74, QOLSET-75, QOLSET-78. evidence: [qol-settings-drawing.md §2026-10-30T21:56:04](../../design/qol-settings-drawing.md#ts-20261030-215604).
+- [ ] QOLSET-72 — Navigation and focus model in `src/qol/`: one focus for mouse and keyboard (hover focuses), Up and Down between rows, Left and Right change the value, Up on the first row reaches the tab bar (Left and Right switch tabs, Down returns), Q and E or PageUp and PageDown, Enter, tabs wrap, rows do not (Up on the first row reaches the tab bar), Esc closing or first cancelling a prompt, dropdown or dialog, wheel scroll, right-click as Back, slider drag, pad LB, RB, D-pad, A, B; replaces the events of `menu_model` (Left and Right turn rows). needs: QOLSET-71. blocks: QOLSET-73, QOLSET-74, QOLSET-75, QOLSET-77. evidence: [qol-settings-drawing.md §2026-10-30T21:56:04](../../design/qol-settings-drawing.md#ts-20261030-215604).
+- [ ] QOLSET-73 — Game and Display tab rows in the new widgets: SFX and Music sliders 0 to 100 in steps of 10 (one original step each), Invert camera `< On >`, Language selector (`< English >`, applied when the menu closes), Window mode `< Fullscreen >` selector, resolution dropdown of the detected modes (greyed out with "Desktop resolution" in full screen), and the tab's "Reset to defaults" button with its confirm question, resetting everything on the tab (Game: volumes, invert camera, language; Display: window mode and resolution with the keep-settings countdown); over the existing stores (`GamePort`, `display_tab`, `MenuStores`). needs: QOLSET-71, QOLSET-72. blocks: QOLSET-77, QOLSET-79. evidence: [qol-settings-drawing.md §2026-10-30T21:56:04](../../design/qol-settings-drawing.md#ts-20261030-215604).
+- [ ] QOLSET-74 — Quality of life tab rows in the new widgets: the master preset selector (Original, Improved, Custom), one `< On >` toggle per feature with its help line and default, a hand change switches the preset to Custom at once and the custom set is remembered; the tab's "Reset to defaults" button (preset back to Original). needs: QOLSET-71, QOLSET-72. blocks: QOLSET-79. evidence: [qol-settings-drawing.md §2026-10-30T21:56:04](../../design/qol-settings-drawing.md#ts-20261030-215604).
+- [ ] QOLSET-75 — Controls tab in the new widgets: columns Action, Slot 1, Slot 2 and Mode (`< Hold >` or `< Toggle >`, both slots follow it), choosing a slot shows "Press a key... (Esc cancel, Del clear)" that also takes mouse buttons and, with a pad connected, pad buttons, Esc and the menu keys cannot be bound, Del clears, rows scroll, the tab's "Reset to defaults" button (all bindings and modes); over `ControlsTab` and `QolControlsBindings`. needs: QOLSET-71, QOLSET-72. blocks: QOLSET-76, QOLSET-79. evidence: [qol-settings-drawing.md §2026-10-30T21:56:04](../../design/qol-settings-drawing.md#ts-20261030-215604).
+- [ ] QOLSET-76 — Binding conflict dialog: a key already bound to another action opens a small modal dialog that names the other action and offers Swap (exchange the two bindings) or Cancel; replaces the refuse message of `ControlsTab`. needs: QOLSET-75. blocks: QOLSET-79. evidence: [qol-settings-drawing.md §2026-10-30T21:56:04](../../design/qol-settings-drawing.md#ts-20261030-215604).
+- [ ] QOLSET-77 — "Keep these settings?" dialog for a window mode or resolution change: 15-second countdown, Enter keeps, Esc or the timeout reverts the window and the stored value; the clock is a plain callback so the test needs no waiting. needs: QOLSET-72, QOLSET-73. blocks: QOLSET-79. evidence: [qol-settings-drawing.md §2026-10-30T21:56:04](../../design/qol-settings-drawing.md#ts-20261030-215604).
+- [ ] QOLSET-78 — Chrome of the menu: tab bar, key-hint bar that follows the input device, help line of the focused row with its default, Back button bottom-left, dimmed game picture behind. needs: QOLSET-71. blocks: QOLSET-79. evidence: [qol-settings-drawing.md §2026-10-30T21:56:04](../../design/qol-settings-drawing.md#ts-20261030-215604).
+- [ ] QOLSET-79 — Wire the new menu in place of the art-based one at the three hooks (slot page bar, pause wheel entry, `MenuWindow`/`FrontMenu`/`PauseSettings`), keep the entry points, remove the old drawing code (`menu_page`, `menu_list_page`, `menu_redraw`, `menu_hit`) and its tests, update `docs/controls.md`, `docs/status.md`, `docs/game-runtime.md` and the hook list; a real-data open test at 1080p and 4K sizes. needs: QOLSET-69, QOLSET-70, QOLSET-73, QOLSET-74, QOLSET-75, QOLSET-76, QOLSET-77, QOLSET-78. blocks: QOLSET-2. evidence: [qol-settings-drawing.md §2026-10-30T21:56:04](../../design/qol-settings-drawing.md#ts-20261030-215604).
+
+## 6. Findings summary
+
+Design: [qol-settings-drawing.md §2026-10-30T21:56:04](../../design/qol-settings-drawing.md#ts-20261030-215604).
+
+## 7. Code and tests
+
+None yet. Planned: font under `assets/` or `third_party/` (QOLSET-68), text and primitives in `src/render/` with `.glsl` shaders, the models in `src/qol/` with tests in `tests/qol/`.
