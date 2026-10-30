@@ -19,7 +19,7 @@ Asked of the user by the lead on 2026-10-28 (planner questions 5 to 8); answers 
 
 Asked of the user by the lead on 2026-10-28; the quoted labels are the user's selections.
 
-- Minimap (QOLMAP-2): "Top-right, round, rotates": a round minimap in the top-right corner, about 1/5 of the screen height, rotating with the camera, zoom like the original bottom-screen map.
+- Minimap (QOLMAP-2): "Top-right, round, rotates": a round minimap in the top-right corner, about 1/5 of the screen height, rotating with the camera, zoom like the original bottom-screen map. Placement (answered 2026-10-30, "Below the counters (Recommended)"): still top-right, moved down so it starts under the studs and counters, with a small margin (not chosen: "Bottom-right corner", "Agent proposes mock-up", "Keep top-right, add margin"); at 16:9 the flush top-right circle overlapped the corner HUD.
 - Other bottom pages (QOLBOT-6): "Scanner, Build-it, Shop, Award viewer" (all four) get a PC version, a full-window panel clicked with the mouse, when their QoL feature is on.
 - Widest aspect (5c): "16:9": the view widens up to 16:9 only; wider screens get black side bars.
 
@@ -94,4 +94,12 @@ Implemented by 20261029-qolview-A:
 
 Asked of the user by the lead on 2026-10-30 (round 20261030-qolstores); the quoted label is the user's selection. Decides QOLBOT-19.
 
-- Title screen and front-end menus with the bottom screen hidden (QOLBOT-19), "When the Improved option hides the bottom screen during play, what should the title screen and front-end menus do?": "Hide like in play": the front end hides it too and the top screen fills the window. Not chosen: "Keep both screens", "Hide, menus full-window". Open: its menus need clicks on the top-screen layout or a PC panel; how they are reached is to be proposed to the user.
+- Title screen and front-end menus with the bottom screen hidden (QOLBOT-19), "When the Improved option hides the bottom screen during play, what should the title screen and front-end menus do?": "Hide like in play": the front end hides it too and the top screen fills the window. Not chosen: "Keep both screens", "Hide, menus full-window".
+- How they are reached (answered 2026-10-30 after the user chose "Agent proposes first" and approved the proposal): with Improved the top screen fills the window; every front-end page with bottom-screen content (language list, prompts, autosave notice, save slot page, delete confirm, mission card, boot and saving notices) shows its 320x240 page as a panel centred over the top picture, clicked with the mouse (the window point is mapped back to bottom-canvas pixels). A click on a list row selects it and presses A; a click on a button picture (A, B, Y) is that button; a click elsewhere does nothing. Keys keep working (the flow still gets `FrontInput`). The panel appears and disappears with its page, no manual switching; logos and movies show no panel; subtitles become a caption at the movie's bottom edge. Original mode is unchanged.
+  - "Approve this general rule?": "Approve centred panel (Recommended)" (not chosen: "Small corner overlay").
+  - "Panel size and top picture?": "Larger, art dimmed (Recommended)": the panel is scaled up as far as it fits keeping 4:3 and the top picture is darkened behind it (not chosen: "Larger, art sharp", "Native 4:3 size, art sharp").
+  - "What does a click on a list row do?": "Select and confirm (Recommended)" (not chosen: "Select, then confirm").
+  - "Where does the PC Settings bar go in Improved?": "Same place as QoL off (Recommended)": under the slots inside the panel, one layout for all modes ([qol-settings.md §2026-10-29T19:34:22](qol-settings.md#ts-20261029-193422)).
+  - "Should a mouse click anywhere skip the fusion movie and the mission card?": "Yes, click skips (Recommended)": a left click works like the skip button, only where a button already skips (not on a first run, where the original does not allow it) (not chosen: "No, keys only").
+  - "Boot ('Preparing') and 'Saving Game' notices with Improved?": "Alert panel (Recommended)": the notice page is shown as the centred panel like other front-end pages (not chosen: "Spinner only").
+  - "Intro movie subtitles at the movie's bottom edge?": "Original bubble, moved (Recommended)": the game's own subtitle bubble art drawn over the bottom edge of the movie (not chosen: "Plain caption strip").

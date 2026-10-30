@@ -18,7 +18,7 @@ IN_PROGRESS. The round minimap is drawn from the original map canvas (20261030-q
 
 ## 5. Open items
 
-- [ ] QOLMAP-5 — Question for the user: at 16:9 the circle covers the top-right corner where the corner HUD puts the studs and counters; where should the minimap sit (margin, below the counters, or the counters moved)? needs: QOLMAP-1.  evidence: [qol-screen-layout.md §2026-10-28T09:37:31](../../design/qol-screen-layout.md#ts-20261028-093731).
+- [ ] QOLMAP-5 — at 16:9 the circle covers the top-right corner where the corner HUD puts the studs and counters; the user decided 2026-10-30 "Below the counters": still top-right, moved down so it starts under the studs and counters, with a small margin (replaces stand-in QOLMAP-S1's flush placement); not built. needs: QOLMAP-1.  evidence: [qol-screen-layout.md §2026-10-28T09:37:31](../../design/qol-screen-layout.md#ts-20261028-093731).
 - [ ] QOLMAP-6 — Hide the minimap in the other panels (dialog boxes, scene change page, fast-travel map, pause menu); only the scanner overlay and cutscenes hide it now. needs: QOLMAP-1.  evidence: [qol-screen-layout.md §2026-10-28T09:37:31](../../design/qol-screen-layout.md#ts-20261028-093731).
 - [ ] QOLMAP-7 — Compare the round minimap with a gameplay picture (rotation, icons and objective markers inside the disc) on real data. needs: QOLMAP-1.  evidence: [qol-screen-layout.md §2026-10-28T09:31:02](../../design/qol-screen-layout.md#ts-20261028-093102).
 
