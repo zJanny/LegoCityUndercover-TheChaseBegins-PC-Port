@@ -15,7 +15,7 @@ struct HudPartDraw {
     chase::render::PixelRect rect;
 };
 
-std::vector<HudPartDraw> hudPartDraws(int windowWidth, const chase::render::PixelRect& topRect);
+std::vector<HudPartDraw> hudPartDraws(int windowWidth, const chase::render::PixelRect& topRect, CameraKind camera);
 
 template <class HudT, class CanvasT, class SinkT>
 void drawHudPartsWith(HudT& hud, CanvasT& canvas, double spinSeconds, const std::vector<HudPartDraw>& draws, SinkT&& sink) {
@@ -28,6 +28,6 @@ void drawHudPartsWith(HudT& hud, CanvasT& canvas, double spinSeconds, const std:
 }
 
 bool drawHudParts(chase::frontend::Hud& hud, chase::frontend::Canvas& canvas, chase::render::HudOverlay& overlay, double spinSeconds,
-                  int windowWidth, int windowHeight, const chase::render::PixelRect& topRect);
+                  int windowWidth, int windowHeight, const chase::render::PixelRect& topRect, CameraKind camera);
 
 }

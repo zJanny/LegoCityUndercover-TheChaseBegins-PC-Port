@@ -19,8 +19,10 @@ CameraKind cameraKindFor(bool cutsceneCamera, bool directorCamera, bool scannerC
     return directorCamera ? CameraKind::Director : CameraKind::Gameplay;
 }
 
+bool cameraWidens(CameraKind camera) { return camera == CameraKind::Gameplay; }
+
 chase::render::ViewRegion topViewRegion(int windowWidth, int windowHeight, const chase::render::PixelRect& topRect, CameraKind camera) {
-    if (!enabled(Feature::WidenedView) || camera != CameraKind::Gameplay || topRect.width <= 0 || topRect.height <= 0) return chase::render::originalViewRegion(topRect);
+    if (!enabled(Feature::WidenedView) || !cameraWidens(camera) || topRect.width <= 0 || topRect.height <= 0) return chase::render::originalViewRegion(topRect);
     if (bottomScreenHidden(activeSettings())) return widenedViewRegion(hiddenTopArea(windowWidth, windowHeight));
     return widenedViewRegion({0, topRect.y, windowWidth, topRect.height});
 }

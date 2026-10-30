@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 1038 open items and stand-ins, 177 linked to game usage, 861 with unknown reach.
+Items: 1037 open items and stand-ins, 177 linked to game usage, 860 with unknown reach.
 
 ## Top 50 overall
 
@@ -201,7 +201,7 @@ No linked items.
 
 ## Quality of life (`qol` plan)
 
-0 of 37 items linked.
+0 of 36 items linked.
 
 No linked items.
 
@@ -246,7 +246,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [player-traversal-zipline.md](features/player-traversal-zipline.md): TRAV-9 (+2), TRAV-49 (+1), TRAV-52 (+1), TRAV-10, TRAV-35, TRAV-6, TRAV-63, TRAV-8, TRAV-S1, TRAV-S2, TRAV-S20, TRAV-S29, TRAV-S3, TRAV-S30, TRAV-S31, TRAV-S32, TRAV-S4
 - [player-traversal.md](features/player-traversal.md): TRAV-2 (+1), TRAV-S12 (+1), TRAV-19, TRAV-20, TRAV-22, TRAV-34, TRAV-5, TRAV-S10, TRAV-S11, TRAV-S13, TRAV-S38
 - [qol-bottom-screen.md](features/qol-bottom-screen.md): QOLBOT-19 (+2), QOLBOT-22 (+1), QOLBOT-10, QOLBOT-2, QOLBOT-21, QOLBOT-3, QOLBOT-4, QOLBOT-5, QOLBOT-7, QOLBOT-8, QOLBOT-9, QOLBOT-S1
-- [qol-fullscreen.md](features/qol-fullscreen.md): QOLFS-1 (+2), QOLFS-10, QOLFS-16, QOLFS-17, QOLFS-19
+- [qol-fullscreen.md](features/qol-fullscreen.md): QOLFS-1 (+2), QOLFS-10, QOLFS-16, QOLFS-17
 - [qol-minimap.md](features/qol-minimap.md): QOLMAP-7, QOLMAP-S1
 - [qol-settings-drawing.md](features/qol-settings-drawing.md): QOLSET-33 (+4), QOLSET-51 (+2), QOLSET-58 (+1), QOLSET-43, QOLSET-52, QOLSET-53, QOLSET-54, QOLSET-64, QOLSET-S2, QOLSET-S4, QOLSET-S6
 - [qol-settings-menu.md](features/qol-settings-menu.md): QOLSET-2 (+3), QOLSET-25 (+2), QOLSET-36, QOLSET-59, QOLSET-61

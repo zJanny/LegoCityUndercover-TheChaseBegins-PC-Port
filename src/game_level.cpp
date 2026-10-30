@@ -419,7 +419,8 @@ void LevelSession::draw(int width, int height) {
     if (drawPause(width, height)) return;
     if (drawAwardViewer(width, height)) return;
     const game_hud::Screens screens = game_hud::screensFor(width, height);
-    const chase::render::ViewRegion topView = qol::topViewRegion(width, height, screens.top, qol::cameraKindFor(cutsceneHost->camera(levelScripts.cutscenes()).has_value(), levelScripts.director().busy(), scanner.viewShown()));
+    const qol::CameraKind cameraKind = qol::cameraKindFor(cutsceneHost->camera(levelScripts.cutscenes()).has_value(), levelScripts.director().busy(), scanner.viewShown());
+    const chase::render::ViewRegion topView = qol::topViewRegion(width, height, screens.top, cameraKind);
     chase::render::beginViewRegion(width, height, topView,
                                    {backgroundColour[0] / 255.0f, backgroundColour[1] / 255.0f, backgroundColour[2] / 255.0f, 1});
     beginFrame(1.0f);
@@ -514,7 +515,7 @@ void LevelSession::draw(int width, int height) {
         hudCanvas.clearTransparent();
         const bool scannerOpen = drawScannerOverlay(hudCanvas);
         if (!scannerOpen) {
-            if (!qol::drawHudParts(*hud, hudCanvas, *overlay, provisionalStudClockSeconds, width, height, screens.top))
+            if (!qol::drawHudParts(*hud, hudCanvas, *overlay, provisionalStudClockSeconds, width, height, screens.top, cameraKind))
                 hud->draw(hudCanvas, provisionalStudClockSeconds);
             drawHeadIcon(hudCanvas);
         }

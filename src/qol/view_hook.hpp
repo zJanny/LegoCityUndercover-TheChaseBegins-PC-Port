@@ -9,6 +9,8 @@ enum class CameraKind { Gameplay, Cutscene, Director, Scanner };
 
 CameraKind cameraKindFor(bool cutsceneCamera, bool directorCamera, bool scannerCamera);
 
+bool cameraWidens(CameraKind camera);
+
 chase::render::ViewRegion widenedViewRegion(const chase::render::PixelRect& area);
 
 chase::render::ViewRegion topViewRegion(int windowWidth, int windowHeight, const chase::render::PixelRect& topRect, CameraKind camera);

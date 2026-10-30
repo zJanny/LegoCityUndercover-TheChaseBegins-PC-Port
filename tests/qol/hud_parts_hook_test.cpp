@@ -42,7 +42,7 @@ bool same(const chase::render::PixelRect& a, const chase::render::PixelRect& b) 
 void originalModeFirst() {
     for (int width = 400; width <= 2600; width += 211)
         for (int height = 240; height <= 1500; height += 173)
-            require(qol::hudPartDraws(width, game_hud::screensFor(width, height).top).empty(),
+            require(qol::hudPartDraws(width, game_hud::screensFor(width, height).top, qol::CameraKind::Gameplay).empty(),
                     "off: no part draw at " + std::to_string(width) + "x" + std::to_string(height));
 }
 
@@ -52,7 +52,7 @@ void widenedOn() {
     settings.setMaster(qol::Master::Custom);
     qol::setActiveSettings(settings);
 
-    const auto draws = qol::hudPartDraws(1920, game_hud::screensFor(1920, 1080).top);
+    const auto draws = qol::hudPartDraws(1920, game_hud::screensFor(1920, 1080).top, qol::CameraKind::Gameplay);
     using chase::frontend::HudPart;
     require(draws.size() == 5, "five parts");
     if (draws.size() != 5) return;
@@ -76,8 +76,15 @@ void widenedOn() {
         require(hud.calls[i] == chase::frontend::HudPartSet(order[i]) && same(sunk[i], rects[i]),
                 "draw " + std::to_string(i) + " is its own part at its rectangle");
 
+    for (const qol::CameraKind camera : {qol::CameraKind::Cutscene, qol::CameraKind::Director, qol::CameraKind::Scanner}) {
+        const chase::render::PixelRect top = game_hud::screensFor(1920, 1080).top;
+        const auto picture = qol::hudPartDraws(1920, top, camera);
+        require(picture.size() == 5, "5:3 camera: five parts");
+        for (const auto& draw : picture) require(same(draw.rect, top), "5:3 camera: each part at the picture's rectangle");
+    }
+
     qol::setActiveSettings(qol::Settings{});
-    require(qol::hudPartDraws(1920, game_hud::screensFor(1920, 1080).top).empty(), "off again: no part draw");
+    require(qol::hudPartDraws(1920, game_hud::screensFor(1920, 1080).top, qol::CameraKind::Gameplay).empty(), "off again: no part draw");
 }
 
 }

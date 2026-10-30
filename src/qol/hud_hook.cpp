@@ -22,8 +22,8 @@ Corner cornerOf(HudPart part) {
 
 }
 
-chase::render::PixelRect hudPartRect(HudPart part, int windowWidth, const chase::render::PixelRect& topRect) {
-    if (!enabled(Feature::WidenedView) || topRect.width <= 0 || topRect.height <= 0) return topRect;
+chase::render::PixelRect hudPartRect(HudPart part, int windowWidth, const chase::render::PixelRect& topRect, CameraKind camera) {
+    if (!enabled(Feature::WidenedView) || !cameraWidens(camera) || topRect.width <= 0 || topRect.height <= 0) return topRect;
     const ViewLayout layout = layoutInArea(windowWidth, topRect.height);
     const HudAnchor anchor = hudAnchor(layout, cornerOf(part));
     const HudPoint origin = hudPosition(anchor, 0, 0);
