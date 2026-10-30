@@ -268,6 +268,18 @@ class HookTest(unittest.TestCase):
         git(self.repo, "add", "dump.raw")
         self.assertDenied(self.bash(f'git commit -m "Add x" -m "{CO_AUTHOR}"'), "dump.raw")
 
+    def test_commit_allows_only_bundled_fonts_as_binary_files(self):
+        self.copy_tools("merge_agent.py", "merge_conflicts.py", "round_log.py")
+        font = self.repo / "third_party" / "fonts" / "Font.ttf"
+        font.parent.mkdir(parents=True)
+        font.write_bytes(b"\0\1\0\0\0")
+        git(self.repo, "add", "-A")
+        self.assertAllowed(self.bash(f'git commit -m "Add x" -m "{CO_AUTHOR}"'))
+        (self.repo / "fonts").mkdir()
+        (self.repo / "fonts" / "Font.ttf").write_bytes(b"\0\1\0\0\0")
+        git(self.repo, "add", "-A")
+        self.assertDenied(self.bash(f'git commit -m "Add x" -m "{CO_AUTHOR}"'), "fonts/Font.ttf")
+
     def test_worker_needs_its_brief(self):
         prompt = "You are worker 20261026-hooks-A of round 20261026-hooks. Read your brief artifacts/rounds/20261026-hooks/20261026-hooks-A.md and follow it completely."
         data = {"cwd": str(self.repo), "tool_input": {"prompt": prompt}}

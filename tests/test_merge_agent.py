@@ -75,6 +75,25 @@ class MergeAgentTest(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("game-derived, build or binary files are staged: shot.bmp", result.stderr)
 
+    def test_only_bundled_fonts_pass_the_binary_check(self) -> None:
+        sys.path.insert(0, str(SCRIPT.parent))
+        import merge_agent
+
+        font = self.repo / "third_party" / "fonts" / "Font.ttf"
+        font.parent.mkdir(parents=True)
+        font.write_bytes(b"\x00\x01\x00\x00\x00")
+        git(self.repo, "add", "-A")
+        merge_agent.check_staged_content(self.repo)
+        for name in ["fonts/Font.ttf", "third_party/fonts/sub/Font.ttf", "third_party/fonts/Font.otf"]:
+            other = self.repo / name
+            other.parent.mkdir(parents=True, exist_ok=True)
+            other.write_bytes(b"\x00\x01\x00\x00\x00")
+            git(self.repo, "add", "-A")
+            with self.assertRaisesRegex(merge_agent.MergeError, "binary files are staged: " + re.escape(name)):
+                merge_agent.check_staged_content(self.repo)
+            git(self.repo, "rm", "-q", "--cached", name)
+            other.unlink()
+
     def test_prepare_without_upstream_stops(self) -> None:
         git(self.repo, "branch", "agent")
         result = run_script(self.repo, "prepare", "agent")

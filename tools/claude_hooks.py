@@ -452,6 +452,7 @@ def prepare_commit(root, take_all=False):
 def forbidden_staged(root, take_all=False):
     merge_agent = load_tool(root, "merge_agent")
     pattern = getattr(merge_agent, "FORBIDDEN", None)
+    allowed = getattr(merge_agent, "ALLOWED_BINARY", None)
     views = [["--cached"], []] if take_all else [["--cached"]]
     bad = []
     for view in views:
@@ -459,7 +460,8 @@ def forbidden_staged(root, take_all=False):
         bad += [name for name in names if name and pattern and pattern.search(name) and name not in bad]
         for line in git(root, "diff", *view, "--numstat").stdout.split("\n"):
             parts = line.split("\t", 2)
-            if len(parts) == 3 and parts[0] == "-" and parts[1] == "-" and parts[2] not in bad:
+            if (len(parts) == 3 and parts[0] == "-" and parts[1] == "-" and parts[2] not in bad
+                    and not (allowed and allowed.match(parts[2]))):
                 bad.append(parts[2])
     return bad
 

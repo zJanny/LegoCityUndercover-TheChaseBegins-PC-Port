@@ -48,6 +48,7 @@ FORBIDDEN = re.compile(
     r"(^|/)(artifacts|build(-[^/]*)?|graphify-out)/|\.(cci|3ds|cst|cia|bin|bmp|png|jpe?g|wav|bcstm|bcwav|fib|blvl|bfnmdl|dat|mem)$|(^|/)session\.json$",
     re.IGNORECASE,
 )
+ALLOWED_BINARY = re.compile(r"^third_party/fonts/[^/]+\.ttf$")
 PRIORITIES = "docs/plans/priorities.md"
 GENERATED_FILES = ["README.md", "docs/progress-trend.svg", PRIORITIES]
 PROGRESS_START = "<!-- progress:start -->"
@@ -164,7 +165,7 @@ def check_staged_content(root: Path) -> None:
     bad = [name for name in files if FORBIDDEN.search(name)]
     for line in git(root, "diff", "--cached", "--numstat").splitlines():
         added, removed, name = line.split("\t", 2)
-        if added == "-" and removed == "-" and name not in bad:
+        if added == "-" and removed == "-" and name not in bad and not ALLOWED_BINARY.match(name):
             bad.append(name)
     if bad:
         raise MergeError("game-derived, build or binary files are staged: " + ", ".join(bad))
