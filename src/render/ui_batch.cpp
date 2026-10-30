@@ -151,11 +151,13 @@ void UiDrawList::clear() {
 UiBatch buildUiBatch(const UiDrawList& list, int windowWidth, int windowHeight) {
     UiBatch batch;
     const UiClip window{0, 0, windowWidth, windowHeight};
+    bool textSinceRun = false;
     for (const UiCommand& command : list.commands()) {
         const UiClip clip = command.clipped ? intersectClips(window, command.clip) : window;
         if (clip.width <= 0 || clip.height <= 0) continue;
         if (command.kind == UiCommandKind::Text) {
-            batch.texts.push_back({command.text, command.pixelSize, command.rect.x, command.rect.y, command.colour, command.clipped, clip});
+            batch.texts.push_back({command.text, command.pixelSize, command.rect.x, command.rect.y, command.colour, command.clipped, clip, batch.runs.size()});
+            textSinceRun = true;
             continue;
         }
         std::vector<UiVertex> vertices;
@@ -165,8 +167,9 @@ UiBatch buildUiBatch(const UiDrawList& list, int windowWidth, int windowHeight) 
         else if (command.kind == UiCommandKind::Line) lineQuad(vertices, command);
         else if (command.kind == UiCommandKind::Dim) fillRect(vertices, {0, 0, float(windowWidth), float(windowHeight)}, 0, command.colour);
         if (vertices.empty()) continue;
-        const bool merge = !batch.runs.empty() && batch.runs.back().clipped == command.clipped &&
+        const bool merge = !textSinceRun && !batch.runs.empty() && batch.runs.back().clipped == command.clipped &&
                            (!command.clipped || sameClip(batch.runs.back().clip, clip));
+        textSinceRun = false;
         if (!merge) batch.runs.push_back({command.clipped, clip, batch.vertices.size(), 0});
         batch.runs.back().count += vertices.size();
         batch.vertices.insert(batch.vertices.end(), vertices.begin(), vertices.end());

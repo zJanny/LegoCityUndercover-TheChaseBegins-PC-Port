@@ -19,6 +19,8 @@ set_tests_properties(skips-labelled PROPERTIES  SKIP_RETURN_CODE "77" LABELS "ne
 add_test(multiline "/b/t" "/data/romfs/a.fib")
 set_tests_properties(multiline PROPERTIES  FAIL_REGULAR_EXPRESSION "first line
 second line" LABELS "needs-game-data" TIMEOUT "9")
+add_test(skips-display "/b/t")
+set_tests_properties(skips-display PROPERTIES  SKIP_RETURN_CODE "77" LABELS "needs-display")
 add_test(setup-shot "/b/t")
 set_tests_properties(setup-shot PROPERTIES  FIXTURES_SETUP "shot" SKIP_RETURN_CODE "77")
 add_test(check-shot "/b/check.py" "shot.bmp")

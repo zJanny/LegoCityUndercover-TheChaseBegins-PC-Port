@@ -16,7 +16,7 @@ public:
     UiText& operator=(const UiText&) = delete;
 
     // (x, y) is the top left of the line box in window pixels (y down); pixelSize is the em size in window pixels.
-    void draw(std::string_view utf8, float pixelSize, float x, float y, UiColour colour, const UiClip* clip = nullptr);
+    void draw(std::string_view utf8, float pixelSize, float x, float y, UiTextColour colour, const UiClip* clip = nullptr);
     void flush(int windowWidth, int windowHeight);
 
 private:

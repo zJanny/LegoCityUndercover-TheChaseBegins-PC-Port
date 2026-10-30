@@ -1,4 +1,5 @@
 #pragma once
+#include "render/ui_text_layout.hpp"
 #include <cstddef>
 #include <memory>
 #include <string>
@@ -13,10 +14,6 @@ struct UiColour {
 // Window pixels with y counting down from the top of the window.
 struct UiRect {
     float x = 0, y = 0, width = 0, height = 0;
-};
-
-struct UiClip {
-    int x = 0, y = 0, width = 0, height = 0;
 };
 
 enum class UiCommandKind { Fill, Border, Line, Dim, Text };
@@ -70,6 +67,7 @@ struct UiTextRun {
     UiColour colour;
     bool clipped = false;
     UiClip clip;
+    std::size_t runsBefore = 0;
 };
 
 struct UiBatch {

@@ -2,6 +2,7 @@
 // Window state for the 2D passes of chase-game and chase-viewer: viewports, the scissor box, clears and the depth,
 // culling and GPU-sync calls. Plain types only; the OpenGL calls live in window.cpp.
 #include <cstdint>
+#include <vector>
 
 namespace chase::render {
 
@@ -27,5 +28,8 @@ void setViewport(const PixelRect& rect);
 void setScissorBox(const PixelRect& rect);
 void clearWindow(const ClearColour& colour, bool depth);
 void waitForGpu();
+
+// RGBA8 of the window's back buffer, row 0 at the top of the window.
+std::vector<std::uint8_t> readWindowPixels(int width, int height);
 
 }

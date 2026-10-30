@@ -32,6 +32,7 @@ ctest --test-dir build -j"$(nproc)" -LE slow --output-on-failure   # without the
 - Tests with the label `slow` run for more than about 5 seconds each. They are listed at the end of `CMakeLists.txt`. Run them before every commit that ends a piece of work.
 - Build with `-DCMAKE_BUILD_TYPE=RelWithDebInfo` (the default). A `Debug` build runs the game tests about 5 times slower.
 - Tests with the label `needs-game-data` need your extracted game data (`artifacts/romfs`). Most of them skip when it is missing. They are listed at the end of `CMakeLists.txt`. The test `test-labels` fails when a test that needs the data lacks the label.
+- Tests with the label `needs-display` open an OpenGL 4.6 window through SDL. They skip with exit code 77 when there is no display or no GL 4.6 context.
 
 ## Continuous integration
 
@@ -152,6 +153,7 @@ The table lists some of the tests. `ctest --test-dir build -N` lists all of them
 | `canvas-clip` | `Canvas::drawScaled` with a destination inside, partly outside, covering and wholly outside the canvas (also flipped) equals the same draw on a larger canvas, and only canvas pixels are visited (`tests/canvas_clip_test.cpp`). |
 | `render-overlay-quad` | Placement of an overlay canvas on a window rectangle, no OpenGL context: clip-space corners and texture coordinates against hand-computed values (`tests/render_overlay_quad_test.cpp`). |
 | `render-ui-batch` | Batching of the UI draw list, no OpenGL context: vertex counts, areas of plain and rounded fills, borders and lines, scissor runs, nested clips and recorded text commands against hand-computed values (`tests/render_ui_batch_test.cpp`). |
+| `render-ui-draw-window` | `UiDraw` in a hidden GL 4.6 core window read back at the window size: fills, rounded fills, borders, lines, nested clips, the dim overlay, text and its order against shapes; skips (77) without a display or GL 4.6 (`tests/render_ui_draw_window_test.cpp`). |
 | `qol-display-tab` | Display tab store and rows, no SDL: `window_mode` and `resolution` keys of `config/qol.cfg` with the desktop-size default, window mode and resolution rows, custom size, list cycling, clamp to the largest display mode, no `resolution` line while the desktop size is in use, rejections (`tests/qol/`) |
 | `debug-metrics-core` | [Debug overlay](debug-overlay.md) values on synthetic input: frame-time window, `/proc/self/status` fixture, CPU percent, overlay lines |
 | `debug-text-core` | Debug overlay font and panel raster |

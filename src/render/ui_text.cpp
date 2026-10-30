@@ -30,7 +30,7 @@ class UiTextImpl {
 public:
     UiTextImpl();
     ~UiTextImpl();
-    void draw(std::string_view utf8, float pixelSize, float x, float y, UiColour colour, const UiClip* clip);
+    void draw(std::string_view utf8, float pixelSize, float x, float y, UiTextColour colour, const UiClip* clip);
     void flush(int windowWidth, int windowHeight);
 
 private:
@@ -77,7 +77,7 @@ UiTextImpl::~UiTextImpl() {
     glDeleteProgram(program_);
 }
 
-void UiTextImpl::draw(std::string_view utf8, float pixelSize, float x, float y, UiColour colour, const UiClip* clip) {
+void UiTextImpl::draw(std::string_view utf8, float pixelSize, float x, float y, UiTextColour colour, const UiClip* clip) {
     for (const UiGlyphQuad& q : layoutUiText(atlas_, utf8, pixelSize, x, y, clip)) {
         const Vertex corners[4] = {{q.x0, q.y0, q.u0, q.v0, colour.r, colour.g, colour.b, colour.a},
                                    {q.x1, q.y0, q.u1, q.v0, colour.r, colour.g, colour.b, colour.a},
@@ -118,7 +118,7 @@ void UiTextImpl::flush(int windowWidth, int windowHeight) {
 UiText::UiText() : impl_(std::make_unique<UiTextImpl>()) {}
 UiText::~UiText() = default;
 
-void UiText::draw(std::string_view utf8, float pixelSize, float x, float y, UiColour colour, const UiClip* clip) {
+void UiText::draw(std::string_view utf8, float pixelSize, float x, float y, UiTextColour colour, const UiClip* clip) {
     impl_->draw(utf8, pixelSize, x, y, colour, clip);
 }
 

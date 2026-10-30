@@ -30,7 +30,7 @@ The original runs in Azahar as a measuring reference. Read `docs/re/oracle.md` b
 
 ## Labelling tests that need game data
 
-- A test that needs the original image or `artifacts/` (for example `artifacts/romfs`, `artifacts/game`) carries the CTest label `needs-game-data`, set where it is registered in `CMakeLists.txt`; a test that skips without that data exits with code 77 and carries the label too.
+- A test that needs the original image or `artifacts/` (for example `artifacts/romfs`, `artifacts/game`) carries the CTest label `needs-game-data`, set where it is registered in `CMakeLists.txt`; a test that skips without that data exits with code 77 and carries the label too. A test that skips with code 77 for lack of a display or an OpenGL 4.6 context carries the label `needs-display` instead of `needs-game-data`.
 - Every other test builds its data in the test (pinned values with provenance) and must pass on a clean clone.
 
 ## Briefs and review

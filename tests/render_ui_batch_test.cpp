@@ -177,6 +177,18 @@ void texts() {
     expect(!batch.texts[1].clipped && batch.texts[1].clip.width == 200, "an unclipped text carries the window as its clip");
 }
 
+void textOrder() {
+    UiDrawList list;
+    list.fill({0, 0, 10, 10}, {1, 0, 0, 1});
+    list.text("a", 12, 0, 0, {1, 1, 1, 1});
+    list.fill({0, 0, 10, 10}, {0, 0, 1, 1});
+    list.text("b", 12, 0, 0, {1, 1, 1, 1});
+    const UiBatch batch = buildUiBatch(list, 100, 100);
+    expect(batch.runs.size() == 2, "a text between two fills of one clip splits the run");
+    expect(batch.texts.size() == 2 && batch.texts[0].runsBefore == 1 && batch.texts[1].runsBefore == 2,
+           "a text records how many runs precede it (20261030-qolui2-B, 2026-10-30, by hand)");
+}
+
 void order() {
     UiDrawList list;
     list.fill({0, 0, 10, 10}, {1, 0, 0, 1});
@@ -196,6 +208,7 @@ int main() {
     dimming();
     clips();
     texts();
+    textOrder();
     order();
     return failures ? 1 : 0;
 }

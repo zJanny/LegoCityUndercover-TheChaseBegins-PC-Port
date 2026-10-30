@@ -1,4 +1,5 @@
 #include "render/window.hpp"
+#include <algorithm>
 #include <epoxy/gl.h>
 
 namespace chase::render {
@@ -28,5 +29,15 @@ void clearWindow(const ClearColour& colour, bool depth) {
 }
 
 void waitForGpu() { glFinish(); }
+
+std::vector<std::uint8_t> readWindowPixels(int width, int height) {
+    const std::size_t row = std::size_t(width) * 4;
+    std::vector<std::uint8_t> bottomUp(row * std::size_t(height)), topDown(bottomUp.size());
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, bottomUp.data());
+    for (int y = 0; y < height; ++y)
+        std::copy_n(bottomUp.begin() + std::ptrdiff_t(row * std::size_t(height - 1 - y)), row, topDown.begin() + std::ptrdiff_t(row * std::size_t(y)));
+    return topDown;
+}
 
 }

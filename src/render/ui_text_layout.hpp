@@ -8,7 +8,7 @@
 
 namespace chase::render {
 
-struct UiColour {
+struct UiTextColour {
     std::uint8_t r = 255, g = 255, b = 255, a = 255;
 };
 

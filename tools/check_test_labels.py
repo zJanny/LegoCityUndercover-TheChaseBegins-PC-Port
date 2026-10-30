@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 LABEL = "needs-game-data"
+DISPLAY_LABEL = "needs-display"
 ADD_TEST = re.compile(r"^add_test\((\S+) (.*)\)\s*$", re.DOTALL)
 SET_PROPERTIES = re.compile(r"^set_tests_properties\((\S+) PROPERTIES\s+(.*)$", re.DOTALL)
 STATEMENT_START = re.compile(r"\n(?=[A-Za-z_]+\()")
@@ -58,7 +59,7 @@ def needing_game_data(commands: dict[str, str], properties: dict[str, str], romf
             needing[name] = "its command line names the RomFS folder"
         elif GAME_DATA_PATH.search(command):
             needing[name] = "its command line names a game-data folder"
-        elif SKIP_CODE.search(setting):
+        elif SKIP_CODE.search(setting) and DISPLAY_LABEL not in setting:
             needing[name] = "it skips with code 77 when game data is missing"
     pairs = [
         (provider, user)
