@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 1048 open items and stand-ins, 177 linked to game usage, 871 with unknown reach.
+Items: 1047 open items and stand-ins, 177 linked to game usage, 870 with unknown reach.
 
 ## Top 50 overall
 
@@ -201,7 +201,7 @@ No linked items.
 
 ## Quality of life (`qol` plan)
 
-0 of 44 items linked.
+0 of 43 items linked.
 
 No linked items.
 
@@ -251,7 +251,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [qol-settings-drawing.md](features/qol-settings-drawing.md): QOLSET-53, QOLSET-S2, QOLSET-S4, QOLSET-S6
 - [qol-settings-menu.md](features/qol-settings-menu.md): QOLSET-2 (+3), QOLSET-25 (+2), QOLSET-36, QOLSET-59, QOLSET-61
 - [qol-settings-tabs.md](features/qol-settings-tabs.md): QOLSET-3, QOLSET-4
-- [qol-settings-ui.md](features/qol-settings-ui.md): QOLSET-71 (+12), QOLSET-72 (+10), QOLSET-68 (+9), QOLSET-69 (+8), QOLSET-84 (+7), QOLSET-73 (+6), QOLSET-75 (+6), QOLSET-83 (+6), QOLSET-70 (+5), QOLSET-74 (+5), QOLSET-76 (+5), QOLSET-77 (+5), QOLSET-78 (+5), QOLSET-79 (+4), QOLSET-S7
+- [qol-settings-ui.md](features/qol-settings-ui.md): QOLSET-72 (+10), QOLSET-68 (+9), QOLSET-69 (+8), QOLSET-84 (+7), QOLSET-73 (+6), QOLSET-75 (+6), QOLSET-83 (+6), QOLSET-70 (+5), QOLSET-74 (+5), QOLSET-76 (+5), QOLSET-77 (+5), QOLSET-78 (+5), QOLSET-79 (+4), QOLSET-S7
 - [rendering-draw-order.md](features/rendering-draw-order.md): RENDER-65 (+1), RENDER-78 (+1), RENDER-79 (+1), RENDER-S64, RENDER-S71, RENDER-S72
 - [rendering-reflections.md](features/rendering-reflections.md): RENDER-75 (+1), RENDER-S69
 - [rendering-shadows.md](features/rendering-shadows.md): RENDER-72 (+1), RENDER-73 (+1), RENDER-74 (+1), RENDER-S67, RENDER-S68

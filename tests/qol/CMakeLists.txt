@@ -195,3 +195,8 @@ if(TARGET chase_qol_window)
   target_compile_options(qol-front-panel-point-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME qol-front-panel-point COMMAND qol-front-panel-point-test)
 endif()
+
+add_executable(qol-ui-layout-test ui_layout_test.cpp)
+target_link_libraries(qol-ui-layout-test PRIVATE chase_qol)
+target_compile_options(qol-ui-layout-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME qol-ui-layout COMMAND qol-ui-layout-test)

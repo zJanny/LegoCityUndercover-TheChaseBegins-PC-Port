@@ -45,4 +45,6 @@ Answers of the user to the lead's questions (2026-10-30; the quoted labels are t
 8. Scope of "Reset to defaults": "Everything on that tab": Game: both volumes, invert camera, language; Display: window mode and resolution, with the keep-settings countdown; Controls: all bindings and modes; Quality of life: the preset back to Original; it always asks first.
 9. Resolution row in full screen: "Greyed out with a note": it stays in place, cannot be changed and shows "Desktop resolution".
 
+10. Proportions (the user, 2026-10-30T22:32:10+01:00, "Approve these values"): body text 2.5 percent and rows 5.5 percent of the window height; the row column 1.3 times the window height wide, at most 90 percent of the window width; controls 45 percent of the column; tab bar, help line and hint bar one row high.
+
 Open: none.
