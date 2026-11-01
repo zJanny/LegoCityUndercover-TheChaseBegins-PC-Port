@@ -2,6 +2,7 @@
 // rows 5 to 6 percent, hit areas at least 40 px at 1080p, contrast at least 4.5:1, selected tab underlined,
 // focus by bar plus border, tabs fixed while long tabs scroll).
 // Pinned sizes computed by hand from the chosen fractions (text 2.5 percent, row 5.5 percent) by 20261030-qolui-C on 2026-10-30.
+// Cells of a row (columns of the Controls tab, answer 7 of the same entry): 20261101-qolui3-A on 2026-11-01.
 // Text width is a fixed-width fake: 0.5 * pixel size per character.
 #include "qol/ui_layout.hpp"
 
@@ -219,6 +220,32 @@ void checkDropdown(int w, int h) {
     require(layout.dropdown.popup.y >= 0, name + "popup top in window");
 }
 
+void checkCells(int w, int h) {
+    using namespace qol::ui;
+    Screen s = sampleScreen(w, h, 2);
+    s.rows[1].kind = RowKind::Button;
+    s.rows[1].cells = {"W", "Mouse Left", "< Hold >"};
+    s.focusRow = 1;
+    s.focusCell = 2;
+    const UiLayout lay = computeLayout(s, fakeWidth);
+    const RowLayout& row = lay.rows[1];
+    require(lay.rows[0].cells.empty() && lay.rows[0].focusedCell == -1, "a row without cells has none");
+    require(row.cells.size() == 3 && row.cellFits.size() == 3 && row.focusedCell == 2, "three cells, focus on the third");
+    int covered = 0;
+    for (const qol::Rect& cell : row.cells) {
+        require(inside(cell, row.control) && cell.height == row.control.height && cell.width >= lay.scale.minHit, "cell inside the control and large enough");
+        covered += cell.width;
+    }
+    require(covered == row.control.width && row.cells[1].x == row.cells[0].x + row.cells[0].width, "cells tile the control");
+    for (std::size_t i = 0; i < 3; ++i) {
+        const qol::Rect& c = row.cells[i];
+        const Hit hit = hitTest(lay, s, c.x + c.width / 2, c.y + c.height / 2);
+        require(hit.target == Target::Row && hit.part == Part::Cell && hit.index == 1 && hit.cell == static_cast<int>(i), "hit test names the cell");
+    }
+    const Hit label = hitTest(lay, s, row.label.x + 2, row.label.y + row.label.height / 2);
+    require(label.target == Target::Row && label.part == Part::Body && label.cell == -1, "label is no cell");
+}
+
 void checkContrast() {
     using namespace qol::ui;
     const Palette palette;
@@ -245,6 +272,7 @@ int main() {
         checkHits(size[0], size[1]);
         checkScroll(size[0], size[1]);
         checkDropdown(size[0], size[1]);
+        checkCells(size[0], size[1]);
     }
 
     const qol::ui::Scale hd = qol::ui::computeScale(1920, 1080);

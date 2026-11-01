@@ -26,6 +26,7 @@ Command commandOf(Key key) {
     case Key::E:
     case Key::PageDown:
     case Key::PadRB: return Command::TabNext;
+    case Key::Delete: return Command::None;
     }
     return Command::None;
 }
@@ -67,6 +68,14 @@ Event wheel(int notches) {
     Event e;
     e.kind = EventKind::Wheel;
     e.notches = notches;
+    return e;
+}
+
+Event promptInput(InputSource source, std::string code) {
+    Event e;
+    e.kind = EventKind::PromptInput;
+    e.source = source;
+    e.code = std::move(code);
     return e;
 }
 
@@ -182,13 +191,27 @@ bool UiNav::openDropdown(int row) {
     return true;
 }
 
+bool UiNav::hasCells(int row) const {
+    return row >= 0 && row < static_cast<int>(screen_.rows.size()) && !screen_.rows[row].cells.empty();
+}
+
+std::vector<Action> UiNav::moveCell(int direction) {
+    const int last = static_cast<int>(screen_.rows[screen_.focusRow].cells.size()) - 1;
+    screen_.focusCell = std::clamp(screen_.focusCell + direction, 0, last);
+    return {};
+}
+
 std::vector<Action> UiNav::activateRow(int row) {
     if (row < 0 || row >= static_cast<int>(screen_.rows.size())) return {};
     const RowSpec& spec = screen_.rows[row];
     if (!spec.enabled) return {};
     switch (spec.kind) {
     case RowKind::Toggle: return changeValue(row, 1);
-    case RowKind::Button: return {make(ActionKind::Activate, row)};
+    case RowKind::Button: {
+        Action a = make(ActionKind::Activate, row);
+        if (!spec.cells.empty()) a.item = std::clamp(screen_.focusCell, 0, static_cast<int>(spec.cells.size()) - 1);
+        return {a};
+    }
     case RowKind::Dropdown:
         if (openDropdown(row)) return {make(ActionKind::DropdownOpened, row)};
         return {make(ActionKind::Activate, row)};
@@ -249,6 +272,7 @@ std::vector<Action> UiNav::handleCommand(Command command) {
     case Command::Right: {
         const int direction = command == Command::Left ? -1 : 1;
         if (screen_.focusOnTabs) return switchTab(screen_.selectedTab + direction);
+        if (hasCells(screen_.focusRow)) return moveCell(direction);
         return changeValue(screen_.focusRow, direction);
     }
     case Command::Confirm:
@@ -261,8 +285,15 @@ std::vector<Action> UiNav::handleCommand(Command command) {
 
 std::vector<Action> UiNav::handleModal(const Event& event, Command command) {
     const ActionKind cancel = modal_ == Modal::Prompt ? ActionKind::PromptCancelled : ActionKind::DialogCancelled;
+    if (modal_ == Modal::Prompt && event.kind == EventKind::PromptInput) {
+        Action a = make(ActionKind::PromptInput);
+        a.source = event.source;
+        a.code = event.code;
+        return {a};
+    }
     if (event.kind == EventKind::Key) {
         if (event.key == Key::Escape) return {make(cancel)};
+        if (modal_ == Modal::Prompt && event.key == Key::Delete) return {make(ActionKind::PromptClear)};
         if (modal_ == Modal::Dialog && command == Command::Confirm) return {make(ActionKind::DialogConfirmed)};
         if (modal_ != Modal::Prompt && (command == Command::Back || command == Command::Confirm)) return {make(cancel)};
         return {};
@@ -307,6 +338,11 @@ std::vector<Action> UiNav::pressOnRow(const Hit& hit, int x) {
         if (hit.part == Part::RightArrow || hit.part == Part::Value) return changeValue(row, 1);
         return {};
     case RowKind::Button:
+        if (hasCells(row)) {
+            if (hit.part != Part::Cell) return {};
+            screen_.focusCell = hit.cell;
+        }
+        return activateRow(row);
     case RowKind::Dropdown: return activateRow(row);
     }
     return {};
@@ -333,8 +369,10 @@ std::vector<Action> UiNav::handleMouse(const Event& event) {
     switch (event.kind) {
     case EventKind::MouseMove:
         if (dragRow_ >= 0) return dragSlider(event.x);
-        if (hit.target == Target::Row) focusRow(hit.index, false);
-        else if (hit.target == Target::Tab) focusTabs();
+        if (hit.target == Target::Row) {
+            focusRow(hit.index, false);
+            if (hit.part == Part::Cell) screen_.focusCell = hit.cell;
+        } else if (hit.target == Target::Tab) focusTabs();
         return {};
     case EventKind::MouseUp:
         dragRow_ = -1;
@@ -355,6 +393,7 @@ std::vector<Action> UiNav::handleMouse(const Event& event) {
 std::vector<Action> UiNav::handle(const Event& event) {
     const Command command = event.kind == EventKind::Key ? commandOf(event.key) : Command::None;
     if (modal_ != Modal::None) return handleModal(event, command);
+    if (event.kind == EventKind::PromptInput) return {};
     switch (event.kind) {
     case EventKind::Key: return handleCommand(command);
     case EventKind::Wheel: {

@@ -58,6 +58,7 @@ struct RowSpec {
     std::string value;
     double fraction = 0;
     bool enabled = true;
+    std::vector<std::string> cells{};
 };
 
 struct Screen {
@@ -67,6 +68,7 @@ struct Screen {
     int selectedTab = 0;
     std::vector<RowSpec> rows;
     int focusRow = -1;
+    int focusCell = 0;
     bool focusOnTabs = false;
     int scrollOffset = 0;
     int openDropdownRow = -1;
@@ -93,6 +95,9 @@ struct RowLayout {
     Rect track;
     Rect thumb;
     Rect numberBox;
+    std::vector<Rect> cells;
+    std::vector<bool> cellFits;
+    int focusedCell = -1;
     Rect focusBar;
     Rect focusBorder;
     bool visible = false;
@@ -138,12 +143,13 @@ int clampScroll(const Screen& screen, int offset, const Proportions& proportions
 int wheelScroll(const Screen& screen, int notches, const Proportions& proportions = {});
 
 enum class Target { None, Tab, Back, Row, DropdownItem, Scrollbar };
-enum class Part { None, Body, LeftArrow, RightArrow, Value, Track, Number };
+enum class Part { None, Body, LeftArrow, RightArrow, Value, Track, Number, Cell };
 
 struct Hit {
     Target target = Target::None;
     Part part = Part::None;
     int index = -1;
+    int cell = -1;
 };
 
 bool contains(const Rect& rect, int x, int y);

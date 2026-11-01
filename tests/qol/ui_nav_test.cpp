@@ -1,6 +1,7 @@
 // Spec: docs/design/qol-settings-drawing.md entry 2026-10-30T21:56:04 (approved suggestion: Up and Down between rows,
 // Left and Right change the value, arrows reach the tabs, Q/E or PageUp/PageDown, Enter, Esc layering, right-click as
 // Back, hover focus, wheel, slider drag, LB/RB/D-pad/A/B; answer 6: tabs wrap, rows do not).
+// Cells and prompt input (QOLSET-86, QOLSET-75): answers 7b, 12 and 15 of the entry 2026-10-30T21:56:04, 20261101-qolui3-A on 2026-11-01.
 // Expectations written from the spec by 20261030-qolui2-A on 2026-10-30; sizes from the layout model at 1080p.
 // Rows of the sample screen: 0 slider, 1 selector, 2 toggle, 3 dropdown, 4 button, 5 disabled selector.
 #include "qol/ui_nav.hpp"
@@ -341,6 +342,72 @@ void checkSliderAndWheel() {
     require(keys.screen().scrollOffset == 0 && keys.screen().focusRow == 0, "focus scrolls back to the first row");
 }
 
+void checkPromptInput() {
+    UiNav nav = makeNav();
+    require(nav.handle(promptInput(InputSource::Key, "W")).empty(), "raw input does nothing without a prompt");
+    require(key(nav, Key::Delete).empty(), "Delete does nothing outside a prompt");
+    require(commandOf(Key::Delete) == Command::None, "Delete is no menu command");
+    nav.setModal(Modal::Prompt);
+    auto a = nav.handle(promptInput(InputSource::Key, "Left_Alt"));
+    require(only(a, ActionKind::PromptInput) && a[0].source == InputSource::Key && a[0].code == "Left_Alt", "prompt passes a key name");
+    a = nav.handle(promptInput(InputSource::Mouse, "Middle"));
+    require(only(a, ActionKind::PromptInput) && a[0].source == InputSource::Mouse && a[0].code == "Middle", "prompt passes a mouse button");
+    a = nav.handle(promptInput(InputSource::Pad, "A"));
+    require(only(a, ActionKind::PromptInput) && a[0].source == InputSource::Pad && a[0].code == "A", "prompt passes a pad button");
+    require(only(key(nav, Key::Delete), ActionKind::PromptClear), "Delete clears the slot of an open prompt");
+    require(only(key(nav, Key::Escape), ActionKind::PromptCancelled), "Esc still cancels the prompt");
+    require(key(nav, Key::PadB).empty() && key(nav, Key::Enter).empty() && key(nav, Key::Down).empty(), "other keys stay swallowed");
+    for (Modal modal : {Modal::Dialog, Modal::SwapDialog}) {
+        nav.setModal(modal);
+        require(nav.handle(promptInput(InputSource::Key, "W")).empty(), "raw input does nothing in a dialog");
+        require(key(nav, Key::Delete).empty(), "Delete does nothing in a dialog");
+    }
+    nav.setModal(Modal::None);
+    require(key(nav, Key::Delete).empty() && nav.screen().focusRow == 0, "Delete after the prompt does nothing");
+}
+
+void checkCells(int w, int h) {
+    UiNav nav = makeNav(w, h, 3);
+    std::vector<RowSpec> rows = sampleRows(3);
+    rows[1].kind = RowKind::Button;
+    rows[1].cells = {"W", "Up", "< Hold >"};
+    rows[2].kind = RowKind::Button;
+    rows[2].cells = {"Space", "Unbound", "< Hold >"};
+    nav.setRows(rows);
+    key(nav, Key::Down);
+    require(nav.screen().focusRow == 1 && nav.screen().focusCell == 0, "cell row focused, first cell");
+    require(key(nav, Key::Left).empty() && nav.screen().focusCell == 0, "Left stops at the first cell");
+    require(key(nav, Key::Right).empty() && nav.screen().focusCell == 1, "Right moves to the next cell");
+    key(nav, Key::Right);
+    require(key(nav, Key::Right).empty() && nav.screen().focusCell == 2, "Right stops at the last cell");
+    auto a = key(nav, Key::Enter);
+    require(only(a, ActionKind::Activate) && a[0].index == 1 && a[0].item == 2, "Enter activates the focused cell");
+    key(nav, Key::Down);
+    require(nav.screen().focusRow == 2 && nav.screen().focusCell == 2, "Down keeps the column");
+    a = key(nav, Key::PadA);
+    require(only(a, ActionKind::Activate) && a[0].index == 2 && a[0].item == 2, "A activates the focused cell");
+    a = nav.handle(keyEvent(Key::Left));
+    require(a.empty() && nav.screen().focusCell == 1, "Left moves back");
+
+    const UiLayout lay = nav.layout();
+    const auto c = centre(lay.rows[1].cells[0]);
+    require(nav.handle(mouseMove(c.first, c.second)).empty() && nav.screen().focusRow == 1 && nav.screen().focusCell == 0, "hover focuses the cell");
+    a = nav.handle(mouseDown(c.first, c.second));
+    require(only(a, ActionKind::Activate) && a[0].index == 1 && a[0].item == 0, "click on a cell activates it");
+    const auto d = centre(lay.rows[2].cells[2]);
+    a = nav.handle(mouseDown(d.first, d.second));
+    require(only(a, ActionKind::Activate) && a[0].index == 2 && a[0].item == 2 && nav.screen().focusCell == 2, "click on the mode cell");
+    const auto l = centre(lay.rows[1].label);
+    require(nav.handle(mouseDown(l.first, l.second)).empty(), "click on the label of a cell row does nothing");
+    UiNav plain = makeNav(w, h);
+    key(plain, Key::Down);
+    key(plain, Key::Down);
+    key(plain, Key::Down);
+    key(plain, Key::Down);
+    a = key(plain, Key::Enter);
+    require(only(a, ActionKind::Activate) && a[0].item == -1, "a button without cells carries no cell");
+}
+
 }
 
 int main() {
@@ -350,8 +417,12 @@ int main() {
     checkDisabledSkip();
     checkTabs();
     checkEscLayers();
+    checkPromptInput();
     const int sizes[][2] = {{1280, 720}, {1920, 1080}, {3840, 2160}, {2560, 1080}, {800, 600}};
-    for (const auto& size : sizes) checkMouse(size[0], size[1]);
+    for (const auto& size : sizes) {
+        checkMouse(size[0], size[1]);
+        checkCells(size[0], size[1]);
+    }
     checkSliderAndWheel();
     if (failures != 0) return 1;
     std::cout << "ui nav ok\n";

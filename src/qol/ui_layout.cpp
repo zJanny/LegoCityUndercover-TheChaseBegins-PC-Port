@@ -66,6 +66,15 @@ void layoutControl(RowLayout& row, const RowSpec& spec, const Scale& s, const Pr
     case RowKind::Button:
         row.valueArea = c;
         row.valueFits = measure(spec.value, s.textPixels) <= static_cast<float>(c.width - s.padding);
+        if (!spec.cells.empty()) {
+            const int count = static_cast<int>(spec.cells.size());
+            for (int i = 0; i < count; ++i) {
+                const int x0 = c.x + c.width * i / count;
+                const int x1 = c.x + c.width * (i + 1) / count;
+                row.cells.push_back({x0, c.y, x1 - x0, c.height});
+                row.cellFits.push_back(measure(spec.cells[static_cast<std::size_t>(i)], s.textPixels) <= static_cast<float>(x1 - x0 - s.padding));
+            }
+        }
         break;
     }
 }
@@ -172,6 +181,8 @@ UiLayout computeLayout(const Screen& screen, const TextMeasure& measure, const P
         row.control = {row.rect.x + s.columnWidth - s.controlWidth - s.padding, row.rect.y, s.controlWidth, s.rowHeight};
         row.labelFits = measure(spec.label, s.textPixels) <= static_cast<float>(row.label.width);
         layoutControl(row, spec, s, p, measure);
+        if (row.focused && !row.cells.empty())
+            row.focusedCell = std::clamp(screen.focusCell, 0, static_cast<int>(row.cells.size()) - 1);
         if (row.focused) {
             row.focusBar = row.rect;
             row.focusBorder = row.rect;
@@ -232,6 +243,8 @@ Hit hitTest(const UiLayout& layout, const Screen& screen, int x, int y) {
         case RowKind::Dropdown:
         case RowKind::Button:
             if (contains(row.control, x, y)) part = Part::Value;
+            for (std::size_t cell = 0; cell < row.cells.size(); ++cell)
+                if (contains(row.cells[cell], x, y)) return {Target::Row, Part::Cell, static_cast<int>(i), static_cast<int>(cell)};
             break;
         }
         return {Target::Row, part, static_cast<int>(i)};

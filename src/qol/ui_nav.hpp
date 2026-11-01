@@ -10,14 +10,17 @@ namespace qol::ui {
 
 enum class Key {
     Up, Down, Left, Right, Enter, Escape, Q, E, PageUp, PageDown,
-    PadUp, PadDown, PadLeft, PadRight, PadA, PadB, PadLB, PadRB
+    PadUp, PadDown, PadLeft, PadRight, PadA, PadB, PadLB, PadRB,
+    Delete
 };
 
 enum class Command { None, Up, Down, Left, Right, Confirm, Back, TabPrevious, TabNext };
 
 Command commandOf(Key key);
 
-enum class EventKind { Key, MouseMove, MouseDown, MouseUp, RightClick, Wheel };
+enum class EventKind { Key, MouseMove, MouseDown, MouseUp, RightClick, Wheel, PromptInput };
+
+enum class InputSource { Key, Mouse, Pad };
 
 struct Event {
     EventKind kind = EventKind::MouseMove;
@@ -25,8 +28,13 @@ struct Event {
     int x = 0;
     int y = 0;
     int notches = 0;
+    InputSource source = InputSource::Key;
+    std::string code;
 };
 
+// PromptInput: the raw press the caller reads while a Prompt modal is open (a key name with underscores for spaces,
+// a mouse button name, a pad button name); it does nothing in any other state. Delete clears the slot of an open
+// prompt and does nothing outside it. Left and right clicks in a prompt arrive as ModalClick with button 1 and 3.
 // Wheel: a positive count scrolls down (rows move up), a negative count scrolls up.
 // Dialog: Enter or A confirms. SwapDialog: Enter or A cancels; Esc, B and right-click cancel in both.
 
@@ -36,6 +44,7 @@ Event mouseDown(int x, int y);
 Event mouseUp(int x, int y);
 Event rightClick(int x, int y);
 Event wheel(int notches);
+Event promptInput(InputSource source, std::string code);
 
 enum class ActionKind {
     ValueChanged,
@@ -49,7 +58,9 @@ enum class ActionKind {
     DialogCancelled,
     DialogConfirmed,
     ModalClick,
-    Scrolled
+    Scrolled,
+    PromptInput,
+    PromptClear
 };
 
 struct Action {
@@ -61,6 +72,8 @@ struct Action {
     int x = 0;
     int y = 0;
     int button = 0;
+    InputSource source = InputSource::Key;
+    std::string code;
 };
 
 enum class Modal { None, Prompt, Dialog, SwapDialog };
@@ -98,6 +111,8 @@ private:
     std::vector<Action> pressOnRow(const Hit& hit, int x);
     std::vector<Action> changeValue(int row, int direction);
     std::vector<Action> activateRow(int row);
+    std::vector<Action> moveCell(int direction);
+    bool hasCells(int row) const;
     std::vector<Action> switchTab(int tab);
     std::vector<Action> dragSlider(int x);
     std::vector<Action> closeDropdown(bool selectItem);

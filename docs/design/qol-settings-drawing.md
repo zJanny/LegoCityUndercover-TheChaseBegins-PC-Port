@@ -52,4 +52,7 @@ Answers of the user to the lead's questions (2026-10-30; the quoted labels are t
 13. Enter in the "key already bound, Swap / Cancel" dialog (the user, 2026-10-30, "Enter = Cancel"): Enter cancels, Swap needs a click or moving the focus to it first; Esc, pad B and right-click also cancel. The "Keep these settings?" dialog keeps Enter = confirm.
 14. Greyed-out rows such as Resolution in full screen (the user, 2026-10-30, "Skipped"): Up and Down, on keyboard and pad, jump over disabled rows; the note is seen only when the mouse hovers the row.
 
+15. Keyboard and pad on a Controls row (the user, 2026-11-01, "Keep A's stand-in"): Left and Right move the focus between Slot 1, Slot 2 and Mode, without wrapping; Up and Down keep the column; Enter or A activates the focused cell (a slot opens the prompt, Mode toggles Hold and Toggle); a mouse click on a cell activates it.
+16. Empty Slot 2 while Slot 1 is empty (the user, 2026-11-01, "Refuse it"): a click on it is refused; slots stay packed, so clearing Slot 1 moves Slot 2 up.
+
 Open: none.
