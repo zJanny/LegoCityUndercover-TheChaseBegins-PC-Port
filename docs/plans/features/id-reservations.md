@@ -12,8 +12,6 @@ Ranges of item IDs held by parallel agents, named like `20261021-audio-A`. The p
 | SCRIPT-S | 317 | 317 | 20261101-mission-A | 2026-11-01T14:38:31+01:00 |
 | SCRIPT | 406 | 409 | 20261101-mission-B | 2026-11-01T14:38:31+01:00 |
 | SCRIPT-S | 318 | 319 | 20261101-mission-B | 2026-11-01T14:38:31+01:00 |
-| SCRIPT | 410 | 417 | 20261101-mission-C | 2026-11-01T14:38:31+01:00 |
-| SCRIPT-S | 320 | 323 | 20261101-mission-C | 2026-11-01T14:38:31+01:00 |
 | PLAYER | 26 | 29 | 20261101-mission-D | 2026-11-01T14:38:31+01:00 |
 | PLAYER-S | 12 | 14 | 20261101-mission-D | 2026-11-01T14:38:31+01:00 |
 | COMBAT | 1 | 6 | 20261101-mission-E | 2026-11-01T14:38:31+01:00 |

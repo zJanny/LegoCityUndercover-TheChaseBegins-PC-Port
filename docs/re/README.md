@@ -82,6 +82,7 @@ Read this index, then open only the file you need.
 | [script-natives-world-reset.md](script-natives-world-reset.md) | ResetObject / EnableSwitch message 8: kinds 64, 132 and the default handler 0x221800, entity +0x44 (skeleton), 0x237c48 rotation order |
 | [script-natives-party.md](script-natives-party.md) | Batch SCRIPT-35: handlers of SwapAllegiance, SetWeaponEnabled, CharSetAllowVehicleEntry, SuperFreeplaySwap, the boss hooks (Walnuts, Rex, 1-8), mech, skydive, beam and downtown intro natives |
 | [scripts-missions.md](scripts-missions.md) | Mission gap analysis: the natives and trigger events a whole mission needs, oracle trace of the start of mission 1-2 (waypoint class starts the script, call order and counts) |
+| [scripts-missions-1-4.md](scripts-missions-1-4.md) | Mission 1-4 (the car showroom): scripts, natives without handler, trigger events, the AI spawner chain, texts, the order of the first part |
 | [doors.md](doors.md) | Doors (type 42): record, update 0x1d16b8, state change, messages, easing, hinge and slide pose, timings measured in the oracle |
 | [switches.md](switches.md) | The switch base (loader 0x23e84c, state machine 0x21435c / 0x22c6d0, handler 0x23aac0, states 0 to 5), the lever class (kind 58: use zone, message 3, handler 0x17f6f4) and the mission 1-3 key switch |
 | [studs.md](studs.md) | Studs (collectible coins): pickup pool records, sprite sheet drawing and spin, pickup radius and skip counter, collect timer, counter values and limits, stand-ins; dropped studs are in [studs-drops.md](studs-drops.md) |

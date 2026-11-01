@@ -13,6 +13,7 @@ What the scripts of one mission call, which natives and trigger events the port 
 - The two unnamed scripts have no starter in this build: every thread start resolves a name string (24 call sites read) and no name hashes to them. The dumpster peek 2451216995 is a copy of what `1-2_HouseArrival` does inline; 2494968948 is a single no-op `PrintDebugString`. [§2026-10-18T11:14:04](#ts-20261018-111404), [§2026-10-18T19:58:54](#ts-20261018-195854)
 - User playtest of mission 1-2 in `chase-game` (2026-10-18): past the Doorlock scene and the first detective point; next blocker is the smashable table `DonutTable_14` that gives the bricks of the trampoline build-it, which needs an attack on foot; cars drive through street lamps without breaking them (VEH-103). [§2026-10-18T15:27:22](#ts-20261018-152722)
 - Mission 1-2 from the dog cage on: the release script blacks the screen out and the cutscene mode of `1_2_c` fades it in again; `chase-game` runs on through `1-2_MissionEnd` (StoryProgress 3) to `1-3_MissionStart`. [use-spot.md §2026-10-19T09:12:53](use-spot.md#ts-20261019-091253)
+- Mission 1-4 (the car showroom): the same analysis in [scripts-missions-1-4.md](scripts-missions-1-4.md).
 - Open: an unnamed code path firing `1-2_Door_Lock_Hint_Script`'s ObjectTriggered (not excluded), the vehicle bound test 0x17b21c, who fires class-driven ObjectTriggered events, missing natives in mission 1-1 (CameraFollow, EnableTrafficAndPedestrians, music), original update numbers between steps.
 
 

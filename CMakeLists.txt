@@ -1179,6 +1179,11 @@ if(BUILD_TESTING)
   target_compile_options(script-call-targets-real-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME script-call-targets-real-data COMMAND script-call-targets-real-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
   set_tests_properties(script-call-targets-real-data PROPERTIES SKIP_RETURN_CODE 77)
+  add_executable(mission14-census-real-test tests/mission14_census_real_test.cpp)
+  target_link_libraries(mission14-census-real-test PRIVATE chase_runtime chase_assets)
+  target_compile_options(mission14-census-real-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME mission-1-4-census-real-data COMMAND mission14-census-real-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
+  set_tests_properties(mission-1-4-census-real-data PROPERTIES SKIP_RETURN_CODE 77)
   add_executable(scene-change-real-test tests/scene_change_real_test.cpp)
   target_link_libraries(scene-change-real-test PRIVATE chase_runtime chase_assets)
   target_compile_options(scene-change-real-test PRIVATE -Wall -Wextra -Wpedantic)
@@ -1873,6 +1878,17 @@ if(BUILD_TESTING)
       --script "0 0 130;0 0 120 A;0 0 100;at 1004.431 30.709 1080.533 352.6;0 0 5;0 0 1 A;0 0 850")
     set_tests_properties(game-crane-1-3 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
       PASS_REGULAR_EXPRESSION "script 1-3_Push_Done ended at update [0-9]+\n.*buildit 1-3_crane_bits: stud drop mode.*script 1-3_Crane_Build_it_done started at update [0-9]+\n.*switch 1-3_crane_switch: used at update [0-9]+\n.*switch 1-3_crane_switch: state 3 at update [0-9]+\n.*script 1-3_Start_Rescue_Lawnmower_man started at update [0-9]+\n.*player AI move: started at update [0-9]+ from [0-9. ]+\n.*player AI move: ended at update [0-9]+ at 987.288 [0-9.]+ 1077.79, [0-9]+ updates\n.*player AI move: 60 updates after the end the player is at 987.288 16.80[0-9]* 1077.79\n.*script 1-4_MissionStart started at update [0-9]+")
+    # Mission 1-4, the arrival at the car showroom (SCRIPT-410): the player walks into the waypoint 1-4_Waypoint_01 from 13 units away, which starts
+    # 1-4_ShowroomArrival; cutscene 1_4_a, the booster on the roof, the end of the script with the player at 1-4_P1_GoTo (577.484, 27.5656, 967.533 from the
+    # placement of that dummy in the level data, read by 20261101-mission-C on 2026-11-01). The update numbers are the port's, not measured in the original.
+    add_test(NAME game-showroom-1-4 COMMAND chase-game
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
+      --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes --save-out "${CMAKE_BINARY_DIR}/game-showroom-1-4.dat"
+      --start "602.9 23.8 975" --facing 180 --call-script 1-4_MissionStart
+      --script "0 0 40;0 120 90;0 0 800")
+    set_tests_properties(game-showroom-1-4 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
+      PASS_REGULAR_EXPRESSION "script 1-4_MissionStart ended at update [0-9]+\n.*waypoint started script 1-4_ShowroomArrival at update [0-9]+\n.*script 1-4_ShowroomArrival started at update [0-9]+\n.*cutscene 1_4_a started at update [0-9]+\n.*cutscene 1_4_a ended at update [0-9]+\n.*PositionObject: 1-4_booster_strange to 1-4_showroof_06 at update [0-9]+\n.*script 1-4_ShowroomArrival ended at update [0-9]+\n.*player ended at 577.484 27.5656 967.533")
     # Mission 1-2, the dog cage (SCRIPT-111): 1-2_Pringles_Cage_Locked enables the use spot 1-2_Dog_Cage_Use_Spot, A on the user's trigger position
     # (oracle save state at the dog cage trigger of mission 1-2) fires 1-2_Cage_Key_Target_Script through the spot's TriggerObject. The use marker (SCRIPT-292) is shown
     # while the spot is usable (seen on the ground in the oracle in that state) and goes after the use, when 0x236624 switched the zone off.
@@ -2398,7 +2414,7 @@ foreach(test_name ${chase_all_tests})
   set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT "XDG_DATA_HOME=${CMAKE_BINARY_DIR}/test-xdg/${test_name}")
 endforeach()
 
-foreach(slow_test game-key-pickup-1-3 game-parts-crate-1-3 game-generator-1-3 game-ledge-lift-1-3 game-fence-vault-1-3 game-push-cart-1-3 game-crane-1-3 game-key-use-1-3 game-debris-super-pickup game-cutscene-dog-end game-super-buildit-build game-helipad-collision game-fast-travel-exit game-super-brick-roof game-doorlock-detective-1-2 game-cage-release-1-2 game-mission-1-1 game-mission-1-1-start game-vehicle-drive game-vehicle-room game-pedestrian-rooms game-vehicle-hit game-vehicle-smash game-vehicle-break game-director-hold game-director-release game-van-escort game-pause-menu waypoint-marker-shot audio-real-data reflection-real-data)
+foreach(slow_test game-key-pickup-1-3 game-parts-crate-1-3 game-generator-1-3 game-ledge-lift-1-3 game-fence-vault-1-3 game-push-cart-1-3 game-crane-1-3 game-showroom-1-4 game-key-use-1-3 game-debris-super-pickup game-cutscene-dog-end game-super-buildit-build game-helipad-collision game-fast-travel-exit game-super-brick-roof game-doorlock-detective-1-2 game-cage-release-1-2 game-mission-1-1 game-mission-1-1-start game-vehicle-drive game-vehicle-room game-pedestrian-rooms game-vehicle-hit game-vehicle-smash game-vehicle-break game-director-hold game-director-release game-van-escort game-pause-menu waypoint-marker-shot audio-real-data reflection-real-data)
   if(TEST ${slow_test})
     set_property(TEST ${slow_test} APPEND PROPERTY LABELS slow)
   endif()
@@ -2417,7 +2433,7 @@ foreach(game_data_test
   camera-records-real-data locomotion-real-data streaming-real-data room-streaming-real-data collision-real-data fog-real-data lighting-real-data reflection-real-data
   sky-real-data shadow-real-data level-start-real-data dcam-real-data npc-idle-real-data pedestrian-limit-real-data ai-real-data nav-path-real-data
   script-triggers-real-data script-dialog-real-data natives-world-real-data natives-party-real-data natives-objects-real-data
-  natives-cutscene-real-data natives-animation-real-data natives-progress-real-data script-call-targets-real-data scene-change-real-data
+  natives-cutscene-real-data natives-animation-real-data natives-progress-real-data script-call-targets-real-data mission-1-4-census-real-data scene-change-real-data
   same-level-entry-real-data door-real-data fall-real-data jump-real-data slide-real-data camera-real-data camera-blend-real-data
   camera-vehicle-real-data camera-sweep-real-data save-real-data test-save-build slot-progress-real-data save-writer-real-data
   new-game-slot-real-data level-state-real-data pregen-derive-real-data pregen-traffic-real-data assets-real-data particles-real-data
@@ -2427,7 +2443,7 @@ foreach(game_data_test
   game-script-run game-script-walk game-script-camera game-script-ledge game-vehicle-drive game-van-escort game-cutscene-glass-hidden
   game-cutscene-dog-prop game-super-brick-freeplay game-save-new-game-clean game-save-new-game game-save-reload game-super-brick-roof
   game-cutscene-dog-end game-vehicle-room game-pedestrian-rooms game-vehicle-hit game-vehicle-break game-vehicle-smash game-debris-super-pickup
-  game-mission-1-1 game-detective-1-2 game-key-pickup-1-3 game-parts-crate-1-3 game-generator-1-3 game-ledge-lift-1-3 game-fence-vault-1-3 game-push-cart-1-3 game-crane-1-3 game-garage-key-1-3 game-key-use-1-3 game-use-spot-1-2 game-use-marker-detective-1-2 game-player-script-animation game-super-buildit-prompt
+  game-mission-1-1 game-detective-1-2 game-key-pickup-1-3 game-parts-crate-1-3 game-generator-1-3 game-ledge-lift-1-3 game-fence-vault-1-3 game-push-cart-1-3 game-crane-1-3 game-showroom-1-4 game-garage-key-1-3 game-key-use-1-3 game-use-spot-1-2 game-use-marker-detective-1-2 game-player-script-animation game-super-buildit-prompt
   game-super-buildit-build game-helipad-collision game-fast-travel-exit game-cage-release-1-2 game-doorlock-detective-1-2 game-mission-1-2-start-timing game-mission-1-1-start game-script-dialog
   game-same-level-entry game-scene-change-exit game-scene-change-entry game-director-hold game-director-release game-script-zipline game-script-zipline-handcuffs
   game-script-attack-table game-script-wobbly-table game-script-bounce game-script-bounce-grab game-script-acrobat-poles game-script-zipline-use-a
