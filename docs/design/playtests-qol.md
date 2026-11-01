@@ -17,3 +17,17 @@ What the user reported from playing the PC settings menu, with what an agent ver
 - **Low resolution: partly confirmed, different cause.** The page is not drawn at the 3DS size and stretched: the canvas has the window size and the page is laid out at the scale min(width / 320, height / 240) (3 at 1280x720, a 960x720 page with black bars left and right). The 3DS art (hexagon pictures, bars, panels and the bitmap font) is itself low resolution and is enlarged, so edges are soft and the glyphs blocky; this is how the original page is built, enlarged by 3 or more. The page uses only a 4:3 part of a wide window.
 
 **Open:** none; the user decided the button, sharpness and motion on 2026-10-29: [qol-settings.md §2026-10-29T19:34:22](qol-settings.md#ts-20261029-193422).
+
+<a id="ts-20261101-135042"></a>
+
+## 2026-11-01T13:50:42+01:00 — New PC settings menu played
+
+**Played:** the build after round 20261101-qolui3 (the new full-window settings menu wired in), reached during play with the master button on Improved through the hidden pause wheel.
+
+The user's words: "The menu looks great. Just record new QoL design choices/open points: ESC should be consistent, and now close the game. The controls should generally be rehauled as a QoL feature. So the game plays like a typical PC game, and drives like a typical driving game on PC. (for this search how modern PC games control, then let me approve the design)".
+
+- **Menu look: confirmed good** ("The menu looks great"); no bug reported.
+- **Escape:** the user asks for consistent Escape behaviour; decided that it never closes the game: [qol-controls.md §2026-11-01T13:50:44](qol-controls.md#ts-20261101-135044).
+- **Controls:** the user wants them overhauled as a QoL feature to PC conventions, on foot and in vehicles; the researched design was approved by the user the same day: [qol-controls.md §2026-11-01T13:50:47](qol-controls.md#ts-20261101-135047).
+
+**Open:** none. Feature file: [qol-controls](../plans/features/qol-controls.md).
