@@ -1,4 +1,5 @@
 #include "render/hud_overlay.hpp"
+#include "render/frame_keep.hpp"
 #include "render/frame_stats.hpp"
 #include "render/overlay_quad.hpp"
 #include "render/shaders.hpp"
@@ -100,6 +101,7 @@ void HudOverlayImpl::draw(const Pixels& top, const Pixels& bottom, const PixelRe
     quad(0, top, topRect, windowWidth, windowHeight);
     quad(1, bottom, bottomRect, windowWidth, windowHeight);
     end();
+    keepFrameIfRequested(windowWidth, windowHeight);
 }
 
 void HudOverlayImpl::drawTop(const Pixels& top, const PixelRect& rect, int windowWidth, int windowHeight, bool upload) {

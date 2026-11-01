@@ -6,7 +6,7 @@
 // (floor rounding, odd pixel in the right bar: user answer to QOLFS-9). GL rectangles count y from the window bottom.
 #include "game_hud.hpp"
 #include "qol/active_settings.hpp"
-#include "qol/menu_model.hpp"
+#include "qol/ui_page_qol.hpp"
 #include "qol/view_hook.hpp"
 
 #include <iostream>
@@ -46,11 +46,13 @@ void originalModeFirst() {
 
 void widenedOn() {
     qol::Settings settings;
-    qol::MenuModel menu(settings);
-    menu.open();
-    menu.handle(qol::tabClick(static_cast<std::size_t>(qol::Tab::QualityOfLife)));
-    menu.handle({qol::EventKind::Right});
-    require(menu.handle({qol::EventKind::Activate}) == qol::Result::SwitchedToCustom, "menu turns the widened view on");
+    qol::ui::QolPage page(settings);
+    qol::ui::Action flip;
+    flip.kind = qol::ui::ActionKind::ValueChanged;
+    flip.direction = 1;
+    flip.index = qol::ui::QolPage::firstFeatureRow;
+    require(page.handle(flip).kind == qol::ui::QolOutcomeKind::Changed && settings.master() == qol::Master::Custom,
+            "menu turns the widened view on");
     qol::setActiveSettings(settings);
     require(qol::enabled(qol::Feature::WidenedView), "store reads the menu's switch");
 
@@ -70,7 +72,7 @@ void widenedOn() {
     require(same(qol::topViewRegion(0, 0, {0, 0, 0, 0}, qol::CameraKind::Gameplay), chase::render::originalViewRegion({0, 0, 0, 0})),
             "empty drawable while on: the original region, no exception from the draw path");
 
-    menu.handle({qol::EventKind::Activate});
+    page.handle(flip);
     qol::setActiveSettings(settings);
     require(!qol::enabled(qol::Feature::WidenedView), "menu turns it off again");
     expectRegion(1920, 1080, {510, 540, 900, 540}, 400, 240, "off again: today's top screen");

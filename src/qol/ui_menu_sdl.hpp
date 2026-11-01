@@ -1,6 +1,7 @@
 #pragma once
 
 #include "qol/menu_stores.hpp"
+#include "qol/ui_backdrop.hpp"
 #include "qol/ui_menu.hpp"
 
 #include <SDL.h>
@@ -38,6 +39,7 @@ private:
     std::vector<std::string> languageNames_;
     ui::UiMenu menu_;
     std::unique_ptr<chase::render::UiDraw> draw_;
+    Backdrop backdrop_;
     int drawableWidth_ = 0;
     int drawableHeight_ = 0;
 };

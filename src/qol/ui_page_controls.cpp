@@ -187,7 +187,6 @@ ControlsPageOutcome ControlsPage::resolveSwap(bool swap) {
     return outcome(ControlsPageEvent::Changed);
 }
 
-// DRAFT QOLSET-97: help texts written by 20261101-qolui3-F on 2026-11-01, awaiting the user's approval.
 std::string ControlsPage::help(int row) const {
     if (row == resetRow()) return "Sets all bindings and modes back to the shipped controls.";
     if (row < 0 || row > resetRow()) return {};

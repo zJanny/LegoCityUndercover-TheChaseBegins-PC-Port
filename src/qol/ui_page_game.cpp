@@ -93,7 +93,6 @@ GamePageResult GamePage::handle(const Action& action) {
     return {};
 }
 
-// DRAFT QOLSET-97: help texts written by 20261101-qolui3-F on 2026-11-01, awaiting the user's approval.
 std::string GamePage::help(int row) const {
     switch (row) {
     case SfxRow: return "Volume of the sound effects. Default: " + std::to_string(defaultSfxVolume * volumeDisplayScale);

@@ -1,4 +1,5 @@
 #include "render/front_presenter.hpp"
+#include "render/frame_keep.hpp"
 #include <algorithm>
 #include <cmath>
 #include <epoxy/gl.h>
@@ -55,6 +56,7 @@ void FrontPresenterImpl::present(const Pixels& top, const Pixels& bottom, int wi
     blit(1, originX + scale * (topWidth_ - bottomWidth_) / 2, originY + scale * screenHeight_, scale * bottomWidth_,
          scale * screenHeight_, bottomWidth_, height);
     glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+    keepFrameIfRequested(width, height);
 }
 
 void FrontPresenterImpl::presentBoxes(const Pixels& top, const Pixels& bottom, int width, int height, const FrontBox& topBox,
@@ -69,6 +71,7 @@ void FrontPresenterImpl::presentBoxes(const Pixels& top, const Pixels& bottom, i
     blit(0, topBox.x, topBox.y, topBox.width, topBox.height, topWidth_, height);
     blit(1, bottomBox.x, bottomBox.y, bottomBox.width, bottomBox.height, bottomWidth_, height);
     glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+    keepFrameIfRequested(width, height);
 }
 
 void FrontPresenterImpl::upload(int index, const Pixels& image) {

@@ -103,7 +103,6 @@ DisplayPageResult DisplayPage::handle(const Action& action) {
     }
 }
 
-// DRAFT QOLSET-97: help texts written by 20261101-qolui3-F on 2026-11-01, awaiting the user's approval.
 std::string DisplayPage::help(int row) const {
     switch (row) {
     case WindowModeRow: return "Windowed or full screen. F11 also switches. Default: Fullscreen";

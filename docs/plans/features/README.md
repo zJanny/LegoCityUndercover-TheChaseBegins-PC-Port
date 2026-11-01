@@ -119,7 +119,8 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | [qol-settings-menu](qol-settings-menu.md) | NOT_STARTED | QOLSET-1 toggle store and master (first); QOLSET-2 menu with tabs; QOLSET-7 `qol-separation` guard; QOLSET-8 PC Settings entry; QOLSET-9 mirrored options |
 | [qol-settings-tabs](qol-settings-tabs.md) | IN_PROGRESS | QOLSET-3 Display tab; QOLSET-4 Controls tab |
 | [qol-settings-drawing](qol-settings-drawing.md) | IN_PROGRESS | QOLSET-53 slot page bar; stores behind the open menu; stand-ins S4 and S6 |
-| [qol-settings-ui](qol-settings-ui.md) | IN_PROGRESS | QOLSET-95 old model removal; QOLSET-96 picture behind the menu |
+| [qol-settings-ui](qol-settings-ui.md) | IN_PROGRESS | QOLSET-98 more keep points for the picture behind the menu |
+| [qol-settings-ui-pages](qol-settings-ui-pages.md) | DONE | Pages and dialogs of the modern menu (models done) |
 | [qol-controls](qol-controls.md) | NOT_STARTED | QOLCTL-1 Escape rules; QOLCTL-5 Quit game row; QOLCTL-8 PC controls toggle; QOLCTL-2 on-foot layout; QOLCTL-3 vehicle layout (design approved) |
 | [qol-fullscreen](qol-fullscreen.md) | IN_PROGRESS | QOLFS-11 load qol.cfg into the active store; QOLFS-1 widened view (wired above the bottom screen); QOLFS-2 corner-anchored HUD; QOLFS-3 pop-in at the edges |
 | [qol-minimap](qol-minimap.md) | IN_PROGRESS | QOLMAP-5 minimap and HUD overlap (question); QOLMAP-6 hide in more panels |

@@ -119,6 +119,7 @@ UiMenuWindow::UiMenuWindow(StoresPorts ports, std::vector<std::string> languageN
 UiMenuWindow::~UiMenuWindow() = default;
 
 void UiMenuWindow::open() {
+    backdrop_.release();
     stores_.open();
     const ui::MenuSetup setup = ui::menuSetupFor(stores_, languageNames_);
     menu_.setWindow(drawableWidth_, drawableHeight_);
@@ -135,21 +136,25 @@ bool UiMenuWindow::consume(const SDL_Event& event, int windowWidth, int windowHe
     const float scaleY = windowHeight > 0 && drawableHeight_ > 0 ? float(drawableHeight_) / float(windowHeight) : 1.0f;
     if (const std::optional<ui::Event> converted = menuEventFor(event, menu_.promptOpen(), scaleX, scaleY))
         commit(menu_.handle(*converted, nowSeconds()));
+    if (!isOpen()) backdrop_.release();
     return menuConsumes(event);
 }
 
-// STAND-IN QOLSET-S7: the menu is drawn over a black window, not over the dimmed last picture of the game.
+// STAND-IN QOLSET-S8: a hook whose frame has no end-of-frame keep in chase_render shows the menu over a black window.
 bool UiMenuWindow::present(int width, int height) {
     if (!isOpen()) return false;
     if (width <= 0 || height <= 0) return true;
     drawableWidth_ = width;
     drawableHeight_ = height;
+    const BackdropStep backdrop = backdrop_.step();
+    if (backdrop == BackdropStep::Defer) return false;
     menu_.setWindow(width, height);
     commit(menu_.tick(nowSeconds()));
     chase::render::setScissorTest(false);
     chase::render::setDepthTest(false);
     chase::render::setViewport({0, 0, width, height});
     chase::render::clearWindow({0, 0, 0, 1}, false);
+    if (backdrop == BackdropStep::Picture) backdrop_.draw(width, height);
     chase::render::UiDrawList list;
     menu_.paint(list);
     if (!draw_) draw_ = std::make_unique<chase::render::UiDraw>();
