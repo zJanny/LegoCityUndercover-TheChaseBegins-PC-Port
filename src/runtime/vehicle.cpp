@@ -67,7 +67,7 @@ void readParameters(const ParamReader& reader, const std::vector<VehicleTableRow
     const float override = floatOf(reader.get("HealthOverride"), -1.0f);
     if (override > 0.0f) record.health = record.hearts = std::uint8_t(std::int32_t(override));
     record.bumpCollision = reader.flag("BumpCollision");
-    for (auto [name, colour] : {std::pair{"DebrisColour", &record.debrisColour}, std::pair{"DebrisColour2", &record.debrisColour2}})
+    for (const auto& [name, colour] : {std::pair{"DebrisColour", &record.debrisColour}, std::pair{"DebrisColour2", &record.debrisColour2}})
         if (const assets::LevelParam* value = reader.get(name))
             if (value->type == 2 && !value->blocks.empty() && value->blocks[0].size() >= 12) {
                 std::array<float, 3> rgb{};

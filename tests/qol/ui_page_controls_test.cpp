@@ -219,7 +219,7 @@ void conflictOutcome() {
 }
 
 void withNavigation() {
-    for (const auto size : {std::pair<int, int>{1280, 720}, {1920, 1080}, {3840, 2160}}) {
+    for (const auto& size : {std::pair<int, int>{1280, 720}, {1920, 1080}, {3840, 2160}}) {
         Fixture f;
         UiNav nav([](std::string_view text, float pixels) { return 0.5f * pixels * static_cast<float>(text.size()); });
         nav.setWindow(size.first, size.second);
