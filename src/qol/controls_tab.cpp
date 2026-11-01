@@ -67,6 +67,14 @@ void ControlsTab::refreshChanged() {
     changed_ = bindings_ != original_;
 }
 
+void ControlsTab::clearConflict() {
+    conflictAction_.clear();
+    message_.clear();
+    pending_.reset();
+    pendingSource_.clear();
+    pendingCode_.clear();
+}
+
 std::vector<std::string> ControlsTab::rowKeys(std::size_t row) const {
     if (row >= actions_.size()) throw std::out_of_range("Controls tab row out of range: " + std::to_string(row));
     std::vector<std::string> keys;
@@ -82,8 +90,7 @@ ControlsResult ControlsTab::activate(std::size_t row, std::size_t slot) {
     waiting_ = true;
     waitingRow_ = row;
     waitingSlot_ = slot;
-    conflictAction_.clear();
-    message_.clear();
+    clearConflict();
     return ControlsResult::Waiting;
 }
 
@@ -97,15 +104,21 @@ ControlsResult ControlsTab::assignInput(const std::string& source, const std::st
     std::string checked = code;
     if (source == "key") std::replace(checked.begin(), checked.end(), '_', ' ');
     if (code.empty() || !validInput_(source, checked)) return ControlsResult::Rejected;
-    conflictAction_.clear();
-    message_.clear();
-    for (const auto& entry : bindings_)
+    clearConflict();
+    auto slots = slotsOf(waitingRow_);
+    for (std::size_t index = 0; index < bindings_.size(); ++index) {
+        const auto& entry = bindings_[index];
         if (entry.source == source && entry.code == code) {
             conflictAction_ = entry.action;
             message_ = source + " " + code + " is already used by " + entry.action;
+            if (waitingSlot_ >= slots.size() || slots[waitingSlot_] != index) {
+                pending_ = index;
+                pendingSource_ = source;
+                pendingCode_ = code;
+            }
             return ControlsResult::Conflict;
         }
-    auto slots = slotsOf(waitingRow_);
+    }
     if (waitingSlot_ < slots.size()) {
         bindings_[slots[waitingSlot_]].source = source;
         bindings_[slots[waitingSlot_]].code = code;
@@ -121,6 +134,7 @@ ControlsResult ControlsTab::toggleMode(std::size_t row, std::size_t slot) {
     if (slot >= slots.size()) return ControlsResult::Rejected;
     waiting_ = false;
     confirming_ = false;
+    pending_.reset();
     auto& mode = bindings_[slots[slot]].mode;
     mode = mode == "hold" ? "toggle" : "hold";
     refreshChanged();
@@ -133,6 +147,7 @@ ControlsResult ControlsTab::clearSlot(std::size_t row, std::size_t slot) {
     if (slot >= slots.size()) return ControlsResult::Rejected;
     waiting_ = false;
     confirming_ = false;
+    pending_.reset();
     bindings_.erase(bindings_.begin() + static_cast<std::ptrdiff_t>(slots[slot]));
     refreshChanged();
     return ControlsResult::Changed;
@@ -142,15 +157,38 @@ ControlsResult ControlsTab::cancel() {
     if (!waiting_ && !confirming_) return ControlsResult::Ignored;
     waiting_ = false;
     confirming_ = false;
-    conflictAction_.clear();
-    message_.clear();
+    clearConflict();
+    return ControlsResult::Cancelled;
+}
+
+ControlsResult ControlsTab::confirmSwap() {
+    if (!conflictPending()) return ControlsResult::Ignored;
+    const auto other = *pending_;
+    const auto slots = slotsOf(waitingRow_);
+    if (waitingSlot_ < slots.size()) {
+        auto& target = bindings_[slots[waitingSlot_]];
+        auto& taken = bindings_[other];
+        std::swap(target.source, taken.source);
+        std::swap(target.code, taken.code);
+    } else {
+        bindings_.erase(bindings_.begin() + static_cast<std::ptrdiff_t>(other));
+        bindings_.push_back({actions_[waitingRow_], pendingSource_, pendingCode_, "hold"});
+    }
+    waiting_ = false;
+    clearConflict();
+    refreshChanged();
+    return ControlsResult::Changed;
+}
+
+ControlsResult ControlsTab::cancelConflict() {
+    if (!conflictPending()) return ControlsResult::Ignored;
+    clearConflict();
     return ControlsResult::Cancelled;
 }
 
 ControlsResult ControlsTab::requestReset() {
     waiting_ = false;
-    conflictAction_.clear();
-    message_.clear();
+    clearConflict();
     if (bindings_ == defaults_) {
         confirming_ = false;
         return ControlsResult::Ignored;
@@ -167,8 +205,7 @@ ControlsResult ControlsTab::confirmReset() {
 ControlsResult ControlsTab::reset() {
     waiting_ = false;
     confirming_ = false;
-    conflictAction_.clear();
-    message_.clear();
+    clearConflict();
     if (bindings_ == defaults_) return ControlsResult::Ignored;
     bindings_ = defaults_;
     refreshChanged();

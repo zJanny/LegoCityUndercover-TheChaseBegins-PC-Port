@@ -46,6 +46,9 @@ public:
     const std::string& conflictAction() const { return conflictAction_; }
     const std::string& message() const { return message_; }
     bool confirming() const { return confirming_; }
+    bool conflictPending() const { return pending_.has_value() && waiting_; }
+    const std::string& pendingSource() const { return pendingSource_; }
+    const std::string& pendingCode() const { return pendingCode_; }
 
     ControlsResult activate(std::size_t row, std::size_t slot);
     ControlsResult assignKey(const std::string& keyName);
@@ -53,6 +56,8 @@ public:
     ControlsResult toggleMode(std::size_t row, std::size_t slot);
     ControlsResult clearSlot(std::size_t row, std::size_t slot);
     ControlsResult cancel();
+    ControlsResult confirmSwap();
+    ControlsResult cancelConflict();
     ControlsResult requestReset();
     ControlsResult confirmReset();
     ControlsResult reset();
@@ -63,6 +68,7 @@ public:
 private:
     std::vector<std::size_t> slotsOf(std::size_t row) const;
     void refreshChanged();
+    void clearConflict();
 
     std::vector<std::string> actions_;
     std::vector<BindingEntry> bindings_;
@@ -74,6 +80,9 @@ private:
     std::size_t waitingSlot_ = 0;
     std::string conflictAction_;
     std::string message_;
+    std::optional<std::size_t> pending_;
+    std::string pendingSource_;
+    std::string pendingCode_;
     bool confirming_ = false;
     bool changed_ = false;
 };

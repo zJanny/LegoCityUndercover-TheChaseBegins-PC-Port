@@ -206,6 +206,16 @@ target_link_libraries(qol-ui-nav-test PRIVATE chase_qol)
 target_compile_options(qol-ui-nav-test PRIVATE -Wall -Wextra -Wpedantic)
 add_test(NAME qol-ui-nav COMMAND qol-ui-nav-test)
 
+add_executable(qol-controls-swap-test controls_swap_test.cpp)
+target_link_libraries(qol-controls-swap-test PRIVATE chase_qol)
+target_compile_options(qol-controls-swap-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME qol-controls-swap COMMAND qol-controls-swap-test)
+
+add_executable(qol-keep-settings-test keep_settings_test.cpp)
+target_link_libraries(qol-keep-settings-test PRIVATE chase_qol)
+target_compile_options(qol-keep-settings-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME qol-keep-settings COMMAND qol-keep-settings-test)
+
 add_executable(qol-ui-page-game-test ui_page_game_test.cpp)
 target_link_libraries(qol-ui-page-game-test PRIVATE chase_qol)
 target_compile_options(qol-ui-page-game-test PRIVATE -Wall -Wextra -Wpedantic)

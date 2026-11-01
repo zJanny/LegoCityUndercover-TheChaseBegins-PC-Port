@@ -54,6 +54,11 @@ Answers of the user to the lead's questions (2026-10-30; the quoted labels are t
 
 15. Keyboard and pad on a Controls row (the user, 2026-11-01, "Keep A's stand-in"): Left and Right move the focus between Slot 1, Slot 2 and Mode, without wrapping; Up and Down keep the column; Enter or A activates the focused cell (a slot opens the prompt, Mode toggles Hold and Toggle); a mouse click on a cell activates it.
 16. Empty Slot 2 while Slot 1 is empty (the user, 2026-11-01, "Refuse it"): a click on it is refused; slots stay packed, so clearing Slot 1 moves Slot 2 up.
+17. Cancel in the "key already bound" dialog (the user, 2026-11-01, "Prompt stays open"): Cancel closes the dialog and the "Press a key..." prompt for the slot stays open.
+18. A key already on the very slot being edited (the user, 2026-11-01, "Conflict, no swap"): nothing changes and no Swap dialog opens; the key is refused as a conflict.
+19. A key already on the same action's other slot (the user, 2026-11-01, "Swap dialog (as built)"): the Swap dialog opens and Swap exchanges the two slots of the action.
+20. Countdown wording (the user, 2026-11-01, "Approve both"): "1 second" is singular, other counts say "seconds".
+21. No change to confirm (the user, 2026-11-01, "Approve both"): when the window mode and resolution after a change equal the values before it, "Keep these settings?" does not open.
 
 22. Language restored by "Reset to defaults" on the Game tab (the user, 2026-11-01, "Approve"): the language the game started with, the "Language at game start".
 23. Window mode selector (the user, 2026-11-01, "Approve"): only Windowed and Fullscreen (no borderless), and the two values wrap with Left and Right.
