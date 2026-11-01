@@ -80,6 +80,7 @@ void LevelSession::updatePushables(const std::function<void(const runtime::Sound
             break;
         case runtime::PushableEventKind::Arrived:
             std::cout << "pushable " << object.instance << ": state 1 at update " << updates << '\n';
+            pushableDrawnPending.insert(event.index);
             break;
         case runtime::PushableEventKind::Done:
             std::cout << "pushable " << object.instance << ": state 2 at update " << updates << '\n';

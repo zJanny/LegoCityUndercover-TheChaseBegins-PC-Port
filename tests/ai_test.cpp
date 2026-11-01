@@ -324,6 +324,36 @@ void superJumpTraceReplay() {
     core.update(0.033f);
     const std::array<float, 3>& held = *core.character("guy")->position;
     require(near(held[0], 944.661f, 2e-3f) && near(held[2], 1140.876f, 2e-3f), "u209: state 10 holds x and z where the jump was");
+    require(core.character("guy")->superJump && core.character("guy")->superJump->released, "20261101-mission-B, SCRIPT-S318: the replaced flight is released and keeps its height going");
+    core.land("guy", 16.8266f);
+    require(!core.character("guy")->superJump && (*core.character("guy")->position)[1] == 16.8266f, "the host lands a released flight on the ground (oracle u217: y 16.8266)");
+}
+
+// 20261101-mission-B, SCRIPT-S318: the released flight of the girder guy (oracle u209..u216: y 19.202 falling to 17.016, x and z held) falls in the port too
+// (the parabola of SCRIPT-S103 continued), keeps x and z, and AiCore::land ignores a flight that is still the character's current order.
+void releasedFlightFalls() {
+    AiCore core;
+    core.setPositionLookup([](const std::string& name, float out[3]) {
+        if (name == "guy") { out[0] = 947.881f; out[1] = 17.617f; out[2] = 1142.456f; return true; }
+        if (name == "jump") { out[0] = 941.8098f; out[1] = 17.3054f; out[2] = 1139.4764f; return true; }
+        if (name == "player1") { out[0] = 945.0f; out[1] = 17.0f; out[2] = 1150.0f; return true; }
+        return false;
+    });
+    core.run(AiNativeKind::AISuperJump, {"guy", "jump"}, {2.0f});
+    for (int u = 0; u < 15; ++u) core.update(0.033f);
+    core.land("guy", 16.8266f);
+    require(core.character("guy")->superJump && !core.character("guy")->superJump->released, "land leaves a flight that is not released");
+    core.run(AiNativeKind::AIFaceTarget, {"guy", "player1"}, {});
+    const std::array<float, 3> held = *core.character("guy")->position;
+    float previous = held[1];
+    for (int u = 0; u < 8; ++u) {
+        core.update(0.033f);
+        const std::array<float, 3>& at = *core.character("guy")->position;
+        require(near(at[0], held[0], 1e-6f) && near(at[2], held[2], 1e-6f), "a released flight keeps x and z");
+        require(u == 0 || at[1] < previous, "a released flight falls once it is past its apex");
+        previous = at[1];
+    }
+    require(previous < 17.617f + 2.0f, "the fall stays below the apex");
 }
 
 // STAND-IN SCRIPT-S103: a jump whose step is longer than the 0.23 arrival window (40 units in 28 frames, 1.43 per frame) is cut at the target and ends.
@@ -513,6 +543,7 @@ int main() {
         goToTargetState();
         superJumpPlanAndFlight();
         superJumpTraceReplay();
+        releasedFlightFalls();
         longSuperJumpEnds();
         faceTargetState();
     } catch (const std::exception& error) {

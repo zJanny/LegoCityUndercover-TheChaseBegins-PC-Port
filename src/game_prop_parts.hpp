@@ -5,6 +5,7 @@
 #include "render/scene.hpp"
 #include "runtime/buildit_bricks.hpp"
 #include "runtime/buildit_set.hpp"
+#include "runtime/final_prop_rise.hpp"
 #include "runtime/mesh_bouncer.hpp"
 #include <cstddef>
 #include <vector>
@@ -39,6 +40,7 @@ private:
         std::ptrdiff_t finalIndex;
         chase::runtime::BuilditBricks bricks;
         std::vector<std::ptrdiff_t> nodeInstance;
+        mutable chase::runtime::FinalPropRise rise;
     };
     std::vector<Child> children_;
     std::vector<Parts> parts_;

@@ -196,6 +196,7 @@ void LevelSession::updateCarry(const float playerPosition[3]) {
 void LevelSession::updateLevelCharacters(float dt) {
     levelCharacters->followAi(levelScripts.ai());
     snapAiMovedCharacters(dt);
+    landReleasedFlights(dt);
     attachLevelCharacters();
     updatePropAnimations(dt);
     updatePropRocking();

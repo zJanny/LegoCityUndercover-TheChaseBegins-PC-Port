@@ -10,6 +10,8 @@ The pushable objects (kind 71, `leprops/leprop_pushable`) with the four push han
 - The handle states' update 0x289d28 blends the player's x and z to the handle's use point (dt x 5 per update), turns him to the pushable (60000 / frame rate per update) and, once the blend is 1.0, sends message 9 with the push direction while the stick points against the handle's z axis; a released stick ends the grip. The pushable update 0x281434 moves the node by direction x `PushSpeed` once per message, starts the push sound, and goes to state 1 within `TriggerDistance` of `Destination`, sinks for 60 updates (none with `SinkHeight` 0) and at state 2 activates `TriggerObject` and makes the handles unusable. [§2026-10-26T23:04:40](#ts-20261026-230440)
 - In `chase-game` the push cart is built, pushed and fires `1-3_Push_Done` (CTest `game-push-cart-1-3`); the stand-ins are SCRIPT-S303 (pushable) and SCRIPT-S304 (player). [§2026-10-26T23:04:40](#ts-20261026-230440)
 - Against the oracle (fixed step): the cart's moves, arrival and rest position equal the port's rule from the measured start (72 moves of 0.06), message 9 acts one update later, the end sequence's timing equals the port's, and the player jumps and falls during the bridge jump. [§2026-10-28T01:21:46+01:00](#ts-20261028-012146)
+- The cart is drawn at its pushed position: the build-it no longer rewrites the final prop's transform outside its rise (SCRIPT-402). [§2026-11-01T15:37:27+01:00](#ts-20261101-153727)
+- The cart's 18 moves ahead of its placement in the state in front of the cart came from a push before that state (SCRIPT-393): the build-it record keeps the placement height. [§2026-11-01T15:58:44+01:00](#ts-20261101-155844)
 
 <a id="ts-20261026-230440"></a>
 
@@ -56,3 +58,24 @@ Method: per-update traces from save states by the emulator servant (20261027-mis
 Unknowns:
 - Why the cart node starts 18 moves ahead of its placement in the state in front of the cart (a push before the state was saved, or the build-it placing it there).
 - The original's height curve of state 73 and the landing clip's move of (-0.879, -0.526); what state 381 is and what the camera does in it.
+
+<a id="ts-20261101-153727"></a>
+
+## 2026-11-01T15:37:27+01:00 — The push cart is drawn where it is pushed to (SCRIPT-402, 20261101-mission-B)
+
+Method: `chase-game` runs of the CTest `game-push-cart-1-3` path with screenshots (not committed) and a log of the drawn transform; code reading of `src/game_prop_parts.cpp`; no new reading of the original.
+
+**Cause.** The cart `1-3_Push_cart` is the final prop of the build-it `1-3_Push_Cart_bits`. `PropParts::apply` wrote the final prop's scene transform every frame as its level placement plus the rise height (`build.propRise`, 0 after the change to state 11). The pushable's own node (`updatePushables` sets it every update) was therefore overwritten in every draw: the cart's logic moved to `1-3_Push_cart_to` while the cart stayed drawn at its placement (1021.34, 33.578, 1029.27), and the player walked into it (the player's box overlaps the cart's bounds) and was hidden inside it. The user's words were "invisible until the small cutscene starts"; the stationary cart and the hidden player are what the port showed, whether this is what the user saw is not confirmed. `1-3_Push_Done` then disables `1-3_Push_cart` and enables `1-3_Push_Platform` (a separate platform object, also a cart model), which the cutscene shows.
+
+**Fix.** The build-it writes the final prop's transform only while the rise is non-zero and once when it returns to 0 (`src/runtime/final_prop_rise.*`, CTest `final-prop-rise`); outside the rise the node belongs to its own object (pushed, carried or attached). Measured in the port: with the push at its end the drawn transform of the cart is (1019.49, 33.4136, 1034.35), the port's rest position next to the level's `1-3_Push_cart_to` (1019.46, 33.4108, 1034.43); before the fix it was the placement. CTest `game-push-cart-1-3` pins the line `pushable 1-3_push_cart: drawn at 1019.4x 33.4x 1034.3x`.
+
+Unknowns:
+- Whether the original's rise of a build-it moves the node itself (so a pushed final prop would carry it on) or only the drawn height; the record keeps the base height at +0x4c, which fits a rise added on top of a stored base, but the node write was not read. The port only avoids writing outside the rise.
+
+<a id="ts-20261101-155844"></a>
+
+## 2026-11-01T15:58:44+01:00 — The build-it record of the push cart against the oracle (SCRIPT-393, 20261101-mission-servant)
+
+Method: recorded from a save state in front of the built cart by the servant's idle job (20261101-mission-servant, 2026-11-01); three loads agree; no code reading and no new reading of the original.
+
+The cart is built and stands on the track behind the player. The build-it's record (kind 21, state 2 with target 2, flags +0x37 0x10 = built) holds the final prop's base height at +0x4c = 33.57809829711914, exactly the level placement y 33.578, while the cart's node is at (1020.9684, 33.5452, 1030.2870): lower by 0.0329 = 18 moves of -0.0018 along the tilted axis. So the build-it stored the placement height when it rose, and the 18 moves came after the build (a push before the state was saved), not from the build-it. This answers the first unknown of [§2026-10-28T01:21:46](#ts-20261028-012146): the start in front of the cart is a cart that was pushed before. The press that builds the cart cannot be observed from this state.

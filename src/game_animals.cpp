@@ -16,9 +16,10 @@ void LevelSession::updatePropAnimations(float dt) {
             continue;
         }
         scene.pose(pose.key, pose.skin);
-        if (!pose.moved) continue;
+        if (!pose.delta) continue;
         for (std::size_t i = 0; i < placedObjects.size(); ++i)
-            if (game_doors::lowerCase(placedObjects[i].instance) == pose.instance) scene.setTransform(placedSceneIndex[i], pose.node);
+            if (game_doors::lowerCase(placedObjects[i].instance) == pose.instance)
+                scene.setTransform(placedSceneIndex[i], runtime::applyRootDelta(scene.instanceTransform(placedSceneIndex[i]), *pose.delta));
     }
 }
 

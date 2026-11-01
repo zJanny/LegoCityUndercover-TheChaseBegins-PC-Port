@@ -97,14 +97,17 @@ std::optional<bool> PropAnimations::currentNearEnd(const std::string& instance) 
 void PropAnimations::update(float dt) {
     clock_ += std::llround(double(dt) * double(kAnimationClockTicksPerSecond));
     for (Entry& entry : entries_) {
+        entry.delta.reset();
         const AnimationSlot* slot = entry.slots.current();
         if (!slot) continue;
         const assets::Animation& animation = clips_[slot->clip].animation;
         const std::optional<RootSample> root = rootSample(animation, lastSampleFrame(animation, AnimationSlots::position(*slot, clock_).frame));
         if (!root) continue;
         if (entry.lastRoot && entry.lastRootStart == slot->startId) {
-            entry.node = applyRootDelta(entry.node, rootDelta(*entry.lastRoot, *root));
+            const RootSample delta = rootDelta(*entry.lastRoot, *root);
+            entry.node = applyRootDelta(entry.node, delta);
             entry.moved = true;
+            if (delta.translation[0] != 0.0f || delta.translation[1] != 0.0f || delta.translation[2] != 0.0f || delta.yaw != 0.0f) entry.delta = delta;
         }
         entry.lastRoot = root;
         entry.lastRootStart = slot->startId;
@@ -126,7 +129,7 @@ std::vector<PropPose> PropAnimations::poses() const {
         if (!slot) continue;
         const assets::Animation& animation = clips_[slot->clip].animation;
         const double frame = lastSampleFrame(animation, AnimationSlots::position(*slot, clock_).frame);
-        result.push_back({entry.key, assets::skinMatrices(entry.skeleton, animation, frame), entry.prop.instance, entry.moved, entry.node});
+        result.push_back({entry.key, assets::skinMatrices(entry.skeleton, animation, frame), entry.prop.instance, entry.moved, entry.node, entry.delta});
     }
     return result;
 }

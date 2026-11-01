@@ -7,6 +7,7 @@ Subtopic of [props-rocking.md](props-rocking.md): mission 1-3's attached placed 
 - Attached placed objects (the crow under the girder, the girder under the platform) keep a local matrix and follow the parent's whole world, a repeated AttachObject takes it again; `Rope_01` and emitters have no scene node (SCRIPT-397). [§2026-10-28T00:02:10](#ts-20261028-000210)
 - The generator scene's camera eye agrees with the oracle within 0.004 and the path shots' direction within 0.001; the Track shot's look is off by 0.03. [§2026-10-28T00:56:05](#ts-20261028-005605)
 - The rocking clock's rate is 30 and its divisor 3000 (about 1 per stepped update); the port's 2 per update stays a stand-in (SCRIPT-S297). The generator scene's camera calls agree within one update. [§2026-10-28T00:40:30](#ts-20261028-004030)
+- The gardener on the rescue lawn mower is drawn on it while it moves: root motion of a prop is applied to its current node, not written from its placement (SCRIPT-401, SCRIPT-S319). [§2026-11-01T15:37:57+01:00](#ts-20261101-153757)
 
 <a id="ts-20261028-000210"></a>
 
@@ -51,3 +52,18 @@ Call arguments (free run, raw words, slot layout uncertain): StartDCamTrack u90:
 Unknowns:
 - The FOV of the shots (not found), the camera names behind the StartDCam hashes and the speaker of the texts, the text of key 0x79e79c1f.
 - The look offset on the girder (SCRIPT-399).
+
+<a id="ts-20261101-153757"></a>
+
+## 2026-11-01T15:37:57+01:00 — The gardener rides the rescue lawn mower (SCRIPT-401, 20261101-mission-B)
+
+Method: `chase-game` runs from the start of `1-3_Start_MowerMan_rescue` (the push cart path of CTest `game-push-cart-1-3`) with a throwaway log of the scene transforms of `1-3_Gardner_Prop_02` and `1-3_Lawnmower_02`; code reading of `src/game_animals.cpp`, `src/runtime/prop_animation.*` and `src/runtime/node_attach.*`; no new reading of the original.
+
+**Cause.** The mower `1-3_Lawnmower_02` and the gardener `1-3_Gardner_Prop_02` (mesh `Prop_Gardener`) are skinned props that play `use` and `ride_lawnmower_minifig`; the startup attaches the gardener under the mower, 1.0879 above and about 1.0 beside the mower's origin (level data: gardener (965.259, 17.8916, 1058.38), mower (966.261, 16.8037, 1058.28), yaw 93.561). The clip `ride_lawnmower_minifig` (21 frames at 30 per second) has a root curve of 22 samples that are all 0, so the prop update (0x15aa70 -> 0x16b06c, [objects.md](objects.md)) has nothing to move; the port still counted it as moved and wrote the prop's own node, accumulated from its level placement, into the scene every update (`updatePropAnimations`). `NodeAttachments::follow` takes a world other than the one it wrote last as written by something else (0x24c118) and keeps it relative to the parent, so each update the attach took the placement as the new local matrix and the gardener never left it: in a run he stayed at (965.259, 17.8916, 1058.38) while the mower went round its path (978.46 .. 1008.77). Measured in the mower's frame (the log line `prop NAME: drawn at X Y Z in PARENT after it moved`, once the mower is 1 m from where it was first seen): before the fix (-10.35, 1.0879, -10.22), after it (-0.0217, 1.0879, -1.0067).
+
+**Fix.** The prop animation hands out the root delta of the update (`PropPose::delta`, empty for a zero delta) and the host applies it to the object's current scene transform (`applyRootDelta`), not an absolute node: whatever else moved the node (a platform, an attach) stays. CTests `game-push-cart-1-3` (the log line above), `attached-drawn-log` (made-up matrices); the props that move by root motion (dog, cat rescue, crane) are unchanged (`animal-props-real-data`, `prop-animation-real-data`).
+
+Stand-in SCRIPT-S319: the delta is applied to the child's world matrix and the attach then derives the local matrix; the original's 0x23d6c4 moves the node's local matrix, so the two agree only while the parent does not move between the prop update and the follow (the order of the entity updates is not read, SCRIPT-S316).
+
+Unknowns:
+- The seat pose: the gardener keeps the offset the level data gives (his model origin 1.0879 above the mower's); whether the original's `ride_lawnmower_minifig` clip lowers him into the seat is not compared with the oracle. The user has not re-checked the bug.

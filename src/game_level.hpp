@@ -79,6 +79,7 @@
 #include "runtime/node_attach.hpp"
 #include "runtime/attach_children.hpp"
 #include "runtime/bone_attach.hpp"
+#include "runtime/attached_drawn_log.hpp"
 #include "runtime/debug_metrics.hpp"
 #include "runtime/detective.hpp"
 #include "runtime/ability_table.hpp"
@@ -221,6 +222,8 @@ private:
     game_player::PlayerAnimation fenceVaultMovePlayer(float dt);
     void loadPushables(chase::assets::FuseArchive& archive);
     void updatePushables(const std::function<void(const chase::runtime::SoundCall&)>& emit);
+    void logDrawnFixes();
+    void landReleasedFlights(float dt);
     void loadAttack(chase::assets::FuseArchive& archive, const std::vector<chase::assets::ObjectCollision>& placed);
     game_player::PlayerAnimation attackMovePlayer(const chase::runtime::StickIntent& intent, bool jumpPressed, bool usePressed, bool attackHeld,
                                                   bool attackAllowed, float dt);
@@ -412,6 +415,8 @@ private:
     chase::runtime::AiSuperJumpVertical aiSuperJumpVertical;
     bool pushActionHeld = false;
     std::vector<std::optional<std::size_t>> pushableScene;
+    std::set<std::size_t> pushableDrawnPending;
+    chase::runtime::AttachedDrawnLog attachedDrawnLog;
     chase::runtime::BuilditPlayer builditPlayer;
     chase::runtime::SuperBuilditSet superBuildits;
     game_super_buildit::State superBuild;

@@ -104,6 +104,9 @@ struct AiSuperJump {
     std::array<float, 3> start{};
     float traveled = 0;
     float horizontalDistance = 0;
+    // Set when another order replaced the flight (AIFaceTarget, AIResetState, ...): x and z stay where they are and the height goes on until the
+    // host lands the character (AiCore::land). docs/re/ai-states.md, the girder guy's AIFaceTarget in the oracle.
+    bool released = false;
 };
 
 // Values the natives wrote, unset until a script wrote them. Meaning of the original bits (component bytes):
@@ -141,6 +144,9 @@ constexpr float kAiUpdatesPerSecond = 30.0f;
 // State 11 compares the horizontal distance with ctrl+0x8c, ATTR_RunSpeed (0x236ed4; default 0.23, the class value of other
 // characters is not read, SCRIPT-S104). Bit 6 of +0x314 (a character below the target has arrived) is stood in by false.
 constexpr float kAiGoToMinDistance = 0.23f;
+// STAND-IN SCRIPT-S318: a released flight (AiSuperJump::released) lands when the ground probe finds a floor within this distance below the node;
+// the original's fall lands on its own ground contact (docs/re/ai-states.md: 0.41 in the last update before the landing).
+constexpr float kReleasedFlightReach = 0.4f;
 
 // STAND-IN SCRIPT-S94: 0x204284 doubles the entity's float at +0x70 into the height tolerance of its lookups; 0.85 is the
 // player's value (oracle read), other characters' values are not read.
@@ -179,6 +185,8 @@ public:
     bool moving(const std::string& lowerCaseName) const;
     // True when the last update() advanced a move of that character (the host copies the new position).
     bool movedLastUpdate(const std::string& lowerCaseName) const;
+    // A released flight (AiSuperJump::released) ends: the character stands on the ground at `height`.
+    void land(const std::string& lowerCaseName, float height);
     // Advances every move order; characters whose order ended in this call are returned once (the AIMove event).
     void update(float dt);
     std::vector<AiMoveEnd> takeMovesEnded();
@@ -194,6 +202,7 @@ private:
     void advanceStraightMove(const std::string& name, AiCharacter& target, float dt);
     void advanceSimplePath(const std::string& name, AiCharacter& target, float dt);
     void advanceSuperJump(const std::string& name, AiCharacter& target, float dt);
+    bool advanceReleasedFlight(AiCharacter& target, float dt);
     void advanceFaceTarget(const std::string& name, AiCharacter& target);
     void advanceNavMove(const std::string& name, AiCharacter& target, float dt);
     bool startNavMove(const std::string& name, AiCharacter& target, const std::array<float, 3>& from, const std::array<float, 3>& to,

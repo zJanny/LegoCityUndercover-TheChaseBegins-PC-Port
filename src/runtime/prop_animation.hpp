@@ -34,7 +34,8 @@ struct PropPose {
     std::vector<assets::Matrix> skin;
     std::string instance;   // lower case
     bool moved = false;     // the clip's root motion moved the node (0x16b06c)
-    assets::Matrix node{};  // node matrix after the root motion
+    assets::Matrix node{};  // node matrix after the root motion, accumulated from the placement or the last place()
+    std::optional<RootSample> delta;  // the root delta of this update only: the node it applies to is the object's current one (attached and carried props)
 };
 
 class PropAnimations : public AnimationDriver {
@@ -68,6 +69,7 @@ private:
         AnimationSlots slots;
         assets::Matrix node{};
         bool moved = false;
+        std::optional<RootSample> delta;
         std::optional<RootSample> lastRoot;
         std::uint32_t lastRootStart = 0;
     };

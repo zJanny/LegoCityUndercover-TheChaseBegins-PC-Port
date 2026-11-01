@@ -320,6 +320,22 @@ void AiCore::advanceNavMove(const std::string& name, AiCharacter& target, float 
     position[2] += dz / distance * step;
 }
 
+namespace {
+// STAND-IN SCRIPT-S103: the height follows a parabola through the apex `plan.climb` above the start to the target height by the fraction of the
+// horizontal distance flown; a released flight goes on with the fraction above 1 (STAND-IN SCRIPT-S318).
+float superJumpHeight(const AiSuperJump& jump, float progress) {
+    const float rise = jump.target[1] - jump.start[1];
+    const float climb = jump.plan.climb;
+    if (climb > 0.0f && climb >= rise) {
+        const float apexToLanding = std::sqrt((climb - rise) / climb);
+        const float apex = 1.0f / (1.0f + apexToLanding);
+        const float k = climb / (apex * apex);
+        return jump.start[1] + climb - k * (progress - apex) * (progress - apex);
+    }
+    return jump.start[1] + rise * progress;
+}
+}
+
 void AiCore::advanceSuperJump(const std::string& name, AiCharacter& target, float dt) {
     AiSuperJump& jump = *target.superJump;
     std::array<float, 3>& position = *target.position;
@@ -346,17 +362,24 @@ void AiCore::advanceSuperJump(const std::string& name, AiCharacter& target, floa
     position[0] += step.x;
     position[2] += step.z;
     jump.traveled += std::min(length, remaining);
-    const float progress = jump.horizontalDistance > 0.0f ? std::min(1.0f, jump.traveled / jump.horizontalDistance) : 1.0f;
-    const float rise = jump.target[1] - jump.start[1];
-    const float climb = jump.plan.climb;
-    if (climb > 0.0f && climb >= rise) {
-        const float apexToLanding = std::sqrt((climb - rise) / climb);
-        const float apex = 1.0f / (1.0f + apexToLanding);
-        const float k = climb / (apex * apex);
-        position[1] = jump.start[1] + climb - k * (progress - apex) * (progress - apex);
-    } else {
-        position[1] = jump.start[1] + rise * progress;
-    }
+    position[1] = superJumpHeight(jump, jump.horizontalDistance > 0.0f ? std::min(1.0f, jump.traveled / jump.horizontalDistance) : 1.0f);
+}
+
+bool AiCore::advanceReleasedFlight(AiCharacter& target, float dt) {
+    AiSuperJump& jump = *target.superJump;
+    jump.released = true;
+    if (jump.horizontalDistance <= 0.0f) return false;
+    const SuperJumpStep step = stepSuperJumpHorizontal(jump.plan, jump.plan.heading, dt);
+    jump.traveled += std::sqrt(step.x * step.x + step.z * step.z);
+    (*target.position)[1] = superJumpHeight(jump, jump.traveled / jump.horizontalDistance);
+    return true;
+}
+
+void AiCore::land(const std::string& name, float height) {
+    AiCharacter& target = at(name);
+    if (!target.superJump || !target.superJump->released || !target.position) return;
+    (*target.position)[1] = height;
+    target.superJump.reset();
 }
 
 void AiCore::advanceFaceTarget(const std::string&, AiCharacter& target) {
@@ -403,6 +426,7 @@ void AiCore::update(float dt) {
             advanceSuperJump(name, target, dt);
             continue;
         }
+        if (target.superJump && advanceReleasedFlight(target, dt)) moved_.push_back(name);
         if (target.state == AiState::FaceTarget) {
             advanceFaceTarget(name, target);
             continue;

@@ -29,7 +29,7 @@ void PropParts::loadBuildits(render::Scene& scene, assets::FuseArchive& archive,
         }
         if (partsIndex < 0) continue;
         const assets::Placement& parts = placed[std::size_t(partsIndex)];
-        Parts entry{b, std::size_t(partsIndex), finalIndex, runtime::BuilditBricks::load(archive, parts.mesh), {}};
+        Parts entry{b, std::size_t(partsIndex), finalIndex, runtime::BuilditBricks::load(archive, parts.mesh), {}, {}};
         if (finalIndex >= 0)
             entry.bricks.buildAt(runtime::nodeRelativeTo(assets::placementMatrix(placed[std::size_t(finalIndex)]), assets::placementMatrix(parts)));
         entry.nodeInstance = scene.addModelNodes(assets::meshModelPath(parts.mesh), assets::placementMatrix(parts));
@@ -66,7 +66,7 @@ void PropParts::apply(render::Scene& scene, const runtime::BuilditSet& buildits,
             node[13] += buildits.objects()[entry.buildit].wobble.offset(brick);
             scene.setTransform(std::size_t(instance), assets::multiply(node, placement));
         }
-        if (entry.finalIndex >= 0) {
+        if (entry.finalIndex >= 0 && entry.rise.writes(build.propRise)) {
             assets::Placement risen = placed[std::size_t(entry.finalIndex)];
             risen.position[1] += build.propRise;
             scene.setTransform(placedScene[std::size_t(entry.finalIndex)], assets::placementMatrix(risen));

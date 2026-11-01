@@ -13,6 +13,7 @@ Update functions and set-up functions behind the AI natives that are not movemen
 - Oracle: the counter ctrl+0x2cf counts one per update, the facing ctrl+0xa equals the heading from the first move update, the horizontal step matches 0x203d18 to 2e-3; the height follows the jump-run clip with a slow first frame and a fall after the clip. [§2026-10-25T16:46:40](#ts-20261025-164640)
 - Stand-in SCRIPT-S103: the port's height is a parabola and a step longer than the distance left is cut at the target, which ends the jump. [§2026-10-25T16:37:12](#ts-20261025-163712)
 - Open: the height and the landing of the flight, the update functions of states 25, 27, 35, 36 and 2, the follow-up lookup 0x1f8d5c, and non-player `ATTR_RunSpeed` values.
+- An AISuperJump that another order replaces keeps its height going and lands on the ground (SCRIPT-400, stand-in SCRIPT-S318); the girder guy of the generator scene lands at y 16.83, the oracle's 16.8266. [§2026-11-01T15:37:57+01:00](#ts-20261101-153757)
 
 <a id="ts-20261014-212158"></a>
 
@@ -80,3 +81,19 @@ Method: servant request RPC 20261025-garage-C-1 (agent 20261025-garage-servant, 
 
 Unknowns:
 - The height model (the clip blend at the start, the move 0x20cd30 with the character's collision that lands the guy at y 16.83), and C+0x208, the fall speed after 28 counts.
+
+<a id="ts-20261101-153757"></a>
+
+## 2026-11-01T15:37:57+01:00 — An interrupted AISuperJump falls to the ground (SCRIPT-400, 20261101-mission-B)
+
+Method: `chase-game` runs of the generator scene of mission 1-3 (`1-3_ArrivedAtStation` and `1-3_Generator_Script` called, the player at the pull switch) with a throwaway log of the AI position of `1-3_AI_Girder_Guy`; the oracle trace of [§2026-10-25T16:46:40](#ts-20261025-164640); no new reading of the original.
+
+**Cause.** `1-3_Generator_Script` calls AISuperJump(1-3_AI_Girder_Guy, 1-3_girder_Jump_2, 2) and, 0.5 s later, AIFaceTarget(1-3_AI_Girder_Guy, Player1). The port set state 10 and left the flight half done: x and z held (as in the oracle), but the height stayed where it was and the guy hung at y 19.57 for the rest of the scene ("the guy is stuck in the air"). The oracle's state 10 keeps the flight's height going: y 19.202 at u209 down to 17.016 at u216 and the landing at u217 at y 16.8266. The test route of CTest `game-generator-1-3` never showed it: it does not call `1-3_ArrivedAtStation`, which enables the guy, so he stayed disabled and his AI did not run.
+
+**Fix.** A flight that another order replaces is released (`AiSuperJump::released`): x and z stay with the new order, the height goes on along the flight's parabola by the horizontal step per update (the fraction above 1 continues the fall) and the host ends it when the ground probe finds a floor within 0.4 below the node (`LevelSession::landReleasedFlights`, `AiCore::land`). Port run: the guy lands at (944.447, 16.8288, 1140.76); the oracle landed at y 16.8266 (x and z 944.661, 1140.876: the port's flight was one update further along when the turn came). CTests `ai-core` (the replay of the oracle trace up to the landing) and `game-girder-guy-1-3` (the log line `character NAME: released flight landed at X Y Z`).
+
+Stand-in SCRIPT-S318: the fall of a released flight follows the port's parabola of SCRIPT-S103 (the original's heights above; its fall is not modelled) and lands within 0.4 of a floor (kReleasedFlightReach), not on the original's own ground contact.
+
+Unknowns:
+- The rescued man `1-3_Lawnmower_man_final` of the end script is the user's SCRIPT-400 (the user confirmed 2026-11-01). His clip `cherry_crane_sequence_minifig` (150 frames at 15 per second) has a root motion of (-29.6, -0.83, 30.5) in his frame that the port does not apply to level characters (SCRIPT-406): he stays in the park at (978.612, 17.644, 1040.27) through the crane sequence and then jumps about 40 m to `1-3_AI_Gardener_Final_Position` (988.349, 17.1079, 1079.2) with AISuperJump, so he is not on the crane when the player sees him.
+- A jump that ends on a target above the ground was not checked against the ground (SCRIPT-407): the final position is at y 17.1079 and the player lands next to it at y 16.80, so the man may stand 0.3 above his ground.
