@@ -102,7 +102,7 @@ void roundTrip() {
     custom.setSwitch(qol::Feature::WidenedView, true);
     custom.setMaster(qol::Master::Custom);
     const std::string text = written(custom);
-    require(text == "master Custom\nwindow_mode fullscreen\nwidened_view on\n", "custom settings written");
+    require(text == "master Custom\nwindow_mode fullscreen\nwidened_view on\npc_controls off\n", "custom settings written");
     qol::Settings back = parse(text);
     require(back.master() == qol::Master::Custom && back.mixSet() &&
         back.enabled(qol::Feature::WidenedView), "custom round trip");
@@ -193,6 +193,9 @@ void rejections() {
         {"widened_view on\nwidened_view off\n", "line 2: widened_view off"},
         {"widened_view\n", "line 1: widened_view"},
         {"widened_view on on\n", "line 1: widened_view on on"},
+        {"pc_controls yes\n", "line 1: pc_controls yes"},
+        {"pc_controls on\npc_controls off\n", "line 2: pc_controls off"},
+        {"pc_controls\n", "line 1: pc_controls"},
         {"master Original\nbogus on\n", "line 2: bogus on"},
         {"window_mode borderless\n", "line 1: window_mode borderless"},
         {"window_mode Windowed\n", "line 1: window_mode Windowed"},

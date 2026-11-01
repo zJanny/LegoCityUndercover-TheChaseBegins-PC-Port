@@ -99,6 +99,13 @@ if(TARGET chase_qol_paint)
 endif()
 
 if(TARGET chase_qol_paint)
+  add_executable(qol-pc-controls-test pc_controls_test.cpp ${CMAKE_SOURCE_DIR}/src/runtime/qol_controls_bindings.cpp ${CMAKE_SOURCE_DIR}/src/runtime/qol_pc_controls.cpp)
+  target_link_libraries(qol-pc-controls-test PRIVATE chase_qol_paint chase_input PkgConfig::SDL2)
+  target_compile_options(qol-pc-controls-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME qol-pc-controls COMMAND qol-pc-controls-test)
+endif()
+
+if(TARGET chase_qol_paint)
   add_executable(qol-game-wiring-test game_wiring_test.cpp ${CMAKE_SOURCE_DIR}/src/runtime/qol_game_wiring.cpp)
   target_link_libraries(qol-game-wiring-test PRIVATE chase_qol_paint chase_runtime chase_save_progress)
   target_compile_options(qol-game-wiring-test PRIVATE -Wall -Wextra -Wpedantic)

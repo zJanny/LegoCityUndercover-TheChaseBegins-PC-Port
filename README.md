@@ -14,13 +14,13 @@ The game data is never part of this repository. You need your own copy of the ga
 | Script commands | 54 of 239 (22.6%) | Different commands the level scripts call that the port runs. They cover 68.4% of all calls. 138 more run with a stand-in result. |
 | Object types | 169 of 506 (33.4%) | Different object types in the levels that the port treats with recovered rules (collision, doors, studs). They cover 56.6% of all placed objects. |
 | Game files read | 99.8% of files, 100.0% of data | Files in the game archive (12836) that the port can decode, by count and by size. |
-| Open work | 614 open items, 473 stand-ins | Known gaps and temporary guesses in 36 feature areas. It has no total to reach; watch the trend. |
+| Open work | 613 open items, 474 stand-ins | Known gaps and temporary guesses in 36 feature areas. It has no total to reach; watch the trend. |
 | Checked against the original | 449 tests, 232 recorded traces | Automatic tests, and recordings of the original game that the tests compare with. |
 | Game code documented | 2911 of about 7575 (38.4%) | Functions of the game program that the notes or the source point to. The total is an estimate. |
 
 ![Progress trend](docs/progress-trend.svg)
 
-Updated 2026-11-01, commit 1123db99. How the numbers are measured: [docs/progress.md](docs/progress.md).
+Updated 2026-11-01, commit 6f942abd. How the numbers are measured: [docs/progress.md](docs/progress.md).
 <!-- progress:end -->
 
 ## What you need

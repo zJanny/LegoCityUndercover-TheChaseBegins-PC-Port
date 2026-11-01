@@ -15,6 +15,7 @@ struct FeatureHelp {
 
 constexpr std::array<FeatureHelp, featureCount> featureHelp{{
     {Feature::WidenedView, "A wider game picture with the HUD in the corners.", false},
+    {Feature::PcControls, "Keys and mouse like a PC game: WASD, Space, E, F.", false},
 }};
 
 const FeatureHelp& helpOf(Feature feature) {

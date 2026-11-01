@@ -19,3 +19,4 @@ __pycache__/
 
 # Per-user settings written by chase-game
 /config/qol.cfg
+/config/controls.pc.cfg

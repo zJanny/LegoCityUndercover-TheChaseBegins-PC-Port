@@ -38,6 +38,10 @@ QolControlsBindings::QolControlsBindings(const std::string& path, const std::str
     : path_(path), tab_(std::make_unique<ControlsTab>(AnyInput{}, controlActions(), readFile(path), readFile(shippedPath),
           fileInputValidator(sdlKeyResolver))) {}
 
+QolControlsBindings::QolControlsBindings(const std::string& path, std::vector<BindingEntry> defaults)
+    : path_(path), tab_(std::make_unique<ControlsTab>(AnyInput{}, controlActions(), readFile(path), std::move(defaults),
+          fileInputValidator(sdlKeyResolver))) {}
+
 ControlsResult QolControlsBindings::saved(ControlsResult result) {
     if (result == ControlsResult::Changed) writeBindingFile(path_, tab_->bindings(), sdlKeyResolver);
     return result;

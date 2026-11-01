@@ -40,6 +40,30 @@ For example, `A key Space hold` makes Space press the A button.
 - The menus and buttons on the lower screen (map buttons, menus) are used by clicking them. There are no extra keys for them.
 - In the [development runtime](commands.md#development-runtime) a left click that starts on the lower screen is a touch, not A. A left click on the upper screen is still A.
 
+## PC controls
+
+The Quality of life tab of the [PC settings menu](#pc-settings-menu) has a "PC controls" row. It is off in Original, on in Improved, and has its own switch in Custom. Off is today's mapping (the table under [Default controls](#default-controls) and `config/controls.cfg`). The game keeps its 3DS button icons; key names appear only in the Controls tab.
+
+With PC controls on, `chase-game` reads the keys from `config/controls.pc.cfg` instead of `config/controls.cfg`. The program creates the file from its built-in set the first time, in the folder of the controls file. The Controls tab then rebinds in that file, and "Reset to defaults" restores the built-in set. Switching the row never changes the other file, so both mappings keep your changes. The built-in set on foot:
+
+| Action | Keys |
+|---|---|
+| Move | W, A, S, D or the arrow keys |
+| Walk (hold) | Left Ctrl, Left Alt second |
+| Jump (B) | Space |
+| Interact and confirm (A) | E, Return second |
+| Punch (Y) | left mouse button, R second |
+| Enter or leave a vehicle (X) | F |
+| Turn the camera (L and R) | Z and C |
+| Re-centre the camera (L and R together) | middle mouse button, Z and C together |
+| Select | Tab |
+| Start | Keypad Enter |
+
+- The right mouse button is unused. The lower-screen menus are used by clicking them. A left click on the lower screen is still a touch.
+- Escape does not belong to this set yet (it becomes the pause key with the Escape rules).
+- Driving keys and the mouse camera are not built yet.
+- A change of the Quality of life row takes effect at once, without restarting.
+
 ## Fast travel pad
 
 In the [development runtime](commands.md#development-runtime), after you pressed A on the built helipad pad and the helicopter idles:
@@ -88,7 +112,7 @@ In the [development runtime](commands.md#development-runtime), on the slot list 
 - Game tab: SFX volume and Music volume (0 to 100 in steps of 10; the sound changes at once), Invert camera (On or Off), Language (`< English >`), and Reset to defaults. The options are stored in the save file when you close the menu, if you changed one. A new language is passed on when the menu closes, but the game does not switch to it yet (a line in the terminal says so).
 - Display tab: Window mode (Windowed or Fullscreen) and Resolution (a list of the monitor's sizes; greyed out as "Desktop resolution" in full screen). A change applies at once and asks "Keep these settings?": **Enter** or Keep keeps it, **Escape**, Revert or 15 seconds without an answer go back to the old setting.
 - Controls tab: one row per action with the columns Action, Slot 1, Slot 2 and Mode. **Left and Right** move between Slot 1, Slot 2 and Mode, **Enter** or a click chooses it. A slot shows "Press a key... (Esc cancel, Del clear)": press the new key, mouse button or gamepad button (a gamepad button only while a gamepad is connected), **Delete** clears the slot, **Escape** cancels. The menu keys cannot be bound. A key that another action uses asks "Swap" or "Cancel": **Enter** cancels, **Left and Right** move between Swap and Cancel and Enter presses the chosen one; a click on Swap swaps the two bindings. Mode switches the action between Hold and Toggle. `config/controls.cfg` is written after each change and the running game uses it at once.
-- Quality of life tab: the preset (Original, Improved, Custom) and one On/Off row per feature. Changing a feature by hand switches the preset to Custom.
+- Quality of life tab: the preset (Original, Improved, Custom) and one On/Off row per feature (Widened view, [PC controls](#pc-controls)). Changing a feature by hand switches the preset to Custom.
 - The help line under the rows says what the focused row does and its default. Every tab ends with a **Reset to defaults** button, which asks first (Yes or No). The question opens on No: **Enter** declines, **Left** moves to Yes.
 - The Display and Quality of life tabs store their settings in `config/qol.cfg` at once (see [window mode and size](game-runtime.md#window-mode-and-size)).
 

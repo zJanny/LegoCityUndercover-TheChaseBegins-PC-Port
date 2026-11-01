@@ -27,6 +27,7 @@ public:
     void attach(SDL_Window* window);
     void poll(const InputState& input);
     qol::StoresPorts menuStores(const std::string& controlsFile, InputState& input);
+    void syncControls(const std::string& controlsFile, InputState& input);
 
 private:
     void apply(bool fullscreen, int width, int height);

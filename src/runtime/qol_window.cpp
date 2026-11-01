@@ -1,7 +1,8 @@
 #include "runtime/qol_window.hpp"
 
+#include "qol/active_settings.hpp"
 #include "qol/window_apply.hpp"
-#include "runtime/qol_controls_bindings.hpp"
+#include "runtime/qol_pc_controls.hpp"
 
 #include <fstream>
 #include <stdexcept>
@@ -9,7 +10,7 @@
 
 namespace chase::runtime {
 
-using qol::StoresPorts, qol::Settings, qol::ControlsPort, qol::Resolution, qol::usableModes;
+using qol::StoresPorts, qol::Settings, qol::Resolution, qol::usableModes, qol::enabled, qol::Feature;
 
 namespace {
 
@@ -73,15 +74,13 @@ StoresPorts QolWindow::menuStores(const std::string& controlsFile, InputState& i
         const auto plan = controller_->adopt(settings);
         apply(plan.fullscreen(), plan.width(), plan.height());
     };
-    ports.makeControls = [controlsFile]() -> std::unique_ptr<ControlsPort> {
-        return std::make_unique<QolControlsBindings>(controlsFile);
-    };
-    ports.controlsChanged = [controlsFile, &input]() {
-        std::ifstream file(controlsFile);
-        if (!file) throw std::runtime_error("cannot open controls: " + controlsFile);
-        input.rebind(readBindings(file, sdlKeyResolver));
-    };
+    ports.makeControls = [controlsFile]() { return makeActiveControls(controlsFile); };
+    ports.controlsChanged = [controlsFile, &input]() { input.rebind(readActiveBindings(controlsFile)); };
     return ports;
+}
+
+void QolWindow::syncControls(const std::string& controlsFile, InputState& input) {
+    if (enabled(Feature::PcControls)) input.rebind(readActiveBindings(controlsFile));
 }
 
 }

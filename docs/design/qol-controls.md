@@ -11,7 +11,7 @@ The user's words, after playing the new settings menu ([playtests-qol.md §2026-
 The lead asked what Escape does on the game window. The user chose **"Never closes the game"** (2026-11-01), option text: "Esc always means back/close menu/pause, like in typical PC games; quitting goes through a menu entry."
 
 Decided (the user, 2026-11-01):
-- Escape never closes the game, in any state. In gameplay it opens the pause menu (it is also bound to Start, Return second); in a menu or dialog it goes back or closes it (the settings menu already follows this: [qol-settings-drawing.md §2026-10-30T21:56:04](qol-settings-drawing.md#ts-20261030-215604)).
+- Escape never closes the game, in any state. In gameplay it opens the pause menu (it is also bound to Start, Keypad Enter second); in a menu or dialog it goes back or closes it (the settings menu already follows this: [qol-settings-drawing.md §2026-10-30T21:56:04](qol-settings-drawing.md#ts-20261030-215604)).
 - Quit entry, "PC Settings + title (Rec.)": a "Quit game" row with Yes/No on the PC Settings Game tab, and the same on the title and save slot screens. The original menus stay unchanged. Closing the window still ends the program.
 - Movies, cutscenes, logos and the title, "Skips if skippable (Rec.)": Escape acts like the original skip where the original has one, and does nothing else.
 - Original mode, "Everywhere (Rec.)": the Escape rules apply with the master button on Original too (so the development quit on Escape in `chase-game` goes away in every mode).
@@ -27,7 +27,7 @@ The user's words: "The controls should generally be rehauled as a QoL feature. S
 
 **Approved design** (the user, 2026-11-01). No new game behaviour beyond the listed choices.
 - Switch: "Own toggle, on in Improved": "PC controls" is its own toggle on the Quality of life tab, on in Improved, off in Original (it is not a Custom-only extra; the Escape rules above apply in both modes).
-- On foot: W/A/S/D and the arrows move; Left Ctrl held = walk (Left Alt second); Space = jump (B); E = interact and confirm (A, Enter second); left mouse button = punch (Y, R second); F = enter or leave a vehicle (X); Z and C turn the camera; middle mouse button = re-centre the camera (Z and C together second); Esc = pause (Start, Return second); Tab = Select. Lower-screen menus are used by clicking them.
+- On foot: W/A/S/D and the arrows move; Left Ctrl held = walk (Left Alt second); Space = jump (B); E = interact and confirm (A, Return second); left mouse button = punch (Y, R second); F = enter or leave a vehicle (X); Z and C turn the camera; middle mouse button = re-centre the camera (Z and C together second); Esc = pause (Start, Keypad Enter second); Tab = Select. Lower-screen menus are used by clicking them.
 - In a vehicle: W or Up accelerate (A); S or Down brake and reverse (B); A and D steer; Space = brake (B); H = horn (Y); F = leave (X). Hand brake and siren stay unbound because the game has no player input for them.
 - Q1 mouse camera, "Mouse X turns (Recommended)": mouse X feeds the existing camera turn (yaw only, analog size, no pitch). The cursor is captured in play and released in menus and on the lower screen.
 - Q2 driving, "Vehicle bindings (Recommended)": the bindings depend on whether the player sits in a vehicle.
@@ -38,5 +38,8 @@ The user's words: "The controls should generally be rehauled as a QoL feature. S
 - Q10 camera keys, "Keep Z / C (Rec.)".
 - Q11 gamepad analog, "Later step (Rec.)": out of this feature ([INPUT-1](../plans/features/input.md)).
 - Rebinding, "Default set, rebindable": with PC controls on the PC layout is the default set; the Controls tab rebinds on top of it and "Reset to defaults" restores it.
+- Where rebinds live (the user, 2026-11-01, "Separate file (Recommended)"): with PC controls on, the keys are read from and written to `config/controls.pc.cfg`, created from the built-in PC set when absent; with it off `config/controls.cfg` is used exactly as before. "Reset to defaults" restores the PC set when on and `config/controls.default.cfg` when off. Switching the toggle never changes the other file.
+- Help text and file key (the user, 2026-11-01, "Approve as is"): the help text of the "PC controls" row is "Keys and mouse like a PC game: WASD, Space, E, F." followed by "Default: Off", and the `config/qol.cfg` key is `pc_controls`.
+- Return key (the user, 2026-11-01, "Return = confirm (A)"): Return is A's second key next to E; pause (Start) is Escape only, with Keypad Enter as Start's second.
 
 Open: none.

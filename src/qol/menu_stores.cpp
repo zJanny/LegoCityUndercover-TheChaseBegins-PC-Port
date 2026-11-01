@@ -32,10 +32,14 @@ void MenuStores::open() {
 
 void MenuStores::commit(const MenuEffects& effects) {
     if (!ports_.configured()) return;
+    bool pcControlsSwitched = false;
     if (effects.settingsChanged) {
+        pcControlsSwitched = settings_.enabled(Feature::PcControls) != activeSettings().enabled(Feature::PcControls);
         saveSettings(ports_.settingsPath, settings_);
         setActiveSettings(settings_);
     }
+    if (pcControlsSwitched && controls_) controls_->reload();
+    if (pcControlsSwitched && ports_.controlsChanged) ports_.controlsChanged();
     if (effects.windowChanged && ports_.applyWindow) ports_.applyWindow(settings_);
     if (effects.controlsChanged && ports_.controlsChanged) ports_.controlsChanged();
     if (!game_) return;

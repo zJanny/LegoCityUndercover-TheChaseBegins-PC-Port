@@ -126,6 +126,7 @@ int run(const Options& given) {
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | qolWindow.flags());
     if (!window) throw std::runtime_error(SDL_GetError());
     qolWindow.attach(window);
+    qolWindow.syncControls(options.config, input);
     SDL_GLContext context = SDL_GL_CreateContext(window);
     if (!context) throw std::runtime_error(SDL_GetError());
     SDL_GL_SetSwapInterval(1);

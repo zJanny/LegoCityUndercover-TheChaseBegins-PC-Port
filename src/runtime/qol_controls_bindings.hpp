@@ -6,12 +6,13 @@
 
 namespace chase::runtime {
 
-using qol::ControlsTab, qol::ControlsResult;
+using qol::ControlsTab, qol::ControlsResult, qol::BindingEntry;
 
 class QolControlsBindings final : public qol::ControlsPort {
 public:
     explicit QolControlsBindings(const std::string& path);
     QolControlsBindings(const std::string& path, const std::string& shippedPath);
+    QolControlsBindings(const std::string& path, std::vector<BindingEntry> defaults);
 
     const ControlsTab& tab() const override { return *tab_; }
     const std::string& path() const { return path_; }

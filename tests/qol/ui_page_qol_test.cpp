@@ -44,10 +44,11 @@ void checkRows() {
     QolPage page(settings);
     const std::vector<RowSpec> rows = page.rows();
     require(static_cast<int>(rows.size()) == QolPage::rowCount, "row count is preset, features, reset");
-    require(QolPage::rowCount == 3, "one feature so far gives three rows");
+    require(QolPage::rowCount == 4, "two features so far give four rows (20261101-qolctl-A added PC controls)");
     require(rows[0].kind == RowKind::Selector && rows[0].value == "Original", "preset selector shows Original");
     require(rows[1].kind == RowKind::Toggle && rows[1].label == "Widened view" && rows[1].value == "Off", "feature toggle off");
-    require(rows[2].kind == RowKind::Button && rows[2].label == "Reset to defaults", "reset button last");
+    require(rows[2].kind == RowKind::Toggle && rows[2].label == "PC controls" && rows[2].value == "Off", "PC controls toggle off");
+    require(rows[3].kind == RowKind::Button && rows[3].label == "Reset to defaults", "reset button last");
     for (const RowSpec& row : rows) require(row.enabled, "rows are enabled");
     require(page.dropdown(0).count == 0 && page.dropdown(1).count == 0 && page.dropdown(2).count == 0, "no dropdown rows");
 }
@@ -166,6 +167,7 @@ void checkThroughNavigation() {
     require(settings.master() == Master::Custom && settings.customSwitch(Feature::WidenedView), "Enter turned the feature on");
     nav.setRows(page.rows());
     require(nav.screen().rows[1].value == "On", "rows rebuilt from the page");
+    nav.handle(keyEvent(Key::Down));
     nav.handle(keyEvent(Key::Down));
     actions = nav.handle(keyEvent(Key::Enter));
     require(actions.size() == 1 && page.handle(actions[0]).kind == QolOutcomeKind::NeedsConfirm, "Enter on reset asks");

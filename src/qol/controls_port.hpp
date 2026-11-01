@@ -20,6 +20,7 @@ public:
     virtual ControlsResult cancelConflict() = 0;
     virtual ControlsResult requestReset() = 0;
     virtual ControlsResult confirmReset() = 0;
+    virtual void reload() {}
 };
 
 class ControlsTabPort final : public ControlsPort {
