@@ -78,5 +78,9 @@ Answers of the user to the lead's questions (2026-10-30; the quoted labels are t
 31. Reopening the menu (the user, 2026-11-01, "Last tab (as built)"): the menu opens again on the tab it was closed on.
 32. Text of the "Reset to defaults" button (the user, 2026-11-01, "Reset to defaults"): the button reads "Reset to defaults" on all four tabs.
 33. Focus of the reset question Yes / No (the user, 2026-11-01, "No (Enter = No)"): the question opens with the focus on No, so Enter declines. Left and Right move the focus between Yes and No as in answer 30 (the user, 2026-11-01, "Approve (as Swap)").
+34. Help texts of the Game, Display and Controls rows (the user, 2026-11-01, shown the texts as on main and asked "Do you approve the draft help texts of the Game, Display and Controls rows of the PC Settings menu (QOLSET-97), as shown above?": "Approve as is"). One help line per focused row, each feature text ending with its default, as in answer 28. Approved texts:
+    - Game: SFX volume "Volume of the sound effects. Default: 100"; Music volume "Volume of the music. Default: 80"; Invert camera "Inverts the camera controls. Default: Off"; Language "Language of the game. It changes when you close the menu. Default: " plus the language the game started with; Reset to defaults "Sets every setting on this tab back to its default."
+    - Display: Window mode "Windowed or full screen. F11 also switches. Default: Fullscreen"; Resolution "Window size in Windowed mode; full screen uses the desktop. Default: Desktop resolution"; Reset to defaults "Sets every setting on this tab back to its default."
+    - Controls: every Action, Slot and Mode row "Choose a slot to bind a key, mouse or pad button; Del clears it. Default: the shipped controls"; Reset to defaults "Sets all bindings and modes back to the shipped controls."
 
 Open: none.
