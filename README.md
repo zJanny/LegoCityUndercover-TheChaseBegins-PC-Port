@@ -15,12 +15,12 @@ The game data is never part of this repository. You need your own copy of the ga
 | Object types | 169 of 506 (33.4%) | Different object types in the levels that the port treats with recovered rules (collision, doors, studs). They cover 56.6% of all placed objects. |
 | Game files read | 99.8% of files, 100.0% of data | Files in the game archive (12836) that the port can decode, by count and by size. |
 | Open work | 622 open items, 480 stand-ins | Known gaps and temporary guesses in 37 feature areas. It has no total to reach; watch the trend. |
-| Checked against the original | 457 tests, 232 recorded traces | Automatic tests, and recordings of the original game that the tests compare with. |
+| Checked against the original | 458 tests, 232 recorded traces | Automatic tests, and recordings of the original game that the tests compare with. |
 | Game code documented | 2941 of about 7575 (38.8%) | Functions of the game program that the notes or the source point to. The total is an estimate. |
 
 ![Progress trend](docs/progress-trend.svg)
 
-Updated 2026-11-01, commit 7c28c880. How the numbers are measured: [docs/progress.md](docs/progress.md).
+Updated 2026-11-01, commit f4061d56. How the numbers are measured: [docs/progress.md](docs/progress.md).
 <!-- progress:end -->
 
 ## What you need
@@ -81,7 +81,7 @@ This copies the game files out of your image into the folder `artifacts/romfs`. 
 build/chase-game
 ```
 
-A window opens. It shows the start screens of the original game: logos, language list, slot list and the intro movie. After the title card the level starts, and you can move the main character. Press Escape to quit. The window is borderless full screen; F11 switches to a window and back.
+A window opens. It shows the start screens of the original game: logos, language list, slot list and the intro movie. After the title card the level starts, and you can move the main character. To quit, close the window, or press Escape for the pause menu, choose PC Settings and then Quit game on the Game tab. The window is borderless full screen; F11 switches to a window and back.
 
 The game saves at the same moments as the original (for example when the story saves or you collect a super brick). The file is `~/.local/share/chase/savegame.dat` (under `$XDG_DATA_HOME` if you set it); the terminal prints `save: request N written to ...` each time. To continue later, start from that file:
 
@@ -104,8 +104,8 @@ You should see `save: level entry ..., studs ..., super bricks ...` in the termi
 | Use (detective spots, build-its and similar) | Space or left mouse button (A) |
 | Get into or out of a car | E (X) |
 | Turn the camera | Z and C |
-| Pause menu (Resume works) | Return; turn with the arrow keys or click on the lower screen |
-| Quit | Escape |
+| Pause menu (Resume works) | Return or Escape; turn with the arrow keys or click on the lower screen |
+| Quit | PC Settings in the pause menu, then Game tab, Quit game; or close the window |
 
 All keys and how to change them: [Controls](docs/controls.md).
 

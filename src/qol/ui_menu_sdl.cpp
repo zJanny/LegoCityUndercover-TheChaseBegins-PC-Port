@@ -127,7 +127,13 @@ void UiMenuWindow::open() {
     menu_.open(setup);
 }
 
-void UiMenuWindow::commit(const MenuEffects& effects) { stores_.commit(effects); }
+void UiMenuWindow::commit(const MenuEffects& effects) {
+    stores_.commit(effects);
+    if (!effects.quitGame) return;
+    SDL_Event quit{};
+    quit.type = SDL_QUIT;
+    SDL_PushEvent(&quit);
+}
 
 bool UiMenuWindow::consume(const SDL_Event& event, int windowWidth, int windowHeight) {
     if (!isOpen()) return false;

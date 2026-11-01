@@ -16,17 +16,21 @@ inline constexpr int defaultMusicVolume = 8;
 inline constexpr int gameLanguageCount = lastLanguage - firstLanguage + 1;
 
 extern const char* const gameResetQuestion;
+extern const char* const quitGameLabel;
+extern const char* const quitGameQuestion;
 
 struct GamePageResult {
     bool changed = false;
     std::optional<int> languageChosen;
     std::optional<std::string> needsConfirm;
+    bool quitAsked = false;
 };
 
 class GamePage {
 public:
     GamePage(GameOptions& options, std::vector<std::string> languageNames,
         int startLanguage);
+    GamePage();
 
     std::vector<RowSpec> rows() const;
     DropdownInfo dropdown(int row) const;
@@ -35,12 +39,15 @@ public:
     std::string help(int row) const;
 
     int language() const { return language_; }
+    bool quitOnly() const { return !tab_; }
 
 private:
     GamePageResult changeValue(const Action& action);
     GamePageResult chooseLanguage(int language);
 
-    GameTab tab_;
+    int pageRow(int row) const;
+
+    std::optional<GameTab> tab_;
     std::vector<std::string> languageNames_;
     int startLanguage_;
     int language_;

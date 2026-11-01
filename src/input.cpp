@@ -28,24 +28,30 @@ const char* actionName(Action action) {
 InputState::InputState(std::vector<Binding> bindings) : bindings_(std::move(bindings)) {}
 void InputState::event(Source source, int code, bool down, bool repeat) {
     if (repeat) return;
-    for (auto& binding : bindings_) {
-        if (binding.source != source || binding.code != code) continue;
-        if (down && !binding.down && binding.mode == Mode::Toggle)
-            binding.toggled = !binding.toggled;
-        binding.down = down;
-    }
+    for (auto* group : {&bindings_, &fixed_})
+        for (auto& binding : *group) {
+            if (binding.source != source || binding.code != code) continue;
+            if (down && !binding.down && binding.mode == Mode::Toggle)
+                binding.toggled = !binding.toggled;
+            binding.down = down;
+        }
 }
 void InputState::reset() {
-    for (auto& binding : bindings_) {
-        binding.down = false;
-        binding.toggled = false;
-    }
+    for (auto* group : {&bindings_, &fixed_})
+        for (auto& binding : *group) {
+            binding.down = false;
+            binding.toggled = false;
+        }
 }
 void InputState::rebind(std::vector<Binding> bindings) { bindings_ = std::move(bindings); }
+void InputState::fix(Action action, Source source, int code) {
+    fixed_.push_back({action, source, code, Mode::Hold});
+}
 bool InputState::active(Action action) const {
-    for (const auto& binding : bindings_)
-        if (binding.action == action &&
-            (binding.mode == Mode::Toggle ? binding.toggled : binding.down)) return true;
+    for (const auto* group : {&bindings_, &fixed_})
+        for (const auto& binding : *group)
+            if (binding.action == action &&
+                (binding.mode == Mode::Toggle ? binding.toggled : binding.down)) return true;
     return false;
 }
 int InputState::horizontal() const {

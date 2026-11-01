@@ -8,6 +8,7 @@ const char* const pauseEntryLabel = "PC Settings";
 const char* const pauseEntryPicture = "UI_StatusScreen_Options.png";
 
 void PauseSettings::bind(chase::frontend::Resources& resources, StoresPorts ports) {
+    ports.quitTab = !ports.makeGame;
     menu_ = std::make_unique<FrontMenu>(resources, std::move(ports));
 }
 

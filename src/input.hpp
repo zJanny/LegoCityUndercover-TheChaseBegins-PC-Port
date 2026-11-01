@@ -26,11 +26,13 @@ public:
     void event(Source source, int code, bool down, bool repeat = false);
     void reset();
     void rebind(std::vector<Binding> bindings);
+    void fix(Action action, Source source, int code);
     bool active(Action action) const;
     int horizontal() const;
     int vertical() const;
 private:
     std::vector<Binding> bindings_;
+    std::vector<Binding> fixed_;
 };
 // Key resolver is supplied by the platform adapter; the input core needs no SDL.
 std::vector<Binding> readBindings(std::istream& stream,

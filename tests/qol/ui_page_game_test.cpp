@@ -5,6 +5,8 @@
 // Spanish, Dutch, Danish, Portuguese, Russian (tests/qol/game_tab_test.cpp header; src/save/save.hpp Language).
 // Answer 22 (the user, 2026-11-01, "Approve"): Reset to defaults restores the language the game started with.
 // Cases written by 20261101-qolui3-B on 2026-11-01.
+// Quit game row (20261101-qolctl-B, 2026-11-01): docs/design/qol-controls.md entry 2026-11-01T13:50:44 (a "Quit game" row with Yes/No on the Game tab);
+// it sits before "Reset to defaults" because every tab ends with the reset button (qol-settings-drawing.md 2026-10-30T21:56:04, row types).
 #include "qol/ui_page_game.hpp"
 
 #include <iostream>
@@ -71,6 +73,7 @@ struct Driver {
             if (result.changed) last.changed = true;
             if (result.languageChosen) last.languageChosen = result.languageChosen;
             if (result.needsConfirm) last.needsConfirm = result.needsConfirm;
+            if (result.quitAsked) last.quitAsked = true;
         }
         nav.setRows(page.rows());
     }
@@ -86,16 +89,17 @@ void originalDefaultsUnchanged() {
         "building the page and its rows writes nothing and leaves the original defaults");
     require(defaultSfxVolume == 10 && defaultMusicVolume == 8, "default volumes are the original's 10 and 8");
     const auto rows = d.page.rows();
-    require(rows.size() == 5, "five rows: two sliders, toggle, selector, reset");
+    require(rows.size() == 6, "six rows: two sliders, toggle, selector, quit, reset");
     require(rows[0].label == "SFX volume" && rows[0].kind == qol::ui::RowKind::Slider && rows[0].value == "100" && rows[0].fraction == 1.0,
         "SFX slider shows 100");
     require(rows[1].label == "Music volume" && rows[1].kind == qol::ui::RowKind::Slider && rows[1].value == "80" && rows[1].fraction == 0.8,
         "Music slider shows 80");
     require(rows[2].label == "Invert camera" && rows[2].kind == qol::ui::RowKind::Toggle && rows[2].value == "Off", "invert camera Off");
     require(rows[3].label == "Language" && rows[3].kind == qol::ui::RowKind::Selector && rows[3].value == "English", "language English");
-    require(rows[4].label == "Reset to defaults" && rows[4].kind == qol::ui::RowKind::Button, "reset button");
+    require(rows[4].label == "Quit game" && rows[4].kind == qol::ui::RowKind::Button && rows[4].value == "Quit game", "quit button");
+    require(rows[5].label == "Reset to defaults" && rows[5].kind == qol::ui::RowKind::Button, "reset button is the last row");
     for (const auto& row : rows) require(row.enabled, "all Game rows enabled");
-    for (int row = 0; row < 5; ++row) require(d.page.dropdown(row).count == 0, "no dropdown on the Game page");
+    for (int row = 0; row < 6; ++row) require(d.page.dropdown(row).count == 0, "no dropdown on the Game page");
 }
 
 void rowsFollowTheStore() {
@@ -186,7 +190,7 @@ void resetAsksThenResets() {
     d.down(3);
     d.press(Key::Right);
     require(d.last.languageChosen == 4, "the selector moved to German first");
-    d.down(1);
+    d.down(2);
     d.press(Key::Enter);
     require(d.last.needsConfirm && *d.last.needsConfirm == "Reset the Game settings?", "the reset button asks first");
     require(!d.last.changed && d.fake.sfx == 2 && d.fake.music == 9 && d.fake.invert, "asking changes nothing");
@@ -196,6 +200,48 @@ void resetAsksThenResets() {
         "reset reports and shows the language the game started with (answer 22)");
     const GamePageResult again = d.page.reset();
     require(!again.changed && !again.languageChosen && !again.needsConfirm, "a second reset changes nothing");
+}
+
+void quitAsksFirst() {
+    Driver d;
+    d.down(4);
+    d.press(Key::Enter);
+    require(d.last.needsConfirm && *d.last.needsConfirm == "Quit the game?" && d.last.quitAsked && !d.last.changed,
+        "Enter on Quit game asks first and changes nothing");
+    require(d.fake.writes == 0 && d.page.rows()[4].label == "Quit game", "the stores are untouched and the row stays");
+    const GamePageResult reset = d.page.reset();
+    require(!reset.quitAsked, "a reset never asks to quit");
+    d.press(Key::Down);
+    d.press(Key::Enter);
+    require(d.last.needsConfirm && *d.last.needsConfirm == "Reset the Game settings?" && !d.last.quitAsked, "the reset row asks its own question");
+    require(d.page.help(4) == "Closes the game after you confirm.", "help text of the Quit game row");
+    for (const Key key : {Key::Left, Key::Right}) {
+        Driver e;
+        e.down(4);
+        e.press(key);
+        require(e.actions == 0 && !e.last.quitAsked, "Left and Right on the Quit game button do nothing");
+    }
+}
+
+void quitOnlyPage() {
+    GamePage page;
+    const auto rows = page.rows();
+    require(page.quitOnly() && rows.size() == 1 && rows[0].label == "Quit game" && rows[0].kind == qol::ui::RowKind::Button,
+        "without game options the page is the Quit game row alone (in play)");
+    Action activate;
+    activate.kind = ActionKind::Activate;
+    activate.index = 0;
+    const GamePageResult asked = page.handle(activate);
+    require(asked.quitAsked && asked.needsConfirm && *asked.needsConfirm == "Quit the game?" && !asked.changed, "its row asks to quit");
+    Action change;
+    change.kind = ActionKind::ValueChanged;
+    change.index = 0;
+    change.direction = 1;
+    const GamePageResult none = page.handle(change);
+    require(!none.changed && !none.quitAsked && !none.languageChosen, "a value change does nothing");
+    const GamePageResult reset = page.reset();
+    require(!reset.changed && !reset.languageChosen && !reset.quitAsked, "there is nothing to reset");
+    require(page.help(0) == "Closes the game after you confirm.", "help of the row");
 }
 
 void rejections() {
@@ -214,8 +260,11 @@ void rejections() {
     GamePage page(fake, names, 1);
     Action action;
     action.kind = ActionKind::ValueChanged;
-    action.index = 4;
-    require(!page.handle(action).changed && fake.writes == 0, "a value change on the reset button is ignored");
+    for (const int index : {4, 5}) {
+        action.index = index;
+        const GamePageResult result = page.handle(action);
+        require(!result.changed && !result.quitAsked && !result.needsConfirm && fake.writes == 0, "a value change on a button row is ignored");
+    }
     action.kind = ActionKind::DropdownSelected;
     action.index = 0;
     action.item = 0;
@@ -247,6 +296,8 @@ int main() {
     languageSelectorWraps();
     languageByMouse();
     resetAsksThenResets();
+    quitAsksFirst();
+    quitOnlyPage();
     rejections();
     sizes();
     return failures == 0 ? 0 : 1;

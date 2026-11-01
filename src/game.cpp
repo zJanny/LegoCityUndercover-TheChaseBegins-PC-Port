@@ -19,6 +19,7 @@
 #include "runtime/debug_metrics.hpp"
 #include "runtime/level_start.hpp"
 #include "runtime/pad.hpp"
+#include "runtime/qol_escape.hpp"
 #include "runtime/qol_window.hpp"
 #include "runtime/qol_game_wiring.hpp"
 #include "runtime/scene_change.hpp"
@@ -80,7 +81,6 @@ void pollEvents(chase::InputState& input, PadDevice& pad, bool& running, game_to
         switch (event.type) {
         case SDL_QUIT: running = false; break;
         case SDL_KEYDOWN: case SDL_KEYUP:
-            if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE) running = false;
             input.event(chase::Source::Key, event.key.keysym.sym, event.type == SDL_KEYDOWN, event.key.repeat != 0);
             break;
         case SDL_MOUSEBUTTONDOWN: case SDL_MOUSEBUTTONUP:
@@ -110,6 +110,7 @@ int run(const Options& given) {
     std::ifstream config(options.config);
     if (!config) throw std::runtime_error("cannot open controls: " + options.config);
     chase::InputState input(chase::readBindings(config, resolveKey));
+    runtime::bindEscape(input, SDLK_ESCAPE);
     FuseArchive archive(options.fib);
     archive.loadNames(options.names);
 

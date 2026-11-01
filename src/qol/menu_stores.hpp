@@ -20,6 +20,7 @@ struct StoresPorts {
     std::function<std::unique_ptr<ControlsPort>()> makeControls;
     std::function<void()> controlsChanged;
     std::function<std::unique_ptr<GamePort>()> makeGame;
+    bool quitTab = false;
 
     bool configured() const { return !settingsPath.empty(); }
 };
@@ -30,6 +31,7 @@ struct MenuEffects {
     bool controlsChanged = false;
     bool gameChanged = false;
     bool closed = false;
+    bool quitGame = false;
     std::optional<int> language;
 
     void merge(const MenuEffects& other);
@@ -44,6 +46,7 @@ public:
     GamePort* game() const { return game_.get(); }
     ControlsPort* controls() const { return controls_.get(); }
     bool hasDisplay() const { return ports_.configured(); }
+    bool quitTab() const { return ports_.quitTab; }
     const ResolutionChoices& modes() const { return ports_.modes; }
     Resolution desktop() const { return ports_.desktop; }
     int startLanguage() const;

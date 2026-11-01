@@ -7,10 +7,12 @@
 namespace qol::ui {
 
 const char* const gameResetQuestion = "Reset the Game settings?";
+const char* const quitGameLabel = "Quit game";
+const char* const quitGameQuestion = "Quit the game?";
 
 namespace {
 
-enum Row { SfxRow, MusicRow, InvertRow, LanguageRow, ResetRow };
+enum Row { SfxRow, MusicRow, InvertRow, LanguageRow, QuitRow, ResetRow };
 
 GameRow gameRowOf(int row) {
     return row == SfxRow ? GameRow::SfxVolume : GameRow::MusicVolume;
@@ -33,17 +35,26 @@ GamePage::GamePage(GameOptions& options, std::vector<std::string> languageNames,
         throw std::invalid_argument("language out of range: " + std::to_string(language_));
 }
 
+GamePage::GamePage() : startLanguage_(firstLanguage), language_(firstLanguage) {}
+
+int GamePage::pageRow(int row) const { return tab_ ? row : row + QuitRow; }
+
 std::vector<RowSpec> GamePage::rows() const {
     std::vector<RowSpec> out;
+    if (!tab_) {
+        out.push_back({quitGameLabel, RowKind::Button, quitGameLabel, 0, true});
+        return out;
+    }
     for (GameRow row : {GameRow::SfxVolume, GameRow::MusicVolume}) {
-        const int volume = tab_.value(row);
+        const int volume = tab_->value(row);
         out.push_back({gameRowLabel(row), RowKind::Slider, std::to_string(volume * volumeDisplayScale),
             static_cast<double>(volume) / volumeSteps, true});
     }
     out.push_back({gameRowLabel(GameRow::InvertCamera), RowKind::Toggle,
-        tab_.valueText(GameRow::InvertCamera), 0, true});
+        tab_->valueText(GameRow::InvertCamera), 0, true});
     out.push_back({gameRowLabel(GameRow::Language), RowKind::Selector,
         languageNames_[static_cast<std::size_t>(language_ - firstLanguage)], 0, true});
+    out.push_back({quitGameLabel, RowKind::Button, quitGameLabel, 0, true});
     out.push_back({resetToDefaultsText, RowKind::Button, resetToDefaultsText, 0, true});
     return out;
 }
@@ -64,14 +75,14 @@ GamePageResult GamePage::changeValue(const Action& action) {
     case MusicRow: {
         const GameRow row = gameRowOf(action.index);
         const int volume = static_cast<int>(std::lround(action.fraction * volumeSteps));
-        if (volume == tab_.value(row)) return {};
+        if (volume == tab_->value(row)) return {};
         GamePageResult result;
-        result.changed = tab_.setValue(row, volume) == GameResult::Changed;
+        result.changed = tab_->setValue(row, volume) == GameResult::Changed;
         return result;
     }
     case InvertRow: {
         GamePageResult result;
-        result.changed = tab_.step(GameRow::InvertCamera, action.direction < 0 ? -1 : 1) == GameResult::Changed;
+        result.changed = tab_->step(GameRow::InvertCamera, action.direction < 0 ? -1 : 1) == GameResult::Changed;
         return result;
     }
     case LanguageRow: {
@@ -84,8 +95,14 @@ GamePageResult GamePage::changeValue(const Action& action) {
 }
 
 GamePageResult GamePage::handle(const Action& action) {
-    if (action.kind == ActionKind::ValueChanged) return changeValue(action);
-    if (action.kind == ActionKind::Activate && action.index == ResetRow) {
+    if (action.kind == ActionKind::ValueChanged) return tab_ ? changeValue(action) : GamePageResult{};
+    if (action.kind == ActionKind::Activate && pageRow(action.index) == QuitRow) {
+        GamePageResult result;
+        result.needsConfirm = quitGameQuestion;
+        result.quitAsked = true;
+        return result;
+    }
+    if (action.kind == ActionKind::Activate && tab_ && action.index == ResetRow) {
         GamePageResult result;
         result.needsConfirm = gameResetQuestion;
         return result;
@@ -94,13 +111,14 @@ GamePageResult GamePage::handle(const Action& action) {
 }
 
 std::string GamePage::help(int row) const {
-    switch (row) {
+    switch (pageRow(row)) {
     case SfxRow: return "Volume of the sound effects. Default: " + std::to_string(defaultSfxVolume * volumeDisplayScale);
     case MusicRow: return "Volume of the music. Default: " + std::to_string(defaultMusicVolume * volumeDisplayScale);
     case InvertRow: return "Inverts the camera controls. Default: Off";
     case LanguageRow:
         return "Language of the game. It changes when you close the menu. Default: " +
             languageNames_[static_cast<std::size_t>(startLanguage_ - firstLanguage)];
+    case QuitRow: return "Closes the game after you confirm.";
     case ResetRow: return "Sets every setting on this tab back to its default.";
     default: return {};
     }
@@ -108,14 +126,15 @@ std::string GamePage::help(int row) const {
 
 GamePageResult GamePage::reset() {
     GamePageResult result;
+    if (!tab_) return result;
     const std::pair<GameRow, int> defaults[] = {
         {GameRow::SfxVolume, defaultSfxVolume},
         {GameRow::MusicVolume, defaultMusicVolume},
         {GameRow::InvertCamera, 0},
     };
     for (const auto& [row, value] : defaults) {
-        if (tab_.value(row) == value) continue;
-        tab_.setValue(row, value);
+        if (tab_->value(row) == value) continue;
+        tab_->setValue(row, value);
         result.changed = true;
     }
     result.languageChosen = chooseLanguage(startLanguage_).languageChosen;

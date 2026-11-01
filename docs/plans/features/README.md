@@ -123,7 +123,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | [qol-settings-drawing](qol-settings-drawing.md) | IN_PROGRESS | QOLSET-53 slot page bar; stores behind the open menu; stand-ins S4 and S6 |
 | [qol-settings-ui](qol-settings-ui.md) | IN_PROGRESS | QOLSET-98 more keep points for the picture behind the menu |
 | [qol-settings-ui-pages](qol-settings-ui-pages.md) | DONE | Pages and dialogs of the modern menu (models done) |
-| [qol-controls](qol-controls.md) | IN_PROGRESS | QOLCTL-1 Escape rules; QOLCTL-5 Quit game row; QOLCTL-3 vehicle layout; QOLCTL-7 seated bindings; QOLCTL-6 mouse camera |
+| [qol-controls](qol-controls.md) | IN_PROGRESS | QOLCTL-3 vehicle layout; QOLCTL-7 seated bindings; QOLCTL-6 mouse camera; QOLCTL-11 Quit game before the slot page; QOLCTL-12 Escape on pause sub-pages |
 | [qol-fullscreen](qol-fullscreen.md) | IN_PROGRESS | QOLFS-11 load qol.cfg into the active store; QOLFS-1 widened view (wired above the bottom screen); QOLFS-2 corner-anchored HUD; QOLFS-3 pop-in at the edges |
 | [qol-minimap](qol-minimap.md) | IN_PROGRESS | QOLMAP-5 minimap and HUD overlap (question); QOLMAP-6 hide in more panels |
 | [qol-bottom-screen](qol-bottom-screen.md) | NOT_STARTED | QOLBOT-1 hide the bottom screen; QOLBOT-2..4 panels; QOLBOT-5 pause PC menu; QOLBOT-7..10 scanner, build-it, shop, award viewer |

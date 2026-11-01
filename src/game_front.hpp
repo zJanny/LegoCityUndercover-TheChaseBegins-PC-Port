@@ -117,7 +117,6 @@ inline Result run(SDL_Window* window, chase::InputState& input, chase::assets::F
             switch (event.type) {
             case SDL_QUIT: running = false; break;
             case SDL_KEYDOWN: case SDL_KEYUP:
-                if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE) running = false;
                 input.event(chase::Source::Key, event.key.keysym.sym, event.type == SDL_KEYDOWN, event.key.repeat != 0);
                 break;
             case SDL_MOUSEBUTTONDOWN: case SDL_MOUSEBUTTONUP:

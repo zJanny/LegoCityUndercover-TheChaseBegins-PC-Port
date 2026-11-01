@@ -37,6 +37,7 @@ struct MenuSetup {
     int startLanguage = firstLanguage;
     ControlsPort* controls = nullptr;
     std::optional<DisplaySetup> display;
+    bool quitTab = false;
 };
 
 MenuSetup menuSetupFor(MenuStores& stores, std::vector<std::string> languageNames);
@@ -97,6 +98,7 @@ private:
     GameOptions* gameOptions_ = nullptr;
     ControlsPort* controlsPort_ = nullptr;
     std::optional<std::string> confirm_;
+    bool confirmQuit_ = false;
     std::string message_;
     int dialogFocus_ = 1;
     bool padConnected_ = false;

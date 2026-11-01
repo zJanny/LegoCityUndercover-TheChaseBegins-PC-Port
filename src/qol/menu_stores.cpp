@@ -12,6 +12,7 @@ void MenuEffects::merge(const MenuEffects& other) {
     controlsChanged = controlsChanged || other.controlsChanged;
     gameChanged = gameChanged || other.gameChanged;
     closed = closed || other.closed;
+    quitGame = quitGame || other.quitGame;
     if (other.language) language = other.language;
 }
 

@@ -5,7 +5,8 @@
 // 22 (reset restores the start language), 29 (painter values), 30 (Left/Right and Enter in a two-button question), 32 (the button text
 // "Reset to defaults" on every tab) and 33 (the reset question opens on No); Yes / No of the reset question from
 // docs/design/qol-settings.md entry 2026-10-29T11:06:51; the help texts of the Game, Display and Controls rows are the draft of QOLSET-97
-// (not approved yet). Expectations written from the spec by 20261101-qolui3-F on 2026-11-01.
+// (not approved yet). Expectations written from the spec by 20261101-qolui3-F on 2026-11-01. The Quit game row: docs/design/qol-controls.md entry
+// 2026-11-01T13:50:44 (Yes/No on the Game tab, Escape cancels), default focus No as for the reset question (answer 33); cases by 20261101-qolctl-B.
 #include "qol/ui_menu.hpp"
 
 #include "qol/active_settings.hpp"
@@ -147,7 +148,7 @@ void sliderAndToggle() {
     e = f.key(Key::Enter);
     require(e.gameChanged && f.game.invert && f.row(2).value == "On", "Enter flips Invert camera");
     for (int i = 0; i < 6; ++i) f.key(Key::Down);
-    require(f.menu.screen().focusRow == 4, "Down on the last row stays (answer 6)");
+    require(f.menu.screen().focusRow == 5, "Down on the last row stays (answer 6)");
 }
 
 void languageOnClose() {
@@ -164,7 +165,7 @@ void languageOnClose() {
 void resetAsksFirst() {
     Fixture f;
     f.key(Key::Left);
-    for (int i = 0; i < 4; ++i) f.key(Key::Down);
+    for (int i = 0; i < 5; ++i) f.key(Key::Down);
     f.key(Key::Enter);
     std::optional<MenuDialog> dialog = f.menu.dialog();
     require(f.menu.modal() == Modal::Dialog && dialog && dialog->title == gameResetQuestion &&
@@ -184,6 +185,92 @@ void resetAsksFirst() {
     f.key(Key::Left);
     e = f.key(Key::Enter);
     require(e.gameChanged && f.game.sfx == 10 && f.menu.modal() == Modal::None, "Enter on Yes resets the tab");
+}
+
+void openQuitQuestion(Fixture& f) {
+    for (int i = 0; i < 4; ++i) f.key(Key::Down);
+    f.key(Key::Enter);
+}
+
+void quitGameOutcomes() {
+    {
+        Fixture f;
+        require(f.row(4).label == "Quit game" && f.row(4).kind == RowKind::Button, "the Game tab has the Quit game row before Reset to defaults");
+        openQuitQuestion(f);
+        const std::optional<MenuDialog> dialog = f.menu.dialog();
+        require(f.menu.modal() == Modal::Dialog && dialog && dialog->title == quitGameQuestion &&
+                dialog->buttons == std::vector<std::string>{"Yes", "No"} && dialog->focusedButton == 1,
+            "Quit game asks Quit the game? with Yes and No, focus on No");
+        require(has(texts(f), quitGameQuestion), "the quit question is painted");
+        const MenuEffects enter = f.key(Key::Enter);
+        require(!enter.quitGame && f.menu.isOpen() && f.menu.modal() == Modal::None, "Enter on the default No does not quit");
+    }
+    {
+        Fixture f;
+        openQuitQuestion(f);
+        f.key(Key::Left);
+        const MenuEffects yes = f.key(Key::Enter);
+        require(yes.quitGame && !yes.gameChanged && f.game.sfx == 10 && f.menu.modal() == Modal::None, "Left then Enter on Yes quits and changes no store");
+    }
+    {
+        Fixture f;
+        openQuitQuestion(f);
+        const MenuEffects esc = f.key(Key::Escape);
+        require(!esc.quitGame && !esc.closed && f.menu.isOpen() && f.menu.modal() == Modal::None, "Escape cancels the question and keeps the menu open");
+        f.key(Key::Enter);
+        require(f.menu.dialog() && f.menu.dialog()->focusedButton == 1, "the question opens on No again after Escape");
+        const MenuEffects padB = f.key(Key::PadB);
+        require(!padB.quitGame && f.menu.isOpen() && f.menu.modal() == Modal::None, "pad B cancels the question");
+    }
+    {
+        Fixture f;
+        openQuitQuestion(f);
+        const DialogLayout d = computeDialogLayout(*f.menu.dialog(), computeScale(1920, 1080), measure, lineHeight);
+        const Rect no = d.buttons.at(1), yes = d.buttons.at(0);
+        const MenuEffects declined = f.event(mouseDown(no.x + no.width / 2, no.y + no.height / 2));
+        require(!declined.quitGame && f.menu.modal() == Modal::None, "a click on No cancels");
+        f.key(Key::Enter);
+        require(f.menu.dialog() && f.menu.dialog()->title == quitGameQuestion, "Enter on the row asks again");
+        const MenuEffects stale = f.key(Key::Enter);
+        require(!stale.quitGame && f.menu.modal() == Modal::None, "a cancelled question leaves no pending quit behind");
+        f.key(Key::Enter);
+        const MenuEffects clicked = f.event(mouseDown(yes.x + yes.width / 2, yes.y + yes.height / 2));
+        require(clicked.quitGame, "a click on Yes quits");
+    }
+    {
+        Fixture f;
+        f.game.sfx = 5;
+        openQuitQuestion(f);
+        f.key(Key::Escape);
+        f.key(Key::Down);
+        f.key(Key::Enter);
+        f.key(Key::Left);
+        const MenuEffects reset = f.key(Key::Enter);
+        require(!reset.quitGame && reset.gameChanged, "the reset question after a cancelled quit question resets and does not quit");
+    }
+}
+
+void quitTabInPlay() {
+    Settings settings;
+    UiMenu menu{measure, lineHeight};
+    menu.setWindow(1920, 1080);
+    MenuSetup setup;
+    setup.settings = &settings;
+    setup.quitTab = true;
+    menu.open(setup);
+    require(menu.tabTitles() == std::vector<std::string>{"Game", "Quality of life"}, "with quitTab and no game options the Game tab is shown (in play)");
+    require(menu.screen().rows.size() == 1 && menu.screen().rows[0].label == "Quit game", "it holds the Quit game row alone");
+    menu.handle(keyEvent(Key::Enter), 0);
+    require(menu.dialog() && menu.dialog()->title == quitGameQuestion && menu.dialog()->focusedButton == 1, "Enter asks, focus on No");
+    menu.handle(keyEvent(Key::Left), 0);
+    const MenuEffects yes = menu.handle(keyEvent(Key::Enter), 0);
+    require(yes.quitGame && !yes.gameChanged && menu.isOpen(), "Yes quits");
+    const MenuEffects close = menu.handle(keyEvent(Key::Escape), 0);
+    require(close.closed && !close.language && !close.quitGame, "Escape closes the menu without a language change or a quit");
+    MenuSetup bare;
+    bare.settings = &settings;
+    menu.open(bare);
+    require(menu.tabTitles() == std::vector<std::string>{"Quality of life"}, "without quitTab and game options there is no Game tab");
 }
 
 void controlsResetDeclinedByClick() {
@@ -345,6 +432,8 @@ int main() {
     sliderAndToggle();
     languageOnClose();
     resetAsksFirst();
+    quitGameOutcomes();
+    quitTabInPlay();
     controlsResetDeclinedByClick();
     resetButtonText();
     displayKeepSettings();

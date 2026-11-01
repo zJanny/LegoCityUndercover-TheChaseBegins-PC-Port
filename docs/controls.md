@@ -60,7 +60,7 @@ With PC controls on, `chase-game` reads the keys from `config/controls.pc.cfg` i
 | Start | Keypad Enter |
 
 - The right mouse button is unused. The lower-screen menus are used by clicking them. A left click on the lower screen is still a touch.
-- Escape does not belong to this set yet (it becomes the pause key with the Escape rules).
+- Escape is a fixed second key for Start in this set too (see [Escape](#escape)).
 - Driving keys and the mouse camera are not built yet.
 - A change of the Quality of life row takes effect at once, without restarting.
 
@@ -85,11 +85,21 @@ In the [development runtime](commands.md#development-runtime), while the scanner
 - Click the back-arrow button at the lower left of the lower screen to leave the scanner. It works once the view has fully opened, like **B** (Q or right mouse). A press that starts elsewhere and slides onto it does nothing.
 - The headphone button above it is greyed and does nothing.
 
+## Escape
+
+In `chase-game`, Escape never closes the program. It is a fixed second key for **Start**; it does not follow `config/controls.cfg` and cannot be unbound.
+
+- While you play, it opens the pause menu, like Start.
+- In the pause menu it does what Start does there: it closes the pause menu. On the options and language pages that also closes the pause menu at once, not one page back; use **B** to go back one page.
+- In the PC settings menu it goes back: it first closes an open list, prompt or question, then the menu.
+- On the start screens it skips the Fusion Games movie when you have played before, like Start. It does nothing on the logos, the language list, the question pages and the slot list, and nothing in cutscenes and movies of a level, because the original has no skip there.
+- To quit, close the window, or choose Quit game in the [PC settings menu](#pc-settings-menu). The model viewer, the movie player and the input laboratory keep Escape = quit.
+
 ## Pause menu
 
 In the [development runtime](commands.md#development-runtime), while you play:
 
-- **Start** (Return) opens the pause menu. The game stops.
+- **Start** (Return, or Keypad Enter with PC controls on; Escape in both) opens the pause menu. The game stops.
 - The lower screen shows Resume, Options, Credits, Exit and PC Settings on a wheel. Turn it with **left and right** (A and D, or the arrow keys), or click the button left or right of the middle one, or swipe sideways with the mouse.
 - **A** (Space), or a click on the middle button, chooses the entry in the middle. Resume goes back to the game.
 - **B** (Q or right mouse) or **Start** go back to the game.
@@ -102,14 +112,14 @@ In the [development runtime](commands.md#development-runtime), while you play:
 
 In the [development runtime](commands.md#development-runtime), on the slot list of the start screens:
 
-- Click the small **PC Settings** bar under the two slots with the left mouse button. It slides in with the slots. No key or gamepad button opens it. During play the [pause menu](#pause-menu) has a PC Settings entry that opens the same menu, there without the Game tab.
+- Click the small **PC Settings** bar under the two slots with the left mouse button. It slides in with the slots. No key or gamepad button opens it. During play the [pause menu](#pause-menu) has a PC Settings entry that opens the same menu; there the Game tab holds only **Quit game** (the volumes, Invert camera and Language are on the Options page of the pause menu).
 - The menu covers the whole window with tabs across the top (Game, Display, Controls, Quality of life), the rows of the tab in the middle, a help line under them and a key-hint bar with a **Back** button at the bottom. It is drawn in its own font, sharp at the window's size. The start screens stop behind it, and the last picture of the game or start screen is shown dimmed behind the menu (a black background where no such picture was kept).
 - Keyboard: **Up and Down** move between rows, **Left and Right** change the value of the row. **Q and E** or **Page Up and Page Down** switch tabs; the last tab wraps to the first. **Up** on the first row moves onto the tab bar, where Left and Right switch tabs and Down goes back to the rows. **Enter** switches an On/Off row, opens the resolution list or presses a button. **Escape** closes the menu, or first closes an open list, prompt or dialog. Greyed-out rows are skipped.
 - The menu opens again on the tab it was closed on.
 - Mouse: moving onto a row or tab selects it; a click on a tab switches to it; click the `<` and `>` arrows or the value to change a choice; click or drag a slider; the wheel scrolls the rows; a **right-click** or a click on **Back** goes back.
 - Gamepad: **leftshoulder / rightshoulder** switch tabs, the **D-pad** moves, **a** selects, **b** goes back.
 - These keys are fixed. They do not follow `config/controls.cfg`.
-- Game tab: SFX volume and Music volume (0 to 100 in steps of 10; the sound changes at once), Invert camera (On or Off), Language (`< English >`), and Reset to defaults. The options are stored in the save file when you close the menu, if you changed one. A new language is passed on when the menu closes, but the game does not switch to it yet (a line in the terminal says so).
+- Game tab: SFX volume and Music volume (0 to 100 in steps of 10; the sound changes at once), Invert camera (On or Off), Language (`< English >`), Quit game and Reset to defaults. **Quit game** asks "Quit the game?" with Yes and No; the question opens on No, **Enter** declines, **Left** moves to Yes, **Escape** cancels, and Yes closes the program. This is the way to quit the game: from the start screens open the PC Settings menu from the slot list, in play open it from the pause menu. Before the slot list (logos, movie, language list) only the window's close button quits. The options are stored in the save file when you close the menu, if you changed one. A new language is passed on when the menu closes, but the game does not switch to it yet (a line in the terminal says so).
 - Display tab: Window mode (Windowed or Fullscreen) and Resolution (a list of the monitor's sizes; greyed out as "Desktop resolution" in full screen). A change applies at once and asks "Keep these settings?": **Enter** or Keep keeps it, **Escape**, Revert or 15 seconds without an answer go back to the old setting.
 - Controls tab: one row per action with the columns Action, Slot 1, Slot 2 and Mode. **Left and Right** move between Slot 1, Slot 2 and Mode, **Enter** or a click chooses it. A slot shows "Press a key... (Esc cancel, Del clear)": press the new key, mouse button or gamepad button (a gamepad button only while a gamepad is connected), **Delete** clears the slot, **Escape** cancels. The menu keys cannot be bound. A key that another action uses asks "Swap" or "Cancel": **Enter** cancels, **Left and Right** move between Swap and Cancel and Enter presses the chosen one; a click on Swap swaps the two bindings. Mode switches the action between Hold and Toggle. `config/controls.cfg` is written after each change and the running game uses it at once.
 - Quality of life tab: the preset (Original, Improved, Custom) and one On/Off row per feature (Widened view, [PC controls](#pc-controls)). Changing a feature by hand switches the preset to Custom.
@@ -161,7 +171,7 @@ In the [development runtime](commands.md#development-runtime), on a detective po
 | Y | R |
 | L | Z |
 | R | C |
-| Start | Return |
+| Start | Return, and Escape (fixed; with PC controls on: Keypad Enter and Escape) |
 | Select | Tab |
 | Walk (not a 3DS button) | Left Alt |
 | Debug overlay (not a 3DS button) | F3 (toggle) |

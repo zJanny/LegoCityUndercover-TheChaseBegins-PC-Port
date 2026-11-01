@@ -12,7 +12,7 @@ Run this from the project folder, the one that contains `README.md`:
 build/chase-game
 ```
 
-A window opens and shows the start of the game, as it looks on the 3DS: the top screen above the bottom screen. Press Escape to quit. With `--window WIDTHxHEIGHT` you choose the window size, for example `--window 800x960`.
+A window opens and shows the start of the game, as it looks on the 3DS: the top screen above the bottom screen. To quit, close the window or use Quit game in the [PC settings menu](controls.md#pc-settings-menu); Escape never closes the game ([Escape](controls.md#escape)). With `--window WIDTHxHEIGHT` you choose the window size, for example `--window 800x960`.
 
 To skip the screens and go straight to a level, use `--gameplay` (police station) or `--level` and the level's path (see [Other levels](#other-levels)).
 
@@ -48,7 +48,8 @@ What is not like the original yet:
 | Jump | Q, or the right mouse button |
 | Punch (the Y button) | R, a short press |
 | Turn the camera | Z (left) and C (right). Pushing left or right also turns the camera. |
-| Quit | Escape |
+| Pause menu | Return, or Keypad Enter with PC controls on; Escape in both |
+| Quit | Quit game in the PC settings menu, or close the window |
 
 - The character runs when you push the keys. After about one second of running, the character sprints.
 - The keys come from `config/controls.cfg`. See [Controls](controls.md).
@@ -158,7 +159,7 @@ The path is the level's place inside the game archive, as in the example. Each l
 A new game in Cherry Tree Hills starts as in the original:
 
 - The intro movie plays (once), then the first cutscene of mission 1-1 with the donut shop, then the first tip.
-- Start opens the pause menu of the original: the upper screen shows the collectibles panel (without its numbers yet), the lower screen the wheel with Resume, Options, Credits, Exit and PC Settings, Back and Select. The wheel turns and chooses as in the original, also by clicking or swiping on the lower screen ([controls](controls.md#pause-menu)). Resume, B and Start go back to the game. Options opens the options wheel of the original: the sound effects and music volume, Invert camera (it turns the camera the other way with L and R) and Language. A change of a volume is heard at once; B after a change saves the options into the save file (without the original's "Checking save data" check) and goes back to the pause wheel. The Language row opens the original's grid of nine flag tiles with no flag chosen; a click on a flag chooses it, a second click or A stores that language in the save file and goes back to the options wheel, B goes back without a change, but the texts and pictures stay English. PC Settings opens the [PC settings menu](controls.md#pc-settings-menu) over the whole window; the game and the pause screen wait behind it and the pause wheel is as it was after Escape. Credits and Exit do nothing yet, and the short black screen of the original before the menu appears is not there.
+- Start (Return, or Keypad Enter with PC controls on; Escape in both) opens the pause menu of the original: the upper screen shows the collectibles panel (without its numbers yet), the lower screen the wheel with Resume, Options, Credits, Exit and PC Settings, Back and Select. The wheel turns and chooses as in the original, also by clicking or swiping on the lower screen ([controls](controls.md#pause-menu)). Resume, B and Start go back to the game. Options opens the options wheel of the original: the sound effects and music volume, Invert camera (it turns the camera the other way with L and R) and Language. A change of a volume is heard at once; B after a change saves the options into the save file (without the original's "Checking save data" check) and goes back to the pause wheel. The Language row opens the original's grid of nine flag tiles with no flag chosen; a click on a flag chooses it, a second click or A stores that language in the save file and goes back to the options wheel, B goes back without a change, but the texts and pictures stay English. PC Settings opens the [PC settings menu](controls.md#pc-settings-menu) over the whole window; the game and the pause screen wait behind it (its Game tab holds only Quit game here) and the pause wheel is as it was after Escape. Credits and Exit do nothing yet, and the short black screen of the original before the menu appears is not there.
 - In the police station, A on the award viewer's use marker opens the awards screen of the original ([controls](controls.md#award-viewer)): the lower screen has the wheel with Overview and the seven areas and the Back button, the upper screen counts the bronze, silver and gold awards of the save slot for the chosen area. The award trophies of the upper screen are not drawn yet, and the screen opens and closes without the original's fades. The program prints `award viewer opened at update N, bronze A/B, silver C/D, gold E/F` and `award viewer closed at update N`.
 - Cutscenes fade the top screen to black before they start (when the script asks for it) and at their end, then fade the game picture back in. The fades come from the original's code: 0.5 s each, black quad over the top screen only. The short black pause before the picture returns is a stand-in measured in the original.
 - The player is held during the cutscene. Add `--no-start-cutscenes` to skip the movie and the first cutscene while testing.

@@ -53,7 +53,11 @@ void pauseWithEntry(fe::Resources& resources) {
         "it opens on the first row of its first tab like from the slot page");
     require(qol::pauseEntryHolds(settings, menu), "the pause screen waits while the menu is open");
 
-    require(settings.menu()->consumeOpen(key(SDL_KEYDOWN, SDLK_DOWN), 960, 600) && settings.menu()->menu()->screen().focusRow == 1, "keys go to the menu");
+    const qol::ui::Screen& screen = settings.menu()->menu()->screen();
+    require(settings.menu()->menu()->tabTitles().front() == "Game" && screen.rows.size() == 1 && screen.rows[0].label == "Quit game",
+        "in play the Game tab holds only the Quit game row (QOLCTL-5; the pause wheel's Options page holds the rest)");
+    require(settings.menu()->consumeOpen(key(SDL_KEYDOWN, SDLK_e), 960, 600) && screen.selectedTab == 1, "the keys go to the menu: E switches the tab");
+    require(settings.menu()->consumeOpen(key(SDL_KEYDOWN, SDLK_DOWN), 960, 600) && screen.focusRow == 1, "keys go to the menu");
     require(!settings.menu()->consumeOpen(key(SDL_KEYUP, SDLK_DOWN), 960, 600), "key releases pass on");
     require(settings.menu()->consumeOpen(key(SDL_KEYDOWN, SDLK_ESCAPE), 960, 600) && !settings.menu()->isOpen(), "Escape closes the menu");
     require(!qol::pauseEntryHolds(settings, menu), "the pause screen goes on");

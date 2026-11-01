@@ -17,6 +17,7 @@ struct MenuOutcome {
     std::optional<std::string> confirm;
     std::optional<KeepSettingsChange> keep;
     std::string message;
+    bool quit = false;
 };
 
 struct MenuPageEntry {
@@ -53,9 +54,9 @@ bool isPadKey(Key key) {
     }
 }
 
-MenuOutcome outcomeOf(const GamePageResult& r) { return {r.changed, r.needsConfirm, std::nullopt, {}}; }
+MenuOutcome outcomeOf(const GamePageResult& r) { return {r.changed, r.needsConfirm, std::nullopt, {}, r.quitAsked}; }
 
-MenuOutcome outcomeOf(const DisplayPageResult& r) { return {r.changed, r.needsConfirm, r.needsKeepSettings, {}}; }
+MenuOutcome outcomeOf(const DisplayPageResult& r) { return {r.changed, r.needsConfirm, r.needsKeepSettings, {}, false}; }
 
 MenuOutcome outcomeOf(const QolPageOutcome& r) {
     MenuOutcome out;
@@ -98,6 +99,7 @@ MenuSetup menuSetupFor(MenuStores& stores, std::vector<std::string> languageName
     setup.languageNames = std::move(languageNames);
     setup.startLanguage = stores.startLanguage();
     setup.controls = stores.controls();
+    setup.quitTab = stores.quitTab();
     if (stores.hasDisplay()) setup.display = DisplaySetup{stores.modes(), stores.desktop()};
     return setup;
 }
@@ -117,14 +119,14 @@ void UiMenu::open(const MenuSetup& setup) {
     qol_.reset();
     keep_.reset();
     confirm_.reset();
+    confirmQuit_ = false;
     message_.clear();
     pending_ = {};
     gameOptions_ = setup.game;
     controlsPort_ = setup.controls;
-    if (setup.game) {
-        game_.emplace(*setup.game, setup.languageNames, setup.startLanguage);
-        pages_.push_back(entryFor("Game", MenuStore::Game, *game_));
-    }
+    if (setup.game) game_.emplace(*setup.game, setup.languageNames, setup.startLanguage);
+    else if (setup.quitTab) game_.emplace();
+    if (game_) pages_.push_back(entryFor("Game", MenuStore::Game, *game_));
     if (setup.display) {
         display_.emplace(*setup.settings, setup.display->choices, setup.display->desktop);
         keep_.emplace(*setup.settings, setup.display->desktop, [this](const Resolution&, WindowMode) {
@@ -284,6 +286,7 @@ void UiMenu::apply(const Action& action, MenuEffects& effects, double now) {
     case ActionKind::Close: close(effects); return;
     case ActionKind::TabChanged:
         confirm_.reset();
+        confirmQuit_ = false;
         showPage();
         return;
     case ActionKind::DialogConfirmed: confirmDialog(effects, now); return;
@@ -313,7 +316,10 @@ void UiMenu::applyOutcome(const MenuOutcome& outcome, MenuEffects& effects, doub
         case MenuStore::Qol: effects.settingsChanged = true; break;
         }
     }
-    if (outcome.confirm) confirm_ = outcome.confirm;
+    if (outcome.confirm) {
+        confirm_ = outcome.confirm;
+        confirmQuit_ = outcome.quit;
+    }
     if (outcome.keep && keep_) keep_->begin(valuesOf(outcome.keep->previous), valuesOf(outcome.keep->current), now);
     message_ = outcome.message;
 }
@@ -321,6 +327,11 @@ void UiMenu::applyOutcome(const MenuOutcome& outcome, MenuEffects& effects, doub
 void UiMenu::confirmDialog(MenuEffects& effects, double now) {
     if (confirm_) {
         confirm_.reset();
+        if (confirmQuit_) {
+            confirmQuit_ = false;
+            effects.quitGame = true;
+            return;
+        }
         if (const MenuPageEntry* current = page()) applyOutcome(current->reset(), effects, now);
         return;
     }
@@ -330,6 +341,7 @@ void UiMenu::confirmDialog(MenuEffects& effects, double now) {
 void UiMenu::cancelDialog(MenuEffects& effects) {
     if (confirm_) {
         confirm_.reset();
+        confirmQuit_ = false;
         Action cancelled;
         cancelled.kind = ActionKind::DialogCancelled;
         if (const MenuPageEntry* current = page()) current->handle(cancelled);

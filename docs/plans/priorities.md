@@ -247,7 +247,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [player-traversal-zipline.md](features/player-traversal-zipline.md): TRAV-9 (+2), TRAV-49 (+1), TRAV-52 (+1), TRAV-10, TRAV-35, TRAV-6, TRAV-63, TRAV-8, TRAV-S1, TRAV-S2, TRAV-S20, TRAV-S29, TRAV-S3, TRAV-S30, TRAV-S31, TRAV-S32, TRAV-S4
 - [player-traversal.md](features/player-traversal.md): TRAV-2 (+1), TRAV-S12 (+1), TRAV-19, TRAV-20, TRAV-22, TRAV-34, TRAV-5, TRAV-S10, TRAV-S11, TRAV-S13, TRAV-S38
 - [qol-bottom-screen.md](features/qol-bottom-screen.md): QOLBOT-19 (+2), QOLBOT-22 (+1), QOLBOT-10, QOLBOT-2, QOLBOT-21, QOLBOT-3, QOLBOT-4, QOLBOT-5, QOLBOT-7, QOLBOT-8, QOLBOT-9, QOLBOT-S1
-- [qol-controls.md](features/qol-controls.md): QOLCTL-7 (+2), QOLCTL-3 (+1), QOLCTL-5 (+1), QOLCTL-1, QOLCTL-10, QOLCTL-6, QOLCTL-S1, QOLCTL-S2
+- [qol-controls.md](features/qol-controls.md): QOLCTL-7 (+2), QOLCTL-3 (+1), QOLCTL-10, QOLCTL-11, QOLCTL-12, QOLCTL-6, QOLCTL-S2, QOLCTL-S3
 - [qol-fullscreen.md](features/qol-fullscreen.md): QOLFS-1 (+2), QOLFS-10, QOLFS-16, QOLFS-17
 - [qol-minimap.md](features/qol-minimap.md): QOLMAP-7, QOLMAP-S1
 - [qol-settings-drawing.md](features/qol-settings-drawing.md): QOLSET-53, QOLSET-S4, QOLSET-S6
