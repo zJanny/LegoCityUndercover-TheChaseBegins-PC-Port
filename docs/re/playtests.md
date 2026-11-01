@@ -14,6 +14,7 @@ What the user saw when playing `chase-game` against their knowledge of the origi
 - Mission 1-3: the rescue's lawn mower "just stood there still and not moving" (user's words); path platforms now move and turn in the port, not yet re-checked by the user. [§2026-10-28T00:06:31](#ts-20261028-000631)
 - Mission 1-3: four more bugs (TV crew's cameras and microphone, the rescued man stuck in the air after the crane, the mower's rider still in the air, the push cart invisible until its cutscene). [§2026-10-30T22:15:38](#ts-20261030-221538)
 - Mission 1-4 (original, emulator): the user did not see the character intro banner (ShowCharacterIntro of `1-4_SO_Phase2`, character Booster Strange) from the showroom fight through the roof to the chase. [§2026-11-01T14:26:42](#ts-20261101-142642)
+- Mission 1-3: the character stuck in the air after the crane rescue (report of 2026-10-30) is the rescued man, not the girder guy (user's answer 2026-11-01). [§2026-11-01T16:07:46](#ts-20261101-160746)
 
 <a id="ts-20261019-175641"></a>
 
@@ -126,3 +127,11 @@ The user played mission 1-4 in the original (in the emulator) from the showroom 
 The call's argument is character row 185 of `tablescharacters.bxls` (row index in the first column of `build/chase-tabledump tables/tablescharacters.bxls`; sheet 0, name column `"boosterstrange"`). That is the mission 1-4 NPC `1-4_Booster_Strange` (model `char_boosterstrange`), not a Chase disguise. The call and its handler are described in [script-text.md §2026-10-14T20:46](script-text.md#ts-20261014-204600). Checked by the lead on 2026-11-01 with the lookup above.
 
 Open, not decided: the intro may not be visible in the original at this point of the mission, or it is shown somewhere the user did not notice (a part of the mission not played, a short display). Where `1-4_SO_Phase2` runs is not found yet.
+
+<a id="ts-20261101-160746"></a>
+
+## 2026-11-01T16:07:46+01:00 — Mission 1-3: which character is stuck in the air after the crane (user answer)
+
+Answers the open point of [§2026-10-30T22:15:38](#ts-20261030-221538), the report "After rescuing the guy from the crane, he is stuck in the air" (SCRIPT-400 in [script-system-missions-1-3-end.md](../plans/features/script-system-missions-1-3-end.md)). Worker mission-B had fixed a different character, the girder guy whose super jump froze mid-air; the rescued man of the end crane sequence was still not fixed. The lead asked the user on 2026-11-01 which character they meant. The user's answer, unchanged (2026-11-01): "The rescued man".
+
+So SCRIPT-400 stays open for the rescued man `1-3_Lawnmower_man_final` (blocked by SCRIPT-406); the girder guy's landing is a separate fix that the user did not ask about.
