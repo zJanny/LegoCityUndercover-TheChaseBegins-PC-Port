@@ -292,6 +292,14 @@ private:
     void propDestroyedEffects(const chase::runtime::SmashedProp& prop);
     void propDestroyMessage(const std::string& lowerInstance);
     bool characterDeathMessage(const std::string& lowerInstance);
+    // Message 0 to a level character and its hit states (runtime/character_hit.hpp; glue src/runtime/game_character_hit_glue.cpp).
+    struct CharacterHitEntry {
+        chase::runtime::CharacterHitTarget target;
+        chase::runtime::CharacterHitStates states;
+    };
+    std::map<std::string, CharacterHitEntry> characterHits;
+    void characterHit(const std::string& lowerInstance, const chase::runtime::CharacterHitMessage& hit);
+    void updateCharacterHits();
     void loadScriptDestroyProps(chase::assets::FuseArchive& archive);
     // STAND-IN VEH-S104: the line tests 0x21ab20 / 0x22b108 of a brick burst are the wheel ray of the collision world, vehicles skipped.
     chase::runtime::DebrisLineTest debrisLineStandIn() const;

@@ -201,6 +201,7 @@ void LevelSession::updateLevelCharacters(float dt) {
     updatePropAnimations(dt);
     updatePropRocking();
     followAttachedCharacters();
+    updateCharacterHits();
     levelCharacters->update(scene, dt, [this](const chase::assets::CharacterObject& character) {
         return !objectState.isDisabled(character.placement.instance) && roomShown(runtime::roomNumber(character.placement.room));
     });

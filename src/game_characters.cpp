@@ -88,6 +88,25 @@ void LevelCharacters::play(const runtime::AnimationPlay& play) {
     }
 }
 
+bool LevelCharacters::startStateClip(const std::string& instance, const std::string& name) {
+    Entry* entry = find(instance);
+    if (!entry) return false;
+    const auto clip = clipOf(render::levelCharacterAnimationPath(archive_, characters_[entry->character].animationClass, name.c_str()));
+    if (!clip) return false;
+    entry->slots.start(clips_[*clip].info, runtime::kAnimationOnce, 0, runtime::kAnimationFrameDefault, runtime::kHitClipSpeed, runtime::kHitClipBlend, clock_);
+    return true;
+}
+
+void LevelCharacters::holdIdle(const std::string& instance, bool held) {
+    if (Entry* entry = find(instance)) entry->idleHeld = held;
+}
+
+std::optional<bool> LevelCharacters::clipFinished(const std::string& instance) const {
+    const Entry* entry = find(instance);
+    if (!entry) return std::nullopt;
+    return entry->slots.kind(clock_) == runtime::kAnimationStopped;
+}
+
 bool LevelCharacters::place(const std::string& instance, const Matrix& world) {
     Entry* entry = find(instance);
     if (!entry) return false;
@@ -133,7 +152,7 @@ void LevelCharacters::update(render::Scene& scene, float dt, const std::function
     clock_ += std::llround(double(dt) * double(runtime::kAnimationClockTicksPerSecond));
     for (Entry& entry : entries_) {
         if (!active(characters_[entry.character])) continue;
-        entry.idleState.update(entry.slots, clock_, random_, clips_[entry.idle].info, clips_[entry.idle2].info);
+        if (!entry.idleHeld) entry.idleState.update(entry.slots, clock_, random_, clips_[entry.idle].info, clips_[entry.idle2].info);
         const runtime::AnimationSlot* slot = entry.slots.current();
         if (!slot) continue;
         const Animation& animation = clips_[slot->clip].animation;

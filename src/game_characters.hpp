@@ -7,6 +7,7 @@
 #include "render/scene.hpp"
 #include "runtime/ai.hpp"
 #include "runtime/animation_slots.hpp"
+#include "runtime/character_hit.hpp"
 #include "runtime/game_random.hpp"
 #include "runtime/natives_animation.hpp"
 #include "runtime/npc_idle.hpp"
@@ -58,6 +59,13 @@ public:
     // A character the AI moved in its last update (AIMove, AISuperJump; runtime/ai.hpp) stands at its AI position, turned to its AI heading when one is
     // set, as the player follows it in game_player::applyAiPosition.
     void followAi(const runtime::AiCore& ai);
+    // A hit state's clip (runtime/character_hit.hpp): 0x21941c starts tablesanimations row `name` of the character's class in a new slot, mode 0,
+    // blend 0.1, speed 1.0. False when the instance or the clip is missing.
+    bool startStateClip(const std::string& lowerCaseInstance, const std::string& name);
+    // While held, the idle state 0x1d5070 starts no idle (the character is in a hit state).
+    void holdIdle(const std::string& lowerCaseInstance, bool held);
+    // Slot kind 6 of 0x22f560: no animation or the current one finished.
+    std::optional<bool> clipFinished(const std::string& lowerCaseInstance) const;
     // The character's node matrix (what place() wrote, or its AI position).
     std::optional<assets::Matrix> world(const std::string& lowerCaseInstance) const;
     // The lower-case instance names with their level data.
@@ -88,6 +96,7 @@ private:
         runtime::AnimationSlots slots;
         runtime::NpcIdle idleState;
         bool scriptLoaded = false;
+        bool idleHeld = false;
         std::vector<assets::Matrix> skin;
     };
     std::optional<std::uint32_t> clipOf(const std::string& path);

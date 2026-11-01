@@ -122,6 +122,7 @@ Read this index, then open only the file you need.
 | [traffic-ai-driver.md](traffic-ai-driver.md) | The junction routes (route list, EnableTrafficPath, path follower, junction test) and the AI driver (record, input provider 0x26d934, state change 0x1cb148, post step 0x1bc79c, kinematic traffic cars) |
 | [player-falling-jumping.md](player-falling-jumping.md) | Falling, landing stun, jumping, step-off slide, slope slow-down, state table |
 | [player-attack.md](player-attack.md) | Attack on foot: Y tap, combat action states 0xa3 / 0xa4, combo, target search, hit test, messages 62 and 0 to the target |
+| [combat-characters.md](combat-characters.md) | A character takes a hit: the hit receiver 0x1b8570, damage 0x15afb4, message 46, the states PUNCHED / KNOCKED DOWN / GET UP, the arrest health and the takedown moves |
 | [player-traversal.md](player-traversal.md) | Zipline (type 101: grab test, states 42..44, slide, dismount, oracle ride), survey of the climbing moves |
 | [player-traversal-pole.md](player-traversal-pole.md) | Pole and drain pipe (type 187): walk-in and A-press mount, climb, exits, dismount (the save state climbing the drain pipe of mission 1-2) |
 | [player-traversal-bricks.md](player-traversal-bricks.md) | Climbing bricks (type 20, states 141..152), the climb wall entry (type 30) (the save state climbing the bricks of mission 1-2) |

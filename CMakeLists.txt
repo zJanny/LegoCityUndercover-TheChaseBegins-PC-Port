@@ -60,7 +60,7 @@ target_sources(chase_runtime PRIVATE src/runtime/reference_trigger_level.cpp src
 target_sources(chase_runtime PRIVATE src/runtime/switch_base.cpp src/runtime/switch_set.cpp src/runtime/lever_use.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/player_attack.cpp src/runtime/attack_sounds.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/pedestrian_walk.cpp)
-target_sources(chase_runtime PRIVATE src/runtime/vehicle_camera.cpp src/runtime/particles.cpp src/runtime/debris.cpp src/runtime/prop_destroy.cpp src/runtime/destroy_message.cpp src/runtime/character_death.cpp src/runtime/fall_apart.cpp src/runtime/stud_drop.cpp src/runtime/character_respawn.cpp)
+target_sources(chase_runtime PRIVATE src/runtime/vehicle_camera.cpp src/runtime/particles.cpp src/runtime/debris.cpp src/runtime/prop_destroy.cpp src/runtime/destroy_message.cpp src/runtime/character_death.cpp src/runtime/fall_apart.cpp src/runtime/stud_drop.cpp src/runtime/character_respawn.cpp src/runtime/character_hit.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/prop_wobbly_destructible.cpp src/runtime/prop_bouncer.cpp src/runtime/stud_callers.cpp src/runtime/stud_drop_classes.cpp src/runtime/super_brick.cpp src/runtime/prop_hit_sequence.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/prop_rocking.cpp src/runtime/platform_wait.cpp src/runtime/game_generator_natives_glue.cpp
   src/runtime/platform_node_move.cpp src/runtime/platform_path.cpp src/runtime/game_platform_glue.cpp)
@@ -188,7 +188,7 @@ if(EPOXY_FOUND)
   if(FFMPEG_FOUND)
     add_executable(chase-game src/game.cpp src/game_options.cpp src/game_player.cpp src/game_carry.cpp src/game_scanner.cpp src/game_doors.cpp src/game_prop_parts.cpp src/game_level.cpp src/game_pause_menu.cpp src/game_award_viewer.cpp src/game_level_update.cpp src/game_vehicle.cpp src/game_vehicle_break.cpp src/game_vehicle_place.cpp src/game_vehicle_camera.cpp src/game_level_rooms.cpp src/game_cutscene.cpp src/game_level_cutscene.cpp src/game_characters.cpp src/game_pedestrians.cpp src/game_pedestrian_fade.cpp src/game_semi_trans.cpp src/game_pedestrian_rooms.cpp src/game_particles.cpp src/game_level_natives.cpp src/game_detective.cpp src/game_use_spot.cpp src/game_objective_markers.cpp src/game_hand_items.cpp src/game_effects.cpp src/game_shadows.cpp src/game_vehicle_effects.cpp src/game_zipline.cpp src/game_brick_grab.cpp src/game_climb_bar.cpp src/game_acrobat_pole.cpp src/game_pole.cpp src/game_ladder.cpp src/game_fence_vault.cpp src/game_animals.cpp src/game_object_visibility.cpp src/game_nested_props.cpp src/game_super_buildit.cpp src/game_fast_travel.cpp src/game_key_pickup.cpp)
     target_sources(chase-game PRIVATE src/game_pedestrian_blocking.cpp src/game_traffic.cpp)
-    target_sources(chase-game PRIVATE src/game_props_destructible.cpp src/game_prop_destroy.cpp src/game_character_death.cpp src/game_fall_apart.cpp src/game_stud_drops.cpp src/game_super_bricks.cpp)
+    target_sources(chase-game PRIVATE src/game_props_destructible.cpp src/game_prop_destroy.cpp src/game_character_death.cpp src/runtime/game_character_hit_glue.cpp src/game_fall_apart.cpp src/game_stud_drops.cpp src/game_super_bricks.cpp)
     target_sources(chase-game PRIVATE src/game_debris_pickup.cpp)
     target_sources(chase-game PRIVATE src/game_switch_glue.cpp src/game_switch_use_glue.cpp)
     target_sources(chase-game PRIVATE src/game_debris_super.cpp)
@@ -870,6 +870,12 @@ if(BUILD_TESTING)
   add_test(NAME character-death COMMAND character-death-test)
   add_test(NAME character-death-real-data COMMAND character-death-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
   set_tests_properties(character-death-real-data PROPERTIES SKIP_RETURN_CODE 77)
+  add_executable(character-hit-test tests/character_hit_test.cpp)
+  target_link_libraries(character-hit-test PRIVATE chase_runtime chase_assets)
+  target_compile_options(character-hit-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME character-hit COMMAND character-hit-test)
+  add_test(NAME character-hit-real-data COMMAND character-hit-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
+  set_tests_properties(character-hit-real-data PROPERTIES SKIP_RETURN_CODE 77)
   add_executable(player-attack-test tests/player_attack_test.cpp)
   target_link_libraries(player-attack-test PRIVATE chase_runtime chase_assets)
   target_compile_options(player-attack-test PRIVATE -Wall -Wextra -Wpedantic)
@@ -2447,7 +2453,7 @@ foreach(game_data_test
   ladder-real-data fence-vault-real-data carry-animation-real-data lever-use-real-data nested-object-collision-real-data super-buildit-real-data layout-text-real-data layout-scale-real-data fast-travel-pad-real-data map-buttons-real-data pause-menu-real-data buildit-real-data
   prop-animation-real-data animal-props-real-data cat-rescue-real-data prop-parts-real-data vehicle-boarding-real-data vehicle-drive-real-data
   floor-graph-real-data vehicle-collision-real-data vehicle-box-contact-real-data vehicle-sphere-sweep-real-data vehicle-prop-smash-real-data
-  destroy-effects-real-data character-death-real-data player-attack-real-data attack-sounds-real-data vehicle-world-real-data vehicle-rest-real-data
+  destroy-effects-real-data character-death-real-data character-hit-real-data player-attack-real-data attack-sounds-real-data vehicle-world-real-data vehicle-rest-real-data
   vehicle-wheels-real-data vehicle-hud-real-data vehicle-real-data objectives-real-data object-kinds progress-readme priorities-current
   camera-records-real-data locomotion-real-data streaming-real-data room-streaming-real-data collision-real-data fog-real-data lighting-real-data reflection-real-data
   sky-real-data shadow-real-data level-start-real-data dcam-real-data npc-idle-real-data pedestrian-limit-real-data ai-real-data nav-path-real-data
