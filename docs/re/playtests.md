@@ -13,6 +13,7 @@ What the user saw when playing `chase-game` against their knowledge of the origi
 - Mission 1-3, the lawnmower rescue: the lawn mower does not move correctly in the port (path platforms, SCRIPT-377); original situations along the rescue (lift, fence, push cart, crane, mission end) were recorded for later oracle checks. [§2026-10-27T23:14:14](#ts-20261027-231414)
 - Mission 1-3: the rescue's lawn mower "just stood there still and not moving" (user's words); path platforms now move and turn in the port, not yet re-checked by the user. [§2026-10-28T00:06:31](#ts-20261028-000631)
 - Mission 1-3: four more bugs (TV crew's cameras and microphone, the rescued man stuck in the air after the crane, the mower's rider still in the air, the push cart invisible until its cutscene). [§2026-10-30T22:15:38](#ts-20261030-221538)
+- Mission 1-4 (original, emulator): the user did not see the character intro banner (ShowCharacterIntro of `1-4_SO_Phase2`, character Booster Strange) from the showroom fight through the roof to the chase. [§2026-11-01T14:26:42](#ts-20261101-142642)
 
 <a id="ts-20261019-175641"></a>
 
@@ -115,3 +116,13 @@ The user played mission 1-3 in `chase-game` (2026-10-30) and reported four bugs 
 - "When pushing the car, it is invisible until the small cutscene starts." (the push cart of the rescue)
 
 Already known: the TV crew's attached cameras and booms are the Attach natives' node changes that are not applied (SCRIPT-272 in [script-system-natives-animation.md](../plans/features/script-system-natives-animation.md)). New items: the rescued man (SCRIPT-400), the mower's rider (SCRIPT-401; the gardener's local matrix under the mower is kept since [props-rocking-attach.md §2026-10-28T00:02:10](props-rocking-attach.md#ts-20261028-000210), so the seat pose is the open part), the invisible push cart (SCRIPT-402). Causes are not investigated.
+
+<a id="ts-20261101-142642"></a>
+
+## 2026-11-01T14:26:42+01:00 — Mission 1-4: no character intro banner seen in the original (user report)
+
+The user played mission 1-4 in the original (in the emulator) from the showroom fight through the roof to the patrol-car chase after Booster Strange escapes, looking for the character intro that the mission script `1-4_SO_Phase2` calls with ShowCharacterIntro (HUD-30). They reported, unchanged (2026-11-01): "I did not see that banner while playing in the emulator".
+
+The call's argument is character row 185 of `tablescharacters.bxls` (row index in the first column of `build/chase-tabledump tables/tablescharacters.bxls`; sheet 0, name column `"boosterstrange"`). That is the mission 1-4 NPC `1-4_Booster_Strange` (model `char_boosterstrange`), not a Chase disguise. The call and its handler are described in [script-text.md §2026-10-14T20:46](script-text.md#ts-20261014-204600). Checked by the lead on 2026-11-01 with the lookup above.
+
+Open, not decided: the intro may not be visible in the original at this point of the mission, or it is shown somewhere the user did not notice (a part of the mission not played, a short display). Where `1-4_SO_Phase2` runs is not found yet.
