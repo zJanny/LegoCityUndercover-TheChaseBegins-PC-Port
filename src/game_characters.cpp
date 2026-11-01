@@ -164,4 +164,29 @@ std::optional<BodyPose> LevelCharacters::bodyPose(const std::string& instance) c
     return pose;
 }
 
+namespace {
+const Joint* findJoint(const Skeleton& skeleton, const std::string& name, std::size_t& index) {
+    const auto found = std::find_if(skeleton.joints.begin(), skeleton.joints.end(), [&](const Joint& joint) { return lower(joint.name) == name; });
+    if (found == skeleton.joints.end()) return nullptr;
+    index = std::size_t(found - skeleton.joints.begin());
+    return &*found;
+}
+}
+
+std::optional<Matrix> LevelCharacters::jointBind(const std::string& instance, const std::string& joint) const {
+    const Entry* entry = find(instance);
+    std::size_t index = 0;
+    const Joint* found = entry ? findJoint(entry->rig->skeleton, joint, index) : nullptr;
+    if (!found) return std::nullopt;
+    return found->world;
+}
+
+std::optional<JointFrame> LevelCharacters::jointFrame(const std::string& instance, const std::string& joint) const {
+    const Entry* entry = find(instance);
+    std::size_t index = 0;
+    const Joint* found = entry ? findJoint(entry->rig->skeleton, joint, index) : nullptr;
+    if (!found || index >= entry->skin.size()) return std::nullopt;
+    return JointFrame{found->world, entry->skin[index], entry->world};
+}
+
 }

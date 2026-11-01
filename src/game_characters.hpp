@@ -35,6 +35,10 @@ struct BodyPose {
     std::optional<render::Mat4> head, hat;
 };
 
+struct JointFrame {
+    assets::Matrix bind, skin, world;
+};
+
 class LevelCharacters : public runtime::AnimationDriver {
 public:
     LevelCharacters(assets::FuseArchive& archive, const std::vector<assets::CharacterObject>& characters,
@@ -64,6 +68,10 @@ public:
     std::optional<CharacterPose> pose(const std::string& instance) const;
     // The character's node matrix and, once it was posed, its head and hat on their joints as placeCharacter draws them.
     std::optional<BodyPose> bodyPose(const std::string& lowerCaseInstance) const;
+    // The bind world matrix of the joint `lowerCaseJoint` of the character's skeleton (what 0x227788 returns).
+    std::optional<assets::Matrix> jointBind(const std::string& lowerCaseInstance, const std::string& lowerCaseJoint) const;
+    // The joint's bind and skin matrix of the last posed frame and the character's node matrix; nothing before the character was posed.
+    std::optional<JointFrame> jointFrame(const std::string& lowerCaseInstance, const std::string& lowerCaseJoint) const;
 
 private:
     struct Clip {

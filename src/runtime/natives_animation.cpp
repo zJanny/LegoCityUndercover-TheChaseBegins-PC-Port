@@ -150,6 +150,7 @@ bool AnimationNativeState::apply(AnimationNativeKind kind, const std::vector<std
         attachment.parent = instance;
         attachment.parentBone = lower(args[2]);
         attachment.childBone = lower(args[3]);
+        attachment.sequence = ++attachCalls_;
         break;
     }
     case AnimationNativeKind::AttachToBoneRot: {
@@ -158,6 +159,7 @@ bool AnimationNativeState::apply(AnimationNativeKind kind, const std::vector<std
         attachment.kind = AttachKind::BoneRotated;
         attachment.parent = instance;
         attachment.parentBone = lower(args[2]);
+        attachment.sequence = ++attachCalls_;
         for (int axis = 0; axis < 3; ++axis) attachment.rotationDegrees[axis] = numbers[3 + axis];
         break;
     }

@@ -78,6 +78,7 @@
 #include "runtime/collision.hpp"
 #include "runtime/node_attach.hpp"
 #include "runtime/attach_children.hpp"
+#include "runtime/bone_attach.hpp"
 #include "runtime/debug_metrics.hpp"
 #include "runtime/detective.hpp"
 #include "runtime/ability_table.hpp"
@@ -251,6 +252,7 @@ private:
     bool objectNodePosition(const std::string& instance, float out[3]) const;
     void attachLevelCharacters();
     void followAttachedCharacters();
+    void followBoneAttached();
     void snapAiMovedCharacters(float dt);
     std::optional<chase::assets::Matrix> placedNodeWorld(const std::string& lowerInstance);
     std::optional<std::array<float, 3>> objectNodeTranslation(const std::string& instance) const;
@@ -395,6 +397,7 @@ private:
     chase::runtime::GroundEntityLink playerGround;
     chase::runtime::NodeAttachments characterAttachments;
     std::map<std::string, std::uint32_t> characterAttachCalls;
+    chase::runtime::BoneAttachments boneAttachments;
     chase::runtime::AttachedChildren propAttachments;
     std::map<std::string, chase::runtime::PlatformVector> propOwnOffsets;
     std::map<std::string, std::optional<std::size_t>> placedSceneByInstance;

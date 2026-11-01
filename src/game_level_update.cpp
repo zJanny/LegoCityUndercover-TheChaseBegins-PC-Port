@@ -203,6 +203,7 @@ void LevelSession::updateLevelCharacters(float dt) {
     levelCharacters->update(scene, dt, [this](const chase::assets::CharacterObject& character) {
         return !objectState.isDisabled(character.placement.instance) && roomShown(runtime::roomNumber(character.placement.room));
     });
+    followBoneAttached();
 }
 
 std::vector<runtime::SoundCall> LevelSession::updateBuildits(const float playerPosition[3]) {

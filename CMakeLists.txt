@@ -66,6 +66,7 @@ target_sources(chase_runtime PRIVATE src/runtime/prop_rocking.cpp src/runtime/pl
   src/runtime/platform_node_move.cpp src/runtime/platform_path.cpp src/runtime/game_platform_glue.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/platform_riding.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/node_attach.cpp src/runtime/attach_children.cpp)
+target_sources(chase_runtime PRIVATE src/runtime/bone_attach.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/script_particles.cpp src/runtime/game_mission_end_1_3_glue.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/pushable.cpp src/runtime/mission13_end.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/pedestrian_manager.cpp)
@@ -195,6 +196,7 @@ if(EPOXY_FOUND)
     target_sources(chase-game PRIVATE src/game_prop_rocking.cpp src/runtime/game_rocking_follow_glue.cpp src/runtime/game_attach_children_glue.cpp src/game_platform_nodes.cpp)
     target_sources(chase-game PRIVATE src/runtime/game_push_cart_glue.cpp src/runtime/qol_window.cpp src/runtime/qol_controls_bindings.cpp src/runtime/qol_pc_controls.cpp src/runtime/qol_game_wiring.cpp)
     target_sources(chase-game PRIVATE src/runtime/game_platform_riding_glue.cpp)
+    target_sources(chase-game PRIVATE src/runtime/game_attach_bone_glue.cpp)
     target_link_libraries(chase-game PRIVATE chase_pad_events chase_qol chase_render chase_runtime chase_input chase_audio chase_frontend_movie chase_save_progress chase_save_tables)
     target_link_libraries(chase-game PRIVATE chase_qol_view chase_qol_hud chase_qol_minimap chase_qol_window)
     target_compile_options(chase-game PRIVATE -Wall -Wextra -Wpedantic)
@@ -2529,3 +2531,23 @@ target_link_libraries(pushable-real-test PRIVATE chase_runtime chase_assets)
 target_compile_options(pushable-real-test PRIVATE -Wall -Wextra -Wpedantic)
 add_test(NAME pushable-real-data COMMAND pushable-real-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
 set_tests_properties(pushable-real-data PROPERTIES SKIP_RETURN_CODE 77 LABELS needs-game-data)
+add_executable(bone-attach-test tests/bone_attach_test.cpp)
+target_link_libraries(bone-attach-test PRIVATE chase_runtime)
+target_compile_options(bone-attach-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME bone-attach COMMAND bone-attach-test)
+add_executable(bone-attach-real-test tests/bone_attach_real_test.cpp)
+target_link_libraries(bone-attach-real-test PRIVATE chase_runtime chase_assets)
+target_compile_options(bone-attach-real-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME bone-attach-real-data COMMAND bone-attach-real-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
+set_tests_properties(bone-attach-real-data PROPERTIES SKIP_RETURN_CODE 77 LABELS needs-game-data)
+if(TARGET chase-game)
+  # SCRIPT-403 (20261101-mission-A): the level start script hangs the TV crew's cameras and booms of mission 1-3 on `weaponright` of their holders
+  # (AttachToBoneRot 0x1bf718); the log lines are the port's own run, in the order of the calls' names.
+  add_test(NAME game-bone-attach-1-3 COMMAND chase-game
+    --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+    --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
+    --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes --save-out "${CMAKE_BINARY_DIR}/game-bone-attach-1-3.dat"
+    --script "0 0 5")
+  set_tests_properties(game-bone-attach-1-3 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300 LABELS needs-game-data
+    PASS_REGULAR_EXPRESSION "prop 1-3_boom_chopper: attached to bone weaponright of 1-3_sound_man_chopper at update 0\n.*prop 1-3_boom_park: attached to bone weaponright of 1-3_sound_man_park at update 0\n.*prop 1-3_camera_chopper: attached to bone weaponright of 1-3_camera_man_chopper at update 0\n.*prop 1-3_camera_park: attached to bone weaponright of 1-3_camera_man_park at update 0")
+endif()

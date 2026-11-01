@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 1051 open items and stand-ins, 182 linked to game usage, 869 with unknown reach.
+Items: 1054 open items and stand-ins, 186 linked to game usage, 868 with unknown reach.
 
 ## Top 50 overall
 
@@ -44,8 +44,8 @@ Items: 1051 open items and stand-ins, 182 linked to game usage, 869 with unknown
 | 8 | [SCRIPT-4](features/script-system.md?display=source#L38) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The code that hides the revealer targets; the role of the other type-4 parameters (Destination, ObjectTo ... |
 | 9 | [SCRIPT-S220](features/script-system-missions-reference.md?display=source#L18) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Closed 2026-10-25: the reference list holds the records of every registering kind ... |
 | 10 | [TRAV-21](features/player-traversal.md?display=source#L30) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Brick use handler 0x1b53a8 (messages 3 / 4 into state 145): sender unknown; `TriggerObject` switching ... |
-| 11 | [SCRIPT-273](features/script-system-natives-animation.md?display=source#L32) | 881 | 0 | 8 | 1 | 2 stand-in | `playanimation`, `playcharanim` | PlayCharAnim's state request 81 (the cutscene call, state 0x51 has the same functions) and its cape animation ... |
-| 12 | [SCRIPT-345](features/script-system-natives-animation.md?display=source#L35) | 859 | 0 | 8 | 0 | 2 stand-in | `loadanimation`, `playcharanim` | The port starts `1-2_Cage_Key_Target_Script` in the update of the press (as the original) but calls ... |
+| 11 | [SCRIPT-273](features/script-system-natives-animation.md?display=source#L34) | 881 | 0 | 8 | 1 | 2 stand-in | `playanimation`, `playcharanim` | PlayCharAnim's state request 81 (the cutscene call, state 0x51 has the same functions) and its cape animation ... |
+| 12 | [SCRIPT-345](features/script-system-natives-animation.md?display=source#L37) | 859 | 0 | 8 | 0 | 2 stand-in | `loadanimation`, `playcharanim` | The port starts `1-2_Cage_Key_Target_Script` in the update of the press (as the original) but calls ... |
 | 13 | [SCRIPT-190](features/script-system-missions.md?display=source#L28) | 0 | 736 | 8 | 2 | - | `scriptobject` | Carry gaps: the instigator argument of 0x244f40 is not modelled; the handler 0x1bc4d4 forwards message 0xff ... |
 | 14 | [SCRIPT-201](features/script-system-missions.md?display=source#L36) | 671 | 0 | 8 | 1 | 4 stand-in, 1 implemented | `automaticmusic`, `camerafollow`, `enabletrafficandpedestrians`, `overridemusic` +1 | Mission 1-1 has a handler (stand-in) for every native it calls: EnableTrafficAndPedestrians (SCRIPT-S230) ... |
 | 15 | [SCRIPT-375](features/script-system-missions-1-3.md?display=source#L31) | 658 | 0 | 8 | 0 | 1 implemented | `startdcam` | The generator scene's FOV, the text keys and the camera names behind the StartDCam hashes are not resolved ... |
@@ -54,7 +54,7 @@ Items: 1051 open items and stand-ins, 182 linked to game usage, 869 with unknown
 | 18 | [ANIM-S13](features/animation-characters.md?display=source#L25) | 623 | 0 | 8 | 0 | 1 stand-in | `playcharanim` | The player's script clip (PlayCharAnim on Player1) is shown at full weight from the native's update instead ... |
 | 19 | [SCRIPT-S269](features/script-system-hud-natives.md?display=source#L18) | 538 | 0 | 7 | 0 | 1 stand-in | `setactivewaypoint` | SetActiveWayPoint: the vehicle waypoint global (`WaypointSet::vehicleWaypoint`) is kept but its reader, which ... |
 | 20 | [SCRIPT-S274](features/script-system-natives-state.md?display=source#L22) | 537 | 0 | 8 | 0 | 1 stand-in, 1 implemented | `positionobject`, `positionplayer` | Message 8 of PositionObject / PositionPlayer to the player shows the player's scene instance ... |
-| 21 | [SCRIPT-274](features/script-system-natives-animation.md?display=source#L41) | 497 | 0 | 8 | 2 | 3 stand-in | `loadanimation`, `playanimation`, `unloadanimation` | LoadAnimation and UnloadAnimation keep a name list only (0x23e6e4 / 0x23e518 load and release are not ported) ... |
+| 21 | [SCRIPT-274](features/script-system-natives-animation.md?display=source#L43) | 497 | 0 | 8 | 2 | 3 stand-in | `loadanimation`, `playanimation`, `unloadanimation` | LoadAnimation and UnloadAnimation keep a name list only (0x23e6e4 / 0x23e518 load and release are not ported) ... |
 | 22 | [CAMERA-55](features/camera.md?display=source#L46) | 495 | 0 | 8 | 0 | 1 implemented | `positionobject` | After PositionObject of `1-1_Release_Car_Script` the port's police car stays on its locator while the ... |
 | 23 | [SCRIPT-S4](features/script-system.md?display=source#L25) | 484 | 0 | 8 | 0 | 1 stand-in, 1 implemented | `dcamcutscenewait`, `waitfordcam` | A function without a handler does nothing and continues at once; `chase-game` prints its name the first time ... |
 | 24 | [SCRIPT-346](features/script-system-hud-natives.md?display=source#L38) | 442 | 0 | 7 | 0 | 1 stand-in | `showdialogbg` | The ShowDialogBG byte and the byte +0x485 make 0x2d9d0c hide the timed object 0x5190bc that it otherwise ... |
@@ -70,7 +70,7 @@ Items: 1051 open items and stand-ins, 182 linked to game usage, 869 with unknown
 | 34 | [SCRIPT-S232](features/script-system-natives-world.md?display=source#L30) | 271 | 0 | 6 | 0 | 1 stand-in | `effectfadeobject` | EffectFadeObject drives `Scene::setInstanceFade` and the instance visibility of placed objects (and their ... |
 | 35 | [SCRIPT-S11](features/script-system-dcam.md?display=source#L19) | 256 | 0 | 8 | 0 | 1 stand-in | `startdcamtrack` | `StartDCamTrack` looks at the placement position of the object (the live position for the player), not at its ... |
 | 36 | [SCRIPT-S20](features/script-system-natives-state.md?display=source#L19) | 248 | 0 | 7 | 0 | 10 stand-in | `addstuds`, `disablesuperbuiltitsave`, `enablestudsbygroup`, `enablesuperbricks` +6 | Nine batch 27 natives (UnlockAbility, LockAbility, UnlockScanner, SetParachuteDeployHeight ... |
-| 37 | [SCRIPT-351](features/script-system-natives-animation.md?display=source#L36) | 236 | 0 | 8 | 1 | 1 stand-in | `loadanimation` | What decides the load time of LoadAnimation (0x23e6e4 request, load record state byte +8 = 2 in 0x17e588) ... |
+| 37 | [SCRIPT-351](features/script-system-natives-animation.md?display=source#L38) | 236 | 0 | 8 | 1 | 1 stand-in | `loadanimation` | What decides the load time of LoadAnimation (0x23e6e4 request, load record state byte +8 = 2 in 0x17e588) ... |
 | 38 | [SCRIPT-377](features/script-system-platforms.md?display=source#L28) | 0 | 183 | 8 | 2 | - | `leprops/leprop_platform`, `props/prop_platform` | The rest of the platform class: `orient` and type 7 rotations of platforms without a path, the shape curves ... |
 | 39 | [SCRIPT-388](features/script-system-platforms.md?display=source#L30) | 0 | 183 | 8 | 1 | - | `leprops/leprop_platform`, `props/prop_platform` | The platform's sweep in its entity move (the push of characters beside a sideways move with message 45 ... |
 | 40 | [SCRIPT-S18](features/script-system-natives-state.md?display=source#L18) | 175 | 0 | 7 | 0 | 2 stand-in | `resetobject`, `skiptofinalstate` | The six flag natives and ResetObject / SkipToFinalState store their value or message by instance name without ... |
@@ -137,7 +137,7 @@ Items: 1051 open items and stand-ins, 182 linked to game usage, 869 with unknown
 
 ## Scripts and missions
 
-117 of 249 items linked.
+121 of 252 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -148,8 +148,8 @@ Items: 1051 open items and stand-ins, 182 linked to game usage, 869 with unknown
 | 5 | [SCRIPT-389](features/script-system-platforms.md?display=source#L31) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The ledge lift starts one update later than in the oracle (the update between the switch's state 3 and the ... |
 | 6 | [SCRIPT-4](features/script-system.md?display=source#L38) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The code that hides the revealer targets; the role of the other type-4 parameters (Destination, ObjectTo ... |
 | 7 | [SCRIPT-S220](features/script-system-missions-reference.md?display=source#L18) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Closed 2026-10-25: the reference list holds the records of every registering kind ... |
-| 8 | [SCRIPT-273](features/script-system-natives-animation.md?display=source#L32) | 881 | 0 | 8 | 1 | 2 stand-in | `playanimation`, `playcharanim` | PlayCharAnim's state request 81 (the cutscene call, state 0x51 has the same functions) and its cape animation ... |
-| 9 | [SCRIPT-345](features/script-system-natives-animation.md?display=source#L35) | 859 | 0 | 8 | 0 | 2 stand-in | `loadanimation`, `playcharanim` | The port starts `1-2_Cage_Key_Target_Script` in the update of the press (as the original) but calls ... |
+| 8 | [SCRIPT-273](features/script-system-natives-animation.md?display=source#L34) | 881 | 0 | 8 | 1 | 2 stand-in | `playanimation`, `playcharanim` | PlayCharAnim's state request 81 (the cutscene call, state 0x51 has the same functions) and its cape animation ... |
+| 9 | [SCRIPT-345](features/script-system-natives-animation.md?display=source#L37) | 859 | 0 | 8 | 0 | 2 stand-in | `loadanimation`, `playcharanim` | The port starts `1-2_Cage_Key_Target_Script` in the update of the press (as the original) but calls ... |
 | 10 | [SCRIPT-190](features/script-system-missions.md?display=source#L28) | 0 | 736 | 8 | 2 | - | `scriptobject` | Carry gaps: the instigator argument of 0x244f40 is not modelled; the handler 0x1bc4d4 forwards message 0xff ... |
 
 ## World and levels
@@ -267,7 +267,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [script-system-missions-1-4.md](features/script-system-missions-1-4.md): SCRIPT-411 (+1), SCRIPT-416, SCRIPT-417, SCRIPT-S320
 - [script-system-missions-reference.md](features/script-system-missions-reference.md): SCRIPT-359 (+6), SCRIPT-360 (+1), SCRIPT-370 (+1), SCRIPT-S289, SCRIPT-S292, SCRIPT-S293, SCRIPT-S299
 - [script-system-missions.md](features/script-system-missions.md): SCRIPT-284 (+1), SCRIPT-115, SCRIPT-142, SCRIPT-221, SCRIPT-S141, SCRIPT-S236, SCRIPT-S237, SCRIPT-S243, SCRIPT-S255
-- [script-system-natives-animation.md](features/script-system-natives-animation.md): SCRIPT-324 (+3), SCRIPT-352 (+2), SCRIPT-272 (+1), SCRIPT-325 (+1), SCRIPT-334 (+1), SCRIPT-S284 (+1), SCRIPT-344, SCRIPT-353, SCRIPT-S110, SCRIPT-S262, SCRIPT-S266, SCRIPT-S267
+- [script-system-natives-animation.md](features/script-system-natives-animation.md): SCRIPT-324 (+3), SCRIPT-352 (+2), SCRIPT-325 (+1), SCRIPT-334 (+1), SCRIPT-405 (+1), SCRIPT-S284 (+1), SCRIPT-344, SCRIPT-353, SCRIPT-S262, SCRIPT-S266, SCRIPT-S267
 - [script-system-natives-party.md](features/script-system-natives-party.md): SCRIPT-338 (+2), SCRIPT-340 (+1)
 - [script-system-natives-state.md](features/script-system-natives-state.md): SCRIPT-335 (+1), SCRIPT-56 (+1), SCRIPT-64 (+1), SCRIPT-S97
 - [script-system-natives-world.md](features/script-system-natives-world.md): SCRIPT-279 (+1)
