@@ -25,3 +25,5 @@ if(TARGET chase_render)
   target_link_libraries(chase_qol_window PUBLIC chase_qol_menu chase_render PkgConfig::SDL2)
   target_compile_options(chase_qol_window PRIVATE -Wall -Wextra -Wpedantic)
 endif()
+
+target_sources(chase_qol PRIVATE ui_page_game.cpp ui_page_display.cpp)

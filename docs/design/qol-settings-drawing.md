@@ -55,6 +55,10 @@ Answers of the user to the lead's questions (2026-10-30; the quoted labels are t
 15. Keyboard and pad on a Controls row (the user, 2026-11-01, "Keep A's stand-in"): Left and Right move the focus between Slot 1, Slot 2 and Mode, without wrapping; Up and Down keep the column; Enter or A activates the focused cell (a slot opens the prompt, Mode toggles Hold and Toggle); a mouse click on a cell activates it.
 16. Empty Slot 2 while Slot 1 is empty (the user, 2026-11-01, "Refuse it"): a click on it is refused; slots stay packed, so clearing Slot 1 moves Slot 2 up.
 
+22. Language restored by "Reset to defaults" on the Game tab (the user, 2026-11-01, "Approve"): the language the game started with, the "Language at game start".
+23. Window mode selector (the user, 2026-11-01, "Approve"): only Windowed and Fullscreen (no borderless), and the two values wrap with Left and Right.
+24. Choosing the resolution that is already in use (the user, 2026-11-01, "Approve"): nothing changes and no "Keep these settings?" dialog opens.
+
 25. Toggle rows of the Quality of life tab (the user, 2026-11-01, "Approve all"): any value change on a feature toggle (Enter, a click, Left or Right) flips it, because the navigation reports them all as one direction.
 
 26. Preset selector (the user, 2026-11-01, "Approve all"): its value wraps at both ends (a value wrap, not a wrap of the row focus, so answer 6 stays) and skips Custom while no own mix is set.

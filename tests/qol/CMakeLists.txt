@@ -206,6 +206,16 @@ target_link_libraries(qol-ui-nav-test PRIVATE chase_qol)
 target_compile_options(qol-ui-nav-test PRIVATE -Wall -Wextra -Wpedantic)
 add_test(NAME qol-ui-nav COMMAND qol-ui-nav-test)
 
+add_executable(qol-ui-page-game-test ui_page_game_test.cpp)
+target_link_libraries(qol-ui-page-game-test PRIVATE chase_qol)
+target_compile_options(qol-ui-page-game-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME qol-ui-page-game COMMAND qol-ui-page-game-test)
+
+add_executable(qol-ui-page-display-test ui_page_display_test.cpp)
+target_link_libraries(qol-ui-page-display-test PRIVATE chase_qol)
+target_compile_options(qol-ui-page-display-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME qol-ui-page-display COMMAND qol-ui-page-display-test)
+
 add_executable(qol-ui-page-controls-test ui_page_controls_test.cpp)
 target_link_libraries(qol-ui-page-controls-test PRIVATE chase_qol)
 target_compile_options(qol-ui-page-controls-test PRIVATE -Wall -Wextra -Wpedantic)

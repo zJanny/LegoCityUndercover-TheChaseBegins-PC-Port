@@ -44,6 +44,7 @@ public:
     void setSwitch(Feature feature, bool on);
     void setWindowMode(WindowMode mode) { windowMode_ = mode; }
     bool setResolution(const Resolution& resolution);
+    void clearResolution() { resolution_.reset(); }
 
 private:
     Master master_ = Master::Original;
