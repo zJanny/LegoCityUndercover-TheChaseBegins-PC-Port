@@ -91,6 +91,8 @@ public:
     void setTabs(std::vector<std::string> tabs);
     void selectTab(int tab);
     void setRows(std::vector<RowSpec> rows);
+    void updateRows(std::vector<RowSpec> rows);
+    void setColumnTitles(std::vector<std::string> titles);
     void setModal(Modal modal);
     void setSliderSteps(int steps);
     void setDropdownInfo(std::function<DropdownInfo(int row)> info);

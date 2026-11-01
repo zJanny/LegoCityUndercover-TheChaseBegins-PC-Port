@@ -116,6 +116,19 @@ void UiNav::setRows(std::vector<RowSpec> rows) {
     screen_.scrollOffset = clampScroll(screen_, screen_.scrollOffset, proportions_);
 }
 
+void UiNav::updateRows(std::vector<RowSpec> rows) {
+    if (rows.size() != screen_.rows.size()) {
+        setRows(std::move(rows));
+        return;
+    }
+    screen_.rows = std::move(rows);
+}
+
+void UiNav::setColumnTitles(std::vector<std::string> titles) {
+    screen_.columnTitles = std::move(titles);
+    screen_.scrollOffset = clampScroll(screen_, screen_.scrollOffset, proportions_);
+}
+
 void UiNav::setModal(Modal modal) {
     modal_ = modal;
     dragRow_ = -1;

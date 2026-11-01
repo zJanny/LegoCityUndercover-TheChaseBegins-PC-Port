@@ -43,7 +43,7 @@ std::string writeTarget(const QolGameSetup& setup) {
 class QolGamePort final : public qol::GamePort {
 public:
     explicit QolGamePort(const QolGameSetup& setup)
-        : setGains_(setup.setGains), target_(writeTarget(setup)), image_(openedImage(setup, target_)),
+        : setGains_(setup.setGains), startLanguage_(setup.language), target_(writeTarget(setup)), image_(openedImage(setup, target_)),
           writer_(target_, image_, 0, std::nullopt), game_(page_, options_.data(), live_) {
         std::copy(image_.options(), image_.options() + save::kOptionsSize, options_.begin());
         live_ = {std::uint8_t(setup.soundVolume), std::uint8_t(setup.musicVolume)};
@@ -58,6 +58,7 @@ public:
     void setMusicVolume(int volume) override { game_.setMusicVolume(volume); }
     void setInvertCamera(bool invert) override { game_.setInvertCamera(invert); }
     void openLanguages() override { game_.openLanguages(); }
+    int startLanguage() const override { return startLanguage_; }
 
     void applied() override {
         const std::optional<float> sound = game_.takeSoundGain(), music = game_.takeMusicGain();
@@ -78,6 +79,7 @@ public:
 
 private:
     std::function<void(std::optional<float>, std::optional<float>)> setGains_;
+    int startLanguage_;
     std::string target_;
     save::SaveImage image_;
     save::SaveRequestWriter writer_;

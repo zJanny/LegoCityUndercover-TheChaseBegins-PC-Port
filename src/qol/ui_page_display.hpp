@@ -41,6 +41,7 @@ public:
     std::vector<std::string> dropdownItems(int row) const;
     DisplayPageResult handle(const Action& action);
     DisplayPageResult reset();
+    std::string help(int row) const;
 
     DisplayState state() const;
 

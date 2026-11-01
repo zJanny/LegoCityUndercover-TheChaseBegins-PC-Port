@@ -163,7 +163,13 @@ private:
         }
     }
 
+    void header() {
+        for (std::size_t i = 0; i < layout_.headerCells.size() && i < screen_.columnTitles.size(); ++i)
+            text(screen_.columnTitles[i], layout_.headerCells[i], i == 0 ? Align::Left : Align::Center, p_.textDisabled);
+    }
+
     void rows() {
+        header();
         list_.pushClip(uiClip(layout_.viewport));
         bound_ = layout_.viewport;
         for (std::size_t i = 0; i < layout_.rows.size() && i < screen_.rows.size(); ++i)
@@ -211,9 +217,24 @@ private:
             break;
         }
         case RowKind::Button:
+            if (!layout.cells.empty()) {
+                cells(spec, layout, valueColour);
+                break;
+            }
             fill(inner(layout.control), p_.control, corner_);
             text(spec.value, layout.control, Align::Center, valueColour);
             break;
+        }
+    }
+
+    void cells(const RowSpec& spec, const RowLayout& layout, Color valueColour) {
+        for (std::size_t i = 0; i < layout.cells.size() && i < spec.cells.size(); ++i) {
+            const Rect& cell = layout.cells[i];
+            const Rect box = inner({cell.x + inset_, cell.y, std::max(0, cell.width - 2 * inset_), cell.height});
+            fill(box, p_.control, corner_);
+            if (static_cast<int>(i) == layout.focusedCell)
+                list_.border(uiRect(box), colour(p_.focusBorder), static_cast<float>(s_.border), corner_);
+            text(spec.cells[i], box, Align::Center, valueColour);
         }
     }
 

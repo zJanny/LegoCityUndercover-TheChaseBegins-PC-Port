@@ -248,10 +248,10 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [qol-bottom-screen.md](features/qol-bottom-screen.md): QOLBOT-19 (+2), QOLBOT-22 (+1), QOLBOT-10, QOLBOT-2, QOLBOT-21, QOLBOT-3, QOLBOT-4, QOLBOT-5, QOLBOT-7, QOLBOT-8, QOLBOT-9, QOLBOT-S1
 - [qol-fullscreen.md](features/qol-fullscreen.md): QOLFS-1 (+2), QOLFS-10, QOLFS-16, QOLFS-17
 - [qol-minimap.md](features/qol-minimap.md): QOLMAP-7, QOLMAP-S1
-- [qol-settings-drawing.md](features/qol-settings-drawing.md): QOLSET-53, QOLSET-S2, QOLSET-S4, QOLSET-S6
+- [qol-settings-drawing.md](features/qol-settings-drawing.md): QOLSET-53, QOLSET-S4, QOLSET-S6
 - [qol-settings-menu.md](features/qol-settings-menu.md): QOLSET-2 (+3), QOLSET-25 (+2), QOLSET-36, QOLSET-59, QOLSET-61
 - [qol-settings-tabs.md](features/qol-settings-tabs.md): QOLSET-3, QOLSET-4
-- [qol-settings-ui.md](features/qol-settings-ui.md): QOLSET-88 (+5), QOLSET-93 (+5), QOLSET-79 (+4)
+- [qol-settings-ui.md](features/qol-settings-ui.md): QOLSET-96 (+1), QOLSET-95, QOLSET-97, QOLSET-S7
 - [rendering-draw-order.md](features/rendering-draw-order.md): RENDER-65 (+1), RENDER-78 (+1), RENDER-79 (+1), RENDER-S64, RENDER-S71, RENDER-S72
 - [rendering-reflections.md](features/rendering-reflections.md): RENDER-75 (+1), RENDER-S69
 - [rendering-shadows.md](features/rendering-shadows.md): RENDER-72 (+1), RENDER-73 (+1), RENDER-74 (+1), RENDER-S67, RENDER-S68

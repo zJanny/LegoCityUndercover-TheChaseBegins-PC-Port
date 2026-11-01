@@ -44,7 +44,7 @@ std::vector<RowSpec> GamePage::rows() const {
         tab_.valueText(GameRow::InvertCamera), 0, true});
     out.push_back({gameRowLabel(GameRow::Language), RowKind::Selector,
         languageNames_[static_cast<std::size_t>(language_ - firstLanguage)], 0, true});
-    out.push_back({"Reset to defaults", RowKind::Button, "", 0, true});
+    out.push_back({resetToDefaultsText, RowKind::Button, resetToDefaultsText, 0, true});
     return out;
 }
 
@@ -91,6 +91,20 @@ GamePageResult GamePage::handle(const Action& action) {
         return result;
     }
     return {};
+}
+
+// DRAFT QOLSET-97: help texts written by 20261101-qolui3-F on 2026-11-01, awaiting the user's approval.
+std::string GamePage::help(int row) const {
+    switch (row) {
+    case SfxRow: return "Volume of the sound effects. Default: " + std::to_string(defaultSfxVolume * volumeDisplayScale);
+    case MusicRow: return "Volume of the music. Default: " + std::to_string(defaultMusicVolume * volumeDisplayScale);
+    case InvertRow: return "Inverts the camera controls. Default: Off";
+    case LanguageRow:
+        return "Language of the game. It changes when you close the menu. Default: " +
+            languageNames_[static_cast<std::size_t>(startLanguage_ - firstLanguage)];
+    case ResetRow: return "Sets every setting on this tab back to its default.";
+    default: return {};
+    }
 }
 
 GamePageResult GamePage::reset() {

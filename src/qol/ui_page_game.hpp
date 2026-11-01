@@ -32,6 +32,7 @@ public:
     DropdownInfo dropdown(int row) const;
     GamePageResult handle(const Action& action);
     GamePageResult reset();
+    std::string help(int row) const;
 
     int language() const { return language_; }
 

@@ -1,12 +1,13 @@
 #pragma once
 
 #include "qol/controls_port.hpp"
+#include "qol/display_tab.hpp"
 #include "qol/game_port.hpp"
-#include "qol/menu_model.hpp"
 #include "qol/settings.hpp"
 
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 
 namespace qol {
@@ -23,7 +24,16 @@ struct StoresPorts {
     bool configured() const { return !settingsPath.empty(); }
 };
 
-bool changesSettings(Result result);
+struct MenuEffects {
+    bool settingsChanged = false;
+    bool windowChanged = false;
+    bool controlsChanged = false;
+    bool gameChanged = false;
+    bool closed = false;
+    std::optional<int> language;
+
+    void merge(const MenuEffects& other);
+};
 
 class MenuStores {
 public:
@@ -31,9 +41,15 @@ public:
 
     Settings& settings() { return settings_; }
     const Settings& settings() const { return settings_; }
-    const GameOptions* game() const { return game_.get(); }
-    void open(MenuModel& model);
-    void commit(Result result);
+    GamePort* game() const { return game_.get(); }
+    ControlsPort* controls() const { return controls_.get(); }
+    bool hasDisplay() const { return ports_.configured(); }
+    const ResolutionChoices& modes() const { return ports_.modes; }
+    Resolution desktop() const { return ports_.desktop; }
+    int startLanguage() const;
+
+    void open();
+    void commit(const MenuEffects& effects);
 
 private:
     StoresPorts ports_;

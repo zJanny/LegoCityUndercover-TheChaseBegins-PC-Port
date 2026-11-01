@@ -17,6 +17,7 @@
 #include <filesystem>
 #include <iostream>
 #include <string>
+#include <vector>
 
 namespace {
 namespace fe = chase::frontend;
@@ -52,6 +53,14 @@ bool sameCanvas(const fe::Canvas& a, const fe::Canvas& b) {
     return a.rgba() == b.rgba();
 }
 
+qol::StoresPorts displayPorts() {
+    qol::StoresPorts ports;
+    ports.settingsPath = (std::filesystem::temp_directory_path() / "chase-qol-front-menu-real-never-written.cfg").string();
+    ports.modes = {{960, 600}, {1920, 1080}};
+    ports.desktop = {1920, 1080};
+    return ports;
+}
+
 int changedPixels(const fe::Canvas& a, const fe::Canvas& b, int x0, int y0, int x1, int y1) {
     int changed = 0;
     for (int y = y0; y < y1; ++y)
@@ -79,7 +88,7 @@ void otherScreens(fe::Resources& resources) {
     qol::FrontMenu menu(resources);
     const qol::Box box = qol::frontButtonBox(resources);
     require(!menu.consume(mouse(SDL_MOUSEBUTTONDOWN, SDL_BUTTON_LEFT, box.x + box.width / 2, box.y + box.height / 2), width, height, flow) &&
-            !menu.isOpen() && !menu.model(),
+            !menu.isOpen() && !menu.menu(),
         "a click on the button place of another page goes to the front end and builds nothing");
     fe::Canvas bottom(fe::kBottomWidth, fe::kScreenHeight), before(fe::kBottomWidth, fe::kScreenHeight);
     bottom.clear(10, 20, 30);
@@ -105,7 +114,7 @@ void slotPage(fe::Resources& resources) {
     fe::Canvas bottom(fe::kBottomWidth, fe::kScreenHeight), before(fe::kBottomWidth, fe::kScreenHeight);
     bottom.clear(0, 0, 0);
     before.clear(0, 0, 0);
-    qol::FrontMenu menu(resources);
+    qol::FrontMenu menu(resources, displayPorts());
     menu.drawButton(bottom, flow);
     const qol::Box box = qol::frontButtonBox(resources);
     const qol::ButtonPlace place = qol::frontButtonPlace;
@@ -148,7 +157,7 @@ void slotPage(fe::Resources& resources) {
     require(changedPixels(page, plain, 0, 0, fe::kBottomWidth, 188) == 0, "the Select Slot bar and both slots are drawn unchanged");
 
     const float cx = box.x + box.width / 2, cy = box.y + box.height / 2;
-    require(!menu.consume(mouse(SDL_MOUSEBUTTONDOWN, SDL_BUTTON_LEFT, 100, 224), width, height, flow) && !menu.isOpen() && !menu.model(),
+    require(!menu.consume(mouse(SDL_MOUSEBUTTONDOWN, SDL_BUTTON_LEFT, 100, 224), width, height, flow) && !menu.isOpen() && !menu.menu(),
         "a click on the Delete shortcut goes to the front end and builds no menu");
     require(!menu.consume(mouse(SDL_MOUSEBUTTONDOWN, SDL_BUTTON_LEFT, box.x + box.width + 4, cy), width, height, flow) && !menu.isOpen(),
         "a click beside the bar goes to the front end");
@@ -166,22 +175,25 @@ void slotPage(fe::Resources& resources) {
     }
     require(menu.consume(mouse(SDL_MOUSEBUTTONDOWN, SDL_BUTTON_LEFT, cx, cy), width, height, flow) && menu.isOpen(),
         "a left click on the bar opens the menu and does not reach the front end");
-    require(menu.model() && menu.model()->tab() == qol::Tab::Game && menu.model()->row() == 0, "the menu opens on the Game tab");
+    require(menu.menu() && menu.menu()->tabTitles() == std::vector<std::string>{"Display", "Quality of life"} &&
+                menu.menu()->screen().selectedTab == 0 && menu.menu()->screen().focusRow == 0,
+        "the menu opens on the first row of its first tab (here Display: no Game or Controls store is given)");
     require(!menu.consume(mouse(SDL_MOUSEBUTTONUP, SDL_BUTTON_LEFT, cx, cy), width, height, flow), "button releases pass on");
 
-    require(menu.consume(key(SDL_KEYDOWN, SDLK_RIGHT), width, height, flow) && menu.model()->row() == 1, "keys go to the menu");
-    require(!menu.consume(key(SDL_KEYUP, SDLK_RIGHT), width, height, flow), "key releases pass on");
-    SDL_Event repeat = key(SDL_KEYDOWN, SDLK_RIGHT);
+    require(menu.consume(key(SDL_KEYDOWN, SDLK_DOWN), width, height, flow) && menu.menu()->screen().focusRow == 2,
+        "keys go to the menu (Down skips the greyed-out Resolution row in full screen)");
+    require(!menu.consume(key(SDL_KEYUP, SDLK_DOWN), width, height, flow), "key releases pass on");
+    SDL_Event repeat = key(SDL_KEYDOWN, SDLK_UP);
     repeat.key.repeat = 1;
-    require(menu.consume(repeat, width, height, flow) && menu.model()->row() == 1, "key repeats are swallowed and do nothing");
+    require(menu.consume(repeat, width, height, flow) && menu.menu()->screen().focusRow == 2, "key repeats are swallowed and do nothing");
     SDL_Event wheel{};
     wheel.type = SDL_MOUSEWHEEL;
     wheel.wheel.y = 1;
-    require(menu.consume(wheel, width, height, flow) && menu.model()->row() == 0, "the wheel moves rows");
+    require(menu.consume(wheel, width, height, flow) && menu.menu()->screen().focusRow == 2, "the wheel goes to the menu");
     SDL_Event pad{};
     pad.type = SDL_CONTROLLERBUTTONDOWN;
     pad.cbutton.button = SDL_CONTROLLER_BUTTON_RIGHTSHOULDER;
-    require(menu.consume(pad, width, height, flow) && menu.model()->tab() == qol::Tab::Display, "pad buttons go to the menu");
+    require(menu.consume(pad, width, height, flow) && menu.menu()->screen().selectedTab == 1, "pad buttons go to the menu");
     SDL_Event quit{};
     quit.type = SDL_QUIT;
     require(!menu.consume(quit, width, height, flow), "quitting passes on");
@@ -191,7 +203,7 @@ void slotPage(fe::Resources& resources) {
         "Escape closes the menu and does not reach the front end");
     require(!menu.consume(key(SDL_KEYDOWN, SDLK_RIGHT), width, height, flow), "after closing, keys go to the front end again");
     require(menu.consume(mouse(SDL_MOUSEBUTTONDOWN, SDL_BUTTON_LEFT, cx, cy), width, height, flow) && menu.isOpen() &&
-            menu.model()->tab() == qol::Tab::Display,
+            menu.menu()->screen().selectedTab == 1,
         "reopening keeps the tab");
 
     fe::FrontInput a;

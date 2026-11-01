@@ -1,7 +1,6 @@
 #pragma once
 
 #include "qol/bottom_hook.hpp"
-#include "qol/menu_hit.hpp"
 
 #include <array>
 #include <cstddef>
@@ -12,6 +11,21 @@
 namespace qol {
 
 inline constexpr float frontTopDim = 0.5f;
+inline constexpr float pageWidth = 320;
+inline constexpr float pageHeight = 240;
+
+struct PageRect {
+    float x, y, width, height, scale;
+};
+
+PageRect menuPageRect(int windowWidth, int windowHeight);
+std::optional<std::array<float, 2>> pagePoint(const PageRect& page, float windowX, float windowY);
+
+struct Box {
+    float x, y, width, height;
+};
+
+bool contains(const Box& box, float x, float y);
 
 struct FrontPanels {
     Box top;

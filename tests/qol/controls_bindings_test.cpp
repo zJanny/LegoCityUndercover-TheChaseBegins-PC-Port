@@ -106,6 +106,30 @@ void changesAreWrittenAtOnce() {
     std::filesystem::remove_all(directory);
 }
 
+void swapIsWritten() {
+    using namespace chase::runtime;
+    auto directory = std::filesystem::temp_directory_path() / "chase-qol-controls-bindings-test-swap";
+    std::filesystem::remove_all(directory);
+    std::filesystem::create_directories(directory);
+    auto path = (directory / "controls.cfg").string();
+    auto defaults = (directory / "shipped.cfg").string();
+    spit(defaults, shipped);
+    spit(path, shipped);
+    QolControlsBindings bindings(path, defaults);
+    const auto up = *bindings.tab().rowOf("Up");
+    bindings.activate(up, 1);
+    require(bindings.assignInput("key", "Space") == qol::ControlsResult::Conflict && bindings.tab().conflictPending(), "a taken key asks to swap");
+    require(bindings.cancelConflict() == qol::ControlsResult::Cancelled && bindings.tab().waiting() && slurp(path) == shipped,
+        "Cancel keeps the prompt open and writes nothing (qol-settings-drawing.md answer 17)");
+    require(bindings.assignInput("key", "Space") == qol::ControlsResult::Conflict, "asked again");
+    require(bindings.confirmSwap() == qol::ControlsResult::Changed &&
+            slurp(path) == "Up key W hold\nUp key Space hold\nA key Up hold\nA mouse Left hold\nWalk key Left_Alt hold\n",
+        "a confirmed swap exchanges the two slots and is written at once");
+    require(bindings.confirmSwap() == qol::ControlsResult::Ignored && bindings.cancelConflict() == qol::ControlsResult::Ignored,
+        "nothing pending afterwards");
+    std::filesystem::remove_all(directory);
+}
+
 void shippedCopyNextToTheFile() {
     using namespace chase::runtime;
     auto directory = std::filesystem::temp_directory_path() / "chase-qol-controls-bindings-test-next";
@@ -147,6 +171,7 @@ void rejections() {
 int main() {
     resolverAndNamer();
     changesAreWrittenAtOnce();
+    swapIsWritten();
     shippedCopyNextToTheFile();
     rejections();
     if (failures == 0) std::cout << "qol-controls-bindings: all checks passed\n";

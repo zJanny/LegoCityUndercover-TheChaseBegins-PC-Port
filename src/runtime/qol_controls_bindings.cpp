@@ -51,6 +51,8 @@ ControlsResult QolControlsBindings::assignInput(const std::string& source, const
 ControlsResult QolControlsBindings::toggleMode(std::size_t row, std::size_t slot) { return saved(tab_->toggleMode(row, slot)); }
 ControlsResult QolControlsBindings::clearSlot(std::size_t row, std::size_t slot) { return saved(tab_->clearSlot(row, slot)); }
 ControlsResult QolControlsBindings::cancel() { return tab_->cancel(); }
+ControlsResult QolControlsBindings::confirmSwap() { return saved(tab_->confirmSwap()); }
+ControlsResult QolControlsBindings::cancelConflict() { return tab_->cancelConflict(); }
 ControlsResult QolControlsBindings::requestReset() { return tab_->requestReset(); }
 ControlsResult QolControlsBindings::confirmReset() { return saved(tab_->confirmReset()); }
 

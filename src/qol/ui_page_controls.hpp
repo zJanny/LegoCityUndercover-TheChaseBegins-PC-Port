@@ -38,6 +38,8 @@ public:
     DropdownInfo dropdown(int row) const;
     ControlsPageOutcome handle(const Action& action);
     ControlsPageOutcome reset();
+    std::string help(int row) const;
+    ControlsPageOutcome resolveSwap(bool swap);
 
     bool promptOpen() const { return port_.tab().waiting(); }
     std::string promptText() const;

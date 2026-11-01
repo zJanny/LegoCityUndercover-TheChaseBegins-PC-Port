@@ -49,12 +49,12 @@ void pauseWithEntry(fe::Resources& resources) {
     menu.update(kDt, a);
     require(!settings.menu()->isOpen(), "choosing the entry only records it");
     require(qol::pauseEntryHolds(settings, menu) && settings.menu()->isOpen(), "the next update opens the settings menu and holds the game");
-    require(settings.menu()->model() && settings.menu()->model()->tab() == qol::Tab::Game && settings.menu()->model()->row() == 0,
-        "it opens on the Game tab like from the slot page");
+    require(settings.menu()->menu() && settings.menu()->menu()->screen().selectedTab == 0 && settings.menu()->menu()->screen().focusRow == 0,
+        "it opens on the first row of its first tab like from the slot page");
     require(qol::pauseEntryHolds(settings, menu), "the pause screen waits while the menu is open");
 
-    require(settings.menu()->consumeOpen(key(SDL_KEYDOWN, SDLK_RIGHT), 960, 600) && settings.menu()->model()->row() == 1, "keys go to the menu");
-    require(!settings.menu()->consumeOpen(key(SDL_KEYUP, SDLK_RIGHT), 960, 600), "key releases pass on");
+    require(settings.menu()->consumeOpen(key(SDL_KEYDOWN, SDLK_DOWN), 960, 600) && settings.menu()->menu()->screen().focusRow == 1, "keys go to the menu");
+    require(!settings.menu()->consumeOpen(key(SDL_KEYUP, SDLK_DOWN), 960, 600), "key releases pass on");
     require(settings.menu()->consumeOpen(key(SDL_KEYDOWN, SDLK_ESCAPE), 960, 600) && !settings.menu()->isOpen(), "Escape closes the menu");
     require(!qol::pauseEntryHolds(settings, menu), "the pause screen goes on");
     require(menu.isOpen() && !menu.closing() && menu.page() == fe::PausePage::Status && menu.round().selected() == 4,

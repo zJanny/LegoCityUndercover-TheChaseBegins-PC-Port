@@ -4,9 +4,9 @@
 #include "frontend/flow.hpp"
 #include "frontend/layout.hpp"
 #include "frontend/resources.hpp"
-#include "qol/menu_hit.hpp"
-#include "qol/menu_model.hpp"
+#include "qol/front_panel.hpp"
 #include "qol/menu_stores.hpp"
+#include "qol/ui_menu_sdl.hpp"
 
 #include <SDL.h>
 #include <array>
@@ -38,7 +38,7 @@ public:
     FrontMenu& operator=(const FrontMenu&) = delete;
 
     bool isOpen() const;
-    const MenuModel* model() const;
+    const ui::UiMenu* menu() const;
     bool consume(const SDL_Event& event, int windowWidth, int windowHeight, const chase::frontend::Flow& flow);
     bool present(SDL_Window* window);
     bool present(int width, int height);
@@ -47,14 +47,12 @@ public:
     void drawButton(chase::frontend::Canvas& bottom, const chase::frontend::Flow& flow);
 
 private:
-    struct State;
-    State& state();
-    bool route(const SDL_Event& event, int windowWidth, int windowHeight);
+    UiMenuWindow& window();
 
     chase::frontend::Resources& resources_;
     StoresPorts ports_;
     std::optional<Box> button_;
-    std::unique_ptr<State> state_;
+    std::unique_ptr<UiMenuWindow> window_;
 };
 
 inline bool frontMenuConsumes(FrontMenu& menu, const SDL_Event& event, SDL_Window* window, const chase::frontend::Flow& flow) {

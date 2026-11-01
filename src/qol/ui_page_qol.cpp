@@ -38,7 +38,7 @@ std::vector<RowSpec> QolPage::rows() const {
     out.push_back({"Preset", RowKind::Selector, masterName(settings_.master()), 0, true});
     for (const FeatureInfo& info : featureTable)
         out.push_back({info.label, RowKind::Toggle, settings_.enabled(info.feature) ? "On" : "Off", 0, true});
-    out.push_back({"Reset to defaults", RowKind::Button, "Reset", 0, true});
+    out.push_back({resetToDefaultsText, RowKind::Button, resetToDefaultsText, 0, true});
     return out;
 }
 

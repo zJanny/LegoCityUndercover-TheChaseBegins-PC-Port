@@ -22,6 +22,8 @@ public:
     ControlsResult toggleMode(std::size_t row, std::size_t slot) override;
     ControlsResult clearSlot(std::size_t row, std::size_t slot) override;
     ControlsResult cancel() override;
+    ControlsResult confirmSwap() override;
+    ControlsResult cancelConflict() override;
     ControlsResult requestReset() override;
     ControlsResult confirmReset() override;
 

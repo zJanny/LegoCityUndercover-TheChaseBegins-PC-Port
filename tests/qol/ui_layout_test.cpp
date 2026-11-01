@@ -246,6 +246,29 @@ void checkCells(int w, int h) {
     require(label.target == Target::Row && label.part == Part::Body && label.cell == -1, "label is no cell");
 }
 
+void checkColumnTitles(int w, int h) {
+    using namespace qol::ui;
+    Screen s = sampleScreen(w, h, 30);
+    for (RowSpec& row : s.rows) {
+        row.kind = RowKind::Button;
+        row.cells = {"W", "Up", "< Hold >"};
+    }
+    const UiLayout plain = computeLayout(s, fakeWidth);
+    s.columnTitles = {"Action", "Slot 1", "Slot 2", "Mode"};
+    const UiLayout lay = computeLayout(s, fakeWidth);
+    const std::string at = " at " + std::to_string(w) + "x" + std::to_string(h);
+    require(plain.header.height == 0 && plain.headerCells.empty(), "no titles, no header" + at);
+    require(lay.header.height == lay.scale.rowHeight && lay.header.y + lay.header.height == lay.viewport.y &&
+                lay.viewport.height == plain.viewport.height - lay.scale.rowHeight,
+        "the title row sits on top of the rows and takes one row of their room (QOLSET-88)" + at);
+    require(lay.headerCells.size() == 4 && lay.headerCells[0].x == lay.rows[0].label.x, "the first title is over the labels" + at);
+    for (std::size_t i = 0; i < 3; ++i)
+        require(lay.headerCells[i + 1].x == lay.rows[0].cells[i].x && lay.headerCells[i + 1].width == lay.rows[0].cells[i].width,
+            "each other title is over its cell" + at);
+    require(lay.scroll.maxOffset == plain.scroll.maxOffset + lay.scale.rowHeight, "the rows scroll one row further" + at);
+    require(!overlap(lay.header, lay.hintBar) && lay.header.y >= lay.tabBar.height, "the title row stays between the bars" + at);
+}
+
 void checkContrast() {
     using namespace qol::ui;
     const Palette palette;
@@ -273,6 +296,7 @@ int main() {
         checkScroll(size[0], size[1]);
         checkDropdown(size[0], size[1]);
         checkCells(size[0], size[1]);
+        checkColumnTitles(size[0], size[1]);
     }
 
     const qol::ui::Scale hd = qol::ui::computeScale(1920, 1080);

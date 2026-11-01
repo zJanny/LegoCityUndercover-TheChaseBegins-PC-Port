@@ -118,8 +118,8 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 |---|---|---|
 | [qol-settings-menu](qol-settings-menu.md) | NOT_STARTED | QOLSET-1 toggle store and master (first); QOLSET-2 menu with tabs; QOLSET-7 `qol-separation` guard; QOLSET-8 PC Settings entry; QOLSET-9 mirrored options |
 | [qol-settings-tabs](qol-settings-tabs.md) | IN_PROGRESS | QOLSET-3 Display tab; QOLSET-4 Controls tab |
-| [qol-settings-drawing](qol-settings-drawing.md) | IN_PROGRESS | QOLSET-40 list form and notices; QOLSET-49 stores behind the open menu; QOLSET-33 drawing |
-| [qol-settings-ui](qol-settings-ui.md) | IN_PROGRESS | QOLSET-73 game and display tabs; QOLSET-76 and QOLSET-77 dialogs; QOLSET-88 controls paint and outcomes; QOLSET-79 wiring |
+| [qol-settings-drawing](qol-settings-drawing.md) | IN_PROGRESS | QOLSET-53 slot page bar; stores behind the open menu; stand-ins S4 and S6 |
+| [qol-settings-ui](qol-settings-ui.md) | IN_PROGRESS | QOLSET-95 old model removal; QOLSET-96 picture behind the menu; QOLSET-97 draft help texts (approval) |
 | [qol-fullscreen](qol-fullscreen.md) | IN_PROGRESS | QOLFS-11 load qol.cfg into the active store; QOLFS-1 widened view (wired above the bottom screen); QOLFS-2 corner-anchored HUD; QOLFS-3 pop-in at the edges |
 | [qol-minimap](qol-minimap.md) | IN_PROGRESS | QOLMAP-5 minimap and HUD overlap (question); QOLMAP-6 hide in more panels |
 | [qol-bottom-screen](qol-bottom-screen.md) | NOT_STARTED | QOLBOT-1 hide the bottom screen; QOLBOT-2..4 panels; QOLBOT-5 pause PC menu; QOLBOT-7..10 scanner, build-it, shop, award viewer |

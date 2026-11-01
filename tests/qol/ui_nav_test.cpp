@@ -410,8 +410,30 @@ void checkCells(int w, int h) {
 
 }
 
+void checkUpdateRows() {
+    UiNav nav = makeNav();
+    const RowLayout slider = nav.layout().rows[0];
+    nav.handle(mouseDown(slider.track.x + slider.track.width / 2, slider.track.y + slider.track.height / 2));
+    std::vector<RowSpec> rows = sampleRows();
+    rows[0].value = "50";
+    nav.updateRows(rows);
+    require(nav.dragging() && nav.screen().rows[0].value == "50", "new row texts keep a running drag (20261101-qolui3-F)");
+    nav.handle(mouseUp(0, 0));
+    key(nav, Key::Down);
+    key(nav, Key::Down);
+    key(nav, Key::Down);
+    key(nav, Key::Enter);
+    nav.updateRows(sampleRows());
+    require(nav.screen().openDropdownRow == 3 && nav.screen().focusRow == 3, "and keep an open list and the focus");
+    nav.updateRows(sampleRows(4));
+    require(nav.screen().openDropdownRow < 0, "a different row count resets like setRows");
+    nav.setColumnTitles({"Action", "Slot 1"});
+    require(nav.screen().columnTitles.size() == 2 && nav.layout().header.height > 0, "column titles reach the layout");
+}
+
 int main() {
     checkCommands();
+    checkUpdateRows();
     checkFocusMovement();
     checkValues();
     checkDisabledSkip();

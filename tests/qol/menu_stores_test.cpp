@@ -1,11 +1,13 @@
 // Stores behind the open settings menu (src/qol/menu_stores.*). Spec: docs/design/qol-settings.md entries 2026-10-28T22:20:41
 // (window_mode and resolution in config/qol.cfg), 2026-10-29T11:06:51 (the controls file is written right after each change),
 // 2026-10-29T18:06:35 (menu opened from the slot page), 2026-10-28T09:53:33 (master states). Cases written by
-// 20261030-qolstores-B on 2026-10-30; display modes, sizes and key names are test fixtures.
+// 20261030-qolstores-B on 2026-10-30, driven through the new menu controller by 20261101-qolui3-F on 2026-11-01 (design
+// qol-settings-drawing.md entry 2026-10-30T21:56:04: keys, display confirm, Swap dialog); display modes, sizes and key names are test fixtures.
 #include "input.hpp"
 #include "qol/active_settings.hpp"
 #include "qol/controls_file.hpp"
 #include "qol/menu_stores.hpp"
+#include "qol/ui_menu.hpp"
 #include "runtime/qol_controls_bindings.hpp"
 
 #include <SDL.h>
@@ -79,25 +81,44 @@ struct Fixture {
     }
 };
 
-void go(qol::MenuModel& menu, qol::Tab tab) {
-    menu.handle(qol::tabClick(static_cast<std::size_t>(tab)));
-}
+float measure(std::string_view text, float pixels) { return static_cast<float>(text.size()) * pixels * 0.5f; }
+float lineHeight(float pixels) { return pixels * 1.2f; }
 
-qol::Result commit(qol::MenuStores& stores, qol::Result result) {
-    stores.commit(result);
-    return result;
-}
+struct Menu {
+    qol::MenuStores stores;
+    qol::ui::UiMenu menu{measure, lineHeight};
+
+    explicit Menu(const qol::StoresPorts& ports) : stores(ports) {}
+    void open() {
+        stores.open();
+        menu.setWindow(1920, 1080);
+        menu.open(qol::ui::menuSetupFor(stores, {}));
+    }
+    qol::MenuEffects press(qol::ui::Key key) {
+        const qol::MenuEffects effects = menu.handle(qol::ui::keyEvent(key), 0);
+        stores.commit(effects);
+        return effects;
+    }
+    qol::MenuEffects input(const std::string& code) {
+        const qol::MenuEffects effects = menu.handle(qol::ui::promptInput(qol::ui::InputSource::Key, code), 0);
+        stores.commit(effects);
+        return effects;
+    }
+    void go(const std::string& title) {
+        for (int i = 0; i < 4 && menu.tabTitles()[static_cast<std::size_t>(menu.screen().selectedTab)] != title; ++i) press(qol::ui::Key::E);
+    }
+};
+
+using qol::ui::Key;
 
 void originalModeFirst() {
     Fixture f("original");
-    qol::MenuStores stores(f.ports);
-    qol::MenuModel menu(stores.settings());
-    stores.open(menu);
-    menu.open();
-    for (qol::Key key : {qol::Key::Right, qol::Key::Down, qol::Key::PageDown, qol::Key::Right, qol::Key::PageUp, qol::Key::Left})
-        commit(stores, menu.handle(qol::eventForKey(key)));
-    commit(stores, menu.handle(qol::eventForKey(qol::Key::Escape)));
-    require(!menu.isOpen(), "closed");
+    Menu m(f.ports);
+    m.open();
+    for (Key key : {Key::Down, Key::E, Key::Down, Key::E, Key::Up, Key::Q, Key::Q})
+        m.press(key);
+    m.press(Key::Escape);
+    require(!m.menu.isOpen(), "closed");
     require(!std::filesystem::exists(f.qolPath), "navigating the open menu writes no qol.cfg");
     require(qol::activeSettings().master() == qol::Master::Original && !qol::enabled(qol::Feature::WidenedView),
         "the active store stays Original");
@@ -107,109 +128,99 @@ void originalModeFirst() {
 
 void masterReachesFileAndActiveStore() {
     Fixture f("master");
-    qol::MenuStores stores(f.ports);
-    qol::MenuModel menu(stores.settings());
-    stores.open(menu);
-    menu.open();
-    go(menu, qol::Tab::QualityOfLife);
-    require(commit(stores, menu.handle(qol::eventForKey(qol::Key::Enter))) == qol::Result::MasterCycled, "master row cycles");
+    Menu m(f.ports);
+    m.open();
+    m.go("Quality of life");
+    require(m.press(Key::Right).settingsChanged, "the preset selector steps");
     require(qol::activeSettings().master() == qol::Master::Improved && qol::enabled(qol::Feature::WidenedView),
         "Improved reaches the active store at once");
     require(qol::loadSettings(f.qolPath).master() == qol::Master::Improved, "Improved is in qol.cfg");
     require(f.applied.empty(), "a master change does not touch the window");
 
-    require(commit(stores, menu.handle(qol::rowClick(1))) == qol::Result::SwitchedToCustom, "feature row switches to Custom");
+    m.press(Key::Down);
+    require(m.press(Key::Enter).settingsChanged, "a feature row switches to Custom");
     require(qol::activeSettings().master() == qol::Master::Custom && !qol::enabled(qol::Feature::WidenedView),
         "the toggled feature is off in Custom");
     const qol::Settings saved = qol::loadSettings(f.qolPath);
     require(saved.master() == qol::Master::Custom && saved.mixSet() && !saved.customSwitch(qol::Feature::WidenedView),
         "Custom and its mix are in qol.cfg");
 
-    qol::MenuStores again(f.ports);
-    qol::MenuModel reopened(again.settings());
-    again.open(reopened);
-    require(again.settings().master() == qol::Master::Custom, "a reopened menu reads the active store");
+    Menu again(f.ports);
+    again.open();
+    require(again.stores.settings().master() == qol::Master::Custom, "a reopened menu reads the active store");
 }
 
 void displayReachesWindow() {
     Fixture f("display");
-    qol::MenuStores stores(f.ports);
-    qol::MenuModel menu(stores.settings());
-    stores.open(menu);
-    menu.open();
-    go(menu, qol::Tab::Display);
-    require(commit(stores, menu.handle(qol::eventForKey(qol::Key::Enter))) == qol::Result::DisplayChanged, "window mode row");
+    Menu m(f.ports);
+    m.open();
+    m.go("Display");
+    require(m.press(Key::Right).windowChanged, "window mode row");
     require(f.applied.size() == 1 && f.applied[0].windowMode() == qol::WindowMode::Windowed, "the window gets the new mode");
     require(qol::activeSettings().windowMode() == qol::WindowMode::Windowed, "active store has the window mode");
     require(slurp(f.qolPath).find("window_mode windowed") != std::string::npos, "window_mode in qol.cfg");
+    m.press(Key::Enter);
 
-    require(commit(stores, menu.handle(qol::rowClick(1))) == qol::Result::DisplayChanged, "resolution row");
+    m.press(Key::Down);
+    m.press(Key::Enter);
+    m.press(Key::Up);
+    m.press(Key::Up);
+    require(m.press(Key::Enter).windowChanged, "a size from the resolution list");
     require(f.applied.size() == 2 && f.applied[1].resolution() && *f.applied[1].resolution() == qol::Resolution{800, 600},
-        "the window gets the step after the desktop size (wrapping to the smallest mode)");
+        "the window gets the chosen size");
     require(slurp(f.qolPath).find("resolution 800x600") != std::string::npos, "resolution in qol.cfg");
+    require(m.press(Key::Escape).windowChanged && f.applied.size() == 3 && !f.applied[2].resolution(),
+        "Esc in Keep these settings? reverts the window");
+    require(slurp(f.qolPath).find("resolution") == std::string::npos, "the revert is in qol.cfg");
     require(qol::activeSettings().master() == qol::Master::Original, "display leaves the master alone");
 }
 
 void controlsTabUsesBindingsAndFile() {
     Fixture f("controls");
-    qol::MenuStores stores(f.ports);
-    qol::MenuModel menu(stores.settings());
-    stores.open(menu);
-    menu.open();
-    go(menu, qol::Tab::Controls);
-    require(!menu.controlsRows().empty(), "the Controls tab has the bindings rows");
-    std::size_t up = 0;
-    for (std::size_t i = 0; i < menu.controlsRows().size(); ++i)
-        if (menu.controlsRows()[i].action == "Up") up = i;
-    require(commit(stores, menu.handle(qol::slotClick(up, 1))) == qol::Result::ControlsWaiting, "waiting for an input");
-    require(commit(stores, menu.assignInput("key", "F5")) == qol::Result::ControlsChanged, "bound");
+    Menu m(f.ports);
+    m.open();
+    m.go("Controls");
+    require(m.menu.screen().rows.size() > 1 && m.menu.screen().rows[0].label == "Up", "the Controls tab has the bindings rows");
+    m.press(Key::Right);
+    m.press(Key::Enter);
+    require(m.menu.promptOpen(), "waiting for an input");
+    require(m.input("F5").controlsChanged, "bound");
     require(slurp(f.controlsPath) == "Up key W hold\nA key Space hold\nWalk key Left_Alt hold\nUp key F5 hold\n",
         "controls.cfg written right after the change");
     require(f.controlsChanged == 1, "the running input is told once");
     f.input.event(chase::Source::Key, SDLK_F5, true);
     require(f.input.active(chase::Action::Up), "the running input uses the new binding");
+
+    for (int i = 0; i < 20 && m.menu.screen().rows[static_cast<std::size_t>(m.menu.screen().focusRow)].label != "A"; ++i) m.press(Key::Down);
+    m.press(Key::Left);
+    m.press(Key::Enter);
+    m.input("F5");
+    require(m.menu.modal() == qol::ui::Modal::SwapDialog, "a key of another action asks to swap");
+    m.press(Key::Left);
+    require(m.press(Key::Enter).controlsChanged && f.controlsChanged == 2, "a confirmed swap tells the running input");
+    require(slurp(f.controlsPath) == "Up key W hold\nA key F5 hold\nWalk key Left_Alt hold\nUp key Space hold\n",
+        "the swap is written to controls.cfg (QOLSET-93)");
     require(!std::filesystem::exists(f.qolPath), "a controls change writes no qol.cfg");
 }
 
 void rejections() {
-    {
-        Fixture f("bad-modes");
-        f.ports.modes = {{399, 240}};
+    for (const char* name : {"bad-modes", "bad-desktop", "missing-controls", "bad-controls"}) {
+        Fixture f(name);
+        if (std::string(name) == "bad-modes") f.ports.modes = {{399, 240}};
+        if (std::string(name) == "bad-desktop") f.ports.desktop = {300, 200};
+        if (std::string(name) == "missing-controls") std::filesystem::remove(f.controlsPath);
+        if (std::string(name) == "bad-controls") spit(f.controlsPath, "Up key W hold\nNonsense line\n");
         qol::MenuStores stores(f.ports);
-        qol::MenuModel menu(stores.settings());
-        require(throws([&] { stores.open(menu); }), "display modes below the minimum stop the open");
-    }
-    {
-        Fixture f("bad-desktop");
-        f.ports.desktop = {300, 200};
-        qol::MenuStores stores(f.ports);
-        qol::MenuModel menu(stores.settings());
-        require(throws([&] { stores.open(menu); }), "a tiny desktop stops the open");
-    }
-    {
-        Fixture f("missing-controls");
-        std::filesystem::remove(f.controlsPath);
-        qol::MenuStores stores(f.ports);
-        qol::MenuModel menu(stores.settings());
-        require(throws([&] { stores.open(menu); }), "a missing controls file stops the open");
-    }
-    {
-        Fixture f("bad-controls");
-        spit(f.controlsPath, "Up key W hold\nNonsense line\n");
-        qol::MenuStores stores(f.ports);
-        qol::MenuModel menu(stores.settings());
-        require(throws([&] { stores.open(menu); }), "a malformed controls file stops the open");
+        require(throws([&] { stores.open(); }), std::string("the open stops: ") + name);
     }
     {
         Fixture f("unwritable");
         f.ports.settingsPath = f.directory + "/missing-folder/qol.cfg";
-        qol::MenuStores stores(f.ports);
-        qol::MenuModel menu(stores.settings());
-        stores.open(menu);
-        menu.open();
-        go(menu, qol::Tab::QualityOfLife);
-        const qol::Result result = menu.handle(qol::eventForKey(qol::Key::Enter));
-        require(throws([&] { stores.commit(result); }), "a write error stops with an error");
+        Menu m(f.ports);
+        m.open();
+        m.go("Quality of life");
+        const qol::MenuEffects effects = m.menu.handle(qol::ui::keyEvent(Key::Right), 0);
+        require(throws([&] { m.stores.commit(effects); }), "a write error stops with an error");
         require(qol::activeSettings().master() == qol::Master::Original, "a failed write leaves the active store alone");
     }
     {
@@ -219,18 +230,13 @@ void rejections() {
     }
     {
         Fixture f("unconfigured");
-        qol::MenuStores stores(qol::StoresPorts{});
-        qol::MenuModel menu(stores.settings());
-        stores.open(menu);
-        menu.open();
-        go(menu, qol::Tab::QualityOfLife);
-        commit(stores, menu.handle(qol::eventForKey(qol::Key::Enter)));
+        Menu m(qol::StoresPorts{});
+        m.open();
+        require(m.menu.tabTitles() == std::vector<std::string>{"Quality of life"}, "without ports only the Quality of life tab");
+        m.press(Key::Right);
         require(qol::activeSettings().master() == qol::Master::Original && !std::filesystem::exists(f.qolPath),
             "without ports the menu works on its copy only");
     }
-    require(!qol::changesSettings(qol::Result::TabChanged) && !qol::changesSettings(qol::Result::ControlsChanged) &&
-            !qol::changesSettings(qol::Result::Ignored),
-        "navigation results change no setting");
 }
 
 }

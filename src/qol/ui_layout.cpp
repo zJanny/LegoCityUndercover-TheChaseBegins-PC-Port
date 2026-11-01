@@ -18,14 +18,25 @@ Rect intersect(const Rect& a, const Rect& b) {
     return {x0, y0, x1 - x0, y1 - y0};
 }
 
-int viewportTop(const Scale& s) { return s.tabBarHeight + s.margin; }
+int headerHeight(const Scale& s, const Screen& screen) { return screen.columnTitles.empty() ? 0 : s.rowHeight; }
+int viewportTop(const Scale& s, const Screen& screen) { return s.tabBarHeight + s.margin + headerHeight(s, screen); }
 int viewportBottom(const Scale& s) { return s.windowHeight - s.hintBarHeight - s.helpLineHeight - s.margin; }
 
 int contentHeightOf(const Scale& s, std::size_t rows) { return static_cast<int>(rows) * s.rowHeight; }
 
-int maxScrollOf(const Scale& s, std::size_t rows) {
-    const int viewport = viewportBottom(s) - viewportTop(s);
-    return std::max(0, contentHeightOf(s, rows) - viewport);
+int maxScrollOf(const Scale& s, const Screen& screen) {
+    const int viewport = viewportBottom(s) - viewportTop(s, screen);
+    return std::max(0, contentHeightOf(s, screen.rows.size()) - viewport);
+}
+
+std::vector<Rect> splitControl(const Rect& c, int count) {
+    std::vector<Rect> cells;
+    for (int i = 0; i < count; ++i) {
+        const int x0 = c.x + c.width * i / count;
+        const int x1 = c.x + c.width * (i + 1) / count;
+        cells.push_back({x0, c.y, x1 - x0, c.height});
+    }
+    return cells;
 }
 
 double channel(unsigned char value) {
@@ -66,15 +77,9 @@ void layoutControl(RowLayout& row, const RowSpec& spec, const Scale& s, const Pr
     case RowKind::Button:
         row.valueArea = c;
         row.valueFits = measure(spec.value, s.textPixels) <= static_cast<float>(c.width - s.padding);
-        if (!spec.cells.empty()) {
-            const int count = static_cast<int>(spec.cells.size());
-            for (int i = 0; i < count; ++i) {
-                const int x0 = c.x + c.width * i / count;
-                const int x1 = c.x + c.width * (i + 1) / count;
-                row.cells.push_back({x0, c.y, x1 - x0, c.height});
-                row.cellFits.push_back(measure(spec.cells[static_cast<std::size_t>(i)], s.textPixels) <= static_cast<float>(x1 - x0 - s.padding));
-            }
-        }
+        row.cells = splitControl(c, static_cast<int>(spec.cells.size()));
+        for (std::size_t i = 0; i < row.cells.size(); ++i)
+            row.cellFits.push_back(measure(spec.cells[i], s.textPixels) <= static_cast<float>(row.cells[i].width - s.padding));
         break;
     }
 }
@@ -103,24 +108,24 @@ Scale computeScale(int windowWidth, int windowHeight, const Proportions& p) {
 
 int clampScroll(const Screen& screen, int offset, const Proportions& p) {
     const Scale s = computeScale(screen.windowWidth, screen.windowHeight, p);
-    return std::clamp(offset, 0, maxScrollOf(s, screen.rows.size()));
+    return std::clamp(offset, 0, maxScrollOf(s, screen));
 }
 
 int scrollToShowRow(const Screen& screen, int row, const Proportions& p) {
     const Scale s = computeScale(screen.windowWidth, screen.windowHeight, p);
     int offset = screen.scrollOffset;
     if (row >= 0 && row < static_cast<int>(screen.rows.size())) {
-        const int viewport = viewportBottom(s) - viewportTop(s);
+        const int viewport = viewportBottom(s) - viewportTop(s, screen);
         const int top = row * s.rowHeight;
         if (top < offset) offset = top;
         if (top + s.rowHeight > offset + viewport) offset = top + s.rowHeight - viewport;
     }
-    return std::clamp(offset, 0, maxScrollOf(s, screen.rows.size()));
+    return std::clamp(offset, 0, maxScrollOf(s, screen));
 }
 
 int wheelScroll(const Screen& screen, int notches, const Proportions& p) {
     const Scale s = computeScale(screen.windowWidth, screen.windowHeight, p);
-    return std::clamp(screen.scrollOffset + notches * s.rowHeight, 0, maxScrollOf(s, screen.rows.size()));
+    return std::clamp(screen.scrollOffset + notches * s.rowHeight, 0, maxScrollOf(s, screen));
 }
 
 UiLayout computeLayout(const Screen& screen, const TextMeasure& measure, const Proportions& p) {
@@ -147,8 +152,15 @@ UiLayout computeLayout(const Screen& screen, const TextMeasure& measure, const P
         x += widths[i];
     }
 
-    const int top = viewportTop(s);
+    const int top = viewportTop(s, screen);
     const int bottom = viewportBottom(s);
+    const int labelWidth = s.columnWidth - s.controlWidth - s.margin;
+    if (!screen.columnTitles.empty()) {
+        out.header = {s.columnX, top - headerHeight(s, screen), s.columnWidth, s.rowHeight};
+        out.headerCells.push_back({out.header.x + s.padding, out.header.y, labelWidth - s.padding, s.rowHeight});
+        const Rect control{out.header.x + s.columnWidth - s.controlWidth - s.padding, out.header.y, s.controlWidth, s.rowHeight};
+        for (const Rect& cell : splitControl(control, static_cast<int>(screen.columnTitles.size()) - 1)) out.headerCells.push_back(cell);
+    }
     out.viewport = {s.columnX, top, s.columnWidth, std::max(0, bottom - top)};
     out.helpLine = {s.columnX, s.windowHeight - s.hintBarHeight - s.helpLineHeight, s.columnWidth, s.helpLineHeight};
     out.hintBar = {0, s.windowHeight - s.hintBarHeight, s.windowWidth, s.hintBarHeight};
@@ -157,7 +169,7 @@ UiLayout computeLayout(const Screen& screen, const TextMeasure& measure, const P
     out.hintText = {out.backButton.x + backWidth + s.margin, out.hintBar.y,
                     std::max(0, s.windowWidth - backWidth - 3 * s.margin), s.hintBarHeight};
 
-    const int maxOffset = maxScrollOf(s, screen.rows.size());
+    const int maxOffset = maxScrollOf(s, screen);
     const int offset = std::clamp(screen.scrollOffset, 0, maxOffset);
     out.scroll.offset = offset;
     out.scroll.maxOffset = maxOffset;
@@ -176,7 +188,6 @@ UiLayout computeLayout(const Screen& screen, const TextMeasure& measure, const P
         row.rect = {s.columnX, top + static_cast<int>(i) * s.rowHeight - offset, s.columnWidth, s.rowHeight};
         row.visible = intersect(row.rect, out.viewport).height > 0;
         row.focused = static_cast<int>(i) == screen.focusRow && !screen.focusOnTabs;
-        const int labelWidth = s.columnWidth - s.controlWidth - s.margin;
         row.label = {row.rect.x + s.padding, row.rect.y, labelWidth - s.padding, s.rowHeight};
         row.control = {row.rect.x + s.columnWidth - s.controlWidth - s.padding, row.rect.y, s.controlWidth, s.rowHeight};
         row.labelFits = measure(spec.label, s.textPixels) <= static_cast<float>(row.label.width);

@@ -6,6 +6,7 @@ namespace qol {
 
 class GamePort : public GameOptions {
 public:
+    virtual int startLanguage() const = 0;
     virtual void applied() = 0;
     virtual void left() = 0;
 };

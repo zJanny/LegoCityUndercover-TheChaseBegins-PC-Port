@@ -2,7 +2,8 @@
 // the 320x240 bottom page is a panel centred over it, scaled up as far as it fits keeping 4:3; a click on a list row selects it and
 // presses A, a click on a button picture A, B or Y presses that button, a click elsewhere does nothing).
 // Pinned rectangles computed by hand by 20261030-qolpanels2-A on 2026-10-30 from the rule above: top picture 400x240 fitted and
-// centred (the QOLBOT-1 rule), panel 320x240 fitted and centred in the window (the settings page rule).
+// centred (the QOLBOT-1 rule), panel 320x240 fitted and centred in the window (the settings page rule). The page rule cases moved here
+// unchanged from the old settings page hit test (20261029-qolmenu2-A) when 20261101-qolui3-F removed the old menu drawing on 2026-11-01.
 #include "qol/front_panel.hpp"
 
 #include <cmath>
@@ -92,7 +93,28 @@ void dimming() {
 
 }
 
+void pageRule() {
+    const qol::PageRect small = qol::menuPageRect(400, 240);
+    require(near(small.scale, 1) && near(small.x, 40) && near(small.y, 0) && near(small.width, 320) && near(small.height, 240),
+        "400x240: s = 1 with 40-pixel bars left and right");
+    const qol::PageRect full = qol::menuPageRect(1920, 1080);
+    require(near(full.scale, 4.5f) && near(full.width, 1440) && near(full.height, 1080) && near(full.x, 240) && near(full.y, 0),
+        "1920x1080: s = 4.5, a 1440x1080 page and 240-pixel bars");
+    const qol::PageRect wide = qol::menuPageRect(3440, 1440);
+    require(near(wide.scale, 6) && near(wide.width, 1920) && near(wide.height, 1440) && near(wide.x, 760), "3440x1440: s = 6, a 1920x1440 page");
+    const qol::PageRect tall = qol::menuPageRect(640, 960);
+    require(near(tall.scale, 2) && near(tall.x, 0) && near(tall.y, 240), "a tall window gets bars above and below");
+    const auto inside = qol::pagePoint(full, 240 + 4.5f * 159, 4.5f * 119);
+    require(inside && near((*inside)[0], 159) && near((*inside)[1], 119), "window pixel to page pixel");
+    require(!qol::pagePoint(full, 100, 500), "a pixel in the black bar is outside the page");
+    require(!qol::pagePoint(full, 240 + 1440, 10), "the right edge is outside the page");
+    require(qol::contains(qol::Box{10, 10, 5, 5}, 10, 14.9f) && !qol::contains(qol::Box{10, 10, 5, 5}, 15, 12) &&
+            !qol::contains(qol::Box{10, 10, 0, 5}, 10, 12),
+        "a box holds its left and top edge, not its right edge, and an empty box holds nothing");
+}
+
 int main() {
+    pageRule();
     originalAndCustomShowNothing();
     rectangles();
     clickMapping();

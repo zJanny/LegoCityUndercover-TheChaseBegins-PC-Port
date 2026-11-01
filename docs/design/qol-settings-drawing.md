@@ -74,4 +74,9 @@ Answers of the user to the lead's questions (2026-10-30; the quoted labels are t
 
 29. Painter values (the user, 2026-11-01, "Approve all"): mouse hint "Click select  Wheel scroll  Right-click back"; picture dim 0.72 and dialog dim 0.5; dialog width 0.8 of the row column; body line spacing 1.25; control inset 0.1 and corner radius 0.12 of the row height. Tab bar, hint bar and row column are opaque so the text keeps the 4.5:1 contrast of the Layout rule.
 
+30. Keys in the "key already bound, Swap / Cancel" dialog (the user, 2026-11-01, "Left/Right (as built)"): Left and Right move the focus between Swap and Cancel, Enter presses the focused button (Cancel has the focus when the dialog opens, answer 13).
+31. Reopening the menu (the user, 2026-11-01, "Last tab (as built)"): the menu opens again on the tab it was closed on.
+32. Text of the "Reset to defaults" button (the user, 2026-11-01, "Reset to defaults"): the button reads "Reset to defaults" on all four tabs.
+33. Focus of the reset question Yes / No (the user, 2026-11-01, "No (Enter = No)"): the question opens with the focus on No, so Enter declines. Left and Right move the focus between Yes and No as in answer 30 (the user, 2026-11-01, "Approve (as Swap)").
+
 Open: none.

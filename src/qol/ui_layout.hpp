@@ -50,6 +50,8 @@ struct Scale {
 
 Scale computeScale(int windowWidth, int windowHeight, const Proportions& proportions = {});
 
+inline constexpr const char* resetToDefaultsText = "Reset to defaults";
+
 enum class RowKind { Slider, Selector, Toggle, Button, Dropdown };
 
 struct RowSpec {
@@ -67,6 +69,7 @@ struct Screen {
     std::vector<std::string> tabs;
     int selectedTab = 0;
     std::vector<RowSpec> rows;
+    std::vector<std::string> columnTitles;
     int focusRow = -1;
     int focusCell = 0;
     bool focusOnTabs = false;
@@ -126,6 +129,8 @@ struct UiLayout {
     Scale scale;
     Rect tabBar;
     std::vector<TabLayout> tabs;
+    Rect header;
+    std::vector<Rect> headerCells;
     Rect viewport;
     std::vector<RowLayout> rows;
     ScrollLayout scroll;

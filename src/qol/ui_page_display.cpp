@@ -40,7 +40,7 @@ std::vector<RowSpec> DisplayPage::rows() const {
     return {
         {"Window mode", RowKind::Selector, windowModeLabel(settings_.windowMode()), 0, true},
         {"Resolution", RowKind::Dropdown, resolution, 0, !fullscreen},
-        {"Reset to defaults", RowKind::Button, "", 0, true},
+        {resetToDefaultsText, RowKind::Button, resetToDefaultsText, 0, true},
     };
 }
 
@@ -99,6 +99,16 @@ DisplayPageResult DisplayPage::handle(const Action& action) {
             result.needsConfirm = displayResetQuestion;
             return result;
         }
+    default: return {};
+    }
+}
+
+// DRAFT QOLSET-97: help texts written by 20261101-qolui3-F on 2026-11-01, awaiting the user's approval.
+std::string DisplayPage::help(int row) const {
+    switch (row) {
+    case WindowModeRow: return "Windowed or full screen. F11 also switches. Default: Fullscreen";
+    case ResolutionRow: return "Window size in Windowed mode; full screen uses the desktop. Default: Desktop resolution";
+    case ResetRow: return "Sets every setting on this tab back to its default.";
     default: return {};
     }
 }

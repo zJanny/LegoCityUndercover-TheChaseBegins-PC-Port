@@ -6,46 +6,42 @@
 
 namespace qol {
 
-bool changesSettings(Result result) {
-    switch (result) {
-    case Result::MasterCycled:
-    case Result::FeatureToggled:
-    case Result::SwitchedToCustom:
-    case Result::DisplayChanged:
-        return true;
-    default:
-        return false;
-    }
+void MenuEffects::merge(const MenuEffects& other) {
+    settingsChanged = settingsChanged || other.settingsChanged;
+    windowChanged = windowChanged || other.windowChanged;
+    controlsChanged = controlsChanged || other.controlsChanged;
+    gameChanged = gameChanged || other.gameChanged;
+    closed = closed || other.closed;
+    if (other.language) language = other.language;
 }
 
 MenuStores::MenuStores(StoresPorts ports) : ports_(std::move(ports)), settings_(activeSettings()) {}
 
-void MenuStores::open(MenuModel& model) {
-    settings_ = activeSettings();
-    if (!ports_.configured()) return;
-    if (!model.setDisplayModes(ports_.modes, ports_.desktop))
-        throw std::runtime_error("settings menu: the display modes or the desktop size are invalid");
-    if (ports_.makeControls) {
-        if (!controls_) controls_ = ports_.makeControls();
-        model.setControls(controls_.get());
-    }
-    if (ports_.makeGame) {
-        if (!game_) game_ = ports_.makeGame();
-        model.setGame(game_.get());
-    }
+int MenuStores::startLanguage() const {
+    return game_ ? game_->startLanguage() : firstLanguage;
 }
 
-void MenuStores::commit(Result result) {
+void MenuStores::open() {
+    settings_ = activeSettings();
     if (!ports_.configured()) return;
-    if (changesSettings(result)) {
+    if (!choicesValid(ports_.modes) || !resolutionValid(ports_.desktop))
+        throw std::runtime_error("settings menu: the display modes or the desktop size are invalid");
+    if (ports_.makeControls && !controls_) controls_ = ports_.makeControls();
+    if (ports_.makeGame && !game_) game_ = ports_.makeGame();
+}
+
+void MenuStores::commit(const MenuEffects& effects) {
+    if (!ports_.configured()) return;
+    if (effects.settingsChanged) {
         saveSettings(ports_.settingsPath, settings_);
         setActiveSettings(settings_);
-        if (result == Result::DisplayChanged && ports_.applyWindow) ports_.applyWindow(settings_);
     }
-    if (result == Result::ControlsChanged && ports_.controlsChanged) ports_.controlsChanged();
+    if (effects.windowChanged && ports_.applyWindow) ports_.applyWindow(settings_);
+    if (effects.controlsChanged && ports_.controlsChanged) ports_.controlsChanged();
     if (!game_) return;
-    if (result == Result::GameChanged || result == Result::LanguagesRequested) game_->applied();
-    if (result == Result::Closed) game_->left();
+    if (effects.language && *effects.language != game_->language()) game_->openLanguages();
+    if (effects.gameChanged || effects.language) game_->applied();
+    if (effects.closed) game_->left();
 }
 
 }

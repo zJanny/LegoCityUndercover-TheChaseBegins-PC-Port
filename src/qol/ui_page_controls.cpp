@@ -12,7 +12,6 @@ namespace {
 
 const char* const promptMessage = "Press a key... (Esc cancel, Del clear)";
 const char* const resetQuestionText = "Reset all controls to their defaults?";
-const char* const resetLabel = "Reset to defaults";
 const char* const unboundText = "Unbound";
 const char* const menuKeyMessage = "That key is used by the menu";
 const char* const padMessage = "No gamepad is connected";
@@ -76,7 +75,8 @@ std::vector<RowSpec> ControlsPage::rows() const {
         out.push_back(std::move(spec));
     }
     RowSpec resetRow;
-    resetRow.label = resetLabel;
+    resetRow.label = resetToDefaultsText;
+    resetRow.value = resetToDefaultsText;
     resetRow.kind = RowKind::Button;
     out.push_back(std::move(resetRow));
     return out;
@@ -173,6 +173,25 @@ ControlsPageOutcome ControlsPage::handle(const Action& action) {
         return cancel();
     default: return outcome(ControlsPageEvent::Nothing);
     }
+}
+
+ControlsPageOutcome ControlsPage::resolveSwap(bool swap) {
+    if (!port_.tab().conflictPending()) return outcome(ControlsPageEvent::Nothing);
+    if (!swap) {
+        port_.cancelConflict();
+        return outcome(ControlsPageEvent::PromptOpen, promptMessage);
+    }
+    const std::size_t row = port_.tab().waitingRow();
+    if (port_.confirmSwap() != ControlsResult::Changed) return outcome(ControlsPageEvent::Nothing);
+    followFirstMode(row);
+    return outcome(ControlsPageEvent::Changed);
+}
+
+// DRAFT QOLSET-97: help texts written by 20261101-qolui3-F on 2026-11-01, awaiting the user's approval.
+std::string ControlsPage::help(int row) const {
+    if (row == resetRow()) return "Sets all bindings and modes back to the shipped controls.";
+    if (row < 0 || row > resetRow()) return {};
+    return "Choose a slot to bind a key, mouse or pad button; Del clears it. Default: the shipped controls";
 }
 
 ControlsPageOutcome ControlsPage::reset() {
