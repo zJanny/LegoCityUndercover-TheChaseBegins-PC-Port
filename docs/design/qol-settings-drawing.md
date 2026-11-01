@@ -55,4 +55,14 @@ Answers of the user to the lead's questions (2026-10-30; the quoted labels are t
 15. Keyboard and pad on a Controls row (the user, 2026-11-01, "Keep A's stand-in"): Left and Right move the focus between Slot 1, Slot 2 and Mode, without wrapping; Up and Down keep the column; Enter or A activates the focused cell (a slot opens the prompt, Mode toggles Hold and Toggle); a mouse click on a cell activates it.
 16. Empty Slot 2 while Slot 1 is empty (the user, 2026-11-01, "Refuse it"): a click on it is refused; slots stay packed, so clearing Slot 1 moves Slot 2 up.
 
+25. Toggle rows of the Quality of life tab (the user, 2026-11-01, "Approve all"): any value change on a feature toggle (Enter, a click, Left or Right) flips it, because the navigation reports them all as one direction.
+
+26. Preset selector (the user, 2026-11-01, "Approve all"): its value wraps at both ends (a value wrap, not a wrap of the row focus, so answer 6 stays) and skips Custom while no own mix is set.
+
+27. "Reset to defaults" on the Quality of life tab (the user, 2026-11-01, "Approve all"): the confirmed reset sets the preset to Original and keeps the own mix, so Custom still restores it.
+
+28. Help texts (the user, 2026-11-01, "Approve all"): the texts written for the Widened view toggle, the preset row and the reset row in `ui_page_qol.cpp`, each feature text ending with its default.
+
+29. Painter values (the user, 2026-11-01, "Approve all"): mouse hint "Click select  Wheel scroll  Right-click back"; picture dim 0.72 and dialog dim 0.5; dialog width 0.8 of the row column; body line spacing 1.25; control inset 0.1 and corner radius 0.12 of the row height. Tab bar, hint bar and row column are opaque so the text keeps the 4.5:1 contrast of the Layout rule.
+
 Open: none.

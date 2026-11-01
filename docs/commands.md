@@ -135,6 +135,8 @@ The table lists some of the tests. `ctest --test-dir build -N` lists all of them
 | `qol-text-check-real-data` | Every settings menu text against the real front-end font: glyphs and fit of the name plate and list bar; skips without the extracted RomFS (`tests/qol/`) |
 | `qol-menu-hit` | Settings page scale rule (page centred at min(w/320, h/240)), hit areas of the round and frame, hover on entering, key and wheel mapping (`tests/qol/`) |
 | `qol-ui-layout` | Settings menu layout model, no SDL or GL: UI scale from the window height, tab bar, centred row column, scrolling, slider, selector, toggle, button and dropdown rectangles and hit areas, 4.5:1 contrast of the palette, at 720p, 1080p and 4K (`tests/qol/`) |
+| `qol-ui-page-qol` | Quality of life page of the settings menu, no SDL or GL: preset selector, Custom switch on a hand change and its memory, default and help lines, confirmed reset (`tests/qol/`) |
+| `qol-ui-paint` | Painter of the settings menu over the draw list, no GL: tab bar, rows, focus, dropdown popup, dialog and hint bar at 720p, 1080p and 4K, clip balance, text inside its clip (`tests/qol/`, built with the render library) |
 | `qol-menu-page-real-data` | Settings page drawn from the round menu layout: setup values, scenes of each tab, element names, black bars at three window sizes; skips without the extracted RomFS (`tests/qol/`) |
 | `qol-menu-redraw` | The page cache key of the settings menu includes element scales (`tests/qol/`) |
 | `qol-menu-redraw-real-data` | Redraw cache of the settings menu: every cached page equals a full redraw, a page seen before is reused, timing budgets at 960x600 and 1920x1080; skips without the extracted RomFS (`tests/qol/`) |
