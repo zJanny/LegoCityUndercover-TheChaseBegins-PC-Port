@@ -30,6 +30,7 @@ constexpr const char* kSlotLayout = "sprites/blend/savegameflow/page_selectslot.
 void drawAlertPage(Canvas& bottom, Resources& resources, const AlertPage& page);
 
 void drawSaveSpinner(Canvas& bottom, Resources& resources, float phase, float opacity);
+void drawSaveSpinnerAt(Canvas& bottom, Resources& resources, float phase, float opacity, float x, float y, float size);
 
 void drawSelectShortcut(Canvas& bottom, Resources& resources, const std::string& selectLabel, const std::string& extraLabel = {});
 

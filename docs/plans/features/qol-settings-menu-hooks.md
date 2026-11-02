@@ -51,6 +51,8 @@ Port files that call into `src/qol/` (rule file "Separate source code"). One bul
 - src/game_front.hpp, game_front::run, qol::steerFrontMenuEntry moves the cursor onto the "PC Settings" bar and back and takes its A press and withholds them from the front end, none (the settings menu is the toggle mechanism)
 - src/game_front.hpp, game_front::run, qol::drawFrontMenuButton draws the "PC Settings" bar (the third list bar at half size) under slot 2 of the slot page, none (the settings menu is the toggle mechanism)
 - src/game_front.hpp, game_front::run, qol::presentFrontPanels in the loop shows the bottom page as a panel over the darkened picture; a movie gets its subtitle bubble and no panel (QOLBOT-28; false while off), qol::Master::Improved
+- src/game_front.hpp, game_front::run, qol::drawFrontLoadingSpinner in the loop draws a small spinning save icon on the loading screen's tip page (QOLBOT-31: nothing while off), qol::Master::Improved
+- src/game_front.hpp, game_front::run, qol::drawFrontLoadingSpinner in the script path does the same for the scripted screenshot, qol::Master::Improved
 - src/game_front.hpp, game_front::run, qol::presentFrontPanels in the script path does the same for the scripted screenshot, qol::Master::Improved
 - src/game_level.cpp, LevelSession::draw, qol::drawMovieSubtitles draws a movie's subtitle bubble over the picture (QOLBOT-29; nothing while off), qol::Master::Improved
 - src/game_front.hpp, game_front::run, qol::FrontClicks holds the queue of the pending panel click, qol::Master::Improved (the master button; there is no toggle of its own)

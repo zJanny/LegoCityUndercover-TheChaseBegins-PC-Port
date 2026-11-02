@@ -89,6 +89,10 @@ void drawAlertPage(Canvas& bottom, Resources& resources, const AlertPage& page) 
 }
 
 void drawSaveSpinner(Canvas& bottom, Resources& resources, float phase, float opacity) {
+    drawSaveSpinnerAt(bottom, resources, phase, opacity, kSpinnerX, kSpinnerY, kSpinnerSize);
+}
+
+void drawSaveSpinnerAt(Canvas& bottom, Resources& resources, float phase, float opacity, float x, float y, float size) {
     const assets::Image& icon = resources.image("sprites/ui_saveindicator/ui_saveindicator.btga");
     float rotation = 0, alpha = 1;
     for (const auto& board : resources.layout(kSaveIconLayout).storyboards) {
@@ -99,8 +103,7 @@ void drawSaveSpinner(Canvas& bottom, Resources& resources, float phase, float op
             else if (track.property == 6) alpha = evaluateTrack(track, time);
         }
     }
-    const float size = kSpinnerSize;
-    bottom.drawRotated(icon, {0, 0, icon.width, icon.height}, kSpinnerX + size / 2, kSpinnerY + size / 2, size, size,
+    bottom.drawRotated(icon, {0, 0, icon.width, icon.height}, x + size / 2, y + size / 2, size, size,
                        rotation, {1, 1, 1, opacity * alpha});
 }
 

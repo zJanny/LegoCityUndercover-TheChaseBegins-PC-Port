@@ -8,6 +8,7 @@
 #include "game_hud.hpp"
 #include "game_movie_sound.hpp"
 #include "input.hpp"
+#include "qol/front_loading_spinner.hpp"
 #include "qol/front_panel_clicks_sdl.hpp"
 #include "qol/front_panel_present.hpp"
 #include "qol/menu_window_sdl.hpp"
@@ -93,6 +94,7 @@ inline Result run(SDL_Window* window, chase::InputState& input, chase::assets::F
         result.handoff = front.flow().handoff();
         if (front.flow().done()) return result;
         front.draw(top, bottom);
+        qol::drawFrontLoadingSpinner(bottom, resources, front.flow());
         SDL_GL_GetDrawableSize(window, &width, &height);
         if (!qol::presentFrontPanels(presenter, top, game_hud::pixelsOf(bottom), resources, front, width, height))
             presenter.present(game_hud::pixelsOf(top), game_hud::pixelsOf(bottom), width, height);
@@ -157,6 +159,7 @@ inline Result run(SDL_Window* window, chase::InputState& input, chase::assets::F
         if (audio) audio->update();
         front.draw(top, bottom);
         qol::drawFrontMenuButton(qolMenu, bottom, front.flow());
+        qol::drawFrontLoadingSpinner(bottom, resources, front.flow());
         SDL_GL_GetDrawableSize(window, &width, &height);
         if (!qol::presentFrontPanels(presenter, top, game_hud::pixelsOf(bottom), resources, front, width, height))
             presenter.present(game_hud::pixelsOf(top), game_hud::pixelsOf(bottom), width, height);

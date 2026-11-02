@@ -149,6 +149,11 @@ target_link_libraries(qol-front-panel-test PRIVATE chase_qol)
 target_compile_options(qol-front-panel-test PRIVATE -Wall -Wextra -Wpedantic)
 add_test(NAME qol-front-panel COMMAND qol-front-panel-test)
 
+add_executable(qol-front-page-rules-test front_page_rules_test.cpp)
+target_link_libraries(qol-front-page-rules-test PRIVATE chase_qol)
+target_compile_options(qol-front-page-rules-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME qol-front-page-rules COMMAND qol-front-page-rules-test)
+
 if(TARGET chase_qol_hud)
   add_executable(qol-movie-subtitle-overlay-test movie_subtitle_overlay_test.cpp)
   target_link_libraries(qol-movie-subtitle-overlay-test PRIVATE chase_qol_hud)
