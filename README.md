@@ -2,7 +2,7 @@
 
 This project builds a PC port of *LEGO City Undercover: The Chase Begins* (Nintendo 3DS). The goal is a port that plays exactly like the original, from start to finish. It runs on Linux first. A Windows version is planned for after the Linux version is finished.
 
-**The game is not playable on PC yet.** What you can start today is `chase-game`, an early development runtime. It shows the start screens of the original game. After them you can play mission 1-1 from start to end in one street of the city. Mission 1-2 is partly playable. Nothing else of the game works yet. See [the project status](docs/status.md).
+**The game is not playable on PC yet.** What you can start today is `chase-game`, an early development runtime. It shows the start screens of the original game. After them you can play parts of the first missions (1-1 to 1-3, and the start of 1-4) in one street of the city. Nothing else of the game works yet. See [the project status](docs/status.md).
 
 The game data is never part of this repository. You need your own copy of the game, dumped from your own 3DS.
 
@@ -20,7 +20,7 @@ The game data is never part of this repository. You need your own copy of the ga
 
 ![Progress trend](docs/progress-trend.svg)
 
-Updated 2026-11-02, commit 2b4b3ed6. How the numbers are measured: [docs/progress.md](docs/progress.md).
+Updated 2026-11-02, commit defdf2b2. How the numbers are measured: [docs/progress.md](docs/progress.md).
 <!-- progress:end -->
 
 ## What you need
