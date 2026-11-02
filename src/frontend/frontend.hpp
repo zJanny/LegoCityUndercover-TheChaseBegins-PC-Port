@@ -4,6 +4,8 @@
 #include "assets/assets.hpp"
 #include "frontend/canvas.hpp"
 #include "frontend/flow.hpp"
+#include "frontend/page_targets.hpp"
+#include "frontend/pages.hpp"
 #include "frontend/resources.hpp"
 #include <memory>
 #include <string>
@@ -26,6 +28,7 @@ public:
     const Flow& flow() const { return flow_; }
     std::vector<int> takeSounds() { return flow_.takeSounds(); }
     std::vector<std::uint8_t> takeMovieAudio();
+    PageTargets targets() const;
 
 private:
     std::string suffix() const;
@@ -34,6 +37,8 @@ private:
     void drawBoot(Canvas& bottom);
     void drawLanguage(Canvas& bottom);
     void drawPrompt(Canvas& bottom);
+    AlertPage promptPage() const;
+    AlertPage autosavePage() const;
     void drawAutosave(Canvas& bottom);
     void drawSlots(Canvas& top, Canvas& bottom);
     void drawSaving(Canvas& top, Canvas& bottom);

@@ -8,6 +8,7 @@
 #include "game_hud.hpp"
 #include "game_movie_sound.hpp"
 #include "input.hpp"
+#include "qol/front_panel_clicks_sdl.hpp"
 #include "qol/front_panel_present.hpp"
 #include "qol/menu_window_sdl.hpp"
 #include "render/debug_overlay.hpp"
@@ -106,6 +107,7 @@ inline Result run(SDL_Window* window, chase::InputState& input, chase::assets::F
     }
 
     qol::FrontMenu qolMenu(resources, options.qolStores);
+    qol::FrontClicks qolClicks;
     chase::runtime::Scheduler scheduler({}, clockNow());
     bool wasUp = false, wasDown = false, wasA = false, wasB = false, wasX = false, wasY = false, wasStart = false;
     bool running = true;
@@ -114,6 +116,7 @@ inline Result run(SDL_Window* window, chase::InputState& input, chase::assets::F
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
             if (qol::frontMenuConsumes(qolMenu, event, window, front.flow())) continue;
+            if (qol::frontClicksConsume(qolClicks, event, window, front)) continue;
             switch (event.type) {
             case SDL_QUIT: running = false; break;
             case SDL_KEYDOWN: case SDL_KEYUP:
@@ -144,6 +147,7 @@ inline Result run(SDL_Window* window, chase::InputState& input, chase::assets::F
             if (y && !wasY) pad.pressed |= fe::kButtonY;
             if (start && !wasStart) pad.pressed |= fe::kButtonStart;
             wasUp = up; wasDown = down; wasA = a; wasB = b; wasX = x; wasY = y; wasStart = start;
+            qol::applyFrontClicks(qolClicks, pad);
             front.update(dt, pad);
             if (audio)
                 for (const int id : front.takeSounds()) audio->playUi(unsigned(id));

@@ -11,6 +11,7 @@ Findings from the oracle (Azahar, fresh save, Old 3DS, software renderer, GDB st
 - A used slot shows location, play time and percent; Y offers "Delete" with a confirmation page; A on a used slot goes to the loading screen without the "Saving Game..." page. [§2026-10-14T20:46:20](#ts-20261014-204620)
 - Subtitles: SubRip reader 0x2e20a0, draw 0x2e1760, breaker 0x21bc2c with wrap on and no line limit; the bubble is 48 rows for one line and 72 for two; the effective wrap width is 272 to 283 px (the port uses 280 as a stand-in). [§2026-10-14T21:36:17](#ts-20261014-213617)
 - The native `chase_frontend` flow reproduces the oracle screens at mean abs difference 0.2 to 2.2; durations, StreetPass state, the loading tip and the badge art are stand-ins. [§2026-10-13T20:46:07](#ts-20261013-204607)
+- Rows and button pictures of the bottom pages sit where the layouts put them (alert icons at (288, 207) and (0, 207), shortcut pictures at (276, 209) and (11, 209), slot rows at (49, 97) and (49, 151)). [§2026-11-02T15:04:23](#ts-20261102-150423)
 - Open: the returning-player flow, delete result, tip choice, loading and title card art, and why the wrap width is below the clip width.
 
 <a id="ts-20261013-175408"></a>
@@ -160,3 +161,16 @@ Unknowns:
 - Why the effective wrap width is 272..283 and not 288 (font scale, advance rounding, or a different clip at the time of the draw); a trap on 0x23c4a4 during the movie would show the clip (0x2e188c) and the first wrap compare.
 - The box for three or more lines (extrapolated by the 0x229128 rule), and the box centre rule (26.5 + 11.5 * lines fits one and two lines).
 - Cues of 3 lines (61 of 2921) and 4 lines (5) exist at the stand-in width; no oracle picture.
+
+<a id="ts-20261102-150423"></a>
+
+## 2026-11-02T15:04:23+01:00 — Where the front end pages put their rows and button pictures
+
+Measured by 20261102-qolctl2-D from the layout files (`chase-layoutdump --tracks`, summing the element positions down the tree as `layoutElementBox` does) and from the drawing code of the port; no oracle run. Bottom-canvas pixels (320x240).
+
+- **Alert pages** (`page_alerttext.bxaml`: StreetPass question, notices, autosave, "Saving Game" and the boot pages): `Option1` (166.023, 208.339) holds `ButtonIcon1` at (122, -1), so the A icon is the 32x32 box at (288.023, 207.339); `Option2` (6.023, 208.339) holds `ButtonIcon2` at (-6, -1), the B icon at (0.023, 207.339). A page shows `Option1` for its first button and `Option2` for its second. The storyboards `TransitionOn` and `TransitionOn2` have no position tracks for them (only opacity), so the icons rest where the layout puts them. The boot and "Saving Game" pages show no buttons.
+- **Shortcut bar** (`ui_frontend/shortcuts.bxaml`, drawn at (-80, -16)): `SelectButton_3DS` (362, 233) holds `Button` at (-6, -8): the A picture is the 32x32 box at (276, 209). `ExtraButton_3DS` (85, 233) references the BackButton layout whose `Button` is at (6, -8): the Y picture (Delete on a used slot) is at (11, 209). The language list and the slot page draw it without a storyboard.
+- **Slot page** (`page_selectslot.bxaml`): `ListItem1` (81, 97) and `ListItem2` (81, 151) are references to `panel_slotlistitem.bxaml`, whose `Button` (256x27) sits at (-32, 0): the rows are the boxes (49, 97) and (49, 151) at rest. The `TransitionOn` storyboard holds their x translate at -280 until 0.3 s and brings it to 0 at 0.5 s (ListItem1) and 0.6 s (ListItem2); the `Select_Slot1` and `Select_Slot2` storyboards move them once a slot is confirmed.
+- **Language list:** drawn from code (`FrontEnd::drawLanguage`) with no row picture: the text of row r is centred at y 20 + 24 r.
+
+Port: `src/frontend/page_targets.cpp` (`alertPageTargets`, `languageListTargets`, `slotPageTargets`), `FrontEnd::targets()`; tests `qol-front-panel-clicks-real-data` (geometry and clicks) in `tests/qol/`.

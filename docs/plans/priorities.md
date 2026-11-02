@@ -221,7 +221,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [combat-characters.md](features/combat-characters.md): COMBAT-6 (+2), COMBAT-4 (+1), COMBAT-1, COMBAT-5, COMBAT-S1, COMBAT-S2, COMBAT-S3
 - [doors.md](features/doors.md): DOOR-2, DOOR-3, DOOR-4, DOOR-6, DOOR-7, DOOR-S1, DOOR-S2, DOOR-S3, DOOR-S4, DOOR-S5
 - [executable-platform.md](features/executable-platform.md): EXEC-1 (+2), EXEC-10 (+1), EXEC-2, EXEC-3, EXEC-4, EXEC-S1, EXEC-S10
-- [front-end.md](features/front-end.md): FE-3 (+10), FE-30 (+1), FE-40 (+1), FE-1, FE-2, FE-4, FE-5, FE-6, FE-7, FE-8, FE-9, FE-S1, FE-S2, FE-S3, FE-S31, FE-S32, FE-S33, FE-S4, FE-S40, FE-S41, FE-S5, FE-S6
+- [front-end.md](features/front-end.md): FE-3 (+10), FE-30 (+2), FE-40 (+1), FE-1, FE-2, FE-4, FE-5, FE-6, FE-7, FE-8, FE-9, FE-S1, FE-S2, FE-S3, FE-S31, FE-S32, FE-S33, FE-S4, FE-S40, FE-S41, FE-S5, FE-S6
 - [hud-ui-super-bricks.md](features/hud-ui-super-bricks.md): HUD-84 (+2), HUD-86 (+2), HUD-79 (+1), HUD-80 (+1), HUD-85 (+1), HUD-S74, HUD-S75, HUD-S76, HUD-S78
 - [hud-ui-text.md](features/hud-ui-text.md): HUD-15, HUD-27, HUD-28, HUD-29, HUD-32, HUD-33, HUD-S15
 - [hud-ui.md](features/hud-ui.md): HUD-70 (+4), HUD-71 (+3), HUD-11 (+2), HUD-74 (+2), HUD-60 (+1), HUD-61 (+1), HUD-90 (+1), HUD-94 (+1), HUD-10, HUD-12, HUD-18, HUD-3, HUD-6, HUD-7, HUD-8, HUD-88, HUD-91, HUD-92, HUD-S1, HUD-S2, HUD-S3, HUD-S4, HUD-S6, HUD-S60, HUD-S7, HUD-S70, HUD-S71, HUD-S79, HUD-S80, HUD-S81, HUD-S82
@@ -247,7 +247,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [player-traversal-rails.md](features/player-traversal-rails.md): TRAV-28 (+3), TRAV-38 (+1), TRAV-43 (+1), TRAV-44 (+1), TRAV-45 (+1), TRAV-S16 (+1), TRAV-S18 (+1), TRAV-S19 (+1), TRAV-27, TRAV-29, TRAV-31, TRAV-32, TRAV-33, TRAV-42, TRAV-S15, TRAV-S17, TRAV-S21, TRAV-S23, TRAV-S24, TRAV-S25, TRAV-S26
 - [player-traversal-zipline.md](features/player-traversal-zipline.md): TRAV-9 (+2), TRAV-49 (+1), TRAV-52 (+1), TRAV-10, TRAV-35, TRAV-6, TRAV-63, TRAV-8, TRAV-S1, TRAV-S2, TRAV-S20, TRAV-S29, TRAV-S3, TRAV-S30, TRAV-S31, TRAV-S32, TRAV-S4
 - [player-traversal.md](features/player-traversal.md): TRAV-2 (+1), TRAV-S12 (+1), TRAV-19, TRAV-20, TRAV-22, TRAV-34, TRAV-5, TRAV-S10, TRAV-S11, TRAV-S13, TRAV-S38
-- [qol-bottom-screen.md](features/qol-bottom-screen.md): QOLBOT-19 (+2), QOLBOT-22 (+1), QOLBOT-10, QOLBOT-2, QOLBOT-21, QOLBOT-3, QOLBOT-4, QOLBOT-5, QOLBOT-7, QOLBOT-8, QOLBOT-9, QOLBOT-S1
+- [qol-bottom-screen.md](features/qol-bottom-screen.md): QOLBOT-19 (+1), QOLBOT-10, QOLBOT-2, QOLBOT-21, QOLBOT-25, QOLBOT-3, QOLBOT-4, QOLBOT-5, QOLBOT-7, QOLBOT-8, QOLBOT-9, QOLBOT-S1
 - [qol-controls.md](features/qol-controls.md): QOLCTL-7 (+2), QOLCTL-3 (+1), QOLCTL-10, QOLCTL-11, QOLCTL-15, QOLCTL-S2, QOLCTL-S5
 - [qol-fullscreen.md](features/qol-fullscreen.md): QOLFS-1 (+1), QOLFS-10, QOLFS-20
 - [qol-minimap.md](features/qol-minimap.md): QOLMAP-7, QOLMAP-S1

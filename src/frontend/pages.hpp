@@ -24,6 +24,9 @@ struct AlertPage {
     bool secondTransition = true;
 };
 
+constexpr const char* kAlertLayout = "sprites/blend/savegameflow/page_alerttext.bxaml";
+constexpr const char* kSlotLayout = "sprites/blend/savegameflow/page_selectslot.bxaml";
+
 void drawAlertPage(Canvas& bottom, Resources& resources, const AlertPage& page);
 
 void drawSaveSpinner(Canvas& bottom, Resources& resources, float phase, float opacity);

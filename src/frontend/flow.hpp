@@ -4,6 +4,7 @@
 // decoder is supplied through MovieHost.
 #include <array>
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -66,6 +67,10 @@ constexpr std::uint32_t kButtonA = 0x1, kButtonB = 0x2, kButtonStart = 0x8, kBut
 
 struct FrontInput {
     std::uint32_t pressed = 0;
+    // A pointer's pick of a list row on the language and slot pages, applied before the pressed buttons; the pad never sets it.
+    std::optional<unsigned> selectRow;
+    FrontInput() = default;
+    FrontInput(std::uint32_t pressedButtons) : pressed(pressedButtons) {}
 };
 
 class MovieHost {

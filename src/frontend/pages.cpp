@@ -6,7 +6,6 @@ namespace chase::frontend {
 
 namespace {
 
-constexpr const char* kAlertLayout = "sprites/blend/savegameflow/page_alerttext.bxaml";
 constexpr const char* kSaveIconLayout = "sprites/blend/savegameflow/page_saveicon.bxaml";
 // STAND-IN: position and size of the spinner measured on the oracle screenshots (64 px, top left (128, 180)); the
 // code that places it was not read.
@@ -45,7 +44,6 @@ constexpr Colour kWarnTextColour{1.0f, 169.0f / 255.0f, 22.0f / 255.0f, 1.0f};
 constexpr float kSlotConfirmedSeconds = 0.3f;
 // STAND-IN FE-S31: the percent's right edge is 37 px left of its layout element's (oracle sl0.png: glyphs end at x 276).
 constexpr int kSlotPercentShiftX = -37;
-constexpr const char* kSlotLayout = "sprites/blend/savegameflow/page_selectslot.bxaml";
 constexpr const char* kButtonA = "sprites/buttons/dsbuttona.btga";
 constexpr const char* kButtonB = "sprites/buttons/dsbuttonb.btga";
 

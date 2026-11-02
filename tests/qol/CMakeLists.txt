@@ -130,6 +130,20 @@ target_link_libraries(qol-front-panel-test PRIVATE chase_qol)
 target_compile_options(qol-front-panel-test PRIVATE -Wall -Wextra -Wpedantic)
 add_test(NAME qol-front-panel COMMAND qol-front-panel-test)
 
+add_executable(qol-front-panel-clicks-test front_panel_clicks_test.cpp)
+target_link_libraries(qol-front-panel-clicks-test PRIVATE chase_qol)
+target_compile_options(qol-front-panel-clicks-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME qol-front-panel-clicks COMMAND qol-front-panel-clicks-test)
+
+if(TARGET chase_qol_window)
+  add_executable(qol-front-panel-clicks-real-test front_panel_clicks_real_test.cpp)
+  target_link_libraries(qol-front-panel-clicks-real-test PRIVATE chase_qol_window)
+  target_compile_options(qol-front-panel-clicks-real-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME qol-front-panel-clicks-real-data COMMAND qol-front-panel-clicks-real-test
+    "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
+  set_tests_properties(qol-front-panel-clicks-real-data PROPERTIES SKIP_RETURN_CODE 77 LABELS needs-game-data)
+endif()
+
 if(TARGET chase_qol_window)
   add_executable(qol-front-panel-point-test front_panel_point_test.cpp)
   target_link_libraries(qol-front-panel-point-test PRIVATE chase_qol_window)

@@ -96,6 +96,16 @@ In `chase-game`, Escape never closes the program. It is a fixed second key for *
 - On the start screens it skips the Fusion Games movie when you have played before, like Start. It does nothing on the logos, the language list, the question pages and the slot list, and nothing in cutscenes and movies of a level, because the original has no skip there.
 - To quit, close the window, or choose Quit game in the [PC settings menu](#pc-settings-menu). The model viewer, the movie player and the input laboratory keep Escape = quit.
 
+## Start screens with the mouse
+
+With `master Improved` in `config/qol.cfg` the bottom page of the start screens is a panel in the middle of the window, and you click it with the left mouse button:
+
+- Click a row of the language list or the slot list: it selects that row and presses **A**.
+- Click an **A**, **B** or **Y** picture (the buttons of the question and notice pages, the Select and Delete pictures at the bottom): it is that button. The Delete picture does nothing yet, because the delete page is missing.
+- A click anywhere else on such a page does nothing, also beside the panel.
+- On pages without rows or buttons (logos, movies, loading, mission card) a left click is still the bound **A** button.
+- The keys work as before. With the bottom screen shown (Original and Custom) a left click is the bound **A** button everywhere.
+
 ## Pause menu
 
 In the [development runtime](commands.md#development-runtime), while you play:

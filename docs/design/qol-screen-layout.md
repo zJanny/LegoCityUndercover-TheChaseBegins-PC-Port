@@ -100,6 +100,7 @@ Asked of the user by the lead on 2026-10-30 (round 20261030-qolstores); the quot
   - "Approve this general rule?": "Approve centred panel (Recommended)" (not chosen: "Small corner overlay").
   - "Panel size and top picture?": "Larger, art dimmed (Recommended)": the panel is scaled up as far as it fits keeping 4:3 and the top picture is darkened behind it (not chosen: "Larger, art sharp", "Native 4:3 size, art sharp").
   - "What does a click on a list row do?": "Select and confirm (Recommended)" (not chosen: "Select, then confirm").
+  - Language list row width (QOLBOT-24, answered 2026-11-02), the list has no row pictures: "Full-width band": a click anywhere in the full-width 24-pixel band around a text line selects that row and presses A (not chosen: text width only).
   - "Where does the PC Settings bar go in Improved?": "Same place as QoL off (Recommended)": under the slots inside the panel, one layout for all modes ([qol-settings.md §2026-10-29T19:34:22](qol-settings.md#ts-20261029-193422)).
   - "Should a mouse click anywhere skip the fusion movie and the mission card?": "Yes, click skips (Recommended)": a left click works like the skip button, only where a button already skips (not on a first run, where the original does not allow it) (not chosen: "No, keys only").
   - "Boot ('Preparing') and 'Saving Game' notices with Improved?": "Alert panel (Recommended)": the notice page is shown as the centred panel like other front-end pages (not chosen: "Spinner only").

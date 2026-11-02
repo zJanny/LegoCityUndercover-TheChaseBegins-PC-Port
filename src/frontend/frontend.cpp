@@ -1,4 +1,5 @@
 #include "frontend/frontend.hpp"
+#include "frontend/page_targets.hpp"
 #include "frontend/pages.hpp"
 #include <algorithm>
 #include <cmath>
@@ -92,15 +93,14 @@ void FrontEnd::drawLanguage(Canvas& bottom) {
         if (row == flow_.selectedRow()) colour = pulseColour(flow_.tick());
         colour.a = level;
         drawText(bottom, font, extended, resources_.textForKey(file, kLanguageRowKeys[row]), kBottomWidth / 2.0f,
-                 20.0f + 24.0f * float(row), Align::Centre, colour, -2, true);
+                 kLanguageRowCentreY + kLanguageRowPitch * float(row), Align::Centre, colour, -2, true);
     }
     drawSelectShortcut(bottom, resources_, resources_.textForKey(file, kKeySelect));
 }
 
-void FrontEnd::drawPrompt(Canvas& bottom) {
+AlertPage FrontEnd::promptPage() const {
     const std::string game = textFile("gametext"), system = textFile("systemtext");
     AlertPage page;
-    page.seconds = flow_.pageSeconds();
     const PageButton cont{resources_.textForKey(system, kSystemContinue), PadSymbol::A};
     switch (flow_.prompt()) {
     case Prompt::StreetPassQuestion:
@@ -133,19 +133,47 @@ void FrontEnd::drawPrompt(Canvas& bottom) {
         page.buttons = {cont};
         break;
     }
+    return page;
+}
+
+void FrontEnd::drawPrompt(Canvas& bottom) {
+    AlertPage page = promptPage();
+    page.seconds = flow_.pageSeconds();
     drawAlertPage(bottom, resources_, page);
 }
 
-void FrontEnd::drawAutosave(Canvas& bottom) {
-    const std::string game = textFile("gametext");
+AlertPage FrontEnd::autosavePage() const {
     AlertPage page;
+    page.body = resources_.textForKey(textFile("gametext"), kKeyAutosave);
+    page.buttons = {{resources_.textForKey(textFile("gametext"), kKeyOk), PadSymbol::A}};
+    return page;
+}
+
+void FrontEnd::drawAutosave(Canvas& bottom) {
+    AlertPage page = autosavePage();
     page.seconds = flow_.screenSeconds();
-    page.body = resources_.textForKey(game, kKeyAutosave);
-    page.buttons = {{resources_.textForKey(game, kKeyOk), PadSymbol::A}};
     drawAlertPage(bottom, resources_, page);
     float opacity = std::min(1.0f, flow_.screenSeconds() / kSpinnerOnSeconds);
     if (flow_.confirming()) opacity *= std::max(0.0f, 1.0f - flow_.confirmSeconds() / kSpinnerOffSeconds);
     drawSaveSpinner(bottom, resources_, flow_.screenSeconds(), opacity);
+}
+
+PageTargets FrontEnd::targets() const {
+    if (flow_.blackout()) return {};
+    switch (flow_.screen()) {
+    case Screen::Language:
+        return languageListTargets(resources_, kLanguageOfRow.size());
+    case Screen::Prompt:
+        return alertPageTargets(resources_, promptPage());
+    case Screen::Autosave:
+        return alertPageTargets(resources_, autosavePage());
+    case Screen::SlotSelect:
+        if (flow_.confirming()) return {};
+        return slotPageTargets(resources_, flow_.config().slotCount, flow_.slotUsed(flow_.selectedSlot()),
+                               flow_.screenSeconds());
+    default:
+        return {};
+    }
 }
 
 void FrontEnd::drawSlots(Canvas& top, Canvas& bottom) {

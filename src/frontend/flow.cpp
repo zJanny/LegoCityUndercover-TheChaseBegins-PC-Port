@@ -168,6 +168,10 @@ void Flow::update(float dt, const FrontInput& input) {
             ++selectedRow_;
             sounds_.push_back(kSoundMove);
         }
+        if (input.selectRow && *input.selectRow < kLanguageOfRow.size() && *input.selectRow != selectedRow_) {
+            selectedRow_ = *input.selectRow;
+            sounds_.push_back(kSoundMove);
+        }
         if (input.pressed & kButtonA) {
             language_ = kLanguageOfRow[selectedRow_];
             sounds_.push_back(kSoundConfirm);
@@ -201,6 +205,10 @@ void Flow::update(float dt, const FrontInput& input) {
         }
         if ((input.pressed & kButtonDown) && selectedSlot_ + 1 < config_.slotCount) {
             ++selectedSlot_;
+            selectionSeconds_ = 0;
+        }
+        if (input.selectRow && *input.selectRow < config_.slotCount && *input.selectRow != selectedSlot_) {
+            selectedSlot_ = *input.selectRow;
             selectionSeconds_ = 0;
         }
         if (input.pressed & kButtonA) confirming_ = true;
