@@ -91,6 +91,29 @@ void forcedSizeWinsAndIsWindowed() {
     require(controller.adopt(picked).size == qol::Resolution{1280, 720}, "and it stays");
 }
 
+void forcedSizeBelowTheMinimumIsRejected() {
+    // Spec docs/design/qol-screen-layout.md 2026-10-28T22:21:19 and the user's answer of 2026-11-02 (QOLFS-23):
+    // a `--window` size below 400x240 stops with an error naming the option. Cases by 20261102-qolctl2-F, 2026-11-02;
+    // the option itself parses widths from 200 (tests/game_options_test.cpp).
+    for (const qol::Resolution& forced : {qol::Resolution{200, 240}, {399, 239}, {200, 480}, {1280, 239}, {399, 240}, {400, 239}}) {
+        qol::WindowController controller(qol::Settings{}, "unused.cfg");
+        std::string message;
+        try {
+            controller.start(reported, desktop, forced);
+        } catch (const std::runtime_error& error) {
+            message = error.what();
+        }
+        require(message == "--window " + qol::resolutionText(forced) + ": below the minimum 400x240",
+            "explicit size " + qol::resolutionText(forced) + " stops with an error naming --window, got: " + message);
+    }
+    for (const qol::Resolution& forced : {qol::Resolution{400, 240}, {1280, 240}, {400, 480}, {960, 600}}) {
+        qol::WindowController controller(qol::Settings{}, "unused.cfg");
+        const qol::WindowPlan plan = controller.start(reported, desktop, forced);
+        require(plan.mode == qol::WindowMode::Windowed && plan.size == forced,
+            "explicit size " + qol::resolutionText(forced) + " is used");
+    }
+}
+
 void toggleSwitchesAndWritesOnlyTheModeOnce() {
     const auto path = std::filesystem::temp_directory_path() / "qol-window-apply-test.cfg";
     std::filesystem::remove(path);
@@ -213,6 +236,7 @@ int main() {
     defaultsAreFullscreenAtTheDesktopSize();
     storedValuesAreUsedAndClamped();
     forcedSizeWinsAndIsWindowed();
+    forcedSizeBelowTheMinimumIsRejected();
     toggleSwitchesAndWritesOnlyTheModeOnce();
     unwritablePathIsAnError();
     desktopBelowMinimumIsRejected();

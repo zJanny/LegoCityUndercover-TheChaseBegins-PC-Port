@@ -3,7 +3,7 @@
 // the top, hint bar at the bottom, sized from the window height) with answer 10 (rows 5.5 percent of the height) and answer 29 (tab
 // bar and hint bar opaque in the panel colour, picture dim 0.72) and the picture of QOLSET-96: the first present defers and asks for a
 // frame, a presented front-end frame is kept and shows dimmed behind the menu (a grey of 200 reads 200 * 0.28 = 56), and a frame that
-// never arrives leaves the stand-in QOLSET-S8 black window. The language names are
+// never arrives leaves a black window. The language names are
 // the gametext names of the nine languages (src/runtime/languages_page.hpp). Written by 20261101-qolui3-F on 2026-11-01, picture checks by 20261101-qolctl-C on 2026-11-01. Needs the
 // extracted RomFS and a GL 4.6 context; exits with 77 without them.
 #include "qol/menu_window_sdl.hpp"

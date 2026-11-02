@@ -1,5 +1,5 @@
 // Spec: docs/design/qol-settings-drawing.md entry 2026-10-30T21:56:04 (menu over the dimmed game picture; the picture is the last
-// presented frame) and the stand-in QOLSET-S8 (a hook whose frame has no end-of-frame keep shows a black window). Steps written by
+// presented frame) and the fallback (a frame that never arrives shows a black window). Steps written by
 // 20261101-qolctl-C on 2026-11-01: the first look asks for a frame and defers, a frame that never arrives gives black, a kept frame
 // gives the picture, release forgets the ask. No GL context is needed: the kept frame itself is tested in render-frame-keep-window.
 #include "qol/ui_backdrop.hpp"

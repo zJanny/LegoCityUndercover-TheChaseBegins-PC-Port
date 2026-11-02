@@ -65,6 +65,7 @@ Implemented by 20261028-qolmenu-B in `src/qol/view_layout.*` from [§2026-10-28T
 The user's answers on 2026-10-28; the quoted labels are the user's selections:
 - QOLFS-9: "Accept; min 400x240": "Keep B's three choices; the smallest window is 400x240, the 3DS top screen size." The three choices are the rounding, the HUD scale by the view height and the scaled corner offset above.
 - Below the minimum: "Window can't shrink below": "The window has a minimum size of 400x240, so a smaller size can't happen. The geometry rejecting it stays only as a safeguard."
+- A `--window` size below 400x240 (QOLFS-23, asked 2026-11-02): "Error below 400x240": the start stops with an error naming the option. The option itself still parses widths from 200; the check is in the QoL window code.
 
 <a id="ts-20261029-114222"></a>
 

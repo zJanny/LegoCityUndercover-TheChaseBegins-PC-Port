@@ -6,7 +6,7 @@ The redesigned PC settings menu: a full-window overlay with top tabs, bundled fo
 
 ## 2. Status
 
-IN_PROGRESS, opened 2026-10-30; QOLSET-68 and QOLSET-69 done (font and text, 20261030-qolui-A); QOLSET-71 done (layout model); QOLSET-72 done (navigation model, 20261030-qolui2-A); QOLSET-86 and QOLSET-75 done (prompt input in `UiNav`, `ControlsPage`; 20261101-qolui3-A); QOLSET-74 and QOLSET-78 done (Quality of life page and menu painter, not wired; 20261101-qolui3-C); QOLSET-76 and QOLSET-77 done (models, 20261101-qolui3-D); QOLSET-73 done (Game and Display page models, 20261101-qolui3-B); QOLSET-70, QOLSET-83 and QOLSET-84 done (draw list, batching, GL executor run in a real window, texts drawn in draw-list order; 20261030-qolui2-B). QOLSET-88, QOLSET-93 and QOLSET-79 done (controller, presenter and wiring at the three hooks, the old drawing removed; 20261101-qolui3-F); the menu is usable in `chase-game`. QOLSET-95 and QOLSET-96 done (old menu model removed; dimmed last frame behind the menu; 20261101-qolctl-C). QOLSET-97 (help texts) approved 2026-11-01. Open: QOLSET-98 (more keep points). Decided by the user on 2026-10-30, all open points answered (QOLSET-80). Suggested build order: QOLSET-68, QOLSET-69, QOLSET-70 (render), QOLSET-71, QOLSET-72 (model), the tabs QOLSET-73 to QOLSET-75, the dialogs QOLSET-76 and QOLSET-77, QOLSET-78, last QOLSET-79 (wiring); each is well under an hour for one worker.
+DONE (no open items), opened 2026-10-30; QOLSET-68 and QOLSET-69 done (font and text, 20261030-qolui-A); QOLSET-71 done (layout model); QOLSET-72 done (navigation model, 20261030-qolui2-A); QOLSET-86 and QOLSET-75 done (prompt input in `UiNav`, `ControlsPage`; 20261101-qolui3-A); QOLSET-74 and QOLSET-78 done (Quality of life page and menu painter, not wired; 20261101-qolui3-C); QOLSET-76 and QOLSET-77 done (models, 20261101-qolui3-D); QOLSET-73 done (Game and Display page models, 20261101-qolui3-B); QOLSET-70, QOLSET-83 and QOLSET-84 done (draw list, batching, GL executor run in a real window, texts drawn in draw-list order; 20261030-qolui2-B). QOLSET-88, QOLSET-93 and QOLSET-79 done (controller, presenter and wiring at the three hooks, the old drawing removed; 20261101-qolui3-F); the menu is usable in `chase-game`. QOLSET-95 and QOLSET-96 done (old menu model removed; dimmed last frame behind the menu; 20261101-qolctl-C). QOLSET-97 (help texts) approved 2026-11-01. QOLSET-98 done (keep points of every frame-ending path, guard test; 20261102-qolctl2-F). Decided by the user on 2026-10-30, all open points answered (QOLSET-80). Suggested build order: QOLSET-68, QOLSET-69, QOLSET-70 (render), QOLSET-71, QOLSET-72 (model), the tabs QOLSET-73 to QOLSET-75, the dialogs QOLSET-76 and QOLSET-77, QOLSET-78, last QOLSET-79 (wiring); each is well under an hour for one worker.
 
 ## 3. Verified behaviour
 
@@ -14,12 +14,11 @@ None yet (the menu is not part of the original).
 
 ## 4. Stand-ins
 
-- QOLSET-S8 — The picture behind the menu is the last frame kept by an end-of-frame keep in `chase_render` (`FrontPresenter`, `HudOverlay::draw`); the frame in which the menu opens is a normal game frame (one extra front-end update runs, the pause screen is drawn once more), and a hook whose frame has no keep point shows the menu over a black window. needs: QOLSET-98. evidence: [qol-settings-drawing.md §2026-10-30T21:56:04](../../design/qol-settings-drawing.md#ts-20261030-215604).
+None.
 
 ## 5. Open items
 
 
-- [ ] QOLSET-98 — Further frame-ending paths without a keep point (front end scripts, other overlays) show the menu over black; add `keepFrameIfRequested` to each such presenter in `src/render/` when one can open the menu. blocks: QOLSET-S8. evidence: [qol-settings-drawing.md §2026-10-30T21:56:04](../../design/qol-settings-drawing.md#ts-20261030-215604).
 
 ## 6. Findings summary
 
@@ -27,7 +26,7 @@ Design: [qol-settings-drawing.md §2026-10-30T21:56:04](../../design/qol-setting
 
 ## 7. Code and tests
 
-Picture behind the menu: `src/render/frame_keep.*` (in `chase_render`, GL blits only, no shader; nothing is kept or drawn unless `requestFrameKeep` was called) and `src/qol/ui_backdrop.*` (`Backdrop::step` returns Defer on the first look, which asks for a frame and lets the game draw one normal frame, then Picture or Black; released when the menu closes). Tests `render-frame-keep-window` (`tests/render_frame_keep_window_test.cpp`, hidden GL window, label `needs-display`: frames identical with and without a request, kept frame drawn back pixel for pixel, 0.72 dim over white reads 71, `HudOverlay` serves a request) and `qol-ui-backdrop` (`tests/qol/ui_backdrop_test.cpp`).
+Picture behind the menu: `src/render/frame_keep.*` (in `chase_render`, GL blits only, no shader; nothing is kept or drawn unless `requestFrameKeep` was called) and `src/qol/ui_backdrop.*` (`Backdrop::step` returns Defer on the first look, which asks for a frame and lets the game draw one normal frame, then Picture or Black; released when the menu closes). Keep points: `FrontPresenter::present`, `FrontPresenter::presentBoxes` and `HudOverlay::draw` call `keepFrameIfRequested`; these are all frame ends of `chase-game` (`SDL_GL_SwapWindow` sits in `src/game.cpp` once and in `src/game_front.hpp` three times, all after one of them or after the menu itself), guarded by CTest `render-frame-keep-points` (`tools/check_frame_keep_points.cmake`). Tests `render-frame-keep-window` (`tests/render_frame_keep_window_test.cpp`, hidden GL window, label `needs-display`: frames identical with and without a request, kept frame drawn back pixel for pixel, 0.72 dim over white reads 71, `HudOverlay` serves a request) and `qol-ui-backdrop` (`tests/qol/ui_backdrop_test.cpp`).
 
 Pages and dialogs (Game, Display, Controls, Quality of life, swap, keep settings): [qol-settings-ui-pages](qol-settings-ui-pages.md).
 

@@ -2,6 +2,8 @@
 // Expected values by hand computation, 20261101-qolctl-C, 2026-11-01: without a request the presenters leave the frame as before
 // and keep nothing; with a request the frame is kept once at the end of the presenter and drawn back unchanged; a dim of alpha
 // 0.72 (spec qol-settings-drawing.md 2026-10-30T21:56:04, answer 29) over a white kept frame reads 255 * (1 - 0.72) = 71.4.
+// boxesEndFrame (20261102-qolctl2-F, 2026-11-02): white screens in a full-width top box and a centred half-width panel box leave
+// white inside both boxes and black left of the panel (hand computation from the box rectangles).
 #include "render/frame_keep.hpp"
 #include "render/front_presenter.hpp"
 #include "render/hud_overlay.hpp"
@@ -97,6 +99,26 @@ void dimmedOverKeptFrame() {
     releaseKeptFrame();
 }
 
+void boxesEndFrame() {
+    FrontPresenter presenter(ScreenW, ScreenW, ScreenH);
+    const std::vector<std::uint8_t> white = solid(255);
+    const Pixels image{ScreenW, ScreenH, white.data()};
+    const FrontBox topBox{0, 0, float(W), float(H) / 2}, panelBox{float(W) / 4, float(H) / 2, float(W) / 2, float(H) / 2};
+    presenter.presentBoxes(image, image, W, H, topBox, panelBox);
+    expect(!frameKept(), "presenting boxes keeps nothing without a request");
+    requestFrameKeep();
+    presenter.presentBoxes(image, image, W, H, topBox, panelBox);
+    expect(frameKept() && !frameKeepRequested(), "presenting boxes serves a request at its end");
+    const std::vector<std::uint8_t> shown = readWindowPixels(W, H);
+    clearWindow({0, 0, 1, 1}, false);
+    drawKeptFrame(W, H);
+    const std::vector<std::uint8_t> back = readWindowPixels(W, H);
+    expect(back == shown, "the kept boxes frame draws back pixel for pixel");
+    expect(near(back, W / 2, H / 4, 255) && near(back, W / 2, 3 * H / 4, 255) && near(back, 5, 3 * H / 4, 0, 0),
+        "the boxes frame has the top box, the centred panel box and black beside the panel");
+    releaseKeptFrame();
+}
+
 void overlayEndsFrame() {
     HudOverlay overlay(ScreenW, ScreenW, ScreenH);
     const std::vector<std::uint8_t> white = solid(255);
@@ -138,6 +160,7 @@ int main() {
         defaultFramesUnchanged();
         keptFrameDrawsBack();
         dimmedOverKeptFrame();
+        boxesEndFrame();
         overlayEndsFrame();
         result = failures ? 1 : 0;
     } catch (const std::exception& error) {

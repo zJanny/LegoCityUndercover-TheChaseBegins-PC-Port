@@ -146,7 +146,6 @@ bool UiMenuWindow::consume(const SDL_Event& event, int windowWidth, int windowHe
     return menuConsumes(event);
 }
 
-// STAND-IN QOLSET-S8: a hook whose frame has no end-of-frame keep in chase_render shows the menu over a black window.
 bool UiMenuWindow::present(int width, int height) {
     if (!isOpen()) return false;
     if (width <= 0 || height <= 0) return true;

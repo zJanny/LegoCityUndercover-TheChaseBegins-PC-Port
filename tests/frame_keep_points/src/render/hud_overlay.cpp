@@ -1,0 +1,1 @@
+void HudOverlayImpl::draw() {}

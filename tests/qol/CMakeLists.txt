@@ -92,6 +92,12 @@ if(TARGET chase_qol_window)
 endif()
 
 if(TARGET chase_qol_paint)
+  add_executable(qol-window-minimum-test window_minimum_test.cpp ${CMAKE_SOURCE_DIR}/src/runtime/qol_window.cpp
+    ${CMAKE_SOURCE_DIR}/src/runtime/qol_pc_controls.cpp ${CMAKE_SOURCE_DIR}/src/runtime/qol_controls_bindings.cpp)
+  target_link_libraries(qol-window-minimum-test PRIVATE chase_qol_paint chase_input PkgConfig::SDL2)
+  target_compile_options(qol-window-minimum-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME qol-window-minimum COMMAND qol-window-minimum-test)
+  set_tests_properties(qol-window-minimum PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=dummy")
   add_executable(qol-menu-stores-test menu_stores_test.cpp ${CMAKE_SOURCE_DIR}/src/runtime/qol_controls_bindings.cpp)
   target_link_libraries(qol-menu-stores-test PRIVATE chase_qol_paint chase_input PkgConfig::SDL2)
   target_compile_options(qol-menu-stores-test PRIVATE -Wall -Wextra -Wpedantic)

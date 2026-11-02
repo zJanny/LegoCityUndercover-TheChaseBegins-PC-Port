@@ -33,6 +33,9 @@ WindowPlan WindowController::start(const std::vector<Resolution>& reported,
     if (!resolutionValid(desktop))
         throw std::runtime_error("desktop size " + resolutionText(desktop) +
             " is below the minimum " + resolutionText(minimumResolution));
+    if (forcedWindow && !resolutionValid(*forcedWindow))
+        throw std::runtime_error("--window " + resolutionText(*forcedWindow) +
+            ": below the minimum " + resolutionText(minimumResolution));
     desktop_ = desktop;
     clampStoredResolution(settings_, usableModes(reported));
     forced_ = forcedWindow;
