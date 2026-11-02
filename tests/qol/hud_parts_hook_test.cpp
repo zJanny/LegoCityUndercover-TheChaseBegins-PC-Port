@@ -1,6 +1,6 @@
 // Spec: docs/design/qol-screen-layout.md §2026-10-29T11:42:22 (HUD parts at the corners of the 16:9 area). The part mapping is the
 // brief of 20261030-qolstores-A (2026-10-30): Hearts, Portrait, Studs, Counters to SuperBricks, Ability to CameraLock (HUD-94).
-// Rectangles are the ones pinned in hud_hook_test.cpp (hand-computed by 20261029-qolmenu-D, 2026-10-29).
+// The widened view hides the bottom screen in every preset (user answer 2026-11-02), so the rectangles are over the whole window, recomputed by 20261102-qolmenu-B on 2026-11-02. Rectangles are the ones pinned in hud_hook_test.cpp (hand-computed by 20261029-qolmenu-D, 2026-10-29).
 #include "game_hud.hpp"
 #include "qol/active_settings.hpp"
 #include "qol/hud_parts_hook.hpp"
@@ -57,8 +57,8 @@ void widenedOn() {
     require(draws.size() == 5, "five parts");
     if (draws.size() != 5) return;
     const HudPart order[] = {HudPart::Hearts, HudPart::Portrait, HudPart::Studs, HudPart::SuperBricks, HudPart::CameraLock};
-    const chase::render::PixelRect rects[] = {{480, 540, 900, 540}, {480, 540, 900, 540}, {540, 540, 900, 540}, {540, 540, 900, 540},
-                                              {480, 540, 900, 540}};
+    const chase::render::PixelRect rects[] = {{0, 0, 1800, 1080}, {0, 0, 1800, 1080}, {120, 0, 1800, 1080}, {120, 0, 1800, 1080},
+                                              {0, 0, 1800, 1080}};
     for (std::size_t i = 0; i < 5; ++i) {
         require(draws[i].frontendPart == order[i], "part mapping " + std::to_string(i));
         require(same(draws[i].rect, rects[i]), "rectangle " + std::to_string(i));

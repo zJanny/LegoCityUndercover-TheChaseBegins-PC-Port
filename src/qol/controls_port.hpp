@@ -7,6 +7,8 @@
 
 namespace qol {
 
+enum class ControlsSet { OnFoot, Vehicle };
+
 class ControlsPort {
 public:
     virtual ~ControlsPort() = default;
@@ -21,6 +23,9 @@ public:
     virtual ControlsResult requestReset() = 0;
     virtual ControlsResult confirmReset() = 0;
     virtual void reload() {}
+    virtual bool hasSets() const { return false; }
+    virtual ControlsSet set() const { return ControlsSet::OnFoot; }
+    virtual void selectSet(ControlsSet) {}
 };
 
 class ControlsTabPort final : public ControlsPort {

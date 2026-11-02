@@ -15,7 +15,7 @@ What follows applies these rules.
 
 ## Faithful first
 
-- **The bottom screen has no toggle of its own.** By the user's decision (2026-10-28, [qol-screen-layout.md §2026-10-28T09:48:15](../design/qol-screen-layout.md#ts-20261028-094815)) the bottom screen, its panels and the minimap are switched only by the master button: Improved hides the bottom screen and shows the minimap and the panels, Original and Custom show the bottom screen. There are no per-panel toggles and no minimap toggle. This is the one place where "each feature by itself" does not apply.
+- **The bottom screen has no toggle of its own.** By the user's decision (2026-10-28, [qol-screen-layout.md §2026-10-28T09:48:15](../design/qol-screen-layout.md#ts-20261028-094815)) the bottom screen, its panels and the minimap follow the widened view setting (the master button sets it): the widened view (on in Improved, a switch in Custom) hides the bottom screen and shows the minimap and the panels, otherwise the bottom screen is shown. There are no per-panel toggles and no minimap toggle. This is the one place where "each feature by itself" does not apply.
 
 - **The two approved exceptions.** Both open the PC settings menu, change no game behaviour, and stay shown with every QoL feature off. Reviewers do not flag them; any other visible or behavioural difference with QoL off is a defect.
   - The pause menu has an always shown "PC Settings" entry. The user decided this explicitly ("Title + PC Settings entry", 2026-10-28, [qol-settings.md §2026-10-28T09:32:07](../design/qol-settings.md#ts-20261028-093207)). It is the last entry of the round pause menu. The original Options page stays unchanged.
@@ -49,7 +49,7 @@ Design: [docs/design/qol-settings.md](../design/qol-settings.md); features: [qol
 ## Behaviour
 
 - What a QoL feature does comes only from a spec the user approved, recorded in `docs/design/`. What the spec does not decide is asked of the user and recorded as an open item, never chosen. Points still open are open items in the feature files, marked as questions for the user.
-- The bottom screen is hidden only when its features are on (it is hidden exactly when the minimap is on); the widened view and the corner HUD are one toggle; the minimap has no toggle of its own and shows only in Improved, so Custom always shows the bottom screen; every panel uses the original game's art and fonts; with all QoL off the window is today's top over bottom.
+- The bottom screen is hidden exactly when the widened view is on, in every preset (the user, 2026-11-02, [qol-screen-layout.md §2026-10-28T09:48:15](../design/qol-screen-layout.md#ts-20261028-094815)); the widened view and the corner HUD are one toggle; the minimap has no toggle of its own and shows whenever the bottom screen is hidden; every panel uses the original game's art and fonts; with all QoL off the window is today's top over bottom.
 - New controls follow the input rules of CLAUDE.md; bottom-screen UI that stays is used by mouse clicks; a bottom-screen content moved to a full-window panel is clicked with the mouse as well.
 - Shared code stays generic (CLAUDE.md "Generic over hardcoded"): one rule for all users, not per-object special cases. `src/game.cpp` gets only hook lines (see "Separate source code"); all QoL logic is in `src/qol/`, and OpenGL calls stay in `src/render/` behind plain-type interfaces.
 

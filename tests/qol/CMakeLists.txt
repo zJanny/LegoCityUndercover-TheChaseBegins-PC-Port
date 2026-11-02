@@ -43,6 +43,11 @@ target_compile_options(qol-controls-bindings-test PRIVATE -Wall -Wextra -Wpedant
 add_test(NAME qol-controls-bindings COMMAND qol-controls-bindings-test)
 add_test(NAME qol-controls-default-copy COMMAND ${CMAKE_COMMAND} -E compare_files ${CMAKE_SOURCE_DIR}/config/controls.cfg ${CMAKE_SOURCE_DIR}/config/controls.default.cfg)
 
+add_executable(qol-pc-controls-off-view-test pc_controls_off_view_test.cpp)
+target_link_libraries(qol-pc-controls-off-view-test PRIVATE chase_qol)
+target_compile_options(qol-pc-controls-off-view-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME qol-pc-controls-off-view COMMAND qol-pc-controls-off-view-test)
+
 add_executable(qol-active-settings-test active_settings_test.cpp)
 target_link_libraries(qol-active-settings-test PRIVATE chase_qol)
 target_compile_options(qol-active-settings-test PRIVATE -Wall -Wextra -Wpedantic)
@@ -113,6 +118,10 @@ if(TARGET chase_qol_paint)
   target_link_libraries(qol-pc-vehicle-controls-test PRIVATE chase_qol_paint chase_input PkgConfig::SDL2)
   target_compile_options(qol-pc-vehicle-controls-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME qol-pc-vehicle-controls COMMAND qol-pc-vehicle-controls-test)
+  add_executable(qol-controls-set-switch-test controls_set_switch_test.cpp ${CMAKE_SOURCE_DIR}/src/runtime/qol_controls_bindings.cpp ${CMAKE_SOURCE_DIR}/src/runtime/qol_pc_controls.cpp)
+  target_link_libraries(qol-controls-set-switch-test PRIVATE chase_qol_paint chase_input PkgConfig::SDL2)
+  target_compile_options(qol-controls-set-switch-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME qol-controls-set-switch COMMAND qol-controls-set-switch-test)
 endif()
 
 if(TARGET chase_qol_paint)

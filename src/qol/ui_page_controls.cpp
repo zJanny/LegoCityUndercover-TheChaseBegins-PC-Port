@@ -63,6 +63,13 @@ std::vector<std::string> ControlsPage::columnTitles() const { return {"Action", 
 std::vector<RowSpec> ControlsPage::rows() const {
     const ControlsTab& tab = port_.tab();
     std::vector<RowSpec> out;
+    if (port_.hasSets()) {
+        RowSpec setSpec;
+        setSpec.label = "Controls for";
+        setSpec.kind = RowKind::Selector;
+        setSpec.value = port_.set() == ControlsSet::Vehicle ? "Vehicle" : "On foot";
+        out.push_back(std::move(setSpec));
+    }
     for (std::size_t row = 0; row < tab.rowCount(); ++row) {
         const auto slots = bindingsOf(tab, row);
         RowSpec spec;
@@ -108,13 +115,18 @@ ControlsPageOutcome ControlsPage::toggleRowMode(std::size_t row) {
     return outcome(ControlsPageEvent::Changed);
 }
 
+ControlsPageOutcome ControlsPage::stepSet() {
+    port_.selectSet(port_.set() == ControlsSet::OnFoot ? ControlsSet::Vehicle : ControlsSet::OnFoot);
+    return outcome(ControlsPageEvent::SetChanged);
+}
+
 ControlsPageOutcome ControlsPage::activateCell(int row, int cell) {
     if (row == resetRow()) {
         if (port_.requestReset() == ControlsResult::Confirming) return outcome(ControlsPageEvent::NeedsConfirm, resetQuestionText);
         return outcome(ControlsPageEvent::Nothing);
     }
-    if (row < 0 || row > resetRow()) return outcome(ControlsPageEvent::Nothing);
-    const auto index = static_cast<std::size_t>(row);
+    if (row < firstActionRow() || row > resetRow()) return outcome(ControlsPageEvent::Nothing);
+    const auto index = static_cast<std::size_t>(row - firstActionRow());
     if (cell == controlsModeCell) return toggleRowMode(index);
     if (cell < 0 || cell >= controlsSlotCells) return outcome(ControlsPageEvent::Nothing);
     if (port_.activate(index, static_cast<std::size_t>(cell)) == ControlsResult::Waiting)
@@ -155,6 +167,9 @@ ControlsPageOutcome ControlsPage::clearPromptSlot() {
 
 ControlsPageOutcome ControlsPage::handle(const Action& action) {
     switch (action.kind) {
+    case ActionKind::ValueChanged:
+        if (port_.hasSets() && action.index == setRow()) return stepSet();
+        return outcome(ControlsPageEvent::Nothing);
     case ActionKind::Activate: return activateCell(action.index, action.item < 0 ? 0 : action.item);
     case ActionKind::PromptInput: {
         const char* source = action.source == InputSource::Mouse ? "mouse" : action.source == InputSource::Pad ? "pad" : "key";
@@ -187,10 +202,22 @@ ControlsPageOutcome ControlsPage::resolveSwap(bool swap) {
     return outcome(ControlsPageEvent::Changed);
 }
 
+std::string ControlsPage::setHint() const {
+    if (!port_.hasSets()) return "Click or select a row, then press the new key. Esc cancels. Del clears the slot.";
+    const char* file = port_.set() == ControlsSet::Vehicle ? "controls.pc.vehicle.cfg" : "controls.pc.cfg";
+    const char* name = port_.set() == ControlsSet::Vehicle ? "vehicle" : "on foot";
+    return std::string("You edit the ") + name + " keys (" + file + "). Click or select a row, then press the new key. Esc cancels.";
+}
+
 std::string ControlsPage::help(int row) const {
-    if (row == resetRow()) return "Sets all bindings and modes back to the shipped controls.";
-    if (row < 0 || row > resetRow()) return {};
-    return "Choose a slot to bind a key, mouse or pad button; Del clears it. Default: the shipped controls";
+    if (port_.hasSets() && row == setRow())
+        return "Switch between the on foot keys and the vehicle keys; each has its own list and Reset. " + setHint();
+    if (row == resetRow()) {
+        if (!port_.hasSets()) return "Sets all bindings and modes back to the shipped controls.";
+        return std::string("Sets all ") + (port_.set() == ControlsSet::Vehicle ? "vehicle" : "on foot") + " bindings and modes back to the shipped controls.";
+    }
+    if (row < firstActionRow() || row > resetRow()) return {};
+    return setHint() + " Default: the shipped controls";
 }
 
 ControlsPageOutcome ControlsPage::reset() {

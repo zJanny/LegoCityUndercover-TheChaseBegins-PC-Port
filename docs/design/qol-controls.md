@@ -19,6 +19,7 @@ Decided (the user, 2026-11-01):
 - Movies, cutscenes, logos and the title, "Skips if skippable (Rec.)": Escape acts like the original skip where the original has one, and does nothing else.
 - Original mode, "Everywhere (Rec.)": the Escape rules apply with the master button on Original too (so the development quit on Escape in `chase-game` goes away in every mode).
 - Developer tools, "Game only": `chase-viewer`, the FMV player and `chase-input-lab` keep Escape = quit.
+- Which set the Controls tab edits (the user, 2026-11-02, "On foot / Vehicle switch"): a switch at the top of the Controls tab (with PC controls on) chooses which set the list shows and edits: the on-foot set `config/controls.pc.cfg` or the vehicle set `config/controls.pc.vehicle.cfg`. Rebinding, Reset, the conflict check and the file write all act on the chosen set. With PC controls off the tab edits `config/controls.cfg` and has no switch.
 
 Open: none.
 

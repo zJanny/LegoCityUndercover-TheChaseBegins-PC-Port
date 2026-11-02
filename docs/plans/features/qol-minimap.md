@@ -10,7 +10,7 @@ IN_PROGRESS. The round minimap is drawn from the original map canvas (20261030-q
 
 ## 3. Verified behaviour
 
-`qol-minimap` pins the geometry (diameter one fifth of the window height, at the right edge and below the studs and counters of the corner HUD, from the same layout source), the round mask and that Original and Custom draw nothing. Every behaviour is tested first in original mode (all QoL off, the port's tests unchanged), then with the feature on ([qol rules](../../rules/qol.md)).
+`qol-minimap` pins the geometry (diameter one fifth of the window height, at the right edge and below the studs and counters of the corner HUD, from the same layout source), the round mask and that it draws nothing while the widened view is off. Every behaviour is tested first in original mode (all QoL off, the port's tests unchanged), then with the feature on ([qol rules](../../rules/qol.md)).
 
 ## 4. Stand-ins
 

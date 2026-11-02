@@ -6,7 +6,7 @@ The top screen as the whole window: the 3D view widened up to 16:9 (same vertica
 
 ## 2. Status
 
-IN_PROGRESS, opened 2026-10-28T09:21:35+01:00. The geometry, the render capability (QOLFS-7) and the hook (QOLFS-8) exist: with the toggle on, the 3D view and the glow pass use the widened region above the bottom screen, or the whole window while the bottom screen is hidden; with the toggle on each HUD part is drawn at its corner rectangle, at the picture's corners while a 5:3 camera shows (QOLFS-19; `src/qol/hud_hook.*`, `src/qol/hud_parts_hook.*`, QOLFS-2, QOLFS-13); the head icon and the scanner overlay stay on today's top rectangle. Only the gameplay camera widens; the cutscene, director and scanner cameras keep the 5:3 region (QOLFS-18). The config load hands the settings to the active store at startup and after F11 (QOLFS-11). The window has its 400x240 minimum from creation (QOLFS-10).
+IN_PROGRESS, opened 2026-10-28T09:21:35+01:00. The geometry, the render capability (QOLFS-7) and the hook (QOLFS-8) exist: with the toggle on, the 3D view and the glow pass use the widened region over the whole window, because the widened view hides the bottom screen in every preset (the user, 2026-11-02); with the toggle on each HUD part is drawn at its corner rectangle, at the picture's corners while a 5:3 camera shows (QOLFS-19; `src/qol/hud_hook.*`, `src/qol/hud_parts_hook.*`, QOLFS-2, QOLFS-13); the head icon and the scanner overlay stay on today's top rectangle. Only the gameplay camera widens; the cutscene, director and scanner cameras keep the 5:3 region (QOLFS-18). The config load hands the settings to the active store at startup and after F11 (QOLFS-11). The window has its 400x240 minimum from creation (QOLFS-10).
 
 ## 3. Verified behaviour
 

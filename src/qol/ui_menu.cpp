@@ -27,6 +27,7 @@ struct MenuPageEntry {
     std::function<DropdownInfo(int)> dropdown;
     std::function<std::vector<std::string>(int)> dropdownItems;
     std::function<std::string(int)> help;
+    std::function<std::string()> pageHelp;
     std::vector<std::string> columnTitles;
     std::function<MenuOutcome(const Action&)> handle;
     std::function<MenuOutcome()> reset;
@@ -142,6 +143,7 @@ void UiMenu::open(const MenuSetup& setup) {
         controls_->setPadConnected(padConnected_);
         MenuPageEntry entry = entryFor("Controls", MenuStore::Controls, *controls_);
         entry.columnTitles = controls_->columnTitles();
+        entry.pageHelp = [this] { return controls_->setHint(); };
         pages_.push_back(std::move(entry));
     }
     qol_.emplace(*setup.settings);
@@ -393,7 +395,8 @@ std::optional<MenuDialog> UiMenu::dialog() const {
 
 std::string UiMenu::helpText() const {
     const MenuPageEntry* current = page();
-    if (!current || !nav_ || nav_->screen().focusOnTabs || nav_->screen().focusRow < 0) return {};
+    if (!current || !nav_) return {};
+    if (nav_->screen().focusOnTabs || nav_->screen().focusRow < 0) return current->pageHelp ? current->pageHelp() : std::string();
     return current->help(nav_->screen().focusRow);
 }
 

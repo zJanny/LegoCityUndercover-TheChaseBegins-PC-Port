@@ -1,7 +1,9 @@
 #pragma once
 
 #include "qol/controls_file.hpp"
+#include "qol/controls_port.hpp"
 #include "qol/controls_tab.hpp"
+#include "qol/pc_controls.hpp"
 
 #include <optional>
 #include <string>
@@ -16,6 +18,8 @@ std::vector<BindingEntry> pcVehicleDefaults();
 std::string pcVehiclePathFor(const std::string& controlsFile);
 
 std::string vehicleControlsPath(const std::string& controlsFile, const KeyResolver& resolveKey, const KeyNamer& nameKey);
+
+ActiveControls activeControlsForSet(const std::string& controlsFile, ControlsSet set, const KeyResolver& resolveKey, const KeyNamer& nameKey);
 
 class SeatedControls {
 public:

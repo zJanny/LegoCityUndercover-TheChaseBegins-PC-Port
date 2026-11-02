@@ -1,3 +1,4 @@
+// Widened view hides the bottom screen in every preset (user answer 2026-11-02, qol-screen-layout.md); expectations for it recomputed by 20261102-qolmenu-B on 2026-11-02 from the same rules over the whole window (scale = window height / 240).
 // 5:3 cameras: 20261030-qolmenu-C, 2026-10-30: the picture is the region of qol::topViewRegion for a non-gameplay camera (user answer "Move to picture corners", docs/design/qol-screen-layout.md §2026-10-29T11:42:22).
 // Spec: docs/design/qol-screen-layout.md §2026-10-28T09:37:31 (standard HUD corners: hearts and character picture top-left, studs
 // and counters top-right, ability bottom-left; scaled to the window height), §2026-10-28T22:21:19 (anchors at the view's corners,
@@ -74,9 +75,9 @@ void pictureCorners() {
                         "5:3 camera: part rectangle is the picture at " + std::to_string(size[0]) + "x" + std::to_string(size[1]));
         }
     }
-    expectRectFor(qol::HudPart::Studs, 1920, 1080, qol::CameraKind::Director, {510, 540, 900, 540}, "1920x1080 director: picture corners, not window corners");
-    expectRectFor(qol::HudPart::Hearts, 1920, 1080, qol::CameraKind::Scanner, {510, 540, 900, 540}, "1920x1080 scanner: picture corners");
-    expectRect(qol::HudPart::Studs, 1920, 1080, {540, 540, 900, 540}, "gameplay camera: still the widened corners");
+    expectRectFor(qol::HudPart::Studs, 1920, 1080, qol::CameraKind::Director, {60, 0, 1800, 1080}, "1920x1080 director: picture corners, not window corners");
+    expectRectFor(qol::HudPart::Hearts, 1920, 1080, qol::CameraKind::Scanner, {60, 0, 1800, 1080}, "1920x1080 scanner: picture corners");
+    expectRect(qol::HudPart::Studs, 1920, 1080, {120, 0, 1800, 1080}, "gameplay camera: still the widened corners");
 
     qol::Settings improved;
     improved.setMaster(qol::Master::Improved);
@@ -92,18 +93,18 @@ void widenedOn() {
     qol::setActiveSettings(settings);
 
     for (qol::HudPart part : {qol::HudPart::Hearts, qol::HudPart::Portrait, qol::HudPart::Ability})
-        expectRect(part, 1920, 1080, {480, 540, 900, 540}, "1920x1080 left parts at the view's left edge");
+        expectRect(part, 1920, 1080, {0, 0, 1800, 1080}, "1920x1080 left parts at the view's left edge");
     for (qol::HudPart part : {qol::HudPart::Studs, qol::HudPart::Counters})
-        expectRect(part, 1920, 1080, {540, 540, 900, 540}, "1920x1080 right parts end at the view's right edge");
+        expectRect(part, 1920, 1080, {120, 0, 1800, 1080}, "1920x1080 right parts end at the view's right edge");
 
-    expectRect(qol::HudPart::Hearts, 1280, 720, {320, 360, 600, 360}, "1280x720 top-left");
-    expectRect(qol::HudPart::Studs, 1280, 720, {360, 360, 600, 360}, "1280x720 top-right");
+    expectRect(qol::HudPart::Hearts, 1280, 720, {0, 0, 1200, 720}, "1280x720 top-left");
+    expectRect(qol::HudPart::Studs, 1280, 720, {80, 0, 1200, 720}, "1280x720 top-right");
 
-    expectRect(qol::HudPart::Hearts, 2520, 1080, {780, 540, 900, 540}, "21:9 window: left anchor inside the bar");
-    expectRect(qol::HudPart::Studs, 2520, 1080, {840, 540, 900, 540}, "21:9 window: right anchor inside the bar");
+    expectRect(qol::HudPart::Hearts, 2520, 1080, {300, 0, 1800, 1080}, "21:9 window: left anchor inside the bar");
+    expectRect(qol::HudPart::Studs, 2520, 1080, {420, 0, 1800, 1080}, "21:9 window: right anchor inside the bar");
 
-    expectRect(qol::HudPart::Hearts, 800, 1200, {0, 600, 800, 480}, "800x1200 tall: 5:3 area, original rectangle");
-    expectRect(qol::HudPart::Studs, 800, 1200, {0, 600, 800, 480}, "800x1200 tall: right edge equals the original");
+    expectRect(qol::HudPart::Hearts, 800, 1200, {0, 360, 800, 480}, "800x1200 tall: 5:3 area over the whole window");
+    expectRect(qol::HudPart::Studs, 800, 1200, {0, 360, 800, 480}, "800x1200 tall: right edge equals the 5:3 area");
 
     const chase::render::PixelRect empty{0, 0, 0, 0};
     require(same(qol::hudPartRect(qol::HudPart::Hearts, 0, empty, qol::CameraKind::Gameplay), empty), "empty drawable while on: unchanged, no exception");

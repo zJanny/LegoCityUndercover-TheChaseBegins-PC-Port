@@ -49,8 +49,10 @@ void predicate() {
     custom.setSwitch(qol::Feature::WidenedView, true);
     custom.setMaster(qol::Master::Custom);
     require(custom.master() == qol::Master::Custom, "Custom is set");
-    require(!qol::bottomScreenHidden(custom), "Custom with the widened view still shows it");
-    require(qol::minimapOn(withMaster(qol::Master::Improved)) && !qol::minimapOn(custom), "the minimap follows the master only");
+    require(qol::bottomScreenHidden(custom), "Custom with the widened view on hides it (user answer 2026-11-02, qol-screen-layout.md)");
+    require(qol::minimapOn(withMaster(qol::Master::Improved)) && qol::minimapOn(custom), "the minimap follows the widened view");
+    custom.setSwitch(qol::Feature::WidenedView, false);
+    require(!qol::bottomScreenHidden(custom) && !qol::minimapOn(custom), "Custom with the widened view off shows the bottom screen");
 }
 
 void originalAndCustomKeepRectangles() {

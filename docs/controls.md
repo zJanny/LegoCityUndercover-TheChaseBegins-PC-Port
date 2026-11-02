@@ -66,7 +66,7 @@ With PC controls on, `chase-game` reads the keys from `config/controls.pc.cfg` i
 
 ### Keys in a vehicle
 
-While the character sits in a vehicle (and no pause screen or award viewer is open), the keys follow a typical PC driving game. They are kept in `config/controls.pc.vehicle.cfg` next to the other files, created from the built-in set the first time. The Controls tab does not show this set yet: change it by editing the file (same line format as above). The built-in set:
+While the character sits in a vehicle (and no pause screen or award viewer is open), the keys follow a typical PC driving game. They are kept in `config/controls.pc.vehicle.cfg` next to the other files, created from the built-in set the first time. You can change it in the Controls tab (choose Vehicle in the switch at the top, see [Rebind the keys](#rebind-the-keys)) or by editing the file (same line format as above). The built-in set:
 
 | Action | Keys |
 |---|---|
@@ -84,6 +84,39 @@ While the character sits in a vehicle (and no pause screen or award viewer is op
 ### When the built-in set grows
 
 If `config/controls.pc.cfg` or `config/controls.pc.vehicle.cfg` already exists, the program keeps every binding in it. It adds only the actions the file has no line for, with their built-in keys, and skips a key that the file already uses for another action. It then writes the file again. An action you cleared completely comes back with its built-in keys at the next start.
+
+## Rebind the keys
+
+Every action has two key slots (Slot 1 and Slot 2): either key does the action. You change them in the Controls tab of the [PC settings menu](#pc-settings-menu).
+
+**Step by step:**
+
+1. Open the PC settings menu: press **PC Settings** on the slot list of the start screens, or in play open it from the pause menu. Go to the Controls tab.
+2. Only with PC controls on: choose On foot or Vehicle in the first row (see below).
+3. Click a slot (Slot 1 or Slot 2) of the action, or select it with the keys and press Enter.
+4. The menu shows "Press a key... (Esc cancel, Del clear)". Press the new key, click a mouse button or press a gamepad button.
+5. Escape cancels without a change. Delete clears the slot.
+6. If another action of the same set already uses the key, the menu asks "Swap" or "Cancel". Swap exchanges the two bindings.
+7. The Mode column switches an action between Hold and Toggle.
+8. "Reset to defaults" at the end of the list asks first, then restores the built-in keys of the chosen set only.
+
+The menu keys (Escape, Q, E, Page Up, Page Down, the arrows, Enter) cannot be bound.
+
+**Which file** the tab changes depends on the PC controls row of the Quality of life tab.
+
+**PC controls off** (the default in Original):
+
+- The tab shows and changes `config/controls.cfg`. There is no switch at the top.
+- A change is written to the file at once, and the running game uses it at once.
+
+**PC controls on:**
+
+- The first row of the Controls tab is a switch, "Controls for": **On foot** or **Vehicle**. Change it with Left and Right, with the gamepad D-pad, or by clicking the arrows or the value.
+- On foot edits `config/controls.pc.cfg`. Vehicle edits `config/controls.pc.vehicle.cfg`. The tab lists, rebinds and resets only the set you chose. The other set and `config/controls.cfg` stay as they are.
+- The line under the tab names the set and file you are editing.
+- A change is written to the file of the chosen set at once. The vehicle keys are used the next time the character sits in a vehicle. The on-foot keys are used at once.
+- The switch only chooses what you edit. It does not change which keys the game uses. The game picks the set by itself: on foot or in a vehicle.
+- The switch cannot change while a key prompt or a question is open. It keeps its choice when you turn PC controls off and on again.
 
 ## Fast travel pad
 
@@ -118,13 +151,13 @@ In `chase-game`, Escape never closes the program. It is a fixed second key for *
 
 ## Start screens with the mouse
 
-With `master Improved` in `config/qol.cfg` the bottom page of the start screens is a panel in the middle of the window, and you click it with the left mouse button:
+While the widened view is on (`master Improved`, or `widened_view on` under `master Custom`) the bottom page of the start screens is a panel in the middle of the window, and you click it with the left mouse button:
 
 - Click a row of the language list or the slot list: it selects that row and presses **A**.
 - Click an **A**, **B** or **Y** picture (the buttons of the question and notice pages, the Select and Delete pictures at the bottom): it is that button. The Delete picture does nothing yet, because the delete page is missing.
 - A click anywhere else on such a page does nothing, also beside the panel.
 - On pages without rows or buttons (logos, movies, loading, mission card) a left click is still the bound **A** button.
-- The keys work as before. With the bottom screen shown (Original and Custom) a left click is the bound **A** button everywhere.
+- The keys work as before. With the bottom screen shown (the widened view is off) a left click is the bound **A** button everywhere.
 
 ## Pause menu
 
@@ -152,7 +185,7 @@ In the [development runtime](commands.md#development-runtime), on the slot list 
 - These keys are fixed. They do not follow `config/controls.cfg`.
 - Game tab: SFX volume and Music volume (0 to 100 in steps of 10; the sound changes at once), Invert camera (On or Off), Language (`< English >`), Quit game and Reset to defaults. **Quit game** asks "Quit the game?" with Yes and No; the question opens on No, **Enter** declines, **Left** moves to Yes, **Escape** cancels, and Yes closes the program. This is the way to quit the game: from the start screens open the PC Settings menu from the slot list, in play open it from the pause menu. Before the slot list (logos, movie, language list) only the window's close button quits. The options are stored in the save file when you close the menu, if you changed one. A new language is passed on when the menu closes, but the game does not switch to it yet (a line in the terminal says so).
 - Display tab: Window mode (Windowed or Fullscreen) and Resolution (a list of the monitor's sizes; greyed out as "Desktop resolution" in full screen). A change applies at once and asks "Keep these settings?": **Enter** or Keep keeps it, **Escape**, Revert or 15 seconds without an answer go back to the old setting.
-- Controls tab: one row per action with the columns Action, Slot 1, Slot 2 and Mode. **Left and Right** move between Slot 1, Slot 2 and Mode, **Enter** or a click chooses it. A slot shows "Press a key... (Esc cancel, Del clear)": press the new key, mouse button or gamepad button (a gamepad button only while a gamepad is connected), **Delete** clears the slot, **Escape** cancels. The menu keys cannot be bound. A key that another action uses asks "Swap" or "Cancel": **Enter** cancels, **Left and Right** move between Swap and Cancel and Enter presses the chosen one; a click on Swap swaps the two bindings. Mode switches the action between Hold and Toggle. `config/controls.cfg` is written after each change and the running game uses it at once.
+- Controls tab: one row per action with the columns Action, Slot 1, Slot 2 and Mode; with PC controls on a switch for the set (On foot or Vehicle) comes first. How to rebind, step by step: [Rebind the keys](#rebind-the-keys).
 - Quality of life tab: the preset (Original, Improved, Custom) and one On/Off row per feature (Widened view, [PC controls](#pc-controls)). Changing a feature by hand switches the preset to Custom.
 - The help line under the rows says what the focused row does and its default. Every tab ends with a **Reset to defaults** button, which asks first (Yes or No). The question opens on No: **Enter** declines, **Left** moves to Yes.
 - The Display and Quality of life tabs store their settings in `config/qol.cfg` at once (see [window mode and size](game-runtime.md#window-mode-and-size)).

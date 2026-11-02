@@ -56,11 +56,9 @@ void widenedOn() {
     qol::setActiveSettings(settings);
     require(qol::enabled(qol::Feature::WidenedView), "store reads the menu's switch");
 
-    expectRegion(1920, 1080, {480, 540, 960, 540}, 960, 540, "1920x1080: 16:9 in the top screen's rows, bars beyond");
-    expectRegion(400, 480, {0, 240, 400, 240}, 400, 240, "400x480: area is 5:3, original rectangle");
-    expectRegion(400, 240, {93, 120, 213, 120}, 213, 120, "400x240 minimum window: 16:9 in a 400x120 area");
-    expectRegion(800, 1200, {0, 600, 800, 480}, 800, 480, "800x1200 tall: the top screen's rows, 5:3");
-    expectRegion(860, 1000, {0, 500, 860, 500}, 860, 500, "860x1000: area between 5:3 and 16:9 is the whole view");
+    expectRegion(1920, 1080, {0, 0, 1920, 1080}, 1920, 1080, "1920x1080: widened over the whole window, the bottom screen is hidden with it");
+    expectRegion(400, 240, {0, 0, 400, 240}, 400, 240, "400x240 minimum window: the whole window");
+    expectRegion(800, 1200, {0, 360, 800, 480}, 800, 480, "800x1200 tall: 5:3 centred, bars above and below");
 
     bool rejected = false;
     try {
@@ -81,7 +79,7 @@ void widenedOn() {
     improved.setSwitch(qol::Feature::WidenedView, true);
     improved.setMaster(qol::Master::Custom);
     qol::setActiveSettings(improved);
-    expectRegion(1920, 1080, {480, 540, 960, 540}, 960, 540, "Custom with the view on: widened above the bottom screen");
+    expectRegion(1920, 1080, {0, 0, 1920, 1080}, 1920, 1080, "Custom with the view on: bottom screen hidden, widened over the whole window (user answer 2026-11-02)");
 
     improved.setMaster(qol::Master::Improved);
     qol::setActiveSettings(improved);
@@ -107,8 +105,7 @@ void otherCamerasKeepFiveByThree() {
         settings.setSwitch(qol::Feature::WidenedView, true);
         settings.setMaster(qol::Master::Custom);
         qol::setActiveSettings(settings);
-        expectRegion(1920, 1080, {510, 540, 900, 540}, 400, 240, "Custom 1920x1080: 5:3 top screen, bars at the sides", camera);
-        expectRegion(3000, 1000, {1083, 500, 834, 500}, 400, 240, "Custom 3000x1000: today's top screen rectangle", camera);
+        expectRegion(1920, 1080, {60, 0, 1800, 1080}, 400, 240, "Custom widened 1920x1080: the 5:3 picture centred, bars at the sides", camera);
 
         settings.setMaster(qol::Master::Improved);
         qol::setActiveSettings(settings);

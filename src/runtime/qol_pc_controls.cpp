@@ -10,7 +10,7 @@
 
 namespace chase::runtime {
 
-using qol::ControlsPort, qol::ReloadingControls, qol::activeControls, qol::vehicleControlsPath;
+using qol::ControlsPort, qol::ControlsSet, qol::ReloadingControls, qol::activeControls, qol::activeControlsForSet, qol::vehicleControlsPath;
 
 namespace {
 
@@ -31,8 +31,8 @@ std::vector<Binding> readVehicleBindings(const std::string& controlsFile) {
 }
 
 std::unique_ptr<ControlsPort> makeActiveControls(const std::string& controlsFile) {
-    return std::make_unique<ReloadingControls>([controlsFile]() -> std::unique_ptr<ControlsPort> {
-        auto active = activeControls(controlsFile, sdlKeyResolver, sdlKeyNamer);
+    return std::make_unique<ReloadingControls>([controlsFile](ControlsSet set) -> std::unique_ptr<ControlsPort> {
+        auto active = activeControlsForSet(controlsFile, set, sdlKeyResolver, sdlKeyNamer);
         if (!active.defaults) return std::make_unique<QolControlsBindings>(active.path);
         return std::make_unique<QolControlsBindings>(active.path, std::move(*active.defaults));
     });

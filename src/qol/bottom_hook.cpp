@@ -7,7 +7,7 @@
 
 namespace qol {
 
-bool minimapOn(const Settings& settings) { return settings.master() == Master::Improved; }
+bool minimapOn(const Settings& settings) { return settings.enabled(Feature::WidenedView); }
 
 bool bottomScreenHidden(const Settings& settings) { return minimapOn(settings); }
 

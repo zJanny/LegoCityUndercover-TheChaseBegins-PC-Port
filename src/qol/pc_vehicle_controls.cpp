@@ -1,5 +1,6 @@
 #include "qol/pc_vehicle_controls.hpp"
 
+#include "qol/active_settings.hpp"
 #include "qol/controls_merge.hpp"
 
 namespace qol {
@@ -39,6 +40,12 @@ std::string vehicleControlsPath(const std::string& controlsFile, const KeyResolv
     const std::string path = pcVehiclePathFor(controlsFile);
     keepControlsFile(path, pcVehicleDefaults(), resolveKey, nameKey);
     return path;
+}
+
+ActiveControls activeControlsForSet(const std::string& controlsFile, ControlsSet set, const KeyResolver& resolveKey, const KeyNamer& nameKey) {
+    if (set == ControlsSet::Vehicle && enabled(Feature::PcControls))
+        return {vehicleControlsPath(controlsFile, resolveKey, nameKey), pcVehicleDefaults()};
+    return activeControls(controlsFile, resolveKey, nameKey);
 }
 
 std::optional<bool> SeatedControls::update(bool pcControls, bool seated) {

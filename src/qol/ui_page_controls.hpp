@@ -15,7 +15,8 @@ enum class ControlsPageEvent {
     Changed,
     Rejected,
     NeedsConfirm,
-    NeedsSwapDialog
+    NeedsSwapDialog,
+    SetChanged
 };
 
 struct ControlsPageOutcome {
@@ -45,10 +46,15 @@ public:
     std::string promptText() const;
     std::string resetQuestion() const;
     std::string swapOtherAction() const { return port_.tab().conflictAction(); }
-    int resetRow() const { return static_cast<int>(port_.tab().rowCount()); }
+    int setRow() const { return 0; }
+    bool hasSetRow() const { return port_.hasSets(); }
+    int firstActionRow() const { return port_.hasSets() ? 1 : 0; }
+    int resetRow() const { return firstActionRow() + static_cast<int>(port_.tab().rowCount()); }
+    std::string setHint() const;
 
 private:
     ControlsPageOutcome activateCell(int row, int cell);
+    ControlsPageOutcome stepSet();
     ControlsPageOutcome assign(const std::string& source, const std::string& code);
     ControlsPageOutcome clearPromptSlot();
     ControlsPageOutcome cancel();
