@@ -13,7 +13,8 @@ chase::render::ViewRegion widenedViewRegion(const chase::render::PixelRect& area
     return chase::render::makeViewRegion(rect, layout.aspectWidth, layout.aspectHeight);
 }
 
-CameraKind cameraKindFor(bool cutsceneCamera, bool directorCamera, bool scannerCamera) {
+CameraKind cameraKindFor(bool cutsceneCamera, bool directorCamera, bool scannerCamera, bool moviePlaying) {
+    if (moviePlaying) return CameraKind::Movie;
     if (cutsceneCamera) return CameraKind::Cutscene;
     if (scannerCamera) return CameraKind::Scanner;
     return directorCamera ? CameraKind::Director : CameraKind::Gameplay;

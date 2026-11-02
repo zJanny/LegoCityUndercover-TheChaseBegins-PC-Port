@@ -923,6 +923,8 @@ struct SubtitleCue {
     std::vector<std::string> lines;
 };
 std::vector<SubtitleCue> parseSubtitles(const Bytes& data, const std::vector<std::string>& extended = {});
+// The lines of the last cue shown at `seconds` of the movie (empty between cues).
+std::vector<std::string> subtitleLinesAt(const std::vector<SubtitleCue>& cues, double seconds);
 // STAND-IN (FE-S41): the wrap width of a subtitle is 7/8 of the screen width, 280 on the 320 px bottom screen. The oracle
 // breaks four intro cues at port widths 272 (fits) and 284 (breaks), so the limit lies in 272..283; the movie player's
 // clip (0x2e1760, 0.05..0.95 of the width, 288) does not explain it.

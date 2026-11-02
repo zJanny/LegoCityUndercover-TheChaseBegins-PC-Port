@@ -125,6 +125,8 @@ public:
     // False when the movie has ended.
     bool advance(float dt);
     void draw(chase::frontend::Canvas& top, chase::frontend::Canvas& bottom);
+    // The subtitle lines at the movie's current frame (empty while no movie plays and between cues).
+    std::vector<std::string> subtitleLines() const;
 
 private:
     chase::assets::FuseArchive& archive_;

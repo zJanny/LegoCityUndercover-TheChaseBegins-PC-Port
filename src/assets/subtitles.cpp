@@ -43,6 +43,14 @@ std::uint32_t timestamp(const std::string& text, std::size_t at) {
 }
 }
 
+std::vector<std::string> subtitleLinesAt(const std::vector<SubtitleCue>& cues, double seconds) {
+    std::vector<std::string> lines;
+    const auto milliseconds = std::int64_t(seconds * 1000);
+    for (const auto& cue : cues)
+        if (milliseconds >= std::int64_t(cue.startMs) && milliseconds < std::int64_t(cue.endMs)) lines = cue.lines;
+    return lines;
+}
+
 std::vector<SubtitleCue> parseSubtitles(const Bytes& data, const std::vector<std::string>& extended) {
     std::vector<std::string> lines = splitLines(data);
     std::vector<SubtitleCue> cues;

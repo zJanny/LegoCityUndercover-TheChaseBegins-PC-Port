@@ -19,7 +19,8 @@ struct MinimapPanels {
     bool speechBox = false;
     bool sceneChange = false;
     bool fastTravelMap = false;
-    bool any() const { return scanner || dialogBox || speechBox || sceneChange || fastTravelMap; }
+    bool movie = false;
+    bool any() const { return scanner || dialogBox || speechBox || sceneChange || fastTravelMap || movie; }
 };
 
 struct MinimapPlacement {

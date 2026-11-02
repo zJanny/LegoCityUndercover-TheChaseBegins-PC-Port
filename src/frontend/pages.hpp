@@ -64,6 +64,10 @@ void drawTitleTop(Canvas& top, Resources& resources, const std::string& suffix, 
 // fitted to oracle screenshots (docs/re/front-end.md): the drawing code of the original is not read.
 void drawDialogBackground(Canvas& bottom, Resources& resources, float alpha = 1.0f);
 void drawSubtitleBubble(Canvas& bottom, Resources& resources, const std::vector<std::string>& lines);
+// The bubble of drawSubtitleBubble without the dialog background: its box in bottom-screen pixels (empty without lines), and
+// the box with its text drawn shifted by offsetX, offsetY.
+IntRect subtitleBoxRect(Resources& resources, const std::vector<std::string>& lines);
+void drawSubtitleBox(Canvas& canvas, Resources& resources, const std::vector<std::string>& lines, int offsetX, int offsetY);
 void drawLoadingTop(Canvas& top, Resources& resources);
 void drawLoadingBottom(Canvas& bottom, Resources& resources, const std::string& tip);
 // Bottom screen of the level switch loading page (manager mode 6, vtable 0x361fb4): a black page with a blue line, the

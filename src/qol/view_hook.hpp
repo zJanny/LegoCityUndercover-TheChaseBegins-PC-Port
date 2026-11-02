@@ -5,9 +5,9 @@
 
 namespace qol {
 
-enum class CameraKind { Gameplay, Cutscene, Director, Scanner };
+enum class CameraKind { Gameplay, Cutscene, Director, Scanner, Movie };
 
-CameraKind cameraKindFor(bool cutsceneCamera, bool directorCamera, bool scannerCamera);
+CameraKind cameraKindFor(bool cutsceneCamera, bool directorCamera, bool scannerCamera, bool moviePlaying);
 
 bool cameraWidens(CameraKind camera);
 

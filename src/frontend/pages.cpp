@@ -225,25 +225,48 @@ void drawDialogBackground(Canvas& bottom, Resources& resources, float alpha) {
     bottom.draw(right, {0, 0, kBottomWidth - left.width, kScreenHeight}, left.width, 0, tint);
 }
 
-void drawSubtitleBubble(Canvas& bottom, Resources& resources, const std::vector<std::string>& cueLines) {
-    drawDialogBackground(bottom, resources);
-    if (cueLines.empty()) return;
+namespace {
+
+std::vector<std::string> wrappedSubtitle(Resources& resources, const std::vector<std::string>& cueLines) {
     const BitmapFont& font = resources.font("frontendfont");
     const auto& extended = resources.extendedCharacters();
-    const std::vector<std::string> lines = assets::wrapSubtitleLines(
-        cueLines, assets::subtitleWrapWidthStandIn(kBottomWidth), [&](const std::string& text) { return textWidth(font, extended, text, 0); });
+    return assets::wrapSubtitleLines(cueLines, assets::subtitleWrapWidthStandIn(kBottomWidth),
+                                     [&](const std::string& text) { return textWidth(font, extended, text, 0); });
+}
+
+IntRect subtitleBoxFor(std::size_t lineCount) {
     const auto evenRounded = [](float value) {
         const int rounded = int(std::floor(value + 0.5f));
         return rounded + (rounded & 1);
     };
-    const float count = float(lines.size());
+    const float count = float(lineCount);
     const int half = evenRounded(count * kBubblePitch / 2);
     const int top = evenRounded(kBubbleCentreBase + kBubbleCentreStep * count) - half - kBoxEdge;
-    bottom.drawNineSlice(resources.image(kDialogBoxTexture), kBoxEdge, kBubbleX - kBoxMarginX, top,
-                         kBubbleWidth + 2 * kBoxMarginX, 2 * (half + kBoxEdge));
+    return {kBubbleX - kBoxMarginX, top, kBubbleWidth + 2 * kBoxMarginX, 2 * (half + kBoxEdge)};
+}
+
+}
+
+IntRect subtitleBoxRect(Resources& resources, const std::vector<std::string>& cueLines) {
+    if (cueLines.empty()) return {};
+    return subtitleBoxFor(wrappedSubtitle(resources, cueLines).size());
+}
+
+void drawSubtitleBox(Canvas& canvas, Resources& resources, const std::vector<std::string>& cueLines, int offsetX, int offsetY) {
+    if (cueLines.empty()) return;
+    const BitmapFont& font = resources.font("frontendfont");
+    const auto& extended = resources.extendedCharacters();
+    const std::vector<std::string> lines = wrappedSubtitle(resources, cueLines);
+    const IntRect box = subtitleBoxFor(lines.size());
+    canvas.drawNineSlice(resources.image(kDialogBoxTexture), kBoxEdge, box.x + offsetX, box.y + offsetY, box.width, box.height);
     for (std::size_t i = 0; i < lines.size(); ++i)
-        drawText(bottom, font, extended, lines[i], kBubbleX + kBubbleWidth / 2.0f, kBubbleTextY + kBubblePitch * float(i),
-                 Align::Centre, {1, 1, 1, 1}, 0, true);
+        drawText(canvas, font, extended, lines[i], kBubbleX + kBubbleWidth / 2.0f + float(offsetX),
+                 kBubbleTextY + kBubblePitch * float(i) + float(offsetY), Align::Centre, {1, 1, 1, 1}, 0, true);
+}
+
+void drawSubtitleBubble(Canvas& bottom, Resources& resources, const std::vector<std::string>& cueLines) {
+    drawDialogBackground(bottom, resources);
+    drawSubtitleBox(bottom, resources, cueLines, 0, 0);
 }
 
 void drawLoadingTop(Canvas& top, Resources& resources) {

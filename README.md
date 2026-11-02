@@ -20,7 +20,7 @@ The game data is never part of this repository. You need your own copy of the ga
 
 ![Progress trend](docs/progress-trend.svg)
 
-Updated 2026-11-02, commit 304e538e. How the numbers are measured: [docs/progress.md](docs/progress.md).
+Updated 2026-11-02, commit 7b07cf81. How the numbers are measured: [docs/progress.md](docs/progress.md).
 <!-- progress:end -->
 
 ## What you need

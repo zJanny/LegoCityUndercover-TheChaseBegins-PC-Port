@@ -597,6 +597,9 @@ void subtitles() {
     require(cues[0].lines == std::vector<std::string>{"Fran\xc3\xa7" "ais", "\xd0\xa0!"}, "subtitle text decode");
     require(cues[1].index == 7 && cues[1].lines == std::vector<std::string>{"Last"}, "subtitle without final newline");
     require(parseSubtitles(bytes("")).empty(), "empty subtitle file");
+    require(subtitleLinesAt(cues, 1.599).empty() && subtitleLinesAt(cues, 1.6) == cues[0].lines, "cue starts at its start time");
+    require(subtitleLinesAt(cues, 7.5) == cues[1].lines, "the last cue shown wins where cues overlap");
+    require(subtitleLinesAt(cues, 3723.004).empty() && subtitleLinesAt({}, 2.0).empty(), "no lines after the end or without cues");
     for (const char* bad : {"1\n00:00:01.600 --> 00:00:02,000\nx\n", "1\n00:00:01,600 -> 00:00:02,000\nx\n",
                             "1\n00:61:01,600 --> 00:62:02,000\nx\n", "1\n00:00:03,000 --> 00:00:02,000\nx\n",
                             "x\n00:00:01,000 --> 00:00:02,000\nx\n", "1\n00:00:01,000 --> 00:00:02,000\n\n",

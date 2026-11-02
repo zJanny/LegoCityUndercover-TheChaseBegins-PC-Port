@@ -107,6 +107,7 @@ void hiding() {
         {"speech box", {false, false, true, false, false}},
         {"scene change page", {false, false, false, true, false}},
         {"fast-travel map", {false, false, false, false, true}},
+        {"movie (QOLBOT-29)", {false, false, false, false, false, true}},
     };
     for (const auto& [name, open] : panels) {
         const Run panel = run(settings, open, 1920, 1080);

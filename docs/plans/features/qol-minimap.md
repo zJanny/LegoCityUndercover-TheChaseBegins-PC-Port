@@ -6,7 +6,7 @@ The map of the bottom screen as a minimap in a corner of the full-screen view. P
 
 ## 2. Status
 
-IN_PROGRESS. The round minimap is drawn from the original map canvas (20261030-qolpanels-B, 2026-10-30T15:39:42+01:00); placement under the counters and hiding in the scanner, dialog boxes, scene change page, fast-travel map and pause menu are built (20261030-qolpanels2-B); the comparison with a gameplay picture remains.
+IN_PROGRESS. The round minimap is drawn from the original map canvas (20261030-qolpanels-B, 2026-10-30T15:39:42+01:00); placement under the counters and hiding in the scanner, dialog boxes, scene change page, fast-travel map and pause menu are built (20261030-qolpanels2-B), and in movies (QOLBOT-29); the comparison with a gameplay picture remains.
 
 ## 3. Verified behaviour
 

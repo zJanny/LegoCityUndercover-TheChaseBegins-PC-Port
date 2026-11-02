@@ -94,7 +94,7 @@ inline Result run(SDL_Window* window, chase::InputState& input, chase::assets::F
         if (front.flow().done()) return result;
         front.draw(top, bottom);
         SDL_GL_GetDrawableSize(window, &width, &height);
-        if (!qol::presentFrontPanels(presenter, game_hud::pixelsOf(top), game_hud::pixelsOf(bottom), width, height))
+        if (!qol::presentFrontPanels(presenter, top, game_hud::pixelsOf(bottom), resources, front, width, height))
             presenter.present(game_hud::pixelsOf(top), game_hud::pixelsOf(bottom), width, height);
         debugOverlay.draw(input, front, width, height);
         chase::render::waitForGpu();
@@ -158,7 +158,7 @@ inline Result run(SDL_Window* window, chase::InputState& input, chase::assets::F
         front.draw(top, bottom);
         qol::drawFrontMenuButton(qolMenu, bottom, front.flow());
         SDL_GL_GetDrawableSize(window, &width, &height);
-        if (!qol::presentFrontPanels(presenter, game_hud::pixelsOf(top), game_hud::pixelsOf(bottom), width, height))
+        if (!qol::presentFrontPanels(presenter, top, game_hud::pixelsOf(bottom), resources, front, width, height))
             presenter.present(game_hud::pixelsOf(top), game_hud::pixelsOf(bottom), width, height);
         debugOverlay.draw(input, front, width, height);
         SDL_GL_SwapWindow(window);

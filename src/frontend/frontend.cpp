@@ -207,11 +207,13 @@ void FrontEnd::drawSaving(Canvas& top, Canvas& bottom) {
     drawSaveSpinner(bottom, resources_, flow_.screenSeconds(), std::min(1.0f, flow_.screenSeconds() / kSpinnerOnSeconds));
 }
 
+std::vector<std::string> FrontEnd::subtitleLines() const {
+    if (flow_.screen() != Screen::IntroMovie) return {};
+    return assets::subtitleLinesAt(cues_, flow_.movieSeconds());
+}
+
 void FrontEnd::drawIntro(Canvas& top, Canvas& bottom) {
-    std::vector<std::string> lines;
-    const auto milliseconds = std::int64_t(flow_.movieSeconds() * 1000);
-    for (const auto& cue : cues_)
-        if (milliseconds >= std::int64_t(cue.startMs) && milliseconds < std::int64_t(cue.endMs)) lines = cue.lines;
+    const std::vector<std::string> lines = subtitleLines();
     if (movies_ && flow_.screenUpdates() > 0) {
         const assets::Image& frame = movies_->frame();
         top.draw(frame, {0, 0, std::min(frame.width, kTopWidth), std::min(frame.height, kScreenHeight)}, 0, 0);

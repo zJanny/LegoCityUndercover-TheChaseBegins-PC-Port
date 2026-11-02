@@ -114,12 +114,14 @@ void otherCamerasKeepFiveByThree() {
 }
 
 void cameraKindOrder() {
-    require(qol::cameraKindFor(false, false, false) == qol::CameraKind::Gameplay, "no special camera is the gameplay camera");
-    require(qol::cameraKindFor(true, false, false) == qol::CameraKind::Cutscene, "cutscene camera");
-    require(qol::cameraKindFor(false, true, false) == qol::CameraKind::Director, "director camera");
-    require(qol::cameraKindFor(false, false, true) == qol::CameraKind::Scanner, "scanner camera");
-    require(qol::cameraKindFor(true, true, true) == qol::CameraKind::Cutscene, "cutscene wins over director and scanner, as in the draw");
-    require(qol::cameraKindFor(false, true, true) == qol::CameraKind::Scanner, "scanner wins over director, as in the draw");
+    require(qol::cameraKindFor(false, false, false, false) == qol::CameraKind::Gameplay, "no special camera is the gameplay camera");
+    require(qol::cameraKindFor(true, false, false, false) == qol::CameraKind::Cutscene, "cutscene camera");
+    require(qol::cameraKindFor(false, true, false, false) == qol::CameraKind::Director, "director camera");
+    require(qol::cameraKindFor(false, false, true, false) == qol::CameraKind::Scanner, "scanner camera");
+    require(qol::cameraKindFor(true, true, true, false) == qol::CameraKind::Cutscene, "cutscene wins over director and scanner, as in the draw");
+    require(qol::cameraKindFor(false, true, true, false) == qol::CameraKind::Scanner, "scanner wins over director, as in the draw");
+    require(qol::cameraKindFor(true, true, true, true) == qol::CameraKind::Movie, "a movie covers every camera (QOLBOT-29)");
+    require(!qol::cameraWidens(qol::CameraKind::Movie), "a movie keeps the 5:3 picture with bars (QOLBOT-29)");
 }
 
 }

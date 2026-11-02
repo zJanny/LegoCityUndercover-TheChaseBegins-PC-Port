@@ -8,6 +8,7 @@
 #include "game_screen_fade.hpp"
 #include "qol/hud_parts_hook.hpp"
 #include "qol/minimap.hpp"
+#include "qol/movie_subtitle_overlay.hpp"
 #include "qol/view_hook.hpp"
 #include "runtime/fog.hpp"
 #include "runtime/glow.hpp"
@@ -427,7 +428,7 @@ void LevelSession::draw(int width, int height) {
     if (drawPause(width, height)) return;
     if (drawAwardViewer(width, height)) return;
     const game_hud::Screens screens = game_hud::screensFor(width, height);
-    const qol::CameraKind cameraKind = qol::cameraKindFor(cutsceneHost->camera(levelScripts.cutscenes()).has_value(), levelScripts.director().busy(), scanner.viewShown());
+    const qol::CameraKind cameraKind = qol::cameraKindFor(cutsceneHost->camera(levelScripts.cutscenes()).has_value(), levelScripts.director().busy(), scanner.viewShown(), movies->playing());
     const chase::render::ViewRegion topView = qol::topViewRegion(width, height, screens.top, cameraKind);
     chase::render::beginViewRegion(width, height, topView,
                                    {backgroundColour[0] / 255.0f, backgroundColour[1] / 255.0f, backgroundColour[2] / 255.0f, 1});
@@ -541,7 +542,7 @@ void LevelSession::draw(int width, int height) {
         addObjectiveMapIcons(mapView);
         fe::drawMinimap(mapCanvas, hudResources, levelName, mapView);
         const bool fastTravelMapOpen = fastTravelState.mapButtons && fastTravelState.mapButtons->button(runtime::MapButton::Exit).disabled;
-        qol::drawRoundMinimap(mapCanvas, *overlay, {scannerOpen, levelScripts.dialogOpen(), levelScripts.text().dialogue().active, sceneChangeFlow.pageOpen(), fastTravelMapOpen}, width, height);
+        qol::drawRoundMinimap(mapCanvas, *overlay, {scannerOpen, levelScripts.dialogOpen(), levelScripts.text().dialogue().active, sceneChangeFlow.pageOpen(), fastTravelMapOpen, movies->playing()}, width, height);
     } else {
         hudCanvas.clearTransparent();
         mapCanvas.clear(0, 0, 0);
@@ -574,6 +575,7 @@ void LevelSession::draw(int width, int height) {
     }
     game_screen_fade::draw(levelScripts.screenFade(), hudCanvas, mapCanvas);
     if (movies->playing()) movies->draw(hudCanvas, mapCanvas);
+    qol::drawMovieSubtitles(hudCanvas, hudResources, movies->subtitleLines());
     overlay->draw(game_hud::pixelsOf(hudCanvas), game_hud::pixelsOf(mapCanvas), screens.top, screens.bottom, width, height);
 }
 

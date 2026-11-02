@@ -29,6 +29,8 @@ public:
     std::vector<int> takeSounds() { return flow_.takeSounds(); }
     std::vector<std::uint8_t> takeMovieAudio();
     PageTargets targets() const;
+    // The subtitle lines of the intro movie at its current time (empty on other screens and between cues).
+    std::vector<std::string> subtitleLines() const;
     void setSlotsUnselected(bool unselected) { slotsUnselected_ = unselected; }
 
 private:

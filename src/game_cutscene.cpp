@@ -294,11 +294,12 @@ void Movies::draw(fe::Canvas& top, fe::Canvas& bottom) {
         const Image& frame = host_.frame();
         top.draw(frame, {0, 0, std::min(frame.width, fe::kTopWidth), std::min(frame.height, fe::kScreenHeight)}, 0, 0);
     }
-    std::vector<std::string> lines;
-    const auto milliseconds = std::int64_t(host_.frameSeconds() * 1000);
-    for (const auto& cue : cues_)
-        if (milliseconds >= std::int64_t(cue.startMs) && milliseconds < std::int64_t(cue.endMs)) lines = cue.lines;
-    fe::drawSubtitleBubble(bottom, resources_, lines);
+    fe::drawSubtitleBubble(bottom, resources_, subtitleLines());
+}
+
+std::vector<std::string> Movies::subtitleLines() const {
+    if (!playing_) return {};
+    return chase::assets::subtitleLinesAt(cues_, host_.frameSeconds());
 }
 
 }
