@@ -1,4 +1,4 @@
-add_library(chase_qol bottom_hook.cpp settings.cpp display_tab.cpp view_layout.cpp ui_layout.cpp game_tab.cpp controls_tab.cpp window_apply.cpp controls_file.cpp active_settings.cpp menu_stores.cpp front_panel.cpp front_panel_clicks.cpp ui_nav.cpp ui_page_controls.cpp ui_page_qol.cpp controls_swap.cpp keep_settings.cpp pc_controls.cpp controls_merge.cpp pc_vehicle_controls.cpp pc_mouse_camera.cpp)
+add_library(chase_qol bottom_hook.cpp settings.cpp display_tab.cpp view_layout.cpp ui_layout.cpp game_tab.cpp controls_tab.cpp window_apply.cpp controls_file.cpp active_settings.cpp menu_stores.cpp front_panel.cpp front_panel_clicks.cpp ui_nav.cpp ui_page_controls.cpp ui_page_qol.cpp controls_swap.cpp keep_settings.cpp pc_controls.cpp controls_merge.cpp pc_vehicle_controls.cpp pc_mouse_camera.cpp slot_page_entry.cpp)
 target_link_libraries(chase_qol PUBLIC chase_input chase_assets)
 target_include_directories(chase_qol PUBLIC ${CMAKE_SOURCE_DIR}/src)
 target_compile_features(chase_qol PUBLIC cxx_std_17)

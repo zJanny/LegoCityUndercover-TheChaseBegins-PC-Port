@@ -279,3 +279,17 @@ if(TARGET chase_runtime AND TARGET chase_assets)
     "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
   set_tests_properties(qol-view-edges-real-data PROPERTIES SKIP_RETURN_CODE 77 LABELS "needs-game-data;slow")
 endif()
+
+add_executable(qol-slot-page-entry-test slot_page_entry_test.cpp)
+target_link_libraries(qol-slot-page-entry-test PRIVATE chase_qol)
+target_compile_options(qol-slot-page-entry-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME qol-slot-page-entry COMMAND qol-slot-page-entry-test)
+
+if(TARGET chase_qol_window)
+  add_executable(qol-slot-page-entry-real-test slot_page_entry_real_test.cpp)
+  target_link_libraries(qol-slot-page-entry-real-test PRIVATE chase_qol_window)
+  target_compile_options(qol-slot-page-entry-real-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME qol-slot-page-entry-real-data COMMAND qol-slot-page-entry-real-test
+    "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
+  set_tests_properties(qol-slot-page-entry-real-data PROPERTIES SKIP_RETURN_CODE 77 LABELS needs-game-data)
+endif()

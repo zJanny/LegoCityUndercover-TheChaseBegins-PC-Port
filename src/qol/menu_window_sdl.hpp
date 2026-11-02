@@ -5,7 +5,9 @@
 #include "frontend/layout.hpp"
 #include "frontend/resources.hpp"
 #include "qol/front_panel.hpp"
+#include "frontend/frontend.hpp"
 #include "qol/menu_stores.hpp"
+#include "qol/slot_page_entry.hpp"
 #include "qol/ui_menu_sdl.hpp"
 
 #include <SDL.h>
@@ -26,7 +28,7 @@ struct ButtonPlace {
 };
 
 extern const ButtonPlace frontButtonPlace;
-chase::frontend::LayoutScene frontButtonScene();
+chase::frontend::LayoutScene frontButtonScene(float highlightSeconds = 0);
 Box frontButtonBox(chase::frontend::Resources& resources);
 float frontButtonSlide(chase::frontend::Resources& resources, float seconds);
 
@@ -44,6 +46,8 @@ public:
     bool present(int width, int height);
     void open();
     bool consumeOpen(const SDL_Event& event, int windowWidth, int windowHeight);
+    bool steer(chase::frontend::FrontEnd& front, float dt, chase::frontend::FrontInput& pad);
+    bool entryFocused() const { return entry_.focused(); }
     void drawButton(chase::frontend::Canvas& bottom, const chase::frontend::Flow& flow);
 
 private:
@@ -52,6 +56,7 @@ private:
     chase::frontend::Resources& resources_;
     StoresPorts ports_;
     std::optional<Box> button_;
+    SlotPageEntry entry_;
     std::unique_ptr<UiMenuWindow> window_;
 };
 
@@ -63,6 +68,10 @@ inline bool frontMenuConsumes(FrontMenu& menu, const SDL_Event& event, SDL_Windo
 
 inline bool frontMenuPresented(FrontMenu& menu, SDL_Window* window) {
     return menu.present(window);
+}
+
+inline bool steerFrontMenuEntry(FrontMenu& menu, chase::frontend::FrontEnd& front, float dt, chase::frontend::FrontInput& pad) {
+    return menu.steer(front, dt, pad);
 }
 
 inline void drawFrontMenuButton(FrontMenu& menu, chase::frontend::Canvas& bottom, const chase::frontend::Flow& flow) {

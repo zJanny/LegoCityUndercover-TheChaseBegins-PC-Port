@@ -29,6 +29,7 @@ public:
     std::vector<int> takeSounds() { return flow_.takeSounds(); }
     std::vector<std::uint8_t> takeMovieAudio();
     PageTargets targets() const;
+    void setSlotsUnselected(bool unselected) { slotsUnselected_ = unselected; }
 
 private:
     std::string suffix() const;
@@ -47,6 +48,7 @@ private:
     Resources& resources_;
     PictureHost* movies_;
     Flow flow_;
+    bool slotsUnselected_ = false;
     Screen shown_ = Screen::Boot;
     std::vector<assets::SubtitleCue> cues_;
 };

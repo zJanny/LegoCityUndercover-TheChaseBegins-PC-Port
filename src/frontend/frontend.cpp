@@ -191,7 +191,7 @@ void FrontEnd::drawSlots(Canvas& top, Canvas& bottom) {
         rows.push_back(row);
     }
     drawSlotPage(bottom, resources_, resources_.textForKey(system, kSystemSelectSlot),
-                 resources_.textForKey(textFile("gametext"), kKeySelect), resources_.textForKey(textFile("gametext"), kKeyDelete), rows, flow_.selectedSlot(), flow_.screenSeconds(),
+                 resources_.textForKey(textFile("gametext"), kKeySelect), resources_.textForKey(textFile("gametext"), kKeyDelete), rows, slotsUnselected_ ? flow_.config().slotCount : flow_.selectedSlot(), flow_.screenSeconds(),
                  std::min(flow_.selectionSeconds(), 0.267f), flow_.confirming() ? flow_.confirmSeconds() : -1.0f);
 }
 

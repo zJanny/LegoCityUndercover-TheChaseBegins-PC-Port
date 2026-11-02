@@ -197,3 +197,10 @@ Asked of the user by the lead on 2026-10-29 after the user's playtest ([playtest
 The user asked on 2026-10-30 for a consistent rule: Left and Right are Left and Right on the arrow keys, Up and Down are Up and Down. The redesign of the same day sets it: Up and Down move between rows, Left and Right change the value or, on the tab bar, switch tabs ([qol-settings-drawing.md §2026-10-30T21:56:04](qol-settings-drawing.md#ts-20261030-215604)).
 - Gamepad: "Yes, same rule": the D-pad follows the arrow rule; the shoulder buttons switch the tabs.
 - Scope: "All menus": the same rule everywhere. The faithful menus (pause menu, Options page, other wheels) already turn with Left and Right, so nothing changes in them and the faithful game stays the default; the change is in the PC Settings menu.
+
+<a id="ts-20261102-182246"></a>
+
+## 2026-11-02T18:22:46+01:00 — The slot page "PC Settings" bar is selectable like a slot
+
+The user reported on 2026-11-02: "The PC settings menu in the save selection screen should be able to be selected just like the save slots." Built by 20261102-qolmenu-A as the same cursor moves as the slots: Down from the last slot moves onto the bar, Up goes back, no wrap (the slots do not wrap), the A press opens the menu, closing the menu keeps the cursor on the bar, a mouse click still opens it. The bar shows the slot highlight while it is selected and the slots show none. This holds in every master state, as part of the approved exception of the bar.
+- Answered by the user, 2026-11-02: the hint line of the full-size bar (QOLSET-53) is "Select or click", for example "Select or click to open the PC settings", replacing "Click with the mouse". The Down, Up and no-wrap order above stands.

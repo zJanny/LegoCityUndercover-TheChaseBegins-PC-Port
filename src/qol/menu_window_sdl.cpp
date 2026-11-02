@@ -20,6 +20,7 @@ namespace {
 
 constexpr const char* gameText = "localisation/gametext_uk.loc";
 constexpr const char* slotPageLayout = "sprites/blend/savegameflow/page_selectslot.bxaml";
+constexpr float kHighlightSeconds = 0.267f;
 constexpr const char* slotBar = "ListItem3";
 constexpr const char* slideTemplate = "ListItem2";
 constexpr const char* slotPageElements[] = {"canvas2", "canvas3", "canvas4", "canvas5", "NoticePanelBg", "canvas", "ListItem1",
@@ -48,14 +49,14 @@ std::optional<std::array<float, 2>> frontBottomPoint(int windowWidth, int window
 const char* const frontButtonLabel = "PC Settings";
 const ButtonPlace frontButtonPlace{121, 194, 0.5f};
 
-fe::LayoutScene frontButtonScene() {
+fe::LayoutScene frontButtonScene(float highlightSeconds) {
     fe::LayoutScene scene;
     for (const char* element : slotPageElements) scene.hidden.insert(element);
     for (const char* field : unusedBarFields) scene.hidden.insert(std::string(slotBar) + "/" + field);
     scene.positions[slotBar] = {0, 0};
     scene.scaleText = true;
     scene.referenceStoryboards[slotBar] = "ButtonHighlight";
-    scene.referenceTimes[slotBar] = 0;
+    scene.referenceTimes[slotBar] = highlightSeconds;
     fe::TextSlot label;
     label.text = frontButtonLabel;
     label.align = fe::Align::Left;
@@ -131,6 +132,20 @@ bool FrontMenu::consume(const SDL_Event& event, int width, int height, const fe:
     return true;
 }
 
+bool FrontMenu::steer(fe::FrontEnd& front, float dt, fe::FrontInput& pad) {
+    const fe::Flow& flow = front.flow();
+    SlotPageEntry::Keys keys;
+    keys.up = (pad.pressed & fe::kButtonUp) != 0;
+    keys.down = (pad.pressed & fe::kButtonDown) != 0;
+    keys.activate = (pad.pressed & fe::kButtonA) != 0;
+    keys.pick = pad.selectRow.has_value();
+    const SlotPageEntry::Step step = entry_.step(keys, flow.config().slotCount, flow.selectedSlot(), opensMenu(flow), dt);
+    if (step.swallow) pad.pressed &= ~(fe::kButtonUp | fe::kButtonDown | fe::kButtonA | fe::kButtonX | fe::kButtonY);
+    front.setSlotsUnselected(entry_.focused());
+    if (step.open) open();
+    return step.open;
+}
+
 void FrontMenu::open() {
     window().open();
 }
@@ -154,7 +169,7 @@ bool FrontMenu::present(int width, int height) {
 void FrontMenu::drawButton(fe::Canvas& bottom, const fe::Flow& flow) {
     if (!opensMenu(flow)) return;
     const float slide = frontButtonSlide(resources_, flow.screenSeconds());
-    fe::drawLayout(bottom, resources_, slotPageLayout, frontButtonScene(), frontButtonPlace.x + slide, frontButtonPlace.y, frontButtonPlace.scale);
+    fe::drawLayout(bottom, resources_, slotPageLayout, frontButtonScene(entry_.focused() ? std::min(entry_.seconds(), kHighlightSeconds) : 0.0f), frontButtonPlace.x + slide, frontButtonPlace.y, frontButtonPlace.scale);
 }
 
 }

@@ -148,6 +148,7 @@ inline Result run(SDL_Window* window, chase::InputState& input, chase::assets::F
             if (start && !wasStart) pad.pressed |= fe::kButtonStart;
             wasUp = up; wasDown = down; wasA = a; wasB = b; wasX = x; wasY = y; wasStart = start;
             qol::applyFrontClicks(qolClicks, pad);
+            qol::steerFrontMenuEntry(qolMenu, front, dt, pad);
             front.update(dt, pad);
             if (audio)
                 for (const int id : front.takeSounds()) audio->playUi(unsigned(id));
