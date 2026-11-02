@@ -1,7 +1,6 @@
 #include "runtime/traffic_system.hpp"
 
 #include <cstdio>
-#include <map>
 #include <stdexcept>
 #include <utility>
 
@@ -117,7 +116,7 @@ TrafficFrame TrafficSystem::makeFrame(const TrafficSystemStep& step) {
                 point.position = source.position;
                 point.direction = source.direction;
                 point.route = source.route;
-                point.speed = source.pathParameter;
+                point.pathParameter = source.pathParameter;
                 point.roomActive = source.room != 0 && pedestrianRoomActive(step.room(source.room), kTrafficCarLayerClass, step.layers);
                 frame.cell.push_back(point);
                 cellPoints_.push_back(index);
@@ -166,12 +165,12 @@ void TrafficSystem::advanceDrivers(GameRandom& random) {
 std::vector<TrafficEvent> TrafficSystem::enterScene(const TrafficSceneEnter& enter, const TrafficSystemStep& step, GameRandom& random) {
     spawns_ = {};
     points_.clear();
-    routeCount_ = 0;
-    if (enter.pregenFile) {
+    TrafficRouteTable& table = manager_.routeTable();
+    routes_ = setUpTrafficRoutes(table, enter.loadedLevels);
+    if (routes_.junctionsInReach > 0 && enter.pregenFile) {
         spawns_ = assets::parsePregenSpawns(*enter.pregenFile, assets::PregenSpawnKind::Traffic);
         const std::vector<PregenDerivedFields> fields = deriveSpawnFields(spawns_, enter.loadedLevels, enter.rooms);
         const std::vector<int> floorCells = deriveTrafficFloorCells(spawns_, enter.floor);
-        std::map<std::pair<std::size_t, std::size_t>, std::uint32_t> routeIds;
         for (std::size_t i = 0; i < spawns_.points.size(); ++i) {
             SpawnPoint point;
             point.position = {spawns_.points[i].position[0], spawns_.points[i].position[1], spawns_.points[i].position[2]};
@@ -179,20 +178,16 @@ std::vector<TrafficEvent> TrafficSystem::enterScene(const TrafficSceneEnter& ent
             point.pathParameter = spawns_.points[i].pathPosition;
             point.room = fields[i].room;
             point.floorCell = floorCells[i];
-            if (fields[i].pathFound) {
-                const std::pair<std::size_t, std::size_t> key{fields[i].levelIndex, fields[i].pathIndex};
-                auto id = routeIds.find(key);
-                if (id == routeIds.end()) id = routeIds.emplace(key, static_cast<std::uint32_t>(routeIds.size())).first;
-                point.route = id->second;
-            }
+            if (fields[i].pathFound) point.route = trafficPointRoute(table, spawns_.points[i].pathHash);
             points_.push_back(point);
         }
-        routeCount_ = routeIds.size();
+        table.loaded = true;
     }
+    applyPendingTrafficRoutes(table);
     syncCars(step);
     TrafficFrame frame = makeFrame(step);
     std::vector<TrafficEvent> events;
-    manager_.startRoom(enter.pregenFile != nullptr, static_cast<std::uint32_t>(routeCount_), frame, random, &events);
+    manager_.startRoom(frame, random, &events);
     advanceDrivers(random);
     return events;
 }

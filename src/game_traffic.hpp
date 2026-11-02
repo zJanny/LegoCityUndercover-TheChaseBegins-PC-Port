@@ -5,6 +5,7 @@
 #include "game_characters.hpp"
 #include "runtime/floor_walk.hpp"
 #include "runtime/game_random.hpp"
+#include "runtime/natives_progress.hpp"
 #include "runtime/room_streaming.hpp"
 #include "runtime/traffic_system.hpp"
 
@@ -24,6 +25,7 @@ namespace runtime = chase::runtime;
 struct SystemInputs {
     std::optional<bool> enabled;          // the last EnableTrafficAndPedestrians
     std::vector<float> maxVehicles;       // SetTrafficMaxVehicles calls since the last update
+    std::vector<runtime::TrafficPathRequest> pathRequests;  // EnableTrafficPath calls since the last update
     runtime::TrafficVec3 player{};
     runtime::TrafficVec3 camera{};
     std::function<bool(int room)> roomLoaded;
@@ -50,6 +52,7 @@ public:
     std::optional<std::size_t> carOf(const std::string& lowerInstance) const;
 
 private:
+    void applyPathRequests(const SystemInputs& inputs);
     runtime::TrafficSystemStep makeStep(const SystemInputs& inputs, assets::PlacedObjectState& state);
     void report(const std::vector<runtime::TrafficEvent>& events, const SystemInputs& inputs, assets::PlacedObjectState& state);
 

@@ -10,6 +10,7 @@
 #include "runtime/pregen_derive.hpp"
 #include "runtime/room_layers.hpp"
 #include "runtime/traffic_manager.hpp"
+#include "runtime/traffic_route_setup.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -105,7 +106,11 @@ public:
     const std::vector<TrafficCarSlot>& slots() const { return slots_; }
     const TrafficManager& manager() const { return manager_; }
     std::size_t spawnPointCount() const { return points_.size(); }
-    std::size_t routeCount() const { return routeCount_; }
+    std::size_t routeCount() const { return manager_.routeTable().routes.size(); }
+    // The junctions and the route -> junction pairs of the last scene enter (TRAFFIC-2 reads them).
+    const TrafficRoutes& routes() const { return routes_; }
+    // EnableTrafficPath (0x27bc30 -> 0x2dece4): before the scene enter a disable is queued and replayed by it.
+    void enablePath(const std::string& name, bool on) { runEnableTrafficPath(manager_.routeTable(), name, on); }
     std::size_t floorCellsFound() const;
     // The point of the loaded file that a spawn event's cell index names.
     std::size_t pointOfCell(std::size_t cellIndex) const { return cellPoints_.at(cellIndex); }
@@ -133,7 +138,7 @@ private:
     assets::PregenSpawns spawns_;
     std::vector<SpawnPoint> points_;
     std::vector<std::size_t> cellPoints_;
-    std::size_t routeCount_ = 0;
+    TrafficRoutes routes_;
 };
 
 }

@@ -139,6 +139,8 @@ void switchesAndLanguage() {
                      {"EnableTrafficAndPedestrians", {"0"}},
                      {"SetTrafficMaxVehicles", {"3"}},
                      {"SetTrafficMaxVehicles", {"7.5"}},
+                     {"EnableTrafficPath", {"Road_A", "0"}},
+                     {"EnableTrafficPath", {"Road_B", "1"}},
                      {"SetParachuteDeployHeight", {"12.5"}},
                      {"UnlockScanner", {}},
                      {"DisableSuperBuiltItSave", {"Helipad.SBPlate", "1"}},
@@ -158,6 +160,10 @@ void switchesAndLanguage() {
     ProgressNativeState& mutableNatives = runner.progressNatives();
     require(mutableNatives.takeTrafficMaxVehicles() == std::vector<float>({3.0f, 7.5f}), "SetTrafficMaxVehicles keeps each argument in call order (0x2a6d70)");
     require(mutableNatives.takeTrafficMaxVehicles().empty(), "and hands them over once");
+    const std::vector<chase::runtime::TrafficPathRequest> paths = mutableNatives.takeTrafficPathRequests();
+    require(paths.size() == 2 && paths[0].path == "road_a" && !paths[0].enable && paths[1].path == "road_b" && paths[1].enable,
+            "EnableTrafficPath keeps the path name and the second argument's truth in call order (0x27bc30: word 0 of the argument tested against 0)");
+    require(mutableNatives.takeTrafficPathRequests().empty(), "and hands them over once");
     require(natives.superBuiltItSaves().size() == 2 && natives.superBuiltItSaves()[0].instance == "helipad.sbplate" &&
                 natives.superBuiltItSaves()[0].disabled && !natives.superBuiltItSaves()[1].disabled,
             "DisableSuperBuiltItSave stores bit 0 of the argument");
@@ -178,13 +184,13 @@ void switchesAndLanguage() {
 }
 
 void supportClasses() {
-    for (const char* name : {"CountRacesWon", "IsRacingCarAwarded", "UnlockLevel", "GetCharacterUnlocked", "IsRedbrickBought"})
+    for (const char* name : {"CountRacesWon", "IsRacingCarAwarded", "UnlockLevel", "GetCharacterUnlocked", "IsRedbrickBought", "EnableTrafficPath"})
         require(chase::runtime::scriptFunctionSupport(name) == ScriptFunctionSupport::Implemented, name);
     for (const char* name : {"AddStuds", "UnlockAbility", "LockAbility", "UnlockCharacter", "LockCharacter", "GiveReward", "QuickSave", "SetRaceWon", "AwardRacingCar",
                              "EnableStudsByGroup", "GetLanguage", "GetPlayerNumber", "UnlockScanner", "SetRaceInProgress", "EnableSuperBricks", "EnableTrafficAndPedestrians", "SetTrafficMaxVehicles",
                              "SetParachuteDeployHeight", "DisableSuperBuiltItSave"})
         require(chase::runtime::scriptFunctionSupport(name) == ScriptFunctionSupport::StandIn, name);
-    require(chase::runtime::progressNativeNames().size() == 24, "24 natives in the batch");
+    require(chase::runtime::progressNativeNames().size() == 25, "25 natives in the batch");
 }
 }
 

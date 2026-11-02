@@ -32,6 +32,13 @@ TrafficFrame openFrame(TrafficManager& manager) {
     return frame;
 }
 
+void startWithOneRoute(TrafficManager& manager, const TrafficFrame& frame, GameRandom& random) {
+    manager.routeTable().routes = {0x1111u};
+    manager.routeTable().enabled = {true};
+    manager.routeTable().loaded = true;
+    manager.startRoom(frame, random, nullptr);
+}
+
 void levelLoad() {
     GameRandom random(1);
     TrafficManager manager;
@@ -101,7 +108,7 @@ void countdown() {
     GameRandom random(5);
     TrafficManager manager;
     manager.loadLevel(10, std::nullopt, random);
-    manager.startRoom(true, 1, TrafficFrame{}, random, nullptr);
+    startWithOneRoute(manager, TrafficFrame{}, random);
     require(manager.countdown() == 0, "a prefill without spawn points leaves the countdown at 0 (0x2dedec, failed spawns at 0x2dffe4 keep it)");
     TrafficFrame frame = openFrame(manager);
     const std::vector<unsigned> at = spawnUpdates(manager, frame, random, 60);
@@ -115,7 +122,7 @@ void prefillCount() {
     TrafficManager manager;
     manager.loadLevel(10, 10u, random);
     TrafficFrame frame = openFrame(manager);
-    manager.startRoom(true, 1, frame, random, nullptr);
+    startWithOneRoute(manager, frame, random);
     const auto live = std::count_if(manager.cars().begin(), manager.cars().end(), [](const TrafficCar& c) { return !c.disabled; });
     require(live == 6, "64 prefill updates with a limit of 10 spawn at updates 0, 3, 12, 24, 42 and 63: six cars");
     require(!manager.prefilling(), "the prefill byte +0xda4 is cleared after the 64 updates");
@@ -126,7 +133,7 @@ void disableRemovesAll() {
     TrafficManager manager;
     manager.loadLevel(6, std::nullopt, random);
     TrafficFrame frame = openFrame(manager);
-    manager.startRoom(true, 1, frame, random, nullptr);
+    startWithOneRoute(manager, frame, random);
     manager.cars()[manager.order().back()].pinned = true;
     manager.setEnabled(false);
     std::vector<TrafficEvent> events;
@@ -142,7 +149,7 @@ TrafficManager drivingManager(GameRandom& random, TrafficFrame& frame) {
     manager.loadLevel(3, std::nullopt, random);
     frame = TrafficFrame{};
     frame.bands = {TrafficSpawnBand{10.0f, 400.0f}, TrafficSpawnBand{10.0f, 400.0f}, TrafficSpawnBand{10.0f, 400.0f}};
-    manager.startRoom(true, 1, frame, random, nullptr);
+    startWithOneRoute(manager, frame, random);
     for (TrafficCar& car : manager.cars()) {
         car.disabled = false;
         car.driveState = 2;
@@ -260,15 +267,15 @@ void spawnRule() {
     frame.bands = {TrafficSpawnBand{20.0f, 100.0f}, TrafficSpawnBand{20.0f, 100.0f}, TrafficSpawnBand{20.0f, 100.0f}};
     frame.cell.push_back({{10.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, 0u, 8.0f, true});
     TrafficFrame prefill = frame;
-    manager.startRoom(true, 1, prefill, random, nullptr);
+    startWithOneRoute(manager, prefill, random);
     require(!manager.cars()[0].disabled || !manager.cars()[1].disabled, "the prefill band starts at 0 m: a point 10 m from the player spawns (0x2df0e4..0x2df0ec)");
     require(manager.cars()[manager.order().back()].driveStage == 1 && manager.cars()[manager.order().back()].aiDriven &&
-                manager.cars()[manager.order().back()].cruiseSpeed == 8.0f,
-            "a spawned car gets driver +0x79 = 1, +0x78 = 0, +0xaf bit 0 and the point's speed in +0x64 (0x2df224..0x2df264, 0x2df384)");
+                manager.cars()[manager.order().back()].pathParameter == 8.0f,
+            "a spawned car gets driver +0x79 = 1, +0x78 = 0, +0xaf bit 0 and the point's path parameter in +0x64 (0x2df224..0x2df264, 0x2df384)");
 
     TrafficManager plain;
     plain.loadLevel(2, std::nullopt, random);
-    plain.startRoom(true, 1, TrafficFrame{}, random, nullptr);
+    startWithOneRoute(plain, TrafficFrame{}, random);
     require(!plain.trySpawn(0, frame, random, nullptr), "outside the prefill 10 m is below 0.7 x near = 14 m (0x2df0f4..0x2df124)");
     frame.cell[0].position = {170.0f, 0.0f, 0.0f};
     require(plain.trySpawn(0, frame, random, nullptr), "170 m lies inside 14 m .. 1.75 x far = 175 m");

@@ -35,9 +35,10 @@ enum class ProgressNativeKind {
     UnlockScanner,
     EnableTrafficAndPedestrians,
     SetTrafficMaxVehicles,
+    EnableTrafficPath,
 };
 
-// Argument shape: `values` leading arguments are read as numbers (object first for DisableSuperBuiltItSave), a getter
+// Argument shape: `values` leading arguments are read as numbers (object first for DisableSuperBuiltItSave and EnableTrafficPath), a getter
 // has one more argument, the variable it writes.
 struct ProgressNativeShape {
     unsigned values = 0;
@@ -73,6 +74,11 @@ struct StudGroupRequest {
 struct ObjectSuperBuiltItSave {
     std::string instance;
     bool disabled = false;
+};
+
+struct TrafficPathRequest {
+    std::string path;
+    bool enable = false;
 };
 
 struct ProgressNativeResult {
@@ -116,6 +122,8 @@ public:
     std::optional<bool> trafficAndPedestriansEnabled() const { return trafficAndPedestrians_; }
     // SetTrafficMaxVehicles 0x2a6d70: the argument of each call, in call order, until the traffic system takes them.
     std::vector<float> takeTrafficMaxVehicles() { return std::exchange(trafficMaxVehicles_, {}); }
+    // EnableTrafficPath 0x27bc30: the path name and the second argument (non-zero enables) of each call, in call order, until the traffic system takes them.
+    std::vector<TrafficPathRequest> takeTrafficPathRequests() { return std::exchange(trafficPathRequests_, {}); }
     const std::vector<ObjectSuperBuiltItSave>& superBuiltItSaves() const { return superBuiltItSaves_; }
     unsigned outOfRangeAccesses() const { return outOfRange_; }
 
@@ -139,6 +147,7 @@ private:
     bool scannerUnlocked_ = false;
     std::optional<bool> trafficAndPedestrians_;
     std::vector<float> trafficMaxVehicles_;
+    std::vector<TrafficPathRequest> trafficPathRequests_;
     std::vector<ObjectSuperBuiltItSave> superBuiltItSaves_;
 };
 

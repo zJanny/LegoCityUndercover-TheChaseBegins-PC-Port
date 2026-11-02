@@ -3,6 +3,7 @@
 // 0x2def8c, fade 0x2df8b8, SetTrafficMaxVehicles 0x2a6d70 / 0x286ca4 (docs/re/traffic.md). No SDL dependency. The level's Traffic%02u vehicles,
 // spawn points, fade bounds and the per-car facts the update reads are supplied by the caller.
 #include "runtime/game_random.hpp"
+#include "runtime/traffic_route.hpp"
 
 #include <array>
 #include <cstddef>
@@ -26,12 +27,12 @@ constexpr float kTrafficSpawnFarScale = 1.75f;
 constexpr std::uint8_t kTrafficOpaque = 255;
 constexpr std::uint8_t kTrafficFadeKeepLimit = 32;
 
-// One entry of a spawn cell (pregen node: +0 position, +0xc direction, +0x18 route, +0x20 speed, +0x24 room).
+// One entry of a spawn cell (pregen node: +0 position, +0xc direction, +0x18 route, +0x20 path parameter, +0x24 room).
 struct TrafficSpawnPoint {
     TrafficVec3 position{};
     TrafficVec3 direction{};
     std::optional<std::uint32_t> route;
-    float speed = 0.0f;
+    float pathParameter = 0.0f;
     // The room test of 0x2def8c: room object +0x24 set, 0x2284bc and the layer table 0x1ffbd8 for the car's byte +0x18.
     bool roomActive = true;
 };
@@ -59,7 +60,7 @@ struct TrafficCar {
     std::uint8_t driveStage = 0;     // driver +0x79
     bool keepWhenFar = false;        // driver +0xad
     float driveValue = 0.0f;         // driver +0x68
-    float cruiseSpeed = 0.0f;        // driver +0x64, the point's speed at the spawn
+    float pathParameter = 0.0f;      // driver +0x64, the point's path parameter (+0x20) at the spawn
     std::optional<std::uint32_t> route;  // driver +4
     float despawnRadius = 0.0f;      // 0x26e130
     unsigned lodClass = 0;           // 0x28781c of the car's node
@@ -98,8 +99,9 @@ public:
     // count pairs of draws of 0x235498, every car faded in, disabled.
     void loadLevel(std::size_t carCount, std::optional<std::uint32_t> maxVehiclesAttribute, GameRandom& random);
 
-    // 0x2dedbc after 0x2df574 found the routes and loaded the pregen data (bit 0 of +0x390): countdown 0, 64 updates with the player as focus.
-    void startRoom(bool routesLoaded, std::uint32_t routeCount, const TrafficFrame& frame, GameRandom& random, std::vector<TrafficEvent>* events);
+    // 0x2dedbc after 0x2df574 found the routes and loaded the pregen data (bit 0 of routeTable().loaded): countdown 0, 64 updates with the
+    // player as focus.
+    void startRoom(const TrafficFrame& frame, GameRandom& random, std::vector<TrafficEvent>* events);
 
     // 0x2dfe88.
     void update(const TrafficFrame& frame, GameRandom& random, std::vector<TrafficEvent>* events);
@@ -108,8 +110,11 @@ public:
     void setEnabled(bool on) { enabled_ = on; }
     bool enabled() const { return enabled_; }
     // 0x2dfe78 clears bit 0.
-    void unloadRoutes() { routesLoaded_ = false; }
-    bool routesLoaded() const { return routesLoaded_; }
+    void unloadRoutes() { routes_.loaded = false; }
+    bool routesLoaded() const { return routes_.loaded; }
+    // The route list +0xc4, bit set +0x2c4, pending list +0xb9c and bit 0 of +0x390; a spawn point's route is its index in the list.
+    TrafficRouteTable& routeTable() { return routes_; }
+    const TrafficRouteTable& routeTable() const { return routes_; }
 
     // 0x2a6d70: the argument converted by vcvt.s32, then 0x286ca4 limits it (unsigned) to the car count.
     void setMaxVehicles(float argument);
@@ -137,11 +142,10 @@ private:
     std::vector<TrafficCar> cars_;
     std::vector<std::uint32_t> order_;
     std::vector<std::uint8_t> fades_;
-    std::vector<bool> routes_;
+    TrafficRouteTable routes_;
     std::uint32_t maxVehicles_ = 0;
     std::uint32_t countdown_ = 0;
     bool enabled_ = true;
-    bool routesLoaded_ = false;
     bool prefill_ = false;
 };
 

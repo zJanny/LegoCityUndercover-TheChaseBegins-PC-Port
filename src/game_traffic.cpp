@@ -39,6 +39,13 @@ runtime::TrafficSystemStep LevelTraffic::makeStep(const SystemInputs& inputs, as
     return step;
 }
 
+void LevelTraffic::applyPathRequests(const SystemInputs& inputs) {
+    for (const runtime::TrafficPathRequest& request : inputs.pathRequests) {
+        system_.enablePath(request.path, request.enable);
+        std::cout << "traffic: path " << request.path << (request.enable ? " enabled" : " disabled") << " at update " << inputs.update << '\n';
+    }
+}
+
 void LevelTraffic::report(const std::vector<runtime::TrafficEvent>& events, const SystemInputs& inputs, assets::PlacedObjectState& state) {
     for (const runtime::TrafficEvent& event : events) {
         const std::string& name = system_.slots()[event.car].instance;
@@ -61,6 +68,7 @@ void LevelTraffic::report(const std::vector<runtime::TrafficEvent>& events, cons
 void LevelTraffic::enterScene(assets::FuseArchive& archive, const assets::Level& level, const std::string& levelName, const runtime::StreamRooms* rooms,
                               const std::map<int, runtime::RoomBox>* boxes, int currentRoom, const runtime::FloorMesh* floor, const SystemInputs& inputs,
                               assets::PlacedObjectState& state) {
+    applyPathRequests(inputs);
     runtime::TrafficSceneEnter enter;
     enter.loadedLevels = {&level};
     if (const assets::FuseEntry* entry = archive.find(assets::pregenSpawnPath(assets::PregenSpawnKind::Traffic, levelName))) {
@@ -78,6 +86,7 @@ void LevelTraffic::enterScene(assets::FuseArchive& archive, const assets::Level&
 
 void LevelTraffic::updateSystem(const SystemInputs& inputs, assets::PlacedObjectState& state) {
     if (inputs.enabled) system_.setEnabled(*inputs.enabled);
+    applyPathRequests(inputs);
     if (!inputs.maxVehicles.empty()) {
         for (const float value : inputs.maxVehicles) system_.setMaxVehicles({value});
         std::cout << "traffic: limit " << system_.manager().maxVehicles() << " at update " << inputs.update << '\n';
@@ -119,6 +128,7 @@ game_traffic::SystemInputs LevelSession::trafficInputs() {
     game_traffic::SystemInputs inputs;
     inputs.enabled = levelScripts.progressNatives().trafficAndPedestriansEnabled();
     inputs.maxVehicles = levelScripts.progressNatives().takeTrafficMaxVehicles();
+    inputs.pathRequests = levelScripts.progressNatives().takeTrafficPathRequests();
     inputs.player = {player->position()[0], player->position()[1], player->position()[2]};
     inputs.camera = {follow->eye()[0], follow->eye()[1], follow->eye()[2]};
     inputs.roomLoaded = [this](int room) { return roomShown(room); };

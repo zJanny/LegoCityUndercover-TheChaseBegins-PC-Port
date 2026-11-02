@@ -65,8 +65,26 @@ assets::LevelParam floatParameter(const std::string& name, float value) {
     return param;
 }
 
+assets::LevelParam bytesParameter(const std::string& name, std::vector<std::uint8_t> bytes) {
+    assets::LevelParam param;
+    param.hash = assets::nameHash(name);
+    param.type = 2;
+    param.blocks.push_back(std::move(bytes));
+    return param;
+}
+
+assets::LevelObject junction(const std::string& input) {
+    assets::LevelObject result;
+    result.className = "props/traffic_junction";
+    result.instance = "Junction01";
+    result.params.push_back(bytesParameter("initialposition", std::vector<std::uint8_t>(12, 0)));
+    result.params.push_back(bytesParameter("InputPath01", std::vector<std::uint8_t>(input.begin(), input.end())));
+    return result;
+}
+
 assets::Level syntheticLevel() {
     assets::Level level;
+    level.objects.push_back(junction("RouteA"));
     for (const char* name : {"Traffic01", "Traffic02", "Traffic03"}) level.objects.push_back(car(name));
     level.defaults.push_back(floatParameter("Traffic_MaxVehicles", 2.0f));
     assets::LevelPath path;
@@ -238,6 +256,34 @@ void synthetic() {
     third.loadLevel(level, [](const assets::LevelObject&) { return 0.0f; }, thirdRandom);
     const std::vector<TrafficEvent> refused = third.enterScene(enter, stepAt(refusing, {10, 0, 60}), thirdRandom);
     require(count(refused, TrafficEventKind::Spawn) == 0 && !refusing.enabled[0], "a refused placement spawns nothing");
+
+    World closed;
+    closed.enabled.assign(3, false);
+    TrafficSystem fourth;
+    GameRandom fourthRandom(0x77u);
+    fourth.loadLevel(level, [](const assets::LevelObject&) { return 0.0f; }, fourthRandom);
+    fourth.enablePath("routea", false);
+    const TrafficSystemStep closedStep = stepAt(closed, {10, 0, 60});
+    const std::vector<TrafficEvent> disabledAtLoad = fourth.enterScene(enter, closedStep, fourthRandom);
+    require(fourth.manager().routesLoaded() && count(disabledAtLoad, TrafficEventKind::Spawn) == 0 && !fourth.manager().routeTable().enabled[0],
+            "a disable queued before the scene enter is replayed by it and no car spawns on that route (0x2dedbc, 0x2def8c route bit)");
+    fourth.enablePath("ROUTEA", true);
+    std::size_t spawnedLater = 0;
+    for (int i = 0; i < 10; ++i) spawnedLater += count(fourth.update(closedStep, fourthRandom), TrafficEventKind::Spawn);
+    require(spawnedLater > 0, "EnableTrafficPath(route, 1) after the load lets cars spawn on it again");
+
+    assets::Level withoutJunction = level;
+    withoutJunction.objects.erase(withoutJunction.objects.begin());
+    TrafficSceneEnter plainEnter = enter;
+    plainEnter.loadedLevels = {&withoutJunction};
+    World plainWorld;
+    plainWorld.enabled.assign(3, false);
+    TrafficSystem fifth;
+    GameRandom fifthRandom(0x77u);
+    fifth.loadLevel(level, [](const assets::LevelObject&) { return 0.0f; }, fifthRandom);
+    const std::vector<TrafficEvent> noJunctions = fifth.enterScene(plainEnter, stepAt(plainWorld, {10, 0, 60}), fifthRandom);
+    require(!fifth.manager().routesLoaded() && fifth.spawnPointCount() == 0 && noJunctions.empty(),
+            "without a junction within reach the route list is empty, bit 0 stays clear and the pregen data is not loaded (0x2df574)");
 }
 
 struct Measured {

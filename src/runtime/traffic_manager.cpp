@@ -74,10 +74,7 @@ void TrafficManager::loadLevel(std::size_t carCount, std::optional<std::uint32_t
     order_.resize(carCount);
 }
 
-void TrafficManager::startRoom(bool routesLoaded, std::uint32_t routeCount, const TrafficFrame& frame, GameRandom& random,
-                               std::vector<TrafficEvent>* events) {
-    routes_.assign(routeCount, true);
-    routesLoaded_ = routesLoaded;
+void TrafficManager::startRoom(const TrafficFrame& frame, GameRandom& random, std::vector<TrafficEvent>* events) {
     countdown_ = 0;
     prefill_ = true;
     for (unsigned i = 0; i < kTrafficPrefillUpdates; ++i) update(frame, random, events);
@@ -91,11 +88,13 @@ void TrafficManager::setMaxVehicles(float argument) {
 }
 
 void TrafficManager::setRouteEnabled(std::uint32_t route, bool on) {
-    if (route >= routes_.size()) routes_.resize(route + 1, false);
-    routes_[route] = on;
+    if (route >= routes_.enabled.size()) routes_.enabled.resize(route + 1, false);
+    routes_.enabled[route] = on;
 }
 
-bool TrafficManager::routeEnabled(std::uint32_t route) const { return route < routes_.size() && routes_[route]; }
+bool TrafficManager::routeEnabled(std::uint32_t route) const {
+    return route < routes_.routes.size() && route < routes_.enabled.size() && routes_.enabled[route];
+}
 
 void TrafficManager::despawnCar(std::size_t car, std::vector<TrafficEvent>* events) {
     cars_[car].disabled = true;
@@ -155,7 +154,7 @@ bool TrafficManager::trySpawn(std::size_t car, const TrafficFrame& frame, GameRa
         spawned.driveState = 0;
         spawned.aiDriven = true;
         spawned.route = point.route;
-        spawned.cruiseSpeed = point.speed;
+        spawned.pathParameter = point.pathParameter;
         if (frame.place && !frame.place(car, point)) return false;
         spawned.disabled = false;
         if (events) events->push_back({TrafficEventKind::Spawn, car, fades_[car], pointIndex});
@@ -173,7 +172,7 @@ void TrafficManager::update(const TrafficFrame& frame, GameRandom& random, std::
         }
         return;
     }
-    if (!routesLoaded_) return;
+    if (!routes_.loaded) return;
 
     std::uint32_t live = 0;
     for (const TrafficCar& car : cars_)

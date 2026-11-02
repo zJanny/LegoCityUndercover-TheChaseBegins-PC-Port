@@ -6,6 +6,7 @@ Subtopic of [traffic.md](traffic.md): the junction routes (route list, EnableTra
 
 - The AI driver 0x26d934 switches on driver +0x78 (states 2 to 8). States 2 and 3 run the obstacle stop rule. State 5 steers 8 m ahead along the route. State 8 steers back to driver +0x18 and puts the car back on the route when it faces away. States 4, 6 and 7 give no input. [traffic.md §2026-10-20T11:18:14](traffic.md#ts-20261020-111814), [§2026-10-25T12:26:09](#ts-20261025-122609)
 - The routes are the input and output paths of the `props/traffic_junction` objects within 9000 of the origin (0x2df574). EnableTrafficPath (0x2dece4) sets or clears a route's bit, or, before the routes are loaded, queues a disable in the pending list +0xb9c, which the room set-up replays. 0x2dfc84 pairs each route with the junctions it enters and leaves; 0x20ff40 gives the driver's junction. [§2026-10-25T12:19:38](#ts-20261025-121938)
+- The port wires the routes into the traffic system: the junction objects of the level, the route list with the manager's bit set, a pregen point's route as its index in the list (no spawn without a junction within 9000), the pending replay and the native EnableTrafficPath (disables before the scene enter are queued). Junction lanes are not read. [§2026-11-02T23:46:29](#ts-20261102-234629)
 - The path follower 0x2bf2ec takes, from the pregen cell under a point 8 units ahead of the car, the nearest point on an enabled route whose direction is less than 60 degrees off the car's forward axis, and returns its route, position and path parameter (point +0x20 and driver +0x64 are the parameter, not a speed). The route type function (table 0x3581d4) then samples the route there; all shipped routes are open type 0 paths (0x1c17c0). [§2026-10-25T12:19:38](#ts-20261025-121938)
 - The junction test 0x2cdde4 stops a car on a junction lane while a lane paired with it in the junction's conflict list is listed at +0x284. [§2026-10-25T12:19:38](#ts-20261025-121938)
 - Driver +0x78 is written only by the spawn (0) and by the state change 0x1cb148. Each update the vehicle update runs 0x1cb148, which copies the request +0x79 into +0x78. After a spawn this gives 0 → 1 → 2, one update per step (code and servant). State 3 (junction, next route +8) follows from 2 at the route end. State 4 follows a contact, 7 destroys the car, and 6 leads to 7 after the car has stood for 90 updates. [§2026-10-25T12:26:09](#ts-20261025-122609)
@@ -15,6 +16,8 @@ Subtopic of [traffic.md](traffic.md): the junction routes (route list, EnableTra
 <a id="ts-20261025-121938"></a>
 
 ## 2026-10-25T12:19:38+01:00 — Route list, EnableTrafficPath, the path follower 0x2bf2ec, the route type function, junction pairs and the junction test 0x2cdde4 (llvm-objdump only, no REA session, no emulator)
+
+Corrected by [traffic-ai-driver.md §2026-11-02T23:46:29](#ts-20261102-234629): the routes are wired into the traffic system (the "Not wired" line of the Port paragraph no longer holds).
 
 [Corrects traffic.md §2026-10-20T11:18:14](traffic.md#ts-20261020-111814): the "route objects" of 0x2df574 are the `props/traffic_junction` objects; point +0x20 and driver +0x64 are the path parameter, not a speed; there are two route → junction lists.
 
@@ -130,3 +133,25 @@ Unknowns:
 - The junction choice 0x2cb1e8 (signal connection table +0x418 / +0x310, which output becomes driver +8), the signal queue 0x22a080 (the junction test 0x2cdde4 is read in [§2026-10-25T12:19:38](#ts-20261025-121938)), and the list of 0x230dbc / 0x230e60 (who sets +0xaf bit 4).
 - The state 6 calls 0x229be4, 0x23cee8 and 0x22a124 (0x11f), 0x1bc660, 0x2308e4, 0x20ae2c and 0x20362c. Who writes +0xaf bits 1 and 2. What 0x2c87a8 tests.
 - The other creators of a driver record (stores to +0x2a4 at 0x1afe50, 0x262794, 0x290de8, 0x2a60c4); which cars they serve is not read.
+
+<a id="ts-20261102-234629"></a>
+
+## 2026-11-02T23:46:29+01:00 — The routes wired into the traffic system: junction list, route index of a point, EnableTrafficPath (llvm-objdump re-read of 0x27bc30 and 0x2a7004, no REA session, no emulator)
+
+[Corrects traffic-ai-driver.md §2026-10-25T12:19:38](#ts-20261025-121938): the routes are no longer "not wired"; the manager's route bits are the `TrafficRouteTable` bit set. [Corrects traffic.md §2026-10-25T12:35:43](traffic.md#ts-20261025-123543): the port numbers the points' paths by the route list, not by first use.
+
+Method: `llvm-objdump -d --triple=armv6k-none-eabi --mattr=+vfp2` on `artifacts/game/game.arm.elf` for the native handler, worker 20261102-traffic-A; the rest is the port's own wiring over the code read in the entry above. Port: `src/runtime/traffic_route_setup.*` (own file), `TrafficManager::routeTable`, `TrafficSystem::enablePath` / `routes`, the native in `natives_progress.*`; tests `traffic-route-setup`, `traffic-route-setup-real-data`, `traffic-system`, `traffic-manager`, `natives-progress`, `game-traffic`, `game-traffic-path`.
+
+**The native.** The script function list (`levels/scriptfns.txt`) gives EnableTrafficPath two arguments: a `path` ("traffic path") and a number (1 = enable, 0 = disable). Handler 0x27bc30 reads word 0 of the second argument and calls 0x2a7004(first argument word, word != 0), which tail-calls 0x2dece4 with the traffic manager 0x527410. The port names the path by its name hash (case-insensitive, as every path name) and takes the second argument as its truncated integer.
+
+**What the port does now.**
+- The junction list (global list 0x515f40) is taken from the objects of class `props/traffic_junction` of the loaded levels (`trafficJunctions`): `initialposition`, `InputPath01..08`, `OutputPath01..08` (name hashes, empty slots skipped).
+- The room set-up runs the route part of 0x2df574 (`collectTrafficRoutes`) and the pairs 0x2dfc84 (`linkTrafficRouteSignals`). Only with at least one junction within 9000 does it load the pregen file and set bit 0 (`table.loaded`); without a junction nothing spawns, as the original returns before the pregen load. Then the pending list is replayed (0x2dedbc).
+- A pregen point's route is the index of its path in the route list (path record +0x24 as 0x2df574 writes it), replacing the port's earlier numbering by first use. The spawn test reads the bit of that index. Every shipped traffic point lies on a listed path, so no shipped point is skipped. The route counts per shipped level (lvl_01 58, lvl_03 31, lvl_04 3, lvl_05 5, lvl_06 4, lvl_07 40, test playground 14) are those of the entry above, reproduced by the setup test; `chase-game` in lvl_01 now prints 58 routes where it printed 57 numbered paths before.
+- EnableTrafficPath calls are recorded by the progress natives and handed to the traffic system in call order before its next scene enter or update. Calls before the scene enter are queued (disables) and replayed by it, as 0x2dece4 does with bit 0 clear. Example in the shipped data: `3-7_MissionStart` of lvl_03 disables `RoadPath27` to `RoadPath30` before the traffic set-up (run of `chase-game`, 20261102-traffic-A).
+
+Stand-ins: TRAFFIC-S9 (junction lanes, conflicts and listed lanes are not read, so `trafficJunctionAllowsCar` never stops a car), TRAFFIC-S10 (every junction object of the level is taken, where the original's list holds the created objects only; the native's calls take effect at the next traffic update, not at the call).
+
+Unknowns:
+- The initial value of path record +0x24 in the level files and what a spawn does for a path outside the list (TRAFFIC-14).
+- Which junction objects the global list holds (creation flags, rooms not streamed in) and whether a native call and the traffic update can interleave inside one frame (TRAFFIC-15).
