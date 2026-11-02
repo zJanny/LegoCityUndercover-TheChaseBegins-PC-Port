@@ -2166,17 +2166,19 @@ if(BUILD_TESTING)
       --start "715.44196 32.71405 641.61597" --facing -5.1416 --script "0 0 2;0 0 1 Y;0 0 20")
     set_tests_properties(game-script-attack-table PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
       PASS_REGULAR_EXPRESSION "attack: message 62 to donuttable_14 at update 3.*attack: hit donuttable_14 \\(message 0, damage 1\\) at update 7.*attack: ended at update 17")
-    # A Y tap 1.5 m from 1-4_AI_Goon_01 (level data position (552.138, 38.946, 980.847)), Chase facing away from it: the grab search finds the bad
+    # A Y tap 1.5 m from 1-4_AI_Goon_07 (level data position (564.267, 35.741, 948.434)), Chase facing away from it: the grab search finds the bad
     # guy all around and starts a fight move on it (0x1fdbd4 -> 0x1d3980, docs/re/player-attack.md; read from the code by 20261101-mission-D on
     # 2026-11-01). No message 62 goes to the goon: oracle 20261101-mission-D-1, recorded from a save state of mission 1-4 (no 0x244fc8 call with 62).
+    # The goon is held by 1-4_Spawner_06 until 1-4_SO_Phase1 triggers it (released in update 2, SCRIPT-410; the spawner of goon 01 is never
+    # triggered, docs/re/scripts-missions-1-4-spawners.md); the update numbers are the port's.
     add_test(NAME game-script-attack-goon COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
       --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes
-      --start "552.138 38.946 979.347" --facing 3.1416 --script "0 0 2;0 0 1 Y;0 0 2")
+      --call-script 1-4_SO_Phase1 --start "564.267 35.741 946.934" --facing 3.1416 --script "0 0 4;0 0 1 Y;0 0 2")
     set_tests_properties(game-script-attack-goon PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
-      PASS_REGULAR_EXPRESSION "attack: 99 characters, 8 fight moves.*attack: fight move [0-7] on character 1-4_ai_goon_01 \\(state 227\\) at update 3.*attack: state 163 clip (261|437|453|467|469|471|473|475) at update 3"
-      FAIL_REGULAR_EXPRESSION "attack: message 62 to 1-4_ai_goon_01")
+      PASS_REGULAR_EXPRESSION "attack: 99 characters, 8 fight moves.*ai spawner 1-4_spawner_06: spawned 1-4_ai_goon_07 \\(slot 0, 1/3\\) at update 2.*attack: fight move [0-7] on character 1-4_ai_goon_07 \\(state 227\\) at update 5.*attack: state 163 clip (261|437|453|467|469|471|473|475) at update 5"
+      FAIL_REGULAR_EXPRESSION "attack: message 62 to 1-4_ai_goon_07")
     # Five Y taps (15 updates apart) from the same spot: every hit lowers the table's WobbleHealth 5 by the damage 1 (oracle: 4, 3, 2, 1, 0 after the five
     # punches), the fifth destroys DonutTable_14 and DonutTable_14_Script runs in the update of the destroy (docs/re/props-wobbly-bouncer.md).
     add_test(NAME game-script-wobbly-table COMMAND chase-game
@@ -2480,6 +2482,32 @@ add_executable(ai-driver-input-test tests/ai_driver_input_test.cpp)
 target_link_libraries(ai-driver-input-test PRIVATE chase_runtime)
 target_compile_options(ai-driver-input-test PRIVATE -Wall -Wextra -Wpedantic)
 add_test(NAME ai-driver-input COMMAND ai-driver-input-test)
+
+target_sources(chase_runtime PRIVATE src/runtime/ai_spawner.cpp)
+add_executable(ai-spawner-test tests/ai_spawner_test.cpp)
+target_link_libraries(ai-spawner-test PRIVATE chase_runtime chase_assets)
+target_compile_options(ai-spawner-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME ai-spawner COMMAND ai-spawner-test)
+add_executable(ai-spawner-real-test tests/ai_spawner_real_test.cpp)
+target_link_libraries(ai-spawner-real-test PRIVATE chase_runtime chase_assets)
+target_compile_options(ai-spawner-real-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME ai-spawner-real-data COMMAND ai-spawner-real-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
+set_tests_properties(ai-spawner-real-data PROPERTIES SKIP_RETURN_CODE 77)
+set_property(TEST ai-spawner-real-data APPEND PROPERTY LABELS needs-game-data)
+if(TARGET chase-game)
+  target_sources(chase-game PRIVATE src/runtime/game_ai_spawner_glue.cpp)
+  # SCRIPT-410: the 42 characters of the 17 spawners of lvl_01 are held from the level load; the TriggerObject of 1-4_ShowroomArrival starts
+  # 1-4_Spawner_05, which releases goons 03 and 06 one after the other (state 1, spawn, state 1, spawn; class code read by 20261102-mission14-A,
+  # docs/re/scripts-missions-1-4-spawners.md). The update numbers are the port's, not measured in the original.
+  add_test(NAME game-ai-spawner-1-4 COMMAND chase-game
+    --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+    --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
+    --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes
+    --call-script 1-4_ShowroomArrival --script "0 0 8")
+  set_tests_properties(game-ai-spawner-1-4 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
+    PASS_REGULAR_EXPRESSION "ai spawners: 17, 42 characters held\n.*ai spawner 1-4_spawner_05: state 1 active at update 1\n.*ai spawner 1-4_spawner_05: spawned 1-4_ai_goon_03 \\(slot 0, 1/2\\) at update 2\n.*ai spawner 1-4_spawner_05: spawned 1-4_ai_goon_06 \\(slot 1, 2/2\\) at update 4")
+  set_property(TEST game-ai-spawner-1-4 APPEND PROPERTY LABELS needs-game-data)
+endif()
 
 if(BUILD_TESTING)
   add_test(NAME test-labels COMMAND python3 "${CMAKE_SOURCE_DIR}/tools/check_test_labels.py" "${CMAKE_BINARY_DIR}")

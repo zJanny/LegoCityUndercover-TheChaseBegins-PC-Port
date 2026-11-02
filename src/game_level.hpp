@@ -55,6 +55,7 @@
 #include "runtime/carry.hpp"
 #include "runtime/scanner.hpp"
 #include "runtime/switch_set.hpp"
+#include "runtime/ai_spawner.hpp"
 #include "runtime/scanner_info.hpp"
 #include "runtime/scanner_bottom.hpp"
 #include "runtime/scanner_markers.hpp"
@@ -307,6 +308,12 @@ private:
     std::map<std::string, CharacterHitEntry> characterHits;
     void characterHit(const std::string& lowerInstance, const chase::runtime::CharacterHitMessage& hit);
     void updateCharacterHits();
+    // The AI spawners, kind 14 (runtime/ai_spawner.hpp; glue src/runtime/game_ai_spawner_glue.cpp).
+    chase::runtime::AiSpawnerSet aiSpawners;
+    void withAiSpawnerWorld(const std::function<void(chase::runtime::AiSpawnerWorld&)>& use);
+    void loadAiSpawners();
+    void deliverAiSpawnerMessage(const chase::runtime::ScriptObjectMessage& sent);
+    void updateAiSpawners();
     void loadScriptDestroyProps(chase::assets::FuseArchive& archive);
     // STAND-IN VEH-S104: the line tests 0x21ab20 / 0x22b108 of a brick burst are the wheel ray of the collision world, vehicles skipped.
     chase::runtime::DebrisLineTest debrisLineStandIn() const;

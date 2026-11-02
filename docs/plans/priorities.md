@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 1076 open items and stand-ins, 193 linked to game usage, 883 with unknown reach.
+Items: 1079 open items and stand-ins, 194 linked to game usage, 885 with unknown reach.
 
 ## Top 50 overall
 
@@ -37,11 +37,11 @@ Items: 1076 open items and stand-ins, 193 linked to game usage, 883 with unknown
 | 1 | [VEH-S2](features/vehicles.md?display=source#L21) | 7016 | 0 | 8 | 0 | 1 implemented | `enableobject` | Owner flags (0x1340 parked, 0x1300 traffic, bit 0 disabled) are not modelled: a vehicle collides while its ... |
 | 2 | [SCRIPT-52](features/script-system.md?display=source#L41) | 3101 | 0 | 8 | 1 | 2 implemented | `enablebound`, `enabletrigger` | Class owners: an empty object name as the owner itself, the variable `TaskComplete.TASK_COMPLETE` (saved per ... |
 | 3 | [PLAYER-S9](features/player-movement-attack.md?display=source#L22) | 0 | 2513 | 8 | 0 | - | `leprops/leprop_wobblydestructible` | `attackTargetObjects` — of the level objects only `leprop_wobblydestructible` props are attack targets (the ... |
-| 4 | [SCRIPT-410](features/script-system-missions-1-4.md?display=source#L24) | 1019 | 93 | 8 | 4 | 1 implemented | `triggerobject`, `props/prop_aispawner` | The AI spawner class (kind 14, `props/prop_aispawner`): characters held from level load (StartSpawned 0) ... |
-| 5 | [SCRIPT-285](features/script-system-missions.md?display=source#L32) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Nothing known fires the ObjectTriggered of `1-2_Door_Lock_Hint_Script`: no name source besides its own ... |
-| 6 | [SCRIPT-365](features/script-system-missions-reference.md?display=source#L30) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The other switch kinds (100 energy switches, 125, 138 fires, 139 switchfloor, 141, 185 ability props and ... |
-| 7 | [SCRIPT-389](features/script-system-platforms.md?display=source#L31) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The ledge lift starts one update later than in the oracle (the update between the switch's state 3 and the ... |
-| 8 | [SCRIPT-4](features/script-system.md?display=source#L38) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The code that hides the revealer targets; the role of the other type-4 parameters (Destination, ObjectTo ... |
+| 4 | [SCRIPT-285](features/script-system-missions.md?display=source#L32) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Nothing known fires the ObjectTriggered of `1-2_Door_Lock_Hint_Script`: no name source besides its own ... |
+| 5 | [SCRIPT-365](features/script-system-missions-reference.md?display=source#L30) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The other switch kinds (100 energy switches, 125, 138 fires, 139 switchfloor, 141, 185 ability props and ... |
+| 6 | [SCRIPT-389](features/script-system-platforms.md?display=source#L31) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The ledge lift starts one update later than in the oracle (the update between the switch's state 3 and the ... |
+| 7 | [SCRIPT-4](features/script-system.md?display=source#L38) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The code that hides the revealer targets; the role of the other type-4 parameters (Destination, ObjectTo ... |
+| 8 | [SCRIPT-420](features/script-system-missions-1-4.md?display=source#L34) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The spawns of `1-4_Spawner_05` against the oracle: the updates from the arrival's TriggerObject to goons 03 ... |
 | 9 | [SCRIPT-S220](features/script-system-missions-reference.md?display=source#L18) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Closed 2026-10-25: the reference list holds the records of every registering kind ... |
 | 10 | [TRAV-21](features/player-traversal.md?display=source#L30) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Brick use handler 0x1b53a8 (messages 3 / 4 into state 145): sender unknown; `TriggerObject` switching ... |
 | 11 | [SCRIPT-273](features/script-system-natives-animation.md?display=source#L34) | 881 | 0 | 8 | 1 | 2 stand-in | `playanimation`, `playcharanim` | PlayCharAnim's state request 81 (the cutscene call, state 0x51 has the same functions) and its cape animation ... |
@@ -137,16 +137,16 @@ Items: 1076 open items and stand-ins, 193 linked to game usage, 883 with unknown
 
 ## Scripts and missions
 
-125 of 257 items linked.
+126 of 260 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
 | 1 | [SCRIPT-52](features/script-system.md?display=source#L41) | 3101 | 0 | 8 | 1 | 2 implemented | `enablebound`, `enabletrigger` | Class owners: an empty object name as the owner itself, the variable `TaskComplete.TASK_COMPLETE` (saved per ... |
-| 2 | [SCRIPT-410](features/script-system-missions-1-4.md?display=source#L24) | 1019 | 93 | 8 | 4 | 1 implemented | `triggerobject`, `props/prop_aispawner` | The AI spawner class (kind 14, `props/prop_aispawner`): characters held from level load (StartSpawned 0) ... |
-| 3 | [SCRIPT-285](features/script-system-missions.md?display=source#L32) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Nothing known fires the ObjectTriggered of `1-2_Door_Lock_Hint_Script`: no name source besides its own ... |
-| 4 | [SCRIPT-365](features/script-system-missions-reference.md?display=source#L30) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The other switch kinds (100 energy switches, 125, 138 fires, 139 switchfloor, 141, 185 ability props and ... |
-| 5 | [SCRIPT-389](features/script-system-platforms.md?display=source#L31) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The ledge lift starts one update later than in the oracle (the update between the switch's state 3 and the ... |
-| 6 | [SCRIPT-4](features/script-system.md?display=source#L38) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The code that hides the revealer targets; the role of the other type-4 parameters (Destination, ObjectTo ... |
+| 2 | [SCRIPT-285](features/script-system-missions.md?display=source#L32) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Nothing known fires the ObjectTriggered of `1-2_Door_Lock_Hint_Script`: no name source besides its own ... |
+| 3 | [SCRIPT-365](features/script-system-missions-reference.md?display=source#L30) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The other switch kinds (100 energy switches, 125, 138 fires, 139 switchfloor, 141, 185 ability props and ... |
+| 4 | [SCRIPT-389](features/script-system-platforms.md?display=source#L31) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The ledge lift starts one update later than in the oracle (the update between the switch's state 3 and the ... |
+| 5 | [SCRIPT-4](features/script-system.md?display=source#L38) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The code that hides the revealer targets; the role of the other type-4 parameters (Destination, ObjectTo ... |
+| 6 | [SCRIPT-420](features/script-system-missions-1-4.md?display=source#L34) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The spawns of `1-4_Spawner_05` against the oracle: the updates from the arrival's TriggerObject to goons 03 ... |
 | 7 | [SCRIPT-S220](features/script-system-missions-reference.md?display=source#L18) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Closed 2026-10-25: the reference list holds the records of every registering kind ... |
 | 8 | [SCRIPT-273](features/script-system-natives-animation.md?display=source#L34) | 881 | 0 | 8 | 1 | 2 stand-in | `playanimation`, `playcharanim` | PlayCharAnim's state request 81 (the cutscene call, state 0x51 has the same functions) and its cape animation ... |
 | 9 | [SCRIPT-345](features/script-system-natives-animation.md?display=source#L37) | 859 | 0 | 8 | 0 | 2 stand-in | `loadanimation`, `playcharanim` | The port starts `1-2_Cage_Key_Target_Script` in the update of the press (as the original) but calls ... |
@@ -266,8 +266,8 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [script-system-missions-1-3-end.md](features/script-system-missions-1-3-end.md): SCRIPT-391, SCRIPT-400, SCRIPT-408, SCRIPT-409, SCRIPT-S303, SCRIPT-S304, SCRIPT-S311, SCRIPT-S319
 - [script-system-missions-1-3-generator.md](features/script-system-missions-1-3-generator.md): SCRIPT-364 (+1)
 - [script-system-missions-1-3.md](features/script-system-missions-1-3.md): SCRIPT-368 (+2), SCRIPT-399, SCRIPT-S291, SCRIPT-S298, SCRIPT-S315, SCRIPT-S316
-- [script-system-missions-1-4.md](features/script-system-missions-1-4.md): SCRIPT-411 (+1), SCRIPT-415, SCRIPT-416, SCRIPT-417, SCRIPT-S320
-- [script-system-missions-reference.md](features/script-system-missions-reference.md): SCRIPT-359 (+6), SCRIPT-360 (+1), SCRIPT-370 (+1), SCRIPT-S289, SCRIPT-S292, SCRIPT-S293, SCRIPT-S299
+- [script-system-missions-1-4.md](features/script-system-missions-1-4.md): SCRIPT-418 (+2), SCRIPT-411 (+1), SCRIPT-415, SCRIPT-416, SCRIPT-S320, SCRIPT-S321, SCRIPT-S322
+- [script-system-missions-reference.md](features/script-system-missions-reference.md): SCRIPT-359 (+1), SCRIPT-360 (+1), SCRIPT-370 (+1), SCRIPT-S289, SCRIPT-S292, SCRIPT-S293, SCRIPT-S299
 - [script-system-missions.md](features/script-system-missions.md): SCRIPT-284 (+1), SCRIPT-115, SCRIPT-142, SCRIPT-221, SCRIPT-S141, SCRIPT-S236, SCRIPT-S237, SCRIPT-S243, SCRIPT-S255
 - [script-system-natives-animation.md](features/script-system-natives-animation.md): SCRIPT-324 (+3), SCRIPT-352 (+2), SCRIPT-325 (+1), SCRIPT-334 (+1), SCRIPT-405 (+1), SCRIPT-S284 (+1), SCRIPT-344, SCRIPT-353, SCRIPT-S262, SCRIPT-S266, SCRIPT-S267
 - [script-system-natives-party.md](features/script-system-natives-party.md): SCRIPT-338 (+2), SCRIPT-340 (+1)

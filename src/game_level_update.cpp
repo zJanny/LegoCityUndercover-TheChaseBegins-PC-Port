@@ -400,6 +400,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         const float playerPosition[3] = {player->motion.x, player->vertical.y, player->motion.z};
         updateDoors(playerPosition, emit);
         updateSwitches(dt, emit);
+        updateAiSpawners();
         updatePushables(emit);
     });
     order.at(runtime::UpdatePhase::AfterCharactersStandIn, [&] {
@@ -465,6 +466,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
     for (const runtime::ScriptObjectMessage& sent : levelScripts.takeObjectMessages()) {
         if (sent.message == runtime::kMessageTrigger) detective.triggerMessage(sent.instance);
         deliverSwitchMessage(sent);
+        deliverAiSpawnerMessage(sent);
         deliverSuperBuilditMessage(sent.instance, sent.message);
         if (const std::optional<runtime::DoorMessage> doorMessage = runtime::doorMessageFor(sent.message))
             for (DoorObject& door : doors)
