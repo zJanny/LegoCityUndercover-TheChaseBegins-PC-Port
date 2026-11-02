@@ -45,6 +45,7 @@ void LevelSession::characterHit(const std::string& lowerInstance, const runtime:
     target.state = entry->second.states.state();
     target.pending = entry->second.states.pending();
     const runtime::CharacterHitResult result = runtime::receiveHit(target, hit);
+    if (result.aggro) characterAggro(lowerInstance, hit.sender);
     std::cout << "character " << lowerInstance << ": hit (kind " << unsigned(hit.kind) << ", damage " << hit.damage << ") at update " << updatesForLog;
     if (result.outcome == runtime::CharacterHitOutcome::Ignored) {
         std::cout << ", ignored\n";

@@ -120,6 +120,7 @@ CharacterHitResult receiveHit(CharacterHitTarget& target, const CharacterHitMess
     if (target.player && oneOf(target.state, kPlayerNoHitStates)) return result;
     const bool fromCharacter = hit.sender.present && hit.sender.character;
     if (fromCharacter && hit.sender.player && !selectModeTakesPlayer(target.selectMode)) return result;
+    result.aggro = fromCharacter && !target.player;
     if (!target.player && target.playerSlot) return result;
     if (hit.damage < kHitIgnoresGuards) {
         if (target.spawnCounter < kHitSpawnGuard || target.cooldown != 0 || oneOf(target.state, kGuardedStates)) return result;

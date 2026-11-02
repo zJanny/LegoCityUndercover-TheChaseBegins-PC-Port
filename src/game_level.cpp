@@ -304,6 +304,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     loadScriptDestroyProps(archive);
     loadDestructibleProps(archive);
     loadAttack(archive, placedCollisions);
+    loadCharacterTakedowns(archive);
     loadObjectiveBoxes(placedCollisions);
     runtime::applyObjectCollisionState(collision, objectState);
     doors = game_doors::loadDoors(archive, level, classOf, placedCollisions, placedInstances);

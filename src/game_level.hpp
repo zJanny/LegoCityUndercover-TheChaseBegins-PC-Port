@@ -72,6 +72,7 @@
 #include "runtime/prop_bouncer.hpp"
 #include "runtime/prop_wobbly_destructible.hpp"
 #include "runtime/player_attack.hpp"
+#include "runtime/character_takedown.hpp"
 #include "runtime/camera_lock_icon.hpp"
 #include "runtime/screen_shake.hpp"
 #include "runtime/camera_rig.hpp"
@@ -309,6 +310,22 @@ private:
     std::map<std::string, CharacterHitEntry> characterHits;
     void characterHit(const std::string& lowerInstance, const chase::runtime::CharacterHitMessage& hit);
     void updateCharacterHits();
+    // The takedown of a level character and the aggro (runtime/character_takedown.hpp; glue src/runtime/game_character_takedown_glue.cpp).
+    struct CharacterTakedownEntry {
+        chase::runtime::TakedownCharacter character;
+        chase::runtime::CharacterTakedownStates states;
+        unsigned startedAt = 0;  // the update of the fight move: the oracle's goon enters MELEE PUTDOWN one update later (20261101-mission-D-1)
+    };
+    std::map<std::string, CharacterTakedownEntry> characterTakedowns;
+    chase::runtime::TakedownTables takedownTables;
+    chase::runtime::ArrestableList arrestables;
+    std::function<void(const std::string& event, const std::string& character)> characterArrestEventSink;
+    void loadCharacterTakedowns(chase::assets::FuseArchive& archive);
+    void characterTakedownStart(const chase::runtime::CharacterFightStart& fight);
+    void updateCharacterTakedowns(float dt);
+    std::optional<std::uint8_t> characterTakedownTargetMode(const std::string& lowerInstance) const;
+    bool enabledObjectTrigger(const std::string& lowerEvent, const std::string& lowerInstance) const;
+    void characterAggro(const std::string& lowerInstance, const chase::runtime::CharacterHitSender& sender);
     // The AI spawners, kind 14 (runtime/ai_spawner.hpp; glue src/runtime/game_ai_spawner_glue.cpp).
     chase::runtime::AiSpawnerSet aiSpawners;
     void withAiSpawnerWorld(const std::function<void(chase::runtime::AiSpawnerWorld&)>& use);

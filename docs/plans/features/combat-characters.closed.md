@@ -1,0 +1,7 @@
+# Closed items of combat-characters
+
+Done items of [combat-characters.md](combat-characters.md), moved here by tools/check_doc_links.py --fix in the order they were closed. IDs are never reused.
+
+- [x] COMBAT-2 — The takedown states with their move and timing tables, the arrest health drop, the list of arrestable characters and its events are ported (`character_takedown.*`); the rest is COMBAT-7 and COMBAT-8. evidence: [combat-characters.md §2026-11-02T15:37:50](../../re/combat-characters.md#ts-20261102-153750).
+- [x] COMBAT-3 — The aggro call of the receiver (0x1d1170) is ported as a decision and logged; the pursuit it starts is COMBAT-9. evidence: same entry.
+- [x] COMBAT-1 — The takedown of a mission 1-4 goon measured in the oracle: one Y-tap throw takes the arrest health 2 -> 1, a counter throw to 0 with the listing, the event and the arrest hint; the update order is ported. The arrestable lie measured about 124 updates against 120 by the timer stays open in the linked entry. evidence: [combat-characters.md §2026-11-02T15:56:52](../../re/combat-characters.md#ts-20261102-155652).

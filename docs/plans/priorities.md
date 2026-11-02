@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 1074 open items and stand-ins, 194 linked to game usage, 880 with unknown reach.
+Items: 1076 open items and stand-ins, 194 linked to game usage, 882 with unknown reach.
 
 ## Top 50 overall
 
@@ -87,7 +87,7 @@ Items: 1074 open items and stand-ins, 194 linked to game usage, 880 with unknown
 
 ## Player and camera
 
-20 of 220 items linked.
+20 of 222 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -99,8 +99,8 @@ Items: 1074 open items and stand-ins, 194 linked to game usage, 880 with unknown
 | 6 | [CAMERA-S51](features/camera.md?display=source#L26) | 145 | 0 | 7 | 0 | 1 stand-in | `shakescreen` | The ShakeScreen shake moves only the eye of the gameplay camera (`CameraRig::setEyeShake`); the cutscene ... |
 | 7 | [PLAYER-S15](features/player-movement-attack.md?display=source#L25) | 97 | 0 | 7 | 0 | 1 stand-in | `enabletargetable` | `appendAttackCharacters` — the character facts besides the box and the near list: the `MeshCollision` branch ... |
 | 8 | [TRAV-55](features/player-traversal-zipline.md?display=source#L40) | 0 | 66 | 7 | 0 | - | `props/parkour_zipline` | The zipline poles (`props/parkour_zipline` anchors) can be walked through in `chase-game` (user report); in ... |
-| 9 | [TRAV-66](features/player-traversal.md?display=source#L26) | 0 | 39 | 4 | 0 | - | `props/parkour_fencevault` | The other kinds that share the fence's B press list are not identified or ported (their order decides who ... |
-| 10 | [TRAV-48](features/player-traversal-zipline.md?display=source#L35) | 0 | 22 | 5 | 1 | - | `props/parkour_tightrope` | The ropes of the tightrope anchors (`GrappleLineType` 0) use the same draw 0x1a9dc4 and are not loaded, so ... |
+| 9 | [COMBAT-S5](features/combat-characters.md?display=source#L23) | 62 | 0 | 4 | 0 | 1 stand-in | `aiignoreplayer` | `characterAggro` knows only the side bit of the target: ctrl+0xd8 bit 5, AIIgnorePlayer, ctrl+0xc4, ctrl+0x72 ... |
+| 10 | [TRAV-66](features/player-traversal.md?display=source#L26) | 0 | 39 | 4 | 0 | - | `props/parkour_fencevault` | The other kinds that share the fence's B press list are not identified or ported (their order decides who ... |
 
 ## Level objects
 
@@ -218,7 +218,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [audio.md](features/audio.md): AUDIO-3 (+2), AUDIO-20 (+1), AUDIO-32 (+1), AUDIO-34 (+1), AUDIO-35 (+1), AUDIO-36 (+1), AUDIO-37 (+1), AUDIO-1, AUDIO-38, AUDIO-5, AUDIO-6, AUDIO-7, AUDIO-S1, AUDIO-S2, AUDIO-S20, AUDIO-S3, AUDIO-S30, AUDIO-S34, AUDIO-S35, AUDIO-S36, AUDIO-S4, AUDIO-S5, AUDIO-S6, AUDIO-S7
 - [camera.md](features/camera.md): CAMERA-54 (+3), CAMERA-11 (+1), CAMERA-53 (+1), CAMERA-1, CAMERA-12, CAMERA-2, CAMERA-3, CAMERA-4, CAMERA-5, CAMERA-S1, CAMERA-S31, CAMERA-S4, CAMERA-S50, CAMERA-S52, CAMERA-S53, CAMERA-S6
 - [collision.md](features/collision.md): COLL-24 (+2), COLL-21 (+1), COLL-3 (+1), COLL-4 (+1), COLL-1, COLL-23, COLL-25, COLL-5, COLL-6, COLL-7, COLL-S1, COLL-S2, COLL-S3, COLL-S4, COLL-S5, COLL-S6, COLL-S7
-- [combat-characters.md](features/combat-characters.md): COMBAT-6 (+2), COMBAT-4 (+1), COMBAT-1, COMBAT-5, COMBAT-S1, COMBAT-S2, COMBAT-S3
+- [combat-characters.md](features/combat-characters.md): COMBAT-6 (+2), COMBAT-7 (+2), COMBAT-4 (+1), COMBAT-8 (+1), COMBAT-5, COMBAT-S1, COMBAT-S2, COMBAT-S3, COMBAT-S4
 - [doors.md](features/doors.md): DOOR-2, DOOR-3, DOOR-4, DOOR-6, DOOR-7, DOOR-S1, DOOR-S2, DOOR-S3, DOOR-S4, DOOR-S5
 - [executable-platform.md](features/executable-platform.md): EXEC-1 (+2), EXEC-10 (+1), EXEC-2, EXEC-3, EXEC-4, EXEC-S1, EXEC-S10
 - [front-end.md](features/front-end.md): FE-3 (+10), FE-30 (+2), FE-40 (+1), FE-1, FE-2, FE-4, FE-5, FE-6, FE-7, FE-8, FE-9, FE-S1, FE-S2, FE-S3, FE-S31, FE-S32, FE-S33, FE-S4, FE-S40, FE-S41, FE-S5, FE-S6

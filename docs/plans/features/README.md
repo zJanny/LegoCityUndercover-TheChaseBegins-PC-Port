@@ -15,7 +15,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | [player-traversal-ladders](player-traversal-ladders.md) | IN_PROGRESS | TRAV-58 entry from the air, furled ladders; TRAV-59 exit collision; TRAV-60 clip restart, hidden weapons, camera; TRAV-61 oracle check of the sounds (ladders ported) |
 | [camera](camera.md) | IN_PROGRESS | CAMERA-55 police car after PositionObject at the hand-back; CAMERA-3 multi-record weights; CAMERA-2 characters and vehicles not registered |
 | [collision](collision.md) | IN_PROGRESS | COLL-1 broad phase stand-in; COLL-2 constructors missing (about 40 kinds, characters); COLL-23 transcribe them; COLL-24 nested start state |
-| [combat-characters](combat-characters.md) | IN_PROGRESS | COMBAT-1 knock-down and arrestable state; COMBAT-2 takedown moves; COMBAT-3 aggro (hit receiver and PUNCHED ported) |
+| [combat-characters](combat-characters.md) | IN_PROGRESS | COMBAT-7 counter takedown and arrest; COMBAT-8 takedown motion; COMBAT-9 AI pursuit (hit receiver, takedown states and arrestable list ported) |
 | [animation-characters](animation-characters.md) | IN_PROGRESS | ANIM-3 blending; ANIM-10 slot bookkeeping; ANIM-11 model folders |
 | [input](input.md) | DONE (lab, mapping) | INPUT-2 readers of input slots 16/17 |
 | [abilities-detective](abilities-detective.md) | IN_PROGRESS | DETECT-2 first point never enabled (Doorlock script waits); DETECT-1 use-state approach; DETECT-4 particles, fades, flight |

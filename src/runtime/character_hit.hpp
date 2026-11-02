@@ -98,10 +98,11 @@ struct CharacterHitResult {
     std::int32_t damage = 0;              // what 0x15afb4 took off
     std::uint8_t cooldown = 0;            // the 0x22c60c entry, 0 when none
     std::optional<std::uint16_t> reaction;  // the state message 46 requested (0x18ee2c)
+    bool aggro = false;                   // 0x1b8770: a character sender the target took calls 0x1d1170 (runtime/character_takedown.hpp)
 };
 
-// 0x1b8570 for the paths the port reaches; the takedown moves of 0x22e884, the aggro 0x1d1170, the knock-back push of kind 3 (0x215634) and the
-// player's branches are not ported (COMBAT-2, COMBAT-3, COMBAT-4).
+// 0x1b8570 for the paths the port reaches; the takedown moves of 0x22e884, the knock-back push of kind 3 (0x215634) and the
+// player's branches are not ported (COMBAT-2, COMBAT-4).
 CharacterHitResult receiveHit(CharacterHitTarget& target, const CharacterHitMessage& hit);
 
 // Message 46 (0x18ee2c): the reaction state for the record, none while a request is pending, ctrl+0xd8 bit 6 is set or 0x25ed90 refuses.

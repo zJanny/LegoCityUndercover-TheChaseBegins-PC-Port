@@ -60,7 +60,7 @@ target_sources(chase_runtime PRIVATE src/runtime/reference_trigger_level.cpp src
 target_sources(chase_runtime PRIVATE src/runtime/switch_base.cpp src/runtime/switch_set.cpp src/runtime/lever_use.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/player_attack.cpp src/runtime/attack_targets.cpp src/runtime/attack_facts.cpp src/runtime/attack_sounds.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/pedestrian_walk.cpp)
-target_sources(chase_runtime PRIVATE src/runtime/vehicle_camera.cpp src/runtime/particles.cpp src/runtime/debris.cpp src/runtime/prop_destroy.cpp src/runtime/destroy_message.cpp src/runtime/character_death.cpp src/runtime/fall_apart.cpp src/runtime/stud_drop.cpp src/runtime/character_respawn.cpp src/runtime/character_hit.cpp)
+target_sources(chase_runtime PRIVATE src/runtime/vehicle_camera.cpp src/runtime/particles.cpp src/runtime/debris.cpp src/runtime/prop_destroy.cpp src/runtime/destroy_message.cpp src/runtime/character_death.cpp src/runtime/fall_apart.cpp src/runtime/stud_drop.cpp src/runtime/character_respawn.cpp src/runtime/character_hit.cpp src/runtime/character_takedown.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/prop_wobbly_destructible.cpp src/runtime/prop_bouncer.cpp src/runtime/stud_callers.cpp src/runtime/stud_drop_classes.cpp src/runtime/super_brick.cpp src/runtime/prop_hit_sequence.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/prop_rocking.cpp src/runtime/platform_wait.cpp src/runtime/game_generator_natives_glue.cpp
   src/runtime/platform_node_move.cpp src/runtime/platform_path.cpp src/runtime/game_platform_glue.cpp)
@@ -189,7 +189,7 @@ if(EPOXY_FOUND)
   if(FFMPEG_FOUND)
     add_executable(chase-game src/game.cpp src/game_options.cpp src/game_player.cpp src/game_carry.cpp src/game_scanner.cpp src/game_doors.cpp src/game_prop_parts.cpp src/game_level.cpp src/game_pause_menu.cpp src/game_award_viewer.cpp src/game_level_update.cpp src/game_vehicle.cpp src/game_vehicle_break.cpp src/game_vehicle_place.cpp src/game_vehicle_camera.cpp src/game_level_rooms.cpp src/game_cutscene.cpp src/game_level_cutscene.cpp src/game_characters.cpp src/game_pedestrians.cpp src/game_pedestrian_fade.cpp src/game_semi_trans.cpp src/game_pedestrian_rooms.cpp src/game_particles.cpp src/game_level_natives.cpp src/game_detective.cpp src/game_use_spot.cpp src/game_objective_markers.cpp src/game_hand_items.cpp src/game_effects.cpp src/game_shadows.cpp src/game_vehicle_effects.cpp src/game_zipline.cpp src/game_brick_grab.cpp src/game_climb_bar.cpp src/game_acrobat_pole.cpp src/game_pole.cpp src/game_ladder.cpp src/game_fence_vault.cpp src/game_animals.cpp src/game_object_visibility.cpp src/game_nested_props.cpp src/game_super_buildit.cpp src/game_fast_travel.cpp src/game_key_pickup.cpp)
     target_sources(chase-game PRIVATE src/game_pedestrian_blocking.cpp src/game_traffic.cpp)
-    target_sources(chase-game PRIVATE src/game_props_destructible.cpp src/game_prop_destroy.cpp src/game_character_death.cpp src/runtime/game_character_hit_glue.cpp src/game_fall_apart.cpp src/game_stud_drops.cpp src/game_super_bricks.cpp)
+    target_sources(chase-game PRIVATE src/game_props_destructible.cpp src/game_prop_destroy.cpp src/game_character_death.cpp src/runtime/game_character_hit_glue.cpp src/runtime/game_character_takedown_glue.cpp src/game_fall_apart.cpp src/game_stud_drops.cpp src/game_super_bricks.cpp)
     target_sources(chase-game PRIVATE src/game_debris_pickup.cpp)
     target_sources(chase-game PRIVATE src/game_switch_glue.cpp src/game_switch_use_glue.cpp)
     target_sources(chase-game PRIVATE src/game_debris_super.cpp)
@@ -893,6 +893,12 @@ if(BUILD_TESTING)
   add_test(NAME character-hit COMMAND character-hit-test)
   add_test(NAME character-hit-real-data COMMAND character-hit-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
   set_tests_properties(character-hit-real-data PROPERTIES SKIP_RETURN_CODE 77)
+  add_executable(character-takedown-test tests/character_takedown_test.cpp)
+  target_link_libraries(character-takedown-test PRIVATE chase_runtime chase_assets)
+  target_compile_options(character-takedown-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME character-takedown COMMAND character-takedown-test)
+  add_test(NAME character-takedown-real-data COMMAND character-takedown-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
+  set_tests_properties(character-takedown-real-data PROPERTIES SKIP_RETURN_CODE 77)
   add_executable(player-attack-test tests/player_attack_test.cpp)
   target_link_libraries(player-attack-test PRIVATE chase_runtime chase_assets)
   target_compile_options(player-attack-test PRIVATE -Wall -Wextra -Wpedantic)
@@ -2190,6 +2196,29 @@ if(BUILD_TESTING)
     set_tests_properties(game-script-attack-goon PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
       PASS_REGULAR_EXPRESSION "attack: 99 characters, 8 fight moves.*ai spawner 1-4_spawner_06: spawned 1-4_ai_goon_07 \\(slot 0, 1/3\\) at update 2.*attack: fight move [0-7] on character 1-4_ai_goon_07 \\(state 227\\) at update 5.*attack: state 163 clip (261|437|453|467|469|471|473|475) at update 5"
       FAIL_REGULAR_EXPRESSION "attack: message 62 to 1-4_ai_goon_07")
+    # The fight move's target (1-4_AI_Goon_07, released by 1-4_Spawner_06 as in game-script-attack-goon) goes through MELEE PUTDOWN (clip 468 grabbed_putdown_04), PUTDOWN STUN (arrest health 2 -> 1, timer 0.35 of
+    # tablescombat sheet 5 row 0, 0.317 after the enter update) and GENERIC GETUP back to IDLE (0x1d6d04, 0x27726c, 0x28cbf8, 0x29ad90, read from the
+    # code by 20261102-mission14-B on 2026-11-02; docs/re/combat-characters.md). Oracle 20261102-mission14-B-1 (recorded from a save state of the first
+    # showroom fight of mission 1-4): 309 is entered in the update the throw's clip ends, 313 eleven updates later, and one throw leaves the goon
+    # not arrestable (arrest health 2 -> 1).
+    add_test(NAME game-script-takedown-goon COMMAND chase-game
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
+      --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes
+      --call-script 1-4_SO_Phase1 --start "564.267 35.741 946.934" --facing 3.1416 --script "0 0 4;0 0 1 Y;0 0 160")
+    set_tests_properties(game-script-takedown-goon PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
+      PASS_REGULAR_EXPRESSION "takedown: 57 takedown moves, 3 timing rows.*attack: fight move [0-7] on character 1-4_ai_goon_07 \\(state 227\\) at update 5.*character 1-4_ai_goon_07: state 227 MELEE PUTDOWN at update 6.*character 1-4_ai_goon_07: state 309 PUTDOWN STUN at update 47\n.*character 1-4_ai_goon_07: arrest health 2 -> 1, timer 0.317\n.*character 1-4_ai_goon_07: state 313 GENERIC GETUP at update 58.*character 1-4_ai_goon_07: state 1 IDLE"
+      FAIL_REGULAR_EXPRESSION "1-4_ai_goon_07: arrestable|1-4_ai_goon_07: event")
+    # A second Y tap on the same goon after it is back in IDLE takes the arrest health 1 -> 0: listed and CharacterArrestable raised through
+    # ScriptRunner::fireObjectEvent in the enter of 309, removed by the exit to 313 (0x28d2a0..0x28d3a4, 0x283a3c..0x283ab4, read from the code by
+    # 20261102-mission14-B on 2026-11-02; a second Y-tap throw was not measured in the oracle, docs/re/combat-characters.md).
+    add_test(NAME game-script-takedown-arrestable COMMAND chase-game
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
+      --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes
+      --call-script 1-4_SO_Phase1 --start "564.267 35.741 946.934" --facing 3.1416 --script "0 0 4;0 0 1 Y;0 0 100;0 0 1 Y;0 0 200")
+    set_tests_properties(game-script-takedown-arrestable PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
+      PASS_REGULAR_EXPRESSION "1-4_ai_goon_07: arrest health 2 -> 1.*1-4_ai_goon_07: state 1 IDLE.*attack: fight move [0-7] on character 1-4_ai_goon_07 \\(state 227\\).*1-4_ai_goon_07: arrest health 1 -> 0, timer 3.967\ncharacter 1-4_ai_goon_07: arrestable \\(1 listed\\) at update [0-9]+\ncharacter 1-4_ai_goon_07: event CharacterArrestable at update [0-9]+\n.*1-4_ai_goon_07: not arrestable any more at update [0-9]+\ncharacter 1-4_ai_goon_07: state 313 GENERIC GETUP")
     # Five Y taps (15 updates apart) from the same spot: every hit lowers the table's WobbleHealth 5 by the damage 1 (oracle: 4, 3, 2, 1, 0 after the five
     # punches), the fifth destroys DonutTable_14 and DonutTable_14_Script runs in the update of the destroy (docs/re/props-wobbly-bouncer.md).
     add_test(NAME game-script-wobbly-table COMMAND chase-game
@@ -2529,7 +2558,7 @@ foreach(test_name ${chase_all_tests})
   set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT "XDG_DATA_HOME=${CMAKE_BINARY_DIR}/test-xdg/${test_name}")
 endforeach()
 
-foreach(slow_test game-key-pickup-1-3 game-parts-crate-1-3 game-generator-1-3 game-girder-guy-1-3 game-ledge-lift-1-3 game-fence-vault-1-3 game-push-cart-1-3 game-crane-1-3 game-showroom-1-4 game-bullet-time-1-4 game-skylight-debris-1-4 game-key-use-1-3 game-debris-super-pickup game-cutscene-dog-end game-super-buildit-build game-helipad-collision game-fast-travel-exit game-super-brick-roof game-doorlock-detective-1-2 game-cage-release-1-2 game-mission-1-1 game-mission-1-1-start game-vehicle-drive game-vehicle-room game-pedestrian-rooms game-vehicle-hit game-vehicle-smash game-vehicle-break game-director-hold game-director-release game-van-escort game-pause-menu waypoint-marker-shot audio-real-data reflection-real-data)
+foreach(slow_test game-script-takedown-goon game-script-takedown-arrestable game-key-pickup-1-3 game-parts-crate-1-3 game-generator-1-3 game-girder-guy-1-3 game-ledge-lift-1-3 game-fence-vault-1-3 game-push-cart-1-3 game-crane-1-3 game-showroom-1-4 game-bullet-time-1-4 game-skylight-debris-1-4 game-key-use-1-3 game-debris-super-pickup game-cutscene-dog-end game-super-buildit-build game-helipad-collision game-fast-travel-exit game-super-brick-roof game-doorlock-detective-1-2 game-cage-release-1-2 game-mission-1-1 game-mission-1-1-start game-vehicle-drive game-vehicle-room game-pedestrian-rooms game-vehicle-hit game-vehicle-smash game-vehicle-break game-director-hold game-director-release game-van-escort game-pause-menu waypoint-marker-shot audio-real-data reflection-real-data)
   if(TEST ${slow_test})
     set_property(TEST ${slow_test} APPEND PROPERTY LABELS slow)
   endif()
@@ -2543,7 +2572,7 @@ foreach(game_data_test
   ladder-real-data fence-vault-real-data carry-animation-real-data lever-use-real-data nested-object-collision-real-data super-buildit-real-data layout-text-real-data layout-scale-real-data fast-travel-pad-real-data map-buttons-real-data pause-menu-real-data buildit-real-data
   prop-animation-real-data animal-props-real-data cat-rescue-real-data prop-parts-real-data vehicle-boarding-real-data vehicle-drive-real-data
   floor-graph-real-data vehicle-collision-real-data vehicle-box-contact-real-data vehicle-sphere-sweep-real-data vehicle-prop-smash-real-data
-  destroy-effects-real-data character-death-real-data character-hit-real-data player-attack-real-data attack-targets-real-data attack-facts-real-data attack-sounds-real-data vehicle-world-real-data vehicle-rest-real-data
+  destroy-effects-real-data character-death-real-data character-hit-real-data character-takedown-real-data player-attack-real-data attack-targets-real-data attack-facts-real-data attack-sounds-real-data vehicle-world-real-data vehicle-rest-real-data
   vehicle-wheels-real-data vehicle-hud-real-data vehicle-real-data objectives-real-data object-kinds progress-readme priorities-current
   camera-records-real-data locomotion-real-data streaming-real-data room-streaming-real-data collision-real-data fog-real-data lighting-real-data reflection-real-data
   sky-real-data shadow-real-data level-start-real-data dcam-real-data npc-idle-real-data pedestrian-limit-real-data ai-real-data nav-path-real-data
@@ -2561,7 +2590,7 @@ foreach(game_data_test
   game-mission-1-1 game-detective-1-2 game-key-pickup-1-3 game-parts-crate-1-3 game-generator-1-3 game-girder-guy-1-3 game-ledge-lift-1-3 game-fence-vault-1-3 game-push-cart-1-3 game-crane-1-3 game-showroom-1-4 game-bullet-time-1-4 game-skylight-debris-1-4 game-garage-key-1-3 game-key-use-1-3 game-use-spot-1-2 game-use-marker-detective-1-2 game-player-script-animation game-super-buildit-prompt
   game-super-buildit-build game-helipad-collision game-fast-travel-exit game-cage-release-1-2 game-doorlock-detective-1-2 game-mission-1-2-start-timing game-mission-1-1-start game-script-dialog
   game-same-level-entry game-scene-change-exit game-scene-change-entry game-director-hold game-director-release game-script-zipline game-script-zipline-handcuffs
-  game-script-attack-table game-script-attack-goon game-script-wobbly-table game-script-bounce game-script-bounce-grab game-script-acrobat-poles game-script-zipline-use-a
+  game-script-attack-table game-script-attack-goon game-script-takedown-goon game-script-takedown-arrestable game-script-wobbly-table game-script-bounce game-script-bounce-grab game-script-acrobat-poles game-script-zipline-use-a
   game-script-zipline-use-b game-script-brick-grab game-script-brick-rail game-script-pole game-script-ladder game-script-ladder-walk-in
   game-script-jump game-pause-menu-clean game-pause-menu game-options-reload game-script-hud game-room-streaming game-stream-room-in soundtest-real-smoke soundtest-id-smoke fmv-real-smoke
   prop-wobbly-real-data stud-callers-real-data stud-drop-classes-real-data prop-hit-sequence-real-data super-brick-real-data

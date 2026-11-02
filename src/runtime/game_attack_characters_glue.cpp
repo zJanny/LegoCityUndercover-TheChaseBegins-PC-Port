@@ -123,6 +123,7 @@ void LevelSession::appendAttackCharacters(std::vector<runtime::AttackCandidate>&
         const runtime::ObjectNativeFlags* flags = levelScripts.objectNatives().flags(character.name);
         if (flags && flags->targetable && !*flags->targetable) candidate.entity.character.targetMode = kTargetModeNobody;
         if (attackTables.engagedOn) candidate.entity.character.heldByOther = attackTables.engagedOn(character.name);
+        if (const std::optional<std::uint8_t> mode = characterTakedownTargetMode(character.name)) candidate.entity.character.targetMode = *mode;
         candidate.name = character.name;
         candidates.push_back(candidate);
     }
